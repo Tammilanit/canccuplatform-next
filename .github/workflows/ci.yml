@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Job names are the required-check names for branch rules (#4). Do not rename them.
+jobs:
+  kit-ts:
+    name: lint-types-test (kit-ts)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/kit-ts
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect package
+        id: pkg
+        run: |
+          if [ -f package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"
+          else echo "empty package, skipping"; echo "present=false" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/setup-node@v4
+        if: steps.pkg.outputs.present == 'true'
+        with:
+          node-version: 22
+      - if: steps.pkg.outputs.present == 'true'
+        run: npm ci
+      - if: steps.pkg.outputs.present == 'true'
+        run: npm run lint
+      - if: steps.pkg.outputs.present == 'true'
+        run: npm run typecheck
+      - if: steps.pkg.outputs.present == 'true'
+        run: npm test
+
+  kit-py:
+    name: lint-types-test (kit-py)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/kit-py
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect package
+        id: pkg
+        run: |
+          if [ -f pyproject.toml ]; then echo "present=true" >> "$GITHUB_OUTPUT"
+          else echo "empty package, skipping"; echo "present=false" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/setup-python@v5
+        if: steps.pkg.outputs.present == 'true'
+        with:
+          python-version: "3.12"
+      - if: steps.pkg.outputs.present == 'true'
+        run: pip install -e ".[dev]"
+      - if: steps.pkg.outputs.present == 'true'
+        run: ruff check .
+      - if: steps.pkg.outputs.present == 'true'
+        run: mypy .
+      - if: steps.pkg.outputs.present == 'true'
+        run: pytest
+
+  no-event-names:
+    name: no-event-names
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Self-test the checker
+        run: scripts/check-event-names --self-test
+      - name: Check the diff
+        env:
+          EVENT_NAME_TERMS: ${{ secrets.EVENT_NAME_TERMS }}
+          # Fork PRs get no secrets; the maintainer-approved run is the gate there.
+          EVENT_NAMES_SKIP_IF_MISSING: ${{ github.event.pull_request.head.repo.full_name != github.repository && '1' || '0' }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: scripts/check-event-names "$BASE"
