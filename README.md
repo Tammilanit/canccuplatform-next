@@ -33,9 +33,13 @@ An event lives in its own repo next to this one (profile, `platform.version`, Co
 
 - Nothing event-specific in this repo; a CI check will fail PRs that name a real event, venue, IPs or Discord ids.
 - One version for the whole platform: a release is a git tag, CI builds one image per module.
-- Contracts live next to code; a contract change and its consumers land in one PR.
+- Contracts live next to code; a contract change is its own PR, merged before its consumers.
 - English throughout; other languages arrive as language packs.
-- Linux only (WSL2 with mirrored networking: at your own risk).
+- Runs on Linux; develop on Linux, Windows (WSL2) or macOS with Docker.
+
+## Contributing
+
+Start with [CONTRIBUTING.md](CONTRIBUTING.md) to set up your machine. The rules for people and AI tools are in [AGENTS.md](AGENTS.md).
 
 ## License
 
