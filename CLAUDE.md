@@ -1,6 +1,6 @@
 # canccuplatform-next — map
 
-Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switch). This is the system repo of its project: parent issues live here, and its event repo is `tammilanit-event` (sibling folder in ~/code). Old repos (canccuplatform, canccubot, canccusignage, …) are legacy: read them for the harvest, never copy wholesale.
+Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switch). This is the system repo of its project: parent issues live here. The event repo names its platform, not the reverse. Old repos (canccuplatform, canccubot, canccusignage, …) are legacy: read them for the harvest, never copy wholesale.
 
 ## Layout
 - modules/<name> — one module each: screen, tournament, pizza, bot, admin, games, moments, voices, cast. Each is its own container.
@@ -8,7 +8,7 @@ Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switc
 - deploy/ Compose (modules + Postgres, Valkey, Caddy) · setup/ install, wizard, backup, restore, new-event · contracts/ one file per module · docs/ general docs · events/demo/ demo profile.
 
 ## Rules
-- Nothing event-specific: no real event name, venue, IPs, hostnames or Discord ids in code, docs, tests or fixtures. Use events/demo/. Event content goes to the event repo.
+- Nothing event-specific: no real event name, venue, IPs, hostnames or Discord ids in code, docs, tests or fixtures. Use events/demo/. Event content goes to the event repo. The planned no-tammilanit check exempts the org name and git remote URLs.
 - Modules talk only through their API and events (contracts/), never through each other's data.
 - Containers keep no state: data and sessions in Postgres, events and caches in Valkey, files in the shared files volume.
 - A contract change and its consumers land in the same PR. Additive first, remove later; breaking changes and destructive migrations need a person.
