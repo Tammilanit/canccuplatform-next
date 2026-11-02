@@ -18,7 +18,7 @@ Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switc
 - No editing on the VMs: code reaches them only by deploy.
 
 ## Issues
-- One issue per module, labelled with its module label (`module:<name>`, plus `module:kit`, `module:ui`, `module:deploy`, `module:setup`), instead of one per repo. Cross-module work: children first, then a parent here with one "Order:" line, children linked as sub-issues, only the first child `ready`. A contract change is its own child, first in the order.
+- One issue per module, labelled with its module label (`module:<name>`, plus `module:kit`, `module:ui`, `module:deploy`, `module:setup`, `module:ci`), instead of one per repo. Cross-module work: children first, then a parent here with one "Order:" line, children linked as sub-issues, only the first child `ready`. A contract change is its own child, first in the order.
 - Labels: `ready`, `idea`, `epic`, `blocked`, `in-progress`, plus module labels.
 - Standard body, in this order: `## Goal`, `## Acceptance criteria` (checkboxes), `## Files likely involved`, `## Out of scope`, and `## Plan` (commit-pinned link) when it belongs to a plan. An `idea` may omit criteria until its open question is decided.
 - Branches: `<n>-short-name` (from the title: lowercase, hyphens, max ~4 words). One issue per PR. Nobody pushes to main.
