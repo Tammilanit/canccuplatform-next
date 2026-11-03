@@ -1,0 +1,102 @@
+name: Claude review
+
+# Never pull_request_target: PR code must not run with secrets of the base repo.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+  merge_group:
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: write
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# The job name is the required-check name for branch rules. Do not rename it.
+jobs:
+  claude-review:
+    name: claude-review
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Decide whether to review
+        id: gate
+        env:
+          EVENT: ${{ github.event_name }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$EVENT" = "merge_group" ]; then
+            msg="Merge queue: the PR was reviewed before it was queued; skipping."
+          elif [ "$HEAD_REPO" != "$REPO" ]; then
+            msg="Fork PR: secrets are unavailable, so the Claude review is skipped. A maintainer reviews the PR when approving the run."
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "::notice title=Claude review skipped::$msg"
+          echo "### Claude review skipped" >> "$GITHUB_STEP_SUMMARY"
+          echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+          echo "run=false" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          fetch-depth: 0
+
+      - name: Review
+        id: review
+        if: steps.gate.outputs.run == 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Read .github/claude-review.md and follow it exactly.
+            Repository: ${{ github.repository }}
+            Pull request: #${{ github.event.pull_request.number }}
+            Base SHA: ${{ github.event.pull_request.base.sha }}
+            Head SHA: ${{ github.event.pull_request.head.sha }}
+          claude_args: |
+            --max-turns 40
+            --allowedTools "Read,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue view:*)"
+            --json-schema '{"type":"object","properties":{"verdict":{"type":"string","enum":["PASS","FAIL"]},"issue":{"type":["integer","null"]},"reasons":{"type":"array","items":{"type":"string"}},"changes":{"type":"array","items":{"type":"string"}}},"required":["verdict","issue","reasons","changes"]}'
+
+      - name: Verdict and comment
+        if: always() && steps.gate.outputs.run == 'true'
+        env:
+          RESULT: ${{ steps.review.outputs.structured_output }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          verdict=$(printf '%s' "$RESULT" | jq -r '.verdict // empty' 2>/dev/null || true)
+          marker='<!-- claude-review -->'
+          if [ -n "$verdict" ]; then
+            issue=$(printf '%s' "$RESULT" | jq -r 'if .issue then "issue #\(.issue)" else "no linked issue" end')
+            body=$(printf '%s' "$RESULT" | jq -r --arg m "$marker" --arg i "$issue" --arg u "$RUN_URL" \
+              '$m + "\n**Claude review: " + .verdict + "** — " + $i + "\n"
+               + ([.reasons[] | "- " + .] | join("\n"))
+               + (if (.changes | length) > 0 then "\n\nTo change:\n" + ([.changes[] | "- " + .] | join("\n")) else "" end)
+               + "\n\n[Run](" + $u + ")"')
+          else
+            body="$marker"$'\n'"**Claude review: no verdict** — the review did not finish; see the [run]($RUN_URL)."
+          fi
+          printf '%s\n' "$body" >> "$GITHUB_STEP_SUMMARY"
+          # One comment per PR: update the earlier one if it exists.
+          id=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+            --jq "[.[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\")))][0].id // empty" | head -1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$id" -f body="$body" > /dev/null
+          else
+            gh api -X POST "repos/$REPO/issues/$PR/comments" -f body="$body" > /dev/null
+          fi
+          case "$verdict" in
+            PASS) echo "Claude review passed." ;;
+            FAIL) echo "::error title=Claude review failed::See the review comment on the PR."; exit 1 ;;
+            *) echo "::error title=Claude review gave no verdict::Treating a missing verdict as a failure."; exit 1 ;;
+          esac
