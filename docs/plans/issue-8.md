@@ -24,10 +24,10 @@ Branch `8-theme-tokens-components`. Parent epic #15 (after #7, before #9). The s
 | D8 | Font values are only accepted if they match `^[A-Za-z0-9 _-]{1,64}$` and are emitted quoted, followed by the default stack as fallback. Colours are only accepted if they match the schema pattern | `themeCss` writes profile text into CSS, so this stops CSS or HTML injection even when a profile skipped validation |
 | D9 | `radius` (`--cp-radius`, `0.5rem`) is a default in `ui.css` only and can't be set from the profile | As stated in the issue's Out of scope; a later additive contract PR can add `theme.radii` |
 | D10 | Logo: `logoPath(profile)` returns `profile.logos?.main`. `page({logoUrl})` takes a URL that the module resolves | The asset path is relative to the event folder; serving files is the module's job, not the UI's |
-| D11 | Every component escapes text and attribute values through one `escapeHtml`. Children passed in as `Html` (a branded string returned by components and `html\`\``) are not escaped again | It's safe by default, and components can still nest |
+| D11 | Every component escapes text and attribute values through one `escapeHtml`. Children passed in as `Html` (a small wrapper class returned by components, `html\`\`` and `raw`) are not escaped again | It's safe by default, and components can still nest. A class rather than a branded string, because a brand doesn't exist at runtime, so `html` couldn't tell markup from text |
 | D12 | Tests: `vitest` 5.1.0 with file snapshots for each component's HTML | The same runner as kit-ts; snapshots make markup changes visible in review |
 | D13 | Schema check in tests: `ajv` 8.20.0 + `ajv-formats` 3.0.1 (`Ajv2020`, `strict: true`) validates a profile that uses every default token against `contracts/profile.schema.json` | These are the same validator versions `scripts/check-contracts` runs (ajv-cli 5.0.0 uses ajv 8). It proves the token names and default values are legal profile content |
-| D14 | Lint: `eslint` 10.14.0 + `typescript-eslint` 8.72.1 + `@eslint/js` 10.0.1, `prettier` 3.9.10; `typescript` 6.0.3; `@types/node` 22.20.5; `yaml` 2.9.1 (dev, reads the demo profile) | These are kit-ts's exact pins, so the repo has one toolchain |
+| D14 | Lint: `eslint` 10.14.0 + `typescript-eslint` 8.72.1 + `@eslint/js` 10.0.1, `prettier` 3.9.10; `typescript` 6.0.3; `@types/node` 22.20.5; `yaml` 2.9.1 (dev, reads the demo profile); prettier `embeddedLanguageFormatting: "off"` | These are kit-ts's exact pins, so the repo has one toolchain. Prettier would otherwise reformat the `html` templates as HTML and break the markup |
 | D15 | Exact versions only, with no `^` or `~` | "Pin versions" (#7 D23) |
 | D16 | CI: add a job `lint-types-test (ui)` to `.github/workflows/ci.yml`, a copy of the kit-ts job with `working-directory: packages/ui` | The acceptance criterion says the tests run in CI; it adds a new required-check name and renames nothing |
 
@@ -74,7 +74,7 @@ Non-profile default: `--cp-radius: 0.5rem`.
 | `packages/ui/src/components.ts`, `src/index.ts` | new | The five components; the public exports |
 | `packages/ui/test/*.test.ts`, `test/__snapshots__/` | new | Tests below |
 | `packages/ui/README.md` | new | Token table, a usage example for TS (Fastify), markup for Python modules, how to serve `ui.css`, the check command |
-| `.github/workflows/ci.yml` | changed | The `lint-types-test (ui)` job (D16) |
+| `.github/workflows/ci.yml`, `docs/ci.md` | changed | The `lint-types-test (ui)` job (D16) and its row in the checks table |
 
 ## Tests
 - **Schema:** a profile `{schema_version: 1, name, modules: ["admin"], theme: {colors: <all defaults>, fonts: <all defaults>}}` validates against `contracts/profile.schema.json`, which the test reads from disk. Every token name matches `$defs.key`.
@@ -103,10 +103,8 @@ Non-profile default: `--cp-radius: 0.5rem`.
 - `scripts/check-contracts` is still green (the demo profile is unchanged).
 - The CI job `lint-types-test (ui)` is green on the PR.
 
-## Open point for the maintainer
-The criterion "Used by the admin pages (#10, #11)" can't be met inside this PR, because `modules/admin` is still empty and #10 is `blocked`. In this PR, #8 delivers an API shaped for those pages, plus the README example. Two options:
-- Reword the criterion to "ready for the admin pages (#10, #11)".
-- Leave it as it is and tick it when #10 and #11 merge, with #8 closed by hand.
+## Decided
+The criterion now reads "Ready to use by the admin pages (#10, #11); tick it when they merge". This PR delivers the API and the README example.
 
 ## Out of scope
 - A UI framework and client JS.
