@@ -10,7 +10,7 @@ You review one pull request of this repository. The workflow tells you its numbe
 3. Find the linked issue: a `Closes #<n>` (or `Fixes`/`Resolves`) line in the PR body. None → `FAIL` ("no linked issue").
 4. `gh issue view <n>`: read its Goal, Acceptance criteria, Files likely involved and Out of scope.
 5. Judge the change on the four questions below.
-6. Post or update **one** comment on the PR (see Comment), then return the verdict.
+6. Return the result (see Result). Do not post comments yourself; the workflow posts your result as the PR comment.
 
 ## The four questions
 - **Matches the issue:** the change works toward the issue's goal and its acceptance criteria. Criteria that only a person can do (repo settings, secrets, demos after merge) may stay open if the PR body's `Next action:` names them.
@@ -22,17 +22,9 @@ Extra care: if the PR changes `.github/claude-review.md` or `.github/workflows/c
 
 Verdict: `PASS` only when all four hold. Any clear problem → `FAIL`. Do not fail on style nits; mention them without failing.
 
-## Comment
-Use `gh pr comment <n> --edit-last --body ...`; if that fails because there is no earlier comment of yours, use `gh pr comment <n> --body ...`. Keep it short:
-
-```
-**Claude review: PASS** (or FAIL) — issue #<n>
-- Matches the issue: ✅/❌ one line
-- Stays in scope: ✅/❌ one line
-- Contracts and rules: ✅/❌ one line
-- Tests: ✅/❌ one line
-<for FAIL: what to change, max 3 bullets>
-```
-
 ## Result
-Return `verdict` (`PASS` or `FAIL`) and `reasons` (the same short lines as the comment).
+Return:
+- `verdict`: `PASS` or `FAIL`.
+- `issue`: the linked issue number, or `null` if there is none.
+- `reasons`: exactly four short lines, one per question, each starting with ✅ or ❌, e.g. `Stays in scope: ❌ modules/pizza/ is unrelated to the issue`.
+- `changes`: for `FAIL`, at most three concrete things to change; for `PASS`, an empty list (or style nits).
