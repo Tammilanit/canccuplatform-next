@@ -40,7 +40,7 @@ Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switc
 5. **Check** before asking for review: run the checks of the modules you touched (see Run and test). For scripts, run them once with `--dry-run` or against an unreachable host and confirm a clear failure.
 6. **Commit** with conventional commits, the module as scope: `feat(screen): …`, `fix(bot): …`, `docs(map): …`.
 7. **PR**: title = the commit subject; body starts with `Closes #<n>` and ends with a `Next action:` line (what remains, or `none`) and `Verification run: <what> — <result>` (or `none — <reason>`). The PR description is the handoff: anyone picking the work up reads it there. Do not commit handoff or session notes.
-8. **Done** = PR ready for review, all acceptance criteria met, and auto-merge enabled (`gh pr merge --auto --squash --delete-branch`, or the button). Never merge by hand; GitHub merges when the gates pass.
+8. **Done** = PR ready for review, all acceptance criteria met, and auto-merge enabled (`gh pr merge <pr> --auto`, or the button; the merge queue sets the strategy and rejects `--delete-branch` and strategy flags). Never merge by hand; GitHub merges when the gates pass.
 
 `ready` and `in-progress` are maintainer bookkeeping; contributors do not need to set them.
 
