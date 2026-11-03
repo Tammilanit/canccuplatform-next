@@ -83,3 +83,14 @@ jobs:
           EVENT_NAMES_SKIP_IF_MISSING: ${{ github.event.pull_request.head.repo.full_name != github.repository && '1' || '0' }}
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: scripts/check-event-names "$BASE"
+
+  contracts:
+    name: contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate profiles and lint OpenAPI contracts
+        run: scripts/check-contracts

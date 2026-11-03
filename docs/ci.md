@@ -8,9 +8,15 @@
 | `lint-types-test (kit-ts)` | In `packages/kit-ts`: `npm run lint`, `npm run typecheck`, `npm test`. Passes with "empty package" while there is no `package.json`. |
 | `lint-types-test (kit-py)` | In `packages/kit-py`: `ruff check .`, `mypy .`, `pytest`. Passes while there is no `pyproject.toml`; the package must offer a `dev` extra with these tools. |
 | `no-event-names` | Fails if the lines a PR adds contain a forbidden term. |
+| `contracts` | `scripts/check-contracts`: validates every `events/*/profile.yaml` against `contracts/profile.schema.json`, checks its asset paths exist, and lints `contracts/*.openapi.yaml` with Redocly (`contracts/redocly.yaml`). |
 | `claude-review` | From `.github/workflows/claude-review.yml`: Claude reviews the PR against its linked issue (see below). |
 
 Do not rename these jobs; renaming breaks the required checks.
+
+## contracts
+- `scripts/check-contracts [--dry-run]`; tools come through `npx` with pinned versions (ajv-cli, ajv-formats, @redocly/cli), so it needs Node 22 and no `package.json`.
+- Fails (exit 1) on an invalid profile, a missing asset or an OpenAPI lint error; exit 2 on wrong usage or missing files.
+- **Required check:** after this job first runs on main, a maintainer adds `contracts` to the required checks of the main ruleset. Do not rename the job.
 
 ## no-event-names
 - `scripts/check-event-names [--dry-run] [BASE]` scans added lines of `BASE...HEAD`, case-insensitively.

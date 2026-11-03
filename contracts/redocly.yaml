@@ -1,0 +1,6 @@
+# Lint config for the OpenAPI contracts (scripts/check-contracts).
+extends:
+  - recommended-strict
+rules:
+  # /health has no client errors by design: it takes no input and no auth.
+  operation-4xx-response: off
