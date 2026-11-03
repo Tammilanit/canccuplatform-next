@@ -6,7 +6,7 @@ The rules are in [AGENTS.md](../AGENTS.md); machine setup is in [CONTRIBUTING.md
 1. **Issue:** pick one labelled `ready` and assign yourself (forks: comment "I'll take this").
 2. **Branch:** `<n>-short-name`, one issue per branch. On the repo if you have write access, otherwise on your fork.
 3. **Draft PR:** open it early. Title = the commit subject; body starts with `Closes #<n>` and ends with `Next action:` and `Verification run:`.
-4. **Ready and auto-merge:** when all acceptance criteria are met, mark the PR ready and enable auto-merge: `gh pr merge --auto --squash --delete-branch`.
+4. **Ready and auto-merge:** when all acceptance criteria are met, mark the PR ready and enable auto-merge: `gh pr merge <pr> --auto`. The merge queue sets the strategy and rejects `--delete-branch` and strategy flags.
 5. **Merge queue:** GitHub merges the PR when the required checks are green. Never merge by hand.
 
 ## What protects `main`
