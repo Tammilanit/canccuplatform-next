@@ -41,6 +41,32 @@ jobs:
       - if: steps.pkg.outputs.present == 'true'
         run: npm test
 
+  ui:
+    name: lint-types-test (ui)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/ui
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect package
+        id: pkg
+        run: |
+          if [ -f package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"
+          else echo "empty package, skipping"; echo "present=false" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/setup-node@v4
+        if: steps.pkg.outputs.present == 'true'
+        with:
+          node-version: 22
+      - if: steps.pkg.outputs.present == 'true'
+        run: npm ci
+      - if: steps.pkg.outputs.present == 'true'
+        run: npm run lint
+      - if: steps.pkg.outputs.present == 'true'
+        run: npm run typecheck
+      - if: steps.pkg.outputs.present == 'true'
+        run: npm test
+
   kit-py:
     name: lint-types-test (kit-py)
     runs-on: ubuntu-latest
