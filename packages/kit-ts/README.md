@@ -104,3 +104,15 @@ npm ci && npm run lint && npm run typecheck && npm test
 ```
 
 CI runs the same commands (job `lint-types-test (kit-ts)`).
+
+## Integration test
+
+The store and bus run against the real Valkey from the Compose stack: publish with MAXLEN (exact and `~`), subscribe, and dedupe of an entry added twice. The test is skipped unless `CP_VALKEY_URL` is set, so the check above stays offline.
+
+```sh
+docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml up -d --wait valkey
+CP_VALKEY_URL=redis://127.0.0.1:6379 npx vitest run test/valkey.integration.test.ts
+docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml down
+```
+
+`compose.test.yml` publishes Valkey on `127.0.0.1:6379` only. CI runs this as the `integration (kit)` job.

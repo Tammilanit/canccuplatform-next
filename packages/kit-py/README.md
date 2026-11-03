@@ -90,3 +90,12 @@ The kit writes nothing to disk. Its only in-memory items are the rights cache (â
 pip install -e ".[dev]" && ruff check . && ruff format --check . && mypy . && pytest
 ```
 CI runs `ruff check .`, `mypy .` and `pytest` (job `lint-types-test (kit-py)`).
+
+## Integration test
+The store and bus run against the real Valkey from the Compose stack: publish with MAXLEN (exact and `~`), subscribe, and dedupe of an entry added twice. The test is skipped unless `CP_VALKEY_URL` is set, so the check above stays offline.
+```sh
+docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml up -d --wait valkey
+CP_VALKEY_URL=redis://127.0.0.1:6379 pytest tests/test_valkey_integration.py
+docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml down
+```
+`compose.test.yml` publishes Valkey on `127.0.0.1:6379` only. CI runs this as the `integration (kit)` job.

@@ -1,0 +1,87 @@
+# CanccuPlatform on one machine, IP mode: `docker compose -f deploy/compose.yml up -d`
+# Only Caddy publishes a port. Containers keep no state: data lives in the postgres-data,
+# valkey-data and files volumes.
+name: canccuplatform
+
+x-kit-env: &kit-env
+  CP_VERSION: ${CP_VERSION:-dev}
+  CP_VALKEY_URL: redis://valkey:6379
+  # The admin module does not exist yet; this is its future address.
+  CP_ADMIN_URL: http://admin:8080
+
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    environment:
+      POSTGRES_USER: cp
+      POSTGRES_DB: cp
+      # Placeholder for local use only. Real installs set POSTGRES_PASSWORD in deploy/.env
+      # (see .env.example); the setup wizard will generate it.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cp-local-only}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cp -d cp"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  valkey:
+    image: valkey/valkey:8.1-alpine
+    command: ["valkey-server", "--appendonly", "yes"]
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  hello:
+    build:
+      context: ..
+      dockerfile: modules/hello/Dockerfile
+    environment:
+      <<: *kit-env
+      CP_MODULE: hello
+      CP_DATABASE_URL: postgres://cp:${POSTGRES_PASSWORD:-cp-local-only}@postgres:5432/cp
+    volumes:
+      - files:/files
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2.11-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    # The image declares /data and /config volumes; http mode stores nothing there, so keep
+    # them in memory instead of creating anonymous volumes.
+    tmpfs:
+      - /data
+      - /config
+    depends_on:
+      - hello
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  valkey-data:
+  # Shared files (uploads, profile assets); mounted at /files in every module that needs it.
+  files:
