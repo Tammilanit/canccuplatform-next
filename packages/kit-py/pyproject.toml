@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling==1.33.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cp-kit"
+version = "0.1.0"
+description = "Shared plumbing for CanccuPlatform modules: bus, health, settings, rights, errors, logging."
+requires-python = ">=3.12"
+dependencies = [
+  "valkey==6.2.0",
+  "httpx==0.28.1",
+  "uuid6==2025.0.1",
+]
+
+[project.optional-dependencies]
+starlette = ["starlette==1.10.0"]
+dev = [
+  "starlette==1.10.0",
+  "pytest==9.2.0",
+  "pytest-asyncio==1.4.1.post1",
+  "ruff==0.17.3",
+  "mypy==2.4.1",
+  "pyyaml==6.0.3",
+  "types-PyYAML==6.0.12.20261103",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cp_kit"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "ASYNC", "RUF"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+mypy_path = "src"
+files = ["src", "tests"]
+explicit_package_bases = true
+exclude = ["^\\.venv/"]
+
+[[tool.mypy.overrides]]
+module = ["uuid6"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
