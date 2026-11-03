@@ -45,8 +45,8 @@ Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switc
 `ready` and `in-progress` are maintainer bookkeeping; contributors do not need to set them.
 
 ## Run and test
-- **Whole platform:** one Docker Compose command starts the full stack on the demo event (`events/demo/`). The command lands with the Compose and demo-event issues and is written here then; until then nothing runs (skeleton).
-- **Per module:** each module's README names its check command (lint, types, unit tests). CI runs the same commands. No module has checks yet; say so in `Verification run`.
+- **Whole platform:** `docker compose -f deploy/compose.yml up -d` starts Postgres, Valkey, Caddy (IP mode, plain http on port 80) and the modules; `http://<host-ip>/api/hello/health` answers when it is up. Caddy routes machine endpoints under `/api/<module>/` and module pages under `/<module>/`, stripping the prefix. The demo event (`events/demo/`) is loaded once the demo-event issue lands.
+- **Per module:** each module's README names its check command (lint, types, unit tests). CI runs the same commands. `modules/hello` (a test module) is the first with checks.
 - Local machines: see [CONTRIBUTING.md](CONTRIBUTING.md) for Linux, Windows (WSL2) and macOS.
 
 ## Merge rules

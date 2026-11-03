@@ -67,6 +67,84 @@ jobs:
       - if: steps.pkg.outputs.present == 'true'
         run: pytest
 
+  integration-kit:
+    name: integration (kit)
+    runs-on: ubuntu-latest
+    env:
+      CP_VALKEY_URL: redis://127.0.0.1:6379
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start Valkey from the Compose stack
+        run: docker compose -f deploy/compose.yml -f deploy/compose.test.yml up -d --wait valkey
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: kit-ts against Valkey
+        working-directory: packages/kit-ts
+        run: npm ci && npx vitest run test/valkey.integration.test.ts
+      - name: kit-py against Valkey
+        working-directory: packages/kit-py
+        run: pip install -e ".[dev]" && pytest tests/test_valkey_integration.py
+      - name: Valkey logs
+        if: failure()
+        run: docker compose -f deploy/compose.yml logs valkey
+      - if: always()
+        run: docker compose -f deploy/compose.yml -f deploy/compose.test.yml down -v
+
+  compose:
+    name: compose (deploy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: hello checks
+        run: |
+          (cd packages/kit-ts && npm ci)
+          cd modules/hello && npm ci && npm run lint && npm run typecheck && npm test
+      - name: Start the stack (clean runner, only Docker)
+        run: docker compose -f deploy/compose.yml up -d --build --wait
+      - name: Only Caddy publishes a port; only the three named volumes exist
+        run: |
+          docker compose -f deploy/compose.yml config --format json > /tmp/config.json
+          jq -e '[.services | to_entries[] | select(.value.ports) | .key] == ["caddy"]' /tmp/config.json
+          jq -e '.volumes | keys == ["files", "postgres-data", "valkey-data"]' /tmp/config.json
+          test "$(docker volume ls -q --filter label=com.docker.compose.project=canccuplatform | sort | tr '\n' ' ')" \
+            = "canccuplatform_files canccuplatform_postgres-data canccuplatform_valkey-data "
+      - name: Health through Caddy is 200 ok
+        run: |
+          code=$(curl -s -o /tmp/health.json -w '%{http_code}' http://localhost/api/hello/health)
+          cat /tmp/health.json; echo
+          test "$code" = 200
+          jq -e '.status == "ok" and .module == "hello" and .checks.valkey.status == "ok" and .checks.postgres.status == "ok"' /tmp/health.json
+      - name: Health is 503 down when Valkey is stopped
+        run: |
+          docker compose -f deploy/compose.yml stop valkey
+          for i in $(seq 1 15); do
+            code=$(curl -s -o /tmp/health.json -w '%{http_code}' http://localhost/api/hello/health || true)
+            if [ "$code" = 503 ] && jq -e '.status == "down" and .checks.valkey.status == "down"' /tmp/health.json; then
+              cat /tmp/health.json; echo; exit 0
+            fi
+            sleep 1
+          done
+          echo "expected 503 down, last answer: $code"; cat /tmp/health.json; exit 1
+      - name: hello stops at start when a kit variable is missing
+        run: |
+          if docker compose -f deploy/compose.yml run --rm --no-deps -e CP_ADMIN_URL= hello > /tmp/start.log 2>&1; then
+            echo "hello started without CP_ADMIN_URL"; cat /tmp/start.log; exit 1
+          fi
+          cat /tmp/start.log
+          grep -q "missing environment variable(s): CP_ADMIN_URL" /tmp/start.log
+      - name: Logs
+        if: failure()
+        run: docker compose -f deploy/compose.yml logs
+      - if: always()
+        run: docker compose -f deploy/compose.yml down -v
+
   no-event-names:
     name: no-event-names
     runs-on: ubuntu-latest

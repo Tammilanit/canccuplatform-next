@@ -1,0 +1,17 @@
+# IP mode: plain http on port 80, no certificates (the TLS option follows #5).
+# Routing: machine endpoints under /api/<module>/, module pages under /<module>/.
+# handle_path strips the prefix, so each module keeps its own paths (/health, ...).
+{
+	auto_https off
+	admin off
+}
+
+:80 {
+	handle_path /api/hello/* {
+		reverse_proxy hello:8080
+	}
+
+	handle {
+		respond "not found" 404
+	}
+}
