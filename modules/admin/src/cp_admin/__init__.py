@@ -1,0 +1,1 @@
+"""CanccuPlatform admin module."""

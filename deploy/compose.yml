@@ -6,7 +6,6 @@ name: canccuplatform
 x-kit-env: &kit-env
   CP_VERSION: ${CP_VERSION:-dev}
   CP_VALKEY_URL: redis://valkey:6379
-  # The admin module does not exist yet; this is its future address.
   CP_ADMIN_URL: http://admin:8080
 
 services:
@@ -65,6 +64,36 @@ services:
       retries: 30
     restart: unless-stopped
 
+  admin:
+    build:
+      context: ..
+      dockerfile: modules/admin/Dockerfile
+    environment:
+      <<: *kit-env
+      CP_MODULE: admin
+      CP_DATABASE_URL: postgres://cp:${POSTGRES_PASSWORD:-cp-local-only}@postgres:5432/cp
+      CP_EVENT_DIR: /files/event
+      CP_HEALTH_TARGETS: hello=http://hello:8080/health
+    volumes:
+      - files:/files
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      hello:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys,urllib.request as u; sys.exit(0 if u.urlopen('http://127.0.0.1:8080/health').status==200 else 1)"
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
   caddy:
     image: caddy:2.11-alpine
     ports:
@@ -78,6 +107,7 @@ services:
       - /config
     depends_on:
       - hello
+      - admin
     restart: unless-stopped
 
 volumes:
