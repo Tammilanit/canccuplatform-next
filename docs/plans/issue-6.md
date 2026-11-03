@@ -58,7 +58,7 @@ Branch `6-admin-profile-contract`. Parent epic #15; runs in parallel with #5 (th
 ## Demo profile and assets
 - `events/demo/profile.yaml`: name "Demo Event", all nine modules, a few demo settings, a theme, one logo, one sound.
 - `assets/logo.svg`: hand-written SVG with the text "Demo". `assets/sounds/chime.wav`: a short sine tone generated once with Python's `wave` module (the generator is not committed; `profile.md` notes how it was made).
-- Nothing from legacy repos; no real event names (the `no-event-names` check covers it).
+- Nothing event-specific from legacy repos; no real event names (the `no-event-names` check covers it).
 
 ## Validation command
 - `scripts/check-contracts [--dry-run]`:
