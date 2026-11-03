@@ -1,0 +1,10 @@
+settings:
+  - key: timezone
+    type: string
+    label: Time zone
+    default: UTC
+  - key: language
+    type: string
+    label: Language
+    default: en
+    choices: [en, fi]

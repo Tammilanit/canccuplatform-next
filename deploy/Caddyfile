@@ -11,6 +11,21 @@
 		reverse_proxy hello:8080
 	}
 
+	# Admin's API paths are part of its contract (/api/admin/...), so they are not stripped;
+	# only its health endpoint is mapped to the shared /health.
+	handle /api/admin/health {
+		rewrite * /health
+		reverse_proxy admin:8080
+	}
+
+	handle /api/admin/* {
+		reverse_proxy admin:8080
+	}
+
+	handle_path /admin/* {
+		reverse_proxy admin:8080
+	}
+
 	handle {
 		respond "not found" 404
 	}
