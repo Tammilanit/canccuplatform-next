@@ -2,7 +2,7 @@
 
 The shared rules for everyone who works here: maintainers, contributors with write access and fork contributors, whether they use Claude, Cursor, Copilot, Codex or no AI tool at all. This file is the source; tool-specific files (CLAUDE.md and others) only import or point to it.
 
-Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switch). It is the system repo of its project: parent issues for cross-module work live here. An event lives in its own repo, which names the platform version it runs; the platform never names an event. Old repos (canccuplatform, canccubot, canccusignage, …) are legacy: read them for ideas, never copy from them.
+Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switch). It is the system repo of its project: parent issues for cross-module work live here. An event lives in its own repo, which names the platform version it runs; the platform never names an event. Old repos (canccuplatform, canccubot, canccusignage, …) are legacy: each module is ported from them (see Porting).
 
 ## Layout
 - `modules/<name>` — one module each, each its own container: screen, tournament, pizza, bot, admin, games, moments, voices, cast.
@@ -14,7 +14,7 @@ Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switc
 - Modules talk only through their API and events (`contracts/`), never through each other's data.
 - Containers keep no state: data and sessions in Postgres, events and caches in Valkey, files in the shared files volume.
 - One version for the whole platform; a release is a git tag.
-- Fresh start: no code or history is copied from legacy repos; only agreed picks from the harvest are rewritten here.
+- Porting: each module is PORTED from the proven legacy code. Take the code and tests and adapt them to Postgres, the kit, containers and the contracts. Scrub every event-specific string and all event content to `events/demo/` or the event repo. Never import legacy git history or legacy docs. Code by other authors keeps its licence and attribution; the tournament module (ISC, c22dragoon) is ported only after his OK.
 - English throughout. Secrets never in the repo.
 - No editing on the VMs: code reaches them only through a merge to main and the deploy that follows.
 
