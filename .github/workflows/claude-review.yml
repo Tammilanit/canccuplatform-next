@@ -1,0 +1,81 @@
+name: Claude review
+
+# Never pull_request_target: PR code must not run with secrets of the base repo.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+  merge_group:
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: write
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# The job name is the required-check name for branch rules. Do not rename it.
+jobs:
+  claude-review:
+    name: claude-review
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Decide whether to review
+        id: gate
+        env:
+          EVENT: ${{ github.event_name }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$EVENT" = "merge_group" ]; then
+            msg="Merge queue: the PR was reviewed before it was queued; skipping."
+          elif [ "$HEAD_REPO" != "$REPO" ]; then
+            msg="Fork PR: secrets are unavailable, so the Claude review is skipped. A maintainer reviews the PR when approving the run."
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "::notice title=Claude review skipped::$msg"
+          echo "### Claude review skipped" >> "$GITHUB_STEP_SUMMARY"
+          echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+          echo "run=false" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          fetch-depth: 0
+
+      - name: Review
+        id: review
+        if: steps.gate.outputs.run == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Read .github/claude-review.md and follow it exactly.
+            Repository: ${{ github.repository }}
+            Pull request: #${{ github.event.pull_request.number }}
+            Base SHA: ${{ github.event.pull_request.base.sha }}
+            Head SHA: ${{ github.event.pull_request.head.sha }}
+          claude_args: |
+            --max-turns 40
+            --allowedTools "Read,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue view:*),Bash(gh pr comment:*),Bash(gh api:*)"
+            --json-schema '{"type":"object","properties":{"verdict":{"type":"string","enum":["PASS","FAIL"]},"reasons":{"type":"array","items":{"type":"string"}}},"required":["verdict","reasons"]}'
+
+      - name: Verdict
+        if: steps.gate.outputs.run == 'true'
+        env:
+          RESULT: ${{ steps.review.outputs.structured_output }}
+        run: |
+          verdict=$(printf '%s' "$RESULT" | jq -r '.verdict // empty' 2>/dev/null || true)
+          {
+            echo "### Claude review: ${verdict:-no verdict}"
+            printf '%s' "$RESULT" | jq -r '.reasons[]? | "- " + .' 2>/dev/null || true
+          } >> "$GITHUB_STEP_SUMMARY"
+          case "$verdict" in
+            PASS) echo "Claude review passed." ;;
+            FAIL) echo "::error title=Claude review failed::See the review comment on the PR."; exit 1 ;;
+            *) echo "::error title=Claude review gave no verdict::Treating a missing verdict as a failure."; exit 1 ;;
+          esac
