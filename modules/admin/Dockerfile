@@ -5,7 +5,9 @@ WORKDIR /repo
 COPY packages/kit-py/ packages/kit-py/
 COPY contracts/profile.schema.json contracts/profile.schema.json
 COPY modules/admin/ modules/admin/
-RUN pip install ./modules/admin
+# pip resolves the relative kit path against the wrong directory in a build; make it absolute.
+RUN sed -i 's#file:../../packages/kit-py#file:///repo/packages/kit-py#' modules/admin/pyproject.toml \
+ && pip install ./modules/admin
 WORKDIR /repo/modules/admin
 ENV CP_CONTRACTS_DIR=/repo/contracts CP_DECLARATIONS_DIR=/repo/modules/admin/declarations
 USER nobody
