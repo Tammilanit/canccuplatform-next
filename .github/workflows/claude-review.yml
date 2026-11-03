@@ -61,7 +61,8 @@ jobs:
             Base SHA: ${{ github.event.pull_request.base.sha }}
             Head SHA: ${{ github.event.pull_request.head.sha }}
           claude_args: |
-            --max-turns 40
+            --model claude-sonnet-5-5
+            --max-turns 12
             --allowedTools "Read,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue view:*)"
             --json-schema '{"type":"object","properties":{"verdict":{"type":"string","enum":["PASS","FAIL"]},"issue":{"type":["integer","null"]},"reasons":{"type":"array","items":{"type":"string"}},"changes":{"type":"array","items":{"type":"string"}}},"required":["verdict","issue","reasons","changes"]}'
 
