@@ -5,8 +5,8 @@
 ## Checks (names are stable; branch rules require them)
 | Check | What it does |
 |---|---|
-| `lint-types-test (kit-ts)` | In `packages/kit-ts`: `npm run lint`, `npm run typecheck`, `npm test`. Passes with "empty package" while there is no `package.json`. |
-| `lint-types-test (kit-py)` | In `packages/kit-py`: `ruff check .`, `mypy .`, `pytest`. Passes while there is no `pyproject.toml`; the package must offer a `dev` extra with these tools. |
+| `lint-types-test (kit-ts)` | In `packages/kit-ts`: `npm ci`, `npm run lint` (eslint + prettier), `npm run typecheck`, `npm test` (vitest). |
+| `lint-types-test (kit-py)` | In `packages/kit-py`: `pip install -e ".[dev]"`, `ruff check .`, `mypy .` (strict), `pytest`. The `dev` extra pins these tools. |
 | `no-event-names` | Fails if the lines a PR adds contain a forbidden term. |
 | `contracts` | `scripts/check-contracts`: validates every `events/*/profile.yaml` against `contracts/profile.schema.json`, checks its asset paths exist, and lints `contracts/*.openapi.yaml` with Redocly (`contracts/redocly.yaml`). |
 | `claude-review` | From `.github/workflows/claude-review.yml`: Claude reviews the PR against its linked issue (see below). |
