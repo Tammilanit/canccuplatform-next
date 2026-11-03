@@ -1,0 +1,337 @@
+openapi: 3.1.0
+info:
+  title: Admin API
+  version: 1.0.0
+  summary: Settings, health, session and rights, profile save and load.
+  description: |
+    Machine-readable part of the admin contract. Prose, rules and events: contracts/admin.md.
+    Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
+    The `/health` operation and the `Health` schema are shared: every module serves the same shape.
+  license:
+    name: AGPL-3.0
+    identifier: AGPL-3.0-only
+servers:
+  - url: /
+    description: Same origin, behind Caddy.
+tags:
+  - name: health
+    description: Health of a module. Every module serves it.
+  - name: settings
+    description: Per-module settings stored by admin.
+  - name: session
+    description: The signed-in user and their rights.
+  - name: profile
+    description: Export and import of the event profile.
+security:
+  - session: []
+paths:
+  /health:
+    get:
+      tags: [health]
+      operationId: getHealth
+      summary: Health of this module
+      description: Served by every module at its own `/health`. No authentication.
+      security: []
+      responses:
+        "200":
+          description: Status `ok` or `degraded`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        "503":
+          description: Status `down`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+  /api/admin/settings/{module}:
+    parameters:
+      - $ref: "#/components/parameters/Module"
+    get:
+      tags: [settings]
+      operationId: getSettings
+      summary: Read a module's settings
+      description: Needs right `admin.settings.read`, or `<module>.settings.read` for that module's own settings.
+      responses:
+        "200":
+          description: The settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [settings]
+      operationId: putSettings
+      summary: Replace a module's settings
+      description: |
+        Needs right `admin.settings.write`. Optimistic concurrency: send the `settings_version` you read;
+        a stale one gets 409 `version_conflict`. On success `settings_version` goes up by one and
+        `admin.settings.changed` is emitted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsUpdate"
+      responses:
+        "200":
+          description: The stored settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/admin/session:
+    get:
+      tags: [session]
+      operationId: getSession
+      summary: The signed-in user and their rights
+      description: |
+        Modules check rights by calling this with the user's `cp_session` cookie and looking for the
+        right in `rights`. The kit wraps this call.
+      responses:
+        "200":
+          description: The session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/admin/session/sign-out:
+    post:
+      tags: [session]
+      operationId: signOut
+      summary: End the session
+      responses:
+        "204":
+          description: Signed out; the cookie is cleared.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/admin/profile:
+    get:
+      tags: [profile]
+      operationId: exportProfile
+      summary: Export the current profile
+      description: Needs right `admin.profile.read`. A zip of `profile.yaml` and `assets/` (contracts/profile.md).
+      responses:
+        "200":
+          description: The profile as a zip.
+          content:
+            application/zip:
+              schema:
+                type: string
+                contentMediaType: application/zip
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    put:
+      tags: [profile]
+      operationId: importProfile
+      summary: Import a profile
+      description: |
+        Needs right `admin.profile.write`. The profile is upgraded step by step to the current
+        `schema_version`, validated, then applied. Emits `admin.profile.loaded`.
+        Errors: 400 `profile_invalid`, 400 `profile_too_new`.
+      requestBody:
+        required: true
+        content:
+          application/zip:
+            schema:
+              type: string
+              contentMediaType: application/zip
+      responses:
+        "200":
+          description: Applied.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: cp_session
+      description: Opaque session id, stored in Postgres. Set by sign-in (issue #10).
+  parameters:
+    Module:
+      name: module
+      in: path
+      required: true
+      description: Module name.
+      schema:
+        $ref: "#/components/schemas/ModuleName"
+  responses:
+    BadRequest:
+      description: Invalid request.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: No valid session.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Signed in, but the right is missing.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Unknown module.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: "`version_conflict`: the settings changed since they were read."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    ModuleName:
+      type: string
+      enum: [screen, tournament, pizza, bot, admin, games, moments, voices, cast]
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              pattern: "^[a-z][a-z0-9_]*$"
+              examples: [version_conflict]
+            message:
+              type: string
+    HealthStatus:
+      type: string
+      enum: [ok, degraded, down]
+    Health:
+      type: object
+      required: [status, module, version, time, checks]
+      properties:
+        status:
+          $ref: "#/components/schemas/HealthStatus"
+        module:
+          $ref: "#/components/schemas/ModuleName"
+        version:
+          type: string
+          description: Platform version (git tag) the module runs.
+          examples: [v0.1.0]
+        time:
+          type: string
+          format: date-time
+        checks:
+          type: object
+          description: One entry per dependency, e.g. `postgres`, `valkey`.
+          additionalProperties:
+            type: object
+            required: [status]
+            properties:
+              status:
+                $ref: "#/components/schemas/HealthStatus"
+              detail:
+                type: string
+    SettingValue:
+      anyOf:
+        - type: string
+        - type: number
+        - type: boolean
+        - type: array
+          items:
+            anyOf:
+              - type: string
+              - type: number
+              - type: boolean
+    Settings:
+      type: object
+      required: [module, settings_version, values]
+      properties:
+        module:
+          $ref: "#/components/schemas/ModuleName"
+        settings_version:
+          type: integer
+          minimum: 0
+          description: Starts at 0 for a module with no stored settings; +1 on every write.
+        values:
+          type: object
+          description: Never secrets.
+          additionalProperties:
+            $ref: "#/components/schemas/SettingValue"
+    SettingsUpdate:
+      type: object
+      required: [settings_version, values]
+      properties:
+        settings_version:
+          type: integer
+          minimum: 0
+        values:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/SettingValue"
+    Session:
+      type: object
+      required: [user, rights, expires_at]
+      properties:
+        user:
+          type: object
+          required: [id, name]
+          properties:
+            id:
+              type: string
+              description: Platform user id.
+            name:
+              type: string
+              description: Display name.
+        rights:
+          type: array
+          items:
+            type: string
+            pattern: "^[a-z]+\\.[a-z0-9_.]+$"
+            examples: [admin.settings.write]
+        expires_at:
+          type: string
+          format: date-time
+    ProfileResult:
+      type: object
+      required: [name, schema_version]
+      properties:
+        name:
+          type: string
+        schema_version:
+          type: integer
+          description: Version after upgrade (the current one).
+        upgraded_from:
+          type: integer
+          description: Present when the imported profile was older.

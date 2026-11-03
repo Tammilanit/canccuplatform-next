@@ -1,0 +1,33 @@
+# Demo event profile. Format: contracts/profile.md. Placeholder content only.
+# assets/logo.svg is hand-written; assets/sounds/chime.wav is a 0.4 s 880 Hz sine tone made with Python's wave module.
+schema_version: 1
+name: Demo Event
+modules:
+  - screen
+  - tournament
+  - pizza
+  - bot
+  - admin
+  - games
+  - moments
+  - voices
+  - cast
+settings:
+  admin:
+    timezone: UTC
+    language: en
+  screen:
+    rotation_seconds: 15
+  pizza:
+    ordering_open: false
+theme:
+  colors:
+    primary: "#3b82f6"
+    background: "#0f172a"
+    text: "#f8fafc"
+  fonts:
+    body: Inter
+logos:
+  main: assets/logo.svg
+sounds:
+  chime: assets/sounds/chime.wav

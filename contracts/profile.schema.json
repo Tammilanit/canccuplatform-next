@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://canccuplatform.invalid/contracts/profile/v1.schema.json",
+  "title": "Event profile v1",
+  "description": "profile.yaml of an event profile. See contracts/profile.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "name",
+    "modules"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Profile format version. This schema accepts only 1.",
+      "type": "integer",
+      "const": 1
+    },
+    "name": {
+      "description": "Display name of the event.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "modules": {
+      "description": "Modules this event runs.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/module"
+      },
+      "uniqueItems": true
+    },
+    "settings": {
+      "description": "Settings per module: {<module>: {<key>: value}}. Never secrets.",
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/module"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "$ref": "#/$defs/key"
+        },
+        "additionalProperties": {
+          "$ref": "#/$defs/setting_value"
+        }
+      }
+    },
+    "theme": {
+      "description": "Theme tokens. Token names follow packages/ui once it exists.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "colors": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/key"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+          }
+        },
+        "fonts": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/key"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "logos": {
+      "description": "Logo files by role: {<role>: <asset path>}.",
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/key"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/asset_path"
+      }
+    },
+    "sounds": {
+      "description": "Sound files by name: {<name>: <asset path>}.",
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/key"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/asset_path"
+      }
+    }
+  },
+  "$defs": {
+    "module": {
+      "enum": [
+        "screen",
+        "tournament",
+        "pizza",
+        "bot",
+        "admin",
+        "games",
+        "moments",
+        "voices",
+        "cast"
+      ]
+    },
+    "key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "setting_value": {
+      "description": "A setting value: scalar, or a flat list of scalars.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/scalar"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/scalar"
+          }
+        }
+      ]
+    },
+    "asset_path": {
+      "description": "Path relative to the profile directory, inside assets/. No absolute paths, no '..'.",
+      "type": "string",
+      "pattern": "^(?!.*(^|/)\\.\\.(/|$))assets/[A-Za-z0-9._/-]+$",
+      "maxLength": 200
+    },
+    "scalar": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    }
+  }
+}
