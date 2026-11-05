@@ -18,7 +18,7 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
 ### Isolation
 5. **Postgres row-level security on every tenant table.** The app role owns no tables and has no BYPASSRLS. The kit sets the tenant with `SET LOCAL` per transaction, never per connection. With no tenant set a query sees nothing. A column default reads the tenant setting. The superadmin overview uses a separate role.
 6. **The tenant is in every key.** Unique constraints include `tenant_id`; foreign keys are composite with it, so a row cannot reference another tenant's row. CI lints every table for the column, the policy and the keys.
-7. **Kit scoping beyond Postgres:** Valkey keys and bus streams per tenant (`t:<tenant>:events:<module>`); files under `/files/<tenant>/<module>/`, served only after a tenant check; caches and schedulers keyed by tenant; bus consumers set the tenant per message. Modules use no raw keys.
+7. **Kit scoping beyond Postgres:** Valkey keys and bus streams per tenant (`t:<tenant>:events:<module>`); files under `/files/<tenant>/<module>/`, served only after a tenant check; caches and schedulers keyed by tenant; bus consumers set the tenant per message and pick up a new tenant's streams without a restart (item 1). Modules use no raw keys.
 8. **Cross-tenant leak tests** for every endpoint and consumer, in CI.
 
 ### Web, sign-in, TLS
@@ -57,7 +57,7 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
 
 ## Consequences
 - The roadmap gains a tenancy-foundation step before the event catalog and screen contracts, preceded by a legacy inventory ([roadmap step 2](../roadmap.md#2-event-catalog-and-contracts)).
-- Setup (#12): `new-event` becomes "create a tenant" and the stack is one; the firewall covers IPv6 and 443 and later opens 80/443 to all.
+- Setup (#12): `new-event` becomes "seed the demo tenant" (tenants are rows created through the tenants module, item 1) and the stack is one; the firewall covers IPv6 and 443 and later opens 80/443 to all.
 - Caddy (#9's follow-up) becomes the single edge Caddy with the DNS plugin, on-demand TLS and `ask`.
 - The event catalog (#34) and screen contract (#35) are tenant-aware; #35 gets pairing tokens, layouts as data, the theming contract and pinned bundles.
 - The admin module assumes one event (`admin_settings` keyed by module, a singleton `admin_profile`) and is reworked for tenants.

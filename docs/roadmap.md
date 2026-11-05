@@ -6,7 +6,7 @@ The plan from today to the full new platform, running at the next event in **Apr
 - **Port, don't rewrite.** Each module is ported from the proven legacy code and tests onto Postgres, containers, the kit and its contract ([0001](decisions/0001-port-dont-rewrite.md)).
 - **Multi-tenant from day 1.** Many events, also simultaneous, on one shared stack ([0013](decisions/0013-multi-tenant-core.md)). The tenancy foundation comes before the module contracts.
 - **Infrastructure first**, then modules one at a time. While `platform.version` is `dev` and no tenant is live, the shared VM follows main, so the pieces are joined every day, not at the end.
-- **Freeze and switch in March 2027** (from 2027-03-01): the event pins a tested release. There is no rehearsal; the April event is the first real run.
+- **All feature work, Hardening included, is done by end of February 2027.** March is the freeze (from 2027-03-01): fixes only, a dress rehearsal and the switch. The event pins a tested release.
 - Each step is an epic in this repo with one child issue per module it touches (AGENTS.md, Maintainers).
 
 ## Goals and non-goals
@@ -24,7 +24,7 @@ The plan from today to the full new platform, running at the next event in **Apr
 - **Modules talk through their API and the bus.** Example: Pizza publishes `pizza.order.placed`, Moments ranks it against other moments, Screen shows it and Voices can speak it. Nothing polls.
 
 ## Timeline
-The months fit the order into the time left; only the March freeze is fixed.
+The months fit the order into the time left. Fixed: steps 9 and 10 finish by 2027-02-28, and March is the freeze.
 
 | Step | When | Epic |
 |---|---|---|
@@ -37,9 +37,9 @@ The months fit the order into the time left; only the March freeze is fixed.
 | 6. Bot | Feb 2027 | — |
 | 7. Tournament | Feb 2027 | — |
 | 8. Admin operations | Feb 2027 | — |
-| 9. Feeds and LAN display | Feb–Mar 2027 | — |
-| 10. Hardening | Mar 2027 | — |
-| 11. Freeze and switch | Mar 2027 (from 2027-03-01) | — |
+| 9. Feeds and LAN display | Feb 2027 | — |
+| 10. Hardening | Feb 2027 (done by 2027-02-28) | — |
+| 11. Freeze, dress rehearsal and switch | Mar 2027 (from 2027-03-01) | — |
 | The event | Apr 2027 | first real run |
 
 Games and Cast run in parallel from step 2, after the tenancy foundation (see Parallel tracks).
@@ -58,7 +58,7 @@ Games and Cast run in parallel from step 2, after the tenancy foundation (see Pa
 ### 1. Skeleton
 - **Goal:** infrastructure first: a stack that starts, deploys itself and has an admin page.
 - **In it:** the monorepo; Compose with Postgres, Valkey and Caddy; kit-ts and kit-py; ui; CI with branch rules and the merge queue; the admin API and profile contract; admin settings, health view and profile save and load; setup (install, boot survival, firewall, the demo event); demo-stack CI with screenshots and image builds; Discord sign-in, first-run code and rights; auto-deploy of main to the VM.
-  - #12 is re-scoped for the shared stack: the firewall covers IPv6 and port 443 and can later open 80/443 to everyone; `new-event` is dropped or becomes "seed the demo tenant" once the tenants module exists.
+  - #12 is re-scoped for the shared stack: the firewall covers IPv6 and port 443 and can later open 80/443 to everyone; `new-event` becomes "seed the demo tenant" once the tenants module exists (tenants themselves are rows created through the tenants module).
   - #5 changes: the VM is remote, so sign-in needs HTTPS on a real hostname. The old check "does Discord accept plain http to a LAN IP" and the venue router's DNS-rebinding check no longer apply. #5 and #10 build sign-in so that it fits the central sign-in host of step 2b ([0013](decisions/0013-multi-tenant-core.md), item 10) instead of being redone there.
   - #14 changes: auto-deploy holds while any tenant is live, except hotfixes ([0013](decisions/0013-multi-tenant-core.md), item 22).
 - **Exit criteria:** sign in on the VM, change a setting, and see a test module's health. Sign-in over HTTPS on the platform domain completes with step 2b (items 4 and 5).
@@ -91,7 +91,7 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
 
 #### 2c. Event catalog and screen contract
 - **Goal:** the events modules exchange, named and outlined before the ports start.
-- **In it:** event names and payload outlines for pizza, tournament, bot and screen overrides (#34); the screen module API and events (#35), with device pairing tokens, layouts as data, the theming contract and pinned bundles. Each other module's full contract is its own PR at the start of its port, written from the real legacy API.
+- **In it:** event names and payload outlines for pizza, tournament, bot and screen overrides (#34); the screen module API and events (#35), with device pairing tokens, layouts as data, the theming contract and pinned bundles. #34 also settles whether screen overrides are `moments.*` or `screen.*` events, since Moments ranks them ([0010](decisions/0010-scope.md)), so step 4 needs no breaking rename. Each other module's full contract is its own PR at the start of its port, written from the real legacy API.
 - **Exit criteria:** catalog and screen contract merged, both tenant-aware.
 - **Issues:** epic #36, order #34 → #35.
 
@@ -121,7 +121,7 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
 
 ### 7. Tournament
 - **Goal:** a tournament runs on the platform.
-- **In it:** port the scoring, leaderboard and final from the signup site's code; registration lives inside the module; the bot's voice-channel handshake goes through events; concurrency with row locks (`SELECT … FOR UPDATE`). Any ISC-licensed mini-tourney code it reuses is ported only after its author's OK (AGENTS.md, Porting).
+- **In it:** port the scoring, leaderboard and final from the signup site's code; registration lives inside the module; the bot's voice-channel handshake goes through events; concurrency with row locks (`SELECT … FOR UPDATE`). Ported only after the mini-tourney author's OK (AGENTS.md, Porting).
 - **Exit criteria:** a test tournament runs end to end.
 - **Issues:** to be created.
 
@@ -134,7 +134,7 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
 ### 9. Feeds and LAN display
 - **Goal:** live data on the screen.
 - **In it:** wire pizza, tournament and bot events into Screen; the LAN display page comes last.
-- **Exit criteria:** live data on the Main screen.
+- **Exit criteria:** live data on the Main screen, by end of February 2027.
 - **Issues:** to be created.
 
 ### 10. Hardening
@@ -143,13 +143,17 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
   - backup and restore, the fallback laptop, an outside watchdog with a heartbeat;
   - the admin simplification pass, theme, and Finnish as the first language pack;
   - dependency auditing ([0015](decisions/0015-dependency-auditing.md)): `npm audit` and `pip-audit` in CI, and Renovate (or Dependabot) for images and dependencies.
-- **Exit criteria:** a restore onto the fallback laptop works from cold; the audit jobs run in CI and update PRs arrive.
+- **Exit criteria:** by 2027-02-28, a restore onto the fallback laptop works from cold; the audit jobs run in CI and update PRs arrive.
 - **Issues:** to be created.
 
-### 11. Freeze and switch
+### 11. Freeze, dress rehearsal and switch
 - **Goal:** the event runs on a pinned, tested release.
-- **In it:** from 2027-03-01 a release branch is cut and only fixes go onto it; every PR needs a maintainer's accept ([0016](decisions/0016-merge-policy.md)). Crew test sessions on the VM, including a restore onto the fallback laptop. The legacy bot is cut over (see [0013](decisions/0013-multi-tenant-core.md), Discord). The old repos are renamed `-legacy` and archived; this repo takes the name `canccuplatform`.
-- **Exit criteria:** the event repo pins a tested release.
+- **In it:**
+  - from 2027-03-01 a release branch is cut; March is fixes only, and every PR needs a maintainer's accept ([0016](decisions/0016-merge-policy.md));
+  - a dress rehearsal with the crew on the VM, including a restore onto the fallback laptop;
+  - the legacy bot is cut over: its data is migrated into its event's tenant and the migration is tested in a crew session, the legacy bot is stopped, and its token moves into the tenant ([0013](decisions/0013-multi-tenant-core.md), Consequences; [0004](decisions/0004-nothing-migrated.md));
+  - the switch: the old repos are renamed `-legacy` and archived; this repo takes the name `canccuplatform`.
+- **Exit criteria:** the dress rehearsal passed; the bot data migration was tested; the event repo pins a tested release.
 - **Issues:** to be created.
 
 ## Parallel tracks
