@@ -4,7 +4,7 @@ A general platform for running LAN events, big or small: the screen view, tourna
 
 `canccuplatform-next` is a working name; the repo is renamed `canccuplatform` at the switch.
 
-Status: skeleton. Nothing runs yet.
+Status: skeleton. The stack runs with the hello and admin modules; `setup/install` starts it (see [setup/README.md](setup/README.md)).
 
 ## Layout
 

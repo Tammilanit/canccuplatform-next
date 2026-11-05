@@ -32,15 +32,19 @@ exits "install fails against an unreachable daemon" 2 env DOCKER_HOST=$unreachab
 has "install names the unreachable daemon" "cannot reach the Docker daemon"
 exits "install --dry-run fails against an unreachable daemon" 2 env DOCKER_HOST=$unreachable setup/install --dry-run
 if [ "$docker_ok" = 1 ]; then
-  exits "install --dry-run --boot refuses an empty CP_WEB_ALLOW" 2 env CP_WEB_ALLOW= setup/install --dry-run --boot
+  exits "install --dry-run --boot refuses an empty CP_WEB_ALLOW" 2 env CP_ENV_FILE=<(printf 'CP_WEB_ALLOW=\n') setup/install --dry-run --boot
   has "install --boot names CP_WEB_ALLOW" "CP_WEB_ALLOW is empty"
-  exits "install --dry-run --boot with an allow list" 0 env CP_WEB_ALLOW=192.0.2.1 setup/install --dry-run --boot
+  exits "install --dry-run --boot with an allow list" 0 env CP_ENV_FILE=<(printf 'CP_WEB_ALLOW=192.0.2.1\n') setup/install --dry-run --boot
   fw=$(grep -nE 'cp-firewall' <<<"$out" | head -1 | cut -d: -f1)
   up=$(grep -nE 'compose .*up' <<<"$out" | head -1 | cut -d: -f1)
   if [ -n "$fw" ] && [ -n "$up" ] && [ "$fw" -lt "$up" ]; then pass "install --boot puts the firewall in place before the stack starts"
   else bad "install --boot puts the firewall in place before the stack starts" "$out"; fi
   has "install --boot enables docker, cp-firewall and cp-stack at boot" "enable docker cp-firewall cp-stack"
   has "install --boot ends with check-boot" "check-boot"
+  n=$(grep -cE 'compose .*up' <<<"$out")
+  if [ "$n" = 1 ]; then pass "install --boot starts the stack once"; else bad "install --boot starts the stack once ($n times)" "$out"; fi
+  exits "install --boot validates deploy/.env, not the environment" 2 env CP_WEB_ALLOW=192.0.2.1 CP_ENV_FILE=/nonexistent setup/install --dry-run --boot
+  has "install --boot ignores CP_WEB_ALLOW from the environment" "CP_WEB_ALLOW is empty"
 else
   skip "install --dry-run --boot" "no reachable Docker daemon"
 fi
@@ -54,6 +58,10 @@ exits "firewall apply refuses 'any' mixed with addresses" 2 env CP_WEB_ALLOW="an
 has "firewall explains 'any' stands alone" "'any' must be the only entry"
 exits "firewall apply refuses a hostname" 2 env CP_WEB_ALLOW=example.org setup/firewall apply --dry-run
 has "firewall names the bad entry" "not an IPv4 or IPv6 address: example.org"
+for e in 300.1.1.1 10.0.0.0/40 1.2.3 2001:db8::/200 : "::" 2001:::1; do
+  exits "firewall apply refuses $e" 2 env CP_WEB_ALLOW="$e" setup/firewall apply --dry-run
+done
+exits "firewall apply accepts a /0 and a full IPv6 address" 0 env CP_WEB_ALLOW="0.0.0.0/0 2001:db8:0:0:0:0:0:1/128" setup/firewall apply --dry-run
 
 exits "firewall apply --dry-run, IPv4 and IPv6 sources" 0 env CP_WEB_ALLOW="192.0.2.1, 2001:db8::/32" setup/firewall apply --dry-run
 for p in 80 443; do
@@ -99,10 +107,11 @@ fi
 echo "# systemd units"
 unit() { grep -E "^$2=" "setup/$1" | sed "s/^$2=//"; }
 if unit cp-firewall.service Before | grep -qw docker.service; then pass "cp-firewall runs before docker"; else bad "cp-firewall runs before docker"; fi
-if unit cp-firewall.service WantedBy | grep -qw docker.service; then pass "starting docker pulls in cp-firewall"; else bad "starting docker pulls in cp-firewall"; fi
 if unit cp-firewall.service ExecStart | grep -q 'firewall close'; then pass "cp-firewall closes the web ports when apply fails"; else bad "cp-firewall closes the web ports when apply fails"; fi
 if unit cp-stack.service Requires | grep -qw cp-firewall.service && unit cp-stack.service After | grep -qw cp-firewall.service
 then pass "cp-stack needs and follows cp-firewall"; else bad "cp-stack needs and follows cp-firewall"; fi
+if unit cp-firewall.service RequiredBy | grep -qw docker.service; then pass "docker requires cp-firewall (no start without the firewall)"; else bad "docker requires cp-firewall (no start without the firewall)"; fi
+if unit cp-firewall.service ExecStart | grep -q 'close; exit 1'; then bad "a closed firewall lets docker start"; else pass "a closed firewall lets docker start"; fi
 if command -v systemd-analyze >/dev/null && systemctl cat docker.service >/dev/null 2>&1; then
   tmp=$(mktemp -d)
   for u in cp-firewall.service cp-stack.service; do sed "s#@REPO@#$PWD#g" "setup/$u" > "$tmp/$u"; done
@@ -128,6 +137,11 @@ echo "# check-boot"
 exits "check-boot --dry-run" 0 setup/check-boot --dry-run
 has "check-boot checks cp-firewall" "cp-firewall"
 has "check-boot checks IPv6" "IPv6"
+has "check-boot checks that docker requires cp-firewall" "docker.service requires cp-firewall"
+if grep -q 'jq' setup/check-boot; then bad "check-boot does not need jq"; else pass "check-boot does not need jq"; fi
+exits "firewall check --dry-run" 0 setup/firewall check --dry-run
+has "firewall check looks at the final DROP" "DROP"
+has "firewall check looks at FORWARD -> DOCKER-USER" "FORWARD"
 
 echo "# shellcheck"
 if command -v shellcheck >/dev/null; then

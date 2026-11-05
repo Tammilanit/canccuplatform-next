@@ -4,7 +4,7 @@
 # Usage: check-boot [--dry-run]      (needs root for the firewall check)
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
-checks="docker.service enabled, cp-firewall.service enabled, cp-stack.service enabled, compose restart policies, CP-FIREWALL hooked into DOCKER-USER (IPv4 and IPv6)"
+checks="docker.service enabled, cp-firewall.service enabled, docker.service requires cp-firewall, cp-stack.service enabled, restart policies of the running services, firewall in place and not closed (IPv4 and IPv6)"
 case "${1:-}" in
   "") ;;
   --dry-run) echo "dry run, would check: $checks"; exit 0 ;;
@@ -18,12 +18,19 @@ no() { echo "FAIL $1" >&2; fail=1; }
 for u in docker cp-firewall cp-stack; do
   if systemctl is-enabled --quiet "$u" 2>/dev/null; then ok "$u.service enabled at boot"; else no "$u.service enabled at boot"; fi
 done
-if policies=$(docker compose -f deploy/compose.yml config --format json 2>/dev/null \
-    | jq -r '.services | to_entries[] | "\(.key) \(.value.restart // "no")"'); then
-  if wrong=$(grep -vE ' (unless-stopped|always)$' <<<"$policies"); then no "compose services restart (unless-stopped/always): $wrong"
-  else ok "compose services restart (unless-stopped/always)"; fi
+if systemctl show -p Requires --value docker 2>/dev/null | grep -qw cp-firewall.service
+then ok "docker.service requires cp-firewall"; else no "docker.service requires cp-firewall"; fi
+want=$(docker compose -f deploy/compose.yml config --services 2>/dev/null | sort)
+mapfile -t ids < <(docker compose -f deploy/compose.yml ps -aq 2>/dev/null)
+have=""; [ "${#ids[@]}" = 0 ] || have=$(docker inspect -f '{{index .Config.Labels "com.docker.compose.service"}} {{.HostConfig.RestartPolicy.Name}}' "${ids[@]}" 2>/dev/null | sort)
+if [ -z "$want" ]; then no "compose config readable"
+elif [ "$(cut -d' ' -f1 <<<"$have")" != "$want" ]; then no "every compose service has a container (is the stack up?)"
+elif wrong=$(grep -vE ' (unless-stopped|always)$' <<<"$have"); then no "services restart (unless-stopped/always): $wrong"
+else ok "services restart (unless-stopped/always)"; fi
+if fw=$(setup/firewall check); then
+  if grep -q '^closed' <<<"$fw"; then no "firewall is closed; fix CP_WEB_ALLOW in deploy/.env and restart cp-firewall"
+  else ok "firewall in place (IPv4 and IPv6)"; fi
 else
-  no "compose config readable (docker compose and jq)"
+  printf '%s\n' "$fw"; no "firewall in place (IPv4 and IPv6)"
 fi
-setup/firewall check || fail=1
 exit $fail

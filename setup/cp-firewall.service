@@ -1,6 +1,8 @@
-# DOCKER-USER firewall for the web ports (setup/firewall). It runs before Docker, so the rules are
-# in place before Docker restores any container that publishes a port. If apply fails (for
-# example CP_WEB_ALLOW is empty), the web ports are closed instead, and the unit fails.
+# DOCKER-USER firewall for the web ports (setup/firewall). It runs before Docker, and Docker
+# requires it, so the rules are in place before Docker restores any container that publishes a
+# port. If apply fails (for example CP_WEB_ALLOW is empty), the web ports are closed instead and
+# Docker starts with nothing let in (see journalctl -u cp-firewall). Only if even that fails does
+# the unit fail, and then Docker does not start at all.
 # setup/install --boot copies it to /etc/systemd/system, replacing @REPO@ with the checkout path.
 [Unit]
 Description=CanccuPlatform DOCKER-USER firewall (IPv4 and IPv6)
@@ -11,7 +13,7 @@ After=local-fs.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/bin/sh -c '@REPO@/setup/firewall apply || { @REPO@/setup/firewall close; exit 1; }'
+ExecStart=/bin/sh -c '@REPO@/setup/firewall apply || { echo "cp-firewall: apply failed, closing the web ports" >&2; @REPO@/setup/firewall close; }'
 
 [Install]
-WantedBy=docker.service
+RequiredBy=docker.service
