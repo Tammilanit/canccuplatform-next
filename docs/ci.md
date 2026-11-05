@@ -28,9 +28,9 @@ Do not rename these jobs; renaming breaks the required checks.
 
 ## Code review
 - There is no `claude-review` check any more. It ran Claude in CI on a subscription token that can no longer be renewed, so `.github/workflows/claude-review.yml` and its prompt `.github/claude-review.md` were removed.
-- The review is now local and mandatory: before marking a PR ready, the author runs `/code-review` at `high` effort in Claude Code (or an equivalent review in another tool), fixes its findings and records a `Review run:` line in the PR body. A maintainer reviews fork PRs. Who accepts a PR is set by AGENTS.md, Merge rules.
+- In its place every PR gets an independent review outside CI: a separate reviewer that did not write the change (in Claude Code, a fresh session running `/code-review` at `high` effort, plus `/security-review` for sign-in, rights, secrets or tenancy/RLS) posts a PR comment ending with `Review verdict: pass` or `Review verdict: changes`, and enables auto-merge on `pass` unless a maintainer's accept is needed. A maintainer arranges the review for fork PRs. See AGENTS.md, Working on an issue and Merge rules.
 - **Required check:** a maintainer removes `claude-review` from the required checks of the main ruleset before the removal merges; otherwise every PR waits for a check that never runs.
 - The secret `CLAUDE_CODE_OAUTH_TOKEN` is no longer used; a maintainer may delete it under Settings → Secrets and variables → Actions.
 
 ## Fork and first-time PRs
-- Settings → Actions → General → "Fork pull request workflows from outside collaborators" is set to *Require approval for all outside collaborators*. CI does not run on a fork or first-time-contributor PR until a maintainer approves the run; that maintainer also reviews the PR.
+- Settings → Actions → General → "Fork pull request workflows from outside collaborators" is set to *Require approval for all outside collaborators*. CI does not run on a fork or first-time-contributor PR until a maintainer approves the run; that maintainer also arranges the independent review.
