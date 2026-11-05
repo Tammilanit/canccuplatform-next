@@ -9,7 +9,7 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0001](0001-port-dont-rewrite.md) | Port, don't rewrite | 2026-11-03 |
 | [0002](0002-no-legacy-history-or-docs.md) | No legacy git history and no legacy docs | 2026-11-03 |
 | [0003](0003-event-content-scrubbed.md) | Event content is scrubbed from the platform | 2026-11-02 |
-| [0004](0004-nothing-migrated.md) | Nothing is migrated from the old system | 2026-11-03 |
+| [0004](0004-nothing-migrated.md) | Nothing is migrated except the legacy bot data | 2026-11-03 |
 | [0005](0005-signup-site-stays-outside.md) | The event signup site stays outside the platform | 2026-11-02 |
 | [0006](0006-stack.md) | The stack | 2026-11-02 |
 | [0007](0007-stateless-containers.md) | Containers are stateless | 2026-11-02 |

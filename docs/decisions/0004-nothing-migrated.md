@@ -1,4 +1,4 @@
-# 0004. Nothing is migrated from the old system
+# 0004. Nothing is migrated except the legacy bot data
 
 - **Status:** Accepted
 - **Date:** 2026-11-03

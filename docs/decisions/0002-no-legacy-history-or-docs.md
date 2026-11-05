@@ -12,4 +12,4 @@ Legacy git history and legacy docs are never imported. Ported code arrives as ne
 ## Consequences
 - The public history holds nothing event-specific from the past.
 - Authorship of ported code by other authors is kept through its licence and attribution, not through history.
-- Anyone needing old context reads the legacy repos, which stay as they are.
+- Anyone needing old context reads the legacy repos, which stay readable (renamed `-legacy` and archived at the switch).

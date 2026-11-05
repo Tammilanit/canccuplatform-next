@@ -6,7 +6,7 @@ The plan from today to the full new platform, running at the next event in **Apr
 - **Port, don't rewrite.** Each module is ported from the proven legacy code and tests onto Postgres, containers, the kit and its contract ([0001](decisions/0001-port-dont-rewrite.md)).
 - **Multi-tenant from day 1.** Many events, also simultaneous, on one shared stack ([0013](decisions/0013-multi-tenant-core.md)). The tenancy foundation comes before the module contracts.
 - **Infrastructure first**, then modules one at a time. While `platform.version` is `dev` and no tenant is live, the shared VM follows main, so the pieces are joined every day, not at the end.
-- **Strictly in order, two fixed dates:** the freeze from 2027-03-01 (fixes only, a dress rehearsal and the switch) and the event in April 2027. The event pins a tested release.
+- **Dependencies set the order; two dates are fixed:** the freeze from 2027-03-01 (fixes only, a dress rehearsal and the switch) and the event in April 2027. The event pins a tested release.
 - Each step is an epic in this repo with one child issue per module it touches (AGENTS.md, Maintainers).
 
 ## Goals and non-goals
@@ -24,9 +24,11 @@ The plan from today to the full new platform, running at the next event in **Apr
 - **Modules talk through their API and the bus.** Example: Pizza publishes `pizza.order.placed`, Moments ranks it against other moments, Screen shows it and Voices can speak it. Nothing polls.
 
 ## Order and dates
-- **Steps run strictly in order,** 0 to 11; a step starts when the one before it is done. Each step is an epic; milestones have no due dates.
+- **Steps follow their dependencies,** not a strict one-after-another rule. An issue starts when the issues it is blocked by are closed, so issues from different steps can run at once. The tracker's blocked-by links are the source for the order; this file names them.
+- **The tracker:** each step is an epic in the milestone of the same number (milestones have no due dates); its epic closes when its children close. Step 2 is one milestone with the epics #36, #46 and #47.
+- **Step 0's product-owner tasks** (#43, #44, #45) run alongside and block only the issues that name them: #43 (domain) blocks #5 and #51; #44 (test Discord) blocks #10 and #52; #45 (backup target) blocks #55.
+- **The parallel tracks** (Games, Cast; milestone "Parallel tracks") start after the tenancy foundation (#47).
 - **Only two dates are fixed:** the freeze from **2027-03-01** (fixes only; every PR needs a maintainer's accept, [0016](decisions/0016-merge-policy.md)) and the event in **April 2027**. What is not merged before the freeze waits for a later release.
-- Games and Cast run in parallel with the main line, after the tenancy foundation (see Parallel tracks).
 
 ## Steps
 
@@ -37,7 +39,7 @@ The plan from today to the full new platform, running at the next event in **Apr
   - open: a test Discord server and a dev bot with its own Discord app (#44, blocks #10); the platform domain and a DNS API token for DNS-01 certificates (#43, blocks HTTPS and #5); a backup target off the VM (#45, blocks 2b item 8);
   - postponed: the mini-tourney author's OK to port the ISC-licensed code, until the tournament and games ports (step 7 and the Games track); ask before step 2b closes, so the Games track does not wait for it.
 - **Exit criteria:** workers run in parallel in one repo; the VM is reachable; the test Discord server and dev bot exist; the domain decision is made.
-- **Issues:** product-owner tasks #43, #44, #45.
+- **Issues:** product-owner tasks #43, #44, #45 (each in the milestone of the step it blocks; see Order and dates).
 
 ### 1. Skeleton
 - **Goal:** infrastructure first: a stack that starts, deploys itself and has an admin page.
@@ -46,20 +48,20 @@ The plan from today to the full new platform, running at the next event in **Apr
   - #5 changes: the VM is remote, so sign-in needs HTTPS on a real hostname. The old check "does Discord accept plain http to a LAN IP" and the venue router's DNS-rebinding check no longer apply. #5 and #10 build sign-in so that it fits the central sign-in host of step 2b ([0013](decisions/0013-multi-tenant-core.md), item 10) instead of being redone there.
   - #14 changes: auto-deploy holds while any tenant is live, except hotfixes ([0013](decisions/0013-multi-tenant-core.md), item 22).
 - **Exit criteria:** change a setting on the VM and see a test module's health. Signing in over HTTPS is an exit criterion of step 2b, because it needs the domain, the edge Caddy and the central sign-in host.
-- **Issues:** epic #15. Closed: #2, #3, #4, #6, #7, #8, #9, #11. Open, in order: #12, #13, #10, #5, #14.
+- **Issues:** epic #15. Closed: #2, #3, #4, #6, #7, #8, #9, #11. Open: #12 and #13 (ready); #10 (blocked by #44); #5 (blocked by #10 and #43); #14 (blocked by #12). Also in the milestone: #39 (merge-policy rollout) and #44.
 
 ### 2. Event catalog and contracts
-The contracts step. Its order is fixed: legacy inventory, then the tenancy foundation, then the event catalog and the screen contract, because both contracts must be tenant-aware.
+The contracts step. Its dependencies: the tenants contract (#48) waits for the legacy inventory (#46); the event catalog (#34) waits for #48; the screen contract (#35) waits for #34 and #48. Both contracts must be tenant-aware.
 
 #### 2a. Legacy inventory
 - **Goal:** know exactly what is being ported, confirmed by the product owner, before tenancy and contracts are designed.
 - **In it:** one inventory per legacy repo (they can run in parallel), then a summary. For each repo: features, data model (what is per event and what is global), bus events and APIs, external integrations (Discord, feeds, devices), config and env, tests, size, event-specific content, the target module and step, and what is dropped.
 - **Exit criteria:** the scrubbed per-repo inventories and the summary `docs/legacy-inventory/README.md` are merged, each confirmed by the product owner; the summary updates the porting plan below; event-specific findings are in the event repo.
-- **Issues:** epic #46: per-repo inventories #68–#75, then the summary #76.
+- **Issues:** epic #46: per-repo inventories #68–#75 (no blockers, can run in parallel), then the summary #76 (blocked by #68–#75).
 
 #### 2b. Tenancy foundation
 - **Goal:** every later module is tenant-aware from its first line ([0013](decisions/0013-multi-tenant-core.md)).
-- **In it**, in this order, each its own child issue:
+- **In it**, each its own child issue; the blocked-by links set the order (#49, #53 and #54 wait for #48; #50 for #48 and #49; #51 for #50 and #43; #52 for #50, #51 and #44; #55 for #50 and #45; #56 for #49 and #50):
   1. the tenants contract (first, #48): registry, hostnames, admins and roles, settings, feature flags, lifecycle, audit log, and `tenant` in the bus envelope; venues as global rows owned by the tenants module and managed by the superadmin (name, IPv4 and IPv6 addresses; the devices at a venue belong to Screen, step 3), each event pointing to a venue (several events can share one, also at once), the per-tenant info-page mode (public, venue-only, sign-in) and the audited emergency switch for the venue IP check ([0013](decisions/0013-multi-tenant-core.md), items 33–34);
   2. kit tenancy (#49): tenant context, row-level security helpers, scoped Valkey keys, streams and files, a migration lint and leak-test helpers; it implements the carve-outs of [0013](decisions/0013-multi-tenant-core.md) items 2 and 6 (platform hostnames, health endpoints and the IP-mode demo stack outside tenant resolution; global tables on the lint's allow-list);
   3. the tenants module (#50);
@@ -71,22 +73,22 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
 
   Then the admin module's single-event tables are reworked for tenants (#56).
 - **Exit criteria:** a user signs in with Discord over HTTPS through the central sign-in host; two demo tenants run on one stack, each on its own hostname over HTTPS, both pointing to one demo venue; CI proves no data crosses between them (RLS lint and leak tests); a backup lands off the VM.
-- **Issues:** epic #47, order #48 → #49 → #50 → #51 → #52 → #53 → #54 → #55 → #56; #43 (domain) blocks items 4 and 5, #45 (backup target) blocks item 8.
+- **Issues:** epic #47, children #48–#56 with the blocked-by links above.
 
 #### 2c. Event catalog and screen contract
 - **Goal:** the events modules exchange, named and outlined before the ports start.
-- **In it:** event names and payload outlines for pizza, tournament, bot and screen overrides (#34); the screen module API and events (#35), with device pairing tokens, the venue IP check, devices (global identity rows) and per-tenant zones and assignments, layouts as data and pinned bundles; it uses the theming contract from 2b item 7. #34 also settles whether screen overrides are `moments.*` or `screen.*` events, since Moments ranks them ([0010](decisions/0010-scope.md)), so step 4 needs no breaking rename. Each other module's full contract is its own PR at the start of its port, written from the real legacy API.
+- **In it:** event names and payload outlines for pizza, tournament, bot and screen overrides (#34); the screen module API and events (#35), with device tokens, the venue IP check, devices (global rows with their current tenant) and per-tenant zones and assignments, layouts as data and pinned bundles; it uses the theming contract from 2b item 7. #34 also settles whether screen overrides are `moments.*` or `screen.*` events, since Moments ranks them ([0010](decisions/0010-scope.md)), so step 4 needs no breaking rename. Each other module's full contract is its own PR at the start of its port, written from the real legacy API.
 - **Exit criteria:** catalog and screen contract merged, both tenant-aware.
-- **Issues:** epic #36, order #34 → #35.
+- **Issues:** epic #36: #34 (blocked by #48), then #35 (blocked by #34 and #48).
 
 ### 3. Screen core incl. PPTX
 - **Goal:** the projector PC plays a Main screen from the VM, and an event can run several screens.
 - **In it:** port the canccusignage core: scheduler and windows, playlists, playback timing and bookmarks, validators, duration parsers, the asset pipeline with PowerPoint rendering as a separate render-job container, the kiosk player and a new Postgres schema. Rewritten: the screen page and snapshot serving, persistence, the admin UI (its view-models kept). Screens cache their last state and assets. Feeds are wired later (step 9).
-  - **Devices**, owned by Screen: a global device row holds only its name, pairing token and venue id (the venue is read through the tenants API); zone assignment and health are per tenant (`tenant_id`, RLS). Paired once, with a revocable device token; a screen is served only with **both** its token and a request from its event's venue IP (the IP alone is never enough), unless the tenant's audited emergency switch has turned the IP check off.
+  - **Devices**, owned by Screen: a global device row holds only its name, a hash of its device token, its venue id (the venue is read through the tenants API) and its current tenant. A device serves one tenant at a time: the superadmin or the venue owner sets its current tenant (audited), and a tenant's zone assignment is valid only while that matches. Two simultaneous events at one venue use different devices. Zone assignment and health are per tenant (`tenant_id`, RLS). Paired once, with a revocable device token; a screen is served only with **both** its token and a request from its event's venue IP (the IP alone is never enough), unless the tenant's audited emergency switch has turned the IP check off.
   - **Zones** per event (for example main hall, café, stage), each with its own layout, playlist and schedule; devices are assigned to zones per event and reassigned for the next event.
   - Push to all zones or one zone, and mirror one zone onto others.
   - Device health in admin: online, last seen, now playing.
-- **Exit criteria:** the projector PC plays a Main screen from the VM over HTTPS, including a PPTX deck, and keeps showing it when the uplink is cut; a second device in another zone plays its own playlist; a device with a valid token outside the venue IP is refused; admin shows both devices' health.
+- **Exit criteria:** the projector PC plays a Main screen from the VM over HTTPS, including a PPTX deck, and keeps showing it when the uplink is cut; a second device in another zone plays its own playlist; a device with a valid token outside the venue IP is refused; a device whose current tenant is another event is refused; admin shows both devices' health.
 - **Issues:** epic #57; children are written when the step starts, after #35.
 
 ### 4. Moments
@@ -131,6 +133,7 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
 - **In it:**
   - backup and restore, the fallback laptop, an outside watchdog with a heartbeat;
   - the admin simplification pass, theme, and Finnish as the first language pack;
+  - the reviewer moves to its own OS user that alone holds its token, a privileged-setup task ([0014](decisions/0014-independent-review.md), Known limits);
   - dependency auditing ([0015](decisions/0015-dependency-auditing.md)): `npm audit` and `pip-audit` in CI, and Renovate (or Dependabot) for images and dependencies.
 - **Exit criteria:** a restore onto the fallback laptop works from cold and secrets decrypt after the restore; the audit jobs run in CI and update PRs arrive.
 - **Issues:** epic #64.
@@ -146,7 +149,7 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
 - **Issues:** epic #65.
 
 ## Parallel tracks
-Both are new builds with their own contracts, so neither blocks the main line. They start in step 2, after the tenancy foundation (2b), so their contracts are tenant-aware from the start.
+Both are new builds with their own contracts, so neither blocks the main line. They start after the tenancy foundation (#47), so their contracts are tenant-aware from the start.
 
 ### Games
 - **Goal:** rosters for any game, organized into rounds.

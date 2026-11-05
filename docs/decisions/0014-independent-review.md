@@ -25,5 +25,5 @@ The `claude-review` CI check ran on a personal account's usage limits, so it can
 - PRs from forks and first-time contributors get the review once a maintainer lets them run.
 
 ## Known limits
-- **Same OS user.** Authors and the reviewer currently run as the same OS user on the VM ([0012](0012-development-on-the-vm.md)), so an author session could read the reviewer token (from a file or another process's environment) and post a verdict as `REVIEWER_LOGIN`. Mitigations: deny rules in the Claude settings keep author sessions away from the token and other processes; the reviewer moves to its own OS user that alone holds the token, a privileged-setup task done before the freeze.
+- **Same OS user.** Authors and the reviewer currently run as the same OS user on the VM ([0012](0012-development-on-the-vm.md)), so an author session could read the reviewer token (from a file or another process's environment) and post a verdict as `REVIEWER_LOGIN`. Mitigations: deny rules in the Claude settings keep author sessions away from the token and other processes; the reviewer moves to its own OS user that alone holds the token, a privileged-setup task done before the freeze, in roadmap step 10 (Hardening).
 - **The gate runs from the PR's branch.** See [0016](0016-merge-policy.md), Known limits.

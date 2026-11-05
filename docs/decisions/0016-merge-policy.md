@@ -15,6 +15,7 @@ Everyone codes with AI, so the gates are machines; a person steps in only where 
   - breaking contract changes;
   - destructive migrations;
   - changes to `.github/` or `setup/`;
+  - a record that supersedes 0014 or 0016;
   - anything in other repos.
 - **At most 2 review-fix rounds.** If the verdict is still not `pass` after the second round, or it is `manual`, a maintainer takes over.
 - **From the freeze on 2027-03-01, every PR needs a maintainer's accept.** From then on fixes only, the dress rehearsal and the switch ([roadmap](../roadmap.md#order-and-dates)).

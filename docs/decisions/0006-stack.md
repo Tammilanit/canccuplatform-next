@@ -13,4 +13,4 @@ Modules are ported from TypeScript and Python code. One maintainer directs AI wo
 
 ## Consequences
 - Two kits to keep in step; a third language needs a strong reason ([0009](0009-rust-rejected.md)).
-- Streams keep events, so a restarted module catches up instead of missing them.
+- Streams keep events, so a restarted module can catch up instead of missing them. That needs persisted consumer positions (consumer groups), a kit requirement for kit tenancy (#49): today's kit subscribes from the newest entry and keeps positions in memory, so a restarted module still misses events.
