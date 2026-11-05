@@ -116,6 +116,17 @@ services:
       - admin
     restart: unless-stopped
 
+# IPv6 on the stack's network, so Docker NATs published IPv6 traffic through ip6tables and the
+# DOCKER-USER firewall (setup/firewall) filters it. Without it, docker-proxy would forward the
+# "::" ports to the IPv4 container address and that traffic would bypass DOCKER-USER.
+# A fixed ULA prefix, internal to this host; Docker adds an IPv4 subnet itself.
+networks:
+  default:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: fd8c:6a3e:51e2:1::/64
+
 volumes:
   postgres-data:
   valkey-data:

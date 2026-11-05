@@ -3,6 +3,8 @@
 # port. If apply fails (for example CP_WEB_ALLOW is empty), the web ports are closed instead and
 # Docker starts with nothing let in (see journalctl -u canccu-firewall). Only if even that fails does
 # the unit fail, and then Docker does not start at all.
+# To reapply after changing CP_WEB_ALLOW: systemctl reload canccu-firewall. Never restart it:
+# Docker requires this unit, so a restart restarts Docker and every container on the host.
 # setup/install --boot copies it to /etc/systemd/system, replacing @REPO@ with the checkout path.
 [Unit]
 Description=CanccuPlatform DOCKER-USER firewall (IPv4 and IPv6)
@@ -14,6 +16,7 @@ After=local-fs.target
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/bin/sh -c '@REPO@/setup/firewall apply || { echo "canccu-firewall: apply failed, closing the web ports" >&2; @REPO@/setup/firewall close; }'
+ExecReload=/bin/sh -c '@REPO@/setup/firewall apply || { echo "canccu-firewall: apply failed, closing the web ports" >&2; @REPO@/setup/firewall close; }'
 
 [Install]
 RequiredBy=docker.service

@@ -1,5 +1,6 @@
 # Starts the platform at boot, after Docker and the DOCKER-USER firewall (canccu-firewall.service).
-# setup/install --boot copies it to /etc/systemd/system, replacing @REPO@ with the checkout path.
+# setup/install --boot copies it to /etc/systemd/system, replacing @REPO@ with the checkout path
+# and @DOCKER@ with the docker binary it found.
 [Unit]
 Description=CanccuPlatform stack (docker compose)
 Requires=docker.service canccu-firewall.service
@@ -12,8 +13,8 @@ RemainAfterExit=yes
 WorkingDirectory=@REPO@
 # Never publish the web ports without the firewall in place.
 ExecStartPre=@REPO@/setup/firewall check
-ExecStart=/usr/bin/docker compose -f deploy/compose.yml up -d --wait
-ExecStop=/usr/bin/docker compose -f deploy/compose.yml stop
+ExecStart=@DOCKER@ compose -f deploy/compose.yml up -d --wait
+ExecStop=@DOCKER@ compose -f deploy/compose.yml stop
 TimeoutStartSec=300
 
 [Install]
