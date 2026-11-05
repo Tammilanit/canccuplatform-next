@@ -17,7 +17,7 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
 
 ### Isolation
 5. **Postgres row-level security on every tenant table.** The app role owns no tables and has no BYPASSRLS. The kit sets the tenant with `SET LOCAL` per transaction, never per connection. With no tenant set a query sees nothing. A column default reads the tenant setting. The superadmin overview uses a separate role.
-6. **The tenant is in every key.** Unique constraints include `tenant_id`; foreign keys are composite with it, so a row cannot reference another tenant's row. CI lints every table for the column, the policy and the keys. Global tables (tenants, hostnames, venues, users) have no `tenant_id`; they are exempt only through an explicit allow-list that the lint enforces, and a new global table needs a change to that list.
+6. **The tenant is in every key.** Unique constraints include `tenant_id`; foreign keys are composite with it, so a row cannot reference another tenant's row. CI lints every table for the column, the policy and the keys. Global tables (tenants, hostnames, venues, users, and Screen's device rows, item 34) have no `tenant_id` of their own; they are exempt only through an explicit allow-list that the lint enforces, and a new global table needs a change to that list. Global tables are not under RLS and are read before a tenant is set; hostnames carry their tenant as a plain foreign key.
 7. **Kit scoping beyond Postgres:** Valkey keys and bus streams per tenant (`t:<tenant>:events:<module>`); files under `/files/<tenant>/<module>/`, served only after a tenant check; caches and schedulers keyed by tenant; bus consumers set the tenant per message and pick up a new tenant's streams without a restart (item 1). Modules use no raw keys.
 8. **Cross-tenant leak tests** for every endpoint and consumer, in CI.
 
@@ -45,7 +45,7 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
 23. **Per-tenant pinned screen version:** the screen and public frontends are static bundles, several versions are kept, and a tenant can pin the one it tested. APIs stay backward-compatible through additive contracts.
 24. **A staging stack on the same VM,** run only while testing a release, with a copy of the demo tenant; stopped otherwise.
 25. **Offline-capable screens:** they cache their last state and assets and keep running when the venue uplink drops; admin shows the offline state.
-26. **Backups off the VM:** nightly database (with PITR) and file backups to another host; a restore tested monthly; per-tenant export and import, also for restoring one event and for archiving.
+26. **Backups off the VM:** nightly database (with PITR) and file backups to another host; the secrets key and `deploy/.env` (item 29) backed up separately from the database dump, never next to it, and kept with the fallback laptop; a restore tested monthly; per-tenant export and import, also for restoring one event and for archiving.
 
 ### Fairness, data, operations
 27. **Per-tenant limits:** rate limits, storage quotas, video size limits, and fair job queues for heavy work (PPTX, TTS, uploads).
@@ -57,13 +57,14 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
 
 ### Venues and screens
 33. **Venues as an entity.**
-    - A venue has a name, its IPv4 and IPv6 addresses (as the VM sees them), and the devices that stay at the venue.
+    - A venue has a name and its IPv4 and IPv6 addresses (as the VM sees them). The tenants module owns venues.
     - An event points to a venue. Several events can use the same venue, at different times or at once.
-    - Venues are global rows managed by the superadmin. Assigning a venue's devices to an event is tenant-scoped.
+    - Venues are global rows managed by the superadmin. The devices that stay at a venue belong to Screen (item 34); assigning them to an event is tenant-scoped.
     - A screen needs **both** a request from its event's venue IP **and** its pairing token. The VM sees only the venue's public IP, and events at one venue share it, so the check is in the app; the firewall cannot tell events apart.
     - A per-tenant switch turns the venue IP check off in an emergency (for example when the venue's address changes mid-event). Every use is audited (item 13).
     - Info pages are public by default; each tenant chooses a mode: public, venue-only (from the venue IP) or sign-in. Venue-only is a visibility setting for public, read-only info pages, never authorization for anything else; attendees of another event at the same venue can see them too.
 34. **Multiple screens per event.**
+    - Screen owns devices: name, pairing token, venue id, zone assignment and health. It refers to the venue through the tenants API, never the tenants module's tables ([0008](0008-contract-first.md)).
     - Devices are paired and named.
     - Each event has zones (for example main hall, café, stage), each with its own layout, playlist and schedule.
     - Devices are assigned to zones per event and can be reassigned for the next event.
@@ -74,7 +75,7 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
 - The roadmap gains a tenancy-foundation step before the event catalog and screen contracts, preceded by a legacy inventory ([roadmap step 2](../roadmap.md#2-event-catalog-and-contracts)).
 - Setup (#12): `new-event` becomes "seed the demo tenant" (tenants are rows created through the tenants module, item 1) and the stack is one; the firewall covers IPv6 and 443 and later opens 80/443 to all.
 - Caddy (#9's follow-up) becomes the single edge Caddy with the DNS plugin, on-demand TLS and `ask`.
-- The event catalog (#34) and screen contract (#35) are tenant-aware; #35 gets pairing tokens, the venue IP check, devices, zones and assignments, layouts as data, the theming contract and pinned bundles.
+- The event catalog (#34) and screen contract (#35) are tenant-aware; #35 gets pairing tokens, the venue IP check, devices, zones and assignments, layouts as data and pinned bundles, and uses the theming contract (item 20, its own child in roadmap step 2b).
 - The admin module assumes one event (`admin_settings` keyed by module, a singleton `admin_profile`) and is reworked for tenants.
 - The kit gains tenant context, RLS helpers, scoped keys, streams and files, and a migration lint.
 - Each port costs more (every table, key, timer, cache and subscription scoped, plus leak tests). One missed scope shows one organizer's data to another, so the lints and leak tests are required checks.

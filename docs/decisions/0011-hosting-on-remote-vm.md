@@ -13,7 +13,7 @@ The first plan put one host at the venue, reached on the LAN, with Tailscale for
   - **the venue uplink is a dependency:** screens cache their last state and assets and keep showing them when it drops, and admin shows them as offline;
   - LAN-only ideas (L2 access, the venue router's DNS-rebinding check, plain http on a LAN IP) no longer apply.
 - **The projector is a venue PC** running a full-screen browser on `/screen`, with picture and sound over HDMI. The VM serves web pages only.
-- **The fallback laptop is the only on-site copy:** event repo, images downloaded in advance, one-command restore of the latest backup.
+- **The fallback laptop is the only on-site copy:** event repo, images downloaded in advance, the separately kept secrets key and `deploy/.env`, and a one-command restore of the latest backup.
 - **Access and firewall** (ufw, deny incoming by default on IPv4 and IPv6):
   - everything on the Tailscale interface; Tailscale key expiry is off;
   - ssh from the old development machine's address and the hoster's jump host (kept for good);

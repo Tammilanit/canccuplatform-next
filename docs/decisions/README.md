@@ -1,6 +1,6 @@
 # Decisions
 
-The settled decisions behind [the roadmap](../roadmap.md), one record each. A decision is reopened only by a maintainer, through a PR that adds a new record and marks the old one superseded; old records are never rewritten. Records merge like any other PR ([0016](0016-merge-policy.md)).
+The settled decisions behind [the roadmap](../roadmap.md), one record each. A decision changes only through an issue the product owner (the maintainer) agreed, and its PR adds a new record and marks the old one superseded; old records are never rewritten. Sessions that answer questions escalate a new decision to the maintainer rather than add a record. Records merge like any other PR ([0016](0016-merge-policy.md)).
 
 Each record has Status, Date, Context, Decision and Consequences. New records take the next number: `NNNN-<slug>.md`.
 

@@ -20,7 +20,7 @@ The plan from today to the full new platform, running at the next event in **Apr
 - **Attendees and the projector PC reach the VM over the internet** through the venue's uplink. The VM sees the whole venue as one public address, so **HTTPS with a real domain is required** for every page and for sign-in. Events at the same venue share that address, so the per-venue check for screens is in the app, not the firewall ([0013](decisions/0013-multi-tenant-core.md), item 33).
 - **The venue uplink is a dependency.** When it drops, screens keep showing their last state and assets, and admin shows them as offline.
 - **The projector is a venue PC** running a full-screen browser on `/screen` and sending picture and sound over HDMI. The VM serves web pages only and never drives a display.
-- **The fallback laptop is the only on-site copy:** the event repo, images downloaded in advance and a restore of the latest backup, started with one command.
+- **The fallback laptop is the only on-site copy:** the event repo, images downloaded in advance, the separately kept secrets key and `deploy/.env`, and a restore of the latest backup, started with one command.
 - **Modules talk through their API and the bus.** Example: Pizza publishes `pizza.order.placed`, Moments ranks it against other moments, Screen shows it and Voices can speak it. Nothing polls.
 
 ## Timeline
@@ -76,7 +76,7 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
 #### 2b. Tenancy foundation
 - **Goal:** every later module is tenant-aware from its first line ([0013](decisions/0013-multi-tenant-core.md)).
 - **In it**, in this order, each its own child issue:
-  1. the tenants contract (first): registry, hostnames, admins and roles, settings, feature flags, lifecycle, audit log, and `tenant` in the bus envelope; venues as global rows managed by the superadmin (name, IPv4 and IPv6 addresses, devices that stay there), each event pointing to a venue (several events can share one, also at once), the per-tenant info-page mode (public, venue-only, sign-in) and the audited emergency switch for the venue IP check ([0013](decisions/0013-multi-tenant-core.md), items 33–34);
+  1. the tenants contract (first): registry, hostnames, admins and roles, settings, feature flags, lifecycle, audit log, and `tenant` in the bus envelope; venues as global rows owned by the tenants module and managed by the superadmin (name, IPv4 and IPv6 addresses; the devices at a venue belong to Screen, step 3), each event pointing to a venue (several events can share one, also at once), the per-tenant info-page mode (public, venue-only, sign-in) and the audited emergency switch for the venue IP check ([0013](decisions/0013-multi-tenant-core.md), items 33–34);
   2. kit tenancy: tenant context, row-level security helpers, scoped Valkey keys, streams and files, a migration lint and leak-test helpers; it implements the carve-outs of [0013](decisions/0013-multi-tenant-core.md) items 2 and 6 (platform hostnames, health endpoints and the IP-mode demo stack outside tenant resolution; global tables on the lint's allow-list);
   3. the tenants module;
   4. the edge Caddy with a wildcard certificate (DNS-01) and on-demand TLS behind an `ask` endpoint;
@@ -91,14 +91,14 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
 
 #### 2c. Event catalog and screen contract
 - **Goal:** the events modules exchange, named and outlined before the ports start.
-- **In it:** event names and payload outlines for pizza, tournament, bot and screen overrides (#34); the screen module API and events (#35), with device pairing tokens, the venue IP check, devices, zones and assignments, layouts as data, the theming contract and pinned bundles. #34 also settles whether screen overrides are `moments.*` or `screen.*` events, since Moments ranks them ([0010](decisions/0010-scope.md)), so step 4 needs no breaking rename. Each other module's full contract is its own PR at the start of its port, written from the real legacy API.
+- **In it:** event names and payload outlines for pizza, tournament, bot and screen overrides (#34); the screen module API and events (#35), with device pairing tokens, the venue IP check, devices, zones and assignments, layouts as data and pinned bundles; it uses the theming contract from 2b item 7. #34 also settles whether screen overrides are `moments.*` or `screen.*` events, since Moments ranks them ([0010](decisions/0010-scope.md)), so step 4 needs no breaking rename. Each other module's full contract is its own PR at the start of its port, written from the real legacy API.
 - **Exit criteria:** catalog and screen contract merged, both tenant-aware.
 - **Issues:** epic #36, order #34 → #35.
 
 ### 3. Screen core incl. PPTX
 - **Goal:** the projector PC plays a Main screen from the VM, and an event can run several screens.
 - **In it:** port the canccusignage core: scheduler and windows, playlists, playback timing and bookmarks, validators, duration parsers, the asset pipeline with PowerPoint rendering as a separate render-job container, the kiosk player and a new Postgres schema. Rewritten: the screen page and snapshot serving, persistence, the admin UI (its view-models kept). Screens cache their last state and assets. Feeds are wired later (step 9).
-  - **Devices:** paired once, named, with a revocable device token; a screen is served only with **both** its token and a request from its event's venue IP (the IP alone is never enough), unless the tenant's audited emergency switch has turned the IP check off.
+  - **Devices**, owned by Screen (name, pairing token, venue id, zone assignment, health; the venue is read through the tenants API): paired once, with a revocable device token; a screen is served only with **both** its token and a request from its event's venue IP (the IP alone is never enough), unless the tenant's audited emergency switch has turned the IP check off.
   - **Zones** per event (for example main hall, café, stage), each with its own layout, playlist and schedule; devices are assigned to zones per event and reassigned for the next event.
   - Push to all zones or one zone, and mirror one zone onto others.
   - Device health in admin: online, last seen, now playing.
@@ -147,7 +147,7 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
   - backup and restore, the fallback laptop, an outside watchdog with a heartbeat;
   - the admin simplification pass, theme, and Finnish as the first language pack;
   - dependency auditing ([0015](decisions/0015-dependency-auditing.md)): `npm audit` and `pip-audit` in CI, and Renovate (or Dependabot) for images and dependencies.
-- **Exit criteria:** by 2027-02-28, a restore onto the fallback laptop works from cold; the audit jobs run in CI and update PRs arrive.
+- **Exit criteria:** by 2027-02-28, a restore onto the fallback laptop works from cold and secrets decrypt after the restore; the audit jobs run in CI and update PRs arrive.
 - **Issues:** to be created.
 
 ### 11. Freeze, dress rehearsal and switch
@@ -167,12 +167,14 @@ Both are new builds with their own contracts, so neither blocks the main line. T
 - **Goal:** rosters for any game, organized into rounds.
 - **In it:** rosters, rounds as data (qualification, quarter-final, semi-final, final), the list of games people play, favourites with a notification when many play one. Based on the mini-tourney code (ISC): bracket engine, rankings and team builder ported; storage, API, auth and frontend rewritten. Ported only after its author's OK; licence and attribution are kept.
 - **Exit criteria:** a roster is built and a bracket runs end to end on the demo tenant.
+- **Issues:** to be created.
 
 ### Cast
 - **Goal:** anyone at the venue casts their screen to the projector.
 - **In it:** its own container (MediaMTX over WebRTC), a cast page and hooks.
 - **Open:** casting was designed for a VM on the venue LAN. With the VM remote, the stream crosses the uplink twice; latency and bandwidth must be measured before the design is fixed.
 - **Exit criteria:** a cast from a venue PC reaches the projector with acceptable delay.
+- **Issues:** to be created.
 
 ## Porting plan
 From the code surveys of 3 Nov 2026. Each port takes this table as its starting point; the legacy inventory (2a) refines it.
@@ -194,3 +196,5 @@ Order rationale: Screen consumes pizza, tournament and bot events, so Screen cor
 - **Domain and DNS:** who provides the platform domain and a DNS API token for DNS-01 certificates. Blocks HTTPS, #5 and step 2b items 4–5.
 - **A separate dev VM before the freeze?** To be asked of the hoster nearer March ([0012](decisions/0012-development-on-the-vm.md)).
 - **Cast over a remote VM:** see Parallel tracks.
+- **What slips first if February runs over:** steps 6–10 all fall in February and March is fixes only; the order of what to cut is not decided yet.
+- **GDPR deletion vs the append-only audit log** ([0013](decisions/0013-multi-tenant-core.md), items 13 and 31): how a deleted user appears in the audit log is not decided yet.
