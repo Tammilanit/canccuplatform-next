@@ -11,13 +11,13 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
 
 ### Core
 1. **One VM, one shared stack:** one container per module, one Postgres, one Valkey, one edge Caddy. Every event is a tenant. Adding an event or a hostname adds rows (no deploy, no restart). Memory grows with modules, not events; disk is the real limit.
-2. **Host-based tenant resolution** through the tenants registry. An unknown host gets nothing. Outside tenant resolution, and named here so no module invents its own bypass: the platform's own hostnames (the central sign-in host, item 10, and the superadmin hostname, item 13); health endpoints; and the IP-mode demo stack in CI, which serves the demo tenant on an unregistered host.
+2. **Host-based tenant resolution** through the tenants registry. An unknown host gets nothing. Outside tenant resolution, and named here so no module invents its own bypass: the platform's own hostnames (the central sign-in host, item 10, and the superadmin hostname, item 13); health endpoints; and the IP-mode demo stack in CI, which serves the demo tenant on an unregistered host. That mode starts only while `platform.version` is `dev` and the demo tenant is the only tenant, so it never runs on a stack with real events.
 3. **Roles:** superadmin (global) and event admin (per tenant; a user can admin several events), checked in the backend.
 4. **The tenants module and contract come first:** tenants, hostnames, admins and roles, venues and each event's venue (item 33), settings, feature flags, lifecycle (draft → live → archived; archived is read-only) and the audit log. The bus envelope gains `tenant`.
 
 ### Isolation
 5. **Postgres row-level security on every tenant table.** The app role owns no tables and has no BYPASSRLS. The kit sets the tenant with `SET LOCAL` per transaction, never per connection. With no tenant set a query sees nothing. A column default reads the tenant setting. The superadmin overview uses a separate role.
-6. **The tenant is in every key.** Unique constraints include `tenant_id`; foreign keys are composite with it, so a row cannot reference another tenant's row. CI lints every table for the column, the policy and the keys. Global tables (tenants, hostnames, venues, users, and Screen's device rows, item 34) have no `tenant_id` of their own; they are exempt only through an explicit allow-list that the lint enforces, and a new global table needs a change to that list. Global tables are not under RLS and are read before a tenant is set; hostnames carry their tenant as a plain foreign key.
+6. **The tenant is in every key.** Unique constraints include `tenant_id`; foreign keys are composite with it, so a row cannot reference another tenant's row. CI lints every table for the column, the policy and the keys. Global tables (tenants, hostnames, venues, users, and Screen's device identity rows, item 34) have no `tenant_id` of their own; they are exempt only through an explicit allow-list that the lint enforces, and a new global table needs a change to that list. Global tables are not under RLS and are read before a tenant is set; hostnames carry their tenant as a plain foreign key. A global row holds no tenant-scoped data. Modules other than the owner resolve the tenant through the tenants API or the kit's cache, never by reading the tenants module's tables ([0008](0008-contract-first.md)).
 7. **Kit scoping beyond Postgres:** Valkey keys and bus streams per tenant (`t:<tenant>:events:<module>`); files under `/files/<tenant>/<module>/`, served only after a tenant check; caches and schedulers keyed by tenant; bus consumers set the tenant per message and pick up a new tenant's streams without a restart (item 1). Modules use no raw keys.
 8. **Cross-tenant leak tests** for every endpoint and consumer, in CI.
 
@@ -52,7 +52,7 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
 28. **Observability:** logs and metrics tagged with the tenant, and a status view per tenant.
 29. **Secrets:** encrypted at rest with a key outside the database (in `deploy/.env`), rotatable, never returned to the frontend.
 30. **Users are global.** An event admin sees only their own event's members.
-31. **GDPR:** deleting a tenant or user covers rows, Valkey, files and logs, plus a stated backup retention period.
+31. **GDPR:** deleting a tenant or user covers rows, Valkey, files and logs, plus a stated backup retention period. In the append-only audit log (item 13) a deleted user is pseudonymised: their name and Discord id are erased, and the rows keep an anonymous id.
 32. **A written data-processing agreement with each outside organizer:** who holds the data, deletion and uptime expectations. An organizational task for the operators, not code.
 
 ### Venues and screens
@@ -64,7 +64,7 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
     - A per-tenant switch turns the venue IP check off in an emergency (for example when the venue's address changes mid-event). Every use is audited (item 13).
     - Info pages are public by default; each tenant chooses a mode: public, venue-only (from the venue IP) or sign-in. Venue-only is a visibility setting for public, read-only info pages, never authorization for anything else; attendees of another event at the same venue can see them too.
 34. **Multiple screens per event.**
-    - Screen owns devices: name, pairing token, venue id, zone assignment and health. It refers to the venue through the tenants API, never the tenants module's tables ([0008](0008-contract-first.md)).
+    - Screen owns devices. A device row is global and holds only its name, pairing token and venue id; it refers to the venue through the tenants API, never the tenants module's tables ([0008](0008-contract-first.md)). Zone assignment and health (online, last seen, now playing) are per tenant: rows with `tenant_id`, under RLS (items 5–6).
     - Devices are paired and named.
     - Each event has zones (for example main hall, café, stage), each with its own layout, playlist and schedule.
     - Devices are assigned to zones per event and can be reassigned for the next event.
@@ -81,4 +81,4 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
 - Each port costs more (every table, key, timer, cache and subscription scoped, plus leak tests). One missed scope shows one organizer's data to another, so the lints and leak tests are required checks.
 - All tenants share one version and one migration; restoring one event uses the per-tenant export, not PITR.
 - The kit-tenancy and edge-Caddy child issues implement the carve-outs named in items 2 and 6.
-- A legacy bot is cut over at the switch: its data is migrated into its event's tenant, the legacy bot is stopped, its token goes into the tenant, and the old container is kept stopped as rollback.
+- A legacy bot is cut over at the switch: its data is migrated into its event's tenant (the migration is built and tested in roadmap step 6, Bot, and run in step 11), the legacy bot is stopped, its token goes into the tenant, and the old container is kept stopped as rollback.

@@ -17,11 +17,11 @@ Everyone codes with AI, so the gates are machines; a person steps in only where 
   - changes to `.github/` or `setup/`;
   - anything in other repos.
 - **At most 2 review-fix rounds.** If the verdict is still not `pass` after the second round, or it is `manual`, a maintainer takes over.
-- **From the freeze on 2027-03-01, every PR needs a maintainer's accept.** March is fixes only, the dress rehearsal and the switch; all feature work, Hardening included, is done by end of February ([roadmap](../roadmap.md#timeline)).
+- **From the freeze on 2027-03-01, every PR needs a maintainer's accept.** From then on fixes only, the dress rehearsal and the switch ([roadmap](../roadmap.md#order-and-dates)).
 
 ## Consequences
 - Authors mark the PR ready and stop; they never enable auto-merge. #39 changes AGENTS.md step 8 (Done) and the CLAUDE.md `finish` and `ship` shortcuts to match.
-- #39's acceptance criteria include: an author session cannot produce a passing verdict; the required `review-gate` check is pinned to its GitHub Actions source in the ruleset; `review-gate` reports on the PR head (a commit status set through the API) and does not block the merge queue's own commit (skip on `merge_group`, as `claude-review` does today).
+- #39's acceptance criteria include: an author session cannot produce a passing verdict; the required `review-gate` check is pinned to its GitHub Actions source in the ruleset; the dispatcher writes the verdict formats of [0014](0014-independent-review.md) exactly; `review-gate` reports on the PR head (a commit status set through the API) and does not block the merge queue's own commit (skip on `merge_group`, as `claude-review` does today).
 - Most PRs merge with no person involved, so CI and the review carry the weight: lints, leak tests and the security review ([0013](0013-multi-tenant-core.md), [0014](0014-independent-review.md)).
 - The AGENTS.md merge rules are updated in #39.
 

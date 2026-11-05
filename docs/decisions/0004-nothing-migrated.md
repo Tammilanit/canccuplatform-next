@@ -12,4 +12,4 @@ The new platform starts empty, with one exception: at cutover the legacy bot's d
 ## Consequences
 - No general import code is written.
 - Old data stays readable in the old stores if anyone needs it.
-- The bot data migration is planned and tested in a crew session as part of the freeze and switch ([roadmap step 11](../roadmap.md#11-freeze-dress-rehearsal-and-switch)).
+- The bot data migration is built and tested on a copy of the legacy data in [roadmap step 6](../roadmap.md#6-bot) (Bot); step 11 only runs it at the switch.
