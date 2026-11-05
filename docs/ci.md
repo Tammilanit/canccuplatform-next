@@ -14,13 +14,14 @@
 | `no-event-names` | Fails if the lines a PR adds contain a forbidden term. |
 | `review-gate` | From `.github/workflows/review-gate.yml`: passes only on an independent review's `Review verdict: pass <head sha>` for the PR's current head (see below). |
 | `contracts` | `scripts/check-contracts`: validates every `events/*/profile.yaml` against `contracts/profile.schema.json`, checks its asset paths exist, and lints `contracts/*.openapi.yaml` with Redocly (`contracts/redocly.yaml`). |
+| `naming` | `scripts/check-naming`: fails if a tracked file name or line uses the old platform prefix as an identifier ([ADR 0017](decisions/0017-naming.md)). After it first runs on main, a maintainer adds it to the required checks. |
 
 Do not rename these jobs; renaming breaks the required checks.
 
 ## demo-stack
 - **Stack:** `docker compose -f deploy/compose.yml -f deploy/compose.ci.yml up -d --build --wait`. The CI overlay adds two things, and is never used for a real install:
   - `event-seed` copies `events/demo/` into the event folder of the files volume (`/files/event`) before admin starts.
-  - `session-stub` stands in for sign-in (#10): admin's rights check asks it for `GET /api/admin/session`. The cookie `cp_session=demo-ci` is a session with every admin right; any other cookie gets 401 `not_signed_in`. When sign-in lands, the stub gives way to a real CI sign-in.
+  - `session-stub` stands in for sign-in (#10): admin's rights check asks it for `GET /api/admin/session`. The cookie `canccu_session=demo-ci` is a session with every admin right; any other cookie gets 401 `not_signed_in`. When sign-in lands, the stub gives way to a real CI sign-in.
 - **API tests:** `scripts/demo-stack-test [--dry-run] [BASE_URL]` (curl, jq, python3): health of hello and admin through Caddy, 401 without a session, Load from the seeded event folder, profile import and export as a zip, settings read, save and `409 version_conflict`, `404` for an unknown module, the health view. It ends by importing the demo event again, so the screenshots show it. Hand-written for now; tests generated from `contracts/` come later.
 - **Screenshots:** `scripts/demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR]` takes full-page Chromium screenshots (Playwright, pinned in the script) of `/admin/settings`, `/admin/settings/admin`, `/admin/health-view` and `/admin/profile`, signed in with the stub's cookie. A page that does not answer 200 fails the check. `scripts/demo-screenshots --install` installs Chromium and its system packages (CI). The PNGs are the artifact `demo-screenshots` of the run (kept 14 days); on failure the Compose logs are the artifact `demo-stack-logs`.
 - **Locally:** start the stack as above, then `scripts/demo-stack-test` and `scripts/demo-screenshots`. Without Chromium's system packages, run the screenshots in the Playwright image: `docker run --rm --network host -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD:/repo:ro" -v /tmp/shots:/out -w /repo mcr.microsoft.com/playwright:v1.64.1-noble scripts/demo-screenshots http://localhost /out`. Stop with `docker compose -f deploy/compose.yml -f deploy/compose.ci.yml down -v`.
@@ -37,6 +38,12 @@ Do not rename these jobs; renaming breaks the required checks.
 - `scripts/check-contracts [--dry-run]`; tools come through `npx` with pinned versions (ajv-cli, ajv-formats, @redocly/cli), so it needs Node 22 and no `package.json`.
 - Fails (exit 1) on an invalid profile, a missing asset or an OpenAPI lint error; exit 2 on wrong usage or missing files.
 - **Required check:** after this job first runs on main, a maintainer adds `contracts` to the required checks of the main ruleset. Do not rename the job.
+
+## naming
+- `scripts/check-naming [DIR]` scans every tracked file (names and contents) of the repo, or of `DIR`, for an identifier with the old prefix: the uppercase prefix followed by `_` or `-`, the lowercase one followed by `_` or `-` and a letter, a template `$` or a regex `[`, or the old npm scope. Exit 1 lists `file:line`; exit 2 on a broken run.
+- Exempt: `docs/plans/` (history). The coreutils `cp` command never matches, because a space follows it; neither do longer words such as `scp-`.
+- Self-test: `scripts/check-naming --self-test`.
+- **Required check:** after this job first runs on main, a maintainer adds `naming` to the required checks of the main ruleset. Do not rename the job.
 
 ## no-event-names
 - `scripts/check-event-names [--dry-run] [BASE]` scans added lines of `BASE...HEAD`, case-insensitively.

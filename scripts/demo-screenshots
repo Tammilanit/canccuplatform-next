@@ -52,14 +52,14 @@ state=$(mktemp)
 log=$(mktemp)
 trap 'rm -f "$state" "$log"' EXIT
 cat > "$state" <<JSON
-{"cookies": [{"name": "cp_session", "value": "$SESSION", "domain": "$host", "path": "/",
+{"cookies": [{"name": "canccu_session", "value": "$SESSION", "domain": "$host", "path": "/",
   "expires": -1, "httpOnly": true, "secure": false, "sameSite": "Lax"}], "origins": []}
 JSON
 
 fail=0
 for p in "${PAGES[@]}"; do
   name=${p%%|*} url=$BASE${p#*|}
-  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "cookie: cp_session=$SESSION" "$url") || code=000
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "cookie: canccu_session=$SESSION" "$url") || code=000
   if [ "$code" != 200 ]; then
     echo "FAIL $name: $url answered HTTP $code, not 200"; fail=1; continue
   fi

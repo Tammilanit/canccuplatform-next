@@ -6,7 +6,7 @@ import logging
 
 import pytest
 
-from cp_kit import (
+from canccu_kit import (
     ConfigError,
     JsonFormatter,
     KitError,
@@ -18,10 +18,10 @@ from cp_kit import (
 )
 
 ENV = {
-    "CP_MODULE": "screen",
-    "CP_VERSION": "v0.1.0",
-    "CP_VALKEY_URL": "valkey://valkey:6379/0",
-    "CP_ADMIN_URL": "http://admin:8000/",
+    "CANCCU_MODULE": "screen",
+    "CANCCU_VERSION": "v0.1.0",
+    "CANCCU_VALKEY_URL": "valkey://valkey:6379/0",
+    "CANCCU_ADMIN_URL": "http://admin:8000/",
 }
 
 
@@ -49,8 +49,10 @@ def test_load_config() -> None:
 
 
 def test_load_config_names_missing_variables() -> None:
-    with pytest.raises(ConfigError, match="CP_VALKEY_URL, CP_ADMIN_URL"):
-        load_config({"CP_MODULE": "screen", "CP_VERSION": "v0.1.0", "CP_VALKEY_URL": ""})
+    with pytest.raises(ConfigError, match="CANCCU_VALKEY_URL, CANCCU_ADMIN_URL"):
+        load_config(
+            {"CANCCU_MODULE": "screen", "CANCCU_VERSION": "v0.1.0", "CANCCU_VALKEY_URL": ""}
+        )
 
 
 def test_json_log_line_fields_and_correlation_id() -> None:

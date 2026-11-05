@@ -1,6 +1,6 @@
 # Test overlay: publishes Valkey on the host's loopback for the kit integration tests.
 #   docker compose -f deploy/compose.yml -f deploy/compose.test.yml up -d --wait valkey
-#   CP_VALKEY_URL=redis://127.0.0.1:6379 npm test   # or pytest
+#   CANCCU_VALKEY_URL=redis://127.0.0.1:6379 npm test   # or pytest
 services:
   valkey:
     ports:

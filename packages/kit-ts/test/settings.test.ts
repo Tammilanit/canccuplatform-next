@@ -77,7 +77,7 @@ describe("settings client", () => {
     await settings.write({ a: 2 }, { sessionId: "s1" });
     expect(admin.requests.at(-1)).toMatchObject({
       method: "PUT",
-      cookie: "cp_session=s1",
+      cookie: "canccu_session=s1",
       body: { settings_version: 2, values: { a: 2 } },
     });
     expect(settings.settingsVersion).toBe(3);

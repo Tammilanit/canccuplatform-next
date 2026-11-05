@@ -1,6 +1,6 @@
 """Integration test of ValkeyStreamStore and Bus against a real Valkey.
 
-Runs only when CP_VALKEY_URL is set; see README, Integration test.
+Runs only when CANCCU_VALKEY_URL is set; see README, Integration test.
 """
 
 from __future__ import annotations
@@ -17,13 +17,13 @@ from datetime import UTC, datetime
 import pytest
 import valkey.asyncio as valkey
 
-from cp_kit import STREAM_MAXLEN, Bus, Event, ValkeyStreamStore, new_id
-from cp_kit.bus import stream_name
+from canccu_kit import STREAM_MAXLEN, Bus, Event, ValkeyStreamStore, new_id
+from canccu_kit.bus import stream_name
 
-URL = os.environ.get("CP_VALKEY_URL", "")
+URL = os.environ.get("CANCCU_VALKEY_URL", "")
 TIME_RE = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$")
 
-pytestmark = pytest.mark.skipif(not URL, reason="CP_VALKEY_URL is not set")
+pytestmark = pytest.mark.skipif(not URL, reason="CANCCU_VALKEY_URL is not set")
 
 
 def unique_module() -> str:

@@ -1,6 +1,6 @@
 /**
  * Integration test of ValkeyStreamStore and Bus against a real Valkey.
- * Runs only when CP_VALKEY_URL is set; see README, Integration test.
+ * Runs only when CANCCU_VALKEY_URL is set; see README, Integration test.
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { validate as isUuid, version as uuidVersion } from "uuid";
@@ -8,7 +8,7 @@ import { Valkey } from "iovalkey";
 import { Bus, STREAM_MAXLEN, ValkeyStreamStore, newId, streamName } from "../src/index.js";
 import type { Event } from "../src/index.js";
 
-const url = process.env.CP_VALKEY_URL;
+const url = process.env.CANCCU_VALKEY_URL;
 const TIME_RE = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
 
 /** A module name no other run uses, so reruns and the kit-py test never share a stream. */

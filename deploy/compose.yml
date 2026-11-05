@@ -4,23 +4,23 @@
 name: canccuplatform
 
 x-kit-env: &kit-env
-  CP_VERSION: ${CP_VERSION:-dev}
-  CP_VALKEY_URL: redis://valkey:6379
-  CP_ADMIN_URL: http://admin:8080
+  CANCCU_VERSION: ${CANCCU_VERSION:-dev}
+  CANCCU_VALKEY_URL: redis://valkey:6379
+  CANCCU_ADMIN_URL: http://admin:8080
 
 services:
   postgres:
     image: postgres:17.11-alpine
     environment:
-      POSTGRES_USER: cp
-      POSTGRES_DB: cp
+      POSTGRES_USER: canccu
+      POSTGRES_DB: canccu
       # Placeholder for local use only. Real installs set POSTGRES_PASSWORD in deploy/.env
       # (see .env.example); the setup wizard will generate it.
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cp-local-only}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-canccu-local-only}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cp -d cp"]
+      test: ["CMD-SHELL", "pg_isready -U canccu -d canccu"]
       interval: 2s
       timeout: 3s
       retries: 30
@@ -44,8 +44,8 @@ services:
       dockerfile: modules/hello/Dockerfile
     environment:
       <<: *kit-env
-      CP_MODULE: hello
-      CP_DATABASE_URL: postgres://cp:${POSTGRES_PASSWORD:-cp-local-only}@postgres:5432/cp
+      CANCCU_MODULE: hello
+      CANCCU_DATABASE_URL: postgres://canccu:${POSTGRES_PASSWORD:-canccu-local-only}@postgres:5432/canccu
     volumes:
       - files:/files
     depends_on:
@@ -70,10 +70,10 @@ services:
       dockerfile: modules/admin/Dockerfile
     environment:
       <<: *kit-env
-      CP_MODULE: admin
-      CP_DATABASE_URL: postgres://cp:${POSTGRES_PASSWORD:-cp-local-only}@postgres:5432/cp
-      CP_EVENT_DIR: /files/event
-      CP_HEALTH_TARGETS: hello=http://hello:8080/health
+      CANCCU_MODULE: admin
+      CANCCU_DATABASE_URL: postgres://canccu:${POSTGRES_PASSWORD:-canccu-local-only}@postgres:5432/canccu
+      CANCCU_EVENT_DIR: /files/event
+      CANCCU_HEALTH_TARGETS: hello=http://hello:8080/health
     volumes:
       - files:/files
     depends_on:

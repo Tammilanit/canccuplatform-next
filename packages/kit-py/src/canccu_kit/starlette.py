@@ -1,6 +1,6 @@
 """Starlette (and FastAPI) adapter: /health route, rights check, error body, correlation id.
 
-Install with the extra: `cp-kit[starlette]`.
+Install with the extra: `canccu-kit[starlette]`.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from .errors import KitError, code_for_status, error_body, internal_error_body
 from .health import Health
 from .rights import RightsChecker, Session
 
-log = logging.getLogger("cp.kit.http")
+log = logging.getLogger("canccu.kit.http")
 
 
 def health_route(health: Health, path: str = "/health") -> Route:

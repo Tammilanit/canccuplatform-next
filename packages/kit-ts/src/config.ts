@@ -1,6 +1,11 @@
 /** Configuration from the environment. */
 
-export const ENV_VARS = ["CP_MODULE", "CP_VERSION", "CP_VALKEY_URL", "CP_ADMIN_URL"] as const;
+export const ENV_VARS = [
+  "CANCCU_MODULE",
+  "CANCCU_VERSION",
+  "CANCCU_VALKEY_URL",
+  "CANCCU_ADMIN_URL",
+] as const;
 
 export class ConfigError extends Error {
   override name = "ConfigError";
@@ -21,9 +26,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   }
   const get = (name: (typeof ENV_VARS)[number]): string => env[name] ?? "";
   return {
-    module: get("CP_MODULE"),
-    version: get("CP_VERSION"),
-    valkeyUrl: get("CP_VALKEY_URL"),
-    adminUrl: get("CP_ADMIN_URL").replace(/\/+$/, ""),
+    module: get("CANCCU_MODULE"),
+    version: get("CANCCU_VERSION"),
+    valkeyUrl: get("CANCCU_VALKEY_URL"),
+    adminUrl: get("CANCCU_ADMIN_URL").replace(/\/+$/, ""),
   };
 }

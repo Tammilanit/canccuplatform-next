@@ -9,7 +9,7 @@ COPY modules/admin/ modules/admin/
 RUN sed -i 's#file:../../packages/kit-py#file:///repo/packages/kit-py#' modules/admin/pyproject.toml \
  && pip install ./modules/admin
 WORKDIR /repo/modules/admin
-ENV CP_CONTRACTS_DIR=/repo/contracts CP_DECLARATIONS_DIR=/repo/modules/admin/declarations
+ENV CANCCU_CONTRACTS_DIR=/repo/contracts CANCCU_DECLARATIONS_DIR=/repo/modules/admin/declarations
 USER nobody
 EXPOSE 8080
-CMD ["python", "-m", "cp_admin.main"]
+CMD ["python", "-m", "canccu_admin.main"]

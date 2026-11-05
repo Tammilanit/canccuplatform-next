@@ -6,9 +6,9 @@ import html
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from cp_kit import Health, KitError
-from cp_kit.rights import Session
-from cp_kit.starlette import install
+from canccu_kit import Health, KitError
+from canccu_kit.rights import Session
+from canccu_kit.starlette import install
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
