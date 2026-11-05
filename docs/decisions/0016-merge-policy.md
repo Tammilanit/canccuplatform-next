@@ -1,33 +1,36 @@
 # 0016. Merge policy
 
-- **Status:** Accepted (the `review-gate` check and the AGENTS.md and CONTRIBUTING.md text follow in #39)
+- **Status:** Accepted (implemented by #40: `.github/workflows/review-gate.yml`, `.github/scripts/review-gate`, AGENTS.md Merge rules)
 - **Date:** 2026-11-05
 
 ## Context
-Everyone codes with AI, so the gates are machines; a person steps in only where real damage is possible. The main ruleset requires 0 approvals, so `gh pr merge --auto` merges as soon as the queue's checks pass.
+Everyone codes with AI, so the gates are machines plus an independent review; a maintainer steps in only where real damage is possible. The main ruleset requires 0 approvals, so `gh pr merge --auto` merges as soon as the required checks pass.
 
 ## Decision
-- **Auto-merge** (`gh pr merge --auto`) once CI is green and the independent review's verdict is `pass` ([0014](0014-independent-review.md)).
-- **Enforcement:** a required CI check `review-gate` (added by #39) trusts only verdicts written by the reviewer identity (`REVIEWER_LOGIN`, [0014](0014-independent-review.md)). It passes only when the newest comment by that login with a verdict line ends with `Review verdict: pass <current head sha>`. Comments by any other login, maintainers included, never count, and later comments without a verdict line do not void a pass. A push changes the head, so it voids a pass.
-- **Who enables auto-merge:** only the maintainers' dispatcher, after `review-gate` passes and only when the PR is not a maintainer-accept case, or a maintainer. Author sessions never enable auto-merge.
-- **A maintainer accepts only** (enforced by the dispatcher, see Known limits):
-  - plan-tier plans;
+- **Automatic merge** when CI is green and the independent review's verdict is `pass` on the current head ([0014](0014-independent-review.md)).
+- **Enforcement:** the required check `review-gate`, a job in its own workflow (`docs/ci.md`, review-gate). It trusts only verdict comments by the reviewer identity (`REVIEWER_LOGIN`) and passes only on `Review verdict: pass <head sha>` for the PR's current head and base. A push or a base-branch change voids a pass; an edited or malformed verdict fails the gate. A reviewer comment that is created, edited or deleted re-runs the gate. On `merge_group` the check passes, because the PR was gated before it was queued.
+- **Who enables auto-merge:** only the dispatcher (the maintainer tooling), after `review-gate` passes and only for a PR that needs no maintainer's accept, or a maintainer. Authors and the reviewer never do.
+- **A maintainer accepts only, until the freeze:**
+  - plan-tier plans (`docs/plans/issue-<n>.md`);
   - breaking contract changes;
   - destructive migrations;
-  - changes to `.github/` or `setup/`;
+  - changes to `.github/` (the gates themselves);
+  - changes to `setup/` (privileged host scripts);
   - a record that supersedes 0014 or 0016;
   - anything in other repos.
-- **At most 2 review-fix rounds.** If the verdict is still not `pass` after the second round, or it is `manual`, a maintainer takes over.
-- **From the freeze on 2027-03-01, every PR needs a maintainer's accept.** From then on fixes only, the dress rehearsal and the switch ([roadmap](../roadmap.md#order-and-dates)).
+
+  The reviewer gives these `manual — <reason>`; a maintainer never accepts over `changes`. The maintainer accepts by labelling the PR `accepted`, having `Review verdict: pass <head sha>` posted for the same head as the reviewer identity, and enabling auto-merge.
+- **Review flow:** one full review, then one narrow fix-check ([0014](0014-independent-review.md)). A missing or broken fix goes to the maintainer; there is no new review loop.
+- **From the freeze on 2027-03-01, every PR needs a maintainer's accept;** the reviewer's best verdict is `manual`. From then on fixes only, the dress rehearsal and the switch ([roadmap](../roadmap.md#order-and-dates)).
 
 ## Consequences
-- Authors mark the PR ready and stop; they never enable auto-merge. #39 changes AGENTS.md step 8 (Done) and the CLAUDE.md `finish` and `ship` shortcuts to match.
-- #39's acceptance criteria include: an author session cannot produce a passing verdict; the required `review-gate` check is pinned to its GitHub Actions source in the ruleset; the dispatcher writes the verdict formats of [0014](0014-independent-review.md) exactly; `review-gate` reports on the PR head (a commit status set through the API) and does not block the merge queue's own commit (skip on `merge_group`, as `claude-review` does today).
 - Most PRs merge with no person involved, so CI and the review carry the weight: lints, leak tests and the security review ([0013](0013-multi-tenant-core.md), [0014](0014-independent-review.md)).
-- The AGENTS.md merge rules are updated in #39.
+- AGENTS.md Merge rules list the first five accept cases; the last two (a record superseding 0014 or 0016, other repos) need a follow-up there.
 
 ## Known limits
-- **The gate runs from the PR's own branch.** The workflow and the gate script come from the PR's branch, so a PR that changes `.github/` can change its own gate. Mitigation: `.github/` PRs are always maintainer-accept, and the dispatcher enforces that: it never enables auto-merge on them, and author sessions never enable it at all.
-- **GitHub does not enforce the accept cases.** The ruleset requires 0 approvals, so the maintainer-accept cases (and every PR after the freeze) are enforced by the dispatcher, not by GitHub.
-- **A status can be set by any write token.** `review-gate` is a commit status; a token with write access can set one directly. Deny rules do not stop an author's own write token from doing this. The mitigation is pinning the required check to its GitHub Actions source in the ruleset, an acceptance criterion of #39; until then this gap is open.
+- **A PR runs its own gate.** The check runs the PR's own copy of `review-gate.yml` and `.github/scripts/review-gate`, so a PR that changes them can make its own check green. Mitigation: `.github/` PRs always need a maintainer's accept, and the dispatcher never enables auto-merge on them. Possible follow-ups: `pull_request_target` with a checkout of the base ref only, or CODEOWNERS for `.github/` with required code-owner review.
+- **GitHub does not enforce the accept cases.** With 0 required approvals, the maintainer-accept cases (and every PR after the freeze) are enforced by the dispatcher and the `manual` verdict, not by GitHub.
+- **A required check without a pinned source** can be satisfied by a commit status of the same name, which any token with write access can set. Mitigation: a maintainer pins `review-gate` to its GitHub Actions source in the ruleset; until then this gap is open.
+- **Deleted reviewer comments.** Anyone with write access can delete the reviewer's newer `changes` comment, so an older `pass` on the same head decides again. Deletions show in the organization audit log.
+- **The merge queue does not re-check.** A `changes` verdict posted after the PR was queued does not stop the merge; remove the PR from the queue by hand.
 - **Same OS user for authors and the reviewer.** See [0014](0014-independent-review.md), Known limits.
