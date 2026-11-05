@@ -1,6 +1,6 @@
 # CI
 
-`.github/workflows/ci.yml` runs on every pull request and on push to main; `.github/workflows/claude-review.yml` runs on every pull request.
+`.github/workflows/ci.yml` runs on every pull request and on push to main. There is no Claude review in CI (see [Code review](#code-review)).
 
 ## Checks (names are stable; branch rules require them)
 | Check | What it does |
@@ -10,7 +10,6 @@
 | `lint-types-test (ui)` | In `packages/ui`: `npm ci`, `npm run lint` (eslint + prettier), `npm run typecheck`, `npm test` (vitest). After it first runs on main, a maintainer adds it to the required checks. |
 | `no-event-names` | Fails if the lines a PR adds contain a forbidden term. |
 | `contracts` | `scripts/check-contracts`: validates every `events/*/profile.yaml` against `contracts/profile.schema.json`, checks its asset paths exist, and lints `contracts/*.openapi.yaml` with Redocly (`contracts/redocly.yaml`). |
-| `claude-review` | From `.github/workflows/claude-review.yml`: Claude reviews the PR against its linked issue (see below). |
 
 Do not rename these jobs; renaming breaks the required checks.
 
@@ -27,13 +26,11 @@ Do not rename these jobs; renaming breaks the required checks.
 - Locally: `EVENT_NAME_TERMS=$'term1\nterm2' scripts/check-event-names origin/main`. Self-test: `scripts/check-event-names --self-test`.
 - Without the secret the check fails (exit 2), except on fork PRs, where secrets are unavailable and it is skipped with a warning; a maintainer reviews those when approving the run.
 
-## claude-review
-- Runs on every PR (opened, new commits, reopened, ready for review, description edited). The prompt lives in `.github/claude-review.md`.
-- Claude reads `AGENTS.md`, `contracts/`, the diff and the issue linked with `Closes #<n>`, then judges: matches the issue and its acceptance criteria, stays in scope, follows contracts and rules, has real tests. No linked issue fails.
-- Result: Claude returns a structured verdict; the workflow (not Claude) posts it as one PR comment, updated on each run, and sets the check: pass on `PASS`, fail on `FAIL` or when no verdict comes back. Claude only gets read tools.
-- **Cost cap:** the review is pinned to `--model claude-sonnet-5-5` (never Opus) and limited to `--max-turns 12` (was 40) in `claude_args`. Do not raise either without a maintainer deciding it.
-- **Token:** runs on the organizer's Claude subscription via the Actions secret `CLAUDE_CODE_OAUTH_TOKEN`, created with `claude setup-token` and set by a person under Settings → Secrets and variables → Actions. Never put it in the repo.
-- **Fork PRs:** the workflow uses `pull_request`, never `pull_request_target`, so fork PRs get no secrets. The job skips with a notice; the maintainer who approves the run reviews the PR by hand. A skipped job counts as passed for required checks, so that approval is the gate.
-- **Approval for outside contributors:** Settings → Actions → General → "Fork pull request workflows from outside collaborators" set to *Require approval for all outside collaborators*. Then neither CI nor the review runs on a fork or first-time-contributor PR until a maintainer approves.
-- **Merge queue:** on `merge_group` the job skips with a notice (the PR was already reviewed), so the queue is not blocked.
-- **Required check:** GitHub offers a check for the ruleset only after it has run. After the workflow is merged, a maintainer adds `claude-review` to the required checks of the main ruleset. Do not rename the job.
+## Code review
+- There is no `claude-review` check any more. It ran Claude in CI on a subscription token that can no longer be renewed, so `.github/workflows/claude-review.yml` and its prompt `.github/claude-review.md` were removed.
+- The review is now local and mandatory: before marking a PR ready, the author runs `/code-review` at `high` effort in Claude Code (or an equivalent review in another tool), fixes its findings and records a `Review run:` line in the PR body. A maintainer reviews fork PRs. Who accepts a PR is set by AGENTS.md, Merge rules.
+- **Required check:** a maintainer removes `claude-review` from the required checks of the main ruleset before the removal merges; otherwise every PR waits for a check that never runs.
+- The secret `CLAUDE_CODE_OAUTH_TOKEN` is no longer used; a maintainer may delete it under Settings → Secrets and variables → Actions.
+
+## Fork and first-time PRs
+- Settings → Actions → General → "Fork pull request workflows from outside collaborators" is set to *Require approval for all outside collaborators*. CI does not run on a fork or first-time-contributor PR until a maintainer approves the run; that maintainer also reviews the PR.

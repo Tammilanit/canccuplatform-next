@@ -24,8 +24,8 @@ Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switc
 - Breaking changes (removing or renaming anything a consumer may use) need a person's approval.
 
 ## Migrations
-- Additive migrations (new tables, columns, indexes) merge automatically once CI is green.
-- Destructive migrations (drop, rename, type changes that lose data) need a person's approval.
+- Every migration needs a maintainer's accept (see Merge rules, accept policy); additive migrations (new tables, columns, indexes) need nothing more once CI is green.
+- Destructive migrations (drop, rename, type changes that lose data) also need a person's explicit approval of the data loss.
 
 ## Issues
 - One issue per module, labelled with its module label: `module:<name>`, plus `module:kit`, `module:ui`, `module:deploy`, `module:setup`, `module:ci`.
@@ -38,9 +38,17 @@ Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switc
 3. **Branch** `<n>-short-name` (from the title: lowercase, hyphens, max ~4 words), on the repo if you have write access, otherwise on your fork. One issue per PR. Nobody pushes to main.
 4. **Build** within the issue's scope. If the issue needs a design first and a maintainer asks for a plan, write it to `docs/plans/issue-<n>.md` and commit it; otherwise no plan file.
 5. **Check** before asking for review: run the checks of the modules you touched (see Run and test). For scripts, run them once with `--dry-run` or against an unreachable host and confirm a clear failure.
-6. **Commit** with conventional commits, the module as scope: `feat(screen): …`, `fix(bot): …`, `docs(map): …`.
-7. **PR**: title = the commit subject; body starts with `Closes #<n>` and ends with a `Next action:` line (what remains, or `none`) and `Verification run: <what> — <result>` (or `none — <reason>`). The PR description is the handoff: anyone picking the work up reads it there. Do not commit handoff or session notes.
-8. **Done** = PR ready for review, all acceptance criteria met, and auto-merge enabled (`gh pr merge <pr> --auto`, or the button; the merge queue sets the strategy and rejects `--delete-branch` and strategy flags). Never merge by hand; GitHub merges when the gates pass.
+6. **Review** before marking the PR ready: run a local code review of the whole diff (Claude Code: `/code-review` at `high` effort; other tools: an equivalent review for correctness bugs at the same depth), fix its findings, and record it in the PR body as `Review run: <tool/effort> — <result>` (e.g. `Review run: Claude Code /code-review high — 2 findings, fixed`). Fork contributors are asked to do the same; a maintainer reviews fork PRs in any case.
+7. **Commit** with conventional commits, the module as scope: `feat(screen): …`, `fix(bot): …`, `docs(map): …`.
+8. **PR**: title = the commit subject; body starts with `Closes #<n>` and ends with these lines:
+   - `Tier: fix|feature|plan` — fix: implement and check; feature: a short plan in the PR body, then implement; plan: only `docs/plans/issue-<n>.md`.
+   - `Accept: auto|manual — <reason>` — `manual` when the PR touches anything a maintainer accepts (see Merge rules), otherwise `auto`.
+   - `Next action:` what remains, or `none`.
+   - `Verification run: <what> — <result>` (or `none — <reason>`).
+   - `Review run: <tool/effort> — <result>`.
+
+   The PR description is the handoff: anyone picking the work up reads it there. Do not commit handoff or session notes.
+9. **Done** = PR ready for review, all acceptance criteria met, the review clean, and, with `Accept: auto`, auto-merge enabled (`gh pr merge <pr> --auto`, or the button; the merge queue sets the strategy and rejects `--delete-branch` and strategy flags). With `Accept: manual` the PR waits for a maintainer's accept. Never merge by hand; GitHub merges when the gates pass.
 
 `ready` and `in-progress` are maintainer bookkeeping; contributors do not need to set them.
 
@@ -50,12 +58,16 @@ Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switc
 - Local machines: see [CONTRIBUTING.md](CONTRIBUTING.md) for Linux, Windows (WSL2) and macOS.
 
 ## Merge rules
-Everyone codes with AI, so the gates are machines; a person steps in only where real damage is possible.
-- **Automatic:** a PR with auto-merge enabled is squash-merged (through the merge queue once branch rules exist) when CI is green and the Claude review check passes. CI covers lint, types, unit tests, contract API tests, the full demo stack with screenshots, coverage not dropping, the no-event-names check, contract diff (additive vs breaking) and migration lint. After merge the shared test VM updates itself to main.
-- **A person approves only:**
+Everyone codes with AI, so the gates are machines plus a local review; a maintainer steps in where real damage is possible.
+- **Gates:** CI is green and the local review (Working on an issue, step 6) is clean, recorded in the `Review run:` line. CI covers lint, types, unit tests, contract API tests, the full demo stack with screenshots, coverage not dropping, the no-event-names check, contract diff (additive vs breaking) and migration lint. A PR with auto-merge enabled is squash-merged (through the merge queue once branch rules exist) when the required checks pass. After merge the shared test VM updates itself to main.
+- **Accept policy until the freeze (2027-03-01):**
+  - **Automatic** (`Accept: auto`): a fix or feature PR that touches only module code (`modules/**`, `packages/ui/**`), tests or docs merges once CI is green and the review is clean.
+  - **A maintainer accepts** (`Accept: manual`) a PR that touches any of: the plan tier; `contracts/`; migrations; `deploy/`; `setup/`; `.github/`; `packages/kit-*`; `docs/decisions/`; root files; Dockerfiles; dependency manifests or lockfiles; anything about sign-in, rights, secrets or tenancy/RLS. This list wins over the automatic one: a docs or module PR that also touches one of these is `manual`.
+- **From the freeze (2027-03-01):** every PR needs a maintainer's accept.
+- **A person also approves:**
   1. a breaking contract change;
   2. a destructive migration;
-  3. running CI and the review on a PR from a fork or a first-time contributor.
+  3. running CI on a PR from a fork or a first-time contributor (that maintainer also reviews the PR).
 
 ## Maintainers
 Plain GitHub actions; any tool or none.
