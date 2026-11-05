@@ -1,6 +1,6 @@
 # CI
 
-`.github/workflows/ci.yml` runs on every pull request and on push to main. `.github/workflows/review-gate.yml` runs on pull requests, PR comments and merge-queue entries. There is no Claude review in CI (see [Code review](#code-review)).
+`.github/workflows/ci.yml` and `.github/workflows/demo-stack.yml` run on every pull request, merge-queue entry and push to main. `.github/workflows/release.yml` builds the module images (see [Images](#images)). `.github/workflows/review-gate.yml` runs on pull requests, PR comments and merge-queue entries. There is no Claude review in CI (see [Code review](#code-review)).
 
 ## Checks (names are stable; branch rules require them)
 | Check | What it does |
@@ -10,11 +10,28 @@
 | `lint-types-test (ui)` | In `packages/ui`: `npm ci`, `npm run lint` (eslint + prettier), `npm run typecheck`, `npm test` (vitest). After it first runs on main, a maintainer adds it to the required checks. |
 | `integration (kit)` | Starts Valkey from the Compose stack (`deploy/compose.yml` + `deploy/compose.test.yml`) and runs the kit-ts and kit-py Valkey integration tests against it. |
 | `compose (deploy)` | Runs the `modules/hello` and `modules/admin` checks, starts the whole stack with `docker compose -f deploy/compose.yml up --build --wait`, and checks that only Caddy publishes a port, that only the three named volumes exist, that hello and admin health through Caddy are `ok`, that health is `503 down` when Valkey stops, and that hello refuses to start without a kit variable. |
+| `demo-stack` | From `.github/workflows/demo-stack.yml`: starts the whole stack with the demo event (`deploy/compose.yml` + `deploy/compose.ci.yml`, `up --build --wait`), runs the API tests (`scripts/demo-stack-test`) and screenshots the admin pages (`scripts/demo-screenshots`), uploaded as the artifact `demo-screenshots`. See [demo-stack](#demo-stack). |
 | `no-event-names` | Fails if the lines a PR adds contain a forbidden term. |
 | `review-gate` | From `.github/workflows/review-gate.yml`: passes only on an independent review's `Review verdict: pass <head sha>` for the PR's current head (see below). |
 | `contracts` | `scripts/check-contracts`: validates every `events/*/profile.yaml` against `contracts/profile.schema.json`, checks its asset paths exist, and lints `contracts/*.openapi.yaml` with Redocly (`contracts/redocly.yaml`). |
 
 Do not rename these jobs; renaming breaks the required checks.
+
+## demo-stack
+- **Stack:** `docker compose -f deploy/compose.yml -f deploy/compose.ci.yml up -d --build --wait`. The CI overlay adds two things, and is never used for a real install:
+  - `event-seed` copies `events/demo/` into the event folder of the files volume (`/files/event`) before admin starts.
+  - `session-stub` stands in for sign-in (#10): admin's rights check asks it for `GET /api/admin/session`. The cookie `cp_session=demo-ci` is a session with every admin right; any other cookie gets 401 `not_signed_in`. When sign-in lands, the stub gives way to a real CI sign-in.
+- **API tests:** `scripts/demo-stack-test [--dry-run] [BASE_URL]` (curl, jq, python3): health of hello and admin through Caddy, 401 without a session, Load from the seeded event folder, profile import and export as a zip, settings read, save and `409 version_conflict`, `404` for an unknown module, the health view. It ends by importing the demo event again, so the screenshots show it. Hand-written for now; tests generated from `contracts/` come later.
+- **Screenshots:** `scripts/demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR]` takes full-page Chromium screenshots (Playwright, pinned in the script) of `/admin/settings`, `/admin/settings/admin`, `/admin/health-view` and `/admin/profile`, signed in with the stub's cookie. A page that does not answer 200 fails the check. `scripts/demo-screenshots --install` installs Chromium and its system packages (CI). The PNGs are the artifact `demo-screenshots` of the run (kept 14 days); on failure the Compose logs are the artifact `demo-stack-logs`.
+- **Locally:** start the stack as above, then `scripts/demo-stack-test` and `scripts/demo-screenshots`. Without Chromium's system packages, run the screenshots in the Playwright image: `docker run --rm --network host -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD:/repo:ro" -v /tmp/shots:/out -w /repo mcr.microsoft.com/playwright:v1.64.1-noble scripts/demo-screenshots http://localhost /out`. Stop with `docker compose -f deploy/compose.yml -f deploy/compose.ci.yml down -v`.
+- **Required check:** after this job first runs on main, a maintainer adds `demo-stack` to the required checks of the main ruleset (#4). Do not rename the job.
+
+## Images
+- `.github/workflows/release.yml` builds one image per module that has a `modules/<name>/Dockerfile`, from the repo root as in `deploy/compose.yml`, as `ghcr.io/<owner>/<repo>/<module>` in lowercase (`ghcr.io/tammilanit/canccuplatform-next/<module>`).
+- **Push to main** pushes the tag `dev`. **A release tag** `v*` (for example `v0.1.0`) pushes the images with that tag. A pull request that changes the workflow or a module's Dockerfile builds the images without pushing them. A module without a Dockerfile is skipped.
+- It logs in with the workflow's `GITHUB_TOKEN` (`packages: write`, only in the image job); no other secret. Build layers are cached in the GitHub Actions cache per module.
+- **First push:** GHCR creates each package on its first push and links it to this repo through the `org.opencontainers.image.source` label. A maintainer checks each package's visibility under the org's Packages settings; the VMs need either a public package or a pull login.
+- These are not required checks: they run after merge.
 
 ## contracts
 - `scripts/check-contracts [--dry-run]`; tools come through `npx` with pinned versions (ajv-cli, ajv-formats, @redocly/cli), so it needs Node 22 and no `package.json`.

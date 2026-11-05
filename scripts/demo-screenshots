@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# Screenshots of the admin pages in the running demo stack, signed in with the CI session
+# stub's cookie (deploy/compose.ci.yml). CI runs it in the `demo-stack` check and uploads
+# OUT_DIR as an artifact. A page that does not answer 200 fails the run, so a screenshot of
+# an error page never passes for a real one.
+# Usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR]   (defaults http://localhost, screenshots)
+#        demo-screenshots --install   installs Chromium and its system packages (CI; needs sudo)
+# Needs curl and Node 22.
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit 2
+
+PLAYWRIGHT=1.64.1
+# name|path: the admin pages, in menu order.
+PAGES=(
+  "settings|/admin/settings"
+  "settings-admin|/admin/settings/admin"
+  "health-view|/admin/health-view"
+  "profile|/admin/profile"
+)
+
+usage() { echo "usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR] | --install" >&2; exit 2; }
+if [ "${1:-}" = "--install" ]; then
+  [ $# = 1 ] || usage
+  exec npx --yes "playwright@$PLAYWRIGHT" install --with-deps chromium
+fi
+dry=0
+if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
+[ $# -le 2 ] || usage
+BASE=${1:-http://localhost}
+BASE=${BASE%/}
+OUT=${2:-screenshots}
+SESSION=${DEMO_SESSION:-demo-ci}
+
+if [ "$dry" = 1 ]; then
+  echo "dry run, would screenshot (playwright $PLAYWRIGHT, chromium) into $OUT/:"
+  for p in "${PAGES[@]}"; do echo "  ${p%%|*}.png  $BASE${p#*|}"; done
+  exit 0
+fi
+
+for tool in curl npx; do
+  command -v "$tool" >/dev/null || { echo "error: $tool not found" >&2; exit 2; }
+done
+if ! curl -s -o /dev/null --max-time 5 "$BASE/"; then
+  echo "error: $BASE does not answer; start the stack first:" >&2
+  echo "  docker compose -f deploy/compose.yml -f deploy/compose.ci.yml up -d --build --wait" >&2
+  exit 1
+fi
+
+host=${BASE#*://}; host=${host%%/*}; host=${host%%:*}
+mkdir -p "$OUT"
+state=$(mktemp)
+log=$(mktemp)
+trap 'rm -f "$state" "$log"' EXIT
+cat > "$state" <<JSON
+{"cookies": [{"name": "cp_session", "value": "$SESSION", "domain": "$host", "path": "/",
+  "expires": -1, "httpOnly": true, "secure": false, "sameSite": "Lax"}], "origins": []}
+JSON
+
+fail=0
+for p in "${PAGES[@]}"; do
+  name=${p%%|*} url=$BASE${p#*|}
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "cookie: cp_session=$SESSION" "$url") || code=000
+  if [ "$code" != 200 ]; then
+    echo "FAIL $name: $url answered HTTP $code, not 200"; fail=1; continue
+  fi
+  if npx --yes "playwright@$PLAYWRIGHT" screenshot --browser chromium --full-page \
+      --viewport-size "1280, 800" --load-storage "$state" "$url" "$OUT/$name.png" >"$log" 2>&1; then
+    echo "ok   $name.png  $url"
+  else
+    echo "FAIL $name: screenshot of $url failed:"; grep -m3 -i 'error' "$log" | cut -c1-300; fail=1
+  fi
+done
+
+if [ "$fail" = 0 ]; then echo "demo-screenshots: ${#PAGES[@]} pages in $OUT/"; else echo "demo-screenshots: failed" >&2; fi
+exit "$fail"
