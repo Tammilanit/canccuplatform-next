@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# Install a host: check Docker, write deploy/.env, start the stack and check its health.
+# Usage: install [--dry-run] [--boot]
+#   --boot  for a host reachable from outside (needs root): install canccu-firewall.service and
+#           canccu-stack.service, enable Docker, the firewall and the stack at boot, put the
+#           DOCKER-USER firewall in place BEFORE the stack publishes its ports, then run
+#           check-boot. Needs CP_WEB_ALLOW in deploy/.env (see setup/README.md).
+# Honours DOCKER_HOST; CP_ENV_FILE replaces deploy/.env (for the self-test).
+# Exit 2 = something is missing or unreachable.
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit 2
+dry=0; boot=0
+for a in "$@"; do case "$a" in
+  --dry-run) dry=1 ;; --boot) boot=1 ;;
+  *) echo "usage: install [--dry-run] [--boot]" >&2; exit 2 ;; esac; done
+die() { echo "error: $*" >&2; exit 2; }
+step() { if [ "$dry" = 1 ]; then echo "would $*"; else echo "==> $*"; fi; }
+
+command -v docker >/dev/null || die "docker not found; install Docker Engine with the Compose plugin (CONTRIBUTING.md)"
+docker compose version >/dev/null 2>&1 || die "docker compose plugin not found"
+docker info >/dev/null 2>&1 || die "cannot reach the Docker daemon (DOCKER_HOST=${DOCKER_HOST:-unset}); is it running and are you in the docker group?"
+[ "$dry" = 1 ] || command -v curl >/dev/null || die "curl not found (needed for the health check)"
+echo "docker ok"
+
+env=${CP_ENV_FILE:-deploy/.env}
+if [ -e "$env" ] && grep -qE '^POSTGRES_PASSWORD=(change-me)?$' "$env"; then
+  # The example password must not reach production. Postgres takes the password only when it
+  # creates the database, so replacing it is safe only while the volume does not exist.
+  if docker volume inspect canccuplatform_postgres-data >/dev/null 2>&1; then
+    msg="$env has the example POSTGRES_PASSWORD and the database already exists with it; set a new password in Postgres (ALTER ROLE cp PASSWORD ...) and in $env"
+    if [ "$boot" = 1 ]; then die "$msg"; else echo "warning: $msg" >&2; fi
+  else
+    step "replace the example POSTGRES_PASSWORD in $env with a random one"
+    if [ "$dry" = 0 ]; then
+      pw=$(openssl rand -hex 16 2>/dev/null || head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
+      [ -n "$pw" ] || die "cannot generate a password"
+      sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$pw/" "$env" || die "cannot update $env"
+      chmod 600 "$env" || die "cannot chmod $env"
+    fi
+  fi
+elif [ -e "$env" ]; then echo "$env exists, keeping it"
+else
+  step "write $env from deploy/.env.example with a random POSTGRES_PASSWORD"
+  if [ "$dry" = 0 ]; then
+    pw=$(openssl rand -hex 16 2>/dev/null || head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
+    [ -n "$pw" ] || die "cannot generate a password"
+    (umask 077; sed "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$pw/" deploy/.env.example > "$env") || die "cannot write $env"
+    # under sudo, keep the file usable by the user who runs compose later
+    if [ -n "${SUDO_USER:-}" ]; then chown "$SUDO_USER" "$env" || die "cannot chown $env"; fi
+  fi
+fi
+
+if [ "$boot" = 1 ]; then
+  # The units bake in this path and read deploy/.env only, so validate exactly that, first:
+  # a bad list then never closes or opens anything (as root this also test-loads the rules).
+  [[ $PWD =~ ^[A-Za-z0-9/._-]+$ ]] || die "the checkout path '$PWD' has characters systemd units cannot take; move it (e.g. /opt/canccuplatform)"
+  # The units run setup/ and deploy/ as root: nobody but root and the installing user may write there.
+  # Group write is fine for root's group or the user's own (user private group) group.
+  owners=(! -user root); groups=(! -group root)
+  for u in "${SUDO_USER:-}" "$(id -un)"; do
+    [ -n "$u" ] || continue
+    owners+=(! -user "$u")
+    if getent group "$u" >/dev/null; then groups+=(! -group "$u"); fi
+  done
+  risky=( \( -perm -002 -o \( -perm -020 "${groups[@]}" \) -o \( "${owners[@]}" \) \) -print )
+  writable=$(find "$PWD" -maxdepth 0 "${risky[@]}" && find setup deploy -maxdepth 1 "${risky[@]}") \
+    || die "cannot check who may write to $PWD, setup/ and deploy/"
+  [ -z "$writable" ] || die "writable by others (world-writable, group-writable by a shared group, or another owner), but run as root by the units: ${writable//$'\n'/ }; fix with chmod o-w,g-w / chown"
+  docker_bin=$(command -v docker)
+  [[ $docker_bin =~ ^[A-Za-z0-9/._-]+$ ]] || die "the docker path '$docker_bin' has characters systemd units cannot take"
+  env -u CP_WEB_ALLOW CP_ENV_FILE="$env" setup/firewall apply --dry-run >/dev/null || die "fix CP_WEB_ALLOW in $env, then run setup/install --boot again"
+  if [ "$dry" = 0 ]; then
+    [ "$(id -u)" = 0 ] || die "--boot needs root (sudo setup/install --boot)"
+    command -v systemctl >/dev/null || die "systemd not found"
+  fi
+  step "install canccu-firewall.service and canccu-stack.service into /etc/systemd/system"
+  step "systemctl enable docker canccu-firewall canccu-stack"
+  step "systemctl reload canccu-firewall, or start it if inactive (put the DOCKER-USER firewall in place; a restart would restart Docker)"
+  if [ "$dry" = 0 ]; then
+    for u in canccu-firewall.service canccu-stack.service; do
+      sed "s#@REPO@#$PWD#g; s#@DOCKER@#$docker_bin#g" "setup/$u" > "/etc/systemd/system/$u" || die "cannot write /etc/systemd/system/$u"
+    done
+    systemctl daemon-reload || die "systemctl daemon-reload failed"
+    systemctl enable docker canccu-firewall canccu-stack || die "systemctl enable failed"
+    if systemctl is-active --quiet canccu-firewall; then systemctl reload canccu-firewall; else systemctl start canccu-firewall; fi \
+      || die "canccu-firewall failed: apply and its fallback close both failed, so the state of the web ports is unknown; see: journalctl -u canccu-firewall"
+    setup/firewall check || die "the firewall is not in place; not starting the stack"
+  fi
+fi
+
+if [ "$boot" = 1 ]; then
+  step "systemctl restart canccu-stack (firewall check, then docker compose -f deploy/compose.yml up -d --wait)"
+  [ "$dry" = 1 ] || systemctl restart canccu-stack || die "canccu-stack failed; see: journalctl -u canccu-stack"
+else
+  step "docker compose -f deploy/compose.yml up -d --wait"
+  [ "$dry" = 1 ] || docker compose -f deploy/compose.yml up -d --wait || die "stack failed to start; see: docker compose -f deploy/compose.yml logs"
+fi
+if [ "$dry" = 0 ]; then
+  for _ in $(seq 1 15); do
+    curl -fsS --max-time 5 http://127.0.0.1/api/hello/health >/dev/null 2>&1 && break
+    sleep 1
+  done
+  curl -fsS --max-time 5 http://127.0.0.1/api/hello/health >/dev/null || die "stack is up but /api/hello/health does not answer"
+  echo "health ok"
+fi
+
+if [ "$boot" = 1 ]; then
+  step "setup/check-boot"
+  [ "$dry" = 1 ] || setup/check-boot || exit 2
+  echo "done. Now run the reboot test in setup/README.md."
+else
+  echo "done. No firewall was set up: on a host reachable from outside use sudo setup/install --boot (setup/README.md)."
+fi

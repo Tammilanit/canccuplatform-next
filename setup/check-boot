@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Docker-on-boot check: Docker, the firewall and the stack start at boot, the services restart,
+# and the DOCKER-USER firewall is in place on IPv4 and IPv6.
+# Usage: check-boot [--dry-run]      (needs root for the firewall check)
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit 2
+checks="docker.service enabled, canccu-firewall.service enabled, docker.service requires canccu-firewall, canccu-stack.service enabled, restart policies of the running services, services running and healthy, firewall in place and not closed (IPv4 and IPv6)"
+case "${1:-}" in
+  "") ;;
+  --dry-run) echo "dry run, would check: $checks"; exit 0 ;;
+  *) echo "usage: check-boot [--dry-run]" >&2; exit 2 ;;
+esac
+command -v systemctl >/dev/null || { echo "error: systemd not found" >&2; exit 2; }
+command -v docker >/dev/null || { echo "error: docker not found" >&2; exit 2; }
+fail=0
+ok() { echo "ok   $1"; }
+no() { echo "FAIL $1" >&2; fail=1; }
+for u in docker canccu-firewall canccu-stack; do
+  if systemctl is-enabled --quiet "$u" 2>/dev/null; then ok "$u.service enabled at boot"; else no "$u.service enabled at boot"; fi
+done
+if systemctl show -p Requires --value docker 2>/dev/null | grep -qw canccu-firewall.service
+then ok "docker.service requires canccu-firewall"; else no "docker.service requires canccu-firewall"; fi
+want=$(docker compose -f deploy/compose.yml config --services 2>/dev/null | sort)
+mapfile -t ids < <(docker compose -f deploy/compose.yml ps -aq 2>/dev/null)
+have=""; [ "${#ids[@]}" = 0 ] || have=$(docker inspect -f '{{index .Config.Labels "com.docker.compose.service"}} {{.HostConfig.RestartPolicy.Name}} {{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{else}}no-healthcheck{{end}}' "${ids[@]}" 2>/dev/null | sort)
+if [ -z "$want" ]; then no "compose config readable"
+elif [ "$(cut -d' ' -f1 <<<"$have")" != "$want" ]; then no "every compose service has a container (is the stack up?)"
+else
+  if wrong=$(awk '$2 != "unless-stopped" && $2 != "always" {print $1}' <<<"$have" | grep .); then no "services restart (unless-stopped/always): ${wrong//$'\n'/ }"
+  else ok "services restart (unless-stopped/always)"; fi
+  if wrong=$(awk '$3 != "running" || ($4 != "healthy" && $4 != "no-healthcheck") {print $1 " (" $3 ", " $4 ")"}' <<<"$have" | grep .); then no "services running and healthy: ${wrong//$'\n'/ }"
+  else ok "services running and healthy"; fi
+fi
+if fw=$(setup/firewall check); then
+  if grep -q '^closed' <<<"$fw"; then no "firewall is closed; fix CP_WEB_ALLOW in deploy/.env and run: systemctl reload canccu-firewall"
+  else ok "firewall in place (IPv4 and IPv6)"; fi
+else
+  printf '%s\n' "$fw"; no "firewall in place (IPv4 and IPv6)"
+fi
+exit $fail

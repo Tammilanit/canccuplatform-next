@@ -20,7 +20,7 @@ You need git and Docker with Compose.
 - **macOS:** Docker Desktop.
 
 ## 3. Run the demo event
-One Docker Compose command starts the whole platform with the demo event (`events/demo/`). It arrives with the Compose and demo-event issues and will be written here; the repo is a skeleton and nothing runs yet.
+Run `setup/install`: it checks Docker, writes `deploy/.env` and starts the whole platform with one Docker Compose command (`docker compose -f deploy/compose.yml up -d`). `http://localhost/api/hello/health` answers when it is up. A host reachable from outside uses `sudo setup/install --boot` instead, which puts the firewall in place first (see [setup/README.md](setup/README.md)). The demo event (`events/demo/`) becomes the demo tenant once the tenants module lands.
 
 Each module's README names its own check command (lint, types, unit tests); run it for every module you touch before asking for review.
 

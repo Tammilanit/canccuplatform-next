@@ -1,0 +1,204 @@
+#!/usr/bin/env bash
+# Self-test for the setup scripts. Needs no root and never changes the host: every script runs
+# with --dry-run or against an unreachable Docker daemon. Tests that need the docker CLI or a
+# reachable daemon are skipped (with a message) when those are missing.
+# Usage: setup/test.sh
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit 2
+fail=0
+pass() { echo "ok   $1"; }
+bad() { echo "FAIL $1"; [ -n "${2:-}" ] && printf '%s\n' "$2" | sed 's/^/     | /'; fail=1; }
+skip() { echo "skip $1 ($2)"; }
+
+# run CMD...: sets $out (stdout+stderr) and $rc
+run() { out=$("$@" 2>&1); rc=$?; }
+# exits NAME RC CMD...: CMD exits with RC
+exits() { local n=$1 want=$2; shift 2; run "$@"; if [ "$rc" = "$want" ]; then pass "$n"; else bad "$n (exit $rc, want $want)" "$out"; fi; }
+# has NAME ERE: the last output matches ERE; hasnt: it does not
+has() { if grep -Eq -- "$2" <<<"$out"; then pass "$1"; else bad "$1 (no match for: $2)" "$out"; fi; }
+hasnt() { if grep -Eq -- "$2" <<<"$out"; then bad "$1 (unexpected match: $2)" "$out"; else pass "$1"; fi; }
+# family V: the last output's dry-run lines for one family (4 = iptables, 6 = ip6tables)
+family() { if [ "$1" = 4 ]; then grep -E '^would iptables' <<<"$out"; else grep -E '^would ip6tables' <<<"$out"; fi; }
+# fam NAME V ERE / famnot NAME V ERE: a line of that family matches / no line does
+fam() { if family "$2" | grep -Eq -- "$3"; then pass "$1"; else bad "$1 (no IPv$2 match for: $3)" "$out"; fi; }
+famnot() { if family "$2" | grep -Eq -- "$3"; then bad "$1 (unexpected IPv$2 match: $3)" "$out"; else pass "$1"; fi; }
+
+unreachable=tcp://127.0.0.1:1
+# envfile CONTENT: a throwaway env file (a real file: scripts may read it more than once)
+scratch=$(mktemp -d); trap 'rm -rf "$scratch"' EXIT
+envfile() { local f; f=$(mktemp "$scratch/env.XXXXXX"); printf '%b' "$1" > "$f"; echo "$f"; }
+docker_ok=0; command -v docker >/dev/null && docker info >/dev/null 2>&1 && docker_ok=1
+
+echo "# install"
+exits "install rejects an unknown option" 2 setup/install --bogus
+has "install prints its usage" "usage: install"
+exits "install fails against an unreachable daemon" 2 env DOCKER_HOST=$unreachable setup/install
+has "install names the unreachable daemon" "cannot reach the Docker daemon"
+exits "install --dry-run fails against an unreachable daemon" 2 env DOCKER_HOST=$unreachable setup/install --dry-run
+if [ "$docker_ok" = 1 ]; then
+  exits "install --dry-run --boot refuses an empty CP_WEB_ALLOW" 2 env CP_ENV_FILE="$(envfile 'CP_WEB_ALLOW=\n')" setup/install --dry-run --boot
+  has "install --boot names CP_WEB_ALLOW" "CP_WEB_ALLOW is empty"
+  exits "install --dry-run --boot with an allow list" 0 env CP_ENV_FILE="$(envfile 'CP_WEB_ALLOW=192.0.2.1\n')" setup/install --dry-run --boot
+  fw=$(grep -nE 'canccu-firewall' <<<"$out" | head -1 | cut -d: -f1)
+  up=$(grep -nE 'compose .*up' <<<"$out" | head -1 | cut -d: -f1)
+  if [ -n "$fw" ] && [ -n "$up" ] && [ "$fw" -lt "$up" ]; then pass "install --boot puts the firewall in place before the stack starts"
+  else bad "install --boot puts the firewall in place before the stack starts" "$out"; fi
+  has "install --boot enables docker, canccu-firewall and canccu-stack at boot" "enable docker canccu-firewall canccu-stack"
+  has "install --boot ends with check-boot" "check-boot"
+  n=$(grep -cE 'compose .*up' <<<"$out")
+  if [ "$n" = 1 ]; then pass "install --boot starts the stack once"; else bad "install --boot starts the stack once ($n times)" "$out"; fi
+  exits "install --boot validates deploy/.env, not the environment" 2 env CP_WEB_ALLOW=192.0.2.1 CP_ENV_FILE=/nonexistent setup/install --dry-run --boot
+  has "install --boot ignores CP_WEB_ALLOW from the environment" "CP_WEB_ALLOW is empty"
+  exits "install --dry-run --boot, existing .env" 0 env CP_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=x\nCP_WEB_ALLOW=192.0.2.1\n')" setup/install --dry-run --boot
+  has "install --boot reloads canccu-firewall (or starts it)" "reload canccu-firewall"
+  hasnt "install --boot never restarts canccu-firewall (that restarts Docker)" "restart canccu-firewall"
+  hasnt "install keeps a .env with its own password" "POSTGRES_PASSWORD"
+  if docker volume inspect canccuplatform_postgres-data >/dev/null 2>&1; then
+    exits "install --boot refuses the example password on an initialised database" 2 env CP_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=change-me\nCP_WEB_ALLOW=192.0.2.1\n')" setup/install --dry-run --boot
+    has "install names the example password" "example POSTGRES_PASSWORD"
+  else
+    exits "install --dry-run --boot, .env with the example password" 0 env CP_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=change-me\nCP_WEB_ALLOW=192.0.2.1\n')" setup/install --dry-run --boot
+    has "install replaces the example password while no database exists" "would replace the example POSTGRES_PASSWORD"
+  fi
+  tmp=$(mktemp -d); cp -r setup deploy "$tmp/"; chmod o+w "$tmp/setup"
+  exits "install --boot refuses a setup/ others can write to" 2 env CP_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=x\nCP_WEB_ALLOW=192.0.2.1\n')" "$tmp/setup/install" --dry-run --boot
+  has "install names the writable path" "writable by others"
+  rm -rf "$tmp"
+else
+  skip "install --dry-run --boot" "no reachable Docker daemon"
+fi
+
+echo "# firewall"
+exits "firewall rejects an unknown command" 2 setup/firewall bogus
+has "firewall prints its usage" "usage: firewall"
+exits "firewall apply refuses an empty allow list" 2 env CP_WEB_ALLOW= setup/firewall apply --dry-run
+has "firewall names CP_WEB_ALLOW" "CP_WEB_ALLOW is empty"
+exits "firewall apply refuses 'any' mixed with addresses" 2 env CP_WEB_ALLOW="any 192.0.2.1" setup/firewall apply --dry-run
+has "firewall explains 'any' stands alone" "'any' must be the only entry"
+exits "firewall apply refuses a hostname" 2 env CP_WEB_ALLOW=example.org setup/firewall apply --dry-run
+has "firewall names the bad entry" "not an IPv4 or IPv6 address: example.org"
+for e in 300.1.1.1 10.0.0.0/40 1.2.3 2001:db8::/200 : "::" 2001:::1; do
+  exits "firewall apply refuses $e" 2 env CP_WEB_ALLOW="$e" setup/firewall apply --dry-run
+done
+exits "firewall apply accepts /0s and a full IPv6 address" 0 env CP_WEB_ALLOW="0.0.0.0/0 ::/0 2001:db8:0:0:0:0:0:1/128" setup/firewall apply --dry-run
+
+exits "firewall apply --dry-run, IPv4 and IPv6 sources" 0 env CP_WEB_ALLOW="192.0.2.1, 2001:db8::/32" setup/firewall apply --dry-run
+for p in 80 443; do
+  fam "IPv4 source allowed to port $p" 4 "-A CP-FIREWALL -s 192.0.2.1 -p tcp -m conntrack --ctstate DNAT --ctorigdstport $p -j RETURN"
+  fam "IPv6 source allowed to port $p" 6 "-A CP-FIREWALL -s 2001:db8::/32 -p tcp -m conntrack --ctstate DNAT --ctorigdstport $p -j RETURN"
+done
+famnot "IPv6 source not in the IPv4 rules" 4 "2001:db8"
+famnot "IPv4 source not in the IPv6 rules" 6 "192\.0\.2\.1"
+for v in 4 6; do
+  fam "IPv$v keeps established connections" $v "-A CP-FIREWALL -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN"
+  fam "IPv$v drops other published traffic" $v "-A CP-FIREWALL -m conntrack --ctstate DNAT -j DROP"
+  fam "IPv$v hooks the chain into DOCKER-USER" $v "-I DOCKER-USER 1 -j CP-FIREWALL"
+done
+others=$( { family 4; family 6; } | grep -oE 'ctorigdstport [0-9]+' | grep -vE ' (80|443)$')
+if [ -z "$others" ]; then pass "only ports 80 and 443 are opened"; else bad "only ports 80 and 443 are opened" "$others"; fi
+
+exits "firewall apply --dry-run, IPv4 only" 0 env CP_WEB_ALLOW=192.0.2.1 setup/firewall apply --dry-run
+famnot "IPv4-only list opens nothing on IPv6" 6 "ctorigdstport|-s "
+fam "IPv4-only list still drops published IPv6 traffic" 6 "--ctstate DNAT -j DROP"
+
+exits "firewall apply --dry-run, any" 0 env CP_WEB_ALLOW=any setup/firewall apply --dry-run
+for v in 4 6; do for p in 80 443; do
+  fam "'any' opens port $p on IPv$v" $v "-A CP-FIREWALL -p tcp -m conntrack --ctstate DNAT --ctorigdstport $p -j RETURN"
+done; done
+famnot "'any' adds no source match" 4 "-s "
+
+exits "firewall reads CP_WEB_ALLOW from an env file" 0 env -u CP_WEB_ALLOW CP_ENV_FILE="$(envfile 'CP_WEB_ALLOW=198.51.100.7\n')" setup/firewall apply --dry-run
+fam "the env file's source is allowed" 4 "-s 198.51.100.7 "
+
+exits "firewall close --dry-run" 0 setup/firewall close --dry-run
+for v in 4 6; do
+  fam "close drops published traffic on IPv$v" $v "--ctstate DNAT -j DROP"
+  famnot "close opens nothing on IPv$v" $v "--ctorigdstport"
+done
+exits "firewall remove --dry-run" 0 setup/firewall remove --dry-run
+for v in 4 6; do fam "remove unhooks the chain on IPv$v" $v "-D DOCKER-USER -j CP-FIREWALL"; done
+if [ "$(id -u)" != 0 ]; then
+  exits "firewall apply without root fails clearly" 2 env CP_WEB_ALLOW=192.0.2.1 setup/firewall apply
+  has "firewall says it needs root" "needs root"
+  exits "firewall check without root fails clearly" 2 setup/firewall check
+fi
+
+echo "# systemd units"
+unit() { grep -E "^$2=" "setup/$1" | sed "s/^$2=//"; }
+if unit canccu-firewall.service Before | grep -qw docker.service; then pass "canccu-firewall runs before docker"; else bad "canccu-firewall runs before docker"; fi
+if unit canccu-firewall.service ExecStart | grep -q 'firewall close'; then pass "canccu-firewall closes the web ports when apply fails"; else bad "canccu-firewall closes the web ports when apply fails"; fi
+if unit canccu-stack.service Requires | grep -qw canccu-firewall.service && unit canccu-stack.service After | grep -qw canccu-firewall.service
+then pass "canccu-stack needs and follows canccu-firewall"; else bad "canccu-stack needs and follows canccu-firewall"; fi
+if unit canccu-firewall.service RequiredBy | grep -qw docker.service; then pass "docker requires canccu-firewall (no start without the firewall)"; else bad "docker requires canccu-firewall (no start without the firewall)"; fi
+if [ "$(unit canccu-firewall.service ExecReload)" = "$(unit canccu-firewall.service ExecStart)" ]; then pass "canccu-firewall reloads with the same command"; else bad "canccu-firewall reloads with the same command"; fi
+# run the unit's ExecStart against a stub setup/firewall: APPLY and CLOSE are the stub's exit codes
+execstart() {
+  local d; d=$(mktemp -d); mkdir "$d/setup"
+  # shellcheck disable=SC2016  # $1 belongs to the stub script
+  printf '#!/bin/sh\ncase "$1" in apply) exit %s ;; close) exit %s ;; esac\nexit 9\n' "$1" "$2" > "$d/setup/firewall"
+  chmod +x "$d/setup/firewall"
+  out=$(eval "$(unit canccu-firewall.service ExecStart | sed "s#@REPO@#$d#g")" 2>&1); rc=$?
+  rm -rf "$d"
+}
+execstart 0 9; if [ "$rc" = 0 ]; then pass "canccu-firewall succeeds when apply works"; else bad "canccu-firewall succeeds when apply works (exit $rc)" "$out"; fi
+execstart 2 0; if [ "$rc" = 0 ]; then pass "a closed firewall lets docker start"; else bad "a closed firewall lets docker start (exit $rc)" "$out"; fi
+execstart 2 3; if [ "$rc" != 0 ]; then pass "canccu-firewall fails (Docker held back) when close fails too"; else bad "canccu-firewall fails (Docker held back) when close fails too"; fi
+if grep -q '/usr/bin/docker' setup/canccu-stack.service || ! grep -q '@DOCKER@' setup/canccu-stack.service
+then bad "canccu-stack gets the docker path from install (@DOCKER@)"; else pass "canccu-stack gets the docker path from install (@DOCKER@)"; fi
+if grep -q 'restart canccu-firewall' setup/check-boot setup/README.md; then bad "docs and hints never restart canccu-firewall"; else pass "docs and hints never restart canccu-firewall"; fi
+if grep -q 'failed, the web ports are closed' setup/install; then bad "install does not claim closed ports when canccu-firewall failed"; else pass "install does not claim closed ports when canccu-firewall failed"; fi
+if command -v systemd-analyze >/dev/null && systemctl cat docker.service >/dev/null 2>&1; then
+  tmp=$(mktemp -d)
+  for u in canccu-firewall.service canccu-stack.service; do sed "s#@REPO@#$PWD#g; s#@DOCKER@#$(command -v docker || echo /usr/bin/docker)#g" "setup/$u" > "$tmp/$u"; done
+  run systemd-analyze verify "$tmp/canccu-firewall.service" "$tmp/canccu-stack.service"
+  rm -rf "$tmp"
+  if [ "$rc" = 0 ] && ! grep -q "$tmp" <<<"$out"; then pass "systemd-analyze verify accepts both units"; else bad "systemd-analyze verify accepts both units" "$out"; fi
+else
+  skip "systemd-analyze verify" "no systemd or no docker.service"
+fi
+
+echo "# compose"
+if command -v docker >/dev/null && docker compose version >/dev/null 2>&1 && command -v jq >/dev/null; then
+  ports=$(docker compose -f deploy/compose.yml config --format json 2>/dev/null \
+    | jq -c '[.services.caddy.ports[] | "\(.host_ip)|\(.published)|\(.target)"] | sort')
+  want='["0.0.0.0|443|443","0.0.0.0|80|80","::|443|443","::|80|80"]'
+  if [ "$ports" = "$want" ]; then pass "caddy publishes 80 and 443 explicitly on 0.0.0.0 and ::"
+  else bad "caddy publishes 80 and 443 explicitly on 0.0.0.0 and ::" "got $ports, want $want"; fi
+  if docker compose -f deploy/compose.yml config --format json 2>/dev/null \
+    | jq -e '.networks.default.enable_ipv6 == true and ([.networks.default.ipam.config[]?.subnet | select(test("^fd[0-9a-f]{2}:.*/64$"))] | length == 1)' >/dev/null
+  then pass "the default network has IPv6 (a ULA /64), so Docker NATs IPv6 through ip6tables"
+  else bad "the default network has IPv6 (a ULA /64), so Docker NATs IPv6 through ip6tables"; fi
+else
+  skip "compose ports and network" "no docker compose or jq"
+fi
+
+echo "# IPv6 bypass (docker-proxy forwarding IPv6 to an IPv4-only container)"
+proxy() { printf '/usr/bin/docker-proxy -proto tcp -host-ip %s -host-port %s -container-ip %s -container-port 80 -use-listen-fd\n' "$@"; }
+exits "bypass found: :: port 80 to an IPv4 container" 1 env CP_PROXY_ARGS=<(proxy :: 80 172.18.0.5) setup/firewall bypass
+has "bypass names the port" "port 80"
+exits "bypass found: :: port 443 to an IPv4 container" 1 env CP_PROXY_ARGS=<(proxy :: 443 172.18.0.5) setup/firewall bypass
+exits "no bypass: :: port 80 to an IPv6 container" 0 env CP_PROXY_ARGS=<(proxy :: 80 fd00:1::2) setup/firewall bypass
+exits "no bypass: IPv4 binding" 0 env CP_PROXY_ARGS=<(proxy 0.0.0.0 80 172.18.0.5) setup/firewall bypass
+exits "no bypass: another port" 0 env CP_PROXY_ARGS=<(proxy ::1 18092 172.18.0.5) setup/firewall bypass
+exits "no bypass: no proxies" 0 env CP_PROXY_ARGS=/dev/null setup/firewall bypass
+
+echo "# check-boot"
+exits "check-boot --dry-run" 0 setup/check-boot --dry-run
+has "check-boot checks canccu-firewall" "canccu-firewall"
+has "check-boot checks IPv6" "IPv6"
+has "check-boot checks that docker requires canccu-firewall" "docker.service requires canccu-firewall"
+has "check-boot checks the services are running and healthy" "running and healthy"
+if grep -q 'jq' setup/check-boot; then bad "check-boot does not need jq"; else pass "check-boot does not need jq"; fi
+exits "firewall check --dry-run" 0 setup/firewall check --dry-run
+has "firewall check looks at the final DROP" "DROP"
+has "firewall check looks at FORWARD -> DOCKER-USER" "FORWARD"
+
+echo "# shellcheck"
+if command -v shellcheck >/dev/null; then
+  exits "shellcheck" 0 shellcheck setup/install setup/firewall setup/check-boot setup/test.sh
+else
+  skip "shellcheck" "not installed"
+fi
+
+[ "$fail" = 0 ] && echo "all setup checks passed" || echo "setup checks FAILED"
+exit $fail
