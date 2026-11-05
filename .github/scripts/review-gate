@@ -6,8 +6,8 @@
 # TIMELINE_JSON, when given, is the PR's issue timeline as one JSON array.
 # Only comments written by the reviewer identity, the login in $REVIEWER_LOGIN (the repo
 # variable REVIEWER_LOGIN), count; everyone else's are ignored. Unset: the gate fails.
-# The newest reviewer comment whose last line starts with "Review verdict:", or that was
-# edited, decides. The gate passes only when that comment was never edited, its last line
+# The newest reviewer comment that contains "Review verdict:" anywhere, or that was edited,
+# decides. The gate passes only when that comment was never edited, its last line
 # fully matches VERDICT_RE, the verdict is `pass`, its SHA equals CURRENT_HEAD (and
 # RUN_HEAD, the head this run was started for, when given), and the base branch has not
 # changed since the verdict was posted.
@@ -68,7 +68,12 @@ if [ "${1:-}" = "--self-test" ]; then
   expect "ascii hyphen in manual is malformed" 1 "$A" "" "$(c $R $D1 "Review verdict: pass $A")" "$(c $R $D2 "Review verdict: manual - touches .github/ $A")"
   expect "short sha fails" 1 "$A" "" "$(c $R $D1 "Review verdict: pass ${A:0:7}")"
   expect "unknown verdict fails" 1 "$A" "" "$(c $R $D1 "Review verdict: lgtm $A")"
-  expect "verdict not on last line does not count" 1 "$A" "" "$(c $R $D1 "Review verdict: pass $A"$'\nthanks')"
+  expect "verdict not on last line fails" 1 "$A" "" "$(c $R $D1 "Review verdict: pass $A"$'\nthanks')"
+  expect "newer verdict with trailing footer beats older pass" 1 "$A" "" "$(c $R $D1 "Review verdict: pass $A")" \
+    "$(c $R $D2 "found a bug"$'\n\n'"Review verdict: changes $A"$'\n\n'"🤖 Generated with Claude Code")"
+  expect "newer bold verdict beats older pass" 1 "$A" "" "$(c $R $D1 "Review verdict: pass $A")" "$(c $R $D2 "**Review verdict: changes $A**")"
+  expect "newer indented verdict beats older pass" 1 "$A" "" "$(c $R $D1 "Review verdict: pass $A")" "$(c $R $D2 "notes"$'\n'"  Review verdict: changes $A")"
+  expect "newer quoted verdict beats older pass" 1 "$A" "" "$(c $R $D1 "Review verdict: pass $A")" "$(c $R $D2 "> Review verdict: changes $A")"
   expect "reviewer comment without verdict ignored" 0 "$A" "" "$(c $R $D1 "Review verdict: pass $A")" "$(c $R $D2 "a note, no verdict")"
   # Edited comments: anyone with write access can edit the reviewer's comment.
   expect "edited pass fails" 1 "$A" "" "$(c $R $D1 "Review verdict: pass $A" $D2)"
@@ -78,6 +83,7 @@ if [ "${1:-}" = "--self-test" ]; then
   # Base branch changes.
   expect --timeline "[{\"event\":\"base_ref_changed\",\"created_at\":\"$D3\"}]" "base changed after verdict fails" 1 "$A" "$A" "$(c $R $D2 "Review verdict: pass $A")"
   expect --timeline "[{\"event\":\"base_ref_changed\",\"created_at\":\"$D1\"}]" "base changed before verdict passes" 0 "$A" "$A" "$(c $R $D2 "Review verdict: pass $A")"
+  expect --timeline "[{\"event\":\"automatic_base_change_succeeded\",\"created_at\":\"$D3\"}]" "automatic retarget after verdict fails" 1 "$A" "$A" "$(c $R $D2 "Review verdict: pass $A")"
   expect --timeline "[{\"event\":\"base_ref_changed\"}]" "base change without time fails" 1 "$A" "$A" "$(c $R $D2 "Review verdict: pass $A")"
   expect --timeline "[{\"event\":\"commented\",\"created_at\":\"$D3\"}]" "other timeline events ignored" 0 "$A" "$A" "$(c $R $D2 "Review verdict: pass $A")"
   expect "shell text is not run" 1 "$A" "" "$(c $R $D1 "Review verdict: manual — \$(touch $t/pwned) $A")"
@@ -117,7 +123,7 @@ if ! newest=$(jq -c --arg who "$reviewer" '
       | select((.user.login // "" | ascii_downcase) == ($who | ascii_downcase))
       | ((.body // "") | gsub("\r"; "") | sub("\\s+$"; "") | split("\n") | last // "") as $line
       | ((.updated_at // .created_at) != .created_at) as $edited
-      | select(($line | startswith("Review verdict:")) or $edited)
+      | select(((.body // "") | contains("Review verdict:")) or $edited)
       | {created_at, edited: $edited, user: .user.login, line: $line} ]
     | sort_by(.created_at) | last' "$comments" 2>/dev/null); then
   echo "error: cannot read comments from $comments" >&2; exit 2
@@ -132,7 +138,7 @@ if [ "$(jq -r .edited <<<"$newest")" = true ]; then
 fi
 
 line=$(jq -r .line <<<"$newest"); who=$(jq -r .user <<<"$newest"); at=$(jq -r .created_at <<<"$newest")
-if ! jq -e --arg re "$VERDICT_RE" 'test($re)' <<<"$(jq -n --arg l "$line" '$l')" >/dev/null; then
+if ! jq -n -e --arg l "$line" --arg re "$VERDICT_RE" '$l | test($re)' >/dev/null; then
   fail "the newest verdict line (by $who) is unparseable; it must be 'Review verdict: <pass|changes|manual — reason> <40-character head sha>'. Ask for a new review."
 fi
 sha=${line##* }
@@ -147,7 +153,7 @@ fi
 
 if [ -n "$timeline" ]; then
   if ! moved=$(jq -r --arg at "$at" '
-      [ .[] | select(.event == "base_ref_changed" or .event == "base_ref_force_pushed")
+      [ .[] | select(.event == "base_ref_changed" or .event == "base_ref_force_pushed" or .event == "automatic_base_change_succeeded")
         | select((.created_at // "9999") > $at) ] | length' "$timeline" 2>/dev/null); then
     echo "error: cannot read timeline from $timeline" >&2; exit 2
   fi

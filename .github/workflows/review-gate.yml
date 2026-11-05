@@ -58,15 +58,17 @@ jobs:
 
   # A comment event runs on the default branch, so its own check would not land on the PR.
   # Instead, re-run the review-gate run of the PR's head, which then reads the comments again.
-  # Fires on a reviewer comment that has (or, when edited, had) a verdict, so a withdrawn
-  # verdict also re-runs the gate. Any other comment only starts a skipped run.
+  # Fires on a reviewer comment that has (or, when edited, had) a verdict, and on any edit of
+  # a reviewer comment (an edited reviewer comment fails the gate). Any other comment only
+  # starts a skipped run.
   rerun-on-verdict:
     name: review-gate (rerun on verdict)
     if: >-
       github.event_name == 'issue_comment' && github.event.issue.pull_request &&
       vars.REVIEWER_LOGIN != '' && github.event.comment.user.login == vars.REVIEWER_LOGIN &&
       (contains(github.event.comment.body, 'Review verdict:') ||
-       contains(github.event.changes.body.from || '', 'Review verdict:'))
+       contains(github.event.changes.body.from || '', 'Review verdict:') ||
+       github.event.action == 'edited')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

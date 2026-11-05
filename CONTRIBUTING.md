@@ -30,7 +30,7 @@ Devices on your LAN cannot easily reach containers inside WSL or on a Mac. Test 
 ## 5. Merging
 You never merge by hand. Run the checks, then mark your PR ready. Every PR then gets an independent review by a reviewer that did not write it (in Claude Code, a fresh session running `/code-review` at `high` effort). The reviewer posts as the reviewer account (repo variable `REVIEWER_LOGIN`) and ends its PR comment with `Review verdict: <pass|changes|manual — reason> <head sha>`. Never post a verdict line yourself; the gate ignores it.
 - On `changes`, fix the findings and ask for a new review.
-- On `pass`, the reviewer enables auto-merge, and GitHub merges the PR when CI and the `review-gate` check are green.
+- On `pass`, the dispatcher (maintainer tooling) or a maintainer enables auto-merge, and GitHub merges the PR when CI and the `review-gate` check are green. You never enable auto-merge yourself.
 - Any push voids the verdict, so ask for a new review after it.
 
 A maintainer accepts only plan-tier plans, breaking contract changes, destructive migrations, and changes to `.github/` or `setup/` (the verdict `manual`); from the freeze on 2027-03-01, every PR. For fork and first-time PRs a maintainer approves the CI run and arranges the review. See AGENTS.md, Merge rules.
