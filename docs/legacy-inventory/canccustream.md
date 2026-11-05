@@ -7,7 +7,7 @@ Nothing here is copied from the legacy repo: it is described. Short identifiers 
 ## In short
 
 - **What it is.** A self-hosted RTMP multi-camera compositor for one Linux host: an nginx RTMP server takes up to four inbound streams (OBS or FFmpeg), a Bash daemon re-encodes each into one of four slots with FFmpeg and runs a second FFmpeg that mixes the slots into one 1280×720 output stream, whose layout follows how many cameras are live. A small HTTP control API (spotlight, name overlay, mode, encode preset, publish info), outbound webhooks to the Discord bot, and a terminal dashboard complete it. No database, no web page, no Discord client of its own.
-- **Is it still used?** No. The other legacy repos record it as decommissioned on 2026-10-23 and the repo as archived: the bot's `/stream` commands are stubs that answer "unavailable", the manager mutes its `canccustream` subsystem from the start, and the casting plan (in the canccuplatform and canccudocs repos) replaces it with a MediaMTX WebRTC relay that forwards one cast without re-encoding. Its last commit is from 2026-03-24. The path that was to put the composite on the big screen (a `stream` directive to the signage server) was never built; no code for it exists here.
+- **Is it still used?** No. The other legacy repos record it as decommissioned on 2026-10-23 and the repo as archived: the bot's `/stream` commands are stubs that answer "unavailable", the manager mutes its `canccustream` subsystem from the start, and the casting plan (in the canccuplatform and canccudocs repos) replaces it with a MediaMTX WebRTC relay that forwards one cast without re-encoding. Its last commit is from 2026-03-24. Note for the summary (#76): canccuplatform's agent notes call this repo the legacy MediaMTX cast relay; the code shows it is nginx-rtmp plus FFmpeg, and MediaMTX was only the planned replacement. The path that was to put the composite on the big screen (a `stream` directive to the signage server) was never built; no code for it exists here.
 - **Size.** 34 tracked files, 6095 lines; 16 commits (10 changes, 6 merges) from 2026-03-19 to 2026-03-24, one author. Read at commit `cc6eb71` (`master`); every remote branch is merged into it.
 - **Port verdict.** Drop the code. Nothing maps to a module as code: ingest, compositing, the slot daemon, scripts and units all go. The Cast track ([#67](../roadmap.md#cast), module `cast`) inherits ideas only: the low-latency encoder findings, the grace before reacting to a lost stream, the "active / idle with heartbeat" signal (as bus events), the "how to publish" info (as the cast page), and the test approach.
 
@@ -54,14 +54,14 @@ To see what the tests really cover, the suite was run once from an exported copy
 
 | # | Feature | Where | Reached by |
 |---|---|---|---|
-| O1 | Stream discovery every poll from the nginx stat XML, ignoring the internal names `slot1`–`slot4` and `composite` | `bin/canccustream-manager.sh` (`get_streams`) | Daemon loop, `POLL_INTERVAL` |
+| O1 | Stream discovery every poll from the nginx stat XML: every publishing stream of every RTMP application (`output` included, not only `live`), minus the exact internal names `slot1`–`slot4` and `composite` | `bin/canccustream-manager.sh` (`get_streams`) | Daemon loop, `POLL_INTERVAL` |
 | O2 | Offline grace: a slot is freed only after `OFFLINE_GRACE_CYCLES` missed polls in a row | `bin/canccustream-manager.sh` (`sync_slots`) | Daemon loop |
 | O3 | Self-healing workers: a dead slot FFmpeg is restarted each poll; a dead mixer is restarted with the tail of its log copied into the manager log, and after two deaths in a row on a camera layout the mixer falls back to the slate | `bin/canccustream-manager.sh` (`sync_slots`, main loop) | Daemon loop |
 | O4 | Mixer start guard: before a camera layout starts, wait until the needed `output/slotN` streams show as publishing in the stat XML, then settle briefly; on timeout show the slate | `bin/canccustream-manager.sh` (`wait_for_mixer_output_slots`, `switch_stream`) | `MIXER_WAIT_PUBLISH_SEC`, `MIXER_PUBLISH_SETTLE_SEC` |
 | O5 | Encode preset `latency` (default) or `quality`; a change restarts all five encoders | `bin/canccustream-manager.sh` (`apply_encode_quality_vars`, main loop) | `POST /quality`, `canccustream-manager.sh quality …`, monitor key Q |
 | O6 | Mode `auto` / `cycle` | `bin/canccustream-manager.sh` | `POST /mode`, `canccustream-manager.sh mode …` |
 | O7 | Status print: the state file plus the API address | `bin/canccustream-manager.sh` (`show_status`) | `canccustream-manager.sh status` |
-| O8 | Control API with fail-closed start: a non-loopback bind without a token stops the manager | `bin/canccustream-manager.sh` (`start_control_api`) | Port 8091 |
+| O8 | Control API with fail-closed start: with a non-loopback bind and no token the daemon exits 1 after it has already started the slate; under systemd (`Restart=always`, 3 s) this becomes a restart loop every 3 s, not a stop | `bin/canccustream-manager.sh` (`start_control_api`) | Port 8091 |
 | O9 | Publish info for the bot: the RTMP publish URL, notes and an update time | `bin/canccustream-manager.sh` (`GET /publish-info`) | Port 8091, or 8080 through nginx |
 | O10 | Bot webhooks: `stream_active` on the first live stream and as a heartbeat, `stream_idle` when the last one goes; retries with backoff on 5xx and network errors only; tokens never logged | `bin/canccustream-manager.sh` (`send_canccubot_webhook`, main loop) | Outbound POST to `CANCCUBOT_WEBHOOK_URL` |
 | O11 | State file and event log for tools | `bin/canccustream-manager.sh` (`write_state`, `log`) | Files in `RUNDIR` |
@@ -100,8 +100,10 @@ The API only writes the small state files in `RUNDIR`; the daemon applies them o
 |---|---|---|
 | `GET /stat` | none | nginx-rtmp statistics XML (`rtmp_stat all`): uptime, per application and stream the name, publishing flag, `bw_in`, video size, fps, codec, time, and each client's address, time and dropped frames |
 | `GET /health` | none | `200` plain text `ok` (nginx only) |
-| any method `/publish-info` | passed through | Proxied to the control API's `GET /publish-info` with the `Authorization` header |
-| any method `/spotlight` | passed through | Proxied to the control API's `POST /spotlight` with `Authorization` and `Content-Type` |
+| `GET /publish-info` | passed through (control token) | Proxied to the same method and path on 8091 (`GET /publish-info`) with the `Authorization` header |
+| `POST /spotlight` | passed through (control token) | Proxied to the same method and path on 8091 (`POST /spotlight`) with `Authorization` and `Content-Type` |
+
+The two proxy locations set no `proxy_method`, so nginx forwards the client's own method: only `GET /publish-info` and `POST /spotlight` are answered; any other method on those paths reaches the API and gets its `404 {error: "not_found"}`. When the API has no token, both proxied routes are open to anyone who reaches 8080 ([Known problems](#known-problems) 2).
 
 ### B. RTMP endpoints (port 1935, all interfaces, no auth)
 
@@ -112,6 +114,7 @@ The API only writes the small state files in `RUNDIR`; the daemon applies them o
 | `output/slot1` … `output/slot4` | publish, play | Slot workers publish; the mixer plays (internal) |
 | `output/composite` | publish | The mixer |
 | `output/composite` | play | Any viewer, OBS media source, recorder or restreamer |
+| `output/<any other name>` | publish | Not meant for publishers, but nothing stops it; the daemon takes such a stream as a camera and gives it a slot whose worker cannot start ([Known problems](#known-problems) 3) |
 
 ### C. Discord commands and handlers
 
@@ -300,7 +303,7 @@ From the files, the commit history and the one test run.
 
 1. **Undocumented GNU awk dependency.** Stream discovery uses the three-argument `match`, a gawk extension. On a host whose `awk` is another implementation (the Debian default, for one), every poll fails and the log says "stat fetch failed", which points at nginx instead of awk. Confirmed by the test run (11 failures).
 2. **The fail-closed API can be bypassed through nginx.** The API may run without a token on loopback, but nginx on port 8080 (all interfaces) proxies `/spotlight` and `/publish-info` to it (`341dc24`). With the default loopback bind and no token, anyone who reaches port 8080 can change the spotlight. The startup check (`c0394b6`) does not see the proxy.
-3. **RTMP has no auth.** Anyone who reaches port 1935 can publish to `live` and take a slot, publish to the internal `output` names while a worker restarts, or watch every stream; the stat XML on 8080 also lists viewers' addresses. Security rested on the LAN being trusted.
+3. **RTMP has no auth, and discovery does not check the application.** Anyone who reaches port 1935 can publish to `live` and take a slot, publish to the internal `output` names while a worker restarts, or watch every stream; the stat XML on 8080 also lists viewers' addresses. Discovery takes publishing streams from every application, so any other name published to `output` is also taken as a camera and holds a slot with a worker that cannot start: the worker plays `live/<name>`, which does not exist, dies, and is restarted on every poll for as long as the publisher stays. Security rested on the LAN being trusted. For the Cast contract: check both the application and the publisher.
 4. **Untrusted stream names reach the FFmpeg filter graph.** Names are typed by publishers; the overlay only strips quotes and doubles backslashes, so other `drawtext` syntax (for example `%{…}` expansion) is still read. A crafted name can break the mixer; after two deaths it falls back to the slate, so one publisher can blank the output.
 5. **The bring-up script overwrites the secrets drop-in.** `bin/canccustream-up.sh` copies `config/override.conf` over the installed one on every run, and with the boot unit on every boot, although both docs warn never to do that because real tokens live there.
 6. **The from-repo drop-in points at the wrong home.** `50-execstart-from-repo.conf` uses `%h`, which in a system unit is the service manager's home (root's), not the `User=` account's, so the manager fails to start unless the clone is there too.
