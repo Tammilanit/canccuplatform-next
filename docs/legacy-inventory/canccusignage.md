@@ -587,5 +587,6 @@ Counted by kind; no values here. The exact locations (legacy `file:line`) are in
 | Local-language sample content | 3 in code, 2 in docs | Ticker preview sample, weekday playlist names, a poll sample |
 | Host evidence (kernel, versions, real asset and playlist ids) | about 15 doc lines | Cutover worksheet |
 | Private repo links and deploy hashes of the site | about 10 doc lines | Area docs, control runbook |
+| In tests | event site domain in about 25 files, time zone in 8, personal first names in 4, a pizzeria name in 2, a tailnet IP in 1, an internal host name in 1 | Fixtures and assertions on the hardcoded defaults; the port's tests use demo values |
 | Discord ids, role names, channel names | none real | Only generic references |
 | Pizzerias, venue name or address | none | — |
