@@ -1,0 +1,71 @@
+# CI overlay for the demo stack: NEVER use it for a real install.
+#   docker compose -f deploy/compose.yml -f deploy/compose.ci.yml up -d --build --wait
+#   scripts/demo-stack-test && scripts/demo-screenshots
+# - event-seed copies events/demo/ into the event folder of the files volume (/files/event),
+#   owned by the admin user, before admin starts.
+# - session-stub stands in for sign-in (#10) until it exists: admin asks it, not itself, for
+#   GET /api/admin/session. The cookie cp_session=demo-ci is a session with every admin
+#   right; any other cookie is 401 not_signed_in. Anyone who can reach Caddy can send that
+#   cookie, which is why this file is for CI only.
+services:
+  event-seed:
+    # Reuses the stack's Caddy image only for its busybox shell; nothing else is pulled.
+    image: caddy:2.11-alpine
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - rm -rf /files/event && mkdir -p /files/event && cp -R /seed/. /files/event/
+        && chown -R 65534:65534 /files/event && echo "seeded /files/event from events/demo"
+    volumes:
+      - ../events/demo:/seed:ro
+      - files:/files
+    restart: "no"
+
+  session-stub:
+    image: caddy:2.11-alpine
+    command: ["caddy", "run", "--adapter", "caddyfile", "--config", "/etc/caddy/Caddyfile"]
+    configs:
+      - source: session-stub
+        target: /etc/caddy/Caddyfile
+    tmpfs:
+      - /data
+      - /config
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/ready"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  admin:
+    environment:
+      CP_ADMIN_URL: http://session-stub:8080
+    depends_on:
+      event-seed:
+        condition: service_completed_successfully
+      session-stub:
+        condition: service_healthy
+
+configs:
+  session-stub:
+    content: |
+      {
+      	auto_https off
+      	admin off
+      }
+      :8081 {
+      	respond /ready "ok" 200
+      }
+      :8080 {
+      	@demo {
+      		path /api/admin/session
+      		header_regexp Cookie (^|;\s*)cp_session=demo-ci(;|$$)
+      	}
+      	handle @demo {
+      		header Content-Type application/json
+      		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write"], "expires_at": "2099-01-01T00:00:00Z"}` 200
+      	}
+      	handle {
+      		header Content-Type application/json
+      		respond `{"error": {"code": "not_signed_in", "message": "sign in first"}}` 401
+      	}
+      }

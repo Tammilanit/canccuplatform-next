@@ -1,0 +1,81 @@
+name: Images
+
+# One image per module (every modules/<name>/Dockerfile), built from the repo root as in
+# deploy/compose.yml. Push to main pushes ghcr.io/<owner>/<repo>/<module>:dev; a release tag
+# v* pushes :<tag>. A pull request that changes this workflow or a Dockerfile builds the
+# images without pushing them.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - modules/*/Dockerfile
+      - modules/*/Dockerfile.dockerignore
+
+permissions:
+  contents: read
+
+concurrency:
+  group: images-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  modules:
+    name: modules
+    runs-on: ubuntu-latest
+    outputs:
+      list: ${{ steps.list.outputs.list }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Modules with a Dockerfile
+        id: list
+        run: |
+          list=$(for f in modules/*/Dockerfile; do [ -f "$f" ] && basename "$(dirname "$f")"; done | jq -Rnc '[inputs]')
+          echo "modules: $list"
+          test "$list" != "[]"
+          echo "list=$list" >> "$GITHUB_OUTPUT"
+
+  image:
+    name: image (${{ matrix.module }})
+    needs: modules
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ${{ fromJSON(needs.modules.outputs.list) }}
+    env:
+      PUSH: ${{ github.event_name == 'push' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Image name (GHCR needs lowercase)
+        id: name
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}/${{ matrix.module }}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        if: env.PUSH == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ steps.name.outputs.image }}
+          tags: |
+            type=ref,event=tag
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
+            type=ref,event=pr
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: modules/${{ matrix.module }}/Dockerfile
+          push: ${{ env.PUSH == 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.module }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.module }}

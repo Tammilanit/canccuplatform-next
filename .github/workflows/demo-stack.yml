@@ -1,0 +1,56 @@
+name: Demo stack
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-stack-${{ github.ref }}
+  cancel-in-progress: true
+
+# The job name is the required-check name for branch rules (#4). Do not rename it.
+jobs:
+  demo-stack:
+    name: demo-stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      COMPOSE: docker compose -f deploy/compose.yml -f deploy/compose.ci.yml
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Start the stack with the demo event, wait for every health check
+        run: $COMPOSE up -d --build --wait
+      - name: API tests
+        run: scripts/demo-stack-test http://localhost
+      - name: Install the browser
+        run: scripts/demo-screenshots --install
+      - name: Screenshots of the admin pages
+        run: scripts/demo-screenshots http://localhost screenshots
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-screenshots
+          path: screenshots/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Logs
+        if: failure()
+        run: $COMPOSE logs --no-color | tee compose.log
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-stack-logs
+          path: compose.log
+          retention-days: 14
+      - if: always()
+        run: $COMPOSE down -v
