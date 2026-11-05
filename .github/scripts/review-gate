@@ -3,8 +3,9 @@
 # Usage: review-gate COMMENTS_JSON CURRENT_HEAD [RUN_HEAD]
 #        review-gate --self-test
 # COMMENTS_JSON is the PR's issue comments as one JSON array (GitHub REST shape).
-# The newest comment from an author with write access (OWNER, MEMBER, COLLABORATOR) whose
-# last line matches VERDICT_RE decides: it passes only with verdict `pass` and a SHA equal
+# Only comments written by the reviewer identity, the login in $REVIEWER_LOGIN (the repo
+# variable REVIEWER_LOGIN), count; everyone else's are ignored. Unset: the gate fails.
+# The newest reviewer comment whose last line matches VERDICT_RE decides: it passes only with verdict `pass` and a SHA equal
 # to CURRENT_HEAD (and to RUN_HEAD, the head this run was started for, when given).
 # Comment text is only matched with jq; it is never executed.
 # Exit: 0 pass, 1 fail, 2 wrong usage or unreadable input.
@@ -19,8 +20,9 @@ if [ "${1:-}" = "--self-test" ]; then
   self=$(cd "$(dirname "$0")" && pwd)/review-gate
   t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
   A=$(printf 'a%.0s' {1..40}); B=$(printf 'b%.0s' {1..40})
-  c() { # author_association, created_at, body
-    jq -n --arg a "$1" --arg t "$2" --arg b "$3" '{author_association:$a, created_at:$t, user:{login:"r"}, body:$b}'
+  export REVIEWER_LOGIN=review-bot
+  c() { # login, created_at, body (author_association is deliberately MEMBER for everyone)
+    jq -n --arg u "$1" --arg t "$2" --arg b "$3" '{author_association:"MEMBER", created_at:$t, user:{login:$u}, body:$b}'
   }
   fail=0
   expect() { # name, expected exit, head, run head, comments...
@@ -30,25 +32,31 @@ if [ "${1:-}" = "--self-test" ]; then
     if [ "$rc" = "$want" ]; then echo "ok   $name"; else echo "FAIL $name (exit $rc, want $want)"; fail=1; fi
   }
   expect "no comments fails" 1 "$A" ""
-  expect "pass on head passes" 0 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review notes"$'\n\n'"Review verdict: pass $A")"
-  expect "trailing whitespace and CRLF ok" 0 "$A" "" "$(c OWNER 2026-01-01T00:00:00Z "x"$'\r\n'"Review verdict: pass $A"$'\r\n\n ')"
-  expect "pass on old head fails" 1 "$B" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: pass $A")"
-  expect "run head differs fails" 1 "$A" "$B" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: pass $A")"
-  expect "changes fails" 1 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: changes $A")"
-  expect "manual fails" 1 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: manual — touches setup/ $A")"
+  expect "pass on head passes" 0 "$A" "" "$(c review-bot 2026-01-01T00:00:00Z "Review notes"$'\n\n'"Review verdict: pass $A")"
+  expect "trailing whitespace and CRLF ok" 0 "$A" "" "$(c review-bot 2026-01-01T00:00:00Z "x"$'\r\n'"Review verdict: pass $A"$'\r\n\n ')"
+  expect "pass on old head fails" 1 "$B" "" "$(c review-bot 2026-01-01T00:00:00Z "Review verdict: pass $A")"
+  expect "run head differs fails" 1 "$A" "$B" "$(c review-bot 2026-01-01T00:00:00Z "Review verdict: pass $A")"
+  expect "changes fails" 1 "$A" "" "$(c review-bot 2026-01-01T00:00:00Z "Review verdict: changes $A")"
+  expect "manual fails" 1 "$A" "" "$(c review-bot 2026-01-01T00:00:00Z "Review verdict: manual — touches setup/ $A")"
   expect "newest decides (changes after pass)" 1 "$A" "" \
-    "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: pass $A")" "$(c MEMBER 2026-01-02T00:00:00Z "Review verdict: changes $A")"
+    "$(c review-bot 2026-01-01T00:00:00Z "Review verdict: pass $A")" "$(c review-bot 2026-01-02T00:00:00Z "Review verdict: changes $A")"
   expect "newest decides (pass after changes)" 0 "$A" "" \
-    "$(c MEMBER 2026-01-02T00:00:00Z "Review verdict: pass $A")" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: changes $A")"
+    "$(c review-bot 2026-01-02T00:00:00Z "Review verdict: pass $A")" "$(c review-bot 2026-01-01T00:00:00Z "Review verdict: changes $A")"
   expect "manual after pass counts as newest" 1 "$A" "" \
-    "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: pass $A")" "$(c MEMBER 2026-01-02T00:00:00Z "Review verdict: manual — touches .github/ $A")"
-  expect "outside author ignored" 1 "$A" "" "$(c CONTRIBUTOR 2026-01-01T00:00:00Z "Review verdict: pass $A")"
+    "$(c review-bot 2026-01-01T00:00:00Z "Review verdict: pass $A")" "$(c review-bot 2026-01-02T00:00:00Z "Review verdict: manual — touches .github/ $A")"
+  expect "other author ignored, even a member" 1 "$A" "" "$(c some-maintainer 2026-01-01T00:00:00Z "Review verdict: pass $A")"
   expect "outside author cannot block" 0 "$A" "" \
-    "$(c COLLABORATOR 2026-01-01T00:00:00Z "Review verdict: pass $A")" "$(c NONE 2026-01-02T00:00:00Z "Review verdict: changes $A")"
-  expect "verdict not on last line ignored" 1 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: pass $A"$'\nthanks')"
-  expect "short sha ignored" 1 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: pass ${A:0:7}")"
-  expect "unknown verdict ignored" 1 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: lgtm $A")"
-  expect "shell text is not run" 1 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: manual — \$(touch $t/pwned) $A")"
+    "$(c review-bot 2026-01-01T00:00:00Z "Review verdict: pass $A")" "$(c outsider 2026-01-02T00:00:00Z "Review verdict: changes $A")"
+  expect "reviewer login matches case-insensitively" 0 "$A" "" "$(c Review-Bot 2026-01-01T00:00:00Z "Review verdict: pass $A")"
+  expect "author pass after reviewer changes ignored" 1 "$A" "" \
+    "$(c review-bot 2026-01-01T00:00:00Z "Review verdict: changes $A")" "$(c pr-author 2026-01-02T00:00:00Z "Review verdict: pass $A")"
+  echo "[$(c review-bot 2026-01-01T00:00:00Z "Review verdict: pass $A")]" > "$t/c.json"
+  REVIEWER_LOGIN="" GITHUB_STEP_SUMMARY="" "$self" "$t/c.json" "$A" >/dev/null 2>&1; rc=$?
+  if [ "$rc" = 1 ]; then echo "ok   unset REVIEWER_LOGIN fails"; else echo "FAIL unset REVIEWER_LOGIN (exit $rc, want 1)"; fail=1; fi
+  expect "verdict not on last line ignored" 1 "$A" "" "$(c review-bot 2026-01-01T00:00:00Z "Review verdict: pass $A"$'\nthanks')"
+  expect "short sha ignored" 1 "$A" "" "$(c review-bot 2026-01-01T00:00:00Z "Review verdict: pass ${A:0:7}")"
+  expect "unknown verdict ignored" 1 "$A" "" "$(c review-bot 2026-01-01T00:00:00Z "Review verdict: lgtm $A")"
+  expect "shell text is not run" 1 "$A" "" "$(c review-bot 2026-01-01T00:00:00Z "Review verdict: manual — \$(touch $t/pwned) $A")"
   if [ -e "$t/pwned" ]; then echo "FAIL comment text was executed"; fail=1; fi
   echo 'not json' > "$t/bad.json"
   "$self" "$t/bad.json" "$A" >/dev/null 2>&1; rc=$?
@@ -63,13 +71,18 @@ if [ $# -lt 2 ] || [ ! -r "$1" ]; then
 fi
 comments=$1 head=$2 runhead=${3:-}
 
+reviewer=${REVIEWER_LOGIN:-}
+if [ -z "$reviewer" ]; then
+  fail "the repository variable REVIEWER_LOGIN is not set, so no verdict can be trusted. A maintainer sets it to the reviewer account's login (Settings → Secrets and variables → Actions → Variables); see docs/ci.md, review-gate."
+fi
+
 if [ -n "$runhead" ] && [ "$runhead" != "$head" ]; then
   fail "this run is for ${runhead:0:7}, but the PR head is now ${head:0:7}; the run for the new head decides."
 fi
 
-if ! newest=$(jq -c --arg re "$VERDICT_RE" '
+if ! newest=$(jq -c --arg re "$VERDICT_RE" --arg who "$reviewer" '
     [ .[]
-      | select(.author_association == "OWNER" or .author_association == "MEMBER" or .author_association == "COLLABORATOR")
+      | select((.user.login // "" | ascii_downcase) == ($who | ascii_downcase))
       | ((.body // "") | gsub("\r"; "") | sub("\\s+$"; "") | split("\n") | last // "") as $line
       | select($line | test($re))
       | {created_at, user: .user.login, line: $line} ]
@@ -78,7 +91,7 @@ if ! newest=$(jq -c --arg re "$VERDICT_RE" '
 fi
 
 if [ "$newest" = "null" ] || [ -z "$newest" ]; then
-  fail "no 'Review verdict: <pass|changes|manual — reason> <head sha>' comment from a reviewer with write access yet."
+  fail "no 'Review verdict: <pass|changes|manual — reason> <head sha>' comment from the reviewer identity ($reviewer) yet."
 fi
 
 line=$(jq -r .line <<<"$newest"); who=$(jq -r .user <<<"$newest")

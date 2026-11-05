@@ -28,7 +28,7 @@ Each module's README names its own check command (lint, types, unit tests); run 
 Devices on your LAN cannot easily reach containers inside WSL or on a Mac. Test Cast and anything else that needs other devices on the shared test VM, which runs main: merge your work first, then try it there.
 
 ## 5. Merging
-You never merge by hand. Run the checks, then mark your PR ready. Every PR then gets an independent review by a reviewer that did not write it (in Claude Code, a fresh session running `/code-review` at `high` effort). The reviewer ends its PR comment with `Review verdict: <pass|changes|manual — reason> <head sha>`.
+You never merge by hand. Run the checks, then mark your PR ready. Every PR then gets an independent review by a reviewer that did not write it (in Claude Code, a fresh session running `/code-review` at `high` effort). The reviewer posts as the reviewer account (repo variable `REVIEWER_LOGIN`) and ends its PR comment with `Review verdict: <pass|changes|manual — reason> <head sha>`. Never post a verdict line yourself; the gate ignores it.
 - On `changes`, fix the findings and ask for a new review.
 - On `pass`, the reviewer enables auto-merge, and GitHub merges the PR when CI and the `review-gate` check are green.
 - Any push voids the verdict, so ask for a new review after it.
