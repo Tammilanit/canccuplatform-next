@@ -8,7 +8,7 @@ Everyone codes with AI, so the gates are machines; a person steps in only where 
 
 ## Decision
 - **Auto-merge** (`gh pr merge --auto`) once CI is green and the independent review's verdict is `pass` ([0014](0014-independent-review.md)).
-- **Enforcement:** a required CI check `review-gate` (added by #39) passes only when the newest maintainer comment's last line is `Review verdict: pass <current head sha>`. A push changes the head, so it voids a pass. The maintainers' dispatcher enables auto-merge only after `review-gate` passes.
+- **Enforcement:** a required CI check `review-gate` (added by #39) trusts only verdicts written by the reviewer identity (`REVIEWER_LOGIN`, [0014](0014-independent-review.md)). It passes only when the newest comment by that login with a verdict line ends with `Review verdict: pass <current head sha>`. Comments by any other login, maintainers included, never count, and later comments without a verdict line do not void a pass. A push changes the head, so it voids a pass. The maintainers' dispatcher enables auto-merge only after `review-gate` passes.
 - **A maintainer accepts only:**
   - plan-tier plans;
   - breaking contract changes;
@@ -20,6 +20,7 @@ Everyone codes with AI, so the gates are machines; a person steps in only where 
 
 ## Consequences
 - Enabling auto-merge early does not bypass the review: the queue waits for `review-gate`.
+- #39's acceptance criteria include: an author session cannot produce a passing verdict; `review-gate` reports on the PR head (a commit status set through the API) and does not block the merge queue's own commit (skip on `merge_group`, as `claude-review` does today).
 - Most PRs merge with no person involved, so CI and the review carry the weight: lints, leak tests and the security review ([0013](0013-multi-tenant-core.md), [0014](0014-independent-review.md)).
 - The AGENTS.md merge rules are updated in #39.
 - After the freeze this record is superseded by a new one.

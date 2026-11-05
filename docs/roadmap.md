@@ -17,7 +17,7 @@ The plan from today to the full new platform, running at the next event in **Apr
 
 ## How the system fits together
 - **The platform runs on a hosted VM away from the venue**, not on a venue host ([0011](decisions/0011-hosting-on-remote-vm.md)). One VM runs one shared stack: one container per module, one Postgres, one Valkey and one edge Caddy. Every event is a tenant in it.
-- **Attendees and the projector PC reach the VM over the internet** through the venue's uplink. The VM sees the whole venue as one public address, so **HTTPS with a real domain is required** for every page and for sign-in.
+- **Attendees and the projector PC reach the VM over the internet** through the venue's uplink. The VM sees the whole venue as one public address, so **HTTPS with a real domain is required** for every page and for sign-in. Events at the same venue share that address, so the per-venue check for screens is in the app, not the firewall ([0013](decisions/0013-multi-tenant-core.md), item 33).
 - **The venue uplink is a dependency.** When it drops, screens keep showing their last state and assets, and admin shows them as offline.
 - **The projector is a venue PC** running a full-screen browser on `/screen` and sending picture and sound over HDMI. The VM serves web pages only and never drives a display.
 - **The fallback laptop is the only on-site copy:** the event repo, images downloaded in advance and a restore of the latest backup, started with one command.
@@ -51,7 +51,7 @@ Games and Cast run in parallel from step 2, after the tenancy foundation (see Pa
 - **In it:**
   - done: the GitHub organization with this public repo and a private event repo; code surveys of the legacy repos and the porting plan (see Porting plan below); the hosted VM with Tailscale and a firewall; parallel workers, one worktree per issue;
   - open: a test Discord server and a dev bot with its own Discord app (blocks #10); the platform domain and a DNS API token for DNS-01 certificates (blocks HTTPS and #5);
-  - postponed: the mini-tourney author's OK to port the ISC-licensed code, until the tournament and games ports (step 7 and the Games track).
+  - postponed: the mini-tourney author's OK to port the ISC-licensed code, until the tournament and games ports (step 7 and the Games track); ask before step 2b closes, so the Games track does not wait in December.
 - **Exit criteria:** workers run in parallel in one repo; the VM is reachable; the test Discord server and dev bot exist; the domain decision is made.
 - **Issues:** none (maintainer tasks).
 
@@ -76,8 +76,8 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
 #### 2b. Tenancy foundation
 - **Goal:** every later module is tenant-aware from its first line ([0013](decisions/0013-multi-tenant-core.md)).
 - **In it**, in this order, each its own child issue:
-  1. the tenants contract (first): registry, hostnames, admins and roles, networks, settings, feature flags, lifecycle, audit log, and `tenant` in the bus envelope;
-  2. kit tenancy: tenant context, row-level security helpers, scoped Valkey keys, streams and files, a migration lint and leak-test helpers;
+  1. the tenants contract (first): registry, hostnames, admins and roles, settings, feature flags, lifecycle, audit log, and `tenant` in the bus envelope; venues as global rows managed by the superadmin (name, IPv4 and IPv6 addresses, devices that stay there), each event pointing to a venue (several events can share one, also at once), the per-tenant info-page mode (public, venue-only, sign-in) and the audited emergency switch for the venue IP check ([0013](decisions/0013-multi-tenant-core.md), items 33–34);
+  2. kit tenancy: tenant context, row-level security helpers, scoped Valkey keys, streams and files, a migration lint and leak-test helpers; it names the carve-out for health endpoints and the IP-mode demo stack in CI from "an unknown host gets nothing";
   3. the tenants module;
   4. the edge Caddy with a wildcard certificate (DNS-01) and on-demand TLS behind an `ask` endpoint;
   5. the central sign-in host;
@@ -86,19 +86,23 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
   8. backups off the VM.
 
   Then the admin module's single-event tables are reworked for tenants.
-- **Exit criteria:** two demo tenants run on one stack, each on its own hostname over HTTPS; CI proves no data crosses between them (RLS lint and leak tests); a backup lands off the VM.
+- **Exit criteria:** two demo tenants run on one stack, each on its own hostname over HTTPS, both pointing to one demo venue; CI proves no data crosses between them (RLS lint and leak tests); a backup lands off the VM.
 - **Issues:** epic to be created; the domain decision (step 0) blocks items 4 and 5.
 
 #### 2c. Event catalog and screen contract
 - **Goal:** the events modules exchange, named and outlined before the ports start.
-- **In it:** event names and payload outlines for pizza, tournament, bot and screen overrides (#34); the screen module API and events (#35), with device pairing tokens, layouts as data, the theming contract and pinned bundles. #34 also settles whether screen overrides are `moments.*` or `screen.*` events, since Moments ranks them ([0010](decisions/0010-scope.md)), so step 4 needs no breaking rename. Each other module's full contract is its own PR at the start of its port, written from the real legacy API.
+- **In it:** event names and payload outlines for pizza, tournament, bot and screen overrides (#34); the screen module API and events (#35), with device pairing tokens, the venue IP check, devices, zones and assignments, layouts as data, the theming contract and pinned bundles. #34 also settles whether screen overrides are `moments.*` or `screen.*` events, since Moments ranks them ([0010](decisions/0010-scope.md)), so step 4 needs no breaking rename. Each other module's full contract is its own PR at the start of its port, written from the real legacy API.
 - **Exit criteria:** catalog and screen contract merged, both tenant-aware.
 - **Issues:** epic #36, order #34 → #35.
 
 ### 3. Screen core incl. PPTX
-- **Goal:** the projector PC plays a Main screen from the VM.
-- **In it:** port the canccusignage core: scheduler and windows, playlists, playback timing and bookmarks, validators, duration parsers, the asset pipeline with PowerPoint rendering as a separate render-job container, the kiosk player and a new Postgres schema. Rewritten: the screen page and snapshot serving, persistence, the admin UI (its view-models kept). Screens pair once and get a revocable device token; they cache their last state and assets. Feeds are wired later (step 9).
-- **Exit criteria:** the projector PC plays a Main screen from the VM over HTTPS, including a PPTX deck, and keeps showing it when the uplink is cut.
+- **Goal:** the projector PC plays a Main screen from the VM, and an event can run several screens.
+- **In it:** port the canccusignage core: scheduler and windows, playlists, playback timing and bookmarks, validators, duration parsers, the asset pipeline with PowerPoint rendering as a separate render-job container, the kiosk player and a new Postgres schema. Rewritten: the screen page and snapshot serving, persistence, the admin UI (its view-models kept). Screens cache their last state and assets. Feeds are wired later (step 9).
+  - **Devices:** paired once, named, with a revocable device token; a screen is served only with **both** its token and a request from its event's venue IP (the IP alone is never enough), unless the tenant's audited emergency switch has turned the IP check off.
+  - **Zones** per event (for example main hall, café, stage), each with its own layout, playlist and schedule; devices are assigned to zones per event and reassigned for the next event.
+  - Push to all zones or one zone, and mirror one zone onto others.
+  - Device health in admin: online, last seen, now playing.
+- **Exit criteria:** the projector PC plays a Main screen from the VM over HTTPS, including a PPTX deck, and keeps showing it when the uplink is cut; a second device in another zone plays its own playlist; a device with a valid token outside the venue IP is refused; admin shows both devices' health.
 - **Issues:** to be created after #35.
 
 ### 4. Moments

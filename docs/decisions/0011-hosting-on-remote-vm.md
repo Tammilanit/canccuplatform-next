@@ -17,7 +17,7 @@ The first plan put one host at the venue, reached on the LAN, with Tailscale for
 - **Access and firewall** (ufw, deny incoming by default on IPv4 and IPv6):
   - everything on the Tailscale interface; Tailscale key expiry is off;
   - ssh from the old development machine's address and the hoster's jump host (kept for good);
-  - ports 80/443 only from the venue's public address until HTTPS and sign-in exist, then open to everyone. The address lives in `deploy/.env`, never in the repo.
+  - ports 80/443 only from the venue's public address until HTTPS and sign-in exist, then open to everyone. The address lives in `deploy/.env`, never in the repo. The firewall cannot tell events at one venue apart, so the per-venue check is in the app ([0013](0013-multi-tenant-core.md), item 33).
 - LLMNR and mDNS are off.
 - **Boot survival:** a systemd unit starts the stack at boot; Docker starts on boot; Docker's own firewall chain follows the same policy for published ports; the install checklist includes a reboot test.
 
