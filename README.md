@@ -22,12 +22,12 @@ Status: skeleton. Nothing runs yet.
 | packages/kit-ts, packages/kit-py | Shared plumbing: bus, health, settings, sign-in checks, logging |
 | packages/ui | Shared look: theme tokens and components |
 | deploy/ | Compose files: modules plus Postgres, Valkey and Caddy |
-| setup/ | Install, first-run wizard, backup, restore, new-event |
+| setup/ | Install, boot survival, firewall, first-run wizard, backup, restore |
 | contracts/ | One file per module: its API and events |
 | docs/ | General docs and design rules; no event-specific content |
 | events/demo/ | The demo event profile for tests, screenshots and new organizers |
 
-An event lives in its own repo next to this one (profile, `platform.version`, Compose override, venue docs). `setup/new-event` will create one from a template.
+An event lives in its own repo next to this one (profile, `platform.version`, Compose override, venue docs).
 
 ## Rules
 

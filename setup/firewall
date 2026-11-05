@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+# DOCKER-USER firewall for the web ports, IPv4 (iptables) and IPv6 (ip6tables).
+#
+# ufw does not filter ports that Docker publishes through NAT, so this keeps a CP-FIREWALL chain,
+# hooked first into DOCKER-USER, that drops published (DNAT) traffic unless it comes from an
+# allowed source to port 80 or 443. Container-to-container and outbound traffic are untouched.
+#
+# Allowed sources: CP_WEB_ALLOW, from the environment or else from deploy/.env (CP_ENV_FILE
+# overrides the path). A space or comma separated list of IPv4/IPv6 addresses or CIDRs, or `any`
+# to open the web ports to everyone. Empty = apply refuses (it never opens silently). Host
+# addresses stay in deploy/.env, never in the repo.
+#
+# Usage: firewall apply|close|remove|check|status [--dry-run]
+#   apply   rebuild the chain from CP_WEB_ALLOW (atomic per family, idempotent)
+#   close   drop all published traffic (what cp-firewall.service does when apply fails)
+#   remove  unhook and delete the chain
+#   check   exit 0 only if the chain is hooked into DOCKER-USER on IPv4 and IPv6
+#   status  list the chain
+# All but --dry-run need root. Exit 2 = bad input or something missing.
+set -uo pipefail
+set -f
+cd "$(dirname "$0")/.." || exit 2
+PATH=$PATH:/usr/sbin:/sbin
+usage="usage: firewall apply|close|remove|check|status [--dry-run]"
+die() { echo "error: $*" >&2; exit 2; }
+cmd=${1:-}; dry=0
+case "$cmd" in apply|close|remove|check|status) ;; *) echo "$usage" >&2; exit 2 ;; esac
+case "${2:-}" in "") ;; --dry-run) dry=1 ;; *) echo "$usage" >&2; exit 2 ;; esac
+[ $# -le 2 ] || { echo "$usage" >&2; exit 2; }
+
+chain=CP-FIREWALL
+ports="80 443"
+env_file=${CP_ENV_FILE:-deploy/.env}
+
+# Parse CP_WEB_ALLOW into v4, v6 and any.
+v4=(); v6=(); any=0
+parse_allow() {
+  local allow="" e n=0
+  if [ -n "${CP_WEB_ALLOW+set}" ]; then allow=$CP_WEB_ALLOW
+  elif [ -r "$env_file" ]; then allow=$(sed -n 's/^CP_WEB_ALLOW=//p' "$env_file" | tail -1)
+  fi
+  allow=${allow//[\"\']/}
+  allow=${allow//,/ }
+  for e in $allow; do
+    n=$((n + 1))
+    if [ "$e" = any ]; then any=1
+    elif [[ $e =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}(/[0-9]{1,2})?$ ]]; then v4+=("$e")
+    elif [[ $e =~ ^[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]*(/[0-9]{1,3})?$ ]]; then v6+=("$e")
+    else die "not an IPv4 or IPv6 address: $e (CP_WEB_ALLOW takes addresses, CIDRs or 'any')"
+    fi
+  done
+  [ "$n" -gt 0 ] || die "CP_WEB_ALLOW is empty; set it in $env_file (e.g. CP_WEB_ALLOW=203.0.113.5, or 'any' to open the web ports to everyone)"
+  if [ "$any" = 1 ] && [ "$n" -gt 1 ]; then die "'any' must be the only entry in CP_WEB_ALLOW"; fi
+}
+
+# rules FAMILY SOURCE...: iptables-restore input for the chain. No sources = closed.
+# "any" as the only source opens the web ports without a source match.
+rules() {
+  local src p
+  shift
+  echo "*filter"
+  echo ":$chain - [0:0]"
+  echo "-A $chain -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN"
+  for src in "$@"; do
+    for p in $ports; do
+      if [ "$src" = any ]; then echo "-A $chain -p tcp -m conntrack --ctstate DNAT --ctorigdstport $p -j RETURN"
+      else echo "-A $chain -s $src -p tcp -m conntrack --ctstate DNAT --ctorigdstport $p -j RETURN"; fi
+    done
+  done
+  echo "-A $chain -m conntrack --ctstate DNAT -j DROP"
+  echo "COMMIT"
+}
+
+tool() { if [ "$1" = 4 ]; then echo iptables; else echo ip6tables; fi; }
+run() { if [ "$dry" = 1 ]; then echo "would $*"; else "$@" || die "failed: $*"; fi; }
+
+preflight() {
+  [ "$(id -u)" = 0 ] || die "needs root (sudo setup/firewall $cmd)"
+  local t
+  for t in iptables ip6tables iptables-restore ip6tables-restore; do
+    command -v "$t" >/dev/null || die "$t not found; install the iptables package"
+  done
+}
+
+# load FAMILY SOURCE...: create DOCKER-USER if Docker has not yet (boot: before docker.service),
+# replace the chain atomically, hook it first into DOCKER-USER once.
+load() {
+  local fam=$1 t input line
+  t=$(tool "$fam")
+  input=$(rules "$@")
+  if [ "$dry" = 1 ]; then
+    echo "would $t -N DOCKER-USER  # only if missing"
+    while IFS= read -r line; do echo "would $t-restore --noflush: $line"; done <<<"$input"
+    echo "would $t -I DOCKER-USER 1 -j $chain  # only if not hooked yet"
+    return
+  fi
+  "$t" -n -L DOCKER-USER >/dev/null 2>&1 || run "$t" -N DOCKER-USER
+  "$t-restore" --noflush <<<"$input" || die "$t-restore failed for the $chain chain"
+  "$t" -C DOCKER-USER -j "$chain" 2>/dev/null || run "$t" -I DOCKER-USER 1 -j "$chain"
+}
+
+hooked() { "$(tool "$1")" -C DOCKER-USER -j "$chain" >/dev/null 2>&1; }
+
+case "$cmd" in
+apply)
+  parse_allow
+  [ "$dry" = 1 ] || preflight
+  if [ "$any" = 1 ]; then load 4 any; load 6 any
+  else load 4 "${v4[@]}"; load 6 "${v6[@]}"; fi
+  if [ "$any" = 1 ]; then echo "firewall applied: ports $ports open to everyone"
+  else echo "firewall applied: ports $ports from ${v4[*]} ${v6[*]}"; fi ;;
+close)
+  [ "$dry" = 1 ] || preflight
+  load 4; load 6
+  echo "firewall closed: no published traffic gets in" ;;
+remove)
+  [ "$dry" = 1 ] || preflight
+  for fam in 4 6; do
+    t=$(tool "$fam")
+    if [ "$dry" = 1 ]; then
+      echo "would $t -D DOCKER-USER -j $chain  # while hooked"
+      echo "would $t -F $chain"; echo "would $t -X $chain"; continue
+    fi
+    while hooked "$fam"; do run "$t" -D DOCKER-USER -j "$chain"; done
+    if "$t" -n -L "$chain" >/dev/null 2>&1; then run "$t" -F "$chain"; run "$t" -X "$chain"; fi
+  done
+  echo "firewall removed" ;;
+check)
+  if [ "$dry" = 1 ]; then echo "would check that $chain is hooked into DOCKER-USER (IPv4 and IPv6)"; exit 0; fi
+  preflight
+  bad=0
+  for fam in 4 6; do
+    if hooked "$fam"; then echo "ok   $chain hooked into DOCKER-USER (IPv$fam)"
+    else echo "FAIL $chain not hooked into DOCKER-USER (IPv$fam)" >&2; bad=1; fi
+  done
+  exit $bad ;;
+status)
+  if [ "$dry" = 1 ]; then echo "would list $chain (IPv4 and IPv6)"; exit 0; fi
+  preflight
+  for fam in 4 6; do echo "# IPv$fam"; "$(tool "$fam")" -n -v -L "$chain" || true; done ;;
+esac

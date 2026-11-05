@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Docker-on-boot check: Docker, the firewall and the stack start at boot, the services restart,
+# and the DOCKER-USER firewall is in place on IPv4 and IPv6.
+# Usage: check-boot [--dry-run]      (needs root for the firewall check)
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit 2
+checks="docker.service enabled, cp-firewall.service enabled, cp-stack.service enabled, compose restart policies, CP-FIREWALL hooked into DOCKER-USER (IPv4 and IPv6)"
+case "${1:-}" in
+  "") ;;
+  --dry-run) echo "dry run, would check: $checks"; exit 0 ;;
+  *) echo "usage: check-boot [--dry-run]" >&2; exit 2 ;;
+esac
+command -v systemctl >/dev/null || { echo "error: systemd not found" >&2; exit 2; }
+command -v docker >/dev/null || { echo "error: docker not found" >&2; exit 2; }
+fail=0
+ok() { echo "ok   $1"; }
+no() { echo "FAIL $1" >&2; fail=1; }
+for u in docker cp-firewall cp-stack; do
+  if systemctl is-enabled --quiet "$u" 2>/dev/null; then ok "$u.service enabled at boot"; else no "$u.service enabled at boot"; fi
+done
+if policies=$(docker compose -f deploy/compose.yml config --format json 2>/dev/null \
+    | jq -r '.services | to_entries[] | "\(.key) \(.value.restart // "no")"'); then
+  if wrong=$(grep -vE ' (unless-stopped|always)$' <<<"$policies"); then no "compose services restart (unless-stopped/always): $wrong"
+  else ok "compose services restart (unless-stopped/always)"; fi
+else
+  no "compose config readable (docker compose and jq)"
+fi
+setup/firewall check || fail=1
+exit $fail

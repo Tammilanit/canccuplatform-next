@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Install a host: check Docker, write deploy/.env, start the stack and check its health.
+# Usage: install [--dry-run] [--boot]
+#   --boot  for a host reachable from outside (needs root): install cp-firewall.service and
+#           cp-stack.service, enable Docker, the firewall and the stack at boot, put the
+#           DOCKER-USER firewall in place BEFORE the stack publishes its ports, then run
+#           check-boot. Needs CP_WEB_ALLOW in deploy/.env (see setup/README.md).
+# Honours DOCKER_HOST. Exit 2 = something is missing or unreachable.
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit 2
+dry=0; boot=0
+for a in "$@"; do case "$a" in
+  --dry-run) dry=1 ;; --boot) boot=1 ;;
+  *) echo "usage: install [--dry-run] [--boot]" >&2; exit 2 ;; esac; done
+die() { echo "error: $*" >&2; exit 2; }
+step() { if [ "$dry" = 1 ]; then echo "would $*"; else echo "==> $*"; fi; }
+
+command -v docker >/dev/null || die "docker not found; install Docker Engine with the Compose plugin (CONTRIBUTING.md)"
+docker compose version >/dev/null 2>&1 || die "docker compose plugin not found"
+docker info >/dev/null 2>&1 || die "cannot reach the Docker daemon (DOCKER_HOST=${DOCKER_HOST:-unset}); is it running and are you in the docker group?"
+[ "$dry" = 1 ] || command -v curl >/dev/null || die "curl not found (needed for the health check)"
+echo "docker ok"
+
+env=deploy/.env
+if [ -e "$env" ]; then echo "$env exists, keeping it"
+else
+  step "write $env from deploy/.env.example with a random POSTGRES_PASSWORD"
+  if [ "$dry" = 0 ]; then
+    pw=$(openssl rand -hex 16 2>/dev/null || head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
+    [ -n "$pw" ] || die "cannot generate a password"
+    (umask 077; sed "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$pw/" deploy/.env.example > "$env") || die "cannot write $env"
+    # under sudo, keep the file usable by the user who runs compose later
+    if [ -n "${SUDO_USER:-}" ]; then chown "$SUDO_USER" "$env" || die "cannot chown $env"; fi
+  fi
+fi
+
+if [ "$boot" = 1 ]; then
+  # Validate the allow list first, so a bad one never closes or opens anything.
+  CP_ENV_FILE=$env setup/firewall apply --dry-run >/dev/null || die "fix CP_WEB_ALLOW in $env, then run setup/install --boot again"
+  if [ "$dry" = 0 ]; then
+    [ "$(id -u)" = 0 ] || die "--boot needs root (sudo setup/install --boot)"
+    command -v systemctl >/dev/null || die "systemd not found"
+  fi
+  step "install cp-firewall.service and cp-stack.service into /etc/systemd/system"
+  step "systemctl enable docker cp-firewall cp-stack"
+  step "systemctl restart cp-firewall (put the DOCKER-USER firewall in place)"
+  if [ "$dry" = 0 ]; then
+    for u in cp-firewall.service cp-stack.service; do
+      sed "s#@REPO@#$PWD#g" "setup/$u" > "/etc/systemd/system/$u" || die "cannot write /etc/systemd/system/$u"
+    done
+    systemctl daemon-reload || die "systemctl daemon-reload failed"
+    systemctl enable docker cp-firewall cp-stack || die "systemctl enable failed"
+    systemctl restart cp-firewall || die "cp-firewall failed, the web ports are closed; see: journalctl -u cp-firewall"
+    setup/firewall check || die "the firewall is not in place; not starting the stack"
+  fi
+fi
+
+step "docker compose -f deploy/compose.yml up -d --wait"
+if [ "$dry" = 0 ]; then
+  docker compose -f deploy/compose.yml up -d --wait || die "stack failed to start; see: docker compose -f deploy/compose.yml logs"
+  for _ in $(seq 1 15); do
+    curl -fsS --max-time 5 http://127.0.0.1/api/hello/health >/dev/null 2>&1 && break
+    sleep 1
+  done
+  curl -fsS --max-time 5 http://127.0.0.1/api/hello/health >/dev/null || die "stack is up but /api/hello/health does not answer"
+  echo "health ok"
+fi
+
+if [ "$boot" = 1 ]; then
+  step "systemctl start cp-stack"
+  step "setup/check-boot"
+  if [ "$dry" = 0 ]; then
+    systemctl start cp-stack || die "cp-stack failed; see: journalctl -u cp-stack"
+    setup/check-boot || exit 2
+  fi
+  echo "done. Now run the reboot test in setup/README.md."
+else
+  echo "done. No firewall was set up: on a host reachable from outside use sudo setup/install --boot (setup/README.md)."
+fi
