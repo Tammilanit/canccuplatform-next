@@ -54,6 +54,109 @@ token=$(envval CP_DEPLOY_GITHUB_TOKEN)
 wait_s=${CP_DEPLOY_WAIT:-30}
 firewall=${CP_DEPLOY_FIREWALL:-setup/firewall}
 
+
+declare -A new old
+modules=(); current=; target=; key=; caddy=0
+pending=$state/pending
+
+# switch: bring up the stack as the checkout and the canccuplatform-<module>:latest tags are now,
+# and check its health; 0 = healthy. Services the checkout no longer lists are removed. Caddy reads
+# deploy/Caddyfile through a bind mount, which compose up does not reload, so it is recreated when
+# the Caddyfile differs between the two commits.
+switch() {
+  docker compose -f deploy/compose.yml up -d --wait --no-build --remove-orphans || { say "the stack did not become healthy"; return 1; }
+  if [ "$caddy" = 1 ]; then
+    docker compose -f deploy/compose.yml up -d --wait --no-build --force-recreate caddy || { say "caddy did not restart"; return 1; }
+  fi
+  local m cid ids
+  for m in "${modules[@]}"; do
+    cid=$(docker compose -f deploy/compose.yml ps -q "$m" 2>/dev/null)
+    [ -z "$cid" ] && continue
+    ids=$(docker inspect -f '{{.Image}}' "$cid") || return 1
+    [ "$ids" = "$(docker image inspect -f '{{.Id}}' "canccuplatform-$m:latest")" ] || { say "$m does not run the image it should"; return 1; }
+  done
+  local i u ok
+  for i in $(seq 1 "$wait_s"); do
+    ok=1
+    for m in "${modules[@]}"; do
+      u=http://127.0.0.1/api/$m/health
+      curl -fsS --max-time 5 "$u" >/dev/null 2>&1 || { ok=0; break; }
+    done
+    [ "$ok" = 1 ] && return 0
+    [ "$i" = "$wait_s" ] || sleep 1
+  done
+  say "health check failed: $u"; return 1
+}
+
+# deployed: the switch to $target is healthy
+deployed() {
+  rm -f "$state/failed" "$pending"
+  local m
+  for m in "${modules[@]}"; do
+    if [ -n "${old[$m]}" ] && [ "${old[$m]}" != "${new[$m]}" ]; then docker image rm "${old[$m]}" >/dev/null 2>&1 || true; fi
+  done
+  say "deployed ${target:0:7}, health ok"
+  exit 0
+}
+
+json() { local s=${1//\\/\\\\}; s=${s//\"/\\\"}; s=${s//$'\n'/\\n}; printf '"%s"' "$s"; }
+
+# rollback WHY: go back to $current and the previous images, hold this deploy, open an issue, exit 1
+rollback() {
+  echo "$key" > "$state/failed"
+  local m rolled="rolled back to ${current:0:7}, health ok"
+  g reset -q --keep "$current" || rolled="ROLLBACK FAILED: cannot reset the checkout to ${current:0:7}"
+  for m in "${modules[@]}"; do
+    [ -n "${old[$m]}" ] && { docker tag "${old[$m]}" "canccuplatform-$m:latest" || rolled="ROLLBACK FAILED: cannot tag the previous image of $m"; }
+  done
+  case "$rolled" in ROLLBACK*) ;; *) switch || rolled="ROLLBACK FAILED: the previous version is not healthy either" ;; esac
+  rm -f "$pending"
+  say "deploy of ${target:0:7} failed ($1); $rolled"
+  local title body tmp
+  title="Auto-deploy of ${target:0:7} failed; ${rolled%%:*}"
+  body="## Goal
+Find out why the dev host could not deploy main at $target ($1), fix it on main, and see the next deploy pass its health check.
+Result of the automatic rollback: $rolled.
+
+## Acceptance criteria
+- [ ] The cause is found (on the host: journalctl -u canccu-deploy and docker compose -f deploy/compose.yml logs)
+- [ ] A fix is merged to main and the next auto-deploy logs \"health ok\"
+
+## Files likely involved
+Depends on the cause: the modules or deploy/ files changed in ${target:0:7}.
+
+## Out of scope
+Changes on the host itself: code reaches it only through a merge to main.
+
+Auto-deploy holds this commit and these images, and keeps failing, until a new merge or new images arrive."
+  if [ -z "$token" ]; then
+    echo "error: no CP_DEPLOY_GITHUB_TOKEN in $env_file, so no issue was opened" >&2
+  else
+    tmp=$(mktemp) || exit 1
+    printf '{"title":%s,"body":%s,"labels":["module:deploy"]}' "$(json "$title")" "$(json "$body")" > "$tmp"
+    printf 'header = "Authorization: Bearer %s"\n' "$token" \
+      | curl -fsS --max-time 20 -K - -X POST -H "Accept: application/vnd.github+json" \
+          --data-binary "@$tmp" "https://api.github.com/repos/$slug/issues" >/dev/null \
+      || echo "error: could not open an issue on $slug" >&2
+    rm -f "$tmp"
+  fi
+  exit 1
+}
+
+# An earlier run stopped between switching and its verdict (a reboot, a kill, the unit's timeout):
+# finish it now from what it wrote down, so an unchecked deploy never counts as up to date.
+if [ -s "$pending" ]; then
+  while read -r k a b; do case "$k" in
+    current) current=$a ;; target) target=$a ;; caddy) caddy=$a ;;
+    module) modules+=("$a"); old[$a]=${b#-} ;;
+  esac; done < "$pending"
+  key=$(sed -n 's/^key //p' "$pending")
+  for m in "${modules[@]}"; do new[$m]=$(docker image inspect -f '{{.Id}}' "canccuplatform-$m:latest" 2>/dev/null || true); done
+  say "an earlier deploy of ${target:0:7} was interrupted; checking it now"
+  if [ "$(g rev-parse --verify -q 'HEAD^{commit}')" = "$target" ] && switch; then deployed; fi
+  rollback "the deploy was interrupted and is not healthy"
+fi
+
 [ "$(g symbolic-ref --short HEAD 2>/dev/null)" = main ] || die "the checkout is not on main; nobody edits code on the VM"
 [ -z "$(g status --porcelain --untracked-files=no)" ] || die "the checkout has local changes; nobody edits code on the VM (code arrives only by a merge to main)"
 g fetch -q origin main || die "cannot fetch main from origin"
@@ -68,7 +171,6 @@ while read -r d; do
 done < <(g ls-tree --name-only "$target" modules/)
 [ "${#modules[@]}" -gt 0 ] || die "main has no modules/<name>/Dockerfile"
 
-declare -A new old
 for m in "${modules[@]}"; do
   docker pull -q "$images/$m:dev" >/dev/null || die "cannot pull $images/$m:dev (registry unreachable, or a private package without docker login?)"
   rev=$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$images/$m:dev")
@@ -84,71 +186,20 @@ for m in "${modules[@]}"; do [ "${new[$m]}" = "${old[$m]}" ] || changed=1; done
 
 key="$target"; for m in "${modules[@]}"; do key+=" $m=${new[$m]}"; done
 if [ -f "$state/failed" ] && [ "$(cat "$state/failed")" = "$key" ]; then
-  say "holding: ${target:0:7} with these images failed before and was rolled back; a new merge or new images retry"
-  exit 0
+  # keep failing, so the unit stays failed until something new arrives
+  echo "error: holding: ${target:0:7} with these images failed before and was rolled back; a new merge or new images retry" >&2
+  exit 1
 fi
 
 "$firewall" check >/dev/null || die "the firewall is not in place; not deploying (see: $firewall check)"
+g diff --quiet "$current" "$target" -- deploy/Caddyfile || caddy=1
 
-# switch MODE: bring up the stack as it is now and check its health; 0 = healthy
-switch() {
-  docker compose -f deploy/compose.yml up -d --wait --no-build || { say "the stack did not become healthy"; return 1; }
-  local m cid ids
-  for m in "${modules[@]}"; do
-    cid=$(docker compose -f deploy/compose.yml ps -q "$m" 2>/dev/null)
-    [ -z "$cid" ] && continue
-    ids=$(docker inspect -f '{{.Image}}' "$cid") || return 1
-    [ "$ids" = "$(docker image inspect -f '{{.Id}}' "canccuplatform-$m:latest")" ] || { say "$m does not run the image it should"; return 1; }
-  done
-  local i u ok
-  for i in $(seq 1 "$wait_s"); do
-    ok=1
-    for u in http://127.0.0.1/api/hello/health http://127.0.0.1/api/admin/health; do
-      curl -fsS --max-time 5 "$u" >/dev/null 2>&1 || { ok=0; break; }
-    done
-    [ "$ok" = 1 ] && return 0
-    [ "$i" = "$wait_s" ] || sleep 1
-  done
-  say "health check failed: $u"; return 1
-}
-
+# Write down how to go back before changing anything, so an interrupted deploy is finished later.
+if ! { echo "current $current"; echo "target $target"; echo "caddy $caddy"; echo "key $key"
+  for m in "${modules[@]}"; do echo "module $m ${old[$m]:--}"; done; } > "$pending.tmp" || ! mv "$pending.tmp" "$pending"
+then die "cannot write $pending"; fi
 say "deploying ${target:0:7} (from ${current:0:7})"
-g merge -q --ff-only "$target" || die "cannot fast-forward the checkout to ${target:0:7}"
-for m in "${modules[@]}"; do docker tag "${new[$m]}" "canccuplatform-$m:latest" || die "cannot tag the image of $m"; done
-if switch; then
-  rm -f "$state/failed"
-  for m in "${modules[@]}"; do
-    if [ -n "${old[$m]}" ] && [ "${old[$m]}" != "${new[$m]}" ]; then docker image rm "${old[$m]}" >/dev/null 2>&1 || true; fi
-  done
-  say "deployed ${target:0:7}, health ok"
-  exit 0
-fi
-
-# Roll back to the previous commit and images, then report.
-echo "$key" > "$state/failed"
-rolled="rolled back to ${current:0:7}, health ok"
-g reset -q --keep "$current" || rolled="ROLLBACK FAILED: cannot reset the checkout to ${current:0:7}"
-for m in "${modules[@]}"; do
-  [ -n "${old[$m]}" ] && { docker tag "${old[$m]}" "canccuplatform-$m:latest" || rolled="ROLLBACK FAILED: cannot tag the previous image of $m"; }
-done
-case "$rolled" in ROLLBACK*) ;; *) switch || rolled="ROLLBACK FAILED: the previous version is not healthy either" ;; esac
-say "deploy of ${target:0:7} failed; $rolled"
-
-title="Auto-deploy of ${target:0:7} failed; ${rolled%%:*}"
-body="The dev host could not deploy main at $target: the stack did not become healthy with the new images.
-Result: $rolled.
-Auto-deploy holds this commit and images until a new merge or new images arrive.
-Logs on the host: journalctl -u canccu-deploy and docker compose -f deploy/compose.yml logs."
-json() { local s=${1//\\/\\\\}; s=${s//\"/\\\"}; s=${s//$'\n'/\\n}; printf '"%s"' "$s"; }
-if [ -z "$token" ]; then
-  echo "error: no CP_DEPLOY_GITHUB_TOKEN in $env_file, so no issue was opened" >&2
-else
-  tmp=$(mktemp) || exit 1
-  printf '{"title":%s,"body":%s,"labels":["module:deploy"]}' "$(json "$title")" "$(json "$body")" > "$tmp"
-  printf 'header = "Authorization: Bearer %s"\n' "$token" \
-    | curl -fsS --max-time 20 -K - -X POST -H "Accept: application/vnd.github+json" \
-        --data-binary "@$tmp" "https://api.github.com/repos/$slug/issues" >/dev/null \
-    || echo "error: could not open an issue on $slug" >&2
-  rm -f "$tmp"
-fi
-exit 1
+g merge -q --ff-only "$target" || { rm -f "$pending"; die "cannot fast-forward the checkout to ${target:0:7}"; }
+for m in "${modules[@]}"; do docker tag "${new[$m]}" "canccuplatform-$m:latest" || rollback "cannot tag the image of $m"; done
+if switch; then deployed; fi
+rollback "the stack did not become healthy with the new images"
