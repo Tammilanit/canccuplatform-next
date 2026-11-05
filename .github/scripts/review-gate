@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# review-gate: pass only on a fresh independent-review verdict (see docs/ci.md, review-gate).
+# Usage: review-gate COMMENTS_JSON CURRENT_HEAD [RUN_HEAD]
+#        review-gate --self-test
+# COMMENTS_JSON is the PR's issue comments as one JSON array (GitHub REST shape).
+# The newest comment from an author with write access (OWNER, MEMBER, COLLABORATOR) whose
+# last line matches VERDICT_RE decides: it passes only with verdict `pass` and a SHA equal
+# to CURRENT_HEAD (and to RUN_HEAD, the head this run was started for, when given).
+# Comment text is only matched with jq; it is never executed.
+# Exit: 0 pass, 1 fail, 2 wrong usage or unreadable input.
+set -uo pipefail
+
+VERDICT_RE='^Review verdict: (pass|changes|manual — .+) ([0-9a-f]{40})$'
+
+fail() { echo "::error title=review-gate::$1"; summary "**review-gate failed:** $1"; exit 1; }
+summary() { [ -n "${GITHUB_STEP_SUMMARY:-}" ] && echo "$1" >> "$GITHUB_STEP_SUMMARY"; return 0; }
+
+if [ "${1:-}" = "--self-test" ]; then
+  self=$(cd "$(dirname "$0")" && pwd)/review-gate
+  t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
+  A=$(printf 'a%.0s' {1..40}); B=$(printf 'b%.0s' {1..40})
+  c() { # author_association, created_at, body
+    jq -n --arg a "$1" --arg t "$2" --arg b "$3" '{author_association:$a, created_at:$t, user:{login:"r"}, body:$b}'
+  }
+  fail=0
+  expect() { # name, expected exit, head, run head, comments...
+    local name=$1 want=$2 head=$3 runhead=$4; shift 4
+    if [ $# -eq 0 ]; then echo '[]' > "$t/c.json"; else printf '%s\n' "$@" | jq -s . > "$t/c.json"; fi
+    GITHUB_STEP_SUMMARY="" "$self" "$t/c.json" "$head" "$runhead" >/dev/null 2>&1; rc=$?
+    if [ "$rc" = "$want" ]; then echo "ok   $name"; else echo "FAIL $name (exit $rc, want $want)"; fail=1; fi
+  }
+  expect "no comments fails" 1 "$A" ""
+  expect "pass on head passes" 0 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review notes"$'\n\n'"Review verdict: pass $A")"
+  expect "trailing whitespace and CRLF ok" 0 "$A" "" "$(c OWNER 2026-01-01T00:00:00Z "x"$'\r\n'"Review verdict: pass $A"$'\r\n\n ')"
+  expect "pass on old head fails" 1 "$B" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: pass $A")"
+  expect "run head differs fails" 1 "$A" "$B" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: pass $A")"
+  expect "changes fails" 1 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: changes $A")"
+  expect "manual fails" 1 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: manual — touches setup/ $A")"
+  expect "newest decides (changes after pass)" 1 "$A" "" \
+    "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: pass $A")" "$(c MEMBER 2026-01-02T00:00:00Z "Review verdict: changes $A")"
+  expect "newest decides (pass after changes)" 0 "$A" "" \
+    "$(c MEMBER 2026-01-02T00:00:00Z "Review verdict: pass $A")" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: changes $A")"
+  expect "manual after pass counts as newest" 1 "$A" "" \
+    "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: pass $A")" "$(c MEMBER 2026-01-02T00:00:00Z "Review verdict: manual — touches .github/ $A")"
+  expect "outside author ignored" 1 "$A" "" "$(c CONTRIBUTOR 2026-01-01T00:00:00Z "Review verdict: pass $A")"
+  expect "outside author cannot block" 0 "$A" "" \
+    "$(c COLLABORATOR 2026-01-01T00:00:00Z "Review verdict: pass $A")" "$(c NONE 2026-01-02T00:00:00Z "Review verdict: changes $A")"
+  expect "verdict not on last line ignored" 1 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: pass $A"$'\nthanks')"
+  expect "short sha ignored" 1 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: pass ${A:0:7}")"
+  expect "unknown verdict ignored" 1 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: lgtm $A")"
+  expect "shell text is not run" 1 "$A" "" "$(c MEMBER 2026-01-01T00:00:00Z "Review verdict: manual — \$(touch $t/pwned) $A")"
+  if [ -e "$t/pwned" ]; then echo "FAIL comment text was executed"; fail=1; fi
+  echo 'not json' > "$t/bad.json"
+  "$self" "$t/bad.json" "$A" >/dev/null 2>&1; rc=$?
+  if [ "$rc" = 2 ]; then echo "ok   unreadable comments exit 2"; else echo "FAIL unreadable comments (exit $rc)"; fail=1; fi
+  "$self" >/dev/null 2>&1; rc=$?
+  if [ "$rc" = 2 ]; then echo "ok   missing arguments exit 2"; else echo "FAIL missing arguments (exit $rc)"; fail=1; fi
+  exit "$fail"
+fi
+
+if [ $# -lt 2 ] || [ ! -r "$1" ]; then
+  echo "usage: review-gate COMMENTS_JSON CURRENT_HEAD [RUN_HEAD] | --self-test" >&2; exit 2
+fi
+comments=$1 head=$2 runhead=${3:-}
+
+if [ -n "$runhead" ] && [ "$runhead" != "$head" ]; then
+  fail "this run is for ${runhead:0:7}, but the PR head is now ${head:0:7}; the run for the new head decides."
+fi
+
+if ! newest=$(jq -c --arg re "$VERDICT_RE" '
+    [ .[]
+      | select(.author_association == "OWNER" or .author_association == "MEMBER" or .author_association == "COLLABORATOR")
+      | ((.body // "") | gsub("\r"; "") | sub("\\s+$"; "") | split("\n") | last // "") as $line
+      | select($line | test($re))
+      | {created_at, user: .user.login, line: $line} ]
+    | sort_by(.created_at) | last' "$comments" 2>/dev/null); then
+  echo "error: cannot read comments from $comments" >&2; exit 2
+fi
+
+if [ "$newest" = "null" ] || [ -z "$newest" ]; then
+  fail "no 'Review verdict: <pass|changes|manual — reason> <head sha>' comment from a reviewer with write access yet."
+fi
+
+line=$(jq -r .line <<<"$newest"); who=$(jq -r .user <<<"$newest")
+sha=${line##* }
+verdict=${line#Review verdict: }; verdict=${verdict% *}
+
+if [ "$sha" != "$head" ]; then
+  fail "the newest verdict ($verdict, by $who) is for ${sha:0:7}, but the PR head is ${head:0:7}; a push voids a review, so ask for a new one."
+fi
+if [ "$verdict" != "pass" ]; then
+  fail "the newest verdict on ${head:0:7} (by $who) is '$verdict', not 'pass'."
+fi
+echo "review-gate passed: 'pass' on ${head:0:7} by $who."
+summary "**review-gate passed:** \`pass\` on \`${head:0:7}\` by $who."

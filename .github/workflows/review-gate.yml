@@ -1,0 +1,94 @@
+name: Review gate
+
+# Machine gate for the independent review (AGENTS.md, Working on an issue, step 8).
+# Passes only when the newest "Review verdict: <pass|changes|manual — reason> <head sha>"
+# comment from someone with write access says `pass` for the PR's current head.
+# No secrets, no LLM: the GITHUB_TOKEN only reads, except `actions: write` in the rerun job,
+# and comment text is matched with jq, never executed. See docs/ci.md, review-gate.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created, edited, deleted]
+  merge_group:
+
+permissions: {}
+
+# The job name `review-gate` is the required-check name for branch rules. Do not rename it.
+jobs:
+  review-gate:
+    name: review-gate
+    if: github.event_name != 'issue_comment'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    concurrency:
+      group: review-gate-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Merge queue entry
+        if: github.event_name == 'merge_group'
+        run: echo "::notice title=review-gate::Merge queue entry; the PR passed review-gate before it was queued."
+      - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request'
+        with:
+          sparse-checkout: .github/scripts
+          persist-credentials: false
+      - name: Self-test the gate
+        if: github.event_name == 'pull_request'
+        run: .github/scripts/review-gate --self-test
+      - name: Check the newest review verdict
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          RUN_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          gh api --paginate "repos/$REPO/issues/$PR/comments" | jq -s 'add // []' > "$RUNNER_TEMP/comments.json"
+          head=$(gh api "repos/$REPO/pulls/$PR" --jq .head.sha)
+          .github/scripts/review-gate "$RUNNER_TEMP/comments.json" "$head" "$RUN_HEAD"
+
+  # A comment event runs on the default branch, so its own check would not land on the PR.
+  # Instead, re-run the review-gate run of the PR's head, which then reads the new comment.
+  rerun-on-verdict:
+    name: review-gate (rerun on verdict)
+    if: >-
+      github.event_name == 'issue_comment' && github.event.issue.pull_request &&
+      contains(github.event.comment.body, 'Review verdict:') &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: write
+      pull-requests: read
+    concurrency:
+      group: review-gate-rerun-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    steps:
+      - name: Re-run review-gate on the PR head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.issue.number }}
+        run: |
+          head=$(gh api "repos/$REPO/pulls/$PR" --jq .head.sha)
+          for _ in $(seq 1 30); do
+            run=$(gh api "repos/$REPO/actions/workflows/review-gate.yml/runs?event=pull_request&head_sha=$head&per_page=1" \
+              --jq '.workflow_runs[0] | select(.) | "\(.id) \(.status)"')
+            if [ -z "$run" ]; then
+              echo "::notice title=review-gate::No review-gate run for ${head:0:7} yet; it reads the verdict when it runs."
+              exit 0
+            fi
+            if [ "${run#* }" = completed ]; then
+              gh run rerun "${run%% *}" -R "$REPO"
+              echo "Re-ran review-gate run ${run%% *} for ${head:0:7}."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error title=review-gate::run ${run%% *} for ${head:0:7} did not finish in time; re-run it by hand."
+          exit 1

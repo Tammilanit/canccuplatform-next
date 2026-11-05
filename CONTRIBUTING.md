@@ -28,4 +28,9 @@ Each module's README names its own check command (lint, types, unit tests); run 
 Devices on your LAN cannot easily reach containers inside WSL or on a Mac. Test Cast and anything else that needs other devices on the shared test VM, which runs main: merge your work first, then try it there.
 
 ## 5. Merging
-You never merge by hand. Run the checks, then mark your PR ready; every PR then gets an independent review by a reviewer that did not write it (in Claude Code, a fresh session running `/code-review` at `high` effort). The reviewer ends its PR comment with `Review verdict: pass` or `Review verdict: changes`. On `changes`, fix the findings and ask for a new review; on `pass`, the reviewer enables auto-merge and GitHub merges the PR when CI is green. A maintainer accepts only plan-tier plans, breaking contract changes, destructive migrations, and changes to `.github/` or `setup/`; from the freeze on 2027-03-01, every PR. For fork and first-time PRs a maintainer approves the CI run and arranges the review. See AGENTS.md, Merge rules.
+You never merge by hand. Run the checks, then mark your PR ready. Every PR then gets an independent review by a reviewer that did not write it (in Claude Code, a fresh session running `/code-review` at `high` effort). The reviewer ends its PR comment with `Review verdict: <pass|changes|manual — reason> <head sha>`.
+- On `changes`, fix the findings and ask for a new review.
+- On `pass`, the reviewer enables auto-merge, and GitHub merges the PR when CI and the `review-gate` check are green.
+- Any push voids the verdict, so ask for a new review after it.
+
+A maintainer accepts only plan-tier plans, breaking contract changes, destructive migrations, and changes to `.github/` or `setup/` (the verdict `manual`); from the freeze on 2027-03-01, every PR. For fork and first-time PRs a maintainer approves the CI run and arranges the review. See AGENTS.md, Merge rules.
