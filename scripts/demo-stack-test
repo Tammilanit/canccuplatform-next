@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+# API tests against the running demo stack (deploy/compose.yml + deploy/compose.ci.yml).
+# CI runs it in the `demo-stack` check. Hand-written smoke tests; tests generated from
+# contracts/ come later.
+# Usage: demo-stack-test [--dry-run] [BASE_URL]   (default http://localhost)
+# Needs curl, jq and python3. The signed-in calls use the CI session stub's cookie
+# (cp_session=demo-ci, see deploy/compose.ci.yml).
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit 2
+
+usage() { echo "usage: demo-stack-test [--dry-run] [BASE_URL]" >&2; exit 2; }
+dry=0
+if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
+[ $# -le 1 ] || usage
+BASE=${1:-http://localhost}
+BASE=${BASE%/}
+COOKIE="cp_session=${DEMO_SESSION:-demo-ci}"
+EVENT_DIR=events/demo
+
+TESTS=(
+  "hello health through Caddy is ok"
+  "admin health through Caddy is ok"
+  "admin API without a session is 401 not_signed_in"
+  "admin API with an unknown session is 401 not_signed_in"
+  "admin Load reads the demo event from the seeded event folder"
+  "PUT /api/admin/profile imports the demo event as a zip"
+  "admin settings hold the demo profile's values"
+  "PUT settings with the current version saves"
+  "PUT settings with a stale version is 409 version_conflict"
+  "unknown module is 404 not_found"
+  "GET /api/admin/profile exports a zip with profile.yaml and its assets"
+  "health view page lists admin and hello"
+  "importing the demo zip again restores the demo profile's settings"
+)
+
+if [ "$dry" = 1 ]; then
+  echo "dry run, would test $BASE with $EVENT_DIR:"
+  for t in "${TESTS[@]}"; do echo "  $t"; done
+  exit 0
+fi
+
+for tool in curl jq python3; do
+  command -v "$tool" >/dev/null || { echo "error: $tool not found" >&2; exit 2; }
+done
+[ -f "$EVENT_DIR/profile.yaml" ] || { echo "error: $EVENT_DIR/profile.yaml not found" >&2; exit 2; }
+if ! curl -s -o /dev/null --max-time 5 "$BASE/"; then
+  echo "error: $BASE does not answer; start the stack first:" >&2
+  echo "  docker compose -f deploy/compose.yml -f deploy/compose.ci.yml up -d --build --wait" >&2
+  exit 1
+fi
+
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+fail=0
+n=0
+
+# call METHOD PATH [curl args...] -> sets $code; body in $TMP/body
+call() {
+  local method=$1 path=$2; shift 2
+  code=$(curl -s -o "$TMP/body" -w '%{http_code}' --max-time 20 -X "$method" "$@" "$BASE$path") || code=000
+}
+# check LABEL COMMAND [ARGS...] : runs the command, prints ok/FAIL with the last answer on failure
+check() {
+  local label=$1; shift
+  if "$@" >/dev/null 2>&1; then
+    echo "ok   $label"
+  else
+    echo "FAIL $label (HTTP $code)"; head -c 600 "$TMP/body" 2>/dev/null; echo; fail=1
+  fi
+  n=$((n + 1))
+}
+# The helpers below run only through check "$@", which shellcheck cannot follow.
+# shellcheck disable=SC2329
+status_is() { [ "$code" = "$1" ]; }
+# shellcheck disable=SC2329
+body_is() { [ "$code" = "$1" ] && jq -e "$2" "$TMP/body"; }
+
+call GET /api/hello/health
+check "${TESTS[0]}" body_is 200 '.status == "ok" and .module == "hello"'
+
+call GET /api/admin/health
+check "${TESTS[1]}" body_is 200 '.status == "ok" and .module == "admin" and .checks.postgres.status == "ok"'
+
+call GET /api/admin/settings/admin
+check "${TESTS[2]}" body_is 401 '.error.code == "not_signed_in"'
+
+call GET /api/admin/settings/admin -H "cookie: cp_session=not-a-session"
+check "${TESTS[3]}" body_is 401 '.error.code == "not_signed_in"'
+
+profile_name=$(grep -m1 '^name:' "$EVENT_DIR/profile.yaml" | sed 's/^name:[[:space:]]*//')
+call POST /admin/profile/load -H "cookie: $COOKIE" -D "$TMP/headers"
+# shellcheck disable=SC2329
+redirects_with_loaded() {
+  status_is 303 && grep -qi "^location: .*/profile?message=Loaded+${profile_name// /+}[&[:space:]]" "$TMP/headers"
+}
+check "${TESTS[4]}" redirects_with_loaded
+
+(cd "$EVENT_DIR" && python3 -m zipfile -c "$TMP/demo.zip" profile.yaml assets/)
+call PUT /api/admin/profile -H "cookie: $COOKIE" -H "content-type: application/zip" --data-binary "@$TMP/demo.zip"
+check "${TESTS[5]}" body_is 200 ".name == \"$profile_name\" and .schema_version == 1"
+
+call GET /api/admin/settings/admin -H "cookie: $COOKIE"
+check "${TESTS[6]}" body_is 200 '.module == "admin" and .values.timezone == "UTC" and .values.language == "en" and (.settings_version | type == "number")'
+version=$(jq -r '.settings_version // 0' "$TMP/body" 2>/dev/null || echo 0)
+
+call PUT /api/admin/settings/admin -H "cookie: $COOKIE" -H "content-type: application/json" \
+  --data "{\"settings_version\": $version, \"values\": {\"timezone\": \"UTC\", \"language\": \"fi\"}}"
+check "${TESTS[7]}" body_is 200 ".values.language == \"fi\" and .settings_version > $version"
+
+call PUT /api/admin/settings/admin -H "cookie: $COOKIE" -H "content-type: application/json" \
+  --data "{\"settings_version\": $version, \"values\": {\"timezone\": \"UTC\", \"language\": \"en\"}}"
+check "${TESTS[8]}" body_is 409 '.error.code == "version_conflict"'
+
+call GET /api/admin/settings/no-such-module -H "cookie: $COOKIE"
+check "${TESTS[9]}" body_is 404 '.error.code == "not_found"'
+
+call GET /api/admin/profile -H "cookie: $COOKIE"
+cp "$TMP/body" "$TMP/export.zip"
+# shellcheck disable=SC2329
+export_has_demo() {
+  status_is 200 || return 1
+  python3 - "$TMP/export.zip" "$EVENT_DIR" <<'PY'
+import pathlib, sys, zipfile
+names = set(zipfile.ZipFile(sys.argv[1]).namelist())
+event = pathlib.Path(sys.argv[2])
+want = {"profile.yaml"} | {str(p.relative_to(event)) for p in (event / "assets").rglob("*") if p.is_file()}
+missing = want - names
+print("missing:", sorted(missing)) if missing else None
+sys.exit(1 if missing else 0)
+PY
+}
+check "${TESTS[10]}" export_has_demo
+
+call GET /admin/health-view -H "cookie: $COOKIE"
+# shellcheck disable=SC2329
+lists_admin_and_hello() {
+  status_is 200 && grep -q "<td>admin</td>" "$TMP/body" && grep -q "<td>hello</td>" "$TMP/body"
+}
+check "${TESTS[11]}" lists_admin_and_hello
+
+# The export above saved the changed settings into the event folder; import the demo again
+# so the screenshots that follow show the demo event.
+call PUT /api/admin/profile -H "cookie: $COOKIE" -H "content-type: application/zip" --data-binary "@$TMP/demo.zip"
+call GET /api/admin/settings/admin -H "cookie: $COOKIE"
+check "${TESTS[12]}" body_is 200 '.values.language == "en"'
+
+if [ "$fail" = 0 ]; then echo "demo-stack-test: all $n tests passed"; else echo "demo-stack-test: tests failed" >&2; fi
+exit "$fail"
