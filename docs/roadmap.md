@@ -148,7 +148,7 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
 
 ### 11. Freeze and switch
 - **Goal:** the event runs on a pinned, tested release.
-- **In it:** from 2027-03-01 a release branch is cut and only fixes go onto it; every PR needs a person's accept again ([0016](decisions/0016-accept-policy.md)). Crew test sessions on the VM, including a restore onto the fallback laptop. The legacy bot is cut over (see [0013](decisions/0013-multi-tenant-core.md), Discord). The old repos are renamed `-legacy` and archived; this repo takes the name `canccuplatform`.
+- **In it:** from 2027-03-01 a release branch is cut and only fixes go onto it; every PR needs a maintainer's accept ([0016](decisions/0016-merge-policy.md)). Crew test sessions on the VM, including a restore onto the fallback laptop. The legacy bot is cut over (see [0013](decisions/0013-multi-tenant-core.md), Discord). The old repos are renamed `-legacy` and archived; this repo takes the name `canccuplatform`.
 - **Exit criteria:** the event repo pins a tested release.
 - **Issues:** to be created.
 

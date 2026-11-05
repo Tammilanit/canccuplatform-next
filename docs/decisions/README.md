@@ -1,6 +1,6 @@
 # Decisions
 
-The settled decisions behind [the roadmap](../roadmap.md), one record each. A decision is reopened only by the project owner, through a PR that adds a new record and marks the old one superseded; old records are never rewritten. Adding or changing a record needs the project owner's accept ([0016](0016-accept-policy.md)).
+The settled decisions behind [the roadmap](../roadmap.md), one record each. A decision is reopened only by a maintainer, through a PR that adds a new record and marks the old one superseded; old records are never rewritten. Records merge like any other PR ([0016](0016-merge-policy.md)).
 
 Each record has Status, Date, Context, Decision and Consequences. New records take the next number: `NNNN-<slug>.md`.
 
@@ -19,6 +19,6 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0011](0011-hosting-on-remote-vm.md) | The platform is hosted on a remote VM | 2026-11-04 |
 | [0012](0012-development-on-the-vm.md) | Development runs on the VM, for now | 2026-11-05 |
 | [0013](0013-multi-tenant-core.md) | Multi-tenant from day 1, on one shared stack | 2026-11-05 |
-| [0014](0014-local-review.md) | A local review replaces the CI Claude review | 2026-11-05 |
+| [0014](0014-independent-review.md) | Every PR gets an independent review | 2026-11-05 |
 | [0015](0015-dependency-auditing.md) | Dependency auditing | 2026-11-05 |
-| [0016](0016-accept-policy.md) | Maintainer accept policy | 2026-11-05 |
+| [0016](0016-merge-policy.md) | Merge policy | 2026-11-05 |
