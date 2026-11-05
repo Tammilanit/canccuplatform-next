@@ -1,0 +1,14 @@
+# 0015. Dependency auditing
+
+- **Status:** Accepted
+- **Date:** 2026-11-05
+
+## Context
+The platform's security rests on containers, a small attack surface and keeping dependencies clean ([0009](0009-rust-rejected.md)). Nothing checks dependencies yet.
+
+## Decision
+In Hardening (roadmap step 10): `npm audit` and `pip-audit` run in CI, and Renovate (or Dependabot) opens update PRs for images and dependencies.
+
+## Consequences
+- Update PRs touch manifests and lockfiles, so they need a person's accept ([0016](0016-accept-policy.md)).
+- A known vulnerability fails CI until it is fixed or explicitly ignored with a reason.

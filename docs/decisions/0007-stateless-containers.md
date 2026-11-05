@@ -1,0 +1,15 @@
+# 0007. Containers are stateless
+
+- **Status:** Accepted
+- **Date:** 2026-11-02
+
+## Context
+Restarts and updates must be safe during an event, and recovery must be one restore.
+
+## Decision
+A container keeps no state of its own. Data and sessions live in Postgres; events and caches in Valkey (on disk, but losing them costs nothing that matters); files in one shared files volume.
+
+## Consequences
+- Any module can be deleted and restarted without loss.
+- A whole backup is Postgres plus the files volume.
+- With tenancy, keys and file paths carry the tenant ([0013](0013-multi-tenant-core.md)).
