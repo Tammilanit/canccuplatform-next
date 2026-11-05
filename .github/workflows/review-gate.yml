@@ -8,7 +8,8 @@ name: Review gate
 # and comment text is matched with jq, never executed. See docs/ci.md, review-gate.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    # edited: a base-branch change keeps the head SHA, so the gate re-checks it.
+    types: [opened, synchronize, reopened, ready_for_review, edited]
   issue_comment:
     types: [created, edited, deleted]
   merge_group:
@@ -51,8 +52,9 @@ jobs:
           REVIEWER_LOGIN: ${{ vars.REVIEWER_LOGIN }}
         run: |
           gh api --paginate "repos/$REPO/issues/$PR/comments" | jq -s 'add // []' > "$RUNNER_TEMP/comments.json"
+          gh api --paginate "repos/$REPO/issues/$PR/timeline" | jq -s 'add // []' > "$RUNNER_TEMP/timeline.json"
           head=$(gh api "repos/$REPO/pulls/$PR" --jq .head.sha)
-          .github/scripts/review-gate "$RUNNER_TEMP/comments.json" "$head" "$RUN_HEAD"
+          .github/scripts/review-gate "$RUNNER_TEMP/comments.json" "$head" "$RUN_HEAD" "$RUNNER_TEMP/timeline.json"
 
   # A comment event runs on the default branch, so its own check would not land on the PR.
   # Instead, re-run the review-gate run of the PR's head, which then reads the comments again.

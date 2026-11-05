@@ -11,7 +11,7 @@ The rules are in [AGENTS.md](../AGENTS.md); machine setup is in [CONTRIBUTING.md
    - On `changes`, fix the findings and ask again.
    - On `pass`, the reviewer enables auto-merge: `gh pr merge <pr> --auto` (the merge queue sets the strategy and rejects `--delete-branch` and strategy flags).
    - On `manual`, a maintainer accepts (see Who accepts).
-   - Any push voids the verdict; the `review-gate` check stays red until a verdict names the new head.
+   - Any push or base-branch change voids the verdict; the `review-gate` check stays red until a new verdict names the current head. An edited verdict comment never counts.
    - For fork PRs a maintainer arranges the review.
 6. **Merge queue:** GitHub merges the PR when the required checks are green. Never merge by hand.
 

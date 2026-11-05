@@ -50,7 +50,8 @@ Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switc
    - `changes`: the findings go back to the author, who fixes them, pushes and asks for a new review.
    - `pass`: nothing blocking and no maintainer's accept needed. The reviewer enables auto-merge (`gh pr merge <pr> --auto`, or the button; the merge queue sets the strategy and rejects `--delete-branch` and strategy flags).
    - `manual — <reason>`: nothing blocking, but the PR needs a maintainer's accept (see Merge rules). The reviewer leaves auto-merge off.
-   - A push voids the verdict: the `review-gate` check passes only on `pass` for the current head, so ask for a new review after every push.
+   - A push or a base-branch change voids the verdict: the `review-gate` check passes only on `pass` for the current head and base, so ask for a new review after either.
+   - A verdict comment is never edited: an edited or malformed verdict fails the gate. To change a verdict, the reviewer posts a new comment.
    - Fork PRs: a maintainer arranges the review.
 9. **Done** = PR ready, all acceptance criteria met, `review-gate` green (verdict `pass` on the current head) and auto-merge enabled, or verdict `manual` and waiting for a maintainer's accept. Never merge by hand; GitHub merges when the gates pass.
 
