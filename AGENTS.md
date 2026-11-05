@@ -38,17 +38,17 @@ Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switc
 3. **Branch** `<n>-short-name` (from the title: lowercase, hyphens, max ~4 words), on the repo if you have write access, otherwise on your fork. One issue per PR. Nobody pushes to main.
 4. **Build** within the issue's scope. If the issue needs a design first and a maintainer asks for a plan, write it to `docs/plans/issue-<n>.md` and commit it; otherwise no plan file.
 5. **Check** before asking for review: run the checks of the modules you touched (see Run and test). For scripts, run them once with `--dry-run` or against an unreachable host and confirm a clear failure.
-6. **Review** before marking the PR ready: run a local code review of the whole diff (Claude Code: `/code-review` at `high` effort; other tools: an equivalent review for correctness bugs at the same depth), fix its findings, and record it in the PR body as `Review run: <tool/effort> — <result>` (e.g. `Review run: Claude Code /code-review high — 2 findings, fixed`). Fork contributors are asked to do the same; a maintainer reviews fork PRs in any case.
+6. **Review** before marking the PR ready: run a local code review of the whole diff (Claude Code: `/code-review` at `high` effort; other tools: an equivalent review for correctness bugs at the same depth), fix its findings, and record it in the PR body as `Review run: <tool/effort> — <result>` (e.g. `Review run: Claude Code /code-review high — 3 findings: 2 fixed, 1 out of scope`). The review is clean when every finding is fixed or answered in the PR body (not applicable, or out of scope with a reason). Fork contributors are asked to do the same; a maintainer reviews fork PRs in any case.
 7. **Commit** with conventional commits, the module as scope: `feat(screen): …`, `fix(bot): …`, `docs(map): …`.
 8. **PR**: title = the commit subject; body starts with `Closes #<n>` and ends with these lines:
-   - `Tier: fix|feature|plan` — fix: implement and check; feature: a short plan in the PR body, then implement; plan: only `docs/plans/issue-<n>.md`.
-   - `Accept: auto|manual — <reason>` — `manual` when the PR touches anything a maintainer accepts (see Merge rules), otherwise `auto`.
+   - `Tier: fix|feature|plan` — fix: implement and check; feature: a short plan first (kept in the PR body), then implement; plan: only `docs/plans/issue-<n>.md`.
+   - `Accept: auto|manual — <reason>` — `manual` when the PR touches anything a maintainer accepts (see Merge rules) or once the freeze has begun, otherwise `auto`.
    - `Next action:` what remains, or `none`.
    - `Verification run: <what> — <result>` (or `none — <reason>`).
    - `Review run: <tool/effort> — <result>`.
 
    The PR description is the handoff: anyone picking the work up reads it there. Do not commit handoff or session notes.
-9. **Done** = PR ready for review, all acceptance criteria met, the review clean, and, with `Accept: auto`, auto-merge enabled (`gh pr merge <pr> --auto`, or the button; the merge queue sets the strategy and rejects `--delete-branch` and strategy flags). With `Accept: manual` the PR waits for a maintainer's accept. Never merge by hand; GitHub merges when the gates pass.
+9. **Done** = PR ready for review, all acceptance criteria met, the review clean, and, with `Accept: auto`, auto-merge enabled (`gh pr merge <pr> --auto`, or the button; the merge queue sets the strategy and rejects `--delete-branch` and strategy flags). With `Accept: manual` the PR waits for a maintainer's accept: the maintainer reviews it, labels it `accepted` and enables auto-merge. Never merge by hand; GitHub merges when the gates pass.
 
 `ready` and `in-progress` are maintainer bookkeeping; contributors do not need to set them.
 
