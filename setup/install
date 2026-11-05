@@ -4,7 +4,8 @@
 #   --boot  for a host reachable from outside (needs root): install canccu-firewall.service and
 #           canccu-stack.service, enable Docker, the firewall and the stack at boot, put the
 #           DOCKER-USER firewall in place BEFORE the stack publishes its ports, then run
-#           check-boot. Needs CP_WEB_ALLOW in deploy/.env (see setup/README.md).
+#           check-boot. Also installs and enables canccu-deploy.timer (setup/deploy: auto-deploy
+#           of main while CP_VERSION is dev). Needs CP_WEB_ALLOW in deploy/.env (see setup/README.md).
 # Honours DOCKER_HOST; CP_ENV_FILE replaces deploy/.env (for the self-test).
 # Exit 2 = something is missing or unreachable.
 set -uo pipefail
@@ -73,11 +74,11 @@ if [ "$boot" = 1 ]; then
     [ "$(id -u)" = 0 ] || die "--boot needs root (sudo setup/install --boot)"
     command -v systemctl >/dev/null || die "systemd not found"
   fi
-  step "install canccu-firewall.service and canccu-stack.service into /etc/systemd/system"
+  step "install canccu-firewall.service, canccu-stack.service, canccu-deploy.service and canccu-deploy.timer into /etc/systemd/system"
   step "systemctl enable docker canccu-firewall canccu-stack"
   step "systemctl reload canccu-firewall, or start it if inactive (put the DOCKER-USER firewall in place; a restart would restart Docker)"
   if [ "$dry" = 0 ]; then
-    for u in canccu-firewall.service canccu-stack.service; do
+    for u in canccu-firewall.service canccu-stack.service canccu-deploy.service canccu-deploy.timer; do
       sed "s#@REPO@#$PWD#g; s#@DOCKER@#$docker_bin#g" "setup/$u" > "/etc/systemd/system/$u" || die "cannot write /etc/systemd/system/$u"
     done
     systemctl daemon-reload || die "systemctl daemon-reload failed"
@@ -105,6 +106,8 @@ if [ "$dry" = 0 ]; then
 fi
 
 if [ "$boot" = 1 ]; then
+  step "systemctl enable --now canccu-deploy.timer (auto-deploy of main; it acts only while CP_VERSION is dev)"
+  [ "$dry" = 1 ] || systemctl enable --now canccu-deploy.timer || die "cannot enable canccu-deploy.timer"
   step "setup/check-boot"
   [ "$dry" = 1 ] || setup/check-boot || exit 2
   echo "done. Now run the reboot test in setup/README.md."

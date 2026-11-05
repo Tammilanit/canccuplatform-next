@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+# Auto-deploy of main (dev mode): while CP_VERSION in deploy/.env is `dev`, bring this host to
+# origin/main and the module images CI pushed for it (`:dev`), check health, and on failure go
+# back to the previous commit and images and open an issue. Run by canccu-deploy.timer as root.
+# Usage: deploy [--dry-run]
+# Exit 0 = deployed, nothing new, waiting for images, holding a failed deploy, or not in dev mode;
+# 1 = the deploy failed and was rolled back; 2 = something is missing, unreachable or refused.
+# deploy/.env (CP_ENV_FILE replaces it): CP_VERSION; CP_DEPLOY_IMAGES (default ghcr.io/<owner>/<repo>
+# of the origin remote); CP_DEPLOY_GITHUB_TOKEN (opens the issue: Issues read and write on the repo).
+# Environment: CP_DEPLOY_STATE (state dir; default $STATE_DIRECTORY or /var/lib/canccu-deploy),
+# CP_DEPLOY_WAIT (seconds to wait for health, default 30), CP_DEPLOY_FIREWALL (default setup/firewall).
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit 2
+dry=0
+for a in "$@"; do case "$a" in
+  --dry-run) dry=1 ;;
+  *) echo "usage: deploy [--dry-run]" >&2; exit 2 ;; esac; done
+die() { echo "error: $*" >&2; exit 2; }
+say() { echo "deploy: $*"; }
+
+command -v docker >/dev/null || die "docker not found"
+docker info >/dev/null 2>&1 || die "cannot reach the Docker daemon (DOCKER_HOST=${DOCKER_HOST:-unset})"
+command -v git >/dev/null || die "git not found"
+command -v curl >/dev/null || die "curl not found"
+if [ "$dry" = 1 ]; then
+  for s in "stop unless CP_VERSION in deploy/.env is dev" "check the checkout is clean and on main" \
+    "git fetch origin main" "docker pull <module>:dev for every module with a Dockerfile" \
+    "wait until every image was built from origin/main (org.opencontainers.image.revision)" \
+    "setup/firewall check" "git merge --ff-only origin/main and tag the images as canccuplatform-<module>:latest" \
+    "docker compose -f deploy/compose.yml up -d --wait --no-build, then check health through Caddy" \
+    "on failure: go back to the previous commit and images and open an issue"; do echo "would $s"; done
+  exit 0
+fi
+
+env_file=${CP_ENV_FILE:-deploy/.env}
+envval() { [ -r "$env_file" ] || return 0; sed -n "s/^$1=//p" "$env_file" | tail -n1 | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"; }
+version=$(envval CP_VERSION); version=${version:-dev}
+[ "$version" = dev ] || { say "platform version is $version, not dev: auto-deploy is off"; exit 0; }
+
+state=${CP_DEPLOY_STATE:-${STATE_DIRECTORY:-/var/lib/canccu-deploy}}
+mkdir -p "$state" || die "cannot create $state"
+exec 9>"$state/lock" || die "cannot open $state/lock"
+flock -n 9 || { say "another deploy is running"; exit 0; }
+
+# git runs as the owner of the checkout, so root never writes into a user's checkout.
+owner=$(stat -c %U .) || die "cannot read the owner of $PWD"
+g() { if [ "$owner" = "$(id -un)" ]; then git "$@"; else runuser -u "$owner" -- git "$@"; fi; }
+
+url=$(g remote get-url origin) || die "the checkout has no origin remote"
+slug=$(sed -E 's#^(https://|ssh://)?([^@/]+@)?github\.com[:/]##; s#\.git$##; s#/$##' <<<"$url")
+[[ $slug =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || die "origin ($url) is not a GitHub repository"
+images=$(envval CP_DEPLOY_IMAGES); images=${images:-ghcr.io/${slug,,}}
+token=$(envval CP_DEPLOY_GITHUB_TOKEN)
+wait_s=${CP_DEPLOY_WAIT:-30}
+firewall=${CP_DEPLOY_FIREWALL:-setup/firewall}
+
+[ "$(g symbolic-ref --short HEAD 2>/dev/null)" = main ] || die "the checkout is not on main; nobody edits code on the VM"
+[ -z "$(g status --porcelain --untracked-files=no)" ] || die "the checkout has local changes; nobody edits code on the VM (code arrives only by a merge to main)"
+g fetch -q origin main || die "cannot fetch main from origin"
+target=$(g rev-parse --verify -q 'FETCH_HEAD^{commit}') || die "cannot read the fetched main"
+current=$(g rev-parse --verify -q 'HEAD^{commit}') || die "cannot read HEAD"
+g merge-base --is-ancestor "$current" "$target" || die "the checkout has diverged from origin/main; nobody edits code on the VM"
+
+modules=()
+while read -r d; do
+  m=${d#modules/}
+  g cat-file -e "$target:modules/$m/Dockerfile" 2>/dev/null && modules+=("$m")
+done < <(g ls-tree --name-only "$target" modules/)
+[ "${#modules[@]}" -gt 0 ] || die "main has no modules/<name>/Dockerfile"
+
+declare -A new old
+for m in "${modules[@]}"; do
+  docker pull -q "$images/$m:dev" >/dev/null || die "cannot pull $images/$m:dev (registry unreachable, or a private package without docker login?)"
+  rev=$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$images/$m:dev")
+  if [ "$rev" != "$target" ]; then say "waiting for the images of ${target:0:7} ($m:dev was built from ${rev:0:7})"; exit 0; fi
+  new[$m]=$(docker image inspect -f '{{.Id}}' "$images/$m:dev") || die "cannot inspect $images/$m:dev"
+  old[$m]=$(docker image inspect -f '{{.Id}}' "canccuplatform-$m:latest" 2>/dev/null || true)
+done
+
+changed=0
+[ "$current" = "$target" ] || changed=1
+for m in "${modules[@]}"; do [ "${new[$m]}" = "${old[$m]}" ] || changed=1; done
+[ "$changed" = 1 ] || { say "up to date at ${target:0:7}"; exit 0; }
+
+key="$target"; for m in "${modules[@]}"; do key+=" $m=${new[$m]}"; done
+if [ -f "$state/failed" ] && [ "$(cat "$state/failed")" = "$key" ]; then
+  say "holding: ${target:0:7} with these images failed before and was rolled back; a new merge or new images retry"
+  exit 0
+fi
+
+"$firewall" check >/dev/null || die "the firewall is not in place; not deploying (see: $firewall check)"
+
+# switch MODE: bring up the stack as it is now and check its health; 0 = healthy
+switch() {
+  docker compose -f deploy/compose.yml up -d --wait --no-build || { say "the stack did not become healthy"; return 1; }
+  local m cid ids
+  for m in "${modules[@]}"; do
+    cid=$(docker compose -f deploy/compose.yml ps -q "$m" 2>/dev/null)
+    [ -z "$cid" ] && continue
+    ids=$(docker inspect -f '{{.Image}}' "$cid") || return 1
+    [ "$ids" = "$(docker image inspect -f '{{.Id}}' "canccuplatform-$m:latest")" ] || { say "$m does not run the image it should"; return 1; }
+  done
+  local i u ok
+  for i in $(seq 1 "$wait_s"); do
+    ok=1
+    for u in http://127.0.0.1/api/hello/health http://127.0.0.1/api/admin/health; do
+      curl -fsS --max-time 5 "$u" >/dev/null 2>&1 || { ok=0; break; }
+    done
+    [ "$ok" = 1 ] && return 0
+    [ "$i" = "$wait_s" ] || sleep 1
+  done
+  say "health check failed: $u"; return 1
+}
+
+say "deploying ${target:0:7} (from ${current:0:7})"
+g merge -q --ff-only "$target" || die "cannot fast-forward the checkout to ${target:0:7}"
+for m in "${modules[@]}"; do docker tag "${new[$m]}" "canccuplatform-$m:latest" || die "cannot tag the image of $m"; done
+if switch; then
+  rm -f "$state/failed"
+  for m in "${modules[@]}"; do
+    if [ -n "${old[$m]}" ] && [ "${old[$m]}" != "${new[$m]}" ]; then docker image rm "${old[$m]}" >/dev/null 2>&1 || true; fi
+  done
+  say "deployed ${target:0:7}, health ok"
+  exit 0
+fi
+
+# Roll back to the previous commit and images, then report.
+echo "$key" > "$state/failed"
+rolled="rolled back to ${current:0:7}, health ok"
+g reset -q --keep "$current" || rolled="ROLLBACK FAILED: cannot reset the checkout to ${current:0:7}"
+for m in "${modules[@]}"; do
+  [ -n "${old[$m]}" ] && { docker tag "${old[$m]}" "canccuplatform-$m:latest" || rolled="ROLLBACK FAILED: cannot tag the previous image of $m"; }
+done
+case "$rolled" in ROLLBACK*) ;; *) switch || rolled="ROLLBACK FAILED: the previous version is not healthy either" ;; esac
+say "deploy of ${target:0:7} failed; $rolled"
+
+title="Auto-deploy of ${target:0:7} failed; ${rolled%%:*}"
+body="The dev host could not deploy main at $target: the stack did not become healthy with the new images.
+Result: $rolled.
+Auto-deploy holds this commit and images until a new merge or new images arrive.
+Logs on the host: journalctl -u canccu-deploy and docker compose -f deploy/compose.yml logs."
+json() { local s=${1//\\/\\\\}; s=${s//\"/\\\"}; s=${s//$'\n'/\\n}; printf '"%s"' "$s"; }
+if [ -z "$token" ]; then
+  echo "error: no CP_DEPLOY_GITHUB_TOKEN in $env_file, so no issue was opened" >&2
+else
+  tmp=$(mktemp) || exit 1
+  printf '{"title":%s,"body":%s,"labels":["module:deploy"]}' "$(json "$title")" "$(json "$body")" > "$tmp"
+  printf 'header = "Authorization: Bearer %s"\n' "$token" \
+    | curl -fsS --max-time 20 -K - -X POST -H "Accept: application/vnd.github+json" \
+        --data-binary "@$tmp" "https://api.github.com/repos/$slug/issues" >/dev/null \
+    || echo "error: could not open an issue on $slug" >&2
+  rm -f "$tmp"
+fi
+exit 1

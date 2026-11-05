@@ -1,0 +1,17 @@
+# Auto-deploy of main (setup/deploy), started by canccu-deploy.timer. It acts only while CP_VERSION
+# in deploy/.env is dev: it pulls the module images CI built from origin/main, restarts the stack,
+# checks health and, on failure, goes back to the previous commit and images and opens an issue.
+# A failed deploy leaves this unit failed: systemctl status canccu-deploy, journalctl -u canccu-deploy.
+# setup/install --boot copies it to /etc/systemd/system, replacing @REPO@ with the checkout path.
+[Unit]
+Description=CanccuPlatform auto-deploy of main (dev mode)
+Requires=docker.service
+After=docker.service canccu-firewall.service canccu-stack.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=@REPO@
+StateDirectory=canccu-deploy
+ExecStart=@REPO@/setup/deploy
+TimeoutStartSec=900

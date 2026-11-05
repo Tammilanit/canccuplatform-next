@@ -45,6 +45,7 @@ if [ "$docker_ok" = 1 ]; then
   else bad "install --boot puts the firewall in place before the stack starts" "$out"; fi
   has "install --boot enables docker, canccu-firewall and canccu-stack at boot" "enable docker canccu-firewall canccu-stack"
   has "install --boot ends with check-boot" "check-boot"
+  has "install --boot enables the auto-deploy timer" "enable --now canccu-deploy.timer"
   n=$(grep -cE 'compose .*up' <<<"$out")
   if [ "$n" = 1 ]; then pass "install --boot starts the stack once"; else bad "install --boot starts the stack once ($n times)" "$out"; fi
   exits "install --boot validates deploy/.env, not the environment" 2 env CP_WEB_ALLOW=192.0.2.1 CP_ENV_FILE=/nonexistent setup/install --dry-run --boot
@@ -147,12 +148,17 @@ if grep -q '/usr/bin/docker' setup/canccu-stack.service || ! grep -q '@DOCKER@' 
 then bad "canccu-stack gets the docker path from install (@DOCKER@)"; else pass "canccu-stack gets the docker path from install (@DOCKER@)"; fi
 if grep -q 'restart canccu-firewall' setup/check-boot setup/README.md; then bad "docs and hints never restart canccu-firewall"; else pass "docs and hints never restart canccu-firewall"; fi
 if grep -q 'failed, the web ports are closed' setup/install; then bad "install does not claim closed ports when canccu-firewall failed"; else pass "install does not claim closed ports when canccu-firewall failed"; fi
+if unit canccu-deploy.timer OnUnitInactiveSec | grep -q . && unit canccu-deploy.timer WantedBy | grep -qw timers.target
+then pass "canccu-deploy.timer runs the deploy again and again, from boot"; else bad "canccu-deploy.timer runs the deploy again and again, from boot"; fi
+if [ "$(unit canccu-deploy.service ExecStart)" = "@REPO@/setup/deploy" ] && unit canccu-deploy.service After | grep -qw canccu-stack.service
+then pass "canccu-deploy runs setup/deploy after the stack has started"; else bad "canccu-deploy runs setup/deploy after the stack has started"; fi
+if [ "$(unit canccu-deploy.service StateDirectory)" = canccu-deploy ]; then pass "canccu-deploy keeps its state in /var/lib/canccu-deploy"; else bad "canccu-deploy keeps its state in /var/lib/canccu-deploy"; fi
 if command -v systemd-analyze >/dev/null && systemctl cat docker.service >/dev/null 2>&1; then
   tmp=$(mktemp -d)
-  for u in canccu-firewall.service canccu-stack.service; do sed "s#@REPO@#$PWD#g; s#@DOCKER@#$(command -v docker || echo /usr/bin/docker)#g" "setup/$u" > "$tmp/$u"; done
-  run systemd-analyze verify "$tmp/canccu-firewall.service" "$tmp/canccu-stack.service"
+  for u in canccu-firewall.service canccu-stack.service canccu-deploy.service canccu-deploy.timer; do sed "s#@REPO@#$PWD#g; s#@DOCKER@#$(command -v docker || echo /usr/bin/docker)#g" "setup/$u" > "$tmp/$u"; done
+  run systemd-analyze verify "$tmp/canccu-firewall.service" "$tmp/canccu-stack.service" "$tmp/canccu-deploy.service" "$tmp/canccu-deploy.timer"
   rm -rf "$tmp"
-  if [ "$rc" = 0 ] && ! grep -q "$tmp" <<<"$out"; then pass "systemd-analyze verify accepts both units"; else bad "systemd-analyze verify accepts both units" "$out"; fi
+  if [ "$rc" = 0 ] && ! grep -q "$tmp" <<<"$out"; then pass "systemd-analyze verify accepts the units"; else bad "systemd-analyze verify accepts the units" "$out"; fi
 else
   skip "systemd-analyze verify" "no systemd or no docker.service"
 fi
@@ -188,14 +194,145 @@ has "check-boot checks canccu-firewall" "canccu-firewall"
 has "check-boot checks IPv6" "IPv6"
 has "check-boot checks that docker requires canccu-firewall" "docker.service requires canccu-firewall"
 has "check-boot checks the services are running and healthy" "running and healthy"
+has "check-boot checks the auto-deploy timer" "canccu-deploy.timer enabled"
 if grep -q 'jq' setup/check-boot; then bad "check-boot does not need jq"; else pass "check-boot does not need jq"; fi
 exits "firewall check --dry-run" 0 setup/firewall check --dry-run
 has "firewall check looks at the final DROP" "DROP"
 has "firewall check looks at FORWARD -> DOCKER-USER" "FORWARD"
 
+echo "# deploy (auto-deploy of main; docker, git, curl and the firewall are stubs)"
+exits "deploy rejects an unknown option" 2 setup/deploy --bogus
+has "deploy prints its usage" "usage: deploy"
+exits "deploy --dry-run fails against an unreachable daemon" 2 env DOCKER_HOST=$unreachable PATH=/usr/bin:/bin setup/deploy --dry-run
+# stubs: one directory of fake tools whose state lives in files under $st (see the case blocks)
+stubs=$scratch/stubs; mkdir -p "$stubs/bin"
+cat > "$stubs/bin/docker" <<'STUB'
+#!/bin/sh
+S=$STUB; echo "docker $*" >> "$S/log"
+mod() { m=${1##*/}; m=${m%:*}; m=${m#canccuplatform-}; echo "$m"; }
+case "$1" in
+  info) exit 0 ;;
+  pull) [ ! -e "$S/pull_fail" ] ;;
+  tag) case "$2" in sha256:*) id=$2 ;; *) id=$(cat "$S/remote_$(mod "$2")") ;; esac
+       printf '%s\n' "$id" > "$S/live_$(mod "$3")" ;;
+  image)
+    case "$2" in
+      rm) exit 0 ;;
+      inspect) case "$5" in
+        canccuplatform-*) [ -e "$S/live_$(mod "$5")" ] && cat "$S/live_$(mod "$5")" ;;
+        *) case "$4" in *revision*) cat "$S/rev" ;; *) cat "$S/remote_$(mod "$5")" ;; esac ;;
+      esac ;;
+    esac ;;
+  compose) for a; do last=$a; done
+    case "$*" in *" up "*) exit "$(cat "$S/up_rc")" ;; *" ps "*) echo "c_$last" ;; esac ;;
+  inspect) cat "$S/live_${4#c_}" ;;
+esac
+STUB
+cat > "$stubs/bin/git" <<'STUB'
+#!/bin/sh
+S=$STUB; echo "git $*" >> "$S/log"
+case "$1 $2" in
+  "remote get-url") echo "https://github.com/Example-Org/Example-Repo.git" ;;
+  "symbolic-ref --short") cat "$S/branch" ;;
+  "status --porcelain") cat "$S/dirty" 2>/dev/null ;;
+  "fetch -q") [ ! -e "$S/fetch_fail" ] ;;
+  "rev-parse --verify") case "$4" in FETCH_HEAD*) cat "$S/target" ;; *) cat "$S/head" ;; esac ;;
+  "merge-base --is-ancestor") [ ! -e "$S/diverged" ] ;;
+  "ls-tree --name-only") printf 'modules/admin\nmodules/hello\nmodules/nodocker\n' ;;
+  "cat-file -e") case "$3" in *nodocker*) exit 1 ;; esac ;;
+  "merge -q") echo "$4" > "$S/head" ;;
+  "reset -q") echo "$4" > "$S/head" ;;
+  *) echo "git stub: unexpected: $*" >&2; exit 9 ;;
+esac
+STUB
+cat > "$stubs/bin/curl" <<'STUB'
+#!/bin/sh
+S=$STUB; echo "curl $*" >> "$S/log"
+case "$*" in
+  */issues*) data=; for a; do case "$a" in @*) data=$(cat "${a#@}") ;; esac; done
+    cat > "$S/token.in"; printf '%s\n' "$data" >> "$S/issues" ;;
+  *) [ ! -e "$S/bad_$(cat "$S/live_hello")" ] || exit 22; echo '{"status":"ok"}' ;;
+esac
+STUB
+# shellcheck disable=SC2016  # $* and $STUB belong to the stub script
+printf '#!/bin/sh\necho "firewall $*" >> "$STUB/log"; exit "$(cat "$STUB/fw_rc")"\n' > "$stubs/firewall"
+chmod +x "$stubs/bin/"* "$stubs/firewall"
+old=1111111111111111111111111111111111111111; new=2222222222222222222222222222222222222222
+# fresh [ENV]: reset the stub state: the checkout is at $old, the registry has images built from $new
+fresh() {
+  st=$(mktemp -d "$scratch/st.XXXXXX"); mkdir "$st/state"
+  echo main > "$st/branch"; echo "$old" > "$st/head"; echo "$new" > "$st/target"; echo "$new" > "$st/rev"
+  echo 0 > "$st/up_rc"; echo 0 > "$st/fw_rc"; : > "$st/log"
+  for m in hello admin; do echo "sha256:old$m" > "$st/live_$m"; echo "sha256:new$m" > "$st/remote_$m"; done
+  denv=$(envfile "CP_VERSION=dev\nCP_DEPLOY_GITHUB_TOKEN=test-token\n${1:-}")
+}
+dep() { exits "$1" "$2" env STUB="$st" PATH="$stubs/bin:$PATH" CP_ENV_FILE="$denv" CP_DEPLOY_STATE="$st/state" CP_DEPLOY_FIREWALL="$stubs/firewall" CP_DEPLOY_WAIT=1 setup/deploy; }
+logged() { if grep -Eq -- "$2" "$st/log"; then pass "$1"; else bad "$1 (not called: $2)" "$(cat "$st/log")"; fi; }
+notlogged() { if grep -Eq -- "$2" "$st/log"; then bad "$1 (called: $2)" "$(cat "$st/log")"; else pass "$1"; fi; }
+issues() { if [ "$(wc -l < "$st/issues" 2>/dev/null || echo 0)" = "$2" ]; then pass "$1"; else bad "$1 (want $2 issues)" "$(cat "$st/issues" 2>/dev/null)"; fi; }
+
+fresh 'CP_VERSION=v0.1.0\n'; dep "deploy does nothing unless the platform version is dev" 0
+has "deploy says auto-deploy is off" "not dev"
+notlogged "deploy pulls nothing when the platform version is not dev" "docker pull"
+
+fresh; echo "$new" > "$st/head"; echo "sha256:newhello" > "$st/live_hello"; echo "sha256:newadmin" > "$st/live_admin"
+dep "deploy with nothing new" 0
+has "deploy says it is up to date" "up to date"
+notlogged "deploy starts nothing when up to date" "compose .* up "
+
+fresh; echo 3333333333333333333333333333333333333333 > "$st/rev"; dep "deploy waits for the images of the new commit" 0
+has "deploy says which images it waits for" "waiting for the images of 2222222"
+notlogged "deploy changes nothing while it waits" "merge -q|docker tag|compose .* up "
+
+fresh; dep "deploy of a new merge" 0
+logged "deploy pulls the dev images from the repo's registry" "docker pull -q ghcr.io/example-org/example-repo/hello:dev"
+logged "deploy pulls only modules with a Dockerfile" "docker pull -q ghcr.io/example-org/example-repo/admin:dev"
+notlogged "deploy skips modules without a Dockerfile" "nodocker:dev"
+logged "deploy checks the firewall first" "^firewall check"
+logged "deploy fast-forwards the checkout to main" "merge -q --ff-only $new"
+logged "deploy restarts the stack without building" "compose -f deploy/compose.yml up -d --wait --no-build"
+if [ "$(cat "$st/head")" = "$new" ] && [ "$(cat "$st/live_hello")" = sha256:newhello ]; then pass "deploy runs the new commit and images"; else bad "deploy runs the new commit and images" "$(cat "$st/log")"; fi
+has "deploy reports health ok" "health ok"
+logged "deploy checks health through Caddy" "curl .*127.0.0.1/api/hello/health"
+issues "deploy opens no issue on success" 0
+logged "deploy removes the replaced images" "image rm sha256:oldhello"
+
+fresh; echo sha256:newhello > "$st/remote_hello"; touch "$st/bad_sha256:newhello"; dep "deploy that fails its health check" 1
+if [ "$(cat "$st/head")" = "$old" ] && [ "$(cat "$st/live_hello")" = sha256:oldhello ] && [ "$(cat "$st/live_admin")" = sha256:oldadmin ]
+then pass "a failed deploy goes back to the previous commit and images"; else bad "a failed deploy goes back to the previous commit and images" "$(cat "$st/log")"; fi
+has "a failed deploy says it rolled back" "rolled back"
+issues "a failed deploy opens one issue" 1
+if grep -q '2222222' "$st/issues" && grep -q '"labels":\["module:deploy"\]' "$st/issues"; then pass "the issue names the commit and has the module:deploy label"; else bad "the issue names the commit and has the module:deploy label" "$(cat "$st/issues")"; fi
+logged "the issue goes to the repo's GitHub API" "curl .*api.github.com/repos/Example-Org/Example-Repo/issues"
+if grep -q test-token "$st/token.in" && ! grep -q test-token "$st/log"; then pass "the token goes to curl on stdin, not on its command line"; else bad "the token goes to curl on stdin, not on its command line" "$(cat "$st/log")"; fi
+notlogged "a failed deploy keeps the previous images" "image rm"
+: > "$st/log"; dep "deploy after a failed deploy of the same images" 0
+has "deploy holds a commit that failed before" "holding"
+notlogged "deploy does not retry the failed images" "compose .* up "
+issues "deploy opens no second issue" 1
+echo sha256:newhello2 > "$st/remote_hello"; : > "$st/log"; dep "deploy retries once the images change" 0
+logged "deploy retries once the images change (stack restarted)" "compose .* up "
+
+fresh; echo 1 > "$st/up_rc"; dep "deploy whose containers do not become healthy" 1
+issues "an unhealthy stack opens an issue" 1
+
+fresh 'CP_DEPLOY_GITHUB_TOKEN=\n'; touch "$st/bad_sha256:newhello"; dep "a failed deploy without a token" 1
+has "deploy says it cannot open an issue without a token" "CP_DEPLOY_GITHUB_TOKEN"
+if [ "$(cat "$st/head")" = "$old" ]; then pass "a failed deploy without a token still rolls back"; else bad "a failed deploy without a token still rolls back"; fi
+
+fresh; echo " M modules/hello/src/x.ts" > "$st/dirty"; dep "deploy refuses a checkout with local changes" 2
+has "deploy says nobody edits code on the VM" "local changes"
+notlogged "deploy changes nothing in an edited checkout" "merge -q|docker tag|compose .* up "
+fresh; echo feature > "$st/branch"; dep "deploy refuses a checkout not on main" 2
+fresh; touch "$st/diverged"; dep "deploy refuses a checkout that diverged from main" 2
+fresh; echo 1 > "$st/fw_rc"; dep "deploy refuses when the firewall is not in place" 2
+notlogged "deploy changes nothing without the firewall" "merge -q|docker tag|compose .* up "
+fresh; touch "$st/pull_fail"; dep "deploy fails clearly when the registry is unreachable" 2
+notlogged "deploy changes nothing when a pull fails" "merge -q|docker tag|compose .* up "
+
 echo "# shellcheck"
 if command -v shellcheck >/dev/null; then
-  exits "shellcheck" 0 shellcheck setup/install setup/firewall setup/check-boot setup/test.sh
+  exits "shellcheck" 0 shellcheck setup/install setup/firewall setup/check-boot setup/deploy setup/test.sh
 else
   skip "shellcheck" "not installed"
 fi
