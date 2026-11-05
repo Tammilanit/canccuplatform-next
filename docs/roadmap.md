@@ -61,7 +61,7 @@ Games and Cast run in parallel from step 2, after the tenancy foundation (see Pa
   - #12 is re-scoped for the shared stack: the firewall covers IPv6 and port 443 and can later open 80/443 to everyone; `new-event` becomes "seed the demo tenant" once the tenants module exists (tenants themselves are rows created through the tenants module).
   - #5 changes: the VM is remote, so sign-in needs HTTPS on a real hostname. The old check "does Discord accept plain http to a LAN IP" and the venue router's DNS-rebinding check no longer apply. #5 and #10 build sign-in so that it fits the central sign-in host of step 2b ([0013](decisions/0013-multi-tenant-core.md), item 10) instead of being redone there.
   - #14 changes: auto-deploy holds while any tenant is live, except hotfixes ([0013](decisions/0013-multi-tenant-core.md), item 22).
-- **Exit criteria:** sign in on the VM, change a setting, and see a test module's health. Sign-in over HTTPS on the platform domain completes with step 2b (items 4 and 5).
+- **Exit criteria:** change a setting on the VM and see a test module's health. Signing in over HTTPS is an exit criterion of step 2b, because it needs the domain, the edge Caddy and the central sign-in host.
 - **Issues:** epic #15. Closed: #2, #3, #4, #6, #7, #8, #9, #11. Open, in order: #12, #13, #10, #5, #14.
 
 ### 2. Event catalog and contracts
@@ -77,7 +77,7 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
 - **Goal:** every later module is tenant-aware from its first line ([0013](decisions/0013-multi-tenant-core.md)).
 - **In it**, in this order, each its own child issue:
   1. the tenants contract (first): registry, hostnames, admins and roles, settings, feature flags, lifecycle, audit log, and `tenant` in the bus envelope; venues as global rows managed by the superadmin (name, IPv4 and IPv6 addresses, devices that stay there), each event pointing to a venue (several events can share one, also at once), the per-tenant info-page mode (public, venue-only, sign-in) and the audited emergency switch for the venue IP check ([0013](decisions/0013-multi-tenant-core.md), items 33–34);
-  2. kit tenancy: tenant context, row-level security helpers, scoped Valkey keys, streams and files, a migration lint and leak-test helpers; it names the carve-out for health endpoints and the IP-mode demo stack in CI from "an unknown host gets nothing";
+  2. kit tenancy: tenant context, row-level security helpers, scoped Valkey keys, streams and files, a migration lint and leak-test helpers; it implements the carve-outs of [0013](decisions/0013-multi-tenant-core.md) items 2 and 6 (platform hostnames, health endpoints and the IP-mode demo stack outside tenant resolution; global tables on the lint's allow-list);
   3. the tenants module;
   4. the edge Caddy with a wildcard certificate (DNS-01) and on-demand TLS behind an `ask` endpoint;
   5. the central sign-in host;
@@ -86,7 +86,7 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
   8. backups off the VM.
 
   Then the admin module's single-event tables are reworked for tenants.
-- **Exit criteria:** two demo tenants run on one stack, each on its own hostname over HTTPS, both pointing to one demo venue; CI proves no data crosses between them (RLS lint and leak tests); a backup lands off the VM.
+- **Exit criteria:** a user signs in with Discord over HTTPS through the central sign-in host; two demo tenants run on one stack, each on its own hostname over HTTPS, both pointing to one demo venue; CI proves no data crosses between them (RLS lint and leak tests); a backup lands off the VM.
 - **Issues:** epic to be created; the domain decision (step 0) blocks items 4 and 5.
 
 #### 2c. Event catalog and screen contract

@@ -15,4 +15,5 @@ Development moved from a home machine to the hosted VM. There is no separate dev
 
 ## Consequences
 - Development and the running stack share CPU, RAM and disk.
+- Author and reviewer sessions share one OS user until the reviewer moves to its own, before the freeze ([0014](0014-independent-review.md), Known limits).
 - Revisit at the freeze, when real secrets and the event live on the VM: ask the hoster for a separate dev VM, or move development off it.

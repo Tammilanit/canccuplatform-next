@@ -11,20 +11,20 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
 
 ### Core
 1. **One VM, one shared stack:** one container per module, one Postgres, one Valkey, one edge Caddy. Every event is a tenant. Adding an event or a hostname adds rows (no deploy, no restart). Memory grows with modules, not events; disk is the real limit.
-2. **Host-based tenant resolution** through the tenants registry. An unknown host gets nothing.
+2. **Host-based tenant resolution** through the tenants registry. An unknown host gets nothing. Outside tenant resolution, and named here so no module invents its own bypass: the platform's own hostnames (the central sign-in host, item 10, and the superadmin hostname, item 13); health endpoints; and the IP-mode demo stack in CI, which serves the demo tenant on an unregistered host.
 3. **Roles:** superadmin (global) and event admin (per tenant; a user can admin several events), checked in the backend.
 4. **The tenants module and contract come first:** tenants, hostnames, admins and roles, venues and each event's venue (item 33), settings, feature flags, lifecycle (draft → live → archived; archived is read-only) and the audit log. The bus envelope gains `tenant`.
 
 ### Isolation
 5. **Postgres row-level security on every tenant table.** The app role owns no tables and has no BYPASSRLS. The kit sets the tenant with `SET LOCAL` per transaction, never per connection. With no tenant set a query sees nothing. A column default reads the tenant setting. The superadmin overview uses a separate role.
-6. **The tenant is in every key.** Unique constraints include `tenant_id`; foreign keys are composite with it, so a row cannot reference another tenant's row. CI lints every table for the column, the policy and the keys.
+6. **The tenant is in every key.** Unique constraints include `tenant_id`; foreign keys are composite with it, so a row cannot reference another tenant's row. CI lints every table for the column, the policy and the keys. Global tables (tenants, hostnames, venues, users) have no `tenant_id`; they are exempt only through an explicit allow-list that the lint enforces, and a new global table needs a change to that list.
 7. **Kit scoping beyond Postgres:** Valkey keys and bus streams per tenant (`t:<tenant>:events:<module>`); files under `/files/<tenant>/<module>/`, served only after a tenant check; caches and schedulers keyed by tenant; bus consumers set the tenant per message and pick up a new tenant's streams without a restart (item 1). Modules use no raw keys.
 8. **Cross-tenant leak tests** for every endpoint and consumer, in CI.
 
 ### Web, sign-in, TLS
 9. **TLS:** a wildcard certificate via DNS-01 for `*.<platform domain>` (Caddy built with the DNS provider plugin); Caddy on-demand TLS for custom hostnames, always behind the `ask` endpoint backed by the registry; 80/443 open to everyone once HTTPS and sign-in exist.
 10. **One central sign-in host** with the Discord OAuth app, handing each tenant hostname a one-time code (Discord allows only about 10 redirect URIs). Cookies are host-only and `Secure`; each session is bound to one tenant server-side; absolute URLs come from the registered hostname, never the `Host` header; Fastify `trustProxy` trusts only Caddy.
-11. **Access:** info views are read-only and public by default, with a per-tenant mode (item 33); screens and projectors pair once and get a revocable device token; admin always needs sign-in. Venue IP addresses (CIDR, IPv4 and IPv6, as the remote VM sees them, i.e. the venue's public NAT or prefix) are only a soft hint for people, never authorization. For screens the venue IP is a required second factor next to the pairing token, never sufficient alone (item 33).
+11. **Access:** info views are read-only and public by default, with a per-tenant mode (item 33); screens and projectors pair once and get a revocable device token; admin always needs sign-in. Venue IP addresses (CIDR, IPv4 and IPv6, as the remote VM sees them, i.e. the venue's public NAT or prefix) are only a soft hint for people, never authorization: this holds for all rights and for admin. For screens the venue IP is a required second factor next to the pairing token, never sufficient alone (item 33).
 12. **Proof of ownership:** binding a guild needs Manage Server on it, through the OAuth bot-install flow; a custom domain needs a DNS TXT record first; a removed hostname is held for a while before reuse.
 13. **Superadmin hardening:** Discord 2FA required (`mfa_enabled`); superadmin works on a separate admin hostname; support access to a tenant is audited; the audit log is append-only and covers settings, roles, hostnames, venues and their addresses, the venue IP-check switch, bot bindings and secret changes.
 
@@ -62,7 +62,7 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
     - Venues are global rows managed by the superadmin. Assigning a venue's devices to an event is tenant-scoped.
     - A screen needs **both** a request from its event's venue IP **and** its pairing token. The VM sees only the venue's public IP, and events at one venue share it, so the check is in the app; the firewall cannot tell events apart.
     - A per-tenant switch turns the venue IP check off in an emergency (for example when the venue's address changes mid-event). Every use is audited (item 13).
-    - Info pages are public by default; each tenant chooses a mode: public, venue-only (from the venue IP) or sign-in.
+    - Info pages are public by default; each tenant chooses a mode: public, venue-only (from the venue IP) or sign-in. Venue-only is a visibility setting for public, read-only info pages, never authorization for anything else; attendees of another event at the same venue can see them too.
 34. **Multiple screens per event.**
     - Devices are paired and named.
     - Each event has zones (for example main hall, café, stage), each with its own layout, playlist and schedule.
@@ -79,5 +79,5 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
 - The kit gains tenant context, RLS helpers, scoped keys, streams and files, and a migration lint.
 - Each port costs more (every table, key, timer, cache and subscription scoped, plus leak tests). One missed scope shows one organizer's data to another, so the lints and leak tests are required checks.
 - All tenants share one version and one migration; restoring one event uses the per-tenant export, not PITR.
-- Health endpoints and the IP-mode demo stack in CI reach the stack without a registered hostname, so the kit-tenancy or edge-Caddy child issue names their carve-out from item 2 (health outside tenant resolution, or the demo tenant registered for the CI host).
+- The kit-tenancy and edge-Caddy child issues implement the carve-outs named in items 2 and 6.
 - A legacy bot is cut over at the switch: its data is migrated into its event's tenant, the legacy bot is stopped, its token goes into the tenant, and the old container is kept stopped as rollback.
