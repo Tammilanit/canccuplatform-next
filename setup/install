@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Install a host: check Docker, write deploy/.env, start the stack and check its health.
 # Usage: install [--dry-run] [--boot]
-#   --boot  for a host reachable from outside (needs root): install cp-firewall.service and
-#           cp-stack.service, enable Docker, the firewall and the stack at boot, put the
+#   --boot  for a host reachable from outside (needs root): install canccu-firewall.service and
+#           canccu-stack.service, enable Docker, the firewall and the stack at boot, put the
 #           DOCKER-USER firewall in place BEFORE the stack publishes its ports, then run
 #           check-boot. Needs CP_WEB_ALLOW in deploy/.env (see setup/README.md).
 # Honours DOCKER_HOST; CP_ENV_FILE replaces deploy/.env (for the self-test).
@@ -44,23 +44,23 @@ if [ "$boot" = 1 ]; then
     [ "$(id -u)" = 0 ] || die "--boot needs root (sudo setup/install --boot)"
     command -v systemctl >/dev/null || die "systemd not found"
   fi
-  step "install cp-firewall.service and cp-stack.service into /etc/systemd/system"
-  step "systemctl enable docker cp-firewall cp-stack"
-  step "systemctl restart cp-firewall (put the DOCKER-USER firewall in place)"
+  step "install canccu-firewall.service and canccu-stack.service into /etc/systemd/system"
+  step "systemctl enable docker canccu-firewall canccu-stack"
+  step "systemctl restart canccu-firewall (put the DOCKER-USER firewall in place)"
   if [ "$dry" = 0 ]; then
-    for u in cp-firewall.service cp-stack.service; do
+    for u in canccu-firewall.service canccu-stack.service; do
       sed "s#@REPO@#$PWD#g" "setup/$u" > "/etc/systemd/system/$u" || die "cannot write /etc/systemd/system/$u"
     done
     systemctl daemon-reload || die "systemctl daemon-reload failed"
-    systemctl enable docker cp-firewall cp-stack || die "systemctl enable failed"
-    systemctl restart cp-firewall || die "cp-firewall failed, the web ports are closed; see: journalctl -u cp-firewall"
+    systemctl enable docker canccu-firewall canccu-stack || die "systemctl enable failed"
+    systemctl restart canccu-firewall || die "canccu-firewall failed, the web ports are closed; see: journalctl -u canccu-firewall"
     setup/firewall check || die "the firewall is not in place; not starting the stack"
   fi
 fi
 
 if [ "$boot" = 1 ]; then
-  step "systemctl restart cp-stack (firewall check, then docker compose -f deploy/compose.yml up -d --wait)"
-  [ "$dry" = 1 ] || systemctl restart cp-stack || die "cp-stack failed; see: journalctl -u cp-stack"
+  step "systemctl restart canccu-stack (firewall check, then docker compose -f deploy/compose.yml up -d --wait)"
+  [ "$dry" = 1 ] || systemctl restart canccu-stack || die "canccu-stack failed; see: journalctl -u canccu-stack"
 else
   step "docker compose -f deploy/compose.yml up -d --wait"
   [ "$dry" = 1 ] || docker compose -f deploy/compose.yml up -d --wait || die "stack failed to start; see: docker compose -f deploy/compose.yml logs"

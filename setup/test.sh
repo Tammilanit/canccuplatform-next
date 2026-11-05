@@ -35,11 +35,11 @@ if [ "$docker_ok" = 1 ]; then
   exits "install --dry-run --boot refuses an empty CP_WEB_ALLOW" 2 env CP_ENV_FILE=<(printf 'CP_WEB_ALLOW=\n') setup/install --dry-run --boot
   has "install --boot names CP_WEB_ALLOW" "CP_WEB_ALLOW is empty"
   exits "install --dry-run --boot with an allow list" 0 env CP_ENV_FILE=<(printf 'CP_WEB_ALLOW=192.0.2.1\n') setup/install --dry-run --boot
-  fw=$(grep -nE 'cp-firewall' <<<"$out" | head -1 | cut -d: -f1)
+  fw=$(grep -nE 'canccu-firewall' <<<"$out" | head -1 | cut -d: -f1)
   up=$(grep -nE 'compose .*up' <<<"$out" | head -1 | cut -d: -f1)
   if [ -n "$fw" ] && [ -n "$up" ] && [ "$fw" -lt "$up" ]; then pass "install --boot puts the firewall in place before the stack starts"
   else bad "install --boot puts the firewall in place before the stack starts" "$out"; fi
-  has "install --boot enables docker, cp-firewall and cp-stack at boot" "enable docker cp-firewall cp-stack"
+  has "install --boot enables docker, canccu-firewall and canccu-stack at boot" "enable docker canccu-firewall canccu-stack"
   has "install --boot ends with check-boot" "check-boot"
   n=$(grep -cE 'compose .*up' <<<"$out")
   if [ "$n" = 1 ]; then pass "install --boot starts the stack once"; else bad "install --boot starts the stack once ($n times)" "$out"; fi
@@ -106,16 +106,16 @@ fi
 
 echo "# systemd units"
 unit() { grep -E "^$2=" "setup/$1" | sed "s/^$2=//"; }
-if unit cp-firewall.service Before | grep -qw docker.service; then pass "cp-firewall runs before docker"; else bad "cp-firewall runs before docker"; fi
-if unit cp-firewall.service ExecStart | grep -q 'firewall close'; then pass "cp-firewall closes the web ports when apply fails"; else bad "cp-firewall closes the web ports when apply fails"; fi
-if unit cp-stack.service Requires | grep -qw cp-firewall.service && unit cp-stack.service After | grep -qw cp-firewall.service
-then pass "cp-stack needs and follows cp-firewall"; else bad "cp-stack needs and follows cp-firewall"; fi
-if unit cp-firewall.service RequiredBy | grep -qw docker.service; then pass "docker requires cp-firewall (no start without the firewall)"; else bad "docker requires cp-firewall (no start without the firewall)"; fi
-if unit cp-firewall.service ExecStart | grep -q 'close; exit 1'; then bad "a closed firewall lets docker start"; else pass "a closed firewall lets docker start"; fi
+if unit canccu-firewall.service Before | grep -qw docker.service; then pass "canccu-firewall runs before docker"; else bad "canccu-firewall runs before docker"; fi
+if unit canccu-firewall.service ExecStart | grep -q 'firewall close'; then pass "canccu-firewall closes the web ports when apply fails"; else bad "canccu-firewall closes the web ports when apply fails"; fi
+if unit canccu-stack.service Requires | grep -qw canccu-firewall.service && unit canccu-stack.service After | grep -qw canccu-firewall.service
+then pass "canccu-stack needs and follows canccu-firewall"; else bad "canccu-stack needs and follows canccu-firewall"; fi
+if unit canccu-firewall.service RequiredBy | grep -qw docker.service; then pass "docker requires canccu-firewall (no start without the firewall)"; else bad "docker requires canccu-firewall (no start without the firewall)"; fi
+if unit canccu-firewall.service ExecStart | grep -q 'close; exit 1'; then bad "a closed firewall lets docker start"; else pass "a closed firewall lets docker start"; fi
 if command -v systemd-analyze >/dev/null && systemctl cat docker.service >/dev/null 2>&1; then
   tmp=$(mktemp -d)
-  for u in cp-firewall.service cp-stack.service; do sed "s#@REPO@#$PWD#g" "setup/$u" > "$tmp/$u"; done
-  run systemd-analyze verify "$tmp/cp-firewall.service" "$tmp/cp-stack.service"
+  for u in canccu-firewall.service canccu-stack.service; do sed "s#@REPO@#$PWD#g" "setup/$u" > "$tmp/$u"; done
+  run systemd-analyze verify "$tmp/canccu-firewall.service" "$tmp/canccu-stack.service"
   rm -rf "$tmp"
   if [ "$rc" = 0 ] && ! grep -q "$tmp" <<<"$out"; then pass "systemd-analyze verify accepts both units"; else bad "systemd-analyze verify accepts both units" "$out"; fi
 else
@@ -135,9 +135,9 @@ fi
 
 echo "# check-boot"
 exits "check-boot --dry-run" 0 setup/check-boot --dry-run
-has "check-boot checks cp-firewall" "cp-firewall"
+has "check-boot checks canccu-firewall" "canccu-firewall"
 has "check-boot checks IPv6" "IPv6"
-has "check-boot checks that docker requires cp-firewall" "docker.service requires cp-firewall"
+has "check-boot checks that docker requires canccu-firewall" "docker.service requires canccu-firewall"
 if grep -q 'jq' setup/check-boot; then bad "check-boot does not need jq"; else pass "check-boot does not need jq"; fi
 exits "firewall check --dry-run" 0 setup/firewall check --dry-run
 has "firewall check looks at the final DROP" "DROP"

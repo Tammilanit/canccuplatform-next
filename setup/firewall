@@ -12,7 +12,7 @@
 #
 # Usage: firewall apply|close|remove|check|status [--dry-run]
 #   apply   rebuild the chain from CP_WEB_ALLOW (atomic per family, idempotent)
-#   close   drop all published traffic (what cp-firewall.service does when apply fails)
+#   close   drop all published traffic (what canccu-firewall.service does when apply fails)
 #   remove  unhook and delete the chain
 #   check   exit 0 only if the chain is hooked into DOCKER-USER on IPv4 and IPv6
 #   status  list the chain

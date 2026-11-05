@@ -1,9 +1,9 @@
-# Starts the platform at boot, after Docker and the DOCKER-USER firewall (cp-firewall.service).
+# Starts the platform at boot, after Docker and the DOCKER-USER firewall (canccu-firewall.service).
 # setup/install --boot copies it to /etc/systemd/system, replacing @REPO@ with the checkout path.
 [Unit]
 Description=CanccuPlatform stack (docker compose)
-Requires=docker.service cp-firewall.service
-After=docker.service cp-firewall.service network-online.target
+Requires=docker.service canccu-firewall.service
+After=docker.service canccu-firewall.service network-online.target
 Wants=network-online.target
 
 [Service]
