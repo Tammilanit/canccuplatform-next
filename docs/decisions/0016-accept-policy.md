@@ -1,6 +1,6 @@
 # 0016. Maintainer accept policy
 
-- **Status:** Accepted (until the freeze, 2027-03-01)
+- **Status:** Accepted (until the freeze, 2027-03-01; the AGENTS.md and CONTRIBUTING.md text follows in #39)
 - **Date:** 2026-11-05
 
 ## Context

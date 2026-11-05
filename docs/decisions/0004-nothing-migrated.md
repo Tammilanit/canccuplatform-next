@@ -10,6 +10,6 @@ The old system keeps its data in several places (SQLite, a hosted serverless dat
 The new platform starts empty. Old repos and databases are kept as they are, never destroyed and not maintained.
 
 ## Consequences
-- No import code is written or tested.
+- No general import code is written.
 - Old data stays readable in the old stores if anyone needs it.
-- Exception, decided separately: the legacy bot's own data may be carried into its event's tenant at cutover ([0013](0013-multi-tenant-core.md), Discord).
+- One exception, decided later: at cutover the legacy bot's data is migrated into its event's tenant ([0013](0013-multi-tenant-core.md), Consequences). That migration is planned and tested as part of the freeze and switch (roadmap step 11).

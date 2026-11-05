@@ -41,7 +41,7 @@ Follow the shared-stack model fully from day 1 and fix what the proposal missed.
 21. **Upload safety:** SVG and HTML are served sandboxed; a strict CSP keeps tenant assets on the tenant's own host; custom JS runs only in a sandboxed iframe on a separate origin.
 
 ### Operating one shared version
-22. **Releases:** additive-only migrations (expand/contract) with `lock_timeout` and online patterns; deploys are blocked while any tenant is live, except hotfixes; a demo tenant gets every change first.
+22. **Releases:** additive-only migrations (expand/contract) with `lock_timeout` and online patterns; the later contract (drop) step is its own destructive migration and needs a person's approval (AGENTS.md, Migrations); deploys are blocked while any tenant is live, except hotfixes; a demo tenant gets every change first.
 23. **Per-tenant pinned screen version:** the screen and public frontends are static bundles, several versions are kept, and a tenant can pin the one it tested. APIs stay backward-compatible through additive contracts.
 24. **A staging stack on the same VM,** run only while testing a release, with a copy of the demo tenant; stopped otherwise.
 25. **Offline-capable screens:** they cache their last state and assets and keep running when the venue uplink drops; admin shows the offline state.

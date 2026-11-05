@@ -12,4 +12,5 @@ A container keeps no state of its own. Data and sessions live in Postgres; event
 ## Consequences
 - Any module can be deleted and restarted without loss.
 - A whole backup is Postgres plus the files volume.
+- Backups do not cover Valkey, so events not yet consumed are lost with it. A module never keeps the only copy of its data on the bus: what must survive is written to Postgres.
 - With tenancy, keys and file paths carry the tenant ([0013](0013-multi-tenant-core.md)).

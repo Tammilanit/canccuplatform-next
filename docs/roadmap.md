@@ -5,7 +5,7 @@ The plan from today to the full new platform, running at the next event in **Apr
 ## In short
 - **Port, don't rewrite.** Each module is ported from the proven legacy code and tests onto Postgres, containers, the kit and its contract ([0001](decisions/0001-port-dont-rewrite.md)).
 - **Multi-tenant from day 1.** Many events, also simultaneous, on one shared stack ([0013](decisions/0013-multi-tenant-core.md)). The tenancy foundation comes before the module contracts.
-- **Infrastructure first**, then modules one at a time. While `platform.version` is `dev`, the shared VM follows main, so the pieces are joined every day, not at the end.
+- **Infrastructure first**, then modules one at a time. While `platform.version` is `dev` and no tenant is live, the shared VM follows main, so the pieces are joined every day, not at the end.
 - **Freeze and switch in March 2027** (from 2027-03-01): the event pins a tested release. There is no rehearsal; the April event is the first real run.
 - Each step is an epic in this repo with one child issue per module it touches (AGENTS.md, Maintainers).
 
@@ -42,7 +42,7 @@ The months fit the order into the time left; only the March freeze is fixed.
 | 11. Freeze and switch | Mar 2027 (from 2027-03-01) | — |
 | The event | Apr 2027 | first real run |
 
-Games and Cast run in parallel from step 2 (see Parallel tracks).
+Games and Cast run in parallel from step 2, after the tenancy foundation (see Parallel tracks).
 
 ## Steps
 
@@ -51,7 +51,7 @@ Games and Cast run in parallel from step 2 (see Parallel tracks).
 - **In it:**
   - done: the GitHub organization with this public repo and a private event repo; code surveys of the legacy repos and the porting plan (see Porting plan below); the hosted VM with Tailscale and a firewall; parallel workers, one worktree per issue;
   - open: a test Discord server and a dev bot with its own Discord app (blocks #10); the platform domain and a DNS API token for DNS-01 certificates (blocks HTTPS and #5);
-  - postponed: the mini-tourney author's OK to port the ISC-licensed code, until the Games track starts.
+  - postponed: the mini-tourney author's OK to port the ISC-licensed code, until the tournament and games ports (step 7 and the Games track).
 - **Exit criteria:** workers run in parallel in one repo; the VM is reachable; the test Discord server and dev bot exist; the domain decision is made.
 - **Issues:** none (maintainer tasks).
 
@@ -59,8 +59,9 @@ Games and Cast run in parallel from step 2 (see Parallel tracks).
 - **Goal:** infrastructure first: a stack that starts, deploys itself and has an admin page.
 - **In it:** the monorepo; Compose with Postgres, Valkey and Caddy; kit-ts and kit-py; ui; CI with branch rules and the merge queue; the admin API and profile contract; admin settings, health view and profile save and load; setup (install, boot survival, firewall, the demo event); demo-stack CI with screenshots and image builds; Discord sign-in, first-run code and rights; auto-deploy of main to the VM.
   - #12 is re-scoped for the shared stack: the firewall covers IPv6 and port 443 and can later open 80/443 to everyone; `new-event` is dropped or becomes "seed the demo tenant" once the tenants module exists.
-  - #5 changes: the VM is remote, so sign-in needs HTTPS on a real hostname. The old check "does Discord accept plain http to a LAN IP" and the venue router's DNS-rebinding check no longer apply.
-- **Exit criteria:** sign in on the VM over HTTPS, change a setting, and see a test module's health.
+  - #5 changes: the VM is remote, so sign-in needs HTTPS on a real hostname. The old check "does Discord accept plain http to a LAN IP" and the venue router's DNS-rebinding check no longer apply. #5 and #10 build sign-in so that it fits the central sign-in host of step 2b ([0013](decisions/0013-multi-tenant-core.md), item 10) instead of being redone there.
+  - #14 changes: auto-deploy holds while any tenant is live, except hotfixes ([0013](decisions/0013-multi-tenant-core.md), item 22).
+- **Exit criteria:** sign in on the VM, change a setting, and see a test module's health. Sign-in over HTTPS on the platform domain completes with step 2b (items 4 and 5).
 - **Issues:** epic #15. Closed: #2, #3, #4, #6, #7, #8, #9, #11. Open, in order: #12, #13, #10, #5, #14.
 
 ### 2. Event catalog and contracts
@@ -120,7 +121,7 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
 
 ### 7. Tournament
 - **Goal:** a tournament runs on the platform.
-- **In it:** port the scoring, leaderboard and final from the signup site's code; registration lives inside the module; the bot's voice-channel handshake goes through events; concurrency with row locks (`SELECT … FOR UPDATE`).
+- **In it:** port the scoring, leaderboard and final from the signup site's code; registration lives inside the module; the bot's voice-channel handshake goes through events; concurrency with row locks (`SELECT … FOR UPDATE`). Any ISC-licensed mini-tourney code it reuses is ported only after its author's OK (AGENTS.md, Porting).
 - **Exit criteria:** a test tournament runs end to end.
 - **Issues:** to be created.
 
@@ -152,7 +153,7 @@ The contracts step. Its order is fixed: legacy inventory, then the tenancy found
 - **Issues:** to be created.
 
 ## Parallel tracks
-Both are new builds with their own contracts, so neither blocks the main line. They start once step 2 is done.
+Both are new builds with their own contracts, so neither blocks the main line. They start in step 2, after the tenancy foundation (2b), so their contracts are tenant-aware from the start.
 
 ### Games
 - **Goal:** rosters for any game, organized into rounds.
