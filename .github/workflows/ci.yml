@@ -218,3 +218,21 @@ jobs:
           node-version: 22
       - name: Validate profiles and lint OpenAPI contracts
         run: scripts/check-contracts
+
+  setup:
+    name: setup (self-test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools for every setup check
+        run: |
+          for t in shellcheck jq docker; do command -v "$t" >/dev/null || { echo "::error::$t missing"; exit 1; }; done
+          docker info >/dev/null && docker compose version
+      - name: setup/test.sh
+        shell: bash  # -eo pipefail: a failing test.sh fails the step despite tee
+        run: setup/test.sh | tee "$RUNNER_TEMP/setup-test.log"
+      - name: No setup check skipped (systemd-analyze may skip)
+        run: |
+          if grep -E '^skip ' "$RUNNER_TEMP/setup-test.log" | grep -v '^skip systemd-analyze verify '; then
+            echo "::error::setup checks were skipped"; exit 1
+          fi

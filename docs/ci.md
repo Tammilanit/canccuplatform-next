@@ -14,6 +14,7 @@
 | `no-event-names` | Fails if the lines a PR adds contain a forbidden term. |
 | `review-gate` | From `.github/workflows/review-gate.yml`: passes only on an independent review's `Review verdict: pass <head sha>` for the PR's current head (see below). |
 | `contracts` | `scripts/check-contracts`: validates every `events/*/profile.yaml` against `contracts/profile.schema.json`, checks its asset paths exist, and lints `contracts/*.openapi.yaml` with Redocly (`contracts/redocly.yaml`). |
+| `setup (self-test)` | Runs `setup/test.sh` (no root, never changes the host: every script with `--dry-run` or against an unreachable daemon) with shellcheck, jq and the docker CLI and daemon present, and fails if any check is skipped except `systemd-analyze verify`, which the runner may lack. Covers `setup/` and the Caddy ports and network in `deploy/compose.yml`. After it first runs on main, a maintainer adds it to the required checks. |
 | `naming` | `scripts/check-naming`: fails if a tracked file name or line uses the old platform prefix as an identifier ([ADR 0017](decisions/0017-naming.md)). After it first runs on main, a maintainer adds it to the required checks. |
 
 Do not rename these jobs; renaming breaks the required checks.
