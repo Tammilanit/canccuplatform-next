@@ -12,6 +12,7 @@ if [ "${1:-}" = "--self-test" ]; then
   t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
   cd "$t" && git init -q .
   fail=0
+  unset GITHUB_ACTIONS  # Actions sets it for every step; only the annotation case wants it
   lines() { mkdir -p "$(dirname "$2")"; { [ -n "${3:-}" ] && printf '%s\n' "$3"; seq "$1"; } > "$2"; }
   exempt() { mkdir -p scripts; printf '%s\n' "$@" > "$list"; }
   # check NAME ERE-or-! ERE: run on the tree, expect exit 0 and the output to match (or not)
