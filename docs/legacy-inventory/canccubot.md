@@ -470,8 +470,8 @@ This follows the porting plan in the [roadmap](../roadmap.md#porting-plan) and [
 | Signage state and auto-revert timers (`signage_state.py`, `display_control.py`, the lan-display URL builder) | Drop | Moments owns the ranking, TTL and revert on the server; the screen-embed URLs are dropped (0010) | – |
 | Signage control client (`canccusignage_control.py`) | Rewrite | Porting plan; it becomes bus events | bot · 6 |
 | Trigger settings (`trigger_settings.py`) | Rewrite **(new)** | Become per-tenant settings (Moments or bot settings schema) instead of a fetch from signage | moments · 4 |
-| Manual ticker (`cogs/ticker.py`, `ticker_ops.py`) | Port with changes | The ticker stays manual only (0010); the commands publish to Screen or Moments | bot · 6, screen · 3 |
-| Scheduled ticker windows (`ticker_schedule.py`) | Port with changes, into Screen's scheduler windows | They are lost on restart today; Screen already ports scheduler windows. See the question below | screen · 3 |
+| Manual ticker (`cogs/ticker.py`, `ticker_ops.py`) | Port with changes | Manual means set by a person, from admin or `/ticker set`, `stop`, `status` ([0018](../decisions/0018-ticker-manual.md)); the commands publish to Screen | bot · 6, screen · 3 |
+| Scheduled ticker windows (`ticker_schedule.py`) | Port with changes, into Screen's scheduler windows | They count as manual ([0018](../decisions/0018-ticker-manual.md)). They are lost on restart today; Screen already ports scheduler windows and keeps them across restarts | screen · 3 |
 | RSS ticker (`ticker_rss.py`, `ticker_rss_server.py`) | Drop | 0010 | – |
 | Photo carousel menus (`cogs/photo_carousel.py`, `canccusignage_carousel.py`) | Port with changes **(new)** | Files go to the tenant's files volume through the Screen API; no separate token | bot · 6, screen · 3 |
 | Carousel photo naming (`carousel_photo_naming.py`) | Port as-is | Porting plan; pure and tested | bot · 6 |
@@ -517,7 +517,7 @@ What this repo implies for the tenancy design (#48), as questions for the produc
 7. **Retention and GDPR:** legacy keeps 96 h of snapshots and never prunes message counts and nicks. Pick a per-tenant retention, and decide whether stats outlive the event (archived tenants are read-only).
 8. **Legacy bot data migration (0004, 0013).** The bot itself holds almost nothing durable: two small JSON state files and its token. The activity, poll and tournament data the old system shows are in the signup site's hosted database. The step 6 migration therefore needs a decision on whether "the legacy bot data" means the site-side snapshots and tournament rows (which 0004 otherwise leaves behind) or only the token and the bot's settings.
 9. **Bot token per tenant.** At the switch, the legacy token moves into the tenant (0013). The legacy process must be stopped first (never two bots on one token).
-10. **Scheduled ticker windows:** 0010 keeps the ticker "manual only" and drops "automatic ticker posts". Do operator-scheduled windows count as manual (port into Screen's scheduler) or as automatic (drop)?
+10. **Scheduled ticker windows:** 0010 keeps the ticker "manual only" and drops "automatic ticker posts". Do operator-scheduled windows count as manual (port into Screen's scheduler) or as automatic (drop)? **Answered** by [0018](../decisions/0018-ticker-manual.md): they count as manual and are ported into Screen's scheduler windows.
 
 ## Event-specific content
 Counted by kind only. The exact non-secret values are kept off GitHub, in the local handover file `~/handover/event-values/canccubot.md` (mode 600), for a follow-up in the event repo. The search covered the event and organization name, its domain and subdomains, IP addresses, Discord snowflakes, tailnet hostnames, channel names and timezone names, over every tracked file. Personal data and secrets were searched for too, in the tree and in the git history.
