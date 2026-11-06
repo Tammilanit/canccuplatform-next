@@ -27,3 +27,4 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0019](0019-work-packages.md) | Work runs in packages, with risk classes, a health pass and a checkpoint per step | 2026-11-06 |
 | [0020](0020-best-of-old-freely-new.md) | The best of the old, freely new | 2026-11-06 |
 | [0021](0021-no-fixed-dates.md) | No freeze and no target dates | 2026-11-06 |
+| [0022](0022-product-vision.md) | The product vision: who it is for, the Pulse screen at its heart, what is planned and what is not | 2026-11-06 |
