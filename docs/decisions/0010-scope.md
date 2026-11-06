@@ -1,6 +1,6 @@
 # 0010. Scope: what is dropped, Moments, PPTX
 
-- **Status:** Accepted
+- **Status:** Accepted; ticker line superseded by [0018](0018-ticker-manual.md)
 - **Date:** 2026-11-03
 
 ## Context
