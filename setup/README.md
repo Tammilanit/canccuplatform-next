@@ -2,7 +2,14 @@
 
 Scripts for installing a host and keeping the stack up across reboots. The platform runs as one shared stack ([decision 0013](../docs/decisions/0013-multi-tenant-core.md)); events are tenants (rows), so there is no per-event setup here. Every script takes `--dry-run` and fails with a clear message (exit 2) when something is missing or unreachable.
 
-- `install [--dry-run] [--boot]`: checks Docker, writes `deploy/.env` from `deploy/.env.example` (random Postgres password, mode 600), starts the stack and checks `/api/hello/health`.
+- `install [--dry-run] [--boot]`: checks Docker, writes `deploy/.env` from `deploy/.env.example` (random Postgres password, mode 600), makes sure every module image matches the checkout, starts the stack and checks `/api/hello/health`.
+  - **Module images:** install never starts an image built from another commit. Before it starts or enables anything, for every `modules/<name>/Dockerfile` in the checkout it needs `canccuplatform-<name>:latest` (the name Compose gives the images it builds, and what `canccu-stack` starts at boot) with the checkout's `HEAD` in its `org.opencontainers.image.revision` label:
+    1. a local image with that label is reused;
+    2. otherwise it pulls `<name>:<CANCCU_VERSION>` (`dev`, or the release tag) from the registry the auto-deploy uses (`CANCCU_DEPLOY_IMAGES` in `deploy/.env`, else `ghcr.io/<owner>/<repo>` of the `origin` remote) and tags it `canccuplatform-<name>:latest` if its label is `HEAD`;
+    3. otherwise it builds `modules/<name>/Dockerfile` from the checkout (`docker build`, repo root as context, as Compose and the Images workflow do), labelled with `HEAD`.
+    - If neither the pull nor the build works, install stops (exit 2) naming the module, before anything is started or enabled. `--dry-run` prints, per module, whether it would reuse, pull or build, and why; it pulls and builds nothing.
+    - A checkout with local changes (`git status`) is never paired with a pulled image: every module is built from it, and those builds are labelled `canccu.local-changes=true` too, so they are not reused once the checkout is clean again.
+    - Plain install then runs `docker compose up -d --wait --no-build`; `canccu-stack.service` at boot starts the images already tagged and neither pulls nor builds.
   - An existing `deploy/.env` is kept. If it still has the example password (`change-me` or empty), install replaces it with a random one while no database volume exists yet. Once the database exists with it, `--boot` refuses and plain install warns, because Postgres keeps the password it was created with.
   - `--boot` (root, for a host reachable from outside) also installs `canccu-firewall.service` and `canccu-stack.service`, enables Docker, the firewall and the stack at boot, puts the firewall in place **before** the stack publishes its ports, starts the stack through `canccu-stack`, and ends with `check-boot`.
   - Before it changes anything, `--boot` validates `CANCCU_WEB_ALLOW` as the units will see it: from `deploy/.env` only (a `CANCCU_WEB_ALLOW` in the environment is ignored), test-loading the rules. It refuses a checkout path with characters other than letters, digits and `/._-`, because the units bake the path in. The units run `setup/` and `deploy/` as root, so it also refuses them, or the checkout directory, when they are world-writable, group-writable by a group other than `root` or the installing user's own, or owned by anyone but root and the installing user. It writes the `docker` path it found into `canccu-stack.service`.
@@ -27,7 +34,7 @@ Scripts for installing a host and keeping the stack up across reboots. The platf
 
 ## Install checklist
 1. If the stack already ran from a version of `deploy/compose.yml` without IPv6 on its network, run `docker compose -f deploy/compose.yml down` first (the volumes stay), so the network is recreated with IPv6.
-2. `sudo setup/install --boot`. On a fresh host it writes `deploy/.env` with a random Postgres password and then stops on the empty `CANCCU_WEB_ALLOW`: set it in `deploy/.env` and run `sudo setup/install --boot` again.
+2. `sudo setup/install --boot`. On a fresh host it writes `deploy/.env` with a random Postgres password and then stops on the empty `CANCCU_WEB_ALLOW`: set it in `deploy/.env` and run `sudo setup/install --boot` again. It pulls or builds the module images for the checkout itself (see Module images above); no `docker compose build` by hand.
 3. `sudo setup/check-boot` shows only `ok`.
    - **Auto-deploy is on by default:** `CANCCU_VERSION` is `dev` in `deploy/.env.example`, and `--boot` enables `canccu-deploy.timer`, so the host follows main from then on. On a host that must not, set `CANCCU_VERSION` to a release tag in `deploy/.env` first. For a dev host, also do the steps in [Auto-deploy](#auto-deploy).
 4. From an allowed address, `http://<host>/api/hello/health` answers; from any other address it times out, on IPv4 and on IPv6.

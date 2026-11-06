@@ -2,7 +2,7 @@
 
 The summary of the eight per-repo inventories of roadmap step 2a ([epic #46](../roadmap.md#2a-legacy-inventory)), issue #76. For every legacy feature it says what the new platform takes from it, where that lands and in which step. It also covers how the legacy pieces worked together, what the platform can offer beyond them, and what the product owner still has to decide before the tenants contract (#48) and the event catalog (#34) are written.
 
-The platform is not limited to porting. It is to be a much bigger, better and richer system: commercial-scale, polished and intuitive. The legacy repos are a source of the best ideas, code and tests, not a boundary (the product owner's direction; decision 0020, proposed in #99, would supersede [0001](../decisions/0001-port-dont-rewrite.md) "port, don't rewrite").
+The platform is not limited to porting. It is to be a much bigger, better and richer system: commercial-scale, polished and intuitive. The legacy repos are a source of the best ideas, code and tests, not a boundary ([0020](../decisions/0020-best-of-old-freely-new.md), which supersedes [0001](../decisions/0001-port-dont-rewrite.md) "port, don't rewrite").
 
 - **Status:** a proposal, waiting for the product owner's confirmation. Every "proposed answer" below is a default to confirm, reword or reject; none is decided here. A confirmed change to a decision record goes through its own issue and a new record ([decisions](../decisions/README.md)).
 - **Sources:** the per-repo inventories in this folder. Each row below names its source by the per-repo feature id (for example `P7`) where the inventory has one, otherwise by the feature's name. Details and paths are in the per-repo file.
@@ -11,7 +11,7 @@ The platform is not limited to porting. It is to be a much bigger, better and ri
   - **reuse with changes:** take the code, rules or tests and adapt them;
   - **rebuild:** build it new, with the legacy behaviour as the spec where it is worth keeping;
   - **drop:** the platform does not need it.
-- **Steps** are the [roadmap](../roadmap.md#steps)'s: 1 Skeleton, 2b Tenancy foundation, 2c Event catalog and screen contract, 3 Screen core, 4 Moments, 5 Pizza, 6 Bot, 7 Tournament, 8 Admin operations, 9 Feeds and LAN display, 10 Hardening, 11 Switch, **Games** and **Cast** the parallel tracks. "—" means nothing is built.
+- **Steps** are the [roadmap](../roadmap.md#steps)'s: 1 Skeleton, 2b Tenancy foundation, 2c Event catalog and screen contract, 3 Screen core, 4 Moments, 5 Pizza, 6 Bot, 7 Tournament, 8 Admin operations, 9 Feeds and LAN display, 10 Hardening, 11 Dress rehearsal and switch, **Games** and **Cast** the parallel tracks. "—" means nothing is built.
 
 | Inventory | Issue | What the repo is | Verdict in one line |
 |---|---|---|---|
@@ -31,7 +31,7 @@ The platform is not limited to porting. It is to be a much bigger, better and ri
 4. [Conflicts with the decision records](#conflicts-with-the-decision-records)
 5. [Gaps from the legacy plans](#gaps-from-the-legacy-plans)
 6. [Beyond the old system](#beyond-the-old-system)
-7. [Changes to the porting plan and order](#changes-to-the-porting-plan-and-order)
+7. [Changes to the reuse table and order](#changes-to-the-reuse-table-and-order)
 
 ## Feature map
 Every feature of the per-repo inventories, one table per repo, in the order of that inventory's port recommendation. Where an inventory grouped features, so does this table. **(new)** marks a feature the roadmap's porting plan did not name before this summary. Each verdict says what we take from the legacy feature, not how far the new feature may go: a feature may grow well past its legacy form (see [Beyond the old system](#beyond-the-old-system)).
@@ -193,7 +193,7 @@ Registration and the site itself stay outside the platform ([0005](../decisions/
 | F18 systemd unit, deploy notes, CI | — | — | drop | Compose, setup and the new CI |
 
 ### thefinals_mini_tourney
-Everything here waits for its author's OK; licence and attribution are kept (AGENTS.md, Porting).
+Everything here waits for its author's OK; licence and attribution are kept (AGENTS.md, Building on the legacy).
 
 | Feature | Target module | Step | Verdict | Reason |
 |---|---|---|---|---|
@@ -549,7 +549,7 @@ Where an inventory's recommendation, or a proposed answer above, does not fit a 
 | DR2 | The canccusignage inventory puts the ticker lane in Moments (step 4). 0018 says Screen core owns the ticker and its scheduled windows (step 3). | [0018](../decisions/0018-ticker-manual.md) | Follow 0018. The feature map above already does. |
 | DR3 | Signage fills the ticker lane from the pizza status, and from polls, when nobody has set a ticker. These are system-generated lines; 0010 and 0018 drop automatic ticker posts. | [0010](../decisions/0010-scope.md), [0018](../decisions/0018-ticker-manual.md) | The poll line goes with polls. The pizza status is a Screen widget and a Moments overlay fed by `pizza.order.*`, not the ticker lane. The product owner confirms, or allows it as an exception. |
 | DR4 | 0004 migrates "the legacy bot's data". The bot holds almost nothing durable: the activity, poll and tournament data it produced live in the signup site's database, which 0004 and 0005 leave behind. | [0004](../decisions/0004-nothing-migrated.md) | Narrow it: migrate the bot's token, settings and state files only (TE6). If the site-side stats or tournament rows should come along, that is a new decision, and step 6 needs a copy of the site's database. |
-| DR5 | AGENTS.md (Porting) and roadmap steps 0 and 7 say the tournament module waits for the mini-tourney author's OK. The tournament code comes from the signup site, whose git history shows no commit by that author. That author's ISC code is the mini-tourney, which goes to the Games track. | AGENTS.md, [0001](../decisions/0001-port-dont-rewrite.md) (0020, proposed in #99, would supersede it), roadmap | Only the Games track waits for the OK; step 7 does not. AGENTS.md's wording changes in its own PR ([order change OC1](#changes-of-order-flagged)). |
+| DR5 | AGENTS.md (Building on the legacy) still says "the tournament module (ISC, …)" uses the mini-tourney author's code only after the author's OK, and roadmap step 0 postpones that OK "until the tournament and games work (step 7 and the Games track)". Step 7 itself now says only that author's code waits. The tournament code comes from the signup site, whose git history shows no commit by that author; the ISC code is the mini-tourney, which goes to the Games track. | AGENTS.md, roadmap step 0 | Only the Games track waits for the OK. AGENTS.md and step 0 name the games module instead of the tournament module, in their own PR ([order change OC1](#changes-of-order-flagged)). |
 | DR6 | Inventories ask for per-device properties: audio output, PA levels, resolution, reload. 0013 item 34 says the global device row holds only the name, the token hash, the venue id and the current tenant. | [0013](../decisions/0013-multi-tenant-core.md) item 34 | Follow 0013. These properties live on the tenant's device assignment (TG1–TG3, TG5); no change to the record is needed if this is confirmed. |
 | DR7 | Several inventories make the time zone a venue property. 0013 item 33 gives a venue only a name and its addresses. | [0013](../decisions/0013-multi-tenant-core.md) item 33 | Change the record: a venue also has a time zone, which a tenant may override (TA1). |
 | DR8 | The proposals add global tables: the game cover cache (TF1) and the games catalog (TF3). 0013 item 6 lists the global tables, and item 7 keys caches by tenant. | [0013](../decisions/0013-multi-tenant-core.md) items 6–7 | Add both to the allow-list; item 6 already allows this through a change to the list. The cover cache is a named exception to item 7: public data, no tenant data, superadmin purge. |
@@ -629,14 +629,14 @@ What a commercial-grade platform should offer that the legacy never had. Each op
 | N25 | **White-label themes.** Full theme packages per tenant with preview and rollback, and a theme gallery to start from. | One look, fonts installed on a laptop | ui, theming contract (#54) |
 | N26 | **Help built in.** In-app help, tooltips and a short guide per page, so a new organizer needs no runbook. | Runbooks and plans in separate docs repos | ui, admin; step 10 |
 
-## Changes to the porting plan and order
-The [porting plan](../roadmap.md#porting-plan) in the roadmap is updated to match this summary: rows for every legacy repo and the new features marked **(new)** above.
+## Changes to the reuse table and order
+The reuse table in the roadmap ([Building on the legacy](../roadmap.md#porting-plan)) is updated to match this summary: rows for every legacy repo and the new features marked **(new)** above.
 
 ### Changes of order (flagged)
 Each is a proposal for the product owner. The step texts of the roadmap change only once it is confirmed.
 
-- **OC1. Tournament no longer waits for the mini-tourney author's OK** ([DR5](#conflicts-with-the-decision-records)). Step 7 reuses the signup site's tournament code, which that author did not write. Only the Games track waits. The roadmap's step 0 "postponed" item and step 7, and AGENTS.md (Porting), change with it.
-- **OC2. Pizza on the screen.** Step 5's exit criterion is "an order runs end to end and shows on the screen", but Screen consumes pizza events only in step 9. Either Screen's pizza widget becomes a child of the pizza epic (#59), or the screen part of the exit criterion moves to step 9. Proposed: move it to step 9, and let step 5's exit be "an order runs end to end and the bot posts it". Step 5's text "port the pizza router and its tests" also changes: the router ports with changes, and its tests are the spec.
+- **OC1. Tournament no longer waits for the mini-tourney author's OK** ([DR5](#conflicts-with-the-decision-records)). Step 7 reuses the signup site's tournament code, which that author did not write, and its text already limits the OK to that author's code. Only the Games track waits. The roadmap's step 0 "postponed" item and AGENTS.md (Building on the legacy) change with it.
+- **OC2. Pizza on the screen.** Step 5's exit criterion is "an order runs end to end and shows on the screen", but Screen consumes pizza events only in step 9. Either Screen's pizza widget becomes a child of the pizza epic (#59), or the screen part of the exit criterion moves to step 9. Proposed: move it to step 9, and let step 5's exit be "an order runs end to end and the bot posts it".
 - **OC3. Ticker in step 3, not 4.** It follows [0018](../decisions/0018-ticker-manual.md) and is already in the step 3 text; only the canccusignage inventory said step 4 (DR2).
 - **OC4. The bot's alert relay and `/platform status` land in step 8,** with admin operations, not in step 6. Step 6 needs only the bot's side of the event contract.
 - **OC5. New work in existing steps** (no change of order, but new children):

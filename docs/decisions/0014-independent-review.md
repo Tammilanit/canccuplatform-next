@@ -1,6 +1,6 @@
 # 0014. Every PR gets an independent review
 
-- **Status:** Accepted (implemented by #40: the `review-gate` check and AGENTS.md step 8)
+- **Status:** Accepted (implemented by #40: the `review-gate` check and AGENTS.md step 8). The review flow per PR is superseded by [0019](0019-work-packages.md): one review, one fix round and one fix-check per package; the rest stands.
 - **Date:** 2026-11-05
 
 ## Context

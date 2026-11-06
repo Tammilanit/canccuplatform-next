@@ -16,6 +16,7 @@
 | `contracts` | `scripts/check-contracts`: validates every `events/*/profile.yaml` against `contracts/profile.schema.json`, checks its asset paths exist, and lints `contracts/*.openapi.yaml` with Redocly (`contracts/redocly.yaml`). |
 | `setup (self-test)` | Runs `setup/test.sh` (no root, never changes the host: every script with `--dry-run` or against an unreachable daemon) with shellcheck, jq and the docker CLI and daemon present, and fails if any check is skipped except `systemd-analyze verify`, which the runner may lack. Covers `setup/` and the Caddy ports and network in `deploy/compose.yml`. After it first runs on main, a maintainer adds it to the required checks. |
 | `naming` | `scripts/check-naming`: fails if a tracked file name or line uses the old platform prefix as an identifier ([ADR 0017](decisions/0017-naming.md)). After it first runs on main, a maintainer adds it to the required checks. |
+| `file-size` | `scripts/check-file-size`: warns, and never fails, on tracked source files over 400 lines (the file-size rule, AGENTS.md). Not a required check. |
 
 Do not rename these jobs; renaming breaks the required checks.
 
@@ -47,6 +48,13 @@ Do not rename these jobs; renaming breaks the required checks.
 - Self-test: `scripts/check-naming --self-test`.
 - **Required check:** after this job first runs on main, a maintainer adds `naming` to the required checks of the main ruleset. Do not rename the job.
 
+## file-size
+- `scripts/check-file-size [DIR]` scans every tracked source file of the repo, or of `DIR`, and warns on each one over 400 lines: a `file:line` line locally, a `::warning` annotation on the file in Actions. It exits 0 whether or not it warns, so the job never fails on a long file; exit 2 only on a broken run (not a git work tree). The self-test step does fail the job, because a failing self-test means the checker itself is broken.
+- **Source:** files ending in `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.cjs`, `.py`, `.sh`, `.bash`, `.css`, `.scss`, `.html`, `.svelte`, `.vue` or `.sql`, and files without an extension that start with `#!`. Docs, data, lockfiles and config are not source.
+- **Exempt:** generated files, marked by `@generated` or `DO NOT EDIT` in their first five lines, and the entries of `scripts/file-size-exemptions.txt`: one `<path or glob> <reason>` per line, where `*` also matches `/`. An entry without a reason is reported and exempts nothing. The health pass reviews the list ([0019](decisions/0019-work-packages.md)).
+- Self-test: `scripts/check-file-size --self-test`.
+- Not a required check: it only warns. Do not rename the job.
+
 ## no-event-names
 - `scripts/check-event-names [--dry-run] [BASE]` scans added lines of `BASE...HEAD`, case-insensitively.
 - The term list (event name, venue, IPs, hostnames, Discord ids) is **not in the repo**. A maintainer stores it in the Actions secret `EVENT_NAME_TERMS`, one term per line or comma-separated.
@@ -57,7 +65,7 @@ Do not rename these jobs; renaming breaks the required checks.
 
 ## Code review
 - There is no `claude-review` check any more. It ran Claude in CI on a subscription token that can no longer be renewed, so `.github/workflows/claude-review.yml` and its prompt `.github/claude-review.md` were removed.
-- In its place every PR gets an independent review outside CI. A separate reviewer that did not write the change runs the review: in Claude Code, a fresh session with `/code-review` at `high` effort, plus `/security-review` for sign-in, rights, secrets or tenancy/RLS. It posts, as the reviewer identity (see review-gate), a PR comment whose last line is `Review verdict: <pass|changes|manual — reason> <head sha>`. Neither the author nor the reviewer enables auto-merge: the dispatcher (the maintainer tooling) does so after `review-gate` passes, for PRs that need no maintainer's accept, or a maintainer does. A maintainer arranges the review for fork PRs. See AGENTS.md, Working on an issue (step 8) and Merge rules.
+- In its place every PR gets an independent review outside CI. A separate reviewer that did not write the change runs the review: in Claude Code, a fresh session with `/code-review` at `high` effort, plus `/security-review` for sign-in, rights, secrets or tenancy/RLS. It posts, as the reviewer identity (see review-gate), a PR comment whose last line is `Review verdict: <pass|changes|manual — reason> <head sha>`. Neither the author nor the reviewer enables auto-merge: the dispatcher (the maintainer tooling) does so after `review-gate` passes, for PRs that need no maintainer's accept, or a maintainer does. A maintainer arranges the review for fork PRs. See AGENTS.md, A package run (step 8) and Merge rules.
 - **Required check:** a maintainer removes `claude-review` from the required checks of the main ruleset before the removal merges; otherwise every PR waits for a check that never runs.
 - The secret `CLAUDE_CODE_OAUTH_TOKEN` is no longer used; a maintainer may delete it under Settings → Secrets and variables → Actions.
 

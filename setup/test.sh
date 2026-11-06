@@ -69,6 +69,114 @@ else
   skip "install --dry-run --boot" "no reachable Docker daemon"
 fi
 
+echo "# install: module images match the checkout (docker, git and curl are stubs)"
+# Stub state in $ist: local_<m> is the "revision|local-changes" labels of canccuplatform-<m>:latest
+# (no file = no image), remote_rev the revision of every registry image, head the checkout's HEAD,
+# dirty its local changes; pull_fail and build_fail make those fail.
+istubs=$scratch/istubs; mkdir -p "$istubs/bin"
+cat > "$istubs/bin/docker" <<'STUB'
+#!/bin/sh
+S=$STUB; echo "docker $*" >> "$S/log"
+mod() { m=${1#canccuplatform-}; echo "${m%:latest}"; }
+case "$1" in
+  info|compose) exit 0 ;;
+  volume) exit 1 ;;
+  image) case "$5" in
+      canccuplatform-*) [ -e "$S/local_$(mod "$5")" ] || exit 1; cat "$S/local_$(mod "$5")" ;;
+      *) echo "$(cat "$S/remote_rev")|" ;;
+    esac ;;
+  pull) [ ! -e "$S/pull_fail" ] ;;
+  tag) echo "$(cat "$S/remote_rev")|" > "$S/local_$(mod "$3")" ;;
+  build) [ ! -e "$S/build_fail" ] || exit 1
+    t=; rev=; lc=; prev=
+    for a; do case "$prev" in
+      -t) t=$a ;;
+      --label) case "$a" in org.opencontainers.image.revision=*) rev=${a#*=} ;; canccu.local-changes=*) lc=${a#*=} ;; esac ;;
+    esac; prev=$a; done
+    echo "$rev|$lc" > "$S/local_$(mod "$t")" ;;
+esac
+STUB
+cat > "$istubs/bin/git" <<'STUB'
+#!/bin/sh
+S=$STUB; echo "git $*" >> "$S/log"
+while [ $# -gt 0 ]; do case "$1" in -c) shift 2 ;; --no-optional-locks) shift ;; *) break ;; esac; done
+case "$1" in
+  rev-parse) [ -s "$S/head" ] && cat "$S/head" ;;
+  status) cat "$S/dirty" 2>/dev/null || true ;;
+  remote) echo "https://github.com/Example-Org/Example-Repo.git" ;;
+  *) echo "git stub: unexpected: $*" >&2; exit 9 ;;
+esac
+STUB
+# shellcheck disable=SC2016  # $* and $STUB belong to the stub script
+printf '#!/bin/sh\necho "curl $*" >> "$STUB/log"; echo ok\n' > "$istubs/bin/curl"
+chmod +x "$istubs/bin/"*
+ihead=3333333333333333333333333333333333333333; istale=4444444444444444444444444444444444444444
+# ifresh [ENV]: the checkout is at $ihead; both local images and the registry's are stale
+ifresh() {
+  ist=$(mktemp -d "$scratch/ist.XXXXXX"); : > "$ist/log"; echo "$ihead" > "$ist/head"; echo "$istale" > "$ist/remote_rev"
+  for m in hello admin; do echo "$istale|" > "$ist/local_$m"; done
+  ienv=$(envfile "POSTGRES_PASSWORD=x\n${1:-CANCCU_VERSION=dev\n}")
+}
+inst() { local n=$1 want=$2; shift 2; exits "$n" "$want" env STUB="$ist" PATH="$istubs/bin:$PATH" CANCCU_ENV_FILE="$ienv" setup/install "$@"; }
+ilogged() { if grep -Eq -- "$2" "$ist/log"; then pass "$1"; else bad "$1 (not called: $2)" "$(cat "$ist/log")"; fi; }
+inotlogged() { if grep -Eq -- "$2" "$ist/log"; then bad "$1 (called: $2)" "$(cat "$ist/log")"; else pass "$1"; fi; }
+ilocal() { if [ "$(cat "$ist/local_$2" 2>/dev/null)" = "$3" ]; then pass "$1"; else bad "$1 (canccuplatform-$2:latest is '$(cat "$ist/local_$2" 2>/dev/null)', want '$3')" "$(cat "$ist/log")"; fi; }
+
+ifresh; for m in hello admin; do echo "$ihead|" > "$ist/local_$m"; done; inst "install with images that match the checkout" 0
+inotlogged "install reuses images built from HEAD (no pull, no build)" "docker (pull|build|tag) "
+ilogged "install starts the stack without building" "compose -f deploy/compose.yml up -d --wait --no-build"
+
+ifresh; echo "$ihead" > "$ist/remote_rev"; rm "$ist/local_admin"; inst "install with stale or missing images, registry at HEAD" 0
+ilogged "install pulls the dev image from the repo's registry" "docker pull -q ghcr.io/example-org/example-repo/hello:dev"
+ilogged "install pulls a missing image too" "docker pull -q ghcr.io/example-org/example-repo/admin:dev"
+ilogged "install tags the pulled image the way compose expects" "docker tag ghcr.io/example-org/example-repo/hello:dev canccuplatform-hello:latest"
+inotlogged "install builds nothing when the pull matches HEAD" "docker build "
+ilocal "the stale hello image is replaced by HEAD's" hello "$ihead|"
+
+ifresh 'CANCCU_VERSION=dev\nCANCCU_DEPLOY_IMAGES=registry.example.org/canccu\n'; echo "$ihead" > "$ist/remote_rev"; inst "install with CANCCU_DEPLOY_IMAGES" 0
+ilogged "install pulls from CANCCU_DEPLOY_IMAGES" "docker pull -q registry.example.org/canccu/hello:dev"
+
+ifresh; inst "install with stale images, registry stale too" 0
+has "install says why it builds" "hello: .*built from 4444444.*building"
+ilogged "install builds the stale image from the checkout" "docker build .*-f modules/hello/Dockerfile"
+ilogged "a local build gets the revision label" "docker build .*--label org.opencontainers.image.revision=$ihead"
+ilocal "the rebuilt image is labelled with HEAD" hello "$ihead|"
+inotlogged "install never tags a stale pulled image" "docker tag "
+
+ifresh; touch "$ist/pull_fail"; inst "install when the registry is unreachable" 0
+ilocal "install builds when the pull fails" admin "$ihead|"
+
+ifresh; echo " M modules/hello/src/main.ts" > "$ist/dirty"; for m in hello admin; do echo "$ihead|" > "$ist/local_$m"; done; echo "$ihead" > "$ist/remote_rev"
+inst "install with local changes in the checkout" 0
+has "install warns about local changes" "local changes"
+inotlogged "install with local changes does not pull" "docker pull "
+ilogged "install with local changes marks the build" "docker build .*--label canccu.local-changes=true"
+ifresh; for m in hello admin; do echo "$ihead|true" > "$ist/local_$m"; done; echo "$ihead" > "$ist/remote_rev"; inst "install after a build with local changes, now clean" 0
+ilogged "install does not reuse an image built with local changes" "docker pull -q ghcr.io/example-org/example-repo/hello:dev"
+ilocal "the image built with local changes is replaced" hello "$ihead|"
+
+ifresh 'CANCCU_VERSION=v0.1.0\n'; echo "$ihead" > "$ist/remote_rev"; inst "install with a release version" 0
+ilogged "install pulls the images of the release" "docker pull -q ghcr.io/example-org/example-repo/hello:v0.1.0"
+inotlogged "install with a release pulls no dev image" ":dev"
+ilocal "the release image is tagged the way compose expects" hello "$ihead|"
+
+ifresh; touch "$ist/pull_fail" "$ist/build_fail"; inst "install when pull and build both fail" 2
+has "install names the module it cannot get" "admin"
+has "install says it neither pulled nor built" "cannot pull or build"
+inotlogged "install starts nothing when an image is missing" "compose .*up"
+ifresh 'CANCCU_VERSION=dev\nCANCCU_WEB_ALLOW=192.0.2.1\n'; touch "$ist/pull_fail" "$ist/build_fail"; inst "install --dry-run --boot does not build" 0 --dry-run --boot
+inotlogged "install --dry-run pulls, builds and tags nothing" "docker (pull|build|tag) "
+
+ifresh; echo "$ihead|" > "$ist/local_admin"; inst "install --dry-run with one stale image" 0 --dry-run
+has "install --dry-run says it would reuse a matching image" "would reuse canccuplatform-admin:latest"
+has "install --dry-run says it would pull, or else build, a stale one, and why" "would pull ghcr.io/example-org/example-repo/hello:dev .*else build.*built from 4444444"
+inotlogged "install --dry-run changes no image" "docker (pull|build|tag) "
+
+ifresh; : > "$ist/head"; inst "install outside a git checkout" 2
+has "install says it needs the checkout's commit" "commit"
+if grep -E '^ExecStart' setup/canccu-stack.service | grep -q 'compose -f deploy/compose.yml up -d --wait' && ! grep -Eq '^ExecStart.*(pull|build)' setup/canccu-stack.service
+then pass "canccu-stack at boot neither pulls nor builds"; else bad "canccu-stack at boot neither pulls nor builds"; fi
+
 echo "# firewall"
 exits "firewall rejects an unknown command" 2 setup/firewall bogus
 has "firewall prints its usage" "usage: firewall"

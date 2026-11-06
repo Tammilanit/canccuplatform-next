@@ -1,6 +1,6 @@
 # 0001. Port, don't rewrite
 
-- **Status:** Accepted (supersedes the earlier "fresh start, harvested" rule)
+- **Status:** Superseded by [0020](0020-best-of-old-freely-new.md) (it superseded the earlier "fresh start, harvested" rule)
 - **Date:** 2026-11-03
 
 ## Context
