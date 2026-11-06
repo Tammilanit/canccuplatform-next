@@ -8,7 +8,7 @@ The plan from today to the full new platform: **a commercial-scale, polished and
 - **Multi-tenant from day 1.** Many events, also simultaneous, on one shared stack ([0013](decisions/0013-multi-tenant-core.md)). The tenancy foundation comes before the module contracts.
 - **Infrastructure first**, then modules one at a time. While `platform.version` is `dev` and no tenant is live, the shared VM follows main, so the pieces are joined every day, not at the end.
 - **Dependencies set the order; no dates are fixed** ([0021](decisions/0021-no-fixed-dates.md)). An event that runs on the platform pins a tested release.
-- Each step is an epic in this repo with a "Planned" checklist of its issues. It runs in work packages and ends with a health pass and a checkpoint ◆ ([0019](decisions/0019-work-packages.md); AGENTS.md, How work flows).
+- Each step is an epic in this repo with a "Planned" checklist of its issues. From step 3 on it starts with a design brief and a brainstorming round with the product owner ([0023](decisions/0023-step-design-briefs.md), [`briefs/`](briefs/README.md)); it runs in work packages and ends with a health pass and a checkpoint ◆ ([0019](decisions/0019-work-packages.md); AGENTS.md, How work flows).
 
 ## Goals and non-goals
 - **Who:** organisers of recurring LAN events at one venue (several events a year), the venue's staff, and attendees; it scales to a large event of about 1,000–2,000 attendees. Free and self-hosted (AGPL), no payments ([0022](decisions/0022-product-vision.md)).
@@ -42,6 +42,7 @@ The roadmap changes as we learn ([0019](decisions/0019-work-packages.md)).
 - **Change log:** every change to this file adds a dated line below, newest first: `- YYYY-MM-DD: <what changed> (<issue or PR>)`.
 
 ### Change log
+- 2026-11-06: every step from step 3 on starts with a design brief (`docs/briefs/`) and a brainstorming round with the product owner, and its other issues wait for the brief; issues gain a Room to design section ([0023](decisions/0023-step-design-briefs.md), #130).
 - 2026-11-06: the product vision recorded ([0022](decisions/0022-product-vision.md)): who it is for, Pulse and push in step 3, Moments at the peaks and one announce action in step 4, the core features in their steps, the App parallel track for the phone hub, the backlog under Not scheduled yet, and what is not planned (#102).
 - 2026-11-06: the reuse table (Building on the legacy) updated from the legacy inventory summary, with the main features of every legacy repo, the new features and six flagged changes of order and dependencies, OC1, OC2, OC4, OC6, OC7 and OC8 (#76).
 - 2026-11-06: the ambition restated: a commercial-scale platform that takes the best of the legacy and is free to build anew ([0020](decisions/0020-best-of-old-freely-new.md)); no freeze and no target dates, step 11 becomes "Dress rehearsal and switch" ([0021](decisions/0021-no-fixed-dates.md)) (#99).
