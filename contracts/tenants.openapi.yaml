@@ -39,7 +39,9 @@ paths:
       tags: [event]
       operationId: getCurrentTenant
       summary: The request's event
-      description: Readable by anyone. Guests get the public fields only; event admins get the whole `Tenant`.
+      description: |
+        Readable by anyone. Event admins get the whole `Tenant`, others the public fields only; a guest of a
+        `draft` event gets only `DraftTenant`.
       responses:
         "200":
           description: The event.
@@ -49,13 +51,17 @@ paths:
                 anyOf:
                   - $ref: "#/components/schemas/Tenant"
                   - $ref: "#/components/schemas/PublicTenant"
+                  - $ref: "#/components/schemas/DraftTenant"
         "404":
           $ref: "#/components/responses/NotFound"
     patch:
       tags: [event]
       operationId: updateCurrentTenant
       summary: Change the event's own fields
-      description: Right `tenants.event.write`. Audited. Emits `tenants.tenant.changed`.
+      description: |
+        Name, time zone and dates need right `tenants.event.write`; `info_page_mode`, `membership` and
+        `admin_access` need `tenants.access.write` (held only through the event-admin role). A request that
+        changes both kinds needs both. Audited. Emits `tenants.tenant.changed`.
       security:
         - session: []
       requestBody:
@@ -115,7 +121,9 @@ paths:
       tags: [event]
       operationId: getFlags
       summary: The event's feature flags
-      description: Readable by anyone. Every declared flag, with its default where none is stored.
+      description: |
+        Readable by anyone except a guest of a `draft` event (403 `info_pages_closed`). Every declared flag,
+        with its default where none is stored.
       responses:
         "200":
           description: The flags.
@@ -123,6 +131,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Flags"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
     put:
@@ -181,9 +191,10 @@ paths:
       operationId: cloneTenant
       summary: Copy the tenants part of a previous event of the series
       description: |
-        Right `tenants.event.write` here and event admin of the source; both in one series. Only on a
-        `draft` event not cloned before. Copies event admins, flags, `info_page_mode`, `membership` and
-        `admin_access`, and shifts the dates. Audited. Emits `tenants.tenant.cloned`.
+        Needs the event-admin role (not a granted right) here and on the source; both in one series. Only on
+        a `draft` event not cloned before. Copies flags, `info_page_mode`, `membership` and `admin_access`,
+        adds the source's event admins to those already here (never removing any), and shifts the dates.
+        Audited. Emits `tenants.tenant.cloned`.
       security:
         - session: []
       requestBody:
@@ -392,8 +403,9 @@ paths:
       operationId: joinEvent
       summary: Join the event as a member
       description: |
-        A signed-in user, while `membership` is `open` (otherwise 403 `membership_closed`) and the event is
-        not archived. Joining again is 200 with the same membership. Emits `tenants.member.joined`.
+        A signed-in user, while `membership` is `open` and the event is `live`. 403 `membership_closed` when
+        it is `closed` or the event is `draft` (only event admins add members then); 409 `event_archived`.
+        Joining again is 200 with the same membership. Emits `tenants.member.joined`.
       security:
         - session: []
       responses:
@@ -666,16 +678,21 @@ paths:
       tags: [audit, superadmin]
       operationId: listAudit
       summary: The whole audit log
-      description: Superadmin. Without `tenant_id` all entries; `tenant_id=platform` only platform entries.
+      description: Superadmin. Without filters all entries; `tenant_id` for one tenant's, `platform=true` for platform entries only.
       security:
         - session: []
       parameters:
         - name: tenant_id
           in: query
-          description: One tenant's entries, or `platform` for entries with no tenant.
+          description: Only this tenant's entries.
           schema:
-            type: string
-            pattern: "^(platform|[a-z][a-z0-9-]{1,30}[a-z0-9])$"
+            $ref: "#/components/schemas/TenantId"
+        - name: platform
+          in: query
+          description: Only entries with no tenant. Not together with `tenant_id`.
+          schema:
+            type: boolean
+            default: false
         - $ref: "#/components/parameters/Before"
         - $ref: "#/components/parameters/Limit"
       responses:
@@ -731,8 +748,9 @@ paths:
       operationId: createTenant
       summary: Create a tenant
       description: |
-        Superadmin. Starts as `draft`. With a venue, its profile is copied into the event's venue info.
-        Audited. Emits `tenants.tenant.created` on the platform stream.
+        Superadmin. Starts as `draft`, with no hostname (`primary_hostname` is `null` until one is added).
+        An id used before, also by a deleted tenant, is 409 `tenant_exists`. With a venue, its profile is
+        copied into the event's venue info. Audited. Emits `tenants.tenant.created` on the platform stream.
       security:
         - session: []
       requestBody:
@@ -787,7 +805,8 @@ paths:
       summary: Change a tenant
       description: |
         Superadmin. The fields of `TenantPatch` plus `venue_id` and `series_id`. A new venue copies its profile
-        into the event's venue info. Audited. Emits `tenants.tenant.changed`.
+        into the event's venue info and also emits `tenants.venue_info.changed` with `copied: true`. Audited.
+        Emits `tenants.tenant.changed`.
       security:
         - session: []
       requestBody:
@@ -819,7 +838,8 @@ paths:
       summary: Delete a tenant and all its data
       description: |
         Superadmin; only `draft` or `archived` (409 `tenant_live`). Every module deletes the tenant's rows,
-        keys, streams and files; its hostnames become `held`. Audited. Emits `tenants.tenant.deleted`.
+        keys, streams and files; its hostnames become `held`, keeping the tenant id as plain text. The id is
+        never reused. Audited. Emits `tenants.tenant.deleted`.
       security:
         - session: []
       responses:
@@ -1627,7 +1647,7 @@ components:
         `missing_right`; `superadmin_required`; `mfa_required` (a superadmin without Discord two-factor);
         `admin_access_restricted` (the event's `admin_access` is `restricted` and the request is neither from
         the venue nor over Tailscale); `info_pages_closed` (the info-page mode does not let this request in);
-        `membership_closed`.
+        `membership_closed` (also any self-join while the event is `draft`).
       content:
         application/json:
           schema:
@@ -1727,6 +1747,15 @@ components:
           $ref: "#/components/schemas/Id"
         name:
           type: string
+    DraftTenant:
+      type: object
+      description: What a guest sees of a `draft` event.
+      required: [id, status]
+      properties:
+        id:
+          $ref: "#/components/schemas/TenantId"
+        status:
+          const: draft
     PublicTenant:
       type: object
       description: What a guest sees of the event.
@@ -1753,7 +1782,10 @@ components:
             - $ref: "#/components/schemas/NamedRef"
             - type: "null"
         primary_hostname:
-          $ref: "#/components/schemas/HostnameValue"
+          description: "`null` until the first hostname is added, or while none is `active`."
+          oneOf:
+            - $ref: "#/components/schemas/HostnameValue"
+            - type: "null"
         info_page_mode:
           $ref: "#/components/schemas/InfoPageMode"
         membership:
@@ -1955,7 +1987,8 @@ components:
           maxLength: 32
         password:
           type: [string, "null"]
-          maxLength: 63
+          description: A passphrase of 8–63 characters, or a 64-hex-digit key.
+          maxLength: 64
         note:
           type: [string, "null"]
           maxLength: 500
@@ -2278,7 +2311,10 @@ components:
         status:
           $ref: "#/components/schemas/Status"
         primary_hostname:
-          $ref: "#/components/schemas/HostnameValue"
+          description: "`null` until the first hostname is added, or while none is `active`."
+          oneOf:
+            - $ref: "#/components/schemas/HostnameValue"
+            - type: "null"
         time_zone:
           $ref: "#/components/schemas/TimeZone"
         info_page_mode:
@@ -2367,7 +2403,9 @@ components:
       type: object
       description: |
         `tenant_id` `null` for a platform entry. `actor_user_id` is turned into the user's audit reference;
-        without it the actor is the calling module.
+        without it the actor is the calling module. Callers never send `superadmin` or `support`: the tenants
+        module sets `actor.superadmin` from the user row, and `actor.support` when the user has an open
+        support window in `tenant_id` at append time.
       required: [tenant_id, module, action, target]
       properties:
         tenant_id:

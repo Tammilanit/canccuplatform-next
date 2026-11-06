@@ -15,7 +15,7 @@ The envelope ([admin.md](admin.md#envelope)) gains one field, an additive change
 
 - A **tenant event** concerns one event. It goes to `t:<tenant>:events:<module>`, and `tenant` names the same tenant as the stream. A consumer sets the tenant from `tenant` for each message (0013 item 7) and drops a message whose `tenant` does not match its stream.
 - A **platform event** concerns no single event: the creation or deletion of a tenant, hostnames, venues, a user's privacy flags or deletion. It goes to the platform stream `events:<module>` and has no `tenant`. Only the tenants module emits platform events so far; another module needs its contract to say so.
-- Consumers learn of a new tenant's streams from `tenants.tenant.created` and start reading them without a restart.
+- Consumers learn of a new tenant's streams from `tenants.tenant.created` and start reading them without a restart, from the start of the stream (`0`), not from `$`, so events written before the consumer arrived (such as the first `tenants.admin.added`) are not missed.
 
 ```json
 {"id": "01928f3e-7a2b-7c4d-9e8f-0a1b2c3d4e5f", "type": "admin.settings.changed", "version": 1,
@@ -67,7 +67,7 @@ On the tenant's stream:
 | `tenants.status.changed` | The event went live or was archived | All modules (archived is read-only) |
 | `tenants.tenant.cloned` | The tenants part of a clone ran | admin (runs each module's clone) |
 | `tenants.flags.changed` | Feature flags were set | All modules; bot (re-registers slash commands) |
-| `tenants.venue_info.changed` | The event's venue info changed. Audience: event-wide, `public` | screen, notify |
+| `tenants.venue_info.changed` | The event's venue info changed (also when copied in for a new venue). Audience: event-wide, `public` | screen, notify |
 | `tenants.venue_ip_check.changed` | The venue IP check was switched off or on | screen (the kit's tenant cache) |
 | `tenants.admin.added`, `tenants.admin.removed` | A user became or stopped being an event admin | Every module that caches rights |
 | `tenants.member.joined`, `tenants.member.left` | A user joined or left the event. Audience: personal | notify (members-only delivery), every module that caches membership |
