@@ -2,7 +2,7 @@
 
 The summary of the eight per-repo inventories of roadmap step 2a ([epic #46](../roadmap.md#2a-legacy-inventory)), issue #76. For every legacy feature it says what the new platform takes from it, where that lands and in which step. It also covers how the legacy pieces worked together, what the platform can offer beyond them, and what the product owner still has to decide before the tenants contract (#48) and the event catalog (#34) are written.
 
-The platform is not limited to porting. It is to be a much bigger, better and richer system: commercial-scale, polished and intuitive. The legacy repos are a source of the best ideas, code and tests, not a boundary (decision 0020, coming in #99, which supersedes [0001](../decisions/0001-port-dont-rewrite.md) "port, don't rewrite").
+The platform is not limited to porting. It is to be a much bigger, better and richer system: commercial-scale, polished and intuitive. The legacy repos are a source of the best ideas, code and tests, not a boundary (the product owner's direction; decision 0020, proposed in #99, would supersede [0001](../decisions/0001-port-dont-rewrite.md) "port, don't rewrite").
 
 - **Status:** a proposal, waiting for the product owner's confirmation. Every "proposed answer" below is a default to confirm, reword or reject; none is decided here. A confirmed change to a decision record goes through its own issue and a new record ([decisions](../decisions/README.md)).
 - **Sources:** the per-repo inventories in this folder. Each row below names its source by the per-repo feature id (for example `P7`) where the inventory has one, otherwise by the feature's name. Details and paths are in the per-repo file.
@@ -50,7 +50,7 @@ Every feature of the per-repo inventories, one table per repo, in the order of t
 | Asset upload validation, image normalize, video length parser, PPTX slide count | screen | 3 | reuse | Pure or near-pure, tested |
 | Asset catalog, replace and undo with slide clamps | screen | 3 | reuse with changes | The logic is worth keeping; storage moves to Postgres and tenant files |
 | PPTX rendering | screen | 3 | reuse with changes | Proven conversion; moves to a render-job container with a fair per-tenant queue, never inside a page request |
-| YouTube normalize, oEmbed health, player error rules | screen | 3 | reuse | Pure, tested |
+| YouTube normalize, oEmbed health, player error rules | screen | 3 | reuse | Pure, tested rules that already handle embeds that are not allowed |
 | Web-asset allowlist | screen | 3 | reuse with changes | A per-tenant setting instead of env |
 | Baseline web page and display-page presets | screen | 3 | reuse with changes | Event values become tenant settings; Screen's own widgets replace the embedded page ([DR1](#conflicts-with-the-decision-records)) |
 | Ready check, pages message, scene transitions, progress bars, mirror | screen | 3 | reuse with changes | Transitions and the Ready-or-fallback rule are good; the cross-frame messages go with the embed protocol ([DR1](#conflicts-with-the-decision-records)); one shared source instead of hand-kept copies |
@@ -71,7 +71,7 @@ Every feature of the per-repo inventories, one table per repo, in the order of t
 | Adapter: display state, tournament and health polls | screen | 9 | rebuild | Becomes event consumers; its normalizers and freshness rules are the spec |
 | Trigger settings for the bot and the display page **(new)** | bot, moments | 4, 6 | reuse with changes | Thresholds belong in the bot and Moments settings schemas |
 | Admin pages | admin, screen | 3 | rebuild | String-built pages; the pure view-models (week calendar, schedule insights, overlap, replace plan, diagnostics) are reused |
-| Admin auth: password, sessions, login links, rate limit | — | 1, 2b | drop | Replaced by central Discord sign-in and rights |
+| Admin auth: password, sessions, login links, rate limit | — | — | drop | Replaced by central Discord sign-in and rights (steps 1 and 2b) |
 | Diagnostics, readiness and health endpoints | screen | 3, 10 | reuse with changes | A per-tenant status view; health follows the kit contract |
 | Alert webhook and log events | kit, admin | 8 | rebuild | Logs tagged with the tenant; alerts as events |
 | Runtime and SQLite layer, in-code migrations | — | — | drop | Postgres migrations with the kit; the legacy ones were destructive |
@@ -89,7 +89,7 @@ Every feature of the per-repo inventories, one table per repo, in the order of t
 | Admin check by role name | bot | 6 | rebuild | Anyone who creates a role with that name is admin; rights come from role-to-rights sync by role id |
 | Intents | bot | 6 | reuse with changes | Keep members and presences; drop the unused message-content intent |
 | Presence snapshots | bot | 6 | reuse with changes | Proven tracker; stored per tenant and published as events |
-| Voice snapshots | bot | 6 | reuse with changes | As presence |
+| Voice snapshots | bot | 6 | reuse with changes | Proven tracker, as presence; stored per tenant and published as events |
 | Game snapshots and play duration | bot | 6 | reuse with changes | Pure logic well tested; stored per tenant |
 | Steam cover fallback | bot | 6 | reuse | Pure, tested, no event content |
 | Hot-game banner **(new)** | bot, moments | 6, 4; wired in 9 | reuse with changes | A favourite on screen; the bot publishes, Moments decides, no direct screen calls |
@@ -97,7 +97,7 @@ Every feature of the per-repo inventories, one table per repo, in the order of t
 | Stats history aggregation | bot, screen | 6, 9 | reuse with changes | Built from Postgres, computed ahead and served to the screen widgets |
 | In-memory storage layer | bot | 6 | reuse with changes | Its queries and aggregations are reused in Postgres; the layer itself goes ([0010](../decisions/0010-scope.md)) |
 | Polls, poll ticker, poll formatters and validators | — | — | drop | Polls are dropped ([0010](../decisions/0010-scope.md)) |
-| Screen announce, clear and reset commands **(new)** | bot, moments | 6, 4 | rebuild | Become commands that publish screen-override events; TTL and revert live in Moments |
+| Screen announce, clear and reset commands **(new)** | bot, moments | 6, 4 | reuse with changes | The commands and their options (text, sound, seconds) stay; they publish screen-override events, and TTL and revert move to Moments |
 | Signage state and auto-revert timers, the display-page URL builder | — | — | drop | Moments owns ranking, TTL and revert; the embed URLs are dropped |
 | Signage control client | bot | 6 | rebuild | Becomes bus events |
 | Trigger settings fetch **(new)** | moments | 4 | rebuild | Per-tenant settings instead of a fetch from signage |
@@ -109,7 +109,7 @@ Every feature of the per-repo inventories, one table per repo, in the order of t
 | Signage admin login link `/adminlink` | — | — | drop | The central sign-in replaces it |
 | `/platform status` **(new)** | admin | 8 | rebuild | Reads the admin status view: tenant view for event admins, stack view for the superadmin |
 | Manager alerts and Acknowledge | bot, admin | 8 | rebuild | Alerts become events the bot consumes; ack and mute through admin |
-| Manager heartbeat watcher | — | 10 (watchdog) | drop | The outside watchdog covers it; it raised false alarms |
+| Manager heartbeat watcher | — | — | drop | The outside watchdog covers it; it raised false alarms (the step 10 watchdog) |
 | Bot health endpoint | bot | 6 | rebuild | On the kit's health contract |
 | `/help` | — | — | drop | Discord lists the registered commands |
 | `/stream` stubs | — | — | drop | Never worked; Cast brings its own commands |
@@ -121,7 +121,7 @@ Every feature of the per-repo inventories, one table per repo, in the order of t
 | Tournament screen pin T−15 to T+10 | moments | 4; wired in 9 | rebuild | An event that Moments ranks |
 | `TournamentMemoryStore` test double | — | — | drop | Tests run against Postgres |
 | Mini-tourney watcher posts and finals summary **(new)** | games, bot | Games, 6 | reuse with changes | Games publishes season events; the bot posts them; announced ids become rows |
-| Finals cards **(new)** | moments, games | 4, Games | rebuild | A Moments takeover driven by Games events, without the site detour |
+| Finals cards **(new)** | moments, screen | 4, 9 | reuse with changes | The phases, hold windows and card content are reused as the spec; Games events drive a Moments takeover (step 4) and a Screen widget draws the card (step 9), without the site detour |
 | Roster nick backfill | — | — | drop | A one-off repair |
 | Signup-site API client | — | — | drop | Each call becomes a contract endpoint or a bus event |
 | Validators and formatters (the surviving parts) | bot | 6 | reuse | Pure and tested |
@@ -142,14 +142,15 @@ Registration and the site itself stay outside the platform ([0005](../decisions/
 | P8–P9 pizza admin, pizzerias and menus | pizza, admin | 5 | reuse with changes | Rights from sign-in; menus per tenant from the profile ([DR11](#conflicts-with-the-decision-records)); hard delete becomes logged |
 | P10 daily record and CSV | pizza | 5 | reuse | Report and CSV with tests; time zone from settings |
 | P11–P12 pizza block and public status | screen, moments | 5, 9 | reuse with changes | Screen consumes events instead of polling a status URL |
-| P13 per-day redirect | — | — | drop | Retired pages |
+| P13 per-day redirect | — | — | drop | Old per-day pages, already retired |
 | T1–T4 schedule, rules, leaderboard, player registration | tournament | 7 | reuse with changes | Registration inside the module; rules text and points become settings; `timestamptz` |
 | T5–T6 session admin and registrants | tournament | 7 | rebuild | A 1433-line string-built page; its logic (postpone, reopen, candidates) is reused |
 | T7 scoring, roster autofill, score merge | tournament | 7 | reuse with changes | Pure parts reused; writes in transactions with row locks |
 | T8 final and final photos | tournament | 7 | reuse with changes | Photos to tenant files with the ETag scheme kept |
 | T9 debug flags | — | — | drop | Events and an admin action replace them |
 | T10 screen payload | tournament, screen | 7, 9 | reuse with changes | Becomes tournament events and a Screen widget |
-| T11 bot flag handshake and tokens | tournament, bot | 7, 6 | rebuild | Flag polling becomes a handshake through events; tokens become sign-in |
+| T11 bot flag handshake | tournament, bot | 7, 6 | rebuild | Flag polling becomes a handshake through events |
+| Registration and admin tokens in page URLs | — | — | drop | Plaintext and never revoked; sign-in replaces them |
 | T12 cover lookup | bot | 6 | reuse with changes | Steam with a real cache, shared with the hot-game banner |
 | D1, D2, D4 LAN display page, stats view and views | screen | 9 | rebuild | About 1800 lines of inline script; Screen widgets fed by events; the views and thresholds are the spec |
 | D3 alive chrome, D6 demo overlays, trend helpers | screen | 9 | reuse | Pure helpers with tests, used by the new widgets |
@@ -157,14 +158,14 @@ Registration and the site itself stay outside the platform ([0005](../decisions/
 | D7 polls | — | — | drop | Polls are dropped |
 | D8 presence, voice and game snapshots | bot | 6 | reuse with changes | Bot-owned tables and events |
 | D9–D10 stats fold and snapshot retention | bot | 6 | rebuild | Workarounds for a hosting quota; Postgres keeps raw samples and aggregates with SQL |
-| D11 announce and finals cards | moments, games | 4, Games | reuse with changes | Become Moments takeovers from bot or Games events |
+| D11 announce and finals cards | moments, screen | 4, 9 | reuse with changes | Become Moments takeovers from bot or Games events (step 4), drawn by Screen widgets (step 9); the card content is the spec |
 | D12 browser trend state | — | — | drop | An unauthenticated public write; trends are computed on the server |
 | D13 polls RSS | — | — | drop | No ticker needs it |
 | D14 manager heartbeat | — | — | drop | Dead-man's switch dropped; its alert-once and recover-once rule is reused by admin alerts (step 8) and the watchdog (step 10) |
-| D15 health | kit | 1 (done) | drop | The kit health contract replaces it |
+| D15 health | — | — | drop | The kit health contract replaces it (the kit, done in step 1) |
 | D16 LAN reset | admin | 8 | reuse with changes | A per-tenant admin action |
-| R1–R6 registration, home page, terminal, music, Snake, site admin, e-mail | — (stays on the site) | — | drop | Registration stays outside, with no sync ([0005](../decisions/0005-signup-site-stays-outside.md)) |
-| Admin password and admin cookie | — | 2b | drop | Central Discord sign-in |
+| R1–R6 registration, home page, terminal, music, Snake, site admin, e-mail | — | — | drop | Registration stays outside, with no sync ([0005](../decisions/0005-signup-site-stays-outside.md)) |
+| Admin password and admin cookie | — | — | drop | Central Discord sign-in (goes to step 2b) |
 
 ### canccumanager
 | Feature | Target module | Step | Verdict | Reason |
@@ -184,7 +185,7 @@ Registration and the site itself stay outside the platform ([0005](../decisions/
 | F5, F16 status and heartbeat API | admin | 8 | reuse with changes | The shapes are a fair start for the admin contract |
 | Kiosk display restart and the `screen-poll` trigger | screen, admin | 3, 8 | rebuild | A device command on paired screens, not an ssh script |
 | Live-cast guard | admin | 8, Cast | reuse with changes | The idea stays; the facts come from Cast and Moments events |
-| F15 heartbeat push to the signup site | — | 10 (watchdog) | drop | The outside watchdog replaces it |
+| F15 heartbeat push to the signup site | — | — | drop | The outside watchdog replaces it (the step 10 watchdog) |
 | Hosted worker log source | — | — | drop | The signup site stays outside |
 | Cast relay subsystem entry and its seeded mute | — | — | drop | Cast brings its own health |
 | Bearer tokens and `X-Caller` | — | — | drop | Any token could restart anything; replaced by sign-in and kit service auth |
@@ -198,27 +199,27 @@ Everything here waits for its author's OK; licence and attribution are kept (AGE
 |---|---|---|---|---|
 | Bracket engine: formats, draws, next round, result validation, champion | games | Games | reuse | Pure and tested per format; becomes rounds as data; two known bugs fixed on the way |
 | Team builder (A14 balancing) | games | Games | reuse | Pure balancing with a seeded random source |
-| A16 rankings and P10 ranking-change marks | games | Games | reuse with changes | Keyed by user id instead of nickname; delta tables as data |
+| A16 rankings and P10 ranking-change marks | games | Games | reuse with changes | Keyed by player id (a user or a guest player, TD4) instead of nickname; delta tables as data |
 | Service rules: P4–P5 registration, P6 and A5 early start and votes, P8 and A9 lobby id, A3–A4 format and arena changes, A6 individual registrations, A7 live swap, A10–A11 cancel and delete | games | Games | reuse with changes | Good rules with tests; each operation becomes one Postgres transaction with signed-in users |
 | P7 and A8 result reporting by two matching team reports, admin override | games | Games | reuse with changes | A clever low-effort flow; the reporter is a signed-in team member |
 | Result correction | games | Games | rebuild | Missing today: a decided match cannot be changed |
 | P9 public start | games, admin | Games | reuse with changes | A per-tenant setting for signed-in users, without calendar windows |
 | A12 debug fill and votes | games | Games | reuse with changes | Kept as test fixtures and the demo seed only |
 | Arena list | games | Games | reuse with changes | Becomes data in the games catalog |
-| A13 player roster, A15 add to registration | games | Games | reuse with changes | Built on global users, not a nickname table |
+| A13 player roster, A15 add to registration | games | Games | reuse with changes | A per-tenant player table: each player is a global user or a guest entered by an admin (TD4); no nickname matching |
 | A17 settings | games, admin | Games | rebuild | Per-tenant module settings through admin |
 | A2 create a season | games | Games | reuse with changes | The name comes from the event |
 | Storage (SQLite, in-code upgrades) | games, kit | Games | rebuild | Foreign keys were off; Postgres with RLS and versioned migrations |
 | HTTP API | games | Games | rebuild | A tenant-aware contract first; the route set is the starting list |
 | SSE `update` | games | Games, 9 | rebuild | Untargeted wake-ups; bus events with payloads instead |
-| A1 admin password | — | 2b | drop | Shared password kept in clear in the browser |
+| A1 admin password | — | — | drop | Shared password kept in clear in the browser (goes to step 2b) |
 | Team and individual tokens | — | — | drop | Lived in one browser; signed-in users replace them |
-| A18 health endpoint | kit | 1 (done) | drop | The kit health contract replaces it |
+| A18 health endpoint | — | — | drop | The kit health contract replaces it (the kit, done in step 1) |
 | P1–P3, P12–P13 public pages: season list, bracket, hover tracing, toasts, dialogs | games, ui | Games | rebuild | New frontend on the theme; the per-format layouts and connector routing are the visual spec |
 | Admin, team builder and settings pages | games, admin | Games, 8 | rebuild | Inside the admin UI |
 | P11 champions page and trophy ranking | games | Games | reuse with changes | Read from finished seasons per tenant |
-| Bracket on the big screen and finals cards | screen, moments | 9 | reuse with changes | Screen widgets fed by Games events, ranked by Moments |
-| README systemd example, agent tool config | — | — | drop | Not product |
+| Bracket on the big screen and finals cards | moments, screen | 4, 9 | reuse with changes | Games events drive a Moments takeover (step 4) and Screen widgets for the bracket and the card (step 9) |
+| README systemd example, agent tool config | — | — | drop | Host and agent tool config, not product |
 
 ### canccuplatform
 | Feature | Target module | Step | Verdict | Reason |
@@ -229,19 +230,21 @@ Everything here waits for its author's OK; licence and attribution are kept (AGE
 | O7 bot version and health binding | — | — | drop | Version is the release; health from the kit |
 | O8 kiosk reload | screen, admin | 3, 8 | rebuild | A per-device action instead of a Windows task |
 | O9 manager deploy and sudoers check | — | — | drop | No hosts to ssh into |
-| O10 SSH timeout and step naming | setup | 1 | drop | The named-step failure idea is kept for `setup/` |
+| O10 SSH timeout and step naming | — | — | drop | The named-step failure idea is kept for `setup/` (goes to setup, step 1) |
 | O11 tourney unit, venue runbook | — | — | drop | Nothing runs at the venue |
 | O12 CI checks | ci | 1 | reuse with changes | Link check and shellcheck kept |
-| O13 workflow rules | — | 1 (done) | drop | Already in AGENTS.md |
+| O13 workflow rules | — | — | drop | Already in AGENTS.md (done in step 1) |
 | O14 upstream rules for the tourney repo | — | — | drop | The code is reused here, not patched upstream |
-| O15 system map | — | 1 (done) | drop | The roadmap and `contracts/` replace it |
+| O15 system map | — | — | drop | The roadmap and `contracts/` replace it (done in step 1) |
 | X1 health shape | kit | 1 (done) | reuse with changes | Already reshaped as the kit health contract |
-| X2 admin login link | — | 2b | drop | Central sign-in |
-| X3 screen control, band ranking, ticker | moments, screen | 2c, 3, 4 | rebuild | Becomes Moments takeovers from events; the ranking and TTL rules are the spec |
+| X2 admin login link | — | — | drop | Central sign-in (goes to step 2b) |
+| X3, screen control and band ranking part | moments | 2c, 4 | reuse with changes | As signage's directive model and control API: the ranking and TTL rules are reused in Moments; the control calls become events |
+| X3, ticker part | screen | 3 | reuse with changes | As signage's ticker row: Screen owns the ticker ([0018](../decisions/0018-ticker-manual.md)) |
 | X4 trigger settings | moments, bot | 4, 6 | reuse with changes | Per-tenant module settings |
-| X5 hot-game banner | bot, moments | 6, 9 | reuse with changes | Bot events, Moments decides |
-| X6 photo carousel and spotlight | bot, screen | 6, 3 | reuse with changes | Tenant files and a Screen playlist |
-| X7 finals cards | games, moments | Games, 9 | reuse with changes | Games events ranked by Moments |
+| X5 hot-game banner | bot, moments | 6, 4; wired in 9 | reuse with changes | The bot publishes, Moments decides; no direct screen calls |
+| X6, photo carousel part | bot, screen | 6, 3 | reuse with changes | Tenant files and a Screen playlist |
+| X6, spotlight part | bot, moments | 6, 4 | reuse with changes | A Moments takeover with a TTL |
+| X7 finals cards | moments, screen | 4, 9 | reuse with changes | The phases, hold windows and card content are reused as the spec; Games events drive a Moments takeover (step 4) and a Screen widget draws the card (step 9), without the site detour |
 | X8 LAN display page | screen | 9 | rebuild | Screen widgets fed by events |
 | X9 `postMessage` protocol | — | — | drop | [0010](../decisions/0010-scope.md) |
 | X10 catch-up cues | moments | 4 | rebuild | The rule becomes Moments policy on the server |
@@ -249,45 +252,52 @@ Everything here waits for its author's OK; licence and attribution are kept (AGE
 | X12 pizza ticker and cues | screen, moments | 5, 9 | reuse with changes | Consume `pizza.order.*` |
 | X13 tournament routes | tournament | 7 | reuse with changes | Scoring, leaderboard and final reused; tokens and handshake rebuilt |
 | X14, polls part | — | — | drop | Polls are dropped |
-| X14, stats snapshots part | bot | 6 | reuse with changes | Bot events |
+| X14, stats snapshots part | bot | 6 | reuse with changes | As D8: bot-owned tables and bot events |
 | X15 tourney read API and SSE | games | Games | rebuild | Storage and API rebuilt; SSE becomes events |
 | X16 manager | admin | 8 | reuse with changes | Debounce, alert rules, ack, mute and restart policy reused; the executor is designed first |
-| X17 heartbeat to the signup site | — | 10 (watchdog) | drop | The watchdog replaces it |
+| X17 heartbeat to the signup site | — | — | drop | The watchdog replaces it (the step 10 watchdog) |
 | X18 low-latency casting | cast | Cast | reuse with changes | Takeover lifecycle, stall guard and encoder findings reused; relay placement open |
 | X19 tourney on a venue LAN hostname | — | — | drop | Everything is served from the VM over HTTPS |
 
 The legacy contracts in this repo (health, admin login link, signage control API, LAN display views, screen messages, site API, tourney API, manager API, manager heartbeat) are not imported ([0002](../decisions/0002-no-legacy-history-or-docs.md)); they are read as the spec when the event catalog (#34), the screen contract (#35) and each module's contract are written.
 
 ### canccudocs
-This repo holds plans, not code. Its "X" features are the same features as in the repos that implement them; the verdicts agree with those rows.
+This repo holds plans, not code. Its "X" features are the same features as in the repos that implement them, and each row takes the verdict and step of the implementing row it names. Where an X feature spans several implementing rows with different verdicts, it is split into labelled parts.
 
 | Feature | Target module | Step | Verdict | Reason |
 |---|---|---|---|---|
 | O1–O3 plan index, editor workspace, sync loop | — | — | drop | The monorepo and AGENTS.md replace them |
 | O4 plan structure rule | — | any (process) | reuse with changes | Questions with stated defaults and risks make better plans |
-| O5 feature-branch rule | — | done | drop | Already in AGENTS.md |
-| O6 to-do tagging | — | — | drop | Tool-specific |
+| O5 feature-branch rule | — | — | drop | Already in AGENTS.md (already done) |
+| O6 to-do tagging | — | — | drop | Specific to one editor tool |
 | O7 docs-with-behaviour rule | — | any (process) | reuse with changes | Docs drifted in several legacy repos ([gap 16](#gaps-from-the-legacy-plans)) |
 | O8 contract map | all | 2c | rebuild | `contracts/` and the event catalog replace it |
 | O9 outside-bot workflow | — | — | drop | The dispatcher and AGENTS.md replace it |
 | X1 scheduled signage | screen | 3 | reuse | The scheduler is reused; gaps 5–7 added in the contract |
 | X2 PPTX rendering | screen | 3 | reuse with changes | A render-job container |
-| X3 compositor and precedence | moments, screen | 2c, 4 | rebuild | Moments ranks takeovers from events; bands, TTL and refusal are the spec |
+| X3, scene precedence part | screen | 3 | reuse | As signage's scene precedence row: pure and tested |
+| X3, directive bands and refusal part | moments | 2c, 4 | reuse with changes | As signage's directive model row: bands become settings, scoped per tenant and zone |
+| X3, embed compositor lanes part | — | — | drop | The embed lanes go with the screen-embed protocol ([0010](../decisions/0010-scope.md)) |
 | X4 no-blank fallback and Ready check | screen | 3 | reuse with changes | The last-frame and static-image rule stays ([gap 4](#gaps-from-the-legacy-plans)) |
 | X5 bookmarks and ADVT breaks | screen | 3 | reuse | Pure timing code; one due-time quirk fixed |
 | X6 ticker | screen | 3 | reuse with changes | Manual only; the poll ticker goes with polls |
-| X7 announce | moments, bot, ui | 4, 6 | reuse with changes | A Moments takeover with a sound; the card look moves to the theme |
+| X7 announce | moments, bot, ui | 4, 6 | reuse with changes | As the bot's announce commands and D11: the commands and their options stay and publish events; Moments owns the takeover and its sound; the card look moves to the theme |
 | X8 polls on screen | — | — | drop | Polls are dropped |
-| X9 hot-game banner | bot, moments | 6, 9 | reuse with changes | Bot events, Moments decides |
+| X9 hot-game banner | bot, moments | 6, 4; wired in 9 | reuse with changes | The bot publishes, Moments decides; no direct screen calls |
 | X10 cover art chain | bot | 6 | reuse with changes | The Steam fallback is reused; IGDB only if wanted |
-| X11 stats view | bot, screen | 6, 9 | reuse with changes | Aggregates computed ahead, never on a polled read |
-| X12 tournament view and pin | tournament, moments | 7, 9 | reuse with changes | Tournament events ranked by Moments |
-| X13 tournament automation | tournament, bot | 7 | reuse with changes | Registration inside the module; tokens rebuilt as sign-in |
+| X11, stats data part | bot | 6 | reuse with changes | As the bot's stats history row: aggregates computed ahead, never on a polled read |
+| X11, stats view part | screen | 9 | rebuild | As D1, D2, D4: Screen widgets fed by events |
+| X12, tournament view part | tournament, screen | 7, 9 | reuse with changes | As T10: tournament events and a Screen widget |
+| X12, screen pin part | moments | 4; wired in 9 | rebuild | As the bot's screen pin row: an event that Moments ranks |
+| X13, reminders, roster, leaderboard and clear part | tournament, bot | 7, 6 | reuse with changes | As the bot's tournament rows and T7: the scheduler moves into the tournament module |
+| X13, registration tokens part | — | — | drop | As the signup site's token row: sign-in replaces them |
 | X14 photo carousel | bot, screen | 6, 3 | reuse with changes | New-first, featured and Clear rules kept |
 | X15 photo spotlight | bot, moments | 6, 4 | reuse with changes | A Moments takeover with a TTL |
-| X16 sound system and sound board | moments, admin | 4 | reuse with changes | The engine is reused; the sound board becomes admin pages; cues from events |
+| X16, sound engine part | moments | 4 | reuse | As signage's sound engine row: pure and well tested; cues come from events |
+| X16, sound settings and log part | moments | 4 | reuse with changes | As signage's sound settings row: Postgres and tenant files |
+| X16, sound board part | moments, admin | 4 | rebuild | As signage's sound board commands and admin pages: per device on the server, in the admin UI |
 | X17 tournament sound moments | tournament, moments | 7, 9 | rebuild | The source becomes tournament events, not the embedded page |
-| X18 admin sign-in | admin | 2b | rebuild | The link goes; fail-closed admin, rate limits and session lifetimes stay as rules |
+| X18 admin sign-in: password and login link | — | — | drop | As signage's admin auth row: the central sign-in (step 2b, #52) replaces them; fail-closed admin, rate limits and session lifetimes carry over as requirements ([gaps 1–3](#gaps-from-the-legacy-plans)) |
 | X19 health and diagnostics | kit, admin | 1, 8 | reuse with changes | Kit health; logs tagged with the tenant |
 | X20 supervisor and kiosk launcher | — | — | drop | The projector PC runs a browser only |
 | X21 backup and restore | setup | 2b, 10 | reuse with changes | Off-VM backups with retention and restore checks |
@@ -295,7 +305,7 @@ This repo holds plans, not code. Its "X" features are the same features as in th
 | X23 emergency takeover | moments, admin | 4 | reuse with changes | Moments' top band, with a defined sender and right |
 | X24 admin live screen | screen, admin | 3 | reuse with changes | A silent mirror per zone |
 | X25 directive history, broken-video detection, console look | moments, screen, ui | 3, 4, 10 | reuse with changes | History becomes the Moments log; the look moves to `packages/ui` |
-| X26 site admin reset | — | — | drop | Per-tenant resets belong to the tenant lifecycle |
+| X26 site admin reset | admin | 8 | reuse with changes | As D16: a per-tenant admin action that clears the bot's stats data |
 | X27 RSS feeds | — | — | drop | [0010](../decisions/0010-scope.md) |
 | X28 stream service takeover | — | — | drop | Never worked; casting replaces it |
 | X29 low-latency casting | cast | Cast | reuse with changes | Relay placement open with a remote VM |
@@ -310,11 +320,11 @@ Decommissioned before this inventory. No code is reused; the Cast track takes id
 | U1 RTMP ingest | — | — | drop | Cast takes one cast at a time over WebRTC; open RTMP had no auth |
 | U2 automatic multi-view layout, U4 slot placeholders | — | — | drop | Four live encodes do not fit the uplink to a remote VM |
 | U3 waiting slate | — | — | drop | Screen shows its normal content |
-| U5 stream-name overlay | cast, moments | Cast | drop | Idea kept: name the caster from sign-in, not a typed name |
+| U5 stream-name overlay | — | — | drop | Idea kept: name the caster from sign-in, not a typed name (goes to cast, moments, the Cast track) |
 | U6 spotlight, U7 cycle mode, O6 modes | — | — | drop | One cast at a time; ranking is Moments' job |
-| U8 silent audio track, O5 encode presets | cast | Cast | drop | Findings kept for the uplink measurement |
-| U9 watching or restreaming the composite | — | — | drop | Not in scope |
-| O1 stream discovery, O2 offline grace | cast | Cast | drop | The grace rule is kept for Cast's stall guard |
+| U8 silent audio track, O5 encode presets | — | — | drop | Findings kept for the uplink measurement (goes to cast, the Cast track) |
+| U9 watching or restreaming the composite | — | — | drop | The projector shows the screen page; restreaming is not in scope |
+| O1 stream discovery, O2 offline grace | — | — | drop | The grace rule is kept for Cast's stall guard (goes to cast, the Cast track) |
 | O3 self-healing workers, O4 mixer start guard | — | — | drop | Containers restart on failure |
 | O7 status print, O11 state files and event log | — | — | drop | State in Postgres and Valkey; health from the kit |
 | O8 control API | cast | Cast | rebuild | Cast's own contract with kit auth |
@@ -322,10 +332,10 @@ Decommissioned before this inventory. No code is reused; the Cast track takes id
 | O10 webhooks `stream_active` and `stream_idle` | cast | Cast | rebuild | Become cast events on the bus |
 | O12 terminal dashboard | — | — | drop | The admin health view covers it |
 | O13–O15 bring-up, restart and publish-IP scripts, O17 units | — | — | drop | Hosts are set up by `setup/` and Compose |
-| O16 synthetic test publishers | cast, ci | Cast | drop | Idea kept: a WHIP test sender |
+| O16 synthetic test publishers | — | — | drop | Idea kept: a WHIP test sender (goes to cast, ci, the Cast track) |
 | O18 nginx tuning | — | — | drop | Caddy is the edge |
 | O19 docs | — | — | drop | Legacy docs are not imported |
-| Tests | cast | Cast | drop | The fake-upstream test shape is kept as an idea |
+| Tests | — | — | drop | The fake-upstream test shape is kept as an idea (goes to cast, the Cast track) |
 | The bot's `/stream` consumer | bot | 6, Cast | rebuild | Cast commands in the bot |
 | The manager's stream subsystem | — | — | drop | The module list replaces the subsystem list |
 
@@ -436,11 +446,12 @@ Rows are numbered by theme (`TA1` to `TJ5`). The common principle behind the ans
 | TC2 | Discord role ids, admin channel, pizza channel, trigger and sound settings, `catchUpEnabled`, thresholds and cadences? | PL-4 | Per tenant: role ids and channels are bot bindings ([#53](../roadmap.md#2b-tenancy-foundation)); the rest are module settings of Moments, the bot or Screen. |
 | TC3 | Is per-instance state per tenant (schedules, playlists, directives, ticker, carousel, sound settings, Ready opt-in, fallback image), with the sound log and directive history as tenant rows with their own caps? | DC-5 | Yes. For the caps see T-H. |
 | TC4 | Are the bot's admin role name, allowed role ids and event time zone bot settings per tenant? | DC-7 | Role ids per tenant (the role name goes, by-id sync); the time zone comes from TA1, not a bot setting. |
-| TC5 | Hot-game, poll and finals trigger settings: venue attributes, or tenant settings with venue defaults? | BT-5 | Tenant settings. The player-count threshold is a bot setting; banner and card times are Moments settings. No venue defaults (polls are dropped). |
+| TC5 | Hot-game, poll and finals trigger settings: venue attributes, or tenant settings with venue defaults? | BT-5 | Tenant settings. The player-count threshold is a bot setting; banner and card times are Moments settings. No venue defaults: the right threshold depends on the event's size and audience, not on the place, and two events at one venue can differ; the demo profile carries the defaults. Poll settings go with polls. |
 | TC6 | Mini-tourney settings (show ranking changes, debug tools, public start): per-tenant module settings? Debug tools a tenant setting? | MT-3 | Ranking changes and public start are per-tenant Games settings. Debug fill is not a tenant setting: it exists only as test fixtures and the demo seed. |
 | TC7 | Public start: a per-tenant setting with no calendar logic? | MT-2 | Yes. The season name comes from the event; the month windows go. |
 | TC8 | The embedded display page's origin and the web allowlist: tenant settings? Which origins does a screen trust? | SG-8, PL-8 | The web-asset allowlist is a per-tenant Screen setting. No origin is trusted for messages: the embed message protocol is dropped ([0010](../decisions/0010-scope.md), [DR1](#conflicts-with-the-decision-records)), and Screen's own widgets replace the embedded page. |
 | TC9 | Auto-restart policies: global config, or per tenant for the tenant-scoped kinds (device restarts)? | MG-8 | Global config owned by the superadmin in step 8. A per-tenant device policy can come later as an additive setting. |
+| TC10 | The "venue network only" hint on bot links: a venue attribute or a tenant setting? | BT-5 | Neither: dropped. The platform is reached over the internet on the tenant's hostname, so links work from anywhere. Where an info page uses the venue-only mode (0013 item 33), the page itself says so. |
 
 ### T-D. Identity and rights
 | # | Question | Asked in | Proposed answer |
@@ -448,7 +459,7 @@ Rows are numbered by theme (`TA1` to `TJ5`). The common principle behind the ans
 | TD1 | Rights by role name today: does role-to-rights sync map role ids per tenant? Does `/platform status` split into a tenant view and a superadmin view? | BT-3 | Yes to both: role ids per tenant mapped to `<module>.<right>` rights, checked in the backend. `/platform status` shows the tenant view to event admins and the stack view to the superadmin (T-I). |
 | TD2 | With central sign-in, does any per-tenant identity remain (display name, rights per event)? | SU-7, PL-7 | Users are global (0013 item 30). Per tenant: membership, rights and an optional display name, which is additive later and not needed for the first versions. Registration tokens go. |
 | TD3 | Does each tenant's bot connection get its own credential scoped to its data? | SU-3 | There is no shared ingest secret: the bot writes only its own tables and publishes events with `tenant`; other modules accept them through the bus, and service calls use kit service auth. A tenant's own bot token is a per-tenant encrypted secret (0013 items 14, 29). |
-| TD4 | Is a team member a global user linked to the tenant? Can a player without Discord play? | MT-10 | Yes, a global user linked to the tenant. An admin can also enter a player by nickname only (no user), as the team builder does today; such a player cannot report results. |
+| TD4 | Is a team member a global user linked to the tenant? Can a player without Discord play? | MT-10 | Yes, a global user linked to the tenant. An admin can also add a guest player: a player row in the tenant with a name and no user, as the team builder allows today. Guests are ranked like any player (rankings are per tenant and keyed by player id, A13 and A16 rows); they cannot report results; an admin can later link a guest to a user. |
 | TD5 | Who may start, cancel or delete a season, or swap live players? | MT-11 | Event admins, plus anyone holding a tenant-granted `games` operator right. |
 | TD6 | Who may cast, and who may end or take over a cast? | ST-3 | Any signed-in member of the tenant with the cast right (granted to members by default, so a tenant can restrict it). The caster or an event admin can end a cast; only an event admin can take one over. |
 | TD7 | The name shown with a cast: moderation or a display-name override? | ST-5 | The user's display name from sign-in (TD2). No moderation in the first version; an admin can end the cast. |
@@ -538,7 +549,7 @@ Where an inventory's recommendation, or a proposed answer above, does not fit a 
 | DR2 | The canccusignage inventory puts the ticker lane in Moments (step 4). 0018 says Screen core owns the ticker and its scheduled windows (step 3). | [0018](../decisions/0018-ticker-manual.md) | Follow 0018. The feature map above already does. |
 | DR3 | Signage fills the ticker lane from the pizza status, and from polls, when nobody has set a ticker. These are system-generated lines; 0010 and 0018 drop automatic ticker posts. | [0010](../decisions/0010-scope.md), [0018](../decisions/0018-ticker-manual.md) | The poll line goes with polls. The pizza status is a Screen widget and a Moments overlay fed by `pizza.order.*`, not the ticker lane. The product owner confirms, or allows it as an exception. |
 | DR4 | 0004 migrates "the legacy bot's data". The bot holds almost nothing durable: the activity, poll and tournament data it produced live in the signup site's database, which 0004 and 0005 leave behind. | [0004](../decisions/0004-nothing-migrated.md) | Narrow it: migrate the bot's token, settings and state files only (TE6). If the site-side stats or tournament rows should come along, that is a new decision, and step 6 needs a copy of the site's database. |
-| DR5 | AGENTS.md (Porting) and roadmap steps 0 and 7 say the tournament module waits for the mini-tourney author's OK. The tournament code comes from the signup site, whose git history shows no commit by that author. That author's ISC code is the mini-tourney, which goes to the Games track. | AGENTS.md, [0001](../decisions/0001-port-dont-rewrite.md) (superseded by 0020, #99), roadmap | Only the Games track waits for the OK; step 7 does not. AGENTS.md's wording changes in its own PR ([order change OC1](#changes-of-order-flagged)). |
+| DR5 | AGENTS.md (Porting) and roadmap steps 0 and 7 say the tournament module waits for the mini-tourney author's OK. The tournament code comes from the signup site, whose git history shows no commit by that author. That author's ISC code is the mini-tourney, which goes to the Games track. | AGENTS.md, [0001](../decisions/0001-port-dont-rewrite.md) (0020, proposed in #99, would supersede it), roadmap | Only the Games track waits for the OK; step 7 does not. AGENTS.md's wording changes in its own PR ([order change OC1](#changes-of-order-flagged)). |
 | DR6 | Inventories ask for per-device properties: audio output, PA levels, resolution, reload. 0013 item 34 says the global device row holds only the name, the token hash, the venue id and the current tenant. | [0013](../decisions/0013-multi-tenant-core.md) item 34 | Follow 0013. These properties live on the tenant's device assignment (TG1–TG3, TG5); no change to the record is needed if this is confirmed. |
 | DR7 | Several inventories make the time zone a venue property. 0013 item 33 gives a venue only a name and its addresses. | [0013](../decisions/0013-multi-tenant-core.md) item 33 | Change the record: a venue also has a time zone, which a tenant may override (TA1). |
 | DR8 | The proposals add global tables: the game cover cache (TF1) and the games catalog (TF3). 0013 item 6 lists the global tables, and item 7 keys caches by tenant. | [0013](../decisions/0013-multi-tenant-core.md) items 6–7 | Add both to the allow-list; item 6 already allows this through a change to the list. The cover cache is a named exception to item 7: public data, no tenant data, superadmin purge. |
