@@ -563,7 +563,9 @@ What this repo implies for the tenancy design (#48). Each is a question for the 
 
 ## Event-specific content
 
-Named by kind and counted only; no value appears in this file. Exact values and their locations are listed in the PR, for a follow-up issue in the event repo. Counts are distinct values unless "occurrences" is said.
+Named by kind and counted only; no value appears in this file, in the PR or in the commits. Event values never go to GitHub: the exact non-secret values are kept in a local, uncommitted handover file on the dev VM for the event repo. Personal data and secrets are recorded there by kind and path only, and the secrets are also listed for rotation before the event. Counts are distinct values unless "occurrences" is said.
+
+**Secrets found in the repo:** two kinds, both to rotate. One shared game-server password, repeated in the static server list. Three spreadsheet links shared with anyone who has the link, in the pizza context doc. No API keys, tokens, webhook URLs or private keys are committed (pattern search); runtime and deploy secrets are referenced by name only.
 
 | Kind | Count | Where (by area) |
 |---|---|---|
@@ -572,7 +574,7 @@ Named by kind and counted only; no value appears in this file. Exact values and 
 | A second private domain (game host) | 1 | static server list, one mp3 tag |
 | Public IPv4 addresses (game servers) | 2, with about 14 host:port entries | static server list |
 | Tailnet name and one tailnet host and IP | 1 tailnet, 1 host, 1 IP | dev config, docs |
-| A game-server password | 1 (secret-like; not even listed in the PR) | static server list |
+| A game-server password | 1 (secret; rotate) | static server list |
 | Cloud database id | 1 | `wrangler.jsonc` |
 | Venue name, venue URL, venue description | 1 each | terminal copy, mocks, admin placeholder |
 | Cities | 2 | terminal copy, mock |
@@ -584,7 +586,7 @@ Named by kind and counted only; no value appears in this file. Exact values and 
 | Event edition names and dates (spring, autumn, summer, XL editions; first pizza day, rehearsal, fixtures) | about 7 editions, about 8 dates | branches, mocks, plans, placeholders |
 | Real pizzeria branch with its district | 1 | pizza mockups |
 | Example pizzerias, phones, menu items and local-language toppings | 3, 2, 6, about 8 | tests |
-| Live spreadsheet links (retired per-day pizza sheets) | 3 | pizza context doc |
+| Live spreadsheet links (retired per-day pizza sheets, shared by link) | 3 (secret; rotate) | pizza context doc |
 | Legacy repo owner accounts | 2 | docs, merge subjects |
 | Developer machine paths | 29 occurrences | archived plan, docs |
 | Event music (album of 12 tracks, about 66 MB) and the album zip name | 12 files, 1 name | `public/assets/` |
