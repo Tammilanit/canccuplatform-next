@@ -16,7 +16,7 @@ The rules are in [AGENTS.md](../AGENTS.md); machine setup is in [CONTRIBUTING.md
 6. **Merge queue:** GitHub merges the PR when the required checks are green. Never merge by hand.
 
 ## Who accepts
-Until the freeze (2027-03-01), a maintainer accepts only high-risk PRs (see the risk classes in [AGENTS.md, Merge rules](../AGENTS.md#merge-rules)) and plan-tier plans; the reviewer marks these `manual — <reason>`. A maintainer never accepts over `changes`. To accept, the maintainer labels the PR `accepted`, has `Review verdict: pass <head sha>` posted as the reviewer identity and enables auto-merge. Everything else merges on green CI and `pass`. From the freeze, every PR needs a maintainer's accept. See [AGENTS.md, Merge rules](../AGENTS.md#merge-rules).
+A maintainer accepts only high-risk PRs (see the risk classes in [AGENTS.md, Merge rules](../AGENTS.md#merge-rules)) and plan-tier plans; the reviewer marks these `manual — <reason>`. A maintainer never accepts over `changes`. To accept, the maintainer labels the PR `accepted`, has `Review verdict: pass <head sha>` posted as the reviewer identity and enables auto-merge. Everything else merges on green CI and `pass`. See [AGENTS.md, Merge rules](../AGENTS.md#merge-rules).
 
 ## What protects `main`
 - No direct pushes and no force pushes, for admins too.

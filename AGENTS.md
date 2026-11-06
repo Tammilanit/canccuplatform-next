@@ -2,7 +2,7 @@
 
 The shared rules for everyone who works here: maintainers, contributors with write access and fork contributors, whether they use Claude, Cursor, Copilot, Codex or no AI tool at all. This file is the source; tool-specific files (CLAUDE.md and others) only import or point to it.
 
-Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switch). It is the system repo of its project: parent issues for cross-module work live here. An event lives in its own repo, which names the platform version it runs; the platform never names an event. Old repos (canccuplatform, canccubot, canccusignage, …) are legacy: each module is ported from them (see Porting).
+Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switch). It is the system repo of its project: parent issues for cross-module work live here. An event lives in its own repo, which names the platform version it runs; the platform never names an event. Old repos (canccuplatform, canccubot, canccusignage, …) are legacy: a source of proven ideas, code and tests (see Building on the legacy).
 
 ## Layout
 - `modules/<name>` — one module each, each its own container: screen, tournament, pizza, bot, admin, games, moments, voices, cast.
@@ -14,12 +14,18 @@ Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switc
 - Modules talk only through their API and events (`contracts/`), never through each other's data.
 - Containers keep no state: data and sessions in Postgres, events and caches in Valkey, files in the shared files volume.
 - One version for the whole platform; a release is a git tag.
-- Porting: each module is PORTED from the proven legacy code. Take the code and tests and adapt them to Postgres, the kit, containers and the contracts. Scrub every event-specific string and all event content to `events/demo/` or the event repo. Never import legacy git history or legacy docs. Code by other authors keeps its licence and attribution; the tournament module (ISC, c22dragoon) is ported only after his OK.
 - Names use the `canccu` prefix: `CANCCU_` env vars, `@canccu/` npm, `canccu_` / `canccu-` for Python, cookies, CSS and units ([ADR 0017](docs/decisions/0017-naming.md)); `scripts/check-naming` enforces it.
 - English throughout. Secrets never in the repo.
 - No editing on the VMs: code reaches them only through a merge to main and the deploy that follows.
 - **The comment rule:** comment the why (reasons, invariants, contracts, traps, links to decisions), never the what the code already shows.
 - **The file-size rule:** about 400 lines at most per source file. Generated files are exempt, and so are files listed with a reason in `scripts/file-size-exemptions.txt`; the CI `file-size` job warns on the rest ([docs/ci.md](docs/ci.md#file-size)).
+
+## Building on the legacy
+We build a commercial-scale, polished and intuitive platform, not a port of the old one ([0020](docs/decisions/0020-best-of-old-freely-new.md)).
+- Take the best of the old code and tests, and adapt it to the new stack (Postgres, the kit, containers) and the contracts. Design anew wherever that is better; never let the old shape limit the new product.
+- For each feature, choose: reuse as is, reuse with changes, rebuild, drop, or add something new. Name the reason.
+- Scrub every event-specific string and all event content to `events/demo/` or the event repo. Never import legacy git history or legacy docs.
+- Code by other authors keeps its licence and attribution; the tournament module (ISC, c22dragoon) uses his code only after his OK.
 
 ## Contracts
 - A contract change is its own PR and merges first. Make it additive (new fields, endpoints, events); remove old things later in a separate PR.
@@ -86,8 +92,8 @@ Everyone codes with AI, so the gates are machines plus an independent review; a 
   - **normal:** features and APIs inside a module. Merges automatically and is listed in the checkpoint summary.
   - **high:** a breaking contract change; a destructive migration; `.github/` (the gates themselves); `setup/` (privileged host scripts); agent config (`AGENTS.md`, `CLAUDE.md`, `.claude/`); security, sign-in, rights, tenancy/RLS, money or personal data; a record that supersedes 0014, 0016 or 0019. Needs the maintainer's accept, for that package only.
 - **Automatic:** a low or normal PR merges when CI is green and the independent review's verdict is `pass` on the current head (A package run, step 8). The `review-gate` check enforces the verdict (see [docs/ci.md](docs/ci.md)). Only the dispatcher (after `review-gate` passes, and only for a PR that needs no maintainer's accept) or a maintainer enables auto-merge; authors never do. Auto-merge squash-merges the PR, through the merge queue once branch rules exist. CI covers lint, types, unit tests, contract API tests, the full demo stack with screenshots, coverage not dropping, the no-event-names check, contract diff (additive vs breaking) and migration lint. After merge the shared test VM updates itself to main.
-- **A maintainer accepts,** until the freeze (2027-03-01), high-risk PRs, and as before plan-tier plans (`docs/plans/issue-<n>.md`) and anything in other repos. The reviewer gives these the verdict `manual — <reason>`; a maintainer never accepts over `changes`. The maintainer accepts by labelling the PR `accepted`, having `Review verdict: pass <head sha>` posted for the same head as the reviewer identity, and enabling auto-merge.
-- **From the freeze (2027-03-01):** every PR needs a maintainer's accept; the reviewer's best verdict is `manual`.
+- **A maintainer accepts** high-risk PRs, and as before plan-tier plans (`docs/plans/issue-<n>.md`) and anything in other repos. The reviewer gives these the verdict `manual — <reason>`; a maintainer never accepts over `changes`. The maintainer accepts by labelling the PR `accepted`, having `Review verdict: pass <head sha>` posted for the same head as the reviewer identity, and enabling auto-merge.
+- **No freeze:** there are no freeze dates and no target dates ([0021](docs/decisions/0021-no-fixed-dates.md)).
 - **Fork and first-time PRs:** a maintainer approves the CI run and arranges the independent review.
 
 ## Maintainers

@@ -19,7 +19,7 @@ Until now every issue ran alone: one issue, one PR, one independent review and o
   - **normal:** features and APIs inside a module. Merges automatically and is listed in the checkpoint summary.
   - **high:** a breaking contract change; a destructive migration; `.github/`; `setup/`; agent config (`AGENTS.md`, `CLAUDE.md`, `.claude/`); security, sign-in, rights, tenancy/RLS, money or personal data; a record that supersedes 0014, 0016 or 0019. Needs the maintainer's accept, for that package only.
 
-  The reviewer's verdict is `manual — <reason>` for high, and `pass` otherwise. From the freeze (2027-03-01) every PR needs the maintainer's accept, as before ([0016](0016-merge-policy.md)).
+  The reviewer's verdict is `manual — <reason>` for high, and `pass` otherwise. There is no freeze date ([0021](0021-no-fixed-dates.md)).
 - **Health pass.** When all of a step's issues are closed, a fresh session runs one cleanup package against the checklist:
   - no file over about 400 lines, or doing two jobs;
   - no code left for dropped features, and no old names;

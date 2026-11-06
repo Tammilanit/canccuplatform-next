@@ -33,4 +33,4 @@ You never merge by hand. Run the checks, then mark your PR ready. Every PR then 
 - On `pass`, the dispatcher (maintainer tooling) or a maintainer enables auto-merge, and GitHub merges the PR when CI and the `review-gate` check are green. You never enable auto-merge yourself.
 - Any push voids the verdict, so ask for a new review after it.
 
-A maintainer accepts only high-risk PRs (breaking contract changes, destructive migrations, `.github/`, `setup/`, agent config, security, sign-in, rights, tenancy/RLS, money or personal data) and plan-tier plans (the verdict `manual`); from the freeze on 2027-03-01, every PR. For fork and first-time PRs a maintainer approves the CI run and arranges the review. See AGENTS.md, Merge rules.
+A maintainer accepts only high-risk PRs (breaking contract changes, destructive migrations, `.github/`, `setup/`, agent config, security, sign-in, rights, tenancy/RLS, money or personal data) and plan-tier plans (the verdict `manual`). For fork and first-time PRs a maintainer approves the CI run and arranges the review. See AGENTS.md, Merge rules.

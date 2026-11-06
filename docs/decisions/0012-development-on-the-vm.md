@@ -1,6 +1,6 @@
 # 0012. Development runs on the VM, for now
 
-- **Status:** Accepted (temporary; revisit before the freeze, 2027-03-01)
+- **Status:** Accepted (temporary). The "revisit before the freeze" trigger is superseded by [0021](0021-no-fixed-dates.md): revisit before real event data comes to the VM. The "one issue per PR" flow is superseded by [0019](0019-work-packages.md).
 - **Date:** 2026-11-05
 
 ## Context
