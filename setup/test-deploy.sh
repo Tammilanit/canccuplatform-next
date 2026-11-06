@@ -36,7 +36,7 @@ cat > "$stubs/bin/git" <<'STUB'
 #!/bin/sh
 S=$STUB; echo "git $*" >> "$S/log"
 case "$1 $2" in
-  "remote get-url") echo "https://github.com/Example-Org/Example-Repo.git" ;;
+  "remote get-url") cat "$S/origin" 2>/dev/null || echo "https://github.com/Example-Org/Example-Repo.git" ;;
   "symbolic-ref --short") cat "$S/branch" ;;
   "status --porcelain") cat "$S/dirty" 2>/dev/null ;;
   "fetch -q") [ ! -e "$S/fetch_fail" ] ;;
@@ -168,3 +168,7 @@ fresh; echo 1 > "$st/fw_rc"; dep "deploy refuses when the firewall is not in pla
 notlogged "deploy changes nothing without the firewall" "merge -q|docker tag|compose .* up "
 fresh; touch "$st/pull_fail"; dep "deploy fails clearly when the registry is unreachable" 2
 notlogged "deploy changes nothing when a pull fails" "merge -q|docker tag|compose .* up "
+fresh; echo "https://git.example.org/a/b.git" > "$st/origin"; dep "deploy refuses an origin not on GitHub" 2
+has "deploy names the origin that is not on GitHub" "git.example.org/a/b.git.* is not a GitHub repository"
+fresh "CANCCU_DEPLOY_IMAGES='registry.example.org/canccu'\n"; dep "deploy with a quoted CANCCU_DEPLOY_IMAGES" 0
+logged "deploy reads quoted values from deploy/.env" "docker pull -q registry.example.org/canccu/hello:dev"

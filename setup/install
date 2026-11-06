@@ -12,12 +12,15 @@
 # Exit 2 = something is missing or unreachable.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
+# shellcheck source=setup/lib.sh
+. setup/lib.sh || exit 2
 dry=0; boot=0
 for a in "$@"; do case "$a" in
   --dry-run) dry=1 ;; --boot) boot=1 ;;
   *) echo "usage: install [--dry-run] [--boot]" >&2; exit 2 ;; esac; done
 die() { echo "error: $*" >&2; exit 2; }
 step() { if [ "$dry" = 1 ]; then echo "would $*"; else echo "==> $*"; fi; }
+newpw() { openssl rand -hex 16 2>/dev/null || head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
 
 command -v docker >/dev/null || die "docker not found; install Docker Engine with the Compose plugin (CONTRIBUTING.md)"
 docker compose version >/dev/null 2>&1 || die "docker compose plugin not found"
@@ -35,7 +38,7 @@ if [ -e "$env" ] && grep -qE '^POSTGRES_PASSWORD=(change-me)?$' "$env"; then
   else
     step "replace the example POSTGRES_PASSWORD in $env with a random one"
     if [ "$dry" = 0 ]; then
-      pw=$(openssl rand -hex 16 2>/dev/null || head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
+      pw=$(newpw)
       [ -n "$pw" ] || die "cannot generate a password"
       sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$pw/" "$env" || die "cannot update $env"
       chmod 600 "$env" || die "cannot chmod $env"
@@ -45,7 +48,7 @@ elif [ -e "$env" ]; then echo "$env exists, keeping it"
 else
   step "write $env from deploy/.env.example with a random POSTGRES_PASSWORD"
   if [ "$dry" = 0 ]; then
-    pw=$(openssl rand -hex 16 2>/dev/null || head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
+    pw=$(newpw)
     [ -n "$pw" ] || die "cannot generate a password"
     (umask 077; sed "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$pw/" deploy/.env.example > "$env") || die "cannot write $env"
     # under sudo, keep the file usable by the user who runs compose later
@@ -83,19 +86,17 @@ fi
 # canccu-stack starts at boot) must carry the checkout's HEAD in org.opencontainers.image.revision.
 # A matching image is reused; otherwise <module>:<CANCCU_VERSION> is pulled from the deploy registry
 # and used if it was built from HEAD; otherwise the image is built from the checkout, labelled.
-envval() { [ -r "$env" ] || return 0; sed -n "s/^$1=//p" "$env" | tail -n1 | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"; }
 # read-only git, also as root in a user's checkout (no index refresh, no dubious-ownership refusal)
 gi() { git -c safe.directory="$PWD" --no-optional-locks "$@"; }
 command -v git >/dev/null || die "git not found (needed to match the module images to the checkout)"
 head=$(gi rev-parse --verify -q 'HEAD^{commit}') || head=
 [[ $head =~ ^[0-9a-f]{40}$ ]] || die "cannot read the checkout's commit (git rev-parse HEAD); run install from a git checkout"
-version=$(envval CANCCU_VERSION); version=${version:-dev}
+version=$(envval "$env" CANCCU_VERSION); version=${version:-dev}
 [[ $version =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]] || die "CANCCU_VERSION '$version' in $env is not an image tag (dev or a release tag)"
-registry=$(envval CANCCU_DEPLOY_IMAGES)
+registry=$(envval "$env" CANCCU_DEPLOY_IMAGES)
 if [ -z "$registry" ]; then
   url=$(gi remote get-url origin 2>/dev/null)
-  slug=$(sed -E 's#^(https://|ssh://)?([^@/]+@)?github\.com[:/]##; s#\.git$##; s#/$##' <<<"$url")
-  if [[ $slug =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then registry=ghcr.io/${slug,,}; fi
+  if slug=$(github_slug "$url"); then registry=ghcr.io/${slug,,}; fi
 fi
 changes=$(gi status --porcelain) || die "cannot read the checkout's state (git status)"
 build_labels=(--label "org.opencontainers.image.revision=$head")

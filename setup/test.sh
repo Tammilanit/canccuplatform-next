@@ -172,7 +172,7 @@ has "firewall check looks at FORWARD -> DOCKER-USER" "FORWARD"
 
 echo "# shellcheck"
 if command -v shellcheck >/dev/null; then
-  exits "shellcheck" 0 shellcheck -x setup/install setup/firewall setup/check-boot setup/deploy setup/test.sh setup/test-install.sh setup/test-deploy.sh
+  exits "shellcheck" 0 shellcheck -x setup/install setup/firewall setup/check-boot setup/deploy setup/lib.sh setup/test.sh setup/test-install.sh setup/test-deploy.sh
 else
   skip "shellcheck" "not installed"
 fi

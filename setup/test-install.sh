@@ -46,7 +46,8 @@ fi
 echo "# install: module images match the checkout (docker, git and curl are stubs)"
 # Stub state in $ist: local_<m> is the "revision|local-changes" labels of canccuplatform-<m>:latest
 # (no file = no image), remote_rev the revision of every registry image, head the checkout's HEAD,
-# dirty its local changes; pull_fail and build_fail make those fail.
+# dirty its local changes, origin the origin remote (default a GitHub URL); pull_fail and
+# build_fail make those fail.
 istubs=$scratch/istubs; mkdir -p "$istubs/bin"
 cat > "$istubs/bin/docker" <<'STUB'
 #!/bin/sh
@@ -77,7 +78,7 @@ while [ $# -gt 0 ]; do case "$1" in -c) shift 2 ;; --no-optional-locks) shift ;;
 case "$1" in
   rev-parse) [ -s "$S/head" ] && cat "$S/head" ;;
   status) cat "$S/dirty" 2>/dev/null || true ;;
-  remote) echo "https://github.com/Example-Org/Example-Repo.git" ;;
+  remote) cat "$S/origin" 2>/dev/null || echo "https://github.com/Example-Org/Example-Repo.git" ;;
   *) echo "git stub: unexpected: $*" >&2; exit 9 ;;
 esac
 STUB
@@ -108,6 +109,13 @@ ilocal "the stale hello image is replaced by HEAD's" hello "$ihead|"
 
 ifresh 'CANCCU_VERSION=dev\nCANCCU_DEPLOY_IMAGES=registry.example.org/canccu\n'; echo "$ihead" > "$ist/remote_rev"; inst "install with CANCCU_DEPLOY_IMAGES" 0
 logged "install pulls from CANCCU_DEPLOY_IMAGES" "docker pull -q registry.example.org/canccu/hello:dev"
+ifresh "CANCCU_VERSION=\"dev\"\nCANCCU_DEPLOY_IMAGES='registry.example.org/canccu'\n"; echo "$ihead" > "$ist/remote_rev"; inst "install with quoted values in deploy/.env" 0
+logged "install reads quoted values from deploy/.env" "docker pull -q registry.example.org/canccu/hello:dev"
+ifresh; echo "git@github.com:Example-Org/Example-Repo.git" > "$ist/origin"; echo "$ihead" > "$ist/remote_rev"; inst "install with an ssh origin on GitHub" 0
+logged "install derives the registry from an ssh origin" "docker pull -q ghcr.io/example-org/example-repo/hello:dev"
+ifresh; echo "https://git.example.org/a/b.git" > "$ist/origin"; inst "install with an origin not on GitHub" 0
+has "install says it has no registry" "no registry"
+notlogged "install pulls nothing without a registry" "docker pull "
 
 ifresh; inst "install with stale images, registry stale too" 0
 has "install says why it builds" "hello: .*built from 4444444.*building"

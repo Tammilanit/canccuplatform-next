@@ -27,6 +27,7 @@ Scripts for installing a host and keeping the stack up across reboots. The platf
 - `canccu-stack.service`: after Docker and `canccu-firewall`, checks the firewall (including the bypass) and runs `docker compose up -d --wait`.
 - `deploy [--dry-run]` and `canccu-deploy.service` / `canccu-deploy.timer`: auto-deploy of main in dev mode (see [Auto-deploy](#auto-deploy)).
 - `check-boot`: checks that Docker, `canccu-firewall`, `canccu-stack` and `canccu-deploy.timer` start at boot, Docker requires `canccu-firewall`, every service has a container that is running, healthy where it has a healthcheck, and has a restart policy (`docker inspect`; no `jq` needed), and the firewall is in place and not closed on IPv4 and IPv6.
+- `lib.sh`: helpers `install` and `deploy` share: reading a value from `deploy/.env` and the GitHub repository of the `origin` remote.
 
 `deploy/compose.yml` publishes Caddy explicitly on `0.0.0.0` and `[::]` for ports 80 and 443, because a host's Docker default bind may be `127.0.0.1`. On a host reachable from outside, start the stack only through `setup/install --boot` or `canccu-stack.service`, so the firewall is in place first: plain `setup/install` and `docker compose up` publish on all interfaces with no firewall. A host booted with IPv6 off (`ipv6.disable=1`) cannot bind `::`, so `compose up` fails there.
 
