@@ -7,7 +7,7 @@ The plan from today to the full new platform, running at the next event in **Apr
 - **Multi-tenant from day 1.** Many events, also simultaneous, on one shared stack ([0013](decisions/0013-multi-tenant-core.md)). The tenancy foundation comes before the module contracts.
 - **Infrastructure first**, then modules one at a time. While `platform.version` is `dev` and no tenant is live, the shared VM follows main, so the pieces are joined every day, not at the end.
 - **Dependencies set the order; two dates are fixed:** the freeze from 2027-03-01 (fixes only, a dress rehearsal and the switch) and the event in April 2027. The event pins a tested release.
-- Each step is an epic in this repo with one child issue per module it touches (AGENTS.md, Maintainers).
+- Each step is an epic in this repo with a "Planned" checklist of its issues. It runs in work packages and ends with a health pass and a checkpoint ◆ ([0019](decisions/0019-work-packages.md); AGENTS.md, How work flows).
 
 ## Goals and non-goals
 - **Goals:** run any event from one profile (configuration, not code); work at both ends, from a handful of friends to a large event with several screens; fewer manual steps on the day; keep what worked (pizza end to end, the tournament flow after its fixes, easy setup, a screen anyone can open).
@@ -29,6 +29,16 @@ The plan from today to the full new platform, running at the next event in **Apr
 - **Step 0's product-owner tasks** (#43, #44, #45) run alongside and block only the issues that name them: #43 (domain) blocks #5 and #51; #45 (backup target) blocks #55. #44 (test Discord) is done; it blocked #10 and #52.
 - **The parallel tracks** (Games, Cast; milestone "Parallel tracks") start after the tenancy foundation (#47). The tracker has no blocked-by link for this yet.
 - **Only two dates are fixed:** the freeze from **2027-03-01** (fixes only; every PR needs a maintainer's accept, [0016](decisions/0016-merge-policy.md)) and the event in **April 2027**. What is not merged before the freeze waits for a later release.
+
+## How the roadmap changes
+The roadmap changes as we learn ([0019](decisions/0019-work-packages.md)).
+- **Roadmap notes:** whoever finds something that changes the plan (a worker, planner or reviewer) writes a `Roadmap note:` line in the PR; work that fits the plan as it is goes in a `Follow-up:` line. Nobody splits an issue or creates one for them.
+- **The lead's triage:** the lead sorts each note into this step, a later step, or a roadmap change for the maintainer.
+- **The review at each checkpoint ◆:** the maintainer sees the demo and the step summary (packages, risk classes, spend, roadmap notes); this file is updated in a PR, and the maintainer says go before the next step starts.
+- **Change log:** every change to this file adds a dated line below, newest first: `- YYYY-MM-DD: <what changed> (<issue or PR>)`.
+
+### Change log
+- 2026-11-06: steps run in work packages and end with a health pass and a checkpoint ◆; this section added ([0019](decisions/0019-work-packages.md), #99).
 
 ## Steps
 

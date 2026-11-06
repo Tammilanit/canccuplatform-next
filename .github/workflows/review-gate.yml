@@ -1,6 +1,6 @@
 name: Review gate
 
-# Machine gate for the independent review (AGENTS.md, Working on an issue, step 8).
+# Machine gate for the independent review (AGENTS.md, A package run, step 8).
 # Passes only when the newest "Review verdict: <pass|changes|manual — reason> <head sha>"
 # comment by the reviewer identity (repo variable REVIEWER_LOGIN) says `pass` for the PR's
 # current head. Comments by anyone else are ignored; with the variable unset the gate fails.

@@ -1,6 +1,6 @@
 # 0016. Merge policy
 
-- **Status:** Accepted (implemented by #40: `.github/workflows/review-gate.yml`, `.github/scripts/review-gate`, AGENTS.md Merge rules)
+- **Status:** Accepted (implemented by #40: `.github/workflows/review-gate.yml`, `.github/scripts/review-gate`, AGENTS.md Merge rules). The accept list is superseded by [0019](0019-work-packages.md): the maintainer accepts by risk class (high), and the review flow is per package; the rest stands.
 - **Date:** 2026-11-05
 
 ## Context
