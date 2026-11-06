@@ -1,6 +1,6 @@
 # Legacy inventory: canccubot
 
-The Discord bot of the old system, inventoried for roadmap step 2a ([#46](../roadmap.md#2a-legacy-inventory)) so the product owner can confirm what exists before the tenancy foundation and the contracts are designed. Nothing here is copied from the legacy repo: code and docs are described, and only short identifiers (commands, routes, env var names, JSON keys) are named. Event-specific values are counted by kind only (see [Event-specific content](#event-specific-content)).
+The Discord bot of the old system, inventoried for [roadmap step 2a](../roadmap.md#2a-legacy-inventory) (epic #46) so the product owner can confirm what exists before the tenancy foundation and the contracts are designed. Nothing here is copied from the legacy repo: code and docs are described, and only short identifiers (commands, routes, env var names, JSON keys) are named. Event-specific values are counted by kind only (see [Event-specific content](#event-specific-content)).
 
 - **Source:** the read-only clone of `canccubot` on the dev VM, at its last commit of 2026-10-30. History: 201 commits from 2026-02-15 to 2026-10-30, mostly February–March and October 2026.
 - **Stack:** Python 3.10+, discord.py 2.x, aiohttp (HTTP client and two small HTTP listeners), python-dotenv, python-dateutil. Tests use pytest with pytest-asyncio, and formatting uses black. A TypeScript Cloudflare Worker stub (`worker/`) is also in the repo, but it is not deployed.
@@ -411,17 +411,19 @@ From the code:
 5. **Event-specific defaults are in code:**
    - three config defaults point at the event's domain;
    - the "registration closed" DM has the tournament URL hard-coded (it ignores `FRONTEND_URL`);
-   - `/platform status` choices and the watcher post wording name the event.
-6. **Dead config and code:** `EVENT_COUNTDOWNS_JSON` (never read), `TOURNAMENT_SCHEDULE_POLL_SECONDS` (only the test path), the `worker/` stub with empty migrations, and the `/stream` stubs.
-7. Admin tokens ignore `TOKEN_EXPIRY_DAYS` (hard-coded 7 days).
-8. **Heartbeat false alarm (likely).** When `MANAGER_URL` and `MANAGER_TOKEN` are set but the manager has no `/api/heartbeat` yet, the watcher counts from start-up. It then DMs "heartbeat is stale" after 3 minutes.
-9. **Poll buttons stop working after a restart.** The poll view is attached only when the poll is created; resuming a hydrated poll does not re-register it.
-10. **Best-effort HTTP everywhere.** Snapshots, votes and roster calls that fail are logged and dropped: there is no retry and no queue, so the site silently misses data while it is down.
-11. **The contract lives in two repos.** Token calls send both `user_id`/`username` and `discord_user_id`/`discord_username` "for Worker compatibility". The site API is documented in this repo but implemented in the signup site.
-12. **Signage coupling by URL:** directive targets are URLs of the site's LAN-display page with query parameters (the screen-embed protocol that [0010](../decisions/0010-scope.md) drops).
-13. The systemd unit runs the bot **as root**. The log file is not rotated by the app.
-14. Naive UTC datetimes (`datetime.utcnow()`) are used throughout.
-15. The mini-tourney test-channel routing is by **season name prefix** ("test").
+   - `/platform status` choices and the watcher post wording name the event;
+   - the event timezone is a hard-coded fallback in the tournament cog (4 places), the tournament manager and the poll manager (the `event_timezone` constructor default), besides the `EVENT_TIMEZONE` default in `config.py`.
+6. **Hard-coded close time in the public T−1 h post.** The "starts in 1 hour" post in `tournament_manager.py` always says registration closes in 30 minutes, ignoring `REGISTRATION_CLOSE_MINUTES` and the event's own `registration_closes_at`. Any event with another close offset posts the wrong close time in public.
+7. **Dead config and code:** `EVENT_COUNTDOWNS_JSON` (never read), `TOURNAMENT_SCHEDULE_POLL_SECONDS` (only the test path), the `worker/` stub with empty migrations, and the `/stream` stubs.
+8. Admin tokens ignore `TOKEN_EXPIRY_DAYS` (hard-coded 7 days).
+9. **Heartbeat false alarm (likely).** When `MANAGER_URL` and `MANAGER_TOKEN` are set but the manager has no `/api/heartbeat` yet, the watcher counts from start-up. It then DMs "heartbeat is stale" after 3 minutes.
+10. **Poll buttons stop working after a restart.** The poll view is attached only when the poll is created; resuming a hydrated poll does not re-register it.
+11. **Best-effort HTTP everywhere.** Snapshots, votes and roster calls that fail are logged and dropped: there is no retry and no queue, so the site silently misses data while it is down.
+12. **The contract lives in two repos.** Token calls send both `user_id`/`username` and `discord_user_id`/`discord_username` "for Worker compatibility". The site API is documented in this repo but implemented in the signup site.
+13. **Signage coupling by URL:** directive targets are URLs of the site's LAN-display page with query parameters (the screen-embed protocol that [0010](../decisions/0010-scope.md) drops).
+14. The systemd unit runs the bot **as root**. The log file is not rotated by the app.
+15. Naive UTC datetimes (`datetime.utcnow()`) are used throughout.
+16. The mini-tourney test-channel routing is by **season name prefix** ("test").
 
 From the commit history (fixes and incidents, mostly in the October 2026 burst):
 - **Tournament:**
@@ -483,7 +485,7 @@ This follows the porting plan in the [roadmap](../roadmap.md#porting-plan) and [
 | Pizza links (`cogs/pizza.py`) | Rewrite | Porting plan; links rely on the platform sign-in, not tournament tokens (0010 drops registration tokens) | pizza · 5 |
 | Tournament read commands (register, schedule, my-registrations, leaderboard) | Port with changes | They read the tournament API; registration lives in the module (roadmap step 7), so `register` becomes a sign-in link | tournament · 7 (bot side in 6) |
 | Tournament admin commands (admin, add, remove, list, clear) | Port with changes | Through the tournament API with backend rights; the admin link is replaced by sign-in | tournament · 7 |
-| Tournament reminders (T−60 post, close and start DMs, status changes) | Port with changes | Scheduler in the tournament module; the bot sends DMs on events | tournament · 7, bot · 6 |
+| Tournament reminders (T−60 post, close and start DMs, status changes) | Port with changes | Scheduler in the tournament module; the bot sends DMs on events; the T−60 post must take the close time from the event's `registration_closes_at` instead of the hard-coded 30 minutes (Known problem 6) | tournament · 7, bot · 6 |
 | Tournament VCs: create-once, dwell roster, cleanup, backstop, create-now (`tournament_manager.py`, `tournament_dwell.py`, `tournament_discord_channels.py`) | Port with changes | Porting plan "tournament pure parts"; the polling of site flags becomes the voice handshake through events (roadmap step 7); keep the three legacy ADR rules (polling not push, create-once, disconnect → delete → ack) as the spec | bot · 6, tournament · 7 |
 | Tournament screen pin T−15..T+10 | Rewrite | An event consumed by Moments and Screen | moments · 4, wired in 9 |
 | `TournamentMemoryStore` | Drop | Test double for the site API; the port tests against Postgres | – |
@@ -532,7 +534,7 @@ Counted by kind only. The exact non-secret values are kept off GitHub, in the lo
 | "Event network only" wording | 2 strings | Mini-tourney announcement posts |
 | Event name as a subsystem choice | 1 | `/platform status` choices |
 | Event schedule | 1 file, 10 `/tournament add` lines (game names and dates) | `docs/` |
-| Event timezone (IANA name) | 33 lines in 16 files | Config default, docstrings, tests, docs |
+| Event timezone (IANA name) | 33 lines in 16 files | Config default, 6 runtime fallbacks in 3 bot source files, docstrings, tests, docs |
 | Event-year phase label | 4 lines in 4 files | Comments and docs |
 | IP addresses | 0 event-specific | Only private-range examples and public DNS servers in the LXC guide |
 | Personal data (emails, phone numbers, people's names, bank details) | 0 | – |
