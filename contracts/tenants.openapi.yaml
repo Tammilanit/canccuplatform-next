@@ -1,0 +1,2402 @@
+openapi: 3.1.0
+info:
+  title: Tenants API
+  version: 1.0.0
+  summary: Events as tenants on one shared stack, their hostnames, venues, users, roles, access and audit log.
+  description: |
+    Machine-readable part of the tenants contract. Prose, rules and events: contracts/tenants.md.
+    Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
+    Paths under /api/tenants/current and /api/tenants/me act on the tenant of the request's hostname.
+    Superadmin paths answer only on the superadmin hostname. Paths under /internal/tenants are reached
+    only on the stack's internal network: the edge Caddy never routes them.
+  license:
+    name: AGPL-3.0
+    identifier: AGPL-3.0-only
+servers:
+  - url: /
+    description: Same origin, behind Caddy; the hostname selects the event, or the superadmin hostname.
+tags:
+  - name: event
+    description: The request's event, its lifecycle, flags and series.
+  - name: venue-info
+    description: The event's copy of its venue's profile.
+  - name: people
+    description: The caller, members, event admins, privacy and support windows.
+  - name: access
+    description: The venue IP check's emergency switch.
+  - name: audit
+    description: The append-only audit log.
+  - name: superadmin
+    description: Tenants, hostnames, venues, series, users and superadmins, on the superadmin hostname only.
+  - name: internal
+    description: For the kit, other modules and Caddy, on the internal network only.
+security:
+  - {}
+  - session: []
+paths:
+  /api/tenants/current:
+    get:
+      tags: [event]
+      operationId: getCurrentTenant
+      summary: The request's event
+      description: Readable by anyone. Guests get the public fields only; event admins get the whole `Tenant`.
+      responses:
+        "200":
+          description: The event.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/Tenant"
+                  - $ref: "#/components/schemas/PublicTenant"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [event]
+      operationId: updateCurrentTenant
+      summary: Change the event's own fields
+      description: Right `tenants.event.write`. Audited. Emits `tenants.tenant.changed`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantPatch"
+      responses:
+        "200":
+          description: The changed event.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/current/status:
+    post:
+      tags: [event]
+      operationId: setCurrentTenantStatus
+      summary: Move the event through its lifecycle
+      description: |
+        Right `tenants.lifecycle.write` (held only through the event-admin role). `draft` → `live`,
+        `draft` → `archived`, `live` → `archived`. Audited. Emits `tenants.status.changed`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatusChange"
+      responses:
+        "200":
+          description: The event in its new status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/current/flags:
+    get:
+      tags: [event]
+      operationId: getFlags
+      summary: The event's feature flags
+      description: Readable by anyone. Every declared flag, with its default where none is stored.
+      responses:
+        "200":
+          description: The flags.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flags"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [event]
+      operationId: setFlags
+      summary: Set feature flags
+      description: |
+        Right `tenants.flags.write`. Sets the given flags; others stay. Audited. Emits `tenants.flags.changed`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlagsWrite"
+      responses:
+        "200":
+          description: All flags after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flags"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/current/series:
+    get:
+      tags: [event]
+      operationId: getCurrentSeries
+      summary: The event's series and its events
+      description: Right `tenants.event.write`. 404 `not_found` when the event is in no series.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The series.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeriesView"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/tenants/current/clone:
+    post:
+      tags: [event]
+      operationId: cloneTenant
+      summary: Copy the tenants part of a previous event of the series
+      description: |
+        Right `tenants.event.write` here and event admin of the source; both in one series. Only on a
+        `draft` event not cloned before. Copies event admins, flags, `info_page_mode`, `membership` and
+        `admin_access`, and shifts the dates. Audited. Emits `tenants.tenant.cloned`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CloneRequest"
+      responses:
+        "200":
+          description: The event after the clone.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/current/venue-info:
+    get:
+      tags: [venue-info]
+      operationId: getVenueInfo
+      summary: The event's venue info
+      description: An info page; follows the info-page mode. Wi-Fi networks with `attendees` visibility only for members.
+      responses:
+        "200":
+          description: The venue info; empty fields when the event has no venue.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenueInfo"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [venue-info]
+      operationId: setVenueInfo
+      summary: Edit the event's venue info
+      description: Right `tenants.venue_info.write`. Replaces the text fields. Emits `tenants.venue_info.changed`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VenueInfoWrite"
+      responses:
+        "200":
+          description: The venue info.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenueInfo"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/current/venue-info/copy:
+    post:
+      tags: [venue-info]
+      operationId: copyVenueInfo
+      summary: Copy the venue's profile again
+      description: |
+        Right `tenants.venue_info.write`. Replaces the event's venue info, floor plan included, with the
+        venue's current profile. 409 `no_venue` when the event has none. Emits `tenants.venue_info.changed`.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The new copy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenueInfo"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/current/venue-info/floor-plan:
+    get:
+      tags: [venue-info]
+      operationId: getVenueInfoFloorPlan
+      summary: The event's floor plan image
+      description: An info page; follows the info-page mode. 404 when there is none.
+      responses:
+        "200":
+          description: The image.
+          content:
+            image/png:
+              schema:
+                $ref: "#/components/schemas/Binary"
+            image/jpeg:
+              schema:
+                $ref: "#/components/schemas/Binary"
+            image/webp:
+              schema:
+                $ref: "#/components/schemas/Binary"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [venue-info]
+      operationId: setVenueInfoFloorPlan
+      summary: Replace the event's floor plan
+      description: Right `tenants.venue_info.write`. PNG, JPEG or WebP, up to 10 MB. Emits `tenants.venue_info.changed`.
+      security:
+        - session: []
+      requestBody:
+        $ref: "#/components/requestBodies/FloorPlan"
+      responses:
+        "204":
+          description: Stored.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+        "415":
+          $ref: "#/components/responses/UnsupportedType"
+  /api/tenants/current/venue-ip-check:
+    get:
+      tags: [access]
+      operationId: getVenueIpCheck
+      summary: The venue IP check's state
+      description: Right `tenants.venue_ip_check.write`.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenueIpCheck"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    put:
+      tags: [access]
+      operationId: setVenueIpCheck
+      summary: Turn the venue IP check off in an emergency, or on again
+      description: |
+        Right `tenants.venue_ip_check.write`. Turning it off needs `reason` and `until` (at most 48 hours
+        ahead); at `until` it turns itself back on. Audited. Emits `tenants.venue_ip_check.changed`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VenueIpCheckWrite"
+      responses:
+        "200":
+          description: The new state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenueIpCheck"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/me:
+    get:
+      tags: [people]
+      operationId: getMe
+      summary: The caller at this event
+      description: For a guest `user` is `null` and `member` is false.
+      responses:
+        "200":
+          description: The caller.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/tenants/me/membership:
+    post:
+      tags: [people]
+      operationId: joinEvent
+      summary: Join the event as a member
+      description: |
+        A signed-in user, while `membership` is `open` (otherwise 403 `membership_closed`) and the event is
+        not archived. Joining again is 200 with the same membership. Emits `tenants.member.joined`.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Already a member.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "201":
+          description: Joined.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [people]
+      operationId: leaveEvent
+      summary: Leave the event
+      description: Also when archived. Emits `tenants.member.left`. 404 when not a member.
+      security:
+        - session: []
+      responses:
+        "204":
+          description: Left.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/tenants/me/privacy:
+    get:
+      tags: [people]
+      operationId: getPrivacy
+      summary: The caller's privacy flags
+      description: Global per user; the same on every event's hostname.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The flags.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Privacy"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      tags: [people]
+      operationId: setPrivacy
+      summary: Set the caller's privacy flags
+      description: Allowed in every status of the event. Emits `tenants.privacy.changed` on the platform stream.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Privacy"
+      responses:
+        "200":
+          description: The flags.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Privacy"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/tenants/current/members:
+    get:
+      tags: [people]
+      operationId: listMembers
+      summary: The event's members
+      description: Right `tenants.members.read`. User id, name and when they joined; never a Discord id.
+      security:
+        - session: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of members, sorted by name.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/tenants/current/members/{user_id}:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
+    put:
+      tags: [people]
+      operationId: addMember
+      summary: Add a user as a member
+      description: Right `tenants.members.write`. Audited. Emits `tenants.member.joined`.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The membership.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [people]
+      operationId: removeMember
+      summary: Remove a member
+      description: Right `tenants.members.write`. Audited. Emits `tenants.member.left`.
+      security:
+        - session: []
+      responses:
+        "204":
+          description: Removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/tenants/current/admins:
+    get:
+      tags: [people]
+      operationId: listAdmins
+      summary: The event's admins
+      description: An event admin.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The event admins.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/tenants/current/admins/{user_id}:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
+    put:
+      tags: [people]
+      operationId: addAdmin
+      summary: Make a user an event admin
+      description: Right `tenants.admins.write` (held only through the role). Audited. Emits `tenants.admin.added`.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The event admins after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [people]
+      operationId: removeAdmin
+      summary: Remove an event admin
+      description: |
+        Right `tenants.admins.write`. 409 `last_admin` for the last one. Audited. Emits `tenants.admin.removed`.
+      security:
+        - session: []
+      responses:
+        "204":
+          description: Removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/current/support:
+    post:
+      tags: [people]
+      operationId: openSupport
+      summary: Open a superadmin support window on this event
+      description: |
+        A superadmin with `mfa_enabled`. For 2 hours they act as an event admin here, and their audit entries
+        are marked `support`. Audited. Emits `tenants.support.opened`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportRequest"
+      responses:
+        "201":
+          description: The window.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportWindow"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    delete:
+      tags: [people]
+      operationId: closeSupport
+      summary: Close the caller's support window
+      description: Audited. Emits `tenants.support.closed`. 404 when none is open.
+      security:
+        - session: []
+      responses:
+        "204":
+          description: Closed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/tenants/current/audit:
+    get:
+      tags: [audit]
+      operationId: listTenantAudit
+      summary: The event's audit log
+      description: Right `tenants.audit.read`. Newest first.
+      security:
+        - session: []
+      parameters:
+        - $ref: "#/components/parameters/Before"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of entries.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/tenants/audit:
+    get:
+      tags: [audit, superadmin]
+      operationId: listAudit
+      summary: The whole audit log
+      description: Superadmin. Without `tenant_id` all entries; `tenant_id=platform` only platform entries.
+      security:
+        - session: []
+      parameters:
+        - name: tenant_id
+          in: query
+          description: One tenant's entries, or `platform` for entries with no tenant.
+          schema:
+            type: string
+            pattern: "^(platform|[a-z][a-z0-9-]{1,30}[a-z0-9])$"
+        - $ref: "#/components/parameters/Before"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of entries.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/tenants/registry:
+    get:
+      tags: [superadmin]
+      operationId: listTenants
+      summary: All tenants
+      description: Superadmin.
+      security:
+        - session: []
+      parameters:
+        - name: status
+          in: query
+          description: Only tenants in this status.
+          schema:
+            $ref: "#/components/schemas/Status"
+      responses:
+        "200":
+          description: The tenants, by id.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [tenants]
+                properties:
+                  tenants:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Tenant"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [superadmin]
+      operationId: createTenant
+      summary: Create a tenant
+      description: |
+        Superadmin. Starts as `draft`. With a venue, its profile is copied into the event's venue info.
+        Audited. Emits `tenants.tenant.created` on the platform stream.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantNew"
+      responses:
+        "201":
+          description: The tenant.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/registry/{tenant_id}:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+    get:
+      tags: [superadmin]
+      operationId: getTenant
+      summary: One tenant
+      description: Superadmin.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The tenant.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [superadmin]
+      operationId: updateTenant
+      summary: Change a tenant
+      description: |
+        Superadmin. The fields of `TenantPatch` plus `venue_id` and `series_id`. A new venue copies its profile
+        into the event's venue info. Audited. Emits `tenants.tenant.changed`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistryPatch"
+      responses:
+        "200":
+          description: The tenant.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [superadmin]
+      operationId: deleteTenant
+      summary: Delete a tenant and all its data
+      description: |
+        Superadmin; only `draft` or `archived` (409 `tenant_live`). Every module deletes the tenant's rows,
+        keys, streams and files; its hostnames become `held`. Audited. Emits `tenants.tenant.deleted`.
+      security:
+        - session: []
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/registry/{tenant_id}/status:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+    post:
+      tags: [superadmin]
+      operationId: setTenantStatus
+      summary: Move a tenant through its lifecycle
+      description: Superadmin. The same transitions as on the event's hostname. Emits `tenants.status.changed`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatusChange"
+      responses:
+        "200":
+          description: The tenant.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/registry/{tenant_id}/admins/{user_id}:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+      - $ref: "#/components/parameters/UserId"
+    put:
+      tags: [superadmin]
+      operationId: addTenantAdmin
+      summary: Make a user an event admin of a tenant
+      description: Superadmin. Audited. Emits `tenants.admin.added` on that tenant's stream.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The tenant's event admins.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [superadmin]
+      operationId: removeTenantAdmin
+      summary: Remove an event admin of a tenant
+      description: Superadmin; the last one may go. Audited. Emits `tenants.admin.removed` on that tenant's stream.
+      security:
+        - session: []
+      responses:
+        "204":
+          description: Removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/tenants/registry/{tenant_id}/hostnames:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+    get:
+      tags: [superadmin]
+      operationId: listHostnames
+      summary: A tenant's hostnames
+      description: Superadmin. Held ones too.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The hostnames.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [hostnames]
+                properties:
+                  hostnames:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Hostname"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [superadmin]
+      operationId: addHostname
+      summary: Add a hostname to a tenant
+      description: |
+        Superadmin. A `platform` hostname is `active` at once; a `custom` one is `pending` until verified by
+        its TXT record. The first hostname of a tenant becomes its primary. Audited. Emits `tenants.hostname.changed`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HostnameNew"
+      responses:
+        "201":
+          description: The hostname.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Hostname"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/hostnames/{hostname}:
+    parameters:
+      - $ref: "#/components/parameters/HostnameParam"
+    patch:
+      tags: [superadmin]
+      operationId: updateHostname
+      summary: Make a hostname its tenant's primary
+      description: Superadmin; only an `active` one. Audited. Emits `tenants.hostname.changed`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HostnamePatch"
+      responses:
+        "200":
+          description: The hostname.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Hostname"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [superadmin]
+      operationId: removeHostname
+      summary: Remove a hostname
+      description: |
+        Superadmin. It becomes `held` for 30 days. The primary hostname can go only when another is made
+        primary first (409 `primary_hostname`). Audited. Emits `tenants.hostname.changed`.
+      security:
+        - session: []
+      responses:
+        "204":
+          description: Held.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/hostnames/{hostname}/verify:
+    parameters:
+      - $ref: "#/components/parameters/HostnameParam"
+    post:
+      tags: [superadmin]
+      operationId: verifyHostname
+      summary: Check a custom hostname's TXT record
+      description: Superadmin. On a match it becomes `active`; otherwise 409 `verification_failed`. Audited.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The verified hostname.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Hostname"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/venues:
+    get:
+      tags: [superadmin]
+      operationId: listVenues
+      summary: All venues
+      description: Superadmin.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The venues.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [venues]
+                properties:
+                  venues:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Venue"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [superadmin]
+      operationId: createVenue
+      summary: Create a venue
+      description: Superadmin. Audited. Emits `tenants.venue.changed`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VenueNew"
+      responses:
+        "201":
+          description: The venue.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Venue"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/tenants/venues/{venue_id}:
+    parameters:
+      - $ref: "#/components/parameters/VenueId"
+    get:
+      tags: [superadmin]
+      operationId: getVenue
+      summary: One venue
+      description: Superadmin. Other modules read a venue through `GET /internal/tenants/venues/{venue_id}`.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The venue.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Venue"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [superadmin]
+      operationId: updateVenue
+      summary: Change a venue
+      description: |
+        Superadmin, with `revision`. Name, addresses and profile; existing events keep their copy of the
+        profile. Audited (addresses with old and new values). Emits `tenants.venue.changed`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VenuePatch"
+      responses:
+        "200":
+          description: The venue.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Venue"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [superadmin]
+      operationId: deleteVenue
+      summary: Delete a venue
+      description: Superadmin; 409 `venue_in_use` while an event points to it. Audited. Emits `tenants.venue.changed`.
+      security:
+        - session: []
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/tenants/venues/{venue_id}/floor-plan:
+    parameters:
+      - $ref: "#/components/parameters/VenueId"
+    put:
+      tags: [superadmin]
+      operationId: setVenueFloorPlan
+      summary: Replace a venue's floor plan
+      description: Superadmin. PNG, JPEG or WebP, up to 10 MB. Existing events keep their copy. Emits `tenants.venue.changed`.
+      security:
+        - session: []
+      requestBody:
+        $ref: "#/components/requestBodies/FloorPlan"
+      responses:
+        "204":
+          description: Stored.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+        "415":
+          $ref: "#/components/responses/UnsupportedType"
+  /api/tenants/series:
+    get:
+      tags: [superadmin]
+      operationId: listSeries
+      summary: All series
+      description: Superadmin.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The series.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [series]
+                properties:
+                  series:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Series"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [superadmin]
+      operationId: createSeries
+      summary: Create a series
+      description: Superadmin. Audited.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeriesWrite"
+      responses:
+        "201":
+          description: The series.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Series"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/tenants/series/{series_id}:
+    parameters:
+      - $ref: "#/components/parameters/SeriesId"
+    patch:
+      tags: [superadmin]
+      operationId: renameSeries
+      summary: Rename a series
+      description: Superadmin. Audited.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeriesWrite"
+      responses:
+        "200":
+          description: The series.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Series"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/tenants/users:
+    get:
+      tags: [superadmin]
+      operationId: findUsers
+      summary: Find users
+      description: Superadmin. By part of the name, or an exact Discord user id.
+      security:
+        - session: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Part of a name, or a Discord user id.
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 100
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Matching users, at most `limit`.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [users]
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/tenants/users/{user_id}:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
+    delete:
+      tags: [superadmin]
+      operationId: deleteUser
+      summary: Delete a user everywhere
+      description: |
+        Superadmin. Every module deletes the user's data in every tenant; the audit log keeps only the
+        anonymous reference. Audited. Emits `tenants.user.deleted` on the platform stream.
+      security:
+        - session: []
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/tenants/superadmins:
+    get:
+      tags: [superadmin]
+      operationId: listSuperadmins
+      summary: The superadmins
+      description: Superadmin.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The superadmins.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [superadmins]
+                properties:
+                  superadmins:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/tenants/superadmins/{user_id}:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
+    put:
+      tags: [superadmin]
+      operationId: addSuperadmin
+      summary: Make a user a superadmin
+      description: Superadmin. The user needs `mfa_enabled` (409 `mfa_required`). Audited.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The new superadmin.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [superadmin]
+      operationId: removeSuperadmin
+      summary: Remove a superadmin
+      description: Superadmin. 409 `last_superadmin` for the last one. Audited.
+      security:
+        - session: []
+      responses:
+        "204":
+          description: Removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /internal/tenants/resolve:
+    get:
+      tags: [internal]
+      operationId: resolveTenant
+      summary: Resolve a hostname to its tenant context
+      description: For the kit, which caches the answer and drops it on the tenants events. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: host
+          in: query
+          required: true
+          description: The request's hostname, lowercase, without a port.
+          schema:
+            $ref: "#/components/schemas/HostnameValue"
+      responses:
+        "200":
+          description: The tenant context.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantContext"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /internal/tenants/ask:
+    get:
+      tags: [internal]
+      operationId: askCertificate
+      summary: May the edge Caddy get a certificate for this domain
+      description: Caddy's on-demand TLS `ask`. 200 only for an `active` hostname. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: domain
+          in: query
+          required: true
+          description: The domain Caddy asks about.
+          schema:
+            type: string
+            maxLength: 253
+      responses:
+        "200":
+          description: Allowed.
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /internal/tenants/venues/{venue_id}:
+    parameters:
+      - $ref: "#/components/parameters/VenueId"
+    get:
+      tags: [internal]
+      operationId: getVenueInternal
+      summary: A venue's name and addresses
+      description: For Screen and the kit. Internal network only.
+      security:
+        - {}
+      responses:
+        "200":
+          description: The venue without its profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenueRef"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /internal/tenants/users/{user_id}:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
+    get:
+      tags: [internal]
+      operationId: getUserInternal
+      summary: A user, with Discord id and privacy flags
+      description: For modules that need them (the bot, Notify, presence data). Internal network only.
+      security:
+        - {}
+      responses:
+        "200":
+          description: The user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInternal"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /internal/tenants/audit:
+    post:
+      tags: [internal, audit]
+      operationId: appendAudit
+      summary: Append an audit entry
+      description: |
+        For other modules, in the request that made the change. Allowed also for archived tenants.
+        Internal network only.
+      security:
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuditAppend"
+      responses:
+        "201":
+          description: The stored entry.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditEntry"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: canccu_session
+      description: |
+        Opaque session id (contracts/admin.md, Session and rights), bound to one tenant, or to the platform on
+        the superadmin hostname. Rights are checked through admin.
+  parameters:
+    TenantId:
+      name: tenant_id
+      in: path
+      required: true
+      description: Tenant id.
+      schema:
+        $ref: "#/components/schemas/TenantId"
+    UserId:
+      name: user_id
+      in: path
+      required: true
+      description: User id.
+      schema:
+        $ref: "#/components/schemas/UserId"
+    VenueId:
+      name: venue_id
+      in: path
+      required: true
+      description: Venue id.
+      schema:
+        $ref: "#/components/schemas/Id"
+    SeriesId:
+      name: series_id
+      in: path
+      required: true
+      description: Series id.
+      schema:
+        $ref: "#/components/schemas/Id"
+    HostnameParam:
+      name: hostname
+      in: path
+      required: true
+      description: The hostname, lowercase.
+      schema:
+        $ref: "#/components/schemas/HostnameValue"
+    Before:
+      name: before
+      in: query
+      description: Only entries older than this entry id (the last id of the previous page).
+      schema:
+        $ref: "#/components/schemas/Id"
+    Cursor:
+      name: cursor
+      in: query
+      description: The `next_cursor` of the previous page.
+      schema:
+        type: string
+        maxLength: 200
+    Limit:
+      name: limit
+      in: query
+      description: Page size.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+  requestBodies:
+    FloorPlan:
+      required: true
+      description: The image, up to 10 MB. SVG is refused.
+      content:
+        image/png:
+          schema:
+            $ref: "#/components/schemas/Binary"
+        image/jpeg:
+          schema:
+            $ref: "#/components/schemas/Binary"
+        image/webp:
+          schema:
+            $ref: "#/components/schemas/Binary"
+  responses:
+    BadRequest:
+      description: "`invalid_request`: a field is missing or invalid; `unknown_flag` for an undeclared flag."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: "`not_signed_in`: no valid session."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: |
+        `missing_right`; `superadmin_required`; `mfa_required` (a superadmin without Discord two-factor);
+        `admin_access_restricted` (the event's `admin_access` is `restricted` and the request is neither from
+        the venue nor over Tailscale); `info_pages_closed` (the info-page mode does not let this request in);
+        `membership_closed`.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: |
+        `not_found`: no such tenant, hostname, venue, series, user or entry; also every superadmin path on a
+        hostname other than the superadmin hostname, and an unknown host.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: |
+        `version_conflict` (stale `revision` or `flags_version`), `event_archived`, `invalid_transition`,
+        `already_cloned`, `no_venue`, `last_admin`, `last_superadmin`, `mfa_required`, `tenant_exists`,
+        `tenant_live`, `venue_in_use`, `hostname_taken`, `hostname_held`, `hostname_reserved`, `primary_hostname`,
+        `verification_failed`.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    TooLarge:
+      description: "`file_too_large`: over 10 MB."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    UnsupportedType:
+      description: "`unsupported_type`: not PNG, JPEG or WebP."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              pattern: "^[a-z][a-z0-9_]*$"
+              examples: [event_archived]
+            message:
+              type: string
+    Binary:
+      type: string
+      format: binary
+    Id:
+      type: string
+      pattern: "^[A-Za-z0-9_-]{1,64}$"
+    TenantId:
+      type: string
+      description: Lowercase letters, digits and `-`, 3–32 characters, starting with a letter; never changes.
+      pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+      examples: [demo]
+    UserId:
+      type: string
+      pattern: "^u_[A-Za-z0-9]{1,40}$"
+      examples: [u_123]
+    HostnameValue:
+      type: string
+      description: A fully qualified hostname, lowercase, no trailing dot.
+      pattern: "^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$"
+      examples: [demo.example.org]
+    Cidr:
+      type: string
+      description: An IPv4 or IPv6 address or prefix in CIDR notation; a plain address is a single host.
+      maxLength: 49
+      examples: ["192.0.2.10/32", "2001:db8:1::/48"]
+    Status:
+      type: string
+      enum: [draft, live, archived]
+    InfoPageMode:
+      type: string
+      enum: [public, venue_only, sign_in]
+    Membership:
+      type: string
+      enum: [open, closed]
+    AdminAccess:
+      type: string
+      enum: [restricted, internet]
+    TimeZone:
+      type: string
+      description: An IANA time zone name.
+      maxLength: 64
+      examples: [Europe/Berlin]
+    NamedRef:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+    PublicTenant:
+      type: object
+      description: What a guest sees of the event.
+      required: [id, name, status, time_zone, starts_at, ends_at, venue, primary_hostname, info_page_mode, membership]
+      properties:
+        id:
+          $ref: "#/components/schemas/TenantId"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        status:
+          $ref: "#/components/schemas/Status"
+        time_zone:
+          $ref: "#/components/schemas/TimeZone"
+        starts_at:
+          type: [string, "null"]
+          format: date-time
+        ends_at:
+          type: [string, "null"]
+          format: date-time
+        venue:
+          oneOf:
+            - $ref: "#/components/schemas/NamedRef"
+            - type: "null"
+        primary_hostname:
+          $ref: "#/components/schemas/HostnameValue"
+        info_page_mode:
+          $ref: "#/components/schemas/InfoPageMode"
+        membership:
+          $ref: "#/components/schemas/Membership"
+    Tenant:
+      description: The whole tenant, for event admins and the superadmin.
+      allOf:
+        - $ref: "#/components/schemas/PublicTenant"
+        - type: object
+          required: [series_id, admin_access, venue_ip_check, archived_at, presence_delete_at, cloned_from, created_at, revision]
+          properties:
+            series_id:
+              type: [string, "null"]
+            admin_access:
+              $ref: "#/components/schemas/AdminAccess"
+            venue_ip_check:
+              $ref: "#/components/schemas/VenueIpCheck"
+            archived_at:
+              type: [string, "null"]
+              format: date-time
+            presence_delete_at:
+              type: [string, "null"]
+              format: date-time
+              description: "`archived_at` plus 30 days; the presence data of the event is deleted then."
+            cloned_from:
+              type: [string, "null"]
+              description: The source tenant id once the tenants part of a clone has run.
+            created_at:
+              type: string
+              format: date-time
+            revision:
+              type: integer
+              minimum: 1
+    TenantPatch:
+      type: object
+      description: "`revision` plus the fields to change; fields left out stay as they are."
+      required: [revision]
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        time_zone:
+          $ref: "#/components/schemas/TimeZone"
+        starts_at:
+          type: [string, "null"]
+          format: date-time
+        ends_at:
+          type: [string, "null"]
+          format: date-time
+        info_page_mode:
+          $ref: "#/components/schemas/InfoPageMode"
+        membership:
+          $ref: "#/components/schemas/Membership"
+        admin_access:
+          $ref: "#/components/schemas/AdminAccess"
+    RegistryPatch:
+      description: As `TenantPatch`, plus the venue and the series (`null` removes them).
+      allOf:
+        - $ref: "#/components/schemas/TenantPatch"
+        - type: object
+          properties:
+            venue_id:
+              type: [string, "null"]
+            series_id:
+              type: [string, "null"]
+    TenantNew:
+      type: object
+      required: [id, name, time_zone]
+      properties:
+        id:
+          $ref: "#/components/schemas/TenantId"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        time_zone:
+          $ref: "#/components/schemas/TimeZone"
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        venue_id:
+          $ref: "#/components/schemas/Id"
+        series_id:
+          $ref: "#/components/schemas/Id"
+        admin_user_ids:
+          type: array
+          description: The first event admins.
+          items:
+            $ref: "#/components/schemas/UserId"
+    StatusChange:
+      type: object
+      required: [status, revision]
+      properties:
+        status:
+          type: string
+          enum: [live, archived]
+        revision:
+          type: integer
+          minimum: 1
+    Flags:
+      type: object
+      required: [flags_version, flags]
+      properties:
+        flags_version:
+          type: integer
+          minimum: 0
+          description: 0 while no flag is stored; +1 on every write.
+        flags:
+          $ref: "#/components/schemas/FlagMap"
+    FlagMap:
+      type: object
+      description: Flag name (`<module>.<feature>`) to on or off.
+      propertyNames:
+        pattern: "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$"
+      additionalProperties:
+        type: boolean
+      examples:
+        - bot.stats: false
+    FlagsWrite:
+      type: object
+      required: [flags_version, flags]
+      properties:
+        flags_version:
+          type: integer
+          minimum: 0
+        flags:
+          $ref: "#/components/schemas/FlagMap"
+    CloneRequest:
+      type: object
+      required: [source_tenant_id, shift_seconds]
+      properties:
+        source_tenant_id:
+          $ref: "#/components/schemas/TenantId"
+        shift_seconds:
+          type: integer
+          description: Added to the source's dates.
+    Series:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+    SeriesWrite:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+    SeriesView:
+      type: object
+      required: [series, events]
+      properties:
+        series:
+          $ref: "#/components/schemas/Series"
+        events:
+          type: array
+          description: The series' events, oldest first.
+          items:
+            type: object
+            required: [id, name, status, starts_at, ends_at, caller_is_admin]
+            properties:
+              id:
+                $ref: "#/components/schemas/TenantId"
+              name:
+                type: string
+              status:
+                $ref: "#/components/schemas/Status"
+              starts_at:
+                type: [string, "null"]
+                format: date-time
+              ends_at:
+                type: [string, "null"]
+                format: date-time
+              caller_is_admin:
+                type: boolean
+    Visibility:
+      type: string
+      enum: [public, attendees]
+    Wifi:
+      type: object
+      required: [ssid, password, note, visibility]
+      properties:
+        ssid:
+          type: string
+          minLength: 1
+          maxLength: 32
+        password:
+          type: [string, "null"]
+          maxLength: 63
+        note:
+          type: [string, "null"]
+          maxLength: 500
+        visibility:
+          $ref: "#/components/schemas/Visibility"
+    VenueProfile:
+      type: object
+      required: [house_rules, wifi, floor_plan]
+      properties:
+        house_rules:
+          type: string
+          maxLength: 20000
+        wifi:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/Wifi"
+        floor_plan:
+          $ref: "#/components/schemas/FloorPlanRef"
+    VenueProfileWrite:
+      type: object
+      required: [house_rules, wifi]
+      properties:
+        house_rules:
+          type: string
+          maxLength: 20000
+        wifi:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/Wifi"
+    FloorPlanRef:
+      oneOf:
+        - type: "null"
+        - type: object
+          required: [content_type, updated_at]
+          properties:
+            content_type:
+              type: string
+              enum: [image/png, image/jpeg, image/webp]
+            updated_at:
+              type: string
+              format: date-time
+    VenueRef:
+      type: object
+      required: [id, name, addresses]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        addresses:
+          type: array
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/Cidr"
+    Venue:
+      allOf:
+        - $ref: "#/components/schemas/VenueRef"
+        - type: object
+          required: [profile, revision]
+          properties:
+            profile:
+              $ref: "#/components/schemas/VenueProfile"
+            revision:
+              type: integer
+              minimum: 1
+    VenueNew:
+      type: object
+      required: [name, addresses]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        addresses:
+          type: array
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/Cidr"
+        profile:
+          $ref: "#/components/schemas/VenueProfileWrite"
+    VenuePatch:
+      type: object
+      required: [revision]
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        addresses:
+          type: array
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/Cidr"
+        profile:
+          $ref: "#/components/schemas/VenueProfileWrite"
+    VenueInfo:
+      type: object
+      description: The event's copy of its venue's profile; Wi-Fi networks the caller may not see are left out.
+      required: [venue_id, copied_at, house_rules, wifi, floor_plan, revision]
+      properties:
+        venue_id:
+          type: [string, "null"]
+        copied_at:
+          type: [string, "null"]
+          format: date-time
+        house_rules:
+          type: string
+          maxLength: 20000
+        wifi:
+          type: array
+          items:
+            $ref: "#/components/schemas/Wifi"
+        floor_plan:
+          $ref: "#/components/schemas/FloorPlanRef"
+        revision:
+          type: integer
+          minimum: 0
+    VenueInfoWrite:
+      allOf:
+        - $ref: "#/components/schemas/VenueProfileWrite"
+        - type: object
+          required: [revision]
+          properties:
+            revision:
+              type: integer
+              minimum: 0
+    VenueIpCheck:
+      type: object
+      required: [enabled, disabled_until, reason]
+      properties:
+        enabled:
+          type: boolean
+        disabled_until:
+          type: [string, "null"]
+          format: date-time
+          description: While off, when it turns itself back on.
+        reason:
+          type: [string, "null"]
+          maxLength: 500
+    VenueIpCheckWrite:
+      oneOf:
+        - type: object
+          required: [enabled]
+          properties:
+            enabled:
+              const: true
+        - type: object
+          required: [enabled, reason, until]
+          properties:
+            enabled:
+              const: false
+            reason:
+              type: string
+              minLength: 1
+              maxLength: 500
+            until:
+              type: string
+              format: date-time
+              description: At most 48 hours ahead.
+    Hostname:
+      type: object
+      required: [hostname, tenant_id, kind, status, primary, verification, held_until]
+      properties:
+        hostname:
+          $ref: "#/components/schemas/HostnameValue"
+        tenant_id:
+          $ref: "#/components/schemas/TenantId"
+        kind:
+          type: string
+          enum: [platform, custom]
+        status:
+          type: string
+          enum: [pending, active, held]
+        primary:
+          type: boolean
+        verification:
+          description: For a `pending` custom hostname, the TXT record to create; otherwise `null`.
+          oneOf:
+            - type: "null"
+            - type: object
+              required: [txt_name, txt_value]
+              properties:
+                txt_name:
+                  type: string
+                  examples: [_canccu-verify.demo.example.org]
+                txt_value:
+                  type: string
+        held_until:
+          type: [string, "null"]
+          format: date-time
+    HostnameNew:
+      type: object
+      required: [hostname]
+      properties:
+        hostname:
+          $ref: "#/components/schemas/HostnameValue"
+    HostnamePatch:
+      type: object
+      required: [primary]
+      properties:
+        primary:
+          const: true
+    User:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          $ref: "#/components/schemas/UserId"
+        name:
+          type: string
+    Privacy:
+      type: object
+      required: [presence_opt_out, memories_opt_in]
+      properties:
+        presence_opt_out:
+          type: boolean
+          description: No module records presence data about the user; held presence data is deleted.
+        memories_opt_in:
+          type: boolean
+          description: Moments keeps the user's memories past the event.
+    UserInternal:
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          required: [discord_user_id, privacy]
+          properties:
+            discord_user_id:
+              type: string
+              pattern: "^[0-9]{1,20}$"
+            privacy:
+              $ref: "#/components/schemas/Privacy"
+    Role:
+      type: string
+      description: Per-tenant roles; more may be added.
+      enum: [event_admin]
+    Me:
+      type: object
+      required: [user, member, roles, superadmin, support_until, privacy]
+      properties:
+        user:
+          oneOf:
+            - $ref: "#/components/schemas/User"
+            - type: "null"
+        member:
+          type: boolean
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Role"
+        superadmin:
+          type: boolean
+        support_until:
+          type: [string, "null"]
+          format: date-time
+          description: The end of the caller's open support window here, if any.
+        privacy:
+          oneOf:
+            - $ref: "#/components/schemas/Privacy"
+            - type: "null"
+    Member:
+      type: object
+      required: [user, joined_at]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        joined_at:
+          type: string
+          format: date-time
+    MemberPage:
+      type: object
+      required: [members, next_cursor]
+      properties:
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/Member"
+        next_cursor:
+          type: [string, "null"]
+    AdminList:
+      type: object
+      required: [admins]
+      properties:
+        admins:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+    SupportRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    SupportWindow:
+      type: object
+      required: [user_id, reason, until]
+      properties:
+        user_id:
+          $ref: "#/components/schemas/UserId"
+        reason:
+          type: string
+        until:
+          type: string
+          format: date-time
+    TenantContext:
+      type: object
+      description: What the kit needs to serve a request for this tenant.
+      required: [tenant_id, status, primary_hostname, time_zone, info_page_mode, membership, admin_access, venue, venue_ip_check, flags_version, flags]
+      properties:
+        tenant_id:
+          $ref: "#/components/schemas/TenantId"
+        status:
+          $ref: "#/components/schemas/Status"
+        primary_hostname:
+          $ref: "#/components/schemas/HostnameValue"
+        time_zone:
+          $ref: "#/components/schemas/TimeZone"
+        info_page_mode:
+          $ref: "#/components/schemas/InfoPageMode"
+        membership:
+          $ref: "#/components/schemas/Membership"
+        admin_access:
+          $ref: "#/components/schemas/AdminAccess"
+        venue:
+          oneOf:
+            - $ref: "#/components/schemas/VenueRef"
+            - type: "null"
+        venue_ip_check:
+          $ref: "#/components/schemas/VenueIpCheck"
+        flags_version:
+          type: integer
+          minimum: 0
+        flags:
+          $ref: "#/components/schemas/FlagMap"
+    AuditActor:
+      type: object
+      required: [kind, ref, superadmin, support]
+      properties:
+        kind:
+          type: string
+          enum: [user, system, module]
+        ref:
+          type: [string, "null"]
+          description: The user's audit reference (`aud_…`) for `user`, the module name for `module`, `null` for `system`.
+        superadmin:
+          type: boolean
+        support:
+          type: boolean
+          description: Done inside a support window.
+    AuditEntry:
+      type: object
+      required: [id, time, tenant_id, actor, action, target, changes, reason, correlation_id]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        time:
+          type: string
+          format: date-time
+        tenant_id:
+          type: [string, "null"]
+          description: "`null` for a platform entry."
+        actor:
+          $ref: "#/components/schemas/AuditActor"
+        actor_user:
+          description: Added on read while the user exists; absent once the user is deleted.
+          $ref: "#/components/schemas/User"
+        action:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){2}$"
+          examples: [tenants.venue_ip_check.changed]
+        target:
+          type: object
+          required: [type, id]
+          properties:
+            type:
+              type: string
+              examples: [venue]
+            id:
+              type: string
+        changes:
+          type: object
+          description: Field name to `{"old", "new"}`. Secret values never appear; a changed secret shows only its name.
+          additionalProperties:
+            type: object
+            properties:
+              old: {}
+              new: {}
+        reason:
+          type: [string, "null"]
+        correlation_id:
+          type: [string, "null"]
+    AuditPage:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditEntry"
+    AuditAppend:
+      type: object
+      description: |
+        `tenant_id` `null` for a platform entry. `actor_user_id` is turned into the user's audit reference;
+        without it the actor is the calling module.
+      required: [tenant_id, module, action, target]
+      properties:
+        tenant_id:
+          type: [string, "null"]
+        module:
+          type: string
+          description: The appending module; equals the first part of `action`.
+        actor_user_id:
+          $ref: "#/components/schemas/UserId"
+        action:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){2}$"
+        target:
+          type: object
+          required: [type, id]
+          properties:
+            type:
+              type: string
+            id:
+              type: string
+        changes:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              old: {}
+              new: {}
+        reason:
+          type: string
+          maxLength: 500
+        correlation_id:
+          type: string
