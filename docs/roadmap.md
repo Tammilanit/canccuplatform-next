@@ -1,13 +1,13 @@
 # Roadmap
 
-The plan from today to the full new platform, running at the next event in **April 2027**. This file is the plan; the decisions behind it are in [`decisions/`](decisions/README.md). Both live only here: when the plan changes, change this file in a PR.
+The plan from today to the full new platform: **a commercial-scale, polished and intuitive platform for events of any size**, much bigger, better and richer than the legacy system it grows from ([0020](decisions/0020-best-of-old-freely-new.md)). There are no fixed dates; the steps go in the order of their dependencies ([0021](decisions/0021-no-fixed-dates.md)). This file is the plan; the decisions behind it are in [`decisions/`](decisions/README.md). Both live only here: when the plan changes, change this file in a PR.
 
 ## In short
-- **Port, don't rewrite.** Each module is ported from the proven legacy code and tests onto Postgres, containers, the kit and its contract ([0001](decisions/0001-port-dont-rewrite.md)).
+- **The best of the old, freely new.** The legacy repos are a source of proven ideas, code and tests; for each feature we reuse, adapt, rebuild, drop or add something new, whichever makes the better product ([0020](decisions/0020-best-of-old-freely-new.md)).
 - **Multi-tenant from day 1.** Many events, also simultaneous, on one shared stack ([0013](decisions/0013-multi-tenant-core.md)). The tenancy foundation comes before the module contracts.
 - **Infrastructure first**, then modules one at a time. While `platform.version` is `dev` and no tenant is live, the shared VM follows main, so the pieces are joined every day, not at the end.
-- **Dependencies set the order; two dates are fixed:** the freeze from 2027-03-01 (fixes only, a dress rehearsal and the switch) and the event in April 2027. The event pins a tested release.
-- Each step is an epic in this repo with one child issue per module it touches (AGENTS.md, Maintainers).
+- **Dependencies set the order; no dates are fixed** ([0021](decisions/0021-no-fixed-dates.md)). An event that runs on the platform pins a tested release.
+- Each step is an epic in this repo with a "Planned" checklist of its issues. It runs in work packages and ends with a health pass and a checkpoint ◆ ([0019](decisions/0019-work-packages.md); AGENTS.md, How work flows).
 
 ## Goals and non-goals
 - **Goals:** run any event from one profile (configuration, not code); work at both ends, from a handful of friends to a large event with several screens; fewer manual steps on the day; keep what worked (pizza end to end, the tournament flow after its fixes, easy setup, a screen anyone can open).
@@ -23,21 +23,33 @@ The plan from today to the full new platform, running at the next event in **Apr
 - **The fallback laptop is the only on-site copy:** the event repo, images downloaded in advance, the separately kept secrets key and `deploy/.env`, and a restore of the latest backup, started with one command.
 - **Modules talk through their API and the bus.** Example: Pizza publishes `pizza.order.placed`, Moments ranks it against other moments, Screen shows it and Voices can speak it. Nothing polls.
 
-## Order and dates
+<a id="order-and-dates"></a>
+## Order
 - **Steps follow their dependencies,** not a strict one-after-another rule. An issue starts when the issues it is blocked by are closed, so issues from different steps can run at once. The tracker's blocked-by links are the source for the order; this file names them.
 - **The tracker:** each step is an epic in the milestone of the same number (milestones have no due dates); its epic closes when its children close. Step 2 is one milestone with the epics #36, #46 and #47.
 - **Step 0's product-owner tasks** (#43, #44, #45) run alongside and block only the issues that name them: #43 (domain) blocks #5 and #51; #45 (backup target) blocks #55. #44 (test Discord) is done; it blocked #10 and #52.
 - **The parallel tracks** (Games, Cast; milestone "Parallel tracks") start after the tenancy foundation (#47). The tracker has no blocked-by link for this yet.
-- **Only two dates are fixed:** the freeze from **2027-03-01** (fixes only; every PR needs a maintainer's accept, [0016](decisions/0016-merge-policy.md)) and the event in **April 2027**. What is not merged before the freeze waits for a later release.
+- **No fixed dates:** no freeze and no target date ([0021](decisions/0021-no-fixed-dates.md)). Work goes as fast as it goes; a release freeze before an event, if ever wanted, is decided then in its own record.
+
+## How the roadmap changes
+The roadmap changes as we learn ([0019](decisions/0019-work-packages.md)).
+- **Roadmap notes:** whoever finds something that changes the plan (a worker, planner or reviewer) writes a `Roadmap note:` line in the PR; work that fits the plan as it is goes in a `Follow-up:` line. Nobody splits an issue or creates one for them.
+- **The lead's triage:** the lead sorts each note into this step, a later step, or a roadmap change for the maintainer.
+- **The review at each checkpoint ◆:** the maintainer sees the demo and the step summary (packages, risk classes, spend, roadmap notes); this file is updated in a PR, and the maintainer says go before the next step starts.
+- **Change log:** every change to this file adds a dated line below, newest first: `- YYYY-MM-DD: <what changed> (<issue or PR>)`.
+
+### Change log
+- 2026-11-06: the ambition restated: a commercial-scale platform that takes the best of the legacy and is free to build anew ([0020](decisions/0020-best-of-old-freely-new.md)); no freeze and no target dates, step 11 becomes "Dress rehearsal and switch" ([0021](decisions/0021-no-fixed-dates.md)) (#99).
+- 2026-11-06: steps run in work packages and end with a health pass and a checkpoint ◆; this section added ([0019](decisions/0019-work-packages.md), #99).
 
 ## Steps
 
 ### 0. Prep
 - **Goal:** everything the first steps need from outside the code.
 - **In it:**
-  - done: the GitHub organization with this public repo and a private event repo; code surveys of the legacy repos and the porting plan (see Porting plan below); the hosted VM with Tailscale and a firewall; parallel workers, one worktree per issue; a test Discord server and a dev bot with its own Discord app (#44);
+  - done: the GitHub organization with this public repo and a private event repo; code surveys of the legacy repos and the reuse plan (see Building on the legacy below); the hosted VM with Tailscale and a firewall; parallel workers, one worktree per issue; a test Discord server and a dev bot with its own Discord app (#44);
   - open: the platform domain and a DNS API token for DNS-01 certificates (#43, blocks #5 and #51); a backup target off the VM (#45, blocks #55);
-  - postponed: the mini-tourney author's OK to port the ISC-licensed code, until the tournament and games ports (step 7 and the Games track); ask before step 2b closes, so the Games track does not wait for it.
+  - postponed: the mini-tourney author's OK to use the ISC-licensed code, until the tournament and games work (step 7 and the Games track); ask before step 2b closes, so the Games track does not wait for it.
 - **Exit criteria:** workers run in parallel in one repo; the VM is reachable; the test Discord server and dev bot exist; the domain decision is made.
 - **Issues:** product-owner tasks #43, #44, #45 (each in the milestone of the step it blocks; see Order and dates).
 
@@ -54,9 +66,9 @@ The plan from today to the full new platform, running at the next event in **Apr
 The contracts step. Its dependencies: the tenants contract (#48) waits for the legacy inventory (#46); the event catalog (#34) waits for #48; the screen contract (#35) waits for #34, #48 and the theming contract (#54). Both contracts must be tenant-aware.
 
 #### 2a. Legacy inventory
-- **Goal:** know exactly what is being ported, confirmed by the product owner, before tenancy and contracts are designed.
+- **Goal:** know exactly what the legacy offers to build on, confirmed by the product owner, before tenancy and contracts are designed.
 - **In it:** one inventory per legacy repo (they can run in parallel), then a summary. For each repo: features, data model (what is per event and what is global), bus events and APIs, external integrations (Discord, feeds, devices), config and env, tests, size, event-specific content, the target module and step, and what is dropped.
-- **Exit criteria:** the scrubbed per-repo inventories and the summary `docs/legacy-inventory/README.md` are merged, each confirmed by the product owner; the summary updates the porting plan below; event-specific findings are in the event repo.
+- **Exit criteria:** the scrubbed per-repo inventories and the summary `docs/legacy-inventory/README.md` are merged, each confirmed by the product owner; the summary updates the reuse plan below; event-specific findings are in the event repo.
 - **Issues:** epic #46: per-repo inventories #68–#75 (no blockers, can run in parallel), then the summary #76 (blocked by #68–#75).
 
 #### 2b. Tenancy foundation
@@ -76,14 +88,14 @@ The contracts step. Its dependencies: the tenants contract (#48) waits for the l
 - **Issues:** epic #47, children #48–#56 with the blocked-by links above.
 
 #### 2c. Event catalog and screen contract
-- **Goal:** the events modules exchange, named and outlined before the ports start.
-- **In it:** event names and payload outlines for pizza, tournament, bot and screen overrides (#34); the screen module API and events (#35), with device tokens, the venue IP check, devices (global rows with their current tenant) and per-tenant zones and assignments, layouts as data and pinned bundles; it uses the theming contract from 2b item 7. #34 also settles whether screen overrides are `moments.*` or `screen.*` events, since Moments ranks them ([0010](decisions/0010-scope.md)), so step 4 needs no breaking rename. Each other module's full contract is its own PR at the start of its port, written from the real legacy API.
+- **Goal:** the events modules exchange, named and outlined before the module work starts.
+- **In it:** event names and payload outlines for pizza, tournament, bot and screen overrides (#34); the screen module API and events (#35), with device tokens, the venue IP check, devices (global rows with their current tenant) and per-tenant zones and assignments, layouts as data and pinned bundles; it uses the theming contract from 2b item 7. #34 also settles whether screen overrides are `moments.*` or `screen.*` events, since Moments ranks them ([0010](decisions/0010-scope.md)), so step 4 needs no breaking rename. Each other module's full contract is its own PR at the start of its step, written from the real legacy API.
 - **Exit criteria:** catalog and screen contract merged, both tenant-aware.
 - **Issues:** epic #36: #34 (blocked by #48), then #35 (blocked by #34, #48 and #54).
 
 ### 3. Screen core incl. PPTX
 - **Goal:** the projector PC plays a Main screen from the VM, and an event can run several screens.
-- **In it:** port the canccusignage core: scheduler and windows, playlists, playback timing and bookmarks, validators, duration parsers, the asset pipeline with PowerPoint rendering as a separate render-job container, the kiosk player and a new Postgres schema. Rewritten: the screen page and snapshot serving, persistence, the admin UI (its view-models kept). Screens cache their last state and assets. The ticker is manual ([0018](decisions/0018-ticker-manual.md)): set from admin or the bot, and Screen owns its scheduled windows (ported from the bot's ticker schedule into the scheduler windows) and keeps them across restarts. Feeds are wired later (step 9).
+- **In it:** a signage system built on the best of the canccusignage core: scheduler and windows, playlists, playback timing and bookmarks, validators, duration parsers, the asset pipeline with PowerPoint rendering as a separate render-job container, the kiosk player and a new Postgres schema. Rewritten: the screen page and snapshot serving, persistence, the admin UI (its view-models kept). Screens cache their last state and assets. The ticker is manual ([0018](decisions/0018-ticker-manual.md)): set from admin or the bot, and Screen owns its scheduled windows (taken from the bot's ticker schedule into the scheduler windows) and keeps them across restarts. Feeds are wired later (step 9).
   - **Devices**, owned by Screen: a global device row holds only its name, a hash of its device token, its venue id (the venue is read through the tenants API) and its current tenant. A device serves one tenant at a time: only the superadmin (who manages venues) sets its current tenant (audited), and a tenant's zone assignment is valid only while that matches. Two simultaneous events at one venue use different devices. Zone assignment and health are per tenant (`tenant_id`, RLS). Paired once, with a revocable device token; a screen is served only with **both** its token and a request from its event's venue IP (the IP alone is never enough), unless the tenant's audited emergency switch has turned the IP check off.
   - **Zones** per event (for example main hall, café, stage), each with its own layout, playlist and schedule; devices are assigned to zones per event and reassigned for the next event.
   - Push to all zones or one zone, and mirror one zone onto others.
@@ -93,32 +105,32 @@ The contracts step. Its dependencies: the tenants contract (#48) waits for the l
 
 ### 4. Moments
 - **Goal:** one queue decides what the screens show and play, and when.
-- **In it:** port the directive ranking and the sound engine as their own module: takeovers, blocks, overlays and the sound budget. Moments runs on the server, so every screen gets the same thing and a reload loses nothing.
+- **In it:** one module that decides what plays, built on the legacy directive ranking and sound engine: takeovers, blocks, overlays and the sound budget. Moments runs on the server, so every screen gets the same thing and a reload loses nothing.
 - **Exit criteria:** a test event takes over the screen and plays sound within the budget.
 - **Issues:** epic #58.
 
 ### 5. Pizza
-- **Goal:** the quick proof of the port model.
-- **In it:** port the pizza router and its tests; events `pizza.order.*`; a transaction for claims; a scheduler for reminders.
+- **Goal:** players order food and the crew hands it out, end to end; the first proof of building on the legacy.
+- **In it:** the ordering flow, built on the legacy pizza router and its tests; events `pizza.order.*`; a transaction for claims; a scheduler for reminders.
 - **Exit criteria:** an order runs end to end and shows on the screen.
 - **Issues:** epic #59.
 
 ### 6. Bot
 - **Goal:** the Discord side of the platform comes from the new bot.
-- **In it:** port canccubot: storage on Postgres, presence, voice, game and stats; polls dropped. One bot module with a pool of clients: the shared platform bot, or a tenant's own token. Slash commands registered per guild from feature flags. Events, and role-to-rights sync. Contract first. The ticker commands (`/ticker set`, `stop`, `status` and `/ticker schedule add`, `list`, `remove`) stay and publish to Screen ([0018](decisions/0018-ticker-manual.md)).
+- **In it:** a bot built on the best of canccubot: storage on Postgres, presence, voice, game and stats; polls dropped. One bot module with a pool of clients: the shared platform bot, or a tenant's own token. Slash commands registered per guild from feature flags. Events, and role-to-rights sync. Contract first. The ticker commands (`/ticker set`, `stop`, `status` and `/ticker schedule add`, `list`, `remove`) stay and publish to Screen ([0018](decisions/0018-ticker-manual.md)).
   - The legacy bot data migration into its event's tenant is built here and tested on a copy of the legacy data ([0004](decisions/0004-nothing-migrated.md)); step 11 only runs it at the switch.
 - **Exit criteria:** dashboard data and rights come from the new bot on the test server; the legacy bot data migration passes its test on a copy of the legacy data.
 - **Issues:** epic #60.
 
 ### 7. Tournament
-- **Goal:** a tournament runs on the platform.
-- **In it:** port the scoring, leaderboard and final from the signup site's code; registration lives inside the module; the bot's voice-channel handshake goes through events; concurrency with row locks (`SELECT … FOR UPDATE`). Ported only after the mini-tourney author's OK (AGENTS.md, Porting).
+- **Goal:** players register, play and follow a tournament on the platform.
+- **In it:** scoring, leaderboard and final, built on the signup site's code; registration lives inside the module; the bot's voice-channel handshake goes through events; concurrency with row locks (`SELECT … FOR UPDATE`). Code from the mini-tourney author is used only after his OK (AGENTS.md, Building on the legacy).
 - **Exit criteria:** a test tournament runs end to end.
 - **Issues:** epic #61.
 
 ### 8. Admin operations
 - **Goal:** the crew sees problems and fixes them from admin.
-- **In it:** port canccumanager: debounce, alerts as events consumed by the bot, ack and mute, restart policy. The executor is designed first, not ported.
+- **In it:** operations built on the best of canccumanager: debounce, alerts as events consumed by the bot, ack and mute, restart policy. The executor is designed new.
 - **Exit criteria:** an alert reaches Discord and can be acked.
 - **Issues:** epic #62.
 
@@ -138,10 +150,11 @@ The contracts step. Its dependencies: the tenants contract (#48) waits for the l
 - **Exit criteria:** a restore onto the fallback laptop works from cold and secrets decrypt after the restore; the audit jobs run in CI and update PRs arrive.
 - **Issues:** epic #64.
 
-### 11. Freeze, dress rehearsal and switch
-- **Goal:** the event runs on a pinned, tested release.
+<a id="11-freeze-dress-rehearsal-and-switch"></a>
+### 11. Dress rehearsal and switch
+- **Goal:** an event runs on a pinned, tested release, and the legacy system is retired.
 - **In it:**
-  - from 2027-03-01 a release branch is cut; from then on fixes only, and every PR needs a maintainer's accept ([0016](decisions/0016-merge-policy.md));
+  - the event pins a tested release ([0021](decisions/0021-no-fixed-dates.md): no freeze date; a release freeze, if wanted, is decided in its own record);
   - a dress rehearsal with the crew on the VM, including a restore onto the fallback laptop;
   - the legacy bot is cut over: the migration built and tested in step 6 runs at the switch and moves its data into its event's tenant, the legacy bot is stopped, and its token moves into the tenant ([0013](decisions/0013-multi-tenant-core.md), Consequences; [0004](decisions/0004-nothing-migrated.md));
   - the switch: the old repos are renamed `-legacy` and archived; this repo takes the name `canccuplatform`.
@@ -153,7 +166,7 @@ Both are new builds with their own contracts, so neither blocks the main line. T
 
 ### Games
 - **Goal:** rosters for any game, organized into rounds.
-- **In it:** rosters, rounds as data (qualification, quarter-final, semi-final, final), the list of games people play, favourites with a notification when many play one. Based on the mini-tourney code (ISC): bracket engine, rankings and team builder ported; storage, API, auth and frontend rewritten. Ported only after its author's OK; licence and attribution are kept.
+- **In it:** rosters, rounds as data (qualification, quarter-final, semi-final, final), the list of games people play, favourites with a notification when many play one. Based on the mini-tourney code (ISC): bracket engine, rankings and team builder reused; storage, API, auth and frontend built new. Its code is used only after its author's OK; licence and attribution are kept.
 - **Exit criteria:** a roster is built and a bracket runs end to end on the demo tenant.
 - **Issues:** epic #66.
 
@@ -164,10 +177,11 @@ Both are new builds with their own contracts, so neither blocks the main line. T
 - **Exit criteria:** a cast from a venue PC reaches the projector with acceptable delay.
 - **Issues:** epic #67.
 
-## Porting plan
-From the code surveys of 3 Nov 2026. Each port takes this table as its starting point; the legacy inventory summary (#76) updates it.
+<a id="porting-plan"></a>
+## Building on the legacy
+From the code surveys of 3 Nov 2026. This table is where each step starts, not a limit: for each feature the step chooses to reuse, adapt, rebuild, drop or add something new, and names the reason ([0020](decisions/0020-best-of-old-freely-new.md)). The legacy inventory summary (#76) updates it.
 
-| Legacy repo | Port as-is | Port with changes | Rewrite | Drop |
+| Legacy repo | Reuse as is | Reuse with changes | Rebuild | Drop |
 |---|---|---|---|---|
 | canccusignage | Scheduler and windows, playback timing and bookmarks, directive precedence, sound engine rules, YouTube, web-asset and replace-plan validators, duration parsers | Directive and ticker model (bands become settings), sound settings, asset pipeline with the PPTX render job | Screen page and snapshot serving, adapter (becomes event consumers), admin UI (view-models kept), all persistence | Auth, runtime/db, supervisor, legacy health, cue migrations, ops scripts |
 | the signup site (pizza and tournament parts) | Pizza router and tests | Pizza events, claim transactions, reminder scheduler; tournament scoring, leaderboard, final | Tournament tokens, voice handshake, admin UI; LAN display last | The LAN signup itself (stays outside, [0005](decisions/0005-signup-site-stays-outside.md)) |
@@ -182,6 +196,6 @@ Order rationale: Screen consumes pizza, tournament and bot events, so Screen cor
 
 ## Open questions
 - **Domain and DNS:** who provides the platform domain and a DNS API token for DNS-01 certificates. Blocks HTTPS, #5 and step 2b items 4–5.
-- **A separate dev VM before the freeze?** To be asked of the hoster before the freeze ([0012](decisions/0012-development-on-the-vm.md)).
+- **A separate dev VM before real event data comes to the VM?** To be asked of the hoster then ([0012](decisions/0012-development-on-the-vm.md), [0021](decisions/0021-no-fixed-dates.md)).
 - **Cast over a remote VM:** see Parallel tracks.
 - **Deploys while tenants are live:** "no deploys while any tenant is live" ([0013](decisions/0013-multi-tenant-core.md), item 22) can block every deploy once live periods overlap; a deploy window or per-tenant pinning beyond the screen bundles (item 23) is not decided yet.

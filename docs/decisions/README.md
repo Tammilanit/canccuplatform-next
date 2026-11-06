@@ -6,7 +6,7 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 
 | # | Decision | Date |
 |---|---|---|
-| [0001](0001-port-dont-rewrite.md) | Port, don't rewrite | 2026-11-03 |
+| [0001](0001-port-dont-rewrite.md) | Port, don't rewrite (superseded by 0020) | 2026-11-03 |
 | [0002](0002-no-legacy-history-or-docs.md) | No legacy git history and no legacy docs | 2026-11-03 |
 | [0003](0003-event-content-scrubbed.md) | Event content is scrubbed from the platform | 2026-11-02 |
 | [0004](0004-nothing-migrated.md) | Nothing is migrated except the legacy bot data | 2026-11-03 |
@@ -24,3 +24,6 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0016](0016-merge-policy.md) | Merge policy | 2026-11-05 |
 | [0017](0017-naming.md) | Naming: the canccu prefix | 2026-11-05 |
 | [0018](0018-ticker-manual.md) | The ticker is manual: set by a person, from admin or the bot | 2026-11-06 |
+| [0019](0019-work-packages.md) | Work runs in packages, with risk classes, a health pass and a checkpoint per step | 2026-11-06 |
+| [0020](0020-best-of-old-freely-new.md) | The best of the old, freely new | 2026-11-06 |
+| [0021](0021-no-fixed-dates.md) | No freeze and no target dates | 2026-11-06 |
