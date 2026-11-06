@@ -1,0 +1,630 @@
+openapi: 3.1.0
+info:
+  title: Notify API
+  version: 1.0.0
+  summary: Web Push subscriptions, notifications, check-in and privacy for the phone hub.
+  description: |
+    Machine-readable part of the notify contract. Prose, topics, delivery rules and events: contracts/notify.md.
+    Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
+    The event (tenant) comes from the hostname; no operation names a tenant.
+  license:
+    name: AGPL-3.0
+    identifier: AGPL-3.0-only
+servers:
+  - url: /
+    description: Same origin, behind Caddy; the hostname selects the event.
+tags:
+  - name: push
+    description: Web Push key and subscriptions.
+  - name: notifications
+    description: Notification details and the inbox.
+  - name: check-in
+    description: Check-in by the rotating QR code.
+  - name: me
+    description: The caller's own settings and privacy.
+security:
+  - session: []
+paths:
+  /api/notify/push-key:
+    get:
+      tags: [push]
+      operationId: getPushKey
+      summary: The VAPID public key
+      description: Passed to `PushManager.subscribe` as `applicationServerKey`. No authentication.
+      security: []
+      responses:
+        "200":
+          description: The key.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [vapid_public_key]
+                properties:
+                  vapid_public_key:
+                    type: string
+                    description: Uncompressed P-256 public key, base64url without padding.
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/notify/topics:
+    get:
+      tags: [push]
+      operationId: listTopics
+      summary: Topics offered at this event
+      description: With their parts and defaults. No authentication.
+      security: []
+      responses:
+        "200":
+          description: The topics.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [topics]
+                properties:
+                  topics:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TopicInfo"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/notify/subscriptions:
+    post:
+      tags: [push]
+      operationId: subscribe
+      summary: Subscribe this browser
+      description: |
+        Without a session a guest subscription (event-wide parts only); with one, the user's. The same
+        `endpoint` again replaces the old subscription. A personal part without a session is 401
+        `sign_in_required`.
+      security:
+        - {}
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscriptionNew"
+      responses:
+        "201":
+          description: The subscription and its token; the token is shown only here.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Subscription"
+                  - type: object
+                    required: [subscription_token]
+                    properties:
+                      subscription_token:
+                        type: string
+                        description: "Stored only as a hash. Send as `Authorization: Bearer <token>`."
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/notify/subscriptions/{subscription_id}:
+    parameters:
+      - $ref: "#/components/parameters/SubscriptionId"
+    get:
+      tags: [push]
+      operationId: getSubscription
+      summary: Read a subscription
+      security:
+        - session: []
+        - subscriptionToken: []
+      responses:
+        "200":
+          description: The subscription.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [push]
+      operationId: updateSubscription
+      summary: Change a subscription's preferences
+      description: Topic parts left out stay as they are. A personal part on a guest subscription is 401 `sign_in_required`.
+      security:
+        - session: []
+        - subscriptionToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [preferences]
+              properties:
+                preferences:
+                  $ref: "#/components/schemas/Preferences"
+      responses:
+        "200":
+          description: The subscription.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [push]
+      operationId: unsubscribe
+      summary: Unsubscribe
+      security:
+        - session: []
+        - subscriptionToken: []
+      responses:
+        "204":
+          description: Deleted; nothing more is pushed to it.
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/notify/subscriptions/{subscription_id}/claim:
+    parameters:
+      - $ref: "#/components/parameters/SubscriptionId"
+    post:
+      tags: [push]
+      operationId: claimSubscription
+      summary: Make a guest subscription the signed-in user's
+      description: Needs the session and the subscription's token.
+      security:
+        - session: []
+          subscriptionToken: []
+      responses:
+        "200":
+          description: The subscription, now the user's.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/notify/notifications/{notification_id}:
+    parameters:
+      - name: notification_id
+        in: path
+        required: true
+        description: From the push payload or the inbox.
+        schema:
+          $ref: "#/components/schemas/NotificationId"
+    get:
+      tags: [notifications]
+      operationId: getNotification
+      summary: A notification's details
+      description: |
+        `public`: anyone holding the id; `attendees`: members; personal: only its user.
+        Otherwise 404 `not_found`.
+      security:
+        - {}
+        - session: []
+      responses:
+        "200":
+          description: The notification.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/notify/inbox:
+    get:
+      tags: [notifications]
+      operationId: getInbox
+      summary: The caller's notifications that have not expired
+      description: |
+        Newest first. With a session: event-wide and their own personal ones. With a subscription token:
+        the event-wide ones of its audience. Includes notifications that were not pushed.
+      security:
+        - session: []
+        - subscriptionToken: []
+      parameters:
+        - name: since
+          in: query
+          description: Only notifications created after this time.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: The inbox.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [notifications]
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Notification"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/notify/check-in/code:
+    get:
+      tags: [check-in]
+      operationId: getCheckInCode
+      summary: The current rotating check-in code
+      description: Needs right `notify.checkin.display`. Rotates every `check_in_rotation_seconds`.
+      parameters:
+        - name: purpose
+          in: query
+          required: true
+          description: "`arrival`, or `<module>:<ref>` for a check-in another module owns."
+          schema:
+            $ref: "#/components/schemas/Purpose"
+      responses:
+        "200":
+          description: The code and the URL to put in the QR.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [code, url, valid_until, rotates_at]
+                properties:
+                  code:
+                    type: string
+                  url:
+                    type: string
+                    description: "Absolute URL on the event's registered hostname: `/notify/check-in?c=<code>`."
+                  valid_until:
+                    type: string
+                    format: date-time
+                  rotates_at:
+                    type: string
+                    format: date-time
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/notify/check-ins:
+    post:
+      tags: [check-in]
+      operationId: checkIn
+      summary: Check in with a scanned code
+      description: |
+        Needs a session of a member of the event. Emits `notify.checkin.recorded`. The same user and purpose
+        again returns the first check-in with 200 and emits nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+      responses:
+        "200":
+          description: Already checked in for this purpose.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckIn"
+        "201":
+          description: Checked in.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckIn"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/notify/check-ins/mine:
+    get:
+      tags: [check-in]
+      operationId: listMyCheckIns
+      summary: The caller's check-ins at this event
+      responses:
+        "200":
+          description: The check-ins.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [check_ins]
+                properties:
+                  check_ins:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CheckIn"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/notify/me:
+    get:
+      tags: [me]
+      operationId: getMe
+      summary: The caller's own Notify settings
+      responses:
+        "200":
+          description: The settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags: [me]
+      operationId: updateMe
+      summary: Change the caller's own Notify settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Me"
+      responses:
+        "200":
+          description: The settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [me]
+      operationId: deleteMe
+      summary: Delete everything Notify holds on the caller at this event
+      description: Subscriptions, preferences, personal notifications and check-ins. Ends every push to the caller.
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/notify/me/export:
+    get:
+      tags: [me]
+      operationId: exportMe
+      summary: Export everything Notify holds on the caller at this event
+      responses:
+        "200":
+          description: The export.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Export"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: canccu_session
+      description: Opaque session id (contracts/admin.md, Session and rights). Rights are checked through admin.
+    subscriptionToken:
+      type: http
+      scheme: bearer
+      description: The `subscription_token` returned once on subscribe; lets a guest manage its subscription.
+  parameters:
+    SubscriptionId:
+      name: subscription_id
+      in: path
+      required: true
+      description: Subscription id.
+      schema:
+        type: string
+        pattern: "^[A-Za-z0-9_-]{1,64}$"
+  responses:
+    BadRequest:
+      description: "`invalid_request`; for check-in also `code_invalid` or `code_expired`."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: "`not_signed_in`, or `sign_in_required` for a personal topic part without a session."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: |
+        `missing_right`; `not_a_member` (check-in by someone not a member of the event); or
+        `info_pages_closed` (the event's info-page mode does not let this request in).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: "`not_found`: no such subscription or notification, or the caller may not see it."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              pattern: "^[a-z][a-z0-9_]*$"
+              examples: [sign_in_required]
+            message:
+              type: string
+    Topic:
+      type: string
+      description: More topics may be added; clients ignore topics they do not know.
+      enum: [schedule, announcements, food, tournament, play]
+    TopicInfo:
+      type: object
+      required: [topic, parts]
+      properties:
+        topic:
+          $ref: "#/components/schemas/Topic"
+        parts:
+          type: object
+          description: The parts this topic has, with their defaults for a new subscription.
+          properties:
+            event:
+              type: object
+              required: [default]
+              properties:
+                default:
+                  type: boolean
+            personal:
+              type: object
+              required: [default, needs_sign_in]
+              properties:
+                default:
+                  type: boolean
+                needs_sign_in:
+                  type: boolean
+                  const: true
+    Preferences:
+      type: object
+      description: Per topic, which parts are on. A topic or part left out takes its default.
+      propertyNames:
+        $ref: "#/components/schemas/Topic"
+      additionalProperties:
+        type: object
+        properties:
+          event:
+            type: boolean
+          personal:
+            type: boolean
+    PushSubscription:
+      type: object
+      description: As the browser's `PushSubscription.toJSON()` gives it.
+      required: [endpoint, keys]
+      properties:
+        endpoint:
+          type: string
+          format: uri
+        keys:
+          type: object
+          required: [p256dh, auth]
+          properties:
+            p256dh:
+              type: string
+            auth:
+              type: string
+    SubscriptionNew:
+      type: object
+      required: [push]
+      properties:
+        push:
+          $ref: "#/components/schemas/PushSubscription"
+        preferences:
+          $ref: "#/components/schemas/Preferences"
+    Subscription:
+      type: object
+      description: Never contains the push endpoint's keys.
+      required: [id, kind, preferences, created_at]
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          enum: [guest, user]
+        preferences:
+          $ref: "#/components/schemas/Preferences"
+        created_at:
+          type: string
+          format: date-time
+    NotificationId:
+      type: string
+      description: Random and unguessable.
+      pattern: "^[A-Za-z0-9_-]{16,64}$"
+    Notification:
+      type: object
+      required: [id, topic, part, audience, title, body, urgent, created_at, expires_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/NotificationId"
+        topic:
+          $ref: "#/components/schemas/Topic"
+        part:
+          type: string
+          enum: [event, personal]
+        audience:
+          type: string
+          enum: [public, attendees, personal]
+        title:
+          type: string
+          maxLength: 80
+        body:
+          type: string
+          maxLength: 300
+        url:
+          type: string
+          description: A page of the hub, relative to the event's hostname.
+        urgent:
+          type: boolean
+        pushed:
+          type: boolean
+          description: In the inbox, whether it was pushed to the caller (not held by cap, quiet hours or opt-out).
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+    Purpose:
+      type: string
+      pattern: "^(arrival|[a-z]+:[A-Za-z0-9_-]{1,64})$"
+      examples: [arrival, "tournament:s_12"]
+    CheckIn:
+      type: object
+      required: [id, purpose, checked_in_at]
+      properties:
+        id:
+          type: string
+        purpose:
+          $ref: "#/components/schemas/Purpose"
+        checked_in_at:
+          type: string
+          format: date-time
+    Me:
+      type: object
+      properties:
+        dm_fallback:
+          type: boolean
+          default: true
+          description: Personal notifications fall back to a Discord DM when no push reaches the caller.
+    Export:
+      type: object
+      required: [subscriptions, me, notifications, check_ins]
+      properties:
+        subscriptions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Subscription"
+        me:
+          $ref: "#/components/schemas/Me"
+        notifications:
+          type: array
+          description: The caller's personal notifications.
+          items:
+            $ref: "#/components/schemas/Notification"
+        check_ins:
+          type: array
+          items:
+            $ref: "#/components/schemas/CheckIn"

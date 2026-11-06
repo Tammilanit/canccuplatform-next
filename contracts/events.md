@@ -26,7 +26,15 @@ Emitter: `agenda`. Audience: event-wide, by the item's `visibility`. Payloads: [
 | `agenda.item.delayed` | An item was delayed or brought forward | screen, bot, notify, moments |
 | `agenda.item.cancelled` | An item was cancelled | screen, bot, notify, moments |
 | `agenda.item.removed` | An item was removed | screen, bot, notify, moments |
-| `agenda.item.started` | An item's start was reached | screen, moments |
+| `agenda.item.started` | An item's start was reached | screen, moments, notify (quiet hours) |
 | `agenda.item.ended` | An item's end was reached | screen, moments, notify (quiet hours) |
 | `agenda.reminder.triggered` | A lead time before an item's start was reached | bot, notify, screen |
 | `agenda.items.cloned` | The agenda was cloned from another event | screen, bot, notify |
+
+## Notify
+Emitter: `notify`. Audience: personal. Payloads: [notify.md](notify.md#events-version-1).
+
+| Type | Meaning | Consumers |
+|---|---|---|
+| `notify.dm.requested` | A personal notification should reach a user as a Discord DM | bot |
+| `notify.checkin.recorded` | A signed-in attendee checked in by the rotating QR | The module named in `purpose` (tournament for match check-in), admin |
