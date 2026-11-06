@@ -27,7 +27,7 @@ export class AdminClient {
     options: { sessionId?: string | undefined; json?: unknown } = {},
   ): Promise<AdminResponse> {
     const headers: Record<string, string> = {};
-    if (options.sessionId !== undefined) headers.cookie = `cp_session=${options.sessionId}`;
+    if (options.sessionId !== undefined) headers.cookie = `canccu_session=${options.sessionId}`;
     if (options.json !== undefined) headers["content-type"] = "application/json";
     let response: Response;
     try {

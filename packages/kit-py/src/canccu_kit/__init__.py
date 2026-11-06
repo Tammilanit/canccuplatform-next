@@ -1,4 +1,4 @@
-"""cp_kit: shared plumbing for CanccuPlatform modules (contracts/admin.md)."""
+"""canccu_kit: shared plumbing for CanccuPlatform modules (contracts/admin.md)."""
 
 from .admin import AdminClient
 from .bus import STREAM_MAXLEN, Bus, Event, InvalidEnvelope, InvalidEventType, Subscription

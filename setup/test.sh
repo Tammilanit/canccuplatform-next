@@ -36,9 +36,9 @@ exits "install fails against an unreachable daemon" 2 env DOCKER_HOST=$unreachab
 has "install names the unreachable daemon" "cannot reach the Docker daemon"
 exits "install --dry-run fails against an unreachable daemon" 2 env DOCKER_HOST=$unreachable setup/install --dry-run
 if [ "$docker_ok" = 1 ]; then
-  exits "install --dry-run --boot refuses an empty CP_WEB_ALLOW" 2 env CP_ENV_FILE="$(envfile 'CP_WEB_ALLOW=\n')" setup/install --dry-run --boot
-  has "install --boot names CP_WEB_ALLOW" "CP_WEB_ALLOW is empty"
-  exits "install --dry-run --boot with an allow list" 0 env CP_ENV_FILE="$(envfile 'CP_WEB_ALLOW=192.0.2.1\n')" setup/install --dry-run --boot
+  exits "install --dry-run --boot refuses an empty CANCCU_WEB_ALLOW" 2 env CANCCU_ENV_FILE="$(envfile 'CANCCU_WEB_ALLOW=\n')" setup/install --dry-run --boot
+  has "install --boot names CANCCU_WEB_ALLOW" "CANCCU_WEB_ALLOW is empty"
+  exits "install --dry-run --boot with an allow list" 0 env CANCCU_ENV_FILE="$(envfile 'CANCCU_WEB_ALLOW=192.0.2.1\n')" setup/install --dry-run --boot
   fw=$(grep -nE 'canccu-firewall' <<<"$out" | head -1 | cut -d: -f1)
   up=$(grep -nE 'compose .*up' <<<"$out" | head -1 | cut -d: -f1)
   if [ -n "$fw" ] && [ -n "$up" ] && [ "$fw" -lt "$up" ]; then pass "install --boot puts the firewall in place before the stack starts"
@@ -48,21 +48,21 @@ if [ "$docker_ok" = 1 ]; then
   has "install --boot enables the auto-deploy timer" "enable --now canccu-deploy.timer"
   n=$(grep -cE 'compose .*up' <<<"$out")
   if [ "$n" = 1 ]; then pass "install --boot starts the stack once"; else bad "install --boot starts the stack once ($n times)" "$out"; fi
-  exits "install --boot validates deploy/.env, not the environment" 2 env CP_WEB_ALLOW=192.0.2.1 CP_ENV_FILE=/nonexistent setup/install --dry-run --boot
-  has "install --boot ignores CP_WEB_ALLOW from the environment" "CP_WEB_ALLOW is empty"
-  exits "install --dry-run --boot, existing .env" 0 env CP_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=x\nCP_WEB_ALLOW=192.0.2.1\n')" setup/install --dry-run --boot
+  exits "install --boot validates deploy/.env, not the environment" 2 env CANCCU_WEB_ALLOW=192.0.2.1 CANCCU_ENV_FILE=/nonexistent setup/install --dry-run --boot
+  has "install --boot ignores CANCCU_WEB_ALLOW from the environment" "CANCCU_WEB_ALLOW is empty"
+  exits "install --dry-run --boot, existing .env" 0 env CANCCU_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=x\nCANCCU_WEB_ALLOW=192.0.2.1\n')" setup/install --dry-run --boot
   has "install --boot reloads canccu-firewall (or starts it)" "reload canccu-firewall"
   hasnt "install --boot never restarts canccu-firewall (that restarts Docker)" "restart canccu-firewall"
   hasnt "install keeps a .env with its own password" "POSTGRES_PASSWORD"
   if docker volume inspect canccuplatform_postgres-data >/dev/null 2>&1; then
-    exits "install --boot refuses the example password on an initialised database" 2 env CP_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=change-me\nCP_WEB_ALLOW=192.0.2.1\n')" setup/install --dry-run --boot
+    exits "install --boot refuses the example password on an initialised database" 2 env CANCCU_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=change-me\nCANCCU_WEB_ALLOW=192.0.2.1\n')" setup/install --dry-run --boot
     has "install names the example password" "example POSTGRES_PASSWORD"
   else
-    exits "install --dry-run --boot, .env with the example password" 0 env CP_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=change-me\nCP_WEB_ALLOW=192.0.2.1\n')" setup/install --dry-run --boot
+    exits "install --dry-run --boot, .env with the example password" 0 env CANCCU_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=change-me\nCANCCU_WEB_ALLOW=192.0.2.1\n')" setup/install --dry-run --boot
     has "install replaces the example password while no database exists" "would replace the example POSTGRES_PASSWORD"
   fi
   tmp=$(mktemp -d); cp -r setup deploy "$tmp/"; chmod o+w "$tmp/setup"
-  exits "install --boot refuses a setup/ others can write to" 2 env CP_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=x\nCP_WEB_ALLOW=192.0.2.1\n')" "$tmp/setup/install" --dry-run --boot
+  exits "install --boot refuses a setup/ others can write to" 2 env CANCCU_ENV_FILE="$(envfile 'POSTGRES_PASSWORD=x\nCANCCU_WEB_ALLOW=192.0.2.1\n')" "$tmp/setup/install" --dry-run --boot
   has "install names the writable path" "writable by others"
   rm -rf "$tmp"
 else
@@ -72,43 +72,43 @@ fi
 echo "# firewall"
 exits "firewall rejects an unknown command" 2 setup/firewall bogus
 has "firewall prints its usage" "usage: firewall"
-exits "firewall apply refuses an empty allow list" 2 env CP_WEB_ALLOW= setup/firewall apply --dry-run
-has "firewall names CP_WEB_ALLOW" "CP_WEB_ALLOW is empty"
-exits "firewall apply refuses 'any' mixed with addresses" 2 env CP_WEB_ALLOW="any 192.0.2.1" setup/firewall apply --dry-run
+exits "firewall apply refuses an empty allow list" 2 env CANCCU_WEB_ALLOW= setup/firewall apply --dry-run
+has "firewall names CANCCU_WEB_ALLOW" "CANCCU_WEB_ALLOW is empty"
+exits "firewall apply refuses 'any' mixed with addresses" 2 env CANCCU_WEB_ALLOW="any 192.0.2.1" setup/firewall apply --dry-run
 has "firewall explains 'any' stands alone" "'any' must be the only entry"
-exits "firewall apply refuses a hostname" 2 env CP_WEB_ALLOW=example.org setup/firewall apply --dry-run
+exits "firewall apply refuses a hostname" 2 env CANCCU_WEB_ALLOW=example.org setup/firewall apply --dry-run
 has "firewall names the bad entry" "not an IPv4 or IPv6 address: example.org"
 for e in 300.1.1.1 10.0.0.0/40 1.2.3 2001:db8::/200 : "::" 2001:::1; do
-  exits "firewall apply refuses $e" 2 env CP_WEB_ALLOW="$e" setup/firewall apply --dry-run
+  exits "firewall apply refuses $e" 2 env CANCCU_WEB_ALLOW="$e" setup/firewall apply --dry-run
 done
-exits "firewall apply accepts /0s and a full IPv6 address" 0 env CP_WEB_ALLOW="0.0.0.0/0 ::/0 2001:db8:0:0:0:0:0:1/128" setup/firewall apply --dry-run
+exits "firewall apply accepts /0s and a full IPv6 address" 0 env CANCCU_WEB_ALLOW="0.0.0.0/0 ::/0 2001:db8:0:0:0:0:0:1/128" setup/firewall apply --dry-run
 
-exits "firewall apply --dry-run, IPv4 and IPv6 sources" 0 env CP_WEB_ALLOW="192.0.2.1, 2001:db8::/32" setup/firewall apply --dry-run
+exits "firewall apply --dry-run, IPv4 and IPv6 sources" 0 env CANCCU_WEB_ALLOW="192.0.2.1, 2001:db8::/32" setup/firewall apply --dry-run
 for p in 80 443; do
-  fam "IPv4 source allowed to port $p" 4 "-A CP-FIREWALL -s 192.0.2.1 -p tcp -m conntrack --ctstate DNAT --ctorigdstport $p -j RETURN"
-  fam "IPv6 source allowed to port $p" 6 "-A CP-FIREWALL -s 2001:db8::/32 -p tcp -m conntrack --ctstate DNAT --ctorigdstport $p -j RETURN"
+  fam "IPv4 source allowed to port $p" 4 "-A CANCCU-FIREWALL -s 192.0.2.1 -p tcp -m conntrack --ctstate DNAT --ctorigdstport $p -j RETURN"
+  fam "IPv6 source allowed to port $p" 6 "-A CANCCU-FIREWALL -s 2001:db8::/32 -p tcp -m conntrack --ctstate DNAT --ctorigdstport $p -j RETURN"
 done
 famnot "IPv6 source not in the IPv4 rules" 4 "2001:db8"
 famnot "IPv4 source not in the IPv6 rules" 6 "192\.0\.2\.1"
 for v in 4 6; do
-  fam "IPv$v keeps established connections" $v "-A CP-FIREWALL -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN"
-  fam "IPv$v drops other published traffic" $v "-A CP-FIREWALL -m conntrack --ctstate DNAT -j DROP"
-  fam "IPv$v hooks the chain into DOCKER-USER" $v "-I DOCKER-USER 1 -j CP-FIREWALL"
+  fam "IPv$v keeps established connections" $v "-A CANCCU-FIREWALL -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN"
+  fam "IPv$v drops other published traffic" $v "-A CANCCU-FIREWALL -m conntrack --ctstate DNAT -j DROP"
+  fam "IPv$v hooks the chain into DOCKER-USER" $v "-I DOCKER-USER 1 -j CANCCU-FIREWALL"
 done
 others=$( { family 4; family 6; } | grep -oE 'ctorigdstport [0-9]+' | grep -vE ' (80|443)$')
 if [ -z "$others" ]; then pass "only ports 80 and 443 are opened"; else bad "only ports 80 and 443 are opened" "$others"; fi
 
-exits "firewall apply --dry-run, IPv4 only" 0 env CP_WEB_ALLOW=192.0.2.1 setup/firewall apply --dry-run
+exits "firewall apply --dry-run, IPv4 only" 0 env CANCCU_WEB_ALLOW=192.0.2.1 setup/firewall apply --dry-run
 famnot "IPv4-only list opens nothing on IPv6" 6 "ctorigdstport|-s "
 fam "IPv4-only list still drops published IPv6 traffic" 6 "--ctstate DNAT -j DROP"
 
-exits "firewall apply --dry-run, any" 0 env CP_WEB_ALLOW=any setup/firewall apply --dry-run
+exits "firewall apply --dry-run, any" 0 env CANCCU_WEB_ALLOW=any setup/firewall apply --dry-run
 for v in 4 6; do for p in 80 443; do
-  fam "'any' opens port $p on IPv$v" $v "-A CP-FIREWALL -p tcp -m conntrack --ctstate DNAT --ctorigdstport $p -j RETURN"
+  fam "'any' opens port $p on IPv$v" $v "-A CANCCU-FIREWALL -p tcp -m conntrack --ctstate DNAT --ctorigdstport $p -j RETURN"
 done; done
 famnot "'any' adds no source match" 4 "-s "
 
-exits "firewall reads CP_WEB_ALLOW from an env file" 0 env -u CP_WEB_ALLOW CP_ENV_FILE="$(envfile 'CP_WEB_ALLOW=198.51.100.7\n')" setup/firewall apply --dry-run
+exits "firewall reads CANCCU_WEB_ALLOW from an env file" 0 env -u CANCCU_WEB_ALLOW CANCCU_ENV_FILE="$(envfile 'CANCCU_WEB_ALLOW=198.51.100.7\n')" setup/firewall apply --dry-run
 fam "the env file's source is allowed" 4 "-s 198.51.100.7 "
 
 exits "firewall close --dry-run" 0 setup/firewall close --dry-run
@@ -117,9 +117,9 @@ for v in 4 6; do
   famnot "close opens nothing on IPv$v" $v "--ctorigdstport"
 done
 exits "firewall remove --dry-run" 0 setup/firewall remove --dry-run
-for v in 4 6; do fam "remove unhooks the chain on IPv$v" $v "-D DOCKER-USER -j CP-FIREWALL"; done
+for v in 4 6; do fam "remove unhooks the chain on IPv$v" $v "-D DOCKER-USER -j CANCCU-FIREWALL"; done
 if [ "$(id -u)" != 0 ]; then
-  exits "firewall apply without root fails clearly" 2 env CP_WEB_ALLOW=192.0.2.1 setup/firewall apply
+  exits "firewall apply without root fails clearly" 2 env CANCCU_WEB_ALLOW=192.0.2.1 setup/firewall apply
   has "firewall says it needs root" "needs root"
   exits "firewall check without root fails clearly" 2 setup/firewall check
 fi
@@ -180,13 +180,13 @@ fi
 
 echo "# IPv6 bypass (docker-proxy forwarding IPv6 to an IPv4-only container)"
 proxy() { printf '/usr/bin/docker-proxy -proto tcp -host-ip %s -host-port %s -container-ip %s -container-port 80 -use-listen-fd\n' "$@"; }
-exits "bypass found: :: port 80 to an IPv4 container" 1 env CP_PROXY_ARGS=<(proxy :: 80 172.18.0.5) setup/firewall bypass
+exits "bypass found: :: port 80 to an IPv4 container" 1 env CANCCU_PROXY_ARGS=<(proxy :: 80 172.18.0.5) setup/firewall bypass
 has "bypass names the port" "port 80"
-exits "bypass found: :: port 443 to an IPv4 container" 1 env CP_PROXY_ARGS=<(proxy :: 443 172.18.0.5) setup/firewall bypass
-exits "no bypass: :: port 80 to an IPv6 container" 0 env CP_PROXY_ARGS=<(proxy :: 80 fd00:1::2) setup/firewall bypass
-exits "no bypass: IPv4 binding" 0 env CP_PROXY_ARGS=<(proxy 0.0.0.0 80 172.18.0.5) setup/firewall bypass
-exits "no bypass: another port" 0 env CP_PROXY_ARGS=<(proxy ::1 18092 172.18.0.5) setup/firewall bypass
-exits "no bypass: no proxies" 0 env CP_PROXY_ARGS=/dev/null setup/firewall bypass
+exits "bypass found: :: port 443 to an IPv4 container" 1 env CANCCU_PROXY_ARGS=<(proxy :: 443 172.18.0.5) setup/firewall bypass
+exits "no bypass: :: port 80 to an IPv6 container" 0 env CANCCU_PROXY_ARGS=<(proxy :: 80 fd00:1::2) setup/firewall bypass
+exits "no bypass: IPv4 binding" 0 env CANCCU_PROXY_ARGS=<(proxy 0.0.0.0 80 172.18.0.5) setup/firewall bypass
+exits "no bypass: another port" 0 env CANCCU_PROXY_ARGS=<(proxy ::1 18092 172.18.0.5) setup/firewall bypass
+exits "no bypass: no proxies" 0 env CANCCU_PROXY_ARGS=/dev/null setup/firewall bypass
 
 echo "# check-boot"
 exits "check-boot --dry-run" 0 setup/check-boot --dry-run
@@ -266,14 +266,14 @@ fresh() {
   echo main > "$st/branch"; echo "$old" > "$st/head"; echo "$new" > "$st/target"; echo "$new" > "$st/rev"
   echo 0 > "$st/up_rc"; echo 0 > "$st/fw_rc"; : > "$st/log"
   for m in hello admin; do echo "sha256:old$m" > "$st/live_$m"; echo "sha256:new$m" > "$st/remote_$m"; done
-  denv=$(envfile "CP_VERSION=dev\nCP_DEPLOY_GITHUB_TOKEN=test-token\n${1:-}")
+  denv=$(envfile "CANCCU_VERSION=dev\nCANCCU_DEPLOY_GITHUB_TOKEN=test-token\n${1:-}")
 }
-dep() { exits "$1" "$2" env STUB="$st" PATH="$stubs/bin:$PATH" CP_ENV_FILE="$denv" CP_DEPLOY_STATE="$st/state" CP_DEPLOY_FIREWALL="$stubs/firewall" CP_DEPLOY_WAIT=1 setup/deploy; }
+dep() { exits "$1" "$2" env STUB="$st" PATH="$stubs/bin:$PATH" CANCCU_ENV_FILE="$denv" CANCCU_DEPLOY_STATE="$st/state" CANCCU_DEPLOY_FIREWALL="$stubs/firewall" CANCCU_DEPLOY_WAIT=1 setup/deploy; }
 logged() { if grep -Eq -- "$2" "$st/log"; then pass "$1"; else bad "$1 (not called: $2)" "$(cat "$st/log")"; fi; }
 notlogged() { if grep -Eq -- "$2" "$st/log"; then bad "$1 (called: $2)" "$(cat "$st/log")"; else pass "$1"; fi; }
 issues() { if [ "$( { wc -l < "$st/issues"; } 2>/dev/null || echo 0)" = "$2" ]; then pass "$1"; else bad "$1 (want $2 issues)" "$(cat "$st/issues" 2>/dev/null)"; fi; }
 
-fresh 'CP_VERSION=v0.1.0\n'; dep "deploy does nothing unless the platform version is dev" 0
+fresh 'CANCCU_VERSION=v0.1.0\n'; dep "deploy does nothing unless the platform version is dev" 0
 has "deploy says auto-deploy is off" "not dev"
 notlogged "deploy pulls nothing when the platform version is not dev" "docker pull"
 
@@ -345,8 +345,8 @@ issues "a resumed healthy deploy opens no issue" 0
 fresh; echo 1 > "$st/up_rc"; dep "deploy whose containers do not become healthy" 1
 issues "an unhealthy stack opens an issue" 1
 
-fresh 'CP_DEPLOY_GITHUB_TOKEN=\n'; touch "$st/bad_sha256:newhello"; dep "a failed deploy without a token" 1
-has "deploy says it cannot open an issue without a token" "CP_DEPLOY_GITHUB_TOKEN"
+fresh 'CANCCU_DEPLOY_GITHUB_TOKEN=\n'; touch "$st/bad_sha256:newhello"; dep "a failed deploy without a token" 1
+has "deploy says it cannot open an issue without a token" "CANCCU_DEPLOY_GITHUB_TOKEN"
 if [ "$(cat "$st/head")" = "$old" ]; then pass "a failed deploy without a token still rolls back"; else bad "a failed deploy without a token still rolls back"; fi
 
 fresh; echo " M modules/hello/src/x.ts" > "$st/dirty"; dep "deploy refuses a checkout with local changes" 2

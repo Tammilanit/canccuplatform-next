@@ -7,8 +7,8 @@ from typing import Any
 import pytest
 import yaml
 
-from cp_kit import Check, CheckResult, Health, postgres_check, valkey_check
-from cp_kit.testing import MemoryStreamStore
+from canccu_kit import Check, CheckResult, Health, postgres_check, valkey_check
+from canccu_kit.testing import MemoryStreamStore
 
 CONTRACT = Path(__file__).resolve().parents[3] / "contracts" / "admin.openapi.yaml"
 

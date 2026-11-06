@@ -4,7 +4,7 @@
 # - event-seed copies events/demo/ into the event folder of the files volume (/files/event),
 #   owned by the admin user, before admin starts.
 # - session-stub stands in for sign-in (#10) until it exists: admin asks it, not itself, for
-#   GET /api/admin/session. The cookie cp_session=demo-ci is a session with every admin
+#   GET /api/admin/session. The cookie canccu_session=demo-ci is a session with every admin
 #   right; any other cookie is 401 not_signed_in. Anyone who can reach Caddy can send that
 #   cookie, which is why this file is for CI only.
 services:
@@ -38,7 +38,7 @@ services:
 
   admin:
     environment:
-      CP_ADMIN_URL: http://session-stub:8080
+      CANCCU_ADMIN_URL: http://session-stub:8080
     depends_on:
       event-seed:
         condition: service_completed_successfully
@@ -58,7 +58,7 @@ configs:
       :8080 {
       	@demo {
       		path /api/admin/session
-      		header_regexp Cookie (^|;\s*)cp_session=demo-ci(;|$$)
+      		header_regexp Cookie (^|;\s*)canccu_session=demo-ci(;|$$)
       	}
       	handle @demo {
       		header Content-Type application/json

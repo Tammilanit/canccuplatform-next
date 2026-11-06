@@ -14,7 +14,7 @@ The legacy modules grew links one feature at a time: polling, one token per link
   - payloads are snake_case with RFC 3339 UTC times;
   - errors are `{error:{code,message}}`;
   - rights are `<module>.<right>`;
-  - the session cookie is `cp_session`.
+  - the session cookie is `canccu_session`.
 
 ## Consequences
 - Modules are language-independent behind their contract.

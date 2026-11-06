@@ -1,4 +1,4 @@
-# Auto-deploy of main (setup/deploy), started by canccu-deploy.timer. It acts only while CP_VERSION
+# Auto-deploy of main (setup/deploy), started by canccu-deploy.timer. It acts only while CANCCU_VERSION
 # in deploy/.env is dev: it pulls the module images CI built from origin/main, restarts the stack,
 # checks health and, on failure, goes back to the previous commit and images and opens an issue.
 # A failed deploy leaves this unit failed: systemctl status canccu-deploy, journalctl -u canccu-deploy.

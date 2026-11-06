@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Auto-deploy of main (dev mode): while CP_VERSION in deploy/.env is `dev`, bring this host to
+# Auto-deploy of main (dev mode): while CANCCU_VERSION in deploy/.env is `dev`, bring this host to
 # origin/main and the module images CI pushed for it (`:dev`), check health, and on failure go
 # back to the previous commit and images and open an issue. Run by canccu-deploy.timer as root.
 # Usage: deploy [--dry-run]
 # Exit 0 = deployed, nothing new, waiting for images, holding a failed deploy, or not in dev mode;
 # 1 = the deploy failed and was rolled back; 2 = something is missing, unreachable or refused.
-# deploy/.env (CP_ENV_FILE replaces it): CP_VERSION; CP_DEPLOY_IMAGES (default ghcr.io/<owner>/<repo>
-# of the origin remote); CP_DEPLOY_GITHUB_TOKEN (opens the issue: Issues read and write on the repo).
-# Environment: CP_DEPLOY_STATE (state dir; default $STATE_DIRECTORY or /var/lib/canccu-deploy),
-# CP_DEPLOY_WAIT (seconds to wait for health, default 30), CP_DEPLOY_FIREWALL (default setup/firewall).
+# deploy/.env (CANCCU_ENV_FILE replaces it): CANCCU_VERSION; CANCCU_DEPLOY_IMAGES (default ghcr.io/<owner>/<repo>
+# of the origin remote); CANCCU_DEPLOY_GITHUB_TOKEN (opens the issue: Issues read and write on the repo).
+# Environment: CANCCU_DEPLOY_STATE (state dir; default $STATE_DIRECTORY or /var/lib/canccu-deploy),
+# CANCCU_DEPLOY_WAIT (seconds to wait for health, default 30), CANCCU_DEPLOY_FIREWALL (default setup/firewall).
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 dry=0
@@ -23,7 +23,7 @@ docker info >/dev/null 2>&1 || die "cannot reach the Docker daemon (DOCKER_HOST=
 command -v git >/dev/null || die "git not found"
 command -v curl >/dev/null || die "curl not found"
 if [ "$dry" = 1 ]; then
-  for s in "stop unless CP_VERSION in deploy/.env is dev" "check the checkout is clean and on main" \
+  for s in "stop unless CANCCU_VERSION in deploy/.env is dev" "check the checkout is clean and on main" \
     "git fetch origin main" "docker pull <module>:dev for every module with a Dockerfile" \
     "wait until every image was built from origin/main (org.opencontainers.image.revision)" \
     "setup/firewall check" "git merge --ff-only origin/main and tag the images as canccuplatform-<module>:latest" \
@@ -32,12 +32,12 @@ if [ "$dry" = 1 ]; then
   exit 0
 fi
 
-env_file=${CP_ENV_FILE:-deploy/.env}
+env_file=${CANCCU_ENV_FILE:-deploy/.env}
 envval() { [ -r "$env_file" ] || return 0; sed -n "s/^$1=//p" "$env_file" | tail -n1 | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"; }
-version=$(envval CP_VERSION); version=${version:-dev}
+version=$(envval CANCCU_VERSION); version=${version:-dev}
 [ "$version" = dev ] || { say "platform version is $version, not dev: auto-deploy is off"; exit 0; }
 
-state=${CP_DEPLOY_STATE:-${STATE_DIRECTORY:-/var/lib/canccu-deploy}}
+state=${CANCCU_DEPLOY_STATE:-${STATE_DIRECTORY:-/var/lib/canccu-deploy}}
 mkdir -p "$state" || die "cannot create $state"
 exec 9>"$state/lock" || die "cannot open $state/lock"
 flock -n 9 || { say "another deploy is running"; exit 0; }
@@ -49,10 +49,10 @@ g() { if [ "$owner" = "$(id -un)" ]; then git "$@"; else runuser -u "$owner" -- 
 url=$(g remote get-url origin) || die "the checkout has no origin remote"
 slug=$(sed -E 's#^(https://|ssh://)?([^@/]+@)?github\.com[:/]##; s#\.git$##; s#/$##' <<<"$url")
 [[ $slug =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || die "origin ($url) is not a GitHub repository"
-images=$(envval CP_DEPLOY_IMAGES); images=${images:-ghcr.io/${slug,,}}
-token=$(envval CP_DEPLOY_GITHUB_TOKEN)
-wait_s=${CP_DEPLOY_WAIT:-30}
-firewall=${CP_DEPLOY_FIREWALL:-setup/firewall}
+images=$(envval CANCCU_DEPLOY_IMAGES); images=${images:-ghcr.io/${slug,,}}
+token=$(envval CANCCU_DEPLOY_GITHUB_TOKEN)
+wait_s=${CANCCU_DEPLOY_WAIT:-30}
+firewall=${CANCCU_DEPLOY_FIREWALL:-setup/firewall}
 
 
 declare -A new old
@@ -130,7 +130,7 @@ Changes on the host itself: code reaches it only through a merge to main.
 
 Auto-deploy holds this commit and these images, and keeps failing, until a new merge or new images arrive."
   if [ -z "$token" ]; then
-    echo "error: no CP_DEPLOY_GITHUB_TOKEN in $env_file, so no issue was opened" >&2
+    echo "error: no CANCCU_DEPLOY_GITHUB_TOKEN in $env_file, so no issue was opened" >&2
   else
     tmp=$(mktemp) || exit 1
     printf '{"title":%s,"body":%s,"labels":["module:deploy"]}' "$(json "$title")" "$(json "$body")" > "$tmp"

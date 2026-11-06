@@ -32,7 +32,7 @@ export function healthHandler(health: Health): FetchHandler {
   };
 }
 
-/** Run `handler` only when the request's cp_session holds `right`. */
+/** Run `handler` only when the request's canccu_session holds `right`. */
 export function withRight(
   checker: RightsChecker,
   right: string,

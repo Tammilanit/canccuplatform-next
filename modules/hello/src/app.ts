@@ -1,9 +1,9 @@
 /** The hello test module: a Fastify app that serves the shared /health, nothing else. */
 import Fastify from "fastify";
 import type { FastifyInstance } from "fastify";
-import { createHealth, postgresCheck, valkeyCheck } from "@cp/kit";
-import type { CheckFn, Health, StreamStore } from "@cp/kit";
-import { install } from "@cp/kit/fastify";
+import { createHealth, postgresCheck, valkeyCheck } from "@canccu/kit";
+import type { CheckFn, Health, StreamStore } from "@canccu/kit";
+import { install } from "@canccu/kit/fastify";
 
 export interface HelloDeps {
   module: string;

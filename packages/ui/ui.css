@@ -1,20 +1,20 @@
-/* @cp/ui base stylesheet. Token defaults live in :root; themeCss() overrides them from the profile. */
+/* @canccu/ui base stylesheet. Token defaults live in :root; themeCss() overrides them from the profile. */
 :root {
-  --cp-color-background: #0f172a;
-  --cp-color-surface: #1e293b;
-  --cp-color-border: #334155;
-  --cp-color-text: #f8fafc;
-  --cp-color-text-muted: #94a3b8;
-  --cp-color-primary: #3b82f6;
-  --cp-color-primary-text: #ffffff;
-  --cp-color-accent: #f59e0b;
-  --cp-color-status-ok: #22c55e;
-  --cp-color-status-degraded: #eab308;
-  --cp-color-status-down: #ef4444;
-  --cp-font-body: system-ui, sans-serif;
-  --cp-font-heading: system-ui, sans-serif;
-  --cp-font-mono: ui-monospace, monospace;
-  --cp-radius: 0.5rem;
+  --canccu-color-background: #0f172a;
+  --canccu-color-surface: #1e293b;
+  --canccu-color-border: #334155;
+  --canccu-color-text: #f8fafc;
+  --canccu-color-text-muted: #94a3b8;
+  --canccu-color-primary: #3b82f6;
+  --canccu-color-primary-text: #ffffff;
+  --canccu-color-accent: #f59e0b;
+  --canccu-color-status-ok: #22c55e;
+  --canccu-color-status-degraded: #eab308;
+  --canccu-color-status-down: #ef4444;
+  --canccu-font-body: system-ui, sans-serif;
+  --canccu-font-heading: system-ui, sans-serif;
+  --canccu-font-mono: ui-monospace, monospace;
+  --canccu-radius: 0.5rem;
 }
 
 /* Page layout */
@@ -23,43 +23,43 @@
 *::after {
   box-sizing: border-box;
 }
-.cp-page {
+.canccu-page {
   margin: 0;
   min-height: 100vh;
-  background: var(--cp-color-background);
-  color: var(--cp-color-text);
-  font-family: var(--cp-font-body);
+  background: var(--canccu-color-background);
+  color: var(--canccu-color-text);
+  font-family: var(--canccu-font-body);
   line-height: 1.5;
 }
-.cp-page h1,
-.cp-page h2,
-.cp-page h3 {
-  font-family: var(--cp-font-heading);
+.canccu-page h1,
+.canccu-page h2,
+.canccu-page h3 {
+  font-family: var(--canccu-font-heading);
   line-height: 1.2;
 }
-.cp-page a {
-  color: var(--cp-color-primary);
+.canccu-page a {
+  color: var(--canccu-color-primary);
 }
-.cp-page code {
-  font-family: var(--cp-font-mono);
+.canccu-page code {
+  font-family: var(--canccu-font-mono);
 }
-.cp-header {
+.canccu-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1.5rem;
-  border-bottom: 1px solid var(--cp-color-border);
-  background: var(--cp-color-surface);
+  border-bottom: 1px solid var(--canccu-color-border);
+  background: var(--canccu-color-surface);
 }
-.cp-header__logo {
+.canccu-header__logo {
   height: 2rem;
   width: auto;
 }
-.cp-header__title {
-  font-family: var(--cp-font-heading);
+.canccu-header__title {
+  font-family: var(--canccu-font-heading);
   font-weight: 600;
 }
-.cp-main {
+.canccu-main {
   max-width: 64rem;
   margin: 0 auto;
   padding: 1.5rem;
@@ -68,106 +68,106 @@
 }
 
 /* Card */
-.cp-card {
-  background: var(--cp-color-surface);
-  border: 1px solid var(--cp-color-border);
-  border-radius: var(--cp-radius);
+.canccu-card {
+  background: var(--canccu-color-surface);
+  border: 1px solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
   padding: 1rem 1.25rem;
 }
-.cp-card__title {
+.canccu-card__title {
   margin: 0 0 0.75rem;
   font-size: 1.125rem;
 }
 
 /* Button */
-.cp-button {
+.canccu-button {
   font: inherit;
   padding: 0.5rem 1rem;
-  border-radius: var(--cp-radius);
+  border-radius: var(--canccu-radius);
   border: 1px solid transparent;
   cursor: pointer;
 }
-.cp-button:focus-visible,
-.cp-input:focus-visible,
-.cp-check:focus-visible {
-  outline: 2px solid var(--cp-color-primary);
+.canccu-button:focus-visible,
+.canccu-input:focus-visible,
+.canccu-check:focus-visible {
+  outline: 2px solid var(--canccu-color-primary);
   outline-offset: 2px;
 }
-.cp-button:disabled {
+.canccu-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-.cp-button--primary {
-  background: var(--cp-color-primary);
-  color: var(--cp-color-primary-text);
+.canccu-button--primary {
+  background: var(--canccu-color-primary);
+  color: var(--canccu-color-primary-text);
 }
-.cp-button--secondary {
+.canccu-button--secondary {
   background: transparent;
-  color: var(--cp-color-text);
-  border-color: var(--cp-color-border);
+  color: var(--canccu-color-text);
+  border-color: var(--canccu-color-border);
 }
-.cp-button--danger {
-  background: var(--cp-color-status-down);
-  color: var(--cp-color-primary-text);
+.canccu-button--danger {
+  background: var(--canccu-color-status-down);
+  color: var(--canccu-color-primary-text);
 }
 
 /* Form field */
-.cp-field {
+.canccu-field {
   display: grid;
   gap: 0.25rem;
   margin-bottom: 0.75rem;
 }
-.cp-field--check {
+.canccu-field--check {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
-.cp-field__label {
+.canccu-field__label {
   font-weight: 500;
 }
-.cp-input {
+.canccu-input {
   font: inherit;
   padding: 0.45rem 0.6rem;
-  color: var(--cp-color-text);
-  background: var(--cp-color-background);
-  border: 1px solid var(--cp-color-border);
-  border-radius: var(--cp-radius);
+  color: var(--canccu-color-text);
+  background: var(--canccu-color-background);
+  border: 1px solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
 }
-.cp-input[aria-invalid="true"] {
-  border-color: var(--cp-color-status-down);
+.canccu-input[aria-invalid="true"] {
+  border-color: var(--canccu-color-status-down);
 }
-.cp-check {
-  accent-color: var(--cp-color-primary);
+.canccu-check {
+  accent-color: var(--canccu-color-primary);
 }
-.cp-field__hint,
-.cp-field__error {
+.canccu-field__hint,
+.canccu-field__error {
   margin: 0;
   font-size: 0.875rem;
   flex-basis: 100%;
 }
-.cp-field__hint {
-  color: var(--cp-color-text-muted);
+.canccu-field__hint {
+  color: var(--canccu-color-text-muted);
 }
-.cp-field__error {
-  color: var(--cp-color-status-down);
+.canccu-field__error {
+  color: var(--canccu-color-status-down);
 }
 
 /* Health badge */
-.cp-badge {
+.canccu-badge {
   display: inline-block;
   padding: 0.1rem 0.6rem;
   border-radius: 999px;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--cp-color-background);
+  color: var(--canccu-color-background);
 }
-.cp-badge--ok {
-  background: var(--cp-color-status-ok);
+.canccu-badge--ok {
+  background: var(--canccu-color-status-ok);
 }
-.cp-badge--degraded {
-  background: var(--cp-color-status-degraded);
+.canccu-badge--degraded {
+  background: var(--canccu-color-status-degraded);
 }
-.cp-badge--down {
-  background: var(--cp-color-status-down);
+.canccu-badge--down {
+  background: var(--canccu-color-status-down);
 }

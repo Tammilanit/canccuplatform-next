@@ -8,7 +8,7 @@ from contextvars import ContextVar
 
 from uuid6 import uuid7
 
-_correlation_id: ContextVar[str | None] = ContextVar("cp_correlation_id", default=None)
+_correlation_id: ContextVar[str | None] = ContextVar("canccu_correlation_id", default=None)
 
 CORRELATION_HEADER = "x-correlation-id"
 

@@ -1,17 +1,17 @@
-# cp-kit (Python)
+# canccu-kit (Python)
 
-Shared plumbing for platform modules, following [contracts/admin.md](../../contracts/admin.md): event bus, `/health`, settings client, rights check, error body and JSON logging. The core has no web framework; `cp_kit.starlette` is a small adapter for Starlette and FastAPI.
+Shared plumbing for platform modules, following [contracts/admin.md](../../contracts/admin.md): event bus, `/health`, settings client, rights check, error body and JSON logging. The core has no web framework; `canccu_kit.starlette` is a small adapter for Starlette and FastAPI.
 
 ## Install (from a module)
 ```toml
 # modules/<name>/pyproject.toml
-dependencies = ["cp-kit[starlette] @ file:../../packages/kit-py"]
+dependencies = ["canccu-kit[starlette] @ file:../../packages/kit-py"]
 ```
-The kit reads `CP_MODULE`, `CP_VERSION`, `CP_VALKEY_URL` and `CP_ADMIN_URL`; `load_config()` stops at start and names any that is missing.
+The kit reads `CANCCU_MODULE`, `CANCCU_VERSION`, `CANCCU_VALKEY_URL` and `CANCCU_ADMIN_URL`; `load_config()` stops at start and names any that is missing.
 
 ## Usage
 ```python
-from cp_kit import (
+from canccu_kit import (
     AdminClient,
     Bus,
     Health,
@@ -38,7 +38,7 @@ settings = SettingsClient(admin, config.module)
 await settings.start()
 rotation = settings.get("rotation_seconds", 10)
 
-# Rights: checks the cp_session cookie against GET /api/admin/session, cached ≤ 30 s
+# Rights: checks the canccu_session cookie against GET /api/admin/session, cached ≤ 30 s
 rights = RightsChecker(admin)
 
 
@@ -60,7 +60,7 @@ health = Health(
 ### Starlette / FastAPI
 ```python
 from starlette.applications import Starlette
-from cp_kit.starlette import install, require_right, right_dependency
+from canccu_kit.starlette import install, require_right, right_dependency
 
 app = Starlette(routes=[...])
 install(app, health)  # /health, error body for every non-2xx, X-Correlation-Id
@@ -83,7 +83,7 @@ Raise `KitError("text", status=400, code="slide_invalid")` (or `MissingRight`, `
 The kit writes nothing to disk. Its only in-memory items are the rights cache (≤ 30 s per session), the current settings and the bus's dedupe list of recent event ids. Sessions live in admin (Postgres) and events in Valkey.
 
 ## Tests for modules
-`cp_kit.testing.MemoryStreamStore` is an in-memory `StreamStore` that records every `xadd` call.
+`canccu_kit.testing.MemoryStreamStore` is an in-memory `StreamStore` that records every `xadd` call.
 
 ## Check
 ```sh
@@ -92,10 +92,10 @@ pip install -e ".[dev]" && ruff check . && ruff format --check . && mypy . && py
 CI runs `ruff check .`, `mypy .` and `pytest` (job `lint-types-test (kit-py)`).
 
 ## Integration test
-The store and bus run against the real Valkey from the Compose stack: publish with MAXLEN (exact and `~`), subscribe, and dedupe of an entry added twice. The test is skipped unless `CP_VALKEY_URL` is set, so the check above stays offline.
+The store and bus run against the real Valkey from the Compose stack: publish with MAXLEN (exact and `~`), subscribe, and dedupe of an entry added twice. The test is skipped unless `CANCCU_VALKEY_URL` is set, so the check above stays offline.
 ```sh
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml up -d --wait valkey
-CP_VALKEY_URL=redis://127.0.0.1:6379 pytest tests/test_valkey_integration.py
+CANCCU_VALKEY_URL=redis://127.0.0.1:6379 pytest tests/test_valkey_integration.py
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml down
 ```
 `compose.test.yml` publishes Valkey on `127.0.0.1:6379` only. CI runs this as the `integration (kit)` job.

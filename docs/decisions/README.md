@@ -22,3 +22,4 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0014](0014-independent-review.md) | Every PR gets an independent review | 2026-11-05 |
 | [0015](0015-dependency-auditing.md) | Dependency auditing | 2026-11-05 |
 | [0016](0016-merge-policy.md) | Merge policy | 2026-11-05 |
+| [0017](0017-naming.md) | Naming: the canccu prefix | 2026-11-05 |

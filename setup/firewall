@@ -1,24 +1,24 @@
 #!/usr/bin/env bash
 # DOCKER-USER firewall for the web ports, IPv4 (iptables) and IPv6 (ip6tables).
 #
-# ufw does not filter ports that Docker publishes through NAT, so this keeps a CP-FIREWALL chain,
+# ufw does not filter ports that Docker publishes through NAT, so this keeps a CANCCU-FIREWALL chain,
 # hooked first into DOCKER-USER, that drops published (DNAT) traffic unless it comes from an
 # allowed source to port 80 or 443. Container-to-container and outbound traffic are untouched.
 #
-# Allowed sources: CP_WEB_ALLOW, from the environment or else from deploy/.env (CP_ENV_FILE
+# Allowed sources: CANCCU_WEB_ALLOW, from the environment or else from deploy/.env (CANCCU_ENV_FILE
 # overrides the path). A space or comma separated list of IPv4/IPv6 addresses or CIDRs, or `any`
 # to open the web ports to everyone. Empty = apply refuses (it never opens silently). Host
 # addresses stay in deploy/.env, never in the repo.
 #
 # Usage: firewall apply|close|remove|check|bypass|status [--dry-run]
-#   apply   rebuild the chain from CP_WEB_ALLOW (atomic per family, idempotent)
+#   apply   rebuild the chain from CANCCU_WEB_ALLOW (atomic per family, idempotent)
 #   close   drop all published traffic (what canccu-firewall.service does when apply fails)
 #   remove  unhook and delete the chain
 #   check   exit 0 only if, on IPv4 and IPv6, FORWARD -> DOCKER-USER -> the chain -> DROP, and
 #           there is no bypass
 #   bypass  exit 1 if docker-proxy serves web port 80/443 on an IPv6 address to an IPv4-only
 #           container: that traffic arrives on INPUT and never meets the chain (no root needed;
-#           CP_PROXY_ARGS names a file of docker-proxy command lines, for the self-test)
+#           CANCCU_PROXY_ARGS names a file of docker-proxy command lines, for the self-test)
 #   status  list the chain
 # All but --dry-run need root. Exit 2 = bad input or something missing.
 set -uo pipefail
@@ -32,9 +32,9 @@ case "$cmd" in apply|close|remove|check|bypass|status) ;; *) echo "$usage" >&2; 
 case "${2:-}" in "") ;; --dry-run) dry=1 ;; *) echo "$usage" >&2; exit 2 ;; esac
 [ $# -le 2 ] || { echo "$usage" >&2; exit 2; }
 
-chain=CP-FIREWALL
+chain=CANCCU-FIREWALL
 ports="80 443"
-env_file=${CP_ENV_FILE:-deploy/.env}
+env_file=${CANCCU_ENV_FILE:-deploy/.env}
 
 # valid4/valid6 ENTRY: an address with an optional prefix. The regexes keep anything but
 # addresses out of iptables-restore; Python's ipaddress, when present, checks the rest.
@@ -57,12 +57,12 @@ valid6() {
   pyvalid "$1"
 }
 
-# Parse CP_WEB_ALLOW into v4, v6 and any.
+# Parse CANCCU_WEB_ALLOW into v4, v6 and any.
 v4=(); v6=(); any=0
 parse_allow() {
   local allow="" e n=0
-  if [ -n "${CP_WEB_ALLOW+set}" ]; then allow=$CP_WEB_ALLOW
-  elif [ -r "$env_file" ]; then allow=$(sed -n 's/^CP_WEB_ALLOW=//p' "$env_file" | tail -1)
+  if [ -n "${CANCCU_WEB_ALLOW+set}" ]; then allow=$CANCCU_WEB_ALLOW
+  elif [ -r "$env_file" ]; then allow=$(sed -n 's/^CANCCU_WEB_ALLOW=//p' "$env_file" | tail -1)
   fi
   allow=${allow//[\"\']/}
   allow=${allow//,/ }
@@ -71,11 +71,11 @@ parse_allow() {
     if [ "$e" = any ]; then any=1
     elif valid4 "$e"; then v4+=("$e")
     elif valid6 "$e"; then v6+=("$e")
-    else die "not an IPv4 or IPv6 address: $e (CP_WEB_ALLOW takes addresses, CIDRs or 'any')"
+    else die "not an IPv4 or IPv6 address: $e (CANCCU_WEB_ALLOW takes addresses, CIDRs or 'any')"
     fi
   done
-  [ "$n" -gt 0 ] || die "CP_WEB_ALLOW is empty; set it in $env_file (e.g. CP_WEB_ALLOW=203.0.113.5, or 'any' to open the web ports to everyone)"
-  if [ "$any" = 1 ] && [ "$n" -gt 1 ]; then die "'any' must be the only entry in CP_WEB_ALLOW"; fi
+  [ "$n" -gt 0 ] || die "CANCCU_WEB_ALLOW is empty; set it in $env_file (e.g. CANCCU_WEB_ALLOW=203.0.113.5, or 'any' to open the web ports to everyone)"
+  if [ "$any" = 1 ] && [ "$n" -gt 1 ]; then die "'any' must be the only entry in CANCCU_WEB_ALLOW"; fi
 }
 
 # rules FAMILY SOURCE...: iptables-restore input for the chain. No sources = closed.
@@ -138,7 +138,7 @@ load() {
 # bypassed: print each IPv6 web-port binding that docker-proxy forwards to an IPv4 container
 bypassed() {
   local args
-  if [ -n "${CP_PROXY_ARGS:-}" ]; then args=$(cat "$CP_PROXY_ARGS"); else args=$(ps -eo args 2>/dev/null); fi
+  if [ -n "${CANCCU_PROXY_ARGS:-}" ]; then args=$(cat "$CANCCU_PROXY_ARGS"); else args=$(ps -eo args 2>/dev/null); fi
   awk -v ports=" $ports " '$1 ~ /docker-proxy$/ {
       hip = ""; hport = ""; cip = ""
       for (i = 2; i < NF; i++) {
@@ -200,7 +200,7 @@ check)
     echo "FAIL IPv6 web traffic bypasses $chain via docker-proxy (IPv4-only network): ${found//$'\n'/, }" >&2; bad=1
   fi
   # closed is safe, so it passes; check-boot reports it
-  if [ "$bad" = 0 ] && ! opened 4 && ! opened 6; then echo "closed: $chain lets no published traffic in (CP_WEB_ALLOW not applied)"; fi
+  if [ "$bad" = 0 ] && ! opened 4 && ! opened 6; then echo "closed: $chain lets no published traffic in (CANCCU_WEB_ALLOW not applied)"; fi
   exit $bad ;;
 bypass)
   found=$(bypassed)

@@ -1,6 +1,6 @@
 /** Start hello: read the kit config, connect to Valkey and Postgres, serve /health. */
 import pg from "pg";
-import { ValkeyStreamStore, createLogger, loadConfig } from "@cp/kit";
+import { ValkeyStreamStore, createLogger, loadConfig } from "@canccu/kit";
 import { buildApp, helloHealth } from "./app.js";
 
 const PORT = 8080;
@@ -8,8 +8,8 @@ const PORT = 8080;
 async function main(): Promise<void> {
   const config = loadConfig();
   const log = createLogger(config.module);
-  const databaseUrl = process.env.CP_DATABASE_URL;
-  if (!databaseUrl) throw new Error("missing environment variable(s): CP_DATABASE_URL");
+  const databaseUrl = process.env.CANCCU_DATABASE_URL;
+  if (!databaseUrl) throw new Error("missing environment variable(s): CANCCU_DATABASE_URL");
 
   const store = ValkeyStreamStore.fromUrl(config.valkeyUrl);
   const pool = new pg.Pool({ connectionString: databaseUrl, connectionTimeoutMillis: 1500 });

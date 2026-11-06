@@ -4,7 +4,7 @@
 # Usage: check-boot [--dry-run]      (needs root for the firewall check)
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
-checks="docker.service enabled, canccu-firewall.service enabled, docker.service requires canccu-firewall, canccu-stack.service enabled, canccu-deploy.timer enabled (while CP_VERSION is dev), restart policies of the running services, services running and healthy, firewall in place and not closed (IPv4 and IPv6)"
+checks="docker.service enabled, canccu-firewall.service enabled, docker.service requires canccu-firewall, canccu-stack.service enabled, canccu-deploy.timer enabled (while CANCCU_VERSION is dev), restart policies of the running services, services running and healthy, firewall in place and not closed (IPv4 and IPv6)"
 case "${1:-}" in
   "") ;;
   --dry-run) echo "dry run, would check: $checks"; exit 0 ;;
@@ -18,11 +18,11 @@ no() { echo "FAIL $1" >&2; fail=1; }
 for u in docker canccu-firewall canccu-stack; do
   if systemctl is-enabled --quiet "$u" 2>/dev/null; then ok "$u.service enabled at boot"; else no "$u.service enabled at boot"; fi
 done
-# the auto-deploy timer matters only while CP_VERSION in deploy/.env is dev (setup/deploy)
-version=$(sed -n 's/^CP_VERSION=//p' "${CP_ENV_FILE:-deploy/.env}" 2>/dev/null | tail -n1 | tr -d "\"'")
-if [ "${version:-dev}" != dev ]; then ok "canccu-deploy.timer not needed (CP_VERSION is $version, not dev)"
+# the auto-deploy timer matters only while CANCCU_VERSION in deploy/.env is dev (setup/deploy)
+version=$(sed -n 's/^CANCCU_VERSION=//p' "${CANCCU_ENV_FILE:-deploy/.env}" 2>/dev/null | tail -n1 | tr -d "\"'")
+if [ "${version:-dev}" != dev ]; then ok "canccu-deploy.timer not needed (CANCCU_VERSION is $version, not dev)"
 elif systemctl is-enabled --quiet canccu-deploy.timer 2>/dev/null; then ok "canccu-deploy.timer enabled at boot"
-else no "canccu-deploy.timer enabled at boot (CP_VERSION is dev; to pause auto-deploy on purpose, ignore this line)"; fi
+else no "canccu-deploy.timer enabled at boot (CANCCU_VERSION is dev; to pause auto-deploy on purpose, ignore this line)"; fi
 if systemctl show -p Requires --value docker 2>/dev/null | grep -qw canccu-firewall.service
 then ok "docker.service requires canccu-firewall"; else no "docker.service requires canccu-firewall"; fi
 want=$(docker compose -f deploy/compose.yml config --services 2>/dev/null | sort)
@@ -37,7 +37,7 @@ else
   else ok "services running and healthy"; fi
 fi
 if fw=$(setup/firewall check); then
-  if grep -q '^closed' <<<"$fw"; then no "firewall is closed; fix CP_WEB_ALLOW in deploy/.env and run: systemctl reload canccu-firewall"
+  if grep -q '^closed' <<<"$fw"; then no "firewall is closed; fix CANCCU_WEB_ALLOW in deploy/.env and run: systemctl reload canccu-firewall"
   else ok "firewall in place (IPv4 and IPv6)"; fi
 else
   printf '%s\n' "$fw"; no "firewall in place (IPv4 and IPv6)"

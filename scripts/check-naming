@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Naming check (ADR 0017): fail if a tracked file uses the old platform prefix as an
+# identifier. Usage: check-naming [DIR]    (default: the repo root; scans `git ls-files`)
+#                    check-naming --self-test
+set -uo pipefail
+# Split so this file does not contain the patterns it forbids.
+old="c""p"
+OLD="C""P"
+
+if [ "${1:-}" = "--self-test" ]; then
+  self=$(cd "$(dirname "$0")" && pwd)/check-naming
+  t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
+  cd "$t" && git init -q .
+  fail=0
+  expect() { # name, expected exit, path, file content
+    mkdir -p "$(dirname "$3")"; printf '%s\n' "$4" > "$3"; git add -A
+    "$self" "$t" >/dev/null 2>&1; rc=$?
+    if [ "$rc" = "$2" ]; then echo "ok   $1"; else echo "FAIL $1 (exit $rc, want $2)"; fail=1; fi
+    git rm -rqf . >/dev/null; rm -rf "${t:?}"/*
+  }
+  expect "clean tree passes" 0 a.txt "CANCCU_MODULE=hello @canccu/kit canccu_kit canccu-ui"
+  expect "env var fails" 1 a.txt "${OLD}_MODULE=hello"
+  expect "npm scope fails" 1 a.json "\"@${old}/kit\": \"file:../kit\""
+  expect "python import fails" 1 a.py "from ${old}_kit import x"
+  expect "dash identifier fails" 1 a.css ".${old}-button { }"
+  expect "CSS custom property fails" 1 a.css "color: var(--${old}-color-text);"
+  expect "upper dash identifier fails" 1 a.sh "chain=${OLD}-FIREWALL"
+  expect "template prefix fails" 1 a.ts "return \`--${old}-\${kind}\`;"
+  expect "regex prefix fails" 1 a.ts "/(--${old}-[a-z-]+)/"
+  expect "after an escaped newline fails" 1 a.sh "printf 'a=1\\n${OLD}_WEB_ALLOW=x'"
+  expect "coreutils cp passes" 0 a.sh "${old} -R /seed/. /files/; ${old} -r a b"
+  expect "longer words pass" 0 a.txt "scp-file mcp_server rsync --cpus=2 SCP_HOST"
+  expect "docs/plans is history" 0 docs/plans/issue-1.md "${OLD}_MODULE and @${old}/kit"
+  expect "other docs are checked" 1 docs/a.md "${OLD}_MODULE"
+  expect "file names are checked" 1 "src/${old}_kit/a.py" "x = 1"
+  exit "$fail"
+fi
+
+root="${1:-$(git rev-parse --show-toplevel)}"
+if ! { cd "$root" && git rev-parse --git-dir >/dev/null; }; then echo "check-naming: $root is not a git work tree"; exit 2; fi
+# An identifier: the old prefix at a word start or after a \n escape, then _ - or / and a
+# letter, or the $ of a template or the [ of a regex. The cp command is followed by a space,
+# so it never matches; neither do scp-, mcp_ or --cpus.
+pattern="(^|[^A-Za-z0-9_]|\\\\[nrt])(${OLD}[_-][A-Z]|${old}[_-]([a-z]|[$]|\\[)|@${old}/)"
+grep -qE -- "$pattern" </dev/null; [ $? -le 1 ] || { echo "check-naming: bad pattern"; exit 2; }
+hits=$(git ls-files -z -- . ':!docs/plans/' | xargs -0 -r grep -nIE -- "$pattern")
+names=$(git ls-files -- . ':!docs/plans/' | grep -E -- "$pattern")
+if [ -n "$hits$names" ]; then
+  echo "check-naming: the old prefix is used; rename to canccu (docs/decisions/0017-naming.md):"
+  [ -n "$names" ] && printf '%s\n' "$names"
+  [ -n "$hits" ] && printf '%s\n' "$hits"
+  exit 1
+fi
+echo "check-naming: ok"

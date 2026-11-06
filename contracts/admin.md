@@ -26,7 +26,7 @@ Every module serves `GET /health` with the same shape (`Health` in the OpenAPI f
 - Modules read their settings at start and follow `admin.settings.changed` instead of polling.
 
 ## Session and rights
-- Signing in (Discord, first-run code: #10) ends in a session. The session id is the opaque cookie `cp_session` (HttpOnly, SameSite=Lax, Secure when served over HTTPS); the session itself lives in Postgres, so any container can serve any request.
+- Signing in (Discord, first-run code: #10) ends in a session. The session id is the opaque cookie `canccu_session` (HttpOnly, SameSite=Lax, Secure when served over HTTPS); the session itself lives in Postgres, so any container can serve any request.
 - `GET /api/admin/session` → `{"user": {"id", "name"}, "rights": [...], "expires_at"}`, or 401 `not_signed_in`.
 - `POST /api/admin/session/sign-out` → 204 and clears the cookie.
 - **Rights** are strings `<module>.<right>`, e.g. `admin.settings.write`, `tournament.matches.edit`. Each module's contract lists its rights.

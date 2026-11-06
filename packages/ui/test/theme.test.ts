@@ -17,7 +17,7 @@ describe("resolveTheme / themeCss", () => {
     expect(theme.fonts.body).toBe("Inter");
     expect(theme.fonts.mono).toBe(FONT_TOKENS.mono);
     expect(themeCss(profile)).toBe(
-      ':root {\n  --cp-color-primary: #ff0000aa;\n  --cp-font-body: "Inter", system-ui, sans-serif;\n}',
+      ':root {\n  --canccu-color-primary: #ff0000aa;\n  --canccu-font-body: "Inter", system-ui, sans-serif;\n}',
     );
   });
 

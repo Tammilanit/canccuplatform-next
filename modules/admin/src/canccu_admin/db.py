@@ -6,7 +6,7 @@ import json
 from typing import Any, Protocol
 
 import asyncpg
-from cp_kit import VersionConflict
+from canccu_kit import VersionConflict
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS admin_settings (

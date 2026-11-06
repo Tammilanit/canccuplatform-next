@@ -21,7 +21,7 @@ class AdminClient:
         session_id: str | None = None,
         json: Any = None,
     ) -> httpx.Response:
-        headers = {"cookie": f"cp_session={session_id}"} if session_id else {}
+        headers = {"cookie": f"canccu_session={session_id}"} if session_id else {}
         try:
             return await self._client.request(method, path, json=json, headers=headers)
         except httpx.TransportError as exc:
