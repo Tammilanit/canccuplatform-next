@@ -1,26 +1,26 @@
 # CanccuPlatform on one machine, IP mode: `docker compose -f deploy/compose.yml up -d`
-# Only Caddy publishes a port. Containers keep no state: data lives in the postgres-data,
+# Only Caddy publishes ports. Containers keep no state: data lives in the postgres-data,
 # valkey-data and files volumes.
 name: canccuplatform
 
 x-kit-env: &kit-env
-  CP_VERSION: ${CP_VERSION:-dev}
-  CP_VALKEY_URL: redis://valkey:6379
-  CP_ADMIN_URL: http://admin:8080
+  CANCCU_VERSION: ${CANCCU_VERSION:-dev}
+  CANCCU_VALKEY_URL: redis://valkey:6379
+  CANCCU_ADMIN_URL: http://admin:8080
 
 services:
   postgres:
     image: postgres:17.11-alpine
     environment:
-      POSTGRES_USER: cp
-      POSTGRES_DB: cp
+      POSTGRES_USER: canccu
+      POSTGRES_DB: canccu
       # Placeholder for local use only. Real installs set POSTGRES_PASSWORD in deploy/.env
       # (see .env.example); the setup wizard will generate it.
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cp-local-only}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-canccu-local-only}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cp -d cp"]
+      test: ["CMD-SHELL", "pg_isready -U canccu -d canccu"]
       interval: 2s
       timeout: 3s
       retries: 30
@@ -44,8 +44,8 @@ services:
       dockerfile: modules/hello/Dockerfile
     environment:
       <<: *kit-env
-      CP_MODULE: hello
-      CP_DATABASE_URL: postgres://cp:${POSTGRES_PASSWORD:-cp-local-only}@postgres:5432/cp
+      CANCCU_MODULE: hello
+      CANCCU_DATABASE_URL: postgres://canccu:${POSTGRES_PASSWORD:-canccu-local-only}@postgres:5432/canccu
     volumes:
       - files:/files
     depends_on:
@@ -70,10 +70,10 @@ services:
       dockerfile: modules/admin/Dockerfile
     environment:
       <<: *kit-env
-      CP_MODULE: admin
-      CP_DATABASE_URL: postgres://cp:${POSTGRES_PASSWORD:-cp-local-only}@postgres:5432/cp
-      CP_EVENT_DIR: /files/event
-      CP_HEALTH_TARGETS: hello=http://hello:8080/health
+      CANCCU_MODULE: admin
+      CANCCU_DATABASE_URL: postgres://canccu:${POSTGRES_PASSWORD:-canccu-local-only}@postgres:5432/canccu
+      CANCCU_EVENT_DIR: /files/event
+      CANCCU_HEALTH_TARGETS: hello=http://hello:8080/health
     volumes:
       - files:/files
     depends_on:
@@ -96,8 +96,14 @@ services:
 
   caddy:
     image: caddy:2.11-alpine
+    # Explicit host IPs: the host's Docker default bind may be 127.0.0.1. On a host reachable from
+    # outside, start the stack only once the DOCKER-USER firewall is in place (setup/README.md):
+    # Docker's NAT bypasses ufw. 443 is published ahead of the TLS option (#5).
     ports:
-      - "80:80"
+      - { target: 80, published: "80", host_ip: 0.0.0.0, protocol: tcp }
+      - { target: 80, published: "80", host_ip: "::", protocol: tcp }
+      - { target: 443, published: "443", host_ip: 0.0.0.0, protocol: tcp }
+      - { target: 443, published: "443", host_ip: "::", protocol: tcp }
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
     # The image declares /data and /config volumes; http mode stores nothing there, so keep
@@ -109,6 +115,17 @@ services:
       - hello
       - admin
     restart: unless-stopped
+
+# IPv6 on the stack's network, so Docker NATs published IPv6 traffic through ip6tables and the
+# DOCKER-USER firewall (setup/firewall) filters it. Without it, docker-proxy would forward the
+# "::" ports to the IPv4 container address and that traffic would bypass DOCKER-USER.
+# A fixed ULA prefix, internal to this host; Docker adds an IPv4 subnet itself.
+networks:
+  default:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: fd8c:6a3e:51e2:1::/64
 
 volumes:
   postgres-data:

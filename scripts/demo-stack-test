@@ -4,7 +4,7 @@
 # contracts/ come later.
 # Usage: demo-stack-test [--dry-run] [BASE_URL]   (default http://localhost)
 # Needs curl, jq and python3. The signed-in calls use the CI session stub's cookie
-# (cp_session=demo-ci, see deploy/compose.ci.yml).
+# (canccu_session=demo-ci, see deploy/compose.ci.yml).
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
@@ -14,7 +14,7 @@ if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
 [ $# -le 1 ] || usage
 BASE=${1:-http://localhost}
 BASE=${BASE%/}
-COOKIE="cp_session=${DEMO_SESSION:-demo-ci}"
+COOKIE="canccu_session=${DEMO_SESSION:-demo-ci}"
 EVENT_DIR=events/demo
 
 TESTS=(
@@ -84,7 +84,7 @@ check "${TESTS[1]}" body_is 200 '.status == "ok" and .module == "admin" and .che
 call GET /api/admin/settings/admin
 check "${TESTS[2]}" body_is 401 '.error.code == "not_signed_in"'
 
-call GET /api/admin/settings/admin -H "cookie: cp_session=not-a-session"
+call GET /api/admin/settings/admin -H "cookie: canccu_session=not-a-session"
 check "${TESTS[3]}" body_is 401 '.error.code == "not_signed_in"'
 
 profile_name=$(grep -m1 '^name:' "$EVENT_DIR/profile.yaml" | sed 's/^name:[[:space:]]*//')

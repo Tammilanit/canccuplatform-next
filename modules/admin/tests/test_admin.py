@@ -9,15 +9,15 @@ from pathlib import Path
 import httpx
 import pytest
 import yaml
-from cp_kit import Bus, Health, MissingRight, NotSignedIn
-from cp_kit.rights import Session
-from cp_kit.testing import MemoryStreamStore
+from canccu_kit import Bus, Health, MissingRight, NotSignedIn
+from canccu_kit.rights import Session
+from canccu_kit.testing import MemoryStreamStore
 
-from cp_admin.app import create_app
-from cp_admin.db import MemoryStore
-from cp_admin.declarations import load_declarations
-from cp_admin.profile import make_validator
-from cp_admin.service import Service
+from canccu_admin.app import create_app
+from canccu_admin.db import MemoryStore
+from canccu_admin.declarations import load_declarations
+from canccu_admin.profile import make_validator
+from canccu_admin.service import Service
 
 ROOT = Path(__file__).resolve().parents[3]
 RIGHTS = {
@@ -70,7 +70,7 @@ def parts(tmp_path: Path) -> Parts:
     health = Health("admin", "dev", {})
     app = create_app(service, health, authorize)
     client = httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app), base_url="http://t", cookies={"cp_session": "s"}
+        transport=httpx.ASGITransport(app=app), base_url="http://t", cookies={"canccu_session": "s"}
     )
     return client, service, streams, event
 
@@ -158,7 +158,7 @@ async def test_load_rejects_too_new_and_invalid(parts: Parts) -> None:
 
 
 async def test_upgrade_older_version(parts: Parts, monkeypatch: pytest.MonkeyPatch) -> None:
-    from cp_admin import profile
+    from canccu_admin import profile
 
     _, service, _, _event = parts
     monkeypatch.setattr(profile, "CURRENT_VERSION", 2)

@@ -14,7 +14,7 @@ export interface ButtonOptions {
 export function button(o: ButtonOptions): Html {
   const variant = o.variant ?? "primary";
   return html`<button${attrs({
-    class: `cp-button cp-button--${variant}`,
+    class: `canccu-button canccu-button--${variant}`,
     type: o.type ?? "submit",
     name: o.name,
     value: o.value,
@@ -42,7 +42,7 @@ export interface FieldOptions {
 /** A labelled form field with an optional hint and error (settings value types: text, number, bool, choice). */
 export function field(o: FieldOptions): Html {
   const type = o.type ?? (o.options ? "select" : "text");
-  const id = `cp-field-${o.name}`;
+  const id = `canccu-field-${o.name}`;
   const describedBy = o.error ? `${id}-error` : o.hint ? `${id}-hint` : undefined;
   const common = {
     id,
@@ -57,21 +57,21 @@ export function field(o: FieldOptions): Html {
       (opt) =>
         html`<option${attrs({ value: opt.value, selected: String(o.value) === opt.value })}>${opt.label}</option>`,
     );
-    control = html`<select${attrs({ class: "cp-input", ...common })}>${options}</select>`;
+    control = html`<select${attrs({ class: "canccu-input", ...common })}>${options}</select>`;
   } else if (type === "checkbox") {
-    control = html`<input${attrs({ class: "cp-check", type, value: "true", checked: o.value === true, ...common })}>`;
+    control = html`<input${attrs({ class: "canccu-check", type, value: "true", checked: o.value === true, ...common })}>`;
   } else {
     const value = o.value === undefined || typeof o.value === "boolean" ? undefined : o.value;
-    control = html`<input${attrs({ class: "cp-input", type, value, ...common })}>`;
+    control = html`<input${attrs({ class: "canccu-input", type, value, ...common })}>`;
   }
-  const label = html`<label${attrs({ class: "cp-field__label", for: id })}>${o.label}</label>`;
+  const label = html`<label${attrs({ class: "canccu-field__label", for: id })}>${o.label}</label>`;
   const help: Slot = o.error
-    ? html`<p${attrs({ class: "cp-field__error", id: `${id}-error` })}>${o.error}</p>`
+    ? html`<p${attrs({ class: "canccu-field__error", id: `${id}-error` })}>${o.error}</p>`
     : o.hint
-      ? html`<p${attrs({ class: "cp-field__hint", id: `${id}-hint` })}>${o.hint}</p>`
+      ? html`<p${attrs({ class: "canccu-field__hint", id: `${id}-hint` })}>${o.hint}</p>`
       : undefined;
   const body = type === "checkbox" ? html`${control} ${label}` : html`${label}${control}`;
-  const cls = type === "checkbox" ? "cp-field cp-field--check" : "cp-field";
+  const cls = type === "checkbox" ? "canccu-field canccu-field--check" : "canccu-field";
   return html`<div${attrs({ class: cls })}>${body}${help}</div>`;
 }
 
@@ -82,8 +82,8 @@ export interface CardOptions {
 
 /** A card: a bordered section with an optional heading. */
 export function card(o: CardOptions): Html {
-  const title = o.title === undefined ? "" : html`<h2 class="cp-card__title">${o.title}</h2>`;
-  return html`<section class="cp-card">${title}${o.body}</section>`;
+  const title = o.title === undefined ? "" : html`<h2 class="canccu-card__title">${o.title}</h2>`;
+  return html`<section class="canccu-card">${title}${o.body}</section>`;
 }
 
 export interface PageOptions {
@@ -104,7 +104,7 @@ export function page(o: PageOptions): Html {
   const logo =
     o.logoUrl === undefined
       ? ""
-      : html`<img${attrs({ class: "cp-header__logo", src: o.logoUrl, alt: "" })}>`;
+      : html`<img${attrs({ class: "canccu-header__logo", src: o.logoUrl, alt: "" })}>`;
   return html`<!doctype html>
 <html lang="en">
 <head>
@@ -113,9 +113,9 @@ export function page(o: PageOptions): Html {
 <title>${o.title}</title>
 <link${attrs({ rel: "stylesheet", href: o.cssHref ?? "/ui/ui.css" })}>
 ${style}</head>
-<body class="cp-page">
-<header class="cp-header">${logo}<span class="cp-header__title">${o.title}</span></header>
-<main class="cp-main">${o.body}</main>
+<body class="canccu-page">
+<header class="canccu-header">${logo}<span class="canccu-header__title">${o.title}</span></header>
+<main class="canccu-main">${o.body}</main>
 </body>
 </html>
 `;
@@ -125,5 +125,5 @@ export type HealthStatus = "ok" | "degraded" | "down";
 
 /** A health badge (contracts/admin.md Health status); the text is the status word. */
 export function healthBadge(status: HealthStatus): Html {
-  return html`<span${attrs({ class: `cp-badge cp-badge--${status}` })}>${status}</span>`;
+  return html`<span${attrs({ class: `canccu-badge canccu-badge--${status}` })}>${status}</span>`;
 }

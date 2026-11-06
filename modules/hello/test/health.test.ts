@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
-import { MemoryStreamStore } from "@cp/kit/testing";
+import { MemoryStreamStore } from "@canccu/kit/testing";
 import { buildApp, helloHealth } from "../src/app.js";
 
 let app: FastifyInstance | undefined;

@@ -12,7 +12,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 import yaml
-from cp_kit import KitError
+from canccu_kit import KitError
 from jsonschema import Draft202012Validator
 
 CURRENT_VERSION = 1

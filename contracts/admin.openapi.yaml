@@ -103,7 +103,7 @@ paths:
       operationId: getSession
       summary: The signed-in user and their rights
       description: |
-        Modules check rights by calling this with the user's `cp_session` cookie and looking for the
+        Modules check rights by calling this with the user's `canccu_session` cookie and looking for the
         right in `rights`. The kit wraps this call.
       responses:
         "200":
@@ -175,7 +175,7 @@ components:
     session:
       type: apiKey
       in: cookie
-      name: cp_session
+      name: canccu_session
       description: Opaque session id, stored in Postgres. Set by sign-in (issue #10).
   parameters:
     Module:

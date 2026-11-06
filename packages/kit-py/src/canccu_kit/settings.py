@@ -10,7 +10,7 @@ from .admin import AdminClient
 from .bus import Event
 from .errors import VersionConflict
 
-log = logging.getLogger("cp.kit.settings")
+log = logging.getLogger("canccu.kit.settings")
 
 SettingValue = str | int | float | bool | list[str | int | float | bool]
 OnChange = Callable[[list[str]], Awaitable[None]]

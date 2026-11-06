@@ -1,0 +1,12 @@
+# Runs canccu-deploy.service (setup/deploy) 5 minutes after boot and then 2 minutes after each run
+# ends, so a merge to main reaches this host a few minutes after CI has pushed its images.
+# setup/install --boot installs and enables it.
+[Unit]
+Description=CanccuPlatform auto-deploy of main (dev mode), every 2 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=2min
+
+[Install]
+WantedBy=timers.target

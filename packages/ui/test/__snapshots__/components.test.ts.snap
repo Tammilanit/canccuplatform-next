@@ -1,32 +1,32 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`button > danger 1`] = `"<button class="cp-button cp-button--danger" type="submit">Save</button>"`;
+exports[`button > danger 1`] = `"<button class="canccu-button canccu-button--danger" type="submit">Save</button>"`;
 
-exports[`button > primary 1`] = `"<button class="cp-button cp-button--primary" type="submit">Save</button>"`;
+exports[`button > primary 1`] = `"<button class="canccu-button canccu-button--primary" type="submit">Save</button>"`;
 
-exports[`button > secondary 1`] = `"<button class="cp-button cp-button--secondary" type="submit">Save</button>"`;
+exports[`button > secondary 1`] = `"<button class="canccu-button canccu-button--secondary" type="submit">Save</button>"`;
 
-exports[`button > with type, name, value and disabled 1`] = `"<button class="cp-button cp-button--primary" type="button" name="action" value="reset" disabled>Reset</button>"`;
+exports[`button > with type, name, value and disabled 1`] = `"<button class="canccu-button canccu-button--primary" type="button" name="action" value="reset" disabled>Reset</button>"`;
 
-exports[`card > with title 1`] = `"<section class="cp-card"><h2 class="cp-card__title">Health</h2><span class="cp-badge cp-badge--ok">ok</span></section>"`;
+exports[`card > with title 1`] = `"<section class="canccu-card"><h2 class="canccu-card__title">Health</h2><span class="canccu-badge canccu-badge--ok">ok</span></section>"`;
 
-exports[`card > without title 1`] = `"<section class="cp-card">Plain text</section>"`;
+exports[`card > without title 1`] = `"<section class="canccu-card">Plain text</section>"`;
 
-exports[`field > checkbox 1`] = `"<div class="cp-field cp-field--check"><input class="cp-check" type="checkbox" value="true" checked id="cp-field-open" name="open"> <label class="cp-field__label" for="cp-field-open">Open</label></div>"`;
+exports[`field > checkbox 1`] = `"<div class="canccu-field canccu-field--check"><input class="canccu-check" type="checkbox" value="true" checked id="canccu-field-open" name="open"> <label class="canccu-field__label" for="canccu-field-open">Open</label></div>"`;
 
-exports[`field > number with error 1`] = `"<div class="cp-field"><label class="cp-field__label" for="cp-field-slots">Slots</label><input class="cp-input" type="number" value="8" id="cp-field-slots" name="slots" required aria-invalid="true" aria-describedby="cp-field-slots-error"><p class="cp-field__error" id="cp-field-slots-error">Too many</p></div>"`;
+exports[`field > number with error 1`] = `"<div class="canccu-field"><label class="canccu-field__label" for="canccu-field-slots">Slots</label><input class="canccu-input" type="number" value="8" id="canccu-field-slots" name="slots" required aria-invalid="true" aria-describedby="canccu-field-slots-error"><p class="canccu-field__error" id="canccu-field-slots-error">Too many</p></div>"`;
 
-exports[`field > password 1`] = `"<div class="cp-field"><label class="cp-field__label" for="cp-field-pin">PIN</label><input class="cp-input" type="password" id="cp-field-pin" name="pin"></div>"`;
+exports[`field > password 1`] = `"<div class="canccu-field"><label class="canccu-field__label" for="canccu-field-pin">PIN</label><input class="canccu-input" type="password" id="canccu-field-pin" name="pin"></div>"`;
 
-exports[`field > select 1`] = `"<div class="cp-field"><label class="cp-field__label" for="cp-field-mode">Mode</label><select class="cp-input" id="cp-field-mode" name="mode"><option value="a">A</option><option value="b" selected>B</option></select></div>"`;
+exports[`field > select 1`] = `"<div class="canccu-field"><label class="canccu-field__label" for="canccu-field-mode">Mode</label><select class="canccu-input" id="canccu-field-mode" name="mode"><option value="a">A</option><option value="b" selected>B</option></select></div>"`;
 
-exports[`field > text with hint 1`] = `"<div class="cp-field"><label class="cp-field__label" for="cp-field-title">Title</label><input class="cp-input" type="text" value="Demo" id="cp-field-title" name="title" aria-describedby="cp-field-title-hint"><p class="cp-field__hint" id="cp-field-title-hint">Shown on screens</p></div>"`;
+exports[`field > text with hint 1`] = `"<div class="canccu-field"><label class="canccu-field__label" for="canccu-field-title">Title</label><input class="canccu-input" type="text" value="Demo" id="canccu-field-title" name="title" aria-describedby="canccu-field-title-hint"><p class="canccu-field__hint" id="canccu-field-title-hint">Shown on screens</p></div>"`;
 
-exports[`healthBadge > degraded 1`] = `"<span class="cp-badge cp-badge--degraded">degraded</span>"`;
+exports[`healthBadge > degraded 1`] = `"<span class="canccu-badge canccu-badge--degraded">degraded</span>"`;
 
-exports[`healthBadge > down 1`] = `"<span class="cp-badge cp-badge--down">down</span>"`;
+exports[`healthBadge > down 1`] = `"<span class="canccu-badge canccu-badge--down">down</span>"`;
 
-exports[`healthBadge > ok 1`] = `"<span class="cp-badge cp-badge--ok">ok</span>"`;
+exports[`healthBadge > ok 1`] = `"<span class="canccu-badge canccu-badge--ok">ok</span>"`;
 
 exports[`page > defaults, no logo, no theme 1`] = `
 "<!doctype html>
@@ -37,9 +37,9 @@ exports[`page > defaults, no logo, no theme 1`] = `
 <title>Admin</title>
 <link rel="stylesheet" href="/ui/ui.css">
 </head>
-<body class="cp-page">
-<header class="cp-header"><span class="cp-header__title">Admin</span></header>
-<main class="cp-main"><section class="cp-card">Hi</section></main>
+<body class="canccu-page">
+<header class="canccu-header"><span class="canccu-header__title">Admin</span></header>
+<main class="canccu-main"><section class="canccu-card">Hi</section></main>
 </body>
 </html>
 "
@@ -55,14 +55,14 @@ exports[`page > with logo, theme and css href 1`] = `
 <link rel="stylesheet" href="/static/ui.css">
 <style>
 :root {
-  --cp-color-primary: #ff0000;
-  --cp-font-body: "Inter", system-ui, sans-serif;
+  --canccu-color-primary: #ff0000;
+  --canccu-font-body: "Inter", system-ui, sans-serif;
 }
 </style>
 </head>
-<body class="cp-page">
-<header class="cp-header"><img class="cp-header__logo" src="/files/assets/logo.svg" alt=""><span class="cp-header__title">Admin</span></header>
-<main class="cp-main">Hi</main>
+<body class="canccu-page">
+<header class="canccu-header"><img class="canccu-header__logo" src="/files/assets/logo.svg" alt=""><span class="canccu-header__title">Admin</span></header>
+<main class="canccu-main">Hi</main>
 </body>
 </html>
 "

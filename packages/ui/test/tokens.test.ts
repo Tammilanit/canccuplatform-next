@@ -44,14 +44,14 @@ describe("tokens against the profile contract", () => {
 });
 
 describe("ui.css :root defaults", () => {
-  it("declares exactly one variable per token, equal to the TS default, plus --cp-radius", () => {
+  it("declares exactly one variable per token, equal to the TS default, plus --canccu-radius", () => {
     const root = /:root\s*\{([^}]*)\}/.exec(pkgFile("ui.css"))?.[1] ?? "";
     const declared: Record<string, string> = {};
-    for (const m of root.matchAll(/(--cp-[a-z-]+)\s*:\s*([^;]+);/g)) {
+    for (const m of root.matchAll(/(--canccu-[a-z-]+)\s*:\s*([^;]+);/g)) {
       expect(declared).not.toHaveProperty(m[1] ?? "");
       declared[m[1] ?? ""] = (m[2] ?? "").trim();
     }
-    const expected: Record<string, string> = { "--cp-radius": RADIUS };
+    const expected: Record<string, string> = { "--canccu-radius": RADIUS };
     for (const [name, value] of Object.entries(COLOR_TOKENS))
       expected[cssVar("color", name)] = value;
     for (const name of Object.keys(FONT_TOKENS) as (keyof typeof FONT_TOKENS)[]) {

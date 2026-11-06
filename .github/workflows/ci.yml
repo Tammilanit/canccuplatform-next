@@ -97,7 +97,7 @@ jobs:
     name: integration (kit)
     runs-on: ubuntu-latest
     env:
-      CP_VALKEY_URL: redis://127.0.0.1:6379
+      CANCCU_VALKEY_URL: redis://127.0.0.1:6379
     steps:
       - uses: actions/checkout@v4
       - name: Start Valkey from the Compose stack
@@ -170,11 +170,11 @@ jobs:
           echo "expected 503 down, last answer: $code"; cat /tmp/health.json; exit 1
       - name: hello stops at start when a kit variable is missing
         run: |
-          if docker compose -f deploy/compose.yml run --rm --no-deps -e CP_ADMIN_URL= hello > /tmp/start.log 2>&1; then
-            echo "hello started without CP_ADMIN_URL"; cat /tmp/start.log; exit 1
+          if docker compose -f deploy/compose.yml run --rm --no-deps -e CANCCU_ADMIN_URL= hello > /tmp/start.log 2>&1; then
+            echo "hello started without CANCCU_ADMIN_URL"; cat /tmp/start.log; exit 1
           fi
           cat /tmp/start.log
-          grep -q "missing environment variable(s): CP_ADMIN_URL" /tmp/start.log
+          grep -q "missing environment variable(s): CANCCU_ADMIN_URL" /tmp/start.log
       - name: Logs
         if: failure()
         run: docker compose -f deploy/compose.yml logs
@@ -198,6 +198,16 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: scripts/check-event-names "$BASE"
 
+  naming:
+    name: naming
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Self-test the checker
+        run: scripts/check-naming --self-test
+      - name: No identifier with the old prefix (ADR 0017)
+        run: scripts/check-naming
+
   contracts:
     name: contracts
     runs-on: ubuntu-latest
@@ -208,3 +218,21 @@ jobs:
           node-version: 22
       - name: Validate profiles and lint OpenAPI contracts
         run: scripts/check-contracts
+
+  setup:
+    name: setup (self-test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools for every setup check
+        run: |
+          for t in shellcheck jq docker; do command -v "$t" >/dev/null || { echo "::error::$t missing"; exit 1; }; done
+          docker info >/dev/null && docker compose version
+      - name: setup/test.sh
+        shell: bash  # -eo pipefail: a failing test.sh fails the step despite tee
+        run: setup/test.sh | tee "$RUNNER_TEMP/setup-test.log"
+      - name: No setup check skipped (systemd-analyze may skip)
+        run: |
+          if grep -E '^skip ' "$RUNNER_TEMP/setup-test.log" | grep -v '^skip systemd-analyze verify '; then
+            echo "::error::setup checks were skipped"; exit 1
+          fi

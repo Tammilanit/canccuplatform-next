@@ -8,9 +8,9 @@ from datetime import datetime
 
 import pytest
 
-from cp_kit import STREAM_MAXLEN, Bus, Event, InvalidEventType, correlation
-from cp_kit.bus import InvalidEnvelope, parse_envelope
-from cp_kit.testing import MemoryStreamStore
+from canccu_kit import STREAM_MAXLEN, Bus, Event, InvalidEventType, correlation
+from canccu_kit.bus import InvalidEnvelope, parse_envelope
+from canccu_kit.testing import MemoryStreamStore
 
 TIME_RE = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$")
 

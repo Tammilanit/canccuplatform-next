@@ -16,7 +16,7 @@ function rightsAnswer(admin: FakeAdmin): void {
   admin.answer = (req) =>
     jsonResponse(
       200,
-      req.cookie === "cp_session=s1" ? sessionBody(["screen.slides.edit"]) : sessionBody([]),
+      req.cookie === "canccu_session=s1" ? sessionBody(["screen.slides.edit"]) : sessionBody([]),
     );
 }
 
@@ -64,7 +64,7 @@ describe("fastify adapter", () => {
     res = await app.inject({
       method: "POST",
       url: "/edit",
-      headers: { cookie: "cp_session=s1", "x-correlation-id": "c-1" },
+      headers: { cookie: "canccu_session=s1", "x-correlation-id": "c-1" },
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ user: "u1" });
@@ -73,7 +73,11 @@ describe("fastify adapter", () => {
       correlation_id: "c-1",
     });
 
-    res = await app.inject({ method: "POST", url: "/edit", headers: { cookie: "cp_session=s2" } });
+    res = await app.inject({
+      method: "POST",
+      url: "/edit",
+      headers: { cookie: "canccu_session=s2" },
+    });
     expect([res.statusCode, res.json<{ error: { code: string } }>().error.code]).toEqual([
       403,
       "missing_right",
@@ -129,13 +133,13 @@ describe("web adapter", () => {
       401,
       { error: { code: "not_signed_in", message: "sign in first" } },
     ]);
-    res = await call("/edit", { cookie: "cp_session=s1", "x-correlation-id": "c-1" });
+    res = await call("/edit", { cookie: "canccu_session=s1", "x-correlation-id": "c-1" });
     expect([res.status, await res.json()]).toEqual([200, { user: "u1" }]);
     expect(res.headers.get("x-correlation-id")).toBe("c-1");
     expect(JSON.parse(store.calls[0]?.fields.event ?? "{}")).toMatchObject({
       correlation_id: "c-1",
     });
-    res = await call("/edit", { cookie: "cp_session=s2" });
+    res = await call("/edit", { cookie: "canccu_session=s2" });
     expect(res.status).toBe(403);
     res = await call("/nowhere");
     expect([res.status, ((await res.json()) as { error: { code: string } }).error.code]).toEqual([
