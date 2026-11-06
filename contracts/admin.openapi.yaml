@@ -219,7 +219,7 @@ components:
   schemas:
     ModuleName:
       type: string
-      enum: [screen, tournament, pizza, bot, admin, games, moments, voices, cast]
+      enum: [screen, tournament, pizza, bot, admin, games, moments, voices, cast, agenda]
     Error:
       type: object
       required: [error]
