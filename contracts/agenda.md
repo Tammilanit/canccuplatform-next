@@ -42,20 +42,22 @@ Times are RFC 3339 UTC like everywhere ([README.md](README.md#conventions)). Peo
 All writes need the right `agenda.items.write`. Each write that changes an item sends the item's `revision`; a stale one gets 409 `version_conflict` (read again and retry). Each change emits its event once it is committed, so the screen, Discord and reminders follow within seconds.
 
 - **Add:** `POST /api/agenda/items` → 201 with the item; `planned_*` equal the given times. Emits `agenda.item.added`.
-- **Edit or move:** `PATCH /api/agenda/items/{item_id}` with `revision` and the fields to change. New times replace both the current and the planned times: a move is a new plan, so `delay_minutes` stays as it was. Emits `agenda.item.changed` with the names of the changed fields.
-- **Delay:** `POST /api/agenda/items/{item_id}/delay` with `revision`, `minutes` (non-zero, −720 to 720; negative brings it forward) and `following`. It shifts `starts_at` and `ends_at` and keeps the planned times, so screens show the delay. With `following: true` it also shifts every scheduled item that starts at or after this item's old start, except `quiet_hours` items. Each shifted item emits its own `agenda.item.delayed`; they share one `correlation_id`. An item already running keeps its start and only its end moves.
+- **Edit or move:** `PATCH /api/agenda/items/{item_id}` with `revision` and the fields to change; fields left out stay as they are, and `null` clears `description`, `location` or `zone`. A move is a new plan: each given time becomes both its planned and its current value, so giving `starts_at` resets `delay_minutes` to 0 (planned 18:00, delayed to 18:15, then moved to 19:00: both times are 19:00 and no delay shows). Emits `agenda.item.changed` with the names of the changed fields.
+- **Delay:** `POST /api/agenda/items/{item_id}/delay` with `revision`, `minutes` (non-zero, −720 to 720; negative brings it forward) and `following`. It shifts `starts_at` and `ends_at` and keeps the planned times, so screens show the delay. With `following: true` it also shifts every scheduled item that starts at or after this item's old start, except `quiet_hours` items. Each shifted item emits its own `agenda.item.delayed`; they share one `correlation_id`. An item already running keeps its start and only its end moves, so its `delay_minutes` stays as it was; screens show a running item whose `ends_at` differs from `planned_ends_at` with its new end ("until 19:15"). A shift that would put an item's `ends_at` at or before its `starts_at` is 400 `invalid_request`, and nothing shifts. Delaying an item that has started and has no `ends_at` is 409 `item_started`.
 - **Cancel:** `POST /api/agenda/items/{item_id}/cancel` with `revision`. Emits `agenda.item.cancelled`. Cancelling is final; add the item again to bring it back.
 - **Remove:** `DELETE /api/agenda/items/{item_id}?revision=` → 204. For mistakes only; during the event, cancel instead so people see it. Emits `agenda.item.removed`.
 
-Errors: 400 `invalid_request` (for example `ends_at` not after `starts_at`, or a `quiet_hours` item without `ends_at`), 409 `version_conflict`, 409 `item_cancelled` (editing or delaying a cancelled item), 409 `event_archived`.
+Errors: 400 `invalid_request` (for example `ends_at` not after `starts_at`, or a `quiet_hours` item without `ends_at`), 409 `version_conflict`, 409 `item_cancelled` (editing or delaying a cancelled item), 409 `item_started`, 409 `event_archived`.
+
+The screen follows every change event, and `agenda.item.started` and `agenda.item.ended`, to keep now and next current without polling.
 
 ## Reminders
 Consumers subscribe to the agenda stream; the agenda module does the timing once per event, so the bot, the screen and Notify never run their own clocks for the run-of-show.
 
 - At `starts_at` minus each lead time of a scheduled item the module emits `agenda.reminder.triggered` with `lead_minutes`. The lead times are the item's `reminder_leads_minutes`, or else the event's setting `reminder_leads_minutes` (default `[30, 10]`).
 - At `starts_at` it emits `agenda.item.started`, and at `ends_at` (when set) `agenda.item.ended`. Moments starts a linked Moment on `agenda.item.started`.
-- A delay or move reschedules the pending reminders. A reminder that has already fired fires again for the new time only while that time is still ahead; its `item.starts_at` tells consumers the new time. A cancelled or removed item drops its pending reminders. A lead that has already passed when an item is added is skipped.
-- Each consumer picks what it needs: the bot posts at one lead in the event's channel, Notify maps one lead to the `schedule` topic ([notify.md](notify.md#topics-and-sources)), the screen counts down from the items themselves. Consumers check `visibility` before they show an item to anyone: `crew` items go only to crew.
+- A delay or move reschedules the pending reminders. A reminder that has already fired fires again for the new time only while that time is still ahead; its `item.starts_at` tells consumers the new time. A cancelled or removed item drops everything still pending for it: its `agenda.reminder.triggered`, `agenda.item.started` and `agenda.item.ended`. An item cancelled or removed while it runs therefore never emits `agenda.item.ended`; consumers treat its `agenda.item.cancelled` or `agenda.item.removed` as its end. A lead that has already passed when an item is added is skipped.
+- Each consumer picks what it needs: the bot posts at one lead in the event's channel, Notify turns the lead nearest its setting into one `schedule` notification ([notify.md](notify.md#topics-and-sources)), the screen counts down from the items themselves. Consumers check `visibility` before they show an item to anyone: `crew` items go only to crew.
 
 ## Clone with an event
 A new event of a series can be cloned from the previous one, dates shifted, then edited (the series rule in the tenants contract). The agenda's part:
@@ -99,6 +101,7 @@ Envelope, naming and transport: [admin.md](admin.md#events). Every agenda event 
    "status": "scheduled", "reminder_leads_minutes": null, "links": {}, "revision": 3},
   "minutes": 15, "agenda_version": 42, "actor_user_id": "u_123"}}
 ```
+The example leaves out the envelope's `tenant` field, which the tenants contract adds to every event.
 
 ## Not in this contract
 Native Discord scheduled events, and the phone hub (its notifications: [notify.md](notify.md)).

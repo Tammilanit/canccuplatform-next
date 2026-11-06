@@ -110,8 +110,9 @@ paths:
       operationId: editItem
       summary: Edit or move an item
       description: |
-        Needs right `agenda.items.write`. New times replace the current and the planned times (a new
-        plan; `delay_minutes` is kept). Emits `agenda.item.changed`.
+        Needs right `agenda.items.write`. A move is a new plan: each given time becomes both its planned and
+        its current value, so giving `starts_at` resets `delay_minutes` to 0. Fields left out stay as they
+        are; `null` clears `description`, `location` or `zone`. Emits `agenda.item.changed`.
       security:
         - session: []
       requestBody:
@@ -175,7 +176,10 @@ paths:
       description: |
         Needs right `agenda.items.write`. Shifts the current times and keeps the planned ones. With
         `following`, also shifts every scheduled item starting at or after this item's old start, except
-        `quiet_hours` items. Emits one `agenda.item.delayed` per shifted item, with one `correlation_id`.
+        `quiet_hours` items. A running item keeps its start and only its end moves. A shift that would put an
+        item's end at or before its start is 400 `invalid_request` and nothing shifts; an item that has started
+        and has no end is 409 `item_started`. Emits one `agenda.item.delayed` per shifted item, with one
+        `correlation_id`.
       security:
         - session: []
       requestBody:
@@ -344,7 +348,8 @@ components:
             $ref: "#/components/schemas/Error"
     Conflict:
       description: |
-        `version_conflict` (stale `revision`), `item_cancelled`, `agenda_not_empty` (clone) or
+        `version_conflict` (stale `revision`), `item_cancelled`, `item_started` (delay of a started item with
+        no end), `agenda_not_empty` (clone) or
         `event_archived` (the event is read-only).
       content:
         application/json:
@@ -495,7 +500,7 @@ components:
           $ref: "#/components/schemas/Links"
     ItemEdit:
       type: object
-      description: "`revision` plus the fields to change; fields left out stay as they are."
+      description: "`revision` plus the fields to change; fields left out stay as they are, `null` clears an optional text field or the zone."
       required: [revision]
       properties:
         revision:
@@ -506,7 +511,7 @@ components:
           minLength: 1
           maxLength: 120
         description:
-          type: string
+          type: [string, "null"]
           maxLength: 2000
         kind:
           $ref: "#/components/schemas/Kind"
@@ -517,10 +522,13 @@ components:
           type: [string, "null"]
           format: date-time
         location:
-          type: string
+          type: [string, "null"]
           maxLength: 120
         zone:
-          $ref: "#/components/schemas/ZoneKey"
+          description: "`null` clears the zone."
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/ZoneKey"
         visibility:
           $ref: "#/components/schemas/Visibility"
         reminder_leads_minutes:

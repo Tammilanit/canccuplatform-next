@@ -21,15 +21,15 @@ Emitter: `agenda`. Audience: event-wide, by the item's `visibility`. Payloads: [
 
 | Type | Meaning | Consumers |
 |---|---|---|
-| `agenda.item.added` | An item was added | screen, bot, notify |
-| `agenda.item.changed` | An item was edited or moved | screen, bot, notify, moments |
-| `agenda.item.delayed` | An item was delayed or brought forward | screen, bot, notify, moments |
-| `agenda.item.cancelled` | An item was cancelled | screen, bot, notify, moments |
-| `agenda.item.removed` | An item was removed | screen, bot, notify, moments |
-| `agenda.item.started` | An item's start was reached | screen, moments, notify (quiet hours) |
-| `agenda.item.ended` | An item's end was reached | screen, moments, notify (quiet hours) |
-| `agenda.reminder.triggered` | A lead time before an item's start was reached | bot, notify, screen |
-| `agenda.items.cloned` | The agenda was cloned from another event | screen, bot, notify |
+| `agenda.item.added` | An item was added | screen, notify (quiet hours) |
+| `agenda.item.changed` | An item was edited or moved | screen, notify (quiet hours) |
+| `agenda.item.delayed` | An item was delayed or brought forward | screen, notify |
+| `agenda.item.cancelled` | An item was cancelled | screen, notify |
+| `agenda.item.removed` | An item was removed | screen, notify (quiet hours) |
+| `agenda.item.started` | An item's start was reached | screen, moments |
+| `agenda.item.ended` | An item's end was reached | screen |
+| `agenda.reminder.triggered` | A lead time before an item's start was reached | bot, notify |
+| `agenda.items.cloned` | The agenda was cloned from another event | screen, notify (quiet hours) |
 
 ## Notify
 Emitter: `notify`. Audience: personal. Payloads: [notify.md](notify.md#events-version-1).

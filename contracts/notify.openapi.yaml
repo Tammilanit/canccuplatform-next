@@ -75,8 +75,9 @@ paths:
       summary: Subscribe this browser
       description: |
         Without a session a guest subscription (event-wide parts only); with one, the user's. The same
-        `endpoint` again replaces the old subscription. A personal part without a session is 401
-        `sign_in_required`.
+        `endpoint` again replaces the old subscription only for its owner (the same user's session, or the old
+        subscription's token); otherwise 409 `subscription_exists`. A personal part without a session is 401
+        `sign_in_required`. In info-page mode `sign-in` a guest gets 403 `info_pages_closed`.
       security:
         - {}
         - session: []
@@ -106,6 +107,12 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "409":
+          description: "`subscription_exists`: this push endpoint belongs to another subscriber."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /api/notify/subscriptions/{subscription_id}:
     parameters:
       - $ref: "#/components/parameters/SubscriptionId"
@@ -203,8 +210,8 @@ paths:
       operationId: getNotification
       summary: A notification's details
       description: |
-        `public`: anyone holding the id; `attendees`: members; personal: only its user.
-        Otherwise 404 `not_found`.
+        `public`: anyone holding the id whom the event's info-page mode lets in; `attendees`: current
+        members only; personal: only its user. Otherwise 404 `not_found`.
       security:
         - {}
         - session: []
@@ -223,8 +230,9 @@ paths:
       operationId: getInbox
       summary: The caller's notifications that have not expired
       description: |
-        Newest first. With a session: event-wide and their own personal ones. With a subscription token:
-        the event-wide ones of its audience. Includes notifications that were not pushed.
+        Newest first: the event-wide ones of the caller's audience (`attendees` only for current members,
+        also through a token) and, with a session, their own personal ones. Includes notifications that were
+        not pushed.
       security:
         - session: []
         - subscriptionToken: []
@@ -257,7 +265,10 @@ paths:
       tags: [check-in]
       operationId: getCheckInCode
       summary: The current rotating check-in code
-      description: Needs right `notify.checkin.display`. Rotates every `check_in_rotation_seconds`.
+      description: |
+        Needs right `notify.checkin.display`. The code is the first 128 bits of HMAC-SHA256 (per-event key)
+        over event id, purpose and period number, base64url without padding; it rotates every
+        `check_in_rotation_seconds` and is valid for its own period and the next one.
       parameters:
         - name: purpose
           in: query
@@ -272,13 +283,15 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [code, url, valid_until, rotates_at]
+                required: [purpose, code, url, valid_until, rotates_at]
                 properties:
+                  purpose:
+                    $ref: "#/components/schemas/Purpose"
                   code:
-                    type: string
+                    $ref: "#/components/schemas/CheckInCode"
                   url:
                     type: string
-                    description: "Absolute URL on the event's registered hostname: `/notify/check-in?c=<code>`."
+                    description: "Absolute URL on the event's registered hostname: `/notify/check-in?p=<purpose>&c=<code>`."
                   valid_until:
                     type: string
                     format: date-time
@@ -297,18 +310,22 @@ paths:
       operationId: checkIn
       summary: Check in with a scanned code
       description: |
-        Needs a session of a member of the event. Emits `notify.checkin.recorded`. The same user and purpose
-        again returns the first check-in with 200 and emits nothing.
+        Needs a session of a member of the event. The server recomputes the code for `purpose` for the current
+        and the previous period; a code of the 10 periods before is 400 `code_expired`, anything else 400
+        `code_invalid`. Emits `notify.checkin.recorded`. The same user and purpose again returns the first
+        check-in with 200 and emits nothing.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [code]
+              required: [purpose, code]
               properties:
+                purpose:
+                  $ref: "#/components/schemas/Purpose"
                 code:
-                  type: string
+                  $ref: "#/components/schemas/CheckInCode"
       responses:
         "200":
           description: Already checked in for this purpose.
@@ -387,7 +404,9 @@ paths:
       tags: [me]
       operationId: deleteMe
       summary: Delete everything Notify holds on the caller at this event
-      description: Subscriptions, preferences, personal notifications and check-ins. Ends every push to the caller.
+      description: |
+        Subscriptions, preferences, personal notifications and check-ins. Ends every push to the caller.
+        Needs a session; a guest deletes its subscription with `DELETE /api/notify/subscriptions/{subscription_id}`.
       responses:
         "204":
           description: Deleted.
@@ -591,6 +610,10 @@ components:
       type: string
       pattern: "^(arrival|[a-z]+:[A-Za-z0-9_-]{1,64})$"
       examples: [arrival, "tournament:s_12"]
+    CheckInCode:
+      type: string
+      description: 128 bits of HMAC-SHA256, base64url without padding.
+      pattern: "^[A-Za-z0-9_-]{22}$"
     CheckIn:
       type: object
       required: [id, purpose, checked_in_at]
