@@ -68,17 +68,21 @@ switch() {
   if [ "$caddy" = 1 ]; then
     docker compose -f deploy/compose.yml up -d --wait --no-build --force-recreate caddy || { say "caddy did not restart"; return 1; }
   fi
-  local m cid ids
+  # Check only the modules the checkout has now and that run: after a rollback, a module only the
+  # failed commit added has no Dockerfile, no container and no route any more.
+  local m cid ids checked=()
   for m in "${modules[@]}"; do
+    g cat-file -e "HEAD:modules/$m/Dockerfile" 2>/dev/null || continue
     cid=$(docker compose -f deploy/compose.yml ps -q "$m" 2>/dev/null)
     [ -z "$cid" ] && continue
     ids=$(docker inspect -f '{{.Image}}' "$cid") || return 1
     [ "$ids" = "$(docker image inspect -f '{{.Id}}' "canccuplatform-$m:latest")" ] || { say "$m does not run the image it should"; return 1; }
+    checked+=("$m")
   done
   local i u ok
   for i in $(seq 1 "$wait_s"); do
     ok=1
-    for m in "${modules[@]}"; do
+    for m in "${checked[@]}"; do
       u=http://127.0.0.1/api/$m/health
       curl -fsS --max-time 5 "$u" >/dev/null 2>&1 || { ok=0; break; }
     done

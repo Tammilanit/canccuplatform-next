@@ -240,8 +240,8 @@ case "$1 $2" in
   "rev-parse --verify") case "$4" in FETCH_HEAD*) cat "$S/target" ;; *) cat "$S/head" ;; esac ;;
   "diff --quiet") [ ! -e "$S/caddy_changed" ] ;;
   "merge-base --is-ancestor") [ ! -e "$S/diverged" ] ;;
-  "ls-tree --name-only") printf 'modules/admin\nmodules/hello\nmodules/nodocker\n' ;;
-  "cat-file -e") case "$3" in *nodocker*) exit 1 ;; esac ;;
+  "ls-tree --name-only") printf 'modules/admin\nmodules/hello\nmodules/nodocker\n'; [ ! -e "$S/extra" ] || echo modules/extra ;;
+  "cat-file -e") case "$3" in *nodocker*) exit 1 ;; HEAD:*extra*) [ "$(cat "$S/head")" = "$(cat "$S/target")" ] ;; esac ;;
   "merge -q") echo "$4" > "$S/head" ;;
   "reset -q") echo "$4" > "$S/head" ;;
   *) echo "git stub: unexpected: $*" >&2; exit 9 ;;
@@ -253,7 +253,9 @@ S=$STUB; echo "curl $*" >> "$S/log"
 case "$*" in
   */issues*) data=; for a; do case "$a" in @*) data=$(cat "${a#@}") ;; esac; done
     cat > "$S/token.in"; printf '%s\n' "$data" >> "$S/issues" ;;
-  *) [ ! -e "$S/bad_$(cat "$S/live_hello")" ] || exit 22; echo '{"status":"ok"}' ;;
+  *) [ ! -e "$S/bad_$(cat "$S/live_hello")" ] || exit 22
+     for a; do case "$a" in */api/*/health) m=${a%/health}; m=${m##*/}; [ ! -e "$S/down_$m" ] || exit 22 ;; esac; done
+     echo '{"status":"ok"}' ;;
 esac
 STUB
 # shellcheck disable=SC2016  # $* and $STUB belong to the stub script
@@ -325,6 +327,12 @@ logged "deploy recreates caddy when the Caddyfile changed (a bind mount is not r
 fresh; touch "$st/caddy_changed" "$st/bad_sha256:newhello"; dep "a failed deploy of a Caddyfile change" 1
 if [ "$(grep -c 'force-recreate caddy' "$st/log")" = 2 ]; then pass "the rollback recreates caddy with the previous Caddyfile"; else bad "the rollback recreates caddy with the previous Caddyfile" "$(cat "$st/log")"; fi
 logged "the rollback removes services the failed commit added" "up -d --wait --no-build --remove-orphans"
+
+# the failed commit adds module extra, whose route never answers; the previous commit has no extra
+fresh; touch "$st/extra" "$st/down_extra"; echo sha256:newextra > "$st/remote_extra"; dep "a failed deploy of a commit that adds a module" 1
+logged "the new module's health is checked on deploy" "curl .*/api/extra/health"
+has "the rollback is healthy without the module only the failed commit had" "rolled back to 1111111, health ok"
+if grep -q 'ROLLBACK FAILED' "$st/issues"; then bad "the issue reports a healthy rollback" "$(cat "$st/issues")"; else pass "the issue reports a healthy rollback"; fi
 
 fresh; touch "$st/tag_fail_admin"; dep "deploy whose image tag fails" 1
 if [ "$(cat "$st/head")" = "$old" ] && [ "$(cat "$st/live_hello")" = sha256:oldhello ]; then pass "a failed tag rolls back"; else bad "a failed tag rolls back" "$(cat "$st/log")"; fi
