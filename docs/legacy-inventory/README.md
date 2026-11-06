@@ -44,7 +44,7 @@ Every feature of the per-repo inventories, one table per repo, in the order of t
 | PPTX rendering (a render-job container, fair per-tenant queue) | screen | 3 | with changes |
 | YouTube normalize, oEmbed health, player error rules | screen | 3 | as-is |
 | Web-asset allowlist (per tenant) | screen | 3 | with changes |
-| Baseline web page and display-page presets (become tenant settings; see [conflict C1](#conflicts-with-the-decision-records)) | screen | 3 | with changes |
+| Baseline web page and display-page presets (become tenant settings; see [conflict DR1](#conflicts-with-the-decision-records)) | screen | 3 | with changes |
 | Ready check, pages message, scene transitions, progress bars, mirror (the embed message protocol goes, [DR1](#conflicts-with-the-decision-records)) | screen | 3 | with changes |
 | Screen chrome and display settings (header, footer, cursor, bar opacity) | screen | 3 | with changes |
 | Kiosk player (device token, no loopback trust) | screen | 3 | with changes |
@@ -127,8 +127,8 @@ Registration and the site itself stay outside the platform ([0005](../decisions/
 
 | Feature | Target module | Step | Verdict |
 |---|---|---|---|
-| P1–P5 pizza order lifecycle and router (`tenant_id`, transactions, sign-in identity) | pizza | 5 | with changes |
-| P2 validate, menu filter, summary, orderer view | pizza | 5 | as-is |
+| P1–P5 pizza order lifecycle and router, including P2 own pizzas (`tenant_id`, transactions, sign-in identity) | pizza | 5 | with changes |
+| Pure pizza helpers: validate, menu filter, summary, orderer view (code modules inside the lifecycle row above, whose verdict is the feature's) | pizza | 5 | as-is |
 | P6 Discord posts (`pizza.order.*` events the bot posts) | pizza, bot | 5, 6 | with changes |
 | P7 reminders and auto-release (scheduler in the pizza container) | pizza | 5 | with changes |
 | P8–P9 pizza admin, pizzerias and menus (menus per tenant from the profile, [DR11](#conflicts-with-the-decision-records)) | pizza, admin | 5 | with changes |
@@ -143,8 +143,8 @@ Registration and the site itself stay outside the platform ([0005](../decisions/
 | T10 screen payload (tournament events and a Screen widget) | tournament, screen | 7, 9 | with changes |
 | T11 bot flag handshake and tokens (voice handshake through events) | tournament, bot | 7, 6 | rewrite |
 | T12 cover lookup (Steam with a real cache, IGDB optional) | bot | 6 | with changes |
-| D1–D4 LAN display page and views (Screen views, last) | screen | 9 | rewrite |
-| D3 alive chrome, D6 demo overlays, trend helpers | screen | 9 | as-is |
+| D1, D2, D4 LAN display page, stats view and views (Screen views, last) | screen | 9 | rewrite |
+| D3 alive chrome, D6 demo overlays, trend helpers (pure helpers, used by the new Screen views) | screen | 9 | as-is |
 | D5 `postMessage` cues (the cue rules become Moments policy) | moments | 4 | rewrite |
 | D7 polls | — | — | drop |
 | D8 presence, voice and game snapshots | bot | 6 | with changes |
@@ -152,8 +152,8 @@ Registration and the site itself stay outside the platform ([0005](../decisions/
 | D11 announce and finals cards (Moments takeovers) | moments, games | 4, Games | with changes |
 | D12 browser trend state | — | — | drop |
 | D13 polls RSS | — | — | drop |
-| D14 manager heartbeat (its alert-once and recover-once rule is reused) | admin | 8, 10 | drop |
-| D15 health (the kit health contract exists) | kit | 1 (done) | rewrite |
+| D14 manager heartbeat (its alert-once and recover-once rule is reused by admin alerts in step 8 and the step 10 watchdog) | — | — | drop |
+| D15 health (the kit health contract replaces it) | kit | 1 (done) | drop |
 | D16 LAN reset (a per-tenant admin action) | admin | 8 | with changes |
 | R1–R6 registration, home page, terminal, music, Snake, site admin, e-mail | — (stays on the site) | — | drop |
 | Admin password and admin cookie | — | 2b | drop |
@@ -240,8 +240,8 @@ Everything here waits for its author's OK; licence and attribution are kept (AGE
 | X11 pizza ordering | pizza | 5 | with changes |
 | X12 pizza ticker and cues | screen, moments | 5, 9 | with changes |
 | X13 tournament routes | tournament | 7 | with changes |
-| X14 polls | — | — | drop |
-| X14 stats snapshots | bot | 6 | with changes |
+| X14, polls part | — | — | drop |
+| X14, stats snapshots part | bot | 6 | with changes |
 | X15 tourney read API and SSE | games | Games | rewrite |
 | X16 manager | admin | 8 | with changes |
 | X17 heartbeat to the signup site | — | 10 (watchdog) | drop |
@@ -381,7 +381,7 @@ How the legacy pieces worked together, end to end, and what replaces each hop. L
 
 ### Flow 9. The ticker
 **Legacy:** `/ticker set` posts a directive with label `ticker` to signage; `/ticker schedule add` keeps windows in the bot's memory, so they are lost on restart; signage's admin page sets the ticker too. A poll line and the pizza status fill the lane automatically. An RSS feed mirrors it.
-**Platform:** Screen owns the ticker and its scheduled windows and keeps them in Postgres (step 3, [0018](../decisions/0018-ticker-manual.md)). The bot's `/ticker` and schedule commands publish to Screen (step 6). The poll line and RSS are dropped; the pizza line is [conflict C3](#conflicts-with-the-decision-records).
+**Platform:** Screen owns the ticker and its scheduled windows and keeps them in Postgres (step 3, [0018](../decisions/0018-ticker-manual.md)). The bot's `/ticker` and schedule commands publish to Screen (step 6). The poll line and RSS are dropped; the pizza line is [conflict DR3](#conflicts-with-the-decision-records).
 
 ### Flow 10. Admin sign-in from Discord
 **Legacy:** `/adminlink` signs a one-time, five-minute HMAC link with the member's role ids; signage redeems it at `/admin/link` into an admin session. The other apps each had their own password or token.
@@ -408,14 +408,14 @@ Rows are numbered by theme (`TA1` to `TJ5`). The common principle behind the ans
 ### T-A. Time zone and locale
 | # | Question | Asked in | Proposed answer |
 |---|---|---|---|
-| TA1 | Is the time zone a venue property or a tenant setting? Today one setting drives schedules, ADVT windows, captions, pizza dates and the bot. | SG-1, BT-5, SU-12, PL-12, DC-12 | The venue has an IANA time zone. A tenant may override it, for an online event or one with no venue. Every module reads the tenant's effective zone from the tenants API. This adds a field to venues ([TC7](#conflicts-with-the-decision-records)). |
+| TA1 | Is the time zone a venue property or a tenant setting? Today one setting drives schedules, ADVT windows, captions, pizza dates and the bot. | SG-1, BT-5, SU-12, PL-12, DC-12 | The venue has an IANA time zone. A tenant may override it, for an online event or one with no venue. Every module reads the tenant's effective zone from the tenants API. This adds a field to venues ([DR7](#conflicts-with-the-decision-records)). |
 | TA2 | Language and number format? | SU-12, PL-12 | Tenant settings (language pack from step 10; CSV number format follows the language). |
 | TA3 | Pizza orders are keyed by local date with a sequence per day: are `date` and `seq` per tenant, and whose zone defines "today"? | SU-5 | Both per tenant; "today" is the date in the tenant's effective zone (TA1). |
 
 ### T-B. Singletons and their scope
 | # | Question | Asked in | Proposed answer |
 |---|---|---|---|
-| TB1 | One open pizza order, one active poll, one final, one announce card, one finals season, one stats history, one carousel playlist, one spotlight, one emergency: do they become one per tenant? | SU-4, PL-5, DC-6 | Yes, all per tenant; none stays global. Polls are dropped. For screens see TB2. |
+| TB1 | One open pizza order, one active poll, one final, one announce card, one finals card (the signup site's mirror of the mini-tourney season; Games seasons are TB5), one stats history, one carousel playlist, one spotlight, one emergency: do they become one per tenant? | SU-4, PL-5, DC-6 | Yes, all per tenant; none stays global. Polls are dropped. For screens see TB2. |
 | TB2 | Which screen state is per zone and which per tenant? | SG-4, DC-6 | Per zone: playback session, bookmarks and ADVT state. Per tenant, each with an optional zone target: ticker, directives, carousel playlist, spotlight and emergency (default: all zones). This shapes the screen contract (#35). |
 | TB3 | Who drives the tick (ADVT, expiry)? | SG-5 | One server-side scheduler per tenant and zone through the kit's tenant-keyed scheduler (0013 item 7). Reads, mirrors and admin views never change state. |
 | TB4 | Tournament seasons: one per tenant, or several? | SU-6 | One season per tenant in the first port, but the tables carry a season id from the start, so more seasons later are an additive change. |
@@ -431,7 +431,7 @@ Rows are numbered by theme (`TA1` to `TJ5`). The common principle behind the ans
 | TC5 | Hot-game, poll and finals trigger settings: venue attributes, or tenant settings with venue defaults? | BT-5 | Tenant settings. The player-count threshold is a bot setting; banner and card times are Moments settings. No venue defaults (polls are dropped). |
 | TC6 | Mini-tourney settings (show ranking changes, debug tools, public start): per-tenant module settings? Debug tools a tenant setting? | MT-3 | Ranking changes and public start are per-tenant Games settings. Debug fill is not a tenant setting: it exists only as test fixtures and the demo seed. |
 | TC7 | Public start: a per-tenant setting with no calendar logic? | MT-2 | Yes. The season name comes from the event; the month windows go. |
-| TC8 | The embedded display page's origin and the web allowlist: tenant settings? Which origins does a screen trust? | SG-8, PL-8 | The web-asset allowlist is a per-tenant Screen setting. No origin is trusted for messages: the embed message protocol is dropped ([0010](../decisions/0010-scope.md), [TC1](#conflicts-with-the-decision-records)), and Screen's own widgets replace the embedded page. |
+| TC8 | The embedded display page's origin and the web allowlist: tenant settings? Which origins does a screen trust? | SG-8, PL-8 | The web-asset allowlist is a per-tenant Screen setting. No origin is trusted for messages: the embed message protocol is dropped ([0010](../decisions/0010-scope.md), [DR1](#conflicts-with-the-decision-records)), and Screen's own widgets replace the embedded page. |
 | TC9 | Auto-restart policies: global config, or per tenant for the tenant-scoped kinds (device restarts)? | MG-8 | Global config owned by the superadmin in step 8. A per-tenant device policy can come later as an additive setting. |
 
 ### T-D. Identity and rights
@@ -444,7 +444,7 @@ Rows are numbered by theme (`TA1` to `TJ5`). The common principle behind the ans
 | TD5 | Who may start, cancel or delete a season, or swap live players? | MT-11 | Event admins, plus anyone holding a tenant-granted `games` operator right. |
 | TD6 | Who may cast, and who may end or take over a cast? | ST-3 | Any signed-in member of the tenant with the cast right (granted to members by default, so a tenant can restrict it). The caster or an event admin can end a cast; only an event admin can take one over. |
 | TD7 | The name shown with a cast: moderation or a display-name override? | ST-5 | The user's display name from sign-in (TD2). No moderation in the first version; an admin can end the cast. |
-| TD8 | Who may trigger an emergency takeover, and does it cover all zones? Is an emergency venue-wide? | SG-7, DC-8 | Per tenant, with a Moments emergency right that event admins hold. The superadmin can trigger one in any tenant, audited. It covers all of the tenant's zones by default. It is not venue-wide: one tenant's action never reaches another tenant's screens ([TC9](#conflicts-with-the-decision-records)). |
+| TD8 | Who may trigger an emergency takeover, and does it cover all zones? Is an emergency venue-wide? | SG-7, DC-8 | Per tenant, with a Moments emergency right that event admins hold. The superadmin can trigger one in any tenant, audited. It covers all of the tenant's zones by default. It is not venue-wide: one tenant's action never reaches another tenant's screens ([DR9](#conflicts-with-the-decision-records)). |
 | TD9 | Break-glass admin access when Discord or the sign-in host is down: superadmin-only and global, or per tenant? | DC-2 | Superadmin only and global: a one-time code created from a shell on the VM gives a superadmin session, audited. Tenants get none. This needs a decision ([DR12](#conflicts-with-the-decision-records)). |
 
 ### T-E. Discord: guilds, intents, channels, the legacy bot
@@ -455,17 +455,17 @@ Rows are numbered by theme (`TA1` to `TJ5`). The common principle behind the ans
 | TE3 | Channels and recipients per tenant (tournament, finals main and test, alert channel, alert DM users)? Are platform alerts global? | BT-4 | Channels and DM recipients are per-tenant bot bindings, held as ids. Platform alerts are global and go to the superadmin (T-I). |
 | TE4 | Is the alert channel a platform setting (a superadmin guild), separate from tenant channels? Which alerts go where? | PL-2, DC-1 | Yes: platform alerts go to a platform channel through the shared bot (setting of the superadmin), tenant alerts to the tenant's alert channel through the tenant's bot connection. |
 | TE5 | The heartbeat and its alert channel concern the stack: do platform alerts go only to a platform channel? | SU-2 | Yes, never to a tenant's channel. |
-| TE6 | What does "the legacy bot data" mean for the migration: the site-side snapshots and tournament rows, or only the token and the bot's settings? | BT-8 | Only what the legacy bot holds: its token, its settings and its two small state files (for example the announced season ids). The site-side data stays behind ([0004](../decisions/0004-nothing-migrated.md), [0005](../decisions/0005-signup-site-stays-outside.md)). This narrows 0004 ([TC4](#conflicts-with-the-decision-records)). |
+| TE6 | What does "the legacy bot data" mean for the migration: the site-side snapshots and tournament rows, or only the token and the bot's settings? | BT-8 | Only what the legacy bot holds: its token, its settings and its two small state files (for example the announced season ids). The site-side data stays behind ([0004](../decisions/0004-nothing-migrated.md), [0005](../decisions/0005-signup-site-stays-outside.md)). This narrows 0004 ([DR4](#conflicts-with-the-decision-records)). |
 | TE7 | At the switch the legacy token moves into the tenant: is the legacy process stopped first? | BT-9 | Yes, always stopped first; two processes never share one token (0013 item 14, roadmap step 11). |
 | TE8 | Do scheduled ticker windows count as manual? | BT-10 | Already answered by [0018](../decisions/0018-ticker-manual.md): yes, ported into Screen's scheduler windows. |
 
 ### T-F. Global data, caches and catalogs
 | # | Question | Asked in | Proposed answer |
 |---|---|---|---|
-| TF1 | The game cover cache (Steam lookups): a global table on the allow-list? Who may purge it? | SU-1, BT-6, DC-3 | Global and owned by the bot module: it is public game data with no tenant data. It goes on the allow-list; only the superadmin purges it. This is an exception to "caches keyed by tenant" ([TC8](#conflicts-with-the-decision-records)). |
+| TF1 | The game cover cache (Steam lookups): a global table on the allow-list? Who may purge it? | SU-1, BT-6, DC-3 | Global and owned by the bot module: it is public game data with no tenant data. It goes on the allow-list; only the superadmin purges it. This is an exception to "caches keyed by tenant" ([DR8](#conflicts-with-the-decision-records)). |
 | TF2 | Which bot data is global? | BT-6 | Global: the cover cache and the Discord user identity (0013 item 30). Per tenant: activity snapshots, message counts, tournament data. |
 | TF3 | The arena list is game data: a global games catalog maintained by the superadmin? | MT-7 | Yes: a global games catalog (games and their arenas) owned by the games module, on the allow-list, maintained by the superadmin. Tenants choose from it. |
-| TF4 | Rankings, the champions page and trophy counts: global per user and game, per tenant, or per organizer? | MT-5 | Per tenant. Global rankings would carry one tenant's results into shared rows, and per organizer needs an organizer entity 0013 does not have ([TC10](#conflicts-with-the-decision-records)). |
+| TF4 | Rankings, the champions page and trophy counts: global per user and game, per tenant, or per organizer? | MT-5 | Per tenant. Global rankings would carry one tenant's results into shared rows, and per organizer needs an organizer entity 0013 does not have ([DR10](#conflicts-with-the-decision-records)). |
 | TF5 | If rankings are global, who may edit them? | MT-6 | Rankings are per tenant (TF4), so the tenant's event admins edit them. |
 | TF6 | On tenant deletion, what happens to its effect on rankings? | MT-8 | Rankings are per tenant (TF4), so they are deleted with the tenant. |
 | TF7 | Asset library: per event, or also per organizer for reuse? | SG-3 | Per tenant. Reuse goes through the per-tenant export and import (0013 item 26) or the event repo. |
@@ -476,7 +476,7 @@ Rows are numbered by theme (`TA1` to `TJ5`). The common principle behind the ans
 | # | Question | Asked in | Proposed answer |
 |---|---|---|---|
 | TG1 | Sound per device: is sound played on every device of a zone, one chosen device, or per zone setting? Where does the once-per-source memory live? | SG-6 | A per-zone setting names one audio device (default: the zone's first device). The once-per-source memory moves to Moments on the server, per tenant and zone. |
-| TG2 | Master volume and category levels are set against one venue's PA: a device property kept across events, or per tenant? | DC-11 | Per tenant, on the tenant's device assignment. The global device row stays as 0013 item 34 defines it ([TC6](#conflicts-with-the-decision-records)). |
+| TG2 | Master volume and category levels are set against one venue's PA: a device property kept across events, or per tenant? | DC-11 | Per tenant, on the tenant's device assignment. The global device row stays as 0013 item 34 defines it ([DR6](#conflicts-with-the-decision-records)). |
 | TG3 | Display resolution: on the device row, and does a layout choose by it? | DC-13 | On the tenant's device assignment too (TG2). Layouts are 1080p-first ([gap 5](#gaps-from-the-legacy-plans)). |
 | TG4 | Does the admin live screen (mirror) need only an admin session, not a device? | SG-10 | Yes: a silent mirror per zone for signed-in admins. It is not a device and never plays sound. |
 | TG5 | The kiosk, its reload action, the instance id and the cue memory are per device: do they map to Screen's device rows? Who may reload? | PL-10 | Yes. Reload is a device command. The admin of the device's current tenant may reload it; the superadmin may always. |
@@ -486,7 +486,7 @@ Rows are numbered by theme (`TA1` to `TJ5`). The common principle behind the ans
 | TG9 | Does any per-venue network setting survive besides the venue IP addresses? Is a per-venue relay device needed for Cast? | PL-11, ST-7 | None beyond the venue IP addresses (0013 item 33). Whether Cast needs a relay at the venue is the roadmap's open question. If it does, the relay is a global device row like Screen's, which needs a decision. |
 | TG10 | Two events at one venue share its address. If casting is for "people at the venue", how are casts kept apart? | ST-8 | By sign-in on the tenant's hostname, not by IP. The venue IP is only a soft hint for the cast page (0013 item 11), the same for both events. |
 | TG11 | The publish URL came from the host's LAN address: does a per-venue network setting survive? | ST-9 | No. The cast page lives on the tenant's hostname. |
-| TG12 | Pizzerias, menus and toppings belong to the place: venue rows reused by each tenant, or copied into each tenant? | SU-11, PL-9 | Copied into each tenant, loaded from the event profile. [0003](../decisions/0003-event-content-scrubbed.md) puts pizzeria menus in the event repo, and global venue rows hold no module data ([TC11](#conflicts-with-the-decision-records)). |
+| TG12 | Pizzerias, menus and toppings belong to the place: venue rows reused by each tenant, or copied into each tenant? | SU-11, PL-9 | Copied into each tenant, loaded from the event profile. [0003](../decisions/0003-event-content-scrubbed.md) puts pizzeria menus in the event repo, and global venue rows hold no module data ([DR11](#conflicts-with-the-decision-records)). |
 | TG13 | A static game-server list with hosts and ports: a feature, or event-repo content? | SU-14 | Event-repo content only; not a platform feature. |
 | TG14 | Is anything in the mini-tourney per venue? | MT-9 | No. Games needs no venue setting. |
 
@@ -572,7 +572,7 @@ The [porting plan](../roadmap.md#porting-plan) in the roadmap is updated to matc
 Each is a proposal for the product owner. The step texts of the roadmap change only once it is confirmed.
 
 - **OC1. Tournament no longer waits for the mini-tourney author's OK** ([DR5](#conflicts-with-the-decision-records)). Step 7 ports the signup site's tournament code, which that author did not write. Only the Games track waits. The roadmap's step 0 "postponed" item and step 7, and AGENTS.md (Porting), change with it.
-- **OC2. Pizza on the screen.** Step 5's exit criterion is "an order runs end to end and shows on the screen", but Screen consumes pizza events only in step 9. Either Screen's pizza widget becomes a child of the pizza epic (#59), or the screen part of the exit criterion moves to step 9. Proposed: move it to step 9, and let step 5's exit be "an order runs end to end and the bot posts it".
+- **OC2. Pizza on the screen.** Step 5's exit criterion is "an order runs end to end and shows on the screen", but Screen consumes pizza events only in step 9. Either Screen's pizza widget becomes a child of the pizza epic (#59), or the screen part of the exit criterion moves to step 9. Proposed: move it to step 9, and let step 5's exit be "an order runs end to end and the bot posts it". Step 5's text "port the pizza router and its tests" also changes: the router ports with changes, and its tests are the spec.
 - **OC3. Ticker in step 3, not 4.** It follows [0018](../decisions/0018-ticker-manual.md) and is already in the step 3 text; only the canccusignage inventory said step 4 (DR2).
 - **OC4. The bot's alert relay and `/platform status` land in step 8,** with admin operations, not in step 6. Step 6 needs only the bot's side of the event contract.
 - **OC5. New work in existing steps** (no change of order, but new children):
