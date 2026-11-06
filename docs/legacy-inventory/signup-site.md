@@ -2,7 +2,7 @@
 
 The legacy signup site, read in full so the product owner can confirm what exists before the tenancy foundation ([#47](../roadmap.md#2b-tenancy-foundation)) and the contracts ([#36](../roadmap.md#2c-event-catalog-and-screen-contract)) are designed. Roadmap step 2a, issue #72. The site's real hostname is never written here; it is "the signup site". Other legacy repos have their own inventories (#68–#71, #73–#75); the summary (#76) joins them.
 
-Per [0005](../decisions/0005-signup-site-stays-outside.md), event registration stays on the site and outside the platform. This inventory therefore covers in depth only what the platform ports or talks to: **pizza, tournament, the LAN display (with the bot ingest API and stats), the heartbeat, and auth**. Registration, the home page, the terminal, music and admin are described by their interfaces and data only.
+Per [0005](../decisions/0005-signup-site-stays-outside.md), event registration stays on the site and outside the platform. This inventory therefore covers in depth only what the platform ports or talks to: **pizza, tournament, the LAN display (with the bot ingest API and stats), the heartbeat, and auth** (some of these are dropped rather than ported; see [Port recommendation](#port-recommendation)). Registration, the home page, the terminal, music and admin are described by their interfaces and data only.
 
 Nothing here is copied from the legacy repo: it is described. Short identifiers (route paths, table and column names, env var names, cue ids) are kept so the port can find them. Event-specific values are named by kind and counted only (see [Event-specific content](#event-specific-content)).
 
@@ -11,7 +11,7 @@ Nothing here is copied from the legacy repo: it is described. Short identifiers 
 - **What it is.** One Astro 5 server app on Cloudflare Workers with one D1 (SQLite) database, Drizzle for part of the queries and raw D1 SQL for the rest, Resend for e-mail, Turnstile for anti-spam, two cron triggers. It hosts five things: event registration, the pizza group-order app, the tournament (schedule, registration, scoring, final), the LAN display page embedded by the signage screen, and the ingest API that the Discord bot and the manager push into.
 - **Size.** 454 tracked files: 401 text files with 66,591 lines and 53 binaries (mp3, png). 422 commits from 2025-03-10 to 2026-11-03, three human authors, many AI co-authored commits. Read at commit `491480a` (`main`, 2026-11-03).
 - **Shape.** No tenant, event or venue key outside registration: one active event (`events.is_active`), and every pizza, tournament, poll, snapshot and display table is global to the database. One shared bearer secret for the bot, one admin password, plaintext UUID tokens in page URLs.
-- **Port verdict.** Pizza ports with changes (pure logic and router tests nearly as-is). Tournament scoring, leaderboard and final port with changes; tokens, the admin UI and the bot flag-polling handshake are rewritten. The LAN display page is rewritten as Screen views last; its pure helpers and cue rules port. Polls are dropped. The D1 workarounds (15-minute snapshot retention, single-row stats blob) are dropped with Postgres. Registration, home page, terminal, music and e-mail stay on the site.
+- **Port verdict.** Pizza ports with changes (pure logic and router tests nearly as-is). Tournament scoring, leaderboard and final port with changes; tokens, the admin UI and the bot flag-polling handshake are rewritten. The LAN display page is rewritten as Screen views last; its pure helpers and cue rules port. Polls are dropped. The D1 workarounds (15-minute snapshot retention, single-row stats blob) are rewritten for Postgres. The heartbeat is dropped; its alert-once/recover-once logic is reused by admin. Registration, home page, terminal, music and e-mail stay on the site.
 
 ## Coverage
 
@@ -31,7 +31,7 @@ Every tracked file was examined. Source, config, migrations, scripts and tests w
 | `src/integrations/` | 1 | 32 | 0 | Build hook that drops the album zip |
 | `src/layouts/` | 2 | 50 | 0 | |
 | `src/lib/` | 73 | 11065 | 0 | Includes `lib/pizza/` (12) and `lib/tournament/` (17); the Snake game and art data skimmed (stay on the site) |
-| `src/pages/` | 82 | 14957 | 0 | 65 API routes, 17 pages; the `admin.astro` client script read in its auth, API, event, CSV and e-mail parts; design-preview page skimmed |
+| `src/pages/` | 82 | 14957 | 0 | 65 API routes, 16 pages, 1 redirect endpoint (`pizza-[day].ts`); the `admin.astro` client script read in its auth, API, event, CSV and e-mail parts; design-preview page skimmed |
 | `src/styles/` | 1 | 254 | 0 | Pizza theme |
 | `src/tests/` | 86 | 11679 | 0 | 83 test files, 2 helpers, 1 setup; core test bodies read by case list and mocks |
 | `src/types/` | 1 | 61 | 0 | `Env` type |
@@ -94,7 +94,7 @@ In this code a tournament "event" is one game session; the whole tournament is o
 | T11 | Bot handshake by flags: the bot polls the session list and acts on `vc_plan`, `create_now_requested`, `scoring_started`, `cleanup_requested`; closes registration at the deadline; DMs reminders | `src/pages/api/tournament/**` | Bot polling and `PATCH` routes |
 | T12 | Cover art lookup chain (cache, fuzzy session match, Discord activity art, Steam search, IGDB); production uses only the fast path | `src/lib/game-cover.ts`, `igdb-client.ts`, `game-name-match.ts`, `src/lib/tournament/steam-cover.ts` | Display state |
 
-### LAN display, bot ingest, heartbeat (port)
+### LAN display, bot ingest, heartbeat (port or talk to; see verdicts)
 
 | # | Feature | Where | Reached by |
 |---|---|---|---|
@@ -168,7 +168,7 @@ Tokens are issued by the bot through the internal routes and travel as `?token=`
 | GET | `/api/pizza/orders/:id/summary` | Holder or admin | — | `{header, pizza_count, lines[{count,label,note}], who[{name,count}], text}` (no comments) |
 | PUT | `/api/pizza/orders/:id/bill` | Holder, admin or payer | `{bill_total_cents: 0..500000}` | 200; 409 `not_placed` |
 | GET | `/api/pizza/orders` | ADMIN-COOKIE | — | `{orders:[…, people[{discord_user_id, name, pizzas[]}]]}` |
-| DELETE | `/api/pizza/orders/:id` | ADMIN-COOKIE | — | 200 `{deleted}` (hard delete with log); 404 checked before auth |
+| DELETE | `/api/pizza/orders/:id` | ADMIN-COOKIE | — | 200 `{deleted}`: hard delete of items, log and order (3 statements, no transaction, no audit entry); 404 checked before auth |
 | GET | `/api/pizza/report` | ADMIN-COOKIE | `?format=csv` | `{days[…], flags[]}` or CSV (BOM, `;`, decimal comma; one row per participant of placed orders) |
 | POST | `/api/pizza/pizzerias` | ADMIN-COOKIE | `{name ≤60, phone? ≤30, base_name? ≤60}` | 201 `{id}`; 409 `exists` |
 | GET, PUT | `/api/pizza/pizzerias/:id` | ADMIN-COOKIE | Partial row | Row with full menu and toppings; 409 `exists` |
@@ -254,7 +254,7 @@ Attendee 401 codes: missing or unknown token `unauthorized`, expired `token_expi
 | GET | `/api/terminal/ping` | — | Is a nick registered for the active event |
 | GET | `/api/_debug/session-rows` | — | Always 404 |
 
-**Pages:** `/`, `/thankyou`, `/design-preview/home-countdown`, `/admin`, `/admin/email-participants`, `/admin/pizza`, `/admin/pizza/pizzerias`, `/admin/pizza/report`, `/lan-display`, `/pizza`, `/pizza/orderer`, `/pizza-[day]`, `/tournament`, `/tournament/admin`, `/tournament/leaderboard`, `/tournament/register`, `/tournament/rules`.
+**Pages:** `/`, `/thankyou`, `/design-preview/home-countdown`, `/admin`, `/admin/email-participants`, `/admin/pizza`, `/admin/pizza/pizzerias`, `/admin/pizza/report`, `/lan-display`, `/pizza`, `/pizza/orderer`, `/tournament`, `/tournament/admin`, `/tournament/leaderboard`, `/tournament/register`, `/tournament/rules`. Redirect endpoint (not a page): `/pizza-[day]` (302 to `/pizza`).
 
 ### C. Discord commands and handlers
 
@@ -330,8 +330,8 @@ All stores are D1 (SQLite) tables in one database. "Scope" says whether the data
 | `pizzeria_menu_items` | `id`, `pizzeria_id`, `number`, `name`, `sort_order`, `active`, `ingredients` (JSON); unique (`pizzeria_id`, `name`) | global → **venue** | permanent (soft deactivate) |
 | `pizzeria_toppings` | `id`, `pizzeria_id`, `name` (nocase), `sort_order` | global → **venue** | hard-deleted on menu replace |
 | `pizza_orders` | `id`, `date` (local date), `seq` (unique per date), `pizzeria_id`, `target_at`, `note`, `opened_at`, `opened_by_name`, `closed_at`, `orderer_discord_user_id`, `orderer_name`, `claimed_at`, `placed_at`, `payer_discord_user_id`, `payer_name`, `bill_total_cents`, `cancelled_at`, `cancelled_by_name`, `created_at`; partial unique index allows one open order | global by date → per event | permanent (for the bill system) |
-| `pizza_order_log` | `id`, `order_id` (no FK), `at`, `discord_user_id`, `display_name`, `event`, `detail` (JSON) | per event | permanent; removed only by admin delete |
-| `pizza_items` | `id`, `order_id`, `discord_user_id`, `display_name`, `kind`, `menu_item_id`, `custom_toppings`, `text`, `note`, `comment`, timestamps | per event | permanent |
+| `pizza_order_log` | `id`, `order_id` (no FK), `at`, `discord_user_id`, `display_name`, `event` (the entry kind, not an event id), `detail` (JSON) | global (via `pizza_orders`) → per event | permanent; removed only by admin delete |
+| `pizza_items` | `id`, `order_id`, `discord_user_id`, `display_name`, `kind`, `menu_item_id`, `custom_toppings`, `text`, `note`, `comment`, timestamps | global (via `pizza_orders`) → per event | permanent |
 | Dropped: `shoutbox_events`, `active_sessions` | — | — | dropped in migration 016 |
 | Browser `localStorage` `lan-display-96h-trend` | rank-arrow memory | per screen device | none |
 
@@ -474,7 +474,7 @@ From the code, the docs and the commit history. No TODO or FIXME markers exist i
 
 **Correctness and races**
 
-15. Pizza lifecycle routes (placed, close, cancel, bill, unplace) are read-then-write; double "placed" can post twice. Only open and claim are atomic.
+15. Pizza lifecycle routes (placed, close, cancel, bill, unplace) are read-then-write; double "placed" can post twice. Only open and claim are atomic. The admin hard delete runs three separate deletes (items, log, order) without a transaction and writes no audit entry, so the order's audit trail is lost.
 16. Pizza: forced release posts the holder's name; an admin "placed" leaves the payer empty; an open order from an earlier day blocks new orders until cancelled; history labels follow live menu data; the display says "by" the holder, not the payer.
 17. Tournament multi-row writes (scores, finalists, create plus final flag) are not transactional; a final-flag race gives 500.
 18. Tournament dates compared as strings; seed data uses another format and sorts wrong; SQLite `lower()` is ASCII-only while the JS side is Unicode-aware.
@@ -590,7 +590,7 @@ Named by kind and counted only; no value appears in this file, in the PR or in t
 | Legacy repo owner accounts | 2 | docs, merge subjects |
 | Developer machine paths | 29 occurrences | archived plan, docs |
 | Event music (album of 12 tracks, about 66 MB) and the album zip name | 12 files, 1 name | `public/assets/` |
-| Brand art: mascot PNGs and a liqueur-brand ASCII art file | 3 PNGs (2 in public, 1 in docs), 1 art file | public, docs, terminal |
+| Brand art: mascot PNGs and a brand ASCII art file | 3 PNGs (2 in public, 1 in docs), 1 art file | public, docs, terminal |
 | Screenshots and mockups showing the brand or hostname | 9 PNGs | docs |
 | Game titles tied to the event (rules tie-breaker, finals tradition, team labels, server list) | 2 rules games, 1 finals game, 2 team labels, 16 server-list games | tournament, display, static file |
 | Local time zone and locale | 1 each | pizza, tournament, display, registration |
