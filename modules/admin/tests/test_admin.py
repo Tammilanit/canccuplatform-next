@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import json
 import shutil
 import zipfile
 from datetime import UTC, datetime, timedelta
@@ -135,6 +136,20 @@ async def test_demo_round_trip(parts: Parts, tmp_path: Path) -> None:
     types = [c.fields["event"] for c in streams.calls]
     assert any("admin.profile.loaded" in t for t in types)
     assert any("admin.profile.saved" in t for t in types)
+
+
+async def test_profile_events_and_results(parts: Parts) -> None:
+    _client, service, streams, _event = parts
+    loaded = await service.load_profile("u_1")
+    saved = await service.save_profile("u_1")
+    imported = await service.import_zip(await service.export_zip("u_1"), "u_1")
+    assert loaded == {"name": "Demo Event", "schema_version": 1, "warnings": []}
+    assert saved == imported == {"name": "Demo Event", "schema_version": 1}
+    events = [json.loads(c.fields["event"]) for c in streams.calls]
+    want = {"profile_name": "Demo Event", "schema_version": 1, "actor_user_id": "u_1"}
+    for kind in ("loaded", "saved"):
+        datas = [e["data"] for e in events if e["type"] == f"admin.profile.{kind}"]
+        assert datas and all(d == want for d in datas)
 
 
 async def test_load_warns_about_missing_file(parts: Parts) -> None:
