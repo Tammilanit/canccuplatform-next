@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from cp_kit import Bus, KitError
+from canccu_kit import Bus, KitError
 from jsonschema import Draft202012Validator
 
 from . import profile as prof

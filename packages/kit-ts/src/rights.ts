@@ -3,7 +3,7 @@ import { AdminClient } from "./admin.js";
 import type { Event } from "./bus.js";
 import { MissingRight, NotSignedIn } from "./errors.js";
 
-export const SESSION_COOKIE = "cp_session";
+export const SESSION_COOKIE = "canccu_session";
 export const CACHE_MS = 30_000;
 
 export interface Session {
@@ -13,7 +13,7 @@ export interface Session {
   expiresAt: Date;
 }
 
-/** The cp_session value from a Cookie header, or undefined. */
+/** The canccu_session value from a Cookie header, or undefined. */
 export function sessionIdFromCookie(cookieHeader: string | undefined | null): string | undefined {
   if (!cookieHeader) return undefined;
   for (const part of cookieHeader.split(";")) {

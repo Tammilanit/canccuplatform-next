@@ -6,7 +6,7 @@ import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-ENV_VARS = ("CP_MODULE", "CP_VERSION", "CP_VALKEY_URL", "CP_ADMIN_URL")
+ENV_VARS = ("CANCCU_MODULE", "CANCCU_VERSION", "CANCCU_VALKEY_URL", "CANCCU_ADMIN_URL")
 
 
 class ConfigError(Exception):
@@ -28,8 +28,8 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
     if missing:
         raise ConfigError(f"missing environment variable(s): {', '.join(missing)}")
     return Config(
-        module=source["CP_MODULE"],
-        version=source["CP_VERSION"],
-        valkey_url=source["CP_VALKEY_URL"],
-        admin_url=source["CP_ADMIN_URL"].rstrip("/"),
+        module=source["CANCCU_MODULE"],
+        version=source["CANCCU_VERSION"],
+        valkey_url=source["CANCCU_VALKEY_URL"],
+        admin_url=source["CANCCU_ADMIN_URL"].rstrip("/"),
     )

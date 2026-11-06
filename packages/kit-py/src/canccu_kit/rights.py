@@ -11,7 +11,7 @@ from .admin import AdminClient
 from .bus import Event
 from .errors import MissingRight, NotSignedIn
 
-SESSION_COOKIE = "cp_session"
+SESSION_COOKIE = "canccu_session"
 CACHE_SECONDS = 30.0
 
 
@@ -27,7 +27,7 @@ class Session:
 
 
 def session_id_from_cookie(cookie_header: str | None) -> str | None:
-    """The cp_session value from a Cookie header, or None."""
+    """The canccu_session value from a Cookie header, or None."""
     if not cookie_header:
         return None
     for part in cookie_header.split(";"):

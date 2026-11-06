@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 import uvicorn
-from cp_kit import (
+from canccu_kit import (
     AdminClient,
     Bus,
     Health,
@@ -33,19 +33,21 @@ def parse_targets(raw: str) -> dict[str, str]:
 
 async def serve() -> None:
     config = load_config()
-    database_url = os.environ.get("CP_DATABASE_URL")
+    database_url = os.environ.get("CANCCU_DATABASE_URL")
     if not database_url:
-        raise SystemExit("missing environment variable(s): CP_DATABASE_URL")
+        raise SystemExit("missing environment variable(s): CANCCU_DATABASE_URL")
     store = await PgStore.connect(database_url)
     streams = ValkeyStreamStore.from_url(config.valkey_url)
-    contracts = Path(os.environ.get("CP_CONTRACTS_DIR", "/repo/contracts"))
+    contracts = Path(os.environ.get("CANCCU_CONTRACTS_DIR", "/repo/contracts"))
     service = Service(
         store=store,
         bus=Bus(streams, config.module),
         validator=make_validator(contracts / "profile.schema.json"),
-        event_dir=Path(os.environ.get("CP_EVENT_DIR", "/files/event")),
-        declarations=load_declarations(Path(os.environ.get("CP_DECLARATIONS_DIR", "declarations"))),
-        health_targets=parse_targets(os.environ.get("CP_HEALTH_TARGETS", "")),
+        event_dir=Path(os.environ.get("CANCCU_EVENT_DIR", "/files/event")),
+        declarations=load_declarations(
+            Path(os.environ.get("CANCCU_DECLARATIONS_DIR", "declarations"))
+        ),
+        health_targets=parse_targets(os.environ.get("CANCCU_HEALTH_TARGETS", "")),
     )
     health = Health(
         config.module,

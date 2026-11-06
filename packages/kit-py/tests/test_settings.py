@@ -5,8 +5,8 @@ import json
 import httpx
 import pytest
 
-from cp_kit import AdminError, SettingsClient, VersionConflict
-from cp_kit.bus import Event
+from canccu_kit import AdminError, SettingsClient, VersionConflict
+from canccu_kit.bus import Event
 
 from .conftest import FakeAdmin, json_response
 
@@ -86,7 +86,7 @@ async def test_write_sends_held_version_and_maps_409(admin: FakeAdmin) -> None:
     await settings.write({"a": 2}, session_id="s1")
     sent = json.loads(admin.requests[-1].content)
     assert sent == {"settings_version": 2, "values": {"a": 2}}
-    assert admin.requests[-1].headers["cookie"] == "cp_session=s1"
+    assert admin.requests[-1].headers["cookie"] == "canccu_session=s1"
     assert settings.settings_version == 3
 
     stored.version = 7  # someone else wrote meanwhile
