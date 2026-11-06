@@ -1,0 +1,604 @@
+openapi: 3.1.0
+info:
+  title: Agenda API
+  version: 1.0.0
+  summary: The run-of-show of one event, editable live.
+  description: |
+    Machine-readable part of the agenda contract. Prose, rules, reminders and events: contracts/agenda.md.
+    Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
+    The event (tenant) comes from the hostname; no operation names a tenant except the clone source.
+  license:
+    name: AGPL-3.0
+    identifier: AGPL-3.0-only
+servers:
+  - url: /
+    description: Same origin, behind Caddy; the hostname selects the event.
+tags:
+  - name: items
+    description: Reading and editing the run-of-show.
+  - name: clone
+    description: Copying the agenda of a previous event of the series.
+security:
+  - {}
+  - session: []
+paths:
+  /api/agenda/items:
+    get:
+      tags: [items]
+      operationId: listItems
+      summary: List the agenda
+      description: |
+        Items the caller may see, sorted by `starts_at`: `public` without a session (when the event's
+        info-page mode allows), plus `attendees` for members, plus `crew` with right `agenda.crew.read`.
+      parameters:
+        - name: from
+          in: query
+          description: Only items that end at or after this time (or start at or after it when they have no end).
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: Only items that start before this time.
+          schema:
+            type: string
+            format: date-time
+        - name: include_cancelled
+          in: query
+          description: Include cancelled items.
+          schema:
+            type: boolean
+            default: true
+      responses:
+        "200":
+          description: The agenda.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agenda"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [items]
+      operationId: addItem
+      summary: Add an item
+      description: Needs right `agenda.items.write`. Emits `agenda.item.added`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemNew"
+      responses:
+        "201":
+          description: The new item.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/agenda/items/{item_id}:
+    parameters:
+      - $ref: "#/components/parameters/ItemId"
+    get:
+      tags: [items]
+      operationId: getItem
+      summary: Read one item
+      description: 404 `not_found` also when the caller may not see the item.
+      responses:
+        "200":
+          description: The item.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [items]
+      operationId: editItem
+      summary: Edit or move an item
+      description: |
+        Needs right `agenda.items.write`. A move is a new plan: each given time becomes both its planned and
+        its current value, so giving `starts_at` resets `delay_minutes` to 0. Fields left out stay as they
+        are; `null` clears `description`, `location` or `zone`. Emits `agenda.item.changed`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemEdit"
+      responses:
+        "200":
+          description: The changed item.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [items]
+      operationId: removeItem
+      summary: Remove an item
+      description: |
+        Needs right `agenda.items.write`. For mistakes; during the event, cancel instead.
+        Emits `agenda.item.removed`.
+      security:
+        - session: []
+      parameters:
+        - name: revision
+          in: query
+          required: true
+          description: The item's revision as read.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "204":
+          description: Removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/agenda/items/{item_id}/delay:
+    parameters:
+      - $ref: "#/components/parameters/ItemId"
+    post:
+      tags: [items]
+      operationId: delayItem
+      summary: Delay an item, or bring it forward
+      description: |
+        Needs right `agenda.items.write`. Shifts the current times and keeps the planned ones. With
+        `following`, also shifts every scheduled item starting at or after this item's old start, except
+        `quiet_hours` items. A running item keeps its start and only its end moves. A shift that would put an
+        item's end at or before its start is 400 `invalid_request` and nothing shifts; an item that has started
+        and has no end is 409 `item_started`. Emits one `agenda.item.delayed` per shifted item, with one
+        `correlation_id`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Delay"
+      responses:
+        "200":
+          description: Every shifted item, this one first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [agenda_version, items]
+                properties:
+                  agenda_version:
+                    type: integer
+                    minimum: 0
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/agenda/items/{item_id}/cancel:
+    parameters:
+      - $ref: "#/components/parameters/ItemId"
+    post:
+      tags: [items]
+      operationId: cancelItem
+      summary: Cancel an item
+      description: Needs right `agenda.items.write`. Final; the item stays visible as cancelled. Emits `agenda.item.cancelled`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RevisionOnly"
+      responses:
+        "200":
+          description: The cancelled item.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/agenda/now:
+    get:
+      tags: [items]
+      operationId: getNow
+      summary: Now and next
+      description: |
+        The scheduled items running now and those with the earliest start after now, among the items the
+        caller may see. Screens, the bot and the hub all take now and next from here.
+      parameters:
+        - name: zone
+          in: query
+          description: Only items of this screen zone and items with no zone.
+          schema:
+            $ref: "#/components/schemas/ZoneKey"
+      responses:
+        "200":
+          description: Now and next.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Now"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/agenda/clone:
+    post:
+      tags: [clone]
+      operationId: cloneAgenda
+      summary: Clone the agenda of a previous event
+      description: |
+        Needs right `agenda.items.write` here and event admin on the source; both events must be in one
+        series (checked through the tenants API). Only into an empty agenda. Scheduled items are copied with
+        their planned times shifted, no delays and no links. Emits `agenda.items.cloned`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CloneRequest"
+      responses:
+        "200":
+          description: The new agenda.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agenda"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: canccu_session
+      description: Opaque session id (contracts/admin.md, Session and rights). Rights are checked through admin.
+  parameters:
+    ItemId:
+      name: item_id
+      in: path
+      required: true
+      description: Item id.
+      schema:
+        $ref: "#/components/schemas/ItemId"
+  responses:
+    BadRequest:
+      description: "`invalid_request`: a field is missing or invalid."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: "`not_signed_in`: no valid session."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: |
+        `missing_right`: signed in, but the right is missing; or `info_pages_closed`: the event's info-page
+        mode does not let this request see the agenda.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: "`not_found`: no such item, or the caller may not see it."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: |
+        `version_conflict` (stale `revision`), `item_cancelled`, `item_started` (delay of a started item with
+        no end), `agenda_not_empty` (clone) or
+        `event_archived` (the event is read-only).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              pattern: "^[a-z][a-z0-9_]*$"
+              examples: [version_conflict]
+            message:
+              type: string
+    ItemId:
+      type: string
+      pattern: "^[A-Za-z0-9_-]{1,64}$"
+      examples: [it_8]
+    ZoneKey:
+      type: string
+      description: A zone key of the screen contract.
+      pattern: "^[a-z0-9_]{1,32}$"
+      examples: [main_hall]
+    Kind:
+      type: string
+      description: More kinds may be added; consumers treat an unknown kind as `other`.
+      enum: [doors, ceremony, tournament, meal, quiet_hours, activity, other]
+    Visibility:
+      type: string
+      description: "`public`: anyone; `attendees`: signed-in members; `crew`: right `agenda.crew.read`."
+      enum: [public, attendees, crew]
+    Links:
+      type: object
+      description: Ids owned by other modules; the agenda stores them and reads nothing behind them.
+      properties:
+        tournament_id:
+          type: string
+        moment_id:
+          type: string
+    ReminderLeads:
+      description: Lead times in minutes; `null` uses the event's setting, `[]` means no reminders.
+      oneOf:
+        - type: "null"
+        - type: array
+          maxItems: 8
+          items:
+            type: integer
+            minimum: 1
+            maximum: 1440
+    Item:
+      type: object
+      required:
+        - id
+        - title
+        - kind
+        - starts_at
+        - ends_at
+        - planned_starts_at
+        - planned_ends_at
+        - delay_minutes
+        - visibility
+        - status
+        - reminder_leads_minutes
+        - links
+        - revision
+      properties:
+        id:
+          $ref: "#/components/schemas/ItemId"
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: string
+          maxLength: 2000
+        kind:
+          $ref: "#/components/schemas/Kind"
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: [string, "null"]
+          format: date-time
+          description: "`null` for a moment in time; always set for `quiet_hours`."
+        planned_starts_at:
+          type: string
+          format: date-time
+        planned_ends_at:
+          type: [string, "null"]
+          format: date-time
+        delay_minutes:
+          type: integer
+          description: "`starts_at` minus `planned_starts_at`, in whole minutes."
+        location:
+          type: string
+          maxLength: 120
+        zone:
+          $ref: "#/components/schemas/ZoneKey"
+        visibility:
+          $ref: "#/components/schemas/Visibility"
+        status:
+          type: string
+          enum: [scheduled, cancelled]
+        reminder_leads_minutes:
+          $ref: "#/components/schemas/ReminderLeads"
+        links:
+          $ref: "#/components/schemas/Links"
+        cloned_from:
+          $ref: "#/components/schemas/ItemId"
+        revision:
+          type: integer
+          minimum: 1
+    ItemNew:
+      type: object
+      required: [title, kind, starts_at, visibility]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: string
+          maxLength: 2000
+        kind:
+          $ref: "#/components/schemas/Kind"
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: [string, "null"]
+          format: date-time
+        location:
+          type: string
+          maxLength: 120
+        zone:
+          $ref: "#/components/schemas/ZoneKey"
+        visibility:
+          $ref: "#/components/schemas/Visibility"
+        reminder_leads_minutes:
+          $ref: "#/components/schemas/ReminderLeads"
+        links:
+          $ref: "#/components/schemas/Links"
+    ItemEdit:
+      type: object
+      description: "`revision` plus the fields to change; fields left out stay as they are, `null` clears an optional text field or the zone."
+      required: [revision]
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: [string, "null"]
+          maxLength: 2000
+        kind:
+          $ref: "#/components/schemas/Kind"
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: [string, "null"]
+          format: date-time
+        location:
+          type: [string, "null"]
+          maxLength: 120
+        zone:
+          description: "`null` clears the zone."
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/ZoneKey"
+        visibility:
+          $ref: "#/components/schemas/Visibility"
+        reminder_leads_minutes:
+          $ref: "#/components/schemas/ReminderLeads"
+        links:
+          $ref: "#/components/schemas/Links"
+    Delay:
+      type: object
+      required: [revision, minutes]
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+        minutes:
+          type: integer
+          minimum: -720
+          maximum: 720
+          not:
+            const: 0
+          description: Positive delays, negative brings forward.
+        following:
+          type: boolean
+          default: false
+          description: Also shift every later scheduled item, except `quiet_hours` items.
+    RevisionOnly:
+      type: object
+      required: [revision]
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+    Agenda:
+      type: object
+      required: [agenda_version, items]
+      properties:
+        agenda_version:
+          type: integer
+          minimum: 0
+          description: +1 on every change of the event's agenda; a jump of more than one means re-read.
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Item"
+    Now:
+      type: object
+      required: [time, agenda_version, current, next]
+      properties:
+        time:
+          type: string
+          format: date-time
+        agenda_version:
+          type: integer
+          minimum: 0
+        current:
+          type: array
+          description: Scheduled items running now.
+          items:
+            $ref: "#/components/schemas/Item"
+        next:
+          type: array
+          description: Scheduled items with the earliest start after now; empty at the end of the event.
+          items:
+            $ref: "#/components/schemas/Item"
+    CloneRequest:
+      type: object
+      required: [source_tenant_id, shift_seconds]
+      properties:
+        source_tenant_id:
+          type: string
+          description: The previous event of the same series.
+        shift_seconds:
+          type: integer
+          description: Added to every planned time of the source.
