@@ -18,7 +18,8 @@ Scripts for installing a host and keeping the stack up across reboots. The platf
   - To reach the web ports over Tailscale too, add its ranges (`100.64.0.0/10`, `fd7a:115c:a1e0::/48`) to `CANCCU_WEB_ALLOW`.
 - `canccu-firewall.service`: runs `firewall apply` before `docker.service`, and Docker requires it (`RequiredBy=docker.service`), so the rules exist before Docker restores any container. If apply fails it runs `firewall close` and Docker starts with the web ports shut; if even `close` fails, the unit fails and Docker does not start.
 - `canccu-stack.service`: after Docker and `canccu-firewall`, checks the firewall (including the bypass) and runs `docker compose up -d --wait`.
-- `check-boot`: checks that Docker, `canccu-firewall` and `canccu-stack` start at boot, Docker requires `canccu-firewall`, every service has a container that is running, healthy where it has a healthcheck, and has a restart policy (`docker inspect`; no `jq` needed), and the firewall is in place and not closed on IPv4 and IPv6.
+- `deploy [--dry-run]` and `canccu-deploy.service` / `canccu-deploy.timer`: auto-deploy of main in dev mode (see [Auto-deploy](#auto-deploy)).
+- `check-boot`: checks that Docker, `canccu-firewall`, `canccu-stack` and `canccu-deploy.timer` start at boot, Docker requires `canccu-firewall`, every service has a container that is running, healthy where it has a healthcheck, and has a restart policy (`docker inspect`; no `jq` needed), and the firewall is in place and not closed on IPv4 and IPv6.
 
 `deploy/compose.yml` publishes Caddy explicitly on `0.0.0.0` and `[::]` for ports 80 and 443, because a host's Docker default bind may be `127.0.0.1`. On a host reachable from outside, start the stack only through `setup/install --boot` or `canccu-stack.service`, so the firewall is in place first: plain `setup/install` and `docker compose up` publish on all interfaces with no firewall. A host booted with IPv6 off (`ipv6.disable=1`) cannot bind `::`, so `compose up` fails there.
 
@@ -28,6 +29,7 @@ Scripts for installing a host and keeping the stack up across reboots. The platf
 1. If the stack already ran from a version of `deploy/compose.yml` without IPv6 on its network, run `docker compose -f deploy/compose.yml down` first (the volumes stay), so the network is recreated with IPv6.
 2. `sudo setup/install --boot`. On a fresh host it writes `deploy/.env` with a random Postgres password and then stops on the empty `CANCCU_WEB_ALLOW`: set it in `deploy/.env` and run `sudo setup/install --boot` again.
 3. `sudo setup/check-boot` shows only `ok`.
+   - **Auto-deploy is on by default:** `CANCCU_VERSION` is `dev` in `deploy/.env.example`, and `--boot` enables `canccu-deploy.timer`, so the host follows main from then on. On a host that must not, set `CANCCU_VERSION` to a release tag in `deploy/.env` first. For a dev host, also do the steps in [Auto-deploy](#auto-deploy).
 4. From an allowed address, `http://<host>/api/hello/health` answers; from any other address it times out, on IPv4 and on IPv6.
 5. **Reboot test:** `sudo reboot`. Once it is back, without touching anything:
    - `systemctl status canccu-firewall canccu-stack` shows both active;
@@ -35,3 +37,32 @@ Scripts for installing a host and keeping the stack up across reboots. The platf
    - `sudo setup/check-boot` shows only `ok`;
    - health answers from an allowed address and is still blocked from others (IPv4 and IPv6);
    - `sudo ufw status` is unchanged.
+
+## Auto-deploy
+In dev mode the host follows main: every merge reaches it a few minutes later, with a health check and a way back. The host pulls; nothing connects to it, so it needs no inbound port and works behind the firewall and Tailscale.
+
+- **When:** only while `CANCCU_VERSION` in `deploy/.env` is `dev`. `CANCCU_VERSION` is the platform version the host runs; it stands for the event repo's `platform.version` until the event repo's deploy word (roadmap step 9) sets it. With any other value `setup/deploy` does nothing and exits 0.
+- **How:** `canccu-deploy.timer` runs `canccu-deploy.service` (as root) 5 minutes after boot and then 2 minutes after each run ends. Each run of `setup/deploy`:
+  1. refuses (exit 2) a checkout that is not on `main`, has local changes or has diverged from `origin/main`: nobody edits code on the VM;
+  2. fetches `origin/main` and pulls `<module>:dev` for every `modules/<name>/Dockerfile` on it, from `ghcr.io/<owner>/<repo>` of the `origin` remote (`CANCCU_DEPLOY_IMAGES` in `deploy/.env` overrides it);
+  3. waits (exit 0) until every image's `org.opencontainers.image.revision` label is that main commit, so code and images always match; the Images workflow ([docs/ci.md](../docs/ci.md#images)) pushes them a few minutes after each merge;
+  4. stops when the checkout and the running images are already that commit (exit 0), or when exactly that commit with exactly those images failed before (exit 1, see below);
+  5. checks the firewall (`setup/firewall check`), writes down the previous commit and images (`pending`), fast-forwards the checkout and tags each pulled image as `canccuplatform-<module>:latest` (the name Compose gives the images it builds, so `canccu-stack` at boot uses the deployed images too);
+  6. runs `docker compose -f deploy/compose.yml up -d --wait --no-build --remove-orphans` (services main dropped are removed) and, when `deploy/Caddyfile` changed, recreates `caddy` (a bind-mounted file is not reloaded otherwise);
+  7. checks that every module container runs its new image and that `/api/<module>/health` answers through Caddy for every module within 30 seconds; then it removes the replaced images.
+- **On failure** (exit 1): it resets the checkout to the previous commit, tags the previous images back, brings the stack up again (removing services the failed commit added, recreating `caddy` if the Caddyfile changed) and checks its health. Then it opens an issue labelled `module:deploy` on the repo, in the standard issue layout, naming the commit and whether the rollback is healthy (it never includes logs: the repo is public). It holds that commit and those images: one issue per failure, and every later run exits 1 too, so `systemctl status canccu-deploy` stays failed until a new merge or new images arrive and are retried.
+- **Interrupted deploys:** if a run stops after it started switching (a reboot, a kill, the unit's 15-minute timeout), the `pending` record is still there. The next run checks that deploy first: healthy on the new commit is kept, anything else is rolled back and reported as above.
+- Git runs as the owner of the checkout, never as root, so the checkout stays the owner's. The deploy state (`pending`, the failed commit and images, a lock) is in `/var/lib/canccu-deploy`.
+- Logs: `journalctl -u canccu-deploy`. Run once by hand: `sudo systemctl start canccu-deploy`. Pause: `sudo systemctl stop canccu-deploy.timer` (it starts again at boot unless disabled).
+
+**Set up auto-deploy** (once, on the dev host, after the install checklist):
+1. The checkout is a clone of this repo on `main`, owned by an ordinary user, and `git fetch origin main` works for that user.
+2. In `deploy/.env`: `CANCCU_VERSION=dev` and `CANCCU_DEPLOY_GITHUB_TOKEN=<token>`, a fine-grained token for this repo only with Issues read and write. Without it a failed deploy still rolls back but opens no issue.
+3. If the GHCR packages are private, `sudo docker login ghcr.io` with a token that can read packages (root runs the pulls).
+4. `sudo setup/install --boot` installs and enables the timer; `sudo setup/check-boot` shows `canccu-deploy.timer enabled at boot` (checked only while `CANCCU_VERSION` is `dev`).
+5. Over Tailscale: add its ranges to `CANCCU_WEB_ALLOW` (above) and open `http://<tailscale-ip>/api/hello/health`.
+6. **Shown:** merge a PR to main; once its Images run is green, within a few minutes `journalctl -u canccu-deploy` shows `deployed <sha>, health ok`, and `/api/hello/health` answers `ok`.
+
+Known limits (follow-ups):
+- The images' origin is checked only through their revision label. Anyone who can write the GHCR packages could push a `:dev` image labelled with main's commit. Build-provenance attestations checked before tagging, or tighter package write access, would close this.
+- If one module's image never arrives (its Images job failed), every run logs `waiting for the images` and exits 0 until the next merge; no issue is opened.

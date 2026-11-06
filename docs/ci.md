@@ -33,6 +33,7 @@ Do not rename these jobs; renaming breaks the required checks.
 - It logs in with the workflow's `GITHUB_TOKEN` (`packages: write`, only in the image job); no other secret. Build layers are cached in the GitHub Actions cache per module.
 - **First push:** GHCR creates each package on its first push and links it to this repo through the `org.opencontainers.image.source` label. A maintainer checks each package's visibility under the org's Packages settings; the VMs need either a public package or a pull login.
 - These are not required checks: they run after merge.
+- **Auto-deploy:** a host in dev mode pulls the `dev` images and deploys them once every image's `org.opencontainers.image.revision` label is the new main commit (`setup/deploy`, see [setup/README.md](../setup/README.md#auto-deploy)).
 
 ## contracts
 - `scripts/check-contracts [--dry-run]`; tools come through `npx` with pinned versions (ajv-cli, ajv-formats, @redocly/cli), so it needs Node 22 and no `package.json`.

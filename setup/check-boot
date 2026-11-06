@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Docker-on-boot check: Docker, the firewall and the stack start at boot, the services restart,
+# Docker-on-boot check: Docker, the firewall, the stack and the auto-deploy timer start at boot, the services restart,
 # and the DOCKER-USER firewall is in place on IPv4 and IPv6.
 # Usage: check-boot [--dry-run]      (needs root for the firewall check)
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
-checks="docker.service enabled, canccu-firewall.service enabled, docker.service requires canccu-firewall, canccu-stack.service enabled, restart policies of the running services, services running and healthy, firewall in place and not closed (IPv4 and IPv6)"
+checks="docker.service enabled, canccu-firewall.service enabled, docker.service requires canccu-firewall, canccu-stack.service enabled, canccu-deploy.timer enabled (while CANCCU_VERSION is dev), restart policies of the running services, services running and healthy, firewall in place and not closed (IPv4 and IPv6)"
 case "${1:-}" in
   "") ;;
   --dry-run) echo "dry run, would check: $checks"; exit 0 ;;
@@ -18,6 +18,11 @@ no() { echo "FAIL $1" >&2; fail=1; }
 for u in docker canccu-firewall canccu-stack; do
   if systemctl is-enabled --quiet "$u" 2>/dev/null; then ok "$u.service enabled at boot"; else no "$u.service enabled at boot"; fi
 done
+# the auto-deploy timer matters only while CANCCU_VERSION in deploy/.env is dev (setup/deploy)
+version=$(sed -n 's/^CANCCU_VERSION=//p' "${CANCCU_ENV_FILE:-deploy/.env}" 2>/dev/null | tail -n1 | tr -d "\"'")
+if [ "${version:-dev}" != dev ]; then ok "canccu-deploy.timer not needed (CANCCU_VERSION is $version, not dev)"
+elif systemctl is-enabled --quiet canccu-deploy.timer 2>/dev/null; then ok "canccu-deploy.timer enabled at boot"
+else no "canccu-deploy.timer enabled at boot (CANCCU_VERSION is dev; to pause auto-deploy on purpose, ignore this line)"; fi
 if systemctl show -p Requires --value docker 2>/dev/null | grep -qw canccu-firewall.service
 then ok "docker.service requires canccu-firewall"; else no "docker.service requires canccu-firewall"; fi
 want=$(docker compose -f deploy/compose.yml config --services 2>/dev/null | sort)
