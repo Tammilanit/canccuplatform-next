@@ -518,7 +518,7 @@ What this repo implies for the tenancy design (#48), as questions for the produc
 10. **Scheduled ticker windows:** 0010 keeps the ticker "manual only" and drops "automatic ticker posts". Do operator-scheduled windows count as manual (port into Screen's scheduler) or as automatic (drop)?
 
 ## Event-specific content
-Counted by kind; the exact values are listed in the PR body for a follow-up in the event repo. The search covered the event and organization name, its domain and subdomains, IP addresses, Discord snowflakes, tailnet hostnames, channel names and timezone names, over every tracked file.
+Counted by kind only. The exact non-secret values are kept off GitHub, in the local handover file `~/handover/event-values/canccubot.md` (mode 600), for a follow-up in the event repo. The search covered the event and organization name, its domain and subdomains, IP addresses, Discord snowflakes, tailnet hostnames, channel names and timezone names, over every tracked file. Personal data and secrets were searched for too, in the tree and in the git history.
 
 | Kind | Count | Where (by kind of file) |
 |---|---|---|
@@ -535,7 +535,8 @@ Counted by kind; the exact values are listed in the PR body for a follow-up in t
 | Event timezone (IANA name) | 33 lines in 16 files | Config default, docstrings, tests, docs |
 | Event-year phase label | 4 lines in 4 files | Comments and docs |
 | IP addresses | 0 event-specific | Only private-range examples and public DNS servers in the LXC guide |
-| Secrets | 0 committed | Placeholders only (`your_bot_token_here`, a placeholder Worker secret) |
+| Personal data (emails, phone numbers, people's names, bank details) | 0 | – |
+| Secrets | 0 committed, in the tree or the history | Placeholders only: env examples, `bot/config.py` comments, docs, `worker/wrangler.toml`. The live tokens are in the bot host's `.env`, outside the repo; the handover file lists them by name under "Rotate before the event" |
 
 ## Coverage
 Every tracked file (175 files, 30,580 lines) was examined:
