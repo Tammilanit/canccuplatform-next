@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Install a host: check Docker, write deploy/.env, start the stack and check its health.
+# Install a host: check Docker, write deploy/.env, make sure every module image matches the
+# checkout's commit (reuse, pull <module>:<CANCCU_VERSION> or build; see setup/README.md), start
+# the stack and check its health.
 # Usage: install [--dry-run] [--boot]
 #   --boot  for a host reachable from outside (needs root): install canccu-firewall.service and
 #           canccu-stack.service, enable Docker, the firewall and the stack at boot, put the
@@ -74,6 +76,82 @@ if [ "$boot" = 1 ]; then
     [ "$(id -u)" = 0 ] || die "--boot needs root (sudo setup/install --boot)"
     command -v systemctl >/dev/null || die "systemd not found"
   fi
+fi
+
+# Module images: nothing starts on an image built from another commit. Every
+# canccuplatform-<module>:latest (the name compose gives the images it builds, and what
+# canccu-stack starts at boot) must carry the checkout's HEAD in org.opencontainers.image.revision.
+# A matching image is reused; otherwise <module>:<CANCCU_VERSION> is pulled from the deploy registry
+# and used if it was built from HEAD; otherwise the image is built from the checkout, labelled.
+envval() { [ -r "$env" ] || return 0; sed -n "s/^$1=//p" "$env" | tail -n1 | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"; }
+# read-only git, also as root in a user's checkout (no index refresh, no dubious-ownership refusal)
+gi() { git -c safe.directory="$PWD" --no-optional-locks "$@"; }
+command -v git >/dev/null || die "git not found (needed to match the module images to the checkout)"
+head=$(gi rev-parse --verify -q 'HEAD^{commit}') || head=
+[[ $head =~ ^[0-9a-f]{40}$ ]] || die "cannot read the checkout's commit (git rev-parse HEAD); run install from a git checkout"
+version=$(envval CANCCU_VERSION); version=${version:-dev}
+[[ $version =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]] || die "CANCCU_VERSION '$version' in $env is not an image tag (dev or a release tag)"
+registry=$(envval CANCCU_DEPLOY_IMAGES)
+if [ -z "$registry" ]; then
+  url=$(gi remote get-url origin 2>/dev/null)
+  slug=$(sed -E 's#^(https://|ssh://)?([^@/]+@)?github\.com[:/]##; s#\.git$##; s#/$##' <<<"$url")
+  if [[ $slug =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then registry=ghcr.io/${slug,,}; fi
+fi
+changes=$(gi status --porcelain) || die "cannot read the checkout's state (git status)"
+build_labels=(--label "org.opencontainers.image.revision=$head")
+if [ -n "$changes" ]; then
+  # Such a build is marked, so it is not reused once the checkout is clean again.
+  echo "warning: the checkout has local changes: every module image is built from it, with those changes" >&2
+  build_labels+=(--label canccu.local-changes=true)
+fi
+[ -n "$registry" ] || echo "no registry (no CANCCU_DEPLOY_IMAGES in $env and origin is not on GitHub): images are built from the checkout"
+labels() { docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}|{{index .Config.Labels "canccu.local-changes"}}' "$1" 2>/dev/null; }
+short=${head:0:7}
+found=0
+for f in modules/*/Dockerfile; do
+  [ -f "$f" ] || continue
+  found=1
+  m=${f#modules/}; m=${m%/Dockerfile}; img=canccuplatform-$m:latest
+  have=$(labels "$img")
+  if [ -z "$changes" ] && [ "$have" = "$head|" ]; then
+    if [ "$dry" = 1 ]; then echo "would reuse $img (built from $short)"; else echo "$m: $img was built from $short, reusing it"; fi
+    continue
+  fi
+  rev=${have%%|*}
+  if [ -z "$have" ]; then why="no $img yet"
+  elif [ -n "$changes" ]; then why="the checkout has local changes"
+  elif [ "$rev" = "$head" ]; then why="$img was built with local changes"
+  elif [ -z "$rev" ]; then why="$img has no revision label"
+  else why="$img was built from ${rev:0:7}, not $short"
+  fi
+  remote=
+  if [ -n "$registry" ] && [ -z "$changes" ]; then remote=$registry/$m:$version; fi
+  if [ "$dry" = 1 ]; then
+    if [ -n "$remote" ]; then echo "would pull $remote and use it as $img if it was built from $short, else build $f ($why)"
+    else echo "would build $f as $img, labelled $short ($why)"; fi
+    continue
+  fi
+  if [ -n "$remote" ]; then
+    if docker pull -q "$remote" >/dev/null; then
+      got=$(labels "$remote")
+      if [ "$got" = "$head|" ]; then
+        docker tag "$remote" "$img" || die "cannot tag $remote as $img"
+        echo "$m: pulled $remote, built from $short ($why)"
+        continue
+      fi
+      got=${got%%|*}
+      why="$why; $remote was built from ${got:0:7}"
+    else
+      why="$why; cannot pull $remote"
+    fi
+  fi
+  echo "==> $m: $why; building $f"
+  docker build -f "$f" -t "$img" "${build_labels[@]}" . \
+    || die "cannot pull or build the image of $m ($why; the build of $f failed); nothing was started"
+done
+[ "$found" = 1 ] || die "the checkout has no modules/<name>/Dockerfile"
+
+if [ "$boot" = 1 ]; then
   step "install canccu-firewall.service, canccu-stack.service, canccu-deploy.service and canccu-deploy.timer into /etc/systemd/system"
   step "systemctl enable docker canccu-firewall canccu-stack"
   step "systemctl reload canccu-firewall, or start it if inactive (put the DOCKER-USER firewall in place; a restart would restart Docker)"
@@ -93,8 +171,8 @@ if [ "$boot" = 1 ]; then
   step "systemctl restart canccu-stack (firewall check, then docker compose -f deploy/compose.yml up -d --wait)"
   [ "$dry" = 1 ] || systemctl restart canccu-stack || die "canccu-stack failed; see: journalctl -u canccu-stack"
 else
-  step "docker compose -f deploy/compose.yml up -d --wait"
-  [ "$dry" = 1 ] || docker compose -f deploy/compose.yml up -d --wait || die "stack failed to start; see: docker compose -f deploy/compose.yml logs"
+  step "docker compose -f deploy/compose.yml up -d --wait --no-build"
+  [ "$dry" = 1 ] || docker compose -f deploy/compose.yml up -d --wait --no-build || die "stack failed to start; see: docker compose -f deploy/compose.yml logs"
 fi
 if [ "$dry" = 0 ]; then
   for _ in $(seq 1 15); do
