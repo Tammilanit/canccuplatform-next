@@ -3,10 +3,10 @@
 One design brief per roadmap step, from step 3 on ([0023](../decisions/0023-step-design-briefs.md)). A brief is the step's agreed design: written before any code, discussed with the product owner in one brainstorming round, revised once and accepted by a maintainer. The step's issues and packages build on it ([AGENTS.md, How work flows](../../AGENTS.md#how-work-flows)).
 
 ## How a brief is made
-1. The step's first issue, `docs(briefs): step <n> design brief and brainstorming round`, blocks the step's other issues.
+1. The step's first issue, `docs(briefs): step <n> design brief and brainstorming round`, blocks the step's other issues (parallel tracks and fast-lane issues excepted).
 2. Its PR adds `step-<n>-<name>.md` here (`<name>` a short slug of the roadmap step's title: lowercase, hyphens, e.g. `step-3-screen-pulse.md`).
-3. The lead runs the brainstorming round with the product owner on the PR. The brief is revised once in the same PR, with what was decided and any question still open.
-4. The reviewer's verdict is `manual — step brief`; a maintainer accepts it.
+3. The PR stays a draft while the lead runs the brainstorming round with the product owner on it. The brief is revised once in the same PR, with what was decided and any question still open.
+4. Only then is the PR marked ready for the independent review, so the verdict covers the revised brief (a later push would void it). The reviewer's verdict is `manual — step brief`; a maintainer accepts it.
 5. The lead applies the proposed issue changes and unblocks the step's other issues. A merged brief is not rewritten; a later change to the design goes through a `Roadmap note:` and the checkpoint.
 
 ## Outline of a brief
@@ -21,4 +21,5 @@ One design brief per roadmap step, from step 3 on ([0023](../decisions/0023-step
 
 ## Rules
 - Nothing event-specific, as everywhere in this repo: use the demo event (`events/demo/`) in text and mockups.
+- Mockups are drawn new: legacy screenshots are never used as mockups. The no-event-names check cannot read images, so the reviewer inspects every mockup image for real event names, venues, hostnames, IPs, Discord ids and personal names.
 - A brief sets the floor and the direction, not every detail: within it, each issue's Room to design leaves workers free to make a better design and say why in their PR.
