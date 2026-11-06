@@ -20,7 +20,7 @@ The platform is not limited to porting. It is to be a much bigger, better and ri
 | [the signup site](signup-site.md) | #72 | Registration (stays outside), pizza, tournament, the LAN display page, bot ingest | Pizza and tournament are reused with changes; the display page is rebuilt as Screen widgets; registration stays |
 | [canccumanager](canccumanager.md) | #70 | Health poller, alerts, ack, mute, ssh actions | Debounce and alert rules are reused in admin; the executor is redesigned; ssh dropped |
 | [thefinals_mini_tourney](thefinals_mini_tourney.md) | #75 | Brackets, rankings and team builder for one team game (ISC, another author) | The pure engine is reused in Games after its author's OK; the rest is rebuilt |
-| [canccuplatform](canccuplatform.md) | #68 | The legacy system repo: contracts, scripts, runbooks | No code reused; its contracts are the spec for the new contracts |
+| [canccuplatform](canccuplatform.md) | #68 | The legacy system repo: contracts, scripts, runbooks | Little code reused (CI checks, health shape); its contracts are the spec for the new contracts |
 | [canccudocs](canccudocs.md) | #73 | Plans and requirements, no code | No code; 17 requirements are not yet in the roadmap ([Gaps](#gaps-from-the-legacy-plans)) |
 | [canccustream](canccustream.md) | #74 | An RTMP multi-camera compositor, decommissioned | Drop all code; ideas go to the Cast track |
 
@@ -113,11 +113,11 @@ Every feature of the per-repo inventories, one table per repo, in the order of t
 | Bot health endpoint | bot | 6 | rebuild | On the kit's health contract |
 | `/help` | — | — | drop | Discord lists the registered commands |
 | `/stream` stubs | — | — | drop | Never worked; Cast brings its own commands |
-| Pizza links | pizza | 5 | rebuild | Sign-in replaces registration tokens in URLs |
-| Tournament read commands: register, schedule, my-registrations, leaderboard | tournament, bot | 7 (bot side 6) | reuse with changes | Read the tournament API; `register` becomes a sign-in link |
+| Pizza links | bot | 6 | rebuild | The `/pizza` commands link to the pizza page (pizza, step 5); sign-in replaces registration tokens in URLs |
+| Tournament read commands: register, schedule, my-registrations, leaderboard | tournament, bot | 7 (bot side 6) | reuse with changes | Read the tournament API; `register` becomes a sign-in link. The bot side is built in step 6 against the event catalog (#34) and goes live with step 7 (OC8) |
 | Tournament admin commands: admin, add, remove, list, clear | tournament | 7 | reuse with changes | Through the tournament API with backend rights |
-| Tournament reminders: T−60 post, close and start DMs, status changes | tournament, bot | 7, 6 | reuse with changes | Valued by players; the scheduler moves into the tournament module and the hard-coded close time is fixed |
-| Tournament voice channels: create-once, dwell roster, cleanup, backstop, create-now | bot, tournament | 6, 7 | reuse with changes | Unique and proven; the flag polling becomes a voice handshake through events, with the legacy rules as the spec |
+| Tournament reminders: T−60 post, close and start DMs, status changes | tournament, bot | 7, 6 | reuse with changes | Valued by players; the scheduler moves into the tournament module and the hard-coded close time is fixed. The bot side is built in step 6 against the event catalog (#34) and goes live with step 7 (OC8) |
+| Tournament voice channels: create-once, dwell roster, cleanup, backstop, create-now | bot, tournament | 6, 7 | reuse with changes | Unique and proven; the flag polling becomes a voice handshake through events, with the legacy rules as the spec. The bot side is built in step 6 against the event catalog (#34) and goes live with step 7 (OC8) |
 | Tournament screen pin T−15 to T+10 | moments | 4; wired in 9 | rebuild | An event that Moments ranks |
 | `TournamentMemoryStore` test double | — | — | drop | Tests run against Postgres |
 | Mini-tourney watcher posts and finals summary **(new)** | games, bot | Games, 6 | reuse with changes | Games publishes season events; the bot posts them; announced ids become rows |
@@ -136,7 +136,7 @@ Registration and the site itself stay outside the platform ([0005](../decisions/
 | Feature | Target module | Step | Verdict | Reason |
 |---|---|---|---|---|
 | P1–P5 pizza order lifecycle and router, including P2 own pizzas | pizza | 5 | reuse with changes | The router rules, status codes and tests are the spec; add `tenant_id`, transactions for every transition (only two are atomic today), sign-in identity, private comments |
-| Pure pizza helpers: validate, menu filter, summary, orderer view (code modules inside the lifecycle row above, whose verdict is the feature's) | pizza | 5 | reuse | Pure TypeScript with tests |
+| Pure pizza helpers: validate, menu filter, summary, orderer view | pizza | 5 | reuse | Pure TypeScript with tests, reused as is inside the order lifecycle (which is reused with changes) |
 | P6 Discord posts | pizza, bot | 5, 6 | reuse with changes | `pizza.order.*` events the bot posts instead of a webhook |
 | P7 reminders and auto-release | pizza | 5 | reuse with changes | A scheduler in the pizza container; the once-per-step and retry rules are kept |
 | P8–P9 pizza admin, pizzerias and menus | pizza, admin | 5 | reuse with changes | Rights from sign-in; menus per tenant from the profile ([DR11](#conflicts-with-the-decision-records)); hard delete becomes logged |
@@ -174,7 +174,7 @@ Registration and the site itself stay outside the platform ([0005](../decisions/
 | Log redaction | kit | 8 | reuse | Pure, generic patterns; every module's log view needs it |
 | F1 health polling and parse | admin | 8 | reuse with changes | Polls every module's health through the kit shape; keeps the generic failure messages |
 | F3 state-change events | admin | 8 | reuse with changes | A bus event with `tenant` where it concerns one event; history in Postgres |
-| F7, F9 alerts and reminders | admin, bot | 8, 6 | reuse with changes | Its incident rules and tests are the spec; published as events; lost recovery alerts fixed |
+| F7, F9 alerts and reminders | admin, bot | 8 (bot relay also 8) | reuse with changes | Its incident rules and tests are the spec; published as events; lost recovery alerts fixed |
 | F8 webhook fallback | admin | 8 | reuse with changes | Still needed when the bot is down; target per alert audience |
 | F6 event history and ack, F10 mute | admin | 8 | reuse with changes | Actor from sign-in, not a self-declared header |
 | F14 auto-restart policy | admin | 8 | reuse with changes | The engine is sound; its guard never received live state and must read every affected tenant |
@@ -296,7 +296,7 @@ This repo holds plans, not code. Its "X" features are the same features as in th
 | X16, sound engine part | moments | 4 | reuse | As signage's sound engine row: pure and well tested; cues come from events |
 | X16, sound settings and log part | moments | 4 | reuse with changes | As signage's sound settings row: Postgres and tenant files |
 | X16, sound board part | moments, admin | 4 | rebuild | As signage's sound board commands and admin pages: per device on the server, in the admin UI |
-| X17 tournament sound moments | tournament, moments | 7, 9 | rebuild | The source becomes tournament events, not the embedded page |
+| X17 tournament sound moments | moments, tournament | 4 (policy), 7 (events) | rebuild | Moments holds the once-per-session sound policy (step 4); tournament events from step 7 trigger it, not the embedded page |
 | X18 admin sign-in: password and login link | — | — | drop | As signage's admin auth row: the central sign-in (step 2b, #52) replaces them; fail-closed admin, rate limits and session lifetimes carry over as requirements ([gaps 1–3](#gaps-from-the-legacy-plans)) |
 | X19 health and diagnostics | kit, admin | 1, 8 | reuse with changes | Kit health; logs tagged with the tenant |
 | X20 supervisor and kiosk launcher | — | — | drop | The projector PC runs a browser only |
@@ -636,7 +636,7 @@ The reuse table in the roadmap ([Building on the legacy](../roadmap.md#porting-p
 Each is a proposal for the product owner. The step texts of the roadmap change only once it is confirmed.
 
 - **OC1. Tournament no longer waits for the mini-tourney author's OK** ([DR5](#conflicts-with-the-decision-records)). Step 7 reuses the signup site's tournament code, which that author did not write, and its text already limits the OK to that author's code. Only the Games track waits. The roadmap's step 0 "postponed" item and AGENTS.md (Building on the legacy) change with it.
-- **OC2. Pizza on the screen.** Step 5's exit criterion is "an order runs end to end and shows on the screen", but Screen consumes pizza events only in step 9. Either Screen's pizza widget becomes a child of the pizza epic (#59), or the screen part of the exit criterion moves to step 9. Proposed: move it to step 9, and let step 5's exit be "an order runs end to end and the bot posts it".
+- **OC2. Pizza on the screen.** Step 5's exit criterion is "an order runs end to end and shows on the screen", but Screen consumes pizza events only in step 9. Either Screen's pizza widget becomes a child of the pizza epic (#59), or the screen part of the exit criterion moves to step 9. Proposed: split the exit by the step that can meet it. Step 5: "an order runs end to end and publishes `pizza.order.*` events (contract-tested)". Step 6 adds "the bot posts the order" to its exit, and step 9 adds "the order shows on the screen".
 - **OC3. Ticker in step 3, not 4.** It follows [0018](../decisions/0018-ticker-manual.md) and is already in the step 3 text; only the canccusignage inventory said step 4 (DR2).
 - **OC4. The bot's alert relay and `/platform status` land in step 8,** with admin operations, not in step 6. Step 6 needs only the bot's side of the event contract.
 - **OC5. New work in existing steps** (no change of order, but new children):
@@ -648,3 +648,4 @@ Each is a proposal for the product owner. The step texts of the roadmap change o
   - the mini-tourney watcher and finals cards after Moments and the bot, once the Games track publishes season events.
 - **OC6. Legacy bot data migration scope.** If the product owner widens it beyond the bot's own state (DR4), step 6 also needs a copy of the signup site's database.
 - **OC7. Tenancy answers before #48.** The answers above (T-A to T-J) are inputs to the tenants contract (#48), which is blocked by this summary. TA1 (venue time zone) and DR8 (allow-list) change what #48 contains.
+- **OC8. The bot's tournament side before the tournament module.** Step 6 builds the bot's tournament commands, reminders and voice-channel handshake, but the tournament API and its events arrive in step 7. Proposed: step 6 builds against the event catalog (#34) with contract tests, and the features go live with step 7.

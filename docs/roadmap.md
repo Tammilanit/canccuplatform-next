@@ -39,7 +39,7 @@ The roadmap changes as we learn ([0019](decisions/0019-work-packages.md)).
 - **Change log:** every change to this file adds a dated line below, newest first: `- YYYY-MM-DD: <what changed> (<issue or PR>)`.
 
 ### Change log
-- 2026-11-06: the reuse table (Building on the legacy) updated from the legacy inventory summary, with every legacy repo, the new features and five flagged changes of order and dependencies (#76).
+- 2026-11-06: the reuse table (Building on the legacy) updated from the legacy inventory summary, with the main features of every legacy repo, the new features and six flagged changes of order and dependencies, OC1, OC2, OC4, OC6, OC7 and OC8 (#76).
 - 2026-11-06: the ambition restated: a commercial-scale platform that takes the best of the legacy and is free to build anew ([0020](decisions/0020-best-of-old-freely-new.md)); no freeze and no target dates, step 11 becomes "Dress rehearsal and switch" ([0021](decisions/0021-no-fixed-dates.md)) (#99).
 - 2026-11-06: steps run in work packages and end with a health pass and a checkpoint ◆; this section added ([0019](decisions/0019-work-packages.md), #99).
 
@@ -180,7 +180,7 @@ Both are new builds with their own contracts, so neither blocks the main line. T
 
 <a id="porting-plan"></a>
 ## Building on the legacy
-What the platform takes from each legacy repo, from the code surveys and the [legacy inventory summary](legacy-inventory/README.md) (#76), which gives every legacy feature its module, step, verdict and reason. This table is where each step starts, not a limit: for each feature the step chooses to reuse, adapt, rebuild, drop or add something new, and names the reason ([0020](decisions/0020-best-of-old-freely-new.md)). The summary also lists what the platform can offer [beyond the old system](legacy-inventory/README.md#beyond-the-old-system). **(new)** marks the main features the summary added; its feature map has the full list.
+The main features the platform takes from each legacy repo, from the code surveys and the [legacy inventory summary](legacy-inventory/README.md) (#76), whose feature map is complete: every legacy feature with its module, step, verdict and reason. This table is where each step starts, not a limit: for each feature the step chooses to reuse, adapt, rebuild, drop or add something new, and names the reason ([0020](decisions/0020-best-of-old-freely-new.md)). The summary also lists what the platform can offer [beyond the old system](legacy-inventory/README.md#beyond-the-old-system). **(new)** marks the main features the summary added; its feature map has the full list.
 
 | Legacy repo | Reuse as is | Reuse with changes | Rebuild | Drop |
 |---|---|---|---|---|
@@ -196,11 +196,12 @@ What the platform takes from each legacy repo, from the code surveys and the [le
 Order rationale: Screen consumes pizza, tournament and bot events, so Screen core and Moments go first and feeds are wired in later. Dropped features are listed in [0010](decisions/0010-scope.md) and, each with its reason, in the summary's [feature map](legacy-inventory/README.md#feature-map).
 
 **Changes of order found by the summary,** flagged for the product owner; the step texts above change only after confirmation (details in [the summary](legacy-inventory/README.md#changes-of-order-flagged)):
-- Tournament (step 7) reuses the signup site's code, not the ISC code; step 7 already limits the OK to that author's code, but step 0's postponed item and AGENTS.md still tie it to step 7. Only the Games track waits.
-- Step 5's exit "shows on the screen" needs Screen's pizza consumer, which is wired in step 9: move that part of the exit to step 9, or add Screen's pizza widget to step 5.
-- The bot's alert relay and `/platform status` land in step 8, not step 6.
-- The scope of the legacy bot data migration (step 6) depends on the product owner's answer about data held by the signup site.
-- The tenancy answers of the summary are inputs to the tenants contract (#48), so they are confirmed before #48 starts.
+- **OC1.** Tournament (step 7) reuses the signup site's code, not the ISC code; step 7 already limits the OK to that author's code, but step 0's postponed item and AGENTS.md still tie it to step 7. Only the Games track waits.
+- **OC2.** Step 5's exit "shows on the screen" needs Screen's pizza consumer (step 9). Proposed: step 5's exit becomes "an order runs end to end and publishes `pizza.order.*` events (contract-tested)"; step 6 adds "the bot posts the order" and step 9 adds "the order shows on the screen".
+- **OC4.** The bot's alert relay and `/platform status` land in step 8, not step 6.
+- **OC6.** The scope of the legacy bot data migration (step 6) depends on the product owner's answer about data held by the signup site.
+- **OC7.** The tenancy answers of the summary are inputs to the tenants contract (#48), so they are confirmed before #48 starts.
+- **OC8.** The bot's tournament side (step 6) needs the tournament API and events of step 7: step 6 builds it against the event catalog (#34) with contract tests, and it goes live with step 7.
 
 ## Not scheduled yet
 - **Voices** (text to speech, pluggable providers, cached by text; a local provider by default so a small event needs no account). It follows Moments when time allows.
