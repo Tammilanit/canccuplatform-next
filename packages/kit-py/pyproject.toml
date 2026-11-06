@@ -3,7 +3,7 @@ requires = ["hatchling==1.33.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "cp-kit"
+name = "canccu-kit"
 version = "0.1.0"
 description = "Shared plumbing for CanccuPlatform modules: bus, health, settings, rights, errors, logging."
 requires-python = ">=3.12"
@@ -26,7 +26,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/cp_kit"]
+packages = ["src/canccu_kit"]
 
 [tool.ruff]
 line-length = 100

@@ -15,6 +15,7 @@ Monorepo for CanccuPlatform (working name; renamed `canccuplatform` at the switc
 - Containers keep no state: data and sessions in Postgres, events and caches in Valkey, files in the shared files volume.
 - One version for the whole platform; a release is a git tag.
 - Porting: each module is PORTED from the proven legacy code. Take the code and tests and adapt them to Postgres, the kit, containers and the contracts. Scrub every event-specific string and all event content to `events/demo/` or the event repo. Never import legacy git history or legacy docs. Code by other authors keeps its licence and attribution; the tournament module (ISC, c22dragoon) is ported only after his OK.
+- Names use the `canccu` prefix: `CANCCU_` env vars, `@canccu/` npm, `canccu_` / `canccu-` for Python, cookies, CSS and units ([ADR 0017](docs/decisions/0017-naming.md)); `scripts/check-naming` enforces it.
 - English throughout. Secrets never in the repo.
 - No editing on the VMs: code reaches them only through a merge to main and the deploy that follows.
 

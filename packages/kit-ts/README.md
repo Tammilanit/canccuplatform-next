@@ -1,16 +1,16 @@
-# @cp/kit (TypeScript)
+# @canccu/kit (TypeScript)
 
-Shared plumbing for platform modules, following [contracts/admin.md](../../contracts/admin.md): event bus, `/health`, settings client, rights check, error body and JSON logging. The core has no web framework. Two small adapters connect it to one: `@cp/kit/fastify` and `@cp/kit/web` (Web `Request` → `Response`: Hono and any fetch-style server).
+Shared plumbing for platform modules, following [contracts/admin.md](../../contracts/admin.md): event bus, `/health`, settings client, rights check, error body and JSON logging. The core has no web framework. Two small adapters connect it to one: `@canccu/kit/fastify` and `@canccu/kit/web` (Web `Request` → `Response`: Hono and any fetch-style server).
 
 ## Install (from a module)
 
 ```json
-{ "dependencies": { "@cp/kit": "file:../../packages/kit-ts" } }
+{ "dependencies": { "@canccu/kit": "file:../../packages/kit-ts" } }
 ```
 
-`npm install` builds the kit (`prepare`). Node 22.13+, ESM only. Fastify is an optional peer: install it in the module if you use `@cp/kit/fastify`.
+`npm install` builds the kit (`prepare`). Node 22.13+, ESM only. Fastify is an optional peer: install it in the module if you use `@canccu/kit/fastify`.
 
-The kit reads `CP_MODULE`, `CP_VERSION`, `CP_VALKEY_URL` and `CP_ADMIN_URL`; `loadConfig()` throws at start and names any that is missing.
+The kit reads `CANCCU_MODULE`, `CANCCU_VERSION`, `CANCCU_VALKEY_URL` and `CANCCU_ADMIN_URL`; `loadConfig()` throws at start and names any that is missing.
 
 ## Usage
 
@@ -26,7 +26,7 @@ import {
   loadConfig,
   postgresCheck,
   valkeyCheck,
-} from "@cp/kit";
+} from "@canccu/kit";
 
 const config = loadConfig();
 const log = createLogger(config.module); // JSON lines on stdout
@@ -42,7 +42,7 @@ const settings = new SettingsClient(admin, config.module);
 await settings.start();
 const rotation = settings.get("rotation_seconds", 10);
 
-// Rights: checks the cp_session cookie against GET /api/admin/session, cached ≤ 30 s
+// Rights: checks the canccu_session cookie against GET /api/admin/session, cached ≤ 30 s
 const rights = new RightsChecker(admin);
 
 const subscription = bus.subscribe(["admin"], async (event) => {
@@ -62,7 +62,7 @@ const health = createHealth({
 
 ```ts
 import Fastify from "fastify";
-import { install, requireRight } from "@cp/kit/fastify";
+import { install, requireRight } from "@canccu/kit/fastify";
 
 const app = Fastify();
 install(app, { health }); // /health, error body for every non-2xx, X-Correlation-Id
@@ -74,7 +74,7 @@ app.post("/slides", { preHandler: requireRight(rights, "screen.slides.edit") }, 
 ### Web (Hono, fetch handlers)
 
 ```ts
-import { healthHandler, withKit, withRight } from "@cp/kit/web";
+import { healthHandler, withKit, withRight } from "@canccu/kit/web";
 
 app.get("/health", (c) => healthHandler(health)(c.req.raw));
 const edit = withRight(rights, "screen.slides.edit", async (req, session) =>
@@ -95,7 +95,7 @@ The kit writes nothing to disk. Its only in-memory items are the rights cache (�
 
 ## Tests for modules
 
-`@cp/kit/testing` exports `MemoryStreamStore`, an in-memory `StreamStore` that records every `xadd` call.
+`@canccu/kit/testing` exports `MemoryStreamStore`, an in-memory `StreamStore` that records every `xadd` call.
 
 ## Check
 
@@ -107,11 +107,11 @@ CI runs the same commands (job `lint-types-test (kit-ts)`).
 
 ## Integration test
 
-The store and bus run against the real Valkey from the Compose stack: publish with MAXLEN (exact and `~`), subscribe, and dedupe of an entry added twice. The test is skipped unless `CP_VALKEY_URL` is set, so the check above stays offline.
+The store and bus run against the real Valkey from the Compose stack: publish with MAXLEN (exact and `~`), subscribe, and dedupe of an entry added twice. The test is skipped unless `CANCCU_VALKEY_URL` is set, so the check above stays offline.
 
 ```sh
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml up -d --wait valkey
-CP_VALKEY_URL=redis://127.0.0.1:6379 npx vitest run test/valkey.integration.test.ts
+CANCCU_VALKEY_URL=redis://127.0.0.1:6379 npx vitest run test/valkey.integration.test.ts
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml down
 ```
 

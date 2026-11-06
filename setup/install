@@ -4,8 +4,8 @@
 #   --boot  for a host reachable from outside (needs root): install canccu-firewall.service and
 #           canccu-stack.service, enable Docker, the firewall and the stack at boot, put the
 #           DOCKER-USER firewall in place BEFORE the stack publishes its ports, then run
-#           check-boot. Needs CP_WEB_ALLOW in deploy/.env (see setup/README.md).
-# Honours DOCKER_HOST; CP_ENV_FILE replaces deploy/.env (for the self-test).
+#           check-boot. Needs CANCCU_WEB_ALLOW in deploy/.env (see setup/README.md).
+# Honours DOCKER_HOST; CANCCU_ENV_FILE replaces deploy/.env (for the self-test).
 # Exit 2 = something is missing or unreachable.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
@@ -22,12 +22,12 @@ docker info >/dev/null 2>&1 || die "cannot reach the Docker daemon (DOCKER_HOST=
 [ "$dry" = 1 ] || command -v curl >/dev/null || die "curl not found (needed for the health check)"
 echo "docker ok"
 
-env=${CP_ENV_FILE:-deploy/.env}
+env=${CANCCU_ENV_FILE:-deploy/.env}
 if [ -e "$env" ] && grep -qE '^POSTGRES_PASSWORD=(change-me)?$' "$env"; then
   # The example password must not reach production. Postgres takes the password only when it
   # creates the database, so replacing it is safe only while the volume does not exist.
   if docker volume inspect canccuplatform_postgres-data >/dev/null 2>&1; then
-    msg="$env has the example POSTGRES_PASSWORD and the database already exists with it; set a new password in Postgres (ALTER ROLE cp PASSWORD ...) and in $env"
+    msg="$env has the example POSTGRES_PASSWORD and the database already exists with it; set a new password in Postgres (ALTER ROLE canccu PASSWORD ...) and in $env"
     if [ "$boot" = 1 ]; then die "$msg"; else echo "warning: $msg" >&2; fi
   else
     step "replace the example POSTGRES_PASSWORD in $env with a random one"
@@ -68,7 +68,7 @@ if [ "$boot" = 1 ]; then
   [ -z "$writable" ] || die "writable by others (world-writable, group-writable by a shared group, or another owner), but run as root by the units: ${writable//$'\n'/ }; fix with chmod o-w,g-w / chown"
   docker_bin=$(command -v docker)
   [[ $docker_bin =~ ^[A-Za-z0-9/._-]+$ ]] || die "the docker path '$docker_bin' has characters systemd units cannot take"
-  env -u CP_WEB_ALLOW CP_ENV_FILE="$env" setup/firewall apply --dry-run >/dev/null || die "fix CP_WEB_ALLOW in $env, then run setup/install --boot again"
+  env -u CANCCU_WEB_ALLOW CANCCU_ENV_FILE="$env" setup/firewall apply --dry-run >/dev/null || die "fix CANCCU_WEB_ALLOW in $env, then run setup/install --boot again"
   if [ "$dry" = 0 ]; then
     [ "$(id -u)" = 0 ] || die "--boot needs root (sudo setup/install --boot)"
     command -v systemctl >/dev/null || die "systemd not found"

@@ -1,4 +1,4 @@
-/** @cp/kit: shared plumbing for CanccuPlatform modules (contracts/admin.md). */
+/** @canccu/kit: shared plumbing for CanccuPlatform modules (contracts/admin.md). */
 export * from "./admin.js";
 export * from "./bus.js";
 export * from "./config.js";

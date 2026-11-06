@@ -1,5 +1,5 @@
 {
-  "name": "@cp/hello",
+  "name": "@canccu/hello",
   "version": "0.1.0",
   "private": true,
   "description": "Test module: reports health through the kit, nothing else.",
@@ -16,7 +16,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cp/kit": "file:../../packages/kit-ts",
+    "@canccu/kit": "file:../../packages/kit-ts",
     "fastify": "5.12.8",
     "pg": "8.23.1"
   },

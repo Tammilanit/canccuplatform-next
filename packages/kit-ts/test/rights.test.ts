@@ -35,18 +35,18 @@ async function rejection(p: Promise<unknown>): Promise<unknown> {
 
 describe("rights check", () => {
   it("parses the cookie header", () => {
-    expect(sessionIdFromCookie("a=1; cp_session=abc; b=2")).toBe("abc");
-    expect(sessionIdFromCookie("cp_session_x=abc")).toBeUndefined();
+    expect(sessionIdFromCookie("a=1; canccu_session=abc; b=2")).toBe("abc");
+    expect(sessionIdFromCookie("canccu_session_x=abc")).toBeUndefined();
     expect(sessionIdFromCookie(undefined)).toBeUndefined();
   });
 
   it("allows and forwards only the session cookie", async () => {
     const { admin, checker } = setup();
     admin.answer = () => jsonResponse(200, sessionBody(["screen.slides.edit"]));
-    const session = await checker.check("theme=dark; cp_session=s1", "screen.slides.edit");
+    const session = await checker.check("theme=dark; canccu_session=s1", "screen.slides.edit");
     expect(session.userId).toBe("u1");
     expect(admin.requests).toEqual([
-      { method: "GET", path: "/api/admin/session", cookie: "cp_session=s1", body: undefined },
+      { method: "GET", path: "/api/admin/session", cookie: "canccu_session=s1", body: undefined },
     ]);
   });
 
@@ -65,7 +65,9 @@ describe("rights check", () => {
     const { admin, checker } = setup();
     admin.answer = () => jsonResponse(401, { error: { code: "not_signed_in", message: "x" } });
     for (let i = 0; i < 2; i++) {
-      expect(await rejection(checker.check("cp_session=gone", "a.b"))).toBeInstanceOf(NotSignedIn);
+      expect(await rejection(checker.check("canccu_session=gone", "a.b"))).toBeInstanceOf(
+        NotSignedIn,
+      );
     }
     expect(admin.requests).toHaveLength(2);
   });
@@ -73,7 +75,7 @@ describe("rights check", () => {
   it("answers 403 missing_right", async () => {
     const { admin, checker } = setup();
     admin.answer = () => jsonResponse(200, sessionBody(["screen.slides.view"]));
-    const err = await rejection(checker.check("cp_session=s1", "screen.slides.edit"));
+    const err = await rejection(checker.check("canccu_session=s1", "screen.slides.edit"));
     expect(err).toBeInstanceOf(MissingRight);
     expect([(err as MissingRight).status, (err as MissingRight).code]).toEqual([
       403,
@@ -84,36 +86,36 @@ describe("rights check", () => {
   it("caches for at most 30 seconds", async () => {
     const { admin, clock, checker } = setup();
     admin.answer = () => jsonResponse(200, sessionBody(["a.b"]));
-    await checker.check("cp_session=s1", "a.b");
+    await checker.check("canccu_session=s1", "a.b");
     clock.t += 29_900;
-    await checker.check("cp_session=s1", "a.b");
+    await checker.check("canccu_session=s1", "a.b");
     expect(admin.requests).toHaveLength(1);
     clock.t += 200;
-    await checker.check("cp_session=s1", "a.b");
+    await checker.check("canccu_session=s1", "a.b");
     expect(admin.requests).toHaveLength(2);
   });
 
   it("never caches past the session's expiry", async () => {
     const { admin, clock, checker } = setup();
     admin.answer = () => jsonResponse(200, sessionBody(["a.b"], "2026-01-01T12:00:05Z"));
-    await checker.check("cp_session=s1", "a.b");
+    await checker.check("canccu_session=s1", "a.b");
     clock.t += 6000;
-    await checker.check("cp_session=s1", "a.b");
+    await checker.check("canccu_session=s1", "a.b");
     expect(admin.requests).toHaveLength(2);
   });
 
   it("drops a user's entries on admin.rights.changed", async () => {
     const { admin, checker } = setup();
     admin.answer = () => jsonResponse(200, sessionBody(["a.b"]));
-    await checker.check("cp_session=s1", "a.b");
-    await checker.check("cp_session=s2", "a.b");
+    await checker.check("canccu_session=s1", "a.b");
+    await checker.check("canccu_session=s2", "a.b");
     checker.handleEvent(rightsChanged("someone_else"));
-    await checker.check("cp_session=s1", "a.b");
+    await checker.check("canccu_session=s1", "a.b");
     expect(admin.requests).toHaveLength(2);
     admin.answer = () => jsonResponse(200, sessionBody([]));
     checker.handleEvent(rightsChanged("u1"));
     for (const sid of ["s1", "s2"]) {
-      expect(await rejection(checker.check(`cp_session=${sid}`, "a.b"))).toBeInstanceOf(
+      expect(await rejection(checker.check(`canccu_session=${sid}`, "a.b"))).toBeInstanceOf(
         MissingRight,
       );
     }
@@ -123,13 +125,15 @@ describe("rights check", () => {
   it("answers 503 admin_unavailable when admin is down", async () => {
     const { admin, checker } = setup();
     admin.answer = () => Promise.reject(new TypeError("fetch failed"));
-    const err = await rejection(checker.check("cp_session=s1", "a.b"));
+    const err = await rejection(checker.check("canccu_session=s1", "a.b"));
     expect(err).toBeInstanceOf(AdminUnavailable);
     expect([(err as AdminUnavailable).status, (err as AdminUnavailable).code]).toEqual([
       503,
       "admin_unavailable",
     ]);
     admin.answer = () => new Response("", { status: 502 });
-    expect(await rejection(checker.check("cp_session=s1", "a.b"))).toBeInstanceOf(AdminUnavailable);
+    expect(await rejection(checker.check("canccu_session=s1", "a.b"))).toBeInstanceOf(
+      AdminUnavailable,
+    );
   });
 });

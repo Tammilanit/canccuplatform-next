@@ -32,7 +32,7 @@ else
   else ok "services running and healthy"; fi
 fi
 if fw=$(setup/firewall check); then
-  if grep -q '^closed' <<<"$fw"; then no "firewall is closed; fix CP_WEB_ALLOW in deploy/.env and run: systemctl reload canccu-firewall"
+  if grep -q '^closed' <<<"$fw"; then no "firewall is closed; fix CANCCU_WEB_ALLOW in deploy/.env and run: systemctl reload canccu-firewall"
   else ok "firewall in place (IPv4 and IPv6)"; fi
 else
   printf '%s\n' "$fw"; no "firewall in place (IPv4 and IPv6)"

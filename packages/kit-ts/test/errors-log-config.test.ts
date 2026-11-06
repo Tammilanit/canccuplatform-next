@@ -33,10 +33,10 @@ describe("error body", () => {
 describe("config", () => {
   it("loads and names missing variables", () => {
     const env = {
-      CP_MODULE: "screen",
-      CP_VERSION: "v0.1.0",
-      CP_VALKEY_URL: "valkey://valkey:6379/0",
-      CP_ADMIN_URL: "http://admin:8000/",
+      CANCCU_MODULE: "screen",
+      CANCCU_VERSION: "v0.1.0",
+      CANCCU_VALKEY_URL: "valkey://valkey:6379/0",
+      CANCCU_ADMIN_URL: "http://admin:8000/",
     };
     expect(loadConfig(env)).toEqual({
       module: "screen",
@@ -45,8 +45,10 @@ describe("config", () => {
       adminUrl: "http://admin:8000",
     });
     expect(() =>
-      loadConfig({ CP_MODULE: "screen", CP_VERSION: "v0.1.0", CP_VALKEY_URL: "" }),
-    ).toThrow(new ConfigError("missing environment variable(s): CP_VALKEY_URL, CP_ADMIN_URL"));
+      loadConfig({ CANCCU_MODULE: "screen", CANCCU_VERSION: "v0.1.0", CANCCU_VALKEY_URL: "" }),
+    ).toThrow(
+      new ConfigError("missing environment variable(s): CANCCU_VALKEY_URL, CANCCU_ADMIN_URL"),
+    );
   });
 });
 

@@ -7,7 +7,7 @@
 Modules are ported from TypeScript and Python code. One maintainer directs AI workers, so the stack must be small, common and well known.
 
 ## Decision
-- **Modules:** Node 22 ESM in TypeScript with Fastify 5, `pg`, vitest and `@cp/kit` (`packages/kit-ts`). Admin uses `packages/kit-py` (Python 3.12, Starlette). The bot is likely Python, as a port of canccubot.
+- **Modules:** Node 22 ESM in TypeScript with Fastify 5, `pg`, vitest and `@canccu/kit` (`packages/kit-ts`). Admin uses `packages/kit-py` (Python 3.12, Starlette). The bot is likely Python, as a port of canccubot.
 - **Infrastructure:** Postgres 17; Valkey 8.1 with Streams as the event bus (NATS was the alternative; it pays off only with many services or hosts); Caddy as the web front; Docker Compose with one container per module.
 - **Shared look:** `packages/ui` (theme tokens and components).
 

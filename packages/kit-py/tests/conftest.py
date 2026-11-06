@@ -7,8 +7,8 @@ from typing import Any
 import httpx
 import pytest
 
-from cp_kit import AdminClient
-from cp_kit.testing import MemoryStreamStore
+from canccu_kit import AdminClient
+from canccu_kit.testing import MemoryStreamStore
 
 
 @dataclass

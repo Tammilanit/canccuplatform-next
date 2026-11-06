@@ -8,10 +8,10 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 from starlette.testclient import TestClient
 
-from cp_kit import Bus, Health, RightsChecker
-from cp_kit.health import CheckResult
-from cp_kit.starlette import install, require_right
-from cp_kit.testing import MemoryStreamStore
+from canccu_kit import Bus, Health, RightsChecker
+from canccu_kit.health import CheckResult
+from canccu_kit.starlette import install, require_right
+from canccu_kit.testing import MemoryStreamStore
 
 from .conftest import FakeAdmin, json_response
 
@@ -67,7 +67,9 @@ def test_rights_and_error_body(admin: FakeAdmin, store: MemoryStreamStore) -> No
     assert response.status_code == 401
     assert response.json() == {"error": {"code": "not_signed_in", "message": "sign in first"}}
 
-    response = client.post("/edit", headers={"cookie": "cp_session=s1", "x-correlation-id": "c-1"})
+    response = client.post(
+        "/edit", headers={"cookie": "canccu_session=s1", "x-correlation-id": "c-1"}
+    )
     assert response.status_code == 200
     assert response.json() == {"user": "u1"}
     assert response.headers["x-correlation-id"] == "c-1"
@@ -76,7 +78,7 @@ def test_rights_and_error_body(admin: FakeAdmin, store: MemoryStreamStore) -> No
     admin.handler = lambda r: json_response(
         200, {"user": {"id": "u2", "name": "E"}, "rights": [], "expires_at": "2999-01-01T00:00:00Z"}
     )
-    response = client.post("/edit", headers={"cookie": "cp_session=s2"})
+    response = client.post("/edit", headers={"cookie": "canccu_session=s2"})
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "missing_right"
 

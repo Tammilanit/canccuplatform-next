@@ -22,7 +22,7 @@ DEDUPE_SIZE = 10000
 EVENT_TYPE_RE = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){2}$")
 REQUIRED_FIELDS = ("id", "type", "version", "time", "source", "data")
 
-log = logging.getLogger("cp.kit.bus")
+log = logging.getLogger("canccu.kit.bus")
 
 
 def stream_name(module: str) -> str:

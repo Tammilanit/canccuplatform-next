@@ -33,7 +33,7 @@ export const RADIUS = "0.5rem";
 export type ColorToken = keyof typeof COLOR_TOKENS;
 export type FontToken = keyof typeof FONT_TOKENS;
 
-/** CSS custom property for a token: `text_muted` → `--cp-color-text-muted`. */
+/** CSS custom property for a token: `text_muted` → `--canccu-color-text-muted`. */
 export function cssVar(kind: "color" | "font", name: string): string {
-  return `--cp-${kind}-${name.replaceAll("_", "-")}`;
+  return `--canccu-${kind}-${name.replaceAll("_", "-")}`;
 }

@@ -55,4 +55,4 @@ def create_logger(module: str, level: int = logging.INFO) -> logging.Logger:
     root = logging.getLogger()
     root.handlers[:] = [handler]
     root.setLevel(level)
-    return logging.getLogger(f"cp.{module}")
+    return logging.getLogger(f"canccu.{module}")
