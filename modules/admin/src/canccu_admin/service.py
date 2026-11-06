@@ -31,6 +31,16 @@ class NoProfile(KitError):
     code = "no_profile"
 
 
+def _summary(document: dict[str, Any], upgraded_from: int | None) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "name": document["name"],
+        "schema_version": document["schema_version"],
+    }
+    if upgraded_from is not None:
+        result["upgraded_from"] = upgraded_from
+    return result
+
+
 @dataclass
 class ModuleHealth:
     module: str
@@ -100,12 +110,9 @@ class Service:
             document["settings"] = settings
         return document
 
-    async def save_profile(self, actor: str) -> dict[str, Any]:
-        """Write the current profile into the event folder."""
-        document = await self._document()
-        await asyncio.to_thread(prof.write_profile_dir, self.event_dir, document, None)
+    async def _publish_profile(self, type: str, document: dict[str, Any], actor: str) -> None:
         await self.bus.publish(
-            "admin.profile.saved",
+            type,
             {
                 "profile_name": document["name"],
                 "schema_version": document["schema_version"],
@@ -113,7 +120,13 @@ class Service:
             },
             version=1,
         )
-        return {"name": document["name"], "schema_version": document["schema_version"]}
+
+    async def save_profile(self, actor: str) -> dict[str, Any]:
+        """Write the current profile into the event folder."""
+        document = await self._document()
+        await asyncio.to_thread(prof.write_profile_dir, self.event_dir, document, None)
+        await self._publish_profile("admin.profile.saved", document, actor)
+        return _summary(document, None)
 
     async def load_profile(self, actor: str, directory: Path | None = None) -> dict[str, Any]:
         """Read the profile from the event folder (or `directory`) and apply it."""
@@ -129,23 +142,8 @@ class Service:
         for module, values in document.get("settings", {}).items():
             version, _ = await self.store.get_settings(module)
             await self.put_settings(module, version, values, actor)
-        await self.bus.publish(
-            "admin.profile.loaded",
-            {
-                "profile_name": document["name"],
-                "schema_version": document["schema_version"],
-                "actor_user_id": actor,
-            },
-            version=1,
-        )
-        result: dict[str, Any] = {
-            "name": document["name"],
-            "schema_version": document["schema_version"],
-            "warnings": loaded.warnings,
-        }
-        if loaded.upgraded_from is not None:
-            result["upgraded_from"] = loaded.upgraded_from
-        return result
+        await self._publish_profile("admin.profile.loaded", document, actor)
+        return {**_summary(document, loaded.upgraded_from), "warnings": loaded.warnings}
 
     async def export_zip(self, actor: str) -> bytes:
         await self.save_profile(actor)
@@ -161,13 +159,7 @@ class Service:
                 raise prof.ProfileInvalid(loaded.warnings[0])
             await self.load_profile(actor, staging)
             await asyncio.to_thread(self._replace_event_dir, staging)
-        result: dict[str, Any] = {
-            "name": loaded.document["name"],
-            "schema_version": loaded.document["schema_version"],
-        }
-        if loaded.upgraded_from is not None:
-            result["upgraded_from"] = loaded.upgraded_from
-        return result
+        return _summary(loaded.document, loaded.upgraded_from)
 
     def _replace_event_dir(self, staging: Path) -> None:
         self.event_dir.mkdir(parents=True, exist_ok=True)

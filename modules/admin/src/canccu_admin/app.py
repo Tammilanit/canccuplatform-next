@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 from collections.abc import Awaitable, Callable
 from typing import Any
+from urllib.parse import urlencode
 
 from canccu_kit import Health, KitError
 from canccu_kit.rights import Session
@@ -196,8 +197,6 @@ def create_app(service: Service, health: Health, authorize: Authorize) -> Starle
     async def profile_load(request: Request) -> Response:
         session = await need(request, "admin.profile.write")
         result = await service.load_profile(session.user_id)
-        from urllib.parse import urlencode
-
         query = urlencode(
             [("message", f"Loaded {result['name']}")] + [("warn", w) for w in result["warnings"]]
         )
