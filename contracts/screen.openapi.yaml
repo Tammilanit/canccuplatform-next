@@ -87,6 +87,20 @@ paths:
           $ref: "#/components/responses/Conflict"
         "429":
           $ref: "#/components/responses/TooMany"
+    delete:
+      tags: [pairing]
+      operationId: clearPairings
+      summary: Clear every open pairing code of the event
+      description: Right `screen.devices.pair`. For when someone on the venue network holds the open codes.
+      responses:
+        "204":
+          description: Cleared.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/pairing/{pairing_id}:
     parameters:
       - name: pairing_id
@@ -147,10 +161,10 @@ paths:
       parameters:
         - name: Last-Event-ID
           in: header
-          description: The last `state_version` the screen applied.
+          description: "The last message id the screen applied: `<zone_key>.<zone_epoch>.<state_version>`, or `none.0.<n>`."
           schema:
             type: string
-            pattern: "^[0-9]{1,18}$"
+            pattern: "^[a-z0-9][a-z0-9_-]{1,31}\\.[A-Za-z0-9]{1,32}\\.[0-9]{1,18}$"
       responses:
         "200":
           description: An event stream; each message's `data` is one `StreamMessage` as JSON.
@@ -164,7 +178,7 @@ paths:
                   $ref: "#/components/schemas/StreamMessage"
               examples:
                 widget:
-                  value: "event: widget\nid: 42\ndata: {\"state_version\": 42, \"region_id\": \"rail\", \"index\": 0, \"view\": {}}\n\n"
+                  value: "event: widget\nid: main.e1.42\ndata: {\"state_version\": 42, \"region_id\": \"rail\", \"index\": 0, \"view\": {}}\n\n"
         "401":
           $ref: "#/components/responses/DeviceUnauthorized"
         "403":
@@ -247,6 +261,8 @@ paths:
                 $ref: "#/components/schemas/Error"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/devices:
     get:
       tags: [devices]
@@ -319,6 +335,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/devices/{device_id}/revoke:
     parameters:
       - $ref: "#/components/parameters/DeviceId"
@@ -336,6 +354,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/devices/{device_id}/assignment:
     parameters:
       - $ref: "#/components/parameters/DeviceId"
@@ -365,6 +385,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
     delete:
       tags: [devices]
       operationId: unassignDevice
@@ -379,6 +401,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/devices/{device_id}/commands:
     parameters:
       - $ref: "#/components/parameters/DeviceId"
@@ -404,6 +428,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/registry/devices:
     get:
       tags: [registry]
@@ -466,6 +492,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
     delete:
       tags: [registry]
       operationId: deleteDevice
@@ -480,6 +508,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/zones:
     get:
       tags: [zones]
@@ -662,6 +692,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/assets:
     get:
       tags: [content]
@@ -782,6 +814,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/assets/{asset_id}:
     parameters:
       - $ref: "#/components/parameters/AssetId"
@@ -818,11 +852,15 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
     delete:
       tags: [content]
       operationId: deleteAsset
-      summary: Delete an asset, its files and renders
-      description: Right `screen.content.write`. 409 `asset_in_use` while a playlist uses it.
+      summary: Delete an asset
+      description: |
+        Right `screen.content.write`. 409 `asset_in_use` while a playlist uses it. Its files and renders are deleted
+        only when no other asset version of the tenant refers to them.
       responses:
         "204":
           description: Deleted.
@@ -865,6 +903,8 @@ paths:
           $ref: "#/components/responses/NotFound"
         "413":
           $ref: "#/components/responses/TooLarge"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/assets/{asset_id}/revert:
     parameters:
       - $ref: "#/components/parameters/AssetId"
@@ -893,15 +933,18 @@ paths:
       - name: file
         in: path
         required: true
-        description: Content-addressed file name, `<sha256>.<ext>`, or a render's slide path.
+        description: Content-addressed file name, `<sha256>.<ext>`.
         schema:
           type: string
-          pattern: "^[a-z0-9._/-]{1,200}$"
+          pattern: "^[a-f0-9]{64}\\.[a-z0-9]{1,8}$"
     get:
       tags: [content]
       operationId: getFile
-      summary: A file of the event (media, slides)
-      description: For the event's devices (cookie and venue address) and sessions with `screen.content.read`. Immutable.
+      summary: A media file of the event
+      description: |
+        For the event's devices (cookie and venue address) and sessions with `screen.content.read`. Immutable.
+        Served only when the name resolves to an asset version of the current tenant; the storage path is built from
+        that row, never from the request.
       security:
         - device: []
         - session: []
@@ -913,6 +956,48 @@ paths:
               schema:
                 type: string
                 contentMediaType: application/octet-stream
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/renders/{asset_id}/{asset_version}/{slide}:
+    parameters:
+      - $ref: "#/components/parameters/AssetId"
+      - name: asset_version
+        in: path
+        required: true
+        description: The asset version the slides were rendered from.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 999999999
+      - name: slide
+        in: path
+        required: true
+        description: "`slide-<n>.png`, 1-based."
+        schema:
+          type: string
+          pattern: "^slide-[0-9]{1,3}\\.png$"
+    get:
+      tags: [render]
+      operationId: getSlide
+      summary: A rendered PPTX slide
+      description: |
+        For the event's devices and sessions with `screen.content.read`. Immutable. Served only when it resolves to a
+        render of the current tenant; the storage path is built from that row, never from the request.
+      security:
+        - device: []
+        - session: []
+      responses:
+        "200":
+          description: The slide.
+          content:
+            image/png:
+              schema:
+                type: string
+                contentMediaType: image/png
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1086,6 +1171,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/schedules/simulate:
     get:
       tags: [content]
@@ -1169,6 +1256,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/push:
     post:
       tags: [content]
@@ -1194,6 +1283,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/push/{push_id}:
     parameters:
       - name: push_id
@@ -1216,6 +1307,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/render-jobs:
     get:
       tags: [render]
@@ -1285,6 +1378,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/render-jobs/{job_id}:
     parameters:
       - $ref: "#/components/parameters/JobId"
@@ -1386,6 +1481,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
     delete:
       tags: [ticker]
       operationId: clearTicker
@@ -1398,6 +1495,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/ticker/windows:
     get:
       tags: [ticker]
@@ -1445,6 +1544,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/ticker/windows/{window_id}:
     parameters:
       - name: window_id
@@ -1467,6 +1568,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/photos:
     get:
       tags: [photos]
@@ -1540,6 +1643,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/screen/clone:
     post:
       tags: [clone]
@@ -1682,7 +1787,7 @@ components:
     Conflict:
       description: |
         `version_conflict`, `device_moved` (the device serves another event, or none), `no_venue`, `zone_exists`,
-        `zone_in_use`, `asset_in_use`, `nothing_to_revert`, `render_not_finished`, `render_finished`,
+        `zone_in_use`, `asset_in_use`, `photo_exists`, `nothing_to_revert`, `render_not_finished`, `render_finished`,
         `already_cloned` or `event_archived`.
       content:
         application/json:
@@ -2156,7 +2261,7 @@ components:
         expires_at:
           type: [string, "null"]
           format: date-time
-          description: "`starts_at` plus `ttl_seconds`; the screen ends the claim then, also offline."
+          description: The override's `expires_at` (else `starts_at` plus `ttl_seconds`); the screen ends the claim then, also offline. Renewals move it; `starts_at` never moves.
     Region:
       type: object
       required: [id, role, area, layer, rotation, cycle_started_at, widgets, claim]
@@ -2262,7 +2367,7 @@ components:
       maximum: 1440
     ScreenState:
       type: object
-      required: [state_version, time, tenant, device, zone, bundle, theme, layout, regions, unplaced, ticker, sound, prefetch, offline]
+      required: [state_version, time, tenant, device, zone, bundle, theme, layout, regions, unplaced, hidden, ticker, sound, prefetch, offline]
       properties:
         state_version:
           type: integer
@@ -2293,13 +2398,17 @@ components:
             mirror:
               type: boolean
         zone:
-          type: object
-          required: [key, name]
+          type: [object, "null"]
+          description: Null for a device with no zone; `layout` is then null and `regions` empty.
+          required: [key, name, epoch]
           properties:
             key:
               type: string
             name:
               type: string
+            epoch:
+              type: string
+              description: Set when the zone is created; part of every stream message id.
         bundle:
           type: object
           required: [version]
@@ -2319,8 +2428,8 @@ components:
             logo_url:
               type: [string, "null"]
         layout:
-          type: object
-          description: The whole layout, in the shape of contracts/theme.schema.json `layout`.
+          type: [object, "null"]
+          description: The whole layout, in the shape of contracts/theme.schema.json `layout`; null without a zone.
           required: [id, aspect, grid]
           properties:
             id:
@@ -2340,7 +2449,12 @@ components:
             $ref: "#/components/schemas/Region"
         unplaced:
           type: array
-          description: Overrides active on this zone that found no region.
+          description: Overrides active on this zone that found no free region.
+          items:
+            type: string
+        hidden:
+          type: array
+          description: Overrides placed on this zone but not drawn, because a higher-ranked `full` claim covers them.
           items:
             type: string
         ticker:

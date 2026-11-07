@@ -94,6 +94,7 @@ Emitter: `screen`. Audience: system, except where noted. Payloads: [screen.md](s
 | `screen.content.pushed`, `screen.content.cleared` | Content was pushed to zones, or a push ended | admin |
 | `screen.ticker.changed` | The ticker text changed. Audience: event-wide, `public` | bot (`/ticker status`), voices |
 | `screen.photo.added`, `screen.photo.removed` | A carousel photo was added or removed. Audience: event-wide, `public` | moments |
+| `screen.claims.changed` | Where Moments' claims are placed on a zone, and which are unplaced or hidden | moments |
 | `screen.render.queued`, `.started`, `.succeeded`, `.failed`, `.cancelled` | A PPTX render job moved | admin |
 
 ## Tenants
@@ -317,7 +318,8 @@ The screen contract adds these optional fields ([screen.md](screen.md#moments-dr
 | Field | Type | Meaning |
 |---|---|---|
 | `regions` | list of string | Region roles it may claim, in order of preference (the degrade chain, e.g. `["hero", "rail", "ticker"]`); without it derived from `kind` |
-| `ttl_seconds` | integer or null | Screen ends it this long after `starts_at` unless renewed |
+| `ttl_seconds` | integer or null | First lifetime: `expires_at` defaults to `starts_at` plus this |
+| `expires_at` | string, time, or null | Screen ends it at this time; Moments renews by sending a later one in `.changed`, and `starts_at` never moves |
 | `sound` | object or null | `cue`, `url`, `volume` (0–1), `play` (`once`, `loop`) |
 | `steps` | list of object or null | A sequence: each `template`, `content`, `duration_ms`, optional `sound` |
 | `on_end` | string | What the region shows after it: `resume` (default) or `next` |

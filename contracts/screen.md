@@ -13,22 +13,22 @@ The venue screens: paired devices, each event's zones, the Pulse layout that com
 
 ## Tenancy
 - Everything belongs to the event (tenant) resolved from the request's hostname ([tenants.md](tenants.md#resolving-the-tenant)); no path, query or body names a tenant. Per-tenant rows carry `tenant_id` under row-level security; events go to `t:<tenant>:events:screen` with the envelope's `tenant`; files live under `/files/<tenant>/screen/`; the scheduler, break ticks and push streams are keyed by tenant and zone ([0013](../docs/decisions/0013-multi-tenant-core.md) item 7).
-- **One global table, `screen devices`** (device identity, 0013 item 34; on the kit's allow-list): `id`, `name`, `token_hash` (SHA-256 of a 256-bit random token; the token itself is never stored), `venue_id` (read through the tenants API), `current_tenant_id` (a plain reference), `created_at`, `revoked_at`. Nothing else of any event is on it. Assignments, health, pairing codes and everything else are per tenant.
+- **One global table, `screen devices`** (device identity, 0013 item 34; on the kit's allow-list): `id`, `name`, `token_hash` (SHA-256 of the current 256-bit random token; no token is ever stored), `superseded_token_hashes` (up to 5 hashes of tokens a transfer replaced, each accepted only by `GET /api/screen/device/home`, see Moving), `venue_id` (read through the tenants API), `current_tenant_id` (a plain reference), `created_at`, `revoked_at`. Nothing else of any event is on it. Assignments, health, pairing codes and everything else are per tenant.
 - An archived event is read-only: writes get 409 `event_archived`; its devices show the archived notice until the superadmin moves them.
 
 ## Devices
 ### Pairing
-1. The kiosk opens `https://<event hostname>/screen/`. Without a device cookie it calls `POST /api/screen/pairing` and shows the returned 8-character `code` large, with the event's name. The request must come from one of the event's venue addresses (unless the venue IP check is off, below), at most 10 open codes per event; a code lives 10 minutes. The answer sets the cookie `canccu_pairing` (HttpOnly, Secure, SameSite=Strict), so only that browser can collect the token.
+1. The kiosk opens `https://<event hostname>/screen/`. Without a device cookie it calls `POST /api/screen/pairing` and shows the returned 8-character `code` large, with the event's name. The request must come from one of the event's venue addresses (unless the venue IP check is off, below), at most 10 open codes per event and 3 per address; a code lives 10 minutes. `DELETE /api/screen/pairing` (`screen.devices.pair`) clears every open code of the event, for when someone on the venue network holds them. The answer sets the cookie `canccu_pairing` (HttpOnly, Secure, SameSite=Strict), so only that browser can collect the token.
 2. An event admin (right `screen.devices.pair`) enters the code: `POST /api/screen/devices` with `code`, `name` and optionally `zone_key`. This creates the device with the event's venue as `venue_id` and the event as its current tenant; an event with no venue cannot pair (409 `no_venue`). Audited; emits `screen.device.paired`.
 3. The kiosk polls `GET /api/screen/pairing/{pairing_id}` (with its pairing cookie) every 2 seconds. Once claimed the answer sets the **device cookie** `canccu_device` (HttpOnly, Secure, SameSite=Strict, host-only, `Max-Age` 400 days) holding the token, and the code is spent.
 
-Creating a device on the event that pairs it is the only time anyone but the superadmin sets a current tenant: the device is new and belongs to no other event. Moving an existing device is the superadmin's (below), as 0013 item 34 says.
+Creating a device on the event that pairs it is the only time anyone but the superadmin sets a current tenant: the device is new and belongs to no other event. Moving an existing device is the superadmin's (below), as 0013 item 34 says. This reading of item 34 is for the maintainer to confirm (or to record as an amendment of 0013).
 
 The token travels as a cookie, not a header, because images, video and the push stream are loaded by the browser, which sends cookies but no custom headers.
 
 ### Every device request
 A device request (state, stream, heartbeat, files, theming reads) is served only when **all** hold, checked in the app by the kit on every request, because the firewall cannot tell events at one venue apart ([tenants.md](tenants.md#venue-ip-check-for-screens-and-its-emergency-switch)):
-- the cookie's token matches a device that is not revoked (otherwise 401 `device_unknown`; the page goes back to pairing);
+- the cookie's token is the current token of a device that is not revoked (otherwise 401 `device_unknown`; the page goes back to pairing). A superseded token gets 409 `device_moved` on every path except `GET /api/screen/device/home`;
 - the device's current tenant is the request's tenant (otherwise 409 `device_moved`, see Moving);
 - the request comes from one of the event's venue addresses, IPv4 or IPv6 (otherwise 403 `venue_ip_refused`). The address alone is never enough.
 
@@ -36,9 +36,10 @@ A device request (state, stream, heartbeat, files, theming reads) is served only
 
 ### Moving, renaming, revoking
 - **Moving** (superadmin only, on the superadmin hostname): `PATCH /api/screen/registry/devices/{device_id}` with `current_tenant_id` (an event whose venue is the device's venue, or `null` to park it) and optionally `venue_id`, `name`. Audited ("devices' current tenant", 0013 item 13). The device's assignment in the old event ends; the old event gets `screen.device.released`, the new one `screen.device.moved` (neither names the other event).
-- A moved kiosk gets 409 `device_moved` on the old hostname and calls `GET /api/screen/device/home`, which answers the new event's screen URL with a one-time transfer code in the fragment (`https://<primary hostname>/screen/#transfer=<code>`, 60 seconds, single use, kept in the new event's Valkey keys). The page there redeems it with `POST /api/screen/device/transfer`, which issues a new token in a new cookie for that hostname and revokes the old one. Audited. A parked device gets `url: null` and shows its name and "not assigned".
+- A moved kiosk gets 409 `device_moved` on the old hostname and calls `GET /api/screen/device/home`, which answers the new event's screen URL with a one-time transfer code in the fragment (`https://<primary hostname>/screen/#transfer=<code>`, 60 seconds, single use, kept in the new event's Valkey keys). The page there redeems it with `POST /api/screen/device/transfer` only when it holds no working device cookie for that hostname (otherwise it drops the fragment and runs); redeeming issues a new current token in a new cookie for that hostname and keeps the replaced token as superseded. Audited.
+- **After a reboot** the kiosk's start URL may still point at an old event's hostname. There the browser sends the superseded token: `GET /api/screen/device/home` accepts it and keeps redirecting to the current event (with a fresh transfer code, unused when the new hostname's cookie still works), so a moved device never strands. Admin shows the device's current screen URL so the venue crew can update the start URL. Revoking or deleting the device drops every superseded token; a sixth transfer drops the oldest. A parked device gets `url: null` and shows its name and "not assigned".
 - **Renaming:** an event admin of the device's current event (`screen.devices.write`) or the superadmin.
-- **Revoking:** `POST /api/screen/devices/{device_id}/revoke` (`screen.devices.write`) or `DELETE /api/screen/registry/devices/{device_id}` (superadmin, also deletes the row). The token stops at once; the kiosk goes back to pairing. Audited; emits `screen.device.revoked`.
+- **Revoking:** `POST /api/screen/devices/{device_id}/revoke` (`screen.devices.write`) or `DELETE /api/screen/registry/devices/{device_id}` (superadmin, also deletes the row). The token and every superseded token stop at once; the kiosk goes back to pairing. Audited; emits `screen.device.revoked`.
 - **Commands:** `POST /api/screen/devices/{device_id}/commands` with `reload` (reload the page and the bundle) or `identify` (show the device's name and zone for 15 seconds). Delivered on the push channel; a command not delivered within 60 seconds is dropped.
 - Two events at one venue at the same time each use their own devices: a device serves one event at a time.
 
@@ -79,7 +80,7 @@ Each widget type below is offered by Screen: theming layouts place it, templates
 | `agenda_now` | `title`, `items` (each `id`, `name`, `state` (`now`, `next`, `delayed`, `cancelled`), `starts_text`, `ends_text`, `starts_at`, `ends_at`, `delay_minutes`, `location`, `kind`) | `GET /api/agenda/now?zone=` (public items only) | `agenda.item.*`, `agenda.kind.*` | `/notify/` (schedule) |
 | `countdown` | `label`, `target_at`, `ends_text` | The next agenda item, or `props.item_id`, or a claim's `content` | `agenda.item.*` | — |
 | `hot_game` | `game` (`id`, `name`, `cover_url`), `players`, `since` | `games.surge.started` | `games.surge.*`, `games.game.changed` | The game's follow page in the hub |
-| `now_playing` | `available`, `games` (each `game_id`, `name`, `players`, `names`: present only with `props.show_names: true`) | The bot's `GET /api/bot/presence/playing` ([bot.md](bot.md#who-plays-what)) | `bot.presence.counted` (re-read, at most every 30 s) | `/notify/` (now playing) |
+| `now_playing` | `available`, `games` (each `game_id`, `name`, `players`, `names`: present only with `props.show_names: true`) | The bot's `GET /api/bot/presence/playing` ([bot.md](bot.md#who-plays-what)), once the bot contract adds a module path for it (until then `empty`) | `bot.presence.counted` (re-read, at most every 30 s) | `/notify/` (now playing) |
 | `bracket` | `title`, `session` (`id`, `game_name`, `status`), `matches` (each `label`, `state`, `teams` (`name`, `names`), `results` (`rank`, `names`, `points`)) | Tournament events ([events.md](events.md#tournament)) | `tournament.session.*`, `tournament.match.*`, `tournament.result.corrected` | Your matches in the hub |
 | `leaderboard` | `title`, `rows` (each `rank`, `name`, `points`, `is_finalist`) | `tournament.leaderboard.changed` | same | — |
 | `photo` | `url`, `caption`, `author_name`, `posted_at`, `featured` | Screen's photo carousel (Photos) | `screen.photo.*` | — |
@@ -87,7 +88,7 @@ Each widget type below is offered by Screen: theming layouts place it, templates
 | `ticker` | `text`, `until`, `source` (`admin`, `bot`, `window`) | Screen's ticker (Ticker) | `screen.ticker.changed` | — |
 | `food_status` | `state`, `seq`, `pizzeria_name`, `target_at`, `pizza_count`, `people_count`, `holder_name` | Pizza events ([events.md](events.md#pizza)) | `pizza.order.*`, `pizza.item.*` | Your order in the hub |
 | `qr` | `url`, `label`, `image_url` | `props.url` (a path on the event's hostname) | none | itself |
-| `checkin_qr` | `url`, `label`, `image_url`, `purpose`, `rotates_at`, `valid_until` | Notify's rotating code ([notify.md](notify.md#check-in-by-the-rotating-qr)): purpose `arrival`, or `tournament:<session id>` while `tournament.checkin.opened` is open | A `widget` push at every rotation | itself |
+| `checkin_qr` | `url`, `label`, `image_url`, `purpose`, `rotates_at`, `valid_until` | Notify's rotating code ([notify.md](notify.md#check-in-by-the-rotating-qr)), once the notify contract adds a module path for it (until then `empty`): purpose `arrival`, or `tournament:<session id>` while `tournament.checkin.opened` is open | A `widget` push at every rotation | itself |
 | `venue_info` | `wifi` (`ssid`, `password`, `note`: public networks only), `has_floor_plan` | `GET /api/tenants/current/venue-info` as a guest would see it | `tenants.venue_info.changed` | `/notify/` (venue info) |
 | `playlist` | `item` (`kind`, `url`, `slide_urls`, `started_at`, `offset_seconds`, `duration_seconds`, `muted`), `next_item` | The zone's scheduler (Content and scheduling) | `screen.content.pushed`, schedule changes | — |
 | `stats` | `members`, `online`, `in_voice` | `bot.presence.counted` | same | — |
@@ -95,7 +96,7 @@ Each widget type below is offered by Screen: theming layouts place it, templates
 
 - `logo` and `embed` are theming's. `sponsor` is reserved for a later step.
 - **Names on a screen** are platform names that their source already makes event-wide `public`; Screen stores no presence data ([tenants.md](tenants.md#privacy-and-retention)): `now_playing` names are read live and kept only in the composed state (Valkey, 60 seconds). They show only with `props.show_names: true`, set per zone.
-- **Reading other modules as a module:** Screen's server reads the bot's presence API and Notify's check-in codes on behalf of the event's screens, never with a device's request. Neither contract has a module path for it yet (see the PR's follow-ups); until then those two widgets show `empty`.
+- **Reading other modules as a module:** Screen's server reads the bot's presence API and Notify's check-in codes on behalf of the event's screens, never with a device's request. Neither the bot nor the notify contract has a module path for it yet; until those contracts add one, `now_playing` and `checkin_qr` show `empty`.
 - **One source, two surfaces:** the hub reads now and next from `GET /api/agenda/now`, now playing from the bot and announcements from Moments ([notify.md](notify.md#the-hub)); Screen's widgets read the same sources, so they never disagree. `GET /api/screen/now?zone=` serves the hub what a zone's screens show now (the view-models of its public widgets, its active claims and the ticker), following the event's info-page mode.
 
 ### QR handoff
@@ -121,12 +122,17 @@ Moments emits `moments.override.started`, `.changed` and `.ended` ([events.md](e
 | Field (added) | Type | Meaning |
 |---|---|---|
 | `regions` | list of string | Roles it may claim, in order of preference: the degrade chain (`["hero", "rail", "ticker"]`). Without it: `takeover` → `["full"]`, `block` → `["hero", "rail", "ticker"]`, `overlay` → `["overlay"]` |
-| `ttl_seconds` | integer or null | Screen ends the claim itself this long after `starts_at` unless a `.changed` renews it (`starts_at` moves on), so an override outlives no crash of Moments |
+| `ttl_seconds` | integer or null | The claim's first lifetime: `expires_at` is `starts_at` plus this when no `expires_at` is given |
+| `expires_at` | string, time, or null | Screen ends the claim itself at this time, also offline, so an override outlives no crash of Moments. Moments renews a claim by sending a later `expires_at` in `.changed`; `starts_at` never moves |
 | `sound` | object or null | `cue` (string), `url` (a file of the event), `volume` (0–1), `play` (`once`, `loop`): played by the zone's sound device when the claim first shows |
 | `steps` | list of object or null | A Moment sequence: each `template`, `content`, `duration_ms` (500–60000), optional `sound`; played in order in the claimed region, then the last step stays until the end |
 | `on_end` | string | What the region shows when the claim ends: `resume` (the rotation where it would be now) or `next` (the next widget). Default `resume` |
 
-- **Placement:** for each zone, Screen walks the claims by `rank` (highest first; ties: the later `starts_at`). Each claim takes the first role in its chain that the zone's layout offers and no higher claim holds. A claim that finds no role is not shown on that zone and is reported in the zone's state as `unplaced`; Moments decides whether it ends. Placement is deterministic, so all screens of a zone agree.
+- **Placement:** for each zone, Screen walks the claims by `rank` (highest first; ties: the later `starts_at`, then the override id). Each claim takes the first role in its chain that the zone's layout offers and that is free:
+  - `hero`, `rail`, `venue_rail` and `ticker` are free when no higher claim holds that role or `full`;
+  - `full` is free only when no higher claim holds any role other than `overlay`;
+  - `overlay` conflicts only with `overlay`; an overlay is drawn above a `full` claim only when it ranks higher.
+- A claim that finds no free role is **`unplaced`**; a placed claim that ranks below a placed `full` claim is **`hidden`** (not drawn). Both are listed in the zone's state and reported in `screen.claims.changed`, so Moments learns of them and decides whether they end. Placement is deterministic and renewals change no tie-breaker, so all screens of a zone agree and regions do not flap.
 - **What a claimed region shows:** the claim's `template` names a widget type (the table above; `pizza_placed` draws as `food_status`), `content` is that widget's whole view-model, and `steps` replace both while they run. `full` hides every region; `overlay` draws on top without hiding.
 - **Sound** plays once per claim per device; the heartbeat reports played claims, so a reload does not repeat it. The sound budget and cue rules are Moments' (step 4).
 
@@ -163,12 +169,12 @@ A hot-game surge, as a short sequence in the hero, falling back to the rail:
 ```
 
 ## Composed state and the push channel
-- **State:** `GET /api/screen/device/state` (`ScreenState`): `state_version` (per zone, +1 on every change), `time`, `tenant` (`id`, `name`, `time_zone`, `status`), `device` (`id`, `name`, `mirror`), `zone` (`key`, `name`), `bundle` (`version`), `theme` (`revision`, `tokens_css_url`, `css_url`, `logo_url`), `layout` (the whole layout), `regions` (each `id`, `role`, `area`, `layer`, `rotation`, `cycle_started_at`, `widgets` with their view-models, `claim` or `null`), `unplaced`, `ticker`, `sound`, `prefetch` (file URLs the next 24 hours of the schedule need) and `offline` (below). It is everything a screen needs to draw.
-- **Push:** `GET /api/screen/device/stream`, Server-Sent Events. SSE because the traffic is one way, it runs over plain HTTP through Caddy, carries the device cookie, and resumes by itself. Messages (SSE `event:` names, not bus events), each with `id: <state_version>`:
+- **State:** `GET /api/screen/device/state` (`ScreenState`): `state_version` (per zone, +1 on every change), `time`, `tenant` (`id`, `name`, `time_zone`, `status`), `device` (`id`, `name`, `mirror`), `zone` (`key`, `name`, `epoch`) or `null`, `bundle` (`version`), `theme` (`revision`, `tokens_css_url`, `css_url`, `logo_url`), `layout` (the whole layout), `regions` (each `id`, `role`, `area`, `layer`, `rotation`, `cycle_started_at`, `widgets` with their view-models, `claim` or `null`), `unplaced`, `hidden`, `ticker`, `sound`, `prefetch` (file URLs the next 24 hours of the schedule need) and `offline` (below). It is everything a screen needs to draw. A device with no zone (paired without `zone_key`, or unassigned) gets the same shape with `zone: null`, `layout: null` and `regions: []`, and shows its name and "not assigned"; its stream stays open, so an assignment arrives as a `state`.
+- **Push:** `GET /api/screen/device/stream`, Server-Sent Events. SSE because the traffic is one way, it runs over plain HTTP through Caddy, carries the device cookie, and resumes by itself. Messages (SSE `event:` names, not bus events), each with `id: <zone_key>.<zone_epoch>.<state_version>` (`none.0.<n>` without a zone). `zone_epoch` is set when a zone is created, so a zone removed and created again under the same key never resumes the old one's versions:
 
 | SSE event | `data` |
 |---|---|
-| `state` | A whole `ScreenState`: on connect, and when a resume is not possible |
+| `state` | A whole `ScreenState`: on connect, when a resume is not possible, and on every change of the device's assignment or mirror target |
 | `widget` | `state_version`, `region_id`, `index`, `view` (the widget's new view-model) |
 | `region` | `state_version`, `region` (one region, e.g. a claim placed or ended, a rotation changed) |
 | `ticker` | `state_version`, `ticker` |
@@ -177,7 +183,7 @@ A hot-game surge, as a short sequence in the hero, falling back to the rail:
 | `ping` | `time`, every 15 seconds |
 
 - **Latency:** a committed change reaches the zone's connected screens within about one second (bus event → composed state → push).
-- **Resume:** the stream sends `retry: 2000`. The screen reconnects with `Last-Event-ID`; when Screen still holds every change since that version (the last 5 minutes per zone), it sends them in order, otherwise one `state`. Reconnect delays back off with jitter up to 30 seconds. After three failed connects in a row the screen polls `GET /api/screen/device/state` every 10 seconds while it keeps retrying the stream.
+- **Resume:** the stream sends `retry: 2000`. The screen reconnects with `Last-Event-ID`. Screen resumes only when its zone key and epoch are those of the zone the device shows now and it still holds every change since that version (the last 5 minutes per zone): it then sends them in order. Otherwise it sends one `state`. Reconnect delays back off with jitter up to 30 seconds. After three failed connects in a row the screen polls `GET /api/screen/device/state` every 10 seconds while it keeps retrying the stream.
 - **Heartbeat:** `POST /api/screen/device/heartbeat` every `heartbeat_seconds` (15) with `state_version`, `now_playing` (`region_id`, `widget`, `item_id` or `claim_id`), `bundle_version`, `theme_revision`, `audio_unlocked`, `viewport`, `claims_sounded` and `errors`. The answer is `server_time`, for the device's clock offset.
 - **Device health** (for admin, `GET /api/screen/devices`): `online` (a heartbeat or an open stream within `offline_after_seconds`, 45), `last_seen_at`, `now_playing`, `state_version` behind the zone's, versions and viewport. Changes emit `screen.device.online`, `screen.device.offline` and `screen.device.playing_changed` (at most once per device per 10 seconds).
 
@@ -190,7 +196,7 @@ A hot-game surge, as a short sequence in the hero, falling back to the rail:
 ## Content and scheduling
 The legacy signage core, per zone ([inventory](../docs/legacy-inventory/canccusignage.md#features)). Right `screen.content.write` for writes, `screen.content.read` for reads.
 
-- **Assets:** kinds `image`, `video`, `pptx`, `web`, `youtube`. `GET /api/screen/assets` (search `q`, `kind`, paged with `cursor`); `POST /api/screen/assets` (multipart upload, ≤ 100 MiB, or JSON `{"kind": "web"|"youtube", "url", "title"}`); `POST /api/screen/assets/name-check`; `PATCH`, `DELETE /api/screen/assets/{asset_id}` (409 `asset_in_use` while a playlist uses it); `POST …/{asset_id}/replace` (multipart) and `POST …/{asset_id}/revert` (one-step undo). Files are checked by content, images scaled to at most 2560×1440 with EXIF orientation applied and metadata dropped, video length read from the file, YouTube URLs normalised and probed (`health`: `ok`, `degraded`, `error`). A web asset's origin must be on `web_allowlist` (400 `origin_not_allowed`). Files are served to the event's devices and to sessions with `screen.content.read` at `/api/screen/files/{file}` (content-addressed, immutable). Counts against the event's storage quota.
+- **Assets:** kinds `image`, `video`, `pptx`, `web`, `youtube`. `GET /api/screen/assets` (search `q`, `kind`, paged with `cursor`); `POST /api/screen/assets` (multipart upload, ≤ 100 MiB, or JSON `{"kind": "web"|"youtube", "url", "title"}`); `POST /api/screen/assets/name-check`; `PATCH`, `DELETE /api/screen/assets/{asset_id}` (409 `asset_in_use` while a playlist uses it; its files go when nothing else refers to them); `POST …/{asset_id}/replace` (multipart) and `POST …/{asset_id}/revert` (one-step undo). Files are checked by content, images scaled to at most 2560×1440 with EXIF orientation applied and metadata dropped, video length read from the file, YouTube URLs normalised and probed (`health`: `ok`, `degraded`, `error`). A web asset's origin must be on `web_allowlist` (400 `origin_not_allowed`). Files are served to the event's devices and to sessions with `screen.content.read` at `/api/screen/files/{sha256}.{ext}` (content-addressed, immutable) and slides at `/api/screen/renders/{asset_id}/{asset_version}/slide-{n}.png`. The server serves a file only when it resolves to an asset version or render row of the current tenant, and builds the storage path from that row; it never joins a path from the request. A file is deleted only when no asset version (also a kept undo version) or render of the tenant refers to it any more, since identical bytes share one file. Counts against the event's storage quota.
 - **Playlists:** `type` `regular` (a timeline), `slideshow` (images with one dwell and a cycle) or `break` (the legacy ADVT: timed interrupts, never scheduled, with `period_seconds`, `break_seconds`, an optional daily window, `play_once`, priority chaining, slideshow options, and `region`: `playlist` (inside the playlist widget) or `full`). Items: `asset_id`, `duration_seconds` (`null` = the video's own length), `slide_start`, `slide_end`, `slide_seconds`. `GET`, `POST /api/screen/playlists`; `GET`, `PUT`, `DELETE /api/screen/playlists/{playlist_id}` (the whole playlist with its items and `revision`).
 - **Schedule windows:** per zone: `zone_key`, `playlist_id`, `priority` (0–999), `layout_id` (optional), and either weekly `days` with `start_minute` and `end_minute` (overnight allowed, 1440 allowed) or `agenda_item_id` (active while that run-of-show item runs, so the run-of-show drives the scheduler). Times are in the event's time zone. The winner: the highest priority, then the later start, then the playlist's priority, then the id, as in legacy. `GET`, `POST /api/screen/schedules`; `PUT`, `DELETE /api/screen/schedules/{schedule_id}`; `GET /api/screen/schedules/simulate?zone=&at=` (what would play). A zone's `break_min_gap_seconds` (setting) applies between unchained breaks.
 - **Scheduler:** one server-side tick per zone owns playback position, bookmarks and breaks; reading the state never changes it.
@@ -205,7 +211,7 @@ A PPTX deck is converted once, all slides, by the render-job container (`screen-
 - **Cancel:** `DELETE /api/screen/render-jobs/{job_id}` while `queued` or `running`.
 - **States:** `queued` → `running` → `succeeded` | `failed`; `queued` or `running` → `cancelled`. Error codes: `render_timeout` (10 minutes), `too_many_slides` (over 300), `file_invalid`, `renderer_failed`.
 - **Fair queue** ([0013](../docs/decisions/0013-multi-tenant-core.md) item 27): one running job per event at a time, events served in turn. The container keeps no state: jobs are in Postgres, the queue in Valkey.
-- **Files:** slides as PNG under `/files/<tenant>/screen/renders/<asset id>/<asset version>/slide-<n>.png` in the shared files volume, served at `/api/screen/files/…`; deleted with the asset version. Fonts are the platform-wide set of the render image.
+- **Files:** slides as PNG under `/files/<tenant>/screen/renders/<asset id>/<asset version>/slide-<n>.png` in the shared files volume, served at `/api/screen/renders/…`; deleted when no asset version refers to them any more. Fonts are the platform-wide set of the render image.
 - Emits `screen.render.queued`, `.started`, `.succeeded`, `.failed` and `.cancelled`.
 
 ### Ticker
@@ -237,11 +243,11 @@ Through `POST /internal/tenants/audit` in the same request ([tenants.md](tenants
 |---|---|---|
 | pizza | `pizza.order.*`, `pizza.item.*` | `food_status`; the ticker fallback line when no ticker is set |
 | tournament | `tournament.session.*`, `tournament.registration.*`, `tournament.player.*` (counts), `tournament.checkin.*`, `tournament.match.*`, `tournament.result.corrected`, `tournament.leaderboard.changed` | `bracket`, `leaderboard`, `countdown`; `checkin_qr` with the session's purpose while check-in is open |
-| bot | `bot.presence.counted`, `bot.voice_channels.created`; the read API `GET /api/bot/presence/playing` | `stats`, `now_playing`, voice channel names in `match_called` |
+| bot | `bot.presence.counted`, `bot.voice_channels.created`; the read API `GET /api/bot/presence/playing` | `stats`, `now_playing` (once the bot contract adds a module path), voice channel names in `match_called` |
 | agenda | `agenda.*`; `GET /api/agenda/now` | `agenda_now`, `countdown`, agenda-bound schedule windows |
 | games | `games.surge.*`, `games.game.*` | `hot_game` |
 | moments | `moments.override.*` | Claims |
-| notify | `GET /api/notify/check-in/code` (as a module) | `checkin_qr` |
+| notify | The rotating check-in code, through a module path the notify contract has yet to add | `checkin_qr` |
 | theming | `theming.theme.published`; `GET /api/theming/current` | Layouts, templates, the `theme` push |
 | tenants | `tenants.tenant.*`, `tenants.status.changed`, `tenants.venue_ip_check.changed`, `tenants.venue.changed`, `tenants.venue_info.changed`, `tenants.flags.changed`, `tenants.user.deleted` | Tenant cache, venue IP check, `venue_info`, flags, deletes |
 | admin | `admin.settings.changed` | Settings |
@@ -266,6 +272,7 @@ Envelope, naming and transport: [admin.md](admin.md#events). All on the tenant's
 | `screen.content.cleared` | A push ended | `push_id`, `reason` (`cleared`, `expired`), `actor_user_id` |
 | `screen.ticker.changed` | The ticker text changed. Audience: event-wide, `public` | `text` (or null), `until`, `source`, `actor_user_id` |
 | `screen.photo.added`, `screen.photo.removed` | A carousel photo was added or removed. Audience: event-wide, `public` | `photo_id`, `actor_user_id` |
+| `screen.claims.changed` | Placement of Moments' claims on a zone changed | `zone_key`, `placed` (list of `override_id` and `role`), `unplaced` (override ids), `hidden` (override ids) |
 | `screen.render.queued`, `.started`, `.succeeded`, `.failed`, `.cancelled` | A render job moved | `job_id`, `asset_id`, `asset_version`, `state`, `slide_count` (succeeded), `error` (failed) |
 
 ```json
@@ -281,7 +288,7 @@ Envelope, naming and transport: [admin.md](admin.md#events). All on the tenant's
 | `POST /api/screen/playback-progress` | Gone: the server-side scheduler owns bookmarks |
 | `POST /api/screen/ready-log`, `youtube-playback-error` | The heartbeat's `errors` |
 | `POST /api/screen/sound-*` | The heartbeat's `audio_unlocked` and `claims_sounded`; the sound board is Moments' (step 4) |
-| `GET /api/asset`, `GET /api/pptx-slide` | `/api/screen/files/{file}`; slides from the render job's result |
+| `GET /api/asset`, `GET /api/pptx-slide` | `/api/screen/files/{file}` and `/api/screen/renders/…`; slides from the render job's result |
 | `/api/admin/assets*` | `/api/screen/assets*` |
 | `/api/admin/playlist*`, `…/advt`, `…/priority`, `…/reorder`, `…/settings` | `/api/screen/playlists/{playlist_id}` (one document); ADVT is the `break` type |
 | `/api/admin/schedules*`, `/schedule/simulate`, `/advt-gap` | `/api/screen/schedules*`; the gap is a setting |
