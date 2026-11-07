@@ -1,0 +1,12 @@
+# Global tables: no tenant_id, no RLS, read before a tenant is set (0013 item 6; checked by
+# scripts/check-tenancy, docs/ci.md#tenancy). Every other table in modules/*/migrations is a
+# tenant table. One entry per line: <module> <table> <reason>. An entry without a reason exempts
+# nothing. A new global table needs a change here, so the review sees it; a global row holds no
+# tenant-scoped data beyond a plain tenant reference.
+tenants tenants         the registry row of every event (contracts/tenants.md, Tables)
+tenants hostnames       each hostname and its tenant as a plain reference, also held ones
+tenants venues          venues are shared by events and managed by the superadmin
+tenants users           users are global (0013 item 30)
+tenants series          a series spans events
+tenants platform_audit  audit entries that belong to no single event
+screen devices          device identity: name, token hash, venue id, current tenant (0013 item 34)

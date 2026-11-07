@@ -1,0 +1,353 @@
+#!/usr/bin/env python3
+"""Tenancy lint (0013 items 5-7, contracts/tenants.md; docs/ci.md#tenancy).
+
+Every table a module's migrations create (`modules/<module>/migrations/*.sql`) is a tenant table
+unless `scripts/tenancy-global-tables.txt` lists it. A tenant table needs a `tenant_id` column,
+row-level security enabled and forced, a policy on the kit's tenant setting, `tenant_id` in every
+primary key, unique constraint and unique index, and composite foreign keys with `tenant_id`
+(a plain reference is allowed only to a global table). Module source must not spell Valkey keys
+or stream names (`"events:…"`, `"t:…"`) itself: the kit builds them.
+
+Usage: check-tenancy [DIR]    (default: the repo root; scans `git ls-files`)
+       check-tenancy --self-test
+Exit 1 lists `file: problem`; exit 2 on a broken run.
+
+The SQL reader is deliberately small: it understands the statements migrations use (CREATE
+TABLE, ALTER TABLE, CREATE [UNIQUE] INDEX, CREATE POLICY) and ignores the rest, so DDL built at
+runtime in code is invisible to it.
+"""
+
+from __future__ import annotations
+
+import re
+import subprocess
+import sys
+import tempfile
+from dataclasses import dataclass, field
+from pathlib import Path
+
+ALLOW_LIST = "scripts/tenancy-global-tables.txt"
+MIGRATION_RE = re.compile(r"^modules/([a-z][a-z0-9_]*)/migrations/.+\.sql$")
+SOURCE_RE = re.compile(r"^modules/[a-z][a-z0-9_]*/src/.+\.(ts|tsx|js|mjs|py)$")
+RAW_KEY_RE = re.compile(r"""["'`](events|t):""")
+TENANT_SETTING = "current_setting('canccu.tenant'"
+IDENT = r'(?:"[^"]+"|[A-Za-z_][A-Za-z0-9_$]*)'
+NAME = rf"((?:{IDENT}\.)?{IDENT})"
+
+
+def bare(name: str) -> str:
+    """Table name without schema or quotes, lowercased."""
+    return name.split(".")[-1].strip('"').lower()
+
+
+def statements(sql: str) -> list[str]:
+    """Split on top-level `;`, dropping comments; quotes and dollar quotes are kept whole."""
+    out, buf, i = [], [], 0
+    while i < len(sql):
+        c = sql[i]
+        if sql.startswith("--", i):
+            i = sql.find("\n", i) if "\n" in sql[i:] else len(sql)
+            continue
+        if sql.startswith("/*", i):
+            end = sql.find("*/", i + 2)
+            i = len(sql) if end == -1 else end + 2
+            continue
+        if c in "'\"":
+            end = i + 1
+            while end < len(sql) and sql[end] != c:
+                end += 1
+            buf.append(sql[i : end + 1])
+            i = end + 1
+            continue
+        tag = re.match(r"\$[A-Za-z0-9_]*\$", sql[i:])
+        if tag:
+            end = sql.find(tag.group(0), i + len(tag.group(0)))
+            end = len(sql) if end == -1 else end + len(tag.group(0))
+            buf.append(sql[i:end])
+            i = end
+            continue
+        if c == ";":
+            out.append("".join(buf).strip())
+            buf = []
+        else:
+            buf.append(c)
+        i += 1
+    out.append("".join(buf).strip())
+    return [" ".join(s.split()) for s in out if s.strip()]
+
+
+def split_top(body: str) -> list[str]:
+    """Split a parenthesised list on top-level commas."""
+    parts, depth, start = [], 0, 0
+    for i, c in enumerate(body):
+        depth += c == "("
+        depth -= c == ")"
+        if c == "," and depth == 0:
+            parts.append(body[start:i].strip())
+            start = i + 1
+    parts.append(body[start:].strip())
+    return [p for p in parts if p]
+
+
+def paren_body(text: str, open_at: int) -> str:
+    depth = 0
+    for i in range(open_at, len(text)):
+        depth += text[i] == "("
+        depth -= text[i] == ")"
+        if depth == 0:
+            return text[open_at + 1 : i]
+    return text[open_at + 1 :]
+
+
+def columns(text: str) -> list[str]:
+    return [bare(c) for c in split_top(text)]
+
+
+@dataclass
+class Table:
+    file: str
+    has_tenant_column: bool = False
+    rls: bool = False
+    forced: bool = False
+    policy: bool = False
+    keys: list[tuple[str, list[str]]] = field(default_factory=list)  # (kind, columns)
+    refs: list[tuple[list[str], str, list[str] | None]] = field(default_factory=list)
+
+
+@dataclass
+class Module:
+    tables: dict[str, Table] = field(default_factory=dict)
+    problems: list[str] = field(default_factory=list)
+
+    def table(self, name: str) -> Table | None:
+        return self.tables.get(bare(name))
+
+
+def read_constraint(table: Table, element: str) -> None:
+    """A table-level PRIMARY KEY, UNIQUE or FOREIGN KEY clause (CONSTRAINT name optional)."""
+    element = re.sub(rf"^CONSTRAINT {IDENT} ", "", element, flags=re.I)
+    m = re.match(r"(PRIMARY KEY|UNIQUE(?: NULLS (?:NOT )?DISTINCT)?) \(", element, re.I)
+    if m:
+        kind = "primary key" if m.group(1).upper().startswith("PRIMARY") else "unique"
+        table.keys.append((kind, columns(paren_body(element, m.end() - 1))))
+        return
+    m = re.match(r"FOREIGN KEY \(", element, re.I)
+    if m:
+        local = columns(paren_body(element, m.end() - 1))
+        ref = re.search(rf"REFERENCES {NAME}\s*(\()?", element, re.I)
+        if ref:
+            target = columns(paren_body(element, ref.end() - 1)) if ref.group(2) else None
+            table.refs.append((local, bare(ref.group(1)), target))
+
+
+def read_column(table: Table, element: str) -> None:
+    name = bare(element.split(" ", 1)[0])
+    if name == "tenant_id":
+        table.has_tenant_column = True
+    rest = element.split(" ", 1)[1] if " " in element else ""
+    if re.search(r"\bPRIMARY KEY\b", rest, re.I):
+        table.keys.append(("primary key", [name]))
+    if re.search(r"\bUNIQUE\b", rest, re.I):
+        table.keys.append(("unique", [name]))
+    ref = re.search(rf"\bREFERENCES {NAME}\s*(\()?", rest, re.I)
+    if ref:
+        target = columns(paren_body(rest, ref.end() - 1)) if ref.group(2) else None
+        table.refs.append(([name], bare(ref.group(1)), target))
+
+
+CONSTRAINT_START = re.compile(r"^(CONSTRAINT|PRIMARY KEY|UNIQUE|FOREIGN KEY|CHECK|EXCLUDE)\b", re.I)
+
+
+def read_statement(module: Module, stmt: str, file: str) -> None:
+    m = re.match(rf"CREATE (?:UNLOGGED )?TABLE (?:IF NOT EXISTS )?{NAME}\s*\(", stmt, re.I)
+    if m:
+        table = module.tables.setdefault(bare(m.group(1)), Table(file))
+        for element in split_top(paren_body(stmt, m.end() - 1)):
+            if CONSTRAINT_START.match(element):
+                read_constraint(table, element)
+            else:
+                read_column(table, element)
+        return
+    m = re.match(rf"CREATE UNIQUE INDEX (?:CONCURRENTLY )?(?:IF NOT EXISTS )?(?:{IDENT} )?ON (?:ONLY )?{NAME}(?: USING \w+)?\s*\(", stmt, re.I)
+    if m and (table := module.table(m.group(1))):
+        table.keys.append(("unique index", columns(paren_body(stmt, m.end() - 1))))
+        return
+    m = re.match(rf"CREATE POLICY {IDENT} ON {NAME}\b(.*)", stmt, re.I)
+    if m and (table := module.table(m.group(1))):
+        table.policy = table.policy or TENANT_SETTING in m.group(2).replace('"', "'")
+        return
+    m = re.match(rf"ALTER TABLE (?:IF EXISTS )?(?:ONLY )?{NAME} (.*)", stmt, re.I)
+    if not m or not (table := module.table(m.group(1))):
+        return
+    for action in split_top(m.group(2)):
+        upper = action.upper()
+        if upper.startswith("ENABLE ROW LEVEL SECURITY"):
+            table.rls = True
+        elif upper.startswith("FORCE ROW LEVEL SECURITY"):
+            table.forced = True
+        elif upper.startswith(("DISABLE ROW LEVEL SECURITY", "NO FORCE ROW LEVEL SECURITY")):
+            module.problems.append(f"{file}: {bare(m.group(1))}: turns row-level security off")
+        elif upper.startswith("ADD "):
+            element = re.sub(r"^ADD (?:COLUMN )?(?:IF NOT EXISTS )?", "", action, flags=re.I)
+            if CONSTRAINT_START.match(element):
+                read_constraint(table, element)
+            else:
+                read_column(table, element)
+
+
+def table_problems(name: str, table: Table, is_global: set[str]) -> list[str]:
+    where = f"{table.file}: {name}"
+    found = []
+    if not table.has_tenant_column:
+        found.append(f"{where}: no tenant_id column")
+    if not table.rls:
+        found.append(f"{where}: row-level security not enabled")
+    if not table.forced:
+        found.append(f"{where}: row-level security not forced")
+    if not table.policy:
+        found.append(f"{where}: no policy on the tenant setting ({TENANT_SETTING}…)")
+    for kind, cols in table.keys:
+        if "tenant_id" not in cols:
+            found.append(f"{where}: {kind} ({', '.join(cols)}) without tenant_id")
+    for local, target, target_cols in table.refs:
+        if target in is_global:
+            continue
+        if "tenant_id" not in local or target_cols is None or "tenant_id" not in target_cols:
+            found.append(
+                f"{where}: foreign key ({', '.join(local)}) to {target} is not composite with tenant_id"
+            )
+    return found
+
+
+def read_allow_list(root: Path) -> tuple[dict[str, set[str]], list[str]]:
+    allowed: dict[str, set[str]] = {}
+    problems = []
+    path = root / ALLOW_LIST
+    if not path.exists():
+        return allowed, problems
+    for n, line in enumerate(path.read_text().splitlines(), 1):
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        parts = line.split(None, 2)
+        if len(parts) < 3:
+            problems.append(f"{ALLOW_LIST}:{n}: entry without a reason exempts nothing: {line.strip()}")
+            continue
+        allowed.setdefault(parts[0], set()).add(parts[1].lower())
+    return allowed, problems
+
+
+def check(root: Path) -> list[str]:
+    files = subprocess.run(
+        ["git", "-C", str(root), "ls-files"], capture_output=True, text=True, check=True
+    ).stdout.splitlines()
+    allowed, problems = read_allow_list(root)
+    every_global = set().union(*allowed.values()) if allowed else set()
+    modules: dict[str, Module] = {}
+    for file in sorted(files):
+        m = MIGRATION_RE.match(file)
+        if m:
+            module = modules.setdefault(m.group(1), Module())
+            for stmt in statements((root / file).read_text()):
+                read_statement(module, stmt, file)
+        elif SOURCE_RE.match(file):
+            for n, line in enumerate((root / file).read_text().splitlines(), 1):
+                if RAW_KEY_RE.search(line):
+                    problems.append(
+                        f"{file}:{n}: raw Valkey key or stream name; use the kit's "
+                        "tenantStream/tenantKey (tenant_stream/tenant_key)"
+                    )
+    for name, module in sorted(modules.items()):
+        problems += module.problems
+        for table_name, table in sorted(module.tables.items()):
+            if table_name not in allowed.get(name, set()):
+                problems += table_problems(table_name, table, every_global)
+    return problems
+
+
+GOOD = """
+CREATE TABLE lists (
+  tenant_id text NOT NULL DEFAULT NULLIF(current_setting('canccu.tenant', true), ''),
+  id text NOT NULL, venue_id text REFERENCES venues (id), note text DEFAULT 'a;b',
+  PRIMARY KEY (tenant_id, id)
+);
+-- a comment; with a semicolon
+CREATE TABLE items (
+  tenant_id text NOT NULL, id text NOT NULL, list_id text NOT NULL,
+  CONSTRAINT items_pk PRIMARY KEY (tenant_id, id),
+  CONSTRAINT items_list FOREIGN KEY (tenant_id, list_id) REFERENCES lists (tenant_id, id)
+);
+CREATE UNIQUE INDEX items_name ON items (tenant_id, id);
+DO $$ BEGIN PERFORM 1; END $$;
+"""
+RLS = """
+ALTER TABLE {t} ENABLE ROW LEVEL SECURITY;
+ALTER TABLE {t} FORCE ROW LEVEL SECURITY;
+CREATE POLICY canccu_tenant ON {t} USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''))
+  WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
+"""
+GLOBALS = "# module table reason\ntenants venues global registry of venues\n"
+
+
+def self_test() -> int:
+    cases: list[tuple[str, dict[str, str], str | None]] = [
+        ("good tables pass", {}, None),
+        ("missing tenant_id", {"m.sql": "CREATE TABLE x (id text PRIMARY KEY);"}, "x: no tenant_id column"),
+        ("no RLS", {"m.sql": "CREATE TABLE x (tenant_id text, id text, PRIMARY KEY (tenant_id, id));"}, "x: row-level security not enabled"),
+        ("not forced", {"m.sql": "CREATE TABLE x (tenant_id text);\nALTER TABLE x ENABLE ROW LEVEL SECURITY;"}, "x: row-level security not forced"),
+        ("no policy", {"m.sql": "CREATE TABLE x (tenant_id text);"}, "x: no policy"),
+        ("single-column primary key", {"m.sql": "CREATE TABLE x (tenant_id text, id text PRIMARY KEY);"}, r"x: primary key \(id\) without tenant_id"),
+        ("unique without tenant", {"m.sql": "CREATE TABLE x (tenant_id text, code text, UNIQUE (code));"}, r"x: unique \(code\) without tenant_id"),
+        ("unique index without tenant", {"m.sql": "CREATE TABLE x (tenant_id text, code text);\nCREATE UNIQUE INDEX x_code ON x (code);"}, r"unique index \(code\) without tenant_id"),
+        ("plain foreign key to a tenant table", {"m.sql": "CREATE TABLE x (tenant_id text, list_id text REFERENCES lists (id));"}, r"foreign key \(list_id\) to lists is not composite"),
+        ("added foreign key", {"m.sql": "CREATE TABLE x (tenant_id text, l text);\nALTER TABLE x ADD CONSTRAINT f FOREIGN KEY (l) REFERENCES lists (id);"}, r"foreign key \(l\) to lists"),
+        ("RLS turned off", {"m.sql": "ALTER TABLE lists DISABLE ROW LEVEL SECURITY;"}, "lists: turns row-level security off"),
+        ("listed global table is exempt", {"m.sql": "CREATE TABLE settings (id text PRIMARY KEY);", "globals": "m settings platform-wide settings\n"}, None),
+        ("entry without a reason", {"m.sql": "CREATE TABLE settings (id text PRIMARY KEY);", "globals": "m settings\n"}, "entry without a reason"),
+        ("raw stream in source", {"src": 'await store.xadd("events:pizza", f);\n'}, r"src/a.ts:1: raw Valkey key"),
+        ("raw tenant key in source", {"src": "key = f't:{tenant}:pizza:cache'\n"}, "raw Valkey key"),
+    ]
+    fail = 0
+    for name, extra, expect in cases:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            (root / "scripts").mkdir()
+            (root / ALLOW_LIST).write_text(GLOBALS + extra.get("globals", ""))
+            good = root / "modules/m/migrations"
+            good.mkdir(parents=True)
+            (good / "001_lists.sql").write_text(GOOD + RLS.format(t="lists") + RLS.format(t="items"))
+            if "m.sql" in extra:
+                (good / "002_more.sql").write_text(extra["m.sql"])
+            if "src" in extra:
+                (root / "modules/m/src").mkdir(parents=True)
+                (root / "modules/m/src/a.ts").write_text(extra["src"])
+            subprocess.run(["git", "-C", tmp, "add", "-A"], check=True)
+            found = check(root)
+            ok = not found if expect is None else any(re.search(expect, p) for p in found)
+            print(f"{'ok  ' if ok else 'FAIL'} {name}")
+            for p in found:
+                print(f"     | {p}", file=sys.stderr)
+            fail |= not ok
+    return int(fail)
+
+
+def main(argv: list[str]) -> int:
+    if argv[1:2] == ["--self-test"]:
+        return self_test()
+    root = Path(argv[1] if len(argv) > 1 else Path(__file__).resolve().parent.parent)
+    try:
+        problems = check(root)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        print(f"check-tenancy: cannot run: {exc}", file=sys.stderr)
+        return 2
+    for problem in problems:
+        print(problem)
+    if problems:
+        print(f"check-tenancy: {len(problems)} problem(s); see docs/ci.md#tenancy", file=sys.stderr)
+        return 1
+    print("check-tenancy: ok")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

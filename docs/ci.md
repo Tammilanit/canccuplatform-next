@@ -8,7 +8,7 @@
 | `lint-types-test (kit-ts)` | In `packages/kit-ts`: `npm ci`, `npm run lint` (eslint + prettier), `npm run typecheck`, `npm test` (vitest). |
 | `lint-types-test (kit-py)` | In `packages/kit-py`: `pip install -e ".[dev]"`, `ruff check .`, `mypy .` (strict), `pytest`. The `dev` extra pins these tools. |
 | `lint-types-test (ui)` | In `packages/ui`: `npm ci`, `npm run lint` (eslint + prettier), `npm run typecheck`, `npm test` (vitest). After it first runs on main, a maintainer adds it to the required checks. |
-| `integration (kit)` | Starts Valkey from the Compose stack (`deploy/compose.yml` + `deploy/compose.test.yml`) and runs the kit-ts and kit-py Valkey integration tests against it. |
+| `integration (kit)` | Starts Valkey and Postgres from the Compose stack (`deploy/compose.yml` + `deploy/compose.test.yml`) and runs the kit-ts and kit-py integration tests against them: the bus and tenant streams on Valkey, and row-level security on Postgres (as a plain app role, because a superuser bypasses RLS). |
 | `compose (deploy)` | Runs the `modules/hello` and `modules/admin` checks, starts the whole stack with `docker compose -f deploy/compose.yml up --build --wait`, and checks that only Caddy publishes a port, that only the three named volumes exist, that hello and admin health through Caddy are `ok`, that health is `503 down` when Valkey stops, and that hello refuses to start without a kit variable. |
 | `demo-stack` | From `.github/workflows/demo-stack.yml`: starts the whole stack with the demo event (`deploy/compose.yml` + `deploy/compose.ci.yml`, `up --build --wait`), runs the API tests (`scripts/demo-stack-test`) and screenshots the admin pages (`scripts/demo-screenshots`), uploaded as the artifact `demo-screenshots`. See [demo-stack](#demo-stack). |
 | `no-event-names` | Fails if the lines a PR adds contain a forbidden term. |
@@ -16,6 +16,7 @@
 | `contracts` | `scripts/check-contracts`: validates every `events/*/profile.yaml` against `contracts/profile.schema.json`, checks its asset paths exist, and lints `contracts/*.openapi.yaml` with Redocly (`contracts/redocly.yaml`). |
 | `setup (self-test)` | Runs `setup/test.sh` (no root, never changes the host: every script with `--dry-run` or against an unreachable daemon) with shellcheck, jq and the docker CLI and daemon present, and fails if any check is skipped except `systemd-analyze verify`, which the runner may lack. Covers `setup/` and the Caddy ports and network in `deploy/compose.yml`. After it first runs on main, a maintainer adds it to the required checks. |
 | `naming` | `scripts/check-naming`: fails if a tracked file name or line uses the old platform prefix as an identifier ([ADR 0017](decisions/0017-naming.md)). After it first runs on main, a maintainer adds it to the required checks. |
+| `tenancy` | `scripts/check-tenancy`: every table in `modules/*/migrations/*.sql` is a tenant table with `tenant_id`, row-level security and a tenant policy, tenant-scoped keys and composite foreign keys, unless `scripts/tenancy-global-tables.txt` lists it; module source spells no raw Valkey key or stream name. See [tenancy](#tenancy). After it first runs on main, a maintainer adds it to the required checks. |
 | `file-size` | `scripts/check-file-size`: warns, and never fails, on tracked source files over 400 lines (the file-size rule, AGENTS.md). Not a required check. |
 
 Do not rename these jobs; renaming breaks the required checks.
@@ -54,6 +55,15 @@ Do not rename these jobs; renaming breaks the required checks.
 - **Exempt:** generated files, marked by `@generated` or `DO NOT EDIT` in their first five lines, and the entries of `scripts/file-size-exemptions.txt`: one `<path or glob> <reason>` per line, where `*` also matches `/`. An entry without a reason is reported and exempts nothing. The health pass reviews the list ([0019](decisions/0019-work-packages.md)).
 - Self-test: `scripts/check-file-size --self-test`.
 - Not a required check: it only warns. Do not rename the job.
+
+## tenancy
+- `scripts/check-tenancy [DIR]` (Python 3, no packages) reads every tracked `modules/<module>/migrations/*.sql` in name order, per module, and every module source file under `modules/<module>/src/` ([0013](decisions/0013-multi-tenant-core.md) items 5–7).
+- **A tenant table** (every table not on the allow-list) needs: a `tenant_id` column; `ENABLE` and `FORCE ROW LEVEL SECURITY`; a `CREATE POLICY` on the kit's tenant setting (`current_setting('canccu.tenant', …)`); `tenant_id` in its primary key, every unique constraint and every unique index; and foreign keys composite with `tenant_id` on both sides, except a plain reference to a global table. `DISABLE` or `NO FORCE ROW LEVEL SECURITY` fails. The kit writes the column and the policy for you: `TENANT_COLUMN_SQL` and `rlsSql(table)` (kit-py: `rls_sql`).
+- **Global tables** are listed in `scripts/tenancy-global-tables.txt`, one `<module> <table> <reason>` per line; an entry without a reason is reported and exempts nothing. A new global table needs a change to that list, so the review sees it.
+- **No raw keys:** a string literal in module source starting with `events:` or `t:` fails; modules use the kit's `tenantStream`, `platformStream` and `tenantKey` (kit-py: `tenant_stream`, `platform_stream`, `tenant_key`).
+- **Limits:** the SQL reader understands `CREATE TABLE`, `ALTER TABLE`, `CREATE [UNIQUE] INDEX` and `CREATE POLICY`; DDL built at runtime in code is invisible to it, so modules keep their schema in migration files.
+- Exit 1 lists `file: problem`; exit 2 on a broken run (not a git work tree). Self-test: `scripts/check-tenancy --self-test`.
+- **Required check:** after this job first runs on main, a maintainer adds `tenancy` to the required checks of the main ruleset. Do not rename the job.
 
 ## no-event-names
 - `scripts/check-event-names [--dry-run] [BASE]` scans added lines of `BASE...HEAD`, case-insensitively.
