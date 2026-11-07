@@ -22,6 +22,17 @@
 		reverse_proxy admin:8080
 	}
 
+	# The tenants contract's paths are /api/tenants/... too; /internal/tenants/ is never routed
+	# here, so it stays on the stack's network.
+	handle /api/tenants/health {
+		rewrite * /health
+		reverse_proxy tenants:8080
+	}
+
+	handle /api/tenants/* {
+		reverse_proxy tenants:8080
+	}
+
 	handle_path /admin/* {
 		reverse_proxy admin:8080
 	}
