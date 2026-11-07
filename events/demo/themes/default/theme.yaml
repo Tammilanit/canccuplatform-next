@@ -4,7 +4,6 @@ schema_version: 1
 name: Default
 mode: simple
 brand:
-  logo: images/logo.svg
   primary: "#3b82f6"
   accent: "#f59e0b"
   scheme: dark

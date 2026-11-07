@@ -6,6 +6,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "name", "mode", "tokens"],
+  "if": {
+    "type": "object",
+    "properties": { "mode": { "const": "simple" } }
+  },
+  "then": {
+    "type": "object",
+    "required": ["brand"],
+    "properties": { "brand": { "$ref": "#/$defs/brand" } }
+  },
   "properties": {
     "schema_version": {
       "description": "Version of this manifest format. Additive changes keep it.",
@@ -39,7 +48,7 @@
       }
     },
     "images": {
-      "description": "Images by role (`logo`, `icon`, `background`, or any name a template or the CSS refers to).",
+      "description": "Images by role: `logo` (the one logo of the theme), `icon` (square, for the phone hub's app icon; the logo when absent), `background`, or any name a template or the CSS refers to.",
       "type": "object",
       "maxProperties": 64,
       "propertyNames": {
@@ -112,18 +121,11 @@
       "pattern": "^images/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.(png|jpg|jpeg|webp|svg)$"
     },
     "brand": {
-      "description": "The simple mode's input, kept so the simple editor can reopen it.",
+      "description": "The simple mode's colour input, kept so the simple editor can reopen it. The logo and icon are `images.logo` and `images.icon`.",
       "type": "object",
       "additionalProperties": false,
       "required": ["primary", "accent", "scheme"],
       "properties": {
-        "logo": {
-          "$ref": "#/$defs/image_path"
-        },
-        "icon": {
-          "description": "Square image for the phone hub's app icon; the logo when absent.",
-          "$ref": "#/$defs/image_path"
-        },
         "primary": {
           "$ref": "#/$defs/color"
         },

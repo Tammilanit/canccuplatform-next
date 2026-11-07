@@ -850,7 +850,8 @@ components:
       pattern: "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
     PackagePath:
       type: string
-      pattern: "^(?!.*\\.\\.)(css|fonts|images|templates|embeds)/[A-Za-z0-9._/-]{1,200}$"
+      description: The limits of theme.schema.json, which allows up to 120 characters before the extension.
+      pattern: "^(?!.*\\.\\.)(css|fonts|images|templates|embeds)/[A-Za-z0-9._/-]{1,129}$"
     Problem:
       type: object
       required: [severity, code, message]
@@ -869,7 +870,9 @@ components:
             - template_forbidden
             - svg_forbidden
             - reference_unknown
+            - duplicate_id
             - area_outside_grid
+            - mode_mismatch
             - contrast_low
             - class_unstable
             - widget_unknown
@@ -932,10 +935,10 @@ components:
           type: integer
           minimum: 1
         logo:
-          description: An image already in the draft (`images/…`).
+          description: An image already in the draft (`images/…`); becomes `images.logo`, the theme's only logo.
           type: string
         icon:
-          description: A square image already in the draft, for the phone hub's icon.
+          description: A square image already in the draft, for the phone hub's icon; becomes `images.icon`.
           type: string
         primary:
           $ref: "#/components/schemas/Color"
@@ -1050,10 +1053,10 @@ components:
               $ref: "theme.schema.json"
     ResolvedTheme:
       type: object
-      required: [revision, theming_version, tokens, tokens_css_url, embed_color, layouts, templates, embeds]
+      required: [revision, theming_version, tokens, tokens_css_url, admin_tokens_css_url, embed_color, layouts, templates, embeds]
       properties:
         revision:
-          description: 0 when the event has no published theme (the defaults); absent on a draft preview.
+          description: 0 when the event has no published theme (the platform defaults with the profile's `theme`); absent on a draft preview.
           type: integer
           minimum: 0
         published_at:
@@ -1068,10 +1071,18 @@ components:
         tokens_css_url:
           description: A `:root` block of the tokens plus the `@font-face` rules; for every surface.
           type: string
+        admin_tokens_css_url:
+          description: |
+            Like `tokens_css_url`, but with the platform default colours when the theme fails the contrast rules;
+            for admin, sign-in, superadmin and privacy pages.
+          type: string
         css_url:
           description: The compiled CSS (`@layer canccu-theme`); only for the surfaces that take CSS. Absent without CSS.
           type: string
         logo_url:
+          type: string
+        logo_png_url:
+          description: The logo as a PNG, 512 px wide, for Discord and other places that take no SVG.
           type: string
         icon_urls:
           type: object
@@ -1181,11 +1192,12 @@ components:
       properties:
         repo_url:
           type: string
-          pattern: "^https://[^\\s/@]+(:443)?/[^\\s]*$"
+          pattern: "^https://[^\\s/@:]+(:443)?/[^\\s]*$"
           maxLength: 300
         ref:
           type: string
-          pattern: "^[A-Za-z0-9._/-]{1,100}$"
+          description: A branch or tag; never starts with `-`, so it cannot be read as a git option.
+          pattern: "^(?!-)[A-Za-z0-9._/-]{1,100}$"
         path:
           description: The package folder in the repo; `.` for the root.
           type: string

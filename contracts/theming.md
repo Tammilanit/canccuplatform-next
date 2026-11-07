@@ -1,6 +1,6 @@
 # Theming contract
 
-Each event's own design, without code ([0013](../docs/decisions/0013-multi-tenant-core.md) items 19–21, [0022](../docs/decisions/0022-product-vision.md)): the stable CSS classes and custom properties every surface uses, the theme package (tokens, CSS, fonts, images), screen layouts as data, logic-less widget templates, custom embeds, the brand kit's simple and advanced modes, draft → preview → publish with rollback, and the security rules for everything an event uploads. The `theming` module owns it. Other modules render with it; none stores a theme of its own.
+Each event's own design, without code ([0013](../docs/decisions/0013-multi-tenant-core.md) items 19–21, [0022](../docs/decisions/0022-product-vision.md)): the stable CSS classes and custom properties every surface uses, the theme package (tokens, CSS, fonts, images), screen layouts as data, logic-less widget templates, custom embeds, the brand kit's simple and advanced modes, draft → preview → publish with rollback, and the security rules for everything an event uploads. The `theming` module owns it. Other modules render with it; none stores a theme of its own. The event profile's `theme` and `logos.main` ([profile.md](profile.md)) are the short form with the same token names: they apply only while the event has no published revision, and a published revision always wins.
 
 **Machine-readable:** [theming.openapi.yaml](theming.openapi.yaml) (OpenAPI 3.1) is the source for paths, fields and status codes; [theme.schema.json](theme.schema.json) (JSON Schema 2020-12) for the package manifest `theme.yaml`. This file explains them and adds the rules and events. Conventions (field names, times, error body): [README.md](README.md#conventions).
 
@@ -15,7 +15,7 @@ Each event's own design, without code ([0013](../docs/decisions/0013-multi-tenan
 - A theme belongs to one event, which is one tenant ([0013](../docs/decisions/0013-multi-tenant-core.md)); the tenant comes from the request's hostname. Drafts and revisions are rows with `tenant_id` under row-level security.
 - Files live under `/files/<tenant>/theming/` in the shared files volume, content-addressed (SHA-256), and are served only after the tenant check.
 - Events go to the tenant's stream `t:<tenant>:events:theming`. An archived event's theme is read-only: writes get 409 `event_archived`.
-- An event with no published theme shows the platform defaults (the `ui.css` defaults of [packages/ui](../packages/ui/README.md)).
+- An event with no published theme shows the **platform defaults**, with the event profile's `theme` applied over them. The platform defaults are the `ui.css` defaults of [packages/ui](../packages/ui/README.md), except `primary_text`, which is `#0f172a`: the white of today's `ui.css` reaches only 3.7:1 on `primary` and `status_down`, below the contrast rules (packages/ui follows). The platform defaults pass every contrast rule.
 
 ## What applies where
 The rule protects people from look-alike controls: an event's CSS and templates restyle what attendees see, never the pages where admins grant rights or people sign in.
@@ -25,9 +25,9 @@ The rule protects people from look-alike controls: an event's CSS and templates 
 | Venue screen | yes | yes | yes | yes | yes | yes |
 | Phone hub, public info pages | yes | yes | yes | — | yes | — |
 | Admin, sign-in, superadmin, privacy pages | yes | yes | — | — | — | — |
-| Discord (the bot) | embed colour | logo | — | — | — | — |
+| Discord (the bot) | embed colour | logo as PNG (`logo_png_url`; Discord shows no SVG) | — | — | — | — |
 
-Admin and sign-in pages take the tokens only after the simple mode's contrast rules hold for them (see Brand kit); a theme that fails them falls back to the default colours on those pages.
+Admin and sign-in pages take the colour tokens only when the simple mode's contrast rules hold for them (see Brand kit); for a theme that fails them those pages use the platform default colours with the theme's fonts and sizes. `admin_tokens_css_url` serves exactly that set, so admin pages never build it themselves.
 
 ## Stable classes and custom properties
 These are the contract every surface keeps and every theme may rely on (theming version 1). Adding a class or a token is additive; removing or renaming one is a breaking contract change. Modules mark up their pages with these classes; anything else in their markup may change in any release, and a theme that styles it may break.
@@ -37,7 +37,7 @@ These are the contract every surface keeps and every theme may rely on (theming 
 | Token group | Tokens | Custom property |
 |---|---|---|
 | `colors` | `background`, `surface`, `border`, `text`, `text_muted`, `primary`, `primary_text`, `accent`, `status_ok`, `status_degraded`, `status_down` | `--canccu-color-<name>` (`text_muted` → `--canccu-color-text-muted`) |
-| `fonts` | `body`, `heading`, `display` (new: big screen text, defaults to `heading`), `mono` | `--canccu-font-<name>` |
+| `fonts` | `body`, `heading`, `display` (new: big screen text, defaults to `heading`), `mono` | `--canccu-font-<name>`: the family, quoted, then a generic fallback the platform appends (`system-ui, sans-serif`; for `mono` `ui-monospace, monospace`) |
 | `sizes` (new) | `radius` (default `0.5rem`), `border_width` (`1px`), `gap` (`1rem`), `safe_inset` (screen edge margin, `48px`) | `--canccu-<name>` (`--canccu-radius`, `--canccu-border-width`, …) |
 
 **Classes** (BEM; the `canccu-` prefix is reserved for the platform, [0017](../docs/decisions/0017-naming.md)):
@@ -76,12 +76,12 @@ A folder (or a zip of it) with `theme.yaml` at its root ([theme.schema.json](the
 - Every path is relative, inside its folder, of `[A-Za-z0-9._/-]` only, with no `..`; a zip with absolute paths, links, nested archives, more than 300 files, more than 20 MB unpacked or an unpacking ratio over 100:1 is refused whole.
 - Files are recognised by their content, never by their extension or the uploaded `Content-Type`; a mismatch is a problem.
 - The package counts against the event's storage quota ([0013](../docs/decisions/0013-multi-tenant-core.md) item 27).
-- **Problems:** every check yields `{"severity": "error"|"warning", "code", "path", "message"}`. A draft may hold errors; publishing refuses a draft with any error (422 `theme_invalid`). Codes: `schema` (fails theme.schema.json), `file_missing`, `file_type`, `file_too_large`, `css_forbidden`, `template_forbidden`, `svg_forbidden`, `reference_unknown` (a template, embed, image or font name that does not exist), `area_outside_grid`, `contrast_low`, `class_unstable` (warning: CSS styles a class that is neither stable nor `t-`), `widget_unknown` (warning: a widget type no module offers; the region shows nothing), `embeds_unavailable` (warning: the platform has no sandbox origin).
+- **Problems:** every check yields `{"severity": "error"|"warning", "code", "path", "message"}`. A draft may hold errors; publishing refuses a draft with any error (422 `theme_invalid`). Codes: `schema` (fails theme.schema.json), `file_missing`, `file_type`, `file_too_large`, `css_forbidden`, `template_forbidden`, `svg_forbidden`, `reference_unknown` (a template, embed, image or font name that does not exist, or a template made for another widget type), `duplicate_id` (a layout id, or a region id within a layout, used twice), `area_outside_grid`, `mode_mismatch` (a simple-mode theme with CSS, fonts, templates or embeds), `contrast_low`, `class_unstable` (warning: CSS styles a class that is neither stable nor `t-`), `widget_unknown` (warning: a widget type no module offers; the region shows nothing), `embeds_unavailable` (warning: the platform has no sandbox origin).
 
 ## Brand kit: simple mode
 An organiser uploads a logo and picks two colours; the module generates the whole token set. A new branding takes minutes.
 
-- `PUT /api/theming/draft/brand` with `logo` (an image already in the draft), `primary`, `accent`, `scheme` (`dark` or `light`) and optionally `icon` and `embed_color`. It sets `mode: simple`, regenerates `tokens.colors` and answers with the draft and `adjusted`: the tokens it had to lighten or darken from the given colours.
+- `PUT /api/theming/draft/brand` with `logo` (an image already in the draft), `primary`, `accent`, `scheme` (`dark` or `light`) and optionally `icon` and `embed_color`. `logo` and `icon` become `images.logo` and `images.icon`, the theme's only logo and icon; the other fields are kept as `brand`. It sets `mode: simple`, regenerates `tokens.colors` and answers with the draft and `adjusted`: the tokens it had to lighten or darken from the given colours.
 - **Generation is deterministic:** the same input gives the same tokens on every platform version that keeps the same theming version, so screenshots stay stable.
 - **Contrast rules** (WCAG 2.2 contrast ratio): `text` and `text_muted` on `background` and on `surface` ≥ 4.5:1; `primary_text` on `primary` and on `status_down` ≥ 4.5:1; `primary` and `accent` on `background` ≥ 3:1; each status colour on `surface` ≥ 3:1. The simple mode never produces a failing pair: `primary_text` is the first of `background`, white and black that passes on both its fills, and where a given colour fails as text, a darker or lighter shade of it takes the text role and the given colour stays for fills.
 - The simple mode keeps the default templates and no CSS, fonts or embeds; it still edits layouts.
@@ -92,7 +92,7 @@ An organiser uploads a logo and picks two colours; the module generates the whol
 The same package edited directly: tokens, CSS on the stable classes, fonts, images, templates and embeds, with the same draft → preview → publish and rollback.
 
 - Any token change, CSS, font, template or embed sets `mode: advanced`. Reopening the simple editor and saving `brand` regenerates the colours and returns to `simple`; the advanced files stay until removed.
-- Contrast failures are warnings (`contrast_low`) in advanced mode, never blocking, except that admin and sign-in pages then use the default colours (What applies where).
+- Contrast failures are warnings (`contrast_low`) in advanced mode, never blocking, except that admin and sign-in pages then use the platform default colours (What applies where).
 - **CSS rules,** checked with a CSS parser at upload, each failure an error `css_forbidden`: no `@import`, `@namespace` or `@charset` other than UTF-8; every `url()` names a file of the package's `images/` or `fonts/` (no other scheme, no `data:`, no `//`, no absolute path; rewritten to the served address on publish); `@font-face` only with package fonts; no `expression()`, `behavior`, `-moz-binding` or `javascript:` anywhere. External fonts and images are impossible by design: the CSP would block them anyway.
 - The module compiles a revision's CSS into one file inside `@layer canccu-theme`, after the platform's `@layer canccu-base`. The few rules that keep people safe (a device's pairing code, the offline marker, the privacy link on public pages) are `!important` in `canccu-base`, which no later layer can override.
 
@@ -152,8 +152,9 @@ object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'
 ```
 
 - No inline script and no `style` attributes; a platform-generated `<style>` block carries the response's nonce. Event CSS is always a file.
-- Only the screen contract may widen `frame-src`, and only by the event's own web-asset allow-list for screen pages; no surface widens any other directive.
-- On admin and sign-in pages `frame-ancestors 'none'` replaces `'self'`, so they cannot be framed at all; the admin's virtual-screen preview frames only surface pages, which keep `'self'`.
+- **Precondition:** a module turns this policy on only once its pages comply. Today `page()` of packages/ui writes its theme `<style>` without a nonce, so packages/ui adds the nonce (or links `tokens_css_url`) first.
+- `frame-src` is widened in exactly two cases, and no surface widens any other directive: admin pages add `'self'`, for the virtual-screen preview of surface pages on the event's own hostname; and the screen contract may add the event's own web-asset allow-list, for screen pages only.
+- On admin and sign-in pages `frame-ancestors 'none'` replaces `'self'`, so they cannot be framed at all. Admin pages therefore send `frame-src 'self' <the event's sandbox origin>`; what they frame are surface pages, which keep `frame-ancestors 'self'` and serve no event JS.
 
 ### The sandbox origin
 - `https://<tenant id>.<sandbox domain>`: a registrable domain of its own (`CANCCU_SANDBOX_DOMAIN`), never the platform domain, a subdomain of it or an event's hostname, so it is neither same-origin nor same-site with any page that holds a session. It sets no cookies, has no sign-in and serves no API.
@@ -182,10 +183,10 @@ A theme can come from the event's own git repo instead of uploads.
 - **Export:** `GET /api/theming/revisions/{revision}/package` downloads the revision as a package zip: the format of an upload, so it goes into another event or the event's repo.
 
 ## The phone hub
-- The hub uses the same tokens, fonts, logo, CSS and templates as the screen (What applies where). Its web app manifest takes `theme_color` from `surface` and `background_color` from `background`; its icons (192 and 512 px, and a maskable 512 px on `background`) are made from `brand.icon` or the logo.
+- The hub uses the same tokens, fonts, logo, CSS and templates as the screen (What applies where). Its web app manifest takes `theme_color` from `surface` and `background_color` from `background`; its icons (192 and 512 px, and a maskable 512 px on `background`) are made from `images.icon` or the logo.
 
 ## Reading the current theme
-`GET /api/theming/current` → the current revision: `revision`, `published_at`, `tokens` (complete, defaults filled in), `tokens_css_url` (a `:root` block of the tokens and the `@font-face` rules: for every surface), `css_url` (the compiled CSS: only for the surfaces that take CSS), `logo_url`, `icon_urls`, `embed_color` (integer), `layouts`, `templates` (name, widget type and the parsed template), `embeds` (name and frame address) and `theming_version`. Readable by whoever the event's info-page mode lets in ([tenants.md](tenants.md#info-page-mode)) and by the event's paired screens. Without a published theme it answers the defaults with `revision: 0`.
+`GET /api/theming/current` → the current revision: `revision`, `published_at`, `tokens` (complete, defaults filled in), `tokens_css_url` (a `:root` block of the tokens and the `@font-face` rules), `admin_tokens_css_url` (the same, with the platform default colours when the theme fails the contrast rules: for admin, sign-in, superadmin and privacy pages), `css_url` (the compiled CSS: only for the surfaces that take CSS), `logo_url`, `logo_png_url` (a PNG rendition, 512 px wide, for Discord and other places that take no SVG), `icon_urls`, `embed_color` (integer), `layouts`, `templates` (name, widget type and the parsed template), `embeds` (name and frame address) and `theming_version`. Readable by whoever the event's info-page mode lets in ([tenants.md](tenants.md#info-page-mode)) and by the event's paired screens. Without a published theme it answers the platform defaults with the profile's `theme` applied, and `revision: 0`.
 
 ## Rights
 `theming.theme.write` (draft, preview, publish, restore, history, export), `theming.embeds.write` (add, change or remove an embed, also through a package upload, a sync or a restore that changes embeds), `theming.sync.write` (git sync settings and credential). Event admins hold all three through their role. Cloning needs the event-admin role itself.
@@ -204,7 +205,7 @@ Consumers read the rest through `GET /api/theming/current`.
 
 ## The test
 - **Screenshots:** CI's demo-stack job ([docs/ci.md](../docs/ci.md)) publishes each package in [events/demo/themes/](../events/demo/themes/) on the demo tenant and screenshots, per theme, each of its layouts on the screen, the hub home, a public info page and an admin page, named `theming-<theme>-<surface>[-<layout>].png`. These screenshots are the theming contract's test: a change to the stable classes, the tokens, `ui.css` or a module's markup shows in the PR's screenshots (the `demo-screenshots` artifact), where the reviewer sees it. Each surface's module adds its screenshots when it is built.
-- **Static:** `scripts/check-contracts` validates every demo `theme.yaml` against [theme.schema.json](theme.schema.json) and checks the files it names exist.
+- **Static:** `scripts/check-contracts` validates every demo `theme.yaml` against [theme.schema.json](theme.schema.json), then `scripts/check-theme-refs` checks what the schema cannot: the files it names exist, ids are unique, areas fit their grid, references resolve, font tokens name package fonts or generic families, and the mode matches the content.
 - **Contract API tests** (once the module exists) cover the problem codes, the headers and CSP of every path above, the draft and preview rights, and cross-tenant leaks of drafts, files and revisions ([0013](../docs/decisions/0013-multi-tenant-core.md) item 8).
 
 ## Not in this contract
