@@ -10,6 +10,7 @@ import re
 from collections.abc import AsyncIterator, Mapping
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import Any, Protocol
+from weakref import WeakSet
 
 from .tenant import require_tenant, tenant_scope
 
@@ -58,6 +59,10 @@ def rls_sql(table: str) -> str:
     )
 
 
+_open_transactions: WeakSet[Any] = WeakSet()
+"""Connections inside a tenant transaction now."""
+
+
 @asynccontextmanager
 async def tenant_transaction[C: SqlConnection](
     conn: C, tenant: str | None = None
@@ -68,10 +73,18 @@ async def tenant_transaction[C: SqlConnection](
     connection, so a pooled connection cannot carry a tenant into the next request.
     """
     tenant = require_tenant() if tenant is None else tenant
-    with tenant_scope(tenant):
-        async with conn.transaction():
-            await conn.execute(f"SELECT set_config('{TENANT_SETTING}', $1, true)", tenant)
-            yield conn
+    # A nested transaction is a savepoint, and set_config inside it outlives the savepoint until
+    # the outer transaction ends: the outer block would run as the inner tenant. Refuse instead.
+    if conn in _open_transactions:
+        raise RuntimeError("a tenant transaction is already open on this connection")
+    _open_transactions.add(conn)
+    try:
+        with tenant_scope(tenant):
+            async with conn.transaction():
+                await conn.execute(f"SELECT set_config('{TENANT_SETTING}', $1, true)", tenant)
+                yield conn
+    finally:
+        _open_transactions.discard(conn)
 
 
 class RlsBypassed(RuntimeError):

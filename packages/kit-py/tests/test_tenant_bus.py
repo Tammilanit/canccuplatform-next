@@ -240,3 +240,35 @@ async def test_skips_the_rest_of_a_batch_of_a_tenant_deleted_in_it() -> None:
         assert len(seen) == 1
     finally:
         await sub.close()
+
+
+async def test_keeps_an_event_arriving_while_another_streams_handler_runs() -> None:
+    store = MemoryStreamStore()
+
+    def seed(tenant: str) -> None:
+        event = tenant_event(tenant, "pizza.order.placed")
+        store.append_raw(tenant_stream("pizza", tenant), {"event": event.to_json()})
+
+    seed("acme")
+    seed("beta")
+    seen: list[str | None] = []
+
+    async def handler(event: Event) -> None:
+        seen.append(event.tenant)
+        # While acme's handler runs, beta publishes; that event must not be skipped.
+        if event.tenant == "acme":
+            seed("beta")
+            await asyncio.sleep(0.03)
+
+    sub = Bus(store, "screen").subscribe_tenants(["pizza"], handler, block_ms=20)
+    try:
+        await asyncio.sleep(0.03)
+        seed("acme")
+        for _ in range(100):
+            if len(seen) >= 2:
+                break
+            await asyncio.sleep(0.02)
+        await asyncio.sleep(0.06)
+        assert seen == ["acme", "beta"]
+    finally:
+        await sub.close()

@@ -51,7 +51,10 @@ function blockList(cidrs: readonly string[]): BlockList {
     const family = isIP(address);
     if (family === 0) continue;
     const type = family === 4 ? "ipv4" : "ipv6";
-    const prefix = bits === undefined ? (family === 4 ? 32 : 128) : Number(bits);
+    const max = family === 4 ? 32 : 128;
+    // Number("") is 0, a /0 that matches every address: accept plain digits in range only.
+    if (bits !== undefined && !(/^\d{1,3}$/.test(bits) && Number(bits) <= max)) continue;
+    const prefix = bits === undefined ? max : Number(bits);
     // A malformed prefix is skipped, so it can only narrow access, never widen it.
     try {
       list.addSubnet(address, prefix, type);

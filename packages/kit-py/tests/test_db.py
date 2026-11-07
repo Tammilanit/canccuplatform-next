@@ -129,3 +129,17 @@ async def test_check_app_role_refuses_a_superuser_or_a_bypassrls_role() -> None:
     conn.row = None
     with pytest.raises(RlsBypassed):
         await check_app_role(conn)
+
+
+async def test_refuses_a_tenant_transaction_nested_on_the_same_connection() -> None:
+    conn = FakeConnection()
+    with pytest.raises(RuntimeError, match="already"):
+        async with tenant_transaction(conn, "acme"), tenant_transaction(conn, "beta"):
+            pass
+    assert [q for q, _ in conn.calls] == [
+        "BEGIN",
+        "SELECT set_config('canccu.tenant', $1, true)",
+        "ROLLBACK",
+    ]
+    async with tenant_transaction(conn, "acme"):
+        pass

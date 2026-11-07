@@ -175,6 +175,8 @@ describe.skipIf(!url)("ValkeyStreamStore against a real Valkey", () => {
       bus.publish(`${source}.thing.happened`, { n: 1 }, { version: 1 }),
     );
     expect(await store.scan(`t:*:events:${source}`)).toEqual([tenantStream(source, "it-a")]);
+    expect(await store.lastEntryId(tenantStream(source, "it-a"))).toMatch(/^\d+-\d+$/);
+    expect(await store.lastEntryId(tenantStream(source, "it-b"))).toBe("0-0");
 
     const received: [string | undefined, Event][] = [];
     const reader = ValkeyStreamStore.fromUrl(url ?? "");

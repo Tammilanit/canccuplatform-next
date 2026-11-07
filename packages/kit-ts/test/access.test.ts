@@ -38,6 +38,11 @@ describe("ipInCidrs", () => {
     expect(ipInCidrs(undefined, cidrs)).toBe(false);
     expect(ipInCidrs("not-an-ip", cidrs)).toBe(false);
     expect(ipInCidrs(VENUE_V4, ["garbage", "192.0.2.0/99"])).toBe(false);
+    // An empty or odd prefix must never widen to /0.
+    for (const odd of ["10.0.0.0/", "10.0.0.0/0x0", "10.0.0.0/ 8", "10.0.0.0/8.0", "2001:db8::/"]) {
+      expect(ipInCidrs("8.8.8.8", [odd])).toBe(false);
+      expect(ipInCidrs("2001:4860::8888", [odd])).toBe(false);
+    }
     expect(ipInCidrs(VENUE_V4, [])).toBe(false);
   });
 });

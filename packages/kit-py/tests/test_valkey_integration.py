@@ -173,6 +173,8 @@ async def test_scan_finds_tenant_streams_and_each_tenant_is_read_in_its_own_cont
     with tenant_scope("it-a"):
         await bus.publish(f"{source}.thing.happened", {"n": 1}, version=1)
     assert await vk.store.scan(f"t:*:events:{source}") == [tenant_stream(source, "it-a")]
+    assert re.fullmatch(r"\d+-\d+", await vk.store.last_entry_id(tenant_stream(source, "it-a")))
+    assert await vk.store.last_entry_id(tenant_stream(source, "it-b")) == "0-0"
 
     received: list[tuple[str | None, Event]] = []
     arrived = asyncio.Event()

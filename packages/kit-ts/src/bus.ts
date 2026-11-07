@@ -214,6 +214,17 @@ export class Subscription {
     return false;
   }
 
+  /**
+   * Replace `$` with the stream's newest id. XREAD moves only the positions of streams that
+   * returned entries, so a stream left at `$` would mean "from now" again on every read and lose
+   * whatever arrived while a handler of another stream ran.
+   */
+  private async anchorNewStreams(): Promise<void> {
+    for (const [stream, id] of Object.entries(this.positions)) {
+      if (id === "$") this.positions[stream] = await this.store.lastEntryId(stream);
+    }
+  }
+
   /** Called before every read. */
   protected async beforeRead(): Promise<void> {}
 
@@ -228,6 +239,7 @@ export class Subscription {
       let batches;
       try {
         await this.beforeRead();
+        await this.anchorNewStreams();
         batches = await this.store.xread(this.positions, { blockMs: this.blockMs, count: 100 });
         backoff = 500;
       } catch (err) {

@@ -39,10 +39,13 @@ export function rlsSql(table: string): string {
   ].join("\n");
 }
 
+/** Connections inside a tenant transaction now. */
+const openTransactions = new WeakSet<SqlClient>();
+
 /**
- * Run `fn` in one transaction for one tenant. The setting is transaction-local (set_config's third
- * argument is SET LOCAL), never per connection, so a pooled connection cannot carry a tenant into
- * the next request.
+ * Run `fn` in one transaction for one tenant, on one checked-out connection (a `pg` PoolClient or
+ * Client, never a Pool). The setting is transaction-local (set_config's third argument is SET
+ * LOCAL), never per connection, so a pooled connection cannot carry a tenant into the next request.
  */
 export async function tenantTransaction<C extends SqlClient, T>(
   client: C,
@@ -50,18 +53,32 @@ export async function tenantTransaction<C extends SqlClient, T>(
   options: { tenant?: string } = {},
 ): Promise<T> {
   const tenant = options.tenant ?? requireTenant();
-  return withTenant(tenant, async () => {
-    await client.query("BEGIN");
-    try {
-      await client.query(`SELECT set_config('${TENANT_SETTING}', $1, true)`, [tenant]);
-      const result = await fn(client);
-      await client.query("COMMIT");
-      return result;
-    } catch (err) {
-      await client.query("ROLLBACK");
-      throw err;
-    }
-  });
+  // A pool may run BEGIN, set_config and the work on different connections.
+  if ("totalCount" in client) throw new TypeError("tenantTransaction needs a client, not a pool");
+  // A nested BEGIN would commit the outer transaction early, and the inner tenant setting would
+  // outlive the inner call: refuse instead.
+  if (openTransactions.has(client)) {
+    throw new Error("a tenant transaction is already open on this connection");
+  }
+  openTransactions.add(client);
+  try {
+    return await withTenant(tenant, async () => {
+      await client.query("BEGIN");
+      try {
+        await client.query(`SELECT set_config('${TENANT_SETTING}', $1, true)`, [tenant]);
+        const result = await fn(client);
+        await client.query("COMMIT");
+        return result;
+      } catch (err) {
+        // The work's error is the one to report; a failed ROLLBACK (e.g. a lost connection)
+        // leaves nothing committed either.
+        await client.query("ROLLBACK").catch(() => undefined);
+        throw err;
+      }
+    });
+  } finally {
+    openTransactions.delete(client);
+  }
 }
 
 export class RlsBypassed extends Error {

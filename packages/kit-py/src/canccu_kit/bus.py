@@ -243,11 +243,23 @@ class Subscription:
         """Hand one parsed, new event to the handler."""
         await self._handler(event)
 
+    async def _anchor_new_streams(self) -> None:
+        """Replace `$` with the stream's newest id.
+
+        XREAD moves only the positions of streams that returned entries, so a stream left at `$`
+        would mean "from now" again on every read and lose whatever arrived while a handler of
+        another stream ran.
+        """
+        for stream, entry_id in list(self._positions.items()):
+            if entry_id == "$":
+                self._positions[stream] = await self._store.last_entry_id(stream)
+
     async def _run(self) -> None:
         backoff = 0.5
         while True:
             try:
                 await self._before_read()
+                await self._anchor_new_streams()
                 batches = await self._store.xread(
                     self._positions, block_ms=self._block_ms, count=100
                 )

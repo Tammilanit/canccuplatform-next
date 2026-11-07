@@ -182,3 +182,34 @@ describe("subscribeTenants", () => {
     await sub.close();
   });
 });
+
+describe("positions while a handler runs", () => {
+  it("delivers an event on one tenant's stream that arrives while another's handler runs", async () => {
+    const store = new MemoryStreamStore();
+    const seed = (tenant: string) =>
+      store.appendRaw(tenantStream("pizza", tenant), {
+        event: JSON.stringify(tenantEvent(tenant, "pizza.order.placed")),
+      });
+    seed("acme");
+    seed("beta");
+    const seen: (string | undefined)[] = [];
+    const sub = new Bus(store, "screen").subscribeTenants(
+      ["pizza"],
+      async (event) => {
+        seen.push(event.tenant);
+        // While acme's handler runs, beta publishes; that event must not be skipped.
+        if (event.tenant === "acme") {
+          seed("beta");
+          await new Promise((r) => setTimeout(r, 30));
+        }
+      },
+      { blockMs: 20 },
+    );
+    await new Promise((r) => setTimeout(r, 30));
+    seed("acme");
+    await until(() => seen.length === 2);
+    await new Promise((r) => setTimeout(r, 60));
+    expect(seen).toEqual(["acme", "beta"]);
+    await sub.close();
+  });
+});

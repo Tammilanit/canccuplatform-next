@@ -76,6 +76,9 @@ class MemoryStreamStore:
             return []
         return collect()
 
+    async def last_entry_id(self, stream: str) -> str:
+        return self._last_id(stream)
+
     async def scan(self, pattern: str) -> list[str]:
         return [s for s in self.streams if fnmatch.fnmatchcase(s, pattern)]
 

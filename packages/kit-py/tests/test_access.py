@@ -44,6 +44,10 @@ def test_ip_in_cidrs_fails_closed_and_skips_malformed_prefixes() -> None:
     assert not ip_in_cidrs(None, CIDRS)
     assert not ip_in_cidrs("not-an-ip", CIDRS)
     assert not ip_in_cidrs(VENUE_V4, ["garbage", "192.0.2.0/99"])
+    # An empty or odd prefix must never widen to /0.
+    for odd in ["10.0.0.0/", "10.0.0.0/0x0", "10.0.0.0/ 8", "10.0.0.0/8.0", "2001:db8::/"]:
+        assert not ip_in_cidrs("8.8.8.8", [odd])
+        assert not ip_in_cidrs("2001:4860::8888", [odd])
     assert not ip_in_cidrs(VENUE_V4, [])
 
 

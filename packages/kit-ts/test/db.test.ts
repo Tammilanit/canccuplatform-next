@@ -105,3 +105,41 @@ describe("checkAppRole", () => {
     await expect(checkAppRole(client)).rejects.toThrow(/bypasses/);
   });
 });
+
+describe("tenantTransaction safety", () => {
+  it("refuses a tenant transaction nested on the same connection", async () => {
+    const client = new FakeClient();
+    await expect(
+      tenantTransaction(
+        client,
+        (c) => tenantTransaction(c, () => Promise.resolve(), { tenant: "beta" }),
+        { tenant: "acme" },
+      ),
+    ).rejects.toThrow(/already/);
+    expect(client.calls.map(([t]) => t)).toEqual([
+      "BEGIN",
+      "SELECT set_config('canccu.tenant', $1, true)",
+      "ROLLBACK",
+    ]);
+    await tenantTransaction(client, () => Promise.resolve(), { tenant: "acme" });
+  });
+
+  it("refuses a pool, whose queries could each run on another connection", async () => {
+    const pool = Object.assign(new FakeClient(), { totalCount: 0, idleCount: 0 });
+    await expect(
+      tenantTransaction(pool, () => Promise.resolve(), { tenant: "acme" }),
+    ).rejects.toThrow(/pool/);
+    expect(pool.calls).toEqual([]);
+  });
+
+  it("rethrows the work's error even when ROLLBACK fails too", async () => {
+    const client = new FakeClient();
+    client.failOn = "INSERT";
+    const original = client.query.bind(client);
+    client.query = (text, values) =>
+      text === "ROLLBACK" ? Promise.reject(new Error("connection lost")) : original(text, values);
+    await expect(
+      tenantTransaction(client, (c) => c.query("INSERT x"), { tenant: "demo" }),
+    ).rejects.toThrow("boom");
+  });
+});

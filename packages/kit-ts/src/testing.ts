@@ -72,6 +72,10 @@ export class MemoryStreamStore implements StreamStore {
     return collect();
   }
 
+  lastEntryId(stream: string): Promise<string> {
+    return Promise.resolve(this.lastId(stream));
+  }
+
   scan(pattern: string): Promise<string[]> {
     const re = new RegExp(
       `^${pattern
