@@ -1,4 +1,4 @@
-"""Starlette (and FastAPI) adapter: /health route, rights check, error body, correlation id.
+"""Starlette (and FastAPI) adapter: /health, rights check, error body, correlation id, tenancy.
 
 Install with the extra: `canccu-kit[starlette]`.
 """
@@ -8,10 +8,11 @@ from __future__ import annotations
 import functools
 import logging
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import Any, Literal
 
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
+from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
@@ -20,7 +21,9 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from .context import CORRELATION_HEADER, correlation
 from .errors import KitError, code_for_status, error_body, internal_error_body
 from .health import Health
+from .resolve import TenantResolver, UnknownHost
 from .rights import RightsChecker, Session
+from .tenant import tenant_scope
 
 log = logging.getLogger("canccu.kit.http")
 
@@ -116,3 +119,67 @@ def install(app: Starlette, health: Health | None = None) -> None:
     app.add_middleware(CorrelationMiddleware)
     if health is not None:
         app.router.routes.append(health_route(health))
+
+
+def is_health_request(method: str, path: str) -> bool:
+    """`GET /health` stays outside tenant resolution (0013 item 2)."""
+    return method in ("GET", "HEAD") and path == "/health"
+
+
+class TenancyMiddleware:
+    """Resolves each request's tenant from its Host header (Caddy forwards it unchanged).
+
+    The rest of the request runs inside tenant_scope, with the TenantContext on
+    `request.state.tenant` (None on /health and on a served platform hostname). Errors are
+    answered here: a middleware's exceptions never reach the app's exception handlers.
+    """
+
+    def __init__(
+        self,
+        app: ASGIApp,
+        resolver: TenantResolver,
+        platform_hosts: Literal["serve", "refuse"] = "refuse",
+    ) -> None:
+        self.app = app
+        self.resolver = resolver
+        self.platform_hosts = platform_hosts
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        state = scope.setdefault("state", {})
+        state["tenant"] = None
+        if is_health_request(scope["method"], scope["path"]):
+            await self.app(scope, receive, send)
+            return
+        host = dict(scope["headers"]).get(b"host", b"").decode("latin-1")
+        try:
+            resolution = await self.resolver.resolve(host)
+            if resolution.kind == "platform" and self.platform_hosts != "serve":
+                raise UnknownHost()
+        except KitError as exc:
+            await JSONResponse(exc.to_body(), status_code=exc.status)(scope, receive, send)
+            return
+        if resolution.context is None:
+            await self.app(scope, receive, send)
+            return
+        state["tenant"] = resolution.context
+        with tenant_scope(resolution.context["tenant_id"]):
+            await self.app(scope, receive, send)
+
+
+def install_tenancy(
+    app: Starlette,
+    resolver: TenantResolver,
+    platform_hosts: Literal["serve", "refuse"] = "refuse",
+) -> None:
+    """Resolve every request's tenant; `serve` only in a module that answers on the sign-in or
+    superadmin hostname."""
+    if app.middleware_stack is not None:
+        raise RuntimeError("Cannot add middleware after an application has started")
+    # Innermost of the user middleware, whatever the call order with install(): the correlation
+    # id then covers tenancy errors, and no other middleware runs on a request with no tenant.
+    app.user_middleware.append(
+        Middleware(TenancyMiddleware, resolver=resolver, platform_hosts=platform_hosts)
+    )

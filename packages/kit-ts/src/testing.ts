@@ -1,5 +1,8 @@
-/** Test helpers for modules that use the kit: an in-memory StreamStore. */
+/** Test helpers for modules that use the kit: an in-memory StreamStore and leak tests. */
+import type { Event, Handler } from "./bus.js";
+import { newId } from "./context.js";
 import type { StreamEntries, StreamEntry, StreamStore } from "./store.js";
+import { withTenant } from "./tenant.js";
 
 export interface XAddCall {
   stream: string;
@@ -69,6 +72,20 @@ export class MemoryStreamStore implements StreamStore {
     return collect();
   }
 
+  lastEntryId(stream: string): Promise<string> {
+    return Promise.resolve(this.lastId(stream));
+  }
+
+  scan(pattern: string): Promise<string[]> {
+    const re = new RegExp(
+      `^${pattern
+        .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+        .replaceAll("*", ".*")
+        .replaceAll("?", ".")}$`,
+    );
+    return Promise.resolve([...this.streams.keys()].filter((s) => re.test(s)));
+  }
+
   ping(): Promise<void> {
     return this.healthy ? Promise.resolve() : Promise.reject(new Error("valkey unreachable"));
   }
@@ -76,4 +93,70 @@ export class MemoryStreamStore implements StreamStore {
   close(): Promise<void> {
     return Promise.resolve();
   }
+}
+
+/** A valid tenant event envelope, as another module would publish it. */
+export function tenantEvent(
+  tenant: string,
+  type: string,
+  data: Record<string, unknown> = {},
+): Event {
+  return {
+    id: newId(),
+    type,
+    version: 1,
+    time: new Date().toISOString(),
+    source: type.split(".")[0] ?? "",
+    tenant,
+    data,
+  };
+}
+
+/** One tenant's data reached another (0013 item 8). */
+export class TenantLeak extends Error {
+  override name = "TenantLeak";
+}
+
+export interface IsolationProbe {
+  /** Store data containing `marker` for `tenant`, the way a user or another module would. */
+  seed(tenant: string, marker: string): Promise<void>;
+  /** Read as `tenant`, the way a user or consumer would: a response body, rows, a file list. */
+  read(tenant: string): Promise<unknown>;
+}
+
+function asText(value: unknown): string {
+  if (typeof value === "string") return value;
+  return value === undefined ? "" : JSON.stringify(value);
+}
+
+/**
+ * The cross-tenant leak test for one endpoint or consumer: each tenant must read back its own
+ * marker and never the other's. Seed and read run inside withTenant; an HTTP probe also sends the
+ * tenant's hostname. A read that does not even return its own marker fails too, so a probe that
+ * reads the wrong thing cannot pass.
+ */
+export async function assertTenantIsolation(
+  probe: IsolationProbe,
+  tenants: [string, string] = ["leak-a", "leak-b"],
+): Promise<void> {
+  const markers = new Map(tenants.map((t) => [t, `leak-marker-${t}-${newId()}`]));
+  for (const [tenant, marker] of markers)
+    await withTenant(tenant, () => probe.seed(tenant, marker));
+  for (const tenant of tenants) {
+    const text = asText(await withTenant(tenant, () => probe.read(tenant)));
+    if (!text.includes(markers.get(tenant) ?? "")) {
+      throw new Error(`${tenant} did not read back its own data, so the leak test proves nothing`);
+    }
+    for (const [other, marker] of markers) {
+      if (other !== tenant && text.includes(marker)) {
+        throw new TenantLeak(`${tenant} can read data of ${other}`);
+      }
+    }
+  }
+}
+
+/** Run a consumer's handler the way the bus does: inside the event's tenant. */
+export async function deliverAs(handler: Handler, event: Event): Promise<void> {
+  if (event.tenant === undefined) throw new RangeError("a tenant event needs a tenant");
+  await withTenant(event.tenant, () => handler(event));
 }

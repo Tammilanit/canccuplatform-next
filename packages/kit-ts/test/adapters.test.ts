@@ -33,7 +33,7 @@ describe("fastify adapter", () => {
       "/edit",
       { preHandler: requireRight(checker, "screen.slides.edit") },
       async (request) => {
-        await bus.publish("screen.slide.changed", {}, { version: 1 });
+        await bus.publish("screen.slide.changed", {}, { version: 1, platform: true });
         return { user: request.session?.userId };
       },
     );
@@ -105,7 +105,7 @@ describe("web adapter", () => {
   const bus = new Bus(store, "screen");
   const checker = new RightsChecker(admin.client());
   const edit = withRight(checker, "screen.slides.edit", async (_req, session) => {
-    await bus.publish("screen.slide.changed", {}, { version: 1 });
+    await bus.publish("screen.slide.changed", {}, { version: 1, platform: true });
     return Response.json({ user: session.userId });
   });
   const handle = withKit(async (req) => {

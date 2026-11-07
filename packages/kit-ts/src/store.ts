@@ -14,6 +14,10 @@ export interface StreamStore {
     streams: Record<string, string>,
     options: { blockMs: number; count: number },
   ): Promise<StreamEntries>;
+  /** The id of a stream's newest entry, or `0-0` when the stream is empty or missing. */
+  lastEntryId(stream: string): Promise<string>;
+  /** Names of the streams matching a glob pattern, e.g. `t:*:events:pizza`. */
+  scan(pattern: string): Promise<string[]>;
   ping(): Promise<void>;
   close(): Promise<void>;
 }
@@ -67,6 +71,34 @@ export class ValkeyStreamStore implements StreamStore {
         ([id, flat]): StreamEntry => [String(id), toFields(flat)],
       ),
     ]);
+  }
+
+  async lastEntryId(stream: string): Promise<string> {
+    const newest = (await this.client.call("XREVRANGE", stream, "+", "-", "COUNT", "1")) as [
+      unknown,
+      unknown,
+    ][];
+    return newest[0] === undefined ? "0-0" : String(newest[0][0]);
+  }
+
+  async scan(pattern: string): Promise<string[]> {
+    const found = new Set<string>();
+    let cursor = "0";
+    do {
+      const [next, keys] = (await this.client.call(
+        "SCAN",
+        cursor,
+        "MATCH",
+        pattern,
+        "COUNT",
+        "1000",
+        "TYPE",
+        "stream",
+      )) as [unknown, unknown[]];
+      cursor = String(next);
+      for (const key of keys) found.add(String(key));
+    } while (cursor !== "0");
+    return [...found];
   }
 
   async ping(): Promise<void> {

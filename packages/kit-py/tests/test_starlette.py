@@ -28,7 +28,7 @@ def build(admin: FakeAdmin, store: MemoryStreamStore) -> Starlette:
 
     @require_right(checker, "screen.slides.edit")
     async def edit(request: Request) -> Response:
-        await bus.publish("screen.slide.changed", {}, version=1)
+        await bus.publish("screen.slide.changed", {}, version=1, platform=True)
         return JSONResponse({"user": request.state.session.user_id})
 
     async def crash(request: Request) -> Response:

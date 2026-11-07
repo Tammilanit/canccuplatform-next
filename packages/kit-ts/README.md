@@ -1,6 +1,6 @@
 # @canccu/kit (TypeScript)
 
-Shared plumbing for platform modules, following [contracts/admin.md](../../contracts/admin.md): event bus, `/health`, settings client, rights check, error body and JSON logging. The core has no web framework. Two small adapters connect it to one: `@canccu/kit/fastify` and `@canccu/kit/web` (Web `Request` → `Response`: Hono and any fetch-style server).
+Shared plumbing for platform modules, following [contracts/admin.md](../../contracts/admin.md) and [contracts/tenants.md](../../contracts/tenants.md): event bus, `/health`, settings client, rights check, error body, JSON logging and tenancy. The core has no web framework. Two small adapters connect it to one: `@canccu/kit/fastify` and `@canccu/kit/web` (Web `Request` → `Response`: Hono and any fetch-style server).
 
 ## Install (from a module)
 
@@ -34,8 +34,8 @@ const store = ValkeyStreamStore.fromUrl(config.valkeyUrl);
 const bus = new Bus(store, config.module, log);
 const admin = new AdminClient(config.adminUrl);
 
-// Bus: publish to events:<module> (trimmed to ~10000 entries), subscribe to other modules' streams
-await bus.publish("screen.slide.shown", { slide: 3 }, { version: 1 });
+// Bus: publish a tenant event to t:<tenant>:events:<module> (trimmed to ~10000 entries)
+await withTenant("demo", () => bus.publish("screen.slide.shown", { slide: 3 }, { version: 1 }));
 
 // Settings: read once at start, then follow admin.settings.changed (never poll)
 const settings = new SettingsClient(admin, config.module);
@@ -89,9 +89,58 @@ Throw `new KitError("text", { status: 400, code: "slide_invalid" })` (or `Missin
 
 `SettingsClient.write` throws `VersionConflict` (409): read again and retry. An admin that can't be reached gives `AdminUnavailable` (503 `admin_unavailable`).
 
+## Tenancy
+
+Every event is a tenant on one shared stack ([0013](../../docs/decisions/0013-multi-tenant-core.md), [contracts/tenants.md](../../contracts/tenants.md)). The kit makes a module tenant-safe by construction: everything that stores or reads data needs a tenant, and it comes only from the request's hostname or the bus message.
+
+```ts
+import {
+  TenantResolver,
+  tenantTransaction,
+  tenantKey,
+  tenantFile,
+  checkInfoAccess,
+} from "@canccu/kit";
+import { installTenancy } from "@canccu/kit/fastify";
+
+const tenants = new TenantResolver({
+  tenantsUrl: process.env.CANCCU_TENANTS_URL ?? "",
+  platformHosts: [
+    process.env.CANCCU_SIGNIN_HOSTNAME,
+    process.env.CANCCU_SUPERADMIN_HOSTNAME,
+  ].filter((h): h is string => !!h),
+});
+install(app, { health });
+installTenancy(app, tenants); // request.tenant + withTenant for the whole request; /health is exempt
+
+app.get("/menu", async (request) => {
+  checkInfoAccess(request.tenant!, { clientIp: request.ip, viewer: "guest" }); // 403 info_pages_closed
+  const client = await pool.connect();
+  try {
+    return await tenantTransaction(client, (c) => c.query("SELECT * FROM pizza_menu")); // RLS sees only this tenant
+  } finally {
+    client.release();
+  }
+});
+
+// Consumers: every tenant's t:<tenant>:events:pizza, new tenants without a restart; handler runs in event.tenant
+bus.subscribeTenants(["pizza"], async (event) => {
+  /* currentTenant() === event.tenant */
+});
+bus.subscribe(["tenants"], (event) => tenants.handleEvent(event)); // drop the resolver cache on tenants events
+```
+
+- **Context:** `withTenant(id, fn)`, `currentTenant()`, `requireTenant()` (throws `NoTenant`, a bug, never a user error).
+- **Postgres:** `tenantTransaction` sets the tenant with `set_config('canccu.tenant', id, true)` (SET LOCAL) inside one transaction, never per connection. Migrations write `TENANT_COLUMN_SQL` (the column defaults to the setting) and `rlsSql(table)` (RLS enabled, forced, and the policy); with no tenant set a query sees nothing and an insert fails. `checkAppRole(client)` refuses to start as a superuser or BYPASSRLS role, which RLS does not bind. `scripts/check-tenancy` lints the migrations ([docs/ci.md](../../docs/ci.md#tenancy)).
+- **Names:** `tenantStream(module)` → `t:<tenant>:events:<module>`, `platformStream(module)` → `events:<module>`, `tenantKey(module, …parts)` → `t:<tenant>:<module>:…`, `tenantFile(module, path)` → `/files/<tenant>/<module>/<path>` (refuses `..`), `platformFilesDir(module)` → `/files/_platform/<module>/`. Modules spell no raw keys.
+- **Bus:** `publish` uses the current tenant (or `{ tenant }`); without one it throws `NoTenant`. Platform events need `{ platform: true }`, and only a module whose contract says so emits them. A consumer drops a message whose `tenant` does not match its stream.
+- **Resolution:** `TenantResolver` asks `GET /internal/tenants/resolve?host=` and caches the answer, for at most 10,000 hosts, for 30 s or until a tenants event (any tenants event also drops cached unknown hosts). An unknown host is 404 `not_found` with no detail; the platform's own hostnames return `{ kind: "platform" }` (adapters answer 404 unless `platformHosts: "serve"`). The IP-mode demo stack (`ipMode`) serves only the `demo` tenant, only on an IP literal and only while the version is `dev`. Env: `CANCCU_TENANTS_URL`, `CANCCU_SIGNIN_HOSTNAME`, `CANCCU_SUPERADMIN_HOSTNAME`.
+- **Access:** `checkScreenAccess` (device token **and** the venue address, unless the emergency switch is off until `disabled_until`; 401 `device_token_invalid`, 403 `venue_ip_mismatch`), `newDeviceToken`, `hashDeviceToken` and `deviceTokenMatches` (store only the hash), `checkInfoAccess` (the info-page mode), `checkAdminAccess` (`admin_access`: venue or Tailscale, `CANCCU_TAILSCALE_CIDRS`). `clientIp` is the address Caddy forwards (Fastify `trustProxy` set to Caddy only).
+- **Leak tests** (`@canccu/kit/testing`): `assertTenantIsolation({ seed, read })` seeds a marker per tenant and fails with `TenantLeak` if one tenant reads the other's, or if a tenant cannot read its own (the test would prove nothing). For a consumer, seed with `deliverAs(handler, tenantEvent(tenant, type, data))`.
+
 ## No state
 
-The kit writes nothing to disk. Its only in-memory items are the rights cache (≤ 30 s per session), the current settings and the bus's dedupe list of recent event ids. Sessions live in admin (Postgres) and events in Valkey.
+The kit writes nothing to disk. Its only in-memory items are the rights cache (≤ 30 s per session), the current settings, the tenant resolver's cache (≤ 30 s per host) and the bus's dedupe list of recent event ids and stream positions. Sessions live in admin (Postgres) and events in Valkey.
 
 ## Tests for modules
 
@@ -107,12 +156,14 @@ CI runs the same commands (job `lint-types-test (kit-ts)`).
 
 ## Integration test
 
-The store and bus run against the real Valkey from the Compose stack: publish with MAXLEN (exact and `~`), subscribe, and dedupe of an entry added twice. The test is skipped unless `CANCCU_VALKEY_URL` is set, so the check above stays offline.
+The store and bus run against the real Valkey from the Compose stack: publish with MAXLEN (exact and `~`), subscribe, dedupe of an entry added twice, and tenant streams found by `scan` and read per tenant. Row-level security runs against the real Postgres, as a plain app role the test creates (a superuser bypasses RLS). Each test is skipped unless `CANCCU_VALKEY_URL` or `CANCCU_DATABASE_URL` is set, so the check above stays offline.
 
 ```sh
-docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml up -d --wait valkey
-CANCCU_VALKEY_URL=redis://127.0.0.1:6379 npx vitest run test/valkey.integration.test.ts
+docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml up -d --wait valkey postgres
+CANCCU_VALKEY_URL=redis://127.0.0.1:6379 \
+CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu \
+  npx vitest run test/valkey.integration.test.ts test/postgres.integration.test.ts
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml down
 ```
 
-`compose.test.yml` publishes Valkey on `127.0.0.1:6379` only. CI runs this as the `integration (kit)` job.
+`compose.test.yml` publishes Valkey and Postgres on `127.0.0.1` only. CI runs this as the `integration (kit)` job.

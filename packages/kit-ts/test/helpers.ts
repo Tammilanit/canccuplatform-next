@@ -1,4 +1,5 @@
 import { AdminClient } from "../src/index.js";
+import type { TenantContext } from "../src/index.js";
 
 export interface Recorded {
   method: string;
@@ -43,4 +44,22 @@ export function jsonResponse(status: number, body: unknown): Response {
 
 export function sessionBody(rights: string[], expiresAt = "2999-01-01T00:00:00Z"): unknown {
   return { user: { id: "u1", name: "Demo User" }, rights, expires_at: expiresAt };
+}
+
+/** A live demo tenant at a venue with one IPv4 and one IPv6 prefix; override any field. */
+export function tenantContext(overrides: Partial<TenantContext> = {}): TenantContext {
+  return {
+    tenant_id: "demo",
+    status: "live",
+    primary_hostname: "demo.example.org",
+    time_zone: "Europe/Berlin",
+    info_page_mode: "public",
+    membership: "open",
+    admin_access: "restricted",
+    venue: { id: "v1", name: "Demo Hall", addresses: ["192.0.2.0/24", "2001:db8:1::/48"] },
+    venue_ip_check: { enabled: true, disabled_until: null, reason: null },
+    flags_version: 0,
+    flags: {},
+    ...overrides,
+  };
 }

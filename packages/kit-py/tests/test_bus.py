@@ -17,7 +17,7 @@ TIME_RE = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$")
 
 async def test_publish_writes_envelope_to_module_stream(store: MemoryStreamStore) -> None:
     bus = Bus(store, "screen")
-    event = await bus.publish("screen.slide.shown", {"slide": 3}, version=1)
+    event = await bus.publish("screen.slide.shown", {"slide": 3}, version=1, platform=True)
 
     [call] = store.calls
     assert call.stream == "events:screen"
@@ -35,7 +35,7 @@ async def test_publish_writes_envelope_to_module_stream(store: MemoryStreamStore
 
 
 async def test_publish_trims_stream_with_approximate_maxlen(store: MemoryStreamStore) -> None:
-    await Bus(store, "screen").publish("screen.slide.shown", {}, version=1)
+    await Bus(store, "screen").publish("screen.slide.shown", {}, version=1, platform=True)
     [call] = store.calls
     assert STREAM_MAXLEN == 10000
     assert call.maxlen == 10000
@@ -54,20 +54,20 @@ async def test_publish_trims_stream_with_approximate_maxlen(store: MemoryStreamS
 )
 async def test_publish_refuses_bad_type(store: MemoryStreamStore, event_type: str) -> None:
     with pytest.raises(InvalidEventType):
-        await Bus(store, "screen").publish(event_type, {}, version=1)
+        await Bus(store, "screen").publish(event_type, {}, version=1, platform=True)
     assert store.calls == []
 
 
 async def test_publish_refuses_bad_version(store: MemoryStreamStore) -> None:
     with pytest.raises(ValueError):
-        await Bus(store, "screen").publish("screen.slide.shown", {}, version=0)
+        await Bus(store, "screen").publish("screen.slide.shown", {}, version=0, platform=True)
 
 
 async def test_publish_carries_correlation_id(store: MemoryStreamStore) -> None:
     bus = Bus(store, "screen")
     with correlation("req-1"):
-        await bus.publish("screen.slide.shown", {}, version=1)
-    await bus.publish("screen.slide.shown", {}, version=1, correlation_id="explicit")
+        await bus.publish("screen.slide.shown", {}, version=1, platform=True)
+    await bus.publish("screen.slide.shown", {}, version=1, platform=True, correlation_id="explicit")
     first, second = (json.loads(c.fields["event"]) for c in store.calls)
     assert first["correlation_id"] == "req-1"
     assert second["correlation_id"] == "explicit"
@@ -146,8 +146,12 @@ async def test_subscribe_dedupes_skips_invalid_and_passes_unknown_types(
 
 
 async def test_subscribe_reads_several_streams(store: MemoryStreamStore) -> None:
-    await Bus(store, "admin").publish("admin.settings.changed", {"module": "screen"}, version=1)
-    await Bus(store, "tournament").publish("tournament.match.finished", {}, version=1)
+    await Bus(store, "admin").publish(
+        "admin.settings.changed", {"module": "screen"}, version=1, platform=True
+    )
+    await Bus(store, "tournament").publish(
+        "tournament.match.finished", {}, version=1, platform=True
+    )
     received = await collect(store, ["admin", "tournament"], until=2)
     assert sorted(e.source for e in received) == ["admin", "tournament"]
 

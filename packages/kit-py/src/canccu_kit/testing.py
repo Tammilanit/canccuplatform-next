@@ -1,11 +1,18 @@
-"""Test helpers for modules that use the kit: an in-memory StreamStore."""
+"""Test helpers for modules that use the kit: an in-memory StreamStore and leak tests."""
 
 from __future__ import annotations
 
 import asyncio
+import fnmatch
+import json
 from dataclasses import dataclass, field
+from typing import Any, Protocol
 
+from .bus import Event, Handler
+from .context import new_id
+from .log import utc_now_iso
 from .store import StreamEntries
+from .tenant import tenant_scope
 
 
 @dataclass
@@ -69,6 +76,12 @@ class MemoryStreamStore:
             return []
         return collect()
 
+    async def last_entry_id(self, stream: str) -> str:
+        return self._last_id(stream)
+
+    async def scan(self, pattern: str) -> list[str]:
+        return [s for s in self.streams if fnmatch.fnmatchcase(s, pattern)]
+
     async def ping(self) -> bool:
         if not self.healthy:
             raise ConnectionError("valkey unreachable")
@@ -76,3 +89,69 @@ class MemoryStreamStore:
 
     async def close(self) -> None:
         return None
+
+
+def tenant_event(tenant: str, type: str, data: dict[str, Any] | None = None) -> Event:
+    """A valid tenant event envelope, as another module would publish it."""
+    return Event(
+        id=new_id(),
+        type=type,
+        version=1,
+        time=utc_now_iso(),
+        source=type.split(".")[0],
+        data={} if data is None else data,
+        tenant=tenant,
+    )
+
+
+class TenantLeak(AssertionError):
+    """One tenant's data reached another (0013 item 8)."""
+
+
+class IsolationProbe(Protocol):
+    async def seed(self, tenant: str, marker: str) -> None:
+        """Store data containing `marker` for `tenant`, the way a user or another module would."""
+        ...
+
+    async def read(self, tenant: str) -> object:
+        """Read as `tenant`, the way a user or consumer would: a body, rows, a file list."""
+        ...
+
+
+def _as_text(value: object) -> str:
+    if isinstance(value, str):
+        return value
+    return "" if value is None else json.dumps(value, default=str)
+
+
+async def assert_tenant_isolation(
+    probe: IsolationProbe, tenants: tuple[str, str] = ("leak-a", "leak-b")
+) -> None:
+    """The cross-tenant leak test for one endpoint or consumer.
+
+    Each tenant must read back its own marker and never the other's. Seed and read run inside
+    tenant_scope; an HTTP probe also sends the tenant's hostname. A read that does not even return
+    its own marker fails too, so a probe that reads the wrong thing cannot pass.
+    """
+    markers = {t: f"leak-marker-{t}-{new_id()}" for t in tenants}
+    for tenant, marker in markers.items():
+        with tenant_scope(tenant):
+            await probe.seed(tenant, marker)
+    for tenant in tenants:
+        with tenant_scope(tenant):
+            text = _as_text(await probe.read(tenant))
+        if markers[tenant] not in text:
+            raise AssertionError(
+                f"{tenant} did not read back its own data, so the leak test proves nothing"
+            )
+        for other, marker in markers.items():
+            if other != tenant and marker in text:
+                raise TenantLeak(f"{tenant} can read data of {other}")
+
+
+async def deliver_as(handler: Handler, event: Event) -> None:
+    """Run a consumer's handler the way the bus does: inside the event's tenant."""
+    if event.tenant is None:
+        raise ValueError("a tenant event needs a tenant")
+    with tenant_scope(event.tenant):
+        await handler(event)

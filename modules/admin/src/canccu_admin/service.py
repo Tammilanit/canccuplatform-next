@@ -92,6 +92,8 @@ class Service:
             "admin.settings.changed",
             {"module": module, "keys": keys, "settings_version": version, "actor_user_id": actor},
             version=1,
+            # Admin is still single-event; #56 makes these tenant events (contracts/events.md).
+            platform=True,
         )
         return {"module": module, "settings_version": version, "values": values}
 
@@ -119,6 +121,7 @@ class Service:
                 "actor_user_id": actor,
             },
             version=1,
+            platform=True,  # until #56, as above
         )
 
     async def save_profile(self, actor: str) -> dict[str, Any]:
