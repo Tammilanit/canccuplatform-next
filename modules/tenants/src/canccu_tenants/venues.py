@@ -11,11 +11,11 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from . import audit, model
+from . import audit, core, model
 from .current import body_of
 from .deps import deps
 from .model import bad_request, conflict, not_found
-from .venue_info import read_plan, write_file
+from .venue_info import read_plan
 
 
 async def _event(d: Any, venue_id: str, changed: list[str], deleted: bool = False) -> None:
@@ -167,7 +167,6 @@ async def put_venue_plan(request: Request) -> Response:
             venue_id,
             kind,
         )
-        write_file(d.files.venue_plan(venue_id), data)
         actor = await audit.user_actor(conn, session.user_id)
         await audit.append(
             conn,
@@ -177,6 +176,8 @@ async def put_venue_plan(request: Request) -> Response:
             {"type": "venue", "id": venue_id},
             {"fields": ["floor_plan"]},
         )
+    # After the commit: a rolled-back write leaves no file behind.
+    core.write_file(d.files.venue_plan(venue_id), data)
     await _event(d, venue_id, ["profile"])
     return JSONResponse(model.venue(row))
 

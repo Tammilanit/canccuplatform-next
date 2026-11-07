@@ -35,6 +35,8 @@ async def create_tenant(request: Request) -> Response:
     zone = model.check_time_zone(body.get("time_zone"))
     starts = model.parse_time(body.get("starts_at"), "starts_at")
     ends = model.parse_time(body.get("ends_at"), "ends_at")
+    if starts and ends and ends < starts:
+        raise bad_request("ends_at is before starts_at")
     venue_id = body.get("venue_id")
     series_id = body.get("series_id")
     for value, field in ((venue_id, "venue_id"), (series_id, "series_id")):
@@ -85,7 +87,7 @@ async def create_tenant(request: Request) -> Response:
                 tid, "tenants.admin.added", {"user_id": user_id, "actor_user_id": session.user_id}
             )
         if venue_id:
-            changed = await core.copy_venue_in(conn, tid, venue_id, d.files, actor)
+            changed = await core.copy_venue_in(conn, tid, venue_id, d.files, actor, outbox)
             outbox.tenant(
                 tid,
                 "tenants.venue_info.changed",

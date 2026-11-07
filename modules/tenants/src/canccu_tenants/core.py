@@ -4,14 +4,13 @@ are collected in `Outbox` and published only after the commit (plan D7)."""
 
 from __future__ import annotations
 
-import shutil
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from canccu_kit import Bus, TenantContext
+from canccu_kit import Bus, TenantContext, platform_files_dir, tenant_file, tenant_scope
 
 from . import audit, model
 from .model import bad_request, conflict, not_found
@@ -31,7 +30,19 @@ def now() -> datetime:
 
 @dataclass
 class Outbox:
+    """What a transaction does only once it has committed: file changes, then bus events. A
+    rolled-back write then leaves neither a file nor an event behind."""
+
     events: list[tuple[str, dict[str, Any], str | None]] = field(default_factory=list)
+    file_ops: list[Callable[[], None]] = field(default_factory=list)
+
+    def after_commit(self, op: Callable[[], None]) -> None:
+        self.file_ops.append(op)
+
+    def apply_files(self) -> None:
+        for op in self.file_ops:
+            op()
+        self.file_ops.clear()
 
     def tenant(self, tenant_id: str, type: str, data: dict[str, Any]) -> None:
         self.events.append((type, data, tenant_id))
@@ -40,6 +51,7 @@ class Outbox:
         self.events.append((type, data, None))
 
     async def publish(self, bus: Bus) -> None:
+        self.apply_files()
         for type, data, tenant_id in self.events:
             if tenant_id is None:
                 await bus.publish(type, data, version=1, platform=True)
@@ -54,10 +66,11 @@ class Files:
     root: str
 
     def venue_plan(self, venue_id: str) -> Path:
-        return Path(self.root, "_platform", "tenants", "venues", venue_id, "floor-plan")
+        return Path(platform_files_dir("tenants", self.root), "venues", venue_id, "floor-plan")
 
     def tenant_plan(self, tenant_id: str) -> Path:
-        return Path(self.root, tenant_id, "tenants", "venue-info", "floor-plan")
+        with tenant_scope(tenant_id):  # the kit builds the path for the current tenant only
+            return Path(tenant_file("tenants", "venue-info/floor-plan", self.root))
 
 
 async def tenant_row(conn: Any, tenant_id: str, *, lock: bool = False) -> Any:
@@ -99,8 +112,20 @@ def writable(row: Mapping[str, Any]) -> None:
         raise conflict("event_archived", "this event is archived and read-only")
 
 
+def write_file(path: Path, data: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_suffix(".tmp")
+    temp.write_bytes(data)
+    temp.replace(path)
+
+
 async def copy_venue_in(
-    conn: Any, tenant_id: str, venue_id: str | None, files: Files, actor: Mapping[str, Any]
+    conn: Any,
+    tenant_id: str,
+    venue_id: str | None,
+    files: Files,
+    actor: Mapping[str, Any],
+    outbox: Outbox,
 ) -> list[str]:
     """Copy-in, not a live link: the venue's profile replaces the event's venue info."""
     venue = None
@@ -125,12 +150,15 @@ async def copy_venue_in(
         plan_at,
     )
     target = files.tenant_plan(tenant_id)
-    target.unlink(missing_ok=True)
-    if venue_id is not None and plan_type is not None:
-        source = files.venue_plan(venue_id)
-        if source.exists():
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source, target)
+    source = files.venue_plan(venue_id) if venue_id is not None and plan_type else None
+
+    def swap_plan() -> None:
+        if source is not None and source.exists():
+            write_file(target, source.read_bytes())
+        else:
+            target.unlink(missing_ok=True)
+
+    outbox.after_commit(swap_plan)
     changed = ["house_rules", "wifi", "floor_plan"]
     await audit.append(
         conn,
@@ -226,7 +254,7 @@ async def patch_tenant(
         },
     )
     if "venue_id" in changed:
-        fields = await copy_venue_in(conn, tenant_id, changed["venue_id"], files, actor)
+        fields = await copy_venue_in(conn, tenant_id, changed["venue_id"], files, actor, outbox)
         outbox.tenant(
             tenant_id,
             "tenants.venue_info.changed",
@@ -247,6 +275,8 @@ async def change_status(
     outbox: Outbox,
 ) -> None:
     target = body.get("status")
+    if not isinstance(target, str):
+        raise bad_request("status must be a string")
     revision = model.check_revision(body)
     row = await tenant_row(conn, tenant_id, lock=True)
     if row["revision"] != revision:

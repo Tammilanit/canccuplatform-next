@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from conftest import SUPERADMIN_HOST, Env, make_tenant, make_user
 
 
@@ -120,3 +122,102 @@ async def test_hostname_lifecycle(env: Env) -> None:
     assert again.json()["error"]["code"] == "tenant_exists"
     assert ("events:tenants", "tenants.tenant.created") in env.events()
     assert ("events:tenants", "tenants.hostname.changed") in env.events()
+
+
+async def _new_tenant(c: object, cookie: dict[str, str], tid: str = "alpha") -> None:
+    r = await c.post(  # type: ignore[attr-defined]
+        "/api/tenants/registry",
+        json={"id": tid, "name": tid, "time_zone": "UTC"},
+        headers=cookie,
+    )
+    assert r.status_code == 201, r.text
+
+
+async def test_a_pending_hostname_never_becomes_primary(env: Env) -> None:
+    cookie = await _superadmin(env)
+    url = "/api/tenants/registry/alpha/hostnames"
+    async with env.client(SUPERADMIN_HOST) as c:
+        await _new_tenant(c, cookie)
+        pending = await c.post(url, json={"hostname": "x.example.org"}, headers=cookie)
+        active = await c.post(url, json={"hostname": "y.example.test"}, headers=cookie)
+        refused = await c.patch(
+            "/api/tenants/hostnames/x.example.org", json={"primary": True}, headers=cookie
+        )
+        tenant = (await c.get("/api/tenants/registry/alpha", headers=cookie)).json()
+    assert pending.json()["primary"] is False
+    assert active.json()["primary"] is True
+    assert refused.status_code == 409
+    assert refused.json()["error"]["code"] == "hostname_not_active"
+    assert tenant["primary_hostname"] == "y.example.test"
+
+
+async def test_a_verified_hostname_becomes_primary_when_none_is_active(env: Env) -> None:
+    cookie = await _superadmin(env)
+    async with env.client(SUPERADMIN_HOST) as c:
+        await _new_tenant(c, cookie)
+        added = await c.post(
+            "/api/tenants/registry/alpha/hostnames",
+            json={"hostname": "x.example.org"},
+            headers=cookie,
+        )
+        env.txt["_canccu-verify.x.example.org"] = [added.json()["verification"]["txt_value"]]
+        verified = await c.post("/api/tenants/hostnames/x.example.org/verify", headers=cookie)
+        tenant = (await c.get("/api/tenants/registry/alpha", headers=cookie)).json()
+    assert verified.json()["primary"] is True
+    assert tenant["primary_hostname"] == "x.example.org"
+
+
+async def test_concurrent_adds_give_one_primary_and_never_overwrite(env: Env) -> None:
+    cookie = await _superadmin(env)
+    url = "/api/tenants/registry/alpha/hostnames"
+    async with env.client(SUPERADMIN_HOST) as c:
+        await _new_tenant(c, cookie)
+        different = await asyncio.gather(
+            *(
+                c.post(url, json={"hostname": f"n{i}.example.test"}, headers=cookie)
+                for i in range(4)
+            )
+        )
+        same = await asyncio.gather(
+            *(c.post(url, json={"hostname": "same.example.org"}, headers=cookie) for _ in range(4))
+        )
+        listed = (await c.get(url, headers=cookie)).json()["hostnames"]
+    assert [r.status_code for r in different] == [201] * 4
+    assert sorted(r.status_code for r in same) == [201, 409, 409, 409]
+    tokens = {r.json()["verification"]["txt_value"] for r in same if r.status_code == 201}
+    by_name = {h["hostname"]: h for h in listed}
+    assert by_name["same.example.org"]["verification"]["txt_value"] in tokens
+    assert sum(h["primary"] for h in listed) == 1
+
+
+async def test_create_refuses_an_end_before_the_start(env: Env) -> None:
+    cookie = await _superadmin(env)
+    async with env.client(SUPERADMIN_HOST) as c:
+        r = await c.post(
+            "/api/tenants/registry",
+            json={
+                "id": "alpha",
+                "name": "A",
+                "time_zone": "UTC",
+                "starts_at": "2026-06-02T10:00:00Z",
+                "ends_at": "2026-06-01T10:00:00Z",
+            },
+            headers=cookie,
+        )
+    assert r.status_code == 400
+
+
+async def test_ip_mode_serves_the_demo_tenant_on_an_ip_host(env: Env) -> None:
+    from pathlib import Path
+
+    from canccu_kit import Health
+
+    from canccu_tenants import seed
+    from canccu_tenants.app import create_app
+
+    await seed.seed_demo(env.db, env.deps.files, Path("/nonexistent/profile.yaml"), None)
+    app = create_app(env.deps, Health("tenants", "dev", {}), [], "dev", ip_mode=True)
+    env.app = app
+    async with env.client("127.0.0.1") as c:
+        r = await c.get("/api/tenants/current")
+    assert r.json()["id"] == "demo"

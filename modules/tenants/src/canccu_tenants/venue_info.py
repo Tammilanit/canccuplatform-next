@@ -39,22 +39,16 @@ async def read_plan(request: Request) -> tuple[bytes, str]:
     size = int(request.headers.get("content-length") or 0)
     if size > MAX_PLAN:
         raise KitError("at most 10 MB", status=413, code="file_too_large")
-    data = b""
+    buffer = bytearray()
     async for chunk in request.stream():
-        data += chunk
-        if len(data) > MAX_PLAN:
+        buffer += chunk
+        if len(buffer) > MAX_PLAN:
             raise KitError("at most 10 MB", status=413, code="file_too_large")
+    data = bytes(buffer)
     kind = sniff(data)
     if kind is None:
         raise KitError("PNG, JPEG or WebP only", status=415, code="unsupported_type")
     return data, kind
-
-
-def write_file(path: Path, data: bytes) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_suffix(".tmp")
-    temp.write_bytes(data)
-    temp.replace(path)
 
 
 def serve_plan(path: Path, kind: str) -> Response:
@@ -120,7 +114,10 @@ async def put_info(request: Request) -> Response:
     tid = ctx["tenant_id"]
     async with d.db.tenant() as conn:
         core.writable(await core.tenant_row(conn, tid))
-        row = await conn.fetchrow("SELECT * FROM venue_info FOR UPDATE") or EMPTY
+        # A row to lock even on the first write, so concurrent first writes cannot both pass
+        # the revision check.
+        await conn.execute("INSERT INTO venue_info DEFAULT VALUES ON CONFLICT DO NOTHING")
+        row = await conn.fetchrow("SELECT * FROM venue_info FOR UPDATE")
         if row["revision"] != revision:
             raise conflict("version_conflict", "the venue info changed meanwhile; read it again")
         changed = [
@@ -128,34 +125,30 @@ async def put_info(request: Request) -> Response:
             for k, v in (("house_rules", rules), ("wifi", wifi))
             if v != (model.wifi_of(row) if k == "wifi" else row[k])
         ]
-        await conn.execute(
-            "INSERT INTO venue_info (house_rules, wifi, revision) VALUES ($1, $2, 1)"
-            " ON CONFLICT (tenant_id) DO UPDATE SET house_rules = $1, wifi = $2,"
-            " revision = venue_info.revision + 1",
-            rules,
-            json.dumps(wifi),
-        )
-        actor = await audit.user_actor(conn, session.user_id)
-        # Field names only: a Wi-Fi password is never written to the audit log.
-        await audit.append(
-            conn,
-            tid,
-            actor,
-            "tenants.venue_info.changed",
-            {"type": "venue_info", "id": tid},
-            {"fields": changed},
-        )
+        if changed:
+            await conn.execute(
+                "UPDATE venue_info SET house_rules = $1, wifi = $2, revision = revision + 1",
+                rules,
+                json.dumps(wifi),
+            )
+            actor = await audit.user_actor(conn, session.user_id)
+            # Field names only: a Wi-Fi password is never written to the audit log.
+            await audit.append(
+                conn,
+                tid,
+                actor,
+                "tenants.venue_info.changed",
+                {"type": "venue_info", "id": tid},
+                {"fields": changed},
+            )
         result = await conn.fetchrow("SELECT * FROM venue_info")
-    await d.bus.publish(
-        "tenants.venue_info.changed",
-        {
-            "changed": changed,
-            "copied": False,
-            "actor_user_id": session.user_id,
-        },
-        version=1,
-        tenant=tid,
-    )
+    if changed:
+        await d.bus.publish(
+            "tenants.venue_info.changed",
+            {"changed": changed, "copied": False, "actor_user_id": session.user_id},
+            version=1,
+            tenant=tid,
+        )
     return JSONResponse(_info(result, "member"))
 
 
@@ -163,24 +156,21 @@ async def copy_info(request: Request) -> Response:
     d, ctx = deps(request), tenant_of(request)
     session = await d.caller.require(request, "tenants.venue_info.write")
     tid = ctx["tenant_id"]
+    outbox = core.Outbox()
     async with d.db.tenant() as conn:
         row = await core.tenant_row(conn, tid)
         core.writable(row)
         if row["venue_id"] is None:
             raise conflict("no_venue", "this event has no venue to copy from")
         actor = await audit.user_actor(conn, session.user_id)
-        changed = await core.copy_venue_in(conn, tid, row["venue_id"], d.files, actor)
+        changed = await core.copy_venue_in(conn, tid, row["venue_id"], d.files, actor, outbox)
         result = await conn.fetchrow("SELECT * FROM venue_info")
-    await d.bus.publish(
+    outbox.tenant(
+        tid,
         "tenants.venue_info.changed",
-        {
-            "changed": changed,
-            "copied": True,
-            "actor_user_id": session.user_id,
-        },
-        version=1,
-        tenant=tid,
+        {"changed": changed, "copied": True, "actor_user_id": session.user_id},
     )
+    await outbox.publish(d.bus)
     return JSONResponse(_info(result, "member"))
 
 
@@ -201,6 +191,7 @@ async def put_plan(request: Request) -> Response:
     session = await d.caller.require(request, "tenants.venue_info.write")
     data, kind = await read_plan(request)
     tid = ctx["tenant_id"]
+    outbox = core.Outbox()
     async with d.db.tenant() as conn:
         core.writable(await core.tenant_row(conn, tid))
         await conn.execute(
@@ -209,7 +200,6 @@ async def put_plan(request: Request) -> Response:
             " floor_plan_updated_at = now(), revision = venue_info.revision + 1",
             kind,
         )
-        write_file(d.files.tenant_plan(tid), data)
         actor = await audit.user_actor(conn, session.user_id)
         await audit.append(
             conn,
@@ -220,16 +210,13 @@ async def put_plan(request: Request) -> Response:
             {"fields": ["floor_plan"]},
         )
         result = await conn.fetchrow("SELECT * FROM venue_info")
-    await d.bus.publish(
+    outbox.after_commit(lambda: core.write_file(d.files.tenant_plan(tid), data))
+    outbox.tenant(
+        tid,
         "tenants.venue_info.changed",
-        {
-            "changed": ["floor_plan"],
-            "copied": False,
-            "actor_user_id": session.user_id,
-        },
-        version=1,
-        tenant=tid,
+        {"changed": ["floor_plan"], "copied": False, "actor_user_id": session.user_id},
     )
+    await outbox.publish(d.bus)
     return JSONResponse(_info(result, "member"))
 
 

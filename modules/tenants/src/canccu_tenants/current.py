@@ -50,7 +50,7 @@ async def patch_current(request: Request) -> Response:
     if set(body) & core.ACCESS_FIELDS:
         needed.add("tenants.access.write")
     session = await d.caller.require_all(request, needed or {"tenants.event.write"})
-    user_id = session.user_id if session else None
+    user_id = session.user_id
     outbox = core.Outbox()
     async with d.db.tenant() as conn:
         actor = await audit.user_actor(conn, user_id)

@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 
 import asyncpg
+import httpx
 import pytest
 from conftest import SUPERADMIN_HOST, Env, make_tenant, make_user
 
+from canccu_tenants import audit as audit_module
 from canccu_tenants import timers
 
 HOST = "alpha.example.org"
@@ -263,3 +266,81 @@ async def test_audit_is_append_only_for_the_app_role(env: Env) -> None:
         with pytest.raises(asyncpg.InsufficientPrivilegeError):
             async with env.db.tenant("alpha") as conn:
                 await conn.execute(statement)
+
+
+async def test_concurrent_first_venue_info_writes_never_overwrite(env: Env) -> None:
+    await make_tenant(env.db, "alpha", HOST, admins=("u_admin",))
+    admin = env.rights.sign_in("u_admin")
+    async with env.client(HOST) as c:
+        results = await asyncio.gather(
+            *(
+                c.put(
+                    "/api/tenants/current/venue-info",
+                    headers=admin,
+                    json={"revision": 0, "house_rules": f"rules {i}", "wifi": []},
+                )
+                for i in range(4)
+            )
+        )
+    assert sorted(r.status_code for r in results) == [200, 409, 409, 409]
+
+
+async def test_an_unchanged_venue_info_write_is_not_audited(env: Env) -> None:
+    await make_tenant(env.db, "alpha", HOST, admins=("u_admin",))
+    admin = env.rights.sign_in("u_admin")
+    body = {"house_rules": "Same.", "wifi": []}
+    async with env.client(HOST) as c:
+        first = await c.put(
+            "/api/tenants/current/venue-info", headers=admin, json=body | {"revision": 0}
+        )
+        again = await c.put(
+            "/api/tenants/current/venue-info",
+            headers=admin,
+            json=body | {"revision": first.json()["revision"]},
+        )
+        audit = (await c.get("/api/tenants/current/audit", headers=admin)).json()["entries"]
+    assert again.json()["revision"] == first.json()["revision"]
+    assert [e["action"] for e in audit].count("tenants.venue_info.changed") == 1
+    assert env.events().count(("t:alpha:events:tenants", "tenants.venue_info.changed")) == 1
+
+
+async def test_a_failed_floor_plan_write_leaves_no_file(
+    env: Env, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    await make_tenant(env.db, "alpha", HOST, admins=("u_admin",))
+    admin = env.rights.sign_in("u_admin")
+
+    async def broken(*args: object, **kwargs: object) -> None:
+        raise RuntimeError("audit down")
+
+    monkeypatch.setattr(audit_module, "append", broken)
+    transport = httpx.ASGITransport(
+        app=env.app, client=("127.0.0.1", 5000), raise_app_exceptions=False
+    )
+    async with httpx.AsyncClient(transport=transport, base_url=f"http://{HOST}") as c:
+        r = await c.put("/api/tenants/current/venue-info/floor-plan", content=PNG, headers=admin)
+    assert r.status_code == 500
+    assert not env.deps.files.tenant_plan("alpha").exists()
+
+
+async def test_malformed_input_is_400_not_500(env: Env) -> None:
+    await make_tenant(env.db, "alpha", HOST, admins=("u_admin",))
+    admin = env.rights.sign_in("u_admin")
+    async with env.client(HOST) as c:
+        status = await c.post(
+            "/api/tenants/current/status", json={"status": ["live"], "revision": 1}, headers=admin
+        )
+        limit = await c.get("/api/tenants/current/audit", params={"limit": "²"}, headers=admin)
+    assert (status.status_code, limit.status_code) == (400, 400)
+
+
+async def test_two_seeds_at_once_create_one_demo(env: Env) -> None:
+    from pathlib import Path
+
+    from canccu_tenants import seed
+
+    none = Path("/nonexistent/profile.yaml")
+    created = await asyncio.gather(
+        *(seed.seed_demo(env.db, env.deps.files, none, None) for _ in range(3))
+    )
+    assert sorted(created) == [False, False, True]

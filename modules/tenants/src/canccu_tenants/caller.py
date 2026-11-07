@@ -68,17 +68,18 @@ class Caller:
 
     async def require(self, request: Request, right: str) -> Session:
         """A right in the request's tenant: signed in, from an allowed address, role or right."""
+        return await self.require_all(request, {right})
+
+    async def require_all(self, request: Request, rights: set[str]) -> Session:
+        """Every right in `rights`; the session and the role are read once for all of them."""
         ctx = tenant_of(request)
         session = await self.rights.session(request.headers.get("cookie"))
         check_admin_access(ctx, client_ip(request), self.tailscale)
-        if not await self.can(ctx, session, right):
-            raise MissingRight(f"needs right {right}")
-        return session
-
-    async def require_all(self, request: Request, rights: set[str]) -> Session | None:
-        session = None
+        if await self.is_event_admin(ctx["tenant_id"], session.user_id):
+            return session
         for right in sorted(rights):
-            session = await self.require(request, right)
+            if right in ROLE_ONLY or not session.has(right):
+                raise MissingRight(f"needs right {right}")
         return session
 
     async def superadmin(self, request: Request) -> Session:

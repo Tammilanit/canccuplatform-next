@@ -110,6 +110,9 @@ services:
       CANCCU_PLATFORM_DOMAIN: ${CANCCU_PLATFORM_DOMAIN:-}
       # The demo tenant and venue (replaces new-event, #12); idempotent at every start.
       CANCCU_SEED_DEMO: "1"
+      # IP mode: the demo tenant on the host's IP address while it is the only tenant. The
+      # module honours it only while CANCCU_VERSION is dev (0013 item 2).
+      CANCCU_IP_MODE: ${CANCCU_IP_MODE:-demo}
       # Only stack containers reach this one, and Caddy's address is not fixed; the edge Caddy
       # (#51) narrows this to Caddy alone.
       CANCCU_TRUSTED_PROXIES: "*"

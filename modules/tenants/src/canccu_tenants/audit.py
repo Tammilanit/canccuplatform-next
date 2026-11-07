@@ -96,7 +96,8 @@ def _entry(row: Mapping[str, Any], tenant_id: str | None) -> dict[str, Any]:
 def page_args(query: Mapping[str, str]) -> tuple[str | None, int]:
     before = query.get("before")
     raw = query.get("limit", "50")
-    if not raw.isdigit() or not 1 <= int(raw) <= 200:
+    # isdecimal alone accepts non-ASCII digits that int() may still refuse or misread.
+    if not (raw.isascii() and raw.isdecimal()) or not 1 <= int(raw) <= 200:
         raise bad_request("limit must be 1-200")
     return before, int(raw)
 

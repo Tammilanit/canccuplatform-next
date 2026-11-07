@@ -14,6 +14,7 @@ from .db import Db
 
 DEMO_TENANT = "demo"
 DEMO_VENUE = "demo-venue"
+SEED_LOCK = 0x7E7A_5EED  # any constant, distinct from the migration lock
 # Loopback serves the local stack; the rest are documentation prefixes (RFC 5737, RFC 3849).
 DEMO_ADDRESSES = ["127.0.0.0/8", "::1/128", "192.0.2.0/24", "2001:db8::/32"]
 
@@ -29,7 +30,11 @@ def demo_name(profile: Path) -> str:
 async def seed_demo(db: Db, files: core.Files, profile: Path, platform_domain: str | None) -> bool:
     """Creates the demo venue, the live demo tenant and, with a platform domain, its hostname
     `demo.<domain>`. Returns False when the demo tenant exists already (nothing is changed)."""
+    outbox = core.Outbox()
     async with db.tenant(DEMO_TENANT) as conn:
+        # Several containers may start at once on a fresh database: one seeds, the rest wait
+        # and then find the demo tenant.
+        await conn.execute("SELECT pg_advisory_xact_lock($1)", SEED_LOCK)
         if await conn.fetchval("SELECT 1 FROM tenants WHERE id = $1", DEMO_TENANT):
             return False
         await conn.execute(
@@ -45,7 +50,7 @@ async def seed_demo(db: Db, files: core.Files, profile: Path, platform_domain: s
             demo_name(profile),
             DEMO_VENUE,
         )
-        await core.copy_venue_in(conn, DEMO_TENANT, DEMO_VENUE, files, audit.SYSTEM)
+        await core.copy_venue_in(conn, DEMO_TENANT, DEMO_VENUE, files, audit.SYSTEM, outbox)
         if platform_domain:
             await conn.execute(
                 "INSERT INTO hostnames (hostname, tenant_id, kind, status, is_primary)"
@@ -61,6 +66,7 @@ async def seed_demo(db: Db, files: core.Files, profile: Path, platform_domain: s
             {"type": "tenant", "id": DEMO_TENANT},
             {"seed": "demo"},
         )
+    outbox.apply_files()
     return True
 
 

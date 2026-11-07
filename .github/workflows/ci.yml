@@ -167,6 +167,10 @@ jobs:
           jq -e '.status == "ok" and .module == "admin" and .checks.postgres.status == "ok"' /tmp/admin-health.json
           curl -fsS http://localhost/api/tenants/health | tee /tmp/tenants-health.json; echo
           jq -e '.status == "ok" and .module == "tenants" and .checks.postgres.status == "ok"' /tmp/tenants-health.json
+      - name: The seeded demo tenant answers in IP mode through Caddy
+        run: |
+          curl -fsS http://127.0.0.1/api/tenants/current | tee /tmp/tenants-current.json; echo
+          jq -e '.id == "demo" and .status == "live"' /tmp/tenants-current.json
       - name: Health is 503 down when Valkey is stopped
         run: |
           docker compose -f deploy/compose.yml stop valkey

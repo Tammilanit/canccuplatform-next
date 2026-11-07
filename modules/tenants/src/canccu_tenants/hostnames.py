@@ -83,7 +83,9 @@ async def add_hostname(request: Request) -> Response:
     token = None if kind == "platform" else secrets.token_urlsafe(24)
     outbox = core.Outbox()
     async with d.db.platform() as conn:
-        if not await conn.fetchval("SELECT 1 FROM tenants WHERE id = $1", tid):
+        # Locking the tenant row serialises this tenant's hostname writes, so two adds cannot
+        # both find no primary.
+        if not await conn.fetchval("SELECT 1 FROM tenants WHERE id = $1 FOR UPDATE", tid):
             raise not_found()
         existing = await conn.fetchrow(
             "SELECT * FROM hostnames WHERE hostname = $1 FOR UPDATE", host
@@ -92,34 +94,56 @@ async def add_hostname(request: Request) -> Response:
             raise conflict("hostname_taken", "this hostname points to an event already")
         if existing is not None and existing["tenant_id"] != tid:
             raise conflict("hostname_held", "this hostname is held after its removal")
-        has_primary = await conn.fetchval(
-            "SELECT 1 FROM hostnames WHERE tenant_id = $1 AND is_primary", tid
-        )
+        # Only an active name may be primary: `primary_hostname` builds absolute URLs.
+        primary = status == "active" and not await _has_primary(conn, tid)
+        # The update only takes back this tenant's own held name; a name another request
+        # inserted meanwhile (or another tenant's) returns no row.
         row = await conn.fetchrow(
             "INSERT INTO hostnames (hostname, tenant_id, kind, status, is_primary, verify_token)"
             " VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (hostname) DO UPDATE SET status = $4,"
-            " kind = $3, is_primary = $5, verify_token = $6, held_until = NULL RETURNING *",
+            " kind = $3, is_primary = $5, verify_token = $6, held_until = NULL"
+            " WHERE hostnames.status = 'held' AND hostnames.tenant_id = EXCLUDED.tenant_id"
+            " RETURNING *",
             host,
             tid,
             kind,
             status,
-            not has_primary,
+            primary,
             token,
         )
+        if row is None:
+            raise conflict("hostname_taken", "this hostname points to an event already")
         await _audit(conn, session.user_id, "tenants.hostname.added", row, {"kind": kind})
         await _changed(conn, outbox, row)
     await outbox.publish(d.bus)
     return JSONResponse(model.hostname(row), status_code=201)
 
 
-async def _locked(conn: Any, request: Request) -> Any:
-    row = await conn.fetchrow(
-        "SELECT * FROM hostnames WHERE hostname = $1 AND status <> 'held' FOR UPDATE",
-        request.path_params["hostname"],
+async def _has_primary(conn: Any, tenant_id: str) -> bool:
+    found = await conn.fetchval(
+        "SELECT 1 FROM hostnames WHERE tenant_id = $1 AND is_primary", tenant_id
     )
-    if row is None:
+    return found is not None
+
+
+async def _lock_tenant_of(conn: Any, host: str) -> Any:
+    """The tenant row first, then the hostname row: the same order as add_hostname, so
+    concurrent hostname writes of one tenant queue instead of deadlocking."""
+    tid = await conn.fetchval(
+        "SELECT tenant_id FROM hostnames WHERE hostname = $1 AND status <> 'held'", host
+    )
+    if tid is not None:
+        await conn.execute("SELECT 1 FROM tenants WHERE id = $1 FOR UPDATE", tid)
+    row = await conn.fetchrow(
+        "SELECT * FROM hostnames WHERE hostname = $1 AND status <> 'held' FOR UPDATE", host
+    )
+    if row is None or row["tenant_id"] != tid:
         raise not_found()
     return row
+
+
+async def _locked(conn: Any, request: Request) -> Any:
+    return await _lock_tenant_of(conn, request.path_params["hostname"])
 
 
 async def make_primary(request: Request) -> Response:
@@ -131,6 +155,8 @@ async def make_primary(request: Request) -> Response:
     outbox = core.Outbox()
     async with d.db.platform() as conn:
         row = await _locked(conn, request)
+        if row["status"] != "active":
+            raise conflict("hostname_not_active", "only an active hostname can be primary")
         await conn.execute(
             "UPDATE hostnames SET is_primary = false WHERE tenant_id = $1 AND is_primary",
             row["tenant_id"],
@@ -188,14 +214,17 @@ async def verify_hostname(request: Request) -> Response:
         raise conflict("verification_failed", "the TXT record is missing or does not match")
     outbox = core.Outbox()
     async with d.db.platform() as conn:
-        row = await conn.fetchrow(
-            "UPDATE hostnames SET status = 'active', verify_token = NULL WHERE hostname = $1"
-            " AND status = 'pending' AND verify_token = $2 RETURNING *",
-            host,
-            row["verify_token"],
-        )
-        if row is None:  # removed or verified meanwhile
+        token = row["verify_token"]
+        locked = await _lock_tenant_of(conn, host)
+        if locked["status"] != "pending" or locked["verify_token"] != token:
             raise conflict("verification_failed", "the hostname changed meanwhile")
+        # The first active name of a tenant becomes its primary, so absolute URLs work at once.
+        row = await conn.fetchrow(
+            "UPDATE hostnames SET status = 'active', verify_token = NULL, is_primary = $2"
+            " WHERE hostname = $1 RETURNING *",
+            host,
+            not await _has_primary(conn, locked["tenant_id"]),
+        )
         await _audit(conn, session.user_id, "tenants.hostname.verified", row, {})
         await _changed(conn, outbox, row)
     await outbox.publish(d.bus)
