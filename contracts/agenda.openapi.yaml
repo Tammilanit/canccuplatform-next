@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Agenda API
-  version: 1.0.0
+  version: 1.1.0
   summary: The run-of-show of one event, editable live.
   description: |
     Machine-readable part of the agenda contract. Prose, rules, reminders and events: contracts/agenda.md.
@@ -16,6 +16,8 @@ servers:
 tags:
   - name: items
     description: Reading and editing the run-of-show.
+  - name: kinds
+    description: The event's own list of item kinds.
   - name: clone
     description: Copying the agenda of a previous event of the series.
 security:
@@ -272,6 +274,94 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "403":
           $ref: "#/components/responses/Forbidden"
+  /api/agenda/kinds:
+    get:
+      tags: [kinds]
+      operationId: listKinds
+      summary: List the event's kinds
+      description: Readable by whoever may read the agenda.
+      responses:
+        "200":
+          description: The kinds.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KindList"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/agenda/kinds/{kind_key}:
+    parameters:
+      - name: kind_key
+        in: path
+        required: true
+        description: Kind key.
+        schema:
+          $ref: "#/components/schemas/Kind"
+    put:
+      tags: [kinds]
+      operationId: saveKind
+      summary: Add or replace a kind
+      description: |
+        Needs right `agenda.items.write`. Without `revision` it adds a kind (409 `kind_exists` when the key is
+        taken); with it, it replaces the kind (409 `version_conflict` when stale). `builtin` follows from the key.
+        Emits `agenda.kind.saved`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KindSave"
+      responses:
+        "200":
+          description: The replaced kind.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KindInfo"
+        "201":
+          description: The new kind.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KindInfo"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [kinds]
+      operationId: removeKind
+      summary: Remove a kind
+      description: |
+        Needs right `agenda.items.write`. 409 `kind_in_use` while an item names it (cancelled ones too),
+        409 `kind_required` for `other`. Emits `agenda.kind.removed`.
+      security:
+        - session: []
+      parameters:
+        - name: revision
+          in: query
+          required: true
+          description: The kind's revision as read.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "204":
+          description: Removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/agenda/clone:
     post:
       tags: [clone]
@@ -279,8 +369,10 @@ paths:
       summary: Clone the agenda of a previous event
       description: |
         Needs right `agenda.items.write` here and event admin on the source; both events must be in one
-        series (checked through the tenants API). Only into an empty agenda. Scheduled items are copied with
-        their planned times shifted, no delays and no links. Emits `agenda.items.cloned`.
+        series (checked through the tenants API). Only into an empty agenda (409 `agenda_not_empty`) whose kind
+        list is the untouched starter set, `kinds_version` 0 (409 `kinds_changed`). The source's kind list replaces
+        the starter set; scheduled items are copied with their planned times shifted, no delays and no links.
+        Emits `agenda.items.cloned`.
       security:
         - session: []
       requestBody:
@@ -321,7 +413,7 @@ components:
         $ref: "#/components/schemas/ItemId"
   responses:
     BadRequest:
-      description: "`invalid_request`: a field is missing or invalid."
+      description: "`invalid_request`: a field is missing or invalid; `unknown_kind`: the item names a kind the event does not have."
       content:
         application/json:
           schema:
@@ -341,7 +433,7 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
     NotFound:
-      description: "`not_found`: no such item, or the caller may not see it."
+      description: "`not_found`: no such item or kind, or the caller may not see it."
       content:
         application/json:
           schema:
@@ -349,8 +441,8 @@ components:
     Conflict:
       description: |
         `version_conflict` (stale `revision`), `item_cancelled`, `item_started` (delay of a started item with
-        no end), `agenda_not_empty` (clone) or
-        `event_archived` (the event is read-only).
+        no end), `agenda_not_empty` (clone), `kind_exists`, `kind_in_use`, `kind_required` (removing `other`), `kinds_changed` (clone)
+        or `event_archived` (the event is read-only).
       content:
         application/json:
           schema:
@@ -381,8 +473,74 @@ components:
       examples: [main_hall]
     Kind:
       type: string
-      description: More kinds may be added; consumers treat an unknown kind as `other`.
-      enum: [doors, ceremony, tournament, meal, quiet_hours, activity, other]
+      description: |
+        A kind key of the event's kind list (`GET /api/agenda/kinds`). The starter set is `doors`, `ceremony`,
+        `tournament`, `meal`, `quiet_hours`, `activity` and `other`; organisers add their own. A consumer that
+        does not know a key reads the list for its name and otherwise treats it as `other`.
+      pattern: "^[a-z][a-z0-9_]{0,31}$"
+      examples: [meal, quiet_hours, cosplay]
+    Channel:
+      type: string
+      description: |
+        `screen` and `discord_channel` are delivered by Screen and the bot; `discord_dm` and `push` by Notify, to
+        attendees who opted in. Consumers ignore channels they do not know.
+      enum: [screen, discord_channel, discord_dm, push]
+    ChannelChoice:
+      description: Channels that announce reminders and changes; `null` hands the choice down (item, kind, event), `[]` announces nothing.
+      oneOf:
+        - type: "null"
+        - type: array
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Channel"
+    KindInfo:
+      type: object
+      required: [key, name, builtin, reminder_leads_minutes, notify, revision]
+      properties:
+        key:
+          $ref: "#/components/schemas/Kind"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        builtin:
+          type: boolean
+          description: A starter-set key. Only `quiet_hours` carries behaviour (contracts/agenda.md, Kinds).
+        reminder_leads_minutes:
+          $ref: "#/components/schemas/ReminderLeads"
+        notify:
+          $ref: "#/components/schemas/ChannelChoice"
+        revision:
+          type: integer
+          minimum: 1
+    KindSave:
+      type: object
+      required: [name]
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+          description: Required to replace an existing kind; left out to add one.
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        reminder_leads_minutes:
+          $ref: "#/components/schemas/ReminderLeads"
+        notify:
+          $ref: "#/components/schemas/ChannelChoice"
+    KindList:
+      type: object
+      required: [kinds_version, kinds]
+      properties:
+        kinds_version:
+          type: integer
+          minimum: 0
+          description: +1 on every change of the kind list.
+        kinds:
+          type: array
+          items:
+            $ref: "#/components/schemas/KindInfo"
     Visibility:
       type: string
       description: "`public`: anyone; `attendees`: signed-in members; `crew`: right `agenda.crew.read`."
@@ -396,7 +554,7 @@ components:
         moment_id:
           type: string
     ReminderLeads:
-      description: Lead times in minutes; `null` uses the event's setting, `[]` means no reminders.
+      description: Lead times in minutes; `null` uses the kind's (for an item), else the event's setting; `[]` means no reminders.
       oneOf:
         - type: "null"
         - type: array
@@ -419,6 +577,8 @@ components:
         - visibility
         - status
         - reminder_leads_minutes
+        - notify
+        - notify_channels
         - links
         - revision
       properties:
@@ -461,6 +621,15 @@ components:
           enum: [scheduled, cancelled]
         reminder_leads_minutes:
           $ref: "#/components/schemas/ReminderLeads"
+        notify:
+          $ref: "#/components/schemas/ChannelChoice"
+        notify_channels:
+          type: array
+          readOnly: true
+          description: The channels in effect (item, else kind, else the event's `notify_channels`). Consumers act on this.
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Channel"
         links:
           $ref: "#/components/schemas/Links"
         cloned_from:
@@ -496,11 +665,13 @@ components:
           $ref: "#/components/schemas/Visibility"
         reminder_leads_minutes:
           $ref: "#/components/schemas/ReminderLeads"
+        notify:
+          $ref: "#/components/schemas/ChannelChoice"
         links:
           $ref: "#/components/schemas/Links"
     ItemEdit:
       type: object
-      description: "`revision` plus the fields to change; fields left out stay as they are, `null` clears an optional text field or the zone."
+      description: "`revision` plus the fields to change; fields left out stay as they are, `null` clears an optional text field or the zone, or hands reminder leads and `notify` back to the kind."
       required: [revision]
       properties:
         revision:
@@ -533,6 +704,8 @@ components:
           $ref: "#/components/schemas/Visibility"
         reminder_leads_minutes:
           $ref: "#/components/schemas/ReminderLeads"
+        notify:
+          $ref: "#/components/schemas/ChannelChoice"
         links:
           $ref: "#/components/schemas/Links"
     Delay:

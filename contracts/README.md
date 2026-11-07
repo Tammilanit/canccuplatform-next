@@ -7,10 +7,12 @@ How modules talk to each other and what an event profile looks like. Modules use
 |---|---|
 | [admin.md](admin.md) | Admin contract: settings, health (shared by all modules), session and rights, event naming and envelope, admin events |
 | [admin.openapi.yaml](admin.openapi.yaml) | Machine-readable admin API (OpenAPI 3.1) |
-| [agenda.md](agenda.md) | Agenda contract: the run-of-show, edited live, its reminders, clone with an event, agenda events |
+| [agenda.md](agenda.md) | Agenda contract: the run-of-show, edited live, each event's own kinds, notification channels per event, kind and item, its reminders, clone with an event, agenda events |
 | [agenda.openapi.yaml](agenda.openapi.yaml) | Machine-readable agenda API (OpenAPI 3.1) |
-| [notify.md](notify.md) | Notify contract: notification topics and their sources, Web Push, delivery rules, check-in by the rotating QR, the phone hub and its privacy page |
+| [notify.md](notify.md) | Notify contract: the topic registry (topic types, triggers, per-event configuration, custom topics), per-person channels and follows, Web Push, delivery rules, check-in by the rotating QR, the phone hub and its privacy page |
 | [notify.openapi.yaml](notify.openapi.yaml) | Machine-readable notify API (OpenAPI 3.1) |
+| [games.md](games.md) | Games contract: the game catalogue (baseline and each event's own), matching Discord activities, moderation, surges, games events |
+| [games.openapi.yaml](games.openapi.yaml) | Machine-readable games API (OpenAPI 3.1) |
 | [events.md](events.md) | Event catalog: every cross-module event, its audience and consumers, linked to its payload |
 | [tenants.md](tenants.md) | Tenants contract: events as tenants, hostnames, venues and the venue profile, users, roles and membership, access (info-page mode, venue IP check, admin access), feature flags, lifecycle, series and clone, privacy and retention, the audit log, global and per-tenant tables |
 | [tenants.openapi.yaml](tenants.openapi.yaml) | Machine-readable tenants API (OpenAPI 3.1) |
