@@ -49,11 +49,13 @@ paths:
       operationId: setConnection
       summary: Bring an own application, rotate a credential, or go back to the shared bot
       description: |
-        The event-admin role itself. For `mode: own` the module checks the token with Discord before storing:
-        400 `token_invalid`, 400 `application_mismatch`. 409 `application_reserved` (the shared application),
-        `application_taken` (another event holds it), `guild_bound` (changing the application or the mode while
-        a guild is bound), `version_conflict`, `event_archived`. A credential left out keeps its stored value; a
-        new application needs both. Audited (which credential, never the value). Emits `bot.connection.changed`.
+        The event-admin role itself. For `mode: own` the module checks the credentials it gets with Discord
+        before storing: 400 `token_invalid`, `application_mismatch`, `client_secret_invalid` (no client-credentials
+        token for the application). 409 `application_reserved` (the shared application), `application_taken`
+        (another event holds it), `guild_bound` (changing the application or the mode while a guild is bound),
+        `version_conflict`, `event_archived` (for `mode: own`; `mode: shared` is also allowed on an archived event,
+        like `DELETE`). A credential left out keeps its stored value; a new application needs both. Audited (which
+        credential, never the value). Emits `bot.connection.changed`.
       requestBody:
         required: true
         content:
@@ -81,7 +83,16 @@ paths:
       summary: Go back to the shared bot and erase the own credentials
       description: |
         The event-admin role itself. The same as `PUT` with `mode: shared`: 409 `guild_bound` while a guild is
-        bound. Also allowed on an archived event. Audited. Emits `bot.connection.changed` when the mode changed.
+        bound, 409 `version_conflict` for a stale `revision`. Also allowed on an archived event. Audited. Emits
+        `bot.connection.changed` when the mode changed.
+      parameters:
+        - name: revision
+          in: query
+          required: true
+          description: The connection's `revision` the caller read, so a clear never erases credentials set since.
+          schema:
+            type: integer
+            minimum: 0
       responses:
         "200":
           description: The connection, now `shared`.
@@ -89,6 +100,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Connection"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -137,11 +150,15 @@ paths:
         the application come from the stored `state`. The module exchanges `code`, checks that the Discord user is
         the user who started, that they own the guild or hold Manage Server or Administrator on it (from their
         guild list), that the bot is in the guild, that the guild is bound to no other event and that the event's
-        connection did not change. Then it binds the guild, registers its commands, audits the bind and emits
-        `bot.guild.bound`. The user's Discord access token is dropped after the checks. The browser always goes
-        back to the event's primary hostname with `bind=ok` or `bind=<error code>`: `discord_user_mismatch`,
-        `manage_server_required`, `bot_not_in_guild`, `guild_bound`, `connection_changed`, `access_denied`
-        (the person cancelled on Discord) or `discord_unavailable`.
+        connection did not change. It also checks again that the event still exists (otherwise `state_invalid`),
+        is not archived (`event_archived`) and still has no guild (`guild_bound`). The checks and the bind run in
+        one transaction under unique keys (one binding per event, one route per guild), so racing binds cannot
+        both win. Then it binds the guild, registers its commands, audits the bind and emits `bot.guild.bound`.
+        The user's Discord access token is dropped after the checks. The browser goes back to the event's primary
+        hostname with `bind=ok` or `bind=<error code>`, or, without an active primary hostname, gets a page on the
+        sign-in host: `discord_user_mismatch`, `manage_server_required`, `bot_not_in_guild`, `guild_bound`,
+        `event_archived`, `connection_changed`, `code_exchange_failed`, `access_denied` (the person cancelled on
+        Discord) or `discord_unavailable`.
       security:
         - {}
       parameters:
@@ -185,11 +202,13 @@ paths:
                 type: string
                 format: uri
         "400":
-          description: "`state_invalid`: the state is unknown, used or expired, so no event can be named."
+          description: |
+            `state_invalid`: a page on the sign-in host, because the state is unknown, used or expired, or its
+            event was deleted, so there is no event to go back to.
           content:
-            application/json:
+            text/html:
               schema:
-                $ref: "#/components/schemas/Error"
+                type: string
         "404":
           $ref: "#/components/responses/NotFound"
   /api/bot/guild:
@@ -243,7 +262,8 @@ paths:
         The event-admin role itself on this event and on the source, both in one series (otherwise
         403 `missing_right`). 409 `source_live`, `already_connected` (this event has its own binding or
         application), `event_archived`. Own credentials move inside the module, re-encrypted for this event. Nothing
-        to move is not an error. Audited in both events. Emits `bot.connection.changed` and `bot.guild.unbound`
+        to move is not an error. In the same transaction the guild route and an own application's route point to
+        this event, and a moved own client is closed and opened again for it. Audited in both events. Emits `bot.connection.changed` and `bot.guild.unbound`
         (`reason: moved`) on the source and `bot.connection.changed` and `bot.guild.bound` on this event.
       requestBody:
         required: true
@@ -301,8 +321,9 @@ components:
   responses:
     BadRequest:
       description: |
-        `invalid_request` (a field is missing or invalid), `token_invalid` (Discord refused the bot token) or
-        `application_mismatch` (the token belongs to another application).
+        `invalid_request` (a field is missing or invalid), `token_invalid` (Discord refused the bot token),
+        `application_mismatch` (the token belongs to another application) or `client_secret_invalid` (Discord
+        refused the client secret).
       content:
         application/json:
           schema:
@@ -356,11 +377,12 @@ components:
       pattern: "^[0-9]{17,20}$"
     UserId:
       type: string
-      pattern: "^[A-Za-z0-9_-]{1,64}$"
+      pattern: "^u_[A-Za-z0-9]{1,40}$"
       examples: [u_123]
     TenantId:
       type: string
-      pattern: "^[a-z][a-z0-9-]{2,31}$"
+      description: Lowercase letters, digits and `-`, 3–32 characters, starting with a letter (contracts/tenants.md).
+      pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
       examples: [demo]
     Mode:
       type: string
