@@ -1,0 +1,300 @@
+/* Level up demo theme: one block per widget template. Container queries (each widget is a size
+   container, base.css) let one template serve the 16:9 and the 9:16 layout. */
+
+/* clock: a HUD frame of four corner brackets around big tabular digits */
+.t-hud {
+  --t-c: var(--canccu-color-primary);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 0 18px;
+  box-sizing: border-box;
+  background:
+    linear-gradient(var(--t-c), var(--t-c)) left top / 26px 3px,
+    linear-gradient(var(--t-c), var(--t-c)) left top / 3px 26px,
+    linear-gradient(var(--t-c), var(--t-c)) right top / 26px 3px,
+    linear-gradient(var(--t-c), var(--t-c)) right top / 3px 26px,
+    linear-gradient(var(--t-c), var(--t-c)) left bottom / 26px 3px,
+    linear-gradient(var(--t-c), var(--t-c)) left bottom / 3px 26px,
+    linear-gradient(var(--t-c), var(--t-c)) right bottom / 26px 3px,
+    linear-gradient(var(--t-c), var(--t-c)) right bottom / 3px 26px;
+  background-repeat: no-repeat;
+}
+.t-hud__time {
+  font-family: var(--canccu-font-display);
+  font-size: min(5.25rem, 62cqh);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 28px color-mix(in srgb, var(--canccu-color-primary) 35%, transparent);
+}
+.t-hud__date {
+  margin-top: 4px;
+  font-size: 1.6rem;
+  color: var(--canccu-color-text-muted);
+}
+.canccu-widget--clock::before {
+  content: none;
+}
+
+/* agenda_now: the running item with its bar, then the next ones */
+.t-agenda {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+.t-now {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 22px 22px;
+  border-radius: 12px;
+  background: var(--t-well);
+  border-left: 4px solid var(--canccu-color-primary);
+}
+.t-now__name {
+  font-family: var(--canccu-font-display);
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.05;
+}
+.t-now__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.9em;
+  color: var(--canccu-color-text-muted);
+}
+.t-now__time {
+  color: var(--canccu-color-text);
+  font-variant-numeric: tabular-nums;
+}
+.t-now .t-xp {
+  margin-top: 8px;
+}
+.t-now__left {
+  font-size: 1.6rem;
+  color: var(--canccu-color-text-muted);
+}
+.t-next {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.t-next__list {
+  padding: 0;
+  list-style: none;
+}
+.t-next__item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--canccu-color-border) 70%, transparent);
+}
+.t-next__item:last-child {
+  border-bottom: 0;
+}
+.t-next__time {
+  grid-row: span 2;
+  min-width: 3.1em;
+  font-family: var(--canccu-font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--canccu-color-primary);
+}
+.t-next__name {
+  font-weight: 600;
+}
+.t-next__place {
+  font-size: 1.5rem;
+  color: var(--canccu-color-text-muted);
+}
+@container (max-height: 760px) {
+  .t-next__item:nth-child(n + 4) {
+    display: none;
+  }
+}
+/* Wide and short (portrait screens): now and next side by side. */
+@container (min-aspect-ratio: 3 / 2) {
+  .t-agenda {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 26px;
+  }
+  .t-now__name {
+    font-size: 2.6rem;
+  }
+  .t-next__item:nth-child(n + 4) {
+    display: none;
+  }
+}
+
+/* countdown: the wait fills like a bar; the digits say the same in words */
+.t-count {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.t-count__label {
+  font-family: var(--canccu-font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.t-count__remaining {
+  font-family: var(--canccu-font-display);
+  font-size: min(6rem, 34cqh);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 32px color-mix(in srgb, var(--canccu-color-accent) 40%, transparent);
+}
+.t-count .t-xp {
+  margin: 6px 0 2px;
+}
+.t-count__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+  font-size: 1.5rem;
+  color: var(--canccu-color-text-muted);
+}
+.t-count__pct {
+  font-family: var(--canccu-font-display);
+  font-weight: 700;
+  color: var(--canccu-color-primary);
+}
+@container (min-aspect-ratio: 5 / 2) {
+  .t-count {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    column-gap: 32px;
+  }
+  .t-count__remaining {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    font-size: min(7.5rem, 48cqh);
+  }
+  .t-count .t-xp,
+  .t-count__foot {
+    grid-column: 1 / -1;
+  }
+}
+
+/* leaderboard: a rank ladder; the top three get a framed badge, every rung shows its number */
+.t-ladder {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+.t-rung {
+  display: grid;
+  grid-template: "rank body score" auto "rank body move" auto / 54px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 16px;
+  padding: 6px 16px 6px 8px;
+  border-radius: 10px;
+  background: var(--t-well);
+}
+.t-rung__rank {
+  display: grid;
+  place-items: center;
+  grid-area: rank;
+  width: 54px;
+  height: 58px;
+  font-family: var(--canccu-font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  /* An outlined hexagon: the outer shape is the border, the inner one the face. */
+  background:
+    linear-gradient(var(--canccu-color-surface), var(--canccu-color-surface)) center / calc(100% - 6px) calc(100% - 6px) no-repeat,
+    var(--canccu-color-border);
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+}
+.t-rung--1 .t-rung__rank,
+.t-rung--2 .t-rung__rank,
+.t-rung--3 .t-rung__rank {
+  background:
+    linear-gradient(var(--canccu-color-surface), var(--canccu-color-surface)) center / calc(100% - 8px) calc(100% - 8px) no-repeat,
+    var(--t-grad);
+}
+.t-rung--1 {
+  box-shadow: inset 4px 0 0 var(--canccu-color-primary);
+}
+.t-rung__body {
+  grid-area: body;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.t-rung__name {
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.t-rung--1 .t-rung__name {
+  font-size: 2rem;
+}
+.t-rung__score {
+  grid-area: score;
+  align-self: end;
+  line-height: 1.05;
+  text-align: right;
+  font-family: var(--canccu-font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.t-rung__move {
+  grid-area: move;
+  align-self: start;
+  line-height: 1.1;
+  font-family: var(--canccu-font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-align: right;
+  color: var(--canccu-color-text-muted);
+}
+.t-rung__move--up {
+  color: var(--canccu-color-status-ok);
+}
+.t-rung__move--down {
+  color: var(--canccu-color-status-down);
+}
+/* Show as many rungs as fit: the ladder never scrolls or clips half a rung. */
+@container (max-height: 660px) {
+  .t-rung:nth-child(n + 8) {
+    display: none;
+  }
+}
+@container (max-height: 580px) {
+  .t-rung:nth-child(n + 7) {
+    display: none;
+  }
+}
+/* Wide and short: two columns of four, read down then across. */
+@container (min-aspect-ratio: 3 / 2) {
+  .t-ladder {
+    display: grid;
+    grid-template-rows: repeat(4, auto);
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 10px 22px;
+  }
+  .t-rung:nth-child(7),
+  .t-rung:nth-child(8) {
+    display: grid;
+  }
+  .t-rung:nth-child(n + 9) {
+    display: none;
+  }
+}

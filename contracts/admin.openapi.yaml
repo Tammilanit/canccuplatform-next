@@ -176,7 +176,10 @@ components:
       type: apiKey
       in: cookie
       name: canccu_session
-      description: Opaque session id, stored in Postgres. Set by sign-in (issue #10).
+      description: >-
+        Opaque session id, stored in Postgres. Set by sign-in (issue #10). From the central sign-in host (#52) on,
+        over HTTPS the cookie is `__Host-canccu_session` (Secure, Path=/, no Domain); plain-http stacks keep this name
+        (contracts/admin.md, Session and rights).
   parameters:
     Module:
       name: module

@@ -1,0 +1,17 @@
+{{! Field names are placeholders until the screen contract names the announcements widget's fields. }}
+{{! items[].level: info or important; the kicker text says which, the card style only repeats it. }}
+<h2 class="canccu-widget__title">{{title}}</h2>
+<div class="t-cards">
+  {{#items}}
+  <div class="t-card t-card--{{level}}">
+    <span class="t-card__badge" aria-hidden="true"><span class="t-card__glyph"></span></span>
+    <div class="t-card__text">
+      <p class="t-card__kicker">{{kicker}}</p>
+      <h3 class="t-card__heading">{{heading}}</h3>
+      <p class="t-card__body">{{body}}</p>
+      <p class="t-card__time"><time datetime="{{iso}}">{{time_text}}</time></p>
+    </div>
+  </div>
+  {{/items}}
+</div>
+{{^items}}<p class="t-empty">No announcements.</p>{{/items}}

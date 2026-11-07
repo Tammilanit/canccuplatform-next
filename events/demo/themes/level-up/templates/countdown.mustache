@@ -1,0 +1,10 @@
+{{! Field names are placeholders until the screen contract names the countdown widget's fields. }}
+{{! percent_step: share of the wait already passed, 0-100 in steps of 5 (a template cannot set a width,
+    so the CSS maps each step class to one); remaining_text carries the same news in words. }}
+<h2 class="canccu-widget__title">{{title}}</h2>
+<div class="t-count">
+  <p class="t-count__label">{{label}}</p>
+  <p class="t-count__remaining">{{remaining_text}}</p>
+  <div class="t-xp t-xp--hero" aria-hidden="true"><span class="t-xp__fill t-xp__fill--{{percent_step}}"></span></div>
+  <p class="t-count__foot"><span>{{target_text}}</span> <span class="t-count__pct">{{percent_text}}</span></p>
+</div>

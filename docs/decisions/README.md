@@ -30,6 +30,7 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0022](0022-product-vision.md) | The product vision: who it is for, the Pulse screen at its heart, what is planned and what is not | 2026-11-06 |
 | [0023](0023-step-design-briefs.md) | Every step starts with a design brief, and issues leave room to design | 2026-11-06 |
 | [0024](0024-additive-contract-docs-normal-risk.md) | Additive contract docs are normal risk; the maintainer reviews contracts at the checkpoint | 2026-11-07 |
+| [0025](0025-finals-and-games-modules.md) | Finals and games are separate modules, on a shared tourney core | 2026-11-07 |
 
 ## How the records are applied
 - **Bundling packages** ([0019](0019-work-packages.md), 2026-11-07, #144). In step 2 most packages held one issue, so each issue paid for its own run, review, fix round and fix-check. The planner now bundles related issues into fuller packages, while a contract change still goes apart from its consumers and merges first; the rules live in [AGENTS.md, Package plan](../../AGENTS.md#how-work-flows). This refines how 0019 is applied; its text is unchanged.

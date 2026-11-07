@@ -1,0 +1,10 @@
+{{! Field names are placeholders until the screen contract names the hot_game widget's fields. }}
+{{! image_url is an image address the widget documents; heat_step is 0-100 in steps of 5. }}
+<h2 class="canccu-widget__title">{{title}}</h2>
+<div class="t-hot">
+  {{#image_url}}<img class="t-hot__art" src="{{image_url}}" alt="">{{/image_url}}
+  <p class="t-hot__name">{{name}}</p>
+  <p class="t-hot__players">{{players_text}}</p>
+  <div class="t-xp" aria-hidden="true"><span class="t-xp__fill t-xp__fill--{{heat_step}}"></span></div>
+  <p class="t-hot__trend">{{trend_text}}</p>
+</div>
