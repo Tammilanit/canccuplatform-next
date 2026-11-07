@@ -42,7 +42,8 @@ ADMIN_RIGHTS = frozenset(
         "admin.profile.write",
     }
 )
-# Other modules' rights join these sets as their modules land (#56 makes them per tenant).
+# Other modules' rights join these sets as their modules land; the event-admin role per tenant
+# (contracts/tenants.md, Roles) replaces them with the central sign-in (#52).
 ROLE_RIGHTS: dict[str, frozenset[str]] = {
     "owner": ADMIN_RIGHTS | {"admin.rights.write"},
     "admin": ADMIN_RIGHTS,
@@ -280,5 +281,6 @@ class Auth:
                 "actor_user_id": actor,
             },
             version=1,
-            platform=True,  # admin is single-event until #56, as in service.py
+            # Roles are platform-wide until the central sign-in binds sessions to a tenant (#52).
+            platform=True,
         )

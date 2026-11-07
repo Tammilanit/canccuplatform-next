@@ -10,4 +10,5 @@ tenants users           users are global (0013 item 30)
 tenants series          a series spans events
 tenants platform_audit  audit entries that belong to no single event
 tenants tenants_migrations which migration files ran (created by db.py before the files); no event data
+admin admin_migrations  which migration files ran (created by db.py before the files); no event data
 screen devices          device identity: name, token hash, venue id, current tenant (0013 item 34)

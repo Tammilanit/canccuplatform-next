@@ -3,7 +3,7 @@
 # stub's cookie (deploy/compose.ci.yml). CI runs it in the `demo-stack` check and uploads
 # OUT_DIR as an artifact. A page that does not answer 200 fails the run, so a screenshot of
 # an error page never passes for a real one.
-# Usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR]   (defaults http://localhost, screenshots)
+# Usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR]   (defaults http://127.0.0.1, screenshots)
 #        demo-screenshots --install   installs Chromium and its system packages (CI; needs sudo)
 # Needs curl and Node 22.
 set -uo pipefail
@@ -26,7 +26,7 @@ fi
 dry=0
 if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
 [ $# -le 2 ] || usage
-BASE=${1:-http://localhost}
+BASE=${1:-http://127.0.0.1}
 BASE=${BASE%/}
 OUT=${2:-screenshots}
 SESSION=${DEMO_SESSION:-demo-ci}

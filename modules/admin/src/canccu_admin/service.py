@@ -1,4 +1,9 @@
-"""Settings, profile and health logic behind the API and the pages."""
+"""Settings, profile and health logic behind the API and the pages.
+
+Settings and the profile are per tenant: every method that touches them runs for the current
+tenant (set by the kit from the request's hostname), reads and writes only that tenant's rows and
+event folder, and publishes on that tenant's stream.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from canccu_kit import Bus, KitError
+from canccu_kit import Bus, KitError, tenant_file
 from jsonschema import Draft202012Validator
 
 from . import profile as prof
@@ -41,6 +46,14 @@ def _summary(document: dict[str, Any], upgraded_from: int | None) -> dict[str, A
     return result
 
 
+def _replace_dir(target: Path, staging: Path) -> None:
+    target.mkdir(parents=True, exist_ok=True)
+    for child in target.iterdir():
+        shutil.rmtree(child) if child.is_dir() else child.unlink()
+    for child in staging.iterdir():
+        shutil.move(str(child), target / child.name)
+
+
 @dataclass
 class ModuleHealth:
     module: str
@@ -55,7 +68,7 @@ class Service:
         store: Store,
         bus: Bus,
         validator: Draft202012Validator,
-        event_dir: Path,
+        files_root: Path,
         declarations: dict[str, list[Setting]],
         health_targets: dict[str, str],
         http: httpx.AsyncClient | None = None,
@@ -63,10 +76,15 @@ class Service:
         self.store = store
         self.bus = bus
         self.validator = validator
-        self.event_dir = event_dir
+        self.files_root = files_root
         self.declarations = declarations
         self.health_targets = health_targets
         self._http = http or httpx.AsyncClient(timeout=2.0)
+
+    @property
+    def event_dir(self) -> Path:
+        """The current tenant's event folder: `<files root>/<tenant>/admin/event`."""
+        return Path(tenant_file("admin", "event", root=str(self.files_root)))
 
     # settings
     async def get_settings(self, module: str) -> dict[str, Any]:
@@ -92,8 +110,6 @@ class Service:
             "admin.settings.changed",
             {"module": module, "keys": keys, "settings_version": version, "actor_user_id": actor},
             version=1,
-            # Admin is still single-event; #56 makes these tenant events (contracts/events.md).
-            platform=True,
         )
         return {"module": module, "settings_version": version, "values": values}
 
@@ -121,7 +137,6 @@ class Service:
                 "actor_user_id": actor,
             },
             version=1,
-            platform=True,  # until #56, as above
         )
 
     async def save_profile(self, actor: str) -> dict[str, Any]:
@@ -161,15 +176,8 @@ class Service:
             if loaded.warnings:
                 raise prof.ProfileInvalid(loaded.warnings[0])
             await self.load_profile(actor, staging)
-            await asyncio.to_thread(self._replace_event_dir, staging)
+            await asyncio.to_thread(_replace_dir, self.event_dir, staging)
         return _summary(loaded.document, loaded.upgraded_from)
-
-    def _replace_event_dir(self, staging: Path) -> None:
-        self.event_dir.mkdir(parents=True, exist_ok=True)
-        for child in self.event_dir.iterdir():
-            shutil.rmtree(child) if child.is_dir() else child.unlink()
-        for child in staging.iterdir():
-            shutil.move(str(child), self.event_dir / child.name)
 
     # health view
     async def _probe(self, module: str, url: str) -> ModuleHealth:
