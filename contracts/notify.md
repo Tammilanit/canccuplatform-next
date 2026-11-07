@@ -34,8 +34,8 @@ Each topic type has an event-wide part, a personal part, or both. An attendee op
 | `schedule` | agenda | event: event (on, off) | `agenda.reminder.triggered` | `data.item.visibility` | kind not `quiet_hours`; `data.lead_minutes` `nearest_in` `data.leads_minutes` to param `lead_minutes` (default 10; on a tie the larger), so an item with leads `[15]` is still announced, at 15, and one with `[]` never | no |
 | | | | `agenda.item.delayed`, `agenda.item.cancelled` | `data.item.visibility` | kind not `quiet_hours`; `data.item.starts_at` `within_minutes` 120; dedupe by `correlation_id` and `audience`, so a delay with `following` gives one notification per audience, for the earliest shifted item it may see | no |
 | `announcements` | admin (provisional: the announce action, step 4) | event: event (on, off) | the announce action's event (step 4) | its visibility | — | `data.urgent` |
-| `food` | pizza | event: event (off, off); personal: user (on, off) | `pizza.ordering.opened`, `pizza.ordering.closed` (provisional) | event: `public` | — | no |
-| | | | `pizza.order.ready` (provisional) | personal: `data.user_id` | — | no |
+| `food` | pizza | event: event (off, off); personal: user (on, off) | `pizza.order.opened`, `pizza.order.closed` (provisional) | event: `public` | — | no |
+| | | | `pizza.order.arrived` (provisional) | personal: `data.user_ids` (each person with a pizza in the order) | — | no |
 | `tournament` | tournament | event: event (off, off); personal: user (on, off) | `tournament.registration.opened` (provisional) | event: `public` | — | no |
 | | | | `tournament.match.called` (provisional) | personal: `data.user_ids` (each player of the match) | — | yes |
 | | | | `tournament.checkin.opened` (provisional) | personal: `data.user_ids` (each registered player) | — | no |
