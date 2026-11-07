@@ -1,5 +1,5 @@
--- The tenants module's tables (contracts/tenants.md, Tables). Run at every start under an
--- advisory lock, so every statement is idempotent.
+-- The tenants module's tables (contracts/tenants.md, Tables). Runs once: db.py records it in
+-- tenants_migrations.
 --
 -- Global tables are on scripts/tenancy-global-tables.txt; every other table is per tenant under
 -- RLS. Requests run as canccu_tenants_app (SET LOCAL ROLE), which RLS binds; the login role only
@@ -123,24 +123,22 @@ CREATE TABLE IF NOT EXISTS audit (
 
 ALTER TABLE event_admins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_admins FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS canccu_tenant ON event_admins;
 CREATE POLICY canccu_tenant ON event_admins USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
 
 ALTER TABLE tenant_flags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tenant_flags FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS canccu_tenant ON tenant_flags;
 CREATE POLICY canccu_tenant ON tenant_flags USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
 
 ALTER TABLE venue_info ENABLE ROW LEVEL SECURITY;
 ALTER TABLE venue_info FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS canccu_tenant ON venue_info;
 CREATE POLICY canccu_tenant ON venue_info USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
 
 ALTER TABLE audit ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS canccu_tenant ON audit;
 CREATE POLICY canccu_tenant ON audit USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
 
+-- Explicit: a public schema created by hand (not by initdb) grants no USAGE to PUBLIC.
+GRANT USAGE ON SCHEMA public TO canccu_tenants_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON venues, tenants, hostnames, users, event_admins, tenant_flags, venue_info TO canccu_tenants_app;
 -- The audit log is append-only by grant (contracts/tenants.md, Audit log), not only by code.
 GRANT SELECT, INSERT ON audit, platform_audit TO canccu_tenants_app;
