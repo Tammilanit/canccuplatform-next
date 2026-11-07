@@ -3,36 +3,24 @@
 from __future__ import annotations
 
 import html
-from collections.abc import Awaitable, Callable
 from typing import Any
 from urllib.parse import urlencode
 
-from canccu_kit import Health, KitError
+from canccu_kit import Health, KitError, NotSignedIn
 from canccu_kit.rights import Session
 from canccu_kit.starlette import install
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
+from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.routing import Route
 
+from .auth import Auth
+from .auth_routes import Authorize, OnEvent, OriginCheck, auth_routes
 from .declarations import Setting
+from .pages import BASE, page
 from .service import BadSettings, Service
 
-Authorize = Callable[[str | None, str], Awaitable[Session]]
-BASE = "/admin"  # Caddy serves module pages under /admin/ and strips it
 MODULES = ("screen", "tournament", "pizza", "bot", "admin", "games", "moments", "voices", "cast")
-
-
-def _page(title: str, body: str) -> HTMLResponse:
-    nav = " · ".join(
-        f'<a href="{BASE}/{p}">{n}</a>'
-        for p, n in (("settings", "Settings"), ("health-view", "Health"), ("profile", "Profile"))
-    )
-    return HTMLResponse(
-        f"<!doctype html><meta charset=utf-8><title>{html.escape(title)}</title>"
-        f"<body style='font-family:sans-serif;max-width:48rem;margin:2rem auto'>"
-        f"<nav>{nav}</nav><h1>{html.escape(title)}</h1>{body}</body>"
-    )
 
 
 def _field(s: Setting, value: Any) -> str:
@@ -78,7 +66,13 @@ def _from_form(declared: list[Setting], form: Any) -> dict[str, Any]:
     return values
 
 
-def create_app(service: Service, health: Health, authorize: Authorize) -> Starlette:
+def create_app(
+    service: Service,
+    health: Health,
+    authorize: Authorize,
+    auth: Auth,
+    on_event: OnEvent | None = None,
+) -> Starlette:
     async def need(request: Request, right: str) -> Session:
         return await authorize(request.headers.get("cookie"), right)
 
@@ -127,7 +121,7 @@ def create_app(service: Service, health: Health, authorize: Authorize) -> Starle
         links = "".join(
             f'<li><a href="{BASE}/settings/{m}">{m}</a></li>' for m in service.declarations
         )
-        return _page(
+        return page(
             "Settings", f"<ul>{links}</ul>" if links else "<p>No module declares settings.</p>"
         )
 
@@ -138,7 +132,7 @@ def create_app(service: Service, health: Health, authorize: Authorize) -> Starle
         current = await service.get_settings(module)
         fields = "".join(_field(s, current["values"].get(s.key)) for s in declared)
         notice = (request.query_params.get("saved") and "<p><b>Saved.</b></p>") or ""
-        return _page(
+        return page(
             f"Settings: {module}",
             f"{notice}<form method=post>"
             f"<input type=hidden name=settings_version value={current['settings_version']}>"
@@ -170,7 +164,7 @@ def create_app(service: Service, health: Health, authorize: Authorize) -> Starle
             f"<td>{html.escape(d)}</td></tr>"
             for m, s, v, d in rows
         )
-        return _page(
+        return page(
             "Health",
             "<table border=1 cellpadding=4><tr><th>Module<th>Status<th>Version"
             f"<th>Detail</tr>{trs}</table>",
@@ -180,7 +174,7 @@ def create_app(service: Service, health: Health, authorize: Authorize) -> Starle
         await need(request, "admin.profile.read")
         message = html.escape(request.query_params.get("message", ""))
         warns = "".join(f"<li>{html.escape(w)}</li>" for w in request.query_params.getlist("warn"))
-        return _page(
+        return page(
             "Profile",
             (f"<p><b>{message}</b></p>" if message else "")
             + (f"<p>Warnings:</p><ul>{warns}</ul>" if warns else "")
@@ -216,7 +210,18 @@ def create_app(service: Service, health: Health, authorize: Authorize) -> Starle
             Route("/profile", profile_page),
             Route("/profile/save", profile_save, methods=["POST"]),
             Route("/profile/load", profile_load, methods=["POST"]),
+            *auth_routes(auth, authorize, on_event),
         ]
     )
     install(app, health)
+    app.add_exception_handler(NotSignedIn, _not_signed_in)
+    app.add_middleware(OriginCheck, origin=auth.public_origin)
     return app
+
+
+async def _not_signed_in(request: Request, exc: Exception) -> Response:
+    """The API answers 401 (contracts/admin.md); a page sends the browser to sign in."""
+    if request.url.path.startswith("/api/"):
+        assert isinstance(exc, NotSignedIn)
+        return JSONResponse(exc.to_body(), status_code=exc.status)
+    return RedirectResponse(f"{BASE}/sign-in", status_code=303)

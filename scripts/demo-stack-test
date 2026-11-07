@@ -31,6 +31,8 @@ TESTS=(
   "GET /api/admin/profile exports a zip with profile.yaml and its assets"
   "health view page lists admin and hello"
   "importing the demo zip again restores the demo profile's settings"
+  "admin's own GET /api/admin/session without a session is 401 not_signed_in"
+  "the sign-in page answers and offers the first-run code"
 )
 
 if [ "$dry" = 1 ]; then
@@ -143,6 +145,15 @@ check "${TESTS[11]}" lists_admin_and_hello
 call PUT /api/admin/profile -H "cookie: $COOKIE" -H "content-type: application/zip" --data-binary "@$TMP/demo.zip"
 call GET /api/admin/settings/admin -H "cookie: $COOKIE"
 check "${TESTS[12]}" body_is 200 '.values.language == "en"'
+
+# Admin itself serves the session API (the stub only answers admin's own rights checks).
+call GET /api/admin/session
+check "${TESTS[13]}" body_is 401 '.error.code == "not_signed_in"'
+
+call GET /admin/sign-in
+# shellcheck disable=SC2329
+offers_first_run() { status_is 200 && grep -q "/admin/first-run" "$TMP/body"; }
+check "${TESTS[14]}" offers_first_run
 
 if [ "$fail" = 0 ]; then echo "demo-stack-test: all $n tests passed"; else echo "demo-stack-test: tests failed" >&2; fi
 exit "$fail"

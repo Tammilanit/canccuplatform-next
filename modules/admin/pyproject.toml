@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "canccu-admin"
 version = "0.1.0"
-description = "CanccuPlatform admin module: settings, health view, profile save and load."
+description = "CanccuPlatform admin module: settings, health view, profile save and load, sign-in."
 requires-python = ">=3.12"
 dependencies = [
   "canccu-kit[starlette] @ file:../../packages/kit-py",
@@ -42,7 +42,7 @@ select = ["E", "F", "W", "I", "B", "UP", "ASYNC", "RUF"]
 [tool.mypy]
 strict = true
 python_version = "3.12"
-mypy_path = "src"
+mypy_path = "src:tests"
 files = ["src", "tests"]
 explicit_package_bases = true
 exclude = ["^\\.venv/"]

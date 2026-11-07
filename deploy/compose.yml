@@ -74,6 +74,9 @@ services:
       CANCCU_DATABASE_URL: postgres://canccu:${POSTGRES_PASSWORD:-canccu-local-only}@postgres:5432/canccu
       CANCCU_EVENT_DIR: /files/event
       CANCCU_HEALTH_TARGETS: hello=http://hello:8080/health
+      CANCCU_PUBLIC_URL: ${CANCCU_PUBLIC_URL:-}
+      CANCCU_DISCORD_CLIENT_ID: ${CANCCU_DISCORD_CLIENT_ID:-}
+      CANCCU_DISCORD_CLIENT_SECRET: ${CANCCU_DISCORD_CLIENT_SECRET:-}
     volumes:
       - files:/files
     depends_on:
