@@ -1217,7 +1217,8 @@ components:
           default: true
           description: |
             Personal notifications fall back to a Discord DM when no push reaches the caller, unless the caller
-            explicitly set `discord_dm: false` for that topic and part in `channels`.
+            explicitly set `discord_dm: false` for that topic and part in `channels`. A caller without a Discord
+            id linked gets no DM at all.
         channels:
           type: object
           description: |

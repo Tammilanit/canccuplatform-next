@@ -2,9 +2,9 @@ openapi: 3.1.0
 info:
   title: Bot API
   version: 1.0.0
-  summary: An event's Discord connection, its guild binding and the command registration.
+  summary: An event's Discord connection, its guild binding, the command registration, and who plays what.
   description: |
-    Machine-readable part of the bot contract (connections). Prose, the client pool, isolation, secrets and
+    Machine-readable part of the bot contract (connections, and the who-plays-what read API). Prose, the client pool, isolation, secrets and
     events: contracts/bot.md. Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
     Paths under /api/bot act on the event (tenant) of the request's hostname, except the install callback,
     which answers only on the central sign-in host, and the superadmin paths, which answer only on the
@@ -20,6 +20,8 @@ tags:
     description: Which Discord application serves the event, and its client's status.
   - name: guild
     description: Binding the event's Discord server through the OAuth bot-install flow, and its slash commands.
+  - name: presence
+    description: Who plays which game and who is in which voice channel, live; the names behind the bus's counts.
   - name: clone
     description: Moving the connection and binding from the last event of a series.
   - name: superadmin
@@ -253,6 +255,58 @@ paths:
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+  /api/bot/presence/playing:
+    get:
+      tags: [presence]
+      operationId: getPlaying
+      summary: Who plays which game now
+      description: |
+        A signed-in member of the event, or right `bot.presence.read`. The guild members' "playing" activities,
+        grouped by the event's games (matched as in contracts/games.md). Activities of a hidden game are left out
+        entirely; unmatched activities form one entry with `game_id: null` and `name: null`. Only platform users
+        are named; other guild members are only counted. Users with the presence opt-out never appear. `available: false` with empty lists when no guild is bound,
+        the client is not ready or the feed's feature flag is off.
+      parameters:
+        - name: game_id
+          in: query
+          required: false
+          description: Only this game of the catalogue.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
+      responses:
+        "200":
+          description: The activities now.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Playing"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/bot/presence/voice:
+    get:
+      tags: [presence]
+      operationId: getVoice
+      summary: Who is in which voice channel now
+      description: |
+        A signed-in member of the event, or right `bot.presence.read`. The voice channels with people in them,
+        only those every member of the guild can see. Only platform users are named; other guild members are
+        only counted. Users with the presence opt-out never appear.
+        `available: false` with empty lists as for `getPlaying`.
+      responses:
+        "200":
+          description: The voice channels now.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Voice"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /api/bot/clone:
     post:
       tags: [clone]
@@ -336,7 +390,8 @@ components:
             $ref: "#/components/schemas/Error"
     Forbidden:
       description: |
-        `missing_right` (the right is missing, or the call needs the event-admin role itself), `mfa_required`
+        `missing_right` (the right is missing, or the call needs the event-admin role itself), `not_a_member`
+        (who-plays-what for a signed-in user who is not a member of the event and lacks the right), `mfa_required`
         (a superadmin without Discord two-factor) or `admin_access_restricted` (contracts/tenants.md, Admin access).
       content:
         application/json:
@@ -561,6 +616,84 @@ components:
           type: boolean
         connection:
           $ref: "#/components/schemas/Connection"
+    Player:
+      type: object
+      description: |
+        A platform user on a board. Guild members without a platform account are never listed (they cannot opt
+        out), only counted. Never a Discord id.
+      required: [user_id, name]
+      additionalProperties: false
+      properties:
+        user_id:
+          $ref: "#/components/schemas/UserId"
+        name:
+          type: string
+          maxLength: 100
+          description: The platform name.
+    Playing:
+      type: object
+      required: [available, as_of, games]
+      additionalProperties: false
+      properties:
+        available:
+          type: boolean
+          description: "`false`: no guild bound, the client not ready, or the feed's feature flag off; `games` is then empty."
+        as_of:
+          type: [string, "null"]
+          format: date-time
+          description: When the bot last updated the state; `null` when not available.
+        games:
+          type: array
+          items:
+            type: object
+            required: [game_id, name, player_count, players]
+            additionalProperties: false
+            properties:
+              game_id:
+                type: [string, "null"]
+                description: The game in the event's catalogue; `null` for the one entry grouping every unmatched activity.
+              name:
+                type: [string, "null"]
+                description: The game's name; `null` for the unmatched entry (activity names are never shown).
+              player_count:
+                type: integer
+                minimum: 0
+                description: Everyone playing it except opted-out users, also guild members who are not listed.
+              players:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Player"
+    Voice:
+      type: object
+      required: [available, as_of, channels]
+      additionalProperties: false
+      properties:
+        available:
+          type: boolean
+          description: As for `Playing`; `channels` is then empty.
+        as_of:
+          type: [string, "null"]
+          format: date-time
+        channels:
+          type: array
+          items:
+            type: object
+            required: [channel_id, name, member_count, members]
+            additionalProperties: false
+            properties:
+              channel_id:
+                $ref: "#/components/schemas/Snowflake"
+              name:
+                type: string
+                maxLength: 100
+              member_count:
+                type: integer
+                minimum: 0
+                description: Everyone in the channel except opted-out users, also guild members who are not listed.
+              members:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Player"
     Reason:
       type: object
       required: [reason]

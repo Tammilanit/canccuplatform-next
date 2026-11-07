@@ -1,6 +1,6 @@
 # Bot contract
 
-The Discord side of the platform. The `bot` module is one module with a pool of Discord clients ([0013](../docs/decisions/0013-multi-tenant-core.md) items 14–16): the shared platform bot serves many events, and an event may bring its own Discord application instead. This part of the contract fixes the **connections**: which client serves an event, how an event binds its Discord server (guild), how slash commands follow the event's feature flags, and how one event's client trouble stays its own. The commands, the gateway data the bot reads and the rest of its events are fixed when canccubot is ported (roadmap step 6) and join this file then.
+The Discord side of the platform. The `bot` module is one module with a pool of Discord clients ([0013](../docs/decisions/0013-multi-tenant-core.md) items 14–16): the shared platform bot serves many events, and an event may bring its own Discord application instead. This part of the contract fixes the **connections**: which client serves an event, how an event binds its Discord server (guild), how slash commands follow the event's feature flags, and how one event's client trouble stays its own. It also fixes the **who-plays-what read API**, which serves the names behind the bot's presence counts. The commands, the gateway data the bot reads and the rest of its events are fixed when canccubot is ported (roadmap step 6) and join this file then.
 
 **Machine-readable API: [bot.openapi.yaml](bot.openapi.yaml)** (OpenAPI 3.1). It is the source for paths, fields and status codes; this file explains them and adds the rules and events. Conventions (field names, times, error body): [README.md](README.md#conventions).
 
@@ -99,6 +99,17 @@ The binding (`Binding` in the OpenAPI file): `guild_id`, `guild_name`, `applicat
 - Each feed of gateway data (presence, members, voice, messages) belongs to a feature flag. The client drops a feed for a guild whose event has that flag off, or that is bound to no event, **before** anything is stored, counted or emitted. The same holds on an own client.
 - Members with the presence opt-out are left out of every presence feed ([tenants.md](tenants.md#privacy-and-retention), [events.md](events.md#provisional-events-version-1)).
 
+## Who plays what
+The bus carries presence as counts only ([events.md](events.md#people-in-events)): an event-wide event reaches every consumer, also logs and the screens of other zones. The names behind the counts, who plays which game and who is in which voice channel, are read here, live, by callers allowed to see them: the screen's and the hub's "now playing" boards, LFG, and the players of a game that surges.
+
+- `GET /api/bot/presence/playing?game_id=` → `Playing`: the event's guild members' "playing" activities now, grouped by game, each with its `players`. The bot matches activities to the event's games catalogue by the games contract's rule ([games.md](games.md#the-catalogue)), reading it through the games API and following the `games.game.*` events. An activity whose identifiers belong to a hidden game is left out entirely, neither listed nor counted, so a game a moderator hid never comes back by its activity name ([games.md](games.md#moderation)). Activities that match no game are grouped into one entry with `game_id: null` and `name: null`: an activity name is free text a guild member controls, so it never reaches a board unmoderated (moderators find them in the games module's unmatched list). At most one entry has `game_id: null`, so clients key entries by `game_id`. `game_id` narrows the answer to one game, for a surge or an LFG page.
+- `GET /api/bot/presence/voice` → `Voice`: the guild's voice channels with people in them, each with its `member_count` and `members`. Only channels every member of the guild can see are listed; a private channel and who is in it never are.
+- **Who may read:** a signed-in member of the event (the hub's attendee session), or a caller with the right `bot.presence.read` (crew; how a screen device's requests carry it is for the screen contract). A guest gets 401 `not_signed_in`, a signed-in non-member 403 `not_a_member`.
+- **Only platform users are named.** A player (`Player`) is `user_id` (always set) and `name` (the platform name). A guild member who has not signed in to the platform is counted in `player_count` and `member_count` but never listed: they cannot opt out (the presence opt-out lives on a platform user), and their presence was visible only inside Discord until now. Never a Discord id either: the people reading are attendees, and Discord ids are for modules ([events.md](events.md#people-in-events)).
+- **Opted out means absent:** a user with `presence_opt_out` ([tenants.md](tenants.md#privacy-and-retention)) never appears in either list, also when they are playing or in voice, and is not counted in `player_count` or `member_count`. The flag is checked when the answer is built, so opting out takes effect on the next read.
+- **Live only:** the bot keeps the current state per event in Valkey, updated from the gateway as it changes, and no history; it is presence data, dropped when the event is archived. The answer's `as_of` says when it was last updated.
+- **Not available:** with no guild bound, the client not ready, or the event's feature flag for the presence or voice feed off ([Privileged intents and data per event](#privileged-intents-and-data-per-event)), the answer is 200 with `available: false` and empty lists, so a board shows "not available" rather than "nobody plays".
+
 ## Clone
 The bot's part of clone-the-last-event ([tenants.md](tenants.md#series-and-clone)): `POST /api/bot/clone` with `source_tenant_id`, on the new event's hostname. It **moves** the source's connection and binding to the new event, so a series keeps its Discord server and its own application without a new install:
 
@@ -111,7 +122,7 @@ The bot's part of clone-the-last-event ([tenants.md](tenants.md#series-and-clone
 - Audited in both events; emits `bot.connection.changed` and `bot.guild.unbound` (`reason: moved`) on the source's stream and `bot.connection.changed` and `bot.guild.bound` on the new event's.
 
 ## Rights
-`bot.connection.read` (see the connection, the client's status and the binding). Writing the connection, binding, unbinding, syncing commands and cloning need the event-admin role itself (above), not a right. The superadmin's unbind needs the superadmin role.
+`bot.connection.read` (see the connection, the client's status and the binding), `bot.presence.read` (read who plays what without being a member of the event). Writing the connection, binding, unbinding, syncing commands and cloning need the event-admin role itself (above), not a right. The superadmin's unbind needs the superadmin role.
 
 ## Events (version 1)
 Envelope, naming and transport: [admin.md](admin.md#events). Listed in the catalog: [events.md](events.md#bot-connections). On the event's stream `t:<tenant>:events:bot`, with `tenant` set. Events carry ids, never a token, a client secret or a person's Discord id.
@@ -133,4 +144,4 @@ Consumers: admin (the event's bot status), notify (Discord DMs are possible only
 ```
 
 ## Not in this contract
-The bot port (step 6): its commands and their flags, the gateway data it reads and which privileged intents the shared application holds, role-to-rights sync, guided guild setup, and the events already outlined in [events.md](events.md#bot). The central sign-in host itself (#52) and the edge Caddy's routes (#51).
+The bot port (step 6): its commands and their flags (among them the flags of the presence and voice feeds), the gateway data it reads and which privileged intents the shared application holds, role-to-rights sync, guided guild setup, and the events already outlined in [events.md](events.md#bot). The central sign-in host itself (#52) and the edge Caddy's routes (#51).

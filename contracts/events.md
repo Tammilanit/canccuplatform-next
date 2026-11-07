@@ -40,7 +40,7 @@ Emitter: `agenda`. Audience: event-wide, by the item's `visibility`. Payloads: [
 |---|---|---|
 | `agenda.item.added` | An item was added | screen, notify (quiet hours) |
 | `agenda.item.changed` | An item was edited or moved | screen, notify (quiet hours) |
-| `agenda.item.delayed` | An item was delayed or brought forward | screen, notify |
+| `agenda.item.delayed` | An item was delayed or brought forward | screen, notify, tournament (moves the session of a delayed session item, [agenda.md](agenda.md#tournament-sessions)) |
 | `agenda.item.cancelled` | An item was cancelled | screen, notify |
 | `agenda.item.removed` | An item was removed | screen, notify (quiet hours) |
 | `agenda.item.started` | An item's start was reached | screen, moments |
@@ -135,12 +135,23 @@ A person in a payload is a **Person**:
 | Field | Type | Meaning |
 |---|---|---|
 | `user_id` | string or null | The platform user ([tenants.md](tenants.md#users-roles-and-membership)); `null` for a Discord member who has not signed in to the platform |
-| `discord_user_id` | string or null | Their Discord user id, so the bot can mention or DM them; `null` when unknown |
+| `discord_user_id` | string or null | Their Discord user id, so the bot can mention or DM them; `null` when unknown, and for a hub user with no Discord account linked |
 | `name` | string | The name the module shows for them |
 
-- A personal event names the users it concerns at the top of `data`: `user_id` (string, or null for a person without a platform account) for one person, or `user_ids` (list of string, users without a platform account left out) for several. Notify's topic triggers read these as their `recipients` ([notify.md](notify.md#topic-types)); the Person objects alongside carry the Discord ids for the bot.
+At least one of `user_id` and `discord_user_id` is set. The phone hub's people fit this shape as they are:
+
+| Who | `user_id` | `discord_user_id` | Personal events |
+|---|---|---|---|
+| A hub user with Discord linked | set | set | Yes: Notify (push, inbox, Discord DM) and the bot |
+| A hub user without Discord | set | `null` | Yes: Notify by push and inbox; no Discord DM and no mention |
+| A Discord member who has not signed in to the platform | `null` | set | Only through the bot (a mention or a channel post); Notify cannot reach them |
+| A guest: the hub with an anonymous push subscription and no account | — | — | Never: a guest is not a Person and no event names them. Guests get event-wide notifications only ([notify.md](notify.md#who-can-do-what)) |
+
+- **The link between a user and their Discord id** is the user's row in the tenants module, the one place it is kept ([tenants.md](tenants.md#users-roles-and-membership)). An emitter fills `discord_user_id` from it when it emits (the kit's user cache or `GET /internal/tenants/users/{user_id}`), so a user who links Discord later carries it in every later event; an event already emitted is never corrected.
+- A personal event names the users it concerns at the top of `data`: `user_id` (string, or null for a person without a platform account) for one person, or `user_ids` (list of string, users without a platform account left out) for several. Notify's topic triggers read these as their `recipients` ([notify.md](notify.md#topic-types)), and **Notify resolves everything from them alone**: it never reads a Person, a name or a Discord id from a payload, and takes a user's Discord id for a DM from the tenants module at delivery. The Person objects alongside are for the bot (mentions) and for screens (names).
 - An event-wide event may name a person too (the holder of a pizza order); its audience then says who may see that name. User ids and Discord ids are for modules: no consumer shows them to people.
 - Presence data ([tenants.md](tenants.md#privacy-and-retention)): the emitter leaves users with `presence_opt_out` out of every presence payload (counts and voice rosters below), so consumers never see them.
+- **Who plays what is never on the bus.** An event-wide event reaches every consumer of the event's stream, also logs and the screens of other zones, so presence goes on the bus as counts only (`bot.activities.counted`, `bot.presence.counted`, `games.surge.started`). The names behind them (who plays which game, who is in which voice channel) are served by the bot's read API to callers allowed to see them ([bot.md](bot.md#who-plays-what)). The one exception is `bot.voice_roster.captured`, a system event that answers the tournament's own scoring request.
 
 ### Pizza
 Emitter: `pizza` (roadmap step 5). The legacy group order, ported as it is ([0022](../docs/decisions/0022-product-vision.md)): one open order at a time per event; people add their pizzas; a holder claims the order, closes it and phones it in. New is `arrived`: the holder marks the pizzas arrived, which feeds the personal part of Notify's `food` topic. Menus, prices, bills and phone numbers never travel in events: they stay in the pizza API and the event's own data.
@@ -186,19 +197,28 @@ An **Order**:
 ```
 
 ### Tournament
-Emitter: `tournament` (roadmap step 7; the bot's side is built in step 6 against these outlines). A **session** is one scheduled game of the event's tournament (a tournament "event" in the legacy code); registration and check-in are per session. A **match** is one game played in a session: one in a free-for-all session, several in heats or a bracket.
+Emitter: `tournament` (roadmap step 7; the bot's side is built in step 6 against these outlines). A **session** is one scheduled game of one of the event's tournaments (a tournament "event" in the legacy code); registration is per session. A **match** is one game played in a session.
+
+- **Scoring is manual** (screenshots and who stayed in the match's Discord voice channels), so the tournament asks nothing of players that scoring does not need. Check-in and matches are both optional.
+- **Check-in is optional,** off by default. It is set per tournament (the tournament's `checkin` setting) and may be switched per session; `checkin_enabled` is the value in effect. With it off, the session never reaches `checkin_open`, no `tournament.checkin.*` or `tournament.player.checked_in` event is emitted, `checked_in_count` stays 0, and nobody is a no-show: every registered player plays. With it on, only registrants with a platform account can check in by the QR (it needs sign-in); an admin marks the others present. Check-in can be switched until the session is `running`. Switching it off while the session is `checkin_open` closes check-in with nobody a no-show: the module emits `tournament.checkin.closed` with an empty `no_show_user_ids`, the session goes back to `registration_closed`, and the screen drops the QR on that event as usual.
+- **Matches are optional:** by default a session is one game, and the module keeps exactly one match for it, labelled with the game's name, with all its players, so the match events below work the same either way. When a tournament is set up, an organiser may give a session several matches (heats, rounds), session by session, and change them later (while none of them has started); `matches` lists them in play order, and a change emits `tournament.session.changed` with `matches` in `changed`.
+- **Sessions feed the run-of-show:** the agenda module follows `tournament.session.added`, `.changed`, `.cancelled` and `.removed` and keeps one item of kind `tournament` per session, so adding, moving or cancelling a session adds, moves or cancels its item and the event's schedule always shows it ([agenda.md](agenda.md#tournament-sessions)). The tournament module never calls the agenda; it moves a session when the agenda delays its item (same section).
 
 A **Session**:
 
 | Field | Type | Meaning |
 |---|---|---|
 | `id` | string | The session |
+| `tournament_id` | string | The tournament it belongs to (the id the agenda's `links.tournament_id` names) |
 | `game` | object | `id` (string or null: the game in the games catalogue, [games.md](games.md)), `name` (string) |
 | `starts_at`, `registration_closes_at` | string, time | Planned start; end of registration |
-| `status` | string | `scheduled`, `registration_open`, `registration_closed`, `checkin_open`, `running`, `finished`, `cancelled` |
+| `ends_at` | string, time, or null | Planned end, when the organiser set one |
+| `status` | string | `scheduled`, `registration_open`, `registration_closed`, `checkin_open` (only with check-in on), `running`, `finished`, `cancelled` |
 | `is_final` | boolean | The tournament's final |
+| `checkin_enabled` | boolean | Check-in is on for this session: the session's own choice, else the tournament's `checkin` setting (default `false`) |
+| `matches` | list of object | `id` (string), `label` (string): the session's matches in play order; exactly one unless the organiser gave it more |
 | `voice_plan` | string | `none`, `solo` (one voice channel per player) or `team` (one per team): what the bot creates when a match is called |
-| `registered_count`, `checked_in_count` | integer | Players registered, and checked in |
+| `registered_count`, `checked_in_count` | integer | Players registered, and checked in (0 while check-in is off) |
 | `revision` | integer | Grows with every change, including each registration and check-in |
 
 A **Match**:
@@ -214,17 +234,17 @@ A **Result** is one placement: `rank` (integer), `team_id` (string or null), `us
 
 | Type | Meaning | Audience | Consumers | `data` |
 |---|---|---|---|---|
-| `tournament.session.added` | A session was added to the schedule | event-wide, `public` | screen, bot | `session` (Session), `actor_user_id` |
-| `tournament.session.changed` | A session was edited, postponed or reopened | event-wide, `public` | screen, bot | `session` (Session), `changed` (list of string: field names), `actor_user_id` |
-| `tournament.session.cancelled` | A session was cancelled or ended early | event-wide, `public` (`session`); personal (`user_ids`, `people`): its registered players | screen, bot (removes its voice channels, tells its players) | `session` (Session), `user_ids` (list of string), `people` (list of Person): its registered players, `actor_user_id` |
-| `tournament.session.removed` | A session was deleted | event-wide, `public` | screen, bot | `session_id` (string), `actor_user_id` |
+| `tournament.session.added` | A session was added to the schedule | event-wide, `public` | screen, bot, agenda (adds the session's item) | `session` (Session), `actor_user_id` |
+| `tournament.session.changed` | A session was edited, postponed or reopened, or its matches or check-in changed | event-wide, `public` | screen, bot, agenda (moves the session's item) | `session` (Session), `changed` (list of string: field names), `actor_user_id` |
+| `tournament.session.cancelled` | A session was cancelled (`session.status` `cancelled`) or ended early (another status) | event-wide, `public` (`session`); personal (`user_ids`, `people`): its registered players | screen, bot (removes its voice channels, tells its players), agenda (cancels the session's item, or ends it for a session that ended early) | `session` (Session), `user_ids` (list of string), `people` (list of Person): its registered players, `actor_user_id` |
+| `tournament.session.removed` | A session was deleted | event-wide, `public` | screen, bot, agenda (removes the session's item) | `session_id` (string), `actor_user_id` |
 | `tournament.registration.opened` | Players can register for a session | event-wide, `public` | notify (`tournament`), screen, bot | `session` (Session), `actor_user_id` |
 | `tournament.registration.closed` | Registration for a session closed | event-wide, `public` | screen, bot | `session` (Session), `actor_user_id` |
 | `tournament.player.registered` | A person registered for a session, or an admin added them | personal (`user_id`) | screen (counts), bot | `session_id` (string), `user_id` (string or null), `person` (Person), `session_revision` (integer), `registered_count` (integer), `actor_user_id` |
 | `tournament.player.unregistered` | A person left a session, or an admin removed them | personal (`user_id`) | screen (counts), bot | `session_id` (string), `user_id` (string or null), `person` (Person), `session_revision` (integer), `registered_count` (integer), `actor_user_id` |
-| `tournament.checkin.opened` | Check-in for a session opened: its players check in by the rotating QR (purpose `tournament:<session id>`, [notify.md](notify.md#check-in-by-the-rotating-qr)) | personal (`user_ids`, `people`: each registered player); `session` is event-wide, `public` | notify (`tournament`), screen (shows the QR with `session` only), bot | `session` (Session), `closes_at` (string, time), `user_ids` (list of string), `people` (list of Person) |
-| `tournament.player.checked_in` | A registered player checked in | personal (`user_id`) | screen (counts) | `session_id` (string), `user_id` (string), `person` (Person), `session_revision` (integer), `checked_in_count` (integer) |
-| `tournament.checkin.closed` | Check-in closed; who did not check in is a no-show | event-wide, `public` | screen, bot | `session` (Session), `checked_in_user_ids` (list of string), `no_show_user_ids` (list of string) |
+| `tournament.checkin.opened` | Only with `checkin_enabled`. Check-in for a session opened: its players check in by the rotating QR (purpose `tournament:<session id>`, [notify.md](notify.md#check-in-by-the-rotating-qr)) | personal (`user_ids`, `people`: each registered player); `session` is event-wide, `public` | notify (`tournament`), screen (shows the QR with `session` only), bot | `session` (Session), `closes_at` (string, time), `user_ids` (list of string), `people` (list of Person) |
+| `tournament.player.checked_in` | Only with `checkin_enabled`. A registered player checked in | personal (`user_id`) | screen (counts) | `session_id` (string), `user_id` (string), `person` (Person), `session_revision` (integer), `checked_in_count` (integer) |
+| `tournament.checkin.closed` | Only with `checkin_enabled`, or when it was just switched off during check-in (then nobody is a no-show). Check-in closed; who did not check in is a no-show | event-wide, `public` | screen, bot | `session` (Session), `checked_in_user_ids` (list of string), `no_show_user_ids` (list of string) |
 | `tournament.match.called` | A match's players are called to play now | personal (`user_ids`: each player of the match), urgent in Notify; `session` and `match`, with the players' names, are event-wide, `public`, as the schedule and results are | notify (`tournament`), bot (creates voice channels by `voice_plan`), moments (screen pin), screen | `session` (Session), `match` (Match), `user_ids` (list of string) |
 | `tournament.match.started` | A match started | event-wide, `public` | screen, moments | `session` (Session), `match` (Match), `actor_user_id` |
 | `tournament.scoring.started` | An admin started scoring a match; the bot answers with the voice roster | system | bot | `session_id` (string), `match_id` (string), `voice_channel_ids` (list of string) |
@@ -235,10 +255,11 @@ A **Result** is one placement: `rank` (integer), `team_id` (string or null), `us
 ```json
 {"id": "01928f3e-7a2b-7c4d-9e8f-0a1b2c3d4e80", "type": "tournament.match.called", "version": 1,
  "time": "2026-01-01T19:45:00Z", "source": "tournament", "tenant": "demo",
- "data": {"session": {"id": "ts_1", "game": {"id": "g_1", "name": "Demo Game"},
-   "starts_at": "2026-01-01T20:00:00Z", "registration_closes_at": "2026-01-01T19:30:00Z",
-   "status": "running", "is_final": false, "voice_plan": "solo",
-   "registered_count": 2, "checked_in_count": 2, "revision": 6},
+ "data": {"session": {"id": "ts_1", "tournament_id": "tn_1", "game": {"id": "g_1", "name": "Demo Game"},
+   "starts_at": "2026-01-01T19:30:00Z", "registration_closes_at": "2026-01-01T19:00:00Z",
+   "ends_at": "2026-01-01T21:00:00Z", "status": "running", "is_final": false,
+   "checkin_enabled": false, "matches": [{"id": "tm_1", "label": "Heat 1"}, {"id": "tm_2", "label": "Heat 2"}],
+   "voice_plan": "solo", "registered_count": 2, "checked_in_count": 0, "revision": 6},
   "match": {"id": "tm_1", "session_id": "ts_1", "label": "Heat 1",
    "teams": [{"team_id": null, "name": null, "user_ids": ["u_123"],
               "people": [{"user_id": "u_123", "discord_user_id": "100000000000000001", "name": "Demo Player"}]},
@@ -249,7 +270,7 @@ A **Result** is one placement: `rank` (integer), `team_id` (string or null), `us
 ```
 
 ### Bot
-Emitter: `bot` (roadmap step 6). Bot events report what the bot sees on Discord, for the event's bound guild. A bot command that changes another module's data (`/screen announce`, `/ticker set`, tournament admin) is a call to that module's API with the person's rights, not an event: the person gets the answer, and the owning module emits the event. The bot consumes `notify.dm.requested` and the pizza and tournament events above. When it answers an event, it sets the envelope's `correlation_id` to that event's `id`.
+Emitter: `bot` (roadmap step 6). Bot events report what the bot sees on Discord, for the event's bound guild. A bot command that changes another module's data (`/screen announce`, `/ticker set`, tournament admin) is a call to that module's API with the person's rights, not an event: the person gets the answer, and the owning module emits the event. The bot consumes `notify.dm.requested`, `games.surge.started` and the pizza and tournament events above. Its events carry counts, never who: who plays which game and who is in which voice channel are read from the bot's API ([bot.md](bot.md#who-plays-what)). When it answers an event, it sets the envelope's `correlation_id` to that event's `id`.
 
 | Type | Meaning | Audience | Consumers | `data` |
 |---|---|---|---|---|
