@@ -262,8 +262,9 @@ paths:
       summary: Who plays which game now
       description: |
         A signed-in member of the event, or right `bot.presence.read`. The guild members' "playing" activities,
-        grouped by the event's games (matched as in contracts/games.md); unmatched activities have `game_id: null`.
-        Users with the presence opt-out never appear. `available: false` with empty lists when no guild is bound,
+        grouped by the event's games (matched as in contracts/games.md). Activities of a hidden game are left out
+        entirely; unmatched activities form one entry with `game_id: null` and `name: null`. Only platform users
+        are named; other guild members are only counted. Users with the presence opt-out never appear. `available: false` with empty lists when no guild is bound,
         the client is not ready or the feed's feature flag is off.
       parameters:
         - name: game_id
@@ -292,7 +293,8 @@ paths:
       summary: Who is in which voice channel now
       description: |
         A signed-in member of the event, or right `bot.presence.read`. The voice channels with people in them,
-        only those every member of the guild can see. Users with the presence opt-out never appear.
+        only those every member of the guild can see. Only platform users are named; other guild members are
+        only counted. Users with the presence opt-out never appear.
         `available: false` with empty lists as for `getPlaying`.
       responses:
         "200":
@@ -616,22 +618,22 @@ components:
           $ref: "#/components/schemas/Connection"
     Player:
       type: object
-      description: A person on a board. Never a Discord id.
+      description: |
+        A platform user on a board. Guild members without a platform account are never listed (they cannot opt
+        out), only counted. Never a Discord id.
       required: [user_id, name]
       additionalProperties: false
       properties:
         user_id:
-          description: "`null` for a Discord member who has not signed in to the platform."
-          oneOf:
-            - type: "null"
-            - $ref: "#/components/schemas/UserId"
+          $ref: "#/components/schemas/UserId"
         name:
           type: string
           maxLength: 100
-          description: The platform name, else the Discord display name.
+          description: The platform name.
     Playing:
       type: object
       required: [available, as_of, games]
+      additionalProperties: false
       properties:
         available:
           type: boolean
@@ -645,16 +647,18 @@ components:
           items:
             type: object
             required: [game_id, name, player_count, players]
+            additionalProperties: false
             properties:
               game_id:
                 type: [string, "null"]
-                description: The game in the event's catalogue; `null` for an activity that matches no game.
+                description: The game in the event's catalogue; `null` for the one entry grouping every unmatched activity.
               name:
-                type: string
-                description: The game's name, or the activity's name when unmatched.
+                type: [string, "null"]
+                description: The game's name; `null` for the unmatched entry (activity names are never shown).
               player_count:
                 type: integer
                 minimum: 0
+                description: Everyone playing it except opted-out users, also guild members who are not listed.
               players:
                 type: array
                 items:
@@ -662,6 +666,7 @@ components:
     Voice:
       type: object
       required: [available, as_of, channels]
+      additionalProperties: false
       properties:
         available:
           type: boolean
@@ -673,13 +678,18 @@ components:
           type: array
           items:
             type: object
-            required: [channel_id, name, members]
+            required: [channel_id, name, member_count, members]
+            additionalProperties: false
             properties:
               channel_id:
                 $ref: "#/components/schemas/Snowflake"
               name:
                 type: string
                 maxLength: 100
+              member_count:
+                type: integer
+                minimum: 0
+                description: Everyone in the channel except opted-out users, also guild members who are not listed.
               members:
                 type: array
                 items:

@@ -369,7 +369,8 @@ paths:
       summary: Clone the agenda of a previous event
       description: |
         Needs right `agenda.items.write` here and event admin on the source; both events must be in one
-        series (checked through the tenants API). Only into an empty agenda (409 `agenda_not_empty`) whose kind
+        series (checked through the tenants API). Only into an empty agenda (409 `agenda_not_empty`; items with
+        `managed_by` do not count, so the tournament's clone may run first) whose kind
         list is the untouched starter set, `kinds_version` 0 (409 `kinds_changed`). The source's kind list replaces
         the starter set; scheduled items are copied with their planned times shifted, no delays and no links.
         Items that mirror a tournament session (`managed_by`) are not copied.
