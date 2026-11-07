@@ -82,6 +82,34 @@ def normalize_code(raw: str) -> str:
     return "".join(c for c in raw.upper() if c.isalnum())
 
 
+DEFAULT_PORTS = {"http": 80, "https": 443}
+
+
+def normalize_public_url(raw: str) -> str:
+    """CANCCU_PUBLIC_URL as a browser spells its origin: lower-case scheme and host, no
+    default port, no trailing slash. Raises ValueError for anything else than a plain URL.
+
+    The origin check compares strings, so `HTTPS://Host:443` must not refuse every page POST.
+    """
+    parts = urlsplit(raw.strip())
+    scheme = parts.scheme.lower()
+    if scheme not in DEFAULT_PORTS:
+        raise ValueError("it must start with http:// or https://")
+    if not parts.hostname:
+        raise ValueError("it has no host")
+    if parts.username is not None or parts.query or parts.fragment:
+        raise ValueError("it must not hold a user, a query or a fragment")
+    try:
+        port = parts.port
+    except ValueError as exc:
+        raise ValueError("its port is not a number from 0 to 65535") from exc
+    host = parts.hostname  # urlsplit lower-cases it and drops IPv6 brackets
+    netloc = f"[{host}]" if ":" in host else host
+    if port is not None and port != DEFAULT_PORTS[scheme]:
+        netloc += f":{port}"
+    return f"{scheme}://{netloc}{parts.path.rstrip('/')}"
+
+
 def _iso(moment: datetime) -> str:
     return moment.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
@@ -95,12 +123,16 @@ class Auth:
         discord: Discord | None,
         *,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
+        on_session_end: Callable[[str], None] = lambda session_id: None,
     ) -> None:
         self.store = store
         self.bus = bus
-        self.public_url = public_url.rstrip("/") if public_url else None
+        self.public_url = normalize_public_url(public_url) if public_url else None
         self.discord = discord
         self._now = now
+        # Admin's own RightsChecker caches answers for up to 30 s; an ended session must
+        # leave that cache at once, or a copied cookie keeps working after sign-out.
+        self._on_session_end = on_session_end
 
     @property
     def public_origin(self) -> str | None:
@@ -182,7 +214,7 @@ class Auth:
             user = claimed
             log.warning("first-run code used: user %s is the owner", user.id)
         if old_session:
-            await self.store.delete_session(digest(old_session))
+            await self._end(old_session)
         session_id = secrets.token_urlsafe(32)
         await self.store.create_session(digest(session_id), user.id, now, now + ABSOLUTE)
         log.info("signed in: user %s", user.id)
@@ -198,7 +230,7 @@ class Auth:
         if row is None:
             raise NotSignedIn("sign in first")
         if now >= row.expires_at or now >= row.last_seen_at + IDLE:
-            await self.store.delete_session(id_hash)
+            await self._end(session_id)
             raise NotSignedIn("the session expired; sign in again")
         last_seen = row.last_seen_at
         if now - last_seen >= TOUCH_AFTER:
@@ -218,8 +250,13 @@ class Auth:
         }
 
     async def sign_out(self, session_id: str | None) -> None:
-        await self.session(session_id)  # refuses a missing, unknown or expired session
-        await self.store.delete_session(digest(session_id or ""))
+        """Ends the session if there is one: signed out is the outcome either way."""
+        if session_id:
+            await self._end(session_id)
+
+    async def _end(self, session_id: str) -> None:
+        await self.store.delete_session(digest(session_id))
+        self._on_session_end(session_id)
 
     # roles
     async def users(self) -> list[tuple[User, str | None]]:

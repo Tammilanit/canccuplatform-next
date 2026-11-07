@@ -65,7 +65,6 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
             title,
             f"<p>{html.escape(exc.message)}</p><p><a href={BASE}/sign-in>Back to sign-in</a></p>",
             exc.status,
-            nav=False,
         )
 
     async def to_discord(claim_hash: str | None) -> Response:
@@ -101,7 +100,7 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
             body = "<form method=post><button>Sign in with Discord</button></form>"
         if not await auth.store.has_owner():
             body += f"<p>First start? <a href={BASE}/first-run>Use the first-run code</a>.</p>"
-        return page("Sign in", body, nav=False)
+        return page("Sign in", body)
 
     async def sign_in_start(request: Request) -> Response:
         try:
@@ -109,10 +108,18 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
         except KitError as exc:
             return failed(exc)
 
+    def clear_flow(response: Response) -> Response:
+        # The flow is used up whatever the outcome; its nonce has no further use.
+        response.delete_cookie(
+            FLOW_COOKIE, path=FLOW_PATH, secure=auth.secure_cookies, httponly=True, samesite="lax"
+        )
+        return response
+
     async def callback(request: Request) -> Response:
         query = request.query_params
         if "error" in query:
-            return failed(KitError("Sign-in was cancelled.", status=400, code="sign_in_cancelled"))
+            cancelled = KitError("Sign-in was cancelled.", status=400, code="sign_in_cancelled")
+            return clear_flow(failed(cancelled))
         try:
             token, _ = await auth.finish(
                 query.get("state", ""),
@@ -121,9 +128,8 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
                 session_id(request),
             )
         except KitError as exc:
-            return failed(exc)
-        response = RedirectResponse(f"{BASE}/", status_code=303)
-        response.delete_cookie(FLOW_COOKIE, path=FLOW_PATH)
+            return clear_flow(failed(exc))
+        response = clear_flow(RedirectResponse(f"{BASE}/", status_code=303))
         response.set_cookie(
             SESSION_COOKIE,
             token,
@@ -140,7 +146,6 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
             return page(
                 "First run",
                 f"<p>This platform has an owner. <a href={BASE}/sign-in>Sign in</a>.</p>",
-                nav=False,
             )
         return page(
             "First run",
@@ -148,7 +153,6 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
             " that Discord account becomes the owner.</p>"
             "<form method=post><input name=code autocomplete=off required>"
             " <button>Continue with Discord</button></form>",
-            nav=False,
         )
 
     async def first_run_start(request: Request) -> Response:
@@ -160,14 +164,11 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
             return failed(exc, "First run")
 
     async def sign_out_page(request: Request) -> Response:
-        try:
-            await auth.sign_out(session_id(request))
-        except KitError:
-            pass  # already signed out: the outcome the user asked for
+        await auth.sign_out(session_id(request))
         return clear_session(RedirectResponse(f"{BASE}/sign-in", status_code=303))
 
     async def people_page(request: Request) -> Response:
-        await authorize(request.headers.get("cookie"), "admin.rights.write")
+        session = await authorize(request.headers.get("cookie"), "admin.rights.write")
         rows = []
         for user, role in await auth.users():
             if role == "owner":
@@ -187,6 +188,7 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
             "<p>Everyone who has signed in. An admin may change settings and the profile;"
             " only the owner hands out roles.</p>"
             f"<table border=1 cellpadding=4><tr><th>Name<th>Role</tr>{''.join(rows)}</table>",
+            session=session,
         )
 
     async def people_save(request: Request) -> Response:

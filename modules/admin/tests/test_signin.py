@@ -6,7 +6,9 @@ import json
 from datetime import timedelta
 from urllib.parse import parse_qs, urlsplit
 
+import httpx
 import pytest
+from canccu_kit import NotSignedIn
 from conftest import CALLBACK, PUBLIC, START, World, first_run_code
 
 from canccu_admin.auth import ABSOLUTE, IDLE
@@ -105,6 +107,7 @@ async def test_callback_refuses_bad_state(world: World) -> None:
     world.discord.users["c"] = {"id": "1", "username": "x"}
     bad = await world.client.get("/admin/sign-in/callback", params={"code": "c", "state": "nope"})
     assert bad.status_code == 400
+    assert_flow_cookie_cleared(bad)
     # The flow cookie binds the state to this browser: another browser cannot finish it.
     r = await world.browser().get("/admin/sign-in/callback", params={"code": "c", "state": state})
     assert r.status_code == 400 and "canccu_session" not in r.headers.get("set-cookie", "")
@@ -126,6 +129,21 @@ async def test_callback_reports_a_cancelled_sign_in(world: World) -> None:
     await world.client.post("/admin/sign-in")
     r = await world.client.get("/admin/sign-in/callback", params={"error": "access_denied"})
     assert r.status_code == 400 and "cancelled" in r.text
+    assert_flow_cookie_cleared(r)
+
+
+async def test_failed_token_exchange_clears_the_flow_cookie(world: World) -> None:
+    start = await world.client.post("/admin/sign-in")
+    state = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
+    r = await world.client.get(CALLBACK, params={"code": "unknown", "state": state})
+    assert r.status_code == 502
+    assert_flow_cookie_cleared(r)
+
+
+def assert_flow_cookie_cleared(r: httpx.Response) -> None:
+    cookie = r.headers["set-cookie"]
+    assert 'canccu_sign_in=""' in cookie and "Max-Age=0" in cookie
+    assert "Path=/admin/sign-in" in cookie
 
 
 async def test_failed_token_exchange_is_a_bad_gateway(world: World) -> None:
@@ -164,8 +182,39 @@ async def test_sign_out(world: World) -> None:
     assert 'canccu_session=""' in r.headers["set-cookie"] and "Max-Age=0" in r.headers["set-cookie"]
     r = await world.browser(token).get("/api/admin/session")
     assert r.status_code == 401 and r.json()["error"]["code"] == "not_signed_in"
-    r = await world.browser(token).post("/api/admin/session/sign-out")
-    assert r.status_code == 401
+
+
+@pytest.mark.parametrize("cookie", [None, "made-up", "expired"])
+async def test_sign_out_api_always_clears_the_cookie(world: World, cookie: str | None) -> None:
+    """contracts/admin.md: 204 and the cookie cleared, whatever state the session is in."""
+    if cookie == "expired":
+        await world.sign_in("2002", "Aino")
+        cookie = world.client.cookies["canccu_session"]
+        world.clock[0] = START + IDLE + timedelta(seconds=1)
+    r = await world.browser(cookie).post("/api/admin/session/sign-out")
+    assert r.status_code == 204
+    assert 'canccu_session=""' in r.headers["set-cookie"] and "Max-Age=0" in r.headers["set-cookie"]
+
+
+@pytest.mark.parametrize("how", ["api", "page", "expired", "signed in again"])
+async def test_ended_session_leaves_admins_rights_cache_at_once(
+    world: World, caplog: pytest.LogCaptureFixture, how: str
+) -> None:
+    code = await first_run_code(world, caplog)
+    await world.sign_in("1001", "Olli", path="/admin/first-run", data={"code": code})
+    copied = f"canccu_session={world.client.cookies['canccu_session']}"
+    await world.checker.check(copied, "admin.settings.read")  # fills the 30 s cache
+    if how == "api":
+        assert (await world.client.post("/api/admin/session/sign-out")).status_code == 204
+    elif how == "page":
+        assert (await world.client.post("/admin/sign-out")).status_code == 303
+    elif how == "expired":
+        world.clock[0] = START + IDLE + timedelta(seconds=1)
+        assert (await world.client.get("/api/admin/session")).status_code == 401
+    else:
+        await world.sign_in("1001", "Olli")
+    with pytest.raises(NotSignedIn):
+        await world.checker.check(copied, "admin.settings.read")
 
 
 async def test_sign_out_page_redirects_to_sign_in(world: World) -> None:
