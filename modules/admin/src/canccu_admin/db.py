@@ -72,6 +72,10 @@ class PgStore:
     def __init__(self, pool: asyncpg.Pool) -> None:
         self._pool = pool
 
+    @property
+    def pool(self) -> asyncpg.Pool:
+        return self._pool
+
     @classmethod
     async def connect(cls, url: str) -> PgStore:
         pool = await asyncpg.create_pool(url, min_size=1, max_size=5)

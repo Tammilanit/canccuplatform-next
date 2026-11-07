@@ -3,10 +3,10 @@
 #   scripts/demo-stack-test && scripts/demo-screenshots
 # - event-seed copies events/demo/ into the event folder of the files volume (/files/event),
 #   owned by the admin user, before admin starts.
-# - session-stub stands in for sign-in (#10) until it exists: admin asks it, not itself, for
-#   GET /api/admin/session. The cookie canccu_session=demo-ci is a session with every admin
-#   right; any other cookie is 401 not_signed_in. Anyone who can reach Caddy can send that
-#   cookie, which is why this file is for CI only.
+# - session-stub stands in for Discord sign-in, which CI cannot run: admin's own rights checks
+#   ask it, not admin, for GET /api/admin/session. The cookie canccu_session=demo-ci is a session
+#   with every admin right; any other cookie is 401 not_signed_in. Anyone who can reach Caddy can
+#   send that cookie, which is why this file is for CI only.
 services:
   event-seed:
     # Reuses the stack's Caddy image only for its busybox shell; nothing else is pulled.

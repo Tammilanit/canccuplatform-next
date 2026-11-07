@@ -15,6 +15,8 @@ from canccu_kit.rights import Session
 from canccu_kit.testing import MemoryStreamStore
 
 from canccu_admin.app import create_app
+from canccu_admin.auth import Auth
+from canccu_admin.auth_db import MemoryAuthStore
 from canccu_admin.db import MemoryStore
 from canccu_admin.declarations import load_declarations
 from canccu_admin.profile import make_validator
@@ -69,7 +71,8 @@ def parts(tmp_path: Path) -> Parts:
         httpx.AsyncClient(transport=httpx.MockTransport(hello_handler)),
     )
     health = Health("admin", "dev", {})
-    app = create_app(service, health, authorize)
+    auth = Auth(MemoryAuthStore(), service.bus, None, None)
+    app = create_app(service, health, authorize, auth)
     client = httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://t", cookies={"canccu_session": "s"}
     )
