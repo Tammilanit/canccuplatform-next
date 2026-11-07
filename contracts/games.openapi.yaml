@@ -1,0 +1,462 @@
+openapi: 3.1.0
+info:
+  title: Games API
+  version: 1.0.0
+  summary: The game catalogue of one event, its moderation and the unmatched activities.
+  description: |
+    Machine-readable part of the games contract. Prose, matching, surges, settings and events: contracts/games.md.
+    Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
+    The event (tenant) comes from the hostname; no operation names a tenant.
+  license:
+    name: AGPL-3.0
+    identifier: AGPL-3.0-only
+servers:
+  - url: /
+    description: Same origin, behind Caddy; the hostname selects the event.
+tags:
+  - name: catalogue
+    description: Reading and adding games.
+  - name: moderation
+    description: Editing, hiding and merging games.
+  - name: activities
+    description: Discord activities that match no game.
+security:
+  - {}
+  - session: []
+paths:
+  /api/games/catalogue:
+    get:
+      tags: [catalogue]
+      operationId: listGames
+      summary: The event's catalogue
+      description: |
+        Active games, baseline and the event's own, with the event's overlay applied. With right
+        `games.catalogue.moderate`, `include_hidden=true` adds hidden and merged games.
+      parameters:
+        - name: q
+          in: query
+          description: Only games whose name or an alias contains this text, case-insensitively.
+          schema:
+            type: string
+            maxLength: 60
+        - name: include_hidden
+          in: query
+          description: Also hidden and merged games; needs right `games.catalogue.moderate`.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: The catalogue.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Catalogue"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [catalogue]
+      operationId: addGame
+      summary: Add a missing game
+      description: |
+        Needs a session of a member of the event, and the setting `attendee_additions` (otherwise right
+        `games.catalogue.moderate`). 409 `game_exists` when the name, an alias, the Steam id or the activity's
+        application id is already in the catalogue; 429 `rate_limited` over 10 a day. Emits `games.game.added`;
+        audited.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameNew"
+      responses:
+        "201":
+          description: The new game.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          description: "`rate_limited`: too many additions today."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/games/catalogue/{game_id}:
+    parameters:
+      - $ref: "#/components/parameters/GameId"
+    get:
+      tags: [catalogue]
+      operationId: getGame
+      summary: Read one game
+      description: Also a merged game, so a client follows `merged_into`. A hidden game is 404 `not_found` without right `games.catalogue.moderate`.
+      responses:
+        "200":
+          description: The game.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [moderation]
+      operationId: editGame
+      summary: Edit, hide or show a game
+      description: |
+        Needs right `games.catalogue.moderate`. On a baseline game only the overlay: adding identifiers and
+        `status`; other fields are 400 `invalid_request`. Lists given replace the event's own values. Emits
+        `games.game.changed`; audited.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameEdit"
+      responses:
+        "200":
+          description: The changed game.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/games/catalogue/{game_id}/merge:
+    parameters:
+      - $ref: "#/components/parameters/GameId"
+    post:
+      tags: [moderation]
+      operationId: mergeGame
+      summary: Merge a duplicate into another game
+      description: |
+        Needs right `games.catalogue.moderate`. Only an event's own game merges (409 `baseline_entry`), into an
+        active game. Final. Emits `games.game.merged`; audited.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [into, revision]
+              properties:
+                into:
+                  $ref: "#/components/schemas/GameId"
+                revision:
+                  type: integer
+                  minimum: 1
+      responses:
+        "200":
+          description: The game merged into, with the identifiers it gained.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/games/catalogue/{game_id}/cover:
+    parameters:
+      - $ref: "#/components/parameters/GameId"
+    put:
+      tags: [moderation]
+      operationId: uploadCover
+      summary: Upload cover art
+      description: Needs right `games.catalogue.moderate`. PNG, JPEG or WebP, at most 2 MB. Emits `games.game.changed`; audited.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          image/png:
+            schema:
+              type: string
+              format: binary
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/webp:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: The game with its new cover.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/games/activities/unmatched:
+    get:
+      tags: [activities]
+      operationId: listUnmatchedActivities
+      summary: Activities seen at the event that match no game
+      description: |
+        Needs a session of a member. Members see activities with at least 2 players; with right
+        `games.catalogue.moderate`, all. Counts only, never who.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The unmatched activities, most players first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [activities]
+                properties:
+                  activities:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UnmatchedActivity"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: canccu_session
+      description: Opaque session id (contracts/admin.md, Session and rights). Rights are checked through admin.
+  parameters:
+    GameId:
+      name: game_id
+      in: path
+      required: true
+      description: Game id.
+      schema:
+        $ref: "#/components/schemas/GameId"
+  responses:
+    BadRequest:
+      description: "`invalid_request`: a field is missing or invalid, or not editable on a baseline game."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: "`not_signed_in`: no valid session."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: |
+        `missing_right`; `not_a_member` (adding a game without membership of the event); or `info_pages_closed`
+        (the event's info-page mode does not let this request in).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: "`not_found`: no such game, or the caller may not see it."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: |
+        `game_exists` (the message names the existing game), `version_conflict` (stale `revision`),
+        `identifier_taken`, `baseline_entry` (merging a baseline game), `game_not_active` (merging into a hidden or
+        merged game) or `event_archived` (the event is read-only).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              pattern: "^[a-z][a-z0-9_]*$"
+              examples: [game_exists]
+            message:
+              type: string
+    GameId:
+      type: string
+      pattern: "^[A-Za-z0-9_-]{1,64}$"
+      examples: [g_42]
+    Snowflake:
+      type: string
+      description: A Discord id, as a string.
+      pattern: "^[0-9]{17,20}$"
+    DiscordIdentifiers:
+      type: object
+      required: [application_ids, name_aliases]
+      properties:
+        application_ids:
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Snowflake"
+        name_aliases:
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 120
+    StoreIds:
+      type: object
+      description: Optional store ids. More stores may be added; clients ignore keys they do not know.
+      properties:
+        steam:
+          type: string
+          pattern: "^[0-9]{1,10}$"
+        epic:
+          type: string
+          maxLength: 64
+        gog:
+          type: string
+          maxLength: 64
+        battle_net:
+          type: string
+          maxLength: 64
+        riot:
+          type: string
+          maxLength: 64
+    Game:
+      type: object
+      required: [id, name, source, discord, store_ids, status, revision]
+      properties:
+        id:
+          $ref: "#/components/schemas/GameId"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        source:
+          type: string
+          enum: [baseline, event]
+        discord:
+          $ref: "#/components/schemas/DiscordIdentifiers"
+        store_ids:
+          $ref: "#/components/schemas/StoreIds"
+        cover_url:
+          type: string
+          description: Served by the games module, relative to the event's hostname.
+        status:
+          type: string
+          enum: [active, hidden, merged]
+        merged_into:
+          $ref: "#/components/schemas/GameId"
+        revision:
+          type: integer
+          minimum: 1
+    GameNew:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        steam_app_id:
+          type: string
+          pattern: "^[0-9]{1,10}$"
+        from_activity:
+          type: string
+          description: The id of an unmatched activity; its application id or name becomes an identifier.
+          pattern: "^[A-Za-z0-9_-]{1,64}$"
+    GameEdit:
+      type: object
+      required: [revision]
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        discord:
+          $ref: "#/components/schemas/DiscordIdentifiers"
+        store_ids:
+          $ref: "#/components/schemas/StoreIds"
+        status:
+          type: string
+          enum: [active, hidden]
+    Catalogue:
+      type: object
+      required: [catalogue_version, games]
+      properties:
+        catalogue_version:
+          type: integer
+          minimum: 0
+          description: +1 on every change of the event's catalogue.
+        games:
+          type: array
+          items:
+            $ref: "#/components/schemas/Game"
+    UnmatchedActivity:
+      type: object
+      required: [id, name, players, last_seen_at]
+      properties:
+        id:
+          type: string
+          pattern: "^[A-Za-z0-9_-]{1,64}$"
+        application_id:
+          $ref: "#/components/schemas/Snowflake"
+        name:
+          type: string
+          maxLength: 120
+        players:
+          type: integer
+          minimum: 0
+          description: Players now.
+        last_seen_at:
+          type: string
+          format: date-time

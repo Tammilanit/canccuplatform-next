@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Notify API
-  version: 1.0.0
+  version: 1.1.0
   summary: Web Push subscriptions, notifications, check-in and privacy for the phone hub.
   description: |
     Machine-readable part of the notify contract. Prose, topics, delivery rules and events: contracts/notify.md.
@@ -21,7 +21,9 @@ tags:
   - name: check-in
     description: Check-in by the rotating QR code.
   - name: me
-    description: The caller's own settings and privacy.
+    description: The caller's own settings, channels, follows and privacy.
+  - name: topics
+    description: The topic registry and each event's topic configuration.
 security:
   - session: []
 paths:
@@ -51,7 +53,7 @@ paths:
       tags: [push]
       operationId: listTopics
       summary: Topics offered at this event
-      description: With their parts and defaults. No authentication.
+      description: The enabled topics, with their parts, channels and defaults. No authentication.
       security: []
       responses:
         "200":
@@ -68,6 +70,155 @@ paths:
                       $ref: "#/components/schemas/TopicInfo"
         "403":
           $ref: "#/components/responses/Forbidden"
+  /api/notify/topic-types:
+    get:
+      tags: [topics]
+      operationId: listTopicTypes
+      summary: Every topic type, with this event's configuration
+      description: Needs right `notify.topics.write`. Module topic types and this event's custom topics.
+      responses:
+        "200":
+          description: The topic types.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [topic_types]
+                properties:
+                  topic_types:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TopicTypeConfigured"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/notify/topic-types/{topic}:
+    parameters:
+      - $ref: "#/components/parameters/TopicKey"
+    put:
+      tags: [topics]
+      operationId: saveCustomTopic
+      summary: Add or replace one of this event's custom topics
+      description: |
+        Needs right `notify.topics.write`. Only for keys starting with `custom_` (others 400 `invalid_request`).
+        Without `revision` it adds the topic (409 `topic_exists` when taken); with it, it replaces it (409
+        `version_conflict` when stale). Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomTopicSave"
+      responses:
+        "200":
+          description: The replaced topic.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicTypeConfigured"
+        "201":
+          description: The new topic.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicTypeConfigured"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [topics]
+      operationId: removeCustomTopic
+      summary: Remove one of this event's custom topics
+      description: Needs right `notify.topics.write`. Also removes people's choices for it. Audited.
+      parameters:
+        - name: revision
+          in: query
+          required: true
+          description: The custom topic's revision as read.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "204":
+          description: Removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/notify/topic-types/{topic}/config:
+    parameters:
+      - $ref: "#/components/parameters/TopicKey"
+    put:
+      tags: [topics]
+      operationId: configureTopic
+      summary: Configure a topic for this event
+      description: |
+        Needs right `notify.topics.write`. Fields left out stay as they are. A stale `config_version` is 409
+        `version_conflict`; a parameter outside the type's limits or a channel the type does not allow is 400
+        `invalid_request`. Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TopicConfigSave"
+      responses:
+        "200":
+          description: The topic type with its new configuration.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicTypeConfigured"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /internal/notify/topic-types/{topic}:
+    parameters:
+      - $ref: "#/components/parameters/TopicKey"
+    put:
+      tags: [topics]
+      operationId: registerTopicType
+      summary: Register a module's topic type
+      description: |
+        For modules, at start; idempotent, a new registration replaces the old one. Global, for every event.
+        Keys starting with `custom_` are 400 `invalid_request`; a key registered by another owner is 409
+        `topic_owned`. Internal network only.
+      security:
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TopicType"
+      responses:
+        "200":
+          description: The stored registration.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicType"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/notify/subscriptions:
     post:
       tags: [push]
@@ -412,6 +563,73 @@ paths:
           description: Deleted.
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /api/notify/me/follows:
+    get:
+      tags: [me]
+      operationId: listFollows
+      summary: The entities the caller follows at this event
+      responses:
+        "200":
+          description: The follows.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [follows]
+                properties:
+                  follows:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Follow"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/notify/me/follows/{topic}/{entity_id}:
+    parameters:
+      - $ref: "#/components/parameters/TopicKey"
+      - name: entity_id
+        in: path
+        required: true
+        description: The entity's id in its owner module (for the `game` topic, a game of the games catalogue).
+        schema:
+          $ref: "#/components/schemas/EntityId"
+    put:
+      tags: [me]
+      operationId: follow
+      summary: Follow an entity
+      description: |
+        Needs a session of a member (401 `sign_in_required` otherwise). A topic without an entity-scoped
+        personal part is 400 `not_followable`; over 200 follows is 409 `follow_limit`. Notify does not check
+        that the entity exists.
+      responses:
+        "200":
+          description: Already followed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Follow"
+        "201":
+          description: Followed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Follow"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [me]
+      operationId: unfollow
+      summary: Stop following an entity
+      responses:
+        "204":
+          description: Not followed (also when it was not).
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/notify/me/export:
     get:
       tags: [me]
@@ -438,6 +656,13 @@ components:
       scheme: bearer
       description: The `subscription_token` returned once on subscribe; lets a guest manage its subscription.
   parameters:
+    TopicKey:
+      name: topic
+      in: path
+      required: true
+      description: Topic key.
+      schema:
+        $ref: "#/components/schemas/TopicKey"
     SubscriptionId:
       name: subscription_id
       in: path
@@ -448,7 +673,7 @@ components:
         pattern: "^[A-Za-z0-9_-]{1,64}$"
   responses:
     BadRequest:
-      description: "`invalid_request`; for check-in also `code_invalid` or `code_expired`."
+      description: "`invalid_request`; for check-in also `code_invalid` or `code_expired`; for a follow `not_followable`."
       content:
         application/json:
           schema:
@@ -468,7 +693,15 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
     NotFound:
-      description: "`not_found`: no such subscription or notification, or the caller may not see it."
+      description: "`not_found`: no such subscription, notification or topic, or the caller may not see it."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: |
+        `version_conflict` (stale `revision` or `config_version`), `topic_exists`, `topic_owned` (the key
+        belongs to another module) or `follow_limit`.
       content:
         application/json:
           schema:
@@ -490,14 +723,34 @@ components:
               type: string
     Topic:
       type: string
-      description: More topics may be added; clients ignore topics they do not know.
-      enum: [schedule, announcements, food, tournament, play]
+      description: |
+        A registered topic key (contracts/notify.md, Topic registry): built in are `schedule`, `announcements`,
+        `food`, `tournament`, `play` and `game`; events add `custom_…` ones. Clients ignore topics they do not know.
+      pattern: "^[a-z][a-z0-9_]{0,31}$"
+      examples: [schedule]
     TopicInfo:
       type: object
       required: [topic, parts]
       properties:
         topic:
           $ref: "#/components/schemas/Topic"
+        title:
+          type: string
+        description:
+          type: string
+        owner:
+          type: string
+        custom:
+          type: boolean
+          description: One of this event's own topics.
+        scopes:
+          type: object
+          description: Per part, its scope (and for `entity` the entity type), and the channels this event allows with their defaults.
+          properties:
+            event:
+              $ref: "#/components/schemas/PartInfo"
+            personal:
+              $ref: "#/components/schemas/PartInfo"
         parts:
           type: object
           description: The parts this topic has, with their defaults for a new subscription.
@@ -529,6 +782,325 @@ components:
             type: boolean
           personal:
             type: boolean
+    PartInfo:
+      type: object
+      required: [scope, channels, defaults]
+      properties:
+        scope:
+          type: string
+          enum: [event, user, entity]
+        entity_type:
+          type: string
+        channels:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Channel"
+        defaults:
+          $ref: "#/components/schemas/ChannelSwitches"
+    TopicKey:
+      type: string
+      description: A module's topic key, or `custom_…` for an event's own topic.
+      pattern: "^[a-z][a-z0-9_]{0,31}$"
+      examples: [schedule, game, custom_cosplay]
+    Channel:
+      type: string
+      description: A channel Notify delivers on. Consumers ignore channels they do not know.
+      enum: [push, discord_dm]
+    ChannelSwitches:
+      type: object
+      properties:
+        push:
+          type: boolean
+        discord_dm:
+          type: boolean
+    Path:
+      type: string
+      description: A dot path into the event envelope, e.g. `data.item.kind` or `correlation_id`.
+      pattern: "^[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*$"
+    Condition:
+      type: object
+      required: [field, op]
+      properties:
+        field:
+          $ref: "#/components/schemas/Path"
+        op:
+          type: string
+          enum: [eq, ne, in, not_in, exists, within_minutes, nearest_in]
+        value:
+          description: The value to compare with (`eq`, `ne`, `in`, `not_in`, `within_minutes`).
+        param:
+          type: string
+          description: A parameter of the topic type to compare with, instead of `value`.
+        list:
+          $ref: "#/components/schemas/Path"
+    TopicParam:
+      type: object
+      required: [key, type, default]
+      properties:
+        key:
+          type: string
+          pattern: "^[a-z][a-z0-9_]{0,31}$"
+        type:
+          type: string
+          enum: [integer, boolean, string]
+        default:
+          type: [integer, boolean, string]
+        min:
+          type: integer
+        max:
+          type: integer
+        description:
+          type: string
+          maxLength: 200
+    TopicPart:
+      type: object
+      required: [scope, channels, defaults]
+      properties:
+        scope:
+          type: string
+          description: "`event` for the event part; `user` or `entity` for the personal part."
+          enum: [event, user, entity]
+        channels:
+          type: array
+          description: The channels a person may pick from for this part.
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Channel"
+        defaults:
+          $ref: "#/components/schemas/ChannelSwitches"
+        entity:
+          type: object
+          description: For scope `entity`.
+          required: [type]
+          properties:
+            type:
+              type: string
+              pattern: "^[a-z][a-z0-9_]{0,31}$"
+              examples: [game]
+            merged:
+              type: object
+              required: [event, from, into]
+              properties:
+                event:
+                  type: string
+                from:
+                  $ref: "#/components/schemas/Path"
+                into:
+                  $ref: "#/components/schemas/Path"
+            removed:
+              type: object
+              required: [event, id]
+              properties:
+                event:
+                  type: string
+                id:
+                  $ref: "#/components/schemas/Path"
+    Audience:
+      type: object
+      description: "`field`: a path to the event's visibility; or a fixed `value`. It must match the event catalog."
+      properties:
+        field:
+          $ref: "#/components/schemas/Path"
+        value:
+          type: string
+          enum: [public, attendees]
+    Trigger:
+      type: object
+      required: [event, part, title, body]
+      properties:
+        event:
+          type: string
+          description: The event type, as in contracts/events.md.
+          pattern: "^[a-z]+(\\.[a-z][a-z0-9_]*){2}$"
+        part:
+          type: string
+          enum: [event, personal]
+        audience:
+          $ref: "#/components/schemas/Audience"
+        recipients:
+          type: object
+          description: "Personal part: `user_field` (scope `user`) or `entity_field` (scope `entity`)."
+          properties:
+            user_field:
+              $ref: "#/components/schemas/Path"
+            entity_field:
+              $ref: "#/components/schemas/Path"
+        where:
+          type: array
+          items:
+            $ref: "#/components/schemas/Condition"
+        channels_field:
+          $ref: "#/components/schemas/Path"
+        dedupe_by:
+          type: array
+          description: Paths, or `audience`; default the event's `id`.
+          items:
+            type: string
+        urgent:
+          oneOf:
+            - type: boolean
+            - type: object
+              required: [field]
+              properties:
+                field:
+                  $ref: "#/components/schemas/Path"
+        title:
+          type: string
+          description: Template; `{<path>}` or `{param.<key>}`, optional formatter `|time`, `|date` or `|signed`.
+          maxLength: 200
+        body:
+          type: string
+          maxLength: 400
+        url:
+          type: string
+          maxLength: 200
+        expires_at:
+          $ref: "#/components/schemas/Path"
+        expires_after_minutes:
+          type: integer
+          minimum: 1
+          maximum: 10080
+    TopicType:
+      type: object
+      required: [key, owner, title, parts, triggers]
+      properties:
+        key:
+          $ref: "#/components/schemas/TopicKey"
+        owner:
+          type: string
+          description: The registering module.
+          pattern: "^[a-z]+$"
+        title:
+          type: string
+          minLength: 1
+          maxLength: 60
+        description:
+          type: string
+          maxLength: 200
+        parts:
+          type: object
+          minProperties: 1
+          properties:
+            event:
+              $ref: "#/components/schemas/TopicPart"
+            personal:
+              $ref: "#/components/schemas/TopicPart"
+        params:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopicParam"
+        triggers:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/Trigger"
+    TopicConfig:
+      type: object
+      required: [config_version, enabled, params, channels]
+      properties:
+        config_version:
+          type: integer
+          minimum: 0
+        enabled:
+          type: boolean
+        params:
+          type: object
+          description: Parameter values for this event; a parameter left out takes its default.
+          additionalProperties:
+            type: [integer, boolean, string]
+        channels:
+          type: array
+          description: The channels this event allows, a subset of the type's.
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Channel"
+    TopicConfigSave:
+      type: object
+      required: [config_version]
+      properties:
+        config_version:
+          type: integer
+          minimum: 0
+        enabled:
+          type: boolean
+        params:
+          type: object
+          additionalProperties:
+            type: [integer, boolean, string]
+        channels:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Channel"
+    CustomTopicSave:
+      type: object
+      required: [based_on, title, where]
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+          description: Required to replace; left out to add.
+        based_on:
+          $ref: "#/components/schemas/TopicKey"
+        title:
+          type: string
+          minLength: 1
+          maxLength: 60
+        description:
+          type: string
+          maxLength: 200
+        defaults:
+          type: object
+          description: Per part, the channel defaults for people who have not chosen.
+          properties:
+            event:
+              $ref: "#/components/schemas/ChannelSwitches"
+            personal:
+              $ref: "#/components/schemas/ChannelSwitches"
+        where:
+          type: array
+          minItems: 1
+          description: Added to every trigger of the base; it can only narrow.
+          items:
+            $ref: "#/components/schemas/Condition"
+    TopicTypeConfigured:
+      type: object
+      required: [topic_type, config]
+      properties:
+        topic_type:
+          $ref: "#/components/schemas/TopicType"
+        custom:
+          type: object
+          description: Present for an event's own topic.
+          required: [based_on, where, revision]
+          properties:
+            based_on:
+              $ref: "#/components/schemas/TopicKey"
+            where:
+              type: array
+              items:
+                $ref: "#/components/schemas/Condition"
+            revision:
+              type: integer
+              minimum: 1
+        config:
+          $ref: "#/components/schemas/TopicConfig"
+    EntityId:
+      type: string
+      pattern: "^[A-Za-z0-9_-]{1,64}$"
+      examples: [g_42]
+    Follow:
+      type: object
+      required: [topic, entity_id, created_at]
+      properties:
+        topic:
+          $ref: "#/components/schemas/TopicKey"
+        entity_id:
+          $ref: "#/components/schemas/EntityId"
+        created_at:
+          type: string
+          format: date-time
     PushSubscription:
       type: object
       description: As the browser's `PushSubscription.toJSON()` gives it.
@@ -597,6 +1169,15 @@ components:
           description: A page of the hub, relative to the event's hostname.
         urgent:
           type: boolean
+        entity:
+          type: object
+          description: For an entity-scoped topic, the entity it is about.
+          required: [type, id]
+          properties:
+            type:
+              type: string
+            id:
+              $ref: "#/components/schemas/EntityId"
         pushed:
           type: boolean
           description: In the inbox, whether it was pushed to the caller (not held by cap, quiet hours or opt-out).
@@ -632,10 +1213,26 @@ components:
           type: boolean
           default: true
           description: Personal notifications fall back to a Discord DM when no push reaches the caller.
+        channels:
+          type: object
+          description: Per topic and part, the caller's channels; left out takes the part's defaults.
+          propertyNames:
+            $ref: "#/components/schemas/Topic"
+          additionalProperties:
+            type: object
+            properties:
+              event:
+                $ref: "#/components/schemas/ChannelSwitches"
+              personal:
+                $ref: "#/components/schemas/ChannelSwitches"
     Export:
       type: object
       required: [subscriptions, me, notifications, check_ins]
       properties:
+        follows:
+          type: array
+          items:
+            $ref: "#/components/schemas/Follow"
         subscriptions:
           type: array
           items:

@@ -45,15 +45,32 @@ Emitter: `agenda`. Audience: event-wide, by the item's `visibility`. Payloads: [
 | `agenda.item.removed` | An item was removed | screen, notify (quiet hours) |
 | `agenda.item.started` | An item's start was reached | screen, moments |
 | `agenda.item.ended` | An item's end was reached | screen |
-| `agenda.reminder.triggered` | A lead time before an item's start was reached | bot, notify |
+| `agenda.reminder.triggered` | A lead time before an item's start was reached | bot, screen, notify |
 | `agenda.items.cloned` | The agenda was cloned from another event | screen, notify (quiet hours) |
+| `agenda.kind.saved` | A kind of the event's kind list was added or changed. Audience: event-wide, `public` | screen, bot, notify (re-read items whose defaults changed) |
+| `agenda.kind.removed` | A kind was removed. Audience: event-wide, `public` | screen, bot |
+
+Every item in these events carries `notify_channels`, the channels the organiser chose for it ([agenda.md](agenda.md#notification-channels)); each consumer announces only on its own.
+
+## Games
+Emitter: `games`. Audience: event-wide, `public`. Payloads: [games.md](games.md#events-version-1).
+
+| Type | Meaning | Consumers |
+|---|---|---|
+| `games.game.added` | A game was added to the event's catalogue | screen |
+| `games.game.changed` | A game was edited, hidden or shown again | screen |
+| `games.game.merged` | An event's game was merged into another | notify (moves the follows), screen |
+| `games.surge.started` | Players on one game reached the event's threshold | notify (`game` topic), screen (hot-game banner), bot |
+| `games.surge.ended` | A surge ended | screen |
+
+Provisional, until the bot contract fixes it: `bot.activities.counted` (system; counts of the members' activities, never who), consumed by games ([games.md](games.md#surges)).
 
 ## Notify
 Emitter: `notify`. Audience: personal. Payloads: [notify.md](notify.md#events-version-1).
 
 | Type | Meaning | Consumers |
 |---|---|---|
-| `notify.dm.requested` | A personal notification should reach a user as a Discord DM | bot |
+| `notify.dm.requested` | A notification should reach a user as a Discord DM: the person chose DMs for its topic, or no push reached them | bot |
 | `notify.checkin.recorded` | A signed-in attendee checked in by the rotating QR | The module named in `purpose` (tournament for match check-in), admin |
 
 ## Tenants
