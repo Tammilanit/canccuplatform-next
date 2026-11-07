@@ -1,6 +1,6 @@
 # Decisions
 
-The settled decisions behind [the roadmap](../roadmap.md), one record each. A decision changes only through an issue the product owner (the maintainer) agreed, and its PR adds a new record and marks the old one superseded; old records are never rewritten, except their Status line. Sessions that answer questions escalate a new decision to the maintainer rather than add a record. Records merge like any other PR ([0016](0016-merge-policy.md)).
+The settled decisions behind [the roadmap](../roadmap.md), one record each. A decision changes only through an issue the product owner (the maintainer) agreed, and its PR adds a new record and marks the old one superseded; old records are never rewritten, except their Status line. Sessions that answer questions escalate a new decision to the maintainer rather than add a record. Records merge like any other PR ([0016](0016-merge-policy.md)). The section [How the records are applied](#how-the-records-are-applied) below notes refinements of how a record is applied; they never change a record's decision.
 
 Each record has Status, Date, Context, Decision and Consequences. New records take the next number: `NNNN-<slug>.md`.
 
@@ -30,3 +30,6 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0022](0022-product-vision.md) | The product vision: who it is for, the Pulse screen at its heart, what is planned and what is not | 2026-11-06 |
 | [0023](0023-step-design-briefs.md) | Every step starts with a design brief, and issues leave room to design | 2026-11-06 |
 | [0024](0024-additive-contract-docs-normal-risk.md) | Additive contract docs are normal risk; the maintainer reviews contracts at the checkpoint | 2026-11-07 |
+
+## How the records are applied
+- **Bundling packages** ([0019](0019-work-packages.md), 2026-11-07, #144). In step 2 most packages held one issue, so each issue paid for its own run, review, fix round and fix-check. The planner now bundles related issues into fuller packages, while a contract change still goes apart from its consumers and merges first; the rules live in [AGENTS.md, Package plan](../../AGENTS.md#how-work-flows). This refines how 0019 is applied; its text is unchanged.
