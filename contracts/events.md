@@ -83,6 +83,19 @@ Emitter: `notify`. Audience: personal. Payloads: [notify.md](notify.md#events-ve
 | `notify.dm.requested` | A notification should reach a user as a Discord DM: the person chose DMs for its topic, or no push reached them | bot |
 | `notify.checkin.recorded` | A signed-in attendee checked in by the rotating QR | The module named in `purpose` (tournament for match check-in), admin |
 
+## Screen
+Emitter: `screen`. Audience: system, except where noted. Payloads: [screen.md](screen.md#events-version-1).
+
+| Type | Meaning | Consumers |
+|---|---|---|
+| `screen.device.paired`, `screen.device.moved`, `screen.device.released`, `screen.device.assigned`, `screen.device.revoked` | A device was paired, given to or taken from the event, assigned to a zone or mirror, or revoked | admin |
+| `screen.device.online`, `screen.device.offline`, `screen.device.playing_changed` | Device health for admin | admin |
+| `screen.zone.saved`, `screen.zone.removed` | A zone was added, changed or removed | admin, moments (zone targets), agenda (zone keys) |
+| `screen.content.pushed`, `screen.content.cleared` | Content was pushed to zones, or a push ended | admin |
+| `screen.ticker.changed` | The ticker text changed. Audience: event-wide, `public` | bot (`/ticker status`), voices |
+| `screen.photo.added`, `screen.photo.removed` | A carousel photo was added or removed. Audience: event-wide, `public` | moments |
+| `screen.render.queued`, `.started`, `.succeeded`, `.failed`, `.cancelled` | A PPTX render job moved | admin |
+
 ## Tenants
 Emitter: `tenants`. Audience: system, except where noted. Payloads: [tenants.md](tenants.md#events-version-1).
 
@@ -284,7 +297,7 @@ Emitter: `bot` (roadmap step 6). Bot events report what the bot sees on Discord,
 Emitter: `moments` (roadmap step 4). A screen override (a takeover, a block or an overlay) is a `moments.*` event, not a `screen.*` one: Moments ranks the overrides and owns their timing and revert ([0010](../docs/decisions/0010-scope.md)), and an event's first part is its emitter, so the module that decides emits. Step 4 therefore needs no rename.
 
 - **Input:** Moments turns domain events into overrides by its own trigger settings (`pizza.order.placed`, `tournament.match.called`, `games.surge.started`, …), and takes explicit ones through its API (the bot's `/screen announce` and `clear`, and the one announce action of step 4). No other module emits override events.
-- **Output:** at most one override of each kind is active on a zone. Screen shows what these events say and ranks nothing. When an override leaves only some of its zones (a higher rank takes one of them), `moments.override.ended` lists just the zones it left and it stays active on the rest. Whether a preempted override comes back afterwards is for the Moments contract. Screen's own events (devices, zones, layouts) are in the screen contract.
+- **Output:** at most one override of each kind is active on a zone. Screen shows what these events say and ranks nothing. When an override leaves only some of its zones (a higher rank takes one of them), `moments.override.ended` lists just the zones it left and it stays active on the rest. Whether a preempted override comes back afterwards is for the Moments contract. How Screen places an override in a zone's regions is in the screen contract ([screen.md](screen.md#moments-drive-it-claims)); Screen's own events are listed under [Screen](#screen).
 
 An **Override**:
 
@@ -298,6 +311,16 @@ An **Override**:
 | `template` | string | How Screen draws it (`announcement`, `pizza_placed`, `match_called`, `hot_game`, …); the set is fixed by the Moments contract |
 | `content` | object | The template's fields (`title`, `body`, `media_url`, `sound`, …) |
 | `starts_at`, `ends_at` | string, time; `ends_at` or null | Start and planned end; `null` until someone clears it |
+
+The screen contract adds these optional fields ([screen.md](screen.md#moments-drive-it-claims)), an additive change; Screen handles an Override without them as before.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `regions` | list of string | Region roles it may claim, in order of preference (the degrade chain, e.g. `["hero", "rail", "ticker"]`); without it derived from `kind` |
+| `ttl_seconds` | integer or null | Screen ends it this long after `starts_at` unless renewed |
+| `sound` | object or null | `cue`, `url`, `volume` (0–1), `play` (`once`, `loop`) |
+| `steps` | list of object or null | A sequence: each `template`, `content`, `duration_ms`, optional `sound` |
+| `on_end` | string | What the region shows after it: `resume` (default) or `next` |
 
 | Type | Meaning | Audience | Consumers | `data` |
 |---|---|---|---|---|

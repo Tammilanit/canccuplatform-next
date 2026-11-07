@@ -1,0 +1,2745 @@
+openapi: 3.1.0
+info:
+  title: Screen API
+  version: 1.0.0
+  summary: Devices, zones, the composed screen state and its push channel, content, scheduling and the PPTX render job.
+  description: |
+    Machine-readable part of the screen contract. Prose, widgets, claims, the Pulse options and events: contracts/screen.md.
+    Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
+    The event (tenant) comes from the hostname; no operation names a tenant, except the superadmin's device registry.
+  license:
+    name: AGPL-3.0
+    identifier: AGPL-3.0-only
+servers:
+  - url: /
+    description: Same origin, behind Caddy; the hostname selects the event.
+tags:
+  - name: health
+    description: Health of the module (shape shared with admin).
+  - name: pairing
+    description: Pairing a kiosk browser as a device.
+  - name: device
+    description: What a paired device calls; device cookie and venue address required.
+  - name: devices
+    description: The event's devices, their assignment and health.
+  - name: registry
+    description: The superadmin's global device registry (superadmin hostname only).
+  - name: zones
+    description: The event's zones and their Pulse options.
+  - name: now
+    description: What a zone's screens show now, for the phone hub.
+  - name: pin
+    description: Pinned screen bundle and theme revision.
+  - name: content
+    description: Assets, files, playlists, schedule windows and pushed content.
+  - name: render
+    description: The PPTX render job.
+  - name: ticker
+    description: The manual ticker and its windows.
+  - name: photos
+    description: The photo carousel.
+  - name: clone
+    description: Copying screen content from another event of the series.
+security:
+  - session: []
+paths:
+  /health:
+    get:
+      tags: [health]
+      operationId: getHealth
+      summary: Health of this module
+      description: Served at `/api/screen/health` behind Caddy. No authentication. Same shape as contracts/admin.md, Health.
+      security:
+        - {}
+      responses:
+        "200":
+          description: "`ok` or `degraded`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        "503":
+          description: "`down`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+  /api/screen/pairing:
+    post:
+      tags: [pairing]
+      operationId: startPairing
+      summary: Ask for a pairing code
+      description: |
+        From one of the event's venue addresses (unless the venue IP check is off). Sets the cookie `canccu_pairing`.
+        429 `rate_limited` over 10 open codes for the event.
+      security:
+        - {}
+      responses:
+        "201":
+          description: The code to show.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pairing"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooMany"
+  /api/screen/pairing/{pairing_id}:
+    parameters:
+      - name: pairing_id
+        in: path
+        required: true
+        description: Pairing id from startPairing.
+        schema:
+          $ref: "#/components/schemas/Id"
+    get:
+      tags: [pairing]
+      operationId: getPairing
+      summary: Poll a pairing
+      description: Once claimed, the answer sets the device cookie `canccu_device` and the code is spent.
+      security:
+        - pairing: []
+      responses:
+        "200":
+          description: The pairing's status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PairingStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/device/state:
+    get:
+      tags: [device]
+      operationId: getDeviceState
+      summary: The composed state of the device's zone
+      description: Everything the screen draws. Also the polling fallback when the stream fails.
+      security:
+        - device: []
+      responses:
+        "200":
+          description: The composed state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScreenState"
+        "401":
+          $ref: "#/components/responses/DeviceUnauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/screen/device/stream:
+    get:
+      tags: [device]
+      operationId: streamDeviceState
+      summary: The push channel (Server-Sent Events)
+      description: |
+        SSE events `state`, `widget`, `region`, `ticker`, `theme`, `command`, `ping`, each with `id: <state_version>`
+        (contracts/screen.md, Composed state and the push channel). Resume with `Last-Event-ID`.
+      security:
+        - device: []
+      parameters:
+        - name: Last-Event-ID
+          in: header
+          description: The last `state_version` the screen applied.
+          schema:
+            type: string
+            pattern: "^[0-9]{1,18}$"
+      responses:
+        "200":
+          description: An event stream; each message's `data` is one `StreamMessage` as JSON.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE frames; each frame's `data` line holds one `StreamMessage` as JSON.
+                contentMediaType: application/json
+                contentSchema:
+                  $ref: "#/components/schemas/StreamMessage"
+              examples:
+                widget:
+                  value: "event: widget\nid: 42\ndata: {\"state_version\": 42, \"region_id\": \"rail\", \"index\": 0, \"view\": {}}\n\n"
+        "401":
+          $ref: "#/components/responses/DeviceUnauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/screen/device/heartbeat:
+    post:
+      tags: [device]
+      operationId: postHeartbeat
+      summary: Report health
+      security:
+        - device: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Heartbeat"
+      responses:
+        "200":
+          description: Server time, for the device's clock offset.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HeartbeatAck"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/DeviceUnauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/screen/device/home:
+    get:
+      tags: [device]
+      operationId: getDeviceHome
+      summary: Where a moved device goes
+      description: Valid token and venue address; answers also when the device serves another event, or none.
+      security:
+        - device: []
+      responses:
+        "200":
+          description: The screen URL of the device's current event with a transfer code, or null for a parked device.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceHome"
+        "401":
+          $ref: "#/components/responses/DeviceUnauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/screen/device/transfer:
+    post:
+      tags: [device]
+      operationId: redeemTransfer
+      summary: Redeem a transfer code
+      description: On the new event's hostname, from its venue address. Sets a new `canccu_device` cookie and revokes the old token. Audited.
+      security:
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Transfer"
+      responses:
+        "200":
+          description: The device, now with a token for this hostname.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          description: "`code_invalid`: unknown, used or older than 60 seconds."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/screen/devices:
+    get:
+      tags: [devices]
+      operationId: listDevices
+      summary: The event's devices with assignment and health
+      description: Right `screen.devices.read`.
+      responses:
+        "200":
+          description: Devices whose current event is this one.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [devices]
+      operationId: claimPairing
+      summary: Pair a device by its code
+      description: Right `screen.devices.pair`. 409 `no_venue` for an event without a venue. Audited; emits `screen.device.paired`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PairingClaim"
+      responses:
+        "201":
+          description: The new device.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/screen/devices/{device_id}:
+    parameters:
+      - $ref: "#/components/parameters/DeviceId"
+    patch:
+      tags: [devices]
+      operationId: renameDevice
+      summary: Rename a device
+      description: Right `screen.devices.write`. Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceRename"
+      responses:
+        "200":
+          description: The device.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/devices/{device_id}/revoke:
+    parameters:
+      - $ref: "#/components/parameters/DeviceId"
+    post:
+      tags: [devices]
+      operationId: revokeDevice
+      summary: Revoke a device's token
+      description: Right `screen.devices.write`. Audited; emits `screen.device.revoked`.
+      responses:
+        "204":
+          description: Revoked.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/devices/{device_id}/assignment:
+    parameters:
+      - $ref: "#/components/parameters/DeviceId"
+    put:
+      tags: [devices]
+      operationId: assignDevice
+      summary: Assign a device to a zone, or make it mirror
+      description: Right `screen.devices.write`. Exactly one of `zone_key` and `mirror_of`. Audited; emits `screen.device.assigned`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Assignment"
+      responses:
+        "200":
+          description: The device.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [devices]
+      operationId: unassignDevice
+      summary: Unassign a device
+      description: Right `screen.devices.write`. Audited; emits `screen.device.assigned`.
+      responses:
+        "204":
+          description: Unassigned.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/devices/{device_id}/commands:
+    parameters:
+      - $ref: "#/components/parameters/DeviceId"
+    post:
+      tags: [devices]
+      operationId: sendCommand
+      summary: Send a command to a device
+      description: Right `screen.devices.write`. Delivered on the push channel; dropped when not delivered within 60 seconds.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Command"
+      responses:
+        "202":
+          description: Queued for delivery.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/registry/devices:
+    get:
+      tags: [registry]
+      operationId: listRegistryDevices
+      summary: All devices (superadmin)
+      description: Superadmin with `mfa_enabled`, on the superadmin hostname; elsewhere 404.
+      parameters:
+        - name: venue_id
+          in: query
+          description: Only devices of this venue.
+          schema:
+            $ref: "#/components/schemas/Id"
+      responses:
+        "200":
+          description: The devices.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [devices]
+                properties:
+                  devices:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RegistryDevice"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/registry/devices/{device_id}:
+    parameters:
+      - $ref: "#/components/parameters/DeviceId"
+    patch:
+      tags: [registry]
+      operationId: moveDevice
+      summary: Move, rename or re-home a device (superadmin)
+      description: |
+        `current_tenant_id` must be an event at the device's venue, or null to park it. Audited; emits
+        `screen.device.released` on the old event and `screen.device.moved` on the new one.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistryDevicePatch"
+      responses:
+        "200":
+          description: The device.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistryDevice"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [registry]
+      operationId: deleteDevice
+      summary: Revoke and delete a device (superadmin)
+      description: Audited; emits `screen.device.revoked` on its current event.
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/zones:
+    get:
+      tags: [zones]
+      operationId: listZones
+      summary: The event's zones
+      description: Right `screen.devices.read` or `screen.content.read`.
+      responses:
+        "200":
+          description: The zones.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [zones]
+                properties:
+                  zones:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Zone"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [zones]
+      operationId: addZone
+      summary: Add a zone
+      description: Right `screen.zones.write`. 409 `zone_exists`. Emits `screen.zone.saved`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Zone"
+      responses:
+        "201":
+          description: The zone.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Zone"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/screen/zones/{zone_key}:
+    parameters:
+      - $ref: "#/components/parameters/ZoneKey"
+    get:
+      tags: [zones]
+      operationId: getZone
+      summary: Read a zone
+      description: Right `screen.devices.read` or `screen.content.read`.
+      responses:
+        "200":
+          description: The zone.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Zone"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [zones]
+      operationId: saveZone
+      summary: Replace a zone
+      description: Right `screen.zones.write`, with the `revision` read. Emits `screen.zone.saved`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Zone"
+      responses:
+        "200":
+          description: The zone.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Zone"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [zones]
+      operationId: removeZone
+      summary: Remove a zone
+      description: Right `screen.zones.write`. 409 `zone_in_use` while devices are assigned. Emits `screen.zone.removed`.
+      responses:
+        "204":
+          description: Removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/screen/now:
+    get:
+      tags: [now]
+      operationId: getNow
+      summary: What a zone's screens show now
+      description: For the phone hub. Follows the event's info-page mode; only public widgets.
+      security:
+        - {}
+        - session: []
+      parameters:
+        - name: zone
+          in: query
+          required: true
+          description: Zone key.
+          schema:
+            $ref: "#/components/schemas/ZoneKey"
+      responses:
+        "200":
+          description: The zone's public view-models, claims and ticker.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NowView"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/pin:
+    get:
+      tags: [pin]
+      operationId: getPin
+      summary: The event's pins
+      description: Right `screen.devices.read`; theming reads it as a module to keep a pinned revision.
+      responses:
+        "200":
+          description: The pins and the available bundle versions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pin"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    put:
+      tags: [pin]
+      operationId: setPin
+      summary: Pin a bundle version and a theme revision
+      description: Right `screen.bundle.write`. Audited; screens get a `reload` command.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Pin"
+      responses:
+        "200":
+          description: The pins.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pin"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/screen/assets:
+    get:
+      tags: [content]
+      operationId: listAssets
+      summary: The asset library
+      description: Right `screen.content.read`.
+      parameters:
+        - name: q
+          in: query
+          description: Title contains this text.
+          schema:
+            type: string
+            maxLength: 120
+        - name: kind
+          in: query
+          description: Only this kind.
+          schema:
+            $ref: "#/components/schemas/AssetKind"
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: A page of assets.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [assets, next_cursor]
+                properties:
+                  assets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Asset"
+                  next_cursor:
+                    type: [string, "null"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [content]
+      operationId: addAsset
+      summary: Upload a file, or add a web or YouTube URL
+      description: |
+        Right `screen.content.write`. A file ≤ 100 MiB, checked by content. A `pptx` upload submits a render job.
+        400 `origin_not_allowed` for a web URL off `web_allowlist`; 413 `file_too_large`.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/AssetUpload"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssetUrl"
+      responses:
+        "201":
+          description: The asset.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+  /api/screen/assets/name-check:
+    post:
+      tags: [content]
+      operationId: checkAssetNames
+      summary: Same-name matches before an upload
+      description: Right `screen.content.write`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [names]
+              properties:
+                names:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: string
+                    maxLength: 200
+      responses:
+        "200":
+          description: For each name, the assets with the same title.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [results]
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      required: [name, asset_ids]
+                      properties:
+                        name:
+                          type: string
+                        asset_ids:
+                          type: array
+                          items:
+                            $ref: "#/components/schemas/Id"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/screen/assets/{asset_id}:
+    parameters:
+      - $ref: "#/components/parameters/AssetId"
+    patch:
+      tags: [content]
+      operationId: editAsset
+      summary: Rename an asset or reset its health
+      description: Right `screen.content.write`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                reset_health:
+                  type: boolean
+      responses:
+        "200":
+          description: The asset.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [content]
+      operationId: deleteAsset
+      summary: Delete an asset, its files and renders
+      description: Right `screen.content.write`. 409 `asset_in_use` while a playlist uses it.
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/screen/assets/{asset_id}/replace:
+    parameters:
+      - $ref: "#/components/parameters/AssetId"
+    post:
+      tags: [content]
+      operationId: replaceAsset
+      summary: Replace an asset's file
+      description: Right `screen.content.write`. Keeps the previous version for one undo; slide ranges are clamped to the new deck.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/AssetUpload"
+      responses:
+        "200":
+          description: The asset with its new version.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+  /api/screen/assets/{asset_id}/revert:
+    parameters:
+      - $ref: "#/components/parameters/AssetId"
+    post:
+      tags: [content]
+      operationId: revertAsset
+      summary: Undo the last replace
+      description: Right `screen.content.write`. 409 `nothing_to_revert`.
+      responses:
+        "200":
+          description: The asset with its previous version.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/screen/files/{file}:
+    parameters:
+      - name: file
+        in: path
+        required: true
+        description: Content-addressed file name, `<sha256>.<ext>`, or a render's slide path.
+        schema:
+          type: string
+          pattern: "^[a-z0-9._/-]{1,200}$"
+    get:
+      tags: [content]
+      operationId: getFile
+      summary: A file of the event (media, slides)
+      description: For the event's devices (cookie and venue address) and sessions with `screen.content.read`. Immutable.
+      security:
+        - device: []
+        - session: []
+      responses:
+        "200":
+          description: The file, with the content type set from its checked content.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                contentMediaType: application/octet-stream
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/playlists:
+    get:
+      tags: [content]
+      operationId: listPlaylists
+      summary: The event's playlists
+      description: Right `screen.content.read`.
+      responses:
+        "200":
+          description: The playlists with their items.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [playlists]
+                properties:
+                  playlists:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Playlist"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [content]
+      operationId: addPlaylist
+      summary: Add a playlist
+      description: Right `screen.content.write`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Playlist"
+      responses:
+        "201":
+          description: The playlist.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Playlist"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/screen/playlists/{playlist_id}:
+    parameters:
+      - $ref: "#/components/parameters/PlaylistId"
+    get:
+      tags: [content]
+      operationId: getPlaylist
+      summary: Read a playlist
+      description: Right `screen.content.read`.
+      responses:
+        "200":
+          description: The playlist.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Playlist"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [content]
+      operationId: savePlaylist
+      summary: Replace a playlist and its items
+      description: Right `screen.content.write`, with the `revision` read.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Playlist"
+      responses:
+        "200":
+          description: The playlist.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Playlist"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [content]
+      operationId: deletePlaylist
+      summary: Delete a playlist with its items and windows
+      description: Right `screen.content.write`.
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/screen/schedules:
+    get:
+      tags: [content]
+      operationId: listSchedules
+      summary: Schedule windows
+      description: Right `screen.content.read`.
+      parameters:
+        - name: zone
+          in: query
+          description: Only this zone's windows.
+          schema:
+            $ref: "#/components/schemas/ZoneKey"
+      responses:
+        "200":
+          description: The windows.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [schedules]
+                properties:
+                  schedules:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Schedule"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [content]
+      operationId: addSchedule
+      summary: Add a schedule window
+      description: Right `screen.content.write`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Schedule"
+      responses:
+        "201":
+          description: The window.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Schedule"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/screen/schedules/simulate:
+    get:
+      tags: [content]
+      operationId: simulateSchedule
+      summary: What a zone would play at a time
+      description: Right `screen.content.read`.
+      parameters:
+        - name: zone
+          in: query
+          required: true
+          description: Zone key.
+          schema:
+            $ref: "#/components/schemas/ZoneKey"
+        - name: at
+          in: query
+          required: true
+          description: The time, RFC 3339.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: The winning window, playlist, layout and break, if any.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Simulation"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/screen/schedules/{schedule_id}:
+    parameters:
+      - name: schedule_id
+        in: path
+        required: true
+        description: Schedule window id.
+        schema:
+          $ref: "#/components/schemas/Id"
+    put:
+      tags: [content]
+      operationId: saveSchedule
+      summary: Replace a schedule window
+      description: Right `screen.content.write`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Schedule"
+      responses:
+        "200":
+          description: The window.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Schedule"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [content]
+      operationId: deleteSchedule
+      summary: Delete a schedule window
+      description: Right `screen.content.write`.
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/push:
+    post:
+      tags: [content]
+      operationId: pushContent
+      summary: Play a playlist or asset now in zones
+      description: Right `screen.push.write`. `zones` empty means every zone. Emits `screen.content.pushed`. Overrides are pushed through Moments.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Push"
+      responses:
+        "201":
+          description: The push.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Push"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/screen/push/{push_id}:
+    parameters:
+      - name: push_id
+        in: path
+        required: true
+        description: Push id.
+        schema:
+          $ref: "#/components/schemas/Id"
+    delete:
+      tags: [content]
+      operationId: clearPush
+      summary: End a push
+      description: Right `screen.push.write`. Emits `screen.content.cleared`.
+      responses:
+        "204":
+          description: Ended.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/render-jobs:
+    get:
+      tags: [render]
+      operationId: listRenderJobs
+      summary: Render jobs
+      description: Right `screen.content.read`.
+      parameters:
+        - name: asset_id
+          in: query
+          description: Only this asset's jobs.
+          schema:
+            $ref: "#/components/schemas/Id"
+      responses:
+        "200":
+          description: The jobs, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [jobs]
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RenderJob"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [render]
+      operationId: submitRenderJob
+      summary: Submit a render job for a PPTX asset
+      description: Right `screen.content.write`. One live job per asset version; a second submit answers it (200). Emits `screen.render.queued`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [asset_id]
+              properties:
+                asset_id:
+                  $ref: "#/components/schemas/Id"
+      responses:
+        "200":
+          description: The existing live job.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RenderJob"
+        "202":
+          description: The new job, queued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RenderJob"
+        "400":
+          description: "`invalid_request`, or `not_pptx`: the asset is no PPTX deck."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/render-jobs/{job_id}:
+    parameters:
+      - $ref: "#/components/parameters/JobId"
+    get:
+      tags: [render]
+      operationId: getRenderJob
+      summary: A render job's status
+      description: Right `screen.content.read`.
+      responses:
+        "200":
+          description: The job.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RenderJob"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [render]
+      operationId: cancelRenderJob
+      summary: Cancel a queued or running job
+      description: Right `screen.content.write`. 409 `render_finished` once it ended. Emits `screen.render.cancelled`.
+      responses:
+        "204":
+          description: Cancelled.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/screen/render-jobs/{job_id}/result:
+    parameters:
+      - $ref: "#/components/parameters/JobId"
+    get:
+      tags: [render]
+      operationId: getRenderResult
+      summary: The rendered slides
+      description: Right `screen.content.read`. 409 `render_not_finished` until the job `succeeded`.
+      responses:
+        "200":
+          description: The slides.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RenderResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/screen/ticker:
+    get:
+      tags: [ticker]
+      operationId: getTicker
+      summary: The ticker now
+      description: Right `screen.ticker.write` or `screen.content.read`.
+      responses:
+        "200":
+          description: The ticker.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticker"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    put:
+      tags: [ticker]
+      operationId: setTicker
+      summary: Set the ticker
+      description: Right `screen.ticker.write` (also the bot's `/ticker set`, with the person's rights). Emits `screen.ticker.changed`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TickerSet"
+      responses:
+        "200":
+          description: The ticker.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticker"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    delete:
+      tags: [ticker]
+      operationId: clearTicker
+      summary: Clear the ticker
+      description: Right `screen.ticker.write`. Emits `screen.ticker.changed`.
+      responses:
+        "204":
+          description: Cleared.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/screen/ticker/windows:
+    get:
+      tags: [ticker]
+      operationId: listTickerWindows
+      summary: Ticker windows
+      description: Right `screen.ticker.write`.
+      responses:
+        "200":
+          description: The windows.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [windows]
+                properties:
+                  windows:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TickerWindow"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [ticker]
+      operationId: addTickerWindow
+      summary: Add a ticker window
+      description: Right `screen.ticker.write`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TickerWindow"
+      responses:
+        "201":
+          description: The window.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TickerWindow"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/screen/ticker/windows/{window_id}:
+    parameters:
+      - name: window_id
+        in: path
+        required: true
+        description: Ticker window id.
+        schema:
+          $ref: "#/components/schemas/Id"
+    delete:
+      tags: [ticker]
+      operationId: deleteTickerWindow
+      summary: Delete a ticker window
+      description: Right `screen.ticker.write`.
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/photos:
+    get:
+      tags: [photos]
+      operationId: listPhotos
+      summary: Carousel photos
+      description: Right `screen.content.read`. Flag `screen.photos`.
+      responses:
+        "200":
+          description: The photos, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [photos]
+                properties:
+                  photos:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Photo"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [photos]
+      operationId: addPhoto
+      summary: Add a carousel photo
+      description: Right `screen.photos.write`. Flag `screen.photos` (otherwise 403 `feature_off`). Emits `screen.photo.added`.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/PhotoUpload"
+      responses:
+        "201":
+          description: The photo.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Photo"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+  /api/screen/photos/{photo_id}:
+    parameters:
+      - name: photo_id
+        in: path
+        required: true
+        description: Photo id.
+        schema:
+          $ref: "#/components/schemas/Id"
+    delete:
+      tags: [photos]
+      operationId: deletePhoto
+      summary: Remove a carousel photo
+      description: Right `screen.photos.write`. Emits `screen.photo.removed`.
+      responses:
+        "204":
+          description: Removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/screen/clone:
+    post:
+      tags: [clone]
+      operationId: cloneScreen
+      summary: Copy screen content from another event of the series
+      description: Event-admin role on both events of one series (otherwise 403 `missing_right`). Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [source_tenant_id]
+              properties:
+                source_tenant_id:
+                  type: string
+                  pattern: "^[a-z][a-z0-9-]{2,31}$"
+      responses:
+        "200":
+          description: What was copied.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [zones, assets, playlists, schedules, ticker_windows]
+                properties:
+                  zones:
+                    type: integer
+                  assets:
+                    type: integer
+                  playlists:
+                    type: integer
+                  schedules:
+                    type: integer
+                  ticker_windows:
+                    type: integer
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: canccu_session
+      description: Opaque session id (contracts/admin.md, Session and rights). Rights are checked through admin.
+    device:
+      type: apiKey
+      in: cookie
+      name: canccu_device
+      description: |
+        The device token (contracts/screen.md, Devices). Served only with a request from the event's venue addresses,
+        unless the event's venue IP check is off.
+    pairing:
+      type: apiKey
+      in: cookie
+      name: canccu_pairing
+      description: Set by startPairing, so only the browser that asked can collect the device token.
+  parameters:
+    DeviceId:
+      name: device_id
+      in: path
+      required: true
+      description: Device id.
+      schema:
+        $ref: "#/components/schemas/Id"
+    ZoneKey:
+      name: zone_key
+      in: path
+      required: true
+      description: Zone key.
+      schema:
+        $ref: "#/components/schemas/ZoneKey"
+    AssetId:
+      name: asset_id
+      in: path
+      required: true
+      description: Asset id.
+      schema:
+        $ref: "#/components/schemas/Id"
+    PlaylistId:
+      name: playlist_id
+      in: path
+      required: true
+      description: Playlist id.
+      schema:
+        $ref: "#/components/schemas/Id"
+    JobId:
+      name: job_id
+      in: path
+      required: true
+      description: Render job id.
+      schema:
+        $ref: "#/components/schemas/Id"
+    Cursor:
+      name: cursor
+      in: query
+      description: The `next_cursor` of the previous page.
+      schema:
+        type: string
+        maxLength: 200
+  responses:
+    BadRequest:
+      description: "`invalid_request`, `origin_not_allowed`, `unknown_zone`, `unknown_layout` or `code_invalid`."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: "`not_signed_in`: no valid session; or `device_unknown` on device calls."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    DeviceUnauthorized:
+      description: "`device_unknown`: no device cookie, or its token is unknown or revoked; the page goes back to pairing."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: |
+        `missing_right`, `venue_ip_refused` (a device or pairing request not from the event's venue addresses),
+        `info_pages_closed`, `admin_access_restricted` or `feature_off`.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: "`not_found`: no such object in this event."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: |
+        `version_conflict`, `device_moved` (the device serves another event, or none), `no_venue`, `zone_exists`,
+        `zone_in_use`, `asset_in_use`, `nothing_to_revert`, `render_not_finished`, `render_finished`,
+        `already_cloned` or `event_archived`.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    TooMany:
+      description: "`rate_limited`."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    TooLarge:
+      description: "`file_too_large`."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              pattern: "^[a-z][a-z0-9_]*$"
+              examples: [venue_ip_refused]
+            message:
+              type: string
+    Health:
+      type: object
+      description: The shape every module serves (contracts/admin.openapi.yaml, Health).
+      required: [status, module, version, time, checks]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, down]
+        module:
+          type: string
+          const: screen
+        version:
+          type: string
+        time:
+          type: string
+          format: date-time
+        checks:
+          type: object
+          additionalProperties:
+            type: object
+            required: [status]
+            properties:
+              status:
+                type: string
+                enum: [ok, degraded, down]
+              detail:
+                type: string
+    Id:
+      type: string
+      pattern: "^[A-Za-z0-9_-]{1,64}$"
+      examples: [dv_1]
+    ZoneKey:
+      type: string
+      pattern: "^[a-z0-9][a-z0-9_-]{1,31}$"
+      examples: [main]
+    Time:
+      type: string
+      format: date-time
+    Pairing:
+      type: object
+      required: [pairing_id, code, expires_at, poll_seconds]
+      properties:
+        pairing_id:
+          $ref: "#/components/schemas/Id"
+        code:
+          type: string
+          description: Eight characters to show large, without look-alike characters.
+          pattern: "^[A-HJ-NP-Z2-9]{8}$"
+        expires_at:
+          $ref: "#/components/schemas/Time"
+        poll_seconds:
+          type: integer
+          const: 2
+    PairingStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [waiting, paired, expired]
+        device:
+          $ref: "#/components/schemas/Device"
+    PairingClaim:
+      type: object
+      required: [code, name]
+      properties:
+        code:
+          type: string
+          pattern: "^[A-HJ-NP-Z2-9]{8}$"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        zone_key:
+          $ref: "#/components/schemas/ZoneKey"
+    MirrorTarget:
+      type: object
+      description: Exactly one of the two.
+      properties:
+        device_id:
+          $ref: "#/components/schemas/Id"
+        zone_key:
+          $ref: "#/components/schemas/ZoneKey"
+    NowPlaying:
+      type: object
+      required: [region_id, widget]
+      properties:
+        region_id:
+          type: string
+        widget:
+          type: string
+        item_id:
+          type: [string, "null"]
+        claim_id:
+          type: [string, "null"]
+    DeviceHealth:
+      type: object
+      required: [online, last_seen_at]
+      properties:
+        online:
+          type: boolean
+        last_seen_at:
+          type: [string, "null"]
+          format: date-time
+        now_playing:
+          oneOf:
+            - $ref: "#/components/schemas/NowPlaying"
+            - type: "null"
+        state_lag:
+          type: integer
+          description: How many state versions the device is behind its zone.
+        bundle_version:
+          type: [string, "null"]
+        theme_revision:
+          type: [integer, "null"]
+        audio_unlocked:
+          type: boolean
+        viewport:
+          $ref: "#/components/schemas/Viewport"
+    Viewport:
+      type: object
+      required: [width, height]
+      properties:
+        width:
+          type: integer
+          minimum: 1
+        height:
+          type: integer
+          minimum: 1
+    Device:
+      type: object
+      required: [id, name, zone_key, mirror_of]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+        zone_key:
+          type: [string, "null"]
+        mirror_of:
+          oneOf:
+            - $ref: "#/components/schemas/MirrorTarget"
+            - type: "null"
+        paired_at:
+          $ref: "#/components/schemas/Time"
+        health:
+          $ref: "#/components/schemas/DeviceHealth"
+    DeviceList:
+      type: object
+      required: [devices]
+      properties:
+        devices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Device"
+    DeviceRename:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+    Assignment:
+      type: object
+      properties:
+        zone_key:
+          $ref: "#/components/schemas/ZoneKey"
+        mirror_of:
+          $ref: "#/components/schemas/MirrorTarget"
+    Command:
+      type: object
+      required: [command]
+      properties:
+        command:
+          type: string
+          enum: [reload, identify]
+    RegistryDevice:
+      type: object
+      required: [id, name, venue_id, current_tenant_id, created_at, revoked_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+        venue_id:
+          type: [string, "null"]
+        current_tenant_id:
+          type: [string, "null"]
+        created_at:
+          $ref: "#/components/schemas/Time"
+        revoked_at:
+          type: [string, "null"]
+          format: date-time
+    RegistryDevicePatch:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        venue_id:
+          type: string
+        current_tenant_id:
+          type: [string, "null"]
+    DeviceHome:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: [string, "null"]
+          description: "`https://<primary hostname>/screen/#transfer=<code>`; the code is single use and lives 60 seconds."
+    Transfer:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          minLength: 16
+          maxLength: 64
+    Heartbeat:
+      type: object
+      required: [state_version, bundle_version, theme_revision]
+      properties:
+        state_version:
+          type: integer
+          minimum: 0
+        now_playing:
+          $ref: "#/components/schemas/NowPlaying"
+        bundle_version:
+          type: string
+        theme_revision:
+          type: integer
+        audio_unlocked:
+          type: boolean
+        viewport:
+          $ref: "#/components/schemas/Viewport"
+        claims_sounded:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+        errors:
+          type: array
+          maxItems: 20
+          items:
+            type: object
+            required: [code]
+            properties:
+              code:
+                type: string
+                examples: [ready_timeout, youtube_error, media_error]
+              item_id:
+                type: string
+              detail:
+                type: string
+                maxLength: 500
+    HeartbeatAck:
+      type: object
+      required: [server_time]
+      properties:
+        server_time:
+          $ref: "#/components/schemas/Time"
+    WidgetEntry:
+      type: object
+      description: A widget entry as in contracts/theme.schema.json (`widget`); `props` per widget type in contracts/screen.md.
+      required: [widget]
+      properties:
+        widget:
+          type: string
+          pattern: "^[a-z][a-z0-9_]{0,39}$"
+        template:
+          type: string
+        embed:
+          type: string
+        props:
+          type: object
+          additionalProperties:
+            type: [string, number, boolean]
+    RegionSettings:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/Role"
+        widgets:
+          type: array
+          maxItems: 12
+          items:
+            $ref: "#/components/schemas/WidgetEntry"
+        rotation:
+          type: string
+          enum: [sequence, shuffle]
+          default: sequence
+        dwell_seconds:
+          type: integer
+          minimum: 5
+          maximum: 3600
+        skip_empty:
+          type: boolean
+          default: true
+        idle:
+          type: string
+          enum: [logo, blank, collapse]
+          default: logo
+    Role:
+      type: string
+      enum: [full, hero, rail, venue_rail, ticker, header, backdrop, overlay]
+    Zone:
+      type: object
+      required: [key, name]
+      properties:
+        key:
+          $ref: "#/components/schemas/ZoneKey"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        layout_id:
+          type: [string, "null"]
+          description: A layout of the current theme, or `pulse` / `pulse_portrait`; null uses `pulse`.
+        regions:
+          type: object
+          description: Keyed by region id of the layout.
+          additionalProperties:
+            $ref: "#/components/schemas/RegionSettings"
+        sound:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: true
+            device_id:
+              type: [string, "null"]
+        revision:
+          type: integer
+          minimum: 1
+          description: Read-only on POST; required on PUT.
+    WidgetView:
+      type: object
+      description: One widget with its view-model (contracts/screen.md, Widgets).
+      required: [widget, view]
+      properties:
+        widget:
+          type: string
+        template:
+          type: [string, "null"]
+        embed:
+          type: [string, "null"]
+        dwell_seconds:
+          type: integer
+        stale_after_seconds:
+          type: [integer, "null"]
+        view:
+          type: object
+          description: The widget type's fields plus `qr`, `stale` and `empty`.
+          properties:
+            qr:
+              oneOf:
+                - $ref: "#/components/schemas/Qr"
+                - type: "null"
+            stale:
+              type: boolean
+            empty:
+              type: boolean
+    Qr:
+      type: object
+      required: [url, label, image_url]
+      properties:
+        url:
+          type: string
+          format: uri
+        label:
+          type: string
+        image_url:
+          type: string
+          description: A `data:image/svg+xml` QR code made by Screen.
+    Sound:
+      type: object
+      required: [play]
+      properties:
+        cue:
+          type: [string, "null"]
+        url:
+          type: [string, "null"]
+        volume:
+          type: number
+          minimum: 0
+          maximum: 1
+        play:
+          type: string
+          enum: [once, loop]
+    Step:
+      type: object
+      required: [template, content, duration_ms]
+      properties:
+        template:
+          type: string
+        content:
+          type: object
+        duration_ms:
+          type: integer
+          minimum: 500
+          maximum: 60000
+        sound:
+          oneOf:
+            - $ref: "#/components/schemas/Sound"
+            - type: "null"
+    Claim:
+      type: object
+      description: A Moments override placed on this region (contracts/screen.md, Moments drive it).
+      required: [override_id, role, rank, template, content, starts_at, ends_at]
+      properties:
+        override_id:
+          type: string
+        role:
+          $ref: "#/components/schemas/Role"
+        rank:
+          type: integer
+        template:
+          type: string
+        content:
+          type: object
+        steps:
+          type: [array, "null"]
+          items:
+            $ref: "#/components/schemas/Step"
+        sound:
+          oneOf:
+            - $ref: "#/components/schemas/Sound"
+            - type: "null"
+        on_end:
+          type: string
+          enum: [resume, next]
+        starts_at:
+          $ref: "#/components/schemas/Time"
+        ends_at:
+          type: [string, "null"]
+          format: date-time
+        expires_at:
+          type: [string, "null"]
+          format: date-time
+          description: "`starts_at` plus `ttl_seconds`; the screen ends the claim then, also offline."
+    Region:
+      type: object
+      required: [id, role, area, layer, rotation, cycle_started_at, widgets, claim]
+      properties:
+        id:
+          type: string
+        role:
+          oneOf:
+            - $ref: "#/components/schemas/Role"
+            - type: "null"
+        area:
+          type: object
+          required: [column, row, columns, rows]
+          properties:
+            column:
+              type: integer
+            row:
+              type: integer
+            columns:
+              type: integer
+            rows:
+              type: integer
+        layer:
+          type: integer
+        rotation:
+          type: string
+          enum: [sequence, shuffle]
+        order:
+          type: array
+          description: Indexes into `widgets` for the current cycle.
+          items:
+            type: integer
+        cycle_started_at:
+          $ref: "#/components/schemas/Time"
+        idle:
+          type: string
+          enum: [logo, blank, collapse]
+        widgets:
+          type: array
+          items:
+            $ref: "#/components/schemas/WidgetView"
+        claim:
+          oneOf:
+            - $ref: "#/components/schemas/Claim"
+            - type: "null"
+    Ticker:
+      type: object
+      required: [text, until, source]
+      properties:
+        text:
+          type: [string, "null"]
+          maxLength: 280
+        until:
+          type: [string, "null"]
+          format: date-time
+        source:
+          type: [string, "null"]
+          enum: [admin, bot, window, null]
+        appearance:
+          type: string
+          enum: [default, high_contrast, minimal, broadcast]
+    TickerSet:
+      type: object
+      required: [text, until]
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 280
+        until:
+          type: [string, "null"]
+          format: date-time
+    TickerWindow:
+      type: object
+      required: [text, days, start_minute, end_minute]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        text:
+          type: string
+          minLength: 1
+          maxLength: 280
+        days:
+          $ref: "#/components/schemas/Days"
+        start_minute:
+          $ref: "#/components/schemas/Minute"
+        end_minute:
+          $ref: "#/components/schemas/Minute"
+    Days:
+      type: array
+      description: ISO weekdays, 1 = Monday.
+      minItems: 1
+      maxItems: 7
+      uniqueItems: true
+      items:
+        type: integer
+        minimum: 1
+        maximum: 7
+    Minute:
+      type: integer
+      description: Minutes after midnight in the event's time zone; 1440 is midnight at the end of the day.
+      minimum: 0
+      maximum: 1440
+    ScreenState:
+      type: object
+      required: [state_version, time, tenant, device, zone, bundle, theme, layout, regions, unplaced, ticker, sound, prefetch, offline]
+      properties:
+        state_version:
+          type: integer
+          minimum: 0
+        time:
+          $ref: "#/components/schemas/Time"
+        tenant:
+          type: object
+          required: [id, name, time_zone, status]
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            time_zone:
+              type: string
+            status:
+              type: string
+              enum: [draft, live, archived]
+        device:
+          type: object
+          required: [id, name, mirror]
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            mirror:
+              type: boolean
+        zone:
+          type: object
+          required: [key, name]
+          properties:
+            key:
+              type: string
+            name:
+              type: string
+        bundle:
+          type: object
+          required: [version]
+          properties:
+            version:
+              type: string
+        theme:
+          type: object
+          required: [revision, tokens_css_url, css_url, logo_url]
+          properties:
+            revision:
+              type: integer
+            tokens_css_url:
+              type: string
+            css_url:
+              type: [string, "null"]
+            logo_url:
+              type: [string, "null"]
+        layout:
+          type: object
+          description: The whole layout, in the shape of contracts/theme.schema.json `layout`.
+          required: [id, aspect, grid]
+          properties:
+            id:
+              type: string
+            aspect:
+              type: string
+            grid:
+              type: object
+              properties:
+                columns:
+                  type: integer
+                rows:
+                  type: integer
+        regions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Region"
+        unplaced:
+          type: array
+          description: Overrides active on this zone that found no region.
+          items:
+            type: string
+        ticker:
+          $ref: "#/components/schemas/Ticker"
+        sound:
+          type: object
+          required: [enabled]
+          properties:
+            enabled:
+              type: boolean
+              description: False on a mirroring device and on devices other than the zone's sound device.
+        prefetch:
+          type: array
+          items:
+            type: string
+        offline:
+          type: object
+          required: [marker_after_seconds]
+          properties:
+            marker_after_seconds:
+              type: integer
+              const: 10
+    StreamMessage:
+      type: object
+      description: The `data` of one push-channel message; which fields are present depends on the SSE event name.
+      properties:
+        state_version:
+          type: integer
+        region_id:
+          type: string
+        index:
+          type: integer
+        view:
+          type: object
+        region:
+          $ref: "#/components/schemas/Region"
+        ticker:
+          $ref: "#/components/schemas/Ticker"
+        theme:
+          type: object
+        command:
+          type: string
+          enum: [reload, identify]
+        expires_at:
+          $ref: "#/components/schemas/Time"
+        time:
+          $ref: "#/components/schemas/Time"
+    NowView:
+      type: object
+      required: [time, zone, regions, ticker]
+      properties:
+        time:
+          $ref: "#/components/schemas/Time"
+        zone:
+          type: object
+          required: [key, name]
+          properties:
+            key:
+              type: string
+            name:
+              type: string
+        regions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Region"
+        ticker:
+          $ref: "#/components/schemas/Ticker"
+    Pin:
+      type: object
+      required: [bundle_version, theme_revision]
+      properties:
+        bundle_version:
+          type: [string, "null"]
+          description: One of `available`; null follows the platform version.
+        theme_revision:
+          type: [integer, "null"]
+          description: A revision of the event's theme; null follows the current.
+        available:
+          type: array
+          readOnly: true
+          items:
+            type: string
+    AssetKind:
+      type: string
+      enum: [image, video, pptx, web, youtube]
+    Asset:
+      type: object
+      required: [id, kind, title, version, health, created_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        kind:
+          $ref: "#/components/schemas/AssetKind"
+        title:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        url:
+          type: string
+          description: The file under `/api/screen/files/`, or the web or YouTube embed URL.
+        mime_type:
+          type: [string, "null"]
+        size_bytes:
+          type: [integer, "null"]
+        duration_seconds:
+          type: [number, "null"]
+        slide_count:
+          type: [integer, "null"]
+        render_state:
+          type: [string, "null"]
+          enum: [queued, running, succeeded, failed, cancelled, null]
+        health:
+          type: string
+          enum: [ok, degraded, error]
+        health_message:
+          type: [string, "null"]
+        can_revert:
+          type: boolean
+        used_by:
+          type: array
+          items:
+            $ref: "#/components/schemas/Id"
+        created_at:
+          $ref: "#/components/schemas/Time"
+    AssetUpload:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          contentMediaType: application/octet-stream
+        title:
+          type: string
+          maxLength: 200
+    AssetUrl:
+      type: object
+      required: [kind, url, title]
+      properties:
+        kind:
+          type: string
+          enum: [web, youtube]
+        url:
+          type: string
+          format: uri
+          pattern: "^https://"
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+    PlaylistItem:
+      type: object
+      required: [asset_id]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        asset_id:
+          $ref: "#/components/schemas/Id"
+        duration_seconds:
+          type: [number, "null"]
+          minimum: 1
+        slide_start:
+          type: [integer, "null"]
+          minimum: 1
+        slide_end:
+          type: [integer, "null"]
+          minimum: 1
+        slide_seconds:
+          type: [integer, "null"]
+          minimum: 1
+    BreakSettings:
+      type: object
+      description: The legacy ADVT break.
+      required: [period_seconds, break_seconds]
+      properties:
+        period_seconds:
+          type: integer
+          minimum: 60
+        break_seconds:
+          type: integer
+          minimum: 5
+        window_start_minute:
+          $ref: "#/components/schemas/Minute"
+        window_end_minute:
+          $ref: "#/components/schemas/Minute"
+        play_once:
+          type: boolean
+        region:
+          type: string
+          enum: [playlist, full]
+          default: playlist
+        mode:
+          type: string
+          enum: [timeline, slideshow]
+        slideshow_dwell_seconds:
+          type: integer
+          minimum: 1
+        transition:
+          type: string
+          enum: [cut, crossfade]
+        pan_zoom:
+          type: string
+          enum: [none, subtle, strong]
+        shuffle:
+          type: boolean
+    Playlist:
+      type: object
+      required: [name, type, items]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        type:
+          type: string
+          enum: [regular, slideshow, break]
+        priority:
+          type: integer
+          minimum: 0
+          maximum: 999
+        slideshow_image_seconds:
+          type: integer
+          minimum: 1
+        break:
+          oneOf:
+            - $ref: "#/components/schemas/BreakSettings"
+            - type: "null"
+        items:
+          type: array
+          maxItems: 500
+          items:
+            $ref: "#/components/schemas/PlaylistItem"
+        revision:
+          type: integer
+          minimum: 1
+    Schedule:
+      type: object
+      description: Either weekly (`days`, `start_minute`, `end_minute`) or bound to a run-of-show item (`agenda_item_id`).
+      required: [zone_key, playlist_id, priority]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        zone_key:
+          $ref: "#/components/schemas/ZoneKey"
+        playlist_id:
+          $ref: "#/components/schemas/Id"
+        priority:
+          type: integer
+          minimum: 0
+          maximum: 999
+        layout_id:
+          type: [string, "null"]
+        days:
+          $ref: "#/components/schemas/Days"
+        start_minute:
+          $ref: "#/components/schemas/Minute"
+        end_minute:
+          $ref: "#/components/schemas/Minute"
+        agenda_item_id:
+          type: [string, "null"]
+    Simulation:
+      type: object
+      required: [at, zone_key, schedule_id, playlist_id, layout_id, in_break]
+      properties:
+        at:
+          $ref: "#/components/schemas/Time"
+        zone_key:
+          type: string
+        schedule_id:
+          type: [string, "null"]
+        playlist_id:
+          type: [string, "null"]
+        layout_id:
+          type: string
+        in_break:
+          type: boolean
+        next_change_at:
+          type: [string, "null"]
+          format: date-time
+    Push:
+      type: object
+      required: [zones, until]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        zones:
+          type: array
+          description: Empty means every zone.
+          items:
+            $ref: "#/components/schemas/ZoneKey"
+        playlist_id:
+          $ref: "#/components/schemas/Id"
+        asset_id:
+          $ref: "#/components/schemas/Id"
+        until:
+          type: string
+          format: date-time
+          description: At most 12 hours ahead.
+    RenderState:
+      type: string
+      enum: [queued, running, succeeded, failed, cancelled]
+    RenderJob:
+      type: object
+      required: [id, asset_id, asset_version, state, queue_position, submitted_at, started_at, finished_at, error]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        asset_id:
+          $ref: "#/components/schemas/Id"
+        asset_version:
+          type: integer
+        state:
+          $ref: "#/components/schemas/RenderState"
+        queue_position:
+          type: [integer, "null"]
+        submitted_at:
+          $ref: "#/components/schemas/Time"
+        started_at:
+          type: [string, "null"]
+          format: date-time
+        finished_at:
+          type: [string, "null"]
+          format: date-time
+        error:
+          oneOf:
+            - type: "null"
+            - type: object
+              required: [code, message]
+              properties:
+                code:
+                  type: string
+                  enum: [render_timeout, too_many_slides, file_invalid, renderer_failed]
+                message:
+                  type: string
+    RenderResult:
+      type: object
+      required: [job_id, slide_count, slides]
+      properties:
+        job_id:
+          $ref: "#/components/schemas/Id"
+        slide_count:
+          type: integer
+          minimum: 1
+          maximum: 300
+        slides:
+          type: array
+          items:
+            type: object
+            required: [index, url, width, height]
+            properties:
+              index:
+                type: integer
+                minimum: 1
+              url:
+                type: string
+              width:
+                type: integer
+              height:
+                type: integer
+    Photo:
+      type: object
+      required: [id, url, caption, author_name, posted_at, featured]
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        url:
+          type: string
+        caption:
+          type: [string, "null"]
+        author_name:
+          type: [string, "null"]
+        author_user_id:
+          type: [string, "null"]
+        posted_at:
+          $ref: "#/components/schemas/Time"
+        featured:
+          type: boolean
+          description: True until it has been featured once.
+    PhotoUpload:
+      type: object
+      required: [file, posted_at]
+      properties:
+        file:
+          type: string
+          contentMediaType: application/octet-stream
+        caption:
+          type: string
+          maxLength: 200
+        author_name:
+          type: string
+          maxLength: 80
+        author_user_id:
+          type: string
+        posted_at:
+          type: string
+          format: date-time
+        source_ref:
+          type: string
+          description: The source's own id (a Discord message id), so a second add of it is 409 `photo_exists`.
+          maxLength: 64
