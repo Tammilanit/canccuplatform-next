@@ -117,8 +117,9 @@ paths:
       operationId: setBrand
       summary: "Simple mode: generate the theme from a logo and two colours"
       description: |
-        Needs right `theming.theme.write`. Sets `mode: simple` and regenerates `tokens.colors` under the contrast
-        rules; `adjusted` names the tokens shaded away from the given colours. Deterministic.
+        Needs right `theming.theme.write`. Regenerates `tokens.colors` under the contrast rules; `adjusted` names
+        the tokens shaded away from the given colours. Deterministic. Never changes the mode: an advanced theme
+        stays advanced, with its CSS and files applied. A new draft from the defaults starts in `simple`.
       requestBody:
         required: true
         content:
@@ -132,6 +133,59 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BrandResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/theming/draft/mode:
+    post:
+      tags: [draft]
+      operationId: switchToSimple
+      summary: Switch an advanced theme back to the simple mode
+      description: |
+        Needs right `theming.theme.write`, and `theming.embeds.write` when the draft has embeds. The only way back
+        to `simple`: `remove_advanced: true` confirms that the client told the person the CSS, fonts, templates and
+        embeds will be removed. Removes them and the font and size tokens, keeps images and layouts, and
+        regenerates the colours from `brand` (409 `brand_missing` without it). Embed removal is audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [draft_version, mode, remove_advanced]
+              properties:
+                draft_version:
+                  type: integer
+                  minimum: 1
+                mode:
+                  type: string
+                  const: simple
+                remove_advanced:
+                  type: boolean
+                  const: true
+      responses:
+        "200":
+          description: The draft in simple mode, and the paths removed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [draft, removed]
+                properties:
+                  draft:
+                    $ref: "#/components/schemas/Draft"
+                  removed:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PackagePath"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -785,7 +839,8 @@ components:
             $ref: "#/components/schemas/Error"
     Conflict:
       description: |
-        `version_conflict` (stale `draft_version` or `current_revision`), `draft_exists`, `nothing_to_clone`, or
+        `version_conflict` (stale `draft_version` or `current_revision`), `draft_exists`, `nothing_to_clone`,
+        `brand_missing` (switching to simple without `brand`), or
         `event_archived` (the event is read-only).
       content:
         application/json:

@@ -60,13 +60,16 @@ for t in "${themes[@]}"; do
   else
     echo "FAIL schema  $t"; fail=1
   fi
-  json=$(mktemp)
-  if quiet "${YAML2JSON[@]}" "$t" >"$json" && scripts/check-theme-refs "$json" "$(dirname "$t")"; then
+  # js-yaml's stderr (npm notices, parse errors) goes to its own file, never into the JSON.
+  json=$(mktemp); err=$(mktemp)
+  if ! "${YAML2JSON[@]}" "$t" >"$json" 2>"$err"; then
+    grep -v '^npm \(notice\|warn\)' "$err"; echo "FAIL refs    $t (YAML)"; fail=1
+  elif scripts/check-theme-refs "$json" "$(dirname "$t")"; then
     echo "ok   refs    $t"
   else
     echo "FAIL refs    $t"; fail=1
   fi
-  rm -f "$json"
+  rm -f "$json" "$err"
 done
 
 for a in "${apis[@]}"; do
