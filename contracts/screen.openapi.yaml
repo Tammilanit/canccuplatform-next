@@ -1166,6 +1166,16 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/Schedule"
+            examples:
+              weekly_null_agenda_item:
+                summary: A weekly window with an explicit null `agenda_item_id`
+                value: {zone_key: main, playlist_id: pl_1, priority: 10, days: [6, 7], start_minute: 600, end_minute: 1320, agenda_item_id: null}
+              weekly_without_agenda_item:
+                summary: A weekly window without the `agenda_item_id` key
+                value: {zone_key: main, playlist_id: pl_1, priority: 10, days: [6], start_minute: 1200, end_minute: 1440}
+              agenda_bound:
+                summary: A window bound to a run-of-show item
+                value: {zone_key: main, playlist_id: pl_2, priority: 50, agenda_item_id: it_8}
       responses:
         "201":
           description: The window.
@@ -2735,8 +2745,9 @@ components:
       required: [zone_key, playlist_id, priority]
       oneOf:
         - required: [days, start_minute, end_minute]
-          not:
-            required: [agenda_item_id]
+          properties:
+            agenda_item_id:
+              type: "null"
         - required: [agenda_item_id]
           properties:
             agenda_item_id:
