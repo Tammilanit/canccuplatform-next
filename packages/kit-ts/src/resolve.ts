@@ -7,10 +7,13 @@ import type { TenantContext } from "./access.js";
 import type { Event } from "./bus.js";
 import { ConfigError } from "./config.js";
 import { KitError } from "./errors.js";
+import { isTenantId } from "./tenant.js";
 
 /** The tenant the IP-mode demo stack serves. */
 export const DEMO_TENANT = "demo";
 export const RESOLVE_CACHE_MS = 30_000;
+/** The Host header is the client's: without a bound, random hosts would grow the cache forever. */
+export const RESOLVE_CACHE_MAX = 10_000;
 
 /** An unknown host gets 404 with no detail, so it learns nothing about the registry. */
 export class UnknownHost extends KitError {
@@ -59,6 +62,7 @@ export interface TenantResolverOptions {
   ipMode?: IpMode;
   fetch?: typeof fetch;
   cacheMs?: number;
+  maxEntries?: number;
   now?: () => number;
 }
 
@@ -69,6 +73,7 @@ export class TenantResolver {
   private readonly platformHosts: Set<string>;
   private readonly fetch: typeof fetch;
   private readonly cacheMs: number;
+  private readonly maxEntries: number;
   private readonly now: () => number;
   private readonly cache = new Map<string, Cached>();
 
@@ -82,6 +87,7 @@ export class TenantResolver {
     );
     this.fetch = options.fetch ?? globalThis.fetch;
     this.cacheMs = options.cacheMs ?? RESOLVE_CACHE_MS;
+    this.maxEntries = options.maxEntries ?? RESOLVE_CACHE_MAX;
     this.now = options.now ?? Date.now;
   }
 
@@ -94,11 +100,27 @@ export class TenantResolver {
     if (hit !== undefined && this.now() - hit.at < this.cacheMs) {
       context = hit.context;
     } else {
+      this.cache.delete(host);
       context = isIP(host) === 0 ? await this.lookup(host) : await this.ipModeContext();
-      this.cache.set(host, { at: this.now(), context });
+      this.remember(host, context);
     }
     if (context === null) throw new UnknownHost();
     return { kind: "tenant", context };
+  }
+
+  get cacheSize(): number {
+    return this.cache.size;
+  }
+
+  /** A Map iterates in insertion order, so the first key is the oldest entry. */
+  private remember(host: string, context: TenantContext | null): void {
+    this.cache.delete(host);
+    this.cache.set(host, { at: this.now(), context });
+    while (this.cache.size > this.maxEntries) {
+      const oldest = this.cache.keys().next().value;
+      if (oldest === undefined) break;
+      this.cache.delete(oldest);
+    }
   }
 
   private async ipModeContext(): Promise<TenantContext | null> {
@@ -119,14 +141,24 @@ export class TenantResolver {
     }
     if (response.status === 404 || response.status === 400) return null;
     if (!response.ok) throw new TenantsUnavailable(`tenants module answered ${response.status}`);
+    let body: unknown;
     try {
-      return (await response.json()) as TenantContext;
+      body = await response.json();
     } catch {
       throw new TenantsUnavailable("tenants module answered with something that is not JSON");
     }
+    // The id goes into keys, streams and paths: never trust it unchecked.
+    const id = (body as { tenant_id?: unknown } | null)?.tenant_id;
+    if (typeof id !== "string" || !isTenantId(id)) {
+      throw new TenantsUnavailable("tenants module answered without a valid tenant id");
+    }
+    return body as TenantContext;
   }
 
-  /** Feed every tenants event here: a tenant event drops that tenant, a platform event all. */
+  /**
+   * Feed every tenants event here: a tenant event drops that tenant, a platform event all. Any
+   * tenants event also drops unknown hosts, so a hostname just added resolves at once.
+   */
   handleEvent(event: Event): void {
     if (event.source !== "tenants") return;
     if (event.tenant === undefined) {
@@ -134,7 +166,9 @@ export class TenantResolver {
       return;
     }
     for (const [host, cached] of this.cache) {
-      if (cached.context?.tenant_id === event.tenant) this.cache.delete(host);
+      if (cached.context === null || cached.context.tenant_id === event.tenant) {
+        this.cache.delete(host);
+      }
     }
   }
 }

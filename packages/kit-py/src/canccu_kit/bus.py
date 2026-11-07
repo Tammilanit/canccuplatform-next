@@ -340,14 +340,17 @@ class TenantSubscription(Subscription):
     async def _before_read(self) -> None:
         if time.monotonic() - self._last_scan < self._rescan_s:
             return
-        self._last_scan = time.monotonic()
-        for module in self._modules:
-            for stream in await self._store.scan(f"t:*:events:{module}"):
-                found = _TENANT_STREAM_RE.fullmatch(stream)
-                if found is not None:
-                    self._add_tenant(found.group(1), self._scan_from)
-        # Only streams there at start may skip their history; any found later is new to us.
+        from_id = self._scan_from
+        # Only a first scan that runs at start may skip history. After any attempt, also a failed
+        # one, a stream found later is read from its start, so a late first scan skips nothing.
         self._scan_from = "0"
+        # One scan for all modules; _last_scan moves only on success, so a failure retries.
+        modules = set(self._modules)
+        for stream in await self._store.scan("t:*:events:*"):
+            found = _TENANT_STREAM_RE.fullmatch(stream)
+            if found is not None and found.group(2) in modules:
+                self._add_tenant(found.group(1), from_id)
+        self._last_scan = time.monotonic()
 
     async def _dispatch(self, stream: str, event: Event) -> None:
         if stream == _TENANTS_PLATFORM:
@@ -355,6 +358,7 @@ class TenantSubscription(Subscription):
             if not isinstance(tenant, str) or not is_tenant_id(tenant):
                 return
             if event.type == "tenants.tenant.created":
+                self._deleted.discard(tenant)
                 self._add_tenant(tenant, "0")
             if event.type == "tenants.tenant.deleted":
                 self._deleted.add(tenant)

@@ -143,3 +143,13 @@ async def test_refuses_a_tenant_transaction_nested_on_the_same_connection() -> N
     ]
     async with tenant_transaction(conn, "acme"):
         pass
+
+
+async def test_refuses_to_start_inside_a_callers_plain_transaction() -> None:
+    # A nested transaction is a savepoint; SET LOCAL there would outlive the block.
+    conn = FakeConnection()
+    conn.is_in_transaction = lambda: True  # type: ignore[attr-defined]
+    with pytest.raises(RuntimeError, match="already in a transaction"):
+        async with tenant_transaction(conn, "acme"):
+            pass
+    assert conn.calls == []

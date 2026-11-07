@@ -192,3 +192,37 @@ async def test_without_ip_mode_an_ip_literal_is_an_unknown_host() -> None:
     with pytest.raises(UnknownHost):
         await resolver.resolve("192.0.2.1")
     assert tenants.asked == []
+
+
+async def test_keeps_the_cache_bounded_and_drops_expired_entries() -> None:
+    now = 0.0
+    resolver = TenantResolver(
+        "http://t", http=FakeTenants({}).http(), max_entries=3, now=lambda: now
+    )
+    for i in range(10):
+        with pytest.raises(UnknownHost):
+            await resolver.resolve(f"x{i}.example.org")
+    assert resolver.cache_size == 3
+    now = 31.0
+    with pytest.raises(UnknownHost):
+        await resolver.resolve("x9.example.org")
+    assert resolver.cache_size == 3
+
+
+@pytest.mark.parametrize("body", [{}, {"tenant_id": "../x"}, []])
+async def test_answers_503_for_a_context_without_a_valid_tenant_id(body: object) -> None:
+    http = httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda _: httpx.Response(200, json=body))
+    )
+    with pytest.raises(TenantsUnavailable):
+        await TenantResolver("http://t", http=http).resolve("demo.example.org")
+
+
+async def test_forgets_unknown_hosts_on_any_tenants_event() -> None:
+    tenants = FakeTenants({})
+    resolver = TenantResolver("http://t", http=tenants.http())
+    with pytest.raises(UnknownHost):
+        await resolver.resolve("new.example.org")
+    tenants.hosts["new.example.org"] = DEMO
+    resolver.handle_event(event("tenants.flags.changed", "other"))
+    assert await resolver.resolve("new.example.org") == Resolution("tenant", DEMO)

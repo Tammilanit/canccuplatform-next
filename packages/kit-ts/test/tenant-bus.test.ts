@@ -213,3 +213,69 @@ describe("positions while a handler runs", () => {
     await sub.close();
   });
 });
+
+describe("subscribeTenants robustness", () => {
+  it("retries a failed first scan and still delivers what arrived meanwhile", async () => {
+    class FlakyStore extends MemoryStreamStore {
+      scans = 0;
+      override scan(pattern: string): Promise<string[]> {
+        this.scans += 1;
+        return this.scans === 1 ? Promise.reject(new Error("valkey hiccup")) : super.scan(pattern);
+      }
+    }
+    const store = new FlakyStore();
+    const stream = tenantStream("pizza", "acme");
+    store.appendRaw(stream, { event: JSON.stringify(tenantEvent("acme", "pizza.order.placed")) });
+    const seen: string[] = [];
+    const sub = new Bus(store, "screen").subscribeTenants(
+      ["pizza"],
+      (event) => {
+        seen.push(event.id);
+      },
+      { blockMs: 20 },
+    );
+    await new Promise((r) => setTimeout(r, 20));
+    const meanwhile = tenantEvent("acme", "pizza.order.placed");
+    store.appendRaw(stream, { event: JSON.stringify(meanwhile) });
+    await until(() => seen.includes(meanwhile.id), 3000);
+    expect(store.scans).toBeGreaterThan(1);
+    await sub.close();
+  });
+
+  it("refuses a bad module name at once", () => {
+    const bus = new Bus(new MemoryStreamStore(), "screen");
+    expect(() => bus.subscribeTenants(["a:b"], () => undefined)).toThrow(/module/);
+  });
+
+  it("reads a tenant again when its id is created after a delete", async () => {
+    const store = new MemoryStreamStore();
+    const seen: (string | undefined)[][] = [];
+    const sub = new Bus(store, "screen").subscribeTenants(
+      ["pizza"],
+      () => {
+        seen.push([currentTenant()]);
+      },
+      { blockMs: 20, rescanMs: 50 },
+    );
+    await new Promise((r) => setTimeout(r, 30));
+    const platform = (type: string, id: string) =>
+      store.appendRaw("events:tenants", {
+        event: JSON.stringify({
+          id: `${type}-${id}`,
+          type,
+          version: 1,
+          time: "t",
+          source: "tenants",
+          data: { tenant_id: id },
+        }),
+      });
+    platform("tenants.tenant.deleted", "again");
+    platform("tenants.tenant.created", "again");
+    store.appendRaw(tenantStream("pizza", "again"), {
+      event: JSON.stringify(tenantEvent("again", "pizza.order.placed")),
+    });
+    await until(() => seen.length === 1);
+    expect(seen[0]?.[0]).toBe("again");
+    await sub.close();
+  });
+});

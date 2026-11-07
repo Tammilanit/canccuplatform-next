@@ -152,3 +152,10 @@ async def test_works_through_a_pooled_connection_and_refuses_nesting_on_it(
                 await pooled.execute("RESET ROLE")
     finally:
         await pool.close()
+
+
+async def test_refuses_to_start_inside_a_plain_transaction(conn: asyncpg.Connection) -> None:
+    async with conn.transaction():
+        with pytest.raises(RuntimeError, match="already in a transaction"):
+            async with tenant_transaction(conn, "leak-a"):
+                pass

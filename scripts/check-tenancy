@@ -109,7 +109,9 @@ class Table:
     has_tenant_column: bool = False
     rls: bool = False
     forced: bool = False
-    policy: bool = False
+    policies: list[tuple[str, bool, bool, bool]] = field(default_factory=list)
+    # (name, permissive, covers all commands, uses the tenant setting)
+    drops: list[str] = field(default_factory=list)
     keys: list[tuple[str, list[str]]] = field(default_factory=list)  # (kind, columns)
     refs: list[tuple[list[str], str, list[str] | None]] = field(default_factory=list)
 
@@ -172,9 +174,20 @@ def read_statement(module: Module, stmt: str, file: str) -> None:
     if m and (table := module.table(m.group(1))):
         table.keys.append(("unique index", columns(paren_body(stmt, m.end() - 1))))
         return
-    m = re.match(rf"CREATE POLICY {IDENT} ON {NAME}\b(.*)", stmt, re.I)
-    if m and (table := module.table(m.group(1))):
-        table.policy = table.policy or TENANT_SETTING in m.group(2).replace('"', "'")
+    m = re.match(rf"CREATE POLICY ({IDENT}) ON {NAME}\b(.*)", stmt, re.I)
+    if m and (table := module.table(m.group(2))):
+        rest = m.group(3)
+        command = re.search(r"\bFOR (ALL|SELECT|INSERT|UPDATE|DELETE)\b", rest, re.I)
+        table.policies.append((
+            bare(m.group(1)),
+            re.search(r"\bAS RESTRICTIVE\b", rest, re.I) is None,
+            command is None or command.group(1).upper() == "ALL",
+            TENANT_SETTING in rest.replace('"', "'"),
+        ))
+        return
+    m = re.match(rf"DROP POLICY (?:IF EXISTS )?({IDENT}) ON {NAME}", stmt, re.I)
+    if m and (table := module.table(m.group(2))):
+        table.drops.append(f"drops policy {bare(m.group(1))}")
         return
     m = re.match(rf"ALTER TABLE (?:IF EXISTS )?(?:ONLY )?{NAME} (.*)", stmt, re.I)
     if not m or not (table := module.table(m.group(1))):
@@ -187,6 +200,10 @@ def read_statement(module: Module, stmt: str, file: str) -> None:
             table.forced = True
         elif upper.startswith(("DISABLE ROW LEVEL SECURITY", "NO FORCE ROW LEVEL SECURITY")):
             module.problems.append(f"{file}: {bare(m.group(1))}: turns row-level security off")
+        elif upper.startswith("DROP CONSTRAINT"):
+            table.drops.append(f"drops a key or foreign key ({action})")
+        elif re.match(r"DROP (?:COLUMN )?(?:IF EXISTS )?\"?tenant_id\b", action, re.I):
+            table.drops.append("drops tenant_id")
         elif upper.startswith("ADD "):
             element = re.sub(r"^ADD (?:COLUMN )?(?:IF NOT EXISTS )?", "", action, flags=re.I)
             if CONSTRAINT_START.match(element):
@@ -204,8 +221,14 @@ def table_problems(name: str, table: Table, is_global: set[str]) -> list[str]:
         found.append(f"{where}: row-level security not enabled")
     if not table.forced:
         found.append(f"{where}: row-level security not forced")
-    if not table.policy:
-        found.append(f"{where}: no policy on the tenant setting ({TENANT_SETTING}…)")
+    # Postgres ORs permissive policies: one without the tenant setting opens the table, and a
+    # tenant policy for some commands only leaves the others unguarded.
+    if not any(setting and every for _, _, every, setting in table.policies):
+        found.append(f"{where}: no policy for all commands on the tenant setting ({TENANT_SETTING}…)")
+    for policy, permissive, _, setting in table.policies:
+        if permissive and not setting:
+            found.append(f"{where}: permissive policy {policy} without the tenant setting")
+    found += [f"{where}: {drop}" for drop in table.drops]
     for kind, cols in table.keys:
         if "tenant_id" not in cols:
             found.append(f"{where}: {kind} ({', '.join(cols)}) without tenant_id")
@@ -241,7 +264,6 @@ def check(root: Path) -> list[str]:
         ["git", "-C", str(root), "ls-files"], capture_output=True, text=True, check=True
     ).stdout.splitlines()
     allowed, problems = read_allow_list(root)
-    every_global = set().union(*allowed.values()) if allowed else set()
     modules: dict[str, Module] = {}
     for file in sorted(files):
         m = MIGRATION_RE.match(file)
@@ -258,9 +280,12 @@ def check(root: Path) -> list[str]:
                     )
     for name, module in sorted(modules.items()):
         problems += module.problems
+        # Only the module's own global tables exempt a plain reference: a same-named table that
+        # another module lists says nothing about this one.
+        own_global = allowed.get(name, set())
         for table_name, table in sorted(module.tables.items()):
-            if table_name not in allowed.get(name, set()):
-                problems += table_problems(table_name, table, every_global)
+            if table_name not in own_global:
+                problems += table_problems(table_name, table, own_global)
     return problems
 
 
@@ -285,7 +310,7 @@ ALTER TABLE {t} FORCE ROW LEVEL SECURITY;
 CREATE POLICY canccu_tenant ON {t} USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''))
   WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
 """
-GLOBALS = "# module table reason\ntenants venues global registry of venues\n"
+GLOBALS = "# module table reason\nm venues global registry of venues\nscreen devices device rows\n"
 
 
 def self_test() -> int:
@@ -303,6 +328,13 @@ def self_test() -> int:
         ("RLS turned off", {"m.sql": "ALTER TABLE lists DISABLE ROW LEVEL SECURITY;"}, "lists: turns row-level security off"),
         ("listed global table is exempt", {"m.sql": "CREATE TABLE settings (id text PRIMARY KEY);", "globals": "m settings platform-wide settings\n"}, None),
         ("entry without a reason", {"m.sql": "CREATE TABLE settings (id text PRIMARY KEY);", "globals": "m settings\n"}, "entry without a reason"),
+        ("permissive policy without the setting", {"m.sql": "CREATE POLICY open ON lists USING (true);"}, "lists: permissive policy open without the tenant setting"),
+        ("restrictive policy without the setting narrows only", {"m.sql": "CREATE POLICY no_archived ON lists AS RESTRICTIVE USING (id <> 'x');"}, None),
+        ("tenant policy for SELECT only", {"m.sql": "CREATE TABLE x (tenant_id text);\nALTER TABLE x ENABLE ROW LEVEL SECURITY;\nALTER TABLE x FORCE ROW LEVEL SECURITY;\nCREATE POLICY p ON x FOR SELECT USING (tenant_id = current_setting('canccu.tenant', true));"}, "x: no policy for all commands"),
+        ("dropped policy", {"m.sql": "DROP POLICY canccu_tenant ON lists;"}, "lists: drops policy canccu_tenant"),
+        ("dropped tenant_id", {"m.sql": "ALTER TABLE lists DROP COLUMN tenant_id;"}, "lists: drops tenant_id"),
+        ("dropped constraint", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_list;"}, "items: drops a key or foreign key"),
+        ("another module's global table does not exempt", {"m.sql": "CREATE TABLE x (tenant_id text, device_id text REFERENCES devices (id));"}, r"foreign key \(device_id\) to devices is not composite"),
         ("raw stream in source", {"src": 'await store.xadd("events:pizza", f);\n'}, r"src/a.ts:1: raw Valkey key"),
         ("raw tenant key in source", {"src": "key = f't:{tenant}:pizza:cache'\n"}, "raw Valkey key"),
     ]

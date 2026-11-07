@@ -9,6 +9,7 @@ from __future__ import annotations
 import ipaddress
 import re
 import time
+from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 from typing import Literal, cast
@@ -19,11 +20,14 @@ from .access import TenantContext
 from .bus import Event
 from .config import ConfigError
 from .errors import KitError
+from .tenant import is_tenant_id
 
 DEMO_TENANT = "demo"
 """The tenant the IP-mode demo stack serves."""
 
 RESOLVE_CACHE_SECONDS = 30
+RESOLVE_CACHE_MAX = 10_000
+"""The Host header is the client's: without a bound, random hosts would grow the cache forever."""
 
 
 class UnknownHost(KitError):
@@ -113,6 +117,7 @@ class TenantResolver:
         ip_mode: IpMode | None = None,
         http: httpx.AsyncClient | None = None,
         cache_seconds: float = RESOLVE_CACHE_SECONDS,
+        max_entries: int = RESOLVE_CACHE_MAX,
         now: Callable[[], float] = time.monotonic,
     ) -> None:
         if ip_mode is not None and ip_mode.version != "dev":
@@ -123,7 +128,9 @@ class TenantResolver:
         self._http = http or httpx.AsyncClient(timeout=5.0)
         self._cache_seconds = cache_seconds
         self._now = now
-        self._cache: dict[str, _Cached] = {}
+        self._max_entries = max_entries
+        # Insertion-ordered, so the first key is the oldest entry.
+        self._cache: OrderedDict[str, _Cached] = OrderedDict()
 
     async def resolve(self, raw_host: str | None) -> Resolution:
         host = normalize_host(raw_host)
@@ -135,11 +142,22 @@ class TenantResolver:
         if hit is not None and self._now() - hit.at < self._cache_seconds:
             context = hit.context
         else:
+            self._cache.pop(host, None)
             context = await (self._ip_mode_context() if _is_ip(host) else self._lookup(host))
-            self._cache[host] = _Cached(self._now(), context)
+            self._remember(host, context)
         if context is None:
             raise UnknownHost()
         return Resolution("tenant", context)
+
+    @property
+    def cache_size(self) -> int:
+        return len(self._cache)
+
+    def _remember(self, host: str, context: TenantContext | None) -> None:
+        self._cache.pop(host, None)
+        self._cache[host] = _Cached(self._now(), context)
+        while len(self._cache) > self._max_entries:
+            self._cache.popitem(last=False)
 
     async def _ip_mode_context(self) -> TenantContext | None:
         if self._ip_mode is None:
@@ -159,12 +177,20 @@ class TenantResolver:
         if not response.is_success:
             raise TenantsUnavailable(f"tenants module answered {response.status_code}")
         try:
-            return cast(TenantContext, response.json())
+            body = response.json()
         except ValueError as exc:
             raise TenantsUnavailable("tenants module answered no JSON") from exc
+        # The id goes into keys, streams and paths: never trust it unchecked.
+        tenant_id = body.get("tenant_id") if isinstance(body, dict) else None
+        if not isinstance(tenant_id, str) or not is_tenant_id(tenant_id):
+            raise TenantsUnavailable("tenants module answered without a valid tenant id")
+        return cast(TenantContext, body)
 
     def handle_event(self, event: Event) -> None:
-        """Feed every tenants event here: a tenant event drops that tenant, a platform event all."""
+        """Feed every tenants event here: a tenant event drops that tenant, a platform event all.
+
+        Any tenants event also drops unknown hosts, so a hostname just added resolves at once.
+        """
         if event.source != "tenants":
             return
         if event.tenant is None:
@@ -173,7 +199,7 @@ class TenantResolver:
         for host in [
             h
             for h, c in self._cache.items()
-            if c.context is not None and c.context["tenant_id"] == event.tenant
+            if c.context is None or c.context["tenant_id"] == event.tenant
         ]:
             del self._cache[host]
 

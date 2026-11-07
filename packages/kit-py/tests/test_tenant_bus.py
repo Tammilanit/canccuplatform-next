@@ -272,3 +272,36 @@ async def test_keeps_an_event_arriving_while_another_streams_handler_runs() -> N
         assert seen == ["acme", "beta"]
     finally:
         await sub.close()
+
+
+async def test_retries_a_failed_first_scan_and_still_delivers_what_arrived_meanwhile() -> None:
+    class FlakyStore(MemoryStreamStore):
+        scans = 0
+
+        async def scan(self, pattern: str) -> list[str]:
+            self.scans += 1
+            if self.scans == 1:
+                raise ConnectionError("valkey hiccup")
+            return await super().scan(pattern)
+
+    store = FlakyStore()
+    stream = tenant_stream("pizza", "acme")
+    store.append_raw(stream, {"event": tenant_event("acme", "pizza.order.placed").to_json()})
+    seen: list[str] = []
+
+    async def handler(event: Event) -> None:
+        seen.append(event.id)
+
+    sub = Bus(store, "screen").subscribe_tenants(["pizza"], handler, block_ms=20)
+    try:
+        await asyncio.sleep(0.02)
+        meanwhile = tenant_event("acme", "pizza.order.placed")
+        store.append_raw(stream, {"event": meanwhile.to_json()})
+        for _ in range(150):
+            if meanwhile.id in seen:
+                break
+            await asyncio.sleep(0.02)
+        assert meanwhile.id in seen
+        assert store.scans > 1
+    finally:
+        await sub.close()

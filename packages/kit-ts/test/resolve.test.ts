@@ -92,6 +92,43 @@ describe("TenantResolver", () => {
     await expect(resolver.resolve("demo.example.org")).rejects.toThrow(TenantsUnavailable);
   });
 
+  it("keeps the cache bounded against random Host headers and drops expired entries", async () => {
+    let now = 0;
+    const resolver = new TenantResolver({
+      tenantsUrl: "http://t",
+      fetch: fakeTenants({}).fetch,
+      maxEntries: 3,
+      now: () => now,
+    });
+    for (let i = 0; i < 10; i++) {
+      await expect(resolver.resolve(`x${i}.example.org`)).rejects.toThrow(UnknownHost);
+    }
+    expect(resolver.cacheSize).toBe(3);
+    now = 31_000;
+    await expect(resolver.resolve("x9.example.org")).rejects.toThrow(UnknownHost);
+    expect(resolver.cacheSize).toBe(3);
+  });
+
+  it("answers 503 when the tenants module sends a context without a valid tenant id", async () => {
+    for (const body of [{}, { tenant_id: "../x" }, []]) {
+      const resolver = new TenantResolver({
+        tenantsUrl: "http://t",
+        fetch: () => Promise.resolve(jsonResponse(200, body)),
+      });
+      await expect(resolver.resolve("demo.example.org")).rejects.toThrow(TenantsUnavailable);
+    }
+  });
+
+  it("forgets unknown hosts on any tenants event, so a new hostname works at once", async () => {
+    const hosts: Record<string, TenantContext> = {};
+    const tenants = fakeTenants(hosts);
+    const resolver = new TenantResolver({ tenantsUrl: "http://t", fetch: tenants.fetch });
+    await expect(resolver.resolve("new.example.org")).rejects.toThrow(UnknownHost);
+    hosts["new.example.org"] = demo;
+    resolver.handleEvent(event("tenants.flags.changed", "other"));
+    expect(await resolver.resolve("new.example.org")).toEqual({ kind: "tenant", context: demo });
+  });
+
   it("drops the cache on tenants events: the tenant's own, or all on a platform event", async () => {
     const tenants = fakeTenants({ "demo.example.org": demo });
     const resolver = new TenantResolver({ tenantsUrl: "http://t", fetch: tenants.fetch });

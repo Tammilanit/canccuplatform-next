@@ -305,6 +305,8 @@ export class TenantSubscription extends Subscription {
   ) {
     // The tenants platform stream announces new and deleted tenants.
     super(tenantStore, { [TENANTS_PLATFORM]: "$" }, handler, options.blockMs, options.log);
+    // Checked here, not at the first scan: a bad name would fail every read, forever.
+    for (const module of modules) platformStream(module);
     this.scanFrom = options.fromId;
   }
 
@@ -318,22 +320,27 @@ export class TenantSubscription extends Subscription {
 
   protected override async beforeRead(): Promise<void> {
     if (Date.now() - this.lastScan < this.options.rescanMs) return;
-    this.lastScan = Date.now();
-    for (const module of this.modules) {
-      for (const stream of await this.tenantStore.scan(`t:*:events:${module}`)) {
-        const tenant = TENANT_STREAM_RE.exec(stream)?.[1];
-        if (tenant !== undefined) this.addTenant(tenant, this.scanFrom);
-      }
-    }
-    // Only streams there at start may skip their history; any found later is new to us.
+    const from = this.scanFrom;
+    // Only a first scan that runs at start may skip history. After any attempt, also a failed
+    // one, a stream found later is read from its start, so a late first scan skips nothing.
     this.scanFrom = "0";
+    // One scan for all modules; lastScan moves only on success, so a failure retries next read.
+    const modules = new Set(this.modules);
+    for (const stream of await this.tenantStore.scan("t:*:events:*")) {
+      const match = TENANT_STREAM_RE.exec(stream);
+      if (match?.[1] !== undefined && modules.has(match[2] ?? "")) this.addTenant(match[1], from);
+    }
+    this.lastScan = Date.now();
   }
 
   protected override async dispatch(stream: string, event: Event): Promise<void> {
     if (stream === TENANTS_PLATFORM) {
       const tenant = event.data.tenant_id;
-      if (typeof tenant !== "string") return;
-      if (event.type === "tenants.tenant.created") this.addTenant(tenant, "0");
+      if (typeof tenant !== "string" || !isTenantId(tenant)) return;
+      if (event.type === "tenants.tenant.created") {
+        this.deleted.delete(tenant);
+        this.addTenant(tenant, "0");
+      }
       if (event.type === "tenants.tenant.deleted") {
         this.deleted.add(tenant);
         for (const module of this.modules) {
