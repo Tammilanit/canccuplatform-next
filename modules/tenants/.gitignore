@@ -1,0 +1,4 @@
+# Local tooling output; the repo has no root .gitignore.
+__pycache__/
+*.egg-info/
+.venv/
