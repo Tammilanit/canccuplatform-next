@@ -119,7 +119,11 @@ export class TenantResolver {
     }
     if (response.status === 404 || response.status === 400) return null;
     if (!response.ok) throw new TenantsUnavailable(`tenants module answered ${response.status}`);
-    return (await response.json()) as TenantContext;
+    try {
+      return (await response.json()) as TenantContext;
+    } catch {
+      throw new TenantsUnavailable("tenants module answered with something that is not JSON");
+    }
   }
 
   /** Feed every tenants event here: a tenant event drops that tenant, a platform event all. */

@@ -84,6 +84,14 @@ describe("TenantResolver", () => {
     await expect(resolver.resolve("demo.example.org")).rejects.toThrow(TenantsUnavailable);
   });
 
+  it("answers 503 when the tenants module sends something that is not JSON", async () => {
+    const resolver = new TenantResolver({
+      tenantsUrl: "http://t",
+      fetch: () => Promise.resolve(new Response("<html>", { status: 200 })),
+    });
+    await expect(resolver.resolve("demo.example.org")).rejects.toThrow(TenantsUnavailable);
+  });
+
   it("drops the cache on tenants events: the tenant's own, or all on a platform event", async () => {
     const tenants = fakeTenants({ "demo.example.org": demo });
     const resolver = new TenantResolver({ tenantsUrl: "http://t", fetch: tenants.fetch });

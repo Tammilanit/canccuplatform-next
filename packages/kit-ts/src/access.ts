@@ -76,12 +76,15 @@ function fromVenue(ctx: TenantContext, clientIp: string | undefined): boolean {
 
 /**
  * Whether the venue IP check applies now. The emergency switch turns it off only until
- * `disabled_until`; a switch without an end keeps the check on, so a bad row fails closed.
+ * `disabled_until`; a switch without an end, or with one that does not parse, keeps the check
+ * on, so a bad row fails closed.
  */
 export function venueIpCheckActive(ctx: TenantContext, now: Date = new Date()): boolean {
   const check = ctx.venue_ip_check;
   if (check.enabled || check.disabled_until === null) return true;
-  return now.getTime() >= Date.parse(check.disabled_until);
+  const until = Date.parse(check.disabled_until);
+  // An unparseable end is NaN, and every comparison with NaN is false: test for it explicitly.
+  return Number.isNaN(until) || now.getTime() >= until;
 }
 
 /** A screen needs its device token and, unless the switch is off, its event's venue address. */

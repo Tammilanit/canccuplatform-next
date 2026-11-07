@@ -93,6 +93,10 @@ describe("screens: venue IP plus device token", () => {
   });
 
   it("keeps the check on when the switch is off without an end", () => {
+    const badDate = tenantContext({
+      venue_ip_check: { enabled: false, disabled_until: "not a date", reason: "x" },
+    });
+    expect(venueIpCheckActive(badDate, NOW)).toBe(true);
     const noUntil = tenantContext({
       venue_ip_check: { enabled: false, disabled_until: null, reason: "x" },
     });
