@@ -1,0 +1,1351 @@
+openapi: 3.1.0
+info:
+  title: Theming API
+  version: 1.0.0
+  summary: One event's theme, its draft, preview, publish and rollback, git sync, clone and the served theme files.
+  description: |
+    Machine-readable part of the theming contract. Prose, stable classes, package rules, upload safety, CSP and
+    events: contracts/theming.md. The package manifest: contracts/theme.schema.json.
+    Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
+    The event (tenant) comes from the hostname; no operation names a tenant. Embeds are served from the sandbox
+    origin, which has no API and is described only in the prose.
+  license:
+    name: AGPL-3.0
+    identifier: AGPL-3.0-only
+servers:
+  - url: /
+    description: Same origin, behind Caddy; the hostname selects the event.
+tags:
+  - name: current
+    description: The theme surfaces show.
+  - name: draft
+    description: Editing, previewing and publishing the one draft.
+  - name: revisions
+    description: History, rollback and export.
+  - name: sync
+    description: Taking the package from the event's git repo.
+  - name: clone
+    description: Reusing a theme in the next event of a series.
+  - name: files
+    description: The served theme files on the event's hostname.
+security:
+  - session: []
+paths:
+  /api/theming/current:
+    get:
+      tags: [current]
+      operationId: getCurrentTheme
+      summary: The current theme
+      description: |
+        The current revision with every token filled in. Readable by whoever the event's info-page mode lets in,
+        and by the event's paired screens. Without a published theme: the defaults, with `revision: 0`.
+      security:
+        - {}
+        - session: []
+        - device: []
+      responses:
+        "200":
+          description: The current theme.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolvedTheme"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/theming/draft:
+    get:
+      tags: [draft]
+      operationId: getDraft
+      summary: The draft
+      description: Needs right `theming.theme.write`. 404 `no_draft` when there is none.
+      responses:
+        "200":
+          $ref: "#/components/responses/DraftOk"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [draft]
+      operationId: createDraft
+      summary: Start a draft
+      description: |
+        Needs right `theming.theme.write`. From the current revision, an earlier revision or the defaults.
+        A draft from the defaults is a valid simple-mode theme: the platform default colours, with a generated
+        `brand` (`primary` and `accent` of the platform defaults, `scheme: dark`). 409 `draft_exists` when the
+        event already has one.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DraftNew"
+      responses:
+        "201":
+          $ref: "#/components/responses/DraftOk"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [draft]
+      operationId: discardDraft
+      summary: Discard the draft
+      description: Needs right `theming.theme.write`.
+      parameters:
+        - $ref: "#/components/parameters/DraftVersion"
+      responses:
+        "204":
+          description: Discarded.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/theming/draft/brand:
+    put:
+      tags: [draft]
+      operationId: setBrand
+      summary: "Simple mode: generate the theme from a logo and two colours"
+      description: |
+        Needs right `theming.theme.write`. Regenerates `tokens.colors` under the contrast rules; `adjusted` names
+        the tokens shaded away from the given colours. Deterministic. Never changes the mode: an advanced theme
+        stays advanced, with its CSS and files applied. A new draft from the defaults starts in `simple`, with a
+        generated `brand`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BrandInput"
+      responses:
+        "200":
+          description: The draft, and the tokens that were adjusted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrandResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/theming/draft/mode:
+    post:
+      tags: [draft]
+      operationId: switchToSimple
+      summary: Switch an advanced theme back to the simple mode
+      description: |
+        Needs right `theming.theme.write`, and `theming.embeds.write` when the draft has embeds. The only way back
+        to `simple`: `remove_advanced: true` confirms that the client told the person the CSS, fonts, templates and
+        embeds will be removed. Removes them and the font and size tokens, keeps images and layouts, and
+        regenerates the colours from `brand` (409 `brand_missing` without it). Embed removal is audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [draft_version, mode, remove_advanced]
+              properties:
+                draft_version:
+                  type: integer
+                  minimum: 1
+                mode:
+                  type: string
+                  const: simple
+                remove_advanced:
+                  type: boolean
+                  const: true
+      responses:
+        "200":
+          description: The draft in simple mode, and the paths removed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [draft, removed]
+                properties:
+                  draft:
+                    $ref: "#/components/schemas/Draft"
+                  removed:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PackagePath"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/theming/draft/tokens:
+    patch:
+      tags: [draft]
+      operationId: editTokens
+      summary: "Advanced mode: set tokens"
+      description: |
+        Needs right `theming.theme.write`. Merges the given tokens into the draft; `null` removes one (back to
+        the default). Sets `mode: advanced`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TokensEdit"
+      responses:
+        "200":
+          $ref: "#/components/responses/DraftOk"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/theming/draft/file:
+    parameters:
+      - name: path
+        in: query
+        required: true
+        description: The file's path in the package, e.g. `css/theme.css`; the folder decides what it may be.
+        schema:
+          $ref: "#/components/schemas/PackagePath"
+      - $ref: "#/components/parameters/DraftVersion"
+    put:
+      tags: [draft]
+      operationId: putDraftFile
+      summary: Add or replace one file
+      description: |
+        Needs right `theming.theme.write`, and `theming.embeds.write` under `embeds/`. The content decides the
+        type, never the `Content-Type` sent. Checked at once; problems are listed on the draft. Sets
+        `mode: advanced` for anything but an image. Embed changes are audited.
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          $ref: "#/components/responses/DraftOk"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+    delete:
+      tags: [draft]
+      operationId: deleteDraftFile
+      summary: Remove one file
+      description: Needs right `theming.theme.write`, and `theming.embeds.write` under `embeds/`.
+      responses:
+        "200":
+          $ref: "#/components/responses/DraftOk"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/theming/draft/layouts/{layout_id}:
+    parameters:
+      - name: layout_id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/Name"
+      - $ref: "#/components/parameters/DraftVersion"
+    put:
+      tags: [draft]
+      operationId: putDraftLayout
+      summary: Add or replace one layout
+      description: Needs right `theming.theme.write`. The body's `id` must equal `layout_id`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "theme.schema.json#/$defs/layout"
+      responses:
+        "200":
+          $ref: "#/components/responses/DraftOk"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [draft]
+      operationId: deleteDraftLayout
+      summary: Remove one layout
+      description: Needs right `theming.theme.write`.
+      responses:
+        "200":
+          $ref: "#/components/responses/DraftOk"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/theming/draft/package:
+    put:
+      tags: [draft]
+      operationId: putDraftPackage
+      summary: Upload a whole package
+      description: |
+        Needs right `theming.theme.write`, and `theming.embeds.write` when the embeds differ from the draft's.
+        A zip of a package folder (`theme.yaml` at its root) replaces the draft's content; creates the draft
+        when there is none. A zip that breaks the archive rules (absolute paths, links, nested archives, over
+        300 files, over 20 MB unpacked, an unpacking ratio over 100:1) is refused whole: 400 `package_refused`.
+      parameters:
+        - name: draft_version
+          in: query
+          description: The draft's current version; absent when no draft exists yet.
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/zip:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          $ref: "#/components/responses/DraftOk"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+  /api/theming/draft/preview:
+    get:
+      tags: [draft]
+      operationId: previewDraft
+      summary: The draft as surfaces would see it
+      description: |
+        Needs right `theming.theme.write`. Shaped like `GET /api/theming/current`, with the draft's addresses
+        (draft files on this hostname, draft embeds under the current draft key). `Cache-Control: no-store`.
+      responses:
+        "200":
+          description: The draft, resolved.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolvedTheme"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/theming/draft/publish:
+    post:
+      tags: [draft]
+      operationId: publishDraft
+      summary: Publish the draft
+      description: |
+        Needs right `theming.theme.write`, and `theming.embeds.write` when the embeds differ from the current
+        revision's. 422 `theme_invalid` with the problems when the draft has an error. Otherwise it becomes the
+        next revision and the draft is removed. Emits `theming.theme.published`; audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [draft_version]
+              properties:
+                draft_version:
+                  type: integer
+                  minimum: 1
+      responses:
+        "201":
+          $ref: "#/components/responses/RevisionOk"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ThemeInvalid"
+  /api/theming/revisions:
+    get:
+      tags: [revisions]
+      operationId: listRevisions
+      summary: The history
+      description: Needs right `theming.theme.write`. Newest first, at most `limit`, older ones with `before`.
+      parameters:
+        - name: before
+          in: query
+          description: Only revisions older than this one.
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Revisions, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [revisions, current_revision]
+                properties:
+                  current_revision:
+                    type: integer
+                    minimum: 0
+                  revisions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RevisionSummary"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/theming/revisions/{revision}:
+    parameters:
+      - $ref: "#/components/parameters/Revision"
+    get:
+      tags: [revisions]
+      operationId: getRevision
+      summary: One revision with its manifest
+      description: Needs right `theming.theme.write`. 404 `not_found` for a revision no longer kept.
+      responses:
+        "200":
+          $ref: "#/components/responses/RevisionOk"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/theming/revisions/{revision}/restore:
+    parameters:
+      - $ref: "#/components/parameters/Revision"
+    post:
+      tags: [revisions]
+      operationId: restoreRevision
+      summary: Roll back to an earlier revision
+      description: |
+        Needs right `theming.theme.write`, and `theming.embeds.write` when the embeds differ from the current
+        revision's. Publishes a copy of the revision as the next one; history is never rewritten. 409
+        `version_conflict` when `current_revision` is no longer current. Emits `theming.theme.published` with
+        `restored_from`; audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [current_revision]
+              properties:
+                current_revision:
+                  type: integer
+                  minimum: 1
+      responses:
+        "201":
+          $ref: "#/components/responses/RevisionOk"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/theming/revisions/{revision}/package:
+    parameters:
+      - $ref: "#/components/parameters/Revision"
+    get:
+      tags: [revisions]
+      operationId: exportRevision
+      summary: Download a revision as a package zip
+      description: Needs right `theming.theme.write`. The same format as an upload.
+      responses:
+        "200":
+          description: The package.
+          headers:
+            Content-Disposition:
+              description: "`attachment; filename=\"theme-<revision>.zip\"`."
+              schema:
+                type: string
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/theming/sync:
+    get:
+      tags: [sync]
+      operationId: getSync
+      summary: The git sync settings
+      description: Needs right `theming.sync.write`. 404 `not_found` when none are set. Never returns the credential.
+      responses:
+        "200":
+          $ref: "#/components/responses/SyncOk"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [sync]
+      operationId: putSync
+      summary: Set the git sync settings
+      description: |
+        Needs right `theming.sync.write`. `credential` is write-only and stored encrypted; leaving it out keeps
+        the stored one, `null` removes it. The stored credential is bound to the host of `repo_url`: a `repo_url`
+        with another host while a credential is stored is 400 `credential_required` unless `credential` is given
+        again (or `null`). Audited (which fields, never the credential).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncInput"
+      responses:
+        "200":
+          $ref: "#/components/responses/SyncOk"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [sync]
+      operationId: deleteSync
+      summary: Remove the git sync settings and credential
+      description: Needs right `theming.sync.write`. Audited.
+      responses:
+        "204":
+          description: Removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/theming/sync/run:
+    post:
+      tags: [sync]
+      operationId: runSync
+      summary: Fetch the package from the repo into the draft
+      description: |
+        Needs right `theming.theme.write`, and `theming.embeds.write` when the embeds differ from the draft's.
+        Fetches over HTTPS on port 443 only, from hosts that resolve only to public addresses (checked on every
+        redirect and connection), with at most 3 redirects, 60 seconds and the package limits. The same checks as
+        an upload; never publishes. 502 `sync_failed` with a reason for people.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                draft_version:
+                  description: The draft's current version; absent when no draft exists yet.
+                  type: integer
+                  minimum: 1
+      responses:
+        "200":
+          $ref: "#/components/responses/DraftOk"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "502":
+          description: "`sync_failed`: the repo could not be fetched; the message says why."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/theming/clone:
+    post:
+      tags: [clone]
+      operationId: cloneTheme
+      summary: Take the theme of an earlier event of the series
+      description: |
+        Needs the event-admin role (not a granted right) on this event and on the source, both in one series
+        (otherwise 403 `missing_right`; checked through `GET /api/tenants/current/series`). The source's current
+        revision, its files copied, becomes this event's next revision with `cloned_from`; a draft is untouched.
+        409 `nothing_to_clone` when the source has no published theme. Emits `theming.theme.published`; audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [source_tenant_id]
+              properties:
+                source_tenant_id:
+                  $ref: "#/components/schemas/TenantId"
+      responses:
+        "201":
+          $ref: "#/components/responses/RevisionOk"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /theming/a/{file}:
+    parameters:
+      - $ref: "#/components/parameters/ServedFile"
+    get:
+      tags: [files]
+      operationId: getRevisionFile
+      summary: A file of a kept revision
+      description: |
+        Public, immutable, content-addressed. Answers only CSS, WOFF2, PNG, JPEG, WebP and SVG of this event's
+        kept revisions; never HTML or JS. SVG also carries a sandboxing CSP and `Content-Disposition: attachment`.
+      security:
+        - {}
+      responses:
+        "200":
+          description: The file.
+          headers:
+            Cache-Control:
+              description: "`public, max-age=31536000, immutable`."
+              schema:
+                type: string
+            X-Content-Type-Options:
+              $ref: "#/components/headers/NoSniff"
+            Cross-Origin-Resource-Policy:
+              $ref: "#/components/headers/SameOriginResource"
+            Content-Security-Policy:
+              $ref: "#/components/headers/SvgPolicy"
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /theming/draft/{file}:
+    parameters:
+      - $ref: "#/components/parameters/ServedFile"
+    get:
+      tags: [files]
+      operationId: getDraftFile
+      summary: A file of the draft, for the preview
+      description: Needs right `theming.theme.write`. The same rules and headers as revision files, but never cached.
+      responses:
+        "200":
+          description: The file.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+            X-Content-Type-Options:
+              $ref: "#/components/headers/NoSniff"
+            Cross-Origin-Resource-Policy:
+              $ref: "#/components/headers/SameOriginResource"
+            Content-Security-Policy:
+              $ref: "#/components/headers/SvgPolicy"
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: canccu_session
+    device:
+      type: http
+      scheme: bearer
+      description: A paired screen's device token. How it travels is the screen contract's; shown here as a bearer token.
+  parameters:
+    DraftVersion:
+      name: draft_version
+      in: query
+      required: true
+      description: The draft's current version; 409 `version_conflict` when stale.
+      schema:
+        type: integer
+        minimum: 1
+    Revision:
+      name: revision
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    ServedFile:
+      name: file
+      in: path
+      required: true
+      description: The file's SHA-256 (hex) and its extension.
+      schema:
+        type: string
+        pattern: "^[0-9a-f]{64}\\.(css|woff2|png|jpg|webp|svg)$"
+  headers:
+    NoStore:
+      description: "`no-store`."
+      schema:
+        type: string
+        const: no-store
+    NoSniff:
+      description: "`nosniff`."
+      schema:
+        type: string
+        const: nosniff
+    SameOriginResource:
+      description: "`same-origin`."
+      schema:
+        type: string
+        const: same-origin
+    SvgPolicy:
+      description: "On SVG only: `default-src 'none'; style-src 'unsafe-inline'; sandbox`."
+      schema:
+        type: string
+  responses:
+    DraftOk:
+      description: The draft.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Draft"
+    RevisionOk:
+      description: The revision.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Revision"
+    SyncOk:
+      description: The git sync settings.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Sync"
+    BadRequest:
+      description: "`invalid_request` (the body or a parameter does not match), or `package_refused` (a zip broke the archive rules), or `credential_required` (a sync `repo_url` on another host without the credential given again)."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: "`unauthenticated`: no valid session."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: "`missing_right`, or `info_pages_closed` (the event's info-page mode does not let this request in)."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: "`not_found`, or `no_draft` (the event has no draft)."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: |
+        `version_conflict` (stale `draft_version` or `current_revision`), `draft_exists`, `nothing_to_clone`,
+        `brand_missing` (switching to simple without `brand`), or
+        `event_archived` (the event is read-only).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    TooLarge:
+      description: "`too_large`: over a size limit of the package rules."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ThemeInvalid:
+      description: "`theme_invalid`: the draft has at least one error; `problems` lists them all."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ThemeInvalidError"
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              pattern: "^[a-z][a-z0-9_]*$"
+              examples: [theme_invalid]
+            message:
+              type: string
+    ThemeInvalidError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, problems]
+          properties:
+            code:
+              type: string
+              const: theme_invalid
+            message:
+              type: string
+            problems:
+              type: array
+              items:
+                $ref: "#/components/schemas/Problem"
+    Name:
+      type: string
+      pattern: "^[a-z][a-z0-9_-]{0,31}$"
+    TenantId:
+      type: string
+      pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+      examples: [demo]
+    UserId:
+      type: string
+      pattern: "^u_[A-Za-z0-9]{1,40}$"
+    Color:
+      type: string
+      pattern: "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+    PackagePath:
+      type: string
+      description: The limits of theme.schema.json, which allows up to 120 characters before the extension.
+      pattern: "^(?!.*\\.\\.)(css|fonts|images|templates|embeds)/[A-Za-z0-9._/-]{1,129}$"
+    Problem:
+      type: object
+      required: [severity, code, message]
+      properties:
+        severity:
+          type: string
+          enum: [error, warning]
+        code:
+          type: string
+          enum:
+            - schema
+            - file_missing
+            - file_type
+            - file_too_large
+            - css_forbidden
+            - template_forbidden
+            - svg_forbidden
+            - reference_unknown
+            - duplicate_id
+            - area_outside_grid
+            - mode_mismatch
+            - contrast_low
+            - class_unstable
+            - widget_unknown
+            - embeds_unavailable
+        path:
+          description: The package file, or the manifest's JSON pointer (`theme.yaml#/layouts/0/regions/2`).
+          type: string
+        message:
+          type: string
+    Tokens:
+      description: Tokens by group; names and custom properties in contracts/theming.md.
+      type: object
+      required: [colors, fonts, sizes]
+      properties:
+        colors:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Color"
+        fonts:
+          type: object
+          additionalProperties:
+            type: string
+        sizes:
+          type: object
+          additionalProperties:
+            type: string
+    TokensEdit:
+      type: object
+      additionalProperties: false
+      required: [draft_version, tokens]
+      properties:
+        draft_version:
+          type: integer
+          minimum: 1
+        tokens:
+          description: |
+            The token names and values of theme.schema.json `tokens`; a `null` value removes the token (back to
+            the default). An unknown name or a bad value is 400 `invalid_request` and changes nothing; it never
+            becomes a draft problem.
+          type: object
+          additionalProperties: false
+          properties:
+            colors:
+              type: object
+              additionalProperties: false
+              properties:
+                background:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                surface:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                border:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                text:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                text_muted:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                primary:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                primary_text:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                accent:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                status_ok:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                status_degraded:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                status_down:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+            fonts:
+              type: object
+              additionalProperties: false
+              properties:
+                body:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/family"
+                    - type: "null"
+                heading:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/family"
+                    - type: "null"
+                display:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/family"
+                    - type: "null"
+                mono:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/family"
+                    - type: "null"
+            sizes:
+              type: object
+              additionalProperties: false
+              properties:
+                radius:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/length"
+                    - type: "null"
+                border_width:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/length"
+                    - type: "null"
+                gap:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/length"
+                    - type: "null"
+                safe_inset:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/length"
+                    - type: "null"
+    BrandInput:
+      type: object
+      additionalProperties: false
+      required: [draft_version, primary, accent, scheme]
+      properties:
+        draft_version:
+          type: integer
+          minimum: 1
+        logo:
+          description: An image already in the draft (`images/…`); becomes `images.logo`, the theme's only logo.
+          type: string
+        icon:
+          description: A square image already in the draft, for the phone hub's icon; becomes `images.icon`.
+          type: string
+        primary:
+          $ref: "#/components/schemas/Color"
+        accent:
+          $ref: "#/components/schemas/Color"
+        scheme:
+          type: string
+          enum: [dark, light]
+        embed_color:
+          $ref: "#/components/schemas/Color"
+    BrandResult:
+      type: object
+      required: [draft, adjusted]
+      properties:
+        draft:
+          $ref: "#/components/schemas/Draft"
+        adjusted:
+          description: Colour tokens shaded away from the given colours to meet the contrast rules.
+          type: array
+          items:
+            type: string
+    DraftNew:
+      type: object
+      additionalProperties: false
+      required: [from]
+      properties:
+        from:
+          description: "`current`, `defaults`, or `revision` with `revision`."
+          type: string
+          enum: [current, defaults, revision]
+        revision:
+          type: integer
+          minimum: 1
+    Draft:
+      type: object
+      required: [draft_version, base_revision, mode, manifest, problems, updated_at, updated_by]
+      properties:
+        draft_version:
+          type: integer
+          minimum: 1
+        base_revision:
+          description: The revision the draft started from; 0 for the defaults.
+          type: integer
+          minimum: 0
+        mode:
+          type: string
+          enum: [simple, advanced]
+        manifest:
+          $ref: "theme.schema.json"
+        files:
+          description: Every file of the draft with its size in bytes.
+          type: array
+          items:
+            type: object
+            required: [path, bytes]
+            properties:
+              path:
+                $ref: "#/components/schemas/PackagePath"
+              bytes:
+                type: integer
+                minimum: 0
+        problems:
+          type: array
+          items:
+            $ref: "#/components/schemas/Problem"
+        updated_at:
+          type: string
+          format: date-time
+        updated_by:
+          $ref: "#/components/schemas/UserId"
+    ClonedFrom:
+      type: object
+      required: [tenant_id, revision]
+      properties:
+        tenant_id:
+          $ref: "#/components/schemas/TenantId"
+        revision:
+          type: integer
+          minimum: 1
+    RevisionSummary:
+      type: object
+      required: [revision, name, mode, published_at, actor_user_id]
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        mode:
+          type: string
+          enum: [simple, advanced]
+        published_at:
+          type: string
+          format: date-time
+        actor_user_id:
+          $ref: "#/components/schemas/UserId"
+        restored_from:
+          type: integer
+          minimum: 1
+        cloned_from:
+          $ref: "#/components/schemas/ClonedFrom"
+        pinned:
+          description: A screen pins this revision, so it is kept beyond the last 20.
+          type: boolean
+    Revision:
+      allOf:
+        - $ref: "#/components/schemas/RevisionSummary"
+        - type: object
+          required: [manifest]
+          properties:
+            manifest:
+              $ref: "theme.schema.json"
+    ResolvedTheme:
+      type: object
+      required: [revision, theming_version, tokens, tokens_css_url, admin_tokens_css_url, embed_color, layouts, templates, embeds]
+      properties:
+        revision:
+          description: |
+            The current revision; 0 when the event has no published theme (the platform defaults with the
+            profile's `theme`); `null` on a draft preview, which is no revision.
+          type: [integer, "null"]
+          minimum: 0
+        published_at:
+          type: string
+          format: date-time
+        theming_version:
+          description: The version of the stable classes and tokens the theme was made against.
+          type: integer
+          const: 1
+        tokens:
+          $ref: "#/components/schemas/Tokens"
+        tokens_css_url:
+          description: A `:root` block of the tokens plus the `@font-face` rules; for every surface.
+          type: string
+        admin_tokens_css_url:
+          description: |
+            Like `tokens_css_url`, but with the platform default colours when the theme fails the contrast rules;
+            for admin, sign-in, superadmin and privacy pages.
+          type: string
+        css_url:
+          description: The compiled CSS (`@layer canccu-theme`); only for the surfaces that take CSS. Absent without CSS.
+          type: string
+        logo_url:
+          type: string
+        logo_png_url:
+          description: The logo as a PNG, 512 px wide, for Discord and other places that take no SVG.
+          type: string
+        icon_urls:
+          type: object
+          properties:
+            "192":
+              type: string
+            "512":
+              type: string
+            maskable_512:
+              type: string
+        embed_color:
+          description: The Discord embed colour as a 24-bit integer.
+          type: integer
+          minimum: 0
+          maximum: 16777215
+        layouts:
+          type: array
+          items:
+            $ref: "theme.schema.json#/$defs/layout"
+        templates:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParsedTemplate"
+        embeds:
+          type: array
+          items:
+            type: object
+            required: [name, frame_url]
+            properties:
+              name:
+                $ref: "#/components/schemas/Name"
+              frame_url:
+                description: The embed's entry on the sandbox origin; absent from the list when there is no sandbox origin.
+                type: string
+    ParsedTemplate:
+      type: object
+      required: [name, widget, tree]
+      properties:
+        name:
+          $ref: "#/components/schemas/Name"
+        widget:
+          type: string
+        tree:
+          description: |
+            The checked template as a tree, so no surface parses template text: an array of nodes, each one of
+            `{"text": "…"}`, `{"field": "a.b"}`, `{"section": "name", "inverted": false, "children": […]}` or
+            `{"element": "div", "attrs": {"class": [{"text": "t-"}, {"field": "state"}]}, "children": […]}`.
+          type: array
+          items:
+            $ref: "#/components/schemas/TemplateNode"
+    TemplateNode:
+      type: object
+      properties:
+        text:
+          type: string
+        field:
+          type: string
+          pattern: "^[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*$"
+        section:
+          type: string
+        inverted:
+          type: boolean
+        element:
+          type: string
+          enum: [div, span, p, h1, h2, h3, h4, ul, ol, li, strong, em, b, i, small, br, img, figure, figcaption, time, table, thead, tbody, tr, th, td]
+        attrs:
+          type: object
+          propertyNames:
+            enum: [class, alt, aria-label, aria-hidden, datetime, colspan, rowspan, src]
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              properties:
+                text:
+                  type: string
+                field:
+                  type: string
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/TemplateNode"
+    Sync:
+      type: object
+      required: [repo_url, ref, path, credential_set]
+      properties:
+        repo_url:
+          type: string
+          pattern: "^https://"
+        ref:
+          type: string
+        path:
+          type: string
+        credential_set:
+          type: boolean
+        last_run_at:
+          type: string
+          format: date-time
+        last_commit:
+          description: The commit the last successful run fetched.
+          type: string
+          pattern: "^[0-9a-f]{40}$"
+    SyncInput:
+      type: object
+      additionalProperties: false
+      required: [repo_url, ref, path]
+      properties:
+        repo_url:
+          type: string
+          description: "`https://`, a host name of letters, digits, dots and hyphens, optionally `:443`, then the path."
+          pattern: "^https://[A-Za-z0-9.-]+(:443)?/[^\\s]*$"
+          maxLength: 300
+        ref:
+          type: string
+          description: A branch or tag; never starts with `-` (it cannot be read as a git option) and holds no `..`.
+          pattern: "^(?!-)(?!.*\\.\\.)[A-Za-z0-9._/-]{1,100}$"
+        path:
+          description: |
+            The package folder in the repo, relative to its root; `.` for the root. Never absolute, never `..`, no
+            segment starting with `-` or `.`; after symlinks it must still resolve inside the checkout.
+          type: string
+          maxLength: 200
+          pattern: "^(\\.|[A-Za-z0-9_][A-Za-z0-9._-]*(/[A-Za-z0-9_][A-Za-z0-9._-]*)*)$"
+        credential:
+          description: A read-only access token; write-only. Absent keeps the stored one, `null` removes it.
+          type: [string, "null"]
+          maxLength: 500

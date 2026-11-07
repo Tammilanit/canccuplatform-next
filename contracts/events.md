@@ -112,6 +112,13 @@ On the platform stream `events:tenants`, without `tenant`:
 | `tenants.privacy.changed` | A user's privacy flags changed. Audience: personal | Every module holding presence data, moments |
 | `tenants.user.deleted` | A user was deleted. Audience: personal | All modules (delete their data) |
 
+## Theming
+Emitter: `theming`. Audience: event-wide, `public`. Payloads: [theming.md](theming.md#events-version-1).
+
+| Type | Meaning | Consumers |
+|---|---|---|
+| `theming.theme.published` | A theme revision became current: publish, rollback or clone | screen (re-renders by push), the phone hub, bot (embed colour), admin |
+
 ## Provisional events (version 1)
 The events the first ports need before their modules have a contract: pizza, tournament, bot, and the screen overrides. Each outline gives the name, a one-line meaning, the audience, the expected consumers and the `data` fields, so consumers built earlier (the bot's tournament side in step 6, Screen and Moments, Notify's topics) use the names the module will emit ([roadmap](../docs/roadmap.md), OC8).
 

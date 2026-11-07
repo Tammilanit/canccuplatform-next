@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Contracts check: validate event profiles against the schema, check their asset
-# paths exist, and lint the OpenAPI contracts. CI runs it as the `contracts` check.
+# Contracts check: validate event profiles and theme packages against their schemas, check
+# the paths they name exist (and a theme's references), and lint the OpenAPI contracts. CI runs it as the `contracts` check.
 # Usage: check-contracts [--dry-run]     (needs Node 22 and network for npx on first run)
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
@@ -8,6 +8,8 @@ cd "$(dirname "$0")/.." || exit 2
 AJV=(npx --yes -p ajv-cli@5.0.0 -p ajv-formats@3.0.1 ajv)
 REDOCLY=(npx --yes @redocly/cli@1.34.5)
 SCHEMA=contracts/profile.schema.json
+THEME_SCHEMA=contracts/theme.schema.json
+YAML2JSON=(npx --yes -p js-yaml@4.1.0 js-yaml)
 
 dry=0
 if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
@@ -15,12 +17,16 @@ if [ $# -gt 0 ]; then echo "usage: check-contracts [--dry-run]" >&2; exit 2; fi
 
 profiles=(events/*/profile.yaml)
 apis=(contracts/*.openapi.yaml)
+shopt -s nullglob
+themes=(events/*/themes/*/theme.yaml)
+shopt -u nullglob
 [ -e "${profiles[0]}" ] || { echo "error: no events/*/profile.yaml found" >&2; exit 2; }
 [ -e "${apis[0]}" ] || { echo "error: no contracts/*.openapi.yaml found" >&2; exit 2; }
 
 if [ "$dry" = 1 ]; then
   echo "dry run, would check:"
   for p in "${profiles[@]}"; do echo "  profile  $p against $SCHEMA, and its asset paths"; done
+  for t in "${themes[@]}"; do echo "  theme    $t against $THEME_SCHEMA, then files and references (scripts/check-theme-refs)"; done
   for a in "${apis[@]}"; do echo "  openapi  $a (redocly lint, contracts/redocly.yaml)"; done
   exit 0
 fi
@@ -40,6 +46,31 @@ for p in "${profiles[@]}"; do
     [ -f "$dir/$asset" ] || { echo "FAIL asset   $dir/$asset does not exist"; missing=1; fail=1; }
   done < <(grep -v '^[[:space:]]*#' "$p" | grep -oE 'assets/[A-Za-z0-9._/-]+' | sort -u)
   [ "$missing" = 0 ] && echo "ok   assets  $p"
+done
+
+if out=$(scripts/check-theme-refs --self-test 2>&1); then
+  echo "ok   self-test scripts/check-theme-refs"
+else
+  printf '%s\n' "$out"; echo "FAIL self-test scripts/check-theme-refs"; fail=1
+fi
+
+for t in "${themes[@]}"; do
+  if quiet "${AJV[@]}" validate --spec=draft2020 --strict=true -c ajv-formats -s "$THEME_SCHEMA" -d "$t"; then
+    echo "ok   schema  $t"
+  else
+    # The reference checks assume a manifest the schema accepts.
+    echo "FAIL schema  $t"; echo "skip refs    $t"; fail=1; continue
+  fi
+  # js-yaml's stderr (npm notices, parse errors) goes to its own file, never into the JSON.
+  json=$(mktemp); err=$(mktemp)
+  if ! "${YAML2JSON[@]}" "$t" >"$json" 2>"$err"; then
+    grep -v '^npm \(notice\|warn\)' "$err"; echo "FAIL refs    $t (YAML)"; fail=1
+  elif scripts/check-theme-refs "$json" "$(dirname "$t")"; then
+    echo "ok   refs    $t"
+  else
+    echo "FAIL refs    $t"; fail=1
+  fi
+  rm -f "$json" "$err"
 done
 
 for a in "${apis[@]}"; do

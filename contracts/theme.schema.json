@@ -1,0 +1,390 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://canccuplatform.invalid/contracts/theme/v1.schema.json",
+  "title": "Theme package manifest (theme.yaml), schema version 1",
+  "description": "The manifest of a theme package: tokens, fonts, images, CSS, layouts, widget templates and embeds. Rules beyond this schema (contrast, CSS and template checks, cross-references, limits): contracts/theming.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "name", "mode", "tokens"],
+  "if": {
+    "type": "object",
+    "properties": { "mode": { "const": "simple" } }
+  },
+  "then": {
+    "type": "object",
+    "required": ["brand"],
+    "properties": { "brand": { "$ref": "#/$defs/brand" } }
+  },
+  "properties": {
+    "schema_version": {
+      "description": "Version of this manifest format. Additive changes keep it.",
+      "const": 1
+    },
+    "name": {
+      "description": "Text for people.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "mode": {
+      "description": "simple: the tokens are generated from `brand`. advanced: tokens, CSS, fonts and images are edited directly.",
+      "enum": ["simple", "advanced"]
+    },
+    "brand": {
+      "$ref": "#/$defs/brand"
+    },
+    "tokens": {
+      "$ref": "#/$defs/tokens"
+    },
+    "fonts": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/$defs/font"
+      }
+    },
+    "images": {
+      "description": "Images by role: `logo` (the one logo of the theme), `icon` (square, for the phone hub's app icon; the logo when absent), `background`, or any name a template or the CSS refers to.",
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": {
+        "$ref": "#/$defs/name"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/image_path"
+      }
+    },
+    "css": {
+      "description": "Stylesheets in order; advanced mode only.",
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^css/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.css$"
+      }
+    },
+    "templates": {
+      "description": "Widget templates by name, in the logic-less template language.",
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": {
+        "$ref": "#/$defs/name"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/template"
+      }
+    },
+    "embeds": {
+      "description": "Custom HTML and JS, served only from the sandbox origin inside a sandboxed frame.",
+      "type": "object",
+      "maxProperties": 8,
+      "propertyNames": {
+        "$ref": "#/$defs/name"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/embed"
+      }
+    },
+    "layouts": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/$defs/layout"
+      }
+    }
+  },
+  "$defs": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,31}$"
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+    },
+    "family": {
+      "description": "A font family: one of the package's `fonts`, or a family the platform knows (system-ui, ui-monospace, sans-serif, serif, monospace).",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9 _-]{1,64}$"
+    },
+    "length": {
+      "type": "string",
+      "pattern": "^(0|[0-9]{1,3}(\\.[0-9]{1,3})?(px|rem|em))$"
+    },
+    "image_path": {
+      "type": "string",
+      "pattern": "^images/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.(png|jpg|jpeg|webp|svg)$"
+    },
+    "brand": {
+      "description": "The simple mode's colour input, kept so the simple editor can reopen it. The logo and icon are `images.logo` and `images.icon`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary", "accent", "scheme"],
+      "properties": {
+        "primary": {
+          "$ref": "#/$defs/color"
+        },
+        "accent": {
+          "$ref": "#/$defs/color"
+        },
+        "scheme": {
+          "enum": ["dark", "light"]
+        },
+        "embed_color": {
+          "description": "Discord embed colour; `primary` when absent.",
+          "$ref": "#/$defs/color"
+        }
+      }
+    },
+    "tokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "colors": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "background": { "$ref": "#/$defs/color" },
+            "surface": { "$ref": "#/$defs/color" },
+            "border": { "$ref": "#/$defs/color" },
+            "text": { "$ref": "#/$defs/color" },
+            "text_muted": { "$ref": "#/$defs/color" },
+            "primary": { "$ref": "#/$defs/color" },
+            "primary_text": { "$ref": "#/$defs/color" },
+            "accent": { "$ref": "#/$defs/color" },
+            "status_ok": { "$ref": "#/$defs/color" },
+            "status_degraded": { "$ref": "#/$defs/color" },
+            "status_down": { "$ref": "#/$defs/color" }
+          }
+        },
+        "fonts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "body": { "$ref": "#/$defs/family" },
+            "heading": { "$ref": "#/$defs/family" },
+            "display": { "$ref": "#/$defs/family" },
+            "mono": { "$ref": "#/$defs/family" }
+          }
+        },
+        "sizes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": { "$ref": "#/$defs/length" },
+            "border_width": { "$ref": "#/$defs/length" },
+            "gap": { "$ref": "#/$defs/length" },
+            "safe_inset": { "$ref": "#/$defs/length" }
+          }
+        }
+      }
+    },
+    "font": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family", "file", "licence", "licence_file"],
+      "properties": {
+        "family": {
+          "$ref": "#/$defs/family"
+        },
+        "weight": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 900,
+          "multipleOf": 100,
+          "default": 400
+        },
+        "style": {
+          "enum": ["normal", "italic"],
+          "default": "normal"
+        },
+        "file": {
+          "description": "WOFF2 only.",
+          "type": "string",
+          "pattern": "^fonts/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.woff2$"
+        },
+        "licence": {
+          "description": "SPDX licence id, e.g. OFL-1.1.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9.+-]{1,64}$"
+        },
+        "licence_file": {
+          "type": "string",
+          "pattern": "^fonts/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.(txt|md)$"
+        }
+      }
+    },
+    "template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["widget", "file"],
+      "properties": {
+        "widget": {
+          "$ref": "#/$defs/widget_type"
+        },
+        "file": {
+          "type": "string",
+          "pattern": "^templates/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.mustache$"
+        }
+      }
+    },
+    "embed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entry"],
+      "properties": {
+        "entry": {
+          "type": "string",
+          "pattern": "^embeds/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.html$"
+        },
+        "files": {
+          "description": "The embed's other files (scripts, styles, images, fonts, data).",
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^embeds/(?!.*\\.\\.)[A-Za-z0-9._/-]{1,120}\\.(js|css|json|png|jpg|jpeg|webp|svg|woff2)$"
+          }
+        }
+      }
+    },
+    "widget_type": {
+      "description": "A widget type: `logo` and `embed` from this contract, the rest from the module that provides the widget (the screen contract).",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,39}$"
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "aspect", "grid", "regions"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/name"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "aspect": {
+          "description": "Width:height the layout is made for, e.g. 16:9 or 9:16.",
+          "type": "string",
+          "pattern": "^[1-9][0-9]?:[1-9][0-9]?$"
+        },
+        "grid": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["columns", "rows"],
+          "properties": {
+            "columns": { "type": "integer", "minimum": 1, "maximum": 48 },
+            "rows": { "type": "integer", "minimum": 1, "maximum": 48 }
+          }
+        },
+        "regions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/region"
+          }
+        }
+      }
+    },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "area", "widgets"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/name"
+        },
+        "area": {
+          "description": "Grid cells, 1-based; must fit inside the layout's grid.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["column", "row", "columns", "rows"],
+          "properties": {
+            "column": { "type": "integer", "minimum": 1, "maximum": 48 },
+            "row": { "type": "integer", "minimum": 1, "maximum": 48 },
+            "columns": { "type": "integer", "minimum": 1, "maximum": 48 },
+            "rows": { "type": "integer", "minimum": 1, "maximum": 48 }
+          }
+        },
+        "layer": {
+          "description": "Stacking order of overlapping regions; higher is in front.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9,
+          "default": 0
+        },
+        "widgets": {
+          "description": "Two or more rotate, each shown for rotate_seconds.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "$ref": "#/$defs/widget"
+          }
+        },
+        "rotate_seconds": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 3600,
+          "default": 15
+        }
+      }
+    },
+    "widget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["widget"],
+      "properties": {
+        "widget": {
+          "$ref": "#/$defs/widget_type"
+        },
+        "template": {
+          "description": "A name under `templates`, made for this widget type; the widget's built-in markup when absent.",
+          "$ref": "#/$defs/name"
+        },
+        "embed": {
+          "description": "A name under `embeds`; required for the `embed` widget, not allowed on others.",
+          "$ref": "#/$defs/name"
+        },
+        "props": {
+          "description": "Options the widget type documents; scalars only.",
+          "type": "object",
+          "maxProperties": 32,
+          "propertyNames": {
+            "$ref": "#/$defs/name"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              { "type": "string", "maxLength": 200 },
+              { "type": "number" },
+              { "type": "boolean" }
+            ]
+          }
+        }
+      },
+      "if": {
+        "type": "object",
+        "properties": { "widget": { "const": "embed" } }
+      },
+      "then": {
+        "type": "object",
+        "required": ["embed"],
+        "properties": { "embed": { "$ref": "#/$defs/name" } }
+      },
+      "else": {
+        "type": "object",
+        "properties": { "embed": false }
+      }
+    }
+  }
+}
