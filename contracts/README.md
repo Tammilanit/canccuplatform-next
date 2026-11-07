@@ -12,6 +12,8 @@ How modules talk to each other and what an event profile looks like. Modules use
 | [notify.md](notify.md) | Notify contract: notification topics and their sources, Web Push, delivery rules, check-in by the rotating QR, the phone hub and its privacy page |
 | [notify.openapi.yaml](notify.openapi.yaml) | Machine-readable notify API (OpenAPI 3.1) |
 | [events.md](events.md) | Event catalog: every cross-module event, its audience and consumers, linked to its payload |
+| [tenants.md](tenants.md) | Tenants contract: events as tenants, hostnames, venues and the venue profile, users, roles and membership, access (info-page mode, venue IP check, admin access), feature flags, lifecycle, series and clone, privacy and retention, the audit log, global and per-tenant tables |
+| [tenants.openapi.yaml](tenants.openapi.yaml) | Machine-readable tenants API (OpenAPI 3.1) |
 | [profile.md](profile.md) | Event profile format v1 |
 | [profile.schema.json](profile.schema.json) | JSON Schema (draft 2020-12) for `profile.yaml` |
 | [redocly.yaml](redocly.yaml) | Lint rules for the OpenAPI files |
@@ -21,9 +23,10 @@ Each module gets its own `<module>.md` (and `<module>.openapi.yaml` if it has an
 ## Conventions
 - JSON over HTTP; field names in `snake_case`; times in RFC 3339, UTC (`2026-01-01T12:00:00Z`).
 - Every non-2xx response has the body `{"error": {"code": "<snake_case>", "message": "<text for people>"}}`. Clients branch on `code`, never on `message`.
-- Module names are the directory names under `modules/`: `screen`, `tournament`, `pizza`, `bot`, `admin`, `games`, `moments`, `voices`, `cast`, `agenda`, `notify`.
+- Module names are the directory names under `modules/`: `screen`, `tournament`, `pizza`, `bot`, `admin`, `games`, `moments`, `voices`, `cast`, `agenda`, `notify`, `tenants`.
 - Rights are named `<module>.<right>`, e.g. `admin.settings.write`.
 - Events are named `<module>.<noun>.<past-tense verb>` and use one envelope; see [admin.md](admin.md#events).
+- Everything belongs to one event (tenant), taken from the request's hostname; see [tenants.md](tenants.md).
 
 ## Changing a contract
 - A contract change is its own PR and merges before its consumers.

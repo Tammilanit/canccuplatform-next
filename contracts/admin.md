@@ -45,6 +45,7 @@ Admin's own rights: `admin.settings.read`, `admin.settings.write`, `admin.profil
 
 ### Transport
 - Valkey Streams, one stream per emitting module: `events:<module>`. Each entry has one field, `event`, holding the envelope as JSON.
+- With tenancy, an event that concerns one event (tenant) goes to that tenant's stream `t:<tenant>:events:<module>`; an event that concerns the platform as a whole stays on `events:<module>` ([events.md](events.md#tenant-in-the-envelope)).
 - Delivery is at least once. Consumers dedupe by `id` and must tolerate events they do not know.
 
 ### Envelope
@@ -57,6 +58,7 @@ Every event, from every module, uses this envelope.
 | `version` | integer ≥ 1 | yes | Version of this event type's `data` shape. Additive changes keep it; a breaking change bumps it (and needs a person's approval) |
 | `time` | string, RFC 3339 UTC | yes | When it happened |
 | `source` | string | yes | Emitting module; equals the first part of `type` |
+| `tenant` | string | for tenant events | The tenant (event) id the event concerns; absent on platform events ([tenants.md](tenants.md), [events.md](events.md#tenant-in-the-envelope)) |
 | `correlation_id` | string | no | Id of the request or event that caused it, for tracing |
 | `data` | object | yes | Payload, documented per event below |
 

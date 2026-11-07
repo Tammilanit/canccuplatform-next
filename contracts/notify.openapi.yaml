@@ -77,7 +77,7 @@ paths:
         Without a session a guest subscription (event-wide parts only); with one, the user's. The same
         `endpoint` again replaces the old subscription only for its owner (the same user's session, or the old
         subscription's token); otherwise 409 `subscription_exists`. A personal part without a session is 401
-        `sign_in_required`. In info-page mode `sign-in` a guest gets 403 `info_pages_closed`.
+        `sign_in_required`. In info-page mode `sign_in` a guest gets 403 `info_pages_closed`.
       security:
         - {}
         - session: []
