@@ -1,0 +1,12 @@
+# The build context is the repo root (BuildKit reads <Dockerfile>.dockerignore).
+**
+!packages/kit-py
+!contracts
+!events/demo/profile.yaml
+!modules/tenants
+**/.venv
+**/__pycache__
+**/.mypy_cache
+**/.ruff_cache
+**/.pytest_cache
+**/*.egg-info

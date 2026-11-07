@@ -116,6 +116,9 @@ jobs:
       - name: kit-py against Valkey and Postgres
         working-directory: packages/kit-py
         run: pip install -e ".[dev]" && pytest tests/test_valkey_integration.py tests/test_postgres_integration.py
+      - name: tenants against Postgres (RLS, audit grants, cross-tenant leak tests)
+        working-directory: modules/tenants
+        run: pip install -e ".[dev]" && pytest
       - name: Valkey and Postgres logs
         if: failure()
         run: docker compose -f deploy/compose.yml logs valkey postgres
@@ -140,6 +143,9 @@ jobs:
       - name: admin checks
         working-directory: modules/admin
         run: pip install -e ".[dev]" && ruff check . && mypy . && pytest
+      - name: tenants checks
+        working-directory: modules/tenants
+        run: pip install -e ".[dev]" && ruff check . && ruff format --check . && mypy . && pytest
       - name: Start the stack (clean runner, only Docker)
         run: docker compose -f deploy/compose.yml up -d --build --wait
       - name: Only Caddy publishes a port; only the three named volumes exist
@@ -159,6 +165,8 @@ jobs:
         run: |
           curl -fsS http://localhost/api/admin/health | tee /tmp/admin-health.json; echo
           jq -e '.status == "ok" and .module == "admin" and .checks.postgres.status == "ok"' /tmp/admin-health.json
+          curl -fsS http://localhost/api/tenants/health | tee /tmp/tenants-health.json; echo
+          jq -e '.status == "ok" and .module == "tenants" and .checks.postgres.status == "ok"' /tmp/tenants-health.json
       - name: Health is 503 down when Valkey is stopped
         run: |
           docker compose -f deploy/compose.yml stop valkey
