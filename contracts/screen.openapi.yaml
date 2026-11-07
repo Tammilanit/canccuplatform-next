@@ -618,7 +618,7 @@ paths:
       tags: [zones]
       operationId: removeZone
       summary: Remove a zone
-      description: Right `screen.zones.write`. 409 `zone_in_use` while devices are assigned. Emits `screen.zone.removed`.
+      description: Right `screen.zones.write`. 409 `zone_in_use` while devices are assigned to it or mirror it, or schedule windows, active pushes or break playlists name it. Emits `screen.zone.removed`.
       responses:
         "204":
           description: Removed.
@@ -680,7 +680,7 @@ paths:
       tags: [pin]
       operationId: setPin
       summary: Pin a bundle version and a theme revision
-      description: Right `screen.bundle.write`. Audited; screens get a `reload` command.
+      description: Right `screen.bundle.write`. Audited; emits `screen.pin.changed`; screens get a `reload` command.
       requestBody:
         required: true
         content:
@@ -951,7 +951,7 @@ paths:
       summary: A media file of the event
       description: |
         For the event's devices (cookie and venue address) and sessions with `screen.content.read`. Immutable.
-        Served only when the name resolves to an asset version of the current tenant; the storage path is built from
+        Served only when the name resolves to an asset version or photo of the current tenant; the storage path is built from
         that row, never from the request.
       security:
         - device: []
@@ -1687,10 +1687,13 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [zones, assets, playlists, schedules, ticker_windows]
+                required: [zones, assets, playlists, schedules, schedules_dropped, ticker_windows]
                 properties:
                   zones:
                     type: integer
+                  schedules_dropped:
+                    type: integer
+                    description: Agenda-bound windows not copied, because their item maps to no item of this event.
                   assets:
                     type: integer
                   playlists:
@@ -2263,10 +2266,13 @@ components:
     Claim:
       type: object
       description: A Moments override placed on this region (contracts/screen.md, Moments drive it).
-      required: [override_id, role, rank, template, content, starts_at, ends_at]
+      required: [override_id, role, rank, template, content, starts_at, ends_at, hidden]
       properties:
         override_id:
           type: string
+        hidden:
+          type: boolean
+          description: Placed but not drawn under a higher-ranked `full` claim; shown once that claim ends.
         role:
           $ref: "#/components/schemas/Role"
         rank:
@@ -2352,7 +2358,7 @@ components:
           format: date-time
         source:
           type: [string, "null"]
-          enum: [admin, bot, window, null]
+          enum: [admin, bot, window, pizza, null]
         appearance:
           type: string
           enum: [default, high_contrast, minimal, broadcast]
@@ -2513,6 +2519,11 @@ components:
             enabled:
               type: boolean
               description: False on a mirroring device and on devices other than the zone's sound device.
+            sounded_claims:
+              type: array
+              description: Claims this device already sounded, so a reload does not play them again.
+              items:
+                type: string
         prefetch:
           type: array
           items:
@@ -2586,7 +2597,7 @@ components:
             type: string
     AssetKind:
       type: string
-      enum: [image, video, pptx, web, youtube]
+      enum: [image, video, audio, pptx, web, youtube]
     Asset:
       type: object
       required: [id, kind, title, version, health, created_at]
@@ -2677,6 +2688,11 @@ components:
       description: The legacy ADVT break.
       required: [period_seconds, break_seconds]
       properties:
+        zones:
+          type: array
+          description: The zones it interrupts; empty for every zone.
+          items:
+            $ref: "#/components/schemas/ZoneKey"
         period_seconds:
           type: integer
           minimum: 60
@@ -2893,6 +2909,7 @@ components:
           $ref: "#/components/schemas/Id"
         url:
           type: string
+          description: "`/api/screen/files/<sha256>.<ext>`, served through the photo's row like an asset's file"
         caption:
           type: [string, "null"]
         author_name:
