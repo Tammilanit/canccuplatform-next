@@ -61,17 +61,17 @@ A device request (state, stream, heartbeat, files, theming reads) is served only
 | `pulse_portrait` | 9:16, 6×16 | `header` (1,1,6,2); `hero` (1,3,6,7); `rail` (1,10,6,6); `ticker` (1,16,6,1) | as `pulse`, without `venue_rail` |
 
   At 1920×1080 a `pulse` hero is 1280×900 px, the rail 640×540, the venue rail 640×360, the ticker 1920×90.
-- **Region roles** let Moments target regions without knowing a theme's ids. A region's role is, in order: the zone's `regions.<id>.role`; its id when the id is a role; `main` → `hero`, `side` → `rail`; otherwise none.
+- **Region roles** let Moments target regions without knowing a theme's ids. A region's role is, in order: the zone's `regions.<id>.role`; its id when the id is a role; `main` → `hero`, `side` → `rail`; otherwise none. A layout region never gets the role `full` or `overlay` (a region with that id, or a zone setting naming it, gets none): those two belong to the synthetic regions only.
 
 | Role | What it is |
 |---|---|
-| `full` | The whole screen. Every layout has it implicitly, above every region; only claims use it. In the composed state it is the synthetic region `full` (the whole grid, layer 10, no widgets) |
+| `full` | The whole screen. Every layout has it implicitly, above every region; only claims use it. In the composed state it is the synthetic region with id `_full` (the whole grid, layer 10, no widgets) |
 | `hero` | The large rotating region |
 | `rail` | The now/next rail |
 | `venue_rail` | Venue facts: Wi-Fi, food, the check-in QR |
 | `ticker` | One line of text along an edge |
 | `header`, `backdrop` | Logo and clock; the background. Never claimed |
-| `overlay` | A band on top of everything, implicit like `full`; only claims use it. In the composed state it is the synthetic region `overlay` (the whole grid, layer 11, above `full`, so an overlay that outranks a takeover is drawn on top; no widgets; the claim's template sets the band's place) |
+| `overlay` | A band on top of everything, implicit like `full`; only claims use it. In the composed state it is the synthetic region with id `_overlay` (the whole grid, layer 11, above `_full`, so an overlay that outranks a takeover is drawn on top; no widgets; the claim's template sets the band's place) |
 
 ## Widgets
 Each widget type below is offered by Screen: theming layouts place it, templates draw it ([theming.md](theming.md#widget-templates)), and its view-model is the only data a template can read. Data comes from the source module, through Screen; a device never calls another module, except loading the theme's files, which theming allows paired screens. The layout and templates come in the composed state, from the theme revision in effect (the pinned one, else the current), which Screen's server reads from theming as a module. Every view-model also has `qr` (see QR handoff) and `stale` (boolean: older than the widget's `stale_after_seconds`; the screen then adds `canccu-is-stale`). A widget with nothing to show has `empty: true` (`canccu-is-empty`) and is skipped in a rotation.
@@ -170,14 +170,14 @@ A hot-game surge, as a short sequence in the hero, falling back to the rail:
 ```
 
 ## Composed state and the push channel
-- **State:** `GET /api/screen/device/state` (`ScreenState`): `state_version` (per zone, +1 on every change), `time`, `tenant` (`id`, `name`, `time_zone`, `status`), `device` (`id`, `name`, `mirror`), `zone` (`key`, `name`, `epoch`) or `null`, `bundle` (`version`), `theme` (`revision`, `tokens_css_url`, `css_url`, `logo_url`), `layout` (the whole layout), `regions` (each `id`, `role`, `area`, `layer`, `rotation`, `cycle_started_at`, `widgets` with their view-models, `claim` or `null`; the synthetic regions `full` and `overlay` are always there, so a takeover or overlay claim has its place, and a `hidden` claim stays in its region's `claim` with `hidden: true` and shows once the `full` claim ends), `unplaced`, `hidden`, `ticker`, `sound`, `prefetch` (file URLs the next 24 hours of the schedule need) and `offline` (below). It is everything a screen needs to draw. A device with no zone (paired without `zone_key`, or unassigned) gets the same shape with `zone: null`, `layout: null` and `regions: []`, and shows its name and "not assigned"; its stream stays open, so an assignment arrives as a `state`.
+- **State:** `GET /api/screen/device/state` (`ScreenState`): `state_version` (per zone, +1 on every change), `time`, `tenant` (`id`, `name`, `time_zone`, `status`), `device` (`id`, `name`, `mirror`), `zone` (`key`, `name`, `epoch`) or `null`, `bundle` (`version`), `theme` (`revision`, `tokens_css_url`, `css_url`, `logo_url`), `layout` (the whole layout), `regions` (each `id`, `role`, `area`, `layer`, `rotation`, `cycle_started_at`, `widgets` with their view-models, `claim` or `null`; the synthetic regions `_full` (role `full`) and `_overlay` (role `overlay`) are always there, so a takeover or overlay claim has its place. Their ids start with `_`, which a theme's region id never does (theme.schema.json `name`: a lowercase letter first), so they never clash with a layout's regions in `regions`, in push messages or in `canccu-region--<id>`; and a `hidden` claim stays in its region's `claim` with `hidden: true` and shows once the `full` claim ends), `unplaced`, `hidden`, `ticker`, `sound`, `prefetch` (file URLs the next 24 hours of the schedule need) and `offline` (below). It is everything a screen needs to draw. A device with no zone (paired without `zone_key`, or unassigned) gets the same shape with `zone: null`, `layout: null` and `regions: []`, and shows its name and "not assigned"; its stream stays open, so an assignment arrives as a `state`.
 - **Push:** `GET /api/screen/device/stream`, Server-Sent Events. SSE because the traffic is one way, it runs over plain HTTP through Caddy, carries the device cookie, and resumes by itself. Messages (SSE `event:` names, not bus events), each with `id: <zone_key>.<zone_epoch>.<state_version>` (`none.0.<n>` without a zone). `zone_epoch` is set when a zone is created, so a zone removed and created again under the same key never resumes the old one's versions:
 
 | SSE event | `data` |
 |---|---|
 | `state` | A whole `ScreenState`: on connect, when a resume is not possible, and on every change of the device's assignment or mirror target |
 | `widget` | `state_version`, `region_id`, `index`, `view` (the widget's new view-model) |
-| `region` | `state_version`, `region` (one region, also the synthetic `full` or `overlay`: e.g. a claim placed, hidden or ended, a rotation changed) |
+| `region` | `state_version`, `region` (one region, also the synthetic `_full` or `_overlay`: e.g. a claim placed, hidden or ended, a rotation changed) |
 | `ticker` | `state_version`, `ticker` |
 | `theme` | `state_version`, `theme`: re-read the theme files (after `theming.theme.published`) |
 | `command` | `command` (`reload`, `identify`), `expires_at` |

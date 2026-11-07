@@ -2307,6 +2307,10 @@ components:
       properties:
         id:
           type: string
+          description: |
+            A layout region's id (a lowercase letter first), or `_full` or `_overlay` for the synthetic regions of the
+            `full` and `overlay` roles, which never clash with a layout's ids.
+          pattern: "^(?:[a-z][a-z0-9_-]{0,31}|_full|_overlay)$"
         role:
           oneOf:
             - $ref: "#/components/schemas/Role"
