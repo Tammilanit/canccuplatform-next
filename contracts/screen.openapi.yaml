@@ -868,7 +868,7 @@ paths:
       summary: Delete an asset
       description: |
         Right `screen.content.write`. 409 `asset_in_use` while a playlist, an active push or the `ready_fallback_asset_id` setting refers to it. Its files and renders are deleted
-        only when no other asset version of the tenant refers to them.
+        only when nothing else of the tenant refers to them: no other asset version (also a kept undo version), render, photo or claim sound.
       responses:
         "204":
           description: Deleted.
