@@ -48,17 +48,18 @@ for p in "${profiles[@]}"; do
   [ "$missing" = 0 ] && echo "ok   assets  $p"
 done
 
-if scripts/check-theme-refs --self-test >/dev/null; then
+if out=$(scripts/check-theme-refs --self-test 2>&1); then
   echo "ok   self-test scripts/check-theme-refs"
 else
-  echo "FAIL self-test scripts/check-theme-refs"; fail=1
+  printf '%s\n' "$out"; echo "FAIL self-test scripts/check-theme-refs"; fail=1
 fi
 
 for t in "${themes[@]}"; do
   if quiet "${AJV[@]}" validate --spec=draft2020 --strict=true -c ajv-formats -s "$THEME_SCHEMA" -d "$t"; then
     echo "ok   schema  $t"
   else
-    echo "FAIL schema  $t"; fail=1
+    # The reference checks assume a manifest the schema accepts.
+    echo "FAIL schema  $t"; echo "skip refs    $t"; fail=1; continue
   fi
   # js-yaml's stderr (npm notices, parse errors) goes to its own file, never into the JSON.
   json=$(mktemp); err=$(mktemp)

@@ -3,9 +3,11 @@
 
 The schema checks each value on its own; this checks how they fit together: every file the
 manifest names exists, layout and region ids are unique, each region's area fits its grid,
-templates and embeds a widget names exist (a template made for that widget type), token
+templates and embeds a widget names exist (a template made for that widget type), a `logo`
+widget has `images.logo`, each embed's files sit in its own `embeds/<name>/` folder, token
 font families are package fonts or generic families, and a simple-mode theme has no CSS,
-fonts, templates or embeds.
+fonts, templates, embeds or font and size tokens. A manifest the schema rejects is reported
+as not checked rather than half-checked.
 
 Usage: check-theme-refs MANIFEST_JSON THEME_DIR   (the manifest already converted to JSON)
        check-theme-refs --self-test
@@ -33,6 +35,13 @@ def manifest_files(m: dict) -> list[str]:
 
 
 def problems(m: dict, theme_dir: Path) -> list[str]:
+    try:
+        return _problems(m, theme_dir)
+    except (KeyError, TypeError, AttributeError) as e:
+        return [f"not_checked: the manifest does not match the schema ({type(e).__name__}: {e})"]
+
+
+def _problems(m: dict, theme_dir: Path) -> list[str]:
     out: list[str] = []
     for f in sorted(set(manifest_files(m))):
         if not (theme_dir / f).is_file():
@@ -62,6 +71,13 @@ def problems(m: dict, theme_dir: Path) -> list[str]:
                     out.append(f"reference_unknown: template {name} is not for {w['widget']}")
                 if "embed" in w and w["embed"] not in embeds:
                     out.append(f"reference_unknown: embed {w['embed']} in {lid}/{rid}")
+                if w["widget"] == "logo" and "logo" not in m.get("images", {}):
+                    out.append(f"reference_unknown: images.logo for the logo widget in {lid}/{rid}")
+
+    for name, embed in embeds.items():
+        for f in [embed["entry"], *embed.get("files", [])]:
+            if not f.startswith(f"embeds/{name}/"):
+                out.append(f"reference_unknown: embed {name}: {f} is outside embeds/{name}/")
 
     families = {f["family"] for f in m.get("fonts", [])} | GENERIC_FAMILIES
     for token, family in m.get("tokens", {}).get("fonts", {}).items():
@@ -72,6 +88,9 @@ def problems(m: dict, theme_dir: Path) -> list[str]:
         for part in ("css", "fonts", "templates", "embeds"):
             if m.get(part):
                 out.append(f"mode_mismatch: simple mode with {part}")
+        for group in ("fonts", "sizes"):
+            if m.get("tokens", {}).get(group):
+                out.append(f"mode_mismatch: simple mode with tokens.{group}")
     return out
 
 
@@ -103,6 +122,14 @@ def self_test() -> int:
     cases.append(("simple mode with templates", m, "mode_mismatch"))
     m = json.loads(json.dumps(base)); m["css"] = ["css/missing.css"]
     cases.append(("missing file", m, "file_missing: css/missing.css"))
+    m = json.loads(json.dumps(base)); m["embeds"] = {"x": {"entry": "embeds/y/index.html"}}
+    cases.append(("embed outside its folder", m, "embed x: embeds/y/index.html"))
+    m = json.loads(json.dumps(base)); m["layouts"][0]["regions"][0]["widgets"] = [{"widget": "logo"}]
+    cases.append(("logo widget without images.logo", m, "reference_unknown: images.logo"))
+    m = json.loads(json.dumps(base)); m["mode"] = "simple"; del m["templates"]
+    m["layouts"][0]["regions"][0]["widgets"] = [{"widget": "clock"}]; m["tokens"] = {"sizes": {"gap": "1rem"}}
+    cases.append(("simple mode with size tokens", m, "mode_mismatch: simple mode with tokens.sizes"))
+    cases.append(("schema-broken manifest", {"layouts": [{"id": "x"}]}, "not_checked"))
 
     failed = 0
     with tempfile.TemporaryDirectory() as tmp:

@@ -1,0 +1,2 @@
+# Python bytecode, written when scripts such as scripts/check-theme-refs run.
+__pycache__/

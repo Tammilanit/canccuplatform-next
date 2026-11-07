@@ -73,7 +73,9 @@ paths:
       summary: Start a draft
       description: |
         Needs right `theming.theme.write`. From the current revision, an earlier revision or the defaults.
-        409 `draft_exists` when the event already has one.
+        A draft from the defaults is a valid simple-mode theme: the platform default colours, with a generated
+        `brand` (`primary` and `accent` of the platform defaults, `scheme: dark`). 409 `draft_exists` when the
+        event already has one.
       requestBody:
         required: true
         content:
@@ -119,7 +121,8 @@ paths:
       description: |
         Needs right `theming.theme.write`. Regenerates `tokens.colors` under the contrast rules; `adjusted` names
         the tokens shaded away from the given colours. Deterministic. Never changes the mode: an advanced theme
-        stays advanced, with its CSS and files applied. A new draft from the defaults starts in `simple`.
+        stays advanced, with its CSS and files applied. A new draft from the defaults starts in `simple`, with a
+        generated `brand`.
       requestBody:
         required: true
         content:
@@ -569,7 +572,9 @@ paths:
       summary: Set the git sync settings
       description: |
         Needs right `theming.sync.write`. `credential` is write-only and stored encrypted; leaving it out keeps
-        the stored one, `null` removes it. Audited (which fields, never the credential).
+        the stored one, `null` removes it. The stored credential is bound to the host of `repo_url`: a `repo_url`
+        with another host while a credential is stored is 400 `credential_required` unless `credential` is given
+        again (or `null`). Audited (which fields, never the credential).
       requestBody:
         required: true
         content:
@@ -814,7 +819,7 @@ components:
           schema:
             $ref: "#/components/schemas/Sync"
     BadRequest:
-      description: "`invalid_request` (the body or a parameter does not match), or `package_refused` (a zip broke the archive rules)."
+      description: "`invalid_request` (the body or a parameter does not match), or `package_refused` (a zip broke the archive rules), or `credential_required` (a sync `repo_url` on another host without the credential given again)."
       content:
         application/json:
           schema:
@@ -963,24 +968,101 @@ components:
           type: integer
           minimum: 1
         tokens:
-          description: Groups and names as in theme.schema.json `tokens`; a `null` value removes the token.
+          description: |
+            The token names and values of theme.schema.json `tokens`; a `null` value removes the token (back to
+            the default). An unknown name or a bad value is 400 `invalid_request` and changes nothing; it never
+            becomes a draft problem.
           type: object
           additionalProperties: false
           properties:
             colors:
               type: object
-              additionalProperties:
-                oneOf:
-                  - $ref: "#/components/schemas/Color"
-                  - type: "null"
+              additionalProperties: false
+              properties:
+                background:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                surface:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                border:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                text:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                text_muted:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                primary:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                primary_text:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                accent:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                status_ok:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                status_degraded:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
+                status_down:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/color"
+                    - type: "null"
             fonts:
               type: object
-              additionalProperties:
-                type: [string, "null"]
+              additionalProperties: false
+              properties:
+                body:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/family"
+                    - type: "null"
+                heading:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/family"
+                    - type: "null"
+                display:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/family"
+                    - type: "null"
+                mono:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/family"
+                    - type: "null"
             sizes:
               type: object
-              additionalProperties:
-                type: [string, "null"]
+              additionalProperties: false
+              properties:
+                radius:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/length"
+                    - type: "null"
+                border_width:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/length"
+                    - type: "null"
+                gap:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/length"
+                    - type: "null"
+                safe_inset:
+                  oneOf:
+                    - $ref: "theme.schema.json#/$defs/length"
+                    - type: "null"
     BrandInput:
       type: object
       additionalProperties: false
@@ -1111,8 +1193,10 @@ components:
       required: [revision, theming_version, tokens, tokens_css_url, admin_tokens_css_url, embed_color, layouts, templates, embeds]
       properties:
         revision:
-          description: 0 when the event has no published theme (the platform defaults with the profile's `theme`); absent on a draft preview.
-          type: integer
+          description: |
+            The current revision; 0 when the event has no published theme (the platform defaults with the
+            profile's `theme`); `null` on a draft preview, which is no revision.
+          type: [integer, "null"]
           minimum: 0
         published_at:
           type: string
@@ -1247,16 +1331,20 @@ components:
       properties:
         repo_url:
           type: string
-          pattern: "^https://[^\\s/@:]+(:443)?/[^\\s]*$"
+          description: "`https://`, a host name of letters, digits, dots and hyphens, optionally `:443`, then the path."
+          pattern: "^https://[A-Za-z0-9.-]+(:443)?/[^\\s]*$"
           maxLength: 300
         ref:
           type: string
-          description: A branch or tag; never starts with `-`, so it cannot be read as a git option.
-          pattern: "^(?!-)[A-Za-z0-9._/-]{1,100}$"
+          description: A branch or tag; never starts with `-` (it cannot be read as a git option) and holds no `..`.
+          pattern: "^(?!-)(?!.*\\.\\.)[A-Za-z0-9._/-]{1,100}$"
         path:
-          description: The package folder in the repo; `.` for the root.
+          description: |
+            The package folder in the repo, relative to its root; `.` for the root. Never absolute, never `..`, no
+            segment starting with `-` or `.`; after symlinks it must still resolve inside the checkout.
           type: string
-          pattern: "^(\\.|(?!.*\\.\\.)[A-Za-z0-9._/-]{1,200})$"
+          maxLength: 200
+          pattern: "^(\\.|[A-Za-z0-9_][A-Za-z0-9._-]*(/[A-Za-z0-9_][A-Za-z0-9._-]*)*)$"
         credential:
           description: A read-only access token; write-only. Absent keeps the stored one, `null` removes it.
           type: [string, "null"]
