@@ -119,6 +119,9 @@ jobs:
       - name: tenants against Postgres (RLS, audit grants, cross-tenant leak tests)
         working-directory: modules/tenants
         run: pip install -e ".[dev]" && pytest
+      - name: admin against Postgres (RLS, its migration, cross-tenant leak tests)
+        working-directory: modules/admin
+        run: pip install -e ".[dev]" && pytest
       - name: Valkey and Postgres logs
         if: failure()
         run: docker compose -f deploy/compose.yml logs valkey postgres

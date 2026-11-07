@@ -6,10 +6,11 @@ import html
 from typing import Any
 from urllib.parse import urlencode
 
-from canccu_kit import Health, KitError, MissingRight, NotSignedIn
+from canccu_kit import Health, KitError, MissingRight, NotSignedIn, TenantResolver
 from canccu_kit.rights import Session
 from canccu_kit.starlette import install
 from starlette.applications import Starlette
+from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.routing import Route
@@ -19,6 +20,7 @@ from .auth_routes import Authorize, OnEvent, OriginCheck, auth_routes
 from .declarations import Setting
 from .pages import BASE, SIGN_OUT, page
 from .service import BadSettings, Service
+from .tenancy import TenantPaths
 
 MODULES = ("screen", "tournament", "pizza", "bot", "admin", "games", "moments", "voices", "cast")
 
@@ -71,6 +73,7 @@ def create_app(
     health: Health,
     authorize: Authorize,
     auth: Auth,
+    resolver: TenantResolver,
     on_event: OnEvent | None = None,
 ) -> Starlette:
     async def need(request: Request, right: str) -> Session:
@@ -222,6 +225,9 @@ def create_app(
     # so the kit's correlation middleware also covers the origin check's 403.
     app.add_middleware(OriginCheck, origin=auth.public_origin)
     install(app, health)
+    # Innermost, as the kit's install_tenancy places it: the correlation id and the origin check
+    # cover its 404s, and settings and profile handlers run inside the request's tenant.
+    app.user_middleware.append(Middleware(TenantPaths, resolver=resolver))
     app.add_exception_handler(NotSignedIn, _not_signed_in)
     app.add_exception_handler(MissingRight, _missing_right)
     return app

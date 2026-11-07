@@ -7,12 +7,15 @@ import logging
 import os
 from pathlib import Path
 
+import httpx
 import uvicorn
 from canccu_kit import (
     AdminClient,
     Bus,
+    Event,
     Health,
     RightsChecker,
+    TenantResolver,
     ValkeyStreamStore,
     create_logger,
     load_config,
@@ -29,6 +32,7 @@ from .declarations import load_declarations
 from .discord import Discord
 from .profile import make_validator
 from .service import Service
+from .tenancy import ip_mode
 
 
 def parse_targets(raw: str) -> dict[str, str]:
@@ -60,6 +64,26 @@ def discord(public: str | None) -> Discord | None:
     return None
 
 
+def tenant_resolver(version: str) -> TenantResolver:
+    """Hostname -> tenant through the tenants module (contracts/tenants.md, Resolving the tenant).
+
+    The platform's own hostnames are never a tenant. IP mode follows the tenants module's switch
+    (CANCCU_IP_MODE=demo, only while the version is dev).
+    """
+    url = os.environ.get("CANCCU_TENANTS_URL", "").strip()
+    if not url:
+        raise SystemExit("missing environment variable(s): CANCCU_TENANTS_URL")
+    own = ("CANCCU_SIGNIN_HOSTNAME", "CANCCU_SUPERADMIN_HOSTNAME")
+    http = httpx.AsyncClient(timeout=5.0)
+    demo = version == "dev" and os.environ.get("CANCCU_IP_MODE") == "demo"
+    return TenantResolver(
+        url,
+        platform_hosts=[os.environ[n] for n in own if os.environ.get(n)],
+        ip_mode=ip_mode(version, url, http) if demo else None,
+        http=http,
+    )
+
+
 async def serve() -> None:
     config = load_config()
     create_logger(config.module)
@@ -67,6 +91,7 @@ async def serve() -> None:
     if not database_url:
         raise SystemExit("missing environment variable(s): CANCCU_DATABASE_URL")
     public = public_url()
+    resolver = tenant_resolver(config.version)
     store = await PgStore.connect(database_url)
     streams = ValkeyStreamStore.from_url(config.valkey_url)
     bus = Bus(streams, config.module)
@@ -84,7 +109,7 @@ async def serve() -> None:
         store=store,
         bus=bus,
         validator=make_validator(contracts / "profile.schema.json"),
-        event_dir=Path(os.environ.get("CANCCU_EVENT_DIR", "/files/event")),
+        files_root=Path(os.environ.get("CANCCU_FILES_ROOT", "/files")),
         declarations=load_declarations(
             Path(os.environ.get("CANCCU_DECLARATIONS_DIR", "declarations"))
         ),
@@ -101,9 +126,22 @@ async def serve() -> None:
     # Admin checks its own pages through the kit like any module, so CI's session stub
     # (deploy/compose.ci.yml) can stand in for it; its own role changes and ended sessions
     # drop the cache at once.
-    app = create_app(service, health, rights.check, auth, rights.handle_event)
+    app = create_app(service, health, rights.check, auth, resolver, rights.handle_event)
+
+    async def drop_cached_tenants(event: Event) -> None:
+        resolver.handle_event(event)
+
+    # A changed or removed hostname stops resolving at once, not after the 30 s cache.
+    subscriptions = [
+        bus.subscribe(["tenants"], drop_cached_tenants),
+        bus.subscribe_tenants(["tenants"], drop_cached_tenants),
+    ]
     server = uvicorn.Server(uvicorn.Config(app, host="0.0.0.0", port=8080, log_config=None))
-    await server.serve()
+    try:
+        await server.serve()
+    finally:
+        for subscription in subscriptions:
+            await subscription.close()
 
 
 def main() -> None:

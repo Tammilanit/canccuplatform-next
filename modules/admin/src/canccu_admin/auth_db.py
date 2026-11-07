@@ -1,8 +1,8 @@
 """Persistence for sign-in: users, roles, sessions, OAuth flows and the first-run code.
 
-Admin is still single-event: #56 moves users to the tenants module and binds sessions to a
-tenant. Secrets are stored only as SHA-256 hashes (session ids, OAuth states, flow nonces, the
-first-run code), so a database dump signs nobody in. The PKCE verifier is stored as is: it is
+Sign-in is not per tenant yet: the central sign-in host (#52) binds each session to one tenant.
+Secrets are stored only as SHA-256 hashes (session ids, OAuth states, flow nonces, the first-run
+code), so a database dump signs nobody in. The PKCE verifier is stored as is: it is
 useless without the authorization code Discord sends to the browser.
 """
 

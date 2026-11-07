@@ -1,4 +1,4 @@
-"""Shared fixtures for the sign-in tests: a fake Discord, a clock, and the app behind Caddy."""
+"""Shared fixtures: a fake Discord, a clock, a fake tenants registry and the app behind Caddy."""
 
 from __future__ import annotations
 
@@ -12,7 +12,8 @@ from urllib.parse import parse_qs, urlsplit
 
 import httpx
 import pytest
-from canccu_kit import AdminClient, Bus, Event, Health, RightsChecker
+from canccu_kit import AdminClient, Bus, Event, Health, RightsChecker, TenantResolver
+from canccu_kit.access import TenantContext
 from canccu_kit.rights import Session
 from canccu_kit.testing import MemoryStreamStore
 from starlette.types import ASGIApp, Receive, Scope, Send
@@ -21,7 +22,7 @@ from canccu_admin.app import create_app
 from canccu_admin.auth import Auth
 from canccu_admin.auth_db import MemoryAuthStore
 from canccu_admin.auth_routes import OnEvent
-from canccu_admin.db import MemoryStore
+from canccu_admin.db import MemoryStore, Store
 from canccu_admin.declarations import load_declarations
 from canccu_admin.discord import Discord
 from canccu_admin.profile import make_validator
@@ -31,6 +32,53 @@ ROOT = Path(__file__).resolve().parents[3]
 PUBLIC = "https://admin.example.test"
 CALLBACK = "/admin/sign-in/callback"
 START = datetime(2026, 11, 7, 12, 0, tzinfo=UTC)
+SIGNIN_HOST = "signin.example.test"
+
+
+def tenant_context(tenant_id: str) -> TenantContext:
+    return {
+        "tenant_id": tenant_id,
+        "status": "live",
+        "primary_hostname": None,
+        "time_zone": "UTC",
+        "info_page_mode": "public",
+        "membership": "open",
+        "admin_access": "internet",
+        "venue": None,
+        "venue_ip_check": {"enabled": True, "disabled_until": None, "reason": None},
+        "flags_version": 0,
+        "flags": {},
+    }
+
+
+def fake_resolver(hosts: dict[str, str]) -> TenantResolver:
+    """The kit's resolver against a fake tenants module that knows `hosts` (host -> tenant)."""
+
+    def registry(request: httpx.Request) -> httpx.Response:
+        tenant = hosts.get(request.url.params.get("host", ""))
+        if tenant is None:
+            return httpx.Response(404, json={"error": {"code": "not_found", "message": "x"}})
+        return httpx.Response(200, json=tenant_context(tenant))
+
+    return TenantResolver(
+        "http://tenants",
+        platform_hosts=[SIGNIN_HOST],
+        http=httpx.AsyncClient(transport=httpx.MockTransport(registry)),
+    )
+
+
+class StoreProbe:
+    """Leak probe for a settings store: the memory twin or Postgres."""
+
+    def __init__(self, store: Store) -> None:
+        self.store = store
+
+    async def seed(self, tenant: str, marker: str) -> None:
+        await self.store.put_settings("screen", 0, {"title": marker})
+        await self.store.set_profile({"name": marker})
+
+    async def read(self, tenant: str) -> object:
+        return [await self.store.get_settings("screen"), await self.store.get_profile()]
 
 
 @dataclass
@@ -101,7 +149,7 @@ def world(tmp_path: Path) -> World:
         MemoryStore(),
         bus,
         make_validator(ROOT / "contracts/profile.schema.json"),
-        tmp_path / "event",
+        tmp_path,
         load_declarations(Path(__file__).parents[1] / "declarations"),
         {},
     )
@@ -126,7 +174,14 @@ def world(tmp_path: Path) -> World:
     async def authorize(cookie: str | None, right: str) -> Session:
         return await holder[0].check(cookie, right)
 
-    app = create_app(service, Health("admin", "dev", {}), authorize, auth, holder_event(holder))
+    app = create_app(
+        service,
+        Health("admin", "dev", {}),
+        authorize,
+        auth,
+        fake_resolver({"admin.example.test": "demo"}),
+        holder_event(holder),
+    )
     asgi = httpx.ASGITransport(app=caddy(app))
     checker = RightsChecker(
         AdminClient("http://t", httpx.AsyncClient(transport=asgi, base_url="http://t")),
