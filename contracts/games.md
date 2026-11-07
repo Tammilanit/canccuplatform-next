@@ -44,8 +44,8 @@ A signed-in member adds a game that is missing, and everyone at the event can th
 Right `games.catalogue.moderate` (event admins hold it through their role). Every change below is written to the audit log through `POST /internal/tenants/audit` in the same request ([tenants.md](tenants.md#audit-log)), with what changed; attendees' additions are audited the same way.
 
 - `PATCH /api/games/catalogue/{game_id}` with `revision`: the name, identifiers, store ids and cover of an event's own game; on a baseline game only the overlay (adding identifiers, hiding). A stale `revision` is 409 `version_conflict`; an identifier already on another game is 409 `identifier_taken`. Emits `games.game.changed`.
-- **Hide:** `PATCH` with `status: hidden` (and `active` to undo). A hidden game is not offered to follow, never surges, and keeps its follows in Notify for when it comes back.
-- **Merge duplicates:** `POST /api/games/catalogue/{game_id}/merge` with `into` and `revision`. Only an event's own game merges (a baseline game is 409 `baseline_entry`), into any active game of the catalogue (otherwise 409 `game_not_active`). Its identifiers move to the target (for a baseline target, into the event's overlay), it becomes `merged` with `merged_into`, and the module emits `games.game.merged`, on which Notify moves its followers to the target ([notify.md](notify.md#per-person-channels-and-follows)). Merging is final.
+- **Hide:** `PATCH` with `status: hidden` (and `active` to undo). A hidden game is not offered to follow, never surges, and keeps its follows in Notify for when it comes back. Its `games.game.changed` carries only `game_id`, `status` and `changed`, never the game, so an entry a moderator removed is not broadcast again.
+- **Merge duplicates:** `POST /api/games/catalogue/{game_id}/merge` with `into` and `revision`. Only an event's own game merges (a baseline game is 409 `baseline_entry`), into any active game of the catalogue (otherwise 409 `game_not_active`). Its identifiers move to the target (for a baseline target, into the event's overlay), it becomes `merged` with `merged_into`, and the module emits `games.game.merged`, on which Notify moves its followers to the target ([notify.md](notify.md#per-person-channels-and-follows)). Merging is final: any `PATCH` or merge of a merged game is 409 `game_merged`.
 - `PUT /api/games/catalogue/{game_id}/cover` uploads cover art (PNG, JPEG or WebP, at most 2 MB) into the shared files volume.
 
 ## Following a game
@@ -79,7 +79,7 @@ Envelope, naming and transport: [admin.md](admin.md#events). Listed in the catal
 | Type | When | Audience | `data` |
 |---|---|---|---|
 | `games.game.added` | A game was added to the event's catalogue | event-wide, `public` | `game`, `catalogue_version`, `actor_user_id` |
-| `games.game.changed` | A game was edited, hidden or shown again | event-wide, `public` | `game`, `changed` (field names), `catalogue_version`, `actor_user_id` |
+| `games.game.changed` | A game was edited, hidden or shown again | event-wide, `public` | `game` (absent when the game was hidden: then `game_id` and `status` instead), `changed` (field names), `catalogue_version`, `actor_user_id` |
 | `games.game.merged` | An event's game was merged into another | event-wide, `public` | `game_id`, `into_game_id`, `catalogue_version`, `actor_user_id` |
 | `games.surge.started` | Players on one game reached the threshold | event-wide, `public` | `game` (`id`, `name`, `cover_url`), `players`, `threshold` |
 | `games.surge.ended` | A surge ended | event-wide, `public` | `game` (`id`, `name`), `players` |

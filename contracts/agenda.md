@@ -53,7 +53,7 @@ Each event has its own list of kinds (`Kind` in the OpenAPI file); the organiser
 - `PUT /api/agenda/kinds/{kind_key}` creates or replaces a kind (send `revision` to replace; a stale one is 409 `version_conflict`, a missing one on an existing kind is 409 `kind_exists`). Right `agenda.items.write`. Emits `agenda.kind.saved`.
 - `DELETE /api/agenda/kinds/{kind_key}?revision=` → 204. Right `agenda.items.write`. A kind still named by an item, cancelled ones included, is 409 `kind_in_use`: move those items to another kind first. Emits `agenda.kind.removed`.
 - An item naming a key not in the list is 400 `unknown_kind`.
-- **`kinds_version`** goes up by one on every change of the kind list. A kind's defaults feed its items' lead times and `notify_channels` in effect, so on `agenda.kind.saved` the module reschedules the pending reminders of its items, and consumers that hold items read the agenda again.
+- **`kinds_version`** is 0 for a new event's starter set and goes up by one on every change of the kind list. A kind's defaults feed its items' lead times and `notify_channels` in effect, so on `agenda.kind.saved` the module reschedules the pending reminders of its items, and consumers that hold items read the agenda again.
 
 ## Notification channels
 Whether the run-of-show's reminders and changes are announced, and where, is optional and chosen per channel:
@@ -101,7 +101,7 @@ Consumers subscribe to the agenda stream; the agenda module does the timing once
 ## Clone with an event
 A new event of a series can be cloned from the previous one, dates shifted, then edited (the series rule in the tenants contract). The agenda's part:
 
-- `POST /api/agenda/clone` with `source_tenant_id` and `shift_seconds`, on the new event's hostname. Needs `agenda.items.write` on the new event. The module asks the tenants API that both events are in one series and that the caller is an event admin of the source too; otherwise 403 `missing_right`. Only into an empty agenda: otherwise 409 `agenda_not_empty`.
+- `POST /api/agenda/clone` with `source_tenant_id` and `shift_seconds`, on the new event's hostname. Needs `agenda.items.write` on the new event. The module asks the tenants API that both events are in one series and that the caller is an event admin of the source too; otherwise 403 `missing_right`. Only into an empty agenda: otherwise 409 `agenda_not_empty`. Only while the kind list is still the starter set, untouched (`kinds_version` 0): otherwise 409 `kinds_changed`, so kinds an organiser set up are never replaced silently; the organiser then adds the source's kinds by hand.
 - The module reads the source items in the source tenant's context and writes the copies in the new tenant's context, never both in one context.
 - Copied first: the source's kind list, replacing the new event's starter set. Then every scheduled item (cancelled ones are not), with title, description, kind, location, zone, visibility, reminder leads and `notify`. The planned times plus `shift_seconds` become both the planned and current times, so the copy has no delays. `links` are dropped, because they name the source event's tournaments and Moments; `cloned_from` keeps the source item's id. Each copy starts at `revision` 1.
 - Emits one `agenda.items.cloned`, not one event per item; consumers read the agenda again.

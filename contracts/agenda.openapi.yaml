@@ -369,8 +369,9 @@ paths:
       summary: Clone the agenda of a previous event
       description: |
         Needs right `agenda.items.write` here and event admin on the source; both events must be in one
-        series (checked through the tenants API). Only into an empty agenda. The source's kind list replaces the
-        starter set; scheduled items are copied with their planned times shifted, no delays and no links.
+        series (checked through the tenants API). Only into an empty agenda (409 `agenda_not_empty`) whose kind
+        list is the untouched starter set, `kinds_version` 0 (409 `kinds_changed`). The source's kind list replaces
+        the starter set; scheduled items are copied with their planned times shifted, no delays and no links.
         Emits `agenda.items.cloned`.
       security:
         - session: []
@@ -440,7 +441,7 @@ components:
     Conflict:
       description: |
         `version_conflict` (stale `revision`), `item_cancelled`, `item_started` (delay of a started item with
-        no end), `agenda_not_empty` (clone), `kind_exists`, `kind_in_use`, `kind_required` (removing `other`)
+        no end), `agenda_not_empty` (clone), `kind_exists`, `kind_in_use`, `kind_required` (removing `other`), `kinds_changed` (clone)
         or `event_archived` (the event is read-only).
       content:
         application/json:

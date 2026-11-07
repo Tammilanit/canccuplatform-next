@@ -119,8 +119,8 @@ paths:
       summary: Edit, hide or show a game
       description: |
         Needs right `games.catalogue.moderate`. On a baseline game only the overlay: adding identifiers and
-        `status`; other fields are 400 `invalid_request`. Lists given replace the event's own values. Emits
-        `games.game.changed`; audited.
+        `status`; other fields are 400 `invalid_request`. Lists given replace the event's own values. A merged
+        game is 409 `game_merged`. Emits `games.game.changed` (for a hide, without the game); audited.
       security:
         - session: []
       requestBody:
@@ -303,7 +303,8 @@ components:
       description: |
         `game_exists` (the message names the existing game), `version_conflict` (stale `revision`),
         `identifier_taken`, `baseline_entry` (merging a baseline game), `game_not_active` (merging into a hidden or
-        merged game) or `event_archived` (the event is read-only).
+        merged game), `game_merged` (editing or merging a merged game; merging is final) or `event_archived` (the
+        event is read-only).
       content:
         application/json:
           schema:

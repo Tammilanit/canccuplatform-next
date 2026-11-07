@@ -198,8 +198,9 @@ paths:
       summary: Register a module's topic type
       description: |
         For modules, at start; idempotent, a new registration replaces the old one. Global, for every event.
-        Keys starting with `custom_` are 400 `invalid_request`; a key registered by another owner is 409
-        `topic_owned`. Internal network only.
+        Keys starting with `custom_` are 400 `invalid_request`, and so is a trigger whose `event` the `owner` does
+        not emit (its first part must equal `owner`); a key registered by another owner is 409 `topic_owned`.
+        Every change is kept in Notify's registration history. Internal network only.
       security:
         - {}
       requestBody:
@@ -1052,7 +1053,9 @@ components:
           maxLength: 200
         defaults:
           type: object
-          description: Per part, the channel defaults for people who have not chosen.
+          description: |
+            Per part, the channel defaults for people who have not chosen. A default may be `true` only where the
+            base's default for that part and channel is `true`; anything else is 400 `invalid_request`.
           properties:
             event:
               $ref: "#/components/schemas/ChannelSwitches"
@@ -1212,10 +1215,14 @@ components:
         dm_fallback:
           type: boolean
           default: true
-          description: Personal notifications fall back to a Discord DM when no push reaches the caller.
+          description: |
+            Personal notifications fall back to a Discord DM when no push reaches the caller, unless the caller
+            explicitly set `discord_dm: false` for that topic and part in `channels`.
         channels:
           type: object
-          description: Per topic and part, the caller's channels; left out takes the part's defaults.
+          description: |
+            Per topic and part, the caller's channels; left out takes the part's defaults. An explicit
+            `discord_dm: false` also stops the DM fallback for that topic and part; a default does not.
           propertyNames:
             $ref: "#/components/schemas/Topic"
           additionalProperties:
