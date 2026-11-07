@@ -154,7 +154,7 @@ paths:
       operationId: streamDeviceState
       summary: The push channel (Server-Sent Events)
       description: |
-        SSE events `state`, `widget`, `region`, `ticker`, `theme`, `command`, `ping`, each with `id: <state_version>`
+        SSE events `state`, `widget`, `region`, `ticker`, `theme`, `command`, `ping`, each with `id: <zone_key>.<zone_epoch>.<state_version>`
         (contracts/screen.md, Composed state and the push channel). Resume with `Last-Event-ID`.
       security:
         - device: []
@@ -635,7 +635,9 @@ paths:
       tags: [now]
       operationId: getNow
       summary: What a zone's screens show now
-      description: For the phone hub. Follows the event's info-page mode; only public widgets.
+      description: |
+        For the phone hub. Follows the event's info-page mode. Only the widget types contracts/screen.md lists for it;
+        never `checkin_qr` (its code proves presence at the venue). `now_playing` names only for a signed-in member.
       security:
         - {}
         - session: []
@@ -865,7 +867,7 @@ paths:
       operationId: deleteAsset
       summary: Delete an asset
       description: |
-        Right `screen.content.write`. 409 `asset_in_use` while a playlist uses it. Its files and renders are deleted
+        Right `screen.content.write`. 409 `asset_in_use` while a playlist, an active push or the `ready_fallback_asset_id` setting refers to it. Its files and renders are deleted
         only when no other asset version of the tenant refers to them.
       responses:
         "204":
@@ -1904,6 +1906,13 @@ components:
     MirrorTarget:
       type: object
       description: Exactly one of the two.
+      oneOf:
+        - required: [device_id]
+          not:
+            required: [zone_key]
+        - required: [zone_key]
+          not:
+            required: [device_id]
       properties:
         device_id:
           $ref: "#/components/schemas/Id"
@@ -1991,6 +2000,14 @@ components:
           maxLength: 80
     Assignment:
       type: object
+      description: Exactly one of `zone_key` and `mirror_of`.
+      oneOf:
+        - required: [zone_key]
+          not:
+            required: [mirror_of]
+        - required: [mirror_of]
+          not:
+            required: [zone_key]
       properties:
         zone_key:
           $ref: "#/components/schemas/ZoneKey"
@@ -2423,10 +2440,24 @@ components:
               type: string
         theme:
           type: object
-          required: [revision, tokens_css_url, css_url, logo_url]
+          description: The theme revision in effect (the pinned one, else the current).
+          required: [revision, tokens_css_url, css_url, logo_url, templates]
           properties:
             revision:
               type: integer
+            templates:
+              type: array
+              description: That revision's templates (name, widget type and the parsed template), as theming serves them.
+              items:
+                type: object
+                required: [name, widget]
+                properties:
+                  name:
+                    type: string
+                  widget:
+                    type: string
+                  template:
+                    type: object
             tokens_css_url:
               type: string
             css_url:
@@ -2702,6 +2733,19 @@ components:
       type: object
       description: Either weekly (`days`, `start_minute`, `end_minute`) or bound to a run-of-show item (`agenda_item_id`).
       required: [zone_key, playlist_id, priority]
+      oneOf:
+        - required: [days, start_minute, end_minute]
+          not:
+            required: [agenda_item_id]
+        - required: [agenda_item_id]
+          properties:
+            agenda_item_id:
+              type: string
+          not:
+            anyOf:
+              - required: [days]
+              - required: [start_minute]
+              - required: [end_minute]
       properties:
         id:
           $ref: "#/components/schemas/Id"
@@ -2745,6 +2789,14 @@ components:
     Push:
       type: object
       required: [zones, until]
+      description: Exactly one of `playlist_id` and `asset_id`.
+      oneOf:
+        - required: [playlist_id]
+          not:
+            required: [asset_id]
+        - required: [asset_id]
+          not:
+            required: [playlist_id]
       properties:
         id:
           $ref: "#/components/schemas/Id"
