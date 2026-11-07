@@ -1,6 +1,6 @@
 # Games contract
 
-The games people play at an event: the game catalogue, how a Discord activity is matched to a game, and surges (many people starting one game at once). The `games` module owns it. Rosters, rounds and Play sessions join this contract when their step writes them (the Games track, [roadmap](../docs/roadmap.md#games)); this part is what the screen, the bot and Notify need first.
+The games people play at an event: the game catalogue, how a Discord activity is matched to a game, and surges (many people starting one game at once). The `games` module owns it. Rosters, rounds and Play sessions join this contract when their step writes them (the Games track, [roadmap](../docs/roadmap.md#games)); this part is what the screen, the bot and Notify need first. The mini tourney's seasons, brackets and team builder are not part of it: they are the separate `finals` module's ([finals.md](finals.md), [0025](../docs/decisions/0025-finals-and-games-modules.md)).
 
 **Machine-readable API: [games.openapi.yaml](games.openapi.yaml)** (OpenAPI 3.1). It is the source for paths, fields and status codes; this file explains them and adds the rules and events. Conventions (field names, times, error body): [README.md](README.md#conventions).
 
