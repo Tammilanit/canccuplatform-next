@@ -1,6 +1,6 @@
 # 0019. Work runs in packages, with risk classes, a health pass and a checkpoint per step
 
-- **Status:** Accepted (supersedes the review flow per PR of [0014](0014-independent-review.md), now per package, and the accept list of [0016](0016-merge-policy.md), now given by risk class)
+- **Status:** Accepted (supersedes the review flow per PR of [0014](0014-independent-review.md), now per package, and the accept list of [0016](0016-merge-policy.md), now given by risk class; extended by [0023](0023-step-design-briefs.md))
 - **Date:** 2026-11-06
 
 ## Context
