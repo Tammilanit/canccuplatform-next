@@ -29,3 +29,4 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0021](0021-no-fixed-dates.md) | No freeze and no target dates | 2026-11-06 |
 | [0022](0022-product-vision.md) | The product vision: who it is for, the Pulse screen at its heart, what is planned and what is not | 2026-11-06 |
 | [0023](0023-step-design-briefs.md) | Every step starts with a design brief, and issues leave room to design | 2026-11-06 |
+| [0024](0024-additive-contract-docs-normal-risk.md) | Additive contract docs are normal risk; the maintainer reviews contracts at the checkpoint | 2026-11-07 |
