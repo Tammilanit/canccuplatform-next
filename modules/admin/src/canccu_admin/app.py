@@ -6,7 +6,7 @@ import html
 from typing import Any
 from urllib.parse import urlencode
 
-from canccu_kit import Health, KitError, NotSignedIn
+from canccu_kit import Health, KitError, MissingRight, NotSignedIn
 from canccu_kit.rights import Session
 from canccu_kit.starlette import install
 from starlette.applications import Starlette
@@ -17,7 +17,7 @@ from starlette.routing import Route
 from .auth import Auth
 from .auth_routes import Authorize, OnEvent, OriginCheck, auth_routes
 from .declarations import Setting
-from .pages import BASE, page
+from .pages import BASE, SIGN_OUT, page
 from .service import BadSettings, Service
 
 MODULES = ("screen", "tournament", "pizza", "bot", "admin", "games", "moments", "voices", "cast")
@@ -117,17 +117,19 @@ def create_app(
         return RedirectResponse(f"{BASE}/settings", status_code=303)
 
     async def settings_index(request: Request) -> Response:
-        await need(request, "admin.settings.read")
+        session = await need(request, "admin.settings.read")
         links = "".join(
             f'<li><a href="{BASE}/settings/{m}">{m}</a></li>' for m in service.declarations
         )
         return page(
-            "Settings", f"<ul>{links}</ul>" if links else "<p>No module declares settings.</p>"
+            "Settings",
+            f"<ul>{links}</ul>" if links else "<p>No module declares settings.</p>",
+            session=session,
         )
 
     async def settings_form(request: Request) -> Response:
         module = module_of(request)
-        await need(request, "admin.settings.read")
+        session = await need(request, "admin.settings.read")
         declared = service.declarations.get(module, [])
         current = await service.get_settings(module)
         fields = "".join(_field(s, current["values"].get(s.key)) for s in declared)
@@ -137,6 +139,7 @@ def create_app(
             f"{notice}<form method=post>"
             f"<input type=hidden name=settings_version value={current['settings_version']}>"
             f"{fields}<button>Save</button></form>",
+            session=session,
         )
 
     async def settings_save(request: Request) -> Response:
@@ -155,7 +158,7 @@ def create_app(
         return RedirectResponse(f"{BASE}/settings/{module}?saved=1", status_code=303)
 
     async def health_page(request: Request) -> Response:
-        await need(request, "admin.settings.read")
+        session = await need(request, "admin.settings.read")
         own = (await health.run()).body
         rows = [(health.module, own["status"], own["version"], "")]
         rows += [(h.module, h.status, h.version, h.detail) for h in await service.health_view()]
@@ -168,10 +171,11 @@ def create_app(
             "Health",
             "<table border=1 cellpadding=4><tr><th>Module<th>Status<th>Version"
             f"<th>Detail</tr>{trs}</table>",
+            session=session,
         )
 
     async def profile_page(request: Request) -> Response:
-        await need(request, "admin.profile.read")
+        session = await need(request, "admin.profile.read")
         message = html.escape(request.query_params.get("message", ""))
         warns = "".join(f"<li>{html.escape(w)}</li>" for w in request.query_params.getlist("warn"))
         return page(
@@ -181,6 +185,7 @@ def create_app(
             + f"<form method=post action={BASE}/profile/save><button>Save profile to event folder"
             f"</button></form><form method=post action={BASE}/profile/load>"
             "<button>Load profile from event folder</button></form>",
+            session=session,
         )
 
     async def profile_save(request: Request) -> Response:
@@ -213,9 +218,12 @@ def create_app(
             *auth_routes(auth, authorize, on_event),
         ]
     )
+    # Added before install(): Starlette wraps each later middleware around the earlier ones,
+    # so the kit's correlation middleware also covers the origin check's 403.
+    app.add_middleware(OriginCheck, origin=auth.public_origin)
     install(app, health)
     app.add_exception_handler(NotSignedIn, _not_signed_in)
-    app.add_middleware(OriginCheck, origin=auth.public_origin)
+    app.add_exception_handler(MissingRight, _missing_right)
     return app
 
 
@@ -225,3 +233,17 @@ async def _not_signed_in(request: Request, exc: Exception) -> Response:
         assert isinstance(exc, NotSignedIn)
         return JSONResponse(exc.to_body(), status_code=exc.status)
     return RedirectResponse(f"{BASE}/sign-in", status_code=303)
+
+
+async def _missing_right(request: Request, exc: Exception) -> Response:
+    """The API answers 403 `missing_right`; a page explains what to do instead."""
+    assert isinstance(exc, MissingRight)
+    if request.url.path.startswith("/api/"):
+        return JSONResponse(exc.to_body(), status_code=exc.status)
+    return page(
+        "No access",
+        "<p>You are signed in, but your account has no right to this page"
+        f" ({html.escape(exc.message)}). Ask the owner for a role, then reload.</p>"
+        f"<p>Wrong account? {SIGN_OUT}</p>",
+        exc.status,
+    )

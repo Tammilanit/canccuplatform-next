@@ -40,7 +40,8 @@ settings = SettingsClient(admin, config.module)
 await settings.start()
 rotation = settings.get("rotation_seconds", 10)
 
-# Rights: checks the canccu_session cookie against GET /api/admin/session, cached ≤ 30 s
+# Rights: checks the canccu_session cookie against GET /api/admin/session, cached ≤ 30 s;
+# rights.forget_session(session_id) drops one session at once (admin calls it on sign-out)
 rights = RightsChecker(admin)
 
 

@@ -133,6 +133,22 @@ async def test_rights_changed_drops_users_entries(admin: FakeAdmin) -> None:
     assert len(admin.requests) == 4
 
 
+async def test_forget_session_drops_only_that_session(admin: FakeAdmin) -> None:
+    admin.handler = lambda r: json_response(200, session_body(["a.b"]))
+    checker = make(admin, Clock())
+    await checker.check("canccu_session=s1", "a.b")
+    await checker.check("canccu_session=s2", "a.b")
+    checker.forget_session("s1")
+    checker.forget_session("never-seen")
+    admin.handler = lambda r: json_response(
+        401, {"error": {"code": "not_signed_in", "message": "x"}}
+    )
+    with pytest.raises(NotSignedIn):
+        await checker.check("canccu_session=s1", "a.b")
+    await checker.check("canccu_session=s2", "a.b")  # still cached
+    assert len(admin.requests) == 3
+
+
 async def test_admin_down_is_503(admin: FakeAdmin) -> None:
     def refuse(request: httpx.Request) -> httpx.Response:
         raise httpx.ConnectError("refused")

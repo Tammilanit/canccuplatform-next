@@ -64,3 +64,33 @@ async def test_foreign_origin_is_refused(world: World, caplog: pytest.LogCapture
     assert r.status_code == 403 and r.json()["error"]["code"] == "bad_origin"
     r = await world.client.post("/admin/sign-out", headers={"origin": PUBLIC})
     assert r.status_code == 303
+
+
+async def test_origin_refusal_carries_a_correlation_id(world: World) -> None:
+    r = await world.client.post("/admin/sign-out", headers={"origin": "https://evil.example"})
+    assert r.status_code == 403 and r.headers.get("x-correlation-id")
+
+
+async def test_signed_in_without_a_role_gets_a_friendly_page(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    _, member = await owner_and_member(world, caplog)
+    for path in ("/admin/settings", "/admin/people"):
+        r = await world.browser(member).get(path)
+        assert r.status_code == 403 and r.headers["content-type"].startswith("text/html")
+        assert "ask the owner for a role" in r.text.lower()
+        assert "/admin/sign-out" in r.text  # a way out for the wrong account
+    r = await world.browser(member).get("/admin/", follow_redirects=True)
+    assert r.status_code == 403 and "ask the owner for a role" in r.text.lower()
+
+
+async def test_people_link_needs_the_rights_right(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, member = await owner_and_member(world, caplog)
+    assert 'href="/admin/people"' in (await world.browser(owner).get("/admin/settings")).text
+    aino = next(u for u, _ in await world.store.list_users() if u.name == "Aino")
+    await world.auth.set_role(aino.id, "admin", "u_owner")
+    page = await world.browser(member).get("/admin/settings")
+    assert page.status_code == 200
+    assert 'href="/admin/people"' not in page.text and 'href="/admin/settings"' in page.text

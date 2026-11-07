@@ -113,8 +113,15 @@ def world(tmp_path: Path) -> World:
         httpx.AsyncClient(transport=httpx.MockTransport(fake.handler)),
     )
     store = MemoryAuthStore()
-    auth = Auth(store, bus, PUBLIC, discord, now=lambda: clock[0])
     holder: list[RightsChecker] = []
+    auth = Auth(
+        store,
+        bus,
+        PUBLIC,
+        discord,
+        now=lambda: clock[0],
+        on_session_end=lambda session_id: holder[0].forget_session(session_id),
+    )
 
     async def authorize(cookie: str | None, right: str) -> Session:
         return await holder[0].check(cookie, right)

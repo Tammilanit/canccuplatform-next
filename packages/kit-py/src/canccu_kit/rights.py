@@ -111,6 +111,11 @@ class RightsChecker:
             raise MissingRight(f"needs right {right}")
         return session
 
+    def forget_session(self, session_id: str) -> None:
+        """Drop one session's cached answer, e.g. when it ends in this process (admin's sign-out),
+        so a copied cookie stops working at once instead of after up to 30 s."""
+        self._forget(session_id)
+
     async def handle_event(self, event: Event) -> None:
         """Feed events from `events:admin`; drops the user's cached sessions on a rights change."""
         if event.type != "admin.rights.changed":
