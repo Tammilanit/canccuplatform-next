@@ -71,7 +71,7 @@ paths:
       summary: Ask for a pairing code
       description: |
         From one of the event's venue addresses (unless the venue IP check is off). Sets the cookie `canccu_pairing`.
-        429 `rate_limited` over 10 open codes for the event.
+        429 `rate_limited` over 10 open codes for the event, or over 3 open codes for the request's address.
       security:
         - {}
       responses:
@@ -218,12 +218,16 @@ paths:
       tags: [device]
       operationId: getDeviceHome
       summary: Where a moved device goes
-      description: Valid token and venue address; answers also when the device serves another event, or none.
+      description: |
+        Venue address and the device's current token, or a superseded one (contracts/screen.md, Moving); answers also when
+        the device serves another event, or none. Only the current token gets a transfer code; a superseded token gets
+        only the redirect URL, without a code, until it expires (7 days after the transfer, or the first use of the new
+        token, whichever is first).
       security:
         - device: []
       responses:
         "200":
-          description: The screen URL of the device's current event with a transfer code, or null for a parked device.
+          description: The screen URL of the device's current event (with a transfer code for the current token only), or null for a parked device.
           content:
             application/json:
               schema:
@@ -237,7 +241,9 @@ paths:
       tags: [device]
       operationId: redeemTransfer
       summary: Redeem a transfer code
-      description: On the new event's hostname, from its venue address. Sets a new `canccu_device` cookie and revokes the old token. Audited.
+      description: |
+        On the new event's hostname, from its venue address. Sets a new `canccu_device` cookie with a new current token;
+        the replaced token becomes superseded (kept in `superseded_token_hashes`), not revoked. Audited.
       security:
         - {}
       requestBody:
@@ -1794,7 +1800,7 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
     TooMany:
-      description: "`rate_limited`."
+      description: "`rate_limited`: for pairing, over 10 open codes for the event or over 3 for one address."
       content:
         application/json:
           schema:
@@ -2031,7 +2037,7 @@ components:
       properties:
         url:
           type: [string, "null"]
-          description: "`https://<primary hostname>/screen/#transfer=<code>`; the code is single use and lives 60 seconds."
+          description: "`https://<primary hostname>/screen/#transfer=<code>` for the current token (the code is single use and lives 60 seconds); `https://<primary hostname>/screen/` without a code for a superseded token."
     Transfer:
       type: object
       required: [code]
