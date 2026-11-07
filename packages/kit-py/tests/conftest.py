@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import pytest
 
 from canccu_kit import AdminClient
+from canccu_kit.access import TenantContext
 from canccu_kit.testing import MemoryStreamStore
 
 
@@ -41,3 +42,26 @@ def admin() -> FakeAdmin:
 
 def json_response(status: int, body: Any) -> httpx.Response:
     return httpx.Response(status, json=body)
+
+
+def tenant_context(**overrides: Any) -> TenantContext:
+    """A live demo tenant at a venue with one IPv4 and one IPv6 prefix; override any field."""
+    context: dict[str, Any] = {
+        "tenant_id": "demo",
+        "status": "live",
+        "primary_hostname": "demo.example.org",
+        "time_zone": "Europe/Berlin",
+        "info_page_mode": "public",
+        "membership": "open",
+        "admin_access": "restricted",
+        "venue": {
+            "id": "v1",
+            "name": "Demo Hall",
+            "addresses": ["192.0.2.0/24", "2001:db8:1::/48"],
+        },
+        "venue_ip_check": {"enabled": True, "disabled_until": None, "reason": None},
+        "flags_version": 0,
+        "flags": {},
+    }
+    context.update(overrides)
+    return cast(TenantContext, context)

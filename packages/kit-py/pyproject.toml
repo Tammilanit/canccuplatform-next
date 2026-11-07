@@ -17,6 +17,7 @@ dependencies = [
 starlette = ["starlette==1.10.0"]
 dev = [
   "starlette==1.10.0",
+  "asyncpg==0.30.0",
   "pytest==9.2.0",
   "pytest-asyncio==1.4.1.post1",
   "ruff==0.17.3",
@@ -44,7 +45,7 @@ explicit_package_bases = true
 exclude = ["^\\.venv/"]
 
 [[tool.mypy.overrides]]
-module = ["uuid6"]
+module = ["uuid6", "asyncpg", "asyncpg.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

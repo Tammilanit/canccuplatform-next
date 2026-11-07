@@ -18,6 +18,10 @@ class StreamStore(Protocol):
         self, streams: dict[str, str], *, block_ms: int, count: int
     ) -> StreamEntries: ...
 
+    async def scan(self, pattern: str) -> list[str]:
+        """Names of the streams matching a glob pattern, e.g. `t:*:events:pizza`."""
+        ...
+
     async def ping(self) -> bool: ...
 
     async def close(self) -> None: ...
@@ -45,6 +49,13 @@ class ValkeyStreamStore:
             (str(stream), [(str(entry_id), dict(fields)) for entry_id, fields in entries])
             for stream, entries in (result or [])
         ]
+
+    async def scan(self, pattern: str) -> list[str]:
+        # A SCAN may return a key more than once while the keyspace is rehashed.
+        found: dict[str, None] = {}
+        async for key in self._client.scan_iter(match=pattern, count=1000, _type="stream"):
+            found[str(key)] = None
+        return list(found)
 
     async def ping(self) -> bool:
         return bool(await self._client.ping())

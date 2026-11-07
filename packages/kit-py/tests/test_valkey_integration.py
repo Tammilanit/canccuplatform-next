@@ -19,6 +19,7 @@ import valkey.asyncio as valkey
 
 from canccu_kit import STREAM_MAXLEN, Bus, Event, ValkeyStreamStore, new_id
 from canccu_kit.bus import stream_name
+from canccu_kit.tenant import current_tenant, tenant_scope, tenant_stream
 
 URL = os.environ.get("CANCCU_VALKEY_URL", "")
 TIME_RE = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$")
@@ -78,7 +79,9 @@ async def test_ping(vk: Valkeys) -> None:
 async def test_publish_writes_one_event_field_with_a_valid_envelope(vk: Valkeys) -> None:
     module = unique_module()
     stream = vk.track(module)
-    sent = await Bus(vk.store, module).publish(f"{module}.thing.happened", {"n": 1}, version=1)
+    sent = await Bus(vk.store, module).publish(
+        f"{module}.thing.happened", {"n": 1}, version=1, platform=True
+    )
 
     entries = await vk.raw.xrange(stream)
     assert len(entries) == 1
@@ -120,7 +123,7 @@ async def test_publish_keeps_the_stream_near_stream_maxlen(vk: Valkeys) -> None:
         for _ in range(STREAM_MAXLEN + 500):
             pipe.xadd(stream, {"event": "{}"})
         await pipe.execute()
-    await Bus(vk.store, module).publish(f"{module}.thing.happened", {}, version=1)
+    await Bus(vk.store, module).publish(f"{module}.thing.happened", {}, version=1, platform=True)
     length = await vk.raw.xlen(stream)
     assert STREAM_MAXLEN <= length < STREAM_MAXLEN + 500
 
@@ -135,7 +138,7 @@ async def test_subscribe_delivers_once_even_when_an_entry_is_added_twice(vk: Val
     )
     try:
         published = await Bus(vk.store, source).publish(
-            f"{source}.thing.happened", {"n": 1}, version=1
+            f"{source}.thing.happened", {"n": 1}, version=1, platform=True
         )
         await received.until(1)
         assert received.events[0].id == published.id
@@ -155,6 +158,55 @@ async def test_subscribe_delivers_once_even_when_an_entry_is_added_twice(vk: Val
         await received.until(2)
         await asyncio.sleep(0.3)
         assert [e.data["n"] for e in received.events] == [1, 2]
+    finally:
+        await subscription.close()
+        await reader.close()
+
+
+async def test_scan_finds_tenant_streams_and_each_tenant_is_read_in_its_own_context(
+    vk: Valkeys,
+) -> None:
+    source = unique_module()
+    vk.streams += [tenant_stream(source, t) for t in ("it-a", "it-b")]
+    vk.streams.append(stream_name("tenants"))
+    bus = Bus(vk.store, source)
+    with tenant_scope("it-a"):
+        await bus.publish(f"{source}.thing.happened", {"n": 1}, version=1)
+    assert await vk.store.scan(f"t:*:events:{source}") == [tenant_stream(source, "it-a")]
+
+    received: list[tuple[str | None, Event]] = []
+    arrived = asyncio.Event()
+
+    async def handler(event: Event) -> None:
+        received.append((current_tenant(), event))
+        arrived.set()
+
+    async def until(count: int) -> None:
+        async with asyncio.timeout(5):
+            while len(received) < count:
+                await arrived.wait()
+                arrived.clear()
+
+    reader = ValkeyStreamStore.from_url(URL)
+    subscription = Bus(reader, unique_module()).subscribe_tenants(
+        [source], handler, from_id="0", block_ms=200
+    )
+    try:
+        await until(1)
+        # A tenant announced after start is read from the start of its stream.
+        with tenant_scope("it-b"):
+            await bus.publish(f"{source}.thing.happened", {"n": 2}, version=1)
+        await Bus(vk.store, "tenants").publish(
+            "tenants.tenant.created",
+            {"tenant_id": "it-b", "status": "draft"},
+            version=1,
+            platform=True,
+        )
+        await until(2)
+        assert [(t, e.tenant, e.data["n"]) for t, e in received] == [
+            ("it-a", "it-a", 1),
+            ("it-b", "it-b", 2),
+        ]
     finally:
         await subscription.close()
         await reader.close()
