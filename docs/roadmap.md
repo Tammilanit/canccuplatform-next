@@ -38,10 +38,11 @@ The plan from today to the full new platform: **a commercial-scale, polished and
 The roadmap changes as we learn ([0019](decisions/0019-work-packages.md)).
 - **Roadmap notes:** whoever finds something that changes the plan (a worker, planner or reviewer) writes a `Roadmap note:` line in the PR; work that fits the plan as it is goes in a `Follow-up:` line. Nobody splits an issue or creates one for them.
 - **The lead's triage:** the lead sorts each note into this step, a later step, or a roadmap change for the maintainer.
-- **The review at each checkpoint ◆:** the maintainer sees the demo and the step summary (packages, risk classes, spend, roadmap notes); this file is updated in a PR, and the maintainer says go before the next step starts.
+- **The review at each checkpoint ◆:** the maintainer sees the demo and the step summary (packages, risk classes, spend, roadmap notes, and the step's contract PRs, reviewed together, [0024](decisions/0024-additive-contract-docs-normal-risk.md)); this file is updated in a PR, and the maintainer says go before the next step starts.
 - **Change log:** every change to this file adds a dated line below, newest first: `- YYYY-MM-DD: <what changed> (<issue or PR>)`.
 
 ### Change log
+- 2026-11-07: a contract doc that only adds is normal risk, and the checkpoint's step summary lists the step's contract PRs for the maintainer to review together ([0024](decisions/0024-additive-contract-docs-normal-risk.md), #136).
 - 2026-11-06: every step from step 3 on starts with a design brief (`docs/briefs/`) and a brainstorming round with the product owner, and its other issues wait for the brief; issues gain a Room to design section ([0023](decisions/0023-step-design-briefs.md), #130).
 - 2026-11-06: the product vision recorded ([0022](decisions/0022-product-vision.md)): who it is for, Pulse and push in step 3, Moments at the peaks and one announce action in step 4, the core features in their steps, the App parallel track for the phone hub, the backlog under Not scheduled yet, and what is not planned (#102).
 - 2026-11-06: the reuse table (Building on the legacy) updated from the legacy inventory summary, with the main features of every legacy repo, the new features and six flagged changes of order and dependencies, OC1, OC2, OC4, OC6, OC7 and OC8 (#76).
