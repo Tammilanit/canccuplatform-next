@@ -13,7 +13,7 @@ How modules talk to each other and what an event profile looks like. Modules use
 | [notify.openapi.yaml](notify.openapi.yaml) | Machine-readable notify API (OpenAPI 3.1) |
 | [games.md](games.md) | Games contract: the game catalogue (baseline and each event's own), matching Discord activities, moderation, surges, games events |
 | [games.openapi.yaml](games.openapi.yaml) | Machine-readable games API (OpenAPI 3.1) |
-| [events.md](events.md) | Event catalog: every cross-module event, its audience and consumers, linked to its payload |
+| [events.md](events.md) | Event catalog: every cross-module event, its audience and consumers, linked to its payload; provisional `version: 1` outlines for pizza, tournament, bot and the screen overrides (`moments.*`) until those contracts are written |
 | [tenants.md](tenants.md) | Tenants contract: events as tenants, hostnames, venues and the venue profile, users, roles and membership, access (info-page mode, venue IP check, admin access), feature flags, lifecycle, series and clone, privacy and retention, the audit log, global and per-tenant tables |
 | [tenants.openapi.yaml](tenants.openapi.yaml) | Machine-readable tenants API (OpenAPI 3.1) |
 | [profile.md](profile.md) | Event profile format v1 |
