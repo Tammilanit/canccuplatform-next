@@ -59,6 +59,7 @@ A surge is the moment many people at the event start the same game. It feeds the
 - **Start:** when a game's players reach `surge_threshold` and the game is not cooling down, the module emits `games.surge.started` and the game's cool-down of `surge_cooldown_minutes` begins: no new surge for that game until it ends.
 - **End:** when the players stay below the threshold for two intervals in a row, the module emits `games.surge.ended`.
 - Hidden and merged games never surge; unmatched activities never surge.
+- Surge events carry counts only. Who plays the game is read from the bot's read API with the game's id ([bot.md](bot.md#who-plays-what)), by callers allowed to see it.
 
 ## Settings
 Per event, through the admin settings API (module `games`). Everything here is optional per event.

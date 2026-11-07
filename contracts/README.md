@@ -7,11 +7,11 @@ How modules talk to each other and what an event profile looks like. Modules use
 |---|---|
 | [admin.md](admin.md) | Admin contract: settings, health (shared by all modules), session and rights, event naming and envelope, admin events |
 | [admin.openapi.yaml](admin.openapi.yaml) | Machine-readable admin API (OpenAPI 3.1) |
-| [agenda.md](agenda.md) | Agenda contract: the run-of-show, edited live, each event's own kinds, notification channels per event, kind and item, its reminders, clone with an event, agenda events |
+| [agenda.md](agenda.md) | Agenda contract: the run-of-show, edited live, each event's own kinds, notification channels per event, kind and item, tournament sessions kept as items, its reminders, clone with an event, agenda events |
 | [agenda.openapi.yaml](agenda.openapi.yaml) | Machine-readable agenda API (OpenAPI 3.1) |
 | [notify.md](notify.md) | Notify contract: the topic registry (topic types, triggers, per-event configuration, custom topics), per-person channels and follows, Web Push, delivery rules, check-in by the rotating QR, the phone hub and its privacy page |
 | [notify.openapi.yaml](notify.openapi.yaml) | Machine-readable notify API (OpenAPI 3.1) |
-| [bot.md](bot.md) | Bot contract, connections part: the client pool (the shared bot or an event's own application, its encrypted credentials), binding a guild with Manage Server through the OAuth bot-install flow, slash commands per guild from feature flags, per-event isolation of client failures and rate limits, bot connection events |
+| [bot.md](bot.md) | Bot contract, connections part: the client pool (the shared bot or an event's own application, its encrypted credentials), binding a guild with Manage Server through the OAuth bot-install flow, slash commands per guild from feature flags, per-event isolation of client failures and rate limits, the who-plays-what read API, bot connection events |
 | [bot.openapi.yaml](bot.openapi.yaml) | Machine-readable bot API (OpenAPI 3.1) |
 | [games.md](games.md) | Games contract: the game catalogue (baseline and each event's own), matching Discord activities, moderation, surges, games events |
 | [games.openapi.yaml](games.openapi.yaml) | Machine-readable games API (OpenAPI 3.1) |

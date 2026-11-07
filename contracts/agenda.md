@@ -27,7 +27,8 @@ An item is one entry of the run-of-show (`Item` in the OpenAPI file).
 | `reminder_leads_minutes` | Lead times for its reminders (see Reminders); `null` uses its kind's, else the event's setting; `[]` means none |
 | `notify` | The channels that announce this item's reminders and changes (see Notification channels); `null` uses its kind's choice, else the event's setting |
 | `notify_channels` | Read-only: the channels in effect, after `notify`, the kind and the event's setting are applied. Consumers act on this field |
-| `links` | `tournament_id` (a tournament of the tournament module) and `moment_id` (a Moment of the moments module), both optional. They are ids owned by those modules; the agenda stores them and does not read those modules' data |
+| `links` | `tournament_id` (a tournament of the tournament module), `tournament_session_id` (a session of it) and `moment_id` (a Moment of the moments module), all optional. They are ids owned by those modules; the agenda stores them and does not read those modules' data. `tournament_session_id` is set only by the agenda itself (see Tournament sessions); a write that sets it is 400 `invalid_request` |
+| `managed_by` | Read-only: `tournament` for an item that mirrors a tournament session (see Tournament sessions); absent on the organiser's own items |
 | `cloned_from` | The source item's id when the item came from a clone; otherwise absent |
 | `revision` | Starts at 1, +1 on every change of the item; used for optimistic concurrency |
 
@@ -86,9 +87,20 @@ All writes need the right `agenda.items.write`. Each write that changes an item 
 - **Cancel:** `POST /api/agenda/items/{item_id}/cancel` with `revision`. Emits `agenda.item.cancelled`. Cancelling is final; add the item again to bring it back.
 - **Remove:** `DELETE /api/agenda/items/{item_id}?revision=` → 204. For mistakes only; during the event, cancel instead so people see it. Emits `agenda.item.removed`.
 
-Errors: 400 `invalid_request` (for example `ends_at` not after `starts_at`, or a `quiet_hours` item without `ends_at`), 400 `unknown_kind`, 409 `version_conflict`, 409 `item_cancelled` (editing or delaying a cancelled item), 409 `item_started`, 409 `event_archived`.
+Errors: 400 `invalid_request` (for example `ends_at` not after `starts_at`, or a `quiet_hours` item without `ends_at`), 400 `unknown_kind`, 409 `version_conflict`, 409 `item_cancelled` (editing or delaying a cancelled item), 409 `item_started`, 409 `item_managed` (a change a tournament session owns, see Tournament sessions), 409 `event_archived`.
 
 The screen follows every change event, and `agenda.item.started` and `agenda.item.ended`, to keep now and next current without polling.
+
+## Tournament sessions
+Every session of the tournament module is an item of the run-of-show, so the event's schedule always shows the tournament. The agenda keeps those items itself, from the tournament's events ([events.md](events.md#tournament)); the tournament module never writes the agenda.
+
+- **Added:** on `tournament.session.added` the agenda adds an item: `title` the session's game name (with " final" for `is_final`), kind `tournament` (`other` when the event's kind list has no `tournament`), `starts_at` and `ends_at` from the session, visibility `public`, `links.tournament_id` and `links.tournament_session_id` from the session, and `managed_by: tournament`. Lead times and `notify` are `null`, so the kind's and the event's choices apply. Emits `agenda.item.added` as for any item.
+- **Moved:** on `tournament.session.changed` it sets the item's title and times from the session. Times that differ from the item's current ones are a move (a new plan, as under Editing live); equal times change nothing, so a session that only follows the agenda's own delay (below) keeps the item's planned times and its delay. Emits `agenda.item.changed` when anything changed.
+- **Cancelled and removed:** on `tournament.session.cancelled` the item is cancelled (also a running one, which ends it, see Reminders), and on `tournament.session.removed` it is removed; each emits its agenda event. A cancelled session that is reopened (`tournament.session.changed` with a status other than `cancelled`) gets a new item, and its cancelled item is removed, so a session has one item at a time.
+- **One item per session:** the agenda finds the item by `links.tournament_session_id`, unique per event. It applies a session event only when its `session.revision` is newer than the last one it applied, so a redelivered or late event changes nothing.
+- **What the organiser edits:** the session owns the item's title, kind, times, status and links. A `PATCH` of any of them, a cancel or a remove is 409 `item_managed`: change the session in the tournament module. Description, location, zone, visibility, lead times and `notify` stay the organiser's in the agenda.
+- **Delays are the exception:** an organiser running late delays the run-of-show here, and a delay, also with `following`, shifts session items like any other. The tournament module follows `agenda.item.delayed` for items with `links.tournament_session_id` and moves the session to the item's new times; its `tournament.session.changed` then finds the times equal and changes nothing here.
+- **Clone:** session items are not copied (see Clone with an event); the tournament module's own clone brings the sessions, and their events add their items.
 
 ## Reminders
 Consumers subscribe to the agenda stream; the agenda module does the timing once per event, so the bot, the screen and Notify never run their own clocks for the run-of-show.
@@ -103,7 +115,7 @@ A new event of a series can be cloned from the previous one, dates shifted, then
 
 - `POST /api/agenda/clone` with `source_tenant_id` and `shift_seconds`, on the new event's hostname. Needs `agenda.items.write` on the new event. The module asks the tenants API that both events are in one series and that the caller is an event admin of the source too; otherwise 403 `missing_right`. Only into an empty agenda: otherwise 409 `agenda_not_empty`. Only while the kind list is still the starter set, untouched (`kinds_version` 0): otherwise 409 `kinds_changed`, so kinds an organiser set up are never replaced silently; the organiser then adds the source's kinds by hand.
 - The module reads the source items in the source tenant's context and writes the copies in the new tenant's context, never both in one context.
-- Copied first: the source's kind list, replacing the new event's starter set. Then every scheduled item (cancelled ones are not), with title, description, kind, location, zone, visibility, reminder leads and `notify`. The planned times plus `shift_seconds` become both the planned and current times, so the copy has no delays. `links` are dropped, because they name the source event's tournaments and Moments; `cloned_from` keeps the source item's id. Each copy starts at `revision` 1.
+- Copied first: the source's kind list, replacing the new event's starter set. Then every scheduled item (cancelled ones and items with `managed_by` are not), with title, description, kind, location, zone, visibility, reminder leads and `notify`. The planned times plus `shift_seconds` become both the planned and current times, so the copy has no delays. `links` are dropped, because they name the source event's tournaments and Moments; `cloned_from` keeps the source item's id. Each copy starts at `revision` 1.
 - Emits one `agenda.items.cloned`, not one event per item; consumers read the agenda again.
 
 ## Settings

@@ -372,6 +372,7 @@ paths:
         series (checked through the tenants API). Only into an empty agenda (409 `agenda_not_empty`) whose kind
         list is the untouched starter set, `kinds_version` 0 (409 `kinds_changed`). The source's kind list replaces
         the starter set; scheduled items are copied with their planned times shifted, no delays and no links.
+        Items that mirror a tournament session (`managed_by`) are not copied.
         Emits `agenda.items.cloned`.
       security:
         - session: []
@@ -441,7 +442,7 @@ components:
     Conflict:
       description: |
         `version_conflict` (stale `revision`), `item_cancelled`, `item_started` (delay of a started item with
-        no end), `agenda_not_empty` (clone), `kind_exists`, `kind_in_use`, `kind_required` (removing `other`), `kinds_changed` (clone)
+        no end), `item_managed` (a change the item's tournament session owns), `agenda_not_empty` (clone), `kind_exists`, `kind_in_use`, `kind_required` (removing `other`), `kinds_changed` (clone)
         or `event_archived` (the event is read-only).
       content:
         application/json:
@@ -551,6 +552,10 @@ components:
       properties:
         tournament_id:
           type: string
+        tournament_session_id:
+          type: string
+          readOnly: true
+          description: Set only by the agenda, on the item that mirrors a tournament session; a write that sets it is 400 `invalid_request`.
         moment_id:
           type: string
     ReminderLeads:
@@ -632,6 +637,13 @@ components:
             $ref: "#/components/schemas/Channel"
         links:
           $ref: "#/components/schemas/Links"
+        managed_by:
+          type: string
+          readOnly: true
+          enum: [tournament]
+          description: |
+            Set on an item that mirrors a tournament session. The session owns its title, kind, times, status
+            and links: changing them here, cancelling or removing it is 409 `item_managed`; delays still apply.
         cloned_from:
           $ref: "#/components/schemas/ItemId"
         revision:
