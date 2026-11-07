@@ -11,6 +11,8 @@ How modules talk to each other and what an event profile looks like. Modules use
 | [agenda.openapi.yaml](agenda.openapi.yaml) | Machine-readable agenda API (OpenAPI 3.1) |
 | [notify.md](notify.md) | Notify contract: the topic registry (topic types, triggers, per-event configuration, custom topics), per-person channels and follows, Web Push, delivery rules, check-in by the rotating QR, the phone hub and its privacy page |
 | [notify.openapi.yaml](notify.openapi.yaml) | Machine-readable notify API (OpenAPI 3.1) |
+| [bot.md](bot.md) | Bot contract, connections part: the client pool (the shared bot or an event's own application, its encrypted credentials), binding a guild with Manage Server through the OAuth bot-install flow, slash commands per guild from feature flags, per-event isolation of client failures and rate limits, bot connection events |
+| [bot.openapi.yaml](bot.openapi.yaml) | Machine-readable bot API (OpenAPI 3.1) |
 | [games.md](games.md) | Games contract: the game catalogue (baseline and each event's own), matching Discord activities, moderation, surges, games events |
 | [games.openapi.yaml](games.openapi.yaml) | Machine-readable games API (OpenAPI 3.1) |
 | [events.md](events.md) | Event catalog: every cross-module event, its audience and consumers, linked to its payload; provisional `version: 1` outlines for pizza, tournament, bot and the screen overrides (`moments.*`) until those contracts are written |

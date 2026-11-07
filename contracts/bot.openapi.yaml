@@ -1,0 +1,556 @@
+openapi: 3.1.0
+info:
+  title: Bot API
+  version: 1.0.0
+  summary: An event's Discord connection, its guild binding and the command registration.
+  description: |
+    Machine-readable part of the bot contract (connections). Prose, the client pool, isolation, secrets and
+    events: contracts/bot.md. Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
+    Paths under /api/bot act on the event (tenant) of the request's hostname, except the install callback,
+    which answers only on the central sign-in host, and the superadmin paths, which answer only on the
+    superadmin hostname. Bot tokens and client secrets are write-only: no response carries them.
+  license:
+    name: AGPL-3.0
+    identifier: AGPL-3.0-only
+servers:
+  - url: /
+    description: Same origin, behind Caddy; the hostname selects the event, the central sign-in host or the superadmin hostname.
+tags:
+  - name: connection
+    description: Which Discord application serves the event, and its client's status.
+  - name: guild
+    description: Binding the event's Discord server through the OAuth bot-install flow, and its slash commands.
+  - name: clone
+    description: Moving the connection and binding from the last event of a series.
+  - name: superadmin
+    description: On the superadmin hostname only.
+security:
+  - session: []
+paths:
+  /api/bot/connection:
+    get:
+      tags: [connection]
+      operationId: getConnection
+      summary: The event's connection, client status and binding
+      description: Right `bot.connection.read`. Never returns a credential's value.
+      responses:
+        "200":
+          description: The connection.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Connection"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    put:
+      tags: [connection]
+      operationId: setConnection
+      summary: Bring an own application, rotate a credential, or go back to the shared bot
+      description: |
+        The event-admin role itself. For `mode: own` the module checks the token with Discord before storing:
+        400 `token_invalid`, 400 `application_mismatch`. 409 `application_reserved` (the shared application),
+        `application_taken` (another event holds it), `guild_bound` (changing the application or the mode while
+        a guild is bound), `version_conflict`, `event_archived`. A credential left out keeps its stored value; a
+        new application needs both. Audited (which credential, never the value). Emits `bot.connection.changed`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConnectionUpdate"
+      responses:
+        "200":
+          description: The connection after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Connection"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [connection]
+      operationId: clearConnection
+      summary: Go back to the shared bot and erase the own credentials
+      description: |
+        The event-admin role itself. The same as `PUT` with `mode: shared`: 409 `guild_bound` while a guild is
+        bound. Also allowed on an archived event. Audited. Emits `bot.connection.changed` when the mode changed.
+      responses:
+        "200":
+          description: The connection, now `shared`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Connection"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/bot/guild/bind:
+    post:
+      tags: [guild]
+      operationId: startBind
+      summary: Start binding a guild through the OAuth bot-install flow
+      description: |
+        The event-admin role itself. Answers Discord's authorize URL for the event's application, with the scopes
+        `bot`, `applications.commands`, `identify` and `guilds`, the redirect URI on the central sign-in host and a
+        single-use `state` valid for 10 minutes, kept server-side with the event, the caller and the application.
+        409 `guild_bound` (the event already has a guild), `connection_incomplete` (an own application without
+        both credentials), `event_archived`.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BindStart"
+      responses:
+        "200":
+          description: Where to send the browser.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BindStarted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/bot/install/callback:
+    get:
+      tags: [guild]
+      operationId: finishBind
+      summary: Discord's redirect after the bot install (central sign-in host only)
+      description: |
+        Answers only on the central sign-in host; elsewhere 404 `not_found`. No session: the event, the user and
+        the application come from the stored `state`. The module exchanges `code`, checks that the Discord user is
+        the user who started, that they own the guild or hold Manage Server or Administrator on it (from their
+        guild list), that the bot is in the guild, that the guild is bound to no other event and that the event's
+        connection did not change. Then it binds the guild, registers its commands, audits the bind and emits
+        `bot.guild.bound`. The user's Discord access token is dropped after the checks. The browser always goes
+        back to the event's primary hostname with `bind=ok` or `bind=<error code>`: `discord_user_mismatch`,
+        `manage_server_required`, `bot_not_in_guild`, `guild_bound`, `connection_changed`, `access_denied`
+        (the person cancelled on Discord) or `discord_unavailable`.
+      security:
+        - {}
+      parameters:
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 128
+        - name: code
+          in: query
+          description: Absent when the person cancelled; Discord then sends `error`.
+          schema:
+            type: string
+            maxLength: 256
+        - name: guild_id
+          in: query
+          schema:
+            $ref: "#/components/schemas/Snowflake"
+        - name: error
+          in: query
+          schema:
+            type: string
+            maxLength: 64
+      responses:
+        "200":
+          description: |
+            A page on the central sign-in host naming the result, when the event has no active primary hostname
+            to go back to (contracts/tenants.md, Tenants).
+          content:
+            text/html:
+              schema:
+                type: string
+        "303":
+          description: Back to the admin pages on the event's primary hostname, with `bind=ok` or `bind=<error code>`.
+          headers:
+            Location:
+              description: An absolute URL on the event's primary hostname.
+              schema:
+                type: string
+                format: uri
+        "400":
+          description: "`state_invalid`: the state is unknown, used or expired, so no event can be named."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/bot/guild:
+    delete:
+      tags: [guild]
+      operationId: unbindGuild
+      summary: Unbind the event's guild
+      description: |
+        The event-admin role itself; also on an archived event. Removes the event's commands from the guild and
+        its route; the shared bot leaves the guild, an own bot stays but serves it no more. Audited. Emits
+        `bot.guild.unbound` with `reason: unbound`.
+      responses:
+        "204":
+          description: Unbound.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/bot/guild/commands/sync:
+    post:
+      tags: [guild]
+      operationId: syncCommands
+      summary: Register the guild's commands again now
+      description: |
+        The event-admin role itself. Writes the commands of the event's enabled flags in one bulk overwrite, in
+        the background; the binding's `commands` shows the result. 404 `not_found` without a binding;
+        409 `event_archived`.
+      responses:
+        "202":
+          description: Queued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Binding"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/bot/clone:
+    post:
+      tags: [clone]
+      operationId: cloneBot
+      summary: Move the connection and binding from the last event of the series
+      description: |
+        The event-admin role itself on this event and on the source, both in one series (otherwise
+        403 `missing_right`). 409 `source_live`, `already_connected` (this event has its own binding or
+        application), `event_archived`. Own credentials move inside the module, re-encrypted for this event. Nothing
+        to move is not an error. Audited in both events. Emits `bot.connection.changed` and `bot.guild.unbound`
+        (`reason: moved`) on the source and `bot.connection.changed` and `bot.guild.bound` on this event.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CloneRequest"
+      responses:
+        "200":
+          description: What moved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CloneResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/bot/guilds/{guild_id}/unbind:
+    post:
+      tags: [superadmin]
+      operationId: superadminUnbindGuild
+      summary: Unbind any guild
+      description: |
+        Superadmin with `mfa_enabled`, on the superadmin hostname only (elsewhere 404 `not_found`). Audited with
+        the reason. Emits `bot.guild.unbound` with `reason: superadmin` on the event's stream.
+      parameters:
+        - name: guild_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/Snowflake"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Reason"
+      responses:
+        "204":
+          description: Unbound.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  responses:
+    BadRequest:
+      description: |
+        `invalid_request` (a field is missing or invalid), `token_invalid` (Discord refused the bot token) or
+        `application_mismatch` (the token belongs to another application).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: "`not_signed_in`: no valid session."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: |
+        `missing_right` (the right is missing, or the call needs the event-admin role itself), `mfa_required`
+        (a superadmin without Discord two-factor) or `admin_access_restricted` (contracts/tenants.md, Admin access).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: "`not_found`: no binding, no such guild binding, or the path does not answer on this hostname."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: |
+        `version_conflict` (stale `revision`), `application_reserved`, `application_taken`, `guild_bound`,
+        `connection_incomplete`, `source_live`, `already_connected` or `event_archived` (the event is read-only).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              pattern: "^[a-z][a-z0-9_]*$"
+              examples: [guild_bound]
+            message:
+              type: string
+    Snowflake:
+      type: string
+      description: A Discord id, as a string.
+      pattern: "^[0-9]{17,20}$"
+    UserId:
+      type: string
+      pattern: "^[A-Za-z0-9_-]{1,64}$"
+      examples: [u_123]
+    TenantId:
+      type: string
+      pattern: "^[a-z][a-z0-9-]{2,31}$"
+      examples: [demo]
+    Mode:
+      type: string
+      enum: [shared, own]
+    BotUser:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          $ref: "#/components/schemas/Snowflake"
+        name:
+          type: string
+          maxLength: 100
+    Credentials:
+      type: object
+      description: Which credentials are stored, never their values.
+      required: [bot_token_set, client_secret_set, updated_at, updated_by]
+      properties:
+        bot_token_set:
+          type: boolean
+        client_secret_set:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+        updated_by:
+          description: The user who last changed a credential; `null` after that user was deleted.
+          oneOf:
+            - $ref: "#/components/schemas/UserId"
+            - type: "null"
+    ClientStatus:
+      type: object
+      required: [status, error_code, since]
+      properties:
+        status:
+          type: string
+          enum: [connecting, ready, rate_limited, paused, failed]
+        error_code:
+          oneOf:
+            - type: string
+              enum: [token_invalid, intents_missing, invalid_requests, discord_unavailable]
+            - type: "null"
+        since:
+          type: string
+          format: date-time
+    CommandsState:
+      type: object
+      required: [status, flags_version, registered_at, error_code]
+      properties:
+        status:
+          type: string
+          enum: [registered, pending, failed, removed]
+        flags_version:
+          description: The event's `flags_version` the registered commands follow (contracts/tenants.md, Feature flags).
+          oneOf:
+            - type: integer
+              minimum: 0
+            - type: "null"
+        registered_at:
+          oneOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        error_code:
+          oneOf:
+            - type: string
+              pattern: "^[a-z][a-z0-9_]*$"
+              examples: [rate_limited]
+            - type: "null"
+    Binding:
+      type: object
+      required: [guild_id, guild_name, application_id, bound_by, bound_at, commands]
+      properties:
+        guild_id:
+          $ref: "#/components/schemas/Snowflake"
+        guild_name:
+          type: string
+          maxLength: 100
+        application_id:
+          $ref: "#/components/schemas/Snowflake"
+        bound_by:
+          description: The user who bound it (a clone keeps it); `null` after that user was deleted.
+          oneOf:
+            - $ref: "#/components/schemas/UserId"
+            - type: "null"
+        bound_at:
+          type: string
+          format: date-time
+        commands:
+          $ref: "#/components/schemas/CommandsState"
+    Connection:
+      type: object
+      required: [mode, application_id, bot_user, credentials, client, guild, revision]
+      properties:
+        mode:
+          $ref: "#/components/schemas/Mode"
+        application_id:
+          $ref: "#/components/schemas/Snowflake"
+        bot_user:
+          oneOf:
+            - $ref: "#/components/schemas/BotUser"
+            - type: "null"
+        credentials:
+          description: For `own` only; `null` for `shared`.
+          oneOf:
+            - $ref: "#/components/schemas/Credentials"
+            - type: "null"
+        client:
+          $ref: "#/components/schemas/ClientStatus"
+        guild:
+          oneOf:
+            - $ref: "#/components/schemas/Binding"
+            - type: "null"
+        revision:
+          type: integer
+          minimum: 0
+    ConnectionUpdate:
+      type: object
+      required: [mode, revision]
+      additionalProperties: false
+      properties:
+        mode:
+          $ref: "#/components/schemas/Mode"
+        application_id:
+          description: Required for `own`; not allowed for `shared`.
+          $ref: "#/components/schemas/Snowflake"
+        bot_token:
+          description: Write-only. Required for a new own application; left out, the stored one is kept.
+          type: string
+          minLength: 50
+          maxLength: 200
+          writeOnly: true
+        client_secret:
+          description: Write-only. Required for a new own application; left out, the stored one is kept.
+          type: string
+          minLength: 16
+          maxLength: 128
+          writeOnly: true
+        revision:
+          type: integer
+          minimum: 0
+    BindStart:
+      type: object
+      additionalProperties: false
+      properties:
+        guild_id:
+          description: Preselects this guild on Discord's page.
+          $ref: "#/components/schemas/Snowflake"
+    BindStarted:
+      type: object
+      required: [authorize_url, expires_at]
+      properties:
+        authorize_url:
+          type: string
+          format: uri
+          examples: ["https://discord.com/oauth2/authorize?client_id=100000000000000002&scope=bot+applications.commands+identify+guilds"]
+        expires_at:
+          description: When the `state` in the URL expires.
+          type: string
+          format: date-time
+    CloneRequest:
+      type: object
+      required: [source_tenant_id]
+      additionalProperties: false
+      properties:
+        source_tenant_id:
+          $ref: "#/components/schemas/TenantId"
+    CloneResult:
+      type: object
+      required: [moved_connection, moved_binding, connection]
+      properties:
+        moved_connection:
+          description: True when the source's own application moved.
+          type: boolean
+        moved_binding:
+          type: boolean
+        connection:
+          $ref: "#/components/schemas/Connection"
+    Reason:
+      type: object
+      required: [reason]
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: canccu_session
+      description: Opaque session id (contracts/admin.md, Session and rights). Rights are checked through admin.

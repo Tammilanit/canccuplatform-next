@@ -52,6 +52,16 @@ Emitter: `agenda`. Audience: event-wide, by the item's `visibility`. Payloads: [
 
 Every item in these events carries `notify_channels`, the channels the organiser chose for it ([agenda.md](agenda.md#notification-channels)); each consumer announces only on its own.
 
+## Bot connections
+Emitter: `bot`. Audience: system. Payloads: [bot.md](bot.md#events-version-1). The bot's other events (presence, activities, voice channels) are still provisional: see [Bot](#bot) below.
+
+| Type | Meaning | Consumers |
+|---|---|---|
+| `bot.connection.changed` | The event's Discord application or a credential changed (never the value) | admin |
+| `bot.client.changed` | The event's Discord client changed status (ready, rate limited, paused, failed) | admin, notify (whether a DM can go out) |
+| `bot.guild.bound` | A Discord guild was bound to the event | admin, notify |
+| `bot.guild.unbound` | The event's guild binding ended | admin, notify |
+
 ## Games
 Emitter: `games`. Audience: event-wide, `public`. Payloads: [games.md](games.md#events-version-1).
 
