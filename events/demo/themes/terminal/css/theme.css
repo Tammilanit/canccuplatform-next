@@ -1,0 +1,41 @@
+/* Terminal demo theme. Targets only stable classes (contracts/theming.md) and its own t- classes. */
+.canccu-surface--screen {
+  letter-spacing: 0.02em;
+}
+.canccu-surface--screen .canccu-widget {
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  background: var(--canccu-color-surface);
+  padding: var(--canccu-gap);
+}
+.canccu-widget__title {
+  font-family: var(--canccu-font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--canccu-color-primary);
+}
+.canccu-widget--ticker {
+  border-width: var(--canccu-border-width) 0 0;
+}
+.t-clock {
+  font-family: var(--canccu-font-display);
+  font-size: 4rem;
+  font-weight: 600;
+  text-align: right;
+}
+.t-clock__date {
+  font-size: 1.35rem;
+  color: var(--canccu-color-text-muted);
+}
+.t-agenda__item {
+  display: flex;
+  gap: var(--canccu-gap);
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--canccu-color-border);
+}
+.t-agenda__time {
+  min-width: 6ch;
+  color: var(--canccu-color-accent);
+}
+.t-agenda__item--now {
+  color: var(--canccu-color-primary);
+}

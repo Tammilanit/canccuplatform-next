@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Contracts check: validate event profiles against the schema, check their asset
-# paths exist, and lint the OpenAPI contracts. CI runs it as the `contracts` check.
+# Contracts check: validate event profiles and theme packages against their schemas, check
+# the paths they name exist, and lint the OpenAPI contracts. CI runs it as the `contracts` check.
 # Usage: check-contracts [--dry-run]     (needs Node 22 and network for npx on first run)
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
@@ -8,6 +8,9 @@ cd "$(dirname "$0")/.." || exit 2
 AJV=(npx --yes -p ajv-cli@5.0.0 -p ajv-formats@3.0.1 ajv)
 REDOCLY=(npx --yes @redocly/cli@1.34.5)
 SCHEMA=contracts/profile.schema.json
+THEME_SCHEMA=contracts/theme.schema.json
+# Every file a theme manifest names sits in one of these folders (contracts/theming.md).
+THEME_PATH='(css|fonts|images|templates|embeds)/[A-Za-z0-9._/-]+'
 
 dry=0
 if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
@@ -15,12 +18,16 @@ if [ $# -gt 0 ]; then echo "usage: check-contracts [--dry-run]" >&2; exit 2; fi
 
 profiles=(events/*/profile.yaml)
 apis=(contracts/*.openapi.yaml)
+shopt -s nullglob
+themes=(events/*/themes/*/theme.yaml)
+shopt -u nullglob
 [ -e "${profiles[0]}" ] || { echo "error: no events/*/profile.yaml found" >&2; exit 2; }
 [ -e "${apis[0]}" ] || { echo "error: no contracts/*.openapi.yaml found" >&2; exit 2; }
 
 if [ "$dry" = 1 ]; then
   echo "dry run, would check:"
   for p in "${profiles[@]}"; do echo "  profile  $p against $SCHEMA, and its asset paths"; done
+  for t in "${themes[@]}"; do echo "  theme    $t against $THEME_SCHEMA, and its file paths"; done
   for a in "${apis[@]}"; do echo "  openapi  $a (redocly lint, contracts/redocly.yaml)"; done
   exit 0
 fi
@@ -40,6 +47,19 @@ for p in "${profiles[@]}"; do
     [ -f "$dir/$asset" ] || { echo "FAIL asset   $dir/$asset does not exist"; missing=1; fail=1; }
   done < <(grep -v '^[[:space:]]*#' "$p" | grep -oE 'assets/[A-Za-z0-9._/-]+' | sort -u)
   [ "$missing" = 0 ] && echo "ok   assets  $p"
+done
+
+for t in "${themes[@]}"; do
+  if quiet "${AJV[@]}" validate --spec=draft2020 --strict=true -c ajv-formats -s "$THEME_SCHEMA" -d "$t"; then
+    echo "ok   schema  $t"
+  else
+    echo "FAIL schema  $t"; fail=1
+  fi
+  dir=$(dirname "$t"); missing=0
+  while IFS= read -r file; do
+    [ -f "$dir/$file" ] || { echo "FAIL file    $dir/$file does not exist"; missing=1; fail=1; }
+  done < <(grep -v '^[[:space:]]*#' "$t" | grep -oE "$THEME_PATH" | sort -u)
+  [ "$missing" = 0 ] && echo "ok   files   $t"
 done
 
 for a in "${apis[@]}"; do

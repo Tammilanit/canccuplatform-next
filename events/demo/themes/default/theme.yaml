@@ -1,0 +1,51 @@
+# Demo theme: the platform default colours put through the simple mode. Format: contracts/theming.md.
+# primary_text is the dark background colour, not white: white reaches only 3.7:1 on primary and status_down.
+schema_version: 1
+name: Default
+mode: simple
+brand:
+  logo: images/logo.svg
+  primary: "#3b82f6"
+  accent: "#f59e0b"
+  scheme: dark
+tokens:
+  colors:
+    background: "#0f172a"
+    surface: "#1e293b"
+    border: "#334155"
+    text: "#f8fafc"
+    text_muted: "#94a3b8"
+    primary: "#3b82f6"
+    primary_text: "#0f172a"
+    accent: "#f59e0b"
+    status_ok: "#22c55e"
+    status_degraded: "#eab308"
+    status_down: "#ef4444"
+images:
+  logo: images/logo.svg
+layouts:
+  - id: main
+    name: Main
+    aspect: "16:9"
+    grid:
+      columns: 12
+      rows: 12
+    regions:
+      - id: header
+        area: { column: 1, row: 1, columns: 12, rows: 2 }
+        widgets:
+          - widget: logo
+          - widget: clock
+        rotate_seconds: 20
+      - id: main
+        area: { column: 1, row: 3, columns: 8, rows: 9 }
+        widgets:
+          - widget: agenda_now
+      - id: side
+        area: { column: 9, row: 3, columns: 4, rows: 9 }
+        widgets:
+          - widget: announcements
+      - id: ticker
+        area: { column: 1, row: 12, columns: 12, rows: 1 }
+        widgets:
+          - widget: ticker

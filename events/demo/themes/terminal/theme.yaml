@@ -1,0 +1,111 @@
+# Demo theme in the advanced mode, ported from the legacy signage look (dark, cyan, condensed type).
+# Format: contracts/theming.md. Fonts: Barlow Semi Condensed, SIL OFL 1.1 (fonts/OFL.txt).
+schema_version: 1
+name: Terminal
+mode: advanced
+tokens:
+  colors:
+    background: "#121212"
+    surface: "#1b1b1b"
+    border: "#00d8d8"
+    text: "#d8d8d8"
+    text_muted: "#a8a8a8"
+    primary: "#00d8d8"
+    primary_text: "#121212"
+    accent: "#e8c040"
+    status_ok: "#00ff00"
+    status_degraded: "#e8c040"
+    status_down: "#ff4040"
+  fonts:
+    body: Barlow Semi Condensed
+    heading: Barlow Semi Condensed
+    display: Barlow Semi Condensed
+  sizes:
+    radius: 0px
+    border_width: 2px
+    gap: 1rem
+    safe_inset: 56px
+fonts:
+  - family: Barlow Semi Condensed
+    weight: 500
+    style: normal
+    file: fonts/barlow-semi-condensed-500.woff2
+    licence: OFL-1.1
+    licence_file: fonts/OFL.txt
+  - family: Barlow Semi Condensed
+    weight: 600
+    style: normal
+    file: fonts/barlow-semi-condensed-600.woff2
+    licence: OFL-1.1
+    licence_file: fonts/OFL.txt
+images:
+  logo: images/logo.svg
+css:
+  - css/theme.css
+templates:
+  clock_big:
+    widget: clock
+    file: templates/clock-big.mustache
+  agenda_list:
+    widget: agenda_now
+    file: templates/agenda-list.mustache
+embeds:
+  starfield:
+    entry: embeds/starfield/index.html
+    files:
+      - embeds/starfield/starfield.js
+layouts:
+  - id: main
+    name: Main hall
+    aspect: "16:9"
+    grid:
+      columns: 12
+      rows: 12
+    regions:
+      - id: header
+        area: { column: 1, row: 1, columns: 9, rows: 2 }
+        widgets:
+          - widget: logo
+      - id: clock
+        area: { column: 10, row: 1, columns: 3, rows: 2 }
+        widgets:
+          - widget: clock
+            template: clock_big
+      - id: backdrop
+        area: { column: 1, row: 3, columns: 12, rows: 9 }
+        layer: 0
+        widgets:
+          - widget: embed
+            embed: starfield
+      - id: main
+        area: { column: 2, row: 4, columns: 10, rows: 7 }
+        layer: 1
+        widgets:
+          - widget: agenda_now
+            template: agenda_list
+          - widget: announcements
+        rotate_seconds: 15
+      - id: ticker
+        area: { column: 1, row: 12, columns: 12, rows: 1 }
+        widgets:
+          - widget: ticker
+  - id: portrait
+    name: Café (portrait)
+    aspect: "9:16"
+    grid:
+      columns: 6
+      rows: 16
+    regions:
+      - id: header
+        area: { column: 1, row: 1, columns: 6, rows: 2 }
+        widgets:
+          - widget: logo
+      - id: main
+        area: { column: 1, row: 3, columns: 6, rows: 13 }
+        widgets:
+          - widget: agenda_now
+            template: agenda_list
+      - id: ticker
+        area: { column: 1, row: 16, columns: 6, rows: 1 }
+        widgets:
+          - widget: ticker

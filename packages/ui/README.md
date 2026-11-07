@@ -8,6 +8,8 @@ The shared look for platform pages. It has three parts:
 
 There's no framework and no client JS.
 
+The classes and custom properties listed in the [theming contract](../../contracts/theming.md#stable-classes-and-custom-properties) are stable: event themes rely on them. Renaming or removing one is a breaking contract change.
+
 ## Install (from a module)
 
 ```json

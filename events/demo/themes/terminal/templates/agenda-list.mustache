@@ -1,0 +1,9 @@
+{{! Field names follow the agenda_now widget's view-model in the screen contract. }}
+<h2 class="canccu-widget__title">{{title}}</h2>
+{{#items}}
+<div class="t-agenda__item t-agenda__item--{{state}}">
+  <span class="t-agenda__time">{{starts_text}}</span>
+  <span>{{name}}</span>
+</div>
+{{/items}}
+{{^items}}<p class="canccu-widget__body">Nothing on the agenda right now.</p>{{/items}}
