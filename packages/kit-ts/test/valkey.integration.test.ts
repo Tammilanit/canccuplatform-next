@@ -5,7 +5,16 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { validate as isUuid, version as uuidVersion } from "uuid";
 import { Valkey } from "iovalkey";
-import { Bus, STREAM_MAXLEN, ValkeyStreamStore, newId, streamName } from "../src/index.js";
+import {
+  Bus,
+  STREAM_MAXLEN,
+  ValkeyStreamStore,
+  currentTenant,
+  newId,
+  streamName,
+  tenantStream,
+  withTenant,
+} from "../src/index.js";
 import type { Event } from "../src/index.js";
 
 const url = process.env.CANCCU_VALKEY_URL;
@@ -56,7 +65,7 @@ describe.skipIf(!url)("ValkeyStreamStore against a real Valkey", () => {
     const sent = await new Bus(store, module).publish(
       `${module}.thing.happened`,
       { n: 1 },
-      { version: 1 },
+      { version: 1, platform: true },
     );
 
     const entries = (await raw.xrange(stream, "-", "+")) as [string, string[]][];
@@ -105,7 +114,7 @@ describe.skipIf(!url)("ValkeyStreamStore against a real Valkey", () => {
     const pipeline = raw.pipeline();
     for (let i = 0; i < STREAM_MAXLEN + 500; i += 1) pipeline.xadd(stream, "*", "event", "{}");
     await pipeline.exec();
-    await bus.publish(`${module}.thing.happened`, {}, { version: 1 });
+    await bus.publish(`${module}.thing.happened`, {}, { version: 1, platform: true });
     const len = await raw.xlen(stream);
     expect(len).toBeGreaterThanOrEqual(STREAM_MAXLEN);
     expect(len).toBeLessThan(STREAM_MAXLEN + 500);
@@ -127,7 +136,7 @@ describe.skipIf(!url)("ValkeyStreamStore against a real Valkey", () => {
       const published = await new Bus(store, source).publish(
         `${source}.thing.happened`,
         { n: 1 },
-        { version: 1 },
+        { version: 1, platform: true },
       );
       await waitFor(() => received.length === 1);
       expect(received[0]).toMatchObject({ id: published.id, data: { n: 1 } });
@@ -151,6 +160,47 @@ describe.skipIf(!url)("ValkeyStreamStore against a real Valkey", () => {
       await waitFor(() => received.length >= 2);
       await new Promise((r) => setTimeout(r, 300));
       expect(received.map((e) => e.data.n)).toEqual([1, 2]);
+    } finally {
+      await subscription.close();
+      await reader.close();
+    }
+  });
+
+  it("finds tenant streams with scan and reads each tenant in its own context", async () => {
+    const source = uniqueModule();
+    const tenants = ["it-a", "it-b"];
+    streams.push(...tenants.map((t) => tenantStream(source, t)), streamName("tenants"));
+    const bus = new Bus(store, source);
+    await withTenant("it-a", () =>
+      bus.publish(`${source}.thing.happened`, { n: 1 }, { version: 1 }),
+    );
+    expect(await store.scan(`t:*:events:${source}`)).toEqual([tenantStream(source, "it-a")]);
+
+    const received: [string | undefined, Event][] = [];
+    const reader = ValkeyStreamStore.fromUrl(url ?? "");
+    const subscription = new Bus(reader, uniqueModule()).subscribeTenants(
+      [source],
+      (event) => {
+        received.push([currentTenant(), event]);
+      },
+      { fromId: "0", blockMs: 200 },
+    );
+    try {
+      await waitFor(() => received.length === 1);
+      // A tenant announced after start is read from the start of its stream.
+      await withTenant("it-b", () =>
+        bus.publish(`${source}.thing.happened`, { n: 2 }, { version: 1 }),
+      );
+      await new Bus(store, "tenants").publish(
+        "tenants.tenant.created",
+        { tenant_id: "it-b", status: "draft" },
+        { version: 1, platform: true },
+      );
+      await waitFor(() => received.length === 2);
+      expect(received.map(([t, e]) => [t, e.tenant, e.data.n])).toEqual([
+        ["it-a", "it-a", 1],
+        ["it-b", "it-b", 2],
+      ]);
     } finally {
       await subscription.close();
       await reader.close();

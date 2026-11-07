@@ -25,7 +25,7 @@ describe("publish", () => {
     const event = await new Bus(store, "screen").publish(
       "screen.slide.shown",
       { slide: 3 },
-      { version: 1 },
+      { version: 1, platform: true },
     );
     expect(store.calls).toHaveLength(1);
     expect(store.calls[0]?.stream).toBe("events:screen");
@@ -45,7 +45,11 @@ describe("publish", () => {
 
   it("trims the stream with approximate MAXLEN ~ 10000", async () => {
     const store = new MemoryStreamStore();
-    await new Bus(store, "screen").publish("screen.slide.shown", {}, { version: 1 });
+    await new Bus(store, "screen").publish(
+      "screen.slide.shown",
+      {},
+      { version: 1, platform: true },
+    );
     expect(STREAM_MAXLEN).toBe(10000);
     expect(store.calls[0]).toMatchObject({ maxlen: 10000, approximate: true });
   });
@@ -58,9 +62,9 @@ describe("publish", () => {
     "tournament.match.finished",
   ])("refuses type %s", async (type) => {
     const store = new MemoryStreamStore();
-    await expect(new Bus(store, "screen").publish(type, {}, { version: 1 })).rejects.toThrow(
-      InvalidEventType,
-    );
+    await expect(
+      new Bus(store, "screen").publish(type, {}, { version: 1, platform: true }),
+    ).rejects.toThrow(InvalidEventType);
     expect(store.calls).toHaveLength(0);
   });
 
@@ -73,8 +77,14 @@ describe("publish", () => {
   it("carries the correlation id from context or options", async () => {
     const store = new MemoryStreamStore();
     const bus = new Bus(store, "screen");
-    await withCorrelation("req-1", () => bus.publish("screen.slide.shown", {}, { version: 1 }));
-    await bus.publish("screen.slide.shown", {}, { version: 1, correlationId: "explicit" });
+    await withCorrelation("req-1", () =>
+      bus.publish("screen.slide.shown", {}, { version: 1, platform: true }),
+    );
+    await bus.publish(
+      "screen.slide.shown",
+      {},
+      { version: 1, platform: true, correlationId: "explicit" },
+    );
     expect(first(store, 0).correlation_id).toBe("req-1");
     expect(first(store, 1).correlation_id).toBe("explicit");
   });
@@ -153,10 +163,18 @@ describe("subscribe", () => {
 
   it("reads several streams, including entries added while waiting", async () => {
     const store = new MemoryStreamStore();
-    await new Bus(store, "admin").publish("admin.settings.changed", {}, { version: 1 });
+    await new Bus(store, "admin").publish(
+      "admin.settings.changed",
+      {},
+      { version: 1, platform: true },
+    );
     const pending = collect(store, ["admin", "tournament"], 2);
     await new Promise((r) => setTimeout(r, 20));
-    await new Bus(store, "tournament").publish("tournament.match.finished", {}, { version: 1 });
+    await new Bus(store, "tournament").publish(
+      "tournament.match.finished",
+      {},
+      { version: 1, platform: true },
+    );
     expect((await pending).map((e) => e.source).sort()).toEqual(["admin", "tournament"]);
   });
 

@@ -14,6 +14,8 @@ export interface StreamStore {
     streams: Record<string, string>,
     options: { blockMs: number; count: number },
   ): Promise<StreamEntries>;
+  /** Names of the streams matching a glob pattern, e.g. `t:*:events:pizza`. */
+  scan(pattern: string): Promise<string[]>;
   ping(): Promise<void>;
   close(): Promise<void>;
 }
@@ -67,6 +69,26 @@ export class ValkeyStreamStore implements StreamStore {
         ([id, flat]): StreamEntry => [String(id), toFields(flat)],
       ),
     ]);
+  }
+
+  async scan(pattern: string): Promise<string[]> {
+    const found = new Set<string>();
+    let cursor = "0";
+    do {
+      const [next, keys] = (await this.client.call(
+        "SCAN",
+        cursor,
+        "MATCH",
+        pattern,
+        "COUNT",
+        "1000",
+        "TYPE",
+        "stream",
+      )) as [unknown, unknown[]];
+      cursor = String(next);
+      for (const key of keys) found.add(String(key));
+    } while (cursor !== "0");
+    return [...found];
   }
 
   async ping(): Promise<void> {

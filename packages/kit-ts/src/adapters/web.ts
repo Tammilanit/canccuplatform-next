@@ -1,7 +1,11 @@
 /** Web-standard adapter (Request → Response): Hono, Bun, Deno-style and fetch handlers. */
 import { CORRELATION_HEADER, withCorrelation } from "../context.js";
 import { KitError, codeForStatus, errorBody, internalErrorBody } from "../errors.js";
+import type { TenantContext } from "../access.js";
 import type { Health } from "../health.js";
+import { UnknownHost } from "../resolve.js";
+import type { TenantResolver } from "../resolve.js";
+import { withTenant } from "../tenant.js";
 import type { Logger } from "../log.js";
 import type { RightsChecker, Session } from "../rights.js";
 
@@ -58,4 +62,28 @@ export function withKit(handler: FetchHandler, log?: Logger): FetchHandler {
       headers.set(CORRELATION_HEADER, id);
       return new Response(response.body, { status: response.status, headers });
     });
+}
+
+/**
+ * Resolve the request's tenant from its Host header and run `handler` inside withTenant.
+ * `GET /health` passes with a null tenant (0013 item 2); a platform hostname is 404 unless
+ * `platformHosts` is `serve`, and then also gets a null tenant.
+ */
+export function withTenancy(
+  resolver: TenantResolver,
+  handler: (request: Request, tenant: TenantContext | null) => Promise<Response>,
+  options: { platformHosts?: "serve" | "refuse" } = {},
+): FetchHandler {
+  return async (request) => {
+    const url = new URL(request.url);
+    const isHealth =
+      (request.method === "GET" || request.method === "HEAD") && url.pathname === "/health";
+    if (isHealth) return handler(request, null);
+    const resolution = await resolver.resolve(request.headers.get("host") ?? url.host);
+    if (resolution.kind === "platform") {
+      if (options.platformHosts !== "serve") throw new UnknownHost();
+      return handler(request, null);
+    }
+    return withTenant(resolution.context.tenant_id, () => handler(request, resolution.context));
+  };
 }
