@@ -1,0 +1,13 @@
+{{! Field names are placeholders until the screen contract names the food_status widget's fields. }}
+{{! state: ok, degraded or down, shown with state_text; progress_step is 0-100 in steps of 5. }}
+<h2 class="canccu-widget__title">{{title}}</h2>
+<div class="t-food">
+  <p class="t-status t-status--{{state}}">{{state_text}}</p>
+  <p class="t-food__detail">{{detail_text}}</p>
+  {{#progress_text}}
+  <div class="t-food__progress">
+    <div class="t-xp" aria-hidden="true"><span class="t-xp__fill t-xp__fill--{{progress_step}}"></span></div>
+    <p class="t-food__progress-text">{{progress_text}}</p>
+  </div>
+  {{/progress_text}}
+</div>

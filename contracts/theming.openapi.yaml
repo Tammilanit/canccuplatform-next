@@ -8,7 +8,8 @@ info:
     events: contracts/theming.md. The package manifest: contracts/theme.schema.json.
     Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
     The event (tenant) comes from the hostname; no operation names a tenant. Embeds are served from the sandbox
-    origin, which has no API and is described only in the prose.
+    (`/theming/sandbox/` on the event's hostname by default, or a separate sandbox origin), which has no API and is
+    described only in the prose.
   license:
     name: AGPL-3.0
     identifier: AGPL-3.0-only
@@ -1254,7 +1255,7 @@ components:
               name:
                 $ref: "#/components/schemas/Name"
               frame_url:
-                description: The embed's entry on the sandbox origin; absent from the list when there is no sandbox origin.
+                description: The embed's entry in the sandbox, on the event's own hostname under `/theming/sandbox/` by default, or on the sandbox origin when the stack sets one; absent from the list when the stack serves no embeds.
                 type: string
     ParsedTemplate:
       type: object

@@ -1,0 +1,249 @@
+/* Level up demo theme: the frame every widget shares (glass panels, titles, progress bars, the
+   backdrop). Targets only stable classes (contracts/theming.md) and its own t- classes.
+   Sizes are for a screen read from about 10 m: nothing a viewer must read is under 26px. */
+.canccu-surface--screen {
+  --t-grad: linear-gradient(90deg, var(--canccu-color-primary), var(--canccu-color-accent));
+  /* 86% surface keeps text_muted above 5:1 even over a white pixel behind the glass. */
+  --t-glass: color-mix(in srgb, var(--canccu-color-surface) 86%, transparent);
+  --t-well: color-mix(in srgb, var(--canccu-color-background) 55%, transparent);
+  --t-pad: 22px;
+  color: var(--canccu-color-text);
+  font-family: var(--canccu-font-body);
+  font-weight: 500;
+  font-size: 1.75rem;
+  line-height: 1.25;
+  /* Behind the letterbox and the safe inset, so the edges match the embed's base. */
+  background:
+    radial-gradient(60% 50% at 0% 0%, color-mix(in srgb, var(--canccu-color-primary) 9%, transparent), transparent),
+    radial-gradient(60% 50% at 100% 100%, color-mix(in srgb, var(--canccu-color-accent) 9%, transparent), transparent),
+    var(--canccu-color-background);
+}
+.canccu-surface--screen p,
+.canccu-surface--screen h2,
+.canccu-surface--screen h3,
+.canccu-surface--screen ol {
+  margin: 0;
+}
+
+/* Glass panel */
+.canccu-surface--screen .canccu-widget {
+  container-type: size;
+  position: relative;
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 0;
+  padding: var(--t-pad);
+  overflow: hidden;
+  border: var(--canccu-border-width) solid color-mix(in srgb, var(--canccu-color-border) 85%, transparent);
+  border-radius: var(--canccu-radius);
+  background: var(--t-glass);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%), 0 18px 48px rgb(0 0 0 / 35%);
+}
+/* The accent edge: decoration only, never under text. */
+.canccu-surface--screen .canccu-widget::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--t-pad);
+  width: 34%;
+  height: 4px;
+  border-radius: 0 0 4px 4px;
+  background: var(--t-grad);
+}
+
+.canccu-widget__title {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+  margin: 0 0 14px;
+  font-family: var(--canccu-font-heading);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--canccu-color-text-muted);
+}
+.canccu-widget__title::before {
+  content: "";
+  flex: none;
+  width: 0.55em;
+  height: 0.55em;
+  transform: rotate(45deg);
+  background: var(--t-grad);
+}
+
+.t-tag {
+  font-family: var(--canccu-font-heading);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--canccu-color-primary);
+}
+.t-tag--quiet {
+  color: var(--canccu-color-text-muted);
+}
+.t-empty {
+  color: var(--canccu-color-text-muted);
+}
+
+/* Progress bar ("XP bar"): the track shows ten segments, the fill is the gradient up to the
+   step. A template cannot set a width, so each step class sets --t-n; the background is sized
+   back to the track's width so the gradient never squeezes into a short fill. */
+.t-xp {
+  position: relative;
+  display: block;
+  height: 18px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--canccu-color-border) 60%, transparent);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 6%);
+}
+.t-xp::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 3px),
+    color-mix(in srgb, var(--canccu-color-background) 70%, transparent) calc(10% - 3px) 10%);
+}
+.t-xp__fill {
+  position: relative;
+  display: block;
+  width: calc(var(--t-n, 0) * 1%);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--t-grad);
+  background-size: calc(10000% / var(--t-n, 100)) 100%;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--canccu-color-primary) 45%, transparent);
+  transition: width 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* The bright head of the bar, so a near-empty bar still shows where it stands. */
+.t-xp__fill::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  bottom: -3px;
+  width: 6px;
+  border-radius: 3px;
+  background: var(--canccu-color-text);
+  box-shadow: 0 0 12px var(--canccu-color-primary);
+}
+.t-xp__fill--0::after {
+  display: none;
+}
+.t-xp--hero {
+  height: 30px;
+}
+.t-xp--thin {
+  height: 10px;
+}
+.t-xp--thin::after {
+  display: none;
+}
+.t-xp__fill--0 { --t-n: 0; }
+.t-xp__fill--5 { --t-n: 5; }
+.t-xp__fill--10 { --t-n: 10; }
+.t-xp__fill--15 { --t-n: 15; }
+.t-xp__fill--20 { --t-n: 20; }
+.t-xp__fill--25 { --t-n: 25; }
+.t-xp__fill--30 { --t-n: 30; }
+.t-xp__fill--35 { --t-n: 35; }
+.t-xp__fill--40 { --t-n: 40; }
+.t-xp__fill--45 { --t-n: 45; }
+.t-xp__fill--50 { --t-n: 50; }
+.t-xp__fill--55 { --t-n: 55; }
+.t-xp__fill--60 { --t-n: 60; }
+.t-xp__fill--65 { --t-n: 65; }
+.t-xp__fill--70 { --t-n: 70; }
+.t-xp__fill--75 { --t-n: 75; }
+.t-xp__fill--80 { --t-n: 80; }
+.t-xp__fill--85 { --t-n: 85; }
+.t-xp__fill--90 { --t-n: 90; }
+.t-xp__fill--95 { --t-n: 95; }
+.t-xp__fill--100 { --t-n: 100; }
+
+/* Status pill: the text names the state; the colour only repeats it. */
+.t-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.15em 0.75em 0.15em 0.6em;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-family: var(--canccu-font-heading);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--canccu-color-primary-text);
+  background: var(--canccu-color-status-ok);
+}
+.t-status::before {
+  content: "";
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: currentcolor;
+}
+.t-status--degraded {
+  background: var(--canccu-color-status-degraded);
+}
+.t-status--down {
+  background: var(--canccu-color-status-down);
+}
+
+/* Widgets without a panel */
+.canccu-surface--screen .canccu-widget--logo,
+.canccu-surface--screen .canccu-widget--embed {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+.canccu-surface--screen .canccu-widget--logo::before,
+.canccu-surface--screen .canccu-widget--embed::before {
+  content: none;
+}
+.canccu-widget--logo {
+  display: flex;
+  align-items: center;
+}
+.canccu-widget--logo img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+/* The backdrop region (this theme's own id) bleeds over the safe inset to the screen's edges. */
+.canccu-surface--screen .canccu-region--backdrop {
+  margin: calc(-1 * var(--canccu-safe-inset));
+}
+.canccu-embed {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* A rotation brings each widget in with a short rise; nothing moves after that. */
+.canccu-is-active {
+  animation: t-arrive 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes t-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canccu-surface--screen *,
+  .canccu-surface--screen *::before,
+  .canccu-surface--screen *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

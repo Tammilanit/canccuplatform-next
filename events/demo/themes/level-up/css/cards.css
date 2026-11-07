@@ -1,0 +1,290 @@
+/* Level up demo theme: the rotating and secondary widgets (announcements, hot_game, qr,
+   food_status) and the ticker. */
+
+/* announcements: each one arrives as an achievement card */
+.t-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.t-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 20px;
+  align-items: start;
+  padding: 18px 20px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background:
+    linear-gradient(var(--canccu-color-surface), var(--canccu-color-surface)) padding-box,
+    linear-gradient(135deg, var(--canccu-color-border), var(--canccu-color-border)) border-box;
+}
+.t-card--important {
+  background:
+    linear-gradient(var(--canccu-color-surface), var(--canccu-color-surface)) padding-box,
+    var(--t-grad) border-box;
+  box-shadow: 0 0 30px color-mix(in srgb, var(--canccu-color-accent) 22%, transparent);
+}
+.t-card__badge {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 84px;
+  background: var(--t-grad);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+/* Two stacked chevrons pointing up: the theme's own "level gained" mark. */
+.t-card__glyph {
+  width: 40px;
+  height: 40px;
+  background: var(--canccu-color-background);
+  clip-path: polygon(50% 0, 100% 38%, 100% 58%, 50% 20%, 0 58%, 0 38%,
+    50% 0, 50% 42%, 100% 80%, 100% 100%, 50% 62%, 0 100%, 0 80%, 50% 42%);
+}
+.t-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.t-card__kicker {
+  font-family: var(--canccu-font-heading);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--canccu-color-primary);
+}
+.t-card__heading {
+  font-family: var(--canccu-font-display);
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1.05;
+}
+.t-card__body {
+  margin-top: 4px;
+}
+.t-card__time {
+  margin-top: 6px;
+  font-size: 1.5rem;
+  color: var(--canccu-color-text-muted);
+}
+.canccu-is-active .t-card:first-child {
+  animation: t-unlock 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes t-unlock {
+  from {
+    transform: scale(0.94);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--canccu-color-primary) 60%, transparent);
+  }
+  60% {
+    transform: scale(1.01);
+  }
+}
+@container (max-height: 520px) {
+  .t-card:nth-child(n + 2) {
+    display: none;
+  }
+}
+
+/* hot_game */
+.canccu-widget--hot_game {
+  display: flex;
+  flex-direction: column;
+}
+.t-hot {
+  flex: 1 1 auto;
+  align-content: center;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 20px;
+  row-gap: 8px;
+  align-items: center;
+}
+.t-hot > :not(.t-hot__art) {
+  grid-column: 1 / -1;
+}
+.t-hot__art {
+  grid-column: 1;
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.t-hot__art ~ .t-hot__name,
+.t-hot__art ~ .t-hot__players {
+  grid-column: 2;
+}
+.t-hot__name {
+  font-family: var(--canccu-font-display);
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.05;
+}
+.t-hot__players {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--canccu-color-primary);
+}
+.t-hot .t-xp {
+  margin: 8px 0 2px;
+}
+.t-hot__trend {
+  color: var(--canccu-color-text-muted);
+}
+
+/* qr: the code on a light tile with a quiet zone, the words beside or under it */
+.canccu-widget--qr {
+  display: flex;
+  flex-direction: column;
+}
+.t-qr {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  min-height: 0;
+  text-align: center;
+}
+.t-qr__code {
+  flex: 1 1 auto;
+  min-height: 0;
+  aspect-ratio: 1;
+  padding: 12px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 0 0 3px var(--canccu-color-primary), 0 0 30px color-mix(in srgb, var(--canccu-color-primary) 30%, transparent);
+}
+.t-qr__code img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+.t-qr__caption {
+  font-weight: 600;
+}
+/* A narrow, short box gives the code the room: the title already says what it is for. */
+@container (max-aspect-ratio: 6 / 5) and (max-height: 380px) {
+  .t-qr__caption {
+    display: none;
+  }
+}
+.t-qr__link {
+  font-family: var(--canccu-font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--canccu-color-primary);
+}
+@container (min-aspect-ratio: 6 / 5) {
+  .t-qr {
+    flex-direction: row;
+    text-align: left;
+  }
+  .t-qr__code {
+    flex: none;
+    height: auto;
+    max-height: 100%;
+    width: 48%;
+  }
+  .t-qr__link {
+    font-size: 1.4rem;
+  }
+  .t-qr__text {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+/* food_status: stacked in a box, one line in a wide strip */
+.t-food {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.t-food__detail {
+  font-weight: 600;
+}
+.t-food__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: stretch;
+}
+.t-food__progress-text {
+  font-size: 1.5rem;
+  color: var(--canccu-color-text-muted);
+}
+@container (min-aspect-ratio: 4 / 1) {
+  .canccu-widget--food_status .canccu-widget__title {
+    position: absolute;
+    top: 18px;
+    left: var(--t-pad);
+    margin: 0;
+    font-size: 1.3rem;
+  }
+  .t-food {
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+    height: 100%;
+    padding-top: 20px;
+    box-sizing: border-box;
+  }
+  .t-food__detail {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .t-food__progress {
+    flex: 0 0 30%;
+    align-self: center;
+  }
+}
+
+/* ticker: a slow scroll; with reduced motion it stands still at the start */
+.canccu-surface--screen .canccu-widget--ticker {
+  padding: 0 var(--t-pad);
+  border-radius: 999px;
+}
+.canccu-widget--ticker::before {
+  content: none;
+}
+.t-ticker {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  overflow: hidden;
+}
+.t-ticker__track {
+  display: flex;
+  flex: none;
+  animation: t-scroll 90s linear infinite;
+}
+.t-ticker__run {
+  display: flex;
+  flex: none;
+}
+.t-ticker__item {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.t-ticker__item::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  margin: 0 28px;
+  transform: rotate(45deg);
+  background: var(--t-grad);
+}
+@keyframes t-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}

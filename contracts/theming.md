@@ -9,7 +9,8 @@ Each event's own design, without code ([0013](../docs/decisions/0013-multi-tenan
 - **Revision:** one published, immutable version of the theme, numbered 1, 2, 3, … per event. The **current** revision is the one surfaces show.
 - **Draft:** the one editable copy of an event's theme. It becomes a revision only by publishing.
 - **Surface:** a place that shows the theme: the venue screen, the phone hub, the public info pages, the admin and sign-in pages, Discord.
-- **Sandbox origin:** the separate origin that alone serves an event's custom HTML and JS (see Upload safety).
+- **Sandbox:** where an event's custom HTML and JS are served, always with an opaque origin: by default the fixed path `/theming/sandbox/` on the event's own hostname (the **same-host sandbox**), or, as optional hardening, a separate sandbox origin (see Upload safety).
+- **Sandbox origin:** that separate origin, `https://<tenant id>.<sandbox domain>`, used only when the stack sets `CANCCU_SANDBOX_DOMAIN`.
 
 ## Tenancy
 - A theme belongs to one event, which is one tenant ([0013](../docs/decisions/0013-multi-tenant-core.md)); the tenant comes from the request's hostname. Drafts and revisions are rows with `tenant_id` under row-level security.
@@ -76,7 +77,7 @@ A folder (or a zip of it) with `theme.yaml` at its root ([theme.schema.json](the
 - Every path is relative, inside its folder, of `[A-Za-z0-9._/-]` only, with no `..`; a zip with absolute paths, links, nested archives, more than 300 files, more than 20 MB unpacked or an unpacking ratio over 100:1 is refused whole.
 - Files are recognised by their content, never by their extension or the uploaded `Content-Type`; a mismatch is a problem.
 - The package counts against the event's storage quota ([0013](../docs/decisions/0013-multi-tenant-core.md) item 27).
-- **Problems:** every check yields `{"severity": "error"|"warning", "code", "path", "message"}`. A draft may hold errors; publishing refuses a draft with any error (422 `theme_invalid`). Codes: `schema` (fails theme.schema.json), `file_missing`, `file_type`, `file_too_large`, `css_forbidden`, `template_forbidden`, `svg_forbidden`, `reference_unknown` (a template, embed, image or font name that does not exist, or a template made for another widget type), `duplicate_id` (a layout id, or a region id within a layout, used twice), `area_outside_grid`, `mode_mismatch` (an uploaded or synced package that declares `simple` but has CSS, fonts, templates, embeds, or font or size tokens; the editors never produce it), `contrast_low`, `class_unstable` (warning: CSS styles a class that is neither stable nor `t-`), `widget_unknown` (warning: a widget type no module offers; the region shows nothing), `embeds_unavailable` (warning: the platform has no sandbox origin).
+- **Problems:** every check yields `{"severity": "error"|"warning", "code", "path", "message"}`. A draft may hold errors; publishing refuses a draft with any error (422 `theme_invalid`). Codes: `schema` (fails theme.schema.json), `file_missing`, `file_type`, `file_too_large`, `css_forbidden`, `template_forbidden`, `svg_forbidden`, `reference_unknown` (a template, embed, image or font name that does not exist, or a template made for another widget type), `duplicate_id` (a layout id, or a region id within a layout, used twice), `area_outside_grid`, `mode_mismatch` (an uploaded or synced package that declares `simple` but has CSS, fonts, templates, embeds, or font or size tokens; the editors never produce it), `contrast_low`, `class_unstable` (warning: CSS styles a class that is neither stable nor `t-`), `widget_unknown` (warning: a widget type no module offers; the region shows nothing), `embeds_unavailable` (warning: the stack serves no embeds; with the same-host sandbox as the default it no longer arises, and the code stays so clients that know it keep working).
 
 ## Brand kit: simple mode
 An organiser uploads a logo and picks two colours; the module generates the whole token set. A new branding takes minutes.
@@ -117,10 +118,10 @@ Per-event markup for a widget, in a logic-less language: a strict subset of [Mus
 ## Embeds: custom HTML and JS
 The only way an event runs its own JavaScript, for visuals no widget offers.
 
-- An embed is a folder `embeds/<name>/` with an HTML `entry` and its `files`, placed with the `embed` widget. It is served only from the **sandbox origin** and shown only in a frame `<iframe class="canccu-embed" sandbox="allow-scripts" allow="" referrerpolicy="no-referrer" src="…">`: no `allow-same-origin`, forms, popups, top navigation, downloads, camera, microphone or other permissions.
+- An embed is a folder `embeds/<name>/` with an HTML `entry` and its `files`, placed with the `embed` widget. It is served only from the **sandbox** (the same-host sandbox path, or the sandbox origin when that hardening is set) and shown only in a frame `<iframe class="canccu-embed" sandbox="allow-scripts" allow="" referrerpolicy="no-referrer" src="…">`: no `allow-same-origin`, forms, popups, top navigation, downloads, camera, microphone or other permissions.
 - **No data in, no messages out:** an embed gets nothing from the page and the page reads no messages from it (the old screen-embed message protocol stays dropped, [0010](../docs/decisions/0010-scope.md)). Its CSP lets it load only its own files and connect nowhere, so it can neither leak what is on the screen nor phone home.
 - Adding or changing an embed needs right `theming.embeds.write`, and every change is audited.
-- Embeds only render on the screen. Without a sandbox origin (below) the `embed` widget shows nothing and publishing warns `embeds_unavailable`.
+- Embeds only render on the screen. Every stack serves them from the same-host sandbox unless the separate sandbox origin is set (see The sandbox).
 
 ## Upload safety
 ### Where files are served
@@ -128,10 +129,10 @@ The only way an event runs its own JavaScript, for visuals no widget offers.
 |---|---|---|---|
 | Revision files: compiled CSS, fonts, images | The event's own hostname | `/theming/a/<sha256>.<ext>`, immutable | `Cache-Control: public, max-age=31536000, immutable` |
 | Draft files | The event's own hostname, to a session with `theming.theme.write` only | `/theming/draft/<sha256>.<ext>` | `Cache-Control: no-store` |
-| Embeds | The sandbox origin only | `/<revision>/<embed>/…` or `/draft/<draft key>/<embed>/…` | `Cache-Control` as above |
+| Embeds | The sandbox only: the event's own hostname under `/theming/sandbox/` (default), or the sandbox origin | Same host: `/theming/sandbox/<revision>/<embed>/…` or `/theming/sandbox/draft/<draft key>/<embed>/…`; on the sandbox origin the same without `/theming/sandbox` | `Cache-Control` as above, and the sandbox CSP (see The sandbox) |
 
-- Every response has `X-Content-Type-Options: nosniff` and a `Content-Type` the module sets from the checked content type. On the event's hostname it also has `Cross-Origin-Resource-Policy: same-origin`. On the sandbox origin it has `Cross-Origin-Resource-Policy: cross-origin` and `Access-Control-Allow-Origin: *` instead, without credentials: a sandboxed embed has an opaque origin, so its requests for its own files are cross-origin, and these files are public anyway.
-- The event's hostname never serves an event's HTML or JS: a theme has none there, and the paths above answer only CSS, WOFF2, PNG, JPEG, WebP and SVG.
+- Every response has `X-Content-Type-Options: nosniff` and a `Content-Type` the module sets from the checked content type. On the event's hostname it also has `Cross-Origin-Resource-Policy: same-origin`. Embed files (under `/theming/sandbox/` or on the sandbox origin) have `Cross-Origin-Resource-Policy: cross-origin` and `Access-Control-Allow-Origin: *` instead, without credentials: a sandboxed embed has an opaque origin, so its requests for its own files are cross-origin, and these files are public anyway.
+- The event's hostname serves an event's HTML and JS only under `/theming/sandbox/`, always with the sandbox CSP; every other path above answers only CSS, WOFF2, PNG, JPEG, WebP and SVG.
 - Screens cache revision files (immutable addresses), so a published theme keeps working when the uplink drops ([0013](../docs/decisions/0013-multi-tenant-core.md) item 25).
 
 ### SVG
@@ -148,20 +149,33 @@ Every HTML response on an event's hostname carries this policy, set by the kit (
 ```
 default-src 'none'; script-src 'self'; style-src 'self' 'nonce-<per response>';
 img-src 'self' data:; font-src 'self'; media-src 'self'; connect-src 'self';
-manifest-src 'self'; worker-src 'self'; frame-src <the event's sandbox origin>;
+manifest-src 'self'; worker-src 'self'; frame-src <the sandbox>;
 object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'
 ```
 
+- `<the sandbox>` is `https://<the event's hostname>/theming/sandbox/` (a source with a path, so a frame may load and navigate to sandbox paths only, never to other pages), or the sandbox origin when that hardening is set.
 - No inline script and no `style` attributes; a platform-generated `<style>` block carries the response's nonce. Event CSS is always a file.
 - **Precondition:** a module turns this policy on only once its pages comply. Today `page()` of packages/ui writes its theme `<style>` without a nonce, so packages/ui adds the nonce (or links `tokens_css_url`) first.
 - `frame-src` is widened in exactly two cases, and no surface widens any other directive: admin pages add `'self'`, for the virtual-screen preview of surface pages on the event's own hostname; and the screen contract may add the event's own web-asset allow-list, for screen pages only.
-- On admin and sign-in pages `frame-ancestors 'none'` replaces `'self'`, so they cannot be framed at all. Admin pages therefore send `frame-src 'self' <the event's sandbox origin>`; what they frame are surface pages, which keep `frame-ancestors 'self'` and serve no event JS.
+- On admin and sign-in pages `frame-ancestors 'none'` replaces `'self'`, so they cannot be framed at all. Admin pages therefore send `frame-src 'self' <the sandbox>`; what they frame are surface pages, which keep `frame-ancestors 'self'` and serve no event JS.
 
-### The sandbox origin
-- `https://<tenant id>.<sandbox domain>`: a registrable domain of its own (`CANCCU_SANDBOX_DOMAIN`), never the platform domain, a subdomain of it or an event's hostname, so it is neither same-origin nor same-site with any page that holds a session. It sets no cookies, has no sign-in and serves no API.
-- Each response carries `Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; media-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors <the event's hostnames>; sandbox allow-scripts`, so an embed opened on its own still has an opaque origin.
-- The platform's APIs grant no CORS to it, and state-changing requests from any origin other than the event's hostname are refused by the kit's origin check.
-- A stack without `CANCCU_SANDBOX_DOMAIN` has no embeds. The IP-mode demo stack in CI serves the sandbox on its own port instead (a separate origin, though not a separate site); it never runs with real events ([0013](../docs/decisions/0013-multi-tenant-core.md) item 2).
+### The sandbox
+An event's custom HTML and JS never run with the event's origin. The browser gives every sandbox document an **opaque origin**: it holds no cookies, reads no storage of the event's hostname, and every request it makes is cross-site.
+
+**The same-host sandbox (the default).** No second domain is needed.
+- Embeds are served on the event's own hostname under the fixed path `/theming/sandbox/` (Where files are served), and framed only as `<iframe class="canccu-embed" sandbox="allow-scripts" …>` (Embeds). The `sandbox` attribute never has `allow-same-origin`.
+- Every response under `/theming/sandbox/` carries `Content-Security-Policy: default-src 'none'; script-src <embed base>; style-src <embed base> 'unsafe-inline'; img-src <embed base> data:; font-src <embed base>; media-src <embed base>; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors <the event's hostnames>; sandbox allow-scripts`, where `<embed base>` is the embed's own folder (`https://<the event's hostname>/theming/sandbox/<revision>/<embed>/`, or its draft path). The header's `sandbox` (never `allow-same-origin`) gives the document an opaque origin even when it is opened on its own or framed without the attribute; `connect-src 'none'` stops fetch, XHR, WebSocket and beacons; the sources with a path keep an embed to its own files.
+- **Only the sandbox loads sandbox files.** The module serves an embed's entry only to a frame request (`Sec-Fetch-Dest: iframe` or `frame`), and its other files only to cross-site requests (`Sec-Fetch-Site: cross-site`, which is what an opaque origin's requests carry). A request without these Fetch Metadata headers is refused (404). So no page on the event's hostname, or on another event's hostname of the same site, can load an embed's JS as its own script or worker, although their CSP allows `'self'`.
+- The sandbox path sets no cookies, reads no session and serves no API.
+- **The platform API refuses `Origin: null`.** The kit answers every request to `/api/…` that carries `Origin: null` with 403 `origin_refused`, so a sandbox document that gets a request out despite `connect-src 'none'` still reaches nothing. Besides that, state-changing requests from any origin other than the event's hostname are refused by the kit's origin check, and the platform's APIs grant no CORS to anyone.
+
+**A separate sandbox domain (optional hardening).** A stack that sets `CANCCU_SANDBOX_DOMAIN` serves embeds from `https://<tenant id>.<sandbox domain>` instead: a registrable domain of its own, never the platform domain, a subdomain of it or an event's hostname, so it is neither same-origin nor same-site with any page that holds a session. It keeps everything above (the same CSP, with `<embed base>` on that origin; the same Fetch Metadata rule), sets no cookies, has no sign-in and serves no API. `<the sandbox>` in the event pages' `frame-src` is then that origin. It is a defence against browser bugs, not a requirement.
+
+**Session cookies are `__Host-` cookies.** Every session cookie of the platform is set with the `__Host-` prefix (`Secure`, `Path=/`, no `Domain`), so no other hostname, a subdomain or another event's hostname included, can set or overwrite it. This lands with the central sign-in host (#52): the session cookie becomes `__Host-canccu_session` ([admin.md](admin.md#session-and-rights)).
+
+**Residual risks.** A bug in the browser's sandbox or CSP enforcement could give an embed the event's origin, so it could act on the event's hostname with whatever the viewing browser holds there (a screen's device credentials); the separate sandbox domain is the hardening against that, and only holders of `theming.embeds.write` (audited) can add an embed at all. Within the rules, an embed can still draw anything inside its frame, a fake sign-in form included; with no network, no forms, no messages to the page and no navigation outside the sandbox paths (the page's `frame-src`), what is typed into it goes nowhere, but a person may still be misled for as long as it is on the screen.
+
+**The IP-mode demo stack** in CI serves the same-host sandbox like any stack. Over plain http browsers send Fetch Metadata only to localhost and refuse `__Host-` cookies, so there the module skips the Fetch Metadata rule and the cookie keeps the name `canccu_session`; it never runs with real events ([0013](../docs/decisions/0013-multi-tenant-core.md) item 2).
 
 ## Draft, preview, publish
 - **One draft per event.** `POST /api/theming/draft` creates it from the current revision, an earlier revision or the defaults (409 `draft_exists`); a draft from the defaults is a valid simple-mode theme with a generated `brand` (the platform default `primary` and `accent`, `scheme: dark`), publishable as it is; `DELETE` discards it. Every change returns the draft with its `draft_version` (+1 per change) and its `problems`; writes take `draft_version` and answer 409 `version_conflict` when it is stale, so two admins never overwrite each other unseen.
@@ -206,6 +220,7 @@ Consumers read the rest through `GET /api/theming/current`.
 
 ## The test
 - **Screenshots:** CI's demo-stack job ([docs/ci.md](../docs/ci.md)) publishes each package in [events/demo/themes/](../events/demo/themes/) on the demo tenant and screenshots, per theme, each of its layouts on the screen, the hub home, a public info page and an admin page, named `theming-<theme>-<surface>[-<layout>].png`. These screenshots are the theming contract's test: a change to the stable classes, the tokens, `ui.css` or a module's markup shows in the PR's screenshots (the `demo-screenshots` artifact), where the reviewer sees it. Each surface's module adds its screenshots when it is built.
+- **Per widget:** on the screen, each widget a demo theme's layouts place is also screenshot on its own, in each layout it appears in, landscape (16:9) and portrait (9:16), named `theming-<theme>-screen-<layout>-<widget type>.png` (`theming-level-up-screen-portrait-countdown.png`); a region that rotates is shot once per widget. Embeds are shot with `prefers-reduced-motion: reduce`, so their still frame is the same every run. The `level-up` demo theme places every widget the screen offers in both a landscape and a portrait layout for this.
 - **Static:** `scripts/check-contracts` validates every demo `theme.yaml` against [theme.schema.json](theme.schema.json), then `scripts/check-theme-refs` checks what the schema cannot: the files it names exist, ids are unique, areas fit their grid, references resolve (templates, embeds, and `images.logo` for a `logo` widget), each embed's files sit in its own `embeds/<name>/`, font tokens name package fonts or generic families, and the mode matches the content.
 - **Contract API tests** (once the module exists) cover the problem codes, the headers and CSP of every path above, the draft and preview rights, and cross-tenant leaks of drafts, files and revisions ([0013](../docs/decisions/0013-multi-tenant-core.md) item 8).
 

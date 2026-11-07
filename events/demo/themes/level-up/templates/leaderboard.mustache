@@ -1,0 +1,18 @@
+{{! Field names are placeholders until the screen contract names the leaderboard widget's fields. }}
+{{! entries[].bar_step: score against the leader, 0-100 in steps of 5; movement: up, down or same,
+    with movement_text ("+2") so the change never rests on colour alone. }}
+<h2 class="canccu-widget__title">{{title}}</h2>
+<ol class="t-ladder">
+  {{#entries}}
+  <li class="t-rung t-rung--{{rank}}">
+    <span class="t-rung__rank">{{rank}}</span>
+    <span class="t-rung__body">
+      <span class="t-rung__name">{{name}}</span>
+      <span class="t-xp t-xp--thin" aria-hidden="true"><span class="t-xp__fill t-xp__fill--{{bar_step}}"></span></span>
+    </span>
+    <span class="t-rung__score">{{score_text}}</span>
+    <span class="t-rung__move t-rung__move--{{movement}}">{{movement_text}}</span>
+  </li>
+  {{/entries}}
+</ol>
+{{^entries}}<p class="t-empty">No scores yet.</p>{{/entries}}

@@ -27,6 +27,7 @@ Every module serves `GET /health` with the same shape (`Health` in the OpenAPI f
 
 ## Session and rights
 - Signing in (Discord, first-run code: #10) ends in a session. The session id is the opaque cookie `canccu_session` (HttpOnly, SameSite=Lax, Secure when served over HTTPS); the session itself lives in Postgres, so any container can serve any request.
+- **From the central sign-in host (#52) on, the cookie is a `__Host-` cookie:** over HTTPS it is named `__Host-canccu_session` and set with `Secure`, `Path=/` and no `Domain`, so no other hostname (another event's hostname or any subdomain of the platform domain included) can set or overwrite it. Session cookies the platform adds later follow the same rule ([theming.md](theming.md#the-sandbox)). Browsers refuse the prefix over plain http, so the IP-mode demo stack keeps `canccu_session`. Modules never name the cookie themselves: the kit reads it and forwards it to `GET /api/admin/session`.
 - `GET /api/admin/session` → `{"user": {"id", "name"}, "rights": [...], "expires_at"}`, or 401 `not_signed_in`.
 - `POST /api/admin/session/sign-out` → 204 and clears the cookie.
 - **Rights** are strings `<module>.<right>`, e.g. `admin.settings.write`, `tournament.matches.edit`. Each module's contract lists its rights.

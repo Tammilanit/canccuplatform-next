@@ -80,7 +80,7 @@
       }
     },
     "embeds": {
-      "description": "Custom HTML and JS, served only from the sandbox origin inside a sandboxed frame.",
+      "description": "Custom HTML and JS, served only from the sandbox (the same-host `/theming/sandbox/` path by default, or the separate sandbox origin) inside a sandboxed frame.",
       "type": "object",
       "maxProperties": 8,
       "propertyNames": {

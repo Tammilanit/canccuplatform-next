@@ -1,0 +1,28 @@
+{{! Field names are placeholders until the screen contract names the agenda_now widget's fields. }}
+{{! now.progress_step: how far the running item is, 0-100 in steps of 5; left_text says it in words. }}
+<h2 class="canccu-widget__title">{{title}}</h2>
+<div class="t-agenda">
+  <div class="t-now">
+    {{#now}}
+    <p class="t-tag">Now</p>
+    <h3 class="t-now__name">{{name}}</h3>
+    <p class="t-now__meta"><span class="t-now__time">{{time_text}}</span> <span class="t-now__place">{{place}}</span></p>
+    <div class="t-xp" aria-hidden="true"><span class="t-xp__fill t-xp__fill--{{progress_step}}"></span></div>
+    <p class="t-now__left">{{left_text}}</p>
+    {{/now}}
+    {{^now}}<p class="t-empty">Nothing running right now.</p>{{/now}}
+  </div>
+  <div class="t-next">
+    <p class="t-tag t-tag--quiet">Up next</p>
+    <ol class="t-next__list">
+      {{#next}}
+      <li class="t-next__item">
+        <time class="t-next__time" datetime="{{starts_iso}}">{{starts_text}}</time>
+        <span class="t-next__name">{{name}}</span>
+        <span class="t-next__place">{{place}}</span>
+      </li>
+      {{/next}}
+    </ol>
+    {{^next}}<p class="t-empty">Nothing else today.</p>{{/next}}
+  </div>
+</div>
