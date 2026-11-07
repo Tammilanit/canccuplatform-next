@@ -106,6 +106,7 @@ On the platform stream `events:tenants`, without `tenant`:
 The events the first ports need before their modules have a contract: pizza, tournament, bot, and the screen overrides. Each outline gives the name, a one-line meaning, the audience, the expected consumers and the `data` fields, so consumers built earlier (the bot's tournament side in step 6, Screen and Moments, Notify's topics) use the names the module will emit ([roadmap](../docs/roadmap.md), OC8).
 
 - **Provisional:** every event here is `version: 1` and provisional until its module's contract PR adopts it. That contract (`<module>.md`, plus `<module>.openapi.yaml` if the module has an HTTP API) is its own PR at the start of the module's port, written from the real legacy API, and merges before the module's code ([README.md](README.md#changing-a-contract)). It takes over these names and fields and may add events and fields; adding stays additive. Changing or dropping a name or field listed here is done in this catalog first, in its own PR, so nothing built against an outline breaks unseen.
+- **Counts** (`pizza_count`, `registered_count`, …) come with the order's or session's revision (`revision`, or `order_revision` / `session_revision` on item and player events). Delivery is at least once ([admin.md](admin.md#transport)), so a consumer ignores counts older than the newest revision it has seen.
 - **Fields** are `snake_case`. Ids are strings; times are strings in RFC 3339, UTC (`2026-01-01T18:00:00Z`); Discord ids are strings, since a snowflake does not fit a JavaScript number. A field marked "or null" is always present. `actor_user_id` (string or null) is the user who made the change, `null` when the module's own scheduler did; consumers never show it to people.
 - **Shapes** used by several events (Person, Order, Session, Match, Override) are defined once in their section; `data` lists name the shape in the type.
 - **Audience** is as above: event-wide with a visibility (`public`, `attendees` or `crew`, as for [agenda items](agenda.md)), personal, or system.
@@ -139,7 +140,7 @@ An **Order**:
 | `holder` | Person or null | Who holds the order |
 | `pizza_count`, `people_count` | integer | Pizzas in the order, and people with at least one |
 | `opened_at`, `closed_at`, `placed_at`, `arrived_at` | string, time, or null | When it reached each state |
-| `revision` | integer | Grows with every change; a consumer keeps the highest it has seen |
+| `revision` | integer | Grows with every change, including each pizza added or removed; a consumer keeps the highest it has seen |
 
 | Type | Meaning | Audience | Consumers | `data` |
 |---|---|---|---|---|
@@ -151,10 +152,10 @@ An **Order**:
 | `pizza.order.placed` | The holder phoned the order in | event-wide, `public` | screen, moments, bot | `order` (Order), `actor_user_id` |
 | `pizza.order.reverted` | A step was undone: placed back to closed, or arrived back to placed | event-wide, `public` | screen, bot | `order` (Order), `from_state` (string), `actor_user_id` |
 | `pizza.order.arrived` | The holder marked the pizzas arrived | personal (`user_ids`); `order` itself is event-wide, `public` | notify (`food`, personal part), screen, moments, bot | `order` (Order), `user_ids` (list of string), `people` (list of Person): everyone with a pizza in the order |
-| `pizza.order.cancelled` | The order was cancelled, also a stale one from an earlier day | event-wide, `public`; personal for everyone with a pizza in it (`user_ids`) | screen, bot | `order` (Order), `reason` (string: `cancelled`, `stale`), `user_ids` (list of string), `actor_user_id` |
-| `pizza.item.added` | A person added a pizza to the open order | personal (`user_id`) | screen (counts) | `order_id` (string), `item_id` (string), `user_id` (string), `person` (Person), `pizza_count` (integer), `people_count` (integer), `actor_user_id` |
-| `pizza.item.removed` | A pizza was taken out of the order, by its owner or the holder | personal (`user_id`) | screen (counts) | `order_id` (string), `item_id` (string), `user_id` (string), `person` (Person), `pizza_count` (integer), `people_count` (integer), `actor_user_id` |
-| `pizza.reminder.triggered` | An order is overdue: open past `target_at`, or closed but not placed, for `minutes` | event-wide, `attendees` (names the holder) | bot (posts, mentioning the holder) | `order` (Order), `kind` (string: `open_past_target`, `closed_not_placed`), `minutes` (integer) |
+| `pizza.order.cancelled` | The order was cancelled, also a stale one from an earlier day | event-wide, `public`; personal for everyone with a pizza in it (`user_ids`) | screen, bot | `order` (Order), `reason` (string: `cancelled`, `stale`), `user_ids` (list of string), `people` (list of Person): everyone with a pizza in it, `actor_user_id` |
+| `pizza.item.added` | A person added a pizza to the open order | personal (`user_id`) | screen (counts) | `order_id` (string), `order_revision` (integer), `item_id` (string), `user_id` (string: adding a pizza needs sign-in), `person` (Person), `pizza_count` (integer), `people_count` (integer), `actor_user_id` |
+| `pizza.item.removed` | A pizza was taken out of the order, by its owner or the holder | personal (`user_id`) | screen (counts) | `order_id` (string), `order_revision` (integer), `item_id` (string), `user_id` (string: adding a pizza needs sign-in), `person` (Person), `pizza_count` (integer), `people_count` (integer), `actor_user_id` |
+| `pizza.reminder.triggered` | An order is overdue: open past `target_at`, or closed but not placed, for `minutes` | event-wide, `public`, like every order event that names the holder | bot (posts in the event's channel, mentioning the holder) | `order` (Order), `kind` (string: `open_past_target`, `closed_not_placed`), `minutes` (integer) |
 
 ```json
 {"id": "01928f3e-7a2b-7c4d-9e8f-0a1b2c3d4e70", "type": "pizza.order.opened", "version": 1,
@@ -181,7 +182,7 @@ A **Session**:
 | `is_final` | boolean | The tournament's final |
 | `voice_plan` | string | `none`, `solo` (one voice channel per player) or `team` (one per team): what the bot creates when a match is called |
 | `registered_count`, `checked_in_count` | integer | Players registered, and checked in |
-| `revision` | integer | Grows with every change |
+| `revision` | integer | Grows with every change, including each registration and check-in |
 
 A **Match**:
 
@@ -198,16 +199,16 @@ A **Result** is one placement: `rank` (integer), `team_id` (string or null), `us
 |---|---|---|---|---|
 | `tournament.session.added` | A session was added to the schedule | event-wide, `public` | screen, bot | `session` (Session), `actor_user_id` |
 | `tournament.session.changed` | A session was edited, postponed or reopened | event-wide, `public` | screen, bot | `session` (Session), `changed` (list of string: field names), `actor_user_id` |
-| `tournament.session.cancelled` | A session was cancelled or ended early | event-wide, `public`; personal for its registered players (`user_ids`) | screen, bot (removes its voice channels), notify | `session` (Session), `user_ids` (list of string), `actor_user_id` |
+| `tournament.session.cancelled` | A session was cancelled or ended early | event-wide, `public`; personal for its registered players (`user_ids`) | screen, bot (removes its voice channels, tells its players) | `session` (Session), `user_ids` (list of string), `people` (list of Person): its registered players, `actor_user_id` |
 | `tournament.session.removed` | A session was deleted | event-wide, `public` | screen, bot | `session_id` (string), `actor_user_id` |
 | `tournament.registration.opened` | Players can register for a session | event-wide, `public` | notify (`tournament`), screen, bot | `session` (Session), `actor_user_id` |
 | `tournament.registration.closed` | Registration for a session closed | event-wide, `public` | screen, bot | `session` (Session), `actor_user_id` |
-| `tournament.player.registered` | A person registered for a session, or an admin added them | personal (`user_id`) | screen (counts), bot | `session_id` (string), `user_id` (string or null), `person` (Person), `registered_count` (integer), `actor_user_id` |
-| `tournament.player.unregistered` | A person left a session, or an admin removed them | personal (`user_id`) | screen (counts), bot | `session_id` (string), `user_id` (string or null), `person` (Person), `registered_count` (integer), `actor_user_id` |
-| `tournament.checkin.opened` | Check-in for a session opened: its players check in by the rotating QR (purpose `tournament:<session id>`, [notify.md](notify.md#check-in-by-the-rotating-qr)) | personal (`user_ids`: each registered player) | notify (`tournament`), screen (shows the QR), bot | `session` (Session), `closes_at` (string, time), `user_ids` (list of string), `people` (list of Person) |
-| `tournament.player.checked_in` | A registered player checked in | personal (`user_id`) | screen (counts) | `session_id` (string), `user_id` (string), `person` (Person), `checked_in_count` (integer) |
+| `tournament.player.registered` | A person registered for a session, or an admin added them | personal (`user_id`) | screen (counts), bot | `session_id` (string), `user_id` (string or null), `person` (Person), `session_revision` (integer), `registered_count` (integer), `actor_user_id` |
+| `tournament.player.unregistered` | A person left a session, or an admin removed them | personal (`user_id`) | screen (counts), bot | `session_id` (string), `user_id` (string or null), `person` (Person), `session_revision` (integer), `registered_count` (integer), `actor_user_id` |
+| `tournament.checkin.opened` | Check-in for a session opened: its players check in by the rotating QR (purpose `tournament:<session id>`, [notify.md](notify.md#check-in-by-the-rotating-qr)) | personal (`user_ids`, `people`: each registered player); `session` is event-wide, `public` | notify (`tournament`), screen (shows the QR with `session` only), bot | `session` (Session), `closes_at` (string, time), `user_ids` (list of string), `people` (list of Person) |
+| `tournament.player.checked_in` | A registered player checked in | personal (`user_id`) | screen (counts) | `session_id` (string), `user_id` (string), `person` (Person), `session_revision` (integer), `checked_in_count` (integer) |
 | `tournament.checkin.closed` | Check-in closed; who did not check in is a no-show | event-wide, `public` | screen, bot | `session` (Session), `checked_in_user_ids` (list of string), `no_show_user_ids` (list of string) |
-| `tournament.match.called` | A match's players are called to play now | personal (`user_ids`: each player of the match); urgent in Notify | notify (`tournament`), bot (creates voice channels by `voice_plan`), moments (screen pin), screen | `session` (Session), `match` (Match), `user_ids` (list of string) |
+| `tournament.match.called` | A match's players are called to play now | personal (`user_ids`: each player of the match), urgent in Notify; `session` and `match`, with the players' names, are event-wide, `public`, as the schedule and results are | notify (`tournament`), bot (creates voice channels by `voice_plan`), moments (screen pin), screen | `session` (Session), `match` (Match), `user_ids` (list of string) |
 | `tournament.match.started` | A match started | event-wide, `public` | screen, moments | `session` (Session), `match` (Match), `actor_user_id` |
 | `tournament.scoring.started` | An admin started scoring a match; the bot answers with the voice roster | system | bot | `session_id` (string), `match_id` (string), `voice_channel_ids` (list of string) |
 | `tournament.match.finished` | A match's results were recorded | event-wide, `public` | screen, moments (finals card when `session.is_final`), bot (posts results, removes the voice channels) | `session` (Session), `match` (Match), `results` (list of Result), `actor_user_id` |
@@ -245,7 +246,7 @@ Emitter: `bot` (roadmap step 6). Bot events report what the bot sees on Discord,
 Emitter: `moments` (roadmap step 4). A screen override (a takeover, a block or an overlay) is a `moments.*` event, not a `screen.*` one: Moments ranks the overrides and owns their timing and revert ([0010](../docs/decisions/0010-scope.md)), and an event's first part is its emitter, so the module that decides emits. Step 4 therefore needs no rename.
 
 - **Input:** Moments turns domain events into overrides by its own trigger settings (`pizza.order.placed`, `tournament.match.called`, `games.surge.started`, …), and takes explicit ones through its API (the bot's `/screen announce` and `clear`, and the one announce action of step 4). No other module emits override events.
-- **Output:** at most one override of each kind is active on a zone. Screen shows what these events say and ranks nothing. Screen's own events (devices, zones, layouts) are in the screen contract.
+- **Output:** at most one override of each kind is active on a zone. Screen shows what these events say and ranks nothing. When an override leaves only some of its zones (a higher rank takes one of them), `moments.override.ended` lists just the zones it left and it stays active on the rest. Whether a preempted override comes back afterwards is for the Moments contract. Screen's own events (devices, zones, layouts) are in the screen contract.
 
 An **Override**:
 
@@ -264,4 +265,4 @@ An **Override**:
 |---|---|---|---|---|
 | `moments.override.started` | An override became active on its zones | event-wide, `public` | screen, voices (may speak it) | `override` (Override), `actor_user_id` |
 | `moments.override.changed` | An active override's content or end changed (extended, a live score) | event-wide, `public` | screen | `override` (Override), `changed` (list of string: field names), `actor_user_id` |
-| `moments.override.ended` | An override stopped: it expired, a person cleared it, a higher rank took its place, or its source ended | event-wide, `public` | screen, voices | `override_id` (string), `zones` (list of string), `reason` (string: `expired`, `cleared`, `preempted`, `source_ended`), `actor_user_id` |
+| `moments.override.ended` | An override stopped: it expired, a person cleared it, a higher rank took its place, or its source ended | event-wide, `public` | screen, voices | `override_id` (string), `zones` (list of string: the zones it left), `reason` (string: `expired`, `cleared`, `preempted`, `source_ended`), `actor_user_id` |
