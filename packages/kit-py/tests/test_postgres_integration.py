@@ -123,3 +123,32 @@ async def test_check_app_role_accepts_the_app_role_and_refuses_the_superuser(
             await check_app_role(conn)
     finally:
         await conn.execute(f"SET ROLE {APP_ROLE}")
+
+
+async def test_works_through_a_pooled_connection_and_refuses_nesting_on_it(
+    conn: asyncpg.Connection,
+) -> None:
+    # asyncpg hands out PoolConnectionProxy objects, not Connections; they cannot be
+    # weak-referenced, so this is the path modules really take.
+    pool = await asyncpg.create_pool(URL, min_size=1, max_size=1)
+    try:
+        async with pool.acquire() as pooled:
+            await pooled.execute(f"SET ROLE {APP_ROLE}")
+            try:
+                async with tenant_transaction(pooled, "leak-a"):
+                    rows = await pooled.fetch("SELECT tenant_id FROM kit_py_test_lists")
+                assert [row["tenant_id"] for row in rows] == ["leak-a"]
+                with pytest.raises(RuntimeError, match="already"):
+                    async with (
+                        tenant_transaction(pooled, "leak-a"),
+                        tenant_transaction(pooled, "leak-b"),
+                    ):
+                        pass
+                # The refused nesting left nothing open: the connection is usable again.
+                async with tenant_transaction(pooled, "leak-b"):
+                    rows = await pooled.fetch("SELECT tenant_id FROM kit_py_test_lists")
+                assert [row["tenant_id"] for row in rows] == ["leak-b"]
+            finally:
+                await pooled.execute("RESET ROLE")
+    finally:
+        await pool.close()
