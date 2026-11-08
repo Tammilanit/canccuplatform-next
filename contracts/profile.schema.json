@@ -92,6 +92,48 @@
       "additionalProperties": {
         "$ref": "#/$defs/asset_path"
       }
+    },
+    "agenda": {
+      "description": "The run-of-show's kind list (contracts/agenda.md, Kinds), so a profile restores an event's own kinds.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kinds": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/agenda_kind"
+          }
+        }
+      }
+    },
+    "notify": {
+      "description": "Notify's per-event topic configuration and custom topics (contracts/notify.md, Per-event configuration; Custom topics).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "topics": {
+          "description": "Per topic key: whether it is offered here, its parameters and the channels this event allows.",
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/topic_key"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/topic_config"
+          }
+        },
+        "custom_topics": {
+          "description": "The event's own topics, each narrowing a module's topic type.",
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^custom_[a-z0-9_]{1,25}$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/custom_topic"
+          }
+        }
+      }
     }
   },
   "$defs": {
@@ -105,7 +147,11 @@
         "games",
         "moments",
         "voices",
-        "cast"
+        "cast",
+        "agenda",
+        "notify",
+        "theming",
+        "finals"
       ]
     },
     "key": {
@@ -144,6 +190,193 @@
           "type": "boolean"
         }
       ]
+    },
+    "agenda_kind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,31}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "reminder_leads_minutes": {
+          "description": "Lead times in minutes; null or left out uses the event's setting.",
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1440
+              }
+            }
+          ]
+        },
+        "notify": {
+          "description": "Channels for its items; null or left out uses the event's setting, [] announces nothing.",
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "screen",
+                  "discord_channel",
+                  "discord_dm",
+                  "push"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "topic_key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,31}$"
+    },
+    "notify_channel": {
+      "enum": [
+        "push",
+        "discord_dm"
+      ]
+    },
+    "channel_switches": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "push": {
+          "type": "boolean"
+        },
+        "discord_dm": {
+          "type": "boolean"
+        }
+      }
+    },
+    "topic_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "params": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/key"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "channels": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/notify_channel"
+          }
+        }
+      }
+    },
+    "custom_topic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "based_on",
+        "title",
+        "where"
+      ],
+      "properties": {
+        "based_on": {
+          "$ref": "#/$defs/topic_key"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "defaults": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "event": {
+              "$ref": "#/$defs/channel_switches"
+            },
+            "personal": {
+              "$ref": "#/$defs/channel_switches"
+            }
+          }
+        },
+        "where": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "field",
+              "op"
+            ],
+            "properties": {
+              "field": {
+                "type": "string",
+                "pattern": "^[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*$"
+              },
+              "op": {
+                "enum": [
+                  "eq",
+                  "ne",
+                  "in",
+                  "not_in",
+                  "exists",
+                  "within_minutes",
+                  "nearest_in"
+                ]
+              },
+              "value": {
+                "description": "The value to compare with."
+              },
+              "param": {
+                "type": "string"
+              },
+              "list": {
+                "type": "string",
+                "pattern": "^[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*$"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

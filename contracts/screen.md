@@ -32,6 +32,8 @@ A device request (state, stream, heartbeat, files, theming reads) is served only
 - the device's current tenant is the request's tenant (otherwise 409 `device_moved`, see Moving);
 - the request comes from one of the event's venue addresses, IPv4 or IPv6 (otherwise 403 `venue_ip_refused`). The address alone is never enough.
 
+The kit's screen checks name the first and the third failure `device_token_invalid` (401) and `venue_ip_mismatch` (403) today. Those are the kit's names for `device_unknown` and `venue_ip_refused`: the screen module answers a device with this contract's codes, and the kit takes them over.
+
 **Emergency switch:** the tenants module's per-tenant switch (`PUT /api/tenants/current/venue-ip-check`, right `tenants.venue_ip_check.write`, at most 48 hours, every change audited) turns the third check off; the device token then serves alone. Screen follows `tenants.venue_ip_check.changed` through the kit's tenant cache and never keeps a switch of its own.
 
 ### Moving, renaming, revoking
@@ -74,7 +76,7 @@ A device request (state, stream, heartbeat, files, theming reads) is served only
 | `overlay` | A band on top of everything, implicit like `full`; only claims use it. In the composed state it is the synthetic region with id `_overlay` (the whole grid, layer 11, above `_full`, so an overlay that outranks a takeover is drawn on top; no widgets; the claim's template sets the band's place) |
 
 ## Widgets
-Each widget type below is offered by Screen: theming layouts place it, templates draw it ([theming.md](theming.md#widget-templates)), and its view-model is the only data a template can read. Data comes from the source module, through Screen; a device never calls another module, except loading the theme's files, which theming allows paired screens. The layout and templates come in the composed state, from the theme revision in effect (the pinned one, else the current), which Screen's server reads from theming as a module. Every view-model also has `qr` (see QR handoff) and `stale` (boolean: older than the widget's `stale_after_seconds`; the screen then adds `canccu-is-stale`). A widget with nothing to show has `empty: true` (`canccu-is-empty`) and is skipped in a rotation.
+Each widget type below is offered by Screen: theming layouts place it, templates draw it ([theming.md](theming.md#widget-templates)), and its view-model is the only data a template can read. Data comes from the source module, through Screen; a device never calls another module, except loading the theme's files, which theming allows paired screens. The layout and templates come in the composed state, from the theme revision in effect (the pinned one, else the current), which Screen's server reads from theming as a module (`GET /internal/theming/revisions/{revision}`, [theming.md](theming.md#reading-the-current-theme)). Every view-model also has `qr` (see QR handoff) and `stale` (boolean: older than the widget's `stale_after_seconds`; the screen then adds `canccu-is-stale`). A widget with nothing to show has `empty: true` (`canccu-is-empty`) and is skipped in a rotation.
 
 | Type | View-model fields | Source | Live updates | Natural QR target |
 |---|---|---|---|---|
@@ -90,7 +92,7 @@ Each widget type below is offered by Screen: theming layouts place it, templates
 | `ticker` | `text`, `until`, `source` (`admin`, `bot`, `window`) | Screen's ticker (Ticker) | `screen.ticker.changed` | — |
 | `food_status` | `state`, `seq`, `pizzeria_name`, `target_at`, `pizza_count`, `people_count`, `holder_name` | Pizza events ([events.md](events.md#pizza)) | `pizza.order.*`, `pizza.item.*` | Your order in the hub |
 | `qr` | `url`, `label`, `image_url` | `props.url` (a path on the event's hostname) | none | itself |
-| `checkin_qr` | `url`, `label`, `image_url`, `purpose`, `rotates_at`, `valid_until` | Notify's rotating code ([notify.md](notify.md#check-in-by-the-rotating-qr)), once the notify contract adds a module path for it (until then `empty`): purpose `arrival`, or `tournament:<session id>` while `tournament.checkin.opened` is open | A `widget` push at every rotation | itself |
+| `checkin_qr` | `url`, `label`, `image_url`, `purpose`, `rotates_at`, `valid_until` | Notify's rotating code, which Screen's server reads as a module (`GET /internal/notify/check-in/code`, [notify.md](notify.md#check-in-by-the-rotating-qr)): purpose `arrival`, or `tournament:<session id>` while `tournament.checkin.opened` is open | A `widget` push at every rotation | itself |
 | `venue_info` | `wifi` (`ssid`, `password`, `note`: public networks only), `has_floor_plan` | `GET /api/tenants/current/venue-info` as a guest would see it | `tenants.venue_info.changed` | `/notify/` (venue info) |
 | `playlist` | `item` (`kind`, `url`, `slide_urls`, `started_at`, `offset_seconds`, `duration_seconds`, `muted`), `next_item` | The zone's scheduler (Content and scheduling) | `screen.content.pushed`, schedule changes | — |
 | `stats` | `members`, `online`, `in_voice` | `bot.presence.counted` | same | — |
@@ -98,7 +100,7 @@ Each widget type below is offered by Screen: theming layouts place it, templates
 
 - `logo` and `embed` are theming's. `sponsor` is reserved for a later step.
 - **Names on a screen:** the venue screen shows platform names to everyone in the room. Most come from event-wide `public` events (pizza holders, tournament players); `now_playing` names do not: the bot gives them only to signed-in members and crew ([bot.md](bot.md#who-plays-what)), so a zone shows them only when its organiser opts in, and `GET /api/screen/now` never gives them to a guest (below). Screen stores no presence data ([tenants.md](tenants.md#privacy-and-retention)): `now_playing` names are read live and kept only in the composed state (Valkey, 60 seconds). They show only with `props.show_names: true`, set per zone.
-- **Reading other modules as a module:** Screen's server reads the bot's presence API and Notify's check-in codes on behalf of the event's screens, never with a device's request. Neither the bot nor the notify contract has a module path for it yet; until those contracts add one, `now_playing` and `checkin_qr` show `empty`.
+- **Reading other modules as a module:** Screen's server reads the bot's presence API, Notify's check-in codes (`GET /internal/notify/check-in/code`) and the pinned theme revision (`GET /internal/theming/revisions/{revision}`) on behalf of the event's screens, never with a device's request. The bot contract has no module path for its presence API yet; until it adds one, `now_playing` shows `empty`.
 - **One source, two surfaces:** the hub reads now and next from `GET /api/agenda/now`, now playing from the bot and announcements from Moments ([notify.md](notify.md#the-hub)); Screen's widgets read the same sources, so they never disagree. `GET /api/screen/now?zone=` serves the hub what a zone's screens show now, following the event's info-page mode: its active claims, the ticker, and the view-models of only these widget types: `clock`, `agenda_now`, `countdown`, `hot_game`, `bracket`, `leaderboard`, `announcement`, `ticker`, `food_status`, `stats`, and `now_playing` (with `names` left out unless the caller is a signed-in member of the event). It never includes `checkin_qr`, `qr`, `venue_info`, `photo`, `playlist` or `embed`: the rotating check-in code proves presence at the venue only while it stays on the screen.
 
 ### QR handoff
@@ -229,7 +231,7 @@ The photo carousel (flag `screen.photos`): `POST /api/screen/photos` (multipart 
 `screen.devices.read` (devices, health, the live mirror), `screen.devices.pair`, `screen.devices.write` (rename, assign, mirror, commands, revoke), `screen.zones.write`, `screen.content.read`, `screen.content.write` (assets, playlists, schedules, render jobs), `screen.push.write`, `screen.ticker.write`, `screen.photos.write`, `screen.bundle.write`, `screen.settings.read` ([admin.md](admin.md#settings)). Event admins hold all of them through their role. Moving and deleting devices is the superadmin's.
 
 ## Feature flags
-`screen.photos` (photo carousel, default `false`), `screen.web` (web and YouTube assets, default `true`).
+`screen.photos` (photo carousel, default `false`), `screen.web` (web and YouTube assets, default `true`); declared in [flags.yaml](flags.yaml).
 
 ## Settings
 Per event through the admin settings API (module `screen`): `heartbeat_seconds` (5–60, 15), `offline_after_seconds` (15–300, 45), `web_allowlist` (list of `https://` origins, empty), `break_min_gap_seconds` (0–3600, 60), `progress_bars` (boolean, `true`), `ticker_appearance` (`default`, `high_contrast`, `minimal`, `broadcast`), `ready_timeout_seconds` (1–30, 8), `ready_fallback_asset_id` (string, empty), `photo_dwell_seconds` (5–60, 8).
@@ -249,8 +251,8 @@ Through `POST /internal/tenants/audit` in the same request ([tenants.md](tenants
 | agenda | `agenda.*`; `GET /api/agenda/now` | `agenda_now`, `countdown`, agenda-bound schedule windows |
 | games | `games.surge.*`, `games.game.*` | `hot_game` |
 | moments | `moments.override.*` | Claims |
-| notify | The rotating check-in code, through a module path the notify contract has yet to add | `checkin_qr` |
-| theming | `theming.theme.published`; the revision in effect (`GET /api/theming/current`, or the pinned revision as a module, through a module path the theming contract has yet to add) | Layouts, templates, the `theme` push |
+| notify | The rotating check-in code, `GET /internal/notify/check-in/code` | `checkin_qr` |
+| theming | `theming.theme.published`; the revision in effect (`GET /api/theming/current`, or the pinned revision as a module, `GET /internal/theming/revisions/{revision}`) | Layouts, templates, the `theme` push |
 | tenants | `tenants.tenant.*`, `tenants.status.changed`, `tenants.venue_ip_check.changed`, `tenants.venue.changed`, `tenants.venue_info.changed`, `tenants.flags.changed`, `tenants.user.deleted` | Tenant cache, venue IP check, `venue_info`, flags, deletes |
 | admin | `admin.settings.changed` | Settings |
 

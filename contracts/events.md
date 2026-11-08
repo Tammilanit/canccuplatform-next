@@ -106,7 +106,7 @@ On the tenant's stream:
 | Type | Meaning | Consumers |
 |---|---|---|
 | `tenants.tenant.changed` | The event's fields changed (name, time zone, dates, access, venue, series) | All modules (the kit's tenant cache) |
-| `tenants.status.changed` | The event went live or was archived | All modules (archived is read-only) |
+| `tenants.status.changed` | The event went live or was archived | All modules (archived is read-only); notify (deletes its subscriptions and notifications at archiving) |
 | `tenants.tenant.cloned` | The tenants part of a clone ran | admin (runs each module's clone) |
 | `tenants.flags.changed` | Feature flags were set | All modules; bot (re-registers slash commands) |
 | `tenants.venue_info.changed` | The event's venue info changed (also when copied in for a new venue). Audience: event-wide, `public` | screen, notify |
@@ -114,7 +114,7 @@ On the tenant's stream:
 | `tenants.admin.added`, `tenants.admin.removed` | A user became or stopped being an event admin | Every module that caches rights |
 | `tenants.member.joined`, `tenants.member.left` | A user joined or left the event. Audience: personal | notify (members-only delivery), every module that caches membership |
 | `tenants.support.opened`, `tenants.support.closed` | A superadmin's support window opened or closed | admin |
-| `tenants.retention.reached` | A retention date was reached (`presence`: 30 days after archiving) | Every module holding presence data |
+| `tenants.retention.reached` | A retention date was reached (`presence`: 30 days after archiving; `personal`: 12 months after archiving) | Every module holding presence or personal data |
 
 On the platform stream `events:tenants`, without `tenant`:
 
@@ -150,19 +150,18 @@ A person in a payload is a **Person**:
 | Field | Type | Meaning |
 |---|---|---|
 | `user_id` | string or null | The platform user ([tenants.md](tenants.md#users-roles-and-membership)); `null` for a Discord member who has not signed in to the platform |
-| `discord_user_id` | string or null | Their Discord user id, so the bot can mention or DM them; `null` when unknown, and for a hub user with no Discord account linked |
+| `discord_user_id` | string or null | Their Discord user id, so the bot can mention or DM them; `null` only when the emitter does not know it |
 | `name` | string | The name the module shows for them |
 
 At least one of `user_id` and `discord_user_id` is set. The phone hub's people fit this shape as they are:
 
 | Who | `user_id` | `discord_user_id` | Personal events |
 |---|---|---|---|
-| A hub user with Discord linked | set | set | Yes: Notify (push, inbox, Discord DM) and the bot |
-| A hub user without Discord | set | `null` | Yes: Notify by push and inbox; no Discord DM and no mention |
+| A signed-in user (every account is a Discord account, [tenants.md](tenants.md#users-roles-and-membership)) | set | set | Yes: Notify (push, inbox, Discord DM) and the bot |
 | A Discord member who has not signed in to the platform | `null` | set | Only through the bot (a mention or a channel post); Notify cannot reach them |
 | A guest: the hub with an anonymous push subscription and no account | — | — | Never: a guest is not a Person and no event names them. Guests get event-wide notifications only ([notify.md](notify.md#who-can-do-what)) |
 
-- **The link between a user and their Discord id** is the user's row in the tenants module, the one place it is kept ([tenants.md](tenants.md#users-roles-and-membership)). An emitter fills `discord_user_id` from it when it emits (the kit's user cache or `GET /internal/tenants/users/{user_id}`), so a user who links Discord later carries it in every later event; an event already emitted is never corrected.
+- **The link between a user and their Discord id** is the user's row in the tenants module, the one place it is kept ([tenants.md](tenants.md#users-roles-and-membership)). An emitter fills `discord_user_id` from it when it emits (the kit's user cache or `GET /internal/tenants/users/{user_id}`); an event already emitted is never corrected.
 - A personal event names the users it concerns at the top of `data`: `user_id` (string, or null for a person without a platform account) for one person, or `user_ids` (list of string, users without a platform account left out) for several. Notify's topic triggers read these as their `recipients` ([notify.md](notify.md#topic-types)), and **Notify resolves everything from them alone**: it never reads a Person, a name or a Discord id from a payload, and takes a user's Discord id for a DM from the tenants module at delivery. The Person objects alongside are for the bot (mentions) and for screens (names).
 - An event-wide event may name a person too (the holder of a pizza order); its audience then says who may see that name. User ids and Discord ids are for modules: no consumer shows them to people.
 - Presence data ([tenants.md](tenants.md#privacy-and-retention)): the emitter leaves users with `presence_opt_out` out of every presence payload (counts and voice rosters below), so consumers never see them.

@@ -1,0 +1,7 @@
+# Feature flags of every module, declared in one place (contracts/tenants.md, Feature flags).
+# The tenants module reads this file: a flag not listed here is 400 `unknown_flag`.
+# A module's contract lists its flags; the same contract PR adds them here. Adding is additive, removing breaking.
+flags:
+  # contracts/screen.md, Feature flags
+  screen.photos: {default: false}
+  screen.web: {default: true}

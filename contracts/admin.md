@@ -24,6 +24,7 @@ Every module serves `GET /health` with the same shape (`Health` in the OpenAPI f
 - Values are strings, numbers, booleans or flat lists of those, keyed by lowercase `snake_case` keys, the same as in a profile ([profile.md](profile.md)).
 - Settings are never secrets. A setting that needs one names the environment variable instead.
 - Modules read their settings at start and follow `admin.settings.changed` instead of polling.
+- **A module reads its own settings** for the tenant it serves with `GET /internal/admin/settings/{module}?tenant_id=` on admin's internal address, where no hostname names a tenant: the same answer as `GET /api/admin/settings/{module}` for that tenant. The kit's settings client calls it, with `tenant_id` from the tenant in scope. Internal network only ([README.md](README.md#conventions)).
 
 ## Session and rights
 - Signing in (Discord, first-run code: #10) ends in a session. The session id is the opaque cookie `canccu_session` (HttpOnly, SameSite=Lax, Secure when served over HTTPS); the session itself lives in Postgres, so any container can serve any request.
