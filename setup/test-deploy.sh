@@ -214,6 +214,6 @@ if [ -s "$st/state/status.json" ]; then pass "deploy still writes the status fil
 fresh "CANCCU_DEPLOY_IMAGES='registry.example.org/canccu'\n"; dep "deploy with a quoted CANCCU_DEPLOY_IMAGES" 0
 logged "deploy reads quoted values from deploy/.env" "docker pull -q registry.example.org/canccu/hello:dev"
 if docker compose -f deploy/compose.yml config 2>/dev/null | grep -q 'name: canccuplatform_deploy-status' \
-  && grep -q 'deploy-status:/run/canccu-deploy:ro' deploy/compose.yml && grep -q 'CANCCU_DEPLOY_STATUS_FILE: /run/canccu-deploy/status.json' deploy/compose.yml
+  && docker compose -f deploy/compose.yml config --format json 2>/dev/null | jq -e '.services.hello.volumes[] | select(.source == "deploy-status" and .target == "/run/canccu-deploy" and .read_only)' >/dev/null && grep -q 'CANCCU_DEPLOY_STATUS_FILE: /run/canccu-deploy/status.json' deploy/compose.yml
 then pass "the stack mounts the volume deploy writes the status to into hello, read-only"
 else bad "the stack mounts the volume deploy writes the status to into hello, read-only"; fi

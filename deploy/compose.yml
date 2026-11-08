@@ -1,6 +1,6 @@
 # CanccuPlatform on one machine, IP mode: `docker compose -f deploy/compose.yml up -d`
 # Only Caddy publishes ports. Containers keep no state: data lives in the postgres-data,
-# valkey-data and files volumes.
+# valkey-data and files volumes; deploy-status holds only what the host's auto-deploy writes.
 name: canccuplatform
 
 x-kit-env: &kit-env
@@ -88,7 +88,11 @@ services:
       CANCCU_DEPLOY_STATUS_FILE: /run/canccu-deploy/status.json
     volumes:
       - files:/files
-      - deploy-status:/run/canccu-deploy:ro
+      # long form: some Compose versions reject the short form's `:ro` on a named volume
+      - type: volume
+        source: deploy-status
+        target: /run/canccu-deploy
+        read_only: true
     depends_on:
       <<: *after-db
     healthcheck:
