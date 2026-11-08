@@ -15,7 +15,8 @@ S=$STUB; echo "docker $*" >> "$S/log"
 mod() { m=${1##*/}; m=${m%:*}; m=${m#canccuplatform-}; echo "$m"; }
 case "$1" in
   info) exit 0 ;;
-  pull) [ ! -e "$S/pull_fail" ] ;;
+  pull) [ ! -e "$S/pull_fail" ] || { cat "$S/pull_fail" >&2; exit 1; } ;;
+  volume) [ -e "$S/no_volume" ] && exit 1; echo "$S/vol" ;;
   tag) [ -e "$S/tag_fail_$(mod "$3")" ] && exit 1
        case "$2" in sha256:*) id=$2 ;; *) id=$(cat "$S/remote_$(mod "$2")") ;; esac
        printf '%s\n' "$id" > "$S/live_$(mod "$3")" ;;
@@ -67,7 +68,7 @@ chmod +x "$stubs/bin/"* "$stubs/firewall"
 old=1111111111111111111111111111111111111111; new=2222222222222222222222222222222222222222
 # fresh [ENV]: reset the stub state: the checkout is at $old, the registry has images built from $new
 fresh() {
-  st=$(mktemp -d "$scratch/st.XXXXXX"); mkdir "$st/state"
+  st=$(mktemp -d "$scratch/st.XXXXXX"); mkdir "$st/state" "$st/vol"
   echo main > "$st/branch"; echo "$old" > "$st/head"; echo "$new" > "$st/target"; echo "$new" > "$st/rev"
   echo 0 > "$st/up_rc"; echo 0 > "$st/fw_rc"; : > "$st/log"
   for m in hello admin; do echo "sha256:old$m" > "$st/live_$m"; echo "sha256:new$m" > "$st/remote_$m"; done
@@ -75,9 +76,20 @@ fresh() {
   stub=$st; denv=$(envfile "CANCCU_VERSION=dev\nCANCCU_DEPLOY_GITHUB_TOKEN=test-token\n${1:-}")
 }
 dep() { exits "$1" "$2" env STUB="$st" PATH="$stubs/bin:$PATH" CANCCU_ENV_FILE="$denv" CANCCU_DEPLOY_STATE="$st/state" CANCCU_DEPLOY_FIREWALL="$stubs/firewall" CANCCU_DEPLOY_WAIT=1 setup/deploy; }
+# status NAME ERE...: the status file in the state directory and the copy in the stack's volume
+# both match every ERE
+status() {
+  local n=$1 f e; shift
+  for f in "$st/state/status.json" "$st/vol/status.json"; do
+    for e; do grep -Eq -- "$e" "$f" 2>/dev/null || { bad "$n ($f: no match for $e)" "$(cat "$f" 2>/dev/null)"; return; }; done
+  done
+  pass "$n"
+}
 issues() { if [ "$( { wc -l < "$st/issues"; } 2>/dev/null || echo 0)" = "$2" ]; then pass "$1"; else bad "$1 (want $2 issues)" "$(cat "$st/issues" 2>/dev/null)"; fi; }
 
-fresh 'CANCCU_VERSION=v0.1.0\n'; dep "deploy does nothing unless the platform version is dev" 0
+fresh 'CANCCU_VERSION=v0.1.0\n'; echo '{}' > "$st/state/status.json"; echo '{}' > "$st/vol/status.json"
+dep "deploy does nothing unless the platform version is dev" 0
+if [ ! -e "$st/state/status.json" ] && [ ! -e "$st/vol/status.json" ]; then pass "deploy removes the status file when auto-deploy is off"; else bad "deploy removes the status file when auto-deploy is off"; fi
 has "deploy says auto-deploy is off" "not dev"
 notlogged "deploy pulls nothing when the platform version is not dev" "docker pull"
 
@@ -91,6 +103,7 @@ has "deploy says which images it waits for" "waiting for the images of 2222222"
 notlogged "deploy changes nothing while it waits" "merge -q|docker tag|compose .* up "
 
 fresh; dep "deploy of a new merge" 0
+status "a deploy writes its result to the status file the stack reads" '"result":"ok"' "\"commit\":\"$new\"" '"time":"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z"' '"failures":0'
 logged "deploy pulls the dev images from the repo's registry" "docker pull -q ghcr.io/example-org/example-repo/hello:dev"
 logged "deploy pulls only modules with a Dockerfile" "docker pull -q ghcr.io/example-org/example-repo/admin:dev"
 notlogged "deploy skips modules without a Dockerfile" "nodocker:dev"
@@ -166,9 +179,41 @@ fresh; echo feature > "$st/branch"; dep "deploy refuses a checkout not on main" 
 fresh; touch "$st/diverged"; dep "deploy refuses a checkout that diverged from main" 2
 fresh; echo 1 > "$st/fw_rc"; dep "deploy refuses when the firewall is not in place" 2
 notlogged "deploy changes nothing without the firewall" "merge -q|docker tag|compose .* up "
-fresh; touch "$st/pull_fail"; dep "deploy fails clearly when the registry is unreachable" 2
+fresh; echo "Error response from daemon: Get \"https://ghcr.io/v2/\": dial tcp: lookup ghcr.io: no such host" > "$st/pull_fail"
+dep "deploy fails clearly when the registry is unreachable" 2
+has "deploy says the registry cannot be reached and what to check" "cannot reach the registry ghcr.io.*network"
 notlogged "deploy changes nothing when a pull fails" "merge -q|docker tag|compose .* up "
+status "a failed pull is written to the status file" '"result":"failed"' '"failures":1' '"error":"[^"]*cannot reach the registry ghcr.io' "\"commit\":\"$old\""
+since=$(sed -n 's/.*"failing_since":"\([^"]*\)".*/\1/p' "$st/state/status.json")
+if [ -n "$since" ]; then pass "the status file says since when the deploy fails"; else bad "the status file says since when the deploy fails" "$(cat "$st/state/status.json")"; fi
+dep "deploy whose pull fails again" 2
+status "a second failure in a row counts two and keeps the start of the streak" '"failures":2' "\"failing_since\":\"$since\""
+rm "$st/pull_fail"; dep "deploy after the registry is back" 0
+status "a good run ends the streak and names the deployed commit" '"result":"ok"' '"failures":0' '"failing_since":""' "\"commit\":\"$new\""
+fresh; echo "Error response from daemon: Head \"https://ghcr.io/v2/example-org/example-repo/hello/manifests/dev\": denied" > "$st/pull_fail"
+dep "deploy whose pull is refused (a private package without a login)" 2
+has "deploy says the package needs a registry login and how to add one" "private.*sudo docker login ghcr.io"
+status "the refused pull is written to the status file" '"error":"[^"]*sudo docker login ghcr.io'
+fresh; echo "Error response from daemon: manifest unknown" > "$st/pull_fail"
+dep "deploy whose image is not in the registry" 2
+has "deploy says the image was not pushed yet" "not in the registry.*Images workflow"
+fresh; echo "Error response from daemon: something else" > "$st/pull_fail"; dep "deploy whose pull fails otherwise" 2
+has "deploy passes on docker's reason when it does not know it" "cannot pull .*:dev: Error response from daemon: something else"
 fresh; echo "https://git.example.org/a/b.git" > "$st/origin"; dep "deploy refuses an origin not on GitHub" 2
 has "deploy names the origin that is not on GitHub" "git.example.org/a/b.git.* is not a GitHub repository"
+status "a refused run is a failure in the status file" '"result":"failed"' '"error":"[^"]*is not a GitHub repository'
+fresh; echo "https://someone:s3cret@git.example.org/a/b.git" > "$st/origin"; dep "deploy refuses an origin with credentials" 2
+if grep -q s3cret "$st/state/status.json" "$st/vol/status.json"; then bad "the status file never holds credentials from a URL" "$(cat "$st/vol/status.json")"; else pass "the status file never holds credentials from a URL"; fi
+fresh; touch "$st/bad_sha256:newhello"; dep "a failed deploy that rolls back" 1
+status "a rolled-back deploy is a failure and names the commit the host still runs" '"result":"failed"' "\"commit\":\"$old\"" '"error":"[^"]*rolled back'
+dep "the held deploy on the next run" 1
+status "holding a failed deploy keeps counting failures" '"failures":2' '"error":"[^"]*holding'
+fresh; touch "$st/no_volume"; dep "deploy without the stack's status volume" 0
+has "deploy says it could not hand the status to the stack" "warning: .*canccuplatform_deploy-status"
+if [ -s "$st/state/status.json" ]; then pass "deploy still writes the status file in its state directory"; else bad "deploy still writes the status file in its state directory"; fi
 fresh "CANCCU_DEPLOY_IMAGES='registry.example.org/canccu'\n"; dep "deploy with a quoted CANCCU_DEPLOY_IMAGES" 0
 logged "deploy reads quoted values from deploy/.env" "docker pull -q registry.example.org/canccu/hello:dev"
+if docker compose -f deploy/compose.yml config 2>/dev/null | grep -q 'name: canccuplatform_deploy-status' \
+  && grep -q 'deploy-status:/run/canccu-deploy:ro' deploy/compose.yml && grep -q 'CANCCU_DEPLOY_STATUS_FILE: /run/canccu-deploy/status.json' deploy/compose.yml
+then pass "the stack mounts the volume deploy writes the status to into hello, read-only"
+else bad "the stack mounts the volume deploy writes the status to into hello, read-only"; fi

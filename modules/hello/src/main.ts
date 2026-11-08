@@ -11,6 +11,7 @@ async function main(): Promise<void> {
   const databaseUrl = process.env.CANCCU_DATABASE_URL;
   if (!databaseUrl) throw new Error("missing environment variable(s): CANCCU_DATABASE_URL");
 
+  const deployStatusFile = process.env.CANCCU_DEPLOY_STATUS_FILE;
   const store = ValkeyStreamStore.fromUrl(config.valkeyUrl);
   const pool = new pg.Pool({ connectionString: databaseUrl, connectionTimeoutMillis: 1500 });
   pool.on("error", (err) => {
@@ -23,6 +24,7 @@ async function main(): Promise<void> {
       version: config.version,
       store,
       query: () => pool.query("SELECT 1"),
+      ...(deployStatusFile ? { deployStatusFile } : {}),
     }),
   );
   await app.listen({ host: "0.0.0.0", port: PORT });
