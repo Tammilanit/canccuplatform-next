@@ -1,12 +1,14 @@
 openapi: 3.1.0
 info:
   title: Admin API
-  version: 1.0.0
+  version: 1.1.0
   summary: Settings, health, session and rights, profile save and load.
   description: |
     Machine-readable part of the admin contract. Prose, rules and events: contracts/admin.md.
     Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
     The `/health` operation and the `Health` schema are shared: every module serves the same shape.
+    Paths under /internal/admin are for other modules on the stack's internal network only and name the tenant
+    in `tenant_id`.
   license:
     name: AGPL-3.0
     identifier: AGPL-3.0-only
@@ -22,6 +24,8 @@ tags:
     description: The signed-in user and their rights.
   - name: profile
     description: Export and import of the event profile.
+  - name: internal
+    description: Module paths on the stack's internal network; the edge Caddy never routes them.
 security:
   - session: []
 paths:
@@ -97,6 +101,38 @@ paths:
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+  /internal/admin/settings/{module}:
+    parameters:
+      - $ref: "#/components/parameters/Module"
+    get:
+      tags: [internal]
+      operationId: getSettingsInternal
+      summary: A module reads its own settings for one tenant
+      description: |
+        For the kit's settings client: a module reads its own settings for the tenant it serves, on admin's
+        internal address, where no hostname names a tenant. The same answer as `GET /api/admin/settings/{module}`
+        for that tenant. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+      responses:
+        "200":
+          description: The settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /api/admin/session:
     get:
       tags: [session]
@@ -208,7 +244,7 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
     NotFound:
-      description: Unknown module.
+      description: Unknown module, or unknown tenant on an internal path.
       content:
         application/json:
           schema:

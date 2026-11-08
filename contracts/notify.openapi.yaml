@@ -1,12 +1,13 @@
 openapi: 3.1.0
 info:
   title: Notify API
-  version: 1.1.0
+  version: 1.2.0
   summary: Web Push subscriptions, notifications, check-in and privacy for the phone hub.
   description: |
     Machine-readable part of the notify contract. Prose, topics, delivery rules and events: contracts/notify.md.
     Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
-    The event (tenant) comes from the hostname; no operation names a tenant.
+    The event (tenant) comes from the hostname; no /api/ operation names a tenant. Paths under /internal/notify
+    are for other modules on the stack's internal network only; a per-event one names the tenant in `tenant_id`.
   license:
     name: AGPL-3.0
     identifier: AGPL-3.0-only
@@ -434,28 +435,49 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required: [purpose, code, url, valid_until, rotates_at]
-                properties:
-                  purpose:
-                    $ref: "#/components/schemas/Purpose"
-                  code:
-                    $ref: "#/components/schemas/CheckInCode"
-                  url:
-                    type: string
-                    description: "Absolute URL on the event's registered hostname: `/notify/check-in?p=<purpose>&c=<code>`."
-                  valid_until:
-                    type: string
-                    format: date-time
-                  rotates_at:
-                    type: string
-                    format: date-time
+                $ref: "#/components/schemas/CheckInCodeNow"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+  /internal/notify/check-in/code:
+    get:
+      tags: [check-in]
+      operationId: getCheckInCodeInternal
+      summary: The current rotating check-in code, for a module
+      description: |
+        For the screen module's server, which shows the code on the event's screens (contracts/screen.md,
+        `checkin_qr`); a device has no session. The same answer as `GET /api/notify/check-in/code`, for the
+        given tenant. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+        - name: purpose
+          in: query
+          required: true
+          description: "`arrival`, or `<module>:<ref>` for a check-in another module owns."
+          schema:
+            $ref: "#/components/schemas/Purpose"
+      responses:
+        "200":
+          description: The code and the URL to put in the QR.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckInCodeNow"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /api/notify/check-ins:
     post:
       tags: [check-in]
@@ -694,7 +716,7 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
     NotFound:
-      description: "`not_found`: no such subscription, notification or topic, or the caller may not see it."
+      description: "`not_found`: no such subscription, notification, topic or tenant, or the caller may not see it."
       content:
         application/json:
           schema:
@@ -1198,6 +1220,23 @@ components:
       type: string
       description: 128 bits of HMAC-SHA256, base64url without padding.
       pattern: "^[A-Za-z0-9_-]{22}$"
+    CheckInCodeNow:
+      type: object
+      required: [purpose, code, url, valid_until, rotates_at]
+      properties:
+        purpose:
+          $ref: "#/components/schemas/Purpose"
+        code:
+          $ref: "#/components/schemas/CheckInCode"
+        url:
+          type: string
+          description: "Absolute URL on the event's registered hostname: `/notify/check-in?p=<purpose>&c=<code>`."
+        valid_until:
+          type: string
+          format: date-time
+        rotates_at:
+          type: string
+          format: date-time
     CheckIn:
       type: object
       required: [id, purpose, checked_in_at]
@@ -1217,8 +1256,8 @@ components:
           default: true
           description: |
             Personal notifications fall back to a Discord DM when no push reaches the caller, unless the caller
-            explicitly set `discord_dm: false` for that topic and part in `channels`. A caller without a Discord
-            id linked gets no DM at all.
+            explicitly set `discord_dm: false` for that topic and part in `channels`. No DM goes out while the
+            event's Discord client cannot send one (no guild bound, or the client paused or failed).
         channels:
           type: object
           description: |

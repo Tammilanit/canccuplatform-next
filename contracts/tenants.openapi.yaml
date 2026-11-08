@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Tenants API
-  version: 1.0.0
+  version: 2.0.0
   summary: Events as tenants on one shared stack, their hostnames, venues, users, roles, access and audit log.
   description: |
     Machine-readable part of the tenants contract. Prose, rules and events: contracts/tenants.md.
@@ -403,11 +403,20 @@ paths:
       operationId: joinEvent
       summary: Join the event as a member
       description: |
-        A signed-in user, while `membership` is `open` and the event is `live`. 403 `membership_closed` when
-        it is `closed` or the event is `draft` (only event admins add members then); 409 `event_archived`.
-        Joining again is 200 with the same membership. Emits `tenants.member.joined`.
+        A signed-in user, while the event is `live` and `membership` is `venue_or_link`, and only when the
+        request comes from one of the venue's addresses or carries the event's current `join_code` (from the
+        event's own link or QR code). 403 `membership_closed` when `membership` is `closed`, the event is `draft`
+        (only event admins add members then), or the request is neither from the venue nor carries a code;
+        403 `join_code_invalid` for a code that is not the current one, from outside the venue; 409
+        `event_archived`. Joining again is 200 with the same membership. Emits `tenants.member.joined`.
       security:
         - session: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinRequest"
       responses:
         "200":
           description: Already a member.
@@ -441,6 +450,50 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/tenants/current/join-link:
+    get:
+      tags: [people]
+      operationId: getJoinLink
+      summary: The event's own join link and its code
+      description: |
+        Right `tenants.members.write`. The link, as a link or a QR code, lets a signed-in person join from
+        anywhere; event admins send it only to attendees.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The join link.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinLink"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/tenants/current/join-link/rotate:
+    post:
+      tags: [people]
+      operationId: rotateJoinLink
+      summary: Replace the join code
+      description: |
+        Right `tenants.members.write`. The old code stops working at once; members who joined with it stay.
+        Audited (never the code). 409 `event_archived`.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: The new join link.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinLink"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/tenants/me/privacy:
     get:
       tags: [people]
@@ -996,7 +1049,9 @@ paths:
       tags: [superadmin]
       operationId: updateHostname
       summary: Make a hostname its tenant's primary
-      description: Superadmin; only an `active` one. Audited. Emits `tenants.hostname.changed`.
+      description: |
+        Superadmin; only an `active` one: a `pending` or `held` hostname is 409 `hostname_not_active`.
+        Audited. Emits `tenants.hostname.changed`.
       security:
         - session: []
       requestBody:
@@ -1464,6 +1519,26 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
+  /internal/tenants/ip-mode:
+    get:
+      tags: [internal]
+      operationId: resolveIpMode
+      summary: The demo tenant's context for the IP-mode demo stack
+      description: |
+        For the kit, for a request whose host is an IP address. Answers the `demo` tenant's context only while
+        the tenants module's version is `dev` and `demo` is the only tenant; otherwise 404 `not_found`.
+        Internal network only.
+      security:
+        - {}
+      responses:
+        "200":
+          description: The demo tenant's context.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantContext"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /internal/tenants/ask:
     get:
       tags: [internal]
@@ -1647,7 +1722,8 @@ components:
         `missing_right`; `superadmin_required`; `mfa_required` (a superadmin without Discord two-factor);
         `admin_access_restricted` (the event's `admin_access` is `restricted` and the request is neither from
         the venue nor over Tailscale); `info_pages_closed` (the info-page mode does not let this request in);
-        `membership_closed` (also any self-join while the event is `draft`).
+        `membership_closed` (a self-join that `membership`, the event's status or the request's place does not
+        allow); `join_code_invalid` (a join code that is not the current one, from outside the venue).
       content:
         application/json:
           schema:
@@ -1665,7 +1741,7 @@ components:
         `version_conflict` (stale `revision` or `flags_version`), `event_archived`, `invalid_transition`,
         `already_cloned`, `no_venue`, `last_admin`, `last_superadmin`, `mfa_required`, `tenant_exists`,
         `tenant_live`, `venue_in_use`, `hostname_taken`, `hostname_held`, `hostname_reserved`, `primary_hostname`,
-        `verification_failed`.
+        `hostname_not_active`, `verification_failed`.
       content:
         application/json:
           schema:
@@ -1730,7 +1806,10 @@ components:
       enum: [public, venue_only, sign_in]
     Membership:
       type: string
-      enum: [open, closed]
+      description: |
+        `venue_or_link`: a signed-in user joins from one of the venue's addresses or with the event's join code
+        (the default). `closed`: only event admins add members.
+      enum: [venue_or_link, closed]
     AdminAccess:
       type: string
       enum: [restricted, internet]
@@ -1795,7 +1874,7 @@ components:
       allOf:
         - $ref: "#/components/schemas/PublicTenant"
         - type: object
-          required: [series_id, admin_access, venue_ip_check, archived_at, presence_delete_at, cloned_from, created_at, revision]
+          required: [series_id, admin_access, venue_ip_check, archived_at, presence_delete_at, personal_anonymise_at, cloned_from, created_at, revision]
           properties:
             series_id:
               type: [string, "null"]
@@ -1810,6 +1889,10 @@ components:
               type: [string, "null"]
               format: date-time
               description: "`archived_at` plus 30 days; the presence data of the event is deleted then."
+            personal_anonymise_at:
+              type: [string, "null"]
+              format: date-time
+              description: "`archived_at` plus 12 calendar months; the event's other personal data is anonymised then."
             cloned_from:
               type: [string, "null"]
               description: The source tenant id once the tenants part of a clone has run.
@@ -2225,6 +2308,7 @@ components:
             discord_user_id:
               type: string
               pattern: "^[0-9]{1,20}$"
+              description: "Always set: every account is a Discord account."
             privacy:
               $ref: "#/components/schemas/Privacy"
     Role:
@@ -2255,6 +2339,30 @@ components:
           oneOf:
             - $ref: "#/components/schemas/Privacy"
             - type: "null"
+    JoinRequest:
+      type: object
+      properties:
+        join_code:
+          $ref: "#/components/schemas/JoinCode"
+    JoinCode:
+      type: string
+      description: 128 random bits, base64url without padding.
+      pattern: "^[A-Za-z0-9_-]{22}$"
+    JoinLink:
+      type: object
+      required: [join_code, url, rotated_at]
+      properties:
+        join_code:
+          $ref: "#/components/schemas/JoinCode"
+        url:
+          type: [string, "null"]
+          description: |
+            `https://<primary_hostname>/notify/join#code=<join_code>`, the hub's join page; the code is in the
+            fragment so it reaches no server log. `null` while the event has no primary hostname.
+        rotated_at:
+          type: string
+          format: date-time
+          description: When the code was made, at creation or by the last rotation.
     Member:
       type: object
       required: [user, joined_at]

@@ -7,7 +7,7 @@ Every event is a tenant on one shared stack ([0013](../docs/decisions/0013-multi
 ## Words
 - **Tenant** or **event:** one event, for example one weekend LAN. The words are used interchangeably; "event" in a module contract means a tenant, never a bus event.
 - **Platform:** the shared stack itself, with the things that belong to no event (venues, users, series, the hostname registry).
-- **Guest:** a request without a session. **Member:** a signed-in user who belongs to the event (an attendee). **Event admin**, **superadmin:** the two roles (see Roles).
+- **Guest:** a request without a session: a person without an account, or not signed in. Guests stay anonymous. **Member:** a signed-in user who belongs to the event (an attendee): they joined from the venue or through the event's own link, or an event admin added them (see Users, roles and membership). **Event admin**, **superadmin:** the two roles (see Roles).
 
 ## Tables: global and per tenant
 Postgres row-level security guards every tenant table (0013 items 5–6). A global table has no `tenant_id` of its own, is not under RLS and is read before a tenant is set. A global table exists only on the kit's allow-list ([#49](../docs/roadmap.md#2b-tenancy-foundation)); adding one changes that list.
@@ -29,6 +29,7 @@ Series and platform audit are added to 0013 item 6's list of global tables: a se
 ## Resolving the tenant
 - The tenant comes from the request's hostname, looked up exactly (lowercase, port dropped) among `active` hostnames. Never from a path, query or body field, and never from the `Host` header of a request Caddy did not forward. An unknown host gets 404 with no body detail, and the edge Caddy gets no certificate for it.
 - Outside resolution (0013 item 2): the platform's own hostnames (the central sign-in host and the superadmin hostname, both from the environment and never registrable), `GET /health`, and the IP-mode demo stack in CI, which serves the demo tenant on an unregistered host only while `platform.version` is `dev` and the demo tenant is the only tenant.
+- **For the IP-mode demo stack:** the kit asks `GET /internal/tenants/ip-mode` for a request whose host is an IP address. It answers the demo tenant's `TenantContext`, the same as `resolve` would, only while the tenants module's own version is `dev` and `demo` is the only tenant; otherwise 404. So every module runs IP mode the same way, without a loader of its own.
 - **For modules:** the kit resolves and caches the tenant through `GET /internal/tenants/resolve?host=` (the `TenantContext` in the OpenAPI file: id, status, time zone, access settings, the venue's addresses and the feature flags) and drops its cache on the tenants events. A module never reads the registry itself.
 - Absolute URLs (links in DMs, push, QR codes) use the tenant's `primary_hostname`, never the request's `Host` header (0013 item 10).
 - **Internal endpoints** live under `/internal/tenants/`, not `/api/`. The edge Caddy routes only `/api/<module>/` and `/<module>/`, so they are reached only on the stack's internal network: by the kit, the other modules and Caddy's `ask`.
@@ -47,10 +48,10 @@ A tenant (`Tenant` in the OpenAPI file):
 | `series_id` | Its series, or `null` |
 | `primary_hostname` | The hostname for absolute URLs; `null` until the first hostname is added, or while none is `active`. No absolute URL can be built then |
 | `info_page_mode` | `public`, `venue_only` or `sign_in` (see Access) |
-| `membership` | `open` (any signed-in user may join) or `closed` (event admins add members). Default `open` |
+| `membership` | `venue_or_link` (a signed-in user joins from one of the venue's addresses or with the event's own join link; the default) or `closed` (only event admins add members). See Users, roles and membership |
 | `admin_access` | `restricted` (default) or `internet` (see Access) |
 | `venue_ip_check` | `{"enabled", "disabled_until", "reason"}` (see Access) |
-| `archived_at`, `presence_delete_at` | Set when archived (see Retention) |
+| `archived_at`, `presence_delete_at`, `personal_anonymise_at` | Set when archived (see Privacy and retention) |
 | `revision` | +1 on every change, for optimistic concurrency |
 
 - `GET /api/tenants/current` → the request's tenant, readable by anyone, also guests, so pages can decide what to show. Guests see the public fields only (`PublicTenant`: no access settings beyond `info_page_mode`, no revision). While the event is `draft`, a guest gets only `{"id", "status"}` (`DraftTenant`), so a page can say "not open yet" without showing the event.
@@ -95,11 +96,12 @@ The venue owns its lasting data, and each new event gets a copy of it ([0022](..
 - The profile: `house_rules` (text, up to 20,000 characters), `wifi` (a list of networks: `ssid`, `password`, `note`, `visibility`), `floor_plan` (an image, PNG, JPEG or WebP, up to 10 MB; SVG is refused because uploads are served as data, 0013 item 21). The screens at the venue are Screen's devices (above); they are not copied, because a device serves one event at a time and only the superadmin moves it.
 - **Copy-in, not a live link:** when an event gets its venue (at creation, or when the superadmin changes it), the venue's profile is copied into the event's **venue info** (per tenant), replacing any earlier copy, and `tenants.venue_info.changed` is emitted with `copied: true`. Later edits of the venue do not change existing events; the event admin may copy again with `POST /api/tenants/current/venue-info/copy`.
 - Event admins edit the event's copy: `PUT /api/tenants/current/venue-info` and `PUT /api/tenants/current/venue-info/floor-plan`, right `tenants.venue_info.write`. Emits `tenants.venue_info.changed`.
-- Reading: `GET /api/tenants/current/venue-info` and `…/floor-plan` are info pages and follow the info-page mode. A Wi-Fi network's `visibility` is `public` (everyone the mode lets in) or `attendees` (members only), so guests never see the password. Members are whoever joined: with `membership: open` anyone who signs in can join from anywhere and see it; an event that wants it only for invited attendees sets `membership: closed`.
+- Reading: `GET /api/tenants/current/venue-info` and `…/floor-plan` are info pages and follow the info-page mode. A Wi-Fi network's `visibility` is `public` (everyone the mode lets in) or `attendees` (members only), so guests never see the password. A member joined at the venue or with the event's own link, or was added by an event admin, so signing in from anywhere else never shows it (see [Joining the event](#joining-the-event)).
 - The venue's floor plan file is global data of the tenants module, stored under `/files/_platform/tenants/venues/<venue id>/` (outside every tenant's tree; `_` is not allowed in tenant ids). The copy goes to `/files/<tenant>/tenants/`.
 
 ## Users, roles and membership
 - **Users are global** (0013 item 30): one row per person, created or updated by the central sign-in ([#52](../docs/roadmap.md#2b-tenancy-foundation)) through the tenants module. A user has an `id` (e.g. `u_123`), a Discord user id, a `name`, `mfa_enabled` as Discord last reported it, and the privacy flags.
+- **Every account is a Discord account:** the central sign-in signs people in with Discord only, so every user has a Discord user id (`discord_user_id` is required in `UserInternal`). A person without an account stays an anonymous guest: the public pages the info-page mode lets them see, and event-wide push without signing in ([notify.md](notify.md#who-can-do-what)).
 - **Roles:**
   - **superadmin** (global): manages tenants, hostnames, venues, series and superadmins on the superadmin hostname. Needs `mfa_enabled` (Discord two-factor; otherwise 403 `mfa_required`). The superadmin hostname is reachable over Tailscale only (0022); the edge Caddy enforces that (#51). On a tenant's hostname a superadmin has no rights until they open a support window.
   - **event admin** (per tenant): holds every right of every module in that tenant. A user may be event admin of several events.
@@ -107,9 +109,18 @@ The venue owns its lasting data, and each new event gets a copy of it ([0022](..
 - **Event admins:** `GET /api/tenants/current/admins`; `PUT` and `DELETE /api/tenants/current/admins/{user_id}`. Right `tenants.admins.write`. Removing the last event admin is 409 `last_admin`. Emits `tenants.admin.added` or `tenants.admin.removed`; a module that caches rights drops that user's cache on them.
 - **Members** (attendees): a member belongs to one event; a user may be a member of several.
   - `GET /api/tenants/me` → for this event: `user` (`null` for a guest), `member`, `roles`, `superadmin`, `support_until` and `privacy`. Modules ask here (through the kit, with the caller's cookie) whether the caller is a member.
-  - Join: `POST /api/tenants/me/membership` while `membership` is `open` and the event is `live`; otherwise 403 `membership_closed` (also for a `draft` event: there only event admins add members) or 409 `event_archived`. Leave: `DELETE /api/tenants/me/membership`, also when archived.
+  - Join: see [Joining the event](#joining-the-event). Leave: `DELETE /api/tenants/me/membership`, also when archived.
   - Event admins: `GET /api/tenants/current/members` (right `tenants.members.read`) and `PUT` or `DELETE /api/tenants/current/members/{user_id}` (right `tenants.members.write`). An event admin sees only their own event's members: user id, name and when they joined; never a Discord id. Emits `tenants.member.joined` or `tenants.member.left`.
 - **Support access** (0013 item 13): a superadmin on a tenant's hostname opens a support window with `POST /api/tenants/current/support` and a `reason`. For 2 hours, or until `DELETE /api/tenants/current/support`, they act as an event admin there, and every audit entry they cause is marked `support`, also entries other modules append (see Audit log). Opening and closing emit `tenants.support.opened` and `tenants.support.closed`.
+
+### Joining the event
+There is no open membership: attendee-only data (the Wi-Fi password, `attendees` items and notifications in other modules) is for members, and a person becomes a member only at the venue, through the event's own link or QR code, or by an event admin. Signing in from anywhere else gives no membership and no attendee data.
+
+- **Join:** `POST /api/tenants/me/membership`, by a signed-in user, while the event is `live` and `membership` is `venue_or_link`, when **either** the request comes from one of the venue's addresses (the addresses `venue_only` uses, see Access) **or** its body carries the event's current `join_code`. Joining again is 200 with the same membership. Emits `tenants.member.joined`.
+- **Refused:** 403 `membership_closed` when `membership` is `closed`, the event is `draft` (only event admins add members there), or the request is neither from the venue nor carries a code; 403 `join_code_invalid` when it carries a code that is not the current one and is not from the venue (a request from the venue joins whatever code it carries, so an old link never locks out someone who is there); 409 `event_archived`. An event with no venue has no venue addresses: people join it only with the link.
+- **The event's own link and QR code:** `GET /api/tenants/current/join-link` → `join_code`, `url` and `rotated_at`; right `tenants.members.write`. `url` is `https://<primary_hostname>/notify/join#code=<join_code>`, the hub's join page ([notify.md](notify.md#the-hub)), or `null` while the event has no primary hostname. Event admins send it to attendees or print it as a QR code. The code sits in the fragment, so it never reaches a server log or a `Referer` header. The hub's page signs the person in through the central sign-in when needed, then joins with the code.
+- **Rotating:** `POST /api/tenants/current/join-link/rotate` makes a new code, and the old one stops working at once; people who joined with it stay members. Right `tenants.members.write`; audited (that it was rotated, never a code).
+- **The code:** 128 random bits in base64url without padding (22 characters), made when the tenant is created and compared in constant time. It never appears in an event, a log or the audit log, and a clone does not copy it.
 
 ## Access
 Who may see what on a tenant's hostname. The kit implements these rules once ([#49](../docs/roadmap.md#2b-tenancy-foundation)); modules call it and never compare addresses themselves. The request's address is the client address the edge Caddy forwards; Caddy is the only trusted proxy (0013 item 10).
@@ -125,6 +136,7 @@ Info pages are read-only, public-facing pages and data: the run-of-show, announc
 
 - Members, event admins and a superadmin in a support window always may, in every mode; guests never may while the event is `draft`.
 - The mode is a **visibility setting, never authorization.** It never grants a write, a personal read or any right. `venue_only` lets in anyone at the venue, also the attendees of another event there at the same time.
+- **Attendee-only data** is never an info page: it is for members only, in every mode, and membership needs the venue or the event's own link ([Joining the event](#joining-the-event)).
 - A denied info read is 403 `info_pages_closed`.
 
 ### Venue IP check for screens and its emergency switch
@@ -141,14 +153,15 @@ Info pages are read-only, public-facing pages and data: the run-of-show, announc
 
 ## Feature flags
 - Per tenant (0013 item 17): `GET /api/tenants/current/flags` → `{"flags_version", "flags"}`, readable by anyone, except guests of a `draft` event (403 `info_pages_closed`); `PUT /api/tenants/current/flags` with `flags_version` and the flags to set, right `tenants.flags.write`. A stale `flags_version` is 409 `version_conflict`.
-- A flag is named `<module>.<feature>` (e.g. `bot.stats`) and is a boolean. Each module's contract lists its flags with their defaults and declares them next to its settings; an undeclared flag is 400 `unknown_flag`. A flag never stored has its default.
+- A flag is named `<module>.<feature>` (e.g. `bot.stats`) and is a boolean. A flag never stored has its default.
+- **Declared in one place:** [flags.yaml](flags.yaml), as `flags: {<module>.<feature>: {default: <bool>}}`. The tenants module reads that file; a flag not in it is 400 `unknown_flag`. A module's contract lists its flags with their defaults, and the same contract PR adds them to `flags.yaml`. Adding a flag is additive; removing one is breaking.
 - Emits `tenants.flags.changed`. Modules follow it without a restart; the bot re-registers that guild's slash commands (0013 item 15), and handlers check the flag too.
 
 ## Series and clone
 - A **series** groups recurring events (0022). The superadmin creates series and puts events in them (`series_id`).
 - `GET /api/tenants/current/series` → the series and its events (`id`, `name`, `status`, `starts_at`, `ends_at`), each with `caller_is_admin`. Right `tenants.event.write`. Other modules use it to check a clone source: [agenda.md](agenda.md#clone-with-an-event) asks it that both events are in one series and that the caller is an event admin of the source.
-- **Clone the last event:** the superadmin creates the new event in the series; then a user who holds the event-admin role on both events clones on the new event's hostname. Each module copies its own part through its own clone endpoint (the agenda's run-of-show, Screen's playlists, the theme, pizzerias, Discord bindings), always reading the source in the source's tenant context and writing in the new one's.
-- The tenants module's part: `POST /api/tenants/current/clone` with `source_tenant_id` and `shift_seconds`. It needs the event-admin role (not a granted right) on the new event and on the source, which must be in the same series (otherwise 403 `missing_right`), and only on a `draft` event that has not been cloned (409 `already_cloned`). It copies the event admins, added to those already there (never removing any), the feature flags, `info_page_mode`, `membership` and `admin_access`, and sets `starts_at` and `ends_at` to the source's plus `shift_seconds`. Not copied: members (attendees join each event themselves), venue info (it comes from the venue, copy-in), the venue IP check (always on in a new event) and the audit log. Emits `tenants.tenant.cloned`; the admin client then runs each module's clone.
+- **Clone the last event:** the superadmin creates the new event in the series; then a user who holds the event-admin role on both events clones on the new event's hostname. Each module copies its own part through its own clone endpoint (the agenda's run-of-show, Screen's playlists, the theme, pizzerias), always reading the source in the source's tenant context and writing in the new one's. The bot moves the Discord connection and binding to the new event instead of copying them ([bot.md](bot.md#clone)).
+- The tenants module's part: `POST /api/tenants/current/clone` with `source_tenant_id` and `shift_seconds`. It needs the event-admin role (not a granted right) on the new event and on the source, which must be in the same series (otherwise 403 `missing_right`), and only on a `draft` event that has not been cloned (409 `already_cloned`). It copies the event admins, added to those already there (never removing any), the feature flags, `info_page_mode`, `membership` and `admin_access`, and sets `starts_at` and `ends_at` to the source's plus `shift_seconds`. Not copied: members (attendees join each event themselves), the join code (each event has its own), venue info (it comes from the venue, copy-in), the venue IP check (always on in a new event) and the audit log. Emits `tenants.tenant.cloned`; the admin client then runs each module's clone.
 
 ## Privacy and retention
 - **Privacy flags** are global per user, set by the user anywhere and read by every module (0022, the phone hub's privacy page):
@@ -156,14 +169,18 @@ Info pages are read-only, public-facing pages and data: the run-of-show, announc
   - `memories_opt_in` (default `false`): Moments keeps a user's memories (photos and clips in which they are the subject) past the event only when it is on (the moments contract).
 - `GET` and `PUT /api/tenants/me/privacy` (a signed-in user, any status of the event). Emits `tenants.privacy.changed` on the platform stream. Modules read the flags in `GET /internal/tenants/users/{user_id}` or the kit's cache.
 - **Data class `presence`:** raw records of where or when a person was or what they did live: Discord presence, voice and game-activity samples, check-ins, location hints. Each module's contract names its data in this class.
-- **The retention rule:** raw presence data of an event is deleted 30 days after the event is archived (0022). At archiving the tenant gets `presence_delete_at` = `archived_at` + 30 days; at that time the tenants module emits `tenants.retention.reached` with `data_class: "presence"`, and every module deletes its presence data of that tenant. A module also checks `presence_delete_at` at start-up, so a missed event is caught. Memories are kept only when opted in (above). Other data stays until the tenant is deleted; each module's contract may set shorter periods.
+- **Data class `personal`:** every other record that names or points to a person: user ids, names and Discord ids in a module's rows, a person's orders, registrations, results, uploads, texts and notification choices, and memories. Each module's contract names its data in this class.
+- **The retention rules:**
+  - **Presence:** raw presence data of an event is deleted 30 days after the event is archived (0022). At archiving the tenant gets `presence_delete_at` = `archived_at` + 30 days; at that time the tenants module emits `tenants.retention.reached` with `data_class: "presence"`, and every module deletes its presence data of that tenant.
+  - **Personal:** the event's other personal data is anonymised 12 months after the event is archived (the product owner's decision of 2026-11-07). At archiving the tenant also gets `personal_anonymise_at` = `archived_at` + 12 calendar months; at that time the tenants module emits `tenants.retention.reached` with `data_class: "personal"`, and every module deletes that tenant's personal data or makes it anonymous: a row a module keeps (a result, a leaderboard line, an order total) loses its user id, name and Discord id, while counts and totals stay. Memories kept by `memories_opt_in` go then too. The tenants module deletes the event's members (event admins stay, so the event can still be cloned from or deleted) and from then on shows the event's audit entries with `actor.ref` only, never a user id or a name.
+  - A module also checks `presence_delete_at` and `personal_anonymise_at` at start-up, so a missed event is caught, and ignores a `data_class` it does not know. Memories are kept past the presence deletion only when opted in (above). Other data stays until the tenant is deleted; each module's contract may set shorter periods.
 - **Deleting a user** (GDPR, 0013 item 31): `DELETE /api/tenants/users/{user_id}`, superadmin. Emits `tenants.user.deleted` on the platform stream; every module deletes that user's rows, keys and files in every tenant. The audit log keeps an anonymous id (see Audit log). Self-service account deletion belongs to the hub's privacy centre.
 - **Deleting a tenant:** `DELETE /api/tenants/registry/{tenant_id}`, superadmin, only for a `draft` or `archived` event (409 `tenant_live`). Emits `tenants.tenant.deleted` on the platform stream; every module deletes the tenant's rows, Valkey keys, streams and files. Its hostnames become `held`; a held row keeps the deleted tenant's id as plain text, not as a foreign key.
 
 ## Audit log
 Append-only (0013 item 13): no API changes or deletes an entry, and the module's database role may only insert into it.
 
-- **Covered:** settings, roles and rights, membership changes by admins, lifecycle, feature flags, hostnames, venues and their addresses, each event's venue, the venue IP check (also its automatic switch back), `admin_access`, devices' current tenant, bot bindings, secret changes (which secret and who, never the value), support windows, superadmins, tenant creation and deletion, and user deletion.
+- **Covered:** settings, roles and rights, membership changes by admins, join link rotations, lifecycle, feature flags, hostnames, venues and their addresses, each event's venue, the venue IP check (also its automatic switch back), `admin_access`, devices' current tenant, bot bindings, games catalogue changes ([games.md](games.md)), Notify's per-event topic configuration and custom topics ([notify.md](notify.md#per-event-configuration)), secret changes (which secret and who, never the value), support windows, superadmins, tenant creation and deletion, and user deletion.
 - **An entry** (`AuditEntry`): `id`, `time`, `tenant_id` (`null` for a platform entry), `actor` (`kind`: `user`, `system` or `module`; `ref`; `superadmin`; `support`), `action` (named like an event, `<module>.<noun>.<past-tense verb>`, e.g. `tenants.venue_ip_check.changed`), `target` (`type`, `id`), `changes` (field names with old and new values; secret values never appear), `reason` (when given) and `correlation_id`.
 - **Other modules append** with `POST /internal/tenants/audit`, in the same request that made the change; the tenants module records its own changes itself. Callers send only `actor_user_id`; the tenants module sets `actor.superadmin` from the user row and `actor.support` when that user has an open support window in the entry's tenant at append time. Callers never send these flags.
 - **Reading:** `GET /api/tenants/current/audit` (right `tenants.audit.read`) for the event's entries; `GET /api/tenants/audit` for the superadmin, filtered by `tenant_id`, or with `platform=true` for the platform entries only. Newest first, paged with `before`.
@@ -175,7 +192,7 @@ On the superadmin hostname only; on any other hostname these paths answer 404 `n
 
 - **Tenants:** `GET`, `POST /api/tenants/registry`; `GET`, `PATCH`, `DELETE /api/tenants/registry/{tenant_id}`; `POST …/status`. Creating takes `id`, `name`, `time_zone` and optionally `venue_id`, `series_id`, `starts_at`, `ends_at` and the first event admins, and emits `tenants.tenant.created`. `PATCH` also sets `venue_id` and `series_id`.
 - **Event admins of any tenant:** `PUT`, `DELETE /api/tenants/registry/{tenant_id}/admins/{user_id}`, so a new event gets its first admin.
-- **Hostnames:** `GET`, `POST /api/tenants/registry/{tenant_id}/hostnames`; `PATCH` (make primary) and `DELETE /api/tenants/hostnames/{hostname}`; `POST /api/tenants/hostnames/{hostname}/verify`.
+- **Hostnames:** `GET`, `POST /api/tenants/registry/{tenant_id}/hostnames`; `PATCH` (make primary: only an `active` hostname, otherwise 409 `hostname_not_active`, since a `pending` name cannot be primary) and `DELETE /api/tenants/hostnames/{hostname}`; `POST /api/tenants/hostnames/{hostname}/verify`.
 - **Venues:** `GET`, `POST /api/tenants/venues`; `GET`, `PATCH`, `DELETE /api/tenants/venues/{venue_id}`; `PUT /api/tenants/venues/{venue_id}/floor-plan`. Changing a venue emits `tenants.venue.changed`.
 - **Series:** `GET`, `POST /api/tenants/series`; `PATCH /api/tenants/series/{series_id}`.
 - **Users:** `GET /api/tenants/users?q=` (find a user by name or Discord id); `DELETE /api/tenants/users/{user_id}`.
@@ -183,7 +200,7 @@ On the superadmin hostname only; on any other hostname these paths answer 404 `n
 - **Audit:** `GET /api/tenants/audit`.
 
 ## Rights
-`tenants.event.write` (name, time zone, dates, series view), `tenants.access.write` (`info_page_mode`, `membership`, `admin_access`; role only), `tenants.lifecycle.write` (status; role only), `tenants.admins.write` (event admins; role only), `tenants.members.read`, `tenants.members.write`, `tenants.flags.write`, `tenants.venue_info.write`, `tenants.venue_ip_check.write`, `tenants.audit.read`. Cloning needs the event-admin role itself. The superadmin's actions need the role, not a right.
+`tenants.event.write` (name, time zone, dates, series view), `tenants.access.write` (`info_page_mode`, `membership`, `admin_access`; role only), `tenants.lifecycle.write` (status; role only), `tenants.admins.write` (event admins; role only), `tenants.members.read`, `tenants.members.write` (members and the join link), `tenants.flags.write`, `tenants.venue_info.write`, `tenants.venue_ip_check.write`, `tenants.audit.read`. Cloning needs the event-admin role itself. The superadmin's actions need the role, not a right.
 
 ## Events (version 1)
 Envelope, naming and transport: [admin.md](admin.md#events); the envelope's `tenant` field and the platform stream: [events.md](events.md#tenant-in-the-envelope). Listed in the catalog: [events.md](events.md#tenants). Events carry ids and changed field names, never secret values or Discord ids.
@@ -193,7 +210,7 @@ On the tenant's stream `t:<tenant>:events:tenants`, with `tenant` set:
 | Type | When | `data` |
 |---|---|---|
 | `tenants.tenant.changed` | The event's fields changed (also its venue or series) | `changed` (field names), `revision`, `actor_user_id` |
-| `tenants.status.changed` | The lifecycle moved | `from`, `to`, `presence_delete_at` (when archived), `actor_user_id` |
+| `tenants.status.changed` | The lifecycle moved | `from`, `to`, `presence_delete_at` and `personal_anonymise_at` (when archived), `actor_user_id` |
 | `tenants.tenant.cloned` | The tenants part of a clone ran | `source_tenant_id`, `shift_seconds`, `actor_user_id` |
 | `tenants.flags.changed` | Feature flags were set | `flags_version`, `changed` (flag names), `flags` (all, with defaults), `actor_user_id` |
 | `tenants.venue_info.changed` | The event's venue info was edited, copied again, or copied in because the event got a new venue | `changed`, `copied` (true for a copy from the venue), `actor_user_id` |
@@ -201,7 +218,7 @@ On the tenant's stream `t:<tenant>:events:tenants`, with `tenant` set:
 | `tenants.admin.added`, `tenants.admin.removed` | A user became or stopped being an event admin | `user_id`, `actor_user_id` |
 | `tenants.member.joined`, `tenants.member.left` | A user joined or left, or an admin added or removed them | `user_id`, `actor_user_id` |
 | `tenants.support.opened`, `tenants.support.closed` | A superadmin's support window opened or closed | `user_id`, `until` |
-| `tenants.retention.reached` | A retention date of the event was reached | `data_class` (`presence`) |
+| `tenants.retention.reached` | A retention date of the event was reached | `data_class` (`presence` or `personal`) |
 
 On the platform stream `events:tenants`, without `tenant`:
 

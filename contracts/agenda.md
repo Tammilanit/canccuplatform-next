@@ -7,7 +7,7 @@ The run-of-show: one dated agenda per event. It drives the screen's now and next
 ## Tenancy
 - The agenda belongs to one event, which is one tenant ([0013](../docs/decisions/0013-multi-tenant-core.md)). The tenant comes from the request's hostname, never from a path, query or body field; there is no way to name another event's agenda.
 - Every row carries `tenant_id` under row-level security; item ids are unique per tenant. Events go to the tenant's stream `t:<tenant>:events:agenda` and carry the envelope's `tenant` field (the tenants contract). The reminder scheduler is keyed by tenant (0013 item 7).
-- An archived event's agenda is read-only: writes get 409 `event_archived`.
+- An archived event's agenda is read-only: writes get 409 `event_archived` ([tenants.md](tenants.md#lifecycle); the module learns it from `tenants.status.changed`).
 
 ## Items
 An item is one entry of the run-of-show (`Item` in the OpenAPI file).
@@ -22,7 +22,7 @@ An item is one entry of the run-of-show (`Item` in the OpenAPI file).
 | `delay_minutes` | `starts_at` minus `planned_starts_at`, in whole minutes; 0 when on time. Screens show it ("+15 min") |
 | `location` | Where, for people ("Main stage"); optional |
 | `zone` | The screen zone it belongs to, by the zone key of the screen contract; optional. Screens of that zone show it first |
-| `visibility` | Who may read it: `public` (anyone, also guests and info pages), `attendees` (signed-in members of the event) or `crew` (right `agenda.crew.read`) |
+| `visibility` | Who may read it: `public` (anyone, also guests and info pages), `attendees` (members of the event, [tenants.md](tenants.md#joining-the-event)) or `crew` (right `agenda.crew.read`) |
 | `status` | `scheduled` or `cancelled`. A cancelled item stays in the agenda, so screens can show it as cancelled |
 | `reminder_leads_minutes` | Lead times for its reminders (see Reminders); `null` uses its kind's, else the event's setting; `[]` means none |
 | `notify` | The channels that announce this item's reminders and changes (see Notification channels); `null` uses its kind's choice, else the event's setting |
@@ -75,7 +75,7 @@ Whether the run-of-show's reminders and changes are announced, and where, is opt
 - `GET /api/agenda/items?from=&to=&include_cancelled=` → `{"agenda_version", "items"}`, sorted by `starts_at`. `from` and `to` filter by overlap with the window; cancelled items are included unless `include_cancelled=false`.
 - `GET /api/agenda/items/{item_id}` → one item.
 - `GET /api/agenda/now?zone=` → `{"time", "agenda_version", "current", "next"}`: the scheduled items running now, and the scheduled items with the earliest start after now (several when they start at once). With `zone`, items of that zone and items with no zone. Every screen, the bot and the hub take now and next from here, so they never disagree.
-- **Who sees what:** without a session only `public` items, and only when the event's info-page mode lets the request see info pages (the tenants contract); a signed-in member of the event also sees `attendees` items; `crew` items need the right `agenda.crew.read`. Items the caller may not see are left out, never returned as errors; a single item the caller may not see is 404 `not_found`.
+- **Who sees what:** without a session only `public` items, and only when the event's info-page mode lets the request see info pages ([tenants.md](tenants.md#info-page-mode)); otherwise the read is 403 `info_pages_closed`, the tenants contract's error. A member of the event (event membership, [tenants.md](tenants.md#joining-the-event)) also sees `attendees` items; `crew` items need the right `agenda.crew.read`. Items the caller may not see are left out, never returned as errors; a single item the caller may not see is 404 `not_found`.
 - **`agenda_version`** goes up by one on every change of the event's agenda (an item added, changed, delayed, cancelled or removed, or a clone). Every change event carries it. A consumer that sees a jump of more than one, or starts up, reads `GET /api/agenda/items` again.
 
 ## Editing live
@@ -148,7 +148,8 @@ Envelope, naming and transport: [admin.md](admin.md#events). Every agenda event 
 
 ```json
 {"id": "01928f3e-7a2b-7c4d-9e8f-0a1b2c3d4e60", "type": "agenda.item.delayed", "version": 1,
- "time": "2026-01-01T17:40:00Z", "source": "agenda", "correlation_id": "01928f3e-7a2b-7c4d-9e8f-0a1b2c3d4e5f",
+ "time": "2026-01-01T17:40:00Z", "source": "agenda", "tenant": "demo",
+ "correlation_id": "01928f3e-7a2b-7c4d-9e8f-0a1b2c3d4e5f",
  "data": {"item": {"id": "it_8", "title": "Dinner", "kind": "meal", "starts_at": "2026-01-01T18:15:00Z",
    "ends_at": "2026-01-01T19:15:00Z", "planned_starts_at": "2026-01-01T18:00:00Z",
    "planned_ends_at": "2026-01-01T19:00:00Z", "delay_minutes": 15, "visibility": "public",
@@ -156,7 +157,6 @@ Envelope, naming and transport: [admin.md](admin.md#events). Every agenda event 
    "notify_channels": ["screen", "discord_channel", "push"], "links": {}, "revision": 3},
   "minutes": 15, "agenda_version": 42, "actor_user_id": "u_123"}}
 ```
-The example leaves out the envelope's `tenant` field, which the tenants contract adds to every event.
 
 ## Not in this contract
 Native Discord scheduled events, and the phone hub (its notifications: [notify.md](notify.md)).

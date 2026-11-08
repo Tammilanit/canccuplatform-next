@@ -24,6 +24,7 @@ How modules talk to each other and what an event profile looks like. Modules use
 | [theming.md](theming.md) | Theming contract: stable CSS classes and custom properties, the theme package (tokens, CSS, fonts, images), layouts as data, logic-less widget templates, embeds, the brand kit's simple and advanced modes, draft → preview → publish with rollback, git sync, clone with a series, upload safety (sandboxed SVG and HTML, the CSP, the same-host sandbox and the optional sandbox origin, `__Host-` session cookies), theming events |
 | [theming.openapi.yaml](theming.openapi.yaml) | Machine-readable theming API (OpenAPI 3.1) |
 | [theme.schema.json](theme.schema.json) | JSON Schema (draft 2020-12) for a theme package's `theme.yaml` |
+| [flags.yaml](flags.yaml) | Every module's feature flags and their defaults, in one place ([tenants.md](tenants.md#feature-flags)) |
 | [profile.md](profile.md) | Event profile format v1 |
 | [profile.schema.json](profile.schema.json) | JSON Schema (draft 2020-12) for `profile.yaml` |
 | [redocly.yaml](redocly.yaml) | Lint rules for the OpenAPI files |
@@ -38,6 +39,16 @@ Each module gets its own `<module>.md` (and `<module>.openapi.yaml` if it has an
 - Rights are named `<module>.<right>`, e.g. `admin.settings.write`.
 - Events are named `<module>.<noun>.<past-tense verb>` and use one envelope; see [admin.md](admin.md#events).
 - Everything belongs to one event (tenant), taken from the request's hostname; see [tenants.md](tenants.md).
+- **Internal paths** (`/internal/<module>/…`) are for other modules only. The edge Caddy never routes them, so they are reached only on the stack's internal network ([tenants.md](tenants.md#resolving-the-tenant)). They take no session. A per-event internal path names its tenant in the query parameter `tenant_id`, which the calling module's kit sets from the tenant it is serving, never from a client's input. Until the kit has a module-to-module identity, the internal network is their only guard.
+
+## Privacy: export and delete
+The phone hub's privacy page collects everything the platform holds on the caller at one event, module by module, so every module follows one shape:
+
+- `GET /api/<module>/me/export` → 200 with everything the module holds on the caller at this event (the request's tenant), as one JSON object whose fields the module's contract defines. Keys, tokens and other secrets are left out.
+- `DELETE /api/<module>/me` → 204: the module deletes all of it at this event and stops using it.
+- Both need a session (otherwise 401 `not_signed_in`), act only on the caller and never take a user id. They work in every status of the event: deleting is allowed when it is archived ([tenants.md](tenants.md#lifecycle)).
+- Every module that holds personal or presence data ([tenants.md](tenants.md#privacy-and-retention)) serves both, and its contract says what its export holds. The hub calls them for each module the event runs; a 404 `not_found` means the module holds nothing on anyone. [notify.md](notify.md#the-hub) is the first.
+- The tenants module holds the platform-wide part: the user, the privacy flags and the membership (`GET /api/tenants/me`, `…/me/privacy`; leaving is `DELETE /api/tenants/me/membership`). Deleting the whole account is `DELETE /api/tenants/users/{user_id}` (the superadmin's for now; self-service belongs to the App track's privacy center).
 
 ## Changing a contract
 - A contract change is its own PR and merges before its consumers.

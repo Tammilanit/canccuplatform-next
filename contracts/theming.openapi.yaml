@@ -1,13 +1,14 @@
 openapi: 3.1.0
 info:
   title: Theming API
-  version: 1.0.0
+  version: 1.1.0
   summary: One event's theme, its draft, preview, publish and rollback, git sync, clone and the served theme files.
   description: |
     Machine-readable part of the theming contract. Prose, stable classes, package rules, upload safety, CSP and
     events: contracts/theming.md. The package manifest: contracts/theme.schema.json.
     Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
-    The event (tenant) comes from the hostname; no operation names a tenant. Embeds are served from the sandbox
+    The event (tenant) comes from the hostname; no /api/ operation names a tenant. Paths under /internal/theming
+    are for other modules on the stack's internal network only and name the tenant in `tenant_id`. Embeds are served from the sandbox
     (`/theming/sandbox/` on the event's hostname by default, or a separate sandbox origin), which has no API and is
     described only in the prose.
   license:
@@ -27,6 +28,8 @@ tags:
     description: Taking the package from the event's git repo.
   - name: clone
     description: Reusing a theme in the next event of a series.
+  - name: internal
+    description: Module paths on the stack's internal network; the edge Caddy never routes them.
   - name: files
     description: The served theme files on the event's hostname.
 security:
@@ -53,6 +56,37 @@ paths:
                 $ref: "#/components/schemas/ResolvedTheme"
         "403":
           $ref: "#/components/responses/Forbidden"
+  /internal/theming/revisions/{revision}:
+    get:
+      tags: [internal]
+      operationId: getRevisionInternal
+      summary: One kept revision, resolved, for a module
+      description: |
+        For the screen module's server, which draws a pinned revision (contracts/screen.md, Pins). Answers like
+        `GET /api/theming/current`, for the given revision of the given tenant: tokens filled in, file addresses,
+        layouts, templates and embeds. A revision that is not kept (pruned, or never published) is 404
+        `not_found`. Internal network only.
+      security:
+        - {}
+      parameters:
+        - $ref: "#/components/parameters/Revision"
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            $ref: "#/components/schemas/TenantId"
+      responses:
+        "200":
+          description: The revision, resolved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolvedTheme"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /api/theming/draft:
     get:
       tags: [draft]
