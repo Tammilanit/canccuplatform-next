@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
 
 from canccu_kit import KitError
 from starlette.requests import Request
@@ -13,19 +12,9 @@ from starlette.routing import Route
 from . import audit, core, model
 from .caller import tenant_of
 from .deps import deps
-from .model import bad_request, conflict
+from .model import bad_request, body_of, conflict
 
 IP_CHECK_MAX_OFF = timedelta(hours=48)
-
-
-async def body_of(request: Request) -> dict[str, Any]:
-    try:
-        body = await request.json()
-    except ValueError as exc:
-        raise bad_request("the body must be JSON") from exc
-    if not isinstance(body, dict):
-        raise bad_request("the body must be a JSON object")
-    return body
 
 
 async def get_current(request: Request) -> Response:

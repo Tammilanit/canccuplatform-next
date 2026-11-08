@@ -59,6 +59,24 @@ class Outbox:
                 await bus.publish(type, data, version=1, tenant=tenant_id)
 
 
+def hostname_changed(
+    outbox: Outbox,
+    row: Mapping[str, Any],
+    *,
+    status: str | None = None,
+    primary: bool | None = None,
+) -> None:
+    outbox.platform(
+        "tenants.hostname.changed",
+        {
+            "hostname": row["hostname"],
+            "tenant_id": row["tenant_id"],
+            "status": status or row["status"],
+            "primary": row["is_primary"] if primary is None else primary,
+        },
+    )
+
+
 @dataclass(frozen=True)
 class Files:
     """Floor plans: the venue's under the platform tree, each event's copy under its own."""

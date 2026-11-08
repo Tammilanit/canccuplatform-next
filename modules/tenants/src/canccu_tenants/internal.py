@@ -5,17 +5,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from canccu_kit import ServiceForbidden, TenantContext
+from canccu_kit import DEMO_TENANT, ServiceForbidden, TenantContext
 from canccu_kit.resolve import normalize_host
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from . import audit, core, model
-from .current import body_of
 from .db import Db
 from .deps import deps
-from .model import bad_request, not_found
+from .model import bad_request, body_of, not_found
 from .venues import internal_venue
 
 
@@ -39,10 +38,10 @@ async def demo_context(db: Db, declared: dict[str, bool]) -> TenantContext | Non
     """IP mode serves the demo tenant only while it is the only tenant (0013 item 2)."""
     async with db.platform() as conn:
         ids = [r["id"] for r in await conn.fetch("SELECT id FROM tenants LIMIT 2")]
-    if ids != ["demo"]:
+    if ids != [DEMO_TENANT]:
         return None
-    async with db.tenant("demo") as conn:
-        return await core.tenant_context(conn, "demo", declared)
+    async with db.tenant(DEMO_TENANT) as conn:
+        return await core.tenant_context(conn, DEMO_TENANT, declared)
 
 
 async def ip_mode(request: Request) -> Response:
