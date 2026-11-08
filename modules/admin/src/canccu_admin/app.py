@@ -5,9 +5,19 @@ from __future__ import annotations
 import html
 from urllib.parse import urlencode
 
-from canccu_kit import Health, KitError, MissingRight, NotSignedIn, TenantResolver
+from canccu_kit import (
+    Health,
+    KitError,
+    MissingRight,
+    NotSignedIn,
+    ServiceForbidden,
+    ServiceIdentity,
+    TenantResolver,
+    is_tenant_id,
+    tenant_scope,
+)
 from canccu_kit.rights import Session
-from canccu_kit.starlette import install
+from canccu_kit.starlette import install, install_service_identity
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.requests import Request
@@ -44,6 +54,8 @@ def create_app(
     auth: Auth,
     resolver: TenantResolver,
     on_event: OnEvent | None = None,
+    *,
+    identity: ServiceIdentity,
 ) -> Starlette:
     async def need(request: Request, right: str) -> Session:
         return await authorize(request.headers.get("cookie"), right)
@@ -59,6 +71,19 @@ def create_app(
         module = module_of(request)
         await need(request, "admin.settings.read")
         return JSONResponse(await service.get_settings(module))
+
+    async def internal_settings(request: Request) -> Response:
+        """A module's own settings for the tenant it serves; no hostname names the tenant on
+        admin's internal address, so the kit sends it (contracts/admin.md, Settings)."""
+        module = module_of(request)
+        # The middleware verified the caller; a module reads only its own settings.
+        if request.state.service != module:
+            raise ServiceForbidden(f"module {request.state.service} reads only its own settings")
+        tenant = request.query_params.get("tenant_id", "")
+        if not is_tenant_id(tenant):
+            raise KitError("tenant_id: a tenant id", status=400, code="invalid_request")
+        with tenant_scope(tenant):
+            return JSONResponse(await service.get_settings(module))
 
     async def put_settings(request: Request) -> Response:
         module = module_of(request)
@@ -177,6 +202,7 @@ def create_app(
         routes=[
             Route("/api/admin/settings/{module}", get_settings, methods=["GET"]),
             Route("/api/admin/settings/{module}", put_settings, methods=["PUT"]),
+            Route("/internal/admin/settings/{module}", internal_settings, methods=["GET"]),
             Route("/api/admin/profile", get_profile, methods=["GET"]),
             Route("/api/admin/profile", put_profile, methods=["PUT"]),
             Route("/", index),
@@ -197,6 +223,7 @@ def create_app(
     # Innermost, as the kit's install_tenancy places it: the correlation id and the origin check
     # cover its 404s, and settings and profile handlers run inside the request's tenant.
     app.user_middleware.append(Middleware(TenantPaths, resolver=resolver))
+    install_service_identity(app, identity)
     app.add_exception_handler(NotSignedIn, _not_signed_in)
     app.add_exception_handler(MissingRight, _missing_right)
     return app

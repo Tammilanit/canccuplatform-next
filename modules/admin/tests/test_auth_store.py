@@ -16,6 +16,7 @@ import asyncpg
 import pytest
 
 from canccu_admin.auth_db import AuthStore, Flow, MemoryAuthStore, PgAuthStore
+from canccu_admin.db import MIGRATIONS
 
 NOW = datetime(2026, 11, 7, 12, 0, tzinfo=UTC)
 URL = os.environ.get("CANCCU_DATABASE_URL")
@@ -32,6 +33,10 @@ async def store(request: pytest.FixtureRequest) -> AsyncIterator[AuthStore]:
     admin = await asyncpg.connect(URL)
     await admin.execute(f"CREATE SCHEMA {schema}")
     pool = await asyncpg.create_pool(URL, server_settings={"search_path": schema})
+    async with pool.acquire() as conn:
+        # The migration role creates the sign-in tables now (002), not the store.
+        for path in sorted(MIGRATIONS.glob("*.sql")):
+            await conn.execute(path.read_text())
     try:
         yield await PgAuthStore.create(pool)
     finally:

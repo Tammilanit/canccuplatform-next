@@ -12,7 +12,15 @@ from urllib.parse import parse_qs, urlsplit
 
 import httpx
 import pytest
-from canccu_kit import AdminClient, Bus, Event, Health, RightsChecker, TenantResolver
+from canccu_kit import (
+    AdminClient,
+    Bus,
+    Event,
+    Health,
+    RightsChecker,
+    ServiceIdentity,
+    TenantResolver,
+)
 from canccu_kit.access import TenantContext
 from canccu_kit.rights import Session
 from canccu_kit.testing import MemoryStreamStore
@@ -30,6 +38,7 @@ from canccu_admin.service import Service
 
 ROOT = Path(__file__).resolve().parents[3]
 PUBLIC = "https://admin.example.test"
+SERVICE_KEY = b"admin-tests-service-key-0123456789ab"
 CALLBACK = "/admin/sign-in/callback"
 START = datetime(2026, 11, 7, 12, 0, tzinfo=UTC)
 SIGNIN_HOST = "signin.example.test"
@@ -108,6 +117,9 @@ class FakeDiscord:
 @dataclass
 class World:
     client: httpx.AsyncClient
+    internal: httpx.AsyncClient
+    """Another module on admin's internal address (`admin:8080`), not through Caddy."""
+    service: Service
     auth: Auth
     store: MemoryAuthStore
     streams: MemoryStreamStore
@@ -181,6 +193,10 @@ def world(tmp_path: Path) -> World:
         auth,
         fake_resolver({"admin.example.test": "demo"}),
         holder_event(holder),
+        identity=ServiceIdentity("admin", SERVICE_KEY),
+    )
+    internal = httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://admin:8080"
     )
     asgi = httpx.ASGITransport(app=caddy(app))
     checker = RightsChecker(
@@ -189,7 +205,7 @@ def world(tmp_path: Path) -> World:
     )
     holder.append(checker)
     client = httpx.AsyncClient(transport=asgi, base_url=PUBLIC)
-    return World(client, auth, store, streams, fake, clock, checker)
+    return World(client, internal, service, auth, store, streams, fake, clock, checker)
 
 
 def caddy(app: ASGIApp) -> ASGIApp:

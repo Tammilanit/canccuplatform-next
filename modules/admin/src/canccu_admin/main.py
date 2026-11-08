@@ -12,14 +12,18 @@ import uvicorn
 from canccu_kit import (
     AdminClient,
     Bus,
+    ConfigError,
     Event,
     Health,
+    IpMode,
     RightsChecker,
+    ServiceIdentity,
     TenantResolver,
     ValkeyStreamStore,
     create_logger,
     load_config,
     postgres_check,
+    service_key_from_env,
     valkey_check,
 )
 
@@ -32,7 +36,6 @@ from .declarations import load_declarations
 from .discord import Discord
 from .profile import make_validator
 from .service import Service
-from .tenancy import ip_mode
 
 
 def parse_targets(raw: str) -> dict[str, str]:
@@ -64,7 +67,7 @@ def discord(public: str | None) -> Discord | None:
     return None
 
 
-def tenant_resolver(version: str) -> TenantResolver:
+def tenant_resolver(version: str, identity: ServiceIdentity) -> TenantResolver:
     """Hostname -> tenant through the tenants module (contracts/tenants.md, Resolving the tenant).
 
     The platform's own hostnames are never a tenant. IP mode follows the tenants module's switch
@@ -74,13 +77,13 @@ def tenant_resolver(version: str) -> TenantResolver:
     if not url:
         raise SystemExit("missing environment variable(s): CANCCU_TENANTS_URL")
     own = ("CANCCU_SIGNIN_HOSTNAME", "CANCCU_SUPERADMIN_HOSTNAME")
-    http = httpx.AsyncClient(timeout=5.0)
     demo = version == "dev" and os.environ.get("CANCCU_IP_MODE") == "demo"
     return TenantResolver(
         url,
         platform_hosts=[os.environ[n] for n in own if os.environ.get(n)],
-        ip_mode=ip_mode(version, url, http) if demo else None,
-        http=http,
+        ip_mode=IpMode(version) if demo else None,
+        http=httpx.AsyncClient(timeout=5.0),
+        service=identity,
     )
 
 
@@ -91,8 +94,15 @@ async def serve() -> None:
     if not database_url:
         raise SystemExit("missing environment variable(s): CANCCU_DATABASE_URL")
     public = public_url()
-    resolver = tenant_resolver(config.version)
-    store = await PgStore.connect(database_url)
+    try:
+        identity = ServiceIdentity(config.module, service_key_from_env())
+    except ConfigError as exc:
+        raise SystemExit(str(exc)) from exc
+    resolver = tenant_resolver(config.version, identity)
+    # The stack logs in as a plain role and migrates as the migration role (0013 item 5).
+    store = await PgStore.connect(
+        database_url, migrate_url=os.environ.get("CANCCU_MIGRATE_DATABASE_URL") or None
+    )
     streams = ValkeyStreamStore.from_url(config.valkey_url)
     bus = Bus(streams, config.module)
     rights = RightsChecker(AdminClient(config.admin_url))
@@ -126,7 +136,9 @@ async def serve() -> None:
     # Admin checks its own pages through the kit like any module, so CI's session stub
     # (deploy/compose.ci.yml) can stand in for it; its own role changes and ended sessions
     # drop the cache at once.
-    app = create_app(service, health, rights.check, auth, resolver, rights.handle_event)
+    app = create_app(
+        service, health, rights.check, auth, resolver, rights.handle_event, identity=identity
+    )
 
     async def drop_cached_tenants(event: Event) -> None:
         resolver.handle_event(event)
