@@ -1,6 +1,6 @@
 # 0023. Every step starts with a design brief, and issues leave room to design
 
-- **Status:** Accepted (extends [0019](0019-work-packages.md) without superseding it)
+- **Status:** Accepted (extends [0019](0019-work-packages.md) without superseding it; its brainstorming round, single revision, limit of 7 questions and exception for parallel tracks are replaced by [0026](0026-briefs-are-research-packs.md))
 - **Date:** 2026-11-06
 
 ## Context
