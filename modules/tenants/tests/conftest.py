@@ -15,7 +15,7 @@ from typing import Any
 
 import httpx
 import pytest
-from canccu_kit import Bus, Health
+from canccu_kit import Bus, Health, ServiceIdentity
 from canccu_kit.errors import NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.testing import MemoryStreamStore
@@ -27,6 +27,7 @@ from canccu_tenants.db import Db
 from canccu_tenants.deps import Deps
 
 URL = os.environ.get("CANCCU_DATABASE_URL")
+SERVICE_KEY = b"tenants-tests-service-key-0123456789"
 SUPERADMIN_HOST = "super.example.test"
 TABLES = "audit, venue_info, tenant_flags, event_admins, hostnames, tenants, venues, users"
 
@@ -58,10 +59,31 @@ class Env:
     txt: dict[str, list[str]]
     app: Any
 
-    def client(self, host: str) -> httpx.AsyncClient:
+    def client(self, host: str, app: Any = None) -> httpx.AsyncClient:
         return httpx.AsyncClient(
-            transport=httpx.ASGITransport(app=self.app, client=("127.0.0.1", 5000)),
+            transport=httpx.ASGITransport(app=app or self.app, client=("127.0.0.1", 5000)),
             base_url=f"http://{host}",
+        )
+
+    def module(self, caller: str, app: Any = None) -> httpx.AsyncClient:
+        """Another module of the stack on the internal address, signing every request."""
+        identity = ServiceIdentity(caller, SERVICE_KEY)
+
+        async def sign(request: httpx.Request) -> None:
+            request.headers.update(identity.headers("tenants"))
+
+        client = self.client("tenants:8080", app)
+        client.event_hooks["request"].append(sign)
+        return client
+
+    def app_with(self, *, ip_mode: bool) -> Any:
+        return create_app(
+            self.deps,
+            Health("tenants", "dev", {}),
+            [SUPERADMIN_HOST, "signin.example.test"],
+            "dev",
+            ip_mode,
+            service=ServiceIdentity("tenants", SERVICE_KEY),
         )
 
     def events(self) -> list[tuple[str, str]]:
@@ -134,6 +156,11 @@ async def env(tmp_path: Path) -> AsyncIterator[Env]:
         platform_domain="example.test",
         reserved_hosts=frozenset({SUPERADMIN_HOST, "signin.example.test"}),
     )
-    app = create_app(deps, Health("tenants", "dev", {}), [SUPERADMIN_HOST, "signin.example.test"])
+    app = create_app(
+        deps,
+        Health("tenants", "dev", {}),
+        [SUPERADMIN_HOST, "signin.example.test"],
+        service=ServiceIdentity("tenants", SERVICE_KEY),
+    )
     yield Env(db, deps, rights, store, txt, app)
     await db.close()

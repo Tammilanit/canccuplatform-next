@@ -230,7 +230,7 @@ async def test_info_page_mode_sign_in_closes_venue_info_to_guests(env: Env) -> N
 
 async def test_audit_is_append_only_for_the_app_role(env: Env) -> None:
     await make_tenant(env.db, "alpha", HOST)
-    async with env.client("tenants:8080") as c:
+    async with env.module("screen") as c:
         appended = await c.post(
             "/internal/tenants/audit",
             json={
