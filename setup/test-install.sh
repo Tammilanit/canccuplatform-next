@@ -125,6 +125,7 @@ ilocal "the rebuilt image is labelled with HEAD" hello "$ihead|"
 notlogged "install never tags a stale pulled image" "docker tag "
 
 ifresh; touch "$ist/pull_fail"; inst "install when the registry is unreachable" 0
+has "install says private images need a registry login" "sudo docker login"
 ilocal "install builds when the pull fails" admin "$ihead|"
 
 ifresh; echo " M modules/hello/src/main.ts" > "$ist/dirty"; for m in hello admin tenants; do echo "$ihead|" > "$ist/local_$m"; done; echo "$ihead" > "$ist/remote_rev"

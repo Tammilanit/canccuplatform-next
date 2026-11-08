@@ -34,7 +34,7 @@ Do not rename these jobs; renaming breaks the required checks.
 - `.github/workflows/release.yml` builds one image per module that has a `modules/<name>/Dockerfile`, from the repo root as in `deploy/compose.yml`, as `ghcr.io/<owner>/<repo>/<module>` in lowercase (`ghcr.io/tammilanit/canccuplatform-next/<module>`).
 - **Push to main** pushes the tag `dev`. **A release tag** `v*` (for example `v0.1.0`) pushes the images with that tag. A pull request that changes the workflow or a module's Dockerfile builds the images without pushing them. A module without a Dockerfile is skipped.
 - It logs in with the workflow's `GITHUB_TOKEN` (`packages: write`, only in the image job); no other secret. Build layers are cached in the GitHub Actions cache per module.
-- **First push:** GHCR creates each package on its first push and links it to this repo through the `org.opencontainers.image.source` label. A maintainer checks each package's visibility under the org's Packages settings; the VMs need either a public package or a pull login.
+- **First push:** GHCR creates each package on its first push and links it to this repo through the `org.opencontainers.image.source` label. The packages stay private (the product owner, 2026-11-08): each host that pulls them needs root's registry login with a read-packages token, renewed when it expires ([setup/README.md](../setup/README.md#auto-deploy), Set up auto-deploy, step 3).
 - These are not required checks: they run after merge.
 - **Auto-deploy:** a host in dev mode pulls the `dev` images and deploys them once every image's `org.opencontainers.image.revision` label is the new main commit (`setup/deploy`, see [setup/README.md](../setup/README.md#auto-deploy)).
 
