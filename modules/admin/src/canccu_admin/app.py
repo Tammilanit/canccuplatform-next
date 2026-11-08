@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import html
-from typing import Any
 from urllib.parse import urlencode
 
 from canccu_kit import Health, KitError, MissingRight, NotSignedIn, TenantResolver
@@ -17,55 +16,25 @@ from starlette.routing import Route
 
 from .auth import Auth
 from .auth_routes import Authorize, OnEvent, OriginCheck, auth_routes
-from .declarations import Setting
+from .forms import field_html, from_form
 from .pages import BASE, SIGN_OUT, page
 from .service import BadSettings, Service
 from .tenancy import TenantPaths
 
-MODULES = ("screen", "tournament", "pizza", "bot", "admin", "games", "moments", "voices", "cast")
-
-
-def _field(s: Setting, value: Any) -> str:
-    name, label = html.escape(s.key), html.escape(s.label)
-    value = s.default if value is None else value
-    if s.type == "boolean":
-        checked = " checked" if value else ""
-        return f"<p><label><input type=checkbox name={name}{checked}> {label}</label></p>"
-    if s.choices:
-        opts = "".join(
-            f"<option{' selected' if c == value else ''}>{html.escape(c)}</option>"
-            for c in s.choices
-        )
-        return f"<p><label>{label} <select name={name}>{opts}</select></label></p>"
-    text = (
-        ", ".join(map(str, value)) if isinstance(value, list) else ("" if value is None else value)
-    )
-    kind = "number" if s.type == "number" else "text"
-    return (
-        f"<p><label>{label} <input type={kind} step=any name={name} "
-        f"value='{html.escape(str(text))}'></label></p>"
-    )
-
-
-def _from_form(declared: list[Setting], form: Any) -> dict[str, Any]:
-    values: dict[str, Any] = {}
-    for s in declared:
-        raw = form.get(s.key)
-        if s.type == "boolean":
-            values[s.key] = raw is not None
-        elif raw is None or raw == "":
-            continue
-        elif s.type == "number":
-            try:
-                number = float(raw)
-            except ValueError as exc:
-                raise BadSettings(f"{s.key} must be a number") from exc
-            values[s.key] = int(number) if number.is_integer() else number
-        elif s.type == "list":
-            values[s.key] = [p.strip() for p in str(raw).split(",") if p.strip()]
-        else:
-            values[s.key] = str(raw)
-    return values
+MODULES = (
+    "screen",
+    "tournament",
+    "pizza",
+    "bot",
+    "admin",
+    "games",
+    "moments",
+    "voices",
+    "cast",
+    "agenda",
+    "notify",
+    "theming",
+)
 
 
 def create_app(
@@ -135,7 +104,7 @@ def create_app(
         session = await need(request, "admin.settings.read")
         declared = service.declarations.get(module, [])
         current = await service.get_settings(module)
-        fields = "".join(_field(s, current["values"].get(s.key)) for s in declared)
+        fields = "".join(field_html(s, current["values"].get(s.key)) for s in declared)
         notice = (request.query_params.get("saved") and "<p><b>Saved.</b></p>") or ""
         return page(
             f"Settings: {module}",
@@ -149,7 +118,7 @@ def create_app(
         module = module_of(request)
         session = await need(request, "admin.settings.write")
         form = await request.form()
-        values = _from_form(service.declarations.get(module, []), form)
+        values = from_form(service.declarations.get(module, []), form)
         try:
             version = int(str(form.get("settings_version", "")))
         except ValueError as exc:

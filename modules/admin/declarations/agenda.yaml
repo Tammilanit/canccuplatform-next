@@ -1,0 +1,13 @@
+settings:
+  - key: reminder_leads_minutes
+    type: list
+    items: integer
+    min: 1
+    max: 1440
+    label: Reminder lead times (minutes)
+    default: [30, 10]
+  - key: notify_channels
+    type: list
+    choices: [screen, discord_channel, discord_dm, push]
+    label: Notification channels
+    default: [screen, discord_channel, push]
