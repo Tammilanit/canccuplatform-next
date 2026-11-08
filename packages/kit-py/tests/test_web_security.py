@@ -102,3 +102,10 @@ def test_the_adapter_checks_every_request() -> None:
     assert response.json()["error"]["code"] == "origin_refused"
     assert client.get("/api/x", headers={"origin": "null"}).status_code == 403
     assert client.post("/api/x", headers={"origin": "http://demo.example.org"}).text == "ok"
+
+
+def test_a_default_port_on_the_host_matches_an_origin_without_it() -> None:
+    check_origin("POST", "/api/x", "https://demo.example.org", "demo.example.org:443")
+    check_origin("POST", "/api/x", "http://192.0.2.1", "192.0.2.1:80")
+    with pytest.raises(OriginRefused):
+        check_origin("POST", "/api/x", "https://demo.example.org", "demo.example.org:8443")

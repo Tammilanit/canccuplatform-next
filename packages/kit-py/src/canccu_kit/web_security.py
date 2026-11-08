@@ -67,8 +67,13 @@ def event_page_csp(
     )
 
 
-def _host_of(value: str) -> str:
-    return value.strip().lower().removesuffix(".")
+_DEFAULT_PORTS = {"http": ":80", "https": ":443"}
+
+
+def _host_of(value: str, scheme: str = "") -> str:
+    # Browsers leave the default port out of Origin, while a Host header may carry it.
+    host = value.strip().lower().removesuffix(_DEFAULT_PORTS.get(scheme, "\0"))
+    return host.removesuffix(".")
 
 
 def check_origin(
@@ -92,6 +97,6 @@ def check_origin(
             raise OriginRefused("requests from another site are refused")
         return
     parsed = urlsplit(origin) if origin != "null" else None
-    sent = _host_of(parsed.netloc) if parsed is not None else ""
-    if not sent or sent != _host_of(host or ""):
+    sent = _host_of(parsed.netloc, parsed.scheme) if parsed is not None else ""
+    if not sent or sent != _host_of(host or "", parsed.scheme if parsed is not None else ""):
         raise OriginRefused("requests from another site are refused")
