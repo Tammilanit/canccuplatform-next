@@ -85,7 +85,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -133,7 +133,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -161,7 +161,7 @@ paths:
         "204":
           description: Removed.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -209,7 +209,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -242,7 +242,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -329,7 +329,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -355,7 +355,7 @@ paths:
         "204":
           description: Removed.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -393,7 +393,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -419,13 +419,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
-    Unauthorized:
-      description: "`not_signed_in`: no valid session."
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Forbidden:
       description: |
         `missing_right`: signed in, but the right is missing; or `info_pages_closed`: the event's info-page
@@ -433,13 +427,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     NotFound:
       description: "`not_found`: no such item or kind, or the caller may not see it."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Conflict:
       description: |
         `version_conflict` (stale `revision`), `item_cancelled`, `item_started` (delay of a started item with
@@ -448,22 +442,8 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
   schemas:
-    Error:
-      type: object
-      required: [error]
-      properties:
-        error:
-          type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              pattern: "^[a-z][a-z0-9_]*$"
-              examples: [version_conflict]
-            message:
-              type: string
     ItemId:
       type: string
       pattern: "^[A-Za-z0-9_-]{1,64}$"

@@ -37,7 +37,7 @@ exports[`page > defaults, no logo, no theme 1`] = `
 <title>Admin</title>
 <link rel="stylesheet" href="/ui/ui.css">
 </head>
-<body class="canccu-page">
+<body class="canccu-page canccu-surface canccu-surface--admin">
 <header class="canccu-header"><span class="canccu-header__title">Admin</span></header>
 <main class="canccu-main"><section class="canccu-card">Hi</section></main>
 </body>
@@ -60,7 +60,7 @@ exports[`page > with logo, theme and css href 1`] = `
 }
 </style>
 </head>
-<body class="canccu-page">
+<body class="canccu-page canccu-surface canccu-surface--admin">
 <header class="canccu-header"><img class="canccu-header__logo" src="/files/assets/logo.svg" alt=""><span class="canccu-header__title">Admin</span></header>
 <main class="canccu-main">Hi</main>
 </body>

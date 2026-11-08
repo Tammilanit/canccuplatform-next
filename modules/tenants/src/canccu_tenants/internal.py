@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from canccu_kit import TenantContext
+from canccu_kit import ServiceForbidden, TenantContext
 from canccu_kit.resolve import normalize_host
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -45,6 +45,16 @@ async def demo_context(db: Db, declared: dict[str, bool]) -> TenantContext | Non
         return await core.tenant_context(conn, "demo", declared)
 
 
+async def ip_mode(request: Request) -> Response:
+    """The demo tenant for the kit's IP mode, so no module needs a loader of its own
+    (contracts/tenants.md, Resolving the tenant)."""
+    d = deps(request)
+    ctx = await demo_context(d.db, d.declared_flags) if request.app.state.ip_mode else None
+    if ctx is None:
+        raise not_found()
+    return JSONResponse(ctx)
+
+
 async def resolve(request: Request) -> Response:
     d = deps(request)
     raw = request.query_params.get("host")
@@ -72,6 +82,9 @@ async def append_audit(request: Request) -> Response:
     d = deps(request)
     body = await body_of(request)
     entry = audit.check_append(body)
+    # The service identity names the caller: a module appends only in its own name.
+    if entry["module"] != request.state.service:
+        raise ServiceForbidden("a module appends audit entries only in its own name")
     tid = body.get("tenant_id")
     actor: dict[str, Any]
     if tid is None:
@@ -103,6 +116,7 @@ async def _append(conn: Any, tid: str | None, actor: dict[str, Any], e: dict[str
 ROUTES = [
     Route("/internal/tenants/resolve", resolve, methods=["GET"]),
     Route("/internal/tenants/ask", ask, methods=["GET"]),
+    Route("/internal/tenants/ip-mode", ip_mode, methods=["GET"]),
     Route("/internal/tenants/venues/{venue_id}", internal_venue, methods=["GET"]),
     Route("/internal/tenants/audit", append_audit, methods=["POST"]),
 ]

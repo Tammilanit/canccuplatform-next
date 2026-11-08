@@ -46,7 +46,7 @@ class AuditProbe(HttpProbe):
     """Seeds as another module would, through the internal append."""
 
     async def seed(self, tenant: str, marker: str) -> None:
-        async with self.env.client("tenants:8080") as c:
+        async with self.env.module("screen") as c:
             r = await c.post(
                 "/internal/tenants/audit",
                 json={

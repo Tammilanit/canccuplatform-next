@@ -83,17 +83,14 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
           $ref: "#/components/responses/Conflict"
         "429":
+          $ref: "common.openapi.yaml#/components/responses/TooMany"
           description: "`rate_limited`: too many additions today."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /api/games/catalogue/{game_id}:
     parameters:
       - $ref: "#/components/parameters/GameId"
@@ -139,7 +136,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -181,7 +178,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -223,7 +220,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -254,7 +251,7 @@ paths:
                     items:
                       $ref: "#/components/schemas/UnmatchedActivity"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
 components:
@@ -278,13 +275,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
-    Unauthorized:
-      description: "`not_signed_in`: no valid session."
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Forbidden:
       description: |
         `missing_right`; `not_a_member` (adding a game without membership of the event); or `info_pages_closed`
@@ -292,13 +283,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     NotFound:
       description: "`not_found`: no such game, or the caller may not see it."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Conflict:
       description: |
         `game_exists` (the message names the existing game), `version_conflict` (stale `revision`),
@@ -308,22 +299,8 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
   schemas:
-    Error:
-      type: object
-      required: [error]
-      properties:
-        error:
-          type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              pattern: "^[a-z][a-z0-9_]*$"
-              examples: [game_exists]
-            message:
-              type: string
     GameId:
       type: string
       pattern: "^[A-Za-z0-9_-]{1,64}$"

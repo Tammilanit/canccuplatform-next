@@ -1,0 +1,92 @@
+# Shared by every <module>.openapi.yaml (contracts/README.md, Shared components). It has no paths: it is
+# linted through its alias in redocly.yaml, where unused components are allowed.
+openapi: 3.1.0
+info:
+  title: Common API components
+  version: 1.0.0
+  summary: The error body and the common error responses, referenced by every module's API.
+  description: |
+    No operations. Each module's API references these with `common.openapi.yaml#/components/...`.
+    Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
+  license:
+    name: AGPL-3.0
+    identifier: AGPL-3.0-only
+servers:
+  - url: /
+    description: Same origin, behind Caddy; the hostname selects the event.
+paths: {}
+components:
+  responses:
+    BadRequest:
+      description: "`invalid_request`: a field is missing or invalid."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: "`not_signed_in`: no valid session."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: "`missing_right`: signed in, but the right is missing."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: "`not_found`: no such object in this event, or the caller may not see it."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: |
+        `version_conflict` (a stale `revision`), or `event_archived` (the event is archived and read-only,
+        contracts/tenants.md, Lifecycle).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    TooLarge:
+      description: "`file_too_large`: over the size limit the module's contract names."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unprocessable:
+      description: |
+        Well-formed, but the content cannot be applied; the operation names the `code`. A module may add fields to
+        the body (for example theming's `theme_invalid` lists its `problems`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    TooMany:
+      description: "`rate_limited`: too many requests; retry later."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    BadGateway:
+      description: A service the module depends on failed; the operation names the `code` and the message says why.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              pattern: "^[a-z][a-z0-9_]*$"
+              examples: [version_conflict]
+            message:
+              type: string

@@ -8,6 +8,11 @@ import valkey.asyncio as valkey
 
 StreamEntries = list[tuple[str, list[tuple[str, dict[str, str]]]]]
 
+READ_TIMEOUT_S = 30.0
+"""valkey-py's socket timeout defaults to 5 s, as long as the bus's blocking XREAD: the read then
+races the timeout and fails every few seconds. It must outlast every block with room to spare."""
+BLOCK_MARGIN_S = 5.0
+
 
 class StreamStore(Protocol):
     async def xadd(
@@ -34,12 +39,14 @@ class StreamStore(Protocol):
 class ValkeyStreamStore:
     """StreamStore backed by valkey-py (asyncio)."""
 
-    def __init__(self, client: valkey.Valkey) -> None:
+    def __init__(self, client: valkey.Valkey, read_timeout_s: float | None = None) -> None:
         self._client = client
+        self._read_timeout_s = read_timeout_s
 
     @classmethod
-    def from_url(cls, url: str) -> ValkeyStreamStore:
-        return cls(valkey.Valkey.from_url(url, decode_responses=True))
+    def from_url(cls, url: str, *, read_timeout_s: float = READ_TIMEOUT_S) -> ValkeyStreamStore:
+        client = valkey.Valkey.from_url(url, decode_responses=True, socket_timeout=read_timeout_s)
+        return cls(client, read_timeout_s)
 
     async def xadd(
         self, stream: str, fields: dict[str, str], *, maxlen: int, approximate: bool
@@ -48,6 +55,10 @@ class ValkeyStreamStore:
         return str(entry_id)
 
     async def xread(self, streams: dict[str, str], *, block_ms: int, count: int) -> StreamEntries:
+        if self._read_timeout_s is not None and block_ms / 1000 + BLOCK_MARGIN_S > (
+            self._read_timeout_s
+        ):
+            raise ValueError("block_ms must stay well below the Valkey read timeout")
         result = await self._client.xread(streams, count=count, block=block_ms)
         return [
             (str(stream), [(str(entry_id), dict(fields)) for entry_id, fields in entries])

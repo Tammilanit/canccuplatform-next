@@ -3,12 +3,21 @@
 from __future__ import annotations
 
 import html
-from typing import Any
 from urllib.parse import urlencode
 
-from canccu_kit import Health, KitError, MissingRight, NotSignedIn, TenantResolver
+from canccu_kit import (
+    Health,
+    KitError,
+    MissingRight,
+    NotSignedIn,
+    ServiceForbidden,
+    ServiceIdentity,
+    TenantResolver,
+    is_tenant_id,
+    tenant_scope,
+)
 from canccu_kit.rights import Session
-from canccu_kit.starlette import install
+from canccu_kit.starlette import install, install_service_identity
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.requests import Request
@@ -17,55 +26,25 @@ from starlette.routing import Route
 
 from .auth import Auth
 from .auth_routes import Authorize, OnEvent, OriginCheck, auth_routes
-from .declarations import Setting
+from .forms import field_html, from_form
 from .pages import BASE, SIGN_OUT, page
 from .service import BadSettings, Service
 from .tenancy import TenantPaths
 
-MODULES = ("screen", "tournament", "pizza", "bot", "admin", "games", "moments", "voices", "cast")
-
-
-def _field(s: Setting, value: Any) -> str:
-    name, label = html.escape(s.key), html.escape(s.label)
-    value = s.default if value is None else value
-    if s.type == "boolean":
-        checked = " checked" if value else ""
-        return f"<p><label><input type=checkbox name={name}{checked}> {label}</label></p>"
-    if s.choices:
-        opts = "".join(
-            f"<option{' selected' if c == value else ''}>{html.escape(c)}</option>"
-            for c in s.choices
-        )
-        return f"<p><label>{label} <select name={name}>{opts}</select></label></p>"
-    text = (
-        ", ".join(map(str, value)) if isinstance(value, list) else ("" if value is None else value)
-    )
-    kind = "number" if s.type == "number" else "text"
-    return (
-        f"<p><label>{label} <input type={kind} step=any name={name} "
-        f"value='{html.escape(str(text))}'></label></p>"
-    )
-
-
-def _from_form(declared: list[Setting], form: Any) -> dict[str, Any]:
-    values: dict[str, Any] = {}
-    for s in declared:
-        raw = form.get(s.key)
-        if s.type == "boolean":
-            values[s.key] = raw is not None
-        elif raw is None or raw == "":
-            continue
-        elif s.type == "number":
-            try:
-                number = float(raw)
-            except ValueError as exc:
-                raise BadSettings(f"{s.key} must be a number") from exc
-            values[s.key] = int(number) if number.is_integer() else number
-        elif s.type == "list":
-            values[s.key] = [p.strip() for p in str(raw).split(",") if p.strip()]
-        else:
-            values[s.key] = str(raw)
-    return values
+MODULES = (
+    "screen",
+    "tournament",
+    "pizza",
+    "bot",
+    "admin",
+    "games",
+    "moments",
+    "voices",
+    "cast",
+    "agenda",
+    "notify",
+    "theming",
+)
 
 
 def create_app(
@@ -75,6 +54,8 @@ def create_app(
     auth: Auth,
     resolver: TenantResolver,
     on_event: OnEvent | None = None,
+    *,
+    identity: ServiceIdentity,
 ) -> Starlette:
     async def need(request: Request, right: str) -> Session:
         return await authorize(request.headers.get("cookie"), right)
@@ -90,6 +71,19 @@ def create_app(
         module = module_of(request)
         await need(request, "admin.settings.read")
         return JSONResponse(await service.get_settings(module))
+
+    async def internal_settings(request: Request) -> Response:
+        """A module's own settings for the tenant it serves; no hostname names the tenant on
+        admin's internal address, so the kit sends it (contracts/admin.md, Settings)."""
+        module = module_of(request)
+        # The middleware verified the caller; a module reads only its own settings.
+        if request.state.service != module:
+            raise ServiceForbidden(f"module {request.state.service} reads only its own settings")
+        tenant = request.query_params.get("tenant_id", "")
+        if not is_tenant_id(tenant):
+            raise KitError("tenant_id: a tenant id", status=400, code="invalid_request")
+        with tenant_scope(tenant):
+            return JSONResponse(await service.get_settings(module))
 
     async def put_settings(request: Request) -> Response:
         module = module_of(request)
@@ -135,7 +129,7 @@ def create_app(
         session = await need(request, "admin.settings.read")
         declared = service.declarations.get(module, [])
         current = await service.get_settings(module)
-        fields = "".join(_field(s, current["values"].get(s.key)) for s in declared)
+        fields = "".join(field_html(s, current["values"].get(s.key)) for s in declared)
         notice = (request.query_params.get("saved") and "<p><b>Saved.</b></p>") or ""
         return page(
             f"Settings: {module}",
@@ -149,7 +143,7 @@ def create_app(
         module = module_of(request)
         session = await need(request, "admin.settings.write")
         form = await request.form()
-        values = _from_form(service.declarations.get(module, []), form)
+        values = from_form(service.declarations.get(module, []), form)
         try:
             version = int(str(form.get("settings_version", "")))
         except ValueError as exc:
@@ -208,6 +202,7 @@ def create_app(
         routes=[
             Route("/api/admin/settings/{module}", get_settings, methods=["GET"]),
             Route("/api/admin/settings/{module}", put_settings, methods=["PUT"]),
+            Route("/internal/admin/settings/{module}", internal_settings, methods=["GET"]),
             Route("/api/admin/profile", get_profile, methods=["GET"]),
             Route("/api/admin/profile", put_profile, methods=["PUT"]),
             Route("/", index),
@@ -228,6 +223,7 @@ def create_app(
     # Innermost, as the kit's install_tenancy places it: the correlation id and the origin check
     # cover its 404s, and settings and profile handlers run inside the request's tenant.
     app.user_middleware.append(Middleware(TenantPaths, resolver=resolver))
+    install_service_identity(app, identity)
     app.add_exception_handler(NotSignedIn, _not_signed_in)
     app.add_exception_handler(MissingRight, _missing_right)
     return app

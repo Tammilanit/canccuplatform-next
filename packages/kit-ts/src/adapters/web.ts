@@ -1,6 +1,6 @@
 /** Web-standard adapter (Request → Response): Hono, Bun, Deno-style and fetch handlers. */
 import { CORRELATION_HEADER, withCorrelation } from "../context.js";
-import { KitError, codeForStatus, errorBody, internalErrorBody } from "../errors.js";
+import { KitError, MissingRight, codeForStatus, errorBody, internalErrorBody } from "../errors.js";
 import type { TenantContext } from "../access.js";
 import type { Health } from "../health.js";
 import { UnknownHost } from "../resolve.js";
@@ -8,6 +8,9 @@ import type { TenantResolver } from "../resolve.js";
 import { withTenant } from "../tenant.js";
 import type { Logger } from "../log.js";
 import type { RightsChecker, Session } from "../rights.js";
+import { SERVICE_HEADER, serviceHasRight } from "../service.js";
+import type { ServiceIdentity } from "../service.js";
+import { canonicalPath, checkOrigin } from "../web-security.js";
 
 export type FetchHandler = (request: Request) => Promise<Response>;
 
@@ -36,24 +39,73 @@ export function healthHandler(health: Health): FetchHandler {
   };
 }
 
-/** Run `handler` only when the request's canccu_session holds `right`. */
+/**
+ * Run `handler` only when the request's canccu_session holds `right`. With `service`, a request
+ * carrying the service header is a module's: it passes for the module's own rights only, and the
+ * handler gets a null session and the calling module. The session is typed nullable on purpose,
+ * so a handler cannot forget the module case.
+ */
 export function withRight(
   checker: RightsChecker,
   right: string,
-  handler: (request: Request, session: Session) => Promise<Response>,
+  handler: (request: Request, session: Session | null, service: string | null) => Promise<Response>,
+  options: { service?: ServiceIdentity } = {},
 ): FetchHandler {
   return async (request) => {
+    const token = request.headers.get(SERVICE_HEADER);
+    if (options.service !== undefined && token !== null) {
+      const caller = options.service.verify(token);
+      if (!serviceHasRight(caller, right)) throw new MissingRight(`needs right ${right}`);
+      return handler(request, null, caller);
+    }
     const session = await checker.check(request.headers.get("cookie"), right);
-    return handler(request, session);
+    return handler(request, session, null);
   };
 }
 
-/** Outermost wrapper: correlation id in and out, error body for anything thrown. */
-export function withKit(handler: FetchHandler, log?: Logger): FetchHandler {
+/**
+ * Every request under `prefix` must carry a valid service token for this module, else 401
+ * `service_unauthenticated`; the handler gets the calling module (null elsewhere and on the
+ * `exempt` paths). Wrap it in withKit, so errors get the error body.
+ */
+export function withServiceIdentity(
+  identity: ServiceIdentity,
+  handler: (request: Request, service: string | null) => Promise<Response>,
+  options: { prefix?: string; exempt?: readonly string[] } = {},
+): FetchHandler {
+  const prefix = options.prefix ?? "/internal/";
+  const exempt = new Set(options.exempt ?? []);
+  return async (request) => {
+    const url = new URL(request.url);
+    const path = canonicalPath(url.pathname);
+    if (!path.startsWith(prefix) || exempt.has(path)) return handler(request, null);
+    return handler(request, identity.verify(request.headers.get(SERVICE_HEADER)));
+  };
+}
+
+/**
+ * Outermost wrapper: correlation id in and out, the origin check (contracts/theming.md, The
+ * sandbox; `originCheck: false` turns it off), error body for anything thrown.
+ */
+export function withKit(
+  handler: FetchHandler,
+  log?: Logger,
+  options: { originCheck?: boolean } = {},
+): FetchHandler {
   return (request) =>
     withCorrelation(request.headers.get(CORRELATION_HEADER) ?? undefined, async (id) => {
       let response: Response;
       try {
+        if (options.originCheck !== false) {
+          const url = new URL(request.url);
+          checkOrigin(
+            request.method,
+            canonicalPath(url.pathname),
+            request.headers.get("origin"),
+            request.headers.get("host") ?? url.host,
+            request.headers.get("sec-fetch-site"),
+          );
+        }
         response = await handler(request);
       } catch (err) {
         response = errorResponse(err, log);

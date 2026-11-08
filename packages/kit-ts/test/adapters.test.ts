@@ -106,7 +106,7 @@ describe("web adapter", () => {
   const checker = new RightsChecker(admin.client());
   const edit = withRight(checker, "screen.slides.edit", async (_req, session) => {
     await bus.publish("screen.slide.changed", {}, { version: 1, platform: true });
-    return Response.json({ user: session.userId });
+    return Response.json({ user: session?.userId });
   });
   const handle = withKit(async (req) => {
     const path = new URL(req.url).pathname;

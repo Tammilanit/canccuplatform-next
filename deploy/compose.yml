@@ -7,6 +7,20 @@ x-kit-env: &kit-env
   CANCCU_VERSION: ${CANCCU_VERSION:-dev}
   CANCCU_VALKEY_URL: redis://valkey:6379
   CANCCU_ADMIN_URL: http://admin:8080
+  # Module-to-module identity (kit, service identity). The placeholder runs only while the
+  # version is dev; the kit refuses it on a release.
+  CANCCU_SERVICE_KEY: ${CANCCU_SERVICE_KEY:-canccu-local-only-service-key-change-me}
+  # Modules serve as the plain login role (0013 item 5); those with migrations also get
+  # CANCCU_MIGRATE_DATABASE_URL, the migration role.
+  CANCCU_DATABASE_URL: postgres://canccu_app:${CANCCU_DB_APP_PASSWORD:-canccu-local-only-app}@postgres:5432/canccu
+
+x-after-db: &after-db
+  postgres:
+    condition: service_healthy
+  db-roles:
+    condition: service_completed_successfully
+  valkey:
+    condition: service_healthy
 
 services:
   postgres:
@@ -25,6 +39,31 @@ services:
       timeout: 3s
       retries: 30
     restart: unless-stopped
+
+  # Creates the login and migration roles (deploy/postgres/roles.sql) and sets their passwords,
+  # at every start, so an existing volume gets them too. Only it and Postgres hold the superuser
+  # password.
+  db-roles:
+    image: postgres:17.11-alpine
+    environment:
+      PGHOST: postgres
+      PGUSER: canccu
+      PGDATABASE: canccu
+      PGPASSWORD: ${POSTGRES_PASSWORD:-canccu-local-only}
+      MIGRATOR_PASSWORD: ${CANCCU_DB_MIGRATOR_PASSWORD:-canccu-local-only-migrator}
+      APP_PASSWORD: ${CANCCU_DB_APP_PASSWORD:-canccu-local-only-app}
+    entrypoint: ["/bin/sh", "-c"]
+    # Passwords go through psql variables on stdin (:'x' quotes them); -c would not interpolate.
+    command:
+      - psql -q -v ON_ERROR_STOP=1 -f /roles.sql
+        && printf "ALTER ROLE canccu_migrator PASSWORD :'m';\nALTER ROLE canccu_app PASSWORD :'a';\n"
+        | psql -q -v ON_ERROR_STOP=1 -v m="$$MIGRATOR_PASSWORD" -v a="$$APP_PASSWORD"
+    volumes:
+      - ./postgres/roles.sql:/roles.sql:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
 
   valkey:
     image: valkey/valkey:8.1-alpine
@@ -45,14 +84,10 @@ services:
     environment:
       <<: *kit-env
       CANCCU_MODULE: hello
-      CANCCU_DATABASE_URL: postgres://canccu:${POSTGRES_PASSWORD:-canccu-local-only}@postgres:5432/canccu
     volumes:
       - files:/files
     depends_on:
-      postgres:
-        condition: service_healthy
-      valkey:
-        condition: service_healthy
+      <<: *after-db
     healthcheck:
       test:
         - CMD
@@ -71,7 +106,7 @@ services:
     environment:
       <<: *kit-env
       CANCCU_MODULE: admin
-      CANCCU_DATABASE_URL: postgres://canccu:${POSTGRES_PASSWORD:-canccu-local-only}@postgres:5432/canccu
+      CANCCU_MIGRATE_DATABASE_URL: postgres://canccu_migrator:${CANCCU_DB_MIGRATOR_PASSWORD:-canccu-local-only-migrator}@postgres:5432/canccu
       # Settings and the profile are per tenant, resolved from the request's hostname.
       CANCCU_TENANTS_URL: http://tenants:8080
       CANCCU_SIGNIN_HOSTNAME: ${CANCCU_SIGNIN_HOSTNAME:-}
@@ -86,10 +121,7 @@ services:
     volumes:
       - files:/files
     depends_on:
-      postgres:
-        condition: service_healthy
-      valkey:
-        condition: service_healthy
+      <<: *after-db
       hello:
         condition: service_healthy
       tenants:
@@ -112,7 +144,7 @@ services:
     environment:
       <<: *kit-env
       CANCCU_MODULE: tenants
-      CANCCU_DATABASE_URL: postgres://canccu:${POSTGRES_PASSWORD:-canccu-local-only}@postgres:5432/canccu
+      CANCCU_MIGRATE_DATABASE_URL: postgres://canccu_migrator:${CANCCU_DB_MIGRATOR_PASSWORD:-canccu-local-only-migrator}@postgres:5432/canccu
       CANCCU_SIGNIN_HOSTNAME: ${CANCCU_SIGNIN_HOSTNAME:-}
       CANCCU_SUPERADMIN_HOSTNAME: ${CANCCU_SUPERADMIN_HOSTNAME:-}
       CANCCU_PLATFORM_DOMAIN: ${CANCCU_PLATFORM_DOMAIN:-}
@@ -127,10 +159,7 @@ services:
     volumes:
       - files:/files
     depends_on:
-      postgres:
-        condition: service_healthy
-      valkey:
-        condition: service_healthy
+      <<: *after-db
     healthcheck:
       test:
         - CMD

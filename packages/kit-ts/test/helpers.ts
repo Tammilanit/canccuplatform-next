@@ -6,6 +6,8 @@ export interface Recorded {
   path: string;
   cookie: string | null;
   body: unknown;
+  query: URLSearchParams;
+  headers: Headers;
 }
 
 export type Answer = (req: Recorded) => Response | Promise<Response>;
@@ -25,6 +27,8 @@ export class FakeAdmin {
       path: url.pathname,
       cookie: headers.get("cookie"),
       body: typeof init?.body === "string" ? JSON.parse(init.body) : undefined,
+      query: url.searchParams,
+      headers,
     };
     this.requests.push(rec);
     return this.answer(rec);

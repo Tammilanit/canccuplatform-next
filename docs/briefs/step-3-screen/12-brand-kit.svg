@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1100" width="1920" height="1100" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 12: the brand kit in simple mode: a logo and two colours become the whole look, previewed on every surface</title>
+  <style>
+    .label { fill: #1f2937; font-size: 26px; font-weight: 600; }
+    .ui { fill: #ffffff; }
+    .h1 { fill: #111827; font-size: 28px; font-weight: 700; }
+    .h2 { fill: #111827; font-size: 19px; font-weight: 700; }
+    .tx { fill: #111827; font-size: 16px; } .mu { fill: #6b7280; font-size: 14px; }
+    .btn { fill: #2563eb; } .btnt { fill: #fff; font-size: 16px; font-weight: 700; }
+    .gbtn { fill: #fff; stroke: #d1d5db; stroke-width: 1.5; } .gbtnt { fill: #111827; font-size: 15px; }
+    .note { fill: #c2410c; font-size: 17px; }
+    .surf { fill: #6b7280; font-size: 14px; font-weight: 700; letter-spacing: 1px; }
+  </style>
+  <rect width="1920" height="1100" fill="#f3f4f6"/>
+  <text x="24" y="40" class="label">12 · Brand kit, simple mode (theming module): upload a logo, pick two colours, see every surface, publish</text>
+
+  <g transform="translate(24,64)">
+    <rect width="1872" height="1010" rx="12" class="ui" stroke="#d1d5db" stroke-width="2"/>
+    <rect width="1872" height="64" rx="12" fill="#111827"/>
+    <text x="28" y="41" fill="#fff" font-size="20" font-weight="700">Demo Event</text>
+    <g transform="translate(40,64)">
+      <text x="0" y="52" class="h1">Brand kit</text>
+      <rect x="180" y="28" width="120" height="36" rx="18" fill="#dbeafe" stroke="#2563eb"/><text x="240" y="52" class="gbtnt" text-anchor="middle">Simple</text>
+      <rect x="310" y="28" width="140" height="36" rx="18" class="gbtn"/><text x="380" y="52" class="gbtnt" text-anchor="middle">Advanced</text>
+      <text x="480" y="52" class="mu">Draft · 2 changes since revision 3 · nobody else is editing</text>
+
+      <!-- controls -->
+      <g transform="translate(0,90)">
+        <rect width="520" height="620" rx="10" fill="#f9fafb" stroke="#e5e7eb"/>
+        <text x="24" y="44" class="h2">Logo</text>
+        <rect x="24" y="60" width="140" height="100" rx="8" fill="#0b0d1a"/>
+        <circle cx="94" cy="110" r="30" fill="#ff7a45"/><circle cx="94" cy="110" r="14" fill="#0b0d1a"/>
+        <text x="184" y="96" class="tx">demo-logo.svg</text><text x="184" y="122" class="mu">SVG, sanitised · PNG made for Discord</text>
+        <text x="24" y="210" class="h2">Colours</text>
+        <rect x="24" y="226" width="56" height="56" rx="8" fill="#ff7a45"/><text x="96" y="250" class="tx">Primary</text><text x="96" y="272" class="mu">#ff7a45</text>
+        <rect x="270" y="226" width="56" height="56" rx="8" fill="#7c5cff"/><text x="342" y="250" class="tx">Accent</text><text x="342" y="272" class="mu">#7c5cff</text>
+        <text x="24" y="330" class="h2">Scheme</text>
+        <rect x="24" y="346" width="120" height="36" rx="6" fill="#dbeafe" stroke="#2563eb"/><text x="84" y="370" class="gbtnt" text-anchor="middle">Dark</text>
+        <rect x="154" y="346" width="120" height="36" rx="6" class="gbtn"/><text x="214" y="370" class="gbtnt" text-anchor="middle">Light</text>
+        <text x="24" y="430" class="h2">Adjusted for readability</text>
+        <rect x="24" y="446" width="472" height="70" rx="8" fill="#ecfdf5" stroke="#10b981"/>
+        <text x="40" y="474" class="tx">Text on primary uses near-black (4.9:1), not white (2.6:1).</text>
+        <text x="40" y="500" class="mu">Every contrast rule passes; nothing for you to fix.</text>
+        <text x="24" y="556" class="mu">The same input always gives the same tokens, so</text>
+        <text x="24" y="578" class="mu">screenshots stay stable between platform versions.</text>
+      </g>
+
+      <!-- previews -->
+      <g transform="translate(560,90)">
+        <text x="0" y="0" class="surf">VENUE SCREEN</text>
+        <rect x="0" y="12" width="760" height="428" fill="#120c0a"/>
+        <circle cx="36" cy="44" r="16" fill="#ff7a45"/><circle cx="36" cy="44" r="7" fill="#120c0a"/>
+        <text x="64" y="52" fill="#fff4ee" font-size="20" font-weight="700">DEMO EVENT</text>
+        <text x="740" y="52" fill="#fff4ee" font-size="22" font-weight="700" text-anchor="end">18:42</text>
+        <rect x="14" y="74" width="490" height="320" rx="8" fill="#241712"/>
+        <text x="40" y="180" fill="#fff4ee" font-size="38" font-weight="800">Demo Game Cup</text>
+        <text x="40" y="222" fill="#d9bfb2" font-size="20">21:00 · Stage</text>
+        <rect x="40" y="350" width="300" height="8" rx="4" fill="#ff7a45"/>
+        <rect x="514" y="74" width="232" height="190" rx="8" fill="#241712" stroke="#4a3027"/>
+        <text x="530" y="104" fill="#d9bfb2" font-size="13" font-weight="700">NOW</text>
+        <text x="530" y="132" fill="#fff4ee" font-size="20" font-weight="700">Dinner</text>
+        <rect x="640" y="114" width="90" height="24" rx="12" fill="#7c5cff"/><text x="685" y="131" fill="#fff" font-size="13" font-weight="700" text-anchor="middle">+15 min</text>
+        <rect x="514" y="274" width="232" height="120" rx="8" fill="#241712" stroke="#4a3027"/>
+        <rect x="0" y="404" width="760" height="36" fill="#241712"/>
+        <rect x="0" y="404" width="90" height="36" fill="#ff7a45"/><text x="45" y="428" fill="#120c0a" font-size="15" font-weight="800" text-anchor="middle">INFO</text>
+        <text x="104" y="428" fill="#fff4ee" font-size="16">Pizza orders close at 20:00</text>
+
+        <text x="800" y="0" class="surf">PHONE HUB</text>
+        <rect x="800" y="12" width="230" height="428" rx="24" fill="#120c0a"/>
+        <text x="820" y="56" fill="#fff4ee" font-size="17" font-weight="700">Demo Event</text>
+        <rect x="816" y="76" width="198" height="90" rx="10" fill="#241712"/>
+        <text x="830" y="104" fill="#d9bfb2" font-size="12" font-weight="700">NOW</text>
+        <text x="830" y="128" fill="#fff4ee" font-size="16" font-weight="700">Dinner +15</text>
+        <rect x="816" y="180" width="198" height="40" rx="20" fill="#ff7a45"/><text x="915" y="206" fill="#120c0a" font-size="15" font-weight="700" text-anchor="middle">Turn on alerts</text>
+
+        <text x="0" y="490" class="surf">ADMIN (TOKENS ONLY, NO EVENT CSS)</text>
+        <rect x="0" y="502" width="500" height="160" rx="10" fill="#fff" stroke="#e5e7eb"/>
+        <rect x="0" y="502" width="500" height="40" rx="10" fill="#1f1512"/>
+        <text x="16" y="528" fill="#fff4ee" font-size="15" font-weight="700">Demo Event · admin</text>
+        <rect x="16" y="602" width="140" height="36" rx="6" fill="#ff7a45"/><text x="86" y="626" fill="#120c0a" font-size="14" font-weight="700" text-anchor="middle">Save</text>
+        <text x="16" y="574" class="mu">Admin and sign-in pages never take event CSS or templates.</text>
+
+        <text x="540" y="490" class="surf">DISCORD</text>
+        <rect x="540" y="502" width="490" height="160" rx="10" fill="#313338"/>
+        <rect x="556" y="522" width="5" height="120" fill="#ff7a45"/>
+        <text x="576" y="550" fill="#f2f3f5" font-size="16" font-weight="700">Dinner is 15 min late</text>
+        <text x="576" y="576" fill="#b5bac1" font-size="14">embed colour from primary · logo as PNG</text>
+      </g>
+      <g transform="translate(560,790)">
+        <rect x="0" y="0" width="160" height="48" rx="8" class="gbtn"/><text x="80" y="30" class="gbtnt" text-anchor="middle">Discard draft</text>
+        <rect x="176" y="0" width="230" height="48" rx="8" class="gbtn"/><text x="291" y="30" class="gbtnt" text-anchor="middle">Preview on a screen…</text>
+        <rect x="830" y="0" width="200" height="48" rx="8" class="btn"/><text x="930" y="30" class="btnt" text-anchor="middle">Publish</text>
+      </g>
+      <text x="0" y="880" class="note">Publish makes revision 4; every screen and hub switches by push, without a reload; Restore brings back any of the last 20 revisions as a new one. A pinned screen keeps its revision.</text>
+      <text x="0" y="906" class="note">Advanced mode adds CSS on the stable classes, fonts, widget templates and sandboxed embeds, as a package upload or a git sync. Theme gallery to start from: question L4.</text>
+    </g>
+  </g>
+</svg>

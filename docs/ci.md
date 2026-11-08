@@ -17,7 +17,7 @@
 | `setup (self-test)` | Runs `setup/test.sh` (no root, never changes the host: every script with `--dry-run` or against an unreachable daemon) with shellcheck, jq and the docker CLI and daemon present, and fails if any check is skipped except `systemd-analyze verify`, which the runner may lack. Covers `setup/` and the Caddy ports and network in `deploy/compose.yml`. After it first runs on main, a maintainer adds it to the required checks. |
 | `naming` | `scripts/check-naming`: fails if a tracked file name or line uses the old platform prefix as an identifier ([ADR 0017](decisions/0017-naming.md)). After it first runs on main, a maintainer adds it to the required checks. |
 | `tenancy` | `scripts/check-tenancy`: every table in `modules/*/migrations/*.sql` is a tenant table with `tenant_id`, row-level security and a tenant policy, tenant-scoped keys and composite foreign keys, unless `scripts/tenancy-global-tables.txt` lists it; module source spells no raw Valkey key or stream name. See [tenancy](#tenancy). After it first runs on main, a maintainer adds it to the required checks. |
-| `file-size` | `scripts/check-file-size`: warns, and never fails, on tracked source files over 400 lines (the file-size rule, AGENTS.md). Not a required check. |
+| `file-size` | `scripts/check-file-size`: warns, and never fails, on tracked source files over 400 lines (the file-size rule, AGENTS.md) and OpenAPI contracts over 1,500. Not a required check. |
 
 Do not rename these jobs; renaming breaks the required checks.
 
@@ -50,8 +50,8 @@ Do not rename these jobs; renaming breaks the required checks.
 - **Required check:** after this job first runs on main, a maintainer adds `naming` to the required checks of the main ruleset. Do not rename the job.
 
 ## file-size
-- `scripts/check-file-size [DIR]` scans every tracked source file of the repo, or of `DIR`, and warns on each one over 400 lines: a `file:line` line locally, a `::warning` annotation on the file in Actions. It exits 0 whether or not it warns, so the job never fails on a long file; exit 2 only on a broken run (not a git work tree). The self-test step does fail the job, because a failing self-test means the checker itself is broken.
-- **Source:** files ending in `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.cjs`, `.py`, `.sh`, `.bash`, `.css`, `.scss`, `.html`, `.svelte`, `.vue` or `.sql`, and files without an extension that start with `#!`. Docs, data, lockfiles and config are not source.
+- `scripts/check-file-size [DIR]` scans every tracked source file of the repo, or of `DIR`, and warns on each one over 400 lines, and on each `*.openapi.yaml` over 1,500 lines ([contracts/README.md](../contracts/README.md#shared-components)): a `file:line` line locally, a `::warning` annotation on the file in Actions. It exits 0 whether or not it warns, so the job never fails on a long file; exit 2 only on a broken run (not a git work tree). The self-test step does fail the job, because a failing self-test means the checker itself is broken.
+- **Source:** files ending in `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.cjs`, `.py`, `.sh`, `.bash`, `.css`, `.scss`, `.html`, `.svelte`, `.vue` or `.sql`, and files without an extension that start with `#!`. Docs, data, lockfiles and config are not source; OpenAPI contracts have their own limit.
 - **Exempt:** generated files, marked by `@generated` or `DO NOT EDIT` in their first five lines, and the entries of `scripts/file-size-exemptions.txt`: one `<path or glob> <reason>` per line, where `*` also matches `/`. An entry without a reason is reported and exempts nothing. The health pass reviews the list ([0019](decisions/0019-work-packages.md)).
 - Self-test: `scripts/check-file-size --self-test`.
 - Not a required check: it only warns. Do not rename the job.
