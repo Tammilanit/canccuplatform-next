@@ -1,5 +1,5 @@
 import { Html, attrs, html, raw, type Slot } from "./html.js";
-import { themeCss, type ProfileLike } from "./theme.js";
+import { themeStyle, type ProfileLike } from "./theme.js";
 
 export interface ButtonOptions {
   label: string;
@@ -86,6 +86,9 @@ export function card(o: CardOptions): Html {
   return html`<section class="canccu-card">${title}${o.body}</section>`;
 }
 
+/** Which kind of page this is; a theme targets `canccu-surface--<surface>` (contracts/theming.md). */
+export type Surface = "screen" | "hub" | "info" | "admin";
+
 export interface PageOptions {
   title: string;
   body: Slot;
@@ -95,12 +98,15 @@ export interface PageOptions {
   logoUrl?: string;
   /** Where the module serves ui.css. */
   cssHref?: string;
+  /** Defaults to `admin`: the surface themes restyle least, so a forgotten option fails safe. */
+  surface?: Surface;
+  /** The response's CSP nonce for the theme `<style>`; required once the module sends the nonce CSP. */
+  nonce?: string;
 }
 
 /** A full HTML document: ui.css, the profile theme, a header with the logo, and main. */
 export function page(o: PageOptions): Html {
-  const css = themeCss(o.profile); // only validated token values; safe inside <style>
-  const style = css === "" ? "" : html`<style>\n${raw(css)}\n</style>\n`;
+  const style = raw(themeStyle(o.profile, o.nonce));
   const logo =
     o.logoUrl === undefined
       ? ""
@@ -113,7 +119,7 @@ export function page(o: PageOptions): Html {
 <title>${o.title}</title>
 <link${attrs({ rel: "stylesheet", href: o.cssHref ?? "/ui/ui.css" })}>
 ${style}</head>
-<body class="canccu-page">
+<body${attrs({ class: `canccu-page canccu-surface canccu-surface--${o.surface ?? "admin"}` })}>
 <header class="canccu-header">${logo}<span class="canccu-header__title">${o.title}</span></header>
 <main class="canccu-main">${o.body}</main>
 </body>

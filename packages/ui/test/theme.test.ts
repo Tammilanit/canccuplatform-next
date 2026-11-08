@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { logoPath, resolveTheme, themeCss } from "../src/theme.js";
-import { COLOR_TOKENS, FONT_TOKENS } from "../src/tokens.js";
+import { logoPath, resolveTheme, themeCss, themeStyle } from "../src/theme.js";
+import { COLOR_TOKENS, FONT_TOKENS, SIZE_TOKENS } from "../src/tokens.js";
 
 describe("resolveTheme / themeCss", () => {
   it("no theme gives the defaults and no override block", () => {
-    expect(resolveTheme()).toEqual({ colors: COLOR_TOKENS, fonts: FONT_TOKENS });
-    expect(resolveTheme({})).toEqual({ colors: COLOR_TOKENS, fonts: FONT_TOKENS });
+    expect(resolveTheme()).toEqual({
+      colors: COLOR_TOKENS,
+      fonts: FONT_TOKENS,
+      sizes: SIZE_TOKENS,
+    });
+    expect(resolveTheme({})).toEqual({
+      colors: COLOR_TOKENS,
+      fonts: FONT_TOKENS,
+      sizes: SIZE_TOKENS,
+    });
     expect(themeCss({})).toBe("");
   });
 
@@ -23,7 +31,11 @@ describe("resolveTheme / themeCss", () => {
 
   it("ignores unknown keys", () => {
     const profile = { theme: { colors: { sparkle: "#123456" }, fonts: { fancy: "Inter" } } };
-    expect(resolveTheme(profile)).toEqual({ colors: COLOR_TOKENS, fonts: FONT_TOKENS });
+    expect(resolveTheme(profile)).toEqual({
+      colors: COLOR_TOKENS,
+      fonts: FONT_TOKENS,
+      sizes: SIZE_TOKENS,
+    });
     expect(themeCss(profile)).toBe("");
   });
 
@@ -45,6 +57,51 @@ describe("resolveTheme / themeCss", () => {
   it("does not treat inherited object keys as tokens", () => {
     const profile = { theme: { colors: JSON.parse('{"__proto__": "#123456"}') as object } };
     expect(themeCss(profile as never)).toBe("");
+  });
+});
+
+describe("sizes and display font", () => {
+  it("sets sizes and the display font", () => {
+    const profile = {
+      theme: { sizes: { radius: "0", safe_inset: "2.5rem" }, fonts: { display: "Anton" } },
+    };
+    expect(resolveTheme(profile).sizes).toEqual({
+      ...SIZE_TOKENS,
+      radius: "0",
+      safe_inset: "2.5rem",
+    });
+    expect(themeCss(profile)).toBe(
+      ':root {\n  --canccu-font-display: "Anton", system-ui, sans-serif;\n  --canccu-radius: 0;\n  --canccu-safe-inset: 2.5rem;\n}',
+    );
+  });
+
+  it("drops bad or unknown sizes", () => {
+    const bad = ["1", "10vh", "1rem; x: y", "-1px", "1000px", "1.2345rem", "", 4, "1px}"];
+    for (const value of bad) {
+      const profile = { theme: { sizes: { gap: value, sparkle: "1px" } } };
+      expect(resolveTheme(profile).sizes).toEqual(SIZE_TOKENS);
+      expect(themeCss(profile)).toBe("");
+    }
+  });
+});
+
+describe("themeStyle (nonce)", () => {
+  const profile = { theme: { colors: { primary: "#ff0000" } } };
+  const nonce = "abcdEFGH0123+/==-_xyz";
+
+  it("wraps the css in a style element carrying the nonce", () => {
+    expect(themeStyle(profile, nonce)).toBe(
+      `<style nonce="${nonce}">\n${themeCss(profile)}\n</style>\n`,
+    );
+  });
+  it("without a nonce the style element has no attribute; no overrides give nothing", () => {
+    expect(themeStyle(profile)).toBe(`<style>\n${themeCss(profile)}\n</style>\n`);
+    expect(themeStyle({}, nonce)).toBe("");
+  });
+  it("refuses a nonce that is not base64 characters", () => {
+    for (const bad of ['a"b', "short", "x".repeat(16) + '" onload="x', "x".repeat(16) + "<", ""]) {
+      expect(() => themeStyle(profile, bad)).toThrow(/nonce/);
+    }
   });
 });
 
