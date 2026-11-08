@@ -153,3 +153,30 @@ async def test_refuses_to_start_inside_a_callers_plain_transaction() -> None:
         async with tenant_transaction(conn, "acme"):
             pass
     assert conn.calls == []
+
+
+@pytest.mark.parametrize(
+    ("row", "safe"),
+    [
+        ({"rolname": "canccu_app", "rolsuper": False, "rolbypassrls": False, "owns": False}, True),
+        ({"rolname": "canccu", "rolsuper": True, "rolbypassrls": False, "owns": False}, False),
+        ({"rolname": "x", "rolsuper": False, "rolbypassrls": True, "owns": False}, False),
+        (
+            {"rolname": "canccu_migrator", "rolsuper": False, "rolbypassrls": False, "owns": True},
+            False,
+        ),
+        (None, False),
+    ],
+)
+async def test_check_login_role_wants_a_plain_role_that_owns_nothing(
+    row: dict[str, Any] | None, safe: bool
+) -> None:
+    from canccu_kit.db import check_login_role
+
+    conn = FakeConnection()
+    conn.row = row
+    if safe:
+        await check_login_role(conn)
+    else:
+        with pytest.raises(RlsBypassed):
+            await check_login_role(conn)

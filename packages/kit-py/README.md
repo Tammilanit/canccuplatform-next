@@ -16,11 +16,13 @@ from canccu_kit import (
     Bus,
     Health,
     RightsChecker,
+    ServiceIdentity,
     SettingsClient,
     ValkeyStreamStore,
     create_logger,
     load_config,
     postgres_check,
+    service_key_from_env,
     tenant_scope,
     valkey_check,
 )
@@ -35,10 +37,13 @@ admin = AdminClient(config.admin_url)
 with tenant_scope("demo"):
     await bus.publish("screen.slide.shown", {"slide": 3}, version=1)
 
-# Settings: read once at start, then follow admin.settings.changed (never poll)
-settings = SettingsClient(admin, config.module)
-await settings.start()
-rotation = settings.get("rotation_seconds", 10)
+# Settings, per tenant: read through admin's internal path on first use, then follow
+# admin.settings.changed on admin's tenant streams (never poll)
+service = ServiceIdentity(config.module, service_key_from_env())
+settings = SettingsClient(admin, config.module, service=service)
+with tenant_scope("demo"):
+    await settings.ensure()
+    rotation = settings.get("rotation_seconds", 10)
 
 # Rights: checks the canccu_session cookie against GET /api/admin/session, cached ≤ 30 s;
 # rights.forget_session(session_id) drops one session at once (admin calls it on sign-out)
@@ -51,6 +56,7 @@ async def on_admin_event(event):
 
 
 subscription = bus.subscribe(["admin"], on_admin_event)
+settings_subscription = bus.subscribe_tenants(["admin"], settings.handle_event)
 
 # Health: the shared /health shape; 200 for ok/degraded, 503 for down
 health = Health(
@@ -115,9 +121,29 @@ bus.subscribe(["tenants"], drop_cache)  # async def drop_cache(event): tenants.h
 - **Postgres:** `async with tenant_transaction(conn[, tenant])` (any asyncpg-shaped connection) sets the tenant with `set_config('canccu.tenant', id, true)` (SET LOCAL) inside one transaction, never per connection. Migrations write `TENANT_COLUMN_SQL` (the column defaults to the setting) and `rls_sql(table)` (RLS enabled, forced, and the policy); with no tenant set a query sees nothing and an insert fails. `check_app_role(conn)` refuses to start as a superuser or BYPASSRLS role, which RLS does not bind. `scripts/check-tenancy` lints the migrations ([docs/ci.md](../../docs/ci.md#tenancy)).
 - **Names:** `tenant_stream(module)` → `t:<tenant>:events:<module>`, `platform_stream(module)` → `events:<module>`, `tenant_key(module, *parts)` → `t:<tenant>:<module>:…`, `tenant_file(module, path)` → `/files/<tenant>/<module>/<path>` (refuses `..`), `platform_files_dir(module)` → `/files/_platform/<module>/`. Modules spell no raw keys.
 - **Bus:** `publish` uses the current tenant (or `tenant=`); without one it raises `NoTenant`. Platform events need `platform=True`, and only a module whose contract says so emits them. A consumer drops a message whose `tenant` does not match its stream.
-- **Resolution:** `TenantResolver` asks `GET /internal/tenants/resolve?host=` and caches the answer, for at most 10,000 hosts, for 30 s or until a tenants event (any tenants event also drops cached unknown hosts). An unknown host is 404 `not_found` with no detail; the platform's own hostnames resolve to `Resolution("platform", host=…)` (the middleware answers 404 unless `platform_hosts="serve"`). The IP-mode demo stack (`ip_mode=IpMode(...)`) serves only the `demo` tenant, only on an IP literal and only while the version is `dev`. Env: `CANCCU_TENANTS_URL`, `CANCCU_SIGNIN_HOSTNAME`, `CANCCU_SUPERADMIN_HOSTNAME`.
+- **Resolution:** `TenantResolver` (signed with `service=`) asks `GET /internal/tenants/resolve?host=` and caches the answer, for at most 10,000 hosts, for 30 s or until a tenants event (any tenants event also drops cached unknown hosts). An unknown host is 404 `not_found` with no detail; the platform's own hostnames resolve to `Resolution("platform", host=…)` (the middleware answers 404 unless `platform_hosts="serve"`). The IP-mode demo stack (`ip_mode=IpMode(version)`) serves only the `demo` tenant, only on an IP literal and only while the version is `dev`; it asks `GET /internal/tenants/ip-mode`, where the tenants module applies the only-tenant rule. Env: `CANCCU_TENANTS_URL`, `CANCCU_SIGNIN_HOSTNAME`, `CANCCU_SUPERADMIN_HOSTNAME`.
 - **Access:** `check_screen_access` (device token **and** the venue address, unless the emergency switch is off until `disabled_until`; 401 `device_token_invalid`, 403 `venue_ip_mismatch`), `new_device_token`, `hash_device_token` and `device_token_matches` (store only the hash), `check_info_access` (the info-page mode), `check_admin_access` (`admin_access`: venue or Tailscale, `CANCCU_TAILSCALE_CIDRS`). `client_ip` is the address Caddy forwards (trust only Caddy as a proxy).
 - **Leak tests** (`canccu_kit.testing`): `assert_tenant_isolation(probe)` seeds a marker per tenant and fails with `TenantLeak` if one tenant reads the other's, or if a tenant cannot read its own (the test would prove nothing). For a consumer, seed with `deliver_as(handler, tenant_event(tenant, type, data))`.
+
+## Module-to-module identity
+Calls to `/internal/…` paths carry `x-canccu-service: v1.<caller>.<audience>.<expires>.<HMAC>`, signed with the stack's `CANCCU_SERVICE_KEY` (at least 32 characters; a `local-only` placeholder runs only while the version is `dev`). Tokens live 60 s.
+```python
+service = ServiceIdentity(config.module, service_key_from_env())
+headers = service.headers("tenants")  # for a call to the tenants module
+install_service_identity(app, service, exempt=("/internal/tenants/ask",))  # 401 without a token
+caller = request.state.service  # e.g. "screen"; service.require(value, allowed={"screen"}) → 403
+@require_right(rights, "screen.slides.edit", service=service)  # a module passes for its own rights
+```
+Every module holds the same key, so a token proves "a module of this stack", not which one against a compromised module; it keeps out everything else on the internal network and never sends the key. `TenantResolver(..., service=service)` and `SettingsClient` sign their calls.
+
+## Secrets
+`SecretBox.from_env()` reads `CANCCU_SECRETS_KEY` (`<version>:<base64 of 32 bytes>`) and `CANCCU_SECRETS_KEYS_RETIRED` (comma-separated, still opened). `seal(value, aad)` gives `cs1.<version>.<nonce>.<ciphertext>` (AES-256-GCM); `open(token, aad)` / `open_text` raise `SecretUndecryptable`; `needs_rotation` and `rotate` move a value to the current key. `aad` binds a value to its row, e.g. `bot:token:<tenant>:<application id>`. kit-ts reads and writes the same format.
+
+## Event pages
+`event_page_csp(new_nonce(), hostname, page="surface"|"admin"|"sign_in", sandbox=None)` is the CSP of [contracts/theming.md](../../contracts/theming.md#the-csp-of-event-pages); give the same nonce to the page's `<style>`. `install()` adds the origin check: `Origin: null` on `/api/…` and a state-changing request from another origin (or cross-site with no Origin) get 403 `origin_refused`.
+
+## Database roles
+Modules log in as a plain role (no superuser, no BYPASSRLS, owns nothing) and run migrations as another role that owns the tables (0013 item 5). `check_login_role(conn)` refuses anything else; call it at start on a fresh connection, before SET ROLE.
 
 ## No state
 The kit writes nothing to disk. Its only in-memory items are the rights cache (≤ 30 s per session), the current settings, the tenant resolver's cache (≤ 30 s per host) and the bus's dedupe list of recent event ids and stream positions. Sessions live in admin (Postgres) and events in Valkey.

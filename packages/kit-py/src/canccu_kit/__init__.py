@@ -37,6 +37,7 @@ from .db import (
     RlsBypassed,
     SqlConnection,
     check_app_role,
+    check_login_role,
     rls_sql,
     tenant_transaction,
 )
@@ -63,6 +64,15 @@ from .resolve import (
     normalize_host,
 )
 from .rights import CACHE_SECONDS, RightsChecker, Session, session_id_from_cookie
+from .secrets import SecretBox, SecretUndecryptable
+from .service import (
+    SERVICE_HEADER,
+    ServiceForbidden,
+    ServiceIdentity,
+    ServiceUnauthenticated,
+    service_has_right,
+    service_key_from_env,
+)
 from .settings import SettingsClient
 from .store import StreamStore, ValkeyStreamStore
 from .tenant import (
@@ -81,6 +91,7 @@ from .tenant import (
     tenant_scope,
     tenant_stream,
 )
+from .web_security import OriginRefused, check_origin, event_page_csp, new_nonce
 
 __all__ = [
     "CACHE_SECONDS",
@@ -90,6 +101,7 @@ __all__ = [
     "FILES_ROOT",
     "PLATFORM_FILES_DIR",
     "RESOLVE_CACHE_SECONDS",
+    "SERVICE_HEADER",
     "STREAM_MAXLEN",
     "TENANT_COLUMN_SQL",
     "TENANT_ID_RE",
@@ -117,9 +129,15 @@ __all__ = [
     "MissingRight",
     "NoTenant",
     "NotSignedIn",
+    "OriginRefused",
     "Resolution",
     "RightsChecker",
     "RlsBypassed",
+    "SecretBox",
+    "SecretUndecryptable",
+    "ServiceForbidden",
+    "ServiceIdentity",
+    "ServiceUnauthenticated",
     "Session",
     "SettingsClient",
     "SqlConnection",
@@ -136,12 +154,15 @@ __all__ = [
     "check_admin_access",
     "check_app_role",
     "check_info_access",
+    "check_login_role",
+    "check_origin",
     "check_screen_access",
     "correlation",
     "create_logger",
     "current_tenant",
     "device_token_matches",
     "error_body",
+    "event_page_csp",
     "get_correlation_id",
     "hash_device_token",
     "ip_in_cidrs",
@@ -149,6 +170,7 @@ __all__ = [
     "load_config",
     "new_device_token",
     "new_id",
+    "new_nonce",
     "normalize_host",
     "parse_error_body",
     "platform_files_dir",
@@ -156,6 +178,8 @@ __all__ = [
     "postgres_check",
     "require_tenant",
     "rls_sql",
+    "service_has_right",
+    "service_key_from_env",
     "session_id_from_cookie",
     "tailscale_cidrs",
     "tenant_file",

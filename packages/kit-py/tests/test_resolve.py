@@ -226,3 +226,75 @@ async def test_forgets_unknown_hosts_on_any_tenants_event() -> None:
     tenants.hosts["new.example.org"] = DEMO
     resolver.handle_event(event("tenants.flags.changed", "other"))
     assert await resolver.resolve("new.example.org") == Resolution("tenant", DEMO)
+
+
+class FakeIpMode:
+    """The tenants module's IP-mode endpoint, which applies the demo-only rule itself."""
+
+    def __init__(self, status: int, body: object = None) -> None:
+        self.status, self.body = status, body
+        self.requests: list[httpx.Request] = []
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        assert request.url.path == "/internal/tenants/ip-mode"
+        return httpx.Response(self.status, json=self.body)
+
+
+async def test_ip_mode_asks_the_tenants_module_signed_when_no_loader_is_given() -> None:
+    from canccu_kit import SERVICE_HEADER, ServiceIdentity
+
+    key = b"k" * 32
+    tenants = FakeIpMode(200, DEMO)
+    resolver = TenantResolver(
+        "http://t",
+        http=httpx.AsyncClient(transport=httpx.MockTransport(tenants)),
+        ip_mode=IpMode(version="dev"),
+        service=ServiceIdentity("admin", key),
+    )
+    assert (await resolver.resolve("192.0.2.1")).context == DEMO
+    signed = tenants.requests[0].headers[SERVICE_HEADER]
+    assert ServiceIdentity("tenants", key).verify(signed) == "admin"
+
+
+@pytest.mark.parametrize(
+    ("status", "body"), [(404, None), (200, tenant_context(tenant_id="real-event"))]
+)
+async def test_ip_mode_endpoint_declining_or_naming_another_tenant_is_404(
+    status: int, body: object
+) -> None:
+    resolver = TenantResolver(
+        "http://t",
+        http=httpx.AsyncClient(transport=httpx.MockTransport(FakeIpMode(status, body))),
+        ip_mode=IpMode(version="dev"),
+    )
+    with pytest.raises(UnknownHost):
+        await resolver.resolve("192.0.2.1")
+
+
+async def test_ip_mode_endpoint_failing_is_503() -> None:
+    resolver = TenantResolver(
+        "http://t",
+        http=httpx.AsyncClient(transport=httpx.MockTransport(FakeIpMode(500))),
+        ip_mode=IpMode(version="dev"),
+    )
+    with pytest.raises(TenantsUnavailable):
+        await resolver.resolve("192.0.2.1")
+
+
+async def test_resolve_lookups_carry_the_service_identity() -> None:
+    from canccu_kit import SERVICE_HEADER, ServiceIdentity
+
+    seen: list[httpx.Request] = []
+
+    def answer(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, json=DEMO)
+
+    resolver = TenantResolver(
+        "http://t",
+        http=httpx.AsyncClient(transport=httpx.MockTransport(answer)),
+        service=ServiceIdentity("screen", b"k" * 32),
+    )
+    await resolver.resolve("demo.example.org")
+    assert seen[0].headers[SERVICE_HEADER].startswith("v1.screen.tenants.")

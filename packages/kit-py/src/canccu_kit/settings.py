@@ -1,4 +1,5 @@
-"""Settings client: read at start, follow admin.settings.changed, write with settings_version."""
+"""Settings client, per tenant: read through admin's internal path, follow
+admin.settings.changed, write with settings_version (contracts/admin.md, Settings)."""
 
 from __future__ import annotations
 
@@ -9,6 +10,8 @@ from typing import Any
 from .admin import AdminClient
 from .bus import Event
 from .errors import VersionConflict
+from .service import ServiceIdentity
+from .tenant import require_tenant, tenant_scope
 
 log = logging.getLogger("canccu.kit.settings")
 
@@ -17,65 +20,96 @@ OnChange = Callable[[list[str]], Awaitable[None]]
 
 
 class SettingsClient:
+    """Each tenant's settings of one module, loaded on first use and kept until they change.
+
+    The read is the module's own (`/internal/admin/settings/{module}?tenant_id=`, signed), since
+    a module reads for the tenant it serves, not on a person's behalf; a write is a person's and
+    goes through the API with their session.
+    """
+
     def __init__(
         self,
         admin: AdminClient,
         module: str,
         *,
+        service: ServiceIdentity,
         session_id: str | None = None,
         on_change: OnChange | None = None,
     ) -> None:
         self._admin = admin
         self.module = module
+        self._service = service
         self._session_id = session_id
         self._on_change = on_change
-        self.settings_version = 0
-        self.values: dict[str, SettingValue] = {}
+        self._cache: dict[str, tuple[int, dict[str, SettingValue]]] = {}
 
-    @property
-    def _path(self) -> str:
-        return f"/api/admin/settings/{self.module}"
+    def _apply(self, tenant: str, body: dict[str, Any]) -> None:
+        self._cache[tenant] = (int(body["settings_version"]), dict(body["values"]))
 
-    def _apply(self, body: dict[str, Any]) -> None:
-        self.settings_version = int(body["settings_version"])
-        self.values = dict(body["values"])
+    async def load(self, tenant: str | None = None) -> None:
+        """Read one tenant's settings (by default the current tenant's)."""
+        tenant = require_tenant() if tenant is None else tenant
+        response = await self._admin.request(
+            "GET",
+            f"/internal/admin/settings/{self.module}",
+            params={"tenant_id": tenant},
+            headers=self._service.headers("admin"),
+        )
+        self._admin.raise_for_error(response)
+        self._apply(tenant, response.json())
 
     async def start(self) -> None:
-        """Read the settings once; call at module start."""
-        await self.refresh()
+        await self.load()
 
-    async def refresh(self) -> None:
-        response = await self._admin.request("GET", self._path, session_id=self._session_id)
-        self._admin.raise_for_error(response)
-        self._apply(response.json())
+    async def ensure(self) -> None:
+        """Load the current tenant's settings unless they are cached."""
+        if require_tenant() not in self._cache:
+            await self.load()
+
+    @property
+    def settings_version(self) -> int:
+        return self._cache.get(require_tenant(), (0, {}))[0]
+
+    @property
+    def values(self) -> dict[str, SettingValue]:
+        return dict(self._cache.get(require_tenant(), (0, {}))[1])
 
     def get(self, key: str, default: SettingValue | None = None) -> SettingValue | None:
-        return self.values.get(key, default)
+        return self._cache.get(require_tenant(), (0, {}))[1].get(key, default)
 
     async def write(
         self, values: dict[str, SettingValue], *, session_id: str | None = None
     ) -> None:
-        """Replace the values; raises VersionConflict if they changed since they were read."""
+        """Replace the current tenant's values; raises VersionConflict if they changed since
+        they were read."""
+        tenant = require_tenant()
         response = await self._admin.request(
             "PUT",
-            self._path,
+            f"/api/admin/settings/{self.module}",
             session_id=session_id or self._session_id,
             json={"settings_version": self.settings_version, "values": values},
         )
         if response.status_code == 409:
             raise VersionConflict("settings changed since they were read; read again and retry")
         self._admin.raise_for_error(response)
-        self._apply(response.json())
+        self._apply(tenant, response.json())
 
     async def handle_event(self, event: Event) -> None:
-        """Feed events from `events:admin`; re-reads on a newer change for this module."""
-        if event.type != "admin.settings.changed" or event.data.get("module") != self.module:
+        """Feed admin's tenant events here; re-reads a cached tenant on a newer change."""
+        tenant = event.tenant
+        if (
+            event.type != "admin.settings.changed"
+            or event.data.get("module") != self.module
+            or tenant is None
+            or tenant not in self._cache
+        ):
             return
         new_version = event.data.get("settings_version")
-        if isinstance(new_version, int) and new_version <= self.settings_version:
+        if isinstance(new_version, int) and new_version <= self._cache[tenant][0]:
             return
-        await self.refresh()
+        await self.load(tenant)
         if self._on_change is not None:
             keys = event.data.get("keys")
             changed = [k for k in keys if isinstance(k, str)] if isinstance(keys, list) else []
-            await self._on_change(changed)
+            with tenant_scope(tenant):
+                await self._on_change(changed)

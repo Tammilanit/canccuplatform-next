@@ -188,3 +188,27 @@ def test_tailscale_prefixes_default_from_the_process_environment(
     check_admin_access(tenant_context(), "10.1.2.3")
     with pytest.raises(AdminAccessRestricted):
         check_admin_access(tenant_context(), "100.101.102.103")
+
+
+def test_parsed_prefixes_are_cached_per_address_list() -> None:
+    from canccu_kit.access import parsed_cidrs
+
+    parsed_cidrs.cache_clear()
+    first = parsed_cidrs(("192.0.2.0/24", "bad"))
+    assert parsed_cidrs(("192.0.2.0/24", "bad")) is first
+    assert parsed_cidrs.cache_info().hits == 1
+    # A venue revision with other addresses is parsed anew; the answers stay right.
+    assert ip_in_cidrs("198.51.100.7", ["198.51.100.0/24"])
+    assert not ip_in_cidrs("198.51.100.7", ["192.0.2.0/24", "bad"])
+    assert parsed_cidrs.cache_info().currsize >= 2
+
+
+def test_tailscale_prefixes_are_read_once_per_value() -> None:
+    env = {"CANCCU_TAILSCALE_CIDRS": "100.100.0.0/16"}
+    assert tailscale_cidrs(env) == tailscale_cidrs(env) == ["100.100.0.0/16"]
+    from canccu_kit.access import parsed_cidrs
+
+    before = parsed_cidrs.cache_info().misses
+    for _ in range(3):
+        ip_in_cidrs("100.100.1.1", tailscale_cidrs(env))
+    assert parsed_cidrs.cache_info().misses <= before + 1

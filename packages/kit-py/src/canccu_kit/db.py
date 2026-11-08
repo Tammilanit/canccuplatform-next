@@ -110,3 +110,23 @@ async def check_app_role(conn: SqlConnection) -> None:
     if role is None or role["rolsuper"] is True or role["rolbypassrls"] is True:
         name = None if role is None else role["rolname"]
         raise RlsBypassed(f"database role {name} bypasses row-level security; use the app role")
+
+
+async def check_login_role(conn: SqlConnection) -> None:
+    """Refuse to log in as anything but a plain role (0013 item 5).
+
+    Call on a fresh connection, before any SET ROLE. A table's owner may switch RLS off or drop
+    its policy, so the role a module logs in as owns nothing; migrations run as another role.
+    """
+    role = await conn.fetchrow(
+        "SELECT r.rolname, r.rolsuper, r.rolbypassrls, EXISTS ("
+        " SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace"
+        " WHERE c.relowner = r.oid AND n.nspname <> 'information_schema'"
+        " AND n.nspname NOT LIKE 'pg\\_%') AS owns"
+        " FROM pg_roles r WHERE r.rolname = current_user"
+    )
+    if role is None or role["rolsuper"] is not False or role["rolbypassrls"] is not False:
+        name = None if role is None else role["rolname"]
+        raise RlsBypassed(f"database login role {name} bypasses row-level security")
+    if role["owns"] is not False:
+        raise RlsBypassed(f"database login role {role['rolname']} owns tables; use the app role")

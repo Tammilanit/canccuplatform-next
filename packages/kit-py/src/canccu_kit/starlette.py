@@ -19,11 +19,13 @@ from starlette.routing import Route
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from .context import CORRELATION_HEADER, correlation
-from .errors import KitError, code_for_status, error_body, internal_error_body
+from .errors import KitError, MissingRight, code_for_status, error_body, internal_error_body
 from .health import Health
 from .resolve import TenantResolver, UnknownHost
 from .rights import RightsChecker, Session
+from .service import SERVICE_HEADER, ServiceIdentity, service_has_right
 from .tenant import tenant_scope
+from .web_security import check_origin
 
 log = logging.getLogger("canccu.kit.http")
 
@@ -36,10 +38,24 @@ def health_route(health: Health, path: str = "/health") -> Route:
     return Route(path, endpoint, methods=["GET"])
 
 
-def right_dependency(checker: RightsChecker, right: str) -> Callable[[Request], Awaitable[Session]]:
-    """A FastAPI dependency (`Depends(...)`) that returns the session or raises a KitError."""
+def right_dependency(
+    checker: RightsChecker, right: str, service: ServiceIdentity | None = None
+) -> Callable[[Request], Awaitable[Session | None]]:
+    """A FastAPI dependency (`Depends(...)`) that returns the session or raises a KitError.
 
-    async def dependency(request: Request) -> Session:
+    With `service`, a module that signs the request passes for its own rights only and gets
+    None (its name is on `request.state.service`); people still need a session.
+    """
+
+    async def dependency(request: Request) -> Session | None:
+        signed = request.headers.get(SERVICE_HEADER)
+        if service is not None and signed is not None:
+            caller = service.verify(signed)
+            if not service_has_right(caller, right):
+                raise MissingRight(f"needs right {right}")
+            request.state.service = caller
+            request.state.session = None
+            return None
         session = await checker.check(request.headers.get("cookie"), right)
         request.state.session = session
         return session
@@ -50,9 +66,11 @@ def right_dependency(checker: RightsChecker, right: str) -> Callable[[Request], 
 Endpoint = Callable[[Request], Awaitable[Response]]
 
 
-def require_right(checker: RightsChecker, right: str) -> Callable[[Endpoint], Endpoint]:
+def require_right(
+    checker: RightsChecker, right: str, *, service: ServiceIdentity | None = None
+) -> Callable[[Endpoint], Endpoint]:
     """Decorator for Starlette endpoints; the session is on `request.state.session`."""
-    dependency = right_dependency(checker, right)
+    dependency = right_dependency(checker, right, service)
 
     def decorate(endpoint: Endpoint) -> Endpoint:
         @functools.wraps(endpoint)
@@ -107,8 +125,37 @@ class CorrelationMiddleware:
             await self.app(scope, receive, send_with_header)
 
 
+class OriginCheckMiddleware:
+    """The kit's origin check on every request; see web_security.check_origin."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "http":
+            headers = dict(scope["headers"])
+
+            def header(name: bytes) -> str | None:
+                value = headers.get(name)
+                return None if value is None else value.decode("latin-1")
+
+            try:
+                check_origin(
+                    scope["method"],
+                    scope["path"],
+                    header(b"origin"),
+                    header(b"host"),
+                    header(b"sec-fetch-site"),
+                )
+            except KitError as exc:
+                await JSONResponse(exc.to_body(), status_code=exc.status)(scope, receive, send)
+                return
+        await self.app(scope, receive, send)
+
+
 def install(app: Starlette, health: Health | None = None) -> None:
-    """Add the error body handlers, correlation middleware and (optionally) /health."""
+    """Add the error body handlers, the origin check, correlation middleware and (optionally)
+    /health."""
     handlers: dict[Any, Any] = {
         KitError: _kit_error,
         HTTPException: _http_error,
@@ -116,6 +163,8 @@ def install(app: Starlette, health: Health | None = None) -> None:
     }
     for exc_class, handler in handlers.items():
         app.add_exception_handler(exc_class, handler)
+    # Added first, so the correlation middleware wraps it and its 403 carries the id too.
+    app.add_middleware(OriginCheckMiddleware)
     app.add_middleware(CorrelationMiddleware)
     if health is not None:
         app.router.routes.append(health_route(health))
@@ -182,4 +231,53 @@ def install_tenancy(
     # id then covers tenancy errors, and no other middleware runs on a request with no tenant.
     app.user_middleware.append(
         Middleware(TenancyMiddleware, resolver=resolver, platform_hosts=platform_hosts)
+    )
+
+
+class ServiceIdentityMiddleware:
+    """Every request under `prefix` must carry a live service token for this module; the caller
+    is on `request.state.service`. `exempt` is for callers that cannot sign, such as Caddy's
+    on-demand TLS `ask`."""
+
+    def __init__(
+        self,
+        app: ASGIApp,
+        identity: ServiceIdentity,
+        prefix: str = "/internal/",
+        exempt: tuple[str, ...] = (),
+    ) -> None:
+        self.app = app
+        self.identity = identity
+        self.prefix = prefix
+        self.exempt = frozenset(exempt)
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        guarded = (
+            scope["type"] == "http"
+            and scope["path"].startswith(self.prefix)
+            and scope["path"] not in self.exempt
+        )
+        if guarded:
+            raw = dict(scope["headers"]).get(SERVICE_HEADER.encode())
+            try:
+                caller = self.identity.verify(None if raw is None else raw.decode("latin-1"))
+            except KitError as exc:
+                await JSONResponse(exc.to_body(), status_code=exc.status)(scope, receive, send)
+                return
+            scope.setdefault("state", {})["service"] = caller
+        await self.app(scope, receive, send)
+
+
+def install_service_identity(
+    app: Starlette,
+    identity: ServiceIdentity,
+    *,
+    prefix: str = "/internal/",
+    exempt: tuple[str, ...] = (),
+) -> None:
+    """Guard the internal paths with the module-to-module identity."""
+    if app.middleware_stack is not None:
+        raise RuntimeError("Cannot add middleware after an application has started")
+    app.user_middleware.append(
+        Middleware(ServiceIdentityMiddleware, identity=identity, prefix=prefix, exempt=exempt)
     )
