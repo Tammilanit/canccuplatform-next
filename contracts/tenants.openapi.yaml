@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Tenants API
-  version: 2.0.0
+  version: 2.1.0
   summary: Events as tenants on one shared stack, their hostnames, venues, users, roles, access and audit log.
   description: |
     Machine-readable part of the tenants contract. Prose, rules and events: contracts/tenants.md.
@@ -667,8 +667,9 @@ paths:
       operationId: openSupport
       summary: Open a superadmin support window on this event
       description: |
-        A superadmin with `mfa_enabled`. For 2 hours they act as an event admin here, and their audit entries
-        are marked `support`. Audited. Emits `tenants.support.opened`.
+        A superadmin with `mfa_enabled` on the session's identity (contracts/tenants.md, Sign-in identities). For
+        2 hours they act as an event admin here, and their audit entries are marked `support`. Audited. Emits
+        `tenants.support.opened`.
       security:
         - session: []
       requestBody:
@@ -1457,7 +1458,7 @@ paths:
       tags: [superadmin]
       operationId: addSuperadmin
       summary: Make a user a superadmin
-      description: Superadmin. The user needs `mfa_enabled` (409 `mfa_required`). Audited.
+      description: Superadmin. The user needs an identity with `mfa_enabled` (409 `mfa_required`). Audited.
       security:
         - session: []
       responses:
@@ -1623,6 +1624,39 @@ paths:
                 $ref: "#/components/schemas/AuditEntry"
         "400":
           $ref: "#/components/responses/BadRequest"
+  /internal/tenants/identities/sign-in:
+    post:
+      tags: [internal, people]
+      operationId: signInIdentity
+      summary: Map a verified sign-in identity to its user
+      description: |
+        For the central sign-in, after any provider has verified the person (contracts/admin.md, Sign-in
+        providers). Finds the user of (`provider`, `subject`), or creates a user with that identity; updates the
+        identity's `mfa_enabled`, and the user's `name` only when this is the identity the user was created with.
+        The same call for every provider. Internal network only.
+      security:
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdentitySignIn"
+      responses:
+        "200":
+          description: The user, and whether this call created it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentitySignInResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: "`provider_disabled`: the provider is not in `CANCCU_SIGN_IN_PROVIDERS`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   securitySchemes:
     session:
@@ -1719,9 +1753,9 @@ components:
             $ref: "#/components/schemas/Error"
     Forbidden:
       description: |
-        `missing_right`; `superadmin_required`; `mfa_required` (a superadmin without Discord two-factor);
-        `admin_access_restricted` (the event's `admin_access` is `restricted` and the request is neither from
-        the venue nor over Tailscale); `info_pages_closed` (the info-page mode does not let this request in);
+        `missing_right`; `superadmin_required`; `mfa_required` (a superadmin whose session's identity has no
+        second factor, today Discord two-factor); `admin_access_restricted` (the event's `admin_access` is
+        `restricted` and the request is neither from the venue nor over Tailscale); `info_pages_closed` (the info-page mode does not let this request in);
         `membership_closed` (a self-join that `membership`, the event's status or the request's place does not
         allow); `join_code_invalid` (a join code that is not the current one, from outside the venue).
       content:
@@ -2308,9 +2342,76 @@ components:
             discord_user_id:
               type: string
               pattern: "^[0-9]{1,20}$"
-              description: "Always set: every account is a Discord account."
+              description: |
+                Derived: the subject of the user's `discord` identity. Always set while `discord` is the only
+                enabled sign-in provider, so every account is a Discord account (contracts/tenants.md, Sign-in
+                identities).
+            identities:
+              type: array
+              description: All of the user's sign-in identities, at most one per provider.
+              items:
+                $ref: "#/components/schemas/Identity"
             privacy:
               $ref: "#/components/schemas/Privacy"
+    SignInProvider:
+      type: string
+      description: |
+        A sign-in provider's id. Today only `discord` exists; more may be added, so clients accept other values.
+        Which are enabled is the platform setting `CANCCU_SIGN_IN_PROVIDERS` (contracts/admin.md).
+      pattern: "^[a-z][a-z0-9_]{1,31}$"
+      examples: [discord]
+    Identity:
+      type: object
+      required: [provider, subject, mfa_enabled, linked_at]
+      properties:
+        provider:
+          $ref: "#/components/schemas/SignInProvider"
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: |
+            The account's stable id at the provider. For `discord` the Discord user id, matching `^[0-9]{1,20}$`
+            (400 otherwise); each later provider's contract sets its own rule.
+          examples: ["100000000000000001"]
+        mfa_enabled:
+          type: boolean
+          description: |
+            Whether the account has a second factor, as the provider last reported it (Discord's `mfa_enabled`).
+            The superadmin check reads it on the identity the session signed in with.
+        linked_at:
+          type: string
+          format: date-time
+    IdentitySignIn:
+      type: object
+      required: [provider, subject, name, mfa_enabled]
+      additionalProperties: false
+      properties:
+        provider:
+          $ref: "#/components/schemas/SignInProvider"
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: "For `discord`, matching `^[0-9]{1,20}$`; otherwise 400."
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: |
+            The name the provider reports. It sets the user's `name` on create, and later only when this is the
+            identity the user was created with.
+        mfa_enabled:
+          type: boolean
+    IdentitySignInResult:
+      type: object
+      required: [user, created]
+      properties:
+        user:
+          $ref: "#/components/schemas/UserInternal"
+        created:
+          type: boolean
+          description: True when this sign-in created the user.
     Role:
       type: string
       description: Per-tenant roles; more may be added.
