@@ -261,11 +261,8 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
+          $ref: "#/components/responses/Conflict"
           description: "`subscription_exists`: this push endpoint belongs to another subscriber."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /api/notify/subscriptions/{subscription_id}:
     parameters:
       - $ref: "#/components/parameters/SubscriptionId"
@@ -700,13 +697,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Unauthorized:
       description: "`not_signed_in`, or `sign_in_required` for a personal topic part without a session."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Forbidden:
       description: |
         `missing_right`; `not_a_member` (check-in by someone not a member of the event); or
@@ -714,13 +711,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     NotFound:
       description: "`not_found`: no such subscription, notification, topic or tenant, or the caller may not see it."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Conflict:
       description: |
         `version_conflict` (stale `revision` or `config_version`), `topic_exists`, `topic_owned` (the key
@@ -728,22 +725,8 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
   schemas:
-    Error:
-      type: object
-      required: [error]
-      properties:
-        error:
-          type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              pattern: "^[a-z][a-z0-9_]*$"
-              examples: [sign_in_required]
-            message:
-              type: string
     Topic:
       type: string
       description: |

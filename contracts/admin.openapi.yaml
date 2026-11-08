@@ -67,9 +67,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/Settings"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
-          $ref: "#/components/responses/Forbidden"
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
     put:
@@ -94,11 +94,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/Settings"
         "400":
-          $ref: "#/components/responses/BadRequest"
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
-          $ref: "#/components/responses/Forbidden"
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
@@ -132,7 +132,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Settings"
         "400":
-          $ref: "#/components/responses/BadRequest"
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
   /api/admin/session:
@@ -151,7 +151,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Session"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
   /api/admin/session/sign-out:
     post:
       tags: [session]
@@ -161,7 +161,7 @@ paths:
         "204":
           description: Signed out; the cookie is cleared.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
   /api/admin/auth/providers:
     get:
       tags: [sign-in]
@@ -208,25 +208,16 @@ paths:
               schema:
                 $ref: "#/components/schemas/SignInStarted"
         "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
           description: "`return_to_invalid` (see `SignInStart`), or a malformed body."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
         "403":
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
           description: |
             `bad_origin`: the request's `Origin` is not the sign-in host; `origin_refused`: `Origin: null`
             (contracts/README.md).
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
         "404":
+          $ref: "#/components/responses/NotFound"
           description: "`not_found`: the provider is unknown, not enabled, or has no redirect flow."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /api/admin/auth/{provider}/callback:
     parameters:
       - $ref: "#/components/parameters/Provider"
@@ -316,9 +307,9 @@ paths:
                 type: string
                 contentMediaType: application/zip
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
-          $ref: "#/components/responses/Forbidden"
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
     put:
       tags: [profile]
       operationId: importProfile
@@ -342,11 +333,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProfileResult"
         "400":
-          $ref: "#/components/responses/BadRequest"
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
-          $ref: "#/components/responses/Forbidden"
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
 components:
   securitySchemes:
     session:
@@ -376,54 +367,22 @@ components:
       schema:
         $ref: "#/components/schemas/ModuleName"
   responses:
-    BadRequest:
-      description: Invalid request.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Error"
-    Unauthorized:
-      description: No valid session.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Error"
-    Forbidden:
-      description: Signed in, but the right is missing.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Error"
     NotFound:
       description: Unknown module, or unknown tenant on an internal path.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Conflict:
       description: "`version_conflict`: the settings changed since they were read."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
   schemas:
     ModuleName:
       type: string
       enum: [screen, tournament, pizza, bot, admin, games, moments, voices, cast, agenda, notify]
-    Error:
-      type: object
-      required: [error]
-      properties:
-        error:
-          type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              pattern: "^[a-z][a-z0-9_]*$"
-              examples: [version_conflict]
-            message:
-              type: string
     HealthStatus:
       type: string
       enum: [ok, degraded, down]

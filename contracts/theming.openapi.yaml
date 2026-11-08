@@ -679,11 +679,8 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
         "502":
+          $ref: "common.openapi.yaml#/components/responses/BadGateway"
           description: "`sync_failed`: the repo could not be fetched; the message says why."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /api/theming/clone:
     post:
       tags: [clone]
@@ -858,25 +855,25 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Unauthorized:
       description: "`unauthenticated`: no valid session."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Forbidden:
       description: "`missing_right`, or `info_pages_closed` (the event's info-page mode does not let this request in)."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     NotFound:
       description: "`not_found`, or `no_draft` (the event has no draft)."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Conflict:
       description: |
         `version_conflict` (stale `draft_version` or `current_revision`), `draft_exists`, `nothing_to_clone`,
@@ -885,13 +882,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     TooLarge:
       description: "`too_large`: over a size limit of the package rules."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     ThemeInvalid:
       description: "`theme_invalid`: the draft has at least one error; `problems` lists them all."
       content:
@@ -899,20 +896,6 @@ components:
           schema:
             $ref: "#/components/schemas/ThemeInvalidError"
   schemas:
-    Error:
-      type: object
-      required: [error]
-      properties:
-        error:
-          type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              pattern: "^[a-z][a-z0-9_]*$"
-              examples: [theme_invalid]
-            message:
-              type: string
     ThemeInvalidError:
       type: object
       required: [error]

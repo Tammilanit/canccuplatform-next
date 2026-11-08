@@ -43,7 +43,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Connection"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
     put:
@@ -74,7 +74,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -105,7 +105,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -137,7 +137,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -226,7 +226,7 @@ paths:
         "204":
           description: Unbound.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -248,7 +248,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Binding"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -283,7 +283,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Playing"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
   /api/bot/presence/voice:
@@ -304,7 +304,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Voice"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
   /api/bot/clone:
@@ -335,7 +335,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -366,7 +366,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -381,13 +381,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
-    Unauthorized:
-      description: "`not_signed_in`: no valid session."
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Forbidden:
       description: |
         `missing_right` (the right is missing, or the call needs the event-admin role itself), `not_a_member`
@@ -396,13 +390,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     NotFound:
       description: "`not_found`: no binding, no such guild binding, or the path does not answer on this hostname."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Conflict:
       description: |
         `version_conflict` (stale `revision`), `application_reserved`, `application_taken`, `guild_bound`,
@@ -410,22 +404,8 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
   schemas:
-    Error:
-      type: object
-      required: [error]
-      properties:
-        error:
-          type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              pattern: "^[a-z][a-z0-9_]*$"
-              examples: [guild_bound]
-            message:
-              type: string
     Snowflake:
       type: string
       description: A Discord id, as a string.
