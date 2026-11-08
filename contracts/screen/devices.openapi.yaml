@@ -1,0 +1,639 @@
+# Part of screen.openapi.yaml: path items only, referenced from its `paths`
+# and linted through it (contracts/README.md, Shared components).
+/api/screen/pairing:
+  post:
+    tags: [pairing]
+    operationId: startPairing
+    summary: Ask for a pairing code
+    description: |
+      From one of the event's venue addresses (unless the venue IP check is off). Sets the cookie `canccu_pairing`.
+      429 `rate_limited` over 10 open codes for the event, or over 3 open codes for the request's address.
+    security:
+      - {}
+    responses:
+      "201":
+        description: The code to show.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/Pairing"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+      "429":
+        $ref: "../screen.openapi.yaml#/components/responses/TooMany"
+  delete:
+    tags: [pairing]
+    operationId: clearPairings
+    summary: Clear every open pairing code of the event
+    description: Right `screen.devices.pair`. For when someone on the venue network holds the open codes.
+    responses:
+      "204":
+        description: Cleared.
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/pairing/{pairing_id}:
+  parameters:
+    - name: pairing_id
+      in: path
+      required: true
+      description: Pairing id from startPairing.
+      schema:
+        $ref: "../screen.openapi.yaml#/components/schemas/Id"
+  get:
+    tags: [pairing]
+    operationId: getPairing
+    summary: Poll a pairing
+    description: Once claimed, the answer sets the device cookie `canccu_device` and the code is spent.
+    security:
+      - pairing: []
+    responses:
+      "200":
+        description: The pairing's status.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/PairingStatus"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+/api/screen/device/state:
+  get:
+    tags: [device]
+    operationId: getDeviceState
+    summary: The composed state of the device's zone
+    description: Everything the screen draws. Also the polling fallback when the stream fails.
+    security:
+      - device: []
+    responses:
+      "200":
+        description: The composed state.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/ScreenState"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/DeviceUnauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/device/stream:
+  get:
+    tags: [device]
+    operationId: streamDeviceState
+    summary: The push channel (Server-Sent Events)
+    description: |
+      SSE events `state`, `widget`, `region`, `ticker`, `theme`, `command`, `ping`, each with `id: <zone_key>.<zone_epoch>.<state_version>`
+      (contracts/screen.md, Composed state and the push channel). Resume with `Last-Event-ID`.
+    security:
+      - device: []
+    parameters:
+      - name: Last-Event-ID
+        in: header
+        description: "The last message id the screen applied: `<zone_key>.<zone_epoch>.<state_version>`, or `none.0.<n>`."
+        schema:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9_-]{1,31}\\.[A-Za-z0-9]{1,32}\\.[0-9]{1,18}$"
+    responses:
+      "200":
+        description: An event stream; each message's `data` is one `StreamMessage` as JSON.
+        content:
+          text/event-stream:
+            schema:
+              type: string
+              description: SSE frames; each frame's `data` line holds one `StreamMessage` as JSON.
+              contentMediaType: application/json
+              contentSchema:
+                $ref: "../screen.openapi.yaml#/components/schemas/StreamMessage"
+            examples:
+              widget:
+                value: "event: widget\nid: main.e1.42\ndata: {\"state_version\": 42, \"region_id\": \"rail\", \"index\": 0, \"view\": {}}\n\n"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/DeviceUnauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/device/heartbeat:
+  post:
+    tags: [device]
+    operationId: postHeartbeat
+    summary: Report health
+    security:
+      - device: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../screen.openapi.yaml#/components/schemas/Heartbeat"
+    responses:
+      "200":
+        description: Server time, for the device's clock offset.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/HeartbeatAck"
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/DeviceUnauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/device/home:
+  get:
+    tags: [device]
+    operationId: getDeviceHome
+    summary: Where a moved device goes
+    description: |
+      Venue address and the device's current token, or a superseded one (contracts/screen.md, Moving); answers also when
+      the device serves another event, or none. Only the current token gets a transfer code; a superseded token gets
+      only the redirect URL, without a code, until it expires (7 days after the transfer, or the first use of the new
+      token, whichever is first).
+    security:
+      - device: []
+    responses:
+      "200":
+        description: The screen URL of the device's current event (with a transfer code for the current token only), or null for a parked device.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/DeviceHome"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/DeviceUnauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+/api/screen/device/transfer:
+  post:
+    tags: [device]
+    operationId: redeemTransfer
+    summary: Redeem a transfer code
+    description: |
+      On the new event's hostname, from its venue address. Sets a new `canccu_device` cookie with a new current token;
+      the replaced token becomes superseded (kept in `superseded_token_hashes`), not revoked. Audited.
+    security:
+      - {}
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../screen.openapi.yaml#/components/schemas/Transfer"
+    responses:
+      "200":
+        description: The device, now with a token for this hostname.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/Device"
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+        description: "`code_invalid`: unknown, used or older than 60 seconds."
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/devices:
+  get:
+    tags: [devices]
+    operationId: listDevices
+    summary: The event's devices with assignment and health
+    description: Right `screen.devices.read`.
+    responses:
+      "200":
+        description: Devices whose current event is this one.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/DeviceList"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+  post:
+    tags: [devices]
+    operationId: claimPairing
+    summary: Pair a device by its code
+    description: Right `screen.devices.pair`. 409 `no_venue` for an event without a venue. Audited; emits `screen.device.paired`.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../screen.openapi.yaml#/components/schemas/PairingClaim"
+    responses:
+      "201":
+        description: The new device.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/Device"
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/devices/{device_id}:
+  parameters:
+    - $ref: "../screen.openapi.yaml#/components/parameters/DeviceId"
+  patch:
+    tags: [devices]
+    operationId: renameDevice
+    summary: Rename a device
+    description: Right `screen.devices.write`. Audited.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../screen.openapi.yaml#/components/schemas/DeviceRename"
+    responses:
+      "200":
+        description: The device.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/Device"
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/devices/{device_id}/revoke:
+  parameters:
+    - $ref: "../screen.openapi.yaml#/components/parameters/DeviceId"
+  post:
+    tags: [devices]
+    operationId: revokeDevice
+    summary: Revoke a device's token
+    description: Right `screen.devices.write`. Audited; emits `screen.device.revoked`.
+    responses:
+      "204":
+        description: Revoked.
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/devices/{device_id}/assignment:
+  parameters:
+    - $ref: "../screen.openapi.yaml#/components/parameters/DeviceId"
+  put:
+    tags: [devices]
+    operationId: assignDevice
+    summary: Assign a device to a zone, or make it mirror
+    description: Right `screen.devices.write`. Exactly one of `zone_key` and `mirror_of`. Audited; emits `screen.device.assigned`.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../screen.openapi.yaml#/components/schemas/Assignment"
+    responses:
+      "200":
+        description: The device.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/Device"
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [devices]
+    operationId: unassignDevice
+    summary: Unassign a device
+    description: Right `screen.devices.write`. Audited; emits `screen.device.assigned`.
+    responses:
+      "204":
+        description: Unassigned.
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/devices/{device_id}/commands:
+  parameters:
+    - $ref: "../screen.openapi.yaml#/components/parameters/DeviceId"
+  post:
+    tags: [devices]
+    operationId: sendCommand
+    summary: Send a command to a device
+    description: Right `screen.devices.write`. Delivered on the push channel; dropped when not delivered within 60 seconds.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../screen.openapi.yaml#/components/schemas/Command"
+    responses:
+      "202":
+        description: Queued for delivery.
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/registry/devices:
+  get:
+    tags: [registry]
+    operationId: listRegistryDevices
+    summary: All devices (superadmin)
+    description: |
+      Superadmin with `mfa_enabled` on the session's identity (contracts/tenants.md, Sign-in identities), on the
+      superadmin hostname; elsewhere 404.
+    parameters:
+      - name: venue_id
+        in: query
+        description: Only devices of this venue.
+        schema:
+          $ref: "../screen.openapi.yaml#/components/schemas/Id"
+    responses:
+      "200":
+        description: The devices.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [devices]
+              properties:
+                devices:
+                  type: array
+                  items:
+                    $ref: "../screen.openapi.yaml#/components/schemas/RegistryDevice"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+/api/screen/registry/devices/{device_id}:
+  parameters:
+    - $ref: "../screen.openapi.yaml#/components/parameters/DeviceId"
+  patch:
+    tags: [registry]
+    operationId: moveDevice
+    summary: Move, rename or re-home a device (superadmin)
+    description: |
+      `current_tenant_id` must be an event at the device's venue, or null to park it. Audited; emits
+      `screen.device.released` on the old event and `screen.device.moved` on the new one.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../screen.openapi.yaml#/components/schemas/RegistryDevicePatch"
+    responses:
+      "200":
+        description: The device.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/RegistryDevice"
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [registry]
+    operationId: deleteDevice
+    summary: Revoke and delete a device (superadmin)
+    description: Audited; emits `screen.device.revoked` on its current event.
+    responses:
+      "204":
+        description: Deleted.
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/zones:
+  get:
+    tags: [zones]
+    operationId: listZones
+    summary: The event's zones
+    description: Right `screen.devices.read` or `screen.content.read`.
+    responses:
+      "200":
+        description: The zones.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [zones]
+              properties:
+                zones:
+                  type: array
+                  items:
+                    $ref: "../screen.openapi.yaml#/components/schemas/Zone"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+  post:
+    tags: [zones]
+    operationId: addZone
+    summary: Add a zone
+    description: Right `screen.zones.write`. 409 `zone_exists`. Emits `screen.zone.saved`.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../screen.openapi.yaml#/components/schemas/Zone"
+    responses:
+      "201":
+        description: The zone.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/Zone"
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/zones/{zone_key}:
+  parameters:
+    - $ref: "../screen.openapi.yaml#/components/parameters/ZoneKey"
+  get:
+    tags: [zones]
+    operationId: getZone
+    summary: Read a zone
+    description: Right `screen.devices.read` or `screen.content.read`.
+    responses:
+      "200":
+        description: The zone.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/Zone"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+  put:
+    tags: [zones]
+    operationId: saveZone
+    summary: Replace a zone
+    description: Right `screen.zones.write`, with the `revision` read. Emits `screen.zone.saved`.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../screen.openapi.yaml#/components/schemas/Zone"
+    responses:
+      "200":
+        description: The zone.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/Zone"
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [zones]
+    operationId: removeZone
+    summary: Remove a zone
+    description: Right `screen.zones.write`. 409 `zone_in_use` while devices are assigned to it or mirror it, or schedule windows, active pushes or break playlists name it. Emits `screen.zone.removed`.
+    responses:
+      "204":
+        description: Removed.
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/now:
+  get:
+    tags: [now]
+    operationId: getNow
+    summary: What a zone's screens show now
+    description: |
+      For the phone hub. Follows the event's info-page mode. Only the widget types contracts/screen.md lists for it;
+      never `checkin_qr` (its code proves presence at the venue). `now_playing` names only for a signed-in member.
+    security:
+      - {}
+      - session: []
+    parameters:
+      - name: zone
+        in: query
+        required: true
+        description: Zone key.
+        schema:
+          $ref: "../screen.openapi.yaml#/components/schemas/ZoneKey"
+    responses:
+      "200":
+        description: The zone's public view-models, claims and ticker.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/NowView"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+/api/screen/pin:
+  get:
+    tags: [pin]
+    operationId: getPin
+    summary: The event's pins
+    description: Right `screen.devices.read`; theming reads it as a module to keep a pinned revision.
+    responses:
+      "200":
+        description: The pins and the available bundle versions.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/Pin"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+  put:
+    tags: [pin]
+    operationId: setPin
+    summary: Pin a bundle version and a theme revision
+    description: Right `screen.bundle.write`. Audited; emits `screen.pin.changed`; screens get a `reload` command.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../screen.openapi.yaml#/components/schemas/Pin"
+    responses:
+      "200":
+        description: The pins.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/Pin"
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"

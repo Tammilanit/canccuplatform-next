@@ -1,0 +1,162 @@
+# Part of tenants.openapi.yaml: path items only, referenced from its `paths`
+# and linted through it (contracts/README.md, Shared components).
+/internal/tenants/resolve:
+  get:
+    tags: [internal]
+    operationId: resolveTenant
+    summary: Resolve a hostname to its tenant context
+    description: For the kit, which caches the answer and drops it on the tenants events. Internal network only.
+    security:
+      - {}
+    parameters:
+      - name: host
+        in: query
+        required: true
+        description: The request's hostname, lowercase, without a port.
+        schema:
+          $ref: "../tenants.openapi.yaml#/components/schemas/HostnameValue"
+    responses:
+      "200":
+        description: The tenant context.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/TenantContext"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/internal/tenants/ip-mode:
+  get:
+    tags: [internal]
+    operationId: resolveIpMode
+    summary: The demo tenant's context for the IP-mode demo stack
+    description: |
+      For the kit, for a request whose host is an IP address. Answers the `demo` tenant's context only while
+      the tenants module's version is `dev` and `demo` is the only tenant; otherwise 404 `not_found`.
+      Internal network only.
+    security:
+      - {}
+    responses:
+      "200":
+        description: The demo tenant's context.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/TenantContext"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/internal/tenants/ask:
+  get:
+    tags: [internal]
+    operationId: askCertificate
+    summary: May the edge Caddy get a certificate for this domain
+    description: Caddy's on-demand TLS `ask`. 200 only for an `active` hostname. Internal network only.
+    security:
+      - {}
+    parameters:
+      - name: domain
+        in: query
+        required: true
+        description: The domain Caddy asks about.
+        schema:
+          type: string
+          maxLength: 253
+    responses:
+      "200":
+        description: Allowed.
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/internal/tenants/venues/{venue_id}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/VenueId"
+  get:
+    tags: [internal]
+    operationId: getVenueInternal
+    summary: A venue's name and addresses
+    description: For Screen and the kit. Internal network only.
+    security:
+      - {}
+    responses:
+      "200":
+        description: The venue without its profile.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/VenueRef"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/internal/tenants/users/{user_id}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/UserId"
+  get:
+    tags: [internal]
+    operationId: getUserInternal
+    summary: A user, with Discord id and privacy flags
+    description: For modules that need them (the bot, Notify, presence data). Internal network only.
+    security:
+      - {}
+    responses:
+      "200":
+        description: The user.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/UserInternal"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/internal/tenants/audit:
+  post:
+    tags: [internal, audit]
+    operationId: appendAudit
+    summary: Append an audit entry
+    description: |
+      For other modules, in the request that made the change. Allowed also for archived tenants.
+      Internal network only.
+    security:
+      - {}
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/AuditAppend"
+    responses:
+      "201":
+        description: The stored entry.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/AuditEntry"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+/internal/tenants/identities/sign-in:
+  post:
+    tags: [internal, people]
+    operationId: signInIdentity
+    summary: Map a verified sign-in identity to its user
+    description: |
+      For the central sign-in, after any provider has verified the person (contracts/admin.md, Sign-in
+      providers). Finds the user of (`provider`, `subject`), or creates a user with that identity; updates the
+      identity's `mfa_enabled`, and the user's `name` only when this is the identity the user was created with.
+      The same call for every provider. Internal network only.
+    security:
+      - {}
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/IdentitySignIn"
+    responses:
+      "200":
+        description: The user, and whether this call created it.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/IdentitySignInResult"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+        description: "`provider_disabled`: the provider is not in `CANCCU_SIGN_IN_PROVIDERS`."
