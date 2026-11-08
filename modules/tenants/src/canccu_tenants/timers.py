@@ -63,15 +63,7 @@ async def run_due(d: Deps) -> None:
                 {"type": "hostname", "id": row["hostname"]},
                 {"tenant_id": row["tenant_id"]},
             )
-            outbox.platform(
-                "tenants.hostname.changed",
-                {
-                    "hostname": row["hostname"],
-                    "tenant_id": row["tenant_id"],
-                    "status": "released",
-                    "primary": False,
-                },
-            )
+            core.hostname_changed(outbox, row, status="released", primary=False)
     await outbox.publish(d.bus)
 
 

@@ -15,13 +15,10 @@ import {
   withTenant,
 } from "./tenant.js";
 
-/** Approximate length each `events:<module>` stream is trimmed to on publish. */
+/** Approximate length each stream, platform or tenant, is trimmed to on publish. */
 export const STREAM_MAXLEN = 10000;
 export const DEDUPE_SIZE = 10000;
 export const EVENT_TYPE_RE = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){2}$/;
-
-/** The platform stream of a module; tenant streams come from `tenantStream`. */
-export const streamName = platformStream;
 
 export class InvalidEventType extends Error {
   override name = "InvalidEventType";

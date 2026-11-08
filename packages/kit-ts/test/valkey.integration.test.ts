@@ -11,7 +11,7 @@ import {
   ValkeyStreamStore,
   currentTenant,
   newId,
-  streamName,
+  platformStream,
   tenantStream,
   withTenant,
 } from "../src/index.js";
@@ -50,7 +50,7 @@ describe.skipIf(!url)("ValkeyStreamStore against a real Valkey", () => {
   });
 
   function track(module: string): string {
-    const name = streamName(module);
+    const name = platformStream(module);
     streams.push(name);
     return name;
   }
@@ -169,7 +169,7 @@ describe.skipIf(!url)("ValkeyStreamStore against a real Valkey", () => {
   it("finds tenant streams with scan and reads each tenant in its own context", async () => {
     const source = uniqueModule();
     const tenants = ["it-a", "it-b"];
-    streams.push(...tenants.map((t) => tenantStream(source, t)), streamName("tenants"));
+    streams.push(...tenants.map((t) => tenantStream(source, t)), platformStream("tenants"));
     const bus = new Bus(store, source);
     await withTenant("it-a", () =>
       bus.publish(`${source}.thing.happened`, { n: 1 }, { version: 1 }),

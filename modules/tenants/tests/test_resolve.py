@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import json
 
-from conftest import SUPERADMIN_HOST, Env, make_tenant, make_user
+from conftest import SUPERADMIN_HOST, Env, make_tenant, make_user, sign_in_superadmin
+
+from canccu_tenants import timers
 
 
 async def test_resolve_gives_the_context_of_an_active_hostname(env: Env) -> None:
@@ -48,15 +51,9 @@ async def test_ask_allows_only_active_hostnames(env: Env) -> None:
     assert (active.status_code, pending.status_code, unknown.status_code) == (200, 404, 404)
 
 
-async def _superadmin(env: Env) -> dict[str, str]:
-    async with env.db.platform() as conn:
-        await make_user(conn, "u_super", superadmin=True)
-    return env.rights.sign_in("u_super")
-
-
 async def test_superadmin_paths_are_404_off_the_superadmin_host(env: Env) -> None:
     await make_tenant(env.db, "alpha", "alpha.example.org")
-    cookie = await _superadmin(env)
+    cookie = await sign_in_superadmin(env)
     async with env.client("alpha.example.org") as c:
         r = await c.get("/api/tenants/registry", headers=cookie)
     assert r.status_code == 404
@@ -76,7 +73,7 @@ async def test_superadmin_needs_two_factor(env: Env) -> None:
 
 
 async def test_hostname_lifecycle(env: Env) -> None:
-    cookie = await _superadmin(env)
+    cookie = await sign_in_superadmin(env)
     async with env.client(SUPERADMIN_HOST) as c:
         created = await c.post(
             "/api/tenants/registry",
@@ -134,7 +131,7 @@ async def _new_tenant(c: object, cookie: dict[str, str], tid: str = "alpha") -> 
 
 
 async def test_a_pending_hostname_never_becomes_primary(env: Env) -> None:
-    cookie = await _superadmin(env)
+    cookie = await sign_in_superadmin(env)
     url = "/api/tenants/registry/alpha/hostnames"
     async with env.client(SUPERADMIN_HOST) as c:
         await _new_tenant(c, cookie)
@@ -152,7 +149,7 @@ async def test_a_pending_hostname_never_becomes_primary(env: Env) -> None:
 
 
 async def test_a_verified_hostname_becomes_primary_when_none_is_active(env: Env) -> None:
-    cookie = await _superadmin(env)
+    cookie = await sign_in_superadmin(env)
     async with env.client(SUPERADMIN_HOST) as c:
         await _new_tenant(c, cookie)
         added = await c.post(
@@ -168,7 +165,7 @@ async def test_a_verified_hostname_becomes_primary_when_none_is_active(env: Env)
 
 
 async def test_concurrent_adds_give_one_primary_and_never_overwrite(env: Env) -> None:
-    cookie = await _superadmin(env)
+    cookie = await sign_in_superadmin(env)
     url = "/api/tenants/registry/alpha/hostnames"
     async with env.client(SUPERADMIN_HOST) as c:
         await _new_tenant(c, cookie)
@@ -191,7 +188,7 @@ async def test_concurrent_adds_give_one_primary_and_never_overwrite(env: Env) ->
 
 
 async def test_create_refuses_an_end_before_the_start(env: Env) -> None:
-    cookie = await _superadmin(env)
+    cookie = await sign_in_superadmin(env)
     async with env.client(SUPERADMIN_HOST) as c:
         r = await c.post(
             "/api/tenants/registry",
@@ -217,3 +214,37 @@ async def test_ip_mode_serves_the_demo_tenant_on_an_ip_host(env: Env) -> None:
     async with env.client("127.0.0.1") as c:
         r = await c.get("/api/tenants/current")
     assert r.json()["id"] == "demo"
+
+
+async def test_hostname_events_follow_a_name_from_added_to_released(env: Env) -> None:
+    cookie = await sign_in_superadmin(env)
+    async with env.client(SUPERADMIN_HOST) as c:
+        await _new_tenant(c, cookie)
+        await c.post(
+            "/api/tenants/registry/alpha/hostnames",
+            json={"hostname": "alpha.example.org"},
+            headers=cookie,
+        )
+        await c.delete("/api/tenants/hostnames/alpha.example.org", headers=cookie)
+    async with env.db.platform() as conn:
+        await conn.execute("UPDATE hostnames SET held_until = now() - interval '1 second'")
+    await timers.run_due(env.deps)
+    sent = [json.loads(v) for call in env.store.calls for v in call.fields.values()]
+    data = [e["data"] for e in sent if e["type"] == "tenants.hostname.changed"]
+    name = {"hostname": "alpha.example.org", "tenant_id": "alpha"}
+    assert data == [
+        {**name, "status": "pending", "primary": False},
+        {**name, "status": "held", "primary": False},
+        {**name, "status": "released", "primary": False},
+    ]
+
+
+async def test_a_body_that_is_no_json_object_is_refused(env: Env) -> None:
+    cookie = await sign_in_superadmin(env)
+    async with env.client(SUPERADMIN_HOST) as c:
+        not_json = await c.post("/api/tenants/registry", content=b"{", headers=cookie)
+        a_list = await c.post("/api/tenants/registry", json=["alpha"], headers=cookie)
+    for r in (not_json, a_list):
+        assert (r.status_code, r.json()["error"]["code"]) == (400, "invalid_request")
+    assert not_json.json()["error"]["message"] == "the body must be JSON"
+    assert a_list.json()["error"]["message"] == "the body must be a JSON object"

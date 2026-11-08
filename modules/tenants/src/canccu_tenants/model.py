@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from canccu_kit import KitError, TenantContext
 from canccu_kit.tenant import is_tenant_id
+from starlette.requests import Request
 
 HOSTNAME_RE = re.compile(r"^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
@@ -31,6 +32,16 @@ def conflict(code: str, message: str | None = None) -> KitError:
 
 def not_found() -> KitError:
     return KitError("Not found.", status=404, code="not_found")
+
+
+async def body_of(request: Request) -> dict[str, Any]:
+    try:
+        body = await request.json()
+    except ValueError as exc:
+        raise bad_request("the body must be JSON") from exc
+    if not isinstance(body, dict):
+        raise bad_request("the body must be a JSON object")
+    return body
 
 
 def iso(value: datetime | None) -> str | None:

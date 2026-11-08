@@ -1,0 +1,695 @@
+# Part of tenants.openapi.yaml: path items only, referenced from its `paths`
+# and linted through it (contracts/README.md, Shared components).
+/api/tenants/current:
+  get:
+    tags: [event]
+    operationId: getCurrentTenant
+    summary: The request's event
+    description: |
+      Readable by anyone. Event admins get the whole `Tenant`, others the public fields only; a guest of a
+      `draft` event gets only `DraftTenant`.
+    responses:
+      "200":
+        description: The event.
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: "../tenants.openapi.yaml#/components/schemas/Tenant"
+                - $ref: "../tenants.openapi.yaml#/components/schemas/PublicTenant"
+                - $ref: "../tenants.openapi.yaml#/components/schemas/DraftTenant"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+  patch:
+    tags: [event]
+    operationId: updateCurrentTenant
+    summary: Change the event's own fields
+    description: |
+      Name, time zone and dates need right `tenants.event.write`; `info_page_mode`, `membership` and
+      `admin_access` need `tenants.access.write` (held only through the event-admin role). A request that
+      changes both kinds needs both. Audited. Emits `tenants.tenant.changed`.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/TenantPatch"
+    responses:
+      "200":
+        description: The changed event.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Tenant"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/current/status:
+  post:
+    tags: [event]
+    operationId: setCurrentTenantStatus
+    summary: Move the event through its lifecycle
+    description: |
+      Right `tenants.lifecycle.write` (held only through the event-admin role). `draft` → `live`,
+      `draft` → `archived`, `live` → `archived`. Audited. Emits `tenants.status.changed`.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/StatusChange"
+    responses:
+      "200":
+        description: The event in its new status.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Tenant"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/current/flags:
+  get:
+    tags: [event]
+    operationId: getFlags
+    summary: The event's feature flags
+    description: |
+      Readable by anyone except a guest of a `draft` event (403 `info_pages_closed`). Every declared flag,
+      with its default where none is stored.
+    responses:
+      "200":
+        description: The flags.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Flags"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+  put:
+    tags: [event]
+    operationId: setFlags
+    summary: Set feature flags
+    description: |
+      Right `tenants.flags.write`. Sets the given flags; others stay. Audited. Emits `tenants.flags.changed`.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/FlagsWrite"
+    responses:
+      "200":
+        description: All flags after the change.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Flags"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/current/series:
+  get:
+    tags: [event]
+    operationId: getCurrentSeries
+    summary: The event's series and its events
+    description: Right `tenants.event.write`. 404 `not_found` when the event is in no series.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The series.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/SeriesView"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/api/tenants/current/clone:
+  post:
+    tags: [event]
+    operationId: cloneTenant
+    summary: Copy the tenants part of a previous event of the series
+    description: |
+      Needs the event-admin role (not a granted right) here and on the source; both in one series. Only on
+      a `draft` event not cloned before. Copies flags, `info_page_mode`, `membership` and `admin_access`,
+      adds the source's event admins to those already here (never removing any), and shifts the dates.
+      Audited. Emits `tenants.tenant.cloned`.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/CloneRequest"
+    responses:
+      "200":
+        description: The event after the clone.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Tenant"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/current/venue-info:
+  get:
+    tags: [venue-info]
+    operationId: getVenueInfo
+    summary: The event's venue info
+    description: An info page; follows the info-page mode. Wi-Fi networks with `attendees` visibility only for members.
+    responses:
+      "200":
+        description: The venue info; empty fields when the event has no venue.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/VenueInfo"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+  put:
+    tags: [venue-info]
+    operationId: setVenueInfo
+    summary: Edit the event's venue info
+    description: Right `tenants.venue_info.write`. Replaces the text fields. Emits `tenants.venue_info.changed`.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/VenueInfoWrite"
+    responses:
+      "200":
+        description: The venue info.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/VenueInfo"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/current/venue-info/copy:
+  post:
+    tags: [venue-info]
+    operationId: copyVenueInfo
+    summary: Copy the venue's profile again
+    description: |
+      Right `tenants.venue_info.write`. Replaces the event's venue info, floor plan included, with the
+      venue's current profile. 409 `no_venue` when the event has none. Emits `tenants.venue_info.changed`.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The new copy.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/VenueInfo"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/current/venue-info/floor-plan:
+  get:
+    tags: [venue-info]
+    operationId: getVenueInfoFloorPlan
+    summary: The event's floor plan image
+    description: An info page; follows the info-page mode. 404 when there is none.
+    responses:
+      "200":
+        description: The image.
+        content:
+          image/png:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Binary"
+          image/jpeg:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Binary"
+          image/webp:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Binary"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+  put:
+    tags: [venue-info]
+    operationId: setVenueInfoFloorPlan
+    summary: Replace the event's floor plan
+    description: Right `tenants.venue_info.write`. PNG, JPEG or WebP, up to 10 MB. Emits `tenants.venue_info.changed`.
+    security:
+      - session: []
+    requestBody:
+      $ref: "../tenants.openapi.yaml#/components/requestBodies/FloorPlan"
+    responses:
+      "204":
+        description: Stored.
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+      "413":
+        $ref: "../tenants.openapi.yaml#/components/responses/TooLarge"
+      "415":
+        $ref: "../tenants.openapi.yaml#/components/responses/UnsupportedType"
+/api/tenants/current/venue-ip-check:
+  get:
+    tags: [access]
+    operationId: getVenueIpCheck
+    summary: The venue IP check's state
+    description: Right `tenants.venue_ip_check.write`.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The state.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/VenueIpCheck"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+  put:
+    tags: [access]
+    operationId: setVenueIpCheck
+    summary: Turn the venue IP check off in an emergency, or on again
+    description: |
+      Right `tenants.venue_ip_check.write`. Turning it off needs `reason` and `until` (at most 48 hours
+      ahead); at `until` it turns itself back on. Audited. Emits `tenants.venue_ip_check.changed`.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/VenueIpCheckWrite"
+    responses:
+      "200":
+        description: The new state.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/VenueIpCheck"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/me:
+  get:
+    tags: [people]
+    operationId: getMe
+    summary: The caller at this event
+    description: For a guest `user` is `null` and `member` is false.
+    responses:
+      "200":
+        description: The caller.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Me"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/api/tenants/me/membership:
+  post:
+    tags: [people]
+    operationId: joinEvent
+    summary: Join the event as a member
+    description: |
+      A signed-in user, while the event is `live` and `membership` is `venue_or_link`, and only when the
+      request comes from one of the venue's addresses or carries the event's current `join_code` (from the
+      event's own link or QR code). 403 `membership_closed` when `membership` is `closed`, the event is `draft`
+      (only event admins add members then), or the request is neither from the venue nor carries a code;
+      403 `join_code_invalid` for a code that is not the current one, from outside the venue; 409
+      `event_archived`. Joining again is 200 with the same membership. Emits `tenants.member.joined`.
+    security:
+      - session: []
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/JoinRequest"
+    responses:
+      "200":
+        description: Already a member.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Member"
+      "201":
+        description: Joined.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Member"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [people]
+    operationId: leaveEvent
+    summary: Leave the event
+    description: Also when archived. Emits `tenants.member.left`. 404 when not a member.
+    security:
+      - session: []
+    responses:
+      "204":
+        description: Left.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/api/tenants/current/join-link:
+  get:
+    tags: [people]
+    operationId: getJoinLink
+    summary: The event's own join link and its code
+    description: |
+      Right `tenants.members.write`. The link, as a link or a QR code, lets a signed-in person join from
+      anywhere; event admins send it only to attendees.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The join link.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/JoinLink"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+/api/tenants/current/join-link/rotate:
+  post:
+    tags: [people]
+    operationId: rotateJoinLink
+    summary: Replace the join code
+    description: |
+      Right `tenants.members.write`. The old code stops working at once; members who joined with it stay.
+      Audited (never the code). 409 `event_archived`.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The new join link.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/JoinLink"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/me/privacy:
+  get:
+    tags: [people]
+    operationId: getPrivacy
+    summary: The caller's privacy flags
+    description: Global per user; the same on every event's hostname.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The flags.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Privacy"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+  put:
+    tags: [people]
+    operationId: setPrivacy
+    summary: Set the caller's privacy flags
+    description: Allowed in every status of the event. Emits `tenants.privacy.changed` on the platform stream.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/Privacy"
+    responses:
+      "200":
+        description: The flags.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Privacy"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+/api/tenants/current/members:
+  get:
+    tags: [people]
+    operationId: listMembers
+    summary: The event's members
+    description: Right `tenants.members.read`. User id, name and when they joined; never a Discord id.
+    security:
+      - session: []
+    parameters:
+      - $ref: "../tenants.openapi.yaml#/components/parameters/Cursor"
+      - $ref: "../tenants.openapi.yaml#/components/parameters/Limit"
+    responses:
+      "200":
+        description: A page of members, sorted by name.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/MemberPage"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+/api/tenants/current/members/{user_id}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/UserId"
+  put:
+    tags: [people]
+    operationId: addMember
+    summary: Add a user as a member
+    description: Right `tenants.members.write`. Audited. Emits `tenants.member.joined`.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The membership.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Member"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [people]
+    operationId: removeMember
+    summary: Remove a member
+    description: Right `tenants.members.write`. Audited. Emits `tenants.member.left`.
+    security:
+      - session: []
+    responses:
+      "204":
+        description: Removed.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/api/tenants/current/admins:
+  get:
+    tags: [people]
+    operationId: listAdmins
+    summary: The event's admins
+    description: An event admin.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The event admins.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/AdminList"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+/api/tenants/current/admins/{user_id}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/UserId"
+  put:
+    tags: [people]
+    operationId: addAdmin
+    summary: Make a user an event admin
+    description: Right `tenants.admins.write` (held only through the role). Audited. Emits `tenants.admin.added`.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The event admins after the change.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/AdminList"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [people]
+    operationId: removeAdmin
+    summary: Remove an event admin
+    description: |
+      Right `tenants.admins.write`. 409 `last_admin` for the last one. Audited. Emits `tenants.admin.removed`.
+    security:
+      - session: []
+    responses:
+      "204":
+        description: Removed.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/current/support:
+  post:
+    tags: [people]
+    operationId: openSupport
+    summary: Open a superadmin support window on this event
+    description: |
+      A superadmin with `mfa_enabled` on the session's identity (contracts/tenants.md, Sign-in identities). For
+      2 hours they act as an event admin here, and their audit entries are marked `support`. Audited. Emits
+      `tenants.support.opened`.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/SupportRequest"
+    responses:
+      "201":
+        description: The window.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/SupportWindow"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+  delete:
+    tags: [people]
+    operationId: closeSupport
+    summary: Close the caller's support window
+    description: Audited. Emits `tenants.support.closed`. 404 when none is open.
+    security:
+      - session: []
+    responses:
+      "204":
+        description: Closed.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/api/tenants/current/audit:
+  get:
+    tags: [audit]
+    operationId: listTenantAudit
+    summary: The event's audit log
+    description: Right `tenants.audit.read`. Newest first.
+    security:
+      - session: []
+    parameters:
+      - $ref: "../tenants.openapi.yaml#/components/parameters/Before"
+      - $ref: "../tenants.openapi.yaml#/components/parameters/Limit"
+    responses:
+      "200":
+        description: A page of entries.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/AuditPage"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
