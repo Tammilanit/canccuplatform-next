@@ -172,3 +172,22 @@ async def test_handler_error_does_not_stop_subscription(store: MemoryStreamStore
     await asyncio.wait_for(done.wait(), 2)
     await sub.close()
     assert seen == ["a", "b"]
+
+
+def test_the_valkey_read_timeout_outlasts_the_blocking_read() -> None:
+    # valkey-py's default socket timeout is 5 s, the bus's XREAD blocks 5 s: they raced and the
+    # demo stack logged `bus read failed … Timeout` every few seconds.
+    from canccu_kit.store import READ_TIMEOUT_S, ValkeyStreamStore
+
+    store = ValkeyStreamStore.from_url("redis://valkey:6379")
+    kwargs = store._client.connection_pool.connection_kwargs
+    assert kwargs["socket_timeout"] == READ_TIMEOUT_S
+    assert READ_TIMEOUT_S * 1000 >= 5000 + 5000
+
+
+async def test_a_block_too_close_to_the_read_timeout_is_refused() -> None:
+    from canccu_kit.store import ValkeyStreamStore
+
+    store = ValkeyStreamStore.from_url("redis://valkey:6379", read_timeout_s=10)
+    with pytest.raises(ValueError):
+        await store.xread({"events:x": "$"}, block_ms=6000, count=1)

@@ -7,6 +7,7 @@ import type { TenantContext } from "./access.js";
 import type { Event } from "./bus.js";
 import { ConfigError } from "./config.js";
 import { KitError } from "./errors.js";
+import type { ServiceIdentity } from "./service.js";
 import { isTenantId } from "./tenant.js";
 
 /** The tenant the IP-mode demo stack serves. */
@@ -47,10 +48,11 @@ export interface IpMode {
   /** The platform version; IP mode runs only while it is `dev` (0013 item 2). */
   version: string;
   /**
-   * The demo tenant's context, or null when IP mode must not serve (e.g. it is not the only
-   * tenant). The kit refuses anything but the demo tenant whatever this returns.
+   * The demo tenant's context, or null when IP mode must not serve. Without it the resolver asks
+   * `GET /internal/tenants/ip-mode`, so every module runs IP mode the same way. The kit refuses
+   * anything but the demo tenant whatever the answer.
    */
-  load: () => Promise<TenantContext | null>;
+  load?: () => Promise<TenantContext | null>;
 }
 
 export interface TenantResolverOptions {
@@ -60,6 +62,8 @@ export interface TenantResolverOptions {
   platformHosts?: string[];
   /** Only the CI demo stack sets this. */
   ipMode?: IpMode;
+  /** Signs every call to `/internal/tenants/*` (audience `tenants`). */
+  service?: ServiceIdentity;
   fetch?: typeof fetch;
   cacheMs?: number;
   maxEntries?: number;
@@ -126,20 +130,28 @@ export class TenantResolver {
   private async ipModeContext(): Promise<TenantContext | null> {
     const ipMode = this.options.ipMode;
     if (ipMode === undefined) return null;
-    const context = await ipMode.load();
+    const context = ipMode.load
+      ? await ipMode.load()
+      : await this.ask("/internal/tenants/ip-mode", [404]);
     return context?.tenant_id === DEMO_TENANT ? context : null;
   }
 
-  private async lookup(host: string): Promise<TenantContext | null> {
+  private lookup(host: string): Promise<TenantContext | null> {
+    // 400 too: a host the tenants module cannot even parse is unknown, not an outage.
+    return this.ask(`/internal/tenants/resolve?host=${encodeURIComponent(host)}`, [404, 400]);
+  }
+
+  /** The context the tenants module answers on `path`, or null on one of `none` statuses. */
+  private async ask(path: string, none: number[]): Promise<TenantContext | null> {
     let response: Response;
     try {
-      response = await this.fetch(
-        `${this.tenantsUrl}/internal/tenants/resolve?host=${encodeURIComponent(host)}`,
-      );
+      response = await this.fetch(`${this.tenantsUrl}${path}`, {
+        headers: this.options.service?.headers("tenants") ?? {},
+      });
     } catch (err) {
       throw new TenantsUnavailable(`tenants module unreachable: ${String(err)}`);
     }
-    if (response.status === 404 || response.status === 400) return null;
+    if (none.includes(response.status)) return null;
     if (!response.ok) throw new TenantsUnavailable(`tenants module answered ${response.status}`);
     let body: unknown;
     try {

@@ -1,0 +1,21 @@
+settings:
+  - key: surges
+    type: boolean
+    label: Detect surges
+    default: true
+  - key: surge_threshold
+    type: integer
+    min: 2
+    max: 500
+    label: Players on one game that start a surge
+    default: 4
+  - key: surge_cooldown_minutes
+    type: integer
+    min: 1
+    max: 1440
+    label: Surge cooldown (minutes)
+    default: 15
+  - key: attendee_additions
+    type: boolean
+    label: Members may add games
+    default: true

@@ -61,7 +61,7 @@ async def test_owner_role_cannot_be_changed(world: World, caplog: pytest.LogCapt
 async def test_foreign_origin_is_refused(world: World, caplog: pytest.LogCaptureFixture) -> None:
     await owner_and_member(world, caplog)
     r = await world.client.post("/admin/sign-out", headers={"origin": "https://evil.example"})
-    assert r.status_code == 403 and r.json()["error"]["code"] == "bad_origin"
+    assert r.status_code == 403 and r.json()["error"]["code"] == "origin_refused"
     r = await world.client.post("/admin/sign-out", headers={"origin": PUBLIC})
     assert r.status_code == 303
 

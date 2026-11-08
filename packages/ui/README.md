@@ -30,19 +30,27 @@ A profile sets tokens by name under `theme.colors` (`#rrggbb` or `#rrggbbaa`) an
 | `text`            | `#f8fafc` | Body text                                  |
 | `text_muted`      | `#94a3b8` | Hints                                      |
 | `primary`         | `#3b82f6` | Primary button, links, focus ring          |
-| `primary_text`    | `#ffffff` | Text on primary and danger buttons         |
+| `primary_text`    | `#0f172a` | Text on primary and danger buttons         |
 | `accent`          | `#f59e0b` | Highlights                                 |
 | `status_ok`       | `#22c55e` | Health `ok`                                |
 | `status_degraded` | `#eab308` | Health `degraded`                          |
 | `status_down`     | `#ef4444` | Health `down`, field errors, danger button |
 
-| `theme.fonts` | Default        | Used for          |
-| ------------- | -------------- | ----------------- |
-| `body`        | `system-ui`    | Body text, inputs |
-| `heading`     | `system-ui`    | Headings, header  |
-| `mono`        | `ui-monospace` | `code`            |
+| `theme.fonts` | Default        | Used for                                        |
+| ------------- | -------------- | ----------------------------------------------- |
+| `body`        | `system-ui`    | Body text, inputs                               |
+| `heading`     | `system-ui`    | Headings, header                                |
+| `display`     | `system-ui`    | Big screen text (follows `heading` in `ui.css`) |
+| `mono`        | `ui-monospace` | `code`                                          |
 
-`--canccu-radius` (`0.5rem`) is a `ui.css` default and can't be set from the profile. Making it configurable needs an additive contract change first (for example `theme.radii`).
+| `theme.sizes`  | Default  | Custom property         | Used for                  |
+| -------------- | -------- | ----------------------- | ------------------------- |
+| `radius`       | `0.5rem` | `--canccu-radius`       | Corner radius             |
+| `border_width` | `1px`    | `--canccu-border-width` | Card, input, header lines |
+| `gap`          | `1rem`   | `--canccu-gap`          | Page grid gap             |
+| `safe_inset`   | `48px`   | `--canccu-safe-inset`   | Screen edge margin        |
+
+Sizes are lengths like `0`, `1px`, `0.5rem` (the `$defs.length` pattern of `contracts/theme.schema.json`); other values are dropped. `ui.css` wraps everything in `@layer canccu-base`. `page()` takes `surface` (`screen`, `hub`, `info`, `admin`; default `admin`) and an optional CSP `nonce`; `themeStyle(profile, nonce)` returns the theme `<style>` element.
 
 ## Usage (TypeScript, Fastify)
 

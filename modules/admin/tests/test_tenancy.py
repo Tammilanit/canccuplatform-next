@@ -16,10 +16,10 @@ from pathlib import Path
 import httpx
 import pytest
 import yaml
-from canccu_kit import Bus, Health, NoTenant, tenant_scope
+from canccu_kit import Bus, Health, NoTenant, ServiceIdentity, tenant_scope
 from canccu_kit.rights import Session
 from canccu_kit.testing import MemoryStreamStore, assert_tenant_isolation
-from conftest import SIGNIN_HOST, StoreProbe, fake_resolver
+from conftest import SERVICE_KEY, SIGNIN_HOST, StoreProbe, fake_resolver
 
 from canccu_admin.app import create_app
 from canccu_admin.auth import Auth
@@ -60,6 +60,7 @@ class Env:
             authorize,
             auth,
             fake_resolver({host: tenant for tenant, host in HOSTS.items()}),
+            identity=ServiceIdentity("admin", SERVICE_KEY),
         )
 
     def client(self, host: str) -> httpx.AsyncClient:

@@ -44,6 +44,27 @@ export class AdminAccessRestricted extends KitError {
   static override defaultCode = "admin_access_restricted";
 }
 
+/** Distinct address lists held parsed; venues change rarely, so this is plenty. */
+export const CIDR_CACHE_MAX = 1024;
+const parsed = new Map<string, BlockList>();
+
+/**
+ * The parsed form of an address list, built once per distinct list (a venue revision, a
+ * `CANCCU_TAILSCALE_CIDRS` value) instead of on every request. Shared: never add to it.
+ */
+export function parsedCidrs(cidrs: readonly string[]): BlockList {
+  // JSON keeps ["a,b"] and ["a", "b"] apart, which a plain join would not.
+  const key = JSON.stringify(cidrs);
+  let list = parsed.get(key);
+  if (list === undefined) {
+    // Clearing at the bound is simpler than LRU and costs only a re-parse of the lists in use.
+    if (parsed.size >= CIDR_CACHE_MAX) parsed.clear();
+    list = blockList(cidrs);
+    parsed.set(key, list);
+  }
+  return list;
+}
+
 function blockList(cidrs: readonly string[]): BlockList {
   const list = new BlockList();
   for (const cidr of cidrs) {
@@ -70,7 +91,7 @@ export function ipInCidrs(ip: string | undefined, cidrs: readonly string[]): boo
   if (ip === undefined) return false;
   const family = isIP(ip);
   if (family === 0) return false;
-  return blockList(cidrs).check(ip, family === 4 ? "ipv4" : "ipv6");
+  return parsedCidrs(cidrs).check(ip, family === 4 ? "ipv4" : "ipv6");
 }
 
 function fromVenue(ctx: TenantContext, clientIp: string | undefined): boolean {

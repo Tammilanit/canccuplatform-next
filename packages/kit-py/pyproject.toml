@@ -11,6 +11,7 @@ dependencies = [
   "valkey==6.2.0",
   "httpx==0.28.1",
   "uuid6==2025.0.1",
+  "cryptography==50.0.2",
 ]
 
 [project.optional-dependencies]

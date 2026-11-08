@@ -7,6 +7,7 @@ The kit implements these rules once; modules call them and never compare address
 from __future__ import annotations
 
 import base64
+import functools
 import hashlib
 import hmac
 import ipaddress
@@ -83,14 +84,19 @@ def _address(ip: str) -> IpAddress | None:
     return address
 
 
-def _networks(cidrs: Iterable[str]) -> Iterable[IpNetwork]:
+@functools.lru_cache(maxsize=1024)
+def parsed_cidrs(cidrs: tuple[str, ...]) -> tuple[IpNetwork, ...]:
+    """A list of prefixes parsed once: a venue's addresses change only with its revision, so
+    every access check of that revision reuses this. Bounded, because old revisions linger."""
+    networks: list[IpNetwork] = []
     for cidr in cidrs:
         # strict=False takes `192.0.2.10/24` as its /24, the way a BlockList subnet does. A
         # malformed prefix is skipped, so it can only narrow access, never widen it.
         try:
-            yield ipaddress.ip_network(cidr.strip(), strict=False)
+            networks.append(ipaddress.ip_network(cidr.strip(), strict=False))
         except ValueError:
             continue
+    return tuple(networks)
 
 
 def ip_in_cidrs(ip: str | None, cidrs: Iterable[str]) -> bool:
@@ -101,7 +107,8 @@ def ip_in_cidrs(ip: str | None, cidrs: Iterable[str]) -> bool:
     if address is None:
         return False
     return any(
-        address.version == network.version and address in network for network in _networks(cidrs)
+        address.version == network.version and address in network
+        for network in parsed_cidrs(tuple(cidrs))
     )
 
 

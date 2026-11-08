@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import httpx
-from canccu_kit import Health, IpMode, TenantContext, TenantResolver
-from canccu_kit.starlette import install, install_tenancy
+from canccu_kit import Health, IpMode, ServiceIdentity, TenantResolver
+from canccu_kit.starlette import install, install_service_identity, install_tenancy
 from starlette.applications import Starlette
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -13,15 +13,21 @@ from .deps import Deps
 
 
 def create_app(
-    d: Deps, health: Health, platform_hosts: list[str], version: str = "", ip_mode: bool = False
+    d: Deps,
+    health: Health,
+    platform_hosts: list[str],
+    version: str = "",
+    ip_mode: bool = False,
+    *,
+    service: ServiceIdentity,
 ) -> ASGIApp:
-    async def load_demo() -> TenantContext | None:
-        return await internal.demo_context(d.db, d.declared_flags)
-
-    mode = IpMode(version, load_demo) if ip_mode else None
+    mode = IpMode(version) if ip_mode else None
     private = Starlette(routes=internal.ROUTES)
     private.state.deps = d
+    private.state.ip_mode = mode is not None
     install(private)
+    # Caddy's on-demand TLS cannot sign, and `ask` only says whether a hostname is active.
+    install_service_identity(private, service, exempt=("/internal/tenants/ask",))
     # The kit's own resolver, asking this module's internal endpoint in-process: one code path
     # for every module. No cache, so this module's own writes show at once.
     resolver = TenantResolver(
@@ -29,6 +35,7 @@ def create_app(
         platform_hosts=platform_hosts,
         ip_mode=mode,
         http=httpx.AsyncClient(transport=httpx.ASGITransport(app=private)),
+        service=service,
         cache_seconds=0,
     )
     public = Starlette(

@@ -6,7 +6,7 @@ export const COLOR_TOKENS = {
   text: "#f8fafc",
   text_muted: "#94a3b8",
   primary: "#3b82f6",
-  primary_text: "#ffffff",
+  primary_text: "#0f172a",
   accent: "#f59e0b",
   status_ok: "#22c55e",
   status_degraded: "#eab308",
@@ -17,6 +17,7 @@ export const COLOR_TOKENS = {
 export const FONT_TOKENS = {
   body: "system-ui",
   heading: "system-ui",
+  display: "system-ui",
   mono: "ui-monospace",
 } as const;
 
@@ -24,16 +25,24 @@ export const FONT_TOKENS = {
 export const FONT_STACKS: Record<FontToken, string> = {
   body: "system-ui, sans-serif",
   heading: "system-ui, sans-serif",
+  display: "system-ui, sans-serif",
   mono: "ui-monospace, monospace",
 };
 
-/** Corner radius: a ui.css default only, not set from the profile. */
-export const RADIUS = "0.5rem";
+/** Size tokens: profile key under `theme.sizes` → default length. Custom property `--canccu-<name>`. */
+export const SIZE_TOKENS = {
+  radius: "0.5rem",
+  border_width: "1px",
+  gap: "1rem",
+  safe_inset: "48px",
+} as const;
 
 export type ColorToken = keyof typeof COLOR_TOKENS;
 export type FontToken = keyof typeof FONT_TOKENS;
+export type SizeToken = keyof typeof SIZE_TOKENS;
 
-/** CSS custom property for a token: `text_muted` → `--canccu-color-text-muted`. */
-export function cssVar(kind: "color" | "font", name: string): string {
-  return `--canccu-${kind}-${name.replaceAll("_", "-")}`;
+/** CSS custom property for a token: `text_muted` → `--canccu-color-text-muted`; sizes have no kind segment. */
+export function cssVar(kind: "color" | "font" | "size", name: string): string {
+  const dashed = name.replaceAll("_", "-");
+  return kind === "size" ? `--canccu-${dashed}` : `--canccu-${kind}-${dashed}`;
 }

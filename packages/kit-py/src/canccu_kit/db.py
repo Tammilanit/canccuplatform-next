@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 from collections.abc import AsyncIterator, Mapping
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from pathlib import Path
 from typing import Any, Protocol
 
 from .tenant import require_tenant, tenant_scope
@@ -110,3 +111,64 @@ async def check_app_role(conn: SqlConnection) -> None:
     if role is None or role["rolsuper"] is True or role["rolbypassrls"] is True:
         name = None if role is None else role["rolname"]
         raise RlsBypassed(f"database role {name} bypasses row-level security; use the app role")
+
+
+async def check_login_role(conn: SqlConnection) -> None:
+    """Refuse to log in as anything but a plain role (0013 item 5).
+
+    Call on a fresh connection, before any SET ROLE. A table's owner may switch RLS off or drop
+    its policy, so the role a module logs in as owns nothing; migrations run as another role.
+    """
+    role = await conn.fetchrow(
+        "SELECT r.rolname, r.rolsuper, r.rolbypassrls, EXISTS ("
+        " SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace"
+        " WHERE c.relowner = r.oid AND n.nspname <> 'information_schema'"
+        " AND n.nspname NOT LIKE 'pg\\_%') AS owns"
+        " FROM pg_roles r WHERE r.rolname = current_user"
+    )
+    if role is None or role["rolsuper"] is not False or role["rolbypassrls"] is not False:
+        name = None if role is None else role["rolname"]
+        raise RlsBypassed(f"database login role {name} bypasses row-level security")
+    if role["owns"] is not False:
+        raise RlsBypassed(f"database login role {role['rolname']} owns tables; use the app role")
+
+
+def quote_ident(name: str) -> str:
+    return '"' + name.replace('"', '""') + '"'
+
+
+async def run_migrations(
+    conn: Any,
+    migrations: Path,
+    *,
+    ledger: str,
+    lock: int,
+    app_role: str | None = None,
+    grant_to: str | None = None,
+) -> None:
+    """Run each new `*.sql` file in `migrations` once, in name order, recorded in `ledger`.
+
+    Run it as the migration role, at start, before serving. Each file runs in its own transaction
+    (CREATE POLICY cannot be repeated); the advisory `lock` serialises containers starting at
+    once. With `grant_to`, the login role then gets the module's `app_role`: the migration role
+    created that role, so it holds ADMIN OPTION on it.
+    """
+    if _IDENTIFIER_RE.fullmatch(ledger) is None:
+        raise ValueError(f"invalid ledger table {ledger!r}")
+    await conn.execute("SELECT pg_advisory_lock($1)", lock)
+    try:
+        await conn.execute(
+            f"CREATE TABLE IF NOT EXISTS {ledger}"
+            " (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())"
+        )
+        # Start-up only, before serving: a blocking read is fine here.
+        for path in sorted(migrations.glob("*.sql")):  # noqa: ASYNC240
+            async with conn.transaction():
+                done = await conn.fetchval(f"SELECT 1 FROM {ledger} WHERE name = $1", path.name)
+                if not done:
+                    await conn.execute(path.read_text())
+                    await conn.execute(f"INSERT INTO {ledger} (name) VALUES ($1)", path.name)
+    finally:
+        await conn.execute("SELECT pg_advisory_unlock($1)", lock)
+    if grant_to is not None and app_role is not None:
+        await conn.execute(f"GRANT {quote_ident(app_role)} TO {quote_ident(grant_to)}")

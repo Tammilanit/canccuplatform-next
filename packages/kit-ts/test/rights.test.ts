@@ -45,7 +45,7 @@ describe("rights check", () => {
     admin.answer = () => jsonResponse(200, sessionBody(["screen.slides.edit"]));
     const session = await checker.check("theme=dark; canccu_session=s1", "screen.slides.edit");
     expect(session.userId).toBe("u1");
-    expect(admin.requests).toEqual([
+    expect(admin.requests).toMatchObject([
       { method: "GET", path: "/api/admin/session", cookie: "canccu_session=s1", body: undefined },
     ]);
   });

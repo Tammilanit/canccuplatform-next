@@ -90,6 +90,21 @@ describe("page", () => {
       ),
     ).toMatchSnapshot();
   });
+  it("marks the body with the surface, admin by default", () => {
+    expect(s(page({ title: "x", body: "" }))).toContain(
+      '<body class="canccu-page canccu-surface canccu-surface--admin">',
+    );
+    expect(s(page({ title: "x", body: "", surface: "screen" }))).toContain(
+      '<body class="canccu-page canccu-surface canccu-surface--screen">',
+    );
+  });
+  it("puts the response nonce on the theme <style>", () => {
+    const nonce = "abcdEFGH0123+/==-_xyz";
+    const profile = { theme: { colors: { primary: "#ff0000" } } };
+    expect(s(page({ title: "x", body: "", profile, nonce }))).toContain(`<style nonce="${nonce}">`);
+    expect(s(page({ title: "x", body: "", profile }))).toContain("<style>");
+    expect(() => page({ title: "x", body: "", profile, nonce: 'a"b' })).toThrow(/nonce/);
+  });
   it("drops an unsafe theme value instead of writing it into <style>", () => {
     const out = s(
       page({

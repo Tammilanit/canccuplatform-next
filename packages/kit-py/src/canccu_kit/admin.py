@@ -20,10 +20,14 @@ class AdminClient:
         *,
         session_id: str | None = None,
         json: Any = None,
+        params: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> httpx.Response:
-        headers = {"cookie": f"canccu_session={session_id}"} if session_id else {}
+        sent = dict(headers or {})
+        if session_id:
+            sent["cookie"] = f"canccu_session={session_id}"
         try:
-            return await self._client.request(method, path, json=json, headers=headers)
+            return await self._client.request(method, path, json=json, params=params, headers=sent)
         except httpx.TransportError as exc:
             raise AdminUnavailable(f"admin unreachable: {type(exc).__name__}") from exc
 

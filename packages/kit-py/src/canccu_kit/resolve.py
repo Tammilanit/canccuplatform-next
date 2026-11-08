@@ -20,6 +20,7 @@ from .access import TenantContext
 from .bus import Event
 from .config import ConfigError
 from .errors import KitError
+from .service import ServiceIdentity
 from .tenant import is_tenant_id
 
 DEMO_TENANT = "demo"
@@ -90,9 +91,11 @@ def normalize_host(host: str | None) -> str | None:
 class IpMode:
     version: str
     """The platform version; IP mode runs only while it is `dev` (0013 item 2)."""
-    load: Callable[[], Awaitable[TenantContext | None]]
-    """The demo tenant's context, or None when IP mode must not serve (e.g. it is not the only
-    tenant). The kit refuses anything but the demo tenant whatever this returns."""
+    load: Callable[[], Awaitable[TenantContext | None]] | None = None
+    """The demo tenant's context, or None when IP mode must not serve. Left out, the kit asks
+    `GET /internal/tenants/ip-mode`, where the tenants module applies the rule (only while `demo`
+    is the only tenant), so no module needs a loader of its own. The kit refuses anything but the
+    demo tenant whatever the answer."""
 
 
 @dataclass
@@ -116,6 +119,7 @@ class TenantResolver:
         platform_hosts: Iterable[str] = (),
         ip_mode: IpMode | None = None,
         http: httpx.AsyncClient | None = None,
+        service: ServiceIdentity | None = None,
         cache_seconds: float = RESOLVE_CACHE_SECONDS,
         max_entries: int = RESOLVE_CACHE_MAX,
         now: Callable[[], float] = time.monotonic,
@@ -126,6 +130,7 @@ class TenantResolver:
         self._platform_hosts = {h for h in map(normalize_host, platform_hosts) if h is not None}
         self._ip_mode = ip_mode
         self._http = http or httpx.AsyncClient(timeout=5.0)
+        self._service = service
         self._cache_seconds = cache_seconds
         self._now = now
         self._max_entries = max_entries
@@ -162,13 +167,20 @@ class TenantResolver:
     async def _ip_mode_context(self) -> TenantContext | None:
         if self._ip_mode is None:
             return None
-        context = await self._ip_mode.load()
+        if self._ip_mode.load is not None:
+            context = await self._ip_mode.load()
+        else:
+            context = await self._internal("ip-mode", {})
         return context if context is not None and context["tenant_id"] == DEMO_TENANT else None
 
     async def _lookup(self, host: str) -> TenantContext | None:
+        return await self._internal("resolve", {"host": host})
+
+    async def _internal(self, path: str, params: dict[str, str]) -> TenantContext | None:
+        headers = self._service.headers("tenants") if self._service is not None else {}
         try:
             response = await self._http.get(
-                f"{self._tenants_url}/internal/tenants/resolve", params={"host": host}
+                f"{self._tenants_url}/internal/tenants/{path}", params=params, headers=headers
             )
         except httpx.HTTPError as exc:
             raise TenantsUnavailable(f"tenants module unreachable: {type(exc).__name__}") from exc

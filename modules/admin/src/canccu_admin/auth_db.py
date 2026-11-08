@@ -15,45 +15,6 @@ from typing import Protocol
 import asyncpg
 from canccu_kit import new_id
 
-AUTH_SCHEMA = """
-CREATE TABLE IF NOT EXISTS admin_users (
-  id text PRIMARY KEY,
-  discord_id text NOT NULL UNIQUE,
-  name text NOT NULL,
-  created_at timestamptz NOT NULL
-);
-CREATE TABLE IF NOT EXISTS admin_roles (
-  user_id text PRIMARY KEY REFERENCES admin_users (id) ON DELETE CASCADE,
-  role text NOT NULL CHECK (role IN ('owner', 'admin')),
-  granted_at timestamptz NOT NULL,
-  granted_by text
-);
--- At most one owner, so two concurrent first-run claims cannot both win.
-CREATE UNIQUE INDEX IF NOT EXISTS admin_roles_one_owner ON admin_roles ((true))
-  WHERE role = 'owner';
-CREATE TABLE IF NOT EXISTS admin_sessions (
-  id_hash text PRIMARY KEY,
-  user_id text NOT NULL REFERENCES admin_users (id) ON DELETE CASCADE,
-  created_at timestamptz NOT NULL,
-  last_seen_at timestamptz NOT NULL,
-  expires_at timestamptz NOT NULL
-);
-CREATE TABLE IF NOT EXISTS admin_sign_in_flows (
-  state_hash text PRIMARY KEY,
-  nonce_hash text NOT NULL,
-  verifier text NOT NULL,
-  claim_hash text,
-  expires_at timestamptz NOT NULL
-);
-CREATE TABLE IF NOT EXISTS admin_first_run (
-  id boolean PRIMARY KEY DEFAULT true CHECK (id),
-  code_hash text NOT NULL,
-  created_at timestamptz NOT NULL,
-  used_at timestamptz,
-  used_by text REFERENCES admin_users (id) ON DELETE SET NULL
-);
-"""
-
 ROLES = ("owner", "admin")
 
 
@@ -224,8 +185,7 @@ class PgAuthStore:
 
     @classmethod
     async def create(cls, pool: asyncpg.Pool) -> PgAuthStore:
-        async with pool.acquire() as conn:
-            await conn.execute(AUTH_SCHEMA)
+        """The tables come from migrations/002_auth_tables.sql, run by the migration role."""
         return cls(pool)
 
     async def has_owner(self) -> bool:

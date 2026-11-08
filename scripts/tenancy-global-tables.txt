@@ -11,4 +11,9 @@ tenants series          a series spans events
 tenants platform_audit  audit entries that belong to no single event
 tenants tenants_migrations which migration files ran (created by db.py before the files); no event data
 admin admin_migrations  which migration files ran (created by db.py before the files); no event data
+admin admin_users       sign-in accounts; sign-in is not per tenant until the central sign-in host (#52)
+admin admin_roles       the owner and admins of today's single sign-in; per tenant with #52
+admin admin_sessions    sign-in sessions, hashed; each is bound to one tenant with #52
+admin admin_sign_in_flows OAuth flows in progress, hashed; no event data
+admin admin_first_run   the one-time first-run code, hashed; no event data
 screen devices          device identity: name, token hash, venue id, current tenant (0013 item 34)

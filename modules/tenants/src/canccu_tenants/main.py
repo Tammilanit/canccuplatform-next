@@ -12,13 +12,16 @@ import uvicorn
 from canccu_kit import (
     AdminClient,
     Bus,
+    ConfigError,
     Event,
     Health,
     RightsChecker,
+    ServiceIdentity,
     ValkeyStreamStore,
     create_logger,
     load_config,
     postgres_check,
+    service_key_from_env,
     valkey_check,
 )
 from canccu_kit.resolve import normalize_host
@@ -65,7 +68,14 @@ async def serve() -> None:
     config = load_config()
     create_logger(config.module)
     e = env()
-    db = await Db.connect(e.database_url)
+    try:
+        identity = ServiceIdentity(config.module, service_key_from_env())
+    except ConfigError as exc:
+        raise SystemExit(str(exc)) from exc
+    # The stack logs in as a plain role and migrates as the migration role (0013 item 5).
+    db = await Db.connect(
+        e.database_url, migrate_url=os.environ.get("CANCCU_MIGRATE_DATABASE_URL") or None
+    )
     files = Files(e.files_root)
     if os.environ.get("CANCCU_SEED_DEMO") == "1":
         await seed.seed_demo(db, files, e.demo_profile, e.platform_domain)
@@ -99,7 +109,7 @@ async def serve() -> None:
         {"postgres": postgres_check(ping), "valkey": valkey_check(streams)},
     )
     ip_mode = config.version == "dev" and os.environ.get("CANCCU_IP_MODE") == "demo"
-    app = create_app(d, health, platform_hosts, config.version, ip_mode)
+    app = create_app(d, health, platform_hosts, config.version, ip_mode, service=identity)
     timer = asyncio.create_task(timers.loop(d))
     # Caddy is the only proxy in front of this container (contracts/tenants.md, Access).
     trusted = os.environ.get("CANCCU_TRUSTED_PROXIES", "127.0.0.1")

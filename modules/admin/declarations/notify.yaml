@@ -1,0 +1,26 @@
+settings:
+  # No default: the contract's default is every registered topic, which only
+  # the topic registry knows.
+  - key: topics
+    type: list
+    label: Topics offered at this event
+  - key: hourly_cap
+    type: integer
+    min: 1
+    max: 60
+    label: Pushes per recipient per hour
+    default: 6
+  - key: dm_fallback
+    type: boolean
+    label: Fall back to a Discord DM for personal notifications
+    default: true
+  - key: schedule_lead_minutes
+    type: integer
+    label: Schedule notification lead (minutes)
+    default: 10
+  - key: check_in_rotation_seconds
+    type: integer
+    min: 15
+    max: 120
+    label: Check-in code rotation (seconds)
+    default: 30

@@ -9,7 +9,7 @@ from conftest import SUPERADMIN_HOST, Env, make_tenant, make_user
 
 async def test_resolve_gives_the_context_of_an_active_hostname(env: Env) -> None:
     await make_tenant(env.db, "alpha", "alpha.example.org")
-    async with env.client("tenants:8080") as c:
+    async with env.module("screen") as c:
         ok = await c.get("/internal/tenants/resolve", params={"host": "alpha.example.org"})
         unknown = await c.get("/internal/tenants/resolve", params={"host": "nope.example.org"})
         bad = await c.get("/internal/tenants/resolve", params={"host": "Alpha.example.org:80"})
@@ -41,7 +41,7 @@ async def test_ask_allows_only_active_hostnames(env: Env) -> None:
             "INSERT INTO hostnames (hostname, tenant_id, kind, status)"
             " VALUES ('pending.example.org', 'alpha', 'custom', 'pending')"
         )
-    async with env.client("tenants:8080") as c:
+    async with env.module("screen") as c:
         active = await c.get("/internal/tenants/ask", params={"domain": "alpha.example.org"})
         pending = await c.get("/internal/tenants/ask", params={"domain": "pending.example.org"})
         unknown = await c.get("/internal/tenants/ask", params={"domain": "x.example.org"})
@@ -210,14 +210,10 @@ async def test_create_refuses_an_end_before_the_start(env: Env) -> None:
 async def test_ip_mode_serves_the_demo_tenant_on_an_ip_host(env: Env) -> None:
     from pathlib import Path
 
-    from canccu_kit import Health
-
     from canccu_tenants import seed
-    from canccu_tenants.app import create_app
 
     await seed.seed_demo(env.db, env.deps.files, Path("/nonexistent/profile.yaml"), None)
-    app = create_app(env.deps, Health("tenants", "dev", {}), [], "dev", ip_mode=True)
-    env.app = app
+    env.app = env.app_with(ip_mode=True)
     async with env.client("127.0.0.1") as c:
         r = await c.get("/api/tenants/current")
     assert r.json()["id"] == "demo"

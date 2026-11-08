@@ -9,6 +9,7 @@ import {
   RlsBypassed,
   TENANT_COLUMN_SQL,
   checkAppRole,
+  checkLoginRole,
   rlsSql,
   tenantTransaction,
 } from "../src/index.js";
@@ -120,5 +121,10 @@ describe.skipIf(!url)("tenant tables in Postgres", () => {
     } finally {
       await client.query(`SET ROLE ${APP_ROLE}`);
     }
+  });
+
+  it("refuses the login role behind SET ROLE when it owns the tables", async () => {
+    // The test's login role created kit_test_lists, so its owner could switch RLS off.
+    await expect(checkLoginRole(client)).rejects.toThrow(RlsBypassed);
   });
 });

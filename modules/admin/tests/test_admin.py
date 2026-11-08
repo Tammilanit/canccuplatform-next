@@ -11,10 +11,10 @@ from pathlib import Path
 import httpx
 import pytest
 import yaml
-from canccu_kit import Bus, Health, MissingRight, NotSignedIn, tenant_scope
+from canccu_kit import Bus, Health, MissingRight, NotSignedIn, ServiceIdentity, tenant_scope
 from canccu_kit.rights import Session
 from canccu_kit.testing import MemoryStreamStore
-from conftest import fake_resolver
+from conftest import SERVICE_KEY, fake_resolver
 
 from canccu_admin.app import create_app
 from canccu_admin.auth import Auth
@@ -75,7 +75,14 @@ def parts(tmp_path: Path) -> Parts:
     )
     health = Health("admin", "dev", {})
     auth = Auth(MemoryAuthStore(), service.bus, None, None)
-    app = create_app(service, health, authorize, auth, fake_resolver({"t": "demo"}))
+    app = create_app(
+        service,
+        health,
+        authorize,
+        auth,
+        fake_resolver({"t": "demo"}),
+        identity=ServiceIdentity("admin", SERVICE_KEY),
+    )
     client = httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://t", cookies={"canccu_session": "s"}
     )

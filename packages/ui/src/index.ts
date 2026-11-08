@@ -1,6 +1,6 @@
-export { COLOR_TOKENS, FONT_STACKS, FONT_TOKENS, RADIUS, cssVar } from "./tokens.js";
-export type { ColorToken, FontToken } from "./tokens.js";
-export { logoPath, resolveTheme, themeCss } from "./theme.js";
+export { COLOR_TOKENS, FONT_STACKS, FONT_TOKENS, SIZE_TOKENS, cssVar } from "./tokens.js";
+export type { ColorToken, FontToken, SizeToken } from "./tokens.js";
+export { logoPath, resolveTheme, themeCss, themeStyle } from "./theme.js";
 export type { ProfileLike, ResolvedTheme } from "./theme.js";
 export { Html, attrs, escapeHtml, html, raw } from "./html.js";
 export type { Slot } from "./html.js";
@@ -12,4 +12,5 @@ export type {
   FieldOptions,
   HealthStatus,
   PageOptions,
+  Surface,
 } from "./components.js";

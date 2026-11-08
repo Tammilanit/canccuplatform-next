@@ -80,27 +80,28 @@ async def test_app_role_cannot_write_into_another_tenant(store: PgStore) -> None
             )
 
 
-async def test_migration_runs_once_and_leaves_the_single_event_tables(store: PgStore) -> None:
-    """The old tables stay as they were (expand and contract, 0013 item 22)."""
+async def test_migration_drops_the_single_event_tables_once(store: PgStore) -> None:
+    """The contract step of 001's expand and contract (0013 item 22), destructive."""
     assert URL is not None
     async with store.pool.acquire() as conn:
         await conn.execute(
-            "CREATE TABLE IF NOT EXISTS admin_settings"
+            "CREATE TABLE admin_settings"
             " (module text PRIMARY KEY, settings_version integer NOT NULL, values jsonb NOT NULL)"
         )
+        await conn.execute("CREATE TABLE admin_profile (id boolean PRIMARY KEY, document jsonb)")
         await conn.execute(
-            "INSERT INTO admin_settings VALUES ('test56', 3, '{}') ON CONFLICT DO NOTHING"
+            "DELETE FROM admin_migrations WHERE name = '003_drop_single_event_tables.sql'"
         )
-    again = await PgStore.connect(URL)  # a second start: the ledger skips the file
+    again = await PgStore.connect(URL)  # a start that finds the file not yet run
     try:
         async with again.pool.acquire() as conn:
+            left = await conn.fetchval(
+                "SELECT count(*) FROM pg_tables"
+                " WHERE tablename IN ('admin_settings', 'admin_profile')"
+            )
             runs = await conn.fetchval(
-                "SELECT count(*) FROM admin_migrations WHERE name = '001_tenant_settings.sql'"
+                "SELECT count(*) FROM admin_migrations WHERE name LIKE '00%'"
             )
-            old = await conn.fetchval(
-                "SELECT settings_version FROM admin_settings WHERE module = 'test56'"
-            )
-            assert (runs, old) == (1, 3)
-            await conn.execute("DELETE FROM admin_settings WHERE module = 'test56'")
+            assert (left, runs) == (0, 3)
     finally:
         await again.close()
