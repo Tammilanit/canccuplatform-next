@@ -24,13 +24,17 @@ from pathlib import Path
 GENERIC_FAMILIES = {"system-ui", "ui-monospace", "sans-serif", "serif", "monospace"}
 
 
+def embed_files(embed: dict) -> list[str]:
+    return [embed["entry"], *embed.get("files", [])]
+
+
 def manifest_files(m: dict) -> list[str]:
     files = list(m.get("images", {}).values()) + list(m.get("css", []))
     for font in m.get("fonts", []):
         files += [font["file"], font["licence_file"]]
     files += [t["file"] for t in m.get("templates", {}).values()]
     for embed in m.get("embeds", {}).values():
-        files += [embed["entry"], *embed.get("files", [])]
+        files += embed_files(embed)
     return files
 
 
@@ -75,7 +79,7 @@ def _problems(m: dict, theme_dir: Path) -> list[str]:
                     out.append(f"reference_unknown: images.logo for the logo widget in {lid}/{rid}")
 
     for name, embed in embeds.items():
-        for f in [embed["entry"], *embed.get("files", [])]:
+        for f in embed_files(embed):
             if not f.startswith(f"embeds/{name}/"):
                 out.append(f"reference_unknown: embed {name}: {f} is outside embeds/{name}/")
 
