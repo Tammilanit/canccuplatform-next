@@ -1,0 +1,25 @@
+# 0027. The product decisions of 2026-11-07/08: joining, accounts, retention, check-in, finals, Go public and brainstorming
+
+- **Status:** Accepted (amends [0022](0022-product-vision.md) without superseding it)
+- **Date:** 2026-11-08
+
+## Context
+On 2026-11-07 and 2026-11-08 the product owner settled several product questions while the step 2 contracts were written and step 3 was prepared. Each landed in a contract, an issue or the roadmap (#139, #148, #162, #165, #166, #175, #193), but no record holds them together: [0022](0022-product-vision.md) still names only the 30-day presence rule and says nothing on how a person joins an event, which accounts exist, or what is optional. Without a record, a later step would have to dig the decisions out of the contracts, or weigh them again. This record collects them; it changes no contract.
+
+## Decision
+- **Joining an event** (2026-11-07, #162): a signed-in person becomes a member of an event only from one of the venue's addresses, with the event's own join link or its QR code, or when an event admin adds them. There is no open membership: signing in from anywhere else gives no attendee data. An event with no venue is joined only with the link ([tenants.md](../../contracts/tenants.md#joining-the-event)).
+- **Accounts** (2026-11-08, #165): people sign in through sign-in providers, and a user's provider accounts are their identities. Discord is the only provider for now, so every account is a Discord account; that policy is a platform setting, not a schema rule, so another provider (for example a username and password) can be added later without reworking users, sessions or the APIs ([tenants.md](../../contracts/tenants.md#sign-in-identities), [admin.md](../../contracts/admin.md#sign-in-providers)).
+- **Retention** (2026-11-07, #162): raw presence data is still deleted 30 days after an event is archived (0022); the event's other personal data is anonymised 12 months after archiving. What a module keeps (a result, a leaderboard line, an order total) loses the person's identity; counts and totals stay ([tenants.md](../../contracts/tenants.md#privacy-and-retention)).
+- **Check-in is never mandatory** (2026-11-07, #139): the platform never requires check-in; an organiser turns it on where they want it. Scoring is manual, so check-in must not add hassle: the tournament's check-in is optional and off by default, set per tournament and switchable per session, and with it off there are no check-in events and nobody is a no-show ([events.md](../../contracts/events.md#tournament)). Matches inside a session are optional too. The hub's check-in by the rotating QR ([notify.md](../../contracts/notify.md#check-in-by-the-rotating-qr)) is an offer to the attendee, not a gate to joining or to the hub.
+- **Finals and games are separate concerns** (2026-11-07, #148): the `finals` module and the generic `games` module, each with its own track, as [0025](0025-finals-and-games-modules.md) records. The finals tourney may become the first real app of the Apps track (2026-11-08, #193): one codebase that runs as an external app off-LAN or as an installed module at LAN events, through the same app interface. Until the Apps track decides it, 0025 stands as written.
+- **The Go-public track** (2026-11-08, #166): opening the platform to the internet is its own track beside the main steps, done before the first real event: public HTTPS on the platform domain, the central Discord sign-in, the people part of the tenants module, and nightly encrypted backups off the VM. It starts once the product owner's domain and backup-target tasks are done. The hub's go-public checklist (0022) is part of it.
+- **Heavy brainstorming before each step** (2026-11-08, #175): every main step from step 3 on and every parallel track starts with a research pack and an extensive, interactive brainstorming session with the product owner, and builds only after the product owner accepts the plan that comes out of it. Its own record, 0026, holds the rules; this record only names the decision.
+
+## Consequences
+- 0022 stays as written, apart from its Status line, which points here. Its App track rules read with this record: membership by venue, link or QR; Discord accounts through the sign-in providers; 12-month anonymisation beside the 30-day presence rule.
+- The contracts already hold these decisions (`contracts/tenants.md`, `contracts/admin.md`, `contracts/events.md`, `contracts/notify.md`); a change to any of them now needs a new record as well as the contract change.
+- The roadmap's App track already lists the joining and retention rules; the Go-public and Apps tracks are listed in the roadmap by the lead when their epics (#166, #193) are planned.
+
+## Known limits
+- **The Apps track is not planned yet.** Whether finals is its first app is open until that track's brainstorming session; until then the Finals track builds on 0025.
+- **A decision that is only here is still a summary.** The contract linked from each item is the detail; where they differ, the contract is fixed to match this record in its own PR.
