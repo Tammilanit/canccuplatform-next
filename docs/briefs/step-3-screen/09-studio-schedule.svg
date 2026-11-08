@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1100" width="1920" height="1100" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 09: Screen studio, the schedule: the event's days, windows, agenda-bound windows, breaks and simulate</title>
+  <style>
+    .label { fill: #1f2937; font-size: 26px; font-weight: 600; }
+    .ui { fill: #ffffff; }
+    .h1 { fill: #111827; font-size: 28px; font-weight: 700; }
+    .h2 { fill: #111827; font-size: 19px; font-weight: 700; }
+    .tx { fill: #111827; font-size: 16px; } .mu { fill: #6b7280; font-size: 14px; }
+    .hr { fill: #6b7280; font-size: 13px; text-anchor: end; }
+    .day { fill: #111827; font-size: 17px; font-weight: 700; text-anchor: middle; }
+    .grid { stroke: #e5e7eb; stroke-width: 1; }
+    .win { fill: #dbeafe; stroke: #2563eb; stroke-width: 2; } .wint { fill: #1e3a8a; font-size: 14px; font-weight: 700; }
+    .lose { fill: #f3f4f6; stroke: #9ca3af; stroke-width: 2; stroke-dasharray: 5 4; } .loset { fill: #6b7280; font-size: 13px; }
+    .ag { fill: #ede9fe; stroke: #7c3aed; stroke-width: 2; } .agt { fill: #4c1d95; font-size: 14px; font-weight: 700; }
+    .brk { fill: #f59e0b; }
+    .btn { fill: #2563eb; } .btnt { fill: #fff; font-size: 16px; font-weight: 700; }
+    .gbtn { fill: #fff; stroke: #d1d5db; stroke-width: 1.5; } .gbtnt { fill: #111827; font-size: 15px; }
+    .note { fill: #c2410c; font-size: 17px; }
+  </style>
+  <rect width="1920" height="1100" fill="#f3f4f6"/>
+  <text x="24" y="40" class="label">09 · Screen studio → Schedule: event days, windows and winners, run-of-show-bound windows, breaks, "what plays at…"</text>
+
+  <g transform="translate(24,64)">
+    <rect width="1872" height="1010" rx="12" class="ui" stroke="#d1d5db" stroke-width="2"/>
+    <rect width="1872" height="64" rx="12" fill="#111827"/>
+    <text x="28" y="41" fill="#fff" font-size="20" font-weight="700">Demo Event</text>
+    <g transform="translate(40,64)">
+      <text x="0" y="52" class="h1">Schedule</text>
+      <text x="150" y="52" class="mu">zone</text>
+      <rect x="192" y="28" width="170" height="36" rx="6" class="gbtn"/><text x="206" y="52" class="gbtnt">Main hall ▾</text>
+      <rect x="372" y="28" width="150" height="36" rx="6" class="gbtn"/><text x="386" y="52" class="gbtnt">All zones</text>
+      <text x="560" y="52" class="mu">Event days Fri 13 – Sun 15 Mar · times in the event's time zone (UTC)</text>
+      <rect x="1600" y="28" width="190" height="40" rx="8" class="btn"/><text x="1695" y="54" class="btnt" text-anchor="middle">+ Window</text>
+
+      <!-- calendar: 3 days x 12:00-24:00 -->
+      <g transform="translate(60,100)">
+        <text x="170" y="0" class="day">Fri 13</text><text x="510" y="0" class="day">Sat 14</text><text x="850" y="0" class="day">Sun 15</text>
+        <line x1="0" y1="14" x2="1020" y2="14" class="grid"/>
+        <g class="grid">
+          <line x1="0" y1="74" x2="1020" y2="74"/><line x1="0" y1="134" x2="1020" y2="134"/><line x1="0" y1="194" x2="1020" y2="194"/>
+          <line x1="0" y1="254" x2="1020" y2="254"/><line x1="0" y1="314" x2="1020" y2="314"/><line x1="0" y1="374" x2="1020" y2="374"/>
+          <line x1="0" y1="434" x2="1020" y2="434"/><line x1="0" y1="494" x2="1020" y2="494"/><line x1="0" y1="554" x2="1020" y2="554"/>
+          <line x1="0" y1="614" x2="1020" y2="614"/><line x1="0" y1="674" x2="1020" y2="674"/><line x1="0" y1="734" x2="1020" y2="734"/>
+          <line x1="340" y1="14" x2="340" y2="734"/><line x1="680" y1="14" x2="680" y2="734"/>
+        </g>
+        <text x="-10" y="20" class="hr">12</text><text x="-10" y="140" class="hr">14</text><text x="-10" y="260" class="hr">16</text>
+        <text x="-10" y="380" class="hr">18</text><text x="-10" y="500" class="hr">20</text><text x="-10" y="620" class="hr">22</text><text x="-10" y="740" class="hr">24</text>
+        <!-- weekly window: Welcome loop every day 12-24, priority 10 (loser where overlapped) -->
+        <rect x="6" y="16" width="150" height="716" rx="6" class="win"/>
+        <text x="16" y="40" class="wint">Welcome loop</text><text x="16" y="58" class="mu">prio 10 · every day</text>
+        <rect x="346" y="16" width="150" height="716" rx="6" class="win"/>
+        <text x="356" y="40" class="wint">Welcome loop</text><text x="356" y="58" class="mu">prio 10</text>
+        <rect x="350" y="374" width="142" height="75" rx="4" class="lose"/>
+        <text x="358" y="400" class="loset">loses to Menu</text>
+        <rect x="686" y="16" width="150" height="716" rx="6" class="win"/>
+        <text x="696" y="40" class="wint">Welcome loop</text><text x="696" y="58" class="mu">prio 10</text>
+        <!-- agenda-bound: dinner Sat 18:00-19:15 (delayed) -->
+        <rect x="500" y="374" width="170" height="75" rx="6" class="ag"/>
+        <text x="510" y="396" class="agt">Menu (bound)</text><text x="510" y="414" class="mu">while "Dinner" runs</text><text x="510" y="432" class="mu">prio 50 · moves with it</text>
+        <!-- dated window: final Sat 20:30-23:00 -->
+        <rect x="500" y="524" width="170" height="150" rx="6" class="win"/>
+        <text x="510" y="548" class="wint">Final hype loop</text><text x="510" y="566" class="mu">bound to "Grand final" · prio 60</text>
+        <!-- layout switch on Sunday morning -->
+        <rect x="846" y="16" width="170" height="120" rx="6" class="win"/>
+        <text x="856" y="40" class="wint">Goodbye slides</text><text x="856" y="58" class="mu">prio 40 · layout: hero only</text>
+        <!-- breaks -->
+        <g><rect x="160" y="80" width="10" height="8" class="brk"/><rect x="160" y="200" width="10" height="8" class="brk"/><rect x="160" y="320" width="10" height="8" class="brk"/><rect x="160" y="440" width="10" height="8" class="brk"/><rect x="160" y="560" width="10" height="8" class="brk"/>
+           <rect x="500" y="80" width="10" height="8" class="brk"/><rect x="500" y="200" width="10" height="8" class="brk"/><rect x="500" y="320" width="10" height="8" class="brk"/></g>
+        <!-- now line -->
+        <line x1="340" y1="401" x2="680" y2="401" stroke="#dc2626" stroke-width="3"/>
+        <text x="346" y="396" fill="#dc2626" font-size="13" font-weight="700">now 18:42</text>
+      </g>
+
+      <!-- side: simulate -->
+      <g transform="translate(1160,100)">
+        <rect width="630" height="380" rx="10" fill="#f9fafb" stroke="#e5e7eb"/>
+        <text x="20" y="38" class="h2">What plays at…</text>
+        <rect x="20" y="54" width="300" height="36" rx="6" class="gbtn"/><text x="34" y="78" class="gbtnt">Sat 14 Mar · 19:20</text>
+        <rect x="330" y="54" width="130" height="36" rx="6" class="gbtn"/><text x="395" y="78" class="gbtnt" text-anchor="middle">Main hall ▾</text>
+        <text x="20" y="128" class="tx" font-weight="700">Hero: Welcome loop, item 4 of 9</text>
+        <text x="20" y="152" class="mu">"Menu" ended at 19:15 with Dinner (moved +15 by the run-of-show)</text>
+        <text x="20" y="184" class="tx">Next break: Partners loop at 19:30 (every 60 min, 45 s)</text>
+        <text x="20" y="216" class="tx">Rail: now "Semis", next "Board games corner"</text>
+        <text x="20" y="248" class="tx">Ticker: "Pizza orders close at 20:00" (admin, until 20:00)</text>
+        <rect x="20" y="276" width="590" height="80" rx="8" fill="#0b0d1a"/>
+        <text x="315" y="322" fill="#f3f5ff" font-size="18" font-weight="700" text-anchor="middle">virtual screen at Sat 19:20 ▸</text>
+      </g>
+      <g transform="translate(1160,500)">
+        <rect width="630" height="230" rx="10" fill="#f9fafb" stroke="#e5e7eb"/>
+        <text x="20" y="38" class="h2">Breaks (interrupt the playlist widget)</text>
+        <rect x="20" y="56" width="12" height="12" class="brk"/><text x="42" y="68" class="tx">Partners loop · every 60 min · 45 s · 12:00–22:00</text>
+        <text x="42" y="94" class="mu">resumes the interrupted item where it was · min gap 60 s</text>
+        <text x="20" y="134" class="tx" font-weight="700">Conflicts</text>
+        <text x="20" y="160" class="mu">Sat 18:00–19:15 Welcome loop loses to Menu (prio 50 &gt; 10)</text>
+        <text x="20" y="184" class="mu">No window on Sun after 14:00: the idle rule shows the logo</text>
+      </g>
+      <text x="0" y="880" class="note">Legacy weekly windows stay (days and minutes, overnight allowed), drawn on the event's real dates. Windows bound to a run-of-show item (agenda_item_id) move when the item is delayed;</text>
+      <text x="0" y="906" class="note">plain dated windows are not in the contract (question D4). Drag to create, move and resize on a 15-minute snap; overlap winner and loser as in legacy; the simulate panel answers GET /schedules/simulate.</text>
+    </g>
+  </g>
+</svg>

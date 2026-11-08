@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1000" width="1920" height="1000" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 13: the crew remote, Studio on a phone: the live view, the ticker, and a device that needs help</title>
+  <style>
+    .label { fill: #1f2937; font-size: 26px; font-weight: 600; }
+    .cap { fill: #111827; font-size: 22px; font-weight: 700; }
+    .d { fill: #374151; font-size: 18px; }
+    .ph { fill: #111827; } .scr { fill: #fff; }
+    .h2 { fill: #111827; font-size: 17px; font-weight: 700; }
+    .tx { fill: #111827; font-size: 14px; } .mu { fill: #6b7280; font-size: 12px; }
+    .btn { fill: #2563eb; } .btnt { fill: #fff; font-size: 14px; font-weight: 700; }
+    .gbtn { fill: #fff; stroke: #d1d5db; stroke-width: 1.5; } .gbtnt { fill: #111827; font-size: 13px; }
+    .tab { fill: #6b7280; font-size: 11px; text-anchor: middle; } .tabon { fill: #1d4ed8; font-size: 11px; font-weight: 700; text-anchor: middle; }
+  </style>
+  <rect width="1920" height="1000" fill="#f3f4f6"/>
+  <text x="24" y="40" class="label">13 · Crew remote: Studio on a phone for the things done on the floor (the same pages, one column, big targets)</text>
+
+  <!-- phone 1: live -->
+  <g transform="translate(80,70)">
+    <rect width="340" height="700" rx="40" class="ph"/>
+    <rect x="14" y="40" width="312" height="620" rx="20" class="scr"/>
+    <text x="34" y="76" class="h2">Live · Demo Event</text>
+    <text x="34" y="98" class="mu">4 screens · 3 online · 18:42</text>
+    <rect x="34" y="112" width="272" height="153" rx="6" fill="#0b0d1a"/>
+    <rect x="42" y="122" width="170" height="124" rx="4" fill="#1b2246"/><rect x="218" y="122" width="80" height="70" rx="4" fill="#161a2e"/><rect x="218" y="198" width="80" height="48" rx="4" fill="#161a2e"/>
+    <text x="34" y="286" class="tx" font-weight="700">Main hall</text><text x="306" y="286" class="mu" text-anchor="end">2 screens ●●</text>
+    <text x="34" y="310" class="mu">hero: Welcome loop · rail: Dinner (+15)</text>
+    <rect x="34" y="330" width="130" height="44" rx="8" class="gbtn"/><text x="99" y="357" class="gbtnt" text-anchor="middle">Café ●○</text>
+    <rect x="176" y="330" width="130" height="44" rx="8" class="gbtn"/><text x="241" y="357" class="gbtnt" text-anchor="middle">Stage ●</text>
+    <text x="34" y="410" class="h2">Quick actions</text>
+    <rect x="34" y="424" width="272" height="46" rx="8" class="btn"/><text x="170" y="453" class="btnt" text-anchor="middle">Delay what's on now…</text>
+    <rect x="34" y="478" width="272" height="46" rx="8" class="gbtn"/><text x="170" y="507" class="gbtnt" text-anchor="middle">Set the ticker…</text>
+    <rect x="34" y="532" width="272" height="46" rx="8" class="gbtn"/><text x="170" y="561" class="gbtnt" text-anchor="middle">Push content now…</text>
+    <line x1="14" y1="608" x2="326" y2="608" stroke="#e5e7eb"/>
+    <text x="64" y="638" class="tabon">Live</text><text x="134" y="638" class="tab">Devices</text><text x="204" y="638" class="tab">Agenda</text><text x="274" y="638" class="tab">More</text>
+    <text x="0" y="740" class="cap">Live: what every zone shows now</text>
+    <text x="0" y="768" class="d">Tap a zone for its full view; the three</text>
+    <text x="0" y="794" class="d">things done most on the floor are one tap.</text>
+  </g>
+
+  <!-- phone 2: ticker -->
+  <g transform="translate(560,70)">
+    <rect width="340" height="700" rx="40" class="ph"/>
+    <rect x="14" y="40" width="312" height="620" rx="20" class="scr"/>
+    <text x="34" y="76" class="h2">Ticker</text>
+    <text x="34" y="98" class="mu">Showing: "Pizza orders close at 20:00"</text>
+    <text x="34" y="116" class="mu">set by Organiser in admin · until 20:00</text>
+    <rect x="34" y="136" width="272" height="100" rx="8" fill="#f9fafb" stroke="#9ca3af"/>
+    <text x="46" y="162" class="tx">Lost and found is at the</text><text x="46" y="182" class="tx">info desk</text>
+    <text x="294" y="226" class="mu" text-anchor="end">38 characters</text>
+    <text x="34" y="266" class="tx" font-weight="700">Until</text>
+    <rect x="34" y="278" width="80" height="38" rx="6" class="gbtn"/><text x="74" y="302" class="gbtnt" text-anchor="middle">15 min</text>
+    <rect x="122" y="278" width="80" height="38" rx="6" fill="#dbeafe" stroke="#2563eb"/><text x="162" y="302" class="gbtnt" text-anchor="middle">1 h</text>
+    <rect x="210" y="278" width="96" height="38" rx="6" class="gbtn"/><text x="258" y="302" class="gbtnt" text-anchor="middle">no end</text>
+    <text x="34" y="350" class="tx" font-weight="700">Preview</text>
+    <rect x="34" y="362" width="272" height="34" fill="#161a2e"/><rect x="34" y="362" width="60" height="34" fill="#3ddcff"/>
+    <text x="102" y="384" fill="#f3f5ff" font-size="13">Lost and found is at the info desk</text>
+    <text x="34" y="430" class="mu">Scheduled lines: 2 · next at 22:00 (window)</text>
+    <rect x="34" y="452" width="272" height="46" rx="8" class="btn"/><text x="170" y="481" class="btnt" text-anchor="middle">Show on every screen</text>
+    <rect x="34" y="506" width="272" height="46" rx="8" class="gbtn"/><text x="170" y="535" class="gbtnt" text-anchor="middle">Clear</text>
+    <line x1="14" y1="608" x2="326" y2="608" stroke="#e5e7eb"/>
+    <text x="64" y="638" class="tab">Live</text><text x="134" y="638" class="tab">Devices</text><text x="204" y="638" class="tab">Agenda</text><text x="274" y="638" class="tabon">More</text>
+    <text x="0" y="740" class="cap">Ticker: one line, with an end</text>
+    <text x="0" y="768" class="d">A person's ticker wins over a window; the</text>
+    <text x="0" y="794" class="d">bot's /ticker does the same from Discord.</text>
+  </g>
+
+  <!-- phone 3: device help -->
+  <g transform="translate(1040,70)">
+    <rect width="340" height="700" rx="40" class="ph"/>
+    <rect x="14" y="40" width="312" height="620" rx="20" class="scr"/>
+    <rect x="14" y="40" width="312" height="70" rx="20" fill="#fef3c7"/>
+    <text x="34" y="72" fill="#92400e" font-size="15" font-weight="700">Café TV offline · 2 min</text>
+    <text x="34" y="94" fill="#92400e" font-size="12">still showing its last state</text>
+    <text x="34" y="140" class="h2">What to check</text>
+    <text x="34" y="170" class="tx">1  Is the TV on, and the PC awake?</text>
+    <text x="34" y="198" class="tx">2  Is its network cable or Wi-Fi up?</text>
+    <text x="34" y="226" class="tx">3  Other screens are online, so the</text>
+    <text x="54" y="246" class="tx">venue uplink is fine.</text>
+    <text x="34" y="274" class="tx">4  Still dark? Reopen the start URL:</text>
+    <rect x="34" y="286" width="272" height="34" rx="6" fill="#f3f4f6"/>
+    <text x="44" y="308" class="tx">demo.example.org/screen/</text>
+    <text x="34" y="350" class="mu">When it is back it catches up by itself:</text>
+    <text x="34" y="368" class="mu">no reload needed.</text>
+    <rect x="34" y="392" width="272" height="46" rx="8" class="gbtn"/><text x="170" y="421" class="gbtnt" text-anchor="middle">Notify me when it is back</text>
+    <rect x="34" y="446" width="272" height="46" rx="8" class="gbtn"/><text x="170" y="475" class="gbtnt" text-anchor="middle">Move its zone to another screen</text>
+    <line x1="14" y1="608" x2="326" y2="608" stroke="#e5e7eb"/>
+    <text x="64" y="638" class="tab">Live</text><text x="134" y="638" class="tabon">Devices</text><text x="204" y="638" class="tab">Agenda</text><text x="274" y="638" class="tab">More</text>
+    <text x="0" y="740" class="cap">A device that needs help</text>
+    <text x="0" y="768" class="d">Plain steps, in the order a crew member</text>
+    <text x="0" y="794" class="d">would check; no jargon, no codes.</text>
+  </g>
+
+  <g transform="translate(1440,90)">
+    <text x="0" y="0" class="cap">Why a crew remote</text>
+    <text x="0" y="40" class="d">On the day, organisers are on the floor,</text>
+    <text x="0" y="66" class="d">not at a desk. The legacy admin needed a</text>
+    <text x="0" y="92" class="d">laptop on the tailnet. 0022 opens admin to</text>
+    <text x="0" y="118" class="d">the internet with sign-in, behind the</text>
+    <text x="0" y="144" class="d">"venue or Tailscale only" switch.</text>
+    <text x="0" y="196" class="cap">Not new pages</text>
+    <text x="0" y="236" class="d">The same Studio pages, responsive, with a</text>
+    <text x="0" y="262" class="d">"Live" home and a bottom bar on narrow</text>
+    <text x="0" y="288" class="d">screens. #110 already asks for "every page</text>
+    <text x="0" y="314" class="d">works on a phone".</text>
+    <text x="0" y="366" class="cap">Open</text>
+    <text x="0" y="406" class="d">"Notify me when it is back" uses Notify's</text>
+    <text x="0" y="432" class="d">push for crew (a crew topic): question D7.</text>
+    <text x="0" y="458" class="d">Alerts proper are step 8.</text>
+  </g>
+</svg>

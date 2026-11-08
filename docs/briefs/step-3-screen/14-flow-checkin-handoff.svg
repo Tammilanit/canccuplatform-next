@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 900" width="1920" height="900" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 14: flow, an attendee checks in from the entrance screen and lands in the hub</title>
+  <style>
+    .label { fill: #1f2937; font-size: 26px; font-weight: 600; }
+    .step { fill: #111827; font-size: 22px; font-weight: 700; }
+    .d { fill: #374151; font-size: 18px; }
+    .who { fill: #6b7280; font-size: 16px; font-weight: 700; letter-spacing: 2px; }
+    .t { fill: #f3f5ff; } .m { fill: #a9b1d6; } .p { fill: #3ddcff; } .ok { fill: #3ee39a; }
+    .arrow { stroke: #9ca3af; stroke-width: 4; fill: none; marker-end: url(#ah); }
+    .boundary { stroke: #7c3aed; stroke-width: 3; stroke-dasharray: 10 8; fill: none; }
+    .btext { fill: #6d28d9; font-size: 18px; font-weight: 700; }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#9ca3af"/></marker>
+    <symbol id="qr" viewBox="0 0 21 21">
+      <rect width="21" height="21" fill="#fff"/>
+      <g fill="#0b0d1a"><rect x="1" y="1" width="6" height="6"/><rect x="2" y="2" width="4" height="4" fill="#fff"/><rect x="3" y="3" width="2" height="2"/>
+      <rect x="14" y="1" width="6" height="6"/><rect x="15" y="2" width="4" height="4" fill="#fff"/><rect x="16" y="3" width="2" height="2"/>
+      <rect x="1" y="14" width="6" height="6"/><rect x="2" y="15" width="4" height="4" fill="#fff"/><rect x="3" y="16" width="2" height="2"/>
+      <rect x="9" y="2" width="2" height="2"/><rect x="8" y="8" width="3" height="2"/><rect x="13" y="9" width="2" height="3"/><rect x="17" y="10" width="3" height="1"/>
+      <rect x="10" y="13" width="2" height="3"/><rect x="15" y="15" width="3" height="2"/><rect x="9" y="18" width="3" height="2"/><rect x="18" y="18" width="2" height="2"/></g>
+    </symbol>
+  </defs>
+  <rect width="1920" height="900" fill="#f3f4f6"/>
+  <text x="24" y="40" class="label">14 · Flow: from the screen to the phone (check-in at arrival; the hub's own pages are the App track's)</text>
+
+  <!-- 1 screen -->
+  <g transform="translate(40,90)">
+    <text x="0" y="0" class="who">ATTENDEE · ENTRANCE SCREEN</text>
+    <rect x="40" y="20" width="240" height="426" fill="#0b0d1a"/>
+    <text x="160" y="80" class="t" font-size="22" font-weight="800" text-anchor="middle">Check in here</text>
+    <use href="#qr" x="70" y="110" width="180" height="180"/>
+    <rect x="70" y="304" width="180" height="8" rx="4" fill="#343c66"/><rect x="70" y="304" width="110" height="8" rx="4" class="p"/>
+    <text x="160" y="346" class="m" font-size="15" text-anchor="middle">new code in 12 s</text>
+    <text x="0" y="490" class="step">1 · Scan the rotating QR</text>
+    <text x="0" y="518" class="d">The phone camera opens</text>
+    <text x="0" y="542" class="d">/notify/check-in?p=arrival&amp;c=…</text>
+  </g>
+  <path d="M360,300 L410,300" class="arrow"/>
+
+  <!-- 2 sign in -->
+  <g transform="translate(430,90)">
+    <text x="0" y="0" class="who">PHONE · FIRST TIME ONLY</text>
+    <rect x="20" y="20" width="240" height="426" rx="26" fill="#111827"/>
+    <rect x="32" y="44" width="216" height="378" rx="14" fill="#0b0d1a"/>
+    <text x="140" y="110" class="t" font-size="19" font-weight="700" text-anchor="middle">Demo Event</text>
+    <text x="140" y="150" class="m" font-size="14" text-anchor="middle">Sign in to check in</text>
+    <rect x="52" y="190" width="176" height="44" rx="10" fill="#5865f2"/>
+    <text x="140" y="218" fill="#fff" font-size="15" font-weight="700" text-anchor="middle">Continue with Discord</text>
+    <text x="140" y="270" class="m" font-size="12" text-anchor="middle">At the venue, signing in also</text>
+    <text x="140" y="288" class="m" font-size="12" text-anchor="middle">joins you to the event.</text>
+    <text x="0" y="490" class="step">2 · Sign in (once)</text>
+    <text x="0" y="518" class="d">Central sign-in; membership by</text>
+    <text x="0" y="542" class="d">the venue address or the join link.</text>
+  </g>
+  <path d="M730,300 L780,300" class="arrow"/>
+
+  <!-- 3 checked in -->
+  <g transform="translate(800,90)">
+    <text x="0" y="0" class="who">PHONE · DONE</text>
+    <rect x="20" y="20" width="240" height="426" rx="26" fill="#111827"/>
+    <rect x="32" y="44" width="216" height="378" rx="14" fill="#0b0d1a"/>
+    <circle cx="140" cy="120" r="34" fill="none" stroke="#3ee39a" stroke-width="5"/>
+    <path d="M124,120 L136,132 L158,108" stroke="#3ee39a" stroke-width="5" fill="none"/>
+    <text x="140" y="190" class="t" font-size="19" font-weight="700" text-anchor="middle">You're checked in</text>
+    <text x="52" y="236" class="m" font-size="13">Wi-Fi</text>
+    <text x="52" y="258" class="t" font-size="15" font-weight="700">demo-guest · ••••••</text>
+    <text x="52" y="296" class="m" font-size="13">Now: Dinner (+15) in the café</text>
+    <rect x="52" y="320" width="176" height="40" rx="20" class="p"/>
+    <text x="140" y="346" fill="#0b0d1a" font-size="14" font-weight="700" text-anchor="middle">Turn on alerts</text>
+    <text x="0" y="490" class="step">3 · Checked in</text>
+    <text x="0" y="518" class="d">notify.checkin.recorded; a second</text>
+    <text x="0" y="542" class="d">scan answers the first check-in.</text>
+  </g>
+  <path d="M1100,300 L1150,300" class="arrow"/>
+
+  <!-- 4 hub -->
+  <g transform="translate(1170,90)">
+    <text x="0" y="0" class="who">PHONE · HUB</text>
+    <rect x="20" y="20" width="240" height="426" rx="26" fill="#111827"/>
+    <rect x="32" y="44" width="216" height="378" rx="14" fill="#0b0d1a"/>
+    <text x="52" y="84" class="t" font-size="16" font-weight="700">Demo Event</text>
+    <rect x="48" y="100" width="184" height="80" rx="10" fill="#161a2e"/>
+    <text x="60" y="126" class="m" font-size="11" font-weight="700">NOW</text><text x="60" y="150" class="t" font-size="15" font-weight="700">Dinner +15</text>
+    <rect x="48" y="190" width="184" height="80" rx="10" fill="#161a2e"/>
+    <text x="60" y="216" class="m" font-size="11" font-weight="700">ON THE MAIN SCREEN</text><text x="60" y="240" class="t" font-size="14">Demo Game Cup final</text>
+    <rect x="48" y="280" width="184" height="60" rx="10" fill="#161a2e"/>
+    <text x="60" y="316" class="t" font-size="14">Alerts: Schedule ✓</text>
+    <text x="0" y="490" class="step">4 · The hub, from then on</text>
+    <text x="0" y="518" class="d">Now and next, what the screen</text>
+    <text x="0" y="542" class="d">shows, alerts: one source for all.</text>
+  </g>
+
+  <path d="M760,70 L1480,70 L1480,560 L760,560 Z" class="boundary"/>
+  <text x="1500" y="96" class="btext">Hub pages:</text>
+  <text x="1500" y="120" class="btext">App track, or a</text>
+  <text x="1500" y="144" class="btext">minimal check-in page</text>
+  <text x="1500" y="168" class="btext">in step 3? (D6)</text>
+
+  <g transform="translate(40,690)">
+    <text x="0" y="0" class="d">Every Pulse widget can also carry a small QR (props.qr: auto) to its natural place in the hub: now and next → the schedule, a hot game → its follow page. The QR is made by Screen</text>
+    <text x="0" y="26" class="d">on the event's primary hostname. Guests get event-wide alerts without signing in; check-in needs a member, because it proves presence. The rotating code is HMAC over the</text>
+    <text x="0" y="52" class="d">event, the purpose and the 30-second period, so nothing is stored and a screenshot is useless a minute later. Screens fetch it server-side; the hub never shows it.</text>
+  </g>
+</svg>

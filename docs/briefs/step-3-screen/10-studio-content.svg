@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1100" width="1920" height="1100" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 10: Screen studio, content: asset library, PPTX render progress, playlist editor and push now</title>
+  <style>
+    .label { fill: #1f2937; font-size: 26px; font-weight: 600; }
+    .ui { fill: #ffffff; }
+    .h1 { fill: #111827; font-size: 28px; font-weight: 700; }
+    .h2 { fill: #111827; font-size: 19px; font-weight: 700; }
+    .tx { fill: #111827; font-size: 16px; } .mu { fill: #6b7280; font-size: 14px; }
+    .card { fill: #fff; stroke: #e5e7eb; stroke-width: 2; }
+    .kind { fill: #374151; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
+    .btn { fill: #2563eb; } .btnt { fill: #fff; font-size: 16px; font-weight: 700; }
+    .gbtn { fill: #fff; stroke: #d1d5db; stroke-width: 1.5; } .gbtnt { fill: #111827; font-size: 15px; }
+    .note { fill: #c2410c; font-size: 17px; }
+  </style>
+  <rect width="1920" height="1100" fill="#f3f4f6"/>
+  <text x="24" y="40" class="label">10 · Screen studio → Content: drop files, watch a deck render, build a playlist, push it to every zone now</text>
+
+  <g transform="translate(24,64)">
+    <rect width="1872" height="1010" rx="12" class="ui" stroke="#d1d5db" stroke-width="2"/>
+    <rect width="1872" height="64" rx="12" fill="#111827"/>
+    <text x="28" y="41" fill="#fff" font-size="20" font-weight="700">Demo Event</text>
+    <g transform="translate(40,64)">
+      <text x="0" y="52" class="h1">Content</text>
+      <rect x="170" y="28" width="420" height="36" rx="6" class="gbtn"/><text x="184" y="52" class="mu">Search assets…</text>
+      <rect x="600" y="28" width="160" height="36" rx="6" class="gbtn"/><text x="614" y="52" class="gbtnt">All kinds ▾</text>
+      <text x="780" y="52" class="mu">412 MB of 2 GB used</text>
+      <!-- drop zone -->
+      <rect x="0" y="86" width="1000" height="96" rx="10" fill="#eff6ff" stroke="#60a5fa" stroke-width="2" stroke-dasharray="8 6"/>
+      <text x="500" y="126" class="tx" font-weight="700" text-anchor="middle">Drop images, videos, decks or sounds here, or paste a web or YouTube link</text>
+      <text x="500" y="154" class="mu" text-anchor="middle">Uploading 3 of 5 · "poster-final.png" has the same name as an asset: keep both or replace?</text>
+      <!-- grid -->
+      <g transform="translate(0,206)">
+        <g><rect width="232" height="230" rx="8" class="card"/><rect x="10" y="10" width="212" height="120" rx="4" fill="#1b2246"/>
+          <text x="12" y="154" class="kind">IMAGE</text><text x="12" y="178" class="tx">poster-final.png</text><text x="12" y="202" class="mu">2560×1440 · in 2 playlists</text></g>
+        <g transform="translate(256,0)"><rect width="232" height="230" rx="8" class="card"/><rect x="10" y="10" width="212" height="120" rx="4" fill="#111827"/>
+          <text x="116" y="78" fill="#fff" font-size="26" text-anchor="middle">▶</text>
+          <text x="12" y="154" class="kind">VIDEO</text><text x="12" y="178" class="tx">trailer.mp4</text><text x="12" y="202" class="mu">1:42 · length read from file</text></g>
+        <g transform="translate(512,0)"><rect width="232" height="230" rx="8" fill="#fff" stroke="#2563eb" stroke-width="3"/><rect x="10" y="10" width="212" height="120" rx="4" fill="#e0e7ff"/>
+          <rect x="30" y="30" width="80" height="50" fill="#c7d2fe"/><rect x="120" y="30" width="80" height="50" fill="#c7d2fe"/><rect x="30" y="86" width="80" height="34" fill="#eef2ff" stroke="#c7d2fe"/>
+          <text x="12" y="154" class="kind">DECK · RENDERING</text><text x="12" y="178" class="tx">welcome.pptx</text>
+          <rect x="12" y="192" width="208" height="8" rx="4" fill="#e5e7eb"/><rect x="12" y="192" width="120" height="8" rx="4" fill="#2563eb"/>
+          <text x="12" y="220" class="mu">slide 7 of 12 · 2nd in queue</text></g>
+        <g transform="translate(768,0)"><rect width="232" height="230" rx="8" fill="#fff" stroke="#f59e0b" stroke-width="2"/><rect x="10" y="10" width="212" height="120" rx="4" fill="#fef3c7"/>
+          <text x="12" y="154" class="kind">YOUTUBE · DEGRADED</text><text x="12" y="178" class="tx">highlights</text><text x="12" y="202" class="mu">embedding unknown · Recheck</text></g>
+        <g transform="translate(0,254)"><rect width="232" height="230" rx="8" class="card"/><rect x="10" y="10" width="212" height="120" rx="4" fill="#ecfeff"/>
+          <text x="12" y="154" class="kind">WEB</text><text x="12" y="178" class="tx">status board</text><text x="12" y="202" class="mu">origin on the allowlist</text></g>
+        <g transform="translate(256,254)"><rect width="232" height="230" rx="8" fill="#fff" stroke="#dc2626" stroke-width="2"/><rect x="10" y="10" width="212" height="120" rx="4" fill="#fee2e2"/>
+          <text x="12" y="154" class="kind">DECK · REFUSED</text><text x="12" y="178" class="tx">linked-images.pptx</text><text x="12" y="202" class="mu">has external links: embed them</text></g>
+        <g transform="translate(512,254)"><rect width="232" height="230" rx="8" class="card"/><rect x="10" y="10" width="212" height="120" rx="4" fill="#f5f3ff"/>
+          <text x="116" y="78" fill="#7c3aed" font-size="22" text-anchor="middle">♪</text>
+          <text x="12" y="154" class="kind">AUDIO</text><text x="12" y="178" class="tx">chime.ogg</text><text x="12" y="202" class="mu">0:02 · for Moments (step 4)</text></g>
+        <g transform="translate(768,254)"><rect width="232" height="230" rx="8" class="card"/><rect x="10" y="10" width="212" height="120" rx="4" fill="#1b2246"/>
+          <text x="12" y="154" class="kind">IMAGE · REPLACED</text><text x="12" y="178" class="tx">menu.png</text><text x="12" y="202" class="mu">Undo replace (1 step)</text></g>
+      </g>
+      <!-- playlist editor -->
+      <g transform="translate(1040,86)">
+        <rect width="750" height="560" rx="10" fill="#f9fafb" stroke="#e5e7eb"/>
+        <text x="20" y="40" class="h2">Playlist: Welcome loop</text>
+        <text x="20" y="66" class="mu">regular · 9 items · 6 min 20 s per cycle · used by 2 windows</text>
+        <g transform="translate(20,86)">
+          <rect width="710" height="52" rx="6" fill="#fff" stroke="#d1d5db"/><text x="14" y="32" class="tx">⋮⋮  welcome.pptx · slides 1–12 · 8 s each</text><text x="696" y="32" class="mu" text-anchor="end">1:36</text>
+          <rect y="60" width="710" height="52" rx="6" fill="#fff" stroke="#d1d5db"/><text x="14" y="92" class="tx">⋮⋮  poster-final.png</text><text x="696" y="92" class="mu" text-anchor="end">0:15</text>
+          <rect y="120" width="710" height="52" rx="6" fill="#fff" stroke="#d1d5db"/><text x="14" y="152" class="tx">⋮⋮  trailer.mp4 · own length · muted</text><text x="696" y="152" class="mu" text-anchor="end">1:42</text>
+          <rect y="180" width="710" height="52" rx="6" fill="#fff" stroke="#d1d5db"/><text x="14" y="212" class="tx">⋮⋮  status board (web) · fallback image if not loaded in 8 s</text><text x="696" y="212" class="mu" text-anchor="end">0:30</text>
+          <text x="14" y="268" class="mu">+ drag assets here · bulk select · remove</text>
+        </g>
+        <rect x="20" y="380" width="710" height="160" rx="8" fill="#fff" stroke="#2563eb"/>
+        <text x="40" y="414" class="h2">Push now</text>
+        <text x="40" y="444" class="tx">Play "Welcome loop" in the playlist widget, above the schedule</text>
+        <rect x="40" y="460" width="120" height="34" rx="6" fill="#dbeafe" stroke="#2563eb"/><text x="100" y="483" class="gbtnt" text-anchor="middle">All zones</text>
+        <rect x="170" y="460" width="120" height="34" rx="6" class="gbtn"/><text x="230" y="483" class="gbtnt" text-anchor="middle">Main hall</text>
+        <rect x="300" y="460" width="100" height="34" rx="6" class="gbtn"/><text x="350" y="483" class="gbtnt" text-anchor="middle">Café</text>
+        <text x="420" y="483" class="tx">until 20:00 ▾</text>
+        <rect x="560" y="490" width="150" height="40" rx="8" class="btn"/><text x="635" y="516" class="btnt" text-anchor="middle">Push</text>
+      </g>
+      <text x="0" y="760" class="note">Upload checks by content (not extension), scales images to 2560×1440 and strips metadata, reads video length from the file, probes YouTube. A deck renders once, all slides, in the isolated</text>
+      <text x="0" y="786" class="note">render-job container with no network; decks with external links are refused with a reason people understand. One running job per event, events served in turn, so one big deck never</text>
+      <text x="0" y="812" class="note">blocks another event. Video is not transcoded (question D8). Pushing an announcement or takeover is Moments' announce action (step 4); "Push now" here is content only.</text>
+    </g>
+  </g>
+</svg>
