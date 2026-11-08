@@ -667,8 +667,9 @@ paths:
       operationId: openSupport
       summary: Open a superadmin support window on this event
       description: |
-        A superadmin with `mfa_enabled`. For 2 hours they act as an event admin here, and their audit entries
-        are marked `support`. Audited. Emits `tenants.support.opened`.
+        A superadmin with `mfa_enabled` on the session's identity (contracts/tenants.md, Sign-in identities). For
+        2 hours they act as an event admin here, and their audit entries are marked `support`. Audited. Emits
+        `tenants.support.opened`.
       security:
         - session: []
       requestBody:
@@ -1631,7 +1632,8 @@ paths:
       description: |
         For the central sign-in, after any provider has verified the person (contracts/admin.md, Sign-in
         providers). Finds the user of (`provider`, `subject`), or creates a user with that identity; updates the
-        identity's `mfa_enabled` and the user's `name`. The same call for every provider. Internal network only.
+        identity's `mfa_enabled`, and the user's `name` only when this is the identity the user was created with.
+        The same call for every provider. Internal network only.
       security:
         - {}
       requestBody:
@@ -2368,7 +2370,9 @@ components:
           type: string
           minLength: 1
           maxLength: 255
-          description: The account's stable id at the provider; for `discord` the Discord user id.
+          description: |
+            The account's stable id at the provider. For `discord` the Discord user id, matching `^[0-9]{1,20}$`
+            (400 otherwise); each later provider's contract sets its own rule.
           examples: ["100000000000000001"]
         mfa_enabled:
           type: boolean
@@ -2389,11 +2393,14 @@ components:
           type: string
           minLength: 1
           maxLength: 255
+          description: "For `discord`, matching `^[0-9]{1,20}$`; otherwise 400."
         name:
           type: string
           minLength: 1
           maxLength: 100
-          description: The name the provider reports; it updates the user's `name`.
+          description: |
+            The name the provider reports. It sets the user's `name` on create, and later only when this is the
+            identity the user was created with.
         mfa_enabled:
           type: boolean
     IdentitySignInResult:

@@ -441,7 +441,9 @@ paths:
       tags: [registry]
       operationId: listRegistryDevices
       summary: All devices (superadmin)
-      description: Superadmin with `mfa_enabled`, on the superadmin hostname; elsewhere 404.
+      description: |
+        Superadmin with `mfa_enabled` on the session's identity (contracts/tenants.md, Sign-in identities), on the
+        superadmin hostname; elsewhere 404.
       parameters:
         - name: venue_id
           in: query

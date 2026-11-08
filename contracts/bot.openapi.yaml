@@ -346,8 +346,8 @@ paths:
       operationId: superadminUnbindGuild
       summary: Unbind any guild
       description: |
-        Superadmin with `mfa_enabled`, on the superadmin hostname only (elsewhere 404 `not_found`). Audited with
-        the reason. Emits `bot.guild.unbound` with `reason: superadmin` on the event's stream.
+        Superadmin with `mfa_enabled` on the session's identity (contracts/tenants.md, Sign-in identities), on the
+        superadmin hostname only (elsewhere 404 `not_found`). Audited with the reason. Emits `bot.guild.unbound` with `reason: superadmin` on the event's stream.
       parameters:
         - name: guild_id
           in: path

@@ -186,11 +186,13 @@ paths:
       operationId: startSignIn
       summary: Start signing in with a redirect provider
       description: |
-        On the central sign-in host, from its sign-in page (the origin check of a state-changing request applies,
-        so no other site can start a sign-in for a browser). Answers where to send the browser: for `discord`
-        Discord's authorize URL with the minimal scopes (`identify`; #52), the redirect URI below and a single-use `state` with
-        PKCE, kept server-side with `return_to` (#52). The same session path follows for every provider. No
-        session.
+        On the central sign-in host, from its sign-in page. Answers where to send the browser: for `discord`
+        Discord's authorize URL with the minimal scopes (`identify`; #52), the redirect URI below and a single-use
+        `state` with PKCE, kept server-side with `return_to`. The 200 also sets the flow cookie
+        (contracts/admin.md, Sign-in providers): `__Host-canccu_sign_in` over HTTPS (Secure, Path=/, no Domain;
+        `canccu_sign_in` on plain http), HttpOnly, SameSite=Lax, living as long as the `state`; only its hash is
+        kept with the `state`. The origin check stops another site from starting a sign-in in the browser; the
+        flow cookie stops a callback URL that someone else started from signing this browser in. No session.
       security: []
       requestBody:
         required: false
@@ -206,9 +208,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/SignInStarted"
         "400":
-          $ref: "#/components/responses/BadRequest"
+          description: "`return_to_invalid` (see `SignInStart`), or a malformed body."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "403":
-          $ref: "#/components/responses/Forbidden"
+          description: |
+            `bad_origin`: the request's `Origin` is not the sign-in host; `origin_refused`: `Origin: null`
+            (contracts/README.md).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "404":
           description: "`not_found`: the provider is unknown, not enabled, or has no redirect flow."
           content:
@@ -224,21 +236,44 @@ paths:
       summary: The redirect provider's callback
       description: |
         On the central sign-in host; the provider's registered redirect URI (for Discord
-        `https://<sign-in host>/api/admin/auth/discord/callback`). The provider's own query parameters (for
-        `discord`, `code` and `state`). On success the identity is mapped to a user
+        `https://<sign-in host>/api/admin/auth/discord/callback`). The `state` must be known, unused, unexpired
+        and match the browser's flow cookie set by start. On success the identity is mapped to a user
         (`POST /internal/tenants/identities/sign-in`), the session is made, and the browser goes to `return_to`'s
         hostname with the one-time hand-off code (#52). Failures are pages on the sign-in host: `state_invalid`
-        (unknown, used or expired `state`), `sign_in_failed` (the provider refused or could not be reached). No
-        session.
+        (the `state` is unknown, used or expired, or the flow cookie is missing or does not match: a `state`
+        started in another browser), `sign_in_failed` (the person cancelled at the provider, for `discord` an
+        `error` such as `access_denied`, or the provider refused or could not be reached). The `state` is used up
+        and the flow cookie cleared on every outcome. No session.
       security: []
       parameters:
         - name: state
           in: query
           required: false
-          description: The `state` from start; the provider's other parameters (for `discord`, `code`) come with it.
+          description: The `state` from start.
           schema:
             type: string
             maxLength: 512
+        - name: code
+          in: query
+          required: false
+          description: For `discord`, the authorization code; absent when the person cancelled.
+          schema:
+            type: string
+            maxLength: 512
+        - name: error
+          in: query
+          required: false
+          description: For `discord`, the OAuth error (for example `access_denied`); it ends in `sign_in_failed`.
+          schema:
+            type: string
+            maxLength: 128
+        - name: error_description
+          in: query
+          required: false
+          description: For `discord`, the OAuth error's text; never shown as given.
+          schema:
+            type: string
+            maxLength: 1024
       responses:
         "200":
           description: Signed in without a `return_to`, as a page on the sign-in host.
@@ -261,11 +296,11 @@ paths:
               schema:
                 type: string
         "404":
-          description: "`not_found`: the provider is unknown, not enabled, or has no redirect flow."
+          description: "`not_found` as a page: the provider is unknown, not enabled, or has no redirect flow."
           content:
-            application/json:
+            text/html:
               schema:
-                $ref: "#/components/schemas/Error"
+                type: string
   /api/admin/profile:
     get:
       tags: [profile]
@@ -327,9 +362,12 @@ components:
       name: provider
       in: path
       required: true
-      description: A sign-in provider's id; today only `discord`.
+      description: |
+        A sign-in provider's id; today only `discord`. Any other value, also one that does not fit
+        `SignInProvider`, is 404 `not_found`, never 400.
       schema:
-        $ref: "#/components/schemas/SignInProvider"
+        type: string
+        maxLength: 64
     Module:
       name: module
       in: path
@@ -509,9 +547,11 @@ components:
           format: uri
           maxLength: 2048
           description: |
-            The absolute `https` URL to come back to after sign-in: on an `active` hostname of a tenant or on a
-            platform hostname, checked against the registry, never taken from `Host`. Anything else is 400
-            `return_to_invalid`. Without it, the callback answers a page on the sign-in host.
+            The absolute URL to come back to after sign-in: `https` on an `active` hostname of a tenant or on a
+            platform hostname, checked against the registry, never taken from `Host`; on the IP-mode demo stack,
+            which has one host and plain http, `http` on that host. Anything else is 400 `return_to_invalid`.
+            Without it, the callback answers a page on the sign-in host. The session is scoped by it
+            (contracts/admin.md, Sign-in providers).
     SignInStarted:
       type: object
       required: [redirect_url]
