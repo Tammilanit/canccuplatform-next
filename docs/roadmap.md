@@ -42,7 +42,7 @@ The roadmap changes as we learn ([0019](decisions/0019-work-packages.md)).
 - **Change log:** every change to this file adds a dated line below, newest first: `- YYYY-MM-DD: <what changed> (<issue or PR>)`.
 
 ### Change log
-- 2026-11-08: a step brief becomes a research pack (every key screen mocked up, a full question bank) for an extensive brainstorming session over as many rounds as it takes; the lead then writes the plan into the brief and rewrites the issues, and the product owner accepts it before any build; this holds for every step from step 3 on and every parallel track ([0026](decisions/0026-briefs-are-research-packs.md), #175).
+- 2026-11-08: a step brief becomes a research pack (every key screen mocked up, a full question bank) for an extensive brainstorming session over as many rounds as it takes; the lead then writes the plan into the brief, the product owner accepts it before any build, and its plan issue gates the step's other issues; this holds for every step from step 3 on and every parallel track ([0026](decisions/0026-briefs-are-research-packs.md), #175).
 - 2026-11-08: the product owner's decisions of 2026-11-07: step 3 builds the new `theming`, `agenda` and `notify` modules, each its own container; the bot only reports activity counts and the games module detects surges; rosters and rounds for casual play belong to the Games track; the App track (#160) and Finals track (#161) epics are listed; the dress rehearsal of step 11 is mainly the product owner testing the whole system at home; the App track's privacy rules gain the 12-month anonymisation and joining by the venue or the event's own link; overrides are `moments.*` (#162, #156).
 - 2026-11-07: the Games track splits into a Finals track (the `finals` module, on the shared tourney core) and a Games track (the generic `games` module); the mini tourney's author gave the OK to reuse the ISC code, so the notes waiting for it are removed ([0025](decisions/0025-finals-and-games-modules.md), #148).
 - 2026-11-07: a contract doc that only adds is normal risk, and the checkpoint's step summary lists the step's contract PRs for the maintainer to review together ([0024](decisions/0024-additive-contract-docs-normal-risk.md), #136).
@@ -181,7 +181,7 @@ The contracts step. Its dependencies: the tenants contract (#48) waits for the l
 - **Issues:** epic #65.
 
 ## Parallel tracks
-All four are new builds with their own contracts, so none blocks the main line. They start after the tenancy foundation (#47), so their contracts are tenant-aware from the start. The Finals and Games tracks were one Games track until 2026-11-07 ([0025](decisions/0025-finals-and-games-modules.md)).
+All four are new builds with their own contracts, so none blocks the main line. They start after the tenancy foundation (#47), so their contracts are tenant-aware from the start, and each builds only once its own plan is accepted: research pack, brainstorming session, plan ([0026](decisions/0026-briefs-are-research-packs.md)). The Finals and Games tracks were one Games track until 2026-11-07 ([0025](decisions/0025-finals-and-games-modules.md)).
 
 ### Finals
 - **Goal:** The Finals mini tourney runs on the platform for an event: players and teams register, the bracket runs, and champions are crowned.
