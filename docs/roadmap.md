@@ -194,7 +194,7 @@ All four are new builds with their own contracts, so none blocks the main line. 
 - **In it:** the generic `games` module: the game catalogue, activity matching and surges ([contracts/games.md](../contracts/games.md)), favourites with a notification when many play one; rosters and rounds for casual play, for any game: generic teams, and rounds as data (the product owner's decision of 2026-11-07); later LFG and casual sessions (Not scheduled yet). The `finals` module and the tournament keep their own rosters and brackets.
 - **Builds on:** the bot's presence data (the who-plays-what API, [contracts/bot.md](../contracts/bot.md)), Notify for the surge notifications, and the screen's hot-game widget; no mini-tourney code.
 - **Exit criteria:** an activity on the test server is matched to a game in the demo tenant's catalogue, and a surge reaches the screen and the hub.
-- **Issues:** epic #66, written for the old Games track; the lead re-scopes it to this track and opens the Finals track's epic.
+- **Issues:** epic #66, written for the old Games track; the lead re-scopes it to this track (the Finals track has its own epic, #161).
 
 ### Cast
 - **Goal:** anyone at the venue casts their screen to the projector.

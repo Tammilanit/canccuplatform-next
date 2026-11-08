@@ -40,7 +40,7 @@ Do not rename these jobs; renaming breaks the required checks.
 
 ## contracts
 - `scripts/check-contracts [--dry-run]`; tools come through `npx` with pinned versions (ajv-cli, ajv-formats, @redocly/cli), so it needs Node 22 and no `package.json`.
-- Fails (exit 1) on an invalid profile, a missing asset or an OpenAPI lint error; exit 2 on wrong usage or missing files.
+- Fails (exit 1) on an invalid profile, a missing asset, an invalid theme package (schema, files or references), a failing `check-theme-refs` self-test or an OpenAPI lint error; exit 2 on wrong usage or missing files.
 - **Required check:** after this job first runs on main, a maintainer adds `contracts` to the required checks of the main ruleset. Do not rename the job.
 
 ## naming
