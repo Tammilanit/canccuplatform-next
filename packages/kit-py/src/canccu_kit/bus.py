@@ -29,17 +29,13 @@ from .tenant import (
 )
 
 STREAM_MAXLEN = 10000
-"""Approximate length each `events:<module>` stream is trimmed to on publish."""
+"""Approximate length each stream, platform or tenant, is trimmed to on publish."""
 
 DEDUPE_SIZE = 10000
 EVENT_TYPE_RE = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){2}$")
 REQUIRED_FIELDS = ("id", "type", "version", "time", "source", "data")
 
 log = logging.getLogger("canccu.kit.bus")
-
-
-stream_name = platform_stream
-"""The platform stream of a module; tenant streams come from `tenant_stream`."""
 
 
 class InvalidEventType(ValueError):

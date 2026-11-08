@@ -12,9 +12,8 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from . import audit, core, model
-from .current import body_of
 from .deps import deps
-from .model import bad_request, conflict, not_found
+from .model import bad_request, body_of, conflict, not_found
 
 
 async def list_tenants(request: Request) -> Response:

@@ -8,11 +8,11 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from canccu_kit import DEMO_TENANT
 
 from . import audit, core
 from .db import Db
 
-DEMO_TENANT = "demo"
 DEMO_VENUE = "demo-venue"
 SEED_LOCK = 0x7E7A_5EED  # any constant, distinct from the migration lock
 # Loopback serves the local stack; the rest are documentation prefixes (RFC 5737, RFC 3849).

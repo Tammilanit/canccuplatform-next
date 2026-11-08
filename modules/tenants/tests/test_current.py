@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 import asyncpg
 import httpx
 import pytest
-from conftest import SUPERADMIN_HOST, Env, make_tenant, make_user
+from conftest import SUPERADMIN_HOST, Env, make_tenant, sign_in_superadmin
 
 from canccu_tenants import audit as audit_module
 from canccu_tenants import timers
@@ -155,9 +155,7 @@ async def test_venue_ip_check_switch_and_its_automatic_return(env: Env) -> None:
 
 
 async def test_venue_info_is_copied_in_and_hides_attendee_wifi_from_guests(env: Env) -> None:
-    async with env.db.platform() as conn:
-        await make_user(conn, "u_super", superadmin=True)
-    sa = env.rights.sign_in("u_super")
+    sa = await sign_in_superadmin(env)
     wifi = [
         {"ssid": "guest", "password": None, "note": None, "visibility": "public"},
         {"ssid": "crew", "password": "secret-pass", "note": None, "visibility": "attendees"},

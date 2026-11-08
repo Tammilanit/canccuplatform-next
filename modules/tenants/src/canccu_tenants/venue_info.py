@@ -14,9 +14,8 @@ from starlette.routing import Route
 
 from . import audit, core, model
 from .caller import client_ip, tenant_of
-from .current import body_of
 from .deps import deps
-from .model import conflict, not_found
+from .model import body_of, conflict, not_found
 
 MAX_PLAN = 10 * 1024 * 1024
 # Checked by content, never by the client's Content-Type: SVG and HTML must never be stored.

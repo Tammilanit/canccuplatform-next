@@ -1,0 +1,769 @@
+# Part of tenants.openapi.yaml: path items only, referenced from its `paths`
+# and linted through it (contracts/README.md, Shared components).
+/api/tenants/audit:
+  get:
+    tags: [audit, superadmin]
+    operationId: listAudit
+    summary: The whole audit log
+    description: Superadmin. Without filters all entries; `tenant_id` for one tenant's, `platform=true` for platform entries only.
+    security:
+      - session: []
+    parameters:
+      - name: tenant_id
+        in: query
+        description: Only this tenant's entries.
+        schema:
+          $ref: "../tenants.openapi.yaml#/components/schemas/TenantId"
+      - name: platform
+        in: query
+        description: Only entries with no tenant. Not together with `tenant_id`.
+        schema:
+          type: boolean
+          default: false
+      - $ref: "../tenants.openapi.yaml#/components/parameters/Before"
+      - $ref: "../tenants.openapi.yaml#/components/parameters/Limit"
+    responses:
+      "200":
+        description: A page of entries.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/AuditPage"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/api/tenants/registry:
+  get:
+    tags: [superadmin]
+    operationId: listTenants
+    summary: All tenants
+    description: Superadmin.
+    security:
+      - session: []
+    parameters:
+      - name: status
+        in: query
+        description: Only tenants in this status.
+        schema:
+          $ref: "../tenants.openapi.yaml#/components/schemas/Status"
+    responses:
+      "200":
+        description: The tenants, by id.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenants]
+              properties:
+                tenants:
+                  type: array
+                  items:
+                    $ref: "../tenants.openapi.yaml#/components/schemas/Tenant"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+  post:
+    tags: [superadmin]
+    operationId: createTenant
+    summary: Create a tenant
+    description: |
+      Superadmin. Starts as `draft`, with no hostname (`primary_hostname` is `null` until one is added).
+      An id used before, also by a deleted tenant, is 409 `tenant_exists`. With a venue, its profile is
+      copied into the event's venue info. Audited. Emits `tenants.tenant.created` on the platform stream.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/TenantNew"
+    responses:
+      "201":
+        description: The tenant.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Tenant"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/registry/{tenant_id}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/TenantId"
+  get:
+    tags: [superadmin]
+    operationId: getTenant
+    summary: One tenant
+    description: Superadmin.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The tenant.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Tenant"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+  patch:
+    tags: [superadmin]
+    operationId: updateTenant
+    summary: Change a tenant
+    description: |
+      Superadmin. The fields of `TenantPatch` plus `venue_id` and `series_id`. A new venue copies its profile
+      into the event's venue info and also emits `tenants.venue_info.changed` with `copied: true`. Audited.
+      Emits `tenants.tenant.changed`.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/RegistryPatch"
+    responses:
+      "200":
+        description: The tenant.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Tenant"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [superadmin]
+    operationId: deleteTenant
+    summary: Delete a tenant and all its data
+    description: |
+      Superadmin; only `draft` or `archived` (409 `tenant_live`). Every module deletes the tenant's rows,
+      keys, streams and files; its hostnames become `held`, keeping the tenant id as plain text. The id is
+      never reused. Audited. Emits `tenants.tenant.deleted`.
+    security:
+      - session: []
+    responses:
+      "204":
+        description: Deleted.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/registry/{tenant_id}/status:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/TenantId"
+  post:
+    tags: [superadmin]
+    operationId: setTenantStatus
+    summary: Move a tenant through its lifecycle
+    description: Superadmin. The same transitions as on the event's hostname. Emits `tenants.status.changed`.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/StatusChange"
+    responses:
+      "200":
+        description: The tenant.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Tenant"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/registry/{tenant_id}/admins/{user_id}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/TenantId"
+    - $ref: "../tenants.openapi.yaml#/components/parameters/UserId"
+  put:
+    tags: [superadmin]
+    operationId: addTenantAdmin
+    summary: Make a user an event admin of a tenant
+    description: Superadmin. Audited. Emits `tenants.admin.added` on that tenant's stream.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The tenant's event admins.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/AdminList"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [superadmin]
+    operationId: removeTenantAdmin
+    summary: Remove an event admin of a tenant
+    description: Superadmin; the last one may go. Audited. Emits `tenants.admin.removed` on that tenant's stream.
+    security:
+      - session: []
+    responses:
+      "204":
+        description: Removed.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/api/tenants/registry/{tenant_id}/hostnames:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/TenantId"
+  get:
+    tags: [superadmin]
+    operationId: listHostnames
+    summary: A tenant's hostnames
+    description: Superadmin. Held ones too.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The hostnames.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hostnames]
+              properties:
+                hostnames:
+                  type: array
+                  items:
+                    $ref: "../tenants.openapi.yaml#/components/schemas/Hostname"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+  post:
+    tags: [superadmin]
+    operationId: addHostname
+    summary: Add a hostname to a tenant
+    description: |
+      Superadmin. A `platform` hostname is `active` at once; a `custom` one is `pending` until verified by
+      its TXT record. The first hostname of a tenant becomes its primary. Audited. Emits `tenants.hostname.changed`.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/HostnameNew"
+    responses:
+      "201":
+        description: The hostname.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Hostname"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/hostnames/{hostname}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/HostnameParam"
+  patch:
+    tags: [superadmin]
+    operationId: updateHostname
+    summary: Make a hostname its tenant's primary
+    description: |
+      Superadmin; only an `active` one: a `pending` or `held` hostname is 409 `hostname_not_active`.
+      Audited. Emits `tenants.hostname.changed`.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/HostnamePatch"
+    responses:
+      "200":
+        description: The hostname.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Hostname"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [superadmin]
+    operationId: removeHostname
+    summary: Remove a hostname
+    description: |
+      Superadmin. It becomes `held` for 30 days. The primary hostname can go only when another is made
+      primary first (409 `primary_hostname`). Audited. Emits `tenants.hostname.changed`.
+    security:
+      - session: []
+    responses:
+      "204":
+        description: Held.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/hostnames/{hostname}/verify:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/HostnameParam"
+  post:
+    tags: [superadmin]
+    operationId: verifyHostname
+    summary: Check a custom hostname's TXT record
+    description: Superadmin. On a match it becomes `active`; otherwise 409 `verification_failed`. Audited.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The verified hostname.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Hostname"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/venues:
+  get:
+    tags: [superadmin]
+    operationId: listVenues
+    summary: All venues
+    description: Superadmin.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The venues.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [venues]
+              properties:
+                venues:
+                  type: array
+                  items:
+                    $ref: "../tenants.openapi.yaml#/components/schemas/Venue"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+  post:
+    tags: [superadmin]
+    operationId: createVenue
+    summary: Create a venue
+    description: Superadmin. Audited. Emits `tenants.venue.changed`.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/VenueNew"
+    responses:
+      "201":
+        description: The venue.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Venue"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/api/tenants/venues/{venue_id}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/VenueId"
+  get:
+    tags: [superadmin]
+    operationId: getVenue
+    summary: One venue
+    description: Superadmin. Other modules read a venue through `GET /internal/tenants/venues/{venue_id}`.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The venue.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Venue"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+  patch:
+    tags: [superadmin]
+    operationId: updateVenue
+    summary: Change a venue
+    description: |
+      Superadmin, with `revision`. Name, addresses and profile; existing events keep their copy of the
+      profile. Audited (addresses with old and new values). Emits `tenants.venue.changed`.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/VenuePatch"
+    responses:
+      "200":
+        description: The venue.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Venue"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [superadmin]
+    operationId: deleteVenue
+    summary: Delete a venue
+    description: Superadmin; 409 `venue_in_use` while an event points to it. Audited. Emits `tenants.venue.changed`.
+    security:
+      - session: []
+    responses:
+      "204":
+        description: Deleted.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+/api/tenants/venues/{venue_id}/floor-plan:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/VenueId"
+  put:
+    tags: [superadmin]
+    operationId: setVenueFloorPlan
+    summary: Replace a venue's floor plan
+    description: Superadmin. PNG, JPEG or WebP, up to 10 MB. Existing events keep their copy. Emits `tenants.venue.changed`.
+    security:
+      - session: []
+    requestBody:
+      $ref: "../tenants.openapi.yaml#/components/requestBodies/FloorPlan"
+    responses:
+      "204":
+        description: Stored.
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "413":
+        $ref: "../tenants.openapi.yaml#/components/responses/TooLarge"
+      "415":
+        $ref: "../tenants.openapi.yaml#/components/responses/UnsupportedType"
+/api/tenants/series:
+  get:
+    tags: [superadmin]
+    operationId: listSeries
+    summary: All series
+    description: Superadmin.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The series.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [series]
+              properties:
+                series:
+                  type: array
+                  items:
+                    $ref: "../tenants.openapi.yaml#/components/schemas/Series"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+  post:
+    tags: [superadmin]
+    operationId: createSeries
+    summary: Create a series
+    description: Superadmin. Audited.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/SeriesWrite"
+    responses:
+      "201":
+        description: The series.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Series"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/api/tenants/series/{series_id}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/SeriesId"
+  patch:
+    tags: [superadmin]
+    operationId: renameSeries
+    summary: Rename a series
+    description: Superadmin. Audited.
+    security:
+      - session: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/SeriesWrite"
+    responses:
+      "200":
+        description: The series.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/Series"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/api/tenants/users:
+  get:
+    tags: [superadmin]
+    operationId: findUsers
+    summary: Find users
+    description: Superadmin. By part of the name, or an exact Discord user id.
+    security:
+      - session: []
+    parameters:
+      - name: q
+        in: query
+        required: true
+        description: Part of a name, or a Discord user id.
+        schema:
+          type: string
+          minLength: 2
+          maxLength: 100
+      - $ref: "../tenants.openapi.yaml#/components/parameters/Limit"
+    responses:
+      "200":
+        description: Matching users, at most `limit`.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [users]
+              properties:
+                users:
+                  type: array
+                  items:
+                    $ref: "../tenants.openapi.yaml#/components/schemas/User"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/api/tenants/users/{user_id}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/UserId"
+  delete:
+    tags: [superadmin]
+    operationId: deleteUser
+    summary: Delete a user everywhere
+    description: |
+      Superadmin. Every module deletes the user's data in every tenant; the audit log keeps only the
+      anonymous reference. Audited. Emits `tenants.user.deleted` on the platform stream.
+    security:
+      - session: []
+    responses:
+      "204":
+        description: Deleted.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/api/tenants/superadmins:
+  get:
+    tags: [superadmin]
+    operationId: listSuperadmins
+    summary: The superadmins
+    description: Superadmin.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The superadmins.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [superadmins]
+              properties:
+                superadmins:
+                  type: array
+                  items:
+                    $ref: "../tenants.openapi.yaml#/components/schemas/User"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/api/tenants/superadmins/{user_id}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/UserId"
+  put:
+    tags: [superadmin]
+    operationId: addSuperadmin
+    summary: Make a user a superadmin
+    description: Superadmin. The user needs an identity with `mfa_enabled` (409 `mfa_required`). Audited.
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The new superadmin.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/User"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [superadmin]
+    operationId: removeSuperadmin
+    summary: Remove a superadmin
+    description: Superadmin. 409 `last_superadmin` for the last one. Audited.
+    security:
+      - session: []
+    responses:
+      "204":
+        description: Removed.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"

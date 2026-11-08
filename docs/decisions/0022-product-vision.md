@@ -1,6 +1,6 @@
 # 0022. The product vision
 
-- **Status:** Accepted
+- **Status:** Accepted; amended by [0027](0027-product-decisions-2026-11-07-08.md)
 - **Date:** 2026-11-06
 
 ## Context

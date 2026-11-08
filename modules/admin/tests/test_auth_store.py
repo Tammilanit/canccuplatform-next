@@ -38,7 +38,7 @@ async def store(request: pytest.FixtureRequest) -> AsyncIterator[AuthStore]:
         for path in sorted(MIGRATIONS.glob("*.sql")):
             await conn.execute(path.read_text())
     try:
-        yield await PgAuthStore.create(pool)
+        yield PgAuthStore(pool)
     finally:
         await pool.close()
         await admin.execute(f"DROP SCHEMA {schema} CASCADE")

@@ -98,7 +98,7 @@ Throw `new KitError("text", { status: 400, code: "slide_invalid" })` (or `Missin
 
 ### Errors from admin
 
-`SettingsClient.write` (a person's write, on `PUT /api/admin/settings/<module>` with their session) throws `VersionConflict` (409): read again and retry. An admin that can't be reached gives `AdminUnavailable` (503 `admin_unavailable`).
+`SettingsClient` only reads: a write is a person's, on admin's API on the event's own hostname, where admin learns the tenant. An admin that can't be reached gives `AdminUnavailable` (503 `admin_unavailable`).
 
 ## Tenancy
 

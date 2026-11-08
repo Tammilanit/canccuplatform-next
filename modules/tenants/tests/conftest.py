@@ -132,6 +132,12 @@ async def make_user(conn: Any, user_id: str, *, superadmin: bool = False, mfa: b
     )
 
 
+async def sign_in_superadmin(env: Env) -> dict[str, str]:
+    async with env.db.platform() as conn:
+        await make_user(conn, "u_super", superadmin=True)
+    return env.rights.sign_in("u_super")
+
+
 @pytest.fixture
 async def env(tmp_path: Path) -> AsyncIterator[Env]:
     if not URL:

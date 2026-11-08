@@ -135,11 +135,7 @@ def read_constraint(table: Table, element: str) -> None:
         return
     m = re.match(r"FOREIGN KEY \(", element, re.I)
     if m:
-        local = columns(paren_body(element, m.end() - 1))
-        ref = re.search(rf"REFERENCES {NAME}\s*(\()?", element, re.I)
-        if ref:
-            target = columns(paren_body(element, ref.end() - 1)) if ref.group(2) else None
-            table.refs.append((local, bare(ref.group(1)), target))
+        read_reference(table, columns(paren_body(element, m.end() - 1)), element)
 
 
 def read_column(table: Table, element: str) -> None:
@@ -151,13 +147,25 @@ def read_column(table: Table, element: str) -> None:
         table.keys.append(("primary key", [name]))
     if re.search(r"\bUNIQUE\b", rest, re.I):
         table.keys.append(("unique", [name]))
-    ref = re.search(rf"\bREFERENCES {NAME}\s*(\()?", rest, re.I)
+    read_reference(table, [name], rest)
+
+
+def read_reference(table: Table, local: list[str], text: str) -> None:
+    """Target columns are None when left out; SQL then means the target's primary key."""
+    ref = re.search(rf"\bREFERENCES {NAME}\s*(\()?", text, re.I)
     if ref:
-        target = columns(paren_body(rest, ref.end() - 1)) if ref.group(2) else None
-        table.refs.append(([name], bare(ref.group(1)), target))
+        target = columns(paren_body(text, ref.end() - 1)) if ref.group(2) else None
+        table.refs.append((local, bare(ref.group(1)), target))
 
 
 CONSTRAINT_START = re.compile(r"^(CONSTRAINT|PRIMARY KEY|UNIQUE|FOREIGN KEY|CHECK|EXCLUDE)\b", re.I)
+
+
+def read_element(table: Table, element: str) -> None:
+    if CONSTRAINT_START.match(element):
+        read_constraint(table, element)
+    else:
+        read_column(table, element)
 
 
 def read_statement(module: Module, stmt: str, file: str) -> None:
@@ -165,10 +173,7 @@ def read_statement(module: Module, stmt: str, file: str) -> None:
     if m:
         table = module.tables.setdefault(bare(m.group(1)), Table(file))
         for element in split_top(paren_body(stmt, m.end() - 1)):
-            if CONSTRAINT_START.match(element):
-                read_constraint(table, element)
-            else:
-                read_column(table, element)
+            read_element(table, element)
         return
     m = re.match(rf"CREATE UNIQUE INDEX (?:CONCURRENTLY )?(?:IF NOT EXISTS )?(?:{IDENT} )?ON (?:ONLY )?{NAME}(?: USING \w+)?\s*\(", stmt, re.I)
     if m and (table := module.table(m.group(1))):
@@ -205,11 +210,7 @@ def read_statement(module: Module, stmt: str, file: str) -> None:
         elif re.match(r"DROP (?:COLUMN )?(?:IF EXISTS )?\"?tenant_id\b", action, re.I):
             table.drops.append("drops tenant_id")
         elif upper.startswith("ADD "):
-            element = re.sub(r"^ADD (?:COLUMN )?(?:IF NOT EXISTS )?", "", action, flags=re.I)
-            if CONSTRAINT_START.match(element):
-                read_constraint(table, element)
-            else:
-                read_column(table, element)
+            read_element(table, re.sub(r"^ADD (?:COLUMN )?(?:IF NOT EXISTS )?", "", action, flags=re.I))
 
 
 def table_problems(name: str, table: Table, is_global: set[str]) -> list[str]:

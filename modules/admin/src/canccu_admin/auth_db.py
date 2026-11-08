@@ -15,8 +15,6 @@ from typing import Protocol
 import asyncpg
 from canccu_kit import new_id
 
-ROLES = ("owner", "admin")
-
 
 @dataclass(frozen=True)
 class User:
@@ -180,13 +178,10 @@ def _user(row: asyncpg.Record) -> User:
 
 
 class PgAuthStore:
+    """Its tables come from migrations/002_auth_tables.sql, run by the migration role."""
+
     def __init__(self, pool: asyncpg.Pool) -> None:
         self._pool = pool
-
-    @classmethod
-    async def create(cls, pool: asyncpg.Pool) -> PgAuthStore:
-        """The tables come from migrations/002_auth_tables.sql, run by the migration role."""
-        return cls(pool)
 
     async def has_owner(self) -> bool:
         return bool(await self._pool.fetchval(OWNER_EXISTS))

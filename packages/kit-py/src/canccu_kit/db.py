@@ -77,8 +77,8 @@ async def tenant_transaction[C: SqlConnection](
     tenant = require_tenant() if tenant is None else tenant
     # A nested transaction is a savepoint, and set_config inside it outlives the savepoint until
     # the outer transaction ends: the outer block would run as the inner tenant. Refuse instead.
-    # Inside a caller's own transaction ours would be a savepoint, and SET LOCAL would outlive
-    # it until the caller's transaction ends. asyncpg tells us; other drivers may not.
+    # asyncpg says whether a transaction is open; with other drivers only a nested tenant
+    # transaction is caught, below.
     in_transaction = getattr(conn, "is_in_transaction", None)
     if callable(in_transaction) and in_transaction():
         raise RuntimeError("the connection is already in a transaction")

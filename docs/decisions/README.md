@@ -27,11 +27,12 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0019](0019-work-packages.md) | Work runs in packages, with risk classes, a health pass and a checkpoint per step | 2026-11-06 |
 | [0020](0020-best-of-old-freely-new.md) | The best of the old, freely new | 2026-11-06 |
 | [0021](0021-no-fixed-dates.md) | No freeze and no target dates | 2026-11-06 |
-| [0022](0022-product-vision.md) | The product vision: who it is for, the Pulse screen at its heart, what is planned and what is not | 2026-11-06 |
+| [0022](0022-product-vision.md) | The product vision: who it is for, the Pulse screen at its heart, what is planned and what is not (amended by 0027) | 2026-11-06 |
 | [0023](0023-step-design-briefs.md) | Every step starts with a design brief, and issues leave room to design (its round replaced by 0026) | 2026-11-06 |
 | [0024](0024-additive-contract-docs-normal-risk.md) | Additive contract docs are normal risk; the maintainer reviews contracts at the checkpoint | 2026-11-07 |
 | [0025](0025-finals-and-games-modules.md) | Finals and games are separate modules, on a shared tourney core | 2026-11-07 |
 | [0026](0026-briefs-are-research-packs.md) | A step brief is a research pack for an extensive brainstorming session | 2026-11-08 |
+| [0027](0027-product-decisions-2026-11-07-08.md) | The product decisions of 2026-11-07/08: joining, accounts, retention, check-in, finals, Go public and brainstorming (amends 0022) | 2026-11-08 |
 
 ## How the records are applied
 - **Bundling packages** ([0019](0019-work-packages.md), 2026-11-07, #144). In step 2 most packages held one issue, so each issue paid for its own run, review, fix round and fix-check. The planner now bundles related issues into fuller packages, while a contract change still goes apart from its consumers and merges first; the rules live in [AGENTS.md, Package plan](../../AGENTS.md#how-work-flows). This refines how 0019 is applied; its text is unchanged.

@@ -12,9 +12,8 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from . import audit, core, model
-from .current import body_of
 from .deps import Deps, deps
-from .model import bad_request, conflict, not_found
+from .model import bad_request, body_of, conflict, not_found
 
 HOLD = timedelta(days=30)
 
@@ -26,18 +25,6 @@ def kind_of(d: Deps, host: str) -> str:
     if domain and host.endswith("." + domain) and "." not in host[: -len(domain) - 1]:
         return "platform"
     return "custom"
-
-
-async def _changed(conn: Any, outbox: core.Outbox, row: Any, status: str | None = None) -> None:
-    outbox.platform(
-        "tenants.hostname.changed",
-        {
-            "hostname": row["hostname"],
-            "tenant_id": row["tenant_id"],
-            "status": status or row["status"],
-            "primary": row["is_primary"],
-        },
-    )
 
 
 async def _audit(
@@ -114,7 +101,7 @@ async def add_hostname(request: Request) -> Response:
         if row is None:
             raise conflict("hostname_taken", "this hostname points to an event already")
         await _audit(conn, session.user_id, "tenants.hostname.added", row, {"kind": kind})
-        await _changed(conn, outbox, row)
+        core.hostname_changed(outbox, row)
     await outbox.publish(d.bus)
     return JSONResponse(model.hostname(row), status_code=201)
 
@@ -166,7 +153,7 @@ async def make_primary(request: Request) -> Response:
             row["hostname"],
         )
         await _audit(conn, session.user_id, "tenants.hostname.changed", row, {"primary": True})
-        await _changed(conn, outbox, row)
+        core.hostname_changed(outbox, row)
     await outbox.publish(d.bus)
     return JSONResponse(model.hostname(row))
 
@@ -191,7 +178,7 @@ async def remove_hostname(request: Request) -> Response:
                 row["tenant_id"],
             )
         await _audit(conn, session.user_id, "tenants.hostname.removed", held, {})
-        await _changed(conn, outbox, held)
+        core.hostname_changed(outbox, held)
     await outbox.publish(d.bus)
     return Response(status_code=204)
 
@@ -226,7 +213,7 @@ async def verify_hostname(request: Request) -> Response:
             not await _has_primary(conn, locked["tenant_id"]),
         )
         await _audit(conn, session.user_id, "tenants.hostname.verified", row, {})
-        await _changed(conn, outbox, row)
+        core.hostname_changed(outbox, row)
     await outbox.publish(d.bus)
     return JSONResponse(model.hostname(row))
 

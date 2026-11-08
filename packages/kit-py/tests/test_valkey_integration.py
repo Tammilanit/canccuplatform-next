@@ -18,8 +18,7 @@ import pytest
 import valkey.asyncio as valkey
 
 from canccu_kit import STREAM_MAXLEN, Bus, Event, ValkeyStreamStore, new_id
-from canccu_kit.bus import stream_name
-from canccu_kit.tenant import current_tenant, tenant_scope, tenant_stream
+from canccu_kit.tenant import current_tenant, platform_stream, tenant_scope, tenant_stream
 
 URL = os.environ.get("CANCCU_VALKEY_URL", "")
 TIME_RE = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$")
@@ -57,7 +56,7 @@ class Valkeys:
         self.streams: list[str] = []
 
     def track(self, module: str) -> str:
-        name: str = stream_name(module)
+        name: str = platform_stream(module)
         self.streams.append(name)
         return name
 
@@ -168,7 +167,7 @@ async def test_scan_finds_tenant_streams_and_each_tenant_is_read_in_its_own_cont
 ) -> None:
     source = unique_module()
     vk.streams += [tenant_stream(source, t) for t in ("it-a", "it-b")]
-    vk.streams.append(stream_name("tenants"))
+    vk.streams.append(platform_stream("tenants"))
     bus = Bus(vk.store, source)
     with tenant_scope("it-a"):
         await bus.publish(f"{source}.thing.happened", {"n": 1}, version=1)
