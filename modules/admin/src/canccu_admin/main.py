@@ -107,7 +107,7 @@ async def serve() -> None:
     bus = Bus(streams, config.module)
     rights = RightsChecker(AdminClient(config.admin_url))
     auth = Auth(
-        await PgAuthStore.create(store.pool),
+        PgAuthStore(store.pool),
         bus,
         public,
         discord(public),

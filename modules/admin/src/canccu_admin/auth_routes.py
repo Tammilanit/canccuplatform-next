@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable
 
 from canccu_kit import Event, KitError, error_body
 from canccu_kit.rights import SESSION_COOKIE, Session, session_id_from_cookie
+from canccu_kit.web_security import SAFE_METHODS
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.routing import Route
@@ -20,7 +21,6 @@ OnEvent = Callable[[Event], Awaitable[None]]
 FLOW_COOKIE = "canccu_sign_in"
 FLOW_PATH = f"{BASE}/sign-in"
 CALLBACK_PATH = f"{FLOW_PATH}/callback"  # the redirect URI registered with Discord
-SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
 
 
 class OriginCheck:

@@ -8,7 +8,6 @@ event folder, and publishes on that tenant's stream.
 from __future__ import annotations
 
 import asyncio
-import re
 import shutil
 import tempfile
 from dataclasses import dataclass
@@ -21,9 +20,7 @@ from jsonschema import Draft202012Validator
 
 from . import profile as prof
 from .db import Store
-from .declarations import Setting, check_values
-
-KEY_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
+from .declarations import KEY_RE, Setting, check_values
 
 
 class BadSettings(KitError):
