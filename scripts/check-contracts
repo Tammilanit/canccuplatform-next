@@ -74,7 +74,9 @@ for t in "${themes[@]}"; do
 done
 
 for a in "${apis[@]}"; do
-  if out=$(quiet "${REDOCLY[@]}" lint --config contracts/redocly.yaml "$a"); then
+  # Redocly applies an API's own rules only when it is named by its alias in redocly.yaml.
+  target=$a; [ "$a" = contracts/common.openapi.yaml ] && target=common
+  if out=$(quiet "${REDOCLY[@]}" lint --config contracts/redocly.yaml "$target"); then
     echo "ok   openapi $a"
   else
     printf '%s\n' "$out"; echo "FAIL openapi $a"; fail=1

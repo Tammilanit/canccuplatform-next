@@ -260,11 +260,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/Device"
         "400":
+          $ref: "#/components/responses/BadRequest"
           description: "`code_invalid`: unknown, used or older than 60 seconds."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -776,7 +773,7 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
         "413":
-          $ref: "#/components/responses/TooLarge"
+          $ref: "common.openapi.yaml#/components/responses/TooLarge"
   /api/screen/assets/name-check:
     post:
       tags: [content]
@@ -912,7 +909,7 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
         "413":
-          $ref: "#/components/responses/TooLarge"
+          $ref: "common.openapi.yaml#/components/responses/TooLarge"
         "409":
           $ref: "#/components/responses/Conflict"
   /api/screen/assets/{asset_id}/revert:
@@ -1387,11 +1384,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/RenderJob"
         "400":
+          $ref: "#/components/responses/BadRequest"
           description: "`invalid_request`, or `not_pptx`: the asset is no PPTX deck."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1640,7 +1634,7 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
         "413":
-          $ref: "#/components/responses/TooLarge"
+          $ref: "common.openapi.yaml#/components/responses/TooLarge"
   /api/screen/photos/{photo_id}:
     parameters:
       - name: photo_id
@@ -1780,19 +1774,19 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Unauthorized:
       description: "`not_signed_in`: no valid session; or `device_unknown` on device calls."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     DeviceUnauthorized:
       description: "`device_unknown`: no device cookie, or its token is unknown or revoked; the page goes back to pairing."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Forbidden:
       description: |
         `missing_right`, `venue_ip_refused` (a device or pairing request not from the event's venue addresses),
@@ -1800,13 +1794,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     NotFound:
       description: "`not_found`: no such object in this event."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Conflict:
       description: |
         `version_conflict`, `device_moved` (the device serves another event, or none), `no_venue`, `zone_exists`,
@@ -1815,34 +1809,14 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     TooMany:
       description: "`rate_limited`: for pairing, over 10 open codes for the event or over 3 for one address."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
-    TooLarge:
-      description: "`file_too_large`."
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
   schemas:
-    Error:
-      type: object
-      required: [error]
-      properties:
-        error:
-          type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              pattern: "^[a-z][a-z0-9_]*$"
-              examples: [venue_ip_refused]
-            message:
-              type: string
     Health:
       type: object
       description: The shape every module serves (contracts/admin.openapi.yaml, Health).

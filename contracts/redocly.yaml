@@ -4,3 +4,9 @@ extends:
 rules:
   # /health has no client errors by design: it takes no input and no auth.
   operation-4xx-response: off
+apis:
+  # Shared components only (contracts/README.md): no operation of its own uses them.
+  common:
+    root: common.openapi.yaml
+    rules:
+      no-unused-components: off

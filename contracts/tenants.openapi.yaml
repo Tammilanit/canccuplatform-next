@@ -80,7 +80,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -111,7 +111,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -159,7 +159,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -180,7 +180,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SeriesView"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -213,7 +213,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -258,7 +258,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -281,7 +281,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/VenueInfo"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -324,7 +324,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -349,7 +349,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/VenueIpCheck"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
     put:
@@ -377,7 +377,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -431,7 +431,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Member"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -447,7 +447,7 @@ paths:
         "204":
           description: Left.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
   /api/tenants/current/join-link:
@@ -468,7 +468,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/JoinLink"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
   /api/tenants/current/join-link/rotate:
@@ -489,7 +489,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/JoinLink"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
@@ -510,7 +510,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Privacy"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
     put:
       tags: [people]
       operationId: setPrivacy
@@ -534,7 +534,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
   /api/tenants/current/members:
     get:
       tags: [people]
@@ -554,7 +554,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/MemberPage"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
   /api/tenants/current/members/{user_id}:
@@ -575,7 +575,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Member"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -593,7 +593,7 @@ paths:
         "204":
           description: Removed.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -614,7 +614,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/AdminList"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
   /api/tenants/current/admins/{user_id}:
@@ -635,7 +635,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/AdminList"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -654,7 +654,7 @@ paths:
         "204":
           description: Removed.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -688,7 +688,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
     delete:
@@ -702,7 +702,7 @@ paths:
         "204":
           description: Closed.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
   /api/tenants/current/audit:
@@ -724,7 +724,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/AuditPage"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
   /api/tenants/audit:
@@ -759,7 +759,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -792,7 +792,7 @@ paths:
                     items:
                       $ref: "#/components/schemas/Tenant"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -823,7 +823,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -848,7 +848,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Tenant"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -879,7 +879,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -900,7 +900,7 @@ paths:
         "204":
           description: Deleted.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -933,7 +933,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -959,7 +959,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/AdminList"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -977,7 +977,7 @@ paths:
         "204":
           description: Removed.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1006,7 +1006,7 @@ paths:
                     items:
                       $ref: "#/components/schemas/Hostname"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1036,7 +1036,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1071,7 +1071,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1091,7 +1091,7 @@ paths:
         "204":
           description: Held.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1116,7 +1116,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Hostname"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1145,7 +1145,7 @@ paths:
                     items:
                       $ref: "#/components/schemas/Venue"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1173,7 +1173,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1196,7 +1196,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Venue"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1226,7 +1226,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1244,7 +1244,7 @@ paths:
         "204":
           description: Deleted.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1269,7 +1269,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1300,7 +1300,7 @@ paths:
                     items:
                       $ref: "#/components/schemas/Series"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1328,7 +1328,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1359,7 +1359,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1398,7 +1398,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1419,7 +1419,7 @@ paths:
         "204":
           description: Deleted.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1446,7 +1446,7 @@ paths:
                     items:
                       $ref: "#/components/schemas/User"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1469,7 +1469,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1487,7 +1487,7 @@ paths:
         "204":
           description: Removed.
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
@@ -1652,11 +1652,8 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "409":
+          $ref: "#/components/responses/Conflict"
           description: "`provider_disabled`: the provider is not in `CANCCU_SIGN_IN_PROVIDERS`."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
 components:
   securitySchemes:
     session:
@@ -1744,13 +1741,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
-    Unauthorized:
-      description: "`not_signed_in`: no valid session."
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Forbidden:
       description: |
         `missing_right`; `superadmin_required`; `mfa_required` (a superadmin whose session's identity has no
@@ -1761,7 +1752,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     NotFound:
       description: |
         `not_found`: no such tenant, hostname, venue, series, user or entry; also every superadmin path on a
@@ -1769,7 +1760,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     Conflict:
       description: |
         `version_conflict` (stale `revision` or `flags_version`), `event_archived`, `invalid_transition`,
@@ -1779,34 +1770,20 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     TooLarge:
       description: "`file_too_large`: over 10 MB."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     UnsupportedType:
       description: "`unsupported_type`: not PNG, JPEG or WebP."
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "common.openapi.yaml#/components/schemas/Error"
   schemas:
-    Error:
-      type: object
-      required: [error]
-      properties:
-        error:
-          type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              pattern: "^[a-z][a-z0-9_]*$"
-              examples: [event_archived]
-            message:
-              type: string
     Binary:
       type: string
       format: binary
