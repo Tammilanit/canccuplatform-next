@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1100" width="1920" height="1100" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 08: Screen studio, zones and layouts: compose what a zone shows, preview, then go live</title>
+  <style>
+    .label { fill: #1f2937; font-size: 26px; font-weight: 600; }
+    .ui { fill: #ffffff; }
+    .h1 { fill: #111827; font-size: 28px; font-weight: 700; }
+    .h2 { fill: #111827; font-size: 19px; font-weight: 700; }
+    .tx { fill: #111827; font-size: 16px; } .mu { fill: #6b7280; font-size: 14px; }
+    .nav { fill: #374151; font-size: 18px; } .navon { fill: #1d4ed8; font-size: 18px; font-weight: 700; }
+    .btn { fill: #2563eb; } .btnt { fill: #fff; font-size: 16px; font-weight: 700; }
+    .gbtn { fill: #fff; stroke: #d1d5db; stroke-width: 1.5; } .gbtnt { fill: #111827; font-size: 15px; }
+    .reg { fill: #eef2ff; stroke: #6366f1; stroke-width: 2; stroke-dasharray: 6 4; }
+    .regon { fill: #dbeafe; stroke: #2563eb; stroke-width: 4; }
+    .rl { fill: #3730a3; font-size: 16px; font-weight: 700; }
+    .wd { fill: #4b5563; font-size: 14px; }
+    .note { fill: #c2410c; font-size: 17px; }
+  </style>
+  <rect width="1920" height="1100" fill="#f3f4f6"/>
+  <text x="24" y="40" class="label">08 · Screen studio → Zones and layouts: what each region of a zone shows, previewed before it goes live</text>
+
+  <g transform="translate(24,64)">
+    <rect width="1872" height="1010" rx="12" class="ui" stroke="#d1d5db" stroke-width="2"/>
+    <rect width="1872" height="64" rx="12" fill="#111827"/>
+    <text x="28" y="41" fill="#fff" font-size="20" font-weight="700">Demo Event</text>
+    <!-- nav -->
+    <g transform="translate(0,64)">
+      <rect width="250" height="946" fill="#f9fafb"/>
+      <text x="28" y="44" class="mu">SCREEN STUDIO</text>
+      <text x="28" y="86" class="nav">Live</text>
+      <text x="28" y="130" class="nav">Devices</text>
+      <rect x="12" y="148" width="226" height="40" rx="8" fill="#dbeafe"/>
+      <text x="28" y="174" class="navon">Zones and layouts</text>
+      <text x="28" y="218" class="nav">Schedule</text>
+      <text x="28" y="262" class="nav">Content</text>
+      <text x="28" y="306" class="nav">Ticker</text>
+    </g>
+    <!-- zone list -->
+    <g transform="translate(270,64)">
+      <text x="0" y="48" class="h2">Zones</text>
+      <rect x="0" y="66" width="230" height="64" rx="8" fill="#dbeafe" stroke="#2563eb"/>
+      <text x="14" y="94" class="tx" font-weight="700">Main hall</text><text x="14" y="118" class="mu">pulse · 2 screens</text>
+      <rect x="0" y="140" width="230" height="64" rx="8" fill="#fff" stroke="#e5e7eb"/>
+      <text x="14" y="168" class="tx">Café</text><text x="14" y="192" class="mu">pulse_portrait · 1 screen</text>
+      <rect x="0" y="214" width="230" height="64" rx="8" fill="#fff" stroke="#e5e7eb"/>
+      <text x="14" y="242" class="tx">Entrance</text><text x="14" y="266" class="mu">pulse_portrait · 0 screens</text>
+      <rect x="0" y="288" width="230" height="64" rx="8" fill="#fff" stroke="#e5e7eb"/>
+      <text x="14" y="316" class="tx">Stage</text><text x="14" y="340" class="mu">pulse · 1 screen</text>
+      <rect x="0" y="372" width="230" height="40" rx="8" class="gbtn"/><text x="115" y="398" class="gbtnt" text-anchor="middle">+ New zone</text>
+    </g>
+    <!-- canvas -->
+    <g transform="translate(530,64)">
+      <text x="0" y="48" class="h1">Main hall</text>
+      <text x="170" y="48" class="mu">layout</text>
+      <rect x="226" y="24" width="250" height="36" rx="6" class="gbtn"/><text x="240" y="48" class="gbtnt">Pulse (theme "Level up") ▾</text>
+      <rect x="0" y="80" width="880" height="495" fill="#f8fafc" stroke="#cbd5e1"/>
+      <!-- regions at 880/1920 -->
+      <rect x="8" y="8" width="864" height="34" class="reg" transform="translate(0,80)"/>
+      <text x="20" y="110" class="rl">header</text><text x="100" y="110" class="wd">logo · clock</text>
+      <rect x="8" y="122" width="580" height="400" class="regon"/>
+      <text x="24" y="150" class="rl">hero</text><text x="80" y="150" class="wd">playlist → photo → bracket (empty: skipped)</text>
+      <rect x="40" y="200" width="510" height="260" rx="8" fill="#0b0d1a"/>
+      <text x="295" y="320" fill="#f3f5ff" font-size="26" font-weight="800" text-anchor="middle">Demo Game Cup</text>
+      <text x="295" y="352" fill="#a9b1d6" font-size="15" text-anchor="middle">live preview of the playlist widget</text>
+      <rect x="598" y="122" width="274" height="236" class="reg"/>
+      <text x="612" y="150" class="rl">rail</text><text x="612" y="172" class="wd">agenda_now · countdown</text>
+      <rect x="598" y="366" width="274" height="156" class="reg"/>
+      <text x="612" y="394" class="rl">venue_rail</text><text x="612" y="416" class="wd">venue_info · checkin_qr</text>
+      <rect x="8" y="530" width="864" height="38" class="reg"/>
+      <text x="20" y="555" class="rl">ticker</text><text x="90" y="555" class="wd">ticker</text>
+      <text x="0" y="610" class="mu">Preview time</text>
+      <rect x="100" y="594" width="520" height="8" rx="4" fill="#e5e7eb"/><circle cx="330" cy="598" r="10" fill="#2563eb"/>
+      <text x="640" y="604" class="tx">Sat 18:42 (now) ▾</text>
+      <text x="0" y="650" class="mu">Preview on</text>
+      <rect x="100" y="630" width="170" height="34" rx="6" fill="#dbeafe" stroke="#2563eb"/><text x="185" y="653" class="gbtnt" text-anchor="middle">this page</text>
+      <rect x="280" y="630" width="250" height="34" rx="6" class="gbtn"/><text x="405" y="653" class="gbtnt" text-anchor="middle">Stage left (unassigned)</text>
+    </g>
+    <!-- inspector -->
+    <g transform="translate(1440,64)">
+      <rect x="0" y="20" width="410" height="760" rx="10" fill="#f9fafb" stroke="#e5e7eb"/>
+      <text x="20" y="58" class="h2">Region: hero</text>
+      <text x="20" y="84" class="mu">role hero · 1280×900 px at 1080p</text>
+      <text x="20" y="124" class="tx" font-weight="700">Widgets, in order</text>
+      <rect x="20" y="138" width="370" height="44" rx="6" fill="#fff" stroke="#d1d5db"/><text x="34" y="166" class="tx">⋮⋮  Playlist  · dwell: playlist length</text>
+      <rect x="20" y="190" width="370" height="44" rx="6" fill="#fff" stroke="#d1d5db"/><text x="34" y="218" class="tx">⋮⋮  Photo  · 8 s · QR none</text>
+      <rect x="20" y="242" width="370" height="44" rx="6" fill="#fff" stroke="#d1d5db"/><text x="34" y="270" class="tx">⋮⋮  Bracket  · 20 s · QR auto</text>
+      <text x="34" y="306" class="mu">empty now: shows once a tournament runs (step 7)</text>
+      <rect x="20" y="320" width="170" height="36" rx="6" class="gbtn"/><text x="105" y="344" class="gbtnt" text-anchor="middle">+ Add widget</text>
+      <text x="20" y="398" class="tx" font-weight="700">Rotation</text>
+      <rect x="20" y="410" width="180" height="34" rx="6" fill="#dbeafe" stroke="#2563eb"/><text x="110" y="433" class="gbtnt" text-anchor="middle">in order</text>
+      <rect x="210" y="410" width="180" height="34" rx="6" class="gbtn"/><text x="300" y="433" class="gbtnt" text-anchor="middle">shuffle</text>
+      <text x="20" y="480" class="tx">Dwell 15 s · skip empty ✓</text>
+      <text x="20" y="510" class="tx">When all empty: show the logo ▾</text>
+      <text x="20" y="560" class="tx" font-weight="700">Changes</text>
+      <text x="20" y="586" class="mu">Photo moved up · dwell 20 → 15 s</text>
+      <rect x="20" y="640" width="120" height="44" rx="8" class="gbtn"/><text x="80" y="668" class="gbtnt" text-anchor="middle">Discard</text>
+      <rect x="150" y="640" width="240" height="44" rx="8" class="btn"/><text x="270" y="668" class="btnt" text-anchor="middle">Go live on 2 screens</text>
+      <text x="20" y="720" class="mu">Undo stays available for 10 minutes</text>
+      <text x="20" y="742" class="mu">after going live (keeps the old revision)</text>
+    </g>
+    <text x="270" y="830" class="note">Two kinds of change: the grid and its regions are theme layouts (theming's draft → preview → publish, with rollback); what each region of a zone shows is the zone's own</text>
+    <text x="270" y="856" class="note">settings (Zone.regions), saved with a revision. How a zone change is previewed before it goes live is open (question U6): a preview of the proposed zone needs a small</text>
+    <text x="270" y="882" class="note">additive contract path, or the studio renders it in the browser from the current state. "Preview on a device" uses an unassigned screen as a test bench.</text>
+  </g>
+</svg>

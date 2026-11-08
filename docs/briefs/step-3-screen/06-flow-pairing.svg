@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 760" width="1920" height="760" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 06: flow, pairing a new screen in under a minute</title>
+  <style>
+    .label { fill: #1f2937; font-size: 26px; font-weight: 600; }
+    .step { fill: #111827; font-size: 22px; font-weight: 700; }
+    .d { fill: #374151; font-size: 18px; }
+    .who { fill: #6b7280; font-size: 16px; font-weight: 700; letter-spacing: 2px; }
+    .t { fill: #f3f5ff; } .m { fill: #a9b1d6; } .p { fill: #3ddcff; }
+    .ui { fill: #ffffff; stroke: #d1d5db; stroke-width: 2; }
+    .uit { fill: #111827; } .uim { fill: #6b7280; }
+    .btn { fill: #2563eb; } .btnt { fill: #fff; font-weight: 700; }
+    .field { fill: #f9fafb; stroke: #9ca3af; stroke-width: 1.5; }
+    .arrow { stroke: #9ca3af; stroke-width: 4; fill: none; marker-end: url(#ah); }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#9ca3af"/></marker>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient>
+  </defs>
+  <rect width="1920" height="760" fill="#f3f4f6"/>
+  <text x="24" y="40" class="label">06 · Flow: pair a new screen (venue crew at the kiosk, an organiser on a phone or laptop)</text>
+
+  <!-- step 1 kiosk -->
+  <g transform="translate(30,80)">
+    <text x="0" y="0" class="who">VENUE CREW · KIOSK</text>
+    <rect x="0" y="16" width="420" height="236" fill="#0b0d1a"/>
+    <text x="24" y="56" class="m" font-size="15">Demo Event · screen setup</text>
+    <text x="24" y="96" class="t" font-size="24" font-weight="700">Pair this screen</text>
+    <text x="24" y="160" class="p" font-size="38" font-weight="800" letter-spacing="2">K7Q4 9WXP</text>
+    <text x="24" y="200" class="m" font-size="14">Studio → Devices → Pair · expires in 9:41</text>
+    <rect x="330" y="30" width="70" height="70" fill="#fff"/>
+    <text x="0" y="292" class="step">1 · Open the start URL</text>
+    <text x="0" y="320" class="d">Full-screen browser on https://demo.example.org/screen/.</text>
+    <text x="0" y="344" class="d">From the venue network only; one code per browser.</text>
+  </g>
+  <path d="M465,200 L505,200" class="arrow"/>
+
+  <!-- step 2 admin dialog (phone) -->
+  <g transform="translate(520,80)">
+    <text x="0" y="0" class="who">ORGANISER · PHONE</text>
+    <rect x="80" y="16" width="250" height="440" rx="28" fill="#111827"/>
+    <rect x="92" y="40" width="226" height="396" rx="14" fill="#fff"/>
+    <text x="108" y="74" class="uit" font-size="17" font-weight="700">Pair a screen</text>
+    <text x="108" y="104" class="uim" font-size="12">Code (filled by the scan)</text>
+    <rect x="108" y="112" width="194" height="36" rx="6" class="field"/>
+    <text x="118" y="137" class="uit" font-size="18" font-weight="700" letter-spacing="2">K7Q4 9WXP</text>
+    <text x="108" y="172" class="uim" font-size="12">Name</text>
+    <rect x="108" y="180" width="194" height="36" rx="6" class="field"/>
+    <text x="118" y="204" class="uit" font-size="15">Hall left</text>
+    <text x="108" y="240" class="uim" font-size="12">Zone</text>
+    <rect x="108" y="248" width="194" height="36" rx="6" class="field"/>
+    <text x="118" y="272" class="uit" font-size="15">Main hall ▾</text>
+    <text x="108" y="308" class="uim" font-size="12">Venue: Demo Venue</text>
+    <rect x="108" y="330" width="194" height="40" rx="8" class="btn"/>
+    <text x="205" y="356" class="btnt" font-size="15" text-anchor="middle">Pair</text>
+    <text x="108" y="404" class="uim" font-size="11">Needs screen.devices.pair · audited</text>
+    <text x="0" y="492" class="step">2 · Type or scan the code</text>
+    <text x="0" y="520" class="d">Name it, pick the zone, done. The venue comes from</text>
+    <text x="0" y="544" class="d">the event; an event with no venue cannot pair.</text>
+  </g>
+  <path d="M875,200 L915,200" class="arrow"/>
+
+  <!-- step 3 kiosk shows pulse -->
+  <g transform="translate(930,80)">
+    <text x="0" y="0" class="who">KIOSK · WITHIN 2 SECONDS</text>
+    <rect x="0" y="16" width="420" height="236" fill="#0b0d1a"/>
+    <rect x="10" y="28" width="16" height="16" rx="4" fill="url(#g)"/>
+    <text x="34" y="42" class="t" font-size="12" font-weight="700">DEMO EVENT</text>
+    <rect x="10" y="54" width="268" height="170" rx="6" fill="#1b2246"/>
+    <text x="24" y="120" class="t" font-size="20" font-weight="800">Demo Game Cup</text>
+    <rect x="286" y="54" width="124" height="100" rx="6" fill="#161a2e"/>
+    <text x="296" y="80" class="t" font-size="13" font-weight="700">Dinner +15</text>
+    <rect x="286" y="160" width="124" height="64" rx="6" fill="#161a2e"/>
+    <rect x="0" y="230" width="420" height="22" fill="#161a2e"/>
+    <rect x="100" y="90" width="220" height="70" rx="10" fill="#0b0d1a" stroke="url(#g)" stroke-width="3" opacity="0.95"/>
+    <text x="210" y="122" class="t" font-size="20" font-weight="800" text-anchor="middle">Hall left</text>
+    <text x="210" y="146" class="p" font-size="14" text-anchor="middle">Main hall · paired</text>
+    <text x="0" y="292" class="step">3 · The Pulse appears</text>
+    <text x="0" y="320" class="d">The kiosk collects its token (an HttpOnly cookie, 400</text>
+    <text x="0" y="344" class="d">days) and shows its name for 5 s, then the zone.</text>
+  </g>
+  <path d="M1385,200 L1425,200" class="arrow"/>
+
+  <!-- step 4 devices list -->
+  <g transform="translate(1440,80)">
+    <text x="0" y="0" class="who">ORGANISER · STUDIO</text>
+    <rect x="0" y="16" width="450" height="236" rx="10" class="ui"/>
+    <text x="20" y="50" class="uit" font-size="17" font-weight="700">Devices · Main hall</text>
+    <rect x="20" y="66" width="410" height="70" rx="8" fill="#ecfdf5" stroke="#10b981"/>
+    <rect x="30" y="76" width="90" height="50" rx="4" fill="#0b0d1a"/>
+    <circle cx="140" cy="92" r="6" fill="#10b981"/>
+    <text x="154" y="97" class="uit" font-size="15" font-weight="700">Hall left · new</text>
+    <text x="134" y="120" class="uim" font-size="13">online · Pulse · hero: playlist</text>
+    <rect x="20" y="146" width="410" height="70" rx="8" fill="#fff" stroke="#e5e7eb"/>
+    <rect x="30" y="156" width="90" height="50" rx="4" fill="#0b0d1a"/>
+    <circle cx="140" cy="172" r="6" fill="#10b981"/>
+    <text x="154" y="177" class="uit" font-size="15" font-weight="700">Hall right</text>
+    <text x="134" y="200" class="uim" font-size="13">online · mirrors Hall left</text>
+    <text x="0" y="292" class="step">4 · It is in the fleet</text>
+    <text x="0" y="320" class="d">Live thumbnail, health and now playing. Next event:</text>
+    <text x="0" y="344" class="d">the superadmin moves it (mockup 15).</text>
+  </g>
+
+  <g transform="translate(30,650)">
+    <text x="0" y="0" class="d">Measure for the session: from opening the start URL to the Pulse on screen in under 60 seconds, with no keyboard at the kiosk beyond the URL.</text>
+    <text x="0" y="26" class="d">Pairing is the only time anyone but the superadmin sets a device's event (the contract's reading of 0013 item 34, to confirm: question D1).</text>
+    <text x="0" y="52" class="d">The QR in step 1 opens the pair dialog on a phone already signed in to Studio, with the code in the URL fragment (no contract change).</text>
+  </g>
+</svg>

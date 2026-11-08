@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1240" width="1920" height="1240" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 04: how claims take regions (rendered by Screen in step 3, ranked by Moments in step 4)</title>
+  <style>
+    .label { fill: #1f2937; font-size: 26px; font-weight: 600; }
+    .cap { fill: #111827; font-size: 24px; font-weight: 700; }
+    .d { fill: #374151; font-size: 20px; }
+    .t { fill: #f3f5ff; } .m { fill: #a9b1d6; } .p { fill: #3ddcff; } .w { fill: #ffc94d; }
+  </style>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient>
+    <!-- the main-hall screen at 900×506 (0.469 of 1920×1080) -->
+    <symbol id="base" viewBox="0 0 1920 1080">
+      <rect width="1920" height="1080" fill="#0b0d1a"/>
+      <rect x="48" y="22" width="46" height="46" rx="10" fill="url(#g)"/>
+      <text x="110" y="58" fill="#f3f5ff" font-size="34" font-weight="700">DEMO EVENT</text>
+      <text x="1872" y="58" fill="#f3f5ff" font-size="40" font-weight="700" text-anchor="end">20:58</text>
+      <rect x="48" y="102" width="1212" height="876" rx="14" fill="#1b2246" stroke="#343c66" stroke-width="2"/>
+      <text x="96" y="300" fill="#f3f5ff" font-size="92" font-weight="800">Bracket: semis</text>
+      <text x="96" y="400" fill="#a9b1d6" font-size="44">Team Alpha 2 – 1 Team Beta</text>
+      <rect x="1290" y="102" width="582" height="510" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="2"/>
+      <text x="1322" y="152" fill="#a9b1d6" font-size="24" font-weight="700">NOW</text>
+      <text x="1322" y="200" fill="#f3f5ff" font-size="38" font-weight="700">Semis</text>
+      <text x="1322" y="318" fill="#a9b1d6" font-size="24" font-weight="700">NEXT</text>
+      <text x="1322" y="364" fill="#f3f5ff" font-size="34">Grand final · 21:00</text>
+      <rect x="1290" y="642" width="582" height="336" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="2"/>
+      <text x="1322" y="732" fill="#f3f5ff" font-size="32" font-weight="700">demo-guest</text>
+      <rect x="0" y="1002" width="1920" height="78" fill="#161a2e"/>
+      <text x="220" y="1052" fill="#f3f5ff" font-size="32">Pizza orders close at 20:00 · Final 21:00 on stage</text>
+    </symbol>
+  </defs>
+  <rect width="1920" height="1240" fill="#f3f4f6"/>
+  <text x="24" y="40" class="label">04 · Claims: Moments' overrides take regions by role; Screen places and draws them, the same on every screen</text>
+
+  <!-- a: block in the rail -->
+  <g transform="translate(40,70)">
+    <use href="#base" width="900" height="506"/>
+    <g transform="scale(0.46875)">
+      <rect x="1290" y="102" width="582" height="510" rx="14" fill="#161a2e" stroke="url(#g)" stroke-width="8"/>
+      <text x="1322" y="170" fill="#3ddcff" font-size="28" font-weight="800" letter-spacing="3">ANNOUNCEMENT</text>
+      <text x="1322" y="250" fill="#f3f5ff" font-size="52" font-weight="800">Dinner is served</text>
+      <text x="1322" y="310" fill="#a9b1d6" font-size="34">Café, until 19:00</text>
+      <rect x="1322" y="560" width="518" height="10" rx="5" fill="#343c66"/><rect x="1322" y="560" width="300" height="10" rx="5" fill="url(#g)"/>
+    </g>
+    <text x="0" y="546" class="cap">a · Block in the rail (rank 80, chain rail → ticker)</text>
+    <text x="0" y="576" class="d">The bracket keeps the hero; the announcement takes the rail. On a zone</text>
+    <text x="0" y="602" class="d">whose layout has no rail it falls back to the ticker line. Ends at its</text>
+    <text x="0" y="628" class="d">expires_at even if Moments is down; the rail resumes where it would be.</text>
+  </g>
+
+  <!-- b: full takeover, emergency -->
+  <g transform="translate(980,70)">
+    <use href="#base" width="900" height="506"/>
+    <rect width="900" height="506" fill="#7f1d1d"/>
+    <rect x="20" y="20" width="860" height="466" fill="none" stroke="#fecaca" stroke-width="6"/>
+    <text x="450" y="200" fill="#fff" font-size="64" font-weight="800" text-anchor="middle">Please leave the hall</text>
+    <text x="450" y="260" fill="#fecaca" font-size="32" text-anchor="middle">Follow the exit signs.</text>
+    <text x="450" y="420" fill="#fecaca" font-size="22" text-anchor="middle">every zone · sound loops on each zone's sound device</text>
+    <text x="0" y="546" class="cap">b · Takeover of the full screen (rank 100, every zone)</text>
+    <text x="0" y="576" class="d">Hides every region. Lower claims become "hidden" and come back when</text>
+    <text x="0" y="602" class="d">it ends. Fixed safety styling no theme can override (canccu-base,</text>
+    <text x="0" y="628" class="d">!important). Who may send one is step 4's question (E9).</text>
+  </g>
+
+  <!-- c: sequence in the hero -->
+  <g transform="translate(40,720)">
+    <use href="#base" width="900" height="506" opacity="0.999"/>
+    <g transform="scale(0.46875)">
+      <rect x="48" y="102" width="1212" height="876" rx="14" fill="#2a1745" stroke="url(#g)" stroke-width="8"/>
+      <rect x="140" y="180" width="300" height="400" rx="12" fill="#3b2a66"/>
+      <text x="290" y="390" fill="#b98cff" font-size="34" text-anchor="middle">cover</text>
+      <text x="500" y="260" fill="#b98cff" font-size="36" font-weight="800" letter-spacing="4">HOT RIGHT NOW</text>
+      <text x="500" y="360" fill="#f3f5ff" font-size="84" font-weight="800">Demo Game</text>
+      <text x="500" y="440" fill="#a9b1d6" font-size="44">14 playing · since 21:10</text>
+      <text x="500" y="540" fill="#3ddcff" font-size="36">Scan to follow →</text>
+    </g>
+    <text x="0" y="546" class="cap">c · A Moment sequence in the hero (sting 2.5 s, then the card)</text>
+    <text x="0" y="576" class="d">steps play in order in the claimed region, with an optional sound on</text>
+    <text x="0" y="602" class="d">the first. The broadcast grammar of direction A lives here: stingers,</text>
+    <text x="0" y="628" class="d">cards and lower thirds as templates, not a separate scene engine.</text>
+  </g>
+
+  <!-- d: overlay band -->
+  <g transform="translate(980,720)">
+    <use href="#base" width="900" height="506"/>
+    <rect x="0" y="352" width="900" height="80" fill="url(#g)"/>
+    <text x="30" y="386" fill="#0b0d1a" font-size="22" font-weight="800">MATCH CALLED</text>
+    <text x="30" y="416" fill="#0b0d1a" font-size="24">Team Alpha vs Team Gamma · go to Stage 2 · voice: Match 7</text>
+    <text x="0" y="546" class="cap">d · Overlay band (a lower third) above everything</text>
+    <text x="0" y="576" class="d">Draws on top without hiding; an overlay that outranks a takeover is</text>
+    <text x="0" y="602" class="d">drawn above it too. The template sets where the band sits. Unplaced</text>
+    <text x="0" y="628" class="d">and hidden claims are reported back to Moments (screen.claims.changed).</text>
+  </g>
+</svg>

@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 760" width="1920" height="760" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 01: the three creative directions side by side</title>
+  <style>
+    .label { fill: #1f2937; font-size: 26px; font-weight: 600; }
+    .h { fill: #111827; font-size: 30px; font-weight: 700; }
+    .d { fill: #374151; font-size: 20px; }
+    .rec { fill: #047857; font-size: 20px; font-weight: 700; }
+    .t { fill: #f3f5ff; } .m { fill: #a9b1d6; } .p { fill: #3ddcff; } .a { fill: #b98cff; } .w { fill: #ffc94d; }
+  </style>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient>
+  </defs>
+  <rect width="1920" height="760" fill="#f3f4f6"/>
+  <text x="24" y="40" class="label">01 · Three directions for step 3, the same moment (18:42, dinner running late) on the main-hall screen</text>
+
+  <!-- A: Channel -->
+  <g transform="translate(24,70)">
+    <rect width="600" height="338" fill="#05060c"/>
+    <rect x="0" y="0" width="600" height="338" fill="#1a1030"/>
+    <text x="40" y="150" class="t" font-size="46" font-weight="800">LIVE: SEMIS</text>
+    <text x="40" y="190" class="m" font-size="20">camera / stream / slides fill the frame</text>
+    <rect x="478" y="16" width="106" height="30" rx="4" fill="#ff3d5a"/>
+    <text x="531" y="38" class="t" font-size="18" font-weight="800" text-anchor="middle">ON AIR</text>
+    <!-- lower third -->
+    <rect x="30" y="232" width="380" height="54" fill="url(#g)"/>
+    <text x="44" y="256" fill="#0b0d1a" font-size="18" font-weight="800">UP NEXT · 19:30</text>
+    <text x="44" y="278" fill="#0b0d1a" font-size="18">Demo Game Cup, semis</text>
+    <rect x="0" y="304" width="600" height="34" fill="#000"/>
+    <text x="12" y="327" class="w" font-size="18" font-weight="700">DINNER +15 MIN</text>
+    <text x="180" y="327" class="t" font-size="18">· Pizza orders close 20:00 · Final 21:00</text>
+    <text x="0" y="380" class="h">A · Channel</text>
+    <text x="0" y="412" class="d">The venue's own TV channel: segments, lower thirds,</text>
+    <text x="0" y="438" class="d">stingers and an ON AIR bug. The run-of-show is the</text>
+    <text x="0" y="464" class="d">rundown; a director (or the agenda) cuts between scenes.</text>
+    <text x="0" y="500" class="d">+ big moments feel like a broadcast; great on a stage</text>
+    <text x="0" y="526" class="d">− needs motion design and a person who directs;</text>
+    <text x="0" y="552" class="d">   busy for a café screen; one thing at a time</text>
+    <text x="0" y="588" class="d">Cost: L (scene engine, transitions, templates)</text>
+  </g>
+
+  <!-- B: Billboard -->
+  <g transform="translate(660,70)">
+    <rect width="600" height="338" fill="#0f172a"/>
+    <rect x="0" y="0" width="600" height="300" fill="#1e293b"/>
+    <text x="300" y="140" class="t" font-size="40" font-weight="800" text-anchor="middle">Slide 3 / 12</text>
+    <text x="300" y="180" class="m" font-size="20" text-anchor="middle">full-screen playlist from the weekly schedule</text>
+    <rect x="200" y="210" width="200" height="8" rx="4" fill="#334155"/><rect x="200" y="210" width="120" height="8" rx="4" fill="#3b82f6"/>
+    <rect x="0" y="300" width="600" height="38" fill="#0b1220"/>
+    <text x="12" y="326" class="t" font-size="18">Dinner is 15 min late · Pizza orders close 20:00</text>
+    <text x="588" y="326" class="m" font-size="18" text-anchor="end">18:42</text>
+    <text x="0" y="380" class="h">B · Billboard</text>
+    <text x="0" y="412" class="d">The legacy signage, polished: playlists and the weekly</text>
+    <text x="0" y="438" class="d">scheduler fill the screen, with a slim ticker. Widgets</text>
+    <text x="0" y="464" class="d">are slides the organiser chooses to add.</text>
+    <text x="0" y="500" class="d">+ cheapest: mostly a port; predictable; known to crews</text>
+    <text x="0" y="526" class="d">− blank without content work; agenda changes need new</text>
+    <text x="0" y="552" class="d">   slides; misses 0022's "lively, always current" Pulse</text>
+    <text x="0" y="588" class="d">Cost: S–M (port of the core, new player and studio)</text>
+  </g>
+
+  <!-- C: Pulse -->
+  <g transform="translate(1296,70)">
+    <rect width="600" height="338" fill="#0b0d1a"/>
+    <rect x="12" y="10" width="20" height="20" rx="5" fill="url(#g)"/>
+    <text x="40" y="27" class="t" font-size="16" font-weight="700">DEMO EVENT</text>
+    <text x="588" y="27" class="t" font-size="18" font-weight="700" text-anchor="end">18:42</text>
+    <rect x="12" y="38" width="384" height="262" rx="8" fill="#1b2246"/>
+    <text x="30" y="110" class="t" font-size="30" font-weight="800">Demo Game Cup</text>
+    <text x="30" y="146" class="t" font-size="30" font-weight="800">Grand final</text>
+    <text x="30" y="178" class="m" font-size="16">21:00 · Stage</text>
+    <rect x="30" y="276" width="300" height="5" rx="2" fill="url(#g)"/>
+    <rect x="406" y="38" width="182" height="160" rx="8" fill="#161a2e" stroke="#343c66"/>
+    <text x="418" y="62" class="m" font-size="12" font-weight="700">NOW</text>
+    <text x="418" y="84" class="t" font-size="18" font-weight="700">Dinner</text>
+    <text x="500" y="84" class="w" font-size="14" font-weight="700">+15 min</text>
+    <text x="418" y="116" class="m" font-size="12" font-weight="700">NEXT</text>
+    <text x="418" y="136" class="t" font-size="15">Semis · 19:30</text>
+    <text x="418" y="180" class="p" font-size="20" font-weight="700">00:47:18</text>
+    <rect x="406" y="206" width="182" height="94" rx="8" fill="#161a2e" stroke="#343c66"/>
+    <text x="418" y="232" class="t" font-size="14" font-weight="700">Check in</text>
+    <text x="418" y="252" class="m" font-size="12">Wi-Fi demo-guest</text>
+    <rect x="516" y="216" width="62" height="62" fill="#fff"/>
+    <rect x="0" y="308" width="600" height="30" fill="#161a2e"/>
+    <rect x="0" y="308" width="70" height="30" fill="url(#g)"/>
+    <text x="80" y="329" class="t" font-size="15">Pizza orders close at 20:00 · Final 21:00 on stage</text>
+    <text x="0" y="380" class="h">C · Pulse  (recommended)</text>
+    <text x="0" y="412" class="d">The room's living dashboard: widgets fed by the platform</text>
+    <text x="0" y="438" class="d">fill the screen by themselves; playlists are one widget</text>
+    <text x="0" y="464" class="d">in the hero; Moments (step 4) claim regions at the peaks.</text>
+    <text x="0" y="500" class="d">+ useful the minute a device is paired; never disagrees</text>
+    <text x="0" y="526" class="d">   with the hub; the contracts already describe it</text>
+    <text x="0" y="552" class="d">− more moving parts (push, composition, theming)</text>
+    <text x="0" y="588" class="d">Cost: M–L, mostly already paid in the step 2 contracts</text>
+    <text x="0" y="624" class="rec">Recommended: C as the body; A's broadcast grammar</text>
+    <text x="0" y="650" class="rec">for claims and transitions; B's proven scheduler</text>
+    <text x="0" y="676" class="rec">and playlists inside the hero.</text>
+  </g>
+</svg>

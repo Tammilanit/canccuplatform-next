@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1000" width="1920" height="1000" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 05: what a kiosk shows in each device state</title>
+  <style>
+    .label { fill: #1f2937; font-size: 26px; font-weight: 600; }
+    .cap { fill: #111827; font-size: 22px; font-weight: 700; }
+    .d { fill: #374151; font-size: 18px; }
+    .scr { fill: #0b0d1a; }
+    .t { fill: #f3f5ff; } .m { fill: #a9b1d6; } .p { fill: #3ddcff; } .w { fill: #ffc94d; } .dn { fill: #ff6b7d; }
+  </style>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient>
+    <symbol id="qr" viewBox="0 0 21 21">
+      <rect width="21" height="21" fill="#fff"/>
+      <g fill="#0b0d1a"><rect x="1" y="1" width="6" height="6"/><rect x="2" y="2" width="4" height="4" fill="#fff"/><rect x="3" y="3" width="2" height="2"/>
+      <rect x="14" y="1" width="6" height="6"/><rect x="15" y="2" width="4" height="4" fill="#fff"/><rect x="16" y="3" width="2" height="2"/>
+      <rect x="1" y="14" width="6" height="6"/><rect x="2" y="15" width="4" height="4" fill="#fff"/><rect x="3" y="16" width="2" height="2"/>
+      <rect x="9" y="2" width="2" height="2"/><rect x="8" y="8" width="3" height="2"/><rect x="13" y="9" width="2" height="3"/><rect x="17" y="10" width="3" height="1"/>
+      <rect x="10" y="13" width="2" height="3"/><rect x="15" y="15" width="3" height="2"/><rect x="9" y="18" width="3" height="2"/><rect x="18" y="18" width="2" height="2"/></g>
+    </symbol>
+  </defs>
+  <rect width="1920" height="1000" fill="#f3f4f6"/>
+  <text x="24" y="40" class="label">05 · Device states: what the kiosk shows (with the device name wherever the server may tell it)</text>
+
+  <!-- 1 pairing -->
+  <g transform="translate(40,70)">
+    <rect width="590" height="332" class="scr"/>
+    <text x="30" y="50" class="m" font-size="18">Demo Event · screen setup</text>
+    <text x="30" y="110" class="t" font-size="30" font-weight="700">Pair this screen</text>
+    <text x="30" y="190" class="p" font-size="56" font-weight="800" letter-spacing="4">K7Q4 9WXP</text>
+    <text x="30" y="240" class="m" font-size="18">Screen studio → Devices → Pair, and type the code.</text>
+    <text x="30" y="266" class="m" font-size="18">Or scan with a signed-in phone →</text>
+    <text x="30" y="306" class="m" font-size="16">Code expires in 9:41 · a reload keeps the same code</text>
+    <use href="#qr" x="450" y="24" width="116" height="116"/>
+    <text x="0" y="372" class="cap">1 · Pairing (no device cookie)</text>
+    <text x="0" y="398" class="d">8-character code, 10 minutes, from the venue address only.</text>
+    <text x="0" y="420" class="d">New: a QR that opens the pair dialog with the code filled (U3).</text>
+  </g>
+
+  <!-- 2 not assigned -->
+  <g transform="translate(665,70)">
+    <rect width="590" height="332" class="scr"/>
+    <rect x="30" y="30" width="40" height="40" rx="8" fill="url(#g)"/>
+    <text x="84" y="60" class="t" font-size="22" font-weight="700">DEMO EVENT</text>
+    <text x="295" y="160" class="t" font-size="40" font-weight="800" text-anchor="middle">Hall left</text>
+    <text x="295" y="204" class="m" font-size="22" text-anchor="middle">Paired. Not assigned to a zone yet.</text>
+    <text x="295" y="236" class="m" font-size="18" text-anchor="middle">An organiser assigns it in Screen studio → Devices.</text>
+    <text x="560" y="310" class="m" font-size="16" text-anchor="end">18:42</text>
+    <text x="0" y="372" class="cap">2 · Paired, not assigned (zone: null)</text>
+    <text x="0" y="398" class="d">The stream stays open: an assignment arrives by push and the</text>
+    <text x="0" y="420" class="d">Pulse appears with no reload. A parked device looks the same.</text>
+  </g>
+
+  <!-- 3 identify -->
+  <g transform="translate(1290,70)">
+    <rect width="590" height="332" class="scr"/>
+    <rect x="10" y="40" width="380" height="250" rx="8" fill="#1b2246"/>
+    <rect x="400" y="40" width="180" height="250" rx="8" fill="#161a2e"/>
+    <rect width="590" height="332" fill="#000" opacity="0.6"/>
+    <rect x="80" y="86" width="430" height="160" rx="16" fill="#0b0d1a" stroke="url(#g)" stroke-width="6"/>
+    <text x="295" y="150" class="t" font-size="44" font-weight="800" text-anchor="middle">Hall left</text>
+    <text x="295" y="196" class="p" font-size="24" text-anchor="middle">zone: Main hall · v0.4.0</text>
+    <text x="295" y="226" class="m" font-size="16" text-anchor="middle">identify · 12 s left</text>
+    <text x="0" y="372" class="cap">3 · Identify (a device command)</text>
+    <text x="0" y="398" class="d">"Which one is Hall left?" Shows name, zone and bundle for 15 s.</text>
+    <text x="0" y="420" class="d">Sent from Studio; dropped if not delivered within 60 s.</text>
+  </g>
+
+  <!-- 4 offline -->
+  <g transform="translate(40,530)">
+    <rect width="590" height="332" class="scr"/>
+    <rect x="10" y="40" width="380" height="250" rx="8" fill="#1b2246"/>
+    <text x="30" y="150" class="t" font-size="34" font-weight="800">Grand final 21:00</text>
+    <rect x="400" y="40" width="180" height="120" rx="8" fill="#161a2e"/>
+    <text x="414" y="76" class="t" font-size="18" font-weight="700">Dinner</text>
+    <text x="414" y="104" class="m" font-size="14">until 19:15</text>
+    <rect x="400" y="170" width="180" height="120" rx="8" fill="#161a2e" opacity="0.5"/>
+    <text x="414" y="206" class="m" font-size="14">Check-in QR hidden</text>
+    <text x="414" y="226" class="m" font-size="14">while offline (stale)</text>
+    <rect x="420" y="8" width="160" height="26" rx="13" fill="#3a2d10"/>
+    <text x="500" y="27" class="w" font-size="15" font-weight="700" text-anchor="middle">offline since 18:40</text>
+    <text x="0" y="372" class="cap">4 · Uplink down (canccu-is-offline after 10 s)</text>
+    <text x="0" y="398" class="d">Rotation, clock, countdowns and cached playlist items run on;</text>
+    <text x="0" y="420" class="d">stale widgets dim or hide; claims end on time. Nothing new starts.</text>
+  </g>
+
+  <!-- 5 moved -->
+  <g transform="translate(665,530)">
+    <rect width="590" height="332" class="scr"/>
+    <text x="295" y="130" class="t" font-size="34" font-weight="800" text-anchor="middle">This screen has moved</text>
+    <text x="295" y="176" class="m" font-size="20" text-anchor="middle">to its next event. Taking you there…</text>
+    <rect x="195" y="210" width="200" height="8" rx="4" fill="#343c66"/><rect x="195" y="210" width="130" height="8" rx="4" class="p"/>
+    <text x="295" y="290" class="m" font-size="16" text-anchor="middle">crew: update the kiosk start URL when convenient</text>
+    <text x="0" y="372" class="cap">5 · Moved by the superadmin (409 device_moved)</text>
+    <text x="0" y="398" class="d">GET /device/home answers the new hostname with a one-time</text>
+    <text x="0" y="420" class="d">transfer code (60 s); the old token only ever redirects.</text>
+  </g>
+
+  <!-- 6 refused -->
+  <g transform="translate(1290,530)">
+    <rect width="590" height="332" class="scr"/>
+    <circle cx="80" cy="96" r="34" fill="none" stroke="#ff6b7d" stroke-width="6"/>
+    <rect x="77" y="76" width="6" height="26" fill="#ff6b7d"/><rect x="77" y="108" width="6" height="6" fill="#ff6b7d"/>
+    <text x="134" y="88" class="t" font-size="26" font-weight="800">Not at the event's venue</text>
+    <text x="134" y="118" class="m" font-size="18">This screen only plays from the venue network.</text>
+    <text x="30" y="190" class="m" font-size="18">The screen is paired, but this network is not the venue.</text>
+    <text x="30" y="220" class="m" font-size="18">Crew: check the venue uplink, or ask an organiser</text>
+    <text x="30" y="246" class="m" font-size="18">about the audited emergency switch (48 h max).</text>
+    <text x="30" y="300" class="m" font-size="15">Retrying every 30 s · no content is sent while refused</text>
+    <text x="0" y="372" class="cap">6 · Refused (403 venue_ip_refused)</text>
+    <text x="0" y="398" class="d">Token valid, address wrong. Says what to do without showing the</text>
+    <text x="0" y="420" class="d">address. Archived event: same frame, "This event has ended".</text>
+  </g>
+</svg>
