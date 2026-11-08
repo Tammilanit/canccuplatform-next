@@ -10,7 +10,7 @@ import type { Logger } from "../log.js";
 import type { RightsChecker, Session } from "../rights.js";
 import { SERVICE_HEADER, serviceHasRight } from "../service.js";
 import type { ServiceIdentity } from "../service.js";
-import { checkOrigin } from "../web-security.js";
+import { canonicalPath, checkOrigin } from "../web-security.js";
 
 export type FetchHandler = (request: Request) => Promise<Response>;
 
@@ -42,23 +42,13 @@ export function healthHandler(health: Health): FetchHandler {
 /**
  * Run `handler` only when the request's canccu_session holds `right`. With `service`, a request
  * carrying the service header is a module's: it passes for the module's own rights only, and the
- * handler gets a null session and the calling module.
+ * handler gets a null session and the calling module. The session is typed nullable on purpose,
+ * so a handler cannot forget the module case.
  */
 export function withRight(
   checker: RightsChecker,
   right: string,
-  handler: (request: Request, session: Session) => Promise<Response>,
-): FetchHandler;
-export function withRight(
-  checker: RightsChecker,
-  right: string,
   handler: (request: Request, session: Session | null, service: string | null) => Promise<Response>,
-  options: { service: ServiceIdentity },
-): FetchHandler;
-export function withRight(
-  checker: RightsChecker,
-  right: string,
-  handler: (request: Request, session: Session, service: string | null) => Promise<Response>,
   options: { service?: ServiceIdentity } = {},
 ): FetchHandler {
   return async (request) => {
@@ -66,9 +56,7 @@ export function withRight(
     if (options.service !== undefined && token !== null) {
       const caller = options.service.verify(token);
       if (!serviceHasRight(caller, right)) throw new MissingRight(`needs right ${right}`);
-      // Only the overload with `service` gets here, and its handler takes a null session; the
-      // first overload's handler type keeps `Session` so existing callers need no null check.
-      return handler(request, null as unknown as Session, caller);
+      return handler(request, null, caller);
     }
     const session = await checker.check(request.headers.get("cookie"), right);
     return handler(request, session, null);
@@ -88,7 +76,8 @@ export function withServiceIdentity(
   const prefix = options.prefix ?? "/internal/";
   const exempt = new Set(options.exempt ?? []);
   return async (request) => {
-    const path = new URL(request.url).pathname;
+    const url = new URL(request.url);
+    const path = canonicalPath(url.pathname);
     if (!path.startsWith(prefix) || exempt.has(path)) return handler(request, null);
     return handler(request, identity.verify(request.headers.get(SERVICE_HEADER)));
   };
@@ -111,7 +100,7 @@ export function withKit(
           const url = new URL(request.url);
           checkOrigin(
             request.method,
-            url.pathname,
+            canonicalPath(url.pathname),
             request.headers.get("origin"),
             request.headers.get("host") ?? url.host,
             request.headers.get("sec-fetch-site"),

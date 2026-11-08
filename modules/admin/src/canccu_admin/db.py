@@ -22,6 +22,7 @@ from canccu_kit import (
     check_app_role,
     check_login_role,
     require_tenant,
+    run_migrations,
     tenant_transaction,
 )
 
@@ -109,7 +110,14 @@ class PgStore:
                 login = await conn.fetchval("SELECT current_user")
             migrator = await asyncpg.connect(migrate_url)
             try:
-                await migrate(migrator, migrations, grant_to=login)
+                await run_migrations(
+                    migrator,
+                    migrations,
+                    ledger="admin_migrations",
+                    lock=_MIGRATION_LOCK,
+                    app_role=APP_ROLE,
+                    grant_to=login,
+                )
             finally:
                 await migrator.close()
         async with pool.acquire() as conn, conn.transaction():
@@ -119,7 +127,7 @@ class PgStore:
 
     async def migrate(self, migrations: Path) -> None:
         async with self._pool.acquire() as conn:
-            await migrate(conn, migrations)
+            await run_migrations(conn, migrations, ledger="admin_migrations", lock=_MIGRATION_LOCK)
 
     @asynccontextmanager
     async def _tenant(self) -> AsyncIterator[Any]:
@@ -180,32 +188,3 @@ class PgStore:
 
     async def close(self) -> None:
         await self._pool.close()
-
-
-async def migrate(conn: Any, migrations: Path, *, grant_to: str | None = None) -> None:
-    """Run each new migration file once; then let the login role `grant_to` take the app role."""
-    await conn.execute("SELECT pg_advisory_lock($1)", _MIGRATION_LOCK)
-    try:
-        # Each file runs once, in its own transaction: CREATE POLICY cannot be repeated.
-        await conn.execute(
-            "CREATE TABLE IF NOT EXISTS admin_migrations"
-            " (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())"
-        )
-        # Start-up only, before serving: a blocking read is fine here.
-        for path in sorted(migrations.glob("*.sql")):  # noqa: ASYNC240
-            async with conn.transaction():
-                done = await conn.fetchval(
-                    "SELECT 1 FROM admin_migrations WHERE name = $1", path.name
-                )
-                if not done:
-                    await conn.execute(path.read_text())
-                    await conn.execute("INSERT INTO admin_migrations (name) VALUES ($1)", path.name)
-    finally:
-        await conn.execute("SELECT pg_advisory_unlock($1)", _MIGRATION_LOCK)
-    if grant_to is not None:
-        # The migration role created the app role, so it may grant it (ADMIN OPTION).
-        await conn.execute(f"GRANT {APP_ROLE} TO {quote_ident(grant_to)}")
-
-
-def quote_ident(name: str) -> str:
-    return '"' + name.replace('"', '""') + '"'

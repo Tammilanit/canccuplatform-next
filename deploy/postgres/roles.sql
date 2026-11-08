@@ -5,7 +5,9 @@
 -- create each module's NOLOGIN app role (canccu_<module>_app); since Postgres 16 it manages only
 -- the roles it created or was given ADMIN OPTION on, and it can never create a superuser.
 -- canccu_app is the login role every module serves as: no superuser, no BYPASSRLS, owns nothing,
--- reaching tables only through the app roles its module's migrations grant it.
+-- reaching tables only through the app roles the modules' migrations grant it. It is shared, so it
+-- holds every module's app role: RLS keeps tenants apart, but nothing in the database keeps one
+-- module out of another's tables until each module has a login role of its own.
 
 DO $$
 BEGIN

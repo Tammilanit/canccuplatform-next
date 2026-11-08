@@ -128,3 +128,33 @@ export function checkOrigin(
     throw new OriginRefused("cross-site requests are refused");
   }
 }
+
+export class InvalidPath extends KitError {
+  static override defaultStatus = 400;
+  static override defaultCode = "invalid_request";
+}
+
+/**
+ * The request path as a router matches it: query dropped, escapes decoded. Guards compare this,
+ * never the raw URL, or `/%69nternal/…` would pass a prefix check that its route then matches.
+ * Escaped separators, dot segments, `//` and backslashes are refused outright: routers disagree
+ * about them, and no platform path needs them.
+ */
+export function canonicalPath(rawUrl: string): string {
+  const raw = rawUrl.split("?")[0] ?? "";
+  if (/%2f|%5c/i.test(raw)) throw new InvalidPath("invalid path");
+  let path: string;
+  try {
+    path = decodeURIComponent(raw);
+  } catch {
+    throw new InvalidPath("invalid path");
+  }
+  const bad =
+    !path.startsWith("/") ||
+    path.includes("//") ||
+    path.includes("\\") ||
+    path.includes("\0") ||
+    path.split("/").some((part) => part === "." || part === "..");
+  if (bad) throw new InvalidPath("invalid path");
+  return path;
+}

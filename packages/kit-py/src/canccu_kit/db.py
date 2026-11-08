@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 from collections.abc import AsyncIterator, Mapping
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from pathlib import Path
 from typing import Any, Protocol
 
 from .tenant import require_tenant, tenant_scope
@@ -130,3 +131,44 @@ async def check_login_role(conn: SqlConnection) -> None:
         raise RlsBypassed(f"database login role {name} bypasses row-level security")
     if role["owns"] is not False:
         raise RlsBypassed(f"database login role {role['rolname']} owns tables; use the app role")
+
+
+def quote_ident(name: str) -> str:
+    return '"' + name.replace('"', '""') + '"'
+
+
+async def run_migrations(
+    conn: Any,
+    migrations: Path,
+    *,
+    ledger: str,
+    lock: int,
+    app_role: str | None = None,
+    grant_to: str | None = None,
+) -> None:
+    """Run each new `*.sql` file in `migrations` once, in name order, recorded in `ledger`.
+
+    Run it as the migration role, at start, before serving. Each file runs in its own transaction
+    (CREATE POLICY cannot be repeated); the advisory `lock` serialises containers starting at
+    once. With `grant_to`, the login role then gets the module's `app_role`: the migration role
+    created that role, so it holds ADMIN OPTION on it.
+    """
+    if _IDENTIFIER_RE.fullmatch(ledger) is None:
+        raise ValueError(f"invalid ledger table {ledger!r}")
+    await conn.execute("SELECT pg_advisory_lock($1)", lock)
+    try:
+        await conn.execute(
+            f"CREATE TABLE IF NOT EXISTS {ledger}"
+            " (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())"
+        )
+        # Start-up only, before serving: a blocking read is fine here.
+        for path in sorted(migrations.glob("*.sql")):  # noqa: ASYNC240
+            async with conn.transaction():
+                done = await conn.fetchval(f"SELECT 1 FROM {ledger} WHERE name = $1", path.name)
+                if not done:
+                    await conn.execute(path.read_text())
+                    await conn.execute(f"INSERT INTO {ledger} (name) VALUES ($1)", path.name)
+    finally:
+        await conn.execute("SELECT pg_advisory_unlock($1)", lock)
+    if grant_to is not None and app_role is not None:
+        await conn.execute(f"GRANT {quote_ident(app_role)} TO {quote_ident(grant_to)}")

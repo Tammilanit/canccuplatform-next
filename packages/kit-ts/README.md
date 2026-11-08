@@ -44,10 +44,11 @@ await withTenant("demo", () => bus.publish("screen.slide.shown", { slide: 3 }, {
 const service = new ServiceIdentity({ module: config.module, key: serviceKeyFromEnv() });
 
 // Settings, per tenant: read on GET /internal/admin/settings/<module>?tenant_id=, then follow
-// admin.settings.changed (never poll)
+// admin.settings.changed (never poll). It does not write: writes are a person's, on admin's API
+// on the event's own hostname, where admin learns the tenant
 const settings = new SettingsClient(admin, config.module, { service });
 await withTenant("demo", async () => {
-  await settings.load(); // the current tenant, or settings.load("demo")
+  await settings.ensure(); // the current tenant once (concurrent callers share the read)
   const rotation = settings.get("rotation_seconds", 10);
 });
 
@@ -86,8 +87,9 @@ app.post("/slides", { preHandler: requireRight(rights, "screen.slides.edit") }, 
 import { healthHandler, withKit, withRight } from "@canccu/kit/web";
 
 app.get("/health", (c) => healthHandler(health)(c.req.raw));
+// session is Session | null: null when a module signs the request (with { service })
 const edit = withRight(rights, "screen.slides.edit", async (req, session) =>
-  Response.json({ by: session.userId }),
+  Response.json({ by: session?.userId }),
 );
 export default { fetch: withKit(router, log) }; // error body + correlation id around everything
 ```
@@ -161,7 +163,7 @@ app.get("/orders", { preHandler: requireRight(rights, "pizza.orders.read", { ser
 ```
 
 - `verify(value)` gives the caller; `require(value, ["admin"])` also limits who (403 `service_forbidden`).
-- With `{ service }`, `requireRight` lets a module through on its own rights only (`serviceHasRight`: `pizza` holds `pizza.*`, never another module's or admin's); `request.session` is then null. Web: `withServiceIdentity(service, handler)` and `withRight(…, { service })`.
+- With `{ service }`, `requireRight` lets a module through on its own rights only (`serviceHasRight`: `pizza` holds `pizza.*`, never another module's or admin's); `request.session` is then null, and `withRight`'s handler gets `session: Session | null`. Web: `withServiceIdentity(service, handler)` and `withRight(…, { service })`.
 - `TenantResolver({ service })` signs its calls to the tenants module, and `SettingsClient` its reads from admin.
 
 ## Secrets

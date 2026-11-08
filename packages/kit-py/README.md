@@ -86,7 +86,7 @@ async def edit(request):
 Raise `KitError("text", status=400, code="slide_invalid")` (or `MissingRight`, `NotSignedIn`, …) and the adapter answers `{"error": {"code", "message"}}`. Unexpected errors become 500 `internal_error`, with the details only in the log.
 
 ### Errors from admin
-`SettingsClient.write` raises `VersionConflict` (409): read again and retry. An admin that can't be reached gives `AdminUnavailable` (503 `admin_unavailable`).
+`SettingsClient` only reads: a write is a person's, on admin's API on the event's own hostname, where admin learns the tenant. An admin that can't be reached gives `AdminUnavailable` (503 `admin_unavailable`).
 
 ## Tenancy
 Every event is a tenant on one shared stack ([0013](../../docs/decisions/0013-multi-tenant-core.md), [contracts/tenants.md](../../contracts/tenants.md)). The kit makes a module tenant-safe by construction: everything that stores or reads data needs a tenant, and it comes only from the request's hostname or the bus message.
@@ -132,7 +132,8 @@ service = ServiceIdentity(config.module, service_key_from_env())
 headers = service.headers("tenants")  # for a call to the tenants module
 install_service_identity(app, service, exempt=("/internal/tenants/ask",))  # 401 without a token
 caller = request.state.service  # e.g. "screen"; service.require(value, allowed={"screen"}) → 403
-@require_right(rights, "screen.slides.edit", service=service)  # a module passes for its own rights
+# a module passes for its own rights; request.state.session is then None (Session | None)
+@require_right(rights, "screen.slides.edit", service=service)
 ```
 Every module holds the same key, so a token proves "a module of this stack", not which one against a compromised module; it keeps out everything else on the internal network and never sends the key. `TenantResolver(..., service=service)` and `SettingsClient` sign their calls.
 
@@ -143,7 +144,7 @@ Every module holds the same key, so a token proves "a module of this stack", not
 `event_page_csp(new_nonce(), hostname, page="surface"|"admin"|"sign_in", sandbox=None)` is the CSP of [contracts/theming.md](../../contracts/theming.md#the-csp-of-event-pages); give the same nonce to the page's `<style>`. `install()` adds the origin check: `Origin: null` on `/api/…` and a state-changing request from another origin (or cross-site with no Origin) get 403 `origin_refused`.
 
 ## Database roles
-Modules log in as a plain role (no superuser, no BYPASSRLS, owns nothing) and run migrations as another role that owns the tables (0013 item 5). `check_login_role(conn)` refuses anything else; call it at start on a fresh connection, before SET ROLE.
+Modules log in as a plain role (no superuser, no BYPASSRLS, owns nothing) and run migrations as another role that owns the tables (0013 item 5). `check_login_role(conn)` refuses anything else; call it at start on a fresh connection, before SET ROLE. `run_migrations(conn, dir, ledger=, lock=, app_role=, grant_to=)` runs each new file once as the migration role and grants the module's app role to the login role. One login role (`canccu_app`) serves every module today, so it holds every module's app role: RLS keeps tenants apart, not modules.
 
 ## No state
 The kit writes nothing to disk. Its only in-memory items are the rights cache (≤ 30 s per session), the current settings, the tenant resolver's cache (≤ 30 s per host) and the bus's dedupe list of recent event ids and stream positions. Sessions live in admin (Postgres) and events in Valkey.

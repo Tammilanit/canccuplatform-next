@@ -23,6 +23,9 @@ from .config import ConfigError
 
 PREFIX = "cs1"
 _KEY_RE = re.compile(r"([1-9][0-9]{0,8}):([A-Za-z0-9_+/=-]+)")
+_VERSION_RE = re.compile(r"[1-9][0-9]{0,8}")
+_TOKEN_PART_RE = re.compile(r"[A-Za-z0-9_-]+")
+"""A sealed value has one spelling, as in kit-ts: canonical versions, base64url without padding."""
 
 
 class SecretUndecryptable(Exception):
@@ -85,7 +88,13 @@ class SecretBox:
 
     def _split(self, token: str) -> tuple[int, bytes, bytes]:
         parts = token.split(".")
-        if len(parts) != 4 or parts[0] != PREFIX or not parts[1].isdigit():
+        if (
+            len(parts) != 4
+            or parts[0] != PREFIX
+            or _VERSION_RE.fullmatch(parts[1]) is None
+            or _TOKEN_PART_RE.fullmatch(parts[2]) is None
+            or _TOKEN_PART_RE.fullmatch(parts[3]) is None
+        ):
             raise SecretUndecryptable("not a sealed value")
         try:
             nonce, sealed = _b64decode(parts[2]), _b64decode(parts[3])

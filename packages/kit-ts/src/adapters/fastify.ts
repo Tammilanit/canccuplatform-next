@@ -18,7 +18,7 @@ import type { RightsChecker, Session } from "../rights.js";
 import { SERVICE_HEADER, serviceHasRight } from "../service.js";
 import type { ServiceIdentity } from "../service.js";
 import { withTenant } from "../tenant.js";
-import { checkOrigin } from "../web-security.js";
+import { canonicalPath, checkOrigin } from "../web-security.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -36,8 +36,9 @@ function header(request: FastifyRequest, name: string): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+/** The decoded path the router matches (throws 400 for a path it would read differently). */
 function pathOf(request: FastifyRequest): string {
-  return request.url.split("?")[0] ?? "";
+  return canonicalPath(request.url);
 }
 
 /** Both install() and installServiceIdentity() may come first; Fastify refuses a second decorate. */
@@ -143,12 +144,12 @@ export function installServiceIdentity(
   const exempt = new Set(options.exempt ?? []);
   decorateService(app);
   app.addHook("onRequest", (request, _reply, done) => {
-    const path = pathOf(request);
-    if (!path.startsWith(prefix) || exempt.has(path)) {
-      done();
-      return;
-    }
     try {
+      const path = pathOf(request);
+      if (!path.startsWith(prefix) || exempt.has(path)) {
+        done();
+        return;
+      }
       request.service = identity.verify(header(request, SERVICE_HEADER));
     } catch (err) {
       done(err as Error);
@@ -179,7 +180,8 @@ export function installTenancy(
 ): void {
   app.decorateRequest("tenant", null);
   app.addHook("onRequest", (request, _reply, done) => {
-    if (isHealthRequest(request.method, pathOf(request))) {
+    // The raw path: an escaped /health only loses its exemption, which fails safe.
+    if (isHealthRequest(request.method, request.url.split("?")[0] ?? "")) {
       done();
       return;
     }

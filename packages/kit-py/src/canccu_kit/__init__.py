@@ -38,7 +38,9 @@ from .db import (
     SqlConnection,
     check_app_role,
     check_login_role,
+    quote_ident,
     rls_sql,
+    run_migrations,
     tenant_transaction,
 )
 from .errors import (
@@ -176,8 +178,10 @@ __all__ = [
     "platform_files_dir",
     "platform_stream",
     "postgres_check",
+    "quote_ident",
     "require_tenant",
     "rls_sql",
+    "run_migrations",
     "service_has_right",
     "service_key_from_env",
     "session_id_from_cookie",

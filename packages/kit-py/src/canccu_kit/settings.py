@@ -1,15 +1,19 @@
 """Settings client, per tenant: read through admin's internal path, follow
-admin.settings.changed, write with settings_version (contracts/admin.md, Settings)."""
+admin.settings.changed (contracts/admin.md, Settings).
+
+It does not write: a write is a person's, made on admin's API on the event's own hostname, which
+is how admin knows the tenant; a module on admin's internal address could name none.
+"""
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
 
 from .admin import AdminClient
 from .bus import Event
-from .errors import VersionConflict
 from .service import ServiceIdentity
 from .tenant import require_tenant, tenant_scope
 
@@ -23,8 +27,7 @@ class SettingsClient:
     """Each tenant's settings of one module, loaded on first use and kept until they change.
 
     The read is the module's own (`/internal/admin/settings/{module}?tenant_id=`, signed), since
-    a module reads for the tenant it serves, not on a person's behalf; a write is a person's and
-    goes through the API with their session.
+    a module reads for the tenant it serves, not on a person's behalf.
     """
 
     def __init__(
@@ -33,15 +36,15 @@ class SettingsClient:
         module: str,
         *,
         service: ServiceIdentity,
-        session_id: str | None = None,
         on_change: OnChange | None = None,
     ) -> None:
         self._admin = admin
         self.module = module
         self._service = service
-        self._session_id = session_id
         self._on_change = on_change
         self._cache: dict[str, tuple[int, dict[str, SettingValue]]] = {}
+        # A tenant's first read in flight, so concurrent first requests ask admin once.
+        self._loading: dict[str, asyncio.Task[None]] = {}
 
     def _apply(self, tenant: str, body: dict[str, Any]) -> None:
         self._cache[tenant] = (int(body["settings_version"]), dict(body["values"]))
@@ -58,13 +61,17 @@ class SettingsClient:
         self._admin.raise_for_error(response)
         self._apply(tenant, response.json())
 
-    async def start(self) -> None:
-        await self.load()
-
     async def ensure(self) -> None:
-        """Load the current tenant's settings unless they are cached."""
-        if require_tenant() not in self._cache:
-            await self.load()
+        """Load the current tenant's settings unless they are cached; callers share one read."""
+        tenant = require_tenant()
+        if tenant in self._cache:
+            return
+        task = self._loading.get(tenant)
+        if task is None:
+            task = asyncio.ensure_future(self.load(tenant))
+            self._loading[tenant] = task
+            task.add_done_callback(lambda _: self._loading.pop(tenant, None))
+        await asyncio.shield(task)
 
     @property
     def settings_version(self) -> int:
@@ -76,23 +83,6 @@ class SettingsClient:
 
     def get(self, key: str, default: SettingValue | None = None) -> SettingValue | None:
         return self._cache.get(require_tenant(), (0, {}))[1].get(key, default)
-
-    async def write(
-        self, values: dict[str, SettingValue], *, session_id: str | None = None
-    ) -> None:
-        """Replace the current tenant's values; raises VersionConflict if they changed since
-        they were read."""
-        tenant = require_tenant()
-        response = await self._admin.request(
-            "PUT",
-            f"/api/admin/settings/{self.module}",
-            session_id=session_id or self._session_id,
-            json={"settings_version": self.settings_version, "values": values},
-        )
-        if response.status_code == 409:
-            raise VersionConflict("settings changed since they were read; read again and retry")
-        self._admin.raise_for_error(response)
-        self._apply(tenant, response.json())
 
     async def handle_event(self, event: Event) -> None:
         """Feed admin's tenant events here; re-reads a cached tenant on a newer change."""

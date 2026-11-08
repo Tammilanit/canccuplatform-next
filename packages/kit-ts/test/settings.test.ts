@@ -5,7 +5,6 @@ import {
   SERVICE_HEADER,
   ServiceIdentity,
   SettingsClient,
-  VersionConflict,
   currentTenant,
   withTenant,
 } from "../src/index.js";
@@ -77,7 +76,7 @@ describe("settings client", () => {
     const { admin, stored, settings } = setup();
     stored.tenants["leak-a"] = { version: 3, values: { rotation_seconds: 10 } };
     stored.tenants["leak-b"] = { version: 5, values: { rotation_seconds: 20 } };
-    await withTenant("leak-a", () => settings.start());
+    await withTenant("leak-a", () => settings.ensure());
     await settings.load("leak-b");
     expect(admin.requests.map((r) => r.query.get("tenant_id"))).toEqual(["leak-a", "leak-b"]);
     withTenant("leak-a", () => {
@@ -117,24 +116,18 @@ describe("settings client", () => {
     expect(seen).toEqual([[["rotation_seconds"], "leak-a"]]);
   });
 
-  it("writes with the session and the tenant's held version; 409 is VersionConflict", async () => {
+  it("concurrent first requests of a tenant share one read; a held tenant is not read again", async () => {
     const { admin, stored, settings } = setup();
     stored.tenants["leak-a"] = { version: 2, values: { a: 1 } };
-    await withTenant("leak-a", async () => {
-      await settings.load();
-      await settings.write({ a: 2 }, { sessionId: "s1" });
-      expect(admin.requests.at(-1)).toMatchObject({
-        method: "PUT",
-        cookie: "canccu_session=s1",
-        body: { settings_version: 2, values: { a: 2 } },
-      });
-      expect([settings.settingsVersion, settings.get("a")]).toEqual([3, 2]);
-      stored.tenants["leak-a"] = { version: 7, values: {} };
-      const err = await settings.write({ a: 3 }).catch((e: unknown) => e);
-      expect(err).toBeInstanceOf(VersionConflict);
-      expect((err as VersionConflict).toBody().error.code).toBe("version_conflict");
-      expect((err as VersionConflict).status).toBe(409);
-    });
+    await withTenant("leak-a", () => Promise.all([settings.ensure(), settings.ensure()]));
+    await withTenant("leak-a", () => settings.ensure());
+    expect(admin.requests).toHaveLength(1);
+  });
+
+  it("writes nothing: a write is a person's, on admin's API on the event's hostname", () => {
+    const { settings } = setup();
+    expect("write" in settings).toBe(false);
+    expect("start" in settings).toBe(false);
   });
 
   it("keeps admin's code for other errors", async () => {

@@ -85,7 +85,15 @@ def test_require_checks_the_allow_list() -> None:
     assert (err.value.status, err.value.code) == (403, "service_forbidden")
 
 
+def test_a_non_canonical_expiry_is_refused() -> None:
+    good = token("admin", "tenants")
+    _, caller, audience, expires, sig = good.split(".")
+    with pytest.raises(ServiceUnauthenticated):
+        identity("tenants").verify(f"v1.{caller}.{audience}.0{expires}.{sig}")
+
+
 def test_a_module_holds_only_its_own_rights() -> None:
+    assert not service_has_right("screen", "screen.")
     assert service_has_right("screen", "screen.slides.edit")
     assert not service_has_right("screen", "admin.settings.read")
     assert not service_has_right("screen", "screens.x")

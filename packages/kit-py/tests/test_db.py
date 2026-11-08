@@ -180,3 +180,10 @@ async def test_check_login_role_wants_a_plain_role_that_owns_nothing(
     else:
         with pytest.raises(RlsBypassed):
             await check_login_role(conn)
+
+
+def test_quote_ident_doubles_quotes() -> None:
+    from canccu_kit.db import quote_ident
+
+    assert quote_ident("canccu_app") == '"canccu_app"'
+    assert quote_ident('a"b') == '"a""b"'

@@ -1,10 +1,11 @@
 /**
- * Settings client (contracts/admin.md, Settings): per tenant, read on admin's internal path,
- * followed through admin.settings.changed, written with settings_version.
+ * Settings client (contracts/admin.md, Settings): per tenant, read on admin's internal path and
+ * followed through admin.settings.changed. It does not write: a write is a person's, made on
+ * admin's API on the event's own hostname, which is how admin knows the tenant; a module on
+ * admin's internal address could name none.
  */
 import { AdminClient } from "./admin.js";
 import type { Event } from "./bus.js";
-import { VersionConflict } from "./errors.js";
 import type { ServiceIdentity } from "./service.js";
 import { isTenantId, requireTenant, withTenant } from "./tenant.js";
 
@@ -24,8 +25,6 @@ interface Held {
 export interface SettingsClientOptions {
   /** Signs the internal read (audience `admin`); admin's internal paths take no session. */
   service: ServiceIdentity;
-  /** The session for write() when the call gives none. */
-  sessionId?: string;
   /** Runs inside the changed tenant's scope. */
   onChange?: (keys: string[]) => Promise<void> | void;
 }
@@ -33,6 +32,8 @@ export interface SettingsClientOptions {
 export class SettingsClient {
   /** tenant → its settings; only tenants this container has served are held. */
   private readonly held = new Map<string, Held>();
+  /** tenant → its first load in flight, so concurrent first requests ask admin once. */
+  private readonly loading = new Map<string, Promise<void>>();
 
   constructor(
     private readonly admin: AdminClient,
@@ -57,9 +58,16 @@ export class SettingsClient {
     this.store(tenant, response.body);
   }
 
-  /** Read the current tenant's settings; the name modules used before settings were per tenant. */
-  start(): Promise<void> {
-    return this.load();
+  /** Load the current tenant's settings unless they are held; concurrent callers share one read. */
+  async ensure(): Promise<void> {
+    const tenant = requireTenant();
+    if (this.held.has(tenant)) return;
+    let pending = this.loading.get(tenant);
+    if (pending === undefined) {
+      pending = this.load(tenant).finally(() => this.loading.delete(tenant));
+      this.loading.set(tenant, pending);
+    }
+    await pending;
   }
 
   /** The current tenant's value, or `fallback` when it has none (or was not loaded). */
@@ -72,26 +80,6 @@ export class SettingsClient {
   /** The current tenant's settings_version; 0 when not loaded. */
   get settingsVersion(): number {
     return this.held.get(requireTenant())?.version ?? 0;
-  }
-
-  /**
-   * Replace the current tenant's values as a person (their session needs `admin.settings.write`);
-   * throws VersionConflict if they changed since they were read.
-   */
-  async write(
-    values: Record<string, SettingValue>,
-    options: { sessionId?: string } = {},
-  ): Promise<void> {
-    const tenant = requireTenant();
-    const response = await this.admin.request("PUT", `/api/admin/settings/${this.module}`, {
-      sessionId: options.sessionId ?? this.options.sessionId,
-      json: { settings_version: this.held.get(tenant)?.version ?? 0, values },
-    });
-    if (response.status === 409) {
-      throw new VersionConflict("settings changed since they were read; read again and retry");
-    }
-    AdminClient.raiseForError(response);
-    this.store(tenant, response.body);
   }
 
   /**

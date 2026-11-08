@@ -36,7 +36,16 @@ def test_a_value_copied_to_another_row_does_not_open() -> None:
 
 @pytest.mark.parametrize(
     "token",
-    ["", "cs1.1.x", "cs2.1.AAECAwQFBgcICQoL.NGe1aaCRuvBOCbJM3bcA0e2-pmuEbQ", VECTOR[:-2] + "AA"],
+    [
+        "",
+        "cs1.1.x",
+        "cs2.1.AAECAwQFBgcICQoL.NGe1aaCRuvBOCbJM3bcA0e2-pmuEbQ",
+        VECTOR[:-2] + "AA",
+        "cs1.\u00b2.AAECAwQFBgcICQoL.NGe1aaCRuvBOCbJM3bcA0e2-pmuEbQ",
+        "cs1.01.AAECAwQFBgcICQoL.NGe1aaCRuvBOCbJM3bcA0e2-pmuEbQ",
+        "cs1.1.AAECAwQFBgcICQoL.NGe1aaCRuv!BOCbJM3bcA0e2-pmuEbQ",
+        "cs1.1.AAECAwQFBgcICQoL.NGe1aaCRuvBOCbJM3bcA0e2+pmuEbQ",
+    ],
 )
 def test_broken_tokens_do_not_open(token: str) -> None:
     with pytest.raises(SecretUndecryptable):

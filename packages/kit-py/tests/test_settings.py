@@ -11,7 +11,6 @@ from canccu_kit import (
     NoTenant,
     ServiceIdentity,
     SettingsClient,
-    VersionConflict,
     tenant_scope,
 )
 from canccu_kit.bus import Event
@@ -85,7 +84,7 @@ async def test_each_tenant_reads_its_own_settings(admin: FakeAdmin) -> None:
         await settings.load()
         assert (settings.settings_version, settings.get("rotation_seconds")) == (3, 10)
     with tenant_scope("other"):
-        await settings.start()
+        await settings.ensure()
         assert settings.get("rotation_seconds") == 30
     with tenant_scope("never"):
         assert settings.settings_version == 0
@@ -126,22 +125,34 @@ async def test_change_event_rereads_only_its_tenant_for_a_newer_version(admin: F
     assert seen == [("demo", ["rotation_seconds"])]
 
 
-async def test_write_sends_held_version_and_maps_409(admin: FakeAdmin) -> None:
-    stored = Stored(demo=(2, {"a": 1}))
-    admin.handler = stored
-    settings = client(admin)
-    with tenant_scope("demo"):
-        await settings.load()
-        await settings.write({"a": 2}, session_id="s1")
-        sent = json.loads(admin.requests[-1].content)
-        assert sent == {"settings_version": 2, "values": {"a": 2}}
-        assert admin.requests[-1].headers["cookie"] == "canccu_session=s1"
-        assert settings.settings_version == 3
+async def test_concurrent_first_loads_share_one_read() -> None:
+    import asyncio
 
-        stored.tenants["demo"] = (7, {})  # someone else wrote meanwhile
-        with pytest.raises(VersionConflict) as info:
-            await settings.write({"a": 3})
-    assert info.value.status == 409
+    from canccu_kit import AdminClient
+
+    stored, seen = Stored(demo=(2, {"a": 1})), []
+
+    async def slow(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        await asyncio.sleep(0.01)  # the read is in flight while the others ask
+        return stored(request)
+
+    http = httpx.AsyncClient(transport=httpx.MockTransport(slow), base_url="http://admin")
+    settings = SettingsClient(
+        AdminClient("http://admin", http), "screen", service=ServiceIdentity("screen", KEY)
+    )
+    with tenant_scope("demo"):
+        await asyncio.gather(settings.ensure(), settings.ensure(), settings.ensure())
+        await settings.ensure()
+        assert settings.get("a") == 1
+    assert len(seen) == 1
+
+
+def test_writes_nothing_and_has_no_tenantless_start(admin: FakeAdmin) -> None:
+    # A write is a person's, on admin's API on the event's hostname, where admin learns the tenant.
+    settings = client(admin)
+    assert not hasattr(settings, "write")
+    assert not hasattr(settings, "start")
 
 
 async def test_other_errors_keep_admin_code(admin: FakeAdmin) -> None:

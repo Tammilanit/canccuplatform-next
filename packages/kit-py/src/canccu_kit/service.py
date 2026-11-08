@@ -27,6 +27,8 @@ MAX_AHEAD_S = 300
 """A token valid for longer than this was not made by the kit: refuse it, whatever its clock."""
 
 _NAME_RE = re.compile(r"[a-z][a-z0-9_]*")
+_EXPIRES_RE = re.compile(r"[1-9][0-9]{0,11}")
+"""Canonical digits only, as kit-ts: one signed value has one spelling."""
 _PLACEHOLDER = "local-only"
 
 
@@ -60,7 +62,7 @@ def service_key_from_env(env: Mapping[str, str] | None = None) -> bytes:
 
 def service_has_right(caller: str, right: str) -> bool:
     """A module acting as itself holds only its own rights, never another module's."""
-    return right.startswith(f"{caller}.")
+    return right.startswith(f"{caller}.") and len(right) > len(caller) + 1
 
 
 def _b64(raw: bytes) -> str:
@@ -105,8 +107,7 @@ class ServiceIdentity:
         if (
             _NAME_RE.fullmatch(caller) is None
             or audience != self.module
-            or not expires_raw.isascii()
-            or not expires_raw.isdigit()
+            or _EXPIRES_RE.fullmatch(expires_raw) is None
         ):
             raise ServiceUnauthenticated()
         expires = int(expires_raw)
