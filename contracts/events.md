@@ -157,11 +157,11 @@ At least one of `user_id` and `discord_user_id` is set. The phone hub's people f
 
 | Who | `user_id` | `discord_user_id` | Personal events |
 |---|---|---|---|
-| A signed-in user (every account is a Discord account, [tenants.md](tenants.md#users-roles-and-membership)) | set | set | Yes: Notify (push, inbox, Discord DM) and the bot |
+| A signed-in user (every account is a Discord account while `discord` is the only sign-in provider, [tenants.md](tenants.md#sign-in-identities)) | set | set | Yes: Notify (push, inbox, Discord DM) and the bot |
 | A Discord member who has not signed in to the platform | `null` | set | Only through the bot (a mention or a channel post); Notify cannot reach them |
 | A guest: the hub with an anonymous push subscription and no account | — | — | Never: a guest is not a Person and no event names them. Guests get event-wide notifications only ([notify.md](notify.md#who-can-do-what)) |
 
-- **The link between a user and their Discord id** is the user's row in the tenants module, the one place it is kept ([tenants.md](tenants.md#users-roles-and-membership)). An emitter fills `discord_user_id` from it when it emits (the kit's user cache or `GET /internal/tenants/users/{user_id}`); an event already emitted is never corrected.
+- **The link between a user and their Discord id** is the user's `discord` identity in the tenants module, the one place it is kept ([tenants.md](tenants.md#sign-in-identities)). An emitter fills `discord_user_id` from it when it emits (the kit's user cache or `GET /internal/tenants/users/{user_id}`); an event already emitted is never corrected.
 - A personal event names the users it concerns at the top of `data`: `user_id` (string, or null for a person without a platform account) for one person, or `user_ids` (list of string, users without a platform account left out) for several. Notify's topic triggers read these as their `recipients` ([notify.md](notify.md#topic-types)), and **Notify resolves everything from them alone**: it never reads a Person, a name or a Discord id from a payload, and takes a user's Discord id for a DM from the tenants module at delivery. The Person objects alongside are for the bot (mentions) and for screens (names).
 - An event-wide event may name a person too (the holder of a pizza order); its audience then says who may see that name. User ids and Discord ids are for modules: no consumer shows them to people.
 - Presence data ([tenants.md](tenants.md#privacy-and-retention)): the emitter leaves users with `presence_opt_out` out of every presence payload (counts and voice rosters below), so consumers never see them.
