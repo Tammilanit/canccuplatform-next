@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   ConfigError,
+  SERVICE_HEADER,
+  ServiceIdentity,
   TenantResolver,
   TenantsUnavailable,
   UnknownHost,
@@ -215,6 +217,86 @@ describe("TenantResolver", () => {
         },
       });
       await expect(other.resolve("192.0.2.1")).rejects.toThrow(UnknownHost);
+    });
+
+    describe("through the tenants module", () => {
+      const service = new ServiceIdentity({ module: "pizza", key: "k".repeat(32) });
+      const tenantsSide = new ServiceIdentity({ module: "tenants", key: "k".repeat(32) });
+
+      function ipModeTenants(answer: () => Promise<Response>) {
+        const calls: { path: string; caller: string }[] = [];
+        const fetch = (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+          const url = new URL(
+            typeof input === "string" ? input : input instanceof URL ? input.href : input.url,
+          );
+          const caller = tenantsSide.verify(new Headers(init?.headers).get(SERVICE_HEADER));
+          calls.push({ path: url.pathname + url.search, caller });
+          return answer();
+        };
+        return { calls, fetch };
+      }
+
+      const ipResolver = (answer: () => Promise<Response>) => {
+        const tenants = ipModeTenants(answer);
+        const resolver = new TenantResolver({
+          tenantsUrl: "http://tenants:8000/",
+          fetch: tenants.fetch,
+          service,
+          ipMode: { version: "dev" },
+        });
+        return { resolver, calls: tenants.calls };
+      };
+
+      it("asks GET /internal/tenants/ip-mode, signed for the tenants module", async () => {
+        const { resolver, calls } = ipResolver(() => Promise.resolve(jsonResponse(200, demo)));
+        expect(await resolver.resolve("192.0.2.1")).toEqual({ kind: "tenant", context: demo });
+        expect(calls).toEqual([{ path: "/internal/tenants/ip-mode", caller: "pizza" }]);
+      });
+
+      it("serves nothing on 404 or a tenant other than demo", async () => {
+        for (const answer of [
+          () => Promise.resolve(jsonResponse(404, { error: { code: "not_found", message: "" } })),
+          () => Promise.resolve(jsonResponse(200, tenantContext({ tenant_id: "real-event" }))),
+        ]) {
+          await expect(ipResolver(answer).resolver.resolve("192.0.2.1")).rejects.toThrow(
+            UnknownHost,
+          );
+        }
+      });
+
+      it("answers 503 on another status, a transport error, non-JSON or a bad tenant id", async () => {
+        for (const answer of [
+          () => Promise.resolve(jsonResponse(500, {})),
+          () => Promise.resolve(jsonResponse(400, {})),
+          () => Promise.reject(new Error("ECONNREFUSED")),
+          () => Promise.resolve(new Response("<html>", { status: 200 })),
+          () => Promise.resolve(jsonResponse(200, { tenant_id: "../x" })),
+        ]) {
+          await expect(ipResolver(answer).resolver.resolve("192.0.2.1")).rejects.toThrow(
+            TenantsUnavailable,
+          );
+        }
+      });
+
+      it("signs host lookups too when the resolver has a service identity", async () => {
+        const { resolver, calls } = ipResolver(() => Promise.resolve(jsonResponse(200, demo)));
+        await resolver.resolve("demo.example.org");
+        expect(calls).toEqual([
+          { path: "/internal/tenants/resolve?host=demo.example.org", caller: "pizza" },
+        ]);
+      });
+
+      it("still prefers a given loader", async () => {
+        const { calls, fetch } = ipModeTenants(() => Promise.resolve(jsonResponse(404, {})));
+        const resolver = new TenantResolver({
+          tenantsUrl: "http://t",
+          fetch,
+          service,
+          ipMode: { version: "dev", load },
+        });
+        expect(await resolver.resolve("192.0.2.1")).toEqual({ kind: "tenant", context: demo });
+        expect(calls).toEqual([]);
+      });
     });
 
     it("without IP mode an IP literal is an unknown host", async () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   AdminAccessRestricted,
+  CIDR_CACHE_MAX,
   DEFAULT_TAILSCALE_CIDRS,
   DeviceTokenInvalid,
   InfoPagesClosed,
@@ -12,6 +13,7 @@ import {
   hashDeviceToken,
   ipInCidrs,
   newDeviceToken,
+  parsedCidrs,
   tailscaleCidrs,
   venueIpCheckActive,
 } from "../src/index.js";
@@ -44,6 +46,32 @@ describe("ipInCidrs", () => {
       expect(ipInCidrs("2001:4860::8888", [odd])).toBe(false);
     }
     expect(ipInCidrs(VENUE_V4, [])).toBe(false);
+  });
+});
+
+describe("parsed address lists", () => {
+  it("parses one list once and gives the same object for the same addresses", () => {
+    const list = ["192.0.2.0/24", "2001:db8:1::/48"];
+    const first = parsedCidrs(list);
+    expect(parsedCidrs([...list])).toBe(first);
+    expect(parsedCidrs(["192.0.2.0/24"])).not.toBe(first);
+    expect(parsedCidrs(["192.0.2.0/24", "2001:db8:1::/48"]).check("192.0.2.9", "ipv4")).toBe(true);
+  });
+
+  it("keys on the exact list, so lists that join alike stay apart", () => {
+    expect(parsedCidrs(["192.0.2.1,198.51.100.7"])).not.toBe(
+      parsedCidrs(["192.0.2.1", "198.51.100.7"]),
+    );
+    expect(ipInCidrs("198.51.100.7", ["192.0.2.1,198.51.100.7"])).toBe(false);
+    expect(ipInCidrs("198.51.100.7", ["192.0.2.1", "198.51.100.7"])).toBe(true);
+  });
+
+  it("stays bounded and keeps answering right after it is cleared", () => {
+    const first = parsedCidrs(["203.0.113.0/24"]);
+    for (let i = 0; i <= CIDR_CACHE_MAX; i++) parsedCidrs([`10.${i >> 8}.${i & 255}.0/24`]);
+    expect(parsedCidrs(["203.0.113.0/24"])).not.toBe(first);
+    expect(ipInCidrs("203.0.113.5", ["203.0.113.0/24"])).toBe(true);
+    expect(ipInCidrs("203.0.114.5", ["203.0.113.0/24"])).toBe(false);
   });
 });
 

@@ -1,7 +1,12 @@
-/** Settings client: read at start, follow admin.settings.changed, write with settings_version. */
+/**
+ * Settings client (contracts/admin.md, Settings): per tenant, read on admin's internal path,
+ * followed through admin.settings.changed, written with settings_version.
+ */
 import { AdminClient } from "./admin.js";
 import type { Event } from "./bus.js";
 import { VersionConflict } from "./errors.js";
+import type { ServiceIdentity } from "./service.js";
+import { isTenantId, requireTenant, withTenant } from "./tenant.js";
 
 export type Scalar = string | number | boolean;
 export type SettingValue = Scalar | Scalar[];
@@ -11,72 +16,103 @@ interface SettingsBody {
   values: Record<string, SettingValue>;
 }
 
+interface Held {
+  version: number;
+  values: Record<string, SettingValue>;
+}
+
+export interface SettingsClientOptions {
+  /** Signs the internal read (audience `admin`); admin's internal paths take no session. */
+  service: ServiceIdentity;
+  /** The session for write() when the call gives none. */
+  sessionId?: string;
+  /** Runs inside the changed tenant's scope. */
+  onChange?: (keys: string[]) => Promise<void> | void;
+}
+
 export class SettingsClient {
-  settingsVersion = 0;
-  values: Record<string, SettingValue> = {};
+  /** tenant → its settings; only tenants this container has served are held. */
+  private readonly held = new Map<string, Held>();
 
   constructor(
     private readonly admin: AdminClient,
     readonly module: string,
-    private readonly options: {
-      sessionId?: string;
-      onChange?: (keys: string[]) => Promise<void> | void;
-    } = {},
+    private readonly options: SettingsClientOptions,
   ) {}
 
-  private get path(): string {
-    return `/api/admin/settings/${this.module}`;
-  }
-
-  private apply(body: unknown): void {
+  private store(tenant: string, body: unknown): void {
     const b = body as SettingsBody;
-    this.settingsVersion = b.settings_version;
-    this.values = { ...b.values };
+    this.held.set(tenant, { version: b.settings_version, values: { ...b.values } });
   }
 
-  /** Read the settings once; call at module start. */
-  async start(): Promise<void> {
-    await this.refresh();
-  }
-
-  async refresh(): Promise<void> {
-    const response = await this.admin.request("GET", this.path, {
-      sessionId: this.options.sessionId,
+  /** Read `tenant`'s settings (default: the current tenant). */
+  async load(tenant: string = requireTenant()): Promise<void> {
+    // The id goes into the query of an internal path: never pass one that is not an id.
+    if (!isTenantId(tenant)) throw new RangeError(`invalid tenant id ${JSON.stringify(tenant)}`);
+    const response = await this.admin.request("GET", `/internal/admin/settings/${this.module}`, {
+      headers: this.options.service.headers("admin"),
+      params: { tenant_id: tenant },
     });
     AdminClient.raiseForError(response);
-    this.apply(response.body);
+    this.store(tenant, response.body);
   }
 
-  get(key: string, fallback: SettingValue): SettingValue {
-    return this.values[key] ?? fallback;
+  /** Read the current tenant's settings; the name modules used before settings were per tenant. */
+  start(): Promise<void> {
+    return this.load();
   }
 
-  /** Replace the values; throws VersionConflict if they changed since they were read. */
+  /** The current tenant's value, or `fallback` when it has none (or was not loaded). */
+  get(key: string, fallback: SettingValue): SettingValue;
+  get(key: string): SettingValue | undefined;
+  get(key: string, fallback?: SettingValue): SettingValue | undefined {
+    return this.held.get(requireTenant())?.values[key] ?? fallback;
+  }
+
+  /** The current tenant's settings_version; 0 when not loaded. */
+  get settingsVersion(): number {
+    return this.held.get(requireTenant())?.version ?? 0;
+  }
+
+  /**
+   * Replace the current tenant's values as a person (their session needs `admin.settings.write`);
+   * throws VersionConflict if they changed since they were read.
+   */
   async write(
     values: Record<string, SettingValue>,
     options: { sessionId?: string } = {},
   ): Promise<void> {
-    const response = await this.admin.request("PUT", this.path, {
+    const tenant = requireTenant();
+    const response = await this.admin.request("PUT", `/api/admin/settings/${this.module}`, {
       sessionId: options.sessionId ?? this.options.sessionId,
-      json: { settings_version: this.settingsVersion, values },
+      json: { settings_version: this.held.get(tenant)?.version ?? 0, values },
     });
     if (response.status === 409) {
       throw new VersionConflict("settings changed since they were read; read again and retry");
     }
     AdminClient.raiseForError(response);
-    this.apply(response.body);
+    this.store(tenant, response.body);
   }
 
-  /** Feed events from `events:admin`; re-reads on a newer change for this module. */
+  /**
+   * Feed tenant events from `admin`. Re-reads a held tenant on a newer change for this module; a
+   * tenant not held has nothing to refresh, and its first load() reads the current settings.
+   */
   async handleEvent(event: Event): Promise<void> {
     if (event.type !== "admin.settings.changed" || event.data.module !== this.module) return;
+    const tenant = event.tenant;
+    if (tenant === undefined) return;
+    const held = this.held.get(tenant);
+    if (held === undefined) return;
     const newVersion = event.data.settings_version;
-    if (typeof newVersion === "number" && newVersion <= this.settingsVersion) return;
-    await this.refresh();
+    if (typeof newVersion === "number" && newVersion <= held.version) return;
+    await this.load(tenant);
     const keys = event.data.keys;
     const changed = Array.isArray(keys)
       ? keys.filter((k): k is string => typeof k === "string")
       : [];
-    await this.options.onChange?.(changed);
+    await withTenant(tenant, async () => {
+      await this.options.onChange?.(changed);
+    });
   }
 }

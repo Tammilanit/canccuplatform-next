@@ -24,14 +24,20 @@ export class AdminClient {
   async request(
     method: string,
     path: string,
-    options: { sessionId?: string | undefined; json?: unknown } = {},
+    options: {
+      sessionId?: string | undefined;
+      json?: unknown;
+      headers?: Record<string, string>;
+      params?: Record<string, string>;
+    } = {},
   ): Promise<AdminResponse> {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = { ...options.headers };
     if (options.sessionId !== undefined) headers.cookie = `canccu_session=${options.sessionId}`;
     if (options.json !== undefined) headers["content-type"] = "application/json";
+    const query = options.params ? `?${new URLSearchParams(options.params).toString()}` : "";
     let response: Response;
     try {
-      response = await this.fetchFn(`${this.baseUrl.replace(/\/+$/, "")}${path}`, {
+      response = await this.fetchFn(`${this.baseUrl.replace(/\/+$/, "")}${path}${query}`, {
         method,
         headers,
         ...(options.json === undefined ? {} : { body: JSON.stringify(options.json) }),
