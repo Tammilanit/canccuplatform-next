@@ -14,7 +14,8 @@ interface WindowBase {
   layoutId: string | null;
 }
 
-export type WeeklyWindow = WindowBase & WeeklyTimes & { agendaItemId: null };
+/** `agendaItemId` may be left out: only a string makes a window agenda-bound. */
+export type WeeklyWindow = WindowBase & WeeklyTimes & { agendaItemId?: null };
 export type AgendaWindow = WindowBase & { agendaItemId: string };
 export type ScheduleWindow = WeeklyWindow | AgendaWindow;
 
@@ -35,7 +36,7 @@ export interface SchedulerInput {
 }
 
 export function isAgendaWindow(window: ScheduleWindow): window is AgendaWindow {
-  return window.agendaItemId !== null;
+  return typeof window.agendaItemId === "string";
 }
 
 /**
@@ -55,30 +56,69 @@ export function windowStartedAt(
   at: Date,
   input: SchedulerInput,
 ): Date | null {
-  return startedAt(window, at, input, () => localClock(at, input.timeZone));
+  const active = activeSince(window, at, input, () => localClock(at, input.timeZone));
+  return active === null ? null : new Date(startMs(active, input.timeZone));
 }
 
-/** `clock` is read at most once, and only for weekly windows. */
-function startedAt(
+/** An active window and what its start needs: a bound item's instant, or a weekly wall time. */
+type Active =
+  { window: ScheduleWindow; startedMs: number } | { window: WeeklyWindow; wallStartMs: number };
+
+function activeSince(
   window: ScheduleWindow,
   at: Date,
   input: SchedulerInput,
   readClock: () => LocalClock,
-): Date | null {
-  if (isAgendaWindow(window)) return runningItem(window, at, input)?.startsAt ?? null;
+): Active | null {
+  if (isAgendaWindow(window)) {
+    const item = runningItem(window, at, input);
+    return item === null ? null : { window, startedMs: item.startsAt.getTime() };
+  }
   const clock = readClock();
   const elapsed = minutesSinceStart(window, clock.isoDay, clock.minuteOfDay);
   if (elapsed === null) return null;
-  // The local start is `elapsed` wall-clock minutes back; a daylight-saving switch in between
-  // makes the real distance an offset change longer or shorter. Two rounds settle the offset at
-  // the start even when the first guess lands on the other side of the switch.
-  const wallStartMs =
-    Math.floor(at.getTime() / 60_000) * 60_000 + (clock.offsetMinutes - elapsed) * 60_000;
-  let startMs = wallStartMs - clock.offsetMinutes * 60_000;
-  for (let round = 0; round < 2; round += 1) {
-    startMs = wallStartMs - localClock(new Date(startMs), input.timeZone).offsetMinutes * 60_000;
+  // The start as a wall-clock time written in UTC terms: `elapsed` wall minutes before now.
+  const wallNowMs =
+    Math.floor(at.getTime() / MINUTE_MS) * MINUTE_MS + clock.offsetMinutes * MINUTE_MS;
+  return { window, wallStartMs: wallNowMs - elapsed * MINUTE_MS };
+}
+
+const MINUTE_MS = 60_000;
+// Every UTC offset lies within ±14 hours, so the offsets at these distances bracket every
+// switch the start could be near (no zone switches twice within a day).
+const BRACKET_MS = 14 * 60 * MINUTE_MS;
+
+/**
+ * The real instant a weekly window's run began. A wall time maps to one instant, to none (the
+ * spring switch skipped it: the run began when the clock jumped past it) or to two (the autumn
+ * switch repeated it: the earlier one if the window ran through the switch, else the later).
+ */
+function startMs(active: Active, timeZone: string): number {
+  if ("startedMs" in active) return active.startedMs;
+  const { window, wallStartMs } = active;
+  const offsetMs = (t: number) => localClock(new Date(t), timeZone).offsetMinutes * MINUTE_MS;
+  const before = offsetMs(wallStartMs - BRACKET_MS);
+  const after = offsetMs(wallStartMs + BRACKET_MS);
+  if (before === after) return wallStartMs - before;
+  const instants = [wallStartMs - before, wallStartMs - after].sort((x, y) => x - y);
+  const [early, late] = instants as [number, number];
+  const valid = instants.filter((t) => t + offsetMs(t) === wallStartMs);
+  if (valid.length === 2) {
+    const justBefore = localClock(new Date(late - MINUTE_MS), timeZone);
+    const ranThrough =
+      minutesSinceStart(window, justBefore.isoDay, justBefore.minuteOfDay) !== null;
+    return ranThrough ? early : late;
   }
-  return new Date(startMs);
+  if (valid.length === 1) return valid[0] as number;
+  // Skipped: the first minute whose wall time has passed the start is the switch itself.
+  let low = early;
+  let high = late;
+  while (high - low > MINUTE_MS) {
+    const mid = low + Math.floor((high - low) / 2 / MINUTE_MS) * MINUTE_MS;
+    if (mid + offsetMs(mid) >= wallStartMs) high = mid;
+    else low = mid;
+  }
+  return high;
 }
 
 /**
@@ -86,19 +126,29 @@ function startedAt(
  * the playlist's priority, then the id, so every container picks the same one. "Later start" is
  * the real instant the occurrence began, so a window still running from last night ranks below
  * one that began this morning (legacy compared the start minute alone) and bound windows compare
- * with weekly ones.
+ * with weekly ones. Starts cost several clock reads, so they are worked out only on a tie.
  */
 export function resolveWinner(input: SchedulerInput, at: Date): ScheduleWindow | null {
   let clock: LocalClock | undefined;
   const readClock = () => (clock ??= localClock(at, input.timeZone));
-  let best: { window: ScheduleWindow; startedMs: number } | null = null;
+  let top: Active[] = [];
+  let topPriority = -1;
   for (const window of input.windows) {
-    const started = startedAt(window, at, input, readClock);
-    if (started === null) continue;
-    const candidate = { window, startedMs: started.getTime() };
-    if (best === null || outranks(candidate, best, input)) best = candidate;
+    if (window.priority < topPriority) continue;
+    const active = activeSince(window, at, input, readClock);
+    if (active === null) continue;
+    if (window.priority > topPriority) {
+      top = [];
+      topPriority = window.priority;
+    }
+    top.push(active);
   }
-  return best?.window ?? null;
+  if (top.length <= 1) return top[0]?.window ?? null;
+  const ranked = top.map((active) => ({
+    window: active.window,
+    startedMs: startMs(active, input.timeZone),
+  }));
+  return ranked.reduce((best, next) => (outranks(next, best, input) ? next : best)).window;
 }
 
 function outranks(
@@ -106,7 +156,6 @@ function outranks(
   b: { window: ScheduleWindow; startedMs: number },
   input: SchedulerInput,
 ): boolean {
-  if (a.window.priority !== b.window.priority) return a.window.priority > b.window.priority;
   if (a.startedMs !== b.startedMs) return a.startedMs > b.startedMs;
   const playlistA = input.playlistPriorities?.get(a.window.playlistId) ?? 0;
   const playlistB = input.playlistPriorities?.get(b.window.playlistId) ?? 0;

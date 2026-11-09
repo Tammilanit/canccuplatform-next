@@ -99,6 +99,22 @@ describe("resolveWinner", () => {
   });
 });
 
+describe("a weekly window without agendaItemId", () => {
+  test("stays weekly when a row mapper leaves the field out", () => {
+    const window: WeeklyWindow = {
+      id: "day",
+      zoneKey: "main",
+      playlistId: "day",
+      priority: 10,
+      layoutId: null,
+      days: [MON],
+      startMinute: 9 * 60,
+      endMinute: 17 * 60,
+    };
+    expect(resolveWinner({ windows: [window], timeZone: "UTC" }, at("10:00:00"))?.id).toBe("day");
+  });
+});
+
 describe("agenda-bound windows", () => {
   const agendaItems = new Map([
     ["talk", item("talk", "2026-04-06T12:00:00Z", "2026-04-06T13:00:00Z")],

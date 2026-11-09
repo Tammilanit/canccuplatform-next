@@ -94,6 +94,9 @@ const ISO_DAYS: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 
 export function localClock(at: Date, timeZone: string): LocalClock {
   const parts: Record<string, string> = {};
   for (const part of formatterFor(timeZone).formatToParts(at)) parts[part.type] = part.value;
+  const isoDay = ISO_DAYS[parts.weekday ?? ""];
+  // A silent default would shift every window by days on an ICU that labels weekdays otherwise.
+  if (isoDay === undefined) throw new RangeError(`unknown weekday label: ${parts.weekday}`);
   const hour = Number(parts.hour);
   const minute = Number(parts.minute);
   const wallMs = Date.UTC(
@@ -105,7 +108,7 @@ export function localClock(at: Date, timeZone: string): LocalClock {
   );
   const atMinuteMs = Math.floor(at.getTime() / 60_000) * 60_000;
   return {
-    isoDay: ISO_DAYS[parts.weekday ?? ""] ?? 1,
+    isoDay,
     minuteOfDay: hour * 60 + minute,
     offsetMinutes: Math.round((wallMs - atMinuteMs) / 60_000),
   };

@@ -131,7 +131,47 @@ describe("Europe/Berlin, spring forward", () => {
   });
 });
 
+describe("a start inside the skipped hour", () => {
+  // A window whose local start never happens begins when the clock jumps past it.
+  const a = { ...weekly([SUN], 2 * 60 + 30, 4 * 60, 1), id: "a" };
+  const b = { ...weekly([SUN], 60 + 45, 5 * 60, 1), id: "b" };
+
+  test("Europe/Berlin: the window begins at the switch and so began later", () => {
+    const input = { windows: [a, b], timeZone: BERLIN };
+    const at = utc("2026-03-29T01:10:00");
+    expect(windowStartedAt(a, at, input)).toEqual(utc("2026-03-29T01:00:00"));
+    expect(windowStartedAt(b, at, input)).toEqual(utc("2026-03-29T00:45:00"));
+    expect(resolveWinner(input, at)?.id).toBe("a");
+  });
+
+  test("America/New_York: the same at its own switch", () => {
+    const input = { windows: [a, b], timeZone: NEW_YORK };
+    const at = utc("2026-03-08T07:10:00");
+    expect(windowStartedAt(a, at, input)).toEqual(utc("2026-03-08T07:00:00"));
+    expect(windowStartedAt(b, at, input)).toEqual(utc("2026-03-08T06:45:00"));
+    expect(resolveWinner(input, at)?.id).toBe("a");
+  });
+});
+
 describe("Europe/Berlin, fall back", () => {
+  test("a window that runs through the repeated hour began at its first start", () => {
+    const window = weekly([SUN], 2 * 60, 4 * 60);
+    const input = { windows: [window], timeZone: BERLIN };
+    // 02:10 UTC is 03:10 CET; 02:00 local happened at 00:00 and again at 01:00 UTC, and the
+    // window has run without a break since the first.
+    expect(windowStartedAt(window, utc("2026-10-25T02:10:00"), input)).toEqual(
+      utc("2026-10-25T00:00:00"),
+    );
+  });
+
+  test("a window's second run in the repeated hour began at the second start", () => {
+    const window = weekly([SUN], 2 * 60, 2 * 60 + 30);
+    const input = { windows: [window], timeZone: BERLIN };
+    expect(windowStartedAt(window, utc("2026-10-25T01:10:00"), input)).toEqual(
+      utc("2026-10-25T01:00:00"),
+    );
+  });
+
   test("a window inside the repeated hour runs twice", () => {
     const window = weekly([SUN], 2 * 60, 2 * 60 + 30);
     expect(
