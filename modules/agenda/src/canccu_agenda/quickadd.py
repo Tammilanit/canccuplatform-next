@@ -86,8 +86,8 @@ async def _choices(request: Request) -> tuple[list[tuple[str, str]], list[Any], 
     async with deps(request).db.tenant() as conn:
         rows = await templates.all_templates(conn)
         kinds = await store.kinds(conn)
-    what = [(f"t:{r['id']}", str(r["name"])) for r in rows]
-    what += [(f"k:{k}", str(r["name"])) for k, r in kinds.items() if k != "quiet_hours"]
+    what = [(f"template:{r['id']}", str(r["name"])) for r in rows]
+    what += [(f"kind:{k}", str(r["name"])) for k, r in kinds.items() if k != "quiet_hours"]
     return what, rows, kinds
 
 
@@ -142,8 +142,8 @@ async def quick_add(request: Request) -> Response:
     day = _day(form.get("day"), today)
     what, rows, _ = await _choices(request)
     picked = str(form.get("what") or "")
-    template = next((r for r in rows if f"t:{r['id']}" == picked), None)
-    kind = picked[2:] if picked.startswith("k:") else None
+    template = next((r for r in rows if f"template:{r['id']}" == picked), None)
+    kind = picked.removeprefix("kind:") if picked.startswith("kind:") else None
     try:
         if template is None and kind is None:
             raise model.invalid("pick what it is")
