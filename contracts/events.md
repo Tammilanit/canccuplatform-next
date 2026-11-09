@@ -43,6 +43,7 @@ Emitter: `agenda`. Audience: event-wide, by the item's `visibility`. Payloads: [
 | `agenda.item.delayed` | An item was delayed or brought forward | screen, notify, tournament (moves the session of a delayed session item, [agenda.md](agenda.md#tournament-sessions)) |
 | `agenda.item.cancelled` | An item was cancelled | screen, notify |
 | `agenda.item.removed` | An item was removed | screen, notify (quiet hours) |
+| `agenda.item.announced` | An organiser announced an item now, with an optional message | notify (`schedule`), bot (a post in the event's channel, on `discord_channel`) |
 | `agenda.item.started` | An item's start was reached | screen, moments |
 | `agenda.item.ended` | An item's end was reached | screen |
 | `agenda.reminder.triggered` | A lead time before an item's start was reached | bot, screen, notify |
