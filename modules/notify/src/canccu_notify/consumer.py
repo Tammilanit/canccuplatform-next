@@ -65,13 +65,16 @@ async def handle(d: Deps, event: Event) -> None:
                     continue
                 part = reg["parts"][trigger["part"]]
                 allowed = [c for c in part["channels"] if c in config["channels"]]
+                based_on = found["custom"]["based_on"] if "custom" in found else None
                 for c in engine.evaluate(
                     key, trigger, allowed, config["params"], envelope, now, tz
                 ):
-                    await _create(conn, c, event.id, now)
+                    await _create(conn, c, event.id, now, based_on)
 
 
-async def _create(conn: Any, c: engine.Candidate, source_id: str, now: Any) -> None:
+async def _create(
+    conn: Any, c: engine.Candidate, source_id: str, now: Any, based_on: str | None
+) -> None:
     # The key is taken only here, after every check passed, so a dropped event leaves it free.
     taken = await conn.fetchval(
         "INSERT INTO notify_dedupe (key) VALUES ($1) ON CONFLICT DO NOTHING RETURNING 1",
@@ -82,8 +85,8 @@ async def _create(conn: Any, c: engine.Candidate, source_id: str, now: Any) -> N
     for user_id in c.user_ids or (None,):
         await conn.execute(
             "INSERT INTO notify_notifications (id, topic, part, audience, user_id, title, body,"
-            " url, urgent, channels, source_event_id, created_at, expires_at)"
-            " VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+            " url, urgent, channels, source_event_id, created_at, expires_at, based_on)"
+            " VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
             new_id(),
             c.topic,
             c.part,
@@ -97,4 +100,5 @@ async def _create(conn: Any, c: engine.Candidate, source_id: str, now: Any) -> N
             source_id,
             now,
             c.expires_at,
+            based_on,
         )

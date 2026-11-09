@@ -1,0 +1,47 @@
+/* The notification pages, phone first: one column, targets of at least 44 px. Colours come from
+   the theme's custom properties (packages/ui, contracts/theming.md), so an event's theme applies
+   here too. */
+@layer canccu-module {
+  .canccu-notify {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 0 0.75rem 4rem;
+  }
+  .canccu-notify h1 { font-size: 1.5rem; margin: 0.75rem 0; }
+  .canccu-notify-menu { display: flex; gap: 0.25rem; overflow-x: auto; }
+  .canccu-notify-menu a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 0.75rem;
+    border-radius: var(--canccu-radius);
+    white-space: nowrap;
+    text-decoration: none;
+  }
+  .canccu-notify-topic { margin-bottom: 0.75rem; }
+  .canccu-notify-muted { color: var(--canccu-color-text-muted); font-size: 0.9rem; }
+  .canccu-notify-fieldset {
+    border: var(--canccu-border-width) solid var(--canccu-color-border);
+    border-radius: var(--canccu-radius);
+    margin: 0.5rem 0;
+    padding: 0.5rem 0.75rem;
+  }
+  .canccu-notify-condition {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+    padding: 0.5rem 0;
+    border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+  @media (min-width: 36rem) {
+    .canccu-notify-condition { grid-template-columns: 2fr 1.5fr 2fr; }
+  }
+  .canccu-notify-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .canccu-notify-actions .canccu-button { min-height: 44px; }
+  .canccu-notify-notice {
+    border-radius: var(--canccu-radius);
+    padding: 0.5rem 0.75rem;
+    border: var(--canccu-border-width) solid var(--canccu-color-status-ok);
+  }
+  .canccu-notify-notice--error { border-color: var(--canccu-color-status-down); }
+}

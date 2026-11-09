@@ -162,7 +162,7 @@ async def env() -> AsyncIterator[Env]:
     async with db.pool.acquire() as conn:  # the login role: RLS does not bind it
         await conn.execute(
             "TRUNCATE notify_topic_types, notify_topic_type_history, notify_topic_config,"
-            " notify_notifications, notify_dedupe, notify_event_state"
+            " notify_notifications, notify_dedupe, notify_event_state, notify_custom_topics"
         )
     access.ZONES.clear()
     contexts = {tid: context(tid) for tid in HOSTS.values()}

@@ -11,7 +11,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from . import registry
+from . import custom, registry
 from .access import client_ip, session_of, tenant_ctx, topics_writer
 from .deps import Deps, Settings, deps
 from .registry import bad, body_of, not_found
@@ -46,10 +46,14 @@ def setting_lead(settings: Settings | None) -> int | None:
     return lead if isinstance(lead, int) and not isinstance(lead, bool) else None
 
 
-def effective(reg: dict[str, Any], row: Any, settings: Settings | None) -> dict[str, Any]:
-    """The configuration in effect. The admin settings `topics` and `schedule_lead_minutes` are
-    the same values as `enabled` and the `schedule` topic's `lead_minutes` (contracts/notify.md,
-    Per-event configuration): whichever was written later wins. A row's value wins while the
+def effective(
+    reg: dict[str, Any], row: Any, settings: Settings | None, base: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """The configuration in effect; `base` is the base's configuration for a custom topic, whose
+    parameters it starts from and whose channels it can only narrow. The admin settings `topics`
+    and `schedule_lead_minutes` are the same values as `enabled` and the `schedule` topic's
+    `lead_minutes` (contracts/notify.md, Per-event configuration): whichever was written later
+    wins. A row's value wins while the
     setting still equals what it was when the row was written (`*_seen`); a setting that has
     changed since was written later. `settings` is None while admin is unreachable: the row's
     values then stand."""
@@ -64,6 +68,8 @@ def effective(reg: dict[str, Any], row: Any, settings: Settings | None) -> dict[
     else:
         enabled = now_enabled if now_enabled is not None else True
     params = {p["key"]: p["default"] for p in reg.get("params") or []}
+    if base is not None:
+        params = dict(base["params"])
     mirrored = key == "schedule" and "lead_minutes" in params
     now_lead = setting_lead(settings)
     if mirrored and now_lead is not None:
@@ -73,7 +79,7 @@ def effective(reg: dict[str, Any], row: Any, settings: Settings | None) -> dict[
         if mirrored and settings is not None and now_lead != row["lead_seen"]:
             own.pop("lead_minutes", None)
         params.update(own)
-    channels = type_channels(reg)
+    channels = type_channels(reg) if base is None else base["channels"]
     if row is not None and row["channels"] is not None:
         channels = [c for c in channels if c in row["channels"]]
     return {
@@ -112,13 +118,25 @@ async def on_admin_event(d: Deps, event: Event) -> None:
 
 
 async def configured(conn: Any, settings: Settings | None) -> dict[str, dict[str, Any]]:
-    """Every registered type with this event's configuration, by key."""
+    """Every registered type and this event's custom topics, with this event's configuration,
+    by key. A custom topic whose base is no longer registered is left out."""
     regs = await registry.load(conn)
     rows = {r["key"]: r for r in await conn.fetch("SELECT * FROM notify_topic_config")}
-    return {
+    found = {
         k: {"topic_type": reg, "config": effective(reg, rows.get(k), settings)}
         for k, reg in regs.items()
     }
+    for row in await custom.rows(conn):
+        base = found.get(row["based_on"])
+        if base is None:
+            continue
+        reg = custom.derive(base["topic_type"], row)
+        found[row["key"]] = {
+            "topic_type": reg,
+            "custom": custom.block(row),
+            "config": effective(reg, rows.get(row["key"]), settings, base["config"]),
+        }
+    return found
 
 
 async def list_types(request: Request) -> Response:
@@ -146,23 +164,21 @@ def _check_params(reg: dict[str, Any], params: Any) -> dict[str, Any]:
     return params
 
 
-async def configure(request: Request) -> Response:
-    session = await topics_writer(request, write=True)
-    key = request.path_params["topic"]
-    body = await body_of(request)
+async def write_config(
+    d: Deps, tenant_id: str, user_id: str, key: str, body: dict[str, Any]
+) -> dict[str, Any]:
+    """`PUT …/config` for the API and the topic pages alike; the caller checked the right."""
     version = body.get("config_version")
     if not isinstance(version, int) or isinstance(version, bool) or version < 0:
         raise bad("config_version: required")
-    d = deps(request)
-    ctx = await tenant_ctx(request)
     # A write records the settings it saw (effective()), so it needs them: no write while admin
     # is unreachable, as in the agenda.
     await d.settings.ensure()
     async with d.db.tenant() as conn:
-        regs = await registry.load(conn)
-        reg = regs.get(key)
-        if reg is None:
+        found = (await configured(conn, d.settings)).get(key)
+        if found is None:
             raise not_found()
+        reg = found["topic_type"]
         row = await conn.fetchrow("SELECT * FROM notify_topic_config WHERE key = $1", key)
         current = row["config_version"] if row is not None else 0
         if version != current:
@@ -208,18 +224,26 @@ async def configure(request: Request) -> Response:
             )
         if saved is None:
             raise VersionConflict("changed by someone else; reload")
-        result = {"topic_type": reg, "config": effective(reg, saved, d.settings)}
         # Inside the transaction: a change whose audit entry cannot be written is rolled back.
         await d.audit.append(
-            ctx["tenant_id"],
-            session.user_id,
-            "notify.topic.configured",
-            {"type": "topic", "id": key},
+            tenant_id, user_id, "notify.topic.configured", {"type": "topic", "id": key}
         )
-    return JSONResponse(result)
+        result: dict[str, Any] = (await configured(conn, d.settings))[key]
+    return result
 
 
-def topic_info(reg: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+async def configure(request: Request) -> Response:
+    session = await topics_writer(request, write=True)
+    body = await body_of(request)
+    ctx = await tenant_ctx(request)
+    d = deps(request)
+    return JSONResponse(
+        await write_config(d, ctx["tenant_id"], session.user_id, request.path_params["topic"], body)
+    )
+
+
+def topic_info(found: dict[str, Any]) -> dict[str, Any]:
+    reg, config = found["topic_type"], found["config"]
     scopes: dict[str, Any] = {}
     parts: dict[str, Any] = {}
     for name, part in reg["parts"].items():
@@ -238,14 +262,17 @@ def topic_info(reg: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
             if name == "personal"
             else {"default": default}
         )
-    return {
+    info = {
         "topic": reg["key"],
         "title": reg["title"],
         "owner": reg["owner"],
-        "custom": False,
+        "custom": "custom" in found,
         "scopes": scopes,
         "parts": parts,
     }
+    if "description" in reg:
+        info["description"] = reg["description"]
+    return info
 
 
 async def list_topics(request: Request) -> Response:
@@ -257,9 +284,7 @@ async def list_topics(request: Request) -> Response:
     ready = await settings_ready(d.settings)
     async with d.db.tenant() as conn:
         found = await configured(conn, d.settings if ready else None)
-    topics = [
-        topic_info(v["topic_type"], v["config"]) for v in found.values() if v["config"]["enabled"]
-    ]
+    topics = [topic_info(v) for v in found.values() if v["config"]["enabled"]]
     return JSONResponse({"topics": topics})
 
 
