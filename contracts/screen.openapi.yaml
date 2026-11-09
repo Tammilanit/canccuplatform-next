@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Screen API
   version: 1.0.0
-  summary: Devices, zones, the composed screen state and its push channel, content, scheduling and the PPTX render job.
+  summary: Devices, zones, the composed screen state and its push channel, content, scheduling and the PPTX and PDF render job.
   description: |
     Machine-readable part of the screen contract. Prose, widgets, claims, the Pulse options and events: contracts/screen.md.
     Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
@@ -33,7 +33,7 @@ tags:
   - name: content
     description: Assets, files, playlists, schedule windows and pushed content.
   - name: render
-    description: The PPTX render job.
+    description: The render job for PPTX and PDF decks.
   - name: ticker
     description: The manual ticker and its windows.
   - name: photos
@@ -96,6 +96,8 @@ paths:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1zones"
   /api/screen/zones/{zone_key}:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1zones~1{zone_key}"
+  /api/screen/zones/{zone_key}/preview:
+    $ref: "screen/devices.openapi.yaml#/~1api~1screen~1zones~1{zone_key}~1preview"
   /api/screen/now:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1now"
   /api/screen/pin:
@@ -574,7 +576,9 @@ components:
           default: true
         idle:
           type: string
-          enum: [logo, blank, collapse]
+          description: |
+            `next`: the zone's next run-of-show item with a big countdown, else the logo (contracts/screen.md, The Pulse options).
+          enum: [logo, blank, collapse, next]
           default: logo
     Role:
       type: string
@@ -757,7 +761,23 @@ components:
           $ref: "#/components/schemas/Time"
         idle:
           type: string
-          enum: [logo, blank, collapse]
+          description: A screen that does not know the value draws `logo`.
+          enum: [logo, blank, collapse, next]
+        idle_view:
+          description: |
+            What `idle: next` draws: the `countdown` widget's view-model for the zone's next public run-of-show item.
+            Null for every other `idle`, and when there is no next item (the screen then draws the logo).
+          oneOf:
+            - type: "null"
+            - type: object
+              required: [widget, view]
+              properties:
+                widget:
+                  type: string
+                  const: countdown
+                view:
+                  type: object
+                  description: The `countdown` view-model (contracts/screen.md, Widgets), drawn with the theme's `countdown` template.
         widgets:
           type: array
           items:
@@ -1017,7 +1037,7 @@ components:
             type: string
     AssetKind:
       type: string
-      enum: [image, video, audio, pptx, web, youtube]
+      enum: [image, video, audio, pptx, pdf, web, youtube]
     Asset:
       type: object
       required: [id, kind, title, version, health, created_at]
@@ -1044,6 +1064,7 @@ components:
           type: [integer, "null"]
         render_state:
           type: [string, "null"]
+          description: For `pptx` and `pdf` assets; null for the other kinds.
           enum: [queued, running, succeeded, failed, cancelled, null]
         health:
           type: string
@@ -1321,6 +1342,34 @@ components:
                 type: integer
               height:
                 type: integer
+        warnings:
+          type: array
+          description: |
+            What may make the slides look different from the deck. The render still succeeded. A client shows `message`
+            for a `code` it does not know.
+          items:
+            $ref: "#/components/schemas/RenderWarning"
+    RenderWarning:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: |
+            `font_missing`: the deck uses a font the render image lacks (in a PDF: a font it does not embed), so a
+            substitute was drawn.
+          examples: [font_missing]
+        font:
+          type: [string, "null"]
+          description: The font's name as the deck names it, for `font_missing`.
+        slides:
+          type: array
+          description: The 1-based slides it affects; empty when the renderer cannot tell.
+          items:
+            type: integer
+            minimum: 1
+        message:
+          type: string
     Photo:
       type: object
       required: [id, url, caption, author_name, posted_at, featured]

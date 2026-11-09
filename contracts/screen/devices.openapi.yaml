@@ -565,6 +565,53 @@
         $ref: "../screen.openapi.yaml#/components/responses/NotFound"
       "409":
         $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/zones/{zone_key}/preview:
+  parameters:
+    - $ref: "../screen.openapi.yaml#/components/parameters/ZoneKey"
+  post:
+    tags: [zones]
+    operationId: previewZone
+    summary: Preview a proposed zone without saving it
+    description: |
+      Right `screen.zones.write`. Answers the `ScreenState` the zone's screens would get if the body were saved now,
+      built from the same sources (real view-models, the zone's active claims, the theme revision in effect), so Studio
+      draws it with the real player. Saves nothing, emits nothing, is not audited and opens no stream; Studio posts
+      again to refresh. The body is the zone as `PUT` takes it (its `revision` is ignored); a key no zone has yet
+      previews a new zone. The answer is a mirror's: `device` is `{"id": "preview", "name": <the zone's name>,
+      "mirror": true}`, `sound.enabled` is false, `state_version` is 0 and `zone.epoch` is `preview`. The
+      `checkin_qr` widget gets a sample view-model without a code (contracts/screen.md, Zones and assignments).
+    parameters:
+      - name: orientation
+        in: query
+        required: false
+        description: The screen the preview stands for; `portrait` falls back to `pulse_portrait` as a portrait device does.
+        schema:
+          type: string
+          enum: [landscape, portrait]
+          default: landscape
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../screen.openapi.yaml#/components/schemas/Zone"
+    responses:
+      "200":
+        description: The composed state the proposed zone would have now.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/ScreenState"
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+        description: "`invalid_request` (also when the body's `key` is not the path's `zone_key`) or `unknown_layout`."
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "429":
+        $ref: "../screen.openapi.yaml#/components/responses/TooMany"
+        description: "`rate_limited`: over 30 previews a minute for one session."
 /api/screen/now:
   get:
     tags: [now]

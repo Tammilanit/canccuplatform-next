@@ -96,7 +96,7 @@ Emitter: `screen`. Audience: system, except where noted. Payloads: [screen.md](s
 | `screen.ticker.changed` | The ticker text changed. Audience: event-wide, `public` | bot (`/ticker status`), voices |
 | `screen.photo.added`, `screen.photo.removed` | A carousel photo was added or removed. Audience: event-wide, `public` | moments |
 | `screen.claims.changed` | Where Moments' claims are placed on a zone, and which are unplaced or hidden | moments |
-| `screen.render.queued`, `.started`, `.succeeded`, `.failed`, `.cancelled` | A PPTX render job moved | admin |
+| `screen.render.queued`, `.started`, `.succeeded`, `.failed`, `.cancelled` | A render job (PPTX or PDF deck) moved | admin |
 
 ## Tenants
 Emitter: `tenants`. Audience: system, except where noted. Payloads: [tenants.md](tenants.md#events-version-1).
