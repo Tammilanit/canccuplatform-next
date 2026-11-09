@@ -1,0 +1,50 @@
+settings:
+  - key: heartbeat_seconds
+    type: integer
+    min: 5
+    max: 60
+    label: Screen heartbeat (seconds)
+    default: 15
+  - key: offline_after_seconds
+    type: integer
+    min: 15
+    max: 300
+    label: Screen offline after (seconds)
+    default: 45
+  # Each item must be an https:// origin; a declaration cannot say so, so the
+  # screen module checks it when it reads the list.
+  - key: web_allowlist
+    type: list
+    label: Web pages screens may show (https:// origins)
+    default: []
+  - key: break_min_gap_seconds
+    type: integer
+    min: 0
+    max: 3600
+    label: Minimum gap between breaks (seconds)
+    default: 60
+  - key: progress_bars
+    type: boolean
+    label: Show progress bars
+    default: true
+  - key: ticker_appearance
+    type: string
+    choices: [default, high_contrast, minimal, broadcast]
+    label: Ticker appearance
+    default: default
+  - key: ready_timeout_seconds
+    type: integer
+    min: 1
+    max: 30
+    label: Wait for content to be ready (seconds)
+    default: 8
+  - key: ready_fallback_asset_id
+    type: string
+    label: Asset shown when content is not ready in time
+    default: ""
+  - key: photo_dwell_seconds
+    type: integer
+    min: 5
+    max: 60
+    label: Photo dwell (seconds)
+    default: 8
