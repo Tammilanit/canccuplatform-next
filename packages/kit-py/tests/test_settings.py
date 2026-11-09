@@ -148,11 +148,43 @@ async def test_concurrent_first_loads_share_one_read() -> None:
     assert len(seen) == 1
 
 
-def test_writes_nothing_and_has_no_tenantless_start(admin: FakeAdmin) -> None:
-    # A write is a person's, on admin's API on the event's hostname, where admin learns the tenant.
+def test_has_no_tenantless_start(admin: FakeAdmin) -> None:
+    assert not hasattr(client(admin), "start")
+
+
+async def test_a_module_writes_some_of_its_own_settings_at_the_version_it_read(
+    admin: FakeAdmin,
+) -> None:
+    seen: list[dict[str, object]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return json_response(
+                200, {"module": "screen", "settings_version": 2, "values": {"a": 1, "b": 2}}
+            )
+        assert request.method == "PATCH"
+        assert request.url.path == "/internal/admin/settings/screen"
+        assert request.url.params["tenant_id"] == "demo"
+        assert ADMIN.verify(request.headers[SERVICE_HEADER]) == "screen"
+        body = json.loads(request.content)
+        seen.append(body)
+        if body["settings_version"] != 2:
+            return json_response(409, {"error": {"code": "version_conflict", "message": "x"}})
+        values = {"a": 1, "b": 2, **body["values"]}
+        return json_response(200, {"module": "screen", "settings_version": 3, "values": values})
+
+    admin.handler = handler
     settings = client(admin)
-    assert not hasattr(settings, "write")
-    assert not hasattr(settings, "start")
+    with tenant_scope("demo"):
+        await settings.write({"b": 5}, actor_user_id="u_org")  # reads first
+        assert seen == [{"settings_version": 2, "values": {"b": 5}, "actor_user_id": "u_org"}]
+        # The answer is the new state: no re-read needed.
+        assert (settings.settings_version, settings.values) == (3, {"a": 1, "b": 5})
+        with pytest.raises(AdminError) as info:
+            await settings.write({"b": 6}, actor_user_id="u_org")
+    assert (info.value.status, info.value.code) == (409, "version_conflict")
+    with pytest.raises(NoTenant):
+        await settings.write({"b": 1}, actor_user_id="u")
 
 
 async def test_other_errors_keep_admin_code(admin: FakeAdmin) -> None:

@@ -1,5 +1,8 @@
 -- Each event's own topics (contracts/notify.md, Custom topics). Numbered 003 so it sorts after
 -- the 002 migrations of the push and check-in packages, whichever merges first.
+-- notify_topic_config.enabled, enabled_seen and lead_seen are no longer read (#251: admin's
+-- settings own those values); a config write clears them, and dropping them is a later,
+-- destructive migration.
 
 -- A custom topic stores only what narrows its base; its registration is derived from the base on
 -- every read, so a new version of the base module reaches the custom topic at once.

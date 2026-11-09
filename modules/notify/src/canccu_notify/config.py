@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 from typing import Any
 
-from canccu_kit import AdminUnavailable, Event, VersionConflict, check_info_access
+from canccu_kit import AdminError, AdminUnavailable, VersionConflict, check_info_access
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
@@ -50,71 +51,65 @@ def effective(
     reg: dict[str, Any], row: Any, settings: Settings | None, base: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """The configuration in effect; `base` is the base's configuration for a custom topic, whose
-    parameters it starts from and whose channels it can only narrow. The admin settings `topics`
-    and `schedule_lead_minutes` are the same values as `enabled` and the `schedule` topic's
-    `lead_minutes` (contracts/notify.md, Per-event configuration): whichever was written later
-    wins. A row's value wins while the
-    setting still equals what it was when the row was written (`*_seen`); a setting that has
-    changed since was written later. `settings` is None while admin is unreachable: the row's
-    values then stand."""
+    parameters it starts from and whose channels it can only narrow.
+
+    `enabled` and the `schedule` topic's `lead_minutes` live only in admin's settings `topics`
+    and `schedule_lead_minutes` (contracts/notify.md, Per-event configuration): a config write
+    carries them there (`write_settings`), so writing either way changes both and admin is the one
+    owner. Rows written before keep `enabled`, `enabled_seen` and `lead_seen`, which nothing reads.
+    `settings` is None while admin is unreachable: the defaults then apply."""
     key = reg["key"]
     now_enabled = setting_enabled(key, settings)
-    if (
-        row is not None
-        and row["enabled"] is not None
-        and (settings is None or now_enabled == row["enabled_seen"])
-    ):
-        enabled = row["enabled"]
-    else:
-        enabled = now_enabled if now_enabled is not None else True
-    params = {p["key"]: p["default"] for p in reg.get("params") or []}
-    if base is not None:
-        params = dict(base["params"])
-    mirrored = key == "schedule" and "lead_minutes" in params
-    now_lead = setting_lead(settings)
-    if mirrored and now_lead is not None:
-        params["lead_minutes"] = now_lead
+    params = dict(base["params"]) if base is not None else {}
+    if base is None:
+        params = {p["key"]: p["default"] for p in reg.get("params") or []}
     if row is not None:
         own = json.loads(row["params"])
-        if mirrored and settings is not None and now_lead != row["lead_seen"]:
+        if key == "schedule":
             own.pop("lead_minutes", None)
         params.update(own)
+    lead = setting_lead(settings)
+    if key == "schedule" and "lead_minutes" in params and lead is not None:
+        params["lead_minutes"] = lead
     channels = type_channels(reg) if base is None else base["channels"]
     if row is not None and row["channels"] is not None:
         channels = [c for c in channels if c in row["channels"]]
     return {
         "config_version": row["config_version"] if row is not None else 0,
-        "enabled": enabled,
+        "enabled": True if now_enabled is None else now_enabled,
         "params": params,
         "channels": channels,
     }
 
 
-async def on_admin_event(d: Deps, event: Event) -> None:
-    """The settings `topics` and `schedule_lead_minutes` written in admin replace the event's own
-    `enabled` and `lead_minutes`: the later write wins, also when a setting returns to an earlier
-    value (effective() alone could not tell). The version goes up, so a config form opened
-    before is stale."""
-    if (
-        event.type != "admin.settings.changed"
-        or event.data.get("module") != "notify"
-        or event.tenant is None
-    ):
-        return
-    keys = event.data.get("keys")
-    keys = keys if isinstance(keys, list) else ["topics", "schedule_lead_minutes"]
-    async with d.db.tenant(event.tenant) as conn:
-        if "topics" in keys:
-            await conn.execute(
-                "UPDATE notify_topic_config SET enabled = NULL, enabled_seen = NULL,"
-                " config_version = config_version + 1 WHERE enabled IS NOT NULL"
-            )
-        if "schedule_lead_minutes" in keys:
-            await conn.execute(
-                "UPDATE notify_topic_config SET params = params - 'lead_minutes',"
-                " lead_seen = NULL, config_version = config_version + 1"
-                " WHERE key = 'schedule' AND params ? 'lead_minutes'"
-            )
+def topics_with(settings: Settings, every: list[str], key: str, on: bool) -> dict[str, list[str]]:
+    """The setting `topics` with one topic switched, or nothing when it already says so. Unset
+    means every topic, so switching one off writes the list of all the others."""
+    current = settings.get("topics")
+    listed = list(current) if isinstance(current, list) else list(every)
+    wanted = [k for k in listed if k != key] + ([key] if on else [])
+    if (key in listed) == on:
+        return {}
+    return {"topics": wanted}
+
+
+async def write_settings(d: Deps, user_id: str, values_of: Callable[[], dict[str, Any]]) -> None:
+    """Carry a change to admin's settings, inside the caller's transaction: if admin refuses it,
+    the change in Notify is rolled back too. A stale `settings_version` means someone wrote the
+    settings meanwhile: reload and compute again once, since the values came from the old ones."""
+    for attempt in (1, 2):
+        values = values_of()
+        if not values:
+            return
+        try:
+            await d.settings.write(values, actor_user_id=user_id)
+            return
+        except AdminError as exc:
+            if exc.code != "version_conflict":
+                raise
+            if attempt == 2:
+                raise VersionConflict("admin's settings changed meanwhile; reload") from exc
+            await d.settings.load()
 
 
 async def configured(conn: Any, settings: Settings | None) -> dict[str, dict[str, Any]]:
@@ -171,11 +166,12 @@ async def write_config(
     version = body.get("config_version")
     if not isinstance(version, int) or isinstance(version, bool) or version < 0:
         raise bad("config_version: required")
-    # A write records the settings it saw (effective()), so it needs them: no write while admin
-    # is unreachable, as in the agenda.
+    # `enabled` and `lead_minutes` are written to admin's settings, so a write needs admin: none
+    # while it is unreachable, as in the agenda.
     await d.settings.ensure()
     async with d.db.tenant() as conn:
-        found = (await configured(conn, d.settings)).get(key)
+        every = await configured(conn, d.settings)
+        found = every.get(key)
         if found is None:
             raise not_found()
         reg = found["topic_type"]
@@ -183,42 +179,40 @@ async def write_config(
         current = row["config_version"] if row is not None else 0
         if version != current:
             raise VersionConflict(f"config_version is {current}")
-        enabled = row["enabled"] if row is not None else None
-        enabled_seen = row["enabled_seen"] if row is not None else None
         params = json.loads(row["params"]) if row is not None else {}
-        lead_seen = row["lead_seen"] if row is not None else None
         channels = row["channels"] if row is not None else None
+        enabled: bool | None = None
+        lead: int | None = None
         if "enabled" in body:
             if not isinstance(body["enabled"], bool):
                 raise bad("enabled: a boolean")
             enabled = body["enabled"]
-            enabled_seen = setting_enabled(key, d.settings)
         if "params" in body:
             given = _check_params(reg, body["params"])
-            params = {**params, **given}
             if key == "schedule" and "lead_minutes" in given:
-                lead_seen = setting_lead(d.settings)
+                lead = given.pop("lead_minutes")
+            params = {**params, **given}
         if "channels" in body:
             wanted = body["channels"]
             allowed = type_channels(reg)
             if not isinstance(wanted, list) or any(c not in allowed for c in wanted):
                 raise bad(f"channels: a subset of {allowed}")
             channels = list(dict.fromkeys(wanted))
-        values = (key, enabled, enabled_seen, json.dumps(params), lead_seen, channels, current + 1)
+        values = (key, json.dumps(params), channels, current + 1)
         # The version is checked by the write itself: two first writes with config_version 0, or
-        # two updates of the same version, cannot both succeed.
+        # two updates of the same version, cannot both succeed. A row of before #251 loses its own
+        # `enabled` here: admin's setting is the one owner now (effective()).
         if row is None:
             saved = await conn.fetchrow(
-                "INSERT INTO notify_topic_config (key, enabled, enabled_seen, params, lead_seen,"
-                " channels, config_version) VALUES ($1, $2, $3, $4, $5, $6, $7)"
-                " ON CONFLICT (tenant_id, key) DO NOTHING RETURNING *",
+                "INSERT INTO notify_topic_config (key, params, channels, config_version)"
+                " VALUES ($1, $2, $3, $4) ON CONFLICT (tenant_id, key) DO NOTHING RETURNING *",
                 *values,
             )
         else:
             saved = await conn.fetchrow(
-                "UPDATE notify_topic_config SET enabled = $2, enabled_seen = $3, params = $4,"
-                " lead_seen = $5, channels = $6, config_version = $7"
-                " WHERE key = $1 AND config_version = $8 RETURNING *",
+                "UPDATE notify_topic_config SET params = $2, channels = $3, config_version = $4,"
+                " enabled = NULL, enabled_seen = NULL, lead_seen = NULL"
+                " WHERE key = $1 AND config_version = $5 RETURNING *",
                 *values,
                 current,
             )
@@ -228,6 +222,16 @@ async def write_config(
         await d.audit.append(
             tenant_id, user_id, "notify.topic.configured", {"type": "topic", "id": key}
         )
+
+        def mirrored() -> dict[str, Any]:
+            out: dict[str, Any] = {}
+            if enabled is not None:
+                out.update(topics_with(d.settings, list(every), key, enabled))
+            if lead is not None and lead != setting_lead(d.settings):
+                out["schedule_lead_minutes"] = lead
+            return out
+
+        await write_settings(d, user_id, mirrored)
         result: dict[str, Any] = (await configured(conn, d.settings))[key]
     return result
 

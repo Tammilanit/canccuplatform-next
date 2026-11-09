@@ -12,7 +12,7 @@ from starlette.routing import Route
 
 from . import custom, registry
 from .access import tenant_ctx, topics_writer
-from .config import configured, setting_enabled
+from .config import configured, topics_with, write_settings
 from .deps import Deps, deps
 from .registry import bad, body_of, not_found
 
@@ -21,8 +21,7 @@ async def save(
     d: Deps, tenant_id: str, user_id: str, key: str, body: dict[str, Any]
 ) -> tuple[bool, dict[str, Any]]:
     """Adds (True) or replaces (False) a custom topic; the caller checked the right."""
-    # A new topic records the setting `topics` it saw, as a config write does: no write while
-    # admin is unreachable.
+    # A new topic may join admin's setting `topics`: no write while admin is unreachable.
     await d.settings.ensure()
     async with d.db.tenant() as conn:
         topic = custom.validate(key, body, await registry.load(conn))
@@ -43,14 +42,11 @@ async def save(
             )
             if saved is None:
                 raise KitError(f"{key} exists; send its revision", status=409, code="topic_exists")
-            # Switched on from the start, also when the setting `topics` lists the topics and
-            # so lacks this new one: an organiser who just made a topic means it to be offered.
-            await conn.execute(
-                "INSERT INTO notify_topic_config (key, enabled, enabled_seen) VALUES ($1, true, $2)"
-                " ON CONFLICT (tenant_id, key) DO NOTHING",
-                key,
-                setting_enabled(key, d.settings),
-            )
+            topics = d.settings.get("topics")
+            # Offered from the start: an organiser who just made a topic means it to be offered.
+            # An unset `topics` already means every topic.
+            if isinstance(topics, list) and key not in topics:
+                await write_settings(d, user_id, lambda: topics_with(d.settings, [], key, True))
         else:
             saved = await conn.fetchval(
                 "UPDATE notify_custom_topics SET based_on = $2, title = $3, description = $4,"
@@ -69,6 +65,7 @@ async def save(
 
 
 async def remove(d: Deps, tenant_id: str, user_id: str, key: str, revision: int) -> None:
+    await d.settings.ensure()
     async with d.db.tenant() as conn:
         gone = await conn.fetchval(
             "DELETE FROM notify_custom_topics WHERE key = $1 AND revision = $2 RETURNING 1",
@@ -80,6 +77,10 @@ async def remove(d: Deps, tenant_id: str, user_id: str, key: str, revision: int)
                 raise VersionConflict("changed by someone else; reload")
             raise not_found()
         await conn.execute("DELETE FROM notify_topic_config WHERE key = $1", key)
+        # A removed topic leaves admin's setting `topics` too, so a later one of the same key
+        # does not inherit its switch.
+        if isinstance(d.settings.get("topics"), list):
+            await write_settings(d, user_id, lambda: topics_with(d.settings, [], key, False))
         await d.audit.append(
             tenant_id, user_id, "notify.custom_topic.removed", {"type": "topic", "id": key}
         )

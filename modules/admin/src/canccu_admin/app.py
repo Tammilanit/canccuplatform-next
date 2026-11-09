@@ -85,6 +85,35 @@ def create_app(
         with tenant_scope(tenant):
             return JSONResponse(await service.get_settings(module))
 
+    async def internal_patch_settings(request: Request) -> Response:
+        """A module writes some of its own settings for the tenant it serves, for settings that
+        are the same values as something it stores (contracts/admin.md, Settings)."""
+        module = module_of(request)
+        if request.state.service != module:
+            raise ServiceForbidden(f"module {request.state.service} writes only its own settings")
+        tenant = request.query_params.get("tenant_id", "")
+        if not is_tenant_id(tenant):
+            raise KitError("tenant_id: a tenant id", status=400, code="invalid_request")
+        try:
+            body = await request.json()
+        except ValueError:
+            body = None
+        if (
+            not isinstance(body, dict)
+            or not isinstance(body.get("values"), dict)
+            or not body["values"]
+            or not isinstance(body.get("settings_version"), int)
+            or not isinstance(body.get("actor_user_id"), str)
+            or not body["actor_user_id"]
+        ):
+            raise BadSettings("body needs settings_version, values and actor_user_id")
+        with tenant_scope(tenant):
+            return JSONResponse(
+                await service.patch_settings(
+                    module, body["settings_version"], body["values"], body["actor_user_id"]
+                )
+            )
+
     async def put_settings(request: Request) -> Response:
         module = module_of(request)
         session = await need(request, "admin.settings.write")
@@ -203,6 +232,7 @@ def create_app(
             Route("/api/admin/settings/{module}", get_settings, methods=["GET"]),
             Route("/api/admin/settings/{module}", put_settings, methods=["PUT"]),
             Route("/internal/admin/settings/{module}", internal_settings, methods=["GET"]),
+            Route("/internal/admin/settings/{module}", internal_patch_settings, methods=["PATCH"]),
             Route("/api/admin/profile", get_profile, methods=["GET"]),
             Route("/api/admin/profile", put_profile, methods=["PUT"]),
             Route("/", index),

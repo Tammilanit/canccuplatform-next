@@ -6,11 +6,8 @@ import asyncio
 from typing import Any
 
 import pytest
-from canccu_kit import Event
 from conftest import Env
 from topics import play, schedule
-
-from canccu_notify import config as config_module
 
 
 async def configure(env: Env, key: str, body: dict[str, Any], host: str = "a.example.test") -> Any:
@@ -67,7 +64,7 @@ async def test_configuration_is_versioned_checked_and_audited(env: Env) -> None:
     assert other.json()["config"]["params"] == {"lead_minutes": 10}
 
 
-async def test_the_settings_are_the_same_values_until_the_event_sets_its_own(env: Env) -> None:
+async def test_the_settings_are_the_same_values_as_the_config(env: Env) -> None:
     await env.register(schedule())
     await env.register(play())
     env.settings.values["ev-a"] = {"topics": ["schedule"], "schedule_lead_minutes": 5}
@@ -103,52 +100,68 @@ async def test_guests_follow_the_info_page_mode(env: Env) -> None:
         assert (await c.get("/api/notify/topics", headers=env.admin())).status_code == 200
 
 
-async def settings_changed(env: Env, keys: list[str]) -> None:
-    event = Event(
-        id="s1",
-        type="admin.settings.changed",
-        version=1,
-        time="2026-11-20T17:00:00Z",
-        source="admin",
-        data={"module": "notify", "settings_version": 2, "keys": keys},
-        tenant="ev-a",
-    )
-    await config_module.on_admin_event(env.deps, event)
+async def config_of(env: Env, key: str = "schedule") -> Any:
+    async with env.client() as c:
+        listed = (await c.get("/api/notify/topic-types", headers=env.admin())).json()
+    return {t["topic_type"]["key"]: t["config"] for t in listed["topic_types"]}[key]
 
 
-async def test_a_setting_written_after_the_config_wins_and_the_config_after_it(env: Env) -> None:
+async def test_a_config_write_changes_admins_settings(env: Env) -> None:
     await env.register(schedule())
-    env.settings.values["ev-a"] = {"topics": ["schedule"], "schedule_lead_minutes": 10}
-    saved = await configure(
-        env, "schedule", {"config_version": 0, "enabled": False, "params": {"lead_minutes": 15}}
-    )
+    await env.register(play())
+    # Unset `topics` means every topic: switching one off writes all the others.
+    saved = await configure(env, "schedule", {"config_version": 0, "enabled": False})
     assert saved.json()["config"]["enabled"] is False
-    assert saved.json()["config"]["params"] == {"lead_minutes": 15}
-    # An unrelated setting changes nothing.
-    env.settings.values["ev-a"]["hourly_cap"] = 3
-
-    async def config() -> Any:
-        async with env.client() as c:
-            listed = (await c.get("/api/notify/topic-types", headers=env.admin())).json()
-        return listed["topic_types"][0]["config"]
-
-    assert (await config())["enabled"] is False
-    # The organiser changes both in admin's settings: the later write wins, even before the
-    # event arrives (the values differ from those the config write saw).
-    env.settings.values["ev-a"].update({"topics": [], "schedule_lead_minutes": 5})
-    assert (await config())["params"] == {"lead_minutes": 5}
-    await settings_changed(env, ["topics", "schedule_lead_minutes"])
-    # Back to the value the config write saw: still the setting, as the override is gone.
-    env.settings.values["ev-a"]["topics"] = ["schedule"]
-    await settings_changed(env, ["topics"])
-    assert (await config())["enabled"] is True
-    assert (await config())["config_version"] == 3
-    # And a config write after the settings wins again.
-    again = await configure(
-        env, "schedule", {"config_version": 3, "enabled": False, "params": {"lead_minutes": 20}}
+    assert env.settings.writes == [("ev-a", {"topics": ["play"]}, "u_org")]
+    lead = await configure(env, "schedule", {"config_version": 1, "params": {"lead_minutes": 15}})
+    assert lead.json()["config"]["params"] == {"lead_minutes": 15}
+    assert env.settings.writes[-1] == ("ev-a", {"schedule_lead_minutes": 15}, "u_org")
+    back = await configure(env, "schedule", {"config_version": 2, "enabled": True})
+    assert back.json()["config"]["enabled"] is True
+    assert env.settings.values["ev-a"] == {
+        "topics": ["play", "schedule"],
+        "schedule_lead_minutes": 15,
+    }
+    # Writing what the settings already say writes nothing to admin; channels never go there.
+    before = len(env.settings.writes)
+    same = await configure(
+        env, "schedule", {"config_version": 3, "enabled": True, "channels": ["push"]}
     )
-    assert again.json()["config"]["enabled"] is False
-    assert (await config())["params"] == {"lead_minutes": 20}
+    assert same.status_code == 200 and len(env.settings.writes) == before
+    # The other event's settings are untouched.
+    assert "ev-b" not in env.settings.values
+
+
+async def test_a_settings_write_changes_the_config(env: Env) -> None:
+    await env.register(schedule())
+    await configure(env, "schedule", {"config_version": 0, "params": {"lead_minutes": 15}})
+    # The organiser writes both in admin's settings: Notify reads them from there, nothing else
+    # holds a copy, so the config shows them at once and keeps its version.
+    env.settings.values["ev-a"].update({"topics": [], "schedule_lead_minutes": 5})
+    config = await config_of(env)
+    assert (config["enabled"], config["params"], config["config_version"]) == (
+        False,
+        {"lead_minutes": 5},
+        1,
+    )
+    env.settings.values["ev-a"]["topics"] = ["schedule"]
+    assert (await config_of(env))["enabled"] is True
+
+
+async def test_a_conflicting_settings_write_is_computed_again_or_refused(env: Env) -> None:
+    await env.register(schedule())
+    await env.register(play())
+    env.settings.values["ev-a"] = {"topics": ["schedule", "play"]}
+    # Someone switches play off in admin while schedule is switched off here: both changes stay.
+    env.settings.meanwhile = [{"topics": ["schedule"]}]
+    saved = await configure(env, "schedule", {"config_version": 0, "enabled": False})
+    assert saved.status_code == 200
+    assert env.settings.values["ev-a"]["topics"] == []
+    # Stale twice: refused, and the config write is rolled back.
+    env.settings.meanwhile = [{"hourly_cap": 3}, {"hourly_cap": 4}]
+    refused = await configure(env, "schedule", {"config_version": 1, "enabled": True})
+    assert refused.status_code == 409 and refused.json()["error"]["code"] == "version_conflict"
+    assert (await config_of(env))["config_version"] == 1
 
 
 async def test_archived_events_take_no_config_writes(env: Env) -> None:

@@ -119,8 +119,16 @@ async def test_revisions_replace_and_remove(env: Env) -> None:
         {"type": "topic", "id": "custom_cosplay"},
     )
     # Its configuration went with it: the key can be taken again from the start.
+    await save(env, "custom_cosplay", COSPLAY)
+    async with env.client() as c:
+        await c.put(
+            "/api/notify/topic-types/custom_cosplay/config",
+            json={"config_version": 0, "channels": ["push"]},
+            headers=env.admin(),
+        )
+    assert (await remove(env, "custom_cosplay", 1)).status_code == 204
     again = await save(env, "custom_cosplay", COSPLAY)
-    assert again.status_code == 201 and again.json()["config"]["config_version"] == 1
+    assert again.status_code == 201 and again.json()["config"]["config_version"] == 0
 
 
 async def test_writes_need_the_right_and_a_live_event(env: Env) -> None:
@@ -150,11 +158,11 @@ async def test_a_custom_topic_reaches_no_channel_its_base_does_not(env: Env) -> 
     async with env.client() as c:
         url = "/api/notify/topic-types/custom_cosplay/config"
         wide = await c.put(
-            url, json={"config_version": 1, "channels": ["push", "discord_dm"]}, headers=env.admin()
+            url, json={"config_version": 0, "channels": ["push", "discord_dm"]}, headers=env.admin()
         )
         assert wide.status_code == 200 and wide.json()["config"]["channels"] == ["push"]
         params = await c.put(
-            url, json={"config_version": 2, "params": {"lead_minutes": 30}}, headers=env.admin()
+            url, json={"config_version": 1, "params": {"lead_minutes": 30}}, headers=env.admin()
         )
     assert params.json()["config"]["params"] == {"lead_minutes": 30}
     # The base keeps its own parameter.
@@ -166,6 +174,10 @@ async def test_a_custom_topic_is_offered_even_when_the_settings_list_the_topics(
     env.settings.values["ev-a"] = {"topics": ["schedule"]}
     made = await save(env, "custom_cosplay", COSPLAY)
     assert made.json()["config"]["enabled"] is True
+    assert env.settings.writes == [("ev-a", {"topics": ["schedule", "custom_cosplay"]}, "u_org")]
+    gone = await remove(env, "custom_cosplay", 1)
+    assert gone.status_code == 204
+    assert env.settings.values["ev-a"]["topics"] == ["schedule"]
 
 
 async def test_matching_events_make_both_and_the_inbox_shows_the_custom_one(env: Env) -> None:
@@ -218,7 +230,7 @@ async def test_a_disabled_custom_topic_makes_nothing_and_its_base_shows(env: Env
     async with env.client() as c:
         await c.put(
             "/api/notify/topic-types/custom_cosplay/config",
-            json={"config_version": 1, "enabled": False},
+            json={"config_version": 0, "enabled": False},
             headers=env.admin(),
         )
     await env.emit("ev-a", "agenda.reminder.triggered", reminder(kind="cosplay"), id="e1")

@@ -1,8 +1,9 @@
 """Settings client, per tenant: read through admin's internal path, follow
 admin.settings.changed (contracts/admin.md, Settings).
 
-It does not write: a write is a person's, made on admin's API on the event's own hostname, which
-is how admin knows the tenant; a module on admin's internal address could name none.
+A person writes settings on admin's API. The module writes only `write`: some of its own keys,
+for settings its contract makes the same values as something it stores, so that writing either
+way changes both.
 """
 
 from __future__ import annotations
@@ -83,6 +84,26 @@ class SettingsClient:
 
     def get(self, key: str, default: SettingValue | None = None) -> SettingValue | None:
         return self._cache.get(require_tenant(), (0, {}))[1].get(key, default)
+
+    async def write(self, values: dict[str, SettingValue], *, actor_user_id: str) -> None:
+        """Set some of the current tenant's keys (`PATCH /internal/admin/settings/{module}`), at
+        the version this client last read. A stale version raises AdminError `version_conflict`:
+        the caller reloads and decides again, since its values came from the old settings."""
+        tenant = require_tenant()
+        await self.ensure()
+        response = await self._admin.request(
+            "PATCH",
+            f"/internal/admin/settings/{self.module}",
+            params={"tenant_id": tenant},
+            json={
+                "settings_version": self._cache[tenant][0],
+                "values": values,
+                "actor_user_id": actor_user_id,
+            },
+            headers=self._service.headers("admin"),
+        )
+        self._admin.raise_for_error(response)
+        self._apply(tenant, response.json())
 
     async def handle_event(self, event: Event) -> None:
         """Feed admin's tenant events here; re-reads a cached tenant on a newer change."""
