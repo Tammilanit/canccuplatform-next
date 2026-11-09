@@ -39,6 +39,8 @@ class Flow:
     claim_hash: str | None
     """Set when the flow claims ownership with the first-run code."""
     expires_at: datetime
+    return_path: str | None = None
+    """A same-site path the browser goes back to after signing in (auth.safe_return_path)."""
 
 
 class AuthStore(Protocol):
@@ -210,23 +212,30 @@ class PgAuthStore:
     async def save_flow(self, state_hash: str, flow: Flow, now: datetime) -> None:
         await self._pool.execute(
             "INSERT INTO admin_sign_in_flows (state_hash, nonce_hash, verifier, claim_hash,"
-            " expires_at) VALUES ($1, $2, $3, $4, $5)",
+            " expires_at, return_path) VALUES ($1, $2, $3, $4, $5, $6)",
             state_hash,
             flow.nonce_hash,
             flow.verifier,
             flow.claim_hash,
             flow.expires_at,
+            flow.return_path,
         )
 
     async def take_flow(self, state_hash: str, now: datetime) -> Flow | None:
         row = await self._pool.fetchrow(
             "DELETE FROM admin_sign_in_flows WHERE state_hash = $1"
-            " RETURNING nonce_hash, verifier, claim_hash, expires_at",
+            " RETURNING nonce_hash, verifier, claim_hash, expires_at, return_path",
             state_hash,
         )
         if row is None or row["expires_at"] <= now:
             return None
-        return Flow(row["nonce_hash"], row["verifier"], row["claim_hash"], row["expires_at"])
+        return Flow(
+            row["nonce_hash"],
+            row["verifier"],
+            row["claim_hash"],
+            row["expires_at"],
+            row["return_path"],
+        )
 
     async def upsert_user(self, discord_id: str, name: str, now: datetime) -> User:
         return await self._upsert(self._pool, discord_id, name, now)

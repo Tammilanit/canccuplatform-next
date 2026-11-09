@@ -13,7 +13,7 @@ from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.routing import Route
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from .auth import ABSOLUTE, FLOW_LIFETIME, Auth
+from .auth import ABSOLUTE, FLOW_LIFETIME, Auth, safe_return_path
 from .pages import BASE, page
 
 Authorize = Callable[[str | None, str], Awaitable[Session]]
@@ -67,8 +67,8 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
             exc.status,
         )
 
-    async def to_discord(claim_hash: str | None) -> Response:
-        url, nonce = await auth.start(claim_hash)
+    async def to_discord(claim_hash: str | None, return_path: str | None = None) -> Response:
+        url, nonce = await auth.start(claim_hash, return_path)
         response = RedirectResponse(url, status_code=303)
         response.set_cookie(
             FLOW_COOKIE,
@@ -97,14 +97,17 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
                 " CANCCU_DISCORD_CLIENT_SECRET and CANCCU_PUBLIC_URL.</p>"
             )
         else:
-            body = "<form method=post><button>Sign in with Discord</button></form>"
+            back = safe_return_path(request.query_params.get("next"))
+            hidden = f'<input type=hidden name=next value="{html.escape(back)}">' if back else ""
+            body = f"<form method=post>{hidden}<button>Sign in with Discord</button></form>"
         if not await auth.store.has_owner():
             body += f"<p>First start? <a href={BASE}/first-run>Use the first-run code</a>.</p>"
         return page("Sign in", body)
 
     async def sign_in_start(request: Request) -> Response:
+        back = (await request.form()).get("next")
         try:
-            return await to_discord(None)
+            return await to_discord(None, back if isinstance(back, str) else None)
         except KitError as exc:
             return failed(exc)
 
@@ -121,7 +124,7 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
             cancelled = KitError("Sign-in was cancelled.", status=400, code="sign_in_cancelled")
             return clear_flow(failed(cancelled))
         try:
-            token, _ = await auth.finish(
+            token, _, back = await auth.finish(
                 query.get("state", ""),
                 request.cookies.get(FLOW_COOKIE),
                 query.get("code", ""),
@@ -129,7 +132,7 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
             )
         except KitError as exc:
             return clear_flow(failed(exc))
-        response = clear_flow(RedirectResponse(f"{BASE}/", status_code=303))
+        response = clear_flow(RedirectResponse(back or f"{BASE}/", status_code=303))
         response.set_cookie(
             SESSION_COOKIE,
             token,

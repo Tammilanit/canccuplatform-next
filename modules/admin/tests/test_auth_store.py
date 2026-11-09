@@ -85,6 +85,12 @@ async def test_flow_is_single_use_and_expires(store: AuthStore) -> None:
     assert await store.take_flow("s3", NOW - timedelta(minutes=1)) is None
 
 
+async def test_flow_keeps_its_return_path(store: AuthStore) -> None:
+    flow = Flow("n", "v", None, NOW + timedelta(minutes=10), "/notify/check-in?p=arrival")
+    await store.save_flow("s1", flow, NOW)
+    assert await store.take_flow("s1", NOW) == flow
+
+
 async def test_sessions(store: AuthStore) -> None:
     user = await store.upsert_user("d1", "Aino", NOW)
     await store.create_session("a", user.id, NOW, NOW + timedelta(hours=24))
