@@ -2,3 +2,4 @@
 # One entry per line: <path or glob> <reason>. A glob's * also matches /. An entry without a
 # reason exempts nothing. Generated files (a `@generated` or `DO NOT EDIT` marker in their first
 # five lines) need no entry. The health pass reviews this list.
+docs/briefs/*.html design mockups, self-contained by rule so they cannot be split (0026)

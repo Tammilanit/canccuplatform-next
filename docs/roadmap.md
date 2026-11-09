@@ -8,7 +8,7 @@ The plan from today to the full new platform: **a commercial-scale, polished and
 - **Multi-tenant from day 1.** Many events, also simultaneous, on one shared stack ([0013](decisions/0013-multi-tenant-core.md)). The tenancy foundation comes before the module contracts.
 - **Infrastructure first**, then modules one at a time. While `platform.version` is `dev` and no tenant is live, the shared VM follows main, so the pieces are joined every day, not at the end.
 - **Dependencies set the order; no dates are fixed** ([0021](decisions/0021-no-fixed-dates.md)). An event that runs on the platform pins a tested release.
-- Each step is an epic in this repo with a "Planned" checklist of its issues. From step 3 on it starts with a design brief and a brainstorming round with the product owner ([0023](decisions/0023-step-design-briefs.md), [`briefs/`](briefs/README.md)); it runs in work packages and ends with a health pass and a checkpoint ◆ ([0019](decisions/0019-work-packages.md); AGENTS.md, How work flows).
+- Each step is an epic in this repo with a "Planned" checklist of its issues. From step 3 on, like every parallel track, it starts with a research pack, an extensive brainstorming session with the product owner over as many rounds as it takes, and a plan the product owner accepts before any build ([0023](decisions/0023-step-design-briefs.md), [0026](decisions/0026-briefs-are-research-packs.md), [`briefs/`](briefs/README.md)); it runs in work packages and ends with a health pass and a checkpoint ◆ ([0019](decisions/0019-work-packages.md); AGENTS.md, How work flows).
 
 ## Goals and non-goals
 - **Who:** organisers of recurring LAN events at one venue (several events a year), the venue's staff, and attendees; it scales to a large event of about 1,000–2,000 attendees. Free and self-hosted (AGPL), no payments ([0022](decisions/0022-product-vision.md)).
@@ -31,7 +31,7 @@ The plan from today to the full new platform: **a commercial-scale, polished and
 - **Steps follow their dependencies,** not a strict one-after-another rule. An issue starts when the issues it is blocked by are closed, so issues from different steps can run at once. The tracker's blocked-by links are the source for the order; this file names them.
 - **The tracker:** each step is an epic in the milestone of the same number (milestones have no due dates); its epic closes when its children close. Step 2 is one milestone with the epics #36, #46 and #47.
 - **Step 0's product-owner tasks** (#43, #44, #45) run alongside and block only the issues that name them: #43 (domain) blocks #5 and #51; #45 (backup target) blocks #55. #44 (test Discord) is done; it blocked #10 and #52.
-- **The parallel tracks** (Finals, Games, Cast, App; milestone "Parallel tracks"; epics #161, #66, #67 and #160) start after the tenancy foundation (#47). The tracker has no blocked-by link for this yet. The App track's privacy center lands before the dress rehearsal (step 11).
+- **The parallel tracks** (Finals, Games, Cast, App; milestone "Parallel tracks"; epics #161, #66, #67 and #160) start after the tenancy foundation (#47); the tracker has no blocked-by link for this yet. Like a step, a track builds only once its own plan is accepted ([0026](decisions/0026-briefs-are-research-packs.md)). The App track's privacy center lands before the dress rehearsal (step 11).
 - **No fixed dates:** no freeze and no target date ([0021](decisions/0021-no-fixed-dates.md)). Work goes as fast as it goes; a release freeze before an event, if ever wanted, is decided then in its own record.
 
 ## How the roadmap changes
@@ -42,6 +42,7 @@ The roadmap changes as we learn ([0019](decisions/0019-work-packages.md)).
 - **Change log:** every change to this file adds a dated line below, newest first: `- YYYY-MM-DD: <what changed> (<issue or PR>)`.
 
 ### Change log
+- 2026-11-08: a step brief becomes a research pack (every key screen mocked up, a full question bank) for an extensive brainstorming session over as many rounds as it takes; the lead then writes the plan into the brief, the product owner accepts it before any build, and its plan issue gates the step's other issues; this holds for every step from step 3 on and every parallel track ([0026](decisions/0026-briefs-are-research-packs.md), #175).
 - 2026-11-08: the product owner's decisions of 2026-11-07: step 3 builds the new `theming`, `agenda` and `notify` modules, each its own container; the bot only reports activity counts and the games module detects surges; rosters and rounds for casual play belong to the Games track; the App track (#160) and Finals track (#161) epics are listed; the dress rehearsal of step 11 is mainly the product owner testing the whole system at home; the App track's privacy rules gain the 12-month anonymisation and joining by the venue or the event's own link; overrides are `moments.*` (#162, #156).
 - 2026-11-07: the Games track splits into a Finals track (the `finals` module, on the shared tourney core) and a Games track (the generic `games` module); the mini tourney's author gave the OK to reuse the ISC code, so the notes waiting for it are removed ([0025](decisions/0025-finals-and-games-modules.md), #148).
 - 2026-11-07: a contract doc that only adds is normal risk, and the checkpoint's step summary lists the step's contract PRs for the maintainer to review together ([0024](decisions/0024-additive-contract-docs-normal-risk.md), #136).
@@ -180,7 +181,7 @@ The contracts step. Its dependencies: the tenants contract (#48) waits for the l
 - **Issues:** epic #65.
 
 ## Parallel tracks
-All four are new builds with their own contracts, so none blocks the main line. They start after the tenancy foundation (#47), so their contracts are tenant-aware from the start. The Finals and Games tracks were one Games track until 2026-11-07 ([0025](decisions/0025-finals-and-games-modules.md)).
+All four are new builds with their own contracts, so none blocks the main line. They start after the tenancy foundation (#47), so their contracts are tenant-aware from the start, and each builds only once its own plan is accepted: research pack, brainstorming session, plan ([0026](decisions/0026-briefs-are-research-packs.md)). The Finals and Games tracks were one Games track until 2026-11-07 ([0025](decisions/0025-finals-and-games-modules.md)).
 
 ### Finals
 - **Goal:** The Finals mini tourney runs on the platform for an event: players and teams register, the bracket runs, and champions are crowned.
