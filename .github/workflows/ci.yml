@@ -252,6 +252,13 @@ jobs:
         run: |
           curl -fsS http://127.0.0.1/api/tenants/current | tee /tmp/tenants-current.json; echo
           jq -e '.id == "demo" and .status == "live"' /tmp/tenants-current.json
+      - name: Theming answers the platform defaults through Caddy, with its token CSS
+        run: |
+          curl -fsS http://localhost/api/theming/health | jq -e '.status == "ok" and .checks.files.status == "ok"'
+          curl -fsS http://127.0.0.1/api/theming/current | tee /tmp/theme.json; echo
+          jq -e '.revision == 0 and .theming_version == 1' /tmp/theme.json
+          curl -fsS -D /tmp/css.headers "http://127.0.0.1$(jq -r .tokens_css_url /tmp/theme.json)" | grep -q -- '--canccu-color-primary'
+          grep -qi '^x-content-type-options: nosniff' /tmp/css.headers
       - name: Health is 503 down when Valkey is stopped
         run: |
           docker compose -f deploy/compose.yml stop valkey
