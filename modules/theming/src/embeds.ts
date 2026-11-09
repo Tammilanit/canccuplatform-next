@@ -40,10 +40,11 @@ export async function putEmbed(
     if ((path === entry) !== (ext === "html")) {
       throw new Error(`embed ${name}: only the entry may be HTML, and it must be (${path})`);
     }
-    const file = await store.put(client, bytes, ext);
+    const file = await store.write(bytes, ext);
     await client.query(
-      `INSERT INTO theming_embed_files (owner, embed, path, file, entry) VALUES ($1, $2, $3, $4, $5)`,
-      [owner, name, path.slice(folder.length), file, path === entry],
+      `INSERT INTO theming_embed_files (owner, embed, path, file, bytes, entry)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [owner, name, path.slice(folder.length), file, bytes.length, path === entry],
     );
   }
 }

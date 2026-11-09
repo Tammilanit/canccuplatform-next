@@ -259,8 +259,12 @@ describe.skipIf(browser === undefined)("the sandbox in Chromium", () => {
         }),
     );
     expect(outcome).toBe("refused");
-    const opened = await p.goto(`${origin}/theming/sandbox/1/drift/index.html`);
-    expect(opened?.status()).toBe(404);
+    // Chrome turns an empty 404 into its own error page and goto() into an error; the response
+    // tells what the server answered either way.
+    const entry = `${origin}/theming/sandbox/1/drift/index.html`;
+    const answered = p.waitForResponse(entry);
+    await p.goto(entry).catch(() => undefined);
+    expect((await answered).status()).toBe(404);
   });
 
   describe("the still", () => {

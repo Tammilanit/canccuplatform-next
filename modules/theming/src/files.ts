@@ -39,22 +39,29 @@ export function extOf(name: string): Ext {
 
 export interface FileStore {
   /** Store bytes for the current tenant and record them; the same bytes give the same name. */
-  put(client: SqlClient, bytes: Buffer, ext: EmbedExt): Promise<string>;
+  put(client: SqlClient, bytes: Buffer, ext: Ext): Promise<string>;
+  /** Store bytes for the current tenant without recording them: embeds record theirs (embeds.ts). */
+  write(bytes: Buffer, ext: EmbedExt): Promise<string>;
   /** The bytes of a stored file of the current tenant, or undefined. */
   read(name: string): Promise<Buffer | undefined>;
 }
 
 export function diskFiles(root: string): FileStore {
   const path = (name: string): string => tenantFile("theming", `files/${name}`, root);
+  const write = async (bytes: Buffer, ext: EmbedExt): Promise<string> => {
+    const name = fileName(bytes, ext);
+    const target = path(name);
+    await mkdir(dirname(target), { recursive: true });
+    // Written under a temporary name and renamed, so a half-written file is never served.
+    const temp = `${target}.${randomBytes(6).toString("hex")}.tmp`;
+    await writeFile(temp, bytes);
+    await rename(temp, target);
+    return name;
+  };
   return {
+    write,
     async put(client, bytes, ext) {
-      const name = fileName(bytes, ext);
-      const target = path(name);
-      await mkdir(dirname(target), { recursive: true });
-      // Written under a temporary name and renamed, so a half-written file is never served.
-      const temp = `${target}.${randomBytes(6).toString("hex")}.tmp`;
-      await writeFile(temp, bytes);
-      await rename(temp, target);
+      const name = await write(bytes, ext);
       // Not undone when the caller's transaction rolls back: the file stays on disk without a row.
       // Harmless while nothing writes at run time; publishing (#241) and uploads (#242) reserve
       // first and clean up on rollback (docs/plans/issue-185.md, D3).

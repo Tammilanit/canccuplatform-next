@@ -204,7 +204,7 @@ describe.skipIf(!DATABASE_URL)("theming core", () => {
       ["theming_pins", "(theme_revision) VALUES ($1::integer)", () => String((n += 1))],
       [
         "theming_embed_files",
-        "(owner, embed, path, file, entry) VALUES ('draft', 'e', 'a.js', $1 || '.js', false)",
+        "(owner, embed, path, file, bytes, entry) VALUES ('draft', 'e', 'a.js', $1 || '.js', 1, false)",
         hex,
       ],
     ];
