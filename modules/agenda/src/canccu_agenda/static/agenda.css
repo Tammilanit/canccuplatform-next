@@ -1,0 +1,104 @@
+/* The run-of-show pages, phone first: one column, targets of at least 44 px, the main actions in
+   a bar at the bottom of the screen where a thumb reaches them. Colours come from the theme's
+   custom properties (packages/ui, contracts/theming.md), so an event's theme applies here too. */
+@layer canccu-module {
+  .canccu-agenda {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 0 0.75rem 6rem;
+  }
+  .canccu-agenda h1 { font-size: 1.5rem; margin: 0.75rem 0; }
+  .canccu-agenda h2 { font-size: 1.1rem; margin: 1rem 0 0.5rem; }
+  .canccu-agenda-menu { display: flex; gap: 0.25rem; overflow-x: auto; }
+  .canccu-agenda-menu a,
+  .canccu-agenda-tab {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 0.75rem;
+    border-radius: var(--canccu-radius);
+    white-space: nowrap;
+    text-decoration: none;
+  }
+  .canccu-agenda-tabs { display: flex; gap: 0.25rem; overflow-x: auto; margin-bottom: 0.75rem; }
+  .canccu-agenda-tab { border: var(--canccu-border-width) solid var(--canccu-color-border); color: var(--canccu-color-text); }
+  .canccu-agenda-tab[aria-current="page"] { border-color: var(--canccu-color-primary); color: var(--canccu-color-primary); font-weight: 700; }
+  .canccu-agenda-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+  .canccu-agenda-row {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
+    gap: 0.125rem 0.75rem;
+    min-height: 44px;
+    padding: 0.625rem 0.75rem;
+    border: var(--canccu-border-width) solid var(--canccu-color-border);
+    border-radius: var(--canccu-radius);
+    background: var(--canccu-color-surface);
+    color: var(--canccu-color-text);
+    text-decoration: none;
+  }
+  .canccu-agenda-row__time { grid-row: span 3; font-weight: 700; font-size: 1.1rem; }
+  .canccu-agenda-row__title { font-weight: 700; }
+  .canccu-agenda-row__meta, .canccu-agenda-muted { color: var(--canccu-color-text-muted); font-size: 0.9rem; }
+  .canccu-agenda-row--running { border-color: var(--canccu-color-primary); border-width: 2px; }
+  .canccu-agenda-row--over { opacity: 0.6; }
+  .canccu-agenda-row--cancelled .canccu-agenda-row__title { text-decoration: line-through; }
+  .canccu-agenda-nowline {
+    border-top: 2px solid var(--canccu-color-status-down);
+    color: var(--canccu-color-status-down);
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding-top: 0.125rem;
+  }
+  .canccu-agenda-chips { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+  .canccu-agenda-chip {
+    border-radius: 999px;
+    padding: 0.0625rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid var(--canccu-color-border);
+  }
+  .canccu-agenda-chip--running { background: var(--canccu-color-status-ok); color: var(--canccu-color-primary-text); }
+  .canccu-agenda-chip--delayed { background: var(--canccu-color-status-degraded); color: var(--canccu-color-primary-text); }
+  .canccu-agenda-chip--cancelled { background: var(--canccu-color-status-down); color: var(--canccu-color-primary-text); }
+  .canccu-agenda-chips-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; }
+  .canccu-agenda-chips-row .canccu-button, .canccu-agenda-actions .canccu-button { min-height: 44px; }
+  .canccu-agenda-chip-choice input { position: absolute; opacity: 0; }
+  .canccu-agenda-chip-choice span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 0.875rem;
+    border: var(--canccu-border-width) solid var(--canccu-color-border);
+    border-radius: var(--canccu-radius);
+  }
+  .canccu-agenda-chip-choice input:checked + span { border-color: var(--canccu-color-primary); color: var(--canccu-color-primary); font-weight: 700; }
+  .canccu-agenda-chip-choice input:focus-visible + span { outline: 2px solid var(--canccu-color-primary); }
+  .canccu-agenda-form { display: grid; gap: 0.75rem; }
+  .canccu-agenda-form .canccu-input { min-height: 44px; width: 100%; box-sizing: border-box; }
+  .canccu-agenda-fieldset { border: 0; padding: 0; margin: 0; }
+  .canccu-agenda-fieldset legend { font-weight: 700; margin-bottom: 0.25rem; }
+  .canccu-agenda-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+  .canccu-agenda-bar {
+    position: fixed;
+    inset: auto 0 0 0;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--canccu-color-surface);
+    border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+  .canccu-agenda-bar .canccu-button { min-height: 44px; flex: 1; max-width: 18rem; text-align: center; }
+  .canccu-agenda-preview {
+    border: 2px solid var(--canccu-color-primary);
+    border-radius: var(--canccu-radius);
+    padding: 0 1rem 0.5rem;
+    margin: 1rem 0;
+  }
+  .canccu-agenda-facts { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; }
+  .canccu-agenda-facts dt { color: var(--canccu-color-text-muted); }
+  .canccu-agenda-facts dd { margin: 0; }
+  .canccu-agenda-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .canccu-agenda-notice { padding: 0.75rem; border-radius: var(--canccu-radius); border: 2px solid var(--canccu-color-status-ok); }
+  .canccu-agenda-notice--error { border-color: var(--canccu-color-status-down); }
+}
