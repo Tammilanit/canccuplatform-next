@@ -967,6 +967,7 @@ components:
           type: integer
           minimum: 1
           maximum: 10080
+          description: Minutes after creation. With `expires_at` too, used only when that path's value is missing or null.
     TopicType:
       type: object
       required: [key, owner, title, parts, triggers]

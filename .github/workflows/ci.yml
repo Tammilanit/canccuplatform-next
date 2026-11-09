@@ -244,6 +244,10 @@ jobs:
           jq -e '.status == "ok" and .module == "agenda" and .checks.postgres.status == "ok"' /tmp/agenda-health.json
           curl -fsS http://127.0.0.1/api/agenda/kinds | tee /tmp/agenda-kinds.json; echo
           jq -e '.kinds_version == 0 and (.kinds | map(.key) | index("other") != null)' /tmp/agenda-kinds.json
+          curl -fsS http://localhost/api/notify/health | tee /tmp/notify-health.json; echo
+          jq -e '.status == "ok" and .module == "notify" and .checks.postgres.status == "ok"' /tmp/notify-health.json
+          curl -fsS http://127.0.0.1/api/notify/topics | tee /tmp/notify-topics.json; echo
+          jq -e '.topics == []' /tmp/notify-topics.json
       - name: The seeded demo tenant answers in IP mode through Caddy
         run: |
           curl -fsS http://127.0.0.1/api/tenants/current | tee /tmp/tenants-current.json; echo
