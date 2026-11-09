@@ -1,7 +1,7 @@
 """The app against a real Postgres (RLS cannot be faked), with a fake admin session, settings and
 tenants module.
 
-Skipped unless CANCCU_DATABASE_URL is set; CI runs them in the `integration (kit)` job.
+Skipped unless CANCCU_DATABASE_URL is set; CI runs them in the `module (agenda)` job.
 """
 
 from __future__ import annotations

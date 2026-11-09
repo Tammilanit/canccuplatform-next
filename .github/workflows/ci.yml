@@ -191,8 +191,19 @@ jobs:
 
   compose:
     name: compose (deploy)
+    # The module checks (RLS and cross-tenant leak tests among them) left this required job for
+    # `modules`; needing it keeps them blocking merges whether or not the ruleset lists
+    # `modules`. always(): a failed `modules` must fail this job, since a skipped one passes.
+    needs: modules
+    if: always()
     runs-on: ubuntu-latest
     steps:
+      - name: Every module check passed
+        env:
+          MODULES: ${{ needs.modules.result }}
+        run: |
+          echo "modules: $MODULES"
+          test "$MODULES" = success
       - uses: actions/checkout@v4
       - name: Start the stack (clean runner, only Docker)
         run: docker compose -f deploy/compose.yml up -d --build --wait

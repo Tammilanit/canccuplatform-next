@@ -69,23 +69,45 @@ check-module: own failed: ./check" own "$t"
   check "a module without checks is an error" 2 "check-module: modules/empty has no checks (no check script, package.json or pyproject.toml)" empty "$t"
   check "an unknown module is an error" 2 "check-module: no module modules/nope" nope "$t"
   check "a path is not a module name" 2 "check-module: not a module name: ../packages" ../packages "$t"
+  # Broken layouts fail loudly in `modules (list)`, never as a module job that cannot pass.
+  mkdir -p "$t/bad/modules/Foo_bar" "$t/noexec/modules/x" "$t/dircheck/modules/y/check"
+  echo '{}' > "$t/bad/modules/Foo_bar/package.json"
+  echo '[project]' > "$t/noexec/modules/x/pyproject.toml"; echo 'exit 0' > "$t/noexec/modules/x/check"
+  echo '[project]' > "$t/dircheck/modules/y/pyproject.toml"
+  check "list refuses a module name the runner would refuse" 2 "check-module: not a module name: modules/Foo_bar" --list "$t/bad"
+  check "list refuses a check that is not executable" 2 "check-module: modules/x/check is not an executable file" --list "$t/noexec"
+  check "a check that is not executable never falls back to the defaults" 2 "check-module: modules/x/check is not an executable file" --dry-run x "$t/noexec"
+  check "a check folder is not a check" 2 "check-module: modules/y/check is not an executable file" --dry-run y "$t/dircheck"
   check "no arguments is a usage error" 2 "usage: check-module --list [ROOT] | [--dry-run] MODULE [ROOT] | --self-test"
   exit "$fail"
 fi
 
 usage="usage: check-module --list [ROOT] | [--dry-run] MODULE [ROOT] | --self-test"
 
-has_checks() { [ -x "$1/check" ] || [ -f "$1/package.json" ] || [ -f "$1/pyproject.toml" ]; }
+# A `check` that lost its exec bit must not fall back to the defaults: for screen-render
+# that would skip the real-deck tests without anyone noticing.
+own_check() { # ROOT, DIR (relative): true if DIR has its own check; exits 2 on a broken one
+  [ -e "$1/$2/check" ] || return 1
+  [ -f "$1/$2/check" ] && [ -x "$1/$2/check" ] && return 0
+  echo "check-module: $2/check is not an executable file"; exit 2
+}
+has_checks() { own_check "$1" "$2" || [ -f "$1/$2/package.json" ] || [ -f "$1/$2/pyproject.toml" ]; }
+name_ok() { [[ "$1" =~ ^[a-z][a-z0-9-]*$ ]]; }
 
 if [ "${1:-}" = "--list" ]; then
   root="${2:-$(git rev-parse --show-toplevel)}"
   names=()
   for d in "$root"/modules/*/; do
-    [ -d "$d" ] && has_checks "$d" && names+=("$(basename "$d")")
+    [ -d "$d" ] || continue
+    n=$(basename "$d")
+    has_checks "$root" "modules/$n" || continue
+    name_ok "$n" || { echo "check-module: not a module name: modules/$n"; exit 2; }
+    names+=("$n")
   done
-  # The CI matrix reads this line as JSON; module names are [a-z0-9-], so no escaping is needed.
+  # The CI matrix reads this line as JSON; name_ok leaves nothing to escape.
+  # ${names[@]+…}: an empty array is unbound under set -u in bash before 4.4 (macOS).
   printf '['; sep=""
-  for n in $(printf '%s\n' "${names[@]}" | LC_ALL=C sort); do printf '%s"%s"' "$sep" "$n"; sep=","; done
+  for n in $(printf '%s\n' ${names[@]+"${names[@]}"} | LC_ALL=C sort); do printf '%s"%s"' "$sep" "$n"; sep=","; done
   printf ']\n'
   exit 0
 fi
@@ -96,13 +118,13 @@ if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
 module=$1
 root="${2:-$(git rev-parse --show-toplevel)}"
 # The name comes from the CI matrix and becomes a path: refuse anything but a plain name.
-[[ "$module" =~ ^[a-z][a-z0-9-]*$ ]] || { echo "check-module: not a module name: $module"; exit 2; }
+name_ok "$module" || { echo "check-module: not a module name: $module"; exit 2; }
 dir="modules/$module"
 [ -d "$root/$dir" ] || { echo "check-module: no module $dir"; exit 2; }
-has_checks "$root/$dir" || { echo "check-module: $dir has no checks (no check script, package.json or pyproject.toml)"; exit 2; }
+has_checks "$root" "$dir" || { echo "check-module: $dir has no checks (no check script, package.json or pyproject.toml)"; exit 2; }
 
 steps=() # "<dir relative to root>|<command>", run in order, stopping at the first failure
-if [ -x "$root/$dir/check" ]; then
+if own_check "$root" "$dir"; then
   steps+=("$dir|./check")
 else
   if [ -f "$root/$dir/package.json" ]; then
