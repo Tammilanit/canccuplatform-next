@@ -69,3 +69,6 @@ Not ported, by the brief: `ticker-appearance.ts` beyond the four preset names (t
 
 ## After the answers
 The lead rewrites #108 and opens the slice issues as the answers decide; each slice then runs as a normal package against this plan's design table.
+
+## Answers
+The user approved this plan on 2026-11-09, with every recommendation above: split #108 into the slices, TypeScript, the migration runner in kit-ts, the quota held by tenants with reserve and release, slice F waits for #107's zones, and one generic CI step.
