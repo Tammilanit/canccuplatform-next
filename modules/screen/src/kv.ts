@@ -1,5 +1,5 @@
 /**
- * The short-lived state the module keeps in Valkey (pairing codes, open-code counts), behind a
+ * The short-lived state the module keeps in Valkey (pairing codes, open-code counts, commands), behind a
  * small interface so tests run without Valkey. Keys come from the kit's `tenantKey` only.
  */
 import { Valkey } from "iovalkey";
@@ -17,6 +17,8 @@ export interface Kv {
   /** The members not yet expired at `nowMs`; expired ones are dropped first. */
   live(key: string, nowMs: number): Promise<string[]>;
   removeMember(key: string, member: string): Promise<void>;
+  /** The members not yet expired at `nowMs`, and the set cleared, at once: one caller gets each. */
+  takeLive(key: string, nowMs: number): Promise<string[]>;
   ping(): Promise<void>;
   close(): Promise<void>;
 }
@@ -58,6 +60,15 @@ export class ValkeyKv implements Kv {
   }
   async removeMember(key: string, member: string): Promise<void> {
     await this.client.zrem(key, member);
+  }
+  async takeLive(key: string, nowMs: number): Promise<string[]> {
+    const replies = await this.client
+      .multi()
+      .zremrangebyscore(key, "-inf", nowMs)
+      .zrange(key, 0, -1)
+      .del(key)
+      .exec();
+    return (replies?.[1]?.[1] as string[] | undefined) ?? [];
   }
   async ping(): Promise<void> {
     await this.client.ping();
@@ -117,6 +128,11 @@ export class MemoryKv implements Kv {
   removeMember(key: string, member: string): Promise<void> {
     this.sets.get(key)?.delete(member);
     return Promise.resolve();
+  }
+  async takeLive(key: string, nowMs: number): Promise<string[]> {
+    const members = await this.live(key, nowMs);
+    this.sets.delete(key);
+    return members;
   }
   ping(): Promise<void> {
     return Promise.resolve();
