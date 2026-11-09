@@ -292,7 +292,7 @@ Proposed additions to the exit criteria: a new event's first useful screen in fi
 All of them are in the [question bank](step-3-screen/questions.md). Decide first: **L1** (the direction), **U1** (who runs the screens), **U6** (zone preview), **L2** (the empty hero), **D6** and **D18** (how much of Notify, and the check-in page), **P1–P3** (the shape of the step's issues), **O3** (the soak test).
 
 ## Plan: final plan (after the session)
-The outcome of the brainstorming session with the product owner on 2026-11-08, four rounds, with this pack as its agenda. The product owner accepted this plan on the same day. It bounds the step's build: each issue's Room to design is measured against it ([0026](../decisions/0026-briefs-are-research-packs.md)), not against the pack's recommendations above. The research above stays as it was written.
+The outcome of the brainstorming session with the product owner on 2026-11-08, four rounds, with this pack as its agenda. The product owner accepted it in the session; accepting this PR records that accept. It bounds the step's build: each issue's Room to design is measured against it ([0026](../decisions/0026-briefs-are-research-packs.md)), not against the pack's recommendations above. The research above is unchanged, apart from the intro's link to this section.
 
 ### What the session changed
 Every question in the [bank](step-3-screen/questions.md) took its recommendation, except for these changes and additions:
@@ -316,7 +316,7 @@ The pack's recommendation, unchanged (L1). **Pulse is the body:** the room's liv
 4. **Live from a phone:** what is done on the floor takes one tap.
 5. **Fail visible, fail graceful:** an outage shows a small mark, never a black screen; Studio says what to check.
 6. **Show before it goes live:** previews of themes, zones and "what plays at…".
-7. **Check-in is never mandatory:** someone who does not check in on arrival loses nothing public; checking in unlocks the extras.
+7. **Check-in is never mandatory:** an offer to the attendee, never a gate to joining or to the hub ([0027](../decisions/0027-product-decisions-2026-11-07-08.md)); the organiser turns it on where they want it. Someone who does not check in on arrival loses nothing public; checking in unlocks the extras.
 
 ### Decisions, one line each
 **Who uses it and how**
@@ -335,7 +335,7 @@ The pack's recommendation, unchanged (L1). **Pulse is the body:** the room's liv
 **Live schedule editing (new in the session)**
 - Quick-add from a phone in a few taps: title; when ("now", "in 30 min", or a time); where; everything else defaulted.
 - Move, delay and cancel, with previews of what moves and who is told.
-- An optional "show on screens now", with an announcement in the same step.
+- An optional "show on screens now", with an optional announcement in the same step: a Notify notification (step 3); Moments' announce takeover stays in step 4 (P5).
 - Templates for recurring kinds (food, ceremony, game session).
 
 **Look and feel**
@@ -377,8 +377,8 @@ The pack's recommendation, unchanged (L1). **Pulse is the body:** the room's liv
 - E4: a refused-screen guide; the event admin's audited emergency switch or the superadmin's address update, never a learned address.
 - E5: theme restore, plus a required preview for CSS changes.
 - E6: a failing playlist item is skipped.
-- E7: concurrent edits show who, and merge when they don't overlap.
-- E8: archived screens stop.
+- E7: concurrent edits show who, and merge when they don't overlap (the agenda and zones; elsewhere "changed by someone else, reload").
+- E8: an archived event's screens show the archived notice until the superadmin moves them (O6).
 - E9: emergency takeovers by the event admin, or by the superadmin venue-wide.
 - E10: a copied-cookie flag.
 - E11: a cold boot offline shows the last state.
@@ -405,7 +405,7 @@ The pack's recommendation, unchanged (L1). **Pulse is the body:** the room's liv
 - P6: CI screenshots.
 
 ### The final issue set
-The pack's [proposed issue changes](#proposed-issue-changes) as the session settled them:
+The pack's [proposed issue changes](#proposed-issue-changes) as the session settled them. Each issue's rewritten goal and acceptance criteria live in the tracker, not here: accepting this plan accepts the issue set and its order, and a later change to an issue's criteria must stay within this plan (or go through a `Roadmap note:` and the checkpoint, [0026](../decisions/0026-briefs-are-research-packs.md)).
 
 | Issue | Status |
 |---|---|
@@ -430,12 +430,13 @@ The pack's [proposed issue changes](#proposed-issue-changes) as the session sett
 3. The content engine (#108) and the render job (#184); theming embeds (#186).
 4. The Pulse player (#109).
 5. Studio essentials (#189) and Studio planning (#190); the CI screenshots and readability check (#191).
-6. The exit: the real 24-hour soak, then the health pass and the checkpoint.
+6. The exit: the real 24-hour soak and the exit criteria on the demo tenant, then the health pass and the checkpoint.
 
 ### Exit criteria: what the product owner sees at the checkpoint
+These add to the [roadmap's exit criteria](#goal), which all stand (among them: the screen keeps showing when the uplink is cut, a second device in another zone plays its own playlist, a valid token outside the venue address is refused, a device whose current tenant is another event is refused, admin shows both devices' health). Every criterion is shown on the demo tenant.
 - A **1080p and a 4K screen**, landscape and portrait, paired by code or QR, show a **themed Pulse** fed by the run-of-show, with no blank frame in any device state.
 - A **new event's first useful screen in five minutes**: brand kit, a few run-of-show items and one paired screen, with nothing else uploaded.
-- **Live from a phone:** quick-add an item, delay "dinner" by 15 minutes and everything after it, and every screen shows it in **under 1 second (p95 measured)**. Undo works.
+- **Live from a phone:** quick-add an item, delay "dinner" by 15 minutes and everything after it, and every screen shows it in **under 1 second (p95 measured on the demo stack)**. Undo works.
 - **Studio essentials:** the Live multi-view, devices with health and thumbnails, zones with preview, the ticker. **Studio planning:** the schedule with "what plays at…", content with PPTX and PDF rendering, and "freeze for the event".
 - **Check-in is optional:** the QR check-in works end to end, and nothing public needs it.
 - The CI load test (100 screens) and the 24-hour soak (accelerated in CI, plus one real run) pass.
