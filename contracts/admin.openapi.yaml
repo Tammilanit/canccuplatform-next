@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Admin API
-  version: 1.3.0
+  version: 1.4.0
   summary: Settings, health, session and rights, profile save and load.
   description: |
     Machine-readable part of the admin contract. Prose, rules and events: contracts/admin.md.
@@ -137,6 +137,49 @@ paths:
           $ref: "common.openapi.yaml#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [internal]
+      operationId: patchSettingsInternal
+      summary: A module writes its own settings for one tenant
+      description: |
+        Sets the keys in `values` and keeps every other key. Only the module itself: the service identity's caller
+        must be `{module}` (403 `service_forbidden` otherwise). The same checks as `PUT /api/admin/settings/{module}`;
+        a stale `settings_version` is 409 `version_conflict`, an archived event 409 `event_archived`. On success
+        `settings_version` goes up by one and `admin.settings.changed` is emitted with `actor_user_id`. The calling
+        module audits the change that caused the write. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsPatch"
+      responses:
+        "200":
+          description: The stored settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/admin/session:
     get:
       tags: [session]
@@ -469,7 +512,8 @@ components:
     Conflict:
       description: |
         `version_conflict` (the settings, or a member's granted rights, changed since they were read);
-        `event_archived` (granting rights in an archived event, which is read-only).
+        `event_archived` (granting rights, or a module writing its settings, in an archived event, which is
+        read-only).
       content:
         application/json:
           schema:
@@ -544,6 +588,22 @@ components:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/SettingValue"
+    SettingsPatch:
+      type: object
+      required: [settings_version, values, actor_user_id]
+      properties:
+        settings_version:
+          type: integer
+          minimum: 0
+        values:
+          type: object
+          description: The keys to set; keys left out keep their values.
+          minProperties: 1
+          additionalProperties:
+            $ref: "#/components/schemas/SettingValue"
+        actor_user_id:
+          type: string
+          description: The user whose change in the calling module caused this write.
     Session:
       type: object
       required: [user, rights, expires_at]
