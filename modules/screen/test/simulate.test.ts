@@ -101,9 +101,29 @@ describe("simulate", () => {
     expect(simulate({ ...base, windows: [tuesday] }, at("08:59:59")).next_change_at).toBeNull();
   });
 
-  test("in_break comes from the injected break check", () => {
-    const inBreak = (when: Date) => when.getTime() === at("10:00:00").getTime();
-    expect(simulate({ ...base, windows: [], inBreak }, at("10:00:00")).in_break).toBe(true);
-    expect(simulate({ ...base, windows: [], inBreak }, at("10:00:01")).in_break).toBe(false);
+  test("in_break follows the zone's breaks, and a break's edges are changes", () => {
+    const windows = [weekly("day", 9 * 60, 17 * 60, 10)];
+    const breaks = [{ startsAt: at("10:00:00"), endsAt: at("10:00:30") }];
+    expect(simulate({ ...base, windows, breaks }, at("09:30:00"))).toMatchObject({
+      in_break: false,
+      next_change_at: "2026-04-06T10:00:00.000Z",
+    });
+    expect(simulate({ ...base, windows, breaks }, at("10:00:00"))).toMatchObject({
+      schedule_id: "day",
+      in_break: true,
+      next_change_at: "2026-04-06T10:00:30.000Z",
+    });
+    expect(simulate({ ...base, windows, breaks }, at("10:00:30"))).toMatchObject({
+      in_break: false,
+      next_change_at: "2026-04-06T17:00:00.000Z",
+    });
+  });
+
+  test("a window change during a break is still a change", () => {
+    const windows = [weekly("day", 9 * 60, 10 * 60, 10)];
+    const breaks = [{ startsAt: at("09:59:50"), endsAt: at("10:00:20") }];
+    expect(simulate({ ...base, windows, breaks }, at("09:59:55")).next_change_at).toBe(
+      "2026-04-06T10:00:00.000Z",
+    );
   });
 });
