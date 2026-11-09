@@ -11,6 +11,8 @@ export interface Session {
   userName: string;
   rights: ReadonlySet<string>;
   expiresAt: Date;
+  /** contracts/admin.md, Session and rights: only `true` from admin counts; anything else is false. */
+  superadmin: boolean;
 }
 
 /** The canccu_session value from a Cookie header, or undefined. */
@@ -33,6 +35,7 @@ interface SessionBody {
   user: { id: string; name: string };
   rights: string[];
   expires_at: string;
+  superadmin?: unknown;
 }
 
 export class RightsChecker {
@@ -91,6 +94,7 @@ export class RightsChecker {
       userName: body.user.name,
       rights: new Set(body.rights.map(String)),
       expiresAt: new Date(body.expires_at),
+      superadmin: body.superadmin === true,
     };
     this.remember(sessionId, session);
     return session;
@@ -100,6 +104,17 @@ export class RightsChecker {
   async check(cookieHeader: string | undefined | null, right: string): Promise<Session> {
     const session = await this.session(cookieHeader);
     if (!session.rights.has(right)) throw new MissingRight(`needs right ${right}`);
+    return session;
+  }
+
+  /**
+   * The session if admin says it is the superadmin's; throws NotSignedIn, MissingRight or
+   * AdminUnavailable. The caller still answers its superadmin paths only on the superadmin
+   * hostname (contracts/admin.md).
+   */
+  async requireSuperadmin(cookieHeader: string | undefined | null): Promise<Session> {
+    const session = await this.session(cookieHeader);
+    if (!session.superadmin) throw new MissingRight("superadmins only");
     return session;
   }
 

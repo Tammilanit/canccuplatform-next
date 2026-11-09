@@ -137,3 +137,45 @@ describe("rights check", () => {
     );
   });
 });
+
+describe("requireSuperadmin", () => {
+  const superadminBody = (superadmin: unknown): unknown => ({
+    ...(sessionBody([]) as object),
+    superadmin,
+  });
+
+  it("answers 401 without a session, without calling admin", async () => {
+    const { admin, checker } = setup();
+    const err = await rejection(checker.requireSuperadmin("theme=dark"));
+    expect(err).toBeInstanceOf(NotSignedIn);
+    expect(admin.requests).toHaveLength(0);
+  });
+
+  // Admin answers false for a superadmin without two-factor and for a session bound to a
+  // tenant (contracts/admin.md, Session and rights); the kit sees only the flag.
+  it.each([
+    ["without two-factor", false],
+    ["bound to a tenant", false],
+    ["from an admin without the field", undefined],
+    ["with a value that is not true", "true"],
+  ])("answers 403 missing_right for a session %s", async (_, flag) => {
+    const { admin, checker } = setup();
+    admin.answer = () =>
+      jsonResponse(200, flag === undefined ? sessionBody(["a.b"]) : superadminBody(flag));
+    const err = await rejection(checker.requireSuperadmin("canccu_session=s1"));
+    expect(err).toBeInstanceOf(MissingRight);
+    expect([(err as MissingRight).status, (err as MissingRight).code]).toEqual([
+      403,
+      "missing_right",
+    ]);
+  });
+
+  it("returns the session of a superadmin", async () => {
+    const { admin, checker } = setup();
+    admin.answer = () => jsonResponse(200, superadminBody(true));
+    const session = await checker.requireSuperadmin("canccu_session=s1");
+    expect([session.userId, session.superadmin]).toEqual(["u1", true]);
+    expect((await checker.session("canccu_session=s1")).superadmin).toBe(true);
+    expect(admin.requests).toHaveLength(1);
+  });
+});

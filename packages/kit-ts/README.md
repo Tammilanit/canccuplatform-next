@@ -54,6 +54,9 @@ await withTenant("demo", async () => {
 
 // Rights: checks the canccu_session cookie against GET /api/admin/session, cached ≤ 30 s
 const rights = new RightsChecker(admin);
+// Superadmin paths: 403 missing_right unless admin's `superadmin` is true (a missing field is
+// false); answer them only on the superadmin hostname as well (contracts/admin.md)
+const session = await rights.requireSuperadmin(request.headers.cookie);
 
 bus.subscribeTenants(["admin"], (event) => settings.handleEvent(event)); // re-reads that tenant
 bus.subscribe(["admin"], (event) => {
