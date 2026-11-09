@@ -249,6 +249,39 @@ paths:
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+  /api/agenda/items/{item_id}/announce:
+    parameters:
+      - $ref: "#/components/parameters/ItemId"
+    post:
+      tags: [items]
+      operationId: announceItem
+      summary: Announce an item now
+      description: |
+        Needs right `agenda.items.write`. Tells people about the item now, on its `notify_channels` (Notify's
+        `schedule` topic, the bot's channel post). Changes nothing in the agenda: no `revision`, and
+        `agenda_version` stays. A `quiet_hours` item is 400 `invalid_request`; a cancelled one is 409
+        `item_cancelled`. Emits `agenda.item.announced`.
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Announce"
+      responses:
+        "204":
+          description: Announced.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/agenda/now:
     get:
       tags: [items]
@@ -726,6 +759,14 @@ components:
         revision:
           type: integer
           minimum: 1
+    Announce:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: The organiser's words, the notification's body; leave out for none.
     Agenda:
       type: object
       required: [agenda_version, items]

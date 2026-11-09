@@ -38,6 +38,33 @@ def test_shipped_declarations_load_with_contract_defaults() -> None:
     assert (games["surge_threshold"].min, games["surge_threshold"].max) == (2, 500)
 
 
+def test_screen_declaration_matches_the_contract() -> None:
+    # contracts/screen.md, Settings: the bounds and defaults the screen module reads.
+    screen = {s.key: s for s in load_declarations(DECL)["screen"]}
+    bounded = {
+        "heartbeat_seconds": (5, 60, 15),
+        "offline_after_seconds": (15, 300, 45),
+        "break_min_gap_seconds": (0, 3600, 60),
+        "ready_timeout_seconds": (1, 30, 8),
+        "photo_dwell_seconds": (5, 60, 8),
+    }
+    for key, (low, high, default) in bounded.items():
+        assert (screen[key].type, screen[key].min, screen[key].max) == ("integer", low, high)
+        assert screen[key].default == default
+    assert (screen["web_allowlist"].type, screen["web_allowlist"].default) == ("list", [])
+    assert (screen["progress_bars"].type, screen["progress_bars"].default) == ("boolean", True)
+    appearances = ("default", "high_contrast", "minimal", "broadcast")
+    assert screen["ticker_appearance"].choices == appearances
+    assert screen["ticker_appearance"].default == "default"
+    assert screen["ready_fallback_asset_id"].default == ""
+    assert set(screen) == set(bounded) | {
+        "web_allowlist",
+        "progress_bars",
+        "ticker_appearance",
+        "ready_fallback_asset_id",
+    }
+
+
 @pytest.mark.parametrize(
     "bad",
     [

@@ -206,6 +206,31 @@ services:
       retries: 30
     restart: unless-stopped
 
+  # The render job (modules/screen-render): parses untrusted PPTX and PDF decks, so it gets nothing
+  # to reach and nothing to read. No network at all, not even the stack's; its only mount is the
+  # socket volume the screen module connects through; no secrets in its environment.
+  screen-render:
+    build:
+      context: ..
+      dockerfile: modules/screen-render/Dockerfile
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp:size=2g,mode=1777
+    volumes:
+      - render-socket:/run/canccu-render
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 2g
+    cpus: 2
+    pids_limit: 256
+    healthcheck:
+      test: ["CMD", "python", "-m", "canccu_screen_render.main", "--ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
   agenda:
     build:
       context: ..
@@ -309,3 +334,5 @@ volumes:
   # name is fixed because setup/deploy finds the volume by it.
   deploy-status:
     name: canccuplatform_deploy-status
+  # Holds only the render job's Unix socket; mounted in screen-render and (later) the screen module.
+  render-socket:

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Admin API
-  version: 1.2.0
+  version: 1.3.0
   summary: Settings, health, session and rights, profile save and load.
   description: |
     Machine-readable part of the admin contract. Prose, rules and events: contracts/admin.md.
@@ -22,6 +22,8 @@ tags:
     description: Per-module settings stored by admin.
   - name: session
     description: The signed-in user and their rights.
+  - name: rights
+    description: The rights granted to an event's members one by one, and the named presets.
   - name: sign-in
     description: The central sign-in host's provider paths (contracts/admin.md, Sign-in providers).
   - name: profile
@@ -162,6 +164,88 @@ paths:
           description: Signed out; the cookie is cleared.
         "401":
           $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+  /api/admin/rights/{user_id}:
+    parameters:
+      - $ref: "#/components/parameters/UserId"
+    get:
+      tags: [rights]
+      operationId: getUserRights
+      summary: The rights granted to one member of this event
+      description: |
+        Needs right `admin.rights.write`. The rights granted to the user one by one in the request's event, not
+        those the event-admin role brings (`event_admin` says whether the user holds it). A member with none
+        has an empty list and `rights_version` 0; a user who is not a member is 404 `not_found`.
+      responses:
+        "200":
+          description: The granted rights.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRights"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [rights]
+      operationId: putUserRights
+      summary: Replace the rights granted to one member of this event
+      description: |
+        Needs right `admin.rights.write`, and the caller must hold every right the request adds or removes
+        (otherwise 403 `missing_right`), so a granted `admin.rights.write` never passes on more than its holder
+        has. The list replaces the granted rights; an empty list takes them all away. Optimistic concurrency:
+        send the `rights_version` you read; a stale one gets 409 `version_conflict`. A role-only right
+        (contracts/tenants.md, Users, roles and membership) is 400 `right_role_only`; a user who is not a member
+        of the event is 404 `not_found`, and an archived event 409 `event_archived`. Audited; emits `admin.rights.changed` with the full new list. Granting
+        a preset (`GET /api/admin/rights/presets`) is this one call with the preset's rights added to the list.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRightsUpdate"
+      responses:
+        "200":
+          description: The granted rights after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRights"
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+          description: |
+            `invalid_request`: a right that is not `<module>.<right>`; `right_role_only`: a right only the
+            event-admin role holds.
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/admin/rights/presets:
+    get:
+      tags: [rights]
+      operationId: getRightsPresets
+      summary: The named sets of rights admin grants in one action
+      description: |
+        Needs right `admin.rights.write`. Each preset is a name for a list of rights defined by a module's
+        contract, such as `screen_crew` (contracts/screen.md, Rights), not a role: once granted, each right
+        stands alone and can be taken away alone.
+      responses:
+        "200":
+          description: The presets.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RightsPresets"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
   /api/admin/auth/providers:
     get:
       tags: [sign-in]
@@ -359,6 +443,13 @@ components:
       schema:
         type: string
         maxLength: 64
+    UserId:
+      name: user_id
+      in: path
+      required: true
+      description: Platform user id.
+      schema:
+        $ref: "#/components/schemas/UserId"
     Module:
       name: module
       in: path
@@ -368,13 +459,17 @@ components:
         $ref: "#/components/schemas/ModuleName"
   responses:
     NotFound:
-      description: Unknown module, or unknown tenant on an internal path.
+      description: |
+        Unknown module, or unknown tenant on an internal path; for rights, a user who is not a member of the
+        event.
       content:
         application/json:
           schema:
             $ref: "common.openapi.yaml#/components/schemas/Error"
     Conflict:
-      description: "`version_conflict`: the settings changed since they were read."
+      description: |
+        `version_conflict` (the settings, or a member's granted rights, changed since they were read);
+        `event_archived` (granting rights in an archived event, which is read-only).
       content:
         application/json:
           schema:
@@ -472,6 +567,80 @@ components:
         expires_at:
           type: string
           format: date-time
+        superadmin:
+          type: boolean
+          description: |
+            True only for a session bound to the platform (signed in for the superadmin hostname) of a user who
+            is a superadmin and whose sign-in identity for this session has `mfa_enabled` (contracts/tenants.md,
+            Sign-in identities). Every other session is false, also a superadmin's on a tenant's hostname, with
+            or without a support window. A missing field counts as false. Modules check it through the kit, and
+            still answer superadmin paths only on the superadmin hostname.
+    UserId:
+      type: string
+      description: The same as `UserId` in tenants.openapi.yaml.
+      pattern: "^u_[A-Za-z0-9]{1,40}$"
+      examples: [u_123]
+    Right:
+      type: string
+      pattern: "^[a-z]+\\.[a-z0-9_.]+$"
+      examples: [screen.devices.pair]
+    UserRights:
+      type: object
+      required: [user_id, rights, rights_version, event_admin]
+      properties:
+        user_id:
+          $ref: "#/components/schemas/UserId"
+        rights:
+          type: array
+          description: The rights granted one by one, sorted; never those of the role.
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Right"
+        rights_version:
+          type: integer
+          minimum: 0
+          description: |
+            0 while nothing was ever granted to the user in this event; +1 on every change. It keeps counting when
+            the grants are dropped (the member left), so a write read before that is stale.
+        event_admin:
+          type: boolean
+          description: The user holds the event-admin role, so every right whatever the list says.
+    UserRightsUpdate:
+      type: object
+      required: [rights, rights_version]
+      additionalProperties: false
+      properties:
+        rights:
+          type: array
+          maxItems: 200
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Right"
+        rights_version:
+          type: integer
+          minimum: 0
+    RightsPresets:
+      type: object
+      required: [presets]
+      properties:
+        presets:
+          type: array
+          items:
+            type: object
+            required: [id, module, rights]
+            properties:
+              id:
+                type: string
+                pattern: "^[a-z][a-z0-9_]{1,63}$"
+                examples: [screen_crew]
+              module:
+                type: string
+                description: The module whose contract defines the preset.
+                examples: [screen]
+              rights:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Right"
     SignInProvider:
       type: string
       description: |

@@ -29,12 +29,20 @@ Every module serves `GET /health` with the same shape (`Health` in the OpenAPI f
 ## Session and rights
 - Signing in (through a sign-in provider, today Discord; see [Sign-in providers](#sign-in-providers)) ends in a session. The session id is the opaque cookie `canccu_session` (HttpOnly, SameSite=Lax, Secure when served over HTTPS); the session itself lives in Postgres, so any container can serve any request.
 - **From the central sign-in host (#52) on, the cookie is a `__Host-` cookie:** over HTTPS it is named `__Host-canccu_session` and set with `Secure`, `Path=/` and no `Domain`, so no other hostname (another event's hostname or any subdomain of the platform domain included) can set or overwrite it. Session cookies the platform adds later follow the same rule ([theming.md](theming.md#the-sandbox)). Browsers refuse the prefix over plain http, so the IP-mode demo stack keeps `canccu_session`. Modules never name the cookie themselves: the kit reads it and forwards it to `GET /api/admin/session`.
-- `GET /api/admin/session` → `{"user": {"id", "name"}, "rights": [...], "expires_at"}`, or 401 `not_signed_in`.
+- `GET /api/admin/session` → `{"user": {"id", "name"}, "rights": [...], "expires_at", "superadmin"}`, or 401 `not_signed_in`.
+- **`superadmin`** is true only for a session bound to the platform (signed in for the superadmin hostname, see [Sign-in providers](#sign-in-providers)) of a superadmin whose sign-in identity for this session has `mfa_enabled` ([tenants.md](tenants.md#sign-in-identities)). Every other session has `false`: a superadmin on a tenant's hostname acts there only through a support window, as an event admin, never as superadmin. A missing field counts as `false`. A module's superadmin paths (such as Screen's device registry) check it through the kit, and answer only on the superadmin hostname, as the tenants module's do ([tenants.md](tenants.md#superadmin)).
 - `POST /api/admin/session/sign-out` → 204 and clears the cookie.
 - **Rights** are strings `<module>.<right>`, e.g. `admin.settings.write`, `tournament.matches.edit`. Each module's contract lists its rights.
 - **Rights check:** a module calls `GET /api/admin/session` with the user's cookie and allows the request when the right is in `rights`; otherwise it answers 401 (no session) or 403 `missing_right`. The kit wraps this call. A module may cache the answer for at most 30 seconds and drops it on `admin.rights.changed` for that user.
 
 Admin's own rights: `admin.settings.read`, `admin.settings.write`, `admin.profile.read`, `admin.profile.write`, `admin.rights.write`.
+
+### Granting rights
+A session's `rights` are those of the user's role in the event (an event admin holds every right) plus the rights granted to the user one by one, without the role ([tenants.md](tenants.md#users-roles-and-membership)).
+- `GET /api/admin/rights/{user_id}` → `{"user_id", "rights", "rights_version", "event_admin"}`: the rights granted to that member of the request's event, never the role's; `event_admin` says whether the role is held too. Right `admin.rights.write`.
+- `PUT /api/admin/rights/{user_id}` with `{"rights", "rights_version"}` replaces the granted list (empty takes all away). Right `admin.rights.write`, and the caller must hold every right the change adds or removes (otherwise 403 `missing_right`), so a granted `admin.rights.write` never passes on more than its holder has. A role-only right is 400 `right_role_only`; a user who is not a member of the event is 404 `not_found`; a stale `rights_version` is 409 `version_conflict`; an archived event is 409 `event_archived`. Audited (action `admin.rights.changed`, the old and new lists in `changes`); emits `admin.rights.changed` with the full new list.
+- **Presets:** `GET /api/admin/rights/presets` (right `admin.rights.write`) → `{"presets": [{"id", "module", "rights"}]}`. A preset is a name a module's contract gives to a list of rights, never a role: granting it is one `PUT` with its rights added to the member's list, and each right can then be taken away alone. Today: `screen_crew` ([screen.md](screen.md#rights)).
+- Granted rights end with the membership: when a member leaves or is removed (`tenants.member.left`), or the user is deleted (`tenants.user.deleted`), admin drops their granted rights in that event and emits `admin.rights.changed` with an empty list. The list is emptied, never deleted, so `rights_version` keeps counting and a write read before the member left is stale after they rejoin. Losing the event-admin role (`tenants.admin.removed`) does not end granted rights, by design: an event admin who steps down to crew keeps the rights granted to them one by one, and `event_admin` with the list shows what they hold.
 
 ## Sign-in providers
 Sign-in starts Discord-only (the product owner, 2026-11-08). The central sign-in host ([#52](../docs/roadmap.md#2b-tenancy-foundation)) is built around a provider interface, so a username-and-password login, or another provider, is added later as one more provider, without touching users, sessions, rights or the hand-off to event hosts.
@@ -94,6 +102,6 @@ Every event, from every module, uses this envelope.
 | `admin.settings.changed` | A module's settings were written | `module`, `keys` (changed keys), `settings_version` (new), `actor_user_id` |
 | `admin.profile.loaded` | A profile was imported and applied | `profile_name`, `schema_version`, `actor_user_id` |
 | `admin.profile.saved` | A profile was exported | `profile_name`, `schema_version`, `actor_user_id` |
-| `admin.rights.changed` | A user's rights changed | `user_id`, `rights` (full new list), `actor_user_id` |
+| `admin.rights.changed` | A user's rights changed | `user_id`, `rights` (the full new list of rights granted one by one, never the role's), `actor_user_id` |
 
 Events carry ids and changed keys, never secret values. Consumers that need the new settings read them through the settings API.

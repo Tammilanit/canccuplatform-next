@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Tenants API
-  version: 2.1.0
+  version: 2.2.0
   summary: Events as tenants on one shared stack, their hostnames, venues, users, roles, access and audit log.
   description: |
     Machine-readable part of the tenants contract. Prose, rules and events: contracts/tenants.md.
@@ -26,6 +26,8 @@ tags:
     description: The venue IP check's emergency switch.
   - name: audit
     description: The append-only audit log.
+  - name: storage
+    description: The event's storage quota and what its modules' files use of it.
   - name: superadmin
     description: Tenants, hostnames, venues, series, users and superadmins, on the superadmin hostname only.
   - name: internal
@@ -74,6 +76,8 @@ paths:
     $ref: "tenants/event.openapi.yaml#/~1api~1tenants~1current~1support"
   /api/tenants/current/audit:
     $ref: "tenants/event.openapi.yaml#/~1api~1tenants~1current~1audit"
+  /api/tenants/current/storage:
+    $ref: "tenants/event.openapi.yaml#/~1api~1tenants~1current~1storage"
   /api/tenants/audit:
     $ref: "tenants/superadmin.openapi.yaml#/~1api~1tenants~1audit"
   /api/tenants/registry:
@@ -110,6 +114,8 @@ paths:
     $ref: "tenants/superadmin.openapi.yaml#/~1api~1tenants~1superadmins~1{user_id}"
   /internal/tenants/resolve:
     $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1resolve"
+  /internal/tenants/tenants/{tenant_id}:
+    $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1tenants~1{tenant_id}"
   /internal/tenants/ip-mode:
     $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1ip-mode"
   /internal/tenants/ask:
@@ -122,6 +128,12 @@ paths:
     $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1audit"
   /internal/tenants/identities/sign-in:
     $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1identities~1sign-in"
+  /internal/tenants/storage/reserve:
+    $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1storage~1reserve"
+  /internal/tenants/storage/release:
+    $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1storage~1release"
+  /internal/tenants/storage/modules/{module}:
+    $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1storage~1modules~1{module}"
 components:
   securitySchemes:
     session:
@@ -139,6 +151,20 @@ components:
       description: Tenant id.
       schema:
         $ref: "#/components/schemas/TenantId"
+    TenantQuery:
+      name: tenant_id
+      in: query
+      required: true
+      description: The tenant the calling module serves, set by its kit, never from a client's input.
+      schema:
+        $ref: "#/components/schemas/TenantId"
+    StorageModule:
+      name: module
+      in: path
+      required: true
+      description: The module whose files the count is for.
+      schema:
+        $ref: "#/components/schemas/StorageModuleName"
     UserId:
       name: user_id
       in: path
@@ -241,6 +267,14 @@ components:
             $ref: "common.openapi.yaml#/components/schemas/Error"
     TooLarge:
       description: "`file_too_large`: over 10 MB."
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    QuotaExceeded:
+      description: |
+        `storage_quota_exceeded`: the event's files would pass its `storage_quota_bytes`. The message names the
+        quota and what is used; the superadmin raises the quota, or the event deletes files.
       content:
         application/json:
           schema:
@@ -353,10 +387,12 @@ components:
       allOf:
         - $ref: "#/components/schemas/PublicTenant"
         - type: object
-          required: [series_id, admin_access, venue_ip_check, archived_at, presence_delete_at, personal_anonymise_at, cloned_from, created_at, revision]
+          required: [series_id, admin_access, venue_ip_check, archived_at, presence_delete_at, personal_anonymise_at, cloned_from, created_at, revision, storage_quota_bytes]
           properties:
             series_id:
               type: [string, "null"]
+            storage_quota_bytes:
+              $ref: "#/components/schemas/StorageQuota"
             admin_access:
               $ref: "#/components/schemas/AdminAccess"
             venue_ip_check:
@@ -417,6 +453,8 @@ components:
               type: [string, "null"]
             series_id:
               type: [string, "null"]
+            storage_quota_bytes:
+              $ref: "#/components/schemas/StorageQuota"
     TenantNew:
       type: object
       required: [id, name, time_zone]
@@ -439,6 +477,8 @@ components:
           $ref: "#/components/schemas/Id"
         series_id:
           $ref: "#/components/schemas/Id"
+        storage_quota_bytes:
+          $ref: "#/components/schemas/StorageQuota"
         admin_user_ids:
           type: array
           description: The first event admins.
@@ -1092,3 +1132,53 @@ components:
           maxLength: 500
         correlation_id:
           type: string
+    StorageQuota:
+      type: integer
+      minimum: 0
+      maximum: 1099511627776
+      default: 2147483648
+      description: |
+        The most bytes the event's files may take, across every module (2 GiB unless the superadmin sets
+        another). Only the superadmin sets it; lowering it under what is used deletes nothing, it only refuses
+        new files until the event is under it again.
+    StorageModuleName:
+      type: string
+      pattern: "^[a-z][a-z0-9_]{1,31}$"
+      examples: [screen, theming]
+    StorageUsage:
+      type: object
+      required: [quota_bytes, used_bytes, modules]
+      properties:
+        quota_bytes:
+          $ref: "#/components/schemas/StorageQuota"
+        used_bytes:
+          type: integer
+          minimum: 0
+          description: The sum of `modules`; may pass `quota_bytes` after the quota was lowered.
+        modules:
+          type: object
+          description: Bytes per module; a module with no files is left out.
+          additionalProperties:
+            type: integer
+            minimum: 0
+    StorageChange:
+      type: object
+      required: [module, bytes]
+      additionalProperties: false
+      properties:
+        module:
+          $ref: "#/components/schemas/StorageModuleName"
+        bytes:
+          type: integer
+          minimum: 1
+          maximum: 1099511627776
+    StorageSet:
+      type: object
+      required: [bytes]
+      additionalProperties: false
+      properties:
+        bytes:
+          type: integer
+          minimum: 0
+          maximum: 1099511627776
+          description: What the module's files of the event take now, as the module counted them.

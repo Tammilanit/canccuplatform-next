@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling==1.33.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "canccu-screen-render"
+version = "0.1.0"
+description = "CanccuPlatform screen render job: PPTX and PDF decks to slide images, isolated."
+requires-python = ">=3.12"
+# Standard library only: no third-party code runs next to untrusted decks (plan R2).
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.2.0",
+  "ruff==0.17.3",
+  "mypy==2.4.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/canccu_screen_render"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "RUF"]
+
+[tool.mypy]
+strict = true
+files = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tests"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["canccu_screen_render", "decks"]
