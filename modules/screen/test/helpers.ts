@@ -6,6 +6,7 @@ import {
   Bus,
   RightsChecker,
   TenantResolver,
+  KitError,
   createHealth,
   runMigrations,
 } from "@canccu/kit";
@@ -90,6 +91,8 @@ export interface Harness {
   pool: pg.Pool;
   store: MemoryStreamStore;
   audits: AuditEntry[];
+  /** Set to make the next audit append fail, as a restarting tenants module does. */
+  failAudit: { next: boolean };
   clock: { now: number };
   close(): Promise<void>;
 }
@@ -106,12 +109,19 @@ export async function harness(): Promise<Harness> {
   const clock = { now: Date.parse("2026-01-01T12:00:00Z") };
   const store = new MemoryStreamStore();
   const audits: AuditEntry[] = [];
+  const failAudit = { next: false };
   const app = buildApp({
     db,
     kv: new MemoryKv(() => clock.now),
     bus: new Bus(store, "screen"),
     rights: new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin })),
     audit: (entry) => {
+      if (failAudit.next) {
+        failAudit.next = false;
+        return Promise.reject(
+          new KitError("audit down", { status: 503, code: "tenants_unavailable" }),
+        );
+      }
       audits.push(entry);
       return Promise.resolve();
     },
@@ -137,6 +147,7 @@ export async function harness(): Promise<Harness> {
     pool,
     store,
     audits,
+    failAudit,
     clock,
     close: async () => {
       await app.close();

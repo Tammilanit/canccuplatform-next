@@ -7,6 +7,8 @@ The venue screens ([contracts/screen.md](../../contracts/screen.md)). This first
 - **Data:** `migrations/*.sql`, run at start by the kit's `runMigrations` (ledger `screen_migrations`). `devices` is the one global table (device identity only); every other table is per event under RLS, and requests run as `canccu_screen_app`. Open pairing codes live in Valkey for 10 minutes; no device token is ever stored, only its SHA-256.
 - **Routes so far:** `POST`, `DELETE /api/screen/pairing`, `GET /api/screen/pairing/{pairing_id}`, `GET`, `POST /api/screen/devices`, `PATCH /api/screen/devices/{device_id}`, `POST /api/screen/devices/{device_id}/revoke`. `requireDevice` (`src/device-access.ts`) is the check the device routes of later slices run.
 
+- **Cookies** `canccu_pairing` and `canccu_device` are always `Secure`, as the contract says, so browsers keep them only over HTTPS: the IP-mode demo stack (plain http on port 80) cannot pair a real kiosk until TLS (#5). The tests send the cookies themselves.
+
 ## Check
 
 ```sh

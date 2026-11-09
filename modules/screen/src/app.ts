@@ -2,7 +2,7 @@
 import Fastify from "fastify";
 import type { FastifyInstance, FastifyServerOptions } from "fastify";
 import { createHealth, postgresCheck, valkeyCheck } from "@canccu/kit";
-import type { Bus, Health, RightsChecker, StreamStore, TenantResolver } from "@canccu/kit";
+import type { Bus, Health, Logger, RightsChecker, StreamStore, TenantResolver } from "@canccu/kit";
 import { install, installTenancy } from "@canccu/kit/fastify";
 import type { Audit } from "./audit.js";
 import type { Db } from "./db.js";
@@ -16,6 +16,7 @@ export interface ScreenDeps {
   bus: Bus;
   rights: RightsChecker;
   audit: Audit;
+  log?: Logger;
   tenants: TenantResolver;
   health: Health;
   now?: () => number;

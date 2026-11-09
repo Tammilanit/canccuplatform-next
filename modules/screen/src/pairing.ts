@@ -3,19 +3,17 @@
  * network, an event admin claims it, and the kiosk collects its token with the pairing cookie.
  * Open codes live only in Valkey; the token is made at collection, so it is never stored.
  */
-import { createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
+import { randomBytes, randomInt } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import {
-  VENUE_REFUSED_MESSAGE,
-  VenueIpRefused,
+  checkScreenAccess,
+  deviceTokenMatches,
   hashDeviceToken,
-  ipInCidrs,
   newDeviceToken,
   requireTenant,
   tenantKey,
-  venueIpCheckActive,
 } from "@canccu/kit";
-import type { Bus, RightsChecker, TenantContext } from "@canccu/kit";
+import type { Bus, Logger, RightsChecker, TenantContext } from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import type { Db, DeviceRow } from "./db.js";
 import { deviceView } from "./devices.js";
@@ -55,6 +53,8 @@ interface PairingRecord {
   address: string;
   expires_at: number;
   device_id: string | null;
+  /** The hash of the token last handed out, so a kiosk whose answer was lost can collect again. */
+  issued_hash?: string;
 }
 
 export interface PairingDeps {
@@ -63,10 +63,15 @@ export interface PairingDeps {
   bus: Bus;
   rights: RightsChecker;
   audit: Audit;
+  log?: Logger;
   now?: () => number;
 }
 
-const sha256 = (value: string): string => createHash("sha256").update(value).digest("hex");
+/** How long a collected pairing stays collectable again by the same browser. */
+const RECOLLECT_MS = 60_000;
+
+// The kit's SHA-256 helper: the pairing secret is a bearer secret like a device token.
+const sha256 = hashDeviceToken;
 const keys = {
   record: (id: string) => tenantKey("screen", "pairing", id),
   code: (code: string) => tenantKey("screen", "pairing-code", code),
@@ -80,17 +85,10 @@ function newCode(): string {
   return Array.from({ length: 8 }, () => ALPHABET[randomInt(ALPHABET.length)]).join("");
 }
 
-function secretMatches(secret: string, stored: string): boolean {
-  const given = Buffer.from(sha256(secret));
-  const want = Buffer.from(stored);
-  return given.length === want.length && timingSafeEqual(given, want);
-}
-
 function fromVenue(ctx: TenantContext, ip: string | undefined, now: number): void {
   if (ctx.venue === null) throw noVenue();
-  if (venueIpCheckActive(ctx, new Date(now)) && !ipInCidrs(ip, ctx.venue.addresses)) {
-    throw new VenueIpRefused(VENUE_REFUSED_MESSAGE);
-  }
+  // The kit's venue rule (and its emergency switch); a pairing has no token yet to check.
+  checkScreenAccess(ctx, { deviceTokenValid: true, clientIp: ip, now: new Date(now) });
 }
 
 export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
@@ -107,7 +105,7 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
     const [id, secret] = (cookieValue ?? "").split(".");
     if (id === undefined || secret === undefined || !/^pr_[A-Za-z0-9_-]+$/.test(id)) return null;
     const found = await record(id);
-    return found !== null && secretMatches(secret, found.secret_hash) ? [id, found] : null;
+    return found !== null && deviceTokenMatches(secret, found.secret_hash) ? [id, found] : null;
   }
 
   app.post("/api/screen/pairing", async (request, reply) => {
@@ -117,8 +115,9 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
     fromVenue(ctx, request.ip, at);
     const address = request.ip;
     const mine = await held(cookie(request, PAIRING_COOKIE));
-    if (mine !== null && mine[1].device_id === null && mine[1].expires_at > at) {
-      // A kiosk reload keeps its code instead of using up another one.
+    if (mine !== null && (mine[1].device_id !== null || mine[1].expires_at > at)) {
+      // A kiosk reload keeps its pairing instead of using up another code: also once claimed,
+      // so a reload between the claim and the next poll still collects the device.
       const [id, rec] = mine;
       return reply.status(201).send({
         pairing_id: id,
@@ -190,10 +189,13 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
       }
       const token = newDeviceToken();
       const device = await db.tenant(async (c) => {
+        // The first collection, or a repeat by the same browser of the token it was just given
+        // (its answer was lost): never a token that has since changed hands.
         const { rows } = await c.query(
-          `UPDATE devices SET token_hash = $2 WHERE id = $1 AND token_hash IS NULL
+          `UPDATE devices SET token_hash = $2 WHERE id = $1
+           AND token_hash IS NOT DISTINCT FROM $4
            AND revoked_at IS NULL AND current_tenant_id = $3 RETURNING *`,
-          [rec.device_id, hashDeviceToken(token), requireTenant()],
+          [rec.device_id, hashDeviceToken(token), requireTenant(), rec.issued_hash ?? null],
         );
         const row = rows[0] as unknown as DeviceRow | undefined;
         if (row === undefined) return null;
@@ -202,8 +204,15 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
         ]);
         return deviceView(row, paired.rows[0]?.paired_at as Date | undefined);
       });
-      await kv.del(keys.record(id));
-      if (device === null) throw notFound();
+      if (device === null) {
+        await kv.del(keys.record(id));
+        throw notFound();
+      }
+      await kv.set(
+        keys.record(id),
+        JSON.stringify({ ...rec, issued_hash: hashDeviceToken(token) }),
+        RECOLLECT_MS,
+      );
       setCookie(reply, DEVICE_COOKIE, token, DEVICE_COOKIE_MAX_AGE_S);
       setCookie(reply, PAIRING_COOKIE, "", 0);
       return { status: "paired", device };
@@ -228,37 +237,53 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
       if (ctx.venue === null) throw noVenue();
       const at = now();
       const id = await kv.take(keys.code(input.code.toUpperCase()));
+      // The code is spent from here; a failed claim below puts it back.
       const rec = id === null ? null : await record(id);
       if (id === null || rec === null || rec.device_id !== null || rec.expires_at <= at)
         throw codeInvalid();
       const deviceId = newId("dv");
       const actor = request.session?.userId ?? null;
-      const device = await db.tenant(async (c) => {
-        const { rows } = await c.query(
-          `INSERT INTO devices (id, name, venue_id, current_tenant_id) VALUES ($1, $2, $3, $4) RETURNING *`,
-          [deviceId, name, ctx.venue?.id, ctx.tenant_id],
-        );
-        const paired = await c.query(
-          "INSERT INTO assignments (device_id) VALUES ($1) RETURNING paired_at",
-          [deviceId],
-        );
-        await deps.audit({
-          tenant_id: ctx.tenant_id,
-          actor_user_id: actor,
-          action: "screen.device.paired",
-          target: { type: "device", id: deviceId },
-          changes: { name: { from: null, to: name } },
+      const code = input.code.toUpperCase();
+      let device: Record<string, unknown>;
+      try {
+        device = await db.tenant(async (c) => {
+          const { rows } = await c.query(
+            `INSERT INTO devices (id, name, venue_id, current_tenant_id) VALUES ($1, $2, $3, $4) RETURNING *`,
+            [deviceId, name, ctx.venue?.id, ctx.tenant_id],
+          );
+          const paired = await c.query(
+            "INSERT INTO assignments (device_id) VALUES ($1) RETURNING paired_at",
+            [deviceId],
+          );
+          await deps.audit({
+            tenant_id: ctx.tenant_id,
+            actor_user_id: actor,
+            action: "screen.device.paired",
+            target: { type: "device", id: deviceId },
+            changes: { name: { from: null, to: name } },
+          });
+          return deviceView(rows[0] as unknown as DeviceRow, paired.rows[0]?.paired_at as Date);
         });
-        return deviceView(rows[0] as unknown as DeviceRow, paired.rows[0]?.paired_at as Date);
-      });
+      } catch (err) {
+        // Nothing was paired: give the code back, so the admin's retry works and the kiosk
+        // is not left showing a dead code.
+        await kv.setIfAbsent(keys.code(code), id, rec.expires_at - at).catch(() => undefined);
+        throw err;
+      }
+      // The device is committed: the claimed record is what the kiosk's next poll needs, so it
+      // goes first; what follows must not turn a done pairing into an error.
       await kv.set(keys.record(id), JSON.stringify({ ...rec, device_id: deviceId }), RECORD_TTL_MS);
-      await kv.removeMember(keys.open(), id);
-      await kv.removeMember(keys.byAddress(rec.address), id);
-      await deps.bus.publish(
-        "screen.device.paired",
-        { device_id: deviceId, name, zone_key: null, actor_user_id: actor },
-        { version: 1 },
-      );
+      try {
+        await kv.removeMember(keys.open(), id);
+        await kv.removeMember(keys.byAddress(rec.address), id);
+        await deps.bus.publish(
+          "screen.device.paired",
+          { device_id: deviceId, name, zone_key: null, actor_user_id: actor },
+          { version: 1 },
+        );
+      } catch (err) {
+        deps.log?.error({ err, device_id: deviceId }, "after pairing: counters or event failed");
+      }
       return reply.status(201).send(device);
     },
   );

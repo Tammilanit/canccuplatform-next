@@ -81,9 +81,11 @@ export function requireDevice(
     if (match.kind === "current" && match.device.superseded_token_hashes.length > 0 && !elsewhere) {
       // The new token has worked once here: the old ones have done their job (contracts/screen.md, Moving).
       await db.tenant((c) =>
-        c.query("UPDATE devices SET superseded_token_hashes = '[]'::jsonb WHERE id = $1", [
-          match.device.id,
-        ]),
+        // Only while the matched token is still current, so a transfer in between keeps its entry.
+        c.query(
+          "UPDATE devices SET superseded_token_hashes = '[]'::jsonb WHERE id = $1 AND token_hash = $2",
+          [match.device.id, match.device.token_hash],
+        ),
       );
     }
     request.device = match.device;

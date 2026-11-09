@@ -60,7 +60,7 @@ describe.skipIf(!DATABASE_URL)("pairing", () => {
     expect((await start("eps.test", "10.9.0.1")).statusCode).toBe(201);
   });
 
-  it("pairs end to end: claim by code, then the kiosk collects its device cookie once", async () => {
+  it("pairs end to end: claim by code, then the kiosk collects its device cookie", async () => {
     const res = await start();
     const { pairing_id, code: shown } = res.json<{ pairing_id: string; code: string }>();
     const pairingCookie = setCookie(res, "canccu_pairing") ?? "";
@@ -96,7 +96,6 @@ describe.skipIf(!DATABASE_URL)("pairing", () => {
       /canccu_device=[A-Za-z0-9_-]{43}; Path=\/; Max-Age=34560000; HttpOnly; Secure; SameSite=Strict/,
     );
     expect(header).toMatch(/canccu_pairing=; Path=\/; Max-Age=0/);
-    expect((await poll()).statusCode).toBe(404);
     const token = setCookie(collected, "canccu_device") ?? "";
     const { rows } = await h.pool.query<{ token_hash: string }>(
       "SELECT token_hash FROM devices WHERE id = $1",
@@ -176,5 +175,69 @@ describe.skipIf(!DATABASE_URL)("pairing", () => {
         }),
       ),
     ).toBe("code_invalid");
+  });
+
+  it("lets a kiosk that reloads between the claim and its next poll still collect", async () => {
+    const res = await start();
+    const { pairing_id, code: shown } = res.json<{ pairing_id: string; code: string }>();
+    const pairingCookie = setCookie(res, "canccu_pairing") ?? "";
+    await call(h, "POST", "/api/screen/devices", {
+      session: "admin",
+      body: { code: shown, name: "Reload" },
+    });
+    const reloaded = await start("alpha.test", undefined, pairingCookie);
+    expect(reloaded.json<{ pairing_id: string }>().pairing_id).toBe(pairing_id);
+    const poll = await call(h, "GET", `/api/screen/pairing/${pairing_id}`, {
+      cookies: { canccu_pairing: pairingCookie },
+    });
+    expect(poll.json()).toMatchObject({ status: "paired" });
+  });
+
+  it("gives the code back when a claim fails, so the retry pairs", async () => {
+    const { code: shown } = (await start()).json<{ code: string }>();
+    const before = (await h.pool.query("SELECT count(*)::int AS n FROM devices")).rows[0] as {
+      n: number;
+    };
+    h.failAudit.next = true;
+    const failed = await call(h, "POST", "/api/screen/devices", {
+      session: "admin",
+      body: { code: shown, name: "Retry" },
+    });
+    expect([failed.statusCode, code(failed)]).toEqual([503, "tenants_unavailable"]);
+    const after = (await h.pool.query("SELECT count(*)::int AS n FROM devices")).rows[0] as {
+      n: number;
+    };
+    expect(after.n).toBe(before.n);
+    const retry = await call(h, "POST", "/api/screen/devices", {
+      session: "admin",
+      body: { code: shown, name: "Retry" },
+    });
+    expect(retry.statusCode).toBe(201);
+  });
+
+  it("lets the same browser collect again when its answer was lost, for a minute only", async () => {
+    const res = await start();
+    const { pairing_id, code: shown } = res.json<{ pairing_id: string; code: string }>();
+    const pairingCookie = setCookie(res, "canccu_pairing") ?? "";
+    await call(h, "POST", "/api/screen/devices", {
+      session: "admin",
+      body: { code: shown, name: "Lost" },
+    });
+    const poll = () =>
+      call(h, "GET", `/api/screen/pairing/${pairing_id}`, {
+        cookies: { canccu_pairing: pairingCookie },
+      });
+    const first = setCookie(await poll(), "canccu_device") ?? "";
+    const again = await poll();
+    expect(again.json()).toMatchObject({ status: "paired" });
+    const second = setCookie(again, "canccu_device") ?? "";
+    expect(second).not.toBe(first);
+    // The first token was replaced, never both valid at once.
+    const probe = (token: string) =>
+      call(h, "GET", "/api/screen/device/_probe", { cookies: { canccu_device: token } });
+    expect(code(await probe(first))).toBe("device_unknown");
+    expect((await probe(second)).statusCode).toBe(200);
+    h.clock.now += 60_001;
+    expect((await poll()).statusCode).toBe(404);
   });
 });

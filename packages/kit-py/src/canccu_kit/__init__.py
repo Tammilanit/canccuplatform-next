@@ -2,6 +2,7 @@
 
 from .access import (
     DEFAULT_TAILSCALE_CIDRS,
+    VENUE_REFUSED_MESSAGE,
     AdminAccessRestricted,
     DeviceUnknown,
     InfoPagesClosed,
@@ -109,6 +110,7 @@ __all__ = [
     "TENANT_ID_RE",
     "TENANT_POLICY",
     "TENANT_SETTING",
+    "VENUE_REFUSED_MESSAGE",
     "AdminAccessRestricted",
     "AdminClient",
     "AdminError",

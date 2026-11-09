@@ -82,11 +82,10 @@ async function main(): Promise<void> {
     ...(process.env.CANCCU_IP_MODE === "demo" ? { ipMode: { version: config.version } } : {}),
   });
   const rights = new RightsChecker(new AdminClient(config.adminUrl));
-  listener.subscribe(["tenants"], (event) => {
-    tenants.handleEvent(event);
-  });
-  listener.subscribe(["admin"], (event) => {
-    rights.handleEvent(event);
+  // One loop for both sources, so neither waits behind the other's blocking read.
+  listener.subscribe(["tenants", "admin"], (event) => {
+    if (event.source === "tenants") tenants.handleEvent(event);
+    else rights.handleEvent(event);
   });
 
   const app = buildApp({
@@ -95,6 +94,7 @@ async function main(): Promise<void> {
     bus,
     rights,
     audit: tenantsAudit(tenantsUrl, service),
+    log,
     tenants,
     health: screenHealth({
       module: config.module,
