@@ -123,12 +123,26 @@ export const ZONE_USES: ZoneUse[] = [
   },
 ];
 
+/**
+ * Lock order for a sound device: its `devices` row first, as reassignment and revoke take it
+ * (`FOR UPDATE`) before they touch its assignment row or a zone (`releaseSound`). A zone save
+ * takes it (`FOR SHARE`) before its zone row, so the two serialise on the device and never
+ * deadlock. Whichever goes second sees the first's commit: a waiting save re-reads the device's
+ * placement and refuses it; a waiting reassignment's `releaseSound` sees and clears the id.
+ */
+async function lockSoundDevice(c: SqlClient, deviceId: string | null): Promise<void> {
+  if (deviceId !== null) {
+    await c.query("SELECT 1 FROM devices WHERE id = $1 FOR SHARE", [deviceId]);
+  }
+}
+
 /** The sound device must be a device of this event assigned to this very zone. */
 async function checkSoundDevice(c: SqlClient, key: string, deviceId: string | null): Promise<void> {
   if (deviceId === null) return;
   const { rows } = await c.query(
     `SELECT 1 FROM assignments a JOIN devices d ON d.id = a.device_id
-     WHERE a.device_id = $1 AND a.zone_key = $2 AND d.current_tenant_id = $3 AND d.revoked_at IS NULL`,
+     WHERE a.device_id = $1 AND a.zone_key = $2 AND d.current_tenant_id = $3 AND d.revoked_at IS NULL
+     FOR SHARE OF a, d`,
     [deviceId, key, requireTenant()],
   );
   if (rows.length === 0) {
@@ -203,7 +217,6 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
     const actor = actorOf(request);
     const [emits, row] = await db.tenant(async (c) => {
       const seeded = await seededFor(ctx, c);
-      await checkSoundDevice(c, zone.key, zone.sound.device_id);
       const { rows } = await c.query(
         `INSERT INTO screen_zones (key, name, layout_id, regions, sound, epoch)
          VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING RETURNING ${ZONE_COLUMNS}`,
@@ -217,6 +230,10 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
         ],
       );
       if (rows[0] === undefined) throw zoneExists();
+      // A new zone has no screens yet, so none of them can be its sound device.
+      if (zone.sound.device_id !== null) {
+        throw invalidRequest("`sound.device_id` must be a screen assigned to this zone.");
+      }
       const saved: Emit = [
         "screen.zone.saved",
         { zone_key: zone.key, revision: 1, changed: [...ZONE_FIELDS], actor_user_id: actor },
@@ -242,6 +259,7 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
     const actor = actorOf(request);
     const [emits, row] = await db.tenant(async (c) => {
       const seeded = await seededFor(ctx, c);
+      await lockSoundDevice(c, zone.sound.device_id);
       const { rows } = await c.query(
         `SELECT ${ZONE_COLUMNS} FROM screen_zones WHERE key = $1 FOR UPDATE`,
         [zone.key],
@@ -250,6 +268,9 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
       if (before === undefined) throw notFound();
       if (before.revision !== zone.revision) throw versionConflict();
       await checkSoundDevice(c, zone.key, zone.sound.device_id);
+      const changed = ZONE_FIELDS.filter((f) => canonical(before[f]) !== canonical(zone[f]));
+      // An unchanged save keeps its revision, so other editors get no needless version_conflict.
+      if (changed.length === 0) return [seeded, zoneView(before)] as const;
       const after = await c.query(
         `UPDATE screen_zones SET name = $2, layout_id = $3, regions = $4, sound = $5,
            revision = revision + 1, updated_at = now()
@@ -263,7 +284,6 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
         ],
       );
       const saved = zoneView(after.rows[0] ?? {});
-      const changed = ZONE_FIELDS.filter((f) => canonical(before[f]) !== canonical(saved[f]));
       const event: Emit = [
         "screen.zone.saved",
         { zone_key: zone.key, revision: saved.revision, changed, actor_user_id: actor },

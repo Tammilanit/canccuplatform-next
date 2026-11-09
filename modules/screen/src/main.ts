@@ -88,7 +88,7 @@ async function main(): Promise<void> {
   const db = poolDb(pool);
   const seed = seedMainZone(db, bus);
   // One loop for both sources, so neither waits behind the other's blocking read.
-  listener.subscribe(["tenants", "admin"], async (event) => {
+  listener.subscribe(["tenants", "admin"], (event) => {
     if (event.source !== "tenants") {
       rights.handleEvent(event);
       return;
@@ -96,8 +96,9 @@ async function main(): Promise<void> {
     tenants.handleEvent(event);
     const id = event.data.tenant_id;
     if (event.type === "tenants.tenant.created" && typeof id === "string" && isTenantId(id)) {
-      // A failure here is not lost: the event's first zone request seeds it too.
-      await withTenant(id, seed).catch((err: unknown) => {
+      // Not awaited, so rights invalidations never queue behind a database write. A failure here
+      // is not lost: the event's first zone, assignment or pairing request seeds it too.
+      void withTenant(id, seed).catch((err: unknown) => {
         log.warn({ err, tenant_id: id }, "seeding the main zone failed");
       });
     }

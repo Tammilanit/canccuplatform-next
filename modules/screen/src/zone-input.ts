@@ -7,6 +7,14 @@
 import { invalidRequest } from "./http.js";
 
 export const ZONE_KEY_RE = /^[a-z0-9][a-z0-9_-]{1,31}$/;
+
+/** A zone key named in a body (`where` is the field), or 400. */
+export function zoneKey(value: unknown, where: string): string {
+  if (typeof value !== "string" || !ZONE_KEY_RE.test(value)) {
+    throw invalidRequest(`\`${where}\` must be a zone key.`);
+  }
+  return value;
+}
 /** The theme schema's `name`: layout, region, template and embed ids, props keys. */
 const NAME_RE = /^[a-z][a-z0-9_-]{0,31}$/;
 const WIDGET_RE = /^[a-z][a-z0-9_]{0,39}$/;

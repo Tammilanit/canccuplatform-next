@@ -16,8 +16,9 @@ export interface Kv {
   addExpiring(key: string, member: string, expiresAtMs: number): Promise<void>;
   /** The members not yet expired at `nowMs`; expired ones are dropped first. */
   live(key: string, nowMs: number): Promise<string[]>;
-  /** True when this call removed it, so of two racing callers only one gets true. */
-  removeMember(key: string, member: string): Promise<boolean>;
+  removeMember(key: string, member: string): Promise<void>;
+  /** The members not yet expired at `nowMs`, and the set cleared, at once: one caller gets each. */
+  takeLive(key: string, nowMs: number): Promise<string[]>;
   ping(): Promise<void>;
   close(): Promise<void>;
 }
@@ -57,8 +58,17 @@ export class ValkeyKv implements Kv {
     await this.client.zremrangebyscore(key, "-inf", nowMs);
     return this.client.zrange(key, 0, -1);
   }
-  async removeMember(key: string, member: string): Promise<boolean> {
-    return (await this.client.zrem(key, member)) > 0;
+  async removeMember(key: string, member: string): Promise<void> {
+    await this.client.zrem(key, member);
+  }
+  async takeLive(key: string, nowMs: number): Promise<string[]> {
+    const replies = await this.client
+      .multi()
+      .zremrangebyscore(key, "-inf", nowMs)
+      .zrange(key, 0, -1)
+      .del(key)
+      .exec();
+    return (replies?.[1]?.[1] as string[] | undefined) ?? [];
   }
   async ping(): Promise<void> {
     await this.client.ping();
@@ -115,8 +125,14 @@ export class MemoryKv implements Kv {
     for (const [member, until] of set) if (until <= nowMs) set.delete(member);
     return Promise.resolve([...set.keys()]);
   }
-  removeMember(key: string, member: string): Promise<boolean> {
-    return Promise.resolve(this.sets.get(key)?.delete(member) ?? false);
+  removeMember(key: string, member: string): Promise<void> {
+    this.sets.get(key)?.delete(member);
+    return Promise.resolve();
+  }
+  async takeLive(key: string, nowMs: number): Promise<string[]> {
+    const members = await this.live(key, nowMs);
+    this.sets.delete(key);
+    return members;
   }
   ping(): Promise<void> {
     return Promise.resolve();

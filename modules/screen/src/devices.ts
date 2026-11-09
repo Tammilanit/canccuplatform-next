@@ -9,7 +9,7 @@ import type { Bus, RightsChecker, SqlClient } from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import type { Db, DeviceRow } from "./db.js";
 import { detachDevice } from "./detach.js";
-import { assertWritable, body, deviceName, needs, notFound, tenantOf } from "./http.js";
+import { actorOf, assertWritable, body, deviceName, needs, notFound, tenantOf } from "./http.js";
 import { publishAll } from "./zones.js";
 
 /** A device's place in the event: its `assignments` row, joined by every event read. */
@@ -106,7 +106,7 @@ export function deviceRoutes(app: FastifyInstance, deps: DeviceDeps): void {
         await c.query("UPDATE devices SET name = $2 WHERE id = $1", [before.id, name]);
         await deps.audit({
           tenant_id: ctx.tenant_id,
-          actor_user_id: request.session?.userId ?? null,
+          actor_user_id: actorOf(request),
           action: "screen.device.renamed",
           target: { type: "device", id: before.id },
           changes: { name: { from: before.name, to: name } },
@@ -122,7 +122,7 @@ export function deviceRoutes(app: FastifyInstance, deps: DeviceDeps): void {
     async (request, reply) => {
       const ctx = tenantOf(request);
       assertWritable(ctx);
-      const actor = request.session?.userId ?? null;
+      const actor = actorOf(request);
       const [id, emits] = await db.tenant(async (c) => {
         const device = await eventDevice(c, request.params.device_id, true);
         const detached = await detachDevice(c, device.id, { audit: deps.audit, actor });

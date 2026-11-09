@@ -80,6 +80,11 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
     });
     const again = await call(h, "POST", "/api/screen/zones", { ...admin(), body: zone });
     expect([again.statusCode, code(again)]).toEqual([409, "zone_exists"]);
+    const loud = await call(h, "POST", "/api/screen/zones", {
+      ...admin(),
+      body: { ...zone, sound: { device_id: "dv_any" } },
+    });
+    expect([loud.statusCode, code(loud)]).toEqual([409, "zone_exists"]);
     expect((await call(h, "GET", "/api/screen/zones/cafe", admin())).json()).toMatchObject({
       key: "cafe",
       revision: 1,
@@ -96,6 +101,14 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
       changed: ["name"],
       actor_user_id: "u_admin",
     });
+    // An unchanged save keeps the revision and emits nothing.
+    const savedEvents = events(h, "screen.zone.saved").length;
+    const same = await call(h, "PUT", "/api/screen/zones/cafe", {
+      ...admin(),
+      body: { ...zone, name: "Café corner", revision: 2 },
+    });
+    expect(same.json()).toMatchObject({ name: "Café corner", revision: 2 });
+    expect(events(h, "screen.zone.saved")).toHaveLength(savedEvents);
     const stale = await call(h, "PUT", "/api/screen/zones/cafe", {
       ...admin(),
       body: { ...zone, name: "Lost update", revision: 1 },

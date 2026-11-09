@@ -20,6 +20,7 @@ import { deviceView } from "./devices.js";
 import type { Placement } from "./devices.js";
 import {
   DEVICE_COOKIE,
+  actorOf,
   DEVICE_COOKIE_MAX_AGE_S,
   PAIRING_COOKIE,
   assertWritable,
@@ -38,7 +39,7 @@ import {
   unknownZone,
 } from "./http.js";
 import type { Kv } from "./kv.js";
-import { ZONE_KEY_RE } from "./zone-input.js";
+import { zoneKey as zoneKeyOf } from "./zone-input.js";
 import { publishAll, seededFor, zoneExistsHere } from "./zones.js";
 import type { Emit } from "./zones.js";
 
@@ -235,10 +236,8 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
       if (typeof input.code !== "string" || !CODE_RE.test(input.code.toUpperCase())) {
         throw invalidRequest("`code` must be the 8 characters the screen shows.");
       }
-      const zoneKey = input.zone_key ?? null;
-      if (zoneKey !== null && (typeof zoneKey !== "string" || !ZONE_KEY_RE.test(zoneKey))) {
-        throw invalidRequest("`zone_key` must be a zone key.");
-      }
+      const zone = input.zone_key ?? null;
+      const zoneKey = zone === null ? null : zoneKeyOf(zone, "zone_key");
       if (ctx.venue === null) throw noVenue();
       const at = now();
       const id = await kv.take(keys.code(input.code.toUpperCase()));
@@ -247,7 +246,7 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
       if (id === null || rec === null || rec.device_id !== null || rec.expires_at <= at)
         throw codeInvalid();
       const deviceId = newId("dv");
-      const actor = request.session?.userId ?? null;
+      const actor = actorOf(request);
       const code = input.code.toUpperCase();
       let device: Record<string, unknown>;
       let seeded: Emit[];

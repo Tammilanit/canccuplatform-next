@@ -168,6 +168,41 @@ describe.skipIf(!DATABASE_URL)("assignments", () => {
     });
   });
 
+  it("never saves a sound device that left the zone while the save waited (race)", async () => {
+    const { id } = await pairDevice(h, "alpha.test", "Racing speaker");
+    await assign(id, { zone_key: "stage" });
+    const { revision } = await zone("stage");
+    // Holds the device as a reassignment does (FOR UPDATE), then moves it out of the zone.
+    const mover = await h.pool.connect();
+    try {
+      await mover.query("BEGIN");
+      await mover.query("SELECT 1 FROM devices WHERE id = $1 FOR UPDATE", [id]);
+      const saving = call(h, "PUT", "/api/screen/zones/stage", {
+        ...admin(),
+        body: { key: "stage", name: "stage", sound: { device_id: id }, revision },
+      });
+      let settled = false;
+      void saving.then(() => (settled = true));
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(settled).toBe(false);
+      await mover.query("UPDATE assignments SET zone_key = 'foyer' WHERE device_id = $1", [id]);
+      await mover.query("COMMIT");
+      expect(code(await saving)).toBe("invalid_request");
+    } finally {
+      mover.release();
+    }
+    expect(await zone("stage")).toMatchObject({ revision, sound: { device_id: null } });
+  });
+
+  it("refuses to mirror a screen that has no assignment row in this event", async () => {
+    const { id } = await pairDevice(h, "alpha.test", "Rowless");
+    const { id: copy } = await pairDevice(h, "alpha.test", "Rowless copy");
+    // What a device the superadmin moves here (#221) looks like before it is assigned.
+    await h.pool.query("DELETE FROM assignments WHERE device_id = $1", [id]);
+    const res = await assign(copy, { mirror_of: { device_id: id } });
+    expect([res.statusCode, code(res)]).toEqual([400, "invalid_request"]);
+  });
+
   it("leaves no dangling references when a device is revoked", async () => {
     const { id: main } = await pairDevice(h, "alpha.test", "Main hall");
     const { id: copy } = await pairDevice(h, "alpha.test", "Main hall copy");

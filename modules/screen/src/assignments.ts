@@ -17,11 +17,12 @@ import {
   invalidRequest,
   needs,
   newId,
+  notFound,
   tenantOf,
   unknownZone,
 } from "./http.js";
 import type { Kv } from "./kv.js";
-import { ZONE_KEY_RE } from "./zone-input.js";
+import { zoneKey } from "./zone-input.js";
 import { publishAll, releaseSound, seededFor, zoneExistsHere } from "./zones.js";
 import type { Emit } from "./zones.js";
 
@@ -32,13 +33,6 @@ interface Target {
 }
 
 const NONE: Target = { zone_key: null, mirror_device_id: null, mirror_zone_key: null };
-
-function zoneKey(value: unknown, where: string): string {
-  if (typeof value !== "string" || !ZONE_KEY_RE.test(value)) {
-    throw invalidRequest(`\`${where}\` must be a zone key.`);
-  }
-  return value;
-}
 
 /** The contract's `Assignment`: exactly one of `zone_key` and `mirror_of`, which holds one target. */
 function targetInput(value: Record<string, unknown>): Target {
@@ -66,14 +60,16 @@ function targetInput(value: Record<string, unknown>): Target {
 
 /**
  * Checks the target and locks every device it involves, in id order so two crossing mirror
- * requests cannot deadlock. A mirror shows a zone or a device that shows a zone, never a chain:
- * so a mirror's target is no mirror, and a device others mirror cannot become one.
+ * requests cannot deadlock. A mirror shows a zone or what a device that is no mirror shows (its
+ * zone, or "not assigned"), never a chain: so a mirror's target is no mirror, and a device
+ * others mirror cannot become one.
  */
 async function lockForTarget(c: SqlClient, deviceId: string, target: Target): Promise<EventDevice> {
   const ids = [deviceId, target.mirror_device_id].filter((x): x is string => x !== null).sort();
   const locked = new Map<string, EventDevice | undefined>();
   for (const id of ids) locked.set(id, await findEventDevice(c, id, true));
-  const device = locked.get(deviceId) ?? (await eventDevice(c, deviceId));
+  const device = locked.get(deviceId);
+  if (device === undefined) throw notFound();
   const key = target.zone_key ?? target.mirror_zone_key;
   if (key !== null && !(await zoneExistsHere(c, key))) throw unknownZone();
   if (target.mirror_device_id !== null) {
@@ -82,6 +78,10 @@ async function lockForTarget(c: SqlClient, deviceId: string, target: Target): Pr
       throw invalidRequest("A screen cannot mirror itself.");
     if (shown === undefined)
       throw invalidRequest("`mirror_of.device_id` is no screen of this event.");
+    // The mirror foreign key needs the target's row; a device moved here (#221) may lack one.
+    if (!shown.paired_at) {
+      throw invalidRequest("That screen has no place in this event yet: assign it first.");
+    }
     if (mirrorOf(shown) !== null) {
       throw invalidRequest("That screen mirrors another one: mirror what it shows instead.");
     }
@@ -213,13 +213,11 @@ export async function takeCommands(
   deviceId: string,
   nowMs: number,
 ): Promise<PendingCommand[]> {
-  const key = commandsKey(deviceId);
-  const taken: PendingCommand[] = [];
-  for (const member of await kv.live(key, nowMs)) {
-    // Only the caller whose removal succeeds delivers it, so two open streams never both do.
-    if (!(await kv.removeMember(key, member))) continue;
-    const { command, expires_at } = JSON.parse(member) as PendingCommand;
-    taken.push({ command, expires_at });
-  }
-  return taken.sort((a, b) => a.expires_at.localeCompare(b.expires_at));
+  // One atomic read-and-clear, so two open streams never both deliver a command.
+  return (await kv.takeLive(commandsKey(deviceId), nowMs))
+    .map((member) => {
+      const { command, expires_at } = JSON.parse(member) as PendingCommand;
+      return { command, expires_at };
+    })
+    .sort((a, b) => a.expires_at.localeCompare(b.expires_at));
 }
