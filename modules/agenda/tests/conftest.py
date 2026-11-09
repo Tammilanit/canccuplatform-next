@@ -17,7 +17,7 @@ import httpx
 import pytest
 from canccu_kit import Bus, Health, TenantResolver, current_tenant
 from canccu_kit.access import TenantContext
-from canccu_kit.errors import NotSignedIn
+from canccu_kit.errors import AdminUnavailable, NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.testing import MemoryStreamStore
 
@@ -68,9 +68,11 @@ class FakeSettings:
     """Per tenant, like the kit's SettingsClient; unset keys take the declared default."""
 
     values: dict[str, dict[str, Any]] = field(default_factory=dict)
+    down: bool = False
 
     async def ensure(self) -> None:
-        return None
+        if self.down:
+            raise AdminUnavailable("admin unreachable")
 
     def get(self, key: str, default: Any = None) -> Any:
         return self.values.get(current_tenant() or "", {}).get(key, default)

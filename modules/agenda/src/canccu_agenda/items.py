@@ -6,7 +6,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from canccu_kit import KitError
+from canccu_kit import AdminUnavailable, KitError
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
@@ -38,9 +38,17 @@ async def event_channels(d: Deps) -> list[str]:
     return list(value) if isinstance(value, list) else list(model.DEFAULT_CHANNELS)
 
 
-async def render(d: Deps, conn: Any, rows: list[Any]) -> list[dict[str, Any]]:
+async def read_channels(d: Deps) -> list[str]:
+    """For reads: screens and phones keep their now and next while admin is down; only the
+    event's channel setting falls back to its declared default."""
+    try:
+        return await event_channels(d)
+    except AdminUnavailable:
+        return list(model.DEFAULT_CHANNELS)
+
+
+async def render(conn: Any, rows: list[Any], channels: list[str]) -> list[dict[str, Any]]:
     kinds = await store.kinds(conn)
-    channels = await event_channels(d)
     return [model.item_json(row, kinds, channels) for row in rows]
 
 
@@ -60,31 +68,34 @@ async def list_items(request: Request) -> Response:
     if q.get("from") is not None:
         args.append(model.parse_time(q["from"], "from"))
         n = len(args) + 1
-        where.append(f"(ends_at >= ${n} OR (ends_at IS NULL AND starts_at >= ${n}))")
+        # Half-open, like /now: an item that ended exactly at `from` is over.
+        where.append(f"(ends_at > ${n} OR (ends_at IS NULL AND starts_at >= ${n}))")
     if q.get("to") is not None:
         args.append(model.parse_time(q["to"], "to"))
         where.append(f"starts_at < ${len(args) + 1}")
     if not _flag(q.get("include_cancelled"), True):
         where.append("status = 'scheduled'")
     d = deps(request)
+    channels = await read_channels(d)
     async with d.db.tenant() as conn:
         state = await store.state(conn)
         rows = await store.items(
             conn, seen.visibilities, where=" AND ".join(where), args=tuple(args)
         )
-        items = await render(d, conn, rows)
+        items = await render(conn, rows, channels)
     return JSONResponse({"agenda_version": state["agenda_version"], "items": items})
 
 
 async def get_item(request: Request) -> Response:
     seen = await viewer(request)
     d = deps(request)
+    channels = await read_channels(d)
     async with d.db.tenant() as conn:
         row = await store.item(conn, request.path_params["item_id"])
         # An item the caller may not see does not exist for them.
         if row is None or row["visibility"] not in seen.visibilities:
             raise not_found("item")
-        (item,) = await render(d, conn, [row])
+        (item,) = await render(conn, [row], channels)
     return JSONResponse(item)
 
 
@@ -94,15 +105,16 @@ async def now(request: Request) -> Response:
     zone = request.query_params.get("zone")
     d = deps(request)
     at = d.now()
-    where = "status = 'scheduled' AND (ends_at IS NULL OR ends_at > $2)"
+    where = "status = 'scheduled' AND (ends_at > $2 OR starts_at > $2)"
     args: list[Any] = [at]
     if zone is not None:
         args.append(model.zone(zone))
         where += " AND (zone = $3 OR zone IS NULL)"
+    channels = await read_channels(d)
     async with d.db.tenant() as conn:
         state = await store.state(conn)
         rows = await store.items(conn, seen.visibilities, where=where, args=tuple(args))
-        items = await render(d, conn, rows)
+        items = await render(conn, rows, channels)
     # A moment in time (no end) is never running: it is next until it starts, then past.
     current = [i for i, r in zip(items, rows, strict=True) if _running(r, at)]
     upcoming = [(i, r) for i, r in zip(items, rows, strict=True) if r["starts_at"] > at]
@@ -158,12 +170,13 @@ async def add_item(request: Request) -> Response:
     }
     _check_times(values["kind"], starts, ends)
     d = deps(request)
+    channels = await event_channels(d)  # before the event's write lock: it may call admin
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
         await _check_kind(conn, values["kind"])
         row = await store.insert_item(conn, values)
         version = await store.bump(conn, "agenda_version")
-        (item,) = await render(d, conn, [row])
+        (item,) = await render(conn, [row], channels)
     await d.bus.publish(
         "agenda.item.added",
         {"item": item, "agenda_version": version, "actor_user_id": session.user_id},
@@ -206,6 +219,7 @@ async def edit_item(request: Request) -> Response:
     sent_revision = model.revision(data.get("revision"))
     edits = _edits(data)
     d = deps(request)
+    channels = await event_channels(d)  # before the event's write lock: it may call admin
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
         row = await store.item(conn, request.path_params["item_id"], lock=True)
@@ -231,11 +245,11 @@ async def edit_item(request: Request) -> Response:
             values.get("ends_at", row["ends_at"]),
         )
         if not values:
-            (item,) = await render(d, conn, [row])
+            (item,) = await render(conn, [row], channels)
             return JSONResponse(item)
         row = await store.update_item(conn, row["id"], values)
         version = await store.bump(conn, "agenda_version")
-        (item,) = await render(d, conn, [row])
+        (item,) = await render(conn, [row], channels)
     await d.bus.publish(
         "agenda.item.changed",
         {

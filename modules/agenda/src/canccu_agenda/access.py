@@ -4,7 +4,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from canccu_kit import KitError, MissingRight, NotSignedIn, check_info_access
+from canccu_kit import (
+    AdminAccessRestricted,
+    KitError,
+    MissingRight,
+    NotSignedIn,
+    check_admin_access,
+    check_info_access,
+    tailscale_cidrs,
+)
 from canccu_kit.access import TenantContext
 from canccu_kit.rights import Session
 from starlette.requests import Request
@@ -19,6 +27,21 @@ CREW_READ = "agenda.crew.read"
 class Viewer:
     session: Session | None
     visibilities: frozenset[str]
+
+
+def client_ip(request: Request) -> str | None:
+    # uvicorn sets this from X-Forwarded-For only for the proxies it trusts (main.py).
+    return request.client.host if request.client else None
+
+
+def from_admin_network(request: Request, ctx: TenantContext) -> bool:
+    """The tenants contract's `admin_access`: with `restricted`, every request that needs a right
+    comes from the venue's addresses or Tailscale."""
+    try:
+        check_admin_access(ctx, client_ip(request), tailscale_cidrs())
+    except AdminAccessRestricted:
+        return False
+    return True
 
 
 def tenant_of(request: Request) -> TenantContext:
@@ -47,12 +70,13 @@ async def viewer(request: Request) -> Viewer:
     seen = {"public"}
     if session is not None and is_member(session):
         seen.add("attendees")
-    if session is not None and session.has(CREW_READ):
+    # Crew items need a right, so they follow the admin-access rule; outside it the caller still
+    # reads what it could read without the right.
+    if session is not None and session.has(CREW_READ) and from_admin_network(request, ctx):
         seen.add("crew")
     if "attendees" not in seen:
         # A guest sees public items only when the event's info-page mode lets it in.
-        client = request.client.host if request.client else None
-        check_info_access(ctx, client_ip=client, viewer="guest")
+        check_info_access(ctx, client_ip=client_ip(request), viewer="guest")
     return Viewer(session, frozenset(seen))
 
 
@@ -62,6 +86,7 @@ async def writer(request: Request) -> Session:
     session = await deps(request).rights.session(request.headers.get("cookie"))
     if not session.has(WRITE):
         raise MissingRight(f"needs right {WRITE}")
+    check_admin_access(ctx, client_ip(request), tailscale_cidrs())  # 403 admin_access_restricted
     # The resolver's context is dropped on every tenants event, tenants.status.changed included,
     # so its status is the event's current one.
     if ctx["status"] == "archived":

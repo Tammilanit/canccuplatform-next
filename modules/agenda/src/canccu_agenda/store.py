@@ -118,8 +118,10 @@ async def insert_item(conn: Any, values: dict[str, Any]) -> Any:
     values = {"id": f"it_{secrets.token_hex(8)}", **values}
     columns = ", ".join(values)
     marks = ", ".join(f"${i}" for i in range(1, len(values) + 1))
-    await conn.execute(f"INSERT INTO agenda_items ({columns}) VALUES ({marks})", *values.values())
-    return await item(conn, values["id"])
+    return await conn.fetchrow(
+        f"INSERT INTO agenda_items ({columns}) VALUES ({marks}) RETURNING {ITEM_COLUMNS}",
+        *values.values(),
+    )
 
 
 async def update_item(conn: Any, item_id: str, values: dict[str, Any]) -> Any:
