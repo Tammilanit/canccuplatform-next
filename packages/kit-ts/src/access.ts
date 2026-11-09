@@ -24,15 +24,23 @@ export interface TenantContext {
 
 export const DEFAULT_TAILSCALE_CIDRS: readonly string[] = ["100.64.0.0/10", "fd7a:115c:a1e0::/48"];
 
-export class DeviceTokenInvalid extends KitError {
+export class DeviceUnknown extends KitError {
   static override defaultStatus = 401;
-  static override defaultCode = "device_token_invalid";
+  static override defaultCode = "device_unknown";
 }
 
-export class VenueIpMismatch extends KitError {
+export class VenueIpRefused extends KitError {
   static override defaultStatus = 403;
-  static override defaultCode = "venue_ip_mismatch";
+  static override defaultCode = "venue_ip_refused";
 }
+
+/**
+ * Shown on a refused kiosk, so it names the crew's next step: the address alone is never enough,
+ * and only the venue's addresses or the audited emergency switch let a screen in.
+ */
+export const VENUE_REFUSED_MESSAGE =
+  "This screen is not on this event's venue network. Ask an event admin to check the venue's " +
+  "addresses, or to turn the venue IP check off for a while with the emergency switch.";
 
 export class InfoPagesClosed extends KitError {
   static override defaultStatus = 403;
@@ -116,9 +124,9 @@ export function checkScreenAccess(
   ctx: TenantContext,
   request: { deviceTokenValid: boolean; clientIp: string | undefined; now?: Date },
 ): void {
-  if (!request.deviceTokenValid) throw new DeviceTokenInvalid();
+  if (!request.deviceTokenValid) throw new DeviceUnknown();
   if (venueIpCheckActive(ctx, request.now) && !fromVenue(ctx, request.clientIp)) {
-    throw new VenueIpMismatch("this screen is not at its event's venue");
+    throw new VenueIpRefused(VENUE_REFUSED_MESSAGE);
   }
 }
 

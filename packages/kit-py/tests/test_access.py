@@ -8,9 +8,9 @@ import pytest
 from canccu_kit.access import (
     DEFAULT_TAILSCALE_CIDRS,
     AdminAccessRestricted,
-    DeviceTokenInvalid,
+    DeviceUnknown,
     InfoPagesClosed,
-    VenueIpMismatch,
+    VenueIpRefused,
     check_admin_access,
     check_info_access,
     check_screen_access,
@@ -58,14 +58,14 @@ def test_screen_with_a_valid_token_from_the_venue_is_served() -> None:
 
 
 def test_screen_is_never_served_on_the_venue_ip_alone() -> None:
-    with pytest.raises(DeviceTokenInvalid):
+    with pytest.raises(DeviceUnknown):
         check_screen_access(tenant_context(), device_token_valid=False, client_ip=VENUE_V4, now=NOW)
 
 
 def test_screen_outside_the_venue_or_of_an_event_without_venue_is_refused() -> None:
-    with pytest.raises(VenueIpMismatch):
+    with pytest.raises(VenueIpRefused):
         check_screen_access(tenant_context(), device_token_valid=True, client_ip=ELSEWHERE, now=NOW)
-    with pytest.raises(VenueIpMismatch):
+    with pytest.raises(VenueIpRefused):
         check_screen_access(
             tenant_context(venue=None), device_token_valid=True, client_ip=VENUE_V4, now=NOW
         )
@@ -81,11 +81,11 @@ def test_token_alone_serves_while_the_emergency_switch_is_off_until_it_expires()
     )
     assert not venue_ip_check_active(off, NOW)
     check_screen_access(off, device_token_valid=True, client_ip=ELSEWHERE, now=NOW)
-    with pytest.raises(DeviceTokenInvalid):
+    with pytest.raises(DeviceUnknown):
         check_screen_access(off, device_token_valid=False, client_ip=ELSEWHERE, now=NOW)
     later = datetime(2026, 1, 1, 18, 0, tzinfo=UTC)
     assert venue_ip_check_active(off, later)
-    with pytest.raises(VenueIpMismatch):
+    with pytest.raises(VenueIpRefused):
         check_screen_access(off, device_token_valid=True, client_ip=ELSEWHERE, now=later)
 
 
@@ -149,8 +149,8 @@ def test_info_pages_closed_answers_403() -> None:
 
 
 def test_error_statuses_and_codes() -> None:
-    assert (DeviceTokenInvalid.status, DeviceTokenInvalid.code) == (401, "device_token_invalid")
-    assert (VenueIpMismatch.status, VenueIpMismatch.code) == (403, "venue_ip_mismatch")
+    assert (DeviceUnknown.status, DeviceUnknown.code) == (401, "device_unknown")
+    assert (VenueIpRefused.status, VenueIpRefused.code) == (403, "venue_ip_refused")
     assert (AdminAccessRestricted.status, AdminAccessRestricted.code) == (
         403,
         "admin_access_restricted",
