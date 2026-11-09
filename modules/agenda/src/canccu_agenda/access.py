@@ -61,12 +61,15 @@ def is_member(session: Session) -> bool:
     return True
 
 
-async def viewer(request: Request) -> Viewer:
+async def viewer(request: Request, signed_in: Session | None = None) -> Viewer:
+    """With `signed_in`, the session the caller already read; otherwise read here."""
     ctx = tenant_of(request)
-    try:
-        session: Session | None = await deps(request).rights.session(request.headers.get("cookie"))
-    except NotSignedIn:
-        session = None
+    session = signed_in
+    if session is None:
+        try:
+            session = await deps(request).rights.session(request.headers.get("cookie"))
+        except NotSignedIn:
+            session = None
     seen = {"public"}
     if session is not None and is_member(session):
         seen.add("attendees")
@@ -84,6 +87,7 @@ async def writer(request: Request) -> Session:
     """The session of a write: right `agenda.items.write`, on an event that is not archived."""
     ctx = tenant_of(request)
     session = await deps(request).rights.session(request.headers.get("cookie"))
+    request.state.agenda_session = session  # the pages' menu reads it
     if not session.has(WRITE):
         raise MissingRight(f"needs right {WRITE}")
     check_admin_access(ctx, client_ip(request), tailscale_cidrs())  # 403 admin_access_restricted
