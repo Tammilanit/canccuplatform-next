@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+# review-gate-rerun: after a reviewer comment, re-run the PR's review-gate runs for its head
+# (see docs/ci.md, review-gate).
+# Usage: review-gate-rerun REPO PR
+#        review-gate-rerun --self-test
+# Needs gh (with GH_TOKEN allowed actions: write) and jq. RERUN_POLL (seconds, default 15)
+# and RERUN_TRIES (polls, default 32) bound the wait.
+# Exit: 0 done (or nothing to re-run yet), 1 a run could not be re-run in time, 2 wrong usage.
+set -euo pipefail
+
+if [ "${1:-}" = "--self-test" ]; then
+  self=$(cd "$(dirname "$0")" && pwd)/review-gate-rerun
+  t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
+  mkdir "$t/bin"
+  # A fake gh that serves one PR (head sha H, branch b, repo o/r, number 7) from $t/runs.json.
+  # Each list call moves runs one tick on; a rerun while another run of the PR is not finished
+  # logs OVERLAP, because the gate's concurrency group would cancel the unfinished one.
+  # Run fields: id, status, conclusion, run_attempt, head_branch, repo, prs, plus for the fake:
+  # left (ticks until done), then (conclusions of later attempts), norerun (rerun fails).
+  cat > "$t/bin/gh" <<'FAKE'
+#!/usr/bin/env bash
+set -euo pipefail
+s=$FAKE_DIR/runs.json
+case "$1 $2" in
+  "api repos/o/r/pulls/7")
+    echo '{"head":{"sha":"H","ref":"b","repo":{"full_name":"o/r"}}}' ;;
+  "api repos/o/r/actions/workflows/review-gate.yml/runs?"*)
+    jq '[ .[] | if .status != "completed" and .status != "action_required" and .status != "waiting" then
+            .left -= 1 | if .left <= 0 then .status = "completed" | .conclusion = ((.then // [])[0] // "success") | .then = ((.then // [])[1:]) else . end
+          else . end ]' "$s" > "$s.new" && mv "$s.new" "$s"
+    jq '{workflow_runs: [ sort_by(-.id)[] | {id, status, conclusion, run_attempt, head_branch,
+          head_repository: {full_name: .repo}, pull_requests: [ .prs[] | {number: .} ]} ]}' "$s" ;;
+  "run rerun")
+    id=$3
+    jq -e --argjson id "$id" 'any(.[]; .id != $id and (.status == "queued" or .status == "in_progress"))' "$s" >/dev/null &&
+      echo "OVERLAP $id" >> "$FAKE_DIR/log"
+    jq -e --argjson id "$id" 'any(.[]; .id == $id and .norerun)' "$s" >/dev/null && { echo "run $id cannot be re-run" >&2; exit 1; }
+    echo "rerun $id" >> "$FAKE_DIR/log"
+    jq --argjson id "$id" 'map(if .id == $id then .status = "in_progress" | .conclusion = null | .run_attempt += 1 | .left = 2 else . end)' "$s" > "$s.new" && mv "$s.new" "$s" ;;
+  *) echo "fake gh: unexpected call: $*" >&2; exit 3 ;;
+esac
+FAKE
+  chmod +x "$t/bin/gh"
+  r() { # id status [conclusion [extra-json]]: a run of PR 7's head on branch b of o/r
+    jq -nc --argjson id "$1" --arg st "$2" --arg c "${3:-}" --argjson x "${4:-{\}}" \
+      '{id: $id, status: $st, conclusion: (if $c == "" then null else $c end), run_attempt: 1,
+        head_branch: "b", repo: "o/r", prs: [7], left: 1} + $x'
+  }
+  fail=0
+  # expect name want-exit want-log [tries] -- runs...: want-log is the reruns in order, space-separated
+  expect() {
+    local name=$1 want=$2 wantlog=$3 tries=$4; shift 5
+    if [ $# -eq 0 ]; then echo '[]' > "$t/runs.json"; else printf '%s\n' "$@" | jq -s . > "$t/runs.json"; fi
+    : > "$t/log"
+    FAKE_DIR=$t PATH="$t/bin:$PATH" RERUN_POLL=0 RERUN_TRIES=$tries "$self" o/r 7 >/dev/null 2>&1 && rc=0 || rc=$?
+    local log; log=$(tr '\n' ' ' < "$t/log"); log=${log% }
+    if [ "$rc" = "$want" ] && [ "$log" = "$wantlog" ]; then echo "ok   $name"
+    else echo "FAIL $name (exit $rc, want $want; log '$log', want '$wantlog')"; fail=1; fi
+  }
+  expect "push plus body edit: the cancelled and the failed run are both re-run" 0 "rerun 1 rerun 2" 32 -- \
+    "$(r 1 completed cancelled)" "$(r 2 completed failure)"
+  expect "a passed run is re-run too, so a newer changes verdict turns it red" 0 "rerun 1" 32 -- "$(r 1 completed success)"
+  expect "no run yet: nothing to re-run" 0 "" 32 --
+  expect "a run waiting for approval is left alone" 0 "" 32 -- "$(r 1 action_required)"
+  expect "a run in progress is re-run once it finishes" 0 "rerun 1" 32 -- "$(r 1 in_progress "" '{"left":3}')"
+  expect "runs of another branch, head repo or PR are ignored; fork runs list no PR" 0 "rerun 4" 32 -- \
+    "$(r 1 completed failure '{"head_branch":"x"}')" "$(r 2 completed failure '{"repo":"fork/r"}')" \
+    "$(r 3 completed failure '{"prs":[8]}')" "$(r 4 completed failure '{"prs":[]}')"
+  expect "a re-run cancelled by a newer run is re-run again" 0 "rerun 1 rerun 1" 32 -- \
+    "$(r 1 completed failure '{"then":["cancelled","success"]}')"
+  expect "a run that never finishes fails in time" 1 "" 3 -- "$(r 1 in_progress "" '{"left":99}')"
+  expect "a run that cannot be re-run fails" 1 "" 32 -- "$(r 1 completed failure '{"norerun":true}')"
+  "$self" >/dev/null 2>&1 && rc=0 || rc=$?
+  if [ "$rc" = 2 ]; then echo "ok   missing arguments exit 2"; else echo "FAIL missing arguments (exit $rc)"; fail=1; fi
+  exit "$fail"
+fi
+
+if [ $# -ne 2 ]; then echo "usage: review-gate-rerun REPO PR | --self-test" >&2; exit 2; fi
+REPO=$1 PR=$2
+POLL=${RERUN_POLL:-15} TRIES=${RERUN_TRIES:-32}
+
+read -r head href hrepo < <(gh api "repos/$REPO/pulls/$PR" |
+  jq -r '"\(.head.sha) \(.head.ref) \(.head.repo.full_name // "-")"')
+# A push and a PR-body edit start two runs for one head, and the gate's concurrency group
+# cancels one of them; GitHub still counts each run's check, so every run of the head must be
+# re-run, not just one. Re-run them one at a time, each after the previous has
+# finished: two at once would share the concurrency group and cancel each other.
+declare -A target=() # run id -> the attempt our rerun created
+for _ in $(seq 1 "$TRIES"); do
+  # Only this PR's runs: same head SHA, branch and repo, and this PR number when GitHub lists
+  # one (it lists none for fork PRs).
+  runs=$(gh api "repos/$REPO/actions/workflows/review-gate.yml/runs?event=pull_request&head_sha=$head&per_page=50" |
+    jq -r --argjson pr "$PR" --arg ref "$href" --arg hrepo "$hrepo" '
+      [ .workflow_runs[]
+        | select(.head_branch == $ref and .head_repository.full_name == $hrepo)
+        | select((.pull_requests | length) == 0 or any(.pull_requests[]; .number == $pr)) ]
+      | sort_by(.id)[] | "\(.id) \(.status) \(.conclusion) \(.run_attempt)"')
+  if [ -z "$runs" ]; then
+    echo "::notice title=review-gate::No review-gate run for ${head:0:7} yet; it reads the verdict when it runs."
+    exit 0
+  fi
+  busy="" next="" attempt=""
+  while read -r id status conclusion att; do
+    case $status in
+      action_required|waiting) ;; # it reads the verdict once a maintainer approves it
+      completed)
+        if [ -z "${target[$id]:-}" ] || { [ "$att" -ge "${target[$id]}" ] && [ "$conclusion" = cancelled ]; }; then
+          # not re-run yet, or our rerun was cancelled by a newer run of the PR
+          [ -n "$next" ] || { next=$id; attempt=$att; }
+        elif [ "$att" -lt "${target[$id]}" ]; then
+          busy=$id # the API does not show our rerun yet
+        fi ;;
+      *) busy=$id ;; # unfinished; it may have read the comments before the verdict
+    esac
+  done <<<"$runs"
+  if [ -z "$busy" ] && [ -z "$next" ]; then
+    while read -r id status _; do
+      case $status in action_required|waiting)
+        echo "::notice title=review-gate::Run $id for ${head:0:7} waits for a maintainer's approval; it reads the verdict when it runs." ;;
+      esac
+    done <<<"$runs"
+    echo "Re-ran every review-gate run for ${head:0:7}: ${!target[*]}"
+    exit 0
+  fi
+  if [ -z "$busy" ]; then
+    if ! gh run rerun "$next" -R "$REPO"; then
+      echo "::error title=review-gate::run $next for ${head:0:7} could not be re-run; re-run it by hand or push a new commit."
+      exit 1
+    fi
+    target[$next]=$((attempt + 1))
+    echo "Re-running review-gate run $next for ${head:0:7}."
+  fi
+  sleep "$POLL"
+done
+echo "::error title=review-gate::the review-gate runs for ${head:0:7} did not all finish in time (last waited on ${busy:-$next}); re-run them by hand."
+exit 1
