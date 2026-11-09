@@ -15,6 +15,7 @@ from canccu_kit import (
     Health,
     IpMode,
     RightsChecker,
+    SecretBox,
     ServiceIdentity,
     SettingsClient,
     TenantResolver,
@@ -31,6 +32,20 @@ from . import consumer
 from .app import create_app
 from .db import Db
 from .deps import Deps
+
+# deploy/compose.yml's stand-in for CANCCU_SECRETS_KEY, so a dev stack starts without one.
+PLACEHOLDER_SECRETS_KEY = "Y2FuY2N1LWxvY2FsLW9ubHktc2VjcmV0cy1rZXktMzI="
+
+
+def secret_box(version: str) -> SecretBox:
+    """Seals each event's check-in key (docs/plans/issue-188.md, D5)."""
+    try:
+        box = SecretBox.from_env()
+    except ConfigError as exc:
+        raise SystemExit(str(exc)) from exc
+    if os.environ["CANCCU_SECRETS_KEY"].endswith(PLACEHOLDER_SECRETS_KEY) and version != "dev":
+        raise SystemExit("CANCCU_SECRETS_KEY is the local placeholder; set a real key")
+    return box
 
 
 class TenantsAudit:
@@ -67,6 +82,7 @@ async def serve() -> None:
         identity = ServiceIdentity(config.module, service_key_from_env())
     except ConfigError as exc:
         raise SystemExit(str(exc)) from exc
+    box = secret_box(config.version)
     # The stack logs in as a plain role and migrates as the migration role (0013 item 5).
     db = await Db.connect(
         os.environ["CANCCU_DATABASE_URL"],
@@ -106,7 +122,15 @@ async def serve() -> None:
         {"postgres": postgres_check(ping), "valkey": valkey_check(streams)},
     )
     audit = TenantsAudit(os.environ["CANCCU_TENANTS_URL"], identity)
-    d = Deps(db=db, bus=bus, rights=rights, settings=settings, audit=audit)
+    d = Deps(
+        db=db,
+        bus=bus,
+        rights=rights,
+        settings=settings,
+        audit=audit,
+        secrets=box,
+        tenants=resolver,
+    )
 
     async def on_source(event: Event) -> None:
         await consumer.handle(d, event)

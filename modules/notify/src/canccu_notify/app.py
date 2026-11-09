@@ -7,18 +7,18 @@ from canccu_kit.starlette import install, install_service_identity, install_tena
 from starlette.applications import Starlette
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from . import config, inbox, registry
+from . import checkin, checkin_page, config, inbox, registry
 from .deps import Deps
 
 
 def create_app(
     d: Deps, health: Health, resolver: TenantResolver, service: ServiceIdentity
 ) -> ASGIApp:
-    private = Starlette(routes=registry.ROUTES)
+    private = Starlette(routes=registry.ROUTES + checkin.INTERNAL_ROUTES)
     private.state.deps = d
     install(private)
     install_service_identity(private, service)
-    public = Starlette(routes=config.ROUTES + inbox.ROUTES)
+    public = Starlette(routes=config.ROUTES + inbox.ROUTES + checkin.ROUTES + checkin_page.ROUTES)
     public.state.deps = d
     install(public, health)
     install_tenancy(public, resolver)

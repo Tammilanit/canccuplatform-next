@@ -78,6 +78,11 @@
 		reverse_proxy notify:8080
 	}
 
+	# Notify's pages (the check-in page a scanned QR opens): prefix stripped like admin's.
+	handle_path /notify/* {
+		reverse_proxy notify:8080
+	}
+
 	handle_path /admin/* {
 		reverse_proxy admin:8080
 	}
