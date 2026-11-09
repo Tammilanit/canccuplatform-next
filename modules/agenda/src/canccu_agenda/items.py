@@ -1,19 +1,21 @@
 """Items: list, read, now and next, add, and edit or move (contracts/agenda.md, Reading and
-Editing live). Delay, cancel and remove follow in #210."""
+Editing live). Delay, cancel and remove are in edits.py."""
 
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
 
-from canccu_kit import AdminUnavailable, KitError
+from canccu_kit import KitError
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from . import model, store
+from . import model, store, timers
 from .access import viewer, writer
-from .deps import Deps, deps
+from .deps import deps
+from .edits import target
+from .effective import event_settings, read_channels
 from .kinds import body, not_found
 
 # Fields an organiser may never change on an item a tournament session owns.
@@ -30,21 +32,6 @@ EDITABLE = (
     "reminder_leads_minutes",
     "notify",
 )
-
-
-async def event_channels(d: Deps) -> list[str]:
-    await d.settings.ensure()
-    value = d.settings.get("notify_channels", list(model.DEFAULT_CHANNELS))
-    return list(value) if isinstance(value, list) else list(model.DEFAULT_CHANNELS)
-
-
-async def read_channels(d: Deps) -> list[str]:
-    """For reads: screens and phones keep their now and next while admin is down; only the
-    event's channel setting falls back to its declared default."""
-    try:
-        return await event_channels(d)
-    except AdminUnavailable:
-        return list(model.DEFAULT_CHANNELS)
 
 
 async def render(conn: Any, rows: list[Any], channels: list[str]) -> list[dict[str, Any]]:
@@ -170,12 +157,13 @@ async def add_item(request: Request) -> Response:
     }
     _check_times(values["kind"], starts, ends)
     d = deps(request)
-    channels = await event_channels(d)  # before the event's write lock: it may call admin
+    channels, leads = await event_settings(d)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
         await _check_kind(conn, values["kind"])
         row = await store.insert_item(conn, values)
         version = await store.bump(conn, "agenda_version")
+        await timers.reschedule(conn, [row], await store.kinds(conn), leads, d.now())
         (item,) = await render(conn, [row], channels)
     await d.bus.publish(
         "agenda.item.added",
@@ -219,14 +207,10 @@ async def edit_item(request: Request) -> Response:
     sent_revision = model.revision(data.get("revision"))
     edits = _edits(data)
     d = deps(request)
-    channels = await event_channels(d)  # before the event's write lock: it may call admin
+    channels, leads = await event_settings(d)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
-        row = await store.item(conn, request.path_params["item_id"], lock=True)
-        if row is None:
-            raise not_found("item")
-        if row["revision"] != sent_revision:
-            raise model.conflict("version_conflict", "the item changed: read it again")
+        row = await target(conn, request.path_params["item_id"], sent_revision)
         if row["status"] == "cancelled":
             raise model.conflict("item_cancelled", "a cancelled item cannot be edited")
         changed = [k for k in edits if _differs(row, k, edits[k])]
@@ -249,6 +233,7 @@ async def edit_item(request: Request) -> Response:
             return JSONResponse(item)
         row = await store.update_item(conn, row["id"], values)
         version = await store.bump(conn, "agenda_version")
+        await timers.reschedule(conn, [row], await store.kinds(conn), leads, d.now())
         (item,) = await render(conn, [row], channels)
     await d.bus.publish(
         "agenda.item.changed",

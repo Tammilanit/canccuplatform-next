@@ -1,0 +1,38 @@
+{
+  "id": "01928f3e-7a2b-7c4d-9e8f-0a1b2c3d4f02",
+  "type": "tournament.session.changed",
+  "version": 1,
+  "time": "2026-11-20T17:00:00Z",
+  "source": "tournament",
+  "tenant": "demo",
+  "data": {
+    "session": {
+      "id": "ts_1",
+      "tournament_id": "tn_1",
+      "game": {
+        "id": "g_1",
+        "name": "Demo Game"
+      },
+      "starts_at": "2026-11-20T19:30:00Z",
+      "registration_closes_at": "2026-11-20T18:30:00Z",
+      "ends_at": "2026-11-20T21:00:00Z",
+      "status": "registration_open",
+      "is_final": false,
+      "checkin_enabled": false,
+      "matches": [
+        {
+          "id": "tm_1",
+          "label": "Demo Game"
+        }
+      ],
+      "voice_plan": "solo",
+      "registered_count": 0,
+      "checked_in_count": 0,
+      "revision": 2
+    },
+    "changed": [
+      "starts_at"
+    ],
+    "actor_user_id": "u_org"
+  }
+}

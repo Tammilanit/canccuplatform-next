@@ -25,6 +25,7 @@ from canccu_kit import (
     valkey_check,
 )
 
+from . import mirror, timers
 from .app import create_app
 from .db import Db
 from .deps import Deps
@@ -59,16 +60,31 @@ async def serve() -> None:
         service=identity,
     )
 
+    d = Deps(db=db, bus=bus, rights=rights, settings=settings)
+
     async def on_admin(event: Event) -> None:
         await rights.handle_event(event)
 
     async def on_tenants(event: Event) -> None:
         resolver.handle_event(event)  # a status change (archived) reaches the next request
 
+    async def on_admin_tenant(event: Event) -> None:
+        # The client reloads first, so the reschedule reads the new lead times; a short admin
+        # outage is retried, since the bus does not redeliver a failed event.
+        await mirror.retrying(lambda: settings.handle_event(event))
+        await mirror.retrying(lambda: timers.on_settings_changed(d, event))
+
+    async def on_tournament(event: Event) -> None:
+        await mirror.handle(d, event)
+
     bus.subscribe(["admin"], on_admin)
     bus.subscribe(["tenants"], on_tenants)
     bus.subscribe_tenants(["tenants"], on_tenants)
-    bus.subscribe_tenants(["admin"], settings.handle_event)
+    bus.subscribe_tenants(["admin"], on_admin_tenant)
+    # From the start of each stream: the tombstones and revisions make a replay change nothing,
+    # and a session added while no container ran still gets its item.
+    bus.subscribe_tenants(["tournament"], on_tournament, from_id="0")
+    scheduler = asyncio.create_task(timers.run(d))
 
     async def ping() -> None:
         async with db.platform() as conn:
@@ -79,7 +95,7 @@ async def serve() -> None:
         config.version,
         {"postgres": postgres_check(ping), "valkey": valkey_check(streams)},
     )
-    app = create_app(Deps(db=db, bus=bus, rights=rights, settings=settings), health, resolver)
+    app = create_app(d, health, resolver)
     trusted = os.environ.get("CANCCU_TRUSTED_PROXIES", "127.0.0.1")
     server = uvicorn.Server(
         uvicorn.Config(
@@ -91,7 +107,10 @@ async def serve() -> None:
             forwarded_allow_ips=trusted,
         )
     )
-    await server.serve()
+    try:
+        await server.serve()
+    finally:
+        scheduler.cancel()
 
 
 def main() -> None:
