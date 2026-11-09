@@ -35,5 +35,12 @@ About 450 changed lines with tests.
 3. **The session merge:** does #52 (which binds sessions to a tenant) add the granted rights to `GET /api/admin/session`, or a short slice after #52? Recommendation: #52, since that is where a session first knows its event. #223 leaves the `granted_rights` read (F5) for it, with tests.
 4. **Owner and admin roles:** admin's global `owner` and `admin` roles predate tenancy. Until #52 replaces them, should `ROLE_RIGHTS` stay as it is, so only an event admin (through G6) can grant `screen_crew`? Recommendation: yes. A global role that holds every module's right would hold it in every event.
 
+## Answers (the lead, 2026-11-09)
+All four as recommended:
+1. **Membership lookup:** G6 as proposed, as the contract issue #248. The tenants module serves it with #150.
+2. **Order:** #223 is blocked by #150 and #248.
+3. **The session merge:** #52 adds the granted rights to `GET /api/admin/session` (noted on #52). #223 builds the `granted_rights` read (F5), with its tests, and leaves the merge to #52.
+4. **Owner and admin roles:** `ROLE_RIGHTS` stays as it is until #52. Only an event admin, as G6 reports, can grant `screen_crew`.
+
 ## After the answers
-The lead settles the order, and opens G6 if accepted, as the answers decide. The slice then runs as one package against F1–F7.
+Once #248 and #150 are merged, #223 runs as one package against F1–F7. This plan's PR does not close #223.
