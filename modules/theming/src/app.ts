@@ -9,12 +9,12 @@ import { install, installTenancy } from "@canccu/kit/fastify";
 import type { Db } from "./db.js";
 import type { FileStore } from "./files.js";
 import { themeRoutes } from "./routes.js";
-import type { Builtins } from "./theme.js";
+import type { ProfileSource } from "./profile.js";
 
 export interface ThemingDeps {
   db: Db;
   files: FileStore;
-  builtins: Builtins;
+  profile: ProfileSource;
   rights: RightsChecker;
   tenants: TenantResolver;
   health: Health;

@@ -62,6 +62,40 @@ describe.skipIf(!DATABASE_URL)("theming core", () => {
       expect(own.body).toContain("--canccu-color-text: #0f172a;");
     });
 
+    it("applies the event profile's theme over the defaults at revision 0", async () => {
+      const res = await get(h, "/api/theming/current", { host: "venue.test" });
+      const body = res.json<
+        { tokens: { colors: Record<string, string> } } & Record<string, unknown>
+      >();
+      expect(body.revision).toBe(0);
+      expect(body.tokens.colors.primary).toBe("#14b8a6");
+      expect(body.embed_color).toBe(0x14b8a6);
+      const css = await get(h, body.tokens_css_url as string, { host: "venue.test" });
+      expect(css.statusCode).toBe(200);
+      expect(css.headers["cache-control"]).toBe("public, max-age=31536000, immutable");
+      expect(css.body).toContain("--canccu-color-primary: #14b8a6;");
+      // Generated from this event's profile, so another event never serves it.
+      const elsewhere = await get(h, body.tokens_css_url as string, { host: "beta.test" });
+      expect(elsewhere.statusCode).toBe(404);
+    });
+
+    it("lets a published revision win over the profile's theme", async () => {
+      await seedRevision(h, "venue", 1, { colors: { accent: "#fbbf24" } });
+      const body = (await get(h, "/api/theming/current", { host: "venue.test" })).json<{
+        revision: number;
+        tokens: { colors: Record<string, string> };
+      }>();
+      expect(body.revision).toBe(1);
+      expect(body.tokens.colors.primary).toBe("#3b82f6");
+    });
+
+    it("lets guests read a public event without asking admin about a session", async () => {
+      const res = await get(h, "/api/theming/current", { host: "beta.test", session: "down" });
+      expect(res.statusCode).toBe(200);
+      const closed = await get(h, "/api/theming/current", { host: "closed.test", session: "down" });
+      expect(closed.statusCode).toBe(503);
+    });
+
     it("follows the info-page mode: venue only, then sign-in", async () => {
       expect((await get(h, "/api/theming/current", { host: "venue.test" })).statusCode).toBe(200);
       const outside = await get(h, "/api/theming/current", { host: "venue.test", ip: OUTSIDE_IP });
@@ -159,15 +193,15 @@ describe.skipIf(!DATABASE_URL)("theming core", () => {
     let n = 700000;
     const hex = (m: string): string => createHash("sha256").update(m).digest("hex");
     const tables: [string, string, (marker: string) => string][] = [
-      ["drafts", "(draft_key, manifest) VALUES ($1, '{}')", (m) => m],
+      ["theming_drafts", "(draft_key, manifest) VALUES ($1, '{}')", (m) => m],
       [
-        "revisions",
+        "theming_revisions",
         "(revision, manifest, tokens, tokens_css, admin_tokens_css, embed_color, actor_user_id) VALUES (90, '{}', '{}', 'x', 'x', 0, $1)",
         (m) => m,
       ],
-      ["files", "(sha256, ext, bytes) VALUES ($1, 'css', 1)", hex],
-      ["file_refs", "(owner, file) VALUES ('draft', $1 || '.css')", hex],
-      ["pins", "(theme_revision) VALUES ($1::integer)", () => String((n += 1))],
+      ["theming_files", "(sha256, ext, bytes) VALUES ($1, 'css', 1)", hex],
+      ["theming_file_refs", "(owner, file) VALUES ('draft', $1 || '.css')", hex],
+      ["theming_pins", "(theme_revision) VALUES ($1::integer)", () => String((n += 1))],
     ];
     for (const [table, insert, stored] of tables) {
       it(`${table} rows stay in their event`, async () => {

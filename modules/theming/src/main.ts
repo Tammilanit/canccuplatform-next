@@ -17,7 +17,7 @@ import {
 import { buildApp, themingHealth } from "./app.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { diskFiles } from "./files.js";
-import { builtins } from "./theme.js";
+import { noProfile } from "./profile.js";
 
 const PORT = 8080;
 /** pg_advisory_lock key of the theming migrations; each module has its own. */
@@ -88,7 +88,7 @@ async function main(): Promise<void> {
   const app = buildApp({
     db: poolDb(pool),
     files: diskFiles(FILES_ROOT),
-    builtins: builtins(),
+    profile: noProfile,
     rights,
     tenants,
     health: themingHealth({

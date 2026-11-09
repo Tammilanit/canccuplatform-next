@@ -1,8 +1,8 @@
 /** The current theme as GET /api/theming/current answers it (contracts/theming.md, Reading the current theme). */
 import type { SqlClient } from "@canccu/kit";
 import { fileName } from "./files.js";
-import { adminTokens, platformTokens, tokensCss } from "./tokens.js";
-import type { Tokens } from "./tokens.js";
+import { adminTokens, fillTokens, tokensCss } from "./tokens.js";
+import type { PartialTokens, Tokens } from "./tokens.js";
 
 export const THEMING_VERSION = 1;
 export const SERVED = "/theming/a/";
@@ -27,31 +27,34 @@ export function colorInt(hex: string): number {
   return parseInt(hex.slice(1, 7), 16);
 }
 
-/**
- * Files every event serves without storing them: the platform defaults' token CSS. They are the
- * same for every event, so they live in memory and a read never writes.
- */
-export interface Builtins {
+/** Revision 0 and the files it links, by served name. */
+export interface RevisionZero {
+  theme: ResolvedTheme;
   files: Map<string, Buffer>;
-  defaults: ResolvedTheme;
 }
 
-export function builtins(): Builtins {
-  const tokens = platformTokens();
+/**
+ * Revision 0: the platform defaults with the profile's `theme` over them. Its token CSS is
+ * generated on each read and never stored, so a read never writes and any container can serve the
+ * addresses it links, by generating them again.
+ */
+export function revisionZero(profile: PartialTokens | undefined): RevisionZero {
+  const tokens = fillTokens(profile ?? {});
   const css = Buffer.from(tokensCss(tokens));
   const admin = Buffer.from(tokensCss(adminTokens(tokens)));
-  const files = new Map([
-    [fileName(css, "css"), css],
-    [fileName(admin, "css"), admin],
-  ]);
+  const cssName = fileName(css, "css");
+  const adminName = fileName(admin, "css");
   return {
-    files,
-    defaults: {
+    files: new Map([
+      [cssName, css],
+      [adminName, admin],
+    ]),
+    theme: {
       revision: 0,
       theming_version: THEMING_VERSION,
       tokens,
-      tokens_css_url: SERVED + fileName(css, "css"),
-      admin_tokens_css_url: SERVED + fileName(admin, "css"),
+      tokens_css_url: SERVED + cssName,
+      admin_tokens_css_url: SERVED + adminName,
       embed_color: colorInt(tokens.colors.primary ?? "#000000"),
       layouts: [],
       templates: [],
@@ -91,13 +94,13 @@ function fromRevision(row: RevisionRow): ResolvedTheme {
   };
 }
 
-/** The highest revision is current: restore and clone publish a new one, never rewind. */
-export async function currentTheme(client: SqlClient, b: Builtins): Promise<ResolvedTheme> {
+/** The highest revision, or undefined: restore and clone publish a new one, never rewind. */
+export async function latestRevision(client: SqlClient): Promise<ResolvedTheme | undefined> {
   const { rows } = await client.query(
     `SELECT revision, published_at, manifest, tokens, tokens_css, admin_tokens_css, css, logo,
             embed_color
-       FROM revisions ORDER BY revision DESC LIMIT 1`,
+       FROM theming_revisions ORDER BY revision DESC LIMIT 1`,
   );
   const row = rows[0] as RevisionRow | undefined;
-  return row === undefined ? b.defaults : fromRevision(row);
+  return row === undefined ? undefined : fromRevision(row);
 }

@@ -18,7 +18,6 @@ import { MIGRATIONS_DIR, poolDb } from "../src/db.js";
 import type { Db } from "../src/db.js";
 import { diskFiles } from "../src/files.js";
 import type { FileStore } from "../src/files.js";
-import { builtins } from "../src/theme.js";
 import { adminTokens, fillTokens, tokensCss } from "../src/tokens.js";
 import type { PartialTokens } from "../src/tokens.js";
 
@@ -53,6 +52,9 @@ const TENANTS: Record<string, TenantContext> = {
   "zeta.test": context("zeta", { admin_access: "restricted" }),
 };
 
+/** Profile themes by event; only `venue` has one. */
+const PROFILES: Record<string, PartialTokens> = { venue: { colors: { primary: "#14b8a6" } } };
+
 const SESSIONS: Record<string, string[]> = { admin: ["theming.theme.write"], member: [] };
 
 function fakeTenants(url: string | URL | Request): Promise<Response> {
@@ -63,7 +65,10 @@ function fakeTenants(url: string | URL | Request): Promise<Response> {
 
 function fakeAdmin(_url: string | URL | Request, init?: RequestInit): Promise<Response> {
   const cookie = (init?.headers as Record<string, string> | undefined)?.cookie ?? "";
-  const rights = SESSIONS[cookie.replace("canccu_session=", "")];
+  const id = cookie.replace("canccu_session=", "");
+  // An admin that fails, as one that is restarting does.
+  if (id === "down") return Promise.resolve(new Response("{}", { status: 502 }));
+  const rights = SESSIONS[id];
   if (rights === undefined) {
     return Promise.resolve(
       Response.json({ error: { code: "not_signed_in", message: "no" } }, { status: 401 }),
@@ -90,7 +95,7 @@ export async function harness(): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
   await admin.query(
-    "DROP TABLE IF EXISTS files, drafts, revisions, file_refs, pins, theming_migrations CASCADE",
+    "DROP TABLE IF EXISTS theming_files, theming_drafts, theming_revisions, theming_file_refs, theming_pins, theming_migrations CASCADE",
   );
   await runMigrations(admin, MIGRATIONS_DIR, { ledger: "theming_migrations", lock: 2 });
   await admin.end();
@@ -101,7 +106,7 @@ export async function harness(): Promise<Harness> {
   const app = buildApp({
     db,
     files,
-    builtins: builtins(),
+    profile: (tenant) => Promise.resolve(PROFILES[tenant]),
     rights: new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin })),
     tenants: new TenantResolver({ tenantsUrl: "http://tenants", fetch: fakeTenants }),
     health: createHealth({ module: "theming", version: "dev", checks: {} }),
@@ -137,7 +142,7 @@ export function seedRevision(
       const adminName = await h.files.put(c, Buffer.from(tokensCss(adminTokens(tokens))), "css");
       const cssName = extra.css ? await h.files.put(c, extra.css, "css") : undefined;
       await c.query(
-        `INSERT INTO revisions (revision, manifest, tokens, tokens_css, admin_tokens_css, css,
+        `INSERT INTO theming_revisions (revision, manifest, tokens, tokens_css, admin_tokens_css, css,
                                 embed_color)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
@@ -152,14 +157,16 @@ export function seedRevision(
       );
       for (const file of [tokensName, adminName, cssName].filter((f) => f !== undefined)) {
         await c.query(
-          `INSERT INTO file_refs (owner, file) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          `INSERT INTO theming_file_refs (owner, file) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
           [`r:${revision}`, file],
         );
       }
       let draftFile: string | undefined;
       if (extra.draftFile) {
         draftFile = await h.files.put(c, extra.draftFile.bytes, extra.draftFile.ext);
-        await c.query(`INSERT INTO file_refs (owner, file) VALUES ('draft', $1)`, [draftFile]);
+        await c.query(`INSERT INTO theming_file_refs (owner, file) VALUES ('draft', $1)`, [
+          draftFile,
+        ]);
       }
       return {
         tokensCss: tokensName,

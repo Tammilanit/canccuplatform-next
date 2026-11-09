@@ -45,8 +45,11 @@ export function diskFiles(root: string): FileStore {
       const temp = `${target}.${randomBytes(6).toString("hex")}.tmp`;
       await writeFile(temp, bytes);
       await rename(temp, target);
+      // Not undone when the caller's transaction rolls back: the file stays on disk without a row.
+      // Harmless while nothing writes at run time; publishing (#241) and uploads (#242) reserve
+      // first and clean up on rollback (docs/plans/issue-185.md, D3).
       await client.query(
-        `INSERT INTO files (sha256, ext, bytes) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
+        `INSERT INTO theming_files (sha256, ext, bytes) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
         [name.slice(0, 64), ext, bytes.length],
       );
       return name;

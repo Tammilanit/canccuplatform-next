@@ -1,5 +1,6 @@
 -- The theming store (contracts/theming.md; docs/plans/issue-185.md, D3 and D4). Every table is per
--- event under RLS; requests run as canccu_theming_app.
+-- event under RLS; requests run as canccu_theming_app. Names carry the module's prefix, so no
+-- other module's migration in the shared schema can collide with them.
 
 DO $$
 BEGIN
@@ -10,7 +11,7 @@ END
 $$;
 
 -- Stored files, content-addressed: one row per file a tenant holds, whatever refers to it.
-CREATE TABLE files (
+CREATE TABLE theming_files (
   tenant_id text NOT NULL DEFAULT NULLIF(current_setting('canccu.tenant', true), ''),
   sha256 text NOT NULL CHECK (sha256 ~ '^[0-9a-f]{64}$'),
   ext text NOT NULL CHECK (ext IN ('css', 'woff2', 'png', 'jpg', 'webp', 'svg')),
@@ -20,7 +21,7 @@ CREATE TABLE files (
 );
 
 -- The one editable copy of an event's theme.
-CREATE TABLE drafts (
+CREATE TABLE theming_drafts (
   tenant_id text NOT NULL DEFAULT NULLIF(current_setting('canccu.tenant', true), '') PRIMARY KEY,
   draft_version integer NOT NULL DEFAULT 1,
   -- The unguessable part of draft embed addresses; replaced on every change (contracts/theming.md, Preview).
@@ -33,7 +34,7 @@ CREATE TABLE drafts (
 );
 
 -- Published revisions: immutable once written; the highest is the current one.
-CREATE TABLE revisions (
+CREATE TABLE theming_revisions (
   tenant_id text NOT NULL DEFAULT NULLIF(current_setting('canccu.tenant', true), ''),
   revision integer NOT NULL CHECK (revision >= 1),
   published_at timestamptz NOT NULL DEFAULT now(),
@@ -54,41 +55,41 @@ CREATE TABLE revisions (
 );
 
 -- What refers to a file: 'draft' or 'r:<revision>'. A file with no row here is deleted.
-CREATE TABLE file_refs (
+CREATE TABLE theming_file_refs (
   tenant_id text NOT NULL DEFAULT NULLIF(current_setting('canccu.tenant', true), ''),
   owner text NOT NULL CHECK (owner = 'draft' OR owner ~ '^r:[1-9][0-9]*$'),
   file text NOT NULL CHECK (file ~ '^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg)$'),
   PRIMARY KEY (tenant_id, owner, file)
 );
-CREATE INDEX file_refs_file ON file_refs (tenant_id, file);
+CREATE INDEX theming_file_refs_file ON theming_file_refs (tenant_id, file);
 
 -- The theme revision the event's screens are pinned to, learnt from screen.pin.changed; kept
 -- whatever its age (contracts/theming.md, Kept).
-CREATE TABLE pins (
+CREATE TABLE theming_pins (
   tenant_id text NOT NULL DEFAULT NULLIF(current_setting('canccu.tenant', true), '') PRIMARY KEY,
   theme_revision integer,
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-ALTER TABLE files ENABLE ROW LEVEL SECURITY;
-ALTER TABLE files FORCE ROW LEVEL SECURITY;
-CREATE POLICY canccu_tenant ON files USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
+ALTER TABLE theming_files ENABLE ROW LEVEL SECURITY;
+ALTER TABLE theming_files FORCE ROW LEVEL SECURITY;
+CREATE POLICY canccu_tenant ON theming_files USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
 
-ALTER TABLE drafts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE drafts FORCE ROW LEVEL SECURITY;
-CREATE POLICY canccu_tenant ON drafts USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
+ALTER TABLE theming_drafts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE theming_drafts FORCE ROW LEVEL SECURITY;
+CREATE POLICY canccu_tenant ON theming_drafts USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
 
-ALTER TABLE revisions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE revisions FORCE ROW LEVEL SECURITY;
-CREATE POLICY canccu_tenant ON revisions USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
+ALTER TABLE theming_revisions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE theming_revisions FORCE ROW LEVEL SECURITY;
+CREATE POLICY canccu_tenant ON theming_revisions USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
 
-ALTER TABLE file_refs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE file_refs FORCE ROW LEVEL SECURITY;
-CREATE POLICY canccu_tenant ON file_refs USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
+ALTER TABLE theming_file_refs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE theming_file_refs FORCE ROW LEVEL SECURITY;
+CREATE POLICY canccu_tenant ON theming_file_refs USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
 
-ALTER TABLE pins ENABLE ROW LEVEL SECURITY;
-ALTER TABLE pins FORCE ROW LEVEL SECURITY;
-CREATE POLICY canccu_tenant ON pins USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
+ALTER TABLE theming_pins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE theming_pins FORCE ROW LEVEL SECURITY;
+CREATE POLICY canccu_tenant ON theming_pins USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
 
 GRANT USAGE ON SCHEMA public TO canccu_theming_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON files, drafts, revisions, file_refs, pins TO canccu_theming_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON theming_files, theming_drafts, theming_revisions, theming_file_refs, theming_pins TO canccu_theming_app;
