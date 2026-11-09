@@ -69,7 +69,7 @@ Whether the run-of-show's reminders and changes are announced, and where, is opt
 - **Per event:** the setting `notify_channels` (default `["screen", "discord_channel", "push"]`); `[]` announces nothing.
 - **Per kind and per item:** a kind's `notify` and an item's `notify` override it; `null` passes the choice down. The order is item, then kind, then event; the first that is not `null` wins, so `[]` on an item silences that item.
 - **Per person:** an attendee picks `push` and `discord_dm` per topic in Notify ([notify.md](notify.md#per-person-channels-and-follows)); Notify delivers only on a channel that both the item's `notify_channels` and the person allow.
-- Each consumer checks `item.notify_channels` for its own channel before it announces a reminder, a delay or a cancellation. The agenda emits every event regardless, so consumers keep their state (now and next, quiet hours) whatever is announced.
+- Each consumer checks `item.notify_channels` for its own channel before it announces a reminder, a delay or a cancellation, or passes on an organiser's announcement (see Editing live). The agenda emits every event regardless, so consumers keep their state (now and next, quiet hours) whatever is announced.
 
 ## Reading
 - `GET /api/agenda/items?from=&to=&include_cancelled=` → `{"agenda_version", "items"}`, sorted by `starts_at`. `from` and `to` filter by overlap with the window; cancelled items are included unless `include_cancelled=false`.
@@ -86,6 +86,7 @@ All writes need the right `agenda.items.write`. Each write that changes an item 
 - **Delay:** `POST /api/agenda/items/{item_id}/delay` with `revision`, `minutes` (non-zero, −720 to 720; negative brings it forward) and `following`. It shifts `starts_at` and `ends_at` and keeps the planned times, so screens show the delay. With `following: true` it also shifts every scheduled item that starts at or after this item's old start, except `quiet_hours` items. Each shifted item emits its own `agenda.item.delayed`; they share one `correlation_id` and are emitted in order of their new `starts_at`, so a consumer that takes the first of a `correlation_id` gets the earliest. An item already running keeps its start and only its end moves, so its `delay_minutes` stays as it was; screens show a running item whose `ends_at` differs from `planned_ends_at` with its new end ("until 19:15"). A shift that would put an item's `ends_at` at or before its `starts_at` is 400 `invalid_request`, and nothing shifts. Delaying an item that has started and has no `ends_at` is 409 `item_started`.
 - **Cancel:** `POST /api/agenda/items/{item_id}/cancel` with `revision`. Emits `agenda.item.cancelled`. Cancelling is final; add the item again to bring it back.
 - **Remove:** `DELETE /api/agenda/items/{item_id}?revision=` → 204. For mistakes only; during the event, cancel instead so people see it. Emits `agenda.item.removed`.
+- **Announce:** `POST /api/agenda/items/{item_id}/announce` with an optional `message` (at most 140 characters) → 204. It tells people about the item now, on the item's `notify_channels`: Notify turns it into a notification of the `schedule` topic ([notify.md](notify.md#topics-and-sources)) and the bot posts it on `discord_channel`. It changes nothing in the agenda, so it sends no `revision` and `agenda_version` stays as it is. "Show on screens now" with an announcement brings the item forward first (a delay to now, which screens show), then announces it, so the announced item carries its new times. Each call is one announcement; Notify's hourly cap keeps repeats from flooding phones. A `quiet_hours` item is never announced (400 `invalid_request`), nor a cancelled one (409 `item_cancelled`); a session item may be, since announcing changes nothing the session owns. Emits `agenda.item.announced`.
 
 Errors: 400 `invalid_request` (for example `ends_at` not after `starts_at`, or a `quiet_hours` item without `ends_at`), 400 `unknown_kind`, 409 `version_conflict`, 409 `item_cancelled` (editing or delaying a cancelled item), 409 `item_started`, 409 `item_managed` (a change a tournament session owns, see Tournament sessions), 409 `event_archived`.
 
@@ -127,7 +128,7 @@ The agenda's per-event settings, through the admin settings API (module `agenda`
 | `notify_channels` | list of `screen`, `discord_channel`, `discord_dm`, `push` | `["screen", "discord_channel", "push"]` | Channels that announce reminders and changes, for items and kinds that set none; `[]` for none |
 
 ## Rights
-`agenda.items.write` (add, edit, delay, cancel, remove, clone, and the kind list), `agenda.crew.read` (read `crew` items).
+`agenda.items.write` (add, edit, delay, cancel, remove, announce, clone, and the kind list), `agenda.crew.read` (read `crew` items).
 
 ## Events (version 1)
 Envelope, naming and transport: [admin.md](admin.md#events). Every agenda event is event-wide; its audience is the item's `visibility`, and `public` for the kind events. `item` is the whole item as `GET /api/agenda/items/{item_id}` returns it to crew. Listed in the catalog: [events.md](events.md).
@@ -139,6 +140,7 @@ Envelope, naming and transport: [admin.md](admin.md#events). Every agenda event 
 | `agenda.item.delayed` | An item was delayed or brought forward | `item`, `minutes` (this shift), `agenda_version`, `actor_user_id` |
 | `agenda.item.cancelled` | An item was cancelled | `item`, `agenda_version`, `actor_user_id` |
 | `agenda.item.removed` | An item was removed | `item_id`, `visibility`, `agenda_version`, `actor_user_id` |
+| `agenda.item.announced` | An organiser announced an item (see Editing live) | `item`, `message` (string of at most 140 characters, or `null` when none was given), `agenda_version` (the current one: an announcement does not change it), `actor_user_id` |
 | `agenda.item.started` | A scheduled item's `starts_at` was reached | `item` |
 | `agenda.item.ended` | A scheduled item's `ends_at` was reached | `item` |
 | `agenda.reminder.triggered` | A lead time before a scheduled item's start was reached | `item`, `lead_minutes`, `leads_minutes` (the item's lead times in effect) |
