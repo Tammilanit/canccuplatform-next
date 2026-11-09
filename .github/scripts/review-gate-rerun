@@ -83,7 +83,7 @@ read -r head href hrepo < <(gh api "repos/$REPO/pulls/$PR" |
   jq -r '"\(.head.sha) \(.head.ref) \(.head.repo.full_name // "-")"')
 # A push and a PR-body edit start two runs for one head, and the gate's concurrency group
 # cancels one of them; GitHub still counts each run's check, so every run of the head must be
-# re-run, not just one (issue #202). Re-run them one at a time, each after the previous has
+# re-run, not just one. Re-run them one at a time, each after the previous has
 # finished: two at once would share the concurrency group and cancel each other.
 declare -A target=() # run id -> the attempt our rerun created
 for _ in $(seq 1 "$TRIES"); do
