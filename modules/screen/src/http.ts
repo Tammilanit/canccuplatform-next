@@ -1,7 +1,7 @@
 /** The screen contract's error codes, cookies and request helpers shared by the routes. */
 import { randomBytes } from "node:crypto";
 import type { FastifyReply, FastifyRequest, preHandlerAsyncHookHandler } from "fastify";
-import { KitError, checkAdminAccess } from "@canccu/kit";
+import { KitError, MissingRight, checkAdminAccess } from "@canccu/kit";
 import type { RightsChecker, TenantContext } from "@canccu/kit";
 import { requireRight } from "@canccu/kit/fastify";
 
@@ -22,6 +22,11 @@ export const noVenue = (): KitError =>
 export const rateLimited = error(429, "rate_limited");
 export const unknownZone = (): KitError =>
   error(400, "unknown_zone")("This event has no such zone.");
+export const versionConflict = (): KitError =>
+  error(409, "version_conflict")("This zone was changed by someone else. Read it again.");
+export const zoneExists = (): KitError =>
+  error(409, "zone_exists")("This event already has a zone with this key.");
+export const zoneInUse = error(409, "zone_in_use");
 export const codeInvalid = (): KitError =>
   error(
     400,
@@ -69,6 +74,24 @@ export function needs(rights: RightsChecker, right: string): preHandlerAsyncHook
     },
     requireRight(rights, right),
   ];
+}
+
+/** As `needs`, for a route that any one of `rights` opens. */
+export function needsAny(rights: RightsChecker, any: string[]): preHandlerAsyncHookHandler[] {
+  return [
+    async (request) => {
+      checkAdminAccess(tenantOf(request), request.ip);
+      const session = await rights.session(request.headers.cookie);
+      if (!any.some((r) => session.rights.has(r))) {
+        throw new MissingRight(`needs one of the rights ${any.join(", ")}`);
+      }
+      request.session = session;
+    },
+  ];
+}
+
+export function actorOf(request: FastifyRequest): string | null {
+  return request.session?.userId ?? null;
 }
 
 /** The body as an object, or 400: Fastify parses JSON but checks no shape. */

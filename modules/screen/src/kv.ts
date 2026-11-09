@@ -1,5 +1,5 @@
 /**
- * The short-lived state the module keeps in Valkey (pairing codes, open-code counts), behind a
+ * The short-lived state the module keeps in Valkey (pairing codes, open-code counts, commands), behind a
  * small interface so tests run without Valkey. Keys come from the kit's `tenantKey` only.
  */
 import { Valkey } from "iovalkey";
@@ -16,7 +16,8 @@ export interface Kv {
   addExpiring(key: string, member: string, expiresAtMs: number): Promise<void>;
   /** The members not yet expired at `nowMs`; expired ones are dropped first. */
   live(key: string, nowMs: number): Promise<string[]>;
-  removeMember(key: string, member: string): Promise<void>;
+  /** True when this call removed it, so of two racing callers only one gets true. */
+  removeMember(key: string, member: string): Promise<boolean>;
   ping(): Promise<void>;
   close(): Promise<void>;
 }
@@ -56,8 +57,8 @@ export class ValkeyKv implements Kv {
     await this.client.zremrangebyscore(key, "-inf", nowMs);
     return this.client.zrange(key, 0, -1);
   }
-  async removeMember(key: string, member: string): Promise<void> {
-    await this.client.zrem(key, member);
+  async removeMember(key: string, member: string): Promise<boolean> {
+    return (await this.client.zrem(key, member)) > 0;
   }
   async ping(): Promise<void> {
     await this.client.ping();
@@ -114,9 +115,8 @@ export class MemoryKv implements Kv {
     for (const [member, until] of set) if (until <= nowMs) set.delete(member);
     return Promise.resolve([...set.keys()]);
   }
-  removeMember(key: string, member: string): Promise<void> {
-    this.sets.get(key)?.delete(member);
-    return Promise.resolve();
+  removeMember(key: string, member: string): Promise<boolean> {
+    return Promise.resolve(this.sets.get(key)?.delete(member) ?? false);
   }
   ping(): Promise<void> {
     return Promise.resolve();

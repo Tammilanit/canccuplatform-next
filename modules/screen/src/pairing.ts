@@ -17,6 +17,7 @@ import type { Bus, Logger, RightsChecker, TenantContext } from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import type { Db, DeviceRow } from "./db.js";
 import { deviceView } from "./devices.js";
+import type { Placement } from "./devices.js";
 import {
   DEVICE_COOKIE,
   DEVICE_COOKIE_MAX_AGE_S,
@@ -37,6 +38,9 @@ import {
   unknownZone,
 } from "./http.js";
 import type { Kv } from "./kv.js";
+import { ZONE_KEY_RE } from "./zone-input.js";
+import { publishAll, seededFor, zoneExistsHere } from "./zones.js";
+import type { Emit } from "./zones.js";
 
 export const CODE_TTL_MS = 10 * 60_000;
 /** The record outlives its code a little, so a late poll learns `expired` instead of 404. */
@@ -199,10 +203,11 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
         );
         const row = rows[0] as unknown as DeviceRow | undefined;
         if (row === undefined) return null;
-        const paired = await c.query("SELECT paired_at FROM assignments WHERE device_id = $1", [
-          row.id,
-        ]);
-        return deviceView(row, paired.rows[0]?.paired_at as Date | undefined);
+        const placed = await c.query(
+          "SELECT paired_at, zone_key, mirror_device_id, mirror_zone_key FROM assignments WHERE device_id = $1",
+          [row.id],
+        );
+        return deviceView({ ...row, ...(placed.rows[0] as Placement | undefined) });
       });
       if (device === null) {
         await kv.del(keys.record(id));
@@ -230,9 +235,9 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
       if (typeof input.code !== "string" || !CODE_RE.test(input.code.toUpperCase())) {
         throw invalidRequest("`code` must be the 8 characters the screen shows.");
       }
-      if (input.zone_key !== undefined && input.zone_key !== null) {
-        // Zones arrive with #220; until then no zone exists to pair into.
-        throw unknownZone();
+      const zoneKey = input.zone_key ?? null;
+      if (zoneKey !== null && (typeof zoneKey !== "string" || !ZONE_KEY_RE.test(zoneKey))) {
+        throw invalidRequest("`zone_key` must be a zone key.");
       }
       if (ctx.venue === null) throw noVenue();
       const at = now();
@@ -245,15 +250,18 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
       const actor = request.session?.userId ?? null;
       const code = input.code.toUpperCase();
       let device: Record<string, unknown>;
+      let seeded: Emit[];
       try {
-        device = await db.tenant(async (c) => {
+        [seeded, device] = await db.tenant(async (c) => {
+          const made = await seededFor(ctx, c);
+          if (zoneKey !== null && !(await zoneExistsHere(c, zoneKey))) throw unknownZone();
           const { rows } = await c.query(
             `INSERT INTO devices (id, name, venue_id, current_tenant_id) VALUES ($1, $2, $3, $4) RETURNING *`,
             [deviceId, name, ctx.venue?.id, ctx.tenant_id],
           );
           const paired = await c.query(
-            "INSERT INTO assignments (device_id) VALUES ($1) RETURNING paired_at",
-            [deviceId],
+            "INSERT INTO assignments (device_id, zone_key) VALUES ($1, $2) RETURNING paired_at, zone_key",
+            [deviceId, zoneKey],
           );
           await deps.audit({
             tenant_id: ctx.tenant_id,
@@ -262,7 +270,8 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
             target: { type: "device", id: deviceId },
             changes: { name: { from: null, to: name } },
           });
-          return deviceView(rows[0] as unknown as DeviceRow, paired.rows[0]?.paired_at as Date);
+          const view = deviceView({ ...(rows[0] as unknown as DeviceRow), ...paired.rows[0] });
+          return [made, view] as const;
         });
       } catch (err) {
         // Nothing was paired: give the code back, so the admin's retry works and the kiosk
@@ -276,11 +285,13 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
       try {
         await kv.removeMember(keys.open(), id);
         await kv.removeMember(keys.byAddress(rec.address), id);
-        await deps.bus.publish(
-          "screen.device.paired",
-          { device_id: deviceId, name, zone_key: null, actor_user_id: actor },
-          { version: 1 },
-        );
+        await publishAll(deps.bus, [
+          ...seeded,
+          [
+            "screen.device.paired",
+            { device_id: deviceId, name, zone_key: zoneKey, actor_user_id: actor },
+          ],
+        ]);
       } catch (err) {
         deps.log?.error({ err, device_id: deviceId }, "after pairing: counters or event failed");
       }

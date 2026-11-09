@@ -131,7 +131,7 @@ describe.skipIf(!DATABASE_URL)("pairing", () => {
     );
     const zoned = await call(h, "POST", "/api/screen/devices", {
       session: "admin",
-      body: { ...body, zone_key: "main" },
+      body: { ...body, zone_key: "nowhere" },
     });
     expect(code(zoned)).toBe("unknown_zone");
     const restricted = await call(h, "POST", "/api/screen/devices", {

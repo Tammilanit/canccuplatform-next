@@ -9,14 +9,17 @@ import {
   ValkeyStreamStore,
   checkLoginRole,
   createLogger,
+  isTenantId,
   loadConfig,
   runMigrations,
   serviceKeyFromEnv,
+  withTenant,
 } from "@canccu/kit";
 import { buildApp, screenHealth } from "./app.js";
 import { tenantsAudit } from "./audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { ValkeyKv } from "./kv.js";
+import { seedMainZone } from "./zones.js";
 
 const PORT = 8080;
 /** pg_advisory_lock key of the screen migrations; each module has its own. */
@@ -82,14 +85,26 @@ async function main(): Promise<void> {
     ...(process.env.CANCCU_IP_MODE === "demo" ? { ipMode: { version: config.version } } : {}),
   });
   const rights = new RightsChecker(new AdminClient(config.adminUrl));
+  const db = poolDb(pool);
+  const seed = seedMainZone(db, bus);
   // One loop for both sources, so neither waits behind the other's blocking read.
-  listener.subscribe(["tenants", "admin"], (event) => {
-    if (event.source === "tenants") tenants.handleEvent(event);
-    else rights.handleEvent(event);
+  listener.subscribe(["tenants", "admin"], async (event) => {
+    if (event.source !== "tenants") {
+      rights.handleEvent(event);
+      return;
+    }
+    tenants.handleEvent(event);
+    const id = event.data.tenant_id;
+    if (event.type === "tenants.tenant.created" && typeof id === "string" && isTenantId(id)) {
+      // A failure here is not lost: the event's first zone request seeds it too.
+      await withTenant(id, seed).catch((err: unknown) => {
+        log.warn({ err, tenant_id: id }, "seeding the main zone failed");
+      });
+    }
   });
 
   const app = buildApp({
-    db: poolDb(pool),
+    db,
     kv,
     bus,
     rights,
