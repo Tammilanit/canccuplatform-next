@@ -116,17 +116,19 @@ def _when(value: datetime, before: datetime, tz: ZoneInfo) -> str:
 def moved_line(
     row: Mapping[str, Any], starts: datetime, ends: datetime | None, tz: ZoneInfo
 ) -> str:
-    title = row["title"]
-    if starts == row["starts_at"] and ends is not None and row["ends_at"] is not None:
-        return (
-            f"{title} ends {_when(ends, row['ends_at'], tz)} instead of {hhmm(row['ends_at'], tz)}"
-        )
+    title, old_ends = row["title"], row["ends_at"]
+    if starts == row["starts_at"]:
+        if ends is not None and old_ends is not None:
+            return f"{title} ends {_when(ends, old_ends, tz)} instead of {hhmm(old_ends, tz)}"
+        if ends is not None:
+            return f"{title} now ends {_when(ends, starts, tz)}"
+        if old_ends is not None:
+            return f"{title} no longer has an end"
+        return f"{title} stays at {hhmm(starts, tz)}"
     line = f"{title} {hhmm(row['starts_at'], tz)} → {_when(starts, row['starts_at'], tz)}"
-    if (
-        ends is not None
-        and row["ends_at"] is not None
-        and ends - starts != (row["ends_at"] - row["starts_at"])
-    ):
+    if ends is None and old_ends is not None:
+        line += ", with no end"
+    elif ends is not None and (old_ends is None or ends - starts != old_ends - row["starts_at"]):
         line += f", until {_when(ends, starts, tz)}"
     return line
 

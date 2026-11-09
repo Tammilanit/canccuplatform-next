@@ -98,6 +98,7 @@
   .canccu-agenda-facts { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; }
   .canccu-agenda-facts dt { color: var(--canccu-color-text-muted); }
   .canccu-agenda-facts dd { margin: 0; }
+  .canccu-agenda-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .canccu-agenda-notice { padding: 0.75rem; border-radius: var(--canccu-radius); border: 2px solid var(--canccu-color-status-ok); }
   .canccu-agenda-notice--error { border-color: var(--canccu-color-status-down); }
 }

@@ -16,7 +16,7 @@ from . import forms, items, model, store, templates
 from .access import writer
 from .deps import Deps, deps
 from .effective import read_channels
-from .kinds import not_found
+from .kinds import int_query, not_found
 from .preview import change_of, moved_line, preview_html, told
 from .web import (
     BASE,
@@ -190,7 +190,7 @@ async def save_page(request: Request) -> Response:
         for key, name in (("starts_at", "starts"), ("ends_at", "ends")):
             if (form.get(name) or "") == current[name]:
                 del fields[key]
-        fields["revision"] = int(str(form.get("revision") or 0))
+        fields["revision"] = model.revision(int_query(str(form.get("revision") or "")))
         moving = "starts_at" in fields or "ends_at" in fields
         if moving and not form.get("confirm"):
             return _move_preview(request, form, row, kinds, fields, tz)

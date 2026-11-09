@@ -164,3 +164,37 @@ async def test_the_stylesheets_are_served(env: Env) -> None:
     assert ui.status_code == 200 and "--canccu-color-primary" in ui.text
     assert own.status_code == 200 and own.headers["content-type"].startswith("text/css")
     assert other.status_code == 404
+
+
+async def test_every_menu_link_reaches_a_page_and_readers_get_no_writer_links(env: Env) -> None:
+    h = env.writer()
+    crew = env.rights.sign_in("u_crew", CREW)
+    async with env.client() as c:
+        menu = (await c.get("/", headers=h)).text.split('aria-label="Event">')[1]
+        hrefs = [part.split('"')[0] for part in menu.split("</nav>")[0].split('href="')[1:]]
+        assert hrefs == ["/agenda/", "/agenda/add", "/agenda/templates", "/admin/"]
+        for href in hrefs[:3]:
+            # As Caddy forwards it: the prefix stripped, the path kept exactly.
+            path = href.removeprefix("/agenda")
+            assert (await c.get(path, headers=h)).status_code == 200, href
+        refused = await c.get("/add", headers=crew)
+    assert refused.status_code == 403
+    assert 'href="/agenda/add"' not in refused.text and 'href="/agenda/"' in refused.text
+
+
+async def test_a_broken_revision_on_the_edit_form_is_a_refusal_not_an_error(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        item = await add(c, h)
+        response = await c.post(
+            f"/items/{item['id']}/edit",
+            data={
+                "revision": "x",
+                "title": "Dinner",
+                "kind": "meal",
+                "starts": "2026-11-20T18:00",
+                "visibility": "public",
+            },
+            headers=h,
+        )
+    assert response.status_code == 400 and "revision" in response.text

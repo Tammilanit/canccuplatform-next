@@ -77,6 +77,9 @@ async def delay_page(request: Request) -> Response:
     )
     choose = (
         f'<form method=get action="{base}/delay" class="canccu-agenda-form">'
+        # Enter in a field submits with the form's first button: this one sends no chip, so the
+        # typed minutes count.
+        '<button class="canccu-agenda-hidden" tabindex=-1 aria-hidden=true>Preview</button>'
         f'<div class="canccu-agenda-chips-row">{chips}</div>'
         '<label class="canccu-field"><span class="canccu-field__label">Other (minutes;'
         " negative brings it forward)</span>"
@@ -135,13 +138,23 @@ async def delay_save(request: Request) -> Response:
     item_id = request.path_params["item_id"]
     minutes = edits.minutes_of(_int(form.get("minutes")))
     following = form.get("following") == "1"
-    async with d.db.tenant() as conn:
-        version = (await store.state(conn))["agenda_version"]
-    if str(version) != form.get("agenda_version"):
+    revision = model.revision(_int(form.get("revision")))
+    shown = _int(form.get("agenda_version"))
+    try:
+        _, items = await edits.delay(
+            d,
+            session,
+            item_id,
+            revision,
+            minutes,
+            following,
+            expected_version=shown if isinstance(shown, int) else -1,
+        )
+    except KitError as exc:
+        if exc.code != "agenda_changed":
+            raise
         query = urlencode({"minutes": minutes, "following": "1" if following else "", "changed": 1})
         return redirect(f"/items/{item_id}/delay?{query}")
-    revision = model.revision(_int(form.get("revision")))
-    _, items = await edits.delay(d, session, item_id, revision, minutes, following)
     return redirect(f"/?day={_day_of(items[0]['starts_at'], request)}&done=delayed")
 
 
@@ -193,7 +206,10 @@ def bring_forward(row: Any, now: datetime) -> int:
     lead: float = (row["starts_at"] - now) / timedelta(minutes=1)
     if lead <= 0:
         return 0
-    return math.ceil(lead) if row["ends_at"] is not None else math.floor(lead)
+    minutes = math.ceil(lead) if row["ends_at"] is not None else math.floor(lead)
+    if minutes > 720:  # the delay's limit, checked again at the confirm
+        raise model.invalid("it starts more than 12 hours from now: move it instead")
+    return minutes
 
 
 async def show_now_page(request: Request) -> Response:
@@ -206,8 +222,6 @@ async def show_now_page(request: Request) -> Response:
     if minutes == 0:
         body = notice("Screens already show it in now and next.")
         return page(request, f"Show {row['title']} now", body)
-    if minutes > 720:  # the delay's limit
-        raise model.invalid("it starts more than 12 hours from now: move it instead")
     preview, _, _ = await _delay_preview(request, row, -minutes, False)
     body = (
         "<p>Brings it forward to now with a delay, so every screen shows it in now and next at"

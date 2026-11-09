@@ -104,14 +104,25 @@ async def delay_item(request: Request) -> Response:
 
 
 async def delay(
-    d: Deps, session: Session, item_id: str, sent_revision: int, minutes: int, following: bool
+    d: Deps,
+    session: Session,
+    item_id: str,
+    sent_revision: int,
+    minutes: int,
+    following: bool,
+    *,
+    expected_version: int | None = None,
 ) -> tuple[int, list[dict[str, Any]]]:
     """Applies a delay; answers the last `agenda_version` and the shifted items, the delayed
-    item first."""
+    item first. With `expected_version` (a page's preview), any change of the agenda since is
+    409 `agenda_changed`, checked under the event's write lock."""
+    minutes = minutes_of(minutes)
     channels, leads = await event_settings(d)
     now = d.now()
     async with d.db.tenant() as conn:
-        await store.state(conn, lock=True)
+        state = await store.state(conn, lock=True)
+        if expected_version is not None and state["agenda_version"] != expected_version:
+            raise model.conflict("agenda_changed", "the run of show changed: preview again")
         row = await target(conn, item_id, sent_revision)
         plan = await plan_delay(conn, row, minutes, following, now)
         # Every item was checked before any is written, so a refused shift moves nothing.

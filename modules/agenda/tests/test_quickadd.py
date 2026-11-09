@@ -143,3 +143,18 @@ async def test_removed_starters_do_not_come_back(env: Env) -> None:
             await c.post(f"/templates/{value.removeprefix('template:')}/delete", headers=h)
         listed = (await c.get("/templates", headers=h)).text
     assert "No templates yet." in listed
+
+
+async def test_quick_add_leaves_out_templates_whose_kind_is_gone(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        await c.put("/api/agenda/kinds/raffle", json={"name": "Raffle"}, headers=h)
+        await c.post(
+            "/templates/new",
+            data={"name": "Draw", "kind": "raffle", "visibility": "public"},
+            headers=h,
+        )
+        assert "Draw" in await templates_of(c, h)
+        await c.delete("/api/agenda/kinds/raffle?revision=1", headers=h)
+        assert "Draw" not in await templates_of(c, h)
+        assert "kind removed" in (await c.get("/templates", headers=h)).text

@@ -86,6 +86,7 @@ async def _choices(request: Request) -> tuple[list[tuple[str, str]], list[Any], 
     async with deps(request).db.tenant() as conn:
         rows = await templates.all_templates(conn)
         kinds = await store.kinds(conn)
+    rows = [r for r in rows if r["kind"] in kinds]  # a removed kind: fix it on its template page
     what = [(f"template:{r['id']}", str(r["name"])) for r in rows]
     what += [(f"kind:{k}", str(r["name"])) for k, r in kinds.items() if k != "quiet_hours"]
     return what, rows, kinds

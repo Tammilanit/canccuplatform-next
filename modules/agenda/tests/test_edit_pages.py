@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import pytest
+from canccu_kit import KitError, tenant_scope
 from conftest import NOW, Env, at
 from test_items import add
+
+from canccu_agenda import edits
 
 
 async def test_delay_previews_what_moves_what_stays_and_who_hears(env: Env) -> None:
@@ -108,3 +112,41 @@ async def test_show_now_refuses_what_it_cannot_bring_forward(env: Env) -> None:
         refused = await c.get(f"/items/{far['id']}/show-now", headers=h)
     assert "Screens already show it" in shown.text
     assert refused.status_code == 400 and "more than 12 hours" in refused.text
+
+
+async def test_enter_in_other_previews_the_typed_minutes_not_a_chip(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        item = await add(c, h, ends_at=at(120))
+        form = (await c.get(f"/items/{item['id']}/delay", headers=h)).text
+        typed = await c.get(f"/items/{item['id']}/delay?other=-20&following=1", headers=h)
+        chip = await c.get(f"/items/{item['id']}/delay?minutes=15&other=-20", headers=h)
+    # The form's first button, the one Enter uses, sends no chip.
+    first = form.split('class="canccu-agenda-form">')[1].split("</button>")[0]
+    assert "name=" not in first
+    assert "Bring 1 item forward 20 min" in typed.text
+    assert "Delay 1 item +15 min" in chip.text  # a tapped chip wins
+
+
+async def test_the_delay_refuses_a_change_of_the_agenda_under_its_lock(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        item = await add(c, h, ends_at=at(120))
+    session = env.rights.sessions["u_org"]
+    d = env.app.state.deps
+    with tenant_scope("ev-a"):
+        with pytest.raises(KitError) as refused:
+            await edits.delay(d, session, item["id"], 1, 15, True, expected_version=0)
+        _, moved = await edits.delay(d, session, item["id"], 1, 15, True, expected_version=1)
+    assert refused.value.code == "agenda_changed"
+    assert moved[0]["delay_minutes"] == 15
+
+
+async def test_show_now_keeps_the_delay_limit_at_the_confirm(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        far = await add(c, h, title="Tomorrow", starts_at=at(60 * 13))
+        response = await c.post(f"/items/{far['id']}/show-now", data={"revision": "1"}, headers=h)
+        unchanged = (await c.get(f"/api/agenda/items/{far['id']}", headers=h)).json()
+    assert response.status_code == 400 and "more than 12 hours" in response.text
+    assert unchanged["revision"] == 1

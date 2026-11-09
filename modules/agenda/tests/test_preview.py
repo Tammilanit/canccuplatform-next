@@ -82,4 +82,19 @@ def test_moved_lines_read_in_the_events_time_zone() -> None:
     assert moved_line(row, NOW, ends + timedelta(minutes=15), TZ) == (
         "Semis ends 20:15 instead of 20:00"
     )
-    assert moved_line(row, NOW + timedelta(hours=6), None, TZ) == "Semis 19:00 → Sat 21 Nov 01:00"
+    moment = {**row, "ends_at": None}
+    assert moved_line(moment, NOW + timedelta(hours=6), None, TZ) == (
+        "Semis 19:00 → Sat 21 Nov 01:00"
+    )
+
+
+def test_a_move_says_when_an_end_is_added_or_removed() -> None:
+    row = {"title": "Doors", "starts_at": NOW, "ends_at": None}
+    assert moved_line(row, NOW, NOW + timedelta(hours=1), TZ) == "Doors now ends 20:00"
+    timed = {**row, "ends_at": NOW + timedelta(hours=1)}
+    assert moved_line(timed, NOW, None, TZ) == "Doors no longer has an end"
+    later = NOW + timedelta(minutes=30)
+    assert moved_line(timed, later, None, TZ) == "Doors 19:00 → 19:30, with no end"
+    assert moved_line(row, later, later + timedelta(hours=1), TZ) == (
+        "Doors 19:00 → 19:30, until 20:30"
+    )

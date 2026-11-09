@@ -105,7 +105,7 @@ async def run_of_show(request: Request) -> Response:
     session = await page_session(request)
     d = deps(request)
     tz, now = zone_of(request), d.now()
-    seen = await viewer(request)
+    seen = await viewer(request, session)
     channels = await read_channels(d)
     async with d.db.tenant() as conn:
         rows = await store.items(conn, seen.visibilities)
@@ -155,7 +155,7 @@ async def item_page(request: Request) -> Response:
     session = await page_session(request)
     d = deps(request)
     tz, now = zone_of(request), d.now()
-    seen = await viewer(request)
+    seen = await viewer(request, session)
     channels = await read_channels(d)
     async with d.db.tenant() as conn:
         row = await store.item(conn, request.path_params["item_id"])

@@ -20,6 +20,8 @@ def create_app(
     routes = items.ROUTES + edits.ROUTES + kinds.ROUTES + item_pages.ROUTES + edit_pages.ROUTES
     routes += pages.ROUTES + quickadd.ROUTES + template_pages.ROUTES + web.ROUTES
     app = Starlette(routes=routes)
+    # Starlette's slash redirects would drop the /agenda prefix Caddy strips.
+    app.router.redirect_slashes = False
     app.state.deps = d
     install(app, health)
     install_tenancy(app, resolver)

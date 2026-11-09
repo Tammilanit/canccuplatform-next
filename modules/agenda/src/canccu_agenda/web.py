@@ -49,6 +49,7 @@ async def page_session(request: Request) -> Session:
     session raises NotSignedIn, which app.py turns into the way to sign in."""
     ctx = tenant_of(request)
     session = await deps(request).rights.session(request.headers.get("cookie"))
+    request.state.agenda_session = session
     if not (session.has(WRITE) or session.has(CREW_READ)):
         raise MissingRight(f"needs right {WRITE} or {CREW_READ}")
     check_admin_access(ctx, request.client.host if request.client else None, tailscale_cidrs())
@@ -59,9 +60,11 @@ def page(
     request: Request, title: str, body: str, *, status: int = 200, session: Session | None = None
 ) -> HTMLResponse:
     nonce = new_nonce()
-    menu = "".join(f'<a href="{BASE}{path}/">{esc(label)}</a>' for path, label in MENU[:1])
-    if session is None or session.has(WRITE):
-        menu += "".join(f'<a href="{BASE}{path}">{esc(label)}</a>' for path, label in MENU[1:])
+    # The session a page's check already read (access.remember); without one, as on an error
+    # page, only the links every reader may follow.
+    session = session or getattr(request.state, "agenda_session", None)
+    links = MENU if session is not None and session.has(WRITE) else MENU[:1]
+    menu = "".join(f'<a href="{BASE}{path}">{esc(label)}</a>' for path, label in links)
     menu += '<a href="/admin/">Admin</a>'
     response = HTMLResponse(
         "<!doctype html><html lang=en><meta charset=utf-8>"
