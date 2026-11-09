@@ -222,6 +222,28 @@ describe.skipIf(!DATABASE_URL)("assignments", () => {
     expect(await withTenant("alpha", () => takeCommands(h.kv, id, h.clock.now))).toEqual([]);
   });
 
+  it("leaves a parked device (no current event) to no event's routes", async () => {
+    const { id } = await pairDevice(h, "alpha.test", "Parked");
+    const { id: other } = await pairDevice(h, "alpha.test", "Still here");
+    // What the superadmin's move to `null` (#221) leaves on the global row.
+    await h.pool.query("UPDATE devices SET current_tenant_id = NULL WHERE id = $1", [id]);
+    for (const host of ["alpha.test", "beta.test"]) {
+      expect(await listed(id, host)).toBeUndefined();
+      for (const [method, path, body] of [
+        ["PUT", `/api/screen/devices/${id}/assignment`, { zone_key: "stage" }],
+        ["DELETE", `/api/screen/devices/${id}/assignment`, undefined],
+        ["POST", `/api/screen/devices/${id}/commands`, { command: "reload" }],
+      ] as const) {
+        const res = await call(h, method, path, { ...admin(host), ...(body ? { body } : {}) });
+        expect([res.statusCode, code(res)], `${host} ${method} ${path}`).toEqual([
+          404,
+          "not_found",
+        ]);
+      }
+    }
+    expect(code(await assign(other, { mirror_of: { device_id: id } }))).toBe("invalid_request");
+  });
+
   it("keeps assignments and commands inside their own event (cross-event leak tests)", async () => {
     const { id } = await pairDevice(h, "alpha.test", "Alpha only");
     await assign(id, { zone_key: "stage" });
