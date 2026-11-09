@@ -661,14 +661,50 @@
   put:
     tags: [pin]
     operationId: setPin
-    summary: Pin a bundle version and a theme revision
-    description: Right `screen.bundle.write`. Audited; emits `screen.pin.changed`; screens get a `reload` command.
+    summary: Pin a bundle version and a theme revision, freeze what is in effect, or end a freeze
+    description: |
+      Right `screen.bundle.write`. Audited; emits `screen.pin.changed`; screens get a `reload` command.
+      Three forms: the values with an optional `until`; the freeze form (`freeze: true` with `until`), which
+      pins `in_effect` in the same step; and `freeze: false`, which puts `restores` back now (with no `until`
+      in place it changes nothing). `until` is in the future and no later than the event's `ends_at` or
+      14 days ahead, whichever is later. Rules: contracts/screen.md, Timed pins and freeze.
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "../screen.openapi.yaml#/components/schemas/Pin"
+            oneOf:
+              - allOf:
+                  - $ref: "../screen.openapi.yaml#/components/schemas/Pin"
+                  - not:
+                      required: [freeze]
+              - type: object
+                description: The freeze form.
+                required: [freeze, until]
+                additionalProperties: false
+                properties:
+                  freeze:
+                    const: true
+                  until:
+                    type: string
+                    format: date-time
+              - type: object
+                description: Ends a timed pin now.
+                required: [freeze]
+                additionalProperties: false
+                properties:
+                  freeze:
+                    const: false
+          examples:
+            pin:
+              summary: Pin a theme revision for good
+              value: {bundle_version: null, theme_revision: 7}
+            freeze:
+              summary: Freeze what screens draw until the event's end
+              value: {freeze: true, until: "2026-01-03T16:00:00Z"}
+            unfreeze:
+              summary: End the freeze now
+              value: {freeze: false}
     responses:
       "200":
         description: The pins.
@@ -678,6 +714,7 @@
               $ref: "../screen.openapi.yaml#/components/schemas/Pin"
       "400":
         $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+        description: "`invalid_request`: also an `until` in the past or past the cap, or values given with `freeze`."
       "401":
         $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
       "403":

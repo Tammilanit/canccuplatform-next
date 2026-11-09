@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Screen API
-  version: 1.1.0
+  version: 1.2.0
   summary: Devices, zones, the composed screen state and its push channel, content, scheduling and the PPTX and PDF render job.
   description: |
     Machine-readable part of the screen contract. Prose, widgets, claims, the Pulse options and events: contracts/screen.md.
@@ -124,6 +124,8 @@ paths:
     $ref: "screen/content.openapi.yaml#/~1api~1screen~1schedules"
   /api/screen/schedules/simulate:
     $ref: "screen/content.openapi.yaml#/~1api~1screen~1schedules~1simulate"
+  /api/screen/schedules/calendar:
+    $ref: "screen/content.openapi.yaml#/~1api~1screen~1schedules~1calendar"
   /api/screen/schedules/{schedule_id}:
     $ref: "screen/content.openapi.yaml#/~1api~1screen~1schedules~1{schedule_id}"
   /api/screen/push:
@@ -1069,11 +1071,43 @@ components:
         theme_revision:
           type: [integer, "null"]
           description: A revision of the event's theme; null follows the current.
+        until:
+          type: [string, "null"]
+          format: date-time
+          description: When the pin ends and `restores` comes back; null or left out is no end.
         available:
           type: array
           readOnly: true
           items:
             type: string
+        in_effect:
+          readOnly: true
+          description: What screens draw now, a null resolved to the platform version or theming's current revision.
+          type: object
+          required: [bundle_version, theme_revision]
+          properties:
+            bundle_version:
+              type: string
+            theme_revision:
+              type: integer
+        restores:
+          readOnly: true
+          description: The pin put back at `until` (both null for none); null for a pin without `until`.
+          type: [object, "null"]
+          required: [bundle_version, theme_revision]
+          properties:
+            bundle_version:
+              type: [string, "null"]
+            theme_revision:
+              type: [integer, "null"]
+        changed_by:
+          type: [string, "null"]
+          readOnly: true
+          description: The user who last changed the pin; null before any change and after the restore at `until`.
+        changed_at:
+          type: [string, "null"]
+          format: date-time
+          readOnly: true
     AssetKind:
       type: string
       enum: [image, video, audio, pptx, pdf, web, youtube]
@@ -1269,7 +1303,10 @@ components:
         days:
           $ref: "#/components/schemas/Days"
         start_minute:
-          $ref: "#/components/schemas/Minute"
+          type: integer
+          description: Minutes after midnight in the event's time zone; 1440 is the end of a day, so no window starts there.
+          minimum: 0
+          maximum: 1439
         end_minute:
           $ref: "#/components/schemas/Minute"
         agenda_item_id:

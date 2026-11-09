@@ -523,6 +523,143 @@
         $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
       "403":
         $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+/api/screen/schedules/calendar:
+  get:
+    tags: [content]
+    operationId: scheduleCalendar
+    summary: The schedule calendar between two times
+    description: |
+      Right `screen.content.read`. Built in screen with the same scheduler the tick and simulate use, so a
+      page draws the calendar without a copy of the rule. One entry per zone (or the one `zone`): each
+      window's runs between `from` and `to` (agenda-bound windows at their items' current times), the
+      segments, and the break playlists that interrupt the zone. Rules: contracts/screen.md, Schedule windows.
+    parameters:
+      - name: from
+        in: query
+        required: true
+        description: The start, RFC 3339.
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        required: true
+        description: The end, RFC 3339; after `from` and at most 31 days after it.
+        schema:
+          type: string
+          format: date-time
+      - name: zone
+        in: query
+        description: Only this zone.
+        schema:
+          $ref: "../screen.openapi.yaml#/components/schemas/ZoneKey"
+    responses:
+      "200":
+        description: The calendar view-model.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, to, time_zone, zones]
+              properties:
+                from:
+                  $ref: "../screen.openapi.yaml#/components/schemas/Time"
+                to:
+                  $ref: "../screen.openapi.yaml#/components/schemas/Time"
+                time_zone:
+                  type: string
+                  description: The event's time zone (IANA), for laying the instants out in days.
+                zones:
+                  type: array
+                  items:
+                    type: object
+                    required: [zone_key, windows, segments, breaks]
+                    properties:
+                      zone_key:
+                        $ref: "../screen.openapi.yaml#/components/schemas/ZoneKey"
+                      windows:
+                        type: array
+                        description: The zone's windows with at least one run in the range.
+                        items:
+                          type: object
+                          required: [schedule_id, playlist_id, priority, layout_id, agenda_item_id, runs]
+                          properties:
+                            schedule_id:
+                              $ref: "../screen.openapi.yaml#/components/schemas/Id"
+                            playlist_id:
+                              $ref: "../screen.openapi.yaml#/components/schemas/Id"
+                            priority:
+                              type: integer
+                            layout_id:
+                              type: [string, "null"]
+                            agenda_item_id:
+                              type: [string, "null"]
+                            runs:
+                              type: array
+                              items:
+                                type: object
+                                required: [starts_at, ends_at]
+                                properties:
+                                  starts_at:
+                                    $ref: "../screen.openapi.yaml#/components/schemas/Time"
+                                  ends_at:
+                                    $ref: "../screen.openapi.yaml#/components/schemas/Time"
+                      segments:
+                        type: array
+                        description: |
+                          Spans in time order, cut wherever the set of active windows changes; a span where no
+                          window is active has none. Each names its winner and every active window it beat, with
+                          the rule it lost on: `priority`, `start` (began earlier), `playlist_priority` or `id`.
+                        items:
+                          type: object
+                          required: [starts_at, ends_at, winner, losers]
+                          properties:
+                            starts_at:
+                              $ref: "../screen.openapi.yaml#/components/schemas/Time"
+                            ends_at:
+                              $ref: "../screen.openapi.yaml#/components/schemas/Time"
+                            winner:
+                              $ref: "../screen.openapi.yaml#/components/schemas/Id"
+                            losers:
+                              type: array
+                              items:
+                                type: object
+                                required: [schedule_id, lost_on]
+                                properties:
+                                  schedule_id:
+                                    $ref: "../screen.openapi.yaml#/components/schemas/Id"
+                                  lost_on:
+                                    type: string
+                                    enum: [priority, start, playlist_priority, id]
+                      breaks:
+                        type: array
+                        description: The break playlists that interrupt the zone, with the spans their daily window allows (the whole range without one).
+                        items:
+                          type: object
+                          required: [playlist_id, period_seconds, break_seconds, spans]
+                          properties:
+                            playlist_id:
+                              $ref: "../screen.openapi.yaml#/components/schemas/Id"
+                            period_seconds:
+                              type: integer
+                            break_seconds:
+                              type: integer
+                            spans:
+                              type: array
+                              items:
+                                type: object
+                                required: [starts_at, ends_at]
+                                properties:
+                                  starts_at:
+                                    $ref: "../screen.openapi.yaml#/components/schemas/Time"
+                                  ends_at:
+                                    $ref: "../screen.openapi.yaml#/components/schemas/Time"
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
 /api/screen/schedules/{schedule_id}:
   parameters:
     - name: schedule_id
