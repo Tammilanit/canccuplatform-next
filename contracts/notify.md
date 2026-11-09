@@ -37,6 +37,7 @@ Each topic type has an event-wide part, a personal part, or both. An attendee op
 |---|---|---|---|---|---|---|
 | `schedule` | agenda | event: event (on, off) | `agenda.reminder.triggered` | `data.item.visibility` | kind not `quiet_hours`; `data.lead_minutes` `nearest_in` `data.leads_minutes` to param `lead_minutes` (default 10; on a tie the larger), so an item with leads `[15]` is still announced, at 15, and one with `[]` never | no |
 | | | | `agenda.item.delayed`, `agenda.item.cancelled` | `data.item.visibility` | kind not `quiet_hours`; `data.item.starts_at` `within_minutes` 120; dedupe by `correlation_id` and `audience`, so a delay with `following` gives one notification per audience, for the earliest shifted item it may see | no |
+| | | | `agenda.item.announced` | `data.item.visibility` | kind not `quiet_hours`; one notification per announcement (dedupe by the event's `id`); title the item's, body the organiser's `data.message` (empty when none was given) | no |
 | `announcements` | admin (provisional: the announce action, step 4) | event: event (on, off) | the announce action's event (step 4) | its visibility | — | `data.urgent` |
 | `food` | pizza | event: event (off, off); personal: user (on, off) | `pizza.order.opened`, `pizza.order.closed` (provisional) | event: `public` | — | no |
 | | | | `pizza.order.arrived` (provisional) | personal: `data.user_ids` (each person with a pizza in the order) | — | no |
@@ -53,7 +54,7 @@ The `schedule` registration in full, as the agenda module sends it:
 
 ```json
 {"key": "schedule", "owner": "agenda", "title": "Schedule",
- "description": "Reminders, delays and cancellations of the run-of-show",
+ "description": "Reminders, delays, cancellations and announcements of the run-of-show",
  "parts": {"event": {"scope": "event", "channels": ["push", "discord_dm"],
                      "defaults": {"push": true, "discord_dm": false}}},
  "params": [{"key": "lead_minutes", "type": "integer", "min": 1, "max": 1440, "default": 10,
@@ -77,7 +78,12 @@ The `schedule` registration in full, as the agenda module sends it:
    "where": [{"field": "data.item.kind", "op": "ne", "value": "quiet_hours"},
              {"field": "data.item.starts_at", "op": "within_minutes", "value": 120}],
    "title": "{data.item.title} cancelled", "body": "Planned for {data.item.planned_starts_at|time}",
-   "url": "/notify/agenda", "expires_at": "data.item.starts_at"}]}
+   "url": "/notify/agenda", "expires_at": "data.item.starts_at"},
+  {"event": "agenda.item.announced", "part": "event", "audience": {"field": "data.item.visibility"},
+   "channels_field": "data.item.notify_channels",
+   "where": [{"field": "data.item.kind", "op": "ne", "value": "quiet_hours"}],
+   "title": "{data.item.title}", "body": "{data.message}",
+   "url": "/notify/agenda/{data.item.id}", "expires_at": "data.item.ends_at", "expires_after_minutes": 60}]}
 ```
 
 **Quiet hours** are not a topic: Notify follows `agenda.item.added`, `.changed`, `.delayed`, `.cancelled` and `.removed` of `quiet_hours` items, and `agenda.items.cloned`, to time them (Delivery rules).
@@ -109,9 +115,9 @@ Each **trigger** maps one event type to one part:
 | `dedupe_by` | Paths whose values make one notification; default the event's `id`. `audience` stands for the audience the notification goes to. Missing values count as the event's `id`. The key is always scoped to the topic (see Dedupe under Delivery rules) |
 | `urgent` | `true`, `false` (default) or `{"field": "<path>"}` to a boolean |
 | `title`, `body`, `url` | Templates (below). `url` is a page of the hub, relative to the event's hostname |
-| `expires_at` or `expires_after_minutes` | A path to a time in the event, or minutes after creation. Default: 12 hours for a personal notification; an event-wide trigger names one |
+| `expires_at` or `expires_after_minutes` | A path to a time in the event, or minutes after creation. Default: 12 hours for a personal notification; an event-wide trigger names one. A trigger may name both: the path's time wins, and the minutes apply when its value is missing or `null` (an announced agenda item with no `ends_at` expires 60 minutes after the announcement) |
 
-- **Paths** are dot paths into the envelope: `data.item.kind`, `correlation_id`. A path that is missing makes a condition false and a template value empty.
+- **Paths** are dot paths into the envelope: `data.item.kind`, `correlation_id`. A path that is missing makes a condition false and a template value empty; a `null` value also fills a template with nothing.
 - **Conditions:** `{"field", "op", ...}` with `op` one of `eq`, `ne`, `in`, `not_in` (against `value`, or `param`), `exists`, `within_minutes` (the time at `field` is at most `value` minutes from now, and not past), `nearest_in` (the number at `field` is the element of the list at `list` nearest to `param`, on a tie the larger).
 - **Templates** put values into text with `{<path>}` or `{param.<key>}`, with an optional formatter: `|time` (hours and minutes in the event's time zone), `|date`, `|signed` (+15, −5). Templates are English and are filled in by Notify, so payload rules still hold (Web Push): no text travels through the push service.
 - A registration is checked on write: an unknown `op`, formatter, channel or part, a trigger whose part the type lacks, or a template longer than the notification fields allow is 400 `invalid_request`. Notify does not check event names or paths against other contracts; the owner's contract and its review do.
