@@ -212,7 +212,10 @@ components:
         maxLength: 200
   responses:
     BadRequest:
-      description: "`invalid_request`, `origin_not_allowed`, `unknown_zone`, `unknown_layout` or `code_invalid`."
+      description: |
+        `invalid_request`, `origin_not_allowed`, `unknown_zone`, `unknown_layout`, `code_invalid` or
+        `media_unsupported` (a video or audio file in a container or codec the screens do not play; the message
+        names what was found and what to export instead).
       content:
         application/json:
           schema:
@@ -248,6 +251,14 @@ components:
         `version_conflict`, `device_moved` (the device serves another event, or none), `no_venue`, `zone_exists`,
         `zone_in_use`, `asset_in_use`, `photo_exists`, `nothing_to_revert`, `render_not_finished`, `render_finished`,
         `already_cloned` or `event_archived`.
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    TooLarge:
+      description: |
+        `file_too_large`: over the size limit of contracts/screen.md; `storage_quota_exceeded`: the file would
+        pass the event's storage quota (contracts/tenants.md, Storage quota).
       content:
         application/json:
           schema:

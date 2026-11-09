@@ -185,3 +185,99 @@
       "409":
         $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
         description: "`provider_disabled`: the provider is not in `CANCCU_SIGN_IN_PROVIDERS`."
+/internal/tenants/storage/reserve:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/TenantQuery"
+  post:
+    tags: [internal, storage]
+    operationId: reserveStorage
+    summary: Reserve bytes of the event's storage quota before writing a file
+    description: |
+      A module calls it before it writes a file to the event's part of the files volume (contracts/tenants.md,
+      Storage quota). Adds `bytes` to the module's count in one step with the check, so two uploads at once
+      never both pass the quota. Over the quota is 413 `storage_quota_exceeded`, which the module passes on to
+      its client; an archived event is 409 `event_archived`. A module that then fails to write the file
+      releases the bytes again. Internal network only.
+    security:
+      - {}
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/StorageChange"
+    responses:
+      "200":
+        description: Reserved; the event's usage after it.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/StorageUsage"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../tenants.openapi.yaml#/components/responses/Conflict"
+      "413":
+        $ref: "../tenants.openapi.yaml#/components/responses/QuotaExceeded"
+/internal/tenants/storage/release:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/TenantQuery"
+  post:
+    tags: [internal, storage]
+    operationId: releaseStorage
+    summary: Give back bytes when a file is deleted, or was never written
+    description: |
+      Subtracts `bytes` from the module's count, never below 0. In every status of the event, also
+      `archived`, since retention deletes files there. Internal network only.
+    security:
+      - {}
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/StorageChange"
+    responses:
+      "200":
+        description: Released; the event's usage after it.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/StorageUsage"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/internal/tenants/storage/modules/{module}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/TenantQuery"
+    - $ref: "../tenants.openapi.yaml#/components/parameters/StorageModule"
+  put:
+    tags: [internal, storage]
+    operationId: setStorageCount
+    summary: Set a module's count to what its files take
+    description: |
+      The repair for a count that drifted, for example after a crash between a reserve and its release: the
+      module counts its own files of the event and sets its count to that, whatever the quota. In every status
+      of the event. Internal network only.
+    security:
+      - {}
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../tenants.openapi.yaml#/components/schemas/StorageSet"
+    responses:
+      "200":
+        description: Set; the event's usage after it.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/StorageUsage"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"

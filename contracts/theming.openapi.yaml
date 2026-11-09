@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Theming API
-  version: 1.1.0
+  version: 1.2.0
   summary: One event's theme, its draft, preview, publish and rollback, git sync, clone and the served theme files.
   description: |
     Machine-readable part of the theming contract. Prose, stable classes, package rules, upload safety, CSP and
@@ -678,6 +678,8 @@ paths:
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/TooLarge"
         "502":
           $ref: "common.openapi.yaml#/components/responses/BadGateway"
           description: "`sync_failed`: the repo could not be fetched; the message says why."
@@ -884,7 +886,9 @@ components:
           schema:
             $ref: "common.openapi.yaml#/components/schemas/Error"
     TooLarge:
-      description: "`too_large`: over a size limit of the package rules."
+      description: |
+        `too_large`: over a size limit of the package rules; `storage_quota_exceeded`: the package's files would
+        pass the event's storage quota (contracts/tenants.md, Storage quota).
       content:
         application/json:
           schema:
