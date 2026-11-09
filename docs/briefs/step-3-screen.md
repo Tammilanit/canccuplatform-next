@@ -1,6 +1,6 @@
 # Step 3 brief: Screen core and Pulse (research pack)
 
-The research pack for the product owner's brainstorming session on [roadmap step 3](../roadmap.md#3-screen-core-incl-pptx), issue #106. It follows the [brief outline](README.md#outline-of-a-brief) and the lead's comment on #106 of 2026-11-08: mockups of every key screen and flow, a full question bank instead of at most 7 questions, and the step's issues treated as input, not a fixed scope. After this merges, the lead runs the session over as many rounds as it takes, writes the final plan into this brief (After the round) and rewrites the step's issues; the product owner accepts the plan before any build starts.
+The research pack for the product owner's brainstorming session on [roadmap step 3](../roadmap.md#3-screen-core-incl-pptx), issue #106. It follows the [brief outline](README.md#outline-of-a-brief) and the lead's comment on #106 of 2026-11-08: mockups of every key screen and flow, a full question bank instead of at most 7 questions, and the step's issues treated as input, not a fixed scope. After this merges, the lead runs the session over as many rounds as it takes, writes the final plan into this brief ([Plan](#plan-final-plan-after-the-session)) and rewrites the step's issues; the product owner accepts the plan before any build starts.
 
 **In this pack**
 - This file: goal, what was read, how others solve it, three directions and the recommended one, the key flows, port / drop / invent, the lead's step 2 notes, proposed issue changes.
@@ -291,5 +291,151 @@ Proposed additions to the exit criteria: a new event's first useful screen in fi
 ## Open questions
 All of them are in the [question bank](step-3-screen/questions.md). Decide first: **L1** (the direction), **U1** (who runs the screens), **U6** (zone preview), **L2** (the empty hero), **D6** and **D18** (how much of Notify, and the check-in page), **P1–P3** (the shape of the step's issues), **O3** (the soak test).
 
-## After the round
-To be written by the lead after the brainstorming session: what the product owner decided, question by question, and anything still open.
+## Plan: final plan (after the session)
+The outcome of the brainstorming session with the product owner on 2026-11-08, four rounds, with this pack as its agenda. The product owner accepted this plan on the same day. It bounds the step's build: each issue's Room to design is measured against it ([0026](../decisions/0026-briefs-are-research-packs.md)), not against the pack's recommendations above. The research above stays as it was written.
+
+### What the session changed
+Every question in the [bank](step-3-screen/questions.md) took its recommendation, except for these changes and additions:
+- **A seventh design principle:** check-in is never mandatory (below, and [0027](../decisions/0027-product-decisions-2026-11-07-08.md)).
+- **L9, resolutions:** 1920×1080 is the primary target and 3840×2160 proves the future; **nothing below 1080p** is assumed, so 1280×720 is dropped. CI screenshots at 1080p and 4K, landscape and portrait, for the default theme; 1080p for the other themes.
+- **New requirement: live schedule editing must be easy, agile and logical.** New things come up during an event and must land in the run-of-show at once (the agenda issue, #187).
+- **O6** was explained, not changed: in step 3 the superadmin moves screens to the next event by hand; an automatic move when an event ends may come later.
+
+No mockup changed in the session; the pack's 17 mockups stand.
+
+### Direction
+The pack's recommendation, unchanged (L1). **Pulse is the body:** the room's living dashboard, composed from what the platform knows: the run-of-show, the venue, the theme, and later games, food and the tournament.
+- **The peaks** borrow Channel's broadcast grammar: lower thirds, stingers and takeovers as claim templates.
+- **The hero** keeps Billboard's proven engine inside it: the legacy scheduler and playlists.
+- **Target:** a new event's first useful screen in five minutes, with nothing uploaded but a logo.
+
+### Design principles
+1. **Never blank:** every state has a designed frame (idle, not assigned, offline, refused, archived).
+2. **Readable from 20 m:** big type, few things per region, contrast and size checked in CI.
+3. **Fed, not authored:** widgets fill themselves; hand-made content fills the gaps.
+4. **Live from a phone:** what is done on the floor takes one tap.
+5. **Fail visible, fail graceful:** an outage shows a small mark, never a black screen; Studio says what to check.
+6. **Show before it goes live:** previews of themes, zones and "what plays at…".
+7. **Check-in is never mandatory:** someone who does not check in on arrival loses nothing public; checking in unlocks the extras.
+
+### Decisions, one line each
+**Who uses it and how**
+- U1: organisers run the day from phones; a screen person is possible but not required.
+- U2: venue screens stay paired across events, with a "screen crew" rights preset.
+- U3: pairing uses a code plus a QR.
+- U4: one hub QR per screen, plus check-in where a zone wants it.
+- U5: Studio opens on Live during an event, on Zones before it.
+- U6: zone changes get a true preview (an additive contract path) and a 10-minute undo.
+- U7: the Live page shows every zone at once.
+- U8: the ticker is set from Studio and the crew remote in step 3; the bot follows in step 6.
+- U9: live agenda edits get a 2-minute undo, which says people get notified again.
+- U10: no backstage screen yet.
+- U11: each event has a language: English first, Finnish in step 10.
+
+**Live schedule editing (new in the session)**
+- Quick-add from a phone in a few taps: title; when ("now", "in 30 min", or a time); where; everything else defaulted.
+- Move, delay and cancel, with previews of what moves and who is told.
+- An optional "show on screens now", with an announcement in the same step.
+- Templates for recurring kinds (food, ceremony, game session).
+
+**Look and feel**
+- L2: an empty hero shows the next item with a big countdown (idle `next`).
+- L3: motion per theme: moderate by default, calm in quiet hours, always reduced-motion aware.
+- L4: the demo themes are starting points.
+- L5: the organiser picks dark or light; dark by default.
+- L6: the platform's mark appears only on the device-state screens.
+- L7: readability is checked in CI, with a warning on publish.
+- L8: portrait from the start.
+- L9: **1080p is the primary target and 4K proves the future; nothing below 1080p** (changed in the session).
+- L10: the theme sets the safe inset.
+- L11: optional burn-in drift.
+- L12: video sound only on the zone's sound device.
+- L13: the ticker is a calm fading line.
+
+**Data and integrations**
+- D1: pairing sets the device's event (amends 0013, #183).
+- D2: moved devices follow by a transfer code.
+- D3: push uses SSE.
+- D4: windows are weekly or bound to run-of-show items.
+- D5: kinds don't switch layouts yet.
+- D6: a minimal, optional check-in page ships in step 3.
+- D7: crew alerts come in step 8.
+- D8: video is MP4 and WebM only.
+- D9, D10: decks are PDF as well as PPTX, with font warnings.
+- D11: the photo carousel has upload.
+- D12: the `checkin_qr` widget reads Notify's code on the internal network's guard until the module identity lands; `now_playing` stays `empty` until the bot.
+- D13: web and YouTube assets sit behind a flag and an allowlist.
+- D14, D15: clone with an event and theme git sync come later.
+- D16: custom embeds ship in step 3.
+- D17: the tournament mirror runs on fixtures.
+- D18: the whole Notify backend ships in step 3, tested with a fake push service.
+
+**Edge cases and failure**
+- E1: a kiosk setup guide and a check page.
+- E2: "the venue uplink may be down" detection.
+- E3: a clock-drift flag.
+- E4: a refused-screen guide; the event admin's audited emergency switch or the superadmin's address update, never a learned address.
+- E5: theme restore, plus a required preview for CSS changes.
+- E6: a failing playlist item is skipped.
+- E7: concurrent edits show who, and merge when they don't overlap.
+- E8: archived screens stop.
+- E9: emergency takeovers by the event admin, or by the superadmin venue-wide.
+- E10: a copied-cookie flag.
+- E11: a cold boot offline shows the last state.
+- E12: daylight-saving tests.
+- E13: with nothing to show, the logo or the event name.
+
+**Operations and scale**
+- O1: a CI load script with 100 screens.
+- O2: push latency p95 under 1 s, measured.
+- O3: a 24-hour soak, accelerated in CI and real on the test VM.
+- O4: device thumbnails.
+- O5: "freeze for the event".
+- O6: manual device moves by the superadmin.
+- O7: 2 GB per event.
+- O8: a fair render queue.
+- O9: safe deploys.
+
+**Plan and scope**
+- P1: one issue per new module.
+- P2: Studio is split into essentials and planning.
+- P3: the render job is its own issue.
+- P4: the event pages sit under one "Event" menu.
+- P5: claim placement is built in step 3; Moments ranks claims in step 4.
+- P6: CI screenshots.
+
+### The final issue set
+The pack's [proposed issue changes](#proposed-issue-changes) as the session settled them:
+
+| Issue | Status |
+|---|---|
+| [#182](https://github.com/Tammilanit/canccuplatform-next/issues/182) docs(contracts): step 3 additions to the screen contract | new |
+| [#183](https://github.com/Tammilanit/canccuplatform-next/issues/183) docs(decisions): pairing sets a new device's event | new |
+| [#185](https://github.com/Tammilanit/canccuplatform-next/issues/185) feat(theming): the theming module and the brand kit | new |
+| [#187](https://github.com/Tammilanit/canccuplatform-next/issues/187) feat(agenda): the run-of-show module with easy live editing | new, with the live-editing requirement |
+| [#107](https://github.com/Tammilanit/canccuplatform-next/issues/107) feat(screen): devices, zones and assignments | kept, rewritten |
+| [#188](https://github.com/Tammilanit/canccuplatform-next/issues/188) feat(notify): the notify backend and the optional check-in page | new |
+| [#108](https://github.com/Tammilanit/canccuplatform-next/issues/108) feat(screen): the content engine: scheduler, playlists, assets, photos and the ticker | kept, rewritten; render job moved out |
+| [#184](https://github.com/Tammilanit/canccuplatform-next/issues/184) feat(screen): the render-job container for PPTX and PDF | new |
+| [#186](https://github.com/Tammilanit/canccuplatform-next/issues/186) feat(theming): custom embeds in the same-host sandbox | new |
+| [#109](https://github.com/Tammilanit/canccuplatform-next/issues/109) feat(screen): the Pulse player with push updates | kept, rewritten |
+| [#189](https://github.com/Tammilanit/canccuplatform-next/issues/189) feat(screen): Studio essentials: Live, devices, zones and the ticker | new, from #110 |
+| [#190](https://github.com/Tammilanit/canccuplatform-next/issues/190) feat(screen): Studio planning: schedule, content and freeze | new, from #110 |
+| [#191](https://github.com/Tammilanit/canccuplatform-next/issues/191) ci(screen): theming and screen screenshots and the readability check | new |
+| [#110](https://github.com/Tammilanit/canccuplatform-next/issues/110) feat(screen): Screen studio in admin | split into #189 and #190 |
+
+### Package order (a sketch for the planner)
+1. The contract additions (#182) and the 0013 amendment (#183).
+2. In parallel: the theming module (#185); the agenda module (#187); devices (#107); the notify module (#188).
+3. The content engine (#108) and the render job (#184); theming embeds (#186).
+4. The Pulse player (#109).
+5. Studio essentials (#189) and Studio planning (#190); the CI screenshots and readability check (#191).
+6. The exit: the real 24-hour soak, then the health pass and the checkpoint.
+
+### Exit criteria: what the product owner sees at the checkpoint
+- A **1080p and a 4K screen**, landscape and portrait, paired by code or QR, show a **themed Pulse** fed by the run-of-show, with no blank frame in any device state.
+- A **new event's first useful screen in five minutes**: brand kit, a few run-of-show items and one paired screen, with nothing else uploaded.
+- **Live from a phone:** quick-add an item, delay "dinner" by 15 minutes and everything after it, and every screen shows it in **under 1 second (p95 measured)**. Undo works.
+- **Studio essentials:** the Live multi-view, devices with health and thumbnails, zones with preview, the ticker. **Studio planning:** the schedule with "what plays at…", content with PPTX and PDF rendering, and "freeze for the event".
+- **Check-in is optional:** the QR check-in works end to end, and nothing public needs it.
+- The CI load test (100 screens) and the 24-hour soak (accelerated in CI, plus one real run) pass.
