@@ -78,8 +78,10 @@
 		reverse_proxy notify:8080
 	}
 
-	# Notify's pages (the check-in page a scanned QR opens): prefix stripped like admin's.
-	handle_path /notify/* {
+	# Notify's one page so far, the check-in page a scanned QR opens. Only that path: a prefix
+	# rule would carry /notify/internal/... to notify's internal paths (contracts/README.md).
+	handle /notify/check-in {
+		uri strip_prefix /notify
 		reverse_proxy notify:8080
 	}
 

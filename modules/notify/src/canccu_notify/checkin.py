@@ -15,15 +15,23 @@ from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlencode
 
-from canccu_kit import KitError, MissingRight, is_tenant_id, tenant_scope
+from canccu_kit import (
+    KitError,
+    MissingRight,
+    check_admin_access,
+    is_tenant_id,
+    tailscale_cidrs,
+    tenant_scope,
+)
 from canccu_kit.access import TenantContext
 from canccu_kit.rights import Session
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from .access import is_member, tenant_ctx, tenant_of
+from .access import client_ip, is_member, tenant_ctx, tenant_of
 from .deps import Deps, deps
+from .engine import iso_time
 from .registry import bad, body_of
 
 DISPLAY = "notify.checkin.display"
@@ -42,6 +50,18 @@ class CodeInvalid(KitError):
 class CodeExpired(KitError):
     status = 400
     code = "code_expired"
+
+
+class EventArchived(KitError):
+    status = 409
+    code = "event_archived"
+
+
+def writable(ctx: TenantContext) -> None:
+    """contracts/tenants.md, Lifecycle: an archived event is read-only. A check-in or a new key
+    there would add presence data after its retention clock has started."""
+    if ctx["status"] == "archived":
+        raise EventArchived("the event has ended and takes no check-ins")
 
 
 class NotAMember(KitError):
@@ -111,15 +131,12 @@ async def event_key(d: Deps, tenant_id: str, *, create: bool) -> bytes | None:
     return None if sealed is None else d.secrets.open(sealed, _aad(tenant_id))
 
 
-def _time(value: datetime) -> str:
-    return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
-
-
 def _at(seconds: int) -> str:
-    return _time(datetime.fromtimestamp(seconds, UTC))
+    return iso_time(datetime.fromtimestamp(seconds, UTC))
 
 
 async def code_now(d: Deps, ctx: TenantContext, purpose: str) -> dict[str, Any]:
+    writable(ctx)
     tenant_id = ctx["tenant_id"]
     length, period = await period_now(d)
     key = await event_key(d, tenant_id, create=True)
@@ -142,14 +159,16 @@ def view(row: Any) -> dict[str, Any]:
     return {
         "id": row["id"],
         "purpose": row["purpose"],
-        "checked_in_at": _time(row["checked_in_at"]),
+        "checked_in_at": iso_time(row["checked_in_at"]),
     }
 
 
 async def record(
     d: Deps, ctx: TenantContext, session: Session, purpose: str, code: str
 ) -> tuple[dict[str, Any], bool]:
-    """(the check-in, whether this call made it). Raises NotAMember, CodeInvalid, CodeExpired."""
+    """(the check-in, whether this call made it). Raises EventArchived, NotAMember, CodeInvalid,
+    CodeExpired."""
+    writable(ctx)
     if not is_member(session):
         raise NotAMember("only members of the event can check in")
     tenant_id = ctx["tenant_id"]
@@ -201,6 +220,9 @@ async def get_code(request: Request) -> Response:
     session = await d.rights.session(request.headers.get("cookie"))
     if not session.has(DISPLAY):
         raise MissingRight(f"needs right {DISPLAY}")
+    # A code fetched from home would let people check in remotely: the event's admin-access
+    # rule (contracts/tenants.md, Access) keeps the right to the venue or Tailscale.
+    check_admin_access(ctx, client_ip(request), tailscale_cidrs())
     return JSONResponse(await code_now(d, ctx, _purpose_param(request)))
 
 

@@ -7,7 +7,7 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -38,6 +38,11 @@ def parse_time(value: Any) -> datetime | None:
     except ValueError:
         return None
     return parsed if parsed.tzinfo is not None else None
+
+
+def iso_time(value: datetime) -> str:
+    """The API's time format: UTC with a `Z`."""
+    return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _number(value: Any) -> float | None:

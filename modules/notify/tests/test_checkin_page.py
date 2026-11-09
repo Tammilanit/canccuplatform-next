@@ -33,7 +33,7 @@ async def test_signed_out_it_offers_sign_in_and_comes_back(env: Env) -> None:
     assert r.status_code == 200
     back = quote(f"/notify/check-in?{query}", safe="")
     assert f'href="/admin/sign-in?next={back}"' in r.text
-    assert "optional" in r.text and recorded(env) == []
+    assert "optional" in r.text and "scan the screen again" in r.text and recorded(env) == []
     csp = r.headers["content-security-policy"]
     assert "frame-ancestors 'none'" in csp and "script-src 'self'" in csp
     assert r.headers["cache-control"] == "no-store"
@@ -76,8 +76,16 @@ async def test_a_signed_out_submit_and_a_non_member_are_told_what_to_do(
     assert signed_out.status_code == 401 and "/admin/sign-in?next=" in signed_out.text
     monkeypatch.setattr(checkin, "is_member", lambda session: False)
     outsider = await submit(env, form, "u_a")
-    assert outsider.status_code == 403 and 'href="/notify/join"' in outsider.text
+    assert outsider.status_code == 403 and "join link" in outsider.text
+    assert "/notify/join" not in outsider.text  # the hub's join page does not exist yet
     assert recorded(env) == []
+
+
+async def test_an_archived_event_says_it_has_ended(env: Env) -> None:
+    form = {"p": "arrival", "c": (await code(env))["code"]}
+    env.contexts["ev-a"]["status"] = "archived"
+    r = await submit(env, form, "u_a")
+    assert r.status_code == 409 and "has ended" in r.text and recorded(env) == []
 
 
 async def test_a_cross_site_submit_is_refused(env: Env) -> None:

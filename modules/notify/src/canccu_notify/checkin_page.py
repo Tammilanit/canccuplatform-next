@@ -20,7 +20,15 @@ from starlette.responses import HTMLResponse, Response
 from starlette.routing import Route
 
 from .access import session_of, tenant_ctx, tenant_of
-from .checkin import CodeExpired, CodeInvalid, NotAMember, record, valid_code, valid_purpose
+from .checkin import (
+    CodeExpired,
+    CodeInvalid,
+    EventArchived,
+    NotAMember,
+    record,
+    valid_code,
+    valid_purpose,
+)
 from .deps import deps
 
 PATH = "/notify/check-in"  # as the browser sees it
@@ -65,7 +73,8 @@ def _sign_in(request: Request, purpose: str, code: str, status: int = 200) -> HT
     return _page(
         request,
         "Sign in to check in",
-        f"<p>Sign in once on this phone; you come back here to check in.</p>"
+        "<p>Sign in once on this phone; you come back here to check in. If the code has expired"
+        " by then, scan the screen again.</p>"
         f'<p><a class=canccu-button href="{href}">Sign in</a></p>',
         status,
     )
@@ -114,15 +123,15 @@ async def submit(request: Request) -> Response:
         return _page(request, "Code expired", f"<p>This code has expired. {SCAN_AGAIN}</p>", 400)
     except CodeInvalid:
         return _invalid(request)
+    except EventArchived:
+        return _page(request, "Event ended", "<p>This event has ended.</p>", 409)
     except NotAMember:
+        # No link: the hub's join page (App track) does not exist yet.
         return _page(
             request,
             "Not a member yet",
-            # At the door the phone is on the venue's network, where joining needs no code
-            # (contracts/tenants.md, Joining the event); the hub's join page does it.
-            "<p>Only members of this event can check in.</p>"
-            '<p><a class=canccu-button href="/notify/join">Join the event</a></p>'
-            "<p>Then scan the screen again.</p>",
+            "<p>Only members of this event can check in. Join the event with its join link"
+            " from the organisers, then scan the screen again.</p>",
             403,
         )
     if created:

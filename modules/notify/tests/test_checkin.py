@@ -200,3 +200,41 @@ async def test_mine_lists_only_the_callers_check_ins_at_this_event(env: Env) -> 
     assert mine["purpose"] == "arrival" and set(mine) == {"id", "purpose", "checked_in_at"}
     assert [e["data"]["user_id"] for e in recorded(env)] == ["u_a", "u_b"]
     assert [e["data"]["user_id"] for e in recorded(env, "ev-b")] == ["u_a"]
+
+
+async def test_the_code_follows_the_events_admin_access_rule(env: Env) -> None:
+    """contracts/tenants.md, Access: while `admin_access` is restricted, a request that needs a
+    right comes from the venue or Tailscale; the test client is neither."""
+    env.contexts["ev-a"]["admin_access"] = "restricted"
+    async with env.client() as c:
+        r = await c.get(
+            "/api/notify/check-in/code?purpose=arrival",
+            headers=env.rights.sign_in("u_door", DISPLAY),
+        )
+    assert r.status_code == 403 and r.json()["error"]["code"] == "admin_access_restricted"
+
+
+async def test_an_archived_event_takes_no_check_ins_and_makes_no_key(env: Env) -> None:
+    """contracts/tenants.md, Lifecycle: archived is read-only, every write is 409."""
+    shown = (await code(env))["code"]
+    env.contexts["ev-a"]["status"] = "archived"
+    env.contexts["ev-b"]["status"] = "archived"
+    r = await check_in(env, "u_a", {"purpose": "arrival", "code": shown})
+    assert r.status_code == 409 and r.json()["error"]["code"] == "event_archived"
+    async with env.client("b.example.test") as c:
+        public = await c.get(
+            "/api/notify/check-in/code?purpose=arrival",
+            headers=env.rights.sign_in("u_door", DISPLAY),
+        )
+    screen = ServiceIdentity("screen", KEY)
+    async with env.internal() as c:
+        internal = await c.get(
+            "/internal/notify/check-in/code",
+            params={"tenant_id": "ev-b", "purpose": "arrival"},
+            headers=screen.headers("notify"),
+        )
+    for refused in (public, internal):
+        assert refused.status_code == 409 and refused.json()["error"]["code"] == "event_archived"
+    async with env.db.tenant("ev-b") as conn:
+        assert await conn.fetchval("SELECT count(*) FROM notify_check_in_keys") == 0
+    assert recorded(env) == []
