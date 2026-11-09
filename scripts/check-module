@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+# The generic module check (#213): CI runs every module that has checks through this one
+# script, so a new module needs no `.github/` change. See docs/ci.md#modules.
+# Usage: check-module --list [ROOT]           JSON array of the modules under ROOT/modules with checks
+#        check-module [--dry-run] MODULE [ROOT]  run the checks of ROOT/modules/MODULE
+#        check-module --self-test
+set -uo pipefail
+
+if [ "${1:-}" = "--self-test" ]; then
+  self=$(cd "$(dirname "$0")" && pwd)/check-module
+  t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
+  fail=0
+  check() { # name, expected exit, expected output (exact), args...
+    local name=$1 want_rc=$2 want_out=$3; shift 3
+    out=$("$self" "$@" 2>&1); rc=$?
+    if [ "$rc" = "$want_rc" ] && [ "$out" = "$want_out" ]; then echo "ok   $name"
+    else echo "FAIL $name (exit $rc, want $want_rc)"; printf '  got:  %s\n' "$out"; printf '  want: %s\n' "$want_out"; fail=1; fi
+  }
+  mkdir -p "$t/modules/"{ts,py,both,own,empty,lib} "$t/packages/kit-ts" "$t/packages/ui"
+  echo '{}' > "$t/packages/kit-ts/package.json"; echo '{}' > "$t/packages/ui/package.json"
+  echo '{"dependencies": {"@canccu/kit": "file:../../packages/kit-ts", "@canccu/ui": "file:../../packages/ui"}}' > "$t/modules/ts/package.json"
+  echo '{"dependencies": {}}' > "$t/modules/lib/package.json"
+  echo '[project]' > "$t/modules/py/pyproject.toml"
+  echo '{}' > "$t/modules/both/package.json"; echo '[project]' > "$t/modules/both/pyproject.toml"
+  # A module whose checks cannot run on the bare runner brings its own `check`; it wins.
+  echo '[project]' > "$t/modules/own/pyproject.toml"
+  # shellcheck disable=SC2016  # expands in the written script, not here
+  printf '#!/usr/bin/env bash\necho "own check in $(basename "$PWD")"; exit "${OWN_RC:-0}"\n' > "$t/modules/own/check"
+  chmod +x "$t/modules/own/check"
+
+  check "list names the modules with checks, sorted" 0 '["both","lib","own","py","ts"]' --list "$t"
+  check "list of a repo without modules is empty" 0 '[]' --list "$t/packages"
+  check "node module builds the local packages it uses first" 0 "\
++ (packages/kit-ts) npm ci
++ (packages/ui) npm ci
++ (modules/ts) npm ci
++ (modules/ts) npm run lint
++ (modules/ts) npm run typecheck
++ (modules/ts) npm test" --dry-run ts "$t"
+  check "node module without local packages" 0 "\
++ (modules/lib) npm ci
++ (modules/lib) npm run lint
++ (modules/lib) npm run typecheck
++ (modules/lib) npm test" --dry-run lib "$t"
+  check "python module" 0 "\
++ (modules/py) python3 -m pip install -e '.[dev]'
++ (modules/py) ruff check .
++ (modules/py) ruff format --check .
++ (modules/py) mypy .
++ (modules/py) pytest" --dry-run py "$t"
+  check "a module with both runs both" 0 "\
++ (modules/both) npm ci
++ (modules/both) npm run lint
++ (modules/both) npm run typecheck
++ (modules/both) npm test
++ (modules/both) python3 -m pip install -e '.[dev]'
++ (modules/both) ruff check .
++ (modules/both) ruff format --check .
++ (modules/both) mypy .
++ (modules/both) pytest" --dry-run both "$t"
+  check "own check replaces the defaults" 0 "+ (modules/own) ./check" --dry-run own "$t"
+  check "own check runs in the module" 0 "\
++ (modules/own) ./check
+own check in own" own "$t"
+  OWN_RC=3 check "a failing check fails with 1" 1 "\
++ (modules/own) ./check
+own check in own
+check-module: own failed: ./check" own "$t"
+  check "a module without checks is an error" 2 "check-module: modules/empty has no checks (no check script, package.json or pyproject.toml)" empty "$t"
+  check "an unknown module is an error" 2 "check-module: no module modules/nope" nope "$t"
+  check "a path is not a module name" 2 "check-module: not a module name: ../packages" ../packages "$t"
+  check "no arguments is a usage error" 2 "usage: check-module --list [ROOT] | [--dry-run] MODULE [ROOT] | --self-test"
+  exit "$fail"
+fi
+
+usage="usage: check-module --list [ROOT] | [--dry-run] MODULE [ROOT] | --self-test"
+
+has_checks() { [ -x "$1/check" ] || [ -f "$1/package.json" ] || [ -f "$1/pyproject.toml" ]; }
+
+if [ "${1:-}" = "--list" ]; then
+  root="${2:-$(git rev-parse --show-toplevel)}"
+  names=()
+  for d in "$root"/modules/*/; do
+    [ -d "$d" ] && has_checks "$d" && names+=("$(basename "$d")")
+  done
+  # The CI matrix reads this line as JSON; module names are [a-z0-9-], so no escaping is needed.
+  printf '['; sep=""
+  for n in $(printf '%s\n' "${names[@]}" | LC_ALL=C sort); do printf '%s"%s"' "$sep" "$n"; sep=","; done
+  printf ']\n'
+  exit 0
+fi
+
+dry=0
+if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
+[ $# -ge 1 ] || { echo "$usage"; exit 2; }
+module=$1
+root="${2:-$(git rev-parse --show-toplevel)}"
+# The name comes from the CI matrix and becomes a path: refuse anything but a plain name.
+[[ "$module" =~ ^[a-z][a-z0-9-]*$ ]] || { echo "check-module: not a module name: $module"; exit 2; }
+dir="modules/$module"
+[ -d "$root/$dir" ] || { echo "check-module: no module $dir"; exit 2; }
+has_checks "$root/$dir" || { echo "check-module: $dir has no checks (no check script, package.json or pyproject.toml)"; exit 2; }
+
+steps=() # "<dir relative to root>|<command>", run in order, stopping at the first failure
+if [ -x "$root/$dir/check" ]; then
+  steps+=("$dir|./check")
+else
+  if [ -f "$root/$dir/package.json" ]; then
+    # A local package (file:../../packages/<name>) builds in its own `npm ci` (its prepare
+    # script); the module's `npm ci` copies it, so it must be built first.
+    while read -r pkg; do
+      [ -f "$root/$pkg/package.json" ] && steps+=("$pkg|npm ci")
+    done < <(grep -o 'file:\.\./\.\./packages/[a-z0-9-]*' "$root/$dir/package.json" | sed 's|^file:\.\./\.\./||' | sort -u)
+    steps+=("$dir|npm ci" "$dir|npm run lint" "$dir|npm run typecheck" "$dir|npm test")
+  fi
+  if [ -f "$root/$dir/pyproject.toml" ]; then
+    steps+=("$dir|python3 -m pip install -e '.[dev]'" "$dir|ruff check ." "$dir|ruff format --check ." "$dir|mypy ." "$dir|pytest")
+  fi
+fi
+
+for step in "${steps[@]}"; do
+  where=${step%%|*}; cmd=${step#*|}
+  echo "+ ($where) $cmd"
+  [ "$dry" = 1 ] && continue
+  if ! (cd "$root/$where" && bash -c "$cmd"); then
+    echo "check-module: $module failed: $cmd"
+    exit 1
+  fi
+done

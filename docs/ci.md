@@ -9,7 +9,8 @@
 | `lint-types-test (kit-py)` | In `packages/kit-py`: `pip install -e ".[dev]"`, `ruff check .`, `mypy .` (strict), `pytest`. The `dev` extra pins these tools. |
 | `lint-types-test (ui)` | In `packages/ui`: `npm ci`, `npm run lint` (eslint + prettier), `npm run typecheck`, `npm test` (vitest). After it first runs on main, a maintainer adds it to the required checks. |
 | `integration (kit)` | Starts Valkey and Postgres from the Compose stack (`deploy/compose.yml` + `deploy/compose.test.yml`) and runs the kit-ts and kit-py integration tests against them: the bus and tenant streams on Valkey, and row-level security on Postgres (as a plain app role, because a superuser bypasses RLS). |
-| `compose (deploy)` | Runs the `modules/hello` and `modules/admin` checks, starts the whole stack with `docker compose -f deploy/compose.yml up --build --wait`, and checks that only Caddy publishes a port, that only the four named volumes exist (the three for data, and `deploy-status`, which only the host's auto-deploy writes), that hello and admin health through Caddy are `ok`, that health is `503 down` when Valkey stops, and that hello refuses to start without a kit variable. |
+| `modules` | Passes when every module job passed. One `module (<name>)` job runs per `modules/<name>` that has checks: lint, types and unit tests, plus its Postgres and Valkey tests against the Compose services, through `scripts/check-module`. A new module needs no `.github/` change. See [modules](#modules). After it first runs on main, a maintainer adds `modules` to the required checks. |
+| `compose (deploy)` | Starts the whole stack with `docker compose -f deploy/compose.yml up --build --wait`, and checks that only Caddy publishes a port, that only the four named volumes exist (the three for data, and `deploy-status`, which only the host's auto-deploy writes), that hello and admin health through Caddy are `ok`, that health is `503 down` when Valkey stops, and that hello refuses to start without a kit variable. |
 | `demo-stack` | From `.github/workflows/demo-stack.yml`: starts the whole stack with the demo event (`deploy/compose.yml` + `deploy/compose.ci.yml`, `up --build --wait`), runs the API tests (`scripts/demo-stack-test`) and screenshots the admin pages (`scripts/demo-screenshots`), uploaded as the artifact `demo-screenshots`. See [demo-stack](#demo-stack). |
 | `no-event-names` | Fails if the lines a PR adds contain a forbidden term. |
 | `review-gate` | From `.github/workflows/review-gate.yml`: passes only on an independent review's `Review verdict: pass <head sha>` for the PR's current head (see below). |
@@ -20,6 +21,17 @@
 | `file-size` | `scripts/check-file-size`: warns, and never fails, on tracked source files over 400 lines (the file-size rule, AGENTS.md) and OpenAPI contracts over 1,500. Not a required check. |
 
 Do not rename these jobs; renaming breaks the required checks.
+
+## modules
+- **The runner:** `scripts/check-module [--dry-run] <module> [ROOT]` runs the checks of `modules/<module>` and stops at the first one that fails (exit 1; exit 2 on wrong usage, an unknown module or a module without checks). `scripts/check-module --list` prints the modules that have checks as a JSON array, which the `modules (list)` job hands to the matrix. Self-test: `scripts/check-module --self-test`.
+- **What runs** is chosen from the module's files, so a new module gets its checks by following the convention:
+  - an executable `check` file in the module: that alone, from the module folder. For checks the plain runner cannot run, for example inside the module's own image.
+  - otherwise, with a `package.json`: `npm ci` in each local package it uses (`file:../../packages/<name>`, built by its `prepare` script), then `npm ci`, `npm run lint`, `npm run typecheck` and `npm test`.
+  - with a `pyproject.toml`: `pip install -e ".[dev]"`, `ruff check .`, `ruff format --check .`, `mypy .` and `pytest`. A module with both files runs both sets.
+  - A module folder with none of these (a placeholder) has no checks and gets no job.
+- **Postgres and Valkey:** each `module (<name>)` job starts its own Valkey and Postgres from the Compose stack (`deploy/compose.yml` + `deploy/compose.test.yml`) and sets `CANCCU_VALKEY_URL`, `CANCCU_DATABASE_URL` and `CANCCU_TEST_DATABASE_URL` (the same superuser database), so tests that skip without a database run in CI. Each job has its own database, so a module's tests may drop and recreate their tables.
+- **The required check** is `modules`, never the per-module names, which come and go with the modules. It runs even when a module job fails or is cancelled and then fails, because a skipped required check counts as passed. Do not rename `modules`.
+- **Locally:** start Postgres and Valkey as in `deploy/compose.test.yml`, export the three variables as the job does, and run `scripts/check-module <module>` (inside a Python virtual environment for a Python module).
 
 ## demo-stack
 - **Stack:** `docker compose -f deploy/compose.yml -f deploy/compose.ci.yml up -d --build --wait`. The CI overlay adds two things, and is never used for a real install:

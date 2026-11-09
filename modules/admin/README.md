@@ -18,4 +18,4 @@ The kit's `CANCCU_MODULE`, `CANCCU_VERSION`, `CANCCU_VALKEY_URL`, `CANCCU_ADMIN_
 ```sh
 pip install -e ".[dev]" && ruff check . && mypy . && pytest
 ```
-The tests use in-memory stores, a fake Discord, a fake tenants registry and round-trip `events/demo/`; `tests/test_tenancy.py` holds the cross-tenant leak tests of every settings and profile path. With `CANCCU_DATABASE_URL` set (`deploy/compose.test.yml`; CI's `integration (kit)` job) `tests/test_auth_store.py` also runs the sign-in store against Postgres, and `tests/test_store_pg.py` the settings store, its migration, row-level security and the leak test; without it those are skipped.
+The tests use in-memory stores, a fake Discord, a fake tenants registry and round-trip `events/demo/`; `tests/test_tenancy.py` holds the cross-tenant leak tests of every settings and profile path. With `CANCCU_DATABASE_URL` set (`deploy/compose.test.yml`; CI's `module (admin)` job) `tests/test_auth_store.py` also runs the sign-in store against Postgres, and `tests/test_store_pg.py` the settings store, its migration, row-level security and the leak test; without it those are skipped.
