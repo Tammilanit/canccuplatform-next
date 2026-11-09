@@ -1,9 +1,11 @@
 -- Web Push (#225, plan issue-188 F, G, H): subscriptions, one delivery row per recipient and
 -- channel, and the events that have deliveries waiting. Additive only.
 
--- The event's info-page mode as the tenants module last told a request, next to its time zone:
--- pushes to guests follow it (contracts/notify.md, Info-page mode) and the sender has no request.
+-- The event's info-page mode and status as the tenants module last told a request, next to its
+-- time zone: pushes to guests follow them (contracts/notify.md, Info-page mode; a draft event is
+-- closed to guests) and the sender has no request.
 ALTER TABLE notify_event_state ADD COLUMN IF NOT EXISTS info_page_mode text;
+ALTER TABLE notify_event_state ADD COLUMN IF NOT EXISTS status text;
 
 -- The endpoint is in clear, as the replace key; the browser's p256dh and auth keys, which let
 -- anyone push to the phone, are sealed with the kit's SecretBox (plan D4). The subscription token
@@ -26,7 +28,8 @@ CREATE INDEX IF NOT EXISTS notify_subscriptions_token
 
 -- Rows, not memory: containers keep no state and may run more than once (plan D7). `recipient` is
 -- `user:<id>`, or `sub:<id>` for a guest, the unit of the hourly cap. subscription_id is a plain
--- reference: a sent row still counts toward the cap after its subscription is gone.
+-- reference: a sent row still counts toward the cap after its subscription is gone. `sending` is
+-- claimed and being sent outside any transaction; done_at is then its lease (delivery.py).
 CREATE TABLE IF NOT EXISTS notify_deliveries (
   tenant_id text NOT NULL DEFAULT NULLIF(current_setting('canccu.tenant', true), ''),
   id bigserial NOT NULL,
@@ -35,7 +38,7 @@ CREATE TABLE IF NOT EXISTS notify_deliveries (
   channel text NOT NULL CHECK (channel IN ('push', 'discord_dm')),
   subscription_id text,
   status text NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'held', 'sent', 'capped', 'failed', 'skipped')),
+    CHECK (status IN ('pending', 'held', 'sending', 'sent', 'capped', 'failed', 'skipped')),
   created_at timestamptz NOT NULL,
   done_at timestamptz,
   PRIMARY KEY (tenant_id, id),
@@ -45,7 +48,7 @@ CREATE TABLE IF NOT EXISTS notify_deliveries (
 CREATE INDEX IF NOT EXISTS notify_deliveries_pending
   ON notify_deliveries (tenant_id, id) WHERE status = 'pending';
 CREATE INDEX IF NOT EXISTS notify_deliveries_cap
-  ON notify_deliveries (tenant_id, recipient, done_at) WHERE status = 'sent';
+  ON notify_deliveries (tenant_id, recipient, done_at) WHERE status IN ('sent', 'sending');
 
 -- The events with deliveries waiting, so the sender finds them without a tenant set: RLS hides
 -- notify_deliveries outside a tenant's context. A plain tenant reference and nothing else.

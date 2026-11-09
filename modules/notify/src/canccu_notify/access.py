@@ -24,24 +24,22 @@ def tenant_of(request: Request) -> TenantContext:
     return ctx
 
 
-SEEN: dict[str, tuple[str, str]] = {}
-"""Each event's time zone and info-page mode as this container last stored them, so a request
-writes only when one changed."""
-
-
 async def tenant_ctx(request: Request) -> TenantContext:
-    """The tenant of a request, and its time zone and info-page mode kept for the stream consumer
-    and the sender, which have no request."""
+    """The tenant of a request, and its time zone, info-page mode and status kept for the stream
+    consumer and the sender, which have no request. Compared with the stored row, not with what
+    this process wrote last: another container may have written since."""
     ctx = tenant_of(request)
-    tid, seen = ctx["tenant_id"], (ctx["time_zone"], ctx["info_page_mode"])
-    if SEEN.get(tid) != seen:
-        async with deps(request).db.tenant(tid) as conn:
-            await conn.execute(
-                "INSERT INTO notify_event_state (time_zone, info_page_mode) VALUES ($1, $2)"
-                " ON CONFLICT (tenant_id) DO UPDATE SET time_zone = $1, info_page_mode = $2",
-                *seen,
-            )
-        SEEN[tid] = seen
+    async with deps(request).db.tenant(ctx["tenant_id"]) as conn:
+        await conn.execute(
+            "INSERT INTO notify_event_state (time_zone, info_page_mode, status)"
+            " VALUES ($1, $2, $3) ON CONFLICT (tenant_id) DO UPDATE"
+            " SET time_zone = $1, info_page_mode = $2, status = $3"
+            " WHERE (notify_event_state.time_zone, notify_event_state.info_page_mode,"
+            " notify_event_state.status) IS DISTINCT FROM ($1, $2, $3)",
+            ctx["time_zone"],
+            ctx["info_page_mode"],
+            ctx["status"],
+        )
     return ctx
 
 

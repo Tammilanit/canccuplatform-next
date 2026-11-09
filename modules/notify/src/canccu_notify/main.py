@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 
 import httpx
@@ -73,6 +74,11 @@ async def serve() -> None:
         box = SecretBox.from_env()
     except ConfigError as exc:
         raise SystemExit(str(exc)) from exc
+    if vapid.subject is None:
+        logging.getLogger("canccu_notify.main").warning(
+            "CANCCU_PUBLIC_URL is not set: the VAPID token has no subject, and some push"
+            " services (Apple's) refuse pushes without one"
+        )
     # The stack logs in as a plain role and migrates as the migration role (0013 item 5).
     db = await Db.connect(
         os.environ["CANCCU_DATABASE_URL"],

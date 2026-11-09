@@ -48,6 +48,9 @@ async def test_bad_subscriptions_are_refused(env: Env) -> None:
     cases: list[Any] = [
         {"push": {**good, "endpoint": "http://push.example.test/x"}},
         {"push": {**good, "endpoint": "https://10.0.0.5/x"}},
+        {"push": {**good, "endpoint": "https://127.1/x"}},
+        {"push": {**good, "endpoint": "https://0x7f.0.0.1/x"}},
+        {"push": {**good, "endpoint": "https://2130706433./x"}},
         {"push": {**good, "endpoint": "https://tenants:443/x"}},
         {"push": {**good, "endpoint": "https://push.example.test:8080/x"}},
         {"push": {**good, "keys": {"p256dh": "AAAA", "auth": good["keys"]["auth"]}}},

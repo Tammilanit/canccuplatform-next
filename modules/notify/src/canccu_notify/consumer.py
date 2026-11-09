@@ -13,7 +13,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from canccu_kit import Event
 
 from . import delivery, engine
-from .config import configured, settings_ready
+from .config import configured, settings_ready, topic_info
 from .deps import Deps
 
 log = logging.getLogger("canccu_notify.consumer")
@@ -57,6 +57,7 @@ async def handle(d: Deps, event: Event) -> None:
     planned = 0
     async with d.db.tenant(event.tenant) as conn:
         tz = zone_of(await conn.fetchval("SELECT time_zone FROM notify_event_state"))
+        closed = await delivery.guests_closed(conn)
         for key, found in (await configured(conn, d.settings if ready else None)).items():
             reg, config = found["topic_type"], found["config"]
             if not config["enabled"]:
@@ -66,11 +67,12 @@ async def handle(d: Deps, event: Event) -> None:
                     continue
                 part = reg["parts"][trigger["part"]]
                 allowed = [c for c in part["channels"] if c in config["channels"]]
+                default = topic_info(reg, config)["parts"][trigger["part"]]["default"]
                 for c in engine.evaluate(
                     key, trigger, allowed, config["params"], envelope, now, tz
                 ):
                     for note in await _create(conn, c, event.id, now):
-                        planned += await delivery.plan(conn, note, reg, now)
+                        planned += await delivery.plan(conn, note, default, closed, now)
     if planned:
         try:
             await delivery.deliver(d, event.tenant)

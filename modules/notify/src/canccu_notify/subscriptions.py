@@ -7,6 +7,7 @@ import hashlib
 import hmac
 import ipaddress
 import json
+import re
 import secrets
 from typing import Any
 from urllib.parse import urlsplit
@@ -25,6 +26,9 @@ from .registry import bad, body_of
 
 ENDPOINT_MAX = 2048
 LOCAL_SUFFIXES = (".local", ".localhost", ".internal", ".home.arpa", ".lan")
+NUMERIC_LABEL = re.compile(r"(0x[0-9a-f]*|[0-9]+)")
+"""A label inet_aton reads as a number: a host of only such labels (`127.1`, `0x7f.0.0.1`) is an
+address in disguise, which ipaddress does not recognise but the resolver does."""
 
 
 def hash_token(token: str) -> str:
@@ -71,6 +75,7 @@ def check_endpoint(value: Any) -> str:
         or parts.username is not None
         or is_address
         or "." not in host
+        or all(NUMERIC_LABEL.fullmatch(label) for label in host.lower().split("."))
         or host.endswith(LOCAL_SUFFIXES)
     ):
         raise bad("push.endpoint: an https URL of a push service")

@@ -30,7 +30,7 @@ from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.testing import MemoryStreamStore
 from fakepush import FakePushService
 
-from canccu_notify import access, consumer
+from canccu_notify import consumer
 from canccu_notify.app import create_app
 from canccu_notify.db import Db
 from canccu_notify.deps import Deps
@@ -183,7 +183,6 @@ async def env() -> AsyncIterator[Env]:
             " notify_notifications, notify_dedupe, notify_event_state, notify_subscriptions,"
             " notify_deliveries, notify_delivery_tenants"
         )
-    access.SEEN.clear()
     contexts = {tid: context(tid) for tid in HOSTS.values()}
 
     def registry(request: httpx.Request) -> httpx.Response:

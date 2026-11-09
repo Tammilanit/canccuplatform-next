@@ -116,26 +116,68 @@ async def test_closed_info_pages_stop_pushes_to_guests_only(env: Env) -> None:
     assert env.push.to("g1") == [] and len(env.push.to("u1")) == 1
 
 
-async def test_the_sender_loop_finishes_what_a_failed_run_left(env: Env) -> None:
+async def test_the_sender_loop_finishes_what_a_crashed_run_left(env: Env) -> None:
     await env.register(schedule())
     await env.subscribe("g1")
-    pusher = env.deps.push
-
-    class Down:
-        vapid = pusher.vapid
-
-        async def send(self, *args: Any, **kwargs: Any) -> int:
-            raise RuntimeError("the sender crashed")
-
-    env.deps.push = Down()  # type: ignore[assignment]
-    await env.emit("ev-a", "agenda.reminder.triggered", reminder())
-    assert await statuses(env) == ["pending"]
-    env.deps.push = pusher
+    env.deps.push, real = None, env.deps.push  # type: ignore[assignment]
+    await env.emit("ev-a", "agenda.reminder.triggered", reminder())  # crashes after the claim
+    env.deps.push = real
+    assert await statuses(env) == ["sending"]
+    assert await delivery.tick(env.deps) == 0  # another container may still be sending it
+    env.clock[0] += delivery.LEASE + timedelta(seconds=1)
     assert await delivery.tick(env.deps) == 1
     assert await statuses(env) == ["sent"] and len(env.push.to("g1")) == 1
     async with env.db.platform() as conn:
         assert await conn.fetch("SELECT * FROM notify_delivery_tenants") == []
     assert await delivery.tick(env.deps) == 0
+
+
+async def test_one_broken_row_fails_alone(env: Env) -> None:
+    await env.register(schedule())
+    await env.subscribe("g1")
+    await env.subscribe("g2")
+    await env.subscribe("g3")
+    async with env.db.tenant("ev-a") as conn:
+        await conn.execute(
+            "UPDATE notify_subscriptions SET keys_sealed = 'cs1.1.AAAA.AAAA'"
+            " WHERE endpoint LIKE '%/g1'"
+        )
+    real = env.deps.push
+
+    class Flaky:
+        vapid = real.vapid
+
+        async def send(self, endpoint: str, *args: Any, **kwargs: Any) -> int:
+            if endpoint.endswith("/g2"):
+                raise RuntimeError("the client broke")
+            return await real.send(endpoint, *args, **kwargs)
+
+    env.deps.push = Flaky()  # type: ignore[assignment]
+    await env.emit("ev-a", "agenda.reminder.triggered", reminder())
+    assert sorted(await statuses(env)) == ["failed", "failed", "sent"]
+    assert len(env.push.to("g3")) == 1
+
+
+async def test_a_draft_event_pushes_nothing_to_guests(env: Env) -> None:
+    await env.register(schedule())
+    await env.subscribe("g1")
+    await env.subscribe("u1", env.rights.sign_in("u_a"))
+    env.contexts["ev-a"]["status"] = "draft"
+    async with env.client() as c:
+        await c.get("/api/notify/topics", headers=env.rights.sign_in("u_a"))  # the status is seen
+    await env.emit("ev-a", "agenda.reminder.triggered", reminder())
+    assert env.push.to("g1") == [] and len(env.push.to("u1")) == 1
+
+
+async def test_the_stored_state_follows_the_request_not_a_process_cache(env: Env) -> None:
+    await env.register(schedule())
+    await env.subscribe("g1")
+    async with env.db.tenant("ev-a") as conn:  # another container wrote a newer mode
+        await conn.execute("UPDATE notify_event_state SET info_page_mode = 'sign_in'")
+    async with env.client() as c:
+        await c.get("/api/notify/topics")  # this request sees the mode public again
+    await env.emit("ev-a", "agenda.reminder.triggered", reminder())
+    assert len(env.push.to("g1")) == 1
 
 
 async def test_an_expired_notification_is_not_pushed(env: Env) -> None:
