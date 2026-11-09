@@ -3,10 +3,12 @@ issue-187 D5)."""
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
 from canccu_kit import new_id
+from canccu_kit.rights import Session
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
@@ -28,7 +30,7 @@ async def target(conn: Any, item_id: str, sent_revision: int) -> Any:
     return row
 
 
-def _minutes(value: Any) -> int:
+def minutes_of(value: Any) -> int:
     if type(value) is not int or value == 0 or not -720 <= value <= 720:
         raise model.invalid("minutes must be a whole number from -720 to 720, not 0")
     return value
@@ -42,46 +44,80 @@ def _shifted(row: Any, shift: timedelta, now: datetime) -> tuple[datetime, datet
     return row["starts_at"] + shift, None if ends is None else ends + shift
 
 
+@dataclass
+class DelayPlan:
+    """What a delay will do: the items that move (row, new start, new end), in order of the new
+    start, and the items it leaves where they are, with the reason."""
+
+    moves: list[tuple[Any, datetime, datetime | None]] = field(default_factory=list)
+    kept: list[tuple[Any, str]] = field(default_factory=list)
+
+
+async def plan_delay(
+    conn: Any, row: Any, minutes: int, following: bool, now: datetime, *, lock: bool = True
+) -> DelayPlan:
+    """The one computation behind both the delay and its preview (plan issue-187 D10), so the
+    preview can never disagree with what the change does. Checks every shifted item first."""
+    if row["status"] == "cancelled":
+        raise model.conflict("item_cancelled", "a cancelled item cannot be delayed")
+    if row["starts_at"] <= now and row["ends_at"] is None:
+        raise model.conflict("item_started", "the item has started and has no end to move")
+    plan = DelayPlan()
+    rows = [row]
+    if following:
+        later = await conn.fetch(
+            f"SELECT {store.ITEM_COLUMNS} FROM agenda_items WHERE status = 'scheduled'"
+            " AND starts_at >= $1 AND id <> $2"
+            f" ORDER BY starts_at, id{' FOR UPDATE' if lock else ''}",
+            row["starts_at"],
+            row["id"],
+        )
+        for r in later:
+            if r["kind"] == "quiet_hours":
+                plan.kept.append((r, "quiet hours never move with a delay"))
+            else:
+                rows.append(r)
+    shift = timedelta(minutes=minutes)
+    for r in rows:
+        if r is not row and r["starts_at"] <= now and (r["ends_at"] or now) <= now:
+            plan.kept.append((r, "already over"))
+            continue
+        starts, ends = _shifted(r, shift, now)
+        if ends is not None and ends <= starts:
+            raise model.invalid(f"the shift would end {r['title']!r} before it starts")
+        plan.moves.append((r, starts, ends))
+    plan.moves.sort(key=lambda m: (m[1], m[0]["id"]))
+    return plan
+
+
 async def delay_item(request: Request) -> Response:
     session = await writer(request)
     data = await body(request)
     sent_revision = model.revision(data.get("revision"))
-    minutes = _minutes(data.get("minutes"))
+    minutes = minutes_of(data.get("minutes"))
     following = data.get("following", False)
     if not isinstance(following, bool):
         raise model.invalid("following must be true or false")
-    d = deps(request)
+    item_id = request.path_params["item_id"]
+    version, items = await delay(deps(request), session, item_id, sent_revision, minutes, following)
+    return JSONResponse({"agenda_version": version, "items": items})
+
+
+async def delay(
+    d: Deps, session: Session, item_id: str, sent_revision: int, minutes: int, following: bool
+) -> tuple[int, list[dict[str, Any]]]:
+    """Applies a delay; answers the last `agenda_version` and the shifted items, the delayed
+    item first."""
     channels, leads = await event_settings(d)
     now = d.now()
-    shift = timedelta(minutes=minutes)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
-        row = await target(conn, request.path_params["item_id"], sent_revision)
-        if row["status"] == "cancelled":
-            raise model.conflict("item_cancelled", "a cancelled item cannot be delayed")
-        if row["starts_at"] <= now and row["ends_at"] is None:
-            raise model.conflict("item_started", "the item has started and has no end to move")
-        rows = [row]
-        if following:
-            rows += await conn.fetch(
-                f"SELECT {store.ITEM_COLUMNS} FROM agenda_items WHERE status = 'scheduled'"
-                " AND starts_at >= $1 AND kind <> 'quiet_hours' AND id <> $2"
-                " ORDER BY starts_at, id FOR UPDATE",
-                row["starts_at"],
-                row["id"],
-            )
-        plan = []
-        for r in rows:
-            if r is not row and r["starts_at"] <= now and (r["ends_at"] or now) <= now:
-                continue  # a moment already past, or an item that has ended: nothing to move
-            starts, ends = _shifted(r, shift, now)
-            if ends is not None and ends <= starts:
-                raise model.invalid(f"the shift would end {r['title']!r} before it starts")
-            plan.append((starts, r["id"], ends))
-        # Every item is checked before any is written, so a refused shift moves nothing.
+        row = await target(conn, item_id, sent_revision)
+        plan = await plan_delay(conn, row, minutes, following, now)
+        # Every item was checked before any is written, so a refused shift moves nothing.
         updated = []
-        for starts, item_id, ends in sorted(plan, key=lambda p: (p[0], p[1])):
-            new_row = await store.update_item(conn, item_id, {"starts_at": starts, "ends_at": ends})
+        for r, starts, ends in plan.moves:
+            new_row = await store.update_item(conn, r["id"], {"starts_at": starts, "ends_at": ends})
             updated.append((new_row, await store.bump(conn, "agenda_version")))
         kinds = await store.kinds(conn)
         await timers.reschedule(conn, [r for r, _ in updated], kinds, leads, now)
@@ -102,18 +138,22 @@ async def delay_item(request: Request) -> Response:
             correlation_id=correlation_id,
         )
     items = sorted((i for i, _ in shifted), key=lambda i: i["id"] != row["id"])
-    return JSONResponse({"agenda_version": shifted[-1][1], "items": items})
+    return shifted[-1][1], items
 
 
 async def cancel_item(request: Request) -> Response:
     session = await writer(request)
     data = await body(request)
     sent_revision = model.revision(data.get("revision"))
-    d = deps(request)
+    item_id = request.path_params["item_id"]
+    return JSONResponse(await cancel_one(deps(request), session, item_id, sent_revision))
+
+
+async def cancel_one(d: Deps, session: Session, item_id: str, sent_revision: int) -> dict[str, Any]:
     channels, leads = await event_settings(d)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
-        row = await target(conn, request.path_params["item_id"], sent_revision)
+        row = await target(conn, item_id, sent_revision)
         if row["managed_by"] is not None:
             raise model.conflict("item_managed", "cancel the session in the tournament module")
         if row["status"] == "cancelled":
@@ -124,7 +164,7 @@ async def cancel_item(request: Request) -> Response:
         {"item": item, "agenda_version": version, "actor_user_id": session.user_id},
         version=1,
     )
-    return JSONResponse(item)
+    return item
 
 
 async def cancel(

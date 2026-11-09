@@ -112,7 +112,7 @@ async def env() -> AsyncIterator[Env]:
     async with db.pool.acquire() as conn:  # the login role: RLS does not bind it
         await conn.execute(
             "TRUNCATE agenda_state, agenda_kinds, agenda_items, agenda_timers,"
-            " agenda_timer_tenants, agenda_sessions"
+            " agenda_timer_tenants, agenda_sessions, agenda_templates"
         )
     contexts = {tid: context(tid) for tid in HOSTS.values()}
 

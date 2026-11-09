@@ -1,0 +1,85 @@
+"""Who is told about a change, and how a move reads (preview.py); no database needed."""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
+
+from canccu_agenda.preview import Change, moved_line, told
+
+NOW = datetime(2026, 11, 20, 17, 0, tzinfo=UTC)
+TZ = ZoneInfo("Europe/Helsinki")  # UTC+2 in November
+
+
+def change(**fields: object) -> Change:
+    base: dict[str, object] = {
+        "title": "Dinner",
+        "kind": "meal",
+        "visibility": "public",
+        "channels": ("screen", "discord_channel", "push"),
+        "starts_at": NOW + timedelta(minutes=60),
+        "zone": None,
+        "managed": False,
+    }
+    return Change(**{**base, **fields})  # type: ignore[arg-type]
+
+
+def test_a_delay_tells_screens_phones_once_per_audience_and_discord() -> None:
+    lines = told(
+        "delay",
+        [
+            change(),
+            change(title="Board games", visibility="attendees"),
+            change(title="Semis", managed=True),
+        ],
+        NOW,
+    )
+    assert lines == [
+        "Screens: every screen, within a second, with a notice.",
+        "Phones: one notice per audience (everyone, attendees), to those who follow the schedule"
+        " by push or Discord DM.",
+        "Discord: a post in the event's channel.",
+        "Tournament: its sessions follow (Semis).",
+    ]
+
+
+def test_items_more_than_two_hours_out_stay_quiet_on_phones() -> None:
+    lines = told("cancel", [change(starts_at=NOW + timedelta(minutes=121))], NOW)
+    assert "Phones stay quiet for 1 item(s) starting more than 2 h from now." in lines
+    assert not any(line.startswith("Phones: ") for line in lines)
+
+
+def test_crew_items_never_reach_screens_or_the_channel() -> None:
+    lines = told("cancel", [change(visibility="crew", zone="stage")], NOW)
+    assert lines[0] == "Screens: nothing; crew items never show on a screen."
+    assert "Discord: a post in the event's channel." not in lines
+    assert any("(crew only)" in line for line in lines)
+
+
+def test_zone_items_reach_only_their_zone_and_silenced_items_no_phone() -> None:
+    lines = told("delay", [change(zone="cafe", channels=())], NOW)
+    assert lines == [
+        "Screens: screens of zone cafe, within a second.",
+        "Phones: nothing; the item's channels leave phones out.",
+    ]
+
+
+def test_a_move_tells_nobody_and_quiet_hours_are_never_announced() -> None:
+    assert told("move", [change()], NOW)[1] == (
+        "Phones and Discord: nobody is told; a move is a new plan."
+    )
+    assert told("delay", [change(kind="quiet_hours")], NOW) == [
+        "Screens: every screen, within a second, with a notice."
+    ]
+
+
+def test_moved_lines_read_in_the_events_time_zone() -> None:
+    ends = NOW + timedelta(hours=1)
+    row = {"title": "Semis", "starts_at": NOW, "ends_at": ends}
+    later = NOW + timedelta(minutes=15)
+    assert moved_line(row, later, ends + timedelta(minutes=15), TZ) == "Semis 19:00 → 19:15"
+    # A running item keeps its start; only its end moves.
+    assert moved_line(row, NOW, ends + timedelta(minutes=15), TZ) == (
+        "Semis ends 20:15 instead of 20:00"
+    )
+    assert moved_line(row, NOW + timedelta(hours=6), None, TZ) == "Semis 19:00 → Sat 21 Nov 01:00"

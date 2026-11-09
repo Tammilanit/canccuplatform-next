@@ -7,13 +7,14 @@ from datetime import datetime
 from typing import Any
 
 from canccu_kit import KitError
+from canccu_kit.rights import Session
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from . import model, store, timers
 from .access import viewer, writer
-from .deps import deps
+from .deps import Deps, deps
 from .edits import target
 from .effective import event_settings, read_channels
 from .kinds import body, not_found
@@ -134,7 +135,12 @@ async def _check_kind(conn: Any, key: str) -> None:
 
 async def add_item(request: Request) -> Response:
     session = await writer(request)
-    data = await body(request)
+    item = await add(deps(request), session, await body(request))
+    return JSONResponse(item, status_code=201)
+
+
+async def add(d: Deps, session: Session, data: dict[str, Any]) -> dict[str, Any]:
+    """Adds an item from the fields of a request body; the pages call it with theirs."""
     starts = model.parse_time(data.get("starts_at"), "starts_at")
     ends_raw = data.get("ends_at")
     ends = None if ends_raw is None else model.parse_time(ends_raw, "ends_at")
@@ -156,7 +162,6 @@ async def add_item(request: Request) -> Response:
         "moment_id": links["moment_id"],
     }
     _check_times(values["kind"], starts, ends)
-    d = deps(request)
     channels, leads = await event_settings(d)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
@@ -170,7 +175,7 @@ async def add_item(request: Request) -> Response:
         {"item": item, "agenda_version": version, "actor_user_id": session.user_id},
         version=1,
     )
-    return JSONResponse(item, status_code=201)
+    return item
 
 
 def _edits(data: dict[str, Any]) -> dict[str, Any]:
@@ -204,13 +209,17 @@ def _edits(data: dict[str, Any]) -> dict[str, Any]:
 async def edit_item(request: Request) -> Response:
     session = await writer(request)
     data = await body(request)
+    return JSONResponse(await edit(deps(request), session, request.path_params["item_id"], data))
+
+
+async def edit(d: Deps, session: Session, item_id: str, data: dict[str, Any]) -> dict[str, Any]:
+    """Edits or moves an item from the fields of a request body (`revision` included)."""
     sent_revision = model.revision(data.get("revision"))
     edits = _edits(data)
-    d = deps(request)
     channels, leads = await event_settings(d)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
-        row = await target(conn, request.path_params["item_id"], sent_revision)
+        row = await target(conn, item_id, sent_revision)
         if row["status"] == "cancelled":
             raise model.conflict("item_cancelled", "a cancelled item cannot be edited")
         changed = [k for k in edits if _differs(row, k, edits[k])]
@@ -230,7 +239,7 @@ async def edit_item(request: Request) -> Response:
         )
         if not values:
             (item,) = await render(conn, [row], channels)
-            return JSONResponse(item)
+            return item
         row = await store.update_item(conn, row["id"], values)
         version = await store.bump(conn, "agenda_version")
         await timers.reschedule(conn, [row], await store.kinds(conn), leads, d.now())
@@ -245,7 +254,7 @@ async def edit_item(request: Request) -> Response:
         },
         version=1,
     )
-    return JSONResponse(item)
+    return item
 
 
 def _differs(row: Any, key: str, value: Any) -> bool:
