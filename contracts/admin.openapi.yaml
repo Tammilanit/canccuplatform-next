@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Admin API
-  version: 1.3.0
+  version: 1.4.0
   summary: Settings, health, session and rights, profile save and load.
   description: |
     Machine-readable part of the admin contract. Prose, rules and events: contracts/admin.md.
@@ -133,6 +133,68 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Settings"
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /internal/admin/profile/theme:
+    get:
+      tags: [internal, profile]
+      operationId: getProfileThemeInternal
+      summary: The event profile's theme tokens and main logo, for theming
+      description: |
+        The short form of the event's design that theming applies while the event has no published revision
+        (contracts/theming.md). Theming reads it when it holds no copy and again on `admin.profile.loaded`. An
+        event without a profile, or whose profile has no `theme` or no `logos.main`, answers `theme: {}` or
+        `logo_main: null`, never 404. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+      responses:
+        "200":
+          description: The profile's theme and main logo.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileThemeInternal"
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /internal/admin/profile/logo:
+    get:
+      tags: [internal, profile]
+      operationId: getProfileLogoInternal
+      summary: The bytes of the event profile's main logo
+      description: |
+        The file `logos.main` names, as stored with the profile, so theming can serve it at revision 0 without
+        reading admin's files. Its SHA-256 is `logo_main.sha256` of `GET /internal/admin/profile/theme`. 404
+        `not_found` when the profile names no main logo, or for an unknown tenant. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+      responses:
+        "200":
+          description: The logo file.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
         "400":
           $ref: "common.openapi.yaml#/components/responses/BadRequest"
         "404":
@@ -518,6 +580,27 @@ components:
               - type: string
               - type: number
               - type: boolean
+    ProfileThemeInternal:
+      type: object
+      required: [theme, logo_main]
+      properties:
+        theme:
+          description: The profile's `theme` as it is (contracts/profile.md); `{}` when it has none.
+          $ref: "profile.schema.json#/properties/theme"
+        logo_main:
+          description: The file `logos.main` names, or `null` when the profile names none.
+          oneOf:
+            - type: object
+              required: [sha256, bytes]
+              properties:
+                sha256:
+                  type: string
+                  pattern: "^[0-9a-f]{64}$"
+                  description: Changes whenever the file does, so theming fetches the bytes only when it differs.
+                bytes:
+                  type: integer
+                  minimum: 0
+            - type: "null"
     Settings:
       type: object
       required: [module, settings_version, values]

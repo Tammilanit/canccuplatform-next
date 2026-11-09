@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Theming API
-  version: 1.2.0
+  version: 1.3.0
   summary: One event's theme, its draft, preview, publish and rollback, git sync, clone and the served theme files.
   description: |
     Machine-readable part of the theming contract. Prose, stable classes, package rules, upload safety, CSP and
@@ -960,6 +960,7 @@ components:
             - area_outside_grid
             - mode_mismatch
             - contrast_low
+            - text_small
             - class_unstable
             - widget_unknown
             - embeds_unavailable
