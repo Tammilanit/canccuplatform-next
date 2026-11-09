@@ -4,7 +4,8 @@ The shared look for platform pages. It has three parts:
 
 - **`ui.css`**: one stylesheet. It declares every theme token as a CSS custom property with its default, plus the component classes.
 - **Theme helpers:** they read the event profile's `theme` and `logos` ([contracts/profile.md](../../contracts/profile.md)).
-- **Five components:** button, form field, card, page layout and health badge. Each is a function that returns escaped HTML, rendered on the server.
+- **Six components:** button, form field, card, page layout, health badge and the `embed` widget. Each is a function that returns escaped HTML, rendered on the server.
+- **`embedWidget({ frameUrl, logoUrl })`** ([contracts/theming.md](../../contracts/theming.md#embeds-custom-html-and-js)): an embed's `frame_url` from the current theme in `<iframe class="canccu-embed" sandbox="allow-scripts" allow="" referrerpolicy="no-referrer">`, over a still (the logo on the theme background). It frames only same-host sandbox paths (`/theming/sandbox/…`). The frame is transparent until the embed paints, so a frame that fails, a sandbox refusal or a script that dies before it draws leaves the still showing; under `prefers-reduced-motion: reduce` `ui.css` hides the frame (`!important` in the base layer, so no theme CSS brings it back).
 
 There's no framework and no client JS.
 

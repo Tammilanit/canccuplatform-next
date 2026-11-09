@@ -16,10 +16,20 @@ export const CONTENT_TYPES = {
 } as const;
 export type Ext = keyof typeof CONTENT_TYPES;
 
+/** An embed's types: the above plus what only the sandbox serves (contracts/theming.md, The sandbox). */
+export const EMBED_TYPES = {
+  ...CONTENT_TYPES,
+  html: "text/html; charset=utf-8",
+  js: "text/javascript; charset=utf-8",
+  json: "application/json",
+} as const;
+export type EmbedExt = keyof typeof EMBED_TYPES;
+
 /** `<sha256>.<ext>`, the served name: the ServedFile pattern of contracts/theming.openapi.yaml. */
 export const FILE_NAME = /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg)$/;
+const STORED_NAME = /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg|html|js|json)$/;
 
-export function fileName(bytes: Buffer, ext: Ext): string {
+export function fileName(bytes: Buffer, ext: EmbedExt): string {
   return `${createHash("sha256").update(bytes).digest("hex")}.${ext}`;
 }
 
@@ -29,7 +39,7 @@ export function extOf(name: string): Ext {
 
 export interface FileStore {
   /** Store bytes for the current tenant and record them; the same bytes give the same name. */
-  put(client: SqlClient, bytes: Buffer, ext: Ext): Promise<string>;
+  put(client: SqlClient, bytes: Buffer, ext: EmbedExt): Promise<string>;
   /** The bytes of a stored file of the current tenant, or undefined. */
   read(name: string): Promise<Buffer | undefined>;
 }
@@ -55,7 +65,7 @@ export function diskFiles(root: string): FileStore {
       return name;
     },
     async read(name) {
-      if (!FILE_NAME.test(name)) return undefined;
+      if (!STORED_NAME.test(name)) return undefined;
       try {
         return await readFile(path(name));
       } catch (err) {
