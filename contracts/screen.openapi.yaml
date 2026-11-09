@@ -374,7 +374,7 @@ components:
           type: [string, "null"]
     DeviceHealth:
       type: object
-      required: [online, last_seen_at]
+      required: [online, last_seen_at, clock_offset_ms, flags]
       properties:
         online:
           type: boolean
@@ -405,7 +405,8 @@ components:
           type: array
           description: |
             What needs the crew's eye; empty when all is well. `clock_drift`: `clock_offset_ms` is over 2,000
-            either way. `shared_token`: two `instance_id`s reported for this device within one `heartbeat_seconds`.
+            either way. `shared_token`: two `instance_id`s each reported at least twice for this device within two
+            `heartbeat_seconds` (a reload never raises it).
             Clients ignore values they do not know; more may be added.
           uniqueItems: true
           items:
@@ -1352,7 +1353,7 @@ components:
               properties:
                 code:
                   type: string
-                  enum: [render_timeout, too_many_slides, file_invalid, renderer_failed]
+                  enum: [render_timeout, too_many_slides, file_invalid, renderer_failed, storage_quota_exceeded]
                 message:
                   type: string
     RenderResult:

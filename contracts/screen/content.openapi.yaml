@@ -964,7 +964,9 @@
     tags: [clone]
     operationId: cloneScreen
     summary: Copy screen content from another event of the series
-    description: Event-admin role on both events of one series (otherwise 403 `missing_right`). Audited.
+    description: |
+      Event-admin role on both events of one series (otherwise 403 `missing_right`). Audited. All or nothing:
+      a clone whose files would pass this event's storage quota is 413 `storage_quota_exceeded` and copies nothing.
     requestBody:
       required: true
       content:
@@ -1006,3 +1008,6 @@
         $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
       "409":
         $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+      "413":
+        $ref: "../screen.openapi.yaml#/components/responses/TooLarge"
+        description: "`storage_quota_exceeded`: the copied files would pass this event's storage quota; nothing was copied."

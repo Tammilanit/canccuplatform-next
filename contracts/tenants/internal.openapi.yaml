@@ -260,7 +260,8 @@
     summary: Set a module's count to what its files take
     description: |
       The repair for a count that drifted, for example after a crash between a reserve and its release: the
-      module counts its own files of the event and sets its count to that, whatever the quota. In every status
+      module counts its own files of the event plus its open reservations (bytes reserved for files not yet
+      written or not yet released, so an upload under way is not lost) and sets its count to that, whatever the quota. In every status
       of the event. Internal network only.
     security:
       - {}

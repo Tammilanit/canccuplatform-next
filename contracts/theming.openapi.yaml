@@ -692,7 +692,8 @@ paths:
         Needs the event-admin role (not a granted right) on this event and on the source, both in one series
         (otherwise 403 `missing_right`; checked through `GET /api/tenants/current/series`). The source's current
         revision, its files copied, becomes this event's next revision with `cloned_from`; a draft is untouched.
-        409 `nothing_to_clone` when the source has no published theme. Emits `theming.theme.published`; audited.
+        409 `nothing_to_clone` when the source has no published theme. All or nothing: a clone whose files would pass
+        this event's storage quota is 413 `storage_quota_exceeded` and creates no revision. Emits `theming.theme.published`; audited.
       requestBody:
         required: true
         content:
@@ -715,6 +716,9 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "409":
           $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/TooLarge"
+          description: "`storage_quota_exceeded`: the copied files would pass this event's storage quota; nothing was copied."
   /theming/a/{file}:
     parameters:
       - $ref: "#/components/parameters/ServedFile"

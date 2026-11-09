@@ -577,7 +577,8 @@ components:
             still answer superadmin paths only on the superadmin hostname.
     UserId:
       type: string
-      pattern: "^[A-Za-z0-9_-]{1,64}$"
+      description: The same as `UserId` in tenants.openapi.yaml.
+      pattern: "^u_[A-Za-z0-9]{1,40}$"
       examples: [u_123]
     Right:
       type: string
@@ -598,7 +599,9 @@ components:
         rights_version:
           type: integer
           minimum: 0
-          description: 0 while nothing was ever granted to the user in this event; +1 on every change.
+          description: |
+            0 while nothing was ever granted to the user in this event; +1 on every change. It keeps counting when
+            the grants are dropped (the member left), so a write read before that is stale.
         event_admin:
           type: boolean
           description: The user holds the event-admin role, so every right whatever the list says.
