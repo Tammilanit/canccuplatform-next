@@ -146,7 +146,8 @@ paths:
         The short form of the event's design that theming applies while the event has no published revision
         (contracts/theming.md). Theming reads it when it holds no copy and again on `admin.profile.loaded`. An
         event without a profile, or whose profile has no `theme` or no `logos.main`, answers `theme: {}` or
-        `logo_main: null`, never 404. Internal network only.
+        `logo_main: null`; an event the tenants module does not know is 404 `not_found`. Only theming calls it,
+        with its service identity; any other module is 403 `service_forbidden`. Internal network only.
       security:
         - {}
       parameters:
@@ -176,7 +177,9 @@ paths:
       description: |
         The file `logos.main` names, as stored with the profile, so theming can serve it at revision 0 without
         reading admin's files. Its SHA-256 is `logo_main.sha256` of `GET /internal/admin/profile/theme`. 404
-        `not_found` when the profile names no main logo, or for an unknown tenant. Internal network only.
+        `not_found` when the profile names no main logo, or for an unknown tenant. The `ETag` is the bytes'
+        SHA-256: when it differs from `logo_main.sha256`, a new profile came in between, and theming reads
+        `/internal/admin/profile/theme` again. Only theming calls it, as above. Internal network only.
       security:
         - {}
       parameters:
@@ -190,6 +193,12 @@ paths:
       responses:
         "200":
           description: The logo file.
+          headers:
+            ETag:
+              description: The SHA-256 of the bytes, hex, in double quotes.
+              schema:
+                type: string
+                pattern: "^\"[0-9a-f]{64}\"$"
           content:
             application/octet-stream:
               schema:

@@ -60,11 +60,16 @@ def tenant_context(tenant_id: str) -> TenantContext:
     }
 
 
-def fake_resolver(hosts: dict[str, str]) -> TenantResolver:
-    """The kit's resolver against a fake tenants module that knows `hosts` (host -> tenant)."""
+def fake_resolver(hosts: dict[str, str], ids: tuple[str, ...] = ()) -> TenantResolver:
+    """The kit's resolver against a fake tenants module that knows `hosts` (host -> tenant),
+    and by id those tenants plus `ids`."""
 
     def registry(request: httpx.Request) -> httpx.Response:
-        tenant = hosts.get(request.url.params.get("host", ""))
+        by_id = request.url.path.removeprefix("/internal/tenants/tenants/")
+        if by_id != request.url.path:
+            tenant = by_id if by_id in {*hosts.values(), *ids} else None
+        else:
+            tenant = hosts.get(request.url.params.get("host", ""))
         if tenant is None:
             return httpx.Response(404, json={"error": {"code": "not_found", "message": "x"}})
         return httpx.Response(200, json=tenant_context(tenant))
@@ -191,7 +196,7 @@ def world(tmp_path: Path) -> World:
         Health("admin", "dev", {}),
         authorize,
         auth,
-        fake_resolver({"admin.example.test": "demo"}),
+        fake_resolver({"admin.example.test": "demo"}, ids=("other",)),
         holder_event(holder),
         identity=ServiceIdentity("admin", SERVICE_KEY),
     )
