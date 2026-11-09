@@ -143,7 +143,7 @@ for f in modules/*/Dockerfile; do
       got=${got%%|*}
       why="$why; $remote was built from ${got:0:7}"
     else
-      why="$why; cannot pull $remote"
+      why="$why; cannot pull $remote (the images are private: root needs 'sudo docker login ${registry%%/*}' with a read-packages token, see setup/README.md)"
     fi
   fi
   echo "==> $m: $why; building $f"

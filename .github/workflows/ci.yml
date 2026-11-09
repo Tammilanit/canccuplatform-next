@@ -151,13 +151,13 @@ jobs:
         run: pip install -e ".[dev]" && ruff check . && ruff format --check . && mypy . && pytest
       - name: Start the stack (clean runner, only Docker)
         run: docker compose -f deploy/compose.yml up -d --build --wait
-      - name: Only Caddy publishes a port; only the three named volumes exist
+      - name: Only Caddy publishes a port; only the four named volumes exist
         run: |
           docker compose -f deploy/compose.yml config --format json > /tmp/config.json
           jq -e '[.services | to_entries[] | select(.value.ports) | .key] == ["caddy"]' /tmp/config.json
-          jq -e '.volumes | keys == ["files", "postgres-data", "valkey-data"]' /tmp/config.json
+          jq -e '.volumes | keys == ["deploy-status", "files", "postgres-data", "valkey-data"]' /tmp/config.json
           test "$(docker volume ls -q --filter label=com.docker.compose.project=canccuplatform | sort | tr '\n' ' ')" \
-            = "canccuplatform_files canccuplatform_postgres-data canccuplatform_valkey-data "
+            = "canccuplatform_deploy-status canccuplatform_files canccuplatform_postgres-data canccuplatform_valkey-data "
       - name: Health through Caddy is 200 ok
         run: |
           code=$(curl -s -o /tmp/health.json -w '%{http_code}' http://localhost/api/hello/health)

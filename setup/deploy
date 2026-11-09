@@ -3,8 +3,10 @@
 # origin/main and the module images CI pushed for it (`:dev`), check health, and on failure go
 # back to the previous commit and images and open an issue. Run by canccu-deploy.timer as root.
 # Usage: deploy [--dry-run]
-# Exit 0 = deployed, nothing new, waiting for images, holding a failed deploy, or not in dev mode;
-# 1 = the deploy failed and was rolled back; 2 = something is missing, unreachable or refused.
+# Exit 0 = deployed, nothing new, waiting for images, or not in dev mode; 1 = the deploy failed and
+# was rolled back, or holds one that did; 2 = something is missing, unreachable or refused.
+# Every run writes its result to status.json in the state directory and in the stack's
+# deploy-status volume, where the hello module reads it for its health (issue #197).
 # deploy/.env (CANCCU_ENV_FILE replaces it): CANCCU_VERSION; CANCCU_DEPLOY_IMAGES (default ghcr.io/<owner>/<repo>
 # of the origin remote); CANCCU_DEPLOY_GITHUB_TOKEN (opens the issue: Issues read and write on the repo).
 # Environment: CANCCU_DEPLOY_STATE (state dir; default $STATE_DIRECTORY or /var/lib/canccu-deploy),
@@ -17,31 +19,85 @@ dry=0
 for a in "$@"; do case "$a" in
   --dry-run) dry=1 ;;
   *) echo "usage: deploy [--dry-run]" >&2; exit 2 ;; esac; done
-die() { echo "error: $*" >&2; exit 2; }
+fail_msg=
+die() { fail_msg=$*; echo "error: $*" >&2; exit 2; }
 say() { echo "deploy: $*"; }
+json() { local s=${1//\\/\\\\}; s=${s//\"/\\\"}; s=${s//$'\n'/\\n}; printf '"%s"' "$s"; }
 
-command -v docker >/dev/null || die "docker not found"
-docker info >/dev/null 2>&1 || die "cannot reach the Docker daemon (DOCKER_HOST=${DOCKER_HOST:-unset})"
-command -v git >/dev/null || die "git not found"
-command -v curl >/dev/null || die "curl not found"
+tools() {
+  command -v docker >/dev/null || die "docker not found"
+  docker info >/dev/null 2>&1 || die "cannot reach the Docker daemon (DOCKER_HOST=${DOCKER_HOST:-unset})"
+  command -v git >/dev/null || die "git not found"
+  command -v curl >/dev/null || die "curl not found"
+}
 if [ "$dry" = 1 ]; then
+  tools
   for s in "stop unless CANCCU_VERSION in deploy/.env is dev" "check the checkout is clean and on main" \
     "git fetch origin main" "docker pull <module>:dev for every module with a Dockerfile" \
     "wait until every image was built from origin/main (org.opencontainers.image.revision)" \
     "setup/firewall check" "git merge --ff-only origin/main and tag the images as canccuplatform-<module>:latest" \
     "docker compose -f deploy/compose.yml up -d --wait --no-build, then check health through Caddy" \
-    "on failure: go back to the previous commit and images and open an issue"; do echo "would $s"; done
+    "on failure: go back to the previous commit and images and open an issue" \
+    "write the result to status.json (state directory and the deploy-status volume)"; do echo "would $s"; done
   exit 0
 fi
 
 env_file=${CANCCU_ENV_FILE:-deploy/.env}
 version=$(envval "$env_file" CANCCU_VERSION); version=${version:-dev}
-[ "$version" = dev ] || { say "platform version is $version, not dev: auto-deploy is off"; exit 0; }
-
 state=${CANCCU_DEPLOY_STATE:-${STATE_DIRECTORY:-/var/lib/canccu-deploy}}
+# The compose project is named canccuplatform (deploy/compose.yml), so its deploy-status volume is this.
+status_volume=canccuplatform_deploy-status
+owner=; norecord=0
+
+# status_dir: where the stack's deploy-status volume lives on this host (rootful Docker)
+status_dir() { local v; v=$(docker volume inspect -f '{{.Mountpoint}}' "$status_volume" 2>/dev/null) && [ -d "$v" ] && echo "$v"; }
+
+# put DIR JSON: replace DIR/status.json in one step, readable by the module that serves it
+# shellcheck disable=SC2317  # called from record, which the EXIT trap runs
+put() { printf '%s\n' "$2" > "$1/status.json.tmp" && chmod 644 "$1/status.json.tmp" && mv "$1/status.json.tmp" "$1/status.json"; }
+
+# record RC: write this run's result for people and for the stack's health: the time, the commit
+# the checkout runs, ok or the error in one line, and how many runs in a row have failed since
+# when. Runs on every exit once the lock is held (trap), so a run that dies early still shows.
+# shellcheck disable=SC2317  # called from the EXIT trap
+record() {
+  local rc=$1 now commit='' n=0 since='' prev_n=0 prev_since='' err='' res=ok f vol
+  # waiting for images is neither a success nor a failure: the last result stands
+  [ "$norecord" = 1 ] && return 0
+  now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  [ -n "$owner" ] && commit=$(g rev-parse --verify -q 'HEAD^{commit}' 2>/dev/null)
+  [ -f "$state/streak" ] && read -r prev_n prev_since < "$state/streak"
+  if [ "$rc" != 0 ]; then
+    res=failed; n=$((prev_n + 1)); since=${prev_since:-$now}
+    # one line, and never the credentials a URL in a message may carry: health has no sign-in
+    err=$(printf '%s' "${fail_msg:-the run stopped (exit $rc)}" | tr '[:cntrl:]' ' ' | sed -E 's#(://)[^/@ ]*@#\1#g')
+    echo "$n $since" > "$state/streak"
+  else rm -f "$state/streak"; fi
+  f=$(printf '{"time":%s,"commit":%s,"result":%s,"error":%s,"failures":%d,"failing_since":%s}' \
+    "$(json "$now")" "$(json "$commit")" "$(json "$res")" "$(json "$err")" "$n" "$(json "$since")")
+  put "$state" "$f" || echo "warning: cannot write $state/status.json" >&2
+  if vol=$(status_dir) && put "$vol" "$f"; then :
+  else echo "warning: cannot hand the status to the stack (docker volume $status_volume); see $state/status.json" >&2; fi
+}
+
+if [ "$version" != dev ]; then
+  # an old status would show a deploy that no longer runs; under the lock, so a dev-mode run
+  # still finishing cannot write it back
+  if [ -d "$state" ] && exec 9>"$state/lock" && flock -n 9; then
+    rm -f "$state/status.json" "$state/streak"
+    vol=$(status_dir) && rm -f "$vol/status.json"
+  fi
+  say "platform version is $version, not dev: auto-deploy is off"; exit 0
+fi
+
 mkdir -p "$state" || die "cannot create $state"
 exec 9>"$state/lock" || die "cannot open $state/lock"
 flock -n 9 || { say "another deploy is running"; exit 0; }
+trap 'record $?' EXIT
+# In an EXIT trap reached through a signal, $? is the last finished command's status (often 0), so
+# a run stopped by the unit's timeout, systemctl stop or a reboot would be recorded as ok.
+trap 'exit 143' TERM; trap 'exit 130' INT; trap 'exit 129' HUP
+tools
 
 # git runs as the owner of the checkout, so root never writes into a user's checkout.
 owner=$(stat -c %U .) || die "cannot read the owner of $PWD"
@@ -54,6 +110,29 @@ token=$(envval "$env_file" CANCCU_DEPLOY_GITHUB_TOKEN)
 wait_s=${CANCCU_DEPLOY_WAIT:-30}
 firewall=${CANCCU_DEPLOY_FIREWALL:-setup/firewall}
 
+# pull_failed IMAGE DOCKER_ERROR: stop with why the pull failed, in plain words, and what to do.
+# The registry's answer goes to the log only: it may name hosts and addresses of this network,
+# and the status is served without sign-in.
+pull_failed() {
+  local reg=${1%%/*} first cfg=${DOCKER_CONFIG:-$HOME/.docker}/config.json
+  first=$(head -n1 <<<"$2")
+  echo "docker pull $1: $first" >&2
+  case "${2,,}" in
+    *denied*|*unauthorized*|*"authentication required"*|*"docker login"*)
+      # The images are private, so root needs a login; GHCR also says `denied` for an image
+      # that was never pushed, so both messages name that too.
+      if [ -r "$cfg" ] && grep -qF "$reg\"" "$cfg"; then
+        die "the registry login for $reg no longer works for $1: it has expired or was revoked (or its token cannot read this package, or the image was never pushed). To fix: renew the read-packages token and run 'sudo docker login $reg' again"
+      fi
+      die "the registry $reg refused to send $1: the images are private and root has no login for $reg. Run 'sudo docker login $reg' with a token that can read packages (setup/README.md, Auto-deploy); with a login, the image may never have been pushed" ;;
+    *"no such host"*|*timeout*|*"timed out"*|*"connection refused"*|*"network is unreachable"*|*"dial tcp"*|*"tls handshake"*)
+      die "cannot reach the registry $reg to pull $1: check this host's network, DNS and proxy ('curl -sI https://$reg/v2/' should answer)" ;;
+    *"manifest unknown"*|*"not found"*)
+      die "$1 is not in the registry: the Images workflow has not pushed it (docs/ci.md#images); check its last run on main" ;;
+    *) die "cannot pull $1: the registry gave an answer this script does not know; it is in the log (journalctl -u canccu-deploy)" ;;
+  esac
+}
+
 declare -A new old
 modules=(); current=; target=; key=; caddy=0
 pending=$state/pending
@@ -64,7 +143,9 @@ pending=$state/pending
 # the Caddyfile differs between the two commits.
 switch() {
   docker compose -f deploy/compose.yml up -d --wait --no-build --remove-orphans || { say "the stack did not become healthy"; return 1; }
-  if [ "$caddy" = 1 ]; then
+  # Recreate caddy before any health check whenever the Caddyfile it runs is not the checkout's:
+  # the two commits differ in it, or an earlier change never reached it.
+  if [ "$caddy" = 1 ] || ! docker compose -f deploy/compose.yml exec -T caddy cat /etc/caddy/Caddyfile 2>/dev/null | cmp -s - deploy/Caddyfile; then
     docker compose -f deploy/compose.yml up -d --wait --no-build --force-recreate caddy || { say "caddy did not restart"; return 1; }
   fi
   # Check only the modules the checkout has now and that run: after a rollback, a module only the
@@ -102,7 +183,18 @@ deployed() {
   exit 0
 }
 
-json() { local s=${1//\\/\\\\}; s=${s//\"/\\\"}; s=${s//$'\n'/\\n}; printf '"%s"' "$s"; }
+# db_refused: the modules whose recent logs show the database refusing them (roles, passwords,
+# rights or schema), as when an older version meets a database a newer one changed. Only their
+# names leave this host; the logs stay in it.
+db_refused() {
+  local m out=()
+  for m in "${modules[@]}"; do
+    docker compose -f deploy/compose.yml logs --no-color --tail 200 "$m" 2>/dev/null | grep -qE \
+      'password authentication failed|role "[^"]+" does not exist|permission denied for (table|schema|relation|sequence|database)|(relation|column) "[^"]+" does not exist|InvalidPasswordError|InsufficientPrivilegeError|Undefined(Table|Column)Error' \
+      && out+=("$m")
+  done
+  [ "${#out[@]}" -gt 0 ] && echo "${out[*]}"
+}
 
 # rollback WHY: go back to $current and the previous images, hold this deploy, open an issue, exit 1
 rollback() {
@@ -113,8 +205,13 @@ rollback() {
     [ -n "${old[$m]}" ] && { docker tag "${old[$m]}" "canccuplatform-$m:latest" || rolled="ROLLBACK FAILED: cannot tag the previous image of $m"; }
   done
   case "$rolled" in ROLLBACK*) ;; *) switch || rolled="ROLLBACK FAILED: the previous version is not healthy either" ;; esac
+  local db
+  if [[ $rolled == "ROLLBACK FAILED: the previous"* ]] && db=$(db_refused); then
+    rolled+="; $db cannot start on the current database, which ${target:0:7} may have changed (roles, schema): restore the database from before ${target:0:7}, or fix forward on main"
+  fi
   rm -f "$pending"
-  say "deploy of ${target:0:7} failed ($1); $rolled"
+  fail_msg="deploy of ${target:0:7} failed ($1); $rolled"
+  say "$fail_msg"
   local title body tmp
   title="Auto-deploy of ${target:0:7} failed; ${rolled%%:*}"
   body="## Goal
@@ -131,7 +228,7 @@ Depends on the cause: the modules or deploy/ files changed in ${target:0:7}.
 ## Out of scope
 Changes on the host itself: code reaches it only through a merge to main.
 
-Auto-deploy holds this commit and these images, and keeps failing, until a new merge or new images arrive."
+Auto-deploy holds this commit and these images, and keeps failing, until a new merge or new images arrive. To retry the same ones on the host: sudo rm $state/failed && sudo systemctl start canccu-deploy"
   if [ -z "$token" ]; then
     echo "error: no CANCCU_DEPLOY_GITHUB_TOKEN in $env_file, so no issue was opened" >&2
   else
@@ -174,14 +271,25 @@ while read -r d; do
 done < <(g ls-tree --name-only "$target" modules/)
 [ "${#modules[@]}" -gt 0 ] || die "main has no modules/<name>/Dockerfile"
 
+missing_new=()
 for m in "${modules[@]}"; do
-  docker pull -q "$images/$m:dev" >/dev/null || die "cannot pull $images/$m:dev (registry unreachable, or a private package without docker login?)"
+  if ! err=$(docker pull -q "$images/$m:dev" 2>&1 >/dev/null); then
+    # A module main just added has no image until its Images job pushes it: that is waiting, not
+    # a failure. The other modules are still pulled, so a broken login shows on them.
+    if ! g cat-file -e "HEAD:modules/$m/Dockerfile" 2>/dev/null; then
+      case "${err,,}" in *"manifest unknown"*|*"not found"*|*denied*) missing_new+=("$m"); continue ;; esac
+    fi
+    pull_failed "$images/$m:dev" "$err"
+  fi
   rev=$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$images/$m:dev")
-  if [ "$rev" != "$target" ]; then say "waiting for the images of ${target:0:7} ($m:dev was built from ${rev:0:7})"; exit 0; fi
+  if [ "$rev" != "$target" ]; then norecord=1; say "waiting for the images of ${target:0:7} ($m:dev was built from ${rev:0:7})"; exit 0; fi
   new[$m]=$(docker image inspect -f '{{.Id}}' "$images/$m:dev") || die "cannot inspect $images/$m:dev"
   old[$m]=$(docker image inspect -f '{{.Id}}' "canccuplatform-$m:latest" 2>/dev/null || true)
 done
 
+if [ "${#missing_new[@]}" -gt 0 ]; then
+  norecord=1; say "waiting for the image of the new module ${missing_new[*]} (not in the registry yet)"; exit 0
+fi
 changed=0
 [ "$current" = "$target" ] || changed=1
 for m in "${modules[@]}"; do [ "${new[$m]}" = "${old[$m]}" ] || changed=1; done
@@ -190,7 +298,8 @@ for m in "${modules[@]}"; do [ "${new[$m]}" = "${old[$m]}" ] || changed=1; done
 key="$target"; for m in "${modules[@]}"; do key+=" $m=${new[$m]}"; done
 if [ -f "$state/failed" ] && [ "$(cat "$state/failed")" = "$key" ]; then
   # keep failing, so the unit stays failed until something new arrives
-  echo "error: holding: ${target:0:7} with these images failed before and was rolled back; a new merge or new images retry" >&2
+  fail_msg="holding: ${target:0:7} with these images failed before and was rolled back; a new merge or new images retry (to retry these now: sudo rm $state/failed && sudo systemctl start canccu-deploy)"
+  echo "error: $fail_msg" >&2
   exit 1
 fi
 

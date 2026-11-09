@@ -4,9 +4,11 @@ A test module for the Compose stack (`deploy/compose.yml`): it serves the shared
 
 Through Caddy: `http://<host-ip>/api/hello/health` (Caddy strips `/api/hello`).
 
+**The `deploy` check** (only with `CANCCU_DEPLOY_STATUS_FILE` set, as `deploy/compose.yml` does): the host's auto-deploy result, read from the file `setup/deploy` writes ([setup/README.md](../../setup/README.md#auto-deploy), Status). It names the deployed commit, and turns `degraded` (never `down`, so HTTP 200) after two failed deploy runs in a row: `failing since <time> (<n> runs in a row): <error>; <commit> still runs`. No file: `ok`, `no auto-deploy on this host`. An unreadable file: `degraded`.
+
 ## Environment
 
-The kit's `CANCCU_MODULE`, `CANCCU_VERSION`, `CANCCU_VALKEY_URL`, `CANCCU_ADMIN_URL` (hello never calls admin), plus `CANCCU_DATABASE_URL`. A missing one stops it at start with `missing environment variable(s): …`. It listens on port 8080 and writes nothing to disk.
+The kit's `CANCCU_MODULE`, `CANCCU_VERSION`, `CANCCU_VALKEY_URL`, `CANCCU_ADMIN_URL` (hello never calls admin), plus `CANCCU_DATABASE_URL`, and the optional `CANCCU_DEPLOY_STATUS_FILE`. A missing required one stops it at start with `missing environment variable(s): …`. It listens on port 8080 and writes nothing to disk.
 
 ## Check
 
