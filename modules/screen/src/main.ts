@@ -68,6 +68,10 @@ async function main(): Promise<void> {
   const store = ValkeyStreamStore.fromUrl(config.valkeyUrl);
   const kv = ValkeyKv.fromUrl(config.valkeyUrl);
   const bus = new Bus(store, config.module, log);
+  // Subscriptions block in XREAD on their connection; on the shared one the health check's PING
+  // would wait behind them and time out, so they get a connection of their own.
+  const listenStore = ValkeyStreamStore.fromUrl(config.valkeyUrl);
+  const listener = new Bus(listenStore, config.module, log);
   const tenants = new TenantResolver({
     tenantsUrl,
     service,
@@ -78,10 +82,10 @@ async function main(): Promise<void> {
     ...(process.env.CANCCU_IP_MODE === "demo" ? { ipMode: { version: config.version } } : {}),
   });
   const rights = new RightsChecker(new AdminClient(config.adminUrl));
-  bus.subscribe(["tenants"], (event) => {
+  listener.subscribe(["tenants"], (event) => {
     tenants.handleEvent(event);
   });
-  bus.subscribe(["admin"], (event) => {
+  listener.subscribe(["admin"], (event) => {
     rights.handleEvent(event);
   });
 
@@ -106,7 +110,10 @@ async function main(): Promise<void> {
     await app.close();
     // A dependency that is down may never answer; do not let it hold the exit.
     const grace = new Promise((resolve) => setTimeout(resolve, 2000).unref());
-    await Promise.race([Promise.allSettled([store.close(), kv.close(), pool.end()]), grace]);
+    await Promise.race([
+      Promise.allSettled([store.close(), listenStore.close(), kv.close(), pool.end()]),
+      grace,
+    ]);
     process.exit(0);
   };
   process.once("SIGTERM", () => void stop());
