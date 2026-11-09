@@ -8,6 +8,7 @@ export * from "./db.js";
 export * from "./errors.js";
 export * from "./health.js";
 export * from "./log.js";
+export * from "./migrations.js";
 export * from "./resolve.js";
 export * from "./rights.js";
 export * from "./secrets.js";

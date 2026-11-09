@@ -106,6 +106,34 @@ services:
       retries: 30
     restart: unless-stopped
 
+  screen:
+    build:
+      context: ..
+      dockerfile: modules/screen/Dockerfile
+    environment:
+      <<: *kit-env
+      CANCCU_MODULE: screen
+      CANCCU_MIGRATE_DATABASE_URL: postgres://canccu_migrator:${CANCCU_DB_MIGRATOR_PASSWORD:-canccu-local-only-migrator}@postgres:5432/canccu
+      CANCCU_TENANTS_URL: http://tenants:8080
+      CANCCU_SIGNIN_HOSTNAME: ${CANCCU_SIGNIN_HOSTNAME:-}
+      CANCCU_SUPERADMIN_HOSTNAME: ${CANCCU_SUPERADMIN_HOSTNAME:-}
+      # The demo tenant on the host's IP address; honoured only while CANCCU_VERSION is dev.
+      CANCCU_IP_MODE: ${CANCCU_IP_MODE:-demo}
+    volumes:
+      - files:/files
+    depends_on:
+      <<: *after-db
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
   admin:
     build:
       context: ..
@@ -121,7 +149,7 @@ services:
       # The same switch as the tenants module's: admin serves the demo tenant on an IP literal
       # only while the tenants module does.
       CANCCU_IP_MODE: ${CANCCU_IP_MODE:-demo}
-      CANCCU_HEALTH_TARGETS: hello=http://hello:8080/health
+      CANCCU_HEALTH_TARGETS: hello=http://hello:8080/health,screen=http://screen:8080/health
       CANCCU_PUBLIC_URL: ${CANCCU_PUBLIC_URL:-}
       CANCCU_DISCORD_CLIENT_ID: ${CANCCU_DISCORD_CLIENT_ID:-}
       CANCCU_DISCORD_CLIENT_SECRET: ${CANCCU_DISCORD_CLIENT_SECRET:-}
@@ -178,6 +206,36 @@ services:
       retries: 30
     restart: unless-stopped
 
+  agenda:
+    build:
+      context: ..
+      dockerfile: modules/agenda/Dockerfile
+    environment:
+      <<: *kit-env
+      CANCCU_MODULE: agenda
+      CANCCU_MIGRATE_DATABASE_URL: postgres://canccu_migrator:${CANCCU_DB_MIGRATOR_PASSWORD:-canccu-local-only-migrator}@postgres:5432/canccu
+      # The event comes from the request's hostname, resolved by the tenants module.
+      CANCCU_TENANTS_URL: http://tenants:8080
+      CANCCU_SIGNIN_HOSTNAME: ${CANCCU_SIGNIN_HOSTNAME:-}
+      CANCCU_SUPERADMIN_HOSTNAME: ${CANCCU_SUPERADMIN_HOSTNAME:-}
+      CANCCU_IP_MODE: ${CANCCU_IP_MODE:-demo}
+      # Only stack containers reach this one; the edge Caddy (#51) narrows it to Caddy alone.
+      CANCCU_TRUSTED_PROXIES: "*"
+    depends_on:
+      <<: *after-db
+      tenants:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys,urllib.request as u; sys.exit(0 if u.urlopen('http://127.0.0.1:8080/health').status==200 else 1)"
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
   caddy:
     image: caddy:2.11-alpine
     # Explicit host IPs: the host's Docker default bind may be 127.0.0.1. On a host reachable from
@@ -198,6 +256,7 @@ services:
     depends_on:
       - hello
       - admin
+      - screen
     restart: unless-stopped
 
 # IPv6 on the stack's network, so Docker NATs published IPv6 traffic through ip6tables and the

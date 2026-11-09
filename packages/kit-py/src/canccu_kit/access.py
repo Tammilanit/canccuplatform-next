@@ -54,14 +54,21 @@ IpNetwork = ipaddress.IPv4Network | ipaddress.IPv6Network
 IpAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
 
 
-class DeviceTokenInvalid(KitError):
+class DeviceUnknown(KitError):
     status = 401
-    code = "device_token_invalid"
+    code = "device_unknown"
 
 
-class VenueIpMismatch(KitError):
+# Shown on a refused kiosk, so it names the crew's next step (the same text as kit-ts).
+VENUE_REFUSED_MESSAGE = (
+    "This screen is not on this event's venue network. Ask an event admin to check the venue's "
+    "addresses, or to turn the venue IP check off for a while with the emergency switch."
+)
+
+
+class VenueIpRefused(KitError):
     status = 403
-    code = "venue_ip_mismatch"
+    code = "venue_ip_refused"
 
 
 class InfoPagesClosed(KitError):
@@ -148,9 +155,9 @@ def check_screen_access(
 ) -> None:
     """A screen needs its device token and, unless the switch is off, its event's venue address."""
     if not device_token_valid:
-        raise DeviceTokenInvalid()
+        raise DeviceUnknown()
     if venue_ip_check_active(ctx, now) and not _from_venue(ctx, client_ip):
-        raise VenueIpMismatch("this screen is not at its event's venue")
+        raise VenueIpRefused(VENUE_REFUSED_MESSAGE)
 
 
 def new_device_token() -> str:

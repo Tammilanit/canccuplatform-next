@@ -1,0 +1,102 @@
+"""Entry point: `python -m canccu_agenda.main` serves on port 8080."""
+
+from __future__ import annotations
+
+import asyncio
+import os
+
+import uvicorn
+from canccu_kit import (
+    AdminClient,
+    Bus,
+    ConfigError,
+    Event,
+    Health,
+    IpMode,
+    RightsChecker,
+    ServiceIdentity,
+    SettingsClient,
+    TenantResolver,
+    ValkeyStreamStore,
+    create_logger,
+    load_config,
+    postgres_check,
+    service_key_from_env,
+    valkey_check,
+)
+
+from .app import create_app
+from .db import Db
+from .deps import Deps
+
+
+async def serve() -> None:
+    config = load_config()
+    create_logger(config.module)
+    missing = [n for n in ("CANCCU_DATABASE_URL", "CANCCU_TENANTS_URL") if not os.environ.get(n)]
+    if missing:
+        raise SystemExit(f"missing environment variable(s): {', '.join(missing)}")
+    try:
+        identity = ServiceIdentity(config.module, service_key_from_env())
+    except ConfigError as exc:
+        raise SystemExit(str(exc)) from exc
+    # The stack logs in as a plain role and migrates as the migration role (0013 item 5).
+    db = await Db.connect(
+        os.environ["CANCCU_DATABASE_URL"],
+        migrate_url=os.environ.get("CANCCU_MIGRATE_DATABASE_URL") or None,
+    )
+    streams = ValkeyStreamStore.from_url(config.valkey_url)
+    bus = Bus(streams, config.module)
+    admin = AdminClient(config.admin_url)
+    rights = RightsChecker(admin)
+    settings = SettingsClient(admin, config.module, service=identity)
+    own_hosts = ("CANCCU_SIGNIN_HOSTNAME", "CANCCU_SUPERADMIN_HOSTNAME")
+    ip_mode = config.version == "dev" and os.environ.get("CANCCU_IP_MODE") == "demo"
+    resolver = TenantResolver(
+        os.environ["CANCCU_TENANTS_URL"],
+        platform_hosts=[os.environ[n] for n in own_hosts if os.environ.get(n)],
+        ip_mode=IpMode(config.version) if ip_mode else None,
+        service=identity,
+    )
+
+    async def on_admin(event: Event) -> None:
+        await rights.handle_event(event)
+
+    async def on_tenants(event: Event) -> None:
+        resolver.handle_event(event)  # a status change (archived) reaches the next request
+
+    bus.subscribe(["admin"], on_admin)
+    bus.subscribe(["tenants"], on_tenants)
+    bus.subscribe_tenants(["tenants"], on_tenants)
+    bus.subscribe_tenants(["admin"], settings.handle_event)
+
+    async def ping() -> None:
+        async with db.platform() as conn:
+            await conn.fetchval("SELECT 1")
+
+    health = Health(
+        config.module,
+        config.version,
+        {"postgres": postgres_check(ping), "valkey": valkey_check(streams)},
+    )
+    app = create_app(Deps(db=db, bus=bus, rights=rights, settings=settings), health, resolver)
+    trusted = os.environ.get("CANCCU_TRUSTED_PROXIES", "127.0.0.1")
+    server = uvicorn.Server(
+        uvicorn.Config(
+            app,
+            host="0.0.0.0",
+            port=8080,
+            log_config=None,
+            proxy_headers=True,
+            forwarded_allow_ips=trusted,
+        )
+    )
+    await server.serve()
+
+
+def main() -> None:
+    asyncio.run(serve())
+
+
+if __name__ == "__main__":
+    main()

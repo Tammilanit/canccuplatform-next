@@ -89,14 +89,14 @@ ihead=3333333333333333333333333333333333333333; istale=4444444444444444444444444
 # ifresh [ENV]: the checkout is at $ihead; both local images and the registry's are stale
 ifresh() {
   ist=$(mktemp -d "$scratch/ist.XXXXXX"); : > "$ist/log"; echo "$ihead" > "$ist/head"; echo "$istale" > "$ist/remote_rev"
-  for m in hello admin tenants; do echo "$istale|" > "$ist/local_$m"; done
+  for m in hello admin tenants agenda screen; do echo "$istale|" > "$ist/local_$m"; done
   # shellcheck disable=SC2034  # read by logged and notlogged in setup/test.sh
   stub=$ist; ienv=$(envfile "POSTGRES_PASSWORD=x\n${1:-CANCCU_VERSION=dev\n}")
 }
 inst() { local n=$1 want=$2; shift 2; exits "$n" "$want" env STUB="$ist" PATH="$istubs/bin:$PATH" CANCCU_ENV_FILE="$ienv" setup/install "$@"; }
 ilocal() { if [ "$(cat "$ist/local_$2" 2>/dev/null)" = "$3" ]; then pass "$1"; else bad "$1 (canccuplatform-$2:latest is '$(cat "$ist/local_$2" 2>/dev/null)', want '$3')" "$(cat "$ist/log")"; fi; }
 
-ifresh; for m in hello admin tenants; do echo "$ihead|" > "$ist/local_$m"; done; inst "install with images that match the checkout" 0
+ifresh; for m in hello admin tenants agenda screen; do echo "$ihead|" > "$ist/local_$m"; done; inst "install with images that match the checkout" 0
 notlogged "install reuses images built from HEAD (no pull, no build)" "docker (pull|build|tag) "
 logged "install starts the stack without building" "compose -f deploy/compose.yml up -d --wait --no-build"
 
@@ -128,12 +128,12 @@ ifresh; touch "$ist/pull_fail"; inst "install when the registry is unreachable" 
 has "install says private images need a registry login" "sudo docker login"
 ilocal "install builds when the pull fails" admin "$ihead|"
 
-ifresh; echo " M modules/hello/src/main.ts" > "$ist/dirty"; for m in hello admin tenants; do echo "$ihead|" > "$ist/local_$m"; done; echo "$ihead" > "$ist/remote_rev"
+ifresh; echo " M modules/hello/src/main.ts" > "$ist/dirty"; for m in hello admin tenants agenda screen; do echo "$ihead|" > "$ist/local_$m"; done; echo "$ihead" > "$ist/remote_rev"
 inst "install with local changes in the checkout" 0
 has "install warns about local changes" "local changes"
 notlogged "install with local changes does not pull" "docker pull "
 logged "install with local changes marks the build" "docker build .*--label canccu.local-changes=true"
-ifresh; for m in hello admin tenants; do echo "$ihead|true" > "$ist/local_$m"; done; echo "$ihead" > "$ist/remote_rev"; inst "install after a build with local changes, now clean" 0
+ifresh; for m in hello admin tenants agenda screen; do echo "$ihead|true" > "$ist/local_$m"; done; echo "$ihead" > "$ist/remote_rev"; inst "install after a build with local changes, now clean" 0
 logged "install does not reuse an image built with local changes" "docker pull -q ghcr.io/example-org/example-repo/hello:dev"
 ilocal "the image built with local changes is replaced" hello "$ihead|"
 

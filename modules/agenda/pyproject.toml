@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling==1.33.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "canccu-agenda"
+version = "0.1.0"
+description = "CanccuPlatform agenda module: the run-of-show, its kinds, now and next."
+requires-python = ">=3.12"
+dependencies = [
+  "canccu-kit[starlette] @ file:../../packages/kit-py",
+  "uvicorn==0.38.0",
+  "asyncpg==0.30.0",
+  "httpx==0.28.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.2.0",
+  "pytest-asyncio==1.4.1.post1",
+  "ruff==0.17.3",
+  "mypy==2.4.1",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/canccu_agenda"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "ASYNC", "RUF"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+mypy_path = "src:tests"
+files = ["src", "tests"]
+explicit_package_bases = true
+exclude = ["^\\.venv/"]
+
+[[tool.mypy.overrides]]
+module = ["asyncpg", "asyncpg.*", "canccu_kit.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]

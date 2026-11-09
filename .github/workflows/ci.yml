@@ -122,6 +122,9 @@ jobs:
       - name: admin against Postgres (RLS, its migration, cross-tenant leak tests)
         working-directory: modules/admin
         run: pip install -e ".[dev]" && pytest
+      - name: agenda against Postgres (RLS, its migration, cross-tenant leak tests)
+        working-directory: modules/agenda
+        run: pip install -e ".[dev]" && pytest
       - name: Valkey and Postgres logs
         if: failure()
         run: docker compose -f deploy/compose.yml logs valkey postgres
@@ -149,6 +152,9 @@ jobs:
       - name: tenants checks
         working-directory: modules/tenants
         run: pip install -e ".[dev]" && ruff check . && ruff format --check . && mypy . && pytest
+      - name: agenda checks
+        working-directory: modules/agenda
+        run: pip install -e ".[dev]" && ruff check . && ruff format --check . && mypy . && pytest
       - name: Start the stack (clean runner, only Docker)
         run: docker compose -f deploy/compose.yml up -d --build --wait
       - name: Only Caddy publishes a port; only the four named volumes exist
@@ -170,6 +176,10 @@ jobs:
           jq -e '.status == "ok" and .module == "admin" and .checks.postgres.status == "ok"' /tmp/admin-health.json
           curl -fsS http://localhost/api/tenants/health | tee /tmp/tenants-health.json; echo
           jq -e '.status == "ok" and .module == "tenants" and .checks.postgres.status == "ok"' /tmp/tenants-health.json
+          curl -fsS http://localhost/api/agenda/health | tee /tmp/agenda-health.json; echo
+          jq -e '.status == "ok" and .module == "agenda" and .checks.postgres.status == "ok"' /tmp/agenda-health.json
+          curl -fsS http://127.0.0.1/api/agenda/kinds | tee /tmp/agenda-kinds.json; echo
+          jq -e '.kinds_version == 0 and (.kinds | map(.key) | index("other") != null)' /tmp/agenda-kinds.json
       - name: The seeded demo tenant answers in IP mode through Caddy
         run: |
           curl -fsS http://127.0.0.1/api/tenants/current | tee /tmp/tenants-current.json; echo
