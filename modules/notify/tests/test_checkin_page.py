@@ -76,7 +76,7 @@ async def test_a_signed_out_submit_and_a_non_member_are_told_what_to_do(
     assert signed_out.status_code == 401 and "/admin/sign-in?next=" in signed_out.text
     monkeypatch.setattr(checkin, "is_member", lambda session: False)
     outsider = await submit(env, form, "u_a")
-    assert outsider.status_code == 403 and "Join the event" in outsider.text
+    assert outsider.status_code == 403 and 'href="/notify/join"' in outsider.text
     assert recorded(env) == []
 
 

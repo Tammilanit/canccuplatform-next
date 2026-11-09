@@ -118,8 +118,11 @@ async def submit(request: Request) -> Response:
         return _page(
             request,
             "Not a member yet",
-            "<p>Only members of this event can check in. Join the event with its own link or"
-            " QR code from the organisers, then scan again.</p>",
+            # At the door the phone is on the venue's network, where joining needs no code
+            # (contracts/tenants.md, Joining the event); the hub's join page does it.
+            "<p>Only members of this event can check in.</p>"
+            '<p><a class=canccu-button href="/notify/join">Join the event</a></p>'
+            "<p>Then scan the screen again.</p>",
             403,
         )
     if created:
