@@ -18,3 +18,6 @@ admin admin_sign_in_flows OAuth flows in progress, hashed; no event data
 admin admin_first_run   the one-time first-run code, hashed; no event data
 screen devices          device identity: name, token hash, venue id, current tenant (0013 item 34)
 screen screen_migrations which migration files ran (created by runMigrations before the files); no event data
+notify notify_migrations which migration files ran (created by db.py before the files); no event data
+notify notify_topic_types the topic registry: one set of topic types for the platform (contracts/notify.md, Tenancy)
+notify notify_topic_type_history every registration change, append-only; module registrations, no event data
