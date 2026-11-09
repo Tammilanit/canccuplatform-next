@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 
 import { breakImageOrder } from "../src/playback/break-play.js";
 import { NO_BREAKS } from "../src/playback/breaks.js";
-import { breakPlaylist, inputFor, ticker } from "./break-fixtures.js";
+import { breakPlaylist, image, inputFor, ticker } from "./break-fixtures.js";
 
 const START = 1_000_000;
 const s = (seconds: number) => START + seconds * 1000;
@@ -136,12 +136,12 @@ describe("slideshow breaks", () => {
     const input = inputFor([show, breakPlaylist("other", {})]);
     const assets = new Map(input.assets);
     input.assets = assets;
-    assets.set("show-img-1", { ...assets.get("show-img-1")!, kind: "video" });
+    assets.set("show-img-1", { ...image("show-img-1"), kind: "video" });
     const t = ticker(input);
     t.setDue("show", START - 1000);
     expect(t.tick(s(0))?.frame?.assetId).toBe("show-img-2");
 
-    assets.set("show-img-2", { ...assets.get("show-img-2")!, health: "error" });
+    assets.set("show-img-2", { ...image("show-img-2"), health: "error" });
     const skipped = ticker(input);
     skipped.setDue("show", START - 1000);
     skipped.setDue("other", START - 1000);
