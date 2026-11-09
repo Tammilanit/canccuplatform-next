@@ -144,7 +144,8 @@ paths:
       description: |
         Sets the keys in `values` and keeps every other key. Only the module itself: the service identity's caller
         must be `{module}` (403 `service_forbidden` otherwise). The same checks as `PUT /api/admin/settings/{module}`;
-        a stale `settings_version` is 409 `version_conflict`, an archived event 409 `event_archived`. On success
+        a stale `settings_version` is 409 `version_conflict`. The calling module refuses its own writes on an
+        archived event before it calls. On success
         `settings_version` goes up by one and `admin.settings.changed` is emitted with `actor_user_id`. The calling
         module audits the change that caused the write. Internal network only.
       security:
@@ -512,8 +513,7 @@ components:
     Conflict:
       description: |
         `version_conflict` (the settings, or a member's granted rights, changed since they were read);
-        `event_archived` (granting rights, or a module writing its settings, in an archived event, which is
-        read-only).
+        `event_archived` (granting rights in an archived event, which is read-only).
       content:
         application/json:
           schema:
