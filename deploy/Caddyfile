@@ -33,6 +33,16 @@
 		reverse_proxy tenants:8080
 	}
 
+	# The screen contract's paths are /api/screen/... too, so they are not stripped either.
+	handle /api/screen/health {
+		rewrite * /health
+		reverse_proxy screen:8080
+	}
+
+	handle /api/screen/* {
+		reverse_proxy screen:8080
+	}
+
 	handle_path /admin/* {
 		reverse_proxy admin:8080
 	}

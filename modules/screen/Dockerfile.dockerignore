@@ -1,0 +1,6 @@
+# The build context is the repo root (BuildKit reads <Dockerfile>.dockerignore).
+**
+!packages/kit-ts
+!modules/screen
+**/node_modules
+**/dist

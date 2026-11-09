@@ -3,9 +3,9 @@ import {
   AdminAccessRestricted,
   CIDR_CACHE_MAX,
   DEFAULT_TAILSCALE_CIDRS,
-  DeviceTokenInvalid,
+  DeviceUnknown,
   InfoPagesClosed,
-  VenueIpMismatch,
+  VenueIpRefused,
   checkAdminAccess,
   checkInfoAccess,
   checkScreenAccess,
@@ -90,17 +90,17 @@ describe("screens: venue IP plus device token", () => {
   it("never serves on the venue IP alone", () => {
     expect(() => {
       checkScreenAccess(ctx, { deviceTokenValid: false, clientIp: VENUE_V4, now: NOW });
-    }).toThrow(DeviceTokenInvalid);
+    }).toThrow(DeviceUnknown);
   });
 
   it("refuses a valid token from outside the venue, and any screen of an event with no venue", () => {
     expect(() => {
       checkScreenAccess(ctx, { deviceTokenValid: true, clientIp: ELSEWHERE, now: NOW });
-    }).toThrow(VenueIpMismatch);
+    }).toThrow(VenueIpRefused);
     const noVenue = tenantContext({ venue: null });
     expect(() => {
       checkScreenAccess(noVenue, { deviceTokenValid: true, clientIp: VENUE_V4, now: NOW });
-    }).toThrow(VenueIpMismatch);
+    }).toThrow(VenueIpRefused);
   });
 
   it("lets the token alone serve while the emergency switch is off, until it expires", () => {
@@ -117,12 +117,12 @@ describe("screens: venue IP plus device token", () => {
     }).not.toThrow();
     expect(() => {
       checkScreenAccess(off, { deviceTokenValid: false, clientIp: ELSEWHERE, now: NOW });
-    }).toThrow(DeviceTokenInvalid);
+    }).toThrow(DeviceUnknown);
     const later = new Date("2026-01-01T18:00:00Z");
     expect(venueIpCheckActive(off, later)).toBe(true);
     expect(() => {
       checkScreenAccess(off, { deviceTokenValid: true, clientIp: ELSEWHERE, now: later });
-    }).toThrow(VenueIpMismatch);
+    }).toThrow(VenueIpRefused);
   });
 
   it("keeps the check on when the switch is off without an end", () => {

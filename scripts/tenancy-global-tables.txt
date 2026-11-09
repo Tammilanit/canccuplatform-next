@@ -17,3 +17,4 @@ admin admin_sessions    sign-in sessions, hashed; each is bound to one tenant wi
 admin admin_sign_in_flows OAuth flows in progress, hashed; no event data
 admin admin_first_run   the one-time first-run code, hashed; no event data
 screen devices          device identity: name, token hash, venue id, current tenant (0013 item 34)
+screen screen_migrations which migration files ran (created by runMigrations before the files); no event data
