@@ -9,7 +9,9 @@ import type { Bus, RightsChecker, SqlClient } from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import type { Db, DeviceRow } from "./db.js";
 import { detachDevice } from "./detach.js";
+import { healthOf } from "./health.js";
 import { actorOf, assertWritable, body, deviceName, needs, notFound, tenantOf } from "./http.js";
+import type { Kv } from "./kv.js";
 import { publishAll } from "./zones.js";
 
 /** A device's place in the event: its `assignments` row, joined by every event read. */
@@ -29,7 +31,7 @@ export function mirrorOf(p: Placement): { device_id: string } | { zone_key: stri
   return null;
 }
 
-/** The contract's `Device`; health joins it with #222. */
+/** The contract's `Device`; the list adds its `health`. */
 export function deviceView(row: EventDevice): Record<string, unknown> {
   return {
     id: row.id,
@@ -70,15 +72,18 @@ export async function eventDevice(
 
 export interface DeviceDeps {
   db: Db;
+  kv: Kv;
   bus: Bus;
   rights: RightsChecker;
   audit: Audit;
+  now?: () => number;
 }
 
 type ById = { Params: { device_id: string } };
 
 export function deviceRoutes(app: FastifyInstance, deps: DeviceDeps): void {
   const { db } = deps;
+  const now = deps.now ?? Date.now;
 
   app.get(
     "/api/screen/devices",
@@ -88,8 +93,16 @@ export function deviceRoutes(app: FastifyInstance, deps: DeviceDeps): void {
         async (c) =>
           (await c.query(`${EVENT_DEVICES_SQL} ORDER BY d.name, d.id`, [requireTenant()])).rows,
       );
+      const health = await healthOf(
+        deps.kv,
+        rows.map((r) => r.id as string),
+        now(),
+      );
       return {
-        devices: rows.map((r) => deviceView(r as unknown as EventDevice)),
+        devices: rows.map((r) => ({
+          ...deviceView(r as unknown as EventDevice),
+          health: health.get(r.id as string),
+        })),
       };
     },
   );

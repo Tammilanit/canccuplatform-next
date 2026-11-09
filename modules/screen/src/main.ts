@@ -5,6 +5,7 @@ import {
   Bus,
   RightsChecker,
   ServiceIdentity,
+  SettingsClient,
   TenantResolver,
   ValkeyStreamStore,
   checkLoginRole,
@@ -18,12 +19,15 @@ import {
 import { buildApp, screenHealth } from "./app.js";
 import { tenantsAudit } from "./audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
+import { sweepOffline } from "./health.js";
 import { ValkeyKv } from "./kv.js";
 import { seedMainZone } from "./zones.js";
 
 const PORT = 8080;
 /** pg_advisory_lock key of the screen migrations; each module has its own. */
 const MIGRATION_LOCK = 0x5c4ee7;
+/** How often a device past its deadline is reported offline (docs/plans/issue-107.md, D11). */
+const SWEEP_MS = 5000;
 
 function env(name: string): string {
   const value = process.env[name];
@@ -84,13 +88,18 @@ async function main(): Promise<void> {
     ].filter((h): h is string => !!h),
     ...(process.env.CANCCU_IP_MODE === "demo" ? { ipMode: { version: config.version } } : {}),
   });
-  const rights = new RightsChecker(new AdminClient(config.adminUrl));
+  const admin = new AdminClient(config.adminUrl);
+  const rights = new RightsChecker(admin);
+  const settings = new SettingsClient(admin, config.module, { service });
   const db = poolDb(pool);
   const seed = seedMainZone(db, bus);
   // One loop for both sources, so neither waits behind the other's blocking read.
   listener.subscribe(["tenants", "admin"], (event) => {
     if (event.source !== "tenants") {
       rights.handleEvent(event);
+      void settings.handleEvent(event).catch((err: unknown) => {
+        log.warn({ err }, "re-reading the screen settings failed");
+      });
       return;
     }
     tenants.handleEvent(event);
@@ -112,6 +121,7 @@ async function main(): Promise<void> {
     audit: tenantsAudit(tenantsUrl, service),
     log,
     tenants,
+    settings,
     health: screenHealth({
       module: config.module,
       version: config.version,
@@ -121,8 +131,14 @@ async function main(): Promise<void> {
   });
   await app.listen({ host: "0.0.0.0", port: PORT });
   log.info({ port: PORT, version: config.version }, "screen started");
+  const sweep = setInterval(() => {
+    sweepOffline({ db, kv, bus, now: Date.now, log }).catch((err: unknown) => {
+      log.warn({ err }, "offline sweep failed");
+    });
+  }, SWEEP_MS);
 
   const stop = async (): Promise<void> => {
+    clearInterval(sweep);
     await app.close();
     // A dependency that is down may never answer; do not let it hold the exit.
     const grace = new Promise((resolve) => setTimeout(resolve, 2000).unref());

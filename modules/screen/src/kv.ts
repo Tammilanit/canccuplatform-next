@@ -1,5 +1,6 @@
 /**
- * The short-lived state the module keeps in Valkey (pairing codes, open-code counts, commands), behind a
+ * The short-lived state the module keeps in Valkey (pairing codes, open-code counts, commands, device
+ * health), behind a
  * small interface so tests run without Valkey. Keys come from the kit's `tenantKey` only.
  */
 import { Valkey } from "iovalkey";
@@ -19,9 +20,18 @@ export interface Kv {
   removeMember(key: string, member: string): Promise<void>;
   /** The members not yet expired at `nowMs`, and the set cleared, at once: one caller gets each. */
   takeLive(key: string, nowMs: number): Promise<string[]>;
+  /**
+   * A member falls due at `dueAtMs`; true when it was not in the set. Unlike `addExpiring`, a due
+   * member stays until `takeDue` takes it, so whoever sweeps sees every one.
+   */
+  addDue(key: string, member: string, dueAtMs: number): Promise<boolean>;
+  /** The members due at `nowMs`, removed at once: one caller gets each. */
+  takeDue(key: string, nowMs: number): Promise<string[]>;
   ping(): Promise<void>;
   close(): Promise<void>;
 }
+
+const DUE_SET_GRACE_MS = 24 * 3600_000;
 
 /** Sorted sets hold a few open codes at most; they expire with their newest member. */
 export class ValkeyKv implements Kv {
@@ -69,6 +79,21 @@ export class ValkeyKv implements Kv {
       .del(key)
       .exec();
     return (replies?.[1]?.[1] as string[] | undefined) ?? [];
+  }
+  async addDue(key: string, member: string, dueAtMs: number): Promise<boolean> {
+    const added = await this.client.zadd(key, dueAtMs, member);
+    // A set nobody sweeps any more (its event has no device left) goes after a day.
+    await this.client.pexpireat(key, dueAtMs + DUE_SET_GRACE_MS, "GT");
+    await this.client.pexpireat(key, dueAtMs + DUE_SET_GRACE_MS, "NX");
+    return added === 1;
+  }
+  async takeDue(key: string, nowMs: number): Promise<string[]> {
+    const replies = await this.client
+      .multi()
+      .zrangebyscore(key, "-inf", nowMs)
+      .zremrangebyscore(key, "-inf", nowMs)
+      .exec();
+    return (replies?.[0]?.[1] as string[] | undefined) ?? [];
   }
   async ping(): Promise<void> {
     await this.client.ping();
@@ -133,6 +158,22 @@ export class MemoryKv implements Kv {
     const members = await this.live(key, nowMs);
     this.sets.delete(key);
     return members;
+  }
+  addDue(key: string, member: string, dueAtMs: number): Promise<boolean> {
+    const set = this.sets.get(key) ?? new Map<string, number>();
+    const added = !set.has(member);
+    set.set(member, dueAtMs);
+    this.sets.set(key, set);
+    return Promise.resolve(added);
+  }
+  takeDue(key: string, nowMs: number): Promise<string[]> {
+    const due: string[] = [];
+    for (const [member, at] of this.sets.get(key) ?? []) {
+      if (at > nowMs) continue;
+      due.push(member);
+      this.sets.get(key)?.delete(member);
+    }
+    return Promise.resolve(due);
   }
   ping(): Promise<void> {
     return Promise.resolve();
