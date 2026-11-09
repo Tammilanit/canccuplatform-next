@@ -19,13 +19,13 @@ def main() -> None:
         s.connect(SOCKET)
         s.sendall(json.dumps({"op": "render", "size": len(deck)}).encode() + b"\n" + deck)
         reply = s.makefile("rb")
-        head = json.loads(reply.readline())
-        assert head["ok"], head
-        assert [(x["width"], x["height"]) for x in head["slides"]] == [(2560, 1440)] * 2, head
-        for slide in head["slides"]:
-            png = reply.read(slide["bytes"])
-            assert png.startswith(b"\x89PNG") and struct.unpack(">II", png[16:24]) == (2560, 1440)
-        assert head["warnings"][0]["font"] == "FancyUnembedded", head
+        slides = 0
+        while "slide" in (msg := json.loads(reply.readline())):
+            png = reply.read(msg["slide"]["bytes"])
+            assert png.startswith(b"\x89PNG") and struct.unpack(">II", png[16:24]) == (3840, 2160)
+            slides += 1
+        assert msg["ok"] and msg["slide_count"] == slides == 2, msg
+        assert msg["warnings"][0]["font"] == "Fancy Unembedded", msg
     print("smoke: 2 slides rendered through the socket")
 
 

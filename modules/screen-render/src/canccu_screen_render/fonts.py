@@ -5,19 +5,12 @@ Calibri), so the organiser knows why a line may break differently. Warnings neve
 """
 
 import re
-import subprocess
 from collections.abc import Callable
 
 Warning = dict[str, object]
+# A deck naming hundreds of fonts gets the first 50 warnings: enough to act on, cheap to check.
+MAX_WARNINGS = 50
 Matcher = Callable[[str], str]
-
-
-def fc_match(name: str) -> str:
-    """The family fontconfig draws `name` with."""
-    out = subprocess.run(
-        ["fc-match", "-f", "%{family}", name], capture_output=True, text=True, timeout=10
-    )
-    return out.stdout.split(",")[0].strip()
 
 
 def _same(a: str, b: str) -> bool:
@@ -37,8 +30,10 @@ def _warning(font: str, substitute: str, slides: list[int]) -> Warning:
 
 
 def pptx_warnings(fonts: dict[str, set[int]], slide_count: int, match: Matcher) -> list[Warning]:
-    warnings = []
+    warnings: list[Warning] = []
     for font in sorted(fonts):
+        if len(warnings) == MAX_WARNINGS:
+            break
         substitute = match(font)
         if not _same(substitute, font):
             slides = sorted(fonts[font]) or list(range(1, slide_count + 1))
@@ -47,27 +42,32 @@ def pptx_warnings(fonts: dict[str, set[int]], slide_count: int, match: Matcher) 
 
 
 def parse_pdffonts(output: str) -> list[tuple[str, bool]]:
-    """(name, embedded) per font from `pdffonts`; the dashes line gives the column widths."""
+    """(name, embedded) per font from `pdffonts`.
+
+    Read from the right: the last five fields are `emb sub uni` and the object id, and a long
+    name pushes the fixed columns out of place. PostScript names have no spaces.
+    """
     lines = output.splitlines()
     dash = next((i for i, line in enumerate(lines) if line.startswith("---")), None)
     if dash is None:
         return []
-    widths = [len(col) for col in lines[dash].split(" ")]
-    name_end = widths[0]
-    emb_start = sum(widths[:3]) + 3
     fonts = []
     for line in lines[dash + 1 :]:
-        if line.strip():
-            emb = line[emb_start : emb_start + widths[3]].strip()
-            fonts.append((line[:name_end].strip(), emb == "yes"))
+        fields = line.split()
+        if len(fields) >= 7:
+            fonts.append((fields[0], fields[-5] == "yes"))
     return fonts
 
 
 def base_family(postscript_name: str) -> str:
-    """`ABCDEF+TimesNewRomanPS-BoldMT` → `TimesNewRoman`: no subset tag, style or vendor suffix."""
+    """`ABCDEF+TimesNewRomanPS-BoldMT` → `Times New Roman`, the family name fontconfig knows.
+
+    Without the spaces fontconfig finds no alias and names another substitute than poppler uses.
+    """
     name = postscript_name.split("+", 1)[-1]
     name = re.split(r"[-,]", name, maxsplit=1)[0]
-    return re.sub(r"(PSMT|PS|MT)$", "", name)
+    name = re.sub(r"(PSMT|PS|MT)$", "", name)
+    return re.sub(r"(?<=[a-z])(?=[A-Z])", " ", name)
 
 
 def pdf_warnings(pages: dict[int, list[tuple[str, bool]]], match: Matcher) -> list[Warning]:
@@ -76,8 +76,10 @@ def pdf_warnings(pages: dict[int, list[tuple[str, bool]]], match: Matcher) -> li
         for name, embedded in fonts:
             if not embedded and not name.startswith("["):
                 missing.setdefault(base_family(name), set()).add(page)
-    warnings = []
+    warnings: list[Warning] = []
     for font in sorted(missing):
+        if len(warnings) == MAX_WARNINGS:
+            break
         substitute = match(font)
         if not _same(substitute, font):
             warnings.append(_warning(font, substitute, sorted(missing[font])))

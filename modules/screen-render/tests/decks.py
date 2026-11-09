@@ -34,15 +34,40 @@ THEME = (
 )
 
 
-def minimal_pptx(slides: list[list[str]], extra: dict[str, bytes] | None = None) -> bytes:
-    """A zip shaped like a PPTX: enough for the checks, not for LibreOffice."""
+R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+
+
+def minimal_pptx(
+    slides: list[list[str]],
+    extra: dict[str, bytes] | None = None,
+    order: list[int] | None = None,
+    hidden: tuple[int, ...] = (),
+) -> bytes:
+    """A zip shaped like a PPTX: enough for the checks, not for LibreOffice.
+
+    `order` lists the slide parts (1-based) in show order; `hidden` marks parts `show="0"`.
+    """
+    order = order or list(range(1, len(slides) + 1))
+    ids = "".join(f'<p:sldId id="{255 + n}" r:id="rId{n}"/>' for n in order)
+    rels = "".join(
+        f'<Relationship Id="rId{n}" Type="{R_NS}/slide" Target="slides/slide{n}.xml"/>'
+        for n in order
+    )
     out = io.BytesIO()
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("[Content_Types].xml", "<Types/>")
-        z.writestr("ppt/presentation.xml", "<p:presentation/>")
+        z.writestr(
+            "ppt/presentation.xml",
+            '<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+            f'xmlns:r="{R_NS}"><p:sldIdLst>{ids}</p:sldIdLst></p:presentation>',
+        )
+        z.writestr("ppt/_rels/presentation.xml.rels", f"<Relationships>{rels}</Relationships>")
         z.writestr("ppt/theme/theme1.xml", THEME)
         for n, fonts in enumerate(slides, start=1):
-            z.writestr(f"ppt/slides/slide{n}.xml", slide_xml(fonts))
+            xml = slide_xml(fonts)
+            if n in hidden:
+                xml = xml.replace("<p:sld ", '<p:sld show="0" ', 1)
+            z.writestr(f"ppt/slides/slide{n}.xml", xml)
             z.writestr(f"ppt/slides/_rels/slide{n}.xml.rels", "<Relationships/>")
         for name, data in (extra or {}).items():
             z.writestr(name, data)
@@ -88,14 +113,46 @@ def png_header(width: int, height: int) -> bytes:
     )
 
 
-def jpeg_header(width: int, height: int) -> bytes:
+def jpeg_header(width: int, height: int, exif: int = 0) -> bytes:
+    """A JPEG start; `exif` bytes of APP1 data push the size marker past the first 64 KiB."""
     sof = b"\xff\xc0" + struct.pack(">HBHHB", 11, 8, height, width, 1) + b"\x01\x11\x00"
-    return b"\xff\xd8" + b"\xff\xe0" + struct.pack(">H", 16) + b"JFIF\x00" + b"\x00" * 9 + sof
+    app0 = b"\xff\xe0" + struct.pack(">H", 16) + b"JFIF\x00" + b"\x00" * 9
+    app1 = b""
+    while exif > 0:
+        chunk = min(exif, 65000)
+        app1 += b"\xff\xe1" + struct.pack(">H", chunk + 2) + b"\x00" * chunk
+        exif -= chunk
+    return b"\xff\xd8" + app0 + app1 + sof
 
 
-def pdf_pages(count: int, font: str = "FancyUnembedded") -> bytes:
-    """A real PDF of `count` 16:9 pages whose text uses a font it does not embed."""
+def gif_header(width: int, height: int) -> bytes:
+    return b"GIF89a" + struct.pack("<HH", width, height) + b"\x00" * 24
+
+
+def bmp_header(width: int, height: int) -> bytes:
+    return b"BM" + b"\x00" * 16 + struct.pack("<ii", width, -height) + b"\x00" * 24
+
+
+def webp_header(width: int, height: int) -> bytes:
+    """A VP8X (extended) WebP: the canvas size is stored minus one, in 24 bits."""
+    body = b"VP8X" + struct.pack("<I", 10) + b"\x00" * 4
+    body += (width - 1).to_bytes(3, "little") + (height - 1).to_bytes(3, "little")
+    return b"RIFF" + struct.pack("<I", len(body) + 4) + b"WEBP" + body
+
+
+def pdf_pages(
+    count: int, font: str = "FancyUnembedded", rotate: int = 0, image: tuple[int, int] | None = None
+) -> bytes:
+    """A real PDF of `count` 16:9 pages whose text uses a font it does not embed.
+
+    `rotate` sets /Rotate on every page; `image` adds an image of that size (its header only:
+    the data is one byte, as in a decompression bomb).
+    """
     content = b"BT /F1 48 Tf 72 270 Td (Slide) Tj ET"
+    xobject = b""
+    if image:
+        content += b" q 100 0 0 100 0 0 cm /Im1 Do Q"
+        xobject = f" /XObject << /Im1 {5 + count} 0 R >>".encode()
     objects = [
         b"<< /Type /Catalog /Pages 2 0 R >>",
         b"<< /Type /Pages /Kids ["
@@ -105,9 +162,16 @@ def pdf_pages(count: int, font: str = "FancyUnembedded") -> bytes:
         b"<< /Length " + str(len(content)).encode() + b" >>\nstream\n" + content + b"\nendstream",
     ]
     objects += [
-        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 960 540] "
-        b"/Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>"
+        f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 960 540] /Rotate {rotate} ".encode()
+        + b"/Resources << /Font << /F1 3 0 R >>"
+        + xobject
+        + b" >> /Contents 4 0 R >>"
     ] * count
+    if image:
+        objects.append(
+            f"<< /Type /XObject /Subtype /Image /Width {image[0]} /Height {image[1]} ".encode()
+            + b"/ColorSpace /DeviceGray /BitsPerComponent 8 /Length 1 >>\nstream\n\x00\nendstream"
+        )
     out = b"%PDF-1.4\n"
     offsets = []
     for n, body in enumerate(objects, start=1):

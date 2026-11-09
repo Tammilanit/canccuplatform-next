@@ -7,8 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from canccu_screen_render.convert import render, run
-from canccu_screen_render.fonts import fc_match
+from canccu_screen_render.convert import fc_matcher, render, run
 from canccu_screen_render.inspect import Limits, RenderError
 from decks import EXTERNAL_IMAGE_REL, add_slide_rel, fodp, pdf_pages, png_header, with_entries
 
@@ -35,10 +34,17 @@ def png_size(path: Path) -> tuple[int, int]:
     return width, height
 
 
-def job(tmp: Path, deck: bytes, **kwargs):  # type: ignore[no-untyped-def]
+class Job:
+    def __init__(self, slides: list[Path], warnings: list[dict]) -> None:
+        self.slides, self.warnings = slides, warnings
+
+
+def job(tmp: Path, deck: bytes, **kwargs) -> Job:  # type: ignore[no-untyped-def]
     workdir = tmp / "job"
     workdir.mkdir(exist_ok=True)
-    return render(deck, workdir, lambda: False, **kwargs)
+    slides: list[Path] = []
+    warnings = render(deck, workdir, lambda: False, slides.append, **kwargs)
+    return Job(slides, warnings)
 
 
 def refusal(tmp: Path, deck: bytes, **kwargs) -> tuple[str, str]:  # type: ignore[no-untyped-def]
@@ -54,14 +60,14 @@ def pptx(tmp_path_factory: pytest.TempPathFactory) -> bytes:
 
 def test_pptx_renders_every_slide_within_the_cap(tmp_path, pptx):
     result = job(tmp_path, pptx)
-    assert [png_size(p) for p in result.slides] == [(2560, 1440), (2560, 1440)]
+    assert [png_size(p) for p in result.slides] == [(3840, 2160), (3840, 2160)]
     [odd] = [w for w in result.warnings if w["font"] == ODD_FONT]
     assert odd["code"] == "font_missing" and odd["slides"] == [1, 2]
 
 
 def test_pdf_renders_without_libreoffice(tmp_path):
     result = job(tmp_path, made_by_libreoffice(tmp_path, "pdf", slides=3))
-    assert len(result.slides) == 3 and png_size(result.slides[0]) == (2560, 1440)
+    assert len(result.slides) == 3 and png_size(result.slides[0]) == (3840, 2160)
     # LibreOffice embeds what it drew with, so the PDF itself needs no warning.
     assert result.warnings == []
 
@@ -70,8 +76,8 @@ def test_pdf_names_fonts_it_does_not_embed(tmp_path):
     result = job(tmp_path, pdf_pages(2))
     assert len(result.slides) == 2
     [w] = result.warnings
-    assert w["font"] == "FancyUnembedded" and w["slides"] == [1, 2]
-    assert fc_match("FancyUnembedded") in str(w["message"])
+    assert w["font"] == "Fancy Unembedded" and w["slides"] == [1, 2]
+    assert fc_matcher(time.monotonic() + 30, lambda: False)("Fancy Unembedded") in str(w["message"])
 
 
 def test_hostile_external_image(tmp_path, pptx):
@@ -106,3 +112,21 @@ def test_timeout(tmp_path, pptx):
 
 def test_limits_are_the_contract_ones():
     assert Limits().max_slides == 300 and Limits().max_deck_bytes == 100 * 1024 * 1024
+
+
+def test_slides_come_in_order_across_batches(tmp_path):
+    result = job(tmp_path, made_by_libreoffice(tmp_path, "pptx", slides=12))
+    assert len(result.slides) == 12
+    # Poppler names a batch's pages by page number; the order must follow the deck.
+    numbers = [int(p.stem.rsplit("-")[-1]) for p in result.slides]
+    assert numbers == list(range(1, 13))
+
+
+def test_a_rotated_page_keeps_its_shape(tmp_path):
+    result = job(tmp_path, pdf_pages(1, rotate=90))
+    assert png_size(result.slides[0]) == (1215, 2160)
+
+
+def test_hostile_huge_image_in_a_pdf(tmp_path):
+    code, message = refusal(tmp_path, pdf_pages(1, image=(40000, 40000)))
+    assert code == "file_invalid" and "40000 by 40000" in message

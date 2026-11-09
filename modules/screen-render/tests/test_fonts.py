@@ -39,7 +39,7 @@ def test_parse_pdffonts():
 
 
 def test_base_family():
-    assert base_family("ABCDEF+TimesNewRomanPS-BoldMT") == "TimesNewRoman"
+    assert base_family("ABCDEF+TimesNewRomanPS-BoldMT") == "Times New Roman"
     assert base_family("ArialMT") == "Arial"
     assert base_family("Calibri,Bold") == "Calibri"
 
@@ -48,3 +48,14 @@ def test_pdf_warns_only_for_fonts_neither_embedded_nor_in_the_image():
     pages = {1: [("ArialMT", False), ("XYZ+Fancy", True)], 2: [("ArialMT", False)], 3: []}
     [w] = pdf_warnings(pages, match)
     assert w["font"] == "Arial" and w["slides"] == [1, 2] and "Liberation Sans" in w["message"]
+
+
+def test_parse_pdffonts_with_a_long_name():
+    long = "ABCDEF+AVeryLongFontNameThatPassesTheColumnWidth-Bold"
+    out = PDFFONTS.replace("ABCDEF+DejaVuSans                   ", long)
+    assert parse_pdffonts(out)[0] == (long, True)
+
+
+def test_warnings_are_capped():
+    fonts = {f"Odd {n}": {1} for n in range(80)}
+    assert len(pptx_warnings(fonts, 1, match)) == 50

@@ -32,8 +32,9 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
     limits = Limits()
     server = serve(
-        SOCKET, lambda deck, workdir, stop: render(deck, workdir, stop, limits), limits, SCRATCH
-    )
+        SOCKET, lambda deck, workdir, stop, emit: render(deck, workdir, stop, emit, limits),
+        limits, SCRATCH,
+    )  # fmt: skip
     logging.getLogger("canccu_screen_render").info("listening on %s", SOCKET)
     server.serve_forever()
 
