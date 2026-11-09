@@ -59,3 +59,6 @@ The criteria map as: isolation, external links, fonts and warnings → A; fair q
 
 ## After the answers
 The lead rewrites #184 (or opens the slices) as the answers decide; slice A then runs as one package against this design table, slice B after #108's skeleton and assets are merged.
+
+## Answers (2026-11-09)
+The user approved the plan with every recommendation. This branch builds slice A only: slice B needs #108's screen module, and only the lead can split the issue. Question 5 (`slides_done`) is a contract change, so it goes in its own PR first. Question 6 got the smallest CI change: one `screen-render` job, not the generic step.

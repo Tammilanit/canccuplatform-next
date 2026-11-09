@@ -93,3 +93,31 @@ def test_ping_helper(sock, tmp_path):
 
     assert ping(sock) is True
     assert ping(tmp_path / "nobody.sock") is False
+
+
+def test_hanging_up_cancels_the_job(tmp_path):
+    import time
+
+    from canccu_screen_render.convert import Cancelled
+
+    seen = threading.Event()
+
+    def waits(deck, workdir, should_stop):
+        end = time.monotonic() + 5
+        while time.monotonic() < end:
+            if should_stop():
+                seen.set()
+                raise Cancelled
+            time.sleep(0.05)
+        raise AssertionError("never saw the hang-up")
+
+    path = tmp_path / "c.sock"
+    server = serve(path, waits, Limits(), tmp_path / "scratch")
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    with socket.socket(socket.AF_UNIX) as s:
+        s.connect(str(path))
+        s.sendall(b'{"op": "render", "size": 4}\ndeck')
+        time.sleep(0.3)
+    assert seen.wait(3)
+    server.shutdown()
+    server.server_close()
