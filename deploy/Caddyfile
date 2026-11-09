@@ -43,6 +43,21 @@
 		reverse_proxy screen:8080
 	}
 
+	# The theming contract's paths are /api/theming/... and /theming/... (its served files), so
+	# neither is stripped; /internal/theming/ is never routed here.
+	handle /api/theming/health {
+		rewrite * /health
+		reverse_proxy theming:8080
+	}
+
+	handle /api/theming/* {
+		reverse_proxy theming:8080
+	}
+
+	handle /theming/* {
+		reverse_proxy theming:8080
+	}
+
 	# The agenda contract's paths are /api/agenda/... too.
 	handle /api/agenda/health {
 		rewrite * /health
