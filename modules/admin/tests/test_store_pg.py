@@ -1,6 +1,6 @@
 """The settings store against Postgres: row-level security, the migration and the leak test.
 
-Runs when CANCCU_DATABASE_URL is set (deploy/compose.test.yml; CI's `integration (kit)` job), as
+Runs when CANCCU_DATABASE_URL is set (deploy/compose.test.yml; CI's `module (admin)` job), as
 the login role, which is the Compose superuser: the store must still keep tenants apart, because
 each of its transactions switches to the app role that RLS binds.
 """

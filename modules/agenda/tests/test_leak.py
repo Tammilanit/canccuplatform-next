@@ -36,13 +36,26 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
                 marker,
                 env.clock[0],
             )
+            await conn.execute(
+                "INSERT INTO agenda_timers (item_id, kind, due_at) VALUES ($1, 'started', $2)",
+                marker,
+                env.clock[0],
+            )
+            await conn.execute("INSERT INTO agenda_sessions (session_id) VALUES ($1)", marker)
 
     async def _read(tenant: str) -> set[str]:
         async with env.db.tenant(tenant) as conn:
             kinds = await conn.fetch("SELECT key FROM agenda_kinds")
             items = await conn.fetch("SELECT id FROM agenda_items")
+            timers = await conn.fetch("SELECT item_id FROM agenda_timers")
+            sessions = await conn.fetch("SELECT session_id FROM agenda_sessions")
             states = await conn.fetchval("SELECT count(*) FROM agenda_state")
         assert states == 1
-        return {r["key"] for r in kinds} | {r["id"] for r in items}
+        return (
+            {r["key"] for r in kinds}
+            | {r["id"] for r in items}
+            | {r["item_id"] for r in timers}
+            | {r["session_id"] for r in sessions}
+        )
 
     await assert_tenant_isolation(Probe())

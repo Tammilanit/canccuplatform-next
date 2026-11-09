@@ -25,10 +25,9 @@ slides it gets back.
   can write to it: use only the socket, never follow a link or read a file there.
 
 ## Checks
-In the image, against the real LibreOffice and poppler (CI runs the same):
-
-    docker build --target test -f modules/screen-render/Dockerfile -t canccu-screen-render-test .
-    docker run --rm --network none canccu-screen-render-test
+In the image, against the real LibreOffice and poppler: `./check`, which builds the image's `test`
+target and runs it with `--network none`. CI runs the same in the `module (screen-render)` job
+([docs/ci.md](../../docs/ci.md#modules)).
 
 Outside the image, `pip install -e ".[dev]" && ruff check . && mypy && pytest` runs everything but
 the real-deck tests, which skip without `soffice`.

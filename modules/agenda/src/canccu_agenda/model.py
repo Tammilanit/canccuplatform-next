@@ -143,6 +143,18 @@ def effective_channels(
     return list(event_channels)
 
 
+def effective_leads(
+    item_leads: Sequence[int] | None,
+    kind_leads: Sequence[int] | None,
+    event_leads: Sequence[int],
+) -> list[int]:
+    """Like the channels: item, then kind, then event; [] means no reminders."""
+    for choice in (item_leads, kind_leads):
+        if choice is not None:
+            return list(choice)
+    return list(event_leads)
+
+
 def kind_json(row: Mapping[str, Any]) -> dict[str, Any]:
     leads_value = row["reminder_leads_minutes"]
     notify_value = row["notify"]

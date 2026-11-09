@@ -10,7 +10,7 @@ import {
   createHealth,
   runMigrations,
 } from "@canccu/kit";
-import type { TenantContext } from "@canccu/kit";
+import type { Event, TenantContext } from "@canccu/kit";
 import { MemoryStreamStore } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
 import type { AuditEntry } from "../src/audit.js";
@@ -58,8 +58,18 @@ export const TENANTS: Record<string, TenantContext> = {
   "zeta.test": context("zeta", { admin_access: "restricted" }),
 };
 
-const ALL_RIGHTS = ["screen.devices.read", "screen.devices.pair", "screen.devices.write"];
-const SESSIONS: Record<string, string[]> = { admin: ALL_RIGHTS, crew: ["screen.devices.read"] };
+const ALL_RIGHTS = [
+  "screen.devices.read",
+  "screen.devices.pair",
+  "screen.devices.write",
+  "screen.zones.write",
+];
+const SESSIONS: Record<string, string[]> = {
+  admin: ALL_RIGHTS,
+  crew: ["screen.devices.read"],
+  content: ["screen.content.read"],
+  nobody: [],
+};
 
 async function fakeTenants(url: string | URL | Request): Promise<Response> {
   const host = new URL(url instanceof Request ? url.url : url).searchParams.get("host") ?? "";
@@ -90,6 +100,8 @@ export interface Harness {
   db: Db;
   pool: pg.Pool;
   store: MemoryStreamStore;
+  bus: Bus;
+  kv: MemoryKv;
   audits: AuditEntry[];
   /** Set to make the next audit append fail, as a restarting tenants module does. */
   failAudit: { next: boolean };
@@ -101,7 +113,9 @@ export interface Harness {
 export async function harness(): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
-  await admin.query("DROP TABLE IF EXISTS assignments, devices, screen_migrations CASCADE");
+  await admin.query(
+    "DROP TABLE IF EXISTS assignments, screen_zones, screen_zone_seeds, devices, screen_migrations CASCADE",
+  );
   await runMigrations(admin, MIGRATIONS_DIR, { ledger: "screen_migrations", lock: 1 });
   await admin.end();
   const pool = new pg.Pool({ connectionString: DATABASE_URL });
@@ -110,10 +124,12 @@ export async function harness(): Promise<Harness> {
   const store = new MemoryStreamStore();
   const audits: AuditEntry[] = [];
   const failAudit = { next: false };
+  const kv = new MemoryKv(() => clock.now);
+  const bus = new Bus(store, "screen");
   const app = buildApp({
     db,
-    kv: new MemoryKv(() => clock.now),
-    bus: new Bus(store, "screen"),
+    kv,
+    bus,
     rights: new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin })),
     audit: (entry) => {
       if (failAudit.next) {
@@ -146,6 +162,8 @@ export async function harness(): Promise<Harness> {
     db,
     pool,
     store,
+    bus,
+    kv,
     audits,
     failAudit,
     clock,
@@ -166,7 +184,7 @@ export interface Call {
 
 export function call(
   h: Harness,
-  method: "GET" | "POST" | "PATCH" | "DELETE",
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   url: string,
   c: Call = {},
 ): Promise<LightMyRequestResponse> {
@@ -191,6 +209,14 @@ export function setCookie(res: LightMyRequestResponse, name: string): string | u
   const header = [res.headers["set-cookie"] ?? []].flat();
   const line = header.find((h) => h.startsWith(`${name}=`));
   return line?.slice(name.length + 1).split(";")[0];
+}
+
+/** The data of the bus events of `type` on `tenant`'s screen stream, oldest first. */
+export function events(h: Harness, type: string, tenant = "alpha"): Record<string, unknown>[] {
+  return (h.store.streams.get(`t:${tenant}:events:screen`) ?? [])
+    .map(([, fields]) => JSON.parse(fields.event ?? "{}") as Event)
+    .filter((e) => e.type === type)
+    .map((e) => e.data);
 }
 
 export function code(res: LightMyRequestResponse): string {

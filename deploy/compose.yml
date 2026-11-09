@@ -323,12 +323,12 @@ services:
     image: caddy:2.11-alpine
     # Explicit host IPs: the host's Docker default bind may be 127.0.0.1. On a host reachable from
     # outside, start the stack only once the DOCKER-USER firewall is in place (setup/README.md):
-    # Docker's NAT bypasses ufw. 443 is published ahead of the TLS option (#5).
+    # Docker's NAT bypasses ufw. Only 80: http mode serves nothing on 443, and a host service
+    # (Tailscale serve) may hold 443, so publishing it stops caddy and every deploy and rollback
+    # (#255). The TLS option (#5) publishes 443 again.
     ports:
       - { target: 80, published: "80", host_ip: 0.0.0.0, protocol: tcp }
       - { target: 80, published: "80", host_ip: "::", protocol: tcp }
-      - { target: 443, published: "443", host_ip: 0.0.0.0, protocol: tcp }
-      - { target: 443, published: "443", host_ip: "::", protocol: tcp }
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
     # The image declares /data and /config volumes; http mode stores nothing there, so keep

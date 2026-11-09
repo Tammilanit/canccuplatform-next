@@ -1,4 +1,4 @@
-/** The screen module's Fastify app: health, tenancy, and the device and pairing routes. */
+/** The screen module's Fastify app: health, tenancy, and the device, pairing, zone and assignment routes. */
 import Fastify from "fastify";
 import type { FastifyInstance, FastifyServerOptions } from "fastify";
 import { createHealth, postgresCheck, valkeyCheck } from "@canccu/kit";
@@ -6,9 +6,11 @@ import type { Bus, Health, Logger, RightsChecker, StreamStore, TenantResolver } 
 import { install, installTenancy } from "@canccu/kit/fastify";
 import type { Audit } from "./audit.js";
 import type { Db } from "./db.js";
+import { assignmentRoutes } from "./assignments.js";
 import { deviceRoutes } from "./devices.js";
 import type { Kv } from "./kv.js";
 import { pairingRoutes } from "./pairing.js";
+import { zoneRoutes } from "./zones.js";
 
 export interface ScreenDeps {
   db: Db;
@@ -48,5 +50,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   app.decorateRequest("device", null);
   pairingRoutes(app, deps);
   deviceRoutes(app, deps);
+  zoneRoutes(app, deps);
+  assignmentRoutes(app, deps);
   return app;
 }

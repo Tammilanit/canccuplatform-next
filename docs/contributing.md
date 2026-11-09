@@ -21,7 +21,7 @@ A maintainer accepts only high-risk PRs (see the risk classes in [AGENTS.md, Mer
 ## What protects `main`
 - No direct pushes and no force pushes, for admins too.
 - Squash merge only; the branch is deleted after merge.
-- Required checks: `lint-types-test (kit-ts)`, `lint-types-test (kit-py)`, `no-event-names`, `contracts`, `compose (deploy)` and `integration (kit)` from `.github/workflows/ci.yml`, plus `review-gate` from `.github/workflows/review-gate.yml` once a maintainer adds it to the ruleset (see [ci.md](ci.md#review-gate)). They run on pull requests and on merge-queue entries. Do not rename these jobs.
+- Required checks: `lint-types-test (kit-ts)`, `lint-types-test (kit-py)`, `no-event-names`, `contracts`, `compose (deploy)`, `integration (kit)` and, once a maintainer adds it, `modules` from `.github/workflows/ci.yml`, plus `review-gate` from `.github/workflows/review-gate.yml` once a maintainer adds it to the ruleset (see [ci.md](ci.md#review-gate)). They run on pull requests and on merge-queue entries. Do not rename these jobs.
 - Workflows from forks and first-time contributors wait for a maintainer to approve the run.
 - A maintainer accepts the PRs listed under Who accepts.
 

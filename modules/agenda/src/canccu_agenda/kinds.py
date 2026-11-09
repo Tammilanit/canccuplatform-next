@@ -9,9 +9,10 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from . import model, store
+from . import model, store, timers
 from .access import viewer, writer
 from .deps import deps
+from .effective import event_leads
 
 
 async def body(request: Request) -> dict[str, Any]:
@@ -52,6 +53,7 @@ async def save_kind(request: Request) -> Response:
     }
     sent_revision = None if data.get("revision") is None else model.revision(data["revision"])
     d = deps(request)
+    leads = await event_leads(d)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
         current = await store.kind(conn, key)
@@ -62,6 +64,13 @@ async def save_kind(request: Request) -> Response:
             raise model.conflict("version_conflict", "the kind changed: read it again")
         row = await store.save_kind(conn, key, values, exists=current is not None)
         kinds_version = await store.bump(conn, "kinds_version")
+        # Its items' lead times in effect may have changed with it.
+        items = await conn.fetch(
+            f"SELECT {store.ITEM_COLUMNS} FROM agenda_items"
+            " WHERE kind = $1 AND status = 'scheduled'",
+            key,
+        )
+        await timers.reschedule(conn, items, await store.kinds(conn), leads, d.now())
     kind = model.kind_json(row)
     await d.bus.publish(
         "agenda.kind.saved",
@@ -74,7 +83,7 @@ async def save_kind(request: Request) -> Response:
 async def remove_kind(request: Request) -> Response:
     session = await writer(request)
     key = request.path_params["kind_key"]
-    sent_revision = model.revision(_int(request.query_params.get("revision")))
+    sent_revision = model.revision(int_query(request.query_params.get("revision")))
     d = deps(request)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
@@ -97,7 +106,7 @@ async def remove_kind(request: Request) -> Response:
     return Response(status_code=204)
 
 
-def _int(value: str | None) -> int | None:
+def int_query(value: str | None) -> int | None:
     try:
         return None if value is None else int(value)
     except ValueError:

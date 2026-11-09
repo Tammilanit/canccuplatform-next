@@ -17,4 +17,4 @@ The kit's `CANCCU_MODULE`, `CANCCU_VERSION`, `CANCCU_VALKEY_URL`, `CANCCU_ADMIN_
 npm ci && npm run lint && npm run typecheck && npm test
 ```
 
-CI runs the same commands in the `compose (deploy)` job, then starts the stack and checks the health through Caddy (200 ok, and 503 down with Valkey stopped).
+CI runs the same commands in the `module (hello)` job ([docs/ci.md](../../docs/ci.md#modules)); the `compose (deploy)` job starts the stack and checks the health through Caddy (200 ok, and 503 down with Valkey stopped).
