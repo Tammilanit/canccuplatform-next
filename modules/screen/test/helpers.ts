@@ -10,13 +10,15 @@ import {
   createHealth,
   runMigrations,
 } from "@canccu/kit";
-import type { Event, TenantContext } from "@canccu/kit";
+import { requireTenant } from "@canccu/kit";
+import type { Event, SettingValue, TenantContext } from "@canccu/kit";
 import { MemoryStreamStore } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
 import type { AuditEntry } from "../src/audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "../src/db.js";
 import type { Db } from "../src/db.js";
 import { requireDevice } from "../src/device-access.js";
+import { sweepOffline } from "../src/health.js";
 import { MemoryKv } from "../src/kv.js";
 
 /** Tests run only with a Postgres to spare; never point this at a database you keep. */
@@ -106,6 +108,10 @@ export interface Harness {
   /** Set to make the next audit append fail, as a restarting tenants module does. */
   failAudit: { next: boolean };
   clock: { now: number };
+  /** tenant → the admin settings it answers; unset keys take their default. */
+  settings: Record<string, Record<string, SettingValue>>;
+  /** One run of the offline sweep, as main starts every 5 seconds. */
+  sweep(): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -126,6 +132,7 @@ export async function harness(): Promise<Harness> {
   const failAudit = { next: false };
   const kv = new MemoryKv(() => clock.now);
   const bus = new Bus(store, "screen");
+  const settings: Record<string, Record<string, SettingValue>> = {};
   const app = buildApp({
     db,
     kv,
@@ -143,6 +150,10 @@ export async function harness(): Promise<Harness> {
     },
     tenants: new TenantResolver({ tenantsUrl: "http://tenants", fetch: fakeTenants }),
     health: createHealth({ module: "screen", version: "dev", checks: {} }),
+    settings: {
+      ensure: () => Promise.resolve(),
+      get: (key: string, fallback: SettingValue) => settings[requireTenant()]?.[key] ?? fallback,
+    },
     now: () => clock.now,
   });
   // A stand-in for the device routes later slices add (state, heartbeat): it runs only the check.
@@ -167,6 +178,8 @@ export async function harness(): Promise<Harness> {
     audits,
     failAudit,
     clock,
+    settings,
+    sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
     close: async () => {
       await app.close();
       await pool.end();
