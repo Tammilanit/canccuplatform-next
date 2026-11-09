@@ -22,7 +22,7 @@ The venue screens: paired devices, each event's zones, the Pulse layout that com
 2. An event admin (right `screen.devices.pair`) enters the code: `POST /api/screen/devices` with `code`, `name` and optionally `zone_key`. This creates the device with the event's venue as `venue_id` and the event as its current tenant; an event with no venue cannot pair (409 `no_venue`). Audited; emits `screen.device.paired`.
 3. The kiosk polls `GET /api/screen/pairing/{pairing_id}` (with its pairing cookie) every 2 seconds. Once claimed the answer sets the **device cookie** `canccu_device` (HttpOnly, Secure, SameSite=Strict, host-only, `Max-Age` 400 days) holding the token, and the code is spent.
 
-Creating a device on the event that pairs it is the only time anyone but the superadmin sets a current tenant: the device is new and belongs to no other event. Moving an existing device is the superadmin's (below), as 0013 item 34 says. This reading of item 34 is for the maintainer to confirm (or to record as an amendment of 0013).
+Creating a device on the event that pairs it is the only time anyone but the superadmin sets a current tenant: the device is new and belongs to no other event. Moving an existing device is the superadmin's (below). [0028](../docs/decisions/0028-pairing-sets-a-new-devices-event.md) records this as an amendment of 0013 item 34.
 
 The token travels as a cookie, not a header, because images, video and the push stream are loaded by the browser, which sends cookies but no custom headers.
 

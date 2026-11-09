@@ -1,6 +1,6 @@
 # 0013. Multi-tenant from day 1, on one shared stack
 
-- **Status:** Accepted
+- **Status:** Accepted; item 34 amended by [0028](0028-pairing-sets-a-new-devices-event.md)
 - **Date:** 2026-11-05
 
 ## Context

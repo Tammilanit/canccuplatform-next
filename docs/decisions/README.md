@@ -18,7 +18,7 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0010](0010-scope.md) | Scope: what is dropped, Moments, PPTX | 2026-11-03 |
 | [0011](0011-hosting-on-remote-vm.md) | The platform is hosted on a remote VM | 2026-11-04 |
 | [0012](0012-development-on-the-vm.md) | Development runs on the VM, for now | 2026-11-05 |
-| [0013](0013-multi-tenant-core.md) | Multi-tenant from day 1, on one shared stack | 2026-11-05 |
+| [0013](0013-multi-tenant-core.md) | Multi-tenant from day 1, on one shared stack (item 34 amended by 0028) | 2026-11-05 |
 | [0014](0014-independent-review.md) | Every PR gets an independent review | 2026-11-05 |
 | [0015](0015-dependency-auditing.md) | Dependency auditing | 2026-11-05 |
 | [0016](0016-merge-policy.md) | Merge policy | 2026-11-05 |
@@ -33,6 +33,7 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0025](0025-finals-and-games-modules.md) | Finals and games are separate modules, on a shared tourney core | 2026-11-07 |
 | [0026](0026-briefs-are-research-packs.md) | A step brief is a research pack for an extensive brainstorming session | 2026-11-08 |
 | [0027](0027-product-decisions-2026-11-07-08.md) | The product decisions of 2026-11-07/08: joining, accounts, retention, check-in, finals, Go public and brainstorming (amends 0022) | 2026-11-08 |
+| [0028](0028-pairing-sets-a-new-devices-event.md) | Pairing sets a new device's event; moves stay the superadmin's (amends 0013 item 34) | 2026-11-08 |
 
 ## How the records are applied
 - **Bundling packages** ([0019](0019-work-packages.md), 2026-11-07, #144). In step 2 most packages held one issue, so each issue paid for its own run, review, fix round and fix-check. The planner now bundles related issues into fuller packages, while a contract change still goes apart from its consumers and merges first; the rules live in [AGENTS.md, Package plan](../../AGENTS.md#how-work-flows). This refines how 0019 is applied; its text is unchanged.
