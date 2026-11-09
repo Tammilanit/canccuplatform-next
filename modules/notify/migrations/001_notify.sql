@@ -30,12 +30,16 @@ CREATE TABLE IF NOT EXISTS notify_topic_type_history (
 );
 
 -- No row means config_version 0 and the defaults; NULL columns fall back to the settings and the
--- type (README, Configuration).
+-- type (README, Configuration). `enabled_seen` and `lead_seen` are the admin settings' values when
+-- `enabled` and `params.lead_minutes` were written here: a setting that differs from them now was
+-- written later, and the later write wins.
 CREATE TABLE IF NOT EXISTS notify_topic_config (
   tenant_id text NOT NULL DEFAULT NULLIF(current_setting('canccu.tenant', true), ''),
   key text NOT NULL,
   enabled boolean,
+  enabled_seen boolean,
   params jsonb NOT NULL DEFAULT '{}',
+  lead_seen integer,
   channels text[],
   config_version integer NOT NULL DEFAULT 1,
   PRIMARY KEY (tenant_id, key)

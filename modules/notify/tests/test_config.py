@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
+import pytest
+from canccu_kit import Event
 from conftest import Env
 from topics import play, schedule
+
+from canccu_notify import config as config_module
 
 
 async def configure(env: Env, key: str, body: dict[str, Any], host: str = "a.example.test") -> Any:
@@ -96,3 +101,85 @@ async def test_guests_follow_the_info_page_mode(env: Env) -> None:
     async with env.client() as c:
         assert (await c.get("/api/notify/topics")).status_code == 403
         assert (await c.get("/api/notify/topics", headers=env.admin())).status_code == 200
+
+
+async def settings_changed(env: Env, keys: list[str]) -> None:
+    event = Event(
+        id="s1",
+        type="admin.settings.changed",
+        version=1,
+        time="2026-11-20T17:00:00Z",
+        source="admin",
+        data={"module": "notify", "settings_version": 2, "keys": keys},
+        tenant="ev-a",
+    )
+    await config_module.on_admin_event(env.deps, event)
+
+
+async def test_a_setting_written_after_the_config_wins_and_the_config_after_it(env: Env) -> None:
+    await env.register(schedule())
+    env.settings.values["ev-a"] = {"topics": ["schedule"], "schedule_lead_minutes": 10}
+    saved = await configure(
+        env, "schedule", {"config_version": 0, "enabled": False, "params": {"lead_minutes": 15}}
+    )
+    assert saved.json()["config"]["enabled"] is False
+    assert saved.json()["config"]["params"] == {"lead_minutes": 15}
+    # An unrelated setting changes nothing.
+    env.settings.values["ev-a"]["hourly_cap"] = 3
+
+    async def config() -> Any:
+        async with env.client() as c:
+            listed = (await c.get("/api/notify/topic-types", headers=env.admin())).json()
+        return listed["topic_types"][0]["config"]
+
+    assert (await config())["enabled"] is False
+    # The organiser changes both in admin's settings: the later write wins, even before the
+    # event arrives (the values differ from those the config write saw).
+    env.settings.values["ev-a"].update({"topics": [], "schedule_lead_minutes": 5})
+    assert (await config())["params"] == {"lead_minutes": 5}
+    await settings_changed(env, ["topics", "schedule_lead_minutes"])
+    # Back to the value the config write saw: still the setting, as the override is gone.
+    env.settings.values["ev-a"]["topics"] = ["schedule"]
+    await settings_changed(env, ["topics"])
+    assert (await config())["enabled"] is True
+    assert (await config())["config_version"] == 3
+    # And a config write after the settings wins again.
+    again = await configure(
+        env, "schedule", {"config_version": 3, "enabled": False, "params": {"lead_minutes": 20}}
+    )
+    assert again.json()["config"]["enabled"] is False
+    assert (await config())["params"] == {"lead_minutes": 20}
+
+
+async def test_archived_events_take_no_config_writes(env: Env) -> None:
+    await env.register(schedule())
+    env.contexts["ev-a"]["status"] = "archived"
+    response = await configure(env, "schedule", {"config_version": 0, "enabled": False})
+    assert response.status_code == 409 and response.json()["error"]["code"] == "event_archived"
+    assert env.audit.entries == []
+    async with env.client() as c:
+        assert (await c.get("/api/notify/topic-types", headers=env.admin())).status_code == 200
+
+
+async def test_two_first_writes_of_one_version_cannot_both_win(env: Env) -> None:
+    await env.register(schedule())
+    results = await asyncio.gather(
+        *(configure(env, "schedule", {"config_version": 0, "enabled": i == 0}) for i in range(2))
+    )
+    assert sorted(r.status_code for r in results) == [200, 409]
+
+
+async def test_a_failed_audit_rolls_the_change_back(env: Env) -> None:
+    await env.register(schedule())
+    env.audit.fail = True
+    with pytest.raises(RuntimeError):
+        await configure(env, "schedule", {"config_version": 0, "enabled": False})
+    env.audit.fail = False
+    assert (await configure(env, "schedule", {"config_version": 0})).status_code == 200
+
+
+async def test_config_writes_wait_for_admin(env: Env) -> None:
+    await env.register(schedule())
+    env.settings.down = True
+    response = await configure(env, "schedule", {"config_version": 0, "enabled": False})
+    assert response.status_code == 503

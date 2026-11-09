@@ -3,6 +3,8 @@ history (contracts/notify.md, Registering)."""
 
 from __future__ import annotations
 
+import asyncio
+import json
 from typing import Any
 
 import pytest
@@ -69,6 +71,25 @@ def broken(change: str) -> dict[str, Any]:
         t["where"][1]["param"] = "nope"
     elif change == "crew audience":
         t["audience"] = {"value": "crew"}
+    elif change == "list audience":
+        t["audience"] = {"value": ["public"]}
+    elif change == "object scope":
+        reg["parts"]["event"]["scope"] = {"x": 1}
+    elif change == "list part":
+        t["part"] = ["event"]
+    elif change == "list op":
+        t["where"][0]["op"] = ["eq"]
+    elif change == "object param":
+        t["where"][1]["param"] = {"x": 1}
+    elif change == "object channel":
+        reg["parts"]["event"]["channels"] = [{"x": 1}]
+    elif change == "string dedupe":
+        t["dedupe_by"] = "correlation_id"
+    elif change == "bool expiry":
+        del t["expires_at"]
+        t["expires_after_minutes"] = True
+    elif change == "no expiry":
+        del t["expires_at"]
     return reg
 
 
@@ -76,10 +97,22 @@ def broken(change: str) -> dict[str, Any]:
     "change",
     [
         "op", "formatter", "foreign event", "part", "channel", "custom key", "long title",
-        "param", "crew audience",
+        "param", "crew audience", "list audience", "object scope", "list part", "list op",
+        "object param", "object channel", "string dedupe", "bool expiry", "no expiry",
     ],
 )  # fmt: skip
 async def test_a_bad_registration_is_400(env: Env, change: str) -> None:
     response = await env.register(broken(change))
     assert response.status_code == 400, response.text
     assert response.json()["error"]["code"] == "invalid_request"
+
+
+async def test_two_first_registrations_of_one_key_keep_one_owner(env: Env) -> None:
+    mine = {**play(), "key": "shared"}
+    theirs = {**schedule(), "key": "shared"}
+    results = await asyncio.gather(env.register(mine), env.register(theirs))
+    assert sorted(r.status_code for r in results) == [200, 409]
+    async with env.db.platform() as conn:
+        row = await conn.fetchrow("SELECT owner, registration FROM notify_topic_types")
+    assert json.loads(row["registration"])["owner"] == row["owner"]
+    assert len(await history(env)) == 1

@@ -60,11 +60,20 @@ async def session_of(request: Request) -> Session | None:
         return None
 
 
-async def topics_writer(request: Request) -> Session:
-    """Right `notify.topics.write`, under the event's admin-access rule."""
-    ctx = await tenant_ctx(request)
+async def topics_writer(request: Request, *, write: bool = False) -> Session:
+    """Right `notify.topics.write`, under the event's admin-access rule; a write also needs an
+    event that is not archived (contracts/tenants.md, Lifecycle)."""
+    ctx = tenant_of(request)
     session = await deps(request).rights.session(request.headers.get("cookie"))
     if not session.has(TOPICS_WRITE):
         raise MissingRight(f"needs right {TOPICS_WRITE}")
     check_admin_access(ctx, client_ip(request), tailscale_cidrs())  # 403 admin_access_restricted
+    # The resolver's context is dropped on every tenants event, so its status is current.
+    if write and ctx["status"] == "archived":
+        raise KitError(
+            "the event is archived and its notifications read-only",
+            status=409,
+            code="event_archived",
+        )
+    await tenant_ctx(request)
     return session

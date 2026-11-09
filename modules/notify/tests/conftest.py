@@ -89,10 +89,13 @@ class FakeSettings:
 @dataclass
 class FakeAudit:
     entries: list[tuple[str, str, str, dict[str, str]]] = field(default_factory=list)
+    fail: bool = False
 
     async def append(
         self, tenant_id: str, actor_user_id: str, action: str, target: dict[str, str]
     ) -> None:
+        if self.fail:
+            raise RuntimeError("tenants unreachable")
         self.entries.append((tenant_id, actor_user_id, action, target))
 
 

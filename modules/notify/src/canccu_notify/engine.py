@@ -4,6 +4,7 @@ consumer does the dedupe insert and the writes."""
 
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -92,7 +93,7 @@ def _format(value: Any, formatter: str | None, tz: ZoneInfo) -> str:
         return local.strftime("%H:%M") if formatter == "time" else local.strftime("%Y-%m-%d")
     if formatter == "signed":
         n = _number(value)
-        if n is None:
+        if n is None or not math.isfinite(n):
             return ""
         text = str(int(n)) if n == int(n) else str(n)
         return f"+{text}" if n > 0 else text.replace("-", MINUS)
@@ -136,7 +137,7 @@ def _audience(trigger: dict[str, Any], envelope: dict[str, Any]) -> str | None:
     spec = trigger.get("audience") or {}
     value = spec["value"] if "value" in spec else get(envelope, spec.get("field", ""))
     # crew and system events never reach phones: dropped before anything else.
-    return value if value in PHONE_AUDIENCES else None
+    return value if isinstance(value, str) and value in PHONE_AUDIENCES else None
 
 
 def _user_ids(trigger: dict[str, Any], envelope: dict[str, Any]) -> tuple[str, ...]:

@@ -117,3 +117,12 @@ def test_personal_recipients_are_user_ids_only() -> None:
     assert c.expires_at == NOW + engine.PERSONAL_EXPIRY
     envelope["data"]["user_ids"] = [None]
     assert engine.evaluate("play", trigger, ["push"], {}, envelope, NOW, HELSINKI) == []
+
+
+def test_odd_values_in_events_drop_quietly() -> None:
+    trigger = {**schedule()["triggers"][0], "audience": {"field": "data.item.visibility"}}
+    assert run(reminder(visibility=["public"])) == []  # type: ignore[arg-type]
+    assert run(reminder(visibility={"a": 1})) == []  # type: ignore[arg-type]
+    env = {"data": {"n": float("nan"), "i": float("inf")}}
+    assert engine.fill("{data.n|signed}{data.i|signed}", env, {}, HELSINKI) == ""
+    assert trigger["event"] == "agenda.reminder.triggered"

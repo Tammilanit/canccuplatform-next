@@ -43,6 +43,14 @@ async def handle(d: Deps, event: Event) -> None:
     """Runs inside the event's tenant scope (the kit's subscribe_tenants)."""
     if event.tenant is None:
         return
+    async with d.db.platform() as conn:
+        listening = await conn.fetchval(
+            "SELECT EXISTS (SELECT 1 FROM notify_topic_types,"
+            " jsonb_array_elements(registration -> 'triggers') AS t WHERE t ->> 'event' = $1)",
+            event.type,
+        )
+    if not listening:
+        return  # most events on the streams: no settings, registry or config read for them
     envelope: dict[str, Any] = json.loads(event.to_json())
     now = d.now()
     ready = await settings_ready(d.settings)

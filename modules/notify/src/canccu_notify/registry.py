@@ -43,6 +43,14 @@ async def body_of(request: Request) -> dict[str, Any]:
     return value
 
 
+def _is_str(value: Any) -> bool:
+    return isinstance(value, str)
+
+
+def _is_int(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
 def _path(value: Any, where: str) -> None:
     if not isinstance(value, str) or not PATH_RE.fullmatch(value):
         raise bad(f"{where}: not a path")
@@ -63,10 +71,10 @@ def check_conditions(conds: Any, where: str, params: set[str]) -> None:
         raise bad(f"{where}: a list of conditions")
     for i, c in enumerate(conds):
         at = f"{where}[{i}]"
-        if not isinstance(c, dict) or c.get("op") not in engine.OPS:
+        if not isinstance(c, dict) or not _is_str(c.get("op")) or c["op"] not in engine.OPS:
             raise bad(f"{at}: unknown op")
         _path(c.get("field"), f"{at}.field")
-        if "param" in c and c["param"] not in params:
+        if "param" in c and (not _is_str(c["param"]) or c["param"] not in params):
             raise bad(f"{at}: unknown parameter {c['param']}")
         if c["op"] == "nearest_in":
             _path(c.get("list"), f"{at}.list")
@@ -76,13 +84,15 @@ def check_conditions(conds: Any, where: str, params: set[str]) -> None:
 
 def _part(name: str, part: Any) -> None:
     where = f"parts.{name}"
-    if not isinstance(part, dict) or part.get("scope") not in PART_SCOPES[name]:
+    if not isinstance(part, dict) or not _is_str(part.get("scope")):
+        raise bad(f"{where}.scope: required")
+    if part["scope"] not in PART_SCOPES[name]:
         raise bad(f"{where}.scope: not allowed for this part")
     channels = part.get("channels")
-    if not isinstance(channels, list) or len(set(channels)) != len(channels):
+    if not isinstance(channels, list) or any(not _is_str(c) or c not in CHANNELS for c in channels):
+        raise bad(f"{where}.channels: a list of known channels")
+    if len(set(channels)) != len(channels):
         raise bad(f"{where}.channels: a list without repeats")
-    if any(c not in CHANNELS for c in channels):
-        raise bad(f"{where}.channels: unknown channel")
     defaults = part.get("defaults")
     if not isinstance(defaults, dict) or any(
         k not in channels or not isinstance(v, bool) for k, v in defaults.items()
@@ -129,7 +139,7 @@ def _trigger(i: int, t: Any, reg: dict[str, Any], params: set[str]) -> None:
     if t["event"].split(".")[0] != reg["owner"]:
         raise bad(f"{where}.event: a module only turns its own events into notifications")
     part = t.get("part")
-    if part not in reg["parts"]:
+    if not _is_str(part) or part not in reg["parts"]:
         raise bad(f"{where}.part: the type has no such part")
     audience = t.get("audience")
     scope = reg["parts"][part]["scope"]
@@ -138,9 +148,11 @@ def _trigger(i: int, t: Any, reg: dict[str, Any], params: set[str]) -> None:
             raise bad(f"{where}.audience: a field or a value")
         if "field" in audience:
             _path(audience["field"], f"{where}.audience.field")
-        elif audience.get("value") not in engine.PHONE_AUDIENCES:
+        elif not _is_str(audience.get("value")) or audience["value"] not in engine.PHONE_AUDIENCES:
             raise bad(f"{where}.audience.value: public or attendees")
-    recipients = t.get("recipients") or {}
+    recipients = t.get("recipients", {})
+    if not isinstance(recipients, dict):
+        raise bad(f"{where}.recipients: an object")
     if part == "personal":
         need = "entity_field" if scope == "entity" else "user_field"
         _path(recipients.get(need), f"{where}.recipients.{need}")
@@ -153,7 +165,10 @@ def _trigger(i: int, t: Any, reg: dict[str, Any], params: set[str]) -> None:
         if not isinstance(urgent, dict):
             raise bad(f"{where}.urgent: a boolean or a field")
         _path(urgent.get("field"), f"{where}.urgent.field")
-    for path in t.get("dedupe_by") or []:
+    dedupe_by = t.get("dedupe_by", [])
+    if not isinstance(dedupe_by, list):
+        raise bad(f"{where}.dedupe_by: a list of paths")
+    for path in dedupe_by:
         if path != "audience":
             _path(path, f"{where}.dedupe_by")
     for field in ("title", "body"):
@@ -161,8 +176,11 @@ def _trigger(i: int, t: Any, reg: dict[str, Any], params: set[str]) -> None:
     if "url" in t:
         _template(t["url"], "url", where, params)
     minutes = t.get("expires_after_minutes")
-    if minutes is not None and (not isinstance(minutes, int) or not 1 <= minutes <= 10080):
+    if minutes is not None and (not _is_int(minutes) or not 1 <= minutes <= 10080):
         raise bad(f"{where}.expires_after_minutes: 1 to 10080")
+    if part == "event" and "expires_at" not in t and minutes is None:
+        # contracts/notify.md: "an event-wide trigger names one"; 12 hours is the personal default.
+        raise bad(f"{where}: an event-wide trigger names expires_at or expires_after_minutes")
 
 
 def validate(key: str, reg: dict[str, Any]) -> dict[str, Any]:
@@ -199,6 +217,9 @@ async def register(request: Request) -> Response:
         raise ServiceForbidden(f"module {caller} registers only its own topics")
     d = deps(request)
     async with d.db.platform() as conn:
+        # FOR UPDATE locks nothing while the key is new: the lock serialises two first
+        # registrations of one key, so the second sees the first owner and gets topic_owned.
+        await conn.execute("SELECT pg_advisory_xact_lock(hashtext('notify_topic:' || $1))", key)
         row = await conn.fetchrow(
             "SELECT owner, registration FROM notify_topic_types WHERE key = $1 FOR UPDATE", key
         )
