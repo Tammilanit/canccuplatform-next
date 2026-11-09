@@ -1082,7 +1082,7 @@ components:
             type: string
         in_effect:
           readOnly: true
-          description: What screens draw now, a null resolved to the platform version or theming's current revision.
+          description: What screens draw now, a null resolved to the platform version or theming's current revision (0 while none is published).
           type: object
           required: [bundle_version, theme_revision]
           properties:
@@ -1311,6 +1311,16 @@ components:
           $ref: "#/components/schemas/Minute"
         agenda_item_id:
           type: [string, "null"]
+        revision:
+          type: integer
+          minimum: 1
+        changed_by:
+          type: [string, "null"]
+          readOnly: true
+        changed_at:
+          type: [string, "null"]
+          format: date-time
+          readOnly: true
     Simulation:
       type: object
       required: [at, zone_key, schedule_id, playlist_id, layout_id, in_break]

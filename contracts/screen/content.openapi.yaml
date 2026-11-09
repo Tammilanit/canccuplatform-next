@@ -532,7 +532,9 @@
       Right `screen.content.read`. Built in screen with the same scheduler the tick and simulate use, so a
       page draws the calendar without a copy of the rule. One entry per zone (or the one `zone`): each
       window's runs between `from` and `to` (agenda-bound windows at their items' current times), the
-      segments, and the break playlists that interrupt the zone. Rules: contracts/screen.md, Schedule windows.
+      segments, and the break playlists that interrupt the zone. Screen reads the agenda as a module, so a window
+      bound to a crew-only item keeps its runs; the answer names that item only to a caller holding
+      `agenda.crew.read`. Rules: contracts/screen.md, Schedule windows.
     parameters:
       - name: from
         in: query
@@ -582,7 +584,7 @@
                         description: The zone's windows with at least one run in the range.
                         items:
                           type: object
-                          required: [schedule_id, playlist_id, priority, layout_id, agenda_item_id, runs]
+                          required: [schedule_id, playlist_id, priority, layout_id, agenda_item_id, agenda_item_crew, runs]
                           properties:
                             schedule_id:
                               $ref: "../screen.openapi.yaml#/components/schemas/Id"
@@ -594,6 +596,10 @@
                               type: [string, "null"]
                             agenda_item_id:
                               type: [string, "null"]
+                              description: Null for a weekly window, and for a crew-only item when the caller lacks `agenda.crew.read`.
+                            agenda_item_crew:
+                              type: boolean
+                              description: The window is bound to a crew-only (`visibility` `crew`) item.
                             runs:
                               type: array
                               items:
@@ -607,8 +613,9 @@
                       segments:
                         type: array
                         description: |
-                          Spans in time order, cut wherever the set of active windows changes; a span where no
-                          window is active has none. Each names its winner and every active window it beat, with
+                          Spans in time order, cut wherever the set of active runs changes (also where an active
+                          window starts a new run, which can change the winner); no segment is given for a span
+                          where no window is active. Each names its winner and every active window it beat, with
                           the rule it lost on: `priority`, `start` (began earlier), `playlist_priority` or `id`.
                         items:
                           type: object
@@ -672,7 +679,7 @@
     tags: [content]
     operationId: saveSchedule
     summary: Replace a schedule window
-    description: Right `screen.content.write`.
+    description: Right `screen.content.write`, with the `revision` read (required here, read-only on POST); a stale one is 409 `version_conflict` (read again and retry).
     requestBody:
       required: true
       content:
@@ -700,7 +707,14 @@
     tags: [content]
     operationId: deleteSchedule
     summary: Delete a schedule window
-    description: Right `screen.content.write`.
+    description: Right `screen.content.write`. With `revision`, a stale one is 409 `version_conflict`.
+    parameters:
+      - name: revision
+        in: query
+        description: The `revision` read.
+        schema:
+          type: integer
+          minimum: 1
     responses:
       "204":
         description: Deleted.

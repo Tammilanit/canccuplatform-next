@@ -115,7 +115,7 @@ The agenda's channel `discord_channel` is the bot's: a post in the event's Disco
 
 - **Reminders:** on `agenda.reminder.triggered` the bot posts the item (title, start time in the event's time zone, location) at one of its lead times, not at every one ([agenda.md](agenda.md#reminders)). A delayed item's reminder that fires again posts again, with the new time.
 - **Announcements:** on `agenda.item.announced` the bot posts the item with the organiser's `message`, once per announcement.
-- **Only where chosen and public:** the bot posts only when the item's `notify_channels` holds `discord_channel`, and only for an item with `visibility: public`. A guild's members are not the event's members, so `attendees` and `crew` items never go to the channel. A `quiet_hours` item is never announced, so it is never posted.
+- **Only where chosen and public:** the bot posts only when the item's `notify_channels` holds `discord_channel`, and only for an item with `visibility: public`. A guild's members are not the event's members, so `attendees` and `crew` items never go to the channel. A `quiet_hours` item is never posted, neither its reminders nor an announcement ([agenda.md](agenda.md#kinds)).
 - **Once, through the event's client:** each source event is posted at most once (deduplicated by its `id`). Posts go out through the event's own client and queue ([One event's trouble stays its own](#one-events-trouble-stays-its-own)); with no guild bound, or the client `paused` or `failed`, nothing is posted and nothing is kept for later.
 
 ## Clone

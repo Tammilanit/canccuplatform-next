@@ -646,7 +646,7 @@
     tags: [pin]
     operationId: getPin
     summary: The event's pins
-    description: Right `screen.devices.read`; theming reads it as a module to keep a pinned revision.
+    description: Right `screen.devices.read`, `screen.content.read` or `screen.bundle.write`; theming reads it as a module to keep a pinned revision.
     responses:
       "200":
         description: The pins and the available bundle versions.
