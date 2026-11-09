@@ -193,6 +193,7 @@ def public_tenant(row: Mapping[str, Any], primary: str | None) -> dict[str, Any]
 def tenant(row: Mapping[str, Any], primary: str | None, now: datetime) -> dict[str, Any]:
     return public_tenant(row, primary) | {
         "series_id": row["series_id"],
+        "storage_quota_bytes": row["storage_quota_bytes"],
         "admin_access": row["admin_access"],
         "venue_ip_check": ip_check(row, now),
         "archived_at": iso(row["archived_at"]),
