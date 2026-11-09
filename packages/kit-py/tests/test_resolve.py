@@ -298,3 +298,49 @@ async def test_resolve_lookups_carry_the_service_identity() -> None:
     )
     await resolver.resolve("demo.example.org")
     assert seen[0].headers[SERVICE_HEADER].startswith("v1.screen.tenants.")
+
+
+def by_id_resolver(
+    answer: Callable[[httpx.Request], httpx.Response], seen: list[httpx.Request]
+) -> TenantResolver:
+    from canccu_kit import ServiceIdentity
+
+    def record(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return answer(request)
+
+    return TenantResolver(
+        "http://t",
+        http=httpx.AsyncClient(transport=httpx.MockTransport(record)),
+        service=ServiceIdentity("screen", b"k" * 32),
+    )
+
+
+async def test_by_id_asks_the_tenants_module_signed_and_never_caches() -> None:
+    from canccu_kit import SERVICE_HEADER
+
+    seen: list[httpx.Request] = []
+    archived = tenant_context(tenant_id="old-event", status="archived")
+    resolver = by_id_resolver(lambda _: httpx.Response(200, json=archived), seen)
+    assert await resolver.by_id("old-event") == archived
+    assert await resolver.by_id("old-event") == archived
+    assert [r.url.path for r in seen] == ["/internal/tenants/tenants/old-event"] * 2
+    assert seen[0].headers[SERVICE_HEADER].startswith("v1.screen.tenants.")
+
+
+async def test_by_id_is_none_for_an_unknown_id_and_never_asks_for_a_malformed_one() -> None:
+    seen: list[httpx.Request] = []
+    resolver = by_id_resolver(lambda _: httpx.Response(404, json={}), seen)
+    assert await resolver.by_id("gone-event") is None
+    assert await resolver.by_id("../resolve") is None
+    assert len(seen) == 1
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [httpx.Response(500), httpx.Response(200, json=tenant_context(tenant_id="other-event"))],
+)
+async def test_by_id_failing_or_naming_another_tenant_is_503(answer: httpx.Response) -> None:
+    resolver = by_id_resolver(lambda _: answer, [])
+    with pytest.raises(TenantsUnavailable):
+        await resolver.by_id("old-event")
