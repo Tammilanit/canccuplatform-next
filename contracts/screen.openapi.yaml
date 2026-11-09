@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Screen API
-  version: 1.0.0
+  version: 1.1.0
   summary: Devices, zones, the composed screen state and its push channel, content, scheduling and the PPTX and PDF render job.
   description: |
     Machine-readable part of the screen contract. Prose, widgets, claims, the Pulse options and events: contracts/screen.md.
@@ -385,6 +385,21 @@ components:
           type: boolean
         viewport:
           $ref: "#/components/schemas/Viewport"
+        clock_offset_ms:
+          type: [integer, "null"]
+          description: |
+            The device's clock minus the server's, from the last heartbeat: `client_time` plus half of `rtt_ms`
+            minus the time the server received it. `null` until a heartbeat carries `client_time`.
+        flags:
+          type: array
+          description: |
+            What needs the crew's eye; empty when all is well. `clock_drift`: `clock_offset_ms` is over 2,000
+            either way. `shared_token`: two `instance_id`s reported for this device within one `heartbeat_seconds`.
+            Clients ignore values they do not know; more may be added.
+          uniqueItems: true
+          items:
+            type: string
+            examples: [clock_drift, shared_token]
     Viewport:
       type: object
       required: [width, height]
@@ -511,6 +526,18 @@ components:
           type: boolean
         viewport:
           $ref: "#/components/schemas/Viewport"
+        client_time:
+          description: The device's clock when it sent this heartbeat.
+          $ref: "#/components/schemas/Time"
+        rtt_ms:
+          type: integer
+          minimum: 0
+          maximum: 600000
+          description: The round trip of the device's previous heartbeat (sent to answered), as the device measured it.
+        instance_id:
+          type: string
+          pattern: "^[A-Za-z0-9_-]{16,64}$"
+          description: Random, made once per page load and kept until the page reloads, so two viewports with one token tell apart.
         claims_sounded:
           type: array
           maxItems: 50

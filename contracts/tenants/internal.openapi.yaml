@@ -26,6 +26,31 @@
         $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
       "404":
         $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/internal/tenants/tenants/{tenant_id}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/TenantId"
+  get:
+    tags: [internal]
+    operationId: getTenantContextById
+    summary: A tenant's context by its id
+    description: |
+      The same `TenantContext` as `resolve`, looked up by tenant id instead of hostname, for a module that acts
+      on another event than the request's: Screen checks that a move's target event has the device's venue and
+      builds a device's home URL from its current event's `primary_hostname` (contracts/screen.md, Moving).
+      Every status, also `draft` and `archived`; a deleted or unknown tenant is 404 `not_found`. Its answer
+      never tells a client which events exist: the caller passes on only what its own contract allows.
+      Internal network only.
+    security:
+      - {}
+    responses:
+      "200":
+        description: The tenant context.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/TenantContext"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
 /internal/tenants/ip-mode:
   get:
     tags: [internal]
