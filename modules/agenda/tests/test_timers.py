@@ -198,3 +198,28 @@ async def test_each_event_fires_only_its_own_timers(env: Env) -> None:
     await timers.tick(env.app.state.deps)
     started = [(e["tenant"], e["data"]["item"]["title"]) for e in env.events()[-2:]]
     assert started == [("ev-a", "A"), ("ev-b", "B")]
+
+
+async def test_a_start_or_end_moved_to_now_or_before_still_fires(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        early = await add(c, h, title="Early", starts_at=at(70), reminder_leads_minutes=[])
+        running = await add(c, h, title="Short", starts_at=at(-30), ends_at=at(30))
+        env.clock[0] = NOW + timedelta(minutes=5)
+        moved = await c.patch(
+            f"/api/agenda/items/{early['id']}",
+            json={"revision": 1, "starts_at": at(4)},  # it began early
+            headers=h,
+        )
+        assert moved.status_code == 200, moved.text
+        cut = await c.post(
+            f"/api/agenda/items/{running['id']}/delay",
+            json={"revision": 1, "minutes": -27},  # its end moves to 3, before now
+            headers=h,
+        )
+        assert cut.status_code == 200, cut.text
+    assert await run_at(env, 5) == [
+        ("agenda.item.ended", "Short"),
+        ("agenda.item.started", "Early"),
+    ]
+    assert await run_at(env, 100) == []  # once

@@ -18,7 +18,8 @@ from .effective import event_settings
 from .kinds import body, int_query, not_found
 
 
-async def _target(conn: Any, item_id: str, sent_revision: int) -> Any:
+async def target(conn: Any, item_id: str, sent_revision: int) -> Any:
+    """The item locked for a write, at the revision the caller read."""
     row = await store.item(conn, item_id, lock=True)
     if row is None:
         raise not_found("item")
@@ -55,7 +56,7 @@ async def delay_item(request: Request) -> Response:
     shift = timedelta(minutes=minutes)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
-        row = await _target(conn, request.path_params["item_id"], sent_revision)
+        row = await target(conn, request.path_params["item_id"], sent_revision)
         if row["status"] == "cancelled":
             raise model.conflict("item_cancelled", "a cancelled item cannot be delayed")
         if row["starts_at"] <= now and row["ends_at"] is None:
@@ -71,8 +72,8 @@ async def delay_item(request: Request) -> Response:
             )
         plan = []
         for r in rows:
-            if r["starts_at"] <= now and r["ends_at"] is None:
-                continue  # a moment already past: nothing of it is ahead to move
+            if r is not row and r["starts_at"] <= now and (r["ends_at"] or now) <= now:
+                continue  # a moment already past, or an item that has ended: nothing to move
             starts, ends = _shifted(r, shift, now)
             if ends is not None and ends <= starts:
                 raise model.invalid(f"the shift would end {r['title']!r} before it starts")
@@ -112,7 +113,7 @@ async def cancel_item(request: Request) -> Response:
     channels, leads = await event_settings(d)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
-        row = await _target(conn, request.path_params["item_id"], sent_revision)
+        row = await target(conn, request.path_params["item_id"], sent_revision)
         if row["managed_by"] is not None:
             raise model.conflict("item_managed", "cancel the session in the tournament module")
         if row["status"] == "cancelled":
@@ -144,7 +145,7 @@ async def remove_item(request: Request) -> Response:
     d = deps(request)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
-        row = await _target(conn, request.path_params["item_id"], sent_revision)
+        row = await target(conn, request.path_params["item_id"], sent_revision)
         if row["managed_by"] is not None:
             raise model.conflict("item_managed", "remove the session in the tournament module")
         version = await remove(conn, row["id"])

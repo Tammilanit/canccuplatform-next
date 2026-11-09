@@ -14,6 +14,7 @@ from starlette.routing import Route
 from . import model, store, timers
 from .access import viewer, writer
 from .deps import deps
+from .edits import target
 from .effective import event_settings, read_channels
 from .kinds import body, not_found
 
@@ -209,11 +210,7 @@ async def edit_item(request: Request) -> Response:
     channels, leads = await event_settings(d)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
-        row = await store.item(conn, request.path_params["item_id"], lock=True)
-        if row is None:
-            raise not_found("item")
-        if row["revision"] != sent_revision:
-            raise model.conflict("version_conflict", "the item changed: read it again")
+        row = await target(conn, request.path_params["item_id"], sent_revision)
         if row["status"] == "cancelled":
             raise model.conflict("item_cancelled", "a cancelled item cannot be edited")
         changed = [k for k in edits if _differs(row, k, edits[k])]

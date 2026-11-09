@@ -69,9 +69,10 @@ async def serve() -> None:
         resolver.handle_event(event)  # a status change (archived) reaches the next request
 
     async def on_admin_tenant(event: Event) -> None:
-        # The client reloads first, so the reschedule reads the new lead times.
-        await settings.handle_event(event)
-        await timers.on_settings_changed(d, event)
+        # The client reloads first, so the reschedule reads the new lead times; a short admin
+        # outage is retried, since the bus does not redeliver a failed event.
+        await mirror.retrying(lambda: settings.handle_event(event))
+        await mirror.retrying(lambda: timers.on_settings_changed(d, event))
 
     async def on_tournament(event: Event) -> None:
         await mirror.handle(d, event)

@@ -242,3 +242,32 @@ async def test_admin_down_is_retried_before_the_event_is_given_up(
 def test_the_fixtures_session_starts_two_hours_after_now() -> None:
     # The tests above read the fixture's times as at(120) and at(240).
     assert NOW + timedelta(minutes=120) == NOW.replace(hour=19)
+
+
+async def test_an_item_ended_early_emits_ended_on_the_next_tick(env: Env) -> None:
+    await feed(env, "added")
+    assert (await run_at(env, 120))[-1] == ("agenda.item.started", "Demo Game")
+    raw = fixture("cancelled")
+    env.clock[0] = NOW + timedelta(minutes=181)
+    with tenant_scope("ev-a"):
+        await mirror.handle(
+            env.app.state.deps,
+            Event(
+                raw["id"],
+                raw["type"],
+                1,
+                at(180),
+                "tournament",
+                {**raw["data"], "session": session(status="finished", revision=3)},
+                tenant="ev-a",
+            ),
+        )
+    assert await run_at(env, 181) == [("agenda.item.ended", "Demo Game")]
+    assert await run_at(env, 300) == []  # not again at the planned end
+
+
+async def test_a_remove_needs_no_admin(env: Env) -> None:
+    await feed(env, "added")
+    env.settings.down = True
+    await feed(env, "removed")
+    assert await items(env) == []

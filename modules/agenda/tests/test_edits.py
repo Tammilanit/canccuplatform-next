@@ -234,3 +234,15 @@ async def test_events_follow_the_new_start_not_the_old_one(env: Env) -> None:
     titles = [e["data"]["item"]["title"] for e in env.events()]
     assert titles == ["Target", "Ahead", "Running"]
     assert [e["data"]["agenda_version"] for e in env.events()] == [4, 5, 6]
+
+
+async def test_following_leaves_items_that_have_ended(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        block = await add(c, h, title="Block", starts_at=at(-60), ends_at=at(120))
+        await add(c, h, title="Done", starts_at=at(-45), ends_at=at(-30))
+        response = await delay(c, h, block, minutes=60, following=True)
+        assert response.status_code == 200, response.text
+        listed = {i["title"]: i for i in (await c.get("/api/agenda/items")).json()["items"]}
+    assert [i["title"] for i in response.json()["items"]] == ["Block"]
+    assert listed["Done"]["ends_at"] == at(-30) and listed["Done"]["revision"] == 1

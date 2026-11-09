@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from typing import Any
 
@@ -74,7 +75,8 @@ async def handle(d: Deps, event: Event) -> None:
     async with d.db.tenant() as conn:
         if _stale(await _mark(conn, session_id, lock=False), session):
             return
-    channels, leads = await _settings(d)
+    # A remove renders no item, so it goes through also while admin is down.
+    channels, leads = ([], []) if session is None else await _settings(d)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
         mark = await _mark(conn, session_id, lock=True)
@@ -220,12 +222,17 @@ async def _move(
 
 
 async def _settings(d: Deps) -> tuple[list[str], list[int]]:
+    return await retrying(lambda: event_settings(d))
+
+
+async def retrying[T](call: Callable[[], Awaitable[T]]) -> T:
+    """`call`, tried again after each pause while admin is unreachable."""
     for pause in SETTINGS_RETRIES:
         try:
-            return await event_settings(d)
+            return await call()
         except AdminUnavailable:
             await wait(pause)
-    return await event_settings(d)
+    return await call()
 
 
 async def wait(seconds: float) -> None:

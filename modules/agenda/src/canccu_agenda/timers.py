@@ -53,37 +53,41 @@ async def reschedule(
     """Make the items' pending timers match the items, inside the write's transaction.
 
     A timer that is due but not yet fired stays when the item still wants it at that time, so an
-    unrelated edit in the seconds before the loop runs never loses a start. A timer is added only
-    while its time is ahead: a lead that has passed is skipped, and a reminder that fired fires
-    again only for a new time still ahead.
+    unrelated edit in the seconds before the loop runs never loses a start. A reminder is added
+    only while its time is ahead: a lead that has passed is skipped, and a reminder that fired
+    fires again only for a new time still ahead. A start or end that has not fired yet always
+    fires, also when a move puts it at or before now: the next tick fires it late.
     """
-    added = False
+    rows = list(rows)
+    if not rows:
+        return
+    have: dict[str, set[Timer]] = {r["id"]: set() for r in rows}
+    for t in await conn.fetch(
+        "SELECT item_id, kind, lead_minutes, due_at FROM agenda_timers"
+        " WHERE item_id = ANY($1::text[])",
+        list(have),
+    ):
+        have[t["item_id"]].add((t["kind"], t["lead_minutes"], t["due_at"]))
+    stale: list[tuple[str, str, int]] = []
+    new: list[tuple[str, str, int, datetime]] = []
     for row in rows:
         kind = kinds.get(row["kind"])
         want = set(wanted(row, None if kind is None else kind["reminder_leads_minutes"], leads))
-        have = {
-            (r["kind"], r["lead_minutes"], r["due_at"])
-            for r in await conn.fetch(
-                "SELECT kind, lead_minutes, due_at FROM agenda_timers WHERE item_id = $1",
-                row["id"],
-            )
-        }
-        for kind_name, lead, _ in have - want:
-            await conn.execute(
-                "DELETE FROM agenda_timers WHERE item_id = $1 AND kind = $2 AND lead_minutes = $3",
-                row["id"],
-                kind_name,
-                lead,
-            )
-        new = [t for t in want - have if t[2] > now]
-        if new:
-            await conn.executemany(
-                "INSERT INTO agenda_timers (item_id, kind, lead_minutes, due_at)"
-                " VALUES ($1, $2, $3, $4)",
-                [(row["id"], *t) for t in new],
-            )
-            added = True
-    if added:
+        pending = {k for k, _, _ in have[row["id"]] if k != "reminder"}
+        stale += [(row["id"], k, lead) for k, lead, _ in have[row["id"]] - want]
+        new += [(row["id"], *t) for t in want - have[row["id"]] if t[2] > now or t[0] in pending]
+    if stale:
+        await conn.execute(
+            "DELETE FROM agenda_timers WHERE (item_id, kind, lead_minutes) IN"
+            " (SELECT * FROM unnest($1::text[], $2::text[], $3::int[]))",
+            *(list(c) for c in zip(*stale, strict=True)),
+        )
+    if new:
+        await conn.executemany(
+            "INSERT INTO agenda_timers (item_id, kind, lead_minutes, due_at)"
+            " VALUES ($1, $2, $3, $4)",
+            new,
+        )
         await conn.execute(
             "INSERT INTO agenda_timer_tenants (tenant_id)"
             " VALUES (current_setting('canccu.tenant')) ON CONFLICT DO NOTHING"
@@ -134,8 +138,15 @@ async def tick(d: Deps, *, batch: int = 100) -> int:
 
 
 async def _fire(d: Deps, tenant: str, batch: int) -> int:
-    channels, leads = await event_settings(d)
     now = d.now()
+    async with d.db.tenant(tenant) as conn:
+        # Most ticks find nothing due: no admin call for them.
+        if not await conn.fetchval(
+            "SELECT EXISTS (SELECT 1 FROM agenda_timers WHERE due_at <= $1)", now
+        ):
+            await _forget_if_idle(conn)
+            return 0
+    channels, leads = await event_settings(d)
     async with d.db.tenant(tenant) as conn:
         due = await conn.fetch(
             "SELECT item_id, kind, lead_minutes FROM agenda_timers WHERE due_at <= $1"
@@ -172,13 +183,10 @@ async def _fire(d: Deps, tenant: str, batch: int) -> int:
                 event_type = f"agenda.item.{timer['kind']}"
             await d.bus.publish(event_type, data, version=1, tenant=tenant)
             published += 1
-        for timer in due:
-            await conn.execute(
-                "DELETE FROM agenda_timers WHERE item_id = $1 AND kind = $2 AND lead_minutes = $3",
-                timer["item_id"],
-                timer["kind"],
-                timer["lead_minutes"],
-            )
+        await conn.executemany(
+            "DELETE FROM agenda_timers WHERE item_id = $1 AND kind = $2 AND lead_minutes = $3",
+            [(t["item_id"], t["kind"], t["lead_minutes"]) for t in due],
+        )
         if len(due) < batch:
             await _forget_if_idle(conn)
     return published
