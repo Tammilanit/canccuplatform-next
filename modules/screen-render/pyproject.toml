@@ -33,3 +33,6 @@ files = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "tests"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["canccu_screen_render", "decks"]

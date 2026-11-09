@@ -16,7 +16,8 @@ HYPERLINK_REL = (
 
 
 def slide_xml(fonts: list[str]) -> str:
-    runs = "".join(f'<a:r><a:rPr><a:latin typeface="{f}"/></a:rPr><a:t>x</a:t></a:r>' for f in fonts)
+    run = '<a:r><a:rPr><a:latin typeface="{}"/></a:rPr><a:t>x</a:t></a:r>'
+    runs = "".join(run.format(f) for f in fonts)
     return (
         '<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
         'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">'

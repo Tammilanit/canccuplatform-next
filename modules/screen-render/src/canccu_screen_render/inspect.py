@@ -1,7 +1,8 @@
 """Checks a deck before any renderer touches it, and reads what the render needs from it.
 
 Everything here reads untrusted bytes: sizes are checked before reading, XML with a DOCTYPE is
-refused (OOXML never has one, and entities are how XML bombs work), and nothing is extracted to disk.
+refused (OOXML never has one, and entities are how XML bombs work), and nothing is extracted
+to disk.
 """
 
 import io
@@ -49,7 +50,7 @@ class Limits:
     max_uncompressed: int = 1024 * 1024 * 1024
     # Real media compresses a little; a high ratio on a big entry is a zip bomb.
     max_ratio: int = 100
-    max_image_pixels: int = 60_000_000  # about 10,000 × 6,000
+    max_image_pixels: int = 60_000_000  # about 10,000 by 6,000
 
 
 @dataclass
@@ -84,7 +85,8 @@ def sniff(data: bytes) -> Kind:
     raise invalid("The file is not a PowerPoint (.pptx) or PDF deck.")
 
 
-def inspect_pptx(data: bytes, limits: Limits = Limits()) -> DeckInfo:
+def inspect_pptx(data: bytes, limits: Limits | None = None) -> DeckInfo:
+    limits = limits or Limits()
     try:
         deck = zipfile.ZipFile(io.BytesIO(data))
         infos = deck.infolist()
@@ -95,7 +97,9 @@ def inspect_pptx(data: bytes, limits: Limits = Limits()) -> DeckInfo:
         raise invalid("The file is not a PowerPoint (.pptx) deck.")
     _check_sizes(infos, limits)
     if any(n.lower().endswith("vbaproject.bin") for n in names):
-        raise invalid("The deck contains macros. Save it as a .pptx without macros and upload again.")
+        raise invalid(
+            "The deck contains macros. Save it as a .pptx without macros and upload again."
+        )
 
     slides = sorted(int(m.group(1)) for n in names if (m := SLIDE_RE.match(n)))
     if len(slides) > limits.max_slides:
@@ -146,7 +150,8 @@ def _check_rels(root: ElementTree.Element) -> None:
 
 def _image_size(head: bytes) -> tuple[int, int] | None:
     if head.startswith(b"\x89PNG\r\n\x1a\n") and len(head) >= 24:
-        return struct.unpack(">II", head[16:24])  # type: ignore[return-value]
+        width, height = struct.unpack(">II", head[16:24])
+        return width, height
     if head.startswith(b"\xff\xd8"):
         i = 2
         while i + 9 < len(head):
@@ -165,8 +170,8 @@ def _check_image(head: bytes, limits: Limits) -> None:
     size = _image_size(head)
     if size and size[0] * size[1] > limits.max_image_pixels:
         raise invalid(
-            f"An image in the deck is {size[0]}×{size[1]} pixels, too large to draw. "
-            "Scale it down (a slide needs at most 2560×1440) and upload again."
+            f"An image in the deck is {size[0]} by {size[1]} pixels, too large to draw. "
+            "Scale it down (a slide needs at most 2560 by 1440) and upload again."
         )
 
 
