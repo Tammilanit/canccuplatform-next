@@ -32,7 +32,11 @@ case "$1" in
   compose) for a; do last=$a; done
     case "$*" in *" exec -T caddy cat "*) if [ -e "$S/caddy_stale" ]; then echo stale; else cat deploy/Caddyfile; fi ;;
       *" logs "*) cat "$S/logs_$last" 2>/dev/null ;; *" up "*) if [ -e "$S/up_kill" ]; then rm "$S/up_kill"; kill -TERM "$PPID"; fi; exit "$(cat "$S/up_rc")" ;; *" ps "*) echo "c_$last" ;; esac ;;
-  inspect) cat "$S/live_${4#c_}" ;;
+  inspect) case "$3" in
+      *NetworkMode*) if [ -e "$S/sockonly_${4#c_}" ]; then echo none; else echo canccuplatform_default; fi ;;
+      *Health*) cat "$S/health_${4#c_}" 2>/dev/null || echo healthy ;;
+      *) cat "$S/live_${4#c_}" ;;
+    esac ;;
 esac
 STUB
 cat > "$stubs/bin/git" <<'STUB'
@@ -46,7 +50,7 @@ case "$1 $2" in
   "rev-parse --verify") case "$4" in FETCH_HEAD*) cat "$S/target" ;; *) cat "$S/head" ;; esac ;;
   "diff --quiet") [ ! -e "$S/caddy_changed" ] ;;
   "merge-base --is-ancestor") [ ! -e "$S/diverged" ] ;;
-  "ls-tree --name-only") printf 'modules/admin\nmodules/hello\nmodules/nodocker\n'; [ ! -e "$S/extra" ] || echo modules/extra ;;
+  "ls-tree --name-only") printf 'modules/admin\nmodules/hello\nmodules/nodocker\n'; [ ! -e "$S/extra" ] || echo modules/extra; [ ! -e "$S/sock" ] || echo modules/sock ;;
   "cat-file -e") case "$3" in *nodocker*) exit 1 ;; HEAD:*extra*) [ "$(cat "$S/head")" = "$(cat "$S/target")" ] ;; esac ;;
   "merge -q") echo "$4" > "$S/head" ;;
   "reset -q") echo "$4" > "$S/head" ;;
@@ -153,6 +157,13 @@ if grep -q 'cannot start on the current database' "$st/issues"; then pass "the i
 fresh; touch "$st/caddy_changed" "$st/bad_sha256:newhello"; dep "a failed deploy of a Caddyfile change" 1
 if [ "$(grep -c 'force-recreate caddy' "$st/log")" = 2 ]; then pass "the rollback recreates caddy with the previous Caddyfile"; else bad "the rollback recreates caddy with the previous Caddyfile" "$(cat "$st/log")"; fi
 logged "the rollback removes services the failed commit added" "up -d --wait --no-build --remove-orphans"
+
+# module sock has no network and no route (like screen-render): its Compose health counts, never curl
+fresh; touch "$st/sock" "$st/sockonly_sock" "$st/down_sock"; echo sha256:newsock > "$st/remote_sock"; dep "deploy with a module that has no route" 0
+notlogged "a module without a route is never checked through Caddy" "curl .*/api/sock/health"
+logged "a module without a route is checked by its Compose health" "docker inspect .*Health.* c_sock"
+fresh; touch "$st/sock" "$st/sockonly_sock"; echo unhealthy > "$st/health_sock"; echo sha256:newsock > "$st/remote_sock"; dep "deploy with an unhealthy module that has no route" 1
+has "the unhealthy module without a route is named" "health check failed: sock"
 
 # the failed commit adds module extra, whose route never answers; the previous commit has no extra
 fresh; touch "$st/extra" "$st/down_extra"; echo sha256:newextra > "$st/remote_extra"; dep "a failed deploy of a commit that adds a module" 1
