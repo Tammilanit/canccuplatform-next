@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Screen API
-  version: 1.0.0
+  version: 1.1.0
   summary: Devices, zones, the composed screen state and its push channel, content, scheduling and the PPTX and PDF render job.
   description: |
     Machine-readable part of the screen contract. Prose, widgets, claims, the Pulse options and events: contracts/screen.md.
@@ -212,7 +212,10 @@ components:
         maxLength: 200
   responses:
     BadRequest:
-      description: "`invalid_request`, `origin_not_allowed`, `unknown_zone`, `unknown_layout` or `code_invalid`."
+      description: |
+        `invalid_request`, `origin_not_allowed`, `unknown_zone`, `unknown_layout`, `code_invalid` or
+        `media_unsupported` (a video or audio file in a container or codec the screens do not play; the message
+        names what was found and what to export instead).
       content:
         application/json:
           schema:
@@ -248,6 +251,14 @@ components:
         `version_conflict`, `device_moved` (the device serves another event, or none), `no_venue`, `zone_exists`,
         `zone_in_use`, `asset_in_use`, `photo_exists`, `nothing_to_revert`, `render_not_finished`, `render_finished`,
         `already_cloned` or `event_archived`.
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    TooLarge:
+      description: |
+        `file_too_large`: over the size limit of contracts/screen.md; `storage_quota_exceeded`: the file would
+        pass the event's storage quota (contracts/tenants.md, Storage quota).
       content:
         application/json:
           schema:
@@ -363,7 +374,7 @@ components:
           type: [string, "null"]
     DeviceHealth:
       type: object
-      required: [online, last_seen_at]
+      required: [online, last_seen_at, clock_offset_ms, flags]
       properties:
         online:
           type: boolean
@@ -385,6 +396,22 @@ components:
           type: boolean
         viewport:
           $ref: "#/components/schemas/Viewport"
+        clock_offset_ms:
+          type: [integer, "null"]
+          description: |
+            The device's clock minus the server's, from the last heartbeat: `client_time` plus half of `rtt_ms`
+            minus the time the server received it. `null` until a heartbeat carries `client_time`.
+        flags:
+          type: array
+          description: |
+            What needs the crew's eye; empty when all is well. `clock_drift`: `clock_offset_ms` is over 2,000
+            either way. `shared_token`: two `instance_id`s each reported at least twice for this device within two
+            `heartbeat_seconds` (a reload never raises it).
+            Clients ignore values they do not know; more may be added.
+          uniqueItems: true
+          items:
+            type: string
+            examples: [clock_drift, shared_token]
     Viewport:
       type: object
       required: [width, height]
@@ -511,6 +538,18 @@ components:
           type: boolean
         viewport:
           $ref: "#/components/schemas/Viewport"
+        client_time:
+          description: The device's clock when it sent this heartbeat.
+          $ref: "#/components/schemas/Time"
+        rtt_ms:
+          type: integer
+          minimum: 0
+          maximum: 600000
+          description: The round trip of the device's previous heartbeat (sent to answered), as the device measured it.
+        instance_id:
+          type: string
+          pattern: "^[A-Za-z0-9_-]{16,64}$"
+          description: Random, made once per page load and kept until the page reloads, so two viewports with one token tell apart.
         claims_sounded:
           type: array
           maxItems: 50
@@ -1314,7 +1353,7 @@ components:
               properties:
                 code:
                   type: string
-                  enum: [render_timeout, too_many_slides, file_invalid, renderer_failed]
+                  enum: [render_timeout, too_many_slides, file_invalid, renderer_failed, storage_quota_exceeded]
                 message:
                   type: string
     RenderResult:

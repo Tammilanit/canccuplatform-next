@@ -46,7 +46,8 @@
     summary: Upload a file, or add a web or YouTube URL
     description: |
       Right `screen.content.write`. A file ≤ 100 MiB, checked by content. A `pptx` or `pdf` upload submits a render job.
-      400 `origin_not_allowed` for a web URL off `web_allowlist`; 413 `file_too_large`.
+      400 `origin_not_allowed` for a web URL off `web_allowlist`; 400 `media_unsupported` for a video or audio
+      file the screens do not play; 413 `file_too_large` or `storage_quota_exceeded`.
     requestBody:
       required: true
       content:
@@ -72,7 +73,7 @@
       "409":
         $ref: "../screen.openapi.yaml#/components/responses/Conflict"
       "413":
-        $ref: "../common.openapi.yaml#/components/responses/TooLarge"
+        $ref: "../screen.openapi.yaml#/components/responses/TooLarge"
 /api/screen/assets/name-check:
   post:
     tags: [content]
@@ -208,7 +209,7 @@
       "404":
         $ref: "../screen.openapi.yaml#/components/responses/NotFound"
       "413":
-        $ref: "../common.openapi.yaml#/components/responses/TooLarge"
+        $ref: "../screen.openapi.yaml#/components/responses/TooLarge"
       "409":
         $ref: "../screen.openapi.yaml#/components/responses/Conflict"
 /api/screen/assets/{asset_id}/revert:
@@ -933,7 +934,7 @@
       "409":
         $ref: "../screen.openapi.yaml#/components/responses/Conflict"
       "413":
-        $ref: "../common.openapi.yaml#/components/responses/TooLarge"
+        $ref: "../screen.openapi.yaml#/components/responses/TooLarge"
 /api/screen/photos/{photo_id}:
   parameters:
     - name: photo_id
@@ -963,7 +964,9 @@
     tags: [clone]
     operationId: cloneScreen
     summary: Copy screen content from another event of the series
-    description: Event-admin role on both events of one series (otherwise 403 `missing_right`). Audited.
+    description: |
+      Event-admin role on both events of one series (otherwise 403 `missing_right`). Audited. All or nothing:
+      a clone whose files would pass this event's storage quota is 413 `storage_quota_exceeded` and copies nothing.
     requestBody:
       required: true
       content:
@@ -1005,3 +1008,6 @@
         $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
       "409":
         $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+      "413":
+        $ref: "../screen.openapi.yaml#/components/responses/TooLarge"
+        description: "`storage_quota_exceeded`: the copied files would pass this event's storage quota; nothing was copied."
