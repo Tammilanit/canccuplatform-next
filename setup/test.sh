@@ -134,9 +134,11 @@ echo "# compose"
 if command -v docker >/dev/null && docker compose version >/dev/null 2>&1 && command -v jq >/dev/null; then
   ports=$(docker compose -f deploy/compose.yml config --format json 2>/dev/null \
     | jq -c '[.services.caddy.ports[] | "\(.host_ip)|\(.published)|\(.target)"] | sort')
-  want='["0.0.0.0|443|443","0.0.0.0|80|80","::|443|443","::|80|80"]'
-  if [ "$ports" = "$want" ]; then pass "caddy publishes 80 and 443 explicitly on 0.0.0.0 and ::"
-  else bad "caddy publishes 80 and 443 explicitly on 0.0.0.0 and ::" "got $ports, want $want"; fi
+  # Only 80: in http mode caddy serves nothing on 443, and a host service (Tailscale serve) may
+  # hold 443, so publishing it makes every deploy and rollback fail (#255). TLS (#5) adds it back.
+  want='["0.0.0.0|80|80","::|80|80"]'
+  if [ "$ports" = "$want" ]; then pass "caddy publishes only 80, explicitly on 0.0.0.0 and ::"
+  else bad "caddy publishes only 80, explicitly on 0.0.0.0 and ::" "got $ports, want $want"; fi
   if docker compose -f deploy/compose.yml config --format json 2>/dev/null \
     | jq -e '.networks.default.enable_ipv6 == true and ([.networks.default.ipam.config[]?.subnet | select(test("^fd[0-9a-f]{2}:.*/64$"))] | length == 1)' >/dev/null
   then pass "the default network has IPv6 (a ULA /64), so Docker NATs IPv6 through ip6tables"
