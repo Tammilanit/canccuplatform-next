@@ -296,6 +296,11 @@ services:
     environment:
       <<: *kit-env
       CANCCU_MODULE: notify
+      # No defaults: notify does not start without them (modules/notify/README.md, Environment).
+      CANCCU_NOTIFY_VAPID_PRIVATE_KEY: ${CANCCU_NOTIFY_VAPID_PRIVATE_KEY:-}
+      CANCCU_SECRETS_KEY: ${CANCCU_SECRETS_KEY:-}
+      CANCCU_SECRETS_KEYS_RETIRED: ${CANCCU_SECRETS_KEYS_RETIRED:-}
+      CANCCU_PUBLIC_URL: ${CANCCU_PUBLIC_URL:-}
       CANCCU_MIGRATE_DATABASE_URL: postgres://canccu_migrator:${CANCCU_DB_MIGRATOR_PASSWORD:-canccu-local-only-migrator}@postgres:5432/canccu
       # The event comes from the request's hostname, resolved by the tenants module.
       CANCCU_TENANTS_URL: http://tenants:8080

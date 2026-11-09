@@ -1,6 +1,6 @@
 """Domain events in, notifications out: the trigger engine with its writes
-(contracts/notify.md, Topics and sources; Dedupe). Pushes and DMs follow in #225 and #226; until
-then a notification lands in the inbox only."""
+(contracts/notify.md, Topics and sources; Dedupe). Each notification's pushes are planned in the
+same transaction and sent after it commits (delivery.py); Discord DMs follow in #226."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from canccu_kit import Event
 
-from . import engine
+from . import delivery, engine
 from .config import configured, settings_ready
 from .deps import Deps
 
@@ -54,6 +54,7 @@ async def handle(d: Deps, event: Event) -> None:
     envelope: dict[str, Any] = json.loads(event.to_json())
     now = d.now()
     ready = await settings_ready(d.settings)
+    planned = 0
     async with d.db.tenant(event.tenant) as conn:
         tz = zone_of(await conn.fetchval("SELECT time_zone FROM notify_event_state"))
         for key, found in (await configured(conn, d.settings if ready else None)).items():
@@ -68,23 +69,39 @@ async def handle(d: Deps, event: Event) -> None:
                 for c in engine.evaluate(
                     key, trigger, allowed, config["params"], envelope, now, tz
                 ):
-                    await _create(conn, c, event.id, now)
+                    for note in await _create(conn, c, event.id, now):
+                        planned += await delivery.plan(conn, note, reg, now)
+    if planned:
+        try:
+            await delivery.deliver(d, event.tenant)
+        except Exception:
+            # The rows are committed: the sender loop sends them on its next tick.
+            log.exception("sending failed; the sender loop retries", extra={"tenant": event.tenant})
 
 
-async def _create(conn: Any, c: engine.Candidate, source_id: str, now: Any) -> None:
+async def _create(conn: Any, c: engine.Candidate, source_id: str, now: Any) -> list[dict[str, Any]]:
     # The key is taken only here, after every check passed, so a dropped event leaves it free.
     taken = await conn.fetchval(
         "INSERT INTO notify_dedupe (key) VALUES ($1) ON CONFLICT DO NOTHING RETURNING 1",
         c.dedupe_key,
     )
     if taken is None:
-        return
+        return []
+    made = []
     for user_id in c.user_ids or (None,):
+        note = {
+            "id": new_id(),
+            "topic": c.topic,
+            "part": c.part,
+            "audience": c.audience,
+            "user_id": user_id,
+            "channels": list(c.channels),
+        }
         await conn.execute(
             "INSERT INTO notify_notifications (id, topic, part, audience, user_id, title, body,"
             " url, urgent, channels, source_event_id, created_at, expires_at)"
             " VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
-            new_id(),
+            note["id"],
             c.topic,
             c.part,
             c.audience,
@@ -93,8 +110,10 @@ async def _create(conn: Any, c: engine.Candidate, source_id: str, now: Any) -> N
             c.body,
             c.url,
             c.urgent,
-            list(c.channels),
+            note["channels"],
             source_id,
             now,
             c.expires_at,
         )
+        made.append(note)
+    return made

@@ -15,6 +15,7 @@ from canccu_kit import (
     Health,
     IpMode,
     RightsChecker,
+    SecretBox,
     ServiceIdentity,
     SettingsClient,
     TenantResolver,
@@ -27,10 +28,12 @@ from canccu_kit import (
 )
 
 from . import config as topic_config
-from . import consumer
+from . import consumer, delivery
 from .app import create_app
 from .db import Db
 from .deps import Deps
+from .push import Pusher
+from .webpush import Vapid
 
 
 class TenantsAudit:
@@ -65,6 +68,9 @@ async def serve() -> None:
         raise SystemExit(f"missing environment variable(s): {', '.join(missing)}")
     try:
         identity = ServiceIdentity(config.module, service_key_from_env())
+        # Push needs both; without either the module does not start (plan D3, D4).
+        vapid = Vapid.from_env()
+        box = SecretBox.from_env()
     except ConfigError as exc:
         raise SystemExit(str(exc)) from exc
     # The stack logs in as a plain role and migrates as the migration role (0013 item 5).
@@ -106,7 +112,15 @@ async def serve() -> None:
         {"postgres": postgres_check(ping), "valkey": valkey_check(streams)},
     )
     audit = TenantsAudit(os.environ["CANCCU_TENANTS_URL"], identity)
-    d = Deps(db=db, bus=bus, rights=rights, settings=settings, audit=audit)
+    d = Deps(
+        db=db,
+        bus=bus,
+        rights=rights,
+        settings=settings,
+        audit=audit,
+        box=box,
+        push=Pusher(vapid),
+    )
 
     async def on_source(event: Event) -> None:
         await consumer.handle(d, event)
@@ -129,7 +143,11 @@ async def serve() -> None:
             forwarded_allow_ips=trusted,
         )
     )
-    await server.serve()
+    sender = asyncio.create_task(delivery.run(d))
+    try:
+        await server.serve()
+    finally:
+        sender.cancel()
 
 
 def main() -> None:

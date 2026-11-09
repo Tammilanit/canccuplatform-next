@@ -18,6 +18,7 @@ from canccu_kit import (
     Bus,
     Event,
     Health,
+    SecretBox,
     ServiceIdentity,
     TenantResolver,
     current_tenant,
@@ -27,11 +28,14 @@ from canccu_kit.access import TenantContext
 from canccu_kit.errors import AdminUnavailable, NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.testing import MemoryStreamStore
+from fakepush import FakePushService
 
 from canccu_notify import access, consumer
 from canccu_notify.app import create_app
 from canccu_notify.db import Db
 from canccu_notify.deps import Deps
+from canccu_notify.push import Pusher
+from canccu_notify.webpush import Vapid, keygen, load_private_key
 
 URL = os.environ.get("CANCCU_DATABASE_URL")
 NOW = datetime(2026, 11, 20, 17, 0, tzinfo=UTC)
@@ -110,6 +114,7 @@ class Env:
     clock: list[datetime]
     audit: FakeAudit
     deps: Deps
+    push: FakePushService
 
     def client(self, host: str = "a.example.test") -> httpx.AsyncClient:
         return httpx.AsyncClient(
@@ -133,6 +138,19 @@ class Env:
                 json=reg,
                 headers=caller.headers("notify"),
             )
+
+    async def subscribe(
+        self,
+        name: str,
+        headers: dict[str, str] | None = None,
+        preferences: dict[str, Any] | None = None,
+        host: str = "a.example.test",
+    ) -> httpx.Response:
+        body: dict[str, Any] = {"push": self.push.browser(name).subscription()}
+        if preferences is not None:
+            body["preferences"] = preferences
+        async with self.client(host) as c:
+            return await c.post("/api/notify/subscriptions", json=body, headers=headers or {})
 
     async def emit(
         self, tenant: str, type: str, data: dict[str, Any], *, id: str = "e1", **extra: Any
@@ -162,9 +180,10 @@ async def env() -> AsyncIterator[Env]:
     async with db.pool.acquire() as conn:  # the login role: RLS does not bind it
         await conn.execute(
             "TRUNCATE notify_topic_types, notify_topic_type_history, notify_topic_config,"
-            " notify_notifications, notify_dedupe, notify_event_state"
+            " notify_notifications, notify_dedupe, notify_event_state, notify_subscriptions,"
+            " notify_deliveries, notify_delivery_tenants"
         )
-    access.ZONES.clear()
+    access.SEEN.clear()
     contexts = {tid: context(tid) for tid in HOSTS.values()}
 
     def registry(request: httpx.Request) -> httpx.Response:
@@ -183,16 +202,21 @@ async def env() -> AsyncIterator[Env]:
     settings = FakeSettings()
     clock = [NOW]
     audit = FakeAudit()
+    vapid = Vapid(load_private_key(keygen()))
+    fake = FakePushService(vapid.public_key)
+    pusher = Pusher(vapid, httpx.AsyncClient(transport=httpx.MockTransport(fake.handler)))
     d = Deps(
         db=db,
         bus=Bus(store, "notify"),
         rights=rights,
         settings=settings,
         audit=audit,
+        box=SecretBox({1: b"s" * 32}, 1),
+        push=pusher,
         now=lambda: clock[0],
     )
     app = create_app(d, Health("notify", "dev", {}), resolver, ServiceIdentity("notify", KEY))
-    yield Env(db, rights, settings, store, contexts, app, clock, audit, d)
+    yield Env(db, rights, settings, store, contexts, app, clock, audit, d, fake)
     await db.close()
 
 

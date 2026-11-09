@@ -1,4 +1,5 @@
-"""Cross-tenant leak tests: one event never reads another's configuration or notifications."""
+"""Cross-tenant leak tests: one event never reads another's configuration, notifications,
+subscriptions or deliveries."""
 
 from __future__ import annotations
 
@@ -23,6 +24,18 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
                 marker,
                 env.clock[0],
             )
+            await conn.execute(
+                "INSERT INTO notify_subscriptions (id, token_hash, endpoint, keys_sealed,"
+                " created_at) VALUES ($1, $1, $1, $1, $2)",
+                marker,
+                env.clock[0],
+            )
+            await conn.execute(
+                "INSERT INTO notify_deliveries (notification_id, recipient, channel,"
+                " created_at) VALUES ($1, $1, 'push', $2)",
+                marker,
+                env.clock[0],
+            )
 
     async def _read(tenant: str) -> set[str]:
         async with env.db.tenant(tenant) as conn:
@@ -32,6 +45,8 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
                 "SELECT key AS v FROM notify_dedupe",
                 "SELECT time_zone AS v FROM notify_event_state",
                 "SELECT id AS v FROM notify_notifications",
+                "SELECT endpoint AS v FROM notify_subscriptions",
+                "SELECT recipient AS v FROM notify_deliveries",
             ):
                 found |= {r["v"] for r in await conn.fetch(sql)}
         return found

@@ -6,14 +6,16 @@ from datetime import datetime
 from typing import Any
 
 from canccu_kit import KitError, NotSignedIn, check_info_access
+from canccu_kit.rights import Session
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from .access import client_ip, is_member, session_of, tenant_ctx
+from .access import client_ip, is_member, session_of, tenant_ctx, tenant_of
 from .deps import deps
 from .engine import parse_time
 from .registry import bad
+from .subscriptions import by_token
 
 INBOX_LIMIT = 200
 
@@ -54,7 +56,7 @@ async def notification(request: Request) -> Response:
         )
     if row is None:
         raise _not_found()
-    member = session is not None and is_member(session)
+    member = session is not None and is_member(session.user_id)
     if row["audience"] == "public" and not member:
         try:
             check_info_access(ctx, client_ip=client_ip(request), viewer="guest")
@@ -68,20 +70,39 @@ async def notification(request: Request) -> Response:
     return JSONResponse(view(row))
 
 
+async def _audiences(
+    request: Request, conn: Any, session: Session | None
+) -> tuple[list[str], str | None]:
+    """The event-wide audiences the caller reads, and the user whose personal ones they read.
+
+    A subscription token reads as its owner's audience (`attendees` only while that user is a
+    member), never their personal notifications: those need the session."""
+    if session is not None:
+        member = is_member(session.user_id)
+        return (["public", "attendees"] if member else ["public"]), session.user_id
+    sub = await by_token(conn, request)
+    if sub is None:
+        raise NotSignedIn("sign in, or use a subscription token")
+    if sub["user_id"] is not None and is_member(sub["user_id"]):
+        return ["public", "attendees"], None
+    try:
+        check_info_access(tenant_of(request), client_ip=client_ip(request), viewer="guest")
+    except KitError:
+        return [], None  # the guest's subscription is kept, and reads nothing while closed
+    return ["public"], None
+
+
 async def inbox(request: Request) -> Response:
-    """The caller's unexpired notifications, newest first. A session for now; the subscription
-    token arrives with subscriptions (#225)."""
+    """The caller's unexpired notifications, newest first."""
     await tenant_ctx(request)
     session = await session_of(request)
-    if session is None:
-        raise NotSignedIn("sign in, or use a subscription token")
-    raw = request.query_params.get("since")
-    since = parse_time(raw) if raw is not None else None
-    if raw is not None and since is None:
-        raise bad("since: an RFC 3339 time with an offset")
-    audiences = ["public", "attendees"] if is_member(session) else ["public"]
     d = deps(request)
     async with d.db.tenant() as conn:
+        audiences, user_id = await _audiences(request, conn, session)
+        raw = request.query_params.get("since")
+        since = parse_time(raw) if raw is not None else None
+        if raw is not None and since is None:
+            raise bad("since: an RFC 3339 time with an offset")
         rows = await conn.fetch(
             "SELECT * FROM notify_notifications WHERE expires_at > $1"
             " AND ($2::timestamptz IS NULL OR created_at > $2)"
@@ -90,7 +111,7 @@ async def inbox(request: Request) -> Response:
             d.now(),
             since,
             audiences,
-            session.user_id,
+            user_id,
             INBOX_LIMIT,
         )
     return JSONResponse({"notifications": [view(r) for r in rows]})
