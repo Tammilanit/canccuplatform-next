@@ -22,7 +22,7 @@ Postgres row-level security guards every tenant table (0013 items 5–6). A glob
 | series (tenants) | global | A series' name; its events point to it |
 | platform audit (tenants) | global | Audit entries with no tenant: venues, hostnames, tenant creation and deletion, superadmins, user deletion |
 | Device identity (screen) | global | Owned by the screen contract (0013 item 34); not part of this contract |
-| event admins, members, feature flags, venue info, audit, support windows (tenants) | per tenant | `tenant_id` under RLS |
+| event admins, members, feature flags, venue info, audit, support windows, storage counts (tenants) | per tenant | `tenant_id` under RLS |
 | Everything else, in every module | per tenant | `tenant_id` under RLS, unless that module's contract adds a table to the allow-list |
 
 Series and platform audit are added to 0013 item 6's list of global tables: a series spans events, and an audit entry about a venue or a hostname belongs to no single event.
@@ -32,7 +32,8 @@ Series and platform audit are added to 0013 item 6's list of global tables: a se
 - Outside resolution (0013 item 2): the platform's own hostnames (the central sign-in host and the superadmin hostname, both from the environment and never registrable), `GET /health`, and the IP-mode demo stack in CI, which serves the demo tenant on an unregistered host only while `platform.version` is `dev` and the demo tenant is the only tenant.
 - **For the IP-mode demo stack:** the kit asks `GET /internal/tenants/ip-mode` for a request whose host is an IP address. It answers the demo tenant's `TenantContext`, the same as `resolve` would, only while the tenants module's own version is `dev` and `demo` is the only tenant; otherwise 404. So every module runs IP mode the same way, without a loader of its own.
 - **For modules:** the kit resolves and caches the tenant through `GET /internal/tenants/resolve?host=` (the `TenantContext` in the OpenAPI file: id, status, time zone, access settings, the venue's addresses and the feature flags) and drops its cache on the tenants events. A module never reads the registry itself.
-- Absolute URLs (links in DMs, push, QR codes) use the tenant's `primary_hostname`, never the request's `Host` header (0013 item 10).
+- **Another event by its id:** `GET /internal/tenants/tenants/{tenant_id}` answers the same `TenantContext`, in every status, or 404 for a deleted or unknown id. It is for the few module actions that span events, such as Screen's device moves (the target event's venue) and a moved device's home URL (its current event's `primary_hostname`, [screen.md](screen.md#moving-renaming-revoking)). A module never serves a request by it: the request's own tenant still comes from its hostname.
+- Absolute URLs (links in DMs, push, QR codes) use the tenant's `primary_hostname`, never the request's `Host` header (0013 item 10). One exception: the screen kiosk's pair QR, which the kiosk builds in the browser from its own page address ([screen.md](screen.md#pairing)). That address is one of the event's own `active` hostnames, since the page would not load otherwise, and it comes from the browser, not from a `Host` header; the kiosk has no device yet and gets no hostname from the server.
 - **Internal endpoints** live under `/internal/tenants/`, not `/api/`. The edge Caddy routes only `/api/<module>/` and `/<module>/`, so they are reached only on the stack's internal network: by the kit, the other modules and Caddy's `ask`.
 
 ## Tenants
@@ -53,6 +54,7 @@ A tenant (`Tenant` in the OpenAPI file):
 | `admin_access` | `restricted` (default) or `internet` (see Access) |
 | `venue_ip_check` | `{"enabled", "disabled_until", "reason"}` (see Access) |
 | `archived_at`, `presence_delete_at`, `personal_anonymise_at` | Set when archived (see Privacy and retention) |
+| `storage_quota_bytes` | The most bytes the event's files may take, across all its modules: 2 GiB (2,147,483,648) unless the superadmin sets another (see [Storage quota](#storage-quota)) |
 | `revision` | +1 on every change, for optimistic concurrency |
 
 - `GET /api/tenants/current` → the request's tenant, readable by anyone, also guests, so pages can decide what to show. Guests see the public fields only (`PublicTenant`: no access settings beyond `info_page_mode`, no revision). While the event is `draft`, a guest gets only `{"id", "status"}` (`DraftTenant`), so a page can say "not open yet" without showing the event.
@@ -60,6 +62,17 @@ A tenant (`Tenant` in the OpenAPI file):
 - The venue, the series and the hostnames are the superadmin's (see Superadmin): they decide who may use a venue's screens and which names point to the event.
 
 **Settings.** A tenant's settings are of two kinds. Its own (time zone, dates, access, membership) are the fields above. Each module's settings are per tenant through the admin settings API ([admin.md](admin.md#settings)), for the request's tenant (0013 item 18).
+
+## Storage quota
+Each event has one quota for every file its modules keep in the shared files volume (today screen's assets, renders and photos, and theming's packages), so one event cannot fill the disk of the others (0013 item 27). The venue info's floor plan does not count: it is at most 10 MB, and the platform copies it in when the event gets its venue, which must never fail on the quota. The event holds one copy at a time: a new copy or an event admin's upload replaces it in place, and no old copies are kept.
+
+- **The quota** is the tenant's `storage_quota_bytes`: 2 GiB by default, set by the superadmin at creation or later on `PATCH /api/tenants/registry/{tenant_id}` (audited; emits `tenants.tenant.changed` with `storage_quota_bytes` in `changed`). Lowering it under what is used deletes nothing: it only refuses new files until the event is under it again.
+- **The count** is per event and per module, held by the tenants module, so modules never read each other's files. A file counts once by its stored bytes: identical bytes a module shares by content (screen's content-addressed files) count once.
+- **Reserve before writing:** before it writes a file, a module calls `POST /internal/tenants/storage/reserve?tenant_id=` with `module` and `bytes`. The check and the add are one step, so two uploads at once never both pass. Over the quota is 413 `storage_quota_exceeded`, which the module passes on to its client unchanged (code and message); an archived event is 409 `event_archived`.
+- **Release:** when a module deletes a file, or failed to write one it reserved, it calls `POST /internal/tenants/storage/release?tenant_id=` with the same fields; the count never goes below 0. Works in every status, since retention deletes files of archived events.
+- **Repair:** `PUT /internal/tenants/storage/modules/{module}?tenant_id=` with `bytes` sets the module's count to what its files of the event take, as the module counted them; for a count that drifted (a crash between a reserve and its release). It ignores the quota. The module counts its files and its open reservations (bytes reserved for files not yet written or not yet released), so an upload under way while it counts is not lost from the count.
+- **Reading:** `GET /api/tenants/current/storage` → `quota_bytes`, `used_bytes` and the bytes per module, for members and event admins, so an upload form shows what is left. All three internal paths answer the same shape.
+- **Clone and delete:** a clone's copied files count against the new event. Each module's clone is all or nothing: it reserves the bytes of everything it will copy in one reserve before it copies, so a clone over the quota is 413 `storage_quota_exceeded` with nothing copied; a copy that fails after the reserve deletes what it wrote and releases the bytes. Each module's clone stands alone, so another module's part may already have run. Deleting a tenant deletes its counts with its files.
 
 ## Lifecycle
 `draft` → `live` → `archived`, and `draft` → `archived` for an event that never runs. Nothing goes back; an archived event comes back only as a new event cloned from it.
@@ -201,7 +214,7 @@ Append-only (0013 item 13): no API changes or deletes an entry, and the module's
 ## Superadmin
 On the superadmin hostname only; on any other hostname these paths answer 404 `not_found`. Every call needs a superadmin with `mfa_enabled` on the identity the session signed in with ([Sign-in identities](#sign-in-identities)). All of it is audited.
 
-- **Tenants:** `GET`, `POST /api/tenants/registry`; `GET`, `PATCH`, `DELETE /api/tenants/registry/{tenant_id}`; `POST …/status`. Creating takes `id`, `name`, `time_zone` and optionally `venue_id`, `series_id`, `starts_at`, `ends_at` and the first event admins, and emits `tenants.tenant.created`. `PATCH` also sets `venue_id` and `series_id`.
+- **Tenants:** `GET`, `POST /api/tenants/registry`; `GET`, `PATCH`, `DELETE /api/tenants/registry/{tenant_id}`; `POST …/status`. Creating takes `id`, `name`, `time_zone` and optionally `venue_id`, `series_id`, `starts_at`, `ends_at`, `storage_quota_bytes` and the first event admins, and emits `tenants.tenant.created`. `PATCH` also sets `venue_id`, `series_id` and `storage_quota_bytes` (the superadmin's only; event admins never set it).
 - **Event admins of any tenant:** `PUT`, `DELETE /api/tenants/registry/{tenant_id}/admins/{user_id}`, so a new event gets its first admin.
 - **Hostnames:** `GET`, `POST /api/tenants/registry/{tenant_id}/hostnames`; `PATCH` (make primary: only an `active` hostname, otherwise 409 `hostname_not_active`, since a `pending` name cannot be primary) and `DELETE /api/tenants/hostnames/{hostname}`; `POST /api/tenants/hostnames/{hostname}/verify`.
 - **Venues:** `GET`, `POST /api/tenants/venues`; `GET`, `PATCH`, `DELETE /api/tenants/venues/{venue_id}`; `PUT /api/tenants/venues/{venue_id}/floor-plan`. Changing a venue emits `tenants.venue.changed`.
