@@ -20,7 +20,7 @@ Through Caddy: `/api/notify/health` and the contract's `/api/notify/…` paths. 
 ```sh
 pip install -e ".[dev]" && ruff check . && ruff format --check . && mypy . && pytest
 ```
-The engine tests run anywhere. Everything else needs a real Postgres, because RLS cannot be faked; without `CANCCU_DATABASE_URL` those tests are skipped. They include the cross-tenant leak tests (`tests/test_leak.py`). CI runs them in the `integration (kit)` job:
+The engine tests run anywhere. Everything else needs a real Postgres, because RLS cannot be faked; without `CANCCU_DATABASE_URL` those tests are skipped. They include the cross-tenant leak tests (`tests/test_leak.py`). CI runs them in the `module (notify)` job ([docs/ci.md](../../docs/ci.md#modules)):
 ```sh
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml up -d --wait postgres
 CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu pytest

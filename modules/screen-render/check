@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Replaces the Python defaults of scripts/check-module: the real-deck tests only run in the
+# render image, against its LibreOffice, poppler and fonts; --network none as in deploy/compose.yml.
+set -euo pipefail
+cd "$(dirname "$0")/../.."
+docker build --target test -f modules/screen-render/Dockerfile -t canccu-screen-render-test .
+docker run --rm --network none canccu-screen-render-test

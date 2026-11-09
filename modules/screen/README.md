@@ -24,3 +24,5 @@ docker run -d --rm --name canccu-screen-test -e POSTGRES_PASSWORD=test -p 127.0.
 CANCCU_TEST_DATABASE_URL=postgres://postgres:test@127.0.0.1:55432/postgres npm test
 docker stop canccu-screen-test
 ```
+
+CI runs them against its own Postgres in the `module (screen)` job ([docs/ci.md](../../docs/ci.md#modules)).
