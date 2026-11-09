@@ -206,6 +206,36 @@ services:
       retries: 30
     restart: unless-stopped
 
+  agenda:
+    build:
+      context: ..
+      dockerfile: modules/agenda/Dockerfile
+    environment:
+      <<: *kit-env
+      CANCCU_MODULE: agenda
+      CANCCU_MIGRATE_DATABASE_URL: postgres://canccu_migrator:${CANCCU_DB_MIGRATOR_PASSWORD:-canccu-local-only-migrator}@postgres:5432/canccu
+      # The event comes from the request's hostname, resolved by the tenants module.
+      CANCCU_TENANTS_URL: http://tenants:8080
+      CANCCU_SIGNIN_HOSTNAME: ${CANCCU_SIGNIN_HOSTNAME:-}
+      CANCCU_SUPERADMIN_HOSTNAME: ${CANCCU_SUPERADMIN_HOSTNAME:-}
+      CANCCU_IP_MODE: ${CANCCU_IP_MODE:-demo}
+      # Only stack containers reach this one; the edge Caddy (#51) narrows it to Caddy alone.
+      CANCCU_TRUSTED_PROXIES: "*"
+    depends_on:
+      <<: *after-db
+      tenants:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys,urllib.request as u; sys.exit(0 if u.urlopen('http://127.0.0.1:8080/health').status==200 else 1)"
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
   caddy:
     image: caddy:2.11-alpine
     # Explicit host IPs: the host's Docker default bind may be 127.0.0.1. On a host reachable from

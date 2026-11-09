@@ -43,6 +43,16 @@
 		reverse_proxy screen:8080
 	}
 
+	# The agenda contract's paths are /api/agenda/... too.
+	handle /api/agenda/health {
+		rewrite * /health
+		reverse_proxy agenda:8080
+	}
+
+	handle /api/agenda/* {
+		reverse_proxy agenda:8080
+	}
+
 	handle_path /admin/* {
 		reverse_proxy admin:8080
 	}
