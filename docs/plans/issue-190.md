@@ -77,3 +77,10 @@ Slices 1, 2 and 4 can run in parallel once their needs merge; 3 follows 2. The i
 
 ## After the answers
 The lead rewrites #190 and opens the slice issues as the answers decide; each slice then runs as a package against this plan's design table.
+
+## Answers (the lead, 2026-11-09)
+1. **Split:** as proposed. Slice 0 (contract G1 and G2) is #262; slice 1 (schedule) is #190 itself; slice 2 (content) is #263; slice 3 (playlists and push) is #264; slice 4 (pins and freeze) is #265. Each slice waits for its needs as GitHub dependencies.
+2. **Freeze (G1):** yes, in #262. The product owner confirms the UX side, that a freeze ends by itself at the event's end.
+3. **Audit (G2):** yes, in #262. #216 and #217 build the audit calls into the API; the slices only test them.
+4. **Order:** yes. Every slice waits for #189's shell.
+5. **Calendar range:** the product owner's call (UX). The recommendation stands unless they say otherwise: the event's own dates, and a week when it has none.
