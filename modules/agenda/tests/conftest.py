@@ -110,7 +110,10 @@ async def env() -> AsyncIterator[Env]:
         pytest.skip("needs CANCCU_DATABASE_URL")
     db = await Db.connect(URL)
     async with db.pool.acquire() as conn:  # the login role: RLS does not bind it
-        await conn.execute("TRUNCATE agenda_state, agenda_kinds, agenda_items")
+        await conn.execute(
+            "TRUNCATE agenda_state, agenda_kinds, agenda_items, agenda_timers,"
+            " agenda_timer_tenants, agenda_sessions"
+        )
     contexts = {tid: context(tid) for tid in HOSTS.values()}
 
     def registry(request: httpx.Request) -> httpx.Response:

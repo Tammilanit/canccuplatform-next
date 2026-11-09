@@ -18,3 +18,4 @@ admin admin_sign_in_flows OAuth flows in progress, hashed; no event data
 admin admin_first_run   the one-time first-run code, hashed; no event data
 screen devices          device identity: name, token hash, venue id, current tenant (0013 item 34)
 screen screen_migrations which migration files ran (created by runMigrations before the files); no event data
+agenda agenda_timer_tenants the events with pending timers, a plain tenant reference, so the scheduler finds them without a tenant set

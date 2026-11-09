@@ -1,0 +1,12 @@
+{
+  "id": "01928f3e-7a2b-7c4d-9e8f-0a1b2c3d4f04",
+  "type": "tournament.session.removed",
+  "version": 1,
+  "time": "2026-11-20T17:00:00Z",
+  "source": "tournament",
+  "tenant": "demo",
+  "data": {
+    "session_id": "ts_1",
+    "actor_user_id": "u_org"
+  }
+}

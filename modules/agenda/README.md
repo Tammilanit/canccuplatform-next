@@ -1,6 +1,6 @@
 # agenda
 
-The agenda module serves [contracts/agenda.md](../../contracts/agenda.md): the run-of-show of each event (tenant), its own list of kinds, and now and next. Plan and split: [docs/plans/issue-187.md](../../docs/plans/issue-187.md). This is package 1 (#187): kinds, adding, editing and moving items, reading, and now and next. Delay, cancel, remove, the reminder scheduler and the tournament-session mirror follow in #210, the run-of-show pages in #211 and #212, clone after the tenants series API (#150).
+The agenda module serves [contracts/agenda.md](../../contracts/agenda.md): the run-of-show of each event (tenant), its own list of kinds, and now and next. Plan and split: [docs/plans/issue-187.md](../../docs/plans/issue-187.md). Package 1 (#187) built kinds, adding, editing and moving items, reading, and now and next; package 2 (#210) adds delay with following, cancel, remove, the reminder scheduler and the tournament-session mirror. The run-of-show pages follow in #211 and #212 (with announce), clone after the tenants series API (#150).
 
 ## How it works
 - **Tenancy:** each request's event comes from its `Host`, through the kit's `TenancyMiddleware` and `TenantResolver` (`CANCCU_TENANTS_URL`). Every table is per tenant under RLS; requests run as `canccu_agenda_app` (`SET LOCAL ROLE` inside each transaction).
@@ -8,6 +8,9 @@ The agenda module serves [contracts/agenda.md](../../contracts/agenda.md): the r
 - **Writes:** one transaction per write takes the event's counter row `FOR UPDATE`, so `agenda_version` and `kinds_version` never skip or repeat. Events are published after the commit.
 - **Who reads what:** guests read `public` items when the event's info-page mode lets them; any valid session on the event's hostname also reads `attendees` items until the tenants membership API lands (#150; `access.is_member`); `agenda.crew.read` adds `crew` items.
 - **Archived events:** writes get 409 `event_archived`. The status comes from the resolver's tenant context, which the module drops on every tenants event.
+- **Delay** with `following` checks every shifted item before it writes any, so a refused shift moves nothing. Each shifted item gets its own `agenda_version` and its own `agenda.item.delayed`, all with one `correlation_id`, in order of the new start.
+- **Timers** (`timers.py`): every write rewrites its items' rows in `agenda_timers` (reminders at each lead in effect, the start and the end) in the same transaction. A loop in every container, every 5 seconds, visits the events listed in the global `agenda_timer_tenants`, claims due rows with `FOR UPDATE SKIP LOCKED` and publishes before it deletes them (at least once). A reminder whose start has passed (after an outage) is dropped; starts and ends still fire. A change of the lead-time setting (`admin.settings.changed`) or of a kind reschedules the items it touches.
+- **Tournament sessions** (`mirror.py`): `tournament.session.*` events, read from the start of each stream, keep one item per session. `agenda_sessions` holds the newest session revision applied and the tombstone of a removed session, so a late or replayed event changes nothing. The tests feed fixtures (`tests/fixtures/tournament/`) that `tests/test_fixtures.py` checks against the event catalog.
 - **Settings** (`reminder_leads_minutes`, `notify_channels`, declared in `modules/admin/declarations/agenda.yaml`) come through the kit's `SettingsClient`; `notify_channels` in effect is the item's choice, else its kind's, else the event's.
 
 ## Environment
