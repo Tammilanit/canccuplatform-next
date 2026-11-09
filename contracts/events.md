@@ -92,7 +92,7 @@ Emitter: `screen`. Audience: system, except where noted. Payloads: [screen.md](s
 | `screen.device.paired`, `screen.device.moved`, `screen.device.released`, `screen.device.assigned`, `screen.device.revoked` | A device was paired, given to or taken from the event, assigned to a zone or mirror, or revoked | admin |
 | `screen.device.online`, `screen.device.offline`, `screen.device.playing_changed` | Device health for admin | admin |
 | `screen.zone.saved`, `screen.zone.removed` | A zone was added, changed or removed | admin, moments (zone targets), agenda (zone keys) |
-| `screen.pin.changed` | The event's pinned screen bundle or theme revision changed | theming (keeps the pinned revision) |
+| `screen.pin.changed` | The event's pinned screen bundle or theme revision changed | theming (keeps the pinned revision and the one a timed pin restores) |
 | `screen.content.pushed`, `screen.content.cleared` | Content was pushed to zones, or a push ended | admin |
 | `screen.ticker.changed` | The ticker text changed. Audience: event-wide, `public` | bot (`/ticker status`), voices |
 | `screen.photo.added`, `screen.photo.removed` | A carousel photo was added or removed. Audience: event-wide, `public` | moments |

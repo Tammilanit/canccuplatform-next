@@ -8,7 +8,7 @@ from canccu_kit.starlette import install, install_service_identity, install_tena
 from starlette.applications import Starlette
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from . import current, hostnames, internal, registry, venue_info, venues
+from . import current, hostnames, internal, registry, storage, venue_info, venues
 from .deps import Deps
 
 
@@ -22,7 +22,7 @@ def create_app(
     service: ServiceIdentity,
 ) -> ASGIApp:
     mode = IpMode(version) if ip_mode else None
-    private = Starlette(routes=internal.ROUTES)
+    private = Starlette(routes=internal.ROUTES + storage.INTERNAL_ROUTES)
     private.state.deps = d
     private.state.ip_mode = mode is not None
     install(private)
@@ -40,6 +40,7 @@ def create_app(
     )
     public = Starlette(
         routes=current.ROUTES
+        + storage.ROUTES
         + venue_info.ROUTES
         + registry.ROUTES
         + hostnames.ROUTES

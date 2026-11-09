@@ -176,6 +176,17 @@ class TenantResolver:
     async def _lookup(self, host: str) -> TenantContext | None:
         return await self._internal("resolve", {"host": host})
 
+    async def by_id(self, tenant_id: str) -> TenantContext | None:
+        """Another event's context by its id, in every status; None for an unknown id. Only for
+        actions that span events (contracts/tenants.md, Another event by its id): a request's own
+        tenant still comes from its hostname. Not cached, so an action sees the event as it is."""
+        if not is_tenant_id(tenant_id):  # never let an id reshape the path
+            return None
+        context = await self._internal(f"tenants/{tenant_id}", {})
+        if context is not None and context["tenant_id"] != tenant_id:
+            raise TenantsUnavailable("tenants module answered another tenant")
+        return context
+
     async def _internal(self, path: str, params: dict[str, str]) -> TenantContext | None:
         headers = self._service.headers("tenants") if self._service is not None else {}
         try:

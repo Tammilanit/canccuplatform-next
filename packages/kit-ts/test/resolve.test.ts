@@ -299,6 +299,48 @@ describe("TenantResolver", () => {
       });
     });
 
+    describe("byId", () => {
+      const service = new ServiceIdentity({ module: "screen", key: "k".repeat(32) });
+      function byIdResolver(answer: () => Response) {
+        const calls: { path: string; caller: string | null }[] = [];
+        const fetch = (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+          const url = new URL(input instanceof Request ? input.url : input);
+          const signed = new Headers(init?.headers).get(SERVICE_HEADER);
+          calls.push({ path: url.pathname, caller: signed?.split(".")[1] ?? null });
+          return Promise.resolve(answer());
+        };
+        return { calls, resolver: new TenantResolver({ tenantsUrl: "http://t", fetch, service }) };
+      }
+
+      it("asks the tenants module signed, in every status, and never caches", async () => {
+        const archived = tenantContext({ tenant_id: "old-event", status: "archived" });
+        const { resolver, calls } = byIdResolver(() => jsonResponse(200, archived));
+        expect(await resolver.byId("old-event")).toEqual(archived);
+        expect(await resolver.byId("old-event")).toEqual(archived);
+        expect(calls).toEqual(
+          Array(2).fill({ path: "/internal/tenants/tenants/old-event", caller: "screen" }),
+        );
+      });
+
+      it("is null for an unknown id and never asks for a malformed one", async () => {
+        const { resolver, calls } = byIdResolver(() => jsonResponse(404, {}));
+        expect(await resolver.byId("gone-event")).toBeNull();
+        expect(await resolver.byId("../resolve")).toBeNull();
+        expect(calls).toHaveLength(1);
+      });
+
+      it("is unavailable when the module fails or names another tenant", async () => {
+        for (const answer of [
+          () => jsonResponse(500, {}),
+          () => jsonResponse(200, tenantContext({ tenant_id: "other-event" })),
+        ]) {
+          await expect(byIdResolver(answer).resolver.byId("old-event")).rejects.toThrow(
+            TenantsUnavailable,
+          );
+        }
+      });
+    });
+
     it("without IP mode an IP literal is an unknown host", async () => {
       const resolver = new TenantResolver({ tenantsUrl: "http://t", fetch: fakeTenants({}).fetch });
       await expect(resolver.resolve("192.0.2.1")).rejects.toThrow(UnknownHost);

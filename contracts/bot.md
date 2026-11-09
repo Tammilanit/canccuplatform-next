@@ -1,6 +1,6 @@
 # Bot contract
 
-The Discord side of the platform. The `bot` module is one module with a pool of Discord clients ([0013](../docs/decisions/0013-multi-tenant-core.md) items 14–16): the shared platform bot serves many events, and an event may bring its own Discord application instead. This part of the contract fixes the **connections**: which client serves an event, how an event binds its Discord server (guild), how slash commands follow the event's feature flags, and how one event's client trouble stays its own. It also fixes the **who-plays-what read API**, which serves the names behind the bot's presence counts. The commands, the gateway data the bot reads and the rest of its events are fixed when canccubot is ported (roadmap step 6) and join this file then.
+The Discord side of the platform. The `bot` module is one module with a pool of Discord clients ([0013](../docs/decisions/0013-multi-tenant-core.md) items 14–16): the shared platform bot serves many events, and an event may bring its own Discord application instead. This part of the contract fixes the **connections**: which client serves an event, how an event binds its Discord server (guild), how slash commands follow the event's feature flags, and how one event's client trouble stays its own. It also fixes the **who-plays-what read API**, which serves the names behind the bot's presence counts, and the **run-of-show posts** the bot makes on the agenda's `discord_channel`. The commands, the gateway data the bot reads and the rest of its events are fixed when canccubot is ported (roadmap step 6) and join this file then.
 
 **Machine-readable API: [bot.openapi.yaml](bot.openapi.yaml)** (OpenAPI 3.1). It is the source for paths, fields and status codes; this file explains them and adds the rules and events. Conventions (field names, times, error body): [README.md](README.md#conventions).
 
@@ -110,6 +110,14 @@ The bus carries presence as counts only ([events.md](events.md#people-in-events)
 - **Live only:** the bot keeps the current state per event in Valkey, updated from the gateway as it changes, and no history; it is presence data, dropped when the event is archived. The answer's `as_of` says when it was last updated.
 - **Not available:** with no guild bound, the client not ready, or the event's feature flag for the presence or voice feed off ([Privileged intents and data per event](#privileged-intents-and-data-per-event)), the answer is 200 with `available: false` and empty lists, so a board shows "not available" rather than "nobody plays".
 
+## Run-of-show posts
+The agenda's channel `discord_channel` is the bot's: a post in the event's Discord channel ([agenda.md](agenda.md#notification-channels)). Notify never posts there ([notify.md](notify.md#delivery-rules)).
+
+- **Reminders:** on `agenda.reminder.triggered` the bot posts the item (title, start time in the event's time zone, location) at one of its lead times, not at every one ([agenda.md](agenda.md#reminders)). A delayed item's reminder that fires again posts again, with the new time.
+- **Announcements:** on `agenda.item.announced` the bot posts the item with the organiser's `message`, once per announcement.
+- **Only where chosen and public:** the bot posts only when the item's `notify_channels` holds `discord_channel`, and only for an item with `visibility: public`. A guild's members are not the event's members, so `attendees` and `crew` items never go to the channel. A `quiet_hours` item is never posted, neither its reminders nor an announcement ([agenda.md](agenda.md#kinds)).
+- **Once, through the event's client:** each source event is posted at most once (deduplicated by its `id`). Posts go out through the event's own client and queue ([One event's trouble stays its own](#one-events-trouble-stays-its-own)); with no guild bound, or the client `paused` or `failed`, nothing is posted and nothing is kept for later.
+
 ## Clone
 The bot's part of clone-the-last-event ([tenants.md](tenants.md#series-and-clone)): `POST /api/bot/clone` with `source_tenant_id`, on the new event's hostname. It **moves** the source's connection and binding to the new event, so a series keeps its Discord server and its own application without a new install:
 
@@ -144,4 +152,4 @@ Consumers: admin (the event's bot status), notify (Discord DMs are possible only
 ```
 
 ## Not in this contract
-The bot port (step 6): its commands and their flags (among them the flags of the presence and voice feeds), the gateway data it reads and which privileged intents the shared application holds, role-to-rights sync, guided guild setup, and the events already outlined in [events.md](events.md#bot). The central sign-in host itself (#52) and the edge Caddy's routes (#51).
+The bot port (step 6): which of the event's Discord channels the run-of-show posts go to, which lead time a reminder posts at, and how a post looks; its commands and their flags (among them the flags of the presence and voice feeds), the gateway data it reads and which privileged intents the shared application holds, role-to-rights sync, guided guild setup, and the events already outlined in [events.md](events.md#bot). The central sign-in host itself (#52) and the edge Caddy's routes (#51).
