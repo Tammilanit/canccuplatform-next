@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from canccu_kit import DEMO_TENANT, ServiceForbidden, TenantContext
+from canccu_kit import DEMO_TENANT, KitError, ServiceForbidden, TenantContext
 from canccu_kit.resolve import normalize_host
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -77,6 +77,18 @@ async def ask(request: Request) -> Response:
     return Response(status_code=200)
 
 
+async def tenant_by_id(request: Request) -> Response:
+    """For the few module actions that span events (contracts/tenants.md, Another event by its
+    id): every status, so a module can act on a draft or archived event it already knows."""
+    d = deps(request)
+    try:
+        tid = model.check_tenant_id(request.path_params["tenant_id"])
+    except KitError:
+        raise not_found() from None  # a malformed id names no tenant, like an unknown one
+    async with d.db.tenant(tid) as conn:
+        return JSONResponse(await core.tenant_context(conn, tid, d.declared_flags))
+
+
 async def append_audit(request: Request) -> Response:
     d = deps(request)
     body = await body_of(request)
@@ -115,6 +127,7 @@ async def _append(conn: Any, tid: str | None, actor: dict[str, Any], e: dict[str
 ROUTES = [
     Route("/internal/tenants/resolve", resolve, methods=["GET"]),
     Route("/internal/tenants/ask", ask, methods=["GET"]),
+    Route("/internal/tenants/tenants/{tenant_id}", tenant_by_id, methods=["GET"]),
     Route("/internal/tenants/ip-mode", ip_mode, methods=["GET"]),
     Route("/internal/tenants/venues/{venue_id}", internal_venue, methods=["GET"]),
     Route("/internal/tenants/audit", append_audit, methods=["POST"]),
