@@ -3,10 +3,10 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { ServiceForbidden, isTenantId, requireTenant, withTenant } from "@canccu/kit";
 import type { Bus, Logger, RightsChecker, SqlClient, TenantResolver } from "@canccu/kit";
 import type { Audit } from "./audit.js";
-import { checkManifest, hasError } from "./checks.js";
+import { hasError } from "./checks.js";
 import type { Manifest } from "./checks.js";
 import type { Db } from "./db.js";
-import { loadDraft, lockDraft, removeDraft } from "./drafts.js";
+import { draftProblems, loadDraft, lockDraft, removeDraft } from "./drafts.js";
 import type { FileStore } from "./files.js";
 import {
   WRITE,
@@ -159,7 +159,7 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
       const body = await publish(request, fromDraft, async (c, base) => {
         const draft = await lockDraft(c, version);
         // Checked again: the stored problems may come from an older module version.
-        const problems = checkManifest(draft.manifest);
+        const problems = await draftProblems(c, draft.manifest);
         if (hasError(problems)) throw new Invalid(problems);
         const current = await lockHistory(c);
         const p = await writeRevision(c, deps.files, current, {

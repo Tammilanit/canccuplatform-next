@@ -11,6 +11,7 @@ import type {
   Logger,
   RightsChecker,
   ServiceIdentity,
+  StorageQuota,
   StreamStore,
   TenantResolver,
 } from "@canccu/kit";
@@ -18,6 +19,7 @@ import { install, installServiceIdentity, installTenancy } from "@canccu/kit/fas
 import type { Audit } from "./audit.js";
 import type { Db } from "./db.js";
 import { draftRoutes } from "./draft-routes.js";
+import { fileRoutes } from "./file-routes.js";
 import type { FileStore } from "./files.js";
 import { internalRoutes, revisionRoutes } from "./revision-routes.js";
 import { themeRoutes } from "./routes.js";
@@ -27,6 +29,8 @@ import type { ProfileSource } from "./profile.js";
 export interface ThemingDeps {
   db: Db;
   files: FileStore;
+  /** The event's storage quota at tenants: uploads reserve before they write (stored.ts). */
+  storage: StorageQuota;
   profile: ProfileSource;
   rights: RightsChecker;
   tenants: TenantResolver;
@@ -91,6 +95,7 @@ export function buildApp(deps: ThemingDeps): FastifyInstance {
     installTenancy(event, deps.tenants);
     themeRoutes(event, deps);
     draftRoutes(event, deps);
+    fileRoutes(event, deps);
     revisionRoutes(event, deps);
     sandboxRoutes(event, deps);
     done();
