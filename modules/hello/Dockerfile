@@ -23,6 +23,7 @@ COPY --from=build /repo/modules/hello/package.json modules/hello/
 COPY --from=build /repo/modules/hello/dist modules/hello/dist
 COPY --from=build /repo/modules/hello/node_modules modules/hello/node_modules
 WORKDIR /repo/modules/hello
-USER node
+# nobody (65534), as every module that mounts the files volume: files-init gives it to that user.
+USER nobody
 EXPOSE 8080
 CMD ["node", "dist/main.js"]

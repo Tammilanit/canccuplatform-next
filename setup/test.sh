@@ -143,6 +143,35 @@ if command -v docker >/dev/null && docker compose version >/dev/null 2>&1 && com
     | jq -e '.networks.default.enable_ipv6 == true and ([.networks.default.ipam.config[]?.subnet | select(test("^fd[0-9a-f]{2}:.*/64$"))] | length == 1)' >/dev/null
   then pass "the default network has IPv6 (a ULA /64), so Docker NATs IPv6 through ip6tables"
   else bad "the default network has IPv6 (a ULA /64), so Docker NATs IPv6 through ip6tables"; fi
+  # The files volume layout (setup/README.md, Files volume): files-init hands it to uid 65534
+  # before any module mounts it, and every module that mounts it runs as that user.
+  mounters='def mounters: .services | to_entries[]
+    | select([.value.volumes[]? | select(.type == "volume" and .source == "files")] | length > 0);'
+  for f in deploy/compose.yml "deploy/compose.yml -f deploy/compose.ci.yml"; do
+    # shellcheck disable=SC2086  # $f is two compose arguments on purpose
+    config=$(docker compose -f $f config --format json 2>"$scratch/config.err")
+    # An unreadable config would leave every check below with nothing to find, which reads as a pass.
+    if ! jq -e '.services["files-init"]' <<<"$config" >/dev/null 2>&1; then
+      bad "compose config with files-init ($f)" "$(cat "$scratch/config.err")"; continue
+    fi
+    late=$(jq -r "$mounters"' mounters | select(.key != "files-init")
+      | select(.value.depends_on["files-init"].condition != "service_completed_successfully") | .key' <<<"$config")
+    if [ -z "$late" ]; then pass "every service mounting files waits for files-init ($f)"
+    else bad "every service mounting files waits for files-init ($f)" "$late"; fi
+    [ "$f" = deploy/compose.yml ] || continue
+    if jq -e '.services["files-init"] | .network_mode == "none" and .read_only == true and .cap_drop == ["ALL"]
+        and (.cap_add | sort) == ["CHOWN", "DAC_READ_SEARCH"] and (.command | join(" ") | test("65534:65534"))' <<<"$config" >/dev/null
+    then pass "files-init has no network, a read-only root, only CHOWN and DAC_READ_SEARCH, and chowns to 65534"
+    else bad "files-init has no network, a read-only root, only CHOWN and DAC_READ_SEARCH, and chowns to 65534" "$(jq '.services["files-init"]' <<<"$config")"; fi
+    modules=$(jq -r "$mounters"' mounters | select(.value.build) | .key' <<<"$config")
+    wrong=""
+    for s in $modules; do
+      user=$(grep -E '^USER ' "modules/$s/Dockerfile" | tail -n1 | cut -d' ' -f2)
+      [ "$user" = nobody ] || wrong+="$s runs as ${user:-root} "
+    done
+    if [ -n "$modules" ] && [ -z "$wrong" ]; then pass "every module mounting files runs as nobody (65534), the volume's owner"
+    else bad "every module mounting files runs as nobody (65534), the volume's owner" "${wrong:-no module mounts files}"; fi
+  done
 else
   skip "compose ports and network" "no docker compose or jq"
 fi

@@ -22,6 +22,10 @@ x-after-db: &after-db
   valkey:
     condition: service_healthy
 
+x-after-files: &after-files
+  files-init:
+    condition: service_completed_successfully
+
 services:
   postgres:
     image: postgres:17.11-alpine
@@ -65,6 +69,33 @@ services:
         condition: service_healthy
     restart: "no"
 
+  # Hands the files volume to uid:gid 65534:65534 (nobody), the user every module that mounts it
+  # runs as, at every start: a new volume is root's, and files an older version wrote as another
+  # user become writable again (setup/README.md, Files volume). Root, as only this one-shot is:
+  # no network, a read-only root and only the rights to chown and to walk 0700 directories.
+  # -h and find's default (-P) never follow a symlink a module left in the volume.
+  # Modules may still run during the walk (an `up` on a running stack, a boot), and an entry they
+  # delete or rename meanwhile makes find fail: the walk's status is ignored, and the one-shot
+  # fails only when the top two levels, where every module's directories begin, are still wrong.
+  files-init:
+    # Reuses the stack's Caddy image only for its busybox find and chown; nothing else is pulled.
+    image: caddy:2.11-alpine
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        find /files \( ! -user 65534 -o ! -group 65534 \) -exec chown -h 65534:65534 {} + 2>/dev/null;
+        wrong=$$(find /files -maxdepth 2 \( ! -user 65534 -o ! -group 65534 \) -print);
+        test -z "$$wrong" || { echo "files-init: not yet 65534:65534: $$wrong" >&2; exit 1; }
+    volumes:
+      - files:/files
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_READ_SEARCH]
+    security_opt: ["no-new-privileges:true"]
+    restart: "no"
+
   valkey:
     image: valkey/valkey:8.1-alpine
     command: ["valkey-server", "--appendonly", "yes"]
@@ -94,7 +125,7 @@ services:
         target: /run/canccu-deploy
         read_only: true
     depends_on:
-      <<: *after-db
+      <<: [*after-db, *after-files]
     healthcheck:
       test:
         - CMD
@@ -124,7 +155,7 @@ services:
       # Only to connect to the renderer: read-only, and nothing in it is read or followed.
       - render-socket:/run/canccu-render:ro
     depends_on:
-      <<: *after-db
+      <<: [*after-db, *after-files]
       # Started first, so the empty volume takes the renderer image's directory and owner; screen
       # still starts and keeps decks queued while the renderer is unhealthy.
       screen-render:
@@ -156,7 +187,7 @@ services:
     volumes:
       - files:/files
     depends_on:
-      <<: *after-db
+      <<: [*after-db, *after-files]
     healthcheck:
       test:
         - CMD
@@ -190,7 +221,7 @@ services:
     volumes:
       - files:/files
     depends_on:
-      <<: *after-db
+      <<: [*after-db, *after-files]
       hello:
         condition: service_healthy
       tenants:
@@ -228,7 +259,7 @@ services:
     volumes:
       - files:/files
     depends_on:
-      <<: *after-db
+      <<: [*after-db, *after-files]
     healthcheck:
       test:
         - CMD
@@ -371,7 +402,8 @@ networks:
 volumes:
   postgres-data:
   valkey-data:
-  # Shared files (uploads, profile assets); mounted at /files in every module that needs it.
+  # Shared files (uploads, profile assets); mounted at /files in every module that needs it, as
+  # /files/<tenant>/<module>/ and /files/_platform/<module>/, owned by 65534 (files-init).
   files:
   # The host's auto-deploy (setup/deploy, root) writes status.json here; only hello reads it. The
   # name is fixed because setup/deploy finds the volume by it.
