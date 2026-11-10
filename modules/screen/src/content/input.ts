@@ -283,6 +283,15 @@ export function scheduleInput(value: unknown): ScheduleInput {
       ...revisionOf(value),
     };
   }
+  return { ...base, ...weeklyInput(value), agenda_item_id: null, ...revisionOf(value) };
+}
+
+/** A weekly window's times, as schedule and ticker windows both take them. */
+export function weeklyInput(value: Json): {
+  days: number[];
+  start_minute: number;
+  end_minute: number;
+} {
   const days = value.days;
   const start = value.start_minute;
   const end = value.end_minute;
@@ -294,14 +303,7 @@ export function scheduleInput(value: unknown): ScheduleInput {
     endMinute: end as number,
   });
   if (!check.ok) throw invalidRequest(`${check.error}.`);
-  return {
-    ...base,
-    days: days as number[],
-    start_minute: start as number,
-    end_minute: end as number,
-    agenda_item_id: null,
-    ...revisionOf(value),
-  };
+  return { days: days as number[], start_minute: start as number, end_minute: end as number };
 }
 
 export function pushInput(value: unknown, nowMs: number): PushInput {

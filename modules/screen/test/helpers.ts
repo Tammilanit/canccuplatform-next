@@ -18,6 +18,7 @@ import { requireTenant } from "@canccu/kit";
 import type { Event, SettingValue, TenantContext } from "@canccu/kit";
 import { MemoryStreamStore } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
+import type { StorageQuota } from "../src/assets/storage.js";
 import type { AuditEntry } from "../src/audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "../src/db.js";
 import type { Db } from "../src/db.js";
@@ -27,7 +28,6 @@ import { MemoryKv } from "../src/kv.js";
 import { dispatchOnce, sweepLeases } from "../src/render/dispatch.js";
 import type { RenderDeps } from "../src/render/jobs.js";
 import { MemoryRenderQueue } from "../src/render/queue.js";
-import type { StorageQuota } from "../src/assets/storage.js";
 
 /** Tests run only with a Postgres to spare; never point this at a database you keep. */
 export const DATABASE_URL = process.env.CANCCU_TEST_DATABASE_URL;
@@ -76,12 +76,16 @@ const ALL_RIGHTS = [
   "screen.content.read",
   "screen.content.write",
   "screen.push.write",
+  "screen.ticker.write",
+  "screen.photos.write",
 ];
 const SESSIONS: Record<string, string[]> = {
   admin: ALL_RIGHTS,
   crew: ["screen.devices.read"],
   content: ["screen.content.read"],
   editor: ["screen.content.read", "screen.content.write"],
+  ticker: ["screen.ticker.write"],
+  photos: ["screen.photos.write"],
   nobody: [],
 };
 
@@ -124,6 +128,8 @@ export interface Harness {
   settings: Record<string, Record<string, SettingValue>>;
   /** The fake storage quota: bytes per tenant, and the limit each gets (default 2 GiB). */
   storage: { used: Record<string, number>; quota: Record<string, number> };
+  /** The fake quota itself, for calls made outside a request. */
+  quota: StorageQuota;
   filesRoot: string;
   /** What the fake oEmbed answers for YouTube probes. */
   oembedStatus: { value: number };
@@ -144,7 +150,8 @@ export async function harness(): Promise<Harness> {
   await admin.query(
     `DROP TABLE IF EXISTS screen_agenda_items, screen_zone_playback, screen_pushes, screen_schedules,
        screen_playlist_items, screen_playlists, assignments, screen_zones, screen_zone_seeds, devices,
-       screen_migrations, screen_render_jobs, screen_asset_versions, screen_assets, screen_files CASCADE`,
+       screen_migrations, screen_render_jobs, screen_asset_versions, screen_assets, screen_files,
+       screen_ticker, screen_ticker_windows, screen_photos CASCADE`,
   );
   await runMigrations(admin, MIGRATIONS_DIR, { ledger: "screen_migrations", lock: 1 });
   await admin.end();
@@ -241,6 +248,7 @@ export async function harness(): Promise<Harness> {
     clock,
     settings,
     storage,
+    quota,
     filesRoot,
     oembedStatus,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
@@ -328,20 +336,21 @@ export async function pairDevice(
 
 export { APP_ROLE };
 
-/** A multipart upload of one file (and optionally a title), as Studio sends it. */
+/** A multipart upload of one file (and optionally a title or other fields), as Studio sends it. */
 export function upload(
   h: Harness,
   url: string,
   file: Buffer,
   filename: string,
-  c: Call & { title?: string } = {},
+  c: Call & { title?: string; fields?: Record<string, string> } = {},
 ): Promise<LightMyRequestResponse> {
   const boundary = "canccu-test-boundary";
   const parts: Buffer[] = [];
-  if (c.title !== undefined) {
+  const fields = { ...(c.title === undefined ? {} : { title: c.title }), ...c.fields };
+  for (const [name, value] of Object.entries(fields)) {
     parts.push(
       Buffer.from(
-        `--${boundary}\r\ncontent-disposition: form-data; name="title"\r\n\r\n${c.title}\r\n`,
+        `--${boundary}\r\ncontent-disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`,
       ),
     );
   }

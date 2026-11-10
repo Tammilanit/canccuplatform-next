@@ -165,7 +165,7 @@ export interface Dropped {
 /**
  * Deletes the rows of those `names` nothing refers to any more, in the caller's transaction; the
  * caller passes them to `collect` after it commits. Later slices add their references (renders,
- * photos, claim sounds) to the `NOT EXISTS`.
+ * claim sounds) to the `NOT EXISTS`.
  */
 export async function dropUnreferenced(c: SqlClient, names: string[]): Promise<Dropped[]> {
   if (names.length === 0) return [];
@@ -173,6 +173,7 @@ export async function dropUnreferenced(c: SqlClient, names: string[]): Promise<D
   const { rows } = await c.query(
     `DELETE FROM screen_files f WHERE f.name = ANY($1)
        AND NOT EXISTS (SELECT 1 FROM screen_asset_versions v WHERE v.file = f.name)
+       AND NOT EXISTS (SELECT 1 FROM screen_photos p WHERE p.file = f.name)
      RETURNING name, size_bytes`,
     [names],
   );
