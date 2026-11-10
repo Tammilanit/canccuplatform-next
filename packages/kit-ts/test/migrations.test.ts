@@ -2,16 +2,19 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { quoteIdent, runMigrations } from "../src/index.js";
+import { PLATFORM_MIGRATION_LOCK, quoteIdent, runMigrations } from "../src/index.js";
 
 /** Records statements and plays a ledger, so the order and the once-only rule are visible. */
 function fakeClient(ran: Set<string> = new Set()) {
   const log: string[] = [];
+  const locks: [string, unknown][] = [];
   let pending: string | undefined;
   return {
     log,
+    locks,
     query(text: string, values?: unknown[]) {
       log.push(text);
+      if (text.includes("pg_advisory_")) locks.push([text, values?.[0]]);
       if (text.startsWith("SELECT 1 FROM")) {
         return Promise.resolve({ rows: ran.has(String(values?.[0])) ? [{ one: 1 }] : [] });
       }
@@ -45,7 +48,10 @@ describe("runMigrations", () => {
       "001_a.sql",
       "002_b.sql",
     ]);
-    expect(first.log[0]).toBe("SELECT pg_advisory_lock($1)");
+    expect(first.log.slice(0, 2)).toEqual([
+      "SELECT pg_advisory_lock($1)",
+      "SELECT pg_advisory_lock($1)",
+    ]);
     expect(first.log.at(-1)).toBe("SELECT pg_advisory_unlock($1)");
     expect(first.log.indexOf("CREATE TABLE a ()")).toBeLessThan(
       first.log.indexOf("CREATE TABLE b ()"),
@@ -62,7 +68,10 @@ describe("runMigrations", () => {
       "boom",
     );
     expect(client.log).toContain("ROLLBACK");
-    expect(client.log.at(-1)).toBe("SELECT pg_advisory_unlock($1)");
+    expect(client.locks.slice(-2)).toEqual([
+      ["SELECT pg_advisory_unlock($1)", 7],
+      ["SELECT pg_advisory_unlock($1)", PLATFORM_MIGRATION_LOCK],
+    ]);
   });
 
   it("grants the app role to the login role, quoted", async () => {
@@ -73,8 +82,25 @@ describe("runMigrations", () => {
       appRole: "canccu_m_app",
       grantTo: 'odd"name',
     });
-    expect(client.log.at(-1)).toBe('GRANT "canccu_m_app" TO "odd""name"');
+    // The grant changes shared catalog rows too, so it runs under both locks.
+    expect(client.log.slice(-3)).toEqual([
+      'GRANT "canccu_m_app" TO "odd""name"',
+      "SELECT pg_advisory_unlock($1)",
+      "SELECT pg_advisory_unlock($1)",
+    ]);
     expect(quoteIdent("a")).toBe('"a"');
+  });
+
+  it("holds the platform lock, kit-py's key, around the module's own lock", async () => {
+    const client = fakeClient();
+    await runMigrations(client, await dir({}), { ledger: "m_migrations", lock: 7 });
+    expect(PLATFORM_MIGRATION_LOCK).toBe(0x63616e6363);
+    expect(client.locks).toEqual([
+      ["SELECT pg_advisory_lock($1)", PLATFORM_MIGRATION_LOCK],
+      ["SELECT pg_advisory_lock($1)", 7],
+      ["SELECT pg_advisory_unlock($1)", 7],
+      ["SELECT pg_advisory_unlock($1)", PLATFORM_MIGRATION_LOCK],
+    ]);
   });
 
   it("refuses a ledger name that is not a plain identifier", async () => {

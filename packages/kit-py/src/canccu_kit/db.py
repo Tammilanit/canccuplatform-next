@@ -137,6 +137,13 @@ def quote_ident(name: str) -> str:
     return '"' + name.replace('"', '""') + '"'
 
 
+PLATFORM_MIGRATION_LOCK = 0x63616E6363
+"""The advisory lock every module's migrations hold, in kit-py and kit-ts alike (keep the two
+equal). Modules starting at once GRANT on shared catalog rows (schema `public`, roles), and two
+such updates at once fail with "tuple concurrently updated" (#284). Above 2**32, so no int4 key
+such as a `hashtext` lock can equal it; below 2**53, so JavaScript holds it exactly."""
+
+
 async def run_migrations(
     conn: Any,
     migrations: Path,
@@ -149,26 +156,31 @@ async def run_migrations(
     """Run each new `*.sql` file in `migrations` once, in name order, recorded in `ledger`.
 
     Run it as the migration role, at start, before serving. Each file runs in its own transaction
-    (CREATE POLICY cannot be repeated); the advisory `lock` serialises containers starting at
-    once. With `grant_to`, the login role then gets the module's `app_role`: the migration role
-    created that role, so it holds ADMIN OPTION on it.
+    (CREATE POLICY cannot be repeated). The whole run, the grant included, holds
+    `PLATFORM_MIGRATION_LOCK`, so the migrations of all modules run one after the other; the
+    module's own advisory `lock` is taken inside it. With `grant_to`, the login role then gets the
+    module's `app_role`: the migration role created that role, so it holds ADMIN OPTION on it.
     """
     if _IDENTIFIER_RE.fullmatch(ledger) is None:
         raise ValueError(f"invalid ledger table {ledger!r}")
-    await conn.execute("SELECT pg_advisory_lock($1)", lock)
+    await conn.execute("SELECT pg_advisory_lock($1)", PLATFORM_MIGRATION_LOCK)
     try:
-        await conn.execute(
-            f"CREATE TABLE IF NOT EXISTS {ledger}"
-            " (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())"
-        )
-        # Start-up only, before serving: a blocking read is fine here.
-        for path in sorted(migrations.glob("*.sql")):  # noqa: ASYNC240
-            async with conn.transaction():
-                done = await conn.fetchval(f"SELECT 1 FROM {ledger} WHERE name = $1", path.name)
-                if not done:
-                    await conn.execute(path.read_text())
-                    await conn.execute(f"INSERT INTO {ledger} (name) VALUES ($1)", path.name)
+        await conn.execute("SELECT pg_advisory_lock($1)", lock)
+        try:
+            await conn.execute(
+                f"CREATE TABLE IF NOT EXISTS {ledger}"
+                " (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())"
+            )
+            # Start-up only, before serving: a blocking read is fine here.
+            for path in sorted(migrations.glob("*.sql")):  # noqa: ASYNC240
+                async with conn.transaction():
+                    done = await conn.fetchval(f"SELECT 1 FROM {ledger} WHERE name = $1", path.name)
+                    if not done:
+                        await conn.execute(path.read_text())
+                        await conn.execute(f"INSERT INTO {ledger} (name) VALUES ($1)", path.name)
+            if grant_to is not None and app_role is not None:
+                await conn.execute(f"GRANT {quote_ident(app_role)} TO {quote_ident(grant_to)}")
+        finally:
+            await conn.execute("SELECT pg_advisory_unlock($1)", lock)
     finally:
-        await conn.execute("SELECT pg_advisory_unlock($1)", lock)
-    if grant_to is not None and app_role is not None:
-        await conn.execute(f"GRANT {quote_ident(app_role)} TO {quote_ident(grant_to)}")
+        await conn.execute("SELECT pg_advisory_unlock($1)", PLATFORM_MIGRATION_LOCK)

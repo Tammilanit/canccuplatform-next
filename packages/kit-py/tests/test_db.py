@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -34,6 +35,10 @@ class FakeConnection:
     async def fetchrow(self, query: str, *args: Any) -> dict[str, Any] | None:
         self.calls.append((query, args))
         return self.row
+
+    async def fetchval(self, query: str, *args: Any) -> Any:
+        self.calls.append((query, args))
+        return None
 
     def transaction(self) -> AbstractAsyncContextManager[None]:
         @asynccontextmanager
@@ -187,3 +192,39 @@ def test_quote_ident_doubles_quotes() -> None:
 
     assert quote_ident("canccu_app") == '"canccu_app"'
     assert quote_ident('a"b') == '"a""b"'
+
+
+async def test_migrations_hold_the_platform_lock_around_the_module_lock_and_the_grant(
+    tmp_path: Path,
+) -> None:
+    from canccu_kit.db import PLATFORM_MIGRATION_LOCK, run_migrations
+
+    (tmp_path / "001_a.sql").write_text("CREATE TABLE a ()")
+    conn = FakeConnection()
+    await run_migrations(
+        conn, tmp_path, ledger="m_migrations", lock=7, app_role="canccu_m_app", grant_to="login"
+    )
+    calls = [(query, args) for query, args in conn.calls if query not in ("BEGIN", "COMMIT")]
+    assert calls[:2] == [
+        ("SELECT pg_advisory_lock($1)", (PLATFORM_MIGRATION_LOCK,)),
+        ("SELECT pg_advisory_lock($1)", (7,)),
+    ]
+    assert calls[-3:] == [
+        ('GRANT "canccu_m_app" TO "login"', ()),
+        ("SELECT pg_advisory_unlock($1)", (7,)),
+        ("SELECT pg_advisory_unlock($1)", (PLATFORM_MIGRATION_LOCK,)),
+    ]
+
+
+async def test_migrations_release_both_locks_when_a_file_fails(tmp_path: Path) -> None:
+    from canccu_kit.db import PLATFORM_MIGRATION_LOCK, run_migrations
+
+    (tmp_path / "001_a.sql").write_text("boom")
+    conn = FakeConnection()
+    conn.fail_on = "boom"
+    with pytest.raises(RuntimeError, match="boom"):
+        await run_migrations(conn, tmp_path, ledger="m_migrations", lock=7)
+    assert conn.calls[-2:] == [
+        ("SELECT pg_advisory_unlock($1)", (7,)),
+        ("SELECT pg_advisory_unlock($1)", (PLATFORM_MIGRATION_LOCK,)),
+    ]

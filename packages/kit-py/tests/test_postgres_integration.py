@@ -7,8 +7,10 @@ bypasses RLS. Role and table names differ from the kit-ts test so both can share
 
 from __future__ import annotations
 
+import asyncio
 import os
 from collections.abc import AsyncIterator
+from pathlib import Path
 
 import asyncpg
 import pytest
@@ -18,6 +20,7 @@ from canccu_kit.db import (
     RlsBypassed,
     check_app_role,
     rls_sql,
+    run_migrations,
     tenant_transaction,
 )
 
@@ -159,3 +162,59 @@ async def test_refuses_to_start_inside_a_plain_transaction(conn: asyncpg.Connect
         with pytest.raises(RuntimeError, match="already in a transaction"):
             async with tenant_transaction(conn, "leak-a"):
                 pass
+
+
+async def wait_for_lock_wait(watcher: asyncpg.Connection, pid: int) -> None:
+    for _ in range(200):
+        state = await watcher.fetchval(
+            "SELECT wait_event_type FROM pg_stat_activity WHERE pid = $1", pid
+        )
+        if state == "Lock":
+            return
+        await asyncio.sleep(0.02)
+    raise AssertionError(f"backend {pid} never waited on a lock")
+
+
+async def test_migrations_of_two_modules_started_at_once_run_one_after_the_other(
+    tmp_path: Path,
+) -> None:
+    # Different modules, so different module locks: only the platform lock keeps them apart.
+    gate_key = 0x6B_17_28_4A
+    first_dir, second_dir = tmp_path / "first", tmp_path / "second"
+    first_dir.mkdir()
+    second_dir.mkdir()
+    # The first module's file waits on a lock the test holds, so it is mid-run when the second
+    # module starts.
+    (first_dir / "001.sql").write_text(
+        f"SELECT pg_advisory_xact_lock({gate_key}); CREATE TABLE kit_py_mig_first ();"
+    )
+    (second_dir / "001.sql").write_text("CREATE TABLE kit_py_mig_second ();")
+    gate, first, second = [await asyncpg.connect(URL) for _ in range(3)]
+    tables = "kit_py_mig_first, kit_py_mig_second, kit_py_mig_first_m, kit_py_mig_second_m"
+    await gate.execute(f"DROP TABLE IF EXISTS {tables}")
+    runs: list[asyncio.Task[None]] = []
+    try:
+        await gate.execute("SELECT pg_advisory_lock($1)", gate_key)
+        first_run = asyncio.create_task(
+            run_migrations(first, first_dir, ledger="kit_py_mig_first_m", lock=0x6B_17_28_01)
+        )
+        runs.append(first_run)
+        await wait_for_lock_wait(gate, first.get_server_pid())
+        second_run = asyncio.create_task(
+            run_migrations(second, second_dir, ledger="kit_py_mig_second_m", lock=0x6B_17_28_02)
+        )
+        runs.append(second_run)
+        await wait_for_lock_wait(gate, second.get_server_pid())
+        assert not second_run.done()
+        assert await gate.fetchval("SELECT to_regclass('kit_py_mig_second')") is None
+
+        await gate.execute("SELECT pg_advisory_unlock($1)", gate_key)
+        await asyncio.wait_for(asyncio.gather(first_run, second_run), 10)
+        assert await gate.fetchval("SELECT to_regclass('kit_py_mig_second')") is not None
+    finally:
+        # Let a still waiting run finish before the DROP, or the DROP waits on it in turn.
+        await gate.execute("SELECT pg_advisory_unlock_all()")
+        await asyncio.wait_for(asyncio.gather(*runs, return_exceptions=True), 10)
+        await gate.execute(f"DROP TABLE IF EXISTS {tables}")
+        for c in (gate, first, second):
+            await c.close()
