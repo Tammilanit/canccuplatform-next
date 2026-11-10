@@ -17,10 +17,13 @@ import {
   notFound,
   positiveInt,
 } from "./http.js";
+import { draftFileNames } from "./package-files.js";
 import { layoutError, tokensEditError } from "./schema.js";
 import type { TokensEdit } from "./schema.js";
+import { writingFiles } from "./stored.js";
+import type { StoredDeps } from "./stored.js";
 
-export interface DraftDeps {
+export interface DraftDeps extends StoredDeps {
   db: Db;
   rights: RightsChecker;
   profile: ProfileSource;
@@ -87,9 +90,11 @@ export function draftRoutes(app: FastifyInstance, deps: DraftDeps): void {
     async (request, reply) => {
       assertWritable(request);
       const version = requiredVersion(request.query.draft_version);
-      await deps.db.tenant(async (c) => {
+      await writingFiles(deps, async (c) => {
         await lockDraft(c, version);
+        const unused = await draftFileNames(c);
         await removeDraft(c);
+        return { result: undefined, unused };
       });
       return reply.status(204).send();
     },

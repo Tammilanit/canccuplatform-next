@@ -19,7 +19,7 @@ import {
   runMigrations,
   withTenant,
 } from "@canccu/kit";
-import type { Event, TenantContext } from "@canccu/kit";
+import type { Event, StorageQuota, TenantContext } from "@canccu/kit";
 import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
 import type { AuditEntry } from "../src/audit.js";
 import { buildApp } from "../src/app.js";
@@ -29,6 +29,7 @@ import type { Db } from "../src/db.js";
 import { diskFiles } from "../src/files.js";
 import type { FileStore } from "../src/files.js";
 import { adminTokens, fillTokens, tokensCss } from "../src/tokens.js";
+import { fakeQuota } from "./quota.js";
 import type { PartialTokens } from "../src/tokens.js";
 
 /** Tests run only on a database named `*_test` (the harness refuses any other). */
@@ -111,7 +112,14 @@ function fakeAdmin(_url: string | URL | Request, init?: RequestInit): Promise<Re
 export interface Harness {
   app: FastifyInstance;
   db: Db;
+  pool: pg.Pool;
   files: FileStore;
+  /** The files volume's root. */
+  root: string;
+  /** The fake storage quota: bytes per tenant, and the limit each gets (default 2 GiB). */
+  storage: { used: Record<string, number>; quota: Record<string, number> };
+  /** The fake quota itself, for calls made outside a request. */
+  quota: StorageQuota;
   /** Audit entries appended so far; `auditDown` makes the next appends fail. */
   audit: AuditEntry[];
   auditDown: boolean;
@@ -129,7 +137,7 @@ export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness>
   try {
     await requireTestDatabase(admin);
     await admin.query(
-      "DROP TABLE IF EXISTS theming_files, theming_drafts, theming_revisions, theming_file_refs, theming_pins, theming_embed_files, theming_migrations CASCADE",
+      "DROP TABLE IF EXISTS theming_files, theming_drafts, theming_revisions, theming_file_refs, theming_pins, theming_embed_files, theming_package_files, theming_migrations CASCADE",
     );
     await runMigrations(admin, MIGRATIONS_DIR, { ledger: "theming_migrations", lock: 2 });
   } finally {
@@ -142,9 +150,11 @@ export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness>
   const store = new MemoryStreamStore();
   const audit: AuditEntry[] = [];
   const state = { auditDown: false };
+  const { storage, quota } = fakeQuota();
   const app = buildApp({
     db,
     files,
+    storage: quota,
     bus: new Bus(store, "theming"),
     log: createLogger("theming"),
     service: new ServiceIdentity({ module: "theming", key: SERVICE_KEY }),
@@ -163,7 +173,11 @@ export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness>
   return {
     app,
     db,
+    pool,
     files,
+    root,
+    storage,
+    quota,
     audit,
     store,
     get auditDown() {

@@ -5,6 +5,7 @@ import { COLOR_TOKENS } from "@canccu/ui";
 import { checkManifest } from "./checks.js";
 import type { Manifest, Problem } from "./checks.js";
 import { draftExists, noDraft, notFound, versionConflict } from "./http.js";
+import { pathProblems } from "./package-files.js";
 import { fillTokens } from "./tokens.js";
 import type { PartialTokens } from "./tokens.js";
 
@@ -13,6 +14,7 @@ export interface DraftRow {
   created_from: number | null;
   manifest: Manifest;
   problems: Problem[];
+  files: { path: string; bytes: number }[];
   updated_at: Date;
   updated_by: string | null;
 }
@@ -24,13 +26,16 @@ export function draftBody(row: DraftRow): Record<string, unknown> {
     base_revision: row.created_from ?? 0,
     mode: row.manifest.mode === "advanced" ? "advanced" : "simple",
     manifest: row.manifest,
+    files: row.files,
     problems: row.problems,
     updated_at: row.updated_at.toISOString(),
     updated_by: row.updated_by,
   };
 }
 
-const COLUMNS = "draft_version, created_from, manifest, problems, updated_at, updated_by";
+const COLUMNS = `draft_version, created_from, manifest, problems, updated_at, updated_by,
+  (SELECT coalesce(jsonb_agg(jsonb_build_object('path', path, 'bytes', bytes) ORDER BY path), '[]')
+     FROM theming_package_files WHERE owner = 'draft' AND file IS NOT NULL) AS files`;
 
 /** The draft key names draft embeds in the sandbox, so it is unguessable and new on every change. */
 const newDraftKey = (): string => randomBytes(24).toString("base64url");
@@ -82,6 +87,11 @@ export async function copyOwned(c: SqlClient, from: string, to: string): Promise
   await c.query(
     `INSERT INTO theming_embed_files (owner, embed, path, file, bytes, entry)
      SELECT $2, embed, path, file, bytes, entry FROM theming_embed_files WHERE owner = $1`,
+    [from, to],
+  );
+  await c.query(
+    `INSERT INTO theming_package_files (owner, path, file, bytes, problem)
+     SELECT $2, path, file, bytes, problem FROM theming_package_files WHERE owner = $1`,
     [from, to],
   );
 }
@@ -148,8 +158,18 @@ export async function createDraft(
   );
   const created = rows[0] as DraftRow | undefined;
   if (created === undefined) throw draftExists();
-  if (base !== null) await copyOwned(c, `r:${base}`, "draft");
-  return created;
+  if (base === null) return created;
+  await copyOwned(c, `r:${base}`, "draft");
+  // Read again for the files just copied.
+  return (await loadDraft(c)) as DraftRow;
+}
+
+/**
+ * Every check on the draft: the manifest's, and the problems of the uploads it holds instead of
+ * files (package-files.ts).
+ */
+export async function draftProblems(c: SqlClient, manifest: Manifest): Promise<Problem[]> {
+  return [...checkManifest(manifest), ...(await pathProblems(c))];
 }
 
 /**
@@ -161,26 +181,33 @@ export async function editDraft(
   c: SqlClient,
   version: number,
   actor: string,
-  change: (manifest: Manifest) => Manifest,
+  change: (manifest: Manifest) => Manifest | Promise<Manifest>,
 ): Promise<DraftRow> {
   const row = await lockDraft(c, version);
-  const manifest = change(structuredClone(row.manifest));
+  const manifest = await change(structuredClone(row.manifest));
   const { rows } = await c.query(
     `UPDATE theming_drafts
         SET draft_version = draft_version + 1, draft_key = $1, manifest = $2, problems = $3,
             updated_at = now(), updated_by = $4
       RETURNING ${COLUMNS}`,
-    [newDraftKey(), JSON.stringify(manifest), JSON.stringify(checkManifest(manifest)), actor],
+    [
+      newDraftKey(),
+      JSON.stringify(manifest),
+      JSON.stringify(await draftProblems(c, manifest)),
+      actor,
+    ],
   );
   return rows[0] as unknown as DraftRow;
 }
 
 /**
- * Removes the draft and what refers to it. The files stay on the volume: another draft or a
- * revision may hold the same bytes, and retention (#246) deletes what nothing refers to.
+ * Removes the draft and what refers to it. The files stay: a revision may hold the same bytes, so
+ * the caller lets go of those nothing else holds (stored.ts, `writingFiles`), or publish has just
+ * copied them all to the revision.
  */
 export async function removeDraft(c: SqlClient): Promise<void> {
   await c.query(`DELETE FROM theming_drafts`);
   await c.query(`DELETE FROM theming_file_refs WHERE owner = 'draft'`);
   await c.query(`DELETE FROM theming_embed_files WHERE owner = 'draft'`);
+  await c.query(`DELETE FROM theming_package_files WHERE owner = 'draft'`);
 }

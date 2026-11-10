@@ -48,6 +48,8 @@ interface Holdings {
   tokens: RevisionTokens;
   files: string[];
   embeds: string[];
+  /** `<path>=<file>` of every package file, so a file moved between paths is a change too. */
+  paths: string[];
 }
 
 async function holdings(
@@ -64,6 +66,11 @@ async function holdings(
     `SELECT file FROM theming_file_refs WHERE owner = $1 ${generated} ORDER BY file`,
     [owner],
   );
+  const paths = await c.query(
+    `SELECT path || '=' || coalesce(file, '') AS p FROM theming_package_files
+      WHERE owner = $1 ORDER BY path`,
+    [owner],
+  );
   const embeds = await c.query(
     `SELECT embed || '/' || path || '=' || file AS e FROM theming_embed_files WHERE owner = $1 ORDER BY 1`,
     [owner],
@@ -73,6 +80,7 @@ async function holdings(
     tokens,
     files: (files.rows as { file: string }[]).map((r) => r.file),
     embeds: (embeds.rows as { e: string }[]).map((r) => r.e),
+    paths: (paths.rows as { p: string }[]).map((r) => r.p),
   };
 }
 
@@ -88,6 +96,9 @@ const EXTS: Record<string, Part> = {
 function changedParts(before: Holdings, after: Holdings): Part[] {
   const filesOf = (h: Holdings, part: Part): string[] =>
     h.files.filter((f) => EXTS[f.slice(f.lastIndexOf(".") + 1)] === part);
+  // A path's folder is its part: `images/…`, `fonts/…`, `css/…`, `templates/…`.
+  const pathsOf = (h: Holdings, part: Part): string[] =>
+    h.paths.filter((p) => p.startsWith(`${part}/`));
   const differs = (part: Part): boolean => {
     if (part === "tokens") return !isDeepStrictEqual(before.tokens, after.tokens);
     if (part === "embeds") {
@@ -98,7 +109,8 @@ function changedParts(before: Holdings, after: Holdings): Part[] {
     }
     return (
       !isDeepStrictEqual(before.manifest[part], after.manifest[part]) ||
-      !isDeepStrictEqual(filesOf(before, part), filesOf(after, part))
+      !isDeepStrictEqual(filesOf(before, part), filesOf(after, part)) ||
+      !isDeepStrictEqual(pathsOf(before, part), pathsOf(after, part))
     );
   };
   return PARTS.filter(differs);
@@ -166,7 +178,7 @@ export async function writeRevision(
   const tokens = revisionTokens(input.manifest);
   const before: Holdings =
     current === 0
-      ? { manifest: {}, tokens: input.zeroTokens, files: [], embeds: [] }
+      ? { manifest: {}, tokens: input.zeroTokens, files: [], embeds: [], paths: [] }
       : await (async () => {
           const { rows } = await c.query(
             `SELECT manifest, tokens FROM theming_revisions WHERE revision = $1`,
