@@ -612,6 +612,89 @@
       "429":
         $ref: "../screen.openapi.yaml#/components/responses/TooMany"
         description: "`rate_limited`: over 30 previews a minute for one session."
+/api/screen/zones/{zone_key}/state:
+  parameters:
+    - $ref: "../screen.openapi.yaml#/components/parameters/ZoneKey"
+    - name: orientation
+      in: query
+      required: false
+      description: The screen it stands for; `portrait` falls back to `pulse_portrait` as a portrait device does.
+      schema:
+        type: string
+        enum: [landscape, portrait]
+        default: landscape
+  get:
+    tags: [zones]
+    operationId: getZoneState
+    summary: A zone's composed state, for a signed-in person
+    description: |
+      Right `screen.devices.read`. The zone's own `ScreenState` as a mirror of the zone gets it, for the admin's
+      virtual screen and Studio's live view: its real `state_version` and `zone.epoch`, `device`
+      `{"id": "mirror", "name": <the zone's name>, "mirror": true}` and `sound.enabled` false. The `checkin_qr`
+      widget gets the sample view-model without a code, as in preview (contracts/screen.md, Zones and assignments).
+    security:
+      - session: []
+    responses:
+      "200":
+        description: The zone's composed state.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/ScreenState"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+/api/screen/zones/{zone_key}/stream:
+  parameters:
+    - $ref: "../screen.openapi.yaml#/components/parameters/ZoneKey"
+    - name: orientation
+      in: query
+      required: false
+      description: The screen it stands for; `portrait` falls back to `pulse_portrait` as a portrait device does.
+      schema:
+        type: string
+        enum: [landscape, portrait]
+        default: landscape
+  get:
+    tags: [zones]
+    operationId: streamZoneState
+    summary: A zone's push channel, for a signed-in person (Server-Sent Events)
+    description: |
+      Right `screen.devices.read`. The zone's push messages as a mirror of the zone gets them, with the ids and the
+      resume of `GET /api/screen/device/stream`: `state`, `widget`, `region`, `ticker`, `theme` and `ping`, never
+      `command`; the page sends no heartbeat. The stream checks the session and the right again at every `ping`
+      and ends when either is gone, and ends when the zone is removed.
+    security:
+      - session: []
+    parameters:
+      - name: Last-Event-ID
+        in: header
+        description: "The last message id the page applied: `<zone_key>.<zone_epoch>.<state_version>`."
+        schema:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9_-]{1,31}\\.[A-Za-z0-9]{1,32}\\.[0-9]{1,18}$"
+    responses:
+      "200":
+        description: An event stream; each message's `data` is one `StreamMessage` as JSON.
+        content:
+          text/event-stream:
+            schema:
+              type: string
+              contentMediaType: application/json
+              contentSchema:
+                $ref: "../screen.openapi.yaml#/components/schemas/StreamMessage"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+      "429":
+        $ref: "../screen.openapi.yaml#/components/responses/TooMany"
+        description: "`rate_limited`: over 20 open zone streams for one session."
 /api/screen/now:
   get:
     tags: [now]

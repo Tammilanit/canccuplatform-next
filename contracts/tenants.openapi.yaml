@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Tenants API
-  version: 2.3.0
+  version: 2.4.0
   summary: Events as tenants on one shared stack, their hostnames, venues, users, roles, access and audit log.
   description: |
     Machine-readable part of the tenants contract. Prose, rules and events: contracts/tenants.md.
@@ -244,7 +244,8 @@ components:
         second factor, today Discord two-factor); `admin_access_restricted` (the event's `admin_access` is
         `restricted` and the request is neither from the venue nor over Tailscale); `info_pages_closed` (the info-page mode does not let this request in);
         `membership_closed` (a self-join that `membership`, the event's status or the request's place does not
-        allow); `join_code_invalid` (a join code that is not the current one, from outside the venue).
+        allow); `join_code_invalid` (a join code that is not the current one, from outside the venue);
+        `service_forbidden` (an internal path the calling module may not use).
       content:
         application/json:
           schema:
