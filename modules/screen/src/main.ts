@@ -21,6 +21,9 @@ import { tenantsAudit } from "./audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { sweepOffline } from "./health.js";
 import { ValkeyKv } from "./kv.js";
+import { applyAgendaEvent } from "./content/agenda.js";
+import { noAssets } from "./tick/content.js";
+import { TICK_MS, tickRunner } from "./tick/run.js";
 import { seedMainZone } from "./zones.js";
 
 const PORT = 8080;
@@ -113,12 +116,29 @@ async function main(): Promise<void> {
     }
   });
 
+  // The run-of-show copy is rebuilt from the agenda streams' start at every boot: the bus has no
+  // consumer groups, so events sent while no container ran would be lost (plan #108, D7). Its
+  // own connection, as the subscriptions above block in XREAD.
+  const agendaStore = ValkeyStreamStore.fromUrl(config.valkeyUrl);
+  new Bus(agendaStore, config.module, log).subscribeTenants(
+    ["agenda"],
+    async (event) => {
+      try {
+        await applyAgendaEvent(db, event);
+      } catch (err) {
+        log.warn({ err, type: event.type }, "keeping an agenda event failed");
+      }
+    },
+    { fromId: "0" },
+  );
+
+  const audit = tenantsAudit(tenantsUrl, service);
   const app = buildApp({
     db,
     kv,
     bus,
     rights,
-    audit: tenantsAudit(tenantsUrl, service),
+    audit,
     log,
     tenants,
     settings,
@@ -137,13 +157,45 @@ async function main(): Promise<void> {
     });
   }, SWEEP_MS);
 
+  const tick = tickRunner({
+    db,
+    kv,
+    bus,
+    audit,
+    settings,
+    assets: noAssets,
+    tenantById: (id) => tenants.byId(id),
+    now: Date.now,
+    log,
+  });
+  let ticking = false;
+  const ticker = setInterval(() => {
+    // A slow step is never doubled up: the next second starts once this one is done.
+    if (ticking) return;
+    ticking = true;
+    tick()
+      .catch((err: unknown) => {
+        log.warn({ err }, "screen tick failed");
+      })
+      .finally(() => {
+        ticking = false;
+      });
+  }, TICK_MS);
+
   const stop = async (): Promise<void> => {
     clearInterval(sweep);
+    clearInterval(ticker);
     await app.close();
     // A dependency that is down may never answer; do not let it hold the exit.
     const grace = new Promise((resolve) => setTimeout(resolve, 2000).unref());
     await Promise.race([
-      Promise.allSettled([store.close(), listenStore.close(), kv.close(), pool.end()]),
+      Promise.allSettled([
+        store.close(),
+        listenStore.close(),
+        agendaStore.close(),
+        kv.close(),
+        pool.end(),
+      ]),
       grace,
     ]);
     process.exit(0);
