@@ -4,6 +4,7 @@
  * `sound` are the device's own.
  */
 import { createHash } from "node:crypto";
+import { tenantKey } from "@canccu/kit";
 import type { SqlClient, TenantContext } from "@canccu/kit";
 import type { Db, DeviceRow } from "../db.js";
 import { loadAgendaItems } from "../content/agenda.js";
@@ -220,7 +221,7 @@ export async function deviceState(
       ? 0
       : await stateVersion(
           deps.kv,
-          `t:${ctx.tenant_id}:screen:zone:${composed.zone.key}:version`,
+          tenantKey("screen", "zone", composed.zone.key, "version"),
           composed,
         );
   const sound = composed?.zone.sound;
