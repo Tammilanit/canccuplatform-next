@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Tenants API
-  version: 2.4.0
+  version: 2.5.0
   summary: Events as tenants on one shared stack, their hostnames, venues, users, roles, access and audit log.
   description: |
     Machine-readable part of the tenants contract. Prose, rules and events: contracts/tenants.md.
@@ -136,6 +136,8 @@ paths:
     $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1storage~1release"
   /internal/tenants/storage/modules/{module}:
     $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1storage~1modules~1{module}"
+  /internal/tenants/venue-info:
+    $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1venue-info"
 components:
   securitySchemes:
     session:
@@ -232,6 +234,12 @@ components:
           schema:
             $ref: "#/components/schemas/Binary"
   responses:
+    ServiceUnauthenticated:
+      description: "`service_unauthenticated`: no valid `x-canccu-service` header (an internal path, no session)."
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     BadRequest:
       description: "`invalid_request`: a field is missing or invalid; `unknown_flag` for an undeclared flag."
       content:
