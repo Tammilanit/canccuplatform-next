@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Notify API
-  version: 1.2.0
+  version: 1.2.1
   summary: Web Push subscriptions, notifications, check-in and privacy for the phone hub.
   description: |
     Machine-readable part of the notify contract. Prose, topics, delivery rules and events: contracts/notify.md.
@@ -1214,7 +1214,10 @@ components:
           $ref: "#/components/schemas/CheckInCode"
         url:
           type: string
-          description: "Absolute URL on the event's registered hostname: `/notify/check-in?p=<purpose>&c=<code>`."
+          description: |
+            Absolute URL on the event's `primary_hostname`: `https://<primary_hostname>/notify/check-in?p=<purpose>&c=<code>`.
+            While the event has no `primary_hostname`, the path alone, which a page resolves against its own origin
+            before it draws the QR (contracts/notify.md, Check-in by the rotating QR).
         valid_until:
           type: string
           format: date-time

@@ -26,6 +26,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Fresh secrets for this run (never a fixed key in the repo)
+        run: |
+          echo "CANCCU_SECRETS_KEY=1:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+          # A module's own (notify's VAPID key, ...) come from its ci/stack-env.sh (docs/ci.md#compose).
+          scripts/stack-smoke env >> "$GITHUB_ENV"
       - name: Start the stack with the demo event, wait for every health check
         run: $COMPOSE up -d --build --wait
       - name: API tests

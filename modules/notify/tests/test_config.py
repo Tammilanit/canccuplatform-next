@@ -196,3 +196,15 @@ async def test_config_writes_wait_for_admin(env: Env) -> None:
     env.settings.down = True
     response = await configure(env, "schedule", {"config_version": 0, "enabled": False})
     assert response.status_code == 503
+
+
+async def test_the_columns_admin_owns_since_251_are_gone(env: Env) -> None:
+    # A copy of `enabled` or `lead_minutes` here could drift from admin's settings, the one owner.
+    async with env.db.pool.acquire() as conn:
+        columns = await conn.fetch(
+            "SELECT column_name FROM information_schema.columns"
+            " WHERE table_name = 'notify_topic_config'"
+        )
+    names = {c["column_name"] for c in columns}
+    assert names.isdisjoint({"enabled", "enabled_seen", "lead_seen"})
+    assert {"params", "channels", "config_version"} <= names

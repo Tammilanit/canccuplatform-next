@@ -63,15 +63,32 @@ export function platformStream(module: string): string {
   return `events:${checkModule(module)}`;
 }
 
-/** `t:<tenant>:<module>:<parts…>` for the current tenant: caches, locks, schedules. */
-export function tenantKey(module: string, ...parts: string[]): string {
-  checkModule(module);
-  if (module === "events") throw new RangeError("t:<tenant>:events:… is reserved for streams");
+function keyParts(parts: string[]): string {
   if (parts.length === 0) throw new RangeError("a key needs at least one part");
   for (const part of parts) {
     if (!KEY_PART_RE.test(part)) throw new RangeError(`invalid key part ${JSON.stringify(part)}`);
   }
-  return `t:${requireTenant()}:${module}:${parts.join(":")}`;
+  return parts.join(":");
+}
+
+/** `t:<tenant>:<module>:<parts…>` for the current tenant: caches, locks, schedules. */
+export function tenantKey(module: string, ...parts: string[]): string {
+  checkModule(module);
+  if (module === "events") throw new RangeError("t:<tenant>:events:… is reserved for streams");
+  return `t:${requireTenant()}:${module}:${keyParts(parts)}`;
+}
+
+/**
+ * `<module>:<parts…>`: a key that spans every event by design, such as screen's render queue
+ * (0013 item 27). It holds ids and times only, never an event's content. The modules `t` and
+ * `events` would read as tenant keys or platform streams, so they are refused.
+ */
+export function platformKey(module: string, ...parts: string[]): string {
+  checkModule(module);
+  if (module === "t" || module === "events") {
+    throw new RangeError(`${module}:… is reserved for tenant keys and streams`);
+  }
+  return `${module}:${keyParts(parts)}`;
 }
 
 /** `/files/<tenant>/<module>/` for the current tenant. */

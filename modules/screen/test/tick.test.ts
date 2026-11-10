@@ -2,11 +2,12 @@
 // alone, one container per zone and second, and pushes expire by themselves.
 import { tenantKey, withTenant } from "@canccu/kit";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { PlaybackAsset } from "../src/playback/timeline.js";
+import { readAssets } from "../src/assets/reader.js";
 import { tickRunner } from "../src/tick/run.js";
 import type { ZoneState } from "../src/tick/zone.js";
 import { DATABASE_URL, TENANTS, call, events, harness, pairDevice } from "./helpers.js";
 import type { Harness } from "./helpers.js";
+import { seedAssets } from "./seed.js";
 
 const as = (session: string, body?: unknown, host = "alpha.test") => ({ host, session, body });
 const items = (...assets: string[]) =>
@@ -21,6 +22,11 @@ describe.skipIf(!DATABASE_URL)("tick", () => {
   beforeAll(async () => {
     h = await harness();
     await pairDevice(h);
+    await seedAssets(
+      h,
+      ...["as_1", "as_2", "as_3", "as_4"].map((id) => ({ id, kind: "image" as const })),
+      { id: "as_9", kind: "image", tenant: "beta" },
+    );
     await call(h, "GET", "/api/screen/zones", as("admin"));
     const make = async (body: Record<string, unknown>) =>
       (await call(h, "POST", "/api/screen/playlists", as("admin", body))).json<{ id: string }>().id;
@@ -49,15 +55,7 @@ describe.skipIf(!DATABASE_URL)("tick", () => {
         return Promise.resolve();
       },
       settings: { ensure: () => Promise.resolve(), get: (_key, fallback) => fallback },
-      assets: (_c, ids) =>
-        Promise.resolve(
-          new Map(
-            ids.map((id): [string, PlaybackAsset] => [
-              id,
-              { id, kind: "image", durationSeconds: null, slideCount: null, health: "ok" },
-            ]),
-          ),
-        ),
+      assets: readAssets,
       tenantById: (id) => {
         const ctx = Object.values(TENANTS).find((t) => t.tenant_id === id);
         if (ctx === undefined) return Promise.resolve(null);

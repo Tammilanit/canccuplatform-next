@@ -181,6 +181,11 @@
             "gap": { "$ref": "#/$defs/length" },
             "safe_inset": { "$ref": "#/$defs/length" }
           }
+        },
+        "motion": {
+          "description": "How much the screen moves: moderate (default), calm or none. contracts/theming.md, Stable classes and custom properties.",
+          "enum": ["moderate", "calm", "none"],
+          "default": "moderate"
         }
       }
     },

@@ -37,6 +37,7 @@ TESTS=(
   "settings on a hostname that is no tenant's are 404 not_found"
   "notify's check-in page answers through Caddy"
   "notify's internal paths are not routed under /notify/"
+  "agenda's internal paths are not routed under /agenda/"
 )
 
 if [ "$dry" = 1 ]; then
@@ -170,6 +171,8 @@ page_says_invalid() { status_is 400 && grep -q "not valid" "$TMP/body"; }
 check "${TESTS[16]}" page_says_invalid
 call GET "/notify/internal/notify/check-in/code?tenant_id=demo&purpose=arrival"
 check "${TESTS[17]}" status_is 404
+call GET "/agenda/internal/agenda/items?tenant_id=demo"
+check "${TESTS[18]}" status_is 404
 
 if [ "$fail" = 0 ]; then echo "demo-stack-test: all $n tests passed"; else echo "demo-stack-test: tests failed" >&2; fi
 exit "$fail"

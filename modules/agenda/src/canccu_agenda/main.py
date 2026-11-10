@@ -97,7 +97,7 @@ async def serve() -> None:
         config.version,
         {"postgres": postgres_check(ping), "valkey": valkey_check(streams)},
     )
-    app = create_app(d, health, resolver)
+    app = create_app(d, health, resolver, identity)
     trusted = os.environ.get("CANCCU_TRUSTED_PROXIES", "127.0.0.1")
     server = uvicorn.Server(
         uvicorn.Config(

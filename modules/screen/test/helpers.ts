@@ -15,7 +15,7 @@ import {
   runMigrations,
 } from "@canccu/kit";
 import { requireTenant } from "@canccu/kit";
-import type { Event, SettingValue, TenantContext } from "@canccu/kit";
+import type { Event, SettingValue } from "@canccu/kit";
 import { MemoryStreamStore } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
 import type { StorageQuota } from "../src/assets/storage.js";
@@ -29,6 +29,7 @@ import { dispatchOnce, sweepLeases } from "../src/render/dispatch.js";
 import type { DispatchDeps } from "../src/render/dispatch.js";
 import type { RenderDeps } from "../src/render/jobs.js";
 import { MemoryRenderQueue } from "../src/render/queue.js";
+import { SIGNIN_HOST, SUPERADMIN_HOST, fakeTenants } from "./tenants.js";
 
 /** Tests run only with a Postgres to spare; never point this at a database you keep. */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
@@ -36,38 +37,7 @@ export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
 export const VENUE_IP = "10.0.0.5";
 export const OUTSIDE_IP = "192.0.2.9";
 
-export function context(id: string, overrides: Partial<TenantContext> = {}): TenantContext {
-  return {
-    tenant_id: id,
-    status: "live",
-    primary_hostname: `${id}.test`,
-    time_zone: "UTC",
-    info_page_mode: "public",
-    membership: "open",
-    admin_access: "internet",
-    venue: { id: "v_1", name: "Demo Hall", addresses: ["10.0.0.0/24"] },
-    venue_ip_check: { enabled: true, disabled_until: null, reason: null },
-    flags_version: 1,
-    flags: {},
-    ...overrides,
-  };
-}
-
-/** alpha and beta share one venue, as two events at one place do; the rest are edge cases. */
-export const TENANTS: Record<string, TenantContext> = {
-  "alpha.test": context("alpha"),
-  "beta.test": context("beta"),
-  "gamma.test": context("gamma", { status: "archived" }),
-  "delta.test": context("delta", { venue: null }),
-  "eps.test": context("eps", {
-    venue_ip_check: {
-      enabled: false,
-      disabled_until: "2999-01-01T00:00:00Z",
-      reason: "new uplink",
-    },
-  }),
-  "zeta.test": context("zeta", { admin_access: "restricted" }),
-};
+export { SIGNIN_HOST, SUPERADMIN_HOST, TENANTS, context } from "./tenants.js";
 
 const ALL_RIGHTS = [
   "screen.devices.read",
@@ -88,13 +58,9 @@ const SESSIONS: Record<string, string[]> = {
   ticker: ["screen.ticker.write"],
   photos: ["screen.photos.write"],
   nobody: [],
+  // `superadmin` as admin answers it: a platform-bound session with `mfa_enabled` (G2).
+  root: [],
 };
-
-async function fakeTenants(url: string | URL | Request): Promise<Response> {
-  const host = new URL(url instanceof Request ? url.url : url).searchParams.get("host") ?? "";
-  const ctx = TENANTS[host];
-  return Promise.resolve(ctx ? Response.json(ctx) : new Response("{}", { status: 404 }));
-}
 
 async function fakeAdmin(_url: string | URL | Request, init?: RequestInit): Promise<Response> {
   const cookie = (init?.headers as Record<string, string> | undefined)?.cookie ?? "";
@@ -110,6 +76,7 @@ async function fakeAdmin(_url: string | URL | Request, init?: RequestInit): Prom
       user: { id: `u_${id}`, name: id },
       rights,
       expires_at: new Date(Date.now() + 3600_000).toISOString(),
+      superadmin: id === "root",
     }),
   );
 }
@@ -208,7 +175,12 @@ export async function harness(): Promise<Harness> {
       audits.push(entry);
       return Promise.resolve();
     },
-    tenants: new TenantResolver({ tenantsUrl: "http://tenants", fetch: fakeTenants }),
+    tenants: new TenantResolver({
+      tenantsUrl: "http://tenants",
+      fetch: fakeTenants,
+      platformHosts: [SUPERADMIN_HOST, SIGNIN_HOST],
+    }),
+    superadminHost: SUPERADMIN_HOST,
     health: createHealth({ module: "screen", version: "dev", checks: {} }),
     settings: {
       ensure: () => Promise.resolve(),
@@ -220,13 +192,10 @@ export async function harness(): Promise<Harness> {
     fetch: () => Promise.resolve(new Response("{}", { status: oembedStatus.value })),
     now: () => clock.now,
   });
-  // A stand-in for the device routes later slices add (state, heartbeat): it runs only the check.
-  app.get("/api/screen/device/_probe", { preHandler: requireDevice(db) }, (request) => ({
-    device_id: request.device?.id,
-  }));
+  // A stand-in for the device routes later slices add (the state, the stream): it runs only the check.
   app.get(
-    "/api/screen/device/_home",
-    { preHandler: requireDevice(db, { allowElsewhere: true }) },
+    "/api/screen/device/_probe",
+    { preHandler: requireDevice(db, { now: () => new Date(clock.now) }) },
     (request) => ({
       device_id: request.device?.id,
     }),

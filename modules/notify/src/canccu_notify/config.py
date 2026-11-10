@@ -56,7 +56,7 @@ def effective(
     `enabled` and the `schedule` topic's `lead_minutes` live only in admin's settings `topics`
     and `schedule_lead_minutes` (contracts/notify.md, Per-event configuration): a config write
     carries them there (`write_settings`), so writing either way changes both and admin is the one
-    owner. Rows written before keep `enabled`, `enabled_seen` and `lead_seen`, which nothing reads.
+    owner.
     `settings` is None while admin is unreachable: the defaults then apply."""
     key = reg["key"]
     now_enabled = setting_enabled(key, settings)
@@ -202,8 +202,7 @@ async def write_config(
             channels = list(dict.fromkeys(wanted))
         values = (key, json.dumps(params), channels, current + 1)
         # The version is checked by the write itself: two first writes with config_version 0, or
-        # two updates of the same version, cannot both succeed. A row of before #251 loses its own
-        # `enabled` here: admin's setting is the one owner now (effective()).
+        # two updates of the same version, cannot both succeed.
         if row is None:
             saved = await conn.fetchrow(
                 "INSERT INTO notify_topic_config (key, params, channels, config_version)"
@@ -212,8 +211,7 @@ async def write_config(
             )
         else:
             saved = await conn.fetchrow(
-                "UPDATE notify_topic_config SET params = $2, channels = $3, config_version = $4,"
-                " enabled = NULL, enabled_seen = NULL, lead_seen = NULL"
+                "UPDATE notify_topic_config SET params = $2, channels = $3, config_version = $4"
                 " WHERE key = $1 AND config_version = $5 RETURNING *",
                 *values,
                 current,

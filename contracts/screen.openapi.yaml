@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Screen API
-  version: 1.2.0
+  version: 1.3.0
   summary: Devices, zones, the composed screen state and its push channel, content, scheduling and the PPTX and PDF render job.
   description: |
     Machine-readable part of the screen contract. Prose, widgets, claims, the Pulse options and events: contracts/screen.md.
@@ -98,6 +98,10 @@ paths:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1zones~1{zone_key}"
   /api/screen/zones/{zone_key}/preview:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1zones~1{zone_key}~1preview"
+  /api/screen/zones/{zone_key}/state:
+    $ref: "screen/devices.openapi.yaml#/~1api~1screen~1zones~1{zone_key}~1state"
+  /api/screen/zones/{zone_key}/stream:
+    $ref: "screen/devices.openapi.yaml#/~1api~1screen~1zones~1{zone_key}~1stream"
   /api/screen/now:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1now"
   /api/screen/pin:
@@ -867,7 +871,7 @@ components:
         days:
           $ref: "#/components/schemas/Days"
         start_minute:
-          $ref: "#/components/schemas/Minute"
+          $ref: "#/components/schemas/StartMinute"
         end_minute:
           $ref: "#/components/schemas/Minute"
     Days:
@@ -885,9 +889,14 @@ components:
       description: Minutes after midnight in the event's time zone; 1440 is midnight at the end of the day.
       minimum: 0
       maximum: 1440
+    StartMinute:
+      type: integer
+      description: Minutes after midnight in the event's time zone; 1440 is the end of a day, so no window starts there.
+      minimum: 0
+      maximum: 1439
     ScreenState:
       type: object
-      required: [state_version, time, tenant, device, zone, bundle, theme, layout, regions, unplaced, hidden, ticker, sound, prefetch, offline]
+      required: [state_version, time, tenant, device, zone, bundle, theme, layout, regions, unplaced, hidden, ticker, sound, prefetch, offline, display]
       properties:
         state_version:
           type: integer
@@ -944,16 +953,23 @@ components:
               type: integer
             templates:
               type: array
-              description: That revision's templates (name, widget type and the parsed template), as theming serves them.
+              description: That revision's templates (name, widget type and the parsed tree), as theming serves them.
               items:
                 type: object
-                required: [name, widget]
+                required: [name, widget, tree]
                 properties:
                   name:
                     type: string
                   widget:
                     type: string
+                  tree:
+                    description: The parsed template (contracts/theming.md, The parsed tree), as theming's `ParsedTemplate.tree`.
+                    type: array
+                    items:
+                      $ref: "theming.openapi.yaml#/components/schemas/TemplateNode"
                   template:
+                    description: Never sent; the parsed template is `tree`.
+                    deprecated: true
                     type: object
             tokens_css_url:
               type: string
@@ -1016,6 +1032,18 @@ components:
             marker_after_seconds:
               type: integer
               const: 10
+        display:
+          type: object
+          description: How the zone's screens move (contracts/screen.md, Motion and burn-in drift).
+          required: [motion, drift]
+          properties:
+            motion:
+              type: string
+              description: The theme's `motion` token, lowered to `calm` while a public quiet-hours item of the zone runs.
+              enum: [moderate, calm, none]
+            drift:
+              type: boolean
+              description: The event's `burn_in_drift` setting; the player then shifts the layout by at most `safe_inset` / 4.
     StreamMessage:
       type: object
       description: The `data` of one push-channel message; which fields are present depends on the SSE event name.
@@ -1303,10 +1331,7 @@ components:
         days:
           $ref: "#/components/schemas/Days"
         start_minute:
-          type: integer
-          description: Minutes after midnight in the event's time zone; 1440 is the end of a day, so no window starts there.
-          minimum: 0
-          maximum: 1439
+          $ref: "#/components/schemas/StartMinute"
         end_minute:
           $ref: "#/components/schemas/Minute"
         agenda_item_id:

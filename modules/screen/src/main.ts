@@ -19,6 +19,7 @@ import {
   withTenant,
 } from "@canccu/kit";
 import { buildApp, screenHealth } from "./app.js";
+import { readAssets } from "./assets/reader.js";
 import { tenantsStorage } from "./assets/storage.js";
 import { tenantsAudit } from "./audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
@@ -27,7 +28,6 @@ import { ValkeyKv } from "./kv.js";
 import { applyAgendaEvent } from "./content/agenda.js";
 import { renderLoop } from "./render/dispatch.js";
 import { ValkeyRenderQueue } from "./render/queue.js";
-import { noAssets } from "./tick/content.js";
 import { TICK_MS, tickRunner } from "./tick/run.js";
 import { seedMainZone } from "./zones.js";
 
@@ -155,6 +155,9 @@ async function main(): Promise<void> {
     renderQueue,
     log,
     tenants,
+    ...(process.env.CANCCU_SUPERADMIN_HOSTNAME
+      ? { superadminHost: process.env.CANCCU_SUPERADMIN_HOSTNAME }
+      : {}),
     settings,
     health: screenHealth({
       module: config.module,
@@ -189,7 +192,7 @@ async function main(): Promise<void> {
     bus,
     audit,
     settings,
-    assets: noAssets,
+    assets: readAssets,
     tenantById: (id) => tenants.byId(id),
     now: Date.now,
     log,

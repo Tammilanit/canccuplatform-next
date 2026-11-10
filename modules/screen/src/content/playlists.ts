@@ -21,6 +21,7 @@ import {
   versionConflict,
 } from "../http.js";
 import { canonical, publishAll, zoneExistsHere, type Emit } from "../zones.js";
+import { checkItemAssets } from "./asset-rules.js";
 import { endPushes } from "./push.js";
 import { playlistInput, type BreakInputSettings, type PlaylistInput } from "./input.js";
 
@@ -160,6 +161,7 @@ export function playlistRoutes(app: FastifyInstance, deps: ContentDeps): void {
     const id = newId("pl");
     const made = await db.tenant(async (c) => {
       await checkBreakZones(c, playlist);
+      await checkItemAssets(c, playlist);
       await c.query(
         `INSERT INTO screen_playlists (id, name, type, priority, slideshow_image_seconds, break, changed_by, changed_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
@@ -225,6 +227,7 @@ export function playlistRoutes(app: FastifyInstance, deps: ContentDeps): void {
         }
       }
       await checkBreakZones(c, playlist);
+      await checkItemAssets(c, playlist);
       await c.query(
         `UPDATE screen_playlists SET name = $2, type = $3, priority = $4, slideshow_image_seconds = $5,
            break = $6, revision = revision + 1, changed_by = $7, changed_at = $8 WHERE id = $1`,

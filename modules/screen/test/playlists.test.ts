@@ -5,6 +5,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { DATABASE_URL, call, code, events, harness } from "./helpers.js";
 import type { Harness } from "./helpers.js";
+import { seedAssets } from "./seed.js";
 
 interface Playlist {
   id: string;
@@ -26,6 +27,11 @@ describe.skipIf(!DATABASE_URL)("playlists", () => {
     h = await harness();
     // Reading the zones seeds the event's `main` zone, as Studio's first page does.
     await call(h, "GET", "/api/screen/zones", as("admin"));
+    await seedAssets(
+      h,
+      ...["as_1", "as_2", "as_ad"].map((id) => ({ id, kind: "image" as const })),
+      ...["as_3", "as_4"].map((id) => ({ id, kind: "video" as const })),
+    );
   });
   afterAll(async () => {
     await h.close();

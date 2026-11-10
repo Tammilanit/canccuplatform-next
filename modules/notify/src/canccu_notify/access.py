@@ -25,27 +25,28 @@ def tenant_of(request: Request) -> TenantContext:
     return ctx
 
 
-ZONES: dict[str, str] = {}
-"""Time zones this container has stored, so a request writes only when the zone changed."""
-
-
 async def tenant_ctx(request: Request) -> TenantContext:
-    """The tenant of a request, and its time zone kept for the stream consumer."""
+    """The tenant of a request, and its time zone, info-page mode and status kept for the stream
+    consumer and the sender, which have no request. Compared with the stored row, not with what
+    this process wrote last: another container may have written since."""
     ctx = tenant_of(request)
-    tid, zone = ctx["tenant_id"], ctx["time_zone"]
-    if ZONES.get(tid) != zone:
-        async with deps(request).db.tenant(tid) as conn:
-            await conn.execute(
-                "INSERT INTO notify_event_state (time_zone) VALUES ($1)"
-                " ON CONFLICT (tenant_id) DO UPDATE SET time_zone = $1",
-                zone,
-            )
-        ZONES[tid] = zone
+    async with deps(request).db.tenant(ctx["tenant_id"]) as conn:
+        await conn.execute(
+            "INSERT INTO notify_event_state (time_zone, info_page_mode, status)"
+            " VALUES ($1, $2, $3) ON CONFLICT (tenant_id) DO UPDATE"
+            " SET time_zone = $1, info_page_mode = $2, status = $3"
+            " WHERE (notify_event_state.time_zone, notify_event_state.info_page_mode,"
+            " notify_event_state.status) IS DISTINCT FROM ($1, $2, $3)",
+            ctx["time_zone"],
+            ctx["info_page_mode"],
+            ctx["status"],
+        )
     return ctx
 
 
-def is_member(session: Session) -> bool:
-    """Whether the signed-in user belongs to the event.
+def is_member(user_id: str) -> bool:
+    """Whether the user belongs to the event, asked for a session, a user's subscription token and
+    each push to a user's phone.
 
     Until the tenants membership API lands (#150), every valid session on the event's hostname
     counts, as in the agenda: sessions are bound to one event, and today only organisers and crew

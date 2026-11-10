@@ -152,6 +152,6 @@ async def test_an_event_goes_out_after_a_failed_first_publish(env: Env) -> None:
     async with env.client() as c:
         item = await add(c, env.writer(), title="Doors", starts_at=at(60))
     assert env.events() == []  # the write committed; its event waits in the outbox
-    assert await env.app.state.deps.outbox.flush_all() == 1
+    assert await env.deps.outbox.flush_all() == 1
     (event,) = env.events()
     assert event["type"] == "agenda.item.added" and event["data"]["item"]["id"] == item["id"]
