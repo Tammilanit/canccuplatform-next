@@ -5,7 +5,8 @@ Every table a module's migrations create (`modules/<module>/migrations/*.sql`) i
 unless `scripts/tenancy-global-tables.txt` lists it. A tenant table needs a `tenant_id` column,
 row-level security enabled and forced, a policy on the kit's tenant setting, `tenant_id` in every
 primary key, unique constraint and unique index, and composite foreign keys with `tenant_id`
-(a plain reference is allowed only to a global table). Module source must not spell Valkey keys
+(a plain reference is allowed only to a global table); it drops no policy, tenant_id or constraint,
+except a CHECK the same migration adds back. Module source must not spell Valkey keys
 or stream names (`"events:…"`, `"t:…"`, in TS `"<module>:…"`) itself: the kit builds them.
 
 Usage: check-tenancy [DIR]    (default: the repo root; scans `git ls-files`)
@@ -40,6 +41,11 @@ NAME = rf"((?:{IDENT}\.)?{IDENT})"
 def bare(name: str) -> str:
     """Table name without schema or quotes, lowercased."""
     return name.split(".")[-1].strip('"').lower()
+
+
+def constraint_name(name: str) -> str:
+    """Postgres folds unquoted names to lower case and cuts every name to 63 bytes."""
+    return (name[1:-1] if name.startswith('"') else name.lower())[:63]
 
 
 def statements(sql: str) -> list[str]:
@@ -108,6 +114,7 @@ def columns(text: str) -> list[str]:
 @dataclass
 class Table:
     file: str
+    name: str
     has_tenant_column: bool = False
     rls: bool = False
     forced: bool = False
@@ -116,6 +123,13 @@ class Table:
     drops: list[str] = field(default_factory=list)
     keys: list[tuple[str, list[str]]] = field(default_factory=list)  # (kind, columns)
     refs: list[tuple[list[str], str, list[str] | None]] = field(default_factory=list)
+    # Constraint name -> every kind ("check", "other") seen under it: a drop passes only for a
+    # name never seen as anything but a CHECK, and only once the same migration adds it back.
+    constraints: dict[str, set[str]] = field(default_factory=dict)
+    unrestored: set[str] = field(default_factory=set)
+
+    def name_constraint(self, name: str, kind: str) -> None:
+        self.constraints.setdefault(constraint_name(name), set()).add(kind)
 
 
 @dataclass
@@ -126,10 +140,23 @@ class Module:
     def table(self, name: str) -> Table | None:
         return self.tables.get(bare(name))
 
+    def end_migration(self) -> None:
+        for table in self.tables.values():
+            table.drops += [
+                f"drops CHECK {n} without adding it back in the same migration" for n in sorted(table.unrestored)
+            ]
+            table.unrestored.clear()
+
 
 def read_constraint(table: Table, element: str) -> None:
     """A table-level PRIMARY KEY, UNIQUE or FOREIGN KEY clause (CONSTRAINT name optional)."""
-    element = re.sub(rf"^CONSTRAINT {IDENT} ", "", element, flags=re.I)
+    named = re.match(rf"CONSTRAINT ({IDENT}) ", element, re.I)
+    element = element[named.end() :] if named else element
+    if named:
+        table.name_constraint(named.group(1), "check" if re.match(r"CHECK\b", element, re.I) else "other")
+    index = re.search(rf"\bUSING INDEX ({IDENT})", element, re.I)
+    if index:  # the constraint takes the index's name
+        table.name_constraint(index.group(1), "other")
     m = re.match(r"(PRIMARY KEY|UNIQUE(?: NULLS (?:NOT )?DISTINCT)?) \(", element, re.I)
     if m:
         kind = "primary key" if m.group(1).upper().startswith("PRIMARY") else "unique"
@@ -145,6 +172,15 @@ def read_column(table: Table, element: str) -> None:
     if name == "tenant_id":
         table.has_tenant_column = True
     rest = element.split(" ", 1)[1] if " " in element else ""
+    named = re.findall(rf"\bCONSTRAINT ({IDENT}) (\w+)", rest, re.I)
+    for constraint, kind in named:
+        table.name_constraint(constraint, "check" if kind.upper() == "CHECK" else "other")
+    # An unnamed column CHECK is named <table>_<column>_check (longer names are cut in ways not
+    # modelled here, so their drops fail). A stray "CHECK" in a literal only adds a _check name,
+    # which no key, foreign key or exclusion is ever named by default.
+    auto = f"{table.name}_{name}_check"
+    if len(re.findall(r"\bCHECK\b", rest, re.I)) > sum(k.upper() == "CHECK" for _, k in named) and len(auto) <= 63:
+        table.name_constraint(auto, "check")
     if re.search(r"\bPRIMARY KEY\b", rest, re.I):
         table.keys.append(("primary key", [name]))
     if re.search(r"\bUNIQUE\b", rest, re.I):
@@ -173,7 +209,7 @@ def read_element(table: Table, element: str) -> None:
 def read_statement(module: Module, stmt: str, file: str) -> None:
     m = re.match(rf"CREATE (?:UNLOGGED )?TABLE (?:IF NOT EXISTS )?{NAME}\s*\(", stmt, re.I)
     if m:
-        table = module.tables.setdefault(bare(m.group(1)), Table(file))
+        table = module.tables.setdefault(bare(m.group(1)), Table(file, bare(m.group(1))))
         for element in split_top(paren_body(stmt, m.end() - 1)):
             read_element(table, element)
         return
@@ -203,6 +239,12 @@ def read_statement(module: Module, stmt: str, file: str) -> None:
     if renamed:
         # The table keeps everything it had under its new name, so later statements stay checked.
         module.tables[bare(renamed.group(1))] = module.tables.pop(bare(m.group(1)))
+        table.name = bare(renamed.group(1))
+        return
+    renamed = re.match(rf"RENAME CONSTRAINT ({IDENT}) TO ({IDENT})\s*$", m.group(2), re.I)
+    if renamed:
+        kinds = table.constraints.pop(constraint_name(renamed.group(1)), {"other"})
+        table.constraints.setdefault(constraint_name(renamed.group(2)), set()).update(kinds)
         return
     for action in split_top(m.group(2)):
         upper = action.upper()
@@ -213,11 +255,20 @@ def read_statement(module: Module, stmt: str, file: str) -> None:
         elif upper.startswith(("DISABLE ROW LEVEL SECURITY", "NO FORCE ROW LEVEL SECURITY")):
             module.problems.append(f"{file}: {bare(m.group(1))}: turns row-level security off")
         elif upper.startswith("DROP CONSTRAINT"):
-            table.drops.append(f"drops a key or foreign key ({action})")
+            # CASCADE could take more than the CHECK with it, so only a plain drop passes.
+            check = re.fullmatch(rf"DROP CONSTRAINT (?:IF EXISTS )?({IDENT})(?: RESTRICT)?", action, re.I)
+            if check and table.constraints.get(constraint_name(check.group(1))) == {"check"}:
+                table.unrestored.add(constraint_name(check.group(1)))
+            else:
+                table.drops.append(f"drops a key or foreign key ({action})")
         elif re.match(r"DROP (?:COLUMN )?(?:IF EXISTS )?\"?tenant_id\b", action, re.I):
             table.drops.append("drops tenant_id")
         elif upper.startswith("ADD "):
-            read_element(table, re.sub(r"^ADD (?:COLUMN )?(?:IF NOT EXISTS )?", "", action, flags=re.I))
+            element = re.sub(r"^ADD (?:COLUMN )?(?:IF NOT EXISTS )?", "", action, flags=re.I)
+            read_element(table, element)
+            added = re.match(rf"CONSTRAINT ({IDENT}) CHECK\b", element, re.I)
+            if added:
+                table.unrestored.discard(constraint_name(added.group(1)))
 
 
 def table_problems(name: str, table: Table, is_global: set[str]) -> list[str]:
@@ -281,6 +332,7 @@ def check(root: Path) -> list[str]:
             module = modules.setdefault(m.group(1), Module())
             for stmt in statements((root / file).read_text()):
                 read_statement(module, stmt, file)
+            module.end_migration()
         elif SOURCE_RE.match(file):
             for n, line in enumerate((root / file).read_text().splitlines(), 1):
                 if RAW_KEY_RE.search(line):
@@ -304,13 +356,13 @@ def check(root: Path) -> list[str]:
 GOOD = """
 CREATE TABLE lists (
   tenant_id text NOT NULL DEFAULT NULLIF(current_setting('canccu.tenant', true), ''),
-  id text NOT NULL, venue_id text REFERENCES venues (id), note text DEFAULT 'a;b',
+  id text NOT NULL, venue_id text REFERENCES venues (id), note text DEFAULT 'a;b' CHECK (note <> ''),
   PRIMARY KEY (tenant_id, id)
 );
 -- a comment; with a semicolon
 CREATE TABLE items (
   tenant_id text NOT NULL, id text NOT NULL, list_id text NOT NULL,
-  CONSTRAINT items_pk PRIMARY KEY (tenant_id, id),
+  CONSTRAINT items_pk PRIMARY KEY (tenant_id, id), CONSTRAINT items_id CHECK (id <> ''),
   CONSTRAINT items_list FOREIGN KEY (tenant_id, list_id) REFERENCES lists (tenant_id, id)
 );
 CREATE UNIQUE INDEX items_name ON items (tenant_id, id);
@@ -346,6 +398,15 @@ def self_test() -> int:
         ("dropped policy", {"m.sql": "DROP POLICY canccu_tenant ON lists;"}, "lists: drops policy canccu_tenant"),
         ("dropped tenant_id", {"m.sql": "ALTER TABLE lists DROP COLUMN tenant_id;"}, "lists: drops tenant_id"),
         ("dropped constraint", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_list;"}, "items: drops a key or foreign key"),
+        ("a CHECK dropped and added back", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;\nALTER TABLE lists ADD CONSTRAINT lists_note_check CHECK (note ~ 'x');\nALTER TABLE items DROP CONSTRAINT IF EXISTS items_id, ADD CONSTRAINT items_id CHECK (id ~ 'x');"}, None),
+        ("a CHECK not added back", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;"}, "lists: drops CHECK lists_note_check without adding it back"),
+        ("a CHECK added back in a later migration", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;", "modules/m/migrations/003_x.sql": "ALTER TABLE lists ADD CONSTRAINT lists_note_check CHECK (note ~ 'x');"}, "lists: drops CHECK lists_note_check without"),
+        ("a CHECK added back under another name", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;\nALTER TABLE lists ADD CONSTRAINT lists_note_check2 CHECK (note ~ 'x');"}, "lists: drops CHECK lists_note_check without"),
+        ("a CHECK added back on another table", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;\nALTER TABLE items ADD CONSTRAINT lists_note_check CHECK (id ~ 'x');"}, "lists: drops CHECK lists_note_check without"),
+        ("a CHECK added back as a key", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_id;\nALTER TABLE items ADD CONSTRAINT items_id UNIQUE (tenant_id, id);"}, "items: drops CHECK items_id without"),
+        ("a foreign key replaced by a CHECK", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_list;\nALTER TABLE items ADD CONSTRAINT items_list CHECK (id ~ 'x');"}, "items: drops a key or foreign key"),
+        ("a key renamed to a CHECK's name", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_id;\nALTER TABLE items RENAME CONSTRAINT items_pk TO items_id;\nALTER TABLE items DROP CONSTRAINT items_id, ADD CONSTRAINT items_id CHECK (id ~ 'x');"}, "items: drops a key or foreign key"),
+        ("a CHECK dropped with CASCADE", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check CASCADE;\nALTER TABLE lists ADD CONSTRAINT lists_note_check CHECK (note ~ 'x');"}, "lists: drops a key or foreign key"),
         ("a renamed table stays checked", {"m.sql": "ALTER TABLE items RENAME TO things;\nALTER TABLE things ADD CONSTRAINT f FOREIGN KEY (l) REFERENCES lists (id);"}, r"things: foreign key \(l\) to lists"),
         ("another module's global table does not exempt", {"m.sql": "CREATE TABLE x (tenant_id text, device_id text REFERENCES devices (id));"}, r"foreign key \(device_id\) to devices is not composite"),
         ("raw stream in source", {"modules/m/src/a.ts": 'await store.xadd("events:pizza", f);\n'}, r"src/a.ts:1: raw Valkey key"),
