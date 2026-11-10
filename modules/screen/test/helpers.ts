@@ -25,6 +25,10 @@ import type { Db } from "../src/db.js";
 import { requireDevice } from "../src/device-access.js";
 import { sweepOffline } from "../src/health.js";
 import { MemoryKv } from "../src/kv.js";
+import { dispatchOnce, sweepLeases } from "../src/render/dispatch.js";
+import type { DispatchDeps } from "../src/render/dispatch.js";
+import type { RenderDeps } from "../src/render/jobs.js";
+import { MemoryRenderQueue } from "../src/render/queue.js";
 
 /** Tests run only with a Postgres to spare; never point this at a database you keep. */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
@@ -132,6 +136,14 @@ export interface Harness {
   oembedStatus: { value: number };
   /** One run of the offline sweep, as main starts every 5 seconds. */
   sweep(): Promise<void>;
+  queue: MemoryRenderQueue;
+  /**
+   * One turn of the render dispatcher against the renderer at `socketPath`; true if it ran a job.
+   * `opts` replaces its deadline, database or bus, or gives it a shutdown signal.
+   */
+  dispatch(socketPath: string, opts?: Partial<DispatchDeps>): Promise<boolean>;
+  /** One run of the lost-container sweep. */
+  sweepLeases(): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -142,8 +154,8 @@ export async function harness(): Promise<Harness> {
   await admin.query(
     `DROP TABLE IF EXISTS screen_agenda_items, screen_zone_playback, screen_pushes, screen_schedules,
        screen_playlist_items, screen_playlists, assignments, screen_zones, screen_zone_seeds, devices,
-       screen_migrations, screen_asset_versions, screen_assets, screen_files, screen_ticker,
-       screen_ticker_windows, screen_photos CASCADE`,
+       screen_migrations, screen_render_jobs, screen_asset_versions, screen_assets, screen_files,
+       screen_ticker, screen_ticker_windows, screen_photos CASCADE`,
   );
   await runMigrations(admin, MIGRATIONS_DIR, { ledger: "screen_migrations", lock: 1 });
   await admin.end();
@@ -180,6 +192,7 @@ export async function harness(): Promise<Harness> {
       return Promise.resolve();
     },
   };
+  const queue = new MemoryRenderQueue();
   const app = buildApp({
     db,
     kv,
@@ -202,6 +215,7 @@ export async function harness(): Promise<Harness> {
       get: (key: string, fallback: SettingValue) => settings[requireTenant()]?.[key] ?? fallback,
     },
     storage: quota,
+    renderQueue: queue,
     filesRoot,
     fetch: () => Promise.resolve(new Response("{}", { status: oembedStatus.value })),
     now: () => clock.now,
@@ -218,6 +232,14 @@ export async function harness(): Promise<Harness> {
     }),
   );
   await app.ready();
+  const renderDeps: RenderDeps = {
+    db,
+    queue,
+    bus,
+    storage: quota,
+    filesRoot,
+    now: () => clock.now,
+  };
   return {
     app,
     db,
@@ -234,6 +256,11 @@ export async function harness(): Promise<Harness> {
     filesRoot,
     oembedStatus,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
+    queue,
+    dispatch: (socketPath, opts = {}) =>
+      dispatchOnce({ ...renderDeps, socketPath, renewMs: 50, ...opts }),
+
+    sweepLeases: () => sweepLeases(renderDeps),
     close: async () => {
       await app.close();
       await pool.end();
