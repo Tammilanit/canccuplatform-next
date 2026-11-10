@@ -6,6 +6,8 @@
 import type { SqlClient } from "@canccu/kit";
 import type { Problem } from "./checks.js";
 import { notFound } from "./http.js";
+import type { PackagePaths } from "./manifest.js";
+import type { Dropped, Unused } from "./stored.js";
 
 export type PathEntry = { file: string; bytes: number } | { problem: Problem };
 
@@ -77,15 +79,39 @@ export async function pathProblems(c: SqlClient): Promise<Problem[]> {
 }
 
 /**
- * Every file the draft refers to, its embeds' too: what discarding it lets go. A theme file whose
- * last other holder was a draft embed is checked again only so.
+ * Every file the draft refers to, its embeds' too: what discarding or replacing it lets go. An
+ * embed's file comes with its bytes, which only its rows record (stored.ts, `Unused`).
  */
-export async function draftFileNames(c: SqlClient): Promise<string[]> {
+export async function draftFileNames(c: SqlClient): Promise<Unused[]> {
+  const refs = await c.query(`SELECT file FROM theming_file_refs WHERE owner = 'draft'`);
+  return [...(refs.rows as { file: string }[]).map((r) => r.file), ...(await draftEmbedFiles(c))];
+}
+
+/** The draft's embed files, each once, with their bytes. */
+export async function draftEmbedFiles(c: SqlClient): Promise<Dropped[]> {
   const { rows } = await c.query(
-    `SELECT file FROM theming_file_refs WHERE owner = 'draft'
-     UNION SELECT file FROM theming_embed_files WHERE owner = 'draft'`,
+    `SELECT DISTINCT file, bytes FROM theming_embed_files WHERE owner = 'draft'`,
   );
-  return (rows as { file: string }[]).map((r) => r.file);
+  return (rows as { file: string; bytes: string }[]).map((r) => ({
+    name: r.file,
+    bytes: Number(r.bytes),
+  }));
+}
+
+/** The draft's package paths, its embeds' files among them, for the reference checks (manifest.ts). */
+export async function draftPaths(c: SqlClient): Promise<PackagePaths> {
+  const { rows } = await c.query(
+    `SELECT path, coalesce(problem ->> 'severity' = 'error', false) AS failed
+       FROM theming_package_files
+      WHERE owner = 'draft'
+     UNION ALL SELECT 'embeds/' || embed || '/' || path, false FROM theming_embed_files
+      WHERE owner = 'draft'`,
+  );
+  const all = rows as { path: string; failed: boolean }[];
+  return {
+    present: new Set(all.map((r) => r.path)),
+    failed: new Set(all.filter((r) => r.failed).map((r) => r.path)),
+  };
 }
 
 /**
@@ -96,7 +122,7 @@ export async function draftFileNames(c: SqlClient): Promise<string[]> {
 export async function removeDraftFolders(
   c: SqlClient,
   folders: readonly string[],
-): Promise<{ removed: string[]; unused: string[] }> {
+): Promise<{ removed: string[]; unused: Unused[] }> {
   const paths = await c.query(
     `DELETE FROM theming_package_files
       WHERE owner = 'draft' AND split_part(path, '/', 1) = ANY($1::text[])
@@ -104,19 +130,21 @@ export async function removeDraftFolders(
     [folders],
   );
   const embeds = await c.query(
-    `DELETE FROM theming_embed_files WHERE owner = 'draft' RETURNING embed, path, file`,
+    `DELETE FROM theming_embed_files WHERE owner = 'draft' RETURNING embed, path, file, bytes`,
   );
-  const unused: string[] = [];
+  const unused: Unused[] = [];
   for (const row of paths.rows as { file: string | null }[]) {
     unused.push(...(await letGo(c, row.file, null)));
   }
   // An embed's files have no refs of their own: their rows were all that kept them.
-  unused.push(...(embeds.rows as { file: string }[]).map((r) => r.file));
+  for (const row of embeds.rows as { file: string; bytes: string }[]) {
+    unused.push({ name: row.file, bytes: Number(row.bytes) });
+  }
   const removed = [
     ...(paths.rows as { path: string }[]).map((r) => r.path),
     ...(embeds.rows as { embed: string; path: string }[]).map((r) => `embeds/${r.embed}/${r.path}`),
   ].sort();
-  return { removed, unused: [...new Set(unused)] };
+  return { removed, unused };
 }
 
 /** The names of the embeds the draft holds files for. */

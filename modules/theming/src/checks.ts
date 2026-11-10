@@ -45,7 +45,7 @@ const WIDGETS = new Set([
 
 export const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
-const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+export const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 const num = (v: unknown): number => (typeof v === "number" ? v : 0);
 
 const error = (code: string, path: string, message: string): Problem => ({

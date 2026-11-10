@@ -7,7 +7,8 @@ import type { Brand } from "./brand.js";
 import { checkManifest } from "./checks.js";
 import type { Manifest, Problem } from "./checks.js";
 import { draftExists, noDraft, notFound, versionConflict } from "./http.js";
-import { pathProblems } from "./package-files.js";
+import { referenceProblems } from "./manifest.js";
+import { draftPaths, pathProblems } from "./package-files.js";
 import { fillTokens } from "./tokens.js";
 import type { PartialTokens } from "./tokens.js";
 
@@ -37,10 +38,12 @@ export function draftBody(row: DraftRow): Record<string, unknown> {
 
 const COLUMNS = `draft_version, created_from, manifest, problems, updated_at, updated_by,
   (SELECT coalesce(jsonb_agg(jsonb_build_object('path', path, 'bytes', bytes) ORDER BY path), '[]')
-     FROM theming_package_files WHERE owner = 'draft' AND file IS NOT NULL) AS files`;
+     FROM (SELECT path, bytes FROM theming_package_files WHERE owner = 'draft' AND file IS NOT NULL
+           UNION ALL SELECT 'embeds/' || embed || '/' || path, bytes FROM theming_embed_files
+            WHERE owner = 'draft') held) AS files`;
 
 /** The draft key names draft embeds in the sandbox, so it is unguessable and new on every change. */
-const newDraftKey = (): string => randomBytes(24).toString("base64url");
+export const newDraftKey = (): string => randomBytes(24).toString("base64url");
 
 export async function loadDraft(c: SqlClient, forUpdate = false): Promise<DraftRow | undefined> {
   const { rows } = await c.query(
@@ -184,16 +187,23 @@ export async function createDraft(
   if (created === undefined) throw draftExists();
   if (base === null) return created;
   await copyOwned(c, `r:${base}`, "draft");
-  // Read again for the files just copied.
+  // Checked again with the files just copied, and read again for them.
+  await c.query(`UPDATE theming_drafts SET problems = $1`, [
+    JSON.stringify(await draftProblems(c, manifest)),
+  ]);
   return (await loadDraft(c)) as DraftRow;
 }
 
 /**
- * Every check on the draft: the manifest's, and the problems of the uploads it holds instead of
- * files (package-files.ts).
+ * Every check on the draft: the manifest's, how it fits the draft's files (manifest.ts), and the
+ * problems of the uploads it holds instead of files (package-files.ts).
  */
 export async function draftProblems(c: SqlClient, manifest: Manifest): Promise<Problem[]> {
-  return [...checkManifest(manifest), ...(await pathProblems(c))];
+  return [
+    ...checkManifest(manifest),
+    ...referenceProblems(manifest, await draftPaths(c)),
+    ...(await pathProblems(c)),
+  ];
 }
 
 /**
@@ -231,7 +241,12 @@ export async function editDraft(
  */
 export async function removeDraft(c: SqlClient): Promise<void> {
   await c.query(`DELETE FROM theming_drafts`);
-  await c.query(`DELETE FROM theming_file_refs WHERE owner = 'draft'`);
+  await removeDraftPaths(c);
   await c.query(`DELETE FROM theming_embed_files WHERE owner = 'draft'`);
+}
+
+/** Removes the draft's package paths and its refs, its embeds kept: a package upload replaces them. */
+export async function removeDraftPaths(c: SqlClient): Promise<void> {
+  await c.query(`DELETE FROM theming_file_refs WHERE owner = 'draft'`);
   await c.query(`DELETE FROM theming_package_files WHERE owner = 'draft'`);
 }
