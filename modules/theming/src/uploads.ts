@@ -109,9 +109,16 @@ function woff2Reason(b: Buffer): string | undefined {
   return undefined;
 }
 
-/** The checks of `bytes` uploaded as `path` (`images/…` or `fonts/…`, validated by the caller). */
-export async function checkFile(path: string, bytes: Buffer): Promise<Checked> {
-  const folder = FOLDERS[path.slice(0, path.indexOf("/"))] ?? {};
+/**
+ * The checks of `bytes` uploaded as `path` (validated by the caller), as a file of `folder`
+ * (`images` or `fonts`): its own folder, or the kind an embed's file takes by its extension.
+ */
+export async function checkFile(
+  path: string,
+  bytes: Buffer,
+  folderName = path.slice(0, path.indexOf("/")),
+): Promise<Checked> {
+  const folder = FOLDERS[folderName] ?? {};
   const named = folder[path.slice(path.lastIndexOf(".") + 1).toLowerCase()];
   const accepted = [...new Set(Object.values(folder).map((k) => NAMES[k]))].join(", ");
   if (named === undefined) {

@@ -8,7 +8,7 @@ import { holdCount, releaseHeld } from "@canccu/kit";
 import type { Logger, SqlClient, StorageQuota } from "@canccu/kit";
 import type { Db } from "./db.js";
 import { fileName, lockFiles } from "./files.js";
-import type { Ext, FileStore } from "./files.js";
+import type { EmbedExt, FileStore, StoredExt } from "./files.js";
 
 export interface StoredDeps {
   db: Db;
@@ -27,7 +27,12 @@ interface Placed {
  * Makes `bytes` the event's file inside the caller's transaction: when the event has no such file
  * yet, reserves its bytes, records it and writes it; otherwise refers to the one there is.
  */
-async function place(c: SqlClient, deps: StoredDeps, bytes: Buffer, ext: Ext): Promise<Placed> {
+async function place(
+  c: SqlClient,
+  deps: StoredDeps,
+  bytes: Buffer,
+  ext: StoredExt,
+): Promise<Placed> {
   const name = fileName(bytes, ext);
   await lockFiles(c, [name]);
   const { rows } = await c.query(
@@ -118,8 +123,27 @@ async function collect(deps: StoredDeps, names: string[]): Promise<void> {
   }
 }
 
-/** Stores checked bytes for the write and answers the served name. */
-export type Place = (bytes: Buffer, ext: Ext) => Promise<string>;
+/**
+ * Reserves the bytes of an embed's file the caller then writes and records itself (`putEmbed`),
+ * unless the event holds these bytes already: the file on the volume counts once, whoever keeps it.
+ */
+async function reserveEmbed(
+  c: SqlClient,
+  deps: StoredDeps,
+  bytes: Buffer,
+  ext: EmbedExt,
+): Promise<Placed> {
+  const name = fileName(bytes, ext);
+  await lockFiles(c, [name]);
+  if (await isKept(c, name)) return { name, reserved: 0 };
+  await deps.storage.reserve(bytes.length);
+  return { name, reserved: bytes.length };
+}
+
+/** Stores checked bytes for the write and answers the stored name. */
+export type Place = (bytes: Buffer, ext: StoredExt) => Promise<string>;
+/** Reserves an embed file's bytes before the caller stores it (`reserveEmbed`). */
+export type Reserve = (bytes: Buffer, ext: EmbedExt) => Promise<void>;
 
 /** What a write's `fn` returns: its result and the files it stopped referring to. */
 export interface Written<T> {
@@ -129,15 +153,18 @@ export interface Written<T> {
 
 /**
  * Runs `fn` in one tenant transaction under the count lock. `fn` places the files it stores
- * through `place` and returns the files it stopped referring to; those nothing else refers to go,
+ * through `place`, reserves an embed's files through `reserve` before it stores them, and returns
+ * the files it stopped referring to; those nothing else refers to go,
  * their bytes given back before the commit and their files unlinked after it. If the write rolls
  * back, what it placed goes with its reserved bytes.
  */
 export async function writingFiles<T>(
   deps: StoredDeps,
-  fn: (c: SqlClient, place: Place) => Promise<Written<T>>,
+  fn: (c: SqlClient, place: Place, reserve: Reserve) => Promise<Written<T>>,
 ): Promise<T> {
   const placed: Placed[] = [];
+  // An embed's bytes reserved in this write, which `isKept` cannot see until putEmbed records them.
+  const reservedEmbeds = new Set<string>();
   const reserved = (): number => placed.reduce((sum, p) => sum + p.reserved, 0);
   let given = false as boolean;
   let dropped: Dropped[] = [];
@@ -145,11 +172,20 @@ export async function writingFiles<T>(
     const result = await deps.db.tenant(async (c) => {
       await holdCount(c, deps.storage);
       try {
-        const out = await fn(c, async (bytes, ext) => {
-          const p = await place(c, deps, bytes, ext);
-          placed.push(p);
-          return p.name;
-        });
+        const out = await fn(
+          c,
+          async (bytes, ext) => {
+            const p = await place(c, deps, bytes, ext);
+            placed.push(p);
+            return p.name;
+          },
+          async (bytes, ext) => {
+            const name = fileName(bytes, ext);
+            if (reservedEmbeds.has(name)) return;
+            reservedEmbeds.add(name);
+            placed.push(await reserveEmbed(c, deps, bytes, ext));
+          },
+        );
         dropped = await dropUnreferenced(c, out.unused);
         // The last statement: nothing after it can roll the rows back while tenants keeps the
         // release (the kit's `releaseHeld`). Only a failed commit can still do that.

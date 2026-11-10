@@ -6,6 +6,7 @@
 import type { SqlClient } from "@canccu/kit";
 import type { Problem } from "./checks.js";
 import { notFound } from "./http.js";
+import type { PackagePaths } from "./manifest.js";
 
 export type PathEntry = { file: string; bytes: number } | { problem: Problem };
 
@@ -86,4 +87,18 @@ export async function draftFileNames(c: SqlClient): Promise<string[]> {
      UNION SELECT file FROM theming_embed_files WHERE owner = 'draft'`,
   );
   return (rows as { file: string }[]).map((r) => r.file);
+}
+
+/** The draft's package paths, its embeds' files among them, for the reference checks (manifest.ts). */
+export async function draftPaths(c: SqlClient): Promise<PackagePaths> {
+  const { rows } = await c.query(
+    `SELECT path, problem IS NOT NULL AS failed FROM theming_package_files WHERE owner = 'draft'
+     UNION ALL SELECT 'embeds/' || embed || '/' || path, false FROM theming_embed_files
+      WHERE owner = 'draft'`,
+  );
+  const all = rows as { path: string; failed: boolean }[];
+  return {
+    present: new Set(all.map((r) => r.path)),
+    failed: new Set(all.filter((r) => r.failed).map((r) => r.path)),
+  };
 }

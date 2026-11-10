@@ -3,12 +3,12 @@
  * Draft, preview, publish). Every upload is checked before any lock is taken (uploads.ts), then
  * stored through the one draft write path with its bytes reserved (stored.ts).
  */
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { FastifyInstance } from "fastify";
 import { KitError } from "@canccu/kit";
 import { requiredVersion } from "./draft-routes.js";
 import type { DraftDeps } from "./draft-routes.js";
 import { draftBody, editDraft } from "./drafts.js";
-import { WRITE, actorOf, assertWritable, invalidRequest, needs } from "./http.js";
+import { WRITE, actorOf, assertWritable, invalidRequest, needs, rawBody } from "./http.js";
 import { removeDraftPath, setDraftPath } from "./package-files.js";
 import type { PathEntry } from "./package-files.js";
 import { writingFiles } from "./stored.js";
@@ -29,8 +29,8 @@ function uploadPath(value: unknown): string {
   ) {
     throw invalidRequest("path must be a package path, such as images/logo.png.");
   }
-  // CSS and templates wait for their own checks, embeds and font licences for the package upload
-  // that stores them (#245, #244); nothing is stored before its checks exist.
+  // CSS and templates wait for their own checks (#245); embeds and font licences come only with
+  // the whole package (package-routes.ts). Nothing is stored before its checks exist.
   const folder = value.slice(0, value.indexOf("/"));
   if (!UPLOAD_FOLDERS.includes(folder) || /\.(txt|md)$/i.test(value)) {
     throw invalidRequest(
@@ -40,22 +40,6 @@ function uploadPath(value: unknown): string {
   return value;
 }
 
-/**
- * The body as bytes, whatever its `Content-Type` (the content decides the type), read no further
- * than the largest file the path takes.
- */
-async function readBody(request: FastifyRequest, payload: AsyncIterable<Buffer>): Promise<Buffer> {
-  if (Number(request.headers["content-length"] ?? 0) > BODY_LIMIT) throw tooLarge();
-  const chunks: Buffer[] = [];
-  let size = 0;
-  for await (const chunk of payload) {
-    size += chunk.length;
-    if (size > BODY_LIMIT) throw tooLarge();
-    chunks.push(chunk);
-  }
-  return Buffer.concat(chunks);
-}
-
 interface FileQuery {
   Querystring: { path?: string; draft_version?: string };
 }
@@ -63,7 +47,7 @@ interface FileQuery {
 export function fileRoutes(app: FastifyInstance, deps: DraftDeps): void {
   void app.register((scope, _opts, done) => {
     scope.removeAllContentTypeParsers();
-    scope.addContentTypeParser("*", readBody);
+    scope.addContentTypeParser("*", rawBody(BODY_LIMIT, tooLarge));
     const route = { preHandler: needs(deps.rights, WRITE) };
 
     scope.put<FileQuery>("/api/theming/draft/file", route, async (request) => {
