@@ -65,15 +65,15 @@ Each slice one issue and one package of about 1,500 lines or less. Normal risk, 
 
 | Slice | Content | Needs |
 |---|---|---|
-| 0. Contract (normal) | G1–G4 | — |
-| 1. Composed state (≈ 1,600) | A; criterion 1 (builder, roles, rotation, idle) and the server half of criterion 3 for the widgets whose sources are on main; the lead's L3, L5 and L6 below (`ScreenState.theme`, `GET /api/screen/now`, the schedule window's layout fallback) | — |
-| 2. Push (≈ 1,200) | B; criterion 2, the lead's `takeCommands` and `epoch` criterion, and L1 below (`state_lag`, an open stream counts as seen) | slice 1 |
-| 3. Player core (≈ 1,400) | D1; criterion 5 (every device-state frame) and the offline mark of criterion 7; `moved` waits on #221 or shows "moved, ask the crew" until it lands | slice 2, #221 for the transfer |
-| 4. Player rendering (≈ 1,500) | D2; criterion 6 (20 m, resolutions, motion, drift, ticker) and the client half of criterion 3 | slice 3, slice 0 (G2–G4) |
-| 5. Claims (≈ 700) | C; criterion 4 with the claim templates drawn by slice 4's renderer; L2 below (`claims_sounded` kept for `sound.sounded_claims`) | slices 1, 4 |
-| 6. Content widgets (≈ 900) | E; the rest of criterion 3; L4 below (the `embed` widget through `embedWidget()`) | slice 4, #216, #217, #218, #224, #227, #186 |
-| 7. Offline, virtual screen, kiosk (≈ 950) | F; criteria 7, 8 and 10; the preview path (question 7); L4 below (sandbox files cached offline like revision files) | slice 4, slice 0 (G1) |
-| 8. Soak and load (≈ 800) | G; criterion 9 (the real 24-hour run is the lead's on the test VM before the step's exit). High if it adds a CI job under `.github`; normal if it runs inside `scripts/demo-stack-test` | slices 2, 4; a second event on the CI stack |
+| 0. Contract (normal), #303 | G1–G4 | — |
+| 1. Composed state, #109 (≈ 1,600) | A; criterion 1 (builder, roles, rotation, idle) and the server half of criterion 3 for the widgets whose sources are on main; the lead's L3, L5 and L6 below (`ScreenState.theme`, `GET /api/screen/now`, the schedule window's layout fallback) | — |
+| 2. Push, #304 (≈ 1,200) | B; criterion 2, the lead's `takeCommands` and `epoch` criterion, and L1 below (`state_lag`, an open stream counts as seen) | slice 1 |
+| 3. Player core, #305 (≈ 1,400) | D1; criterion 5 (every device-state frame) and the offline mark of criterion 7; `moved` waits on #221 or shows "moved, ask the crew" until it lands | slice 2, #221 for the transfer |
+| 4. Player rendering, #306 (≈ 1,500) | D2; criterion 6 (20 m, resolutions, motion, drift, ticker) and the client half of criterion 3 | slice 3, slice 0 (G2–G4) |
+| 5. Claims, #307 (≈ 700) | C; criterion 4 with the claim templates drawn by slice 4's renderer; L2 below (`claims_sounded` kept for `sound.sounded_claims`) | slices 1, 4 |
+| 6. Content widgets, #308 (≈ 900) | E; the rest of criterion 3; L4 below (the `embed` widget through `embedWidget()`) | slice 4, #216, #217, #218, #224, #227, #186 |
+| 7. Offline, virtual screen, kiosk, #309 (≈ 950) | F; criteria 7, 8 and 10; the preview path (question 7); L4 below (sandbox files cached offline like revision files) | slice 4, slice 0 (G1) |
+| 8. Soak and load, #310 (≈ 800) | G; criterion 9 (the real 24-hour run is the lead's on the test VM before the step's exit). High if it adds a CI job under `.github`; normal if it runs inside `scripts/demo-stack-test` | slices 2, 4; a second event on the CI stack |
 
 Slices 1–4 run in order; 5, 6 and 7 can run in parallel after 4; 8 last. #189 (Live), #191 (screenshots) and #265 (bundle retention) wait for slices 4 and 7 rather than all of #109. The issue's criteria map: 1 → slice 1; 2 → 2; 3 → 1, 4 and 6; 4 → 5; 5 → 3; 6 → 4; 7 → 3 and 7; 8 → 7; 9 → 8; 10 → 7.
 
@@ -99,6 +99,16 @@ From worker notes; each goes to the slice issue named when #109 is split.
 | L6 | An unknown `layout_id` on a schedule window falls back to `pulse`, as the contract says (PR #282) | 1 | The builder's one layout rule: window, then zone, then theme or built-in, then `pulse` (`pulse_portrait` on a portrait device) |
 
 The sizes in the split above include these: slice 1 is about 1,600, slice 2 about 1,200, slice 7 about 950; the total stays ≈ 8,900.
+
+## Answers (the lead, 2026-11-10)
+All as recommended; the lead approved the technical plan and the product owner the split.
+1. **Split:** slices 0–8. Slice 1 (composed state) is #109 itself; slice 0 is #303, 2 is #304, 3 is #305, 4 is #306, 5 is #307, 6 is #308, 7 is #309 and 8 is #310. #189, #191 and #265 wait on #306 and #309.
+2. **G1:** yes, in the contract PR (#303).
+3. **G2 and G3:** yes: the theme token `motion`, `ScreenState.display` and the setting `burn_in_drift`; quiet hours come from the agenda's `quiet_hours` items.
+4. **G4:** yes, the template tree goes into theming.md now (#303).
+5. **Content widgets:** ship them `empty` first; slice 6 (#308) waits for their sources.
+6. **Second CI tenant:** in slice 8 (#310), as CI data only.
+7. **Preview path:** in slice 7 (#309).
 
 ## After the answers
 The lead rewrites #109 and opens the slice issues as the answers decide; each slice then runs as a package against this plan's design table.
