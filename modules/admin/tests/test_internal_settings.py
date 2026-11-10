@@ -116,3 +116,12 @@ async def test_a_module_write_is_checked_like_the_session_write(world: World) ->
     assert (await patch(world, "notify", good)).status_code == 200
     stale = await patch(world, "notify", good)
     assert (stale.status_code, stale.json()["error"]["code"]) == (409, "version_conflict")
+
+
+async def test_a_module_write_needs_a_known_event_that_is_not_archived(world: World) -> None:
+    good = {"settings_version": 0, "values": {"hourly_cap": 3}, "actor_user_id": "u_org"}
+    archived = await patch(world, "notify", good, tenant="gone")
+    assert (archived.status_code, archived.json()["error"]["code"]) == (409, "event_archived")
+    unknown = await patch(world, "notify", good, tenant="nope")
+    assert (unknown.status_code, unknown.json()["error"]["code"]) == (404, "not_found")
+    assert world.streams.calls == []

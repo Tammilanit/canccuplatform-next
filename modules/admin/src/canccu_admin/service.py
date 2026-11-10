@@ -8,6 +8,7 @@ event folder, and publishes on that tenant's stream.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import shutil
 import tempfile
 from dataclasses import dataclass
@@ -151,11 +152,14 @@ class Service:
         await self._publish_profile("admin.profile.saved", document, actor)
         return _summary(document, None)
 
-    async def load_profile(self, actor: str, directory: Path | None = None) -> dict[str, Any]:
-        """Read the profile from the event folder (or `directory`) and apply it."""
-        source = directory or self.event_dir
-        loaded = await asyncio.to_thread(prof.read_profile_dir, source, self.validator)
-        document = loaded.document
+    async def load_profile(self, actor: str) -> dict[str, Any]:
+        """Read the profile from the event folder and apply it."""
+        loaded = await asyncio.to_thread(prof.read_profile_dir, self.event_dir, self.validator)
+        await self._apply(loaded.document, actor)
+        await self._publish_profile("admin.profile.loaded", loaded.document, actor)
+        return {**_summary(loaded.document, loaded.upgraded_from), "warnings": loaded.warnings}
+
+    async def _apply(self, document: dict[str, Any], actor: str) -> None:
         for module, values in document.get("settings", {}).items():
             problem = check_values(self.declarations.get(module, []), values)
             if problem:
@@ -165,8 +169,6 @@ class Service:
         for module, values in document.get("settings", {}).items():
             version, _ = await self.store.get_settings(module)
             await self.put_settings(module, version, values, actor)
-        await self._publish_profile("admin.profile.loaded", document, actor)
-        return {**_summary(document, loaded.upgraded_from), "warnings": loaded.warnings}
 
     async def export_zip(self, actor: str) -> bytes:
         await self.save_profile(actor)
@@ -180,9 +182,35 @@ class Service:
             loaded = await asyncio.to_thread(prof.read_profile_dir, staging, self.validator)
             if loaded.warnings:
                 raise prof.ProfileInvalid(loaded.warnings[0])
-            await self.load_profile(actor, staging)
+            await self._apply(loaded.document, actor)
             await asyncio.to_thread(_replace_dir, self.event_dir, staging)
+        # Only now: theming re-reads the logo on this event, so the new files must be in place.
+        await self._publish_profile("admin.profile.loaded", loaded.document, actor)
         return _summary(loaded.document, loaded.upgraded_from)
+
+    # the profile's design, for theming at revision 0
+    async def profile_theme(self) -> dict[str, Any]:
+        record = await self.store.get_profile() or {}
+        logo = await self.profile_logo()
+        return {
+            "theme": record.get("theme", {}),
+            "logo_main": None
+            if logo is None
+            else {"sha256": hashlib.sha256(logo).hexdigest(), "bytes": len(logo)},
+        }
+
+    async def profile_logo(self) -> bytes | None:
+        """The file `logos.main` names, from the current tenant's event folder; None without one."""
+        record = await self.store.get_profile() or {}
+        path = (record.get("logos") or {}).get("main")
+        if not isinstance(path, str):
+            return None
+        event = self.event_dir.resolve()
+        file = (event / path).resolve()
+        # The schema already refuses `..` and absolute paths; this keeps a stored record honest too.
+        if not file.is_relative_to(event) or not file.is_file():
+            return None
+        return await asyncio.to_thread(file.read_bytes)
 
     # health view
     async def _probe(self, module: str, url: str) -> ModuleHealth:

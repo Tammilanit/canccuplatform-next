@@ -65,11 +65,15 @@ const ALL_RIGHTS = [
   "screen.devices.pair",
   "screen.devices.write",
   "screen.zones.write",
+  "screen.content.read",
+  "screen.content.write",
+  "screen.push.write",
 ];
 const SESSIONS: Record<string, string[]> = {
   admin: ALL_RIGHTS,
   crew: ["screen.devices.read"],
   content: ["screen.content.read"],
+  editor: ["screen.content.read", "screen.content.write"],
   nobody: [],
 };
 
@@ -120,7 +124,7 @@ export async function harness(): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
   await admin.query(
-    "DROP TABLE IF EXISTS assignments, screen_zones, screen_zone_seeds, devices, screen_migrations CASCADE",
+    "DROP TABLE IF EXISTS screen_agenda_items, screen_zone_playback, screen_pushes, screen_schedules, screen_playlist_items, screen_playlists, assignments, screen_zones, screen_zone_seeds, devices, screen_migrations CASCADE",
   );
   await runMigrations(admin, MIGRATIONS_DIR, { ledger: "screen_migrations", lock: 1 });
   await admin.end();

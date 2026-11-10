@@ -22,8 +22,8 @@ export const noVenue = (): KitError =>
 export const rateLimited = error(429, "rate_limited");
 export const unknownZone = (): KitError =>
   error(400, "unknown_zone")("This event has no such zone.");
-export const versionConflict = (): KitError =>
-  error(409, "version_conflict")("This zone was changed by someone else. Read it again.");
+export const versionConflict = (what = "zone"): KitError =>
+  error(409, "version_conflict")(`This ${what} was changed by someone else. Read it again.`);
 export const zoneExists = (): KitError =>
   error(409, "zone_exists")("This event already has a zone with this key.");
 export const zoneInUse = error(409, "zone_in_use");
