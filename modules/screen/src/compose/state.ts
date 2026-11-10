@@ -29,7 +29,7 @@ export interface ComposeDeps {
   now?: () => number;
 }
 
-interface ZoneRow {
+export interface ZoneRow {
   key: string;
   name: string;
   layout_id: string | null;
@@ -97,6 +97,8 @@ const origin = (ctx: TenantContext, host: string): string =>
   ctx.primary_hostname === null ? `http://${host}` : `https://${ctx.primary_hostname}`;
 
 interface ZoneComposed {
+  /** Fingerprint of the zone's inputs, the same for every screen of the zone (see zoneFingerprint). */
+  fingerprint: string;
   zone: ZoneRow;
   theme: ThemeNow;
   eventName: string;
@@ -148,37 +150,58 @@ export async function composeZone(
     portrait,
     facts,
   });
-  const appearance = deps.settings.get("ticker_appearance", "default");
+  const setting = deps.settings.get("ticker_appearance", "default");
+  const appearance = typeof setting === "string" ? setting : "default";
   return {
+    fingerprint: zoneFingerprint({
+      zone: read.zone,
+      windowLayoutId: read.windowLayout,
+      theme: { revision: theme?.revision ?? 0, layouts: theme?.layouts ?? [] },
+      facts,
+      tickerAppearance: appearance,
+    }),
     zone: read.zone,
     theme: theme ?? NO_THEME,
     eventName,
     ...built,
-    ticker: { ...read.ticker, appearance: typeof appearance === "string" ? appearance : "default" },
+    ticker: { ...read.ticker, appearance },
   };
 }
 
+export interface FingerprintInput {
+  zone: ZoneRow;
+  windowLayoutId: string | null;
+  theme: { revision: number; layouts: unknown[] };
+  facts: ZoneFacts;
+  tickerAppearance?: string;
+}
+
 /**
- * `state_version` moves when what a screen draws changes, not when time passes: the clock's
- * view-model and the rotation's cycle are left out of the fingerprint. The push slice (#304)
- * replaces this with its change log, which bumps the version atomically.
+ * What a zone's screens draw is a function of these inputs, the time and the screen's
+ * orientation. Hashing the inputs rather than the output keeps time (the clock, cycles, shuffled
+ * orders) and orientation out, so landscape and portrait screens of one zone share one version
+ * and only an edit or a source's change moves it.
  */
-async function stateVersion(kv: Kv, key: string, composed: ZoneComposed): Promise<number> {
+export function zoneFingerprint(input: FingerprintInput): string {
   const stable = {
-    layout: composed.layout.id,
-    theme: composed.theme.revision,
-    ticker: composed.ticker,
-    regions: composed.regions.map((r) => ({
-      ...r,
-      cycle_started_at: null,
-      widgets: r.widgets.map((w) => (w.widget === "clock" ? { ...w, view: null } : w)),
-    })),
+    zone: input.zone,
+    window: input.windowLayoutId,
+    theme: input.theme,
+    facts: { ...input.facts, now: null },
+    ticker: input.tickerAppearance ?? "default",
   };
-  const hash = createHash("sha256").update(JSON.stringify(stable)).digest("base64url");
+  return createHash("sha256").update(JSON.stringify(stable)).digest("base64url");
+}
+
+// Long enough that a quiet zone keeps its count between events; #304's change log replaces it.
+const VERSION_TTL_MS = 400 * 24 * 3600_000;
+
+/** `state_version`: +1 whenever the zone's fingerprint changes. #304 makes it atomic. */
+async function stateVersion(kv: Kv, key: string, fingerprint: string): Promise<number> {
   const kept = await kv.get(key);
   const [version, seen] = kept === null ? [0, ""] : (JSON.parse(kept) as [number, string]);
-  if (seen === hash) return version;
-  await kv.set(key, JSON.stringify([version + 1, hash]), 7 * 24 * 3600_000);
+  if (seen === fingerprint) return version;
+  await kv.set(key, JSON.stringify([version + 1, fingerprint]), VERSION_TTL_MS);
   return version + 1;
 }
 
@@ -222,7 +245,7 @@ export async function deviceState(
       : await stateVersion(
           deps.kv,
           tenantKey("screen", "zone", composed.zone.key, "version"),
-          composed,
+          composed.fingerprint,
         );
   const sound = composed?.zone.sound;
   return {

@@ -97,6 +97,7 @@ async function fakeTenants(url: string | URL | Request): Promise<Response> {
 async function fakeAdmin(_url: string | URL | Request, init?: RequestInit): Promise<Response> {
   const cookie = (init?.headers as Record<string, string> | undefined)?.cookie ?? "";
   const id = cookie.replace("canccu_session=", "");
+  if (id === "admin-down") return Promise.resolve(new Response("down", { status: 503 }));
   const rights = SESSIONS[id];
   if (rights === undefined) {
     return Promise.resolve(

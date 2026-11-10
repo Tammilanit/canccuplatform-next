@@ -164,3 +164,81 @@ describe.skipIf(!DATABASE_URL)("the composed state", () => {
     });
   });
 });
+
+describe.skipIf(!DATABASE_URL)("the composed state after review", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await harness();
+    h.sources.agenda = { current: [], next: [NEXT] };
+    h.sources.event = { name: "Demo Event" };
+  });
+  afterAll(async () => {
+    await h.close();
+  });
+
+  const host = "alpha.test";
+  const version = async (token: string) =>
+    (
+      await call(h, "GET", "/api/screen/device/state", { host, cookies: { canccu_device: token } })
+    ).json<State>().state_version;
+  const placeIn = async (id: string) => {
+    await call(h, "GET", "/api/screen/zones", { host, session: "admin" });
+    await call(h, "PUT", `/api/screen/devices/${id}/assignment`, {
+      host,
+      session: "admin",
+      body: { zone_key: "main" },
+    });
+  };
+
+  it("keeps one version for a landscape and a portrait screen of one zone", async () => {
+    const wide = await pairDevice(h, host, "Wide");
+    const tall = await pairDevice(h, host, "Tall");
+    await placeIn(wide.id);
+    await placeIn(tall.id);
+    await call(h, "POST", "/api/screen/device/heartbeat", {
+      host,
+      cookies: { canccu_device: tall.token },
+      body: {
+        state_version: 0,
+        bundle_version: "test",
+        theme_revision: 0,
+        viewport: { width: 1080, height: 1920 },
+      },
+    });
+    const first = await version(wide.token);
+    expect(await version(tall.token)).toBe(first);
+    expect(await version(wide.token)).toBe(first);
+    expect(await version(tall.token)).toBe(first);
+  });
+
+  it("moves the version when the zone's sound device changes", async () => {
+    const screen = await pairDevice(h, host, "Sound");
+    await placeIn(screen.id);
+    const before = await version(screen.token);
+    const zone = (await call(h, "GET", "/api/screen/zones/main", { host, session: "admin" })).json<{
+      name: string;
+      layout_id: string | null;
+      regions: Record<string, unknown>;
+      revision: number;
+    }>();
+    const saved = await call(h, "PUT", "/api/screen/zones/main", {
+      host,
+      session: "admin",
+      body: {
+        key: "main",
+        name: zone.name,
+        layout_id: zone.layout_id,
+        regions: zone.regions,
+        sound: { enabled: true, device_id: screen.id },
+        revision: zone.revision,
+      },
+    });
+    expect(saved.statusCode).toBe(200);
+    expect(await version(screen.token)).toBe(before + 1);
+  });
+
+  it("serves a public event's hub when admin is down for a signed-in viewer", async () => {
+    const res = await call(h, "GET", "/api/screen/now?zone=main", { host, session: "admin-down" });
+    expect(res.statusCode).toBe(200);
+  });
+});

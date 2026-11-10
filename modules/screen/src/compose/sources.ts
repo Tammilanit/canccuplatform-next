@@ -4,6 +4,8 @@
  * module's own public path with the event's hostname, as a guest would read it, so a screen shows
  * exactly what the hub shows and nothing crew-only: one source, two surfaces.
  */
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
 import type { AgendaItem, AgendaNow, VenueInfo } from "./widgets.js";
 
 export interface ThemeNow {
@@ -34,16 +36,67 @@ export interface SourceUrls {
 }
 
 const READ_TIMEOUT_MS = 1500;
+const MAX_BODY_BYTES = 1024 * 1024;
+const WARN_EVERY_MS = 60_000;
 
-export function httpSources(urls: SourceUrls, fetchFn: typeof fetch = fetch): Sources {
+export interface SourceLog {
+  warn(obj: object, msg: string): void;
+}
+
+/**
+ * GET with a `Host` of our choosing. The global `fetch` (undici) treats `Host` as a forbidden
+ * header and sends the URL's own authority, which no module resolves to an event; node:http keeps it.
+ */
+function getJson(url: string, host: string): Promise<{ status: number; body: unknown }> {
+  const target = new URL(url);
+  const send = target.protocol === "https:" ? httpsRequest : httpRequest;
+  return new Promise((resolve, reject) => {
+    const req = send(
+      target,
+      { headers: { host, accept: "application/json" }, timeout: READ_TIMEOUT_MS },
+      (res) => {
+        const chunks: Buffer[] = [];
+        let size = 0;
+        res.on("data", (chunk: Buffer) => {
+          size += chunk.length;
+          if (size > MAX_BODY_BYTES) req.destroy(new Error("body too large"));
+          else chunks.push(chunk);
+        });
+        res.on("end", () => {
+          try {
+            const text = Buffer.concat(chunks).toString("utf8");
+            resolve({ status: res.statusCode ?? 0, body: text === "" ? null : JSON.parse(text) });
+          } catch (err) {
+            reject(err instanceof Error ? err : new Error(String(err)));
+          }
+        });
+        res.on("error", reject);
+      },
+    );
+    req.on("timeout", () => req.destroy(new Error("timeout")));
+    req.on("error", reject);
+    req.end();
+  });
+}
+
+export function httpSources(urls: SourceUrls, log?: SourceLog): Sources {
+  // One warning per path a minute: a module that is down for a day must not fill the log.
+  const lastWarned = new Map<string, number>();
+  const warn = (path: string, detail: object): void => {
+    const now = Date.now();
+    if (log === undefined || now - (lastWarned.get(path) ?? 0) < WARN_EVERY_MS) return;
+    lastWarned.set(path, now);
+    log.warn({ path, ...detail }, "composed state source unavailable; its widgets show empty");
+  };
   const read = async (base: string, path: string, host: string): Promise<unknown> => {
+    const route = path.split("?")[0] ?? path;
     try {
-      const response = await fetchFn(`${base.replace(/\/+$/, "")}${path}`, {
-        headers: { host, accept: "application/json" },
-        signal: AbortSignal.timeout(READ_TIMEOUT_MS),
-      });
-      return response.ok ? await response.json() : null;
-    } catch {
+      const { status, body } = await getJson(`${base.replace(/\/+$/, "")}${path}`, host);
+      if (status >= 200 && status < 300) return body;
+      warn(route, { status });
+      return null;
+    } catch (err) {
+      warn(route, { err: err instanceof Error ? err.message : String(err) });
       return null;
     }
   };

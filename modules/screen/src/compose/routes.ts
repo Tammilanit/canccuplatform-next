@@ -33,13 +33,16 @@ async function hubReader(request: FastifyRequest, rights: RightsChecker): Promis
   };
   try {
     checkInfoAccess(ctx, { clientIp: request.ip, viewer: "guest" });
-    return hasCookie ? await signedIn() : false;
   } catch (err) {
-    if (!(err instanceof InfoPagesClosed) || !hasCookie) throw err;
-    if (!(await signedIn())) throw err;
+    // Guests are kept out: only a signed-in member reads on, and the closed answer stands for
+    // everyone else.
+    if (!(err instanceof InfoPagesClosed) || !hasCookie || !(await signedIn())) throw err;
     checkInfoAccess(ctx, { clientIp: request.ip, viewer: "member" });
     return true;
   }
+  // Membership only decides `now_playing` names here, so a lookup that fails (admin down) reads
+  // as "not a member" and the public hub never waits on admin.
+  return hasCookie ? await signedIn().catch(() => false) : false;
 }
 
 export function composeRoutes(app: FastifyInstance, deps: ComposeRouteDeps): void {

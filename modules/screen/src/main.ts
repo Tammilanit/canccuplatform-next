@@ -146,11 +146,14 @@ async function main(): Promise<void> {
     tenants,
     settings,
     // The service names of deploy/compose.yml; a stack that moves them sets the variables.
-    sources: httpSources({
-      agenda: process.env.CANCCU_AGENDA_URL ?? "http://agenda:8080",
-      tenants: tenantsUrl,
-      theming: process.env.CANCCU_THEMING_URL ?? "http://theming:8080",
-    }),
+    sources: httpSources(
+      {
+        agenda: process.env.CANCCU_AGENDA_URL ?? "http://agenda:8080",
+        tenants: tenantsUrl,
+        theming: process.env.CANCCU_THEMING_URL ?? "http://theming:8080",
+      },
+      log,
+    ),
     bundleVersion: config.version,
     health: screenHealth({
       module: config.module,

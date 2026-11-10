@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { buildRegions } from "../src/compose/build.js";
 import type { BuildInput } from "../src/compose/build.js";
-import { chooseLayout, roleOf } from "../src/compose/layouts.js";
+import { chooseLayout, roleOf, themeLayouts } from "../src/compose/layouts.js";
+import { zoneFingerprint } from "../src/compose/state.js";
+import type { FingerprintInput } from "../src/compose/state.js";
 import type { Layout } from "../src/compose/layouts.js";
 import { viewOf } from "../src/compose/widgets.js";
 import type { AgendaItem, ZoneFacts } from "../src/compose/widgets.js";
@@ -278,5 +280,62 @@ describe("view-models", () => {
     expect((view.items as { id: string; state: string }[]).map((i) => [i.id, i.state])).toEqual([
       ["a", "delayed"],
     ]);
+  });
+});
+
+describe("review fixes", () => {
+  it("keeps the hub QR on the venue rail when the venue has nothing to show", () => {
+    const rail = buildRegions(input({ facts: facts({ venue: null }) })).regions.find(
+      (r) => r.id === "venue_rail",
+    );
+    const shown = (rail?.order ?? []).map((i) => rail?.widgets[i]);
+    expect(shown.map((w) => w?.widget)).toEqual(["qr"]);
+    expect(shown[0]?.view).toMatchObject({ url: "https://demo.example/notify/", empty: false });
+  });
+
+  it("drops theme layout regions without widgets or an area", () => {
+    const broken = {
+      ...themeLayout("stage"),
+      regions: [{ id: "main" }, ...themeLayout("stage").regions],
+    };
+    expect(themeLayouts([broken])[0]?.regions.map((r) => r.id)).toEqual(["main"]);
+    expect(themeLayouts([broken])[0]?.regions).toHaveLength(1);
+  });
+
+  const print = (over: Partial<FingerprintInput> = {}) =>
+    zoneFingerprint({
+      zone: {
+        key: "main",
+        name: "Main",
+        layout_id: null,
+        regions: { hero: { rotation: "shuffle" } },
+        sound: { enabled: true, device_id: null },
+        epoch: "e1",
+      },
+      windowLayoutId: null,
+      theme: { revision: 1, layouts: [] },
+      facts: facts(),
+      ...over,
+    });
+
+  it("leaves time, cycles and shuffles out of the fingerprint", () => {
+    expect(print({ facts: facts({ now: new Date("2026-01-01T12:07:31Z") }) })).toBe(print());
+  });
+
+  it("changes the fingerprint with the sound device, the zone's name and the event's name", () => {
+    const zone = {
+      key: "main",
+      name: "Main",
+      layout_id: null,
+      regions: {},
+      sound: { enabled: true, device_id: null },
+      epoch: "e1",
+    };
+    const base = print({ zone });
+    expect(print({ zone: { ...zone, sound: { enabled: true, device_id: "dv_1" } } })).not.toBe(
+      base,
+    );
+    expect(print({ zone: { ...zone, name: "Hall" } })).not.toBe(base);
+    expect(print({ zone, facts: facts({ eventName: "Other" }) })).not.toBe(base);
   });
 });

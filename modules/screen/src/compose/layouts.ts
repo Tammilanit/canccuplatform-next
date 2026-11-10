@@ -44,10 +44,12 @@ const at = (column: number, row: number, columns: number, rows: number): Area =>
 });
 const w = (...types: string[]): WidgetEntry[] => types.map((widget) => ({ widget }));
 
-// The venue rail carries the hub QR through `venue_info`; `checkin_qr` is left to the zones that
+// The hub QR is a widget of its own, so it stays on the venue rail when the venue has nothing to
+// show or its read fails (one hub QR per screen, plan U4); `checkin_qr` is left to the zones that
 // want it, because check-in is never mandatory (0027) and a built-in would put it on every screen.
 const VENUE_RAIL: WidgetEntry[] = [
-  { widget: "venue_info", props: { qr: "auto" } },
+  { widget: "qr", props: { url: "/notify/", label: "The event hub" } },
+  { widget: "venue_info" },
   { widget: "food_status" },
 ];
 const HERO = w("playlist", "hot_game", "bracket", "photo");
@@ -129,15 +131,27 @@ export function roleOf(regionId: string, zoneSetting: unknown): Role | null {
   return role === null || SYNTHETIC_ONLY.has(role) ? null : role;
 }
 
-/** Theme layouts as theming serves them; anything not in the layout shape is dropped. */
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
+
+/**
+ * Theme layouts as theming serves them. Theming validates them against theme.schema.json, but a
+ * region without `area` or `widgets` would fail every screen of the zone, so it is dropped here.
+ */
 export function themeLayouts(value: unknown): Layout[] {
   if (!Array.isArray(value)) return [];
-  return value.filter(
-    (l): l is Layout =>
-      typeof l === "object" &&
-      l !== null &&
-      typeof (l as Layout).id === "string" &&
-      typeof (l as Layout).grid === "object" &&
-      Array.isArray((l as Layout).regions),
-  );
+  return value.flatMap((l: unknown): Layout[] => {
+    if (
+      !isObject(l) ||
+      typeof l.id !== "string" ||
+      !isObject(l.grid) ||
+      !Array.isArray(l.regions)
+    ) {
+      return [];
+    }
+    const regions = (l.regions as unknown[]).filter(
+      (r): r is LayoutRegion =>
+        isObject(r) && typeof r.id === "string" && isObject(r.area) && Array.isArray(r.widgets),
+    );
+    return regions.length === 0 ? [] : [{ ...(l as unknown as Layout), regions }];
+  });
 }
