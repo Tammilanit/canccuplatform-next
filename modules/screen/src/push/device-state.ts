@@ -27,6 +27,9 @@ function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
   };
 }
 
+/** A lost advance builds again; past this many the zone refresh (10 s) takes over. */
+const ADVANCE_TRIES = 3;
+
 /**
  * Compose the zone now and, when its inputs changed, store the next version and publish the
  * change; null when the zone does not exist. The answer is always freshly built (the clock,
@@ -38,31 +41,35 @@ export async function refreshZone(
   host: string,
   zoneKey: string,
 ): Promise<ZoneRecord | null> {
-  // Read before composing: a build from older inputs must not overwrite a newer one (advance
-  // refuses once the version moved on).
-  const before = await deps.zones.read(zoneKey);
-  const composed = await composeZone(deps, ctx, host, zoneKey);
-  if (composed === null) return null;
-  const base = before?.version ?? 0;
-  if (
-    before !== null &&
-    before.fingerprint === composed.fingerprint &&
-    before.zone.epoch === composed.zone.epoch
-  ) {
-    return recordOf(composed, base);
+  for (let attempt = 1; ; attempt++) {
+    // Read before composing: a build from older inputs must not overwrite a newer one (advance
+    // refuses once the version moved on).
+    const before = await deps.zones.read(zoneKey);
+    const composed = await composeZone(deps, ctx, host, zoneKey);
+    if (composed === null) return null;
+    const base = before?.version ?? 0;
+    if (
+      before !== null &&
+      before.fingerprint === composed.fingerprint &&
+      before.zone.epoch === composed.zone.epoch
+    ) {
+      return recordOf(composed, base);
+    }
+    const next = recordOf(composed, base + 1);
+    const entry = {
+      version: base + 1,
+      epoch: composed.zone.epoch,
+      messages: {
+        landscape: diffZone(before, next, "landscape", base + 1),
+        portrait: diffZone(before, next, "portrait", base + 1),
+      },
+    };
+    if (await deps.zones.advance(zoneKey, base, next, entry)) return next;
+    // Another container stored a change meanwhile, perhaps built from older inputs than these
+    // (it read them first and finished first): build again on top of it, so a newer change is
+    // never left waiting for the next refresh.
+    if (attempt === ADVANCE_TRIES) return (await deps.zones.read(zoneKey)) ?? next;
   }
-  const next = recordOf(composed, base + 1);
-  const entry = {
-    version: base + 1,
-    epoch: composed.zone.epoch,
-    messages: {
-      landscape: diffZone(before, next, "landscape", base + 1),
-      portrait: diffZone(before, next, "portrait", base + 1),
-    },
-  };
-  if (await deps.zones.advance(zoneKey, base, next, entry)) return next;
-  // Another container stored a change meanwhile, from inputs as new as these or newer.
-  return (await deps.zones.read(zoneKey)) ?? next;
 }
 
 export interface DeviceSide {

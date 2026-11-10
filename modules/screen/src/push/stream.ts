@@ -229,23 +229,46 @@ export class DeviceStream {
     await recordSeen({ ...this.deps, now }, this.deviceId, now());
   }
 
-  private async ping(): Promise<void> {
-    const nowMs = (this.deps.now ?? Date.now)();
-    // The event as it is now: its venue addresses, the emergency switch, archiving and name.
+  /**
+   * The event and the device as they are now: the venue addresses, the emergency switch,
+   * archiving, the time zone and the device's name. False when the stream has ended.
+   */
+  private async recheck(nowMs: number): Promise<{ ok: boolean; changed: boolean }> {
     const ctx = await this.deps.contextOf(this.req.host).catch(() => this.req.ctx);
     if (ctx?.tenant_id !== this.tenant) {
       this.end();
-      return;
+      return { ok: false, changed: false };
     }
+    let match;
     try {
-      await checkDevice(this.deps.db, ctx, this.req.token, this.req.ip, new Date(nowMs));
+      match = await checkDevice(this.deps.db, ctx, this.req.token, this.req.ip, new Date(nowMs));
     } catch {
       // Revoked, moved or refused since it connected: the screen reconnects and gets the answer.
       this.end();
-      return;
+      return { ok: false, changed: false };
     }
-    const changed = ctx.status !== this.req.ctx.status || ctx.time_zone !== this.req.ctx.time_zone;
+    // A rename emits no event; the ping is where an open stream learns of it.
+    const changed =
+      ctx.status !== this.req.ctx.status ||
+      ctx.time_zone !== this.req.ctx.time_zone ||
+      match.device.name !== this.req.device.name;
     this.req.ctx = ctx;
+    this.req.device = match.device;
+    return { ok: true, changed };
+  }
+
+  /** After the event's status or venue check changed: refused screens go, the rest redraw. */
+  refresh(): Promise<void> {
+    return this.enqueue(async () => {
+      const { ok, changed } = await this.recheck((this.deps.now ?? Date.now)());
+      if (ok && changed) await this.place(undefined);
+    });
+  }
+
+  private async ping(): Promise<void> {
+    const nowMs = (this.deps.now ?? Date.now)();
+    const { ok, changed } = await this.recheck(nowMs);
+    if (!ok) return;
     this.write({ event: "ping", data: { time: new Date(nowMs).toISOString() } });
     await this.seen();
     // The first heartbeat, with the viewport, may come after the stream opened.

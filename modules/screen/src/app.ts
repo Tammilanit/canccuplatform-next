@@ -11,6 +11,7 @@ import type { FastifyInstance, FastifyServerOptions } from "fastify";
 import { FILES_ROOT, createHealth, postgresCheck } from "@canccu/kit";
 import type {
   Bus,
+  Event,
   CheckFn,
   Health,
   Logger,
@@ -202,6 +203,9 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
     contextOf: async (host: string) => {
       const found = await deps.tenants.resolve(host);
       return found.kind === "tenant" ? found.context : null;
+    },
+    tenantChanged: (event: Event) => {
+      deps.tenants.handleEvent(event);
     },
   };
   const hub = new PushHub(push);

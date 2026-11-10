@@ -32,11 +32,24 @@ const REBUILDS = [
   "tenants.venue_info.changed",
   "theming.theme.published",
 ];
+/** The event's context changed: every stream checks its device again and may redraw. */
+const RECHECKS = new Set([
+  "tenants.tenant.changed",
+  "tenants.status.changed",
+  "tenants.venue_ip_check.changed",
+  "tenants.venue.changed",
+]);
 /** The device no longer serves this event, or its token stopped: its streams end. */
 const ENDS = new Set(["screen.device.revoked", "screen.device.released", "screen.device.moved"]);
 
 export interface HubDeps extends StreamDeps {
   log?: Logger;
+  /**
+   * Forget the cached context of the event a `tenants` event is about (the kit's TenantResolver).
+   * Its cache hears only the platform stream; these events come on the event's own stream, and a
+   * rebuild or recheck from a cached context would see nothing new for up to 30 seconds.
+   */
+  tenantChanged(event: Event): void;
 }
 
 export class PushHub {
@@ -68,6 +81,7 @@ export class PushHub {
 
   /** One event of the screen, agenda, tenants or theming tenant streams. */
   handleEvent(event: Event): void {
+    if (event.source === "tenants") this.deps.tenantChanged(event);
     const tenant = event.tenant;
     const streams = tenant === undefined ? undefined : this.streams.get(tenant);
     if (tenant === undefined || streams === undefined) return;
@@ -85,6 +99,7 @@ export class PushHub {
       }
       return;
     }
+    if (RECHECKS.has(event.type)) for (const s of streams) void s.refresh();
     if (!REBUILDS.some((p) => (p.endsWith(".") ? event.type.startsWith(p) : event.type === p))) {
       return;
     }

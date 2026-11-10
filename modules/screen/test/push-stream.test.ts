@@ -3,139 +3,32 @@
  * ends): the first state, pushed changes, resume, commands, reassignment, revocation, and an
  * open stream counting as seen. The bus is fed to the hub by hand, as main's subscription does.
  */
-import { request } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { parseEnvelope } from "@canccu/kit";
 import type { Event } from "@canccu/kit";
-import { DATABASE_URL, TENANTS, VENUE_IP, call, context, harness, pairDevice } from "./helpers.js";
+import { DATABASE_URL, TENANTS, call, context, harness } from "./helpers.js";
 import type { Harness } from "./helpers.js";
-
-interface Frame {
-  event: string;
-  id: string;
-  data: Record<string, unknown>;
-}
-
-interface Sse {
-  /** The next frame of `event` (pings skipped unless asked for). */
-  next(event?: string, timeoutMs?: number): Promise<Frame>;
-  status: Promise<number>;
-  ended: Promise<void>;
-  close(): void;
-}
+import { pushClient } from "./sse.js";
+import type { Frame } from "./sse.js";
 
 describe.skipIf(!DATABASE_URL)("the push channel", () => {
   let h: Harness;
-  let port: number;
-  const consumed = new Map<string, number>();
+  let client: ReturnType<typeof pushClient>;
+  const pump = () => {
+    client.pump();
+  };
+  const open = (token: string, lastEventId?: string) => client.open(token, lastEventId);
+  const screen = (zone?: string) => client.screen(zone);
 
   beforeAll(async () => {
     h = await harness();
     await h.app.listen({ host: "127.0.0.1", port: 0 });
-    port = (h.app.server.address() as AddressInfo).port;
+    client = pushClient(h, (h.app.server.address() as AddressInfo).port);
     h.sources.event = { name: "Demo Event" };
   });
   afterAll(async () => {
     await h.close();
   });
-
-  /** Hand the hub the events published since the last pump, as main's subscription would. */
-  function pump(tenant = "alpha"): void {
-    for (const module of ["screen"]) {
-      const stream = `t:${tenant}:events:${module}`;
-      const entries = h.store.streams.get(stream) ?? [];
-      for (const [, fields] of entries.slice(consumed.get(stream) ?? 0)) {
-        h.app.pushHub.handleEvent(parseEnvelope(fields.event ?? ""));
-      }
-      consumed.set(stream, entries.length);
-    }
-  }
-
-  function open(token: string, lastEventId?: string): Sse {
-    const frames: Frame[] = [];
-    const waiters: (() => void)[] = [];
-    let status!: (code: number) => void;
-    let ended!: () => void;
-    const statusP = new Promise<number>((r) => (status = r));
-    const endedP = new Promise<void>((r) => (ended = r));
-    const req = request(
-      {
-        host: "127.0.0.1",
-        port,
-        path: "/api/screen/device/stream",
-        headers: {
-          host: "alpha.test",
-          "x-forwarded-for": VENUE_IP,
-          cookie: `canccu_device=${token}`,
-          ...(lastEventId === undefined ? {} : { "last-event-id": lastEventId }),
-        },
-      },
-      (res) => {
-        status(res.statusCode ?? 0);
-        let buffer = "";
-        res.setEncoding("utf8");
-        res.on("data", (chunk: string) => {
-          buffer += chunk;
-          let cut;
-          while ((cut = buffer.indexOf("\n\n")) >= 0) {
-            const block = buffer.slice(0, cut);
-            buffer = buffer.slice(cut + 2);
-            const line = (name: string) =>
-              block
-                .split("\n")
-                .find((l) => l.startsWith(`${name}: `))
-                ?.slice(name.length + 2);
-            const event = line("event");
-            if (event === undefined) continue;
-            frames.push({
-              event,
-              id: line("id") ?? "",
-              data: JSON.parse(line("data") ?? "{}") as Frame["data"],
-            });
-            for (const w of waiters.splice(0)) w();
-          }
-        });
-        res.on("end", ended);
-        res.on("close", ended);
-      },
-    );
-    req.on("error", () => {
-      ended();
-    });
-    req.end();
-    return {
-      status: statusP,
-      ended: endedP,
-      close: () => req.destroy(),
-      next: async (event, timeoutMs = 3000) => {
-        const deadline = Date.now() + timeoutMs;
-        for (;;) {
-          const i = frames.findIndex((f) => (event ? f.event === event : f.event !== "ping"));
-          if (i >= 0) return frames.splice(0, i + 1).at(-1) as Frame;
-          const left = deadline - Date.now();
-          if (left <= 0) throw new Error(`no ${event ?? "frame"} within ${timeoutMs} ms`);
-          await new Promise<void>((resolve) => {
-            waiters.push(resolve);
-            setTimeout(resolve, left);
-          });
-        }
-      },
-    };
-  }
-
-  async function screen(zone = "main"): Promise<{ id: string; token: string }> {
-    const device = await pairDevice(h);
-    await call(h, "GET", "/api/screen/zones", { session: "admin" });
-    const res = await call(h, "PUT", `/api/screen/devices/${device.id}/assignment`, {
-      session: "admin",
-      body: { zone_key: zone },
-    });
-    expect(res.statusCode).toBe(200);
-    // Taken off the bus now, so only what each test does reaches its streams.
-    pump();
-    return device;
-  }
 
   const ticker = (text: string) =>
     call(h, "PUT", "/api/screen/ticker", { session: "admin", body: { text, until: null } });

@@ -316,13 +316,18 @@ export async function sweepOffline(deps: HealthDeps): Promise<void> {
         if (due.length === 0) return;
         const zones = await zonesOf(deps.db, due);
         for (const id of due) {
-          const record = await readRecord(deps.kv, id);
+          const [record, seen] = await Promise.all([
+            readRecord(deps.kv, id),
+            readSeen(deps.kv, id),
+          ]);
+          // The latest of a heartbeat and an open stream, as the health view shows it.
+          const lastSeen = Math.max(record?.last_seen_ms ?? -Infinity, seen?.seen_ms ?? -Infinity);
           await deps.bus.publish(
             "screen.device.offline",
             {
               device_id: id,
               zone_key: zones.get(id) ?? null,
-              last_seen_at: record === null ? null : new Date(record.last_seen_ms).toISOString(),
+              last_seen_at: Number.isFinite(lastSeen) ? new Date(lastSeen).toISOString() : null,
             },
             { version: 1 },
           );
