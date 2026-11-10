@@ -44,8 +44,15 @@ def bare(name: str) -> str:
 
 
 def constraint_name(name: str) -> str:
-    """Postgres folds unquoted names to lower case and cuts every name to 63 bytes."""
-    return (name[1:-1] if name.startswith('"') else name.lower())[:63]
+    """Postgres folds unquoted names to lower case and cuts every name to 63 bytes, never inside
+    a character."""
+    name = name[1:-1] if name.startswith('"') else name.lower()
+    return name.encode()[:63].decode("utf-8", "ignore")
+
+
+# Postgres names an unnamed key, unique, exclusion or foreign key <table>_…_<suffix>[digits], so
+# a CHECK's name of that shape can be taken by a key the reader never saw named.
+KEY_NAME_RE = re.compile(r"_(?:pkey|key|fkey|excl)[0-9]*$")
 
 
 def statements(sql: str) -> list[str]:
@@ -120,7 +127,7 @@ class Table:
     forced: bool = False
     policies: list[tuple[str, bool, bool, bool]] = field(default_factory=list)
     # (name, permissive, covers all commands, uses the tenant setting)
-    drops: list[str] = field(default_factory=list)
+    drops: list[tuple[str, str]] = field(default_factory=list)  # (migration file, what it drops)
     keys: list[tuple[str, list[str]]] = field(default_factory=list)  # (kind, columns)
     refs: list[tuple[list[str], str, list[str] | None]] = field(default_factory=list)
     # Constraint name -> every kind ("check", "other") seen under it: a drop passes only for a
@@ -140,10 +147,10 @@ class Module:
     def table(self, name: str) -> Table | None:
         return self.tables.get(bare(name))
 
-    def end_migration(self) -> None:
+    def end_migration(self, file: str) -> None:
         for table in self.tables.values():
             table.drops += [
-                f"drops CHECK {n} without adding it back in the same migration" for n in sorted(table.unrestored)
+                (file, f"drops CHECK {n} without adding it back in the same migration") for n in sorted(table.unrestored)
             ]
             table.unrestored.clear()
 
@@ -177,9 +184,11 @@ def read_column(table: Table, element: str) -> None:
         table.name_constraint(constraint, "check" if kind.upper() == "CHECK" else "other")
     # An unnamed column CHECK is named <table>_<column>_check (longer names are cut in ways not
     # modelled here, so their drops fail). A stray "CHECK" in a literal only adds a _check name,
-    # which no key, foreign key or exclusion is ever named by default.
+    # which no key, foreign key or exclusion is ever named by default. bare() lowercases quoted
+    # names too, so for a quoted mixed-case table or column this is not Postgres's name and the
+    # drop fails: closed, never open.
     auto = f"{table.name}_{name}_check"
-    if len(re.findall(r"\bCHECK\b", rest, re.I)) > sum(k.upper() == "CHECK" for _, k in named) and len(auto) <= 63:
+    if len(re.findall(r"\bCHECK\b", rest, re.I)) > sum(k.upper() == "CHECK" for _, k in named) and len(auto.encode()) <= 63:
         table.name_constraint(auto, "check")
     if re.search(r"\bPRIMARY KEY\b", rest, re.I):
         table.keys.append(("primary key", [name]))
@@ -230,16 +239,23 @@ def read_statement(module: Module, stmt: str, file: str) -> None:
         return
     m = re.match(rf"DROP POLICY (?:IF EXISTS )?({IDENT}) ON {NAME}", stmt, re.I)
     if m and (table := module.table(m.group(2))):
-        table.drops.append(f"drops policy {bare(m.group(1))}")
+        table.drops.append((file, f"drops policy {bare(m.group(1))}"))
+        return
+    # Postgres lets ALTER INDEX rename a table and ALTER TABLE rename an index.
+    m = re.match(rf"ALTER (?:INDEX|TABLE) (?:IF EXISTS )?(?:ONLY )?{NAME} RENAME TO ({IDENT})\s*$", stmt, re.I)
+    if m:
+        if table := module.table(m.group(1)):
+            # The table keeps everything it had under its new name, so later statements stay checked.
+            module.tables[bare(m.group(2))] = module.tables.pop(bare(m.group(1)))
+            table.name = bare(m.group(2))
+        else:
+            # Renaming the index behind a primary key, unique or exclusion constraint renames the
+            # constraint too. Index names are schema-wide, so the new name may be a key on any table.
+            for each in module.tables.values():
+                each.name_constraint(m.group(2), "other")
         return
     m = re.match(rf"ALTER TABLE (?:IF EXISTS )?(?:ONLY )?{NAME} (.*)", stmt, re.I)
     if not m or not (table := module.table(m.group(1))):
-        return
-    renamed = re.match(rf"RENAME TO {NAME}\s*$", m.group(2), re.I)
-    if renamed:
-        # The table keeps everything it had under its new name, so later statements stay checked.
-        module.tables[bare(renamed.group(1))] = module.tables.pop(bare(m.group(1)))
-        table.name = bare(renamed.group(1))
         return
     renamed = re.match(rf"RENAME CONSTRAINT ({IDENT}) TO ({IDENT})\s*$", m.group(2), re.I)
     if renamed:
@@ -256,13 +272,19 @@ def read_statement(module: Module, stmt: str, file: str) -> None:
             module.problems.append(f"{file}: {bare(m.group(1))}: turns row-level security off")
         elif upper.startswith("DROP CONSTRAINT"):
             # CASCADE could take more than the CHECK with it, so only a plain drop passes.
-            check = re.fullmatch(rf"DROP CONSTRAINT (?:IF EXISTS )?({IDENT})(?: RESTRICT)?", action, re.I)
-            if check and table.constraints.get(constraint_name(check.group(1))) == {"check"}:
-                table.unrestored.add(constraint_name(check.group(1)))
+            plain = re.fullmatch(rf"DROP CONSTRAINT (?:IF EXISTS )?({IDENT})(?: RESTRICT)?", action, re.I)
+            name = constraint_name(plain.group(1)) if plain else ""
+            if not plain:
+                table.drops.append((file, f"drops a constraint with CASCADE or in a form not read here ({action})"))
+            elif table.constraints.get(name) != {"check"} or KEY_NAME_RE.search(name):
+                table.drops.append((file, (
+                    f"drops constraint {name}, not known as a CHECK only (a key, foreign key, "
+                    "unnamed or renamed constraint, or a name Postgres gives keys)"
+                )))
             else:
-                table.drops.append(f"drops a key or foreign key ({action})")
+                table.unrestored.add(name)
         elif re.match(r"DROP (?:COLUMN )?(?:IF EXISTS )?\"?tenant_id\b", action, re.I):
-            table.drops.append("drops tenant_id")
+            table.drops.append((file, "drops tenant_id"))
         elif upper.startswith("ADD "):
             element = re.sub(r"^ADD (?:COLUMN )?(?:IF NOT EXISTS )?", "", action, flags=re.I)
             read_element(table, element)
@@ -287,7 +309,8 @@ def table_problems(name: str, table: Table, is_global: set[str]) -> list[str]:
     for policy, permissive, _, setting in table.policies:
         if permissive and not setting:
             found.append(f"{where}: permissive policy {policy} without the tenant setting")
-    found += [f"{where}: {drop}" for drop in table.drops]
+    # A drop is reported in the migration that made it, not the one that created the table.
+    found += [f"{file}: {name}: {drop}" for file, drop in table.drops]
     for kind, cols in table.keys:
         if "tenant_id" not in cols:
             found.append(f"{where}: {kind} ({', '.join(cols)}) without tenant_id")
@@ -332,7 +355,7 @@ def check(root: Path) -> list[str]:
             module = modules.setdefault(m.group(1), Module())
             for stmt in statements((root / file).read_text()):
                 read_statement(module, stmt, file)
-            module.end_migration()
+            module.end_migration(file)
         elif SOURCE_RE.match(file):
             for n, line in enumerate((root / file).read_text().splitlines(), 1):
                 if RAW_KEY_RE.search(line):
@@ -397,17 +420,22 @@ def self_test() -> int:
         ("tenant policy for SELECT only", {"m.sql": "CREATE TABLE x (tenant_id text);\nALTER TABLE x ENABLE ROW LEVEL SECURITY;\nALTER TABLE x FORCE ROW LEVEL SECURITY;\nCREATE POLICY p ON x FOR SELECT USING (tenant_id = current_setting('canccu.tenant', true));"}, "x: no policy for all commands"),
         ("dropped policy", {"m.sql": "DROP POLICY canccu_tenant ON lists;"}, "lists: drops policy canccu_tenant"),
         ("dropped tenant_id", {"m.sql": "ALTER TABLE lists DROP COLUMN tenant_id;"}, "lists: drops tenant_id"),
-        ("dropped constraint", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_list;"}, "items: drops a key or foreign key"),
+        ("dropped constraint", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_list;"}, "items: drops constraint items_list, not known as a CHECK"),
         ("a CHECK dropped and added back", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;\nALTER TABLE lists ADD CONSTRAINT lists_note_check CHECK (note ~ 'x');\nALTER TABLE items DROP CONSTRAINT IF EXISTS items_id, ADD CONSTRAINT items_id CHECK (id ~ 'x');"}, None),
-        ("a CHECK not added back", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;"}, "lists: drops CHECK lists_note_check without adding it back"),
-        ("a CHECK added back in a later migration", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;", "modules/m/migrations/003_x.sql": "ALTER TABLE lists ADD CONSTRAINT lists_note_check CHECK (note ~ 'x');"}, "lists: drops CHECK lists_note_check without"),
+        ("a CHECK not added back", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;"}, r"002_more.sql: lists: drops CHECK lists_note_check without adding it back"),
+        ("a CHECK added back in a later migration", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;", "modules/m/migrations/003_x.sql": "ALTER TABLE lists ADD CONSTRAINT lists_note_check CHECK (note ~ 'x');"}, r"002_more.sql: lists: drops CHECK lists_note_check without"),
         ("a CHECK added back under another name", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;\nALTER TABLE lists ADD CONSTRAINT lists_note_check2 CHECK (note ~ 'x');"}, "lists: drops CHECK lists_note_check without"),
         ("a CHECK added back on another table", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;\nALTER TABLE items ADD CONSTRAINT lists_note_check CHECK (id ~ 'x');"}, "lists: drops CHECK lists_note_check without"),
         ("a CHECK added back as a key", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_id;\nALTER TABLE items ADD CONSTRAINT items_id UNIQUE (tenant_id, id);"}, "items: drops CHECK items_id without"),
-        ("a foreign key replaced by a CHECK", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_list;\nALTER TABLE items ADD CONSTRAINT items_list CHECK (id ~ 'x');"}, "items: drops a key or foreign key"),
-        ("a key renamed to a CHECK's name", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_id;\nALTER TABLE items RENAME CONSTRAINT items_pk TO items_id;\nALTER TABLE items DROP CONSTRAINT items_id, ADD CONSTRAINT items_id CHECK (id ~ 'x');"}, "items: drops a key or foreign key"),
-        ("a CHECK dropped with CASCADE", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check CASCADE;\nALTER TABLE lists ADD CONSTRAINT lists_note_check CHECK (note ~ 'x');"}, "lists: drops a key or foreign key"),
+        ("a foreign key replaced by a CHECK", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_list;\nALTER TABLE items ADD CONSTRAINT items_list CHECK (id ~ 'x');"}, "items: drops constraint items_list, not known"),
+        ("a key renamed to a CHECK's name", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_id;\nALTER TABLE items RENAME CONSTRAINT items_pk TO items_id;\nALTER TABLE items DROP CONSTRAINT items_id, ADD CONSTRAINT items_id CHECK (id ~ 'x');"}, "items: drops constraint items_id, not known"),
+        ("an index renamed to a dropped CHECK's name", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;\nALTER INDEX lists_pkey RENAME TO lists_note_check;\nALTER TABLE lists DROP CONSTRAINT lists_note_check;\nALTER TABLE lists ADD CONSTRAINT lists_note_check CHECK (note <> '');"}, "lists: drops constraint lists_note_check, not known"),
+        ("an index renamed by ALTER TABLE", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check;\nALTER TABLE IF EXISTS lists_pkey RENAME TO lists_note_check;\nALTER TABLE lists DROP CONSTRAINT lists_note_check, ADD CONSTRAINT lists_note_check CHECK (note <> '');"}, "lists: drops constraint lists_note_check, not known"),
+        ("an unnamed key takes a dropped CHECK's name", {"m.sql": "CREATE TABLE x (tenant_id text, id text, CONSTRAINT x_pkey CHECK (id <> ''));\nALTER TABLE x DROP CONSTRAINT x_pkey, ADD CONSTRAINT x_pkey CHECK (id ~ 'x');"}, "x: drops constraint x_pkey, not known"),
+        ("a long multibyte CHECK name is cut to 63 bytes", {"m.sql": f'CREATE TABLE x (tenant_id text, id text, PRIMARY KEY (tenant_id, id), CONSTRAINT "{"ä" * 40}" CHECK (id <> \'\'));' + RLS.format(t="x") + f'ALTER TABLE x DROP CONSTRAINT "{"ä" * 31}", ADD CONSTRAINT "{"ä" * 40}" CHECK (id ~ \'x\');'}, None),
+        ("a CHECK dropped with CASCADE", {"m.sql": "ALTER TABLE lists DROP CONSTRAINT lists_note_check CASCADE;\nALTER TABLE lists ADD CONSTRAINT lists_note_check CHECK (note ~ 'x');"}, "lists: drops a constraint with CASCADE"),
         ("a renamed table stays checked", {"m.sql": "ALTER TABLE items RENAME TO things;\nALTER TABLE things ADD CONSTRAINT f FOREIGN KEY (l) REFERENCES lists (id);"}, r"things: foreign key \(l\) to lists"),
+        ("ALTER INDEX renames a table too", {"m.sql": "ALTER INDEX items RENAME TO things;\nALTER TABLE things DROP CONSTRAINT items_pk;"}, "things: drops constraint items_pk"),
         ("another module's global table does not exempt", {"m.sql": "CREATE TABLE x (tenant_id text, device_id text REFERENCES devices (id));"}, r"foreign key \(device_id\) to devices is not composite"),
         ("raw stream in source", {"modules/m/src/a.ts": 'await store.xadd("events:pizza", f);\n'}, r"src/a.ts:1: raw Valkey key"),
         ("raw tenant key in source", {"modules/m/src/a.ts": "key = f't:{tenant}:pizza:cache'\n"}, "raw Valkey key"),
