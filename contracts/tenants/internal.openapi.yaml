@@ -339,6 +339,8 @@
               $ref: "../tenants.openapi.yaml#/components/schemas/VenueInfo"
       "400":
         $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../tenants.openapi.yaml#/components/responses/ServiceUnauthenticated"
       "403":
         $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
         description: "`service_forbidden`: the calling module is not the screen module."

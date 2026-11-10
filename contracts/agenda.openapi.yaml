@@ -292,7 +292,8 @@ paths:
       summary: Now and next
       description: |
         The scheduled items running now and those with the earliest start after now, among the items the
-        caller may see. Screens, the bot and the hub all take now and next from here.
+        caller may see. The hub and the bot take now and next from here; the screens read the same answer as a
+        module (`GET /internal/agenda/now`).
       parameters:
         - name: zone
           in: query
@@ -536,8 +537,9 @@ components:
             $ref: "common.openapi.yaml#/components/schemas/Error"
     Forbidden:
       description: |
-        `missing_right`: signed in, but the right is missing; or `info_pages_closed`: the event's info-page
-        mode does not let this request see the agenda.
+        `missing_right`: signed in, but the right is missing; `info_pages_closed`: the event's info-page
+        mode does not let this request see the agenda; or `service_forbidden`: an internal path the calling
+        module may not use.
       content:
         application/json:
           schema:

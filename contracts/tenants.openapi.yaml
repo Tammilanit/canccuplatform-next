@@ -234,6 +234,12 @@ components:
           schema:
             $ref: "#/components/schemas/Binary"
   responses:
+    ServiceUnauthenticated:
+      description: "`service_unauthenticated`: no valid `x-canccu-service` header (an internal path, no session)."
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
     BadRequest:
       description: "`invalid_request`: a field is missing or invalid; `unknown_flag` for an undeclared flag."
       content:
