@@ -13,12 +13,14 @@ import {
   loadConfig,
   runMigrations,
   serviceKeyFromEnv,
+  tenantsStorage,
 } from "@canccu/kit";
 import { buildApp, themingHealth } from "./app.js";
 import { tenantsAudit } from "./audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { diskFiles } from "./files.js";
 import { adminProfile } from "./profile.js";
+import { UPKEEP_MS, upkeepAll } from "./upkeep.js";
 
 const PORT = 8080;
 /** pg_advisory_lock key of the theming migrations; each module has its own. */
@@ -93,9 +95,13 @@ async function main(): Promise<void> {
     profile.handleEvent(event);
   });
 
+  const db = poolDb(pool);
+  const files = diskFiles(FILES_ROOT);
+  const storage = tenantsStorage(tenantsUrl, service);
   const app = buildApp({
-    db: poolDb(pool),
-    files: diskFiles(FILES_ROOT),
+    db,
+    files,
+    storage,
     profile: profile.read,
     rights,
     tenants,
@@ -115,7 +121,15 @@ async function main(): Promise<void> {
   await app.listen({ host: "0.0.0.0", port: PORT });
   log.info({ port: PORT, version: config.version }, "theming started");
 
+  const upkeep = setInterval(() => {
+    upkeepAll({ db, files, storage, filesRoot: FILES_ROOT, log }).catch((err: unknown) => {
+      log.warn({ err }, "theming's storage upkeep failed");
+    });
+  }, UPKEEP_MS);
+  upkeep.unref();
+
   const stop = async (): Promise<void> => {
+    clearInterval(upkeep);
     await app.close();
     // A dependency that is down may never answer; do not let it hold the exit.
     const grace = new Promise((resolve) => setTimeout(resolve, 2000).unref());

@@ -10,17 +10,16 @@ import type { FastifyInstance, LightMyRequestResponse } from "fastify";
 import {
   AdminClient,
   Bus,
+  KitError,
   RightsChecker,
   TenantResolver,
-  KitError,
   createHealth,
+  requireTenant,
   runMigrations,
 } from "@canccu/kit";
-import { requireTenant } from "@canccu/kit";
-import type { Event, SettingValue } from "@canccu/kit";
+import type { Event, SettingValue, StorageQuota } from "@canccu/kit";
 import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
-import type { StorageQuota } from "../src/assets/storage.js";
 import type { AuditEntry } from "../src/audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "../src/db.js";
 import type { Db } from "../src/db.js";
@@ -173,6 +172,7 @@ export async function harness(): Promise<Harness> {
     return Promise.resolve(value);
   };
   const quota: StorageQuota = {
+    module: "screen",
     reserve: (bytes) => {
       const tenant = requireTenant();
       const used = (storage.used[tenant] ?? 0) + bytes;

@@ -11,11 +11,12 @@ import type { FastifyInstance, FastifyServerOptions } from "fastify";
 import { FILES_ROOT, createHealth, postgresCheck } from "@canccu/kit";
 import type {
   Bus,
-  Event,
   CheckFn,
+  Event,
   Health,
   Logger,
   RightsChecker,
+  StorageQuota,
   StreamStore,
   TenantResolver,
 } from "@canccu/kit";
@@ -26,7 +27,6 @@ import { ffprobe } from "./assets/probe.js";
 import type { Ffprobe } from "./assets/probe.js";
 import { assetRoutes } from "./assets/routes.js";
 import { fileRoutes } from "./assets/serve.js";
-import type { StorageQuota } from "./assets/storage.js";
 import { MAX_UPLOAD_BYTES } from "./assets/upload.js";
 import { versionRoutes } from "./assets/versions.js";
 import { assignmentRoutes } from "./assignments.js";

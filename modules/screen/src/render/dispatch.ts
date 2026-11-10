@@ -14,9 +14,8 @@
 import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import type { Socket } from "node:net";
 import { dirname, join } from "node:path";
-import { KitError, requireTenant, withTenant } from "@canccu/kit";
+import { KitError, holdCount, releaseHeld, requireTenant, withTenant } from "@canccu/kit";
 import { filePath } from "../assets/files.js";
-import { holdCount, releaseHeld } from "../assets/storage.js";
 import { clampToDeck } from "../content/asset-rules.js";
 import { RENDERER_FAILED, RendererUnavailable, openRenderer, renderDeck } from "./client.js";
 import type { RenderOutcome } from "./client.js";
@@ -180,7 +179,7 @@ async function runJob(d: DispatchDeps, jobId: string): Promise<{ ran: boolean; s
           // recount (assets/upkeep.ts) sees the bytes in the row or not yet reserved. `reserved`
           // grows only with the row: bytes no row took go back here, under the same lock.
           await d.db.tenant(async (c) => {
-            await holdCount(c);
+            await holdCount(c, d.storage);
             await d.storage.reserve(png.length);
             let held = false;
             try {
@@ -270,7 +269,7 @@ async function settle(
     await d.db.tenant(async (c) => {
       // The count lock before the job row, the order onSlide keeps, so a waiting recount never
       // stands between the two.
-      await holdCount(c);
+      await holdCount(c, d.storage);
       const now = await readJob(c, job.id, true);
       // Deleted: the delete gave back what the row held (render/jobs.ts, dropJobs), and onSlide
       // keeps `reserved` equal to that.
