@@ -83,7 +83,10 @@ async def edit(request):
 
 # FastAPI: session: Session = Depends(right_dependency(rights, "screen.slides.edit"))
 ```
-Raise `KitError("text", status=400, code="slide_invalid")` (or `MissingRight`, `NotSignedIn`, …) and the adapter answers `{"error": {"code", "message"}}`. Unexpected errors become 500 `internal_error`, with the details only in the log.
+Raise `KitError("text", status=400, code="slide_invalid")` (or `MissingRight`, `NotSignedIn`, …) and the adapter answers `{"error": {"code", "message"}}`. Unexpected errors become 500 `internal_error`, with the details only in the log. A module with pages passes `error_response=` (a function of the request and the `KitError`, answering a page or None for the JSON body) to both `install` and `install_tenancy`: the origin check and tenant resolution answer in middleware, before the app's exception handlers.
+
+### Outbox
+`Outbox(bus, db)` sends a write's events only once it has committed, and never loses them: `await outbox.add(conn, type, data, version=1)` inside the write's tenant transaction stores the event (built as `Bus.publish` would), `await outbox.flush()` after the commit sends it, and `outbox.run()` (a task in every container) sends what a failed flush left. `db` is the module's Db (`tenant()` and `platform()` transactions as its app role); the tables `<module>_outbox` and `<module>_outbox_tenants` are in the module's migrations, as the docstring of `outbox.py` shows. Delivery is at least once with the same event id, in order per tenant.
 
 ### Errors from admin
 A person writes settings on admin's API. `SettingsClient.write(values, actor_user_id=…)` sets some of the module's own keys for the current tenant (`PATCH /internal/admin/settings/{module}`), only for settings its contract makes the same values as something it stores; a stale version raises `AdminError` `version_conflict`, and the caller reloads and decides again. An admin that can't be reached gives `AdminUnavailable` (503 `admin_unavailable`).
@@ -138,7 +141,7 @@ caller = request.state.service  # e.g. "screen"; service.require(value, allowed=
 Every module holds the same key, so a token proves "a module of this stack", not which one against a compromised module; it keeps out everything else on the internal network and never sends the key. `TenantResolver(..., service=service)` and `SettingsClient` sign their calls.
 
 ## Secrets
-`SecretBox.from_env()` reads `CANCCU_SECRETS_KEY` (`<version>:<base64 of 32 bytes>`) and `CANCCU_SECRETS_KEYS_RETIRED` (comma-separated, still opened). `seal(value, aad)` gives `cs1.<version>.<nonce>.<ciphertext>` (AES-256-GCM); `open(token, aad)` / `open_text` raise `SecretUndecryptable`; `needs_rotation` and `rotate` move a value to the current key. `aad` binds a value to its row, e.g. `bot:token:<tenant>:<application id>`. kit-ts reads and writes the same format.
+`SecretBox.from_env()` reads `CANCCU_SECRETS_KEY` (`<version>:<base64 of 32 bytes>`) and `CANCCU_SECRETS_KEYS_RETIRED` (comma-separated, still opened). `seal(value, aad)` gives `cs1.<version>.<nonce>.<ciphertext>` (AES-256-GCM); `open(token, aad)` / `open_text` raise `SecretUndecryptable`; `needs_rotation` and `rotate` move a value to the current key. `from_env` refuses deploy/compose.yml's placeholder key, as current or retired key, unless `CANCCU_VERSION` is `dev`. `aad` binds a value to its row, e.g. `bot:token:<tenant>:<application id>`. kit-ts reads and writes the same format.
 
 ## Event pages
 `event_page_csp(new_nonce(), hostname, page="surface"|"admin"|"sign_in", sandbox=None)` is the CSP of [contracts/theming.md](../../contracts/theming.md#the-csp-of-event-pages); give the same nonce to the page's `<style>`. `install()` adds the origin check: `Origin: null` on `/api/…` and a state-changing request from another origin (or cross-site with no Origin) get 403 `origin_refused`.

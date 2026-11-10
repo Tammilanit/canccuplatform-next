@@ -26,6 +26,9 @@ _KEY_RE = re.compile(r"([1-9][0-9]{0,8}):([A-Za-z0-9_+/=-]+)")
 _VERSION_RE = re.compile(r"[1-9][0-9]{0,8}")
 _TOKEN_PART_RE = re.compile(r"[A-Za-z0-9_-]+")
 """A sealed value has one spelling, as in kit-ts: canonical versions, base64url without padding."""
+PLACEHOLDER_KEY = b"canccu-local-only-secrets-key-32"
+"""The key bytes of deploy/compose.yml's stand-in for CANCCU_SECRETS_KEY, so a dev stack starts
+without one. Anything sealed with it is readable by everyone who has the repo."""
 
 
 class SecretUndecryptable(Exception):
@@ -65,7 +68,11 @@ class SecretBox:
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> SecretBox:
-        """`CANCCU_SECRETS_KEY` (current) and `CANCCU_SECRETS_KEYS_RETIRED` (comma-separated)."""
+        """`CANCCU_SECRETS_KEY` (current) and `CANCCU_SECRETS_KEYS_RETIRED` (comma-separated).
+
+        The compose placeholder is refused, as current or retired key, unless `CANCCU_VERSION` is
+        `dev`: a retired placeholder would still open what it sealed.
+        """
         source = os.environ if env is None else env
         raw = source.get("CANCCU_SECRETS_KEY", "")
         if not raw:
@@ -78,6 +85,8 @@ class SecretBox:
             if version in keys:
                 raise ConfigError(f"secrets key version {version} is given twice")
             keys[version] = old
+        if PLACEHOLDER_KEY in keys.values() and source.get("CANCCU_VERSION") != "dev":
+            raise ConfigError("a secrets key is the local placeholder; set a real key")
         return cls(keys, current)
 
     def seal(self, plaintext: str | bytes, aad: str) -> str:
