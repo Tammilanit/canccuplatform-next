@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+# The module stack smoke runner (#324): the `compose (deploy)` CI job runs every module's
+# own checks against the running stack through this script, so a module adds or changes its
+# smoke checks under modules/<name>/ci/ and never edits `.github/`. See docs/ci.md#compose.
+# Usage: stack-smoke env [ROOT]   print the KEY=value lines of every ROOT/modules/*/ci/stack-env.sh
+#        stack-smoke run [ROOT]   run every ROOT/modules/*/ci/stack-smoke.sh against the stack
+#        stack-smoke --self-test
+# `run` passes CANCCU_SMOKE_BASE_URL (default http://127.0.0.1) and CANCCU_SMOKE_COMPOSE_ARGS
+# (default `-f deploy/compose.yml`) to each script, from ROOT. It runs them all, in module-name
+# order, and fails if any failed, so one CI run shows every broken module.
+set -uo pipefail
+
+if [ "${1:-}" = "--self-test" ]; then
+  self=$(cd "$(dirname "$0")" && pwd)/stack-smoke
+  t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
+  fail=0
+  unset CANCCU_SMOKE_BASE_URL CANCCU_SMOKE_COMPOSE_ARGS
+  check() { # name, expected exit, expected output (exact), args...
+    local name=$1 want_rc=$2 want_out=$3; shift 3
+    out=$("$self" "$@" 2>&1); rc=$?
+    if [ "$rc" = "$want_rc" ] && [ "$out" = "$want_out" ]; then echo "ok   $name"
+    else echo "FAIL $name (exit $rc, want $want_rc)"; printf '  got:  %s\n' "$out"; printf '  want: %s\n' "$want_out"; fail=1; fi
+  }
+  mk() { mkdir -p "$(dirname "$1")"; cat > "$1"; }
+
+  mkdir -p "$t/ok/modules/none"
+  # shellcheck disable=SC2016  # expands in the written scripts, not here
+  {
+    mk "$t/ok/modules/b/ci/stack-smoke.sh" <<< 'echo "b in $(basename "$PWD") at $CANCCU_SMOKE_BASE_URL with $CANCCU_SMOKE_COMPOSE_ARGS"'
+    mk "$t/ok/modules/a/ci/stack-smoke.sh" <<< 'echo "a checked"'
+    mk "$t/ok/modules/b/ci/stack-env.sh" <<< 'echo "CANCCU_B_KEY=$(echo b)"'
+    mk "$t/ok/modules/a/ci/stack-env.sh" <<< 'printf "CANCCU_A_ONE=1\nCANCCU_A_TWO=x=y\n"'
+    mk "$t/ok/modules/c/ci/stack-env.sh" <<< 'true'
+  }
+  cp -r "$t/ok" "$t/bad"
+  mk "$t/bad/modules/a/ci/stack-smoke.sh" <<< 'echo "a broke" >&2; exit 3'
+  mkdir -p "$t/badenv/modules/a/ci" "$t/badline/modules/a/ci" "$t/badname/modules/a/ci" "$t/empty/modules/x"
+  echo 'echo CANCCU_A=1; exit 1' > "$t/badenv/modules/a/ci/stack-env.sh"
+  echo 'echo "CANCCU_A=1 2"; echo "--not-a-line"' > "$t/badline/modules/a/ci/stack-env.sh"
+  echo 'echo "PATH=/tmp"' > "$t/badname/modules/a/ci/stack-env.sh"
+
+  check "run runs every module's smoke, in name order, from ROOT, with the defaults" 0 "\
+== a: modules/a/ci/stack-smoke.sh
+a checked
+ok   a
+== b: modules/b/ci/stack-smoke.sh
+b in ok at http://127.0.0.1 with -f deploy/compose.yml
+ok   b
+all 2 module stack smoke checks passed" run "$t/ok"
+  CANCCU_SMOKE_BASE_URL=http://10.0.0.1/ CANCCU_SMOKE_COMPOSE_ARGS='-f x.yml -f y.yml' \
+    check "run passes the caller's base URL and compose arguments on" 0 "\
+== a: modules/a/ci/stack-smoke.sh
+a checked
+ok   a
+== b: modules/b/ci/stack-smoke.sh
+b in ok at http://10.0.0.1 with -f x.yml -f y.yml
+ok   b
+all 2 module stack smoke checks passed" run "$t/ok"
+  check "run goes on after a failure, then fails naming it" 1 "\
+== a: modules/a/ci/stack-smoke.sh
+a broke
+FAIL a (exit 3)
+== b: modules/b/ci/stack-smoke.sh
+b in bad at http://127.0.0.1 with -f deploy/compose.yml
+ok   b
+module stack smoke failed: a" run "$t/bad"
+  # The glob would sort modules/x-y/ before modules/x/ ("-" < "/"); the order is by name.
+  mkdir -p "$t/order/modules/x/ci" "$t/order/modules/x-y/ci"
+  echo 'echo x' > "$t/order/modules/x/ci/stack-smoke.sh"; echo 'echo x-y' > "$t/order/modules/x-y/ci/stack-smoke.sh"
+  check "run sorts by module name, not by path" 0 "\
+== x: modules/x/ci/stack-smoke.sh
+x
+ok   x
+== x-y: modules/x-y/ci/stack-smoke.sh
+x-y
+ok   x-y
+all 2 module stack smoke checks passed" run "$t/order"
+  check "run without any smoke script says so and passes" 0 "no module has ci/stack-smoke.sh" run "$t/empty"
+  check "env prints every module's lines, in name order, and none for an empty one" 0 "\
+CANCCU_A_ONE=1
+CANCCU_A_TWO=x=y
+CANCCU_B_KEY=b" env "$t/ok"
+  check "env fails when a module's script fails" 1 "stack-env: modules/a/ci/stack-env.sh failed (exit 1)" env "$t/badenv"
+  # The lines go to $GITHUB_ENV: one malformed line could set any variable for later steps.
+  check "env refuses a line that is not CANCCU_NAME=value without spaces" 1 "\
+stack-env: modules/a/ci/stack-env.sh printed a line that is not CANCCU_NAME=value: CANCCU_A=1 2" env "$t/badline"
+  check "env refuses a variable without the canccu prefix" 1 "\
+stack-env: modules/a/ci/stack-env.sh printed a line that is not CANCCU_NAME=value: PATH=/tmp" env "$t/badname"
+  check "an unknown command is a usage error" 2 "usage: stack-smoke env|run [ROOT] | --self-test" nope
+  exit "$fail"
+fi
+
+usage() { echo "usage: stack-smoke env|run [ROOT] | --self-test" >&2; exit 2; }
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then usage; fi
+cmd=$1
+cd "${2:-$(dirname "$0")/..}" || exit 2
+
+# By module name in the C locale, so the order is the same on every machine.
+scripts() {
+  local d
+  for d in modules/*/; do d=${d%/}; [ -f "$d/ci/$1" ] && echo "${d#modules/}"; done \
+    | LC_ALL=C sort | sed "s|.*|modules/&/ci/$1|"
+}
+
+case "$cmd" in
+  env)
+    while read -r f; do
+      out=$(bash "$f") || { echo "stack-env: $f failed (exit $?)" >&2; exit 1; }
+      [ -n "$out" ] || continue
+      while IFS= read -r line; do
+        [[ $line =~ ^CANCCU_[A-Z0-9_]+=[^[:space:]]*$ ]] \
+          || { echo "stack-env: $f printed a line that is not CANCCU_NAME=value: $line" >&2; exit 1; }
+        echo "$line"
+      done <<< "$out"
+    done < <(scripts stack-env.sh)
+    ;;
+  run)
+    base=${CANCCU_SMOKE_BASE_URL:-http://127.0.0.1}
+    export CANCCU_SMOKE_BASE_URL=${base%/}
+    export CANCCU_SMOKE_COMPOSE_ARGS=${CANCCU_SMOKE_COMPOSE_ARGS:--f deploy/compose.yml}
+    n=0; failed=()
+    while read -r f; do
+      m=${f#modules/}; m=${m%%/*}; n=$((n + 1))
+      echo "== $m: $f"
+      if bash "$f" < /dev/null 2>&1; then echo "ok   $m"; else echo "FAIL $m (exit $?)"; failed+=("$m"); fi
+    done < <(scripts stack-smoke.sh)
+    if [ "$n" = 0 ]; then echo "no module has ci/stack-smoke.sh"
+    elif [ ${#failed[@]} = 0 ]; then echo "all $n module stack smoke checks passed"
+    else echo "module stack smoke failed: ${failed[*]}"; exit 1; fi
+    ;;
+  *) usage ;;
+esac

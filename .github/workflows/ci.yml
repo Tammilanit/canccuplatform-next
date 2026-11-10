@@ -147,8 +147,8 @@ jobs:
       - name: Fresh secrets for this run (never a fixed key in the repo)
         run: |
           echo "CANCCU_SECRETS_KEY=1:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
-          # A random 32-byte scalar is a valid P-256 key but for a chance of about 2^-32.
-          echo "CANCCU_NOTIFY_VAPID_PRIVATE_KEY=$(openssl rand -base64 32 | tr '+/' '-_' | tr -d '=')" >> "$GITHUB_ENV"
+          # A module's own (notify's VAPID key, ...) come from its ci/stack-env.sh (docs/ci.md#compose).
+          scripts/stack-smoke env >> "$GITHUB_ENV"
       - name: Start the stack (clean runner, only Docker)
         run: docker compose -f deploy/compose.yml up -d --build --wait
       - name: Only Caddy publishes a port; only the five named volumes exist
@@ -158,56 +158,16 @@ jobs:
           jq -e '.volumes | keys == ["deploy-status", "files", "postgres-data", "render-socket", "valkey-data"]' /tmp/config.json
           test "$(docker volume ls -q --filter label=com.docker.compose.project=canccuplatform | sort | tr '\n' ' ')" \
             = "canccuplatform_deploy-status canccuplatform_files canccuplatform_postgres-data canccuplatform_render-socket canccuplatform_valkey-data "
-      - name: The render job is isolated, and screen renders through its socket
-        run: |
-          jq -e '.services["screen-render"] | .network_mode == "none" and .read_only == true
-            and .cap_drop == ["ALL"] and ([.volumes[].source] == ["render-socket"])
-            and (.environment // {} | length == 0)' /tmp/config.json
-          jq -e '[.services | to_entries[] | select(.value.volumes // [] | map(.source) | index("render-socket")) | .key]
-            == ["screen", "screen-render"]' /tmp/config.json
-          jq -e '[.services.screen.volumes[] | select(.source == "render-socket")][0].read_only == true' /tmp/config.json
-          if docker compose -f deploy/compose.yml exec -T screen-render \
-              python -c "import socket; socket.create_connection(('1.1.1.1', 53), 2)"; then
-            echo "screen-render reached the network"; exit 1
-          fi
-          docker build -q --target test -f modules/screen-render/Dockerfile -t canccu-screen-render-test .
-          docker run --rm --network none -v canccuplatform_render-socket:/run/canccu-render \
-            canccu-screen-render-test python tests/smoke.py
-          docker compose -f deploy/compose.yml exec -T screen node --input-type=module \
-            < modules/screen/test/render-smoke.mjs
       - name: Health through Caddy is 200 ok
         run: |
           code=$(curl -s -o /tmp/health.json -w '%{http_code}' http://localhost/api/hello/health)
           cat /tmp/health.json; echo
           test "$code" = 200
           jq -e '.status == "ok" and .module == "hello" and .checks.valkey.status == "ok" and .checks.postgres.status == "ok"' /tmp/health.json
-      - name: Admin health through Caddy is 200 ok
-        run: |
-          curl -fsS http://localhost/api/admin/health | tee /tmp/admin-health.json; echo
-          jq -e '.status == "ok" and .module == "admin" and .checks.postgres.status == "ok"' /tmp/admin-health.json
-          curl -fsS http://localhost/api/tenants/health | tee /tmp/tenants-health.json; echo
-          jq -e '.status == "ok" and .module == "tenants" and .checks.postgres.status == "ok"' /tmp/tenants-health.json
-          curl -fsS http://localhost/api/agenda/health | tee /tmp/agenda-health.json; echo
-          jq -e '.status == "ok" and .module == "agenda" and .checks.postgres.status == "ok"' /tmp/agenda-health.json
-          curl -fsS http://127.0.0.1/api/agenda/kinds | tee /tmp/agenda-kinds.json; echo
-          jq -e '.kinds_version == 0 and (.kinds | map(.key) | index("other") != null)' /tmp/agenda-kinds.json
-          curl -fsS http://localhost/api/notify/health | tee /tmp/notify-health.json; echo
-          jq -e '.status == "ok" and .module == "notify" and .checks.postgres.status == "ok"' /tmp/notify-health.json
-          curl -fsS http://127.0.0.1/api/notify/topics | tee /tmp/notify-topics.json; echo
-          jq -e '.topics == []' /tmp/notify-topics.json
-          curl -fsS http://127.0.0.1/api/notify/push-key | tee /tmp/notify-key.json; echo
-          jq -e '.vapid_public_key | test("^B[A-Za-z0-9_-]{86}$")' /tmp/notify-key.json
-      - name: The seeded demo tenant answers in IP mode through Caddy
-        run: |
-          curl -fsS http://127.0.0.1/api/tenants/current | tee /tmp/tenants-current.json; echo
-          jq -e '.id == "demo" and .status == "live"' /tmp/tenants-current.json
-      - name: Theming answers the platform defaults through Caddy, with its token CSS
-        run: |
-          curl -fsS http://localhost/api/theming/health | jq -e '.status == "ok" and .checks.files.status == "ok"'
-          curl -fsS http://127.0.0.1/api/theming/current | tee /tmp/theme.json; echo
-          jq -e '.revision == 0 and .theming_version == 1' /tmp/theme.json
-          curl -fsS -D /tmp/css.headers "http://127.0.0.1$(jq -r .tokens_css_url /tmp/theme.json)" | grep -q -- '--canccu-color-primary'
-          grep -qi '^x-content-type-options: nosniff' /tmp/css.headers
+      # Each module's own checks live in modules/<name>/ci/stack-smoke.sh, so a module PR never
+      # edits this file (#324). Before Valkey stops: they expect the whole stack up.
+      - name: Module stack smoke checks (modules/*/ci/stack-smoke.sh)
+        run: scripts/stack-smoke run
       - name: Health is 503 down when Valkey is stopped
         run: |
           docker compose -f deploy/compose.yml stop valkey
