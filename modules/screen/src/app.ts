@@ -1,6 +1,7 @@
 /**
  * The screen module's Fastify app: health, tenancy, and the device, pairing, heartbeat, moving,
- * registry, zone, assignment, playlist, schedule, push, asset, ticker, photo and render-job routes.
+ * registry, zone, assignment, playlist, schedule, push, asset, ticker, photo and render-job routes,
+ * and the composed state.
  */
 import { constants } from "node:fs";
 import { access } from "node:fs/promises";
@@ -28,6 +29,9 @@ import type { StorageQuota } from "./assets/storage.js";
 import { MAX_UPLOAD_BYTES } from "./assets/upload.js";
 import { versionRoutes } from "./assets/versions.js";
 import { assignmentRoutes } from "./assignments.js";
+import { composeRoutes } from "./compose/routes.js";
+import { noSources } from "./compose/sources.js";
+import type { Sources } from "./compose/sources.js";
 import { deviceRoutes } from "./devices.js";
 import type { Settings } from "./health.js";
 import { heartbeatRoutes } from "./heartbeat.js";
@@ -66,6 +70,10 @@ export interface ScreenDeps {
   /** The fair render queue; main gives the Valkey one. */
   renderQueue: RenderQueue;
   now?: () => number;
+  /** The agenda, tenants and theming reads behind the composed state; none in tests. */
+  sources?: Sources;
+  /** The platform version, the bundle `/screen/` loads unless pinned. */
+  bundleVersion?: string;
 }
 
 /** How long a deck may wait for the renderer before health says `degraded` (contracts/screen.md, Health). */
@@ -173,6 +181,11 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   scheduleRoutes(app, deps);
   pushRoutes(app, deps);
   tickerRoutes(app, deps);
+  composeRoutes(app, {
+    ...deps,
+    sources: deps.sources ?? noSources,
+    bundleVersion: deps.bundleVersion ?? "dev",
+  });
   void app.register(multipart, {
     limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 4, fieldSize: 1024, parts: 5 },
   });

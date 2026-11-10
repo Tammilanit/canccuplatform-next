@@ -27,6 +27,7 @@ import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { sweepOffline } from "./health.js";
 import { ValkeyKv } from "./kv.js";
 import { applyAgendaEvent } from "./content/agenda.js";
+import { httpSources } from "./compose/sources.js";
 import { renderLoop } from "./render/dispatch.js";
 import { ValkeyRenderQueue } from "./render/queue.js";
 import { TICK_MS, tickRunner } from "./tick/run.js";
@@ -162,6 +163,16 @@ async function main(): Promise<void> {
       ? { superadminHost: process.env.CANCCU_SUPERADMIN_HOSTNAME }
       : {}),
     settings,
+    // The service names of deploy/compose.yml; a stack that moves them sets the variables.
+    sources: httpSources(
+      {
+        agenda: process.env.CANCCU_AGENDA_URL ?? "http://agenda:8080",
+        tenants: tenantsUrl,
+        theming: process.env.CANCCU_THEMING_URL ?? "http://theming:8080",
+      },
+      log,
+    ),
+    bundleVersion: config.version,
     health: screenHealth({
       module: config.module,
       version: config.version,
