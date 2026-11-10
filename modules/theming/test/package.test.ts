@@ -190,13 +190,13 @@ describe.skipIf(!DATABASE_URL)("PUT /api/theming/draft/package", () => {
     expect(
       (await get(d.h, `/theming/draft/${String(name)}`, { session: "admin" })).statusCode,
     ).toBe(404);
-    // CSS and templates wait for their checks: held as problems, never stored.
-    expect(body.problems.filter((p) => p.code === "file_type").map((p) => p.path)).toEqual([
-      "css/theme.css",
-      "templates/agenda-list.mustache",
-      "templates/clock-big.mustache",
-    ]);
-    expect(await d.fileAt("css/theme.css")).toBeUndefined();
+    expect(body.problems.filter((p) => p.severity === "error")).toEqual([]);
+    // A template's text is stored for the package and its export; surfaces get only its tree.
+    const template = await d.fileAt("templates/clock-big.mustache");
+    expect(template).toMatch(/^[0-9a-f]{64}\.mustache$/);
+    expect(
+      (await get(d.h, `/theming/draft/${String(template)}`, { session: "admin" })).statusCode,
+    ).toBe(404);
   });
 
   describe("embeds", () => {

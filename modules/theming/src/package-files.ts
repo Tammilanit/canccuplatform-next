@@ -5,11 +5,17 @@
  */
 import type { SqlClient } from "@canccu/kit";
 import type { Problem } from "./checks.js";
+import { CSS_LIMIT } from "./css.js";
 import { notFound } from "./http.js";
 import type { PackagePaths } from "./manifest.js";
 import type { Dropped, Unused } from "./stored.js";
 
-export type PathEntry = { file: string; bytes: number } | { problem: Problem };
+/**
+ * A stored file, with what its checks found for the draft's checks (CSS and templates: the package
+ * paths it names and its warnings), or the problem of an upload that failed.
+ */
+export type PathEntry =
+  { file: string; bytes: number; refs?: string[]; warnings?: Problem[] } | { problem: Problem };
 
 /**
  * The draft's file at `path` stops referring to `old`; answers it when the draft keeps no other
@@ -38,15 +44,18 @@ export async function setDraftPath(
   const old = (rows[0] as { file: string | null } | undefined)?.file ?? null;
   const file = "file" in entry ? entry.file : null;
   await c.query(
-    `INSERT INTO theming_package_files (owner, path, file, bytes, problem)
-     VALUES ('draft', $1, $2, $3, $4)
+    `INSERT INTO theming_package_files (owner, path, file, bytes, problem, refs, warnings)
+     VALUES ('draft', $1, $2, $3, $4, $5, $6)
      ON CONFLICT (tenant_id, owner, path)
-       DO UPDATE SET file = EXCLUDED.file, bytes = EXCLUDED.bytes, problem = EXCLUDED.problem`,
+       DO UPDATE SET file = EXCLUDED.file, bytes = EXCLUDED.bytes, problem = EXCLUDED.problem,
+                     refs = EXCLUDED.refs, warnings = EXCLUDED.warnings`,
     [
       path,
       file,
       "file" in entry ? entry.bytes : null,
       "problem" in entry ? JSON.stringify(entry.problem) : null,
+      "file" in entry ? (entry.refs ?? []) : [],
+      JSON.stringify("file" in entry ? (entry.warnings ?? []) : []),
     ],
   );
   if (file !== null) {
@@ -69,13 +78,50 @@ export async function removeDraftPath(c: SqlClient, path: string): Promise<strin
   return letGo(c, row.file, null);
 }
 
-/** The problems of the uploads the draft holds instead of files. */
-export async function pathProblems(c: SqlClient): Promise<Problem[]> {
+/**
+ * The problems of the draft's package files: those of the uploads it holds instead of files, the
+ * warnings of the files it holds, each package path a CSS file or template names that the package
+ * does not hold (contracts/theming.md: a url() names a package file, an img src a package image),
+ * and `css/` over its 256 KB together.
+ */
+export async function pathProblems(c: SqlClient, paths: PackagePaths): Promise<Problem[]> {
   const { rows } = await c.query(
-    `SELECT problem FROM theming_package_files
-      WHERE owner = 'draft' AND problem IS NOT NULL ORDER BY path`,
+    `SELECT path, problem, refs, warnings FROM theming_package_files
+      WHERE owner = 'draft' ORDER BY path`,
   );
-  return (rows as { problem: Problem }[]).map((r) => r.problem);
+  const out: Problem[] = [];
+  for (const row of rows as {
+    path: string;
+    problem: Problem | null;
+    refs: string[];
+    warnings: Problem[];
+  }[]) {
+    if (row.problem !== null) out.push(row.problem);
+    out.push(...row.warnings);
+    for (const ref of row.refs) {
+      if (paths.present.has(ref) && !paths.failed.has(ref)) continue;
+      out.push({
+        severity: "error",
+        code: row.path.startsWith("css/") ? "css_forbidden" : "template_forbidden",
+        path: row.path,
+        message: `${row.path} names ${ref}, which the package does not hold.`,
+      });
+    }
+  }
+  const { rows: sum } = await c.query(
+    `SELECT coalesce(sum(bytes), 0) AS n FROM theming_package_files
+      WHERE owner = 'draft' AND path LIKE 'css/%'`,
+  );
+  const css = Number((sum[0] as { n: string }).n);
+  if (css > CSS_LIMIT) {
+    out.push({
+      severity: "error",
+      code: "file_too_large",
+      path: "css/",
+      message: "The CSS files are at most 256 KB together.",
+    });
+  }
+  return out;
 }
 
 /**

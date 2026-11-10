@@ -94,7 +94,12 @@ async function storePackage(
       path,
       "problem" in entry
         ? entry
-        : { file: await place(entry.bytes, entry.ext), bytes: entry.bytes.length },
+        : {
+            file: await place(entry.bytes, entry.ext),
+            bytes: entry.bytes.length,
+            refs: entry.refs ?? [],
+            warnings: entry.warnings ?? [],
+          },
     );
   }
   await c.query(`DELETE FROM theming_embed_files WHERE owner = 'draft'`);

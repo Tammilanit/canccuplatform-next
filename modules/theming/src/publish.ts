@@ -6,6 +6,7 @@ import { isDeepStrictEqual } from "node:util";
 import type { SqlClient } from "@canccu/kit";
 import type { Manifest } from "./checks.js";
 import { brandImages } from "./brand-images.js";
+import { compileStyle } from "./compile.js";
 import { CARRIED_REFS, copyOwned } from "./drafts.js";
 import { embedHoldings } from "./embeds.js";
 import type { FileStore } from "./files.js";
@@ -83,6 +84,7 @@ const EXTS: Record<string, Part> = {
   jpg: "images",
   webp: "images",
   svg: "images",
+  mustache: "templates",
 };
 
 function changedParts(before: Holdings, after: Holdings): Part[] {
@@ -197,13 +199,15 @@ export async function writeRevision(
     input.manifest,
     tokens.colors.background ?? "#000000",
   );
+  const style = await compileStyle(c, files, input.source, input.manifest);
   const brand = (input.manifest.brand ?? {}) as { embed_color?: string };
   const embedColor = colorInt(brand.embed_color ?? tokens.colors.primary ?? "#000000");
   await c.query(
     `INSERT INTO theming_revisions (revision, manifest, tokens, tokens_css, admin_tokens_css,
                                     embed_color, restored_from, changed, actor_user_id, logo,
-                                    logo_png, icon_192, icon_512, icon_maskable_512)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+                                    logo_png, icon_192, icon_512, icon_maskable_512, css,
+                                    templates)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
     [
       revision,
       JSON.stringify(input.manifest),
@@ -219,10 +223,18 @@ export async function writeRevision(
       images.icon_192,
       images.icon_512,
       images.icon_maskable_512,
+      style.css,
+      JSON.stringify(style.templates),
     ],
   );
   const owner = `r:${revision}`;
-  const generated = [images.logo_png, images.icon_192, images.icon_512, images.icon_maskable_512];
+  const generated = [
+    images.logo_png,
+    images.icon_192,
+    images.icon_512,
+    images.icon_maskable_512,
+    style.css,
+  ];
   for (const file of [tokensName, adminName, ...generated.filter((f) => f !== null)]) {
     await c.query(
       `INSERT INTO theming_file_refs (owner, file) VALUES ($1, $2) ON CONFLICT DO NOTHING`,

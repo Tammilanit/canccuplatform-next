@@ -9,7 +9,8 @@ import { isObject } from "./checks.js";
 import { EMBED_EXTS } from "./embeds.js";
 import type { EmbedExt, StoredExt } from "./files.js";
 import { parseManifest } from "./manifest.js";
-import { checkFile } from "./uploads.js";
+import { readText } from "./text.js";
+import { checkFile, checkUpload } from "./uploads.js";
 
 /** PackagePath of contracts/theming.openapi.yaml; the zip reader has refused `.` and `..` parts. */
 export const PACKAGE_PATH = /^(css|fonts|images|templates|embeds)\/[A-Za-z0-9._/-]{1,129}$/;
@@ -19,7 +20,8 @@ export const MAX_PATH = 136;
 const EMBED_NAME = /^[a-z][a-z0-9_-]{0,31}$/;
 const EMBED_LIMIT = 5 * 1024 * 1024;
 
-export type CheckedPath = { bytes: Buffer; ext: StoredExt } | { problem: Problem };
+export type CheckedPath =
+  { bytes: Buffer; ext: StoredExt; refs?: string[]; warnings?: Problem[] } | { problem: Problem };
 
 export interface CheckedEmbed {
   entry: string;
@@ -45,17 +47,7 @@ const fail = (
   problem: { severity: warning ? "warning" : "error", code, path, message },
 });
 
-const utf8 = new TextDecoder("utf-8", { fatal: true });
-
-/** Text a person reads: UTF-8 with no control characters but tabs, line and page breaks. */
-function isText(bytes: Buffer): boolean {
-  try {
-    // eslint-disable-next-line no-control-regex
-    return !/[\u0000-\u0008\u000b\u000e-\u001f\u007f]/.test(utf8.decode(bytes));
-  } catch {
-    return false;
-  }
-}
+const isText = (bytes: Buffer): boolean => readText(bytes) !== undefined;
 
 /** A font's licence: stored for the package and its export, never served. */
 function checkLicence(path: string, bytes: Buffer): CheckedPath {
@@ -64,21 +56,11 @@ function checkLicence(path: string, bytes: Buffer): CheckedPath {
 }
 
 async function checkPath(path: string, bytes: Buffer): Promise<CheckedPath> {
-  if (path.startsWith("css/")) {
-    // Nothing is stored before its checks exist: the CSS and template checks come in their own
-    // slice (docs/plans/issue-185.md, slice 6), until then the path holds why.
-    return fail("file_type", path, "CSS is not accepted yet: this version cannot check it.");
-  }
-  if (path.startsWith("templates/")) {
-    return fail(
-      "file_type",
-      path,
-      "Templates are not accepted yet: this version cannot check them.",
-    );
-  }
   if (/^fonts\/.*\.(txt|md)$/i.test(path)) return checkLicence(path, bytes);
-  const checked = await checkFile(path, bytes);
-  return checked.ok ? { bytes: checked.bytes, ext: checked.ext } : { problem: checked.problem };
+  const checked = await checkUpload(path, bytes);
+  if (!checked.ok) return { problem: checked.problem };
+  const { bytes: stored, ext, refs, warnings } = checked;
+  return { bytes: stored, ext, refs, warnings };
 }
 
 /** One file of an embed, by its extension; images and fonts through the checks of their folders. */

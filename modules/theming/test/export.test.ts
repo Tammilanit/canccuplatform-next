@@ -14,16 +14,9 @@ import { packageZip } from "./zips.js";
 describe.skipIf(!DATABASE_URL)("GET /api/theming/revisions/{revision}/package", () => {
   const d = draftFiles();
 
-  /** The level-up demo without the parts whose checks come later (CSS and templates). */
+  /** The level-up demo, whole: CSS, templates, fonts, images, an embed and every layout. */
   async function publishDemo(host = "alpha.test"): Promise<Record<string, Buffer>> {
-    const files = Object.fromEntries(
-      Object.entries(await demoFiles("level-up")).filter(([p]) => !/^(css|templates)\//.test(p)),
-    );
-    const m = parse(String(files["theme.yaml"])) as Record<string, unknown>;
-    delete m.css;
-    delete m.templates;
-    m.layouts = [];
-    files["theme.yaml"] = Buffer.from(JSON.stringify(m));
+    const files = await demoFiles("level-up");
     const put = await putPackage(d.h, packageZip(files), { session: "embedder", host });
     expect(put.json<DraftBody>().problems.filter((p) => p.severity === "error")).toEqual([]);
     const published = await send(

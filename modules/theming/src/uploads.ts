@@ -4,10 +4,12 @@
  * agree. A file that passes is what gets stored; one that fails is a problem on its path.
  */
 import type { Problem } from "./checks.js";
-import type { Ext } from "./files.js";
+import { checkCss } from "./css.js";
+import type { Ext, StoredExt } from "./files.js";
 import { reencode } from "./raster.js";
 import type { RasterKind } from "./raster.js";
 import { checkSvg } from "./svg.js";
+import { parseTemplate } from "./template.js";
 
 const KB = 1024;
 const MB = 1024 * KB;
@@ -47,12 +49,12 @@ const FOLDERS: Record<string, Record<string, Kind>> = {
   fonts: { woff2: "woff2" },
 };
 
-/** The folders this path takes files for. */
-export const UPLOAD_FOLDERS = Object.keys(FOLDERS);
+/** The folders one upload takes files for: these, and the text of css/ and templates/. */
+export const UPLOAD_FOLDERS = [...Object.keys(FOLDERS), "css", "templates"];
 
 export type Checked = { ok: true; bytes: Buffer; ext: Ext } | { ok: false; problem: Problem };
 
-const refuse = (code: string, path: string, message: string): Checked => ({
+const refuse = (code: string, path: string, message: string): { ok: false; problem: Problem } => ({
   ok: false,
   problem: { severity: "error", code, path, message },
 });
@@ -159,4 +161,29 @@ export async function checkFile(
     return refuse("file_too_large", path, `Re-encoded, this image passes ${limit.label}.`);
   }
   return { ok: true, bytes: raster.bytes, ext };
+}
+
+export type CheckedUpload =
+  | { ok: true; bytes: Buffer; ext: StoredExt; refs: string[]; warnings: Problem[] }
+  | { ok: false; problem: Problem };
+
+/**
+ * One file of the package's own folders (an embed's and a licence's checks are the package's):
+ * CSS and templates by their parsers, which also answer the package paths they name and their
+ * warnings; images and fonts by `checkFile`.
+ */
+export async function checkUpload(path: string, bytes: Buffer): Promise<CheckedUpload> {
+  const css = path.startsWith("css/");
+  if (css || path.startsWith("templates/")) {
+    // theme.schema.json names them so; the content is the parser's to judge.
+    if (!path.endsWith(css ? ".css" : ".mustache")) {
+      return refuse("file_type", path, `This folder takes ${css ? ".css" : ".mustache"} files.`);
+    }
+    const checked = css ? checkCss(path, bytes) : parseTemplate(path, bytes);
+    if (!checked.ok) return checked;
+    const warnings = "warnings" in checked ? checked.warnings : [];
+    return { ok: true, bytes, ext: css ? "css" : "mustache", refs: checked.refs, warnings };
+  }
+  const checked = await checkFile(path, bytes);
+  return checked.ok ? { ...checked, refs: [], warnings: [] } : checked;
 }
