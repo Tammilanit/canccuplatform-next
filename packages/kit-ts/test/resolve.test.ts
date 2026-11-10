@@ -331,6 +331,8 @@ describe("TenantResolver", () => {
 
       it("is unavailable when the module fails or names another tenant", async () => {
         for (const answer of [
+          // G1 answers only 200 or 404: a 400 is a fault, as in kit-py, never an unknown id.
+          () => jsonResponse(400, {}),
           () => jsonResponse(500, {}),
           () => jsonResponse(200, tenantContext({ tenant_id: "other-event" })),
         ]) {

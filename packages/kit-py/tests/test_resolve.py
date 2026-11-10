@@ -338,7 +338,12 @@ async def test_by_id_is_none_for_an_unknown_id_and_never_asks_for_a_malformed_on
 
 @pytest.mark.parametrize(
     "answer",
-    [httpx.Response(500), httpx.Response(200, json=tenant_context(tenant_id="other-event"))],
+    [
+        # G1 answers only 200 or 404: a 400 is a fault, as in kit-ts, never an unknown id.
+        httpx.Response(400, json={}),
+        httpx.Response(500),
+        httpx.Response(200, json=tenant_context(tenant_id="other-event")),
+    ],
 )
 async def test_by_id_failing_or_naming_another_tenant_is_503(answer: httpx.Response) -> None:
     resolver = by_id_resolver(lambda _: answer, [])
