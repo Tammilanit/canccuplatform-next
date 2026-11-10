@@ -39,6 +39,22 @@ describe("tenantsStorage.repair", () => {
   });
 });
 
+describe("tenantsStorage", () => {
+  it("gives up on a tenants that does not answer, so no lock waits on it for ever", async () => {
+    const service = { headers: () => ({}) } as unknown as ServiceIdentity;
+    const hung: typeof fetch = (_url, init) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => {
+          reject(new Error("aborted"));
+        });
+      });
+    const storage = tenantsStorage("http://tenants:8080", service, hung, 50);
+    await expect(withTenant("alpha", () => storage.release(1))).rejects.toMatchObject({
+      code: "tenants_unavailable",
+    });
+  });
+});
+
 describe.skipIf(!DATABASE_URL)("storage upkeep", () => {
   let h: Harness;
   beforeAll(async () => {
@@ -145,6 +161,30 @@ describe.skipIf(!DATABASE_URL)("storage upkeep", () => {
     const raced = h.storage.used.alpha;
     await inAlpha(() => recount(deps()));
     expect(raced).toBe(h.storage.used.alpha);
+  });
+
+  it("gives nothing back when a delete rolls back after its render was dropped", async () => {
+    const deck = await upload(h, "/api/screen/assets", pdfPages(6), "Kept.pdf", {
+      session: "admin",
+    });
+    const id = deck.json<{ id: string }>().id;
+    await h.pool.query<Record<string, string>>(
+      "UPDATE screen_render_jobs SET state = 'succeeded', bytes = 40 WHERE asset_id = $1",
+      [id],
+    );
+    const before = h.storage.used.alpha;
+    const admin = { host: "alpha.test", session: "admin" };
+    for (let i = 0; i < 2; i++) {
+      h.failAudit.next = true;
+      expect((await call(h, "DELETE", `/api/screen/assets/${id}`, admin)).statusCode).toBe(503);
+    }
+    expect(h.storage.used.alpha).toBe(before);
+    const { rows } = await h.pool.query<Record<string, string>>(
+      "SELECT 1 FROM screen_render_jobs WHERE asset_id = $1 AND state = 'succeeded'",
+      [id],
+    );
+    expect(rows).toHaveLength(1);
+    expect((await call(h, "DELETE", `/api/screen/assets/${id}`, admin)).statusCode).toBe(204);
   });
 
   it("sweeps orphaned files and stale render scratch, and keeps what is in use", async () => {

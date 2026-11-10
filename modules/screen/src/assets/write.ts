@@ -7,6 +7,7 @@ import type { Settings } from "../health.js";
 import { collect, dropUnreferenced, place } from "./files.js";
 import type { Dropped, Placed } from "./files.js";
 import type { Ffprobe } from "./probe.js";
+import { releaseHeld } from "./storage.js";
 import type { StorageQuota } from "./storage.js";
 import type { Prepared } from "./upload.js";
 import type { RenderQueue } from "../render/queue.js";
@@ -34,6 +35,30 @@ export function fileName(prepared: Prepared): string {
   return `${prepared.temp.sha256}.${prepared.ext}`;
 }
 
+/** What a write's `fn` returns: its result, the files it stopped using, other bytes it freed. */
+export interface Written<T> {
+  result: T;
+  unused: string[];
+  /** Bytes of other rows it deleted (a dropped render, render/jobs.ts `dropJobs`). */
+  freed?: number;
+}
+
+/**
+ * The write's last statement: the bytes of everything it deleted go back in one release, so
+ * nothing after it can roll the rows back while tenants keeps the release (storage.ts,
+ * `releaseHeld`). Only a failed commit can still do that.
+ */
+async function dropAndRelease<T>(
+  c: SqlClient,
+  deps: FileDeps,
+  out: Written<T>,
+): Promise<Dropped[]> {
+  const dropped = await dropUnreferenced(c, out.unused);
+  const bytes = dropped.reduce((sum, f) => sum + f.bytes, out.freed ?? 0);
+  await releaseHeld(c, deps.storage, bytes);
+  return dropped;
+}
+
 /**
  * Runs `fn` in one tenant transaction. `fn` calls `placeFile` once it holds its other locks (an
  * asset row comes before any file, the order every writer keeps) and returns the files it
@@ -43,7 +68,7 @@ export function fileName(prepared: Prepared): string {
 export async function writeWithFile<T>(
   deps: AssetDeps,
   prepared: Prepared,
-  fn: (c: SqlClient, placeFile: () => Promise<string>) => Promise<{ result: T; unused: string[] }>,
+  fn: (c: SqlClient, placeFile: () => Promise<string>) => Promise<Written<T>>,
 ): Promise<T> {
   let placed: Placed | null = null;
   let dropped: Dropped[] = [];
@@ -53,7 +78,7 @@ export async function writeWithFile<T>(
         placed = await place(c, deps.filesRoot, deps.storage, prepared.temp, prepared);
         return placed.name;
       });
-      dropped = await dropUnreferenced(c, deps.storage, out.unused);
+      dropped = await dropAndRelease(c, deps, out);
       return out.result;
     });
     await collect(deps.db, deps.filesRoot, dropped, deps.log);
@@ -77,12 +102,12 @@ export async function writeWithFile<T>(
 /** As `writeWithFile`, for a write that only stops using files (delete, revert). */
 export async function writeDroppingFiles<T>(
   deps: FileDeps,
-  fn: (c: SqlClient) => Promise<{ result: T; unused: string[] }>,
+  fn: (c: SqlClient) => Promise<Written<T>>,
 ): Promise<T> {
   let dropped: Dropped[] = [];
   const result = await deps.db.tenant(async (c) => {
     const out = await fn(c);
-    dropped = await dropUnreferenced(c, deps.storage, out.unused);
+    dropped = await dropAndRelease(c, deps, out);
     return out.result;
   });
   await collect(deps.db, deps.filesRoot, dropped, deps.log);

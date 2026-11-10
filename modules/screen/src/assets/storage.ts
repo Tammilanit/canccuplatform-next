@@ -22,10 +22,18 @@ const unavailable = (detail: string): KitError =>
     code: "tenants_unavailable",
   });
 
+/**
+ * Reserves and releases run inside transactions that hold the count lock and row locks
+ * (`holdCount`, `releaseHeld`): a tenants that never answers must not hold those, and every
+ * recount and writer queued behind them, for ever.
+ */
+const TENANTS_TIMEOUT_MS = 10_000;
+
 export function tenantsStorage(
   tenantsUrl: string,
   service: ServiceIdentity,
   fetchFn: typeof fetch = fetch,
+  timeoutMs = TENANTS_TIMEOUT_MS,
 ): StorageQuota {
   const base = `${tenantsUrl.replace(/\/+$/, "")}/internal/tenants/storage`;
   const change = async (
@@ -40,6 +48,7 @@ export function tenantsStorage(
         method: repair ? "PUT" : "POST",
         headers: { "content-type": "application/json", ...service.headers("tenants") },
         body: JSON.stringify(repair ? { bytes } : { module: "screen", bytes }),
+        signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (err) {
       throw unavailable(String(err));

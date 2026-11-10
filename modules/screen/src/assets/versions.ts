@@ -18,7 +18,7 @@ import { afterDrop, announce, dropJobs, submitJob } from "../render/jobs.js";
 import { clampToDeck } from "../content/asset-rules.js";
 import type { Dropped, JobRow } from "../render/jobs.js";
 
-const NOTHING_DROPPED: Dropped = { renders: [], live: [] };
+const NOTHING_DROPPED: Dropped = { renders: [], bytes: 0, live: [] };
 
 const KIND_NAMES: Record<string, string> = {
   image: "an image",
@@ -79,7 +79,7 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
       const file = await placeFile();
       const version = before.last_version + 1;
       if (before.prev_version !== null) {
-        dropped = await dropJobs(c, deps.storage, id, [before.prev_version]);
+        dropped = await dropJobs(c, id, [before.prev_version]);
         await c.query("DELETE FROM screen_asset_versions WHERE asset_id = $1 AND version = $2", [
           id,
           before.prev_version,
@@ -111,7 +111,11 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
         const who = { tenant_id: ctx.tenant_id, actor_user_id: actorOf(request) };
         job = (await submitJob(c, deps, who, id, version)).row;
       }
-      return { result: await viewAsset(c, id, deps.now()), unused: discarded ? [discarded] : [] };
+      return {
+        result: await viewAsset(c, id, deps.now()),
+        unused: discarded ? [discarded] : [],
+        freed: dropped.bytes,
+      };
     });
     await afterDrop(deps, dropped);
     if (job !== null) await announce(deps, job);
@@ -131,7 +135,7 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
           code: "nothing_to_revert",
         });
       }
-      dropped = await dropJobs(c, deps.storage, id, [before.version]);
+      dropped = await dropJobs(c, id, [before.version]);
       await c.query("DELETE FROM screen_asset_versions WHERE asset_id = $1 AND version = $2", [
         id,
         before.version,
@@ -153,6 +157,7 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
       return {
         result: await viewAsset(c, id, deps.now()),
         unused: before.file ? [before.file] : [],
+        freed: dropped.bytes,
       };
     });
     await afterDrop(deps, dropped);
@@ -171,7 +176,7 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
         const why = await use(c, id, { settings: deps.settings, nowMs: deps.now() });
         if (why !== null) throw new KitError(why, { status: 409, code: "asset_in_use" });
       }
-      dropped = await dropJobs(c, deps.storage, id, null);
+      dropped = await dropJobs(c, id, null);
       const { rows } = await c.query(
         "DELETE FROM screen_asset_versions WHERE asset_id = $1 RETURNING file",
         [id],
@@ -184,7 +189,7 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
         target: { type: "asset", id },
         changes: { title: { from: before.title, to: null } },
       });
-      return { result: null, unused: rows.map((r) => r.file as string) };
+      return { result: null, unused: rows.map((r) => r.file as string), freed: dropped.bytes };
     });
     await afterDrop(deps, dropped);
     return reply.status(204).send();

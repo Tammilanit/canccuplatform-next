@@ -10,7 +10,7 @@ import type { Bus, Logger, SqlClient } from "@canccu/kit";
 import type { Audit } from "../audit.js";
 import type { Db } from "../db.js";
 import { newId } from "../http.js";
-import { releaseHeld } from "../assets/storage.js";
+import { holdCount, releaseHeld } from "../assets/storage.js";
 import type { StorageQuota } from "../assets/storage.js";
 import type { RenderWarning, SlideMeta } from "./client.js";
 import type { RenderQueue } from "./queue.js";
@@ -179,17 +179,19 @@ export async function announce(deps: RenderDeps, row: JobRow, opts: { head?: boo
 
 export interface Dropped {
   renders: { asset_id: string; asset_version: number }[];
+  /** What the dropped renders took, still to be given back. */
+  bytes: number;
   live: JobRow[];
 }
 
 /**
  * In the transaction that removes asset versions (all of the asset's when `versions` is null):
- * their jobs go first, as the foreign key asks, and their renders' bytes go back. A running job's
- * container notices the row is gone at its next lease renewal and stops.
+ * their jobs go first, as the foreign key asks. The renders' bytes (`bytes`) go back as the
+ * transaction's last step (assets/write.ts). A running job's container notices the row is gone
+ * at its next lease renewal and stops.
  */
 export async function dropJobs(
   c: SqlClient,
-  storage: StorageQuota,
   assetId: string,
   versions: number[] | null,
 ): Promise<Dropped> {
@@ -200,13 +202,9 @@ export async function dropJobs(
   );
   const jobs = rows as unknown as JobRow[];
   const renders = jobs.filter((j) => j.state === "succeeded");
-  await releaseHeld(
-    c,
-    storage,
-    renders.reduce((sum, j) => sum + Number(j.bytes), 0),
-  );
   return {
     renders: renders.map((j) => ({ asset_id: j.asset_id, asset_version: j.asset_version })),
+    bytes: renders.reduce((sum, j) => sum + Number(j.bytes), 0),
     live: jobs.filter(isLive),
   };
 }
@@ -240,6 +238,8 @@ export async function afterDrop(deps: RenderDeps, dropped: Dropped): Promise<voi
 export async function recoverLost(deps: RenderDeps, jobId: string): Promise<void> {
   const now = new Date(deps.now());
   const lost = await deps.db.tenant(async (c) => {
+    // The count lock before the job row, the order the dispatcher's onSlide keeps.
+    await holdCount(c);
     const job = await readJob(c, jobId, true);
     if (job === null || job.state !== "running") return null;
     if (job.lease_until !== null && job.lease_until > now) {

@@ -254,6 +254,9 @@ async function settle(
   let ended: JobRow | null = null;
   try {
     await d.db.tenant(async (c) => {
+      // The count lock before the job row, the order onSlide keeps, so a waiting recount never
+      // stands between the two.
+      await holdCount(c);
       const now = await readJob(c, job.id, true);
       if (now === null) {
         await releaseHeld(c, d.storage, reserved);
