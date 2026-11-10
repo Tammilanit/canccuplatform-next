@@ -9,8 +9,8 @@ import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
 import type { AddressInfo } from "node:net";
 import { chromium } from "playwright-core";
-import type { Browser, Frame, Page } from "playwright-core";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { Browser, BrowserContext, Frame, Page } from "playwright-core";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { embedWidget } from "@canccu/ui";
 import { DATABASE_URL, demoEmbed, harness, seedEmbeds } from "./helpers.js";
 import type { Harness } from "./helpers.js";
@@ -42,10 +42,11 @@ const LOGO = Buffer.from(
 );
 const UI_CSS = await readFile(new URL("../node_modules/@canccu/ui/ui.css", import.meta.url));
 
-describe.skipIf(browser === undefined)("the sandbox in Chromium", () => {
+// Vitest's 5 s default is too short for a browser on a busy CI runner (#300); Playwright's own
+// waits stay at their defaults, so a real hang still fails on its own message.
+describe.skipIf(browser === undefined)("the sandbox in Chromium", { timeout: 20_000 }, () => {
   let h: Harness;
   let origin: string;
-  let page: Page;
   // A server that answers anyone, with CORS: what an embed would phone home to.
   const hits: string[] = [];
   const phoneHome = createServer((req, res) => {
@@ -58,6 +59,13 @@ describe.skipIf(browser === undefined)("the sandbox in Chromium", () => {
     socket.destroy();
   });
 
+  // Every context closes after its test: drift animates, and pages left open slow each later test.
+  const contexts: BrowserContext[] = [];
+  async function closeContexts(): Promise<void> {
+    await Promise.all(contexts.splice(0).map((c) => c.close()));
+  }
+  afterEach(closeContexts);
+
   beforeAll(async () => {
     h = await harness();
     await seedEmbeds(
@@ -69,7 +77,11 @@ describe.skipIf(browser === undefined)("the sandbox in Chromium", () => {
     await h.app.listen({ host: "127.0.0.1", port: 0 });
     await new Promise<void>((resolve) => phoneHome.listen(0, "127.0.0.1", resolve));
     origin = `http://localhost:${(h.app.server.address() as AddressInfo).port}`;
-  });
+    // The first page of a cold browser starts its renderer and GPU process: pay that here, not
+    // in the first test's budget.
+    await embedFrame(await screen("/theming/sandbox/1/drift/index.html"));
+    await closeContexts();
+  }, 60_000);
   afterAll(async () => {
     await browser?.close();
     phoneHome.close();
@@ -83,8 +95,9 @@ describe.skipIf(browser === undefined)("the sandbox in Chromium", () => {
       viewport: { width: 640, height: 360 },
       reducedMotion: reducedMotion ? "reduce" : "no-preference",
     });
+    contexts.push(context);
     await context.addCookies([{ name: "canccu_session", value: "secret", url: origin }]);
-    page = await context.newPage();
+    const page = await context.newPage();
     const body = embedWidget({ logoUrl: "/test/logo.svg", ...(frameUrl ? { frameUrl } : {}) });
     await page.route(`${origin}/test/**`, async (route) => {
       const path = new URL(route.request().url()).pathname;
@@ -159,7 +172,8 @@ describe.skipIf(browser === undefined)("the sandbox in Chromium", () => {
   });
 
   it("gives the embed no network, even to a server that would answer it", async () => {
-    const frame = await embedFrame(await screen("/theming/sandbox/1/drift/index.html"));
+    const p = await screen("/theming/sandbox/1/drift/index.html");
+    const frame = await embedFrame(p);
     hits.length = 0;
     const result = await frame.evaluate(
       async (target) => {
@@ -212,12 +226,13 @@ describe.skipIf(browser === undefined)("the sandbox in Chromium", () => {
       socket: "blocked",
       image: "blocked",
     });
-    await page.waitForTimeout(300);
+    await p.waitForTimeout(300);
     expect(hits).toEqual([]);
   });
 
   it("gives the embed no access to the page it is on", async () => {
-    const frame = await embedFrame(await screen("/theming/sandbox/1/drift/index.html"));
+    const p = await screen("/theming/sandbox/1/drift/index.html");
+    const frame = await embedFrame(p);
     const result = await frame.evaluate(() => {
       const attempt = (fn: () => unknown): string => {
         try {
@@ -239,7 +254,7 @@ describe.skipIf(browser === undefined)("the sandbox in Chromium", () => {
     expect(result.storage).toBe("SecurityError");
     expect(result.location).toBe("SecurityError");
     // Top navigation without allow-top-navigation: refused, the screen stays where it is.
-    expect(page.url()).toBe(`${origin}/test/screen`);
+    expect(p.url()).toBe(`${origin}/test/screen`);
   });
 
   it("lets no page on the hostname run an embed's script as its own", async () => {
