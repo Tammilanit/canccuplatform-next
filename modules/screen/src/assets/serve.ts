@@ -7,7 +7,7 @@
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { KitError } from "@canccu/kit";
+import { errorBody } from "@canccu/kit";
 import type { RightsChecker } from "@canccu/kit";
 import type { Db } from "../db.js";
 import { requireDevice } from "../device-access.js";
@@ -16,18 +16,25 @@ import { filePath } from "./files.js";
 
 const FILE_NAME = /^[a-f0-9]{64}\.[a-z0-9]{1,8}$/;
 
-/** The one range a screen asks for (`bytes=a-b`, `bytes=a-`, `bytes=-n`), or null for the whole file. */
-export function parseRange(header: string | undefined, size: number): [number, number] | null {
+/**
+ * The one range a screen asks for (`bytes=a-b`, `bytes=a-`, `bytes=-n`): null serves the whole
+ * file, as RFC 9110 has a server ignore a range it cannot parse or whose end comes before its
+ * start; "unsatisfiable" is a range that starts past the end (or `bytes=-0`), answered 416.
+ */
+export function parseRange(
+  header: string | undefined,
+  size: number,
+): [number, number] | null | "unsatisfiable" {
   const match = /^bytes=(\d*)-(\d*)$/.exec(header ?? "");
   if (!match || (match[1] === "" && match[2] === "")) return null;
-  const [start, end] =
-    match[1] === ""
-      ? [Math.max(0, size - Number(match[2])), size - 1]
-      : [Number(match[1]), match[2] === "" ? size - 1 : Math.min(Number(match[2]), size - 1)];
-  if (start > end || start >= size) {
-    throw new KitError("The range is outside the file.", { status: 416, code: "invalid_request" });
+  if (match[1] === "") {
+    const suffix = Number(match[2]);
+    return suffix === 0 ? "unsatisfiable" : [Math.max(0, size - suffix), size - 1];
   }
-  return [start, end];
+  const start = Number(match[1]);
+  if (match[2] !== "" && Number(match[2]) < start) return null;
+  if (start >= size) return "unsatisfiable";
+  return [start, match[2] === "" ? size - 1 : Math.min(Number(match[2]), size - 1)];
 }
 
 export function fileRoutes(
@@ -64,6 +71,13 @@ export function fileRoutes(
       .header("cache-control", "private, max-age=31536000, immutable")
       .header("accept-ranges", "bytes")
       .header("x-content-type-options", "nosniff");
+    if (range === "unsatisfiable") {
+      return reply
+        .status(416)
+        .header("content-range", `bytes */${size}`)
+        .type("application/json")
+        .send(errorBody("invalid_request", "The range is outside the file."));
+    }
     if (range === null) {
       return reply.header("content-length", size).send(createReadStream(path));
     }

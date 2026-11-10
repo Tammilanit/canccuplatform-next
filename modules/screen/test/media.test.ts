@@ -8,13 +8,13 @@ import { describe, expect, it } from "vitest";
 import { KitError } from "@canccu/kit";
 import { ffprobe, judgeMedia } from "../src/assets/probe.js";
 import { sniff } from "../src/assets/sniff.js";
-import type { Sniffed, Unplayable } from "../src/assets/sniff.js";
+import type { Sniffed } from "../src/assets/sniff.js";
 
 const fixture = (name: string): string =>
   new URL(`./fixtures/media/${name}`, import.meta.url).pathname;
 const probe = ffprobe();
 
-function sniffFile(name: string): Sniffed | Unplayable | null {
+function sniffFile(name: string): ReturnType<typeof sniff> {
   const bytes = readFileSync(fixture(name));
   return sniff(bytes.subarray(0, 4096), bytes.subarray(-65536));
 }
@@ -22,7 +22,14 @@ function sniffFile(name: string): Sniffed | Unplayable | null {
 async function judge(name: string): Promise<{ duration_seconds: number | null }> {
   const sniffed = sniffFile(name);
   if (sniffed === null) throw new Error(`${name} not recognised`);
-  return judgeMedia(sniffed, await probe(fixture(name)), readFileSync(fixture(name)).length);
+  if (sniffed.kind === "unplayable-image" || sniffed.demuxer === undefined) {
+    throw new Error(`${name} is no media`);
+  }
+  return judgeMedia(
+    sniffed,
+    await probe(fixture(name), sniffed.demuxer),
+    readFileSync(fixture(name)).length,
+  );
 }
 
 async function refusal(name: string): Promise<{ status: number; code: string; message: string }> {
@@ -70,12 +77,41 @@ describe("sniff", () => {
 
   it("tells WebM from Matroska, and MP4 from QuickTime", () => {
     expect(sniffFile("clip-vp9-opus.webm")).toMatchObject({ kind: "video", ext: "webm" });
-    expect(sniffFile("clip-h264.mkv")).toEqual({ kind: "unplayable", container: "Matroska" });
+    expect(sniffFile("clip-h264.mkv")).toEqual({
+      kind: "unplayable",
+      container: "Matroska",
+      demuxer: "matroska",
+    });
     expect(sniffFile("clip-h264-aac.mp4")).toMatchObject({ kind: "video", ext: "mp4" });
-    expect(sniffFile("clip-prores.mov")).toEqual({ kind: "unplayable", container: "QuickTime" });
+    expect(sniffFile("clip-prores.mov")).toEqual({
+      kind: "unplayable",
+      container: "QuickTime",
+      demuxer: "mov",
+    });
     expect(sniffFile("sound.mp3")).toMatchObject({ kind: "audio", ext: "mp3" });
     expect(sniffFile("sound.ogg")).toMatchObject({ kind: "audio", ext: "ogg" });
-    expect(sniffFile("sound.wav")).toEqual({ kind: "unplayable", container: "WAV" });
+    expect(sniffFile("sound.wav")).toEqual({
+      kind: "unplayable",
+      container: "WAV",
+      demuxer: "wav",
+    });
+  });
+
+  it("tells HEIC and AVIF photos from MP4 video", () => {
+    const ftyp = (brand: string) => Buffer.from(`\0\0\0\x18ftyp${brand}\0\0\0\0`, "latin1");
+    expect(sniff(ftyp("heic"), Buffer.alloc(0))).toEqual({
+      kind: "unplayable-image",
+      container: "HEIF",
+    });
+    expect(sniff(ftyp("mif1"), Buffer.alloc(0))).toEqual({
+      kind: "unplayable-image",
+      container: "HEIF",
+    });
+    expect(sniff(ftyp("avif"), Buffer.alloc(0))).toEqual({
+      kind: "unplayable-image",
+      container: "AVIF",
+    });
+    expect(sniff(ftyp("isom"), Buffer.alloc(0))).toMatchObject({ kind: "video", demuxer: "mov" });
   });
 });
 

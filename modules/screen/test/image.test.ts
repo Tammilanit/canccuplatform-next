@@ -1,7 +1,14 @@
 /** Ported from the legacy `image-resize` and `image-orientation` tests, to the contract's frame. */
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
-import { fitSize, normalizeImage } from "../src/assets/image.js";
+import { fitSize, normalizeImage as normalizeStream } from "../src/assets/image.js";
+
+/** The stored bytes, as `receive` would write them. */
+async function normalizeImage(input: Buffer): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of await normalizeStream(input)) chunks.push(chunk as Buffer);
+  return Buffer.concat(chunks);
+}
 
 /** Left half red, right half blue, so the direction of a turn shows. */
 async function jpeg(width: number, height: number, orientation?: number): Promise<Buffer> {
@@ -78,6 +85,21 @@ describe("normalizeImage", () => {
       .toBuffer();
     const meta = await sharp(await normalizeImage(gif), { animated: true }).metadata();
     expect(meta).toMatchObject({ format: "gif", pages: 2, width: 8, pageHeight: 8 });
+  });
+
+  it("keeps an animation's frame size whatever orientation it claims", async () => {
+    const frame = (background: string) =>
+      sharp({ create: { width: 16, height: 8, channels: 3, background } })
+        .png()
+        .toBuffer();
+    const gif = await sharp([await frame("#ff0000"), await frame("#0000ff")], {
+      join: { animated: true },
+    })
+      .gif()
+      .withMetadata({ orientation: 6 })
+      .toBuffer();
+    const meta = await sharp(await normalizeImage(gif), { animated: true }).metadata();
+    expect(meta).toMatchObject({ width: 16, pageHeight: 8 });
   });
 
   it("refuses bytes that only look like an image", async () => {

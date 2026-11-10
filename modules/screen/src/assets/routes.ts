@@ -20,7 +20,7 @@ import {
 import { probeYouTube, webUrl, youtubeLink } from "./links.js";
 import { ASSET_KINDS, ASSET_SELECT, assetView, readAsset, viewAsset } from "./store.js";
 import type { AssetKind, AssetRow } from "./store.js";
-import { prepare, readUpload, uploadTitle } from "./upload.js";
+import { assetTitle, prepare, readUpload, uploadTitle } from "./upload.js";
 import { writeWithFile } from "./write.js";
 import type { AssetDeps } from "./write.js";
 
@@ -35,22 +35,28 @@ function featureOn(ctx: TenantContext): void {
   }
 }
 
-function titleOf(value: unknown, field = "title"): string {
-  if (typeof value !== "string" || value.trim().length < 1 || value.trim().length > 200) {
-    throw invalidRequest(`\`${field}\` must be 1 to 200 characters.`);
-  }
-  return value.trim();
-}
-
-/** `<created_at ISO>|<id>`, base64url: the last row of the page, newest first. */
+/**
+ * `<created_at in microseconds since 1970>|<id>`, base64url: the last row of the page, newest
+ * first. Microseconds, as Postgres keeps them: a JS Date has only milliseconds, and a cursor cut
+ * to them would skip every row created within the same millisecond as the page's last.
+ */
 function decodeCursor(cursor: string): [string, string] {
-  const [at, id] = Buffer.from(cursor, "base64url").toString().split("|");
-  if (!at || !id || Number.isNaN(Date.parse(at))) throw invalidRequest("`cursor` is not valid.");
-  return [at, id];
+  const match = /^(\d{1,17})\|([A-Za-z0-9_-]{1,64})$/.exec(
+    Buffer.from(cursor, "base64url").toString(),
+  );
+  if (!match?.[1] || !match[2]) throw invalidRequest("`cursor` is not valid.");
+  return [match[1], match[2]];
 }
 
-function encodeCursor(row: AssetRow): string {
-  return Buffer.from(`${row.created_at.toISOString()}|${row.id}`).toString("base64url");
+function encodeCursor(row: AssetRow & { cursor_us: string }): string {
+  return Buffer.from(`${row.cursor_us}|${row.id}`).toString("base64url");
+}
+
+/** A query parameter given once, or undefined; `?q=a&q=b` is a client's mistake, not ours. */
+function param(query: unknown, name: string): string | undefined {
+  const value = (query as Record<string, unknown>)[name];
+  if (value === undefined || typeof value === "string") return value;
+  throw invalidRequest(`\`${name}\` may be given once.`);
 }
 
 /** `%`, `_` and `\` in a search are meant literally. */
@@ -59,7 +65,7 @@ const likeText = (q: string): string => `%${q.replace(/[\\%_]/g, (ch) => `\\${ch
 async function addLink(deps: AssetDeps, request: FastifyRequest, ctx: TenantContext) {
   featureOn(ctx);
   const input = body(request);
-  const title = titleOf(input.title);
+  const title = assetTitle(input.title);
   if (typeof input.url !== "string") throw invalidRequest("`url` is required.");
   let kind: AssetKind;
   let url: string;
@@ -130,7 +136,11 @@ export function assetRoutes(app: FastifyInstance, deps: AssetDeps): void {
   const write = { preHandler: needs(deps.rights, "screen.content.write") };
 
   app.get("/api/screen/assets", read, async (request) => {
-    const query = request.query as Record<string, string | undefined>;
+    const query = {
+      q: param(request.query, "q"),
+      kind: param(request.query, "kind"),
+      cursor: param(request.query, "cursor"),
+    };
     const where: string[] = [];
     const values: unknown[] = [];
     if (query.q !== undefined && query.q.trim() !== "") {
@@ -144,14 +154,19 @@ export function assetRoutes(app: FastifyInstance, deps: AssetDeps): void {
       where.push(`a.kind = $${values.length}`);
     }
     if (query.cursor !== undefined) {
-      const [at, id] = decodeCursor(query.cursor);
-      values.push(at, id);
-      where.push(`(a.created_at, a.id) < ($${values.length - 1}::timestamptz, $${values.length})`);
+      const [micros, id] = decodeCursor(query.cursor);
+      values.push(micros, id);
+      const at = `timestamptz 'epoch' + $${values.length - 1}::bigint * interval '1 microsecond'`;
+      where.push(`(a.created_at, a.id) < (${at}, $${values.length})`);
     }
-    const sql = `${ASSET_SELECT} ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
+    const select = ASSET_SELECT.replace(
+      "SELECT ",
+      "SELECT (extract(epoch FROM a.created_at) * 1000000)::bigint::text AS cursor_us, ",
+    );
+    const sql = `${select} ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
       ORDER BY a.created_at DESC, a.id DESC LIMIT ${PAGE + 1}`;
     const rows = await deps.db.tenant(async (c) => (await c.query(sql, values)).rows);
-    const page = (rows as unknown as AssetRow[]).slice(0, PAGE);
+    const page = (rows as unknown as (AssetRow & { cursor_us: string })[]).slice(0, PAGE);
     const last = page.at(-1);
     return {
       assets: page.map(assetView),
@@ -200,7 +215,7 @@ export function assetRoutes(app: FastifyInstance, deps: AssetDeps): void {
     assertWritable(ctx);
     const { asset_id: id } = request.params as { asset_id: string };
     const input = body(request);
-    const title = input.title === undefined ? undefined : titleOf(input.title);
+    const title = input.title === undefined ? undefined : assetTitle(input.title);
     if (input.reset_health !== undefined && typeof input.reset_health !== "boolean") {
       throw invalidRequest("`reset_health` must be true or false.");
     }

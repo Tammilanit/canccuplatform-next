@@ -37,7 +37,8 @@ export interface Prepared {
 const tooLarge = (): KitError =>
   new KitError("A file may be at most 100 MiB.", { status: 413, code: "file_too_large" });
 
-function title(value: unknown): string {
+/** The title rule of uploads, links and renames. */
+export function assetTitle(value: unknown): string {
   if (typeof value !== "string" || value.trim().length < 1 || value.trim().length > TITLE_MAX) {
     throw invalidRequest("`title` must be 1 to 200 characters.");
   }
@@ -58,7 +59,7 @@ export async function readUpload(request: FastifyRequest, root: string): Promise
         upload.filename = part.filename;
         if (part.file.truncated) throw tooLarge();
       } else if (part.fieldname === "title") {
-        upload.title = title(part.value);
+        upload.title = assetTitle(part.value);
       }
     }
   } catch (err) {
@@ -89,8 +90,18 @@ async function check(root: string, temp: Received, probe: Ffprobe): Promise<Prep
       "This file is not an image, video, sound, PowerPoint deck or PDF the screens can show.",
     );
   }
+  if (sniffed.kind === "unplayable-image") {
+    throw invalidRequest(`This image is ${sniffed.container}. Save it as JPEG or PNG.`);
+  }
   if (sniffed.kind === "image") {
-    const image = await receive(root, await normalizeImage(temp.path));
+    let image: Received;
+    try {
+      image = await receive(root, await normalizeImage(temp.path));
+    } catch (err) {
+      // A KitError is ours (a refused header, the volume); anything else is sharp failing to encode.
+      if (err instanceof KitError) throw err;
+      throw invalidRequest("This image could not be read. Save it again as PNG or JPEG.");
+    }
     await rm(temp.path, { force: true });
     return { temp: image, ...sniffed, duration_seconds: null };
   }
@@ -99,7 +110,8 @@ async function check(root: string, temp: Received, probe: Ffprobe): Promise<Prep
   }
   let probed;
   try {
-    probed = await probe(temp.path);
+    // Every video and sound sniff names its demuxer; mp4's is the fallback that cannot happen.
+    probed = await probe(temp.path, sniffed.demuxer ?? "mov");
   } catch {
     throw invalidRequest(`This ${sniffed.container} file could not be read. Export it again.`);
   }

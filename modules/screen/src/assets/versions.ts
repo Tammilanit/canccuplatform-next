@@ -42,6 +42,9 @@ async function fileAsset(c: SqlClient, id: string): Promise<AssetRow> {
   return row;
 }
 
+const onlyFiles = () =>
+  invalidRequest("Only an uploaded file can be replaced; add a new link instead.");
+
 export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
   const write = { preHandler: needs(deps.rights, "screen.content.write") };
 
@@ -49,13 +52,16 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
     const ctx = tenantOf(request);
     assertWritable(ctx);
     const { asset_id: id } = request.params as { asset_id: string };
+    // A cheap look first, so a missing asset or a link costs no upload, image or probe work; the
+    // locked read in the transaction below decides.
+    const found = await deps.db.tenant((c) => readAsset(c, id));
+    if (found === null) throw notFound();
+    if (!FILE_KINDS.includes(found.kind)) throw onlyFiles();
     const upload = await readUpload(request, deps.filesRoot);
     const prepared = await prepare(deps.filesRoot, upload.temp, deps.ffprobe);
     return writeWithFile(deps, prepared, async (c, placeFile) => {
       const before = await fileAsset(c, id);
-      if (!FILE_KINDS.includes(before.kind)) {
-        throw invalidRequest("Only an uploaded file can be replaced; add a new link instead.");
-      }
+      if (!FILE_KINDS.includes(before.kind)) throw onlyFiles();
       if (before.kind !== prepared.kind) {
         throw invalidRequest(
           `This asset is ${KIND_NAMES[before.kind]}; replace it with ${KIND_NAMES[before.kind]}, not ${KIND_NAMES[prepared.kind]}.`,

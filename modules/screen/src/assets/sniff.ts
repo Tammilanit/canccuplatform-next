@@ -13,11 +13,20 @@ export interface Sniffed {
   mime: string;
   /** For messages: the container as people know it ("QuickTime", "Matroska"). */
   container: string;
+  /** The ffprobe demuxer for video and sound, so a file is never read as anything else. */
+  demuxer?: string;
 }
 
 /** Media containers recognised only to refuse them with a useful message. */
 export interface Unplayable {
   kind: "unplayable";
+  container: string;
+  demuxer: string;
+}
+
+/** Photo formats the screens' browsers do not all show; refused with what to save instead. */
+export interface UnplayableImage {
+  kind: "unplayable-image";
   container: string;
 }
 
@@ -54,8 +63,13 @@ function isPptx(head: Buffer, tail: Buffer): boolean {
  * `head` is the file's first 4 KiB, `tail` its last 64 KiB (the zip central directory's usual
  * home). Null: nothing the screens show.
  */
-export function sniff(head: Buffer, tail: Buffer): Sniffed | Unplayable | null {
+export function sniff(head: Buffer, tail: Buffer): Sniffed | Unplayable | UnplayableImage | null {
   const four = ascii(head, 0, 4);
+  const refuse = (container: string, demuxer: string): Unplayable => ({
+    kind: "unplayable",
+    container,
+    demuxer,
+  });
   if (head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])))
     return image("png", "image/png");
   if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) return image("jpg", "image/jpeg");
@@ -68,36 +82,57 @@ export function sniff(head: Buffer, tail: Buffer): Sniffed | Unplayable | null {
   }
   if (ascii(head, 4, 8) === "ftyp") {
     const brand = ascii(head, 8, 12);
-    if (brand === "qt  ") return { kind: "unplayable", container: "QuickTime" };
-    if (brand.startsWith("M4A") || brand.startsWith("M4B")) {
-      return { kind: "unplayable", container: "MPEG-4 audio" };
+    // iPhone photos (HEIC) and AVIF share the MP4 box format; they are pictures, not video.
+    if (HEIF_BRANDS.has(brand)) {
+      return { kind: "unplayable-image", container: brand.startsWith("avi") ? "AVIF" : "HEIF" };
     }
-    return file("video", "mp4", "video/mp4", "MP4");
+    if (brand === "qt  ") return refuse("QuickTime", "mov");
+    if (brand.startsWith("M4A") || brand.startsWith("M4B")) return refuse("MPEG-4 audio", "mov");
+    return file("video", "mp4", "video/mp4", "MP4", "mov");
   }
   if (head.length >= 4 && head.readUInt32BE(0) === 0x1a45dfa3) {
     return ebmlDocType(head) === "webm"
-      ? file("video", "webm", "video/webm", "WebM")
-      : { kind: "unplayable", container: "Matroska" };
+      ? file("video", "webm", "video/webm", "WebM", "matroska")
+      : refuse("Matroska", "matroska");
   }
-  if (four === "OggS") return file("audio", "ogg", "audio/ogg", "OGG");
+  if (four === "OggS") return file("audio", "ogg", "audio/ogg", "OGG", "ogg");
   if (ascii(head, 0, 3) === "ID3" || mp3Frame(head))
-    return file("audio", "mp3", "audio/mpeg", "MP3");
+    return file("audio", "mp3", "audio/mpeg", "MP3", "mp3");
   if (four === "RIFF") {
     const form = ascii(head, 8, 12);
-    if (form === "WAVE") return { kind: "unplayable", container: "WAV" };
-    if (form === "AVI ") return { kind: "unplayable", container: "AVI" };
+    if (form === "WAVE") return refuse("WAV", "wav");
+    if (form === "AVI ") return refuse("AVI", "avi");
   }
-  if (four === "fLaC") return { kind: "unplayable", container: "FLAC" };
-  if (head[0] === 0x47 && head[188] === 0x47) return { kind: "unplayable", container: "MPEG-TS" };
+  if (four === "fLaC") return refuse("FLAC", "flac");
+  if (head[0] === 0x47 && head[188] === 0x47) return refuse("MPEG-TS", "mpegts");
   if (head.subarray(0, 4).equals(Buffer.from([0x30, 0x26, 0xb2, 0x75])))
-    return { kind: "unplayable", container: "Windows Media" };
+    return refuse("Windows Media", "asf");
   return null;
 }
+
+const HEIF_BRANDS = new Set([
+  "heic",
+  "heix",
+  "hevc",
+  "hevx",
+  "heim",
+  "heis",
+  "mif1",
+  "msf1",
+  "avif",
+  "avis",
+]);
 
 function image(ext: string, mime: string): Sniffed {
   return { kind: "image", ext, mime, container: ext.toUpperCase() };
 }
 
-function file(kind: FileKind, ext: string, mime: string, container: string): Sniffed {
-  return { kind, ext, mime, container };
+function file(
+  kind: FileKind,
+  ext: string,
+  mime: string,
+  container: string,
+  demuxer?: string,
+): Sniffed {
+  return { kind, ext, mime, container, ...(demuxer ? { demuxer } : {}) };
 }

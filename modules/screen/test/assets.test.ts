@@ -4,8 +4,10 @@
  * `asset-catalog`, `web-asset` and `youtube-asset` tests, against the contract's paths.
  */
 import { existsSync, readdirSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { parseRange } from "../src/assets/serve.js";
 import {
   TENANTS,
   DATABASE_URL,
@@ -226,6 +228,40 @@ describe.skipIf(!DATABASE_URL)("assets", () => {
     ).toBe(403);
   });
 
+  it("pages every asset once when many share one created_at, to the microsecond", async () => {
+    // Bulk uploads in one millisecond: the cursor must not cut created_at to a JS Date.
+    await h.pool.query(
+      "UPDATE screen_assets SET created_at = '2026-01-02 10:00:00.123456+00' WHERE tenant_id = 'eps'",
+    );
+    const list = (query: string) =>
+      call(h, "GET", `/api/screen/assets${query}`, { host: "eps.test", session: "content" });
+    const first = (await list("")).json<{ assets: Asset[]; next_cursor: string }>();
+    const second = (await list(`?cursor=${first.next_cursor}`)).json<{ assets: Asset[] }>();
+    const ids = [...first.assets, ...second.assets].map((a) => a.id);
+    expect(ids).toHaveLength(52);
+    expect(new Set(ids).size).toBe(52);
+  });
+
+  it("answers a repeated query parameter with 400, not 500", async () => {
+    for (const query of ["?q=a&q=b", "?kind=image&kind=video", "?cursor=a&cursor=b"]) {
+      const res = await call(h, "GET", `/api/screen/assets${query}`, admin());
+      expect(res.statusCode).toBe(400);
+      expect(code(res)).toBe("invalid_request");
+    }
+  });
+
+  it("answers 503 files_unavailable when the files volume cannot be written", async () => {
+    // The event's own directory, read-only, stands for a volume owned by another user.
+    await mkdir(join(h.filesRoot, "delta"), { mode: 0o500 });
+    const res = await upload(h, "/api/screen/assets", await png(90), "x.png", {
+      host: "delta.test",
+      session: "admin",
+    });
+    expect(res.statusCode).toBe(503);
+    expect(code(res)).toBe("files_unavailable");
+    expect(h.storage.used.delta ?? 0).toBe(0);
+  });
+
   it("finds same-title assets before an upload, in any case", async () => {
     const res = await call(h, "POST", "/api/screen/assets/name-check", {
       ...admin(),
@@ -259,6 +295,18 @@ describe.skipIf(!DATABASE_URL)("assets", () => {
     expect(part.statusCode).toBe(206);
     expect(part.headers["content-range"]).toBe(`bytes 0-7/${asset.size_bytes}`);
     expect(part.rawPayload.subarray(1, 4).toString()).toBe("PNG");
+    const beyond = await h.app.inject({
+      method: "GET",
+      url: asset.url,
+      headers: {
+        host: "alpha.test",
+        "x-forwarded-for": "10.0.0.5",
+        cookie: "canccu_session=admin",
+        range: "bytes=999999-",
+      },
+    });
+    expect(beyond.statusCode).toBe(416);
+    expect(beyond.headers["content-range"]).toBe(`bytes */${String(asset.size_bytes)}`);
 
     expect((await get({ session: "nobody" })).statusCode).toBe(403);
     expect((await get({})).statusCode).toBe(401);
@@ -273,5 +321,27 @@ describe.skipIf(!DATABASE_URL)("assets", () => {
     );
     const unknown = `/api/screen/files/${"0".repeat(64)}.png`;
     expect((await call(h, "GET", unknown, admin())).statusCode).toBe(404);
+  });
+});
+
+describe("parseRange", () => {
+  it("serves the whole file for no range, a malformed one or one that ends before it starts", () => {
+    expect(parseRange(undefined, 100)).toBeNull();
+    expect(parseRange("bytes=", 100)).toBeNull();
+    expect(parseRange("bytes=5-3", 100)).toBeNull();
+    expect(parseRange("items=0-1", 100)).toBeNull();
+  });
+
+  it("reads the three forms and clamps the end", () => {
+    expect(parseRange("bytes=0-9", 100)).toEqual([0, 9]);
+    expect(parseRange("bytes=90-", 100)).toEqual([90, 99]);
+    expect(parseRange("bytes=-10", 100)).toEqual([90, 99]);
+    expect(parseRange("bytes=-500", 100)).toEqual([0, 99]);
+    expect(parseRange("bytes=50-500", 100)).toEqual([50, 99]);
+  });
+
+  it("calls a range past the end, or of no bytes, unsatisfiable", () => {
+    expect(parseRange("bytes=100-", 100)).toBe("unsatisfiable");
+    expect(parseRange("bytes=-0", 100)).toBe("unsatisfiable");
   });
 });

@@ -6,6 +6,7 @@
  * location among it). The legacy scaled to *cover* the frame, which left a portrait photo at
  * 2560×3840; the contract says at most 2560×1440, so it fits inside.
  */
+import type { Readable } from "node:stream";
 import sharp from "sharp";
 import { invalidRequest } from "../http.js";
 
@@ -23,8 +24,11 @@ export function fitSize(width: number, height: number): { width: number; height:
   };
 }
 
-/** The bytes to store, in the input's format. 400 when sharp cannot read the image. */
-export async function normalizeImage(input: Buffer | string): Promise<Buffer> {
+/**
+ * The image to store, as a stream in the input's format, so a large photo is never held whole.
+ * 400 when sharp cannot read the image's header; an encoding error surfaces on the stream.
+ */
+export async function normalizeImage(input: Buffer | string): Promise<Readable> {
   let meta: Awaited<ReturnType<ReturnType<typeof sharp>["metadata"]>>;
   try {
     meta = await sharp(input, { animated: true }).metadata();
@@ -35,33 +39,24 @@ export async function normalizeImage(input: Buffer | string): Promise<Buffer> {
   const width = meta.width;
   const height = animated ? meta.pageHeight : meta.height;
   if (!width || !height) throw invalidRequest("This image has no size. Save it again.");
-  // Orientations 5 to 8 turn the image a quarter, so its upright size swaps.
-  const turned = (meta.orientation ?? 1) >= 5;
+  // sharp cannot turn the frames of an animation, and writes no metadata unless told to. A turned
+  // image (orientations 5 to 8) swaps its upright size, but only when it is actually turned.
+  const turned = !animated && (meta.orientation ?? 1) >= 5;
   const target = turned ? fitSize(height, width) : fitSize(width, height);
 
-  // sharp cannot turn the frames of an animation, and writes no metadata unless told to.
   let pipeline = sharp(input, { animated });
   if (!animated) pipeline = pipeline.rotate();
   if (target) pipeline = pipeline.resize(target.width, target.height, { fit: "fill" });
   switch (meta.format) {
     case "jpeg":
-      pipeline = pipeline.jpeg({ quality: QUALITY, chromaSubsampling: "4:4:4" });
-      break;
+      return pipeline.jpeg({ quality: QUALITY, chromaSubsampling: "4:4:4" });
     case "png":
-      pipeline = pipeline.png();
-      break;
+      return pipeline.png();
     case "webp":
-      pipeline = pipeline.webp({ quality: QUALITY });
-      break;
+      return pipeline.webp({ quality: QUALITY });
     case "gif":
-      pipeline = pipeline.gif();
-      break;
+      return pipeline.gif();
     default:
       throw invalidRequest("Use a PNG, JPEG, GIF or WebP image.");
-  }
-  try {
-    return await pipeline.toBuffer();
-  } catch {
-    throw invalidRequest("This image could not be read. Save it again as PNG or JPEG.");
   }
 }

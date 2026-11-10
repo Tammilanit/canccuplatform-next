@@ -24,14 +24,18 @@ export interface FfprobeOutput {
   streams?: FfprobeStream[];
 }
 
-export type Ffprobe = (path: string) => Promise<FfprobeOutput>;
+/** `demuxer` is the sniffed container's (sniff.ts), so ffprobe never guesses the format. */
+export type Ffprobe = (path: string, demuxer: string) => Promise<FfprobeOutput>;
 
 /** The binary comes from `CANCCU_FFPROBE` or the PATH (Debian's `ffmpeg` package in the image). */
 export function ffprobe(bin = process.env.CANCCU_FFPROBE ?? "ffprobe"): Ffprobe {
   const args = ["-v", "error", "-print_format", "json", "-show_format", "-show_streams"];
-  return (path) =>
+  // Only the local file may be opened: an upload read as a playlist could name URLs or other files.
+  const only = ["-protocol_whitelist", "file"];
+  return (path, demuxer) =>
     new Promise((resolve, reject) => {
-      execFile(bin, [...args, path], { timeout: 30_000, maxBuffer: 1 << 20 }, (err, stdout) => {
+      const argv = [...args, ...only, "-f", demuxer, `file:${path}`];
+      execFile(bin, argv, { timeout: 30_000, maxBuffer: 1 << 20 }, (err, stdout) => {
         if (err) {
           reject(new Error(`ffprobe failed: ${err.message}`));
           return;
