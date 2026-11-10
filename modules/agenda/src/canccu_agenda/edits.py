@@ -131,7 +131,7 @@ async def delay(
         updated = []
         for r, starts, ends in plan.moves:
             new_row = await store.update_item(
-                conn, r["id"], {"starts_at": starts, "ends_at": ends}, store.actor_of(session)
+                conn, r, {"starts_at": starts, "ends_at": ends}, store.actor_of(session)
             )
             updated.append((new_row, await store.bump(conn, "agenda_version")))
             if inverse is not None:
@@ -198,7 +198,7 @@ async def cancel(
 ) -> tuple[dict[str, Any], int]:
     """Cancels inside the caller's transaction; dropping its timers means an item cancelled while
     it runs never emits `agenda.item.ended`."""
-    row = await store.update_item(conn, row["id"], {"status": "cancelled"}, actor)
+    row = await store.update_item(conn, row, {"status": "cancelled"}, actor)
     version = await store.bump(conn, "agenda_version")
     kinds = await store.kinds(conn)
     await timers.reschedule(conn, [row], kinds, leads, d.now())

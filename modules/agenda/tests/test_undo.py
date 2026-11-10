@@ -162,3 +162,18 @@ async def test_undo_is_its_authors_and_lasts_two_minutes(env: Env) -> None:
     assert theirs.status_code == 404
     assert late.status_code == 409 and "more than 2 minutes" in late.text
     assert after["delay_minutes"] == 15
+
+
+async def test_undo_a_cancel_refuses_when_its_kind_is_gone(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        item = await add(c, h, title="Raffle", kind="activity", starts_at=at(30))
+        done = await c.post(f"/items/{item['id']}/cancel", data={"revision": "1"}, headers=h)
+        # The kind API refuses while the cancelled item uses it; this stands for any other way.
+        async with env.db.pool.acquire() as conn:
+            await conn.execute("DELETE FROM agenda_kinds WHERE key = 'activity'")
+        env.store.calls.clear()
+        refused = await c.post(f"/undo/{undo_id(done)}", headers=h)
+        (after,) = await items(c, h)
+    assert refused.status_code == 409 and "kind" in refused.text
+    assert after["status"] == "cancelled" and env.store.calls == []

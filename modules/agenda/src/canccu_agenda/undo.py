@@ -163,13 +163,18 @@ async def _apply(
         await _remove(conn, row, actor, out)
         return []
     if step["op"] == "add_again":
+        # The add's own check: an item of a kind the event no longer has would be unknown to all.
+        if await store.kind(conn, row["kind"]) is None:
+            raise model.conflict(
+                "undo_stale", f"the kind of {row['title']} was removed since: nothing was undone."
+            )
         new = await store.insert_item(conn, {k: row[k] for k in COPIED}, actor)
         version = await store.bump(conn, "agenda_version")
         out.append(("agenda.item.added", new["id"], {"agenda_version": version}))
         await _remove(conn, row, actor, out)
         return [new]
     values = _values(step["values"])
-    new = await store.update_item(conn, row["id"], values, actor)
+    new = await store.update_item(conn, row, values, actor)
     version = await store.bump(conn, "agenda_version")
     if step["minutes"] is not None:
         data = {"minutes": step["minutes"], "agenda_version": version}

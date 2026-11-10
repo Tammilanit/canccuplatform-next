@@ -39,6 +39,9 @@ DONE = {
     "shown": "Brought forward: screens show it now.",
     "shown_announced": "Brought forward and announced: screens show it now.",
     "announced": "Announced.",
+    "shown_not_announced": (
+        "Brought forward, but not announced: open it to try the announcement again."
+    ),
     "undone": "Undone. People who were told are told again.",
 }
 
@@ -211,7 +214,7 @@ async def item_page(request: Request) -> Response:
             )
             + "</div>"
         )
-    body += changes_html(log, tz)
+    body += changes_html(log, tz, now.astimezone(tz).date())
     return page(request, row["title"], body, session=session)
 
 

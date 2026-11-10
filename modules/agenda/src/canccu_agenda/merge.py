@@ -42,6 +42,8 @@ def _same(key: str, posted: Any, seen: Any, tz: ZoneInfo) -> bool:
 async def rebase(
     d: Deps, row: Any, sent_revision: int, fields: dict[str, Any], tz: ZoneInfo
 ) -> Rebased:
+    if sent_revision > row["revision"]:  # only a hand-made form: nothing to merge against
+        return Rebased(fields, complete=False)
     async with d.db.tenant() as conn:
         log = await store.changes(conn, row["id"], after=sent_revision)
     log = [r for r in log if r["action"] == "changed"]
@@ -57,6 +59,9 @@ async def rebase(
     for key, value in fields.items():
         if key not in seen:
             out[key] = value
-        elif not _same(key, value, seen[key], tz):
+        elif not _same(key, value, seen[key], tz) and not _same(
+            key, value, store.to_json(row[key]), tz
+        ):
+            # A change to what the other person also set is no clash: the item has it already.
             clash.append(key)
     return Rebased(out, complete=True, clash=clash, log=log)

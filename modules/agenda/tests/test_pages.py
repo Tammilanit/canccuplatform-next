@@ -149,11 +149,15 @@ async def test_editing_a_delayed_item_without_its_times_keeps_the_delay(env: Env
         }
         response = await c.post(f"/items/{item['id']}/edit", data=fields, headers=h)
         edited = (await c.get(f"/api/agenda/items/{item['id']}", headers=h)).json()
+        events = len(env.events())
+        # The same form again, now stale: its one change is already there, so it is no clash.
         stale = await c.post(f"/items/{item['id']}/edit", data=fields, headers=h)
+        again = (await c.get(f"/api/agenda/items/{item['id']}", headers=h)).json()
     assert response.status_code == 303
     assert edited["title"] == "Dinner and drinks" and edited["delay_minutes"] == 15
-    assert env.events()[-1]["data"]["changed"] == ["title"]
-    assert stale.status_code == 409 and "changed this item meanwhile" in stale.text
+    assert env.events()[events - 1]["data"]["changed"] == ["title"]
+    assert stale.status_code == 303 and len(env.events()) == events
+    assert again["revision"] == edited["revision"] and again["delay_minutes"] == 15
 
 
 async def test_the_stylesheets_are_served(env: Env) -> None:

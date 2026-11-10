@@ -100,3 +100,27 @@ async def test_without_the_full_log_a_stale_edit_is_not_merged(env: Env) -> None
         after = await current(c, h, item_id)
     assert clash.status_code == 409 and "Someone changed this item meanwhile" in clash.text
     assert after["title"] == "Dinner"
+
+
+async def test_the_same_change_made_by_both_is_not_a_clash(env: Env) -> None:
+    async with env.client() as c:
+        h, sam, item_id = await setup(env, c)
+        await c.patch(
+            f"/api/agenda/items/{item_id}", json={"revision": 1, "title": "Supper"}, headers=sam
+        )
+        saved = await c.post(
+            f"/items/{item_id}/edit", data=form_of(title="Supper", location="Café"), headers=h
+        )
+        after = await current(c, h, item_id)
+    assert saved.status_code == 303
+    assert (after["title"], after["location"]) == ("Supper", "Café")
+
+
+async def test_a_form_revision_newer_than_the_item_is_not_merged(env: Env) -> None:
+    async with env.client() as c:
+        h, _, item_id = await setup(env, c)
+        clash = await c.post(
+            f"/items/{item_id}/edit", data=form_of(revision="7", title="Supper"), headers=h
+        )
+        after = await current(c, h, item_id)
+    assert clash.status_code == 409 and after["title"] == "Dinner"

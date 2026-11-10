@@ -253,7 +253,7 @@ async def edit(
         if not values:
             (item,) = await render(conn, [row], channels)
             return item
-        new_row = await store.update_item(conn, row["id"], values, store.actor_of(session))
+        new_row = await store.update_item(conn, row, values, store.actor_of(session))
         if inverse is not None:
             inverse.restore(row, new_row, list(values))
         row = new_row

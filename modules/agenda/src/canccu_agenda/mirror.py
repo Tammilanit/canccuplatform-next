@@ -212,7 +212,7 @@ async def _move(
     if ends is not None and ends <= starts:
         log.warning("skipped a session move that ends before it starts", extra={"item": row["id"]})
         return
-    new = await store.update_item(conn, row["id"], values, store.TOURNAMENT)
+    new = await store.update_item(conn, row, values, store.TOURNAMENT)
     version = await store.bump(conn, "agenda_version")
     kinds = await store.kinds(conn)
     await timers.reschedule(conn, [new], kinds, leads, d.now())

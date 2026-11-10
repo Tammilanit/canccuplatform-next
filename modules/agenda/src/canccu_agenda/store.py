@@ -146,15 +146,14 @@ async def insert_item(conn: Any, values: dict[str, Any], actor: Actor) -> Any:
     return row
 
 
-async def update_item(conn: Any, item_id: str, values: dict[str, Any], actor: Actor) -> Any:
-    """Sets `values` (column names from the code, never from a request), bumps `revision` and
-    logs the fields that differ."""
-    old = await item(conn, item_id)
+async def update_item(conn: Any, old: Any, values: dict[str, Any], actor: Actor) -> Any:
+    """Sets `values` (column names from the code, never from a request) on the item `old`, which
+    the caller holds locked, bumps `revision` and logs the fields that differ."""
     sets = ", ".join(f"{column} = ${i}" for i, column in enumerate(values, start=2))
     row = await conn.fetchrow(
         f"UPDATE agenda_items SET {sets}, revision = revision + 1 WHERE id = $1"
         f" RETURNING {ITEM_COLUMNS}",
-        item_id,
+        old["id"],
         *values.values(),
     )
     # A planned time is the API's view of its time: resetting a delay changes `starts_at`'s

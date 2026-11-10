@@ -290,22 +290,32 @@ async def show_now_save(request: Request) -> Response:
     row, _, _ = await load_item(d, request.path_params["item_id"])
     announcing = form.get("announce") == "1"
     # Checked before the item moves, so a refused announcement leaves the run of show as it was.
-    message = announce.message_of(forms.opt_text(form, "message"))
+    message = announce.message_of(forms.opt_text(form, "message")) if announcing else None
     if announcing and row["kind"] == "quiet_hours":
         raise model.invalid("quiet hours are never announced")
     # Counted again at the moment of the change, so a moment never lands in the past.
     minutes = bring_forward(row, d.now())
+    if not minutes and not announcing:
+        raise model.invalid("screens already show it; tick Announce it too to announce it")
     inverse = Inverse()
     if minutes:
         revision = model.revision(_int(form.get("revision")))
         await edits.delay(d, session, row["id"], revision, -minutes, False, inverse=inverse)
+    # Saved before the announcement: the move has happened whatever the announcement does, so its
+    # undo is offered either way. An announcement cannot be taken back.
+    undo_id = await undo.save(d, session, inverse)
+    done = "shown"
     if announcing:
-        # After the bring-forward, so the announced item carries its new times (contract).
-        await announce.announce(d, session, row["id"], message)
-    done = ("shown_announced" if announcing else "shown") if minutes else "announced"
-    path = f"/?day={_day(row, request)}&done={done}"
-    # An announcement cannot be taken back; the undo brings the item back to its time.
-    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
+        try:
+            # After the bring-forward, so the announced item carries its new times (contract).
+            await announce.announce(d, session, row["id"], message)
+        except KitError:
+            if not minutes:
+                raise  # nothing happened: the error page says why
+            done = "shown_not_announced"
+        else:
+            done = "shown_announced" if minutes else "announced"
+    return redirect(undo.with_undo(f"/?day={_day(row, request)}&done={done}", undo_id))
 
 
 ROUTES = [

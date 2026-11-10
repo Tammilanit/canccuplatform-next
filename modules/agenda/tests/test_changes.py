@@ -73,3 +73,16 @@ async def test_the_tournament_mirror_is_logged_as_the_tournament_module(env: Env
     (entry,) = await _log(env, item["id"])
     assert (entry["action"], entry["actor_user_id"]) == ("added", None)
     assert entry["actor_name"] == "Tournament module"
+
+
+async def test_a_move_to_another_day_shows_the_days(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        item = await add(c, h, starts_at=at(60))
+        await c.patch(
+            f"/api/agenda/items/{item['id']}",
+            json={"revision": 1, "starts_at": at(60 + 24 * 60)},
+            headers=h,
+        )
+        page = await c.get(f"/items/{item['id']}", headers=h)
+    assert "changed start: Fri 20 Nov 18:00 → Sat 21 Nov 18:00" in page.text
