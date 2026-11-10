@@ -279,3 +279,25 @@ describe("subscribeTenants robustness", () => {
     await sub.close();
   });
 });
+
+describe("a failed tenant handler", () => {
+  it("is retried inside the event's tenant", async () => {
+    const store = new MemoryStreamStore();
+    store.appendRaw(tenantStream("pizza", "acme"), {
+      event: JSON.stringify(tenantEvent("acme", "pizza.order.placed")),
+    });
+    const tenants: (string | undefined)[] = [];
+    const sub = new Bus(store, "screen").subscribeTenants(
+      ["pizza"],
+      () => {
+        tenants.push(currentTenant());
+        if (tenants.length < 2) throw new Error("boom");
+      },
+      { fromId: "0", blockMs: 20, retryMs: 5 },
+    );
+    await until(() => tenants.length === 2);
+    await new Promise((r) => setTimeout(r, 60));
+    expect(tenants).toEqual(["acme", "acme"]);
+    await sub.close();
+  });
+});
