@@ -3,5 +3,6 @@
 !packages/kit-ts
 !packages/ui
 !modules/theming
+!contracts/theme.schema.json
 **/node_modules
 **/dist

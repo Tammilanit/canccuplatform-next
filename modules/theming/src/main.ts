@@ -15,9 +15,10 @@ import {
   serviceKeyFromEnv,
 } from "@canccu/kit";
 import { buildApp, themingHealth } from "./app.js";
+import { tenantsAudit } from "./audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { diskFiles } from "./files.js";
-import { noProfile } from "./profile.js";
+import { adminProfile } from "./profile.js";
 
 const PORT = 8080;
 /** pg_advisory_lock key of the theming migrations; each module has its own. */
@@ -71,8 +72,9 @@ async function main(): Promise<void> {
   const listenStore = ValkeyStreamStore.fromUrl(config.valkeyUrl);
   const listener = new Bus(listenStore, config.module, log);
   const ipMode = process.env.CANCCU_IP_MODE === "demo";
+  const tenantsUrl = env("CANCCU_TENANTS_URL");
   const tenants = new TenantResolver({
-    tenantsUrl: env("CANCCU_TENANTS_URL"),
+    tenantsUrl,
     service,
     platformHosts: [
       process.env.CANCCU_SIGNIN_HOSTNAME,
@@ -85,13 +87,21 @@ async function main(): Promise<void> {
     if (event.source === "tenants") tenants.handleEvent(event);
     else rights.handleEvent(event);
   });
+  const profile = adminProfile(config.adminUrl, service);
+  // admin.profile.loaded goes to each event's own stream.
+  listener.subscribeTenants(["admin"], (event) => {
+    profile.handleEvent(event);
+  });
 
   const app = buildApp({
     db: poolDb(pool),
     files: diskFiles(FILES_ROOT),
-    profile: noProfile,
+    profile: profile.read,
     rights,
     tenants,
+    bus: new Bus(store, config.module, log),
+    audit: tenantsAudit(tenantsUrl, service),
+    service,
     ipMode,
     health: themingHealth({
       module: config.module,

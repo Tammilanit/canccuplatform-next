@@ -2,18 +2,16 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
   InfoPagesClosed,
-  KitError,
   NotSignedIn,
-  checkAdminAccess,
   checkInfoAccess,
   requireTenant,
   sessionIdFromCookie,
 } from "@canccu/kit";
-import type { RightsChecker, Session, TenantContext } from "@canccu/kit";
-import { requireRight } from "@canccu/kit/fastify";
+import type { RightsChecker, Session } from "@canccu/kit";
 import type { Db } from "./db.js";
 import { CONTENT_TYPES, FILE_NAME, extOf } from "./files.js";
 import type { FileStore } from "./files.js";
+import { needs, notFound, tenantOf } from "./http.js";
 import type { ProfileSource } from "./profile.js";
 import { latestRevision, revisionZero } from "./theme.js";
 
@@ -22,14 +20,6 @@ export interface RouteDeps {
   files: FileStore;
   profile: ProfileSource;
   rights: RightsChecker;
-}
-
-const notFound = (): KitError => new KitError("Not found.", { status: 404, code: "not_found" });
-
-function tenantOf(request: FastifyRequest): TenantContext {
-  // installTenancy sets it on every route of this module; null would be a wiring bug.
-  if (request.tenant === null) throw notFound();
-  return request.tenant;
 }
 
 /**
@@ -118,15 +108,7 @@ export function themeRoutes(app: FastifyInstance, deps: RouteDeps): void {
 
   app.get<{ Params: { file: string } }>(
     "/theming/draft/:file",
-    {
-      preHandler: [
-        (request) => {
-          checkAdminAccess(tenantOf(request), request.ip);
-          return Promise.resolve();
-        },
-        requireRight(deps.rights, "theming.theme.write"),
-      ],
-    },
+    { preHandler: needs(deps.rights, "theming.theme.write") },
     async (request, reply) => {
       const name = request.params.file;
       if (!FILE_NAME.test(name)) throw notFound();

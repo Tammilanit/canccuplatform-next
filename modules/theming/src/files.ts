@@ -62,9 +62,9 @@ export function diskFiles(root: string): FileStore {
     write,
     async put(client, bytes, ext) {
       const name = await write(bytes, ext);
-      // Not undone when the caller's transaction rolls back: the file stays on disk without a row.
-      // Harmless while nothing writes at run time; publishing (#241) and uploads (#242) reserve
-      // first and clean up on rollback (docs/plans/issue-185.md, D3).
+      // Not undone when the caller's transaction rolls back: the file stays on disk without a row,
+      // never deleted then, since the same bytes may belong to another revision. Retention (#246)
+      // deletes what nothing refers to; uploads (#242) reserve their bytes first (plan D3).
       await client.query(
         `INSERT INTO theming_files (sha256, ext, bytes) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
         [name.slice(0, 64), ext, bytes.length],
