@@ -82,7 +82,7 @@ function clockText(at: Date, timeZone: string, part: "time" | "date"): string {
 const textOf = (iso: string | null, facts: ZoneFacts): string | null =>
   iso === null ? null : clockText(new Date(iso), facts.timeZone, "time");
 
-/** Guest reads already leave crew items out; the filter keeps a screen public if one slips in. */
+/** The agenda's screen read already leaves non-public items out; the filter keeps a screen public if one slips in. */
 const publicOnly = (items: AgendaItem[]): AgendaItem[] =>
   items.filter((i) => i.visibility === "public");
 

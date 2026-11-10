@@ -125,8 +125,10 @@ export interface FakeSources {
   event: { name: string } | null;
   agenda: AgendaNow | null;
   venue: VenueInfo | null;
-  /** The hostnames the reads were made with. */
+  /** The hostnames the guest reads (theme, event) were made with. */
   hosts: string[];
+  /** The tenant ids the module reads (now and next, venue info) were made for. */
+  tenants: string[];
 }
 
 /** Drops every screen table; `assignments` too, the name before migration 007. */
@@ -163,9 +165,16 @@ export async function harness(): Promise<Harness> {
   const storage = { used: {} as Record<string, number>, quota: {} as Record<string, number> };
   const filesRoot = await mkdtemp(join(tmpdir(), "canccu-screen-files-"));
   const oembedStatus = { value: 200 };
-  const fake: FakeSources = { theme: null, event: null, agenda: null, venue: null, hosts: [] };
-  const answer = <T>(host: string, value: T): Promise<T> => {
-    fake.hosts.push(host);
+  const fake: FakeSources = {
+    theme: null,
+    event: null,
+    agenda: null,
+    venue: null,
+    hosts: [],
+    tenants: [],
+  };
+  const answer = <T>(seen: string[], key: string, value: T): Promise<T> => {
+    seen.push(key);
     return Promise.resolve(value);
   };
   const quota: StorageQuota = {
@@ -230,10 +239,10 @@ export async function harness(): Promise<Harness> {
     bundleVersion: "test",
     streamPingMs: 200,
     sources: {
-      theme: (host) => answer(host, fake.theme),
-      event: (host) => answer(host, fake.event),
-      agendaNow: (host) => answer(host, fake.agenda),
-      venueInfo: (host) => answer(host, fake.venue),
+      theme: (host) => answer(fake.hosts, host, fake.theme),
+      event: (host) => answer(fake.hosts, host, fake.event),
+      agendaNow: (tenantId) => answer(fake.tenants, tenantId, fake.agenda),
+      venueInfo: (tenantId) => answer(fake.tenants, tenantId, fake.venue),
     },
   });
   // A stand-in for the device routes later slices add (the state, the stream): it runs only the check.

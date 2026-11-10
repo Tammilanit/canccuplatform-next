@@ -91,8 +91,13 @@ async def get_item(request: Request) -> Response:
 async def now(request: Request) -> Response:
     """The scheduled items running now, and those with the earliest start after now."""
     seen = await viewer(request)
-    zone = request.query_params.get("zone")
-    d = deps(request)
+    body = await now_and_next(deps(request), seen.visibilities, request.query_params.get("zone"))
+    return JSONResponse(body)
+
+
+async def now_and_next(d: Deps, visibilities: frozenset[str], zone: str | None) -> dict[str, Any]:
+    """One answer for the hub's read and the screens' module read, so they never disagree. Runs in
+    the tenant scope of the caller."""
     at = d.now()
     where = "status = 'scheduled' AND (ends_at > $2 OR starts_at > $2)"
     args: list[Any] = [at]
@@ -102,20 +107,18 @@ async def now(request: Request) -> Response:
     channels = await read_channels(d)
     async with d.db.tenant() as conn:
         state = await store.state(conn)
-        rows = await store.items(conn, seen.visibilities, where=where, args=tuple(args))
+        rows = await store.items(conn, visibilities, where=where, args=tuple(args))
         items = await render(conn, rows, channels)
     # A moment in time (no end) is never running: it is next until it starts, then past.
     current = [i for i, r in zip(items, rows, strict=True) if _running(r, at)]
     upcoming = [(i, r) for i, r in zip(items, rows, strict=True) if r["starts_at"] > at]
     first = upcoming[0][1]["starts_at"] if upcoming else None
-    return JSONResponse(
-        {
-            "time": model.iso(at),
-            "agenda_version": state["agenda_version"],
-            "current": current,
-            "next": [i for i, r in upcoming if r["starts_at"] == first],
-        }
-    )
+    return {
+        "time": model.iso(at),
+        "agenda_version": state["agenda_version"],
+        "current": current,
+        "next": [i for i, r in upcoming if r["starts_at"] == first],
+    }
 
 
 def _running(row: Any, at: datetime) -> bool:
