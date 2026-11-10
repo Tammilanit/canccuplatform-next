@@ -66,6 +66,23 @@ class Caller:
             return True
         return right not in ROLE_ONLY and session.has(right)
 
+    async def is_member(self, ctx: TenantContext, session: Session | None) -> bool:
+        """Until members arrive (#150), a member is a signed-in user who holds any right in the
+        event, or one of its event admins. The one stand-in for every member check here."""
+        if session is None:
+            return False
+        return bool(session.rights) or await self.is_event_admin(ctx["tenant_id"], session.user_id)
+
+    async def require_member(self, request: Request) -> Session:
+        """A member or event admin of the request's tenant, from an allowed address: like a right,
+        so `admin_access: restricted` applies."""
+        ctx = tenant_of(request)
+        session = await self.rights.session(request.headers.get("cookie"))
+        check_admin_access(ctx, client_ip(request), self.tailscale)
+        if not await self.is_member(ctx, session):
+            raise MissingRight("members and event admins only")
+        return session
+
     async def require(self, request: Request, right: str) -> Session:
         """A right in the request's tenant: signed in, from an allowed address, role or right."""
         return await self.require_all(request, {right})

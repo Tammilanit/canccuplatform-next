@@ -69,7 +69,7 @@ class StorageProbe(HttpProbe):
     async def seed(self, tenant: str, marker: str) -> None:
         name = f"m{abs(hash(marker)) % 10**12}"
         self.names = getattr(self, "names", {}) | {name: marker}
-        async with self.env.module("screen") as c:
+        async with self.env.module(name) as c:  # a module counts only in its own name
             r = await c.post(
                 "/internal/tenants/storage/reserve",
                 params={"tenant_id": tenant},

@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from canccu_kit import KitError, MissingRight
+from canccu_kit import KitError, ServiceForbidden
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
@@ -19,6 +19,17 @@ from .model import bad_request, body_of, not_found
 
 MODULE_RE = re.compile(r"[a-z][a-z0-9_]{1,31}")
 MAX_BYTES = 1_099_511_627_776
+SHARED_STORAGE: dict[str, str] = {}
+"""Service → the module whose files it writes and counts for. Empty: every writer today (screen,
+theming) counts under its own name, and the render job never calls (it has no network)."""
+
+
+def _check_owner(request: Request, module: str) -> None:
+    # The service identity names the caller, as for audit appends: a module counts only its own
+    # files, so one module cannot release another's bytes and let the event pass its quota.
+    service: str = request.state.service
+    if module != SHARED_STORAGE.get(service, service):
+        raise ServiceForbidden(f"module {service} counts only its own files")
 
 
 def _change(body: dict[str, Any]) -> tuple[str, int]:
@@ -60,6 +71,7 @@ async def _quota(conn: Any, tid: str, *, lock: bool = False) -> Any:
 async def reserve(request: Request) -> Response:
     d, tid = deps(request), _tenant_query(request)
     module, size = _change(await body_of(request))
+    _check_owner(request, module)
     async with d.db.tenant(tid) as conn:
         # The registry row's lock queues every reserve of the event, so the check below and the
         # add are one step: two uploads at once never both pass the quota.
@@ -86,6 +98,7 @@ async def release(request: Request) -> Response:
     """Every status, also archived: retention deletes files there."""
     d, tid = deps(request), _tenant_query(request)
     module, size = _change(await body_of(request))
+    _check_owner(request, module)
     async with d.db.tenant(tid) as conn:
         row = await _quota(conn, tid)
         await conn.execute(
@@ -97,12 +110,8 @@ async def release(request: Request) -> Response:
 
 
 async def get_storage(request: Request) -> Response:
-    """Members and event admins. Until members arrive (#150), a member is a signed-in user who
-    holds any right in the event, the same stand-in as the venue info's editor."""
     d, ctx = deps(request), tenant_of(request)
-    session = await d.caller.rights.session(request.headers.get("cookie"))
-    if not session.rights and not await d.caller.is_event_admin(ctx["tenant_id"], session.user_id):
-        raise MissingRight("members and event admins only")
+    await d.caller.require_member(request)
     async with d.db.tenant() as conn:
         row = await _quota(conn, ctx["tenant_id"])
         return JSONResponse(await usage(conn, row["storage_quota_bytes"]))
