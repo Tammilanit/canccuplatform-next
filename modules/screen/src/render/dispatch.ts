@@ -16,6 +16,7 @@ import type { Socket } from "node:net";
 import { dirname, join } from "node:path";
 import { KitError, requireTenant, withTenant } from "@canccu/kit";
 import { filePath } from "../assets/files.js";
+import { clampToDeck } from "../content/asset-rules.js";
 import { RENDERER_FAILED, RendererUnavailable, openRenderer, renderDeck } from "./client.js";
 import type { RenderOutcome } from "./client.js";
 import {
@@ -264,6 +265,8 @@ async function settle(
         [job.id, ...(result === "requeue" ? [] : [new Date(d.now())]), ...values],
       );
       ended = rows[0] as unknown as JobRow;
+      // The deck's slide count is known only now: a replace's ranges are fitted to it here.
+      if (placed) await clampToDeck(c, job.asset_id);
     });
   } catch (err) {
     d.log?.warn({ err, job_id: job.id }, "recording a render job failed");

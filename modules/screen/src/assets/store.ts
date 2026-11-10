@@ -64,14 +64,17 @@ export async function readAsset(c: SqlClient, id: string, lock = false): Promise
 }
 
 /** The contract's `Asset` for `id`, read in the caller's transaction. */
-export async function viewAsset(c: SqlClient, id: string): Promise<Record<string, unknown>> {
+export async function viewAsset(
+  c: SqlClient,
+  id: string,
+  nowMs: number,
+): Promise<Record<string, unknown>> {
   const row = await readAsset(c, id);
   if (row === null) throw notFound();
-  return assetView(row);
+  return assetView(row, (await usedBy(c, [id], nowMs)).get(id) ?? []);
 }
 
-/** `used_by` is left out until playlists (#216) can name what uses an asset. */
-export function assetView(row: AssetRow): Record<string, unknown> {
+export function assetView(row: AssetRow, users: readonly string[]): Record<string, unknown> {
   return {
     id: row.id,
     kind: row.kind,
@@ -86,20 +89,66 @@ export function assetView(row: AssetRow): Record<string, unknown> {
     health: row.health,
     health_message: row.health_message,
     can_revert: row.prev_version !== null,
+    used_by: users,
     created_at: row.created_at.toISOString(),
   };
 }
 
 /**
- * What may keep an asset from being deleted, each answering why or null (the contract's
- * `asset_in_use`). Playlists (#216) and pushes add theirs here, as they do to `ZONE_USES`.
+ * `used_by`: by asset, the playlists that hold it and the pushes playing it at `nowMs` (the
+ * tick ends an expired push a moment later; it no longer plays, so it no longer counts).
  */
-export type AssetUse = (c: SqlClient, id: string, settings: Settings) => Promise<string | null>;
+export async function usedBy(
+  c: SqlClient,
+  ids: readonly string[],
+  nowMs: number,
+): Promise<Map<string, string[]>> {
+  const { rows } = await c.query(
+    `SELECT DISTINCT asset_id, playlist_id AS user_id FROM screen_playlist_items WHERE asset_id = ANY($1)
+     UNION ALL
+     SELECT asset_id, id FROM screen_pushes
+     WHERE asset_id = ANY($1) AND ended_at IS NULL AND until > $2
+     ORDER BY 1, 2`,
+    [[...ids], new Date(nowMs)],
+  );
+  const users = new Map<string, string[]>();
+  for (const r of rows as { asset_id: string; user_id: string }[]) {
+    users.set(r.asset_id, [...(users.get(r.asset_id) ?? []), r.user_id]);
+  }
+  return users;
+}
+
+/** What may keep an asset from being deleted, each answering why or null (`asset_in_use`). */
+export type AssetUse = (
+  c: SqlClient,
+  id: string,
+  at: { settings: Settings; nowMs: number },
+) => Promise<string | null>;
 export const ASSET_USES: AssetUse[] = [
-  (_c, id, settings) =>
+  (_c, id, { settings }) =>
     Promise.resolve(
       settings.get("ready_fallback_asset_id", "") === id
         ? "The screens show this asset while their content loads (setting ready_fallback_asset_id). Choose another there first."
         : null,
     ),
+  async (c, id) => {
+    const { rows } = await c.query(
+      `SELECT DISTINCT p.name FROM screen_playlist_items i
+       JOIN screen_playlists p ON p.tenant_id = i.tenant_id AND p.id = i.playlist_id
+       WHERE i.asset_id = $1 ORDER BY p.name`,
+      [id],
+    );
+    if (rows.length === 0) return null;
+    const names = rows.map((r) => `“${r.name as string}”`).join(", ");
+    return `Playlists play this asset (${names}). Take it out of them first.`;
+  },
+  async (c, id, { nowMs }) => {
+    const { rows } = await c.query(
+      "SELECT 1 FROM screen_pushes WHERE asset_id = $1 AND ended_at IS NULL AND until > $2 LIMIT 1",
+      [id, new Date(nowMs)],
+    );
+    return rows.length === 0
+      ? null
+      : "This asset is pushed to screens now. Clear the push first, or wait until it ends.";
+  },
 ];

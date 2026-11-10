@@ -11,13 +11,8 @@ import type { BreakInput } from "../playback/breaks.js";
 import type { Assets, PlaybackPlaylist } from "../playback/timeline.js";
 import type { AgendaTimes, ScheduleWindow } from "../schedule/winner.js";
 
-/**
- * The playable facts of the assets named (kind, length, slides, health). The assets slice
- * (#217) reads them from its tables; until then main passes `noAssets`, so nothing is playable
- * and the tick keeps what plays without frames.
- */
+/** The playable facts of the assets named (kind, length, slides, health): `readAssets`. */
 export type AssetReader = (c: SqlClient, ids: readonly string[]) => Promise<Assets>;
-export const noAssets: AssetReader = () => Promise.resolve(new Map());
 
 export interface EventContent {
   zones: { key: string; layoutId: string | null }[];
