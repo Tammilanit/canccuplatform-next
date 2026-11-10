@@ -6,8 +6,7 @@ unless `scripts/tenancy-global-tables.txt` lists it. A tenant table needs a `ten
 row-level security enabled and forced, a policy on the kit's tenant setting, `tenant_id` in every
 primary key, unique constraint and unique index, and composite foreign keys with `tenant_id`
 (a plain reference is allowed only to a global table). Module source must not spell Valkey keys
-or stream names (`"events:…"`, `"t:…"`, and in TypeScript `"<module>:…"`) itself: the kit
-builds them.
+or stream names (`"events:…"`, `"t:…"`, in TS `"<module>:…"`) itself: the kit builds them.
 
 Usage: check-tenancy [DIR]    (default: the repo root; scans `git ls-files`)
        check-tenancy --self-test
@@ -31,7 +30,7 @@ ALLOW_LIST = "scripts/tenancy-global-tables.txt"
 MIGRATION_RE = re.compile(r"^modules/([a-z][a-z0-9_]*)/migrations/.+\.sql$")
 SOURCE_RE = re.compile(r"^modules/[a-z][a-z0-9_]*/src/.+\.(ts|tsx|js|mjs|py)$")
 RAW_KEY_RE = re.compile(r"""["'`](events|t):""")
-# Only kit-ts has `platformKey`; kit-py has no counterpart yet, so Python is not held to it.
+# `"<module>:…"` is what `platformKey` builds, in kit-ts only: kit-py has no counterpart yet.
 PLATFORM_KEY_SOURCE = (".ts", ".tsx", ".js", ".mjs")
 TENANT_SETTING = "current_setting('canccu.tenant'"
 IDENT = r'(?:"[^"]+"|[A-Za-z_][A-Za-z0-9_$]*)'
@@ -274,10 +273,7 @@ def check(root: Path) -> list[str]:
     ).stdout.splitlines()
     allowed, problems = read_allow_list(root)
     names = sorted({f.split("/")[1] for f in files if f.startswith("modules/") and f.count("/") > 1})
-    # `<module>:<part>`, the shape `platformKey` builds; "node:fs" or "screen: started" are not keys.
-    raw_platform_key = re.compile(
-        rf"""["'`]({"|".join(map(re.escape, names))}):[^\s"'`]""" if names else r"(?!)"
-    )
+    raw_platform_key = re.compile(rf"""["'`]({"|".join(map(re.escape, names))}):[^\s"'`]""" if names else "(?!)")
     modules: dict[str, Module] = {}
     for file in sorted(files):
         m = MIGRATION_RE.match(file)
@@ -352,13 +348,11 @@ def self_test() -> int:
         ("dropped constraint", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_list;"}, "items: drops a key or foreign key"),
         ("a renamed table stays checked", {"m.sql": "ALTER TABLE items RENAME TO things;\nALTER TABLE things ADD CONSTRAINT f FOREIGN KEY (l) REFERENCES lists (id);"}, r"things: foreign key \(l\) to lists"),
         ("another module's global table does not exempt", {"m.sql": "CREATE TABLE x (tenant_id text, device_id text REFERENCES devices (id));"}, r"foreign key \(device_id\) to devices is not composite"),
-        ("raw stream in source", {"src": 'await store.xadd("events:pizza", f);\n'}, r"src/a.ts:1: raw Valkey key"),
-        ("raw tenant key in source", {"src": "key = f't:{tenant}:pizza:cache'\n"}, "raw Valkey key"),
-        ("raw platform key in source", {"src": 'const RING = "m:render:ring";\n'}, r"src/a.ts:1: raw platform key"),
-        ("raw platform key in a template", {"src": "redis.get(`m:${id}`);\n"}, "raw platform key"),
-        ("another module's platform key", {"src": 'redis.get("screen-render:x");\n', "module": "screen-render"}, "raw platform key"),
-        ("platformKey and other prefixes pass", {"src": 'platformKey("m", "render", "ring");\nimport "node:fs";\nconst m = "m: started";\n'}, None),
-        ("Python has no platform_key yet", {"src.py": 'aad = f"m:sub:{tenant}"\n'}, None),
+        ("raw stream in source", {"modules/m/src/a.ts": 'await store.xadd("events:pizza", f);\n'}, r"src/a.ts:1: raw Valkey key"),
+        ("raw tenant key in source", {"modules/m/src/a.ts": "key = f't:{tenant}:pizza:cache'\n"}, "raw Valkey key"),
+        ("raw platform key in source", {"modules/m/src/a.ts": 'const RING = "m:render:ring";\n'}, r"src/a.ts:1: raw platform key"),
+        ("another module's key in a template", {"modules/m/src/a.ts": "redis.get(`screen-render:${id}`);\n", "modules/screen-render/README.md": "a module\n"}, "raw platform key"),
+        ("platformKey, other prefixes and Python pass", {"modules/m/src/a.ts": 'platformKey("m", "render", "ring");\nimport "node:fs";\nconst m = "m: started";\n', "modules/m/src/a.py": 'aad = f"m:sub:{tenant}"\n'}, None),
     ]
     fail = 0
     for name, extra, expect in cases:
@@ -367,20 +361,13 @@ def self_test() -> int:
             subprocess.run(["git", "init", "-q", str(root)], check=True)
             (root / "scripts").mkdir()
             (root / ALLOW_LIST).write_text(GLOBALS + extra.get("globals", ""))
-            good = root / "modules/m/migrations"
-            good.mkdir(parents=True)
-            (good / "001_lists.sql").write_text(GOOD + RLS.format(t="lists") + RLS.format(t="items"))
-            if "m.sql" in extra:
-                (good / "002_more.sql").write_text(extra["m.sql"])
-            if "module" in extra:
-                (root / f"modules/{extra['module']}").mkdir()
-                (root / f"modules/{extra['module']}/README.md").write_text("a module\n")
-            if "src" in extra:
-                (root / "modules/m/src").mkdir(parents=True)
-                (root / "modules/m/src/a.ts").write_text(extra["src"])
-            if "src.py" in extra:
-                (root / "modules/m/src").mkdir(parents=True)
-                (root / "modules/m/src/a.py").write_text(extra["src.py"])
+            files = {
+                "modules/m/migrations/001_lists.sql": GOOD + RLS.format(t="lists") + RLS.format(t="items"),
+                "modules/m/migrations/002_more.sql": extra.get("m.sql", ""),
+            } | extra
+            for rel in (k for k in files if "/" in k):
+                (root / rel).parent.mkdir(parents=True, exist_ok=True)
+                (root / rel).write_text(files[rel])
             subprocess.run(["git", "-C", tmp, "add", "-A"], check=True)
             found = check(root)
             ok = not found if expect is None else any(re.search(expect, p) for p in found)
