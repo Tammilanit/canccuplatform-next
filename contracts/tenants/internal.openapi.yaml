@@ -51,6 +51,32 @@
               $ref: "../tenants.openapi.yaml#/components/schemas/TenantContext"
       "404":
         $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/internal/tenants/tenants/{tenant_id}/users/{user_id}:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/TenantId"
+    - $ref: "../tenants.openapi.yaml#/components/parameters/UserId"
+  get:
+    tags: [internal, people]
+    operationId: getMembershipInternal
+    summary: Whether a user is a member of an event and holds its event-admin role
+    description: |
+      For a module that checks rights on another user than the caller, or on the caller without forwarding
+      their cookie, such as admin's rights grants (contracts/admin.md, Granting rights). Every status of the
+      event, also `draft` and `archived`; a deleted or unknown tenant is 404 `not_found`. An unknown or
+      deleted user is never 404: it answers `member` and `event_admin` false, so the answer does not tell
+      which user ids exist. Narrower than `GET /internal/tenants/users/{user_id}`, which carries the Discord
+      id and identities. Internal network only.
+    security:
+      - {}
+    responses:
+      "200":
+        description: The user's membership and role in the event.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/MembershipInternal"
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
 /internal/tenants/ip-mode:
   get:
     tags: [internal]
