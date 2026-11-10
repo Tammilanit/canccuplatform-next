@@ -115,15 +115,20 @@ export interface Harness {
 }
 
 /** A fresh schema per file, migrated by the module's own files, as at start. */
+/** Drops every screen table; `assignments` too, the name before migration 007. */
+export async function dropTables(admin: pg.Client): Promise<void> {
+  await admin.query(
+    `DROP TABLE IF EXISTS screen_agenda_items, screen_zone_playback, screen_pushes, screen_schedules,
+       screen_playlist_items, screen_playlists, assignments, screen_assignments, screen_zones,
+       screen_zone_seeds, devices, screen_migrations, screen_render_jobs, screen_asset_versions,
+       screen_assets, screen_files, screen_ticker, screen_ticker_windows, screen_photos CASCADE`,
+  );
+}
+
 export async function harness(): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
-  await admin.query(
-    `DROP TABLE IF EXISTS screen_agenda_items, screen_zone_playback, screen_pushes, screen_schedules,
-       screen_playlist_items, screen_playlists, assignments, screen_zones, screen_zone_seeds, devices,
-       screen_migrations, screen_render_jobs, screen_asset_versions, screen_assets, screen_files,
-       screen_ticker, screen_ticker_windows, screen_photos CASCADE`,
-  );
+  await dropTables(admin);
   await runMigrations(admin, MIGRATIONS_DIR, { ledger: "screen_migrations", lock: 1 });
   await admin.end();
   const pool = new pg.Pool({ connectionString: DATABASE_URL });

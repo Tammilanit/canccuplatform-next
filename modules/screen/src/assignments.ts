@@ -88,7 +88,7 @@ async function lockForTarget(c: SqlClient, deviceId: string, target: Target): Pr
   }
   if (target.mirror_device_id !== null || target.mirror_zone_key !== null) {
     const { rows } = await c.query(
-      "SELECT 1 FROM assignments WHERE mirror_device_id = $1 LIMIT 1",
+      "SELECT 1 FROM screen_assignments WHERE mirror_device_id = $1 LIMIT 1",
       [deviceId],
     );
     if (rows.length > 0) {
@@ -126,7 +126,7 @@ export function assignmentRoutes(app: FastifyInstance, deps: AssignmentDeps): vo
       const before = await lockForTarget(c, id, next);
       // Upsert: a device the superadmin moves here (#221) may have no row in this event yet.
       await c.query(
-        `INSERT INTO assignments (device_id, zone_key, mirror_device_id, mirror_zone_key)
+        `INSERT INTO screen_assignments (device_id, zone_key, mirror_device_id, mirror_zone_key)
          VALUES ($1, $2, $3, $4) ON CONFLICT (tenant_id, device_id) DO UPDATE
          SET zone_key = $2, mirror_device_id = $3, mirror_zone_key = $4`,
         [before.id, next.zone_key, next.mirror_device_id, next.mirror_zone_key],

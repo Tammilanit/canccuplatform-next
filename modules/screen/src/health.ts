@@ -94,7 +94,7 @@ async function readRecord(kv: Kv, id: string): Promise<HealthRecord | null> {
 /** The zone each device shows, for the events' `zone_key`; a mirror or an unassigned device has none. */
 async function zonesOf(db: Db, ids: string[]): Promise<Map<string, string | null>> {
   const { rows } = await db.tenant((c) =>
-    c.query("SELECT device_id, zone_key FROM assignments WHERE device_id = ANY($1)", [ids]),
+    c.query("SELECT device_id, zone_key FROM screen_assignments WHERE device_id = ANY($1)", [ids]),
   );
   return new Map(rows.map((r) => [r.device_id as string, (r.zone_key as string | null) ?? null]));
 }

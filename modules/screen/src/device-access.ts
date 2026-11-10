@@ -32,18 +32,14 @@ export async function findByToken(
   now: Date,
 ): Promise<TokenMatch | null> {
   const hash = hashDeviceToken(token);
-  const current = await client.query(
-    "SELECT * FROM devices WHERE token_hash = $1 AND revoked_at IS NULL",
-    [hash],
+  const { rows } = await client.query(
+    `SELECT * FROM devices WHERE revoked_at IS NULL
+       AND (token_hash = $1 OR superseded_token_hashes @> $2::jsonb)`,
+    [hash, JSON.stringify([{ hash }])],
   );
-  if (current.rows[0] !== undefined)
-    return { kind: "current", device: current.rows[0] as unknown as DeviceRow };
-  const old = await client.query(
-    `SELECT * FROM devices WHERE revoked_at IS NULL AND superseded_token_hashes @> $1::jsonb`,
-    [JSON.stringify([{ hash }])],
-  );
-  const device = old.rows[0] as unknown as DeviceRow | undefined;
+  const device = rows[0] as unknown as DeviceRow | undefined;
   if (device === undefined) return null;
+  if (device.token_hash === hash) return { kind: "current", device };
   // An expired superseded token is dropped and answers like an unknown one.
   const entry = device.superseded_token_hashes.find((s) => s.hash === hash);
   if (entry === undefined || Date.parse(entry.expires_at) <= now.getTime()) {
@@ -74,22 +70,31 @@ export function requireDevice(
     const ctx = tenantOf(request);
     const token = cookie(request, DEVICE_COOKIE);
     const at = now();
-    const match = token === undefined ? null : await db.tenant((c) => findByToken(c, token, at));
-    if (match === null) throw new DeviceUnknown(DEVICE_UNKNOWN_MESSAGE);
-    const elsewhere =
-      match.kind === "superseded" || match.device.current_tenant_id !== ctx.tenant_id;
-    if (elsewhere && options.allowElsewhere !== true) throw deviceMoved(MOVED_MESSAGE);
-    checkScreenAccess(ctx, { deviceTokenValid: true, clientIp: request.ip, now: at });
-    if (match.kind === "current" && match.device.superseded_token_hashes.length > 0 && !elsewhere) {
-      // The new token has worked once here: the old ones have done their job (contracts/screen.md, Moving).
-      await db.tenant((c) =>
-        // Only while the matched token is still current, so a transfer in between keeps its entry.
-        c.query(
+    if (token === undefined) throw new DeviceUnknown(DEVICE_UNKNOWN_MESSAGE);
+    const match = await db.tenant(async (c) => {
+      const found = await findByToken(c, token, at);
+      if (found === null) return null;
+      const elsewhere =
+        found.kind === "superseded" || found.device.current_tenant_id !== ctx.tenant_id;
+      if (elsewhere && options.allowElsewhere !== true) throw deviceMoved(MOVED_MESSAGE);
+      // Before any write: a refused address must change nothing.
+      checkScreenAccess(ctx, { deviceTokenValid: true, clientIp: request.ip, now: at });
+      if (
+        found.kind === "current" &&
+        found.device.superseded_token_hashes.length > 0 &&
+        !elsewhere
+      ) {
+        // The new token has worked once here: the old ones have done their job (contracts/screen.md,
+        // Moving). Only while the matched token is still current, so a transfer in between keeps
+        // its entry.
+        await c.query(
           "UPDATE devices SET superseded_token_hashes = '[]'::jsonb WHERE id = $1 AND token_hash = $2",
-          [match.device.id, match.device.token_hash],
-        ),
-      );
-    }
+          [found.device.id, found.device.token_hash],
+        );
+      }
+      return found;
+    });
+    if (match === null) throw new DeviceUnknown(DEVICE_UNKNOWN_MESSAGE);
     request.device = match.device;
     request.deviceToken = match.kind;
   };

@@ -197,6 +197,11 @@ def read_statement(module: Module, stmt: str, file: str) -> None:
     m = re.match(rf"ALTER TABLE (?:IF EXISTS )?(?:ONLY )?{NAME} (.*)", stmt, re.I)
     if not m or not (table := module.table(m.group(1))):
         return
+    renamed = re.match(rf"RENAME TO {NAME}\s*$", m.group(2), re.I)
+    if renamed:
+        # The table keeps everything it had under its new name, so later statements stay checked.
+        module.tables[bare(renamed.group(1))] = module.tables.pop(bare(m.group(1)))
+        return
     for action in split_top(m.group(2)):
         upper = action.upper()
         if upper.startswith("ENABLE ROW LEVEL SECURITY"):
@@ -335,6 +340,7 @@ def self_test() -> int:
         ("dropped policy", {"m.sql": "DROP POLICY canccu_tenant ON lists;"}, "lists: drops policy canccu_tenant"),
         ("dropped tenant_id", {"m.sql": "ALTER TABLE lists DROP COLUMN tenant_id;"}, "lists: drops tenant_id"),
         ("dropped constraint", {"m.sql": "ALTER TABLE items DROP CONSTRAINT items_list;"}, "items: drops a key or foreign key"),
+        ("a renamed table stays checked", {"m.sql": "ALTER TABLE items RENAME TO things;\nALTER TABLE things ADD CONSTRAINT f FOREIGN KEY (l) REFERENCES lists (id);"}, r"things: foreign key \(l\) to lists"),
         ("another module's global table does not exempt", {"m.sql": "CREATE TABLE x (tenant_id text, device_id text REFERENCES devices (id));"}, r"foreign key \(device_id\) to devices is not composite"),
         ("raw stream in source", {"src": 'await store.xadd("events:pizza", f);\n'}, r"src/a.ts:1: raw Valkey key"),
         ("raw tenant key in source", {"src": "key = f't:{tenant}:pizza:cache'\n"}, "raw Valkey key"),

@@ -85,14 +85,21 @@ export function screenHealth(opts: {
   module: string;
   version: string;
   store: StreamStore;
+  kv: Kv;
   query: () => Promise<unknown>;
   renderQueue: RenderQueue;
 }): Health {
+  const streams = valkeyCheck(opts.store);
   return createHealth({
     module: opts.module,
     version: opts.version,
     checks: {
-      valkey: valkeyCheck(opts.store),
+      // Pairing, commands and device health run on the key-value connection, not the streams'
+      // one: either lost is Valkey down for this module.
+      valkey: async () => {
+        await opts.kv.ping();
+        return streams();
+      },
       postgres: postgresCheck(opts.query),
       // Readability only, as theming checks it: the shared volume is owned by root on today's
       // stack, and making it writable for uploads is deploy work (#241). A write check here

@@ -163,6 +163,7 @@ async function main(): Promise<void> {
       module: config.module,
       version: config.version,
       store,
+      kv,
       query: () => pool.query("SELECT 1"),
       renderQueue,
     }),

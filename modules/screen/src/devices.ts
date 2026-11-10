@@ -14,7 +14,7 @@ import { actorOf, assertWritable, body, deviceName, needs, notFound, tenantOf } 
 import type { Kv } from "./kv.js";
 import { publishAll } from "./zones.js";
 
-/** A device's place in the event: its `assignments` row, joined by every event read. */
+/** A device's place in the event: its `screen_assignments` row, joined by every event read. */
 export interface Placement {
   paired_at?: Date | null;
   zone_key?: string | null;
@@ -43,7 +43,7 @@ export function deviceView(row: EventDevice): Record<string, unknown> {
 }
 
 const EVENT_DEVICES_SQL = `SELECT d.*, a.paired_at, a.zone_key, a.mirror_device_id, a.mirror_zone_key
-  FROM devices d LEFT JOIN assignments a ON a.device_id = d.id
+  FROM devices d LEFT JOIN screen_assignments a ON a.device_id = d.id
   WHERE d.current_tenant_id = $1 AND d.revoked_at IS NULL`;
 
 /** A device of the current event, or undefined. `FOR UPDATE` when the caller changes it. */
@@ -144,7 +144,7 @@ export function deviceRoutes(app: FastifyInstance, deps: DeviceDeps): void {
           "UPDATE devices SET revoked_at = now(), token_hash = NULL, superseded_token_hashes = '[]'::jsonb WHERE id = $1",
           [device.id],
         );
-        await c.query("DELETE FROM assignments WHERE device_id = $1", [device.id]);
+        await c.query("DELETE FROM screen_assignments WHERE device_id = $1", [device.id]);
         await deps.audit({
           tenant_id: ctx.tenant_id,
           actor_user_id: actor,
