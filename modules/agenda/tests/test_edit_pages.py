@@ -56,7 +56,7 @@ async def test_confirming_a_delay_applies_it_unless_the_agenda_changed(env: Env)
     assert stale.status_code == 303 and "changed=1" in stale.headers["location"]
     assert "The run of show changed meanwhile" in again.text
     assert done.status_code == 303
-    assert done.headers["location"] == "/agenda/?day=2026-11-20&done=delayed"
+    assert done.headers["location"].startswith("/agenda/?day=2026-11-20&done=delayed&undo=un_")
     assert [i["delay_minutes"] for i in items] == [15, 15, 15]
     delayed = [e for e in env.events() if e["type"] == "agenda.item.delayed"]
     assert len(delayed) == 3 and {e["data"]["item"]["id"] for e in delayed} >= {show["id"]}

@@ -6,6 +6,8 @@ every item they may show (never `crew`); Notify's `schedule` topic tells phones 
 cancellations of items starting within 120 minutes, once per audience for one delay
 (notify.md, Topics and sources); the bot posts on `discord_channel`; a session item's delay moves
 the session in the tournament module (events.md). A move is a new plan and announces nothing.
+An announcement goes to phones by the `schedule` topic's announcement trigger (no time window) and
+to the bot's channel only for a public item (bot.md); screens show the item through its times.
 """
 
 from __future__ import annotations
@@ -103,6 +105,21 @@ def told(action: Action, changes: Sequence[Change], now: datetime) -> list[str]:
     managed = [c.title for c in changes if c.managed]
     if managed and action == "delay":
         lines.append("Tournament: its sessions follow (" + ", ".join(managed) + ").")
+    return lines
+
+
+def told_announce(change: Change) -> list[str]:
+    """Who hears an organiser's announcement of one item."""
+    lines = ["Screens: no extra notice; they show the item in now and next."]
+    if PHONE_CHANNELS & set(change.channels):
+        lines.append(
+            f"Phones: a notice ({_audiences([change])}), to those who follow the schedule"
+            " by push or Discord DM."
+        )
+    else:
+        lines.append("Phones: nothing; the item's channels leave phones out.")
+    if "discord_channel" in change.channels and change.visibility == "public":
+        lines.append("Discord: a post in the event's channel.")
     return lines
 
 
