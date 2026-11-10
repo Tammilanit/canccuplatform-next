@@ -55,8 +55,11 @@ export function screenHealth(opts: {
     checks: {
       valkey: valkeyCheck(opts.store),
       postgres: postgresCheck(opts.query),
+      // Readability only, as theming checks it: the shared volume is owned by root on today's
+      // stack, and making it writable for uploads is deploy work (#241). A write check here
+      // would mark the whole module down for a volume every read still works on.
       files: async () => {
-        await access(FILES_ROOT, constants.W_OK);
+        await access(FILES_ROOT, constants.R_OK | constants.X_OK);
         return { status: "ok" };
       },
     },
