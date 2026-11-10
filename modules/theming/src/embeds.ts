@@ -1,5 +1,6 @@
 /** Embed files by owner, `draft` or `r:<revision>` (contracts/theming.md, Embeds; migrations/002). */
 import type { SqlClient } from "@canccu/kit";
+import { fileName, lockFiles } from "./files.js";
 import type { EmbedExt, FileStore } from "./files.js";
 
 /** The theme schema's embed file extensions, as stored (`jpeg` is stored as `jpg`). */
@@ -40,6 +41,8 @@ export async function putEmbed(
     if ((path === entry) !== (ext === "html")) {
       throw new Error(`embed ${name}: only the entry may be HTML, and it must be (${path})`);
     }
+    // Held to the commit, so the sweep (upkeep.ts) never takes the file for an orphan meanwhile.
+    await lockFiles(client, [fileName(bytes, ext)]);
     const file = await store.write(bytes, ext);
     await client.query(
       `INSERT INTO theming_embed_files (owner, embed, path, file, bytes, entry)

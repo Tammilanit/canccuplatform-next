@@ -207,6 +207,11 @@ describe.skipIf(!DATABASE_URL)("theming core", () => {
         "(owner, embed, path, file, bytes, entry) VALUES ('draft', 'e', 'a.js', $1 || '.js', 1, false)",
         hex,
       ],
+      [
+        "theming_package_files",
+        "(owner, path, file, bytes) VALUES ('draft', 'images/a.png', $1 || '.png', 1)",
+        hex,
+      ],
     ];
     for (const [table, insert, stored] of tables) {
       it(`${table} rows stay in their event`, async () => {
@@ -224,7 +229,9 @@ describe.skipIf(!DATABASE_URL)("theming core", () => {
             h.db.tenant(async (c) => {
               const { rows } = await c.query(`SELECT * FROM ${table}`);
               return rows.flatMap((row) =>
-                Object.values(row).map((v) => markerOf.get(String(v).replace(/\.(css|js)$/, ""))),
+                Object.values(row).map((v) =>
+                  markerOf.get(String(v).replace(/\.(css|js|png)$/, "")),
+                ),
               );
             }),
         });
