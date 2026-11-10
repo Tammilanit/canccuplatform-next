@@ -2,7 +2,8 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist/", "node_modules/", "eslint.config.js"] },
+  // The render smoke runs inside the built image against dist/, outside the TypeScript project.
+  { ignores: ["dist/", "node_modules/", "eslint.config.js", "test/render-smoke.mjs"] },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   {

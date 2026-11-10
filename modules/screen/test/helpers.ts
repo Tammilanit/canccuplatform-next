@@ -24,6 +24,10 @@ import type { Db } from "../src/db.js";
 import { requireDevice } from "../src/device-access.js";
 import { sweepOffline } from "../src/health.js";
 import { MemoryKv } from "../src/kv.js";
+import { dispatchOnce, sweepLeases } from "../src/render/dispatch.js";
+import type { RenderDeps } from "../src/render/jobs.js";
+import { MemoryRenderQueue } from "../src/render/queue.js";
+import type { StorageQuota } from "../src/assets/storage.js";
 
 /** Tests run only with a Postgres to spare; never point this at a database you keep. */
 export const DATABASE_URL = process.env.CANCCU_TEST_DATABASE_URL;
@@ -125,6 +129,11 @@ export interface Harness {
   oembedStatus: { value: number };
   /** One run of the offline sweep, as main starts every 5 seconds. */
   sweep(): Promise<void>;
+  queue: MemoryRenderQueue;
+  /** One turn of the render dispatcher against the renderer at `socketPath`; true if it ran a job. */
+  dispatch(socketPath: string, timeoutMs?: number): Promise<boolean>;
+  /** One run of the lost-container sweep. */
+  sweepLeases(): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -135,7 +144,7 @@ export async function harness(): Promise<Harness> {
   await admin.query(
     `DROP TABLE IF EXISTS screen_agenda_items, screen_zone_playback, screen_pushes, screen_schedules,
        screen_playlist_items, screen_playlists, assignments, screen_zones, screen_zone_seeds, devices,
-       screen_migrations, screen_asset_versions, screen_assets, screen_files CASCADE`,
+       screen_migrations, screen_render_jobs, screen_asset_versions, screen_assets, screen_files CASCADE`,
   );
   await runMigrations(admin, MIGRATIONS_DIR, { ledger: "screen_migrations", lock: 1 });
   await admin.end();
@@ -151,6 +160,28 @@ export async function harness(): Promise<Harness> {
   const storage = { used: {} as Record<string, number>, quota: {} as Record<string, number> };
   const filesRoot = await mkdtemp(join(tmpdir(), "canccu-screen-files-"));
   const oembedStatus = { value: 200 };
+  const quota: StorageQuota = {
+    reserve: (bytes) => {
+      const tenant = requireTenant();
+      const used = (storage.used[tenant] ?? 0) + bytes;
+      if (used > (storage.quota[tenant] ?? 2 ** 31)) {
+        return Promise.reject(
+          new KitError("This event's files would pass its storage quota.", {
+            status: 413,
+            code: "storage_quota_exceeded",
+          }),
+        );
+      }
+      storage.used[tenant] = used;
+      return Promise.resolve();
+    },
+    release: (bytes) => {
+      const tenant = requireTenant();
+      storage.used[tenant] = Math.max(0, (storage.used[tenant] ?? 0) - bytes);
+      return Promise.resolve();
+    },
+  };
+  const queue = new MemoryRenderQueue();
   const app = buildApp({
     db,
     kv,
@@ -172,27 +203,8 @@ export async function harness(): Promise<Harness> {
       ensure: () => Promise.resolve(),
       get: (key: string, fallback: SettingValue) => settings[requireTenant()]?.[key] ?? fallback,
     },
-    storage: {
-      reserve: (bytes) => {
-        const tenant = requireTenant();
-        const used = (storage.used[tenant] ?? 0) + bytes;
-        if (used > (storage.quota[tenant] ?? 2 ** 31)) {
-          return Promise.reject(
-            new KitError("This event's files would pass its storage quota.", {
-              status: 413,
-              code: "storage_quota_exceeded",
-            }),
-          );
-        }
-        storage.used[tenant] = used;
-        return Promise.resolve();
-      },
-      release: (bytes) => {
-        const tenant = requireTenant();
-        storage.used[tenant] = Math.max(0, (storage.used[tenant] ?? 0) - bytes);
-        return Promise.resolve();
-      },
-    },
+    storage: quota,
+    renderQueue: queue,
     filesRoot,
     fetch: () => Promise.resolve(new Response("{}", { status: oembedStatus.value })),
     now: () => clock.now,
@@ -209,6 +221,14 @@ export async function harness(): Promise<Harness> {
     }),
   );
   await app.ready();
+  const renderDeps: RenderDeps = {
+    db,
+    queue,
+    bus,
+    storage: quota,
+    filesRoot,
+    now: () => clock.now,
+  };
   return {
     app,
     db,
@@ -224,6 +244,10 @@ export async function harness(): Promise<Harness> {
     filesRoot,
     oembedStatus,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
+    queue,
+    dispatch: (socketPath, timeoutMs) =>
+      dispatchOnce({ ...renderDeps, socketPath, renewMs: 50, ...(timeoutMs ? { timeoutMs } : {}) }),
+    sweepLeases: () => sweepLeases(renderDeps),
     close: async () => {
       await app.close();
       await pool.end();

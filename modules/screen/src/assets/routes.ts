@@ -22,6 +22,8 @@ import { ASSET_KINDS, ASSET_SELECT, assetView, readAsset, viewAsset } from "./st
 import type { AssetKind, AssetRow } from "./store.js";
 import { assetTitle, prepare, readUpload, uploadTitle } from "./upload.js";
 import { writeWithFile } from "./write.js";
+import { announce, submitJob } from "../render/jobs.js";
+import type { JobRow } from "../render/jobs.js";
 import type { AssetDeps } from "./write.js";
 
 const PAGE = 50;
@@ -108,7 +110,8 @@ async function addFile(deps: AssetDeps, request: FastifyRequest, ctx: TenantCont
   const prepared = await prepare(deps.filesRoot, upload.temp, deps.ffprobe);
   const id = newId("as");
   const title = uploadTitle(upload);
-  return writeWithFile(deps, prepared, async (c, placeFile) => {
+  let job = null as JobRow | null;
+  const asset = await writeWithFile(deps, prepared, async (c, placeFile) => {
     const file = await placeFile();
     await c.query("INSERT INTO screen_assets (id, kind, title) VALUES ($1, $2, $3)", [
       id,
@@ -127,8 +130,14 @@ async function addFile(deps: AssetDeps, request: FastifyRequest, ctx: TenantCont
       target: { type: "asset", id },
       changes: { kind: { from: null, to: prepared.kind }, file: { from: null, to: file } },
     });
+    if (prepared.kind === "pptx" || prepared.kind === "pdf") {
+      const who = { tenant_id: ctx.tenant_id, actor_user_id: actorOf(request) };
+      job = (await submitJob(c, deps, who, id, 1)).row;
+    }
     return { result: await viewAsset(c, id), unused: [] };
   });
+  if (job !== null) await announce(deps, job);
+  return asset;
 }
 
 export function assetRoutes(app: FastifyInstance, deps: AssetDeps): void {

@@ -14,6 +14,10 @@ import type { AssetRow } from "./store.js";
 import { prepare, readUpload } from "./upload.js";
 import { fileName, writeDroppingFiles, writeWithFile } from "./write.js";
 import type { AssetDeps } from "./write.js";
+import { afterDrop, announce, dropJobs, submitJob } from "../render/jobs.js";
+import type { Dropped, JobRow } from "../render/jobs.js";
+
+const NOTHING_DROPPED: Dropped = { renders: [], live: [] };
 
 const KIND_NAMES: Record<string, string> = {
   image: "an image",
@@ -59,7 +63,9 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
     if (!FILE_KINDS.includes(found.kind)) throw onlyFiles();
     const upload = await readUpload(request, deps.filesRoot);
     const prepared = await prepare(deps.filesRoot, upload.temp, deps.ffprobe);
-    return writeWithFile(deps, prepared, async (c, placeFile) => {
+    let job = null as JobRow | null;
+    let dropped: Dropped = NOTHING_DROPPED;
+    const asset = await writeWithFile(deps, prepared, async (c, placeFile) => {
       const before = await fileAsset(c, id);
       if (!FILE_KINDS.includes(before.kind)) throw onlyFiles();
       if (before.kind !== prepared.kind) {
@@ -72,6 +78,7 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
       const file = await placeFile();
       const version = before.last_version + 1;
       if (before.prev_version !== null) {
+        dropped = await dropJobs(c, id, [before.prev_version]);
         await c.query("DELETE FROM screen_asset_versions WHERE asset_id = $1 AND version = $2", [
           id,
           before.prev_version,
@@ -97,15 +104,25 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
           file: { from: before.file, to: file },
         },
       });
+      // A new deck is a new upload: it is rendered as one. The replaced version keeps its render
+      // for the undo.
+      if (before.kind === "pptx" || before.kind === "pdf") {
+        const who = { tenant_id: ctx.tenant_id, actor_user_id: actorOf(request) };
+        job = (await submitJob(c, deps, who, id, version)).row;
+      }
       return { result: await viewAsset(c, id), unused: discarded ? [discarded] : [] };
     });
+    await afterDrop(deps, dropped);
+    if (job !== null) await announce(deps, job);
+    return asset;
   });
 
   app.post("/api/screen/assets/:asset_id/revert", write, async (request) => {
     const ctx = tenantOf(request);
     assertWritable(ctx);
     const { asset_id: id } = request.params as { asset_id: string };
-    return writeDroppingFiles(deps, async (c) => {
+    let dropped: Dropped = NOTHING_DROPPED;
+    const asset = await writeDroppingFiles(deps, async (c) => {
       const before = await fileAsset(c, id);
       if (before.prev_version === null) {
         throw new KitError("This asset has no earlier version to go back to.", {
@@ -113,6 +130,7 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
           code: "nothing_to_revert",
         });
       }
+      dropped = await dropJobs(c, id, [before.version]);
       await c.query("DELETE FROM screen_asset_versions WHERE asset_id = $1 AND version = $2", [
         id,
         before.version,
@@ -134,6 +152,8 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
         unused: before.file ? [before.file] : [],
       };
     });
+    await afterDrop(deps, dropped);
+    return asset;
   });
 
   app.delete("/api/screen/assets/:asset_id", write, async (request, reply) => {
@@ -141,12 +161,14 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
     assertWritable(ctx);
     const { asset_id: id } = request.params as { asset_id: string };
     await deps.settings.ensure();
+    let dropped: Dropped = NOTHING_DROPPED;
     await writeDroppingFiles(deps, async (c) => {
       const before = await fileAsset(c, id);
       for (const use of ASSET_USES) {
         const why = await use(c, id, deps.settings);
         if (why !== null) throw new KitError(why, { status: 409, code: "asset_in_use" });
       }
+      dropped = await dropJobs(c, id, null);
       const { rows } = await c.query(
         "DELETE FROM screen_asset_versions WHERE asset_id = $1 RETURNING file",
         [id],
@@ -161,6 +183,7 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
       });
       return { result: null, unused: rows.map((r) => r.file as string) };
     });
+    await afterDrop(deps, dropped);
     return reply.status(204).send();
   });
 }
