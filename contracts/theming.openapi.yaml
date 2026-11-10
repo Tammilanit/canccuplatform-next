@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Theming API
-  version: 1.3.0
+  version: 1.4.0
   summary: One event's theme, its draft, preview, publish and rollback, git sync, clone and the served theme files.
   description: |
     Machine-readable part of the theming contract. Prose, stable classes, package rules, upload safety, CSP and
@@ -783,6 +783,59 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+  /theming/sandbox/{revision}/{embed}/{path}:
+    parameters:
+      - name: revision
+        in: path
+        required: true
+        description: A kept revision of the event's theme.
+        schema:
+          type: string
+          pattern: "^[1-9][0-9]{0,9}$"
+      - $ref: "#/components/parameters/SandboxEmbed"
+      - $ref: "#/components/parameters/SandboxPath"
+    get:
+      tags: [files]
+      operationId: getSandboxFile
+      summary: A file of an embed of a kept revision, in the same-host sandbox
+      description: |
+        The same-host sandbox (contracts/theming.md, The sandbox): an embed's entry and its files, public and
+        immutable. The embed's entry is served only to a frame (`Sec-Fetch-Dest: iframe` or `frame`), every other
+        file only to the sandboxed document's own requests (`Sec-Fetch-Site: cross-site`), so no page of the event
+        runs an embed's JS as its own; the IP-mode demo stack, whose plain-http browsers send no fetch metadata to an
+        IP, skips that rule. No response under `/theming/sandbox/` sets a cookie.
+      security:
+        - {}
+      responses:
+        "200":
+          $ref: "#/components/responses/SandboxFile"
+        "404":
+          $ref: "#/components/responses/SandboxRefused"
+  /theming/sandbox/draft/{draft_key}/{embed}/{path}:
+    parameters:
+      - name: draft_key
+        in: path
+        required: true
+        description: The draft's key, which the draft preview's `frame_url`s carry.
+        schema:
+          type: string
+          pattern: "^[A-Za-z0-9_-]{16,128}$"
+      - $ref: "#/components/parameters/SandboxEmbed"
+      - $ref: "#/components/parameters/SandboxPath"
+    get:
+      tags: [files]
+      operationId: getDraftSandboxFile
+      summary: A file of an embed of the draft, in the same-host sandbox, for the preview
+      description: |
+        As `GET /theming/sandbox/{revision}/{embed}/{path}`, for the draft's embeds, but never cached. It takes no
+        session: the draft key, which only the draft preview hands out, is the address.
+      security:
+        - {}
+      responses:
+        "200":
+          $ref: "#/components/responses/SandboxFile"
+        "404":
+          $ref: "#/components/responses/SandboxRefused"
 components:
   securitySchemes:
     session:
@@ -817,6 +870,21 @@ components:
       schema:
         type: string
         pattern: "^[0-9a-f]{64}\\.(css|woff2|png|jpg|webp|svg)$"
+    SandboxEmbed:
+      name: embed
+      in: path
+      required: true
+      description: The embed's name.
+      schema:
+        $ref: "#/components/schemas/Name"
+    SandboxPath:
+      name: path
+      in: path
+      required: true
+      description: "The file's path in the embed's folder, slashes included (`js/main.js`); no `.` or `..` segment is served."
+      schema:
+        type: string
+        pattern: "^[A-Za-z0-9._-]{1,129}(/[A-Za-z0-9._-]{1,129}){0,15}$"
   headers:
     NoStore:
       description: "`no-store`."
@@ -837,7 +905,57 @@ components:
       description: "On SVG only: `default-src 'none'; style-src 'unsafe-inline'; sandbox`."
       schema:
         type: string
+    EmbedPolicy:
+      description: |
+        The sandbox CSP of contracts/theming.md, The sandbox: `default-src 'none'; script-src <embed base>; style-src
+        <embed base> 'unsafe-inline'; img-src <embed base> data:; font-src <embed base>; media-src <embed base>;
+        connect-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors <the request's origin>; sandbox
+        allow-scripts`, where `<embed base>` is the embed's folder on the request's origin.
+      schema:
+        type: string
+    CrossOriginResource:
+      description: "`cross-origin`: the sandboxed document's opaque origin loads the embed's files cross-origin."
+      schema:
+        type: string
+        const: cross-origin
+    AnyOrigin:
+      description: "`*`, never with credentials: embed files are public."
+      schema:
+        type: string
+        const: "*"
+    FetchMetadataVary:
+      description: "`Sec-Fetch-Dest, Sec-Fetch-Site`: who may load the file depends on them."
+      schema:
+        type: string
   responses:
+    SandboxFile:
+      description: The file, with the embed's own CSP.
+      headers:
+        Cache-Control:
+          description: "`public, max-age=31536000, immutable` for a revision; `no-store` for the draft."
+          schema:
+            type: string
+        Content-Security-Policy:
+          $ref: "#/components/headers/EmbedPolicy"
+        X-Content-Type-Options:
+          $ref: "#/components/headers/NoSniff"
+        Cross-Origin-Resource-Policy:
+          $ref: "#/components/headers/CrossOriginResource"
+        Access-Control-Allow-Origin:
+          $ref: "#/components/headers/AnyOrigin"
+        Vary:
+          $ref: "#/components/headers/FetchMetadataVary"
+      content:
+        "*/*":
+          schema:
+            type: string
+            format: binary
+    SandboxRefused:
+      description: |
+        Not served: an unknown revision, draft key, embed or file, a path out of pattern, a request the sandbox did
+        not make, or a file missing from the store. An empty body (not the JSON error body, so a refused frame
+        paints nothing and the still behind it shows), with `Content-Security-Policy: default-src 'none'; sandbox`,
+        `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`.
     DraftOk:
       description: The draft.
       content:
@@ -986,6 +1104,10 @@ components:
           type: object
           additionalProperties:
             type: string
+        motion:
+          description: "`moderate` when the theme sets none."
+          type: string
+          enum: [moderate, calm, none]
     TokensEdit:
       type: object
       additionalProperties: false
@@ -1090,6 +1212,9 @@ components:
                   oneOf:
                     - $ref: "theme.schema.json#/$defs/length"
                     - type: "null"
+            motion:
+              description: Setting it never makes the theme advanced (contracts/theming.md).
+              enum: [moderate, calm, none, null]
     BrandInput:
       type: object
       additionalProperties: false
@@ -1295,7 +1420,8 @@ components:
           description: |
             The checked template as a tree, so no surface parses template text: an array of nodes, each one of
             `{"text": "…"}`, `{"field": "a.b"}`, `{"section": "name", "inverted": false, "children": […]}` or
-            `{"element": "div", "attrs": {"class": [{"text": "t-"}, {"field": "state"}]}, "children": […]}`.
+            `{"element": "div", "attrs": {"class": [{"text": "t-"}, {"field": "state"}]}, "children": […]}`; the
+            rules are contracts/theming.md, The parsed tree.
           type: array
           items:
             $ref: "#/components/schemas/TemplateNode"
@@ -1320,13 +1446,9 @@ components:
             enum: [class, alt, aria-label, aria-hidden, datetime, colspan, rowspan, src]
           additionalProperties:
             type: array
+            description: The value's `text`, `field` and `section` nodes, never `element` (contracts/theming.md, The parsed tree).
             items:
-              type: object
-              properties:
-                text:
-                  type: string
-                field:
-                  type: string
+              $ref: "#/components/schemas/TemplateNode"
         children:
           type: array
           items:

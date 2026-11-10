@@ -700,7 +700,9 @@
     summary: The event's storage quota and what its files use
     description: |
       For members and event admins (a guest is 401 `not_signed_in`, a signed-in user who is not a member 403
-      `missing_right`), so an upload form can show what is left before it starts. Every status of the event.
+      `missing_right`), so an upload form can show what is left before it starts. Every status of the event. Like a
+      right, it follows the event's `admin_access`: while that is `restricted`, a request from neither the venue nor
+      Tailscale is 403 `admin_access_restricted` (contracts/tenants.md, Admin access).
     security:
       - session: []
     responses:

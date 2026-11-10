@@ -1,17 +1,20 @@
-"""The ASGI app: every path behind tenant resolution; the hostname names the event."""
+"""The ASGI app: `/internal/agenda/` for modules, everything else behind tenant resolution; the
+hostname names the event."""
 
 from __future__ import annotations
 
-from canccu_kit import Health, IpMode, KitError, NotSignedIn, TenantResolver
-from canccu_kit.starlette import install, install_tenancy
+from canccu_kit import Health, IpMode, KitError, NotSignedIn, ServiceIdentity, TenantResolver
+from canccu_kit.starlette import install, install_service_identity, install_tenancy
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from . import (
     announce,
     edit_pages,
     edits,
+    internal,
     item_pages,
     items,
     kinds,
@@ -25,9 +28,18 @@ from .deps import Deps
 
 
 def create_app(
-    d: Deps, health: Health, resolver: TenantResolver, ip_mode: IpMode | None = None
-) -> Starlette:
+    d: Deps,
+    health: Health,
+    resolver: TenantResolver,
+    service: ServiceIdentity,
+    ip_mode: IpMode | None = None,
+) -> ASGIApp:
     del ip_mode  # the resolver carries it
+    private = Starlette(routes=internal.ROUTES)
+    private.state.deps = d
+    private.state.tenants = resolver
+    install(private)
+    install_service_identity(private, service)
     # /items/new before /items/{item_id}: Starlette takes the first route that matches.
     routes = (
         items.ROUTES
@@ -47,7 +59,13 @@ def create_app(
     # After install(), so these replace the kit's JSON handler for the pages only.
     app.add_exception_handler(NotSignedIn, _not_signed_in)
     app.add_exception_handler(KitError, _kit_error)
-    return app
+
+    async def dispatch(scope: Scope, receive: Receive, send: Send) -> None:
+        # Tenancy would 404 the internal callers' host (`agenda:8080`): they skip it.
+        is_internal = scope["type"] == "http" and scope["path"].startswith("/internal/")
+        await (private if is_internal else app)(scope, receive, send)
+
+    return dispatch
 
 
 async def _not_signed_in(request: Request, exc: Exception) -> Response:

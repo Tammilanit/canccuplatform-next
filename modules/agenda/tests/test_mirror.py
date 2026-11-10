@@ -35,7 +35,7 @@ async def feed(env: Env, name: str, tenant: str = "ev-a", **data: Any) -> None:
     raw["data"].update(data)
     event = Event(raw["id"], raw["type"], 1, raw["time"], "tournament", raw["data"], tenant=tenant)
     with tenant_scope(tenant):
-        await mirror.handle(env.app.state.deps, event)
+        await mirror.handle(env.deps, event)
 
 
 async def items(env: Env) -> list[dict[str, Any]]:
@@ -148,7 +148,7 @@ async def test_a_session_that_ended_early_ends_its_item_instead(env: Env) -> Non
     raw["time"] = at(200)
     with tenant_scope("ev-a"):
         await mirror.handle(
-            env.app.state.deps,
+            env.deps,
             Event(
                 raw["id"],
                 raw["type"],
@@ -251,7 +251,7 @@ async def test_an_item_ended_early_emits_ended_on_the_next_tick(env: Env) -> Non
     env.clock[0] = NOW + timedelta(minutes=181)
     with tenant_scope("ev-a"):
         await mirror.handle(
-            env.app.state.deps,
+            env.deps,
             Event(
                 raw["id"],
                 raw["type"],

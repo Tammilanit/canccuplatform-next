@@ -28,7 +28,7 @@ def fired(env: Env) -> list[tuple[str, Any]]:
 async def run_at(env: Env, minutes: int) -> list[tuple[str, Any]]:
     env.clock[0] = NOW + timedelta(minutes=minutes)
     env.store.calls.clear()
-    await timers.tick(env.app.state.deps)
+    await timers.tick(env.deps)
     return fired(env)
 
 
@@ -44,7 +44,7 @@ async def test_reminders_start_and_end_fire_once_at_their_time(env: Env) -> None
     assert await registered(env) == ["ev-a"]
     assert await run_at(env, 29) == []
     env.clock[0] = NOW + timedelta(minutes=30)
-    await timers.tick(env.app.state.deps)
+    await timers.tick(env.deps)
     (reminder,) = env.events()
     assert reminder["type"] == "agenda.reminder.triggered" and reminder["tenant"] == "ev-a"
     assert reminder["data"]["item"] == item
@@ -162,8 +162,8 @@ async def test_a_lead_setting_change_reschedules_the_event(env: Env) -> None:
         tenant="ev-a",
     )
     with tenant_scope("ev-a"):
-        await timers.on_settings_changed(env.app.state.deps, unrelated)
-        await timers.on_settings_changed(env.app.state.deps, changed)
+        await timers.on_settings_changed(env.deps, unrelated)
+        await timers.on_settings_changed(env.deps, changed)
     assert await run_at(env, 50) == []
     assert await run_at(env, 55) == [("agenda.reminder.triggered", 5)]
 
@@ -183,7 +183,7 @@ async def test_two_containers_never_fire_one_timer_twice(env: Env) -> None:
             await add(c, env.writer(), title=f"T{n}", starts_at=at(60), reminder_leads_minutes=[])
     env.clock[0] = NOW + timedelta(minutes=60)
     env.store.calls.clear()
-    d = env.app.state.deps
+    d = env.deps
     await asyncio.gather(timers.tick(d, batch=2), timers.tick(d, batch=2), timers.tick(d))
     await timers.tick(d)
     assert sorted(title for _, title in fired(env)) == [f"T{n}" for n in range(5)]
@@ -195,7 +195,7 @@ async def test_each_event_fires_only_its_own_timers(env: Env) -> None:
         await add(a, h, title="A", starts_at=at(60), reminder_leads_minutes=[])
         await add(b, h, title="B", starts_at=at(90), reminder_leads_minutes=[])
     env.clock[0] = NOW + timedelta(minutes=90)
-    await timers.tick(env.app.state.deps)
+    await timers.tick(env.deps)
     started = [(e["tenant"], e["data"]["item"]["title"]) for e in env.events()[-2:]]
     assert started == [("ev-a", "A"), ("ev-b", "B")]
 

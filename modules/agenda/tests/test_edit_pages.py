@@ -133,7 +133,7 @@ async def test_the_delay_refuses_a_change_of_the_agenda_under_its_lock(env: Env)
     async with env.client() as c:
         item = await add(c, h, ends_at=at(120))
     session = env.rights.sessions["u_org"]
-    d = env.app.state.deps
+    d = env.deps
     with tenant_scope("ev-a"):
         with pytest.raises(KitError) as refused:
             await edits.delay(d, session, item["id"], 1, 15, True, expected_version=0)

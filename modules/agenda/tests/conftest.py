@@ -15,7 +15,7 @@ from typing import Any
 
 import httpx
 import pytest
-from canccu_kit import Bus, Health, TenantResolver, current_tenant
+from canccu_kit import Bus, Health, ServiceIdentity, TenantResolver, current_tenant
 from canccu_kit.access import TenantContext
 from canccu_kit.errors import AdminUnavailable, NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
@@ -29,6 +29,7 @@ URL = os.environ.get("CANCCU_DATABASE_URL")
 NOW = datetime(2026, 11, 20, 17, 0, tzinfo=UTC)
 WRITE = "agenda.items.write"
 CREW = "agenda.crew.read"
+KEY = b"k" * 32
 
 
 def context(tenant_id: str) -> TenantContext:
@@ -87,11 +88,18 @@ class Env:
     contexts: dict[str, TenantContext]
     app: Any
     clock: list[datetime]
+    deps: Deps
 
     def client(self, host: str = "a.example.test") -> httpx.AsyncClient:
         return httpx.AsyncClient(
             transport=httpx.ASGITransport(app=self.app, client=("198.51.100.7", 5000)),
             base_url=f"http://{host}",
+        )
+
+    def internal(self) -> httpx.AsyncClient:
+        """A module on the stack's network: no event hostname, no session."""
+        return httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=self.app), base_url="http://agenda:8080"
         )
 
     def writer(self, *rights: str) -> dict[str, str]:
@@ -117,7 +125,8 @@ async def env() -> AsyncIterator[Env]:
     contexts = {tid: context(tid) for tid in HOSTS.values()}
 
     def registry(request: httpx.Request) -> httpx.Response:
-        tid = HOSTS.get(request.url.params.get("host", ""))
+        by_id = request.url.path.removeprefix("/internal/tenants/tenants/")
+        tid = by_id if by_id in contexts else HOSTS.get(request.url.params.get("host", ""))
         if tid is None:
             return httpx.Response(404, json={"error": {"code": "not_found", "message": "x"}})
         return httpx.Response(200, json=contexts[tid])
@@ -134,8 +143,8 @@ async def env() -> AsyncIterator[Env]:
     d = Deps(
         db=db, bus=Bus(store, "agenda"), rights=rights, settings=settings, now=lambda: clock[0]
     )
-    app = create_app(d, Health("agenda", "dev", {}), resolver)
-    yield Env(db, rights, settings, store, contexts, app, clock)
+    app = create_app(d, Health("agenda", "dev", {}), resolver, ServiceIdentity("agenda", KEY))
+    yield Env(db, rights, settings, store, contexts, app, clock, d)
     await db.close()
 
 
