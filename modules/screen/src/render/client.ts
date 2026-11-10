@@ -246,7 +246,8 @@ export async function openRenderer(path: string): Promise<Socket> {
 /**
  * Renders the deck at `deckPath` over `socket` (from `openRenderer`), handing each checked slide
  * to `onSlide` as it arrives. Rejects with "render cancelled" when `signal` aborts, and with what
- * `onSlide` throws; either way it hangs up, which is how the renderer learns to stop.
+ * `onSlide` throws; either way it hangs up, which is how the renderer learns to stop. It never
+ * calls `onSlide` once it has returned, so the caller's count of reserved bytes is final then.
  */
 export async function renderDeck(opts: {
   socket: Socket;
@@ -260,6 +261,11 @@ export async function renderDeck(opts: {
   let deck: ReadStream | undefined;
   let timer: NodeJS.Timeout | undefined;
   let onAbort: (() => void) | undefined;
+  // The talk goes on reading after a cancel or the deadline, and a slide may already sit in the
+  // reader: the caller settles its bytes once this returns, so nothing is handed over after (#317).
+  let returned = false;
+  const onSlide = (slide: SlideMeta, png: Buffer): Promise<void> =>
+    returned ? Promise.reject(new Error("the render has ended")) : opts.onSlide(slide, png);
   const stopped = new Promise<RenderOutcome>((resolve, reject) => {
     timer = setTimeout(() => {
       resolve({ ok: false, code: "render_timeout", message: TIMED_OUT });
@@ -279,7 +285,7 @@ export async function renderDeck(opts: {
     // A deck that cannot be read (deleted meanwhile) ends the talk: the hang-up fails the job.
     deck = createReadStream(opts.deckPath).on("error", () => socket.destroy());
     deck.pipe(socket, { end: false });
-    const talk = converse(reader, opts.onSlide).catch((err: unknown): RenderOutcome => {
+    const talk = converse(reader, onSlide).catch((err: unknown): RenderOutcome => {
       if (err instanceof Protocol) {
         return { ok: false, code: "renderer_failed", message: RENDERER_FAILED };
       }
@@ -289,6 +295,7 @@ export async function renderDeck(opts: {
     talk.catch(() => undefined);
     return await Promise.race([talk, stopped]);
   } finally {
+    returned = true;
     clearTimeout(timer);
     if (onAbort) opts.signal.removeEventListener("abort", onAbort);
     deck?.destroy();
