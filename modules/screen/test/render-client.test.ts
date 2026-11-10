@@ -2,15 +2,30 @@
  * The renderer's socket protocol from screen's side (modules/screen-render, server.py): the deck
  * goes out, slides come back, and nothing the renderer says is trusted (plan #184, R4).
  */
+import type { ReadStream } from "node:fs";
 import { mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import type { Server, Socket } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import sharp from "sharp";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RendererUnavailable, openRenderer, renderDeck } from "../src/render/client.js";
 import type { RenderOutcome } from "../src/render/client.js";
+
+/** Every deck stream the client opens, so a test can see that none is left open. */
+const decks = vi.hoisted(() => [] as ReadStream[]);
+vi.mock("node:fs", async (original) => {
+  const fs = await original<typeof import("node:fs")>();
+  return {
+    ...fs,
+    createReadStream: (...args: Parameters<typeof fs.createReadStream>) => {
+      const stream = fs.createReadStream(...args);
+      decks.push(stream);
+      return stream;
+    },
+  };
+});
 
 type Script = (socket: Socket, request: { header: Record<string, unknown>; deck: Buffer }) => void;
 
@@ -83,6 +98,7 @@ describe("the render socket client", () => {
   beforeEach(async () => {
     dir = await mkdtemp(join(tmpdir(), "canccu-render-client-"));
     received = null;
+    decks.length = 0;
   });
   afterEach(async () => {
     await new Promise<void>((resolve) => {
@@ -238,6 +254,42 @@ describe("the render socket client", () => {
       onSlide: () => Promise.resolve(),
     });
     expect(outcome).toMatchObject({ ok: false, code: "renderer_failed" });
+  });
+
+  it("hangs up, sending nothing, when the deck vanished before the render", async () => {
+    const path = await fakeRenderer(() => undefined);
+    const running = renderDeck({
+      socket: await openRenderer(path),
+      deckPath: join(dir, "collected.pdf"),
+      signal: new AbortController().signal,
+      timeoutMs: 5_000,
+      onSlide: () => Promise.resolve(),
+    });
+    await expect(running).rejects.toThrow(/ENOENT/);
+    await closed;
+    expect(received).toBeNull();
+  });
+
+  it("closes the deck when the renderer hangs up in the middle of the upload", async () => {
+    const path = join(dir, "render.sock");
+    server = createServer((socket) => {
+      socket.once("data", () => socket.destroy());
+    });
+    await new Promise<void>((resolve) => server?.listen(path, resolve));
+    const deckPath = join(dir, "big.pdf");
+    // Far more than the socket buffers, so the upload is cut off part way.
+    await writeFile(deckPath, Buffer.alloc(16 * 1024 * 1024));
+    const outcome = await renderDeck({
+      socket: await openRenderer(path),
+      deckPath,
+      signal: new AbortController().signal,
+      timeoutMs: 5_000,
+      onSlide: () => Promise.resolve(),
+    });
+    expect(outcome).toMatchObject({ ok: false, code: "renderer_failed" });
+    expect(decks).toHaveLength(1);
+    expect(decks[0]?.bytesRead).toBeLessThan(16 * 1024 * 1024);
+    expect(decks[0]?.destroyed).toBe(true);
   });
 
   it("keeps only well-formed warnings, cut to size", async () => {

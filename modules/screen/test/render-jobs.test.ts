@@ -7,7 +7,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { DATABASE_URL, call, code, events, harness, png, upload } from "./helpers.js";
 import type { Harness } from "./helpers.js";
 import { fakeRenderer, pdfPages } from "./render-fake.js";
@@ -228,6 +228,39 @@ describe.skipIf(!DATABASE_URL)("render jobs", () => {
     expect(renderer.requests).toBe(0);
     const twice = await call(h, "DELETE", `/api/screen/render-jobs/${job?.id}`, admin());
     expect([twice.statusCode, code(twice)]).toEqual([409, "render_finished"]);
+  });
+
+  it.each([
+    [
+      "the queue cannot be tidied",
+      () => vi.spyOn(h.queue, "remove").mockRejectedValueOnce(new Error("valkey is down")),
+    ],
+    [
+      "the cancel cannot be announced",
+      () => {
+        const publish = h.bus.publish.bind(h.bus);
+        return vi
+          .spyOn(h.bus, "publish")
+          .mockImplementation((type, ...rest) =>
+            type === "screen.render.cancelled"
+              ? Promise.reject(new Error("the bus is down"))
+              : publish(type, ...rest),
+          );
+      },
+    ],
+  ])("answers 204 for a cancel that happened when %s", async (_name, fail) => {
+    const deck = await addDeck();
+    const [job] = await jobsOf(deck.id);
+    const spy = fail();
+    try {
+      const res = await call(h, "DELETE", `/api/screen/render-jobs/${job?.id}`, admin());
+      expect(res.statusCode).toBe(204);
+    } finally {
+      spy.mockRestore();
+    }
+    expect((await jobsOf(deck.id))[0]?.state).toBe("cancelled");
+    expect(await h.dispatch(renderer.path)).toBe(false);
+    expect(renderer.requests).toBe(0);
   });
 
   it("cancels a running job by hanging up on the renderer", async () => {
