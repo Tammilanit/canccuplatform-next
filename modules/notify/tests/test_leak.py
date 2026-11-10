@@ -1,5 +1,5 @@
 """Cross-tenant leak tests: one event never reads another's configuration, notifications,
-subscriptions or deliveries."""
+subscriptions, deliveries, quiet hours, choices or follows."""
 
 from __future__ import annotations
 
@@ -53,6 +53,20 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
                 env.clock[0],
             )
             await conn.execute("INSERT INTO notify_outbox (event) VALUES ($1)", marker)
+            await conn.execute(
+                "INSERT INTO notify_quiet_hours (item_id, visibility, status, starts_at, ends_at)"
+                " VALUES ($1, 'public', 'scheduled', $2, $2)",
+                marker,
+                env.clock[0],
+            )
+            await conn.execute("INSERT INTO notify_source_state (bot_client) VALUES ($1)", marker)
+            await conn.execute("INSERT INTO notify_people (user_id) VALUES ($1)", marker)
+            await conn.execute(
+                "INSERT INTO notify_follows (user_id, topic, entity_id, created_at)"
+                " VALUES ($1, 'game', 'g', $2)",
+                marker,
+                env.clock[0],
+            )
 
     async def _read(tenant: str) -> set[str]:
         async with env.db.tenant(tenant) as conn:
@@ -68,6 +82,10 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
                 "SELECT endpoint AS v FROM notify_subscriptions",
                 "SELECT recipient AS v FROM notify_deliveries",
                 "SELECT event AS v FROM notify_outbox",
+                "SELECT item_id AS v FROM notify_quiet_hours",
+                "SELECT bot_client AS v FROM notify_source_state",
+                "SELECT user_id AS v FROM notify_people",
+                "SELECT user_id AS v FROM notify_follows",
             ):
                 found |= {r["v"] for r in await conn.fetch(sql)}
         return found

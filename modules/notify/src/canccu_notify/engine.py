@@ -136,6 +136,9 @@ class Candidate:
     urgent: bool
     channels: tuple[str, ...]
     expires_at: datetime
+    entity_id: str | None = None
+    """For an entity-scoped part: the entity whose followers get it (the consumer finds them),
+    with `audience` the source's, which they must be allowed to read."""
 
 
 def _audience(trigger: dict[str, Any], envelope: dict[str, Any]) -> str | None:
@@ -181,10 +184,14 @@ def evaluate(
         channels = [c for c in channels if c in named]
     if not channels:
         return []
-    if "entity_field" in (trigger.get("recipients") or {}):
-        return []  # followers arrive with follows (#226); until then nobody follows anything
+    entity_id: str | None = None
     user_ids: tuple[str, ...] = ()
-    if part == "personal":
+    if "entity_field" in (trigger.get("recipients") or {}):
+        raw = get(envelope, trigger["recipients"]["entity_field"])
+        if not isinstance(raw, str | int) or isinstance(raw, bool) or raw == "":
+            return []
+        entity_id = str(raw)
+    elif part == "personal":
         user_ids = _user_ids(trigger, envelope)
         if not user_ids:
             return []
@@ -218,5 +225,6 @@ def evaluate(
             urgent=urgent,
             channels=tuple(channels),
             expires_at=expires,
+            entity_id=entity_id,
         )
     ]

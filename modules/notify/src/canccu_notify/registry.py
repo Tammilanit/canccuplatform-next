@@ -82,7 +82,7 @@ def check_conditions(conds: Any, where: str, params: set[str]) -> None:
                 raise bad(f"{at}: nearest_in needs a param or a number")
 
 
-def _part(name: str, part: Any) -> None:
+def _part(name: str, part: Any, owner: str) -> None:
     where = f"parts.{name}"
     if not isinstance(part, dict) or not _is_str(part.get("scope")):
         raise bad(f"{where}.scope: required")
@@ -102,6 +102,21 @@ def _part(name: str, part: Any) -> None:
         entity = part.get("entity")
         if not isinstance(entity, dict) or not KEY_RE.fullmatch(str(entity.get("type", ""))):
             raise bad(f"{where}.entity.type: required for scope entity")
+        _entity_events(entity, f"{where}.entity", owner)
+
+
+def _entity_events(entity: dict[str, Any], where: str, owner: str) -> None:
+    """`merged` and `removed`: the owner's own events, and the paths to the ids (Follows)."""
+    for name, paths in (("merged", ("from", "into")), ("removed", ("id",))):
+        spec = entity.get(name)
+        if spec is None:
+            continue
+        if not isinstance(spec, dict) or not EVENT_RE.fullmatch(str(spec.get("event", ""))):
+            raise bad(f"{where}.{name}.event: an event type")
+        if spec["event"].split(".")[0] != owner:
+            raise bad(f"{where}.{name}.event: one of the owner's own events")
+        for path in paths:
+            _path(spec.get(path), f"{where}.{name}.{path}")
 
 
 def _params(raw: Any) -> set[str]:
@@ -198,7 +213,7 @@ def validate(key: str, reg: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(parts, dict) or not parts or set(parts) - set(PART_SCOPES):
         raise bad("parts: event and/or personal")
     for name, part in parts.items():
-        _part(name, part)
+        _part(name, part, reg["owner"])
     params = _params(reg.get("params"))
     triggers = reg.get("triggers")
     if not isinstance(triggers, list) or not triggers:

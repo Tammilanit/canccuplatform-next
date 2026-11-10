@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+from typing import Any
+from urllib.parse import quote
 
 import httpx
 import uvicorn
@@ -29,7 +31,7 @@ from canccu_kit import (
     valkey_check,
 )
 
-from . import consumer, delivery
+from . import consumer, delivery, lifecycle, quiet
 from .app import create_app
 from .db import Db
 from .deps import Deps
@@ -68,6 +70,43 @@ class TenantsAudit:
             self.url, json=body, headers=self.identity.headers("tenants")
         )
         response.raise_for_status()
+
+
+class AgendaReader:
+    """`GET /internal/agenda/items` as a module (contracts/agenda.md, Reading)."""
+
+    def __init__(self, base_url: str, identity: ServiceIdentity) -> None:
+        self.url = base_url.rstrip("/") + "/internal/agenda/items"
+        self.identity = identity
+        self.http = httpx.AsyncClient(timeout=5.0)
+
+    async def items(self, tenant_id: str) -> dict[str, Any]:
+        response = await self.http.get(
+            self.url, params={"tenant_id": tenant_id}, headers=self.identity.headers("agenda")
+        )
+        response.raise_for_status()
+        answer: dict[str, Any] = response.json()
+        return answer
+
+
+class UsersReader:
+    """`GET /internal/tenants/users/{user_id}`: the Discord id for a DM, read when it is
+    requested. A 404 (an unknown user, or the read not served yet, #150) is None."""
+
+    def __init__(self, base_url: str, identity: ServiceIdentity) -> None:
+        self.base = base_url.rstrip("/") + "/internal/tenants/users/"
+        self.identity = identity
+        self.http = httpx.AsyncClient(timeout=5.0)
+
+    async def discord_id(self, user_id: str) -> str | None:
+        response = await self.http.get(
+            self.base + quote(user_id, safe=""), headers=self.identity.headers("tenants")
+        )
+        if response.status_code == 404:
+            return None
+        response.raise_for_status()
+        value = response.json().get("discord_user_id")
+        return value if isinstance(value, str) and value else None
 
 
 async def serve() -> None:
@@ -115,7 +154,6 @@ async def serve() -> None:
 
     bus.subscribe(["admin"], on_admin)
     bus.subscribe(["tenants"], on_tenants)
-    bus.subscribe_tenants(["tenants"], on_tenants)
 
     async def ping() -> None:
         async with db.platform() as conn:
@@ -137,11 +175,18 @@ async def serve() -> None:
         tenants=resolver,
         push=Pusher(vapid),
         outbox=Outbox(bus, db),
+        agenda=AgendaReader(os.environ.get("CANCCU_AGENDA_URL", "http://agenda:8080"), identity),
+        users=UsersReader(os.environ["CANCCU_TENANTS_URL"], identity),
     )
+
+    async def on_event_tenants(event: Event) -> None:
+        resolver.handle_event(event)
+        await lifecycle.handle(d, event)  # the archive and retention
 
     async def on_source(event: Event) -> None:
         await consumer.handle(d, event)
 
+    bus.subscribe_tenants(["tenants"], on_event_tenants)
     bus.subscribe_tenants(["admin"], settings.handle_event)
     bus.subscribe_tenants(consumer.SOURCES, on_source)
     app = create_app(d, health, resolver, identity)
@@ -156,11 +201,15 @@ async def serve() -> None:
             forwarded_allow_ips=trusted,
         )
     )
+    # A restart during quiet hours keeps them: the mirror is in Postgres; this catches changes
+    # made while no container ran.
+    reread = asyncio.create_task(quiet.refresh_all(d))
     sender = asyncio.create_task(delivery.run(d))
     outbox_sender = asyncio.create_task(d.outbox.run())
     try:
         await server.serve()
     finally:
+        reread.cancel()
         sender.cancel()
         outbox_sender.cancel()
 

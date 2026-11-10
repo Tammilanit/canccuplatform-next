@@ -22,7 +22,9 @@ from . import (
     config,
     custom_api,
     custom_pages,
+    follows,
     inbox,
+    me,
     push,
     registry,
     subscriptions,
@@ -48,6 +50,8 @@ def create_app(
         + checkin.ROUTES
         + push.ROUTES
         + subscriptions.ROUTES
+        + me.ROUTES
+        + follows.ROUTES
     )
     public = Starlette(routes=api + pages)
     # Starlette's slash redirects would drop the /notify prefix Caddy strips.
