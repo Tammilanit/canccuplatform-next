@@ -18,6 +18,7 @@ from canccu_kit import (
     Bus,
     Event,
     Health,
+    Outbox,
     SecretBox,
     ServiceIdentity,
     TenantResolver,
@@ -178,6 +179,8 @@ class Env:
 
 
 HOSTS = {"a.example.test": "ev-a", "b.example.test": "ev-b"}
+DOWN_HOST = "down.example.test"
+"""A hostname the fake tenants module fails to resolve (502), as while it is down."""
 
 
 @pytest.fixture
@@ -189,12 +192,14 @@ async def env() -> AsyncIterator[Env]:
         await conn.execute(
             "TRUNCATE notify_topic_types, notify_topic_type_history, notify_topic_config,"
             " notify_notifications, notify_dedupe, notify_event_state, notify_custom_topics,"
-            " notify_check_in_keys, notify_check_ins"
+            " notify_check_in_keys, notify_check_ins, notify_outbox, notify_outbox_tenants"
         )
     access.ZONES.clear()
     contexts = {tid: context(tid) for tid in HOSTS.values()}
 
     def registry(request: httpx.Request) -> httpx.Response:
+        if request.url.params.get("host") == DOWN_HOST:
+            return httpx.Response(502)
         tid = HOSTS.get(request.url.params.get("host", ""))
         if tid is None:
             return httpx.Response(404, json={"error": {"code": "not_found", "message": "x"}})
@@ -210,14 +215,16 @@ async def env() -> AsyncIterator[Env]:
     settings = FakeSettings()
     clock = [NOW]
     audit = FakeAudit()
+    bus = Bus(store, "notify")
     d = Deps(
         db=db,
-        bus=Bus(store, "notify"),
+        bus=bus,
         rights=rights,
         settings=settings,
         audit=audit,
         secrets=SecretBox({1: b"s" * 32}, 1),
         tenants=FakeTenants(contexts),
+        outbox=Outbox(bus, db),
         now=lambda: clock[0],
     )
     app = create_app(d, Health("notify", "dev", {}), resolver, ServiceIdentity("notify", KEY))

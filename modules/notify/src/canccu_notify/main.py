@@ -14,6 +14,7 @@ from canccu_kit import (
     Event,
     Health,
     IpMode,
+    Outbox,
     RightsChecker,
     SecretBox,
     ServiceIdentity,
@@ -32,19 +33,14 @@ from .app import create_app
 from .db import Db
 from .deps import Deps
 
-# deploy/compose.yml's stand-in for CANCCU_SECRETS_KEY, so a dev stack starts without one.
-PLACEHOLDER_SECRETS_KEY = "Y2FuY2N1LWxvY2FsLW9ubHktc2VjcmV0cy1rZXktMzI="
 
-
-def secret_box(version: str) -> SecretBox:
-    """Seals each event's check-in key (docs/plans/issue-188.md, D5)."""
+def secret_box() -> SecretBox:
+    """Seals each event's check-in key (docs/plans/issue-188.md, D5). The kit refuses the compose
+    placeholder outside a dev stack."""
     try:
-        box = SecretBox.from_env()
+        return SecretBox.from_env()
     except ConfigError as exc:
         raise SystemExit(str(exc)) from exc
-    if os.environ["CANCCU_SECRETS_KEY"].endswith(PLACEHOLDER_SECRETS_KEY) and version != "dev":
-        raise SystemExit("CANCCU_SECRETS_KEY is the local placeholder; set a real key")
-    return box
 
 
 class TenantsAudit:
@@ -81,7 +77,7 @@ async def serve() -> None:
         identity = ServiceIdentity(config.module, service_key_from_env())
     except ConfigError as exc:
         raise SystemExit(str(exc)) from exc
-    box = secret_box(config.version)
+    box = secret_box()
     # The stack logs in as a plain role and migrates as the migration role (0013 item 5).
     db = await Db.connect(
         os.environ["CANCCU_DATABASE_URL"],
@@ -129,6 +125,7 @@ async def serve() -> None:
         audit=audit,
         secrets=box,
         tenants=resolver,
+        outbox=Outbox(bus, db),
     )
 
     async def on_source(event: Event) -> None:
@@ -148,7 +145,11 @@ async def serve() -> None:
             forwarded_allow_ips=trusted,
         )
     )
-    await server.serve()
+    sender = asyncio.create_task(d.outbox.run())
+    try:
+        await server.serve()
+    finally:
+        sender.cancel()
 
 
 def main() -> None:

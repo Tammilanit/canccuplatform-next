@@ -8,7 +8,7 @@ from urllib.parse import quote
 
 import httpx
 import pytest
-from conftest import NOW, Env
+from conftest import DOWN_HOST, NOW, Env
 from test_checkin import code, recorded
 
 from canccu_notify import checkin
@@ -97,3 +97,36 @@ async def test_a_cross_site_submit_is_refused(env: Env) -> None:
             headers={**env.rights.sign_in("u_a"), "origin": "https://evil.example"},
         )
     assert r.status_code == 403 and recorded(env) == []
+
+
+@pytest.mark.parametrize(
+    ("host", "status"),
+    [(DOWN_HOST, 503), ("unknown.example.test", 404)],
+)
+async def test_the_page_says_try_again_when_the_event_cannot_be_resolved(
+    env: Env, host: str, status: int
+) -> None:
+    async with env.client(host) as c:
+        r = await c.get("/check-in?p=arrival&c=" + "x" * 22)
+    assert r.status_code == status and r.headers["content-type"].startswith("text/html")
+    assert "Try again" in r.text and '"error"' not in r.text
+
+
+async def test_the_page_says_try_again_while_admin_is_down(env: Env) -> None:
+    form = {"p": "arrival", "c": (await code(env))["code"]}
+    env.settings.down = True
+    r = await submit(env, form, "u_a")
+    assert r.status_code == 503 and r.headers["content-type"].startswith("text/html")
+    assert "Try again" in r.text and recorded(env) == []
+    assert r.headers["cache-control"] == "no-store"
+
+
+async def test_a_refused_origin_is_a_page_too(env: Env) -> None:
+    async with env.client() as c:
+        r = await c.post(
+            "/check-in",
+            data={"p": "arrival", "c": "x" * 22},
+            headers={**env.rights.sign_in("u_a"), "origin": "https://evil.example"},
+        )
+    assert r.status_code == 403 and r.headers["content-type"].startswith("text/html")
+    assert "Try again" in r.text

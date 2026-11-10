@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
-from canccu_kit import Bus, SecretBox
+from canccu_kit import Bus, Outbox, SecretBox
 from canccu_kit.access import TenantContext
 from canccu_kit.rights import Session
 from starlette.requests import Request
@@ -59,7 +59,11 @@ class Deps:
     audit: Audit
     secrets: SecretBox
     tenants: Tenants
+    outbox: Outbox
     now: Callable[[], datetime] = field(default=utc_now)
+    check_in_keys: dict[str, bytes | None] = field(default_factory=dict)
+    """Each event's opened check-in key, by tenant id: a key never changes once made, only its
+    seal does, so the process may keep it. None: the key did not open, and that was logged."""
 
 
 def deps(request: Request) -> Deps:
