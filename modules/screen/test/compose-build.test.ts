@@ -114,9 +114,11 @@ describe("the builder", () => {
     expect(layout.id).toBe("pulse");
     expect(regions.map((r) => [r.id, r.role, r.layer])).toEqual([
       ["header", "header", 0],
+      ["header-2", "header", 0],
       ["hero", "hero", 0],
       ["rail", "rail", 0],
       ["venue_rail", "venue_rail", 0],
+      ["venue_rail-2", null, 0],
       ["ticker", "ticker", 1],
       ["_full", "full", 10],
       ["_overlay", "overlay", 11],
@@ -166,15 +168,15 @@ describe("the builder", () => {
       key: "main",
       layoutId: null,
       regions: {
-        header: {
+        hero: {
           rotation: "shuffle",
           skip_empty: false,
           widgets: [1, 2, 3, 4, 5].map(() => ({ widget: "clock" })),
         },
       },
     };
-    const a = buildRegions(input({ zone })).regions.find((r) => r.id === "header");
-    const b = buildRegions(input({ zone })).regions.find((r) => r.id === "header");
+    const a = buildRegions(input({ zone })).regions.find((r) => r.id === "hero");
+    const b = buildRegions(input({ zone })).regions.find((r) => r.id === "hero");
     expect(a?.rotation).toBe("shuffle");
     expect(a?.order).toEqual(b?.order);
     expect([...(a?.order ?? [])].sort()).toEqual([0, 1, 2, 3, 4]);
@@ -284,8 +286,9 @@ describe("view-models", () => {
 });
 
 describe("review fixes", () => {
-  it("keeps the hub QR on the venue rail when the venue has nothing to show", () => {
-    const rail = buildRegions(input({ facts: facts({ venue: null }) })).regions.find(
+  it("keeps the hub QR in the venue rail's rotation when the venue has nothing to show", () => {
+    const zone = { key: "main", layoutId: null, regions: {}, hubQr: "rotate" as const };
+    const rail = buildRegions(input({ zone, facts: facts({ venue: null }) })).regions.find(
       (r) => r.id === "venue_rail",
     );
     const shown = (rail?.order ?? []).map((i) => rail?.widgets[i]);
@@ -309,6 +312,8 @@ describe("review fixes", () => {
         name: "Main",
         layout_id: null,
         regions: { hero: { rotation: "shuffle" } },
+        header: null,
+        hub_qr: "always",
         sound: { enabled: true, device_id: null },
         epoch: "e1",
       },
@@ -328,6 +333,8 @@ describe("review fixes", () => {
       name: "Main",
       layout_id: null,
       regions: {},
+      header: null,
+      hub_qr: "always" as const,
       sound: { enabled: true, device_id: null },
       epoch: "e1",
     };

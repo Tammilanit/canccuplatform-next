@@ -61,4 +61,16 @@ describe.skipIf(!DATABASE_URL)("migrations", () => {
       { old: null },
     ]);
   });
+
+  // The zone above was made before 008 ran, so it shows what 008 gives existing zones.
+  it("gives existing zones the contract's defaults for `header` and `hub_qr`", async () => {
+    const kept = await admin.query("SELECT key, header, hub_qr FROM screen_zones");
+    expect(kept.rows).toEqual([{ key: "hall", header: null, hub_qr: "always" }]);
+    await expect(
+      admin.query("UPDATE screen_zones SET hub_qr = 'never' WHERE key = 'hall'"),
+    ).rejects.toThrow();
+    await expect(
+      admin.query("UPDATE screen_zones SET header = 'rotating' WHERE key = 'hall'"),
+    ).rejects.toThrow();
+  });
 });

@@ -21,6 +21,8 @@ const WIDGET_RE = /^[a-z][a-z0-9_]{0,39}$/;
 const ROLES = ["full", "hero", "rail", "venue_rail", "ticker", "header", "backdrop", "overlay"];
 const ROTATIONS = ["sequence", "shuffle"];
 const IDLES = ["logo", "blank", "collapse", "next"];
+const HEADERS = ["separate", "shared"];
+const HUB_QRS = ["always", "rotate"];
 const MAX_REGIONS = 32;
 const MAX_WIDGETS = 12;
 const MAX_PROPS = 32;
@@ -35,6 +37,9 @@ export interface ZoneInput {
   name: string;
   layout_id: string | null;
   regions: Record<string, Record<string, unknown>>;
+  /** Null: the layout's `header`, else `separate` (src/compose/parts.ts). */
+  header: "separate" | "shared" | null;
+  hub_qr: "always" | "rotate";
   sound: ZoneSound;
   /** Required on PUT; ignored on POST, where it is read-only. */
   revision?: number;
@@ -118,7 +123,11 @@ function regionSettings(value: unknown, where: string): Json {
 /** The checked zone, or 400 `invalid_request` naming the first problem. */
 export function zoneInput(value: unknown): ZoneInput {
   if (!isObject(value)) throw invalidRequest("The body must be a JSON object.");
-  onlyKeys(value, ["key", "name", "layout_id", "regions", "sound", "revision"], "zone");
+  onlyKeys(
+    value,
+    ["key", "name", "layout_id", "regions", "header", "hub_qr", "sound", "revision"],
+    "zone",
+  );
   const { key, name } = value;
   if (typeof key !== "string" || !ZONE_KEY_RE.test(key)) {
     throw invalidRequest(
@@ -141,6 +150,11 @@ export function zoneInput(value: unknown): ZoneInput {
     if (!NAME_RE.test(id)) throw invalidRequest(`\`regions.${id}\` is not a region id.`);
     regionSettings(settings, `regions.${id}`);
   }
+  const header = value.header ?? null;
+  if (header !== null) oneOf(header, HEADERS, "`header`");
+  // Unlike `header`, `hub_qr` has no null: the contract gives it a plain default.
+  const hubQr = value.hub_qr === undefined ? "always" : value.hub_qr;
+  oneOf(hubQr, HUB_QRS, "`hub_qr`");
   const sound = value.sound ?? {};
   if (!isObject(sound)) throw invalidRequest("`sound` must be an object.");
   onlyKeys(sound, ["enabled", "device_id"], "sound");
@@ -159,6 +173,8 @@ export function zoneInput(value: unknown): ZoneInput {
     name: name.trim(),
     layout_id: layout,
     regions: regions as Record<string, Json>,
+    header: header as ZoneInput["header"],
+    hub_qr: hubQr as ZoneInput["hub_qr"],
     sound: { enabled, device_id: deviceId },
     ...(revision === undefined ? {} : { revision: revision as number }),
   };

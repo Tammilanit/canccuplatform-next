@@ -10,6 +10,8 @@ interface Zone {
   name: string;
   layout_id: string | null;
   regions: Record<string, Record<string, unknown>>;
+  header: "separate" | "shared" | null;
+  hub_qr: "always" | "rotate";
   sound: { enabled: boolean; device_id: string | null };
   revision: number;
 }
@@ -41,6 +43,8 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
         name: "Main",
         layout_id: null,
         regions: { hero: { idle: "next" } },
+        header: null,
+        hub_qr: "always",
         sound: { enabled: true, device_id: null },
         revision: 1,
       },
@@ -75,6 +79,8 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
     expect(added.statusCode).toBe(201);
     expect(added.json()).toEqual({
       ...zone,
+      header: null,
+      hub_qr: "always",
       sound: { enabled: true, device_id: null },
       revision: 1,
     });
@@ -134,6 +140,30 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
     expect((await call(h, "DELETE", "/api/screen/zones/cafe", admin())).statusCode).toBe(404);
   });
 
+  it("keeps `header` and `hub_qr`, and names them in `changed` when they change", async () => {
+    const zone = { key: "lobby", name: "Lobby", header: "shared", hub_qr: "rotate" };
+    const added = await call(h, "POST", "/api/screen/zones", { ...admin(), body: zone });
+    expect(added.json()).toMatchObject({ header: "shared", hub_qr: "rotate", revision: 1 });
+    const saved = await call(h, "PUT", "/api/screen/zones/lobby", {
+      ...admin(),
+      body: { ...zone, header: "separate", revision: 1 },
+    });
+    expect(saved.json()).toMatchObject({ header: "separate", hub_qr: "rotate", revision: 2 });
+    expect(events(h, "screen.zone.saved").at(-1)).toMatchObject({ changed: ["header"] });
+    // Left out, each takes the contract's default, as every other field of a PUT does.
+    const defaults = await call(h, "PUT", "/api/screen/zones/lobby", {
+      ...admin(),
+      body: { key: "lobby", name: "Lobby", revision: 2 },
+    });
+    expect(defaults.json()).toMatchObject({ header: null, hub_qr: "always", revision: 3 });
+    expect(events(h, "screen.zone.saved").at(-1)).toMatchObject({ changed: ["header", "hub_qr"] });
+    expect((await zones()).find((z) => z.key === "lobby")).toMatchObject({
+      header: null,
+      hub_qr: "always",
+    });
+    await call(h, "DELETE", "/api/screen/zones/lobby", admin());
+  });
+
   it("gives a zone made again under the same key a new epoch", async () => {
     const body = { key: "stage", name: "Stage" };
     await call(h, "POST", "/api/screen/zones", { ...admin(), body });
@@ -173,6 +203,10 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
         name: "x",
         regions: { hero: { widgets: [{ widget: "clock", props: { a: {} } }] } },
       },
+      { key: "ok", name: "x", header: "rotating" },
+      { key: "ok", name: "x", header: true },
+      { key: "ok", name: "x", hub_qr: null },
+      { key: "ok", name: "x", hub_qr: "never" },
       { key: "ok", name: "x", sound: { enabled: "no" } },
       { key: "ok", name: "x", sound: { device_id: "dv_nobody" } },
     ];
