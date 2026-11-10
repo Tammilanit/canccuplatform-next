@@ -53,13 +53,13 @@ owner=; norecord=0
 status_dir() { local v; v=$(docker volume inspect -f '{{.Mountpoint}}' "$status_volume" 2>/dev/null) && [ -d "$v" ] && echo "$v"; }
 
 # put DIR JSON: replace DIR/status.json in one step, readable by the module that serves it
-# shellcheck disable=SC2317  # called from record, which the EXIT trap runs
+# shellcheck disable=SC2317,SC2329  # called from record, which the EXIT trap runs
 put() { printf '%s\n' "$2" > "$1/status.json.tmp" && chmod 644 "$1/status.json.tmp" && mv "$1/status.json.tmp" "$1/status.json"; }
 
 # record RC: write this run's result for people and for the stack's health: the time, the commit
 # the checkout runs, ok or the error in one line, and how many runs in a row have failed since
 # when. Runs on every exit once the lock is held (trap), so a run that dies early still shows.
-# shellcheck disable=SC2317  # called from the EXIT trap
+# shellcheck disable=SC2317,SC2329  # called from the EXIT trap
 record() {
   local rc=$1 now commit='' n=0 since='' prev_n=0 prev_since='' err='' res=ok f vol
   # waiting for images is neither a success nor a failure: the last result stands

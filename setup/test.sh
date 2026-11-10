@@ -174,6 +174,9 @@ has "firewall check looks at FORWARD -> DOCKER-USER" "FORWARD"
 
 echo "# shellcheck"
 if command -v shellcheck >/dev/null; then
+  # The runner image updates ShellCheck on its own and new versions add rules (SC2329 in 0.11),
+  # so the log names the version that ran.
+  echo "     shellcheck $(shellcheck --version | sed -n 's/^version: //p')"
   exits "shellcheck" 0 shellcheck -x setup/install setup/firewall setup/check-boot setup/deploy setup/lib.sh setup/test.sh setup/test-install.sh setup/test-deploy.sh
 else
   skip "shellcheck" "not installed"
