@@ -176,8 +176,12 @@ call GET "/agenda/internal/agenda/items?tenant_id=demo"
 check "${TESTS[18]}" status_is 404
 
 # The files volume is writable by the modules (#286): screen keeps the upload as sent (a sound
-# is stored unchanged) and serves the same bytes back.
-SOUND=modules/screen/test/fixtures/media/sound.mp3
+# is stored unchanged) and serves the same bytes back. Files are content-addressed, so on a reused
+# volume the fixture's bytes would match a copy an earlier run stored and prove no write: an
+# ID3v1 tag (128 bytes, the last thing in an MP3) with a title of this run makes them new.
+SOUND="$TMP/sound.mp3"
+{ cat modules/screen/test/fixtures/media/sound.mp3
+  printf 'TAG%-30.30s%-30s%-30s%-4s%-30s\377' "canccu-$(date +%s%N)-$$" "" "" "" ""; } > "$SOUND"
 call POST /api/screen/assets -H "cookie: $COOKIE" -F "file=@$SOUND"
 file_url=$(jq -r '.url // ""' "$TMP/body" 2>/dev/null)
 # shellcheck disable=SC2329
