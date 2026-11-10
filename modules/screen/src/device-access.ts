@@ -13,6 +13,8 @@ declare module "fastify" {
   interface FastifyRequest {
     /** Set by requireDevice. */
     device: DeviceRow | null;
+    /** Which of the device's tokens the cookie held; set by requireDevice. */
+    deviceToken: TokenMatch["kind"] | null;
   }
 }
 
@@ -89,5 +91,6 @@ export function requireDevice(
       );
     }
     request.device = match.device;
+    request.deviceToken = match.kind;
   };
 }
