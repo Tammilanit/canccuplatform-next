@@ -26,7 +26,7 @@ import { sweepOffline } from "../src/health.js";
 import { MemoryKv } from "../src/kv.js";
 
 /** Tests run only with a Postgres to spare; never point this at a database you keep. */
-export const DATABASE_URL = process.env.CANCCU_TEST_DATABASE_URL;
+export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
 
 export const VENUE_IP = "10.0.0.5";
 export const OUTSIDE_IP = "192.0.2.9";

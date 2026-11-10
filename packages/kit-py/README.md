@@ -156,7 +156,7 @@ The kit writes nothing to disk. Its only in-memory items are the rights cache (â
 ```sh
 pip install -e ".[dev]" && ruff check . && ruff format --check . && mypy . && pytest
 ```
-CI runs `ruff check .`, `mypy .` and `pytest` (job `lint-types-test (kit-py)`).
+CI runs the same commands through `scripts/check-module packages/kit-py`, with the integration tests below (job `lint-types-test (kit-py)`).
 
 ## Integration test
 The store and bus run against the real Valkey from the Compose stack: publish with MAXLEN (exact and `~`), subscribe, dedupe of an entry added twice, and tenant streams found by `scan` and read per tenant. Row-level security runs against the real Postgres, as a plain app role the test creates (a superuser bypasses RLS); its role and table names differ from the kit-ts test, so both can share one database. Each test is skipped unless `CANCCU_VALKEY_URL` or `CANCCU_DATABASE_URL` is set, so the check above stays offline.
@@ -167,4 +167,4 @@ CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu \
   pytest tests/test_valkey_integration.py tests/test_postgres_integration.py
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml down
 ```
-`compose.test.yml` publishes Valkey and Postgres on `127.0.0.1` only. CI runs this as the `integration (kit)` job.
+`compose.test.yml` publishes Valkey and Postgres on `127.0.0.1` only. CI runs these in the `lint-types-test (kit-py)` job; `integration (kit)` passes when it does.

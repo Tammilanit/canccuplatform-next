@@ -206,7 +206,7 @@ The kit writes nothing to disk. Its only in-memory items are the rights cache (â
 npm ci && npm run lint && npm run typecheck && npm test
 ```
 
-CI runs the same commands (job `lint-types-test (kit-ts)`).
+CI runs the same commands through `scripts/check-module packages/kit-ts`, with the integration tests below (job `lint-types-test (kit-ts)`).
 
 ## Integration test
 
@@ -220,4 +220,4 @@ CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu \
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml down
 ```
 
-`compose.test.yml` publishes Valkey and Postgres on `127.0.0.1` only. CI runs this as the `integration (kit)` job.
+`compose.test.yml` publishes Valkey and Postgres on `127.0.0.1` only. CI runs these in the `lint-types-test (kit-ts)` job; `integration (kit)` passes when it does.

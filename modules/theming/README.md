@@ -19,17 +19,17 @@ Each event's theme ([contracts/theming.md](../../contracts/theming.md)). The fir
 npm ci && npm run lint && npm run typecheck && npm test
 ```
 
-`packages/kit-ts` and `packages/ui` need `npm ci` first. The tests need a Postgres for RLS and skip without one. Point `CANCCU_TEST_DATABASE_URL` at a throwaway database (the tests drop and recreate the theming tables) as a superuser; requests still run as the app role, which RLS binds:
+`packages/kit-ts` and `packages/ui` need `npm ci` first. The tests need a Postgres for RLS and skip without one. Point `CANCCU_DATABASE_URL` at a throwaway database (the tests drop and recreate the theming tables) as a superuser; requests still run as the app role, which RLS binds:
 
 ```sh
 docker run -d --rm --name canccu-theming-test -e POSTGRES_PASSWORD=test -p 127.0.0.1:55433:5432 postgres:17.11-alpine
-CANCCU_TEST_DATABASE_URL=postgres://postgres:test@127.0.0.1:55433/postgres npm test
+CANCCU_DATABASE_URL=postgres://postgres:test@127.0.0.1:55433/postgres npm test
 docker stop canccu-theming-test
 ```
 
 `test/sandbox.browser.test.ts` proves the sandbox in Chromium (opaque origin, no storage, no network, no access to the page, the still on failure and under reduced motion) with the level-up demo theme's `drift` embed. It uses Playwright's Chromium where one is installed, else the system Chrome (`channel: "chrome"`, as on CI runners); without either it skips locally and fails in CI. Where the host lacks Chromium's libraries, run it in Playwright's image:
 
 ```sh
-docker run --rm --network host -u "$(id -u):$(id -g)" -e HOME=/tmp -e CANCCU_TEST_DATABASE_URL=postgres://postgres:test@127.0.0.1:55433/postgres \
+docker run --rm --network host -u "$(id -u):$(id -g)" -e HOME=/tmp -e CANCCU_DATABASE_URL=postgres://postgres:test@127.0.0.1:55433/postgres \
   -v "$PWD/../..:$PWD/../.." -w "$PWD" mcr.microsoft.com/playwright:v1.64.1-noble npx vitest run test/sandbox.browser.test.ts
 ```
