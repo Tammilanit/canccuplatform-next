@@ -95,10 +95,19 @@ export function screenHealth(opts: {
     version: opts.version,
     checks: {
       // Pairing, commands and device health run on the key-value connection, not the streams'
-      // one: either lost is Valkey down for this module.
+      // one: either lost is Valkey down for this module. Both at once, so one slow connection
+      // does not eat the other's time, and the detail names the one that failed.
       valkey: async () => {
-        await opts.kv.ping();
-        return streams();
+        const [kv, bus] = await Promise.allSettled([opts.kv.ping(), streams()]);
+        const lost = (name: string, result: PromiseSettledResult<unknown>): string[] =>
+          result.status === "rejected"
+            ? [
+                `${name} connection: ${result.reason instanceof Error ? result.reason.message : String(result.reason)}`,
+              ]
+            : [];
+        const failed = [...lost("key-value", kv), ...lost("streams", bus)];
+        if (failed.length > 0) throw new Error(failed.join("; "));
+        return { status: "ok" };
       },
       postgres: postgresCheck(opts.query),
       // Readability only, as theming checks it: the shared volume is owned by root on today's

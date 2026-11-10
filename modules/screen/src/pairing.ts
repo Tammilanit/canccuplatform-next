@@ -207,7 +207,8 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
           if (row === undefined) {
             // Lost to a collection that changed the token since this poll read the record: most
             // often an overlapping poll of this browser, whose record with `issued_hash` must stay
-            // for its retry. Only a device that is gone from this event ends the pairing.
+            // for its retry. A device gone from this event ends the pairing, and so does a lost
+            // write of `issued_hash` (below).
             const live = await c.query(
               "SELECT 1 FROM devices WHERE id = $1 AND revoked_at IS NULL AND current_tenant_id = $2",
               [rec.device_id, requireTenant()],
@@ -222,7 +223,13 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
         },
       );
       if ("gone" in collected) {
-        if (collected.gone) await kv.del(keys.record(id));
+        // A live device whose stored record still has no `issued_hash` was collected by a poll
+        // whose write below was lost: no token can be collected again, so forget the pairing and
+        // let the next POST start a new one. Read afresh: an overlapping winner may have written
+        // it since; if its write lands after this delete, it simply puts the record back.
+        const stored = collected.gone ? null : await record(id);
+        if (collected.gone || (stored !== null && stored.issued_hash === undefined))
+          await kv.del(keys.record(id));
         throw notFound();
       }
       await kv.set(

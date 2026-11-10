@@ -271,6 +271,35 @@ describe.skipIf(!DATABASE_URL)("pairing", () => {
     expect((await poll()).json()).toMatchObject({ status: "paired" });
   });
 
+  it("forgets a collected pairing whose issued token was never stored, so a reload asks again", async () => {
+    const res = await start();
+    const { pairing_id, code: shown } = res.json<{ pairing_id: string; code: string }>();
+    const pairingCookie = setCookie(res, "canccu_pairing") ?? "";
+    await call(h, "POST", "/api/screen/devices", {
+      session: "admin",
+      body: { code: shown, name: "Lost write" },
+    });
+    const poll = () =>
+      call(h, "GET", `/api/screen/pairing/${pairing_id}`, {
+        cookies: { canccu_pairing: pairingCookie },
+      });
+    // The collection commits, then Valkey loses the write of `issued_hash`.
+    const set = h.kv.set.bind(h.kv);
+    let failed = false;
+    h.kv.set = async (key, value, ttlMs) => {
+      if (failed || !value.includes("issued_hash")) return set(key, value, ttlMs);
+      failed = true;
+      throw new Error("valkey went away");
+    };
+    expect((await poll()).statusCode).toBe(500);
+    h.kv.set = set;
+    expect(failed).toBe(true);
+    expect((await poll()).statusCode).toBe(404);
+    const reloaded = await start("alpha.test", undefined, pairingCookie);
+    expect(reloaded.statusCode).toBe(201);
+    expect(reloaded.json<{ pairing_id: string }>().pairing_id).not.toBe(pairing_id);
+  });
+
   it("forgets the pairing of a revoked device, so a reload asks for a new code", async () => {
     const res = await start();
     const { pairing_id, code: shown } = res.json<{ pairing_id: string; code: string }>();
