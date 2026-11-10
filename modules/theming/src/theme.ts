@@ -1,6 +1,9 @@
 /** The current theme as GET /api/theming/current answers it (contracts/theming.md, Reading the current theme). */
 import type { SqlClient } from "@canccu/kit";
+import { listEmbeds } from "./embeds.js";
+import type { EmbedRef } from "./embeds.js";
 import { fileName } from "./files.js";
+import { SANDBOX } from "./sandbox.js";
 import { adminTokens, fillTokens, tokensCss } from "./tokens.js";
 import type { PartialTokens, Tokens } from "./tokens.js";
 
@@ -19,7 +22,7 @@ export interface ResolvedTheme {
   embed_color: number;
   layouts: unknown[];
   templates: unknown[];
-  embeds: unknown[];
+  embeds: EmbedRef[];
 }
 
 /** `#rrggbb[aa]` → the 24-bit Discord colour, alpha dropped (contracts/theming.md, Brand kit). */
@@ -75,9 +78,9 @@ interface RevisionRow {
   embed_color: number;
 }
 
-// Templates are parsed by a later slice (#245) and embeds served by #186; until then a revision
-// answers none, which the contract allows (a region without them shows its widget's default).
-function fromRevision(row: RevisionRow): ResolvedTheme {
+// Templates are parsed by a later slice (#245); until then a revision answers none, which the
+// contract allows (a region without them shows its widget's default).
+function fromRevision(row: RevisionRow, embeds: EmbedRef[]): ResolvedTheme {
   return {
     revision: row.revision,
     published_at: row.published_at.toISOString(),
@@ -90,7 +93,7 @@ function fromRevision(row: RevisionRow): ResolvedTheme {
     embed_color: row.embed_color,
     layouts: row.manifest.layouts ?? [],
     templates: [],
-    embeds: [],
+    embeds,
   };
 }
 
@@ -102,5 +105,7 @@ export async function latestRevision(client: SqlClient): Promise<ResolvedTheme |
        FROM theming_revisions ORDER BY revision DESC LIMIT 1`,
   );
   const row = rows[0] as RevisionRow | undefined;
-  return row === undefined ? undefined : fromRevision(row);
+  if (row === undefined) return undefined;
+  const base = `${SANDBOX}${row.revision}/`;
+  return fromRevision(row, await listEmbeds(client, `r:${row.revision}`, base));
 }

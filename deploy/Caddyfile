@@ -83,6 +83,11 @@
 		reverse_proxy notify:8080
 	}
 
+	# The notification pages under admin's "Event" menu; the module's own paths start at /.
+	handle_path /notify/* {
+		reverse_proxy notify:8080
+	}
+
 	handle_path /admin/* {
 		reverse_proxy admin:8080
 	}

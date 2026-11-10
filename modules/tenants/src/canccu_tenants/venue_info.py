@@ -64,10 +64,9 @@ def serve_plan(path: Path, kind: str) -> Response:
 
 
 async def _viewer(request: Request) -> str:
-    """`member` for whoever may edit; members themselves arrive with #150."""
     d, ctx = deps(request), tenant_of(request)
     session = await d.caller.session(request)
-    return "member" if await d.caller.can(ctx, session, "tenants.venue_info.write") else "guest"
+    return "member" if await d.caller.is_member(ctx, session) else "guest"
 
 
 def _info(row: Any, viewer: str) -> dict[str, Any]:

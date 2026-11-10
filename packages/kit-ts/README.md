@@ -145,7 +145,7 @@ bus.subscribe(["tenants"], (event) => tenants.handleEvent(event)); // drop the r
 - **Postgres:** `tenantTransaction` sets the tenant with `set_config('canccu.tenant', id, true)` (SET LOCAL) inside one transaction, never per connection. Migrations write `TENANT_COLUMN_SQL` (the column defaults to the setting) and `rlsSql(table)` (RLS enabled, forced, and the policy); with no tenant set a query sees nothing and an insert fails. `checkAppRole(client)` refuses to start as a superuser or BYPASSRLS role, which RLS does not bind. `scripts/check-tenancy` lints the migrations ([docs/ci.md](../../docs/ci.md#tenancy)).
 - **Names:** `tenantStream(module)` → `t:<tenant>:events:<module>`, `platformStream(module)` → `events:<module>`, `tenantKey(module, …parts)` → `t:<tenant>:<module>:…`, `tenantFile(module, path)` → `/files/<tenant>/<module>/<path>` (refuses `..`), `platformFilesDir(module)` → `/files/_platform/<module>/`. Modules spell no raw keys.
 - **Bus:** `publish` uses the current tenant (or `{ tenant }`); without one it throws `NoTenant`. Platform events need `{ platform: true }`, and only a module whose contract says so emits them. A consumer drops a message whose `tenant` does not match its stream.
-- **Resolution:** `TenantResolver` asks `GET /internal/tenants/resolve?host=` and caches the answer, for at most 10,000 hosts, for 30 s or until a tenants event (any tenants event also drops cached unknown hosts). An unknown host is 404 `not_found` with no detail; the platform's own hostnames return `{ kind: "platform" }` (adapters answer 404 unless `platformHosts: "serve"`). The IP-mode demo stack (`ipMode: { version }`) serves only the `demo` tenant, only on an IP literal and only while the version is `dev`; it asks `GET /internal/tenants/ip-mode`. `byId(tenantId)` asks `GET /internal/tenants/tenants/{tenant_id}` for another event's context in every status (`null` for an unknown id), uncached, only for actions that span events. Env: `CANCCU_TENANTS_URL`, `CANCCU_SIGNIN_HOSTNAME`, `CANCCU_SUPERADMIN_HOSTNAME`.
+- **Resolution:** `TenantResolver` asks `GET /internal/tenants/resolve?host=` and caches the answer, for at most 10,000 hosts, for 30 s or until a tenants event (any tenants event also drops cached unknown hosts). An unknown host is 404 `not_found` with no detail; the platform's own hostnames return `{ kind: "platform" }` (adapters answer 404 unless `platformHosts: "serve"`). The IP-mode demo stack (`ipMode: { version }`) serves only the `demo` tenant, only on an IP literal and only while the version is `dev`; it asks `GET /internal/tenants/ip-mode`. `byId(tenantId)` asks `GET /internal/tenants/tenants/{tenant_id}` for another event's context in every status (`null` for an unknown id, that is a 404; any other failure is `TenantsUnavailable`, as in kit-py), uncached, only for actions that span events. Env: `CANCCU_TENANTS_URL`, `CANCCU_SIGNIN_HOSTNAME`, `CANCCU_SUPERADMIN_HOSTNAME`.
 - **Access:** `checkScreenAccess` (device token **and** the venue address, unless the emergency switch is off until `disabled_until`; 401 `device_unknown`, 403 `venue_ip_refused`), `newDeviceToken`, `hashDeviceToken` and `deviceTokenMatches` (store only the hash), `checkInfoAccess` (the info-page mode), `checkAdminAccess` (`admin_access`: venue or Tailscale, `CANCCU_TAILSCALE_CIDRS`). `clientIp` is the address Caddy forwards (Fastify `trustProxy` set to Caddy only).
 - **Leak tests** (`@canccu/kit/testing`): `assertTenantIsolation({ seed, read })` seeds a marker per tenant and fails with `TenantLeak` if one tenant reads the other's, or if a tenant cannot read its own (the test would prove nothing). For a consumer, seed with `deliverAs(handler, tenantEvent(tenant, type, data))`.
 
@@ -206,7 +206,7 @@ The kit writes nothing to disk. Its only in-memory items are the rights cache (�
 npm ci && npm run lint && npm run typecheck && npm test
 ```
 
-CI runs the same commands (job `lint-types-test (kit-ts)`).
+CI runs the same commands through `scripts/check-module packages/kit-ts`, with the integration tests below (job `lint-types-test (kit-ts)`).
 
 ## Integration test
 
@@ -220,4 +220,4 @@ CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu \
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml down
 ```
 
-`compose.test.yml` publishes Valkey and Postgres on `127.0.0.1` only. CI runs this as the `integration (kit)` job.
+`compose.test.yml` publishes Valkey and Postgres on `127.0.0.1` only. CI runs these in the `lint-types-test (kit-ts)` job; `integration (kit)` passes when it does.

@@ -15,6 +15,9 @@ RUN cd modules/screen && npm run build && npm prune --omit=dev \
 
 FROM node:22.23-slim
 ENV NODE_ENV=production
+# ffprobe reads an uploaded video's or sound's container, codecs and length (docs/plans/issue-108.md, D8).
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+ && rm -rf /var/lib/apt/lists/*
 WORKDIR /repo
 COPY --from=build /repo/packages/kit-ts/package.json packages/kit-ts/
 COPY --from=build /repo/packages/kit-ts/dist packages/kit-ts/dist

@@ -41,6 +41,14 @@ def view(row: Any) -> dict[str, Any]:
     return out
 
 
+def collapse(rows: list[Any]) -> list[Any]:
+    """A reader who gets both a custom topic's notification and its base's for one source event
+    gets only the custom one (contracts/notify.md, Custom topics). `rows` are what this reader
+    may see, so a base notification is dropped only for those who also see the custom one."""
+    covered = {(r["source_event_id"], r["based_on"], r["user_id"]) for r in rows if r["based_on"]}
+    return [r for r in rows if (r["source_event_id"], r["topic"], r["user_id"]) not in covered]
+
+
 def _not_found() -> KitError:
     return KitError("no such notification", status=404, code="not_found")
 
@@ -93,7 +101,7 @@ async def inbox(request: Request) -> Response:
             session.user_id,
             INBOX_LIMIT,
         )
-    return JSONResponse({"notifications": [view(r) for r in rows]})
+    return JSONResponse({"notifications": [view(r) for r in collapse(rows)]})
 
 
 ROUTES = [
