@@ -6,7 +6,7 @@ import { isDeepStrictEqual } from "node:util";
 import type { SqlClient } from "@canccu/kit";
 import type { Manifest } from "./checks.js";
 import { brandImages } from "./brand-images.js";
-import { GENERATED, copyOwned } from "./drafts.js";
+import { CARRIED_REFS, copyOwned } from "./drafts.js";
 import type { FileStore } from "./files.js";
 import { SERVED, colorInt } from "./theme.js";
 import { versionConflict } from "./http.js";
@@ -60,16 +60,7 @@ async function holdings(
   tokens: RevisionTokens,
 ): Promise<Holdings> {
   // As copyOwned leaves them behind: a revision's generated files are no part of what changed.
-  const files = await c.query(
-    `SELECT f.file FROM theming_file_refs f
-       LEFT JOIN theming_revisions r ON 'r:' || r.revision = f.owner
-      WHERE f.owner = $1
-        AND (r.revision IS NULL OR f.file <> ALL (${GENERATED})
-             OR EXISTS (SELECT 1 FROM theming_package_files p
-                         WHERE p.owner = f.owner AND p.file = f.file))
-      ORDER BY f.file`,
-    [owner],
-  );
+  const files = await c.query(`SELECT f.file ${CARRIED_REFS} ORDER BY f.file`, [owner]);
   const paths = await c.query(
     `SELECT path || '=' || coalesce(file, '') AS p FROM theming_package_files
       WHERE owner = $1 ORDER BY path`,

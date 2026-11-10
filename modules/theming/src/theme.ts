@@ -97,7 +97,7 @@ function fromRevision(row: RevisionRow, embeds: EmbedRef[]): ResolvedTheme {
     ...(row.css === null ? {} : { css_url: SERVED + row.css }),
     ...(row.logo === null ? {} : { logo_url: SERVED + row.logo }),
     ...(row.logo_png === null ? {} : { logo_png_url: SERVED + row.logo_png }),
-    // The three come from one image, so a revision has all of them or none.
+    // A set, or none: an image too thin to draw at one of the sizes leaves the whole set out.
     ...(row.icon_192 === null || row.icon_512 === null || row.icon_maskable_512 === null
       ? {}
       : {

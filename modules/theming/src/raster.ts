@@ -49,19 +49,35 @@ export type Fit =
 
 const CLEAR = { r: 0, g: 0, b: 0, alpha: 0 };
 
+/** librsvg draws no SVG wider or taller than this. */
+const SVG_MAX_SIDE = 32_767;
+
+/**
+ * The density (72 is the SVG's own size) that draws an SVG of `w` × `h` at the size `fit` needs.
+ * A side drawn under half a pixel makes librsvg refuse the image, so the shorter side gets at least
+ * one; the longer side and the pixel count stay within what librsvg and `MAX_PIXELS` allow.
+ */
+function svgDensity(w: number, h: number, fit: Fit): number {
+  const wanted =
+    "width" in fit ? Math.min(fit.width / w, (4 * fit.width) / h) : fit.inner / Math.max(w, h);
+  const most = Math.min(SVG_MAX_SIDE / Math.max(w, h), Math.sqrt(MAX_PIXELS / (w * h)));
+  const scale = Math.min(most, Math.max(wanted, 1 / Math.min(w, h)));
+  // sharp's own bounds for density.
+  return Math.min(100_000, Math.max(1, 72 * scale));
+}
+
 /**
  * A PNG of a stored image, which passed its checks at upload: PNG, JPEG, WebP (the first frame)
  * or SVG. An SVG is drawn at the density its target needs rather than scaled up from its own size,
- * so it stays sharp.
+ * so it stays sharp. Rejects an image that cannot be drawn, such as an SVG too thin for any
+ * density to give both sides a pixel within librsvg's limit.
  */
 export function render(input: Buffer, ext: RasterKind | "svg", fit: Fit): Promise<Buffer> {
   return inTurn(async () => {
-    const target = "width" in fit ? fit.width : fit.inner;
     let density: number | undefined;
     if (ext === "svg") {
-      const meta = await sharp(input).metadata();
-      const longest = Math.max(meta.width, meta.height, 1);
-      density = Math.min(100_000, Math.max(1, (72 * target) / longest));
+      const { width, height } = await sharp(input).metadata();
+      if (width > 0 && height > 0) density = svgDensity(width, height, fit);
     }
     const source = (): Sharp =>
       sharp(input, { limitInputPixels: MAX_PIXELS, ...(density ? { density } : {}) }).rotate();

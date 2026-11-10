@@ -81,24 +81,30 @@ export type DraftSource =
  * The files a revision `r` generated at publish, as an SQL array: token CSS, compiled CSS, the
  * logo PNG and the icons. The next revision generates its own, so copies leave them behind.
  */
-export const GENERATED = `array_remove(ARRAY[r.tokens_css, r.admin_tokens_css, r.css, r.logo_png,
+const GENERATED = `array_remove(ARRAY[r.tokens_css, r.admin_tokens_css, r.css, r.logo_png,
   r.icon_192, r.icon_512, r.icon_maskable_512], NULL)`;
 
 /**
+ * The file references `f` that owner `$1` passes on to a copy: all of them but a revision's
+ * generated files, unless a package path holds the same bytes (a logo already 512 px wide can come
+ * out of the PNG encoder identical to its own rendition). The one rule of copyOwned and publish's
+ * comparison of what changed, so the two cannot drift apart.
+ */
+export const CARRIED_REFS = `FROM theming_file_refs f
+   LEFT JOIN theming_revisions r ON 'r:' || r.revision = f.owner
+  WHERE f.owner = $1
+    AND (r.revision IS NULL OR f.file <> ALL (${GENERATED})
+         OR EXISTS (SELECT 1 FROM theming_package_files p
+                     WHERE p.owner = f.owner AND p.file = f.file))`;
+
+/**
  * Copies what `from` (`draft` or `r:<n>`) holds to `to`: its file references and embed files, the
- * one copy rule of draft creation, publish and restore. A revision's generated files stay behind,
- * unless a package path holds the same bytes: a logo already 512 px wide can come out of the PNG
- * encoder identical to its own rendition.
+ * one copy rule of draft creation, publish and restore (CARRIED_REFS says which files go).
  */
 export async function copyOwned(c: SqlClient, from: string, to: string): Promise<void> {
   await c.query(
     `INSERT INTO theming_file_refs (owner, file)
-     SELECT $2, f.file FROM theming_file_refs f
-       LEFT JOIN theming_revisions r ON 'r:' || r.revision = f.owner
-      WHERE f.owner = $1
-        AND (r.revision IS NULL OR f.file <> ALL (${GENERATED})
-             OR EXISTS (SELECT 1 FROM theming_package_files p
-                         WHERE p.owner = f.owner AND p.file = f.file))
+     SELECT $2, f.file ${CARRIED_REFS}
      ON CONFLICT DO NOTHING`,
     [from, to],
   );

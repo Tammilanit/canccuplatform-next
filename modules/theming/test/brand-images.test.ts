@@ -104,6 +104,17 @@ describe.skipIf(!DATABASE_URL)("the logo PNG and the icons", () => {
     expect(await pixel(logoPng, 511, 255)).toEqual([255, 0, 0, 255]);
   });
 
+  it("publishes without the images an SVG too thin to draw would give", async () => {
+    // Passes the upload checks, but no density gives both sides a pixel within librsvg's limit.
+    const sliver = Buffer.from(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="100000" height="1"><rect width="100000" height="1"/></svg>',
+    );
+    const current = await publishWith({ "images/logo.svg": sliver }, { logo: "images/logo.svg" });
+    expect(current.logo_url).toMatch(/\.svg$/);
+    expect(current).not.toHaveProperty("logo_png_url");
+    expect(current).not.toHaveProperty("icon_urls");
+  });
+
   it("makes the icons from images.icon when the brand has one", async () => {
     const current = await publishWith(
       { "images/logo.png": await png("#ff0000", 16), "images/icon.png": await png("#00ff00", 16) },

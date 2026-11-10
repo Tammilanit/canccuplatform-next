@@ -57,14 +57,23 @@ export async function brandImages(
   const images = (manifest.images ?? {}) as Record<string, unknown>;
   const logo = await fileAt(c, owner, images.logo);
   const icon = (await fileAt(c, owner, images.icon)) ?? logo;
+  const read = new Map<string, Promise<Buffer | undefined>>();
   const make = async (name: string | undefined, fit: Fit): Promise<string | null> => {
     if (name === undefined) return null;
-    const bytes = await files.read(name);
-    // A file the owner refers to is on the volume; without it the theme simply has no such image.
-    if (bytes === undefined) return null;
     const ext = extOf(name);
     if (ext !== "png" && ext !== "jpg" && ext !== "webp" && ext !== "svg") return null;
-    const png = await render(bytes, ext === "jpg" ? "jpeg" : ext, fit);
+    if (!read.has(name)) read.set(name, files.read(name));
+    const bytes = await read.get(name);
+    // A file the owner refers to is on the volume; without it the theme simply has no such image.
+    if (bytes === undefined) return null;
+    let png: Buffer;
+    try {
+      png = await render(bytes, ext === "jpg" ? "jpeg" : ext, fit);
+    } catch {
+      // Passing the upload checks does not make every image drawable at every size (an SVG a
+      // pixel thin and thousands long); such an image is left out rather than failing the publish.
+      return null;
+    }
     return files.put(c, png, "png");
   };
   return {

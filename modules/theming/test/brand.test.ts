@@ -200,6 +200,14 @@ describe("brand-kit generation", () => {
     expect(dark.colors.primary_text).toBe(dark.colors.background);
   });
 
+  it("prefers a primary_text that reads on both fills over shading the red", () => {
+    // White reads on this grey but not on the platform red; black reads on both, so it wins and
+    // status_down stays the platform's.
+    const out = generateColors({ primary: "#767676", accent: "#f59e0b", scheme: "dark" });
+    expect(out.colors.primary_text).toBe("#000000");
+    expect(out.colors.status_down).toBe(COLOR_TOKENS.status_down);
+  });
+
   it("is deterministic", () => {
     const input = { primary: "#7c3aed", accent: "#10b981", scheme: "light" } as const;
     expect(generateColors(input)).toEqual(generateColors({ ...input }));

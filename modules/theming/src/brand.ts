@@ -132,6 +132,12 @@ function shade(hex: string, ok: (c: string) => boolean, dir: 1 | -1): string | u
 const awayFrom = (hex: string, ref: string): 1 | -1 =>
   contrastRatio(hex, WHITE) > contrastRatio(ref, WHITE) ? -1 : 1;
 
+/** A search that must end with a colour; a palette change that breaks that fails loudly. */
+function found(colour: string | undefined, what: string): string {
+  if (colour === undefined) throw new Error(`brand generation found no colour for ${what}`);
+  return colour;
+}
+
 export function generateColors(brand: Brand): Generated {
   const neutral = PALETTES[brand.scheme];
   const { background, surface } = neutral;
@@ -139,7 +145,10 @@ export function generateColors(brand: Brand): Generated {
   // passes every rule against either palette, so these searches always end with a colour.
   const away = brand.scheme === "dark" ? 1 : -1;
   const fill = (hex: string, on: string): string =>
-    shade(hex, (c) => contrastRatio(c, on) >= 3, away) as string;
+    found(
+      shade(hex, (c) => contrastRatio(c, on) >= 3, away),
+      hex,
+    );
 
   const primary = fill(brand.primary, background);
   const accent = fill(brand.accent, background);
@@ -147,17 +156,28 @@ export function generateColors(brand: Brand): Generated {
   const statusDegraded = fill(COLOR_TOKENS.status_degraded, surface);
 
   // primary_text must read on primary and on status_down: the first of background, white and
-  // black that reads on primary (white or black always does), with status_down shaded from the
-  // platform's red until the text reads on it too. That red depends only on the scheme and the
-  // text chosen, and each of those six pairs has one (the golden tests hold them all).
-  const primaryText = [background, WHITE, BLACK].find(
-    (text) => contrastRatio(text, primary) >= 4.5,
-  ) as string;
-  const statusDown = shade(
-    COLOR_TOKENS.status_down,
-    (c) => contrastRatio(c, surface) >= 3 && contrastRatio(primaryText, c) >= 4.5,
-    awayFrom(COLOR_TOKENS.status_down, primaryText),
-  ) as string;
+  // black that reads on both, status_down being the platform's red as the other status colours
+  // are. Many primaries leave no such text (white and black each fall short on the red or the
+  // primary); then the text is the first that reads on primary (white or black always does) and
+  // the red is shaded until it reads too. That red depends only on the scheme and the text, and
+  // each of those six pairs has one (the golden tests hold them all).
+  const red = fill(COLOR_TOKENS.status_down, surface);
+  const texts = [background, WHITE, BLACK];
+  const onPrimary = (text: string): boolean => contrastRatio(text, primary) >= 4.5;
+  const primaryText =
+    texts.find((text) => onPrimary(text) && contrastRatio(text, red) >= 4.5) ??
+    found(texts.find(onPrimary), "primary_text");
+  const statusDown =
+    contrastRatio(primaryText, red) >= 4.5
+      ? red
+      : found(
+          shade(
+            COLOR_TOKENS.status_down,
+            (c) => contrastRatio(c, surface) >= 3 && contrastRatio(primaryText, c) >= 4.5,
+            awayFrom(COLOR_TOKENS.status_down, primaryText),
+          ),
+          "status_down",
+        );
 
   const colors: Colors = {
     ...neutral,

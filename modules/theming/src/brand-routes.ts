@@ -8,6 +8,7 @@ import type { SqlClient } from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import { generateColors } from "./brand.js";
 import type { Brand } from "./brand.js";
+import { isObject } from "./checks.js";
 import type { Manifest } from "./checks.js";
 import type { DraftDeps } from "./draft-routes.js";
 import { draftBody, editDraft, loadDraft } from "./drafts.js";
@@ -32,9 +33,6 @@ const brandMissing = (): KitError =>
     status: 409,
     code: "brand_missing",
   });
-
-const isObject = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null && !Array.isArray(v);
 
 function brandOf(manifest: Manifest): Brand | undefined {
   const b = manifest.brand;
@@ -144,11 +142,11 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
     };
     // Removing embeds needs the embeds right as well. Checked before the lock, since the check
     // may call admin; embeds that appear only under the lock came meanwhile (409, read again).
-    const embedsAllowed = await deps.db.tenant(async (c) => {
+    const hadEmbeds = await deps.db.tenant(async (c) => {
       const draft = await loadDraft(c);
       return draft !== undefined && (await embedsOf(c, draft.manifest)).length > 0;
     });
-    if (embedsAllowed) await deps.rights.check(request.headers.cookie, EMBEDS);
+    if (hadEmbeds) await deps.rights.check(request.headers.cookie, EMBEDS);
     const result = await writingFiles(deps, async (c) => {
       let removed: string[] = [];
       let unused: string[] = [];
@@ -157,7 +155,7 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
         const brand = brandOf(m);
         if (brand === undefined) throw brandMissing();
         embeds = await embedsOf(c, m);
-        if (embeds.length > 0 && !embedsAllowed) throw versionConflict("draft");
+        if (embeds.length > 0 && !hadEmbeds) throw versionConflict("draft");
         ({ removed, unused } = await removeDraftFolders(c, ADVANCED_FOLDERS));
         return simpleManifest(m, brand);
       });
