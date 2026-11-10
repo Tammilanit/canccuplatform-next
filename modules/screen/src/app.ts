@@ -25,6 +25,7 @@ import type { Settings } from "./health.js";
 import { heartbeatRoutes } from "./heartbeat.js";
 import type { Kv } from "./kv.js";
 import { pairingRoutes } from "./pairing.js";
+import { photoRoutes } from "./photos.js";
 import { playlistRoutes } from "./content/playlists.js";
 import { pushRoutes } from "./content/push.js";
 import { scheduleRoutes } from "./content/schedules.js";
@@ -108,5 +109,6 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   assetRoutes(app, assets);
   versionRoutes(app, assets);
   fileRoutes(app, assets);
+  photoRoutes(app, assets);
   return app;
 }

@@ -14,7 +14,7 @@ import { normalizeImage } from "./image.js";
 import { judgeMedia } from "./probe.js";
 import type { Ffprobe } from "./probe.js";
 import { sniff } from "./sniff.js";
-import type { FileKind } from "./sniff.js";
+import type { FileKind, Sniffed } from "./sniff.js";
 
 export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 const TITLE_MAX = 200;
@@ -47,29 +47,45 @@ export function assetTitle(value: unknown): string {
 
 /** The request's file in a temporary file of the event; the caller removes it when done. */
 export async function readUpload(request: FastifyRequest, root: string): Promise<Upload> {
+  let title: string | null = null;
+  const file = await readMultipart(request, root, (name, value) => {
+    if (name === "title") title = assetTitle(value);
+  });
+  return { ...file, title };
+}
+
+/**
+ * One file, in the field `file`, written to a temporary file of the event; every other field
+ * goes to `onField`, which throws to refuse it. `limits` widens the app's for a form with more
+ * fields.
+ */
+export async function readMultipart(
+  request: FastifyRequest,
+  root: string,
+  onField: (name: string, value: unknown) => void,
+  limits?: { fields: number; parts: number },
+): Promise<{ temp: Received; filename: string }> {
   if (!request.isMultipart()) throw invalidRequest("Send the file as multipart/form-data.");
-  let upload: Partial<Upload> = {};
+  let file: { temp: Received; filename: string } | undefined;
   try {
-    for await (const part of request.parts()) {
+    for await (const part of request.parts(limits ? { limits } : undefined)) {
       if (part.type === "file") {
-        if (part.fieldname !== "file" || upload.temp) {
+        if (part.fieldname !== "file" || file) {
           throw invalidRequest("Send one file, in the field `file`.");
         }
-        upload.temp = await receive(root, part.file);
-        upload.filename = part.filename;
+        file = { temp: await receive(root, part.file), filename: part.filename };
         if (part.file.truncated) throw tooLarge();
-      } else if (part.fieldname === "title") {
-        upload.title = assetTitle(part.value);
+      } else {
+        onField(part.fieldname, part.value);
       }
     }
   } catch (err) {
-    if (upload.temp) await rm(upload.temp.path, { force: true });
+    if (file) await rm(file.temp.path, { force: true });
     if ((err as { code?: string }).code === "FST_REQ_FILE_TOO_LARGE") throw tooLarge();
     throw err;
   }
-  if (!upload.temp) throw invalidRequest("Send one file, in the field `file`.");
-  upload = { title: null, ...upload };
-  return upload as Upload;
+  if (!file) throw invalidRequest("Send one file, in the field `file`.");
+  return file;
 }
 
 /** The upload checked by content: images normalised, video and sound probed. */
@@ -93,18 +109,7 @@ async function check(root: string, temp: Received, probe: Ffprobe): Promise<Prep
   if (sniffed.kind === "unplayable-image") {
     throw invalidRequest(`This image is ${sniffed.container}. Save it as JPEG or PNG.`);
   }
-  if (sniffed.kind === "image") {
-    let image: Received;
-    try {
-      image = await receive(root, await normalizeImage(temp.path));
-    } catch (err) {
-      // A KitError is ours (a refused header, the volume); anything else is sharp failing to encode.
-      if (err instanceof KitError) throw err;
-      throw invalidRequest("This image could not be read. Save it again as PNG or JPEG.");
-    }
-    await rm(temp.path, { force: true });
-    return { temp: image, ...sniffed, duration_seconds: null };
-  }
+  if (sniffed.kind === "image") return normalized(root, temp, sniffed);
   if (sniffed.kind === "pptx" || sniffed.kind === "pdf") {
     return { temp, ...sniffed, duration_seconds: null };
   }
@@ -119,6 +124,35 @@ async function check(root: string, temp: Received, probe: Ffprobe): Promise<Prep
   // judgeMedia refuses every unplayable container; this narrows the type.
   if (sniffed.kind === "unplayable") throw invalidRequest("The screens cannot play this file.");
   return { temp, ...sniffed, ...judged };
+}
+
+/**
+ * A photo for the carousel: images only, normalised as an image asset is. The temporary file is
+ * removed on refusal, as `prepare` does.
+ */
+export async function preparePhoto(root: string, temp: Received): Promise<Prepared> {
+  try {
+    const sniffed = temp.bytes === 0 ? null : sniff(temp.head, temp.tail);
+    if (sniffed?.kind !== "image") throw invalidRequest("A photo must be a JPEG or PNG image.");
+    return await normalized(root, temp, sniffed);
+  } catch (err) {
+    await rm(temp.path, { force: true });
+    throw err;
+  }
+}
+
+/** The image upright, within 2560×1440 and without metadata, in a new temporary file. */
+async function normalized(root: string, temp: Received, sniffed: Sniffed): Promise<Prepared> {
+  let image: Received;
+  try {
+    image = await receive(root, await normalizeImage(temp.path));
+  } catch (err) {
+    // A KitError is ours (a refused header, the volume); anything else is sharp failing to encode.
+    if (err instanceof KitError) throw err;
+    throw invalidRequest("This image could not be read. Save it again as PNG or JPEG.");
+  }
+  await rm(temp.path, { force: true });
+  return { temp: image, ...sniffed, duration_seconds: null };
 }
 
 /** The title an upload gets: the one sent, else the file name, so name-check finds it again. */
