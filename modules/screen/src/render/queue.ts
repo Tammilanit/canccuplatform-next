@@ -9,7 +9,7 @@
  * it (`reconcile` in jobs.ts). Members of the global sets are `<tenant>/<job id>`; neither id can
  * hold a `/`.
  */
-import { isTenantId, tenantKey, withTenant } from "@canccu/kit";
+import { isTenantId, platformKey, tenantKey, withTenant } from "@canccu/kit";
 import type { Valkey } from "iovalkey";
 
 export interface QueuedJob {
@@ -72,13 +72,13 @@ function parseMember(value: string): QueuedJob | null {
 }
 
 /**
- * Cross-event keys, so not the kit's `tenantKey`: the ring and the slot span every event by
- * design (0013 item 27). They hold ids and times only, never an event's content.
+ * Cross-event keys: the ring and the slot span every event by design (0013 item 27). They hold
+ * ids and times only, never an event's content.
  */
-const RING = "screen:render:ring";
-const SLOT = "screen:render:slot";
-const WAITING = "screen:render:waiting";
-const LEASES = "screen:render:leases";
+const RING = platformKey("screen", "render", "ring");
+const SLOT = platformKey("screen", "render", "slot");
+const WAITING = platformKey("screen", "render", "waiting");
+const LEASES = platformKey("screen", "render", "leases");
 
 const queueKey = (tenant: string): string =>
   withTenant(tenant, () => tenantKey("screen", "render", "queue"));

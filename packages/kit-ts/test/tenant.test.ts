@@ -4,6 +4,7 @@ import {
   currentTenant,
   isTenantId,
   platformFilesDir,
+  platformKey,
   platformStream,
   requireTenant,
   tenantFile,
@@ -73,6 +74,20 @@ describe("scoped names", () => {
       expect(() => tenantKey("pizza", "")).toThrow(/part/);
     });
     expect(() => tenantKey("pizza", "cache")).toThrow(NoTenant);
+  });
+
+  it("builds cross-event Valkey keys without a tenant, apart from tenant keys and streams", () => {
+    expect(platformKey("screen", "render", "ring")).toBe("screen:render:ring");
+    withTenant("demo", () => {
+      expect(platformKey("screen", "render", "slot")).toBe("screen:render:slot");
+    });
+    expect(() => platformKey("screen")).toThrow(/at least one/);
+    expect(() => platformKey("screen", "a:b")).toThrow(/part/);
+    expect(() => platformKey("screen", "")).toThrow(/part/);
+    expect(() => platformKey("a:b", "x")).toThrow(/module/);
+    // `t:…` is every tenant's keys and streams, `events:…` the platform streams.
+    expect(() => platformKey("t", "demo")).toThrow(/reserved/);
+    expect(() => platformKey("events", "pizza")).toThrow(/reserved/);
   });
 
   it("puts files under /files/<tenant>/<module>/ and refuses escapes", () => {
