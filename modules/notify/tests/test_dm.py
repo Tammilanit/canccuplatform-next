@@ -6,6 +6,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+import pytest
 from conftest import Env
 from test_checkin import recorded
 from test_delivery import raise_alert, statuses
@@ -177,3 +178,60 @@ async def test_quiet_hours_hold_dms_too(env: Env) -> None:
 
     await delivery.tick(env.deps)
     assert len(dms(env)) == 1
+
+
+async def test_a_push_that_fails_before_sending_still_falls_back(env: Env) -> None:
+    env.users.discord["u_a"] = DISCORD
+    await env.register(play())
+    await bound(env)
+    await env.subscribe("a1", env.rights.sign_in("u_a"), {"play": {"personal": True}})
+    async with env.db.tenant("ev-a") as conn:
+        await conn.execute("UPDATE notify_subscriptions SET keys_sealed = 'cs1.1.AAAA.AAAA'")
+    await invite(env, 1)
+    assert [d["reason"] for d in dms(env)] == ["fallback"]
+
+
+async def test_a_failed_discord_id_read_is_tried_again(env: Env) -> None:
+    await env.register(play())
+    await bound(env)
+    real = env.users
+
+    class Down:
+        async def discord_id(self, user_id: str) -> str | None:
+            raise RuntimeError("tenants unreachable")
+
+    env.deps.users = Down()
+    await invite(env, 1)
+    assert dms(env) == [] and await statuses(env) == ["pending"]
+    env.deps.users = real
+    real.discord["u_a"] = DISCORD
+    from canccu_notify import delivery
+
+    await delivery.tick(env.deps)
+    assert len(dms(env)) == 1 and await statuses(env) == ["sent"]
+
+
+async def test_a_dm_the_bot_can_no_longer_send_takes_no_cap_place(
+    env: Env, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from canccu_notify import delivery
+
+    env.users.discord["u_a"] = DISCORD
+    env.settings.values["ev-a"] = {"hourly_cap": 1}
+    await env.register(play())
+    await bound(env)
+
+    async def later(*args: Any, **kwargs: Any) -> int:
+        return 0
+
+    monkeypatch.setattr(delivery, "deliver", later)  # both rows wait for one batch
+    await choose(env, "u_a", DM_ON)
+    await invite(env, 1)  # no phone yet: a DM row
+    await choose(env, "u_a", {"channels": {"play": {"personal": {"discord_dm": False}}}})
+    await env.subscribe("a1", env.rights.sign_in("u_a"), {"play": {"personal": True}})
+    await invite(env, 2)  # a push row
+    await bot(env, "client.changed", 2, status="paused", error_code=None, since="x")
+    monkeypatch.undo()
+    await delivery.tick(env.deps)
+    assert dms(env) == [] and len(env.push.to("a1")) == 1
+    assert await statuses(env) == ["skipped", "sent"]

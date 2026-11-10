@@ -3,6 +3,7 @@ mirror of the agenda's `quiet_hours` items, holding and releasing."""
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 
@@ -130,3 +131,25 @@ async def test_start_up_reads_every_mirrored_agenda_again(env: Env) -> None:
     env.agenda.down = True
     await quiet_hours.refresh_all(env.deps)  # logged, nothing raised, the mirror kept
     assert await mirrored(env) == ["q2"]
+
+
+async def test_a_release_that_waited_on_another_puts_nothing_back(env: Env) -> None:
+    """Two containers release at once: the second must not reset rows the first claimed."""
+    await env.register(alert())
+    await env.subscribe("g1")
+    await agenda(env, "item.added", 1, 1, item=quiet(end=20))
+    await raise_alert(env, 1)
+    now = env.clock[0] + timedelta(minutes=21)
+    async with env.db.tenant("ev-a") as first:
+        await quiet_hours.release(first, now)
+        await first.execute("UPDATE notify_deliveries SET status = 'sending'")
+
+        async def second() -> None:
+            async with env.db.tenant("ev-a") as conn:
+                await quiet_hours.release(conn, now)
+
+        waiting = asyncio.create_task(second())
+        await asyncio.sleep(0.2)  # it blocks on the first's row locks
+        assert not waiting.done()
+    await waiting
+    assert await statuses(env) == ["sending"]

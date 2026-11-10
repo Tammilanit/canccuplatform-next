@@ -45,6 +45,10 @@ async def handle(d: Deps, event: Event) -> None:
     """Runs inside the event's tenant scope (the kit's subscribe_tenants)."""
     if event.tenant is None:
         return
+    async with d.db.tenant(event.tenant) as conn:
+        state = await conn.fetchrow("SELECT time_zone, status FROM notify_event_state")
+    if state is not None and state["status"] == "archived":
+        return  # an archived event's people are gone, and nothing is delivered there
     if event.type.startswith("agenda."):
         await quiet.handle(d, event)
     elif event.type.startswith("bot."):
@@ -66,9 +70,6 @@ async def handle(d: Deps, event: Event) -> None:
     fallback = delivery.event_fallback(d, ready)
     planned = 0
     async with d.db.tenant(event.tenant) as conn:
-        state = await conn.fetchrow("SELECT time_zone, status FROM notify_event_state")
-        if state is not None and state["status"] == "archived":
-            return  # an archived event's people are gone, and nothing is delivered there
         tz = zone_of(state["time_zone"] if state is not None else None)
         closed = await delivery.guests_closed(conn)
         everything = await configured(conn, d.settings if ready else None)

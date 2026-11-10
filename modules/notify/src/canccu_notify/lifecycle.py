@@ -42,6 +42,11 @@ async def archive(d: Deps, tenant: str) -> None:
             "INSERT INTO notify_event_state (time_zone, status) VALUES ('UTC', 'archived')"
             " ON CONFLICT (tenant_id) DO UPDATE SET status = 'archived'"
         )
-        for table in PERSONAL:
+        # Not personal, but nothing reads them for an archived event, and start-up would read
+        # its agenda again every time.
+        for table in (*PERSONAL, "notify_quiet_hours", "notify_source_state"):
             await conn.execute(f"DELETE FROM {table}")
+        await conn.execute(
+            "DELETE FROM notify_agenda_tenants WHERE tenant_id = current_setting('canccu.tenant')"
+        )
     d.check_in_keys.pop(tenant, None)

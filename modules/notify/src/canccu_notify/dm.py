@@ -111,28 +111,36 @@ async def fallbacks(
     ]
 
 
-async def discord_ids(d: Deps, tenant: str, user_ids: set[str]) -> dict[str, str | None]:
-    """Read when the DM is requested, never taken from the source event (the contract's rule)."""
+UNREAD: Any = object()
+"""A Discord id that could not be read now (tenants unreachable): the DM is tried again."""
+
+
+async def discord_ids(d: Deps, tenant: str, user_ids: set[str]) -> dict[str, Any]:
+    """Read when the DM is requested, never taken from the source event (the contract's rule).
+    None is the tenants module's answer that there is none; UNREAD a failed read."""
     users = sorted(user_ids)
     answers = await asyncio.gather(*(d.users.discord_id(u) for u in users), return_exceptions=True)
-    out: dict[str, str | None] = {}
+    out: dict[str, Any] = {}
     for user, answer in zip(users, answers, strict=True):
         if isinstance(answer, BaseException):
             log.error("Discord id read failed: %s", type(answer).__name__, extra={"tenant": tenant})
-            answer = None
+            answer = UNREAD
         elif answer is None:
             log.warning("the tenants module knows no Discord id: no DM", extra={"tenant": tenant})
         out[user] = answer
     return out
 
 
-async def request(d: Deps, conn: Any, jobs: list[Any], ids: dict[str, str | None]) -> list[Any]:
+async def request(d: Deps, conn: Any, jobs: list[Any], ids: dict[str, Any]) -> list[Any]:
     """`notify.dm.requested` for each claimed DM row, through the outbox in the caller's
-    transaction; returns each row's final status."""
+    transaction; returns each row's status: `pending` again after a failed read."""
     done = []
     for row in jobs:
         user = row["recipient"].removeprefix("user:")
         discord = ids.get(user)
+        if discord is UNREAD:
+            done.append((row["id"], "pending"))  # the sender loop tries again
+            continue
         if discord is None:
             done.append((row["id"], "failed"))
             continue

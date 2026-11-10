@@ -111,6 +111,10 @@ async def handle(d: Deps, event: Event) -> None:
         return  # the mirror already has it, or something newer
     async with d.db.tenant(tenant) as conn:
         await conn.execute(f"SELECT pg_advisory_xact_lock({LOCK})")
+        # Again under the lock: a full read may have committed since the first look.
+        stored = await _version(conn)
+        if stored is not None and version <= stored:
+            return
         item_id = event.data.get("item_id") if event.type == REMOVED else None
         row = None if event.type == REMOVED else _row(event.data.get("item"))
         if row is not None:
@@ -156,6 +160,8 @@ async def release(conn: Any, now: datetime) -> None:
         " UPDATE notify_deliveries d SET"
         " status = CASE WHEN held.live AND held.rank = 1 THEN 'pending' ELSE 'skipped' END,"
         " done_at = CASE WHEN held.live AND held.rank = 1 THEN NULL ELSE $1 END"
-        " FROM held WHERE d.id = held.id",
+        # Checked again on the row itself: a container that waited on another's locks must not
+        # put back to pending what that one has claimed (sent twice) since its snapshot.
+        " FROM held WHERE d.id = held.id AND d.status = 'held'",
         now,
     )

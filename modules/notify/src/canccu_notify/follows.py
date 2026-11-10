@@ -13,7 +13,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from .access import is_member, session_of, tenant_ctx
+from .access import is_member, session_of, tenant_ctx, writable
 from .config import configured, settings_ready
 from .deps import deps
 from .engine import MISSING, get, iso_time
@@ -91,6 +91,7 @@ async def on_entity_event(conn: Any, found: dict[str, Any], envelope: dict[str, 
 
 async def follow(request: Request) -> Response:
     session = await member(request)
+    writable(await tenant_ctx(request))
     topic, entity_id = request.path_params["topic"], request.path_params["entity_id"]
     if not ENTITY_ID.fullmatch(entity_id):
         raise bad("entity_id: letters, digits, `_` or `-`, at most 64")

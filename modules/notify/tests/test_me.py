@@ -179,3 +179,14 @@ async def test_delete_me_removes_everything_on_the_caller_and_ends_pushes(env: E
     data = {"user_ids": ["u_a"], "game": "Chess", "host": "Host", "at": "2026-11-20T18:00:00Z"}
     await env.emit("ev-a", "games.session.invited", data, id="after")
     assert len(env.push.to("u_a-phone")) == 1  # only the one before the delete
+
+
+async def test_an_archived_event_takes_no_new_choices_or_follows(env: Env) -> None:
+    await env.register(game())
+    env.contexts["ev-a"]["status"] = "archived"
+    r = await call(env, "PATCH", "/api/notify/me", "u_a", json={"dm_fallback": False})
+    assert r.status_code == 409 and r.json()["error"]["code"] == "event_archived"
+    r = await call(env, "PUT", "/api/notify/me/follows/game/g_1", "u_a")
+    assert r.status_code == 409 and r.json()["error"]["code"] == "event_archived"
+    assert (await call(env, "GET", "/api/notify/me", "u_a")).status_code == 200
+    assert (await call(env, "DELETE", "/api/notify/me", "u_a")).status_code == 204

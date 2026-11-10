@@ -151,9 +151,9 @@ async def _decide(
 
 async def _claim(
     d: Deps, conn: Any, tenant: str, batch: int, cap: int, now: datetime
-) -> tuple[list[Any], list[Any], int]:
-    """The pushes to send, each with its subscription's opened keys, and the DMs; marks them
-    `sending`."""
+) -> tuple[list[Any], list[Any], list[str], int]:
+    """The pushes to send, each with its subscription's opened keys, the DMs, and the
+    notifications of pushes that failed here (for the DM fallback); marks them `sending`."""
     held = await quiet.active(conn, now)
     if not held:
         await quiet.release(conn, now)
@@ -179,12 +179,15 @@ async def _claim(
         batch,
         now - LEASE,
     )
-    send, done = await _decide(conn, tenant, list(due), cap, held, now)
+    done: list[tuple[int, str]] = []
+    if any(r["channel"] == dm.DM for r in due) and not await dm.can_send(conn):
+        # The bot stopped since they were planned: none goes out, and none takes a cap place.
+        done = [(r["id"], "skipped") for r in due if r["channel"] == dm.DM]
+        due = [r for r in due if r["channel"] != dm.DM]
+    send, decided = await _decide(conn, tenant, list(due), cap, held, now)
+    done += decided
     dms = [r for r in send if r["channel"] == dm.DM]
     send = [r for r in send if r["channel"] != dm.DM]
-    if dms and not await dm.can_send(conn):
-        done += [(r["id"], "skipped") for r in dms]  # the bot stopped since: none goes out
-        dms = []
     done += [(r["id"], "sending") for r in dms]
     subs = {
         s["id"]: s
@@ -194,10 +197,12 @@ async def _claim(
         )
     }
     jobs = []
+    lost: list[str] = []
     for row in send:
         sub = subs.get(row["subscription_id"])
         if sub is None:
             done.append((row["id"], "skipped"))  # unsubscribed since
+            lost.append(row["notification_id"])
             continue
         try:
             keys = json.loads(d.secrets.open_text(sub["keys_sealed"], keys_aad(tenant, sub["id"])))
@@ -205,6 +210,7 @@ async def _claim(
             # One row that does not open (a lost key, a damaged value) must not stop the event.
             log.exception("push keys do not open", extra={"tenant": tenant})
             done.append((row["id"], "failed"))
+            lost.append(row["notification_id"])
             continue
         jobs.append((row, sub, keys))
         done.append((row["id"], "sending"))
@@ -212,7 +218,7 @@ async def _claim(
         "UPDATE notify_deliveries SET status = $2, done_at = $3 WHERE id = $1",
         [(i, status, now) for i, status in done],
     )
-    return jobs, dms, len(due)
+    return jobs, dms, lost, len(due)
 
 
 async def deliver(d: Deps, tenant: str, *, batch: int = 100) -> int:
@@ -230,7 +236,7 @@ async def deliver(d: Deps, tenant: str, *, batch: int = 100) -> int:
 async def _pass(d: Deps, tenant: str, batch: int, cap: int, fallback: bool) -> tuple[int, bool]:
     now = d.now()
     async with d.db.tenant(tenant) as conn:
-        jobs, dms, claimed = await _claim(d, conn, tenant, batch, cap, now)
+        jobs, dms, failed, claimed = await _claim(d, conn, tenant, batch, cap, now)
     ids = await dm.discord_ids(d, tenant, {r["recipient"].removeprefix("user:") for r in dms})
     answers = await asyncio.gather(
         *(
@@ -249,7 +255,6 @@ async def _pass(d: Deps, tenant: str, batch: int, cap: int, fallback: bool) -> t
     sent = 0
     done: list[tuple[int, str]] = []
     gone: list[str] = []
-    failed: list[str] = []
     for (row, sub, _), answer in zip(jobs, answers, strict=True):
         if isinstance(answer, BaseException):
             log.error("push failed: %s", type(answer).__name__, extra={"tenant": tenant})

@@ -12,7 +12,7 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from . import checkin, inbox, people, subscriptions
-from .access import session_of, tenant_ctx
+from .access import session_of, tenant_ctx, writable
 from .deps import deps
 from .follows import view as follow_view
 from .registry import bad, body_of
@@ -57,6 +57,7 @@ async def read(request: Request) -> Response:
 
 async def update(request: Request) -> Response:
     session = await signed_in(request)
+    writable(await tenant_ctx(request))
     body = await body_of(request)
     if "dm_fallback" in body and not isinstance(body["dm_fallback"], bool):
         raise bad("dm_fallback: true or false")
