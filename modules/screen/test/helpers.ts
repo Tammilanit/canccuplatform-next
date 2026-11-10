@@ -114,7 +114,6 @@ export interface Harness {
   close(): Promise<void>;
 }
 
-/** A fresh schema per file, migrated by the module's own files, as at start. */
 /** Drops every screen table; `assignments` too, the name before migration 007. */
 export async function dropTables(admin: pg.Client): Promise<void> {
   await admin.query(
@@ -125,6 +124,7 @@ export async function dropTables(admin: pg.Client): Promise<void> {
   );
 }
 
+/** A fresh schema per file, migrated by the module's own files, as at start. */
 export async function harness(): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
