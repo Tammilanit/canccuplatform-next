@@ -646,6 +646,20 @@ components:
           description: Keyed by region id of the layout.
           additionalProperties:
             $ref: "#/components/schemas/RegionSettings"
+        header:
+          type: [string, "null"]
+          enum: [separate, shared, null]
+          default: null
+          description: |
+            `separate`: each widget of a header region has a place of its own; `shared`: the region rotates them.
+            Null uses the layout's `header`, else `separate` (contracts/screen.md, Header and hub QR).
+        hub_qr:
+          type: string
+          enum: [always, rotate]
+          default: always
+          description: |
+            `always`: the hub QR (a `qr` widget with `props.url` `/notify/`) has a fixed place beside its region's
+            rotating widgets; `rotate`: it is one of them (contracts/screen.md, Header and hub QR).
         sound:
           type: object
           properties:
@@ -773,7 +787,8 @@ components:
         id:
           type: string
           description: |
-            A layout region's id (a lowercase letter first), or `_full` or `_overlay` for the synthetic regions of the
+            A layout region's id (a lowercase letter first), a part of a split region (`<id>-2`, `<id>-3`, …:
+            contracts/screen.md, Header and hub QR), or `_full` or `_overlay` for the synthetic regions of the
             `full` and `overlay` roles, which never clash with a layout's ids.
           pattern: "^(?:[a-z][a-z0-9_-]{0,31}|_full|_overlay)$"
         role:

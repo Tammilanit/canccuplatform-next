@@ -108,6 +108,7 @@ A layout places widgets on a screen: a grid, regions on it, widgets in each regi
 - `aspect` (e.g. `16:9`, `9:16`) is the shape it is made for; the screen scales it to the display and letterboxes a different shape. Which zone shows which layout is Screen's ([0013](../docs/decisions/0013-multi-tenant-core.md) item 34; the screen contract).
 - `grid` has 1–48 `columns` and `rows`; each region's `area` (1-based `column`, `row`, `columns`, `rows`) must fit (`area_outside_grid`). Regions may overlap; `layer` (0–9) orders them.
 - A region with two or more widgets rotates them, each for `rotate_seconds` (5–3600, default 15).
+- `header` (optional, `separate` or `shared`, default `separate`): how the layout's header regions show two or more widgets by default, each in a place of its own or rotating. Screen defines it and a zone may set its own ([screen.md](screen.md#header-and-hub-qr)).
 - A widget entry names its `widget` type, optionally a `template` (one made for that type), and `props` (options the type documents; scalars only). This contract defines two types: `logo` (the theme's logo) and `embed` (see Embeds). The module that provides a widget names its type, options and template fields in its own contract (the screen contract for the screen's widgets). A type no module offers is a warning, not an error, so a theme survives a widget that comes later.
 - Layouts carry no data and no logic: what a widget shows comes from its module at run time.
 
