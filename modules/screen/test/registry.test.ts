@@ -160,11 +160,13 @@ describe.skipIf(!DATABASE_URL)("the superadmin's device registry", () => {
       const res = await call(h, method, path, { ...admin, ...(body ? { body } : {}) });
       expect([res.statusCode, code(res)]).toEqual([404, "not_found"]);
     }
-    expect(await rows("alpha", `SELECT 1 FROM assignments WHERE device_id = '${id}'`)).toEqual([]);
+    expect(
+      await rows("alpha", `SELECT 1 FROM screen_assignments WHERE device_id = '${id}'`),
+    ).toEqual([]);
     expect(
       await rows(
         "beta",
-        `SELECT zone_key, mirror_device_id FROM assignments WHERE device_id = '${id}'`,
+        `SELECT zone_key, mirror_device_id FROM screen_assignments WHERE device_id = '${id}'`,
       ),
     ).toEqual([{ zone_key: null, mirror_device_id: null }]);
   });

@@ -17,7 +17,7 @@ export async function detachDevice(
   by: { audit: Audit; actor: string | null },
 ): Promise<Emit[]> {
   const { rows } = await c.query(
-    "UPDATE assignments SET mirror_device_id = NULL WHERE mirror_device_id = $1 RETURNING device_id",
+    "UPDATE screen_assignments SET mirror_device_id = NULL WHERE mirror_device_id = $1 RETURNING device_id",
     [deviceId],
   );
   const emits: Emit[] = [];

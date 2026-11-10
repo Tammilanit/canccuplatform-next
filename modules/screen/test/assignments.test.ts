@@ -185,7 +185,9 @@ describe.skipIf(!DATABASE_URL)("assignments", () => {
       void saving.then(() => (settled = true));
       await new Promise((resolve) => setTimeout(resolve, 300));
       expect(settled).toBe(false);
-      await mover.query("UPDATE assignments SET zone_key = 'foyer' WHERE device_id = $1", [id]);
+      await mover.query("UPDATE screen_assignments SET zone_key = 'foyer' WHERE device_id = $1", [
+        id,
+      ]);
       await mover.query("COMMIT");
       expect(code(await saving)).toBe("invalid_request");
     } finally {
@@ -198,7 +200,7 @@ describe.skipIf(!DATABASE_URL)("assignments", () => {
     const { id } = await pairDevice(h, "alpha.test", "Rowless");
     const { id: copy } = await pairDevice(h, "alpha.test", "Rowless copy");
     // What a device the superadmin moves here (#221) looks like before it is assigned.
-    await h.pool.query("DELETE FROM assignments WHERE device_id = $1", [id]);
+    await h.pool.query("DELETE FROM screen_assignments WHERE device_id = $1", [id]);
     const res = await assign(copy, { mirror_of: { device_id: id } });
     expect([res.statusCode, code(res)]).toEqual([400, "invalid_request"]);
   });

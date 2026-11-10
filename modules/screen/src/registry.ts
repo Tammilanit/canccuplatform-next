@@ -65,7 +65,7 @@ async function leave(
   if (tenant === null) return null;
   return asTenant(c, tenant, async () => {
     const emits = await detachDevice(c, device.id, { audit: deps.audit, actor });
-    await c.query("DELETE FROM assignments WHERE device_id = $1", [device.id]);
+    await c.query("DELETE FROM screen_assignments WHERE device_id = $1", [device.id]);
     return { tenant, emits: [...emits, last] };
   });
 }
@@ -162,7 +162,7 @@ export function registryRoutes(app: FastifyInstance, deps: RegistryDeps): void {
           const tenant = after.current_tenant_id;
           // A place in the new event without a zone: its crew assigns it there.
           await asTenant(c, tenant, () =>
-            c.query("INSERT INTO assignments (device_id) VALUES ($1)", [before.id]),
+            c.query("INSERT INTO screen_assignments (device_id) VALUES ($1)", [before.id]),
           );
           arrived = {
             tenant,

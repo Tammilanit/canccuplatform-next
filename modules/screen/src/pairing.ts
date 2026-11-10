@@ -193,25 +193,36 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
         return { status: rec.expires_at > now() ? "waiting" : "expired" };
       }
       const token = newDeviceToken();
-      const device = await db.tenant(async (c) => {
-        // The first collection, or a repeat by the same browser of the token it was just given
-        // (its answer was lost): never a token that has since changed hands.
-        const { rows } = await c.query(
-          `UPDATE devices SET token_hash = $2 WHERE id = $1
-           AND token_hash IS NOT DISTINCT FROM $4
-           AND revoked_at IS NULL AND current_tenant_id = $3 RETURNING *`,
-          [rec.device_id, hashDeviceToken(token), requireTenant(), rec.issued_hash ?? null],
-        );
-        const row = rows[0] as unknown as DeviceRow | undefined;
-        if (row === undefined) return null;
-        const placed = await c.query(
-          "SELECT paired_at, zone_key, mirror_device_id, mirror_zone_key FROM assignments WHERE device_id = $1",
-          [row.id],
-        );
-        return deviceView({ ...row, ...(placed.rows[0] as Placement | undefined) });
-      });
-      if (device === null) {
-        await kv.del(keys.record(id));
+      const collected = await db.tenant(
+        async (c): Promise<{ device: Record<string, unknown> } | { gone: boolean }> => {
+          // The first collection, or a repeat by the same browser of the token it was just given
+          // (its answer was lost): never a token that has since changed hands.
+          const { rows } = await c.query(
+            `UPDATE devices SET token_hash = $2 WHERE id = $1
+             AND token_hash IS NOT DISTINCT FROM $4
+             AND revoked_at IS NULL AND current_tenant_id = $3 RETURNING *`,
+            [rec.device_id, hashDeviceToken(token), requireTenant(), rec.issued_hash ?? null],
+          );
+          const row = rows[0] as unknown as DeviceRow | undefined;
+          if (row === undefined) {
+            // Lost to a collection that changed the token since this poll read the record: most
+            // often an overlapping poll of this browser, whose record with `issued_hash` must stay
+            // for its retry. Only a device that is gone from this event ends the pairing.
+            const live = await c.query(
+              "SELECT 1 FROM devices WHERE id = $1 AND revoked_at IS NULL AND current_tenant_id = $2",
+              [rec.device_id, requireTenant()],
+            );
+            return { gone: live.rows.length === 0 };
+          }
+          const placed = await c.query(
+            "SELECT paired_at, zone_key, mirror_device_id, mirror_zone_key FROM screen_assignments WHERE device_id = $1",
+            [row.id],
+          );
+          return { device: deviceView({ ...row, ...(placed.rows[0] as Placement | undefined) }) };
+        },
+      );
+      if ("gone" in collected) {
+        if (collected.gone) await kv.del(keys.record(id));
         throw notFound();
       }
       await kv.set(
@@ -221,7 +232,7 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
       );
       setCookie(reply, DEVICE_COOKIE, token, DEVICE_COOKIE_MAX_AGE_S);
       setCookie(reply, PAIRING_COOKIE, "", 0);
-      return { status: "paired", device };
+      return { status: "paired", device: collected.device };
     },
   );
 
@@ -259,7 +270,7 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
             [deviceId, name, ctx.venue?.id, ctx.tenant_id],
           );
           const paired = await c.query(
-            "INSERT INTO assignments (device_id, zone_key) VALUES ($1, $2) RETURNING paired_at, zone_key",
+            "INSERT INTO screen_assignments (device_id, zone_key) VALUES ($1, $2) RETURNING paired_at, zone_key",
             [deviceId, zoneKey],
           );
           await deps.audit({

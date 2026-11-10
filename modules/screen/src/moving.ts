@@ -147,7 +147,7 @@ export function movingRoutes(app: FastifyInstance, deps: MovingDeps): void {
         target: { type: "device", id: row.id },
       });
       const placed = await c.query(
-        "SELECT paired_at, zone_key, mirror_device_id, mirror_zone_key FROM assignments WHERE device_id = $1",
+        "SELECT paired_at, zone_key, mirror_device_id, mirror_zone_key FROM screen_assignments WHERE device_id = $1",
         [row.id],
       );
       return deviceView({ ...row, ...(placed.rows[0] as Placement | undefined) });

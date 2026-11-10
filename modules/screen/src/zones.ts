@@ -107,13 +107,13 @@ export async function zoneExistsHere(c: SqlClient, key: string): Promise<boolean
 /**
  * What may refer to a zone key, each answering why the zone is in use or null (plan #107, D9).
  * The contract names devices, schedule windows, active pushes and break playlists. The foreign
- * keys on `assignments` and `screen_schedules` are the database's backstop for the first two.
+ * keys on `screen_assignments` and `screen_schedules` are the database's backstop for the first two.
  */
 export type ZoneUse = (c: SqlClient, key: string) => Promise<string | null>;
 export const ZONE_USES: ZoneUse[] = [
   async (c, key) => {
     const { rows } = await c.query(
-      "SELECT count(*)::int AS n FROM assignments WHERE zone_key = $1 OR mirror_zone_key = $1",
+      "SELECT count(*)::int AS n FROM screen_assignments WHERE zone_key = $1 OR mirror_zone_key = $1",
       [key],
     );
     const n = (rows[0]?.n as number | undefined) ?? 0;
@@ -167,7 +167,7 @@ async function lockSoundDevice(c: SqlClient, deviceId: string | null): Promise<v
 async function checkSoundDevice(c: SqlClient, key: string, deviceId: string | null): Promise<void> {
   if (deviceId === null) return;
   const { rows } = await c.query(
-    `SELECT 1 FROM assignments a JOIN devices d ON d.id = a.device_id
+    `SELECT 1 FROM screen_assignments a JOIN devices d ON d.id = a.device_id
      WHERE a.device_id = $1 AND a.zone_key = $2 AND d.current_tenant_id = $3 AND d.revoked_at IS NULL
      FOR SHARE OF a, d`,
     [deviceId, key, requireTenant()],
