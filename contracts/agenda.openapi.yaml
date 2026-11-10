@@ -1,13 +1,13 @@
 openapi: 3.1.0
 info:
   title: Agenda API
-  version: 1.2.0
+  version: 1.3.0
   summary: The run-of-show of one event, editable live.
   description: |
     Machine-readable part of the agenda contract. Prose, rules, reminders and events: contracts/agenda.md.
     Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
     The event (tenant) comes from the hostname; no operation names a tenant except the clone source and the
-    internal read, whose `tenant_id` the calling module's kit sets.
+    internal reads, whose `tenant_id` the calling module's kit sets.
   license:
     name: AGPL-3.0
     identifier: AGPL-3.0-only
@@ -292,7 +292,8 @@ paths:
       summary: Now and next
       description: |
         The scheduled items running now and those with the earliest start after now, among the items the
-        caller may see. Screens, the bot and the hub all take now and next from here.
+        caller may see. The hub and the bot take now and next from here; the screens read the same answer as a
+        module (`GET /internal/agenda/now`).
       parameters:
         - name: zone
           in: query
@@ -468,6 +469,50 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
           description: "`not_found`: no such event."
+  /internal/agenda/now:
+    get:
+      tags: [internal]
+      operationId: getNowInternal
+      summary: Now and next of an event's public items, for the screens
+      description: |
+        The same answer as `GET /api/agenda/now` gives a guest whom the info-page mode lets in: `public` items
+        only, never `attendees` or `crew` ones, with the same fields. It ignores the info-page mode, so an event
+        in mode `venue_only` or `sign_in` still shows its run-of-show on its own screens: the screen module's
+        server reads it for the event's screens (contracts/screen.md, Widgets: `agenda_now`, `countdown`). Every
+        status of the event. No session: the kit's service identity (`x-canccu-service`, contracts/README.md,
+        Conventions); only the screen module may call it. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+        - name: zone
+          in: query
+          description: Only items of this screen zone and items with no zone.
+          schema:
+            $ref: "#/components/schemas/ZoneKey"
+      responses:
+        "200":
+          description: Now and next among the event's public items.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Now"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/ServiceUnauthenticated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+          description: "`service_forbidden`: the calling module is not the screen module."
+        "404":
+          $ref: "#/components/responses/NotFound"
+          description: "`not_found`: no such event."
 components:
   securitySchemes:
     session:
@@ -492,8 +537,9 @@ components:
             $ref: "common.openapi.yaml#/components/schemas/Error"
     Forbidden:
       description: |
-        `missing_right`: signed in, but the right is missing; or `info_pages_closed`: the event's info-page
-        mode does not let this request see the agenda.
+        `missing_right`: signed in, but the right is missing; `info_pages_closed`: the event's info-page
+        mode does not let this request see the agenda; or `service_forbidden`: an internal path the calling
+        module may not use.
       content:
         application/json:
           schema:
