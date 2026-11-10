@@ -4,7 +4,7 @@
  * 30 s. A 401, 403 or 409 is about the device, not the network: the stream stops and the player
  * decides which frame to show.
  */
-import { drain, readAnswer } from "./api.js";
+import { drain, fetchUntil, isDeviceAnswer, readAnswer } from "./api.js";
 import type { Answer, Fetch } from "./api.js";
 import { SseParser } from "./sse.js";
 import type { SseMessage } from "./sse.js";
@@ -13,6 +13,11 @@ export const STREAM_PATH = "/api/screen/device/stream";
 const MAX_DELAY_MS = 30_000;
 /** The server pings every 15 s: three missed pings mean a connection that died without closing. */
 export const SILENCE_MS = 45_000;
+/**
+ * A connect that has no headers by then has failed: it counts toward the poll fallback and is
+ * tried again, instead of waiting on a stalled upstream or a half-open connection for good.
+ */
+export const CONNECT_MS = 15_000;
 
 export interface StreamHandlers {
   open(): void;
@@ -33,10 +38,6 @@ export interface StreamHandlers {
 export function backoffMs(failures: number, retryMs: number, random: () => number): number {
   const base = Math.min(MAX_DELAY_MS, retryMs * 2 ** Math.max(0, failures - 1));
   return Math.round(base / 2 + (random() * base) / 2);
-}
-
-function isRefusal(status: number): boolean {
-  return status === 401 || status === 403 || status === 409;
 }
 
 export class StreamClient {
@@ -73,25 +74,34 @@ export class StreamClient {
     this.abort = abort;
     const headers: Record<string, string> = { accept: "text/event-stream" };
     if (this.lastEventId !== "") headers["last-event-id"] = this.lastEventId;
+    const connectTimer = setTimeout(() => {
+      abort.abort();
+    }, CONNECT_MS);
+    const stale = (): boolean => !this.running || abort !== this.abort;
     let response: Response;
     try {
-      response = await this.fetchFn(STREAM_PATH, {
+      response = await fetchUntil(this.fetchFn, STREAM_PATH, {
         headers,
         credentials: "same-origin",
         cache: "no-store",
         signal: abort.signal,
       });
     } catch {
-      this.fail();
+      clearTimeout(connectTimer);
+      if (!stale()) this.fail();
       return;
     }
-    if (!this.running || abort !== this.abort) {
+    if (stale()) {
+      clearTimeout(connectTimer);
       drain(response);
       return;
     }
     if (response.status !== 200 || response.body === null) {
       const answer = await readAnswer(response);
-      if (isRefusal(answer.status)) {
+      clearTimeout(connectTimer);
+      // A connect that was replaced meanwhile must not stop the stream that replaced it.
+      if (stale()) return;
+      if (isDeviceAnswer(answer.status)) {
         this.stop();
         this.on.refused(answer);
       } else {
@@ -99,6 +109,7 @@ export class StreamClient {
       }
       return;
     }
+    clearTimeout(connectTimer);
     this.failures = 0;
     this.on.open();
     await this.read(response.body, abort);

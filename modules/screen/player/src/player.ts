@@ -20,6 +20,13 @@ export const RETRY_MS = 30_000;
 /** How long the moved frame shows before the page goes to the new address. */
 export const MOVE_MS = 3000;
 const CODE_MAX_MS = 10 * 60_000;
+/** The contract's code and the kit's older name for it (contracts/screen.md, Devices). */
+const VENUE_CODES = new Set(["venue_ip_refused", "venue_ip_mismatch"]);
+
+/** A 403 for the venue check; any other 403 is not something the venue frame can explain. */
+function venueRefused(answer: Answer): boolean {
+  return answer.status === 403 && answer.code !== null && VENUE_CODES.has(answer.code);
+}
 
 export interface Nav {
   hash(): string;
@@ -57,6 +64,8 @@ export class Player {
   private ticker: ReturnType<typeof setInterval> | undefined;
   private tick: (() => void) | null = null;
   private failures = 0;
+  /** Whether any frame has been drawn: the loader's `<body>` starts empty. */
+  private drawn = false;
   private eventName: string | null | undefined;
   private readonly now: () => number;
   private readonly random: () => number;
@@ -92,6 +101,8 @@ export class Player {
     const gen = this.next();
     const transfer = /^#transfer=([A-Za-z0-9_-]{16,64})$/.exec(this.env.nav.hash())?.[1];
     if (transfer !== undefined) this.env.nav.clearHash();
+    // Never a blank page while the first read is out, however long it takes to fail.
+    if (!this.drawn) this.show({ kind: "unknown", ...CONNECTING });
     let answer = await call(this.env.fetch, "GET", STATE_PATH);
     // A working cookie for this hostname wins over the code (contracts/screen.md, Moving).
     if (transfer !== undefined && answer.status !== 200 && gen === this.generation) {
@@ -125,6 +136,7 @@ export class Player {
   }
 
   private mount(node: HTMLElement): void {
+    this.drawn = true;
     const keep = [...this.env.root.children].filter((c) =>
       c.matches(".canccu-offline-mark, .canccu-identify"),
     );
@@ -140,7 +152,7 @@ export class Player {
     this.next();
     this.live.stop();
     if (answer.status === 401) void this.pair();
-    else if (answer.status === 403) this.refused();
+    else if (venueRefused(answer)) this.refused();
     else if (answer.status === 409 && answer.code === "device_moved") void this.moved();
     else if (answer.status === 409 && answer.code === "event_archived") this.archived();
     else this.unknown();
@@ -187,8 +199,8 @@ export class Player {
     const body = answer.body as { pairing_id?: string; code?: string; expires_at?: string } | null;
     if (answer.status === 201 && body?.pairing_id && body.code) {
       this.failures = 0;
-      this.showCode(event, body.pairing_id, body.code, body.expires_at ?? "");
-    } else if (answer.status === 403) this.refused();
+      this.showCode(event, body.pairing_id, body.code, body.expires_at ?? "", answer.serverMs);
+    } else if (venueRefused(answer)) this.refused();
     else if (answer.status === 409 && answer.code === "event_archived") this.archived();
     else if (answer.status === 409 && answer.code === "no_venue") {
       this.show({ kind: "unknown", event, ...NO_VENUE });
@@ -199,9 +211,17 @@ export class Player {
     } else this.unknown();
   }
 
-  private showCode(event: string, id: string, code: string, expiresAt: string): void {
-    // The device's clock may be off before its first heartbeat: never show more than a code lives.
-    const left = Math.min(CODE_MAX_MS, Math.max(0, Date.parse(expiresAt) - this.now() || 0));
+  private showCode(
+    event: string,
+    id: string,
+    code: string,
+    expiresAt: string,
+    serverMs = NaN,
+  ): void {
+    // A kiosk's clock may be off before NTP syncs, and no heartbeat runs while pairing: the time
+    // left is counted on the server's clock (its `Date` header), and never more than a code lives.
+    const serverNow = Number.isNaN(serverMs) ? this.now() : serverMs;
+    const left = Math.min(CODE_MAX_MS, Math.max(0, Date.parse(expiresAt) - serverNow || 0));
     const until = this.now() + left;
     const node = this.show({
       kind: "pairing",
@@ -227,10 +247,11 @@ export class Player {
       if (gen !== this.generation) return;
       const status = (answer.body as { status?: string } | null)?.status;
       if (answer.status === 200 && status === "paired") {
-        this.settle(await call(this.env.fetch, "GET", STATE_PATH));
+        const state = await call(this.env.fetch, "GET", STATE_PATH);
+        if (gen === this.generation) this.settle(state);
       } else if ((answer.status === 200 && status === "expired") || answer.status === 404) {
         void this.pair();
-      } else if (answer.status === 403) this.refused();
+      } else if (venueRefused(answer)) this.refused();
       else this.wait(2000, poll);
     };
     this.wait(2000, poll);
@@ -254,8 +275,7 @@ export class Player {
     const ms = backoffMs(this.failures, 2000, this.random);
     this.show({
       kind: "unknown",
-      title: "Connecting…",
-      lines: ["This screen is waiting for the event's server."],
+      ...CONNECTING,
       foot: `Trying again in ${Math.ceil(ms / 1000)} s`,
     });
     this.wait(ms, () => this.start());
@@ -287,6 +307,10 @@ export class Player {
   }
 }
 
+const CONNECTING = {
+  title: "Connecting…",
+  lines: ["This screen is waiting for the event's server."],
+};
 const REFUSED = {
   title: "Not at the event's venue",
   lines: [

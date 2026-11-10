@@ -3,7 +3,7 @@
  * current and hands every new one to the player to draw; an answer about the device (401, 403,
  * 409) goes back to the player, which leaves playing for that answer's frame.
  */
-import { call } from "./api.js";
+import { call, isDeviceAnswer } from "./api.js";
 import type { Answer, Fetch } from "./api.js";
 import { clockText, identifyCard, offlineMark } from "./frames.js";
 import { Heartbeat } from "./heartbeat.js";
@@ -19,10 +19,6 @@ export const OFFLINE_AFTER_MS = 10_000;
 export const POLL_MS = 10_000;
 const IDENTIFY_MS = 15_000;
 const PATCHES = new Set(["widget", "region", "ticker", "theme"]);
-
-export function isDeviceAnswer(status: number): boolean {
-  return status === 401 || status === 403 || status === 409;
-}
 
 export interface LiveHost {
   fetch: Fetch;
@@ -201,7 +197,8 @@ export class Live {
       ["css", theme.css_url],
     ] as const) {
       const old = head.querySelector<HTMLLinkElement>(`link[data-theme="${slot}"]`);
-      if (href === null || !href.startsWith("/")) {
+      // Same-origin paths only: `//host/x.css` would be another host's file.
+      if (href === null || !/^\/(?!\/)/.test(href)) {
         old?.remove();
         continue;
       }

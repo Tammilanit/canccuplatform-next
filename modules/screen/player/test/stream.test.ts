@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Answer } from "../src/api.js";
 import type { SseMessage } from "../src/sse.js";
-import { SILENCE_MS, StreamClient, backoffMs } from "../src/stream.js";
+import { CONNECT_MS, SILENCE_MS, StreamClient, backoffMs } from "../src/stream.js";
 
 /** A stream answer the test writes into. */
 function live(): { response: Response; write(text: string): void; end(): void } {
@@ -49,7 +49,7 @@ function recorder() {
 }
 
 const flush = async (): Promise<void> => {
-  for (let i = 0; i < 10; i++) await Promise.resolve();
+  for (let i = 0; i < 30; i++) await Promise.resolve();
 };
 
 describe("the reconnect delay", () => {
@@ -132,6 +132,56 @@ describe("the stream client", () => {
     expect(r.refused.map((a) => [a.status, a.code])).toEqual([[409, "device_moved"]]);
     await vi.advanceTimersByTimeAsync(60_000);
     expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("counts a connect that never gets an answer as failed, so the reconnects go on", async () => {
+    // A stalled upstream or a half-open connection: nothing ever settles, not even on abort.
+    const fetchFn = vi.fn(() => new Promise<Response>(() => undefined));
+    const r = recorder();
+    const client = new StreamClient(fetchFn, r.handlers, () => 1);
+    client.start();
+    await vi.advanceTimersByTimeAsync(CONNECT_MS - 1);
+    expect(r.log).toEqual([]);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(r.log).toEqual(["failed 1"]);
+    await vi.advanceTimersByTimeAsync(2000 + CONNECT_MS);
+    expect(r.log).toEqual(["failed 1", "failed 2"]);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    client.stop();
+  });
+
+  it("ignores a refusal that arrives for a connect the client has replaced", async () => {
+    let finish!: () => void;
+    const late = new ReadableStream<Uint8Array>({
+      start(c) {
+        finish = () => {
+          c.enqueue(new TextEncoder().encode('{"error":{"code":"device_moved"}}'));
+          c.close();
+        };
+      },
+    });
+    const second = live();
+    const fetchFn = vi
+      .fn<(url: string, init?: RequestInit) => Promise<Response>>()
+      .mockResolvedValueOnce(
+        new Response(late, { status: 409, headers: { "content-type": "application/json" } }),
+      )
+      .mockResolvedValueOnce(second.response);
+    const r = recorder();
+    const client = new StreamClient(fetchFn, r.handlers, () => 1);
+    client.start();
+    await flush();
+    client.stop();
+    client.start();
+    await flush();
+    finish();
+    await flush();
+    expect(r.refused).toEqual([]);
+    expect(r.log).toEqual(["open"]);
+    second.write("event: state\ndata: {}\n\n");
+    await flush();
+    expect(r.messages).toHaveLength(1);
+    client.stop();
   });
 
   it("gives up on a stream that goes silent and connects again", async () => {

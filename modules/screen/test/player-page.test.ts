@@ -33,6 +33,12 @@ describe.skipIf(!DATABASE_URL)("the /screen/ page and its bundle", () => {
     expect(res.headers["x-content-type-options"]).toBe("nosniff");
   });
 
+  it("serves the page to a host written with a trailing dot", async () => {
+    const res = await call(h, "GET", "/screen/", { host: "alpha.test." });
+    expect(res.statusCode).toBe(200);
+    expect(String(res.headers["content-security-policy"])).toContain("script-src 'self'");
+  });
+
   it("sends the bare path on to the page", async () => {
     const res = await call(h, "GET", "/screen?x=1");
     expect(res.statusCode).toBe(308);

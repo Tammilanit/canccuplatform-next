@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CALL_TIMEOUT_MS } from "../src/api.js";
 import { MOVE_MS, OFFLINE_AFTER_MS, Player, RETRY_MS } from "../src/player.js";
 import { FakeApi, fakeNav, json, problem, screenState } from "./fake.js";
 
@@ -109,6 +110,39 @@ describe("the device-state frames", () => {
     expect(api.calls.filter((c) => c === "GET /api/screen/device/state")).toHaveLength(2);
   });
 
+  it("keeps the venue frame for the venue check: another 403 retries behind connecting", async () => {
+    const api = new FakeApi().on("GET /api/screen/device/state", () =>
+      problem(403, "missing_right"),
+    );
+    const { player } = setup(api);
+    await player.start();
+    expect(shown()).toBe("unknown");
+    expect(text()).toContain("Connecting…");
+    expect(text()).not.toContain("Not at the event's venue");
+  });
+
+  it("counts the code's time on the server's clock, not a kiosk clock that runs fast", async () => {
+    // The device's clock is 9 minutes ahead of the server's, before NTP syncs.
+    const server = T0 - 9 * 60_000;
+    const api = new FakeApi()
+      .on("GET /api/screen/device/state", () => problem(401, "device_unknown"))
+      .on("GET /api/tenants/current", () => json(200, { id: "alpha", name: "Demo Event" }))
+      .on("POST /api/screen/pairing", () => {
+        const res = json(201, {
+          pairing_id: "pr_1",
+          code: "K7Q49WXP",
+          expires_at: new Date(server + 600_000).toISOString(),
+        });
+        res.headers.set("date", new Date(server).toUTCString());
+        return res;
+      })
+      .on("GET /api/screen/pairing/pr_1", () => json(200, { status: "waiting" }));
+    const { player } = setup(api);
+    await player.start();
+    await settle();
+    expect(text()).toContain("Code expires in 10:00");
+  });
+
   it("shows the archived notice for an archived event, and keeps listening", async () => {
     const api = new FakeApi().on("GET /api/screen/device/state", () =>
       json(
@@ -195,6 +229,23 @@ describe("the device-state frames", () => {
     await settle(2000);
     expect(shown()).toBe("starting");
     expect(text()).toContain("Main hall");
+  });
+
+  it("is never blank while the first read hangs, and retries once it times out", async () => {
+    let up = false;
+    const api = new FakeApi().on("GET /api/screen/device/state", () =>
+      up ? json(200, screenState()) : new Promise<Response>(() => undefined),
+    );
+    const { player } = setup(api);
+    void player.start();
+    await settle();
+    expect(shown()).toBe("unknown");
+    expect(text()).toContain("Connecting…");
+    await settle(CALL_TIMEOUT_MS);
+    expect(text()).toContain("Trying again in");
+    up = true;
+    await settle(2000);
+    expect(shown()).toBe("starting");
   });
 });
 

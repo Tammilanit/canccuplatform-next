@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CALL_TIMEOUT_MS } from "../src/api.js";
 import type { Answer } from "../src/api.js";
 import { Heartbeat } from "../src/heartbeat.js";
 
@@ -13,7 +14,7 @@ const report = () => ({
 });
 
 const flush = async (): Promise<void> => {
-  for (let i = 0; i < 10; i++) await Promise.resolve();
+  for (let i = 0; i < 30; i++) await Promise.resolve();
 };
 
 describe("the heartbeat", () => {
@@ -58,6 +59,17 @@ describe("the heartbeat", () => {
     expect(String(bodies[0]?.instance_id)).toMatch(/^[A-Za-z0-9_-]{16,64}$/);
     await vi.advanceTimersByTimeAsync(15_000);
     expect(bodies[1]).toMatchObject({ rtt_ms: 200, instance_id: bodies[0]?.instance_id });
+    beat.stop();
+  });
+
+  it("sends no beat while the last is open, and gives that one up after the call timeout", async () => {
+    const fetchFn = vi.fn(() => new Promise<Response>(() => undefined));
+    const beat = new Heartbeat(fetchFn, report, () => undefined);
+    beat.start(4000);
+    await vi.advanceTimersByTimeAsync(CALL_TIMEOUT_MS - 1);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(12_000 - (CALL_TIMEOUT_MS - 1));
+    expect(fetchFn).toHaveBeenCalledTimes(2);
     beat.stop();
   });
 

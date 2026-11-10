@@ -3,7 +3,7 @@
  * countdowns and claim ends run on this device's clock corrected by the offset, so every screen of
  * a zone shows the same moment (docs/plans/issue-109.md, S6).
  */
-import { call } from "./api.js";
+import { call, isDeviceAnswer } from "./api.js";
 import type { Answer, Fetch } from "./api.js";
 
 export const HEARTBEAT_PATH = "/api/screen/device/heartbeat";
@@ -30,6 +30,8 @@ export class Heartbeat {
   readonly instanceId: string;
   private rttMs: number | null = null;
   private timer: ReturnType<typeof setInterval> | undefined;
+  /** A beat still waiting for its answer; the next is skipped, so beats never pile up. */
+  private open = false;
 
   constructor(
     private readonly fetchFn: Fetch,
@@ -59,6 +61,16 @@ export class Heartbeat {
   }
 
   private async beat(): Promise<void> {
+    if (this.open) return;
+    this.open = true;
+    try {
+      await this.send();
+    } finally {
+      this.open = false;
+    }
+  }
+
+  private async send(): Promise<void> {
     const sent = this.now();
     const body = {
       ...this.report(),
@@ -71,7 +83,7 @@ export class Heartbeat {
     const answer = await call(this.fetchFn, "POST", HEARTBEAT_PATH, body);
     if (this.timer === undefined) return;
     const received = this.now();
-    if (answer.status === 401 || answer.status === 403 || answer.status === 409) {
+    if (isDeviceAnswer(answer.status)) {
       this.stop();
       this.refused(answer);
       return;
