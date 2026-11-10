@@ -4,7 +4,7 @@
  * queue and, with `CANCCU_VALKEY_URL`, on the Lua scripts against a real Valkey.
  */
 import { Valkey } from "iovalkey";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRenderQueue, ValkeyRenderQueue } from "../src/render/queue.js";
 import type { RenderQueue } from "../src/render/queue.js";
 
@@ -146,3 +146,40 @@ for (const [kind, make] of kinds) {
     });
   });
 }
+
+describe.skipIf(!VALKEY_URL)("render queue on Valkey", () => {
+  // Old and new containers run side by side during a deploy: the cross-event keys must keep
+  // their spelling, or the two would hold two renderer slots at once.
+  it("keeps the cross-event keys at screen:render:* and each event's list under its tenant", async () => {
+    const client = new Valkey(VALKEY_URL as string, { db: TEST_DB });
+    clients.push(client);
+    await client.flushdb();
+    const queue = new ValkeyRenderQueue(client);
+    await queue.enqueue("alpha", "a1", 1);
+    await queue.enqueue("alpha", "a2", 2);
+    await queue.take(LEASE, 0);
+    await queue.watch("alpha", "a1", LEASE);
+    expect((await client.keys("*")).sort()).toEqual([
+      "screen:render:leases",
+      "screen:render:ring",
+      "screen:render:slot",
+      "screen:render:waiting",
+      "t:alpha:screen:render:queue",
+    ]);
+  });
+
+  it("reads the ring and its lengths once for all of an event's queued jobs", async () => {
+    const client = new Valkey(VALKEY_URL as string, { db: TEST_DB });
+    clients.push(client);
+    await client.flushdb();
+    const queue = new ValkeyRenderQueue(client);
+    for (let i = 1; i <= 5; i++) await queue.enqueue("alpha", `a${i}`, i);
+    await queue.enqueue("beta", "b1", 10);
+    const lrange = vi.spyOn(client, "lrange");
+    const llen = vi.spyOn(client, "llen");
+    const positions = await queue.positions("alpha", ["a1", "a2", "a3", "a4", "a5"]);
+    expect([...positions.values()]).toEqual([1, 3, 4, 5, 6]);
+    expect(lrange).toHaveBeenCalledTimes(2);
+    expect(llen).toHaveBeenCalledTimes(2);
+  });
+});
