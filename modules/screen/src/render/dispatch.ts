@@ -16,6 +16,7 @@ import type { Socket } from "node:net";
 import { dirname, join } from "node:path";
 import { KitError, requireTenant, withTenant } from "@canccu/kit";
 import { filePath } from "../assets/files.js";
+import { holdCount } from "../assets/storage.js";
 import { clampToDeck } from "../content/asset-rules.js";
 import { RENDERER_FAILED, RendererUnavailable, openRenderer, renderDeck } from "./client.js";
 import type { RenderOutcome } from "./client.js";
@@ -130,6 +131,7 @@ async function runJob(d: DispatchDeps, jobId: string): Promise<{ ran: boolean; s
   const attempt = started.row.attempts;
   const tmp = attemptDir(d.filesRoot, jobId, attempt);
   let reserved = 0;
+  let inHand: Promise<void> = Promise.resolve();
   let stopped = null as "requeue" | "gone" | null;
   const controller = new AbortController();
   const halt = (why: "requeue" | "gone"): void => {
@@ -166,16 +168,25 @@ async function runJob(d: DispatchDeps, jobId: string): Promise<{ ran: boolean; s
       deckPath: filePath(d.filesRoot, started.file),
       signal: controller.signal,
       timeoutMs: d.timeoutMs ?? TIMEOUT_MS,
-      onSlide: async (slide, png) => {
-        await d.storage.reserve(png.length);
-        reserved += png.length;
-        await d.db.tenant((c) =>
-          c.query(
-            "UPDATE screen_render_jobs SET reserved_bytes = $3 WHERE id = $1 AND attempts = $2",
-            [jobId, attempt, reserved],
-          ),
-        );
-        await writeFile(join(tmp, `slide-${slide.index}.png`), png, { flag: "wx" });
+      onSlide: (slide, png) => {
+        // renderDeck returns on a cancel or a shutdown without waiting for the slide in hand;
+        // settle waits for it, or bytes it reserves after the settle would never go back.
+        const work = (async () => {
+          // The reserve and the row that holds it in one transaction under the count lock, so a
+          // recount (assets/upkeep.ts) sees the bytes in the row or not yet reserved.
+          await d.db.tenant(async (c) => {
+            await holdCount(c);
+            await d.storage.reserve(png.length);
+            reserved += png.length;
+            await c.query(
+              "UPDATE screen_render_jobs SET reserved_bytes = $3 WHERE id = $1 AND attempts = $2",
+              [jobId, attempt, reserved],
+            );
+          });
+          await writeFile(join(tmp, `slide-${slide.index}.png`), png, { flag: "wx" });
+        })();
+        inHand = work.catch(() => undefined);
+        return work;
       },
     });
   } catch (err) {
@@ -191,6 +202,7 @@ async function runJob(d: DispatchDeps, jobId: string): Promise<{ ran: boolean; s
     d.stop?.removeEventListener("abort", onShutdown);
     socket.destroy();
   }
+  await inHand;
   return { ran: true, settled: await settle(d, started.row, attempt, result, tmp, reserved) };
 }
 

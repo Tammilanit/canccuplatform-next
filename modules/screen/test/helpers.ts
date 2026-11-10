@@ -158,6 +158,10 @@ export async function harness(): Promise<Harness> {
       storage.used[tenant] = Math.max(0, (storage.used[tenant] ?? 0) - bytes);
       return Promise.resolve();
     },
+    repair: (bytes) => {
+      storage.used[requireTenant()] = bytes;
+      return Promise.resolve();
+    },
   };
   const queue = new MemoryRenderQueue();
   const app = buildApp({

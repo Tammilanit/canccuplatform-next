@@ -17,6 +17,7 @@ import { pipeline } from "node:stream/promises";
 import { KitError, requireTenant, tenantFile } from "@canccu/kit";
 import type { Logger, SqlClient } from "@canccu/kit";
 import type { Db } from "../db.js";
+import { holdCount } from "./storage.js";
 import type { StorageQuota } from "./storage.js";
 
 /** Advisory-lock class of screen's file names; the two-key form never meets the migration lock. */
@@ -136,6 +137,8 @@ export async function place(
     await rm(temp.path, { force: true });
     return { name, reserved: 0 };
   }
+  // Until this transaction ends, so a recount sees these bytes in the row or not at all.
+  await holdCount(c);
   await storage.reserve(temp.bytes);
   try {
     // The row first: if the rename then fails, the caller's rollback takes the row, and no file
