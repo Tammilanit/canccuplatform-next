@@ -4,6 +4,7 @@
  * and GPS data, and whatever a polyglot hides around or inside the image, are dropped.
  */
 import sharp from "sharp";
+import type { Sharp } from "sharp";
 
 export type RasterKind = "png" | "jpeg" | "webp";
 
@@ -37,6 +38,59 @@ async function inTurn<T>(fn: () => Promise<T>): Promise<T> {
 
 export function reencode(input: Buffer, kind: RasterKind): Promise<RasterVerdict> {
   return inTurn(() => decode(input, kind));
+}
+
+/** How `render` sizes its output. */
+export type Fit =
+  /** `width` px wide, the height kept in proportion (at most four times the width). */
+  | { width: number }
+  /** A `size` px square, the image centred inside `inner` px, on `background` or transparent. */
+  | { size: number; inner: number; background?: string };
+
+const CLEAR = { r: 0, g: 0, b: 0, alpha: 0 };
+
+/**
+ * A PNG of a stored image, which passed its checks at upload: PNG, JPEG, WebP (the first frame)
+ * or SVG. An SVG is drawn at the density its target needs rather than scaled up from its own size,
+ * so it stays sharp.
+ */
+export function render(input: Buffer, ext: RasterKind | "svg", fit: Fit): Promise<Buffer> {
+  return inTurn(async () => {
+    const target = "width" in fit ? fit.width : fit.inner;
+    let density: number | undefined;
+    if (ext === "svg") {
+      const meta = await sharp(input).metadata();
+      const longest = Math.max(meta.width, meta.height, 1);
+      density = Math.min(100_000, Math.max(1, (72 * target) / longest));
+    }
+    const source = (): Sharp =>
+      sharp(input, { limitInputPixels: MAX_PIXELS, ...(density ? { density } : {}) }).rotate();
+    if ("width" in fit) {
+      // The cap keeps a sliver of a logo from becoming a huge image.
+      return source()
+        .resize({ width: fit.width, height: fit.width * 4, fit: "inside" })
+        .png({ compressionLevel: 9 })
+        .toBuffer();
+    }
+    const pad = Math.floor((fit.size - fit.inner) / 2);
+    const square = await source()
+      .resize(fit.inner, fit.inner, { fit: "contain", background: CLEAR })
+      .extend({
+        top: pad,
+        left: pad,
+        bottom: fit.size - fit.inner - pad,
+        right: fit.size - fit.inner - pad,
+        background: CLEAR,
+      })
+      .png()
+      .toBuffer();
+    // flatten runs before resize within one pipeline, so the padding is filled in a second one.
+    const out =
+      fit.background === undefined
+        ? sharp(square)
+        : sharp(square).flatten({ background: fit.background });
+    return out.png({ compressionLevel: 9 }).toBuffer();
+  });
 }
 
 async function decode(input: Buffer, kind: RasterKind): Promise<RasterVerdict> {

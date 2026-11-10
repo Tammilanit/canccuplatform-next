@@ -19,6 +19,8 @@ export interface ResolvedTheme {
   admin_tokens_css_url: string;
   css_url?: string;
   logo_url?: string;
+  logo_png_url?: string;
+  icon_urls?: { "192": string; "512": string; maskable_512: string };
   embed_color: number;
   layouts: unknown[];
   templates: unknown[];
@@ -75,6 +77,10 @@ interface RevisionRow {
   admin_tokens_css: string;
   css: string | null;
   logo: string | null;
+  logo_png: string | null;
+  icon_192: string | null;
+  icon_512: string | null;
+  icon_maskable_512: string | null;
   embed_color: number;
 }
 
@@ -90,6 +96,17 @@ function fromRevision(row: RevisionRow, embeds: EmbedRef[]): ResolvedTheme {
     admin_tokens_css_url: SERVED + row.admin_tokens_css,
     ...(row.css === null ? {} : { css_url: SERVED + row.css }),
     ...(row.logo === null ? {} : { logo_url: SERVED + row.logo }),
+    ...(row.logo_png === null ? {} : { logo_png_url: SERVED + row.logo_png }),
+    // The three come from one image, so a revision has all of them or none.
+    ...(row.icon_192 === null || row.icon_512 === null || row.icon_maskable_512 === null
+      ? {}
+      : {
+          icon_urls: {
+            "192": SERVED + row.icon_192,
+            "512": SERVED + row.icon_512,
+            maskable_512: SERVED + row.icon_maskable_512,
+          },
+        }),
     embed_color: row.embed_color,
     layouts: row.manifest.layouts ?? [],
     templates: [],
@@ -107,7 +124,7 @@ export async function resolvedRevision(
 ): Promise<ResolvedTheme | undefined> {
   const { rows } = await client.query(
     `SELECT revision, published_at, manifest, tokens, tokens_css, admin_tokens_css, css, logo,
-            embed_color
+            logo_png, icon_192, icon_512, icon_maskable_512, embed_color
        FROM theming_revisions WHERE $1::integer IS NULL OR revision = $1
       ORDER BY revision DESC LIMIT 1`,
     [revision ?? null],

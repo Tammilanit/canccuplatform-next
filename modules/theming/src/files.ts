@@ -91,8 +91,9 @@ export function diskFiles(root: string): FileStore {
       await lockFiles(client, [fileName(bytes, ext)]);
       const name = await write(bytes, ext);
       // Not undone when the caller's transaction rolls back: the sweep (upkeep.ts) removes a file
-      // left without a row. Only publish's generated CSS comes here, unreserved: a few KB the
-      // recount adds, so a publish never fails on the quota; uploads reserve (stored.ts).
+      // left without a row. Only publish's generated CSS and images come here, unreserved: small
+      // files the recount adds, so a publish never fails on the quota; uploads
+      // reserve (stored.ts).
       await client.query(
         `INSERT INTO theming_files (sha256, ext, bytes) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
         [name.slice(0, 64), ext, bytes.length],

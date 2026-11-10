@@ -58,6 +58,34 @@ function tokensEditSchema(): object {
   };
 }
 
+/** contracts/theming.openapi.yaml, BrandInput. */
+const brandInputCheck = ajv.compile({
+  type: "object",
+  additionalProperties: false,
+  required: ["draft_version", "primary", "accent", "scheme"],
+  properties: {
+    draft_version: { type: "integer", minimum: 1 },
+    logo: { $ref: def("image_path") },
+    icon: { $ref: def("image_path") },
+    primary: { $ref: def("color") },
+    accent: { $ref: def("color") },
+    scheme: { enum: ["dark", "light"] },
+    embed_color: { $ref: def("color") },
+  },
+});
+
+/** The body of `POST …/draft/mode`: only the confirmed switch back to simple exists. */
+const modeSwitchCheck = ajv.compile({
+  type: "object",
+  additionalProperties: false,
+  required: ["draft_version", "mode", "remove_advanced"],
+  properties: {
+    draft_version: { type: "integer", minimum: 1 },
+    mode: { const: "simple" },
+    remove_advanced: { const: true },
+  },
+});
+
 const manifestCheck = ajv.getSchema(schema.$id) as ValidateFunction;
 const layoutCheck = ajv.compile({ $ref: def("layout") });
 const tokensEditCheck = ajv.compile(tokensEditSchema());
@@ -92,6 +120,24 @@ export function schemaErrors(manifest: unknown): { path: string; message: string
 /** undefined when `body` is a layout of theme.schema.json, else why not. */
 export function layoutError(body: unknown): string | undefined {
   return layoutCheck(body) ? undefined : describe(layoutCheck.errors);
+}
+
+export interface BrandEdit {
+  draft_version: number;
+  logo?: string;
+  icon?: string;
+  primary: string;
+  accent: string;
+  scheme: "dark" | "light";
+  embed_color?: string;
+}
+
+export function brandInputError(body: unknown): string | undefined {
+  return brandInputCheck(body) ? undefined : describe(brandInputCheck.errors);
+}
+
+export function modeSwitchError(body: unknown): string | undefined {
+  return modeSwitchCheck(body) ? undefined : describe(modeSwitchCheck.errors);
 }
 
 export function tokensEditError(body: unknown): string | undefined {

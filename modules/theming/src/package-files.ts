@@ -87,3 +87,42 @@ export async function draftFileNames(c: SqlClient): Promise<string[]> {
   );
   return (rows as { file: string }[]).map((r) => r.file);
 }
+
+/**
+ * Removes every draft path in `folders` (`css`, `fonts`, …) and every draft embed: the switch back
+ * to simple. Answers the package paths removed, sorted, and the files the draft may no longer
+ * refer to.
+ */
+export async function removeDraftFolders(
+  c: SqlClient,
+  folders: readonly string[],
+): Promise<{ removed: string[]; unused: string[] }> {
+  const paths = await c.query(
+    `DELETE FROM theming_package_files
+      WHERE owner = 'draft' AND split_part(path, '/', 1) = ANY($1::text[])
+     RETURNING path, file`,
+    [folders],
+  );
+  const embeds = await c.query(
+    `DELETE FROM theming_embed_files WHERE owner = 'draft' RETURNING embed, path, file`,
+  );
+  const unused: string[] = [];
+  for (const row of paths.rows as { file: string | null }[]) {
+    unused.push(...(await letGo(c, row.file, null)));
+  }
+  // An embed's files have no refs of their own: their rows were all that kept them.
+  unused.push(...(embeds.rows as { file: string }[]).map((r) => r.file));
+  const removed = [
+    ...(paths.rows as { path: string }[]).map((r) => r.path),
+    ...(embeds.rows as { embed: string; path: string }[]).map((r) => `embeds/${r.embed}/${r.path}`),
+  ].sort();
+  return { removed, unused: [...new Set(unused)] };
+}
+
+/** The names of the embeds the draft holds files for. */
+export async function draftEmbedNames(c: SqlClient): Promise<string[]> {
+  const { rows } = await c.query(
+    `SELECT DISTINCT embed FROM theming_embed_files WHERE owner = 'draft' ORDER BY embed`,
+  );
+  return (rows as { embed: string }[]).map((r) => r.embed);
+}
