@@ -44,6 +44,16 @@ async def tenant_ctx(request: Request) -> TenantContext:
     return ctx
 
 
+def writable(ctx: TenantContext) -> None:
+    """An archived event is read-only (contracts/tenants.md, Lifecycle)."""
+    if ctx["status"] == "archived":
+        raise KitError(
+            "the event is archived and its notifications read-only",
+            status=409,
+            code="event_archived",
+        )
+
+
 def is_member(user_id: str) -> bool:
     """Whether the user belongs to the event, asked for a session, a user's subscription token and
     each push to a user's phone.
@@ -71,11 +81,7 @@ async def topics_writer(request: Request, *, write: bool = False) -> Session:
         raise MissingRight(f"needs right {TOPICS_WRITE}")
     check_admin_access(ctx, client_ip(request), tailscale_cidrs())  # 403 admin_access_restricted
     # The resolver's context is dropped on every tenants event, so its status is current.
-    if write and ctx["status"] == "archived":
-        raise KitError(
-            "the event is archived and its notifications read-only",
-            status=409,
-            code="event_archived",
-        )
+    if write:
+        writable(ctx)
     await tenant_ctx(request)
     return session

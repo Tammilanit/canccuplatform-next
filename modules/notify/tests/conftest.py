@@ -130,6 +130,31 @@ class FakeTenants:
 
 
 @dataclass
+class FakeAgenda:
+    """`GET /internal/agenda/items` per event (contracts/agenda.md, Reading)."""
+
+    answers: dict[str, dict[str, Any]] = field(default_factory=dict)
+    down: bool = False
+    reads: list[str] = field(default_factory=list)
+
+    async def items(self, tenant_id: str) -> dict[str, Any]:
+        self.reads.append(tenant_id)
+        if self.down:
+            raise httpx.ConnectError("agenda unreachable")
+        return self.answers.get(tenant_id, {"agenda_version": 0, "items": []})
+
+
+@dataclass
+class FakeUsers:
+    """`GET /internal/tenants/users/{user_id}`: Discord ids; an unknown user is None (404)."""
+
+    discord: dict[str, str] = field(default_factory=dict)
+
+    async def discord_id(self, user_id: str) -> str | None:
+        return self.discord.get(user_id)
+
+
+@dataclass
 class Env:
     db: Db
     rights: FakeRights
@@ -141,6 +166,8 @@ class Env:
     audit: FakeAudit
     deps: Deps
     push: FakePushService
+    agenda: FakeAgenda
+    users: FakeUsers
 
     def client(self, host: str = "a.example.test") -> httpx.AsyncClient:
         return httpx.AsyncClient(
@@ -211,7 +238,8 @@ async def env() -> AsyncIterator[Env]:
             "TRUNCATE notify_topic_types, notify_topic_type_history, notify_topic_config,"
             " notify_notifications, notify_dedupe, notify_event_state, notify_custom_topics,"
             " notify_check_in_keys, notify_check_ins, notify_subscriptions, notify_deliveries,"
-            " notify_delivery_tenants, notify_outbox, notify_outbox_tenants"
+            " notify_delivery_tenants, notify_outbox, notify_outbox_tenants, notify_quiet_hours,"
+            " notify_source_state, notify_agenda_tenants, notify_people, notify_follows"
         )
     contexts = {tid: context(tid) for tid in HOSTS.values()}
 
@@ -236,6 +264,7 @@ async def env() -> AsyncIterator[Env]:
     bus = Bus(store, "notify")
     vapid = Vapid(load_private_key(keygen()))
     fake = FakePushService(vapid.public_key)
+    agenda, users = FakeAgenda(), FakeUsers()
     pusher = Pusher(vapid, httpx.AsyncClient(transport=httpx.MockTransport(fake.handler)))
     d = Deps(
         db=db,
@@ -247,10 +276,12 @@ async def env() -> AsyncIterator[Env]:
         tenants=FakeTenants(contexts),
         push=pusher,
         outbox=Outbox(bus, db),
+        agenda=agenda,
+        users=users,
         now=lambda: clock[0],
     )
     app = create_app(d, Health("notify", "dev", {}), resolver, ServiceIdentity("notify", KEY))
-    yield Env(db, rights, settings, store, contexts, app, clock, audit, d, fake)
+    yield Env(db, rights, settings, store, contexts, app, clock, audit, d, fake, agenda, users)
     await db.close()
 
 

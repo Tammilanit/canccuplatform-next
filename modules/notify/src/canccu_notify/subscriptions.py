@@ -131,7 +131,7 @@ def switches(stored: dict[str, Any], found: dict[str, Any], *, user: bool) -> di
     return out
 
 
-async def _found(d: Deps, conn: Any) -> dict[str, Any]:
+async def offered(d: Deps, conn: Any) -> dict[str, Any]:
     ready = await settings_ready(d.settings)
     return await configured(conn, d.settings if ready else None)
 
@@ -179,7 +179,7 @@ async def subscribe(request: Request) -> Response:
     d = deps(request)
     sub_id, token = secrets.token_urlsafe(16), secrets.token_urlsafe(32)
     async with d.db.tenant() as conn:
-        found = await _found(d, conn)
+        found = await offered(d, conn)
         prefs = check_preferences(body.get("preferences", {}), found, signed_in=bool(session))
         old = await conn.fetchrow(
             "SELECT * FROM notify_subscriptions WHERE endpoint = $1 FOR UPDATE", endpoint
@@ -226,7 +226,7 @@ async def read(request: Request) -> Response:
     d = deps(request)
     async with d.db.tenant() as conn:
         row = await _owned(request, conn)
-        return JSONResponse(view(row, await _found(d, conn)))
+        return JSONResponse(view(row, await offered(d, conn)))
 
 
 async def update(request: Request) -> Response:
@@ -237,7 +237,7 @@ async def update(request: Request) -> Response:
     d = deps(request)
     async with d.db.tenant() as conn:
         row = await _owned(request, conn)
-        found = await _found(d, conn)
+        found = await offered(d, conn)
         user = row["user_id"] is not None
         given = check_preferences(body["preferences"], found, signed_in=user)
         stored = json.loads(row["preferences"])
@@ -278,7 +278,7 @@ async def claim(request: Request) -> Response:
             row["id"],
             session.user_id,
         )
-        return JSONResponse(view(row, await _found(d, conn)))
+        return JSONResponse(view(row, await offered(d, conn)))
 
 
 ROUTES = [

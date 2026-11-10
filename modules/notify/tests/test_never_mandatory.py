@@ -55,8 +55,8 @@ async def test_every_read_answers_the_same_after_a_check_in(env: Env) -> None:
 
 
 def test_only_the_check_in_code_reads_check_ins() -> None:
-    """D11: no Notify path but the check-in API and page reads check-ins, so none can depend on
-    one. The export (#226) joins this list when it lands."""
+    """D11: no Notify path but the check-in API and page, the export and the deletes (a person's
+    own, the archive's and retention's) touches check-ins, so none can depend on one."""
     src = Path(canccu_notify.__file__).parent
     readers = sorted(p.name for p in src.glob("*.py") if "notify_check_ins" in p.read_text())
-    assert readers == ["checkin.py"]
+    assert readers == ["checkin.py", "lifecycle.py", "me.py"]

@@ -49,6 +49,20 @@ class Tenants(Protocol):
     async def by_id(self, tenant_id: str) -> TenantContext | None: ...
 
 
+class Agenda(Protocol):
+    """`GET /internal/agenda/items?tenant_id=` (contracts/agenda.md, Reading): every item of the
+    event. Raises when the agenda cannot answer."""
+
+    async def items(self, tenant_id: str) -> dict[str, Any]: ...
+
+
+class Users(Protocol):
+    """`GET /internal/tenants/users/{user_id}`: the user's Discord id, or None while the tenants
+    module does not know the user (or does not serve the read yet, #150)."""
+
+    async def discord_id(self, user_id: str) -> str | None: ...
+
+
 def utc_now() -> datetime:
     return datetime.now(UTC)
 
@@ -64,6 +78,8 @@ class Deps:
     tenants: Tenants
     push: Pusher
     outbox: Outbox
+    agenda: Agenda
+    users: Users
     now: Callable[[], datetime] = field(default=utc_now)
     check_in_keys: dict[str, bytes | None] = field(default_factory=dict)
     """Each event's opened check-in key, by tenant id: a key never changes once made, only its

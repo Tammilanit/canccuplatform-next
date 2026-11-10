@@ -25,3 +25,4 @@ notify notify_topic_types the topic registry: one set of topic types for the pla
 notify notify_topic_type_history every registration change, append-only; module registrations, no event data
 notify notify_outbox_tenants the events with pending outbox rows, a plain tenant reference, so the sender finds them without a tenant set
 notify notify_delivery_tenants the events with deliveries waiting, a plain tenant reference, so the sender finds them without a tenant set
+notify notify_agenda_tenants the events whose quiet hours notify mirrors, a plain tenant reference, so start-up reads each agenda again without a tenant set

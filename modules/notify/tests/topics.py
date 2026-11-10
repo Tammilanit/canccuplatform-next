@@ -86,3 +86,61 @@ def alert() -> dict[str, Any]:
             }
         ],
     }
+
+
+def game() -> dict[str, Any]:
+    """The contract's `game` topic: followers of `data.game.id` among current members. Its
+    `removed` event is provisional (the games contract has none yet)."""
+    return {
+        "key": "game",
+        "owner": "games",
+        "title": "Games you follow",
+        "parts": {
+            "personal": {
+                "scope": "entity",
+                "channels": ["push", "discord_dm"],
+                "defaults": {"push": True, "discord_dm": False},
+                "entity": {
+                    "type": "game",
+                    "merged": {
+                        "event": "games.game.merged",
+                        "from": "data.game_id",
+                        "into": "data.into_game_id",
+                    },
+                    "removed": {"event": "games.game.removed", "id": "data.game_id"},
+                },
+            }
+        },
+        "triggers": [
+            {
+                "event": "games.surge.started",
+                "part": "personal",
+                "audience": {"value": "attendees"},
+                "recipients": {"entity_field": "data.game.id"},
+                "title": "{data.game.name} is popular now",
+                "body": "{data.players} are playing",
+                "expires_after_minutes": 60,
+            }
+        ],
+    }
+
+
+def surge(game_id: str = "g_1") -> dict[str, Any]:
+    game = {"id": game_id, "name": "Chess", "cover_url": None}
+    return {"game": game, "players": 8, "threshold": 6}
+
+
+def quiet(item_id: str = "q1", start: int = -10, end: int = 20, **item: Any) -> dict[str, Any]:
+    """A `quiet_hours` item, `start` and `end` in minutes from the tests' NOW."""
+    from conftest import at
+
+    return {
+        "id": item_id,
+        "title": "Night",
+        "kind": "quiet_hours",
+        "starts_at": at(start),
+        "ends_at": at(end),
+        "visibility": "public",
+        "status": "scheduled",
+        **item,
+    }

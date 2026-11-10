@@ -116,3 +116,15 @@ async def test_two_first_registrations_of_one_key_keep_one_owner(env: Env) -> No
         row = await conn.fetchrow("SELECT owner, registration FROM notify_topic_types")
     assert json.loads(row["registration"])["owner"] == row["owner"]
     assert len(await history(env)) == 1
+
+
+async def test_entity_merges_and_removals_are_the_owners_own_events(env: Env) -> None:
+    from topics import game
+
+    reg = game()
+    reg["parts"]["personal"]["entity"]["merged"]["event"] = "pizza.order.merged"
+    assert (await env.register(reg)).status_code == 400
+    reg = game()
+    reg["parts"]["personal"]["entity"]["removed"]["id"] = "Not A Path"
+    assert (await env.register(reg)).status_code == 400
+    assert (await env.register(game())).status_code in (200, 201)
