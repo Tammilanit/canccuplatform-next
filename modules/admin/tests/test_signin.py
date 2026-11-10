@@ -9,7 +9,7 @@ from urllib.parse import parse_qs, urlsplit
 import httpx
 import pytest
 from canccu_kit import NotSignedIn
-from conftest import CALLBACK, PUBLIC, START, World, first_run_code
+from conftest import CALLBACK, PUBLIC, START, World, first_run_code, owner_and_member
 
 from canccu_admin.auth import ABSOLUTE, IDLE
 
@@ -259,3 +259,65 @@ async def test_invalid_session_is_refused(world: World) -> None:
 async def test_pages_send_a_signed_out_browser_to_sign_in(world: World) -> None:
     r = await world.client.get("/admin/settings")
     assert r.status_code == 303 and r.headers["location"] == "/admin/sign-in"
+
+
+# --- the superadmin flag (#250)
+
+
+async def test_no_session_is_superadmin_before_the_central_sign_in(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    """contracts/admin.md, Session and rights: true only for a platform-bound session of a
+    superadmin with two-factor. Admin's sessions are bound to nothing yet (#52) and no contract
+    path tells admin who is a superadmin, so even the owner with two-factor gets false."""
+    owner, member = await owner_and_member(world, caplog)
+    for token in (owner, member):
+        body = (await world.browser(token).get("/api/admin/session")).json()
+        assert body["superadmin"] is False
+
+
+# --- the return path (#227, docs/plans/issue-188.md, Q2)
+
+CHECK_IN = "/notify/check-in?p=arrival&c=AAAAAAAAAAAAAAAAAAAAAA"
+
+
+async def test_sign_in_returns_to_a_same_site_path(world: World) -> None:
+    page = await world.client.get("/admin/sign-in", params={"next": CHECK_IN})
+    assert 'name=next value="/notify/check-in?p=arrival&amp;c=AAAA' in page.text
+    r = await world.sign_in("2002", "Aino", data={"next": CHECK_IN})
+    assert r.status_code == 303 and r.headers["location"] == CHECK_IN
+    assert world.client.cookies["canccu_session"]
+
+
+@pytest.mark.parametrize(
+    "unsafe",
+    [
+        "//evil.example/x",
+        "/\\evil.example",
+        "https://evil.example/",
+        "javascript:alert(1)",
+        "notify/check-in",
+        "/notify/\tcheck-in",
+        "/notify/\ncheck-in",
+        "/" + "a" * 2048,
+    ],
+)
+async def test_an_unsafe_return_path_falls_back_to_admin(world: World, unsafe: str) -> None:
+    page = await world.client.get("/admin/sign-in", params={"next": unsafe})
+    assert "name=next" not in page.text
+    r = await world.sign_in("2002", "Aino", data={"next": unsafe})
+    assert r.status_code == 303 and r.headers["location"] == "/admin/"
+
+
+async def test_the_return_path_lives_with_the_flow_not_the_browser(world: World) -> None:
+    """The callback takes the path stored with the state, so a crafted callback URL cannot
+    redirect anywhere."""
+    start = await world.client.post("/admin/sign-in", data={"next": CHECK_IN})
+    query = parse_qs(urlsplit(start.headers["location"]).query)
+    assert CHECK_IN not in start.headers["location"]
+    world.discord.users["c"] = {"id": "1", "username": "x"}
+    world.discord.challenges["c"] = query["code_challenge"][0]
+    r = await world.client.get(
+        CALLBACK, params={"code": "c", "state": query["state"][0], "next": "//evil.example"}
+    )
+    assert r.headers["location"] == CHECK_IN

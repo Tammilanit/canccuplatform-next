@@ -111,6 +111,23 @@ def normalize_public_url(raw: str) -> str:
     return f"{scheme}://{netloc}{parts.path.rstrip('/')}"
 
 
+RETURN_PATH_MAX = 1024
+
+
+def safe_return_path(raw: str | None) -> str | None:
+    """`raw` if it is a path on this site, else None: never an open redirect.
+
+    Only printable ASCII, so a tab or newline that browsers drop cannot turn `/<tab>/host` into
+    `//host`; no backslash, which browsers read as `/`; and no scheme or host after parsing.
+    """
+    if not raw or len(raw) > RETURN_PATH_MAX or not raw.startswith("/"):
+        return None
+    if raw.startswith("//") or "\\" in raw or any(not "!" <= c <= "~" for c in raw):
+        return None
+    parts = urlsplit(raw)
+    return raw if not parts.scheme and not parts.netloc else None
+
+
 def _iso(moment: datetime) -> str:
     return moment.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
@@ -174,7 +191,9 @@ class Auth:
         return code_hash
 
     # Discord round trip
-    async def start(self, claim_hash: str | None = None) -> tuple[str, str]:
+    async def start(
+        self, claim_hash: str | None = None, return_path: str | None = None
+    ) -> tuple[str, str]:
         """(authorize URL, flow nonce for the browser's cookie)."""
         if self.discord is None:
             raise SignInUnavailable("Discord sign-in is not configured")
@@ -182,7 +201,13 @@ class Auth:
         state, nonce = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
         verifier = secrets.token_urlsafe(64)
         challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
-        flow = Flow(digest(nonce), verifier, claim_hash, now + FLOW_LIFETIME)
+        flow = Flow(
+            digest(nonce),
+            verifier,
+            claim_hash,
+            now + FLOW_LIFETIME,
+            safe_return_path(return_path),
+        )
         await self.store.prune(now, now - IDLE)
         await self.store.save_flow(digest(state), flow, now)
         url = self.discord.authorize_url(state, challenge.rstrip(b"=").decode())
@@ -190,8 +215,9 @@ class Auth:
 
     async def finish(
         self, state: str, nonce: str | None, code: str, old_session: str | None
-    ) -> tuple[str, User]:
-        """Check the flow, ask Discord who signed in, start a session: (session id, user)."""
+    ) -> tuple[str, User, str | None]:
+        """Check the flow, ask Discord who signed in, start a session: (session id, user, the
+        flow's return path)."""
         if self.discord is None:
             raise SignInUnavailable("Discord sign-in is not configured")
         now = self._now()
@@ -219,7 +245,7 @@ class Auth:
         session_id = secrets.token_urlsafe(32)
         await self.store.create_session(digest(session_id), user.id, now, now + ABSOLUTE)
         log.info("signed in: user %s", user.id)
-        return session_id, user
+        return session_id, user, flow.return_path
 
     # sessions
     async def session(self, session_id: str | None) -> Session:
@@ -248,6 +274,10 @@ class Auth:
             "user": {"id": s.user_id, "name": s.user_name},
             "rights": sorted(s.rights),
             "expires_at": _iso(s.expires_at),
+            # Fails closed until the central sign-in (#52): admin's sessions are bound to neither
+            # the platform nor a tenant, and no contract path tells admin who is a superadmin or
+            # whether the identity has two-factor (contracts/admin.md, Session and rights).
+            "superadmin": False,
         }
 
     async def sign_out(self, session_id: str | None) -> None:

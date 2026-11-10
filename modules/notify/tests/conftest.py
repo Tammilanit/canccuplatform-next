@@ -18,6 +18,7 @@ from canccu_kit import (
     Bus,
     Event,
     Health,
+    SecretBox,
     ServiceIdentity,
     TenantResolver,
     current_tenant,
@@ -115,6 +116,16 @@ class FakeAudit:
 
 
 @dataclass
+class FakeTenants:
+    """The tenants module's lookup by id (contracts/tenants.md, Another event by its id)."""
+
+    contexts: dict[str, TenantContext]
+
+    async def by_id(self, tenant_id: str) -> TenantContext | None:
+        return self.contexts.get(tenant_id)
+
+
+@dataclass
 class Env:
     db: Db
     rights: FakeRights
@@ -177,7 +188,8 @@ async def env() -> AsyncIterator[Env]:
     async with db.pool.acquire() as conn:  # the login role: RLS does not bind it
         await conn.execute(
             "TRUNCATE notify_topic_types, notify_topic_type_history, notify_topic_config,"
-            " notify_notifications, notify_dedupe, notify_event_state, notify_custom_topics"
+            " notify_notifications, notify_dedupe, notify_event_state, notify_custom_topics,"
+            " notify_check_in_keys, notify_check_ins"
         )
     access.ZONES.clear()
     contexts = {tid: context(tid) for tid in HOSTS.values()}
@@ -204,6 +216,8 @@ async def env() -> AsyncIterator[Env]:
         rights=rights,
         settings=settings,
         audit=audit,
+        secrets=SecretBox({1: b"s" * 32}, 1),
+        tenants=FakeTenants(contexts),
         now=lambda: clock[0],
     )
     app = create_app(d, Health("notify", "dev", {}), resolver, ServiceIdentity("notify", KEY))
