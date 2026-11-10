@@ -38,6 +38,7 @@ TESTS=(
   "notify's check-in page answers through Caddy"
   "notify's internal paths are not routed under /notify/"
   "agenda's internal paths are not routed under /agenda/"
+  "screen stores an uploaded file on the files volume and serves it back through Caddy"
 )
 
 if [ "$dry" = 1 ]; then
@@ -173,6 +174,19 @@ call GET "/notify/internal/notify/check-in/code?tenant_id=demo&purpose=arrival"
 check "${TESTS[17]}" status_is 404
 call GET "/agenda/internal/agenda/items?tenant_id=demo"
 check "${TESTS[18]}" status_is 404
+
+# The files volume is writable by the modules (#286): screen keeps the upload as sent (a sound
+# is stored unchanged) and serves the same bytes back.
+SOUND=modules/screen/test/fixtures/media/sound.mp3
+call POST /api/screen/assets -H "cookie: $COOKIE" -F "file=@$SOUND"
+file_url=$(jq -r 'if .url then .url else "" end' "$TMP/body" 2>/dev/null)
+# shellcheck disable=SC2329
+serves_upload_back() {
+  status_is 201 && [[ $file_url == /api/screen/files/* ]] || return 1
+  call GET "$file_url" -H "cookie: $COOKIE"
+  status_is 200 && cmp -s "$TMP/body" "$SOUND"
+}
+check "${TESTS[19]}" serves_upload_back
 
 if [ "$fail" = 0 ]; then echo "demo-stack-test: all $n tests passed"; else echo "demo-stack-test: tests failed" >&2; fi
 exit "$fail"

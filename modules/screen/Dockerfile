@@ -27,6 +27,7 @@ COPY --from=build /repo/modules/screen/dist modules/screen/dist
 COPY --from=build /repo/modules/screen/migrations modules/screen/migrations
 COPY --from=build /repo/modules/screen/node_modules modules/screen/node_modules
 WORKDIR /repo/modules/screen
-USER node
+# nobody (65534), as every module that mounts the files volume: files-init gives it to that user.
+USER nobody
 EXPOSE 8080
 CMD ["node", "dist/main.js"]

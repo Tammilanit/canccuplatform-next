@@ -33,6 +33,13 @@ Scripts for installing a host and keeping the stack up across reboots. The platf
 
 **Check command:** `setup/test.sh`. It needs no root and changes nothing on the host: every script runs with `--dry-run` or against an unreachable Docker daemon, plus `systemd-analyze verify` on the units, the compose ports and shellcheck (each skipped with a message when its tool is missing). It sources `test-install.sh` and `test-deploy.sh`, its sections for `install` and `deploy`.
 
+## Files volume
+The stack's `files` volume (`deploy/compose.yml`) holds every module's files: `/files/<tenant>/<module>/` for an event's, `/files/_platform/<module>/` for a module's global ones (the kit's `tenantFilesDir` and `platformFilesDir`). A module reads and writes only its own directories; the others' files reach it through their APIs, as everything else does.
+
+- **Owner:** the whole volume belongs to uid:gid `65534:65534` (`nobody`), and every module that mounts it runs as that user (`USER nobody` in its Dockerfile; `setup/test.sh` checks both). Modules create their directories as they need them, so a new event needs no setup: a tenant's directory is made by whichever module writes there first, and the others can still add theirs.
+- **`files-init`**, a one-shot service, runs at every start of the stack and before any service that mounts the volume: it gives everything in the volume that is not yet `65534:65534` to that owner. A new volume (root's) thus becomes writable, and so do files an older version wrote as another user (the node modules ran as uid 1000 before). It is the only part that runs as root, with no network, a read-only root filesystem and only the `CHOWN` and `DAC_READ_SEARCH` capabilities; it never follows a symlink. It ends at once on a clean volume; a large volume takes one walk over its entries.
+- **Why one user:** tenants appear while the stack runs, so `/files/<tenant>/` cannot be prepared per module in advance; with one user any module can create it. The modules therefore do not keep each other out of their files on the volume; they keep out by convention, and Caddy serves no file from the volume itself (every file goes through its module's API).
+
 ## Install checklist
 1. If the stack already ran from a version of `deploy/compose.yml` without IPv6 on its network, run `docker compose -f deploy/compose.yml down` first (the volumes stay), so the network is recreated with IPv6.
 2. `sudo setup/install --boot`. On a fresh host it writes `deploy/.env` with a random Postgres password and then stops on the empty `CANCCU_WEB_ALLOW`: set it in `deploy/.env` and run `sudo setup/install --boot` again. It pulls or builds the module images for the checkout itself (see Module images above); no `docker compose build` by hand.
