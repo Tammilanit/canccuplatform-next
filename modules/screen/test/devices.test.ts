@@ -84,7 +84,7 @@ describe.skipIf(!DATABASE_URL)("devices", () => {
     // Only the home path serves it there.
     expect(
       (
-        await call(h, "GET", "/api/screen/device/_home", {
+        await call(h, "GET", "/api/screen/device/home", {
           host: "beta.test",
           cookies: { canccu_device: token },
         })

@@ -155,6 +155,9 @@ async function main(): Promise<void> {
     renderQueue,
     log,
     tenants,
+    ...(process.env.CANCCU_SUPERADMIN_HOSTNAME
+      ? { superadminHost: process.env.CANCCU_SUPERADMIN_HOSTNAME }
+      : {}),
     settings,
     health: screenHealth({
       module: config.module,
