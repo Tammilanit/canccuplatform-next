@@ -3,12 +3,14 @@
  * no job drops out of the queue, a stopped run gives its quota bytes back, and a job that loses
  * the renderer slot or is stopped by a shutdown goes back to its place without counting.
  */
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { withTenant } from "@canccu/kit";
 import type { Bus, SqlClient } from "@canccu/kit";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { recount } from "../src/assets/upkeep.js";
 import type { Db } from "../src/db.js";
 import { DATABASE_URL, call, harness, upload } from "./helpers.js";
 import type { Harness } from "./helpers.js";
@@ -202,6 +204,70 @@ describe.skipIf(!DATABASE_URL)("render dispatch failures", () => {
     expect(Number(rows[0]?.reserved_bytes)).toBe(0);
     expect(h.storage.used.alpha ?? 0).toBe(before);
     expect(tmpFiles()).toEqual([]);
+  }, 20_000);
+
+  const upkeep = () => ({ db: h.db, storage: h.quota, filesRoot: h.filesRoot });
+  /** A recount run now, against one run after everything settled: equal unless one was raced. */
+  const recountRaced = async () => {
+    const raced = h.storage.used.alpha;
+    await withTenant("alpha", () => recount(upkeep()));
+    return [raced, h.storage.used.alpha];
+  };
+  const slidesOf = (jobId: string) => {
+    const dir = join(h.filesRoot, "alpha", "screen", "tmp", `render-${jobId}-1`);
+    return existsSync(dir) ? readdirSync(dir).length : 0;
+  };
+
+  it("gives a running render's reservation back with the delete of its asset", async () => {
+    renderer.behaviour = { slides: 2, hang: true };
+    const id = await addDeck();
+    const jobId = (await jobOf(id))?.id ?? "";
+    const shutdown = new AbortController();
+    // No renewal: the run notices nothing until the shutdown, after the recount.
+    const running = h.dispatch(renderer.path, { stop: shutdown.signal, renewMs: 60_000 });
+    await until(() => slidesOf(jobId) === 2);
+    expect((await call(h, "DELETE", `/api/screen/assets/${id}`, admin)).statusCode).toBe(204);
+    await withTenant("alpha", () => recount(upkeep()));
+    shutdown.abort();
+    await running;
+    const [raced, clean] = await recountRaced();
+    expect(raced).toBe(clean);
+  }, 20_000);
+
+  it("gives a slide's reserve back itself when its job row went meanwhile", async () => {
+    renderer.behaviour = { slides: 2, hang: true };
+    const id = await addDeck();
+    let stalled!: () => void;
+    const reached = new Promise<void>((resolve) => (stalled = resolve));
+    let resume!: () => void;
+    const gate = new Promise<void>((resolve) => (resume = resolve));
+    let armed = true;
+    const db: Db = {
+      tenant: (fn) =>
+        h.db.tenant((c) =>
+          fn({
+            query: async (text, values) => {
+              if (armed && text.includes("SET reserved_bytes = $3")) {
+                armed = false;
+                stalled();
+                await gate;
+              }
+              return c.query(text, values);
+            },
+          }),
+        ),
+      global: (fn) => h.db.global(fn),
+    };
+    const shutdown = new AbortController();
+    const running = h.dispatch(renderer.path, { db, stop: shutdown.signal, renewMs: 60_000 });
+    await reached;
+    expect((await call(h, "DELETE", `/api/screen/assets/${id}`, admin)).statusCode).toBe(204);
+    resume();
+    await new Promise((r) => setTimeout(r, 300));
+    shutdown.abort();
+    await running;
+    const [raced, clean] = await recountRaced();
+    expect(raced).toBe(clean);
   }, 20_000);
 
   it("puts the running job back at its place on shutdown, without counting it", async () => {

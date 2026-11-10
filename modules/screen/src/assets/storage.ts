@@ -86,26 +86,26 @@ export async function holdCount(c: SqlClient): Promise<void> {
 }
 
 /**
- * Gives `bytes` back in the caller's transaction, before the commit that deletes (or rolls back)
- * the rows that held them, under the count lock: a recount sees the rows and the bytes together
- * or neither, never the rows gone while tenants still counts the bytes (contracts/tenants.md,
- * Repair).
+ * Gives `bytes` back from inside the transaction that deletes (or rolls back) the rows that held
+ * them, before it ends; the caller already holds the count lock (`holdCount`). A recount then sees
+ * the rows and the bytes together or neither, never the rows gone while tenants still counts the
+ * bytes (contracts/tenants.md, Repair).
  *
- * A failed or timed-out release is logged and the transaction goes on: a takedown, a privacy
- * delete or a render's end must not wait for tenants. Its cases, all mended by the next recount:
+ * A failed or timed-out release is logged and the transaction goes on, so a takedown, a privacy
+ * delete or a render's end still commits while tenants is down. It does wait for tenants, up to the
+ * timeout and holding the caller's locks: a hung tenants slows those writes, it no longer fails
+ * them. What is left, each mended by the next recount:
  * - tenants never got it: the count stays high, the safe direction;
- * - tenants applied it after the timeout: the count is right, and since the rows are gone no
- *   retry can release the same bytes twice;
+ * - tenants applies it after the timeout, so after the commit and perhaps after a recount that
+ *   already left the bytes out: the count is low;
  * - it reached tenants and the commit then failed: the count is low.
  */
 export async function releaseHeld(
-  c: SqlClient,
   storage: StorageQuota,
   bytes: number,
   log?: Logger,
 ): Promise<void> {
   if (bytes <= 0) return;
-  await holdCount(c);
   await storage.release(bytes).catch((err: unknown) => {
     log?.warn({ err, bytes }, "giving bytes back to the storage quota failed");
   });

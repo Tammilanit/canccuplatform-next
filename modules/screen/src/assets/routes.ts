@@ -142,7 +142,7 @@ async function addFile(deps: AssetDeps, request: FastifyRequest, ctx: TenantCont
       const who = { tenant_id: ctx.tenant_id, actor_user_id: actorOf(request) };
       job = (await submitJob(c, deps, who, id, 1)).row;
     }
-    return { result: await viewAsset(c, id, deps.now()), unused: [] };
+    return { result: await viewAsset(c, id, deps.now()), unused: [], freed: 0 };
   });
   if (job !== null) await announce(deps, job);
   return asset;

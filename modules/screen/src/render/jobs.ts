@@ -179,16 +179,17 @@ export async function announce(deps: RenderDeps, row: JobRow, opts: { head?: boo
 
 export interface Dropped {
   renders: { asset_id: string; asset_version: number }[];
-  /** What the dropped renders took, still to be given back. */
+  /** What the dropped renders took and the dropped attempts reserved, still to be given back. */
   bytes: number;
   live: JobRow[];
 }
 
 /**
  * In the transaction that removes asset versions (all of the asset's when `versions` is null):
- * their jobs go first, as the foreign key asks. The renders' bytes (`bytes`) go back as the
- * transaction's last step (assets/write.ts). A running job's container notices the row is gone
- * at its next lease renewal and stops.
+ * their jobs go first, as the foreign key asks. The renders' bytes and the attempts' reservations
+ * (`bytes`) go back as the transaction's last step (assets/write.ts): the rows that held them are
+ * gone, so a running job's container gives back only what it reserves after this. It notices the
+ * row is gone at its next lease renewal and stops.
  */
 export async function dropJobs(
   c: SqlClient,
@@ -204,7 +205,10 @@ export async function dropJobs(
   const renders = jobs.filter((j) => j.state === "succeeded");
   return {
     renders: renders.map((j) => ({ asset_id: j.asset_id, asset_version: j.asset_version })),
-    bytes: renders.reduce((sum, j) => sum + Number(j.bytes), 0),
+    bytes: jobs.reduce(
+      (sum, j) => sum + Number(j.reserved_bytes) + (j.state === "succeeded" ? Number(j.bytes) : 0),
+      0,
+    ),
     live: jobs.filter(isLive),
   };
 }
@@ -259,7 +263,7 @@ export async function recoverLost(deps: RenderDeps, jobId: string): Promise<void
       again ? [jobId] : [jobId, now, LOST_TWICE],
     );
     // The lost attempt's bytes: the row no longer holds them, so they go back once.
-    await releaseHeld(c, deps.storage, Number(job.reserved_bytes), deps.log);
+    await releaseHeld(deps.storage, Number(job.reserved_bytes), deps.log);
     return { row: rows[0] as unknown as JobRow, attempt: job.attempts };
   });
   if (lost === null) return;

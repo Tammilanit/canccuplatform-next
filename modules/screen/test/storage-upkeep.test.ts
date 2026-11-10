@@ -187,6 +187,68 @@ describe.skipIf(!DATABASE_URL)("storage upkeep", () => {
     expect((await call(h, "DELETE", `/api/screen/assets/${id}`, admin)).statusCode).toBe(204);
   });
 
+  it("counts a cancelled run's reservation until its container gives it back", async () => {
+    const deck = await upload(h, "/api/screen/assets", pdfPages(7), "Stop.pdf", {
+      session: "admin",
+    });
+    const id = deck.json<{ id: string }>().id;
+    await inAlpha(() => recount(deps()));
+    const clean = h.storage.used.alpha ?? 0;
+    // The cancel route keeps reserved_bytes: the running container's settle gives them back.
+    await h.pool.query<Record<string, string>>(
+      "UPDATE screen_render_jobs SET state = 'cancelled', reserved_bytes = 70 WHERE asset_id = $1",
+      [id],
+    );
+    await inAlpha(() => recount(deps()));
+    expect(h.storage.used.alpha).toBe(clean + 70);
+    await h.pool.query<Record<string, string>>(
+      "UPDATE screen_render_jobs SET reserved_bytes = 0 WHERE asset_id = $1",
+      [id],
+    );
+  });
+
+  it("gives a rolled-back upload's bytes back before a recount can count without them", async () => {
+    const first = await upload(h, "/api/screen/assets", await png(21), "a.png", {
+      session: "admin",
+    });
+    const id = first.json<{ id: string }>().id;
+    // The first transaction that fails stalls right after its rollback; a recount runs then.
+    const tenant = h.db.tenant.bind(h.db);
+    let rolledBack!: () => void;
+    const stalled = new Promise<void>((resolve) => (rolledBack = resolve));
+    let resume!: () => void;
+    const gate = new Promise<void>((resolve) => (resume = resolve));
+    let armed = true;
+    h.db.tenant = async (fn) => {
+      try {
+        return await tenant(fn);
+      } catch (err) {
+        if (armed) {
+          armed = false;
+          rolledBack();
+          await gate;
+        }
+        throw err;
+      }
+    };
+    try {
+      // The replace places its file, then its audit fails: the transaction rolls back.
+      h.failAudit.next = true;
+      const replacing = upload(h, `/api/screen/assets/${id}/replace`, await png(22), "b.png", {
+        session: "admin",
+      });
+      await stalled;
+      await inAlpha(() => recount(deps()));
+      resume();
+      expect((await replacing).statusCode).toBe(503);
+    } finally {
+      h.db.tenant = tenant;
+    }
+    const raced = h.storage.used.alpha;
+    await inAlpha(() => recount(deps()));
+    expect(raced).toBe(h.storage.used.alpha);
+  });
+
   it("sweeps orphaned files and stale render scratch, and keeps what is in use", async () => {
     const files = await inAlpha(() => Promise.resolve(tenantFile("screen", "files", h.filesRoot)));
     const tmp = await inAlpha(() => Promise.resolve(tenantFile("screen", "tmp", h.filesRoot)));

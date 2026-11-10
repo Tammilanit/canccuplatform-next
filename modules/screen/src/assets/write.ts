@@ -39,8 +39,11 @@ export function fileName(prepared: Prepared): string {
 export interface Written<T> {
   result: T;
   unused: string[];
-  /** Bytes of other rows it deleted (a dropped render, render/jobs.ts `dropJobs`). */
-  freed?: number;
+  /**
+   * Bytes of other rows it deleted (a dropped render, render/jobs.ts `dropJobs`); required, so a
+   * write that drops jobs cannot forget to give their bytes back.
+   */
+  freed: number;
 }
 
 /**
@@ -54,8 +57,8 @@ async function dropAndRelease<T>(
   out: Written<T>,
 ): Promise<Dropped[]> {
   const dropped = await dropUnreferenced(c, out.unused);
-  const bytes = dropped.reduce((sum, f) => sum + f.bytes, out.freed ?? 0);
-  await releaseHeld(c, deps.storage, bytes, deps.log);
+  const bytes = dropped.reduce((sum, f) => sum + f.bytes, out.freed);
+  await releaseHeld(deps.storage, bytes, deps.log);
   return dropped;
 }
 
@@ -71,29 +74,47 @@ export async function writeWithFile<T>(
   fn: (c: SqlClient, placeFile: () => Promise<string>) => Promise<Written<T>>,
 ): Promise<T> {
   let placed: Placed | null = null;
+  let given = false as boolean;
   let dropped: Dropped[] = [];
   try {
     const result = await deps.db.tenant(async (c) => {
       // The count lock first, the order the render side keeps (it takes the job rows after), so
       // a waiting recount never stands between this write's job rows and its release.
       await holdCount(c);
-      const out = await fn(c, async () => {
-        placed = await place(c, deps.filesRoot, deps.storage, prepared.temp, prepared);
-        return placed.name;
-      });
-      dropped = await dropAndRelease(c, deps, out);
-      return out.result;
+      try {
+        const out = await fn(c, async () => {
+          placed = await place(c, deps.filesRoot, deps.storage, prepared.temp, prepared);
+          return placed.name;
+        });
+        dropped = await dropAndRelease(c, deps, out);
+        return out.result;
+      } catch (err) {
+        // Before the rollback, still under the count lock: a recount never sees the placed row
+        // gone while tenants still counts its bytes.
+        const orphan = placed;
+        if (orphan !== null && orphan.reserved > 0) {
+          await releaseHeld(deps.storage, orphan.reserved, deps.log);
+          given = true;
+        }
+        throw err;
+      }
     });
     await collect(deps.db, deps.filesRoot, dropped, deps.log);
     return result;
   } catch (err) {
     const orphan = placed as Placed | null;
     if (orphan !== null && orphan.reserved > 0) {
-      await deps.db
-        .tenant((c) => releaseHeld(c, deps.storage, orphan.reserved, deps.log))
-        .catch((failed: unknown) =>
-          deps.log?.warn({ err: failed }, "giving back an upload failed"),
-        );
+      // Only a failed commit gets here with the bytes still out.
+      if (!given) {
+        await deps.db
+          .tenant(async (c) => {
+            await holdCount(c);
+            await releaseHeld(deps.storage, orphan.reserved, deps.log);
+          })
+          .catch((failed: unknown) =>
+            deps.log?.warn({ err: failed }, "giving back an upload failed"),
+          );
+      }
       await collect(deps.db, deps.filesRoot, [orphan], deps.log);
     }
     throw err;
