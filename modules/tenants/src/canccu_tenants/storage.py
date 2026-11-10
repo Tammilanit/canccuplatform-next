@@ -26,7 +26,9 @@ theming) counts under its own name, and the render job never calls (it has no ne
 
 def _check_owner(request: Request, module: str) -> None:
     # The service identity names the caller, as for audit appends: a module counts only its own
-    # files, so one module cannot release another's bytes and let the event pass its quota.
+    # files, so a module cannot release another's bytes by mistake. It prevents mistakes, not a
+    # malicious module: every module signs with the shared CANCCU_SERVICE_KEY, so one can still
+    # sign as another (per-module keys are a separate decision).
     service: str = request.state.service
     if module != SHARED_STORAGE.get(service, service):
         raise ServiceForbidden(f"module {service} counts only its own files")

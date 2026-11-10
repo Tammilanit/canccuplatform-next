@@ -73,12 +73,19 @@ class Caller:
             return False
         return bool(session.rights) or await self.is_event_admin(ctx["tenant_id"], session.user_id)
 
-    async def require_member(self, request: Request) -> Session:
-        """A member or event admin of the request's tenant, from an allowed address: like a right,
-        so `admin_access: restricted` applies."""
+    async def _signed_in_here(self, request: Request) -> tuple[TenantContext, Session]:
+        # The one preamble of every member and right check, so a change to its order (support
+        # windows, #150) cannot reach only some of them: the tenant first (a platform hostname is
+        # 404 before any auth), then the session, then `admin_access`.
         ctx = tenant_of(request)
         session = await self.rights.session(request.headers.get("cookie"))
         check_admin_access(ctx, client_ip(request), self.tailscale)
+        return ctx, session
+
+    async def require_member(self, request: Request) -> Session:
+        """A member or event admin of the request's tenant, from an allowed address: like a right,
+        so `admin_access: restricted` applies."""
+        ctx, session = await self._signed_in_here(request)
         if not await self.is_member(ctx, session):
             raise MissingRight("members and event admins only")
         return session
@@ -89,9 +96,7 @@ class Caller:
 
     async def require_all(self, request: Request, rights: set[str]) -> Session:
         """Every right in `rights`; the session and the role are read once for all of them."""
-        ctx = tenant_of(request)
-        session = await self.rights.session(request.headers.get("cookie"))
-        check_admin_access(ctx, client_ip(request), self.tailscale)
+        ctx, session = await self._signed_in_here(request)
         if await self.is_event_admin(ctx["tenant_id"], session.user_id):
             return session
         for right in sorted(rights):
