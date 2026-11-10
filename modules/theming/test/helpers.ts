@@ -17,6 +17,7 @@ import {
   withTenant,
 } from "@canccu/kit";
 import type { TenantContext } from "@canccu/kit";
+import { requireTestDatabase } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
 import { MIGRATIONS_DIR, poolDb } from "../src/db.js";
 import { putEmbed } from "../src/embeds.js";
@@ -26,7 +27,7 @@ import type { FileStore } from "../src/files.js";
 import { adminTokens, fillTokens, tokensCss } from "../src/tokens.js";
 import type { PartialTokens } from "../src/tokens.js";
 
-/** Tests run only with a Postgres to spare; never point this at a database you keep. */
+/** Tests run only on a database named `*_test` (the harness refuses any other). */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
 
 export const VENUE_IP = "10.0.0.5";
@@ -101,6 +102,7 @@ export interface Harness {
 export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
+  await requireTestDatabase(admin);
   await admin.query(
     "DROP TABLE IF EXISTS theming_files, theming_drafts, theming_revisions, theming_file_refs, theming_pins, theming_embed_files, theming_migrations CASCADE",
   );

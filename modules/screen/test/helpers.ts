@@ -16,7 +16,7 @@ import {
 } from "@canccu/kit";
 import { requireTenant } from "@canccu/kit";
 import type { Event, SettingValue } from "@canccu/kit";
-import { MemoryStreamStore } from "@canccu/kit/testing";
+import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
 import type { StorageQuota } from "../src/assets/storage.js";
 import type { AuditEntry } from "../src/audit.js";
@@ -31,7 +31,7 @@ import type { RenderDeps } from "../src/render/jobs.js";
 import { MemoryRenderQueue } from "../src/render/queue.js";
 import { SIGNIN_HOST, SUPERADMIN_HOST, fakeTenants } from "./tenants.js";
 
-/** Tests run only with a Postgres to spare; never point this at a database you keep. */
+/** Tests run only on a database named `*_test` (dropTables refuses any other). */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
 
 export const VENUE_IP = "10.0.0.5";
@@ -116,6 +116,7 @@ export interface Harness {
 
 /** Drops every screen table; `assignments` too, the name before migration 007. */
 export async function dropTables(admin: pg.Client): Promise<void> {
+  await requireTestDatabase(admin);
   await admin.query(
     `DROP TABLE IF EXISTS screen_agenda_items, screen_zone_playback, screen_pushes, screen_schedules,
        screen_playlist_items, screen_playlists, assignments, screen_assignments, screen_zones,

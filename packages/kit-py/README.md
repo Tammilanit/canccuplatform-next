@@ -153,7 +153,7 @@ Modules log in as a plain role (no superuser, no BYPASSRLS, owns nothing) and ru
 The kit writes nothing to disk. Its only in-memory items are the rights cache (≤ 30 s per session), the current settings, the tenant resolver's cache (≤ 30 s per host) and the bus's dedupe list of recent event ids and stream positions. Sessions live in admin (Postgres) and events in Valkey.
 
 ## Tests for modules
-`canccu_kit.testing.MemoryStreamStore` is an in-memory `StreamStore` that records every `xadd` call.
+`canccu_kit.testing.MemoryStreamStore` is an in-memory `StreamStore` that records every `xadd` call. `await require_test_database(conn)` raises unless the connection (or pool) is on a database whose name ends in `_test`; module tests call it before they drop or empty tables ([docs/ci.md](../../docs/ci.md#modules)).
 
 ## Check
 ```sh
@@ -165,8 +165,9 @@ CI runs the same commands through `scripts/check-module packages/kit-py`, with t
 The store and bus run against the real Valkey from the Compose stack: publish with MAXLEN (exact and `~`), subscribe, dedupe of an entry added twice, and tenant streams found by `scan` and read per tenant. Row-level security runs against the real Postgres, as a plain app role the test creates (a superuser bypasses RLS); its role and table names differ from the kit-ts test, so both can share one database. Two modules' migrators started at once must run one after the other. Each test is skipped unless `CANCCU_VALKEY_URL` or `CANCCU_DATABASE_URL` is set, so the check above stays offline.
 ```sh
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml up -d --wait valkey postgres
+docker compose -f ../../deploy/compose.yml exec postgres createdb -U canccu canccu_test   # once
 CANCCU_VALKEY_URL=redis://127.0.0.1:6379 \
-CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu \
+CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu_test \
   pytest tests/test_valkey_integration.py tests/test_postgres_integration.py
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml down
 ```

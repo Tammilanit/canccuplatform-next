@@ -27,11 +27,11 @@ The venue screens ([contracts/screen.md](../../contracts/screen.md)). It holds t
 npm ci && npm run lint && npm run typecheck && npm test
 ```
 
-The media tests run the real `ffprobe`: `CANCCU_FFPROBE` if set, otherwise the build of the `@ffprobe-installer/ffprobe` dev dependency, so they need no ffmpeg on the machine. The tests need a Postgres for RLS and skip without one. Point `CANCCU_DATABASE_URL` at a throwaway database (the tests drop and recreate the screen tables) as a superuser; requests still run as the app role, which RLS binds:
+The media tests run the real `ffprobe`: `CANCCU_FFPROBE` if set, otherwise the build of the `@ffprobe-installer/ffprobe` dev dependency, so they need no ffmpeg on the machine. The tests need a Postgres for RLS and skip without one. Point `CANCCU_DATABASE_URL` at a throwaway database whose name ends in `_test` (the tests drop and recreate the screen tables, and refuse any other name; [docs/ci.md](../../docs/ci.md#modules)) as a superuser; requests still run as the app role, which RLS binds:
 
 ```sh
-docker run -d --rm --name canccu-screen-test -e POSTGRES_PASSWORD=test -p 127.0.0.1:55432:5432 postgres:17.11-alpine
-CANCCU_DATABASE_URL=postgres://postgres:test@127.0.0.1:55432/postgres npm test
+docker run -d --rm --name canccu-screen-test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=canccu_test -p 127.0.0.1:55432:5432 postgres:17.11-alpine
+CANCCU_DATABASE_URL=postgres://postgres:test@127.0.0.1:55432/canccu_test npm test
 docker stop canccu-screen-test
 ```
 

@@ -13,7 +13,7 @@ from collections.abc import AsyncIterator
 import asyncpg
 import pytest
 from canccu_kit import NoTenant, tenant_scope
-from canccu_kit.testing import assert_tenant_isolation
+from canccu_kit.testing import assert_tenant_isolation, require_test_database
 from conftest import StoreProbe
 
 from canccu_admin.db import APP_ROLE, MIGRATIONS, PgStore
@@ -27,6 +27,7 @@ async def store() -> AsyncIterator[PgStore]:
         pytest.skip("CANCCU_DATABASE_URL not set")
     store = await PgStore.connect(URL)
     async with store.pool.acquire() as conn:  # the login role: RLS does not bind it
+        await require_test_database(conn)
         await conn.execute("TRUNCATE admin_tenant_settings, admin_tenant_profile")
     yield store
     await store.close()

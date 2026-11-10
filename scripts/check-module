@@ -5,6 +5,7 @@
 # Usage: check-module --list [ROOT]           JSON array of the modules under ROOT/modules with checks
 #        check-module [--dry-run] MODULE [ROOT]  run the checks of ROOT/modules/MODULE
 #        check-module [--dry-run] packages/NAME [ROOT]  run the checks of ROOT/packages/NAME
+#        check-module --needs MODULE|packages/NAME [ROOT]  what its CI leg sets up, as key=value
 #        check-module --self-test
 set -uo pipefail
 
@@ -96,11 +97,50 @@ check-module: own failed: ./check" own "$t"
   check "an unknown package is an error" 2 "check-module: no package packages/nope" packages/nope "$t"
   check "a nested path is not a package" 2 "check-module: not a module name: packages/kit-ts/src" packages/kit-ts/src "$t"
   check "modules/ is not a prefix" 2 "check-module: not a module name: modules/ts" modules/ts "$t"
-  check "no arguments is a usage error" 2 "usage: check-module --list [ROOT] | [--dry-run] MODULE|packages/NAME [ROOT] | --self-test"
+  # --needs (#302): a CI leg sets up only the toolchains and services the checks use.
+  mkdir -p "$t/modules/ts/test" "$t/modules/py/tests" "$t/packages/kit-ts/test"
+  echo 'const url = process.env.CANCCU_DATABASE_URL;' > "$t/modules/ts/test/helpers.ts"
+  echo 'URL = os.environ["CANCCU_VALKEY_URL"]' > "$t/modules/py/tests/conftest.py"
+  printf 'CANCCU_VALKEY_URL\nCANCCU_DATABASE_URL\n' > "$t/packages/kit-ts/test/x.test.ts"
+  echo 'CANCCU_DATABASE_URL' > "$t/modules/both/README.md"
+  check "needs: node, and Postgres for a test that reads its URL" 0 "\
+node=true
+python=false
+postgres=true
+valkey=false" --needs ts "$t"
+  check "needs: python, and Valkey" 0 "\
+node=false
+python=true
+postgres=false
+valkey=true" --needs py "$t"
+  check "needs: a URL outside the tests starts no service" 0 "\
+node=true
+python=true
+postgres=false
+valkey=false" --needs both "$t"
+  check "needs: an own check sets up its own toolchain" 0 "\
+node=false
+python=false
+postgres=false
+valkey=false" --needs own "$t"
+  check "needs: a package, both services" 0 "\
+node=true
+python=false
+postgres=true
+valkey=true" --needs packages/kit-ts "$t"
+  # shellcheck disable=SC2016  # the check reads the URL; it is never expanded here
+  echo 'psql "$CANCCU_DATABASE_URL"' >> "$t/modules/own/check"
+  check "needs: an own check that reads a URL gets the service" 0 "\
+node=false
+python=false
+postgres=true
+valkey=false" --needs own "$t"
+  check "needs: the module name rules hold" 2 "check-module: not a module name: ../x" --needs ../x "$t"
+  check "no arguments is a usage error" 2 "usage: check-module --list [ROOT] | [--dry-run|--needs] MODULE|packages/NAME [ROOT] | --self-test"
   exit "$fail"
 fi
 
-usage="usage: check-module --list [ROOT] | [--dry-run] MODULE|packages/NAME [ROOT] | --self-test"
+usage="usage: check-module --list [ROOT] | [--dry-run|--needs] MODULE|packages/NAME [ROOT] | --self-test"
 
 # A `check` that lost its exec bit must not fall back to the defaults: for screen-render
 # that would skip the real-deck tests without anyone noticing.
@@ -130,8 +170,9 @@ if [ "${1:-}" = "--list" ]; then
   exit 0
 fi
 
-dry=0
-if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
+dry=0 needs=0
+if [ "${1:-}" = "--dry-run" ]; then dry=1; shift
+elif [ "${1:-}" = "--needs" ]; then needs=1; shift; fi
 [ $# -ge 1 ] || { echo "$usage"; exit 2; }
 module=$1
 root="${2:-$(git rev-parse --show-toplevel)}"
@@ -145,6 +186,19 @@ else
 fi
 [ -d "$root/$dir" ] || { echo "check-module: no $kind $dir"; exit 2; }
 has_checks "$root" "$dir" || { echo "check-module: $dir has no checks (no check script, package.json or pyproject.toml)"; exit 2; }
+
+if [ "$needs" = 1 ]; then
+  # A service is needed when the tests (or the own check) read its URL. CI sets both URLs on
+  # every leg, so a test this misses fails on a refused connection instead of skipping.
+  uses() { grep -rqsF "$1" "$root/$dir/test" "$root/$dir/tests" "$root/$dir/check"; }
+  own=0; own_check "$root" "$dir" && own=1
+  # An own check sets up its own toolchain (screen-render builds its image).
+  [ "$own" = 0 ] && [ -f "$root/$dir/package.json" ] && echo node=true || echo node=false
+  [ "$own" = 0 ] && [ -f "$root/$dir/pyproject.toml" ] && echo python=true || echo python=false
+  uses CANCCU_DATABASE_URL && echo postgres=true || echo postgres=false
+  uses CANCCU_VALKEY_URL && echo valkey=true || echo valkey=false
+  exit 0
+fi
 
 steps=() # "<dir relative to root>|<command>", run in order, stopping at the first failure
 if own_check "$root" "$dir"; then

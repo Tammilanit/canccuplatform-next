@@ -1,4 +1,5 @@
-"""Test helpers for modules that use the kit: an in-memory StreamStore and leak tests."""
+"""Test helpers for modules that use the kit: an in-memory StreamStore, leak tests and the
+test-database guard."""
 
 from __future__ import annotations
 
@@ -155,3 +156,24 @@ async def deliver_as(handler: Handler, event: Event) -> None:
         raise ValueError("a tenant event needs a tenant")
     with tenant_scope(event.tenant):
         await handler(event)
+
+
+class _Fetches(Protocol):
+    async def fetchval(self, query: str, *args: Any) -> Any: ...
+
+
+async def require_test_database(conn: _Fetches) -> None:
+    """Raise RuntimeError unless `conn` (an asyncpg connection or pool) is connected to a database
+    whose name ends in `_test`.
+
+    Module tests drop and empty their tables, and a test database may share its server with a
+    local stack's `canccu` one, so only the name tells them apart (docs/ci.md, modules). The server
+    answers, not the URL, so `PGDATABASE` and URL parameters cannot slip past. Call it before the
+    first DROP or TRUNCATE.
+    """
+    name = str(await conn.fetchval("SELECT current_database()") or "")
+    if not name.endswith("_test"):
+        raise RuntimeError(
+            f'the tests are connected to the database "{name}": they drop and empty tables, so'
+            " they run only on a database whose name ends in _test (docs/ci.md#modules)"
+        )

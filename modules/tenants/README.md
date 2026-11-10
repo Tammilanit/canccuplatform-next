@@ -25,8 +25,9 @@ The demo seed creates the venue `demo-venue` and the live tenant `demo`; it chan
 ```sh
 pip install -e ".[dev]" && ruff check . && ruff format --check . && mypy . && pytest
 ```
-The tests need a real Postgres, because RLS and the grants cannot be faked; without `CANCCU_DATABASE_URL` they are skipped. They include the cross-tenant leak tests (`tests/test_leak.py`). CI runs them in the `module (tenants)` job ([docs/ci.md](../../docs/ci.md#modules)):
+The tests need a real Postgres, because RLS and the grants cannot be faked; without `CANCCU_DATABASE_URL` they are skipped. They empty the module's tables, so they refuse a database whose name does not end in `_test` ([docs/ci.md](../../docs/ci.md#modules)). They include the cross-tenant leak tests (`tests/test_leak.py`). CI runs them in the `module (tenants)` job ([docs/ci.md](../../docs/ci.md#modules)):
 ```sh
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml up -d --wait postgres
-CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu pytest
+docker compose -f ../../deploy/compose.yml exec postgres createdb -U canccu canccu_test   # once
+CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu_test pytest
 ```

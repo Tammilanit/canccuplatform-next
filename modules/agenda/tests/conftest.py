@@ -19,7 +19,7 @@ from canccu_kit import Bus, Health, Outbox, ServiceIdentity, TenantResolver, cur
 from canccu_kit.access import TenantContext
 from canccu_kit.errors import AdminUnavailable, NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
-from canccu_kit.testing import MemoryStreamStore
+from canccu_kit.testing import MemoryStreamStore, require_test_database
 
 from canccu_agenda.app import create_app
 from canccu_agenda.db import Db
@@ -118,6 +118,7 @@ async def env() -> AsyncIterator[Env]:
         pytest.skip("needs CANCCU_DATABASE_URL")
     db = await Db.connect(URL)
     async with db.pool.acquire() as conn:  # the login role: RLS does not bind it
+        await require_test_database(conn)
         await conn.execute(
             "TRUNCATE agenda_state, agenda_kinds, agenda_items, agenda_timers,"
             " agenda_timer_tenants, agenda_sessions, agenda_templates, agenda_changes, agenda_undo,"
