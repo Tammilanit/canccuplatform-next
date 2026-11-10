@@ -1,9 +1,10 @@
 /** Start screen: config, migrations as the migration role, then serve as the app role. */
-import { httpSources } from "./compose/sources.js";
+import { Valkey } from "iovalkey";
 import pg from "pg";
 import {
   AdminClient,
   Bus,
+  FILES_ROOT,
   RightsChecker,
   ServiceIdentity,
   SettingsClient,
@@ -24,6 +25,9 @@ import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { sweepOffline } from "./health.js";
 import { ValkeyKv } from "./kv.js";
 import { applyAgendaEvent } from "./content/agenda.js";
+import { httpSources } from "./compose/sources.js";
+import { renderLoop } from "./render/dispatch.js";
+import { ValkeyRenderQueue } from "./render/queue.js";
 import { noAssets } from "./tick/content.js";
 import { TICK_MS, tickRunner } from "./tick/run.js";
 import { seedMainZone } from "./zones.js";
@@ -33,6 +37,8 @@ const PORT = 8080;
 const MIGRATION_LOCK = 0x5c4ee7;
 /** How often a device past its deadline is reported offline (docs/plans/issue-107.md, D11). */
 const SWEEP_MS = 5000;
+/** In the `render-socket` volume, shared with screen-render alone (deploy/compose.yml). */
+const RENDER_SOCKET = "/run/canccu-render/render.sock";
 
 function env(name: string): string {
   const value = process.env[name];
@@ -79,6 +85,10 @@ async function main(): Promise<void> {
   const service = new ServiceIdentity({ module: config.module, key: serviceKeyFromEnv() });
   const store = ValkeyStreamStore.fromUrl(config.valkeyUrl);
   const kv = ValkeyKv.fromUrl(config.valkeyUrl);
+  const queueClient = new Valkey(config.valkeyUrl, { maxRetriesPerRequest: 2 });
+  // Without a listener a lost connection is an unhandled error event; /health reports it.
+  queueClient.on("error", () => undefined);
+  const renderQueue = new ValkeyRenderQueue(queueClient);
   const bus = new Bus(store, config.module, log);
   // Subscriptions block in XREAD on their connection; on the shared one the health check's PING
   // would wait behind them and time out, so they get a connection of their own.
@@ -135,13 +145,15 @@ async function main(): Promise<void> {
   );
 
   const audit = tenantsAudit(tenantsUrl, service);
+  const storage = tenantsStorage(tenantsUrl, service);
   const app = buildApp({
     db,
     kv,
     bus,
     rights,
     audit,
-    storage: tenantsStorage(tenantsUrl, service),
+    storage,
+    renderQueue,
     log,
     tenants,
     settings,
@@ -160,6 +172,7 @@ async function main(): Promise<void> {
       version: config.version,
       store,
       query: () => pool.query("SELECT 1"),
+      renderQueue,
     }),
   });
   await app.listen({ host: "0.0.0.0", port: PORT });
@@ -169,6 +182,17 @@ async function main(): Promise<void> {
       log.warn({ err }, "offline sweep failed");
     });
   }, SWEEP_MS);
+
+  const renders = renderLoop({
+    db,
+    queue: renderQueue,
+    bus,
+    storage,
+    filesRoot: FILES_ROOT,
+    now: Date.now,
+    log,
+    socketPath: process.env.CANCCU_RENDER_SOCKET ?? RENDER_SOCKET,
+  });
 
   const tick = tickRunner({
     db,
@@ -198,6 +222,12 @@ async function main(): Promise<void> {
   const stop = async (): Promise<void> => {
     clearInterval(sweep);
     clearInterval(ticker);
+    // The running render goes back to its place before the pool and Valkey close; bounded, as a
+    // dependency that is down may never answer.
+    await Promise.race([
+      renders.stop(),
+      new Promise((resolve) => setTimeout(resolve, 5000).unref()),
+    ]);
     await app.close();
     // A dependency that is down may never answer; do not let it hold the exit.
     const grace = new Promise((resolve) => setTimeout(resolve, 2000).unref());
@@ -207,6 +237,7 @@ async function main(): Promise<void> {
         listenStore.close(),
         agendaStore.close(),
         kv.close(),
+        queueClient.quit(),
         pool.end(),
       ]),
       grace,

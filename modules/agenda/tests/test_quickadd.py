@@ -48,7 +48,7 @@ async def test_quick_add_now_from_a_template(env: Env) -> None:
         )
         (item,) = await items(c, h)
     assert response.status_code == 303
-    assert response.headers["location"] == "/agenda/?day=2026-11-20&done=added"
+    assert response.headers["location"].startswith("/agenda/?day=2026-11-20&done=added&undo=un_")
     assert item["title"] == "Pizza" and item["kind"] == "meal"
     assert item["starts_at"] == at(1) and item["ends_at"] == at(61)
     assert env.events()[-1]["type"] == "agenda.item.added"

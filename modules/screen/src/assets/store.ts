@@ -15,6 +15,9 @@ export const ASSET_KINDS: readonly AssetKind[] = [
 ];
 export const FILE_KINDS: readonly AssetKind[] = ["image", "video", "audio", "pptx", "pdf"];
 
+/** A PPTX or PDF deck: the kinds the render job draws as slides. */
+export const isDeck = (kind: string): boolean => kind === "pptx" || kind === "pdf";
+
 export interface AssetRow {
   id: string;
   kind: AssetKind;
@@ -30,16 +33,27 @@ export interface AssetRow {
   mime_type: string | null;
   size_bytes: string | null;
   duration_seconds: number | null;
+  render_state: string | null;
+  slide_count: number | null;
 }
 
-/** The asset with its current version's file; `FOR UPDATE` locks only the asset row. */
+/**
+ * The asset with its current version's file and the state of that version's newest render job;
+ * `FOR UPDATE` locks only the asset row.
+ */
 export const ASSET_SELECT = `
   SELECT a.id, a.kind, a.title, a.version, a.prev_version, a.last_version, a.url, a.health,
-         a.health_message, a.created_at, v.file, f.mime_type, f.size_bytes, v.duration_seconds
+         a.health_message, a.created_at, v.file, f.mime_type, f.size_bytes, v.duration_seconds,
+         r.state AS render_state, r.slide_count
   FROM screen_assets a
   LEFT JOIN screen_asset_versions v
     ON v.tenant_id = a.tenant_id AND v.asset_id = a.id AND v.version = a.version
-  LEFT JOIN screen_files f ON f.tenant_id = v.tenant_id AND f.name = v.file`;
+  LEFT JOIN screen_files f ON f.tenant_id = v.tenant_id AND f.name = v.file
+  LEFT JOIN LATERAL (
+    SELECT j.state, jsonb_array_length(j.slides) AS slide_count FROM screen_render_jobs j
+    WHERE j.tenant_id = a.tenant_id AND j.asset_id = a.id AND j.asset_version = a.version
+    ORDER BY j.submitted_at DESC, j.id DESC LIMIT 1
+  ) r ON true`;
 
 export async function readAsset(c: SqlClient, id: string, lock = false): Promise<AssetRow | null> {
   const { rows } = await c.query(
@@ -56,10 +70,7 @@ export async function viewAsset(c: SqlClient, id: string): Promise<Record<string
   return assetView(row);
 }
 
-/**
- * `slide_count` and `render_state` stay null until the render job (#224) fills them; `used_by`
- * is left out until playlists (#216) can name what uses an asset.
- */
+/** `used_by` is left out until playlists (#216) can name what uses an asset. */
 export function assetView(row: AssetRow): Record<string, unknown> {
   return {
     id: row.id,
@@ -70,8 +81,8 @@ export function assetView(row: AssetRow): Record<string, unknown> {
     mime_type: row.mime_type,
     size_bytes: row.size_bytes === null ? null : Number(row.size_bytes),
     duration_seconds: row.duration_seconds,
-    slide_count: null,
-    render_state: null,
+    slide_count: row.render_state === "succeeded" ? row.slide_count : null,
+    render_state: isDeck(row.kind) ? row.render_state : null,
     health: row.health,
     health_message: row.health_message,
     can_revert: row.prev_version !== null,

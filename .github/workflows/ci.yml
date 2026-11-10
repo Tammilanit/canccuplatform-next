@@ -153,13 +153,14 @@ jobs:
           jq -e '.volumes | keys == ["deploy-status", "files", "postgres-data", "render-socket", "valkey-data"]' /tmp/config.json
           test "$(docker volume ls -q --filter label=com.docker.compose.project=canccuplatform | sort | tr '\n' ' ')" \
             = "canccuplatform_deploy-status canccuplatform_files canccuplatform_postgres-data canccuplatform_render-socket canccuplatform_valkey-data "
-      - name: The render job is isolated and renders through its socket
+      - name: The render job is isolated, and screen renders through its socket
         run: |
           jq -e '.services["screen-render"] | .network_mode == "none" and .read_only == true
             and .cap_drop == ["ALL"] and ([.volumes[].source] == ["render-socket"])
             and (.environment // {} | length == 0)' /tmp/config.json
           jq -e '[.services | to_entries[] | select(.value.volumes // [] | map(.source) | index("render-socket")) | .key]
-            == ["screen-render"]' /tmp/config.json
+            == ["screen", "screen-render"]' /tmp/config.json
+          jq -e '[.services.screen.volumes[] | select(.source == "render-socket")][0].read_only == true' /tmp/config.json
           if docker compose -f deploy/compose.yml exec -T screen-render \
               python -c "import socket; socket.create_connection(('1.1.1.1', 53), 2)"; then
             echo "screen-render reached the network"; exit 1
@@ -167,6 +168,8 @@ jobs:
           docker build -q --target test -f modules/screen-render/Dockerfile -t canccu-screen-render-test .
           docker run --rm --network none -v canccuplatform_render-socket:/run/canccu-render \
             canccu-screen-render-test python tests/smoke.py
+          docker compose -f deploy/compose.yml exec -T screen node --input-type=module \
+            < modules/screen/test/render-smoke.mjs
       - name: Health through Caddy is 200 ok
         run: |
           code=$(curl -s -o /tmp/health.json -w '%{http_code}' http://localhost/api/hello/health)

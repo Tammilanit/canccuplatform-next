@@ -121,8 +121,14 @@ services:
       CANCCU_IP_MODE: ${CANCCU_IP_MODE:-demo}
     volumes:
       - files:/files
+      # Only to connect to the renderer: read-only, and nothing in it is read or followed.
+      - render-socket:/run/canccu-render:ro
     depends_on:
       <<: *after-db
+      # Started first, so the empty volume takes the renderer image's directory and owner; screen
+      # still starts and keeps decks queued while the renderer is unhealthy.
+      screen-render:
+        condition: service_started
     healthcheck:
       test:
         - CMD
@@ -296,6 +302,10 @@ services:
     environment:
       <<: *kit-env
       CANCCU_MODULE: notify
+      # Seals each event's check-in key (contracts/notify.md). The placeholder runs only while
+      # the version is dev; notify refuses it on a release (deploy/.env.example).
+      CANCCU_SECRETS_KEY: ${CANCCU_SECRETS_KEY:-1:Y2FuY2N1LWxvY2FsLW9ubHktc2VjcmV0cy1rZXktMzI=}
+      CANCCU_SECRETS_KEYS_RETIRED: ${CANCCU_SECRETS_KEYS_RETIRED:-}
       CANCCU_MIGRATE_DATABASE_URL: postgres://canccu_migrator:${CANCCU_DB_MIGRATOR_PASSWORD:-canccu-local-only-migrator}@postgres:5432/canccu
       # The event comes from the request's hostname, resolved by the tenants module.
       CANCCU_TENANTS_URL: http://tenants:8080
@@ -363,5 +373,5 @@ volumes:
   # name is fixed because setup/deploy finds the volume by it.
   deploy-status:
     name: canccuplatform_deploy-status
-  # Holds only the render job's Unix socket; mounted in screen-render and (later) the screen module.
+  # Holds only the render job's Unix socket; mounted in screen-render and, read-only, in screen.
   render-socket:

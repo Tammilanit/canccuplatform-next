@@ -1,6 +1,6 @@
 /** The one way a request writes a stored file and the rows that use it (plan #108, D9). */
 import { rm } from "node:fs/promises";
-import type { Logger, RightsChecker, SqlClient } from "@canccu/kit";
+import type { Bus, Logger, RightsChecker, SqlClient } from "@canccu/kit";
 import type { Audit } from "../audit.js";
 import type { Db } from "../db.js";
 import type { Settings } from "../health.js";
@@ -9,6 +9,7 @@ import type { Dropped, Placed } from "./files.js";
 import type { Ffprobe } from "./probe.js";
 import type { StorageQuota } from "./storage.js";
 import type { Prepared } from "./upload.js";
+import type { RenderQueue } from "../render/queue.js";
 
 export interface AssetDeps {
   db: Db;
@@ -19,6 +20,10 @@ export interface AssetDeps {
   filesRoot: string;
   ffprobe: Ffprobe;
   fetch: typeof fetch;
+  /** A deck upload submits its render job; a version's render goes with the version. */
+  queue: RenderQueue;
+  bus: Bus;
+  now: () => number;
   log?: Logger;
 }
 

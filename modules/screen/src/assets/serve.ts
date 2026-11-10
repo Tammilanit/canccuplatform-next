@@ -37,20 +37,28 @@ export function parseRange(
   return [start, match[2] === "" ? size - 1 : Math.min(Number(match[2]), size - 1)];
 }
 
-export function fileRoutes(
+/** The event's devices, or sessions with `screen.content.read`: who may read stored files and slides. */
+export function contentAccess(
   app: FastifyInstance,
-  deps: { db: Db; rights: RightsChecker; filesRoot: string },
-): void {
+  deps: { db: Db; rights: RightsChecker },
+): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
   const device = requireDevice(deps.db);
   const session = needs(deps.rights, "screen.content.read");
   // A device cookie means a screen: it passes the device check or nothing, never a session's.
-  const access = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+  return async (request, reply) => {
     if (cookie(request, DEVICE_COOKIE) !== undefined) {
       await device.call(app, request, reply);
       return;
     }
     for (const step of session) await step.call(app, request, reply);
   };
+}
+
+export function fileRoutes(
+  app: FastifyInstance,
+  deps: { db: Db; rights: RightsChecker; filesRoot: string },
+): void {
+  const access = contentAccess(app, deps);
 
   app.get("/api/screen/files/:file", { preHandler: access }, async (request, reply) => {
     const { file } = request.params as { file: string };
