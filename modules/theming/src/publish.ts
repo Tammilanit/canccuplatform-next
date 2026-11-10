@@ -5,7 +5,8 @@
 import { isDeepStrictEqual } from "node:util";
 import type { SqlClient } from "@canccu/kit";
 import type { Manifest } from "./checks.js";
-import { copyOwned } from "./drafts.js";
+import { brandImages } from "./brand-images.js";
+import { CARRIED_REFS, copyOwned } from "./drafts.js";
 import type { FileStore } from "./files.js";
 import { SERVED, colorInt } from "./theme.js";
 import { versionConflict } from "./http.js";
@@ -58,14 +59,8 @@ async function holdings(
   manifest: Manifest,
   tokens: RevisionTokens,
 ): Promise<Holdings> {
-  const generated = owner.startsWith("r:")
-    ? `AND file NOT IN (SELECT unnest(ARRAY[tokens_css, admin_tokens_css, coalesce(css, '')])
-                          FROM theming_revisions WHERE 'r:' || revision = $1)`
-    : "";
-  const files = await c.query(
-    `SELECT file FROM theming_file_refs WHERE owner = $1 ${generated} ORDER BY file`,
-    [owner],
-  );
+  // As copyOwned leaves them behind: a revision's generated files are no part of what changed.
+  const files = await c.query(`SELECT f.file ${CARRIED_REFS} ORDER BY f.file`, [owner]);
   const paths = await c.query(
     `SELECT path || '=' || coalesce(file, '') AS p FROM theming_package_files
       WHERE owner = $1 ORDER BY path`,
@@ -196,12 +191,22 @@ export async function writeRevision(
   // Files land before the row; on a rollback they stay unreferenced and retention (#246) removes them.
   const tokensName = await files.put(c, Buffer.from(tokensCss(tokens)), "css");
   const adminName = await files.put(c, Buffer.from(tokensCss(adminTokens(tokens))), "css");
+  // Rendered under the history lock, which a publish holds for a few image renders at most: the
+  // images are part of the revision, written with it or not at all.
+  const images = await brandImages(
+    c,
+    files,
+    input.source,
+    input.manifest,
+    tokens.colors.background ?? "#000000",
+  );
   const brand = (input.manifest.brand ?? {}) as { embed_color?: string };
   const embedColor = colorInt(brand.embed_color ?? tokens.colors.primary ?? "#000000");
   await c.query(
     `INSERT INTO theming_revisions (revision, manifest, tokens, tokens_css, admin_tokens_css,
-                                    embed_color, restored_from, changed, actor_user_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                                    embed_color, restored_from, changed, actor_user_id, logo,
+                                    logo_png, icon_192, icon_512, icon_maskable_512)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
     [
       revision,
       JSON.stringify(input.manifest),
@@ -212,10 +217,16 @@ export async function writeRevision(
       input.restoredFrom,
       changed,
       input.actor,
+      images.logo,
+      images.logo_png,
+      images.icon_192,
+      images.icon_512,
+      images.icon_maskable_512,
     ],
   );
   const owner = `r:${revision}`;
-  for (const file of [tokensName, adminName]) {
+  const generated = [images.logo_png, images.icon_192, images.icon_512, images.icon_maskable_512];
+  for (const file of [tokensName, adminName, ...generated.filter((f) => f !== null)]) {
     await c.query(
       `INSERT INTO theming_file_refs (owner, file) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
       [owner, file],

@@ -2,6 +2,8 @@
 import { randomBytes } from "node:crypto";
 import type { SqlClient } from "@canccu/kit";
 import { COLOR_TOKENS } from "@canccu/ui";
+import { generateColors } from "./brand.js";
+import type { Brand } from "./brand.js";
 import { checkManifest } from "./checks.js";
 import type { Manifest, Problem } from "./checks.js";
 import { draftExists, noDraft, notFound, versionConflict } from "./http.js";
@@ -57,12 +59,18 @@ export async function lockDraft(c: SqlClient, version: number): Promise<DraftRow
 
 /** A valid simple-mode theme: the platform colours, with the brand they come from. */
 export function defaultManifest(): Manifest {
+  const brand: Brand = {
+    primary: COLOR_TOKENS.primary,
+    accent: COLOR_TOKENS.accent,
+    scheme: "dark",
+  };
   return {
     schema_version: 1,
     name: "Default",
     mode: "simple",
-    brand: { primary: COLOR_TOKENS.primary, accent: COLOR_TOKENS.accent, scheme: "dark" },
-    tokens: { colors: { ...COLOR_TOKENS } },
+    brand,
+    // The platform colours themselves: the default brand generates exactly them (test/brand.test.ts).
+    tokens: { colors: generateColors(brand).colors },
   };
 }
 
@@ -70,17 +78,33 @@ export type DraftSource =
   { from: "defaults" } | { from: "current" } | { from: "revision"; revision: number };
 
 /**
+ * The files a revision `r` generated at publish, as an SQL array: token CSS, compiled CSS, the
+ * logo PNG and the icons. The next revision generates its own, so copies leave them behind.
+ */
+const GENERATED = `array_remove(ARRAY[r.tokens_css, r.admin_tokens_css, r.css, r.logo_png,
+  r.icon_192, r.icon_512, r.icon_maskable_512], NULL)`;
+
+/**
+ * The file references `f` that owner `$1` passes on to a copy: all of them but a revision's
+ * generated files, unless a package path holds the same bytes (a logo already 512 px wide can come
+ * out of the PNG encoder identical to its own rendition). The one rule of copyOwned and publish's
+ * comparison of what changed, so the two cannot drift apart.
+ */
+export const CARRIED_REFS = `FROM theming_file_refs f
+   LEFT JOIN theming_revisions r ON 'r:' || r.revision = f.owner
+  WHERE f.owner = $1
+    AND (r.revision IS NULL OR f.file <> ALL (${GENERATED})
+         OR EXISTS (SELECT 1 FROM theming_package_files p
+                     WHERE p.owner = f.owner AND p.file = f.file))`;
+
+/**
  * Copies what `from` (`draft` or `r:<n>`) holds to `to`: its file references and embed files, the
- * one copy rule of draft creation, publish and restore. A revision's generated token CSS stays
- * behind: the next revision generates its own.
+ * one copy rule of draft creation, publish and restore (CARRIED_REFS says which files go).
  */
 export async function copyOwned(c: SqlClient, from: string, to: string): Promise<void> {
   await c.query(
     `INSERT INTO theming_file_refs (owner, file)
-     SELECT $2, f.file FROM theming_file_refs f
-       LEFT JOIN theming_revisions r ON 'r:' || r.revision = f.owner
-      WHERE f.owner = $1
-        AND (r.revision IS NULL OR f.file NOT IN (r.tokens_css, r.admin_tokens_css, coalesce(r.css, '')))
+     SELECT $2, f.file ${CARRIED_REFS}
      ON CONFLICT DO NOTHING`,
     [from, to],
   );
