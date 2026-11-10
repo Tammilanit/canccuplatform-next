@@ -6,15 +6,29 @@
  */
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { isTenantId, normalizeHost, withTenant } from "@canccu/kit";
-import type { Bus, Logger, RightsChecker, SqlClient, TenantResolver } from "@canccu/kit";
+import type {
+  Bus,
+  Logger,
+  RightsChecker,
+  SqlClient,
+  TenantContext,
+  TenantResolver,
+} from "@canccu/kit";
 import type { Audit, AuditEntry } from "./audit.js";
 import { asTenant } from "./db.js";
 import type { Db, DeviceRow } from "./db.js";
-import { detachDevice } from "./detach.js";
-import { forgetHealth } from "./health.js";
-import { body, deviceName, eventArchived, invalidRequest, noVenue, notFound } from "./http.js";
+import { announceLeft, leaveEvent, publishEach } from "./detach.js";
+import type { Left } from "./detach.js";
+import {
+  body,
+  deviceName,
+  eventArchived,
+  invalidRequest,
+  noVenue,
+  notFound,
+  versionConflict,
+} from "./http.js";
 import type { Kv } from "./kv.js";
-import { publishAll } from "./zones.js";
 import type { Emit } from "./zones.js";
 
 export const REGISTRY_PREFIX = "/api/screen/registry/";
@@ -44,57 +58,85 @@ function registryView(row: DeviceRow): Record<string, unknown> {
   };
 }
 
-/** What one event hears when a device leaves it, sent once the move has committed. */
-interface Left {
-  tenant: string;
-  emits: Emit[];
+/** Whether `requestHost` is the superadmin hostname; never without one configured. */
+export function onSuperadminHost(
+  superadminHost: string | undefined,
+  requestHost: string | undefined,
+): boolean {
+  const host = normalizeHost(superadminHost);
+  return host !== undefined && normalizeHost(requestHost) === host;
 }
 
-/**
- * The old event's side of a device leaving it, in that event's RLS: mirrors and sound go
- * (detachDevice), then its assignment row. The caller holds the device's row lock.
- */
-async function leave(
-  c: SqlClient,
-  deps: RegistryDeps,
-  device: DeviceRow,
-  actor: string,
-  last: Emit,
-): Promise<Left | null> {
-  const tenant = device.current_tenant_id;
-  if (tenant === null) return null;
-  return asTenant(c, tenant, async () => {
-    const emits = await detachDevice(c, device.id, { audit: deps.audit, actor });
-    await c.query("DELETE FROM screen_assignments WHERE device_id = $1", [device.id]);
-    return { tenant, emits: [...emits, last] };
-  });
+/** The fields a PATCH sets; `undefined` leaves one as it is. */
+interface Patch {
+  name: string | undefined;
+  venue_id: string | undefined;
+  current_tenant_id: string | null | undefined;
+}
+
+function patchOf(input: Record<string, unknown>): Patch {
+  const name = input.name === undefined ? undefined : deviceName(input.name);
+  const venue = input.venue_id;
+  if (venue !== undefined && (typeof venue !== "string" || !VENUE_ID_RE.test(venue))) {
+    throw invalidRequest("`venue_id` must be a venue id.");
+  }
+  const target = input.current_tenant_id;
+  if (target !== undefined && target !== null) {
+    if (typeof target !== "string" || !isTenantId(target)) {
+      throw invalidRequest("`current_tenant_id` must be an event id, or null to park it.");
+    }
+  }
+  return { name, venue_id: venue, current_tenant_id: target };
+}
+
+function applied(before: DeviceRow, patch: Patch): DeviceRow {
+  return {
+    ...before,
+    name: patch.name ?? before.name,
+    venue_id: patch.venue_id ?? before.venue_id,
+    current_tenant_id:
+      patch.current_tenant_id === undefined ? before.current_tenant_id : patch.current_tenant_id,
+  };
+}
+
+/** The event to check the device against: one it moves to, or whose venue it leaves. */
+function eventToCheck(before: DeviceRow, after: DeviceRow): string | null {
+  const moving = after.current_tenant_id !== before.current_tenant_id;
+  if (after.current_tenant_id === null || !(moving || after.venue_id !== before.venue_id)) {
+    return null;
+  }
+  return after.current_tenant_id;
 }
 
 export function registryRoutes(app: FastifyInstance, deps: RegistryDeps): void {
   const { db } = deps;
-  const host = normalizeHost(deps.superadminHost);
 
-  /** 404 off the superadmin hostname, then the superadmin's session or 401/403. */
+  /** 404 off the superadmin hostname (app.ts says so before parsing), then the session. */
   async function superadmin(request: FastifyRequest): Promise<string> {
-    if (host === undefined || normalizeHost(request.headers.host) !== host) throw notFound();
+    if (!onSuperadminHost(deps.superadminHost, request.headers.host)) throw notFound();
     const session = await deps.rights.requireSuperadmin(request.headers.cookie);
     request.session = session;
     return session.userId;
   }
 
-  /**
-   * After the commit, each side hears its events and the event left behind forgets the device's
-   * health. The move is done by then: a failure here is logged, never turned into an error.
-   */
-  async function announce(deviceId: string, old: Left | null, arrived: Left | null): Promise<void> {
-    try {
-      for (const side of [old, arrived]) {
-        if (side !== null) await withTenant(side.tenant, () => publishAll(deps.bus, side.emits));
-      }
-      if (old !== null) await withTenant(old.tenant, () => forgetHealth(deps.kv, deviceId));
-    } catch (err) {
-      deps.log?.error({ err, device_id: deviceId }, "after a registry change: events failed");
-    }
+  /** Its current event's side of the device leaving; the caller holds the row lock. */
+  function leaveCurrent(
+    c: SqlClient,
+    device: DeviceRow,
+    actor: string,
+    last: Emit,
+  ): Promise<Left | null> {
+    const from = device.current_tenant_id;
+    if (from === null) return Promise.resolve(null);
+    // A revoked device's event heard `revoked` when it was; it hears nothing more.
+    const told = device.revoked_at === null ? last : undefined;
+    return asTenant(c, from, () => leaveEvent(c, device.id, { audit: deps.audit, actor }, told));
+  }
+
+  /** After the commit: the event left behind (announceLeft), then the one the device joined. */
+  async function announce(old: Left | null, joined: Left | null): Promise<void> {
+    if (old !== null) await announceLeft(deps, old);
+    if (joined !== null) await withTenant(joined.tenant, () => publishEach(deps, joined.emits));
   }
 
   app.get<{ Querystring: { venue_id?: string } }>(
@@ -116,39 +158,32 @@ export function registryRoutes(app: FastifyInstance, deps: RegistryDeps): void {
     "/api/screen/registry/devices/:device_id",
     async (request) => {
       const actor = await superadmin(request);
-      const input = body(request);
-      const name = input.name === undefined ? undefined : deviceName(input.name);
-      const venue = input.venue_id;
-      if (venue !== undefined && (typeof venue !== "string" || !VENUE_ID_RE.test(venue))) {
-        throw invalidRequest("`venue_id` must be a venue id.");
-      }
-      const target = input.current_tenant_id;
-      if (target !== undefined && target !== null) {
-        if (typeof target !== "string" || !isTenantId(target)) {
-          throw invalidRequest("`current_tenant_id` must be an event id, or null to park it.");
-        }
-      }
-      const [view, left] = await db.global(async (c) => {
-        const found = await c.query("SELECT * FROM devices WHERE id = $1 FOR UPDATE", [
-          request.params.device_id,
-        ]);
+      const patch = patchOf(body(request));
+      const id = request.params.device_id;
+      // The tenants lookup goes over the network: done before the row lock, so a slow tenants
+      // module never holds the device's heartbeats and transfers. Checked again under the lock.
+      const seen = await readDevice(db, id);
+      const wanted = eventToCheck(seen, applied(seen, patch));
+      const target = wanted === null ? null : await deps.tenants.byId(wanted);
+      const [view, old, joined] = await db.global(async (c) => {
+        const found = await c.query("SELECT * FROM devices WHERE id = $1 FOR UPDATE", [id]);
         const before = found.rows[0] as unknown as DeviceRow | undefined;
         if (before === undefined) throw notFound();
-        const after: DeviceRow = {
-          ...before,
-          name: name ?? before.name,
-          venue_id: venue ?? before.venue_id,
-          current_tenant_id: target === undefined ? before.current_tenant_id : target,
-        };
+        const after = applied(before, patch);
         const moving = after.current_tenant_id !== before.current_tenant_id;
         if (moving && after.current_tenant_id !== null && before.revoked_at !== null) {
           throw invalidRequest("A revoked device cannot serve an event. Pair a new one.");
         }
-        if (after.current_tenant_id !== null && (moving || after.venue_id !== before.venue_id)) {
-          await checkTarget(deps.tenants, after.current_tenant_id, after.venue_id, moving);
+        const check = eventToCheck(before, after);
+        if (check !== null) {
+          // Moved by someone else since the lookup, which then named another event.
+          if (check !== wanted) throw versionConflict("device");
+          checkTarget(target, after.venue_id, moving);
         }
-        const old = moving
-          ? await leave(c, deps, before, actor, [
+        const entry = changeEntry(before, after, actor);
+        if (entry === null) return [registryView(before), null, null] as const;
+        const left = moving
+          ? await leaveCurrent(c, before, actor, [
               "screen.device.released",
               { device_id: before.id, actor_user_id: actor },
             ])
@@ -158,26 +193,19 @@ export function registryRoutes(app: FastifyInstance, deps: RegistryDeps): void {
           [before.id, after.name, after.venue_id, after.current_tenant_id],
         );
         let arrived: Left | null = null;
-        if (moving && after.current_tenant_id !== null) {
-          const tenant = after.current_tenant_id;
+        const to = after.current_tenant_id;
+        if (moving && to !== null) {
           // A place in the new event without a zone: its crew assigns it there.
-          await asTenant(c, tenant, () =>
+          await asTenant(c, to, () =>
             c.query("INSERT INTO screen_assignments (device_id) VALUES ($1)", [before.id]),
           );
-          arrived = {
-            tenant,
-            emits: [
-              [
-                "screen.device.moved",
-                { device_id: before.id, name: after.name, actor_user_id: actor },
-              ],
-            ],
-          };
+          const data = { device_id: before.id, name: after.name, actor_user_id: actor };
+          arrived = { tenant: to, deviceId: before.id, emits: [["screen.device.moved", data]] };
         }
-        await deps.audit(changeEntry(before, after, actor));
-        return [registryView(after), [old, arrived] as const] as const;
+        await deps.audit(entry);
+        return [registryView(after), left, arrived] as const;
       });
-      await announce(request.params.device_id, ...left);
+      await announce(old, joined);
       return view;
     },
   );
@@ -192,12 +220,10 @@ export function registryRoutes(app: FastifyInstance, deps: RegistryDeps): void {
         ]);
         const device = found.rows[0] as unknown as DeviceRow | undefined;
         if (device === undefined) throw notFound();
-        // An already revoked device's event heard `revoked` when it was.
-        const side = await leave(c, deps, device, actor, [
+        const side = await leaveCurrent(c, device, actor, [
           "screen.device.revoked",
           { device_id: device.id, actor_user_id: actor },
         ]);
-        if (side !== null && device.revoked_at !== null) side.emits.pop();
         // The row goes with its token and every superseded token.
         await c.query("DELETE FROM devices WHERE id = $1", [device.id]);
         await deps.audit({
@@ -212,20 +238,21 @@ export function registryRoutes(app: FastifyInstance, deps: RegistryDeps): void {
         });
         return side;
       });
-      await announce(request.params.device_id, left, null);
+      await announce(left, null);
       return reply.status(204).send();
     },
   );
 }
 
+async function readDevice(db: Db, id: string): Promise<DeviceRow> {
+  const { rows } = await db.global((c) => c.query("SELECT * FROM devices WHERE id = $1", [id]));
+  const row = rows[0] as unknown as DeviceRow | undefined;
+  if (row === undefined) throw notFound();
+  return row;
+}
+
 /** The event a device moves to must exist, take writes, and be at the device's venue. */
-async function checkTarget(
-  tenants: TenantResolver,
-  tenantId: string,
-  venueId: string | null,
-  moving: boolean,
-): Promise<void> {
-  const ctx = await tenants.byId(tenantId);
+function checkTarget(ctx: TenantContext | null, venueId: string | null, moving: boolean): void {
   if (ctx === null) throw invalidRequest("There is no such event.");
   if (moving && ctx.status === "archived") throw eventArchived();
   if (ctx.venue === null) throw noVenue();
@@ -236,17 +263,26 @@ async function checkTarget(
   }
 }
 
-/** One platform entry: the registry acts above events (tenants.md, devices' current tenant). */
-function changeEntry(before: DeviceRow, after: DeviceRow, actor: string): AuditEntry {
+/**
+ * One platform entry (the registry acts above events; tenants.md, devices' current tenant), or
+ * null when nothing changes. `moved` is a change of event; a new venue alone is `rehomed`.
+ */
+function changeEntry(before: DeviceRow, after: DeviceRow, actor: string): AuditEntry | null {
   const changes: Record<string, { from: unknown; to: unknown }> = {};
   for (const field of ["current_tenant_id", "venue_id", "name"] as const) {
     if (before[field] !== after[field]) changes[field] = { from: before[field], to: after[field] };
   }
-  const moved = "current_tenant_id" in changes || "venue_id" in changes;
+  if (Object.keys(changes).length === 0) return null;
+  const action =
+    "current_tenant_id" in changes
+      ? "screen.device.moved"
+      : "venue_id" in changes
+        ? "screen.device.rehomed"
+        : "screen.device.renamed";
   return {
     tenant_id: null,
     actor_user_id: actor,
-    action: moved ? "screen.device.moved" : "screen.device.renamed",
+    action,
     target: { type: "device", id: before.id },
     changes,
   };

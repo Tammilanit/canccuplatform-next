@@ -27,7 +27,6 @@ import {
   body,
   codeInvalid,
   invalidRequest,
-  notFound,
   setCookie,
   tenantOf,
 } from "./http.js";
@@ -127,8 +126,8 @@ export function movingRoutes(app: FastifyInstance, deps: MovingDeps): void {
         [record.device_id, tenantId],
       );
       const row = rows[0] as unknown as DeviceRow | undefined;
-      // Moved on, revoked or deleted since the code was made.
-      if (row === undefined) throw notFound();
+      // Moved on, revoked or deleted since the code was made: the code is no longer valid.
+      if (row === undefined) throw codeInvalid();
       if (row.token_hash !== record.token_hash) throw codeInvalid();
       const kept = row.superseded_token_hashes.filter((s) => Date.parse(s.expires_at) > at);
       const superseded = [

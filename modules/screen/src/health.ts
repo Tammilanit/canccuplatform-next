@@ -5,7 +5,7 @@
  * last heartbeat plus `offline_after_seconds`; the deadlines sit in one set per event, which the
  * offline sweep empties as they pass.
  */
-import { isTenantId, tenantKey, withTenant } from "@canccu/kit";
+import { isTenantId, requireTenant, tenantKey, withTenant } from "@canccu/kit";
 import type { Bus, Logger, SettingValue } from "@canccu/kit";
 import type { Db } from "./db.js";
 import type { Kv } from "./kv.js";
@@ -99,6 +99,19 @@ async function zonesOf(db: Db, ids: string[]): Promise<Map<string, string | null
   return new Map(rows.map((r) => [r.device_id as string, (r.zone_key as string | null) ?? null]));
 }
 
+/** The device's place in the current event, or null once it has left it (or was revoked). */
+async function placeOf(db: Db, id: string): Promise<{ zone_key: string | null } | null> {
+  const { rows } = await db.tenant((c) =>
+    c.query(
+      `SELECT a.zone_key FROM devices d JOIN screen_assignments a ON a.device_id = d.id
+       WHERE d.id = $1 AND d.current_tenant_id = $2 AND d.revoked_at IS NULL`,
+      [id, requireTenant()],
+    ),
+  );
+  const row = rows[0];
+  return row === undefined ? null : { zone_key: (row.zone_key as string | null) ?? null };
+}
+
 export interface HealthDeps {
   db: Db;
   kv: Kv;
@@ -148,8 +161,16 @@ export async function recordHeartbeat(
   }
   // New in the set only when the sweep took it out (or never saw it): it was offline until now.
   const cameOnline = await kv.addDue(keys.online(), id, record.online_until_ms);
+  // Read after the writes: a heartbeat whose device left the event while it was in flight (its
+  // check passed before) would otherwise bring back the health the leaving forgot. If the device
+  // is gone now, the leaving committed, and its forget may have run before these writes.
+  const place = await placeOf(deps.db, id);
+  if (place === null) {
+    await forgetHealth(kv, id);
+    return;
+  }
   if (!cameOnline && !announce) return;
-  const zoneKey = (await zonesOf(deps.db, [id])).get(id) ?? null;
+  const zoneKey = place.zone_key;
   if (cameOnline) {
     await deps.bus.publish(
       "screen.device.online",
