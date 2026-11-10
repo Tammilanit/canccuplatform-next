@@ -160,6 +160,50 @@ describe.skipIf(!DATABASE_URL)("render dispatch failures", () => {
     expect(tmpFiles()).toEqual([]);
   }, 20_000);
 
+  it("takes no slide after a timeout, though more were already buffered", async () => {
+    renderer.behaviour = { slides: 2, hang: true };
+    const id = await addDeck();
+    const jobId = (await jobOf(id))?.id ?? "";
+    const before = h.storage.used.alpha ?? 0;
+    // The first slide's row write stalls past the deadline, while the second slide sits in the
+    // reader's buffer: once the stall ends, nothing may reserve or write for the ended run.
+    let stalled!: () => void;
+    const reached = new Promise<void>((resolve) => (stalled = resolve));
+    let resume!: () => void;
+    const gate = new Promise<void>((resolve) => (resume = resolve));
+    let armed = true;
+    const db: Db = {
+      tenant: (fn) =>
+        h.db.tenant((c) =>
+          fn({
+            query: async (text, values) => {
+              if (armed && text.includes("SET reserved_bytes = $3")) {
+                armed = false;
+                stalled();
+                await gate;
+              }
+              return c.query(text, values);
+            },
+          }),
+        ),
+      global: (fn) => h.db.global(fn),
+    };
+    const running = h.dispatch(renderer.path, { db, timeoutMs: 300 });
+    await reached;
+    await new Promise((r) => setTimeout(r, 500));
+    resume();
+    await running;
+    await new Promise((r) => setTimeout(r, 300));
+    expect((await jobOf(id))?.state).toBe("failed");
+    const { rows } = await h.pool.query<{ reserved_bytes: string }>(
+      "SELECT reserved_bytes FROM screen_render_jobs WHERE id = $1",
+      [jobId],
+    );
+    expect(Number(rows[0]?.reserved_bytes)).toBe(0);
+    expect(h.storage.used.alpha ?? 0).toBe(before);
+    expect(tmpFiles()).toEqual([]);
+  }, 20_000);
+
   it("puts the running job back at its place on shutdown, without counting it", async () => {
     renderer.behaviour = { slides: 2, hang: true };
     const id = await addDeck();

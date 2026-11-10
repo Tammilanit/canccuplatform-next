@@ -76,6 +76,23 @@ export async function holdCount(c: SqlClient): Promise<void> {
   ]);
 }
 
+/**
+ * Gives `bytes` back in the caller's transaction, before the commit that deletes (or rolls back)
+ * the rows that held them, under the count lock: a recount sees the rows and the bytes together
+ * or neither, never the rows gone while tenants still counts the bytes (contracts/tenants.md,
+ * Repair). A failed release fails the transaction. One that reached tenants before a commit that
+ * then failed leaves the count low until the next recount.
+ */
+export async function releaseHeld(
+  c: SqlClient,
+  storage: StorageQuota,
+  bytes: number,
+): Promise<void> {
+  if (bytes <= 0) return;
+  await holdCount(c);
+  await storage.release(bytes);
+}
+
 /** The recount's side of `holdCount`: no reserve runs until the caller's transaction ends. */
 export async function lockCount(c: SqlClient): Promise<void> {
   await c.query("SELECT pg_advisory_xact_lock($1, hashtext($2))", [

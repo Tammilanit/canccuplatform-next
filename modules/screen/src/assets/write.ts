@@ -53,16 +53,20 @@ export async function writeWithFile<T>(
         placed = await place(c, deps.filesRoot, deps.storage, prepared.temp, prepared);
         return placed.name;
       });
-      dropped = await dropUnreferenced(c, out.unused);
+      dropped = await dropUnreferenced(c, deps.storage, out.unused);
       return out.result;
     });
-    await collect(deps.db, deps.filesRoot, deps.storage, dropped, deps.log);
+    await collect(deps.db, deps.filesRoot, dropped, deps.log);
     return result;
   } catch (err) {
     const orphan = placed as Placed | null;
     if (orphan !== null && orphan.reserved > 0) {
-      const lost = [{ name: orphan.name, bytes: orphan.reserved }];
-      await collect(deps.db, deps.filesRoot, deps.storage, lost, deps.log);
+      await deps.storage
+        .release(orphan.reserved)
+        .catch((failed: unknown) =>
+          deps.log?.warn({ err: failed }, "giving back an upload failed"),
+        );
+      await collect(deps.db, deps.filesRoot, [orphan], deps.log);
     }
     throw err;
   } finally {
@@ -78,9 +82,9 @@ export async function writeDroppingFiles<T>(
   let dropped: Dropped[] = [];
   const result = await deps.db.tenant(async (c) => {
     const out = await fn(c);
-    dropped = await dropUnreferenced(c, out.unused);
+    dropped = await dropUnreferenced(c, deps.storage, out.unused);
     return out.result;
   });
-  await collect(deps.db, deps.filesRoot, deps.storage, dropped, deps.log);
+  await collect(deps.db, deps.filesRoot, dropped, deps.log);
   return result;
 }

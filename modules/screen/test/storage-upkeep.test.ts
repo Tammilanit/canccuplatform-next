@@ -10,7 +10,7 @@ import type { ServiceIdentity } from "@canccu/kit";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { holdCount, tenantsStorage } from "../src/assets/storage.js";
 import { recount, sweepFiles, upkeepAll } from "../src/assets/upkeep.js";
-import { DATABASE_URL, harness, png, upload } from "./helpers.js";
+import { DATABASE_URL, call, harness, png, upload } from "./helpers.js";
 import type { Harness } from "./helpers.js";
 import { pdfPages } from "./render-fake.js";
 
@@ -106,6 +106,45 @@ describe.skipIf(!DATABASE_URL)("storage upkeep", () => {
     await uploadTx;
     await counting;
     expect(h.storage.used.alpha).toBe(base + 50 + 30);
+  });
+
+  it("counts a delete's bytes until tenants has them back, so a recount between is not low", async () => {
+    const deck = await upload(h, "/api/screen/assets", pdfPages(5), "Gone.pdf", {
+      session: "admin",
+    });
+    const id = deck.json<{ id: string }>().id;
+    await h.pool.query<Record<string, string>>(
+      "UPDATE screen_render_jobs SET state = 'succeeded', bytes = 40 WHERE asset_id = $1",
+      [id],
+    );
+    // Every release stalls on its way to tenants; a recount runs meanwhile.
+    const release = h.quota.release.bind(h.quota);
+    let reached!: () => void;
+    const releasing = new Promise<void>((resolve) => (reached = resolve));
+    let resume!: () => void;
+    const gate = new Promise<void>((resolve) => (resume = resolve));
+    h.quota.release = async (bytes) => {
+      reached();
+      await gate;
+      await release(bytes);
+    };
+    try {
+      const deleting = call(h, "DELETE", `/api/screen/assets/${id}`, {
+        host: "alpha.test",
+        session: "admin",
+      });
+      await releasing;
+      const counting = inAlpha(() => recount(deps()));
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      resume();
+      expect((await deleting).statusCode).toBe(204);
+      await counting;
+    } finally {
+      h.quota.release = release;
+    }
+    const raced = h.storage.used.alpha;
+    await inAlpha(() => recount(deps()));
+    expect(raced).toBe(h.storage.used.alpha);
   });
 
   it("sweeps orphaned files and stale render scratch, and keeps what is in use", async () => {

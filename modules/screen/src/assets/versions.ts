@@ -79,7 +79,7 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
       const file = await placeFile();
       const version = before.last_version + 1;
       if (before.prev_version !== null) {
-        dropped = await dropJobs(c, id, [before.prev_version]);
+        dropped = await dropJobs(c, deps.storage, id, [before.prev_version]);
         await c.query("DELETE FROM screen_asset_versions WHERE asset_id = $1 AND version = $2", [
           id,
           before.prev_version,
@@ -131,7 +131,7 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
           code: "nothing_to_revert",
         });
       }
-      dropped = await dropJobs(c, id, [before.version]);
+      dropped = await dropJobs(c, deps.storage, id, [before.version]);
       await c.query("DELETE FROM screen_asset_versions WHERE asset_id = $1 AND version = $2", [
         id,
         before.version,
@@ -171,7 +171,7 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
         const why = await use(c, id, { settings: deps.settings, nowMs: deps.now() });
         if (why !== null) throw new KitError(why, { status: 409, code: "asset_in_use" });
       }
-      dropped = await dropJobs(c, id, null);
+      dropped = await dropJobs(c, deps.storage, id, null);
       const { rows } = await c.query(
         "DELETE FROM screen_asset_versions WHERE asset_id = $1 RETURNING file",
         [id],

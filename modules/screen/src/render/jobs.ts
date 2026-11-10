@@ -10,6 +10,7 @@ import type { Bus, Logger, SqlClient } from "@canccu/kit";
 import type { Audit } from "../audit.js";
 import type { Db } from "../db.js";
 import { newId } from "../http.js";
+import { releaseHeld } from "../assets/storage.js";
 import type { StorageQuota } from "../assets/storage.js";
 import type { RenderWarning, SlideMeta } from "./client.js";
 import type { RenderQueue } from "./queue.js";
@@ -177,17 +178,18 @@ export async function announce(deps: RenderDeps, row: JobRow, opts: { head?: boo
 }
 
 export interface Dropped {
-  renders: { asset_id: string; asset_version: number; bytes: number }[];
+  renders: { asset_id: string; asset_version: number }[];
   live: JobRow[];
 }
 
 /**
  * In the transaction that removes asset versions (all of the asset's when `versions` is null):
- * their jobs go first, as the foreign key asks. A running job's container notices the row is
- * gone at its next lease renewal and stops.
+ * their jobs go first, as the foreign key asks, and their renders' bytes go back. A running job's
+ * container notices the row is gone at its next lease renewal and stops.
  */
 export async function dropJobs(
   c: SqlClient,
+  storage: StorageQuota,
   assetId: string,
   versions: number[] | null,
 ): Promise<Dropped> {
@@ -197,19 +199,19 @@ export async function dropJobs(
     [assetId, versions],
   );
   const jobs = rows as unknown as JobRow[];
+  const renders = jobs.filter((j) => j.state === "succeeded");
+  await releaseHeld(
+    c,
+    storage,
+    renders.reduce((sum, j) => sum + Number(j.bytes), 0),
+  );
   return {
-    renders: jobs
-      .filter((j) => j.state === "succeeded")
-      .map((j) => ({
-        asset_id: j.asset_id,
-        asset_version: j.asset_version,
-        bytes: Number(j.bytes),
-      })),
+    renders: renders.map((j) => ({ asset_id: j.asset_id, asset_version: j.asset_version })),
     live: jobs.filter(isLive),
   };
 }
 
-/** After the commit of `dropJobs`: the slides and their quota go, live jobs end as cancelled. */
+/** After the commit of `dropJobs`: the slides go, live jobs end as cancelled. */
 export async function afterDrop(deps: RenderDeps, dropped: Dropped): Promise<void> {
   for (const render of dropped.renders) {
     try {
@@ -217,7 +219,6 @@ export async function afterDrop(deps: RenderDeps, dropped: Dropped): Promise<voi
         recursive: true,
         force: true,
       });
-      if (render.bytes > 0) await deps.storage.release(render.bytes);
     } catch (err) {
       deps.log?.warn({ err, asset_id: render.asset_id }, "removing a render failed");
     }
@@ -257,16 +258,12 @@ export async function recoverLost(deps: RenderDeps, jobId: string): Promise<void
            WHERE id = $1 RETURNING ${JOB_COLUMNS}`,
       again ? [jobId] : [jobId, now, LOST_TWICE],
     );
-    return {
-      row: rows[0] as unknown as JobRow,
-      attempt: job.attempts,
-      bytes: Number(job.reserved_bytes),
-    };
+    // The lost attempt's bytes: the row no longer holds them, so they go back once.
+    await releaseHeld(c, deps.storage, Number(job.reserved_bytes));
+    return { row: rows[0] as unknown as JobRow, attempt: job.attempts };
   });
   if (lost === null) return;
-  // The lost attempt's slides and bytes: the row no longer holds them, so they go back once.
   await rm(attemptDir(deps.filesRoot, jobId, lost.attempt), { recursive: true, force: true });
-  if (lost.bytes > 0) await deps.storage.release(lost.bytes);
   if (lost.row.state === "queued") await announce(deps, lost.row, { head: true });
   else await publishJob(deps.bus, lost.row);
 }
