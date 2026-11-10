@@ -16,10 +16,20 @@ export const CONTENT_TYPES = {
 } as const;
 export type Ext = keyof typeof CONTENT_TYPES;
 
+/** An embed's types: the above plus what only the sandbox serves (contracts/theming.md, The sandbox). */
+export const EMBED_TYPES = {
+  ...CONTENT_TYPES,
+  html: "text/html; charset=utf-8",
+  js: "text/javascript; charset=utf-8",
+  json: "application/json",
+} as const;
+export type EmbedExt = keyof typeof EMBED_TYPES;
+
 /** `<sha256>.<ext>`, the served name: the ServedFile pattern of contracts/theming.openapi.yaml. */
 export const FILE_NAME = /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg)$/;
+const STORED_NAME = /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg|html|js|json)$/;
 
-export function fileName(bytes: Buffer, ext: Ext): string {
+export function fileName(bytes: Buffer, ext: EmbedExt): string {
   return `${createHash("sha256").update(bytes).digest("hex")}.${ext}`;
 }
 
@@ -30,21 +40,28 @@ export function extOf(name: string): Ext {
 export interface FileStore {
   /** Store bytes for the current tenant and record them; the same bytes give the same name. */
   put(client: SqlClient, bytes: Buffer, ext: Ext): Promise<string>;
+  /** Store bytes for the current tenant without recording them: embeds record theirs (embeds.ts). */
+  write(bytes: Buffer, ext: EmbedExt): Promise<string>;
   /** The bytes of a stored file of the current tenant, or undefined. */
   read(name: string): Promise<Buffer | undefined>;
 }
 
 export function diskFiles(root: string): FileStore {
   const path = (name: string): string => tenantFile("theming", `files/${name}`, root);
+  const write = async (bytes: Buffer, ext: EmbedExt): Promise<string> => {
+    const name = fileName(bytes, ext);
+    const target = path(name);
+    await mkdir(dirname(target), { recursive: true });
+    // Written under a temporary name and renamed, so a half-written file is never served.
+    const temp = `${target}.${randomBytes(6).toString("hex")}.tmp`;
+    await writeFile(temp, bytes);
+    await rename(temp, target);
+    return name;
+  };
   return {
+    write,
     async put(client, bytes, ext) {
-      const name = fileName(bytes, ext);
-      const target = path(name);
-      await mkdir(dirname(target), { recursive: true });
-      // Written under a temporary name and renamed, so a half-written file is never served.
-      const temp = `${target}.${randomBytes(6).toString("hex")}.tmp`;
-      await writeFile(temp, bytes);
-      await rename(temp, target);
+      const name = await write(bytes, ext);
       // Not undone when the caller's transaction rolls back: the file stays on disk without a row.
       // Harmless while nothing writes at run time; publishing (#241) and uploads (#242) reserve
       // first and clean up on rollback (docs/plans/issue-185.md, D3).
@@ -55,7 +72,7 @@ export function diskFiles(root: string): FileStore {
       return name;
     },
     async read(name) {
-      if (!FILE_NAME.test(name)) return undefined;
+      if (!STORED_NAME.test(name)) return undefined;
       try {
         return await readFile(path(name));
       } catch (err) {
