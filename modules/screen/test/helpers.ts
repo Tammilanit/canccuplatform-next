@@ -2,7 +2,7 @@
 import type { ThemeNow } from "../src/compose/sources.js";
 import type { AgendaNow, VenueInfo } from "../src/compose/widgets.js";
 import { readFileSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
@@ -163,6 +163,9 @@ export async function harness(): Promise<Harness> {
   const settings: Record<string, Record<string, SettingValue>> = {};
   const storage = { used: {} as Record<string, number>, quota: {} as Record<string, number> };
   const filesRoot = await mkdtemp(join(tmpdir(), "canccu-screen-files-"));
+  const playerDir = await mkdtemp(join(tmpdir(), "canccu-screen-player-"));
+  await writeFile(join(playerDir, "player.js"), "export {};\n");
+  await writeFile(join(playerDir, "player.css"), "body {}\n");
   const oembedStatus = { value: 200 };
   const fake: FakeSources = { theme: null, event: null, agenda: null, venue: null, hosts: [] };
   const answer = <T>(host: string, value: T): Promise<T> => {
@@ -228,6 +231,7 @@ export async function harness(): Promise<Harness> {
     fetch: () => Promise.resolve(new Response("{}", { status: oembedStatus.value })),
     now: () => clock.now,
     bundleVersion: "test",
+    playerDir,
     streamPingMs: 200,
     sources: {
       theme: (host) => answer(host, fake.theme),
@@ -280,6 +284,7 @@ export async function harness(): Promise<Harness> {
       await app.close();
       await pool.end();
       await rm(filesRoot, { recursive: true, force: true });
+      await rm(playerDir, { recursive: true, force: true });
     },
   };
 }

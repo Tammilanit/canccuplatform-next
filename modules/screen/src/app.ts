@@ -41,6 +41,7 @@ import { notFound } from "./http.js";
 import { movingRoutes } from "./moving.js";
 import { pairingRoutes } from "./pairing.js";
 import { photoRoutes } from "./photos.js";
+import { playerRoutes } from "./player.js";
 import { PushHub } from "./push/hub.js";
 import { streamRoutes } from "./push/routes.js";
 import { MemoryFanout, MemoryZoneStore } from "./push/store.js";
@@ -79,6 +80,8 @@ export interface ScreenDeps {
   sources?: Sources;
   /** The platform version, the bundle `/screen/` loads unless pinned. */
   bundleVersion?: string;
+  /** The built player bundle; tests point it at a temporary directory. */
+  playerDir?: string;
   /** The zones' states and the fan-out between containers; main gives the Valkey ones. */
   push?: { zones: ZoneStore; fanout: Fanout };
   /** How often an open stream pings (15 s); tests shorten it. */
@@ -222,6 +225,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   pushRoutes(app, deps);
   tickerRoutes(app, deps);
   composeRoutes(app, compose);
+  playerRoutes(app, compose);
   streamRoutes(app, { ...push, hub });
   void app.register(multipart, {
     limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 4, fieldSize: 1024, parts: 5 },
