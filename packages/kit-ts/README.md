@@ -190,7 +190,7 @@ Rotation: make the new key current and list the old one in `CANCCU_SECRETS_KEYS_
 
 ## Postgres connections
 
-- **Migrations:** `runMigrations(client, dir, { ledger, lock, appRole, grantTo })` runs each new `*.sql` file in `dir` once, in name order, each in its own transaction, under an advisory lock, recorded in the ledger table; then grants the app role to the login role. The same behaviour as kit-py's `run_migrations`.
+- **Migrations:** `runMigrations(client, dir, { ledger, lock, appRole, grantTo })` runs each new `*.sql` file in `dir` once, in name order, each in its own transaction, recorded in the ledger table; then grants the app role to the login role. The whole run holds the platform-wide advisory lock `PLATFORM_MIGRATION_LOCK` (the same key in kit-py) around the module's own `lock`, so modules starting at once migrate one after the other. The same behaviour as kit-py's `run_migrations`.
 
 - **Tracked clients:** `trackTransactions(client)` wraps a checked-out connection and follows its BEGIN/COMMIT/ROLLBACK; `tenantTransaction` then refuses to start inside the caller's own transaction, whose COMMIT it would otherwise end early. `release()` passes through.
 - **Login role:** `checkLoginRole(client)` at start, before `SET ROLE` to the app role, refuses a login role that is a superuser, has BYPASSRLS or owns tables (it could switch RLS off). `checkAppRole` still checks the role the queries run as.
