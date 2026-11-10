@@ -104,6 +104,7 @@ def create_app(
             or not isinstance(body.get("values"), dict)
             or not body["values"]
             or not isinstance(body.get("settings_version"), int)
+            or isinstance(body["settings_version"], bool)
             or not isinstance(body.get("actor_user_id"), str)
             or not body["actor_user_id"]
         ):

@@ -6,6 +6,7 @@ into the event's own value over admin's setting `topics` (config.effective)."""
 
 from __future__ import annotations
 
+import json
 from datetime import timedelta
 from typing import Any
 
@@ -62,6 +63,12 @@ def _param_input(p: dict[str, Any], value: Any) -> str:
     return field(label, text_input(name, value))
 
 
+def _shown(config: dict[str, Any]) -> str:
+    """The values a form showed, sent back with it: a write in admin's settings does not move
+    `config_version`, so only these tell a stale form from a change."""
+    return json.dumps({k: config[k] for k in ("enabled", "params", "channels")}, sort_keys=True)
+
+
 def _form(found: dict[str, Any], every: dict[str, dict[str, Any]]) -> str:
     reg, config = found["topic_type"], found["config"]
     key = reg["key"]
@@ -81,7 +88,7 @@ def _form(found: dict[str, Any], every: dict[str, dict[str, Any]]) -> str:
         )
     return (
         f'<form method=post action="{TOPICS}/{esc(key)}">'
-        + hidden({"config_version": config["config_version"]})
+        + hidden({"config_version": config["config_version"], "shown": _shown(config)})
         + check("enabled", "Offered at this event", config["enabled"])
         + f'<fieldset class="canccu-notify-fieldset"><legend>Channels</legend>{channels}</fieldset>'
         + params
@@ -176,18 +183,25 @@ async def save_config(request: Request) -> Response:
         raise bad("config_version: required") from None
     if version != config["config_version"]:
         raise VersionConflict(f"config_version is {config['config_version']}")
+    try:
+        shown = json.loads(str(form.get("shown")))
+    except ValueError:
+        raise bad("shown: the values the form showed") from None
+    if shown != json.loads(_shown(config)):
+        raise VersionConflict("changed meanwhile, here or in admin's settings; reload")
+    # Only what the person changed on the form: a value they left alone is never written back.
     body: dict[str, Any] = {"config_version": version}
     enabled = form.get("enabled") is not None
-    if enabled != config["enabled"]:
+    if enabled != shown["enabled"]:
         body["enabled"] = enabled
     channels = [c for c in shown_channels(found, every) if form.get(f"channel_{c}") is not None]
-    if channels != config["channels"]:
+    if channels != shown["channels"]:
         body["channels"] = channels
     params = {
         p["key"]: value
         for p in found["topic_type"].get("params") or []
         if (value := _param_value(p, form.get(f"param_{p['key']}")))
-        != config["params"].get(p["key"])
+        != shown["params"].get(p["key"])
     }
     if params:
         body["params"] = params

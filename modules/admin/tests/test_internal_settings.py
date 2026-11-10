@@ -107,6 +107,7 @@ async def test_a_module_write_is_checked_like_the_session_write(world: World) ->
         {**good, "values": {}},
         {**good, "values": {"Bad": 1}},
         {**good, "actor_user_id": ""},
+        {**good, "settings_version": True},
         {"values": {"hourly_cap": 3}, "actor_user_id": "u"},
         [],
     ):

@@ -239,3 +239,34 @@ async def test_a_disabled_custom_topic_makes_nothing_and_its_base_shows(env: Env
         topics = (await c.get("/api/notify/topics")).json()["topics"]
     assert [n["topic"] for n in inbox] == ["schedule"]
     assert [t["topic"] for t in topics] == ["schedule"]
+
+
+async def test_a_new_custom_topic_never_shrinks_an_unset_topics_setting(env: Env) -> None:
+    await env.register(schedule())
+    env.settings.values["ev-a"] = {"topics": ["schedule"]}
+    # Meanwhile someone resets `topics` to unset, which means every topic.
+    env.settings.meanwhile = [{"topics": None}]
+    made = await save(env, "custom_cosplay", COSPLAY)
+    assert made.status_code == 201
+    assert env.settings.writes == [] and env.settings.values["ev-a"]["topics"] is None
+    assert {t["config"]["enabled"] for t in (await listed(env)).values()} == {True}
+
+
+async def test_a_new_base_drops_the_parameters_of_the_old_one(env: Env) -> None:
+    await env.register(schedule())
+    await env.register(play())
+    await save(env, "custom_cosplay", COSPLAY)
+    async with env.client() as c:
+        await c.put(
+            "/api/notify/topic-types/custom_cosplay/config",
+            json={"config_version": 0, "params": {"lead_minutes": 30}},
+            headers=env.admin(),
+        )
+    chess = {
+        "based_on": "play",
+        "title": "Chess",
+        "where": [{"field": "data.game", "op": "eq", "value": "chess"}],
+        "revision": 1,
+    }
+    moved = await save(env, "custom_cosplay", chess)
+    assert moved.status_code == 200 and moved.json()["config"]["params"] == {}

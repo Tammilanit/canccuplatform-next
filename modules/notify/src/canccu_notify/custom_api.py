@@ -17,6 +17,15 @@ from .deps import Deps, deps
 from .registry import bad, body_of, not_found
 
 
+def _joined(d: Deps, key: str) -> dict[str, Any]:
+    """`topics` with a new custom topic added, recomputed after a reload: a `topics` reset to
+    unset meanwhile already means every topic, and a list of the new key alone would switch
+    every other topic off."""
+    if not isinstance(d.settings.get("topics"), list):
+        return {}
+    return topics_with(d.settings, [], key, True)
+
+
 async def save(
     d: Deps, tenant_id: str, user_id: str, key: str, body: dict[str, Any]
 ) -> tuple[bool, dict[str, Any]]:
@@ -46,8 +55,11 @@ async def save(
             # Offered from the start: an organiser who just made a topic means it to be offered.
             # An unset `topics` already means every topic.
             if isinstance(topics, list) and key not in topics:
-                await write_settings(d, user_id, lambda: topics_with(d.settings, [], key, True))
+                await write_settings(d, user_id, lambda: _joined(d, key))
         else:
+            old_base = await conn.fetchval(
+                "SELECT based_on FROM notify_custom_topics WHERE key = $1", key
+            )
             saved = await conn.fetchval(
                 "UPDATE notify_custom_topics SET based_on = $2, title = $3, description = $4,"
                 " defaults = $5, conditions = $6, revision = revision + 1"
@@ -57,6 +69,11 @@ async def save(
             )
             if saved is None:
                 raise VersionConflict("changed or removed by someone else; reload")
+            if old_base != topic["based_on"]:
+                # Parameters set for the old base mean nothing to the new one.
+                await conn.execute(
+                    "UPDATE notify_topic_config SET params = '{}' WHERE key = $1", key
+                )
         await d.audit.append(
             tenant_id, user_id, "notify.custom_topic.saved", {"type": "topic", "id": key}
         )

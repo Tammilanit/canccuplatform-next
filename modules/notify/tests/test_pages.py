@@ -3,6 +3,8 @@ counts, and the custom-topic form (docs/plans/issue-188.md, area O)."""
 
 from __future__ import annotations
 
+import html
+import re
 from typing import Any
 
 from conftest import TOPICS, Env
@@ -52,16 +54,26 @@ async def test_counts_need_the_stats_right_and_show_no_forms_without_the_write_r
     assert "<form" in both.text and "1 in the last 24 hours" in both.text
 
 
+async def page_form(c: Any, env: Env, key: str) -> dict[str, str]:
+    """The hidden fields of one topic's form, as the list page renders them now."""
+    text = (await c.get(LIST, headers=env.admin())).text
+    form = text.split(f'<form method=post action="/notify/admin/topics/{key}">')[1]
+    form = form.split("</form>")[0]
+    found = re.findall(r'<input type=hidden name="([^"]+)" value="([^"]*)">', form)
+    return {name: html.unescape(value) for name, value in found}
+
+
 async def test_the_form_changes_only_what_changed(env: Env) -> None:
     await env.register(schedule())
-    form = {
-        "config_version": "0",
-        "enabled": "on",
-        "channel_push": "on",
-        "channel_discord_dm": "on",
-        "param_lead_minutes": "10",
-    }
     async with env.client() as c:
+        first = await page_form(c, env, "schedule")
+        form = {
+            **first,
+            "enabled": "on",
+            "channel_push": "on",
+            "channel_discord_dm": "on",
+            "param_lead_minutes": "10",
+        }
         same = await c.post(f"{LIST}/schedule", data=form, headers=env.admin())
         assert same.status_code == 303 and same.headers["location"].endswith(
             "?unchanged=schedule#schedule"
@@ -79,7 +91,7 @@ async def test_the_form_changes_only_what_changed(env: Env) -> None:
         assert stale.status_code == 409 and "Someone changed this topic" in stale.text
         bad = await c.post(
             f"{LIST}/schedule",
-            data={**changed, "config_version": "1", "param_lead_minutes": "0"},
+            data={**await page_form(c, env, "schedule"), "param_lead_minutes": "0"},
             headers=env.admin(),
         )
         assert bad.status_code == 400 and "lead_minutes" in bad.text
@@ -94,6 +106,30 @@ async def test_the_form_changes_only_what_changed(env: Env) -> None:
         "params": {"lead_minutes": 15},
         "channels": ["push"],
     }
+
+
+async def test_a_form_opened_before_a_change_in_admin_cannot_undo_it(env: Env) -> None:
+    await env.register(schedule())
+    async with env.client() as c:
+        before = await page_form(c, env, "schedule")
+        env.settings.values["ev-a"] = {"topics": [], "schedule_lead_minutes": 5}
+        # Only the channels were touched, yet the form still shows schedule on with lead 10.
+        form = {**before, "enabled": "on", "channel_push": "on", "param_lead_minutes": "10"}
+        stale = await c.post(f"{LIST}/schedule", data=form, headers=env.admin())
+        assert stale.status_code == 409 and "Someone changed this topic" in stale.text
+        assert env.settings.values["ev-a"] == {"topics": [], "schedule_lead_minutes": 5}
+        # Opened again, the form shows admin's values, and a channel change writes only that.
+        again = {**await page_form(c, env, "schedule"), "channel_push": "on"}
+        again["param_lead_minutes"] = "5"
+        saved = await c.post(f"{LIST}/schedule", data=again, headers=env.admin())
+        assert saved.status_code == 303
+    assert env.settings.writes == []
+    config = (await topic_types(env))["schedule"]["config"]
+    assert (config["enabled"], config["params"], config["channels"]) == (
+        False,
+        {"lead_minutes": 5},
+        ["push"],
+    )
 
 
 async def test_an_archived_event_shows_its_topics_without_forms(env: Env) -> None:

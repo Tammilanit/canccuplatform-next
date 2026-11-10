@@ -60,9 +60,11 @@ def effective(
     `settings` is None while admin is unreachable: the defaults then apply."""
     key = reg["key"]
     now_enabled = setting_enabled(key, settings)
-    params = dict(base["params"]) if base is not None else {}
-    if base is None:
-        params = {p["key"]: p["default"] for p in reg.get("params") or []}
+    params = (
+        dict(base["params"])
+        if base is not None
+        else {p["key"]: p["default"] for p in reg.get("params") or []}
+    )
     if row is not None:
         own = json.loads(row["params"])
         if key == "schedule":
