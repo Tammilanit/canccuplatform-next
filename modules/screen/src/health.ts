@@ -48,7 +48,7 @@ interface HealthRecord {
   now_playing: NowPlaying | null;
   /** The `now_playing` last announced in `playing_changed`, as JSON. */
   announced: string;
-  // Kept for the state lag, which needs the zone's state version from the composed state (#109).
+  /** What the device last applied; `state_lag` is its zone's version minus this. */
   state_version: number;
   bundle_version: string;
   theme_revision: number;
@@ -66,6 +66,8 @@ const keys = {
   record: (id: string) => tenantKey("screen", "health", id),
   instances: (id: string) => tenantKey("screen", "health", id, "instances"),
   playingQuiet: (id: string) => tenantKey("screen", "health", id, "playing_quiet"),
+  /** An open push stream's last sign of life, apart from the record so the two never overwrite. */
+  seen: (id: string) => tenantKey("screen", "health", id, "seen"),
   online: () => tenantKey("screen", "online"),
 };
 
@@ -187,12 +189,46 @@ export async function recordHeartbeat(
   }
 }
 
+interface Seen {
+  seen_ms: number;
+  online_until_ms: number;
+}
+
+/**
+ * An open push stream counts as seen (contracts/screen.md, Device health): on connect and at
+ * every `ping` it moves the device's deadline as a heartbeat does, so a screen whose stream is
+ * up stays online even between heartbeats it fails to send.
+ */
+export async function recordSeen(
+  deps: HealthDeps & { settings: Settings },
+  id: string,
+  nowMs: number,
+): Promise<void> {
+  const { offlineAfterMs } = timing(deps.settings);
+  const seen: Seen = { seen_ms: nowMs, online_until_ms: nowMs + offlineAfterMs };
+  await deps.kv.set(keys.seen(id), JSON.stringify(seen), RECORD_TTL_MS);
+  const cameOnline = await deps.kv.addDue(keys.online(), id, seen.online_until_ms);
+  // As for a heartbeat: a device that left the event meanwhile must not get its health back.
+  const place = await placeOf(deps.db, id);
+  if (place === null) {
+    await forgetHealth(deps.kv, id);
+    return;
+  }
+  if (cameOnline) {
+    await deps.bus.publish(
+      "screen.device.online",
+      { device_id: id, zone_key: place.zone_key, last_seen_at: new Date(nowMs).toISOString() },
+      { version: 1 },
+    );
+  }
+}
+
 /**
  * Drop the current event's health of a device that has left it (moved away or deleted), so the
  * sweep never reports it offline there and a later return starts afresh.
  */
 export async function forgetHealth(kv: Kv, id: string): Promise<void> {
-  await kv.del(keys.record(id), keys.instances(id), keys.playingQuiet(id));
+  await kv.del(keys.record(id), keys.instances(id), keys.playingQuiet(id), keys.seen(id));
   await kv.removeMember(keys.online(), id);
 }
 
@@ -206,32 +242,45 @@ function sharedToken(members: string[]): boolean {
   return [...reports.values()].filter((n) => n >= 2).length >= 2;
 }
 
-/** The contract's `DeviceHealth` of each of the current event's devices `ids`. */
+async function readSeen(kv: Kv, id: string): Promise<Seen | null> {
+  const raw = await kv.get(keys.seen(id));
+  return raw === null ? null : (JSON.parse(raw) as Seen);
+}
+
+/**
+ * The contract's `DeviceHealth` of each of the current event's devices `ids`. `zoneVersions`
+ * holds the `state_version` of the zone each device shows; a device without one has no
+ * `state_lag`.
+ */
 export async function healthOf(
   kv: Kv,
   ids: string[],
   nowMs: number,
+  zoneVersions: Map<string, number> = new Map(),
 ): Promise<Map<string, Record<string, unknown>>> {
   const views = await Promise.all(
     ids.map(async (id): Promise<[string, Record<string, unknown>]> => {
-      const record = await readRecord(kv, id);
+      const [record, seen] = await Promise.all([readRecord(kv, id), readSeen(kv, id)]);
+      const lastSeen = Math.max(record?.last_seen_ms ?? -Infinity, seen?.seen_ms ?? -Infinity);
+      const onlineUntil = Math.max(record?.online_until_ms ?? 0, seen?.online_until_ms ?? 0);
+      const base = {
+        online: onlineUntil > nowMs,
+        last_seen_at: Number.isFinite(lastSeen) ? new Date(lastSeen).toISOString() : null,
+      };
       if (record === null) {
-        const none = {
-          online: false,
-          last_seen_at: null,
-          now_playing: null,
-          clock_offset_ms: null,
-        };
-        return [id, { ...none, flags: [] }];
+        return [id, { ...base, now_playing: null, clock_offset_ms: null, flags: [] }];
       }
       const flags: string[] = [];
       const offset = record.clock_offset_ms;
       if (offset !== null && Math.abs(offset) > CLOCK_DRIFT_MS) flags.push("clock_drift");
       if (sharedToken(await kv.live(keys.instances(id), nowMs))) flags.push("shared_token");
+      const zoneVersion = zoneVersions.get(id);
       const view = {
-        online: record.online_until_ms > nowMs,
-        last_seen_at: new Date(record.last_seen_ms).toISOString(),
+        ...base,
         now_playing: record.now_playing,
+        ...(zoneVersion === undefined
+          ? {}
+          : { state_lag: Math.max(0, zoneVersion - record.state_version) }),
         bundle_version: record.bundle_version,
         theme_revision: record.theme_revision,
         ...(record.audio_unlocked === undefined ? {} : { audio_unlocked: record.audio_unlocked }),

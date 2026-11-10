@@ -5,7 +5,7 @@
  */
 import type { FastifyRequest, preHandlerAsyncHookHandler } from "fastify";
 import { DeviceUnknown, checkScreenAccess, hashDeviceToken } from "@canccu/kit";
-import type { SqlClient } from "@canccu/kit";
+import type { SqlClient, TenantContext } from "@canccu/kit";
 import type { Db, DeviceRow } from "./db.js";
 import { DEVICE_COOKIE, cookie, deviceMoved, tenantOf } from "./http.js";
 
@@ -60,6 +60,43 @@ export interface DeviceCheckOptions {
   now?: () => Date;
 }
 
+/**
+ * The whole check for one device request: the match, or 401 `device_unknown`, 409
+ * `device_moved` or 403 `venue_ip_refused`. The push channel runs it again at every `ping`, so a
+ * revoked, moved or refused screen loses an open stream too.
+ */
+export async function checkDevice(
+  db: Db,
+  ctx: TenantContext,
+  token: string | undefined,
+  clientIp: string | undefined,
+  at: Date,
+  options: Pick<DeviceCheckOptions, "allowElsewhere"> = {},
+): Promise<TokenMatch> {
+  if (token === undefined) throw new DeviceUnknown(DEVICE_UNKNOWN_MESSAGE);
+  const match = await db.tenant(async (c) => {
+    const found = await findByToken(c, token, at);
+    if (found === null) return null;
+    const elsewhere =
+      found.kind === "superseded" || found.device.current_tenant_id !== ctx.tenant_id;
+    if (elsewhere && options.allowElsewhere !== true) throw deviceMoved(MOVED_MESSAGE);
+    // Before any write: a refused address must change nothing.
+    checkScreenAccess(ctx, { deviceTokenValid: true, clientIp, now: at });
+    if (found.kind === "current" && found.device.superseded_token_hashes.length > 0 && !elsewhere) {
+      // The new token has worked once here: the old ones have done their job (contracts/screen.md,
+      // Moving). Only while the matched token is still current, so a transfer in between keeps
+      // its entry.
+      await c.query(
+        "UPDATE devices SET superseded_token_hashes = '[]'::jsonb WHERE id = $1 AND token_hash = $2",
+        [found.device.id, found.device.token_hash],
+      );
+    }
+    return found;
+  });
+  if (match === null) throw new DeviceUnknown(DEVICE_UNKNOWN_MESSAGE);
+  return match;
+}
+
 /** preHandler: sets request.device or answers 401 `device_unknown`, 409 `device_moved` or 403 `venue_ip_refused`. */
 export function requireDevice(
   db: Db,
@@ -67,34 +104,14 @@ export function requireDevice(
 ): preHandlerAsyncHookHandler {
   const now = options.now ?? (() => new Date());
   return async (request: FastifyRequest) => {
-    const ctx = tenantOf(request);
-    const token = cookie(request, DEVICE_COOKIE);
-    const at = now();
-    if (token === undefined) throw new DeviceUnknown(DEVICE_UNKNOWN_MESSAGE);
-    const match = await db.tenant(async (c) => {
-      const found = await findByToken(c, token, at);
-      if (found === null) return null;
-      const elsewhere =
-        found.kind === "superseded" || found.device.current_tenant_id !== ctx.tenant_id;
-      if (elsewhere && options.allowElsewhere !== true) throw deviceMoved(MOVED_MESSAGE);
-      // Before any write: a refused address must change nothing.
-      checkScreenAccess(ctx, { deviceTokenValid: true, clientIp: request.ip, now: at });
-      if (
-        found.kind === "current" &&
-        found.device.superseded_token_hashes.length > 0 &&
-        !elsewhere
-      ) {
-        // The new token has worked once here: the old ones have done their job (contracts/screen.md,
-        // Moving). Only while the matched token is still current, so a transfer in between keeps
-        // its entry.
-        await c.query(
-          "UPDATE devices SET superseded_token_hashes = '[]'::jsonb WHERE id = $1 AND token_hash = $2",
-          [found.device.id, found.device.token_hash],
-        );
-      }
-      return found;
-    });
-    if (match === null) throw new DeviceUnknown(DEVICE_UNKNOWN_MESSAGE);
+    const match = await checkDevice(
+      db,
+      tenantOf(request),
+      cookie(request, DEVICE_COOKIE),
+      request.ip,
+      now(),
+      options,
+    );
     request.device = match.device;
     request.deviceToken = match.kind;
   };

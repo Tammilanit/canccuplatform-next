@@ -68,6 +68,8 @@ describe.skipIf(!DATABASE_URL)("heartbeat and health", () => {
       online: true,
       last_seen_at: iso(h.clock.now),
       now_playing: { region_id: "hero", widget: "playlist", item_id: "it_1", claim_id: null },
+      // The zone has no composed state yet (version 0), so a device at version 3 is not behind.
+      state_lag: 0,
       bundle_version: "b1",
       theme_revision: 2,
       audio_unlocked: true,
