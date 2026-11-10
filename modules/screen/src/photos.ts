@@ -93,7 +93,7 @@ async function removePhotos(
       `DELETE FROM screen_photos WHERE ${where.sql} RETURNING id, file`,
       where.params,
     );
-    return { result: rows, unused: rows.map((r) => r.file as string) };
+    return { result: rows, unused: rows.map((r) => r.file as string), freed: 0 };
   });
   return removed.map((r): Emit => [
     "screen.photo.removed",
@@ -180,7 +180,7 @@ export function photoRoutes(app: FastifyInstance, deps: AssetDeps & { bus: Bus }
         throw err;
       }
       const { rows } = await c.query(`${PHOTO_SELECT} WHERE id = $1`, [id]);
-      return { result: photoView(rows[0] as Record<string, unknown>), unused: [] };
+      return { result: photoView(rows[0] as Record<string, unknown>), unused: [], freed: 0 };
     });
     await publishAll(deps.bus, [["screen.photo.added", { photo_id: id, actor_user_id: actor }]]);
     return reply.status(201).send(photo);

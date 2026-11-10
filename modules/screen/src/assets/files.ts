@@ -17,7 +17,6 @@ import { pipeline } from "node:stream/promises";
 import { KitError, requireTenant, tenantFile } from "@canccu/kit";
 import type { Logger, SqlClient } from "@canccu/kit";
 import type { Db } from "../db.js";
-import { holdCount } from "./storage.js";
 import type { StorageQuota } from "./storage.js";
 
 /** Advisory-lock class of screen's file names; the two-key form never meets the migration lock. */
@@ -137,8 +136,8 @@ export async function place(
     await rm(temp.path, { force: true });
     return { name, reserved: 0 };
   }
-  // Until this transaction ends, so a recount sees these bytes in the row or not at all.
-  await holdCount(c);
+  // The caller holds the count lock until this transaction ends (write.ts), so a recount sees
+  // these bytes in the row or not at all.
   await storage.reserve(temp.bytes);
   try {
     // The row first: if the rename then fails, the caller's rollback takes the row, and no file
@@ -166,9 +165,9 @@ export interface Dropped {
 }
 
 /**
- * Deletes the rows of those `names` nothing refers to any more, in the caller's transaction; the
- * caller passes them to `collect` after it commits. Later slices add their references (renders,
- * claim sounds) to the `NOT EXISTS`.
+ * Deletes the rows of those `names` nothing refers to any more, in the caller's transaction,
+ * which gives their bytes back as its last step (write.ts); the caller passes them to `collect`
+ * after it commits. Later slices add their references (renders, claim sounds) to the `NOT EXISTS`.
  */
 export async function dropUnreferenced(c: SqlClient, names: string[]): Promise<Dropped[]> {
   if (names.length === 0) return [];
@@ -184,15 +183,16 @@ export async function dropUnreferenced(c: SqlClient, names: string[]): Promise<D
 }
 
 /**
- * After the commit that deleted their rows: unlinks each file unless an upload has brought its
- * row back meanwhile, and gives its bytes back to the quota. A failure leaves an orphan file or a
- * count too high, never a missing file; tenants' repair path fixes the count.
+ * After the commit that deleted their rows (or the rollback that never kept them): unlinks each
+ * file unless an upload has brought its row back meanwhile. The caller gave their bytes back
+ * already: before that commit (write.ts, under the count lock), or for a rolled-back upload just
+ * before calling this. A failure leaves an orphan file, never a missing one; the storage upkeep
+ * removes it.
  */
 export async function collect(
   db: Db,
   root: string,
-  storage: StorageQuota,
-  dropped: Dropped[],
+  dropped: Pick<Dropped, "name">[],
   log?: Logger,
 ): Promise<void> {
   for (const file of dropped) {
@@ -202,7 +202,6 @@ export async function collect(
         const { rows } = await c.query("SELECT 1 FROM screen_files WHERE name = $1", [file.name]);
         if (rows.length === 0) await rm(filePath(root, file.name), { force: true });
       });
-      await storage.release(file.bytes);
     } catch (err) {
       log?.warn({ err, file: file.name }, "removing an unreferenced file failed");
     }
