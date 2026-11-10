@@ -60,9 +60,11 @@ function refuse(reply: FastifyReply): FastifyReply {
   return reply.code(404).send();
 }
 
-export function sandboxRoutes(app: FastifyInstance, deps: SandboxDeps): void {
-  // Every response under the path, the kit's errors included, keeps an opaque origin, sets no
-  // cookie and paints nothing when it fails: a failed embed shows the still behind its frame.
+/**
+ * Every response under the path, the kit's errors included, keeps an opaque origin, sets no cookie
+ * and paints nothing when it fails: a failed embed shows the still behind its frame.
+ */
+export function sandboxGuard(app: FastifyInstance): void {
   app.addHook("onSend", (request, reply, payload, done) => {
     if (!decodedPath(request.url).startsWith(SANDBOX)) {
       done(null, payload);
@@ -80,7 +82,9 @@ export function sandboxRoutes(app: FastifyInstance, deps: SandboxDeps): void {
     }
     done(null, payload);
   });
+}
 
+export function sandboxRoutes(app: FastifyInstance, deps: SandboxDeps): void {
   async function serve(
     request: FastifyRequest,
     reply: FastifyReply,

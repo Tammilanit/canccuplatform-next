@@ -10,14 +10,18 @@ import { parse as parseYaml } from "yaml";
 import type { FastifyInstance, LightMyRequestResponse } from "fastify";
 import {
   AdminClient,
+  Bus,
   RightsChecker,
+  ServiceIdentity,
   TenantResolver,
   createHealth,
+  createLogger,
   runMigrations,
   withTenant,
 } from "@canccu/kit";
-import type { TenantContext } from "@canccu/kit";
-import { requireTestDatabase } from "@canccu/kit/testing";
+import type { Event, TenantContext } from "@canccu/kit";
+import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
+import type { AuditEntry } from "../src/audit.js";
 import { buildApp } from "../src/app.js";
 import { MIGRATIONS_DIR, poolDb } from "../src/db.js";
 import { putEmbed } from "../src/embeds.js";
@@ -56,6 +60,7 @@ const TENANTS: Record<string, TenantContext> = {
   "venue.test": context("venue", { info_page_mode: "venue_only" }),
   "closed.test": context("closed", { info_page_mode: "sign_in" }),
   "zeta.test": context("zeta", { admin_access: "restricted" }),
+  "archived.test": context("archived", { status: "archived" }),
   // The browser tests: a browser sends fetch metadata over plain http only to localhost.
   localhost: context("local"),
 };
@@ -63,12 +68,24 @@ const TENANTS: Record<string, TenantContext> = {
 /** Profile themes by event; only `venue` has one. */
 const PROFILES: Record<string, PartialTokens> = { venue: { colors: { primary: "#14b8a6" } } };
 
-const SESSIONS: Record<string, string[]> = { admin: ["theming.theme.write"], member: [] };
+const SESSIONS: Record<string, string[]> = {
+  admin: ["theming.theme.write"],
+  embedder: ["theming.theme.write", "theming.embeds.write"],
+  member: [],
+};
 
 function fakeTenants(url: string | URL | Request): Promise<Response> {
-  const host = new URL(url instanceof Request ? url.url : url).searchParams.get("host") ?? "";
-  const ctx = TENANTS[host];
+  const parsed = new URL(url instanceof Request ? url.url : url);
+  const byId = /^\/internal\/tenants\/tenants\/([a-z0-9-]+)$/.exec(parsed.pathname)?.[1];
+  const host = parsed.searchParams.get("host") ?? "";
+  const ctx = byId ? Object.values(TENANTS).find((t) => t.tenant_id === byId) : TENANTS[host];
   return Promise.resolve(ctx ? Response.json(ctx) : new Response("{}", { status: 404 }));
+}
+
+const SERVICE_KEY = "k".repeat(32);
+/** The service identity of another module calling theming's internal paths. */
+export function caller(module: string): Record<string, string> {
+  return new ServiceIdentity({ module, key: SERVICE_KEY }).headers("theming");
 }
 
 function fakeAdmin(_url: string | URL | Request, init?: RequestInit): Promise<Response> {
@@ -84,7 +101,7 @@ function fakeAdmin(_url: string | URL | Request, init?: RequestInit): Promise<Re
   }
   return Promise.resolve(
     Response.json({
-      user: { id: "u_1", name: "Someone" },
+      user: { id: `u_${id}`, name: "Someone" },
       rights,
       expires_at: new Date(Date.now() + 3600_000).toISOString(),
     }),
@@ -95,6 +112,12 @@ export interface Harness {
   app: FastifyInstance;
   db: Db;
   files: FileStore;
+  /** Audit entries appended so far; `auditDown` makes the next appends fail. */
+  audit: AuditEntry[];
+  auditDown: boolean;
+  /** The events theming published to one event's stream. */
+  events(tenant: string): Event[];
+  store: MemoryStreamStore;
   close(): Promise<void>;
 }
 
@@ -116,9 +139,20 @@ export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness>
   const root = await mkdtemp(join(tmpdir(), "canccu-theming-"));
   const db = poolDb(pool);
   const files = diskFiles(root);
+  const store = new MemoryStreamStore();
+  const audit: AuditEntry[] = [];
+  const state = { auditDown: false };
   const app = buildApp({
     db,
     files,
+    bus: new Bus(store, "theming"),
+    log: createLogger("theming"),
+    service: new ServiceIdentity({ module: "theming", key: SERVICE_KEY }),
+    audit: (entry) => {
+      if (state.auditDown) return Promise.reject(new Error("tenants down"));
+      audit.push(entry);
+      return Promise.resolve();
+    },
     profile: (tenant) => Promise.resolve(PROFILES[tenant]),
     rights: new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin })),
     tenants: new TenantResolver({ tenantsUrl: "http://tenants", fetch: fakeTenants }),
@@ -130,6 +164,18 @@ export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness>
     app,
     db,
     files,
+    audit,
+    store,
+    get auditDown() {
+      return state.auditDown;
+    },
+    set auditDown(down: boolean) {
+      state.auditDown = down;
+    },
+    events: (tenant) =>
+      (store.streams.get(`t:${tenant}:events:theming`) ?? []).map(
+        ([, fields]) => JSON.parse(fields.event ?? "{}") as Event,
+      ),
     close: async () => {
       await app.close();
       await pool.end();
@@ -276,6 +322,28 @@ export function get(
       "x-forwarded-for": c.ip ?? VENUE_IP,
       ...(c.session ? { cookie: `canccu_session=${c.session}` } : {}),
     },
+  });
+}
+
+/** A write as the admin pages make it: JSON body, the event's own hostname. */
+export function send(
+  h: Harness,
+  method: "POST" | "PUT" | "PATCH" | "DELETE",
+  url: string,
+  body?: unknown,
+  c: Call = {},
+): Promise<LightMyRequestResponse> {
+  return h.app.inject({
+    method,
+    url,
+    headers: {
+      host: c.host ?? "alpha.test",
+      "x-forwarded-for": c.ip ?? VENUE_IP,
+      ...(c.session === undefined ? { cookie: "canccu_session=admin" } : {}),
+      ...(c.session ? { cookie: `canccu_session=${c.session}` } : {}),
+      ...(body === undefined ? {} : { "content-type": "application/json" }),
+    },
+    ...(body === undefined ? {} : { payload: JSON.stringify(body) }),
   });
 }
 
