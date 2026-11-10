@@ -72,6 +72,9 @@ describe("scoped names", () => {
       expect(() => tenantKey("pizza")).toThrow(/at least one/);
       expect(() => tenantKey("pizza", "a:b")).toThrow(/part/);
       expect(() => tenantKey("pizza", "")).toThrow(/part/);
+      // The same reserved modules as platformKey: one set guards both helpers.
+      expect(() => tenantKey("events", "pizza")).toThrow(/reserved/);
+      expect(() => tenantKey("t", "x")).toThrow(/reserved/);
     });
     expect(() => tenantKey("pizza", "cache")).toThrow(NoTenant);
   });

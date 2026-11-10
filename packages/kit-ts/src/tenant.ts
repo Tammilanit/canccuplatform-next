@@ -9,6 +9,11 @@ import { posix } from "node:path";
 export const TENANT_ID_RE = /^[a-z][a-z0-9-]{1,30}[a-z0-9]$/;
 const MODULE_RE = /^[a-z][a-z0-9_]*$/;
 const KEY_PART_RE = /^[^:\s]+$/;
+/**
+ * `t:…` is every tenant's keys and streams and `events:…` the platform streams, so neither is a
+ * module of a key: `t:<tenant>:events:…` would read as a stream, `events:…` as platform events.
+ */
+const RESERVED_MODULES: ReadonlySet<string> = new Set(["t", "events"]);
 
 export const FILES_ROOT = "/files";
 /** Global files of a module live outside every tenant's tree; `_` is not allowed in tenant ids. */
@@ -33,6 +38,13 @@ function checkTenantId(tenant: string): string {
 
 function checkModule(module: string): string {
   if (!MODULE_RE.test(module)) throw new RangeError(`invalid module ${JSON.stringify(module)}`);
+  return module;
+}
+
+function checkKeyModule(module: string): string {
+  if (RESERVED_MODULES.has(checkModule(module))) {
+    throw new RangeError(`${module}:… is reserved for tenant keys and streams`);
+  }
   return module;
 }
 
@@ -73,21 +85,16 @@ function keyParts(parts: string[]): string {
 
 /** `t:<tenant>:<module>:<parts…>` for the current tenant: caches, locks, schedules. */
 export function tenantKey(module: string, ...parts: string[]): string {
-  checkModule(module);
-  if (module === "events") throw new RangeError("t:<tenant>:events:… is reserved for streams");
+  checkKeyModule(module);
   return `t:${requireTenant()}:${module}:${keyParts(parts)}`;
 }
 
 /**
  * `<module>:<parts…>`: a key that spans every event by design, such as screen's render queue
- * (0013 item 27). It holds ids and times only, never an event's content. The modules `t` and
- * `events` would read as tenant keys or platform streams, so they are refused.
+ * (0013 item 27). It holds ids and times only, never an event's content.
  */
 export function platformKey(module: string, ...parts: string[]): string {
-  checkModule(module);
-  if (module === "t" || module === "events") {
-    throw new RangeError(`${module}:… is reserved for tenant keys and streams`);
-  }
+  checkKeyModule(module);
   return `${module}:${keyParts(parts)}`;
 }
 

@@ -175,11 +175,26 @@ describe.skipIf(!VALKEY_URL)("render queue on Valkey", () => {
     const queue = new ValkeyRenderQueue(client);
     for (let i = 1; i <= 5; i++) await queue.enqueue("alpha", `a${i}`, i);
     await queue.enqueue("beta", "b1", 10);
+    await queue.enqueue("gamma", "g1", 11);
     const lrange = vi.spyOn(client, "lrange");
     const llen = vi.spyOn(client, "llen");
+    const piped: string[] = [];
+    const pipeline = client.pipeline.bind(client);
+    const pipelines = vi.spyOn(client, "pipeline").mockImplementation(() => {
+      const p = pipeline();
+      const add = p.llen.bind(p);
+      vi.spyOn(p, "llen").mockImplementation((key) => {
+        piped.push(String(key));
+        return add(key);
+      });
+      return p;
+    });
     const positions = await queue.positions("alpha", ["a1", "a2", "a3", "a4", "a5"]);
-    expect([...positions.values()]).toEqual([1, 3, 4, 5, 6]);
+    expect([...positions.values()]).toEqual([1, 4, 5, 6, 7]);
     expect(lrange).toHaveBeenCalledTimes(2);
-    expect(llen).toHaveBeenCalledTimes(2);
+    // The other events' lengths in one round trip; alpha's own is the list just read.
+    expect(llen).not.toHaveBeenCalled();
+    expect(pipelines).toHaveBeenCalledTimes(1);
+    expect(piped.sort()).toEqual(["t:beta:screen:render:queue", "t:gamma:screen:render:queue"]);
   });
 });

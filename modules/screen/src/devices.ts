@@ -5,14 +5,13 @@
  */
 import type { FastifyInstance } from "fastify";
 import { requireTenant } from "@canccu/kit";
-import type { Bus, RightsChecker, SqlClient } from "@canccu/kit";
+import type { Bus, Logger, RightsChecker, SqlClient } from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import type { Db, DeviceRow } from "./db.js";
-import { detachDevice } from "./detach.js";
+import { announceLeft, leaveEvent } from "./detach.js";
 import { healthOf } from "./health.js";
 import { actorOf, assertWritable, body, deviceName, needs, notFound, tenantOf } from "./http.js";
 import type { Kv } from "./kv.js";
-import { publishAll } from "./zones.js";
 
 /** A device's place in the event: its `screen_assignments` row, joined by every event read. */
 export interface Placement {
@@ -76,6 +75,7 @@ export interface DeviceDeps {
   bus: Bus;
   rights: RightsChecker;
   audit: Audit;
+  log?: Logger;
   now?: () => number;
 }
 
@@ -136,29 +136,26 @@ export function deviceRoutes(app: FastifyInstance, deps: DeviceDeps): void {
       const ctx = tenantOf(request);
       assertWritable(ctx);
       const actor = actorOf(request);
-      const [id, emits] = await db.tenant(async (c) => {
+      const left = await db.tenant(async (c) => {
         const device = await eventDevice(c, request.params.device_id, true);
-        const detached = await detachDevice(c, device.id, { audit: deps.audit, actor });
+        const side = await leaveEvent(c, device.id, { audit: deps.audit, actor }, [
+          "screen.device.revoked",
+          { device_id: device.id, actor_user_id: actor },
+        ]);
         // The token and every superseded token stop at once; the kiosk goes back to pairing.
         await c.query(
           "UPDATE devices SET revoked_at = now(), token_hash = NULL, superseded_token_hashes = '[]'::jsonb WHERE id = $1",
           [device.id],
         );
-        await c.query("DELETE FROM screen_assignments WHERE device_id = $1", [device.id]);
         await deps.audit({
           tenant_id: ctx.tenant_id,
           actor_user_id: actor,
           action: "screen.device.revoked",
           target: { type: "device", id: device.id },
         });
-        return [device.id, detached] as const;
+        return side;
       });
-      await publishAll(deps.bus, emits);
-      await deps.bus.publish(
-        "screen.device.revoked",
-        { device_id: id, actor_user_id: actor },
-        { version: 1 },
-      );
+      await announceLeft(deps, left);
       return reply.status(204).send();
     },
   );

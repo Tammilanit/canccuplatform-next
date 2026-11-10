@@ -263,6 +263,22 @@ describe.skipIf(!DATABASE_URL)("render jobs", () => {
     expect(renderer.requests).toBe(0);
   });
 
+  it("announces a cancel even when the queue cannot be tidied", async () => {
+    const deck = await addDeck();
+    const [job] = await jobsOf(deck.id);
+    const spy = vi.spyOn(h.queue, "remove").mockRejectedValueOnce(new Error("valkey is down"));
+    try {
+      const res = await call(h, "DELETE", `/api/screen/render-jobs/${job?.id}`, admin());
+      expect(res.statusCode).toBe(204);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(events(h, "screen.render.cancelled").at(-1)).toMatchObject({
+      job_id: job?.id,
+      state: "cancelled",
+    });
+  });
+
   it("cancels a running job by hanging up on the renderer", async () => {
     renderer.behaviour = "hang";
     const deck = await addDeck();

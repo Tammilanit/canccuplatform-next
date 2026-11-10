@@ -133,6 +133,6 @@ describe.skipIf(!DATABASE_URL)("a moved device finds its new home", () => {
     const url = (await home(token)).json<{ url: string }>().url;
     expect((await move(id, "alpha")).statusCode).toBe(200);
     const res = await redeem(transferCode(url));
-    expect([res.statusCode, code(res)]).toEqual([404, "not_found"]);
+    expect([res.statusCode, code(res)]).toEqual([400, "code_invalid"]);
   });
 });
