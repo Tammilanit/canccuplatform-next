@@ -37,7 +37,7 @@ describe.skipIf(!DATABASE_URL)("theming publish and revisions", () => {
     h.audit.length = 0;
     h.auditDown = false;
     h.store.streams.clear();
-    for (const tenant of ["alpha", "beta"]) {
+    for (const tenant of ["alpha", "beta", "venue"]) {
       await withTenant(tenant, () =>
         h.db.tenant(async (c) => {
           for (const table of ["drafts", "revisions", "file_refs", "embed_files", "pins"]) {

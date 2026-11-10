@@ -1,11 +1,14 @@
 /** The draft's API: start, read, discard, tokens and layouts (contracts/theming.openapi.yaml, draft). */
 import type { FastifyInstance } from "fastify";
+import { requireTenant } from "@canccu/kit";
 import type { RightsChecker } from "@canccu/kit";
+import type { ProfileSource } from "./profile.js";
 import type { Manifest } from "./checks.js";
 import type { Db } from "./db.js";
 import { createDraft, draftBody, editDraft, loadDraft, lockDraft, removeDraft } from "./drafts.js";
 import type { DraftSource } from "./drafts.js";
 import {
+  WRITE,
   actorOf,
   assertWritable,
   invalidRequest,
@@ -20,9 +23,8 @@ import type { TokensEdit } from "./schema.js";
 export interface DraftDeps {
   db: Db;
   rights: RightsChecker;
+  profile: ProfileSource;
 }
-
-const WRITE = "theming.theme.write";
 
 function draftSource(body: unknown): DraftSource {
   const b = (body ?? {}) as Record<string, unknown>;
@@ -50,9 +52,10 @@ function mergeTokens(manifest: Manifest, edit: TokensEdit["tokens"]): Manifest {
   }
   const motion = edit.motion === undefined ? tokens.motion : edit.motion;
   if (motion !== undefined && motion !== null) merged.motion = motion;
-  // Any token but motion is styling, which makes the theme advanced (contracts/theming.md, Advanced mode).
-  const styling = (["colors", "fonts", "sizes"] as const).some(
-    (g) => Object.keys(edit[g] ?? {}).length > 0,
+  // Setting any token but motion is styling, which makes the theme advanced (contracts/theming.md,
+  // Advanced mode); removing one only goes back towards what the simple mode generates.
+  const styling = (["colors", "fonts", "sizes"] as const).some((g) =>
+    Object.values(edit[g] ?? {}).some((v) => v !== null),
   );
   return { ...manifest, tokens: merged, ...(styling ? { mode: "advanced" } : {}) };
 }
@@ -73,7 +76,8 @@ export function draftRoutes(app: FastifyInstance, deps: DraftDeps): void {
   app.post("/api/theming/draft", writer, async (request, reply) => {
     assertWritable(request);
     const source = draftSource(request.body);
-    const row = await deps.db.tenant((c) => createDraft(c, source, actorOf(request)));
+    const profile = source.from === "current" ? await deps.profile(requireTenant()) : undefined;
+    const row = await deps.db.tenant((c) => createDraft(c, source, actorOf(request), profile));
     return reply.status(201).send(draftBody(row));
   });
 

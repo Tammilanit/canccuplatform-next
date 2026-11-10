@@ -15,6 +15,8 @@ export const draftExists = (): KitError =>
 export const versionConflict = (what: string): KitError =>
   error(409, "version_conflict", `The ${what} was changed by someone else. Read it again.`);
 
+export const WRITE = "theming.theme.write";
+
 export function tenantOf(request: FastifyRequest): TenantContext {
   // installTenancy sets it on every route of this module; null would be a wiring bug.
   if (request.tenant === null) throw notFound();

@@ -8,6 +8,7 @@ import type {
   Bus,
   CheckFn,
   Health,
+  Logger,
   RightsChecker,
   ServiceIdentity,
   StreamStore,
@@ -31,6 +32,7 @@ export interface ThemingDeps {
   tenants: TenantResolver;
   bus: Bus;
   audit: Audit;
+  log: Logger;
   /** Verifies the modules that call /internal/theming/. */
   service: ServiceIdentity;
   health: Health;

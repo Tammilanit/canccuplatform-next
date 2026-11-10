@@ -10,6 +10,7 @@ export type ProfileSource = (tenant: string) => Promise<PartialTokens | undefine
  * consumer groups yet, so an event that arrives while Valkey blips is gone).
  */
 const MAX_AGE_MS = 60_000;
+const RETRY_MS = 10_000;
 
 export interface AdminProfile {
   read: ProfileSource;
@@ -19,8 +20,9 @@ export interface AdminProfile {
 
 /**
  * Admin's `GET /internal/admin/profile/theme`, kept per event in memory: every revision 0 read and
- * every served revision 0 file asks for it. While admin cannot answer, revision 0 is the platform
- * defaults and nothing is kept, so the next read asks again.
+ * every served revision 0 file asks for it. While admin cannot answer, the last answer stays in use
+ * (so revision 0's file names do not change under pages already loaded), or the platform defaults
+ * without one, and admin is asked again only after RETRY_MS, so reads do not each wait for it.
  *
  * The profile's `logo_main` is not read yet: theming may store a logo only through the image
  * checks and the storage quota of the uploads slice (#242).
@@ -57,7 +59,11 @@ export function adminProfile(
       const hit = kept.get(tenant);
       if (hit !== undefined && now() - hit.at < MAX_AGE_MS) return hit.theme;
       const answer = await ask(tenant);
-      if (answer === undefined) return undefined;
+      if (answer === undefined) {
+        const theme = hit?.theme;
+        kept.set(tenant, { theme, at: now() - MAX_AGE_MS + RETRY_MS });
+        return theme;
+      }
       kept.set(tenant, { theme: answer.theme, at: now() });
       return answer.theme;
     },

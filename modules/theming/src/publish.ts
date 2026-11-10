@@ -8,7 +8,8 @@ import type { Manifest } from "./checks.js";
 import { copyOwned } from "./drafts.js";
 import type { FileStore } from "./files.js";
 import { SERVED, colorInt } from "./theme.js";
-import { adminTokens, fillTokens, platformTokens, tokensCss } from "./tokens.js";
+import { versionConflict } from "./http.js";
+import { adminTokens, fillTokens, tokensCss } from "./tokens.js";
 import type { PartialTokens, Tokens } from "./tokens.js";
 
 /** The parts `theming.theme.published` names in `changed`, in the contract's order. */
@@ -33,6 +34,10 @@ export async function lockHistory(c: SqlClient): Promise<number> {
   await c.query(
     `SELECT pg_advisory_xact_lock(hashtext('canccu_theming_history:' || current_setting('canccu.tenant')))`,
   );
+  return currentRevision(c);
+}
+
+export async function currentRevision(c: SqlClient): Promise<number> {
   const { rows } = await c.query(`SELECT coalesce(max(revision), 0) AS n FROM theming_revisions`);
   return (rows[0] as { n: number }).n;
 }
@@ -105,8 +110,14 @@ export interface PublishInput {
   source: string;
   restoredFrom: number | null;
   actor: string;
-  /** Called when the embeds differ from the current revision's, before anything is written. */
-  embedsChanged: () => Promise<void>;
+  /**
+   * Whether the caller checked `theming.embeds.write` up front (`embedsDiffer`, before any lock).
+   * Embeds that differ only under the lock changed meanwhile: 409, never a call to admin while
+   * the event's history is locked.
+   */
+  embedsAllowed: boolean;
+  /** Revision 0's tokens (the defaults with the profile's theme), for `changed` at the first publish. */
+  zeroTokens: Tokens;
 }
 
 export interface Published {
@@ -120,6 +131,31 @@ export interface Published {
   embedColor: number;
 }
 
+/**
+ * Whether publishing `manifest` with the files and embeds of `source` changes the embeds of the
+ * current revision. Read without locks, so the embeds right can be checked before any are taken.
+ */
+export async function embedsDiffer(
+  c: SqlClient,
+  source: string,
+  manifest: Manifest,
+): Promise<boolean> {
+  const current = await currentRevision(c);
+  const embedsOf = async (owner: string): Promise<string[]> =>
+    (await holdings(c, owner, {}, {} as RevisionTokens)).embeds;
+  let before: unknown = undefined;
+  if (current > 0) {
+    const { rows } = await c.query(`SELECT manifest FROM theming_revisions WHERE revision = $1`, [
+      current,
+    ]);
+    before = (rows[0] as { manifest: Manifest }).manifest.embeds;
+  }
+  return (
+    !isDeepStrictEqual(before, manifest.embeds) ||
+    !isDeepStrictEqual(current > 0 ? await embedsOf(`r:${current}`) : [], await embedsOf(source))
+  );
+}
+
 /** Writes the next revision in the caller's transaction, which must hold `lockHistory`. */
 export async function writeRevision(
   c: SqlClient,
@@ -130,7 +166,7 @@ export async function writeRevision(
   const tokens = revisionTokens(input.manifest);
   const before: Holdings =
     current === 0
-      ? { manifest: {}, tokens: platformTokens(), files: [], embeds: [] }
+      ? { manifest: {}, tokens: input.zeroTokens, files: [], embeds: [] }
       : await (async () => {
           const { rows } = await c.query(
             `SELECT manifest, tokens FROM theming_revisions WHERE revision = $1`,
@@ -141,7 +177,7 @@ export async function writeRevision(
         })();
   const after = await holdings(c, input.source, input.manifest, tokens);
   const changed = changedParts(before, after);
-  if (changed.includes("embeds")) await input.embedsChanged();
+  if (changed.includes("embeds") && !input.embedsAllowed) throw versionConflict("theme");
 
   const revision = current + 1;
   // Generated once here, so every later read of the revision is a pure read of addresses (D4).
@@ -173,19 +209,7 @@ export async function writeRevision(
       [owner, file],
     );
   }
-  if (input.source === "draft") {
-    await c.query(
-      `INSERT INTO theming_file_refs (owner, file) SELECT $1, file FROM theming_file_refs WHERE owner = 'draft' ON CONFLICT DO NOTHING`,
-      [owner],
-    );
-    await c.query(
-      `INSERT INTO theming_embed_files (owner, embed, path, file, bytes, entry)
-       SELECT $1, embed, path, file, bytes, entry FROM theming_embed_files WHERE owner = 'draft'`,
-      [owner],
-    );
-  } else {
-    await copyOwned(c, Number(input.source.slice(2)), owner);
-  }
+  await copyOwned(c, input.source, owner);
   const names = (h: Holdings): string[] => Object.keys(h.manifest.embeds ?? {}).sort();
   return {
     revision,

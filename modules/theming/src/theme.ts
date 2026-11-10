@@ -97,12 +97,10 @@ function fromRevision(row: RevisionRow, embeds: EmbedRef[]): ResolvedTheme {
   };
 }
 
-/** The highest revision, or undefined: restore and clone publish a new one, never rewind. */
-export function latestRevision(client: SqlClient): Promise<ResolvedTheme | undefined> {
-  return resolvedRevision(client);
-}
-
-/** One revision resolved like the current one (`GET /internal/theming/revisions/{revision}`), or the highest. */
+/**
+ * One revision resolved like the current one (`GET /internal/theming/revisions/{revision}`), or
+ * without `revision` the highest: restore and clone publish a new one, never rewind.
+ */
 export async function resolvedRevision(
   client: SqlClient,
   revision?: number,

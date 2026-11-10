@@ -5,6 +5,8 @@ import { COLOR_TOKENS } from "@canccu/ui";
 import { checkManifest } from "./checks.js";
 import type { Manifest, Problem } from "./checks.js";
 import { draftExists, noDraft, notFound, versionConflict } from "./http.js";
+import { fillTokens } from "./tokens.js";
+import type { PartialTokens } from "./tokens.js";
 
 export interface DraftRow {
   draft_version: number;
@@ -62,30 +64,70 @@ export function defaultManifest(): Manifest {
 export type DraftSource =
   { from: "defaults" } | { from: "current" } | { from: "revision"; revision: number };
 
-/** What a revision holds besides the files publish generated for it (owner `r:<n>`). */
-export async function copyOwned(c: SqlClient, revision: number, to: string): Promise<void> {
-  const owner = `r:${revision}`;
+/**
+ * Copies what `from` (`draft` or `r:<n>`) holds to `to`: its file references and embed files, the
+ * one copy rule of draft creation, publish and restore. A revision's generated token CSS stays
+ * behind: the next revision generates its own.
+ */
+export async function copyOwned(c: SqlClient, from: string, to: string): Promise<void> {
   await c.query(
     `INSERT INTO theming_file_refs (owner, file)
-     SELECT $2, f.file FROM theming_file_refs f, theming_revisions r
-      WHERE f.owner = $1 AND r.revision = $3
-        AND f.file NOT IN (r.tokens_css, r.admin_tokens_css, coalesce(r.css, ''))
+     SELECT $2, f.file FROM theming_file_refs f
+       LEFT JOIN theming_revisions r ON 'r:' || r.revision = f.owner
+      WHERE f.owner = $1
+        AND (r.revision IS NULL OR f.file NOT IN (r.tokens_css, r.admin_tokens_css, coalesce(r.css, '')))
      ON CONFLICT DO NOTHING`,
-    [owner, to, revision],
+    [from, to],
   );
   await c.query(
     `INSERT INTO theming_embed_files (owner, embed, path, file, bytes, entry)
      SELECT $2, embed, path, file, bytes, entry FROM theming_embed_files WHERE owner = $1`,
-    [owner, to],
+    [from, to],
   );
+}
+
+/**
+ * Revision 0 as a manifest: the defaults with the profile's `theme` over them, as
+ * `GET /api/theming/current` shows it. Fonts or sizes are styling the simple mode cannot make, so
+ * they make the draft advanced; colours stay simple, with the brand taken from them.
+ */
+export function profileManifest(profile: PartialTokens | undefined): Manifest {
+  const manifest = defaultManifest();
+  if (profile === undefined) return manifest;
+  const filled = fillTokens(profile);
+  const given = (group: "fonts" | "sizes"): Record<string, string> =>
+    Object.fromEntries(
+      Object.keys(profile[group] ?? {})
+        .filter((k) => filled[group][k] !== undefined)
+        .map((k) => [k, filled[group][k] as string]),
+    );
+  const [fonts, sizes] = [given("fonts"), given("sizes")];
+  const advanced = Object.keys(fonts).length + Object.keys(sizes).length > 0;
+  const brand = manifest.brand as Record<string, string>;
+  return {
+    ...manifest,
+    mode: advanced ? "advanced" : "simple",
+    brand: {
+      ...brand,
+      primary: filled.colors.primary ?? brand.primary,
+      accent: filled.colors.accent ?? brand.accent,
+    },
+    tokens: {
+      colors: filled.colors,
+      ...(Object.keys(fonts).length > 0 ? { fonts } : {}),
+      ...(Object.keys(sizes).length > 0 ? { sizes } : {}),
+    },
+  };
 }
 
 export async function createDraft(
   c: SqlClient,
   source: DraftSource,
   actor: string,
+  /** The profile's `theme`, which revision 0 shows: a draft from current at revision 0 keeps it. */
+  profile: PartialTokens | undefined,
 ): Promise<DraftRow> {
-  let manifest = defaultManifest();
+  let manifest = source.from === "current" ? profileManifest(profile) : defaultManifest();
   let base: number | null = null;
   if (source.from !== "defaults") {
     const { rows } = await c.query(
@@ -95,7 +137,7 @@ export async function createDraft(
       source.from === "current" ? [] : [source.revision],
     );
     const row = rows[0] as { revision: number; manifest: Manifest } | undefined;
-    // Without a published revision, the current theme is the defaults (revision 0).
+    // Without a published revision, the current theme is revision 0, the profile's manifest.
     if (row === undefined && source.from === "revision") throw notFound();
     if (row !== undefined) [manifest, base] = [row.manifest, row.revision];
   }
@@ -106,7 +148,7 @@ export async function createDraft(
   );
   const created = rows[0] as DraftRow | undefined;
   if (created === undefined) throw draftExists();
-  if (base !== null) await copyOwned(c, base, "draft");
+  if (base !== null) await copyOwned(c, `r:${base}`, "draft");
   return created;
 }
 

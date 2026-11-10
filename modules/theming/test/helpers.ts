@@ -15,6 +15,7 @@ import {
   ServiceIdentity,
   TenantResolver,
   createHealth,
+  createLogger,
   runMigrations,
   withTenant,
 } from "@canccu/kit";
@@ -145,6 +146,7 @@ export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness>
     db,
     files,
     bus: new Bus(store, "theming"),
+    log: createLogger("theming"),
     service: new ServiceIdentity({ module: "theming", key: SERVICE_KEY }),
     audit: (entry) => {
       if (state.auditDown) return Promise.reject(new Error("tenants down"));

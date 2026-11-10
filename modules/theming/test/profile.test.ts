@@ -44,7 +44,8 @@ describe("adminProfile", () => {
     expect(await profile.read("unknown")).toBeUndefined();
   });
 
-  it("falls back to the platform defaults while admin is down, and asks again next time", async () => {
+  it("falls back to the platform defaults while admin is down, asking again after a pause", async () => {
+    let now = 0;
     let up = false;
     const { calls, fetchFn } = fakeAdmin({
       demo: () =>
@@ -52,9 +53,30 @@ describe("adminProfile", () => {
           ? Response.json({ theme: { colors: { primary: "#14b8a6" } }, logo_main: null })
           : new Response("{}", { status: 502 }),
     });
-    const profile = adminProfile("http://admin:8080", service, { fetch: fetchFn });
+    const profile = adminProfile("http://admin:8080", service, { fetch: fetchFn, now: () => now });
     expect(await profile.read("demo")).toBeUndefined();
     up = true;
+    expect(await profile.read("demo")).toBeUndefined();
+    expect(calls).toHaveLength(1);
+    now += 11_000;
+    expect(await profile.read("demo")).toEqual({ colors: { primary: "#14b8a6" } });
+    expect(calls).toHaveLength(2);
+  });
+
+  it("keeps serving the last answer while admin is down", async () => {
+    let now = 0;
+    let up = true;
+    const { calls, fetchFn } = fakeAdmin({
+      demo: () =>
+        up
+          ? Response.json({ theme: { colors: { primary: "#14b8a6" } }, logo_main: null })
+          : new Response("{}", { status: 502 }),
+    });
+    const profile = adminProfile("http://admin:8080", service, { fetch: fetchFn, now: () => now });
+    await profile.read("demo");
+    up = false;
+    now += 61_000;
+    expect(await profile.read("demo")).toEqual({ colors: { primary: "#14b8a6" } });
     expect(await profile.read("demo")).toEqual({ colors: { primary: "#14b8a6" } });
     expect(calls).toHaveLength(2);
   });

@@ -137,6 +137,15 @@ describe.skipIf(!DATABASE_URL)("theming drafts", () => {
       expect(draft.manifest.tokens.sizes).toEqual({ radius: "0" });
     });
 
+    it("keeps simple when tokens are only removed", async () => {
+      await fresh();
+      const res = await send(h, "PATCH", "/api/theming/draft/tokens", {
+        draft_version: 1,
+        tokens: { colors: { accent: null } },
+      });
+      expect(res.json<DraftBody>().mode).toBe("simple");
+    });
+
     it("keeps simple when only motion changes", async () => {
       await fresh();
       const res = await send(h, "PATCH", "/api/theming/draft/tokens", {

@@ -101,6 +101,7 @@ async function main(): Promise<void> {
     tenants,
     bus: new Bus(store, config.module, log),
     audit: tenantsAudit(tenantsUrl, service),
+    log,
     service,
     ipMode,
     health: themingHealth({

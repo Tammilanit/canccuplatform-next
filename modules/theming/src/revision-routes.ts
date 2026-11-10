@@ -1,14 +1,15 @@
 /** Publish, restore, the history and the pinned read (contracts/theming.openapi.yaml, draft and revisions). */
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { ServiceForbidden, isTenantId, requireTenant, withTenant } from "@canccu/kit";
-import type { Bus, RightsChecker, SqlClient, TenantResolver } from "@canccu/kit";
+import type { Bus, Logger, RightsChecker, SqlClient, TenantResolver } from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import { checkManifest, hasError } from "./checks.js";
 import type { Manifest } from "./checks.js";
 import type { Db } from "./db.js";
-import { lockDraft, removeDraft } from "./drafts.js";
+import { loadDraft, lockDraft, removeDraft } from "./drafts.js";
 import type { FileStore } from "./files.js";
 import {
+  WRITE,
   actorOf,
   assertWritable,
   invalidRequest,
@@ -17,7 +18,9 @@ import {
   positiveInt,
   versionConflict,
 } from "./http.js";
-import { lockHistory, writeRevision } from "./publish.js";
+import { currentRevision, embedsDiffer, lockHistory, writeRevision } from "./publish.js";
+import type { ProfileSource } from "./profile.js";
+import { fillTokens } from "./tokens.js";
 import type { Published, PublishInput } from "./publish.js";
 import { resolvedRevision } from "./theme.js";
 
@@ -27,9 +30,10 @@ export interface RevisionDeps {
   rights: RightsChecker;
   bus: Bus;
   audit: Audit;
+  profile: ProfileSource;
+  log: Logger;
 }
 
-const WRITE = "theming.theme.write";
 const EMBEDS = "theming.embeds.write";
 
 /** `{"<field>": <positive integer>}` and nothing else. */
@@ -86,6 +90,8 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
   /** Publish or restore: the revision, its audit entry, then (after commit) its event. */
   async function publish(
     request: FastifyRequest,
+    /** What would be published, read without locks; undefined when there is nothing (404 follows). */
+    sourceOf: (c: SqlClient) => Promise<{ source: string; manifest: Manifest } | undefined>,
     write: (
       c: SqlClient,
       base: Omit<PublishInput, "manifest" | "source" | "restoredFrom">,
@@ -93,11 +99,17 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
   ): Promise<Record<string, unknown>> {
     const actor = actorOf(request);
     // Whoever changes embeds needs the embeds right as well, also through a publish or restore.
-    const embedsChanged = async (): Promise<void> => {
-      await deps.rights.check(request.headers.cookie, EMBEDS);
-    };
+    // Checked before any lock: the check may call admin, which must never hold up the event's history.
+    const embedsAllowed = await deps.db.tenant(async (c) => {
+      const s = await sourceOf(c);
+      return s !== undefined && embedsDiffer(c, s.source, s.manifest);
+    });
+    if (embedsAllowed) await deps.rights.check(request.headers.cookie, EMBEDS);
+    const zeroTokens = fillTokens((await deps.profile(requireTenant())) ?? {});
     const [published, body] = await deps.db.tenant(async (c) => {
-      const p = await write(c, { actor, embedsChanged });
+      const p = await write(c, { actor, embedsAllowed, zeroTokens });
+      // Appended before commit, so no revision exists unaudited. The reverse can happen: if the
+      // commit then fails, the log holds an entry for a number the next publish takes again.
       const restored =
         p.restoredFrom === null ? {} : { restored_from: { old: null, new: p.restoredFrom } };
       await deps.audit({
@@ -113,20 +125,26 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
       });
       return [p, await oneRevision(c, p.revision)] as const;
     });
-    await deps.bus.publish(
-      "theming.theme.published",
-      {
-        revision: published.revision,
-        restored_from: published.restoredFrom,
-        cloned_from: null,
-        changed: published.changed,
-        tokens_css_url: published.tokensCss,
-        css_url: null,
-        embed_color: published.embedColor,
-        actor_user_id: actor,
-      },
-      { version: 1 },
-    );
+    // After commit: a lost event must not turn a committed revision into an error the client
+    // retries (it would meet no_draft or a conflict). Surfaces still catch up through `current`.
+    await deps.bus
+      .publish(
+        "theming.theme.published",
+        {
+          revision: published.revision,
+          restored_from: published.restoredFrom,
+          cloned_from: null,
+          changed: published.changed,
+          tokens_css_url: published.tokensCss,
+          css_url: null,
+          embed_color: published.embedColor,
+          actor_user_id: actor,
+        },
+        { version: 1 },
+      )
+      .catch((err: unknown) => {
+        deps.log.error({ err, revision: published.revision }, "theming.theme.published not sent");
+      });
     return body;
   }
 
@@ -134,7 +152,11 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
     assertWritable(request);
     const version = bodyInt(request.body, "draft_version");
     try {
-      const body = await publish(request, async (c, base) => {
+      const fromDraft = async (c: SqlClient) => {
+        const draft = await loadDraft(c);
+        return draft && { source: "draft", manifest: draft.manifest };
+      };
+      const body = await publish(request, fromDraft, async (c, base) => {
         const draft = await lockDraft(c, version);
         // Checked again: the stored problems may come from an older module version.
         const problems = checkManifest(draft.manifest);
@@ -169,13 +191,17 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
       assertWritable(request);
       const from = positiveInt(request.params.revision, "revision") as number;
       const expected = bodyInt(request.body, "current_revision");
-      const body = await publish(request, async (c, base) => {
-        const current = await lockHistory(c);
+      const fromRevision = async (c: SqlClient) => {
         const { rows } = await c.query(
           `SELECT manifest FROM theming_revisions WHERE revision = $1`,
           [from],
         );
-        const source = rows[0] as { manifest: Manifest } | undefined;
+        const row = rows[0] as { manifest: Manifest } | undefined;
+        return row && { source: `r:${from}`, manifest: row.manifest };
+      };
+      const body = await publish(request, fromRevision, async (c, base) => {
+        const current = await lockHistory(c);
+        const source = await fromRevision(c);
         if (source === undefined) throw notFound();
         if (current !== expected) throw versionConflict("theme");
         return writeRevision(c, deps.files, current, {
@@ -201,11 +227,8 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
           `${SUMMARY} WHERE $1::integer IS NULL OR r.revision < $1 ORDER BY r.revision DESC LIMIT $2`,
           [before ?? null, limit],
         );
-        const current = await c.query(
-          `SELECT coalesce(max(revision), 0) AS n FROM theming_revisions`,
-        );
         return {
-          current_revision: (current.rows[0] as { n: number }).n,
+          current_revision: await currentRevision(c),
           revisions: (rows as unknown as SummaryRow[]).map((r) => revisionBody(r, false)),
         };
       });
