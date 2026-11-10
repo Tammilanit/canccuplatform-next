@@ -3,7 +3,7 @@ event hostname (contracts/agenda.md, Reading). The kit's service identity guards
 
 from __future__ import annotations
 
-from canccu_kit import KitError, TenantResolver, is_tenant_id, tenant_scope
+from canccu_kit import TenantResolver, tenant_scope
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
@@ -12,6 +12,7 @@ from . import model, store
 from .deps import deps
 from .effective import read_channels
 from .items import render
+from .kinds import not_found
 
 
 async def all_items(request: Request) -> Response:
@@ -19,8 +20,9 @@ async def all_items(request: Request) -> Response:
     it again after an `agenda_version` jump or a clone, whose items no event carries."""
     tenant_id = request.query_params.get("tenant_id", "")
     resolver: TenantResolver = request.app.state.tenants
-    if not is_tenant_id(tenant_id) or await resolver.by_id(tenant_id) is None:
-        raise KitError("no such event", status=404, code="not_found")
+    # by_id answers None for an id that is not one, before any request.
+    if await resolver.by_id(tenant_id) is None:
+        raise not_found("event")
     d = deps(request)
     with tenant_scope(tenant_id):
         channels = await read_channels(d)
