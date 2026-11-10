@@ -21,7 +21,8 @@ import type { Entry, Fanout, Message, Orientation } from "./store.js";
 export const PING_MS = 15_000;
 /** A screen that reads nothing for this long is gone; its buffered frames are dropped with it. */
 const MAX_BUFFERED_BYTES = 4 * 1024 * 1024;
-const LAST_ID_RE = /^([a-z0-9][a-z0-9_-]{1,31})\.([A-Za-z0-9]{1,32})\.([0-9]{1,18})$/;
+// The epoch is base64url (src/zones.ts, newEpoch), so `-` and `_` belong to it; neither part has a `.`.
+const LAST_ID_RE = /^([a-z0-9][a-z0-9_-]{1,31})\.([A-Za-z0-9_-]{1,32})\.([0-9]{1,18})$/;
 
 export interface StreamDeps extends ComposeDeps {
   fanout: Fanout;

@@ -86,6 +86,30 @@ describe.skipIf(!DATABASE_URL)("the push channel", () => {
     }
   });
 
+  it("resumes a zone whose epoch has the base64url `-` and `_`", async () => {
+    // Epochs are random base64url, so about one zone in five has one of these characters.
+    const zone = { key: "foyer", name: "Foyer" };
+    expect(
+      (await call(h, "POST", "/api/screen/zones", { session: "admin", body: zone })).statusCode,
+    ).toBe(201);
+    await h.pool.query(
+      "UPDATE screen_zones SET epoch = '-a_B-c_D' WHERE tenant_id = 'alpha' AND key = 'foyer'",
+    );
+    const { token } = await screen("foyer");
+    const sse = open(token);
+    const first = await sse.next("state");
+    expect(first.id).toMatch(/^foyer\.-a_B-c_D\.\d+$/);
+    sse.close();
+    await sse.ended;
+    await ticker("Mind the step");
+    await call(h, "GET", "/api/screen/device/state", { cookies: { canccu_device: token } });
+    const resumed = open(token, first.id);
+    const missed = await resumed.next();
+    expect(missed.event).toBe("ticker");
+    expect(missed.data.ticker).toMatchObject({ text: "Mind the step" });
+    resumed.close();
+  });
+
   it("rebuilds a zone with streams on the refresh too, in one container per period", async () => {
     const { token } = await screen();
     const sse = open(token);

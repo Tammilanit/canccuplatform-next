@@ -5,6 +5,8 @@
  */
 import { chooseLayout, roleOf } from "./layouts.js";
 import type { Area, Layout, LayoutRegion, Props, Role, WidgetEntry } from "./layouts.js";
+import { partsOf } from "./parts.js";
+import type { HeaderMode, HubQrMode, Part } from "./parts.js";
 import { countdownFields, viewOf } from "./widgets.js";
 import type { View, ZoneFacts } from "./widgets.js";
 
@@ -12,6 +14,10 @@ export interface ZoneSetup {
   key: string;
   layoutId: string | null;
   regions: Record<string, Record<string, unknown>>;
+  /** Absent or null: the layout's `header`, else `separate`. */
+  header?: HeaderMode | null;
+  /** Absent: `always`. */
+  hubQr?: HubQrMode;
 }
 
 export interface BuildInput {
@@ -79,11 +85,31 @@ function shuffled(order: number[], seed: string): number[] {
   return out;
 }
 
-function region(source: LayoutRegion, input: BuildInput): RegionView {
+/** A region as the zone sets it, drawn whole or as its parts. */
+function regionsOf(source: LayoutRegion, layout: Layout, input: BuildInput): RegionView[] {
   const setting = input.zone.regions[source.id] ?? {};
   const entries = Array.isArray(setting.widgets)
     ? (setting.widgets as WidgetEntry[])
     : source.widgets;
+  const role = roleOf(source.id, setting.role);
+  const modes = {
+    header: input.zone.header ?? layout.header ?? "separate",
+    hubQr: input.zone.hubQr ?? "always",
+  };
+  const ids = new Set(layout.regions.map((r) => r.id));
+  return partsOf(source, entries, role, modes, ids).map((part) =>
+    region(part, source, setting, part.hubQr ? null : role, input),
+  );
+}
+
+function region(
+  part: Part,
+  source: LayoutRegion,
+  setting: Record<string, unknown>,
+  role: Role | null,
+  input: BuildInput,
+): RegionView {
+  const entries = part.entries;
   const zoneDwell = clampDwell(setting.dwell_seconds);
   const widgets = entries.map((entry): WidgetView => {
     const props: Props = entry.props ?? {};
@@ -112,14 +138,14 @@ function region(source: LayoutRegion, input: BuildInput): RegionView {
   const idle = IDLES.includes(setting.idle as Idle) ? (setting.idle as Idle) : "logo";
   const next = idle === "next" ? countdownFields(input.facts) : null;
   return {
-    id: source.id,
-    role: roleOf(source.id, setting.role),
-    area: source.area,
+    id: part.id,
+    role,
+    area: part.area,
     layer: source.layer ?? 0,
     rotation,
     order:
       rotation === "shuffle"
-        ? shuffled(sequence, `${input.zone.key}:${source.id}:${cycle}`)
+        ? shuffled(sequence, `${input.zone.key}:${part.id}:${cycle}`)
         : sequence,
     cycle_started_at: new Date(cycle * cycleMs).toISOString(),
     idle,
@@ -156,7 +182,7 @@ export function buildRegions(input: BuildInput): { layout: Layout; regions: Regi
     themeLayouts: input.themeLayouts,
     portrait: input.portrait,
   });
-  const regions = layout.regions.map((r) => region(r, input));
+  const regions = layout.regions.flatMap((r) => regionsOf(r, layout, input));
   return {
     layout,
     regions: [
