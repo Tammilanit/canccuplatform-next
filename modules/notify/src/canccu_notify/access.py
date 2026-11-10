@@ -10,6 +10,7 @@ from starlette.requests import Request
 from .deps import deps
 
 TOPICS_WRITE = "notify.topics.write"
+STATS_READ = "notify.stats.read"
 
 
 def client_ip(request: Request) -> str | None:

@@ -17,7 +17,10 @@ NAV = (
 )
 # The "Event" menu (brief P4, plan issue-187 D9): the event's pages, served by the modules that
 # own them; (href, label, the rights of which any one opens the page).
-EVENT_NAV = (("/agenda/", "Run of show", ("agenda.items.write", "agenda.crew.read")),)
+EVENT_NAV = (
+    ("/agenda/", "Run of show", ("agenda.items.write", "agenda.crew.read")),
+    ("/notify/admin/topics", "Notifications", ("notify.topics.write", "notify.stats.read")),
+)
 SIGN_OUT = (
     f"<form method=post action={BASE}/sign-out style='display:inline'>"
     "<button>Sign out</button></form>"

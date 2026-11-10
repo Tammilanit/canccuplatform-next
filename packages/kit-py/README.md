@@ -86,7 +86,7 @@ async def edit(request):
 Raise `KitError("text", status=400, code="slide_invalid")` (or `MissingRight`, `NotSignedIn`, …) and the adapter answers `{"error": {"code", "message"}}`. Unexpected errors become 500 `internal_error`, with the details only in the log.
 
 ### Errors from admin
-`SettingsClient` only reads: a write is a person's, on admin's API on the event's own hostname, where admin learns the tenant. An admin that can't be reached gives `AdminUnavailable` (503 `admin_unavailable`).
+A person writes settings on admin's API. `SettingsClient.write(values, actor_user_id=…)` sets some of the module's own keys for the current tenant (`PATCH /internal/admin/settings/{module}`), only for settings its contract makes the same values as something it stores; a stale version raises `AdminError` `version_conflict`, and the caller reloads and decides again. An admin that can't be reached gives `AdminUnavailable` (503 `admin_unavailable`).
 
 ## Tenancy
 Every event is a tenant on one shared stack ([0013](../../docs/decisions/0013-multi-tenant-core.md), [contracts/tenants.md](../../contracts/tenants.md)). The kit makes a module tenant-safe by construction: everything that stores or reads data needs a tenant, and it comes only from the request's hostname or the bus message.

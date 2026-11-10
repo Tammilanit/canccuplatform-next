@@ -86,6 +86,43 @@ def create_app(
         with tenant_scope(tenant):
             return JSONResponse(await service.get_settings(module))
 
+    async def internal_patch_settings(request: Request) -> Response:
+        """A module writes some of its own settings for the tenant it serves, for settings that
+        are the same values as something it stores (contracts/admin.md, Settings)."""
+        module = module_of(request)
+        if request.state.service != module:
+            raise ServiceForbidden(f"module {request.state.service} writes only its own settings")
+        tenant = request.query_params.get("tenant_id", "")
+        if not is_tenant_id(tenant):
+            raise KitError("tenant_id: a tenant id", status=400, code="invalid_request")
+        try:
+            body = await request.json()
+        except ValueError:
+            body = None
+        if (
+            not isinstance(body, dict)
+            or not isinstance(body.get("values"), dict)
+            or not body["values"]
+            or not isinstance(body.get("settings_version"), int)
+            or isinstance(body["settings_version"], bool)
+            or not isinstance(body.get("actor_user_id"), str)
+            or not body["actor_user_id"]
+        ):
+            raise BadSettings("body needs settings_version, values and actor_user_id")
+        # The caller refuses its own writes on an archived event first; this holds when it does
+        # not (contracts/admin.md, Settings).
+        context = await resolver.by_id(tenant)
+        if context is None:
+            raise KitError("no such tenant", status=404, code="not_found")
+        if context["status"] == "archived":
+            raise KitError("the event is archived", status=409, code="event_archived")
+        with tenant_scope(tenant):
+            return JSONResponse(
+                await service.patch_settings(
+                    module, body["settings_version"], body["values"], body["actor_user_id"]
+                )
+            )
+
     async def theming_tenant(request: Request) -> str:
         """The tenant of an internal profile read: only theming asks, and only for an event the
         tenants module knows (contracts/admin.md, Profile)."""
@@ -229,6 +266,7 @@ def create_app(
             Route("/api/admin/settings/{module}", get_settings, methods=["GET"]),
             Route("/api/admin/settings/{module}", put_settings, methods=["PUT"]),
             Route("/internal/admin/settings/{module}", internal_settings, methods=["GET"]),
+            Route("/internal/admin/settings/{module}", internal_patch_settings, methods=["PATCH"]),
             Route("/internal/admin/profile/theme", internal_profile_theme, methods=["GET"]),
             Route("/internal/admin/profile/logo", internal_profile_logo, methods=["GET"]),
             Route("/api/admin/profile", get_profile, methods=["GET"]),

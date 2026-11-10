@@ -111,6 +111,14 @@ class Service:
         )
         return {"module": module, "settings_version": version, "values": values}
 
+    async def patch_settings(
+        self, module: str, expected_version: int, values: dict[str, Any], actor: str
+    ) -> dict[str, Any]:
+        """A module sets some keys of its own settings and keeps the rest (contracts/admin.md,
+        Settings); the store's version check still refuses a stale write."""
+        _, old = await self.store.get_settings(module)
+        return await self.put_settings(module, expected_version, {**old, **values}, actor)
+
     # profile
     async def _document(self) -> dict[str, Any]:
         record = await self.store.get_profile()

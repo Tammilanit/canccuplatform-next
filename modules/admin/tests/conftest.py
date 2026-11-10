@@ -60,19 +60,24 @@ def tenant_context(tenant_id: str) -> TenantContext:
     }
 
 
-def fake_resolver(hosts: dict[str, str], ids: tuple[str, ...] = ()) -> TenantResolver:
+def fake_resolver(
+    hosts: dict[str, str], ids: tuple[str, ...] = (), archived: tuple[str, ...] = ()
+) -> TenantResolver:
     """The kit's resolver against a fake tenants module that knows `hosts` (host -> tenant),
-    and by id those tenants plus `ids`."""
+    and by id those tenants plus `ids` and the `archived` ones."""
 
     def registry(request: httpx.Request) -> httpx.Response:
         by_id = request.url.path.removeprefix("/internal/tenants/tenants/")
         if by_id != request.url.path:
-            tenant = by_id if by_id in {*hosts.values(), *ids} else None
+            tenant = by_id if by_id in {*hosts.values(), *ids, *archived} else None
         else:
             tenant = hosts.get(request.url.params.get("host", ""))
         if tenant is None:
             return httpx.Response(404, json={"error": {"code": "not_found", "message": "x"}})
-        return httpx.Response(200, json=tenant_context(tenant))
+        context = tenant_context(tenant)
+        if tenant in archived:
+            context["status"] = "archived"
+        return httpx.Response(200, json=context)
 
     return TenantResolver(
         "http://tenants",
@@ -196,7 +201,7 @@ def world(tmp_path: Path) -> World:
         Health("admin", "dev", {}),
         authorize,
         auth,
-        fake_resolver({"admin.example.test": "demo"}, ids=("other",)),
+        fake_resolver({"admin.example.test": "demo"}, ids=("other",), archived=("gone",)),
         holder_event(holder),
         identity=ServiceIdentity("admin", SERVICE_KEY),
     )
