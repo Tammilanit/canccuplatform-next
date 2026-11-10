@@ -203,8 +203,18 @@ export class ValkeyRenderQueue implements RenderQueue {
     if (jobIds.length === 0) return out;
     const own = await this.client.lrange(queueKey(tenant), 0, -1);
     const ring = (await this.client.lrange(RING, 0, -1)).filter(isTenantId);
-    const lengths = new Map<string, number>();
-    for (const t of ring) lengths.set(t, await this.client.llen(queueKey(t)));
+    const others = [...new Set(ring)].filter((t) => t !== tenant);
+    const lengths = new Map<string, number>([[tenant, own.length]]);
+    if (others.length > 0) {
+      const batch = this.client.pipeline();
+      for (const t of others) batch.llen(queueKey(t));
+      const replies = (await batch.exec()) ?? [];
+      others.forEach((t, i) => {
+        const [err, length] = replies[i] ?? [new Error("no reply"), 0];
+        if (err) throw err;
+        lengths.set(t, Number(length));
+      });
+    }
     for (const id of jobIds) {
       const index = own.indexOf(id);
       if (index >= 0) out.set(id, fairPosition(ring, lengths, tenant, index));

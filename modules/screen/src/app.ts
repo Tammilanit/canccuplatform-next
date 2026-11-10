@@ -44,7 +44,7 @@ import { playlistRoutes } from "./content/playlists.js";
 import { pushRoutes } from "./content/push.js";
 import { scheduleRoutes } from "./content/schedules.js";
 import type { RenderQueue } from "./render/queue.js";
-import { REGISTRY_PREFIX, registryRoutes } from "./registry.js";
+import { REGISTRY_PREFIX, onSuperadminHost, registryRoutes } from "./registry.js";
 import { renderRoutes } from "./render/routes.js";
 import { tickerRoutes } from "./ticker/routes.js";
 import { zoneRoutes } from "./zones.js";
@@ -163,9 +163,12 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   installTenancy(app, deps.tenants, { platformHosts: "serve" });
   app.addHook("onRequest", async (request) => {
     const path = request.url.split("?")[0] ?? "";
-    if (request.tenant === null && path !== "/health" && !path.startsWith(REGISTRY_PREFIX)) {
-      throw notFound();
-    }
+    // The registry off its hostname is 404 here, before the body is parsed, so no body can make
+    // it answer anything an unknown route would not.
+    const hidden = path.startsWith(REGISTRY_PREFIX)
+      ? !onSuperadminHost(deps.superadminHost, request.headers.host)
+      : request.tenant === null && path !== "/health";
+    if (hidden) throw notFound();
     await Promise.resolve();
   });
   app.decorateRequest("device", null);

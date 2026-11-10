@@ -7,6 +7,7 @@ import type { Settings } from "../health.js";
 import { collect, dropUnreferenced, place } from "./files.js";
 import type { Dropped, Placed } from "./files.js";
 import type { Ffprobe } from "./probe.js";
+import { holdCount, releaseHeld } from "./storage.js";
 import type { StorageQuota } from "./storage.js";
 import type { Prepared } from "./upload.js";
 import type { RenderQueue } from "../render/queue.js";
@@ -34,6 +35,33 @@ export function fileName(prepared: Prepared): string {
   return `${prepared.temp.sha256}.${prepared.ext}`;
 }
 
+/** What a write's `fn` returns: its result, the files it stopped using, other bytes it freed. */
+export interface Written<T> {
+  result: T;
+  unused: string[];
+  /**
+   * Bytes of other rows it deleted (a dropped render, render/jobs.ts `dropJobs`); required, so a
+   * write that drops jobs cannot forget to give their bytes back.
+   */
+  freed: number;
+}
+
+/**
+ * The write's last statement: the bytes of everything it deleted go back in one release, so
+ * nothing after it can roll the rows back while tenants keeps the release (storage.ts,
+ * `releaseHeld`). Only a failed commit can still do that.
+ */
+async function dropAndRelease<T>(
+  c: SqlClient,
+  deps: FileDeps,
+  out: Written<T>,
+): Promise<Dropped[]> {
+  const dropped = await dropUnreferenced(c, out.unused);
+  const bytes = dropped.reduce((sum, f) => sum + f.bytes, out.freed);
+  await releaseHeld(deps.storage, bytes, deps.log);
+  return dropped;
+}
+
 /**
  * Runs `fn` in one tenant transaction. `fn` calls `placeFile` once it holds its other locks (an
  * asset row comes before any file, the order every writer keeps) and returns the files it
@@ -43,26 +71,51 @@ export function fileName(prepared: Prepared): string {
 export async function writeWithFile<T>(
   deps: AssetDeps,
   prepared: Prepared,
-  fn: (c: SqlClient, placeFile: () => Promise<string>) => Promise<{ result: T; unused: string[] }>,
+  fn: (c: SqlClient, placeFile: () => Promise<string>) => Promise<Written<T>>,
 ): Promise<T> {
   let placed: Placed | null = null;
+  let given = false as boolean;
   let dropped: Dropped[] = [];
   try {
     const result = await deps.db.tenant(async (c) => {
-      const out = await fn(c, async () => {
-        placed = await place(c, deps.filesRoot, deps.storage, prepared.temp, prepared);
-        return placed.name;
-      });
-      dropped = await dropUnreferenced(c, out.unused);
-      return out.result;
+      // The count lock first, the order the render side keeps (it takes the job rows after), so
+      // a waiting recount never stands between this write's job rows and its release.
+      await holdCount(c);
+      try {
+        const out = await fn(c, async () => {
+          placed = await place(c, deps.filesRoot, deps.storage, prepared.temp, prepared);
+          return placed.name;
+        });
+        dropped = await dropAndRelease(c, deps, out);
+        return out.result;
+      } catch (err) {
+        // Before the rollback, still under the count lock: a recount never sees the placed row
+        // gone while tenants still counts its bytes.
+        const orphan = placed;
+        if (orphan !== null && orphan.reserved > 0) {
+          await releaseHeld(deps.storage, orphan.reserved, deps.log);
+          given = true;
+        }
+        throw err;
+      }
     });
-    await collect(deps.db, deps.filesRoot, deps.storage, dropped, deps.log);
+    await collect(deps.db, deps.filesRoot, dropped, deps.log);
     return result;
   } catch (err) {
     const orphan = placed as Placed | null;
     if (orphan !== null && orphan.reserved > 0) {
-      const lost = [{ name: orphan.name, bytes: orphan.reserved }];
-      await collect(deps.db, deps.filesRoot, deps.storage, lost, deps.log);
+      // Only a failed commit gets here with the bytes still out.
+      if (!given) {
+        await deps.db
+          .tenant(async (c) => {
+            await holdCount(c);
+            await releaseHeld(deps.storage, orphan.reserved, deps.log);
+          })
+          .catch((failed: unknown) =>
+            deps.log?.warn({ err: failed }, "giving back an upload failed"),
+          );
+      }
+      await collect(deps.db, deps.filesRoot, [orphan], deps.log);
     }
     throw err;
   } finally {
@@ -73,14 +126,16 @@ export async function writeWithFile<T>(
 /** As `writeWithFile`, for a write that only stops using files (delete, revert). */
 export async function writeDroppingFiles<T>(
   deps: FileDeps,
-  fn: (c: SqlClient) => Promise<{ result: T; unused: string[] }>,
+  fn: (c: SqlClient) => Promise<Written<T>>,
 ): Promise<T> {
   let dropped: Dropped[] = [];
   const result = await deps.db.tenant(async (c) => {
+    // The count lock first, as in writeWithFile.
+    await holdCount(c);
     const out = await fn(c);
-    dropped = await dropUnreferenced(c, out.unused);
+    dropped = await dropAndRelease(c, deps, out);
     return out.result;
   });
-  await collect(deps.db, deps.filesRoot, deps.storage, dropped, deps.log);
+  await collect(deps.db, deps.filesRoot, dropped, deps.log);
   return result;
 }

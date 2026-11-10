@@ -6,7 +6,7 @@
  */
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { withTenant } from "@canccu/kit";
+import { KitError, withTenant } from "@canccu/kit";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { deleteUserPhotos } from "../src/photos.js";
 import {
@@ -177,6 +177,32 @@ describe.skipIf(!DATABASE_URL)("photos", () => {
       session: "photos",
     });
     expect(again.statusCode).toBe(404);
+  });
+
+  it("takes a photo down while tenants is down, and leaves its bytes to the recount", async () => {
+    const photo = (await add(await png(16))).json<Photo>();
+    const used = h.storage.used.iota ?? 0;
+    const release = h.quota.release.bind(h.quota);
+    h.quota.release = () =>
+      Promise.reject(
+        new KitError("the storage quota is unreachable", {
+          status: 503,
+          code: "tenants_unavailable",
+        }),
+      );
+    try {
+      const res = await call(h, "DELETE", `/api/screen/photos/${photo.id}`, {
+        host: HOST,
+        session: "photos",
+      });
+      expect(res.statusCode).toBe(204);
+    } finally {
+      h.quota.release = release;
+    }
+    expect((await list()).map((p) => p.id)).not.toContain(photo.id);
+    expect(stored(photo.url)).toBe(false);
+    // Still counted: the safe direction, until the storage upkeep's recount.
+    expect(h.storage.used.iota).toBe(used);
   });
 
   it("keeps a file an asset still uses", async () => {

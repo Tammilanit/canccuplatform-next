@@ -23,6 +23,8 @@ services:
     volumes:
       - ../events/demo:/seed:ro
       - files:/files
+    # The image's VOLUME /data /config would leave two anonymous volumes behind at every run.
+    tmpfs: [/data, /config]
     depends_on:
       files-init:
         condition: service_completed_successfully

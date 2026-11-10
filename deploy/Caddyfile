@@ -68,21 +68,17 @@
 		reverse_proxy agenda:8080
 	}
 
-	# Never agenda's internal paths (contracts/README.md): the prefix rule below would strip
-	# /agenda and pass /agenda/internal/... on as /internal/....
-	handle /agenda/internal/* {
+	# The prefix rule below strips /agenda, so it would pass /agenda/internal/... on as agenda's
+	# internal paths (never routed, contracts/README.md), and /agenda/api/... and /agenda/health
+	# as a second way into what /api/agenda/ above already serves.
+	@agenda-hidden path /agenda/internal/* /agenda/api/* /agenda/health
+	handle @agenda-hidden {
 		respond "not found" 404
 	}
 
-	# Nor its API: the strip below would pass /agenda/api/agenda/... on as /api/agenda/...,
-	# a second way in that /api/agenda/ above already gives.
-	handle /agenda/api/* {
-		respond "not found" 404
-	}
-
-	# The pages' links all start /agenda/, so the bare prefix goes there.
+	# The pages' links all start /agenda/, so the bare prefix goes there, with a link's query.
 	handle /agenda {
-		redir * /agenda/ 308
+		redir * /agenda/{?query} 308
 	}
 
 	# The run-of-show pages; the module's own paths start at /.
@@ -100,10 +96,17 @@
 		reverse_proxy notify:8080
 	}
 
-	# Never notify's internal paths (contracts/README.md): the prefix rule below would strip
-	# /notify and pass /notify/internal/... on as /internal/....
-	handle /notify/internal/* {
+	# As for agenda: the strip below would pass these on as notify's internal paths or as a
+	# second way into what /api/notify/ above already serves.
+	@notify-hidden path /notify/internal/* /notify/api/* /notify/health
+	handle @notify-hidden {
 		respond "not found" 404
+	}
+
+	# Notify has no page at /notify/; its first page is the topic list admin's menu links to.
+	@notify-bare path /notify /notify/
+	handle @notify-bare {
+		redir * /notify/admin/topics{?query} 308
 	}
 
 	# The notification pages under admin's "Event" menu and the check-in page a scanned QR

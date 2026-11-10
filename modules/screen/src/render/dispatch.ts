@@ -16,7 +16,7 @@ import type { Socket } from "node:net";
 import { dirname, join } from "node:path";
 import { KitError, requireTenant, withTenant } from "@canccu/kit";
 import { filePath } from "../assets/files.js";
-import { holdCount } from "../assets/storage.js";
+import { holdCount, releaseHeld } from "../assets/storage.js";
 import { clampToDeck } from "../content/asset-rules.js";
 import { RENDERER_FAILED, RendererUnavailable, openRenderer, renderDeck } from "./client.js";
 import type { RenderOutcome } from "./client.js";
@@ -132,6 +132,7 @@ async function runJob(d: DispatchDeps, jobId: string): Promise<{ ran: boolean; s
   const tmp = attemptDir(d.filesRoot, jobId, attempt);
   let reserved = 0;
   let inHand: Promise<void> = Promise.resolve();
+  let closed = false;
   let stopped = null as "requeue" | "gone" | null;
   const controller = new AbortController();
   const halt = (why: "requeue" | "gone"): void => {
@@ -169,20 +170,37 @@ async function runJob(d: DispatchDeps, jobId: string): Promise<{ ran: boolean; s
       signal: controller.signal,
       timeoutMs: d.timeoutMs ?? TIMEOUT_MS,
       onSlide: (slide, png) => {
+        // The reader keeps serving slides it buffered before renderDeck returned; one of those
+        // would reserve after settle and write into a scratch directory already settled.
+        if (closed) return Promise.reject(new Error("the render already ended"));
         // renderDeck returns on a cancel or a shutdown without waiting for the slide in hand;
         // settle waits for it, or bytes it reserves after the settle would never go back.
         const work = (async () => {
           // The reserve and the row that holds it in one transaction under the count lock, so a
-          // recount (assets/upkeep.ts) sees the bytes in the row or not yet reserved.
+          // recount (assets/upkeep.ts) sees the bytes in the row or not yet reserved. `reserved`
+          // grows only with the row: bytes no row took go back here, under the same lock.
           await d.db.tenant(async (c) => {
             await holdCount(c);
             await d.storage.reserve(png.length);
-            reserved += png.length;
-            await c.query(
-              "UPDATE screen_render_jobs SET reserved_bytes = $3 WHERE id = $1 AND attempts = $2",
-              [jobId, attempt, reserved],
-            );
+            let held = false;
+            try {
+              const { rows } = await c.query(
+                `UPDATE screen_render_jobs SET reserved_bytes = $3
+                 WHERE id = $1 AND attempts = $2 RETURNING 1`,
+                [jobId, attempt, reserved + png.length],
+              );
+              held = rows.length > 0;
+            } finally {
+              if (!held) await releaseHeld(d.storage, png.length, d.log);
+            }
+            if (!held) {
+              // Deleted or recovered meanwhile: whoever did gave back what the row held.
+              halt("gone");
+              throw new Error("the render job is gone");
+            }
           });
+          // Only once committed: `reserved` never counts bytes the row does not hold.
+          reserved += png.length;
           await writeFile(join(tmp, `slide-${slide.index}.png`), png, { flag: "wx" });
         })();
         inHand = work.catch(() => undefined);
@@ -202,6 +220,7 @@ async function runJob(d: DispatchDeps, jobId: string): Promise<{ ran: boolean; s
     d.stop?.removeEventListener("abort", onShutdown);
     socket.destroy();
   }
+  closed = true;
   await inHand;
   return { ran: true, settled: await settle(d, started.row, attempt, result, tmp, reserved) };
 }
@@ -232,8 +251,9 @@ function endOf(result: RenderOutcome | "requeue", reserved: number): [string, un
 
 /**
  * Commits the run's end if the job is still this container's run, and gives back the bytes this
- * run reserved unless its slides are kept or someone else already gave them back. False when
- * nothing could be committed: the row then still holds the bytes and the lease sweep recovers it.
+ * run reserved, before that commit, unless its slides are kept or someone else already gave them
+ * back. False when nothing could be committed: the row then still holds the bytes and the lease
+ * sweep recovers it.
  */
 async function settle(
   d: DispatchDeps,
@@ -245,20 +265,23 @@ async function settle(
 ): Promise<boolean> {
   const target = renderDir(d.filesRoot, job.asset_id, job.asset_version);
   let placed = false as boolean;
-  let release = 0;
   let ended: JobRow | null = null;
   try {
     await d.db.tenant(async (c) => {
+      // The count lock before the job row, the order onSlide keeps, so a waiting recount never
+      // stands between the two.
+      await holdCount(c);
       const now = await readJob(c, job.id, true);
-      if (now === null) {
-        release = reserved;
-        return;
-      }
+      // Deleted: the delete gave back what the row held (render/jobs.ts, dropJobs), and onSlide
+      // keeps `reserved` equal to that.
+      if (now === null) return;
       if (result === "gone" || now.state !== "running" || now.attempts !== attempt) {
-        // Cancelled, or recovered by the sweep, which then gave the bytes back already.
-        if (now.attempts === attempt && Number(now.reserved_bytes) > 0) {
+        // Cancelled (the row still holds this attempt's bytes), or recovered by the sweep, which
+        // zeroed the row and gave them back already: what the row holds is what goes back.
+        const held = now.attempts === attempt ? Number(now.reserved_bytes) : 0;
+        if (held > 0) {
           await c.query("UPDATE screen_render_jobs SET reserved_bytes = 0 WHERE id = $1", [job.id]);
-          release = reserved;
+          await releaseHeld(d.storage, held, d.log);
         }
         return;
       }
@@ -268,8 +291,6 @@ async function settle(
         await mkdir(dirname(target), { recursive: true });
         await rename(tmp, target);
         placed = true;
-      } else {
-        release = reserved;
       }
       const [set, values] = endOf(result, reserved);
       const { rows } = await c.query(
@@ -277,6 +298,7 @@ async function settle(
         [job.id, ...(result === "requeue" ? [] : [new Date(d.now())]), ...values],
       );
       ended = rows[0] as unknown as JobRow;
+      if (!placed) await releaseHeld(d.storage, reserved, d.log);
       // The deck's slide count is known only now: a replace's ranges are fitted to it here.
       if (placed) await clampToDeck(c, job.asset_id);
     });
@@ -285,11 +307,10 @@ async function settle(
     if (placed) await rm(target, { recursive: true, force: true }).catch(() => undefined);
     return false;
   }
-  try {
-    if (!placed) await rm(tmp, { recursive: true, force: true });
-    if (release > 0) await d.storage.release(release);
-  } catch (err) {
-    d.log?.warn({ err, job_id: job.id }, "giving back a render's bytes failed");
+  if (!placed) {
+    await rm(tmp, { recursive: true, force: true }).catch((err: unknown) =>
+      d.log?.warn({ err, job_id: job.id }, "removing a render's scratch failed"),
+    );
   }
   const row = ended as JobRow | null;
   if (row?.state === "queued") await announce(d, row, { head: true });

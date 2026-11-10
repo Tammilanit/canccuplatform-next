@@ -147,6 +147,20 @@ if command -v docker >/dev/null && docker compose version >/dev/null 2>&1 && com
   # before any module mounts it, and every module that mounts it runs as that user.
   mounters='def mounters: .services | to_entries[]
     | select([.value.volumes[]? | select(.type == "volume" and .source == "files")] | length > 0);'
+  # Prints each built service mounting files that does not run as nobody. Compose's `user:` wins
+  # over the image's USER, and the Dockerfile is the one the config builds from, not a guess.
+  not_nobody() {
+    jq -r "$mounters"' mounters | select(.value.build) | .value.build as $b
+      | [.key, (($b.dockerfile // "Dockerfile") as $d | if ($d | startswith("/")) then $d else "\($b.context)/\($d)" end),
+         .value.user // ""] | join("\u001f")' <<<"$1" |
+    while IFS=$'\x1f' read -r s dockerfile user; do
+      if [ -z "$user" ]; then
+        [ -r "$dockerfile" ] || { echo "$s has no readable Dockerfile at $dockerfile"; continue; }
+        user=$(grep -E '^USER ' "$dockerfile" | tail -n1 | cut -d' ' -f2)
+      fi
+      case $user in nobody|65534|nobody:nobody|65534:65534) ;; *) echo "$s runs as ${user:-root}" ;; esac
+    done
+  }
   for f in deploy/compose.yml "deploy/compose.yml -f deploy/compose.ci.yml"; do
     # shellcheck disable=SC2086  # $f is two compose arguments on purpose
     config=$(docker compose -f $f config --format json 2>"$scratch/config.err")
@@ -158,19 +172,30 @@ if command -v docker >/dev/null && docker compose version >/dev/null 2>&1 && com
       | select(.value.depends_on["files-init"].condition != "service_completed_successfully") | .key' <<<"$config")
     if [ -z "$late" ]; then pass "every service mounting files waits for files-init ($f)"
     else bad "every service mounting files waits for files-init ($f)" "$late"; fi
+    # The Caddy image declares VOLUME /data /config: without a tmpfs there, each run of a one-shot
+    # on it leaves two anonymous volumes behind.
+    litter=$(jq -r '.services | to_entries[] | select(.value.image // "" | startswith("caddy:"))
+      | select((.value.tmpfs // []) as $t | ($t | index("/data")) == null or ($t | index("/config")) == null) | .key' <<<"$config")
+    if [ -z "$litter" ]; then pass "every service on the Caddy image keeps /data and /config in tmpfs ($f)"
+    else bad "every service on the Caddy image keeps /data and /config in tmpfs ($f)" "$litter"; fi
     [ "$f" = deploy/compose.yml ] || continue
     if jq -e '.services["files-init"] | .network_mode == "none" and .read_only == true and .cap_drop == ["ALL"]
         and (.cap_add | sort) == ["CHOWN", "DAC_READ_SEARCH"] and (.command | join(" ") | test("65534:65534"))' <<<"$config" >/dev/null
     then pass "files-init has no network, a read-only root, only CHOWN and DAC_READ_SEARCH, and chowns to 65534"
     else bad "files-init has no network, a read-only root, only CHOWN and DAC_READ_SEARCH, and chowns to 65534" "$(jq '.services["files-init"]' <<<"$config")"; fi
     modules=$(jq -r "$mounters"' mounters | select(.value.build) | .key' <<<"$config")
-    wrong=""
-    for s in $modules; do
-      user=$(grep -E '^USER ' "modules/$s/Dockerfile" | tail -n1 | cut -d' ' -f2)
-      [ "$user" = nobody ] || wrong+="$s runs as ${user:-root} "
-    done
+    wrong=$(not_nobody "$config")
     if [ -n "$modules" ] && [ -z "$wrong" ]; then pass "every module mounting files runs as nobody (65534), the volume's owner"
     else bad "every module mounting files runs as nobody (65534), the volume's owner" "${wrong:-no module mounts files}"; fi
+  done
+  # The check above must be able to fail: a compose user: and a Dockerfile without USER.
+  printf 'services:\n  hello:\n    user: "1000"\n' > "$scratch/user.yml"
+  printf 'FROM scratch\n' > "$scratch/Dockerfile.root"
+  printf 'services:\n  hello:\n    build:\n      dockerfile: %s\n' "$scratch/Dockerfile.root" > "$scratch/root.yml"
+  for o in user:"hello runs as 1000" root:"hello runs as root"; do
+    wrong=$(not_nobody "$(docker compose -f deploy/compose.yml -f "$scratch/${o%%:*}.yml" config --format json 2>&1)")
+    if [ "$wrong" = "${o#*:}" ]; then pass "the nobody check catches: ${o#*:}"
+    else bad "the nobody check catches: ${o#*:}" "got: $wrong"; fi
   done
 else
   skip "compose ports and network" "no docker compose or jq"
@@ -203,9 +228,10 @@ has "firewall check looks at FORWARD -> DOCKER-USER" "FORWARD"
 
 echo "# shellcheck"
 if command -v shellcheck >/dev/null; then
-  # The runner image updates ShellCheck on its own and new versions add rules (SC2329 in 0.11),
-  # so the log names the version that ran.
-  echo "     shellcheck $(shellcheck --version | sed -n 's/^version: //p')"
+  # New ShellCheck versions add rules (SC2329 in 0.11). CI pins one; a local run uses whatever
+  # is installed, so the log names the version that ran.
+  v=$(shellcheck --version | sed -n 's/^version: //p')
+  echo "     shellcheck ${v:-unknown}"
   exits "shellcheck" 0 shellcheck -x setup/install setup/firewall setup/check-boot setup/deploy setup/lib.sh setup/test.sh setup/test-install.sh setup/test-deploy.sh
 else
   skip "shellcheck" "not installed"

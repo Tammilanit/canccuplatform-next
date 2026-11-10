@@ -10,7 +10,7 @@ import type { ServiceIdentity } from "@canccu/kit";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { holdCount, tenantsStorage } from "../src/assets/storage.js";
 import { recount, sweepFiles, upkeepAll } from "../src/assets/upkeep.js";
-import { DATABASE_URL, harness, png, upload } from "./helpers.js";
+import { DATABASE_URL, call, harness, png, upload } from "./helpers.js";
 import type { Harness } from "./helpers.js";
 import { pdfPages } from "./render-fake.js";
 
@@ -36,6 +36,22 @@ describe("tenantsStorage.repair", () => {
         body: { bytes: 42 },
       },
     ]);
+  });
+});
+
+describe("tenantsStorage", () => {
+  it("gives up on a tenants that does not answer, so no lock waits on it for ever", async () => {
+    const service = { headers: () => ({}) } as unknown as ServiceIdentity;
+    const hung: typeof fetch = (_url, init) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => {
+          reject(new Error("aborted"));
+        });
+      });
+    const storage = tenantsStorage("http://tenants:8080", service, hung, 50);
+    await expect(withTenant("alpha", () => storage.release(1))).rejects.toMatchObject({
+      code: "tenants_unavailable",
+    });
   });
 });
 
@@ -106,6 +122,131 @@ describe.skipIf(!DATABASE_URL)("storage upkeep", () => {
     await uploadTx;
     await counting;
     expect(h.storage.used.alpha).toBe(base + 50 + 30);
+  });
+
+  it("counts a delete's bytes until tenants has them back, so a recount between is not low", async () => {
+    const deck = await upload(h, "/api/screen/assets", pdfPages(5), "Gone.pdf", {
+      session: "admin",
+    });
+    const id = deck.json<{ id: string }>().id;
+    await h.pool.query<Record<string, string>>(
+      "UPDATE screen_render_jobs SET state = 'succeeded', bytes = 40 WHERE asset_id = $1",
+      [id],
+    );
+    // Every release stalls on its way to tenants; a recount runs meanwhile.
+    const release = h.quota.release.bind(h.quota);
+    let reached!: () => void;
+    const releasing = new Promise<void>((resolve) => (reached = resolve));
+    let resume!: () => void;
+    const gate = new Promise<void>((resolve) => (resume = resolve));
+    h.quota.release = async (bytes) => {
+      reached();
+      await gate;
+      await release(bytes);
+    };
+    try {
+      const deleting = call(h, "DELETE", `/api/screen/assets/${id}`, {
+        host: "alpha.test",
+        session: "admin",
+      });
+      await releasing;
+      const counting = inAlpha(() => recount(deps()));
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      resume();
+      expect((await deleting).statusCode).toBe(204);
+      await counting;
+    } finally {
+      h.quota.release = release;
+    }
+    const raced = h.storage.used.alpha;
+    await inAlpha(() => recount(deps()));
+    expect(raced).toBe(h.storage.used.alpha);
+  });
+
+  it("gives nothing back when a delete rolls back after its render was dropped", async () => {
+    const deck = await upload(h, "/api/screen/assets", pdfPages(6), "Kept.pdf", {
+      session: "admin",
+    });
+    const id = deck.json<{ id: string }>().id;
+    await h.pool.query<Record<string, string>>(
+      "UPDATE screen_render_jobs SET state = 'succeeded', bytes = 40 WHERE asset_id = $1",
+      [id],
+    );
+    const before = h.storage.used.alpha;
+    const admin = { host: "alpha.test", session: "admin" };
+    for (let i = 0; i < 2; i++) {
+      h.failAudit.next = true;
+      expect((await call(h, "DELETE", `/api/screen/assets/${id}`, admin)).statusCode).toBe(503);
+    }
+    expect(h.storage.used.alpha).toBe(before);
+    const { rows } = await h.pool.query<Record<string, string>>(
+      "SELECT 1 FROM screen_render_jobs WHERE asset_id = $1 AND state = 'succeeded'",
+      [id],
+    );
+    expect(rows).toHaveLength(1);
+    expect((await call(h, "DELETE", `/api/screen/assets/${id}`, admin)).statusCode).toBe(204);
+  });
+
+  it("counts a cancelled run's reservation until its container gives it back", async () => {
+    const deck = await upload(h, "/api/screen/assets", pdfPages(7), "Stop.pdf", {
+      session: "admin",
+    });
+    const id = deck.json<{ id: string }>().id;
+    await inAlpha(() => recount(deps()));
+    const clean = h.storage.used.alpha ?? 0;
+    // The cancel route keeps reserved_bytes: the running container's settle gives them back.
+    await h.pool.query<Record<string, string>>(
+      "UPDATE screen_render_jobs SET state = 'cancelled', reserved_bytes = 70 WHERE asset_id = $1",
+      [id],
+    );
+    await inAlpha(() => recount(deps()));
+    expect(h.storage.used.alpha).toBe(clean + 70);
+    await h.pool.query<Record<string, string>>(
+      "UPDATE screen_render_jobs SET reserved_bytes = 0 WHERE asset_id = $1",
+      [id],
+    );
+  });
+
+  it("gives a rolled-back upload's bytes back before a recount can count without them", async () => {
+    const first = await upload(h, "/api/screen/assets", await png(21), "a.png", {
+      session: "admin",
+    });
+    const id = first.json<{ id: string }>().id;
+    // The first transaction that fails stalls right after its rollback; a recount runs then.
+    const tenant = h.db.tenant.bind(h.db);
+    let rolledBack!: () => void;
+    const stalled = new Promise<void>((resolve) => (rolledBack = resolve));
+    let resume!: () => void;
+    const gate = new Promise<void>((resolve) => (resume = resolve));
+    let armed = true;
+    h.db.tenant = async (fn) => {
+      try {
+        return await tenant(fn);
+      } catch (err) {
+        if (armed) {
+          armed = false;
+          rolledBack();
+          await gate;
+        }
+        throw err;
+      }
+    };
+    try {
+      // The replace places its file, then its audit fails: the transaction rolls back.
+      h.failAudit.next = true;
+      const replacing = upload(h, `/api/screen/assets/${id}/replace`, await png(22), "b.png", {
+        session: "admin",
+      });
+      await stalled;
+      await inAlpha(() => recount(deps()));
+      resume();
+      expect((await replacing).statusCode).toBe(503);
+    } finally {
+      h.db.tenant = tenant;
+    }
+    const raced = h.storage.used.alpha;
+    await inAlpha(() => recount(deps()));
+    expect(raced).toBe(h.storage.used.alpha);
   });
 
   it("sweeps orphaned files and stale render scratch, and keeps what is in use", async () => {

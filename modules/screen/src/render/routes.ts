@@ -142,8 +142,13 @@ export function renderRoutes(app: FastifyInstance, deps: RenderRouteDeps): void 
     // A running job's container sees the state at its next lease renewal and hangs up.
     // The cancel is committed: a failure to tidy the queue or announce it must not answer 500,
     // since a retry would then get 409. The dispatcher skips a cancelled job it still takes.
+    // Each on its own: a queue that cannot be tidied must not keep the cancel unannounced.
     try {
       await deps.queue.remove(ctx.tenant_id, id);
+    } catch (err) {
+      deps.log?.warn({ err, job_id: id }, "removing a cancelled render job from the queue failed");
+    }
+    try {
       await publishJob(deps.bus, row);
     } catch (err) {
       deps.log?.warn({ err, job_id: id }, "announcing a cancelled render job failed");

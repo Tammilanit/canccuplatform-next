@@ -324,6 +324,38 @@ describe("the render socket client", () => {
     await closed;
   });
 
+  it("hands over no slide once it has returned, even one already read off the socket", async () => {
+    // #317: the dispatcher settles the bytes once renderDeck has returned; a slide handed over
+    // after that reserved bytes nobody gave back.
+    const png = await pngOf(4, 3);
+    const path = await fakeRenderer((socket) => {
+      void sendSlide(socket, 1, png).then(() => sendSlide(socket, 2, png));
+    });
+    const deckPath = join(dir, "deck.pdf");
+    await writeFile(deckPath, Buffer.from("%PDF-1.4 a deck"));
+    const controller = new AbortController();
+    let returned = false;
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const seen: number[] = [];
+    const rendering = renderDeck({
+      socket: await openRenderer(path),
+      deckPath,
+      signal: controller.signal,
+      timeoutMs: 10_000,
+      onSlide: async (slide) => {
+        seen.push(slide.index);
+        if (returned) throw new Error(`slide ${slide.index} after the return`);
+        controller.abort();
+        await held;
+      },
+    }).finally(() => (returned = true));
+    await expect(rendering).rejects.toThrow(/cancelled/);
+    release();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(seen).toEqual([1]);
+  });
+
   it("fails as render_timeout when the renderer outlives the deadline", async () => {
     const path = await fakeRenderer(() => undefined);
     const { outcome } = await run(path, { timeoutMs: 100 });

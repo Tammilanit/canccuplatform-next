@@ -2,8 +2,15 @@
 
 from __future__ import annotations
 
+from urllib.parse import urlencode
+
 from canccu_kit import Health, KitError, NotSignedIn, ServiceIdentity, TenantResolver
-from canccu_kit.starlette import install, install_service_identity, install_tenancy
+from canccu_kit.starlette import (
+    install,
+    install_service_identity,
+    install_tenancy,
+    sign_in_return,
+)
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
@@ -68,7 +75,8 @@ async def _not_signed_in(request: Request, exc: Exception) -> Response:
     assert isinstance(exc, NotSignedIn)
     if not _is_page(request):
         return JSONResponse(exc.to_body(), status_code=exc.status)
-    return RedirectResponse(web.SIGN_IN, status_code=303)
+    back = sign_in_return(request, web.BASE, f"{web.BASE}/admin/topics")
+    return RedirectResponse(f"{web.SIGN_IN}?{urlencode({'next': back})}", status_code=303)
 
 
 def _page_error(request: Request, exc: KitError) -> Response | None:

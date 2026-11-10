@@ -1,4 +1,5 @@
-"""Starlette (and FastAPI) adapter: /health, rights check, error body, correlation id, tenancy.
+"""Starlette (and FastAPI) adapter: /health, rights check, error body, correlation id, tenancy,
+the return path after sign-in.
 
 Install with the extra: `canccu-kit[starlette]`.
 """
@@ -9,13 +10,14 @@ import functools
 import logging
 from collections.abc import Awaitable, Callable
 from typing import Any, Literal
+from urllib.parse import quote
 
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
 from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
-from starlette.routing import Route
+from starlette.routing import Match, Route
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from .context import CORRELATION_HEADER, correlation
@@ -184,6 +186,37 @@ def install(
     app.add_middleware(CorrelationMiddleware)
     if health is not None:
         app.router.routes.append(health_route(health))
+
+
+# Admin's limit on a return path (canccu_admin.auth.safe_return_path): a longer one, or one with a
+# character outside printable ASCII, admin drops for its own default.
+RETURN_PATH_MAX = 1024
+
+
+def sign_in_return(request: Request, prefix: str, fallback: str) -> str:
+    """Where admin's sign-in sends the browser back to: this page under `prefix` (the path Caddy
+    strips before the module sees it), with its query.
+
+    A form post cannot be replayed as the GET a redirect makes, so it returns to the page at its
+    path, or to `fallback` when no page is there (an undo, a delete). A path admin would drop
+    also returns to `fallback`, which keeps the browser in the module.
+    """
+    path = quote(prefix + request.url.path)
+    if request.method in ("GET", "HEAD"):
+        query = request.url.query
+        back = path + (f"?{query}" if query else "")
+    elif _has_page(request):
+        back = path
+    else:
+        return fallback
+    if len(back) > RETURN_PATH_MAX or any(not "!" <= c <= "~" for c in back):
+        return fallback
+    return back
+
+
+def _has_page(request: Request) -> bool:
+    scope = {**request.scope, "method": "GET"}
+    return any(route.matches(scope)[0] is Match.FULL for route in request.app.router.routes)
 
 
 def is_health_request(method: str, path: str) -> bool:

@@ -29,10 +29,11 @@ export interface UpkeepDeps {
 
 /**
  * Sets screen's count of the current event at tenants to what its files take: the stored files,
- * the kept renders and the running render attempts' reservations. Under the exclusive count lock,
- * so no reserve runs between the read and the set. A release whose rows were deleted just before
- * the read but which reaches tenants after the set leaves the count that much low, until the next
- * recount: releases come after their commit, so no lock can bracket them.
+ * the kept renders and the render attempts' reservations (a cancelled one's too, until its container
+ * gives them back in settle). Under the exclusive count lock,
+ * so no reserve or release runs between the read and the set: both happen before the commit of
+ * the rows that hold the bytes, under the shared lock (storage.ts, `holdCount`, `releaseHeld`), so
+ * the read sees rows and bytes together.
  */
 export async function recount(deps: UpkeepDeps): Promise<void> {
   await deps.db.tenant(async (c) => {
@@ -41,8 +42,7 @@ export async function recount(deps: UpkeepDeps): Promise<void> {
     const { rows } = await c.query(
       `SELECT (SELECT COALESCE(SUM(size_bytes), 0) FROM screen_files)
             + (SELECT COALESCE(SUM(bytes), 0) FROM screen_render_jobs WHERE state = 'succeeded')
-            + (SELECT COALESCE(SUM(reserved_bytes), 0) FROM screen_render_jobs
-               WHERE state = 'running') AS total`,
+            + (SELECT COALESCE(SUM(reserved_bytes), 0) FROM screen_render_jobs) AS total`,
       [],
     );
     await deps.storage.repair(Number(rows[0]?.total ?? 0));

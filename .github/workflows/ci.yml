@@ -229,10 +229,30 @@ jobs:
   setup:
     name: setup (self-test)
     runs-on: ubuntu-latest
+    # The runner image's ShellCheck updates on its own, and a new version with a new rule
+    # (SC2329 in 0.11) turned every PR red at once (#343). A pinned, checksummed release
+    # makes a ShellCheck update a PR of its own: change both lines together.
+    env:
+      SHELLCHECK_VERSION: v0.11.0
+      SHELLCHECK_SHA256: 8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198
     steps:
       - uses: actions/checkout@v4
+      - name: Pinned ShellCheck
+        run: |
+          tarball="$RUNNER_TEMP/shellcheck.tar.xz"
+          curl -fsSL --retry 3 -o "$tarball" \
+            "https://github.com/koalaman/shellcheck/releases/download/$SHELLCHECK_VERSION/shellcheck-$SHELLCHECK_VERSION.linux.x86_64.tar.xz"
+          echo "$SHELLCHECK_SHA256  $tarball" | sha256sum -c - \
+            || { echo "::error::ShellCheck $SHELLCHECK_VERSION tarball does not match its pinned checksum"; exit 1; }
+          tar -xJf "$tarball" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/shellcheck-$SHELLCHECK_VERSION" >> "$GITHUB_PATH"
+          got=$("$RUNNER_TEMP/shellcheck-$SHELLCHECK_VERSION/shellcheck" --version | sed -n 's/^version: //p')
+          [ "v$got" = "$SHELLCHECK_VERSION" ] \
+            || { echo "::error::pinned ShellCheck reports version ${got:-unknown}, expected $SHELLCHECK_VERSION"; exit 1; }
       - name: Tools for every setup check
         run: |
+          [ "$(command -v shellcheck)" = "$RUNNER_TEMP/shellcheck-$SHELLCHECK_VERSION/shellcheck" ] \
+            || { echo "::error::shellcheck on PATH is $(command -v shellcheck), not the pinned one"; exit 1; }
           for t in shellcheck jq docker; do command -v "$t" >/dev/null || { echo "::error::$t missing"; exit 1; }; done
           docker info >/dev/null && docker compose version
       - name: setup/test.sh
