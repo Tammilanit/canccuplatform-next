@@ -22,6 +22,8 @@ import {
   unknownZone,
 } from "./http.js";
 import type { Kv } from "./kv.js";
+import { keys } from "./push/store.js";
+import type { Fanout } from "./push/store.js";
 import { zoneKey } from "./zone-input.js";
 import { publishAll, releaseSound, seededFor, zoneExistsHere } from "./zones.js";
 import type { Emit } from "./zones.js";
@@ -104,6 +106,8 @@ export interface AssignmentDeps {
   bus: Bus;
   rights: RightsChecker;
   audit: Audit;
+  /** Wakes the device's open stream, whichever container holds it. */
+  fanout: Fanout;
   now?: () => number;
 }
 
@@ -186,6 +190,8 @@ export function assignmentRoutes(app: FastifyInstance, deps: AssignmentDeps): vo
       const expiresAt = now() + COMMAND_TTL_MS;
       const entry = { id: newId("cm"), command, expires_at: new Date(expiresAt).toISOString() };
       await deps.kv.addExpiring(commandsKey(device.id), JSON.stringify(entry), expiresAt);
+      // Best effort: a stream that misses the nudge takes the command at its next ping.
+      await deps.fanout.publish(keys.deviceChannel(device.id), "commands").catch(() => undefined);
       return reply.status(202).send();
     },
   );
@@ -205,8 +211,8 @@ export interface PendingCommand {
 }
 
 /**
- * The device's undelivered commands, oldest first, each handed out once: for the push channel
- * (#109) to send as `command` messages. Run inside the device's tenant.
+ * The device's undelivered commands, oldest first, each handed out once: the push channel sends
+ * them as `command` messages. Run inside the device's tenant.
  */
 export async function takeCommands(
   kv: Kv,

@@ -5,7 +5,8 @@ import type { RightsChecker } from "@canccu/kit";
 import { requireDevice } from "../device-access.js";
 import { notFound, tenantOf } from "../http.js";
 import { zoneKey } from "../zone-input.js";
-import { deviceState, nowView } from "./state.js";
+import { placeDevice } from "../push/device-state.js";
+import { nowView } from "./state.js";
 import type { ComposeDeps } from "./state.js";
 
 export interface ComposeRouteDeps extends ComposeDeps {
@@ -52,7 +53,7 @@ export function composeRoutes(app: FastifyInstance, deps: ComposeRouteDeps): voi
     async (request) => {
       // requireDevice sets it or answers 401; null here would be a wiring bug.
       if (request.device === null) throw notFound();
-      return deviceState(deps, tenantOf(request), hostOf(request), request.device);
+      return (await placeDevice(deps, tenantOf(request), hostOf(request), request.device)).state;
     },
   );
 

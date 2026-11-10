@@ -106,6 +106,8 @@ export interface Harness {
   oembedStatus: { value: number };
   /** What the fake agenda, tenants and theming answer the composed state; null is "down". */
   sources: FakeSources;
+  /** The app's tenant cache; a test that changes TENANTS clears it with a tenants event. */
+  tenants: TenantResolver;
   /** One run of the offline sweep, as main starts every 5 seconds. */
   sweep(): Promise<void>;
   queue: MemoryRenderQueue;
@@ -193,6 +195,11 @@ export async function harness(): Promise<Harness> {
     },
   };
   const queue = new MemoryRenderQueue();
+  const tenants = new TenantResolver({
+    tenantsUrl: "http://tenants",
+    fetch: fakeTenants,
+    platformHosts: [SUPERADMIN_HOST, SIGNIN_HOST],
+  });
   const app = buildApp({
     db,
     kv,
@@ -208,11 +215,7 @@ export async function harness(): Promise<Harness> {
       audits.push(entry);
       return Promise.resolve();
     },
-    tenants: new TenantResolver({
-      tenantsUrl: "http://tenants",
-      fetch: fakeTenants,
-      platformHosts: [SUPERADMIN_HOST, SIGNIN_HOST],
-    }),
+    tenants,
     superadminHost: SUPERADMIN_HOST,
     health: createHealth({ module: "screen", version: "dev", checks: {} }),
     settings: {
@@ -225,6 +228,7 @@ export async function harness(): Promise<Harness> {
     fetch: () => Promise.resolve(new Response("{}", { status: oembedStatus.value })),
     now: () => clock.now,
     bundleVersion: "test",
+    streamPingMs: 200,
     sources: {
       theme: (host) => answer(host, fake.theme),
       event: (host) => answer(host, fake.event),
@@ -265,6 +269,7 @@ export async function harness(): Promise<Harness> {
     filesRoot,
     oembedStatus,
     sources: fake,
+    tenants,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
     queue,
     dispatch: (socketPath, opts = {}) =>
