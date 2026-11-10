@@ -1,21 +1,20 @@
 /**
- * `ScreenState` for one device, and the hub's `NowView` of one zone (contracts/screen.md,
- * Composed state). The zone's part is the same for every screen of the zone; only `device` and
- * `sound` are the device's own.
+ * A zone's composed part, the same for every screen of the zone, and the hub's `NowView` of it
+ * (contracts/screen.md, Composed state). A device's own `ScreenState` (its `device` and `sound`)
+ * is put together from the stored zone part in src/push/device-state.ts.
  */
 import { createHash } from "node:crypto";
-import { tenantKey } from "@canccu/kit";
 import type { SqlClient, TenantContext } from "@canccu/kit";
-import type { Db, DeviceRow } from "../db.js";
+import type { Db } from "../db.js";
 import { loadAgendaItems } from "../content/agenda.js";
 import { healthOf } from "../health.js";
 import type { Settings } from "../health.js";
 import type { Kv } from "../kv.js";
+import type { Orientation, ZoneStore } from "../push/store.js";
 import { resolveWinner } from "../schedule/winner.js";
 import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
 import { buildRegions } from "./build.js";
-import type { RegionView } from "./build.js";
 import { themeLayouts } from "./layouts.js";
 import type { Sources, ThemeNow } from "./sources.js";
 import type { ZoneFacts } from "./widgets.js";
@@ -26,6 +25,8 @@ export interface ComposeDeps {
   sources: Sources;
   settings: Settings;
   bundleVersion: string;
+  /** Each zone's state and change log (src/push/store.ts). */
+  zones: ZoneStore;
   now?: () => number;
 }
 
@@ -39,7 +40,7 @@ export interface ZoneRow {
 }
 
 /** Until theming serves a revision (or the pinned one, #265), the platform defaults. */
-const NO_THEME: ThemeNow = {
+export const NO_THEME: ThemeNow = {
   revision: 0,
   tokens_css_url: "/theming/a/tokens.css",
   css_url: null,
@@ -57,7 +58,7 @@ async function zoneRow(c: SqlClient, key: string): Promise<ZoneRow | null> {
 }
 
 /** The zone a device draws, and whether it only mirrors it (one hop: a mirror of a mirror shows nothing). */
-async function placement(
+export async function placement(
   c: SqlClient,
   deviceId: string,
 ): Promise<{ zoneKey: string | null; mirror: boolean }> {
@@ -96,24 +97,23 @@ async function windowLayoutId(
 const origin = (ctx: TenantContext, host: string): string =>
   ctx.primary_hostname === null ? `http://${host}` : `https://${ctx.primary_hostname}`;
 
-interface ZoneComposed {
+export interface ZoneComposed {
   /** Fingerprint of the zone's inputs, the same for every screen of the zone (see zoneFingerprint). */
   fingerprint: string;
   zone: ZoneRow;
   theme: ThemeNow;
   eventName: string;
-  layout: ReturnType<typeof buildRegions>["layout"];
-  regions: RegionView[];
+  /** Landscape and portrait screens of a zone differ only in the layout and its regions. */
+  views: Record<Orientation, ReturnType<typeof buildRegions>>;
   ticker: ZoneFacts["ticker"] & { appearance: string };
 }
 
-/** Everything of a zone's state that is the same for all its screens. */
+/** Everything of a zone's state that is the same for all its screens, in both orientations. */
 export async function composeZone(
   deps: ComposeDeps,
   ctx: TenantContext,
   host: string,
   zoneKey: string,
-  portrait: boolean,
 ): Promise<ZoneComposed | null> {
   const at = new Date((deps.now ?? Date.now)());
   const read = await deps.db.tenant(async (c) => {
@@ -143,13 +143,14 @@ export async function composeZone(
     venue,
     ticker: read.ticker,
   };
-  const built = buildRegions({
-    zone: { key: read.zone.key, layoutId: read.zone.layout_id, regions: read.zone.regions },
-    windowLayoutId: read.windowLayout,
-    themeLayouts: themeLayouts(theme?.layouts),
-    portrait,
-    facts,
-  });
+  const build = (portrait: boolean) =>
+    buildRegions({
+      zone: { key: read.zone.key, layoutId: read.zone.layout_id, regions: read.zone.regions },
+      windowLayoutId: read.windowLayout,
+      themeLayouts: themeLayouts(theme?.layouts),
+      portrait,
+      facts,
+    });
   const setting = deps.settings.get("ticker_appearance", "default");
   const appearance = typeof setting === "string" ? setting : "default";
   return {
@@ -163,7 +164,7 @@ export async function composeZone(
     zone: read.zone,
     theme: theme ?? NO_THEME,
     eventName,
-    ...built,
+    views: { landscape: build(false), portrait: build(true) },
     ticker: { ...read.ticker, appearance },
   };
 }
@@ -193,87 +194,19 @@ export function zoneFingerprint(input: FingerprintInput): string {
   return createHash("sha256").update(JSON.stringify(stable)).digest("base64url");
 }
 
-// Long enough that a quiet zone keeps its count between events; #304's change log replaces it.
-const VERSION_TTL_MS = 400 * 24 * 3600_000;
-
-/** `state_version`: +1 whenever the zone's fingerprint changes. #304 makes it atomic. */
-async function stateVersion(kv: Kv, key: string, fingerprint: string): Promise<number> {
-  const kept = await kv.get(key);
-  const [version, seen] = kept === null ? [0, ""] : (JSON.parse(kept) as [number, string]);
-  if (seen === fingerprint) return version;
-  await kv.set(key, JSON.stringify([version + 1, fingerprint]), VERSION_TTL_MS);
-  return version + 1;
-}
-
-async function isPortrait(kv: Kv, deviceId: string, nowMs: number): Promise<boolean> {
+export async function isPortrait(kv: Kv, deviceId: string, nowMs: number): Promise<boolean> {
   const view = (await healthOf(kv, [deviceId], nowMs)).get(deviceId);
   const viewport = view?.viewport as { width: number; height: number } | undefined;
   return viewport !== undefined && viewport.height > viewport.width;
 }
 
-const themeView = (t: ThemeNow): Record<string, unknown> => ({
+export const themeView = (t: ThemeNow): Record<string, unknown> => ({
   revision: t.revision,
   tokens_css_url: t.tokens_css_url,
   css_url: t.css_url,
   logo_url: t.logo_url,
   templates: t.templates,
 });
-
-export async function deviceState(
-  deps: ComposeDeps,
-  ctx: TenantContext,
-  host: string,
-  device: DeviceRow,
-): Promise<Record<string, unknown>> {
-  const nowMs = (deps.now ?? Date.now)();
-  const where = await deps.db.tenant((c) => placement(c, device.id));
-  const composed =
-    where.zoneKey === null
-      ? null
-      : await composeZone(
-          deps,
-          ctx,
-          host,
-          where.zoneKey,
-          await isPortrait(deps.kv, device.id, nowMs),
-        );
-  const theme = composed?.theme ?? (await deps.sources.theme(host)) ?? NO_THEME;
-  const eventName = composed?.eventName ?? (await deps.sources.event(host))?.name ?? "";
-  const version =
-    composed === null
-      ? 0
-      : await stateVersion(
-          deps.kv,
-          tenantKey("screen", "zone", composed.zone.key, "version"),
-          composed.fingerprint,
-        );
-  const sound = composed?.zone.sound;
-  return {
-    state_version: version,
-    time: new Date(nowMs).toISOString(),
-    tenant: { id: ctx.tenant_id, name: eventName, time_zone: ctx.time_zone, status: ctx.status },
-    device: { id: device.id, name: device.name, mirror: where.mirror },
-    zone:
-      composed === null
-        ? null
-        : { key: composed.zone.key, name: composed.zone.name, epoch: composed.zone.epoch },
-    bundle: { version: deps.bundleVersion },
-    theme: themeView(theme),
-    layout: composed?.layout ?? null,
-    regions: composed?.regions ?? [],
-    unplaced: [],
-    hidden: [],
-    ticker: composed?.ticker ?? { text: null, until: null, source: null },
-    // Only the zone's sound device plays sound; a mirror never does (contracts/screen.md, Zones).
-    sound: {
-      enabled: !where.mirror && sound?.enabled === true && sound.device_id === device.id,
-      // Kept for Moments (step 4): the heartbeat's claims_sounded are dropped until then.
-      sounded_claims: [],
-    },
-    prefetch: [],
-    offline: { marker_after_seconds: 10 },
-  };
-}
 
 /**
  * The widget types the hub may see (contracts/screen.md, One source, two surfaces). Never
@@ -300,9 +233,9 @@ export async function nowView(
   zoneKey: string,
   member: boolean,
 ): Promise<Record<string, unknown> | null> {
-  const composed = await composeZone(deps, ctx, host, zoneKey, false);
+  const composed = await composeZone(deps, ctx, host, zoneKey);
   if (composed === null) return null;
-  const regions = composed.regions.map((r) => {
+  const regions = composed.views.landscape.regions.map((r) => {
     const kept = r.widgets.flatMap((w, i) => (NOW_TYPES.has(w.widget) ? [{ w, i }] : []));
     const index = new Map(kept.map(({ i }, n) => [i, n]));
     return {

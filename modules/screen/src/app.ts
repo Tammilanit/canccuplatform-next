@@ -11,6 +11,7 @@ import type { FastifyInstance, FastifyServerOptions } from "fastify";
 import { FILES_ROOT, createHealth, postgresCheck } from "@canccu/kit";
 import type {
   Bus,
+  Event,
   CheckFn,
   Health,
   Logger,
@@ -40,6 +41,10 @@ import { notFound } from "./http.js";
 import { movingRoutes } from "./moving.js";
 import { pairingRoutes } from "./pairing.js";
 import { photoRoutes } from "./photos.js";
+import { PushHub } from "./push/hub.js";
+import { streamRoutes } from "./push/routes.js";
+import { MemoryFanout, MemoryZoneStore } from "./push/store.js";
+import type { Fanout, ZoneStore } from "./push/store.js";
 import { playlistRoutes } from "./content/playlists.js";
 import { pushRoutes } from "./content/push.js";
 import { scheduleRoutes } from "./content/schedules.js";
@@ -74,6 +79,17 @@ export interface ScreenDeps {
   sources?: Sources;
   /** The platform version, the bundle `/screen/` loads unless pinned. */
   bundleVersion?: string;
+  /** The zones' states and the fan-out between containers; main gives the Valkey ones. */
+  push?: { zones: ZoneStore; fanout: Fanout };
+  /** How often an open stream pings (15 s); tests shorten it. */
+  streamPingMs?: number;
+}
+
+declare module "fastify" {
+  interface FastifyInstance {
+    /** This container's open push streams; main feeds it the bus. */
+    pushHub: PushHub;
+  }
 }
 
 /** How long a deck may wait for the renderer before health says `degraded` (contracts/screen.md, Health). */
@@ -173,22 +189,40 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   });
   app.decorateRequest("device", null);
   app.decorateRequest("deviceToken", null);
+  const fanout = deps.push?.fanout ?? new MemoryFanout();
+  const zones = deps.push?.zones ?? new MemoryZoneStore(fanout, deps.now);
+  const compose = {
+    ...deps,
+    fanout,
+    zones,
+    sources: deps.sources ?? noSources,
+    bundleVersion: deps.bundleVersion ?? "dev",
+  };
+  const push = {
+    ...compose,
+    contextOf: async (host: string) => {
+      const found = await deps.tenants.resolve(host);
+      return found.kind === "tenant" ? found.context : null;
+    },
+    tenantChanged: (event: Event) => {
+      deps.tenants.handleEvent(event);
+    },
+  };
+  const hub = new PushHub(push);
+  app.decorate("pushHub", hub);
   pairingRoutes(app, deps);
-  deviceRoutes(app, deps);
+  deviceRoutes(app, compose);
   heartbeatRoutes(app, deps);
   movingRoutes(app, deps);
   registryRoutes(app, deps);
   zoneRoutes(app, deps);
-  assignmentRoutes(app, deps);
+  assignmentRoutes(app, compose);
   playlistRoutes(app, deps);
   scheduleRoutes(app, deps);
   pushRoutes(app, deps);
   tickerRoutes(app, deps);
-  composeRoutes(app, {
-    ...deps,
-    sources: deps.sources ?? noSources,
-    bundleVersion: deps.bundleVersion ?? "dev",
-  });
+  composeRoutes(app, compose);
+  streamRoutes(app, { ...push, hub });
   void app.register(multipart, {
     limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 4, fieldSize: 1024, parts: 5 },
   });

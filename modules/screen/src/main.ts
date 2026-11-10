@@ -28,6 +28,8 @@ import { sweepOffline } from "./health.js";
 import { ValkeyKv } from "./kv.js";
 import { applyAgendaEvent } from "./content/agenda.js";
 import { httpSources } from "./compose/sources.js";
+import { REFRESH_MS } from "./push/hub.js";
+import { ValkeyFanout, ValkeyZoneStore } from "./push/store.js";
 import { renderLoop } from "./render/dispatch.js";
 import { ValkeyRenderQueue } from "./render/queue.js";
 import { TICK_MS, tickRunner } from "./tick/run.js";
@@ -92,6 +94,16 @@ async function main(): Promise<void> {
   // Without a listener a lost connection is an unhandled error event; /health reports it.
   queueClient.on("error", () => undefined);
   const renderQueue = new ValkeyRenderQueue(queueClient);
+  // The zones' states go on the queue's connection; the fan-out's subscriber needs one of its
+  // own, as a connection in subscribe mode can do nothing else.
+  const pushSubscriber = new Valkey(config.valkeyUrl);
+  pushSubscriber.on("error", () => undefined);
+  const push = {
+    zones: new ValkeyZoneStore(queueClient),
+    fanout: new ValkeyFanout(pushSubscriber, queueClient, (err) => {
+      log.warn({ err }, "push channel subscription failed");
+    }),
+  };
   const bus = new Bus(store, config.module, log);
   // Subscriptions block in XREAD on their connection; on the shared one the health check's PING
   // would wait behind them and time out, so they get a connection of their own.
@@ -173,6 +185,7 @@ async function main(): Promise<void> {
       log,
     ),
     bundleVersion: config.version,
+    push,
     health: screenHealth({
       module: config.module,
       version: config.version,
@@ -182,6 +195,22 @@ async function main(): Promise<void> {
       renderQueue,
     }),
   });
+  // What changes the zones' screens draw, from now on: a stream opened later starts from a whole
+  // state, and the refresh below catches what came while no container read the bus.
+  const pushStore = ValkeyStreamStore.fromUrl(config.valkeyUrl);
+  new Bus(pushStore, config.module, log).subscribeTenants(
+    ["screen", "agenda", "tenants", "theming"],
+    (event) => {
+      app.pushHub.handleEvent(event);
+    },
+    // An event's stream that appears after the scan at start (its first event) is found at the
+    // next rescan: every 5 seconds rather than the kit's 30, so a new event's first changes wait
+    // less than the zone refresh would (a scan reads 1000 keys a step, of the stream type only).
+    { rescanMs: 5000 },
+  );
+  const refresh = setInterval(() => {
+    void app.pushHub.refreshAll();
+  }, REFRESH_MS);
   await app.listen({ host: "0.0.0.0", port: PORT });
   log.info({ port: PORT, version: config.version }, "screen started");
   const sweep = setInterval(() => {
@@ -241,6 +270,7 @@ async function main(): Promise<void> {
 
   const stop = async (): Promise<void> => {
     clearInterval(sweep);
+    clearInterval(refresh);
     clearInterval(upkeep);
     clearInterval(ticker);
     // The running render goes back to its place before the pool and Valkey close; bounded, as a
@@ -257,6 +287,8 @@ async function main(): Promise<void> {
         store.close(),
         listenStore.close(),
         agendaStore.close(),
+        pushStore.close(),
+        pushSubscriber.quit(),
         kv.close(),
         queueClient.quit(),
         pool.end(),

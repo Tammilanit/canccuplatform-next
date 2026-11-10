@@ -12,6 +12,7 @@ import { announceLeft, leaveEvent } from "./detach.js";
 import { healthOf } from "./health.js";
 import { actorOf, assertWritable, body, deviceName, needs, notFound, tenantOf } from "./http.js";
 import type { Kv } from "./kv.js";
+import type { ZoneStore } from "./push/store.js";
 
 /** A device's place in the event: its `screen_assignments` row, joined by every event read. */
 export interface Placement {
@@ -76,7 +77,21 @@ export interface DeviceDeps {
   rights: RightsChecker;
   audit: Audit;
   log?: Logger;
+  /** For each device's `state_lag`. */
+  zones: ZoneStore;
   now?: () => number;
+}
+
+/** The `state_version` of the zone each device shows: its own, or its mirror target's. */
+async function shownVersions(zones: ZoneStore, rows: EventDevice[]): Promise<Map<string, number>> {
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const shown = rows.flatMap((r): [string, string][] => {
+    const key = r.zone_key ?? r.mirror_zone_key ?? byId.get(r.mirror_device_id ?? "")?.zone_key;
+    return key ? [[r.id, key]] : [];
+  });
+  const versions = new Map<string, number>();
+  for (const key of new Set(shown.map(([, k]) => k))) versions.set(key, await zones.version(key));
+  return new Map(shown.map(([id, key]) => [id, versions.get(key) ?? 0]));
 }
 
 type ById = { Params: { device_id: string } };
@@ -91,17 +106,19 @@ export function deviceRoutes(app: FastifyInstance, deps: DeviceDeps): void {
     async () => {
       const rows = await db.tenant(
         async (c) =>
-          (await c.query(`${EVENT_DEVICES_SQL} ORDER BY d.name, d.id`, [requireTenant()])).rows,
+          (await c.query(`${EVENT_DEVICES_SQL} ORDER BY d.name, d.id`, [requireTenant()]))
+            .rows as unknown as EventDevice[],
       );
       const health = await healthOf(
         deps.kv,
-        rows.map((r) => r.id as string),
+        rows.map((r) => r.id),
         now(),
+        await shownVersions(deps.zones, rows),
       );
       return {
         devices: rows.map((r) => ({
-          ...deviceView(r as unknown as EventDevice),
-          health: health.get(r.id as string),
+          ...deviceView(r),
+          health: health.get(r.id),
         })),
       };
     },

@@ -4,8 +4,10 @@
 # contracts/ come later.
 # Usage: demo-stack-test [--dry-run] [BASE_URL]   (default http://127.0.0.1)
 # The host must be an IP literal: the IP-mode stack serves the demo tenant only there.
-# Needs curl, jq and python3. The signed-in calls use the CI session stub's cookie
-# (canccu_session=demo-ci, see deploy/compose.ci.yml).
+# Needs curl, jq, python3 and docker (the push latency test runs in the screen container, through
+# CANCCU_DEMO_COMPOSE, default `docker compose -f deploy/compose.yml -f deploy/compose.ci.yml`).
+# The signed-in calls use the CI session stub's cookie (canccu_session=demo-ci, see
+# deploy/compose.ci.yml).
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
@@ -16,6 +18,7 @@ if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
 BASE=${1:-http://127.0.0.1}
 BASE=${BASE%/}
 COOKIE="canccu_session=${DEMO_SESSION:-demo-ci}"
+read -ra COMPOSE <<< "${CANCCU_DEMO_COMPOSE:-docker compose -f deploy/compose.yml -f deploy/compose.ci.yml}"
 EVENT_DIR=events/demo
 
 TESTS=(
@@ -41,6 +44,7 @@ TESTS=(
   "screen stores an uploaded file on the files volume and serves it back through Caddy"
   "bare /agenda and /notify go to their pages and keep the query"
   "agenda's and notify's API and health are not routed under their page prefix"
+  "screen pushes a ticker change to a paired screen's stream within a second (p95 of 20)"
 )
 
 if [ "$dry" = 1 ]; then
@@ -49,7 +53,7 @@ if [ "$dry" = 1 ]; then
   exit 0
 fi
 
-for tool in curl jq python3; do
+for tool in curl jq python3 docker; do
   command -v "$tool" >/dev/null || { echo "error: $tool not found" >&2; exit 2; }
 done
 [ -f "$EVENT_DIR/profile.yaml" ] || { echo "error: $EVENT_DIR/profile.yaml not found" >&2; exit 2; }
@@ -214,6 +218,18 @@ hidden_under_prefix() {
   done
 }
 check "${TESTS[21]}" hidden_under_prefix
+
+# The push channel (#304): from the ticker's PUT to its message on an open device stream. It runs
+# in the screen container against screen itself, since a device stream opens only from the demo
+# venue's addresses (the loopback there) and the host reaches Caddy from Docker's gateway.
+# shellcheck disable=SC2329
+push_within_a_second() {
+  code=000
+  "${COMPOSE[@]}" exec -T screen node --input-type=module \
+    < modules/screen/test/push-latency.mjs > "$TMP/body" 2>&1
+}
+check "${TESTS[22]}" push_within_a_second
+sed -n 's/^push latency: /     /p' "$TMP/body"
 
 if [ "$fail" = 0 ]; then echo "demo-stack-test: all $n tests passed"; else echo "demo-stack-test: tests failed" >&2; fi
 exit "$fail"
