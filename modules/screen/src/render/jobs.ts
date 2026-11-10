@@ -259,7 +259,7 @@ export async function recoverLost(deps: RenderDeps, jobId: string): Promise<void
       again ? [jobId] : [jobId, now, LOST_TWICE],
     );
     // The lost attempt's bytes: the row no longer holds them, so they go back once.
-    await releaseHeld(c, deps.storage, Number(job.reserved_bytes));
+    await releaseHeld(c, deps.storage, Number(job.reserved_bytes), deps.log);
     return { row: rows[0] as unknown as JobRow, attempt: job.attempts };
   });
   if (lost === null) return;

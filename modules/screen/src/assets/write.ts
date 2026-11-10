@@ -7,7 +7,7 @@ import type { Settings } from "../health.js";
 import { collect, dropUnreferenced, place } from "./files.js";
 import type { Dropped, Placed } from "./files.js";
 import type { Ffprobe } from "./probe.js";
-import { releaseHeld } from "./storage.js";
+import { holdCount, releaseHeld } from "./storage.js";
 import type { StorageQuota } from "./storage.js";
 import type { Prepared } from "./upload.js";
 import type { RenderQueue } from "../render/queue.js";
@@ -55,7 +55,7 @@ async function dropAndRelease<T>(
 ): Promise<Dropped[]> {
   const dropped = await dropUnreferenced(c, out.unused);
   const bytes = dropped.reduce((sum, f) => sum + f.bytes, out.freed ?? 0);
-  await releaseHeld(c, deps.storage, bytes);
+  await releaseHeld(c, deps.storage, bytes, deps.log);
   return dropped;
 }
 
@@ -74,6 +74,9 @@ export async function writeWithFile<T>(
   let dropped: Dropped[] = [];
   try {
     const result = await deps.db.tenant(async (c) => {
+      // The count lock first, the order the render side keeps (it takes the job rows after), so
+      // a waiting recount never stands between this write's job rows and its release.
+      await holdCount(c);
       const out = await fn(c, async () => {
         placed = await place(c, deps.filesRoot, deps.storage, prepared.temp, prepared);
         return placed.name;
@@ -86,8 +89,8 @@ export async function writeWithFile<T>(
   } catch (err) {
     const orphan = placed as Placed | null;
     if (orphan !== null && orphan.reserved > 0) {
-      await deps.storage
-        .release(orphan.reserved)
+      await deps.db
+        .tenant((c) => releaseHeld(c, deps.storage, orphan.reserved, deps.log))
         .catch((failed: unknown) =>
           deps.log?.warn({ err: failed }, "giving back an upload failed"),
         );
@@ -106,6 +109,8 @@ export async function writeDroppingFiles<T>(
 ): Promise<T> {
   let dropped: Dropped[] = [];
   const result = await deps.db.tenant(async (c) => {
+    // The count lock first, as in writeWithFile.
+    await holdCount(c);
     const out = await fn(c);
     dropped = await dropAndRelease(c, deps, out);
     return out.result;

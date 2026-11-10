@@ -259,14 +259,14 @@ async function settle(
       await holdCount(c);
       const now = await readJob(c, job.id, true);
       if (now === null) {
-        await releaseHeld(c, d.storage, reserved);
+        await releaseHeld(c, d.storage, reserved, d.log);
         return;
       }
       if (result === "gone" || now.state !== "running" || now.attempts !== attempt) {
         // Cancelled, or recovered by the sweep, which then gave the bytes back already.
         if (now.attempts === attempt && Number(now.reserved_bytes) > 0) {
           await c.query("UPDATE screen_render_jobs SET reserved_bytes = 0 WHERE id = $1", [job.id]);
-          await releaseHeld(c, d.storage, reserved);
+          await releaseHeld(c, d.storage, reserved, d.log);
         }
         return;
       }
@@ -283,7 +283,7 @@ async function settle(
         [job.id, ...(result === "requeue" ? [] : [new Date(d.now())]), ...values],
       );
       ended = rows[0] as unknown as JobRow;
-      if (!placed) await releaseHeld(c, d.storage, reserved);
+      if (!placed) await releaseHeld(c, d.storage, reserved, d.log);
       // The deck's slide count is known only now: a replace's ranges are fitted to it here.
       if (placed) await clampToDeck(c, job.asset_id);
     });

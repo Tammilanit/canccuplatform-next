@@ -3,7 +3,7 @@
  * reserved before a file is written and released when it is deleted or never written.
  */
 import { KitError, requireTenant } from "@canccu/kit";
-import type { ServiceIdentity, SqlClient } from "@canccu/kit";
+import type { Logger, ServiceIdentity, SqlClient } from "@canccu/kit";
 
 /** Advisory-lock class of the event's count; the file locks use 0x5c4e. */
 const COUNT_LOCK_CLASS = 0x5c4f;
@@ -89,17 +89,26 @@ export async function holdCount(c: SqlClient): Promise<void> {
  * Gives `bytes` back in the caller's transaction, before the commit that deletes (or rolls back)
  * the rows that held them, under the count lock: a recount sees the rows and the bytes together
  * or neither, never the rows gone while tenants still counts the bytes (contracts/tenants.md,
- * Repair). A failed release fails the transaction. One that reached tenants before a commit that
- * then failed leaves the count low until the next recount.
+ * Repair).
+ *
+ * A failed or timed-out release is logged and the transaction goes on: a takedown, a privacy
+ * delete or a render's end must not wait for tenants. Its cases, all mended by the next recount:
+ * - tenants never got it: the count stays high, the safe direction;
+ * - tenants applied it after the timeout: the count is right, and since the rows are gone no
+ *   retry can release the same bytes twice;
+ * - it reached tenants and the commit then failed: the count is low.
  */
 export async function releaseHeld(
   c: SqlClient,
   storage: StorageQuota,
   bytes: number,
+  log?: Logger,
 ): Promise<void> {
   if (bytes <= 0) return;
   await holdCount(c);
-  await storage.release(bytes);
+  await storage.release(bytes).catch((err: unknown) => {
+    log?.warn({ err, bytes }, "giving bytes back to the storage quota failed");
+  });
 }
 
 /** The recount's side of `holdCount`: no reserve runs until the caller's transaction ends. */
