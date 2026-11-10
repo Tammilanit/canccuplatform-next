@@ -1,0 +1,69 @@
+# The one setup of every `lint-types-test (<package>)` and `module (<name>)` leg (#302), so the
+# two jobs cannot drift apart. The caller checks the repo out first. See docs/ci.md#modules.
+name: check-module
+description: Run scripts/check-module for one module or package, with only what its checks use.
+inputs:
+  target:
+    description: A module name, or packages/<name>.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: What the checks use
+      id: needs
+      shell: bash
+      env:
+        TARGET: ${{ inputs.target }}
+      run: scripts/check-module --needs "$TARGET" | tee -a "$GITHUB_OUTPUT"
+    - if: steps.needs.outputs.node == 'true'
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - if: steps.needs.outputs.python == 'true'
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Start Valkey and Postgres from the Compose stack, those the checks use
+      id: services
+      if: steps.needs.outputs.postgres == 'true' || steps.needs.outputs.valkey == 'true'
+      shell: bash
+      env:
+        POSTGRES: ${{ steps.needs.outputs.postgres }}
+        VALKEY: ${{ steps.needs.outputs.valkey }}
+      run: |
+        services=()
+        if [ "$POSTGRES" = true ]; then services+=(postgres); fi
+        if [ "$VALKEY" = true ]; then services+=(valkey); fi
+        echo "list=${services[*]}" >> "$GITHUB_OUTPUT"
+        compose() { docker compose -f deploy/compose.yml -f deploy/compose.test.yml "$@"; }
+        failed() { echo "::error::$1"; compose logs "${services[@]}"; exit 1; }
+        compose up -d --wait "${services[@]}" || failed "Valkey or Postgres did not start"
+        # The module tests refuse a database whose name does not end in _test. Retried: the
+        # healthcheck also passes against the entrypoint's short-lived init server.
+        if [ "$POSTGRES" = true ]; then
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            compose exec -T postgres createdb -U canccu canccu_test && break
+            [ "$i" = 10 ] && failed "could not create canccu_test"
+            sleep 1
+          done
+        fi
+    - name: Lint, types and tests, with the Postgres and Valkey tests
+      shell: bash
+      env:
+        TARGET: ${{ inputs.target }}
+        SERVICES: ${{ steps.services.outputs.list }}
+        # Set on every leg, even without the service: a test that --needs missed then fails on a
+        # refused connection instead of skipping. The Compose superuser: the RLS tests create
+        # their own plain app role and switch to it. Each leg has its own Postgres, so its tests
+        # may drop and recreate their tables.
+        CANCCU_VALKEY_URL: redis://127.0.0.1:6379
+        CANCCU_DATABASE_URL: postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu_test
+      run: |
+        if scripts/check-module "$TARGET"; then exit 0; fi
+        if [ -n "$SERVICES" ]; then
+          echo "::group::Valkey and Postgres logs"
+          # shellcheck disable=SC2086  # one word per service
+          docker compose -f deploy/compose.yml logs $SERVICES
+          echo "::endgroup::"
+        fi
+        exit 1

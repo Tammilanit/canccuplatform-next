@@ -201,7 +201,7 @@ The kit writes nothing to disk. Its only in-memory items are the rights cache (â
 
 ## Tests for modules
 
-`@canccu/kit/testing` exports `MemoryStreamStore`, an in-memory `StreamStore` that records every `xadd` call.
+`@canccu/kit/testing` exports `MemoryStreamStore`, an in-memory `StreamStore` that records every `xadd` call, and `requireTestDatabase(client)`, which rejects unless the client is connected to a database whose name ends in `_test`; module tests call it before they drop or empty tables ([docs/ci.md](../../docs/ci.md#modules)).
 
 ## Check
 
@@ -217,8 +217,9 @@ The store and bus run against the real Valkey from the Compose stack: publish wi
 
 ```sh
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml up -d --wait valkey postgres
+# canccu_test is made once, as in docs/ci.md#modules (Locally)
 CANCCU_VALKEY_URL=redis://127.0.0.1:6379 \
-CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu \
+CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu_test \
   npx vitest run test/valkey.integration.test.ts test/postgres.integration.test.ts
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml down
 ```

@@ -18,7 +18,7 @@ import pytest
 from canccu_kit import Bus, Health, ServiceIdentity
 from canccu_kit.errors import NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
-from canccu_kit.testing import MemoryStreamStore
+from canccu_kit.testing import MemoryStreamStore, require_test_database_url
 
 from canccu_tenants.app import create_app
 from canccu_tenants.caller import Caller
@@ -145,6 +145,7 @@ async def sign_in_superadmin(env: Env) -> dict[str, str]:
 async def env(tmp_path: Path) -> AsyncIterator[Env]:
     if not URL:
         pytest.skip("needs CANCCU_DATABASE_URL")
+    await require_test_database_url(URL)  # before connect: it migrates
     db = await Db.connect(URL)
     async with db.pool.acquire() as conn:  # the login role: RLS and grants do not bind it
         await conn.execute(f"TRUNCATE {TABLES}, platform_audit")

@@ -1,7 +1,9 @@
-# Test overlay: publishes Valkey and Postgres on the host's loopback for the kit integration tests.
+# Test overlay: publishes Valkey and Postgres on the host's loopback for the module and kit tests.
+# They run on a test database next to `canccu`, never on it (docs/ci.md#modules):
 #   docker compose -f deploy/compose.yml -f deploy/compose.test.yml up -d --wait valkey postgres
+#   (canccu_test is made once, as in docs/ci.md#modules, Locally)
 #   CANCCU_VALKEY_URL=redis://127.0.0.1:6379 \
-#   CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu npm test   # or pytest
+#   CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu_test npm test   # or pytest
 services:
   valkey:
     ports:
