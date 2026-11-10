@@ -7,8 +7,8 @@ import type { Settings } from "../health.js";
 import { collect, dropUnreferenced, place } from "./files.js";
 import type { Dropped, Placed } from "./files.js";
 import type { Ffprobe } from "./probe.js";
-import { holdCount, releaseHeld } from "./storage.js";
-import type { StorageQuota } from "./storage.js";
+import { holdCount, releaseHeld } from "@canccu/kit";
+import type { StorageQuota } from "@canccu/kit";
 import type { Prepared } from "./upload.js";
 import type { RenderQueue } from "../render/queue.js";
 
@@ -48,7 +48,7 @@ export interface Written<T> {
 
 /**
  * The write's last statement: the bytes of everything it deleted go back in one release, so
- * nothing after it can roll the rows back while tenants keeps the release (storage.ts,
+ * nothing after it can roll the rows back while tenants keeps the release (the kit's
  * `releaseHeld`). Only a failed commit can still do that.
  */
 async function dropAndRelease<T>(
@@ -80,7 +80,7 @@ export async function writeWithFile<T>(
     const result = await deps.db.tenant(async (c) => {
       // The count lock first, the order the render side keeps (it takes the job rows after), so
       // a waiting recount never stands between this write's job rows and its release.
-      await holdCount(c);
+      await holdCount(c, "screen");
       try {
         const out = await fn(c, async () => {
           placed = await place(c, deps.filesRoot, deps.storage, prepared.temp, prepared);
@@ -108,7 +108,7 @@ export async function writeWithFile<T>(
       if (!given) {
         await deps.db
           .tenant(async (c) => {
-            await holdCount(c);
+            await holdCount(c, "screen");
             await releaseHeld(deps.storage, orphan.reserved, deps.log);
           })
           .catch((failed: unknown) =>
@@ -131,7 +131,7 @@ export async function writeDroppingFiles<T>(
   let dropped: Dropped[] = [];
   const result = await deps.db.tenant(async (c) => {
     // The count lock first, as in writeWithFile.
-    await holdCount(c);
+    await holdCount(c, "screen");
     const out = await fn(c);
     dropped = await dropAndRelease(c, deps, out);
     return out.result;

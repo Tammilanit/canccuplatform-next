@@ -25,7 +25,7 @@ import { ffprobe } from "./assets/probe.js";
 import type { Ffprobe } from "./assets/probe.js";
 import { assetRoutes } from "./assets/routes.js";
 import { fileRoutes } from "./assets/serve.js";
-import type { StorageQuota } from "./assets/storage.js";
+import type { StorageQuota } from "@canccu/kit";
 import { MAX_UPLOAD_BYTES } from "./assets/upload.js";
 import { versionRoutes } from "./assets/versions.js";
 import { assignmentRoutes } from "./assignments.js";

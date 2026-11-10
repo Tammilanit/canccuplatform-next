@@ -20,7 +20,7 @@ import { requireTenant } from "@canccu/kit";
 import type { Event, SettingValue } from "@canccu/kit";
 import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
-import type { StorageQuota } from "../src/assets/storage.js";
+import type { StorageQuota } from "@canccu/kit";
 import type { AuditEntry } from "../src/audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "../src/db.js";
 import type { Db } from "../src/db.js";

@@ -1,18 +1,25 @@
 /**
- * The event's storage quota, held by tenants (contracts/tenants.md, Storage quota): bytes are
- * reserved before a file is written and released when it is deleted or never written.
+ * The event's storage quota, held by tenants (contracts/tenants.md, Storage quota): a module
+ * reserves bytes before it writes a file and releases them when it deletes the file or never
+ * writes it. Every module that keeps files on the shared volume shares this client and its locks.
  */
-import { KitError, requireTenant } from "@canccu/kit";
-import type { Logger, ServiceIdentity, SqlClient } from "@canccu/kit";
+import { KitError } from "./errors.js";
+import type { Logger } from "./log.js";
+import type { SqlClient } from "./db.js";
+import type { ServiceIdentity } from "./service.js";
+import { requireTenant } from "./tenant.js";
 
-/** Advisory-lock class of the event's count; the file locks use 0x5c4e. */
+/**
+ * Advisory-lock class of the per-module count of an event; modules use other classes for their
+ * own locks (screen's file names use 0x5c4e).
+ */
 const COUNT_LOCK_CLASS = 0x5c4f;
 
 export interface StorageQuota {
   /** 413 `storage_quota_exceeded` or 409 `event_archived` from tenants, passed on unchanged. */
   reserve(bytes: number): Promise<void>;
   release(bytes: number): Promise<void>;
-  /** Sets screen's count of the event to `bytes`, whatever the quota (the recount, upkeep.ts). */
+  /** Sets the module's count of the event to `bytes`, whatever the quota (the recount). */
   repair(bytes: number): Promise<void>;
 }
 
@@ -29,25 +36,27 @@ const unavailable = (detail: string): KitError =>
  */
 const TENANTS_TIMEOUT_MS = 10_000;
 
+/**
+ * The quota of the current tenant, counted for the module `service` names: tenants answers 403
+ * for any other module (contracts/tenants.md, Reserve before writing).
+ */
 export function tenantsStorage(
   tenantsUrl: string,
-  service: ServiceIdentity,
+  service: Pick<ServiceIdentity, "module" | "headers">,
   fetchFn: typeof fetch = fetch,
   timeoutMs = TENANTS_TIMEOUT_MS,
 ): StorageQuota {
   const base = `${tenantsUrl.replace(/\/+$/, "")}/internal/tenants/storage`;
-  const change = async (
-    path: "reserve" | "release" | "modules/screen",
-    bytes: number,
-  ): Promise<void> => {
-    const url = `${base}/${path}?tenant_id=${encodeURIComponent(requireTenant())}`;
-    const repair = path === "modules/screen";
+  const module = service.module;
+  const change = async (path: "reserve" | "release" | "repair", bytes: number): Promise<void> => {
+    const repair = path === "repair";
+    const url = `${base}/${repair ? `modules/${module}` : path}?tenant_id=${encodeURIComponent(requireTenant())}`;
     let response: Response;
     try {
       response = await fetchFn(url, {
         method: repair ? "PUT" : "POST",
         headers: { "content-type": "application/json", ...service.headers("tenants") },
-        body: JSON.stringify(repair ? { bytes } : { module: "screen", bytes }),
+        body: JSON.stringify(repair ? { bytes } : { module, bytes }),
         signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (err) {
@@ -68,20 +77,30 @@ export function tenantsStorage(
   return {
     reserve: (bytes) => change("reserve", bytes),
     release: (bytes) => change("release", bytes),
-    repair: (bytes) => change("modules/screen", bytes),
+    repair: (bytes) => change("repair", bytes),
   };
 }
 
+const countKey = (module: string): string => `${module}/${requireTenant()}`;
+
 /**
- * Holds off a recount (upkeep.ts) until the caller's transaction ends. A writer takes it before
- * it reserves, so a recount waits for the commit that writes the rows holding those bytes instead
+ * Holds off `module`'s recount until the caller's transaction ends. A writer takes it before it
+ * reserves, so a recount waits for the commit that writes the rows holding those bytes instead
  * of reading the rows without them and then setting a count that has them: an upload under way
- * while screen counts is not lost from the count.
+ * while the module counts is not lost from the count.
  */
-export async function holdCount(c: SqlClient): Promise<void> {
+export async function holdCount(c: SqlClient, module: string): Promise<void> {
   await c.query("SELECT pg_advisory_xact_lock_shared($1, hashtext($2))", [
     COUNT_LOCK_CLASS,
-    requireTenant(),
+    countKey(module),
+  ]);
+}
+
+/** The recount's side of `holdCount`: no reserve runs until the caller's transaction ends. */
+export async function lockCount(c: SqlClient, module: string): Promise<void> {
+  await c.query("SELECT pg_advisory_xact_lock($1, hashtext($2))", [
+    COUNT_LOCK_CLASS,
+    countKey(module),
   ]);
 }
 
@@ -91,10 +110,10 @@ export async function holdCount(c: SqlClient): Promise<void> {
  * the rows and the bytes together or neither, never the rows gone while tenants still counts the
  * bytes (contracts/tenants.md, Repair).
  *
- * A failed or timed-out release is logged and the transaction goes on, so a takedown, a privacy
- * delete or a render's end still commits while tenants is down. It does wait for tenants, up to the
- * timeout and holding the caller's locks: a hung tenants slows those writes, it no longer fails
- * them. What is left, each mended by the next recount:
+ * A failed or timed-out release is logged and the transaction goes on, so a delete still commits
+ * while tenants is down. It does wait for tenants, up to the timeout and holding the caller's
+ * locks: a hung tenants slows those writes, it no longer fails them. What is left, each mended by
+ * the next recount:
  * - tenants never got it: the count stays high, the safe direction;
  * - tenants applies it after the timeout, so after the commit and perhaps after a recount that
  *   already left the bytes out: the count is low;
@@ -109,12 +128,4 @@ export async function releaseHeld(
   await storage.release(bytes).catch((err: unknown) => {
     log?.warn({ err, bytes }, "giving bytes back to the storage quota failed");
   });
-}
-
-/** The recount's side of `holdCount`: no reserve runs until the caller's transaction ends. */
-export async function lockCount(c: SqlClient): Promise<void> {
-  await c.query("SELECT pg_advisory_xact_lock($1, hashtext($2))", [
-    COUNT_LOCK_CLASS,
-    requireTenant(),
-  ]);
 }

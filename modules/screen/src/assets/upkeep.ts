@@ -11,8 +11,8 @@ import type { Logger } from "@canccu/kit";
 import type { Db } from "../db.js";
 import type { Kv } from "../kv.js";
 import { lockFiles } from "./files.js";
-import { lockCount } from "./storage.js";
-import type { StorageQuota } from "./storage.js";
+import { lockCount } from "@canccu/kit";
+import type { StorageQuota } from "@canccu/kit";
 
 export const UPKEEP_MS = 3_600_000;
 /** A stored file's name (files.ts, place): its sha256 and its extension. */
@@ -32,12 +32,12 @@ export interface UpkeepDeps {
  * the kept renders and the render attempts' reservations (a cancelled one's too, until its container
  * gives them back in settle). Under the exclusive count lock,
  * so no reserve or release runs between the read and the set: both happen before the commit of
- * the rows that hold the bytes, under the shared lock (storage.ts, `holdCount`, `releaseHeld`), so
+ * the rows that hold the bytes, under the shared lock (the kit's `holdCount` and `releaseHeld`), so
  * the read sees rows and bytes together.
  */
 export async function recount(deps: UpkeepDeps): Promise<void> {
   await deps.db.tenant(async (c) => {
-    await lockCount(c);
+    await lockCount(c, "screen");
     // One statement, so one snapshot for all three sums.
     const { rows } = await c.query(
       `SELECT (SELECT COALESCE(SUM(size_bytes), 0) FROM screen_files)

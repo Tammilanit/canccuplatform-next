@@ -20,7 +20,7 @@ import {
 } from "@canccu/kit";
 import { buildApp, screenHealth } from "./app.js";
 import { readAssets } from "./assets/reader.js";
-import { tenantsStorage } from "./assets/storage.js";
+import { tenantsStorage } from "@canccu/kit";
 import { upkeepAll } from "./assets/upkeep.js";
 import { tenantsAudit } from "./audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";

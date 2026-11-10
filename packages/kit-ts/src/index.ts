@@ -14,6 +14,7 @@ export * from "./rights.js";
 export * from "./secrets.js";
 export * from "./service.js";
 export * from "./settings.js";
+export * from "./storage.js";
 export * from "./store.js";
 export * from "./tenant.js";
 export * from "./web-security.js";

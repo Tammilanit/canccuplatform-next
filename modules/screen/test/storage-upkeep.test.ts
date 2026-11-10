@@ -5,55 +5,14 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { tenantFile, withTenant } from "@canccu/kit";
-import type { ServiceIdentity } from "@canccu/kit";
+import { holdCount, tenantFile, withTenant } from "@canccu/kit";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { holdCount, tenantsStorage } from "../src/assets/storage.js";
 import { recount, sweepFiles, upkeepAll } from "../src/assets/upkeep.js";
 import { DATABASE_URL, call, harness, png, upload } from "./helpers.js";
 import type { Harness } from "./helpers.js";
 import { pdfPages } from "./render-fake.js";
 
 const ORPHAN = `${"ab".repeat(32)}.png`;
-
-describe("tenantsStorage.repair", () => {
-  it("puts screen's count on the repair path", async () => {
-    const seen: { url: string; method: string; body: unknown }[] = [];
-    const service = { headers: () => ({ "x-test": "1" }) } as unknown as ServiceIdentity;
-    const storage = tenantsStorage("http://tenants:8080/", service, (url, init) => {
-      seen.push({
-        url: url as string,
-        method: init?.method ?? "",
-        body: JSON.parse(init?.body as string) as unknown,
-      });
-      return Promise.resolve(new Response("{}", { status: 200 }));
-    });
-    await withTenant("alpha", () => storage.repair(42));
-    expect(seen).toEqual([
-      {
-        url: "http://tenants:8080/internal/tenants/storage/modules/screen?tenant_id=alpha",
-        method: "PUT",
-        body: { bytes: 42 },
-      },
-    ]);
-  });
-});
-
-describe("tenantsStorage", () => {
-  it("gives up on a tenants that does not answer, so no lock waits on it for ever", async () => {
-    const service = { headers: () => ({}) } as unknown as ServiceIdentity;
-    const hung: typeof fetch = (_url, init) =>
-      new Promise((_resolve, reject) => {
-        init?.signal?.addEventListener("abort", () => {
-          reject(new Error("aborted"));
-        });
-      });
-    const storage = tenantsStorage("http://tenants:8080", service, hung, 50);
-    await expect(withTenant("alpha", () => storage.release(1))).rejects.toMatchObject({
-      code: "tenants_unavailable",
-    });
-  });
-});
 
 describe.skipIf(!DATABASE_URL)("storage upkeep", () => {
   let h: Harness;
@@ -103,7 +62,7 @@ describe.skipIf(!DATABASE_URL)("storage upkeep", () => {
     const holding = new Promise<void>((resolve) => (held = resolve));
     const uploadTx = inAlpha(() =>
       h.db.tenant(async (c) => {
-        await holdCount(c);
+        await holdCount(c, "screen");
         await h.quota.reserve(50);
         held();
         await gate;
