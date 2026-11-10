@@ -18,6 +18,7 @@ import type {
 import { install, installServiceIdentity, installTenancy } from "@canccu/kit/fastify";
 import type { Audit } from "./audit.js";
 import type { Db } from "./db.js";
+import { brandRoutes } from "./brand-routes.js";
 import { draftRoutes } from "./draft-routes.js";
 import { fileRoutes } from "./file-routes.js";
 import type { FileStore } from "./files.js";
@@ -96,6 +97,7 @@ export function buildApp(deps: ThemingDeps): FastifyInstance {
     installTenancy(event, deps.tenants);
     themeRoutes(event, deps);
     draftRoutes(event, deps);
+    brandRoutes(event, deps);
     fileRoutes(event, deps);
     packageRoutes(event, deps);
     revisionRoutes(event, deps);
