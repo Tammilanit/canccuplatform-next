@@ -1,8 +1,12 @@
 /** A theming app on a real Postgres (RLS needs one) with fake tenants and admin, files in a temp dir. */
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { request } from "node:http";
+import type { IncomingHttpHeaders } from "node:http";
+import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
+import { parse as parseYaml } from "yaml";
 import type { FastifyInstance, LightMyRequestResponse } from "fastify";
 import {
   AdminClient,
@@ -15,6 +19,7 @@ import {
 import type { TenantContext } from "@canccu/kit";
 import { buildApp } from "../src/app.js";
 import { MIGRATIONS_DIR, poolDb } from "../src/db.js";
+import { putEmbed } from "../src/embeds.js";
 import type { Db } from "../src/db.js";
 import { diskFiles } from "../src/files.js";
 import type { FileStore } from "../src/files.js";
@@ -50,6 +55,8 @@ const TENANTS: Record<string, TenantContext> = {
   "venue.test": context("venue", { info_page_mode: "venue_only" }),
   "closed.test": context("closed", { info_page_mode: "sign_in" }),
   "zeta.test": context("zeta", { admin_access: "restricted" }),
+  // The browser tests: a browser sends fetch metadata over plain http only to localhost.
+  localhost: context("local"),
 };
 
 /** Profile themes by event; only `venue` has one. */
@@ -91,11 +98,11 @@ export interface Harness {
 }
 
 /** Fresh tables per file, migrated by the module's own files, as at start. */
-export async function harness(): Promise<Harness> {
+export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
   await admin.query(
-    "DROP TABLE IF EXISTS theming_files, theming_drafts, theming_revisions, theming_file_refs, theming_pins, theming_migrations CASCADE",
+    "DROP TABLE IF EXISTS theming_files, theming_drafts, theming_revisions, theming_file_refs, theming_pins, theming_embed_files, theming_migrations CASCADE",
   );
   await runMigrations(admin, MIGRATIONS_DIR, { ledger: "theming_migrations", lock: 2 });
   await admin.end();
@@ -110,6 +117,7 @@ export async function harness(): Promise<Harness> {
     rights: new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin })),
     tenants: new TenantResolver({ tenantsUrl: "http://tenants", fetch: fakeTenants }),
     health: createHealth({ module: "theming", version: "dev", checks: {} }),
+    ipMode: opts.ipMode ?? false,
   });
   await app.ready();
   return {
@@ -178,17 +186,86 @@ export function seedRevision(
   );
 }
 
+/** An embed as a package holds it: package paths (`embeds/<name>/…`) to bytes. */
+export interface EmbedFiles {
+  entry: string;
+  files: Record<string, Buffer>;
+}
+
+/** The level-up demo theme's `drift` embed, read from events/demo as a package upload would. */
+export async function demoEmbed(theme: string, name: string): Promise<EmbedFiles> {
+  const root = new URL(`../../../events/demo/themes/${theme}/`, import.meta.url).pathname;
+  const manifest = parseYaml(await readFile(join(root, "theme.yaml"), "utf8")) as {
+    embeds: Record<string, { entry: string; files?: string[] }>;
+  };
+  const embed = manifest.embeds[name];
+  if (embed === undefined) throw new Error(`no embed ${name} in ${theme}`);
+  const files: Record<string, Buffer> = {};
+  for (const path of [embed.entry, ...(embed.files ?? [])]) {
+    files[path] = await readFile(join(root, path));
+  }
+  return { entry: embed.entry, files };
+}
+
+/**
+ * Publish a revision with embeds, or fill the draft with them, the way publish (#241) and package
+ * uploads (#244) will: through putEmbed, owned by `r:<revision>` or `draft`.
+ */
+export function seedEmbeds(
+  h: Harness,
+  tenant: string,
+  owner: { revision: number } | { draftKey: string },
+  embeds: Record<string, EmbedFiles>,
+): Promise<void> {
+  return withTenant(tenant, () =>
+    h.db.tenant(async (c) => {
+      const manifest = JSON.stringify({
+        name: "Seeded",
+        embeds: Object.fromEntries(
+          Object.entries(embeds).map(([name, e]) => [
+            name,
+            { entry: e.entry, files: Object.keys(e.files).filter((p) => p !== e.entry) },
+          ]),
+        ),
+      });
+      if ("revision" in owner) {
+        await c.query(
+          `INSERT INTO theming_revisions (revision, manifest, tokens, tokens_css, admin_tokens_css,
+                                          embed_color)
+           VALUES ($1, $2, $3, 'x.css', 'x.css', 0)`,
+          [owner.revision, manifest, JSON.stringify(fillTokens({}))],
+        );
+      } else {
+        await c.query(`INSERT INTO theming_drafts (draft_key, manifest) VALUES ($1, $2)`, [
+          owner.draftKey,
+          manifest,
+        ]);
+      }
+      const ownerName = "revision" in owner ? `r:${owner.revision}` : "draft";
+      for (const [name, e] of Object.entries(embeds)) {
+        await putEmbed(c, h.files, ownerName, name, e.entry, new Map(Object.entries(e.files)));
+      }
+    }),
+  );
+}
+
 export interface Call {
   host?: string;
   ip?: string;
   session?: string;
 }
 
-export function get(h: Harness, url: string, c: Call = {}): Promise<LightMyRequestResponse> {
+export function get(
+  h: Harness,
+  url: string,
+  c: Call = {},
+  headers: Record<string, string> = {},
+): Promise<LightMyRequestResponse> {
   return h.app.inject({
     method: "GET",
     url,
     headers: {
+      ...headers,
       host: c.host ?? "alpha.test",
       "x-forwarded-for": c.ip ?? VENUE_IP,
       ...(c.session ? { cookie: `canccu_session=${c.session}` } : {}),
@@ -198,4 +275,29 @@ export function get(h: Harness, url: string, c: Call = {}): Promise<LightMyReque
 
 export function code(res: LightMyRequestResponse): string {
   return res.json<{ error: { code: string } }>().error.code;
+}
+
+/** A request whose path reaches the server byte for byte, as no browser or inject() sends it. */
+export async function raw(
+  h: Harness,
+  path: string,
+  headers: Record<string, string> = {},
+): Promise<{ status: number; headers: IncomingHttpHeaders; body: string }> {
+  if (!h.app.server.listening) await h.app.listen({ host: "127.0.0.1", port: 0 });
+  const { port } = h.app.server.address() as AddressInfo;
+  return new Promise((resolve, reject) => {
+    const req = request(
+      { host: "127.0.0.1", port, path, headers: { ...headers, host: "alpha.test" } },
+      (res) => {
+        let body = "";
+        res.setEncoding("utf8");
+        res.on("data", (chunk: string) => (body += chunk));
+        res.on("end", () => {
+          resolve({ status: res.statusCode ?? 0, headers: res.headers, body });
+        });
+      },
+    );
+    req.on("error", reject);
+    req.end();
+  });
 }

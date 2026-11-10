@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Tenants API
-  version: 2.2.0
+  version: 2.3.0
   summary: Events as tenants on one shared stack, their hostnames, venues, users, roles, access and audit log.
   description: |
     Machine-readable part of the tenants contract. Prose, rules and events: contracts/tenants.md.
@@ -116,6 +116,8 @@ paths:
     $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1resolve"
   /internal/tenants/tenants/{tenant_id}:
     $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1tenants~1{tenant_id}"
+  /internal/tenants/tenants/{tenant_id}/users/{user_id}:
+    $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1tenants~1{tenant_id}~1users~1{user_id}"
   /internal/tenants/ip-mode:
     $ref: "tenants/internal.openapi.yaml#/~1internal~1tenants~1ip-mode"
   /internal/tenants/ask:
@@ -958,6 +960,24 @@ components:
         joined_at:
           type: string
           format: date-time
+    MembershipInternal:
+      type: object
+      required: [member, event_admin, joined_at]
+      properties:
+        member:
+          type: boolean
+          description: The user is a member (attendee) of the event now.
+        event_admin:
+          type: boolean
+          description: |
+            The user holds the event-admin role in the event (its event admins list). Independent of `member`: an
+            event admin need not be a member. A superadmin's support window is not the role and does not set it.
+        joined_at:
+          type: [string, "null"]
+          format: date-time
+          description: |
+            When the current membership began: set anew when a user who left joins again (joining again while a
+            member keeps it), so it tells one membership from the next. `null` when `member` is false.
     MemberPage:
       type: object
       required: [members, next_cursor]

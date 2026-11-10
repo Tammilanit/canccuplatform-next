@@ -70,6 +70,7 @@ async function main(): Promise<void> {
   // would wait behind them and time out, so they get a connection of their own.
   const listenStore = ValkeyStreamStore.fromUrl(config.valkeyUrl);
   const listener = new Bus(listenStore, config.module, log);
+  const ipMode = process.env.CANCCU_IP_MODE === "demo";
   const tenants = new TenantResolver({
     tenantsUrl: env("CANCCU_TENANTS_URL"),
     service,
@@ -77,7 +78,7 @@ async function main(): Promise<void> {
       process.env.CANCCU_SIGNIN_HOSTNAME,
       process.env.CANCCU_SUPERADMIN_HOSTNAME,
     ].filter((h): h is string => !!h),
-    ...(process.env.CANCCU_IP_MODE === "demo" ? { ipMode: { version: config.version } } : {}),
+    ...(ipMode ? { ipMode: { version: config.version } } : {}),
   });
   const rights = new RightsChecker(new AdminClient(config.adminUrl));
   listener.subscribe(["tenants", "admin"], (event) => {
@@ -91,6 +92,7 @@ async function main(): Promise<void> {
     profile: noProfile,
     rights,
     tenants,
+    ipMode,
     health: themingHealth({
       module: config.module,
       version: config.version,

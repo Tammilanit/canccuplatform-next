@@ -17,6 +17,11 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
             await conn.execute("INSERT INTO notify_dedupe (key) VALUES ($1)", marker)
             await conn.execute("INSERT INTO notify_event_state (time_zone) VALUES ($1)", marker)
             await conn.execute(
+                "INSERT INTO notify_custom_topics (key, based_on, title, conditions)"
+                " VALUES ($1, 'schedule', 't', '[]')",
+                f"custom_{marker}",
+            )
+            await conn.execute(
                 "INSERT INTO notify_check_in_keys (sealed, created_at) VALUES ($1, $2)",
                 marker,
                 env.clock[0],
@@ -44,6 +49,7 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
                 "SELECT time_zone AS v FROM notify_event_state",
                 "SELECT sealed AS v FROM notify_check_in_keys",
                 "SELECT id AS v FROM notify_check_ins",
+                "SELECT substr(key, 8) AS v FROM notify_custom_topics",
                 "SELECT id AS v FROM notify_notifications",
             ):
                 found |= {r["v"] for r in await conn.fetch(sql)}

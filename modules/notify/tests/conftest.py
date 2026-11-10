@@ -25,7 +25,7 @@ from canccu_kit import (
     tenant_scope,
 )
 from canccu_kit.access import TenantContext
-from canccu_kit.errors import AdminUnavailable, NotSignedIn
+from canccu_kit.errors import AdminError, AdminUnavailable, NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.testing import MemoryStreamStore
 
@@ -78,10 +78,25 @@ class FakeSettings:
 
     values: dict[str, dict[str, Any]] = field(default_factory=dict)
     down: bool = False
+    writes: list[tuple[str, dict[str, Any], str]] = field(default_factory=list)
+    meanwhile: list[dict[str, Any]] = field(default_factory=list)
+    """Writes someone else makes in admin just before each of ours: ours is then stale."""
 
     async def ensure(self) -> None:
         if self.down:
             raise AdminUnavailable("admin unreachable")
+
+    async def load(self) -> None:
+        await self.ensure()
+
+    async def write(self, values: dict[str, Any], *, actor_user_id: str) -> None:
+        await self.ensure()
+        tenant = current_tenant() or ""
+        if self.meanwhile:
+            self.values.setdefault(tenant, {}).update(self.meanwhile.pop(0))
+            raise AdminError("stale", status=409, code="version_conflict")
+        self.values.setdefault(tenant, {}).update(values)
+        self.writes.append((tenant, values, actor_user_id))
 
     def get(self, key: str, default: Any = None) -> Any:
         return self.values.get(current_tenant() or "", {}).get(key, default)
@@ -173,8 +188,8 @@ async def env() -> AsyncIterator[Env]:
     async with db.pool.acquire() as conn:  # the login role: RLS does not bind it
         await conn.execute(
             "TRUNCATE notify_topic_types, notify_topic_type_history, notify_topic_config,"
-            " notify_notifications, notify_dedupe, notify_event_state, notify_check_in_keys,"
-            " notify_check_ins"
+            " notify_notifications, notify_dedupe, notify_event_state, notify_custom_topics,"
+            " notify_check_in_keys, notify_check_ins"
         )
     access.ZONES.clear()
     contexts = {tid: context(tid) for tid in HOSTS.values()}

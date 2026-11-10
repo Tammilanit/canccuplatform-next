@@ -1,4 +1,4 @@
-/** The theming module's Fastify app: health, tenancy, the current theme and the served files. */
+/** The theming module's Fastify app: health, tenancy, the current theme, the served files and the sandbox. */
 import { constants } from "node:fs";
 import { access } from "node:fs/promises";
 import Fastify from "fastify";
@@ -9,6 +9,7 @@ import { install, installTenancy } from "@canccu/kit/fastify";
 import type { Db } from "./db.js";
 import type { FileStore } from "./files.js";
 import { themeRoutes } from "./routes.js";
+import { sandboxRoutes } from "./sandbox.js";
 import type { ProfileSource } from "./profile.js";
 
 export interface ThemingDeps {
@@ -18,6 +19,8 @@ export interface ThemingDeps {
   rights: RightsChecker;
   tenants: TenantResolver;
   health: Health;
+  /** The IP-mode demo stack (contracts/theming.md, The sandbox). */
+  ipMode: boolean;
 }
 
 /**
@@ -65,5 +68,6 @@ export function buildApp(deps: ThemingDeps): FastifyInstance {
   install(app, { health: deps.health });
   installTenancy(app, deps.tenants);
   themeRoutes(app, deps);
+  sandboxRoutes(app, deps);
   return app;
 }

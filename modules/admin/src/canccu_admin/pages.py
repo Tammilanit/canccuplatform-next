@@ -15,6 +15,12 @@ NAV = (
     ("profile", "Profile", "admin.profile.read"),
     ("people", "People", "admin.rights.write"),
 )
+# The "Event" menu (brief P4, plan issue-187 D9): the event's pages, served by the modules that
+# own them; (href, label, the rights of which any one opens the page).
+EVENT_NAV = (
+    ("/agenda/", "Run of show", ("agenda.items.write", "agenda.crew.read")),
+    ("/notify/admin/topics", "Notifications", ("notify.topics.write", "notify.stats.read")),
+)
 SIGN_OUT = (
     f"<form method=post action={BASE}/sign-out style='display:inline'>"
     "<button>Sign out</button></form>"
@@ -28,6 +34,13 @@ def page(
     header = ""
     if session is not None:
         links = [f'<a href="{BASE}/{p}">{n}</a>' for p, n, right in NAV if session.has(right)]
+        event = [
+            f'<a href="{href}">{n}</a>'
+            for href, n, rights in EVENT_NAV
+            if any(session.has(r) for r in rights)
+        ]
+        if event:
+            links.append(f"Event: {' · '.join(event)}")
         header = f"<nav>{' · '.join([*links, SIGN_OUT])}</nav>"
     return HTMLResponse(
         f"<!doctype html><meta charset=utf-8><title>{html.escape(title)}</title>"

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Admin API
-  version: 1.3.0
+  version: 1.5.0
   summary: Settings, health, session and rights, profile save and load.
   description: |
     Machine-readable part of the admin contract. Prose, rules and events: contracts/admin.md.
@@ -133,6 +133,126 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Settings"
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/ServiceUnauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [internal]
+      operationId: patchSettingsInternal
+      summary: A module writes its own settings for one tenant
+      description: |
+        Sets the keys in `values` and keeps every other key. Only the module itself: the service identity's caller
+        must be `{module}` (403 `service_forbidden` otherwise); the shared key proves a module of this stack, not
+        which one. Only the keys and value types the module's own contract lists for its settings (400
+        `invalid_request` otherwise). A stale `settings_version` is 409 `version_conflict`: read again and retry.
+        An archived event is 409 `event_archived`; the calling module refuses its own writes on an archived event
+        before it calls. On success `settings_version` goes up by one and `admin.settings.changed` is emitted with
+        `actor_user_id`, its `keys` being the keys in `values` whose value changed. The calling module writes
+        admin first, commits its own store only after a 200, and audits the change that caused the write; it
+        ignores the `admin.settings.changed` of its own write. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsPatch"
+      responses:
+        "200":
+          description: The stored settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/ServiceUnauthenticated"
+        "403":
+          $ref: "#/components/responses/ServiceForbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /internal/admin/profile/theme:
+    get:
+      tags: [internal, profile]
+      operationId: getProfileThemeInternal
+      summary: The event profile's theme tokens and main logo, for theming
+      description: |
+        The short form of the event's design that theming applies while the event has no published revision
+        (contracts/theming.md). Theming reads it when it holds no copy and again on `admin.profile.loaded`. An
+        event without a profile, or whose profile has no `theme` or no `logos.main`, answers `theme: {}` or
+        `logo_main: null`; an event the tenants module does not know is 404 `not_found`. Only theming calls it,
+        with its service identity; any other module is 403 `service_forbidden`. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+      responses:
+        "200":
+          description: The profile's theme and main logo.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileThemeInternal"
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /internal/admin/profile/logo:
+    get:
+      tags: [internal, profile]
+      operationId: getProfileLogoInternal
+      summary: The bytes of the event profile's main logo
+      description: |
+        The file `logos.main` names, as stored with the profile, so theming can serve it at revision 0 without
+        reading admin's files. Its SHA-256 is `logo_main.sha256` of `GET /internal/admin/profile/theme`. 404
+        `not_found` when the profile names no main logo, or for an unknown tenant. The `ETag` is the bytes'
+        SHA-256: when it differs from `logo_main.sha256`, a new profile came in between, and theming reads
+        `/internal/admin/profile/theme` again. Only theming calls it, as above. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+      responses:
+        "200":
+          description: The logo file.
+          headers:
+            ETag:
+              description: The SHA-256 of the bytes, hex, in double quotes.
+              schema:
+                type: string
+                pattern: "^\"[0-9a-f]{64}\"$"
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
         "400":
           $ref: "common.openapi.yaml#/components/responses/BadRequest"
         "404":
@@ -469,7 +589,20 @@ components:
     Conflict:
       description: |
         `version_conflict` (the settings, or a member's granted rights, changed since they were read);
-        `event_archived` (granting rights in an archived event, which is read-only).
+        `event_archived` (granting rights, or a module writing its own settings, in an archived event, which is
+        read-only).
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    ServiceUnauthenticated:
+      description: "`service_unauthenticated`: no valid `x-canccu-service` header (an internal path, no session)."
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    ServiceForbidden:
+      description: "`service_forbidden`: the calling module may not use this path (it is not `{module}`)."
       content:
         application/json:
           schema:
@@ -518,6 +651,27 @@ components:
               - type: string
               - type: number
               - type: boolean
+    ProfileThemeInternal:
+      type: object
+      required: [theme, logo_main]
+      properties:
+        theme:
+          description: The profile's `theme` as it is (contracts/profile.md); `{}` when it has none.
+          $ref: "profile.schema.json#/properties/theme"
+        logo_main:
+          description: The file `logos.main` names, or `null` when the profile names none.
+          oneOf:
+            - type: object
+              required: [sha256, bytes]
+              properties:
+                sha256:
+                  type: string
+                  pattern: "^[0-9a-f]{64}$"
+                  description: Changes whenever the file does, so theming fetches the bytes only when it differs.
+                bytes:
+                  type: integer
+                  minimum: 0
+            - type: "null"
     Settings:
       type: object
       required: [module, settings_version, values]
@@ -544,6 +698,24 @@ components:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/SettingValue"
+    SettingsPatch:
+      type: object
+      required: [settings_version, values, actor_user_id]
+      properties:
+        settings_version:
+          type: integer
+          minimum: 0
+        values:
+          type: object
+          description: The keys to set; keys left out keep their values.
+          minProperties: 1
+          additionalProperties:
+            $ref: "#/components/schemas/SettingValue"
+        actor_user_id:
+          type: string
+          description: |
+            The user whose change in the calling module caused this write. Always a user: a module never mirrors
+            a system change through this path.
     Session:
       type: object
       required: [user, rights, expires_at]

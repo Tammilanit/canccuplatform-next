@@ -53,7 +53,7 @@ function newEpoch(): string {
 }
 
 /** JSON with sorted keys: jsonb comes back in its own key order, so plain stringify would differ. */
-function canonical(value: unknown): string {
+export function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
   if (typeof value === "object" && value !== null) {
     const entries = Object.entries(value).sort(([a], [b]) => (a < b ? -1 : 1));
@@ -106,8 +106,8 @@ export async function zoneExistsHere(c: SqlClient, key: string): Promise<boolean
 
 /**
  * What may refer to a zone key, each answering why the zone is in use or null (plan #107, D9).
- * The contract names devices, schedule windows, active pushes and break playlists; #108 adds
- * its three here. The foreign keys on `assignments` are the database's backstop for the first.
+ * The contract names devices, schedule windows, active pushes and break playlists. The foreign
+ * keys on `assignments` and `screen_schedules` are the database's backstop for the first two.
  */
 export type ZoneUse = (c: SqlClient, key: string) => Promise<string | null>;
 export const ZONE_USES: ZoneUse[] = [
@@ -120,6 +120,33 @@ export const ZONE_USES: ZoneUse[] = [
     return n === 0
       ? null
       : `${n} screen(s) show this zone or mirror it. Assign them elsewhere first.`;
+  },
+  async (c, key) => {
+    const { rows } = await c.query(
+      "SELECT count(*)::int AS n FROM screen_schedules WHERE zone_key = $1",
+      [key],
+    );
+    const n = (rows[0]?.n as number | undefined) ?? 0;
+    return n === 0 ? null : `${n} schedule window(s) play in this zone. Delete them first.`;
+  },
+  async (c, key) => {
+    // A push with no zones plays everywhere and names none, so it holds no zone. One past its
+    // `until` holds it until the tick ends it, at most a second later.
+    const { rows } = await c.query(
+      "SELECT 1 FROM screen_pushes WHERE ended_at IS NULL AND $1 = ANY(zones) LIMIT 1",
+      [key],
+    );
+    return rows.length === 0 ? null : "Content is pushed to this zone now. Clear the push first.";
+  },
+  async (c, key) => {
+    const { rows } = await c.query(
+      "SELECT name FROM screen_playlists WHERE break->'zones' ? $1 ORDER BY name LIMIT 1",
+      [key],
+    );
+    const name = rows[0]?.name as string | undefined;
+    return name === undefined
+      ? null
+      : `The break playlist "${name}" interrupts this zone. Take the zone off it first.`;
   },
 ];
 

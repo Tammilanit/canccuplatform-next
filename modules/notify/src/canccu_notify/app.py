@@ -2,12 +2,24 @@
 
 from __future__ import annotations
 
-from canccu_kit import Health, ServiceIdentity, TenantResolver
+from canccu_kit import Health, KitError, NotSignedIn, ServiceIdentity, TenantResolver
 from canccu_kit.starlette import install, install_service_identity, install_tenancy
 from starlette.applications import Starlette
+from starlette.requests import Request
+from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from . import checkin, checkin_page, config, inbox, registry
+from . import (
+    checkin,
+    checkin_page,
+    config,
+    custom_api,
+    custom_pages,
+    inbox,
+    registry,
+    topic_pages,
+    web,
+)
 from .deps import Deps
 
 
@@ -18,10 +30,18 @@ def create_app(
     private.state.deps = d
     install(private)
     install_service_identity(private, service)
-    public = Starlette(routes=config.ROUTES + inbox.ROUTES + checkin.ROUTES + checkin_page.ROUTES)
+    # /admin/topics/new before /admin/topics/{topic}: Starlette takes the first route that matches.
+    pages = custom_pages.ROUTES + topic_pages.ROUTES + web.ROUTES + checkin_page.ROUTES
+    api = config.ROUTES + custom_api.ROUTES + inbox.ROUTES + checkin.ROUTES
+    public = Starlette(routes=api + pages)
+    # Starlette's slash redirects would drop the /notify prefix Caddy strips.
+    public.router.redirect_slashes = False
     public.state.deps = d
     install(public, health)
     install_tenancy(public, resolver)
+    # After install(), so these replace the kit's JSON handler for the pages only.
+    public.add_exception_handler(NotSignedIn, _not_signed_in)
+    public.add_exception_handler(KitError, _kit_error)
 
     async def app(scope: Scope, receive: Receive, send: Send) -> None:
         # Tenancy would 404 the internal callers' host (`notify:8080`): they skip it.
@@ -29,3 +49,22 @@ def create_app(
         await (private if is_internal else public)(scope, receive, send)
 
     return app
+
+
+def _is_page(request: Request) -> bool:
+    return request.url.path.startswith("/admin/")
+
+
+async def _not_signed_in(request: Request, exc: Exception) -> Response:
+    """The API answers 401 (contracts/notify.md); a page sends the browser to sign in."""
+    assert isinstance(exc, NotSignedIn)
+    if not _is_page(request):
+        return JSONResponse(exc.to_body(), status_code=exc.status)
+    return RedirectResponse(web.SIGN_IN, status_code=303)
+
+
+async def _kit_error(request: Request, exc: Exception) -> Response:
+    assert isinstance(exc, KitError)
+    if not _is_page(request):
+        return JSONResponse(exc.to_body(), status_code=exc.status)
+    return web.error_page(request, exc)

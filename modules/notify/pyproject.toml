@@ -12,7 +12,6 @@ dependencies = [
   "uvicorn==0.38.0",
   "asyncpg==0.30.0",
   "httpx==0.28.1",
-  # Form parsing for the check-in page (Starlette needs it); the same pin as admin.
   "python-multipart==0.0.20",
 ]
 
