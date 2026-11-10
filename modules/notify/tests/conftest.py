@@ -28,7 +28,7 @@ from canccu_kit import (
 from canccu_kit.access import TenantContext
 from canccu_kit.errors import AdminError, AdminUnavailable, NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
-from canccu_kit.testing import MemoryStreamStore, require_test_database
+from canccu_kit.testing import MemoryStreamStore, require_test_database_url
 from fakepush import FakePushService
 
 from canccu_notify import consumer
@@ -204,9 +204,9 @@ DOWN_HOST = "down.example.test"
 async def env() -> AsyncIterator[Env]:
     if not URL:
         pytest.skip("needs CANCCU_DATABASE_URL")
+    await require_test_database_url(URL)  # before connect: it migrates
     db = await Db.connect(URL)
     async with db.pool.acquire() as conn:  # the login role: RLS does not bind it
-        await require_test_database(conn)
         await conn.execute(
             "TRUNCATE notify_topic_types, notify_topic_type_history, notify_topic_config,"
             " notify_notifications, notify_dedupe, notify_event_state, notify_custom_topics,"

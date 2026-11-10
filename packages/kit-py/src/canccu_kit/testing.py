@@ -9,6 +9,8 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+import asyncpg
+
 from .bus import Event, Handler
 from .context import new_id
 from .log import utc_now_iso
@@ -177,3 +179,14 @@ async def require_test_database(conn: _Fetches) -> None:
             f'the tests are connected to the database "{name}": they drop and empty tables, so'
             " they run only on a database whose name ends in _test (docs/ci.md#modules)"
         )
+
+
+async def require_test_database_url(url: str) -> None:
+    """`require_test_database` on a connection of its own, closed again: for a fixture to call
+    before it connects a module's store, whose connect already runs the migrations (some drop
+    tables) on whatever database `url` names."""
+    conn = await asyncpg.connect(url)
+    try:
+        await require_test_database(conn)
+    finally:
+        await conn.close()

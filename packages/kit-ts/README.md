@@ -217,7 +217,7 @@ The store and bus run against the real Valkey from the Compose stack: publish wi
 
 ```sh
 docker compose -f ../../deploy/compose.yml -f ../../deploy/compose.test.yml up -d --wait valkey postgres
-docker compose -f ../../deploy/compose.yml exec postgres createdb -U canccu canccu_test   # once
+# canccu_test is made once, as in docs/ci.md#modules (Locally)
 CANCCU_VALKEY_URL=redis://127.0.0.1:6379 \
 CANCCU_DATABASE_URL=postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu_test \
   npx vitest run test/valkey.integration.test.ts test/postgres.integration.test.ts

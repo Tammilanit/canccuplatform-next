@@ -35,11 +35,17 @@ runs:
         if [ "$POSTGRES" = true ]; then services+=(postgres); fi
         if [ "$VALKEY" = true ]; then services+=(valkey); fi
         echo "list=${services[*]}" >> "$GITHUB_OUTPUT"
-        docker compose -f deploy/compose.yml -f deploy/compose.test.yml up -d --wait "${services[@]}"
-        # The module tests refuse a database whose name does not end in _test.
+        compose() { docker compose -f deploy/compose.yml -f deploy/compose.test.yml "$@"; }
+        failed() { echo "::error::$1"; compose logs "${services[@]}"; exit 1; }
+        compose up -d --wait "${services[@]}" || failed "Valkey or Postgres did not start"
+        # The module tests refuse a database whose name does not end in _test. Retried: the
+        # healthcheck also passes against the entrypoint's short-lived init server.
         if [ "$POSTGRES" = true ]; then
-          docker compose -f deploy/compose.yml -f deploy/compose.test.yml exec -T postgres \
-            createdb -U canccu canccu_test
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            compose exec -T postgres createdb -U canccu canccu_test && break
+            [ "$i" = 10 ] && failed "could not create canccu_test"
+            sleep 1
+          done
         fi
     - name: Lint, types and tests, with the Postgres and Valkey tests
       shell: bash

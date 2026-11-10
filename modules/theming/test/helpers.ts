@@ -102,12 +102,16 @@ export interface Harness {
 export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
-  await requireTestDatabase(admin);
-  await admin.query(
-    "DROP TABLE IF EXISTS theming_files, theming_drafts, theming_revisions, theming_file_refs, theming_pins, theming_embed_files, theming_migrations CASCADE",
-  );
-  await runMigrations(admin, MIGRATIONS_DIR, { ledger: "theming_migrations", lock: 2 });
-  await admin.end();
+  // finally: a refused database must not leave the client open and hold the run.
+  try {
+    await requireTestDatabase(admin);
+    await admin.query(
+      "DROP TABLE IF EXISTS theming_files, theming_drafts, theming_revisions, theming_file_refs, theming_pins, theming_embed_files, theming_migrations CASCADE",
+    );
+    await runMigrations(admin, MIGRATIONS_DIR, { ledger: "theming_migrations", lock: 2 });
+  } finally {
+    await admin.end();
+  }
   const pool = new pg.Pool({ connectionString: DATABASE_URL });
   const root = await mkdtemp(join(tmpdir(), "canccu-theming-"));
   const db = poolDb(pool);

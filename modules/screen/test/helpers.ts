@@ -129,9 +129,13 @@ export async function dropTables(admin: pg.Client): Promise<void> {
 export async function harness(): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
-  await dropTables(admin);
-  await runMigrations(admin, MIGRATIONS_DIR, { ledger: "screen_migrations", lock: 1 });
-  await admin.end();
+  // finally: a refused database must not leave the client open and hold the run.
+  try {
+    await dropTables(admin);
+    await runMigrations(admin, MIGRATIONS_DIR, { ledger: "screen_migrations", lock: 1 });
+  } finally {
+    await admin.end();
+  }
   const pool = new pg.Pool({ connectionString: DATABASE_URL });
   const db = poolDb(pool);
   const clock = { now: Date.parse("2026-01-01T12:00:00Z") };
