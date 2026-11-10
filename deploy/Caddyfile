@@ -74,6 +74,17 @@
 		respond "not found" 404
 	}
 
+	# Nor its API: the strip below would pass /agenda/api/agenda/... on as /api/agenda/...,
+	# a second way in that /api/agenda/ above already gives.
+	handle /agenda/api/* {
+		respond "not found" 404
+	}
+
+	# The pages' links all start /agenda/, so the bare prefix goes there.
+	handle /agenda {
+		redir * /agenda/ 308
+	}
+
 	# The run-of-show pages; the module's own paths start at /.
 	handle_path /agenda/* {
 		reverse_proxy agenda:8080

@@ -10,7 +10,7 @@ async def test_pages_need_a_session_with_an_agenda_right(env: Env) -> None:
     async with env.client() as c:
         anonymous = await c.get("/")
         assert anonymous.status_code == 303
-        assert anonymous.headers["location"] == "/admin/sign-in"
+        assert anonymous.headers["location"] == "/admin/sign-in?next=%2Fagenda%2F"
         nobody = await c.get("/", headers=env.rights.sign_in("u_x", "admin.settings.read"))
         assert nobody.status_code == 403 and "text/html" in nobody.headers["content-type"]
         crew = await c.get("/", headers=env.rights.sign_in("u_crew", CREW))
@@ -20,6 +20,20 @@ async def test_pages_need_a_session_with_an_agenda_right(env: Env) -> None:
     csp = crew.headers["content-security-policy"]
     assert "script-src 'self'" in csp and "frame-ancestors 'none'" in csp
     assert crew.headers["cache-control"] == "no-store"
+
+
+async def test_sign_in_comes_back_to_the_page_that_asked(env: Env) -> None:
+    async with env.client() as c:
+        page = await c.get("/templates", params={"day": "2026-11-10"})
+        # A POST cannot be replayed as a GET, so it comes back to the list instead.
+        form = await c.post("/add", data={"title": "x"})
+        api = await c.post("/api/agenda/items", json={})
+    assert page.headers["location"] == (
+        "/admin/sign-in?next=%2Fagenda%2Ftemplates%3Fday%3D2026-11-10"
+    )
+    assert form.status_code == 303
+    assert form.headers["location"] == "/admin/sign-in?next=%2Fagenda%2F"
+    assert api.status_code == 401
 
 
 async def test_the_list_shows_the_day_with_now_delays_and_cancellations(env: Env) -> None:
