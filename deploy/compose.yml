@@ -74,13 +74,19 @@ services:
   # user become writable again (setup/README.md, Files volume). Root, as only this one-shot is:
   # no network, a read-only root and only the rights to chown and to walk 0700 directories.
   # -h and find's default (-P) never follow a symlink a module left in the volume.
+  # Modules may still run during the walk (an `up` on a running stack, a boot), and an entry they
+  # delete or rename meanwhile makes find fail: the walk's status is ignored, and the one-shot
+  # fails only when the top two levels, where every module's directories begin, are still wrong.
   files-init:
     # Reuses the stack's Caddy image only for its busybox find and chown; nothing else is pulled.
     image: caddy:2.11-alpine
     user: "0:0"
     entrypoint: ["/bin/sh", "-c"]
     command:
-      - find /files \( ! -user 65534 -o ! -group 65534 \) -exec chown -h 65534:65534 {} +
+      - >-
+        find /files \( ! -user 65534 -o ! -group 65534 \) -exec chown -h 65534:65534 {} + 2>/dev/null;
+        wrong=$$(find /files -maxdepth 2 \( ! -user 65534 -o ! -group 65534 \) -print);
+        test -z "$$wrong" || { echo "files-init: not yet 65534:65534: $$wrong" >&2; exit 1; }
     volumes:
       - files:/files
     network_mode: none

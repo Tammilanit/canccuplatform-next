@@ -57,7 +57,8 @@ services:
       CANCCU_ADMIN_URL: http://session-stub:8080
       # The demo tenant's admin paths answer only from the venue or Tailscale. The tests' calls to
       # the published port reach Caddy from the Docker network's gateway, an address of Docker's
-      # default pools, so those pools stand in for Tailscale here.
+      # default pools, so those pools stand in for Tailscale here. A daemon with its own
+      # `default-address-pools` gets 403 on the screen tests: add its pools here when running them.
       CANCCU_TAILSCALE_CIDRS: 172.16.0.0/12,192.168.0.0/16
     depends_on:
       session-stub:
