@@ -52,6 +52,7 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
                 marker,
                 env.clock[0],
             )
+            await conn.execute("INSERT INTO notify_outbox (event) VALUES ($1)", marker)
 
     async def _read(tenant: str) -> set[str]:
         async with env.db.tenant(tenant) as conn:
@@ -66,6 +67,7 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
                 "SELECT id AS v FROM notify_notifications",
                 "SELECT endpoint AS v FROM notify_subscriptions",
                 "SELECT recipient AS v FROM notify_deliveries",
+                "SELECT event AS v FROM notify_outbox",
             ):
                 found |= {r["v"] for r in await conn.fetch(sql)}
         return found

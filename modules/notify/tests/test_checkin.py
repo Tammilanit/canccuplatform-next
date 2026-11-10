@@ -11,7 +11,7 @@ from typing import Any
 
 import httpx
 import pytest
-from canccu_kit import ServiceIdentity
+from canccu_kit import SecretBox, ServiceIdentity
 from conftest import KEY, NOW, Env
 
 from canccu_notify import checkin
@@ -238,3 +238,141 @@ async def test_an_archived_event_takes_no_check_ins_and_makes_no_key(env: Env) -
     async with env.db.tenant("ev-b") as conn:
         assert await conn.fetchval("SELECT count(*) FROM notify_check_in_keys") == 0
     assert recorded(env) == []
+
+
+async def test_only_the_screen_module_fetches_codes_internally(env: Env) -> None:
+    async with env.internal() as c:
+        r = await c.get(
+            "/internal/notify/check-in/code",
+            params={"tenant_id": "ev-a", "purpose": "arrival"},
+            headers=ServiceIdentity("pizza", KEY).headers("notify"),
+        )
+    assert r.status_code == 403 and r.json()["error"]["code"] == "service_forbidden"
+
+
+@pytest.mark.parametrize(
+    ("purpose", "valid"),
+    [
+        ("a" * 32 + ":ref", True),
+        ("a" * 33 + ":ref", False),
+        ("tournament:" + "r" * 64, True),
+        ("tournament:" + "r" * 65, False),
+        ("arrival", True),
+    ],
+)
+def test_the_purpose_is_bounded(purpose: str, valid: bool) -> None:
+    assert (checkin.valid_purpose(purpose) is not None) is valid
+
+
+def stored_key(env: Env) -> Any:
+    async def read() -> Any:
+        async with env.db.pool.acquire() as conn:  # the login role: RLS does not bind it
+            return await conn.fetchval("SELECT sealed FROM notify_check_in_keys")
+
+    return read()
+
+
+def opens(env: Env) -> list[str]:
+    """Counts the check-in key openings from now on."""
+    calls: list[str] = []
+    real = env.deps.secrets.open
+
+    def counting(token: str, aad: str) -> bytes:
+        calls.append(aad)
+        return real(token, aad)
+
+    env.deps.secrets.open = counting  # type: ignore[method-assign]
+    return calls
+
+
+async def test_the_opened_key_is_kept_per_event_in_the_process(env: Env) -> None:
+    calls = opens(env)
+    now = await code(env)
+    await code(env)
+    other = await code(env, host="b.example.test")
+    assert other["code"] != now["code"]
+    checked = await check_in(env, "u_a", {"purpose": "arrival", "code": now["code"]})
+    assert checked.status_code == 201
+    assert calls == ["notify:checkin:ev-a", "notify:checkin:ev-b"]
+
+
+async def test_recording_a_check_in_is_one_transaction(env: Env) -> None:
+    now = await code(env)
+    opened = []
+    real = env.db.tenant
+
+    def counting(tenant_id: str | None = None) -> Any:
+        opened.append(tenant_id)
+        return real(tenant_id)
+
+    async def no_flush(tenant: str | None = None) -> int:
+        return 0  # the send after the commit is not part of the write
+
+    env.db.tenant = counting  # type: ignore[method-assign]
+    env.deps.outbox.flush = no_flush  # type: ignore[method-assign]
+    env.deps.check_in_keys.clear()  # also when the key is not in the process yet
+    session = env.rights.sessions["u_door"]
+    _, created = await checkin.record(
+        env.deps, env.contexts["ev-a"], session, "arrival", now["code"]
+    )
+    assert created and opened == ["ev-a"]
+
+
+def rotated_box(env: Env, *, keep_old: bool) -> None:
+    """The secrets key moves to version 2; the container starts again with an empty cache."""
+    keys = {2: b"t" * 32, **({1: b"s" * 32} if keep_old else {})}
+    env.deps.secrets = SecretBox(keys, 2)
+    env.deps.check_in_keys.clear()
+
+
+async def test_a_key_sealed_with_a_retired_key_is_sealed_again_on_read(env: Env) -> None:
+    before = await code(env)
+    assert (await stored_key(env)).startswith("cs1.1.")
+    rotated_box(env, keep_old=True)
+    assert (await code(env))["code"] == before["code"]
+    assert (await stored_key(env)).startswith("cs1.2.")
+    env.deps.secrets = SecretBox({2: b"t" * 32}, 2)  # the old key can now be dropped
+    env.deps.check_in_keys.clear()
+    assert (await code(env))["code"] == before["code"]
+
+
+async def test_a_key_that_no_longer_opens_answers_503_and_is_logged_once(
+    env: Env, caplog: pytest.LogCaptureFixture
+) -> None:
+    before = await code(env)
+    rotated_box(env, keep_old=False)
+    for _ in range(2):
+        async with env.client() as c:
+            r = await c.get(
+                "/api/notify/check-in/code",
+                params={"purpose": "arrival"},
+                headers=env.rights.sign_in("u_door", DISPLAY),
+            )
+        assert r.status_code == 503 and r.json()["error"]["code"] == "unavailable"
+        refused = await check_in(env, "u_a", {"purpose": "arrival", "code": before["code"]})
+        assert refused.status_code == 503
+    logged = [r for r in caplog.records if "check-in key" in r.getMessage()]
+    assert len(logged) == 1 and logged[0].levelname == "ERROR"
+    assert recorded(env) == []
+
+
+async def test_a_check_in_event_goes_out_after_a_failed_first_publish(env: Env) -> None:
+    now = await code(env)
+    real = env.store.xadd
+    failures = [1]
+
+    async def flaky(stream: str, fields: dict[str, str], **kw: Any) -> str:
+        if failures[0]:
+            failures[0] -= 1
+            raise ConnectionError("valkey unreachable")
+        return await real(stream, fields, **kw)
+
+    env.store.xadd = flaky  # type: ignore[method-assign]
+    first = await check_in(env, "u_a", {"purpose": "arrival", "code": now["code"]})
+    assert first.status_code == 201 and recorded(env) == []
+    assert await env.deps.outbox.flush_all() == 1
+    (event,) = recorded(env)
+    assert event["type"] == "notify.checkin.recorded"
+    assert event["data"]["check_in_id"] == first.json()["id"]
+    again = await check_in(env, "u_a", {"purpose": "arrival", "code": now["code"]})
+    assert again.status_code == 200 and len(recorded(env)) == 1

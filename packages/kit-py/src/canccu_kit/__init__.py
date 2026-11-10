@@ -56,6 +56,7 @@ from .errors import (
 )
 from .health import Check, CheckResult, Health, HealthResult, postgres_check, valkey_check
 from .log import JsonFormatter, create_logger
+from .outbox import Outbox, OutboxDb
 from .resolve import (
     DEMO_TENANT,
     RESOLVE_CACHE_SECONDS,
@@ -134,6 +135,8 @@ __all__ = [
     "NoTenant",
     "NotSignedIn",
     "OriginRefused",
+    "Outbox",
+    "OutboxDb",
     "Resolution",
     "RightsChecker",
     "RlsBypassed",

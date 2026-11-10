@@ -15,6 +15,7 @@ from canccu_kit import (
     Event,
     Health,
     IpMode,
+    Outbox,
     RightsChecker,
     SecretBox,
     ServiceIdentity,
@@ -35,19 +36,14 @@ from .deps import Deps
 from .push import Pusher
 from .webpush import Vapid
 
-# deploy/compose.yml's stand-in for CANCCU_SECRETS_KEY, so a dev stack starts without one.
-PLACEHOLDER_SECRETS_KEY = "Y2FuY2N1LWxvY2FsLW9ubHktc2VjcmV0cy1rZXktMzI="
 
-
-def secret_box(version: str) -> SecretBox:
-    """Seals each event's check-in key (docs/plans/issue-188.md, D5)."""
+def secret_box() -> SecretBox:
+    """Seals each event's check-in key (docs/plans/issue-188.md, D5). The kit refuses the compose
+    placeholder outside a dev stack."""
     try:
-        box = SecretBox.from_env()
+        return SecretBox.from_env()
     except ConfigError as exc:
         raise SystemExit(str(exc)) from exc
-    if os.environ["CANCCU_SECRETS_KEY"].endswith(PLACEHOLDER_SECRETS_KEY) and version != "dev":
-        raise SystemExit("CANCCU_SECRETS_KEY is the local placeholder; set a real key")
-    return box
 
 
 class TenantsAudit:
@@ -91,7 +87,7 @@ async def serve() -> None:
             "CANCCU_PUBLIC_URL is not set: the VAPID token has no subject, and some push"
             " services (Apple's) refuse pushes without one"
         )
-    box = secret_box(config.version)
+    box = secret_box()
     # The stack logs in as a plain role and migrates as the migration role (0013 item 5).
     db = await Db.connect(
         os.environ["CANCCU_DATABASE_URL"],
@@ -140,6 +136,7 @@ async def serve() -> None:
         secrets=box,
         tenants=resolver,
         push=Pusher(vapid),
+        outbox=Outbox(bus, db),
     )
 
     async def on_source(event: Event) -> None:
@@ -160,10 +157,12 @@ async def serve() -> None:
         )
     )
     sender = asyncio.create_task(delivery.run(d))
+    outbox_sender = asyncio.create_task(d.outbox.run())
     try:
         await server.serve()
     finally:
         sender.cancel()
+        outbox_sender.cancel()
 
 
 def main() -> None:

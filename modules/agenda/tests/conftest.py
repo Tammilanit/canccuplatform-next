@@ -15,7 +15,7 @@ from typing import Any
 
 import httpx
 import pytest
-from canccu_kit import Bus, Health, ServiceIdentity, TenantResolver, current_tenant
+from canccu_kit import Bus, Health, Outbox, ServiceIdentity, TenantResolver, current_tenant
 from canccu_kit.access import TenantContext
 from canccu_kit.errors import AdminUnavailable, NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
@@ -120,7 +120,8 @@ async def env() -> AsyncIterator[Env]:
     async with db.pool.acquire() as conn:  # the login role: RLS does not bind it
         await conn.execute(
             "TRUNCATE agenda_state, agenda_kinds, agenda_items, agenda_timers,"
-            " agenda_timer_tenants, agenda_sessions, agenda_templates, agenda_changes, agenda_undo"
+            " agenda_timer_tenants, agenda_sessions, agenda_templates, agenda_changes, agenda_undo,"
+            " agenda_outbox, agenda_outbox_tenants"
         )
     contexts = {tid: context(tid) for tid in HOSTS.values()}
 
@@ -140,8 +141,14 @@ async def env() -> AsyncIterator[Env]:
     rights = FakeRights()
     settings = FakeSettings()
     clock = [NOW]
+    bus = Bus(store, "agenda")
     d = Deps(
-        db=db, bus=Bus(store, "agenda"), rights=rights, settings=settings, now=lambda: clock[0]
+        db=db,
+        bus=bus,
+        rights=rights,
+        settings=settings,
+        outbox=Outbox(bus, db),
+        now=lambda: clock[0],
     )
     app = create_app(d, Health("agenda", "dev", {}), resolver, ServiceIdentity("agenda", KEY))
     yield Env(db, rights, settings, store, contexts, app, clock, d)

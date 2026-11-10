@@ -46,8 +46,9 @@ COPIED = (
     "tournament_id",
     "moment_id",
 )
-# The events of an undo, published after the commit: (type, the item to render or None, data).
-Outbox = list[tuple[str, str | None, dict[str, Any]]]
+# The events of an undo, stored once every item is rendered: (type, the item to render or None,
+# data).
+Pending = list[tuple[str, str | None, dict[str, Any]]]
 
 
 async def save(d: Deps, session: Session, inverse: Inverse) -> str | None:
@@ -118,14 +119,15 @@ async def undo_page(request: Request) -> Response:
             )
         steps = json.loads(record["steps"])
         rows = [await _current(conn, step) for step in steps]
-        out: Outbox = []
+        out: Pending = []
         touched = []
         for step, row in zip(steps, rows, strict=True):
             touched += await _apply(conn, step, row, actor, out)
         kinds = await store.kinds(conn)
         await timers.reschedule(conn, touched, kinds, leads, now)
         rendered = {r["id"]: model.item_json(r, kinds, channels) for r in touched}
-    await _publish(d, session, out, rendered)
+        await _store(d, conn, session, out, rendered)
+    await d.outbox.flush()
     day = min((r["starts_at"] for r in touched), default=now)
     return redirect(f"/?day={day.astimezone(zone_of(request)).date().isoformat()}&done=undone")
 
@@ -156,7 +158,7 @@ def _values(values: dict[str, Any]) -> dict[str, Any]:
 
 
 async def _apply(
-    conn: Any, step: dict[str, Any], row: Any, actor: store.Actor, out: Outbox
+    conn: Any, step: dict[str, Any], row: Any, actor: store.Actor, out: Pending
 ) -> list[Any]:
     """One step through the normal writes; answers the rows whose timers it changed."""
     if step["op"] == "remove":
@@ -186,14 +188,14 @@ async def _apply(
     return [new]
 
 
-async def _remove(conn: Any, row: Any, actor: store.Actor, out: Outbox) -> None:
+async def _remove(conn: Any, row: Any, actor: store.Actor, out: Pending) -> None:
     version = await remove(conn, row, actor)
     data = {"item_id": row["id"], "visibility": row["visibility"], "agenda_version": version}
     out.append(("agenda.item.removed", None, data))
 
 
-async def _publish(
-    d: Deps, session: Session, out: Outbox, rendered: dict[str, dict[str, Any]]
+async def _store(
+    d: Deps, conn: Any, session: Session, out: Pending, rendered: dict[str, dict[str, Any]]
 ) -> None:
     """An undone delay is told as one delay: one correlation id, in order of the new start, as
     edits.delay does."""
@@ -208,12 +210,12 @@ async def _publish(
     )
     correlation_id = new_id()
     for event_type, item_id, data in delayed:
-        await d.bus.publish(
-            event_type, payload(item_id, data), version=1, correlation_id=correlation_id
+        await d.outbox.add(
+            conn, event_type, payload(item_id, data), version=1, correlation_id=correlation_id
         )
     for event_type, item_id, data in out:
         if event_type != "agenda.item.delayed":
-            await d.bus.publish(event_type, payload(item_id, data), version=1)
+            await d.outbox.add(conn, event_type, payload(item_id, data), version=1)
 
 
 ROUTES = [Route("/undo/{undo_id}", undo_page, methods=["POST"])]

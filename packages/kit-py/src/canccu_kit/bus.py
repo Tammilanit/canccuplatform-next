@@ -87,6 +87,28 @@ class Bus:
         Only a module whose contract says so emits platform events; without the flag a missing
         tenant is an error, never a silent platform event.
         """
+        event = self.envelope(
+            type,
+            data,
+            version=version,
+            correlation_id=correlation_id,
+            tenant=tenant,
+            platform=platform,
+        )
+        await self.send(event)
+        return event
+
+    def envelope(
+        self,
+        type: str,
+        data: dict[str, Any],
+        *,
+        version: int,
+        correlation_id: str | None = None,
+        tenant: str | None = None,
+        platform: bool = False,
+    ) -> Event:
+        """The event `publish` would send, checked but not sent (the outbox stores it)."""
         if not EVENT_TYPE_RE.match(type):
             raise InvalidEventType(f"{type!r} is not <module>.<noun>.<past-tense verb>")
         if type.split(".")[0] != self.module:
@@ -98,10 +120,7 @@ class Bus:
         target = None if platform else (tenant if tenant is not None else current_tenant())
         if not platform and target is None:
             raise NoTenant()
-        stream = (
-            platform_stream(self.module) if target is None else tenant_stream(self.module, target)
-        )
-        event = Event(
+        return Event(
             id=new_id(),
             type=type,
             version=version,
@@ -111,10 +130,19 @@ class Bus:
             correlation_id=correlation_id or get_correlation_id(),
             tenant=target,
         )
+
+    async def send(self, event: Event) -> None:
+        """Send an event built by `envelope`, also again: consumers drop a repeated id."""
+        if event.source != self.module:
+            raise InvalidEventType(f"{event.type!r} is not this module's ({self.module})")
+        stream = (
+            platform_stream(self.module)
+            if event.tenant is None
+            else tenant_stream(self.module, event.tenant)
+        )
         await self.store.xadd(
             stream, {"event": event.to_json()}, maxlen=STREAM_MAXLEN, approximate=True
         )
-        return event
 
     def subscribe(
         self,

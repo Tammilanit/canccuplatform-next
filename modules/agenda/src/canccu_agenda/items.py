@@ -176,11 +176,13 @@ async def add(
         version = await store.bump(conn, "agenda_version")
         await timers.reschedule(conn, [row], await store.kinds(conn), leads, d.now())
         (item,) = await render(conn, [row], channels)
-    await d.bus.publish(
-        "agenda.item.added",
-        {"item": item, "agenda_version": version, "actor_user_id": session.user_id},
-        version=1,
-    )
+        await d.outbox.add(
+            conn,
+            "agenda.item.added",
+            {"item": item, "agenda_version": version, "actor_user_id": session.user_id},
+            version=1,
+        )
+    await d.outbox.flush()
     return item
 
 
@@ -260,16 +262,18 @@ async def edit(
         version = await store.bump(conn, "agenda_version")
         await timers.reschedule(conn, [row], await store.kinds(conn), leads, d.now())
         (item,) = await render(conn, [row], channels)
-    await d.bus.publish(
-        "agenda.item.changed",
-        {
-            "item": item,
-            "changed": changed,
-            "agenda_version": version,
-            "actor_user_id": session.user_id,
-        },
-        version=1,
-    )
+        await d.outbox.add(
+            conn,
+            "agenda.item.changed",
+            {
+                "item": item,
+                "changed": changed,
+                "agenda_version": version,
+                "actor_user_id": session.user_id,
+            },
+            version=1,
+        )
+    await d.outbox.flush()
     return item
 
 

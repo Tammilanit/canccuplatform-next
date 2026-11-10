@@ -136,3 +136,22 @@ async def test_writes_on_an_archived_event_are_refused(env: Env) -> None:
         )
         assert response.json()["error"]["code"] == "event_archived"
         assert (await c.get("/api/agenda/items")).status_code == 200
+
+
+async def test_an_event_goes_out_after_a_failed_first_publish(env: Env) -> None:
+    real = env.store.xadd
+    failures = [1]
+
+    async def flaky(stream: str, fields: dict[str, str], **kw: Any) -> str:
+        if failures[0]:
+            failures[0] -= 1
+            raise ConnectionError("valkey unreachable")
+        return await real(stream, fields, **kw)
+
+    env.store.xadd = flaky  # type: ignore[method-assign]
+    async with env.client() as c:
+        item = await add(c, env.writer(), title="Doors", starts_at=at(60))
+    assert env.events() == []  # the write committed; its event waits in the outbox
+    assert await env.deps.outbox.flush_all() == 1
+    (event,) = env.events()
+    assert event["type"] == "agenda.item.added" and event["data"]["item"]["id"] == item["id"]

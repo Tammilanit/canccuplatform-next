@@ -45,16 +45,18 @@ async def announce(d: Deps, session: Session, item_id: str, message: str | None)
         if row["status"] == "cancelled":
             raise model.conflict("item_cancelled", "a cancelled item cannot be announced")
         item = model.item_json(row, await store.kinds(conn), channels)
-    await d.bus.publish(
-        "agenda.item.announced",
-        {
-            "item": item,
-            "message": message,
-            "agenda_version": state["agenda_version"],
-            "actor_user_id": session.user_id,
-        },
-        version=1,
-    )
+        await d.outbox.add(
+            conn,
+            "agenda.item.announced",
+            {
+                "item": item,
+                "message": message,
+                "agenda_version": state["agenda_version"],
+                "actor_user_id": session.user_id,
+            },
+            version=1,
+        )
+    await d.outbox.flush()
 
 
 ROUTES = [Route("/api/agenda/items/{item_id}/announce", announce_item, methods=["POST"])]

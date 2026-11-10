@@ -19,7 +19,9 @@ admin admin_first_run   the one-time first-run code, hashed; no event data
 screen devices          device identity: name, token hash, venue id, current tenant (0013 item 34)
 screen screen_migrations which migration files ran (created by runMigrations before the files); no event data
 agenda agenda_timer_tenants the events with pending timers, a plain tenant reference, so the scheduler finds them without a tenant set
+agenda agenda_outbox_tenants the events with pending outbox rows, a plain tenant reference, so the sender finds them without a tenant set
 notify notify_migrations which migration files ran (created by db.py before the files); no event data
 notify notify_topic_types the topic registry: one set of topic types for the platform (contracts/notify.md, Tenancy)
 notify notify_topic_type_history every registration change, append-only; module registrations, no event data
+notify notify_outbox_tenants the events with pending outbox rows, a plain tenant reference, so the sender finds them without a tenant set
 notify notify_delivery_tenants the events with deliveries waiting, a plain tenant reference, so the sender finds them without a tenant set

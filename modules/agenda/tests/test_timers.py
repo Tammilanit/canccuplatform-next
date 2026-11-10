@@ -186,6 +186,9 @@ async def test_two_containers_never_fire_one_timer_twice(env: Env) -> None:
     d = env.deps
     await asyncio.gather(timers.tick(d, batch=2), timers.tick(d, batch=2), timers.tick(d))
     await timers.tick(d)
+    # As each container's outbox loop does: a flush that met another holding the event's lock
+    # may leave the last rows to it.
+    await d.outbox.flush_all()
     assert sorted(title for _, title in fired(env)) == [f"T{n}" for n in range(5)]
 
 

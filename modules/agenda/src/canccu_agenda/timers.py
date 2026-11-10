@@ -2,8 +2,9 @@
 
 Every write rewrites its items' pending timers in its own transaction (`reschedule`). A loop in
 every container (`run`) visits the events listed in `agenda_timer_tenants`, claims their due rows
-with FOR UPDATE SKIP LOCKED, so two containers never fire one row, and publishes before it
-deletes them: a crash between the two fires a timer twice rather than never.
+with FOR UPDATE SKIP LOCKED, so two containers never fire one row, and stores their events in the
+outbox in the transaction that deletes them: a timer fires exactly once into the outbox, which
+sends it at least once.
 """
 
 from __future__ import annotations
@@ -118,7 +119,7 @@ async def on_settings_changed(d: Deps, event: Event) -> None:
 
 
 async def tick(d: Deps, *, batch: int = 100) -> int:
-    """Fire what is due in every event that has timers; returns how many events were published."""
+    """Fire what is due in every event that has timers; returns how many events fired."""
     async with d.db.platform() as conn:
         tenants = [
             r["tenant_id"]
@@ -181,7 +182,7 @@ async def _fire(d: Deps, tenant: str, batch: int) -> int:
                 event_type = "agenda.reminder.triggered"
             else:
                 event_type = f"agenda.item.{timer['kind']}"
-            await d.bus.publish(event_type, data, version=1, tenant=tenant)
+            await d.outbox.add(conn, event_type, data, version=1)
             published += 1
         await conn.executemany(
             "DELETE FROM agenda_timers WHERE item_id = $1 AND kind = $2 AND lead_minutes = $3",
@@ -189,6 +190,7 @@ async def _fire(d: Deps, tenant: str, batch: int) -> int:
         )
         if len(due) < batch:
             await _forget_if_idle(conn)
+    await d.outbox.flush(tenant)
     return published
 
 

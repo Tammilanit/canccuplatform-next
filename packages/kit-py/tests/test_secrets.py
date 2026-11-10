@@ -77,3 +77,31 @@ def test_rotation_keeps_old_values_readable_and_moves_them_to_the_new_key() -> N
 def test_bad_keys_stop_the_start(env: dict[str, str]) -> None:
     with pytest.raises(ConfigError):
         SecretBox.from_env(env)
+
+
+PLACEHOLDER = "Y2FuY2N1LWxvY2FsLW9ubHktc2VjcmV0cy1rZXktMzI="
+"""deploy/compose.yml's stand-in for CANCCU_SECRETS_KEY."""
+
+
+@pytest.mark.parametrize(
+    "env",
+    [
+        {"CANCCU_SECRETS_KEY": f"1:{PLACEHOLDER}"},
+        {"CANCCU_SECRETS_KEY": f"7:{PLACEHOLDER}", "CANCCU_VERSION": "1.4.0"},
+        # Other spellings of the same bytes are the placeholder too.
+        {"CANCCU_SECRETS_KEY": f"1:{PLACEHOLDER.rstrip('=')}", "CANCCU_VERSION": "1.4.0"},
+        {"CANCCU_SECRETS_KEY": KEY2, "CANCCU_SECRETS_KEYS_RETIRED": f"1:{PLACEHOLDER}"},
+    ],
+)
+def test_the_compose_placeholder_is_refused_outside_dev(env: dict[str, str]) -> None:
+    with pytest.raises(ConfigError, match="placeholder"):
+        SecretBox.from_env(env)
+
+
+def test_the_compose_placeholder_opens_a_dev_stack() -> None:
+    env = {
+        "CANCCU_SECRETS_KEY": KEY2,
+        "CANCCU_SECRETS_KEYS_RETIRED": f"1:{PLACEHOLDER}",
+        "CANCCU_VERSION": "dev",
+    }
+    assert SecretBox.from_env(env).current == 2
