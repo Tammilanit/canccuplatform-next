@@ -58,7 +58,7 @@ Alternatives: G1 could reuse `GET /api/screen/device/state` with `?mirror_zone=`
 | E. Content widgets: `playlist` playback (image, video, slides, web with ready timeout and fallback, YouTube), sound device; `photo`, `ticker` feed, `checkin_qr`, `embed` | YouTube rules, ready check | 900 | 900 |
 | F. Offline service worker; virtual-screen route (G1); kiosk guide and check page | — | 800 | 800 |
 | G. Accelerated soak with a heap budget, the 100-screen two-event load script, the real 24-hour run's script and report | — | 800 | 800 |
-| **Total** | | | **≈ 8,700** |
+| **Total** | | | **≈ 8,700** (≈ 8,900 with the lead's additions below) |
 
 ## Proposed split (for the lead)
 Each slice one issue and one package of about 1,500 lines or less. Normal risk, unless it changes `.github` (high).
@@ -66,13 +66,13 @@ Each slice one issue and one package of about 1,500 lines or less. Normal risk, 
 | Slice | Content | Needs |
 |---|---|---|
 | 0. Contract (normal) | G1–G4 | — |
-| 1. Composed state (≈ 1,500) | A; criterion 1 (builder, roles, rotation, idle) and the server half of criterion 3 for the widgets whose sources are on main | — |
-| 2. Push (≈ 1,100) | B; criterion 2, the lead's `takeCommands` and `epoch` criterion | slice 1 |
+| 1. Composed state (≈ 1,600) | A; criterion 1 (builder, roles, rotation, idle) and the server half of criterion 3 for the widgets whose sources are on main; the lead's L3, L5 and L6 below (`ScreenState.theme`, `GET /api/screen/now`, the schedule window's layout fallback) | — |
+| 2. Push (≈ 1,200) | B; criterion 2, the lead's `takeCommands` and `epoch` criterion, and L1 below (`state_lag`, an open stream counts as seen) | slice 1 |
 | 3. Player core (≈ 1,400) | D1; criterion 5 (every device-state frame) and the offline mark of criterion 7; `moved` waits on #221 or shows "moved, ask the crew" until it lands | slice 2, #221 for the transfer |
 | 4. Player rendering (≈ 1,500) | D2; criterion 6 (20 m, resolutions, motion, drift, ticker) and the client half of criterion 3 | slice 3, slice 0 (G2–G4) |
-| 5. Claims (≈ 700) | C; criterion 4 with the claim templates drawn by slice 4's renderer | slices 1, 4 |
-| 6. Content widgets (≈ 900) | E; the rest of criterion 3 | slice 4, #216, #217, #218, #224, #227, #186 |
-| 7. Offline, virtual screen, kiosk (≈ 800) | F; criteria 7, 8 and 10 | slice 4, slice 0 (G1) |
+| 5. Claims (≈ 700) | C; criterion 4 with the claim templates drawn by slice 4's renderer; L2 below (`claims_sounded` kept for `sound.sounded_claims`) | slices 1, 4 |
+| 6. Content widgets (≈ 900) | E; the rest of criterion 3; L4 below (the `embed` widget through `embedWidget()`) | slice 4, #216, #217, #218, #224, #227, #186 |
+| 7. Offline, virtual screen, kiosk (≈ 950) | F; criteria 7, 8 and 10; the preview path (question 7); L4 below (sandbox files cached offline like revision files) | slice 4, slice 0 (G1) |
 | 8. Soak and load (≈ 800) | G; criterion 9 (the real 24-hour run is the lead's on the test VM before the step's exit). High if it adds a CI job under `.github`; normal if it runs inside `scripts/demo-stack-test` | slices 2, 4; a second event on the CI stack |
 
 Slices 1–4 run in order; 5, 6 and 7 can run in parallel after 4; 8 last. #189 (Live), #191 (screenshots) and #265 (bundle retention) wait for slices 4 and 7 rather than all of #109. The issue's criteria map: 1 → slice 1; 2 → 2; 3 → 1, 4 and 6; 4 → 5; 5 → 3; 6 → 4; 7 → 3 and 7; 8 → 7; 9 → 8; 10 → 7.
@@ -84,7 +84,21 @@ Slices 1–4 run in order; 5, 6 and 7 can run in parallel after 4; 8 last. #189 
 4. **G4 (the template tree):** define it now in theming.md, ahead of #245? Recommendation: yes, so the player's defaults and #245's parser meet.
 5. **Content widgets:** wait in slice 6 for their sources (#216, #217, #218, #224, #227, #186), or let slices 1–4 ship them `empty` and slice 6 fill them? Recommendation: ship them `empty` first (S13); slice 6 waits.
 6. **Two events on the CI stack:** the load script (O1) needs 100 screens across two events, and the IP-mode stack serves the demo tenant only. Add a second demo tenant to `deploy/compose.ci.yml` in slice 8, or a separate issue? Recommendation: in slice 8, as CI data only.
-7. **The preview path** (`POST /api/screen/zones/{zone_key}/preview`): build it in slice 1 (it is the builder with an unsaved zone), or leave it to #189? Recommendation: slice 1; it is a few lines on top of the builder and #189 then only draws it.
+7. **The preview path** (`POST /api/screen/zones/{zone_key}/preview`): build it here, or leave it to #189? Recommendation: here, in slice 7 with the virtual screen (both draw a zone for a session); it is a few lines on top of slice 1's builder, and #189 then only draws it. It moved from slice 1 to slice 7 when L3 and L6 put `GET /api/screen/now` and the layout fallback into slice 1.
+
+## Added to scope (the lead, 2026-11-10)
+From worker notes; each goes to the slice issue named when #109 is split.
+
+| # | Criterion | Slice | Note |
+|---|---|---|---|
+| L1 | The composed state adds `state_lag` to `DeviceHealth` from the zone's state version, and an open stream counts as seen by moving the device's deadline as a heartbeat does (PR #266) | 2 | The stream knows the zone's `state_version` and the device's connection; `health.ts` keeps its deadline rule, the stream calls it on connect and on each `ping` |
+| L2 | Keep the heartbeat's `claims_sounded` for `sound.sounded_claims` (Moments, step 4); the route validates and drops them for now (PR #266) | 5 | `sound.sounded_claims` stays `[]` until step 4; slice 5 tests that the route still validates and drops them |
+| L3 | Paired screens get the theme through screen (`ScreenState.theme`), since theming cannot check a device token (PR #232) | 1 (server), 4 (player) | Slice 1 reads the revision in effect as a module and fills `ScreenState.theme`; the player takes its tokens, CSS, logo and templates only from there and never calls theming's API (S1, S5) |
+| L4 | Render the `embed` widget with `embedWidget()` and cache sandbox files offline like revision files (PR #276) | 6 (render), 7 (offline) | Needs #186 (PR #276) merged; the service worker (S9) treats sandbox files as immutable, as it does the theme's revision files |
+| L5 | `GET /api/screen/now` (the hub's view of a zone) comes out of slice 1's builder (PR #281) | 1 | The builder's view-models filtered to the contract's list, `now_playing` names only for a signed-in member |
+| L6 | An unknown `layout_id` on a schedule window falls back to `pulse`, as the contract says (PR #282) | 1 | The builder's one layout rule: window, then zone, then theme or built-in, then `pulse` (`pulse_portrait` on a portrait device) |
+
+The sizes in the split above include these: slice 1 is about 1,600, slice 2 about 1,200, slice 7 about 950; the total stays ≈ 8,900.
 
 ## After the answers
 The lead rewrites #109 and opens the slice issues as the answers decide; each slice then runs as a package against this plan's design table.
