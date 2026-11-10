@@ -19,6 +19,7 @@ import {
   unknownZone,
 } from "../http.js";
 import { publishAll, zoneExistsHere, type Emit } from "../zones.js";
+import { checkPushAsset } from "./asset-rules.js";
 import { pushInput } from "./input.js";
 
 export interface ActivePush {
@@ -105,6 +106,7 @@ export function pushRoutes(app: FastifyInstance, deps: ContentDeps): void {
     await db.tenant(async (c) => {
       for (const key of push.zones) if (!(await zoneExistsHere(c, key))) throw unknownZone();
       if (push.playlist_id !== null) await checkPlayable(c, push.playlist_id, "pushed");
+      if (push.asset_id !== null) await checkPushAsset(c, push.asset_id);
       await c.query(
         `INSERT INTO screen_pushes (id, zones, playlist_id, asset_id, until, created_by, created_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,

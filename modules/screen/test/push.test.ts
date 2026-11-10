@@ -3,6 +3,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { DATABASE_URL, call, code, events, harness } from "./helpers.js";
 import type { Harness } from "./helpers.js";
+import { seedAssets } from "./seed.js";
 
 const as = (session: string, body?: unknown, host = "alpha.test") => ({ host, session, body });
 
@@ -15,6 +16,7 @@ describe.skipIf(!DATABASE_URL)("push", () => {
     h = await harness();
     await call(h, "GET", "/api/screen/zones", as("admin"));
     await call(h, "POST", "/api/screen/zones", as("admin", { key: "cafe", name: "Café" }));
+    await seedAssets(h, { id: "as_7", kind: "image" });
     const make = async (body: Record<string, unknown>) =>
       (await call(h, "POST", "/api/screen/playlists", as("admin", body))).json<{ id: string }>().id;
     playlist = await make({ name: "Final intro", type: "regular", items: [] });

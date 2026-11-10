@@ -42,7 +42,6 @@ import { scheduleRoutes } from "./content/schedules.js";
 import type { RenderQueue } from "./render/queue.js";
 import { REGISTRY_PREFIX, registryRoutes } from "./registry.js";
 import { renderRoutes } from "./render/routes.js";
-import type { AssetReader } from "./tick/content.js";
 import { tickerRoutes } from "./ticker/routes.js";
 import { zoneRoutes } from "./zones.js";
 
@@ -66,8 +65,6 @@ export interface ScreenDeps {
   fetch?: typeof fetch;
   /** The fair render queue; main gives the Valkey one. */
   renderQueue: RenderQueue;
-  /** What simulate knows of assets; the assets slice (#217) supplies it. */
-  assets?: AssetReader;
   now?: () => number;
 }
 
