@@ -19,11 +19,11 @@ Each event's theme ([contracts/theming.md](../../contracts/theming.md)). The fir
 npm ci && npm run lint && npm run typecheck && npm test
 ```
 
-`packages/kit-ts` and `packages/ui` need `npm ci` first. The tests need a Postgres for RLS and skip without one. Point `CANCCU_DATABASE_URL` at a throwaway database (the tests drop and recreate the theming tables) as a superuser; requests still run as the app role, which RLS binds:
+`packages/kit-ts` and `packages/ui` need `npm ci` first. The tests need a Postgres for RLS and skip without one. Point `CANCCU_DATABASE_URL` at a throwaway database whose name ends in `_test` (the tests drop and recreate the theming tables, and refuse any other name; [docs/ci.md](../../docs/ci.md#modules)) as a superuser; requests still run as the app role, which RLS binds:
 
 ```sh
-docker run -d --rm --name canccu-theming-test -e POSTGRES_PASSWORD=test -p 127.0.0.1:55433:5432 postgres:17.11-alpine
-CANCCU_DATABASE_URL=postgres://postgres:test@127.0.0.1:55433/postgres npm test
+docker run -d --rm --name canccu-theming-test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=canccu_test -p 127.0.0.1:55433:5432 postgres:17.11-alpine
+CANCCU_DATABASE_URL=postgres://postgres:test@127.0.0.1:55433/canccu_test npm test
 docker stop canccu-theming-test
 ```
 

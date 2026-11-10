@@ -19,7 +19,7 @@ from canccu_kit import Bus, Health, Outbox, ServiceIdentity, TenantResolver, cur
 from canccu_kit.access import TenantContext
 from canccu_kit.errors import AdminUnavailable, NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
-from canccu_kit.testing import MemoryStreamStore
+from canccu_kit.testing import MemoryStreamStore, require_test_database_url
 
 from canccu_agenda.app import create_app
 from canccu_agenda.db import Db
@@ -116,6 +116,7 @@ HOSTS = {"a.example.test": "ev-a", "b.example.test": "ev-b"}
 async def env() -> AsyncIterator[Env]:
     if not URL:
         pytest.skip("needs CANCCU_DATABASE_URL")
+    await require_test_database_url(URL)  # before connect: it migrates
     db = await Db.connect(URL)
     async with db.pool.acquire() as conn:  # the login role: RLS does not bind it
         await conn.execute(

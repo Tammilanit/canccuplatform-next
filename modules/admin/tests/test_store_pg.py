@@ -8,12 +8,14 @@ each of its transactions switches to the app role that RLS binds.
 from __future__ import annotations
 
 import os
+import secrets
 from collections.abc import AsyncIterator
+from urllib.parse import urlsplit
 
 import asyncpg
 import pytest
 from canccu_kit import NoTenant, tenant_scope
-from canccu_kit.testing import assert_tenant_isolation
+from canccu_kit.testing import assert_tenant_isolation, require_test_database_url
 from conftest import StoreProbe
 
 from canccu_admin.db import APP_ROLE, MIGRATIONS, PgStore
@@ -21,15 +23,44 @@ from canccu_admin.db import APP_ROLE, MIGRATIONS, PgStore
 URL = os.environ.get("CANCCU_DATABASE_URL")
 
 
+async def connect_store(url: str) -> PgStore:
+    await require_test_database_url(url)  # first: connect runs the migrations, 003 drops tables
+    return await PgStore.connect(url)
+
+
 @pytest.fixture
 async def store() -> AsyncIterator[PgStore]:
     if not URL:
         pytest.skip("CANCCU_DATABASE_URL not set")
-    store = await PgStore.connect(URL)
+    store = await connect_store(URL)
     async with store.pool.acquire() as conn:  # the login role: RLS does not bind it
         await conn.execute("TRUNCATE admin_tenant_settings, admin_tenant_profile")
     yield store
     await store.close()
+
+
+async def test_refuses_a_kept_database_before_any_migration_runs() -> None:
+    if not URL:
+        pytest.skip("CANCCU_DATABASE_URL not set")
+    name = f"admin_kept_{secrets.token_hex(4)}"
+    admin = await asyncpg.connect(URL)
+    await admin.execute(f"CREATE DATABASE {name}")
+    try:
+        kept = urlsplit(URL)._replace(path=f"/{name}").geturl()
+        with pytest.raises(RuntimeError, match=f'"{name}"'):
+            await connect_store(kept)
+        conn = await asyncpg.connect(kept)
+        try:
+            # 003 drops tables: not even the ledger may exist.
+            tables = await conn.fetchval(
+                "SELECT count(*) FROM pg_tables WHERE schemaname = 'public'"
+            )
+            assert tables == 0
+        finally:
+            await conn.close()
+    finally:
+        await admin.execute(f"DROP DATABASE {name}")
+        await admin.close()
 
 
 async def test_keeps_tenants_apart(store: PgStore) -> None:
