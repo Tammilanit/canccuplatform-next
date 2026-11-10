@@ -11,10 +11,11 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
 
-from . import model, store
+from . import model, store, undo
 from .access import WRITE, viewer
 from .deps import deps
 from .effective import read_channels
+from .history import changes_html
 from .kinds import not_found
 from .web import (
     BASE,
@@ -36,6 +37,9 @@ DONE = {
     "delayed": "Delayed.",
     "cancelled": "Cancelled.",
     "shown": "Brought forward: screens show it now.",
+    "shown_announced": "Brought forward and announced: screens show it now.",
+    "announced": "Announced.",
+    "undone": "Undone. People who were told are told again.",
 }
 
 
@@ -135,6 +139,7 @@ async def run_of_show(request: Request) -> Response:
     done = DONE.get(request.query_params.get("done", ""))
     body = (
         (notice(done) if done else "")
+        + await undo.offer_html(d, session, request.query_params.get("undo"))
         + f'<nav class="canccu-agenda-tabs" aria-label="Days">{tabs}</nav>'
         + f'<ol class="canccu-agenda-list">{"".join(lines)}</ol>'
     )
@@ -163,6 +168,7 @@ async def item_page(request: Request) -> Response:
         if row is None or row["visibility"] not in seen.visibilities:
             raise not_found("item")
         item = model.item_json(row, await store.kinds(conn), channels)
+        log = await store.changes(conn, row["id"])
     state = state_of(row, now)
     when = f"{day_label(row['starts_at'].astimezone(tz).date())} {hhmm(row['starts_at'], tz)}"
     if row["ends_at"] is not None:
@@ -191,7 +197,8 @@ async def item_page(request: Request) -> Response:
         actions = []
         if state == "ahead" or (state == "running" and row["ends_at"] is not None):
             actions.append(("delay", "Delay…", "primary"))
-        if state == "ahead":
+        if state == "ahead" or (state == "running" and row["kind"] != "quiet_hours"):
+            # A running item is on screens already; its page still sends the announcement.
             actions.append(("show-now", "Show on screens now", "secondary"))
         actions.append(("edit", "Edit or move", "secondary"))
         if row["managed_by"] is None:
@@ -204,6 +211,7 @@ async def item_page(request: Request) -> Response:
             )
             + "</div>"
         )
+    body += changes_html(log, tz)
     return page(request, row["title"], body, session=session)
 
 

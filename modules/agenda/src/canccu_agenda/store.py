@@ -2,16 +2,36 @@
 
 from __future__ import annotations
 
+import json
 import secrets
+from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
-from .model import BUILTIN, STARTER_KINDS
+from canccu_kit.rights import Session
+
+from .model import BUILTIN, STARTER_KINDS, iso
 
 ITEM_COLUMNS = (
     "id, title, description, kind, starts_at, ends_at, planned_starts_at, planned_ends_at,"
     " location, zone, visibility, status, reminder_leads_minutes, notify, tournament_id,"
     " tournament_session_id, moment_id, managed_by, cloned_from, revision"
 )
+
+
+@dataclass(frozen=True)
+class Actor:
+    """Who a change log row names: a person, or the tournament module (no user)."""
+
+    user_id: str | None
+    name: str
+
+
+TOURNAMENT = Actor(None, "Tournament module")
+
+
+def actor_of(session: Session) -> Actor:
+    return Actor(session.user_id, session.user_name)
 
 
 async def ensure_event(conn: Any) -> None:
@@ -114,22 +134,87 @@ async def items(
     return rows
 
 
-async def insert_item(conn: Any, values: dict[str, Any]) -> Any:
+async def insert_item(conn: Any, values: dict[str, Any], actor: Actor) -> Any:
     values = {"id": f"it_{secrets.token_hex(8)}", **values}
     columns = ", ".join(values)
     marks = ", ".join(f"${i}" for i in range(1, len(values) + 1))
-    return await conn.fetchrow(
+    row = await conn.fetchrow(
         f"INSERT INTO agenda_items ({columns}) VALUES ({marks}) RETURNING {ITEM_COLUMNS}",
         *values.values(),
     )
+    await _log(conn, row, "added", actor, [], {}, {})
+    return row
 
 
-async def update_item(conn: Any, item_id: str, values: dict[str, Any]) -> Any:
-    """Sets `values` (column names from the code, never from a request) and bumps `revision`."""
+async def update_item(conn: Any, item_id: str, values: dict[str, Any], actor: Actor) -> Any:
+    """Sets `values` (column names from the code, never from a request), bumps `revision` and
+    logs the fields that differ."""
+    old = await item(conn, item_id)
     sets = ", ".join(f"{column} = ${i}" for i, column in enumerate(values, start=2))
-    return await conn.fetchrow(
+    row = await conn.fetchrow(
         f"UPDATE agenda_items SET {sets}, revision = revision + 1 WHERE id = $1"
         f" RETURNING {ITEM_COLUMNS}",
         item_id,
         *values.values(),
     )
+    # A planned time is the API's view of its time: resetting a delay changes `starts_at`'s
+    # meaning even when the time itself stays.
+    fields = list(dict.fromkeys(k.removeprefix("planned_") for k in values if old[k] != row[k]))
+    await _log(
+        conn,
+        row,
+        "changed",
+        actor,
+        fields,
+        {k: to_json(old[k]) for k in fields},
+        {k: to_json(row[k]) for k in fields},
+    )
+    return row
+
+
+async def delete_item(conn: Any, row: Any, actor: Actor) -> None:
+    """Removes an item; its timers go with it (ON DELETE CASCADE), its log stays."""
+    await conn.execute("DELETE FROM agenda_items WHERE id = $1", row["id"])
+    await _log(conn, row, "removed", actor, [], {}, {})
+
+
+def to_json(value: Any) -> Any:
+    """A column value as the API writes it."""
+    if isinstance(value, datetime):
+        return iso(value)
+    return list(value) if isinstance(value, list | tuple) else value
+
+
+async def _log(
+    conn: Any,
+    row: Any,
+    action: str,
+    actor: Actor,
+    fields: list[str],
+    old: dict[str, Any],
+    new: dict[str, Any],
+) -> None:
+    await conn.execute(
+        "INSERT INTO agenda_changes (item_id, revision, action, actor_user_id, actor_name,"
+        " fields, old, new) VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb)",
+        row["id"],
+        row["revision"],
+        action,
+        actor.user_id,
+        actor.name,
+        fields,
+        json.dumps(old),
+        json.dumps(new),
+    )
+
+
+async def changes(conn: Any, item_id: str, *, after: int = 0) -> list[Any]:
+    """The item's log, oldest first; with `after`, only the revisions after it."""
+    rows: list[Any] = await conn.fetch(
+        "SELECT revision, action, actor_user_id, actor_name, fields, old, new, at"
+        " FROM agenda_changes WHERE item_id = $1 AND revision > $2"
+        " ORDER BY revision, action = 'removed', at",
+        item_id,
+        after,
+    )
+    return rows

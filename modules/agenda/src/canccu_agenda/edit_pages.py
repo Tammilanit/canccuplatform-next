@@ -18,13 +18,26 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
 
-from . import edits, model, store
+from . import announce, edits, forms, model, store, undo
 from .access import writer
 from .deps import Deps, deps
 from .effective import read_channels
+from .inverse import Inverse
 from .item_pages import load_item
-from .preview import change_of, moved_line, preview_html, told
-from .web import BASE, button, esc, hhmm, hidden, notice, page, redirect, zone_of
+from .preview import change_of, moved_line, preview_html, told, told_announce
+from .web import (
+    BASE,
+    button,
+    esc,
+    field,
+    hhmm,
+    hidden,
+    notice,
+    page,
+    redirect,
+    text_input,
+    zone_of,
+)
 
 CHIPS = (5, 10, 15, 30)
 
@@ -140,6 +153,7 @@ async def delay_save(request: Request) -> Response:
     following = form.get("following") == "1"
     revision = model.revision(_int(form.get("revision")))
     shown = _int(form.get("agenda_version"))
+    inverse = Inverse()
     try:
         _, items = await edits.delay(
             d,
@@ -149,13 +163,15 @@ async def delay_save(request: Request) -> Response:
             minutes,
             following,
             expected_version=shown if isinstance(shown, int) else -1,
+            inverse=inverse,
         )
     except KitError as exc:
         if exc.code != "agenda_changed":
             raise
         query = urlencode({"minutes": minutes, "following": "1" if following else "", "changed": 1})
         return redirect(f"/items/{item_id}/delay?{query}")
-    return redirect(f"/?day={_day_of(items[0]['starts_at'], request)}&done=delayed")
+    path = f"/?day={_day_of(items[0]['starts_at'], request)}&done=delayed"
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
 
 
 def _day_of(value: str, request: Request) -> str:
@@ -195,8 +211,11 @@ async def cancel_save(request: Request) -> Response:
     session = await writer(request)
     form = await request.form()
     revision = model.revision(_int(form.get("revision")))
-    item = await edits.cancel_one(deps(request), session, request.path_params["item_id"], revision)
-    return redirect(f"/?day={_day_of(item['starts_at'], request)}&done=cancelled")
+    d, inverse = deps(request), Inverse()
+    item_id = request.path_params["item_id"]
+    item = await edits.cancel_one(d, session, item_id, revision, inverse=inverse)
+    path = f"/?day={_day_of(item['starts_at'], request)}&done=cancelled"
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
 
 
 def bring_forward(row: Any, now: datetime) -> int:
@@ -212,26 +231,54 @@ def bring_forward(row: Any, now: datetime) -> int:
     return minutes
 
 
+def _announce_form(row: Any, kinds: Any, channels: list[str]) -> str:
+    """The optional announcement, sent in the same step; quiet hours are never announced."""
+    if row["kind"] == "quiet_hours":
+        return ""
+    who = "".join(
+        f"<li>{esc(line)}</li>" for line in told_announce(change_of(row, kinds, channels))
+    )
+    return (
+        '<fieldset class="canccu-agenda-fieldset"><legend>Announcement</legend>'
+        '<label class="canccu-field canccu-field--check"><input class=canccu-check type=checkbox'
+        " name=announce value=1> Announce it too</label>"
+        + field(
+            "Message (optional)",
+            text_input("message", "", maxlength=announce.MESSAGE_MAX),
+            "Up to 140 characters; the item's title is the heading.",
+        )
+        + f"<h2>If you announce it</h2><ul>{who}</ul></fieldset>"
+    )
+
+
 async def show_now_page(request: Request) -> Response:
     await writer(request)
     d = deps(request)
-    row, _, _ = await load_item(d, request.path_params["item_id"])
+    row, _, kinds = await load_item(d, request.path_params["item_id"])
     if row["status"] == "cancelled":
         raise model.conflict("item_cancelled", "a cancelled item cannot be shown")
     minutes = bring_forward(row, d.now())
+    channels = await read_channels(d)
+    announcing = _announce_form(row, kinds, channels)
     if minutes == 0:
-        body = notice("Screens already show it in now and next.")
-        return page(request, f"Show {row['title']} now", body)
-    preview, _, _ = await _delay_preview(request, row, -minutes, False)
-    body = (
-        "<p>Brings it forward to now with a delay, so every screen shows it in now and next at"
-        " once and its planned time stays visible.</p>"
-        + preview
-        + f'<form method=post action="{BASE}/items/{esc(row["id"])}/show-now"'
-        ' class="canccu-agenda-actions">'
+        if not announcing:
+            body = notice("Screens already show it in now and next.")
+            return page(request, f"Show {row['title']} now", body)
+        body = notice("Screens already show it in now and next; you can still announce it.")
+        label = "Announce now"
+    else:
+        preview, _, _ = await _delay_preview(request, row, -minutes, False)
+        body = (
+            "<p>Brings it forward to now with a delay, so every screen shows it in now and next"
+            " at once and its planned time stays visible.</p>" + preview
+        )
+        label = "Show on screens now"
+    body += (
+        f'<form method=post action="{BASE}/items/{esc(row["id"])}/show-now"'
+        ' class="canccu-agenda-form">'
         + hidden({"revision": row["revision"]})
-        + button("Show on screens now")
-        + "</form>"
+        + announcing
+        + f'<div class="canccu-agenda-actions">{button(label)}</div></form>'
     )
     return page(request, f"Show {row['title']} now", body)
 
@@ -241,12 +288,24 @@ async def show_now_save(request: Request) -> Response:
     d = deps(request)
     form = await request.form()
     row, _, _ = await load_item(d, request.path_params["item_id"])
+    announcing = form.get("announce") == "1"
+    # Checked before the item moves, so a refused announcement leaves the run of show as it was.
+    message = announce.message_of(forms.opt_text(form, "message"))
+    if announcing and row["kind"] == "quiet_hours":
+        raise model.invalid("quiet hours are never announced")
     # Counted again at the moment of the change, so a moment never lands in the past.
     minutes = bring_forward(row, d.now())
+    inverse = Inverse()
     if minutes:
         revision = model.revision(_int(form.get("revision")))
-        await edits.delay(d, session, row["id"], revision, -minutes, False)
-    return redirect(f"/?day={_day(row, request)}&done=shown")
+        await edits.delay(d, session, row["id"], revision, -minutes, False, inverse=inverse)
+    if announcing:
+        # After the bring-forward, so the announced item carries its new times (contract).
+        await announce.announce(d, session, row["id"], message)
+    done = ("shown_announced" if announcing else "shown") if minutes else "announced"
+    path = f"/?day={_day(row, request)}&done={done}"
+    # An announcement cannot be taken back; the undo brings the item back to its time.
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
 
 
 ROUTES = [

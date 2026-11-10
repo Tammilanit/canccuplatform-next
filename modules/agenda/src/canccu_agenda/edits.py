@@ -17,6 +17,7 @@ from . import model, store, timers
 from .access import writer
 from .deps import Deps, deps
 from .effective import event_settings
+from .inverse import Inverse
 from .kinds import body, int_query, not_found
 
 
@@ -112,6 +113,7 @@ async def delay(
     following: bool,
     *,
     expected_version: int | None = None,
+    inverse: Inverse | None = None,
 ) -> tuple[int, list[dict[str, Any]]]:
     """Applies a delay; answers the last `agenda_version` and the shifted items, the delayed
     item first. With `expected_version` (a page's preview), any change of the agenda since is
@@ -128,8 +130,12 @@ async def delay(
         # Every item was checked before any is written, so a refused shift moves nothing.
         updated = []
         for r, starts, ends in plan.moves:
-            new_row = await store.update_item(conn, r["id"], {"starts_at": starts, "ends_at": ends})
+            new_row = await store.update_item(
+                conn, r["id"], {"starts_at": starts, "ends_at": ends}, store.actor_of(session)
+            )
             updated.append((new_row, await store.bump(conn, "agenda_version")))
+            if inverse is not None:
+                inverse.restore(r, new_row, ["starts_at", "ends_at"], -minutes)
         kinds = await store.kinds(conn)
         await timers.reschedule(conn, [r for r, _ in updated], kinds, leads, now)
         shifted = [(model.item_json(r, kinds, channels), v) for r, v in updated]
@@ -160,7 +166,14 @@ async def cancel_item(request: Request) -> Response:
     return JSONResponse(await cancel_one(deps(request), session, item_id, sent_revision))
 
 
-async def cancel_one(d: Deps, session: Session, item_id: str, sent_revision: int) -> dict[str, Any]:
+async def cancel_one(
+    d: Deps,
+    session: Session,
+    item_id: str,
+    sent_revision: int,
+    *,
+    inverse: Inverse | None = None,
+) -> dict[str, Any]:
     channels, leads = await event_settings(d)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
@@ -169,7 +182,9 @@ async def cancel_one(d: Deps, session: Session, item_id: str, sent_revision: int
             raise model.conflict("item_managed", "cancel the session in the tournament module")
         if row["status"] == "cancelled":
             raise model.conflict("item_cancelled", "the item is already cancelled")
-        item, version = await cancel(conn, row, channels, leads, d)
+        item, version = await cancel(conn, row, channels, leads, d, store.actor_of(session))
+        if inverse is not None:
+            inverse.add_again(await store.item(conn, row["id"]))
     await d.bus.publish(
         "agenda.item.cancelled",
         {"item": item, "agenda_version": version, "actor_user_id": session.user_id},
@@ -179,11 +194,11 @@ async def cancel_one(d: Deps, session: Session, item_id: str, sent_revision: int
 
 
 async def cancel(
-    conn: Any, row: Any, channels: list[str], leads: list[int], d: Deps
+    conn: Any, row: Any, channels: list[str], leads: list[int], d: Deps, actor: store.Actor
 ) -> tuple[dict[str, Any], int]:
     """Cancels inside the caller's transaction; dropping its timers means an item cancelled while
     it runs never emits `agenda.item.ended`."""
-    row = await store.update_item(conn, row["id"], {"status": "cancelled"})
+    row = await store.update_item(conn, row["id"], {"status": "cancelled"}, actor)
     version = await store.bump(conn, "agenda_version")
     kinds = await store.kinds(conn)
     await timers.reschedule(conn, [row], kinds, leads, d.now())
@@ -199,7 +214,7 @@ async def remove_item(request: Request) -> Response:
         row = await target(conn, request.path_params["item_id"], sent_revision)
         if row["managed_by"] is not None:
             raise model.conflict("item_managed", "remove the session in the tournament module")
-        version = await remove(conn, row["id"])
+        version = await remove(conn, row, store.actor_of(session))
     await d.bus.publish(
         "agenda.item.removed",
         {
@@ -213,9 +228,9 @@ async def remove_item(request: Request) -> Response:
     return Response(status_code=204)
 
 
-async def remove(conn: Any, item_id: str) -> int:
-    """Removes inside the caller's transaction; its timers go with it (ON DELETE CASCADE)."""
-    await conn.execute("DELETE FROM agenda_items WHERE id = $1", item_id)
+async def remove(conn: Any, row: Any, actor: store.Actor) -> int:
+    """Removes inside the caller's transaction."""
+    await store.delete_item(conn, row, actor)
     return await store.bump(conn, "agenda_version")
 
 

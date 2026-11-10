@@ -98,7 +98,7 @@ async def handle(d: Deps, event: Event) -> None:
         out: Published = []
         if session is None:
             if row is not None:
-                out.append(_removed(row, await remove(conn, row["id"])))
+                out.append(_removed(row, await remove(conn, row, store.TOURNAMENT)))
         else:
             await _apply(conn, d, event, session, row, channels, leads, out)
     for event_type, data in out:
@@ -142,7 +142,7 @@ async def _apply(
     if session.status == "cancelled":
         # Also from `.changed`: the session's status is what counts, whichever event carries it.
         if scheduled:
-            item, version = await cancel(conn, row, channels, leads, d)
+            item, version = await cancel(conn, row, channels, leads, d, store.TOURNAMENT)
             out.append(("agenda.item.cancelled", {"item": item, "agenda_version": version}))
         return
     if event.type == "tournament.session.cancelled":
@@ -155,7 +155,7 @@ async def _apply(
         return
     if row is not None and not scheduled:
         # Reopened: a new item, and the cancelled one goes, so the session has one item.
-        out.append(_removed(row, await remove(conn, row["id"])))
+        out.append(_removed(row, await remove(conn, row, store.TOURNAMENT)))
         row = None
     if row is None:
         kinds = await store.kinds(conn)
@@ -173,6 +173,7 @@ async def _apply(
                 "tournament_session_id": session.id,
                 "managed_by": "tournament",
             },
+            store.TOURNAMENT,
         )
         version = await store.bump(conn, "agenda_version")
         await timers.reschedule(conn, [new], kinds, leads, d.now())
@@ -211,7 +212,7 @@ async def _move(
     if ends is not None and ends <= starts:
         log.warning("skipped a session move that ends before it starts", extra={"item": row["id"]})
         return
-    new = await store.update_item(conn, row["id"], values)
+    new = await store.update_item(conn, row["id"], values, store.TOURNAMENT)
     version = await store.bump(conn, "agenda_version")
     kinds = await store.kinds(conn)
     await timers.reschedule(conn, [new], kinds, leads, d.now())

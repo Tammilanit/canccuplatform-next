@@ -8,7 +8,19 @@ from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
 
-from . import edit_pages, edits, item_pages, items, kinds, pages, quickadd, template_pages, web
+from . import (
+    announce,
+    edit_pages,
+    edits,
+    item_pages,
+    items,
+    kinds,
+    pages,
+    quickadd,
+    template_pages,
+    undo,
+    web,
+)
 from .deps import Deps
 
 
@@ -17,8 +29,15 @@ def create_app(
 ) -> Starlette:
     del ip_mode  # the resolver carries it
     # /items/new before /items/{item_id}: Starlette takes the first route that matches.
-    routes = items.ROUTES + edits.ROUTES + kinds.ROUTES + item_pages.ROUTES + edit_pages.ROUTES
-    routes += pages.ROUTES + quickadd.ROUTES + template_pages.ROUTES + web.ROUTES
+    routes = (
+        items.ROUTES
+        + edits.ROUTES
+        + announce.ROUTES
+        + kinds.ROUTES
+        + item_pages.ROUTES
+        + edit_pages.ROUTES
+    )
+    routes += pages.ROUTES + quickadd.ROUTES + template_pages.ROUTES + undo.ROUTES + web.ROUTES
     app = Starlette(routes=routes)
     # Starlette's slash redirects would drop the /agenda prefix Caddy strips.
     app.router.redirect_slashes = False

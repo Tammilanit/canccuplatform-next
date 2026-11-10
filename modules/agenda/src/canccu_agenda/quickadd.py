@@ -13,9 +13,10 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
 
-from . import forms, items, model, store, templates
+from . import forms, items, model, store, templates, undo
 from .access import writer
 from .deps import deps
+from .inverse import Inverse
 from .web import (
     BASE,
     api_time,
@@ -145,17 +146,18 @@ async def quick_add(request: Request) -> Response:
     picked = str(form.get("what") or "")
     template = next((r for r in rows if f"template:{r['id']}" == picked), None)
     kind = picked.removeprefix("kind:") if picked.startswith("kind:") else None
+    inverse = Inverse()
     try:
         if template is None and kind is None:
             raise model.invalid("pick what it is")
-        item = await items.add(
-            d, session, item_fields(form, template, kind, _starts(form, day, now, tz))
-        )
+        fields = item_fields(form, template, kind, _starts(form, day, now, tz))
+        item = await items.add(d, session, fields, inverse=inverse)
     except KitError as exc:
         body = notice(exc.message, "error") + _form(dict(form), what, day, today)
         return page(request, "Quick add", body, status=400)
     added_day = datetime.fromisoformat(item["starts_at"].replace("Z", "+00:00")).astimezone(tz)
-    return redirect(f"/?day={added_day.date().isoformat()}&done=added")
+    path = f"/?day={added_day.date().isoformat()}&done=added"
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
 
 
 ROUTES = [

@@ -99,7 +99,7 @@ async def test_the_full_form_adds_an_item_in_the_events_time_zone(env: Env) -> N
         (item,) = (await c.get("/api/agenda/items", headers=h)).json()["items"]
     assert 'value="2026-11-20T19:01"' in new.text  # the next whole minute, local time
     assert response.status_code == 303
-    assert response.headers["location"] == "/agenda/?day=2026-11-20&done=added"
+    assert response.headers["location"].startswith("/agenda/?day=2026-11-20&done=added&undo=un_")
     assert item["starts_at"] == at(60) and item["ends_at"] == at(150)
     assert item["visibility"] == "attendees" and item["location"] == "Stage"
     assert item["reminder_leads_minutes"] == [15] and item["notify"] == ["push"]
