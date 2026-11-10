@@ -15,91 +15,20 @@ concurrency:
 
 # Job names are the required-check names for branch rules (#4). Do not rename them.
 jobs:
-  kit-ts:
-    name: lint-types-test (kit-ts)
+  # The packages run through the module runner (#253), each with its own Valkey and Postgres,
+  # so the kit's integration tests run inside its lint-types-test job, not a second time.
+  package:
+    name: lint-types-test (${{ matrix.package }})
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/kit-ts
-    steps:
-      - uses: actions/checkout@v4
-      - name: Detect package
-        id: pkg
-        run: |
-          if [ -f package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"
-          else echo "empty package, skipping"; echo "present=false" >> "$GITHUB_OUTPUT"; fi
-      - uses: actions/setup-node@v4
-        if: steps.pkg.outputs.present == 'true'
-        with:
-          node-version: 22
-      - if: steps.pkg.outputs.present == 'true'
-        run: npm ci
-      - if: steps.pkg.outputs.present == 'true'
-        run: npm run lint
-      - if: steps.pkg.outputs.present == 'true'
-        run: npm run typecheck
-      - if: steps.pkg.outputs.present == 'true'
-        run: npm test
-
-  ui:
-    name: lint-types-test (ui)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/ui
-    steps:
-      - uses: actions/checkout@v4
-      - name: Detect package
-        id: pkg
-        run: |
-          if [ -f package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"
-          else echo "empty package, skipping"; echo "present=false" >> "$GITHUB_OUTPUT"; fi
-      - uses: actions/setup-node@v4
-        if: steps.pkg.outputs.present == 'true'
-        with:
-          node-version: 22
-      - if: steps.pkg.outputs.present == 'true'
-        run: npm ci
-      - if: steps.pkg.outputs.present == 'true'
-        run: npm run lint
-      - if: steps.pkg.outputs.present == 'true'
-        run: npm run typecheck
-      - if: steps.pkg.outputs.present == 'true'
-        run: npm test
-
-  kit-py:
-    name: lint-types-test (kit-py)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/kit-py
-    steps:
-      - uses: actions/checkout@v4
-      - name: Detect package
-        id: pkg
-        run: |
-          if [ -f pyproject.toml ]; then echo "present=true" >> "$GITHUB_OUTPUT"
-          else echo "empty package, skipping"; echo "present=false" >> "$GITHUB_OUTPUT"; fi
-      - uses: actions/setup-python@v5
-        if: steps.pkg.outputs.present == 'true'
-        with:
-          python-version: "3.12"
-      - if: steps.pkg.outputs.present == 'true'
-        run: pip install -e ".[dev]"
-      - if: steps.pkg.outputs.present == 'true'
-        run: ruff check .
-      - if: steps.pkg.outputs.present == 'true'
-        run: mypy .
-      - if: steps.pkg.outputs.present == 'true'
-        run: pytest
-
-  integration-kit:
-    name: integration (kit)
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [kit-ts, ui, kit-py]
     env:
       CANCCU_VALKEY_URL: redis://127.0.0.1:6379
       # The Compose superuser: the RLS tests create their own plain app role and switch to it.
       CANCCU_DATABASE_URL: postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu
+      PACKAGE: packages/${{ matrix.package }}
     steps:
       - uses: actions/checkout@v4
       - name: Start Valkey and Postgres from the Compose stack
@@ -110,17 +39,28 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: kit-ts against Valkey and Postgres
-        working-directory: packages/kit-ts
-        run: npm ci && npx vitest run test/valkey.integration.test.ts test/postgres.integration.test.ts
-      - name: kit-py against Valkey and Postgres
-        working-directory: packages/kit-py
-        run: pip install -e ".[dev]" && pytest tests/test_valkey_integration.py tests/test_postgres_integration.py
+      - name: Lint, types and tests, with the Postgres and Valkey tests
+        run: scripts/check-module "$PACKAGE"
       - name: Valkey and Postgres logs
         if: failure()
         run: docker compose -f deploy/compose.yml logs valkey postgres
       - if: always()
         run: docker compose -f deploy/compose.yml -f deploy/compose.test.yml down -v
+
+  integration-kit:
+    name: integration (kit)
+    needs: package
+    # Kept as a required name: the kit's Valkey and Postgres tests now run in the package jobs.
+    # always(): a failed or cancelled package job must fail this check, not skip it.
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every package job passed, the kit's integration tests among them
+        env:
+          RESULT: ${{ needs.package.result }}
+        run: |
+          echo "package jobs: $RESULT"
+          test "$RESULT" = success
 
   # The generic module step (#213): every modules/<name> with checks runs through
   # scripts/check-module, so a new module needs no change here. Only `modules` is a stable
@@ -149,9 +89,8 @@ jobs:
     env:
       CANCCU_VALKEY_URL: redis://127.0.0.1:6379
       # The Compose superuser: the RLS tests create their own plain app role and switch to it.
+      # Each module job has its own database, so a module's tests may recreate their tables.
       CANCCU_DATABASE_URL: postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu
-      # The same database for tests that recreate their tables: each module job has its own.
-      CANCCU_TEST_DATABASE_URL: postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu
       MODULE: ${{ matrix.module }}
     steps:
       - uses: actions/checkout@v4

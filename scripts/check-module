@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # The generic module check (#213): CI runs every module that has checks through this one
-# script, so a new module needs no `.github/` change. See docs/ci.md#modules.
+# script, so a new module needs no `.github/` change; the packages run through it too (#253).
+# See docs/ci.md#modules.
 # Usage: check-module --list [ROOT]           JSON array of the modules under ROOT/modules with checks
 #        check-module [--dry-run] MODULE [ROOT]  run the checks of ROOT/modules/MODULE
+#        check-module [--dry-run] packages/NAME [ROOT]  run the checks of ROOT/packages/NAME
 #        check-module --self-test
 set -uo pipefail
 
@@ -78,11 +80,27 @@ check-module: own failed: ./check" own "$t"
   check "list refuses a check that is not executable" 2 "check-module: modules/x/check is not an executable file" --list "$t/noexec"
   check "a check that is not executable never falls back to the defaults" 2 "check-module: modules/x/check is not an executable file" --dry-run x "$t/noexec"
   check "a check folder is not a check" 2 "check-module: modules/y/check is not an executable file" --dry-run y "$t/dircheck"
-  check "no arguments is a usage error" 2 "usage: check-module --list [ROOT] | [--dry-run] MODULE [ROOT] | --self-test"
+  # The packages (#253) run the same defaults as a module, named by their path.
+  mkdir -p "$t/packages/kit-py"; echo '[project]' > "$t/packages/kit-py/pyproject.toml"
+  check "a node package runs the node defaults" 0 "\
++ (packages/ui) npm ci
++ (packages/ui) npm run lint
++ (packages/ui) npm run typecheck
++ (packages/ui) npm test" --dry-run packages/ui "$t"
+  check "a python package runs the python defaults" 0 "\
++ (packages/kit-py) python3 -m pip install -e '.[dev]'
++ (packages/kit-py) ruff check .
++ (packages/kit-py) ruff format --check .
++ (packages/kit-py) mypy .
++ (packages/kit-py) pytest" --dry-run packages/kit-py "$t"
+  check "an unknown package is an error" 2 "check-module: no package packages/nope" packages/nope "$t"
+  check "a nested path is not a package" 2 "check-module: not a module name: packages/kit-ts/src" packages/kit-ts/src "$t"
+  check "modules/ is not a prefix" 2 "check-module: not a module name: modules/ts" modules/ts "$t"
+  check "no arguments is a usage error" 2 "usage: check-module --list [ROOT] | [--dry-run] MODULE|packages/NAME [ROOT] | --self-test"
   exit "$fail"
 fi
 
-usage="usage: check-module --list [ROOT] | [--dry-run] MODULE [ROOT] | --self-test"
+usage="usage: check-module --list [ROOT] | [--dry-run] MODULE|packages/NAME [ROOT] | --self-test"
 
 # A `check` that lost its exec bit must not fall back to the defaults: for screen-render
 # that would skip the real-deck tests without anyone noticing.
@@ -118,9 +136,14 @@ if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
 module=$1
 root="${2:-$(git rev-parse --show-toplevel)}"
 # The name comes from the CI matrix and becomes a path: refuse anything but a plain name.
-name_ok "$module" || { echo "check-module: not a module name: $module"; exit 2; }
-dir="modules/$module"
-[ -d "$root/$dir" ] || { echo "check-module: no module $dir"; exit 2; }
+if [[ "$module" == packages/* ]] && name_ok "${module#packages/}"; then
+  dir=$module; kind=package
+elif name_ok "$module"; then
+  dir="modules/$module"; kind=module
+else
+  echo "check-module: not a module name: $module"; exit 2
+fi
+[ -d "$root/$dir" ] || { echo "check-module: no $kind $dir"; exit 2; }
 has_checks "$root" "$dir" || { echo "check-module: $dir has no checks (no check script, package.json or pyproject.toml)"; exit 2; }
 
 steps=() # "<dir relative to root>|<command>", run in order, stopping at the first failure
