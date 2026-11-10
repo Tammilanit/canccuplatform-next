@@ -169,7 +169,7 @@ async def record(
     """(the check-in, whether this call made it). Raises EventArchived, NotAMember, CodeInvalid,
     CodeExpired."""
     writable(ctx)
-    if not is_member(session):
+    if not is_member(session.user_id):
         raise NotAMember("only members of the event can check in")
     tenant_id = ctx["tenant_id"]
     key = await event_key(d, tenant_id, create=False)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 
 import httpx
@@ -27,10 +28,12 @@ from canccu_kit import (
     valkey_check,
 )
 
-from . import consumer
+from . import consumer, delivery
 from .app import create_app
 from .db import Db
 from .deps import Deps
+from .push import Pusher
+from .webpush import Vapid
 
 # deploy/compose.yml's stand-in for CANCCU_SECRETS_KEY, so a dev stack starts without one.
 PLACEHOLDER_SECRETS_KEY = "Y2FuY2N1LWxvY2FsLW9ubHktc2VjcmV0cy1rZXktMzI="
@@ -79,8 +82,15 @@ async def serve() -> None:
         raise SystemExit(f"missing environment variable(s): {', '.join(missing)}")
     try:
         identity = ServiceIdentity(config.module, service_key_from_env())
+        # Push needs it; without a valid key the module does not start (plan D3).
+        vapid = Vapid.from_env()
     except ConfigError as exc:
         raise SystemExit(str(exc)) from exc
+    if vapid.subject is None:
+        logging.getLogger("canccu_notify.main").warning(
+            "CANCCU_PUBLIC_URL is not set: the VAPID token has no subject, and some push"
+            " services (Apple's) refuse pushes without one"
+        )
     box = secret_box(config.version)
     # The stack logs in as a plain role and migrates as the migration role (0013 item 5).
     db = await Db.connect(
@@ -129,6 +139,7 @@ async def serve() -> None:
         audit=audit,
         secrets=box,
         tenants=resolver,
+        push=Pusher(vapid),
     )
 
     async def on_source(event: Event) -> None:
@@ -148,7 +159,11 @@ async def serve() -> None:
             forwarded_allow_ips=trusted,
         )
     )
-    await server.serve()
+    sender = asyncio.create_task(delivery.run(d))
+    try:
+        await server.serve()
+    finally:
+        sender.cancel()
 
 
 def main() -> None:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from canccu_kit import Bus, SecretBox
 from canccu_kit.access import TenantContext
@@ -13,6 +13,9 @@ from canccu_kit.rights import Session
 from starlette.requests import Request
 
 from .db import Db
+
+if TYPE_CHECKING:
+    from .push import Pusher
 
 
 class Rights(Protocol):
@@ -59,6 +62,7 @@ class Deps:
     audit: Audit
     secrets: SecretBox
     tenants: Tenants
+    push: Pusher
     now: Callable[[], datetime] = field(default=utc_now)
 
 
