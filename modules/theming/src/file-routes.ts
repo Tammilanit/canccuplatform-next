@@ -64,8 +64,7 @@ export function fileRoutes(app: FastifyInstance, deps: DraftDeps): void {
   void app.register((scope, _opts, done) => {
     scope.removeAllContentTypeParsers();
     scope.addContentTypeParser("*", readBody);
-    // Above the path's own limit, so readBody, not Fastify, answers a body that passes it.
-    const route = { preHandler: needs(deps.rights, WRITE), bodyLimit: BODY_LIMIT * 2 };
+    const route = { preHandler: needs(deps.rights, WRITE) };
 
     scope.put<FileQuery>("/api/theming/draft/file", route, async (request) => {
       assertWritable(request);

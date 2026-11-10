@@ -11,6 +11,7 @@ export interface FakeQuota {
 export function fakeQuota(): FakeQuota {
   const storage = { used: {} as Record<string, number>, quota: {} as Record<string, number> };
   const quota: StorageQuota = {
+    module: "theming",
     reserve: (bytes) => {
       const tenant = requireTenant();
       const used = (storage.used[tenant] ?? 0) + bytes;

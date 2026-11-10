@@ -14,7 +14,32 @@ const QUALITY = 90;
 export type RasterVerdict =
   { ok: true; bytes: Buffer } | { ok: false; code: "file_type" | "file_too_large"; why: string };
 
-export async function reencode(input: Buffer, kind: RasterKind): Promise<RasterVerdict> {
+/**
+ * Decodes at once: each may hold up to 40 megapixels (about 160 MB), and a few such files are
+ * small on the wire, so a burst of uploads waits its turn instead of exhausting the memory.
+ */
+const MAX_DECODES = 2;
+let decoding = 0;
+const waiting: (() => void)[] = [];
+
+async function inTurn<T>(fn: () => Promise<T>): Promise<T> {
+  // A finished decode hands its turn to the next waiter directly, so no newcomer slips in between.
+  if (decoding >= MAX_DECODES) await new Promise<void>((resolve) => waiting.push(resolve));
+  else decoding += 1;
+  try {
+    return await fn();
+  } finally {
+    const next = waiting.shift();
+    if (next === undefined) decoding -= 1;
+    else next();
+  }
+}
+
+export function reencode(input: Buffer, kind: RasterKind): Promise<RasterVerdict> {
+  return inTurn(() => decode(input, kind));
+}
+
+async function decode(input: Buffer, kind: RasterKind): Promise<RasterVerdict> {
   let meta: Awaited<ReturnType<ReturnType<typeof sharp>["metadata"]>>;
   try {
     // The header only, so no pixel limit yet: a huge size is refused below as too large, with

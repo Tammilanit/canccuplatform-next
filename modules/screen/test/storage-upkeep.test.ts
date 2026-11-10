@@ -62,7 +62,7 @@ describe.skipIf(!DATABASE_URL)("storage upkeep", () => {
     const holding = new Promise<void>((resolve) => (held = resolve));
     const uploadTx = inAlpha(() =>
       h.db.tenant(async (c) => {
-        await holdCount(c, "screen");
+        await holdCount(c, h.quota);
         await h.quota.reserve(50);
         held();
         await gate;

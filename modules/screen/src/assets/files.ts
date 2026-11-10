@@ -15,9 +15,8 @@ import { dirname } from "node:path";
 import type { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { KitError, requireTenant, tenantFile } from "@canccu/kit";
-import type { Logger, SqlClient } from "@canccu/kit";
+import type { Logger, SqlClient, StorageQuota } from "@canccu/kit";
 import type { Db } from "../db.js";
-import type { StorageQuota } from "@canccu/kit";
 
 /** Advisory-lock class of screen's file names; the two-key form never meets the migration lock. */
 const FILE_LOCK_CLASS = 0x5c4e;

@@ -4,14 +4,12 @@
  * stored files take. A crash between a reserve and its release, a cleanup that failed, or files
  * written without a reserve (publish's generated CSS, files.ts) so stay wrong at most one period.
  */
-import { readdir } from "node:fs/promises";
-import { join } from "node:path";
-import { isTenantId, lockCount, withTenant } from "@canccu/kit";
+import { lockCount, tenantsWithFiles, withTenant } from "@canccu/kit";
 import type { Logger, StorageQuota } from "@canccu/kit";
 import type { Db } from "./db.js";
 import { STORED_NAME, TEMP_NAME, lockFiles } from "./files.js";
 import type { FileStore } from "./files.js";
-import { QUOTA_MODULE, isKept } from "./stored.js";
+import { isKept } from "./stored.js";
 
 export const UPKEEP_MS = 3_600_000;
 /** A temporary name this old is a write that crashed between writing and renaming (files.ts). */
@@ -32,7 +30,7 @@ export interface UpkeepDeps {
  */
 export async function recount(deps: UpkeepDeps): Promise<void> {
   await deps.db.tenant(async (c) => {
-    await lockCount(c, QUOTA_MODULE);
+    await lockCount(c, deps.storage);
     const { rows } = await c.query(
       `SELECT coalesce(sum(bytes), 0) AS total FROM (
          SELECT sha256 || '.' || ext AS name, bytes FROM theming_files
@@ -47,12 +45,21 @@ export async function recount(deps: UpkeepDeps): Promise<void> {
  * failed too) and the temporary files of writes that crashed.
  */
 export async function sweepFiles(deps: UpkeepDeps, now = Date.now()): Promise<void> {
+  const kept = new Set(
+    await deps.db.tenant(async (c) => {
+      const { rows } = await c.query(
+        `SELECT sha256 || '.' || ext AS name FROM theming_files
+         UNION SELECT file FROM theming_embed_files`,
+      );
+      return (rows as { name: string }[]).map((r) => r.name);
+    }),
+  );
   for (const { name, modifiedMs } of await deps.files.entries()) {
     if (TEMP_NAME.test(name)) {
       if (now - modifiedMs > STALE_TEMP_MS) await deps.files.remove(name);
       continue;
     }
-    if (!STORED_NAME.test(name)) continue;
+    if (!STORED_NAME.test(name) || kept.has(name)) continue;
     // Under the file's lock and read again: a write of the same bytes holds the lock from before
     // it writes until its commit, so its file is never taken for an orphan.
     await deps.db.tenant(async (c) => {
@@ -62,23 +69,12 @@ export async function sweepFiles(deps: UpkeepDeps, now = Date.now()): Promise<vo
   }
 }
 
-async function entries(dir: string): Promise<string[]> {
-  try {
-    return await readdir(dir);
-  } catch (err) {
-    if ((err as { code?: unknown }).code === "ENOENT") return [];
-    throw err;
-  }
-}
-
 /**
  * Every event with theming files. Every container runs it each period, with no claim between
  * them: the sweep and the recount are safe to run twice, under their locks, and cost little.
  */
 export async function upkeepAll(deps: UpkeepDeps & { filesRoot: string }): Promise<void> {
-  for (const tenant of (await entries(deps.filesRoot)).filter(isTenantId)) {
-    // Only events that ever had theming files; `_platform` is no tenant id.
-    if ((await entries(join(deps.filesRoot, tenant, "theming"))).length === 0) continue;
+  for (const tenant of await tenantsWithFiles(deps.filesRoot, "theming")) {
     try {
       await withTenant(tenant, async () => {
         try {

@@ -3,11 +3,13 @@
  * reserves bytes before it writes a file and releases them when it deletes the file or never
  * writes it. Every module that keeps files on the shared volume shares this client and its locks.
  */
+import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 import { KitError } from "./errors.js";
 import type { Logger } from "./log.js";
 import type { SqlClient } from "./db.js";
 import type { ServiceIdentity } from "./service.js";
-import { requireTenant } from "./tenant.js";
+import { isTenantId, requireTenant } from "./tenant.js";
 
 /**
  * Advisory-lock class of the per-module count of an event; modules use other classes for their
@@ -16,6 +18,8 @@ import { requireTenant } from "./tenant.js";
 const COUNT_LOCK_CLASS = 0x5c4f;
 
 export interface StorageQuota {
+  /** The module counted, as its service identity names it; the count locks are keyed by it. */
+  readonly module: string;
   /** 413 `storage_quota_exceeded` or 409 `event_archived` from tenants, passed on unchanged. */
   reserve(bytes: number): Promise<void>;
   release(bytes: number): Promise<void>;
@@ -75,32 +79,45 @@ export function tenantsStorage(
     throw unavailable(`${path} answered ${response.status}`);
   };
   return {
+    module,
     reserve: (bytes) => change("reserve", bytes),
     release: (bytes) => change("release", bytes),
     repair: (bytes) => change("repair", bytes),
   };
 }
 
-const countKey = (module: string): string => `${module}/${requireTenant()}`;
+/**
+ * Keyed by module and tenant. Screen's key was the tenant alone before theming shared the client:
+ * during the deploy that brings this in, an old and a new screen container do not block each
+ * other, so one recount may leave out an upload under way; the next recount mends it.
+ */
+const countKey = (storage: Pick<StorageQuota, "module">): string =>
+  `${storage.module}/${requireTenant()}`;
 
 /**
- * Holds off `module`'s recount until the caller's transaction ends. A writer takes it before it
+ * Holds off the module's recount until the caller's transaction ends. A writer takes it before it
  * reserves, so a recount waits for the commit that writes the rows holding those bytes instead
  * of reading the rows without them and then setting a count that has them: an upload under way
  * while the module counts is not lost from the count.
  */
-export async function holdCount(c: SqlClient, module: string): Promise<void> {
+export async function holdCount(
+  c: SqlClient,
+  storage: Pick<StorageQuota, "module">,
+): Promise<void> {
   await c.query("SELECT pg_advisory_xact_lock_shared($1, hashtext($2))", [
     COUNT_LOCK_CLASS,
-    countKey(module),
+    countKey(storage),
   ]);
 }
 
 /** The recount's side of `holdCount`: no reserve runs until the caller's transaction ends. */
-export async function lockCount(c: SqlClient, module: string): Promise<void> {
+export async function lockCount(
+  c: SqlClient,
+  storage: Pick<StorageQuota, "module">,
+): Promise<void> {
   await c.query("SELECT pg_advisory_xact_lock($1, hashtext($2))", [
     COUNT_LOCK_CLASS,
-    countKey(module),
+    countKey(storage),
   ]);
 }
 
@@ -128,4 +145,27 @@ export async function releaseHeld(
   await storage.release(bytes).catch((err: unknown) => {
     log?.warn({ err, bytes }, "giving bytes back to the storage quota failed");
   });
+}
+
+async function entries(dir: string): Promise<string[]> {
+  try {
+    return await readdir(dir);
+  } catch (err) {
+    const code = (err as { code?: unknown }).code;
+    // A stray file where a folder would be holds no module files either.
+    if (code === "ENOENT" || code === "ENOTDIR") return [];
+    throw err;
+  }
+}
+
+/**
+ * The events that ever had files of `module` on the volume at `filesRoot`: those a module's
+ * storage upkeep sweeps and recounts. `_platform` is no tenant id.
+ */
+export async function tenantsWithFiles(filesRoot: string, module: string): Promise<string[]> {
+  const out: string[] = [];
+  for (const tenant of (await entries(filesRoot)).filter(isTenantId)) {
+    if ((await entries(join(filesRoot, tenant, module))).length > 0) out.push(tenant);
+  }
+  return out;
 }

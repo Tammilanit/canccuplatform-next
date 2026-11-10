@@ -76,8 +76,14 @@ export async function pathProblems(c: SqlClient): Promise<Problem[]> {
   return (rows as { problem: Problem }[]).map((r) => r.problem);
 }
 
-/** Every file the draft refers to: what discarding it lets go. */
+/**
+ * Every file the draft refers to, its embeds' too: what discarding it lets go. A theme file whose
+ * last other holder was a draft embed is checked again only so.
+ */
 export async function draftFileNames(c: SqlClient): Promise<string[]> {
-  const { rows } = await c.query(`SELECT file FROM theming_file_refs WHERE owner = 'draft'`);
+  const { rows } = await c.query(
+    `SELECT file FROM theming_file_refs WHERE owner = 'draft'
+     UNION SELECT file FROM theming_embed_files WHERE owner = 'draft'`,
+  );
   return (rows as { file: string }[]).map((r) => r.file);
 }

@@ -10,9 +10,6 @@ import type { Db } from "./db.js";
 import { fileName, lockFiles } from "./files.js";
 import type { Ext, FileStore } from "./files.js";
 
-/** The module the quota counts these files for: the service identity's name. */
-export const QUOTA_MODULE = "theming";
-
 export interface StoredDeps {
   db: Db;
   files: FileStore;
@@ -33,11 +30,23 @@ interface Placed {
 async function place(c: SqlClient, deps: StoredDeps, bytes: Buffer, ext: Ext): Promise<Placed> {
   const name = fileName(bytes, ext);
   await lockFiles(c, [name]);
-  const { rows } = await c.query(`SELECT 1 FROM theming_files WHERE sha256 = $1 AND ext = $2`, [
-    name.slice(0, 64),
-    ext,
-  ]);
-  if (rows.length > 0) return { name, reserved: 0 };
+  const { rows } = await c.query(
+    `SELECT EXISTS (SELECT 1 FROM theming_files WHERE sha256 = $1 AND ext = $2) AS theme,
+            EXISTS (SELECT 1 FROM theming_embed_files WHERE file = $3) AS embed`,
+    [name.slice(0, 64), ext, name],
+  );
+  const held = rows[0] as { theme: boolean; embed: boolean };
+  if (held.theme) return { name, reserved: 0 };
+  if (held.embed) {
+    // An embed's file with these bytes is already on the volume: the bytes count once, so the
+    // row only records them, with nothing reserved again.
+    await c.query(`INSERT INTO theming_files (sha256, ext, bytes) VALUES ($1, $2, $3)`, [
+      name.slice(0, 64),
+      ext,
+      bytes.length,
+    ]);
+    return { name, reserved: 0 };
+  }
   // The caller holds the count lock until this transaction ends (`writingFiles`), so a recount
   // sees these bytes in the row or not at all.
   await deps.storage.reserve(bytes.length);
@@ -67,7 +76,9 @@ async function dropUnreferenced(c: SqlClient, names: string[]): Promise<Dropped[
   if (names.length === 0) return [];
   await lockFiles(c, names);
   const { rows } = await c.query(
-    `DELETE FROM theming_files f WHERE f.sha256 || '.' || f.ext = ANY($1)
+    `DELETE FROM theming_files f
+      WHERE (f.sha256, f.ext) IN (SELECT split_part(n, '.', 1), split_part(n, '.', 2)
+                                    FROM unnest($1::text[]) AS n)
        AND NOT EXISTS (SELECT 1 FROM theming_file_refs r WHERE r.file = f.sha256 || '.' || f.ext)
        AND NOT EXISTS (SELECT 1 FROM theming_embed_files e WHERE e.file = f.sha256 || '.' || f.ext)
      RETURNING f.sha256 || '.' || f.ext AS name, f.bytes`,
@@ -82,7 +93,7 @@ async function dropUnreferenced(c: SqlClient, names: string[]): Promise<Dropped[
 /** Whether a row still keeps the stored file `name`: a theme file or an embed's. */
 export async function isKept(c: SqlClient, name: string): Promise<boolean> {
   const { rows } = await c.query(
-    `SELECT 1 FROM theming_files WHERE sha256 || '.' || ext = $1
+    `SELECT 1 FROM theming_files WHERE sha256 = split_part($1, '.', 1) AND ext = split_part($1, '.', 2)
      UNION ALL SELECT 1 FROM theming_embed_files WHERE file = $1 LIMIT 1`,
     [name],
   );
@@ -132,7 +143,7 @@ export async function writingFiles<T>(
   let dropped: Dropped[] = [];
   try {
     const result = await deps.db.tenant(async (c) => {
-      await holdCount(c, QUOTA_MODULE);
+      await holdCount(c, deps.storage);
       try {
         const out = await fn(c, async (bytes, ext) => {
           const p = await place(c, deps, bytes, ext);
@@ -167,7 +178,7 @@ export async function writingFiles<T>(
       if (!given) {
         await deps.db
           .tenant(async (c) => {
-            await holdCount(c, QUOTA_MODULE);
+            await holdCount(c, deps.storage);
             await releaseHeld(deps.storage, reserved(), deps.log);
           })
           .catch((failed: unknown) => {

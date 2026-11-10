@@ -1,6 +1,9 @@
 /** The storage quota's client (contracts/tenants.md, Storage quota), shared by every module that keeps files. */
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { ServiceIdentity, tenantsStorage, withTenant } from "../src/index.js";
+import { ServiceIdentity, tenantsStorage, tenantsWithFiles, withTenant } from "../src/index.js";
 
 const service = new ServiceIdentity({ module: "theming", key: "k".repeat(32) });
 
@@ -50,6 +53,10 @@ describe("tenantsStorage", () => {
     ]);
   });
 
+  it("names the module it counts for, which keys its count locks", () => {
+    expect(tenantsStorage("http://tenants", service).module).toBe("theming");
+  });
+
   it("puts the module's count on the repair path", async () => {
     const r = recording();
     const storage = tenantsStorage("http://tenants:8080", service, r.fetch);
@@ -92,5 +99,22 @@ describe("tenantsStorage", () => {
     await expect(withTenant("alpha", () => storage.release(1))).rejects.toMatchObject({
       code: "tenants_unavailable",
     });
+  });
+});
+
+describe("tenantsWithFiles", () => {
+  it("lists the events with files of the module, never `_platform` or an empty folder", async () => {
+    const root = await mkdtemp(join(tmpdir(), "canccu-kit-files-"));
+    try {
+      await mkdir(join(root, "alpha", "theming", "files"), { recursive: true });
+      await mkdir(join(root, "beta", "theming"), { recursive: true });
+      await mkdir(join(root, "gamma", "screen", "files"), { recursive: true });
+      await mkdir(join(root, "_platform", "theming", "files"), { recursive: true });
+      await writeFile(join(root, "stray"), "");
+      expect(await tenantsWithFiles(root, "theming")).toEqual(["alpha"]);
+      expect(await tenantsWithFiles(join(root, "missing"), "theming")).toEqual([]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });

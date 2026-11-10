@@ -6,13 +6,11 @@
  */
 import { readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { isTenantId, tenantFile, tenantKey, withTenant } from "@canccu/kit";
-import type { Logger } from "@canccu/kit";
+import { lockCount, tenantFile, tenantKey, tenantsWithFiles, withTenant } from "@canccu/kit";
+import type { Logger, StorageQuota } from "@canccu/kit";
 import type { Db } from "../db.js";
 import type { Kv } from "../kv.js";
 import { lockFiles } from "./files.js";
-import { lockCount } from "@canccu/kit";
-import type { StorageQuota } from "@canccu/kit";
 
 export const UPKEEP_MS = 3_600_000;
 /** A stored file's name (files.ts, place): its sha256 and its extension. */
@@ -37,7 +35,7 @@ export interface UpkeepDeps {
  */
 export async function recount(deps: UpkeepDeps): Promise<void> {
   await deps.db.tenant(async (c) => {
-    await lockCount(c, "screen");
+    await lockCount(c, deps.storage);
     // One statement, so one snapshot for all three sums.
     const { rows } = await c.query(
       `SELECT (SELECT COALESCE(SUM(size_bytes), 0) FROM screen_files)
@@ -99,9 +97,7 @@ export async function sweepFiles(deps: UpkeepDeps): Promise<void> {
 
 /** Every event with screen files, each once per `periodMs` across all containers. */
 export async function upkeepAll(deps: UpkeepDeps & { kv: Kv; periodMs?: number }): Promise<void> {
-  for (const tenant of (await entries(deps.filesRoot)).filter(isTenantId)) {
-    // Only events that ever had screen files; `_platform` is no tenant id.
-    if ((await entries(join(deps.filesRoot, tenant, "screen"))).length === 0) continue;
+  for (const tenant of await tenantsWithFiles(deps.filesRoot, "screen")) {
     try {
       await withTenant(tenant, async () => {
         const claim = tenantKey("screen", "storage", "upkeep");

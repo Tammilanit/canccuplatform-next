@@ -5,13 +5,11 @@
  * storage quota, and gone with the version (`dropJobs`), never before.
  */
 import { rm } from "node:fs/promises";
-import { requireTenant, tenantFile } from "@canccu/kit";
-import type { Bus, Logger, SqlClient } from "@canccu/kit";
+import { holdCount, releaseHeld, requireTenant, tenantFile } from "@canccu/kit";
+import type { Bus, Logger, SqlClient, StorageQuota } from "@canccu/kit";
 import type { Audit } from "../audit.js";
 import type { Db } from "../db.js";
 import { newId } from "../http.js";
-import { holdCount, releaseHeld } from "@canccu/kit";
-import type { StorageQuota } from "@canccu/kit";
 import type { RenderWarning, SlideMeta } from "./client.js";
 import type { RenderQueue } from "./queue.js";
 
@@ -243,7 +241,7 @@ export async function recoverLost(deps: RenderDeps, jobId: string): Promise<void
   const now = new Date(deps.now());
   const lost = await deps.db.tenant(async (c) => {
     // The count lock before the job row, the order the dispatcher's onSlide keeps.
-    await holdCount(c, "screen");
+    await holdCount(c, deps.storage);
     const job = await readJob(c, jobId, true);
     if (job === null || job.state !== "running") return null;
     if (job.lease_until !== null && job.lease_until > now) {

@@ -139,6 +139,15 @@ describe("raster images", () => {
     expect((await sharp(out.bytes, { animated: true }).metadata()).pages).toBe(2);
   });
 
+  it("decodes a burst of uploads a few at a time, every one finishing", async () => {
+    const burst = await Promise.all(
+      Array.from({ length: 6 }, async (_, i) =>
+        checkFile(`images/${i}.png`, await png(16, 16, `#0000${(i + 16).toString(16)}`)),
+      ),
+    );
+    expect(burst.map((c) => c.ok)).toEqual(Array(6).fill(true));
+  });
+
   it("refuses a raster over 5 MB", async () => {
     const big = Buffer.concat([await png(), Buffer.alloc(5 * 1024 * 1024)]);
     expect(problem(await checkFile("images/big.png", big)).code).toBe("file_too_large");
