@@ -189,3 +189,16 @@ async def test_an_expired_notification_is_not_pushed(env: Env) -> None:
     env.clock[0] += timedelta(hours=2)
     await delivery.tick(env.deps)
     assert await statuses(env) == ["skipped"] and env.push.received == []
+
+
+async def test_a_phone_that_gets_a_custom_topic_skips_its_bases_push(env: Env) -> None:
+    from test_custom import COSPLAY, save
+
+    await env.register(schedule())
+    assert (await save(env, "custom_cosplay", COSPLAY)).status_code in (200, 201)
+    await env.subscribe("both")
+    await env.subscribe("base", preferences={"custom_cosplay": {"event": False}})
+    await env.emit("ev-a", "agenda.reminder.triggered", reminder(kind="cosplay"))
+    assert [p["topic"] for p in env.push.to("both")] == ["custom_cosplay"]
+    assert [p["topic"] for p in env.push.to("base")] == ["schedule"]
+    assert sorted(await statuses(env)) == ["sent", "sent", "skipped"]

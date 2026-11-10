@@ -29,7 +29,10 @@ from canccu_tenants.deps import Deps
 URL = os.environ.get("CANCCU_DATABASE_URL")
 SERVICE_KEY = b"tenants-tests-service-key-0123456789"
 SUPERADMIN_HOST = "super.example.test"
-TABLES = "audit, venue_info, tenant_flags, event_admins, hostnames, tenants, venues, users"
+TABLES = (
+    "storage_counts, audit, venue_info, tenant_flags, event_admins, hostnames, tenants, venues,"
+    " users"
+)
 
 
 @dataclass

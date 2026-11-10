@@ -68,6 +68,11 @@
 		reverse_proxy agenda:8080
 	}
 
+	# The run-of-show pages; the module's own paths start at /.
+	handle_path /agenda/* {
+		reverse_proxy agenda:8080
+	}
+
 	# The notify contract's paths are /api/notify/... too; /internal/notify/ is never routed.
 	handle /api/notify/health {
 		rewrite * /health
@@ -75,6 +80,11 @@
 	}
 
 	handle /api/notify/* {
+		reverse_proxy notify:8080
+	}
+
+	# The notification pages under admin's "Event" menu; the module's own paths start at /.
+	handle_path /notify/* {
 		reverse_proxy notify:8080
 	}
 

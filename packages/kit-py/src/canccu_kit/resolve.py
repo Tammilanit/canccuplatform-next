@@ -170,13 +170,28 @@ class TenantResolver:
         if self._ip_mode.load is not None:
             context = await self._ip_mode.load()
         else:
-            context = await self._internal("ip-mode", {})
+            context = await self._internal("ip-mode", {}, none=(404,))
         return context if context is not None and context["tenant_id"] == DEMO_TENANT else None
 
     async def _lookup(self, host: str) -> TenantContext | None:
-        return await self._internal("resolve", {"host": host})
+        # 400 too: a host the tenants module cannot even parse is unknown, not an outage.
+        return await self._internal("resolve", {"host": host}, none=(404, 400))
 
-    async def _internal(self, path: str, params: dict[str, str]) -> TenantContext | None:
+    async def by_id(self, tenant_id: str) -> TenantContext | None:
+        """Another event's context by its id, in every status; None for an unknown id. Only for
+        actions that span events (contracts/tenants.md, Another event by its id): a request's own
+        tenant still comes from its hostname. Not cached, so an action sees the event as it is."""
+        if not is_tenant_id(tenant_id):  # never let an id reshape the path
+            return None
+        context = await self._internal(f"tenants/{tenant_id}", {}, none=(404,))
+        if context is not None and context["tenant_id"] != tenant_id:
+            raise TenantsUnavailable("tenants module answered another tenant")
+        return context
+
+    async def _internal(
+        self, path: str, params: dict[str, str], *, none: tuple[int, ...]
+    ) -> TenantContext | None:
+        """The context the tenants module answers on `path`, or None on one of `none` statuses."""
         headers = self._service.headers("tenants") if self._service is not None else {}
         try:
             response = await self._http.get(
@@ -184,7 +199,7 @@ class TenantResolver:
             )
         except httpx.HTTPError as exc:
             raise TenantsUnavailable(f"tenants module unreachable: {type(exc).__name__}") from exc
-        if response.status_code in (400, 404):
+        if response.status_code in none:
             return None
         if not response.is_success:
             raise TenantsUnavailable(f"tenants module answered {response.status_code}")

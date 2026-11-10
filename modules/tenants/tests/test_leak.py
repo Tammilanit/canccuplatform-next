@@ -60,6 +60,28 @@ class AuditProbe(HttpProbe):
             assert r.status_code == 201, r.text
 
 
+class StorageProbe(HttpProbe):
+    """Reserves as another module would, each tenant under its own module name; a marker cannot be
+    a module name, so the probe maps the names it made back to their markers."""
+
+    names: dict[str, str]
+
+    async def seed(self, tenant: str, marker: str) -> None:
+        name = f"m{abs(hash(marker)) % 10**12}"
+        self.names = getattr(self, "names", {}) | {name: marker}
+        async with self.env.module(name) as c:  # a module counts only in its own name
+            r = await c.post(
+                "/internal/tenants/storage/reserve",
+                params={"tenant_id": tenant},
+                json={"module": name, "bytes": 7},
+            )
+            assert r.status_code == 200, r.text
+
+    async def read(self, tenant: str) -> object:
+        usage: Any = await super().read(tenant)
+        return [self.names.get(m, m) for m in usage["modules"]]
+
+
 async def test_venue_info_reads_stay_in_their_tenant(two: Env) -> None:
     probe = HttpProbe(two, "/api/tenants/current/venue-info")
     await assert_tenant_isolation(probe, tuple(HOSTS))  # type: ignore[arg-type]
@@ -68,6 +90,29 @@ async def test_venue_info_reads_stay_in_their_tenant(two: Env) -> None:
 async def test_audit_reads_stay_in_their_tenant(two: Env) -> None:
     probe = AuditProbe(two, "/api/tenants/current/audit")
     await assert_tenant_isolation(probe, tuple(HOSTS))  # type: ignore[arg-type]
+
+
+async def test_storage_usage_stays_in_its_tenant(two: Env) -> None:
+    probe = StorageProbe(two, "/api/tenants/current/storage")
+    await assert_tenant_isolation(probe, tuple(HOSTS))  # type: ignore[arg-type]
+
+
+async def test_storage_reserves_count_only_against_their_own_tenant(two: Env) -> None:
+    async with two.db.platform() as conn:
+        await conn.execute("UPDATE tenants SET storage_quota_bytes = 100")
+    async with two.module("screen") as c:
+        full = await c.post(
+            "/internal/tenants/storage/reserve",
+            params={"tenant_id": "leak-a"},
+            json={"module": "screen", "bytes": 100},
+        )
+        other = await c.post(
+            "/internal/tenants/storage/reserve",
+            params={"tenant_id": "leak-b"},
+            json={"module": "screen", "bytes": 100},
+        )
+    assert (full.status_code, other.status_code) == (200, 200)
+    assert other.json()["used_bytes"] == 100
 
 
 class TableProbe:
@@ -100,6 +145,10 @@ TABLES = {
         " ON CONFLICT (tenant_id) DO UPDATE SET house_rules = $1",
         "SELECT house_rules FROM venue_info",
     ),
+    "storage_counts": (
+        "INSERT INTO storage_counts (module, bytes) VALUES ($1, 1)",
+        "SELECT module FROM storage_counts",
+    ),
     "audit": (
         "INSERT INTO audit (id, actor, action, target) VALUES ($1, '{}', 'a.b.c', '{}')",
         "SELECT id FROM audit",
@@ -129,3 +178,4 @@ async def test_no_tenant_set_sees_no_tenant_rows(two: Env) -> None:
     async with two.db.platform() as conn:
         assert await conn.fetch("SELECT * FROM event_admins") == []
         assert await conn.fetch("SELECT * FROM venue_info") == []
+        assert await conn.fetch("SELECT * FROM storage_counts") == []

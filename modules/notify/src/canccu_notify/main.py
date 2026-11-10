@@ -28,7 +28,6 @@ from canccu_kit import (
     valkey_check,
 )
 
-from . import config as topic_config
 from . import consumer, delivery
 from .app import create_app
 from .db import Db
@@ -131,11 +130,7 @@ async def serve() -> None:
     async def on_source(event: Event) -> None:
         await consumer.handle(d, event)
 
-    async def on_admin_tenant(event: Event) -> None:
-        await settings.handle_event(event)
-        await topic_config.on_admin_event(d, event)
-
-    bus.subscribe_tenants(["admin"], on_admin_tenant)
+    bus.subscribe_tenants(["admin"], settings.handle_event)
     bus.subscribe_tenants(consumer.SOURCES, on_source)
     app = create_app(d, health, resolver, identity)
     trusted = os.environ.get("CANCCU_TRUSTED_PROXIES", "127.0.0.1")

@@ -1,4 +1,8 @@
 /** A screen app on a real Postgres (RLS needs one) with fake tenants, admin and Valkey. */
+import { readFileSync } from "node:fs";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import pg from "pg";
 import type { FastifyInstance, LightMyRequestResponse } from "fastify";
 import {
@@ -14,6 +18,7 @@ import { requireTenant } from "@canccu/kit";
 import type { Event, SettingValue, TenantContext } from "@canccu/kit";
 import { MemoryStreamStore } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
+import type { StorageQuota } from "../src/assets/storage.js";
 import type { AuditEntry } from "../src/audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "../src/db.js";
 import type { Db } from "../src/db.js";
@@ -22,7 +27,7 @@ import { sweepOffline } from "../src/health.js";
 import { MemoryKv } from "../src/kv.js";
 
 /** Tests run only with a Postgres to spare; never point this at a database you keep. */
-export const DATABASE_URL = process.env.CANCCU_TEST_DATABASE_URL;
+export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
 
 export const VENUE_IP = "10.0.0.5";
 export const OUTSIDE_IP = "192.0.2.9";
@@ -65,11 +70,19 @@ const ALL_RIGHTS = [
   "screen.devices.pair",
   "screen.devices.write",
   "screen.zones.write",
+  "screen.content.read",
+  "screen.content.write",
+  "screen.push.write",
+  "screen.ticker.write",
+  "screen.photos.write",
 ];
 const SESSIONS: Record<string, string[]> = {
   admin: ALL_RIGHTS,
   crew: ["screen.devices.read"],
   content: ["screen.content.read"],
+  editor: ["screen.content.read", "screen.content.write"],
+  ticker: ["screen.ticker.write"],
+  photos: ["screen.photos.write"],
   nobody: [],
 };
 
@@ -110,6 +123,13 @@ export interface Harness {
   clock: { now: number };
   /** tenant → the admin settings it answers; unset keys take their default. */
   settings: Record<string, Record<string, SettingValue>>;
+  /** The fake storage quota: bytes per tenant, and the limit each gets (default 2 GiB). */
+  storage: { used: Record<string, number>; quota: Record<string, number> };
+  /** The fake quota itself, for calls made outside a request. */
+  quota: StorageQuota;
+  filesRoot: string;
+  /** What the fake oEmbed answers for YouTube probes. */
+  oembedStatus: { value: number };
   /** One run of the offline sweep, as main starts every 5 seconds. */
   sweep(): Promise<void>;
   close(): Promise<void>;
@@ -120,7 +140,10 @@ export async function harness(): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
   await admin.query(
-    "DROP TABLE IF EXISTS assignments, screen_zones, screen_zone_seeds, devices, screen_migrations CASCADE",
+    `DROP TABLE IF EXISTS screen_agenda_items, screen_zone_playback, screen_pushes, screen_schedules,
+       screen_playlist_items, screen_playlists, assignments, screen_zones, screen_zone_seeds, devices,
+       screen_migrations, screen_asset_versions, screen_assets, screen_files, screen_ticker,
+       screen_ticker_windows, screen_photos CASCADE`,
   );
   await runMigrations(admin, MIGRATIONS_DIR, { ledger: "screen_migrations", lock: 1 });
   await admin.end();
@@ -133,6 +156,30 @@ export async function harness(): Promise<Harness> {
   const kv = new MemoryKv(() => clock.now);
   const bus = new Bus(store, "screen");
   const settings: Record<string, Record<string, SettingValue>> = {};
+  const storage = { used: {} as Record<string, number>, quota: {} as Record<string, number> };
+  const filesRoot = await mkdtemp(join(tmpdir(), "canccu-screen-files-"));
+  const oembedStatus = { value: 200 };
+  const quota: StorageQuota = {
+    reserve: (bytes) => {
+      const tenant = requireTenant();
+      const used = (storage.used[tenant] ?? 0) + bytes;
+      if (used > (storage.quota[tenant] ?? 2 ** 31)) {
+        return Promise.reject(
+          new KitError("This event's files would pass its storage quota.", {
+            status: 413,
+            code: "storage_quota_exceeded",
+          }),
+        );
+      }
+      storage.used[tenant] = used;
+      return Promise.resolve();
+    },
+    release: (bytes) => {
+      const tenant = requireTenant();
+      storage.used[tenant] = Math.max(0, (storage.used[tenant] ?? 0) - bytes);
+      return Promise.resolve();
+    },
+  };
   const app = buildApp({
     db,
     kv,
@@ -154,6 +201,9 @@ export async function harness(): Promise<Harness> {
       ensure: () => Promise.resolve(),
       get: (key: string, fallback: SettingValue) => settings[requireTenant()]?.[key] ?? fallback,
     },
+    storage: quota,
+    filesRoot,
+    fetch: () => Promise.resolve(new Response("{}", { status: oembedStatus.value })),
     now: () => clock.now,
   });
   // A stand-in for the device routes later slices add (state, heartbeat): it runs only the check.
@@ -179,10 +229,15 @@ export async function harness(): Promise<Harness> {
     failAudit,
     clock,
     settings,
+    storage,
+    quota,
+    filesRoot,
+    oembedStatus,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
     close: async () => {
       await app.close();
       await pool.end();
+      await rm(filesRoot, { recursive: true, force: true });
     },
   };
 }
@@ -258,3 +313,56 @@ export async function pairDevice(
 }
 
 export { APP_ROLE };
+
+/** A multipart upload of one file (and optionally a title or other fields), as Studio sends it. */
+export function upload(
+  h: Harness,
+  url: string,
+  file: Buffer,
+  filename: string,
+  c: Call & { title?: string; fields?: Record<string, string> } = {},
+): Promise<LightMyRequestResponse> {
+  const boundary = "canccu-test-boundary";
+  const parts: Buffer[] = [];
+  const fields = { ...(c.title === undefined ? {} : { title: c.title }), ...c.fields };
+  for (const [name, value] of Object.entries(fields)) {
+    parts.push(
+      Buffer.from(
+        `--${boundary}\r\ncontent-disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`,
+      ),
+    );
+  }
+  parts.push(
+    Buffer.from(
+      `--${boundary}\r\ncontent-disposition: form-data; name="file"; filename="${filename}"\r\n` +
+        "content-type: application/octet-stream\r\n\r\n",
+    ),
+    file,
+    Buffer.from(`\r\n--${boundary}--\r\n`),
+  );
+  return h.app.inject({
+    method: "POST",
+    url,
+    headers: {
+      host: c.host ?? "alpha.test",
+      "x-forwarded-for": c.ip ?? VENUE_IP,
+      cookie: c.session ? `canccu_session=${c.session}` : "",
+      "content-type": `multipart/form-data; boundary=${boundary}`,
+    },
+    payload: Buffer.concat(parts),
+  });
+}
+
+/** A small PNG; `seed` changes its bytes, so each seed is a file of its own. */
+export async function png(seed = 0): Promise<Buffer> {
+  const { default: sharp } = await import("sharp");
+  return sharp({
+    create: { width: 8, height: 8, channels: 3, background: { r: seed % 256, g: 0, b: 0 } },
+  })
+    .png()
+    .toBuffer();
+}
+
+export function fixture(name: string): Buffer {
+  return readFileSync(new URL(`./fixtures/media/${name}`, import.meta.url));
+}

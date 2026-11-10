@@ -126,7 +126,7 @@ def switches(stored: dict[str, Any], found: dict[str, Any], *, user: bool) -> di
         own = stored.get(topic, {})
         out[topic] = {
             part: own.get(part, p["default"]) and (user or part != "personal")
-            for part, p in topic_info(v["topic_type"], v["config"])["parts"].items()
+            for part, p in topic_info(v)["parts"].items()
         }
     return out
 

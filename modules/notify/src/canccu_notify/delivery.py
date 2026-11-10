@@ -139,6 +139,18 @@ async def _claim(
     d: Deps, conn: Any, tenant: str, batch: int, cap: int, now: datetime
 ) -> tuple[list[Any], int]:
     """The pushes to send, each with its subscription's opened keys; marks them `sending`."""
+    # A recipient who would get both a custom topic's notification and its base's for one source
+    # event gets only the custom one (contracts/notify.md, Custom topics), as the inbox's collapse.
+    # Both are planned in the consumer's one transaction, so the custom row is there to be seen.
+    await conn.execute(
+        "UPDATE notify_deliveries b SET status = 'skipped', done_at = $1"
+        " FROM notify_notifications bn, notify_deliveries c, notify_notifications cn"
+        " WHERE b.status = 'pending' AND bn.tenant_id = b.tenant_id AND bn.id = b.notification_id"
+        " AND c.tenant_id = b.tenant_id AND c.recipient = b.recipient AND c.channel = b.channel"
+        " AND cn.tenant_id = c.tenant_id AND cn.id = c.notification_id"
+        " AND cn.based_on = bn.topic AND cn.source_event_id = bn.source_event_id",
+        now,
+    )
     due = await conn.fetch(
         "SELECT d.id, d.notification_id, d.recipient, d.subscription_id, n.topic, n.urgent,"
         " n.expires_at FROM notify_deliveries d JOIN notify_notifications n"

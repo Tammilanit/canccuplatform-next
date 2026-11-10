@@ -5,6 +5,8 @@ export type { ProfileLike, ResolvedTheme } from "./theme.js";
 export { Html, attrs, escapeHtml, html, raw } from "./html.js";
 export type { Slot } from "./html.js";
 export { button, card, field, healthBadge, page } from "./components.js";
+export { embedWidget } from "./embed.js";
+export type { EmbedOptions } from "./embed.js";
 export type {
   ButtonOptions,
   CardOptions,

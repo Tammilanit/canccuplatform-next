@@ -67,11 +67,12 @@ async def handle(d: Deps, event: Event) -> None:
                     continue
                 part = reg["parts"][trigger["part"]]
                 allowed = [c for c in part["channels"] if c in config["channels"]]
-                default = topic_info(reg, config)["parts"][trigger["part"]]["default"]
+                default = topic_info(found)["parts"][trigger["part"]]["default"]
+                based_on = found["custom"]["based_on"] if "custom" in found else None
                 for c in engine.evaluate(
                     key, trigger, allowed, config["params"], envelope, now, tz
                 ):
-                    for note in await _create(conn, c, event.id, now):
+                    for note in await _create(conn, c, event.id, now, based_on):
                         planned += await delivery.plan(conn, note, default, closed, now)
     if planned:
         try:
@@ -81,7 +82,9 @@ async def handle(d: Deps, event: Event) -> None:
             log.exception("sending failed; the sender loop retries", extra={"tenant": event.tenant})
 
 
-async def _create(conn: Any, c: engine.Candidate, source_id: str, now: Any) -> list[dict[str, Any]]:
+async def _create(
+    conn: Any, c: engine.Candidate, source_id: str, now: Any, based_on: str | None
+) -> list[dict[str, Any]]:
     # The key is taken only here, after every check passed, so a dropped event leaves it free.
     taken = await conn.fetchval(
         "INSERT INTO notify_dedupe (key) VALUES ($1) ON CONFLICT DO NOTHING RETURNING 1",
@@ -101,8 +104,8 @@ async def _create(conn: Any, c: engine.Candidate, source_id: str, now: Any) -> l
         }
         await conn.execute(
             "INSERT INTO notify_notifications (id, topic, part, audience, user_id, title, body,"
-            " url, urgent, channels, source_event_id, created_at, expires_at)"
-            " VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+            " url, urgent, channels, source_event_id, created_at, expires_at, based_on)"
+            " VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
             note["id"],
             c.topic,
             c.part,
@@ -116,6 +119,7 @@ async def _create(conn: Any, c: engine.Candidate, source_id: str, now: Any) -> l
             source_id,
             now,
             c.expires_at,
+            based_on,
         )
         made.append(note)
     return made

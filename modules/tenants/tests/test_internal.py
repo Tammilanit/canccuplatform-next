@@ -61,3 +61,41 @@ async def test_the_modules_own_ip_literal_requests_use_the_endpoint(env: Env) ->
         current = await c.get("/api/tenants/current")
     assert current.status_code == 200
     assert current.json()["id"] == "demo"
+
+
+async def test_a_tenant_context_by_id_answers_every_status(env: Env) -> None:
+    for tid, status in (("draft-one", "draft"), ("live-one", "live"), ("old-one", "archived")):
+        await make_tenant(env.db, tid, f"{tid}.example.org", status=status)
+    async with env.module("screen") as c:
+        found = {
+            tid: await c.get(f"/internal/tenants/tenants/{tid}")
+            for tid in ("draft-one", "live-one", "old-one")
+        }
+        by_host = await c.get("/internal/tenants/resolve", params={"host": "live-one.example.org"})
+    assert {tid: r.status_code for tid, r in found.items()} == dict.fromkeys(found, 200)
+    assert {tid: r.json()["status"] for tid, r in found.items()} == {
+        "draft-one": "draft",
+        "live-one": "live",
+        "old-one": "archived",
+    }
+    # The same TenantContext as `resolve`, only looked up by id.
+    assert found["live-one"].json() == by_host.json()
+
+
+async def test_a_tenant_context_by_id_is_404_for_an_unknown_or_malformed_id(env: Env) -> None:
+    await make_tenant(env.db, "alpha", "alpha.example.org")
+    async with env.module("screen") as c:
+        unknown = await c.get("/internal/tenants/tenants/nobody")
+        malformed = await c.get("/internal/tenants/tenants/Not_An-Id")
+    assert (unknown.status_code, malformed.status_code) == (404, 404)
+    assert unknown.json()["error"]["code"] == "not_found"
+
+
+async def test_a_tenant_context_by_id_needs_a_service_identity(env: Env) -> None:
+    await make_tenant(env.db, "alpha", "alpha.example.org")
+    async with env.client("tenants:8080") as c:
+        unsigned = await c.get("/internal/tenants/tenants/alpha")
+    async with env.client("alpha.example.org") as c:
+        public_host = await c.get("/internal/tenants/tenants/alpha")
+    assert unsigned.status_code == 401
+    assert public_host.status_code == 401

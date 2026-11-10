@@ -141,6 +141,20 @@ export class TenantResolver {
     return this.ask(`/internal/tenants/resolve?host=${encodeURIComponent(host)}`, [404, 400]);
   }
 
+  /**
+   * Another event's context by its id, in every status; null for an unknown id. Only for actions
+   * that span events (contracts/tenants.md, Another event by its id): a request's own tenant
+   * still comes from its hostname. Not cached, so an action sees the event as it is.
+   */
+  async byId(tenantId: string): Promise<TenantContext | null> {
+    if (!isTenantId(tenantId)) return null; // never let an id reshape the path
+    const context = await this.ask(`/internal/tenants/tenants/${tenantId}`, [404]);
+    if (context !== null && context.tenant_id !== tenantId) {
+      throw new TenantsUnavailable("tenants module answered another tenant");
+    }
+    return context;
+  }
+
   /** The context the tenants module answers on `path`, or null on one of `none` statuses. */
   private async ask(path: string, none: number[]): Promise<TenantContext | null> {
     let response: Response;

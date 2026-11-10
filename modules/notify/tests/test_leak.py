@@ -18,6 +18,11 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
             await conn.execute("INSERT INTO notify_dedupe (key) VALUES ($1)", marker)
             await conn.execute("INSERT INTO notify_event_state (time_zone) VALUES ($1)", marker)
             await conn.execute(
+                "INSERT INTO notify_custom_topics (key, based_on, title, conditions)"
+                " VALUES ($1, 'schedule', 't', '[]')",
+                f"custom_{marker}",
+            )
+            await conn.execute(
                 "INSERT INTO notify_notifications (id, topic, part, audience, title, body,"
                 " channels, source_event_id, created_at, expires_at) VALUES ($1, 't', 'event',"
                 " 'public', 't', 'b', '{push}', 'e', $2, $2)",
@@ -44,6 +49,7 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
                 "SELECT key AS v FROM notify_topic_config",
                 "SELECT key AS v FROM notify_dedupe",
                 "SELECT time_zone AS v FROM notify_event_state",
+                "SELECT substr(key, 8) AS v FROM notify_custom_topics",
                 "SELECT id AS v FROM notify_notifications",
                 "SELECT endpoint AS v FROM notify_subscriptions",
                 "SELECT recipient AS v FROM notify_deliveries",
