@@ -16,7 +16,7 @@ export function zoneKey(value: unknown, where: string): string {
   return value;
 }
 /** The theme schema's `name`: layout, region, template and embed ids, props keys. */
-const NAME_RE = /^[a-z][a-z0-9_-]{0,31}$/;
+export const NAME_RE = /^[a-z][a-z0-9_-]{0,31}$/;
 const WIDGET_RE = /^[a-z][a-z0-9_]{0,39}$/;
 const ROLES = ["full", "hero", "rail", "venue_rail", "ticker", "header", "backdrop", "overlay"];
 const ROTATIONS = ["sequence", "shuffle"];
@@ -42,16 +42,16 @@ export interface ZoneInput {
 
 type Json = Record<string, unknown>;
 
-function isObject(value: unknown): value is Json {
+export function isObject(value: unknown): value is Json {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function onlyKeys(value: Json, allowed: string[], where: string): void {
+export function onlyKeys(value: Json, allowed: string[], where: string): void {
   const extra = Object.keys(value).filter((k) => !allowed.includes(k));
   if (extra.length > 0) throw invalidRequest(`${where}: unknown field \`${extra[0]}\`.`);
 }
 
-function oneOf(value: unknown, allowed: string[], where: string): void {
+export function oneOf(value: unknown, allowed: string[], where: string): void {
   if (value !== undefined && !allowed.includes(value as string)) {
     throw invalidRequest(`${where} must be one of ${allowed.join(", ")}.`);
   }

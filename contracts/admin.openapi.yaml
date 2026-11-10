@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Admin API
-  version: 1.4.0
+  version: 1.5.0
   summary: Settings, health, session and rights, profile save and load.
   description: |
     Machine-readable part of the admin contract. Prose, rules and events: contracts/admin.md.
@@ -135,8 +135,57 @@ paths:
                 $ref: "#/components/schemas/Settings"
         "400":
           $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/ServiceUnauthenticated"
         "404":
           $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [internal]
+      operationId: patchSettingsInternal
+      summary: A module writes its own settings for one tenant
+      description: |
+        Sets the keys in `values` and keeps every other key. Only the module itself: the service identity's caller
+        must be `{module}` (403 `service_forbidden` otherwise); the shared key proves a module of this stack, not
+        which one. Only the keys and value types the module's own contract lists for its settings (400
+        `invalid_request` otherwise). A stale `settings_version` is 409 `version_conflict`: read again and retry.
+        An archived event is 409 `event_archived`; the calling module refuses its own writes on an archived event
+        before it calls. On success `settings_version` goes up by one and `admin.settings.changed` is emitted with
+        `actor_user_id`, its `keys` being the keys in `values` whose value changed. The calling module writes
+        admin first, commits its own store only after a 200, and audits the change that caused the write; it
+        ignores the `admin.settings.changed` of its own write. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsPatch"
+      responses:
+        "200":
+          description: The stored settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/ServiceUnauthenticated"
+        "403":
+          $ref: "#/components/responses/ServiceForbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /internal/admin/profile/theme:
     get:
       tags: [internal, profile]
@@ -540,7 +589,20 @@ components:
     Conflict:
       description: |
         `version_conflict` (the settings, or a member's granted rights, changed since they were read);
-        `event_archived` (granting rights in an archived event, which is read-only).
+        `event_archived` (granting rights, or a module writing its own settings, in an archived event, which is
+        read-only).
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    ServiceUnauthenticated:
+      description: "`service_unauthenticated`: no valid `x-canccu-service` header (an internal path, no session)."
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    ServiceForbidden:
+      description: "`service_forbidden`: the calling module may not use this path (it is not `{module}`)."
       content:
         application/json:
           schema:
@@ -636,6 +698,24 @@ components:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/SettingValue"
+    SettingsPatch:
+      type: object
+      required: [settings_version, values, actor_user_id]
+      properties:
+        settings_version:
+          type: integer
+          minimum: 0
+        values:
+          type: object
+          description: The keys to set; keys left out keep their values.
+          minProperties: 1
+          additionalProperties:
+            $ref: "#/components/schemas/SettingValue"
+        actor_user_id:
+          type: string
+          description: |
+            The user whose change in the calling module caused this write. Always a user: a module never mirrors
+            a system change through this path.
     Session:
       type: object
       required: [user, rights, expires_at]
