@@ -71,12 +71,14 @@ async def save_kind(request: Request) -> Response:
             key,
         )
         await timers.reschedule(conn, items, await store.kinds(conn), leads, d.now())
-    kind = model.kind_json(row)
-    await d.bus.publish(
-        "agenda.kind.saved",
-        {"kind": kind, "kinds_version": kinds_version, "actor_user_id": session.user_id},
-        version=1,
-    )
+        kind = model.kind_json(row)
+        await d.outbox.add(
+            conn,
+            "agenda.kind.saved",
+            {"kind": kind, "kinds_version": kinds_version, "actor_user_id": session.user_id},
+            version=1,
+        )
+    await d.outbox.flush()
     return JSONResponse(kind, status_code=200 if current is not None else 201)
 
 
@@ -98,11 +100,13 @@ async def remove_kind(request: Request) -> Response:
             raise model.conflict("kind_in_use", "items still name this kind: move them first")
         await conn.execute("DELETE FROM agenda_kinds WHERE key = $1", key)
         kinds_version = await store.bump(conn, "kinds_version")
-    await d.bus.publish(
-        "agenda.kind.removed",
-        {"kind_key": key, "kinds_version": kinds_version, "actor_user_id": session.user_id},
-        version=1,
-    )
+        await d.outbox.add(
+            conn,
+            "agenda.kind.removed",
+            {"kind_key": key, "kinds_version": kinds_version, "actor_user_id": session.user_id},
+            version=1,
+        )
+    await d.outbox.flush()
     return Response(status_code=204)
 
 

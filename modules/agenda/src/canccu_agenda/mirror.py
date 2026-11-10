@@ -101,8 +101,9 @@ async def handle(d: Deps, event: Event) -> None:
                 out.append(_removed(row, await remove(conn, row, store.TOURNAMENT)))
         else:
             await _apply(conn, d, event, session, row, channels, leads, out)
-    for event_type, data in out:
-        await d.bus.publish(event_type, {**data, "actor_user_id": actor}, version=1)
+        for event_type, data in out:
+            await d.outbox.add(conn, event_type, {**data, "actor_user_id": actor}, version=1)
+    await d.outbox.flush()
 
 
 async def _mark(conn: Any, session_id: str, *, lock: bool) -> Any:
