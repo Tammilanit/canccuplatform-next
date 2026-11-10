@@ -223,13 +223,25 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
         },
       );
       if ("gone" in collected) {
+        if (collected.gone) {
+          await kv.del(keys.record(id));
+          throw notFound();
+        }
         // A live device whose stored record still has no `issued_hash` was collected by a poll
         // whose write below was lost: no token can be collected again, so forget the pairing and
-        // let the next POST start a new one. Read afresh: an overlapping winner may have written
-        // it since; if its write lands after this delete, it simply puts the record back.
-        const stored = collected.gone ? null : await record(id);
-        if (collected.gone || (stored !== null && stored.issued_hash === undefined))
-          await kv.del(keys.record(id));
+        // let the next POST start a new one. Read afresh, and delete only that very value: an
+        // overlapping winner may write `issued_hash` at any point, and its record must stay.
+        const raw = await kv.get(keys.record(id));
+        if (
+          raw !== null &&
+          (JSON.parse(raw) as PairingRecord).issued_hash === undefined &&
+          (await kv.delIfEquals(keys.record(id), raw))
+        ) {
+          deps.log?.warn(
+            { device_id: rec.device_id },
+            "pairing forgotten after a lost issued_hash write: revoke the device, its token is held by no one",
+          );
+        }
         throw notFound();
       }
       await kv.set(

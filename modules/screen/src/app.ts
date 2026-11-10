@@ -7,7 +7,7 @@ import { access } from "node:fs/promises";
 import multipart from "@fastify/multipart";
 import Fastify from "fastify";
 import type { FastifyInstance, FastifyServerOptions } from "fastify";
-import { FILES_ROOT, createHealth, postgresCheck, valkeyCheck } from "@canccu/kit";
+import { FILES_ROOT, createHealth, postgresCheck } from "@canccu/kit";
 import type {
   Bus,
   CheckFn,
@@ -81,6 +81,24 @@ export function renderCheck(queue: RenderQueue, now: () => number = Date.now): C
   };
 }
 
+/**
+ * Under the kit's 2 s per check, so a ping that hangs (a lost streams connection queues it offline
+ * and never rejects) is named here instead of the whole check timing out unnamed.
+ */
+const PING_TIMEOUT_MS = 1500;
+
+function answersWithin(ping: Promise<void>, ms: number): Promise<void> {
+  let timer: NodeJS.Timeout | undefined;
+  const late = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error(`no answer within ${ms / 1000} s`));
+    }, ms);
+  });
+  return Promise.race([ping, late]).finally(() => {
+    clearTimeout(timer);
+  });
+}
+
 export function screenHealth(opts: {
   module: string;
   version: string;
@@ -89,7 +107,6 @@ export function screenHealth(opts: {
   query: () => Promise<unknown>;
   renderQueue: RenderQueue;
 }): Health {
-  const streams = valkeyCheck(opts.store);
   return createHealth({
     module: opts.module,
     version: opts.version,
@@ -98,7 +115,10 @@ export function screenHealth(opts: {
       // one: either lost is Valkey down for this module. Both at once, so one slow connection
       // does not eat the other's time, and the detail names the one that failed.
       valkey: async () => {
-        const [kv, bus] = await Promise.allSettled([opts.kv.ping(), streams()]);
+        const [kv, bus] = await Promise.allSettled([
+          answersWithin(opts.kv.ping(), PING_TIMEOUT_MS),
+          answersWithin(opts.store.ping(), PING_TIMEOUT_MS),
+        ]);
         const lost = (name: string, result: PromiseSettledResult<unknown>): string[] =>
           result.status === "rejected"
             ? [

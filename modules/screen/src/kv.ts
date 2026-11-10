@@ -13,6 +13,8 @@ export interface Kv {
   /** Read and delete at once, so only one caller ever gets the value. */
   take(key: string): Promise<string | null>;
   del(...keys: string[]): Promise<void>;
+  /** Delete the key only while it still holds `value`, in one step; true when it was deleted. */
+  delIfEquals(key: string, value: string): Promise<boolean>;
   /** A set whose members expire one by one (a sorted set scored by expiry). */
   addExpiring(key: string, member: string, expiresAtMs: number): Promise<void>;
   /** The members not yet expired at `nowMs`; expired ones are dropped first. */
@@ -58,6 +60,15 @@ export class ValkeyKv implements Kv {
   }
   async del(...keys: string[]): Promise<void> {
     if (keys.length > 0) await this.client.del(...keys);
+  }
+  async delIfEquals(key: string, value: string): Promise<boolean> {
+    const deleted = await this.client.eval(
+      "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end return 0",
+      1,
+      key,
+      value,
+    );
+    return deleted === 1;
   }
   async addExpiring(key: string, member: string, expiresAtMs: number): Promise<void> {
     await this.client.zadd(key, expiresAtMs, member);
@@ -131,6 +142,11 @@ export class MemoryKv implements Kv {
     const value = await this.get(key);
     this.values.delete(key);
     return value;
+  }
+  async delIfEquals(key: string, value: string): Promise<boolean> {
+    if ((await this.get(key)) !== value) return false;
+    this.values.delete(key);
+    return true;
   }
   del(...keys: string[]): Promise<void> {
     for (const key of keys) {

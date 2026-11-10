@@ -56,4 +56,15 @@ describe("screen health", () => {
     expect(body.checks.valkey?.detail).toContain("key-value connection: kv lost");
     expect(body.checks.valkey?.detail).toContain("streams connection: streams lost");
   });
+
+  it("names a connection whose ping never answers, and the other one that failed", async () => {
+    const kv = new MemoryKv();
+    const store = new MemoryStreamStore();
+    kv.ping = () => Promise.reject(new Error("kv lost"));
+    // A lost streams connection queues its ping offline and never rejects it.
+    store.ping = () => new Promise<void>(() => undefined);
+    const { body } = await healthOf(kv, store).run();
+    expect(body.checks.valkey?.detail).toContain("key-value connection: kv lost");
+    expect(body.checks.valkey?.detail).toContain("streams connection: no answer within 1.5 s");
+  });
 });
