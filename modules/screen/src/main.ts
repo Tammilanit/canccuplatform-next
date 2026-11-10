@@ -21,6 +21,7 @@ import {
 import { buildApp, screenHealth } from "./app.js";
 import { readAssets } from "./assets/reader.js";
 import { tenantsStorage } from "./assets/storage.js";
+import { upkeepAll } from "./assets/upkeep.js";
 import { tenantsAudit } from "./audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { sweepOffline } from "./health.js";
@@ -36,6 +37,8 @@ const PORT = 8080;
 const MIGRATION_LOCK = 0x5c4ee7;
 /** How often a device past its deadline is reported offline (docs/plans/issue-107.md, D11). */
 const SWEEP_MS = 5000;
+/** How often each event is checked for its storage upkeep, which itself runs once an hour. */
+const UPKEEP_CHECK_MS = 600_000;
 /** In the `render-socket` volume, shared with screen-render alone (deploy/compose.yml). */
 const RENDER_SOCKET = "/run/canccu-render/render.sock";
 
@@ -176,6 +179,19 @@ async function main(): Promise<void> {
     });
   }, SWEEP_MS);
 
+  let upkeeping = false;
+  const upkeep = setInterval(() => {
+    if (upkeeping) return;
+    upkeeping = true;
+    upkeepAll({ db, kv, storage, filesRoot: FILES_ROOT, log })
+      .catch((err: unknown) => {
+        log.warn({ err }, "storage upkeep failed");
+      })
+      .finally(() => {
+        upkeeping = false;
+      });
+  }, UPKEEP_CHECK_MS);
+
   const renders = renderLoop({
     db,
     queue: renderQueue,
@@ -214,6 +230,7 @@ async function main(): Promise<void> {
 
   const stop = async (): Promise<void> => {
     clearInterval(sweep);
+    clearInterval(upkeep);
     clearInterval(ticker);
     // The running render goes back to its place before the pool and Valkey close; bounded, as a
     // dependency that is down may never answer.
