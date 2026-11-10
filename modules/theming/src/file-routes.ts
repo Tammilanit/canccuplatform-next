@@ -11,6 +11,7 @@ import { draftBody, editDraft } from "./drafts.js";
 import { WRITE, actorOf, assertWritable, invalidRequest, needs, rawBody } from "./http.js";
 import { removeDraftPath, setDraftPath } from "./package-files.js";
 import type { PathEntry } from "./package-files.js";
+import { MAX_PATH } from "./package.js";
 import { writingFiles } from "./stored.js";
 import { BODY_LIMIT, UPLOAD_FOLDERS, checkFile } from "./uploads.js";
 
@@ -25,6 +26,7 @@ function uploadPath(value: unknown): string {
   if (
     typeof value !== "string" ||
     !PACKAGE_PATH.test(value) ||
+    value.length > MAX_PATH ||
     value.split("/").some((part) => part === "" || part === ".")
   ) {
     throw invalidRequest("path must be a package path, such as images/logo.png.");

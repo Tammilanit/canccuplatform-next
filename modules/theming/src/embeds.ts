@@ -52,6 +52,18 @@ export async function putEmbed(
   }
 }
 
+/**
+ * What `owner`'s embed files are, as publish and a package upload compare them: `embed/path=file`,
+ * sorted by code unit in JS, so a list built from a package compares equal (no SQL collation).
+ */
+export async function embedHoldings(client: SqlClient, owner: string): Promise<string[]> {
+  const { rows } = await client.query(
+    `SELECT embed || '/' || path || '=' || file AS e FROM theming_embed_files WHERE owner = $1`,
+    [owner],
+  );
+  return (rows as { e: string }[]).map((r) => r.e).sort();
+}
+
 export interface EmbedRef {
   name: string;
   frame_url: string;

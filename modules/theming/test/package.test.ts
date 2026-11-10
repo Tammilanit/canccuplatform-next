@@ -5,7 +5,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { parse, stringify } from "yaml";
-import { DATABASE_URL, code, get } from "./helpers.js";
+import { withTenant } from "@canccu/kit";
+import { DATABASE_URL, code, get, send } from "./helpers.js";
 import { draftFiles, png } from "./drafting.js";
 import type { DraftBody } from "./drafting.js";
 import { demoFiles, demoZip, putPackage } from "./packaging.js";
@@ -31,6 +32,18 @@ const region = (id: string, widget: Record<string, unknown>, columns = 4) => ({
 describe.skipIf(!DATABASE_URL)("PUT /api/theming/draft/package", () => {
   const d = draftFiles();
   const { fresh, onDisk, storedBytes } = d;
+  /** What the hourly recount sets (upkeep.ts): theme and embed files, each stored file once. */
+  const counted = (): Promise<number> =>
+    withTenant("alpha", () =>
+      d.h.db.tenant(async (c) => {
+        const { rows } = await c.query(
+          `SELECT coalesce(sum(bytes), 0) AS n FROM (
+             SELECT sha256 || '.' || ext AS name, bytes FROM theming_files
+             UNION SELECT file, bytes FROM theming_embed_files) stored`,
+        );
+        return Number((rows[0] as { n: string }).n);
+      }),
+    );
 
   it("creates the draft from a zip when there is none, its files checked and counted", async () => {
     const res = await putPackage(d.h, await demoZip("default"));
@@ -77,6 +90,10 @@ describe.skipIf(!DATABASE_URL)("PUT /api/theming/draft/package", () => {
     ],
     ["no theme.yaml", packageZip({ "images/a.svg": "<svg/>" })],
     ["a file outside the folders", packageZip({ "theme.yaml": manifest(), "run.sh": "x" })],
+    [
+      "a path over the 136 characters a draft path holds",
+      packageZip({ "theme.yaml": manifest(), [`templates/${"a".repeat(120)}.mustache`]: "x" }),
+    ],
     ["a theme.yaml that is no YAML", packageZip({ "theme.yaml": "a: [" })],
   ])("refuses %s whole, leaving the draft as it was", async (_what, zip) => {
     const draft = await fresh();
@@ -224,6 +241,80 @@ describe.skipIf(!DATABASE_URL)("PUT /api/theming/draft/package", () => {
       expect(code(res)).toBe("storage_quota_exceeded");
       expect(d.h.storage.used.alpha ?? 0).toBe(0);
       expect(await onDisk()).toEqual([]);
+    });
+
+    it("counts an embed once over uploads, giving its bytes back when it goes", async () => {
+      const zip = await withEmbed();
+      expect((await putPackage(d.h, zip, { session: "embedder" })).statusCode).toBe(200);
+      const once = await counted();
+      expect(d.h.storage.used.alpha).toBe(once);
+      // The same package again, then one without the embed, then the embed back and discarded.
+      expect((await putPackage(d.h, zip, { session: "embedder", version: 1 })).statusCode).toBe(
+        200,
+      );
+      expect(d.h.storage.used.alpha).toBe(once);
+      const bare = packageZip({ "theme.yaml": manifest() });
+      expect((await putPackage(d.h, bare, { session: "embedder", version: 2 })).statusCode).toBe(
+        200,
+      );
+      expect(d.h.storage.used.alpha ?? 0).toBe(0);
+      expect(await onDisk()).toEqual([]);
+      expect((await putPackage(d.h, zip, { session: "embedder", version: 3 })).statusCode).toBe(
+        200,
+      );
+      expect(d.h.storage.used.alpha).toBe(once);
+      const discard = await send(d.h, "DELETE", "/api/theming/draft?draft_version=4", undefined);
+      expect(discard.statusCode).toBe(204);
+      expect(d.h.storage.used.alpha ?? 0).toBe(0);
+      expect(await onDisk()).toEqual([]);
+    });
+
+    it("takes an unchanged embed back with the theme right alone, whatever its names' case", async () => {
+      const zip = packageZip({
+        "theme.yaml": manifest({
+          embeds: {
+            mixed: {
+              entry: "embeds/mixed/index.html",
+              files: ["embeds/mixed/Main.js", "embeds/mixed/app.css", "embeds/mixed/_x.json"],
+            },
+          },
+        }),
+        "embeds/mixed/index.html": "<!doctype html><title>x</title>",
+        "embeds/mixed/Main.js": "export {};",
+        "embeds/mixed/app.css": "body {}",
+        "embeds/mixed/_x.json": "{}",
+      });
+      const first = await putPackage(d.h, zip, { session: "embedder" });
+      expect(
+        first.json<DraftBody>().files?.filter((f) => f.path.startsWith("embeds/")),
+      ).toHaveLength(4);
+      const audits = d.h.audit.length;
+      const again = await putPackage(d.h, zip, { session: "admin", version: 1 });
+      expect(again.statusCode).toBe(200);
+      expect(d.h.audit).toHaveLength(audits);
+    });
+
+    it("names a declared embed's missing entry as an error, beside a stray file's warning", async () => {
+      const zip = packageZip({
+        "theme.yaml": manifest({ embeds: { clock: { entry: "embeds/clock/index.html" } } }),
+        "embeds/clock/main.js": "export {};",
+      });
+      const res = await putPackage(d.h, zip, { session: "embedder" });
+      expect(res.statusCode).toBe(200);
+      expect(res.json<DraftBody>().problems).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            severity: "error",
+            code: "file_missing",
+            path: "embeds/clock/index.html",
+          }),
+          expect.objectContaining({
+            severity: "warning",
+            code: "reference_unknown",
+            path: "embeds/clock/main.js",
+          }),
+        ]),
+      );
     });
 
     it("stores an embed with a failing file not at all, its problem naming why", async () => {

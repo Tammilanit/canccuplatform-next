@@ -71,13 +71,25 @@ async function place(
   return { name, reserved: bytes.length };
 }
 
-interface Dropped {
+export interface Dropped {
   name: string;
   bytes: number;
 }
 
-/** Deletes the rows of those `names` nothing refers to any more: no owner and no embed. */
-async function dropUnreferenced(c: SqlClient, names: string[]): Promise<Dropped[]> {
+/**
+ * A file a write stopped referring to: its name, or an embed's file with its bytes, which no
+ * theming_files row records (the embed's rows were all that kept it, and are gone).
+ */
+export type Unused = string | Dropped;
+
+const nameOf = (u: Unused): string => (typeof u === "string" ? u : u.name);
+
+/**
+ * Deletes the rows of the `unused` theme files nothing refers to any more (no owner and no embed),
+ * and answers those, with the embed files no row keeps now: all their bytes are freed.
+ */
+async function dropUnreferenced(c: SqlClient, unused: Unused[]): Promise<Dropped[]> {
+  const names = [...new Set(unused.map(nameOf))];
   if (names.length === 0) return [];
   await lockFiles(c, names);
   const { rows } = await c.query(
@@ -89,10 +101,17 @@ async function dropUnreferenced(c: SqlClient, names: string[]): Promise<Dropped[
      RETURNING f.sha256 || '.' || f.ext AS name, f.bytes`,
     [names],
   );
-  return (rows as { name: string; bytes: string }[]).map((r) => ({
+  const dropped = (rows as { name: string; bytes: string }[]).map((r) => ({
     name: r.name,
     bytes: Number(r.bytes),
   }));
+  const seen = new Set(dropped.map((f) => f.name));
+  for (const u of unused) {
+    if (typeof u === "string" || seen.has(u.name)) continue;
+    seen.add(u.name);
+    if (!(await isKept(c, u.name))) dropped.push(u);
+  }
+  return dropped;
 }
 
 /** Whether a row still keeps the stored file `name`: a theme file or an embed's. */
@@ -148,7 +167,7 @@ export type Reserve = (bytes: Buffer, ext: EmbedExt) => Promise<void>;
 /** What a write's `fn` returns: its result and the files it stopped referring to. */
 export interface Written<T> {
   result: T;
-  unused: string[];
+  unused: Unused[];
 }
 
 /**

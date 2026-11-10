@@ -43,7 +43,10 @@ export function parseManifest(bytes: Buffer): Parsed {
   }
 }
 
-/** The package's paths: every path it holds, and those whose upload failed its checks. */
+/**
+ * The package's paths: every path it holds, and those whose upload failed its checks with an
+ * error. A warning (an undeclared embed folder's file) never hides a declared file's absence.
+ */
 export interface PackagePaths {
   present: Set<string>;
   failed: Set<string>;

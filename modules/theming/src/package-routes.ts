@@ -13,8 +13,8 @@ import yazl from "yazl";
 import type { Audit } from "./audit.js";
 import type { Manifest } from "./checks.js";
 import type { DraftDeps } from "./draft-routes.js";
-import { draftBody, editDraft, newDraftKey, removeDraftContent } from "./drafts.js";
-import { putEmbed } from "./embeds.js";
+import { draftBody, editDraft, newDraftKey, removeDraftPaths } from "./drafts.js";
+import { embedHoldings, putEmbed } from "./embeds.js";
 import { fileName } from "./files.js";
 import {
   WRITE,
@@ -30,7 +30,7 @@ import { checkPackage } from "./package.js";
 import type { CheckedPackage } from "./package.js";
 import { draftFileNames, setDraftPath } from "./package-files.js";
 import { writingFiles } from "./stored.js";
-import type { Place, Reserve } from "./stored.js";
+import type { Place, Reserve, Unused } from "./stored.js";
 import { MAX_UNPACKED, readPackage } from "./zip.js";
 
 const EMBEDS = "theming.embeds.write";
@@ -54,13 +54,9 @@ interface Embeds {
 
 async function draftEmbeds(c: SqlClient): Promise<Embeds> {
   const { rows } = await c.query(`SELECT manifest -> 'embeds' AS embeds FROM theming_drafts`);
-  const files = await c.query(
-    `SELECT embed || '/' || path || '=' || file AS e FROM theming_embed_files
-      WHERE owner = 'draft' ORDER BY 1`,
-  );
   return {
     manifest: (rows[0] as { embeds: unknown } | undefined)?.embeds ?? undefined,
-    files: (files.rows as { e: string }[]).map((r) => r.e),
+    files: await embedHoldings(c, "draft"),
   };
 }
 
@@ -77,8 +73,10 @@ function packageEmbeds(pkg: CheckedPackage): Embeds {
 const embedNames = (e: Embeds): string[] => Object.keys(e.manifest ?? {}).sort();
 
 /**
- * Replaces the draft's content with the package's; answers the files the draft held before. Theme
- * files go first: an embed's file with the same bytes then finds their row and counts once.
+ * Replaces the draft's content with the package's; answers the files the draft held before. The
+ * draft's embed rows go only after the theme files are placed, and their files are not reserved
+ * again: bytes the event already counts stay counted once (stored.ts), and those the package drops
+ * are given back with the rest of `unused`.
  */
 async function storePackage(
   c: SqlClient,
@@ -86,9 +84,10 @@ async function storePackage(
   pkg: CheckedPackage,
   place: Place,
   reserve: Reserve,
-): Promise<string[]> {
+): Promise<Unused[]> {
   const before = await draftFileNames(c);
-  await removeDraftContent(c);
+  const counted = new Set(before.flatMap((u) => (typeof u === "string" ? [] : [u.name])));
+  await removeDraftPaths(c);
   for (const [path, entry] of pkg.paths) {
     await setDraftPath(
       c,
@@ -98,8 +97,11 @@ async function storePackage(
         : { file: await place(entry.bytes, entry.ext), bytes: entry.bytes.length },
     );
   }
+  await c.query(`DELETE FROM theming_embed_files WHERE owner = 'draft'`);
   for (const [name, embed] of pkg.embeds) {
-    for (const f of embed.files.values()) await reserve(f.bytes, f.ext);
+    for (const f of embed.files.values()) {
+      if (!counted.has(fileName(f.bytes, f.ext))) await reserve(f.bytes, f.ext);
+    }
     const bytes = new Map([...embed.files].map(([path, f]) => [path, f.bytes]));
     await putEmbed(c, deps.files, "draft", name, embed.entry, bytes);
   }
@@ -161,7 +163,7 @@ export function packageRoutes(app: FastifyInstance, deps: DraftDeps & { audit: A
         const actor = actorOf(request);
         const row = await writingFiles(deps, async (c, place, reserve) => {
           if (version === undefined) await startDraft(c, actor);
-          let unused: string[] = [];
+          let unused: Unused[] = [];
           let before: Embeds = { manifest: undefined, files: [] };
           const draft = await editDraft(c, version ?? 0, actor, async () => {
             before = await draftEmbeds(c);

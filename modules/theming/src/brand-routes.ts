@@ -17,6 +17,7 @@ import { draftEmbedNames, removeDraftFolders } from "./package-files.js";
 import { brandInputError, modeSwitchError } from "./schema.js";
 import type { BrandEdit } from "./schema.js";
 import { writingFiles } from "./stored.js";
+import type { Unused } from "./stored.js";
 
 export interface BrandDeps extends DraftDeps {
   audit: Audit;
@@ -149,7 +150,7 @@ export function brandRoutes(app: FastifyInstance, deps: BrandDeps): void {
     if (hadEmbeds) await deps.rights.check(request.headers.cookie, EMBEDS);
     const result = await writingFiles(deps, async (c) => {
       let removed: string[] = [];
-      let unused: string[] = [];
+      let unused: Unused[] = [];
       let embeds: string[] = [];
       const row = await editDraft(c, version, actor, async (m) => {
         const brand = brandOf(m);

@@ -241,12 +241,12 @@ export async function editDraft(
  */
 export async function removeDraft(c: SqlClient): Promise<void> {
   await c.query(`DELETE FROM theming_drafts`);
-  await removeDraftContent(c);
+  await removeDraftPaths(c);
+  await c.query(`DELETE FROM theming_embed_files WHERE owner = 'draft'`);
 }
 
-/** Removes what the draft refers to, the draft itself kept: a whole-package upload replaces it. */
-export async function removeDraftContent(c: SqlClient): Promise<void> {
+/** Removes the draft's package paths and its refs, its embeds kept: a package upload replaces them. */
+export async function removeDraftPaths(c: SqlClient): Promise<void> {
   await c.query(`DELETE FROM theming_file_refs WHERE owner = 'draft'`);
-  await c.query(`DELETE FROM theming_embed_files WHERE owner = 'draft'`);
   await c.query(`DELETE FROM theming_package_files WHERE owner = 'draft'`);
 }

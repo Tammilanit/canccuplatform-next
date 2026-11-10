@@ -13,6 +13,8 @@ import { checkFile } from "./uploads.js";
 
 /** PackagePath of contracts/theming.openapi.yaml; the zip reader has refused `.` and `..` parts. */
 export const PACKAGE_PATH = /^(css|fonts|images|templates|embeds)\/[A-Za-z0-9._/-]{1,129}$/;
+/** theming_package_files_path_check (migrations/006): `templates/` plus 129 would pass the pattern. */
+export const MAX_PATH = 136;
 /** An embed's name as theming_embed_files keeps it (migrations/002). */
 const EMBED_NAME = /^[a-z][a-z0-9_-]{0,31}$/;
 const EMBED_LIMIT = 5 * 1024 * 1024;
@@ -163,7 +165,7 @@ export async function checkPackage(files: Map<string, Buffer>): Promise<PackageR
   const yaml = files.get("theme.yaml");
   if (yaml === undefined) return { ok: false, why: "The zip has no theme.yaml at its root." };
   for (const path of files.keys()) {
-    if (path !== "theme.yaml" && !PACKAGE_PATH.test(path)) {
+    if (path !== "theme.yaml" && (!PACKAGE_PATH.test(path) || path.length > MAX_PATH)) {
       return {
         ok: false,
         why: `${path} is outside the package's folders (css, fonts, images, templates, embeds) or too long.`,

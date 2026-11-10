@@ -7,6 +7,7 @@ import type { SqlClient } from "@canccu/kit";
 import type { Manifest } from "./checks.js";
 import { brandImages } from "./brand-images.js";
 import { CARRIED_REFS, copyOwned } from "./drafts.js";
+import { embedHoldings } from "./embeds.js";
 import type { FileStore } from "./files.js";
 import { SERVED, colorInt } from "./theme.js";
 import { versionConflict } from "./http.js";
@@ -66,15 +67,11 @@ async function holdings(
       WHERE owner = $1 ORDER BY path`,
     [owner],
   );
-  const embeds = await c.query(
-    `SELECT embed || '/' || path || '=' || file AS e FROM theming_embed_files WHERE owner = $1 ORDER BY 1`,
-    [owner],
-  );
   return {
     manifest,
     tokens,
     files: (files.rows as { file: string }[]).map((r) => r.file),
-    embeds: (embeds.rows as { e: string }[]).map((r) => r.e),
+    embeds: await embedHoldings(c, owner),
     paths: (paths.rows as { p: string }[]).map((r) => r.p),
   };
 }
