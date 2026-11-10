@@ -264,10 +264,78 @@ describe.skipIf(!DATABASE_URL)("pairing", () => {
       delete before.issued_hash;
       return JSON.stringify(before);
     };
-    expect((await poll()).statusCode).toBe(404);
+    try {
+      expect((await poll()).statusCode).toBe(404);
+    } finally {
+      h.kv.get = get;
+    }
     expect(served).toBe(true);
-    h.kv.get = get;
     // The winner's answer was lost: it still collects with the record the loser left alone.
+    expect((await poll()).json()).toMatchObject({ status: "paired" });
+  });
+
+  it("forgets a collected pairing whose issued token was never stored, so a reload asks again", async () => {
+    const res = await start();
+    const { pairing_id, code: shown } = res.json<{ pairing_id: string; code: string }>();
+    const pairingCookie = setCookie(res, "canccu_pairing") ?? "";
+    await call(h, "POST", "/api/screen/devices", {
+      session: "admin",
+      body: { code: shown, name: "Lost write" },
+    });
+    const poll = () =>
+      call(h, "GET", `/api/screen/pairing/${pairing_id}`, {
+        cookies: { canccu_pairing: pairingCookie },
+      });
+    // The collection commits, then Valkey loses the write of `issued_hash`.
+    const set = h.kv.set.bind(h.kv);
+    let failed = false;
+    h.kv.set = async (key, value, ttlMs) => {
+      if (failed || !value.includes("issued_hash")) return set(key, value, ttlMs);
+      failed = true;
+      throw new Error("valkey went away");
+    };
+    try {
+      expect((await poll()).statusCode).toBe(500);
+    } finally {
+      h.kv.set = set;
+    }
+    expect(failed).toBe(true);
+    expect((await poll()).statusCode).toBe(404);
+    const reloaded = await start("alpha.test", undefined, pairingCookie);
+    expect(reloaded.statusCode).toBe(201);
+    expect(reloaded.json<{ pairing_id: string }>().pairing_id).not.toBe(pairing_id);
+  });
+
+  it("keeps the winner's record when its write lands between the loser's re-read and delete", async () => {
+    const res = await start();
+    const { pairing_id, code: shown } = res.json<{ pairing_id: string; code: string }>();
+    const pairingCookie = setCookie(res, "canccu_pairing") ?? "";
+    await call(h, "POST", "/api/screen/devices", {
+      session: "admin",
+      body: { code: shown, name: "Late write" },
+    });
+    const poll = () =>
+      call(h, "GET", `/api/screen/pairing/${pairing_id}`, {
+        cookies: { canccu_pairing: pairingCookie },
+      });
+    expect((await poll()).json()).toMatchObject({ status: "paired" });
+    // Both reads of the loser see the record from before the winner wrote `issued_hash`.
+    const get = h.kv.get.bind(h.kv);
+    let stale = 0;
+    h.kv.get = async (key) => {
+      const raw = await get(key);
+      if (stale >= 2 || raw === null || !raw.includes("issued_hash")) return raw;
+      stale++;
+      const before = JSON.parse(raw) as Record<string, unknown>;
+      delete before.issued_hash;
+      return JSON.stringify(before);
+    };
+    try {
+      expect((await poll()).statusCode).toBe(404);
+    } finally {
+      h.kv.get = get;
+    }
+    expect(stale).toBe(2);
     expect((await poll()).json()).toMatchObject({ status: "paired" });
   });
 

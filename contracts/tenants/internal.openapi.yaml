@@ -314,3 +314,35 @@
         $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
       "404":
         $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
+/internal/tenants/venue-info:
+  parameters:
+    - $ref: "../tenants.openapi.yaml#/components/parameters/TenantQuery"
+  get:
+    tags: [internal]
+    operationId: getVenueInfoInternal
+    summary: An event's venue info as a guest sees it, for the screens
+    description: |
+      The same answer as `GET /api/tenants/current/venue-info` gives a guest whom the info-page mode lets in:
+      only `public` Wi-Fi networks, never `attendees` ones. It ignores the info-page mode, so an event in mode
+      `venue_only` or `sign_in` still shows its venue info on its own screens: the screen module's server reads
+      it for the event's screens (contracts/screen.md, Widgets: `venue_info`). Every status of the event; a
+      deleted or unknown tenant is 404 `not_found`. Only the screen module may call it, with its service
+      identity. Internal network only.
+    security:
+      - {}
+    responses:
+      "200":
+        description: The event's venue info, public Wi-Fi networks only.
+        content:
+          application/json:
+            schema:
+              $ref: "../tenants.openapi.yaml#/components/schemas/VenueInfo"
+      "400":
+        $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../tenants.openapi.yaml#/components/responses/ServiceUnauthenticated"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+        description: "`service_forbidden`: the calling module is not the screen module."
+      "404":
+        $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
