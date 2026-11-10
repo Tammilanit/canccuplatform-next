@@ -1,14 +1,17 @@
+import { Writable } from "node:stream";
 import { describe, expect, it } from "vitest";
 import { validate as isUuid, version as uuidVersion } from "uuid";
 import {
   Bus,
+  HANDLER_TRIES,
   InvalidEnvelope,
   InvalidEventType,
   STREAM_MAXLEN,
+  createLogger,
   parseEnvelope,
   withCorrelation,
 } from "../src/index.js";
-import type { Event } from "../src/index.js";
+import type { Event, Logger } from "../src/index.js";
 import { MemoryStreamStore } from "../src/testing.js";
 
 const TIME_RE = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/;
@@ -177,25 +180,96 @@ describe("subscribe", () => {
     );
     expect((await pending).map((e) => e.source).sort()).toEqual(["admin", "tournament"]);
   });
+});
 
-  it("keeps going when a handler throws", async () => {
+function logSink(): { log: Logger; lines: () => Record<string, unknown>[] } {
+  const raw: string[] = [];
+  const sink = new Writable({
+    write(chunk: Buffer, _enc, done) {
+      raw.push(...chunk.toString().split("\n").filter(Boolean));
+      done();
+    },
+  });
+  return {
+    log: createLogger("screen", sink),
+    lines: () => raw.map((l) => JSON.parse(l) as Record<string, unknown>),
+  };
+}
+
+describe("a failed handler", () => {
+  it("is retried with growing delays, and the next event follows only after it", async () => {
     const store = new MemoryStreamStore();
     store.appendRaw("events:admin", { event: envelope({ id: "a" }) });
     store.appendRaw("events:admin", { event: envelope({ id: "b" }) });
-    const seen: string[] = [];
+    const calls: { id: string; at: number }[] = [];
     let resolve!: () => void;
     const done = new Promise<void>((r) => (resolve = r));
     const sub = new Bus(store, "screen").subscribe(
+      ["admin"],
+      (e) => {
+        calls.push({ id: e.id, at: Date.now() });
+        if (e.id === "a" && calls.length < 3) throw new Error("boom");
+        if (e.id === "b") resolve();
+      },
+      { fromId: "0-0", blockMs: 50, retryMs: 20 },
+    );
+    await done;
+    await sub.close();
+    expect(calls.map((c) => c.id)).toEqual(["a", "a", "a", "b"]);
+    const gap = (i: number) => (calls[i]?.at ?? 0) - (calls[i - 1]?.at ?? 0);
+    expect(gap(1)).toBeGreaterThanOrEqual(18);
+    expect(gap(2)).toBeGreaterThanOrEqual(38);
+  });
+
+  it("is skipped and logged after the set number of tries, so the stream goes on", async () => {
+    const store = new MemoryStreamStore();
+    store.appendRaw("events:admin", { event: envelope({ id: "a" }) });
+    store.appendRaw("events:admin", { event: envelope({ id: "b" }) });
+    const { log, lines } = logSink();
+    const seen: string[] = [];
+    let resolve!: () => void;
+    const done = new Promise<void>((r) => (resolve = r));
+    const sub = new Bus(store, "screen", log).subscribe(
       ["admin"],
       (e) => {
         seen.push(e.id);
         if (e.id === "a") throw new Error("boom");
         resolve();
       },
-      { fromId: "0-0", blockMs: 50 },
+      { fromId: "0-0", blockMs: 50, handlerTries: 3, retryMs: 1 },
     );
     await done;
     await sub.close();
-    expect(seen).toEqual(["a", "b"]);
+    expect(seen).toEqual(["a", "a", "a", "b"]);
+    const skipped = lines().filter((l) => l.message === "event skipped after failed handler");
+    expect(skipped).toHaveLength(1);
+    expect(skipped[0]).toMatchObject({ level: "error", event_id: "a", tries: 3 });
+    expect(lines().filter((l) => l.message === "event handler failed")).toHaveLength(3);
+  });
+
+  it("tries five times by default", () => {
+    expect(HANDLER_TRIES).toBe(5);
+  });
+
+  it("stops retrying when the subscription closes", async () => {
+    const store = new MemoryStreamStore();
+    store.appendRaw("events:admin", { event: envelope({ id: "a" }) });
+    let calls = 0;
+    let resolve!: () => void;
+    const first = new Promise<void>((r) => (resolve = r));
+    const sub = new Bus(store, "screen").subscribe(
+      ["admin"],
+      () => {
+        calls += 1;
+        resolve();
+        throw new Error("boom");
+      },
+      { fromId: "0-0", blockMs: 50, retryMs: 10000 },
+    );
+    await first;
+    const start = Date.now();
+    await sub.close();
+    expect(Date.now() - start).toBeLessThan(1000);
+    expect(calls).toBe(1);
   });
 });

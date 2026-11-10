@@ -5,6 +5,8 @@
 import { getCorrelationId, newId } from "./context.js";
 import { utcNowIso } from "./log.js";
 import type { Logger } from "./log.js";
+import { EVENT_TYPE_RE, parseEnvelope } from "./envelope.js";
+import type { Event } from "./envelope.js";
 import type { StreamStore } from "./store.js";
 import {
   NoTenant,
@@ -15,76 +17,49 @@ import {
   withTenant,
 } from "./tenant.js";
 
+export { EVENT_TYPE_RE, InvalidEnvelope, parseEnvelope } from "./envelope.js";
+export type { Event } from "./envelope.js";
+
 /** Approximate length each stream, platform or tenant, is trimmed to on publish. */
 export const STREAM_MAXLEN = 10000;
 export const DEDUPE_SIZE = 10000;
-export const EVENT_TYPE_RE = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){2}$/;
+/**
+ * A handler that throws runs again, in place, up to this many times in all, before its event is
+ * logged and skipped: one bad event must not stop the stream, and later events of the same
+ * stream wait so they never overtake it.
+ */
+export const HANDLER_TRIES = 5;
+/** The first wait before a retry; it doubles each time, up to MAX_RETRY_MS. */
+export const HANDLER_RETRY_MS = 500;
+const MAX_RETRY_MS = 10000;
 
 export class InvalidEventType extends Error {
   override name = "InvalidEventType";
 }
 
-export class InvalidEnvelope extends Error {
-  override name = "InvalidEnvelope";
-}
-
-export interface Event {
-  id: string;
-  type: string;
-  version: number;
-  time: string;
-  source: string;
-  /** Set on tenant events, absent on platform events. */
-  tenant?: string;
-  correlation_id?: string;
-  data: Record<string, unknown>;
-}
-
-const isObject = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null && !Array.isArray(v);
-
-/** Parse and check an envelope; unknown fields are ignored. */
-export function parseEnvelope(raw: string): Event {
-  let body: unknown;
-  try {
-    body = JSON.parse(raw);
-  } catch {
-    throw new InvalidEnvelope("not JSON");
-  }
-  if (!isObject(body)) throw new InvalidEnvelope("not an object");
-  const required = ["id", "type", "version", "time", "source", "data"];
-  const missing = required.filter((f) => !(f in body));
-  if (missing.length > 0) throw new InvalidEnvelope(`missing field(s): ${missing.join(", ")}`);
-  const { id, type, version, time, source, data, correlation_id, tenant } = body;
-  const checks: Record<string, boolean> = {
-    id: typeof id === "string" && id !== "",
-    type: typeof type === "string" && EVENT_TYPE_RE.test(type),
-    version: typeof version === "number" && Number.isInteger(version) && version >= 1,
-    time: typeof time === "string",
-    source: typeof source === "string",
-    data: isObject(data),
-    correlation_id: correlation_id === undefined || typeof correlation_id === "string",
-    tenant: tenant === undefined || (typeof tenant === "string" && isTenantId(tenant)),
-  };
-  const bad = Object.keys(checks).filter((k) => !checks[k]);
-  if (bad.length > 0) throw new InvalidEnvelope(`invalid field(s): ${bad.join(", ")}`);
-  const event = {
-    id,
-    type,
-    version,
-    time,
-    source,
-    ...(typeof tenant === "string" ? { tenant } : {}),
-    ...(typeof correlation_id === "string" ? { correlation_id } : {}),
-    data,
-  } as Event;
-  if (event.type.split(".")[0] !== event.source) {
-    throw new InvalidEnvelope("source does not match the type's module");
-  }
-  return event;
-}
-
 export type Handler = (event: Event) => Promise<void> | void;
+
+export interface SubscribeOptions {
+  fromId?: string;
+  blockMs?: number;
+  /** Runs of a failing handler before its event is skipped (default HANDLER_TRIES). */
+  handlerTries?: number;
+  /** First wait before a retry, doubling each time (default HANDLER_RETRY_MS). */
+  retryMs?: number;
+}
+
+interface RetryPolicy {
+  tries: number;
+  retryMs: number;
+}
+
+function retryPolicy(options: SubscribeOptions): RetryPolicy {
+  const tries = options.handlerTries ?? HANDLER_TRIES;
+  const retryMs = options.retryMs ?? HANDLER_RETRY_MS;
+  if (!Number.isInteger(tries) || tries < 1) throw new RangeError("handlerTries must be >= 1");
+  if (!(retryMs >= 0)) throw new RangeError("retryMs must be >= 0");
+  return { tries, retryMs };
+}
 
 export interface PublishOptions {
   version: number;
@@ -144,15 +119,18 @@ export class Bus {
   }
 
   /** Read other modules' platform streams `events:<module>`. */
-  subscribe(
-    modules: string[],
-    handler: Handler,
-    options: { fromId?: string; blockMs?: number } = {},
-  ): Subscription {
+  subscribe(modules: string[], handler: Handler, options: SubscribeOptions = {}): Subscription {
     const streams = Object.fromEntries(
       modules.map((m) => [platformStream(m), options.fromId ?? "$"]),
     );
-    return new Subscription(this.store, streams, handler, options.blockMs ?? 5000, this.log);
+    return new Subscription(
+      this.store,
+      streams,
+      handler,
+      options.blockMs ?? 5000,
+      this.log,
+      retryPolicy(options),
+    );
   }
 
   /**
@@ -163,12 +141,13 @@ export class Bus {
   subscribeTenants(
     modules: string[],
     handler: Handler,
-    options: { fromId?: string; blockMs?: number; rescanMs?: number } = {},
+    options: SubscribeOptions & { rescanMs?: number } = {},
   ): TenantSubscription {
     return new TenantSubscription(this.store, modules, handler, {
       fromId: options.fromId ?? "$",
       blockMs: options.blockMs ?? 5000,
       rescanMs: options.rescanMs ?? 30000,
+      retry: retryPolicy(options),
       ...(this.log === undefined ? {} : { log: this.log }),
     });
   }
@@ -179,6 +158,7 @@ export class Subscription {
   protected readonly positions: Record<string, string>;
   private readonly seen = new Set<string>();
   private closed = false;
+  private wake: (() => void) | undefined;
   readonly done: Promise<void>;
 
   constructor(
@@ -186,7 +166,8 @@ export class Subscription {
     streams: Record<string, string>,
     protected readonly handler: Handler,
     private readonly blockMs: number,
-    protected readonly log?: Logger,
+    protected readonly log: Logger | undefined,
+    private readonly retry: RetryPolicy,
   ) {
     this.positions = { ...streams };
     // Start after the constructor (and a subclass's) has finished setting its fields.
@@ -271,16 +252,49 @@ export class Subscription {
       return;
     }
     if (this.isDuplicate(event.id)) return;
-    try {
-      await this.dispatch(stream, event);
-    } catch (err) {
-      this.log?.error({ err, event_id: event.id, type: event.type }, "event handler failed");
+    let delay = this.retry.retryMs;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await this.dispatch(stream, event);
+        return;
+      } catch (err) {
+        const { tries } = this.retry;
+        this.log?.error(
+          { err, event_id: event.id, type: event.type, attempt, tries },
+          "event handler failed",
+        );
+        if (attempt >= tries) {
+          this.log?.error(
+            { stream, entry: entryId, event_id: event.id, type: event.type, tries },
+            "event skipped after failed handler",
+          );
+          return;
+        }
+      }
+      await this.pause(delay);
+      if (this.isClosed()) return;
+      delay = Math.min(delay * 2, MAX_RETRY_MS);
     }
   }
 
-  /** Stop after the current read (at most blockMs). */
+  /** Wait, but wake at once on close. */
+  private async pause(ms: number): Promise<void> {
+    // close() may have run already, before there was a wait to wake.
+    if (this.isClosed()) return;
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, ms);
+      this.wake = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+    });
+    this.wake = undefined;
+  }
+
+  /** Stop after the current read (at most blockMs) or handler run. */
   async close(): Promise<void> {
     this.closed = true;
+    this.wake?.();
     await this.done;
   }
 }
@@ -298,10 +312,23 @@ export class TenantSubscription extends Subscription {
     private readonly tenantStore: StreamStore,
     private readonly modules: string[],
     handler: Handler,
-    private readonly options: { fromId: string; blockMs: number; rescanMs: number; log?: Logger },
+    private readonly options: {
+      fromId: string;
+      blockMs: number;
+      rescanMs: number;
+      log?: Logger;
+      retry: RetryPolicy;
+    },
   ) {
     // The tenants platform stream announces new and deleted tenants.
-    super(tenantStore, { [TENANTS_PLATFORM]: "$" }, handler, options.blockMs, options.log);
+    super(
+      tenantStore,
+      { [TENANTS_PLATFORM]: "$" },
+      handler,
+      options.blockMs,
+      options.log,
+      options.retry,
+    );
     // Checked here, not at the first scan: a bad name would fail every read, forever.
     for (const module of modules) platformStream(module);
     this.scanFrom = options.fromId;

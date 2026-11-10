@@ -7,7 +7,6 @@ Tenant events go to `t:<tenant>:events:<module>`, platform events to `events:<mo
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import re
 import time
@@ -17,6 +16,10 @@ from dataclasses import dataclass
 from typing import Any
 
 from .context import get_correlation_id, new_id
+from .envelope import EVENT_TYPE_RE as EVENT_TYPE_RE
+from .envelope import Event as Event
+from .envelope import InvalidEnvelope as InvalidEnvelope
+from .envelope import parse_envelope as parse_envelope
 from .log import utc_now_iso
 from .store import StreamStore
 from .tenant import (
@@ -32,8 +35,13 @@ STREAM_MAXLEN = 10000
 """Approximate length each stream, platform or tenant, is trimmed to on publish."""
 
 DEDUPE_SIZE = 10000
-EVENT_TYPE_RE = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){2}$")
-REQUIRED_FIELDS = ("id", "type", "version", "time", "source", "data")
+HANDLER_TRIES = 5
+"""A handler that raises runs again, in place, up to this many times in all, before its event is
+logged and skipped: one bad event must not stop the stream, and later events of the same stream
+wait so they never overtake it."""
+HANDLER_RETRY_MS = 500
+"""The first wait before a retry; it doubles each time, up to _MAX_RETRY_S."""
+_MAX_RETRY_S = 10.0
 
 log = logging.getLogger("canccu.kit.bus")
 
@@ -42,81 +50,21 @@ class InvalidEventType(ValueError):
     """The event type breaks the naming rule or names another module."""
 
 
-class InvalidEnvelope(ValueError):
-    """A stream entry is not a valid event envelope."""
+Handler = Callable[[Event], Awaitable[None]]
 
 
 @dataclass(frozen=True)
-class Event:
-    id: str
-    type: str
-    version: int
-    time: str
-    source: str
-    data: dict[str, Any]
-    correlation_id: str | None = None
-    tenant: str | None = None
-    """Set on tenant events, None on platform events."""
-
-    def to_json(self) -> str:
-        body: dict[str, Any] = {
-            "id": self.id,
-            "type": self.type,
-            "version": self.version,
-            "time": self.time,
-            "source": self.source,
-        }
-        if self.tenant is not None:
-            body["tenant"] = self.tenant
-        if self.correlation_id is not None:
-            body["correlation_id"] = self.correlation_id
-        body["data"] = self.data
-        return json.dumps(body, separators=(",", ":"))
+class _RetryPolicy:
+    tries: int
+    retry_s: float
 
 
-def parse_envelope(raw: str) -> Event:
-    """Parse and check an envelope; unknown fields are ignored."""
-    try:
-        body = json.loads(raw)
-    except (TypeError, ValueError) as exc:
-        raise InvalidEnvelope("not JSON") from exc
-    if not isinstance(body, dict):
-        raise InvalidEnvelope("not an object")
-    missing = [f for f in REQUIRED_FIELDS if f not in body]
-    if missing:
-        raise InvalidEnvelope(f"missing field(s): {', '.join(missing)}")
-    checks = {
-        "id": isinstance(body["id"], str) and body["id"] != "",
-        "type": isinstance(body["type"], str) and bool(EVENT_TYPE_RE.match(body["type"])),
-        "version": isinstance(body["version"], int)
-        and not isinstance(body["version"], bool)
-        and body["version"] >= 1,
-        "time": isinstance(body["time"], str),
-        "source": isinstance(body["source"], str),
-        "data": isinstance(body["data"], dict),
-        "correlation_id": body.get("correlation_id") is None
-        or isinstance(body["correlation_id"], str),
-        "tenant": "tenant" not in body
-        or (isinstance(body["tenant"], str) and is_tenant_id(body["tenant"])),
-    }
-    bad = [name for name, ok in checks.items() if not ok]
-    if bad:
-        raise InvalidEnvelope(f"invalid field(s): {', '.join(bad)}")
-    if body["type"].split(".")[0] != body["source"]:
-        raise InvalidEnvelope("source does not match the type's module")
-    return Event(
-        id=body["id"],
-        type=body["type"],
-        version=body["version"],
-        time=body["time"],
-        source=body["source"],
-        data=body["data"],
-        correlation_id=body.get("correlation_id"),
-        tenant=body.get("tenant"),
-    )
-
-
-Handler = Callable[[Event], Awaitable[None]]
+def _retry_policy(handler_tries: int, retry_ms: float) -> _RetryPolicy:
+    if isinstance(handler_tries, bool) or not isinstance(handler_tries, int) or handler_tries < 1:
+        raise ValueError("handler_tries must be an integer >= 1")
+    if not retry_ms >= 0:
+        raise ValueError("retry_ms must be >= 0")
+    return _RetryPolicy(handler_tries, retry_ms / 1000)
 
 
 class Bus:
@@ -175,10 +123,16 @@ class Bus:
         *,
         from_id: str = "$",
         block_ms: int = 5000,
+        handler_tries: int = HANDLER_TRIES,
+        retry_ms: float = HANDLER_RETRY_MS,
     ) -> Subscription:
-        """Read other modules' platform streams `events:<module>`."""
+        """Read other modules' platform streams `events:<module>`.
+
+        A failing handler runs up to `handler_tries` times, `retry_ms` apart and doubling.
+        """
         streams = {platform_stream(m): from_id for m in modules}
-        return Subscription(self.store, streams, handler, block_ms)
+        retry = _retry_policy(handler_tries, retry_ms)
+        return Subscription(self.store, streams, handler, block_ms, retry)
 
     def subscribe_tenants(
         self,
@@ -188,6 +142,8 @@ class Bus:
         from_id: str = "$",
         block_ms: int = 5000,
         rescan_ms: int = 30000,
+        handler_tries: int = HANDLER_TRIES,
+        retry_ms: float = HANDLER_RETRY_MS,
     ) -> TenantSubscription:
         """Read other modules' tenant streams for every tenant, now and later (0013 item 7).
 
@@ -202,6 +158,7 @@ class Bus:
             from_id=from_id,
             block_ms=block_ms,
             rescan_ms=rescan_ms,
+            retry=_retry_policy(handler_tries, retry_ms),
         )
 
 
@@ -214,10 +171,12 @@ class Subscription:
         streams: dict[str, str],
         handler: Handler,
         block_ms: int,
+        retry: _RetryPolicy,
     ) -> None:
         self._store = store
         self._handler = handler
         self._block_ms = block_ms
+        self._retry = retry
         self._positions = dict(streams)
         self._seen: OrderedDict[str, None] = OrderedDict()
         # The task first runs at the caller's next await, after a subclass's __init__ is done.
@@ -286,10 +245,35 @@ class Subscription:
             return
         if self._is_duplicate(event.id):
             return
-        try:
-            await self._dispatch(stream, event)
-        except Exception:
-            log.exception("event handler failed", extra={"event_id": event.id, "type": event.type})
+        tries = self._retry.tries
+        delay = self._retry.retry_s
+        for attempt in range(1, tries + 1):
+            try:
+                await self._dispatch(stream, event)
+                return
+            except Exception:
+                log.exception(
+                    "event handler failed",
+                    extra={
+                        "event_id": event.id,
+                        "type": event.type,
+                        "attempt": attempt,
+                        "tries": tries,
+                    },
+                )
+            if attempt < tries:
+                await asyncio.sleep(delay)
+                delay = min(delay * 2, _MAX_RETRY_S)
+        log.error(
+            "event skipped after failed handler",
+            extra={
+                "stream": stream,
+                "entry": entry_id,
+                "event_id": event.id,
+                "type": event.type,
+                "tries": tries,
+            },
+        )
 
     async def close(self) -> None:
         self._task.cancel()
@@ -315,6 +299,7 @@ class TenantSubscription(Subscription):
         from_id: str,
         block_ms: int,
         rescan_ms: int,
+        retry: _RetryPolicy,
     ) -> None:
         for module in modules:
             # Checked here, not at the first scan: a bad name would fail every read, forever.
@@ -325,7 +310,7 @@ class TenantSubscription(Subscription):
         self._last_scan = float("-inf")
         self._deleted: set[str] = set()
         # The tenants platform stream announces new and deleted tenants.
-        super().__init__(store, {_TENANTS_PLATFORM: "$"}, handler, block_ms)
+        super().__init__(store, {_TENANTS_PLATFORM: "$"}, handler, block_ms, retry)
 
     def _add_tenant(self, tenant: str, from_id: str) -> None:
         if not is_tenant_id(tenant) or tenant in self._deleted:
