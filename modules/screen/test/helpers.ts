@@ -1,4 +1,6 @@
 /** A screen app on a real Postgres (RLS needs one) with fake tenants, admin and Valkey. */
+import type { ThemeNow } from "../src/compose/sources.js";
+import type { AgendaNow, VenueInfo } from "../src/compose/widgets.js";
 import { readFileSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -130,9 +132,20 @@ export interface Harness {
   filesRoot: string;
   /** What the fake oEmbed answers for YouTube probes. */
   oembedStatus: { value: number };
+  /** What the fake agenda, tenants and theming answer the composed state; null is "down". */
+  sources: FakeSources;
   /** One run of the offline sweep, as main starts every 5 seconds. */
   sweep(): Promise<void>;
   close(): Promise<void>;
+}
+
+export interface FakeSources {
+  theme: ThemeNow | null;
+  event: { name: string } | null;
+  agenda: AgendaNow | null;
+  venue: VenueInfo | null;
+  /** The hostnames the reads were made with. */
+  hosts: string[];
 }
 
 /** A fresh schema per file, migrated by the module's own files, as at start. */
@@ -159,6 +172,11 @@ export async function harness(): Promise<Harness> {
   const storage = { used: {} as Record<string, number>, quota: {} as Record<string, number> };
   const filesRoot = await mkdtemp(join(tmpdir(), "canccu-screen-files-"));
   const oembedStatus = { value: 200 };
+  const fake: FakeSources = { theme: null, event: null, agenda: null, venue: null, hosts: [] };
+  const answer = <T>(host: string, value: T): Promise<T> => {
+    fake.hosts.push(host);
+    return Promise.resolve(value);
+  };
   const quota: StorageQuota = {
     reserve: (bytes) => {
       const tenant = requireTenant();
@@ -205,6 +223,13 @@ export async function harness(): Promise<Harness> {
     filesRoot,
     fetch: () => Promise.resolve(new Response("{}", { status: oembedStatus.value })),
     now: () => clock.now,
+    bundleVersion: "test",
+    sources: {
+      theme: (host) => answer(host, fake.theme),
+      event: (host) => answer(host, fake.event),
+      agendaNow: (host) => answer(host, fake.agenda),
+      venueInfo: (host) => answer(host, fake.venue),
+    },
   });
   // A stand-in for the device routes later slices add (state, heartbeat): it runs only the check.
   app.get("/api/screen/device/_probe", { preHandler: requireDevice(db) }, (request) => ({
@@ -233,6 +258,7 @@ export async function harness(): Promise<Harness> {
     quota,
     filesRoot,
     oembedStatus,
+    sources: fake,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
     close: async () => {
       await app.close();

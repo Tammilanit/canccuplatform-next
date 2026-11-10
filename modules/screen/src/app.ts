@@ -1,6 +1,6 @@
 /**
  * The screen module's Fastify app: health, tenancy, and the device, pairing, heartbeat, zone,
- * assignment, playlist, schedule, push, asset, ticker and photo routes.
+ * assignment, playlist, schedule, push, asset, ticker and photo routes, and the composed state.
  */
 import { constants } from "node:fs";
 import { access } from "node:fs/promises";
@@ -20,6 +20,9 @@ import type { StorageQuota } from "./assets/storage.js";
 import { MAX_UPLOAD_BYTES } from "./assets/upload.js";
 import { versionRoutes } from "./assets/versions.js";
 import { assignmentRoutes } from "./assignments.js";
+import { composeRoutes } from "./compose/routes.js";
+import { noSources } from "./compose/sources.js";
+import type { Sources } from "./compose/sources.js";
 import { deviceRoutes } from "./devices.js";
 import type { Settings } from "./health.js";
 import { heartbeatRoutes } from "./heartbeat.js";
@@ -52,6 +55,10 @@ export interface ScreenDeps {
   /** What simulate knows of assets; the assets slice (#217) supplies it. */
   assets?: AssetReader;
   now?: () => number;
+  /** The agenda, tenants and theming reads behind the composed state; none in tests. */
+  sources?: Sources;
+  /** The platform version, the bundle `/screen/` loads unless pinned. */
+  bundleVersion?: string;
 }
 
 export function screenHealth(opts: {
@@ -97,6 +104,11 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   scheduleRoutes(app, deps);
   pushRoutes(app, deps);
   tickerRoutes(app, deps);
+  composeRoutes(app, {
+    ...deps,
+    sources: deps.sources ?? noSources,
+    bundleVersion: deps.bundleVersion ?? "dev",
+  });
   void app.register(multipart, {
     limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 4, fieldSize: 1024, parts: 5 },
   });
