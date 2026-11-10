@@ -9,7 +9,7 @@ import { KitError } from "@canccu/kit";
 import type { SqlClient } from "@canccu/kit";
 import { actorOf, assertWritable, invalidRequest, needs, notFound, tenantOf } from "../http.js";
 import { lockFiles } from "./files.js";
-import { ASSET_USES, FILE_KINDS, readAsset, viewAsset } from "./store.js";
+import { ASSET_USES, FILE_KINDS, isDeck, readAsset, viewAsset } from "./store.js";
 import type { AssetRow } from "./store.js";
 import { prepare, readUpload } from "./upload.js";
 import { fileName, writeDroppingFiles, writeWithFile } from "./write.js";
@@ -106,7 +106,7 @@ export function versionRoutes(app: FastifyInstance, deps: AssetDeps): void {
       });
       // A new deck is a new upload: it is rendered as one. The replaced version keeps its render
       // for the undo.
-      if (before.kind === "pptx" || before.kind === "pdf") {
+      if (isDeck(before.kind)) {
         const who = { tenant_id: ctx.tenant_id, actor_user_id: actorOf(request) };
         job = (await submitJob(c, deps, who, id, version)).row;
       }

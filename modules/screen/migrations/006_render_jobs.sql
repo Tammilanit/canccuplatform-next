@@ -23,6 +23,9 @@ CREATE TABLE screen_render_jobs (
   slides jsonb,
   warnings jsonb,
   bytes bigint NOT NULL DEFAULT 0,
+  -- The bytes the running attempt has reserved for slides it wrote to tmp/render-<id>-<attempts>:
+  -- whoever ends the attempt (its container, or the lease sweep after a lost one) gives them back.
+  reserved_bytes bigint NOT NULL DEFAULT 0,
   PRIMARY KEY (tenant_id, id),
   -- No cascade: a version's jobs and render are removed by the code that removes the version, so
   -- their files and quota go with them (src/render/jobs.ts, dropJobs).

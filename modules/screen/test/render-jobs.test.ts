@@ -250,7 +250,7 @@ describe.skipIf(!DATABASE_URL)("render jobs", () => {
   it("fails as render_timeout when the renderer passes the deadline", async () => {
     renderer.behaviour = "hang";
     const deck = await addDeck();
-    await h.dispatch(renderer.path, 200);
+    await h.dispatch(renderer.path, { timeoutMs: 200 });
     expect((await jobsOf(deck.id))[0]?.error?.code).toBe("render_timeout");
   });
 

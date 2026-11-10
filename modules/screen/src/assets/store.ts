@@ -15,6 +15,9 @@ export const ASSET_KINDS: readonly AssetKind[] = [
 ];
 export const FILE_KINDS: readonly AssetKind[] = ["image", "video", "audio", "pptx", "pdf"];
 
+/** A PPTX or PDF deck: the kinds the render job draws as slides. */
+export const isDeck = (kind: string): boolean => kind === "pptx" || kind === "pdf";
+
 export interface AssetRow {
   id: string;
   kind: AssetKind;
@@ -79,7 +82,7 @@ export function assetView(row: AssetRow): Record<string, unknown> {
     size_bytes: row.size_bytes === null ? null : Number(row.size_bytes),
     duration_seconds: row.duration_seconds,
     slide_count: row.render_state === "succeeded" ? row.slide_count : null,
-    render_state: row.kind === "pptx" || row.kind === "pdf" ? row.render_state : null,
+    render_state: isDeck(row.kind) ? row.render_state : null,
     health: row.health,
     health_message: row.health_message,
     can_revert: row.prev_version !== null,

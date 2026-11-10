@@ -33,7 +33,10 @@ export function pdfPages(count: number): Buffer {
 }
 
 export type Behaviour =
-  { slides: number; warnings?: unknown[] } | { error: { code: string; message: string } } | "hang";
+  /** `hang`: the slides arrive, then the renderer never finishes. */
+  | { slides: number; warnings?: unknown[]; hang?: boolean }
+  | { error: { code: string; message: string } }
+  | "hang";
 
 export interface FakeRenderer {
   path: string;
@@ -65,6 +68,7 @@ async function answer(socket: Socket, behaviour: Behaviour): Promise<void> {
     line({ slide: { index: i, width: 32, height: 18, bytes: slide.length } });
     socket.write(slide);
   }
+  if (behaviour.hang) return;
   line({ ok: true, slide_count: behaviour.slides, warnings: behaviour.warnings ?? [] });
 }
 

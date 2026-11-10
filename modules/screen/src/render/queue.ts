@@ -33,8 +33,13 @@ export interface RenderQueue {
   release(tenant: string, jobId: string): Promise<void>;
   /** Drops a waiting job (cancelled, or its deck deleted). */
   remove(tenant: string, jobId: string): Promise<void>;
-  /** 1 for the job taken next; null when the job is not waiting. */
-  position(tenant: string, jobId: string): Promise<number | null>;
+  /**
+   * Watches a running job's lease without the slot: a job whose container could not record its
+   * end is recovered by `expiredLeases` once `untilMs` passes.
+   */
+  watch(tenant: string, jobId: string, untilMs: number): Promise<void>;
+  /** Each waiting job's place, 1 for the job taken next; a job not waiting is left out. */
+  positions(tenant: string, jobIds: string[]): Promise<Map<string, number>>;
   /** The submit time of the longest-waiting job of any event, for the `render` health check. */
   oldestWaiting(): Promise<number | null>;
   /** The jobs whose lease ran out by `nowMs`, each handed out once (plan #184, R11). */
@@ -189,13 +194,22 @@ export class ValkeyRenderQueue implements RenderQueue {
     await this.client.eval(REMOVE, 3, RING, WAITING, queueKey(tenant), tenant, jobId);
   }
 
-  async position(tenant: string, jobId: string): Promise<number | null> {
-    const index = await this.client.lpos(queueKey(tenant), jobId);
-    if (index === null) return null;
+  async watch(tenant: string, jobId: string, untilMs: number): Promise<void> {
+    await this.client.zadd(LEASES, untilMs, member(tenant, jobId));
+  }
+
+  async positions(tenant: string, jobIds: string[]): Promise<Map<string, number>> {
+    const out = new Map<string, number>();
+    if (jobIds.length === 0) return out;
+    const own = await this.client.lrange(queueKey(tenant), 0, -1);
     const ring = (await this.client.lrange(RING, 0, -1)).filter(isTenantId);
     const lengths = new Map<string, number>();
     for (const t of ring) lengths.set(t, await this.client.llen(queueKey(t)));
-    return fairPosition(ring, lengths, tenant, index);
+    for (const id of jobIds) {
+      const index = own.indexOf(id);
+      if (index >= 0) out.set(id, fairPosition(ring, lengths, tenant, index));
+    }
+    return out;
   }
 
   async oldestWaiting(): Promise<number | null> {
@@ -284,11 +298,19 @@ export class MemoryRenderQueue implements RenderQueue {
     return Promise.resolve();
   }
 
-  position(tenant: string, jobId: string): Promise<number | null> {
-    const index = this.list(tenant).indexOf(jobId);
-    if (index < 0) return Promise.resolve(null);
+  watch(tenant: string, jobId: string, untilMs: number): Promise<void> {
+    this.leases.set(member(tenant, jobId), untilMs);
+    return Promise.resolve();
+  }
+
+  positions(tenant: string, jobIds: string[]): Promise<Map<string, number>> {
     const lengths = new Map(this.ring.map((t) => [t, this.list(t).length]));
-    return Promise.resolve(fairPosition(this.ring, lengths, tenant, index));
+    const out = new Map<string, number>();
+    for (const id of jobIds) {
+      const index = this.list(tenant).indexOf(id);
+      if (index >= 0) out.set(id, fairPosition(this.ring, lengths, tenant, index));
+    }
+    return Promise.resolve(out);
   }
 
   oldestWaiting(): Promise<number | null> {

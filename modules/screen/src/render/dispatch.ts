@@ -2,17 +2,31 @@
  * The render dispatcher, in every screen container (plan #184, B3): takes the next job in fair
  * turn, streams its deck to the renderer, reserves each slide's bytes against the event's quota
  * before writing it (contracts/tenants.md, Storage quota), and moves the finished slides into
- * place in one rename. A job holds a lease, renewed while it runs: a cancel or a lost lease is
- * seen at the next renewal and stops the render, and a lease that runs out marks a lost
- * container (`sweepLeases`).
+ * place in one rename. A job holds a lease, renewed while it runs: a cancel, a lost lease or a
+ * lost renderer slot is seen at the next renewal and stops the render, and a lease that runs out
+ * marks a lost container (`sweepLeases`).
+ *
+ * The invariant: from its take to a recorded end, a job is always findable again. Until it is
+ * marked running it goes back to the head of its event's list on any failure; once running, its
+ * lease stays watched until an end is committed, so the lease sweep recovers it. The bytes an
+ * attempt reserved are on its row (`reserved_bytes`) and given back once, by whoever clears them.
  */
 import { mkdir, rename, rm, writeFile } from "node:fs/promises";
+import type { Socket } from "node:net";
 import { dirname, join } from "node:path";
-import { KitError, requireTenant, tenantFile, withTenant } from "@canccu/kit";
+import { KitError, requireTenant, withTenant } from "@canccu/kit";
 import { filePath } from "../assets/files.js";
 import { RENDERER_FAILED, RendererUnavailable, openRenderer, renderDeck } from "./client.js";
 import type { RenderOutcome } from "./client.js";
-import { JOB_COLUMNS, publishJob, readJob, recoverLost, renderDir } from "./jobs.js";
+import {
+  JOB_COLUMNS,
+  announce,
+  attemptDir,
+  publishJob,
+  readJob,
+  recoverLost,
+  renderDir,
+} from "./jobs.js";
 import type { JobRow, RenderDeps } from "./jobs.js";
 
 export const LEASE_MS = 30_000;
@@ -26,18 +40,33 @@ export interface DispatchDeps extends RenderDeps {
   socketPath: string;
   timeoutMs?: number;
   renewMs?: number;
+  /** Aborted when the container shuts down: the running job goes back to its place. */
+  stop?: AbortSignal;
 }
 
-type Outcome = RenderOutcome | "cancelled";
+/**
+ * How a run ended: an outcome to record; `requeue` when it was stopped through no fault of the
+ * deck (the slot passed to another job, or a shutdown); `gone` when its row was cancelled,
+ * deleted or recovered by the lease sweep meanwhile.
+ */
+type Result = RenderOutcome | "requeue" | "gone";
 
 /** One turn: runs the next job if the renderer slot is free. True when a job ran. */
 export async function dispatchOnce(d: DispatchDeps): Promise<boolean> {
   const taken = await d.queue.take(LEASE_MS, d.now());
   if (taken === null) return false;
+  let settled = false;
   try {
-    return await withTenant(taken.tenant, () => runJob(d, taken.jobId));
+    const run = await withTenant(taken.tenant, () => runJob(d, taken.jobId));
+    settled = run.settled;
+    return run.ran;
+  } catch (err) {
+    d.log?.warn({ err, job_id: taken.jobId }, "render dispatch failed");
+    return false;
   } finally {
     await d.queue.release(taken.tenant, taken.jobId);
+    // Running, with no end committed: the lease sweep finds it once the lease runs out.
+    if (!settled) await d.queue.watch(taken.tenant, taken.jobId, d.now() + LEASE_MS);
   }
 }
 
@@ -55,7 +84,7 @@ async function start(
     );
     const { rows } = await c.query(
       `UPDATE screen_render_jobs SET state = 'running', attempts = attempts + 1, started_at = $2,
-         lease_until = $3
+         lease_until = $3, reserved_bytes = 0
        WHERE id = $1 RETURNING ${JOB_COLUMNS}`,
       [jobId, new Date(d.now()), new Date(d.now() + LEASE_MS)],
     );
@@ -63,33 +92,52 @@ async function start(
   });
 }
 
-async function runJob(d: DispatchDeps, jobId: string): Promise<boolean> {
-  let socket;
+/** A job taken but never started keeps its place and its attempts. */
+async function backToHead(d: DispatchDeps, jobId: string): Promise<void> {
+  const row = await d.db.tenant((c) => readJob(c, jobId));
+  if (row?.state === "queued") {
+    await d.queue.enqueue(requireTenant(), jobId, row.submitted_at.getTime(), { head: true });
+  }
+}
+
+async function runJob(d: DispatchDeps, jobId: string): Promise<{ ran: boolean; settled: boolean }> {
+  let socket: Socket;
+  let started: { row: JobRow; file: string } | null;
   try {
     socket = await openRenderer(d.socketPath);
   } catch (err) {
     if (!(err instanceof RendererUnavailable)) throw err;
-    // Nothing started: the job keeps its place and its attempts.
-    const row = await d.db.tenant((c) => readJob(c, jobId));
-    if (row?.state === "queued") {
-      await d.queue.enqueue(requireTenant(), jobId, row.submitted_at.getTime(), { head: true });
-    }
     d.log?.warn({ err }, "the renderer is unavailable");
-    return false;
+    await backToHead(d, jobId);
+    return { ran: false, settled: true };
   }
-  const started = await start(d, jobId).catch((err: unknown) => {
+  try {
+    started = await start(d, jobId);
+  } catch (err) {
     socket.destroy();
-    throw err;
-  });
+    d.log?.warn({ err, job_id: jobId }, "starting a render job failed");
+    await backToHead(d, jobId);
+    return { ran: false, settled: true };
+  }
   if (started === null) {
     socket.destroy();
-    return false;
+    return { ran: false, settled: true };
   }
-  await publishJob(d.bus, started.row);
+  await publishJob(d.bus, started.row).catch((err: unknown) =>
+    d.log?.warn({ err, job_id: jobId }, "announcing a render job failed"),
+  );
   const attempt = started.row.attempts;
-  const tmp = tenantFile("screen", `tmp/render-${jobId}-${attempt}`, d.filesRoot);
+  const tmp = attemptDir(d.filesRoot, jobId, attempt);
   let reserved = 0;
+  let stopped = null as "requeue" | "gone" | null;
   const controller = new AbortController();
+  const halt = (why: "requeue" | "gone"): void => {
+    stopped ??= why;
+    controller.abort();
+  };
+  const onShutdown = (): void => {
+    halt("requeue");
+  };
   const keep = async (): Promise<void> => {
     const { rows } = await d.db.tenant((c) =>
       c.query(
@@ -98,18 +146,21 @@ async function runJob(d: DispatchDeps, jobId: string): Promise<boolean> {
         [jobId, attempt, new Date(d.now() + LEASE_MS)],
       ),
     );
-    if (rows.length === 0) controller.abort();
-    else await d.queue.renew(requireTenant(), jobId, LEASE_MS, d.now());
+    if (rows.length === 0) halt("gone");
+    // Another job holds the slot: two decks must never draw at once on the one renderer.
+    else if (!(await d.queue.renew(requireTenant(), jobId, LEASE_MS, d.now()))) halt("requeue");
   };
   const renewer = setInterval(() => {
     keep().catch((err: unknown) =>
       d.log?.warn({ err, job_id: jobId }, "renewing a render lease failed"),
     );
   }, d.renewMs ?? RENEW_MS);
-  let outcome: Outcome;
+  d.stop?.addEventListener("abort", onShutdown, { once: true });
+  if (d.stop?.aborted) onShutdown();
+  let result: Result;
   try {
     await mkdir(tmp, { recursive: true });
-    outcome = await renderDeck({
+    result = await renderDeck({
       socket,
       deckPath: filePath(d.filesRoot, started.file),
       signal: controller.signal,
@@ -117,84 +168,122 @@ async function runJob(d: DispatchDeps, jobId: string): Promise<boolean> {
       onSlide: async (slide, png) => {
         await d.storage.reserve(png.length);
         reserved += png.length;
+        await d.db.tenant((c) =>
+          c.query(
+            "UPDATE screen_render_jobs SET reserved_bytes = $3 WHERE id = $1 AND attempts = $2",
+            [jobId, attempt, reserved],
+          ),
+        );
         await writeFile(join(tmp, `slide-${slide.index}.png`), png, { flag: "wx" });
       },
     });
   } catch (err) {
-    if (controller.signal.aborted) outcome = "cancelled";
+    if (stopped !== null) result = stopped;
     else if (err instanceof KitError && err.code === "storage_quota_exceeded") {
-      outcome = { ok: false, code: "storage_quota_exceeded", message: QUOTA_FULL };
+      result = { ok: false, code: "storage_quota_exceeded", message: QUOTA_FULL };
     } else {
       d.log?.warn({ err, job_id: jobId }, "a render failed");
-      outcome = { ok: false, code: "renderer_failed", message: RENDERER_FAILED };
+      result = { ok: false, code: "renderer_failed", message: RENDERER_FAILED };
     }
   } finally {
     clearInterval(renewer);
+    d.stop?.removeEventListener("abort", onShutdown);
+    socket.destroy();
   }
-  await finish(d, started.row, attempt, outcome, tmp, reserved);
-  return true;
+  return { ran: true, settled: await settle(d, started.row, attempt, result, tmp, reserved) };
+}
+
+/** The end to write for a run that is still this container's. */
+function endOf(result: RenderOutcome | "requeue", reserved: number): [string, unknown[]] {
+  if (result === "requeue") {
+    // Not the deck's fault, so the attempt does not count towards a lost container's retry.
+    return [
+      `state = 'queued', attempts = attempts - 1, started_at = NULL, lease_until = NULL,
+       reserved_bytes = 0`,
+      [],
+    ];
+  }
+  if (result.ok) {
+    return [
+      `state = 'succeeded', finished_at = $2, lease_until = NULL, slides = $3, warnings = $4,
+       bytes = $5, reserved_bytes = 0`,
+      [JSON.stringify(result.slides), JSON.stringify(result.warnings), reserved],
+    ];
+  }
+  return [
+    `state = 'failed', finished_at = $2, lease_until = NULL, reserved_bytes = 0,
+     error_code = $3, error_message = $4`,
+    [result.code, result.message],
+  ];
 }
 
 /**
- * Records the outcome if the job is still this container's run (not cancelled, deleted or
- * requeued meanwhile). Only a recorded success keeps its slides; anything else gives their bytes
- * back.
+ * Commits the run's end if the job is still this container's run, and gives back the bytes this
+ * run reserved unless its slides are kept or someone else already gave them back. False when
+ * nothing could be committed: the row then still holds the bytes and the lease sweep recovers it.
  */
-async function finish(
+async function settle(
   d: DispatchDeps,
   job: JobRow,
   attempt: number,
-  outcome: Outcome,
+  result: Result,
   tmp: string,
   reserved: number,
-): Promise<void> {
+): Promise<boolean> {
   const target = renderDir(d.filesRoot, job.asset_id, job.asset_version);
   let placed = false as boolean;
+  let release = 0;
+  let ended: JobRow | null = null;
   try {
-    if (outcome !== "cancelled") {
-      const row = await d.db.tenant(async (c) => {
-        const now = await readJob(c, job.id, true);
-        if (now === null || now.state !== "running" || now.attempts !== attempt) return null;
-        if (outcome.ok) {
-          // Anything already there is an orphan: a version has one render, and it is this one.
-          await rm(target, { recursive: true, force: true });
-          await mkdir(dirname(target), { recursive: true });
-          await rename(tmp, target);
-          placed = true;
-        }
-        const { rows } = await c.query(
-          outcome.ok
-            ? `UPDATE screen_render_jobs SET state = 'succeeded', finished_at = $2, lease_until = NULL,
-                 slides = $3, warnings = $4, bytes = $5
-               WHERE id = $1 RETURNING ${JOB_COLUMNS}`
-            : `UPDATE screen_render_jobs SET state = 'failed', finished_at = $2, lease_until = NULL,
-                 error_code = $3, error_message = $4
-               WHERE id = $1 RETURNING ${JOB_COLUMNS}`,
-          outcome.ok
-            ? [
-                job.id,
-                new Date(d.now()),
-                JSON.stringify(outcome.slides),
-                JSON.stringify(outcome.warnings),
-                reserved,
-              ]
-            : [job.id, new Date(d.now()), outcome.code, outcome.message],
-        );
-        return rows[0] as unknown as JobRow;
-      });
-      if (row !== null) {
-        await publishJob(d.bus, row).catch((err: unknown) =>
-          d.log?.warn({ err, job_id: job.id }, "announcing a render job failed"),
-        );
-        if (row.state === "succeeded") return;
+    await d.db.tenant(async (c) => {
+      const now = await readJob(c, job.id, true);
+      if (now === null) {
+        release = reserved;
+        return;
       }
-    }
+      if (result === "gone" || now.state !== "running" || now.attempts !== attempt) {
+        // Cancelled, or recovered by the sweep, which then gave the bytes back already.
+        if (now.attempts === attempt && Number(now.reserved_bytes) > 0) {
+          await c.query("UPDATE screen_render_jobs SET reserved_bytes = 0 WHERE id = $1", [job.id]);
+          release = reserved;
+        }
+        return;
+      }
+      if (result !== "requeue" && result.ok) {
+        // Anything already there is an orphan: a version has one render, and it is this one.
+        await rm(target, { recursive: true, force: true });
+        await mkdir(dirname(target), { recursive: true });
+        await rename(tmp, target);
+        placed = true;
+      } else {
+        release = reserved;
+      }
+      const [set, values] = endOf(result, reserved);
+      const { rows } = await c.query(
+        `UPDATE screen_render_jobs SET ${set} WHERE id = $1 RETURNING ${JOB_COLUMNS}`,
+        [job.id, ...(result === "requeue" ? [] : [new Date(d.now())]), ...values],
+      );
+      ended = rows[0] as unknown as JobRow;
+    });
   } catch (err) {
     d.log?.warn({ err, job_id: job.id }, "recording a render job failed");
-    if (placed) await rm(target, { recursive: true, force: true });
+    if (placed) await rm(target, { recursive: true, force: true }).catch(() => undefined);
+    return false;
   }
-  await rm(tmp, { recursive: true, force: true });
-  if (reserved > 0) await d.storage.release(reserved);
+  try {
+    if (!placed) await rm(tmp, { recursive: true, force: true });
+    if (release > 0) await d.storage.release(release);
+  } catch (err) {
+    d.log?.warn({ err, job_id: job.id }, "giving back a render's bytes failed");
+  }
+  const row = ended as JobRow | null;
+  if (row?.state === "queued") await announce(d, row, { head: true });
+  else if (row !== null) {
+    await publishJob(d.bus, row).catch((err: unknown) =>
+      d.log?.warn({ err, job_id: job.id }, "announcing a render job failed"),
+    );
+  }
+  return true;
 }
 
 /** Recovers the jobs whose containers stopped renewing their leases. */
@@ -203,6 +292,8 @@ export async function sweepLeases(d: RenderDeps): Promise<void> {
     try {
       await withTenant(lost.tenant, () => recoverLost(d, lost.jobId));
     } catch (err) {
+      // Keep watching it, so a database hiccup here does not lose the job for good.
+      await d.queue.watch(lost.tenant, lost.jobId, d.now() + LEASE_MS).catch(() => undefined);
       d.log?.warn(
         { err, tenant_id: lost.tenant, job_id: lost.jobId },
         "recovering a render job failed",
@@ -211,25 +302,31 @@ export async function sweepLeases(d: RenderDeps): Promise<void> {
   }
 }
 
-/** The dispatcher and the lease sweep, as main runs them; `stop` ends both. */
-export function renderLoop(d: DispatchDeps): { stop: () => void } {
-  let busy = false;
+/**
+ * The dispatcher and the lease sweep, as main runs them. `stop` puts a running job back at its
+ * place and resolves once it is recorded, so main closes the database and Valkey only after.
+ */
+export function renderLoop(d: DispatchDeps): { stop: () => Promise<void> } {
+  const shutdown = new AbortController();
+  const deps = { ...d, stop: shutdown.signal };
+  let current: Promise<unknown> | null = null;
   const dispatcher = setInterval(() => {
-    if (busy) return;
-    busy = true;
-    dispatchOnce(d)
+    if (current !== null) return;
+    current = dispatchOnce(deps)
       .catch((err: unknown) => d.log?.warn({ err }, "render dispatch failed"))
       .finally(() => {
-        busy = false;
+        current = null;
       });
   }, 1000);
   const sweeper = setInterval(() => {
     sweepLeases(d).catch((err: unknown) => d.log?.warn({ err }, "render lease sweep failed"));
   }, 5000);
   return {
-    stop: () => {
+    stop: async () => {
       clearInterval(dispatcher);
       clearInterval(sweeper);
+      shutdown.abort();
+      await current;
     },
   };
 }

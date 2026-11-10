@@ -41,10 +41,11 @@ export interface JobRow {
   slides: SlideMeta[] | null;
   warnings: RenderWarning[] | null;
   bytes: string;
+  reserved_bytes: string;
 }
 
 export const JOB_COLUMNS = `id, asset_id, asset_version, state, attempts, lease_until, submitted_at,
-  started_at, finished_at, error_code, error_message, slides, warnings, bytes`;
+  started_at, finished_at, error_code, error_message, slides, warnings, bytes, reserved_bytes`;
 
 /** A container lost twice while drawing the same deck is the deck's doing, not bad luck. */
 export const MAX_ATTEMPTS = 2;
@@ -93,12 +94,14 @@ export async function viewJobs(
   deps: RenderDeps,
   rows: JobRow[],
 ): Promise<Record<string, unknown>[]> {
-  const tenant = requireTenant();
-  return Promise.all(
-    rows.map(async (row) =>
-      jobView(row, row.state === "queued" ? await deps.queue.position(tenant, row.id) : null),
-    ),
-  );
+  const queued = rows.filter((r) => r.state === "queued").map((r) => r.id);
+  const positions = await deps.queue.positions(requireTenant(), queued);
+  return rows.map((row) => jobView(row, positions.get(row.id) ?? null));
+}
+
+/** The scratch directory of one attempt, where its slides wait until the job is recorded. */
+export function attemptDir(root: string, jobId: string, attempt: number): string {
+  return tenantFile("screen", `tmp/render-${jobId}-${attempt}`, root);
 }
 
 export async function readJob(c: SqlClient, id: string, lock = false): Promise<JobRow | null> {
@@ -235,30 +238,37 @@ export async function afterDrop(deps: RenderDeps, dropped: Dropped): Promise<voi
  */
 export async function recoverLost(deps: RenderDeps, jobId: string): Promise<void> {
   const now = new Date(deps.now());
-  const row = await deps.db.tenant(async (c) => {
+  const lost = await deps.db.tenant(async (c) => {
     const job = await readJob(c, jobId, true);
-    if (
-      job === null ||
-      job.state !== "running" ||
-      (job.lease_until !== null && job.lease_until > now)
-    ) {
+    if (job === null || job.state !== "running") return null;
+    if (job.lease_until !== null && job.lease_until > now) {
+      // Renewed after the lease index fell due: keep watching it, or it would never be seen again.
+      await deps.queue.watch(requireTenant(), jobId, job.lease_until.getTime());
       return null;
     }
     const again = job.attempts < MAX_ATTEMPTS;
     const { rows } = await c.query(
       again
-        ? `UPDATE screen_render_jobs SET state = 'queued', started_at = NULL, lease_until = NULL
+        ? `UPDATE screen_render_jobs SET state = 'queued', started_at = NULL, lease_until = NULL,
+             reserved_bytes = 0
            WHERE id = $1 RETURNING ${JOB_COLUMNS}`
         : `UPDATE screen_render_jobs SET state = 'failed', finished_at = $2, lease_until = NULL,
-             error_code = 'renderer_failed', error_message = $3
+             reserved_bytes = 0, error_code = 'renderer_failed', error_message = $3
            WHERE id = $1 RETURNING ${JOB_COLUMNS}`,
       again ? [jobId] : [jobId, now, LOST_TWICE],
     );
-    return rows[0] as unknown as JobRow;
+    return {
+      row: rows[0] as unknown as JobRow,
+      attempt: job.attempts,
+      bytes: Number(job.reserved_bytes),
+    };
   });
-  if (row === null) return;
-  if (row.state === "queued") await announce(deps, row, { head: true });
-  else await publishJob(deps.bus, row);
+  if (lost === null) return;
+  // The lost attempt's slides and bytes: the row no longer holds them, so they go back once.
+  await rm(attemptDir(deps.filesRoot, jobId, lost.attempt), { recursive: true, force: true });
+  if (lost.bytes > 0) await deps.storage.release(lost.bytes);
+  if (lost.row.state === "queued") await announce(deps, lost.row, { head: true });
+  else await publishJob(deps.bus, lost.row);
 }
 
 const reconciled = new WeakMap<RenderQueue, Map<string, number>>();

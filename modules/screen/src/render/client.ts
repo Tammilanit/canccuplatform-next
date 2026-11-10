@@ -6,6 +6,7 @@
  * other answer fails the job as `renderer_failed`, never anything worse.
  */
 import { createReadStream } from "node:fs";
+import type { ReadStream } from "node:fs";
 import { lstat, stat } from "node:fs/promises";
 import { connect } from "node:net";
 import type { Socket } from "node:net";
@@ -223,7 +224,9 @@ async function converse(
 
 /**
  * Connects to the renderer. The path must be a socket itself: the renderer can write to its
- * volume, so a link there is never followed.
+ * volume, so a link there is never followed. Node cannot connect through the checked file, so a
+ * renderer swapping in a link between the check and the connect still wins; that reaches only
+ * Unix sockets in screen's own filesystem, never files, and screen sends them only the deck.
  */
 export async function openRenderer(path: string): Promise<Socket> {
   const info = await lstat(path).catch(() => null);
@@ -253,8 +256,8 @@ export async function renderDeck(opts: {
   onSlide: (slide: SlideMeta, png: Buffer) => Promise<void>;
 }): Promise<RenderOutcome> {
   const socket = opts.socket;
-  const size = (await stat(opts.deckPath)).size;
   const reader = new Reader(socket);
+  let deck: ReadStream | undefined;
   let timer: NodeJS.Timeout | undefined;
   let onAbort: (() => void) | undefined;
   const stopped = new Promise<RenderOutcome>((resolve, reject) => {
@@ -267,11 +270,14 @@ export async function renderDeck(opts: {
     if (opts.signal.aborted) onAbort();
     opts.signal.addEventListener("abort", onAbort, { once: true });
   });
+  // A cancel while the deck is still being read must not surface as an unhandled rejection.
+  stopped.catch(() => undefined);
   try {
+    const size = (await stat(opts.deckPath)).size;
     // Never half-closed: the renderer reads a closed side as the caller leaving.
     socket.write(`${JSON.stringify({ op: "render", size })}\n`);
     // A deck that cannot be read (deleted meanwhile) ends the talk: the hang-up fails the job.
-    const deck = createReadStream(opts.deckPath).on("error", () => socket.destroy());
+    deck = createReadStream(opts.deckPath).on("error", () => socket.destroy());
     deck.pipe(socket, { end: false });
     const talk = converse(reader, opts.onSlide).catch((err: unknown): RenderOutcome => {
       if (err instanceof Protocol) {
@@ -285,6 +291,7 @@ export async function renderDeck(opts: {
   } finally {
     clearTimeout(timer);
     if (onAbort) opts.signal.removeEventListener("abort", onAbort);
+    deck?.destroy();
     socket.destroy();
   }
 }

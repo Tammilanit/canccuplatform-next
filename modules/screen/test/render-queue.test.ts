@@ -44,6 +44,8 @@ for (const [kind, make] of kinds) {
       queue = (await made?.fresh()) as RenderQueue;
     });
 
+    const position = async (tenant: string, jobId: string) =>
+      (await queue.positions(tenant, [jobId])).get(jobId) ?? null;
     const drain = async (): Promise<string[]> => {
       const order: string[] = [];
       for (;;) {
@@ -57,7 +59,7 @@ for (const [kind, make] of kinds) {
     it("serves events in turn: one event's 20 decks hold another's one back by one job", async () => {
       for (let i = 1; i <= 20; i++) await queue.enqueue("alpha", `a${i}`, i);
       await queue.enqueue("beta", "b1", 100);
-      expect(await queue.position("beta", "b1")).toBe(2);
+      expect(await position("beta", "b1")).toBe(2);
       const order = await drain();
       expect(order.indexOf("beta/b1")).toBeLessThanOrEqual(1);
       expect(order.filter((o) => o.startsWith("alpha/"))).toEqual(
@@ -90,19 +92,19 @@ for (const [kind, make] of kinds) {
       await queue.enqueue("beta", "b1", 4);
       await queue.enqueue("beta", "b2", 5);
       // alpha is ahead in the ring: a1, b1, a2, b2, a3.
-      expect(await queue.position("alpha", "a1")).toBe(1);
-      expect(await queue.position("beta", "b1")).toBe(2);
-      expect(await queue.position("alpha", "a2")).toBe(3);
-      expect(await queue.position("beta", "b2")).toBe(4);
-      expect(await queue.position("alpha", "a3")).toBe(5);
-      expect(await queue.position("alpha", "nope")).toBeNull();
+      expect(await position("alpha", "a1")).toBe(1);
+      expect(await position("beta", "b1")).toBe(2);
+      expect(await position("alpha", "a2")).toBe(3);
+      expect(await position("beta", "b2")).toBe(4);
+      expect(await position("alpha", "a3")).toBe(5);
+      expect(await position("alpha", "nope")).toBeNull();
     });
 
     it("removes a cancelled job, and an event with nothing left leaves the ring", async () => {
       await queue.enqueue("alpha", "a1", 1);
       await queue.enqueue("beta", "b1", 2);
       await queue.remove("alpha", "a1");
-      expect(await queue.position("beta", "b1")).toBe(1);
+      expect(await position("beta", "b1")).toBe(1);
       expect(await drain()).toEqual(["beta/b1"]);
     });
 
@@ -124,6 +126,15 @@ for (const [kind, make] of kinds) {
       expect(await queue.expiredLeases(1000 + LEASE)).toEqual([]);
       expect(await queue.expiredLeases(20_000 + LEASE)).toEqual([{ tenant: "alpha", jobId: "a1" }]);
       expect(await queue.expiredLeases(20_000 + LEASE)).toEqual([]);
+    });
+
+    it("watches a lease without the slot, so an unrecorded job is still recovered", async () => {
+      await queue.enqueue("alpha", "a1", 1);
+      await queue.take(LEASE, 0);
+      await queue.release("alpha", "a1");
+      await queue.watch("alpha", "a1", LEASE);
+      expect(await queue.take(LEASE, 0)).toBeNull();
+      expect(await queue.expiredLeases(LEASE)).toEqual([{ tenant: "alpha", jobId: "a1" }]);
     });
 
     it("renews only the job that holds the slot", async () => {

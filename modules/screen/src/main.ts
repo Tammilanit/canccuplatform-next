@@ -211,7 +211,12 @@ async function main(): Promise<void> {
   const stop = async (): Promise<void> => {
     clearInterval(sweep);
     clearInterval(ticker);
-    renders.stop();
+    // The running render goes back to its place before the pool and Valkey close; bounded, as a
+    // dependency that is down may never answer.
+    await Promise.race([
+      renders.stop(),
+      new Promise((resolve) => setTimeout(resolve, 5000).unref()),
+    ]);
     await app.close();
     // A dependency that is down may never answer; do not let it hold the exit.
     const grace = new Promise((resolve) => setTimeout(resolve, 2000).unref());

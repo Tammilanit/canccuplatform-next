@@ -18,7 +18,7 @@ import {
   tenantOf,
 } from "../http.js";
 import { probeYouTube, webUrl, youtubeLink } from "./links.js";
-import { ASSET_KINDS, ASSET_SELECT, assetView, readAsset, viewAsset } from "./store.js";
+import { ASSET_KINDS, ASSET_SELECT, assetView, isDeck, readAsset, viewAsset } from "./store.js";
 import type { AssetKind, AssetRow } from "./store.js";
 import { assetTitle, prepare, readUpload, uploadTitle } from "./upload.js";
 import { writeWithFile } from "./write.js";
@@ -130,7 +130,7 @@ async function addFile(deps: AssetDeps, request: FastifyRequest, ctx: TenantCont
       target: { type: "asset", id },
       changes: { kind: { from: null, to: prepared.kind }, file: { from: null, to: file } },
     });
-    if (prepared.kind === "pptx" || prepared.kind === "pdf") {
+    if (isDeck(prepared.kind)) {
       const who = { tenant_id: ctx.tenant_id, actor_user_id: actorOf(request) };
       job = (await submitJob(c, deps, who, id, 1)).row;
     }

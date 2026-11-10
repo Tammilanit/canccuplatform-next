@@ -26,6 +26,7 @@ import { requireDevice } from "../src/device-access.js";
 import { sweepOffline } from "../src/health.js";
 import { MemoryKv } from "../src/kv.js";
 import { dispatchOnce, sweepLeases } from "../src/render/dispatch.js";
+import type { DispatchDeps } from "../src/render/dispatch.js";
 import type { RenderDeps } from "../src/render/jobs.js";
 import { MemoryRenderQueue } from "../src/render/queue.js";
 
@@ -136,8 +137,11 @@ export interface Harness {
   /** One run of the offline sweep, as main starts every 5 seconds. */
   sweep(): Promise<void>;
   queue: MemoryRenderQueue;
-  /** One turn of the render dispatcher against the renderer at `socketPath`; true if it ran a job. */
-  dispatch(socketPath: string, timeoutMs?: number): Promise<boolean>;
+  /**
+   * One turn of the render dispatcher against the renderer at `socketPath`; true if it ran a job.
+   * `opts` replaces its deadline, database or bus, or gives it a shutdown signal.
+   */
+  dispatch(socketPath: string, opts?: Partial<DispatchDeps>): Promise<boolean>;
   /** One run of the lost-container sweep. */
   sweepLeases(): Promise<void>;
   close(): Promise<void>;
@@ -253,8 +257,9 @@ export async function harness(): Promise<Harness> {
     oembedStatus,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
     queue,
-    dispatch: (socketPath, timeoutMs) =>
-      dispatchOnce({ ...renderDeps, socketPath, renewMs: 50, ...(timeoutMs ? { timeoutMs } : {}) }),
+    dispatch: (socketPath, opts = {}) =>
+      dispatchOnce({ ...renderDeps, socketPath, renewMs: 50, ...opts }),
+
     sweepLeases: () => sweepLeases(renderDeps),
     close: async () => {
       await app.close();

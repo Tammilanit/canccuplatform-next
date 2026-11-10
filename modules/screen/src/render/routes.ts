@@ -10,7 +10,7 @@ import { KitError } from "@canccu/kit";
 import type { RightsChecker } from "@canccu/kit";
 import type { Audit } from "../audit.js";
 import { contentAccess } from "../assets/serve.js";
-import { readAsset } from "../assets/store.js";
+import { isDeck, readAsset } from "../assets/store.js";
 import {
   actorOf,
   assertWritable,
@@ -86,7 +86,7 @@ export function renderRoutes(app: FastifyInstance, deps: RenderRouteDeps): void 
     const { row, created } = await deps.db.tenant(async (c) => {
       const asset = await readAsset(c, assetId, true);
       if (asset === null) throw notFound();
-      if (asset.kind !== "pptx" && asset.kind !== "pdf") {
+      if (!isDeck(asset.kind)) {
         throw new KitError("Only a PowerPoint deck or a PDF can be rendered.", {
           status: 400,
           code: "not_pptx",
@@ -140,8 +140,14 @@ export function renderRoutes(app: FastifyInstance, deps: RenderRouteDeps): void 
       return rows[0] as unknown as JobRow;
     });
     // A running job's container sees the state at its next lease renewal and hangs up.
-    await deps.queue.remove(ctx.tenant_id, id);
-    await publishJob(deps.bus, row);
+    // The cancel is committed: a failure to tidy the queue or announce it must not answer 500,
+    // since a retry would then get 409. The dispatcher skips a cancelled job it still takes.
+    try {
+      await deps.queue.remove(ctx.tenant_id, id);
+      await publishJob(deps.bus, row);
+    } catch (err) {
+      deps.log?.warn({ err, job_id: id }, "announcing a cancelled render job failed");
+    }
     return reply.status(204).send();
   });
 
