@@ -25,7 +25,7 @@ async def test_the_list_needs_a_session_with_a_notify_right(env: Env) -> None:
     async with env.client() as c:
         anonymous = await c.get(LIST)
         assert anonymous.status_code == 303
-        assert anonymous.headers["location"] == "/admin/sign-in"
+        assert anonymous.headers["location"] == "/admin/sign-in?next=%2Fnotify%2Fadmin%2Ftopics"
         nobody = await c.get(LIST, headers=env.rights.sign_in("u_x", "admin.settings.read"))
         assert nobody.status_code == 403 and "text/html" in nobody.headers["content-type"]
         writer = await c.get(LIST, headers=env.admin())
@@ -38,6 +38,26 @@ async def test_the_list_needs_a_session_with_a_notify_right(env: Env) -> None:
     assert 'aria-label="Event"' in writer.text and 'href="/notify/admin/topics"' in writer.text
     assert "Schedule" in writer.text and "<form" in writer.text
     assert "in the last 24 hours" not in writer.text  # counts need notify.stats.read
+
+
+async def test_sign_in_comes_back_to_the_page_that_asked(env: Env) -> None:
+    async with env.client() as c:
+        page = await c.get("/admin/topics/my topic/edit", params={"from": "list"})
+        # A POST cannot be replayed as a GET: it comes back to the form's page, or to the list
+        # where there is none.
+        form = await c.post("/admin/topics/new", data={"title": "x"})
+        save = await c.post("/admin/topics/schedule", data={})
+        long = await c.get("/admin/topics/new", params={"title": "x" * 1024})
+        api = await c.get("/api/notify/topic-types")
+    assert page.status_code == 303
+    assert page.headers["location"] == (
+        "/admin/sign-in?next=%2Fnotify%2Fadmin%2Ftopics%2Fmy%2520topic%2Fedit%3Ffrom%3Dlist"
+    )
+    assert form.status_code == 303
+    assert form.headers["location"] == "/admin/sign-in?next=%2Fnotify%2Fadmin%2Ftopics%2Fnew"
+    assert save.headers["location"] == "/admin/sign-in?next=%2Fnotify%2Fadmin%2Ftopics"
+    assert long.headers["location"] == "/admin/sign-in?next=%2Fnotify%2Fadmin%2Ftopics"
+    assert api.status_code == 401
 
 
 async def test_counts_need_the_stats_right_and_show_no_forms_without_the_write_right(

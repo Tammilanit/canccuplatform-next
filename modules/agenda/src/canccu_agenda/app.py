@@ -3,10 +3,15 @@ hostname names the event."""
 
 from __future__ import annotations
 
-from urllib.parse import quote, urlencode
+from urllib.parse import urlencode
 
 from canccu_kit import Health, IpMode, KitError, NotSignedIn, ServiceIdentity, TenantResolver
-from canccu_kit.starlette import install, install_service_identity, install_tenancy
+from canccu_kit.starlette import (
+    install,
+    install_service_identity,
+    install_tenancy,
+    sign_in_return,
+)
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
@@ -75,17 +80,8 @@ async def _not_signed_in(request: Request, exc: Exception) -> Response:
     if request.url.path.startswith("/api/"):
         assert isinstance(exc, NotSignedIn)
         return JSONResponse(exc.to_body(), status_code=exc.status)
-    return RedirectResponse(f"{web.SIGN_IN}?{urlencode({'next': _back(request)})}", status_code=303)
-
-
-def _back(request: Request) -> str:
-    """Where sign-in returns: this page, under the /agenda prefix Caddy stripped. Admin keeps it
-    only if it is a path on this site (auth.safe_return_path). A form post cannot be replayed as
-    the GET a redirect makes, so it returns to the list."""
-    if request.method not in ("GET", "HEAD"):
-        return f"{web.BASE}/"
-    query = request.url.query
-    return quote(web.BASE + request.url.path) + (f"?{query}" if query else "")
+    back = sign_in_return(request, web.BASE, f"{web.BASE}/")
+    return RedirectResponse(f"{web.SIGN_IN}?{urlencode({'next': back})}", status_code=303)
 
 
 async def _kit_error(request: Request, exc: Exception) -> Response:
