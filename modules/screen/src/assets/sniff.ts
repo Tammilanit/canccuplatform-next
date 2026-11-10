@@ -1,0 +1,103 @@
+/**
+ * What an uploaded file is, read from its first and last bytes, never from its name or the type
+ * the browser sent (contracts/screen.md, Content and scheduling: "files are checked by content").
+ * The legacy upload trusted the file name; a renamed `.html` or `.svg` could pass as an image.
+ */
+
+export type FileKind = "image" | "video" | "audio" | "pptx" | "pdf";
+
+export interface Sniffed {
+  kind: FileKind;
+  /** The stored file's extension and the type it is served with. */
+  ext: string;
+  mime: string;
+  /** For messages: the container as people know it ("QuickTime", "Matroska"). */
+  container: string;
+}
+
+/** Media containers recognised only to refuse them with a useful message. */
+export interface Unplayable {
+  kind: "unplayable";
+  container: string;
+}
+
+const ascii = (buf: Buffer, start: number, end: number): string =>
+  buf.subarray(start, end).toString("latin1");
+
+/** An MPEG audio frame header: 11 sync bits, then a layer that is not "reserved". */
+function mp3Frame(head: Buffer): boolean {
+  return (
+    head.length >= 2 &&
+    head[0] === 0xff &&
+    (head.readUInt8(1) & 0xe0) === 0xe0 &&
+    (head.readUInt8(1) & 0x06) !== 0
+  );
+}
+
+/** Matroska's EBML DocType sits within the header's first few dozen bytes. */
+function ebmlDocType(head: Buffer): string | null {
+  const at = head.indexOf(Buffer.from([0x42, 0x82]));
+  if (at < 0 || at + 3 > head.length) return null;
+  const size = head.readUInt8(at + 2) & 0x7f;
+  return ascii(head, at + 3, at + 3 + size);
+}
+
+/**
+ * A PPTX is a zip whose central directory, at the end, names `ppt/presentation.xml`; names are
+ * stored uncompressed, so the bytes are there to find. The renderer inspects the deck in depth.
+ */
+function isPptx(head: Buffer, tail: Buffer): boolean {
+  return ascii(head, 0, 4) === "PK\x03\x04" && tail.includes("ppt/presentation.xml", 0, "latin1");
+}
+
+/**
+ * `head` is the file's first 4 KiB, `tail` its last 64 KiB (the zip central directory's usual
+ * home). Null: nothing the screens show.
+ */
+export function sniff(head: Buffer, tail: Buffer): Sniffed | Unplayable | null {
+  const four = ascii(head, 0, 4);
+  if (head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])))
+    return image("png", "image/png");
+  if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) return image("jpg", "image/jpeg");
+  if (four === "GIF8") return image("gif", "image/gif");
+  if (four === "RIFF" && ascii(head, 8, 12) === "WEBP") return image("webp", "image/webp");
+  if (ascii(head, 0, 5) === "%PDF-") return file("pdf", "pdf", "application/pdf", "PDF");
+  if (isPptx(head, tail)) {
+    const mime = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+    return file("pptx", "pptx", mime, "PowerPoint");
+  }
+  if (ascii(head, 4, 8) === "ftyp") {
+    const brand = ascii(head, 8, 12);
+    if (brand === "qt  ") return { kind: "unplayable", container: "QuickTime" };
+    if (brand.startsWith("M4A") || brand.startsWith("M4B")) {
+      return { kind: "unplayable", container: "MPEG-4 audio" };
+    }
+    return file("video", "mp4", "video/mp4", "MP4");
+  }
+  if (head.length >= 4 && head.readUInt32BE(0) === 0x1a45dfa3) {
+    return ebmlDocType(head) === "webm"
+      ? file("video", "webm", "video/webm", "WebM")
+      : { kind: "unplayable", container: "Matroska" };
+  }
+  if (four === "OggS") return file("audio", "ogg", "audio/ogg", "OGG");
+  if (ascii(head, 0, 3) === "ID3" || mp3Frame(head))
+    return file("audio", "mp3", "audio/mpeg", "MP3");
+  if (four === "RIFF") {
+    const form = ascii(head, 8, 12);
+    if (form === "WAVE") return { kind: "unplayable", container: "WAV" };
+    if (form === "AVI ") return { kind: "unplayable", container: "AVI" };
+  }
+  if (four === "fLaC") return { kind: "unplayable", container: "FLAC" };
+  if (head[0] === 0x47 && head[188] === 0x47) return { kind: "unplayable", container: "MPEG-TS" };
+  if (head.subarray(0, 4).equals(Buffer.from([0x30, 0x26, 0xb2, 0x75])))
+    return { kind: "unplayable", container: "Windows Media" };
+  return null;
+}
+
+function image(ext: string, mime: string): Sniffed {
+  return { kind: "image", ext, mime, container: ext.toUpperCase() };
+}
+
+function file(kind: FileKind, ext: string, mime: string, container: string): Sniffed {
+  return { kind, ext, mime, container };
+}
