@@ -3,7 +3,7 @@
  * event with screens advances once. A Valkey claim per zone and second hands each step to one
  * container; the state row, locked for the step, and the time it was written keep a slower
  * container from writing over a later step. The tick alone writes playback state, and it also
- * ends expired pushes.
+ * ends expired pushes and announces the ticker's own changes (a window starting or ending).
  */
 import { isTenantId, tenantKey, withTenant } from "@canccu/kit";
 import type { Bus, Logger, SqlClient, TenantContext } from "@canccu/kit";
@@ -12,6 +12,7 @@ import type { Db } from "../db.js";
 import type { Settings } from "../health.js";
 import type { Kv } from "../kv.js";
 import { expirePushes } from "../content/push.js";
+import { tickTicker } from "../ticker/routes.js";
 import { resolveWinner } from "../schedule/winner.js";
 import { canonical, publishAll } from "../zones.js";
 import {
@@ -62,6 +63,11 @@ export async function tickTenant(deps: TickDeps, ctx: TenantContext): Promise<vo
   const tenantId = ctx.tenant_id;
   const ended = await deps.db.tenant((c) => expirePushes(c, deps.audit, tenantId, deps.now()));
   await publishAll(deps.bus, ended);
+  // Not under "tick": a zone may be called `ticker`.
+  if (await deps.kv.setIfAbsent(tenantKey("screen", "ticker", "tick"), "1", CLAIM_MS)) {
+    const ticker = await deps.db.tenant((c) => tickTicker(c, ctx.time_zone, deps.now()));
+    await publishAll(deps.bus, ticker);
+  }
   const keys = await deps.db.tenant(async (c) =>
     (await c.query("SELECT key FROM screen_zones ORDER BY key")).rows.map((r) => r.key as string),
   );

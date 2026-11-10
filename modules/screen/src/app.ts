@@ -1,6 +1,6 @@
 /**
  * The screen module's Fastify app: health, tenancy, and the device, pairing, heartbeat, zone,
- * assignment, playlist, schedule, push and asset routes.
+ * assignment, playlist, schedule, push, asset, ticker and photo routes.
  */
 import { constants } from "node:fs";
 import { access } from "node:fs/promises";
@@ -25,10 +25,12 @@ import type { Settings } from "./health.js";
 import { heartbeatRoutes } from "./heartbeat.js";
 import type { Kv } from "./kv.js";
 import { pairingRoutes } from "./pairing.js";
+import { photoRoutes } from "./photos.js";
 import { playlistRoutes } from "./content/playlists.js";
 import { pushRoutes } from "./content/push.js";
 import { scheduleRoutes } from "./content/schedules.js";
 import type { AssetReader } from "./tick/content.js";
+import { tickerRoutes } from "./ticker/routes.js";
 import { zoneRoutes } from "./zones.js";
 
 export interface ScreenDeps {
@@ -94,6 +96,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   playlistRoutes(app, deps);
   scheduleRoutes(app, deps);
   pushRoutes(app, deps);
+  tickerRoutes(app, deps);
   void app.register(multipart, {
     limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 4, fieldSize: 1024, parts: 5 },
   });
@@ -106,5 +109,6 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   assetRoutes(app, assets);
   versionRoutes(app, assets);
   fileRoutes(app, assets);
+  photoRoutes(app, assets);
   return app;
 }

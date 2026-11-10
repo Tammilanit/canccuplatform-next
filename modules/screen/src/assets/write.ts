@@ -22,6 +22,9 @@ export interface AssetDeps {
   log?: Logger;
 }
 
+/** What a write that only drops files needs. */
+export type FileDeps = Pick<AssetDeps, "db" | "storage" | "filesRoot" | "log">;
+
 export function fileName(prepared: Prepared): string {
   return `${prepared.temp.sha256}.${prepared.ext}`;
 }
@@ -64,7 +67,7 @@ export async function writeWithFile<T>(
 
 /** As `writeWithFile`, for a write that only stops using files (delete, revert). */
 export async function writeDroppingFiles<T>(
-  deps: AssetDeps,
+  deps: FileDeps,
   fn: (c: SqlClient) => Promise<{ result: T; unused: string[] }>,
 ): Promise<T> {
   let dropped: Dropped[] = [];
