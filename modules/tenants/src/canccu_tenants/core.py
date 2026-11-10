@@ -212,6 +212,10 @@ def _patch_values(body: Mapping[str, Any]) -> dict[str, Any]:
         out["venue_id"] = (
             None if body["venue_id"] is None else model.check_id(body["venue_id"], "venue_id")
         )
+    if "storage_quota_bytes" in body:
+        out["storage_quota_bytes"] = model.check_storage_bytes(
+            body["storage_quota_bytes"], "storage_quota_bytes"
+        )
     if "series_id" in body:
         out["series_id"] = (
             None if body["series_id"] is None else model.check_id(body["series_id"], "series_id")
