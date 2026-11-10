@@ -15,51 +15,44 @@ concurrency:
 
 # Job names are the required-check names for branch rules (#4). Do not rename them.
 jobs:
-  # The packages run through the module runner (#253), each with its own Valkey and Postgres,
-  # so the kit's integration tests run inside its lint-types-test job, not a second time.
-  package:
+  # The packages run through the module runner and its setup (#253, #302), so the kit's
+  # integration tests run inside its lint-types-test jobs, not a second time. The kit
+  # legs are a job of their own so that `integration (kit)` waits for them alone, not for ui.
+  package-kit:
     name: lint-types-test (${{ matrix.package }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        package: [kit-ts, ui, kit-py]
-    env:
-      CANCCU_VALKEY_URL: redis://127.0.0.1:6379
-      # The Compose superuser: the RLS tests create their own plain app role and switch to it.
-      CANCCU_DATABASE_URL: postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu
-      PACKAGE: packages/${{ matrix.package }}
+        package: [kit-ts, kit-py]
     steps:
       - uses: actions/checkout@v4
-      - name: Start Valkey and Postgres from the Compose stack
-        run: docker compose -f deploy/compose.yml -f deploy/compose.test.yml up -d --wait valkey postgres
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/check-module
         with:
-          node-version: 22
-      - uses: actions/setup-python@v5
+          target: packages/${{ matrix.package }}
+
+  package-ui:
+    name: lint-types-test (ui)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/check-module
         with:
-          python-version: "3.12"
-      - name: Lint, types and tests, with the Postgres and Valkey tests
-        run: scripts/check-module "$PACKAGE"
-      - name: Valkey and Postgres logs
-        if: failure()
-        run: docker compose -f deploy/compose.yml logs valkey postgres
-      - if: always()
-        run: docker compose -f deploy/compose.yml -f deploy/compose.test.yml down -v
+          target: packages/ui
 
   integration-kit:
     name: integration (kit)
-    needs: package
+    needs: package-kit
     # Kept as a required name: the kit's Valkey and Postgres tests now run in the package jobs.
     # always(): a failed or cancelled package job must fail this check, not skip it.
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Every package job passed, the kit's integration tests among them
+      - name: Both kit package jobs passed, the kit's integration tests among them
         env:
-          RESULT: ${{ needs.package.result }}
+          RESULT: ${{ needs.package-kit.result }}
         run: |
-          echo "package jobs: $RESULT"
+          echo "kit package jobs: $RESULT"
           test "$RESULT" = success
 
   # The generic module step (#213): every modules/<name> with checks runs through
@@ -86,29 +79,11 @@ jobs:
       fail-fast: false
       matrix:
         module: ${{ fromJSON(needs.module-list.outputs.modules) }}
-    env:
-      CANCCU_VALKEY_URL: redis://127.0.0.1:6379
-      # The Compose superuser: the RLS tests create their own plain app role and switch to it.
-      # Each module job has its own database, so a module's tests may recreate their tables.
-      CANCCU_DATABASE_URL: postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu
-      MODULE: ${{ matrix.module }}
     steps:
       - uses: actions/checkout@v4
-      - name: Start Valkey and Postgres from the Compose stack
-        run: docker compose -f deploy/compose.yml -f deploy/compose.test.yml up -d --wait valkey postgres
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/check-module
         with:
-          node-version: 22
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Lint, types and tests, with the Postgres and Valkey tests
-        run: scripts/check-module "$MODULE"
-      - name: Valkey and Postgres logs
-        if: failure()
-        run: docker compose -f deploy/compose.yml logs valkey postgres
-      - if: always()
-        run: docker compose -f deploy/compose.yml -f deploy/compose.test.yml down -v
+          target: ${{ matrix.module }}
 
   modules:
     name: modules

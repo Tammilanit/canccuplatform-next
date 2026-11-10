@@ -1,6 +1,10 @@
-/** Test helpers for modules that use the kit: an in-memory StreamStore and leak tests. */
+/**
+ * Test helpers for modules that use the kit: an in-memory StreamStore, leak tests and the
+ * test-database guard.
+ */
 import type { Event, Handler } from "./bus.js";
 import { newId } from "./context.js";
+import type { SqlClient } from "./db.js";
 import type { StreamEntries, StreamEntry, StreamStore } from "./store.js";
 import { withTenant } from "./tenant.js";
 
@@ -159,4 +163,22 @@ export async function assertTenantIsolation(
 export async function deliverAs(handler: Handler, event: Event): Promise<void> {
   if (event.tenant === undefined) throw new RangeError("a tenant event needs a tenant");
   await withTenant(event.tenant, () => handler(event));
+}
+
+/**
+ * Rejects unless `client` is connected to a database whose name ends in `_test`. Module tests drop
+ * and empty their tables, and a test database may share its server with a local stack's `canccu`
+ * one, so only the name tells them apart (docs/ci.md, modules). The server answers, not the URL,
+ * so `PGDATABASE` and URL parameters cannot slip past. Call it before the first DROP or TRUNCATE.
+ */
+export async function requireTestDatabase(client: SqlClient): Promise<void> {
+  const { rows } = await client.query("SELECT current_database() AS name");
+  const found = rows[0]?.name;
+  const name = typeof found === "string" ? found : "";
+  if (!name.endsWith("_test")) {
+    throw new Error(
+      `the tests are connected to the database "${name}": they drop and empty tables, so they ` +
+        "run only on a database whose name ends in _test (docs/ci.md#modules)",
+    );
+  }
 }

@@ -18,7 +18,7 @@ import {
 } from "@canccu/kit";
 import { requireTenant } from "@canccu/kit";
 import type { Event, SettingValue } from "@canccu/kit";
-import { MemoryStreamStore } from "@canccu/kit/testing";
+import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
 import type { StorageQuota } from "../src/assets/storage.js";
 import type { AuditEntry } from "../src/audit.js";
@@ -33,7 +33,7 @@ import type { RenderDeps } from "../src/render/jobs.js";
 import { MemoryRenderQueue } from "../src/render/queue.js";
 import { SIGNIN_HOST, SUPERADMIN_HOST, fakeTenants } from "./tenants.js";
 
-/** Tests run only with a Postgres to spare; never point this at a database you keep. */
+/** Tests run only on a database named `*_test` (dropTables refuses any other). */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
 
 export const VENUE_IP = "10.0.0.5";
@@ -130,6 +130,7 @@ export interface FakeSources {
 
 /** Drops every screen table; `assignments` too, the name before migration 007. */
 export async function dropTables(admin: pg.Client): Promise<void> {
+  await requireTestDatabase(admin);
   await admin.query(
     `DROP TABLE IF EXISTS screen_agenda_items, screen_zone_playback, screen_pushes, screen_schedules,
        screen_playlist_items, screen_playlists, assignments, screen_assignments, screen_zones,
@@ -142,9 +143,13 @@ export async function dropTables(admin: pg.Client): Promise<void> {
 export async function harness(): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
-  await dropTables(admin);
-  await runMigrations(admin, MIGRATIONS_DIR, { ledger: "screen_migrations", lock: 1 });
-  await admin.end();
+  // finally: a refused database must not leave the client open and hold the run.
+  try {
+    await dropTables(admin);
+    await runMigrations(admin, MIGRATIONS_DIR, { ledger: "screen_migrations", lock: 1 });
+  } finally {
+    await admin.end();
+  }
   const pool = new pg.Pool({ connectionString: DATABASE_URL });
   const db = poolDb(pool);
   const clock = { now: Date.parse("2026-01-01T12:00:00Z") };
