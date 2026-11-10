@@ -17,6 +17,7 @@ import {
   withTenant,
 } from "@canccu/kit";
 import { buildApp, screenHealth } from "./app.js";
+import { tenantsStorage } from "./assets/storage.js";
 import { tenantsAudit } from "./audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { sweepOffline } from "./health.js";
@@ -139,6 +140,7 @@ async function main(): Promise<void> {
     bus,
     rights,
     audit,
+    storage: tenantsStorage(tenantsUrl, service),
     log,
     tenants,
     settings,
