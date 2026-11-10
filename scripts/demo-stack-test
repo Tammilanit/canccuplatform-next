@@ -39,6 +39,8 @@ TESTS=(
   "notify's internal paths are not routed under /notify/"
   "agenda's internal paths are not routed under /agenda/"
   "screen stores an uploaded file on the files volume and serves it back through Caddy"
+  "bare /agenda and /notify go to their pages and keep the query"
+  "agenda's and notify's API and health are not routed under their page prefix"
 )
 
 if [ "$dry" = 1 ]; then
@@ -191,6 +193,27 @@ serves_upload_back() {
   status_is 200 && cmp -s "$TMP/body" "$SOUND"
 }
 check "${TESTS[19]}" serves_upload_back
+
+# shellcheck disable=SC2329
+redirects_to() {
+  call GET "$1" -D "$TMP/headers"
+  status_is 308 && grep -qiF "location: $2"$'\r' "$TMP/headers"
+}
+# shellcheck disable=SC2329
+bare_prefixes_redirect() {
+  redirects_to "/agenda?day=2026-11-10" "/agenda/?day=2026-11-10" && redirects_to /agenda /agenda/ &&
+    redirects_to "/notify?x=1" "/notify/admin/topics?x=1" && redirects_to /notify/ /notify/admin/topics
+}
+check "${TESTS[20]}" bare_prefixes_redirect
+# shellcheck disable=SC2329
+hidden_under_prefix() {
+  local p
+  for p in /agenda/api/agenda/now /agenda/health /notify/api/notify/topic-types /notify/health; do
+    call GET "$p"
+    status_is 404 || return 1
+  done
+}
+check "${TESTS[21]}" hidden_under_prefix
 
 if [ "$fail" = 0 ]; then echo "demo-stack-test: all $n tests passed"; else echo "demo-stack-test: tests failed" >&2; fi
 exit "$fail"

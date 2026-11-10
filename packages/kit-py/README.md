@@ -85,6 +85,8 @@ async def edit(request):
 ```
 Raise `KitError("text", status=400, code="slide_invalid")` (or `MissingRight`, `NotSignedIn`, …) and the adapter answers `{"error": {"code", "message"}}`. Unexpected errors become 500 `internal_error`, with the details only in the log. A module with pages passes `error_response=` (a function of the request and the `KitError`, answering a page or None for the JSON body) to both `install` and `install_tenancy`: the origin check and tenant resolution answer in middleware, before the app's exception handlers.
 
+A page that finds no session sends the browser to `/admin/sign-in?next=…` with `sign_in_return(request, prefix, fallback)` as `next`: the page under its Caddy prefix, with its query. A form post returns to the page at its path when the app has one there, otherwise to `fallback`, and so does a path admin would drop (over `RETURN_PATH_MAX`, 1024 characters, or not printable ASCII).
+
 ### Outbox
 `Outbox(bus, db)` sends a write's events only once it has committed, and never loses them: `await outbox.add(conn, type, data, version=1)` inside the write's tenant transaction stores the event (built as `Bus.publish` would), `await outbox.flush()` after the commit sends it, and `outbox.run()` (a task in every container) sends what a failed flush left. `db` is the module's Db (`tenant()` and `platform()` transactions as its app role); the tables `<module>_outbox` and `<module>_outbox_tenants` are in the module's migrations, as the docstring of `outbox.py` shows. Delivery is at least once with the same event id, in order per tenant.
 

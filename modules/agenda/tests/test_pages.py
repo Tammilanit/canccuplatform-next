@@ -25,15 +25,29 @@ async def test_pages_need_a_session_with_an_agenda_right(env: Env) -> None:
 async def test_sign_in_comes_back_to_the_page_that_asked(env: Env) -> None:
     async with env.client() as c:
         page = await c.get("/templates", params={"day": "2026-11-10"})
-        # A POST cannot be replayed as a GET, so it comes back to the list instead.
+        odd = await c.get("/items/a b/edit")
+        # A POST cannot be replayed as a GET: it comes back to the form's page, or to the list
+        # where there is none.
         form = await c.post("/add", data={"title": "x"})
+        undo = await c.post("/undo/u1")
+        delete = await c.post("/templates/t1/delete")
         api = await c.post("/api/agenda/items", json={})
+    assert page.status_code == 303
     assert page.headers["location"] == (
         "/admin/sign-in?next=%2Fagenda%2Ftemplates%3Fday%3D2026-11-10"
     )
+    assert odd.headers["location"] == "/admin/sign-in?next=%2Fagenda%2Fitems%2Fa%2520b%2Fedit"
     assert form.status_code == 303
-    assert form.headers["location"] == "/admin/sign-in?next=%2Fagenda%2F"
+    assert form.headers["location"] == "/admin/sign-in?next=%2Fagenda%2Fadd"
+    assert undo.headers["location"] == "/admin/sign-in?next=%2Fagenda%2F"
+    assert delete.headers["location"] == "/admin/sign-in?next=%2Fagenda%2F"
     assert api.status_code == 401
+
+
+async def test_a_return_path_admin_would_drop_comes_back_to_the_list(env: Env) -> None:
+    async with env.client() as c:
+        long = await c.get("/items/new", params={"title": "x" * 1024})
+    assert long.headers["location"] == "/admin/sign-in?next=%2Fagenda%2F"
 
 
 async def test_the_list_shows_the_day_with_now_delays_and_cancellations(env: Env) -> None:
