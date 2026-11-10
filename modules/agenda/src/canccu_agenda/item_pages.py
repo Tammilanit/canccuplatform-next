@@ -12,10 +12,11 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
 
-from . import forms, items, model, store, templates
+from . import forms, history, items, merge, model, store, templates, undo
 from .access import writer
 from .deps import Deps, deps
 from .effective import read_channels
+from .inverse import Inverse
 from .kinds import int_query, not_found
 from .preview import change_of, moved_line, preview_html, told
 from .web import (
@@ -136,12 +137,14 @@ async def add_page(request: Request) -> Response:
     d = deps(request)
     tz = zone_of(request)
     form = await request.form()
+    inverse = Inverse()
     try:
-        item = await items.add(d, session, _fields(form, tz))
+        item = await items.add(d, session, _fields(form, tz), inverse=inverse)
     except KitError as exc:
         body = _form(_posted(form), await _kinds(d), f"{BASE}/items/new", exc.message)
         return page(request, "New item", body, status=400)
-    return redirect(f"/?day={_day(item['starts_at'], tz)}&done=added")
+    path = f"/?day={_day(item['starts_at'], tz)}&done=added"
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
 
 
 def _day(value: str, tz: ZoneInfo) -> str:
@@ -185,22 +188,49 @@ async def save_page(request: Request) -> Response:
     current = _values_of(item, tz)
     try:
         fields = _fields(form, tz)
+        sent = model.revision(int_query(str(form.get("revision") or "")))
+        if sent != row["revision"]:
+            rebased = await merge.rebase(d, row, sent, fields, tz)
+            if not rebased.complete or rebased.clash:
+                return _clash_page(request, rebased, item, kinds, tz)
+            fields = rebased.fields
         # Only times the organiser changed are sent: sending the current time of a delayed item
         # would be a move that clears its delay.
         for key, name in (("starts_at", "starts"), ("ends_at", "ends")):
-            if (form.get(name) or "") == current[name]:
+            if key in fields and (form.get(name) or "") == current[name]:
                 del fields[key]
-        fields["revision"] = model.revision(int_query(str(form.get("revision") or "")))
+        fields["revision"] = row["revision"]
         moving = "starts_at" in fields or "ends_at" in fields
         if moving and not form.get("confirm"):
             return _move_preview(request, form, row, kinds, fields, tz)
-        await items.edit(d, session, row["id"], fields)
+        inverse = Inverse()
+        await items.edit(d, session, row["id"], fields, inverse=inverse)
     except KitError as exc:
         if exc.code == "version_conflict":
             raise
         body = _form(_posted(form), kinds, action, exc.message)
         return page(request, f"Edit {row['title']}", body, status=400)
-    return redirect(f"/?day={_day(fields.get('starts_at') or item['starts_at'], tz)}&done=saved")
+    path = f"/?day={_day(fields.get('starts_at') or item['starts_at'], tz)}&done=saved"
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
+
+
+def _clash_page(
+    request: Request, rebased: merge.Rebased, item: dict[str, Any], kinds: Any, tz: ZoneInfo
+) -> Response:
+    """Who changed what since the form was read, and the form again as the item is now."""
+    if not rebased.complete:
+        raise model.conflict("version_conflict", "the item changed: read it again")
+    changes = "".join(f"<li>{esc(history.line(r, tz))}</li>" for r in rebased.log)
+    body = (
+        notice(
+            f"Someone changed this item meanwhile. Your change to {history.labels(rebased.clash)}"
+            " was not saved: the form shows the item as it is now.",
+            "error",
+        )
+        + f'<ul class="canccu-agenda-changes">{changes}</ul>'
+        + _form(_values_of(item, tz), kinds, f"{BASE}/items/{esc(item['id'])}/edit")
+    )
+    return page(request, f"Edit {item['title']}", body, status=409)
 
 
 def _move_preview(

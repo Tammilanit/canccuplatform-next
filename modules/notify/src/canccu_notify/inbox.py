@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 
 from canccu_kit import KitError, NotSignedIn, check_info_access
@@ -13,15 +12,11 @@ from starlette.routing import Route
 
 from .access import client_ip, is_member, session_of, tenant_ctx, tenant_of
 from .deps import deps
-from .engine import parse_time
+from .engine import iso_time, parse_time
 from .registry import bad
 from .subscriptions import by_token
 
 INBOX_LIMIT = 200
-
-
-def _time(value: datetime) -> str:
-    return value.isoformat().replace("+00:00", "Z")
 
 
 def view(row: Any) -> dict[str, Any]:
@@ -33,8 +28,8 @@ def view(row: Any) -> dict[str, Any]:
         "title": row["title"],
         "body": row["body"],
         "urgent": row["urgent"],
-        "created_at": _time(row["created_at"]),
-        "expires_at": _time(row["expires_at"]),
+        "created_at": iso_time(row["created_at"]),
+        "expires_at": iso_time(row["expires_at"]),
     }
     if row["url"] is not None:
         out["url"] = row["url"]

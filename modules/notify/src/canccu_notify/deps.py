@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, Protocol
 
 from canccu_kit import Bus, SecretBox
+from canccu_kit.access import TenantContext
 from canccu_kit.rights import Session
 from starlette.requests import Request
 
@@ -41,6 +42,13 @@ class Audit(Protocol):
     ) -> None: ...
 
 
+class Tenants(Protocol):
+    """The kit's lookup of another event by its id (contracts/tenants.md, Another event by its
+    id): for internal callers, whose request names no event by its hostname."""
+
+    async def by_id(self, tenant_id: str) -> TenantContext | None: ...
+
+
 def utc_now() -> datetime:
     return datetime.now(UTC)
 
@@ -52,7 +60,8 @@ class Deps:
     rights: Rights
     settings: Settings
     audit: Audit
-    box: SecretBox
+    secrets: SecretBox
+    tenants: Tenants
     push: Pusher
     now: Callable[[], datetime] = field(default=utc_now)
 

@@ -1,6 +1,12 @@
 /** Postgres access: every request's work runs in one tenant transaction as the screen app role. */
 import type pg from "pg";
-import { requireTenant, tenantTransaction, trackTransactions } from "@canccu/kit";
+import {
+  TENANT_SETTING,
+  requireTenant,
+  tenantTransaction,
+  trackTransactions,
+  withTenant,
+} from "@canccu/kit";
 import type { SqlClient } from "@canccu/kit";
 
 export const APP_ROLE = "canccu_screen_app";
@@ -22,7 +28,7 @@ export interface Db {
   tenant<T>(fn: (client: SqlClient) => Promise<T>): Promise<T>;
   /**
    * Run `fn` in one transaction for no tenant, as the app role: it reads only the global
-   * `devices` table, since RLS shows no tenant's rows without a tenant.
+   * `devices` table, since RLS shows no tenant's rows without a tenant, until `asTenant` binds one.
    */
   global<T>(fn: (client: SqlClient) => Promise<T>): Promise<T>;
 }
@@ -66,6 +72,20 @@ export function poolDb(pool: pg.Pool): Db {
       }
     },
   };
+}
+
+/**
+ * Inside a `global` transaction, run `fn` as `tenant`: RLS and `requireTenant` both see it until
+ * the next `asTenant`. Only a superadmin's move spans events, and it must commit or roll back the
+ * old event's side and the new one's together, so it binds each in turn on one transaction.
+ */
+export async function asTenant<T>(
+  client: SqlClient,
+  tenant: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  await client.query(`SELECT set_config('${TENANT_SETTING}', $1, true)`, [tenant]);
+  return withTenant(tenant, fn);
 }
 
 export const MIGRATIONS_DIR = new URL("../migrations/", import.meta.url).pathname;

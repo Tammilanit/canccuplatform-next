@@ -10,6 +10,8 @@ from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from . import (
+    checkin,
+    checkin_page,
     config,
     custom_api,
     custom_pages,
@@ -26,13 +28,20 @@ from .deps import Deps
 def create_app(
     d: Deps, health: Health, resolver: TenantResolver, service: ServiceIdentity
 ) -> ASGIApp:
-    private = Starlette(routes=registry.ROUTES)
+    private = Starlette(routes=registry.ROUTES + checkin.INTERNAL_ROUTES)
     private.state.deps = d
     install(private)
     install_service_identity(private, service)
     # /admin/topics/new before /admin/topics/{topic}: Starlette takes the first route that matches.
-    pages = custom_pages.ROUTES + topic_pages.ROUTES + web.ROUTES
-    api = config.ROUTES + custom_api.ROUTES + inbox.ROUTES + push.ROUTES + subscriptions.ROUTES
+    pages = custom_pages.ROUTES + topic_pages.ROUTES + web.ROUTES + checkin_page.ROUTES
+    api = (
+        config.ROUTES
+        + custom_api.ROUTES
+        + inbox.ROUTES
+        + checkin.ROUTES
+        + push.ROUTES
+        + subscriptions.ROUTES
+    )
     public = Starlette(routes=api + pages)
     # Starlette's slash redirects would drop the /notify prefix Caddy strips.
     public.router.redirect_slashes = False

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from canccu_kit.testing import assert_tenant_isolation
-from conftest import Env
+from conftest import Env, at
 from test_items import add
 
 
@@ -41,6 +41,21 @@ async def test_another_events_templates_do_not_exist_there(env: Env) -> None:
         assert "Raffle" in (await a.get("/templates", headers=h)).text
 
 
+async def test_another_events_undo_and_announce_do_not_reach_here(env: Env) -> None:
+    h = env.writer()
+    async with env.client("a.example.test") as a, env.client("b.example.test") as b:
+        item = await add(a, h, ends_at=at(120))
+        done = await a.post(f"/items/{item['id']}/cancel", data={"revision": "1"}, headers=h)
+        token = done.headers["location"].split("undo=")[1]
+        env.store.calls.clear()
+        undo = await b.post(f"/undo/{token}", headers=h)
+        announced = await b.post(f"/api/agenda/items/{item['id']}/announce", json={}, headers=h)
+        on_a = (await a.get(done.headers["location"].removeprefix("/agenda"), headers=h)).text
+    assert undo.status_code == 404 and announced.status_code == 404
+    assert env.store.calls == []
+    assert token in on_a  # still there for its own event
+
+
 async def test_rls_keeps_every_table_apart(env: Env) -> None:
     class Probe:
         seed = staticmethod(lambda t, m: _seed(t, m))
@@ -67,6 +82,17 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
                 " VALUES ($1, $1, 'other', 'public')",
                 marker,
             )
+            await conn.execute(
+                "INSERT INTO agenda_changes (item_id, revision, action, actor_name)"
+                " VALUES ($1, 1, 'added', 'x')",
+                marker,
+            )
+            await conn.execute(
+                "INSERT INTO agenda_undo (id, actor_user_id, steps, expires_at)"
+                " VALUES ($1, 'u', '[]', $2)",
+                marker,
+                env.clock[0],
+            )
 
     async def _read(tenant: str) -> set[str]:
         async with env.db.tenant(tenant) as conn:
@@ -75,6 +101,8 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
             timers = await conn.fetch("SELECT item_id FROM agenda_timers")
             sessions = await conn.fetch("SELECT session_id FROM agenda_sessions")
             kept = await conn.fetch("SELECT id FROM agenda_templates")
+            logged = await conn.fetch("SELECT item_id FROM agenda_changes")
+            undos = await conn.fetch("SELECT id FROM agenda_undo")
             states = await conn.fetchval("SELECT count(*) FROM agenda_state")
         assert states == 1
         return (
@@ -83,6 +111,8 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
             | {r["item_id"] for r in timers}
             | {r["session_id"] for r in sessions}
             | {r["id"] for r in kept}
+            | {r["item_id"] for r in logged}
+            | {r["id"] for r in undos}
         )
 
     await assert_tenant_isolation(Probe())

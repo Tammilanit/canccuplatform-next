@@ -35,6 +35,20 @@ from .deps import Deps
 from .push import Pusher
 from .webpush import Vapid
 
+# deploy/compose.yml's stand-in for CANCCU_SECRETS_KEY, so a dev stack starts without one.
+PLACEHOLDER_SECRETS_KEY = "Y2FuY2N1LWxvY2FsLW9ubHktc2VjcmV0cy1rZXktMzI="
+
+
+def secret_box(version: str) -> SecretBox:
+    """Seals each event's check-in key (docs/plans/issue-188.md, D5)."""
+    try:
+        box = SecretBox.from_env()
+    except ConfigError as exc:
+        raise SystemExit(str(exc)) from exc
+    if os.environ["CANCCU_SECRETS_KEY"].endswith(PLACEHOLDER_SECRETS_KEY) and version != "dev":
+        raise SystemExit("CANCCU_SECRETS_KEY is the local placeholder; set a real key")
+    return box
+
 
 class TenantsAudit:
     """Appends to the tenants module's audit log, in the request that made the change."""
@@ -68,9 +82,8 @@ async def serve() -> None:
         raise SystemExit(f"missing environment variable(s): {', '.join(missing)}")
     try:
         identity = ServiceIdentity(config.module, service_key_from_env())
-        # Push needs both; without either the module does not start (plan D3, D4).
+        # Push needs it; without a valid key the module does not start (plan D3).
         vapid = Vapid.from_env()
-        box = SecretBox.from_env()
     except ConfigError as exc:
         raise SystemExit(str(exc)) from exc
     if vapid.subject is None:
@@ -78,6 +91,7 @@ async def serve() -> None:
             "CANCCU_PUBLIC_URL is not set: the VAPID token has no subject, and some push"
             " services (Apple's) refuse pushes without one"
         )
+    box = secret_box(config.version)
     # The stack logs in as a plain role and migrates as the migration role (0013 item 5).
     db = await Db.connect(
         os.environ["CANCCU_DATABASE_URL"],
@@ -123,7 +137,8 @@ async def serve() -> None:
         rights=rights,
         settings=settings,
         audit=audit,
-        box=box,
+        secrets=box,
+        tenants=resolver,
         push=Pusher(vapid),
     )
 

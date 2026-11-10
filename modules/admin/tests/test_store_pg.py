@@ -16,7 +16,7 @@ from canccu_kit import NoTenant, tenant_scope
 from canccu_kit.testing import assert_tenant_isolation
 from conftest import StoreProbe
 
-from canccu_admin.db import APP_ROLE, PgStore
+from canccu_admin.db import APP_ROLE, MIGRATIONS, PgStore
 
 URL = os.environ.get("CANCCU_DATABASE_URL")
 
@@ -102,6 +102,6 @@ async def test_migration_drops_the_single_event_tables_once(store: PgStore) -> N
             runs = await conn.fetchval(
                 "SELECT count(*) FROM admin_migrations WHERE name LIKE '00%'"
             )
-            assert (left, runs) == (0, 3)
+            assert (left, runs) == (0, len(list(MIGRATIONS.glob("*.sql"))))
     finally:
         await again.close()

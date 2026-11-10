@@ -176,7 +176,7 @@ async def _claim(
             done.append((row["id"], "skipped"))  # unsubscribed since
             continue
         try:
-            keys = json.loads(d.box.open_text(sub["keys_sealed"], keys_aad(tenant, sub["id"])))
+            keys = json.loads(d.secrets.open_text(sub["keys_sealed"], keys_aad(tenant, sub["id"])))
         except Exception:
             # One row that does not open (a lost key, a damaged value) must not stop the event.
             log.exception("push keys do not open", extra={"tenant": tenant})

@@ -166,6 +166,15 @@ export async function recordHeartbeat(
   }
 }
 
+/**
+ * Drop the current event's health of a device that has left it (moved away or deleted), so the
+ * sweep never reports it offline there and a later return starts afresh.
+ */
+export async function forgetHealth(kv: Kv, id: string): Promise<void> {
+  await kv.del(keys.record(id), keys.instances(id), keys.playingQuiet(id));
+  await kv.removeMember(keys.online(), id);
+}
+
 /** Two page loads each reporting at least twice in the window: one token in two places. */
 function sharedToken(members: string[]): boolean {
   const reports = new Map<string, number>();

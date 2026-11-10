@@ -119,6 +119,16 @@ class FakeAudit:
 
 
 @dataclass
+class FakeTenants:
+    """The tenants module's lookup by id (contracts/tenants.md, Another event by its id)."""
+
+    contexts: dict[str, TenantContext]
+
+    async def by_id(self, tenant_id: str) -> TenantContext | None:
+        return self.contexts.get(tenant_id)
+
+
+@dataclass
 class Env:
     db: Db
     rights: FakeRights
@@ -196,7 +206,8 @@ async def env() -> AsyncIterator[Env]:
         await conn.execute(
             "TRUNCATE notify_topic_types, notify_topic_type_history, notify_topic_config,"
             " notify_notifications, notify_dedupe, notify_event_state, notify_custom_topics,"
-            " notify_subscriptions, notify_deliveries, notify_delivery_tenants"
+            " notify_check_in_keys, notify_check_ins, notify_subscriptions, notify_deliveries,"
+            " notify_delivery_tenants"
         )
     contexts = {tid: context(tid) for tid in HOSTS.values()}
 
@@ -225,7 +236,8 @@ async def env() -> AsyncIterator[Env]:
         rights=rights,
         settings=settings,
         audit=audit,
-        box=SecretBox({1: b"s" * 32}, 1),
+        secrets=SecretBox({1: b"s" * 32}, 1),
+        tenants=FakeTenants(contexts),
         push=pusher,
         now=lambda: clock[0],
     )

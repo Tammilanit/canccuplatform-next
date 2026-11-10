@@ -17,6 +17,7 @@ from .access import viewer, writer
 from .deps import Deps, deps
 from .edits import target
 from .effective import event_settings, read_channels
+from .inverse import Inverse
 from .kinds import body, not_found
 
 # Fields an organiser may never change on an item a tournament session owns.
@@ -139,8 +140,11 @@ async def add_item(request: Request) -> Response:
     return JSONResponse(item, status_code=201)
 
 
-async def add(d: Deps, session: Session, data: dict[str, Any]) -> dict[str, Any]:
-    """Adds an item from the fields of a request body; the pages call it with theirs."""
+async def add(
+    d: Deps, session: Session, data: dict[str, Any], *, inverse: Inverse | None = None
+) -> dict[str, Any]:
+    """Adds an item from the fields of a request body; the pages call it with theirs, and an
+    `inverse` to offer the undo."""
     starts = model.parse_time(data.get("starts_at"), "starts_at")
     ends_raw = data.get("ends_at")
     ends = None if ends_raw is None else model.parse_time(ends_raw, "ends_at")
@@ -166,7 +170,9 @@ async def add(d: Deps, session: Session, data: dict[str, Any]) -> dict[str, Any]
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
         await _check_kind(conn, values["kind"])
-        row = await store.insert_item(conn, values)
+        row = await store.insert_item(conn, values, store.actor_of(session))
+        if inverse is not None:
+            inverse.remove(row)
         version = await store.bump(conn, "agenda_version")
         await timers.reschedule(conn, [row], await store.kinds(conn), leads, d.now())
         (item,) = await render(conn, [row], channels)
@@ -178,7 +184,7 @@ async def add(d: Deps, session: Session, data: dict[str, Any]) -> dict[str, Any]
     return item
 
 
-def _edits(data: dict[str, Any]) -> dict[str, Any]:
+def edit_values(data: dict[str, Any]) -> dict[str, Any]:
     """The validated fields of an edit; `null` clears or hands back to the kind."""
     out: dict[str, Any] = {}
     for key in EDITABLE:
@@ -212,10 +218,17 @@ async def edit_item(request: Request) -> Response:
     return JSONResponse(await edit(deps(request), session, request.path_params["item_id"], data))
 
 
-async def edit(d: Deps, session: Session, item_id: str, data: dict[str, Any]) -> dict[str, Any]:
+async def edit(
+    d: Deps,
+    session: Session,
+    item_id: str,
+    data: dict[str, Any],
+    *,
+    inverse: Inverse | None = None,
+) -> dict[str, Any]:
     """Edits or moves an item from the fields of a request body (`revision` included)."""
     sent_revision = model.revision(data.get("revision"))
-    edits = _edits(data)
+    edits = edit_values(data)
     channels, leads = await event_settings(d)
     async with d.db.tenant() as conn:
         await store.state(conn, lock=True)
@@ -240,7 +253,10 @@ async def edit(d: Deps, session: Session, item_id: str, data: dict[str, Any]) ->
         if not values:
             (item,) = await render(conn, [row], channels)
             return item
-        row = await store.update_item(conn, row["id"], values)
+        new_row = await store.update_item(conn, row, values, store.actor_of(session))
+        if inverse is not None:
+            inverse.restore(row, new_row, list(values))
+        row = new_row
         version = await store.bump(conn, "agenda_version")
         await timers.reschedule(conn, [row], await store.kinds(conn), leads, d.now())
         (item,) = await render(conn, [row], channels)

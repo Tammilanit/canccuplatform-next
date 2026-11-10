@@ -200,7 +200,7 @@ async def subscribe(request: Request) -> Response:
             session.user_id if session else None,
             hash_token(token),
             endpoint,
-            d.box.seal(json.dumps(keys), keys_aad(ctx["tenant_id"], sub_id)),
+            d.secrets.seal(json.dumps(keys), keys_aad(ctx["tenant_id"], sub_id)),
             json.dumps(prefs),
             d.now(),
         )
