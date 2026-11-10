@@ -13,6 +13,7 @@ from canccu_kit import (
     Event,
     Health,
     IpMode,
+    Outbox,
     RightsChecker,
     ServiceIdentity,
     SettingsClient,
@@ -60,7 +61,7 @@ async def serve() -> None:
         service=identity,
     )
 
-    d = Deps(db=db, bus=bus, rights=rights, settings=settings)
+    d = Deps(db=db, bus=bus, rights=rights, settings=settings, outbox=Outbox(bus, db))
 
     async def on_admin(event: Event) -> None:
         await rights.handle_event(event)
@@ -85,6 +86,7 @@ async def serve() -> None:
     # and a session added while no container ran still gets its item.
     bus.subscribe_tenants(["tournament"], on_tournament, from_id="0")
     scheduler = asyncio.create_task(timers.run(d))
+    sender = asyncio.create_task(d.outbox.run())
 
     async def ping() -> None:
         async with db.platform() as conn:
@@ -95,7 +97,7 @@ async def serve() -> None:
         config.version,
         {"postgres": postgres_check(ping), "valkey": valkey_check(streams)},
     )
-    app = create_app(d, health, resolver)
+    app = create_app(d, health, resolver, identity)
     trusted = os.environ.get("CANCCU_TRUSTED_PROXIES", "127.0.0.1")
     server = uvicorn.Server(
         uvicorn.Config(
@@ -111,6 +113,7 @@ async def serve() -> None:
         await server.serve()
     finally:
         scheduler.cancel()
+        sender.cancel()
 
 
 def main() -> None:

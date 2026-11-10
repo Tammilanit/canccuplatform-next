@@ -68,6 +68,12 @@
 		reverse_proxy agenda:8080
 	}
 
+	# Never agenda's internal paths (contracts/README.md): the prefix rule below would strip
+	# /agenda and pass /agenda/internal/... on as /internal/....
+	handle /agenda/internal/* {
+		respond "not found" 404
+	}
+
 	# The run-of-show pages; the module's own paths start at /.
 	handle_path /agenda/* {
 		reverse_proxy agenda:8080

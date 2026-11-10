@@ -59,3 +59,30 @@ def reminder(visibility: str = "public", lead: int = 10, **item: Any) -> dict[st
         "lead_minutes": lead,
         "leads_minutes": [lead],
     }
+
+
+def alert() -> dict[str, Any]:
+    """An event-wide topic whose trigger may be urgent, for the cap (no module registers it)."""
+    return {
+        "key": "alert",
+        "owner": "admin",
+        "title": "Alerts",
+        "parts": {
+            "event": {
+                "scope": "event",
+                "channels": ["push", "discord_dm"],
+                "defaults": {"push": True, "discord_dm": False},
+            }
+        },
+        "triggers": [
+            {
+                "event": "admin.alert.raised",
+                "part": "event",
+                "audience": {"field": "data.visibility"},
+                "urgent": {"field": "data.urgent"},
+                "title": "{data.title}",
+                "body": "Alert",
+                "expires_after_minutes": 30,
+            }
+        ],
+    }

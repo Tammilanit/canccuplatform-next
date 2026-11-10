@@ -13,6 +13,7 @@ from datetime import datetime
 from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
+from canccu_kit import KitError
 from canccu_kit.access import TenantContext
 from canccu_kit.web_security import event_page_csp, new_nonce
 from starlette.requests import Request
@@ -83,6 +84,17 @@ def _sign_in(request: Request, purpose: str, code: str, status: int = 200) -> HT
 def _invalid(request: Request, status: int = 400) -> HTMLResponse:
     body = f"<p>This check-in code is not valid. {SCAN_AGAIN}</p>"
     return _page(request, "Code not valid", body, status)
+
+
+def error_page(request: Request, exc: KitError) -> HTMLResponse:
+    """Every other refusal, also those of the kit's middleware (the tenants module or admin
+    unreachable, a refused origin, a hostname that is no event's): a phone gets the page, never
+    the API's JSON body."""
+    body = (
+        "<p>Checking in did not work this time. Try again in a moment; if the code has expired"
+        " by then, scan the screen again.</p>"
+    )
+    return _page(request, "Check-in not available", body, exc.status)
 
 
 def _local_time(ctx: TenantContext, iso: str) -> str:

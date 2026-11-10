@@ -94,7 +94,7 @@ Work runs per roadmap step, in packages ([0019](docs/decisions/0019-work-package
 
 ## Run and test
 - **Whole platform:** `docker compose -f deploy/compose.yml up -d` starts Postgres, Valkey, Caddy (IP mode, plain http on port 80) and the modules; `http://<host-ip>/api/hello/health` answers when it is up. Caddy routes machine endpoints under `/api/<module>/` and module pages under `/<module>/`, stripping the prefix. The demo event (`events/demo/`) is loaded once the demo-event issue lands.
-- **Per module:** each module's README names its check command (lint, types, unit tests). CI runs the same commands. `modules/hello` (a test module) is the first with checks.
+- **Per module:** each module's README names its check command (lint, types, unit tests). CI runs the same commands. A module's checks against the running stack go in its `ci/stack-smoke.sh` (and the fresh secrets they need in its `ci/stack-env.sh`); never edit `.github/workflows/ci.yml` for a module check ([docs/ci.md](docs/ci.md#compose)). `modules/hello` (a test module) is the first with checks.
 - Local machines: see [CONTRIBUTING.md](CONTRIBUTING.md) for Linux, Windows (WSL2) and macOS.
 
 ## Merge rules

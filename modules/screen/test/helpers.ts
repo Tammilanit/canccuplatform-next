@@ -17,7 +17,7 @@ import {
   runMigrations,
 } from "@canccu/kit";
 import { requireTenant } from "@canccu/kit";
-import type { Event, SettingValue, TenantContext } from "@canccu/kit";
+import type { Event, SettingValue } from "@canccu/kit";
 import { MemoryStreamStore } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
 import type { StorageQuota } from "../src/assets/storage.js";
@@ -31,6 +31,7 @@ import { dispatchOnce, sweepLeases } from "../src/render/dispatch.js";
 import type { DispatchDeps } from "../src/render/dispatch.js";
 import type { RenderDeps } from "../src/render/jobs.js";
 import { MemoryRenderQueue } from "../src/render/queue.js";
+import { SIGNIN_HOST, SUPERADMIN_HOST, fakeTenants } from "./tenants.js";
 
 /** Tests run only with a Postgres to spare; never point this at a database you keep. */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
@@ -38,38 +39,7 @@ export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
 export const VENUE_IP = "10.0.0.5";
 export const OUTSIDE_IP = "192.0.2.9";
 
-export function context(id: string, overrides: Partial<TenantContext> = {}): TenantContext {
-  return {
-    tenant_id: id,
-    status: "live",
-    primary_hostname: `${id}.test`,
-    time_zone: "UTC",
-    info_page_mode: "public",
-    membership: "open",
-    admin_access: "internet",
-    venue: { id: "v_1", name: "Demo Hall", addresses: ["10.0.0.0/24"] },
-    venue_ip_check: { enabled: true, disabled_until: null, reason: null },
-    flags_version: 1,
-    flags: {},
-    ...overrides,
-  };
-}
-
-/** alpha and beta share one venue, as two events at one place do; the rest are edge cases. */
-export const TENANTS: Record<string, TenantContext> = {
-  "alpha.test": context("alpha"),
-  "beta.test": context("beta"),
-  "gamma.test": context("gamma", { status: "archived" }),
-  "delta.test": context("delta", { venue: null }),
-  "eps.test": context("eps", {
-    venue_ip_check: {
-      enabled: false,
-      disabled_until: "2999-01-01T00:00:00Z",
-      reason: "new uplink",
-    },
-  }),
-  "zeta.test": context("zeta", { admin_access: "restricted" }),
-};
+export { SIGNIN_HOST, SUPERADMIN_HOST, TENANTS, context } from "./tenants.js";
 
 const ALL_RIGHTS = [
   "screen.devices.read",
@@ -90,13 +60,9 @@ const SESSIONS: Record<string, string[]> = {
   ticker: ["screen.ticker.write"],
   photos: ["screen.photos.write"],
   nobody: [],
+  // `superadmin` as admin answers it: a platform-bound session with `mfa_enabled` (G2).
+  root: [],
 };
-
-async function fakeTenants(url: string | URL | Request): Promise<Response> {
-  const host = new URL(url instanceof Request ? url.url : url).searchParams.get("host") ?? "";
-  const ctx = TENANTS[host];
-  return Promise.resolve(ctx ? Response.json(ctx) : new Response("{}", { status: 404 }));
-}
 
 async function fakeAdmin(_url: string | URL | Request, init?: RequestInit): Promise<Response> {
   const cookie = (init?.headers as Record<string, string> | undefined)?.cookie ?? "";
@@ -113,6 +79,7 @@ async function fakeAdmin(_url: string | URL | Request, init?: RequestInit): Prom
       user: { id: `u_${id}`, name: id },
       rights,
       expires_at: new Date(Date.now() + 3600_000).toISOString(),
+      superadmin: id === "root",
     }),
   );
 }
@@ -162,15 +129,20 @@ export interface FakeSources {
 }
 
 /** A fresh schema per file, migrated by the module's own files, as at start. */
+/** Drops every screen table; `assignments` too, the name before migration 007. */
+export async function dropTables(admin: pg.Client): Promise<void> {
+  await admin.query(
+    `DROP TABLE IF EXISTS screen_agenda_items, screen_zone_playback, screen_pushes, screen_schedules,
+       screen_playlist_items, screen_playlists, assignments, screen_assignments, screen_zones,
+       screen_zone_seeds, devices, screen_migrations, screen_render_jobs, screen_asset_versions,
+       screen_assets, screen_files, screen_ticker, screen_ticker_windows, screen_photos CASCADE`,
+  );
+}
+
 export async function harness(): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
-  await admin.query(
-    `DROP TABLE IF EXISTS screen_agenda_items, screen_zone_playback, screen_pushes, screen_schedules,
-       screen_playlist_items, screen_playlists, assignments, screen_zones, screen_zone_seeds, devices,
-       screen_migrations, screen_render_jobs, screen_asset_versions, screen_assets, screen_files,
-       screen_ticker, screen_ticker_windows, screen_photos CASCADE`,
-  );
+  await dropTables(admin);
   await runMigrations(admin, MIGRATIONS_DIR, { ledger: "screen_migrations", lock: 1 });
   await admin.end();
   const pool = new pg.Pool({ connectionString: DATABASE_URL });
@@ -210,6 +182,10 @@ export async function harness(): Promise<Harness> {
       storage.used[tenant] = Math.max(0, (storage.used[tenant] ?? 0) - bytes);
       return Promise.resolve();
     },
+    repair: (bytes) => {
+      storage.used[requireTenant()] = bytes;
+      return Promise.resolve();
+    },
   };
   const queue = new MemoryRenderQueue();
   const app = buildApp({
@@ -227,7 +203,12 @@ export async function harness(): Promise<Harness> {
       audits.push(entry);
       return Promise.resolve();
     },
-    tenants: new TenantResolver({ tenantsUrl: "http://tenants", fetch: fakeTenants }),
+    tenants: new TenantResolver({
+      tenantsUrl: "http://tenants",
+      fetch: fakeTenants,
+      platformHosts: [SUPERADMIN_HOST, SIGNIN_HOST],
+    }),
+    superadminHost: SUPERADMIN_HOST,
     health: createHealth({ module: "screen", version: "dev", checks: {} }),
     settings: {
       ensure: () => Promise.resolve(),
@@ -246,13 +227,10 @@ export async function harness(): Promise<Harness> {
       venueInfo: (host) => answer(host, fake.venue),
     },
   });
-  // A stand-in for the device routes later slices add (state, heartbeat): it runs only the check.
-  app.get("/api/screen/device/_probe", { preHandler: requireDevice(db) }, (request) => ({
-    device_id: request.device?.id,
-  }));
+  // A stand-in for the device routes later slices add (the state, the stream): it runs only the check.
   app.get(
-    "/api/screen/device/_home",
-    { preHandler: requireDevice(db, { allowElsewhere: true }) },
+    "/api/screen/device/_probe",
+    { preHandler: requireDevice(db, { now: () => new Date(clock.now) }) },
     (request) => ({
       device_id: request.device?.id,
     }),

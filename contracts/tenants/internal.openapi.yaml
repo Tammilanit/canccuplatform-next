@@ -241,6 +241,9 @@
               $ref: "../tenants.openapi.yaml#/components/schemas/StorageUsage"
       "400":
         $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+        description: "`service_forbidden`: `module` is not the calling module (its service identity); a module counts only its own files."
       "404":
         $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
       "409":
@@ -274,6 +277,9 @@
               $ref: "../tenants.openapi.yaml#/components/schemas/StorageUsage"
       "400":
         $ref: "../tenants.openapi.yaml#/components/responses/BadRequest"
+      "403":
+        $ref: "../tenants.openapi.yaml#/components/responses/Forbidden"
+        description: "`service_forbidden`: `module` is not the calling module (its service identity); a module counts only its own files."
       "404":
         $ref: "../tenants.openapi.yaml#/components/responses/NotFound"
 /internal/tenants/storage/modules/{module}:

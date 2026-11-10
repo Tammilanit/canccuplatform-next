@@ -6,11 +6,11 @@ from typing import Literal
 import httpx
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import JSONResponse, Response
+from starlette.responses import HTMLResponse, JSONResponse, Response
 from starlette.routing import Route
 from starlette.testclient import TestClient
 
-from canccu_kit import Health
+from canccu_kit import Health, KitError
 from canccu_kit.access import TenantContext
 from canccu_kit.resolve import TenantResolver
 from canccu_kit.starlette import install, install_tenancy
@@ -88,3 +88,43 @@ def test_refuses_the_platforms_own_hostnames_unless_the_module_serves_them() -> 
     assert refused.status_code == 404
     served = client("serve").get("/who", headers={"host": "signin.example.org"})
     assert served.json() == {"context": None, "ctxvar": None}
+
+
+def page_errors(request: Request, exc: KitError) -> Response | None:
+    if request.url.path != "/page":
+        return None
+    return HTMLResponse(f"<p>{exc.code}</p>", status_code=exc.status)
+
+
+async def fails(request: Request) -> Response:
+    raise KitError("admin unreachable", status=503, code="admin_unavailable")
+
+
+def paged(tenant_resolver: TenantResolver | None = None) -> TestClient:
+    routes = [Route(p, fails, methods=["GET", "POST"]) for p in ("/page", "/api")]
+    app = Starlette(routes=routes)
+    install(app, Health("pizza", "dev", {}), error_response=page_errors)
+    install_tenancy(app, tenant_resolver or resolver(), error_response=page_errors)
+    return TestClient(app, raise_server_exceptions=False)
+
+
+def test_an_error_response_hook_renders_every_kit_error_of_a_page() -> None:
+    down = resolver(httpx.MockTransport(lambda r: httpx.Response(502)))
+    cases = [
+        (paged(down).get("/page", headers={"host": "a.example.org"}), 503, "tenants_unavailable"),
+        (paged().get("/page", headers={"host": "x.example.org"}), 404, "not_found"),
+        (paged().get("/page", headers={"host": "a.example.org"}), 503, "admin_unavailable"),
+        (
+            paged().post(
+                "/page", headers={"host": "a.example.org", "origin": "https://evil.example"}
+            ),
+            403,
+            "origin_refused",
+        ),
+    ]
+    for response, status, code in cases:
+        assert response.status_code == status
+        assert response.text == f"<p>{code}</p>"
+    api = paged(down).get("/api", headers={"host": "a.example.org"})
+    assert api.json()["error"]["code"] == "tenants_unavailable"
+    assert paged().get("/api", headers={"host": "a.example.org"}).status_code == 503

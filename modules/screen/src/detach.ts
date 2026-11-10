@@ -1,6 +1,6 @@
 /**
  * No dangling references (contracts/screen.md, Moving, renaming, revoking; plan #107, D10): when
- * a device leaves the event (revoked here; moved away or deleted with #221) the devices that
+ * a device leaves the event (revoked, moved away or deleted, src/registry.ts) the devices that
  * mirror it are unassigned and a zone that plays sound on it gets `null` there. Every leaving
  * path calls this one function, in its own transaction and before the device's assignment row
  * goes, which the foreign key from the mirrors would otherwise refuse.
@@ -17,7 +17,7 @@ export async function detachDevice(
   by: { audit: Audit; actor: string | null },
 ): Promise<Emit[]> {
   const { rows } = await c.query(
-    "UPDATE assignments SET mirror_device_id = NULL WHERE mirror_device_id = $1 RETURNING device_id",
+    "UPDATE screen_assignments SET mirror_device_id = NULL WHERE mirror_device_id = $1 RETURNING device_id",
     [deviceId],
   );
   const emits: Emit[] = [];

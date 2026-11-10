@@ -3,13 +3,14 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+import time
 import uuid
 from datetime import datetime
 
 import pytest
 
 from canccu_kit import STREAM_MAXLEN, Bus, Event, InvalidEventType, correlation
-from canccu_kit.bus import InvalidEnvelope, parse_envelope
+from canccu_kit.bus import HANDLER_TRIES, InvalidEnvelope, parse_envelope
 from canccu_kit.testing import MemoryStreamStore
 
 TIME_RE = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$")
@@ -156,7 +157,34 @@ async def test_subscribe_reads_several_streams(store: MemoryStreamStore) -> None
     assert sorted(e.source for e in received) == ["admin", "tournament"]
 
 
-async def test_handler_error_does_not_stop_subscription(store: MemoryStreamStore) -> None:
+async def test_a_failed_handler_is_retried_with_growing_delays_before_the_next_event(
+    store: MemoryStreamStore,
+) -> None:
+    store.append_raw("events:admin", {"event": envelope(id="a")})
+    store.append_raw("events:admin", {"event": envelope(id="b")})
+    calls: list[tuple[str, float]] = []
+    done = asyncio.Event()
+
+    async def handler(event: Event) -> None:
+        calls.append((event.id, time.monotonic()))
+        if event.id == "a" and len(calls) < 3:
+            raise RuntimeError("boom")
+        if event.id == "b":
+            done.set()
+
+    sub = Bus(store, "screen").subscribe(
+        ["admin"], handler, from_id="0-0", block_ms=50, retry_ms=20
+    )
+    await asyncio.wait_for(done.wait(), 2)
+    await sub.close()
+    assert [c[0] for c in calls] == ["a", "a", "a", "b"]
+    assert calls[1][1] - calls[0][1] >= 0.018
+    assert calls[2][1] - calls[1][1] >= 0.038
+
+
+async def test_a_failed_event_is_skipped_and_logged_after_the_set_tries(
+    store: MemoryStreamStore, caplog: pytest.LogCaptureFixture
+) -> None:
     store.append_raw("events:admin", {"event": envelope(id="a")})
     store.append_raw("events:admin", {"event": envelope(id="b")})
     seen: list[str] = []
@@ -168,10 +196,42 @@ async def test_handler_error_does_not_stop_subscription(store: MemoryStreamStore
             raise RuntimeError("boom")
         done.set()
 
-    sub = Bus(store, "screen").subscribe(["admin"], handler, from_id="0-0", block_ms=50)
+    sub = Bus(store, "screen").subscribe(
+        ["admin"], handler, from_id="0-0", block_ms=50, handler_tries=3, retry_ms=1
+    )
     await asyncio.wait_for(done.wait(), 2)
     await sub.close()
-    assert seen == ["a", "b"]
+    assert seen == ["a", "a", "a", "b"]
+    skipped = [r for r in caplog.records if r.getMessage() == "event skipped after failed handler"]
+    assert len(skipped) == 1
+    assert skipped[0].levelname == "ERROR"
+    assert skipped[0].__dict__["event_id"] == "a"
+    assert skipped[0].__dict__["tries"] == 3
+    failed = [r for r in caplog.records if r.getMessage() == "event handler failed"]
+    assert len(failed) == 3
+
+
+def test_a_handler_tries_five_times_by_default() -> None:
+    assert HANDLER_TRIES == 5
+
+
+async def test_close_stops_retrying(store: MemoryStreamStore) -> None:
+    store.append_raw("events:admin", {"event": envelope(id="a")})
+    calls = 0
+    first = asyncio.Event()
+
+    async def handler(event: Event) -> None:
+        nonlocal calls
+        calls += 1
+        first.set()
+        raise RuntimeError("boom")
+
+    sub = Bus(store, "screen").subscribe(
+        ["admin"], handler, from_id="0-0", block_ms=50, retry_ms=10_000
+    )
+    await asyncio.wait_for(first.wait(), 2)
+    await asyncio.wait_for(sub.close(), 1)
+    assert calls == 1
 
 
 def test_the_valkey_read_timeout_outlasts_the_blocking_read() -> None:

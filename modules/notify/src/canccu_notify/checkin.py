@@ -9,6 +9,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+import logging
 import re
 import secrets
 from datetime import UTC, datetime
@@ -18,6 +19,8 @@ from urllib.parse import urlencode
 from canccu_kit import (
     KitError,
     MissingRight,
+    SecretUndecryptable,
+    ServiceForbidden,
     check_admin_access,
     is_tenant_id,
     tailscale_cidrs,
@@ -34,8 +37,10 @@ from .deps import Deps, deps
 from .engine import iso_time
 from .registry import bad, body_of
 
+log = logging.getLogger("canccu.notify.checkin")
+
 DISPLAY = "notify.checkin.display"
-PURPOSE_RE = re.compile(r"arrival|[a-z]+:[A-Za-z0-9_-]{1,64}")
+PURPOSE_RE = re.compile(r"arrival|[a-z]{1,32}:[A-Za-z0-9_-]{1,64}")
 CODE_RE = re.compile(r"[A-Za-z0-9_-]{22}")
 ROTATION_DEFAULT = 30
 VALID_PERIODS = 2  # the current period and the one before
@@ -67,6 +72,14 @@ def writable(ctx: TenantContext) -> None:
 class NotAMember(KitError):
     status = 403
     code = "not_a_member"
+
+
+class KeyUnavailable(KitError):
+    """The event's check-in key does not open: an operator error (a dropped secrets key), so the
+    kit's generic 503 rather than a code of the contract."""
+
+    status = 503
+    code = "unavailable"
 
 
 def valid_purpose(value: object) -> str | None:
@@ -114,21 +127,45 @@ def _aad(tenant_id: str) -> str:
     return f"notify:checkin:{tenant_id}"
 
 
-async def event_key(d: Deps, tenant_id: str, *, create: bool) -> bytes | None:
+async def _key(d: Deps, conn: Any, tenant_id: str, *, create: bool) -> bytes | None:
     """The event's key, made on its first code request (D5): random per event, so a leaked key
-    tells nothing about another event's codes."""
-    async with d.db.tenant(tenant_id) as conn:
+    tells nothing about another event's codes. A key sealed with a retired secrets key is sealed
+    again with the current one, so the retired key can be dropped (#289).
+
+    The caller keeps the key in `d.check_in_keys` once its transaction has committed: a key made
+    here exists only then.
+    """
+    sealed = await conn.fetchval("SELECT sealed FROM notify_check_in_keys")
+    if sealed is None and create:
+        # Two first requests at once: the first insert wins and both read it back.
+        await conn.execute(
+            "INSERT INTO notify_check_in_keys (sealed, created_at) VALUES ($1, $2)"
+            " ON CONFLICT (tenant_id) DO NOTHING",
+            d.secrets.seal(secrets.token_bytes(32), _aad(tenant_id)),
+            d.now(),
+        )
         sealed = await conn.fetchval("SELECT sealed FROM notify_check_in_keys")
-        if sealed is None and create:
-            # Two first requests at once: the first insert wins and both read it back.
-            await conn.execute(
-                "INSERT INTO notify_check_in_keys (sealed, created_at) VALUES ($1, $2)"
-                " ON CONFLICT (tenant_id) DO NOTHING",
-                d.secrets.seal(secrets.token_bytes(32), _aad(tenant_id)),
-                d.now(),
+    if sealed is None:
+        return None
+    try:
+        key = d.secrets.open(sealed, _aad(tenant_id))
+    except SecretUndecryptable as exc:
+        # Logged once per process and event; every request retries, so a fixed row works at once.
+        if tenant_id not in d.check_in_keys:
+            log.error(
+                "the event's check-in key does not open",
+                extra={"tenant": tenant_id, "reason": str(exc)},
             )
-            sealed = await conn.fetchval("SELECT sealed FROM notify_check_in_keys")
-    return None if sealed is None else d.secrets.open(sealed, _aad(tenant_id))
+            d.check_in_keys[tenant_id] = None
+        raise KeyUnavailable("check-in is unavailable at this event; tell the organisers") from None
+    if d.secrets.needs_rotation(sealed):
+        # Compared with the value read, so a container that re-sealed first is not overwritten.
+        await conn.execute(
+            "UPDATE notify_check_in_keys SET sealed = $1 WHERE sealed = $2",
+            d.secrets.seal(key, _aad(tenant_id)),
+            sealed,
+        )
+    return key
 
 
 def _at(seconds: int) -> str:
@@ -139,8 +176,12 @@ async def code_now(d: Deps, ctx: TenantContext, purpose: str) -> dict[str, Any]:
     writable(ctx)
     tenant_id = ctx["tenant_id"]
     length, period = await period_now(d)
-    key = await event_key(d, tenant_id, create=True)
-    assert key is not None
+    key = d.check_in_keys.get(tenant_id)
+    if key is None:
+        async with d.db.tenant(tenant_id) as conn:
+            key = await _key(d, conn, tenant_id, create=True)
+        assert key is not None
+        d.check_in_keys[tenant_id] = key
     code = code_for(key, tenant_id, purpose, period)
     path = "/notify/check-in?" + urlencode({"p": purpose, "c": code})
     host = ctx["primary_hostname"]
@@ -169,15 +210,15 @@ async def record(
     """(the check-in, whether this call made it). Raises EventArchived, NotAMember, CodeInvalid,
     CodeExpired."""
     writable(ctx)
-    if not is_member(session):
+    if not is_member(session.user_id):
         raise NotAMember("only members of the event can check in")
     tenant_id = ctx["tenant_id"]
-    key = await event_key(d, tenant_id, create=False)
-    if key is None:
-        raise CodeInvalid("this is not a valid check-in code")
     _, period = await period_now(d)
-    verify(key, tenant_id, purpose, period, code)
     async with d.db.tenant(tenant_id) as conn:
+        key = d.check_in_keys.get(tenant_id) or await _key(d, conn, tenant_id, create=False)
+        if key is None:
+            raise CodeInvalid("this is not a valid check-in code")
+        verify(key, tenant_id, purpose, period, code)
         row = await conn.fetchrow(
             "INSERT INTO notify_check_ins (id, user_id, purpose, checked_in_at)"
             " VALUES ($1, $2, $3, $4) ON CONFLICT (tenant_id, user_id, purpose) DO NOTHING"
@@ -195,15 +236,18 @@ async def record(
                 session.user_id,
                 purpose,
             )
-    found = view(row)
+        found = view(row)
+        if created:
+            data = {
+                "user_id": session.user_id,
+                "purpose": purpose,
+                "check_in_id": found["id"],
+                "checked_in_at": found["checked_in_at"],
+            }
+            await d.outbox.add(conn, "notify.checkin.recorded", data, version=1)
+    d.check_in_keys[tenant_id] = key
     if created:
-        data = {
-            "user_id": session.user_id,
-            "purpose": purpose,
-            "check_in_id": found["id"],
-            "checked_in_at": found["checked_in_at"],
-        }
-        await d.bus.publish("notify.checkin.recorded", data, version=1, tenant=tenant_id)
+        await d.outbox.flush(tenant_id)
     return found, created
 
 
@@ -228,6 +272,9 @@ async def get_code(request: Request) -> Response:
 
 async def get_code_internal(request: Request) -> Response:
     """For the screen module's server: a door screen is a device with no session."""
+    caller = request.state.service
+    if caller != "screen":
+        raise ServiceForbidden(f"module {caller} may not fetch check-in codes")
     d = deps(request)
     purpose = _purpose_param(request)
     tenant_id = request.query_params.get("tenant_id", "")

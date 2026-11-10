@@ -63,7 +63,7 @@ async function placement(
 ): Promise<{ zoneKey: string | null; mirror: boolean }> {
   const { rows } = await c.query(
     `SELECT a.zone_key, a.mirror_device_id, a.mirror_zone_key, t.zone_key AS target_zone
-     FROM assignments a LEFT JOIN assignments t ON t.device_id = a.mirror_device_id
+     FROM screen_assignments a LEFT JOIN screen_assignments t ON t.device_id = a.mirror_device_id
      WHERE a.device_id = $1`,
     [deviceId],
   );

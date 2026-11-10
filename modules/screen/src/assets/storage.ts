@@ -3,12 +3,17 @@
  * reserved before a file is written and released when it is deleted or never written.
  */
 import { KitError, requireTenant } from "@canccu/kit";
-import type { ServiceIdentity } from "@canccu/kit";
+import type { ServiceIdentity, SqlClient } from "@canccu/kit";
+
+/** Advisory-lock class of the event's count; the file locks use 0x5c4e. */
+const COUNT_LOCK_CLASS = 0x5c4f;
 
 export interface StorageQuota {
   /** 413 `storage_quota_exceeded` or 409 `event_archived` from tenants, passed on unchanged. */
   reserve(bytes: number): Promise<void>;
   release(bytes: number): Promise<void>;
+  /** Sets screen's count of the event to `bytes`, whatever the quota (the recount, upkeep.ts). */
+  repair(bytes: number): Promise<void>;
 }
 
 const unavailable = (detail: string): KitError =>
@@ -23,14 +28,18 @@ export function tenantsStorage(
   fetchFn: typeof fetch = fetch,
 ): StorageQuota {
   const base = `${tenantsUrl.replace(/\/+$/, "")}/internal/tenants/storage`;
-  const change = async (path: "reserve" | "release", bytes: number): Promise<void> => {
+  const change = async (
+    path: "reserve" | "release" | "modules/screen",
+    bytes: number,
+  ): Promise<void> => {
     const url = `${base}/${path}?tenant_id=${encodeURIComponent(requireTenant())}`;
+    const repair = path === "modules/screen";
     let response: Response;
     try {
       response = await fetchFn(url, {
-        method: "POST",
+        method: repair ? "PUT" : "POST",
         headers: { "content-type": "application/json", ...service.headers("tenants") },
-        body: JSON.stringify({ module: "screen", bytes }),
+        body: JSON.stringify(repair ? { bytes } : { module: "screen", bytes }),
       });
     } catch (err) {
       throw unavailable(String(err));
@@ -50,5 +59,27 @@ export function tenantsStorage(
   return {
     reserve: (bytes) => change("reserve", bytes),
     release: (bytes) => change("release", bytes),
+    repair: (bytes) => change("modules/screen", bytes),
   };
+}
+
+/**
+ * Holds off a recount (upkeep.ts) until the caller's transaction ends. A writer takes it before
+ * it reserves, so a recount waits for the commit that writes the rows holding those bytes instead
+ * of reading the rows without them and then setting a count that has them: an upload under way
+ * while screen counts is not lost from the count.
+ */
+export async function holdCount(c: SqlClient): Promise<void> {
+  await c.query("SELECT pg_advisory_xact_lock_shared($1, hashtext($2))", [
+    COUNT_LOCK_CLASS,
+    requireTenant(),
+  ]);
+}
+
+/** The recount's side of `holdCount`: no reserve runs until the caller's transaction ends. */
+export async function lockCount(c: SqlClient): Promise<void> {
+  await c.query("SELECT pg_advisory_xact_lock($1, hashtext($2))", [
+    COUNT_LOCK_CLASS,
+    requireTenant(),
+  ]);
 }

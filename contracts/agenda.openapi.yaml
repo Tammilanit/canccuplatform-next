@@ -1,12 +1,13 @@
 openapi: 3.1.0
 info:
   title: Agenda API
-  version: 1.1.0
+  version: 1.2.0
   summary: The run-of-show of one event, editable live.
   description: |
     Machine-readable part of the agenda contract. Prose, rules, reminders and events: contracts/agenda.md.
     Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
-    The event (tenant) comes from the hostname; no operation names a tenant except the clone source.
+    The event (tenant) comes from the hostname; no operation names a tenant except the clone source and the
+    internal read, whose `tenant_id` the calling module's kit sets.
   license:
     name: AGPL-3.0
     identifier: AGPL-3.0-only
@@ -20,6 +21,8 @@ tags:
     description: The event's own list of item kinds.
   - name: clone
     description: Copying the agenda of a previous event of the series.
+  - name: internal
+    description: Module paths on the stack's internal network; the edge Caddy never routes them.
 security:
   - {}
   - session: []
@@ -431,6 +434,40 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "409":
           $ref: "#/components/responses/Conflict"
+  /internal/agenda/items:
+    get:
+      tags: [internal]
+      operationId: listAllItemsInternal
+      summary: Every item of an event, for a module
+      description: |
+        For a module that keeps its own copy of the agenda (the screen module's agenda-bound windows and quiet
+        hours), to read it again at start, after a jump in `agenda_version` and after `agenda.items.cloned`, whose
+        items no event carries. Every item of the event, `crew` and cancelled ones included, sorted by
+        `starts_at`, each as crew sees it; the caller shows each item only to those its `visibility` allows. No
+        session: the kit's service identity (`x-canccu-service`, contracts/README.md, Conventions). Internal
+        network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+      responses:
+        "200":
+          description: The whole agenda of the event.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agenda"
+        "401":
+          $ref: "#/components/responses/ServiceUnauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+          description: "`not_found`: no such event."
 components:
   securitySchemes:
     session:
@@ -463,6 +500,12 @@ components:
             $ref: "common.openapi.yaml#/components/schemas/Error"
     NotFound:
       description: "`not_found`: no such item or kind, or the caller may not see it."
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    ServiceUnauthenticated:
+      description: "`service_unauthenticated`: no valid `x-canccu-service` header (an internal path, no session)."
       content:
         application/json:
           schema:

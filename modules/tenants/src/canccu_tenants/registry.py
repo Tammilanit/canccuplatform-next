@@ -15,6 +15,9 @@ from . import audit, core, model
 from .deps import deps
 from .model import bad_request, body_of, conflict, not_found
 
+DEFAULT_QUOTA = 2_147_483_648
+"""2 GiB, as the column's default (migrations/002_storage.sql)."""
+
 
 async def list_tenants(request: Request) -> Response:
     d = deps(request)
@@ -41,6 +44,9 @@ async def create_tenant(request: Request) -> Response:
     for value, field in ((venue_id, "venue_id"), (series_id, "series_id")):
         if value is not None:
             model.check_id(value, field)
+    quota = model.check_storage_bytes(
+        body.get("storage_quota_bytes", DEFAULT_QUOTA), "storage_quota_bytes"
+    )
     admins = body.get("admin_user_ids", [])
     if not isinstance(admins, list) or not all(isinstance(a, str) for a in admins):
         raise bad_request("admin_user_ids: a list of user ids")
@@ -53,8 +59,8 @@ async def create_tenant(request: Request) -> Response:
         if venue_id and not await conn.fetchval("SELECT 1 FROM venues WHERE id = $1", venue_id):
             raise not_found()
         await conn.execute(
-            "INSERT INTO tenants (id, name, time_zone, starts_at, ends_at, venue_id, series_id)"
-            " VALUES ($1, $2, $3, $4, $5, $6, $7)",
+            "INSERT INTO tenants (id, name, time_zone, starts_at, ends_at, venue_id, series_id,"
+            " storage_quota_bytes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
             tid,
             name,
             zone,
@@ -62,6 +68,7 @@ async def create_tenant(request: Request) -> Response:
             ends,
             venue_id,
             series_id,
+            quota,
         )
         actor = await audit.user_actor(conn, session.user_id)
         await audit.append(
@@ -121,7 +128,16 @@ async def _registry_write(request: Request, action: str) -> Response:
     async with d.db.tenant(tid) as conn:
         actor = await audit.user_actor(conn, session.user_id)
         if action == "patch":
-            allowed = core.EVENT_FIELDS | core.ACCESS_FIELDS | {"venue_id", "series_id"}
+            # The quota is the superadmin's alone: event admins never set it (current.py).
+            allowed = (
+                core.EVENT_FIELDS
+                | core.ACCESS_FIELDS
+                | {
+                    "venue_id",
+                    "series_id",
+                    "storage_quota_bytes",
+                }
+            )
             await core.patch_tenant(
                 conn, tid, body, allowed, actor, session.user_id, d.files, outbox
             )
@@ -158,6 +174,9 @@ async def read_audit(request: Request) -> Response:
     return JSONResponse(page)
 
 
+# Deleting a tenant (`DELETE /api/tenants/registry/{tenant_id}`, #150) goes here. It must delete
+# the event's `storage_counts` rows with the tenant (contracts/tenants.md, Storage quota, Clone and
+# delete), once every module has deleted the event's files; the migration grants no DELETE yet.
 ROUTES = [
     Route("/api/tenants/registry", list_tenants, methods=["GET"]),
     Route("/api/tenants/registry", create_tenant, methods=["POST"]),

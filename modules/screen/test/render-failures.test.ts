@@ -4,7 +4,7 @@
  * the renderer slot or is stopped by a shutdown goes back to its place without counting.
  */
 import { readdirSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Bus, SqlClient } from "@canccu/kit";
@@ -93,6 +93,20 @@ describe.skipIf(!DATABASE_URL)("render dispatch failures", () => {
     expect(await jobOf(id)).toMatchObject({ state: "queued", queue_position: 1 });
     expect(await h.dispatch(renderer.path)).toBe(true);
     expect((await jobOf(id))?.state).toBe("succeeded");
+  });
+
+  it("hangs up on the renderer when the attempt's scratch directory cannot be made", async () => {
+    const id = await addDeck();
+    const jobId = (await jobOf(id))?.id ?? "";
+    // A file where the first attempt's directory goes makes its mkdir fail.
+    await mkdir(join(h.filesRoot, "alpha", "screen", "tmp"), { recursive: true });
+    await writeFile(join(h.filesRoot, "alpha", "screen", "tmp", `render-${jobId}-1`), "");
+    expect(await h.dispatch(renderer.path)).toBe(true);
+    await until(() => renderer.closed === 1);
+    expect(renderer.closed).toBe(1);
+    expect(renderer.requests).toBe(0);
+    expect((await jobOf(id))?.state).toBe("failed");
+    expect(tmpFiles()).toEqual([]);
   });
 
   it("still renders when announcing the start fails", async () => {

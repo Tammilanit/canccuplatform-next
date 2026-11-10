@@ -18,7 +18,6 @@ from .deps import deps
 from .model import bad_request, body_of, not_found
 
 MODULE_RE = re.compile(r"[a-z][a-z0-9_]{1,31}")
-MAX_BYTES = 1_099_511_627_776
 SHARED_STORAGE: dict[str, str] = {}
 """Service → the module whose files it writes and counts for. Empty: every writer today (screen,
 theming) counts under its own name, and the render job never calls (it has no network)."""
@@ -26,7 +25,9 @@ theming) counts under its own name, and the render job never calls (it has no ne
 
 def _check_owner(request: Request, module: str) -> None:
     # The service identity names the caller, as for audit appends: a module counts only its own
-    # files, so one module cannot release another's bytes and let the event pass its quota.
+    # files, so a module cannot release another's bytes by mistake. It prevents mistakes, not a
+    # malicious module: every module signs with the shared CANCCU_SERVICE_KEY, so one can still
+    # sign as another (per-module keys are a separate decision).
     service: str = request.state.service
     if module != SHARED_STORAGE.get(service, service):
         raise ServiceForbidden(f"module {service} counts only its own files")
@@ -36,11 +37,13 @@ def _change(body: dict[str, Any]) -> tuple[str, int]:
     if set(body) - {"module", "bytes"}:
         raise bad_request("only module and bytes")
     module, size = body.get("module"), body.get("bytes")
+    return _module(module), model.check_storage_bytes(size, "bytes", 1)
+
+
+def _module(module: object) -> str:
     if not isinstance(module, str) or not MODULE_RE.fullmatch(module):
         raise bad_request("module: lowercase letters, digits and _, 2-32 characters, from a letter")
-    if isinstance(size, bool) or not isinstance(size, int) or not 1 <= size <= MAX_BYTES:
-        raise bad_request(f"bytes: a whole number from 1 to {MAX_BYTES}")
-    return module, size
+    return module
 
 
 def _tenant_query(request: Request) -> str:
@@ -109,6 +112,28 @@ async def release(request: Request) -> Response:
         return JSONResponse(await usage(conn, row["storage_quota_bytes"]))
 
 
+async def set_count(request: Request) -> Response:
+    """The repair: every status, whatever the quota; the module counted its files and its open
+    reservations itself, so the count it sends replaces the one held here."""
+    d, tid = deps(request), _tenant_query(request)
+    module = _module(request.path_params["module"])
+    body = await body_of(request)
+    if set(body) - {"bytes"}:
+        raise bad_request("only bytes")
+    size = model.check_storage_bytes(body.get("bytes"), "bytes")
+    # Like reserve and release: one module setting another's count to 0 would let it pass.
+    _check_owner(request, module)
+    async with d.db.tenant(tid) as conn:
+        row = await _quota(conn, tid)
+        await conn.execute(
+            "INSERT INTO storage_counts (module, bytes) VALUES ($1, $2) ON CONFLICT"
+            " (tenant_id, module) DO UPDATE SET bytes = EXCLUDED.bytes",
+            module,
+            size,
+        )
+        return JSONResponse(await usage(conn, row["storage_quota_bytes"]))
+
+
 async def get_storage(request: Request) -> Response:
     d, ctx = deps(request), tenant_of(request)
     await d.caller.require_member(request)
@@ -120,5 +145,6 @@ async def get_storage(request: Request) -> Response:
 INTERNAL_ROUTES = [
     Route("/internal/tenants/storage/reserve", reserve, methods=["POST"]),
     Route("/internal/tenants/storage/release", release, methods=["POST"]),
+    Route("/internal/tenants/storage/modules/{module}", set_count, methods=["PUT"]),
 ]
 ROUTES = [Route("/api/tenants/current/storage", get_storage, methods=["GET"])]

@@ -94,7 +94,7 @@ async function readRecord(kv: Kv, id: string): Promise<HealthRecord | null> {
 /** The zone each device shows, for the events' `zone_key`; a mirror or an unassigned device has none. */
 async function zonesOf(db: Db, ids: string[]): Promise<Map<string, string | null>> {
   const { rows } = await db.tenant((c) =>
-    c.query("SELECT device_id, zone_key FROM assignments WHERE device_id = ANY($1)", [ids]),
+    c.query("SELECT device_id, zone_key FROM screen_assignments WHERE device_id = ANY($1)", [ids]),
   );
   return new Map(rows.map((r) => [r.device_id as string, (r.zone_key as string | null) ?? null]));
 }
@@ -164,6 +164,15 @@ export async function recordHeartbeat(
       { version: 1 },
     );
   }
+}
+
+/**
+ * Drop the current event's health of a device that has left it (moved away or deleted), so the
+ * sweep never reports it offline there and a later return starts afresh.
+ */
+export async function forgetHealth(kv: Kv, id: string): Promise<void> {
+  await kv.del(keys.record(id), keys.instances(id), keys.playingQuiet(id));
+  await kv.removeMember(keys.online(), id);
 }
 
 /** Two page loads each reporting at least twice in the window: one token in two places. */

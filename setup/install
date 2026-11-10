@@ -56,6 +56,29 @@ else
   fi
 fi
 
+# Notify does not start without these (modules/notify/README.md, Environment). Only an empty or
+# missing value is filled, never a set one: a new secrets key loses the stored secrets, and a new
+# VAPID key every phone's push subscription.
+newsecretskey() { k=$(openssl rand -base64 32) || return 1; echo "1:$k"; }
+# A fresh P-256 key from openssl; its DER form holds the 32-byte private scalar after 7 header bytes.
+newvapidkey() {
+  openssl ecparam -name prime256v1 -genkey -noout -outform DER | tail -c +8 | head -c 32 \
+    | base64 | tr '+/' '-_' | tr -d '=\n'
+}
+fillsecret() {  # <name> <generator>
+  [ -e "$env" ] && grep -qE "^$1=.+" "$env" && return 0
+  step "generate $1 in $env"
+  [ "$dry" = 1 ] && return 0
+  v=$($2 2>/dev/null) || v=""
+  [ -n "$v" ] || die "cannot generate $1 (is openssl installed?)"
+  if grep -qE "^$1=" "$env"; then sed -i "s#^$1=.*#$1=$v#" "$env"; else printf '%s=%s\n' "$1" "$v" >> "$env"; fi \
+    || die "cannot update $env"
+  chmod 600 "$env" || die "cannot chmod $env"
+  if [ -n "${SUDO_USER:-}" ]; then chown "$SUDO_USER" "$env" || die "cannot chown $env"; fi
+}
+fillsecret CANCCU_SECRETS_KEY newsecretskey
+fillsecret CANCCU_NOTIFY_VAPID_PRIVATE_KEY newvapidkey
+
 if [ "$boot" = 1 ]; then
   # The units bake in this path and read deploy/.env only, so validate exactly that, first:
   # a bad list then never closes or opens anything (as root this also test-loads the rules).

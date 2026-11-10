@@ -1,7 +1,11 @@
-import { hashDeviceToken, newDeviceToken } from "@canccu/kit";
+import { hashDeviceToken, newDeviceToken, withTenant } from "@canccu/kit";
+import type { FastifyReply, FastifyRequest } from "fastify";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { Db } from "../src/db.js";
+import { requireDevice } from "../src/device-access.js";
 import { DATABASE_URL, OUTSIDE_IP, call, code, harness, pairDevice } from "./helpers.js";
 import type { Harness } from "./helpers.js";
+import { TENANTS } from "./tenants.js";
 
 describe.skipIf(!DATABASE_URL)("devices", () => {
   let h: Harness;
@@ -84,7 +88,7 @@ describe.skipIf(!DATABASE_URL)("devices", () => {
     // Only the home path serves it there.
     expect(
       (
-        await call(h, "GET", "/api/screen/device/_home", {
+        await call(h, "GET", "/api/screen/device/home", {
           host: "beta.test",
           cookies: { canccu_device: token },
         })
@@ -105,6 +109,52 @@ describe.skipIf(!DATABASE_URL)("devices", () => {
     // The new token's first success drops the superseded ones.
     expect((await probe(token)).statusCode).toBe(200);
     expect(code(await probe(old))).toBe("device_unknown");
+  });
+
+  it("finds a token in one lookup and drops the superseded hashes in the same transaction", async () => {
+    const { id, token } = await pairDevice(h);
+    const old = newDeviceToken();
+    await h.pool.query("UPDATE devices SET superseded_token_hashes = $2::jsonb WHERE id = $1", [
+      id,
+      JSON.stringify([{ hash: hashDeviceToken(old), expires_at: "2999-01-01T00:00:00Z" }]),
+    ]);
+    let transactions = 0;
+    let lookups = 0;
+    const counted: Db = {
+      tenant: (fn) => {
+        transactions++;
+        return h.db.tenant((c) =>
+          fn({
+            query: (text, values) => {
+              if (/\bFROM devices\b/i.test(text)) lookups++;
+              return c.query(text, values);
+            },
+          }),
+        );
+      },
+      global: (fn) => h.db.global(fn),
+    };
+    const check = requireDevice(counted, {
+      allowElsewhere: true,
+      now: () => new Date(h.clock.now),
+    });
+    const run = async (cookieToken: string) => {
+      [transactions, lookups] = [0, 0];
+      const request = {
+        tenant: TENANTS["alpha.test"],
+        ip: "10.0.0.7",
+        headers: { cookie: `canccu_device=${cookieToken}` },
+      } as unknown as FastifyRequest;
+      await withTenant("alpha", () => check.call(h.app, request, {} as FastifyReply));
+      return [request.deviceToken, transactions, lookups];
+    };
+    expect(await run(old)).toEqual(["superseded", 1, 1]);
+    expect(await run(token)).toEqual(["current", 1, 1]);
+    const { rows } = await h.pool.query(
+      "SELECT superseded_token_hashes FROM devices WHERE id = $1",
+      [id],
+    );
+    expect(rows[0]).toEqual({ superseded_token_hashes: [] });
   });
 
   it("keeps every device path inside its own event (cross-event leak tests)", async () => {
@@ -153,7 +203,7 @@ describe.skipIf(!DATABASE_URL)("devices", () => {
     const { withTenant } = await import("@canccu/kit");
     const seen = await withTenant("beta", () =>
       h.db.tenant(async (c) =>
-        (await c.query("SELECT device_id FROM assignments")).rows.map((r) => r.device_id),
+        (await c.query("SELECT device_id FROM screen_assignments")).rows.map((r) => r.device_id),
       ),
     );
     expect(seen).not.toContain(id);

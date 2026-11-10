@@ -29,6 +29,14 @@ from .web_security import check_origin
 
 log = logging.getLogger("canccu.kit.http")
 
+ErrorResponse = Callable[[Request, KitError], Response | None]
+"""Renders a KitError for a request, e.g. as a page; None leaves it to the JSON error body."""
+
+
+def _error_response(request: Request, exc: KitError, hook: ErrorResponse | None) -> Response:
+    response = None if hook is None else hook(request, exc)
+    return response or JSONResponse(exc.to_body(), status_code=exc.status)
+
 
 def health_route(health: Health, path: str = "/health") -> Route:
     async def endpoint(request: Request) -> Response:
@@ -83,9 +91,12 @@ def require_right(
     return decorate
 
 
-async def _kit_error(request: Request, exc: Exception) -> Response:
-    assert isinstance(exc, KitError)
-    return JSONResponse(exc.to_body(), status_code=exc.status)
+def _kit_error(hook: ErrorResponse | None) -> Callable[[Request, Exception], Awaitable[Response]]:
+    async def handler(request: Request, exc: Exception) -> Response:
+        assert isinstance(exc, KitError)
+        return _error_response(request, exc, hook)
+
+    return handler
 
 
 async def _http_error(request: Request, exc: Exception) -> Response:
@@ -128,8 +139,9 @@ class CorrelationMiddleware:
 class OriginCheckMiddleware:
     """The kit's origin check on every request; see web_security.check_origin."""
 
-    def __init__(self, app: ASGIApp) -> None:
+    def __init__(self, app: ASGIApp, error_response: ErrorResponse | None = None) -> None:
         self.app = app
+        self.error_response = error_response
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] == "http":
@@ -148,23 +160,27 @@ class OriginCheckMiddleware:
                     header(b"sec-fetch-site"),
                 )
             except KitError as exc:
-                await JSONResponse(exc.to_body(), status_code=exc.status)(scope, receive, send)
+                response = _error_response(Request(scope), exc, self.error_response)
+                await response(scope, receive, send)
                 return
         await self.app(scope, receive, send)
 
 
-def install(app: Starlette, health: Health | None = None) -> None:
+def install(
+    app: Starlette, health: Health | None = None, *, error_response: ErrorResponse | None = None
+) -> None:
     """Add the error body handlers, the origin check, correlation middleware and (optionally)
-    /health."""
+    /health. `error_response` renders the KitErrors of the handlers and the origin check; pass
+    the same to `install_tenancy` for its errors."""
     handlers: dict[Any, Any] = {
-        KitError: _kit_error,
+        KitError: _kit_error(error_response),
         HTTPException: _http_error,
         Exception: _internal_error,
     }
     for exc_class, handler in handlers.items():
         app.add_exception_handler(exc_class, handler)
     # Added first, so the correlation middleware wraps it and its 403 carries the id too.
-    app.add_middleware(OriginCheckMiddleware)
+    app.add_middleware(OriginCheckMiddleware, error_response=error_response)
     app.add_middleware(CorrelationMiddleware)
     if health is not None:
         app.router.routes.append(health_route(health))
@@ -188,10 +204,12 @@ class TenancyMiddleware:
         app: ASGIApp,
         resolver: TenantResolver,
         platform_hosts: Literal["serve", "refuse"] = "refuse",
+        error_response: ErrorResponse | None = None,
     ) -> None:
         self.app = app
         self.resolver = resolver
         self.platform_hosts = platform_hosts
+        self.error_response = error_response
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -208,7 +226,8 @@ class TenancyMiddleware:
             if resolution.kind == "platform" and self.platform_hosts != "serve":
                 raise UnknownHost()
         except KitError as exc:
-            await JSONResponse(exc.to_body(), status_code=exc.status)(scope, receive, send)
+            response = _error_response(Request(scope), exc, self.error_response)
+            await response(scope, receive, send)
             return
         if resolution.context is None:
             await self.app(scope, receive, send)
@@ -222,6 +241,8 @@ def install_tenancy(
     app: Starlette,
     resolver: TenantResolver,
     platform_hosts: Literal["serve", "refuse"] = "refuse",
+    *,
+    error_response: ErrorResponse | None = None,
 ) -> None:
     """Resolve every request's tenant; `serve` only in a module that answers on the sign-in or
     superadmin hostname."""
@@ -230,7 +251,12 @@ def install_tenancy(
     # Innermost of the user middleware, whatever the call order with install(): the correlation
     # id then covers tenancy errors, and no other middleware runs on a request with no tenant.
     app.user_middleware.append(
-        Middleware(TenancyMiddleware, resolver=resolver, platform_hosts=platform_hosts)
+        Middleware(
+            TenancyMiddleware,
+            resolver=resolver,
+            platform_hosts=platform_hosts,
+            error_response=error_response,
+        )
     )
 
 

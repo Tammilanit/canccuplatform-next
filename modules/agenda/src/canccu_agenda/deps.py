@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
-from canccu_kit import Bus
+from canccu_kit import Bus, Outbox
 from canccu_kit.rights import Session
 from starlette.requests import Request
 
@@ -36,6 +36,7 @@ class Deps:
     bus: Bus
     rights: Rights
     settings: Settings
+    outbox: Outbox
     now: Callable[[], datetime] = field(default=utc_now)
 
 

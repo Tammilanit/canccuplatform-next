@@ -97,6 +97,20 @@ def check_id(value: object, field: str) -> str:
     return value
 
 
+MAX_STORAGE_BYTES = 1_099_511_627_776
+"""The largest quota and count (contracts, `StorageQuota`): 1 TiB."""
+
+
+def check_storage_bytes(value: object, field: str, low: int = 0) -> int:
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int)
+        or not low <= value <= MAX_STORAGE_BYTES
+    ):
+        raise bad_request(f"{field}: a whole number from {low} to {MAX_STORAGE_BYTES}")
+    return value
+
+
 def check_revision(body: Mapping[str, Any], field: str = "revision") -> int:
     value = body.get(field)
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:

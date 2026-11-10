@@ -139,21 +139,23 @@ async def delay(
         kinds = await store.kinds(conn)
         await timers.reschedule(conn, [r for r, _ in updated], kinds, leads, now)
         shifted = [(model.item_json(r, kinds, channels), v) for r, v in updated]
-    # One correlation id, in order of the new start: a consumer that takes the first of a
-    # correlation id gets the earliest.
-    correlation_id = new_id()
-    for item, version in shifted:
-        await d.bus.publish(
-            "agenda.item.delayed",
-            {
-                "item": item,
-                "minutes": minutes,
-                "agenda_version": version,
-                "actor_user_id": session.user_id,
-            },
-            version=1,
-            correlation_id=correlation_id,
-        )
+        # One correlation id, in order of the new start: a consumer that takes the first of a
+        # correlation id gets the earliest.
+        correlation_id = new_id()
+        for item, version in shifted:
+            await d.outbox.add(
+                conn,
+                "agenda.item.delayed",
+                {
+                    "item": item,
+                    "minutes": minutes,
+                    "agenda_version": version,
+                    "actor_user_id": session.user_id,
+                },
+                version=1,
+                correlation_id=correlation_id,
+            )
+    await d.outbox.flush()
     items = sorted((i for i, _ in shifted), key=lambda i: i["id"] != row["id"])
     return shifted[-1][1], items
 
@@ -185,11 +187,13 @@ async def cancel_one(
         item, version = await cancel(conn, row, channels, leads, d, store.actor_of(session))
         if inverse is not None:
             inverse.add_again(await store.item(conn, row["id"]))
-    await d.bus.publish(
-        "agenda.item.cancelled",
-        {"item": item, "agenda_version": version, "actor_user_id": session.user_id},
-        version=1,
-    )
+        await d.outbox.add(
+            conn,
+            "agenda.item.cancelled",
+            {"item": item, "agenda_version": version, "actor_user_id": session.user_id},
+            version=1,
+        )
+    await d.outbox.flush()
     return item
 
 
@@ -215,16 +219,18 @@ async def remove_item(request: Request) -> Response:
         if row["managed_by"] is not None:
             raise model.conflict("item_managed", "remove the session in the tournament module")
         version = await remove(conn, row, store.actor_of(session))
-    await d.bus.publish(
-        "agenda.item.removed",
-        {
-            "item_id": row["id"],
-            "visibility": row["visibility"],
-            "agenda_version": version,
-            "actor_user_id": session.user_id,
-        },
-        version=1,
-    )
+        await d.outbox.add(
+            conn,
+            "agenda.item.removed",
+            {
+                "item_id": row["id"],
+                "visibility": row["visibility"],
+                "agenda_version": version,
+                "actor_user_id": session.user_id,
+            },
+            version=1,
+        )
+    await d.outbox.flush()
     return Response(status_code=204)
 
 

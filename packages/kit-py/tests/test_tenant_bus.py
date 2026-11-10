@@ -305,3 +305,27 @@ async def test_retries_a_failed_first_scan_and_still_delivers_what_arrived_meanw
         assert store.scans > 1
     finally:
         await sub.close()
+
+
+async def test_a_failed_tenant_handler_is_retried_inside_the_events_tenant() -> None:
+    store = MemoryStreamStore()
+    store.append_raw("t:acme:events:pizza", entry("acme"))
+    tenants: list[str | None] = []
+
+    async def handler(event: Event) -> None:
+        tenants.append(current_tenant())
+        if len(tenants) < 2:
+            raise RuntimeError("boom")
+
+    sub = Bus(store, "screen").subscribe_tenants(
+        ["pizza"], handler, from_id="0", block_ms=20, retry_ms=5
+    )
+    try:
+        for _ in range(200):
+            if len(tenants) >= 2:
+                break
+            await asyncio.sleep(0.01)
+        await asyncio.sleep(0.06)
+        assert tenants == ["acme", "acme"]
+    finally:
+        await sub.close()

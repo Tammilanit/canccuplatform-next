@@ -18,7 +18,15 @@ import {
   tenantOf,
 } from "../http.js";
 import { probeYouTube, webUrl, youtubeLink } from "./links.js";
-import { ASSET_KINDS, ASSET_SELECT, assetView, isDeck, readAsset, viewAsset } from "./store.js";
+import {
+  ASSET_KINDS,
+  ASSET_SELECT,
+  assetView,
+  isDeck,
+  readAsset,
+  usedBy,
+  viewAsset,
+} from "./store.js";
 import type { AssetKind, AssetRow } from "./store.js";
 import { assetTitle, prepare, readUpload, uploadTitle } from "./upload.js";
 import { writeWithFile } from "./write.js";
@@ -101,7 +109,7 @@ async function addLink(deps: AssetDeps, request: FastifyRequest, ctx: TenantCont
       target: { type: "asset", id },
       changes: { kind: { from: null, to: kind }, url: { from: null, to: url } },
     });
-    return await viewAsset(c, id);
+    return await viewAsset(c, id, deps.now());
   });
 }
 
@@ -134,7 +142,7 @@ async function addFile(deps: AssetDeps, request: FastifyRequest, ctx: TenantCont
       const who = { tenant_id: ctx.tenant_id, actor_user_id: actorOf(request) };
       job = (await submitJob(c, deps, who, id, 1)).row;
     }
-    return { result: await viewAsset(c, id), unused: [] };
+    return { result: await viewAsset(c, id, deps.now()), unused: [] };
   });
   if (job !== null) await announce(deps, job);
   return asset;
@@ -174,11 +182,17 @@ export function assetRoutes(app: FastifyInstance, deps: AssetDeps): void {
     );
     const sql = `${select} ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
       ORDER BY a.created_at DESC, a.id DESC LIMIT ${PAGE + 1}`;
-    const rows = await deps.db.tenant(async (c) => (await c.query(sql, values)).rows);
-    const page = (rows as unknown as (AssetRow & { cursor_us: string })[]).slice(0, PAGE);
+    const [rows, users] = await deps.db.tenant(async (c) => {
+      const found = (await c.query(sql, values)).rows as unknown as (AssetRow & {
+        cursor_us: string;
+      })[];
+      const ids = found.slice(0, PAGE).map((r) => r.id);
+      return [found, await usedBy(c, ids, deps.now())] as const;
+    });
+    const page = rows.slice(0, PAGE);
     const last = page.at(-1);
     return {
-      assets: page.map(assetView),
+      assets: page.map((row) => assetView(row, users.get(row.id) ?? [])),
       next_cursor: rows.length > PAGE && last ? encodeCursor(last) : null,
     };
   });
@@ -254,7 +268,7 @@ export function assetRoutes(app: FastifyInstance, deps: AssetDeps): void {
           changes,
         });
       }
-      return await viewAsset(c, id);
+      return await viewAsset(c, id, deps.now());
     });
   });
 }

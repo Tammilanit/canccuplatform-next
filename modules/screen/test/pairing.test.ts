@@ -240,4 +240,53 @@ describe.skipIf(!DATABASE_URL)("pairing", () => {
     h.clock.now += 60_001;
     expect((await poll()).statusCode).toBe(404);
   });
+  it("keeps the winner's record when two polls of one browser overlap", async () => {
+    const res = await start();
+    const { pairing_id, code: shown } = res.json<{ pairing_id: string; code: string }>();
+    const pairingCookie = setCookie(res, "canccu_pairing") ?? "";
+    await call(h, "POST", "/api/screen/devices", {
+      session: "admin",
+      body: { code: shown, name: "Overlap" },
+    });
+    const poll = () =>
+      call(h, "GET", `/api/screen/pairing/${pairing_id}`, {
+        cookies: { canccu_pairing: pairingCookie },
+      });
+    expect((await poll()).json()).toMatchObject({ status: "paired" });
+    // The loser read the record before the winner wrote `issued_hash`, so its collection fails.
+    const get = h.kv.get.bind(h.kv);
+    let served = false;
+    h.kv.get = async (key) => {
+      const raw = await get(key);
+      if (served || raw === null || !raw.includes("issued_hash")) return raw;
+      served = true;
+      const before = JSON.parse(raw) as Record<string, unknown>;
+      delete before.issued_hash;
+      return JSON.stringify(before);
+    };
+    expect((await poll()).statusCode).toBe(404);
+    expect(served).toBe(true);
+    h.kv.get = get;
+    // The winner's answer was lost: it still collects with the record the loser left alone.
+    expect((await poll()).json()).toMatchObject({ status: "paired" });
+  });
+
+  it("forgets the pairing of a revoked device, so a reload asks for a new code", async () => {
+    const res = await start();
+    const { pairing_id, code: shown } = res.json<{ pairing_id: string; code: string }>();
+    const pairingCookie = setCookie(res, "canccu_pairing") ?? "";
+    const { id } = (
+      await call(h, "POST", "/api/screen/devices", {
+        session: "admin",
+        body: { code: shown, name: "Revoked" },
+      })
+    ).json<{ id: string }>();
+    await call(h, "POST", `/api/screen/devices/${id}/revoke`, { session: "admin" });
+    const poll = await call(h, "GET", `/api/screen/pairing/${pairing_id}`, {
+      cookies: { canccu_pairing: pairingCookie },
+    });
+    expect(poll.statusCode).toBe(404);
+    const reloaded = await start("alpha.test", undefined, pairingCookie);
+    expect(reloaded.json<{ pairing_id: string }>().pairing_id).not.toBe(pairing_id);
+  });
 });

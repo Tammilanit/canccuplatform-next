@@ -21,7 +21,8 @@ import {
 } from "../http.js";
 import { projectBreaks } from "../playback/break-projection.js";
 import { NEXT_CHANGE_HORIZON_MS, simulate } from "../schedule/simulate.js";
-import { breakInputFor, loadContent, noAssets, type AssetReader } from "../tick/content.js";
+import { readAssets } from "../assets/reader.js";
+import { breakInputFor, loadContent } from "../tick/content.js";
 import { breakGapSeconds, loadZoneState } from "../tick/run.js";
 import { EMPTY_ZONE } from "../tick/zone.js";
 import { zoneExistsHere } from "../zones.js";
@@ -83,7 +84,6 @@ function values(window: ScheduleInput) {
 
 export interface ScheduleDeps extends ContentDeps {
   settings: Settings;
-  assets?: AssetReader;
 }
 
 type ById = { Params: { schedule_id: string } };
@@ -225,7 +225,7 @@ export function scheduleRoutes(app: FastifyInstance, deps: ScheduleDeps): void {
       const [content, state] = await db.tenant(
         async (c) =>
           [
-            await loadContent(c, deps.assets ?? noAssets, nowMs),
+            await loadContent(c, readAssets, nowMs),
             zone === undefined ? EMPTY_ZONE : await loadZoneState(c, zone),
           ] as const,
       );

@@ -3,14 +3,19 @@
  * test). The URL's role must be able to create roles and tables; the tests then run as a plain
  * app role, because a superuser bypasses RLS.
  */
+import { mkdtemp, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  PLATFORM_MIGRATION_LOCK,
   RlsBypassed,
   TENANT_COLUMN_SQL,
   checkAppRole,
   checkLoginRole,
   rlsSql,
+  runMigrations,
   tenantTransaction,
 } from "../src/index.js";
 
@@ -126,5 +131,54 @@ describe.skipIf(!url)("tenant tables in Postgres", () => {
   it("refuses the login role behind SET ROLE when it owns the tables", async () => {
     // The test's login role created kit_test_lists, so its owner could switch RLS off.
     await expect(checkLoginRole(client)).rejects.toThrow(RlsBypassed);
+  });
+});
+
+describe.skipIf(!url)("migrations of several modules in Postgres", () => {
+  async function waitsOnALock(watcher: pg.Client, pid: number): Promise<void> {
+    for (let i = 0; i < 200; i++) {
+      const { rows } = await watcher.query<{ wait_event_type: string | null }>(
+        "SELECT wait_event_type FROM pg_stat_activity WHERE pid = $1",
+        [pid],
+      );
+      if (rows[0]?.wait_event_type === "Lock") return;
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    throw new Error(`backend ${pid} never waited on a lock`);
+  }
+
+  it("waits while another module's migrations run, though its own lock is free", async () => {
+    const d = await mkdtemp(join(tmpdir(), "canccu-mig-"));
+    await writeFile(join(d, "001.sql"), "CREATE TABLE kit_ts_mig_second ()");
+    // `other` stands in for another module mid-run, in either kit: it holds the platform lock.
+    const [other, migrator] = [
+      new pg.Client({ connectionString: url }),
+      new pg.Client({ connectionString: url }),
+    ];
+    await other.connect();
+    await migrator.connect();
+    const tables = "kit_ts_mig_second, kit_ts_mig_second_m";
+    let run: Promise<string[]> | undefined;
+    try {
+      await other.query(`DROP TABLE IF EXISTS ${tables}`);
+      await other.query("SELECT pg_advisory_lock($1)", [PLATFORM_MIGRATION_LOCK]);
+      const [{ pid }] = (await migrator.query<{ pid: number }>("SELECT pg_backend_pid() AS pid"))
+        .rows as [{ pid: number }];
+      run = runMigrations(migrator, d, { ledger: "kit_ts_mig_second_m", lock: 0x6b172803 });
+      await waitsOnALock(other, pid);
+      const before = await other.query<{ t: string | null }>(
+        "SELECT to_regclass('kit_ts_mig_second') AS t",
+      );
+      expect(before.rows).toEqual([{ t: null }]);
+
+      await other.query("SELECT pg_advisory_unlock($1)", [PLATFORM_MIGRATION_LOCK]);
+      expect(await run).toEqual(["001.sql"]);
+    } finally {
+      await other.query("SELECT pg_advisory_unlock_all()");
+      await run?.catch(() => undefined);
+      await other.query(`DROP TABLE IF EXISTS ${tables}`);
+      await other.end();
+      await migrator.end();
+    }
   });
 });
