@@ -12,6 +12,10 @@ import { isObject, NAME_RE, onlyKeys, oneOf, zoneKey } from "../zone-input.js";
 
 const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 const MAX_ITEMS = 500;
+// Upper bounds keep values inside Postgres `integer` columns and the tick's arithmetic: a deck
+// never has this many slides, and nothing on a screen lasts longer than a day.
+const MAX_SLIDE = 10_000;
+const MAX_SECONDS = 86_400;
 /** "At most 12 hours ahead" (contracts/screen.md, Push content). */
 export const PUSH_MAX_MS = 12 * 3600 * 1000;
 
@@ -126,8 +130,8 @@ function itemInput(value: unknown, where: string): ItemInput {
       `\`${where}.duration_seconds\` must be at least 1 second, or null for the video's own length.`,
     );
   }
-  const start = wholeOrNull(value.slide_start, `${where}.slide_start`, 1);
-  const end = wholeOrNull(value.slide_end, `${where}.slide_end`, 1);
+  const start = wholeOrNull(value.slide_start, `${where}.slide_start`, 1, MAX_SLIDE);
+  const end = wholeOrNull(value.slide_end, `${where}.slide_end`, 1, MAX_SLIDE);
   if (start !== null && end !== null && start > end) {
     throw invalidRequest(`\`${where}\`: the start slide cannot be after the end slide.`);
   }
@@ -137,7 +141,7 @@ function itemInput(value: unknown, where: string): ItemInput {
     duration_seconds: duration,
     slide_start: start,
     slide_end: end,
-    slide_seconds: wholeOrNull(value.slide_seconds, `${where}.slide_seconds`, 1),
+    slide_seconds: wholeOrNull(value.slide_seconds, `${where}.slide_seconds`, 1, MAX_SECONDS),
   };
 }
 
@@ -169,8 +173,8 @@ function breakSettings(value: unknown): BreakInputSettings {
   if (!window.ok) throw invalidRequest(`\`break\`: ${window.error}.`);
   return {
     zones: zoneList(value.zones, "break.zones"),
-    period_seconds: whole(value.period_seconds, "break.period_seconds", 60),
-    break_seconds: whole(value.break_seconds, "break.break_seconds", 5),
+    period_seconds: whole(value.period_seconds, "break.period_seconds", 60, MAX_SECONDS),
+    break_seconds: whole(value.break_seconds, "break.break_seconds", 5, MAX_SECONDS),
     window_start_minute: start,
     window_end_minute: end,
     play_once: bool(value.play_once, "break.play_once"),
@@ -180,6 +184,7 @@ function breakSettings(value: unknown): BreakInputSettings {
       value.slideshow_dwell_seconds,
       "break.slideshow_dwell_seconds",
       1,
+      MAX_SECONDS,
     ),
     shuffle: bool(value.shuffle, "break.shuffle"),
     ...(value.transition === undefined ? {} : { transition: value.transition as string }),
@@ -219,6 +224,7 @@ export function playlistInput(value: unknown): PlaylistInput {
       value.slideshow_image_seconds,
       "slideshow_image_seconds",
       1,
+      MAX_SECONDS,
     ),
     break: settings === null ? null : breakSettings(settings),
     items,
@@ -256,7 +262,10 @@ export function scheduleInput(value: unknown): ScheduleInput {
     priority: whole(value.priority, "priority", 0, 999),
     layout_id: layout,
   };
-  const weekly = ["days", "start_minute", "end_minute"].some((k) => value[k] !== undefined);
+  // An explicit null counts as left out, as everywhere in these bodies.
+  const weekly = ["days", "start_minute", "end_minute"].some(
+    (k) => value[k] !== undefined && value[k] !== null,
+  );
   const bound = value.agenda_item_id !== undefined && value.agenda_item_id !== null;
   if (weekly === bound) {
     throw invalidRequest(
@@ -300,8 +309,8 @@ export function pushInput(value: unknown, nowMs: number): PushInput {
   onlyKeys(value, ["id", "zones", "playlist_id", "asset_id", "until"], "push");
   if (!Array.isArray(value.zones))
     throw invalidRequest("`zones` is required: a list of zone keys, empty for every zone.");
-  const hasPlaylist = value.playlist_id !== undefined;
-  if (hasPlaylist === (value.asset_id !== undefined)) {
+  const hasPlaylist = value.playlist_id !== undefined && value.playlist_id !== null;
+  if (hasPlaylist === (value.asset_id !== undefined && value.asset_id !== null)) {
     throw invalidRequest("Name exactly one of `playlist_id` and `asset_id`.");
   }
   const untilMs = typeof value.until === "string" ? Date.parse(value.until) : NaN;

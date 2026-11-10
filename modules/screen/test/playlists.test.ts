@@ -201,9 +201,11 @@ describe.skipIf(!DATABASE_URL)("playlists", () => {
       reason: "cleared",
       actor_user_id: "u_admin",
     });
-    expect(h.audits.map((a) => a.action).slice(-2)).toEqual([
-      "screen.content.cleared",
-      "screen.playlist.deleted",
+    const windowId = window.json<{ id: string }>().id;
+    expect(h.audits.slice(-3)).toMatchObject([
+      { action: "screen.content.cleared" },
+      { action: "screen.schedule.deleted", target: { type: "schedule", id: windowId } },
+      { action: "screen.playlist.deleted" },
     ]);
     expect(
       (await call(h, "DELETE", `/api/screen/playlists/${made.id}`, as("admin"))).statusCode,
@@ -231,6 +233,31 @@ describe.skipIf(!DATABASE_URL)("playlists", () => {
       }),
     );
     expect(code(res)).toBe("invalid_request");
+  });
+
+  it("refuses to make a pushed playlist a break playlist", async () => {
+    const made = await create({ name: "Now", type: "regular", items: [] });
+    const until = new Date(h.clock.now + 3600_000).toISOString();
+    await call(
+      h,
+      "POST",
+      "/api/screen/push",
+      as("admin", { zones: [], playlist_id: made.id, until }),
+    );
+    const toBreak = {
+      name: "Now",
+      type: "break",
+      items: [],
+      break: { period_seconds: 60, break_seconds: 5 },
+    };
+    const res = await call(
+      h,
+      "PUT",
+      `/api/screen/playlists/${made.id}`,
+      as("admin", { ...toBreak, revision: 1 }),
+    );
+    expect(code(res)).toBe("invalid_request");
+    expect(res.json<{ error: { message: string } }>().error.message).toMatch(/pushed/);
   });
 
   it("writes nothing when the audit log cannot take the entry", async () => {

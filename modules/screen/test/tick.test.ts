@@ -1,5 +1,6 @@
 // The tick runner on Postgres: what each zone plays and its bookmarks are stored by the tick
 // alone, one container per zone and second, and pushes expire by themselves.
+import { tenantKey, withTenant } from "@canccu/kit";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { PlaybackAsset } from "../src/playback/timeline.js";
 import { tickRunner } from "../src/tick/run.js";
@@ -132,6 +133,25 @@ describe.skipIf(!DATABASE_URL)("tick", () => {
     row = await state();
     expect(row?.state.playing).toMatchObject({ source: "schedule", playlistId: day });
     expect(row?.state.bookmarks[day]).toMatchObject({ offsetMs: 5000, runningSince: h.clock.now });
+  });
+
+  it("never writes a step older than the stored one", async () => {
+    const before = await state();
+    const until = new Date(h.clock.now + 60_000).toISOString();
+    await call(
+      h,
+      "POST",
+      "/api/screen/push",
+      as("admin", { zones: ["main"], playlist_id: evening, until }),
+    );
+    // A slow container whose clock reads earlier than the last write, with the claim free.
+    h.clock.now -= 5000;
+    await withTenant("alpha", () => h.kv.del(tenantKey("screen", "tick", "main")));
+    await tick();
+    expect((await state())?.state).toEqual(before?.state);
+    h.clock.now += 6000;
+    await tick();
+    expect((await state())?.state.playing).toMatchObject({ source: "push", playlistId: evening });
   });
 
   it("ticks only events with screens, and none while archived", async () => {

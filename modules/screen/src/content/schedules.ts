@@ -232,7 +232,10 @@ export function scheduleRoutes(app: FastifyInstance, deps: ScheduleDeps): void {
       const here = content.zones.find((z) => z.key === zone);
       if (zone === undefined || here === undefined) throw unknownZone();
       const breakInput = breakInputFor(content, here.key, ctx.time_zone, gap);
-      // Breaks follow the zone's stored state forward from now; the past has no projection.
+      // Breaks follow the zone's stored state forward from now; the past has no projection, and
+      // `projectBreaks` stops after its step bound (about two weeks of steps, less with frequent
+      // breaks), so `in_break` beyond it is false. Simulate answers the schedule and its breaks:
+      // a push plays only from now to its `until`, so it is no part of "what would play at…".
       const breaks =
         atMs < nowMs
           ? []

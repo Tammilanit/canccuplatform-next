@@ -124,6 +124,31 @@ describe("playlistInput", () => {
   });
 });
 
+describe("bounds that keep values inside the database's columns", () => {
+  test("refuses slide numbers and seconds past their bounds with 400, not a database error", () => {
+    const withItem = (extra: Record<string, unknown>) => () =>
+      playlistInput({ name: "x", type: "regular", items: [{ asset_id: "as_1", ...extra }] });
+    expect(refused(withItem({ slide_end: 3_000_000_000 }))).toMatch(
+      /^invalid_request: .*slide_end/,
+    );
+    expect(refused(withItem({ slide_start: 10_001 }))).toMatch(/slide_start/);
+    expect(refused(withItem({ slide_seconds: 86_401 }))).toMatch(/slide_seconds/);
+    expect(
+      refused(() =>
+        playlistInput({
+          name: "x",
+          type: "slideshow",
+          items: [],
+          slideshow_image_seconds: 2 ** 31,
+        }),
+      ),
+    ).toMatch(/slideshow_image_seconds/);
+    expect(withItem({ slide_end: 10_000, slide_seconds: 86_400 })().items[0]?.slide_end).toBe(
+      10_000,
+    );
+  });
+});
+
 describe("scheduleInput", () => {
   const weekly = {
     zone_key: "main",
@@ -197,6 +222,18 @@ describe("pushInput", () => {
       asset_id: null,
       until: new Date("2026-01-01T13:00:00Z"),
     });
+  });
+
+  test("an explicit null target counts as left out", () => {
+    const until = "2026-01-01T13:00:00Z";
+    expect(pushInput({ zones: [], asset_id: "as_1", playlist_id: null, until }, now)).toMatchObject(
+      {
+        asset_id: "as_1",
+        playlist_id: null,
+      },
+    );
+    const bound = { zone_key: "main", playlist_id: "pl_2", priority: 50, agenda_item_id: "it_8" };
+    expect(scheduleInput({ ...bound, days: null, start_minute: null }).agenda_item_id).toBe("it_8");
   });
 
   test("names exactly one of a playlist and an asset", () => {

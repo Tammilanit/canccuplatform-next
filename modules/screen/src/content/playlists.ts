@@ -213,6 +213,16 @@ export function playlistRoutes(app: FastifyInstance, deps: ContentDeps): void {
             "Schedule windows play this playlist; delete them before making it a break playlist.",
           );
         }
+        // Pushes never name a break playlist (checkPlayable), so an open one keeps this type.
+        const pushes = await c.query(
+          "SELECT 1 FROM screen_pushes WHERE playlist_id = $1 AND ended_at IS NULL AND until > $2 LIMIT 1",
+          [id, new Date(now())],
+        );
+        if (pushes.rows.length > 0) {
+          throw invalidRequest(
+            "This playlist is pushed to screens now; clear the push before making it a break playlist.",
+          );
+        }
       }
       await checkBreakZones(c, playlist);
       await c.query(
@@ -280,8 +290,20 @@ export function playlistRoutes(app: FastifyInstance, deps: ContentDeps): void {
         // Its pushes end with it rather than pointing at nothing until they expire.
         const where = { sql: "playlist_id = $3 AND until > $4", params: [id, new Date(at)] };
         const cleared = await endPushes(c, audit, ctx.tenant_id, where, "cleared", actor, at);
-        // Its items and windows go with it (ON DELETE CASCADE).
+        const windows = await c.query("SELECT id FROM screen_schedules WHERE playlist_id = $1", [
+          id,
+        ]);
+        // Its items and windows go with it (ON DELETE CASCADE); each window's delete is audited
+        // as if deleted alone, since the audit list names schedule-window deletes.
         await c.query("DELETE FROM screen_playlists WHERE id = $1", [id]);
+        for (const { id: windowId } of windows.rows as { id: string }[]) {
+          await audit({
+            tenant_id: ctx.tenant_id,
+            actor_user_id: actor,
+            action: "screen.schedule.deleted",
+            target: { type: "schedule", id: windowId },
+          });
+        }
         await audit({
           tenant_id: ctx.tenant_id,
           actor_user_id: actor,
