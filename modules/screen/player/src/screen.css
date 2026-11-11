@@ -275,9 +275,10 @@
     color: var(--canccu-color-primary-text, #0f1115);
     font-weight: 600;
   }
-  /* The playlist's media fill the widget edge to edge, with no card (src/media.ts). */
+  /* The playlist's media fill the widget edge to edge, with no card (src/media.ts). The widget
+     stays absolute, inset 0 like every widget: it is the media's containing block, and set back
+     to relative it would collapse to its absolute children's height, 0 px. */
   .canccu-region > .canccu-widget--playlist {
-    position: relative;
     padding: 0;
     overflow: hidden;
     background: #000;
@@ -299,7 +300,6 @@
   /* The embed widget, as packages/ui's ui.css draws it (the screen page loads no ui.css): the
      still fills the widget and the frame lies over it, transparent until the embed paints. */
   .canccu-region > .canccu-widget--embed {
-    position: relative;
     padding: 0;
     overflow: hidden;
     background: var(--canccu-color-background, #0f1115);
