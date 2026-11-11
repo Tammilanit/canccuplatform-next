@@ -1,7 +1,8 @@
 /**
  * The storage upkeep (contracts/tenants.md, Storage quota, Repair): once a period per event,
- * theming removes the files on the volume no row keeps, then sets its count at tenants to what its
- * stored files take. A crash between a reserve and its release, a cleanup that failed, or files
+ * theming prunes the revisions it no longer keeps (retention.ts; a prune after a publish or a pin
+ * change that failed so waits at most one period), removes the files on the volume no row keeps,
+ * then sets its count at tenants to what its stored files take. A crash between a reserve and its release, a cleanup that failed, or files
  * written without a reserve (publish's generated CSS, files.ts) so stay wrong at most one period.
  */
 import { lockCount, tenantsWithFiles, withTenant } from "@canccu/kit";
@@ -9,6 +10,7 @@ import type { Logger, StorageQuota } from "@canccu/kit";
 import type { Db } from "./db.js";
 import { STORED_NAME, TEMP_NAME, lockFiles } from "./files.js";
 import type { FileStore } from "./files.js";
+import { pruneRevisions } from "./retention.js";
 import { isKept } from "./stored.js";
 
 export const UPKEEP_MS = 3_600_000;
@@ -19,7 +21,7 @@ export interface UpkeepDeps {
   db: Db;
   files: FileStore;
   storage: StorageQuota;
-  log?: Logger;
+  log: Logger;
 }
 
 /**
@@ -78,15 +80,20 @@ export async function upkeepAll(deps: UpkeepDeps & { filesRoot: string }): Promi
     try {
       await withTenant(tenant, async () => {
         try {
+          await pruneRevisions(deps);
+        } catch (err) {
+          deps.log.warn({ err, tenant_id: tenant }, "pruning theme revisions failed");
+        }
+        try {
           await sweepFiles(deps);
         } catch (err) {
-          deps.log?.warn({ err, tenant_id: tenant }, "sweeping theming's files failed");
+          deps.log.warn({ err, tenant_id: tenant }, "sweeping theming's files failed");
         }
         await recount(deps);
       });
     } catch (err) {
       // One event's failure never holds back the others'.
-      deps.log?.warn({ err, tenant_id: tenant }, "recounting theming's storage failed");
+      deps.log.warn({ err, tenant_id: tenant }, "recounting theming's storage failed");
     }
   }
 }

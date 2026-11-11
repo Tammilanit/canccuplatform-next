@@ -31,8 +31,8 @@ export async function publishAll(bus: Bus, emits: readonly Emit[]): Promise<void
   for (const [type, data] of emits) await bus.publish(type, data, { version: 1 });
 }
 
-const ZONE_FIELDS = ["name", "layout_id", "regions", "sound"] as const;
-const ZONE_COLUMNS = "key, name, layout_id, regions, sound, revision";
+const ZONE_FIELDS = ["name", "layout_id", "regions", "header", "hub_qr", "sound"] as const;
+const ZONE_COLUMNS = "key, name, layout_id, regions, header, hub_qr, sound, revision";
 
 type ZoneRow = Omit<ZoneInput, "revision"> & { revision: number };
 
@@ -43,6 +43,8 @@ function zoneView(row: Record<string, unknown>): ZoneRow {
     name: row.name as string,
     layout_id: row.layout_id as string | null,
     regions: row.regions as ZoneRow["regions"],
+    header: row.header as ZoneRow["header"],
+    hub_qr: row.hub_qr as ZoneRow["hub_qr"],
     sound: row.sound as ZoneRow["sound"],
     revision: row.revision as number,
   };
@@ -245,13 +247,15 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
     const [emits, row] = await db.tenant(async (c) => {
       const seeded = await seededFor(ctx, c);
       const { rows } = await c.query(
-        `INSERT INTO screen_zones (key, name, layout_id, regions, sound, epoch)
-         VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING RETURNING ${ZONE_COLUMNS}`,
+        `INSERT INTO screen_zones (key, name, layout_id, regions, header, hub_qr, sound, epoch)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT DO NOTHING RETURNING ${ZONE_COLUMNS}`,
         [
           zone.key,
           zone.name,
           zone.layout_id,
           JSON.stringify(zone.regions),
+          zone.header,
+          zone.hub_qr,
           JSON.stringify(zone.sound),
           newEpoch(),
         ],
@@ -299,14 +303,16 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
       // An unchanged save keeps its revision, so other editors get no needless version_conflict.
       if (changed.length === 0) return [seeded, zoneView(before)] as const;
       const after = await c.query(
-        `UPDATE screen_zones SET name = $2, layout_id = $3, regions = $4, sound = $5,
-           revision = revision + 1, updated_at = now()
+        `UPDATE screen_zones SET name = $2, layout_id = $3, regions = $4, header = $5, hub_qr = $6,
+           sound = $7, revision = revision + 1, updated_at = now()
          WHERE key = $1 RETURNING ${ZONE_COLUMNS}`,
         [
           zone.key,
           zone.name,
           zone.layout_id,
           JSON.stringify(zone.regions),
+          zone.header,
+          zone.hub_qr,
           JSON.stringify(zone.sound),
         ],
       );

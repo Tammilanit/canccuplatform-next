@@ -19,22 +19,29 @@
     "@canccu/kit": "file:../../packages/kit-ts",
     "@canccu/ui": "file:../../packages/ui",
     "ajv": "8.20.0",
+    "css-tree": "3.2.1",
     "fastify": "5.12.8",
     "iovalkey": "0.4.0",
+    "parse5": "8.1.1",
     "pg": "8.23.1",
     "saxes": "6.0.0",
-    "sharp": "0.35.5"
+    "sharp": "0.35.5",
+    "yaml": "2.9.1",
+    "yauzl": "3.4.0",
+    "yazl": "3.3.1"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@types/css-tree": "3.2.0",
     "@types/node": "22.20.5",
     "@types/pg": "8.23.1",
+    "@types/yauzl": "3.4.0",
+    "@types/yazl": "3.3.1",
     "eslint": "10.14.0",
     "playwright-core": "1.64.1",
     "prettier": "3.9.10",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",
-    "vitest": "5.1.0",
-    "yaml": "2.9.1"
+    "vitest": "5.1.0"
   }
 }

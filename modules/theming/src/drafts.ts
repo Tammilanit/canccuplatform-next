@@ -2,10 +2,15 @@
 import { randomBytes } from "node:crypto";
 import type { SqlClient } from "@canccu/kit";
 import { COLOR_TOKENS } from "@canccu/ui";
+import { generateColors } from "./brand.js";
+import type { Brand } from "./brand.js";
 import { checkManifest } from "./checks.js";
 import type { Manifest, Problem } from "./checks.js";
 import { draftExists, noDraft, notFound, versionConflict } from "./http.js";
-import { pathProblems } from "./package-files.js";
+import { referenceProblems } from "./manifest.js";
+import { draftPaths, pathProblems } from "./package-files.js";
+import { lockHistory } from "./publish.js";
+import { readabilityProblems } from "./readability.js";
 import { fillTokens } from "./tokens.js";
 import type { PartialTokens } from "./tokens.js";
 
@@ -35,10 +40,12 @@ export function draftBody(row: DraftRow): Record<string, unknown> {
 
 const COLUMNS = `draft_version, created_from, manifest, problems, updated_at, updated_by,
   (SELECT coalesce(jsonb_agg(jsonb_build_object('path', path, 'bytes', bytes) ORDER BY path), '[]')
-     FROM theming_package_files WHERE owner = 'draft' AND file IS NOT NULL) AS files`;
+     FROM (SELECT path, bytes FROM theming_package_files WHERE owner = 'draft' AND file IS NOT NULL
+           UNION ALL SELECT 'embeds/' || embed || '/' || path, bytes FROM theming_embed_files
+            WHERE owner = 'draft') held) AS files`;
 
 /** The draft key names draft embeds in the sandbox, so it is unguessable and new on every change. */
-const newDraftKey = (): string => randomBytes(24).toString("base64url");
+export const newDraftKey = (): string => randomBytes(24).toString("base64url");
 
 export async function loadDraft(c: SqlClient, forUpdate = false): Promise<DraftRow | undefined> {
   const { rows } = await c.query(
@@ -57,12 +64,18 @@ export async function lockDraft(c: SqlClient, version: number): Promise<DraftRow
 
 /** A valid simple-mode theme: the platform colours, with the brand they come from. */
 export function defaultManifest(): Manifest {
+  const brand: Brand = {
+    primary: COLOR_TOKENS.primary,
+    accent: COLOR_TOKENS.accent,
+    scheme: "dark",
+  };
   return {
     schema_version: 1,
     name: "Default",
     mode: "simple",
-    brand: { primary: COLOR_TOKENS.primary, accent: COLOR_TOKENS.accent, scheme: "dark" },
-    tokens: { colors: { ...COLOR_TOKENS } },
+    brand,
+    // The platform colours themselves: the default brand generates exactly them (test/brand.test.ts).
+    tokens: { colors: generateColors(brand).colors },
   };
 }
 
@@ -70,17 +83,33 @@ export type DraftSource =
   { from: "defaults" } | { from: "current" } | { from: "revision"; revision: number };
 
 /**
+ * The files a revision `r` generated at publish, as an SQL array: token CSS, compiled CSS, the
+ * logo PNG and the icons. The next revision generates its own, so copies leave them behind.
+ */
+const GENERATED = `array_remove(ARRAY[r.tokens_css, r.admin_tokens_css, r.css, r.logo_png,
+  r.icon_192, r.icon_512, r.icon_maskable_512], NULL)`;
+
+/**
+ * The file references `f` that owner `$1` passes on to a copy: all of them but a revision's
+ * generated files, unless a package path holds the same bytes (a logo already 512 px wide can come
+ * out of the PNG encoder identical to its own rendition). The one rule of copyOwned and publish's
+ * comparison of what changed, so the two cannot drift apart.
+ */
+export const CARRIED_REFS = `FROM theming_file_refs f
+   LEFT JOIN theming_revisions r ON 'r:' || r.revision = f.owner
+  WHERE f.owner = $1
+    AND (r.revision IS NULL OR f.file <> ALL (${GENERATED})
+         OR EXISTS (SELECT 1 FROM theming_package_files p
+                     WHERE p.owner = f.owner AND p.file = f.file))`;
+
+/**
  * Copies what `from` (`draft` or `r:<n>`) holds to `to`: its file references and embed files, the
- * one copy rule of draft creation, publish and restore. A revision's generated token CSS stays
- * behind: the next revision generates its own.
+ * one copy rule of draft creation, publish and restore (CARRIED_REFS says which files go).
  */
 export async function copyOwned(c: SqlClient, from: string, to: string): Promise<void> {
   await c.query(
     `INSERT INTO theming_file_refs (owner, file)
-     SELECT $2, f.file FROM theming_file_refs f
-       LEFT JOIN theming_revisions r ON 'r:' || r.revision = f.owner
-      WHERE f.owner = $1
-        AND (r.revision IS NULL OR f.file NOT IN (r.tokens_css, r.admin_tokens_css, coalesce(r.css, '')))
+     SELECT $2, f.file ${CARRIED_REFS}
      ON CONFLICT DO NOTHING`,
     [from, to],
   );
@@ -90,8 +119,10 @@ export async function copyOwned(c: SqlClient, from: string, to: string): Promise
     [from, to],
   );
   await c.query(
-    `INSERT INTO theming_package_files (owner, path, file, bytes, problem)
-     SELECT $2, path, file, bytes, problem FROM theming_package_files WHERE owner = $1`,
+    `INSERT INTO theming_package_files (owner, path, file, bytes, problem, refs, warnings,
+                                        font_sizes)
+     SELECT $2, path, file, bytes, problem, refs, warnings, font_sizes FROM theming_package_files
+      WHERE owner = $1`,
     [from, to],
   );
 }
@@ -140,6 +171,8 @@ export async function createDraft(
   let manifest = source.from === "current" ? profileManifest(profile) : defaultManifest();
   let base: number | null = null;
   if (source.from !== "defaults") {
+    // Retention prunes under the same lock (retention.ts), so the revision copied stays whole.
+    await lockHistory(c);
     const { rows } = await c.query(
       source.from === "current"
         ? `SELECT revision, manifest FROM theming_revisions ORDER BY revision DESC LIMIT 1`
@@ -160,16 +193,26 @@ export async function createDraft(
   if (created === undefined) throw draftExists();
   if (base === null) return created;
   await copyOwned(c, `r:${base}`, "draft");
-  // Read again for the files just copied.
+  // Checked again with the files just copied, and read again for them.
+  await c.query(`UPDATE theming_drafts SET problems = $1`, [
+    JSON.stringify(await draftProblems(c, manifest)),
+  ]);
   return (await loadDraft(c)) as DraftRow;
 }
 
 /**
- * Every check on the draft: the manifest's, and the problems of the uploads it holds instead of
- * files (package-files.ts).
+ * Every check on the draft: the manifest's, how it fits the draft's files (manifest.ts), the
+ * problems of the uploads it holds instead of files (package-files.ts), and its CSS's small text
+ * (readability.ts).
  */
 export async function draftProblems(c: SqlClient, manifest: Manifest): Promise<Problem[]> {
-  return [...checkManifest(manifest), ...(await pathProblems(c))];
+  const paths = await draftPaths(c);
+  return [
+    ...checkManifest(manifest),
+    ...referenceProblems(manifest, paths),
+    ...(await pathProblems(c, paths)),
+    ...(await readabilityProblems(c, manifest)),
+  ];
 }
 
 /**
@@ -207,7 +250,12 @@ export async function editDraft(
  */
 export async function removeDraft(c: SqlClient): Promise<void> {
   await c.query(`DELETE FROM theming_drafts`);
-  await c.query(`DELETE FROM theming_file_refs WHERE owner = 'draft'`);
+  await removeDraftPaths(c);
   await c.query(`DELETE FROM theming_embed_files WHERE owner = 'draft'`);
+}
+
+/** Removes the draft's package paths and its refs, its embeds kept: a package upload replaces them. */
+export async function removeDraftPaths(c: SqlClient): Promise<void> {
+  await c.query(`DELETE FROM theming_file_refs WHERE owner = 'draft'`);
   await c.query(`DELETE FROM theming_package_files WHERE owner = 'draft'`);
 }

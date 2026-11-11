@@ -4,7 +4,7 @@ import { fileName, lockFiles } from "./files.js";
 import type { EmbedExt, FileStore } from "./files.js";
 
 /** The theme schema's embed file extensions, as stored (`jpeg` is stored as `jpg`). */
-const EXTS: Record<string, EmbedExt> = {
+export const EMBED_EXTS: Record<string, EmbedExt> = {
   html: "html",
   js: "js",
   css: "css",
@@ -35,7 +35,7 @@ export async function putEmbed(
     throw new Error(`embed ${name}: the entry ${entry} is not among its files`);
   for (const [path, bytes] of files) {
     if (!path.startsWith(folder)) throw new Error(`embed ${name}: ${path} is outside ${folder}`);
-    const ext = EXTS[path.slice(path.lastIndexOf(".") + 1).toLowerCase()];
+    const ext = EMBED_EXTS[path.slice(path.lastIndexOf(".") + 1).toLowerCase()];
     if (ext === undefined) throw new Error(`embed ${name}: ${path} is no embed file type`);
     // The sandbox serves HTML only as the entry, and the entry only to a frame: one HTML per embed.
     if ((path === entry) !== (ext === "html")) {
@@ -50,6 +50,18 @@ export async function putEmbed(
       [owner, name, path.slice(folder.length), file, bytes.length, path === entry],
     );
   }
+}
+
+/**
+ * What `owner`'s embed files are, as publish and a package upload compare them: `embed/path=file`,
+ * sorted by code unit in JS, so a list built from a package compares equal (no SQL collation).
+ */
+export async function embedHoldings(client: SqlClient, owner: string): Promise<string[]> {
+  const { rows } = await client.query(
+    `SELECT embed || '/' || path || '=' || file AS e FROM theming_embed_files WHERE owner = $1`,
+    [owner],
+  );
+  return (rows as { e: string }[]).map((r) => r.e).sort();
 }
 
 export interface EmbedRef {

@@ -4,10 +4,13 @@
  * agree. A file that passes is what gets stored; one that fails is a problem on its path.
  */
 import type { Problem } from "./checks.js";
-import type { Ext } from "./files.js";
+import { checkCss } from "./css.js";
+import type { FontSize } from "./readability.js";
+import type { Ext, StoredExt } from "./files.js";
 import { reencode } from "./raster.js";
 import type { RasterKind } from "./raster.js";
 import { checkSvg } from "./svg.js";
+import { parseTemplate } from "./template.js";
 
 const KB = 1024;
 const MB = 1024 * KB;
@@ -47,12 +50,12 @@ const FOLDERS: Record<string, Record<string, Kind>> = {
   fonts: { woff2: "woff2" },
 };
 
-/** The folders this path takes files for. */
-export const UPLOAD_FOLDERS = Object.keys(FOLDERS);
+/** The folders one upload takes files for: these, and the text of css/ and templates/. */
+export const UPLOAD_FOLDERS = [...Object.keys(FOLDERS), "css", "templates"];
 
 export type Checked = { ok: true; bytes: Buffer; ext: Ext } | { ok: false; problem: Problem };
 
-const refuse = (code: string, path: string, message: string): Checked => ({
+const refuse = (code: string, path: string, message: string): { ok: false; problem: Problem } => ({
   ok: false,
   problem: { severity: "error", code, path, message },
 });
@@ -109,9 +112,16 @@ function woff2Reason(b: Buffer): string | undefined {
   return undefined;
 }
 
-/** The checks of `bytes` uploaded as `path` (`images/…` or `fonts/…`, validated by the caller). */
-export async function checkFile(path: string, bytes: Buffer): Promise<Checked> {
-  const folder = FOLDERS[path.slice(0, path.indexOf("/"))] ?? {};
+/**
+ * The checks of `bytes` uploaded as `path` (validated by the caller), as a file of `folder`
+ * (`images` or `fonts`): its own folder, or the kind an embed's file takes by its extension.
+ */
+export async function checkFile(
+  path: string,
+  bytes: Buffer,
+  folderName = path.slice(0, path.indexOf("/")),
+): Promise<Checked> {
+  const folder = FOLDERS[folderName] ?? {};
   const named = folder[path.slice(path.lastIndexOf(".") + 1).toLowerCase()];
   const accepted = [...new Set(Object.values(folder).map((k) => NAMES[k]))].join(", ");
   if (named === undefined) {
@@ -152,4 +162,37 @@ export async function checkFile(path: string, bytes: Buffer): Promise<Checked> {
     return refuse("file_too_large", path, `Re-encoded, this image passes ${limit.label}.`);
   }
   return { ok: true, bytes: raster.bytes, ext };
+}
+
+export type CheckedUpload =
+  | {
+      ok: true;
+      bytes: Buffer;
+      ext: StoredExt;
+      refs: string[];
+      warnings: Problem[];
+      sizes: FontSize[];
+    }
+  | { ok: false; problem: Problem };
+
+/**
+ * One file of the package's own folders (an embed's and a licence's checks are the package's):
+ * CSS and templates by their parsers, which also answer the package paths they name and their
+ * warnings, and CSS its font sizes; images and fonts by `checkFile`.
+ */
+export async function checkUpload(path: string, bytes: Buffer): Promise<CheckedUpload> {
+  const css = path.startsWith("css/");
+  if (css || path.startsWith("templates/")) {
+    // theme.schema.json names them so; the content is the parser's to judge.
+    if (!path.endsWith(css ? ".css" : ".mustache")) {
+      return refuse("file_type", path, `This folder takes ${css ? ".css" : ".mustache"} files.`);
+    }
+    const checked = css ? checkCss(path, bytes) : parseTemplate(path, bytes);
+    if (!checked.ok) return checked;
+    const warnings = "warnings" in checked ? checked.warnings : [];
+    const sizes = "sizes" in checked ? checked.sizes : [];
+    return { ok: true, bytes, ext: css ? "css" : "mustache", refs: checked.refs, warnings, sizes };
+  }
+  const checked = await checkFile(path, bytes);
+  return checked.ok ? { ...checked, refs: [], warnings: [], sizes: [] } : checked;
 }

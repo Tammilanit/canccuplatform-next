@@ -56,3 +56,24 @@ export function positiveInt(value: unknown, name: string): number | undefined {
   }
   return Number(value);
 }
+
+/**
+ * A body parser for uploads: the bytes as sent, whatever their `Content-Type` (the content decides
+ * the type), read no further than `limit`.
+ */
+export function rawBody(
+  limit: number,
+  tooLarge: () => KitError,
+): (request: FastifyRequest, payload: AsyncIterable<Buffer>) => Promise<Buffer> {
+  return async (request, payload) => {
+    if (Number(request.headers["content-length"] ?? 0) > limit) throw tooLarge();
+    const chunks: Buffer[] = [];
+    let size = 0;
+    for await (const chunk of payload) {
+      size += chunk.length;
+      if (size > limit) throw tooLarge();
+      chunks.push(chunk);
+    }
+    return Buffer.concat(chunks);
+  };
+}

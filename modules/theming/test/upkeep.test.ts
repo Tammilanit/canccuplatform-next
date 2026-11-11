@@ -5,7 +5,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, rm, utimes, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { holdCount, requireTenant, tenantFile, withTenant } from "@canccu/kit";
+import { createLogger, holdCount, requireTenant, tenantFile, withTenant } from "@canccu/kit";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { recount, sweepFiles, upkeepAll } from "../src/upkeep.js";
 import { DATABASE_URL, harness } from "./helpers.js";
@@ -35,7 +35,7 @@ describe.skipIf(!DATABASE_URL)("storage upkeep", () => {
   });
 
   const inAlpha = <T>(fn: () => Promise<T>): Promise<T> => withTenant("alpha", fn);
-  const deps = () => ({ db: h.db, files: h.files, storage: h.quota });
+  const deps = () => ({ db: h.db, files: h.files, storage: h.quota, log: createLogger("theming") });
 
   /** A file on the volume, with a theme row, an embed row, or none. */
   const seed = (file: string, bytes: number, row: "theme" | "embed" | "none", tenant = "alpha") =>

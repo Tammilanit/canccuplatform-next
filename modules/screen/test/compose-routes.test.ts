@@ -98,6 +98,8 @@ describe.skipIf(!DATABASE_URL)("the composed state", () => {
     expect(body.regions.map((r) => r.id)).toContain("_full");
     expect(body.sound).toEqual({ enabled: false, sounded_claims: [] });
     expect(h.sources.hosts.at(-1)).toBe("alpha.test");
+    // Module reads by the event's id: the info-page mode cannot refuse them, as it does a guest.
+    expect(h.sources.tenants.slice(-2)).toEqual(["alpha", "alpha"]);
   });
 
   it("moves `state_version` only when what the screen draws changes", async () => {
@@ -235,6 +237,45 @@ describe.skipIf(!DATABASE_URL)("the composed state after review", () => {
     });
     expect(saved.statusCode).toBe(200);
     expect(await version(screen.token)).toBe(before + 1);
+  });
+
+  it("draws `header` and `hub_qr` as the zone sets them, and moves the version with each", async () => {
+    const screen = await pairDevice(h, host, "Options");
+    await placeIn(screen.id);
+    const read = async () =>
+      (
+        await call(h, "GET", "/api/screen/device/state", {
+          host,
+          cookies: { canccu_device: screen.token },
+        })
+      ).json<State>();
+    const first = await read();
+    const ids = (s: State) => s.regions.map((r) => r.id);
+    expect(ids(first)).toEqual(expect.arrayContaining(["header-2", "venue_rail-2"]));
+    expect(first.layout).toMatchObject({ id: "pulse" });
+    const save = async (options: Record<string, string>) => {
+      const zone = (
+        await call(h, "GET", "/api/screen/zones/main", { host, session: "admin" })
+      ).json<Record<string, unknown>>();
+      const res = await call(h, "PUT", "/api/screen/zones/main", {
+        host,
+        session: "admin",
+        body: { ...zone, ...options },
+      });
+      expect(res.statusCode).toBe(200);
+    };
+    await save({ header: "shared" });
+    const shared = await read();
+    expect(shared.state_version).toBe(first.state_version + 1);
+    expect(ids(shared)).not.toContain("header-2");
+    expect(ids(shared)).toContain("venue_rail-2");
+    await save({ header: "shared", hub_qr: "rotate" });
+    const rotating = await read();
+    expect(rotating.state_version).toBe(first.state_version + 2);
+    expect(ids(rotating)).not.toContain("venue_rail-2");
+    expect(
+      rotating.regions.find((r) => r.id === "venue_rail")?.widgets.map((w) => w.widget),
+    ).toEqual(["qr", "venue_info", "food_status"]);
   });
 
   it("serves a public event's hub when admin is down for a signed-in viewer", async () => {

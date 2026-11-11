@@ -25,9 +25,16 @@ export const EMBED_TYPES = {
 } as const;
 export type EmbedExt = keyof typeof EMBED_TYPES;
 
+/**
+ * What is stored but never served: a font's licence, kept for the package and its export, and a
+ * template's text, which surfaces get only as its parsed tree.
+ */
+export type StoredExt = Ext | "txt" | "md" | "mustache";
+
 /** `<sha256>.<ext>`, the served name: the ServedFile pattern of contracts/theming.openapi.yaml. */
 export const FILE_NAME = /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg)$/;
-export const STORED_NAME = /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg|html|js|json)$/;
+export const STORED_NAME =
+  /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg|html|js|json|txt|md|mustache)$/;
 
 /** A write's temporary name (`write` below): the stored name and a random part. */
 export const TEMP_NAME = /^[0-9a-f]{64}\.[a-z0-9]+\.[0-9a-f]{12}\.tmp$/;
@@ -49,7 +56,7 @@ export async function lockFiles(c: SqlClient, names: Iterable<string>): Promise<
   }
 }
 
-export function fileName(bytes: Buffer, ext: EmbedExt): string {
+export function fileName(bytes: Buffer, ext: EmbedExt | StoredExt): string {
   return `${createHash("sha256").update(bytes).digest("hex")}.${ext}`;
 }
 
@@ -61,7 +68,7 @@ export interface FileStore {
   /** Store bytes for the current tenant and record them; the same bytes give the same name. */
   put(client: SqlClient, bytes: Buffer, ext: Ext): Promise<string>;
   /** Store bytes for the current tenant without recording them: embeds record theirs (embeds.ts). */
-  write(bytes: Buffer, ext: EmbedExt): Promise<string>;
+  write(bytes: Buffer, ext: EmbedExt | StoredExt): Promise<string>;
   /** The bytes of a stored file of the current tenant, or undefined. */
   read(name: string): Promise<Buffer | undefined>;
   /**
@@ -75,7 +82,7 @@ export interface FileStore {
 
 export function diskFiles(root: string): FileStore {
   const path = (name: string): string => tenantFile("theming", `files/${name}`, root);
-  const write = async (bytes: Buffer, ext: EmbedExt): Promise<string> => {
+  const write = async (bytes: Buffer, ext: EmbedExt | StoredExt): Promise<string> => {
     const name = fileName(bytes, ext);
     const target = path(name);
     await mkdir(dirname(target), { recursive: true });
@@ -91,8 +98,10 @@ export function diskFiles(root: string): FileStore {
       await lockFiles(client, [fileName(bytes, ext)]);
       const name = await write(bytes, ext);
       // Not undone when the caller's transaction rolls back: the sweep (upkeep.ts) removes a file
-      // left without a row. Only publish's generated CSS comes here, unreserved: a few KB the
-      // recount adds, so a publish never fails on the quota; uploads reserve (stored.ts).
+      // left without a row. Only publish's generated CSS and images come here, unreserved, so a
+      // publish never fails on the quota; the hourly recount adds them. The images can reach a few
+      // MB per revision (a tall logo's PNG is up to 512 × 2048), a deliberate allowance of
+      // generated output; uploads reserve (stored.ts).
       await client.query(
         `INSERT INTO theming_files (sha256, ext, bytes) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
         [name.slice(0, 64), ext, bytes.length],

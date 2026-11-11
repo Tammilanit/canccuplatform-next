@@ -33,6 +33,8 @@ export interface Layout {
   name: string;
   aspect: string;
   grid: { columns: number; rows: number };
+  /** The theme's default for its header regions (theme.schema.json `layout.header`). */
+  header?: "separate" | "shared";
   regions: LayoutRegion[];
 }
 
@@ -152,6 +154,10 @@ export function themeLayouts(value: unknown): Layout[] {
       (r): r is LayoutRegion =>
         isObject(r) && typeof r.id === "string" && isObject(r.area) && Array.isArray(r.widgets),
     );
-    return regions.length === 0 ? [] : [{ ...(l as unknown as Layout), regions }];
+    if (regions.length === 0) return [];
+    const { header, ...rest } = l as unknown as Layout;
+    // An unknown `header` would split or merge by accident; without it the screen's default holds.
+    const known = header === "separate" || header === "shared";
+    return [{ ...rest, ...(known ? { header } : {}), regions }];
   });
 }

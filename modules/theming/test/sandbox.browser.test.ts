@@ -8,25 +8,12 @@ import { createServer } from "node:http";
 import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
 import type { AddressInfo } from "node:net";
-import { chromium } from "playwright-core";
-import type { Browser, BrowserContext, Frame, Page } from "playwright-core";
+import type { BrowserContext, Frame, Page } from "playwright-core";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { embedWidget } from "@canccu/ui";
+import { launch } from "./chromium.js";
 import { DATABASE_URL, demoEmbed, harness, seedEmbeds } from "./helpers.js";
 import type { Harness } from "./helpers.js";
-
-/** The bundled Chromium where Playwright installed one, else the runner's Chrome; in CI one must run. */
-async function launch(): Promise<Browser | undefined> {
-  for (const options of [{}, { channel: "chrome" }]) {
-    try {
-      return await chromium.launch(options);
-    } catch {
-      // Try the next one.
-    }
-  }
-  if (process.env.CI) throw new Error("no Chromium or Chrome for the sandbox browser tests");
-  return undefined;
-}
 
 const browser = DATABASE_URL ? await launch() : undefined;
 

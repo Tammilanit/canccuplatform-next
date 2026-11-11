@@ -1,10 +1,18 @@
 /** Publish, restore, the history and the pinned read (contracts/theming.openapi.yaml, draft and revisions). */
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { ServiceForbidden, isTenantId, requireTenant, withTenant } from "@canccu/kit";
-import type { Bus, Logger, RightsChecker, SqlClient, TenantResolver } from "@canccu/kit";
+import type {
+  Bus,
+  Logger,
+  RightsChecker,
+  SqlClient,
+  StorageQuota,
+  TenantResolver,
+} from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import { hasError } from "./checks.js";
 import type { Manifest } from "./checks.js";
+import { StyleError } from "./css.js";
 import type { Db } from "./db.js";
 import { draftProblems, loadDraft, lockDraft, removeDraft } from "./drafts.js";
 import type { FileStore } from "./files.js";
@@ -20,6 +28,7 @@ import {
 } from "./http.js";
 import { currentRevision, embedsDiffer, lockHistory, writeRevision } from "./publish.js";
 import type { ProfileSource } from "./profile.js";
+import { pruneQuietly } from "./retention.js";
 import { fillTokens } from "./tokens.js";
 import type { Published, PublishInput } from "./publish.js";
 import { resolvedRevision } from "./theme.js";
@@ -27,6 +36,7 @@ import { resolvedRevision } from "./theme.js";
 export interface RevisionDeps {
   db: Db;
   files: FileStore;
+  storage: StorageQuota;
   rights: RightsChecker;
   bus: Bus;
   audit: Audit;
@@ -60,7 +70,8 @@ interface SummaryRow {
 const SUMMARY = `SELECT r.revision, r.manifest, r.published_at, r.actor_user_id, r.restored_from,
                         r.cloned_from, p.tenant_id IS NOT NULL AS pinned
                    FROM theming_revisions r
-                   LEFT JOIN theming_pins p ON p.theme_revision = r.revision`;
+                   LEFT JOIN theming_pins p
+                          ON r.revision IN (p.theme_revision, p.restores_revision)`;
 
 /** RevisionSummary, and Revision with `manifest`. */
 function revisionBody(row: SummaryRow, withManifest: boolean): Record<string, unknown> {
@@ -136,7 +147,7 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
           cloned_from: null,
           changed: published.changed,
           tokens_css_url: published.tokensCss,
-          css_url: null,
+          css_url: published.css,
           embed_color: published.embedColor,
           actor_user_id: actor,
         },
@@ -145,6 +156,8 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
       .catch((err: unknown) => {
         deps.log.error({ err, revision: published.revision }, "theming.theme.published not sent");
       });
+    // The new revision may push the oldest past the newest 20.
+    await pruneQuietly(deps);
     return body;
   }
 
@@ -173,14 +186,7 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
       });
       return await reply.status(201).send(body);
     } catch (err) {
-      if (!(err instanceof Invalid)) throw err;
-      return reply.status(422).send({
-        error: {
-          code: "theme_invalid",
-          message: "The draft has errors; fix them first.",
-          problems: err.problems,
-        },
-      });
+      return invalid(reply, err, "The draft has errors; fix them first.");
     }
   });
 
@@ -199,19 +205,24 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
         const row = rows[0] as { manifest: Manifest } | undefined;
         return row && { source: `r:${from}`, manifest: row.manifest };
       };
-      const body = await publish(request, fromRevision, async (c, base) => {
-        const current = await lockHistory(c);
-        const source = await fromRevision(c);
-        if (source === undefined) throw notFound();
-        if (current !== expected) throw versionConflict("theme");
-        return writeRevision(c, deps.files, current, {
-          ...base,
-          manifest: source.manifest,
-          source: `r:${from}`,
-          restoredFrom: from,
+      try {
+        const body = await publish(request, fromRevision, async (c, base) => {
+          const current = await lockHistory(c);
+          const source = await fromRevision(c);
+          if (source === undefined) throw notFound();
+          if (current !== expected) throw versionConflict("theme");
+          return writeRevision(c, deps.files, current, {
+            ...base,
+            manifest: source.manifest,
+            source: `r:${from}`,
+            restoredFrom: from,
+          });
         });
-      });
-      return reply.status(201).send(body);
+        return await reply.status(201).send(body);
+      } catch (err) {
+        // A revision whose CSS or templates the checks of this version refuse.
+        return invalid(reply, err, "The revision has errors under this version's checks.");
+      }
     },
   );
 
@@ -250,6 +261,16 @@ class Invalid extends Error {
   constructor(readonly problems: unknown[]) {
     super("theme_invalid");
   }
+}
+
+/**
+ * 422 `theme_invalid` for a draft with errors, or CSS or a template that does not compile (both
+ * thrown before anything is written); any other error goes on.
+ */
+function invalid(reply: FastifyReply, err: unknown, message: string): FastifyReply {
+  if (!(err instanceof Invalid) && !(err instanceof StyleError)) throw err;
+  const problems = err instanceof Invalid ? err.problems : [err.problem];
+  return reply.status(422).send({ error: { code: "theme_invalid", message, problems } });
 }
 
 export interface InternalDeps {

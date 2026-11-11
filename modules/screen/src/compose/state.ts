@@ -16,6 +16,7 @@ import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
 import { buildRegions } from "./build.js";
 import { themeLayouts } from "./layouts.js";
+import type { HeaderMode, HubQrMode } from "./parts.js";
 import type { Sources, ThemeNow } from "./sources.js";
 import type { ZoneFacts } from "./widgets.js";
 
@@ -35,6 +36,8 @@ export interface ZoneRow {
   name: string;
   layout_id: string | null;
   regions: Record<string, Record<string, unknown>>;
+  header: HeaderMode | null;
+  hub_qr: HubQrMode;
   sound: { enabled: boolean; device_id: string | null };
   epoch: string;
 }
@@ -51,7 +54,7 @@ export const NO_THEME: ThemeNow = {
 
 async function zoneRow(c: SqlClient, key: string): Promise<ZoneRow | null> {
   const { rows } = await c.query(
-    "SELECT key, name, layout_id, regions, sound, epoch FROM screen_zones WHERE key = $1",
+    "SELECT key, name, layout_id, regions, header, hub_qr, sound, epoch FROM screen_zones WHERE key = $1",
     [key],
   );
   return (rows[0] as ZoneRow | undefined) ?? null;
@@ -129,8 +132,8 @@ export async function composeZone(
   const [theme, event, agenda, venue] = await Promise.all([
     deps.sources.theme(host),
     deps.sources.event(host),
-    deps.sources.agendaNow(host, zoneKey),
-    deps.sources.venueInfo(host),
+    deps.sources.agendaNow(ctx.tenant_id, zoneKey),
+    deps.sources.venueInfo(ctx.tenant_id),
   ]);
   const eventName = event?.name ?? ctx.primary_hostname ?? "";
   const facts: ZoneFacts = {
@@ -145,7 +148,13 @@ export async function composeZone(
   };
   const build = (portrait: boolean) =>
     buildRegions({
-      zone: { key: read.zone.key, layoutId: read.zone.layout_id, regions: read.zone.regions },
+      zone: {
+        key: read.zone.key,
+        layoutId: read.zone.layout_id,
+        regions: read.zone.regions,
+        header: read.zone.header,
+        hubQr: read.zone.hub_qr,
+      },
       windowLayoutId: read.windowLayout,
       themeLayouts: themeLayouts(theme?.layouts),
       portrait,
