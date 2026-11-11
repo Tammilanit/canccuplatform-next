@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# The screen player's soak (modules/screen/test/stack/soak.mjs, #310) against a running stack:
+# Chromium from the Playwright image plays one paired screen of the demo event and checks its
+# memory. scripts/demo-stack-test runs it accelerated in CI; the lead runs it for real on the test
+# VM before step 3's exit (modules/screen/README.md, Soak and load).
+# Usage: screen-soak [--dry-run] [--hours H] [--minutes M] [--heap-budget-mib N] [--out DIR]
+#   --minutes M  accelerated: H hours of the page's clock in M real minutes; without it, real time.
+#   --out DIR    where soak-report.md and samples.json go (default soak-report).
+# Needs docker. The stack is CANCCU_DEMO_COMPOSE (default `docker compose -f deploy/compose.yml
+# -f deploy/compose.ci.yml`); the page runs in the screen container's network namespace, since a
+# device stream opens only from the venue's addresses (the loopback there). CANCCU_DEMO_HOST names
+# the event (default demo.localhost; an IP-mode stack takes 127.0.0.1), and DEMO_SESSION is a
+# session cookie with screen's pairing and ticker rights (default the CI stub's demo-ci).
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit 2
+
+# The image's browser and playwright-core must be the same release (scripts/demo-screenshots).
+PLAYWRIGHT=1.64.1
+IMAGE="mcr.microsoft.com/playwright:v$PLAYWRIGHT-noble"
+
+usage() {
+  echo "usage: screen-soak [--dry-run] [--hours H] [--minutes M] [--heap-budget-mib N] [--out DIR]" >&2
+  exit 2
+}
+dry=0
+out=soak-report
+args=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dry-run) dry=1; shift ;;
+    --hours|--minutes|--heap-budget-mib)
+      [[ ${2:-} =~ ^[1-9][0-9]*$ ]] || usage
+      args+=("$1" "$2"); shift 2 ;;
+    --out) [ -n "${2:-}" ] || usage; out=$2; shift 2 ;;
+    *) usage ;;
+  esac
+done
+read -ra COMPOSE <<< "${CANCCU_DEMO_COMPOSE:-docker compose -f deploy/compose.yml -f deploy/compose.ci.yml}"
+
+if [ "$dry" = 1 ]; then
+  echo "dry run, would soak the player of ${CANCCU_DEMO_HOST:-demo.localhost} in $IMAGE (${args[*]:-24 hours, real time}) into $out/"
+  exit 0
+fi
+
+command -v docker >/dev/null || { echo "error: docker not found" >&2; exit 2; }
+screen=$("${COMPOSE[@]}" ps -q screen 2>/dev/null)
+if [ -z "$screen" ]; then
+  echo "error: no running screen container in: ${COMPOSE[*]}; start the stack first" >&2
+  exit 1
+fi
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+mkdir -p "$out" "$work/stack"
+cp modules/screen/test/stack/*.mjs "$work/stack/"
+user="$(id -u):$(id -g)"
+# On the default network: the screen container's namespace may not reach the registry.
+if ! docker run --rm -u "$user" -e HOME=/tmp -v "$work:/work" -w /work "$IMAGE" \
+  npm install --no-save --no-audit --no-fund --loglevel=error "playwright-core@$PLAYWRIGHT" >&2; then
+  echo "error: could not install playwright-core $PLAYWRIGHT in $IMAGE" >&2
+  exit 1
+fi
+docker run --rm --network "container:$screen" -u "$user" -e HOME=/tmp \
+  -e CANCCU_DEMO_HOST -e DEMO_SESSION \
+  -v "$work:/work" -v "$(cd "$out" && pwd):/out" -w /work "$IMAGE" \
+  node stack/soak.mjs "${args[@]}" --out /out

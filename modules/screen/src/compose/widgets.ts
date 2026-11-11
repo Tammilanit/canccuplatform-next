@@ -4,6 +4,7 @@
  */
 import qrcode from "qrcode-generator";
 import type { Props } from "./layouts.js";
+import type { PlaylistView } from "./playing.js";
 
 export type View = Record<string, unknown> & { qr: Qr | null; stale: boolean; empty: boolean };
 export interface Qr {
@@ -23,6 +24,24 @@ export interface ZoneFacts {
   agenda: AgendaNow | null;
   venue: VenueInfo | null;
   ticker: { text: string | null; until: string | null; source: string | null };
+  /**
+   * Read only for a zone that shows the widget, so another zone's version never moves with them
+   * (src/compose/state.ts). Absent: not read; `null`: nothing to show, or (`checkin`) the read failed.
+   */
+  playlist?: PlaylistView | null;
+  photo?: Record<string, unknown> | null;
+  checkin?: CheckinCode | null;
+  /** The theme's embeds (contracts/theming.md, Embeds). */
+  embeds?: { name: string; frame_url: string }[];
+}
+
+/** Notify's rotating code (contracts/notify.md, Check-in by the rotating QR). */
+export interface CheckinCode {
+  purpose: string;
+  code: string;
+  url: string;
+  valid_until: string;
+  rotates_at: string;
 }
 
 export interface AgendaItem {
@@ -117,8 +136,26 @@ export function countdownFields(facts: ZoneFacts, itemId?: string): Record<strin
   return { label: item.title, target_at: item.starts_at, ends_text: textOf(item.ends_at, facts) };
 }
 
+/** The code's URL is the path alone while the event has no primary hostname: made whole here. */
+function checkinFields(code: CheckinCode, facts: ZoneFacts): Record<string, unknown> {
+  const url = code.url.startsWith("/") ? facts.origin + code.url : code.url;
+  return {
+    url,
+    label: "Check in",
+    image_url: qrImage(url),
+    purpose: code.purpose,
+    rotates_at: code.rotates_at,
+    valid_until: code.valid_until,
+  };
+}
+
 /** A type's fields, or null when it has nothing to show. */
-function fields(type: string, props: Props, facts: ZoneFacts): Record<string, unknown> | null {
+function fields(
+  type: string,
+  props: Props,
+  facts: ZoneFacts,
+  embed: string | null,
+): Record<string, unknown> | null {
   switch (type) {
     case "clock":
       return {
@@ -154,9 +191,18 @@ function fields(type: string, props: Props, facts: ZoneFacts): Record<string, un
       return facts.logoUrl === null ? null : { url: facts.logoUrl, name: facts.eventName };
     case "ticker":
       return facts.ticker.text === null ? null : { ...facts.ticker };
+    case "playlist":
+      return facts.playlist == null ? null : { ...facts.playlist };
+    case "photo":
+      return facts.photo ?? null;
+    case "checkin_qr":
+      return facts.checkin == null ? null : checkinFields(facts.checkin, facts);
+    case "embed": {
+      const found = facts.embeds?.find((e) => e.name === embed);
+      return found === undefined ? null : { frame_url: found.frame_url, logo_url: facts.logoUrl };
+    }
     default:
-      // playlist, photo, checkin_qr, embed (#308), the feeds of later steps and the claim-only
-      // templates: no source on main yet.
+      // The feeds of later steps and the claim-only templates: no source on main yet.
       return null;
   }
 }
@@ -165,11 +211,17 @@ function fields(type: string, props: Props, facts: ZoneFacts): Record<string, un
 function isStale(type: string, facts: ZoneFacts): boolean {
   if (type === "agenda_now" || type === "countdown") return facts.agenda === null;
   if (type === "venue_info") return facts.venue === null;
+  if (type === "checkin_qr") return facts.checkin === null;
   return false;
 }
 
-export function viewOf(type: string, props: Props, facts: ZoneFacts): View {
-  const found = fields(type, props, facts);
+export function viewOf(
+  type: string,
+  props: Props,
+  facts: ZoneFacts,
+  embed: string | null = null,
+): View {
+  const found = fields(type, props, facts, embed);
   return {
     ...(found ?? {}),
     qr: found === null ? null : qrFor(type, props, facts),

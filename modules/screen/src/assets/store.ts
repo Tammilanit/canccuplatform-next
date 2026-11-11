@@ -74,13 +74,16 @@ export async function viewAsset(
   return assetView(row, (await usedBy(c, [id], nowMs)).get(id) ?? []);
 }
 
+/** Where the screens and Studio load a stored file. */
+export const fileUrl = (name: string): string => `/api/screen/files/${name}`;
+
 export function assetView(row: AssetRow, users: readonly string[]): Record<string, unknown> {
   return {
     id: row.id,
     kind: row.kind,
     title: row.title,
     version: row.version,
-    url: row.file === null ? row.url : `/api/screen/files/${row.file}`,
+    url: row.file === null ? row.url : fileUrl(row.file),
     mime_type: row.mime_type,
     size_bytes: row.size_bytes === null ? null : Number(row.size_bytes),
     duration_seconds: row.duration_seconds,

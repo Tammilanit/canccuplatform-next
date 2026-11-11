@@ -227,8 +227,21 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   tickerRoutes(app, deps);
   composeRoutes(app, compose);
   playerRoutes(app, compose);
-  streamRoutes(app, { ...push, hub });
-  zoneViewRoutes(app, { ...push, rights: deps.rights, hub });
+  streamRoutes(app, {
+    ...push,
+    hub,
+    onPlaced: (tenant, zone, at) => {
+      hub.plan(tenant, zone, at);
+    },
+  });
+  zoneViewRoutes(app, {
+    ...push,
+    rights: deps.rights,
+    hub,
+    onPlaced: (tenant, zone, at) => {
+      hub.plan(tenant, zone, at);
+    },
+  });
   void app.register(multipart, {
     limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 4, fieldSize: 1024, parts: 5 },
   });

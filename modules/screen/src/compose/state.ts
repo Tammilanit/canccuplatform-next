@@ -17,6 +17,7 @@ import { tickerNow } from "../ticker/store.js";
 import { buildRegions } from "./build.js";
 import { placeClaims } from "./claims.js";
 import type { Override, Placement } from "./claims.js";
+import { contentFacts } from "./content.js";
 import { displayOf } from "./display.js";
 import type { Display } from "./display.js";
 import { themeLayouts } from "./layouts.js";
@@ -126,6 +127,17 @@ export interface ZoneComposed {
   views: Record<Orientation, ZoneView>;
   ticker: ZoneFacts["ticker"] & { appearance: string };
   display: Display;
+  /** When a content widget next changes by itself (epoch ms), or null. */
+  nextChangeAt: number | null;
+}
+
+/** The widget types a zone's regions show, in either orientation. */
+function typesOf(views: ZoneComposed["views"]): Set<string> {
+  const types = new Set<string>();
+  for (const view of Object.values(views)) {
+    for (const r of view.regions) for (const w of r.widgets) types.add(w.widget);
+  }
+  return types;
 }
 
 /**
@@ -138,6 +150,8 @@ export async function composeZone(
   host: string,
   zoneKey: string,
   proposed?: ZoneRow,
+  /** False for the hub's view, which drops every content widget anyway (NOW_TYPES). */
+  withContent = true,
 ): Promise<ZoneComposed | null> {
   const at = new Date((deps.now ?? Date.now)());
   const read = await deps.db.tenant(async (c) => {
@@ -167,6 +181,7 @@ export async function composeZone(
     agenda,
     venue,
     ticker: read.ticker,
+    embeds: theme?.embeds ?? [],
   };
   const build = (portrait: boolean): ZoneView => {
     const { layout, regions } = buildRegions({
@@ -184,6 +199,16 @@ export async function composeZone(
     });
     return { layout, ...placeClaims(regions, read.claims) };
   };
+  let views = { landscape: build(false), portrait: build(true) };
+  // The content widgets' sources are read only for a zone that shows them, so their changes
+  // (every frame, photo and code) never move another zone's version.
+  const content = withContent
+    ? await contentFacts(deps, ctx, zoneKey, typesOf(views), at.getTime())
+    : { facts: {}, changesAt: null };
+  if (Object.keys(content.facts).length > 0) {
+    Object.assign(facts, content.facts);
+    views = { landscape: build(false), portrait: build(true) };
+  }
   const setting = deps.settings.get("ticker_appearance", "default");
   const appearance = typeof setting === "string" ? setting : "default";
   const display = displayOf(theme?.tokens, agenda, deps.settings.get("burn_in_drift", false));
@@ -200,9 +225,10 @@ export async function composeZone(
     zone: read.zone,
     theme: theme ?? NO_THEME,
     eventName,
-    views: { landscape: build(false), portrait: build(true) },
+    views,
     ticker: { ...read.ticker, appearance },
     display,
+    nextChangeAt: content.changesAt,
   };
 }
 
@@ -276,7 +302,7 @@ export async function nowView(
   zoneKey: string,
   member: boolean,
 ): Promise<Record<string, unknown> | null> {
-  const composed = await composeZone(deps, ctx, host, zoneKey);
+  const composed = await composeZone(deps, ctx, host, zoneKey, undefined, false);
   if (composed === null) return null;
   const regions = composed.views.landscape.regions.map((r) => {
     const kept = r.widgets.flatMap((w, i) => (NOW_TYPES.has(w.widget) ? [{ w, i }] : []));

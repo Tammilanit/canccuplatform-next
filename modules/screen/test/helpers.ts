@@ -1,6 +1,6 @@
 /** A screen app on a real Postgres (RLS needs one) with fake tenants, admin and Valkey. */
 import type { ThemeNow } from "../src/compose/sources.js";
-import type { AgendaNow, VenueInfo } from "../src/compose/widgets.js";
+import type { AgendaNow, CheckinCode, VenueInfo } from "../src/compose/widgets.js";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -133,6 +133,9 @@ export interface FakeSources {
   hosts: string[];
   /** The tenant ids the module reads (theme, now and next, venue info) were made for. */
   tenants: string[];
+  checkin: CheckinCode | null;
+  /** The purposes notify's check-in code was read for. */
+  checkinReads: string[];
 }
 
 /** Drops every screen table; `assignments` too, the name before migration 007. */
@@ -180,6 +183,8 @@ export async function harness(): Promise<Harness> {
     venue: null,
     hosts: [],
     tenants: [],
+    checkin: null,
+    checkinReads: [],
   };
   const answer = <T>(seen: string[], key: string, value: T): Promise<T> => {
     seen.push(key);
@@ -253,6 +258,7 @@ export async function harness(): Promise<Harness> {
       event: (host) => answer(fake.hosts, host, fake.event),
       agendaNow: (tenantId) => answer(fake.tenants, tenantId, fake.agenda),
       venueInfo: (tenantId) => answer(fake.tenants, tenantId, fake.venue),
+      checkinCode: (_tenantId, purpose) => answer(fake.checkinReads, purpose, fake.checkin),
     },
   });
   // A stand-in for the device routes later slices add (the state, the stream): it runs only the check.
