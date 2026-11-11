@@ -7,12 +7,17 @@
 # The pages open on the demo event's hostname CANCCU_DEMO_HOST (default demo.localhost; the CI
 # stack has two events, so IP mode serves none) at BASE_URL's port. Chromium resolves `*.localhost`
 # to the loopback itself, so BASE_URL must be this machine.
-#        demo-screenshots --install   installs Chromium and its system packages (CI; needs sudo)
-# Needs curl and Node 22.
+#        demo-screenshots --install   pulls the Playwright image (CI)
+# Needs Docker. The run happens in Playwright's image, which ships Chromium and its system
+# libraries: installing them with apt on the runner failed CI whenever the Ubuntu mirrors were
+# down (#378). Inside the image the script runs itself directly and needs curl and npx.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
+# The version of the browser tests (playwright-core in modules/theming/package.json and their
+# image in modules/theming/README.md); bump them together.
 PLAYWRIGHT=1.64.1
+IMAGE=mcr.microsoft.com/playwright:v$PLAYWRIGHT-noble
 # name|path: the admin pages, in menu order.
 PAGES=(
   "settings|/admin/settings"
@@ -24,7 +29,7 @@ PAGES=(
 usage() { echo "usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR] | --install" >&2; exit 2; }
 if [ "${1:-}" = "--install" ]; then
   [ $# = 1 ] || usage
-  exec npx --yes "playwright@$PLAYWRIGHT" install --with-deps chromium
+  exec docker pull "$IMAGE"
 fi
 dry=0
 if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
@@ -39,9 +44,19 @@ port=""
 [[ $authority =~ :([0-9]+)$ ]] && port=":${BASH_REMATCH[1]}"
 
 if [ "$dry" = 1 ]; then
-  echo "dry run, would screenshot (playwright $PLAYWRIGHT, chromium) into $OUT/:"
+  echo "dry run, would screenshot (chromium in $IMAGE) into $OUT/:"
   for p in "${PAGES[@]}"; do echo "  ${p%%|*}.png  http://$DEMO_HOST$port${p#*|}"; done
   exit 0
+fi
+
+# The image sets PLAYWRIGHT_BROWSERS_PATH to its browsers; anywhere else, run this script there.
+# Host network, so BASE_URL means the same in the container; the caller's uid owns the PNGs.
+if [ "${PLAYWRIGHT_BROWSERS_PATH:-}" != /ms-playwright ]; then
+  command -v docker >/dev/null || { echo "error: docker not found" >&2; exit 2; }
+  mkdir -p "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
+  exec docker run --rm --network host -u "$(id -u):$(id -g)" -e HOME=/tmp -e DEMO_SESSION="$SESSION" \
+    -e CANCCU_DEMO_HOST="$DEMO_HOST" \
+    -v "$PWD:/repo:ro" -v "$out:$out" -w /repo "$IMAGE" scripts/demo-screenshots "$BASE" "$out"
 fi
 
 for tool in curl npx; do
