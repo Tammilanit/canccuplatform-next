@@ -181,6 +181,11 @@
     width: min(100%, 22cqmin);
   }
 
+  /* A check-in code past its time is dropped (widget.ts, shownView): no blank square in its place. */
+  .canccu-widget--checkin_qr.canccu-is-empty .canccu-widget__code {
+    display: none;
+  }
+
   .canccu-widget__image {
     min-height: 0;
     max-width: 100%;

@@ -1,3 +1,5 @@
+import { rm } from "node:fs/promises";
+import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { DATABASE_URL, call, harness } from "./helpers.js";
 import type { Harness } from "./helpers.js";
@@ -57,6 +59,39 @@ describe.skipIf(!DATABASE_URL)("the /screen/ page and its bundle", () => {
     const res = await call(h, "GET", "/screen/", { host: "alpha.test." });
     expect(res.statusCode).toBe(200);
     expect(String(res.headers["content-security-policy"])).toContain("script-src 'self'");
+  });
+
+  it("serves a zone's virtual screen and the kiosk check from the same loader", async () => {
+    const zone = await call(h, "GET", "/screen/zones/main");
+    expect(zone.statusCode).toBe(200);
+    expect(zone.headers["cache-control"]).toBe("no-store");
+    expect(zone.body).toContain('data-page="zone" data-zone="main"');
+    expect(zone.body).toContain('src="/screen/b/test/player.js"');
+    expect(String(zone.headers["content-security-policy"])).toContain("script-src 'self'");
+    expect((await call(h, "GET", "/screen/zones/Not%22a%20key")).statusCode).toBe(404);
+    const check = await call(h, "GET", "/screen/check");
+    expect(check.statusCode).toBe(200);
+    expect(check.body).toContain('data-page="check"');
+    expect((await call(h, "GET", "/screen/")).body).not.toContain("data-page");
+  });
+
+  it("serves the service worker at a fixed address, revalidated on every load", async () => {
+    const sw = await call(h, "GET", "/screen/sw.js?v=test");
+    expect(sw.statusCode).toBe(200);
+    expect(sw.headers["content-type"]).toBe("text/javascript; charset=utf-8");
+    expect(sw.headers["cache-control"]).toBe("no-cache");
+    expect(sw.body).toBe("self;\n");
+  });
+
+  it("answers 404, not 500, for a worker that was never built", async () => {
+    // A harness of its own: the worker read above is kept for this version.
+    const bare = await harness();
+    try {
+      await rm(join(bare.playerDir, "sw.js"));
+      expect((await call(bare, "GET", "/screen/sw.js?v=test")).statusCode).toBe(404);
+    } finally {
+      await bare.close();
+    }
   });
 
   it("sends the bare path on to the page", async () => {

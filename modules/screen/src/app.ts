@@ -44,6 +44,7 @@ import { photoRoutes } from "./photos.js";
 import { playerRoutes } from "./player.js";
 import { PushHub } from "./push/hub.js";
 import { streamRoutes } from "./push/routes.js";
+import { zoneViewRoutes } from "./push/zone-routes.js";
 import { MemoryFanout, MemoryZoneStore } from "./push/store.js";
 import type { Fanout, ZoneStore } from "./push/store.js";
 import { playlistRoutes } from "./content/playlists.js";
@@ -228,6 +229,14 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   playerRoutes(app, compose);
   streamRoutes(app, {
     ...push,
+    hub,
+    onPlaced: (tenant, zone, at) => {
+      hub.plan(tenant, zone, at);
+    },
+  });
+  zoneViewRoutes(app, {
+    ...push,
+    rights: deps.rights,
     hub,
     onPlaced: (tenant, zone, at) => {
       hub.plan(tenant, zone, at);

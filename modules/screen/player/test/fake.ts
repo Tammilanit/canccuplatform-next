@@ -91,3 +91,45 @@ export function fakeNav(hash = ""): Nav & { hashValue: string; went: string[]; r
   };
   return nav;
 }
+
+/** A cache key as the path it stands for on `origin`. */
+export const cachePath = (key: RequestInfo | URL, origin = "https://alpha.test"): string =>
+  new URL(typeof key === "string" ? key : key instanceof URL ? key.href : key.url, origin).pathname;
+const pathOf = (key: RequestInfo | URL): string => cachePath(key);
+
+/** Cache Storage in memory, for the service worker and the offline store. */
+export class FakeCache {
+  readonly entries = new Map<string, { body: ArrayBuffer; init: ResponseInit }>();
+  async put(key: RequestInfo | URL, response: Response): Promise<void> {
+    const headers = Object.fromEntries(response.headers.entries());
+    const body = await response.arrayBuffer();
+    this.entries.set(pathOf(key), { body, init: { status: response.status, headers } });
+  }
+  match(key: RequestInfo | URL): Promise<Response | undefined> {
+    const hit = this.entries.get(pathOf(key));
+    return Promise.resolve(hit && new Response(hit.body.slice(0), hit.init));
+  }
+  delete(key: RequestInfo | URL): Promise<boolean> {
+    return Promise.resolve(this.entries.delete(pathOf(key)));
+  }
+  keys(): Promise<Request[]> {
+    return Promise.resolve(
+      [...this.entries.keys()].map((p) => new Request(`https://alpha.test${p}`)),
+    );
+  }
+}
+
+export class FakeCaches {
+  readonly named = new Map<string, FakeCache>();
+  open(name: string): Promise<FakeCache> {
+    const cache = this.named.get(name) ?? new FakeCache();
+    this.named.set(name, cache);
+    return Promise.resolve(cache);
+  }
+  keys(): Promise<string[]> {
+    return Promise.resolve([...this.named.keys()]);
+  }
+  delete(name: string): Promise<boolean> {
+    return Promise.resolve(this.named.delete(name));
+  }
+}

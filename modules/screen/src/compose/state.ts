@@ -140,18 +140,22 @@ function typesOf(views: ZoneComposed["views"]): Set<string> {
   return types;
 }
 
-/** Everything of a zone's state that is the same for all its screens, in both orientations. */
+/**
+ * Everything of a zone's state that is the same for all its screens, in both orientations.
+ * `proposed` stands in for the saved zone (a preview), so it composes even a key no zone has yet.
+ */
 export async function composeZone(
   deps: ComposeDeps,
   ctx: TenantContext,
   host: string,
   zoneKey: string,
+  proposed?: ZoneRow,
   /** False for the hub's view, which drops every content widget anyway (NOW_TYPES). */
   withContent = true,
 ): Promise<ZoneComposed | null> {
   const at = new Date((deps.now ?? Date.now)());
   const read = await deps.db.tenant(async (c) => {
-    const zone = await zoneRow(c, zoneKey);
+    const zone = proposed ?? (await zoneRow(c, zoneKey));
     if (zone === null) return null;
     return {
       zone,
@@ -298,7 +302,7 @@ export async function nowView(
   zoneKey: string,
   member: boolean,
 ): Promise<Record<string, unknown> | null> {
-  const composed = await composeZone(deps, ctx, host, zoneKey, false);
+  const composed = await composeZone(deps, ctx, host, zoneKey, undefined, false);
   if (composed === null) return null;
   const regions = composed.views.landscape.regions.map((r) => {
     const kept = r.widgets.flatMap((w, i) => (NOW_TYPES.has(w.widget) ? [{ w, i }] : []));

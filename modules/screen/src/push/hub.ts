@@ -8,7 +8,7 @@
 import { platformKey, tenantKey, withTenant } from "@canccu/kit";
 import type { Event, Logger } from "@canccu/kit";
 import { refreshZone } from "./device-state.js";
-import type { DeviceStream, StreamDeps } from "./stream.js";
+import type { Feed, StreamDeps } from "./feed.js";
 
 export const COALESCE_MS = 100;
 /**
@@ -65,7 +65,7 @@ export interface HubDeps extends StreamDeps {
 }
 
 export class PushHub {
-  private readonly streams = new Map<string, Set<DeviceStream>>();
+  private readonly streams = new Map<string, Set<Feed>>();
   private readonly pending = new Map<string, NodeJS.Timeout>();
   private readonly running = new Set<string>();
   private readonly dirty = new Set<string>();
@@ -79,13 +79,13 @@ export class PushHub {
     });
   }
 
-  add(stream: DeviceStream): void {
+  add(stream: Feed): void {
     const set = this.streams.get(stream.tenant) ?? new Set();
     set.add(stream);
     this.streams.set(stream.tenant, set);
   }
 
-  remove(stream: DeviceStream): void {
+  remove(stream: Feed): void {
     const set = this.streams.get(stream.tenant);
     set?.delete(stream);
     if (set?.size === 0) this.streams.delete(stream.tenant);

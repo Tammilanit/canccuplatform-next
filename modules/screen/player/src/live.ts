@@ -1,15 +1,16 @@
 /**
  * A screen that plays: its push stream, heartbeat, offline mark and commands. It keeps the state
  * current and hands every new one to the player to draw; an answer about the device (401, 403,
- * 409) goes back to the player, which leaves playing for that answer's frame.
+ * 409, and any the host names) goes back to the player, which leaves playing for its frame.
  */
 import { call, isDeviceAnswer } from "./api.js";
+import { audioUnlocked } from "./audio.js";
 import type { Answer, Fetch } from "./api.js";
 import { clockText, identifyCard, offlineMark } from "./frames.js";
 import { Heartbeat } from "./heartbeat.js";
 import { applyPatch, isState } from "./state.js";
 import type { ScreenState } from "./state.js";
-import { StreamClient } from "./stream.js";
+import { STREAM_PATH, StreamClient } from "./stream.js";
 import type { SseMessage } from "./sse.js";
 
 export const STATE_PATH = "/api/screen/device/state";
@@ -22,6 +23,10 @@ const PATCHES = new Set(["widget", "region", "ticker", "theme"]);
 
 export interface LiveHost {
   fetch: Fetch;
+  /** A device's paths by default; the virtual screen reads a zone's, and sends no heartbeat. */
+  paths?: { state: string; stream: string; heartbeat: boolean };
+  /** The stream is open, or said something: the page is online now (for the offline store). */
+  seen?(): void;
   /** `<body>`: it carries `canccu-is-offline`, the offline mark and the identify card. */
   root: HTMLElement;
   bundle: string;
@@ -32,11 +37,18 @@ export interface LiveHost {
   show(state: ScreenState): void;
   /** A whole-state answer, or one about the device, for the player to act on. */
   settle(answer: Answer): void;
+  /**
+   * Answers that end the stream besides the device's (401, 403, 409): the virtual screen's 404
+   * for a zone that is gone, which no retry brings back.
+   */
+  refuses?: ReadonlySet<number>;
 }
 
 export class Live {
   state: ScreenState | null = null;
   running = false;
+  /** The page carries `canccu-is-offline` now; the screen dims what the server keeps. */
+  offline = false;
   readonly heartbeat: Heartbeat;
   private readonly stream: StreamClient;
   private streamOpen = false;
@@ -44,16 +56,22 @@ export class Live {
   private pollTimer: ReturnType<typeof setInterval> | undefined;
   private identify: HTMLElement | null = null;
   private lastTime = "";
+  private readonly paths: NonNullable<LiveHost["paths"]>;
+  private readonly refuses: (status: number) => boolean;
 
   constructor(private readonly host: LiveHost) {
+    this.paths = host.paths ?? { state: STATE_PATH, stream: STREAM_PATH, heartbeat: true };
+    this.refuses = (status) => isDeviceAnswer(status) || (host.refuses?.has(status) ?? false);
     this.stream = new StreamClient(
       host.fetch,
       {
         open: () => {
           this.streamOpen = true;
           this.online();
+          host.seen?.();
         },
         message: (m) => {
+          host.seen?.();
           this.onMessage(m);
         },
         lost: () => {
@@ -69,6 +87,8 @@ export class Live {
         },
       },
       host.random,
+      this.paths.stream,
+      this.refuses,
     );
     this.heartbeat = new Heartbeat(
       host.fetch,
@@ -76,6 +96,7 @@ export class Live {
         state_version: this.state?.state_version ?? 0,
         bundle_version: host.bundle,
         theme_revision: this.state?.theme.revision ?? 0,
+        audio_unlocked: audioUnlocked(),
         viewport: { width: window.innerWidth || 1, height: window.innerHeight || 1 },
       }),
       (answer) => {
@@ -86,15 +107,19 @@ export class Live {
     );
   }
 
-  /** Take a state: the first one starts the stream and the heartbeat. */
-  play(state: ScreenState): void {
+  /**
+   * Take a state: the first one starts the stream and the heartbeat. `offlineSince` marks a state
+   * from the offline store (a cold boot without the uplink): its time is not the server's now, and
+   * the page has been offline since it last heard from the server.
+   */
+  play(state: ScreenState, offlineSince?: number): void {
     this.state = state;
     // Until a heartbeat is answered, the state's own time is the best guess at the server's clock
     // (contracts/screen.md, Motion and burn-in drift).
     // A patched state keeps the time of the whole state it came from, so only a new time counts:
     // else every patch would set the clock back to that state's time.
     const stateMs = Date.parse(state.time);
-    const fresh = state.time !== this.lastTime;
+    const fresh = state.time !== this.lastTime && offlineSince === undefined;
     this.lastTime = state.time;
     if (fresh && !this.heartbeat.synced && !Number.isNaN(stateMs)) {
       this.heartbeat.offsetMs = stateMs - this.host.now();
@@ -103,9 +128,9 @@ export class Live {
     if (this.running) return;
     this.running = true;
     this.streamOpen = false;
-    this.armOffline();
+    this.armOffline(offlineSince);
     this.stream.start();
-    this.heartbeat.start();
+    if (this.paths.heartbeat) this.heartbeat.start();
   }
 
   stop(): void {
@@ -124,14 +149,23 @@ export class Live {
       return;
     }
     if (m.event === "state") {
-      if (isState(data)) this.host.show(data);
+      if (isState(data)) this.take(data);
     } else if (m.event === "command") {
       this.command(data as { command?: string; expires_at?: string });
     } else if (PATCHES.has(m.event) && this.state !== null) {
       const next = applyPatch(this.state, m.event, data as Parameters<typeof applyPatch>[2]);
       if (next === null) void this.reread();
-      else this.host.show(next);
+      else this.take(next);
     }
+  }
+
+  /**
+   * A pushed state becomes the current one here, not in the host: the next patch builds on it,
+   * and a theme patch reaches the page's CSS, whichever host draws it.
+   */
+  private take(state: ScreenState): void {
+    this.play(state);
+    this.host.show(state);
   }
 
   /**
@@ -139,9 +173,9 @@ export class Live {
    * shows: a server error keeps the last state on screen, as an outage does.
    */
   private async reread(): Promise<void> {
-    const answer = await call(this.host.fetch, "GET", STATE_PATH);
+    const answer = await call(this.host.fetch, "GET", this.paths.state);
     if (!this.running) return;
-    if (answer.status === 200 || isDeviceAnswer(answer.status)) this.host.settle(answer);
+    if (answer.status === 200 || this.refuses(answer.status)) this.host.settle(answer);
   }
 
   private command(data: { command?: string; expires_at?: string }): void {
@@ -172,12 +206,13 @@ export class Live {
     step();
   }
 
-  private armOffline(): void {
+  private armOffline(offlineSince?: number): void {
     if (this.offlineTimer !== undefined || this.streamOpen || !this.running) return;
-    const since = this.heartbeat.serverNow();
+    const since = offlineSince ?? this.heartbeat.serverNow();
     this.offlineTimer = setTimeout(() => {
       if (this.streamOpen || !this.running) return;
       const root = this.host.root;
+      this.offline = true;
       root.classList.add("canccu-is-offline");
       root.querySelector(".canccu-offline-mark")?.remove();
       root.append(offlineMark(clockText(since, this.state?.tenant.time_zone)));
@@ -189,6 +224,7 @@ export class Live {
     this.offlineTimer = undefined;
     clearInterval(this.pollTimer);
     this.pollTimer = undefined;
+    this.offline = false;
     this.host.root.classList.remove("canccu-is-offline");
     this.host.root.querySelector(".canccu-offline-mark")?.remove();
   }
@@ -201,7 +237,7 @@ export class Live {
   }
 
   /** The theme's files come only from the state (L3): the player never calls theming. */
-  private setTheme(theme: ScreenState["theme"]): void {
+  setTheme(theme: ScreenState["theme"]): void {
     const head = document.head;
     for (const [slot, href] of [
       ["tokens", theme.tokens_css_url],
