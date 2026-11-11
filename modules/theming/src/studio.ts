@@ -9,7 +9,7 @@ import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from
 import { KitError, NotSignedIn, eventPageCsp, newNonce } from "@canccu/kit";
 import { html, page } from "@canccu/ui";
 import type { Slot } from "@canccu/ui";
-import { WRITE, needs, positiveInt } from "./http.js";
+import { WRITE, pageNeeds, positiveInt } from "./http.js";
 import { revisionList } from "./revision-routes.js";
 import { draftCssRoutes, htmlHeaders, previewRoutes } from "./studio-preview.js";
 import type { StudioDeps } from "./studio-preview.js";
@@ -97,7 +97,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       </p>`;
       return studioPage(request, reply, "Not available", body, 500);
     });
-    const reader = { preHandler: needs(deps.rights, WRITE) };
+    const reader = { preHandler: pageNeeds(deps.rights, WRITE) };
     previewRoutes(studio, deps);
 
     studio.get(STUDIO, reader, async (request, reply) => {

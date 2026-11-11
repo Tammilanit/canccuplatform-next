@@ -19,7 +19,7 @@ import type { Db } from "./db.js";
 import type { FileStore } from "./files.js";
 import { zipOf } from "./package-routes.js";
 import type { ProfileSource } from "./profile.js";
-import { WRITE, needs, noDraft, notFound } from "./http.js";
+import { WRITE, needs, noDraft, notFound, pageNeeds } from "./http.js";
 import { resolvedRevision, revisionZero } from "./theme.js";
 import { adminTokens, fillTokens, tokensCss } from "./tokens.js";
 import { STARTERS, draftFileUrl } from "./studio-views.js";
@@ -219,7 +219,7 @@ function previewPage(
 export function previewRoutes(app: FastifyInstance, deps: StudioDeps): void {
   app.get<{ Params: { surface: string }; Querystring: { canccu_theme?: string } }>(
     `${STUDIO}preview/:surface`,
-    { preHandler: needs(deps.rights, WRITE) },
+    { preHandler: pageNeeds(deps.rights, WRITE) },
     async (request, reply) => {
       const look = await deps.db.tenant(
         async (c) =>

@@ -25,6 +25,14 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       );
     });
 
+    it("asks for the session before the address rule, as admin's own pages do", async () => {
+      const res = await get(t.h, "/theming/studio/", { host: "zeta.test", ip: OUTSIDE_IP });
+      expect(res.statusCode).toBe(303);
+      expect(res.headers.location).toBe(
+        `/admin/sign-in?next=${encodeURIComponent("/theming/studio/")}`,
+      );
+    });
+
     it("answers a page saying why to a session without theming.theme.write", async () => {
       const res = await page("/theming/studio/", "member");
       expect(res.statusCode).toBe(403);
