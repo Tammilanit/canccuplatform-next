@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
-# Screenshots of the admin pages in the running demo stack, signed in with the CI session
-# stub's cookie (deploy/compose.ci.yml). CI runs it in the `demo-stack` check and uploads
-# OUT_DIR as an artifact. A page that does not answer 200 fails the run, so a screenshot of
-# an error page never passes for a real one.
+# Screenshots of every user-facing surface of the running demo stack (#376): the admin pages, the
+# Theme studio, the phone hub's preview, the agenda and notify pages and a paired Pulse screen in
+# landscape and portrait. Pages are signed in with the CI session stub's cookie
+# (deploy/compose.ci.yml). CI runs it in the `demo-stack` check and uploads OUT_DIR as an
+# artifact, which a user-visible PR's reviewer holds against the mockups (AGENTS.md, A package
+# run). A page that does not answer 200 fails the run, so a screenshot of an error page never
+# passes for a real one.
 # Usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR]   (defaults http://127.0.0.1, screenshots)
 #        demo-screenshots --install   pulls the Playwright image (CI)
 # Needs Docker. The run happens in Playwright's image, which ships Chromium and its system
 # libraries: installing them with apt on the runner failed CI whenever the Ubuntu mirrors were
-# down (#378). Inside the image the script runs itself directly and needs curl and npx.
+# down (#378). Inside the image the script runs itself directly and needs curl, node and npx.
+# The image joins the network namespace of the stack's Caddy container, found through
+# CANCCU_DEMO_COMPOSE (default `docker compose -f deploy/compose.yml -f deploy/compose.ci.yml`,
+# as in scripts/demo-stack-test), so BASE_URL is Caddy's address there. The browser then comes
+# from the loopback, an address of the demo venue, which the venue IP check needs before a
+# screen pairs or plays (contracts/screen.md); from the host, Docker's gateway is the source.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
@@ -15,12 +23,30 @@ cd "$(dirname "$0")/.." || exit 2
 # image in modules/theming/README.md); bump them together.
 PLAYWRIGHT=1.64.1
 IMAGE=mcr.microsoft.com/playwright:v$PLAYWRIGHT-noble
-# name|path: the admin pages, in menu order.
+DESK="1280, 800"
+PHONE="390, 844"
+# name|path|viewport, full page: each surface people use, at the width they use it at. A path
+# @check-in stands for the check-in page of a fresh arrival code.
 PAGES=(
-  "settings|/admin/settings"
-  "settings-admin|/admin/settings/admin"
-  "health-view|/admin/health-view"
-  "profile|/admin/profile"
+  "settings|/admin/settings|$DESK"
+  "settings-admin|/admin/settings/admin|$DESK"
+  "health-view|/admin/health-view|$DESK"
+  "profile|/admin/profile|$DESK"
+  "studio|/theming/studio/|$DESK"
+  "studio-advanced|/theming/studio/advanced|$DESK"
+  "studio-history|/theming/studio/history|$DESK"
+  "hub-preview-phone|/theming/studio/preview/hub|$PHONE"
+  "agenda|/agenda/|$DESK"
+  "agenda-new-item|/agenda/items/new|$DESK"
+  "agenda-quick-add-phone|/agenda/add|$PHONE"
+  "notify-topics|/notify/admin/topics|$DESK"
+  "check-in-phone|@check-in|$PHONE"
+)
+# name|viewport: the demo event's main zone on a screen paired for this run, in the default
+# theme. Every theme and the 4K sizes are #191's, which builds on this.
+SCREENS=(
+  "pulse-landscape|1920, 1080"
+  "pulse-portrait|1080, 1920"
 )
 
 usage() { echo "usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR] | --install" >&2; exit 2; }
@@ -37,53 +63,121 @@ OUT=${2:-screenshots}
 SESSION=${DEMO_SESSION:-demo-ci}
 
 if [ "$dry" = 1 ]; then
-  echo "dry run, would screenshot (chromium in $IMAGE) into $OUT/:"
-  for p in "${PAGES[@]}"; do echo "  ${p%%|*}.png  $BASE${p#*|}"; done
+  echo "dry run, would screenshot (chromium in $IMAGE, in Caddy's network) into $OUT/:"
+  for p in "${PAGES[@]}"; do
+    IFS='|' read -r name path size <<< "$p"
+    [ "$path" = @check-in ] && path="/notify/check-in?p=arrival&c=<a fresh code>"
+    echo "  $name.png  $BASE$path  ($size)"
+  done
+  for s in "${SCREENS[@]}"; do echo "  ${s%%|*}.png  $BASE/screen/  (${s#*|}, a paired screen)"; done
   exit 0
 fi
 
 # The image sets PLAYWRIGHT_BROWSERS_PATH to its browsers; anywhere else, run this script there.
-# Host network, so BASE_URL means the same in the container; the caller's uid owns the PNGs.
+# The caller's uid owns the PNGs.
 if [ "${PLAYWRIGHT_BROWSERS_PATH:-}" != /ms-playwright ]; then
   command -v docker >/dev/null || { echo "error: docker not found" >&2; exit 2; }
+  read -ra COMPOSE <<< "${CANCCU_DEMO_COMPOSE:-docker compose -f deploy/compose.yml -f deploy/compose.ci.yml}"
+  caddy=$("${COMPOSE[@]}" ps -q caddy 2>/dev/null | head -n1)
+  if [ -z "$caddy" ]; then
+    echo "error: the stack's caddy container is not running; start the stack first:" >&2
+    echo "  docker compose -f deploy/compose.yml -f deploy/compose.ci.yml up -d --build --wait" >&2
+    echo "  (another project or files: set CANCCU_DEMO_COMPOSE to its compose command)" >&2
+    exit 1
+  fi
   mkdir -p "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
-  exec docker run --rm --network host -u "$(id -u):$(id -g)" -e HOME=/tmp -e DEMO_SESSION="$SESSION" \
-    -v "$PWD:/repo:ro" -v "$out:$out" -w /repo "$IMAGE" scripts/demo-screenshots "$BASE" "$out"
+  exec docker run --rm --network "container:$caddy" -u "$(id -u):$(id -g)" -e HOME=/tmp \
+    -e DEMO_SESSION="$SESSION" -v "$PWD:/repo:ro" -v "$out:$out" -w /repo "$IMAGE" \
+    scripts/demo-screenshots "$BASE" "$out"
 fi
 
-for tool in curl npx; do
+for tool in curl node npx; do
   command -v "$tool" >/dev/null || { echo "error: $tool not found" >&2; exit 2; }
 done
 if ! curl -s -o /dev/null --max-time 5 "$BASE/"; then
-  echo "error: $BASE does not answer; start the stack first:" >&2
+  echo "error: $BASE does not answer from Caddy's network; start the stack first:" >&2
   echo "  docker compose -f deploy/compose.yml -f deploy/compose.ci.yml up -d --build --wait" >&2
   exit 1
 fi
 
 host=${BASE#*://}; host=${host%%/*}; host=${host%%:*}
 mkdir -p "$OUT"
-state=$(mktemp)
-log=$(mktemp)
-trap 'rm -f "$state" "$log"' EXIT
-cat > "$state" <<JSON
-{"cookies": [{"name": "canccu_session", "value": "$SESSION", "domain": "$host", "path": "/",
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+# A Playwright storage state holding one cookie.
+cookie_state() {
+  cat > "$3" <<JSON
+{"cookies": [{"name": "$1", "value": "$2", "domain": "$host", "path": "/",
   "expires": -1, "httpOnly": true, "secure": false, "sameSite": "Lax"}], "origins": []}
 JSON
-
+}
+# One field of the JSON object on stdin; fails when it is missing.
+field() {
+  node -e 'let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
+    const v = JSON.parse(s)[process.argv[1]];
+    if (v === undefined || v === null) process.exit(1);
+    console.log(v);
+  });' "$1"
+}
 fail=0
+count=0
+# shot NAME URL VIEWPORT STATE [playwright options]
+shot() {
+  local name=$1 url=$2 size=$3 state=$4
+  shift 4
+  if npx --yes "playwright@$PLAYWRIGHT" screenshot --browser chromium --viewport-size "$size" \
+      --load-storage "$state" "$@" "$url" "$OUT/$name.png" >"$tmp/log" 2>&1; then
+    echo "ok   $name.png  $url"; count=$((count + 1))
+  else
+    echo "FAIL $name: screenshot of $url failed:"; grep -m3 -i 'error' "$tmp/log" | cut -c1-300; fail=1
+  fi
+}
+call() { curl -sS --max-time 20 -H "cookie: canccu_session=$SESSION" "$@"; }
+
+cookie_state canccu_session "$SESSION" "$tmp/session.json"
 for p in "${PAGES[@]}"; do
-  name=${p%%|*} url=$BASE${p#*|}
+  IFS='|' read -r name path size <<< "$p"
+  if [ "$path" = @check-in ]; then
+    # The code rotates (contracts/notify.md, Check-in), so it is fetched right before its shot.
+    path=$(call "$BASE/api/notify/check-in/code?purpose=arrival" | field url) || {
+      echo "FAIL $name: no check-in code from $BASE/api/notify/check-in/code"; fail=1; continue
+    }
+    # A bare path on the IP-mode stack; on an event with a primary hostname, absolute there.
+    case $path in *://*) path=/${path#*://*/} ;; esac
+  fi
+  url=$BASE$path
   code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "cookie: canccu_session=$SESSION" "$url") || code=000
   if [ "$code" != 200 ]; then
     echo "FAIL $name: $url answered HTTP $code, not 200"; fail=1; continue
   fi
-  if npx --yes "playwright@$PLAYWRIGHT" screenshot --browser chromium --full-page \
-      --viewport-size "1280, 800" --load-storage "$state" "$url" "$OUT/$name.png" >"$log" 2>&1; then
-    echo "ok   $name.png  $url"
-  else
-    echo "FAIL $name: screenshot of $url failed:"; grep -m3 -i 'error' "$log" | cut -c1-300; fail=1
-  fi
+  shot "$name" "$url" "$size" "$tmp/session.json" --full-page
 done
 
-if [ "$fail" = 0 ]; then echo "demo-screenshots: ${#PAGES[@]} pages in $OUT/"; else echo "demo-screenshots: failed" >&2; fi
+# Pair a screen as a kiosk would (contracts/screen.md, Pairing): the screen asks for a code, an
+# admin approves it into the demo's main zone, the screen claims its device cookie.
+device_id=
+call -c "$tmp/jar" -X POST -H 'content-type: application/json' -d '{}' \
+  "$BASE/api/screen/pairing" > "$tmp/pairing"
+if pairing_code=$(field code < "$tmp/pairing") && pairing_id=$(field pairing_id < "$tmp/pairing") \
+  && call -X POST -H 'content-type: application/json' \
+    -d "{\"code\": \"$pairing_code\", \"name\": \"Screenshots\", \"zone_key\": \"main\"}" \
+    "$BASE/api/screen/devices" > "$tmp/device" && device_id=$(field id < "$tmp/device") \
+  && curl -sS --max-time 20 -b "$tmp/jar" -c "$tmp/jar" -o /dev/null "$BASE/api/screen/pairing/$pairing_id" \
+  && device=$(awk '$6 == "canccu_device" { print $7 }' "$tmp/jar") && [ -n "$device" ]; then
+  cookie_state canccu_device "$device" "$tmp/device.json"
+  for s in "${SCREENS[@]}"; do
+    # The player draws after its state read and has no ready mark: give it a few seconds.
+    shot "${s%%|*}" "$BASE/screen/" "${s#*|}" "$tmp/device.json" --wait-for-timeout 5000
+  done
+else
+  echo "FAIL pulse: pairing a screen failed:"; cat "$tmp/pairing" "$tmp/device" 2>/dev/null | cut -c1-300
+  fail=1
+fi
+# A rerun on the same stack would otherwise leave one more paired screen each time.
+if [ -n "$device_id" ]; then
+  call -o /dev/null -X POST "$BASE/api/screen/devices/$device_id/revoke" || true
+fi
+
+if [ "$fail" = 0 ]; then echo "demo-screenshots: $count views in $OUT/"; else echo "demo-screenshots: failed" >&2; fi
 exit "$fail"
