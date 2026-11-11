@@ -39,12 +39,15 @@ export class OfflineStore {
   private seenWritten = -Infinity;
   /** The last state written, for a worker that takes control later. */
   private last: ScreenState | null = null;
+  /** The list the worker has, so a save that names the same files costs it no pass. */
+  private named = "";
 
   constructor(private readonly env: OfflineEnv) {}
 
   register(bundle: string): void {
     // The first page load runs before its worker controls it; once it does, it learns the files.
     this.env.worker?.addEventListener("controllerchange", () => {
+      this.named = "";
       this.nameFiles();
     });
     void this.env.worker
@@ -93,11 +96,13 @@ export class OfflineStore {
   }
 
   private nameFiles(): void {
-    if (this.last === null) return;
-    this.env.worker?.controller?.postMessage({
-      type: "canccu-screen-files",
-      files: namedFiles(this.last, this.env.origin),
-    });
+    const controller = this.env.worker?.controller;
+    if (this.last === null || !controller) return;
+    const files = namedFiles(this.last, this.env.origin);
+    const key = JSON.stringify(files);
+    if (key === this.named) return;
+    this.named = key;
+    controller.postMessage({ type: "canccu-screen-files", files });
   }
 
   private async put(key: string, value: unknown): Promise<void> {

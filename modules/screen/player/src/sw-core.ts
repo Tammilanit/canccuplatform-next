@@ -18,6 +18,12 @@ export const LOADER = "/screen/";
  */
 export const LOADER_TIMEOUT_MS = 5000;
 
+/**
+ * The fetch event's `waitUntil`: a cache write runs on after the answer has gone, so the page never
+ * waits for a large file to be stored, and a write that fails (a full disk) costs only the copy.
+ */
+export type KeepAlive = (work: Promise<unknown>) => void;
+
 export interface WorkerEnv {
   caches: CacheStorage;
   fetch: typeof fetch;
@@ -90,47 +96,55 @@ export class ScreenCache {
   }
 
   /** The answer to a fetch, or null to leave it to the network as if no worker were there. */
-  respond(request: Request): Promise<Response> | null {
+  respond(request: Request, keep: KeepAlive): Promise<Response> | null {
     if (request.method !== "GET") return null;
     const url = new URL(request.url);
     if (url.origin !== this.env.origin) return null;
-    if (url.pathname === LOADER && request.mode === "navigate") return this.loader(request);
-    if (isImmutable(url.pathname)) return this.immutable(request, url.pathname);
+    if (url.pathname === LOADER && request.mode === "navigate") return this.loader(request, keep);
+    if (isImmutable(url.pathname)) return this.immutable(request, url.pathname, keep);
     return null;
   }
 
-  private async loader(request: Request): Promise<Response> {
-    const shell = await this.env.caches.open(SHELL_CACHE);
+  private async loader(request: Request, keep: KeepAlive): Promise<Response> {
+    const network = this.env.fetch(request).catch(() => null);
+    // Registered before anything awaits, while the fetch event still takes `waitUntil`; its clone
+    // is taken before the page reads the body. The cached copy is only for when the server cannot
+    // be reached: a 5xx is cached never.
+    keep(
+      network
+        .then(async (response) => {
+          if (response === null || !response.ok) return;
+          const copy = response.clone();
+          await (await this.env.caches.open(SHELL_CACHE)).put(LOADER, copy);
+        })
+        .catch(() => undefined),
+    );
     let timer: ReturnType<typeof setTimeout> | undefined;
     const late = new Promise<null>((resolve) => {
       timer = setTimeout(() => {
         resolve(null);
       }, this.env.timeoutMs ?? LOADER_TIMEOUT_MS);
     });
-    const network = this.env.fetch(request).then(
-      async (response) => {
-        // The cached copy is only for when the server cannot be reached: a 5xx is cached never.
-        if (response.ok) await shell.put(LOADER, response.clone());
-        return response;
-      },
-      () => null,
-    );
     const first = await Promise.race([network, late]);
     clearTimeout(timer);
     if (first !== null && first.status < 500) return first;
+    const shell = await this.env.caches.open(SHELL_CACHE);
     const cached = await shell.match(LOADER);
     if (cached !== undefined) return cached;
     return (await network) ?? Response.error();
   }
 
-  private async immutable(request: Request, path: string): Promise<Response> {
+  private async immutable(request: Request, path: string, keep: KeepAlive): Promise<Response> {
     const cache = await this.env.caches.open(cacheFor(path));
     const range = request.headers.get("range");
     const hit = await cache.match(path);
     if (hit !== undefined) return range === null ? hit : ranged(hit, range);
     const response = await this.env.fetch(request);
     // Only a whole file is kept; a range read leaves it to the prefetch of the state's files.
-    if (response.status === 200 && range === null) await cache.put(path, response.clone());
+    // Called while `respondWith` is still pending, so `waitUntil` still takes it.
+    if (response.status === 200 && range === null) {
+      keep(cache.put(path, response.clone()).catch(() => undefined));
+    }
     return response;
   }
 

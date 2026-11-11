@@ -23,7 +23,9 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  const answer = cache.respond(event.request);
+  const answer = cache.respond(event.request, (work) => {
+    event.waitUntil(work);
+  });
   if (answer !== null) event.respondWith(answer);
 });
 

@@ -1,7 +1,7 @@
 /**
  * A screen that plays: its push stream, heartbeat, offline mark and commands. It keeps the state
  * current and hands every new one to the player to draw; an answer about the device (401, 403,
- * 409) goes back to the player, which leaves playing for that answer's frame.
+ * 409, and any the host names) goes back to the player, which leaves playing for its frame.
  */
 import { call, isDeviceAnswer } from "./api.js";
 import { audioUnlocked } from "./audio.js";
@@ -37,6 +37,11 @@ export interface LiveHost {
   show(state: ScreenState): void;
   /** A whole-state answer, or one about the device, for the player to act on. */
   settle(answer: Answer): void;
+  /**
+   * Answers that end the stream besides the device's (401, 403, 409): the virtual screen's 404
+   * for a zone that is gone, which no retry brings back.
+   */
+  refuses?: ReadonlySet<number>;
 }
 
 export class Live {
@@ -50,9 +55,11 @@ export class Live {
   private identify: HTMLElement | null = null;
   private lastTime = "";
   private readonly paths: NonNullable<LiveHost["paths"]>;
+  private readonly refuses: (status: number) => boolean;
 
   constructor(private readonly host: LiveHost) {
     this.paths = host.paths ?? { state: STATE_PATH, stream: STREAM_PATH, heartbeat: true };
+    this.refuses = (status) => isDeviceAnswer(status) || (host.refuses?.has(status) ?? false);
     this.stream = new StreamClient(
       host.fetch,
       {
@@ -79,6 +86,7 @@ export class Live {
       },
       host.random,
       this.paths.stream,
+      this.refuses,
     );
     this.heartbeat = new Heartbeat(
       host.fetch,
@@ -139,14 +147,23 @@ export class Live {
       return;
     }
     if (m.event === "state") {
-      if (isState(data)) this.host.show(data);
+      if (isState(data)) this.take(data);
     } else if (m.event === "command") {
       this.command(data as { command?: string; expires_at?: string });
     } else if (PATCHES.has(m.event) && this.state !== null) {
       const next = applyPatch(this.state, m.event, data as Parameters<typeof applyPatch>[2]);
       if (next === null) void this.reread();
-      else this.host.show(next);
+      else this.take(next);
     }
+  }
+
+  /**
+   * A pushed state becomes the current one here, not in the host: the next patch builds on it,
+   * and a theme patch reaches the page's CSS, whichever host draws it.
+   */
+  private take(state: ScreenState): void {
+    this.play(state);
+    this.host.show(state);
   }
 
   /**
@@ -156,7 +173,7 @@ export class Live {
   private async reread(): Promise<void> {
     const answer = await call(this.host.fetch, "GET", this.paths.state);
     if (!this.running) return;
-    if (answer.status === 200 || isDeviceAnswer(answer.status)) this.host.settle(answer);
+    if (answer.status === 200 || this.refuses(answer.status)) this.host.settle(answer);
   }
 
   private command(data: { command?: string; expires_at?: string }): void {

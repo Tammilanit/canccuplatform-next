@@ -67,6 +67,10 @@ describe("the offline store", () => {
     expect(saved?.state.state_version).toBe(2);
     expect(saved?.seenAt).toBe(T0 + SAVE_DELAY_MS);
     expect(w.posted).toEqual([{ type: "canccu-screen-files", files: [logo] }]);
+    // A new state that names the same files costs the worker no pass.
+    s.save(screenState({ state_version: 3, theme }));
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(w.posted).toHaveLength(1);
     // A worker that takes control later learns the files then.
     for (const fn of w.listeners) fn();
     expect(w.posted).toHaveLength(2);

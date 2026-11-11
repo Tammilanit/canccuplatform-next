@@ -43,6 +43,17 @@ const req = (
     headers: new Headers(opts.range === undefined ? {} : { range: opts.range }),
   }) as unknown as Request;
 
+/** The fetch event's `waitUntil`: the cache writes it was handed, to wait for in a test. */
+class Kept {
+  work: Promise<unknown>[] = [];
+  keep = (work: Promise<unknown>): void => {
+    this.work.push(work);
+  };
+  settled = async (): Promise<void> => {
+    await Promise.all(this.work);
+  };
+}
+
 function setup(version = "2.0.0") {
   const caches = new FakeCaches();
   const net = new Net();
@@ -52,7 +63,9 @@ function setup(version = "2.0.0") {
     version,
     origin: ORIGIN,
   });
-  return { caches, net, sw };
+  const kept = new Kept();
+  const respond = (request: Request) => sw.respond(request, kept.keep);
+  return { caches, net, sw, kept, respond };
 }
 
 const text = async (answer: Promise<Response> | null): Promise<string> =>
@@ -86,10 +99,11 @@ describe("the screen's service worker", () => {
   });
 
   it("reads the loader from the network, and from the cache when the network fails or hangs", async () => {
-    const { net, sw } = setup();
+    const { net, kept, respond } = setup();
     net.files.set("/screen/", "loader 1");
-    const nav = () => sw.respond(req("/screen/", { mode: "navigate" }));
+    const nav = () => respond(req("/screen/", { mode: "navigate" }));
     expect(await text(nav())).toBe("loader 1");
+    await kept.settled();
     net.down = true;
     expect(await text(nav())).toBe("loader 1");
     net.down = false;
@@ -103,21 +117,36 @@ describe("the screen's service worker", () => {
   });
 
   it("leaves the API, other pages, other origins and writes to the network", () => {
-    const { sw } = setup();
-    expect(sw.respond(req("/api/screen/device/state"))).toBeNull();
-    expect(sw.respond(req("/api/screen/device/stream"))).toBeNull();
-    expect(sw.respond(req("/screen/zones/main", { mode: "navigate" }))).toBeNull();
-    expect(sw.respond(req("/api/screen/files/a.jpg", { method: "POST" }))).toBeNull();
-    expect(sw.respond(req("/theming/a/x.css", { origin: "https://other.test" }))).toBeNull();
+    const { respond } = setup();
+    expect(respond(req("/api/screen/device/state"))).toBeNull();
+    expect(respond(req("/api/screen/device/stream"))).toBeNull();
+    expect(respond(req("/screen/zones/main", { mode: "navigate" }))).toBeNull();
+    expect(respond(req("/api/screen/files/a.jpg", { method: "POST" }))).toBeNull();
+    expect(respond(req("/theming/a/x.css", { origin: "https://other.test" }))).toBeNull();
   });
 
   it("serves immutable files from the cache first, and keeps the ones it reads", async () => {
-    const { net, sw } = setup();
+    const { net, kept, respond } = setup();
     net.files.set("/theming/sandbox/7/clock/index.html", "embed");
-    expect(await text(sw.respond(req("/theming/sandbox/7/clock/index.html")))).toBe("embed");
+    expect(await text(respond(req("/theming/sandbox/7/clock/index.html")))).toBe("embed");
+    await kept.settled();
     net.down = true;
-    expect(await text(sw.respond(req("/theming/sandbox/7/clock/index.html")))).toBe("embed");
+    expect(await text(respond(req("/theming/sandbox/7/clock/index.html")))).toBe("embed");
     expect(net.reads.filter((p) => p.startsWith("/theming/sandbox/"))).toHaveLength(1);
+  });
+
+  it("still answers from the network when a cache write fails (a full disk)", async () => {
+    const { caches, net, kept, respond } = setup();
+    const full = (): Promise<never> =>
+      Promise.reject(new DOMException("quota exceeded", "QuotaExceededError"));
+    (await caches.open(SHELL_CACHE)).put = full;
+    (await caches.open(FILES_CACHE)).put = full;
+    net.files.set("/screen/", "loader 1");
+    net.files.set("/api/screen/files/a.jpg", "a");
+    expect(await text(respond(req("/screen/", { mode: "navigate" })))).toBe("loader 1");
+    expect(await text(respond(req("/api/screen/files/a.jpg")))).toBe("a");
+    await kept.settled();
+    expect(kept.work).toHaveLength(2);
   });
 
   it("answers a media element's range read from a cached file", async () => {

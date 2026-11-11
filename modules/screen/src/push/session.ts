@@ -184,7 +184,10 @@ export class SessionStream extends Feed<SessionRequest> {
     try {
       checkAdminAccess(ctx, this.req.ip);
       const session = await this.session.rights.session(this.req.cookie);
-      return session.rights.has(SESSION_RIGHT) && session.expiresAt.getTime() > Date.now();
+      return (
+        session.rights.has(SESSION_RIGHT) &&
+        session.expiresAt.getTime() > (this.deps.now ?? Date.now)()
+      );
     } catch {
       // Admin unreachable counts too: a view nobody can vouch for ends, and the page reconnects.
       return false;

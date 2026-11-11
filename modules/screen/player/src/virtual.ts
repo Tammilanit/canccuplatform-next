@@ -61,6 +61,8 @@ export class VirtualScreen {
       root: env.root,
       bundle: env.bundle,
       paths: { state: this.statePath, stream: `${base}/stream${query}`, heartbeat: false },
+      // A deleted zone answers 404 from then on: say so, rather than retry with its old content.
+      refuses: new Set([404]),
       reload: () => {
         env.reload();
       },
