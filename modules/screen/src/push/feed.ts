@@ -25,6 +25,8 @@ export interface StreamDeps extends ComposeDeps {
   streamPingMs?: number;
   /** The event a hostname serves now, as a request would resolve it; null when none. */
   contextOf(host: string): Promise<TenantContext | null>;
+  /** A stream was placed in a zone whose content next changes by itself at `at` (PushHub.plan). */
+  onPlaced?(tenant: string, zone: string, at: number | null): void;
 }
 
 export interface FeedRequest {
@@ -154,6 +156,9 @@ export abstract class Feed<R extends FeedRequest = FeedRequest> {
     this.zoneKey = placed.zoneKey;
     this.orientation = placed.orientation;
     const record = placed.record;
+    if (record !== null && placed.zoneKey !== null) {
+      this.deps.onPlaced?.(this.tenant, placed.zoneKey, record.nextChangeAt ?? null);
+    }
     const last = LAST_ID_RE.exec(lastEventId ?? "");
     if (
       record !== null &&
