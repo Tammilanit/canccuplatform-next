@@ -17,6 +17,7 @@ describe.skipIf(!DATABASE_URL)("GET /internal/theming/current", () => {
   beforeAll(async () => {
     h = await harness();
     await seedRevision(h, "alpha", 1, { colors: { accent: "#fbbf24" } });
+    await seedRevision(h, "venue", 1, { colors: { accent: "#a3e635" } });
     await seedRevision(h, "closed", 1, { colors: { accent: "#22d3ee" } });
   });
   afterAll(async () => {
@@ -49,19 +50,31 @@ describe.skipIf(!DATABASE_URL)("GET /internal/theming/current", () => {
       const res = await internal(`?tenant_id=${tenant}`);
       expect(res.statusCode).toBe(200);
       expect(res.json()).toEqual(guest.json());
+      expect(res.json()).toMatchObject({ revision: 1 });
     });
   }
 
   it("is the only way in for the screens where the mode keeps a guest out", async () => {
-    for (const host of ["venue.test", "closed.test"]) {
-      const guest = await get(h, "/api/theming/current", { host, ip: OUTSIDE_IP });
+    for (const tenant of ["venue", "closed"]) {
+      const guest = await get(h, "/api/theming/current", {
+        host: `${tenant}.test`,
+        ip: OUTSIDE_IP,
+      });
       expect(code(guest)).toBe("info_pages_closed");
+      expect((await internal(`?tenant_id=${tenant}`)).statusCode).toBe(200);
     }
   });
 
-  it("answers revision 0 from the profile without a published theme", async () => {
-    const res = await internal("?tenant_id=venue");
-    expect(res.json()).toMatchObject({ revision: 0, tokens: { colors: { primary: "#14b8a6" } } });
+  it("answers revision 0 without a published theme, as the public read does", async () => {
+    const guest = await get(h, "/api/theming/current", { host: "beta.test", ip: OUTSIDE_IP });
+    const res = await internal("?tenant_id=beta");
+    expect(res.json()).toMatchObject({ revision: 0 });
+    expect(res.json()).toEqual(guest.json());
+  });
+
+  it("is never served from a cache without asking again", async () => {
+    const res = await internal("?tenant_id=alpha");
+    expect(res.headers["cache-control"]).toBe("no-cache");
   });
 
   it("answers the highest revision of the named event only", async () => {

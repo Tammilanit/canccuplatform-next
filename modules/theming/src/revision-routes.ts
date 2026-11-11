@@ -291,15 +291,20 @@ function onlyScreen(request: FastifyRequest): void {
 export function internalRoutes(app: FastifyInstance, deps: InternalDeps): void {
   // No info-page check: screen's container is no venue address and has no session, so the guests'
   // read would refuse it in `venue_only` and `sign_in`, and those screens would lose the event's look.
-  app.get<{ Querystring: { tenant_id?: string } }>("/internal/theming/current", async (request) => {
-    onlyScreen(request);
-    const tenant = request.query.tenant_id;
-    if (tenant === undefined || !isTenantId(tenant)) {
-      throw invalidRequest("A tenant_id is required.");
-    }
-    if ((await deps.tenants.byId(tenant)) === null) throw notFound();
-    return withTenant(tenant, () => currentTheme(deps.db, deps.profile, tenant));
-  });
+  app.get<{ Querystring: { tenant_id?: string } }>(
+    "/internal/theming/current",
+    async (request, reply) => {
+      onlyScreen(request);
+      const tenant = request.query.tenant_id;
+      if (tenant === undefined || !isTenantId(tenant)) {
+        throw invalidRequest("A tenant_id is required.");
+      }
+      if ((await deps.tenants.byId(tenant)) === null) throw notFound();
+      // As the public read: screens switch on theming.theme.published, this read only catches up.
+      void reply.header("cache-control", "no-cache");
+      return withTenant(tenant, () => currentTheme(deps.db, deps.profile, tenant));
+    },
+  );
 
   app.get<{ Params: { revision: string }; Querystring: { tenant_id?: string } }>(
     "/internal/theming/revisions/:revision",
