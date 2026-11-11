@@ -1,4 +1,5 @@
 /** The current theme as GET /api/theming/current answers it (contracts/theming.md, Reading the current theme). */
+import { requireTenant } from "@canccu/kit";
 import type { SqlClient } from "@canccu/kit";
 import type { Db } from "./db.js";
 import { listEmbeds } from "./embeds.js";
@@ -137,14 +138,15 @@ export async function resolvedRevision(
 }
 
 /**
- * The current theme of the tenant in scope: the highest revision, else revision 0 from `tenant`'s
+ * The current theme of the tenant in scope: the highest revision, else revision 0 from its
  * profile. The guests' read and the screens' read both answer through this one function, so a
  * screen never shows another look than the event's own pages; the callers do the access checks.
+ * Both halves read the ambient tenant, so no caller can mix one event's revisions with another's
+ * profile.
  */
-export async function currentTheme(
-  db: Db,
-  profile: ProfileSource,
-  tenant: string,
-): Promise<ResolvedTheme> {
-  return (await db.tenant((c) => resolvedRevision(c))) ?? revisionZero(await profile(tenant)).theme;
+export async function currentTheme(db: Db, profile: ProfileSource): Promise<ResolvedTheme> {
+  return (
+    (await db.tenant((c) => resolvedRevision(c))) ??
+    revisionZero(await profile(requireTenant())).theme
+  );
 }

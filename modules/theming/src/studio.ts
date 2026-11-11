@@ -9,7 +9,7 @@ import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from
 import { KitError, NotSignedIn, eventPageCsp, newNonce } from "@canccu/kit";
 import { html, page } from "@canccu/ui";
 import type { Slot } from "@canccu/ui";
-import { WRITE, pageNeeds, positiveInt } from "./http.js";
+import { EMBEDS, WRITE, pageNeeds, positiveInt } from "./http.js";
 import { revisionList } from "./revision-routes.js";
 import { draftCssRoutes, htmlHeaders, previewRoutes } from "./studio-preview.js";
 import type { StudioDeps } from "./studio-preview.js";
@@ -106,7 +106,9 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
 
     studio.get(STUDIO, reader, async (request, reply) => {
       const state = await deps.db.tenant((c) => studioState(c, deps.files));
-      return studioPage(request, reply, "Theme", brandKitView(state));
+      // The page only offers; the package upload checks the embeds right itself.
+      const embedsAllowed = request.session?.rights.has(EMBEDS) ?? false;
+      return studioPage(request, reply, "Theme", brandKitView(state, embedsAllowed));
     });
 
     studio.get(`${STUDIO}advanced`, reader, async (request, reply) => {
