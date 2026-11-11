@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Theming API
-  version: 1.4.0
+  version: 1.5.0
   summary: One event's theme, its draft, preview, publish and rollback, git sync, clone and the served theme files.
   description: |
     Machine-readable part of the theming contract. Prose, stable classes, package rules, upload safety, CSP and
@@ -56,6 +56,45 @@ paths:
                 $ref: "#/components/schemas/ResolvedTheme"
         "403":
           $ref: "#/components/responses/Forbidden"
+  /internal/theming/current:
+    get:
+      tags: [internal]
+      operationId: getCurrentThemeInternal
+      summary: The current theme of an event, for the screens
+      description: |
+        The same answer as `GET /api/theming/current` gives a guest whom the info-page mode lets in: the current
+        revision, resolved, or the platform defaults with the profile's `theme` applied and `revision: 0` when the
+        event has none published. It ignores the info-page mode, so an event in mode `venue_only` or `sign_in`
+        keeps its own look on its own screens: the screen module's server reads it for the event's screens
+        (contracts/screen.md, Widgets). Every status of the event. No session: the kit's service identity
+        (`x-canccu-service`, contracts/README.md, Conventions); only the screen module may call it. Internal
+        network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            $ref: "#/components/schemas/TenantId"
+      responses:
+        "200":
+          description: The current theme.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolvedTheme"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/ServiceUnauthenticated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+          description: "`service_forbidden`: the calling module is not the screen module."
+        "404":
+          $ref: "#/components/responses/NotFound"
+          description: "`not_found`: no such event."
   /internal/theming/revisions/{revision}:
     get:
       tags: [internal]
@@ -987,7 +1026,15 @@ components:
           schema:
             $ref: "common.openapi.yaml#/components/schemas/Error"
     Forbidden:
-      description: "`missing_right`, or `info_pages_closed` (the event's info-page mode does not let this request in)."
+      description: |
+        `missing_right`, or `info_pages_closed` (the event's info-page mode does not let this request in), or
+        `service_forbidden` (an internal path the calling module may not call).
+      content:
+        application/json:
+          schema:
+            $ref: "common.openapi.yaml#/components/schemas/Error"
+    ServiceUnauthenticated:
+      description: "`service_unauthenticated`: no valid `x-canccu-service` header (an internal path, no session)."
       content:
         application/json:
           schema:

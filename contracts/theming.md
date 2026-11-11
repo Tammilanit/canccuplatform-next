@@ -225,6 +225,8 @@ A theme can come from the event's own git repo instead of uploads.
 ## Reading the current theme
 `GET /api/theming/current` → the current revision: `revision`, `published_at`, `tokens` (complete, defaults filled in), `tokens_css_url` (a `:root` block of the tokens and the `@font-face` rules), `admin_tokens_css_url` (the same, with the platform default colours when the theme fails the contrast rules: for admin, sign-in, superadmin and privacy pages), `css_url` (the compiled CSS: only for the surfaces that take CSS), `logo_url`, `logo_png_url` (a PNG rendition, 512 px wide, for Discord and other places that take no SVG), `icon_urls`, `embed_color` (integer), `layouts`, `templates` (name, widget type and the parsed template), `embeds` (name and frame address) and `theming_version`. Readable by whoever the event's info-page mode lets in ([tenants.md](tenants.md#info-page-mode)) and by the event's paired screens. Without a published theme it answers the platform defaults with the profile's `theme` applied, and `revision: 0`.
 
+**The current theme, for the screens:** `GET /internal/theming/current?tenant_id=` → the same answer as `GET /api/theming/current` gives a guest whom the info-page mode lets in (the current revision, or the defaults with `revision: 0`). It ignores the info-page mode, so an event in mode `venue_only` or `sign_in` keeps its own look on its own screens: Screen's server reads it for the event's screens, whose container is no venue address and has no session ([screen.md](screen.md#widgets)). Every status of the event; an unknown event is 404 `not_found`. Only Screen may call it, with its service identity; any other module is 403 `service_forbidden`. Internal network only ([README.md](README.md#conventions)).
+
 **A pinned revision, for a module:** `GET /internal/theming/revisions/{revision}?tenant_id=` answers the same shape for one kept revision of that tenant (404 `not_found` for one that is not kept). The screen module's server reads it to draw a screen pinned to that revision (`ScreenState.theme`, [screen.md](screen.md#offline-theming-and-the-pinned-bundle)). Internal network only ([README.md](README.md#conventions)).
 
 ## Rights
@@ -240,7 +242,7 @@ Envelope, naming and transport: [admin.md](admin.md#events). Listed in the catal
 |---|---|---|---|
 | `theming.theme.published` | A revision became current: publish, restore or clone | event-wide, `public` | `revision`, `restored_from` (or `null`), `cloned_from` (`tenant_id` and `revision`, or `null`), `changed` (any of `tokens`, `css`, `fonts`, `images`, `layouts`, `templates`, `embeds`), `tokens_css_url`, `css_url`, `embed_color`, `actor_user_id` |
 
-Consumers read the rest through `GET /api/theming/current`.
+Consumers read the rest through `GET /api/theming/current` (Screen's server through `GET /internal/theming/current`).
 
 ## The test
 - **Screenshots:** CI's demo-stack job ([docs/ci.md](../docs/ci.md)) publishes each package in [events/demo/themes/](../events/demo/themes/) on the demo tenant and screenshots, per theme, each of its layouts on the screen, the hub home, a public info page and an admin page, named `theming-<theme>-<surface>[-<layout>].png`. These screenshots are the theming contract's test: a change to the stable classes, the tokens, `ui.css` or a module's markup shows in the PR's screenshots (the `demo-screenshots` artifact), where the reviewer sees it. Each surface's module adds its screenshots when it is built.
