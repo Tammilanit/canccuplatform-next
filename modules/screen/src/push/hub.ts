@@ -31,6 +31,8 @@ const REBUILDS = [
   "tenants.status.changed",
   "tenants.venue_info.changed",
   "theming.theme.published",
+  // Main hands these on only once src/compose/overrides.ts has kept them.
+  "moments.override.",
 ];
 /** The event's context changed: every stream checks its device again and may redraw. */
 const RECHECKS = new Set([
@@ -86,7 +88,7 @@ export class PushHub {
     return n;
   }
 
-  /** One event of the screen, agenda, tenants or theming tenant streams. */
+  /** One event of the screen, agenda, tenants, theming or moments tenant streams. */
   handleEvent(event: Event): void {
     if (event.source === "tenants") this.deps.tenantChanged(event);
     const tenant = event.tenant;

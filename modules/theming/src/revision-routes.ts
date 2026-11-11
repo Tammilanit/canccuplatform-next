@@ -309,7 +309,7 @@ export function internalRoutes(app: FastifyInstance, deps: InternalDeps): void {
       if ((await deps.tenants.byId(tenant)) === null) throw notFound();
       // As the public read: screens switch on theming.theme.published, this read only catches up.
       void reply.header("cache-control", "no-cache");
-      return withTenant(tenant, () => currentTheme(deps.db, deps.profile, tenant));
+      return withTenant(tenant, () => currentTheme(deps.db, deps.profile));
     },
   );
 

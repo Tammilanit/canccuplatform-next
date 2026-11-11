@@ -1,10 +1,23 @@
 /** The Studio pages under `/theming/studio/` (plan issue-185 D8, D10): brand kit, advanced, history. */
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { withTenant } from "@canccu/kit";
 import { draftFiles, png } from "./drafting.js";
 import type { DraftBody } from "./drafting.js";
 import { DATABASE_URL, OUTSIDE_IP, get, send } from "./helpers.js";
+import { STARTERS, STARTERS_WITH_EMBEDS } from "../src/studio-views.js";
 import { demoZip, putPackage } from "./packaging.js";
+
+describe("the starters with embeds", () => {
+  it("are the demo themes that hold an embeds folder", () => {
+    const themes = fileURLToPath(new URL("../../../events/demo/themes/", import.meta.url));
+    const withEmbeds = STARTERS.filter((name) => existsSync(join(themes, name, "embeds")));
+    expect(withEmbeds.length).toBeGreaterThan(0);
+    expect([...STARTERS_WITH_EMBEDS].sort()).toEqual([...withEmbeds].sort());
+  });
+});
 
 describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
   const t = draftFiles();
@@ -70,12 +83,24 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
   });
 
   describe("the brand kit page", () => {
-    it("offers the starting points while there is no draft", async () => {
-      const res = await page("/theming/studio/");
+    it("offers every starting point to a writer with the embeds right", async () => {
+      const res = await page("/theming/studio/", "embedder");
       expect(res.body).toContain('data-action="start"');
       for (const name of ["default", "terminal", "level-up"]) {
         expect(res.body).toContain(`data-starter="${name}"`);
       }
+      expect(res.body).not.toContain("theming.embeds.write");
+    });
+
+    it("offers a writer without the embeds right only the starters without embeds", async () => {
+      const res = await page("/theming/studio/");
+      expect(res.body).toContain('data-action="start"');
+      expect(res.body).toContain('data-starter="default"');
+      for (const name of ["terminal", "level-up"]) {
+        expect(res.body).not.toContain(`data-starter="${name}"`);
+      }
+      // Says why the others are missing, rather than leaving them to a refusal.
+      expect(res.body).toContain("theming.embeds.write");
       expect(res.body).not.toContain('data-action="brand"');
       // The current theme is shown, not a draft.
       expect(res.body).toContain('src="/theming/studio/preview/screen"');
@@ -276,5 +301,8 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
     expect(res.statusCode).toBe(200);
     const body = (await page("/theming/studio/")).body;
     expect(body).toMatch(/<img[^>]*src="\/theming\/draft\/[0-9a-f]{64}\.png"/);
+    // The kept logo is one void <input>: an end tag is invalid HTML and leaves a second input.
+    expect(body).toContain('<input type="hidden" name="logo" value="images/logo.png">');
+    expect(body).not.toContain("</input");
   });
 });

@@ -85,7 +85,7 @@ function referenced(db: Db, name: string, draft: boolean): Promise<boolean> {
 export function themeRoutes(app: FastifyInstance, deps: RouteDeps): void {
   app.get("/api/theming/current", async (request, reply) => {
     await checkReader(request, deps.rights);
-    const theme = await currentTheme(deps.db, deps.profile, requireTenant());
+    const theme = await currentTheme(deps.db, deps.profile);
     // Short-lived: surfaces switch on theming.theme.published, this read only catches up.
     void reply.header("cache-control", "no-cache");
     return theme;

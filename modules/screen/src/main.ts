@@ -27,6 +27,7 @@ import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { sweepOffline } from "./health.js";
 import { ValkeyKv } from "./kv.js";
 import { applyAgendaEvent } from "./content/agenda.js";
+import { applyOverrideEvent } from "./compose/overrides.js";
 import { httpSources } from "./compose/sources.js";
 import { REFRESH_MS } from "./push/hub.js";
 import { ValkeyFanout, ValkeyZoneStore } from "./push/store.js";
@@ -210,6 +211,22 @@ async function main(): Promise<void> {
     // less than the zone refresh would (a scan reads 1000 keys a step, of the stream type only).
     { rescanMs: 5000 },
   );
+  // Moments' overrides (#307), from the streams' start at every boot as the agenda's above, so an
+  // end sent while no container ran still ends its claim. Each is kept before the hub hears of
+  // it, so the rebuild it starts reads it; its own connection, as XREAD blocks.
+  const claimsStore = ValkeyStreamStore.fromUrl(config.valkeyUrl);
+  new Bus(claimsStore, config.module, log).subscribeTenants(
+    ["moments"],
+    async (event) => {
+      try {
+        await applyOverrideEvent(db, event);
+      } catch (err) {
+        log.warn({ err, type: event.type }, "keeping a moments override failed");
+      }
+      app.pushHub.handleEvent(event);
+    },
+    { fromId: "0", rescanMs: 5000 },
+  );
   const refresh = setInterval(() => {
     void app.pushHub.refreshAll();
   }, REFRESH_MS);
@@ -290,6 +307,7 @@ async function main(): Promise<void> {
         listenStore.close(),
         agendaStore.close(),
         pushStore.close(),
+        claimsStore.close(),
         pushSubscriber.quit(),
         kv.close(),
         queueClient.quit(),

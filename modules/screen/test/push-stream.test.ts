@@ -5,7 +5,9 @@
  */
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { newId, withTenant } from "@canccu/kit";
 import type { Event } from "@canccu/kit";
+import { applyOverrideEvent } from "../src/compose/overrides.js";
 import { DATABASE_URL, TENANTS, call, context, harness } from "./helpers.js";
 import type { Harness } from "./helpers.js";
 import { pushClient } from "./sse.js";
@@ -256,6 +258,44 @@ describe.skipIf(!DATABASE_URL)("the push channel", () => {
     });
     expect(beat.statusCode).toBe(200);
     expect((await health())?.state_lag).toBe(1);
+    sse.close();
+  });
+
+  it("pushes a claim to the region it takes, once Moments' event is kept", async () => {
+    const { token } = await screen();
+    const sse = open(token);
+    const first = await sse.next("state");
+    const event: Event = {
+      id: newId(),
+      type: "moments.override.started",
+      version: 1,
+      time: new Date(h.clock.now).toISOString(),
+      source: "moments",
+      tenant: "alpha",
+      data: {
+        override: {
+          id: "ov_10",
+          kind: "block",
+          zones: [],
+          rank: 80,
+          source: { module: "moments", event_id: null, ref: null },
+          template: "announcement",
+          content: { title: "Dinner is served", body: "Café", level: "info", starts_at: null },
+          regions: ["rail"],
+          starts_at: new Date(h.clock.now).toISOString(),
+          ends_at: null,
+        },
+        actor_user_id: null,
+      },
+    };
+    // As main's moments subscription does: keep the override, then tell the hub.
+    await withTenant("alpha", () => applyOverrideEvent(h.db, event));
+    h.app.pushHub.handleEvent(event);
+    const pushed = await sse.next("region");
+    expect(pushed.data).toMatchObject({
+      state_version: (first.data.state_version as number) + 1,
+      region: { id: "rail", claim: { override_id: "ov_10", role: "rail", hidden: false } },
+    });
     sse.close();
   });
 });

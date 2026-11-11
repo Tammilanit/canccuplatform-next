@@ -1,5 +1,7 @@
 /** The screens' read of the current theme (contracts/theming.md, Reading the current theme). */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { withTenant } from "@canccu/kit";
+import { currentTheme } from "../src/theme.js";
 import {
   DATABASE_URL,
   OUTSIDE_IP,
@@ -104,5 +106,39 @@ describe.skipIf(!DATABASE_URL)("GET /internal/theming/current", () => {
     const unknown = await internal("?tenant_id=nobody");
     expect(unknown.statusCode).toBe(404);
     expect(code(unknown)).toBe("not_found");
+  });
+});
+
+describe.skipIf(!DATABASE_URL)("revision 0 of a gated event", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await harness();
+  });
+  afterAll(async () => {
+    await h.close();
+  });
+
+  it("gives the screens the profile's tokens of a venue_only event with no revision", async () => {
+    const res = await h.app.inject({
+      method: "GET",
+      url: "/internal/theming/current?tenant_id=venue",
+      headers: { host: "theming:8080", ...caller("screen") },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({
+      revision: 0,
+      tokens: { colors: { primary: "#14b8a6" } },
+    });
+  });
+
+  it("reads revision 0's profile for the tenant in scope, the one its revisions come from", async () => {
+    const asked: string[] = [];
+    const profile = (tenant: string) => {
+      asked.push(tenant);
+      return Promise.resolve(tenant === "venue" ? { colors: { primary: "#14b8a6" } } : undefined);
+    };
+    const theme = await withTenant("venue", () => currentTheme(h.db, profile));
+    expect(asked).toEqual(["venue"]);
+    expect(theme).toMatchObject({ revision: 0, tokens: { colors: { primary: "#14b8a6" } } });
   });
 });

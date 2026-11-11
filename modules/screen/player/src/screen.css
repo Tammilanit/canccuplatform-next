@@ -275,6 +275,7 @@
     color: var(--canccu-color-primary-text, #0f1115);
     font-weight: 600;
   }
+
   /* The playlist's media fill the widget edge to edge, with no card (src/media.ts). The widget
      stays absolute, inset 0 like every widget: it is the media's containing block, and set back
      to relative it would collapse to its absolute children's height, 0 px. */
@@ -325,5 +326,48 @@
     border: 0;
     background: transparent;
     color-scheme: normal;
+  }
+
+  /*
+   * Claims (contracts/screen.md, Moments drive it: claims). A takeover hides every region but
+   * itself and the overlay; the overlay draws its claim as a lower-third band on top of all.
+   */
+  .canccu-layout[data-takeover]
+    > .canccu-region:not(.canccu-region--_full, .canccu-region--_overlay) {
+    visibility: hidden;
+  }
+
+  .canccu-region--_full > .canccu-widget {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 5cqmin;
+  }
+
+  .canccu-region--_full .canccu-widget__title,
+  .canccu-region--_full .canccu-widget__big {
+    font-size: 9cqmin;
+  }
+
+  .canccu-region--_overlay > .canccu-widget {
+    inset: auto 0 0;
+    min-height: 16%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 2cqmin;
+    background: var(--canccu-color-primary, #60a5fa);
+    color: var(--canccu-color-primary-text, #0f1115);
+  }
+
+  /* An emergency stands out in the default look. A theme may restyle it: only a safety class
+     (packages/ui) would hold against a theme, and none exists for claims. */
+  .canccu-widget--announcement:has(.canccu-widget__level--emergency) {
+    background: #7f1d1d;
+    color: #fff;
+  }
+
+  .canccu-widget__level--emergency .canccu-widget__title {
+    color: #fff;
   }
 }

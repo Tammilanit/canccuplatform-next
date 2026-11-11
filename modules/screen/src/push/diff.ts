@@ -37,8 +37,9 @@ const sameShell = (a: RegionView, b: RegionView): boolean => {
 /**
  * The messages for one orientation, or null when only a whole `state` will do: no state before,
  * a new zone epoch, name, event name, sound device (these are in the device's own part) or display
- * (the contract sends motion and drift as a `state`), or
- * another layout or set of regions. An orientation the change left as it was gets a `ticker`
+ * (the contract sends motion and drift as a `state`), another layout or set of regions, or
+ * other `unplaced` or `hidden` claims. A claim placed, renewed or ended where those lists stay
+ * goes as its region's `region` message. An orientation the change left as it was gets a `ticker`
  * message anyway, so its screens learn the new `state_version` and show no lag.
  */
 export function diffZone(
@@ -60,6 +61,8 @@ export function diffZone(
   const now = after.views[orientation];
   if (
     !isDeepStrictEqual(was.layout, now.layout) ||
+    !isDeepStrictEqual(was.unplaced ?? [], now.unplaced ?? []) ||
+    !isDeepStrictEqual(was.hidden ?? [], now.hidden ?? []) ||
     was.regions.length !== now.regions.length ||
     was.regions.some((r, i) => r.id !== now.regions[i]?.id)
   ) {
