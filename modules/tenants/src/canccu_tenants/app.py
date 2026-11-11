@@ -22,7 +22,9 @@ def create_app(
     service: ServiceIdentity,
 ) -> ASGIApp:
     mode = IpMode(version) if ip_mode else None
-    private = Starlette(routes=internal.ROUTES + storage.INTERNAL_ROUTES)
+    private = Starlette(
+        routes=internal.ROUTES + storage.INTERNAL_ROUTES + venue_info.INTERNAL_ROUTES
+    )
     private.state.deps = d
     private.state.ip_mode = mode is not None
     install(private)

@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from canccu_kit import KitError, check_info_access
+from canccu_kit import KitError, ServiceForbidden, check_info_access
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
@@ -101,6 +101,23 @@ async def get_info(request: Request) -> Response:
     async with d.db.tenant() as conn:
         row = await conn.fetchrow("SELECT * FROM venue_info")
     return JSONResponse(_info(row or EMPTY, viewer))
+
+
+async def screen_info(request: Request) -> Response:
+    """The venue info as a guest sees it, for the event's screens whatever the info-page mode
+    (contracts/tenants.md, Venue profile): the screen module's container is no venue address and
+    has no session, so the guest read refuses it in `venue_only` and `sign_in`. Skipping that gate
+    is safe only because the answer is the guest's view, public Wi-Fi networks alone."""
+    caller = request.state.service
+    if caller != "screen":
+        raise ServiceForbidden(f"module {caller} may not read the screens' venue info")
+    d = deps(request)
+    # Set by the screen module's kit from the tenant it serves, never from a client.
+    tid = model.check_tenant_id(request.query_params.get("tenant_id"))
+    async with d.db.tenant(tid) as conn:
+        await core.tenant_row(conn, tid)  # 404 for a deleted or unknown event, any status else
+        row = await conn.fetchrow("SELECT * FROM venue_info")
+    return JSONResponse(_info(row or EMPTY, "guest"))
 
 
 async def put_info(request: Request) -> Response:
@@ -225,3 +242,4 @@ ROUTES = [
     Route("/api/tenants/current/venue-info/floor-plan", get_plan, methods=["GET"]),
     Route("/api/tenants/current/venue-info/floor-plan", put_plan, methods=["PUT"]),
 ]
+INTERNAL_ROUTES = [Route("/internal/tenants/venue-info", screen_info, methods=["GET"])]

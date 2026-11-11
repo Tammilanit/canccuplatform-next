@@ -132,8 +132,8 @@ export async function composeZone(
   const [theme, event, agenda, venue] = await Promise.all([
     deps.sources.theme(host),
     deps.sources.event(host),
-    deps.sources.agendaNow(host, zoneKey),
-    deps.sources.venueInfo(host),
+    deps.sources.agendaNow(ctx.tenant_id, zoneKey),
+    deps.sources.venueInfo(ctx.tenant_id),
   ]);
   const eventName = event?.name ?? ctx.primary_hostname ?? "";
   const facts: ZoneFacts = {

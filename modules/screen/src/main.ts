@@ -182,6 +182,7 @@ async function main(): Promise<void> {
         tenants: tenantsUrl,
         theming: process.env.CANCCU_THEMING_URL ?? "http://theming:8080",
       },
+      service,
       log,
     ),
     bundleVersion: config.version,

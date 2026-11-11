@@ -1,11 +1,14 @@
 /**
  * What the composed state reads from other modules, on the screens' behalf and never with a
- * device's request (contracts/screen.md, Reading other modules as a module). The reads go to each
- * module's own public path with the event's hostname, as a guest would read it, so a screen shows
- * exactly what the hub shows and nothing crew-only: one source, two surfaces.
+ * device's request (contracts/screen.md, Reading other modules as a module). Now and next and the
+ * venue info come from module reads that answer what a guest sees, whatever the info-page mode:
+ * screen's container is no venue address, so the guest read is refused in `venue_only` and
+ * `sign_in`. The theme and the event's name are still read as a guest, with the event's hostname.
+ * Either way a screen shows exactly what the hub shows and nothing crew-only: one source, two surfaces.
  */
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
+import type { ServiceIdentity } from "@canccu/kit";
 import type { AgendaItem, AgendaNow, VenueInfo } from "./widgets.js";
 
 export interface ThemeNow {
@@ -23,8 +26,8 @@ export interface EventPublic {
 
 /** Every read answers `null` when its module is down or refuses, so a screen never goes blank. */
 export interface Sources {
-  agendaNow(host: string, zoneKey: string): Promise<AgendaNow | null>;
-  venueInfo(host: string): Promise<VenueInfo | null>;
+  agendaNow(tenantId: string, zoneKey: string): Promise<AgendaNow | null>;
+  venueInfo(tenantId: string): Promise<VenueInfo | null>;
   theme(host: string): Promise<ThemeNow | null>;
   event(host: string): Promise<EventPublic | null>;
 }
@@ -44,16 +47,20 @@ export interface SourceLog {
 }
 
 /**
- * GET with a `Host` of our choosing. The global `fetch` (undici) treats `Host` as a forbidden
- * header and sends the URL's own authority, which no module resolves to an event; node:http keeps it.
+ * GET with a `Host` of our choosing (or the URL's own, for a module read). The global `fetch`
+ * (undici) treats `Host` as a forbidden header and sends the URL's own authority, which no module
+ * resolves to an event; node:http keeps it.
  */
-function getJson(url: string, host: string): Promise<{ status: number; body: unknown }> {
+function getJson(
+  url: string,
+  headers: Record<string, string>,
+): Promise<{ status: number; body: unknown }> {
   const target = new URL(url);
   const send = target.protocol === "https:" ? httpsRequest : httpRequest;
   return new Promise((resolve, reject) => {
     const req = send(
       target,
-      { headers: { host, accept: "application/json" }, timeout: READ_TIMEOUT_MS },
+      { headers: { ...headers, accept: "application/json" }, timeout: READ_TIMEOUT_MS },
       (res) => {
         const chunks: Buffer[] = [];
         let size = 0;
@@ -79,7 +86,7 @@ function getJson(url: string, host: string): Promise<{ status: number; body: unk
   });
 }
 
-export function httpSources(urls: SourceUrls, log?: SourceLog): Sources {
+export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: SourceLog): Sources {
   // One warning per path a minute: a module that is down for a day must not fill the log.
   const lastWarned = new Map<string, number>();
   const warn = (path: string, detail: object): void => {
@@ -88,10 +95,14 @@ export function httpSources(urls: SourceUrls, log?: SourceLog): Sources {
     lastWarned.set(path, now);
     log.warn({ path, ...detail }, "composed state source unavailable; its widgets show empty");
   };
-  const read = async (base: string, path: string, host: string): Promise<unknown> => {
+  const read = async (
+    base: string,
+    path: string,
+    headers: Record<string, string>,
+  ): Promise<unknown> => {
     const route = path.split("?")[0] ?? path;
     try {
-      const { status, body } = await getJson(`${base.replace(/\/+$/, "")}${path}`, host);
+      const { status, body } = await getJson(`${base.replace(/\/+$/, "")}${path}`, headers);
       if (status >= 200 && status < 300) return body;
       warn(route, { status });
       return null;
@@ -101,29 +112,32 @@ export function httpSources(urls: SourceUrls, log?: SourceLog): Sources {
     }
   };
   return {
-    agendaNow: async (host, zoneKey) => {
+    agendaNow: async (tenantId, zoneKey) => {
+      const query = `tenant_id=${encodeURIComponent(tenantId)}&zone=${encodeURIComponent(zoneKey)}`;
       const body = (await read(
         urls.agenda,
-        `/api/agenda/now?zone=${encodeURIComponent(zoneKey)}`,
-        host,
+        `/internal/agenda/now?${query}`,
+        service.headers("agenda"),
       )) as { current?: AgendaItem[]; next?: AgendaItem[] } | null;
       if (body === null || !Array.isArray(body.current) || !Array.isArray(body.next)) return null;
       return { current: body.current, next: body.next };
     },
-    venueInfo: async (host) => {
+    venueInfo: async (tenantId) => {
       const body = (await read(
         urls.tenants,
-        "/api/tenants/current/venue-info",
-        host,
+        `/internal/tenants/venue-info?tenant_id=${encodeURIComponent(tenantId)}`,
+        service.headers("tenants"),
       )) as VenueInfo | null;
       return body === null || !Array.isArray(body.wifi) ? null : body;
     },
     theme: async (host) => {
-      const body = (await read(urls.theming, "/api/theming/current", host)) as ThemeNow | null;
+      const body = (await read(urls.theming, "/api/theming/current", { host })) as ThemeNow | null;
       return body === null || typeof body.revision !== "number" ? null : body;
     },
     event: async (host) => {
-      const body = (await read(urls.tenants, "/api/tenants/current", host)) as EventPublic | null;
+      const body = (await read(urls.tenants, "/api/tenants/current", {
+        host,
+      })) as EventPublic | null;
       return body === null || typeof body.name !== "string" ? null : body;
     },
   };
