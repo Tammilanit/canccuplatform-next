@@ -137,3 +137,52 @@ body.canccu-surface--screen {
   font-size: 3vh;
   color: var(--canccu-color-text-muted, #9ca3af);
 }
+
+/* The kiosk check page: the crew works it with a mouse, so the pointer comes back. */
+body:has(.canccu-frame--check) {
+  cursor: auto;
+}
+
+.canccu-check {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 1.6vh 2vw;
+  font-size: 3vh;
+}
+
+.canccu-check__row {
+  display: contents;
+}
+
+.canccu-check__mark {
+  font-weight: 700;
+}
+
+.canccu-check__row--ok .canccu-check__mark {
+  color: var(--canccu-color-status-ok, #22c55e);
+}
+
+.canccu-check__row--warn .canccu-check__mark,
+.canccu-check__row--warn .canccu-check__value {
+  color: var(--canccu-color-status-degraded, #fbbf24);
+}
+
+.canccu-check__name {
+  color: var(--canccu-color-text-muted, #9ca3af);
+}
+
+.canccu-check__unlock {
+  justify-self: start;
+  margin-top: 4vh;
+  padding: 1.6vh 3vw;
+  font: inherit;
+  font-size: 3vh;
+  border: 0;
+  border-radius: 1vh;
+  background: var(--canccu-color-primary, #2563eb);
+  color: var(--canccu-color-primary-text, #ffffff);
+  cursor: pointer;
+}

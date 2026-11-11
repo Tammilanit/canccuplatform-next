@@ -17,7 +17,8 @@ import type { ComposeDeps, ZoneComposed } from "../compose/state.js";
 import { diffZone } from "./diff.js";
 import type { Orientation, ZoneRecord } from "./store.js";
 
-function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
+/** A composed zone as the store keeps it, at `version`. */
+export function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
   const view = (o: Orientation) => ({
     layout: composed.views[o].layout,
     regions: composed.views[o].regions,

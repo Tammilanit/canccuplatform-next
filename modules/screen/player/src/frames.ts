@@ -24,7 +24,8 @@ export interface FrameText {
   foot?: string;
 }
 
-function el<K extends keyof HTMLElementTagNameMap>(
+/** An element with its class and text: never markup, so no server text is parsed. */
+export function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   className: string,
   text?: string,

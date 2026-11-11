@@ -116,16 +116,20 @@ export interface ZoneComposed {
   display: Display;
 }
 
-/** Everything of a zone's state that is the same for all its screens, in both orientations. */
+/**
+ * Everything of a zone's state that is the same for all its screens, in both orientations.
+ * `proposed` stands in for the saved zone (a preview), so it composes even a key no zone has yet.
+ */
 export async function composeZone(
   deps: ComposeDeps,
   ctx: TenantContext,
   host: string,
   zoneKey: string,
+  proposed?: ZoneRow,
 ): Promise<ZoneComposed | null> {
   const at = new Date((deps.now ?? Date.now)());
   const read = await deps.db.tenant(async (c) => {
-    const zone = await zoneRow(c, zoneKey);
+    const zone = proposed ?? (await zoneRow(c, zoneKey));
     if (zone === null) return null;
     return {
       zone,

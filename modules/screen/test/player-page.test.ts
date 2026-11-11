@@ -39,6 +39,28 @@ describe.skipIf(!DATABASE_URL)("the /screen/ page and its bundle", () => {
     expect(String(res.headers["content-security-policy"])).toContain("script-src 'self'");
   });
 
+  it("serves a zone's virtual screen and the kiosk check from the same loader", async () => {
+    const zone = await call(h, "GET", "/screen/zones/main");
+    expect(zone.statusCode).toBe(200);
+    expect(zone.headers["cache-control"]).toBe("no-store");
+    expect(zone.body).toContain('data-page="zone" data-zone="main"');
+    expect(zone.body).toContain('src="/screen/b/test/player.js"');
+    expect(String(zone.headers["content-security-policy"])).toContain("script-src 'self'");
+    expect((await call(h, "GET", "/screen/zones/Not%22a%20key")).statusCode).toBe(404);
+    const check = await call(h, "GET", "/screen/check");
+    expect(check.statusCode).toBe(200);
+    expect(check.body).toContain('data-page="check"');
+    expect((await call(h, "GET", "/screen/")).body).not.toContain("data-page");
+  });
+
+  it("serves the service worker at a fixed address, revalidated on every load", async () => {
+    const sw = await call(h, "GET", "/screen/sw.js?v=test");
+    expect(sw.statusCode).toBe(200);
+    expect(sw.headers["content-type"]).toBe("text/javascript; charset=utf-8");
+    expect(sw.headers["cache-control"]).toBe("no-cache");
+    expect(sw.body).toBe("self;\n");
+  });
+
   it("sends the bare path on to the page", async () => {
     const res = await call(h, "GET", "/screen?x=1");
     expect(res.statusCode).toBe(308);

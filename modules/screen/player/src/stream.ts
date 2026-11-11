@@ -53,6 +53,8 @@ export class StreamClient {
     private readonly fetchFn: Fetch,
     private readonly on: StreamHandlers,
     private readonly random: () => number = Math.random,
+    /** A device's channel, or a zone's for a signed-in person (the virtual screen). */
+    private readonly path: string = STREAM_PATH,
   ) {}
 
   start(): void {
@@ -80,7 +82,7 @@ export class StreamClient {
     const stale = (): boolean => !this.running || abort !== this.abort;
     let response: Response;
     try {
-      response = await fetchUntil(this.fetchFn, STREAM_PATH, {
+      response = await fetchUntil(this.fetchFn, this.path, {
         headers,
         credentials: "same-origin",
         cache: "no-store",
