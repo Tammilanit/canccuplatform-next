@@ -8,6 +8,8 @@ import * as csstree from "css-tree";
 import type { CssNode, StyleSheet, WalkContext } from "css-tree";
 import type { Problem } from "./checks.js";
 import { isStableClass, isThemeClass } from "./classes.js";
+import { fontSizes } from "./readability.js";
+import type { FontSize } from "./readability.js";
 import { IMAGE, plainPath, readText } from "./text.js";
 
 /** `css/` takes 256 KB together (The theme package), so no one file passes it either. */
@@ -51,7 +53,8 @@ const MAX_REASONS = 5;
 const MAX_CLASSES = 10;
 
 export type CssResult =
-  { ok: true; refs: string[]; warnings: Problem[] } | { ok: false; problem: Problem };
+  | { ok: true; refs: string[]; warnings: Problem[]; sizes: FontSize[] }
+  | { ok: false; problem: Problem };
 
 interface Inspected {
   ast: StyleSheet;
@@ -194,11 +197,19 @@ function inspect(path: string, bytes: Buffer): Inspected | Problem {
   return { ast: ast as StyleSheet, refs, warnings };
 }
 
-/** The checks of one CSS file, and the package files its url()s name (for the draft's checks). */
+/**
+ * The checks of one CSS file, with what the draft's checks need of it: the package files its
+ * url()s name and its font sizes (readability.ts).
+ */
 export function checkCss(path: string, bytes: Buffer): CssResult {
   const inspected = inspect(path, bytes);
   return "ast" in inspected
-    ? { ok: true, refs: inspected.refs, warnings: inspected.warnings }
+    ? {
+        ok: true,
+        refs: inspected.refs,
+        warnings: inspected.warnings,
+        sizes: fontSizes(inspected.ast),
+      }
     : { ok: false, problem: inspected };
 }
 

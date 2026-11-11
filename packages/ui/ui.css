@@ -238,4 +238,95 @@
       display: none !important;
     }
   }
+
+  /* Safety (src/safety.ts): the pairing code, the offline marker and the privacy link. Every
+     declaration is `!important` in this first layer, so no theme layer hides, moves, covers or
+     restyles them: `all: initial` first resets whatever a theme could set, then the look is set
+     again here, in fixed colours and fonts, since the tokens and fonts are the theme's. */
+  .canccu-pairing-code,
+  .canccu-offline-marker,
+  .canccu-privacy-link {
+    all: initial !important;
+    display: block !important;
+    position: fixed !important;
+    z-index: 2147483647 !important;
+    box-sizing: border-box !important;
+    padding: 0.25em 0.5em !important;
+    border-radius: 0.25em !important;
+    background: #000000 !important;
+    color: #ffffff !important;
+    font-family: system-ui, sans-serif !important;
+    font-size: max(16px, 2.5vh) !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+  }
+  .canccu-pairing-code {
+    inset: 0 !important;
+    width: fit-content !important;
+    height: fit-content !important;
+    margin: auto !important;
+    font-family: ui-monospace, monospace !important;
+    font-size: max(32px, 8vh) !important;
+    letter-spacing: 0.1em !important;
+  }
+  .canccu-offline-marker {
+    top: max(8px, 1.5vh) !important;
+    right: max(8px, 1.5vh) !important;
+  }
+  .canccu-privacy-link {
+    bottom: 8px !important;
+    right: 8px !important;
+    font-size: 16px !important;
+    text-decoration: underline !important;
+    cursor: pointer !important;
+  }
+  /* Nothing drawn over, before or after them, and their first line or letter like the rest. */
+  .canccu-pairing-code::before,
+  .canccu-pairing-code::after,
+  .canccu-offline-marker::before,
+  .canccu-offline-marker::after,
+  .canccu-privacy-link::before,
+  .canccu-privacy-link::after {
+    content: none !important;
+  }
+  .canccu-pairing-code::first-line,
+  .canccu-pairing-code::first-letter,
+  .canccu-offline-marker::first-line,
+  .canccu-offline-marker::first-letter,
+  .canccu-privacy-link::first-line,
+  .canccu-privacy-link::first-letter {
+    all: inherit !important;
+  }
+  /* What an ancestor could do to them: hide, fade, move, scale or clip its whole content, or
+     become the box a fixed element is placed in. Only the root and the page are guarded, so the
+     safety elements are children of the page. */
+  :root,
+  .canccu-page {
+    display: block !important;
+    opacity: 1 !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    transform: none !important;
+    translate: none !important;
+    scale: none !important;
+    rotate: none !important;
+    perspective: none !important;
+    clip-path: none !important;
+    mask: none !important;
+    contain: none !important;
+    container-type: normal !important;
+    content-visibility: visible !important;
+    will-change: auto !important;
+    zoom: 1 !important;
+  }
+  /* Drawn after the page's last child, the root's would cover it whatever its z-index; the
+     page's, at z-index auto, stay under the safety elements' top z-index. */
+  :root::before,
+  :root::after {
+    content: none !important;
+  }
+  .canccu-page::before,
+  .canccu-page::after {
+    z-index: auto !important;
+  }
 }

@@ -9,6 +9,7 @@ import { isObject } from "./checks.js";
 import { EMBED_EXTS } from "./embeds.js";
 import type { EmbedExt, StoredExt } from "./files.js";
 import { parseManifest } from "./manifest.js";
+import type { FontSize } from "./readability.js";
 import { readText } from "./text.js";
 import { checkFile, checkUpload } from "./uploads.js";
 
@@ -21,7 +22,8 @@ const EMBED_NAME = /^[a-z][a-z0-9_-]{0,31}$/;
 const EMBED_LIMIT = 5 * 1024 * 1024;
 
 export type CheckedPath =
-  { bytes: Buffer; ext: StoredExt; refs: string[]; warnings: Problem[] } | { problem: Problem };
+  | { bytes: Buffer; ext: StoredExt; refs: string[]; warnings: Problem[]; sizes: FontSize[] }
+  | { problem: Problem };
 
 export interface CheckedEmbed {
   entry: string;
@@ -52,15 +54,16 @@ const isText = (bytes: Buffer): boolean => readText(bytes) !== undefined;
 /** A font's licence: stored for the package and its export, never served. */
 function checkLicence(path: string, bytes: Buffer): CheckedPath {
   if (!isText(bytes)) return fail("file_type", path, "A licence file is UTF-8 text.");
-  return { bytes, ext: path.toLowerCase().endsWith(".md") ? "md" : "txt", refs: [], warnings: [] };
+  const ext = path.toLowerCase().endsWith(".md") ? "md" : "txt";
+  return { bytes, ext, refs: [], warnings: [], sizes: [] };
 }
 
 async function checkPath(path: string, bytes: Buffer): Promise<CheckedPath> {
   if (/^fonts\/.*\.(txt|md)$/i.test(path)) return checkLicence(path, bytes);
   const checked = await checkUpload(path, bytes);
   if (!checked.ok) return { problem: checked.problem };
-  const { bytes: stored, ext, refs, warnings } = checked;
-  return { bytes: stored, ext, refs, warnings };
+  const { bytes: stored, ext, refs, warnings, sizes } = checked;
+  return { bytes: stored, ext, refs, warnings, sizes };
 }
 
 /** One file of an embed, by its extension; images and fonts through the checks of their folders. */

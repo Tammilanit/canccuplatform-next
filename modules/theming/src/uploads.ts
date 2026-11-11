@@ -5,6 +5,7 @@
  */
 import type { Problem } from "./checks.js";
 import { checkCss } from "./css.js";
+import type { FontSize } from "./readability.js";
 import type { Ext, StoredExt } from "./files.js";
 import { reencode } from "./raster.js";
 import type { RasterKind } from "./raster.js";
@@ -164,13 +165,20 @@ export async function checkFile(
 }
 
 export type CheckedUpload =
-  | { ok: true; bytes: Buffer; ext: StoredExt; refs: string[]; warnings: Problem[] }
+  | {
+      ok: true;
+      bytes: Buffer;
+      ext: StoredExt;
+      refs: string[];
+      warnings: Problem[];
+      sizes: FontSize[];
+    }
   | { ok: false; problem: Problem };
 
 /**
  * One file of the package's own folders (an embed's and a licence's checks are the package's):
  * CSS and templates by their parsers, which also answer the package paths they name and their
- * warnings; images and fonts by `checkFile`.
+ * warnings, and CSS its font sizes; images and fonts by `checkFile`.
  */
 export async function checkUpload(path: string, bytes: Buffer): Promise<CheckedUpload> {
   const css = path.startsWith("css/");
@@ -182,8 +190,9 @@ export async function checkUpload(path: string, bytes: Buffer): Promise<CheckedU
     const checked = css ? checkCss(path, bytes) : parseTemplate(path, bytes);
     if (!checked.ok) return checked;
     const warnings = "warnings" in checked ? checked.warnings : [];
-    return { ok: true, bytes, ext: css ? "css" : "mustache", refs: checked.refs, warnings };
+    const sizes = "sizes" in checked ? checked.sizes : [];
+    return { ok: true, bytes, ext: css ? "css" : "mustache", refs: checked.refs, warnings, sizes };
   }
   const checked = await checkFile(path, bytes);
-  return checked.ok ? { ...checked, refs: [], warnings: [] } : checked;
+  return checked.ok ? { ...checked, refs: [], warnings: [], sizes: [] } : checked;
 }

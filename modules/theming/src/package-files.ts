@@ -8,6 +8,7 @@ import type { Problem } from "./checks.js";
 import { CSS_LIMIT } from "./css.js";
 import { notFound } from "./http.js";
 import type { PackagePaths } from "./manifest.js";
+import type { FontSize } from "./readability.js";
 import type { Dropped, Unused } from "./stored.js";
 
 /**
@@ -15,7 +16,8 @@ import type { Dropped, Unused } from "./stored.js";
  * paths it names and its warnings), or the problem of an upload that failed.
  */
 export type PathEntry =
-  { file: string; bytes: number; refs: string[]; warnings: Problem[] } | { problem: Problem };
+  | { file: string; bytes: number; refs: string[]; warnings: Problem[]; sizes: FontSize[] }
+  | { problem: Problem };
 
 /**
  * The draft's file at `path` stops referring to `old`; answers it when the draft keeps no other
@@ -44,11 +46,13 @@ export async function setDraftPath(
   const old = (rows[0] as { file: string | null } | undefined)?.file ?? null;
   const file = "file" in entry ? entry.file : null;
   await c.query(
-    `INSERT INTO theming_package_files (owner, path, file, bytes, problem, refs, warnings)
-     VALUES ('draft', $1, $2, $3, $4, $5, $6)
+    `INSERT INTO theming_package_files (owner, path, file, bytes, problem, refs, warnings,
+                                        font_sizes)
+     VALUES ('draft', $1, $2, $3, $4, $5, $6, $7)
      ON CONFLICT (tenant_id, owner, path)
        DO UPDATE SET file = EXCLUDED.file, bytes = EXCLUDED.bytes, problem = EXCLUDED.problem,
-                     refs = EXCLUDED.refs, warnings = EXCLUDED.warnings`,
+                     refs = EXCLUDED.refs, warnings = EXCLUDED.warnings,
+                     font_sizes = EXCLUDED.font_sizes`,
     [
       path,
       file,
@@ -56,6 +60,7 @@ export async function setDraftPath(
       "problem" in entry ? JSON.stringify(entry.problem) : null,
       "file" in entry ? entry.refs : [],
       JSON.stringify("file" in entry ? entry.warnings : []),
+      JSON.stringify("file" in entry ? entry.sizes : []),
     ],
   );
   if (file !== null) {

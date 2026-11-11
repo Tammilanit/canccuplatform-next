@@ -9,6 +9,8 @@ import type { Manifest, Problem } from "./checks.js";
 import { draftExists, noDraft, notFound, versionConflict } from "./http.js";
 import { referenceProblems } from "./manifest.js";
 import { draftPaths, pathProblems } from "./package-files.js";
+import { lockHistory } from "./publish.js";
+import { readabilityProblems } from "./readability.js";
 import { fillTokens } from "./tokens.js";
 import type { PartialTokens } from "./tokens.js";
 
@@ -117,8 +119,9 @@ export async function copyOwned(c: SqlClient, from: string, to: string): Promise
     [from, to],
   );
   await c.query(
-    `INSERT INTO theming_package_files (owner, path, file, bytes, problem, refs, warnings)
-     SELECT $2, path, file, bytes, problem, refs, warnings FROM theming_package_files
+    `INSERT INTO theming_package_files (owner, path, file, bytes, problem, refs, warnings,
+                                        font_sizes)
+     SELECT $2, path, file, bytes, problem, refs, warnings, font_sizes FROM theming_package_files
       WHERE owner = $1`,
     [from, to],
   );
@@ -168,6 +171,8 @@ export async function createDraft(
   let manifest = source.from === "current" ? profileManifest(profile) : defaultManifest();
   let base: number | null = null;
   if (source.from !== "defaults") {
+    // Retention prunes under the same lock (retention.ts), so the revision copied stays whole.
+    await lockHistory(c);
     const { rows } = await c.query(
       source.from === "current"
         ? `SELECT revision, manifest FROM theming_revisions ORDER BY revision DESC LIMIT 1`
@@ -196,8 +201,9 @@ export async function createDraft(
 }
 
 /**
- * Every check on the draft: the manifest's, how it fits the draft's files (manifest.ts), and the
- * problems of the uploads it holds instead of files (package-files.ts).
+ * Every check on the draft: the manifest's, how it fits the draft's files (manifest.ts), the
+ * problems of the uploads it holds instead of files (package-files.ts), and its CSS's small text
+ * (readability.ts).
  */
 export async function draftProblems(c: SqlClient, manifest: Manifest): Promise<Problem[]> {
   const paths = await draftPaths(c);
@@ -205,6 +211,7 @@ export async function draftProblems(c: SqlClient, manifest: Manifest): Promise<P
     ...checkManifest(manifest),
     ...referenceProblems(manifest, paths),
     ...(await pathProblems(c, paths)),
+    ...(await readabilityProblems(c, manifest)),
   ];
 }
 

@@ -99,6 +99,7 @@ async function storePackage(
             bytes: entry.bytes.length,
             refs: entry.refs,
             warnings: entry.warnings,
+            sizes: entry.sizes,
           },
     );
   }
