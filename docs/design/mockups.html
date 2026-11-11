@@ -1,0 +1,1334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One design: the design language, the organiser shell and the screens (issue 382)</title>
+<!--
+  Design mockups for the product owner (issue #382, from the UX audit docs/reports/ux-audit-step3.md).
+  Self-contained by rule (docs/briefs/README.md): no external scripts, fonts, styles or images, no JS.
+  Two style blocks: the board (how the mockups are laid out for review, not part of the design) and the
+  proposal (what packages/ui would ship). The proposal derives every colour from the 11 theme tokens with
+  color-mix(), so an event theme, dark or light, restyles every page without new tokens; the theme
+  switcher at the top proves it on every mockup at once.
+-->
+<style>
+/* ===================== Board: presentation only ===================== */
+html { background: #e6e8ed; scroll-behavior: smooth; }
+body.board { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #111827; -webkit-font-smoothing: antialiased; }
+.board__theme-input { position: absolute; opacity: 0; pointer-events: none; }
+.board__bar { position: sticky; top: 0; z-index: 100; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; padding: 12px 32px; background: rgb(255 255 255 / 0.92); backdrop-filter: blur(10px); border-bottom: 1px solid #d3d7df; }
+.board__brand { font-weight: 700; font-size: 15px; }
+.board__nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.board__nav a { color: #374151; text-decoration: none; font-size: 13.5px; padding: 6px 10px; border-radius: 999px; }
+.board__nav a:hover { background: #eef0f4; color: #111827; }
+.board__themes { display: flex; gap: 4px; margin-left: auto; padding: 3px; border-radius: 999px; background: #eef0f4; }
+.board__themes label { font-size: 13px; padding: 5px 12px; border-radius: 999px; cursor: pointer; color: #374151; }
+#theme-default:checked ~ .board__bar label[for="theme-default"],
+#theme-night:checked ~ .board__bar label[for="theme-night"],
+#theme-light:checked ~ .board__bar label[for="theme-light"] { background: #111827; color: #fff; }
+.sheet { max-width: 1560px; margin: 0 auto; padding: 56px 32px 24px; scroll-margin-top: 56px; }
+.sheet + .sheet { border-top: 1px solid #d3d7df; }
+.sheet__kicker { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #6b7280; margin: 0 0 6px; }
+.sheet__title { font-size: 30px; line-height: 1.15; margin: 0 0 10px; letter-spacing: -.01em; }
+.sheet__lead { max-width: 80ch; color: #374151; font-size: 16px; line-height: 1.55; margin: 0 0 8px; }
+.sheet__covers { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 28px; }
+.sheet__covers span { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: #fff; border: 1px solid #d3d7df; color: #374151; }
+.row { display: flex; flex-wrap: wrap; gap: 40px 32px; align-items: flex-start; margin-bottom: 40px; }
+.shot { display: grid; gap: 12px; }
+.shot:has(> .frame--phone) { width: 412px; }
+.shot__cap { font-size: 14px; color: #4b5563; max-width: 60ch; line-height: 1.45; }
+.shot__cap b { color: #111827; }
+.notes { margin: 0; padding: 0 0 0 18px; color: #374151; font-size: 14px; line-height: 1.55; max-width: 62ch; }
+.notes li + li { margin-top: 6px; }
+.notes code, .sheet__lead code { font-size: .9em; background: #fff; border: 1px solid #d9dce3; padding: 0 4px; border-radius: 4px; }
+.frame { position: relative; overflow: hidden; background: var(--canccu-color-background); box-shadow: 0 1px 2px rgb(0 0 0 / .08), 0 18px 40px -12px rgb(15 23 42 / .35); }
+.frame--desktop { width: 1440px; height: 900px; border-radius: 12px; }
+.frame--tall { height: 1000px; }
+.frame--short { height: 760px; }
+.frame--phone { width: 390px; height: 844px; border-radius: 46px; border: 11px solid #0b0c10; box-sizing: content-box; }
+.frame--phone::before { content: ""; position: absolute; z-index: 60; top: 10px; left: 50%; width: 108px; height: 30px; margin-left: -54px; border-radius: 20px; background: #0b0c10; }
+.frame__chrome { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; background: #dcdfe5; }
+.frame__chrome i { width: 12px; height: 12px; border-radius: 50%; background: #c2c6ce; }
+.frame__url { margin-left: 18px; flex: 0 1 520px; height: 24px; border-radius: 8px; background: #f3f4f6; color: #4b5563; font: 12.5px/24px system-ui, sans-serif; padding: 0 12px; }
+.frame__status { height: 50px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 30px 6px; font: 600 15px/1 system-ui, sans-serif; color: var(--canccu-color-text); background: inherit; position: relative; z-index: 2; }
+.frame .frame__screen { height: calc(100% - 38px); min-height: 0; overflow: hidden; }
+.frame--phone .frame__screen { height: calc(100% - 50px); }
+/* Desktop frames are drawn at 1440 CSS px; on smaller monitors the board shrinks them, nothing else. */
+@media (max-width: 1540px) { .frame--desktop { zoom: .85; } }
+@media (max-width: 1320px) { .frame--desktop { zoom: .7; } }
+@media (max-width: 1100px) { .frame--desktop { zoom: .55; } }
+.screen { width: 744px; aspect-ratio: 16 / 9; container-type: inline-size; border-radius: 10px; overflow: hidden; position: relative; box-shadow: 0 1px 2px rgb(0 0 0 / .1), 0 18px 40px -14px rgb(15 23 42 / .45); }
+.screen--sm { width: 744px; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.callout { background: #fff; border: 1px solid #d3d7df; border-radius: 12px; padding: 18px 22px; max-width: 80ch; font-size: 14.5px; line-height: 1.55; color: #374151; }
+.callout b { color: #111827; }
+.pin { position: absolute; z-index: 40; width: 26px; height: 26px; border-radius: 50%; background: #f97316; color: #fff; font: 700 13px/26px system-ui, sans-serif; text-align: center; box-shadow: 0 0 0 3px rgb(255 255 255 / .9), 0 4px 10px rgb(0 0 0 / .3); }
+.legend { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; max-width: 60ch; font-size: 14px; line-height: 1.5; color: #374151; }
+.legend li { display: grid; grid-template-columns: 26px 1fr; gap: 12px; }
+.legend li > span { width: 26px; height: 26px; border-radius: 50%; background: #f97316; color: #fff; font: 700 13px/26px system-ui, sans-serif; text-align: center; }
+.legend b { color: #111827; }
+
+/* ===================== Proposal: packages/ui ===================== */
+/* Token defaults are ui.css's :root; here they sit on .canccu-page so each mockup can carry a theme. */
+.canccu-page {
+  --canccu-color-background: #0f172a; --canccu-color-surface: #1e293b; --canccu-color-border: #334155;
+  --canccu-color-text: #f8fafc; --canccu-color-text-muted: #94a3b8; --canccu-color-primary: #3b82f6;
+  --canccu-color-primary-text: #0f172a; --canccu-color-accent: #f59e0b; --canccu-color-status-ok: #22c55e;
+  --canccu-color-status-degraded: #eab308; --canccu-color-status-down: #ef4444;
+  --canccu-font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --canccu-font-heading: var(--canccu-font-body);
+  --canccu-font-display: var(--canccu-font-heading); --canccu-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --canccu-radius: 0.5rem; --canccu-border-width: 1px; --canccu-gap: 1rem; --canccu-safe-inset: 48px;
+}
+/* Example event themes (board switcher): "Demo night" is the palette of the Pulse mockups 02–05. */
+body:has(#theme-night:checked) .canccu-page {
+  --canccu-color-background: #0b0d1a; --canccu-color-surface: #161a2e; --canccu-color-border: #343c66;
+  --canccu-color-text: #f3f5ff; --canccu-color-text-muted: #a9b1d6; --canccu-color-primary: #3ddcff;
+  --canccu-color-primary-text: #0b0d1a; --canccu-color-accent: #b98cff; --canccu-color-status-ok: #3ee39a;
+  --canccu-color-status-degraded: #ffc94d; --canccu-color-status-down: #ff6b7d; --canccu-radius: 0.75rem;
+}
+body:has(#theme-light:checked) .canccu-page {
+  --canccu-color-background: #f5f6f8; --canccu-color-surface: #ffffff; --canccu-color-border: #dde1e8;
+  --canccu-color-text: #0f172a; --canccu-color-text-muted: #5b6577; --canccu-color-primary: #2563eb;
+  --canccu-color-primary-text: #ffffff; --canccu-color-accent: #c2410c; --canccu-color-status-ok: #15803d;
+  --canccu-color-status-degraded: #a16207; --canccu-color-status-down: #dc2626;
+}
+/* Internal scales: not tokens. Type: 12 · 14 · 16 · 18 · 22 · 28 · 36 px. Space: 4 · 8 · 12 · 16 · 24 · 32 · 48 px. */
+.canccu-page {
+  --canccu-text-xs: .75rem; --canccu-text-sm: .875rem; --canccu-text-md: 1rem; --canccu-text-lg: 1.125rem;
+  --canccu-text-xl: 1.375rem; --canccu-text-2xl: 1.75rem; --canccu-text-3xl: 2.25rem;
+  --canccu-tint: color-mix(in srgb, var(--canccu-color-text) 6%, transparent);
+  --canccu-tint-strong: color-mix(in srgb, var(--canccu-color-text) 10%, transparent);
+  --canccu-raised: color-mix(in srgb, var(--canccu-color-surface) 86%, var(--canccu-color-text));
+  --canccu-shadow: 0 1px 2px rgb(0 0 0 / .18), 0 8px 24px -8px rgb(0 0 0 / .35);
+  margin: 0; min-height: 100%; background: var(--canccu-color-background); color: var(--canccu-color-text);
+  font-family: var(--canccu-font-body); font-size: var(--canccu-text-md); line-height: 1.5; -webkit-font-smoothing: antialiased;
+}
+body:has(#theme-light:checked) .canccu-page { --canccu-shadow: 0 1px 2px rgb(15 23 42 / .06), 0 8px 24px -10px rgb(15 23 42 / .18); }
+.canccu-page *, .canccu-page *::before, .canccu-page *::after { box-sizing: border-box; }
+.canccu-page h1, .canccu-page h2, .canccu-page h3 { font-family: var(--canccu-font-heading); line-height: 1.25; margin: 0; letter-spacing: -.01em; }
+.canccu-page p { margin: 0; }
+/* B1: the link colour sits in :where(), at zero specificity, so every button variant beats it. */
+:where(.canccu-page) a { color: var(--canccu-color-primary); text-underline-offset: .2em; }
+.canccu-page code { font-family: var(--canccu-font-mono); font-size: .875em; }
+.canccu-muted { color: var(--canccu-color-text-muted); }
+.canccu-small { font-size: var(--canccu-text-sm); }
+.canccu-overline { font-size: var(--canccu-text-xs); font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--canccu-color-text-muted); }
+.canccu-num { font-variant-numeric: tabular-nums; }
+.canccu-i { width: 1.25em; height: 1.25em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; vertical-align: -.25em; }
+.canccu-stack { display: grid; gap: var(--canccu-gap); align-content: start; }
+.canccu-cluster { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.canccu-spread { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+
+/* Shell: header across, the Event menu at the side (desktop) or as a sheet (phone), content in the middle. */
+.canccu-shell { display: grid; grid-template-columns: 16rem minmax(0, 1fr); grid-template-rows: 3.5rem minmax(0, 1fr); height: 100%; }
+.canccu-header { grid-column: 1 / -1; display: flex; align-items: center; gap: .75rem; padding: 0 1.25rem; background: var(--canccu-color-surface); border-bottom: var(--canccu-border-width) solid var(--canccu-color-border); min-width: 0; }
+.canccu-header__logo { height: 1.75rem; width: auto; display: block; flex: none; }
+.canccu-header__title { font-family: var(--canccu-font-heading); font-weight: 650; font-size: var(--canccu-text-md); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.canccu-header__meta { color: var(--canccu-color-text-muted); font-size: var(--canccu-text-sm); white-space: nowrap; }
+.canccu-header__sep { width: 1px; height: 1.25rem; background: var(--canccu-color-border); }
+.canccu-header__end { margin-left: auto; display: flex; align-items: center; gap: .75rem; }
+.canccu-clock { font-variant-numeric: tabular-nums; font-weight: 600; font-size: var(--canccu-text-sm); display: inline-flex; align-items: baseline; gap: .375rem; }
+.canccu-clock small { color: var(--canccu-color-text-muted); font-weight: 500; font-size: var(--canccu-text-xs); }
+.canccu-menu { display: flex; flex-direction: column; gap: 1.25rem; padding: 1rem .75rem; overflow: auto; background: color-mix(in srgb, var(--canccu-color-surface) 45%, var(--canccu-color-background)); border-right: var(--canccu-border-width) solid var(--canccu-color-border); }
+.canccu-menu__group { display: grid; gap: 2px; }
+.canccu-menu__label { padding: 0 .75rem .375rem; }
+.canccu-menu__item { display: flex; align-items: center; gap: .75rem; padding: .5rem .75rem; border-radius: calc(var(--canccu-radius) - 2px); color: color-mix(in srgb, var(--canccu-color-text) 80%, var(--canccu-color-background)); text-decoration: none; font-weight: 500; font-size: .9375rem; }
+.canccu-menu__item .canccu-i { color: var(--canccu-color-text-muted); }
+.canccu-menu__item:hover { background: var(--canccu-tint); color: var(--canccu-color-text); }
+.canccu-menu__item[aria-current="page"] { background: color-mix(in srgb, var(--canccu-color-primary) 16%, transparent); color: var(--canccu-color-text); box-shadow: inset 3px 0 0 var(--canccu-color-primary); font-weight: 600; }
+.canccu-menu__item[aria-current="page"] .canccu-i { color: var(--canccu-color-primary); }
+.canccu-menu__item .canccu-badge { margin-left: auto; }
+.canccu-menu__foot { margin-top: auto; display: grid; gap: .5rem; padding-top: 1rem; border-top: var(--canccu-border-width) solid var(--canccu-color-border); }
+.canccu-user { display: flex; align-items: center; gap: .75rem; padding: 0 .5rem; min-width: 0; }
+.canccu-user__name { font-weight: 600; font-size: var(--canccu-text-sm); line-height: 1.3; }
+.canccu-user__role { color: var(--canccu-color-text-muted); font-size: var(--canccu-text-xs); }
+.canccu-avatar { width: 2rem; height: 2rem; border-radius: 50%; flex: none; display: grid; place-items: center; font-weight: 700; font-size: .75rem; color: var(--canccu-color-primary-text); background: linear-gradient(135deg, var(--canccu-color-primary), var(--canccu-color-accent)); }
+.canccu-content { overflow: auto; padding: 2rem 2.5rem 3rem; }
+.canccu-main { max-width: 64rem; margin: 0 auto; display: grid; gap: 1.5rem; align-content: start; }
+.canccu-main--narrow { max-width: 40rem; }
+.canccu-pagehead { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem 1.5rem; flex-wrap: wrap; }
+.canccu-pagehead__title { font-size: var(--canccu-text-2xl); font-weight: 650; }
+.canccu-pagehead__desc { color: var(--canccu-color-text-muted); margin-top: .25rem; font-size: .9375rem; }
+.canccu-tabs { display: flex; gap: .25rem; border-bottom: var(--canccu-border-width) solid var(--canccu-color-border); margin-top: -.5rem; overflow: auto; scrollbar-width: none; }
+.canccu-tabs a { padding: .625rem .875rem; color: var(--canccu-color-text-muted); font-weight: 550; font-size: .9375rem; text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: calc(-1 * var(--canccu-border-width)); white-space: nowrap; display: inline-flex; gap: .5rem; align-items: center; }
+.canccu-tabs a:hover { color: var(--canccu-color-text); }
+.canccu-tabs a[aria-current="page"] { color: var(--canccu-color-text); border-color: var(--canccu-color-primary); }
+.canccu-banner { grid-column: 1 / -1; display: flex; align-items: center; gap: .75rem; padding: .5rem 1.25rem; font-size: var(--canccu-text-sm); background: color-mix(in srgb, var(--canccu-color-text-muted) 18%, var(--canccu-color-background)); border-bottom: var(--canccu-border-width) solid var(--canccu-color-border); }
+
+.canccu-crumb { display: inline-flex; align-items: center; gap: .375rem; color: var(--canccu-color-text-muted); font-size: var(--canccu-text-sm); font-weight: 550; text-decoration: none; margin-bottom: .375rem; }
+:where(.canccu-page) a.canccu-crumb { color: var(--canccu-color-text-muted); }
+
+/* Phone shell: one column, the menu behind the header's Menu button, actions in a bottom bar. */
+.canccu-shell--phone { grid-template-columns: minmax(0, 1fr); grid-template-rows: 3.5rem minmax(0, 1fr) auto; }
+.canccu-shell--phone .canccu-header { padding: 0 .5rem 0 1rem; }
+.canccu-shell--phone .canccu-content { padding: 1.25rem 1rem 2rem; }
+.canccu-shell--phone .canccu-pagehead__title { font-size: 1.5rem; }
+.canccu-shell--phone .canccu-tabs { margin-left: -1rem; margin-right: -1rem; padding: 0 1rem; mask-image: linear-gradient(90deg, #000 85%, transparent); }
+.canccu-actionbar { display: flex; gap: .5rem; padding: .75rem 1rem 1.5rem; background: var(--canccu-color-surface); border-top: var(--canccu-border-width) solid var(--canccu-color-border); }
+.canccu-actionbar > * { flex: 1; }
+.canccu-sheet { position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; background: var(--canccu-color-background); }
+.canccu-sheet__head { display: flex; align-items: center; gap: .75rem; height: 3.5rem; padding: 0 .5rem 0 1rem; border-bottom: var(--canccu-border-width) solid var(--canccu-color-border); background: var(--canccu-color-surface); }
+.canccu-sheet .canccu-menu { border: 0; background: none; flex: 1; padding: 1rem; }
+.canccu-sheet .canccu-menu__item { padding: .75rem; font-size: 1rem; }
+
+/* Buttons: one look whether the element is <a> or <button>. */
+.canccu-button { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.5rem; padding: 0 1rem; border-radius: var(--canccu-radius); border: var(--canccu-border-width) solid transparent; font: 600 .9375rem/1.2 var(--canccu-font-body); text-decoration: none; white-space: nowrap; cursor: pointer; transition: background-color .15s, border-color .15s, box-shadow .15s; }
+.canccu-button--primary { background: var(--canccu-color-primary); color: var(--canccu-color-primary-text); box-shadow: inset 0 1px 0 rgb(255 255 255 / .18), 0 1px 2px rgb(0 0 0 / .2); }
+.canccu-button--primary:hover, .canccu-button--primary.is-hover { background: color-mix(in srgb, var(--canccu-color-primary) 86%, var(--canccu-color-text)); }
+.canccu-button--secondary { background: var(--canccu-color-surface); color: var(--canccu-color-text); border-color: var(--canccu-color-border); }
+.canccu-button--secondary:hover, .canccu-button--secondary.is-hover { background: var(--canccu-raised); }
+.canccu-button--ghost { background: transparent; color: var(--canccu-color-text); }
+.canccu-button--ghost:hover, .canccu-button--ghost.is-hover { background: var(--canccu-tint); }
+.canccu-button--danger { background: var(--canccu-color-status-down); color: var(--canccu-color-primary-text); }
+.canccu-button--danger:hover, .canccu-button--danger.is-hover { background: color-mix(in srgb, var(--canccu-color-status-down) 86%, var(--canccu-color-text)); }
+.canccu-button--danger-ghost { background: transparent; color: var(--canccu-color-status-down); }
+.canccu-button--danger-ghost:hover { background: color-mix(in srgb, var(--canccu-color-status-down) 12%, transparent); }
+.canccu-button--sm { min-height: 2rem; padding: 0 .75rem; font-size: var(--canccu-text-sm); gap: .375rem; }
+.canccu-button--lg { min-height: 3rem; padding: 0 1.5rem; font-size: 1rem; }
+.canccu-button--block { width: 100%; }
+.canccu-button--icon { padding: 0; width: 2.5rem; }
+.canccu-button--icon.canccu-button--sm { width: 2rem; }
+.canccu-button:focus-visible, .canccu-button.is-focus { outline: 2px solid var(--canccu-color-primary); outline-offset: 2px; }
+.canccu-button:disabled, .canccu-button[aria-disabled="true"] { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.canccu-spinner { width: 1em; height: 1em; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; opacity: .8; }
+.canccu-link { font-weight: 550; }
+
+/* Form fields: the label above, the hint below, the error under the hint; checks and switches as rows. */
+.canccu-field { display: grid; gap: .375rem; align-content: start; }
+.canccu-field > .canccu-segmented, .canccu-field > .canccu-inputgroup--short { justify-self: start; }
+.canccu-field__label { font-weight: 600; font-size: var(--canccu-text-sm); display: flex; gap: .5rem; align-items: baseline; }
+.canccu-field__label small { color: var(--canccu-color-text-muted); font-weight: 500; }
+.canccu-field__hint { color: var(--canccu-color-text-muted); font-size: var(--canccu-text-sm); }
+.canccu-field__error { color: color-mix(in srgb, var(--canccu-color-status-down) 80%, var(--canccu-color-text)); font-size: var(--canccu-text-sm); display: flex; gap: .375rem; align-items: center; font-weight: 500; }
+.canccu-input { width: 100%; min-height: 2.5rem; padding: .5rem .75rem; font: inherit; font-size: .9375rem; color: var(--canccu-color-text); background: color-mix(in srgb, var(--canccu-color-background) 70%, var(--canccu-color-surface)); border: var(--canccu-border-width) solid var(--canccu-color-border); border-radius: var(--canccu-radius); }
+.canccu-input::placeholder { color: color-mix(in srgb, var(--canccu-color-text-muted) 75%, transparent); }
+.canccu-input:hover { border-color: color-mix(in srgb, var(--canccu-color-border) 60%, var(--canccu-color-text)); }
+.canccu-input:focus, .canccu-input.is-focus { outline: none; border-color: var(--canccu-color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--canccu-color-primary) 30%, transparent); }
+.canccu-input[aria-invalid="true"] { border-color: var(--canccu-color-status-down); box-shadow: 0 0 0 3px color-mix(in srgb, var(--canccu-color-status-down) 18%, transparent); }
+.canccu-input:disabled { opacity: .55; }
+textarea.canccu-input { min-height: 5.5rem; resize: vertical; line-height: 1.5; }
+.canccu-select { position: relative; display: block; }
+.canccu-select .canccu-input { padding-right: 2.25rem; appearance: none; display: flex; align-items: center; }
+.canccu-select > .canccu-i { position: absolute; right: .75rem; top: 50%; margin-top: -.625em; color: var(--canccu-color-text-muted); pointer-events: none; }
+.canccu-inputgroup { display: flex; }
+.canccu-inputgroup .canccu-input { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.canccu-inputgroup__add { display: flex; align-items: center; padding: 0 .75rem; font-size: var(--canccu-text-sm); color: var(--canccu-color-text-muted); background: var(--canccu-tint); border: var(--canccu-border-width) solid var(--canccu-color-border); border-left: 0; border-radius: 0 var(--canccu-radius) var(--canccu-radius) 0; white-space: nowrap; }
+.canccu-inputgroup--short .canccu-input { max-width: 7rem; }
+.canccu-check { display: grid; grid-template-columns: auto 1fr; gap: .125rem .75rem; align-items: start; align-content: start; }
+.canccu-check__box { width: 1.25rem; height: 1.25rem; margin-top: .125rem; border-radius: .3rem; border: 1.5px solid color-mix(in srgb, var(--canccu-color-border) 50%, var(--canccu-color-text)); display: grid; place-items: center; color: var(--canccu-color-primary-text); }
+.canccu-check__box.is-on { background: var(--canccu-color-primary); border-color: var(--canccu-color-primary); }
+.canccu-check__label { font-weight: 550; font-size: .9375rem; }
+.canccu-check .canccu-field__hint { grid-column: 2; }
+.canccu-switch { width: 2.5rem; height: 1.5rem; border-radius: 999px; background: var(--canccu-tint-strong); border: var(--canccu-border-width) solid var(--canccu-color-border); position: relative; flex: none; margin-top: .0625rem; }
+.canccu-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: calc(1.5rem - 6px); height: calc(1.5rem - 6px); border-radius: 50%; background: var(--canccu-color-text); }
+.canccu-switch.is-on { background: var(--canccu-color-primary); border-color: var(--canccu-color-primary); }
+.canccu-switch.is-on::after { left: auto; right: 2px; background: var(--canccu-color-primary-text); }
+.canccu-segmented { display: inline-flex; padding: 3px; gap: 2px; border-radius: calc(var(--canccu-radius) + 3px); background: var(--canccu-tint); border: var(--canccu-border-width) solid var(--canccu-color-border); }
+.canccu-segmented span { padding: .375rem .875rem; border-radius: calc(var(--canccu-radius) - 1px); font-weight: 550; font-size: var(--canccu-text-sm); color: var(--canccu-color-text-muted); }
+.canccu-segmented .is-on { background: var(--canccu-color-surface); color: var(--canccu-color-text); box-shadow: 0 1px 2px rgb(0 0 0 / .25); }
+.canccu-colorfield { display: flex; align-items: center; gap: .625rem; }
+.canccu-colorfield__swatch { width: 2.5rem; height: 2.5rem; border-radius: var(--canccu-radius); border: var(--canccu-border-width) solid var(--canccu-color-border); flex: none; box-shadow: inset 0 0 0 2px rgb(255 255 255 / .12); }
+.canccu-colorfield .canccu-input { font-family: var(--canccu-font-mono); max-width: 8rem; text-transform: uppercase; }
+.canccu-drop { display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1.5px dashed color-mix(in srgb, var(--canccu-color-border) 60%, var(--canccu-color-text)); border-radius: var(--canccu-radius); background: var(--canccu-tint); }
+.canccu-drop__thumb { width: 4.5rem; height: 3rem; border-radius: calc(var(--canccu-radius) - 2px); display: grid; place-items: center; background: var(--canccu-color-background); flex: none; overflow: hidden; }
+.canccu-form { display: grid; gap: 1.25rem; }
+.canccu-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+/* Cards, lists and tables */
+.canccu-card { background: var(--canccu-color-surface); border: var(--canccu-border-width) solid var(--canccu-color-border); border-radius: calc(var(--canccu-radius) + 4px); box-shadow: var(--canccu-shadow); overflow: hidden; }
+.canccu-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.125rem 1.25rem 0; }
+.canccu-card__title { font-size: var(--canccu-text-lg); font-weight: 650; }
+.canccu-card__desc { color: var(--canccu-color-text-muted); font-size: var(--canccu-text-sm); margin-top: .125rem; }
+.canccu-card__body { padding: 1.125rem 1.25rem 1.25rem; }
+.canccu-card__foot { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; padding: .875rem 1.25rem; background: var(--canccu-tint); border-top: var(--canccu-border-width) solid var(--canccu-color-border); }
+.canccu-card__foot .canccu-muted { margin-right: auto; font-size: var(--canccu-text-sm); }
+.canccu-card--flat { box-shadow: none; }
+.canccu-list { display: grid; }
+.canccu-list__row { display: flex; align-items: center; gap: .875rem; padding: .875rem 1.25rem; text-decoration: none; color: inherit; border-top: var(--canccu-border-width) solid var(--canccu-color-border); }
+.canccu-list__row:first-child { border-top: 0; }
+a.canccu-list__row:hover { background: var(--canccu-tint); }
+.canccu-list__icon { width: 2.25rem; height: 2.25rem; border-radius: var(--canccu-radius); display: grid; place-items: center; flex: none; color: var(--canccu-color-primary); background: color-mix(in srgb, var(--canccu-color-primary) 14%, transparent); }
+.canccu-list__main { min-width: 0; flex: 1; }
+.canccu-list__title { font-weight: 600; }
+.canccu-list__meta { color: var(--canccu-color-text-muted); font-size: var(--canccu-text-sm); }
+.canccu-list__end { display: flex; align-items: center; gap: .75rem; color: var(--canccu-color-text-muted); font-size: var(--canccu-text-sm); }
+.canccu-table { width: 100%; border-collapse: collapse; font-size: .9375rem; }
+.canccu-table th { text-align: left; font-size: var(--canccu-text-xs); font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--canccu-color-text-muted); padding: .75rem 1.25rem; background: var(--canccu-tint); border-bottom: var(--canccu-border-width) solid var(--canccu-color-border); }
+.canccu-table td { padding: .875rem 1.25rem; border-bottom: var(--canccu-border-width) solid var(--canccu-color-border); vertical-align: middle; }
+.canccu-table tr:last-child td { border-bottom: 0; }
+.canccu-table .is-num { text-align: right; font-variant-numeric: tabular-nums; }
+.canccu-table__sub { display: block; color: var(--canccu-color-text-muted); font-size: var(--canccu-text-sm); }
+.canccu-dl { display: grid; grid-template-columns: 7.5rem 1fr; gap: .625rem 1rem; margin: 0; font-size: .9375rem; }
+.canccu-dl dt { color: var(--canccu-color-text-muted); }
+.canccu-dl dd { margin: 0; }
+.canccu-stat { padding: 1rem 1.25rem; }
+.canccu-stat__value { font-size: var(--canccu-text-2xl); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.canccu-stat__label { color: var(--canccu-color-text-muted); font-size: var(--canccu-text-sm); }
+
+/* Badges: a word, never colour alone; status badges carry a dot. */
+.canccu-badge { display: inline-flex; align-items: center; gap: .375rem; padding: .125rem .5rem; border-radius: 999px; font-size: var(--canccu-text-xs); font-weight: 650; line-height: 1.4; white-space: nowrap; --b: var(--canccu-color-text-muted); color: color-mix(in srgb, var(--b) 72%, var(--canccu-color-text)); background: color-mix(in srgb, var(--b) 16%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--b) 28%, transparent); }
+.canccu-badge--ok { --b: var(--canccu-color-status-ok); }
+.canccu-badge--degraded { --b: var(--canccu-color-status-degraded); }
+.canccu-badge--down { --b: var(--canccu-color-status-down); }
+.canccu-badge--primary { --b: var(--canccu-color-primary); }
+.canccu-badge--accent { --b: var(--canccu-color-accent); }
+.canccu-badge--solid { color: var(--canccu-color-primary-text); background: var(--b); box-shadow: none; }
+.canccu-badge--dot::before { content: ""; width: .4375rem; height: .4375rem; border-radius: 50%; background: var(--b); box-shadow: 0 0 0 3px color-mix(in srgb, var(--b) 25%, transparent); }
+
+/* Notices: a status colour, an icon, a title and one sentence, and at most two actions. */
+.canccu-notice { --n: var(--canccu-color-primary); display: flex; gap: .75rem; align-items: flex-start; padding: .875rem 1rem; border-radius: var(--canccu-radius); background: color-mix(in srgb, var(--n) 11%, var(--canccu-color-surface)); border: var(--canccu-border-width) solid color-mix(in srgb, var(--n) 35%, transparent); font-size: .9375rem; }
+.canccu-notice > .canccu-i { color: var(--n); margin-top: .1rem; }
+.canccu-notice__title { font-weight: 650; }
+.canccu-notice__body { flex: 1; min-width: 0; }
+.canccu-notice__body p { color: color-mix(in srgb, var(--canccu-color-text) 82%, var(--canccu-color-background)); }
+.canccu-notice__actions { display: flex; gap: .5rem; margin-top: .625rem; }
+.canccu-notice--ok { --n: var(--canccu-color-status-ok); }
+.canccu-notice--warn { --n: var(--canccu-color-status-degraded); }
+.canccu-notice--down { --n: var(--canccu-color-status-down); }
+
+/* Empty states: what is missing, why it matters, the one next step. */
+.canccu-empty { display: grid; justify-items: center; text-align: center; gap: .5rem; padding: 2.5rem 1.5rem; }
+.canccu-empty__icon { width: 3.5rem; height: 3.5rem; border-radius: 1rem; display: grid; place-items: center; margin-bottom: .5rem; color: var(--canccu-color-primary); background: color-mix(in srgb, var(--canccu-color-primary) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--canccu-color-primary) 25%, transparent); }
+.canccu-empty__icon .canccu-i { width: 1.75rem; height: 1.75rem; }
+.canccu-empty__title { font-size: var(--canccu-text-lg); font-weight: 650; }
+.canccu-empty__text { color: var(--canccu-color-text-muted); max-width: 38ch; }
+.canccu-empty .canccu-cluster { margin-top: .75rem; justify-content: center; }
+
+/* The error page family: one layout, a title per case, plain words, the next step. */
+.canccu-error { display: grid; justify-items: center; text-align: center; gap: .75rem; max-width: 30rem; margin: 3rem auto 0; }
+.canccu-error__icon { --n: var(--canccu-color-primary); width: 4.5rem; height: 4.5rem; border-radius: 1.25rem; display: grid; place-items: center; margin-bottom: .75rem; color: var(--n); background: color-mix(in srgb, var(--n) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--n) 28%, transparent), 0 0 0 10px color-mix(in srgb, var(--n) 5%, transparent); }
+.canccu-error__icon .canccu-i { width: 2rem; height: 2rem; }
+.canccu-error__title { font-size: var(--canccu-text-2xl); font-weight: 700; }
+.canccu-error__text { color: color-mix(in srgb, var(--canccu-color-text) 82%, var(--canccu-color-background)); font-size: 1.0625rem; }
+.canccu-error__next { color: var(--canccu-color-text-muted); font-size: .9375rem; }
+.canccu-error .canccu-cluster { justify-content: center; margin-top: .75rem; }
+
+/* Run of show */
+.canccu-dayswitch { display: flex; align-items: center; gap: .5rem; }
+.canccu-timeline { display: grid; }
+.canccu-slot { display: grid; grid-template-columns: 4.25rem 1rem minmax(0, 1fr) auto; gap: 0 .75rem; align-items: start; padding: .875rem 1.25rem; border-top: var(--canccu-border-width) solid var(--canccu-color-border); text-decoration: none; color: inherit; position: relative; }
+.canccu-slot:first-child { border-top: 0; }
+.canccu-slot:hover { background: var(--canccu-tint); }
+.canccu-slot__time { font-variant-numeric: tabular-nums; font-weight: 650; padding-top: .0625rem; }
+.canccu-slot__time s { display: block; font-weight: 500; color: var(--canccu-color-text-muted); font-size: var(--canccu-text-sm); }
+.canccu-slot__dot { width: .625rem; height: .625rem; border-radius: 50%; margin-top: .45rem; background: var(--canccu-color-border); box-shadow: 0 0 0 3px var(--canccu-color-surface); justify-self: center; }
+.canccu-slot__title { font-weight: 600; display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+.canccu-slot__meta { color: var(--canccu-color-text-muted); font-size: var(--canccu-text-sm); }
+.canccu-slot.is-done { opacity: .55; }
+.canccu-slot.is-now { background: color-mix(in srgb, var(--canccu-color-primary) 9%, transparent); }
+.canccu-slot.is-now .canccu-slot__dot { background: var(--canccu-color-primary); box-shadow: 0 0 0 3px var(--canccu-color-surface), 0 0 0 6px color-mix(in srgb, var(--canccu-color-primary) 35%, transparent); }
+.canccu-nowline { display: flex; align-items: center; gap: .5rem; height: 0; margin: 0 1.25rem; position: relative; z-index: 1; color: var(--canccu-color-primary); font-size: var(--canccu-text-xs); font-weight: 700; }
+.canccu-nowline::after { content: ""; flex: 1; height: 2px; background: var(--canccu-color-primary); border-radius: 2px; }
+.canccu-nowline span { background: var(--canccu-color-primary); color: var(--canccu-color-primary-text); padding: .0625rem .375rem; border-radius: .25rem; font-variant-numeric: tabular-nums; }
+.canccu-history { display: grid; gap: .75rem; font-size: var(--canccu-text-sm); }
+.canccu-history li { display: grid; grid-template-columns: 3rem 1fr; gap: .5rem; list-style: none; }
+.canccu-history ul { margin: 0; padding: 0; display: grid; gap: .75rem; }
+.canccu-chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+.canccu-chip { display: inline-flex; align-items: center; gap: .375rem; padding: .5rem .875rem; border-radius: 999px; border: var(--canccu-border-width) solid var(--canccu-color-border); background: var(--canccu-color-surface); font-weight: 550; font-size: .9375rem; }
+.canccu-chip.is-on { border-color: var(--canccu-color-primary); background: color-mix(in srgb, var(--canccu-color-primary) 16%, var(--canccu-color-surface)); }
+
+/* Sign-in and other pages without a session: the event's identity, one card. */
+.canccu-signin { height: 100%; display: grid; grid-template-rows: auto 1fr auto; background: radial-gradient(60rem 30rem at 50% -10%, color-mix(in srgb, var(--canccu-color-primary) 22%, transparent), transparent 70%), radial-gradient(40rem 24rem at 100% 110%, color-mix(in srgb, var(--canccu-color-accent) 14%, transparent), transparent 70%), var(--canccu-color-background); }
+.canccu-signin__top { display: flex; align-items: center; gap: .75rem; padding: 1.5rem 2rem; }
+.canccu-signin__card { align-self: center; justify-self: center; width: min(26rem, calc(100% - 2rem)); display: grid; gap: 1.25rem; padding: 2rem; background: color-mix(in srgb, var(--canccu-color-surface) 92%, transparent); border: var(--canccu-border-width) solid var(--canccu-color-border); border-radius: calc(var(--canccu-radius) + 8px); box-shadow: var(--canccu-shadow); }
+.canccu-signin__logo { height: 3rem; width: auto; justify-self: start; }
+.canccu-signin__title { font-size: var(--canccu-text-2xl); font-weight: 700; }
+.canccu-signin__foot { display: flex; justify-content: center; gap: 1.25rem; padding: 1.5rem; font-size: var(--canccu-text-sm); color: var(--canccu-color-text-muted); }
+.canccu-divider { display: flex; align-items: center; gap: .75rem; color: var(--canccu-color-text-muted); font-size: var(--canccu-text-xs); }
+.canccu-divider::before, .canccu-divider::after { content: ""; flex: 1; height: 1px; background: var(--canccu-color-border); }
+
+/* Hub (attendee phone pages): the event's header, one task per page. */
+.canccu-hubhead { display: flex; align-items: center; gap: .75rem; height: 3.5rem; padding: 0 1rem; background: var(--canccu-color-surface); border-bottom: var(--canccu-border-width) solid var(--canccu-color-border); }
+.canccu-hubbody { padding: 2rem 1.25rem; display: grid; gap: 1.25rem; }
+.canccu-task { display: grid; gap: 1rem; padding: 1.5rem 1.25rem; text-align: center; justify-items: center; }
+.canccu-task__icon { width: 4rem; height: 4rem; border-radius: 1.25rem; display: grid; place-items: center; color: var(--canccu-color-primary); background: color-mix(in srgb, var(--canccu-color-primary) 15%, transparent); }
+.canccu-task__icon .canccu-i { width: 2rem; height: 2rem; }
+.canccu-task__title { font-size: 1.5rem; font-weight: 700; }
+.canccu-task p { color: color-mix(in srgb, var(--canccu-color-text) 80%, var(--canccu-color-background)); }
+
+/* Screens (1920×1080 design, drawn in cqw: 1px at 1920 = 0.052083cqw). The frames share Pulse's header and type. */
+.canccu-surface--screen { position: absolute; inset: 0; padding: 0; font-family: var(--canccu-font-body); background: radial-gradient(70cqw 40cqw at 85% -10%, color-mix(in srgb, var(--canccu-color-primary) 14%, transparent), transparent 70%), var(--canccu-color-background); }
+.scr-head { position: absolute; left: 2.5cqw; right: 2.5cqw; top: 1.6cqw; height: 3.2cqw; display: flex; align-items: center; gap: 1.2cqw; }
+.scr-logo { height: 2.6cqw; width: auto; }
+.scr-event { font-family: var(--canccu-font-display); font-weight: 700; font-size: 1.75cqw; letter-spacing: .06em; text-transform: uppercase; }
+.scr-zone { color: var(--canccu-color-text-muted); font-size: 1.35cqw; }
+.scr-clock { margin-left: auto; font-family: var(--canccu-font-display); font-weight: 700; font-size: 2.1cqw; font-variant-numeric: tabular-nums; }
+.scr-date { color: var(--canccu-color-text-muted); font-size: 1.25cqw; }
+.scr-body { position: absolute; left: 2.5cqw; right: 2.5cqw; top: 6.4cqw; bottom: 4.6cqw; }
+.scr-foot { position: absolute; left: 2.5cqw; right: 2.5cqw; bottom: 1.4cqw; height: 2.4cqw; display: flex; align-items: center; gap: 1cqw; color: var(--canccu-color-text-muted); font-size: 1.15cqw; }
+.scr-panel { background: color-mix(in srgb, var(--canccu-color-surface) 92%, transparent); border: max(1px, .1cqw) solid var(--canccu-color-border); border-radius: calc(var(--canccu-radius) * 1.6); }
+.scr-kicker { font-size: 1.3cqw; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--canccu-color-primary); }
+.scr-h1 { font-family: var(--canccu-font-display); font-weight: 800; font-size: 4.2cqw; line-height: 1.08; letter-spacing: -.01em; }
+.scr-h2 { font-family: var(--canccu-font-display); font-weight: 750; font-size: 2.3cqw; line-height: 1.15; }
+.scr-text { font-size: 1.6cqw; color: color-mix(in srgb, var(--canccu-color-text) 82%, var(--canccu-color-background)); line-height: 1.35; }
+.scr-muted { font-size: 1.3cqw; color: var(--canccu-color-text-muted); }
+.scr-chip { display: inline-flex; align-items: center; gap: .4cqw; padding: .2cqw .7cqw; border-radius: 99cqw; font-size: 1.1cqw; font-weight: 700; --b: var(--canccu-color-status-degraded); color: color-mix(in srgb, var(--b) 72%, var(--canccu-color-text)); background: color-mix(in srgb, var(--b) 18%, transparent); }
+.scr-icon { width: 4.2cqw; height: 4.2cqw; border-radius: 1.1cqw; display: grid; place-items: center; --n: var(--canccu-color-primary); color: var(--n); background: color-mix(in srgb, var(--n) 16%, transparent); box-shadow: inset 0 0 0 .1cqw color-mix(in srgb, var(--n) 35%, transparent); flex: none; }
+.scr-icon .canccu-i { width: 2.3cqw; height: 2.3cqw; stroke-width: 2; }
+.scr-qr { width: 9cqw; height: 9cqw; padding: .5cqw; background: #fff; border-radius: .6cqw; }
+/* The safety elements exactly as ui.css draws them today: white on black, system fonts, fixed place. */
+.safe-code { position: absolute; inset: 0; margin: auto; width: fit-content; height: fit-content; padding: .25em .5em; border-radius: .25em; background: #000; color: #fff; font: 4.5cqw/1.2 ui-monospace, monospace; letter-spacing: .1em; white-space: nowrap; z-index: 5; }
+.safe-marker { position: absolute; top: .84cqw; right: .84cqw; padding: .25em .5em; border-radius: .25em; background: #000; color: #fff; font: 1.4cqw/1.2 system-ui, sans-serif; white-space: nowrap; z-index: 5; }
+.safe-privacy { position: absolute; bottom: 8px; right: 8px; padding: .25em .5em; border-radius: .25em; background: #000; color: #fff !important; font: 16px/1.2 system-ui, sans-serif; text-decoration: underline; z-index: 5; }
+.is-offline-frame .scr-clock { margin-right: 15.5cqw; }
+.scr-stale { opacity: .6; filter: grayscale(1); }
+</style>
+</head>
+<body class="board">
+<input class="board__theme-input" type="radio" name="theme" id="theme-default" checked>
+<input class="board__theme-input" type="radio" name="theme" id="theme-night">
+<input class="board__theme-input" type="radio" name="theme" id="theme-light">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 21h4"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-1 2-2 0-1.6-1.5-1.8-1.5-3.2 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4C21 6.4 17 3 12 3z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10.5" cy="7.2" r="1.2"/><circle cx="15" cy="7.5" r="1.2"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 16.5v4"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+  <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2.5-7 5 14 2.5-7h4"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M3.5 7.5L12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5L12 11.5l8.5-4M12 11.5v9"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 5a3.5 3.5 0 0 1 0 7M18 14.5a6 6 0 0 1 3.5 5.5"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4M6 12h10"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></symbol>
+  <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 1.5M9.5 2.5h5M19 6l1.5-1.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+  <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 4.2L2.8 17.5a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z"/><path d="M12 10v4M12 17.2v.1"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.4v.1"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1.2"/><path d="M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2.5v2.5H14zM17.5 17.5H20V20h-2.5zM14 19.5h1M19.5 14h.5"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8.5 8.5M18 14v4.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4M7 9l5-5 5 5M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
+  <symbol id="i-cast" viewBox="0 0 24 24"><path d="M3 10.5v3h3.5L12 18V6L6.5 10.5z"/><path d="M16 9a4.5 4.5 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11.5A8 8 0 0 0 5.6 7.2L4 9M4 4.5V9h4.5M4 12.5a8 8 0 0 0 14.4 4.3L20 15M20 19.5V15h-4.5"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 4.5h14A1.5 1.5 0 0 1 20.5 6v9a1.5 1.5 0 0 1-1.5 1.5H10l-5 4v-4H5A1.5 1.5 0 0 1 3.5 15V6A1.5 1.5 0 0 1 5 4.5z"/><path d="M8.5 10.5h.1M12 10.5h.1M15.5 10.5h.1"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.8 15.8a4.8 4.8 0 0 1 6.4 0M12 19.2v.1"/></symbol>
+  <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="M3 3l18 18M8.8 15.8a4.8 4.8 0 0 1 6.4 0M12 19.2v.1M5.5 12.5a9.5 9.5 0 0 1 4-2.3M14.8 10.4a9.5 9.5 0 0 1 3.7 2.1M2.5 9a14 14 0 0 1 4.4-2.8M11 5.1A14 14 0 0 1 21.5 9"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24"><path d="M12 3.5v8M12 3.5a1.75 1.75 0 0 1 3.5 0V12M8.5 5.5a1.75 1.75 0 0 1 3.5 0M8.5 5.5V12M15.5 7a1.75 1.75 0 0 1 3.5 0v6.5a7 7 0 0 1-7 7h-.5a7 7 0 0 1-5.6-2.8L3.3 14a1.75 1.75 0 0 1 2.8-2.1l2.4 2.6V8"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+  <symbol id="qr-code" viewBox="0 0 21 21"><rect width="21" height="21" fill="#fff"/><g fill="#0f172a"><rect x="1" y="1" width="6" height="6"/><rect x="2" y="2" width="4" height="4" fill="#fff"/><rect x="3" y="3" width="2" height="2"/><rect x="14" y="1" width="6" height="6"/><rect x="15" y="2" width="4" height="4" fill="#fff"/><rect x="16" y="3" width="2" height="2"/><rect x="1" y="14" width="6" height="6"/><rect x="2" y="15" width="4" height="4" fill="#fff"/><rect x="3" y="16" width="2" height="2"/><rect x="9" y="1" width="1" height="2"/><rect x="11" y="2" width="2" height="1"/><rect x="9" y="5" width="3" height="1"/><rect x="8" y="8" width="2" height="2"/><rect x="11" y="9" width="3" height="1"/><rect x="15" y="9" width="2" height="2"/><rect x="18" y="8" width="2" height="1"/><rect x="1" y="9" width="3" height="1"/><rect x="5" y="10" width="2" height="2"/><rect x="9" y="12" width="1" height="3"/><rect x="12" y="12" width="3" height="2"/><rect x="17" y="13" width="3" height="1"/><rect x="9" y="17" width="2" height="2"/><rect x="13" y="16" width="2" height="3"/><rect x="17" y="17" width="3" height="3"/></g></symbol>
+  <symbol id="logo-demo" viewBox="0 0 240 80"><rect width="240" height="80" rx="12" fill="#3b82f6"/><text x="120" y="52" font-family="system-ui, sans-serif" font-size="36" font-weight="700" fill="#f8fafc" text-anchor="middle">Demo</text></symbol>
+</svg>
+
+<header class="board__bar">
+  <span class="board__brand">One design · mockups for the PO</span>
+  <nav class="board__nav">
+    <a href="#language">Language</a><a href="#shell">Shell</a><a href="#sign-in">Sign-in</a><a href="#admin">Admin pages</a>
+    <a href="#run-of-show">Run of show</a><a href="#studio">Theme studio</a><a href="#check-in">Check-in</a><a href="#errors">Errors</a><a href="#screens">Screens</a>
+  </nav>
+  <div class="board__themes" title="Every mockup on this page is drawn from the 11 theme tokens: switch the theme to see it follow">
+    <label for="theme-default">Default theme</label><label for="theme-night">Demo night</label><label for="theme-light">Light</label>
+  </div>
+</header>
+
+<section class="sheet" id="language">
+  <p class="sheet__kicker">1 · Design language</p>
+  <h2 class="sheet__title">One page that shows them all</h2>
+  <p class="sheet__lead">Every surface draws from the same eleven colour tokens, four fonts and four sizes that <code>packages/ui</code> already has. Nothing new is a token: tints, hovers and raised surfaces are mixed from the tokens, so an event's theme (or the light scheme) restyles every page at once. Try the switch at the top right.</p>
+  <div class="sheet__covers"><span>A1 design side</span><span>A4</span><span>B1</span><span>B4</span><span>B5</span><span>F2</span><span>F3</span><span>F4</span></div>
+
+  <div class="frame" style="border-radius:16px">
+  <div class="canccu-page" style="padding:40px 48px 56px; display:grid; gap:48px">
+
+    <!-- Colour -->
+    <div class="canccu-stack" style="gap:20px">
+      <div><p class="canccu-overline">Colour</p><h3 style="font-size:1.375rem;margin-top:4px">Eleven tokens, one job each</h3>
+        <p class="canccu-muted" style="margin-top:6px;max-width:80ch">Primary is for the one thing to do (and links and focus). Accent marks highlights only: the avatar, a featured item. Status colours mean status and nothing else: the "now" line is primary, not red (F2). Text on a colour fill uses <code>primary_text</code>.</p></div>
+      <div class="swatches">
+        <div class="canccu-card canccu-card--flat"><div style="height:64px;background:var(--canccu-color-background);border-bottom:1px solid var(--canccu-color-border)"></div><div style="padding:10px 12px"><b class="canccu-small">background</b><p class="canccu-muted canccu-small">The page</p></div></div>
+        <div class="canccu-card canccu-card--flat"><div style="height:64px;background:var(--canccu-color-surface);border-bottom:1px solid var(--canccu-color-border)"></div><div style="padding:10px 12px"><b class="canccu-small">surface</b><p class="canccu-muted canccu-small">Cards, header, bars</p></div></div>
+        <div class="canccu-card canccu-card--flat"><div style="height:64px;background:var(--canccu-color-border)"></div><div style="padding:10px 12px"><b class="canccu-small">border</b><p class="canccu-muted canccu-small">Lines and dividers</p></div></div>
+        <div class="canccu-card canccu-card--flat"><div style="height:64px;background:var(--canccu-color-text)"></div><div style="padding:10px 12px"><b class="canccu-small">text</b><p class="canccu-muted canccu-small">Body and titles</p></div></div>
+        <div class="canccu-card canccu-card--flat"><div style="height:64px;background:var(--canccu-color-text-muted)"></div><div style="padding:10px 12px"><b class="canccu-small">text_muted</b><p class="canccu-muted canccu-small">Hints, meta, labels</p></div></div>
+        <div class="canccu-card canccu-card--flat"><div style="height:64px;background:var(--canccu-color-primary);display:grid;place-items:center;color:var(--canccu-color-primary-text);font-weight:700">Aa</div><div style="padding:10px 12px"><b class="canccu-small">primary · primary_text</b><p class="canccu-muted canccu-small">The action, links, now</p></div></div>
+        <div class="canccu-card canccu-card--flat"><div style="height:64px;background:var(--canccu-color-accent)"></div><div style="padding:10px 12px"><b class="canccu-small">accent</b><p class="canccu-muted canccu-small">Highlights only</p></div></div>
+        <div class="canccu-card canccu-card--flat"><div style="height:64px;background:var(--canccu-color-status-ok)"></div><div style="padding:10px 12px"><b class="canccu-small">status_ok</b><p class="canccu-muted canccu-small">Running, done, saved</p></div></div>
+        <div class="canccu-card canccu-card--flat"><div style="height:64px;background:var(--canccu-color-status-degraded)"></div><div style="padding:10px 12px"><b class="canccu-small">status_degraded</b><p class="canccu-muted canccu-small">Late, slow, needs a look</p></div></div>
+        <div class="canccu-card canccu-card--flat"><div style="height:64px;background:var(--canccu-color-status-down)"></div><div style="padding:10px 12px"><b class="canccu-small">status_down</b><p class="canccu-muted canccu-small">Down, error, destroy</p></div></div>
+      </div>
+      <div class="canccu-cluster canccu-small canccu-muted" style="gap:18px">
+        <span><b style="color:var(--canccu-color-text)">Mixed, not new:</b></span>
+        <span style="display:inline-flex;gap:8px;align-items:center"><i style="width:28px;height:18px;border-radius:4px;background:var(--canccu-tint);box-shadow:inset 0 0 0 1px var(--canccu-color-border)"></i>hover: text 6 %</span>
+        <span style="display:inline-flex;gap:8px;align-items:center"><i style="width:28px;height:18px;border-radius:4px;background:color-mix(in srgb,var(--canccu-color-primary) 16%,transparent)"></i>current: primary 16 %</span>
+        <span style="display:inline-flex;gap:8px;align-items:center"><i style="width:28px;height:18px;border-radius:4px;background:var(--canccu-raised)"></i>raised: surface + text 14 %</span>
+        <span style="display:inline-flex;gap:8px;align-items:center"><i style="width:28px;height:18px;border-radius:4px;background:color-mix(in srgb,var(--canccu-color-status-degraded) 16%,transparent)"></i>badge and notice fills: status 11–16 %</span>
+      </div>
+    </div>
+
+    <!-- Type, space, widths -->
+    <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:40px">
+      <div class="canccu-stack" style="gap:14px">
+        <div><p class="canccu-overline">Type</p><h3 style="font-size:1.375rem;margin-top:4px">Seven sizes, one page title</h3></div>
+        <div class="canccu-card canccu-card--flat"><div class="canccu-list">
+          <div class="canccu-list__row"><span class="canccu-muted canccu-small canccu-num" style="width:110px">36 · 700</span><span style="font-size:2.25rem;font-weight:700;line-height:1.1;letter-spacing:-.01em">Sign in</span><span class="canccu-list__end" style="margin-left:auto">sign-in and first-run titles</span></div>
+          <div class="canccu-list__row"><span class="canccu-muted canccu-small canccu-num" style="width:110px">28 · 650</span><span style="font-size:1.75rem;font-weight:650;letter-spacing:-.01em">Run of show</span><span class="canccu-list__end" style="margin-left:auto">the page title, everywhere (24 on a phone)</span></div>
+          <div class="canccu-list__row"><span class="canccu-muted canccu-small canccu-num" style="width:110px">22 · 650</span><span style="font-size:1.375rem;font-weight:650">Section heading</span><span class="canccu-list__end" style="margin-left:auto">groups on long pages</span></div>
+          <div class="canccu-list__row"><span class="canccu-muted canccu-small canccu-num" style="width:110px">18 · 650</span><span style="font-size:1.125rem;font-weight:650">Card title</span><span class="canccu-list__end" style="margin-left:auto">cards, empty states</span></div>
+          <div class="canccu-list__row"><span class="canccu-muted canccu-small canccu-num" style="width:110px">16 · 400</span><span>Body text reads at sixteen pixels.</span><span class="canccu-list__end" style="margin-left:auto">body, inputs</span></div>
+          <div class="canccu-list__row"><span class="canccu-muted canccu-small canccu-num" style="width:110px">14 · 400–600</span><span class="canccu-small">Labels, hints and meta lines</span><span class="canccu-list__end" style="margin-left:auto">labels 600, hints muted</span></div>
+          <div class="canccu-list__row"><span class="canccu-muted canccu-small canccu-num" style="width:110px">12 · 650 caps</span><span class="canccu-overline">Overline · table head</span><span class="canccu-list__end" style="margin-left:auto">menu groups, badges</span></div>
+        </div></div>
+        <p class="canccu-small canccu-muted">Fonts are the theme's: <code>heading</code> for titles, <code>body</code> for the rest, <code>display</code> on screens, <code>mono</code> for codes. Numbers that change (times, counts) are tabular, so they don't jump.</p>
+      </div>
+      <div class="canccu-stack" style="gap:14px">
+        <div><p class="canccu-overline">Space, shape, width</p><h3 style="font-size:1.375rem;margin-top:4px">A 4-pixel rhythm, two widths</h3></div>
+        <div class="canccu-card canccu-card--flat canccu-card__body" style="display:grid;gap:14px">
+          <div class="canccu-cluster" style="gap:10px;align-items:flex-end">
+            <span style="width:4px;height:4px;background:var(--canccu-color-primary);border-radius:1px"></span><span style="width:8px;height:8px;background:var(--canccu-color-primary);border-radius:2px"></span><span style="width:12px;height:12px;background:var(--canccu-color-primary);border-radius:2px"></span><span style="width:16px;height:16px;background:var(--canccu-color-primary);border-radius:3px"></span><span style="width:24px;height:24px;background:var(--canccu-color-primary);border-radius:4px"></span><span style="width:32px;height:32px;background:var(--canccu-color-primary);border-radius:5px"></span><span style="width:48px;height:48px;background:var(--canccu-color-primary);border-radius:6px"></span>
+            <span class="canccu-small canccu-muted" style="margin-left:6px">4 · 8 · 12 · 16 · 24 · 32 · 48</span>
+          </div>
+          <p class="canccu-small">Corners from <code>radius</code> (inputs, buttons), cards <code>radius</code> + 4 px. Lines are <code>border_width</code>.</p>
+          <div style="display:grid;gap:8px">
+            <div style="height:30px;width:62.5%;border-radius:6px;background:color-mix(in srgb,var(--canccu-color-primary) 18%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--canccu-color-primary) 45%,transparent);display:flex;align-items:center;padding:0 10px" class="canccu-small"><b>40rem</b>&nbsp;· forms, settings, an item, sign-in</div>
+            <div style="height:30px;width:100%;border-radius:6px;background:color-mix(in srgb,var(--canccu-color-accent) 16%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--canccu-color-accent) 45%,transparent);display:flex;align-items:center;padding:0 10px" class="canccu-small"><b>64rem</b>&nbsp;· workspaces: run of show, Studio, health, tables</div>
+          </div>
+          <p class="canccu-small canccu-muted">Two widths, set by <code>page()</code> by page kind, never inline (B4).</p>
+        </div>
+        <div class="canccu-card canccu-card--flat canccu-card__body" style="display:grid;gap:8px">
+          <p class="canccu-overline">Dates and times (B5)</p>
+          <p class="canccu-small">One format, from the event's <code>language</code> and <code>timezone</code>, everywhere, inputs included:</p>
+          <div class="canccu-cluster canccu-small"><span class="canccu-badge">en · Sat 14 Mar · 18:00</span><span class="canccu-badge">fi · la 14.3. · 18.00</span><span class="canccu-badge">times in UTC</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="canccu-stack" style="gap:16px">
+      <div><p class="canccu-overline">Buttons</p><h3 style="font-size:1.375rem;margin-top:4px">Four kinds, the same as a link or a button (B1)</h3>
+        <p class="canccu-muted" style="margin-top:6px;max-width:86ch">One primary per view: the thing to do next. Secondary for other actions, ghost for quiet ones in rows and bars, danger only for a step that destroys or cancels, and then in its confirm. Each row below holds an <code>&lt;a&gt;</code> and a <code>&lt;button&gt;</code>: they look the same.</p></div>
+      <div class="canccu-card canccu-card--flat"><table class="canccu-table">
+        <thead><tr><th style="width:130px">Kind</th><th>&lt;a&gt; link</th><th>&lt;button&gt;</th><th>Hover</th><th>Focus</th><th>Disabled</th><th>Busy</th></tr></thead>
+        <tbody>
+          <tr><td><b>Primary</b></td><td><a class="canccu-button canccu-button--primary" href="#language"><svg class="canccu-i"><use href="#i-plus"/></svg>Quick add</a></td><td><button class="canccu-button canccu-button--primary">Publish</button></td><td><span class="canccu-button canccu-button--primary is-hover">Publish</span></td><td><span class="canccu-button canccu-button--primary is-focus">Publish</span></td><td><button class="canccu-button canccu-button--primary" disabled>Publish</button></td><td><span class="canccu-button canccu-button--primary"><i class="canccu-spinner"></i>Publishing…</span></td></tr>
+          <tr><td><b>Secondary</b></td><td><a class="canccu-button canccu-button--secondary" href="#language">New template</a></td><td><button class="canccu-button canccu-button--secondary">Preview on a screen…</button></td><td><span class="canccu-button canccu-button--secondary is-hover">Preview…</span></td><td><span class="canccu-button canccu-button--secondary is-focus">Preview…</span></td><td><button class="canccu-button canccu-button--secondary" disabled>Preview…</button></td><td><span class="canccu-button canccu-button--secondary"><i class="canccu-spinner"></i>Loading…</span></td></tr>
+          <tr><td><b>Ghost</b></td><td><a class="canccu-button canccu-button--ghost" href="#language"><svg class="canccu-i"><use href="#i-pencil"/></svg>Edit or move</a></td><td><button class="canccu-button canccu-button--ghost">Discard draft</button></td><td><span class="canccu-button canccu-button--ghost is-hover">Discard draft</span></td><td><span class="canccu-button canccu-button--ghost is-focus">Discard draft</span></td><td><button class="canccu-button canccu-button--ghost" disabled>Discard draft</button></td><td></td></tr>
+          <tr><td><b>Danger</b></td><td><a class="canccu-button canccu-button--danger-ghost" href="#language">Cancel item…</a></td><td><button class="canccu-button canccu-button--danger">Cancel “Dinner”</button></td><td><span class="canccu-button canccu-button--danger is-hover">Cancel “Dinner”</span></td><td><span class="canccu-button canccu-button--danger is-focus">Cancel “Dinner”</span></td><td><button class="canccu-button canccu-button--danger" disabled>Cancel “Dinner”</button></td><td><span class="canccu-button canccu-button--danger"><i class="canccu-spinner"></i>Cancelling…</span></td></tr>
+        </tbody></table></div>
+      <div class="canccu-cluster" style="gap:12px">
+        <button class="canccu-button canccu-button--primary canccu-button--lg">Large · 48 px</button>
+        <button class="canccu-button canccu-button--primary">Default · 40 px</button>
+        <button class="canccu-button canccu-button--secondary canccu-button--sm">Small · 32 px</button>
+        <button class="canccu-button canccu-button--secondary canccu-button--icon" aria-label="More"><svg class="canccu-i"><use href="#i-more"/></svg></button>
+        <button class="canccu-button canccu-button--ghost canccu-button--icon" aria-label="Menu"><svg class="canccu-i"><use href="#i-menu"/></svg></button>
+        <span class="canccu-small canccu-muted" style="margin-left:8px">Phones use 48 px for the main action and full-width bars. An icon-only button always has a label for screen readers.</span>
+      </div>
+    </div>
+
+    <!-- Fields -->
+    <div class="canccu-stack" style="gap:16px">
+      <div><p class="canccu-overline">Form fields</p><h3 style="font-size:1.375rem;margin-top:4px">Label above, hint below, the unit beside (A4)</h3></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:28px 32px">
+        <div class="canccu-field"><label class="canccu-field__label">Event name</label><input class="canccu-input" value="Demo Event"><p class="canccu-field__hint">On screens, the hub and in Discord posts.</p></div>
+        <div class="canccu-field"><label class="canccu-field__label">Where <small>optional</small></label><input class="canccu-input is-focus" value="Café"><p class="canccu-field__hint">Focused: the primary ring.</p></div>
+        <div class="canccu-field"><label class="canccu-field__label">Starts</label><input class="canccu-input" aria-invalid="true" value="Sat 14 Mar · 25:00"><p class="canccu-field__error"><svg class="canccu-i"><use href="#i-alert"/></svg>Use a time between 00:00 and 23:59.</p></div>
+        <div class="canccu-field"><label class="canccu-field__label">Ticker look</label><span class="canccu-select"><span class="canccu-input">Calm (slow fade)</span><svg class="canccu-i"><use href="#i-down"/></svg></span><p class="canccu-field__hint">Names, never slugs.</p></div>
+        <div class="canccu-field"><label class="canccu-field__label">Mark a screen offline after</label><span class="canccu-inputgroup canccu-inputgroup--short"><input class="canccu-input canccu-num" value="45"><span class="canccu-inputgroup__add">seconds</span></span><p class="canccu-field__hint">Default 45. Shorter means more false alarms on a slow uplink.</p></div>
+        <div class="canccu-field"><label class="canccu-field__label">Ticker text</label><textarea class="canccu-input">Lost and found is at the info desk</textarea><p class="canccu-field__hint canccu-spread"><span>One line on every screen.</span><span class="canccu-num">34 / 80</span></p></div>
+        <div class="canccu-check"><span class="canccu-check__box is-on"><svg class="canccu-i" style="width:14px;height:14px;stroke-width:3"><use href="#i-check"/></svg></span><span class="canccu-check__label">Show progress bars</span><p class="canccu-field__hint">A thin bar under each rotating slide.</p></div>
+        <div class="canccu-check"><span class="canccu-switch"></span><span class="canccu-check__label">Shift the layout slowly against burn-in</span><p class="canccu-field__hint">For screens on all day. Off: takes effect when you save.</p></div>
+        <div class="canccu-field"><span class="canccu-field__label">Scheme</span><span class="canccu-segmented"><span class="is-on">Dark</span><span>Light</span></span><p class="canccu-field__hint">Two to four choices: a segmented control, not radio buttons.</p></div>
+        <div class="canccu-field"><span class="canccu-field__label">Primary colour</span><span class="canccu-colorfield"><span class="canccu-colorfield__swatch" style="background:var(--canccu-color-primary)"></span><input class="canccu-input" value="#3B82F6"></span><p class="canccu-field__hint">The colour and its hex, always (C2).</p></div>
+        <div class="canccu-field" style="grid-column:span 2"><span class="canccu-field__label">Logo</span><div class="canccu-drop"><span class="canccu-drop__thumb"><svg style="width:56px;height:19px"><use href="#logo-demo"/></svg></span><div style="flex:1"><b class="canccu-small">logo.svg</b><p class="canccu-field__hint">SVG or PNG, up to 2 MB. Drop a new file here to replace it.</p></div><button class="canccu-button canccu-button--secondary canccu-button--sm"><svg class="canccu-i"><use href="#i-upload"/></svg>Choose file</button></div></div>
+      </div>
+    </div>
+
+    <!-- Cards, tables, badges -->
+    <div style="display:grid;grid-template-columns:1fr 1.35fr;gap:32px;align-items:start">
+      <div class="canccu-stack" style="gap:16px">
+        <div><p class="canccu-overline">Cards</p><h3 style="font-size:1.375rem;margin-top:4px">Title, one line, the content, the actions</h3></div>
+        <section class="canccu-card">
+          <div class="canccu-card__head"><div><h3 class="canccu-card__title">Screens</h3><p class="canccu-card__desc">How every screen of the event behaves.</p></div><span class="canccu-badge canccu-badge--accent">2 changes</span></div>
+          <div class="canccu-card__body canccu-form">
+            <div class="canccu-field"><label class="canccu-field__label">Seconds per slide</label><span class="canccu-inputgroup canccu-inputgroup--short"><input class="canccu-input canccu-num" value="15"><span class="canccu-inputgroup__add">seconds</span></span></div>
+          </div>
+          <div class="canccu-card__foot"><span class="canccu-muted">Not saved yet</span><button class="canccu-button canccu-button--ghost">Undo</button><button class="canccu-button canccu-button--primary">Save</button></div>
+        </section>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div class="canccu-card canccu-stat"><div class="canccu-stat__value">7</div><div class="canccu-stat__label">modules</div></div>
+          <div class="canccu-card canccu-stat"><div class="canccu-stat__value" style="color:var(--canccu-color-status-ok)">6</div><div class="canccu-stat__label">running</div></div>
+          <div class="canccu-card canccu-stat"><div class="canccu-stat__value" style="color:var(--canccu-color-status-degraded)">1</div><div class="canccu-stat__label">slow</div></div>
+        </div>
+      </div>
+      <div class="canccu-stack" style="gap:16px">
+        <div><p class="canccu-overline">Tables and badges</p><h3 style="font-size:1.375rem;margin-top:4px">Names first, status as a word with a dot</h3></div>
+        <section class="canccu-card"><table class="canccu-table">
+          <thead><tr><th>Module</th><th>Status</th><th>Version</th><th class="is-num">Answered</th></tr></thead>
+          <tbody>
+            <tr><td><b>Run of show</b><span class="canccu-table__sub">agenda</span></td><td><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Running</span></td><td class="canccu-num">0.4.0</td><td class="is-num">12 ms</td></tr>
+            <tr><td><b>Screens</b><span class="canccu-table__sub">screen</span></td><td><span class="canccu-badge canccu-badge--degraded canccu-badge--dot">Slow</span></td><td class="canccu-num">0.4.0</td><td class="is-num">1.8 s</td></tr>
+            <tr><td><b>Notifications</b><span class="canccu-table__sub">notify</span></td><td><span class="canccu-badge canccu-badge--down canccu-badge--dot">Down</span></td><td class="canccu-num">—</td><td class="is-num">no answer</td></tr>
+          </tbody></table></section>
+        <div class="canccu-cluster">
+          <span class="canccu-badge canccu-badge--ok canccu-badge--dot">Running</span><span class="canccu-badge canccu-badge--degraded canccu-badge--dot">Slow</span><span class="canccu-badge canccu-badge--down canccu-badge--dot">Down</span>
+          <span class="canccu-badge canccu-badge--primary canccu-badge--solid">Now</span><span class="canccu-badge canccu-badge--degraded">+15 min</span><span class="canccu-badge canccu-badge--accent">Draft</span><span class="canccu-badge canccu-badge--primary">Live</span><span class="canccu-badge">Crew only</span><span class="canccu-badge">Archived</span>
+        </div>
+        <p class="canccu-small canccu-muted">A badge is a word: colour backs it up and never carries meaning alone. Status badges get the dot. Solid fill only for "Now".</p>
+      </div>
+    </div>
+
+    <!-- Notices -->
+    <div class="canccu-stack" style="gap:16px">
+      <div><p class="canccu-overline">Notices</p><h3 style="font-size:1.375rem;margin-top:4px">What happened, in one sentence, and what to do</h3></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="canccu-notice canccu-notice--ok"><svg class="canccu-i"><use href="#i-check-circle"/></svg><div class="canccu-notice__body"><p class="canccu-notice__title">Saved</p><p>Screens pick up the change within a second.</p></div></div>
+        <div class="canccu-notice"><svg class="canccu-i"><use href="#i-info"/></svg><div class="canccu-notice__body"><p class="canccu-notice__title">Nothing is published yet</p><p>Screens show the default look until you publish a theme.</p></div></div>
+        <div class="canccu-notice canccu-notice--warn"><svg class="canccu-i"><use href="#i-warn"/></svg><div class="canccu-notice__body"><p class="canccu-notice__title">Café TV is offline since 18:40</p><p>It keeps showing its last state. Check its power and network.</p><div class="canccu-notice__actions"><a class="canccu-button canccu-button--secondary canccu-button--sm" href="#language">Open Café TV</a></div></div></div>
+        <div class="canccu-notice canccu-notice--down"><svg class="canccu-i"><use href="#i-alert"/></svg><div class="canccu-notice__body"><p class="canccu-notice__title">The theme can't be published yet</p><p>The body font Inter is not in the theme. Upload it, or pick a system font.</p><div class="canccu-notice__actions"><a class="canccu-button canccu-button--secondary canccu-button--sm" href="#language">Pick a font</a></div></div></div>
+      </div>
+      <p class="canccu-small canccu-muted">Words, never a schema path or a right id. "Saved." becomes the ok notice above the form (A4).</p>
+    </div>
+
+    <!-- Empty states -->
+    <div class="canccu-stack" style="gap:16px">
+      <div><p class="canccu-overline">Empty states</p><h3 style="font-size:1.375rem;margin-top:4px">One style, always with the next step (F3, F4)</h3></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+        <section class="canccu-card"><div class="canccu-empty"><span class="canccu-empty__icon"><svg class="canccu-i"><use href="#i-calendar"/></svg></span><p class="canccu-empty__title">Nothing on Sunday yet</p><p class="canccu-empty__text">Add the first item, or start from a template.</p><div class="canccu-cluster"><a class="canccu-button canccu-button--primary" href="#language"><svg class="canccu-i"><use href="#i-plus"/></svg>Add the first item</a></div></div></section>
+        <section class="canccu-card"><div class="canccu-empty"><span class="canccu-empty__icon"><svg class="canccu-i"><use href="#i-users"/></svg></span><p class="canccu-empty__title">Only you so far</p><p class="canccu-empty__text">People get a role here after they sign in once with Discord.</p><div class="canccu-cluster"><a class="canccu-button canccu-button--secondary" href="#language">Copy the sign-in link</a></div></div></section>
+        <section class="canccu-card"><div class="canccu-empty"><span class="canccu-empty__icon"><svg class="canccu-i"><use href="#i-bell"/></svg></span><p class="canccu-empty__title">No topics to build on yet</p><p class="canccu-empty__text">A topic starts from one a module offers. None has offered one so far.</p><div class="canccu-cluster"><a class="canccu-button canccu-button--secondary" href="#language"><svg class="canccu-i"><use href="#i-back"/></svg>Back to topics</a></div></div></section>
+      </div>
+    </div>
+
+  </div>
+  </div>
+</section>
+
+<section class="sheet" id="shell">
+  <p class="sheet__kicker">2 · Organiser shell</p>
+  <h2 class="sheet__title">One header, one Event menu, one content column</h2>
+  <p class="sheet__lead">Every organiser page, whichever module serves it, is drawn by one <code>page()</code> shell from <code>packages/ui</code>: the event's header across the top, the Event menu at the side, the page's own sub-pages as a row of tabs, and the content at one of two widths. The menu lists every page this person may open, marks the current one and ends with Sign out. On a phone the same menu opens from the header.</p>
+  <div class="sheet__covers"><span>A1</span><span>A2</span><span>B2</span><span>B4</span></div>
+
+  <div class="row">
+    <div class="shot">
+      <div class="frame frame--desktop">
+        <div class="frame__chrome"><i></i><i></i><i></i><span class="frame__url">/admin/settings</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:5.25rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><span class="canccu-header__sep"></span><span class="canccu-header__meta">Sat 14 – Sun 15 Mar</span><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Live</span><div class="canccu-header__end"><span class="canccu-clock">18:42<small>UTC</small></span></div></header>
+          <nav class="canccu-menu" aria-label="Event"><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Run the event</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-calendar"/></svg>Run of show</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-bell"/></svg>Notifications</a></div><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Look</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-palette"/></svg>Theme studio</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-monitor"/></svg>Screen studio</a></div><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Admin</p><a class="canccu-menu__item" href="#" aria-current="page"><svg class="canccu-i"><use href="#i-sliders"/></svg>Settings</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-pulse"/></svg>Health<span class="canccu-badge canccu-badge--degraded canccu-badge--dot">1</span></a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-box"/></svg>Event profile</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-users"/></svg>People</a></div><div class="canccu-menu__foot"><div class="canccu-user"><span class="canccu-avatar">DO</span><div><p class="canccu-user__name">Demo Organiser</p><p class="canccu-user__role">Organiser</p></div></div><button class="canccu-button canccu-button--ghost" style="justify-content:flex-start"><svg class="canccu-i"><use href="#i-out"/></svg>Sign out</button></div></nav>
+          <div class="canccu-content"><main class="canccu-main canccu-main--narrow">
+            <div class="canccu-pagehead"><div><h1 class="canccu-pagehead__title">Settings</h1><p class="canccu-pagehead__desc">How each part of Demo Event behaves. A change applies when you save it.</p></div></div>
+            <section class="canccu-card"><div class="canccu-list">
+              <a class="canccu-list__row" href="#"><span class="canccu-list__icon"><svg class="canccu-i"><use href="#i-sliders"/></svg></span><span class="canccu-list__main"><p class="canccu-list__title">General</p><p class="canccu-list__meta">Time zone, language, date format</p></span><span class="canccu-list__end">UTC · English<svg class="canccu-i"><use href="#i-right"/></svg></span></a>
+              <a class="canccu-list__row" href="#"><span class="canccu-list__icon"><svg class="canccu-i"><use href="#i-calendar"/></svg></span><span class="canccu-list__main"><p class="canccu-list__title">Run of show</p><p class="canccu-list__meta">Kinds, reminders, quiet hours</p></span><span class="canccu-list__end">3 settings<svg class="canccu-i"><use href="#i-right"/></svg></span></a>
+              <a class="canccu-list__row" href="#"><span class="canccu-list__icon"><svg class="canccu-i"><use href="#i-bell"/></svg></span><span class="canccu-list__main"><p class="canccu-list__title">Notifications</p><p class="canccu-list__meta">Channels, push limits</p></span><span class="canccu-list__end">2 settings<svg class="canccu-i"><use href="#i-right"/></svg></span></a>
+              <a class="canccu-list__row" href="#"><span class="canccu-list__icon"><svg class="canccu-i"><use href="#i-monitor"/></svg></span><span class="canccu-list__main"><p class="canccu-list__title">Screens</p><p class="canccu-list__meta">Slides, offline mark, web pages, burn-in</p></span><span class="canccu-list__end">10 settings<svg class="canccu-i"><use href="#i-right"/></svg></span></a>
+              <a class="canccu-list__row" href="#"><span class="canccu-list__icon"><svg class="canccu-i"><use href="#i-flag"/></svg></span><span class="canccu-list__main"><p class="canccu-list__title">Games</p><p class="canccu-list__meta">Sign-ups and rules</p></span><span class="canccu-list__end">1 setting<svg class="canccu-i"><use href="#i-right"/></svg></span></a>
+            </div></section>
+          </main></div>
+        </div></div>
+        <span class="pin" style="left:212px;top:52px">1</span>
+        <span class="pin" style="left:424px;top:52px">2</span>
+        <span class="pin" style="left:1316px;top:52px">3</span>
+        <span class="pin" style="left:232px;top:118px">4</span>
+        <span class="pin" style="left:232px;top:460px">5</span>
+        <span class="pin" style="left:232px;top:800px">6</span>
+        <span class="pin" style="left:488px;top:128px">7</span>
+        <span class="pin" style="left:1176px;top:136px">8</span>
+      </div>
+      <p class="shot__cap"><b>Desktop, 1440 px.</b> Settings: a form page, so the narrow 40rem column. Module names and what they hold, never ids (A2).</p>
+    </div>
+    <ol class="legend">
+      <li><span>1</span><div><b>The event's logo and name,</b> from the profile, on every page. The header is the surface colour, 56 px, on every module.</div></li>
+      <li><span>2</span><div><b>The event's dates and state:</b> Live, Upcoming or Archived, as a badge. Archived also adds a banner (see Errors).</div></li>
+      <li><span>3</span><div><b>Event time and its zone.</b> Organisers run the day from it, and it shows what the time-zone setting does (B5).</div></li>
+      <li><span>4</span><div><b>The Event menu,</b> grouped: running the event, its look, admin. Only pages this person may open are listed, so it never offers a dead end (B2, B3).</div></li>
+      <li><span>5</span><div><b>The current page,</b> marked with the primary tint and a bar. Health carries a count when something needs a look.</div></li>
+      <li><span>6</span><div><b>Who is signed in, and Sign out,</b> on every page of every module (only admin had it).</div></li>
+      <li><span>7</span><div><b>One title, once:</b> 28 px, the page's name. The header names the event, the menu the section, the title the page: nothing is said twice (B4).</div></li>
+      <li><span>8</span><div><b>Two widths:</b> 40rem for forms like this one, 64rem for workspaces (run of show, Studio, health).</div></li>
+    </ol>
+  </div>
+
+  <div class="row">
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell canccu-shell--phone">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><button class="canccu-button canccu-button--ghost canccu-button--sm" style="margin-left:auto"><svg class="canccu-i"><use href="#i-menu"/></svg>Menu</button></header>
+          <div class="canccu-content"><main class="canccu-main">
+            <div class="canccu-pagehead"><div><h1 class="canccu-pagehead__title">Settings</h1><p class="canccu-pagehead__desc">How each part of Demo Event behaves.</p></div></div>
+            <section class="canccu-card"><div class="canccu-list">
+              <a class="canccu-list__row" href="#"><span class="canccu-list__icon"><svg class="canccu-i"><use href="#i-sliders"/></svg></span><span class="canccu-list__main"><p class="canccu-list__title">General</p><p class="canccu-list__meta">UTC · English</p></span><span class="canccu-list__end"><svg class="canccu-i"><use href="#i-right"/></svg></span></a>
+              <a class="canccu-list__row" href="#"><span class="canccu-list__icon"><svg class="canccu-i"><use href="#i-calendar"/></svg></span><span class="canccu-list__main"><p class="canccu-list__title">Run of show</p><p class="canccu-list__meta">3 settings</p></span><span class="canccu-list__end"><svg class="canccu-i"><use href="#i-right"/></svg></span></a>
+              <a class="canccu-list__row" href="#"><span class="canccu-list__icon"><svg class="canccu-i"><use href="#i-bell"/></svg></span><span class="canccu-list__main"><p class="canccu-list__title">Notifications</p><p class="canccu-list__meta">2 settings</p></span><span class="canccu-list__end"><svg class="canccu-i"><use href="#i-right"/></svg></span></a>
+              <a class="canccu-list__row" href="#"><span class="canccu-list__icon"><svg class="canccu-i"><use href="#i-monitor"/></svg></span><span class="canccu-list__main"><p class="canccu-list__title">Screens</p><p class="canccu-list__meta">10 settings</p></span><span class="canccu-list__end"><svg class="canccu-i"><use href="#i-right"/></svg></span></a>
+              <a class="canccu-list__row" href="#"><span class="canccu-list__icon"><svg class="canccu-i"><use href="#i-flag"/></svg></span><span class="canccu-list__main"><p class="canccu-list__title">Games</p><p class="canccu-list__meta">1 setting</p></span><span class="canccu-list__end"><svg class="canccu-i"><use href="#i-right"/></svg></span></a>
+            </div></section>
+          </main></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Phone, 390 px.</b> A real viewport, so text stays 16 px (A1). The header keeps the event's name; the menu sits behind <b>Menu</b>.</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin" style="position:relative">
+          <div class="canccu-sheet">
+            <div class="canccu-sheet__head"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><button class="canccu-button canccu-button--ghost canccu-button--sm" style="margin-left:auto"><svg class="canccu-i"><use href="#i-x"/></svg>Close</button></div>
+            <div style="padding:14px 20px 0" class="canccu-spread canccu-small"><span class="canccu-muted">Sat 14 – Sun 15 Mar</span><span class="canccu-cluster"><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Live</span><span class="canccu-clock">18:42<small>UTC</small></span></span></div>
+            <nav class="canccu-menu" aria-label="Event"><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Run the event</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-calendar"/></svg>Run of show</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-bell"/></svg>Notifications</a></div><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Look</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-palette"/></svg>Theme studio</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-monitor"/></svg>Screen studio</a></div><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Admin</p><a class="canccu-menu__item" href="#" aria-current="page"><svg class="canccu-i"><use href="#i-sliders"/></svg>Settings</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-pulse"/></svg>Health</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-box"/></svg>Event profile</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-users"/></svg>People</a></div><div class="canccu-menu__foot"><div class="canccu-user"><span class="canccu-avatar">DO</span><div><p class="canccu-user__name">Demo Organiser</p><p class="canccu-user__role">Organiser</p></div></div><button class="canccu-button canccu-button--ghost canccu-button--lg" style="justify-content:flex-start"><svg class="canccu-i"><use href="#i-out"/></svg>Sign out</button></div></nav>
+          </div>
+        </div>
+      </div>
+      <p class="shot__cap"><b>The Event menu on a phone:</b> the same groups and items, 48 px targets, the current page marked, Sign out at the bottom. Nothing scrolls sideways (B2).</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell canccu-shell--phone">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><button class="canccu-button canccu-button--ghost canccu-button--sm" style="margin-left:auto"><svg class="canccu-i"><use href="#i-menu"/></svg>Menu</button></header>
+          <div class="canccu-content"><main class="canccu-main">
+            <div class="canccu-pagehead"><div><h1 class="canccu-pagehead__title">Theme studio</h1><p class="canccu-pagehead__desc">Draft · 2 changes, not published</p></div></div>
+            <nav class="canccu-tabs"><a href="#" aria-current="page">Brand kit</a><a href="#">Advanced</a><a href="#">History</a></nav>
+            <div class="canccu-notice"><svg class="canccu-i"><use href="#i-info"/></svg><div class="canccu-notice__body"><p class="canccu-notice__title">The sub-page row</p><p>Two to four tabs fit a phone. A longer row scrolls and fades at the edge, so the next tab shows it is there.</p></div></div>
+            <nav class="canccu-tabs" style="margin-top:0"><a href="#" aria-current="page">Live</a><a href="#">Devices</a><a href="#">Zones</a><a href="#">Schedule</a><a href="#">Content</a><a href="#">Ticker</a></nav>
+          </main></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Sub-pages.</b> A section's own pages are tabs under its title, on desktop and phone alike. Actions (Quick add, New topic) are buttons, not tabs.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="sign-in">
+  <p class="sheet__kicker">3 · Sign-in</p>
+  <h2 class="sheet__title">The first page an organiser sees</h2>
+  <p class="sheet__lead">The event's identity on a quiet backdrop drawn from its colours, one card, one button that says where it goes. Sign-in takes the theme's tokens but never its CSS, as today. Setup details for the person who installed the platform go to the server log and the setup guide, not this page (A5).</p>
+  <div class="sheet__covers"><span>A1</span><span>A5</span><span>E2 wording</span></div>
+  <div class="row">
+    <div class="shot">
+      <div class="frame frame--desktop frame--short">
+        <div class="frame__chrome"><i></i><i></i><i></i><span class="frame__url">/admin/sign-in</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-signin">
+          <div class="canccu-signin__top"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:5.25rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span></div>
+          <div class="canccu-signin__card">
+            <div><p class="canccu-overline">Organisers and crew</p><h1 class="canccu-signin__title" style="margin-top:6px">Sign in to Demo Event</h1><p class="canccu-muted" style="margin-top:8px">Use the Discord account you have a role with. You come back here signed in.</p></div>
+            <a class="canccu-button canccu-button--primary canccu-button--lg canccu-button--block" href="#"><svg class="canccu-i"><use href="#i-chat"/></svg>Continue with Discord</a>
+            <p class="canccu-small canccu-muted">No role yet? Sign in once anyway, then ask an event owner to give you one.</p>
+          </div>
+          <div class="canccu-signin__foot"><a href="#" style="color:inherit">Privacy</a><span>·</span><span>Sat 14 – Sun 15 Mar</span></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Desktop.</b> "Continue with Discord" names where the button goes (mockup 14).</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-signin">
+          <div class="canccu-signin__top" style="padding:1rem 1.25rem"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span></div>
+          <div class="canccu-signin__card" style="align-self:start;margin-top:3rem;padding:1.5rem">
+            <div><p class="canccu-overline">Organisers and crew</p><h1 class="canccu-signin__title" style="margin-top:6px;font-size:1.5rem">Sign in to Demo Event</h1><p class="canccu-muted" style="margin-top:8px">Use the Discord account you have a role with.</p></div>
+            <a class="canccu-button canccu-button--primary canccu-button--lg canccu-button--block" href="#"><svg class="canccu-i"><use href="#i-chat"/></svg>Continue with Discord</a>
+          </div>
+          <div class="canccu-signin__foot"><a href="#" style="color:inherit">Privacy</a></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Phone.</b> The same card, full width.</p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="shot">
+      <div class="frame frame--phone" style="height:640px">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-signin">
+          <div class="canccu-signin__top" style="padding:1rem 1.25rem"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span></div>
+          <div class="canccu-signin__card" style="align-self:start;margin-top:1.5rem;padding:1.5rem">
+            <h1 class="canccu-signin__title" style="font-size:1.5rem">Sign in to Demo Event</h1>
+            <div class="canccu-notice canccu-notice--warn"><svg class="canccu-i"><use href="#i-warn"/></svg><div class="canccu-notice__body"><p class="canccu-notice__title">Sign-in didn't finish</p><p>Discord was closed before it said yes. Try again.</p></div></div>
+            <a class="canccu-button canccu-button--primary canccu-button--lg canccu-button--block" href="#"><svg class="canccu-i"><use href="#i-chat"/></svg>Try again with Discord</a>
+          </div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Failed.</b> The same page with a notice, not a new page.</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone" style="height:640px">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-signin">
+          <div class="canccu-signin__top" style="padding:1rem 1.25rem"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span></div>
+          <div class="canccu-signin__card" style="align-self:start;margin-top:1.5rem;padding:1.5rem">
+            <h1 class="canccu-signin__title" style="font-size:1.5rem">Sign in to Demo Event</h1>
+            <div class="canccu-notice"><svg class="canccu-i"><use href="#i-info"/></svg><div class="canccu-notice__body"><p class="canccu-notice__title">Sign-in isn't set up yet</p><p>The person who installed the platform finishes it in setup. Nothing for you to do here.</p></div></div>
+            <button class="canccu-button canccu-button--primary canccu-button--lg canccu-button--block" disabled><svg class="canccu-i"><use href="#i-chat"/></svg>Continue with Discord</button>
+          </div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Not set up.</b> No env var names on the page; they stay in the log and the setup guide (A5).</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone" style="height:640px">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-signin">
+          <div class="canccu-signin__top" style="padding:1rem 1.25rem"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span></div>
+          <div class="canccu-signin__card" style="align-self:start;margin-top:1.5rem;padding:1.5rem">
+            <div><p class="canccu-overline">First start</p><h1 class="canccu-signin__title" style="margin-top:6px;font-size:1.5rem">Become the owner</h1><p class="canccu-muted" style="margin-top:8px">Type the first-run code from the setup log, then sign in. That Discord account owns the platform.</p></div>
+            <div class="canccu-field"><label class="canccu-field__label">First-run code</label><input class="canccu-input" style="font-family:var(--canccu-font-mono);letter-spacing:.12em" value="K7Q4-9WXP"></div>
+            <button class="canccu-button canccu-button--primary canccu-button--lg canccu-button--block"><svg class="canccu-i"><use href="#i-chat"/></svg>Continue with Discord</button>
+          </div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>First run.</b> Same card; one field; the same button.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="admin">
+  <p class="sheet__kicker">4 · Pages in the shell: admin</p>
+  <h2 class="sheet__title">Settings of a module, health, event profile, people</h2>
+  <p class="sheet__lead">Admin's pages move into the shell and the language: grouped fields with hints and units, a sticky save bar, a health page that lists every module by name, and empty states with a next step.</p>
+  <div class="sheet__covers"><span>A1</span><span>A2</span><span>A3</span><span>A4</span><span>A5</span><span>F4</span></div>
+
+  <div class="row">
+    <div class="shot">
+      <div class="frame frame--desktop frame--tall">
+        <div class="frame__chrome"><i></i><i></i><i></i><span class="frame__url">/admin/settings/screen</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:5.25rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><span class="canccu-header__sep"></span><span class="canccu-header__meta">Sat 14 – Sun 15 Mar</span><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Live</span><div class="canccu-header__end"><span class="canccu-clock">18:42<small>UTC</small></span></div></header>
+          <nav class="canccu-menu" aria-label="Event"><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Run the event</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-calendar"/></svg>Run of show</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-bell"/></svg>Notifications</a></div><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Look</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-palette"/></svg>Theme studio</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-monitor"/></svg>Screen studio</a></div><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Admin</p><a class="canccu-menu__item" href="#" aria-current="page"><svg class="canccu-i"><use href="#i-sliders"/></svg>Settings</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-pulse"/></svg>Health</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-box"/></svg>Event profile</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-users"/></svg>People</a></div><div class="canccu-menu__foot"><div class="canccu-user"><span class="canccu-avatar">DO</span><div><p class="canccu-user__name">Demo Organiser</p><p class="canccu-user__role">Organiser</p></div></div><button class="canccu-button canccu-button--ghost" style="justify-content:flex-start"><svg class="canccu-i"><use href="#i-out"/></svg>Sign out</button></div></nav>
+          <div class="canccu-content" style="padding-bottom:0"><main class="canccu-main canccu-main--narrow">
+            <div class="canccu-pagehead"><div><a class="canccu-crumb" href="#"><svg class="canccu-i"><use href="#i-left"/></svg>Settings</a><h1 class="canccu-pagehead__title">Screens</h1><p class="canccu-pagehead__desc">How every screen of Demo Event behaves. Zones and content live in Screen studio.</p></div></div>
+            <div class="canccu-notice canccu-notice--ok"><svg class="canccu-i"><use href="#i-check-circle"/></svg><div class="canccu-notice__body"><p class="canccu-notice__title">Saved</p><p>Every screen picks up the change within a second.</p></div></div>
+            <section class="canccu-card"><div class="canccu-card__head"><div><h2 class="canccu-card__title">Playing</h2><p class="canccu-card__desc">What a screen does between slides.</p></div></div>
+              <div class="canccu-card__body canccu-form">
+                <div class="canccu-form__row">
+                  <div class="canccu-field"><label class="canccu-field__label">Seconds per photo</label><span class="canccu-inputgroup canccu-inputgroup--short"><input class="canccu-input canccu-num" value="8"><span class="canccu-inputgroup__add">seconds</span></span></div>
+                  <div class="canccu-field"><label class="canccu-field__label">Least time between breaks</label><span class="canccu-inputgroup canccu-inputgroup--short"><input class="canccu-input canccu-num" value="60"><span class="canccu-inputgroup__add">seconds</span></span></div>
+                </div>
+                <div class="canccu-field"><label class="canccu-field__label">Ticker look</label><span class="canccu-select"><span class="canccu-input">Standard</span><svg class="canccu-i"><use href="#i-down"/></svg></span></div>
+                <div class="canccu-check"><span class="canccu-check__box is-on"><svg class="canccu-i" style="width:14px;height:14px;stroke-width:3"><use href="#i-check"/></svg></span><span class="canccu-check__label">Show progress bars</span><p class="canccu-field__hint">A thin bar under each rotating slide.</p></div>
+              </div></section>
+            <section class="canccu-card"><div class="canccu-card__head"><div><h2 class="canccu-card__title">When the network is slow</h2><p class="canccu-card__desc">How long a screen waits before it says so.</p></div></div>
+              <div class="canccu-card__body canccu-form">
+                <div class="canccu-form__row">
+                  <div class="canccu-field"><label class="canccu-field__label">Heartbeat</label><span class="canccu-inputgroup canccu-inputgroup--short"><input class="canccu-input canccu-num" value="15"><span class="canccu-inputgroup__add">seconds</span></span><p class="canccu-field__hint">How often a screen checks in.</p></div>
+                  <div class="canccu-field"><label class="canccu-field__label">Mark offline after</label><span class="canccu-inputgroup canccu-inputgroup--short"><input class="canccu-input canccu-num" value="45"><span class="canccu-inputgroup__add">seconds</span></span><p class="canccu-field__hint">Shorter: more false alarms on a slow uplink.</p></div>
+                </div>
+              </div></section>
+          </main>
+          <div style="position:sticky;bottom:0;margin:1.5rem -2.5rem 0;padding:14px 2.5rem 18px;background:color-mix(in srgb,var(--canccu-color-surface) 94%,transparent);border-top:1px solid var(--canccu-color-border)"><div class="canccu-main canccu-main--narrow"><div class="canccu-spread"><span class="canccu-small canccu-muted">1 change not saved</span><span class="canccu-cluster"><button class="canccu-button canccu-button--ghost">Undo</button><button class="canccu-button canccu-button--primary">Save</button></span></div></div></div>
+          </div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Settings of a module.</b> Fields grouped in cards by what they are for, every number with its unit and a hint. "Saved" is a notice; the save bar stays at the bottom while you scroll (A4).</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="shot">
+      <div class="frame frame--desktop">
+        <div class="frame__chrome"><i></i><i></i><i></i><span class="frame__url">/admin/health-view</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:5.25rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><span class="canccu-header__sep"></span><span class="canccu-header__meta">Sat 14 – Sun 15 Mar</span><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Live</span><div class="canccu-header__end"><span class="canccu-clock">18:42<small>UTC</small></span></div></header>
+          <nav class="canccu-menu" aria-label="Event"><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Run the event</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-calendar"/></svg>Run of show</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-bell"/></svg>Notifications</a></div><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Look</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-palette"/></svg>Theme studio</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-monitor"/></svg>Screen studio</a></div><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Admin</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-sliders"/></svg>Settings</a><a class="canccu-menu__item" href="#" aria-current="page"><svg class="canccu-i"><use href="#i-pulse"/></svg>Health<span class="canccu-badge canccu-badge--degraded canccu-badge--dot">1</span></a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-box"/></svg>Event profile</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-users"/></svg>People</a></div><div class="canccu-menu__foot"><div class="canccu-user"><span class="canccu-avatar">DO</span><div><p class="canccu-user__name">Demo Organiser</p><p class="canccu-user__role">Organiser</p></div></div><button class="canccu-button canccu-button--ghost" style="justify-content:flex-start"><svg class="canccu-i"><use href="#i-out"/></svg>Sign out</button></div></nav>
+          <div class="canccu-content"><main class="canccu-main">
+            <div class="canccu-pagehead"><div><h1 class="canccu-pagehead__title">Health</h1><p class="canccu-pagehead__desc">Every part of the platform, checked every 10 seconds. Last check 18:42:05.</p></div><button class="canccu-button canccu-button--secondary"><svg class="canccu-i"><use href="#i-refresh"/></svg>Check now</button></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+              <div class="canccu-card canccu-stat"><div class="canccu-stat__value">7</div><div class="canccu-stat__label">parts</div></div>
+              <div class="canccu-card canccu-stat"><div class="canccu-stat__value" style="color:var(--canccu-color-status-ok)">6</div><div class="canccu-stat__label">running</div></div>
+              <div class="canccu-card canccu-stat"><div class="canccu-stat__value" style="color:var(--canccu-color-status-degraded)">1</div><div class="canccu-stat__label">slow</div></div>
+              <div class="canccu-card canccu-stat"><div class="canccu-stat__value">0</div><div class="canccu-stat__label">down</div></div>
+            </div>
+            <section class="canccu-card"><table class="canccu-table">
+              <thead><tr><th>Part</th><th>Status</th><th>What it says</th><th>Version</th><th class="is-num">Answered in</th></tr></thead>
+              <tbody>
+                <tr><td><b>Admin</b><span class="canccu-table__sub">Sign-in, settings, people</span></td><td><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Running</span></td><td class="canccu-muted">—</td><td class="canccu-num">0.4.0</td><td class="is-num">3 ms</td></tr>
+                <tr><td><b>Run of show</b><span class="canccu-table__sub">agenda</span></td><td><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Running</span></td><td class="canccu-muted">—</td><td class="canccu-num">0.4.0</td><td class="is-num">12 ms</td></tr>
+                <tr><td><b>Notifications</b><span class="canccu-table__sub">notify</span></td><td><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Running</span></td><td class="canccu-muted">—</td><td class="canccu-num">0.4.0</td><td class="is-num">9 ms</td></tr>
+                <tr><td><b>Screens</b><span class="canccu-table__sub">screen</span></td><td><span class="canccu-badge canccu-badge--degraded canccu-badge--dot">Slow</span></td><td>3 of 4 screens online; Café TV offline since 18:40</td><td class="canccu-num">0.4.0</td><td class="is-num">41 ms</td></tr>
+                <tr><td><b>Screen rendering</b><span class="canccu-table__sub">screen-render</span></td><td><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Running</span></td><td class="canccu-muted">—</td><td class="canccu-num">0.4.0</td><td class="is-num">18 ms</td></tr>
+                <tr><td><b>Themes</b><span class="canccu-table__sub">theming</span></td><td><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Running</span></td><td class="canccu-muted">—</td><td class="canccu-num">0.4.0</td><td class="is-num">7 ms</td></tr>
+                <tr><td><b>Events</b><span class="canccu-table__sub">tenants</span></td><td><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Running</span></td><td class="canccu-muted">—</td><td class="canccu-num">0.4.0</td><td class="is-num">5 ms</td></tr>
+              </tbody></table></section>
+          </main></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Health.</b> A workspace page (64rem). Every module by name, with the id under it for whoever reads logs; a status word, what the module says, a real version. The test module is not listed (A2, A3).</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell canccu-shell--phone">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><button class="canccu-button canccu-button--ghost canccu-button--sm" style="margin-left:auto"><svg class="canccu-i"><use href="#i-menu"/></svg>Menu</button></header>
+          <div class="canccu-content"><main class="canccu-main">
+            <div class="canccu-pagehead"><div><h1 class="canccu-pagehead__title">Event profile</h1><p class="canccu-pagehead__desc">The event's name, modules, settings and look, as one file.</p></div></div>
+            <section class="canccu-card"><div class="canccu-card__head"><div><h2 class="canccu-card__title">Loaded</h2><p class="canccu-card__desc">Demo Event · today 17:58 by Demo Organiser</p></div><span class="canccu-badge canccu-badge--ok canccu-badge--dot">In use</span></div>
+              <div class="canccu-card__body"><dl class="canccu-dl" style="grid-template-columns:6rem 1fr"><dt>Modules</dt><dd>9</dd><dt>Theme</dt><dd>Default</dd><dt>Time zone</dt><dd>UTC</dd></dl></div></section>
+            <section class="canccu-card"><div class="canccu-card__head"><div><h2 class="canccu-card__title">Load a profile</h2><p class="canccu-card__desc">Replaces settings and look. Run of show and people stay.</p></div></div>
+              <div class="canccu-card__body" style="display:grid;gap:10px">
+                <button class="canccu-button canccu-button--secondary canccu-button--block"><svg class="canccu-i"><use href="#i-refresh"/></svg>Load the demo profile again</button>
+                <button class="canccu-button canccu-button--secondary canccu-button--block"><svg class="canccu-i"><use href="#i-upload"/></svg>Upload a profile…</button>
+              </div></section>
+          </main></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Event profile.</b> What is loaded, said in a card; the two actions with what they change (A5).</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell canccu-shell--phone">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><button class="canccu-button canccu-button--ghost canccu-button--sm" style="margin-left:auto"><svg class="canccu-i"><use href="#i-menu"/></svg>Menu</button></header>
+          <div class="canccu-content"><main class="canccu-main">
+            <div class="canccu-pagehead"><div><h1 class="canccu-pagehead__title">People</h1><p class="canccu-pagehead__desc">Who may open which pages of Demo Event.</p></div></div>
+            <section class="canccu-card"><div class="canccu-list">
+              <div class="canccu-list__row"><span class="canccu-avatar">DO</span><span class="canccu-list__main"><p class="canccu-list__title">Demo Organiser</p><p class="canccu-list__meta">You</p></span><span class="canccu-badge canccu-badge--primary">Owner</span></div>
+            </div></section>
+            <section class="canccu-card"><div class="canccu-empty" style="padding:2rem 1rem"><span class="canccu-empty__icon"><svg class="canccu-i"><use href="#i-users"/></svg></span><p class="canccu-empty__title">Only you so far</p><p class="canccu-empty__text">People appear here after they sign in once. Then give them a role.</p><div class="canccu-cluster"><button class="canccu-button canccu-button--primary">Copy the sign-in link</button></div></div></section>
+          </main></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>People,</b> with its empty state and the next step, not an empty table (A5, F4).</p>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="run-of-show">
+  <p class="sheet__kicker">5 · Pages in the shell: run of show</p>
+  <h2 class="sheet__title">The day, and one item</h2>
+  <p class="sheet__lead">The busiest organiser page on event day, so it gets the most care: the timeline with the now line in the primary colour, delays as a badge with the planned time struck through, and what is on now beside it. On a phone the two things done most, Quick add and Delay, sit in a bottom bar within thumb reach.</p>
+  <div class="sheet__covers"><span>B1</span><span>B2</span><span>B4</span><span>B5</span><span>F1</span><span>F2</span><span>F4</span></div>
+
+  <div class="row">
+    <div class="shot">
+      <div class="frame frame--desktop">
+        <div class="frame__chrome"><i></i><i></i><i></i><span class="frame__url">/agenda/</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:5.25rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><span class="canccu-header__sep"></span><span class="canccu-header__meta">Sat 14 – Sun 15 Mar</span><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Live</span><div class="canccu-header__end"><span class="canccu-clock">18:42<small>UTC</small></span></div></header>
+          <nav class="canccu-menu" aria-label="Event"><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Run the event</p><a class="canccu-menu__item" href="#" aria-current="page"><svg class="canccu-i"><use href="#i-calendar"/></svg>Run of show</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-bell"/></svg>Notifications</a></div><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Look</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-palette"/></svg>Theme studio</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-monitor"/></svg>Screen studio</a></div><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Admin</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-sliders"/></svg>Settings</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-pulse"/></svg>Health</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-box"/></svg>Event profile</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-users"/></svg>People</a></div><div class="canccu-menu__foot"><div class="canccu-user"><span class="canccu-avatar">DO</span><div><p class="canccu-user__name">Demo Organiser</p><p class="canccu-user__role">Organiser</p></div></div><button class="canccu-button canccu-button--ghost" style="justify-content:flex-start"><svg class="canccu-i"><use href="#i-out"/></svg>Sign out</button></div></nav>
+          <div class="canccu-content"><main class="canccu-main">
+            <div class="canccu-pagehead"><div><h1 class="canccu-pagehead__title">Run of show</h1><p class="canccu-pagehead__desc">Saturday 14 March · 7 items · times in UTC</p></div><div class="canccu-cluster"><a class="canccu-button canccu-button--secondary" href="#"><svg class="canccu-i"><use href="#i-timer"/></svg>Delay…</a><a class="canccu-button canccu-button--primary" href="#"><svg class="canccu-i"><use href="#i-plus"/></svg>Quick add</a></div></div>
+            <nav class="canccu-tabs"><a href="#" aria-current="page">Day</a><a href="#">Templates</a></nav>
+            <div class="canccu-spread"><div class="canccu-dayswitch"><button class="canccu-button canccu-button--ghost canccu-button--icon canccu-button--sm" aria-label="Previous day"><svg class="canccu-i"><use href="#i-left"/></svg></button><span class="canccu-segmented"><span class="is-on">Sat 14 Mar</span><span>Sun 15 Mar</span></span><button class="canccu-button canccu-button--ghost canccu-button--icon canccu-button--sm" aria-label="Next day"><svg class="canccu-i"><use href="#i-right"/></svg></button></div><span class="canccu-select" style="width:12rem"><span class="canccu-input" style="min-height:2.25rem">Everyone and crew</span><svg class="canccu-i"><use href="#i-down"/></svg></span></div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 19rem;gap:1.5rem;align-items:start">
+              <section class="canccu-card"><div class="canccu-timeline">
+                <a class="canccu-slot is-done" href="#"><span class="canccu-slot__time">17:00</span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Doors open</span><span class="canccu-slot__meta">Doors · Entrance · everyone</span></span><span class="canccu-badge canccu-badge--ok">Done</span></a>
+                <a class="canccu-slot is-now" href="#"><span class="canccu-slot__time">18:00</span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Dinner <span class="canccu-badge canccu-badge--primary canccu-badge--solid">Now</span><span class="canccu-badge canccu-badge--degraded">+15 min</span></span><span class="canccu-slot__meta">Meal · Café · everyone · until 19:15 <s>19:00</s></span></span><svg class="canccu-i canccu-muted"><use href="#i-right"/></svg></a>
+                <div class="canccu-nowline"><span>18:42</span></div>
+                <a class="canccu-slot" href="#"><span class="canccu-slot__time">19:45<s>19:30</s></span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Demo Game Cup: semi-finals <span class="canccu-badge canccu-badge--degraded">+15 min</span></span><span class="canccu-slot__meta">Tournament · Stage · from Games</span></span><svg class="canccu-i canccu-muted"><use href="#i-right"/></svg></a>
+                <a class="canccu-slot" href="#"><span class="canccu-slot__time">20:15<s>20:00</s></span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Board games corner</span><span class="canccu-slot__meta">Activity · Café · attendees</span></span><svg class="canccu-i canccu-muted"><use href="#i-right"/></svg></a>
+                <a class="canccu-slot" href="#"><span class="canccu-slot__time">20:30<s>20:15</s></span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Crew briefing <span class="canccu-badge">Crew only</span></span><span class="canccu-slot__meta">Other · Back office · never on a screen</span></span><svg class="canccu-i canccu-muted"><use href="#i-right"/></svg></a>
+                <a class="canccu-slot" href="#"><span class="canccu-slot__time">21:15<s>21:00</s></span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Demo Game Cup: grand final</span><span class="canccu-slot__meta">Tournament · Stage · reminders 30 and 10 min before</span></span><svg class="canccu-i canccu-muted"><use href="#i-right"/></svg></a>
+                <a class="canccu-slot" href="#"><span class="canccu-slot__time">01:00</span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Quiet hours</span><span class="canccu-slot__meta">until 08:00 · holds pushes that can wait</span></span><svg class="canccu-i canccu-muted"><use href="#i-right"/></svg></a>
+              </div></section>
+              <div class="canccu-stack">
+                <section class="canccu-card"><div class="canccu-card__head"><div><p class="canccu-overline">On now</p><h2 class="canccu-card__title" style="margin-top:4px">Dinner</h2><p class="canccu-card__desc">Café · until 19:15 · 33 min left</p></div></div>
+                  <div class="canccu-card__body" style="display:grid;gap:8px"><a class="canccu-button canccu-button--primary canccu-button--block" href="#"><svg class="canccu-i"><use href="#i-timer"/></svg>Delay Dinner…</a><a class="canccu-button canccu-button--secondary canccu-button--block" href="#"><svg class="canccu-i"><use href="#i-cast"/></svg>Show on screens now</a></div></section>
+                <section class="canccu-card"><div class="canccu-card__head"><div><p class="canccu-overline">What people see</p></div></div><div class="canccu-card__body"><dl class="canccu-dl" style="grid-template-columns:5.5rem 1fr"><dt>Screens</dt><dd>Now Dinner +15, next semi-finals 19:45</dd><dt>Hub</dt><dd>The same</dd><dt>Discord</dt><dd>Posted 18:31: "Dinner runs 15 min late"</dd></dl></div></section>
+              </div>
+            </div>
+          </main></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Day, desktop.</b> A workspace (64rem). The now line is primary, not the error red (F2). Times follow the event's language (B5). Every button reads, link or not (B1).</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell canccu-shell--phone">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><button class="canccu-button canccu-button--ghost canccu-button--sm" style="margin-left:auto"><svg class="canccu-i"><use href="#i-menu"/></svg>Menu</button></header>
+          <div class="canccu-content" style="padding-bottom:0"><main class="canccu-main" style="gap:1.25rem">
+            <div class="canccu-pagehead"><div><h1 class="canccu-pagehead__title">Run of show</h1><p class="canccu-pagehead__desc">Sat 14 Mar · times in UTC</p></div></div>
+            <nav class="canccu-tabs"><a href="#" aria-current="page">Day</a><a href="#">Templates</a></nav>
+            <span class="canccu-segmented" style="display:flex"><span class="is-on" style="flex:1;text-align:center">Sat 14 Mar</span><span style="flex:1;text-align:center">Sun 15 Mar</span></span>
+            <section class="canccu-card" style="margin:0 -.25rem"><div class="canccu-timeline">
+              <a class="canccu-slot is-done" href="#" style="grid-template-columns:3.5rem .75rem minmax(0,1fr);padding:.75rem 1rem"><span class="canccu-slot__time">17:00</span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Doors open</span><span class="canccu-slot__meta">Entrance</span></span></a>
+              <a class="canccu-slot is-now" href="#" style="grid-template-columns:3.5rem .75rem minmax(0,1fr);padding:.75rem 1rem"><span class="canccu-slot__time">18:00</span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Dinner <span class="canccu-badge canccu-badge--primary canccu-badge--solid">Now</span><span class="canccu-badge canccu-badge--degraded">+15</span></span><span class="canccu-slot__meta">Café · until 19:15</span></span></a>
+              <div class="canccu-nowline" style="margin:0 1rem"><span>18:42</span></div>
+              <a class="canccu-slot" href="#" style="grid-template-columns:3.5rem .75rem minmax(0,1fr);padding:.75rem 1rem"><span class="canccu-slot__time">19:45<s>19:30</s></span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Demo Game Cup: semi-finals</span><span class="canccu-slot__meta">Stage · +15 min</span></span></a>
+              <a class="canccu-slot" href="#" style="grid-template-columns:3.5rem .75rem minmax(0,1fr);padding:.75rem 1rem"><span class="canccu-slot__time">20:15<s>20:00</s></span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Board games corner</span><span class="canccu-slot__meta">Café</span></span></a>
+              <a class="canccu-slot" href="#" style="grid-template-columns:3.5rem .75rem minmax(0,1fr);padding:.75rem 1rem"><span class="canccu-slot__time">20:30<s>20:15</s></span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Crew briefing <span class="canccu-badge">Crew</span></span><span class="canccu-slot__meta">Back office</span></span></a>
+              <a class="canccu-slot" href="#" style="grid-template-columns:3.5rem .75rem minmax(0,1fr);padding:.75rem 1rem"><span class="canccu-slot__time">21:15<s>21:00</s></span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Demo Game Cup: grand final</span><span class="canccu-slot__meta">Stage</span></span></a>
+            </div></section>
+          </main></div>
+          <div class="canccu-actionbar"><a class="canccu-button canccu-button--secondary canccu-button--lg" href="#"><svg class="canccu-i"><use href="#i-timer"/></svg>Delay…</a><a class="canccu-button canccu-button--primary canccu-button--lg" href="#"><svg class="canccu-i"><use href="#i-plus"/></svg>Quick add</a></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Day, phone.</b> One column, the bottom bar for the two live actions. The tabs fit; nothing scrolls sideways (B2).</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell canccu-shell--phone">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><button class="canccu-button canccu-button--ghost canccu-button--sm" style="margin-left:auto"><svg class="canccu-i"><use href="#i-menu"/></svg>Menu</button></header>
+          <div class="canccu-content"><main class="canccu-main" style="gap:1.25rem">
+            <div class="canccu-pagehead"><div><a class="canccu-crumb" href="#"><svg class="canccu-i"><use href="#i-left"/></svg>Run of show</a><h1 class="canccu-pagehead__title">Dinner</h1><div class="canccu-cluster" style="margin-top:8px"><span class="canccu-badge canccu-badge--primary canccu-badge--solid">Now</span><span class="canccu-badge canccu-badge--degraded">+15 min</span><span class="canccu-badge">Everyone</span></div></div></div>
+            <section class="canccu-card"><div class="canccu-card__body"><dl class="canccu-dl" style="grid-template-columns:5.75rem 1fr"><dt>When</dt><dd>Sat 14 Mar, 18:00–19:15<br><span class="canccu-muted canccu-small">planned until 19:00</span></dd><dt>Where</dt><dd>Café</dd><dt>Tells</dt><dd>Screens, Discord, phones</dd></dl></div></section>
+            <div style="display:grid;gap:8px">
+              <a class="canccu-button canccu-button--primary canccu-button--lg" href="#"><svg class="canccu-i"><use href="#i-timer"/></svg>Delay…</a>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><a class="canccu-button canccu-button--secondary" href="#"><svg class="canccu-i"><use href="#i-cast"/></svg>On screens now</a><a class="canccu-button canccu-button--secondary" href="#"><svg class="canccu-i"><use href="#i-pencil"/></svg>Edit or move</a></div>
+              <a class="canccu-button canccu-button--danger-ghost" href="#">Cancel this item…</a>
+            </div>
+            <section class="canccu-card"><div class="canccu-card__head"><h2 class="canccu-card__title">Changes</h2></div><div class="canccu-card__body"><ul class="canccu-history" style="margin:0;padding:0"><li><span class="canccu-muted canccu-num">18:31</span><span><b>Demo Organiser</b> moved the end 19:00 → 19:15</span></li><li><span class="canccu-muted canccu-num">17:58</span><span><b>Demo Organiser</b> added it</span></li></ul></div></section>
+          </main></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Item, phone.</b> The audit's empty blue and unreadable red buttons, fixed: one primary, two secondary, and Cancel as a quiet danger link that asks first (B1).</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin" style="position:relative">
+          <div class="canccu-sheet">
+            <div class="canccu-sheet__head"><span class="canccu-header__title">Quick add · Saturday</span><button class="canccu-button canccu-button--ghost canccu-button--sm" style="margin-left:auto"><svg class="canccu-i"><use href="#i-x"/></svg>Close</button></div>
+            <div style="padding:1.25rem 1rem;display:grid;gap:1.25rem;overflow:auto">
+              <div class="canccu-field"><span class="canccu-field__label">What</span>
+                <p class="canccu-field__hint">Your templates</p>
+                <div class="canccu-chips"><span class="canccu-chip is-on">Food</span><span class="canccu-chip">Ceremony</span><span class="canccu-chip">Game session</span></div>
+                <p class="canccu-field__hint" style="margin-top:6px">Or a kind</p>
+                <div class="canccu-chips"><span class="canccu-chip">Doors</span><span class="canccu-chip">Tournament</span><span class="canccu-chip">Activity</span><span class="canccu-chip">Other</span></div>
+              </div>
+              <div class="canccu-field"><label class="canccu-field__label">Title</label><input class="canccu-input" value="Pizza delivery"></div>
+              <div class="canccu-form__row"><div class="canccu-field"><label class="canccu-field__label">Starts</label><input class="canccu-input canccu-num" value="19:30"></div><div class="canccu-field"><label class="canccu-field__label">Where</label><input class="canccu-input" value="Café"></div></div>
+              <div class="canccu-field"><span class="canccu-field__label">Length</span><div class="canccu-chips"><span class="canccu-chip">15 min</span><span class="canccu-chip is-on">30 min</span><span class="canccu-chip">1 h</span><span class="canccu-chip">Other…</span></div></div>
+            </div>
+            <div class="canccu-actionbar" style="margin-top:auto"><button class="canccu-button canccu-button--primary canccu-button--lg">Add at 19:30</button></div>
+          </div>
+        </div>
+      </div>
+      <p class="shot__cap"><b>Quick add.</b> A template wins over the kind it is made of, so each choice shows once: no Ceremony twice, no Food beside Meal (F1).</p>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="studio">
+  <p class="sheet__kicker">6 · Pages in the shell: Theme studio</p>
+  <h2 class="sheet__title">The Studio frame: mockup 12, inside the shell</h2>
+  <p class="sheet__lead">The brand kit's layout is mockup 12's (the build is the theming issue); this sheet shows how it sits in the shell. The title row carries the draft's state in words and the three actions, Discard, Preview and Publish, together. Previews sit beside the form, not below it.</p>
+  <div class="sheet__covers"><span>B2</span><span>B4</span><span>C2–C4 frame side</span></div>
+  <div class="row">
+    <div class="shot">
+      <div class="frame frame--desktop">
+        <div class="frame__chrome"><i></i><i></i><i></i><span class="frame__url">/theming/studio/</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:5.25rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><span class="canccu-header__sep"></span><span class="canccu-header__meta">Sat 14 – Sun 15 Mar</span><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Live</span><div class="canccu-header__end"><span class="canccu-clock">18:42<small>UTC</small></span></div></header>
+          <nav class="canccu-menu" aria-label="Event"><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Run the event</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-calendar"/></svg>Run of show</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-bell"/></svg>Notifications</a></div><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Look</p><a class="canccu-menu__item" href="#" aria-current="page"><svg class="canccu-i"><use href="#i-palette"/></svg>Theme studio</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-monitor"/></svg>Screen studio</a></div><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Admin</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-sliders"/></svg>Settings</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-pulse"/></svg>Health</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-box"/></svg>Event profile</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-users"/></svg>People</a></div><div class="canccu-menu__foot"><div class="canccu-user"><span class="canccu-avatar">DO</span><div><p class="canccu-user__name">Demo Organiser</p><p class="canccu-user__role">Organiser</p></div></div><button class="canccu-button canccu-button--ghost" style="justify-content:flex-start"><svg class="canccu-i"><use href="#i-out"/></svg>Sign out</button></div></nav>
+          <div class="canccu-content"><main class="canccu-main">
+            <div class="canccu-pagehead"><div><h1 class="canccu-pagehead__title">Theme studio</h1><p class="canccu-pagehead__desc"><span class="canccu-badge canccu-badge--accent" style="margin-right:6px">Draft</span>2 changes since the published theme · only you are editing</p></div><div class="canccu-cluster"><button class="canccu-button canccu-button--ghost">Discard draft</button><button class="canccu-button canccu-button--secondary"><svg class="canccu-i"><use href="#i-eye"/></svg>Preview on a screen…</button><button class="canccu-button canccu-button--primary">Publish</button></div></div>
+            <nav class="canccu-tabs"><a href="#" aria-current="page">Brand kit</a><a href="#">Advanced</a><a href="#">History</a></nav>
+            <div style="display:grid;grid-template-columns:21rem minmax(0,1fr);gap:1.5rem;align-items:start">
+              <section class="canccu-card"><div class="canccu-card__body canccu-form">
+                <div class="canccu-field"><span class="canccu-field__label">Logo</span><div class="canccu-drop" style="padding:.75rem"><span class="canccu-drop__thumb"><svg style="width:56px;height:19px"><use href="#logo-demo"/></svg></span><div style="flex:1"><b class="canccu-small">logo.svg</b><p class="canccu-field__hint">Drop to replace</p></div></div></div>
+                <div class="canccu-form__row"><div class="canccu-field"><span class="canccu-field__label">Primary</span><span class="canccu-colorfield"><span class="canccu-colorfield__swatch" style="background:var(--canccu-color-primary)"></span><input class="canccu-input" value="#3B82F6" style="max-width:6.5rem"></span></div><div class="canccu-field"><span class="canccu-field__label">Accent</span><span class="canccu-colorfield"><span class="canccu-colorfield__swatch" style="background:var(--canccu-color-accent)"></span><input class="canccu-input" value="#F59E0B" style="max-width:6.5rem"></span></div></div>
+                <div class="canccu-field"><span class="canccu-field__label">Scheme</span><span class="canccu-segmented"><span class="is-on">Dark</span><span>Light</span></span></div>
+                <div class="canccu-field"><span class="canccu-field__label">Text font</span><span class="canccu-select"><span class="canccu-input">System font</span><svg class="canccu-i"><use href="#i-down"/></svg></span></div>
+                <div class="canccu-notice canccu-notice--ok" style="font-size:.875rem"><svg class="canccu-i"><use href="#i-check-circle"/></svg><div class="canccu-notice__body"><p class="canccu-notice__title">Ready to publish</p><p>Every contrast rule passes. Text on primary is near-black (4.9:1).</p></div></div>
+              </div></section>
+              <section class="canccu-card"><div class="canccu-card__head"><h2 class="canccu-card__title">Previews</h2><span class="canccu-segmented"><span class="is-on">Screen</span><span>Phone</span><span>Admin</span><span>Discord</span></span></div>
+                <div class="canccu-card__body">
+                  <div style="aspect-ratio:16/9;container-type:inline-size;border-radius:10px;overflow:hidden;position:relative;box-shadow:0 0 0 1px var(--canccu-color-border)">
+                    <div class="canccu-surface--screen">
+                      <div class="scr-head"><svg class="scr-logo" viewBox="0 0 240 80" style="width:7.8cqw"><use href="#logo-demo"/></svg><span class="scr-event">Demo Event</span><span class="scr-zone">Main hall</span><span class="scr-clock">18:42</span></div>
+                      <div class="scr-body" style="display:grid;grid-template-columns:2fr 1fr;gap:1.6cqw">
+                        <div class="scr-panel" style="padding:3cqw;display:grid;align-content:center;gap:1cqw;background:linear-gradient(135deg,color-mix(in srgb,var(--canccu-color-primary) 22%,var(--canccu-color-surface)),var(--canccu-color-surface))"><span class="scr-kicker">Tonight on stage</span><span class="scr-h1">Demo Game Cup<br>grand final</span><span class="scr-text">21:15 · Stage</span></div>
+                        <div style="display:grid;gap:1.6cqw"><div class="scr-panel" style="padding:1.8cqw;display:grid;align-content:start;gap:.6cqw"><span class="scr-kicker" style="font-size:1.1cqw">Now</span><span class="scr-h2">Dinner</span><span><span class="scr-chip">+15 min</span></span></div><div class="scr-panel" style="padding:1.8cqw;display:grid;align-content:start;gap:.6cqw"><span class="scr-kicker" style="font-size:1.1cqw">Next</span><span class="scr-h2" style="font-size:1.9cqw">Semi-finals 19:45</span></div></div>
+                      </div>
+                      <div class="scr-foot"><b style="color:var(--canccu-color-accent)">INFO</b>Pizza orders close at 20:00</div>
+                    </div>
+                  </div>
+                  <p class="canccu-small canccu-muted" style="margin-top:10px">The real Pulse layout of the zone, at 16:9 and large enough to read (C3).</p>
+                </div></section>
+            </div>
+          </main></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Brand kit in the shell.</b> One status line in words ("Draft", who is editing), no revision numbers or user ids; names, not slugs (C2). One check for the notice and for Publish (C1).</p>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="check-in">
+  <p class="sheet__kicker">7 · Check-in (attendee, phone)</p>
+  <h2 class="sheet__title">The event's name on top, one task per page</h2>
+  <p class="sheet__lead">Already the best pages of the set; they get the event's identity and one layout for every step: an icon, a title, one or two sentences, one big button, and the same quiet line under it. This header is the one the hub uses later.</p>
+  <div class="sheet__covers"><span>E1</span><span>E2</span></div>
+  <div class="row">
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--hub" style="position:relative">
+          <header class="canccu-hubhead"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span></header>
+          <div class="canccu-hubbody"><section class="canccu-card"><div class="canccu-task">
+            <span class="canccu-task__icon"><svg class="canccu-i"><use href="#i-hand"/></svg></span>
+            <h1 class="canccu-task__title">Check in to Demo Event</h1>
+            <p>Sign in once with Discord to check in. At the venue, signing in also makes you a member of the event.</p>
+            <a class="canccu-button canccu-button--primary canccu-button--lg canccu-button--block" href="#"><svg class="canccu-i"><use href="#i-chat"/></svg>Continue with Discord</a>
+            <p class="canccu-small canccu-muted">Checking in is optional.</p>
+          </div></section></div>
+          <a class="safe-privacy" href="#">Privacy</a>
+        </div>
+      </div>
+      <p class="shot__cap"><b>1 · Sign in first.</b> The button says where it goes (E2).</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--hub" style="position:relative">
+          <header class="canccu-hubhead"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><span class="canccu-avatar" style="margin-left:auto;width:1.75rem;height:1.75rem">DA</span></header>
+          <div class="canccu-hubbody"><section class="canccu-card"><div class="canccu-task">
+            <span class="canccu-task__icon"><svg class="canccu-i"><use href="#i-hand"/></svg></span>
+            <h1 class="canccu-task__title">Check in to Demo Event</h1>
+            <p>You're signed in as Demo Attendee. One tap and the crew knows you're here.</p>
+            <button class="canccu-button canccu-button--primary canccu-button--lg canccu-button--block"><svg class="canccu-i"><use href="#i-check"/></svg>Check in</button>
+            <p class="canccu-small canccu-muted">Checking in is optional.</p>
+          </div></section></div>
+          <a class="safe-privacy" href="#">Privacy</a>
+        </div>
+      </div>
+      <p class="shot__cap"><b>2 · Ready.</b> The same layout as step 1, so the two read as one flow (E2).</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--hub" style="position:relative">
+          <header class="canccu-hubhead"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><span class="canccu-avatar" style="margin-left:auto;width:1.75rem;height:1.75rem">DA</span></header>
+          <div class="canccu-hubbody">
+            <section class="canccu-card"><div class="canccu-task" style="--canccu-color-primary:var(--canccu-color-status-ok)">
+              <span class="canccu-task__icon"><svg class="canccu-i"><use href="#i-check-circle"/></svg></span>
+              <h1 class="canccu-task__title">You're checked in</h1>
+              <p>Welcome! Checked in at 18:42.</p>
+            </div></section>
+            <section class="canccu-card"><div class="canccu-list">
+              <div class="canccu-list__row"><span class="canccu-list__icon"><svg class="canccu-i"><use href="#i-wifi"/></svg></span><span class="canccu-list__main"><p class="canccu-list__title">Wi-Fi: demo-guest</p><p class="canccu-list__meta">Password on the badge you got</p></span></div>
+              <div class="canccu-list__row"><span class="canccu-list__icon"><svg class="canccu-i"><use href="#i-clock"/></svg></span><span class="canccu-list__main"><p class="canccu-list__title">Now: Dinner <span class="canccu-badge canccu-badge--degraded">+15 min</span></p><p class="canccu-list__meta">In the café until 19:15</p></span></div>
+            </div></section>
+            <button class="canccu-button canccu-button--secondary canccu-button--lg"><svg class="canccu-i"><use href="#i-bell"/></svg>Turn on alerts</button>
+          </div>
+          <a class="safe-privacy" href="#">Privacy</a>
+        </div>
+      </div>
+      <p class="shot__cap"><b>3 · Done.</b> The confirmation, then what is useful right now (mockup 14).</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--hub" style="position:relative">
+          <header class="canccu-hubhead"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span></header>
+          <div class="canccu-hubbody"><section class="canccu-card"><div class="canccu-task" style="--canccu-color-primary:var(--canccu-color-status-degraded)">
+            <span class="canccu-task__icon"><svg class="canccu-i"><use href="#i-qr"/></svg></span>
+            <h1 class="canccu-task__title">This code has expired</h1>
+            <p>The code on the screen changes every 30 seconds. Scan it again with your camera.</p>
+            <p class="canccu-small canccu-muted">Checking in is optional.</p>
+          </div></section></div>
+          <a class="safe-privacy" href="#">Privacy</a>
+        </div>
+      </div>
+      <p class="shot__cap"><b>4 · Code not valid.</b> What happened and what to do, in the same card.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="errors">
+  <p class="sheet__kicker">8 · Errors</p>
+  <h2 class="sheet__title">One error page family</h2>
+  <p class="sheet__lead">Four cases, one layout: an icon, a title by case, one sentence in plain words, the next step and a way on. The shell stays, and its menu lists only pages the person may open. No right ids, paths or addresses on the page: those go to the server log.</p>
+  <div class="sheet__covers"><span>B3</span><span>D7 design side</span></div>
+  <div class="row">
+    <div class="shot">
+      <div class="frame frame--desktop frame--short">
+        <div class="frame__chrome"><i></i><i></i><i></i><span class="frame__url">/theming/studio/</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:5.25rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><span class="canccu-header__sep"></span><span class="canccu-header__meta">Sat 14 – Sun 15 Mar</span><span class="canccu-badge canccu-badge--ok canccu-badge--dot">Live</span><div class="canccu-header__end"><span class="canccu-clock">18:42<small>UTC</small></span></div></header>
+          <nav class="canccu-menu" aria-label="Event"><div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">Run the event</p><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-calendar"/></svg>Run of show</a><a class="canccu-menu__item" href="#"><svg class="canccu-i"><use href="#i-bell"/></svg>Notifications</a></div><div class="canccu-menu__foot"><div class="canccu-user"><span class="canccu-avatar">DC</span><div><p class="canccu-user__name">Demo Crew</p><p class="canccu-user__role">Crew</p></div></div><button class="canccu-button canccu-button--ghost" style="justify-content:flex-start"><svg class="canccu-i"><use href="#i-out"/></svg>Sign out</button></div></nav>
+          <div class="canccu-content"><main class="canccu-main canccu-main--narrow">
+            <div class="canccu-error">
+              <span class="canccu-error__icon"><svg class="canccu-i"><use href="#i-lock"/></svg></span>
+              <h1 class="canccu-error__title">No access</h1>
+              <p class="canccu-error__text">Your role in Demo Event doesn't include the Theme studio.</p>
+              <p class="canccu-error__next">If you need it, ask an event owner to add it to your role.</p>
+              <div class="canccu-cluster"><a class="canccu-button canccu-button--primary" href="#">Go to Run of show</a><a class="canccu-button canccu-button--ghost" href="#">Sign in as someone else</a></div>
+            </div>
+          </main></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>No access</b> (403, a missing right). The page is named in words, never <code>theming.theme.write</code>. The menu holds only what this crew member may open.</p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell canccu-shell--phone">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><button class="canccu-button canccu-button--ghost canccu-button--sm" style="margin-left:auto"><svg class="canccu-i"><use href="#i-menu"/></svg>Menu</button></header>
+          <div class="canccu-content"><main class="canccu-main">
+            <div class="canccu-error" style="margin-top:4rem">
+              <span class="canccu-error__icon" style="--n:var(--canccu-color-text-muted)"><svg class="canccu-i"><use href="#i-compass"/></svg></span>
+              <h1 class="canccu-error__title">Not found</h1>
+              <p class="canccu-error__text">There's nothing at this address. It may have been removed, or the link is cut short.</p>
+              <div class="canccu-cluster" style="display:grid;width:100%"><a class="canccu-button canccu-button--primary canccu-button--lg" href="#">Open Run of show</a></div>
+            </div>
+          </main></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Not found</b> (404): an unknown item, page or link. Not "Not changed".</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell canccu-shell--phone">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span></header>
+          <div class="canccu-content"><main class="canccu-main">
+            <div class="canccu-error" style="margin-top:4rem">
+              <span class="canccu-error__icon" style="--n:var(--canccu-color-status-degraded)"><svg class="canccu-i"><use href="#i-pin"/></svg></span>
+              <h1 class="canccu-error__title">Not at the venue</h1>
+              <p class="canccu-error__text">Organiser pages open only on the venue's network or through the crew's Tailscale.</p>
+              <p class="canccu-error__next">Join the venue Wi-Fi or turn Tailscale on, then try again.</p>
+              <div class="canccu-cluster" style="display:grid;width:100%"><a class="canccu-button canccu-button--primary canccu-button--lg" href="#"><svg class="canccu-i"><use href="#i-refresh"/></svg>Try again</a></div>
+            </div>
+          </main></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Not at the venue</b> (the network refusal). Refused before any session, so no menu. It never shows the address.</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell canccu-shell--phone">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><button class="canccu-button canccu-button--ghost canccu-button--sm" style="margin-left:auto"><svg class="canccu-i"><use href="#i-menu"/></svg>Menu</button></header>
+          <div class="canccu-content"><main class="canccu-main">
+            <div class="canccu-error" style="margin-top:4rem">
+              <span class="canccu-error__icon" style="--n:var(--canccu-color-text-muted)"><svg class="canccu-i"><use href="#i-archive"/></svg></span>
+              <h1 class="canccu-error__title">Event archived</h1>
+              <p class="canccu-error__text">Demo Event ended on 15 March. Everything can still be read; nothing can be changed.</p>
+              <div class="canccu-cluster" style="display:grid;width:100%"><a class="canccu-button canccu-button--secondary canccu-button--lg" href="#">Read the run of show</a></div>
+            </div>
+          </main></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Event archived,</b> for a change that cannot be made any more.</p>
+    </div>
+    <div class="shot">
+      <div class="frame frame--phone">
+        <div class="frame__status canccu-page" style="min-height:0"><span>18:42</span><span>●●● ▮</span></div>
+        <div class="frame__screen canccu-page canccu-surface--admin"><div class="canccu-shell canccu-shell--phone" style="grid-template-rows:3.5rem auto minmax(0,1fr)">
+          <header class="canccu-header"><svg class="canccu-header__logo" viewBox="0 0 240 80" style="width:4.5rem;height:1.5rem"><use href="#logo-demo"/></svg><span class="canccu-header__title">Demo Event</span><button class="canccu-button canccu-button--ghost canccu-button--sm" style="margin-left:auto"><svg class="canccu-i"><use href="#i-menu"/></svg>Menu</button></header>
+          <div class="canccu-banner"><svg class="canccu-i"><use href="#i-archive"/></svg><span><b>Archived.</b> Demo Event ended on 15 March. Read only.</span></div>
+          <div class="canccu-content"><main class="canccu-main" style="gap:1.25rem">
+            <div class="canccu-pagehead"><div><h1 class="canccu-pagehead__title">Run of show</h1><p class="canccu-pagehead__desc">Sun 15 Mar · times in UTC</p></div></div>
+            <section class="canccu-card"><div class="canccu-timeline">
+              <div class="canccu-slot" style="grid-template-columns:3.5rem .75rem minmax(0,1fr);padding:.75rem 1rem"><span class="canccu-slot__time">10:00</span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Breakfast</span><span class="canccu-slot__meta">Café</span></span></div>
+              <div class="canccu-slot" style="grid-template-columns:3.5rem .75rem minmax(0,1fr);padding:.75rem 1rem"><span class="canccu-slot__time">12:00</span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Prize ceremony</span><span class="canccu-slot__meta">Stage</span></span></div>
+              <div class="canccu-slot" style="grid-template-columns:3.5rem .75rem minmax(0,1fr);padding:.75rem 1rem"><span class="canccu-slot__time">14:00</span><span class="canccu-slot__dot"></span><span><span class="canccu-slot__title">Doors close</span><span class="canccu-slot__meta">Entrance</span></span></div>
+            </div></section>
+          </main></div>
+        </div></div>
+      </div>
+      <p class="shot__cap"><b>Archived, read pages:</b> one banner under the header, the same words on every module; actions are gone, not disabled (D7).</p>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="screens">
+  <p class="sheet__kicker">9 · Screens</p>
+  <h2 class="sheet__title">The device frames are one family with Pulse</h2>
+  <p class="sheet__lead">Every frame a screen can show is built from Pulse's parts (mockups 02–05): the same header (logo, event name, zone or device, clock), the same background with its soft glow, the same display type and panels. A screen going from pairing to not assigned to Pulse never changes colour, and the clock never jumps corners. Drawn at 1920×1080, shown smaller; the switch at the top recolours them like the pages.</p>
+  <div class="sheet__covers"><span>D1</span><span>D2</span><span>D3</span><span>D6</span><span>D7 design side</span></div>
+
+  <div class="row">
+    <div class="shot">
+      <div class="screen"><div class="canccu-page canccu-surface--screen">
+        <div class="scr-head"><svg class="scr-logo" viewBox="0 0 240 80" style="width:7.8cqw"><use href="#logo-demo"/></svg><span class="scr-event">Demo Event</span><span class="scr-zone">Main hall</span><span class="scr-date" style="margin-left:auto">Sat 14 Mar</span><span class="scr-clock" style="margin-left:0">18:42</span></div>
+        <div class="scr-body" style="display:grid;grid-template-columns:2fr 1fr;gap:1.6cqw">
+          <div class="scr-panel" style="padding:3.4cqw;display:grid;align-content:center;gap:1.1cqw;background:linear-gradient(135deg,color-mix(in srgb,var(--canccu-color-primary) 22%,var(--canccu-color-surface)),color-mix(in srgb,var(--canccu-color-accent) 10%,var(--canccu-color-surface)))"><span class="scr-kicker">Tonight on stage</span><span class="scr-h1">Demo Game Cup<br>grand final</span><span class="scr-text">21:15 · Stage · 8 teams left</span></div>
+          <div style="display:grid;gap:1.6cqw;grid-template-rows:1fr 1fr">
+            <div class="scr-panel" style="padding:1.8cqw;display:grid;align-content:start;gap:.7cqw"><span class="scr-kicker" style="font-size:1.1cqw">Now</span><span class="scr-h2">Dinner</span><span class="scr-muted">Café · until 19:15</span><span><span class="scr-chip">+15 min</span></span></div>
+            <div class="scr-panel" style="padding:1.8cqw;display:grid;align-content:start;gap:.7cqw"><span class="scr-kicker" style="font-size:1.1cqw;color:var(--canccu-color-text-muted)">Next</span><span class="scr-h2" style="font-size:2cqw">Semi-finals</span><span class="scr-muted">19:45 · Stage</span></div>
+          </div>
+        </div>
+        <div class="scr-foot"><b style="color:var(--canccu-color-accent);letter-spacing:.1em">INFO</b>Pizza orders close at 20:00</div>
+      </div></div>
+      <p class="shot__cap"><b>Pulse</b> (built by #375, mockup 02), for reference: header, panels, the ticker in the foot. Every frame below reuses these parts.</p>
+    </div>
+    <div class="shot">
+      <div class="screen"><div class="canccu-page canccu-surface--screen">
+        <div class="scr-head"><svg class="scr-logo" viewBox="0 0 240 80" style="width:7.8cqw"><use href="#logo-demo"/></svg><span class="scr-event">Demo Event</span><span class="scr-zone">Screen setup</span><span class="scr-clock">18:42</span></div>
+        <div style="position:absolute;left:0;right:0;top:21%;text-align:center;display:grid;gap:.6cqw"><span class="scr-kicker">New screen</span><span class="scr-h1" style="font-size:3.6cqw">Pair this screen</span></div>
+        <div style="position:absolute;left:0;right:0;top:62%;text-align:center;display:grid;gap:.6cqw;justify-items:center"><span class="scr-text" style="max-width:52cqw">Scan the code with a signed-in phone, or type it in<br><b style="color:var(--canccu-color-text)">Screen studio → Pair a screen.</b></span><span class="scr-muted">Code expires in 9:41 · a reload keeps the same code</span></div>
+        <div class="scr-panel" style="position:absolute;right:2.5cqw;bottom:2.5cqw;padding:1.2cqw;display:grid;gap:.6cqw;justify-items:center"><svg class="scr-qr" viewBox="0 0 21 21"><use href="#qr-code"/></svg><span class="scr-muted" style="font-size:1.05cqw">Scan to pair</span></div>
+        <span class="safe-code">K7Q4 9WXP</span>
+      </div></div>
+      <p class="shot__cap"><b>Pairing.</b> The code is the safety element exactly as <code>ui.css</code> draws it (white on black, centred); the frame is laid out around it. It points to a page that exists (D3).</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="shot">
+      <div class="screen screen--sm"><div class="canccu-page canccu-surface--screen">
+        <div class="scr-head"><svg class="scr-logo" viewBox="0 0 240 80" style="width:7.8cqw"><use href="#logo-demo"/></svg><span class="scr-event">Demo Event</span><span class="scr-zone">Hall left</span><span class="scr-clock">18:42</span></div>
+        <div style="position:absolute;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;gap:1.2cqw"><span class="scr-icon"><svg class="canccu-i"><use href="#i-monitor"/></svg></span><span class="scr-h1" style="font-size:4cqw">Hall left</span><span class="scr-text">Paired. Waiting for a zone.</span><span class="scr-muted">An organiser picks one in Screen studio → Devices. It starts by itself.</span></div>
+      </div></div>
+      <p class="shot__cap"><b>Not assigned.</b> The device's name large, the clock where Pulse has it (D6).</p>
+    </div>
+    <div class="shot">
+      <div class="screen screen--sm"><div class="canccu-page canccu-surface--screen">
+        <div class="scr-head"><svg class="scr-logo" viewBox="0 0 240 80" style="width:7.8cqw"><use href="#logo-demo"/></svg><span class="scr-event">Demo Event</span><span class="scr-zone">Hall left</span><span class="scr-clock">18:42</span></div>
+        <div style="position:absolute;left:8cqw;right:8cqw;top:0;bottom:0;display:grid;align-content:center;gap:1.4cqw"><span class="scr-icon" style="--n:var(--canccu-color-status-degraded)"><svg class="canccu-i"><use href="#i-pin"/></svg></span><span class="scr-h1" style="font-size:4cqw">Not at the venue</span><span class="scr-text">This screen plays only on the venue's network.</span><span class="scr-muted">Crew: check the venue uplink, or ask an organiser about the emergency switch.</span></div>
+        <div class="scr-foot"><svg class="canccu-i" style="width:1.4cqw;height:1.4cqw"><use href="#i-refresh"/></svg>Trying again every 30 s · nothing is shown while refused</div>
+      </div></div>
+      <p class="shot__cap"><b>Refused.</b> The same words and icon as the organiser page "Not at the venue". No address.</p>
+    </div>
+    <div class="shot">
+      <div class="screen screen--sm"><div class="canccu-page canccu-surface--screen">
+        <div class="scr-head"><svg class="scr-logo" viewBox="0 0 240 80" style="width:7.8cqw"><use href="#logo-demo"/></svg><span class="scr-event">Demo Event</span><span class="scr-zone">Main hall</span><span class="scr-clock">18:42</span></div>
+        <div style="position:absolute;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;gap:1.2cqw"><span class="scr-icon" style="--n:var(--canccu-color-text-muted)"><svg class="canccu-i"><use href="#i-archive"/></svg></span><span class="scr-h1" style="font-size:4cqw">This event has ended</span><span class="scr-text">Thank you for coming to Demo Event.</span></div>
+      </div></div>
+      <p class="shot__cap"><b>Event ended</b> (archived). The archived words of the error pages, said for a room.</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="shot">
+      <div class="screen screen--sm"><div class="canccu-page canccu-surface--screen is-offline-frame">
+        <div class="scr-head"><svg class="scr-logo" viewBox="0 0 240 80" style="width:7.8cqw"><use href="#logo-demo"/></svg><span class="scr-event">Demo Event</span><span class="scr-zone">Main hall</span><span class="scr-clock">18:42</span></div>
+        <div class="scr-body" style="display:grid;grid-template-columns:2fr 1fr;gap:1.6cqw">
+          <div class="scr-panel" style="padding:3.4cqw;display:grid;align-content:center;gap:1.1cqw;background:linear-gradient(135deg,color-mix(in srgb,var(--canccu-color-primary) 22%,var(--canccu-color-surface)),var(--canccu-color-surface))"><span class="scr-kicker">Tonight on stage</span><span class="scr-h1">Demo Game Cup<br>grand final</span><span class="scr-text">21:15 · Stage</span></div>
+          <div style="display:grid;gap:1.6cqw;grid-template-rows:1fr 1fr">
+            <div class="scr-panel" style="padding:1.8cqw;display:grid;align-content:start;gap:.7cqw"><span class="scr-kicker" style="font-size:1.1cqw">Now</span><span class="scr-h2">Dinner</span><span class="scr-muted">until 19:15</span></div>
+            <div class="scr-panel scr-stale" style="padding:1.8cqw;display:grid;align-content:center;gap:.7cqw"><span class="scr-muted">Check-in code hidden while offline</span></div>
+          </div>
+        </div>
+      </div><span class="safe-marker">offline since 18:40</span></div>
+      <p class="shot__cap"><b>Offline.</b> The marker is <code>ui.css</code>'s safety element, top right, as specified; the clock steps aside for it. Stale panels dim.</p>
+    </div>
+    <div class="shot">
+      <div class="screen screen--sm"><div class="canccu-page canccu-surface--screen">
+        <div class="scr-head"><svg class="scr-logo" viewBox="0 0 240 80" style="width:7.8cqw"><use href="#logo-demo"/></svg><span class="scr-event">Demo Event</span><span class="scr-zone">Main hall</span><span class="scr-clock">18:42</span></div>
+        <div class="scr-body" style="display:grid;grid-template-columns:2fr 1fr;gap:1.6cqw;opacity:.35"><div class="scr-panel"></div><div class="scr-panel"></div></div>
+        <div style="position:absolute;inset:0;display:grid;place-items:center"><div class="scr-panel" style="padding:3cqw 5cqw;display:grid;justify-items:center;gap:1cqw;text-align:center;border:.35cqw solid var(--canccu-color-primary);box-shadow:0 0 0 1.2cqw color-mix(in srgb,var(--canccu-color-primary) 18%,transparent)"><span class="scr-kicker">Identify</span><span class="scr-h1" style="font-size:5cqw">Hall left</span><span class="scr-text">Main hall · version 0.4.0</span><span class="scr-muted">12 s left</span></div></div>
+      </div></div>
+      <p class="shot__cap"><b>Identify.</b> A Pulse panel, sized to the stage, not the window; a real version, never "vdev" (D6).</p>
+    </div>
+    <div class="shot" style="align-self:center">
+      <ul class="notes">
+        <li><b>One background (D1).</b> Every frame draws on the theme's <code>background</code> with the same glow. Before a theme loads, the player uses <code>ui.css</code>'s defaults, which are the default theme's, so nothing changes colour.</li>
+        <li><b>Safety elements (D2).</b> Drawn as <code>ui.css</code> and the theming contract say today: no contract change. Mockup 05's amber marker is retired for the black and white one.</li>
+        <li><b>Real places only (D3).</b> Frames and the QR name Screen studio → Pair a screen, which the screen issue builds before the wording ships.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
