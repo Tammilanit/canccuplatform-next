@@ -1,8 +1,7 @@
 /** A screen app on a real Postgres (RLS needs one) with fake tenants, admin and Valkey. */
 import type { ThemeNow } from "../src/compose/sources.js";
 import type { AgendaNow, VenueInfo } from "../src/compose/widgets.js";
-import { readFileSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
@@ -164,6 +163,9 @@ export async function harness(): Promise<Harness> {
   const settings: Record<string, Record<string, SettingValue>> = {};
   const storage = { used: {} as Record<string, number>, quota: {} as Record<string, number> };
   const filesRoot = await mkdtemp(join(tmpdir(), "canccu-screen-files-"));
+  const playerDir = await mkdtemp(join(tmpdir(), "canccu-screen-player-"));
+  await writeFile(join(playerDir, "player.js"), "export {};\n");
+  await writeFile(join(playerDir, "player.css"), "body {}\n");
   const oembedStatus = { value: 200 };
   const fake: FakeSources = {
     theme: null,
@@ -237,6 +239,7 @@ export async function harness(): Promise<Harness> {
     fetch: () => Promise.resolve(new Response("{}", { status: oembedStatus.value })),
     now: () => clock.now,
     bundleVersion: "test",
+    playerDir,
     streamPingMs: 200,
     sources: {
       theme: (host) => answer(fake.hosts, host, fake.theme),
@@ -289,6 +292,7 @@ export async function harness(): Promise<Harness> {
       await app.close();
       await pool.end();
       await rm(filesRoot, { recursive: true, force: true });
+      await rm(playerDir, { recursive: true, force: true });
     },
   };
 }
@@ -365,55 +369,4 @@ export async function pairDevice(
 
 export { APP_ROLE };
 
-/** A multipart upload of one file (and optionally a title or other fields), as Studio sends it. */
-export function upload(
-  h: Harness,
-  url: string,
-  file: Buffer,
-  filename: string,
-  c: Call & { title?: string; fields?: Record<string, string> } = {},
-): Promise<LightMyRequestResponse> {
-  const boundary = "canccu-test-boundary";
-  const parts: Buffer[] = [];
-  const fields = { ...(c.title === undefined ? {} : { title: c.title }), ...c.fields };
-  for (const [name, value] of Object.entries(fields)) {
-    parts.push(
-      Buffer.from(
-        `--${boundary}\r\ncontent-disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`,
-      ),
-    );
-  }
-  parts.push(
-    Buffer.from(
-      `--${boundary}\r\ncontent-disposition: form-data; name="file"; filename="${filename}"\r\n` +
-        "content-type: application/octet-stream\r\n\r\n",
-    ),
-    file,
-    Buffer.from(`\r\n--${boundary}--\r\n`),
-  );
-  return h.app.inject({
-    method: "POST",
-    url,
-    headers: {
-      host: c.host ?? "alpha.test",
-      "x-forwarded-for": c.ip ?? VENUE_IP,
-      cookie: c.session ? `canccu_session=${c.session}` : "",
-      "content-type": `multipart/form-data; boundary=${boundary}`,
-    },
-    payload: Buffer.concat(parts),
-  });
-}
-
-/** A small PNG; `seed` changes its bytes, so each seed is a file of its own. */
-export async function png(seed = 0): Promise<Buffer> {
-  const { default: sharp } = await import("sharp");
-  return sharp({
-    create: { width: 8, height: 8, channels: 3, background: { r: seed % 256, g: 0, b: 0 } },
-  })
-    .png()
-    .toBuffer();
-}
-
-export function fixture(name: string): Buffer {
-  return readFileSync(new URL(`./fixtures/media/${name}`, import.meta.url));
-}
+export { fixture, png, upload } from "./uploads.js";

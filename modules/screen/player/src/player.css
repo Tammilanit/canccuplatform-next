@@ -1,0 +1,139 @@
+/*
+ * The player's own pages: the device-state frames, the offline mark and the identify card. They
+ * read the theme's custom properties (contracts/theming.md, Stable classes and custom properties)
+ * with the platform's defaults as fallbacks, since an unpaired kiosk has no theme yet. Type
+ * scales with the viewport height, so a frame reads the same at 1080p and 4K from across a hall.
+ */
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body.canccu-surface--screen {
+  overflow: hidden;
+  cursor: none;
+  background: var(--canccu-color-background, #0f1115);
+  color: var(--canccu-color-text, #f3f4f6);
+  font-family: var(--canccu-font-body, system-ui, sans-serif);
+}
+
+.canccu-frame {
+  box-sizing: border-box;
+  height: 100vh;
+  padding: var(--canccu-safe-inset, 48px);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr auto;
+  gap: 2vh 4vw;
+}
+
+.canccu-frame__head {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 2vw;
+  align-items: baseline;
+  font-size: 2.4vh;
+  color: var(--canccu-color-text-muted, #9ca3af);
+}
+
+.canccu-frame__mark {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--canccu-color-primary, #60a5fa);
+}
+
+.canccu-frame__body {
+  align-self: center;
+  max-width: 70vw;
+}
+
+.canccu-frame__title {
+  margin: 0 0 3vh;
+  font-family: var(--canccu-font-display, var(--canccu-font-heading, system-ui, sans-serif));
+  font-size: 7vh;
+  line-height: 1.1;
+}
+
+.canccu-frame__code {
+  margin: 0 0 3vh;
+  font-family: var(--canccu-font-mono, ui-monospace, monospace);
+  font-size: 14vh;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.canccu-frame__line {
+  margin: 0 0 1.5vh;
+  font-size: 3.2vh;
+  line-height: 1.35;
+}
+
+.canccu-frame__qr {
+  align-self: center;
+  width: 30vh;
+  text-align: center;
+}
+
+.canccu-qr {
+  display: block;
+  width: 100%;
+  border-radius: var(--canccu-radius, 0.5rem);
+}
+
+.canccu-frame__foot {
+  grid-column: 1 / -1;
+  font-size: 2.4vh;
+  color: var(--canccu-color-text-muted, #9ca3af);
+}
+
+.canccu-frame--refused .canccu-frame__title,
+.canccu-frame--archived .canccu-frame__title {
+  color: var(--canccu-color-status-degraded, #fbbf24);
+}
+
+.canccu-frame--unassigned .canccu-frame__foot {
+  font-size: 6vh;
+  font-variant-numeric: tabular-nums;
+  color: var(--canccu-color-text, #f3f4f6);
+}
+
+.canccu-offline-mark {
+  position: fixed;
+  right: var(--canccu-safe-inset, 48px);
+  bottom: var(--canccu-safe-inset, 48px);
+  padding: 0.6vh 1.2vh;
+  border-radius: var(--canccu-radius, 0.5rem);
+  background: var(--canccu-color-surface, #1f2937);
+  color: var(--canccu-color-text-muted, #9ca3af);
+  font-size: 2vh;
+  opacity: 0.85;
+}
+
+.canccu-identify {
+  position: fixed;
+  inset: 25vh 20vw;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  border: 0.6vh solid var(--canccu-color-accent, #f472b6);
+  border-radius: var(--canccu-radius, 0.5rem);
+  background: var(--canccu-color-surface, #1f2937);
+}
+
+.canccu-identify p {
+  margin: 1vh 0;
+}
+
+.canccu-identify__name {
+  font-size: 10vh;
+  font-weight: 700;
+}
+
+.canccu-identify__zone,
+.canccu-identify__left {
+  font-size: 3vh;
+  color: var(--canccu-color-text-muted, #9ca3af);
+}

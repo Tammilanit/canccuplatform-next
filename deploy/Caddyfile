@@ -43,6 +43,16 @@
 		reverse_proxy screen:8080
 	}
 
+	# The kiosk's page and its bundle (/screen/, /screen/b/<version>/): screen's own paths, not
+	# stripped. The bare prefix goes to the page, with a link's query.
+	handle /screen {
+		redir * /screen/{?query} 308
+	}
+
+	handle /screen/* {
+		reverse_proxy screen:8080
+	}
+
 	# The theming contract's paths are /api/theming/... and /theming/... (its served files), so
 	# neither is stripped; /internal/theming/ is never routed here.
 	handle /api/theming/health {
