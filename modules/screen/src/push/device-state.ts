@@ -3,6 +3,7 @@
  * Composed state). Every read and every push goes through `refreshZone`, so `state_version`
  * moves once per change, whichever container or request saw the change first.
  */
+import { isDeepStrictEqual } from "node:util";
 import type { TenantContext } from "@canccu/kit";
 import type { DeviceRow } from "../db.js";
 import {
@@ -15,13 +16,13 @@ import {
 } from "../compose/state.js";
 import type { ComposeDeps, ZoneComposed } from "../compose/state.js";
 import { diffZone } from "./diff.js";
-import type { Orientation, ZoneRecord } from "./store.js";
+import type { Orientation, ZoneRecord, ZoneRecordView } from "./store.js";
 
 function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
-  const view = (o: Orientation) => ({
-    layout: composed.views[o].layout,
-    regions: composed.views[o].regions,
-  });
+  const view = (o: Orientation): ZoneRecordView => {
+    const { layout, regions, placed, unplaced, hidden } = composed.views[o];
+    return { layout, regions, placed, unplaced, hidden };
+  };
   return {
     version,
     fingerprint: composed.fingerprint,
@@ -72,11 +73,42 @@ export async function refreshZone(
         portrait: diffZone(before, next, "portrait", base + 1),
       },
     };
-    if (await deps.zones.advance(zoneKey, base, next, entry)) return next;
+    if (await deps.zones.advance(zoneKey, base, next, entry)) {
+      await reportClaims(deps, zoneKey, before, next);
+      return next;
+    }
     // Another container stored a change meanwhile, perhaps built from older inputs than these
     // (it read them first and finished first): build again on top of it, so a newer change is
     // never left waiting for the next refresh.
     if (attempt === ADVANCE_TRIES) return (await deps.zones.read(zoneKey)) ?? next;
+  }
+}
+
+/** What `screen.claims.changed` says of a record: its landscape placement (see reportClaims). */
+function claimsOf(record: ZoneRecord | null): Record<string, unknown> {
+  const view = record?.views.landscape;
+  return { placed: view?.placed ?? [], unplaced: view?.unplaced ?? [], hidden: view?.hidden ?? [] };
+}
+
+/**
+ * Tell Moments where its claims went when that changed (contracts/screen.md, Events). Only the
+ * container whose advance won reports, so a change is told once. The event has no orientation:
+ * it reports the landscape layout, the primary target (L9); a portrait screen of the zone may
+ * place a claim lower in its chain. A lost report is logged, not retried: the next change of
+ * the zone's placement reports the whole of it again.
+ */
+async function reportClaims(
+  deps: ComposeDeps,
+  zoneKey: string,
+  before: ZoneRecord | null,
+  next: ZoneRecord,
+): Promise<void> {
+  const now = claimsOf(next);
+  if (deps.bus === undefined || isDeepStrictEqual(claimsOf(before), now)) return;
+  try {
+    await deps.bus.publish("screen.claims.changed", { zone_key: zoneKey, ...now }, { version: 1 });
+  } catch (err) {
+    deps.log?.warn({ err, zone_key: zoneKey }, "reporting the zone's claims failed");
   }
 }
 
@@ -114,8 +146,8 @@ export function assemble(
     theme: record?.theme ?? side.fallback?.theme ?? themeView(NO_THEME),
     layout: view?.layout ?? null,
     regions: view?.regions ?? [],
-    unplaced: [],
-    hidden: [],
+    unplaced: view?.unplaced ?? [],
+    hidden: view?.hidden ?? [],
     ticker: record?.ticker ?? { text: null, until: null, source: null },
     // Only the zone's sound device plays sound; a mirror never does (contracts/screen.md, Zones).
     sound: {
