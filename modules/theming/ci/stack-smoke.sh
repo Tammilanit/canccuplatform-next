@@ -15,3 +15,9 @@ echo "-- the token CSS holds the tokens and is served nosniff"
 curl -fsS -D "$t/css.headers" -o "$t/tokens.css" "$base$(jq -r .tokens_css_url "$t/theme.json")"
 grep -q -- '--canccu-color-primary' "$t/tokens.css"
 grep -qi '^x-content-type-options: nosniff' "$t/css.headers"
+echo "-- the Studio sends a signed-out browser to sign in, and serves its static files"
+curl -sS -o /dev/null -D "$t/studio.headers" "$base/theming/studio/"
+grep -qi '^location: /admin/sign-in?next=%2Ftheming%2Fstudio%2F' "$t/studio.headers"
+for f in ui.css studio.css preview.css studio.js; do
+  curl -fsS -o /dev/null "$base/theming/studio/static/$f"
+done

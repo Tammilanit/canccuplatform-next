@@ -27,3 +27,9 @@ def test_the_event_menu_links_the_notification_pages_for_their_rights() -> None:
     both = nav("agenda.items.write", "notify.topics.write")
     assert 'Run of show</a> · <a href="/notify/admin/topics">' in both
     assert "Notifications" not in nav("agenda.items.write")
+
+
+def test_the_event_menu_links_the_theme_studio_for_its_right() -> None:
+    link = '<a href="/theming/studio/">Theme</a>'
+    assert f"Event: {link}" in nav("theming.theme.write")
+    assert "Theme</a>" not in nav("agenda.items.write")

@@ -41,6 +41,14 @@ export function needs(rights: RightsChecker, right: string): preHandlerAsyncHook
   ];
 }
 
+/**
+ * A page's request: the same checks with the session first, so a signed-out browser is sent to
+ * sign in wherever it is, as admin's and agenda's pages do; the address rule then refuses the rest.
+ */
+export function pageNeeds(rights: RightsChecker, right: string): preHandlerAsyncHookHandler[] {
+  return needs(rights, right).reverse();
+}
+
 /** The signed-in person; the routes that call it run after `needs`, which sets the session. */
 export function actorOf(request: FastifyRequest): string {
   const id = request.session?.userId;

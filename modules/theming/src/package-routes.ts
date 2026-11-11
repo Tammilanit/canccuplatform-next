@@ -126,13 +126,17 @@ async function startDraft(c: SqlClient, actor: string): Promise<void> {
 }
 
 async function exportZip(manifest: Manifest, files: [string, Buffer][]): Promise<Buffer> {
+  const yaml = Buffer.from(stringify(manifest, { aliasDuplicateObjects: false }));
+  return zipOf([["theme.yaml", yaml], ...files]);
+}
+
+/** A package zip of `files` (path, bytes) that an upload takes back; the Studio's starting points too. */
+export async function zipOf(files: [string, Buffer][]): Promise<Buffer> {
   const zip = new yazl.ZipFile();
-  const add = (path: string, bytes: Buffer): void => {
+  for (const [path, bytes] of files) {
     const compress = deflateRawSync(bytes).length * EXPORT_RATIO >= bytes.length;
     zip.addBuffer(bytes, path, { mtime: EPOCH, mode: 0o100644, compress });
-  };
-  add("theme.yaml", Buffer.from(stringify(manifest, { aliasDuplicateObjects: false })));
-  for (const [path, bytes] of files) add(path, bytes);
+  }
   zip.end();
   const chunks: Buffer[] = [];
   for await (const chunk of zip.outputStream as AsyncIterable<Buffer>) chunks.push(chunk);

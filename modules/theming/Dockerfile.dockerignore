@@ -4,5 +4,6 @@
 !packages/ui
 !modules/theming
 !contracts/theme.schema.json
+!events/demo/themes
 **/node_modules
 **/dist

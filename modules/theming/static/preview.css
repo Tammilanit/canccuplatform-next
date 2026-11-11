@@ -1,0 +1,58 @@
+/* The sample content of the preview surfaces (plan issue-185 D9). In canccu-base, so the theme's
+   layer restyles it as it will the real surfaces; an unlayered rule would win over the theme. */
+@layer canccu-base {
+  .canccu-layout--preview {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 1fr auto;
+    gap: var(--canccu-gap);
+    height: calc(100vh - 2 * var(--canccu-safe-inset) - 8rem);
+  }
+  .canccu-region--hero {
+    grid-column: 1;
+  }
+  .canccu-region--ticker {
+    grid-column: 1 / -1;
+  }
+  .canccu-widget {
+    height: 100%;
+    padding: var(--canccu-gap);
+    background: var(--canccu-color-surface);
+    border: var(--canccu-border-width) solid var(--canccu-color-border);
+    border-radius: var(--canccu-radius);
+  }
+  .canccu-surface--screen .canccu-widget__body {
+    font-size: 3rem;
+  }
+  .canccu-widget__title {
+    color: var(--canccu-color-accent);
+  }
+  .canccu-widget__footer {
+    color: var(--canccu-color-text-muted);
+  }
+
+  /* Discord's own look: only the embed colour and the logo are the event's. */
+  .canccu-preview-discord {
+    display: flex;
+    min-height: 100vh;
+    background: #313338;
+    color: #dbdee1;
+    font-family: system-ui, sans-serif;
+  }
+  .canccu-preview-discord__bar {
+    flex: 0 0 4px;
+    width: 4px;
+  }
+  .canccu-preview-discord__body {
+    padding: 0.75rem 1rem;
+  }
+  .canccu-preview-discord__logo {
+    float: right;
+    max-width: 4rem;
+    max-height: 4rem;
+  }
+  .canccu-preview-discord__title {
+    font-weight: 600;
+    color: #ffffff;
+  }
+}

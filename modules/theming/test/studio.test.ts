@@ -1,0 +1,280 @@
+/** The Studio pages under `/theming/studio/` (plan issue-185 D8, D10): brand kit, advanced, history. */
+import { describe, expect, it } from "vitest";
+import { withTenant } from "@canccu/kit";
+import { draftFiles, png } from "./drafting.js";
+import type { DraftBody } from "./drafting.js";
+import { DATABASE_URL, OUTSIDE_IP, get, send } from "./helpers.js";
+import { demoZip, putPackage } from "./packaging.js";
+
+describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
+  const t = draftFiles();
+  /** A page as `session` sees it; "" sends no session cookie. */
+  const page = (path: string, session = "admin") => get(t.h, path, { session });
+
+  const publish = async (version: number) => {
+    const res = await send(t.h, "POST", "/api/theming/draft/publish", { draft_version: version });
+    expect(res.statusCode).toBe(201);
+  };
+
+  describe("access", () => {
+    it("sends a browser without a session to admin's sign-in, back to the page", async () => {
+      const res = await page("/theming/studio/history?before=3", "");
+      expect(res.statusCode).toBe(303);
+      expect(res.headers.location).toBe(
+        `/admin/sign-in?next=${encodeURIComponent("/theming/studio/history?before=3")}`,
+      );
+    });
+
+    it("asks for the session before the address rule, as admin's own pages do", async () => {
+      const res = await get(t.h, "/theming/studio/", { host: "zeta.test", ip: OUTSIDE_IP });
+      expect(res.statusCode).toBe(303);
+      expect(res.headers.location).toBe(
+        `/admin/sign-in?next=${encodeURIComponent("/theming/studio/")}`,
+      );
+    });
+
+    it("answers a page saying why to a session without theming.theme.write", async () => {
+      const res = await page("/theming/studio/", "member");
+      expect(res.statusCode).toBe(403);
+      expect(res.headers["content-type"]).toMatch(/^text\/html/);
+      expect(res.body).toContain("theming.theme.write");
+    });
+
+    it("keeps the admin address rule", async () => {
+      const res = await get(t.h, "/theming/studio/", {
+        host: "zeta.test",
+        session: "admin",
+        ip: OUTSIDE_IP,
+      });
+      expect(res.statusCode).toBe(403);
+      expect(res.headers["content-type"]).toMatch(/^text\/html/);
+    });
+
+    it("sends the admin page policy: never framed, frames its own previews", async () => {
+      for (const path of [
+        "/theming/studio/",
+        "/theming/studio/advanced",
+        "/theming/studio/history",
+      ]) {
+        const res = await page(path);
+        expect(res.statusCode, path).toBe(200);
+        const csp = res.headers["content-security-policy"] as string;
+        expect(csp).toContain("frame-ancestors 'none'");
+        expect(csp).toContain("frame-src 'self' https://alpha.test/theming/sandbox/");
+        expect(csp).toMatch(/style-src 'self' 'nonce-[A-Za-z0-9+/=]+'/);
+        expect(res.headers["cache-control"]).toBe("no-store");
+        expect(res.headers["x-content-type-options"]).toBe("nosniff");
+        expect(res.body).toContain('<script src="/theming/studio/static/studio.js"');
+      }
+    });
+  });
+
+  describe("the brand kit page", () => {
+    it("offers the starting points while there is no draft", async () => {
+      const res = await page("/theming/studio/");
+      expect(res.body).toContain('data-action="start"');
+      for (const name of ["default", "terminal", "level-up"]) {
+        expect(res.body).toContain(`data-starter="${name}"`);
+      }
+      expect(res.body).not.toContain('data-action="brand"');
+      // The current theme is shown, not a draft.
+      expect(res.body).toContain('src="/theming/studio/preview/screen"');
+    });
+
+    it("shows the draft's brand, its colours and what was adjusted", async () => {
+      const draft = await t.fresh();
+      const res = await send(t.h, "PUT", "/api/theming/draft/brand", {
+        draft_version: draft.draft_version,
+        primary: "#1e1b4b",
+        accent: "#f59e0b",
+        scheme: "light",
+        embed_color: "#11223344",
+      });
+      expect(res.statusCode).toBe(200);
+      const body = (await page("/theming/studio/")).body;
+      expect(body).toContain('data-draft-version="2"');
+      // The field takes every colour the schema does, so its value never blocks a Save.
+      const pattern = /name="embed_color" pattern="([^"]+)"[^>]*value="#11223344"/.exec(body)?.[1];
+      expect(pattern).toBeDefined();
+      expect(new RegExp(`^(?:${pattern})$`, "v").test("#11223344")).toBe(true);
+      expect(new RegExp(`^(?:${pattern})$`, "v").test("#112233")).toBe(true);
+      expect(body).toContain('data-action="brand"');
+      expect(body).toContain('value="#1e1b4b"');
+      expect(body).toMatch(/<input[^>]*value="light"[^>]*checked/);
+      expect(body).toContain('data-token="primary_text"');
+      // The light scheme keeps the dark primary; the accent fails 3:1 on white and is shaded.
+      expect(body).toContain('data-adjusted="accent"');
+      expect(body).not.toContain('data-adjusted="primary"');
+    });
+
+    it("frames the draft preview of the current version on four surfaces", async () => {
+      const draft = await t.fresh();
+      const body = (await page("/theming/studio/")).body;
+      for (const surface of ["screen", "hub", "admin", "discord"]) {
+        expect(body).toContain(
+          `src="/theming/studio/preview/${surface}?canccu_theme=draft&amp;v=${draft.draft_version}"`,
+        );
+      }
+    });
+
+    it("lets a draft without CSS changes publish at once", async () => {
+      await t.fresh();
+      const body = (await page("/theming/studio/")).body;
+      expect(body).toMatch(/<button[^>]*data-action="publish"/);
+      expect(body).not.toContain("data-needs-preview");
+    });
+
+    it("holds Publish for the preview when the draft's CSS differs from the current", async () => {
+      const res = await putPackage(t.h, await demoZip("terminal"), { session: "embedder" });
+      expect(res.statusCode).toBe(200);
+      const body = (await page("/theming/studio/")).body;
+      expect(body).toMatch(/<button[^>]*data-needs-preview[^>]*disabled/);
+    });
+
+    it("no longer holds Publish once the same CSS is published", async () => {
+      let res = await putPackage(t.h, await demoZip("terminal"), { session: "embedder" });
+      const version = res.json<DraftBody>().draft_version;
+      res = await send(
+        t.h,
+        "POST",
+        "/api/theming/draft/publish",
+        { draft_version: version },
+        { session: "embedder" },
+      );
+      expect(res.statusCode).toBe(201);
+      res = await send(t.h, "POST", "/api/theming/draft", { from: "current" });
+      expect(res.statusCode).toBe(201);
+      const body = (await page("/theming/studio/")).body;
+      expect(body).toMatch(/<button[^>]*data-action="publish"/);
+      expect(body).not.toContain("data-needs-preview");
+    });
+
+    it("disables Publish for a draft with an error and lists the problem", async () => {
+      const draft = await t.fresh();
+      const res = await t.put("images/bad.png", draft.draft_version, Buffer.from("not a png"));
+      expect(res.statusCode).toBe(200);
+      const body = (await page("/theming/studio/")).body;
+      expect(body).toMatch(/<button[^>]*data-action="publish"[^>]*disabled/);
+      expect(body).toContain("images/bad.png");
+      expect(body).toContain('class="canccu-studio-problem canccu-studio-problem--error"');
+    });
+  });
+
+  describe("the advanced page", () => {
+    it("offers the package upload, the problems and the tokens", async () => {
+      const draft = await t.fresh();
+      const body = (await page("/theming/studio/advanced")).body;
+      expect(body).toContain('data-action="package"');
+      expect(body).toContain('type="file"');
+      expect(body).toContain('data-action="tokens"');
+      expect(body).toContain('name="colors.primary"');
+      expect(body).toContain('name="sizes.radius"');
+      expect(body).toContain(`data-draft-version="${draft.draft_version}"`);
+      expect(body).toContain("No problems");
+    });
+
+    it("offers the way back to simple only for an advanced draft", async () => {
+      const draft = await t.fresh();
+      expect((await page("/theming/studio/advanced")).body).not.toContain('data-action="simple"');
+      const res = await send(t.h, "PATCH", "/api/theming/draft/tokens", {
+        draft_version: draft.draft_version,
+        tokens: { sizes: { radius: "0px" } },
+      });
+      expect(res.json<{ mode: string }>().mode).toBe("advanced");
+      expect((await page("/theming/studio/advanced")).body).toContain('data-action="simple"');
+    });
+
+    it("lists the draft's files", async () => {
+      const res = await putPackage(t.h, await demoZip("terminal"), { session: "embedder" });
+      expect(res.statusCode).toBe(200);
+      expect((await page("/theming/studio/advanced")).body).toContain("css/theme.css");
+    });
+
+    it("asks for the brand kit before the way back to simple, which needs a brand", async () => {
+      const res = await putPackage(t.h, await demoZip("terminal"), { session: "embedder" });
+      expect(res.statusCode).toBe(200);
+      const body = (await page("/theming/studio/advanced")).body;
+      expect(body).not.toContain('data-action="simple"');
+      expect(body).toContain("Save the brand kit first");
+    });
+
+    it("lets a package start a draft when there is none", async () => {
+      const body = (await page("/theming/studio/advanced")).body;
+      expect(body).toContain('data-action="package"');
+      expect(body).not.toContain("data-draft-version");
+    });
+  });
+
+  describe("the history page", () => {
+    it("lists the revisions newest first, each with a one-click restore but the current", async () => {
+      await publish((await t.fresh()).draft_version);
+      await publish((await t.fresh()).draft_version);
+      const body = (await page("/theming/studio/history")).body;
+      expect(body).toContain('data-current-revision="2"');
+      expect(body.indexOf("Revision 2")).toBeLessThan(body.indexOf("Revision 1"));
+      expect(body).toContain('data-action="restore" data-revision="1"');
+      expect(body).not.toContain('data-revision="2"');
+      expect(body).toContain('href="/api/theming/revisions/1/package"');
+    });
+
+    it("marks a pinned revision", async () => {
+      await publish((await t.fresh()).draft_version);
+      await withTenant("alpha", () =>
+        t.h.db.tenant((c) => c.query(`INSERT INTO theming_pins (theme_revision) VALUES (1)`)),
+      );
+      const body = (await page("/theming/studio/history")).body;
+      await withTenant("alpha", () => t.h.db.tenant((c) => c.query(`DELETE FROM theming_pins`)));
+      expect(body).toContain("Pinned");
+    });
+
+    it("pages with before", async () => {
+      for (let i = 0; i < 3; i++) await publish((await t.fresh()).draft_version);
+      const body = (await page("/theming/studio/history?before=2")).body;
+      expect(body).toContain("Revision 1");
+      expect(body).not.toContain("Revision 3");
+    });
+
+    it("offers older revisions only when there are some", async () => {
+      // Retention keeps exactly a page (20), so a full page alone must not offer more.
+      for (let i = 0; i < 21; i++) await publish((await t.fresh()).draft_version);
+      let body = (await page("/theming/studio/history")).body;
+      expect(body).toContain("Revision 21");
+      expect(body).toContain("Revision 2<");
+      expect(body).not.toContain("Older revisions");
+      body = (await page("/theming/studio/history?before=2")).body;
+      expect(body).toContain("No older revisions");
+      expect(body).not.toContain("Nothing published yet");
+
+      // A pinned older revision is kept beyond the 20, so it is a page further.
+      await withTenant("alpha", () =>
+        t.h.db.tenant((c) => c.query(`INSERT INTO theming_pins (theme_revision) VALUES (2)`)),
+      );
+      await publish((await t.fresh()).draft_version);
+      body = (await page("/theming/studio/history")).body;
+      await withTenant("alpha", () => t.h.db.tenant((c) => c.query(`DELETE FROM theming_pins`)));
+      expect(body).not.toContain("Revision 2<");
+      expect(body).toContain('href="/theming/studio/history?before=3"');
+    });
+
+    it("says so when nothing is published yet", async () => {
+      const body = (await page("/theming/studio/history")).body;
+      expect(body).toContain("Nothing published yet");
+      expect(body).toContain('data-current-revision="0"');
+    });
+  });
+
+  it("shows the draft logo on the brand kit page", async () => {
+    const draft = await t.fresh();
+    let res = await t.put("images/logo.png", draft.draft_version, await png("#ff0000", 16));
+    res = await send(t.h, "PUT", "/api/theming/draft/brand", {
+      draft_version: res.json<DraftBody>().draft_version,
+      logo: "images/logo.png",
+      primary: "#3b82f6",
+      accent: "#f59e0b",
+      scheme: "dark",
+    });
+    expect(res.statusCode).toBe(200);
+    const body = (await page("/theming/studio/")).body;
+    expect(body).toMatch(/<img[^>]*src="\/theming\/draft\/[0-9a-f]{64}\.png"/);
+  });
+});

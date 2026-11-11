@@ -26,12 +26,17 @@ COPY --from=build /repo/packages/kit-ts/dist packages/kit-ts/dist
 COPY --from=build /repo/packages/kit-ts/node_modules packages/kit-ts/node_modules
 COPY --from=build /repo/packages/ui/package.json packages/ui/
 COPY --from=build /repo/packages/ui/dist packages/ui/dist
+# The Studio pages serve packages/ui's own stylesheet (src/studio.ts).
+COPY --from=build /repo/packages/ui/ui.css packages/ui/ui.css
 COPY --from=build /repo/modules/theming/package.json modules/theming/
 COPY --from=build /repo/modules/theming/dist modules/theming/dist
 COPY --from=build /repo/modules/theming/migrations modules/theming/migrations
+COPY --from=build /repo/modules/theming/static modules/theming/static
 COPY --from=build /repo/modules/theming/node_modules modules/theming/node_modules
 # The manifest schema, read from the contract itself (src/schema.ts) at the same relative place.
 COPY contracts/theme.schema.json contracts/theme.schema.json
+# The Studio's starting points (plan issue-185 D7), zipped on request from the same relative place.
+COPY events/demo/themes events/demo/themes
 WORKDIR /repo/modules/theming
 # nobody (65534), as every module that mounts the files volume: files-init gives it to that user.
 USER nobody
