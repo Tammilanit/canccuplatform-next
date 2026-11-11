@@ -272,6 +272,9 @@ async function main(): Promise<void> {
     tenantById: (id) => tenants.byId(id),
     now: Date.now,
     log,
+    played: (tenant, zones) => {
+      app.pushHub.played(tenant, zones);
+    },
   });
   let ticking = false;
   const ticker = setInterval(() => {
