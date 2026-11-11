@@ -82,10 +82,9 @@ interface RevisionRow {
   icon_512: string | null;
   icon_maskable_512: string | null;
   embed_color: number;
+  templates: unknown[];
 }
 
-// Templates are parsed by a later slice (#245); until then a revision answers none, which the
-// contract allows (a region without them shows its widget's default).
 function fromRevision(row: RevisionRow, embeds: EmbedRef[]): ResolvedTheme {
   return {
     revision: row.revision,
@@ -109,7 +108,7 @@ function fromRevision(row: RevisionRow, embeds: EmbedRef[]): ResolvedTheme {
         }),
     embed_color: row.embed_color,
     layouts: row.manifest.layouts ?? [],
-    templates: [],
+    templates: row.templates,
     embeds,
   };
 }
@@ -124,7 +123,7 @@ export async function resolvedRevision(
 ): Promise<ResolvedTheme | undefined> {
   const { rows } = await client.query(
     `SELECT revision, published_at, manifest, tokens, tokens_css, admin_tokens_css, css, logo,
-            logo_png, icon_192, icon_512, icon_maskable_512, embed_color
+            logo_png, icon_192, icon_512, icon_maskable_512, embed_color, templates
        FROM theming_revisions WHERE $1::integer IS NULL OR revision = $1
       ORDER BY revision DESC LIMIT 1`,
     [revision ?? null],

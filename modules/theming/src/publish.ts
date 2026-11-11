@@ -6,6 +6,7 @@ import { isDeepStrictEqual } from "node:util";
 import type { SqlClient } from "@canccu/kit";
 import type { Manifest } from "./checks.js";
 import { brandImages } from "./brand-images.js";
+import { compileStyle } from "./compile.js";
 import { CARRIED_REFS, copyOwned } from "./drafts.js";
 import { embedHoldings } from "./embeds.js";
 import type { FileStore } from "./files.js";
@@ -83,6 +84,7 @@ const EXTS: Record<string, Part> = {
   jpg: "images",
   webp: "images",
   svg: "images",
+  mustache: "templates",
 };
 
 function changedParts(before: Holdings, after: Holdings): Part[] {
@@ -132,6 +134,8 @@ export interface Published {
   /** The embeds' names before and after, when they changed: every embed change is audited. */
   embeds?: { old: string[]; new: string[] };
   tokensCss: string;
+  /** The compiled CSS's address, or null for a theme without CSS. */
+  css: string | null;
   embedColor: number;
 }
 
@@ -184,6 +188,8 @@ export async function writeRevision(
   if (changed.includes("embeds") && !input.embedsAllowed) throw versionConflict("theme");
 
   const revision = current + 1;
+  // First: CSS or a template that no longer passes its checks fails the publish before any work.
+  const style = await compileStyle(c, files, input.source, input.manifest);
   // Generated once here, so every later read of the revision is a pure read of addresses (D4).
   // Files land before the row; on a rollback they stay unreferenced and retention (#246) removes them.
   const tokensName = await files.put(c, Buffer.from(tokensCss(tokens)), "css");
@@ -202,8 +208,9 @@ export async function writeRevision(
   await c.query(
     `INSERT INTO theming_revisions (revision, manifest, tokens, tokens_css, admin_tokens_css,
                                     embed_color, restored_from, changed, actor_user_id, logo,
-                                    logo_png, icon_192, icon_512, icon_maskable_512)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+                                    logo_png, icon_192, icon_512, icon_maskable_512, css,
+                                    templates)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
     [
       revision,
       JSON.stringify(input.manifest),
@@ -219,10 +226,18 @@ export async function writeRevision(
       images.icon_192,
       images.icon_512,
       images.icon_maskable_512,
+      style.css,
+      JSON.stringify(style.templates),
     ],
   );
   const owner = `r:${revision}`;
-  const generated = [images.logo_png, images.icon_192, images.icon_512, images.icon_maskable_512];
+  const generated = [
+    images.logo_png,
+    images.icon_192,
+    images.icon_512,
+    images.icon_maskable_512,
+    style.css,
+  ];
   for (const file of [tokensName, adminName, ...generated.filter((f) => f !== null)]) {
     await c.query(
       `INSERT INTO theming_file_refs (owner, file) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
@@ -238,6 +253,7 @@ export async function writeRevision(
     changed,
     ...(changed.includes("embeds") ? { embeds: { old: names(before), new: names(after) } } : {}),
     tokensCss: SERVED + tokensName,
+    css: style.css === null ? null : SERVED + style.css,
     embedColor,
   };
 }

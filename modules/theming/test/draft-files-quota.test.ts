@@ -151,8 +151,6 @@ describe.skipIf(!DATABASE_URL)("draft files and the quota", () => {
         "other/x.png",
         "/images/x.png",
         "images/x y.png",
-        "css/theme.css",
-        "templates/card.mustache",
         "embeds/drift/index.html",
         "fonts/LICENSE.txt",
       ]) {

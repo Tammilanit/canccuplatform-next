@@ -117,8 +117,9 @@ export async function copyOwned(c: SqlClient, from: string, to: string): Promise
     [from, to],
   );
   await c.query(
-    `INSERT INTO theming_package_files (owner, path, file, bytes, problem)
-     SELECT $2, path, file, bytes, problem FROM theming_package_files WHERE owner = $1`,
+    `INSERT INTO theming_package_files (owner, path, file, bytes, problem, refs, warnings)
+     SELECT $2, path, file, bytes, problem, refs, warnings FROM theming_package_files
+      WHERE owner = $1`,
     [from, to],
   );
 }
@@ -199,10 +200,11 @@ export async function createDraft(
  * problems of the uploads it holds instead of files (package-files.ts).
  */
 export async function draftProblems(c: SqlClient, manifest: Manifest): Promise<Problem[]> {
+  const paths = await draftPaths(c);
   return [
     ...checkManifest(manifest),
-    ...referenceProblems(manifest, await draftPaths(c)),
-    ...(await pathProblems(c)),
+    ...referenceProblems(manifest, paths),
+    ...(await pathProblems(c, paths)),
   ];
 }
 

@@ -25,12 +25,16 @@ export const EMBED_TYPES = {
 } as const;
 export type EmbedExt = keyof typeof EMBED_TYPES;
 
-/** What is stored but never served: a font's licence, kept for the package and its export. */
-export type StoredExt = Ext | "txt" | "md";
+/**
+ * What is stored but never served: a font's licence, kept for the package and its export, and a
+ * template's text, which surfaces get only as its parsed tree.
+ */
+export type StoredExt = Ext | "txt" | "md" | "mustache";
 
 /** `<sha256>.<ext>`, the served name: the ServedFile pattern of contracts/theming.openapi.yaml. */
 export const FILE_NAME = /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg)$/;
-export const STORED_NAME = /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg|html|js|json|txt|md)$/;
+export const STORED_NAME =
+  /^[0-9a-f]{64}\.(css|woff2|png|jpg|webp|svg|html|js|json|txt|md|mustache)$/;
 
 /** A write's temporary name (`write` below): the stored name and a random part. */
 export const TEMP_NAME = /^[0-9a-f]{64}\.[a-z0-9]+\.[0-9a-f]{12}\.tmp$/;

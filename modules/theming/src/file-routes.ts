@@ -13,7 +13,7 @@ import { removeDraftPath, setDraftPath } from "./package-files.js";
 import type { PathEntry } from "./package-files.js";
 import { MAX_PATH } from "./package.js";
 import { writingFiles } from "./stored.js";
-import { BODY_LIMIT, UPLOAD_FOLDERS, checkFile } from "./uploads.js";
+import { BODY_LIMIT, UPLOAD_FOLDERS, checkUpload } from "./uploads.js";
 
 /** PackagePath of contracts/theming.openapi.yaml. */
 const PACKAGE_PATH = /^(?!.*\.\.)(css|fonts|images|templates|embeds)\/[A-Za-z0-9._/-]{1,129}$/;
@@ -31,12 +31,12 @@ function uploadPath(value: unknown): string {
   ) {
     throw invalidRequest("path must be a package path, such as images/logo.png.");
   }
-  // CSS and templates wait for their own checks (#245); embeds and font licences come only with
-  // the whole package (package-routes.ts). Nothing is stored before its checks exist.
+  // Embeds and font licences come only with the whole package (package-routes.ts): an embed is
+  // checked as a whole folder, a licence with the fonts it belongs to.
   const folder = value.slice(0, value.indexOf("/"));
   if (!UPLOAD_FOLDERS.includes(folder) || /\.(txt|md)$/i.test(value)) {
     throw invalidRequest(
-      "Only images and fonts can be uploaded one by one so far; CSS, templates, embeds and licences cannot yet.",
+      "Only CSS, templates, images and fonts can be uploaded one by one; embeds and licences come with the package.",
     );
   }
   return value;
@@ -57,12 +57,17 @@ export function fileRoutes(app: FastifyInstance, deps: DraftDeps): void {
       const version = requiredVersion(request.query.draft_version);
       const path = uploadPath(request.query.path);
       const body = Buffer.isBuffer(request.body) ? request.body : Buffer.alloc(0);
-      const checked = await checkFile(path, body);
+      const checked = await checkUpload(path, body);
       const row = await writingFiles(deps, async (c, place) => {
         let unused: string[] = [];
         const draft = await editDraft(c, version, actorOf(request), async (manifest) => {
           const entry: PathEntry = checked.ok
-            ? { file: await place(checked.bytes, checked.ext), bytes: checked.bytes.length }
+            ? {
+                file: await place(checked.bytes, checked.ext),
+                bytes: checked.bytes.length,
+                refs: checked.refs,
+                warnings: checked.warnings,
+              }
             : { problem: checked.problem };
           unused = await setDraftPath(c, path, entry);
           // Any file but an image is styling only the advanced mode makes (Advanced mode).
