@@ -149,4 +149,23 @@ describe("the push diff", () => {
       { event: "ticker", data: { state_version: 5, ticker: later.ticker } },
     ]);
   });
+
+  it("sends a shuffled region when the widgets taking part change, so the screen cycles them", () => {
+    const hero = (order: number[], items: unknown[]) =>
+      region(
+        "hero",
+        [
+          widget("agenda_now", { title: "Now", items, empty: items.length === 0 }),
+          widget("logo", {}),
+        ],
+        { role: "hero", rotation: "shuffle", order },
+      );
+    const rail = record().views.landscape.regions[0] as RegionView;
+    const before = record({}, [rail, hero([1], [])]);
+    const after = record({}, [rail, hero([0, 1], [{ id: "x" }])]);
+    expect(diffZone(before, after, "landscape", 6)).toEqual([
+      { event: "region", data: { state_version: 6, region: after.views.landscape.regions[1] } },
+    ]);
+    expect(diffZone(after, before, "landscape", 7)?.[0]?.event).toBe("region");
+  });
 });

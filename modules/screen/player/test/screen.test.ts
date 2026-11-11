@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FADE_MS } from "../src/display.js";
 import { Screen } from "../src/screen.js";
+import { applyPatch } from "../src/state.js";
 import type { Region, ScreenState } from "../src/state.js";
 import { screenState } from "./fake.js";
 
@@ -163,6 +164,39 @@ describe("what a region shows", () => {
     expect(shownIn(screen, "ticker")).toEqual(["Hello", "Seats open 20:30."]);
     await advance(FADE_MS.calm);
     expect(shownIn(screen, "ticker")).toEqual(["Seats open 20:30."]);
+  });
+
+  it("shows a widget a pushed region adds to a shuffle, and drops one it takes out", () => {
+    const shuffled = (order: number[]) =>
+      region("rail", {
+        rotation: "shuffle",
+        order,
+        widgets: [widget("ticker", { text: "one" }), widget("ticker", { text: "two" })],
+      });
+    const screen = new Screen(host);
+    const before = state([shuffled([0])]);
+    screen.draw(before);
+    expect(shownIn(screen, "rail")).toEqual(["one"]);
+    const added = applyPatch(before, "region", { state_version: 2, region: shuffled([1]) });
+    expect(added).not.toBeNull();
+    screen.draw(added as ScreenState);
+    expect(shownIn(screen, "rail")).toEqual(["two"]);
+  });
+
+  it("keeps a widget that waits for its images unseen when its data changes meanwhile", () => {
+    const screen = new Screen(host);
+    const motion = { display: { motion: "moderate", drift: false } } as const;
+    const ticker = (text: string, stale: boolean) =>
+      region("rail", { widgets: [widget("agenda_now", { title: text, items: [], stale })] });
+    screen.draw(state([region("rail")], motion));
+    screen.draw(state([ticker("Now", false)], motion));
+    const incoming = screen.root.querySelector(".canccu-region--rail > :last-child");
+    expect(incoming?.classList.contains("canccu-slot--in")).toBe(true);
+    screen.draw(state([ticker("Later", true)], motion));
+    expect(incoming?.textContent).toContain("Later");
+    expect(incoming?.classList.contains("canccu-slot--in")).toBe(true);
+    expect(incoming?.classList.contains("canccu-is-stale")).toBe(true);
+    expect(incoming?.classList.contains("canccu-is-active")).toBe(true);
   });
 
   it("changes a shown widget's data in place, without a fade", () => {

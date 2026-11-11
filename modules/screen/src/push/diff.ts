@@ -13,11 +13,13 @@ function stableWidget(w: WidgetView): WidgetView {
   return { ...w, view: { ...w.view, iso: null, time: null, date: null } };
 }
 
+// A shuffle's order is the screen's own, but which widgets take part (`skip_empty`) is not: the
+// player cycles through `order`, so a change of members must reach it as a `region` message.
 function stableRegion(r: RegionView): RegionView {
   return {
     ...r,
     cycle_started_at: "",
-    order: r.rotation === "shuffle" ? [] : r.order,
+    order: r.rotation === "shuffle" ? [...r.order].sort((a, b) => a - b) : r.order,
     widgets: r.widgets.map(stableWidget),
   };
 }

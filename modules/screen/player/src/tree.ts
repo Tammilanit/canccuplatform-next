@@ -23,7 +23,8 @@ const VOID = new Set(["br", "img"]);
 const MAX_DEPTH = 8;
 // The page's CSP lets images load from its own host and `data:` only; anything else is left out
 // rather than left to the browser to refuse, so a theme can never make a screen fetch elsewhere.
-const IMAGE_SRC = /^(\/(?!\/)|data:image\/(png|jpeg|webp|gif|svg\+xml)[;,])/;
+// Browsers read `/\host` as `//host`, so a backslash after the slash is refused too.
+const IMAGE_SRC = /^(\/(?![/\\])|data:image\/(png|jpeg|webp|gif|svg\+xml)[;,])/;
 
 type Scope = readonly unknown[];
 
@@ -59,12 +60,13 @@ function showings(value: unknown): unknown[] {
 function attrText(nodes: TreeNode[], scopes: Scope, inClass: boolean, depth: number): string {
   let out = "";
   for (const node of nodes) {
+    if (!isObject(node)) continue;
     if ("text" in node && typeof node.text === "string") out += node.text;
     else if ("field" in node && typeof node.field === "string") {
       const value = asText(lookup(node.field, scopes));
       // Data may lengthen a class name, never add one of its own.
       out += inClass ? value.replace(/[^a-z0-9-]/g, "") : value;
-    } else if ("section" in node && depth < MAX_DEPTH) {
+    } else if ("section" in node && Array.isArray(node.children) && depth < MAX_DEPTH) {
       for (const scope of sectionScopes(node, scopes)) {
         out += attrText(node.children, scope, inClass, depth + 1);
       }

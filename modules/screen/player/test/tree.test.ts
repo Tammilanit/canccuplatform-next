@@ -80,7 +80,13 @@ describe("the template tree renderer (contracts/theming.md, The parsed tree)", (
       );
     expect(img("/theming/a/x.png")).toBe('<img src="/theming/a/x.png" alt="a">');
     expect(img("data:image/svg+xml;base64,AAAA")).toContain('src="data:image/svg+xml;base64,AAAA"');
-    for (const bad of ["//evil.test/x.png", "https://evil.test/x.png", "javascript:alert(1)", ""]) {
+    for (const bad of [
+      "//evil.test/x.png",
+      "/\\evil.test/x.png",
+      "https://evil.test/x.png",
+      "javascript:alert(1)",
+      "",
+    ]) {
       expect(img(bad)).toBe('<img alt="a">');
     }
   });

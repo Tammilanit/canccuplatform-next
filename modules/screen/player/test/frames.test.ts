@@ -360,6 +360,11 @@ describe("while playing", () => {
     await player.start();
     await settle();
     expect(player.live.heartbeat.serverNow()).toBe(T0 + 3_600_000);
+    // A push keeps the whole state's time: it must not set the clock back to it.
+    await settle(40_000);
+    api.send("ticker", { state_version: 4, ticker: { text: "Hello" } });
+    await settle();
+    expect(player.live.heartbeat.serverNow()).toBe(T0 + 3_640_000);
   });
 
   it("runs the identify and reload commands", async () => {

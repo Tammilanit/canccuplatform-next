@@ -90,8 +90,12 @@ export class Screen {
     const next = (): void => {
       this.timer = setTimeout(
         () => {
-          this.tick();
-          next();
+          // A tick that throws (a malformed theme tree) must not stop the screen's clock for good.
+          try {
+            this.tick();
+          } finally {
+            next();
+          }
         },
         1000 - (((this.host.serverNow() % 1000) + 1000) % 1000),
       );
@@ -184,7 +188,12 @@ export class Screen {
       // New data for what is already shown: redraw it in place, with no fade.
       const fresh = drawWidget(next.type, next.template, next.view, templates);
       drawn.slot?.replaceChildren(...fresh.childNodes);
-      if (drawn.slot !== null) drawn.slot.className = `${fresh.className} canccu-is-active`;
+      // Keep a fade that is still waiting for its images (`canccu-slot--in`), or it pops in.
+      if (drawn.slot !== null) {
+        const fading = drawn.slot.classList.contains("canccu-slot--in");
+        drawn.slot.className = `${fresh.className} canccu-is-active`;
+        if (fading) drawn.slot.classList.add("canccu-slot--in");
+      }
       return;
     }
     const incoming =

@@ -35,7 +35,8 @@ export function liveView(type: string, view: View, nowMs: number, timeZone: stri
   if (type !== "clock") return view;
   return {
     ...view,
-    iso: new Date(nowMs).toISOString(),
+    // To the minute, as the text shows it: else the clock redraws every second for nothing.
+    iso: new Date(Math.floor(nowMs / 60_000) * 60_000).toISOString(),
     time: format(nowMs, timeZone, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
     date: format(nowMs, timeZone, { weekday: "short", day: "numeric", month: "short" }),
   };

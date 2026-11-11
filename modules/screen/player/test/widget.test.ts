@@ -38,7 +38,7 @@ describe("what ticks on the device", () => {
       "Europe/Helsinki",
     );
     expect(clock).toMatchObject({
-      iso: "2026-03-14T18:42:30.000Z",
+      iso: "2026-03-14T18:42:00.000Z",
       time: "20:42",
       date: "Sat 14 Mar",
     });

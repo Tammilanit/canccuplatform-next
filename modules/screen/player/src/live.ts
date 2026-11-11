@@ -43,6 +43,7 @@ export class Live {
   private offlineTimer: ReturnType<typeof setTimeout> | undefined;
   private pollTimer: ReturnType<typeof setInterval> | undefined;
   private identify: HTMLElement | null = null;
+  private lastTime = "";
 
   constructor(private readonly host: LiveHost) {
     this.stream = new StreamClient(
@@ -90,8 +91,12 @@ export class Live {
     this.state = state;
     // Until a heartbeat is answered, the state's own time is the best guess at the server's clock
     // (contracts/screen.md, Motion and burn-in drift).
+    // A patched state keeps the time of the whole state it came from, so only a new time counts:
+    // else every patch would set the clock back to that state's time.
     const stateMs = Date.parse(state.time);
-    if (!this.heartbeat.synced && !Number.isNaN(stateMs)) {
+    const fresh = state.time !== this.lastTime;
+    this.lastTime = state.time;
+    if (fresh && !this.heartbeat.synced && !Number.isNaN(stateMs)) {
       this.heartbeat.offsetMs = stateMs - this.host.now();
     }
     this.setTheme(state.theme);
