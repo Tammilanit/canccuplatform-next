@@ -181,6 +181,7 @@ async function main(): Promise<void> {
         agenda: process.env.CANCCU_AGENDA_URL ?? "http://agenda:8080",
         tenants: tenantsUrl,
         theming: process.env.CANCCU_THEMING_URL ?? "http://theming:8080",
+        notify: process.env.CANCCU_NOTIFY_URL ?? "http://notify:8080",
       },
       service,
       log,

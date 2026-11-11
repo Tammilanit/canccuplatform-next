@@ -33,6 +33,26 @@ describe.skipIf(!DATABASE_URL)("the /screen/ page and its bundle", () => {
     expect(res.headers["x-content-type-options"]).toBe("nosniff");
   });
 
+  it("frames the event's web pages and YouTube's embeds, and nothing a list entry could smuggle in", async () => {
+    h.settings.alpha = {
+      web_allowlist: [
+        "https://info.example/board",
+        "https://menu.example",
+        "http://plain.example",
+        "https://bad.example; script-src *",
+        "not a url",
+      ],
+    };
+    const res = await call(h, "GET", "/screen/");
+    const csp = String(res.headers["content-security-policy"]);
+    expect(csp).toContain(
+      "frame-src http://alpha.test/theming/sandbox/ https://www.youtube-nocookie.com https://info.example https://menu.example;",
+    );
+    expect(csp).not.toContain("plain.example");
+    expect(csp.match(/script-src/g)).toHaveLength(1);
+    h.settings.alpha = {};
+  });
+
   it("serves the page to a host written with a trailing dot", async () => {
     const res = await call(h, "GET", "/screen/", { host: "alpha.test." });
     expect(res.statusCode).toBe(200);

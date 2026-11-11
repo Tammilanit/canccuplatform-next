@@ -31,6 +31,8 @@ export interface ZoneRecord {
   /** Absent in a record stored before it was added: screens then get the defaults. */
   display?: Display;
   views: Record<Orientation, { layout: unknown; regions: RegionView[] }>;
+  /** When a content widget next changes by itself (epoch ms): the hub rebuilds the zone then. */
+  nextChangeAt?: number | null;
 }
 
 /** One change of the log: its messages per orientation, `null` where a whole `state` is sent. */

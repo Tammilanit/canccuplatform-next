@@ -57,6 +57,8 @@ export class PushHub {
   private readonly pending = new Map<string, NodeJS.Timeout>();
   private readonly running = new Set<string>();
   private readonly dirty = new Set<string>();
+  /** By tenant and zone: the rebuild at the zone's next content change (a frame, a photo, a code). */
+  private readonly changes = new Map<string, NodeJS.Timeout>();
 
   constructor(private readonly deps: HubDeps) {}
 
@@ -130,8 +132,9 @@ export class PushHub {
   }
 
   close(): void {
-    for (const timer of this.pending.values()) clearTimeout(timer);
+    for (const timer of [...this.pending.values(), ...this.changes.values()]) clearTimeout(timer);
     this.pending.clear();
+    this.changes.clear();
     for (const set of [...this.streams.values()]) for (const s of [...set]) s.end();
   }
 
@@ -164,12 +167,45 @@ export class PushHub {
       const ctx = await this.deps.contextOf(stream.req.host);
       // A hostname that serves another event now builds nothing for this one.
       if (ctx === null || ctx.tenant_id !== tenant) return;
-      await withTenant(tenant, () => refreshZone(this.deps, ctx, stream.req.host, zone));
+      const record = await withTenant(tenant, () =>
+        refreshZone(this.deps, ctx, stream.req.host, zone),
+      );
+      this.plan(tenant, zone, record?.nextChangeAt ?? null);
     } catch (err) {
       this.deps.log?.warn({ err, tenant_id: tenant, zone_key: zone }, "zone rebuild failed");
     } finally {
       this.running.delete(key);
       if (this.dirty.delete(key)) this.schedule(tenant, zone);
     }
+  }
+
+  /**
+   * Rebuild the zone when its content next changes by itself: after each build here, and when a
+   * stream is placed (its build was the stream's own). Every container with a stream on the zone
+   * plans it; a claim on the instant hands the build to one of them.
+   */
+  plan(tenant: string, zone: string, at: number | null): void {
+    const key = `${tenant}\n${zone}`;
+    clearTimeout(this.changes.get(key));
+    this.changes.delete(key);
+    if (at === null) return;
+    const delay = Math.max(0, at - (this.deps.now ?? Date.now)());
+    const timer = setTimeout(() => {
+      this.changes.delete(key);
+      void withTenant(tenant, () =>
+        this.deps.kv.setIfAbsent(
+          tenantKey("screen", "zone", zone, "change", String(at)),
+          "1",
+          REFRESH_MS,
+        ),
+      )
+        .then((claimed) => {
+          if (claimed) this.schedule(tenant, zone);
+        })
+        .catch((err: unknown) => {
+          this.deps.log?.warn({ err, tenant_id: tenant, zone_key: zone }, "zone change failed");
+        });
+    }, delay);
+    this.changes.set(key, timer);
   }
 }

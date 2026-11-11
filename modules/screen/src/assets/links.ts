@@ -37,7 +37,7 @@ function httpsUrl(value: string): URL {
 }
 
 /** The origins of `web_allowlist`; entries that are not https:// origins never match. */
-function allowedOrigins(allowlist: unknown): Set<string> {
+export function allowedOrigins(allowlist: unknown): Set<string> {
   const origins = new Set<string>();
   for (const entry of Array.isArray(allowlist) ? allowlist : []) {
     if (typeof entry !== "string") continue;

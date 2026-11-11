@@ -123,7 +123,7 @@ function region(
         clampDwell(source.rotate_seconds) ??
         DEFAULT_DWELL_S,
       stale_after_seconds: null,
-      view: viewOf(entry.widget, props, input.facts),
+      view: viewOf(entry.widget, props, input.facts, entry.embed ?? null),
     };
   });
   const skipEmpty = setting.skip_empty !== false;

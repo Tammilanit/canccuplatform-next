@@ -275,4 +275,55 @@
     color: var(--canccu-color-primary-text, #0f1115);
     font-weight: 600;
   }
+  /* The playlist's media fill the widget edge to edge, with no card (src/media.ts). */
+  .canccu-region > .canccu-widget--playlist {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .canccu-widget__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: contain;
+  }
+
+  .canccu-widget__media.canccu-is-failed {
+    visibility: hidden;
+  }
+
+  /* The embed widget, as packages/ui's ui.css draws it (the screen page loads no ui.css): the
+     still fills the widget and the frame lies over it, transparent until the embed paints. */
+  .canccu-region > .canccu-widget--embed {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+    background: var(--canccu-color-background, #0f1115);
+  }
+
+  .canccu-widget--embed > .canccu-widget__body {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .canccu-widget--embed > .canccu-widget__body > img {
+    max-width: 40%;
+    max-height: 40%;
+  }
+
+  .canccu-embed {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    color-scheme: normal;
+  }
 }

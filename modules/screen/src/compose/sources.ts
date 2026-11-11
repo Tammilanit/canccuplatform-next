@@ -9,7 +9,7 @@
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import type { ServiceIdentity } from "@canccu/kit";
-import type { AgendaItem, AgendaNow, VenueInfo } from "./widgets.js";
+import type { AgendaItem, AgendaNow, CheckinCode, VenueInfo } from "./widgets.js";
 
 export interface ThemeNow {
   revision: number;
@@ -20,6 +20,8 @@ export interface ThemeNow {
   logo_url: string | null;
   layouts: unknown[];
   templates: unknown[];
+  /** Each embed's name and its frame in the sandbox; absent from an older theming. */
+  embeds?: { name: string; frame_url: string }[];
 }
 
 export interface EventPublic {
@@ -32,12 +34,14 @@ export interface Sources {
   venueInfo(tenantId: string): Promise<VenueInfo | null>;
   theme(tenantId: string): Promise<ThemeNow | null>;
   event(host: string): Promise<EventPublic | null>;
+  checkinCode(tenantId: string, purpose: string): Promise<CheckinCode | null>;
 }
 
 export interface SourceUrls {
   agenda: string;
   tenants: string;
   theming: string;
+  notify: string;
 }
 
 const READ_TIMEOUT_MS = 1500;
@@ -140,6 +144,16 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       )) as ThemeNow | null;
       return body === null || typeof body.revision !== "number" ? null : body;
     },
+    checkinCode: async (tenantId, purpose) => {
+      const query = `tenant_id=${encodeURIComponent(tenantId)}&purpose=${encodeURIComponent(purpose)}`;
+      const body = (await read(
+        urls.notify,
+        `/internal/notify/check-in/code?${query}`,
+        service.headers("notify"),
+      )) as CheckinCode | null;
+      const fields = ["purpose", "code", "url", "valid_until", "rotates_at"] as const;
+      return body === null || fields.some((f) => typeof body[f] !== "string") ? null : body;
+    },
     event: async (host) => {
       const body = (await read(urls.tenants, "/api/tenants/current", {
         host,
@@ -155,4 +169,5 @@ export const noSources: Sources = {
   venueInfo: () => Promise.resolve(null),
   theme: () => Promise.resolve(null),
   event: () => Promise.resolve(null),
+  checkinCode: () => Promise.resolve(null),
 };

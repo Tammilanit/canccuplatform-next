@@ -132,6 +132,36 @@ describe.skipIf(!DATABASE_URL)("the push channel", () => {
     sse.close();
   });
 
+  it("pushes a content widget's own change (a code rotates) when it is due, with no event", async () => {
+    const at = (ms: number) => new Date(h.clock.now + ms).toISOString();
+    const code = (c: string, rotatesIn: number) => ({
+      purpose: "arrival",
+      code: c,
+      url: `/notify/check-in?p=arrival&c=${c}`,
+      valid_until: at(60_000),
+      rotates_at: at(rotatesIn),
+    });
+    h.sources.checkin = code("first", 300);
+    const zone = {
+      key: "door",
+      name: "Door",
+      regions: { hero: { widgets: [{ widget: "checkin_qr" }] } },
+    };
+    expect(
+      (await call(h, "POST", "/api/screen/zones", { session: "admin", body: zone })).statusCode,
+    ).toBe(201);
+    const { token } = await screen("door");
+    const sse = open(token);
+    await sse.next("state");
+    h.clock.now += 300;
+    h.sources.checkin = code("second", 30_000);
+    const pushed = await sse.next("widget", 3_000);
+    expect(pushed.data.view).toMatchObject({
+      url: "https://alpha.test/notify/check-in?p=arrival&c=second",
+    });
+    sse.close();
+  });
+
   it("delivers a command once, as a `command` message", async () => {
     const { id, token } = await screen();
     const sse = open(token);

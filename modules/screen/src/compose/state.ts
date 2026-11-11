@@ -15,6 +15,7 @@ import { resolveWinner } from "../schedule/winner.js";
 import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
 import { buildRegions } from "./build.js";
+import { contentFacts } from "./content.js";
 import { displayOf } from "./display.js";
 import type { Display } from "./display.js";
 import { themeLayouts } from "./layouts.js";
@@ -114,6 +115,17 @@ export interface ZoneComposed {
   views: Record<Orientation, ReturnType<typeof buildRegions>>;
   ticker: ZoneFacts["ticker"] & { appearance: string };
   display: Display;
+  /** When a content widget next changes by itself (epoch ms), or null. */
+  nextChangeAt: number | null;
+}
+
+/** The widget types a zone's regions show, in either orientation. */
+function typesOf(views: ZoneComposed["views"]): Set<string> {
+  const types = new Set<string>();
+  for (const view of Object.values(views)) {
+    for (const r of view.regions) for (const w of r.widgets) types.add(w.widget);
+  }
+  return types;
 }
 
 /** Everything of a zone's state that is the same for all its screens, in both orientations. */
@@ -150,6 +162,7 @@ export async function composeZone(
     agenda,
     venue,
     ticker: read.ticker,
+    embeds: theme?.embeds ?? [],
   };
   const build = (portrait: boolean) =>
     buildRegions({
@@ -165,6 +178,14 @@ export async function composeZone(
       portrait,
       facts,
     });
+  let views = { landscape: build(false), portrait: build(true) };
+  // The content widgets' sources are read only for a zone that shows them, so their changes
+  // (every frame, photo and code) never move another zone's version.
+  const content = await contentFacts(deps, ctx, zoneKey, typesOf(views), at.getTime());
+  if (Object.keys(content.facts).length > 0) {
+    Object.assign(facts, content.facts);
+    views = { landscape: build(false), portrait: build(true) };
+  }
   const setting = deps.settings.get("ticker_appearance", "default");
   const appearance = typeof setting === "string" ? setting : "default";
   const display = displayOf(theme?.tokens, agenda, deps.settings.get("burn_in_drift", false));
@@ -180,9 +201,10 @@ export async function composeZone(
     zone: read.zone,
     theme: theme ?? NO_THEME,
     eventName,
-    views: { landscape: build(false), portrait: build(true) },
+    views,
     ticker: { ...read.ticker, appearance },
     display,
+    nextChangeAt: content.changesAt,
   };
 }
 

@@ -26,6 +26,7 @@
     "sharp": "0.35.5"
   },
   "devDependencies": {
+    "@canccu/ui": "file:../../packages/ui",
     "@eslint/js": "10.0.1",
     "@ffprobe-installer/ffprobe": "2.1.2",
     "@types/node": "22.20.5",
