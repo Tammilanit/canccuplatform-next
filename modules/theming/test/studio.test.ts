@@ -88,10 +88,16 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
         primary: "#1e1b4b",
         accent: "#f59e0b",
         scheme: "light",
+        embed_color: "#11223344",
       });
       expect(res.statusCode).toBe(200);
       const body = (await page("/theming/studio/")).body;
       expect(body).toContain('data-draft-version="2"');
+      // The field takes every colour the schema does, so its value never blocks a Save.
+      const pattern = /name="embed_color" pattern="([^"]+)"[^>]*value="#11223344"/.exec(body)?.[1];
+      expect(pattern).toBeDefined();
+      expect(new RegExp(`^(?:${pattern})$`, "v").test("#11223344")).toBe(true);
+      expect(new RegExp(`^(?:${pattern})$`, "v").test("#112233")).toBe(true);
       expect(body).toContain('data-action="brand"');
       expect(body).toContain('value="#1e1b4b"');
       expect(body).toMatch(/<input[^>]*value="light"[^>]*checked/);
@@ -226,6 +232,28 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       const body = (await page("/theming/studio/history?before=2")).body;
       expect(body).toContain("Revision 1");
       expect(body).not.toContain("Revision 3");
+    });
+
+    it("offers older revisions only when there are some", async () => {
+      // Retention keeps exactly a page (20), so a full page alone must not offer more.
+      for (let i = 0; i < 21; i++) await publish((await t.fresh()).draft_version);
+      let body = (await page("/theming/studio/history")).body;
+      expect(body).toContain("Revision 21");
+      expect(body).toContain("Revision 2<");
+      expect(body).not.toContain("Older revisions");
+      body = (await page("/theming/studio/history?before=2")).body;
+      expect(body).toContain("No older revisions");
+      expect(body).not.toContain("Nothing published yet");
+
+      // A pinned older revision is kept beyond the 20, so it is a page further.
+      await withTenant("alpha", () =>
+        t.h.db.tenant((c) => c.query(`INSERT INTO theming_pins (theme_revision) VALUES (2)`)),
+      );
+      await publish((await t.fresh()).draft_version);
+      body = (await page("/theming/studio/history")).body;
+      await withTenant("alpha", () => t.h.db.tenant((c) => c.query(`DELETE FROM theming_pins`)));
+      expect(body).not.toContain("Revision 2<");
+      expect(body).toContain('href="/theming/studio/history?before=3"');
     });
 
     it("says so when nothing is published yet", async () => {

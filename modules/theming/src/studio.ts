@@ -14,10 +14,10 @@ import { revisionList } from "./revision-routes.js";
 import { draftCssRoutes, htmlHeaders, previewRoutes } from "./studio-preview.js";
 import type { StudioDeps } from "./studio-preview.js";
 import { advancedView, historyView } from "./studio-advanced.js";
-import { brandKitView, studioState } from "./studio-views.js";
+import { STUDIO, brandKitView, studioState } from "./studio-views.js";
 
-export const STUDIO = "/theming/studio/";
 const SIGN_IN = "/admin/sign-in";
+const HISTORY_PAGE = 20;
 const STATIC = new URL("../static/", import.meta.url);
 
 const MENU: [string, string][] = [
@@ -74,7 +74,11 @@ function staticFile(name: string): Promise<Buffer> {
       name === "ui.css"
         ? createRequire(import.meta.url).resolve("@canccu/ui/ui.css")
         : new URL(name, STATIC);
-    bytes = readFile(path);
+    // A failed read is forgotten, so the next request tries again instead of failing forever.
+    bytes = readFile(path).catch((err: unknown) => {
+      staticFiles.delete(name);
+      throw err;
+    });
     staticFiles.set(name, bytes);
   }
   return bytes;
@@ -106,7 +110,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
     });
 
     studio.get(`${STUDIO}advanced`, reader, async (request, reply) => {
-      const state = await deps.db.tenant((c) => studioState(c, deps.files));
+      const state = await deps.db.tenant((c) => studioState(c, deps.files, false));
       return studioPage(request, reply, "Theme: advanced", advancedView(state));
     });
 
@@ -115,20 +119,29 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       reader,
       async (request, reply) => {
         const before = positiveInt(request.query.before, "before");
-        const list = await deps.db.tenant((c) => revisionList(c, before, 20));
-        return studioPage(request, reply, "Theme: history", historyView(list));
+        // One row more than shown tells whether older revisions exist: retention keeps exactly a
+        // page of them, so a full page alone says nothing.
+        const list = await deps.db.tenant((c) => revisionList(c, before, HISTORY_PAGE + 1));
+        return studioPage(
+          request,
+          reply,
+          "Theme: history",
+          historyView(list, HISTORY_PAGE, before),
+        );
       },
     );
 
     // Static and public, as ui.css is on every module's pages: nothing in them is the event's.
     studio.get<{ Params: { name: string } }>(`${STUDIO}static/:name`, async (request, reply) => {
-      const type = STATIC_TYPES[request.params.name];
+      // Own keys only: `constructor` and the like must be a 404, not a read of a missing file.
+      const name = request.params.name;
+      const type = Object.hasOwn(STATIC_TYPES, name) ? STATIC_TYPES[name] : undefined;
       if (type === undefined) throw new KitError("Not found.", { status: 404, code: "not_found" });
       return reply
         .type(type)
         .header("x-content-type-options", "nosniff")
         .header("cache-control", "no-cache")
-        .send(await staticFile(request.params.name));
+        .send(await staticFile(name));
     });
     done();
   });

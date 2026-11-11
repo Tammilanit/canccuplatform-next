@@ -126,12 +126,15 @@ interface RevisionSummary {
   pinned: boolean;
 }
 
-export function historyView(list: {
-  current_revision: number;
-  revisions: Record<string, unknown>[];
-}): Html {
+/** `list` holds up to `pageSize + 1` rows; the extra one only says that older revisions exist. */
+export function historyView(
+  list: { current_revision: number; revisions: Record<string, unknown>[] },
+  pageSize: number,
+  before: number | undefined,
+): Html {
   const current = list.current_revision;
-  const revisions = list.revisions as unknown as RevisionSummary[];
+  const all = list.revisions as unknown as RevisionSummary[];
+  const revisions = all.slice(0, pageSize);
   const rows = revisions.map((r) => {
     const restore =
       r.revision === current
@@ -145,13 +148,17 @@ export function historyView(list: {
   });
   const last = revisions.at(-1);
   const more =
-    revisions.length === 20 && last !== undefined
+    all.length > pageSize && last !== undefined
       ? html`<p><a${attrs({ href: `${STUDIO}history?before=${last.revision}` })}>Older revisions</a></p>`
       : "";
+  const empty =
+    before === undefined
+      ? html`<p>Nothing published yet: screens show the platform's default look.</p>`
+      : html`<p>No older revisions. <a href="${STUDIO}history">Newest revisions</a></p>`;
   return html`<div class="canccu-studio" ${attrs({ "data-current-revision": current })}>
     ${
       revisions.length === 0
-        ? html`<p>Nothing published yet: screens show the platform's default look.</p>`
+        ? empty
         : html`<p>
               Restore publishes a copy of an earlier revision as a new one; history only grows. The
               last 20 revisions are kept, and every pinned one.

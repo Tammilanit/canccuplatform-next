@@ -54,6 +54,10 @@ describe.skipIf(!DATABASE_URL)("the Studio previews", () => {
 
     it("answer 404 for a surface there is none of", async () => {
       expect((await as("/theming/studio/preview/billboard")).statusCode).toBe(404);
+      // Names an object inherits are no surface either.
+      for (const name of ["toString", "constructor", "__proto__"]) {
+        expect((await as(`/theming/studio/preview/${name}`)).statusCode).toBe(404);
+      }
     });
 
     it("show the current theme without canccu_theme=draft", async () => {
@@ -226,6 +230,9 @@ describe.skipIf(!DATABASE_URL)("the Studio previews", () => {
       expect((await as("/theming/studio/static/ui.css", "")).body).toContain("@layer canccu-base");
       expect((await as("/theming/studio/static/../package.json", "")).statusCode).toBe(404);
       expect((await as("/theming/studio/static/other.js", "")).statusCode).toBe(404);
+      for (const name of ["constructor", "toString", "hasOwnProperty"]) {
+        expect((await as(`/theming/studio/static/${name}`, "")).statusCode).toBe(404);
+      }
     });
 
     it("keep the preview's own rules under the theme's layer", async () => {

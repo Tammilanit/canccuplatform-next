@@ -72,7 +72,12 @@
     const q = query({ path, draft_version: version });
     const draft = await call("PUT", `/api/theming/draft/file?${q}`, file);
     const problem = draft.problems.find((p) => p.path === path && p.severity === "error");
-    if (problem !== undefined) throw new Error(`${path}: ${problem.message}`);
+    if (problem !== undefined) {
+      // Take the refused file out again, or its error would block Publish with no page to remove it.
+      const back = query({ path, draft_version: draft.draft_version });
+      await call("DELETE", `/api/theming/draft/file?${back}`);
+      throw new Error(`${path}: ${problem.message}`);
+    }
     return { path, version: draft.draft_version };
   }
 

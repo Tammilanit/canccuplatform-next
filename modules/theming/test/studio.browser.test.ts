@@ -9,7 +9,7 @@ import type { BrowserContext, Page, Route } from "playwright-core";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { withTenant } from "@canccu/kit";
 import { launch } from "./chromium.js";
-import { png } from "./drafting.js";
+import { SCRIPTED, png } from "./drafting.js";
 import type { DraftBody } from "./drafting.js";
 import { DATABASE_URL, harness } from "./helpers.js";
 import type { Harness } from "./helpers.js";
@@ -121,6 +121,21 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
     await page.fill('input[name="accent"]', "#7c5cff");
     await act(page, '[data-action="brand"] button[type="submit"]');
     expect((await draft()).manifest.images).toEqual({ logo: "images/logo.png" });
+  });
+
+  it("takes a refused logo out of the draft again and says why", async () => {
+    await api("POST", "/api/theming/draft", { from: "defaults" });
+    const page = await open("/theming/studio/");
+    await page.setInputFiles('input[name="logo_file"]', {
+      name: "logo.svg",
+      mimeType: "image/svg+xml",
+      buffer: SCRIPTED,
+    });
+    await act(page, '[data-action="brand"] button[type="submit"]');
+    expect(await page.textContent(".canccu-studio-notice")).toContain("images/logo.svg");
+    const after = await draft();
+    expect((after.files ?? []).map((f) => f.path)).not.toContain("images/logo.svg");
+    expect(after.problems.filter((p) => p.severity === "error")).toEqual([]);
   });
 
   it("holds Publish until the preview of changed CSS has loaded, then publishes", async () => {

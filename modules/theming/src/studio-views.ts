@@ -51,14 +51,19 @@ export async function draftFileUrl(c: SqlClient, path: unknown): Promise<string 
     : undefined;
 }
 
-export async function studioState(c: SqlClient, files: FileStore): Promise<StudioState> {
+/** `compare` false skips compiling the draft's CSS, for pages that never hold Publish (advanced). */
+export async function studioState(
+  c: SqlClient,
+  files: FileStore,
+  compare = true,
+): Promise<StudioState> {
   const draft = await loadDraft(c);
   const { rows } = await c.query(
     `SELECT revision, css FROM theming_revisions ORDER BY revision DESC LIMIT 1`,
   );
   const head = rows[0] as { revision: number; css: string | null } | undefined;
   let cssChanged = false;
-  if (draft !== undefined) {
+  if (draft !== undefined && compare) {
     // Compiled as publish would store it, so the same CSS has the same name as the current's.
     try {
       const css = await compiledCss(c, files, "draft", draft.manifest, SERVED);
@@ -173,7 +178,7 @@ function brandForm(state: StudioState, colors: Record<string, string>): Html {
 <div class="canccu-field"><label class="canccu-field__label" for="canccu-studio-logo">Logo</label>${logo}<input class="canccu-input" type="file" id="canccu-studio-logo" name="logo_file" accept="image/png,image/jpeg,image/webp,image/svg+xml"><p class="canccu-field__hint">PNG, JPEG, WebP or SVG, up to 5 MB. A PNG of it is made for Discord and the hub's icons.</p></div>
 ${colour("primary", "Primary colour")}${colour("accent", "Accent colour")}
 <fieldset class="canccu-field"><legend class="canccu-field__label">Scheme</legend>${schemes}</fieldset>
-<div class="canccu-field"><label class="canccu-field__label" for="canccu-studio-embed-color">Discord embed colour</label><input${attrs({ class: "canccu-input", type: "text", id: "canccu-studio-embed-color", name: "embed_color", pattern: "#[0-9a-fA-F]{6}", placeholder: "the primary colour", value: brand?.embed_color })}></div>
+<div class="canccu-field"><label class="canccu-field__label" for="canccu-studio-embed-color">Discord embed colour</label><input${attrs({ class: "canccu-input", type: "text", id: "canccu-studio-embed-color", name: "embed_color", pattern: "#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})", placeholder: "the primary colour", value: brand?.embed_color })}></div>
 <button class="canccu-button canccu-button--primary" type="submit">Save</button></form>`,
   );
 }

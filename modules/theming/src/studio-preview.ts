@@ -6,6 +6,7 @@
  */
 import { readFile, readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { eventPageCsp, newNonce, requireTenant } from "@canccu/kit";
 import type { Logger, RightsChecker, SqlClient } from "@canccu/kit";
@@ -22,10 +23,9 @@ import type { ProfileSource } from "./profile.js";
 import { WRITE, needs, noDraft, notFound, pageNeeds } from "./http.js";
 import { resolvedRevision, revisionZero } from "./theme.js";
 import { adminTokens, fillTokens, tokensCss } from "./tokens.js";
-import { STARTERS, draftFileUrl } from "./studio-views.js";
+import { STARTERS, STUDIO, draftFileUrl } from "./studio-views.js";
 
-const STUDIO = "/theming/studio/";
-const THEMES = new URL("../../../events/demo/themes/", import.meta.url).pathname;
+const THEMES = fileURLToPath(new URL("../../../events/demo/themes/", import.meta.url));
 
 export interface StudioDeps {
   db: Db;
@@ -194,7 +194,8 @@ function previewPage(
     body = discordCard(look);
     links = base;
   } else {
-    const sample = SAMPLES[surface];
+    // Own keys only: `toString` and the like are no surface.
+    const sample = Object.hasOwn(SAMPLES, surface) ? SAMPLES[surface] : undefined;
     if (sample === undefined) throw notFound();
     title = sample.title;
     kind = sample.surface;
