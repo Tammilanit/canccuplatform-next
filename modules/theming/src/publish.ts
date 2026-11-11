@@ -134,6 +134,8 @@ export interface Published {
   /** The embeds' names before and after, when they changed: every embed change is audited. */
   embeds?: { old: string[]; new: string[] };
   tokensCss: string;
+  /** The compiled CSS's address, or null for a theme without CSS. */
+  css: string | null;
   embedColor: number;
 }
 
@@ -186,6 +188,8 @@ export async function writeRevision(
   if (changed.includes("embeds") && !input.embedsAllowed) throw versionConflict("theme");
 
   const revision = current + 1;
+  // First: CSS or a template that no longer passes its checks fails the publish before any work.
+  const style = await compileStyle(c, files, input.source, input.manifest);
   // Generated once here, so every later read of the revision is a pure read of addresses (D4).
   // Files land before the row; on a rollback they stay unreferenced and retention (#246) removes them.
   const tokensName = await files.put(c, Buffer.from(tokensCss(tokens)), "css");
@@ -199,7 +203,6 @@ export async function writeRevision(
     input.manifest,
     tokens.colors.background ?? "#000000",
   );
-  const style = await compileStyle(c, files, input.source, input.manifest);
   const brand = (input.manifest.brand ?? {}) as { embed_color?: string };
   const embedColor = colorInt(brand.embed_color ?? tokens.colors.primary ?? "#000000");
   await c.query(
@@ -250,6 +253,7 @@ export async function writeRevision(
     changed,
     ...(changed.includes("embeds") ? { embeds: { old: names(before), new: names(after) } } : {}),
     tokensCss: SERVED + tokensName,
+    css: style.css === null ? null : SERVED + style.css,
     embedColor,
   };
 }

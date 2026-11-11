@@ -24,6 +24,7 @@ const HOSTILE_CSS: Record<string, string> = {
   "@import": `@import url(css/other.css);`,
   "data:": `.t-a { background: url(data:image/svg+xml;base64,PHN2Zy8+); }`,
   "expression()": `.t-a { width: expression(alert(document.cookie)); }`,
+  "var() in image-set()": `:root { --u: "https://tracker.example/p.png"; } .t-a { background-image: image-set(var(--u) 1x); }`,
 };
 
 const HOSTILE_TEMPLATES: Record<string, string> = {
@@ -167,6 +168,8 @@ describe.skipIf(!DATABASE_URL)("CSS and templates", () => {
 
   it("publishes the CSS compiled into @layer canccu-theme, and the parsed templates", async () => {
     const current = await publishStyled();
+    // Surfaces that follow the event load the CSS without reading `current` again.
+    expect(d.h.events("alpha").at(-1)?.data.css_url).toBe(current.css_url);
     const image = `/theming/a/${String(await fileAt("images/bg.png", "r:1"))}`;
     const served = await get(d.h, current.css_url);
     expect(served.statusCode).toBe(200);
@@ -223,6 +226,11 @@ describe.skipIf(!DATABASE_URL)("CSS and templates", () => {
     }>();
     expect(current.css_url).toBe(first.css_url);
     expect(current.templates).toEqual(first.templates);
+    expect(d.h.events("alpha").at(-1)?.data).toMatchObject({
+      revision: 2,
+      restored_from: 1,
+      css_url: first.css_url,
+    });
     // A CSS file gone from the volume: the restore writes nothing and says why.
     const name = String(await fileAt("css/a.css", "r:1"));
     await withTenant("alpha", () => rm(tenantFile("theming", `files/${name}`, d.h.root)));

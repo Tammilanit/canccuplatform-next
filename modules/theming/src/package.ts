@@ -21,7 +21,7 @@ const EMBED_NAME = /^[a-z][a-z0-9_-]{0,31}$/;
 const EMBED_LIMIT = 5 * 1024 * 1024;
 
 export type CheckedPath =
-  { bytes: Buffer; ext: StoredExt; refs?: string[]; warnings?: Problem[] } | { problem: Problem };
+  { bytes: Buffer; ext: StoredExt; refs: string[]; warnings: Problem[] } | { problem: Problem };
 
 export interface CheckedEmbed {
   entry: string;
@@ -52,7 +52,7 @@ const isText = (bytes: Buffer): boolean => readText(bytes) !== undefined;
 /** A font's licence: stored for the package and its export, never served. */
 function checkLicence(path: string, bytes: Buffer): CheckedPath {
   if (!isText(bytes)) return fail("file_type", path, "A licence file is UTF-8 text.");
-  return { bytes, ext: path.toLowerCase().endsWith(".md") ? "md" : "txt" };
+  return { bytes, ext: path.toLowerCase().endsWith(".md") ? "md" : "txt", refs: [], warnings: [] };
 }
 
 async function checkPath(path: string, bytes: Buffer): Promise<CheckedPath> {

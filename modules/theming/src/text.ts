@@ -17,3 +17,6 @@ export function readText(bytes: Buffer): string | undefined {
 /** Whether `path`'s parts are all real names: no empty, `.` or `..` part. */
 export const plainPath = (path: string): boolean =>
   path.split("/").every((part) => part !== "" && part !== "." && part !== "..");
+
+/** A package image, by its package path (as in theme.yaml): what url() and an img's src may name. */
+export const IMAGE = /^images\/[A-Za-z0-9._/-]+\.(png|jpe?g|webp|svg)$/i;

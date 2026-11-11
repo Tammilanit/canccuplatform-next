@@ -35,7 +35,8 @@ describe("checkCss", () => {
     const result = check(`
       @font-face { font-family: "T"; src: url(fonts/t.woff2) format("woff2"); }
       .canccu-page { background: url("images/bg.png") no-repeat; }
-      .t-x { --t-art: url('images/art.svg'); background-image: image-set(url(images/bg.png) 1x); }`);
+      .t-x { --t-art: url('images/art.svg'); background-image: image-set(url(images/bg.png) 1x); }
+      .t-y { background-image: image-set(url(images/bg.png) type("image/png") 1x); }`);
     expect(result).toMatchObject({
       ok: true,
       refs: ["fonts/t.woff2", "images/bg.png", "images/art.svg"],
@@ -77,6 +78,18 @@ describe("checkCss", () => {
       "image-set()",
     ],
     ["a string URL in src()", `.t-a { background: src("images/a.png"); }`, "src()"],
+    [
+      "a custom property's string in image-set()",
+      `:root{--u:"https://tracker.example/p.png"} .canccu-page{background-image:image-set(var(--u) 1x)}`,
+      "not var()",
+    ],
+    [
+      "var() deeper in cross-fade()",
+      `.t-a { background: cross-fade(image-set(var(--u) 1x), url(images/a.png) 50%); }`,
+      "not var()",
+    ],
+    ["env() in image()", `.t-a { background: image(env(--u)); }`, "not env()"],
+    ["attr() in image-set()", `.t-a { background: image-set(attr(data-u url) 1x); }`, "not attr()"],
     ["an escaped url()", `.t-a { background: \\75 rl("https://evil.test/x.png"); }`, "url()"],
     ["a custom property that does not parse", `.t-a { --t-x: {url(x)}; }`, "parse"],
     ["expression()", `.t-a { width: expression(alert(1)); }`, "expression()"],

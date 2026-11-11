@@ -137,7 +137,7 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
           cloned_from: null,
           changed: published.changed,
           tokens_css_url: published.tokensCss,
-          css_url: null,
+          css_url: published.css,
           embed_color: published.embedColor,
           actor_user_id: actor,
         },

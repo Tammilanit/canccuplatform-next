@@ -10,7 +10,7 @@ import { StyleError, compileCss } from "./css.js";
 import { FILE_NAME } from "./files.js";
 import type { FileStore } from "./files.js";
 import { SERVED } from "./theme.js";
-import { parseTemplate, servedTree } from "./template.js";
+import { parseTemplate } from "./template.js";
 import type { TemplateNode } from "./template.js";
 
 /** ParsedTemplate of contracts/theming.openapi.yaml. */
@@ -80,4 +80,36 @@ export async function compileStyle(
     templates.push({ name, widget: spec.widget, tree: servedTree(parsed.tree, served, spec.file) });
   }
   return { css, templates };
+}
+
+/**
+ * The tree as a revision serves it: each package image in `src` rewritten by `served` to its
+ * served address (contracts/theming.md, The parsed tree), everything else as parsed.
+ */
+export function servedTree(
+  tree: TemplateNode[],
+  served: (path: string) => string | undefined,
+  path = "templates/",
+): TemplateNode[] {
+  return tree.map((node): TemplateNode => {
+    if ("section" in node) return { ...node, children: servedTree(node.children, served, path) };
+    if (!("element" in node)) return node;
+    const attrs = { ...node.attrs };
+    const src = attrs.src?.[0];
+    if (attrs.src?.length === 1 && src !== undefined && "text" in src) {
+      const address = served(src.text);
+      if (address === undefined) {
+        throw new StyleError({
+          severity: "error",
+          code: "template_forbidden",
+          path,
+          message: `src names ${src.text}, which the package does not hold.`,
+        });
+      }
+      attrs.src = [{ text: address }];
+    }
+    return node.children === undefined
+      ? { element: node.element, attrs }
+      : { element: node.element, attrs, children: servedTree(node.children, served, path) };
+  });
 }

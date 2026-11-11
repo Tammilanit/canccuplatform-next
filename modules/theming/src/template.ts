@@ -7,14 +7,14 @@
  * Each tag is then replaced by a private-use marker and the HTML parsed with `parse5` twice: the
  * first pass tells a tag in text from one in an attribute value; the second has each tag in text as
  * an HTML comment, which the parser keeps where it stands even inside a table, where text would be
- * moved out of it.
+ * moved out of it. The `<tbody>` the parser adds around a table's rows is no part of the tree, so a
+ * section around rows closes in the element it opened in (a `<tr>` may stand in a `<table>`).
  */
 import { html, parseFragment } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 import type { Problem } from "./checks.js";
 import { isStableClass, isThemeClass } from "./classes.js";
-import { StyleError } from "./css.js";
-import { plainPath, readText } from "./text.js";
+import { IMAGE, plainPath, readText } from "./text.js";
 
 type ChildNode = DefaultTreeAdapterMap["childNode"];
 type Element = DefaultTreeAdapterMap["element"];
@@ -23,6 +23,7 @@ export const TEMPLATE_LIMIT = 32 * 1024;
 const MAX_SECTIONS = 8;
 /** Not the contract's: a bound on the tree's depth, so neither the checks nor a renderer recurse without end. */
 const MAX_ELEMENTS = 32;
+const tooDeep = `elements nest at most ${MAX_ELEMENTS} deep`;
 
 const ELEMENTS = new Set(
   "div span p h1 h2 h3 h4 ul ol li strong em b i small br img figure figcaption time table thead tbody tr th td".split(
@@ -42,7 +43,6 @@ const ATTRIBUTES = new Set([
 ]);
 /** TemplateNode `field` of contracts/theming.openapi.yaml. */
 const NAME = /^[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)*$/;
-const IMAGE = /^images\/[A-Za-z0-9._/-]+\.(png|jpe?g|webp|svg)$/i;
 /**
  * A field the widget documents as an image address. Until the screen contract names each widget's
  * fields, the convention is the name: `url` or ending in `_url` (`image_url`, `qr_url`).
@@ -77,18 +77,29 @@ function refuse(line: number | undefined, why: string): never {
   throw new Refusal(line === undefined ? why : `line ${line}: ${why}`);
 }
 
+/** A line of the parsed text as the template's line, for the messages. */
+type LineOf = (line: number | undefined) => number | undefined;
+
+const newlines = (text: string): number => text.split("\n").length - 1;
+
 /** The text with every Mustache tag replaced by its marker, and the tags; comments dropped. */
-function tokenize(text: string): { marked: string; tags: Tag[] } {
+function tokenize(text: string): { marked: string; tags: Tag[]; lineOf: LineOf } {
   const tags: Tag[] = [];
+  /** Where a comment's line breaks left the marked text: its line there, and how many. */
+  const dropped: { at: number; lines: number }[] = [];
+  const lineOf: LineOf = (n) =>
+    n === undefined ? undefined : dropped.reduce((sum, d) => sum + (d.at < n ? d.lines : 0), n);
   let marked = "";
+  let markedLine = 1;
   let at = 0;
   let line = 1;
   let counted = 0;
   for (;;) {
     const start = text.indexOf("{{", at);
-    if (start < 0) return { marked: marked + text.slice(at), tags };
+    if (start < 0) return { marked: marked + text.slice(at), tags, lineOf };
     marked += text.slice(at, start);
-    line += text.slice(counted, start).split("\n").length - 1;
+    markedLine += newlines(text.slice(at, start));
+    line += newlines(text.slice(counted, start));
     counted = start;
     const end = text.indexOf("}}", start + 2);
     if (text[start + 2] === "{") refuse(line, "{{{ }}} (unescaped output) is not allowed");
@@ -99,8 +110,8 @@ function tokenize(text: string): { marked: string; tags: Tag[] } {
     const body = inner.trimStart();
     const sigil = body[0] ?? "";
     if (sigil === "!") {
-      // Its line breaks stay, so the parser's lines are still the template's.
-      marked += "\n".repeat(inner.split("\n").length - 1);
+      // Dropped whole, also inside an attribute value; lineOf maps the parser's lines back.
+      if (newlines(inner) > 0) dropped.push({ at: markedLine, lines: newlines(inner) });
       continue;
     }
     if ("&>{<=$".includes(sigil) && sigil !== "") refuse(line, `{{${sigil} … }} is not allowed`);
@@ -116,8 +127,11 @@ function tokenize(text: string): { marked: string; tags: Tag[] } {
   }
 }
 
-/** Where each tag stands after the first parse: in text or in an attribute's value. */
-function contexts(marked: string, tags: Tag[]): ("text" | "attr")[] {
+/**
+ * Where each tag stands after the first parse: in text or in an attribute's value. The depth bound
+ * holds here already, so no walk of the parsed tree recurses past it.
+ */
+function contexts(marked: string, tags: Tag[], lineOf: LineOf): ("text" | "attr")[] {
   const found: ("text" | "attr" | "twice" | undefined)[] = tags.map(() => undefined);
   const note = (value: string, where: "text" | "attr"): void => {
     for (const m of value.matchAll(MARK)) {
@@ -125,15 +139,18 @@ function contexts(marked: string, tags: Tag[]): ("text" | "attr")[] {
       found[i] = found[i] === undefined ? where : "twice";
     }
   };
-  const walk = (nodes: ChildNode[]): void => {
+  const walk = (nodes: ChildNode[], depth: number): void => {
     for (const node of nodes) {
       if (node.nodeName === "#text") note((node as { value: string }).value, "text");
       if (!("tagName" in node)) continue;
+      if (depth >= MAX_ELEMENTS) {
+        refuse(lineOf(node.sourceCodeLocation?.startLine), tooDeep);
+      }
       for (const attr of node.attrs) note(attr.value, "attr");
-      walk(node.childNodes);
+      walk(node.childNodes, depth + 1);
     }
   };
-  walk(parseFragment(marked).childNodes);
+  walk(parseFragment(marked, { sourceCodeLocationInfo: true }).childNodes, 0);
   return found.map((where, i) => {
     const tag = tags[i] as Tag;
     // The parser copies a misnested <b> or <em> with its attributes, and their tags with them.
@@ -196,6 +213,7 @@ class Folder {
 interface Context {
   tags: Tag[];
   refs: string[];
+  lineOf: LineOf;
 }
 
 /** `class`: whole names, stable or `t-`; data may only lengthen a literal `t-` name. */
@@ -263,12 +281,12 @@ function attrValue(value: string, sections: number, ctx: Context): TemplateNode[
 }
 
 function element(node: Element, sections: number, depth: number, ctx: Context): TemplateNode {
-  const line = node.sourceCodeLocation?.startLine;
+  const line = ctx.lineOf(node.sourceCodeLocation?.startLine);
   const name = node.tagName;
   if (node.namespaceURI !== html.NS.HTML || !ELEMENTS.has(name)) {
     refuse(line, `<${name}> is not allowed`);
   }
-  if (depth >= MAX_ELEMENTS) refuse(line, `elements nest at most ${MAX_ELEMENTS} deep`);
+  if (depth >= MAX_ELEMENTS) refuse(line, tooDeep);
   const attrs: Record<string, TemplateNode[]> = {};
   for (const attr of node.attrs) {
     if (
@@ -294,9 +312,15 @@ function children(
   ctx: Context,
 ): TemplateNode[] {
   const folder = new Folder(sections);
+  fill(folder, nodes, depth, ctx);
+  return folder.end();
+}
+
+function fill(folder: Folder, nodes: ChildNode[], depth: number, ctx: Context): void {
   for (const node of nodes) {
-    const line = (node as { sourceCodeLocation?: { startLine: number } | null }).sourceCodeLocation
-      ?.startLine;
+    const line = ctx.lineOf(
+      (node as { sourceCodeLocation?: { startLine: number } | null }).sourceCodeLocation?.startLine,
+    );
     if (node.nodeName === "#text") {
       const value = (node as { value: string }).value;
       // Only inside an element that keeps its text raw (script, style, textarea), refused anyway.
@@ -306,13 +330,17 @@ function children(
       const m = /^(\d+)$/.exec((node as { data: string }).data);
       if (m === null) refuse(line, "HTML comments are not allowed; use {{! … }}");
       folder.tag(ctx.tags[Number(m[1])] as Tag);
+    } else if ("tagName" in node && node.tagName === "tbody" && !node.sourceCodeLocation) {
+      // Added by the parser around rows (no source location): its rows join the table's list, so
+      // `<table>{{#rows}}<tr>…</tr>{{/rows}}</table>` folds; still a level for the depth bound.
+      if (depth >= MAX_ELEMENTS) refuse(line, tooDeep);
+      fill(folder, node.childNodes, depth + 1, ctx);
     } else if ("tagName" in node) {
       folder.push(element(node, folder.depth, depth, ctx));
     } else {
       refuse(line, `${node.nodeName} is not allowed`);
     }
   }
-  return folder.end();
 }
 
 /** Parses and checks one template; the tree, and the package images it names. */
@@ -337,48 +365,16 @@ export function parseTemplate(path: string, bytes: Buffer): TemplateResult {
     );
   }
   try {
-    const { marked, tags } = tokenize(text);
-    const where = contexts(marked, tags);
+    const { marked, tags, lineOf } = tokenize(text);
+    const where = contexts(marked, tags, lineOf);
     const second = marked.replace(MARK, (m, i: string) =>
       where[Number(i)] === "text" ? `<!--${m}-->` : m,
     );
-    const ctx: Context = { tags, refs: [] };
+    const ctx: Context = { tags, refs: [], lineOf };
     const fragment = parseFragment(second, { sourceCodeLocationInfo: true });
     return { ok: true, tree: children(fragment.childNodes, 0, 0, ctx), refs: ctx.refs };
   } catch (err) {
     if (err instanceof Refusal) return problem("template_forbidden", `Refused: ${err.message}.`);
     throw err;
   }
-}
-
-/**
- * The tree as a revision serves it: each package image in `src` rewritten by `served` to its
- * served address (contracts/theming.md, The parsed tree), everything else as parsed.
- */
-export function servedTree(
-  tree: TemplateNode[],
-  served: (path: string) => string | undefined,
-  path = "templates/",
-): TemplateNode[] {
-  return tree.map((node): TemplateNode => {
-    if ("section" in node) return { ...node, children: servedTree(node.children, served, path) };
-    if (!("element" in node)) return node;
-    const attrs = { ...node.attrs };
-    const src = attrs.src?.[0];
-    if (attrs.src?.length === 1 && src !== undefined && "text" in src) {
-      const address = served(src.text);
-      if (address === undefined) {
-        throw new StyleError({
-          severity: "error",
-          code: "template_forbidden",
-          path,
-          message: `src names ${src.text}, which the package does not hold.`,
-        });
-      }
-      attrs.src = [{ text: address }];
-    }
-    return node.children === undefined
-      ? { element: node.element, attrs }
-      : { element: node.element, attrs, children: servedTree(node.children, served, path) };
-  });
 }

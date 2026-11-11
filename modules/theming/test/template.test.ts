@@ -5,7 +5,8 @@
  */
 import { readFile, readdir } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
-import { parseTemplate, servedTree } from "../src/template.js";
+import { servedTree } from "../src/compile.js";
+import { parseTemplate } from "../src/template.js";
 import type { TemplateNode } from "../src/template.js";
 
 const parse = (source: string) => parseTemplate("templates/t.mustache", Buffer.from(source));
@@ -119,6 +120,52 @@ describe("parseTemplate", () => {
     ]);
   });
 
+  it("keeps a section around rows without <tbody>, leaving out the one the parser adds", () => {
+    const row = {
+      element: "tr",
+      attrs: {},
+      children: [{ element: "td", attrs: {}, children: [{ field: "n" }] }],
+    };
+    expect(tree(`<table>{{#rows}}<tr><td>{{n}}</td></tr>{{/rows}}</table>`)).toEqual([
+      {
+        element: "table",
+        attrs: {},
+        children: [{ section: "rows", inverted: false, children: [row] }],
+      },
+    ]);
+    expect(
+      tree(
+        `<table><thead><tr><th>N</th></tr></thead>{{#rows}}<tr><td>{{n}}</td></tr>{{/rows}}</table>`,
+      ),
+    ).toEqual([
+      {
+        element: "table",
+        attrs: {},
+        children: [
+          {
+            element: "thead",
+            attrs: {},
+            children: [
+              {
+                element: "tr",
+                attrs: {},
+                children: [{ element: "th", attrs: {}, children: [{ text: "N" }] }],
+              },
+            ],
+          },
+          { section: "rows", inverted: false, children: [row] },
+        ],
+      },
+    ]);
+  });
+
+  it("drops a comment that spans lines whole, also in an attribute, and keeps the lines", () => {
+    expect(tree(`<p class="t-a{{!\nnote\n}}b">x</p>`)).toEqual([
+      { element: "p", attrs: { class: [{ text: "t-ab" }] }, children: [{ text: "x" }] },
+    ]);
+    expect(refused(`{{! one\ntwo\n}}<p>x</p>\n<p style="x">y</p>`)).toContain("line 4");
+  });
+
   it("answers the package images it names", () => {
     const result = parse(`<img src="images/a.png"><img src="{{art_url}}"><img src="images/b.svg">`);
     expect(result).toMatchObject({ ok: true, refs: ["images/a.png", "images/b.svg"] });
@@ -174,6 +221,9 @@ describe("parseTemplate", () => {
     const big = parse("<p>x</p>".padEnd(32 * 1024 + 1, " "));
     expect(big).toMatchObject({ ok: false, problem: { code: "file_too_large" } });
     expect(refused("<div>".repeat(40) + "x")).toContain("deep");
+    // Within 32 KB, deep enough to overflow the stack of a walk with no bound.
+    expect(refused("<div>".repeat(6500))).toContain("nest at most 32 deep");
+    expect(refused("<x>".repeat(10900))).toContain("nest at most 32 deep");
   });
 
   it("keeps whitespace as text, as the browser does", () => {

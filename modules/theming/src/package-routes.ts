@@ -97,8 +97,8 @@ async function storePackage(
         : {
             file: await place(entry.bytes, entry.ext),
             bytes: entry.bytes.length,
-            refs: entry.refs ?? [],
-            warnings: entry.warnings ?? [],
+            refs: entry.refs,
+            warnings: entry.warnings,
           },
     );
   }

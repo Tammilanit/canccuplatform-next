@@ -15,7 +15,7 @@ import type { Dropped, Unused } from "./stored.js";
  * paths it names and its warnings), or the problem of an upload that failed.
  */
 export type PathEntry =
-  { file: string; bytes: number; refs?: string[]; warnings?: Problem[] } | { problem: Problem };
+  { file: string; bytes: number; refs: string[]; warnings: Problem[] } | { problem: Problem };
 
 /**
  * The draft's file at `path` stops referring to `old`; answers it when the draft keeps no other
@@ -54,8 +54,8 @@ export async function setDraftPath(
       file,
       "file" in entry ? entry.bytes : null,
       "problem" in entry ? JSON.stringify(entry.problem) : null,
-      "file" in entry ? (entry.refs ?? []) : [],
-      JSON.stringify("file" in entry ? (entry.warnings ?? []) : []),
+      "file" in entry ? entry.refs : [],
+      JSON.stringify("file" in entry ? entry.warnings : []),
     ],
   );
   if (file !== null) {
@@ -86,16 +86,20 @@ export async function removeDraftPath(c: SqlClient, path: string): Promise<strin
  */
 export async function pathProblems(c: SqlClient, paths: PackagePaths): Promise<Problem[]> {
   const { rows } = await c.query(
-    `SELECT path, problem, refs, warnings FROM theming_package_files
+    `SELECT path, bytes, problem, refs, warnings FROM theming_package_files
       WHERE owner = 'draft' ORDER BY path`,
   );
   const out: Problem[] = [];
+  let css = 0;
   for (const row of rows as {
     path: string;
+    /** bigint: pg answers it as text. */
+    bytes: string | null;
     problem: Problem | null;
     refs: string[];
     warnings: Problem[];
   }[]) {
+    if (row.path.startsWith("css/")) css += Number(row.bytes ?? 0);
     if (row.problem !== null) out.push(row.problem);
     out.push(...row.warnings);
     for (const ref of row.refs) {
@@ -108,11 +112,6 @@ export async function pathProblems(c: SqlClient, paths: PackagePaths): Promise<P
       });
     }
   }
-  const { rows: sum } = await c.query(
-    `SELECT coalesce(sum(bytes), 0) AS n FROM theming_package_files
-      WHERE owner = 'draft' AND path LIKE 'css/%'`,
-  );
-  const css = Number((sum[0] as { n: string }).n);
   if (css > CSS_LIMIT) {
     out.push({
       severity: "error",

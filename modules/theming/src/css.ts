@@ -8,7 +8,7 @@ import * as csstree from "css-tree";
 import type { CssNode, StyleSheet, WalkContext } from "css-tree";
 import type { Problem } from "./checks.js";
 import { isStableClass, isThemeClass } from "./classes.js";
-import { plainPath, readText } from "./text.js";
+import { IMAGE, plainPath, readText } from "./text.js";
 
 /** `css/` takes 256 KB together (The theme package), so no one file passes it either. */
 export const CSS_LIMIT = 256 * 1024;
@@ -28,7 +28,11 @@ const AT_RULES = new Set([
   "font-face",
 ]);
 
-/** Functions that take a URL as a string, which would pass by the url() rules. */
+/**
+ * Functions that take a URL as a string, which would pass by the url() rules. Inside them a string
+ * is refused (but in `type()`), and so is a value filled in at use, which may be a string held in a
+ * custom property.
+ */
 const STRING_URL_FUNCTIONS = new Set([
   "image-set",
   "-webkit-image-set",
@@ -38,9 +42,10 @@ const STRING_URL_FUNCTIONS = new Set([
   "-webkit-cross-fade",
 ]);
 
-/** The package's images and fonts, by their package paths (as in theme.yaml). */
-const IMAGE = /^images\/[A-Za-z0-9._/-]+\.(png|jpe?g|webp|svg)$/i;
+/** The package's fonts, by their package paths (as in theme.yaml). */
 const FONT = /^fonts\/[A-Za-z0-9._/-]+\.woff2$/i;
+
+const FILLED_IN = new Set(["var", "env", "attr"]);
 
 const MAX_REASONS = 5;
 const MAX_CLASSES = 10;
@@ -87,7 +92,8 @@ function inspect(path: string, bytes: Buffer): Inspected | Problem {
 
   const reasons: string[] = [];
   const fail = (line: number | undefined, why: string): void => {
-    reasons.push(line === undefined ? why : `line ${line}: ${why}`);
+    const reason = line === undefined ? why : `line ${line}: ${why}`;
+    if (!reasons.includes(reason)) reasons.push(reason);
   };
   let ast: CssNode;
   try {
@@ -107,7 +113,6 @@ function inspect(path: string, bytes: Buffer): Inspected | Problem {
   const unstable = new Set<string>();
   csstree.walk(ast, function (this: WalkContext, node: CssNode) {
     const line = node.loc?.start.line;
-    const fn = this.function === null ? undefined : plain(this.function.name);
     switch (node.type) {
       case "Atrule": {
         const name = plain(node.name);
@@ -129,13 +134,21 @@ function inspect(path: string, bytes: Buffer): Inspected | Problem {
         if (name === "local") fail(line, "local() is not allowed: @font-face takes package fonts");
         // An escaped `url(` is still a URL to the browser, though not to the parser.
         if (name === "url") fail(line, "url() must be written without escapes");
-        break;
-      }
-      case "String":
-        if (fn !== undefined && STRING_URL_FUNCTIONS.has(fn)) {
-          fail(line, `${fn}() takes images only as url()`);
+        // Every level below, not only its own arguments: image-set(var(--u) 1x) is a string URL.
+        if (STRING_URL_FUNCTIONS.has(name)) {
+          csstree.walk(node, function (this: WalkContext, inner: CssNode) {
+            const at = inner.loc?.start.line;
+            const nearest = this.function === null ? "" : plain(this.function.name);
+            if (inner.type === "String" && nearest !== "type") {
+              fail(at, `${name}() takes images only as url()`);
+            }
+            if (inner.type === "Function" && FILLED_IN.has(plain(inner.name))) {
+              fail(at, `${name}() takes images only as url(), not ${plain(inner.name)}()`);
+            }
+          });
         }
         break;
+      }
       case "Url": {
         const inFontFace = this.atrule !== null && plain(this.atrule.name) === "font-face";
         const ref = packageUrl(node.value, inFontFace);
