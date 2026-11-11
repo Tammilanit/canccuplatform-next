@@ -151,7 +151,7 @@ export async function placeDevice(
   const fallback =
     record === null
       ? {
-          theme: themeView((await deps.sources.theme(host)) ?? NO_THEME),
+          theme: themeView((await deps.sources.theme(ctx.tenant_id)) ?? NO_THEME),
           eventName: (await deps.sources.event(host))?.name ?? "",
         }
       : undefined;

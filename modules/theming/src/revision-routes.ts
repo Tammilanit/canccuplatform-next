@@ -31,7 +31,7 @@ import type { ProfileSource } from "./profile.js";
 import { pruneQuietly } from "./retention.js";
 import { fillTokens } from "./tokens.js";
 import type { Published, PublishInput } from "./publish.js";
-import { resolvedRevision } from "./theme.js";
+import { currentTheme, resolvedRevision } from "./theme.js";
 
 export interface RevisionDeps {
   db: Db;
@@ -276,15 +276,40 @@ function invalid(reply: FastifyReply, err: unknown, message: string): FastifyRep
 export interface InternalDeps {
   db: Db;
   tenants: TenantResolver;
+  profile: ProfileSource;
 }
 
-/** For the screen module's server, which draws a pinned revision (contracts/screen.md, Pins). */
+function onlyScreen(request: FastifyRequest): void {
+  if (request.service !== "screen")
+    throw new ServiceForbidden(`module ${String(request.service)} may not call this`);
+}
+
+/**
+ * For the screen module's server, which draws the event's screens: the current theme in every
+ * info-page mode, and a pinned revision (contracts/screen.md, Widgets and Pins).
+ */
 export function internalRoutes(app: FastifyInstance, deps: InternalDeps): void {
+  // No info-page check: screen's container is no venue address and has no session, so the guests'
+  // read would refuse it in `venue_only` and `sign_in`, and those screens would lose the event's look.
+  app.get<{ Querystring: { tenant_id?: string } }>(
+    "/internal/theming/current",
+    async (request, reply) => {
+      onlyScreen(request);
+      const tenant = request.query.tenant_id;
+      if (tenant === undefined || !isTenantId(tenant)) {
+        throw invalidRequest("A tenant_id is required.");
+      }
+      if ((await deps.tenants.byId(tenant)) === null) throw notFound();
+      // As the public read: screens switch on theming.theme.published, this read only catches up.
+      void reply.header("cache-control", "no-cache");
+      return withTenant(tenant, () => currentTheme(deps.db, deps.profile, tenant));
+    },
+  );
+
   app.get<{ Params: { revision: string }; Querystring: { tenant_id?: string } }>(
     "/internal/theming/revisions/:revision",
     async (request) => {
-      if (request.service !== "screen")
-        throw new ServiceForbidden(`module ${String(request.service)} may not call this`);
+      onlyScreen(request);
       const revision = positiveInt(request.params.revision, "revision");
       const tenant = request.query.tenant_id;
       if (revision === undefined || tenant === undefined || !isTenantId(tenant)) {
