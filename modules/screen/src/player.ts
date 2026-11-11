@@ -73,14 +73,20 @@ export function playerRoutes(app: FastifyInstance, deps: PlayerDeps): void {
   const check = loaderHtml(version, { page: "check" });
   // The files never change under one version: read once, on first use (a failed read is not kept).
   const bytes = new Map<string, Promise<Buffer>>();
-  const read = (file: string): Promise<Buffer> => {
+  const read = async (file: string): Promise<Buffer> => {
     let pending = bytes.get(file);
     if (pending === undefined) {
       pending = readFile(join(dir, file));
       pending.catch(() => bytes.delete(file));
       bytes.set(file, pending);
     }
-    return pending;
+    try {
+      return await pending;
+    } catch (err) {
+      // Not built (a dev server without the player build): a missing file, not a server fault.
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") throw notFound();
+      throw err;
+    }
   };
 
   app.get("/screen", async (request, reply) => {

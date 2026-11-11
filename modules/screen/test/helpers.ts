@@ -101,6 +101,8 @@ export interface Harness {
   /** The fake quota itself, for calls made outside a request. */
   quota: StorageQuota;
   filesRoot: string;
+  /** The player's built files, which a test may take away. */
+  playerDir: string;
   /** What the fake oEmbed answers for YouTube probes. */
   oembedStatus: { value: number };
   /** What the fake agenda, tenants and theming answer the composed state; null is "down". */
@@ -284,6 +286,7 @@ export async function harness(): Promise<Harness> {
     storage,
     quota,
     filesRoot,
+    playerDir,
     oembedStatus,
     sources: fake,
     tenants,

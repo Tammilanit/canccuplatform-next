@@ -1,6 +1,7 @@
 /** The service worker's cache rules, against an in-memory Cache Storage and a fake network. */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  FETCH_AT_ONCE,
   FILES_CACHE,
   LOADER_TIMEOUT_MS,
   SHELL_CACHE,
@@ -98,6 +99,27 @@ describe("the screen's service worker", () => {
     expect((await caches.keys()).sort()).toEqual([SHELL_CACHE, STATE_CACHE].sort());
   });
 
+  it("keeps the bundle the cached loader names, even when the worker was registered for another", async () => {
+    // A page booted from an older cached loader registers its own version; the server already
+    // serves the next one, whose loader is what the worker caches.
+    const { caches, net, sw } = setup("1.0.0");
+    const loader = (v: string) =>
+      `<link rel="stylesheet" href="/screen/b/${v}/player.css">` +
+      `<script type="module" src="/screen/b/${v}/player.js"></script>`;
+    net.files.set("/screen/", loader("2.0.0"));
+    net.files.set("/screen/b/2.0.0/player.js", "js");
+    net.files.set("/screen/b/2.0.0/player.css", "css");
+    const shell = await caches.open(SHELL_CACHE);
+    await shell.put("/screen/b/0.9.0/player.js", new Response("old"));
+    await sw.install();
+    await sw.activate();
+    expect([...shell.entries.keys()].sort()).toEqual([
+      "/screen/",
+      "/screen/b/2.0.0/player.css",
+      "/screen/b/2.0.0/player.js",
+    ]);
+  });
+
   it("reads the loader from the network, and from the cache when the network fails or hangs", async () => {
     const { net, kept, respond } = setup();
     net.files.set("/screen/", "loader 1");
@@ -184,5 +206,29 @@ describe("the screen's service worker", () => {
     await sw.name(["/theming/a/t.css", "/api/screen/files/b.jpg", "/api/screen/files/c.jpg"]);
     expect(files.entries.has("/api/screen/files/b.jpg")).toBe(true);
     expect(files.entries.has("/theming/a/f.woff2")).toBe(true);
+  });
+
+  it("fetches a state's missing files a few at a time, not one by one nor all at once", async () => {
+    const { caches, net } = setup();
+    const paths = Array.from({ length: 10 }, (_, i) => `/api/screen/files/${i}.jpg`);
+    for (const p of paths) net.files.set(p, p);
+    let open = 0;
+    let most = 0;
+    const sw = new ScreenCache({
+      caches: caches as unknown as CacheStorage,
+      fetch: async (input) => {
+        most = Math.max(most, ++open);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        open--;
+        return net.fetch(input);
+      },
+      version: "2.0.0",
+      origin: ORIGIN,
+    });
+    const done = sw.name(paths);
+    await vi.runAllTimersAsync();
+    await done;
+    expect(most).toBe(FETCH_AT_ONCE);
+    expect((await caches.open(FILES_CACHE)).entries.size).toBe(paths.length);
   });
 });

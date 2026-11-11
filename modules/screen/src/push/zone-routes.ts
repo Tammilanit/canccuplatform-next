@@ -13,6 +13,7 @@ import { zoneInput } from "../zone-input.js";
 import { recordOf, refreshZone } from "./device-state.js";
 import { PING_MS } from "./feed.js";
 import type { HubDeps, PushHub } from "./hub.js";
+import { serveFeed } from "./routes.js";
 import { SESSION_RIGHT, SessionStream, viewerState } from "./session.js";
 import type { SessionDeps } from "./session.js";
 import type { Orientation } from "./store.js";
@@ -93,22 +94,15 @@ export function zoneViewRoutes(
         },
         () => deps.kv.addExpiring(key, member, now() + ttl),
       );
-      deps.hub.add(stream);
-      reply.raw.on("close", () => {
-        stream.end();
-      });
-      void reply
-        .header("content-type", "text/event-stream; charset=utf-8")
-        .header("cache-control", "no-store")
-        .header("x-accel-buffering", "no");
-      void stream.start(
-        () => {
-          deps.hub.remove(stream);
-          void deps.kv.removeMember(key, member).catch(() => undefined);
-        },
-        typeof lastEventId === "string" ? lastEventId : undefined,
+      return serveFeed(reply, deps.hub, stream, (ended) =>
+        stream.start(
+          () => {
+            ended();
+            void deps.kv.removeMember(key, member).catch(() => undefined);
+          },
+          typeof lastEventId === "string" ? lastEventId : undefined,
+        ),
       );
-      return reply.send(stream.out);
     },
   );
 
@@ -125,7 +119,6 @@ export function zoneViewRoutes(
       if ((await deps.kv.live(key, now())).length >= MAX_PREVIEWS_PER_MINUTE) {
         throw rateLimited(`At most ${MAX_PREVIEWS_PER_MINUTE} previews a minute.`);
       }
-      await deps.kv.addExpiring(key, randomBytes(9).toString("base64url"), now() + 60_000);
       const ctx = tenantOf(request);
       const composed = await composeZone(deps, ctx, hostOf(request), zone.key, {
         key: zone.key,
@@ -146,6 +139,8 @@ export function zoneViewRoutes(
       if (zone.layout_id !== null && !known.some((l) => l.id === zone.layout_id)) {
         throw unknownLayout();
       }
+      // Counted once valid: a refused preview does not use up the person's minute.
+      await deps.kv.addExpiring(key, randomBytes(9).toString("base64url"), now() + 60_000);
       return viewerState(recordOf(composed, 0), orientation, {
         id: "preview",
         nowMs: now(),

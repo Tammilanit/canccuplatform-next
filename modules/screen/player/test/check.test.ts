@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 /** The kiosk check page (plan #109, S14): each row says what is wrong and what fixes it. */
-import { describe, expect, it } from "vitest";
-import { NO_ANSWER } from "../src/api.js";
+import { describe, expect, it, vi } from "vitest";
+import { CALL_TIMEOUT_MS, NO_ANSWER } from "../src/api.js";
 import { CheckPage, checkRows, measure } from "../src/check.js";
 import type { CheckInput } from "../src/check.js";
 import { FakeApi, json, problem, screenState } from "./fake.js";
@@ -93,5 +93,45 @@ describe("the kiosk check", () => {
     const names = [...document.querySelectorAll(".canccu-check__name")].map((n) => n.textContent);
     expect(names).toEqual(["Screen", "Clock", "Device", "Sound", "Offline", "Player"]);
     expect(document.querySelector("button.canccu-check__unlock")).not.toBeNull();
+  });
+
+  it("checks again only once the last check ended, and a late answer never lands over a newer one", async () => {
+    vi.useFakeTimers();
+    try {
+      let reads = 0;
+      const api = new FakeApi().on("GET /api/screen/device/state", () =>
+        // The second read hangs, as on a slow uplink; the others answer at once.
+        ++reads === 2 ? new Promise<Response>(() => undefined) : json(200, screenState()),
+      );
+      document.body.replaceChildren();
+      await new CheckPage({
+        fetch: api.fetch,
+        root: document.body,
+        bundle: "1.2.3",
+        viewport: () => good.viewport,
+        offline: () => good.offline,
+      }).start();
+      const device = () =>
+        [...document.querySelectorAll(".canccu-check__row")].find(
+          (li) => li.querySelector(".canccu-check__name")?.textContent === "Device",
+        )?.className;
+      const answered = device();
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(reads).toBe(2);
+      // No third read while the second is out.
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(reads).toBe(2);
+      document.querySelector<HTMLButtonElement>("button.canccu-check__unlock")?.click();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(reads).toBe(3);
+      // The hung read (out since 5 s) gives up with no answer, after the tap's check answered;
+      // the next timed check (5 s later) is not due yet.
+      await vi.advanceTimersByTimeAsync(CALL_TIMEOUT_MS - 5000 + 100);
+      expect(reads).toBe(3);
+      expect(answered).toContain("--ok");
+      expect(device()).toBe(answered);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -1,3 +1,5 @@
+import { rm } from "node:fs/promises";
+import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { DATABASE_URL, call, harness } from "./helpers.js";
 import type { Harness } from "./helpers.js";
@@ -59,6 +61,17 @@ describe.skipIf(!DATABASE_URL)("the /screen/ page and its bundle", () => {
     expect(sw.headers["content-type"]).toBe("text/javascript; charset=utf-8");
     expect(sw.headers["cache-control"]).toBe("no-cache");
     expect(sw.body).toBe("self;\n");
+  });
+
+  it("answers 404, not 500, for a worker that was never built", async () => {
+    // A harness of its own: the worker read above is kept for this version.
+    const bare = await harness();
+    try {
+      await rm(join(bare.playerDir, "sw.js"));
+      expect((await call(bare, "GET", "/screen/sw.js?v=test")).statusCode).toBe(404);
+    } finally {
+      await bare.close();
+    }
   });
 
   it("sends the bare path on to the page", async () => {

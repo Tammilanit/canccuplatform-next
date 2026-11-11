@@ -41,6 +41,8 @@ export class OfflineStore {
   private last: ScreenState | null = null;
   /** The list the worker has, so a save that names the same files costs it no pass. */
   private named = "";
+  /** The write under way, so a clear lands after it rather than under it. */
+  private writing: Promise<void> = Promise.resolve();
 
   constructor(private readonly env: OfflineEnv) {}
 
@@ -60,8 +62,25 @@ export class OfflineStore {
     this.pending = state;
     this.timer ??= setTimeout(() => {
       this.timer = undefined;
-      void this.flush();
+      this.writing = this.writing.then(() => this.flush());
     }, SAVE_DELAY_MS);
+  }
+
+  /**
+   * Forget the kept state: the server said this device may no longer play it (revoked, refused,
+   * moved, archived), so a later boot without the server must not replay it. A save still
+   * waiting is dropped with it.
+   */
+  clear(): void {
+    clearTimeout(this.timer);
+    this.timer = undefined;
+    this.pending = null;
+    this.last = null;
+    this.writing = this.writing
+      .then(async () => {
+        await (await this.env.caches?.open(STATE_CACHE))?.delete(STATE_KEY);
+      })
+      .catch(() => undefined);
   }
 
   /** The server answered or the stream spoke: written down at most once a minute. */

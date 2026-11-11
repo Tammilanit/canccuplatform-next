@@ -151,6 +151,32 @@ describe("a cold boot", () => {
     expect(shown()).toBe("pairing");
   });
 
+  for (const [why, refusal] of [
+    ["revoked", () => problem(401, "device_unknown")],
+    ["refused by the venue", () => problem(403, "venue_ip_refused")],
+    ["moved", () => problem(409, "device_moved")],
+    ["archived", () => problem(409, "event_archived")],
+  ] as const) {
+    it(`forgets the kept state once ${why}, so a later boot without the server cannot replay it`, async () => {
+      const caches = new FakeCaches();
+      await keptState(caches);
+      const told = new FakeApi()
+        .on("GET /api/screen/device/state", refusal)
+        .on("GET /api/tenants/current", () => json(200, { name: "Demo Event" }))
+        .on("POST /api/screen/pairing", () =>
+          json(201, { pairing_id: "pr_1", code: "AAAABBBB", expires_at: "" }),
+        );
+      const second = await boot(told, caches);
+      await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+      second.live.stop();
+      const down = new FakeApi().on("GET /api/screen/device/state", () =>
+        Promise.reject(new TypeError("Failed to fetch")),
+      );
+      await boot(down, caches);
+      expect(shown()).toBe("unknown");
+    });
+  }
+
   it("with nothing kept, says it is connecting, as before", async () => {
     const api = new FakeApi().on("GET /api/screen/device/state", () =>
       Promise.reject(new TypeError("Failed to fetch")),

@@ -223,5 +223,14 @@ describe.skipIf(!DATABASE_URL)("a zone for a signed-in person", () => {
       h.clock.now += 61_000;
       expect((await preview(body, "previewer")).statusCode).toBe(200);
     });
+
+    it("counts only previews it accepts", async () => {
+      SESSIONS.refused = ["screen.zones.write"];
+      const bad = { ...ZONE, key: "lobby", layout_id: "nope" };
+      for (let i = 0; i < MAX_PREVIEWS_PER_MINUTE; i++) {
+        expect(code(await preview(bad, "refused"))).toBe("unknown_layout");
+      }
+      expect((await preview({ ...ZONE, key: "lobby" }, "refused")).statusCode).toBe(200);
+    });
   });
 });

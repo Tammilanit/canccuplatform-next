@@ -5,7 +5,7 @@
  */
 import { call } from "./api.js";
 import type { Answer, Fetch } from "./api.js";
-import { audioUnlocked, beep, unlockAudio } from "./audio.js";
+import { audioSettled, audioUnlocked, beep, unlockAudio } from "./audio.js";
 import { PLATFORM_MARK, el } from "./frames.js";
 import { STATE_PATH } from "./live.js";
 import { isState } from "./state.js";
@@ -141,8 +141,10 @@ export interface CheckEnv {
 
 export class CheckPage {
   /** Read before anything on the page could have been tapped. */
-  private readonly withoutTap = audioUnlocked();
+  private readonly withoutTap = audioSettled();
   private readonly list = el("ul", "canccu-check");
+  /** The latest check started; a tap's check may overlap the timed one, and the later wins. */
+  private latest = 0;
 
   constructor(private readonly env: CheckEnv) {}
 
@@ -168,17 +170,25 @@ export class CheckPage {
     );
     page.append(head, body, foot);
     this.env.root.replaceChildren(page);
-    await this.run();
-    setInterval(() => void this.run(), RECHECK_MS);
+    await this.again();
+  }
+
+  /** Each check starts once the last has ended: on a slow uplink an older answer never lands last. */
+  private async again(): Promise<void> {
+    await this.run().catch(() => undefined);
+    setTimeout(() => void this.again(), RECHECK_MS);
   }
 
   private async run(): Promise<void> {
+    const mine = ++this.latest;
     const { answer, offsetMs } = await measure(this.env.fetch, this.env.now ?? Date.now);
+    const withoutTap = await this.withoutTap;
+    if (mine !== this.latest) return;
     const rows = checkRows({
       viewport: this.env.viewport(),
       offsetMs,
       device: answer,
-      audio: { withoutTap: this.withoutTap, now: audioUnlocked() },
+      audio: { withoutTap, now: audioUnlocked() },
       offline: this.env.offline(),
       bundle: this.env.bundle,
     });

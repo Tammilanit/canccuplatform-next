@@ -82,8 +82,13 @@ describe("the check-in code in a person's view", () => {
     ).toBeNull();
   });
 
-  it("never passes a command", () => {
+  it("never passes a command, nor an event it does not know (fails closed)", () => {
     expect(probe().pass({ event: "command", data: { command: "reload" } })).toBeNull();
+    // An event added later, before the filter learns to sample it.
+    const unknown = { event: "views", data: { view: { ...CODE } } } as unknown as Message;
+    expect(probe().pass(unknown)).toBeNull();
+    const ticker: Message = { event: "ticker", data: { items: [] } };
+    expect(probe().pass(ticker)).toBe(ticker);
   });
 
   it("resumes only over changes that keep every region's widgets", () => {

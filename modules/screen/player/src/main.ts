@@ -6,7 +6,7 @@
  */
 import "./player.css";
 import "./screen.css";
-import { unlockOnGesture } from "./audio.js";
+import { audioSettled, unlockOnGesture } from "./audio.js";
 import { CheckPage } from "./check.js";
 import { OfflineStore } from "./offline.js";
 import { Player } from "./player.js";
@@ -55,6 +55,8 @@ if (body.dataset.page === "zone") {
   const offline = new OfflineStore({ caches, worker, origin: location.origin, now: Date.now });
   offline.register(bundle);
   unlockOnGesture(document);
+  // The context made now has settled by the first heartbeat's `audio_unlocked`.
+  void audioSettled();
   const player = new Player({
     fetch: fetchFn,
     nav: {

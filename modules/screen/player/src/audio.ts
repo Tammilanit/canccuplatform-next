@@ -21,6 +21,31 @@ export function audioUnlocked(): boolean {
   return audioContext()?.state === "running";
 }
 
+/** How long a fresh context may take to turn `running` on its own (the autoplay flag). */
+export const AUDIO_SETTLE_MS = 500;
+
+/**
+ * `audioUnlocked`, once a fresh context had its chance: one made without a gesture turns
+ * `running` only in a later task, even with the autoplay flag, so an answer read at once is
+ * "blocked" on a kiosk that may play.
+ */
+export async function audioSettled(waitMs = AUDIO_SETTLE_MS): Promise<boolean> {
+  const ctx = audioContext();
+  if (ctx === null) return false;
+  if (ctx.state !== "running") {
+    await new Promise<void>((resolve) => {
+      const done = (): void => {
+        clearTimeout(timer);
+        ctx.removeEventListener("statechange", done);
+        resolve();
+      };
+      const timer = setTimeout(done, waitMs);
+      ctx.addEventListener("statechange", done);
+    });
+  }
+  return ctx.state === "running";
+}
+
 /** Try to unlock now: only works inside a tap or key press, or with the autoplay flag. */
 export async function unlockAudio(): Promise<boolean> {
   const ctx = audioContext();

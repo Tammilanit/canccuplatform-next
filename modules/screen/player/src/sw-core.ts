@@ -58,6 +58,14 @@ export async function ranged(hit: Response, range: string): Promise<Response> {
 const cacheFor = (path: string): string =>
   path.startsWith("/screen/b/") ? SHELL_CACHE : FILES_CACHE;
 
+/** The bundle files a loader page names (its `<link href>` and `<script src>`). */
+export function loaderBundle(html: string): string[] {
+  return [...html.matchAll(/(?:href|src)="(\/screen\/b\/[^"]+)"/g)].map((m) => m[1] as string);
+}
+
+/** How many of a state's missing files are fetched at once: fast to fill, yet no flood. */
+export const FETCH_AT_ONCE = 4;
+
 export class ScreenCache {
   private naming: Promise<void> = Promise.resolve();
 
@@ -68,16 +76,31 @@ export class ScreenCache {
     return [`${base}/player.js`, `${base}/player.css`];
   }
 
-  /** The loader and this version's bundle, so a cold boot offline has a page to start. */
+  /**
+   * This version's bundle and the one the cached loader names. They differ when a page booted
+   * from an older cached loader registers the worker while the server already runs the next
+   * version: the loader a cold boot gets is the cached one, so its bundle must stay.
+   */
+  private async keptBundle(shell: Cache): Promise<string[]> {
+    const loader = await shell.match(LOADER);
+    const named = loader === undefined ? [] : loaderBundle(await loader.text());
+    return [...new Set([...this.bundleFiles(), ...named])];
+  }
+
+  /** The loader and its bundle, so a cold boot offline has a page to start. */
   async install(): Promise<void> {
     const shell = await this.env.caches.open(SHELL_CACHE);
-    for (const path of [LOADER, ...this.bundleFiles()]) {
+    const fetchInto = async (path: string): Promise<void> => {
       try {
         const response = await this.env.fetch(path, { cache: "no-store" });
         if (response.ok) await shell.put(path, response);
       } catch {
         // Installed while offline: the page caches what it reads once the network is back.
       }
+    };
+    await fetchInto(LOADER);
+    for (const path of await this.keptBundle(shell)) {
+      if ((await shell.match(path)) === undefined) await fetchInto(path);
     }
   }
 
@@ -88,7 +111,7 @@ export class ScreenCache {
       if (name.startsWith("canccu-screen-") && !keep.has(name)) await this.env.caches.delete(name);
     }
     const shell = await this.env.caches.open(SHELL_CACHE);
-    const current = new Set(this.bundleFiles());
+    const current = new Set(await this.keptBundle(shell));
     for (const request of await shell.keys()) {
       const path = new URL(request.url).pathname;
       if (path.startsWith("/screen/b/") && !current.has(path)) await shell.delete(request);
@@ -161,30 +184,40 @@ export class ScreenCache {
     const files = await this.env.caches.open(FILES_CACHE);
     const keep = new Set(paths.filter((p) => isImmutable(p) && cacheFor(p) === FILES_CACHE));
     const queue = [...keep];
-    for (let i = 0; i < queue.length; i++) {
-      const path = queue[i] as string;
-      let hit = await files.match(path);
-      if (hit === undefined) {
-        try {
-          const response = await this.env.fetch(path);
-          if (response.status !== 200) continue;
-          await files.put(path, response.clone());
-          hit = response;
-        } catch {
-          continue;
-        }
-      }
-      if (path.endsWith(".css")) {
-        for (const named of cssFiles(await hit.clone().text())) {
+    // A few workers share the queue; a stylesheet adds the files it names to its end.
+    const work = async (): Promise<void> => {
+      for (let path = queue.shift(); path !== undefined; path = queue.shift()) {
+        const hit = await this.held(files, path);
+        if (hit === null || !path.endsWith(".css")) continue;
+        for (const named of cssFiles(await hit.text())) {
           if (!keep.has(named)) {
             keep.add(named);
             queue.push(named);
           }
         }
       }
+    };
+    // A worker that finds the queue empty ends, so one more round picks up what a late
+    // stylesheet added after the others had ended.
+    while (queue.length > 0) {
+      await Promise.all(Array.from({ length: FETCH_AT_ONCE }, work));
     }
     for (const request of await files.keys()) {
       if (!keep.has(new URL(request.url).pathname)) await files.delete(request);
+    }
+  }
+
+  /** The cached copy of `path`, fetched and stored first when missing; null when unavailable. */
+  private async held(files: Cache, path: string): Promise<Response | null> {
+    const hit = await files.match(path);
+    if (hit !== undefined) return hit;
+    try {
+      const response = await this.env.fetch(path);
+      if (response.status !== 200) return null;
+      await files.put(path, response.clone());
+      return response;
+    } catch {
+      return null;
     }
   }
 }

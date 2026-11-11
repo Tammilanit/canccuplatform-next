@@ -52,6 +52,7 @@ export interface PlayerEnv {
   offline?: {
     load(): Promise<Saved | null>;
     save(state: ScreenState): void;
+    clear(): void;
     seen(): void;
   };
 }
@@ -85,8 +86,9 @@ export class Player {
       },
       now: this.now,
       random: this.random,
+      // Live has played it already (take): only draw it, else every push plays twice.
       show: (state) => {
-        this.run(state);
+        this.draw(state);
       },
       settle: (answer) => {
         this.settle(answer);
@@ -175,6 +177,8 @@ export class Player {
     }
     this.next();
     this.live.stop();
+    // Only while the server is reachable do these answers win over the kept state (start()).
+    if (isDeviceAnswer(answer.status)) this.env.offline?.clear();
     if (answer.status === 401) void this.pair();
     else if (venueRefused(answer)) this.refused();
     else if (answer.status === 409 && answer.code === "device_moved") void this.moved();
@@ -186,6 +190,11 @@ export class Player {
   private run(state: ScreenState, offlineSince?: number): void {
     if (!this.live.running) this.next();
     this.live.play(state, offlineSince);
+    this.draw(state, offlineSince);
+  }
+
+  /** A state the live flow has taken already (a pushed one), or that `run` just played. */
+  private draw(state: ScreenState, offlineSince?: number): void {
     if (offlineSince === undefined) this.env.offline?.save(state);
     this.tick = null;
     const who = { event: state.tenant.name, device: state.device.name };

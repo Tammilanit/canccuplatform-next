@@ -16,6 +16,8 @@ import type { Entry, Message, Orientation, ZoneRecord } from "./store.js";
 export const SESSION_RIGHT = "screen.devices.read";
 
 /** The view-model's fields that carry or date the code (contracts/screen.md, Widgets). */
+/** Events that carry no widget view, so no check-in code: passed to a person unchanged. */
+const PASSED_AS_IS = new Set(["theme", "ticker", "ping"]);
 const CODE_FIELDS = ["url", "image_url", "rotates_at", "valid_until", "qr"];
 
 /** A `checkin_qr` view as a sample: its label and purpose, no code. */
@@ -153,8 +155,9 @@ export class SessionStream extends Feed<SessionRequest> {
         data: { ...data, view: sampleView(data.view as Record<string, unknown>) },
       };
     }
-    // Never a device's commands: a person's page is no device.
-    return message.event === "command" ? null : message;
+    // An allowlist (fails closed): an event added later that carries widget views stays off a
+    // person's stream until it is sampled here. Never a device's commands: a person is no device.
+    return PASSED_AS_IS.has(message.event) ? message : null;
   }
 
   private remember(regions: readonly RegionView[]): void {
