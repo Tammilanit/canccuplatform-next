@@ -168,4 +168,36 @@ describe("the push diff", () => {
     ]);
     expect(diffZone(after, before, "landscape", 7)?.[0]?.event).toBe("region");
   });
+
+  it("sends a claim placed or ended as its region, and other unplaced or hidden claims as a state", () => {
+    const claim = {
+      override_id: "ov_10",
+      hidden: false,
+      role: "rail" as const,
+      rank: 80,
+      template: "announcement",
+      content: { title: "Dinner is served" },
+      steps: null,
+      sound: null,
+      on_end: "resume" as const,
+      starts_at: "2026-01-01T12:00:00Z",
+      ends_at: null,
+      expires_at: null,
+    };
+    const [rail, hero] = record().views.landscape.regions as [RegionView, RegionView];
+    const before = record();
+    const after = record({}, [{ ...rail, claim }, hero]);
+    expect(diffZone(before, after, "landscape", 3)).toEqual([
+      { event: "region", data: { state_version: 3, region: { ...rail, claim } } },
+    ]);
+    const lists = (unplaced: string[], hidden: string[]) => {
+      const r = record();
+      r.views.landscape = { ...r.views.landscape, unplaced, hidden };
+      return r;
+    };
+    expect(diffZone(before, lists(["ov_1"], []), "landscape", 4)).toBeNull();
+    expect(diffZone(lists([], ["ov_1"]), before, "landscape", 4)).toBeNull();
+    // A record stored before claims has none.
+    expect(diffZone(before, lists([], []), "landscape", 4)?.[0]?.event).toBe("ticker");
+  });
 });

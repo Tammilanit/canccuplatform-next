@@ -4,7 +4,7 @@
  * is put together from the stored zone part in src/push/device-state.ts.
  */
 import { createHash } from "node:crypto";
-import type { SqlClient, TenantContext } from "@canccu/kit";
+import type { Bus, Logger, SqlClient, TenantContext } from "@canccu/kit";
 import type { Db } from "../db.js";
 import { loadAgendaItems } from "../content/agenda.js";
 import { healthOf } from "../health.js";
@@ -15,9 +15,13 @@ import { resolveWinner } from "../schedule/winner.js";
 import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
 import { buildRegions } from "./build.js";
+import { placeClaims } from "./claims.js";
+import type { Override, Placement } from "./claims.js";
 import { displayOf } from "./display.js";
 import type { Display } from "./display.js";
 import { themeLayouts } from "./layouts.js";
+import type { Layout } from "./layouts.js";
+import { loadOverrides } from "./overrides.js";
 import type { HeaderMode, HubQrMode } from "./parts.js";
 import type { Sources, ThemeNow } from "./sources.js";
 import type { ZoneFacts } from "./widgets.js";
@@ -30,6 +34,9 @@ export interface ComposeDeps {
   bundleVersion: string;
   /** Each zone's state and change log (src/push/store.ts). */
   zones: ZoneStore;
+  /** For `screen.claims.changed`; none in the pure tests. */
+  bus?: Pick<Bus, "publish">;
+  log?: Logger;
   now?: () => number;
 }
 
@@ -104,14 +111,19 @@ async function windowLayoutId(
 const origin = (ctx: TenantContext, host: string): string =>
   ctx.primary_hostname === null ? `http://${host}` : `https://${ctx.primary_hostname}`;
 
+/** One orientation's layout, its regions with their claims, and where the claims went. */
+export interface ZoneView extends Placement {
+  layout: Layout;
+}
+
 export interface ZoneComposed {
   /** Fingerprint of the zone's inputs, the same for every screen of the zone (see zoneFingerprint). */
   fingerprint: string;
   zone: ZoneRow;
   theme: ThemeNow;
   eventName: string;
-  /** Landscape and portrait screens of a zone differ only in the layout and its regions. */
-  views: Record<Orientation, ReturnType<typeof buildRegions>>;
+  /** Landscape and portrait screens of a zone differ in the layout, its regions and so its claims. */
+  views: Record<Orientation, ZoneView>;
   ticker: ZoneFacts["ticker"] & { appearance: string };
   display: Display;
 }
@@ -135,6 +147,7 @@ export async function composeZone(
       zone,
       windowLayout: await windowLayoutId(c, zone.key, ctx.time_zone, at),
       ticker: await tickerNow(c, ctx.time_zone, at.getTime()),
+      claims: await loadOverrides(c, zone.key, at.getTime()),
     };
   });
   if (read === null) return null;
@@ -155,8 +168,8 @@ export async function composeZone(
     venue,
     ticker: read.ticker,
   };
-  const build = (portrait: boolean) =>
-    buildRegions({
+  const build = (portrait: boolean): ZoneView => {
+    const { layout, regions } = buildRegions({
       zone: {
         key: read.zone.key,
         layoutId: read.zone.layout_id,
@@ -169,6 +182,8 @@ export async function composeZone(
       portrait,
       facts,
     });
+    return { layout, ...placeClaims(regions, read.claims) };
+  };
   const setting = deps.settings.get("ticker_appearance", "default");
   const appearance = typeof setting === "string" ? setting : "default";
   const display = displayOf(theme?.tokens, agenda, deps.settings.get("burn_in_drift", false));
@@ -180,6 +195,7 @@ export async function composeZone(
       facts,
       tickerAppearance: appearance,
       display,
+      claims: read.claims,
     }),
     zone: read.zone,
     theme: theme ?? NO_THEME,
@@ -198,6 +214,8 @@ export interface FingerprintInput {
   tickerAppearance?: string;
   /** Holds the `burn_in_drift` setting, which no other input carries. */
   display?: Display;
+  /** The overrides active on the zone now: one that ends changes the inputs, so it is drawn away. */
+  claims?: readonly Override[];
 }
 
 /**
@@ -214,6 +232,7 @@ export function zoneFingerprint(input: FingerprintInput): string {
     facts: { ...input.facts, now: null },
     ticker: input.tickerAppearance ?? "default",
     display: input.display ?? NO_DISPLAY,
+    claims: input.claims ?? [],
   };
   return createHash("sha256").update(JSON.stringify(stable)).digest("base64url");
 }

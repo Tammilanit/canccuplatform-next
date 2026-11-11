@@ -17,11 +17,17 @@ import { loadDraft } from "./drafts.js";
 import type { DraftRow } from "./drafts.js";
 import { FILE_NAME, fileName } from "./files.js";
 import type { FileStore } from "./files.js";
+import { EMBEDS } from "./http.js";
 import { SERVED } from "./theme.js";
 import { fillTokens } from "./tokens.js";
 
 export const STUDIO = "/theming/studio/";
 export const STARTERS = ["default", "terminal", "level-up"] as const;
+/**
+ * The starters that hold embeds, so uploading one needs `theming.embeds.write` as well; a writer
+ * without it is not offered them (test/studio.test.ts checks this against events/demo/themes/).
+ */
+export const STARTERS_WITH_EMBEDS: ReadonlySet<string> = new Set(["terminal", "level-up"]);
 const SURFACES: [string, string][] = [
   ["screen", "Screen"],
   ["hub", "Phone hub"],
@@ -124,16 +130,23 @@ export function problemsView(problems: readonly Problem[]): Html {
   </ul>`;
 }
 
-function startView(): Html {
-  const starters = STARTERS.map((name) =>
-    actionButton(name, { "data-action": "starter", "data-starter": name }),
+function startView(embedsAllowed: boolean): Html {
+  const starters = STARTERS.filter((name) => embedsAllowed || !STARTERS_WITH_EMBEDS.has(name)).map(
+    (name) => actionButton(name, { "data-action": "starter", "data-starter": name }),
   );
+  const missing = embedsAllowed
+    ? ""
+    : html`<p class="canccu-field__hint">
+        The ${[...STARTERS_WITH_EMBEDS].join(" and ")} themes hold embeds, which need the right
+        <code>${EMBEDS}</code>.
+      </p>`;
   return card(
     "Start a draft",
     html`<p>Edit a copy of what screens show now, or start from one of the platform's themes.</p>
       <p class="canccu-studio-row">
         ${actionButton("The current theme", { "data-action": "start" }, "primary")} ${starters}
-      </p>`,
+      </p>
+      ${missing}`,
   );
 }
 
@@ -155,9 +168,10 @@ function brandForm(state: StudioState, colors: Record<string, string>): Html {
   const scheme = brand?.scheme ?? "dark";
   const hidden = (["logo", "icon"] as const).map((role) => {
     const value = images[role];
-    return typeof value === "string"
-      ? html`<input${attrs({ type: "hidden", name: role, value })}></input${attrs({ type: "hidden", name: role, value })}>`
-      : "";
+    // Prettier formats `html` templates as HTML and closes a lone `<input${…}>` with an invalid
+    // end tag that repeats the attributes, so it must leave this line alone.
+    // prettier-ignore
+    return typeof value === "string" ? html`<input${attrs({ type: "hidden", name: role, value })}>` : "";
   });
   const colour = (name: "primary" | "accent", label: string) =>
     html`<div class="canccu-field"><label class="canccu-field__label"${attrs({ for: `canccu-studio-${name}` })}>${label}</label><input${attrs({ class: "canccu-input canccu-studio-colour", type: "color", id: `canccu-studio-${name}`, name, value: (brand?.[name] ?? colors[name] ?? "#000000").slice(0, 7) })}></div>`;
@@ -253,10 +267,11 @@ function publishView(state: StudioState, draft: DraftRow): Html {
   );
 }
 
-export function brandKitView(state: StudioState): Html {
+/** `embedsAllowed`: whether the session holds `theming.embeds.write`, for the starters offered. */
+export function brandKitView(state: StudioState, embedsAllowed: boolean): Html {
   const d = state.draft;
   if (d === undefined)
-    return root(state, html`${status(state)}${startView()}${previewView(state)}`);
+    return root(state, html`${status(state)}${startView(embedsAllowed)}${previewView(state)}`);
   const colors = fillTokens(d.manifest.tokens ?? {}).colors;
   return root(
     state,

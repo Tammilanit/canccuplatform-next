@@ -3,6 +3,7 @@
  * pure function of the zone, the layout and what the sources said, so every screen of a zone
  * gets the same answer and the rules are tested without a stack.
  */
+import type { Claim } from "./claims.js";
 import { chooseLayout, roleOf } from "./layouts.js";
 import type { Area, Layout, LayoutRegion, Props, Role, WidgetEntry } from "./layouts.js";
 import { partsOf } from "./parts.js";
@@ -50,7 +51,8 @@ export interface RegionView {
   idle: Idle;
   idle_view: { widget: "countdown"; view: View } | null;
   widgets: WidgetView[];
-  claim: null;
+  /** Placed afterwards, from the zone's active overrides (claims.ts). */
+  claim: Claim | null;
 }
 
 const DEFAULT_DWELL_S = 15;

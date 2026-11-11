@@ -31,7 +31,7 @@ export interface Region {
   idle: string;
   idle_view: { widget: string; view: Record<string, unknown> } | null;
   widgets: WidgetState[];
-  /** Drawn by the claims slice (#307). */
+  /** A Moments claim placed on the region (claims.ts reads it). */
   claim: unknown;
   [field: string]: unknown;
 }
