@@ -3,9 +3,12 @@
 # CI runs it in the `demo-stack` check. Hand-written smoke tests; tests generated from
 # contracts/ come later.
 # Usage: demo-stack-test [--dry-run] [BASE_URL]   (default http://127.0.0.1)
-# The host must be an IP literal: the IP-mode stack serves the demo tenant only there.
-# Needs curl, jq, python3 and docker (the push latency test runs in the screen container, through
-# CANCCU_DEMO_COMPOSE, default `docker compose -f deploy/compose.yml -f deploy/compose.ci.yml`).
+# BASE_URL is where Caddy listens; every request names the event in `Host`: the demo event's
+# hostname CANCCU_DEMO_HOST (default demo.localhost), since the CI stack has two events and IP
+# mode serves none then (deploy/compose.ci.yml).
+# Needs curl, jq, python3 and docker (the push, load and soak tests run in the screen container or
+# its network namespace, through CANCCU_DEMO_COMPOSE, default `docker compose -f deploy/compose.yml
+# -f deploy/compose.ci.yml`).
 # The signed-in calls use the CI session stub's cookie (canccu_session=demo-ci, see
 # deploy/compose.ci.yml).
 set -uo pipefail
@@ -18,6 +21,7 @@ if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
 BASE=${1:-http://127.0.0.1}
 BASE=${BASE%/}
 COOKIE="canccu_session=${DEMO_SESSION:-demo-ci}"
+DEMO_HOST=${CANCCU_DEMO_HOST:-demo.localhost}
 read -ra COMPOSE <<< "${CANCCU_DEMO_COMPOSE:-docker compose -f deploy/compose.yml -f deploy/compose.ci.yml}"
 EVENT_DIR=events/demo
 
@@ -45,6 +49,9 @@ TESTS=(
   "bare /agenda and /notify go to their pages and keep the query"
   "agenda's and notify's API and health are not routed under their page prefix"
   "screen pushes a ticker change to a paired screen's stream within a second (p95 of 20)"
+  "the second event answers on its own hostname"
+  "screen keeps 100 screens of two events current, each change within a second (p95)"
+  "the player holds 24 accelerated hours within its heap budget"
 )
 
 if [ "$dry" = 1 ]; then
@@ -68,10 +75,12 @@ trap 'rm -rf "$TMP"' EXIT
 fail=0
 n=0
 
-# call METHOD PATH [curl args...] -> sets $code; body in $TMP/body
+# call METHOD PATH [curl args...] -> sets $code; body in $TMP/body. The host is the demo
+# event's, or CALL_HOST's for one call.
 call() {
   local method=$1 path=$2; shift 2
-  code=$(curl -s -o "$TMP/body" -w '%{http_code}' --max-time 20 -X "$method" "$@" "$BASE$path") || code=000
+  code=$(curl -s -o "$TMP/body" -w '%{http_code}' --max-time 20 -X "$method" \
+    -H "host: ${CALL_HOST:-$DEMO_HOST}" "$@" "$BASE$path") || code=000
 }
 # check LABEL COMMAND [ARGS...] : runs the command, prints ok/FAIL with the last answer on failure
 check() {
@@ -168,7 +177,7 @@ offers_first_run() { status_is 200 && grep -q "/admin/first-run" "$TMP/body"; }
 check "${TESTS[14]}" offers_first_run
 
 # Settings are per tenant: a host the tenants module does not know gets nothing, signed in or not.
-call GET /api/admin/settings/admin -H "cookie: $COOKIE" -H "host: no-tenant.example.test"
+CALL_HOST=no-tenant.example.test call GET /api/admin/settings/admin -H "cookie: $COOKIE"
 check "${TESTS[15]}" body_is 404 '.error.code == "not_found"'
 
 # The page is routed (a malformed code gets the page's own answer); internal paths never are.
@@ -219,17 +228,43 @@ hidden_under_prefix() {
 }
 check "${TESTS[21]}" hidden_under_prefix
 
-# The push channel (#304): from the ticker's PUT to its message on an open device stream. It runs
-# in the screen container against screen itself, since a device stream opens only from the demo
-# venue's addresses (the loopback there) and the host reaches Caddy from Docker's gateway.
+# The stack tests of screen (modules/screen/test/stack/) run in the screen container against
+# screen itself, since a device stream opens only from the demo venue's addresses (the loopback
+# there) and the host reaches Caddy from Docker's gateway.
 # shellcheck disable=SC2329
-push_within_a_second() {
+in_screen() {
   code=000
-  "${COMPOSE[@]}" exec -T screen node --input-type=module \
-    < modules/screen/test/push-latency.mjs > "$TMP/body" 2>&1
+  "${COMPOSE[@]}" cp modules/screen/test/stack/. screen:/tmp/canccu-stack >/dev/null &&
+    "${COMPOSE[@]}" exec -T -e CANCCU_DEMO_HOST="$DEMO_HOST" -w /tmp/canccu-stack screen \
+      node "$@" > "$TMP/body" 2>&1
 }
-check "${TESTS[22]}" push_within_a_second
+# The push channel (#304): from the ticker's PUT to its message on an open device stream.
+check "${TESTS[22]}" in_screen push-latency.mjs
 sed -n 's/^push latency: /     /p' "$TMP/body"
+
+call GET /api/tenants/current
+demo_name=$(jq -r '.name // ""' "$TMP/body" 2>/dev/null)
+# shellcheck disable=SC2329
+two_events() {
+  [ -n "$demo_name" ] && CALL_HOST=demo-two.localhost call GET /api/tenants/current &&
+    body_is 200 ".id == \"demo-two\" and .name != \"$demo_name\""
+}
+check "${TESTS[23]}" two_events
+
+# The load test (#310, plan O1): 50 screens in each event, every change timed on every screen.
+check "${TESTS[24]}" in_screen load.mjs
+sed -n 's/^load: /     /p' "$TMP/body"
+
+# The player's soak (#310, plan O3): a fake clock runs 24 hours in 6 minutes; the real 24-hour run
+# is the lead's, on the test VM (modules/screen/README.md, Soak and load).
+# shellcheck disable=SC2329
+soak_holds() {
+  code=000
+  CANCCU_DEMO_HOST="$DEMO_HOST" scripts/screen-soak --hours 24 --minutes 6 --out "$TMP/soak" \
+    > "$TMP/body" 2>&1
+}
+check "${TESTS[25]}" soak_holds
+sed -n 's/^soak: /     /p' "$TMP/body"
 
 if [ "$fail" = 0 ]; then echo "demo-stack-test: all $n tests passed"; else echo "demo-stack-test: tests failed" >&2; fi
 exit "$fail"
