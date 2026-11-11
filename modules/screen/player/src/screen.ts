@@ -1,9 +1,11 @@
 /**
  * Draws a zone's composed state (plan #109, D2 and S5–S7, S11): the layout's grid letterboxed to
- * its aspect, each region in its cells, the widget its rotation shows now or its idle choice, and
- * the screen's motion and burn-in drift. The DOM is kept between states, so a push changes only
+ * its aspect, each region in its cells, its claim or else the widget its rotation shows now or its
+ * idle choice, and the screen's motion and burn-in drift. The DOM is kept between states, so a push changes only
  * what it changed and a fade in progress is never cut short by an unrelated update.
  */
+import { claimEnd, claimOf, claimShown } from "./claims.js";
+import type { ClaimState } from "./claims.js";
 import { driftAt, effectiveMotion, FADE_MS } from "./display.js";
 import type { Motion } from "./display.js";
 import { shownAt } from "./rotation.js";
@@ -34,6 +36,10 @@ interface Drawn {
   json: string;
   slot: HTMLElement | null;
   state: Region;
+  /** The claim the region showed last, to see it end. */
+  claim: ClaimState | null;
+  /** After a claim with `on_end: next`: the widget shown instead of the rotation's, until when. */
+  next: { index: number | null; until: number } | null;
 }
 
 const grid = (n: number): string => `repeat(${String(n)}, minmax(0, 1fr))`;
@@ -46,6 +52,10 @@ function ratioOf(aspect: string): number {
 
 const layoutKey = (l: Layout): string =>
   JSON.stringify([l.id, l.aspect, l.grid.columns, l.grid.rows]);
+
+/** What `shownAt` reads of a region, not the widgets' data, which every push may renew. */
+const rotationKey = (r: Region): string =>
+  JSON.stringify([r.rotation, r.order, r.widgets.map((w) => w.dwell_seconds)]);
 
 export class Screen {
   root: HTMLElement = document.createElement("main");
@@ -113,10 +123,12 @@ export class Screen {
     if (drawn === undefined) {
       const el = document.createElement("section");
       el.className = `canccu-region canccu-region--${r.id}`;
-      drawn = { el, shown: null, json: "", slot: null, state: r };
+      drawn = { el, shown: null, json: "", slot: null, state: r, claim: null, next: null };
       this.regions.set(r.id, drawn);
       this.root.append(el);
     }
+    // A skip worked out on the old rotation means nothing on a new one.
+    if (rotationKey(r) !== rotationKey(drawn.state)) drawn.next = null;
     drawn.state = r;
     const { el } = drawn;
     if (r.role === null) delete el.dataset.role;
@@ -136,8 +148,13 @@ export class Screen {
     const now = this.host.serverNow();
     const motion = effectiveMotion(state.display?.motion, this.host.reducedMotion());
     this.root.dataset.motion = motion;
+    // A takeover hides every region but itself and the overlay (screen.css), until it ends here.
+    const full = claimOf(state.regions.find((r) => r.role === "full")?.claim);
+    const takeover = full !== null && !full.hidden && claimShown(full, now) !== null;
+    if (takeover) this.root.dataset.takeover = "";
+    else delete this.root.dataset.takeover;
     for (const drawn of this.regions.values())
-      this.show(drawn, this.choose(drawn.state, state, now), motion);
+      this.show(drawn, this.choose(drawn, state, now, takeover), motion);
     fillCountdowns(this.root, now);
     if (state.display?.drift === true) {
       const { x, y } = driftAt(now);
@@ -149,9 +166,41 @@ export class Screen {
     }
   }
 
-  /** The rotation's widget now, else the region's idle choice; null draws nothing. */
-  private choose(r: Region, state: ScreenState, now: number): Shown | "collapse" | null {
-    const { index } = shownAt(r, state.zone?.key ?? "", now);
+  /**
+   * The region's claim, else the rotation's widget now, else the region's idle choice; null draws
+   * nothing. A `hidden` claim waits while the takeover above it runs, and shows once it ends.
+   */
+  private choose(
+    drawn: Drawn,
+    state: ScreenState,
+    now: number,
+    takeover: boolean,
+  ): Shown | "collapse" | null {
+    const r = drawn.state;
+    const zone = state.zone?.key ?? "";
+    const claim = claimOf(r.claim);
+    const shown = claim === null ? null : claimShown(claim, now);
+    if (claim !== null && shown !== null) {
+      if (!claim.hidden || !takeover) {
+        drawn.claim = claim;
+        drawn.next = null;
+        return { ...shown, template: null };
+      }
+    } else if (drawn.claim !== null) {
+      // The claim ended here, or a state dropped it: `next` skips the rest of the widget the
+      // rotation would show at its end (contracts/screen.md, `on_end`).
+      if (drawn.claim.on_end === "next") {
+        const at = Math.min(claimEnd(drawn.claim) ?? now, now);
+        // With nothing rotating there is nothing to skip; an endless `next` would hold the idle
+        // choice even after widgets arrive.
+        const { index: cur, until } = shownAt(r, zone, at);
+        if (cur !== null && Number.isFinite(until))
+          drawn.next = { index: shownAt(r, zone, until).index, until };
+      }
+    }
+    if (claim?.override_id !== drawn.claim?.override_id || shown === null) drawn.claim = null;
+    if (drawn.next !== null && now >= drawn.next.until) drawn.next = null;
+    const { index } = drawn.next ?? shownAt(r, zone, now);
     const w = index === null ? undefined : r.widgets[index];
     if (w !== undefined) {
       const view = liveView(w.widget, w.view, now, state.tenant.time_zone);
