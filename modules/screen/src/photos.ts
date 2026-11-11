@@ -21,6 +21,7 @@ import {
 import { preparePhoto, readMultipart } from "./assets/upload.js";
 import { writeDroppingFiles, writeWithFile } from "./assets/write.js";
 import type { AssetDeps, FileDeps } from "./assets/write.js";
+import { featuredUntil, photoDwell } from "./compose/photos.js";
 import { publishAll } from "./zones.js";
 import type { Emit } from "./zones.js";
 
@@ -35,8 +36,8 @@ const FIELDS: Record<string, number> = {
 /** The form's fields and one file; the app's limits are an asset upload's. */
 const LIMITS = { fields: Object.keys(FIELDS).length, parts: Object.keys(FIELDS).length + 1 };
 
-const PHOTO_SELECT = `SELECT id, file, caption, author_name, author_user_id, posted_at, featured
-  FROM screen_photos`;
+const PHOTO_SELECT = `SELECT id, file, caption, author_name, author_user_id, posted_at, featured,
+  created_at FROM screen_photos`;
 
 function photoView(row: Record<string, unknown>) {
   return {
@@ -125,7 +126,19 @@ export function photoRoutes(app: FastifyInstance, deps: AssetDeps & { bus: Bus }
     const { rows } = await deps.db.tenant((c) =>
       c.query(`${PHOTO_SELECT} ORDER BY created_at DESC, id DESC`),
     );
-    return { photos: rows.map(photoView) };
+    await deps.settings.ensure();
+    // Featured once its feature on the screens is over: the `photo` widget's own rule.
+    const until = featuredUntil(
+      rows.map((r) => ({ id: r.id as string, created_at: (r.created_at as Date).getTime() })),
+      photoDwell(deps.settings),
+    );
+    const now = deps.now();
+    return {
+      photos: rows.map((r) => ({
+        ...photoView(r),
+        featured: (until.get(r.id as string) ?? 0) > now,
+      })),
+    };
   });
 
   app.post("/api/screen/photos", write, async (request, reply) => {

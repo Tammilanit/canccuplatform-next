@@ -15,13 +15,25 @@ export async function readAssets(
   ids: readonly string[],
   lock = false,
 ): Promise<Assets> {
-  if (ids.length === 0) return new Map();
+  return playbackOf(await readAssetRows(c, ids, lock));
+}
+
+export async function readAssetRows(
+  c: SqlClient,
+  ids: readonly string[],
+  lock = false,
+): Promise<AssetRow[]> {
+  if (ids.length === 0) return [];
   const { rows } = await c.query(
     `${ASSET_SELECT} WHERE a.id = ANY($1)${lock ? " FOR KEY SHARE OF a" : ""}`,
     [[...ids]],
   );
+  return rows as unknown as AssetRow[];
+}
+
+export function playbackOf(rows: readonly AssetRow[]): Assets {
   return new Map(
-    (rows as unknown as AssetRow[]).map((r): [string, PlaybackAsset] => [
+    rows.map((r): [string, PlaybackAsset] => [
       r.id,
       {
         id: r.id,

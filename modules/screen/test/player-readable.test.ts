@@ -21,6 +21,27 @@ describe("the screen's stylesheet", () => {
     expect(css).not.toContain("!important");
   });
 
+  it("lets every widget fill its region: no widget rule takes it out of absolute, inset 0", () => {
+    // A region is a grid cell with no content height of its own; a widget set back to `relative`
+    // (or given its own inset) collapses to its content, and a playlist of absolute media is 0 px.
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+      selector: (m[1] ?? "").replace(/\/\*[\s\S]*?\*\//g, "").trim(),
+      body: m[2] ?? "",
+    }));
+    const widgetRules = rules.filter((r) =>
+      /\.canccu-region\s*>\s*\.canccu-widget/.test(r.selector),
+    );
+    expect(widgetRules.some((r) => r.selector.includes("--playlist"))).toBe(true);
+    expect(widgetRules.some((r) => r.selector.includes("--embed"))).toBe(true);
+    for (const { selector, body } of widgetRules) {
+      for (const [, value] of body.matchAll(/(?:^|;)\s*position:\s*([^;]+)/g)) {
+        expect(value?.trim(), selector).toBe("absolute");
+      }
+      if (selector === ".canccu-region > .canccu-widget") continue;
+      expect(body, selector).not.toMatch(/(?:^|;)\s*(inset|top|right|bottom|left|height):/);
+    }
+  });
+
   it("has a look for every ticker appearance and every motion", () => {
     for (const appearance of ["high_contrast", "minimal", "broadcast"]) {
       expect(css).toContain(`[data-ticker="${appearance}"]`);

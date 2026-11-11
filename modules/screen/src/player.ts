@@ -9,6 +9,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { FastifyInstance } from "fastify";
 import { eventPageCsp, newNonce, normalizeHost } from "@canccu/kit";
+import { allowedOrigins, YOUTUBE_ORIGIN } from "./assets/links.js";
+import type { Settings } from "./health.js";
 import { notFound } from "./http.js";
 
 /** Where `npm run build` puts the bundle: next to this file in dist/. */
@@ -22,6 +24,19 @@ const FILES = new Map([
 export interface PlayerDeps {
   bundleVersion: string;
   playerDir?: string;
+  settings: Settings;
+}
+
+/**
+ * The screen page's one widening of the event page CSP (contracts/screen.md, CSP): web assets'
+ * origins and YouTube in `frame-src`. Only parsed https origins go in, so no list entry can end
+ * the directive or add one of its own.
+ */
+function withFrames(csp: string, allowlist: unknown): string {
+  const extra = [YOUTUBE_ORIGIN, ...allowedOrigins(allowlist)].join(" ");
+  return csp.replace(/(^|; )frame-src ([^;]*)/, (_m, pre: string, src: string) => {
+    return `${pre}frame-src ${src} ${extra}`;
+  });
 }
 
 const ENTITIES: Record<string, string> = {
@@ -80,11 +95,16 @@ export function playerRoutes(app: FastifyInstance, deps: PlayerDeps): void {
     // The sandbox on the address the page loaded from, so the IP-mode stack (plain http) frames
     // embeds too; the kit's default names https.
     const sandbox = `${request.protocol}://${request.host.toLowerCase()}/theming/sandbox/`;
+    await deps.settings.ensure();
+    const csp = withFrames(
+      eventPageCsp(newNonce(), hostname, { sandbox }),
+      deps.settings.get("web_allowlist", []),
+    );
     return reply
       .header("content-type", "text/html; charset=utf-8")
       .header("cache-control", "no-store")
       .header("x-content-type-options", "nosniff")
-      .header("content-security-policy", eventPageCsp(newNonce(), hostname, { sandbox }))
+      .header("content-security-policy", csp)
       .send(page);
   });
 

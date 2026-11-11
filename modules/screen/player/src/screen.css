@@ -276,6 +276,58 @@
     font-weight: 600;
   }
 
+  /* The playlist's media fill the widget edge to edge, with no card (src/media.ts). The widget
+     stays absolute, inset 0 like every widget: it is the media's containing block, and set back
+     to relative it would collapse to its absolute children's height, 0 px. */
+  .canccu-region > .canccu-widget--playlist {
+    padding: 0;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .canccu-widget__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: contain;
+  }
+
+  .canccu-widget__media.canccu-is-failed {
+    visibility: hidden;
+  }
+
+  /* The embed widget, as packages/ui's ui.css draws it (the screen page loads no ui.css): the
+     still fills the widget and the frame lies over it, transparent until the embed paints. */
+  .canccu-region > .canccu-widget--embed {
+    padding: 0;
+    overflow: hidden;
+    background: var(--canccu-color-background, #0f1115);
+  }
+
+  .canccu-widget--embed > .canccu-widget__body {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .canccu-widget--embed > .canccu-widget__body > img {
+    max-width: 40%;
+    max-height: 40%;
+  }
+
+  .canccu-embed {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    color-scheme: normal;
+  }
+
   /*
    * Claims (contracts/screen.md, Moments drive it: claims). A takeover hides every region but
    * itself and the overlay; the overlay draws its claim as a lower-third band on top of all.

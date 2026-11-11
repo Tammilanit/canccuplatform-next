@@ -33,6 +33,7 @@ function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
     sound: { enabled: composed.zone.sound.enabled, device_id: composed.zone.sound.device_id },
     display: composed.display,
     views: { landscape: view("landscape"), portrait: view("portrait") },
+    nextChangeAt: composed.nextChangeAt,
   };
 }
 

@@ -41,6 +41,11 @@ export interface TickDeps {
   tenantById: (id: string) => Promise<TenantContext | null>;
   now: () => number;
   log?: Logger;
+  /**
+   * The zones of the event whose playback this step stored a change of (PushHub.played): their
+   * `playlist` widget reads that state, so the screens see the change only after a rebuild.
+   */
+  played?: (tenant: string, zones: string[]) => void;
 }
 
 export function breakGapSeconds(settings: Settings): number {
@@ -80,15 +85,17 @@ export async function tickTenant(deps: TickDeps, ctx: TenantContext): Promise<vo
   await deps.settings.ensure();
   const gap = breakGapSeconds(deps.settings);
   const content = await deps.db.tenant((c) => loadContent(c, deps.assets, deps.now()));
+  const changed: string[] = [];
   for (const key of claimed) {
     try {
-      await stepZone(deps, ctx, content, key, gap);
+      if (await stepZone(deps, ctx, content, key, gap)) changed.push(key);
     } catch (err) {
       // A zone deleted since the read has no row to write (its foreign key refuses the insert);
       // that, or any one zone's failure, never holds back the event's other zones.
       deps.log?.warn({ err, tenant_id: tenantId, zone_key: key }, "screen zone tick failed");
     }
   }
+  if (changed.length > 0) deps.played?.(tenantId, changed);
 }
 
 async function stepZone(
@@ -97,7 +104,7 @@ async function stepZone(
   content: EventContent,
   key: string,
   gap: number,
-): Promise<void> {
+): Promise<boolean> {
   const nowMs = deps.now();
   const windows = content.windows.filter((w) => w.zoneKey === key);
   const winner = resolveWinner({ ...content, windows, timeZone: ctx.time_zone }, new Date(nowMs));
@@ -109,25 +116,27 @@ async function stepZone(
     playlists: content.playlists,
     breaks: breakInputFor(content, key, ctx.time_zone, gap),
   };
-  await deps.db.tenant(async (c) => {
+  return deps.db.tenant(async (c) => {
     const { rows } = await c.query(
       "SELECT state, updated_at FROM screen_zone_playback WHERE zone_key = $1 FOR UPDATE",
       [key],
     );
     // A container whose step began earlier never writes over a later one: time only moves on.
     const stored = rows[0] as { state: ZoneState; updated_at: Date } | undefined;
-    if (stored !== undefined && stored.updated_at.getTime() > nowMs) return;
+    if (stored !== undefined && stored.updated_at.getTime() > nowMs) return false;
     const before = stored?.state ?? EMPTY_ZONE;
     const after = advanceZone(before, input, nowMs);
     // Most steps change nothing; only a change is written.
-    if (canonical(before) === canonical(after)) return;
+    if (canonical(before) === canonical(after)) return false;
     // The guard also covers two first inserts racing, which no row lock can.
-    await c.query(
+    const written = await c.query(
       `INSERT INTO screen_zone_playback (zone_key, state, updated_at) VALUES ($1, $2, $3)
        ON CONFLICT (tenant_id, zone_key) DO UPDATE SET state = $2, updated_at = $3
-       WHERE screen_zone_playback.updated_at <= $3`,
+       WHERE screen_zone_playback.updated_at <= $3
+       RETURNING zone_key`,
       [key, JSON.stringify(after), new Date(nowMs)],
     );
+    return written.rows.length > 0;
   });
 }
 

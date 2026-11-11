@@ -10,7 +10,8 @@ import { driftAt, effectiveMotion, FADE_MS } from "./display.js";
 import type { Motion } from "./display.js";
 import { shownAt } from "./rotation.js";
 import type { Layout, Region, ScreenState } from "./state.js";
-import { drawWidget, fillCountdowns, liveView } from "./widget.js";
+import { whenReady } from "./media.js";
+import { drawWidget, fillCountdowns, identity, liveView } from "./widget.js";
 import type { View } from "./widget.js";
 
 export interface ScreenHost {
@@ -19,7 +20,7 @@ export interface ScreenHost {
   reducedMotion(): boolean;
 }
 
-/** How long a widget may wait for its images before it fades in anyway. */
+/** How long a widget may wait for its images, video or page before it fades in anyway. */
 export const READY_MS = 2000;
 
 /** What a region shows: `key` names the thing, so a new key fades and the same key updates. */
@@ -204,8 +205,9 @@ export class Screen {
     const w = index === null ? undefined : r.widgets[index];
     if (w !== undefined) {
       const view = liveView(w.widget, w.view, now, state.tenant.time_zone);
-      // A ticker's new text is a new thing to show, so it fades in (the calm fading line, L13).
-      const text = w.widget === "ticker" ? JSON.stringify(view.text) : "";
+      // A ticker's new text is a new thing to show, so it fades in (the calm fading line, L13);
+      // so are a new photo and a new playlist frame.
+      const text = w.widget === "ticker" ? JSON.stringify(view.text) : identity(w.widget, view);
       return {
         key: `${String(index)}:${text}`,
         type: w.widget,
@@ -227,15 +229,31 @@ export class Screen {
     drawn.el.hidden = shown === "collapse";
     const next = shown === "collapse" ? null : shown;
     const templates = this.state?.theme.templates;
+    const media = {
+      sound: (this.state?.sound as { enabled?: unknown } | undefined)?.enabled === true,
+      nowMs: this.host.serverNow(),
+      reducedMotion: this.host.reducedMotion(),
+    };
+    // The media options belong in the comparison: when the zone's sound moves to another device,
+    // a playing video or YouTube frame must be redrawn muted here (only one device sounds).
     const json =
-      next === null ? "" : JSON.stringify([next.type, next.template, next.view, templates]);
+      next === null
+        ? ""
+        : JSON.stringify([
+            next.type,
+            next.template,
+            next.view,
+            templates,
+            media.sound,
+            media.reducedMotion,
+          ]);
     if (next?.key === drawn.shown?.key && json === drawn.json) return;
     const sameThing = next !== null && next.key === drawn.shown?.key && drawn.slot !== null;
     drawn.shown = next;
     drawn.json = json;
     if (sameThing) {
       // New data for what is already shown: redraw it in place, with no fade.
-      const fresh = drawWidget(next.type, next.template, next.view, templates);
+      const fresh = drawWidget(next.type, next.template, next.view, templates, media);
       drawn.slot?.replaceChildren(...fresh.childNodes);
       // Keep a fade that is still waiting for its images (`canccu-slot--in`), or it pops in.
       if (drawn.slot !== null) {
@@ -246,7 +264,7 @@ export class Screen {
       return;
     }
     const incoming =
-      next === null ? null : drawWidget(next.type, next.template, next.view, templates);
+      next === null ? null : drawWidget(next.type, next.template, next.view, templates, media);
     incoming?.classList.add("canccu-is-active");
     drawn.slot = incoming;
     this.enter(drawn, incoming, motion);
@@ -265,12 +283,10 @@ export class Screen {
     }
     incoming.classList.add("canccu-slot--in");
     region.append(incoming);
-    // `decode` settles once the image can be drawn, or fails; either way the wait is over.
-    const images = [...incoming.querySelectorAll("img")].map((img) =>
-      img.decode().catch(() => undefined),
-    );
+    // Images, a video's first frame, a frame's page: each settles once it can be drawn or fails.
+    const media = [...incoming.querySelectorAll("img, video, iframe")].map(whenReady);
     const ready = Promise.race([
-      Promise.all(images),
+      Promise.all(media),
       new Promise((resolve) => setTimeout(resolve, READY_MS)),
     ]);
     void ready.then(() => {

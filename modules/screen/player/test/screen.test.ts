@@ -302,3 +302,51 @@ describe("burn-in drift", () => {
     expect(root.style.getPropertyValue("--canccu-drift-x")).toBe("");
   });
 });
+
+describe("the playlist on the screen", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ now: T0 });
+    shift = 0;
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const frame = (file: string, startsIn: number) => ({
+    kind: "image",
+    url: `/api/screen/files/${file}`,
+    slide_urls: [],
+    started_at: new Date(T0 + startsIn).toISOString(),
+    offset_seconds: 0,
+    duration_seconds: 10,
+    muted: true,
+  });
+  const src = (screen: Screen) =>
+    screen.root.querySelector(".canccu-region--hero img")?.getAttribute("src");
+
+  it("goes on to the next frame by itself when the item ends, before any push", async () => {
+    const screen = new Screen(host);
+    const hero = region("hero", {
+      widgets: [
+        widget("playlist", { item: frame("a.png", 0), next_item: frame("b.png", 10_000) }, 60),
+      ],
+    });
+    screen.draw(state([hero]));
+    screen.start();
+    expect(src(screen)).toBe("/api/screen/files/a.png");
+    await advance(10_000);
+    expect(src(screen)).toBe("/api/screen/files/b.png");
+    screen.stop();
+  });
+
+  it("mutes a playing video here when the zone's sound moves to another device", () => {
+    const screen = new Screen(host);
+    const video = { ...frame("v.mp4", 0), kind: "video", muted: false };
+    const hero = region("hero", { widgets: [widget("playlist", { item: video }, 60)] });
+    const el = () => screen.root.querySelector<HTMLVideoElement>(".canccu-region--hero video");
+    screen.draw(state([hero], { sound: { enabled: true } }));
+    expect(el()?.muted).toBe(false);
+    screen.draw(state([hero], { sound: { enabled: false } }));
+    expect(el()?.muted).toBe(true);
+  });
+});

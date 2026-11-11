@@ -19,7 +19,8 @@ describe("the sources' reads", () => {
   beforeAll(async () => {
     server = createServer((request, response) => {
       const header = request.headers["x-canccu-service"];
-      const module = /^\/internal\/(agenda|theming)\//.exec(request.url ?? "")?.[1] ?? "tenants";
+      const module =
+        /^\/internal\/(agenda|theming|notify)\//.exec(request.url ?? "")?.[1] ?? "tenants";
       let caller: string | null;
       try {
         caller = audience(module).verify(typeof header === "string" ? header : null);
@@ -39,6 +40,14 @@ describe("the sources' reads", () => {
         json(200, { time: "t", agenda_version: 1, current: [], next: [{ id: "i1" }] });
       } else if (request.url?.startsWith("/internal/tenants/venue-info")) {
         json(200, { house_rules: "", wifi: [{ ssid: "guest" }], floor_plan: null });
+      } else if (request.url?.startsWith("/internal/notify/check-in/code")) {
+        json(200, {
+          purpose: "arrival",
+          code: "abcdefghijklmnopqrstuv",
+          url: "/notify/check-in?p=arrival&c=abcdefghijklmnopqrstuv",
+          valid_until: "2026-01-01T12:01:00Z",
+          rotates_at: "2026-01-01T12:00:30Z",
+        });
       } else if (request.url?.startsWith("/internal/theming/current")) {
         json(200, { revision: 3, tokens_css_url: "/t.css", css_url: null, logo_url: null });
       } else {
@@ -53,7 +62,7 @@ describe("the sources' reads", () => {
   });
 
   const sources = () =>
-    httpSources({ agenda: base, tenants: base, theming: base }, screen, {
+    httpSources({ agenda: base, tenants: base, theming: base, notify: base }, screen, {
       warn: (...args: unknown[]) => warnings.push(args),
     });
 
@@ -84,6 +93,15 @@ describe("the sources' reads", () => {
     });
   });
 
+  it("reads the check-in code as a module, signed for notify", async () => {
+    const code = await sources().checkinCode("alpha", "arrival");
+    expect(code).toMatchObject({ purpose: "arrival", rotates_at: "2026-01-01T12:00:30Z" });
+    expect(seen.at(-1)).toMatchObject({
+      path: "/internal/notify/check-in/code?tenant_id=alpha&purpose=arrival",
+      caller: "screen",
+    });
+  });
+
   it("answers null on a refusal and says so in the log", async () => {
     const before = warnings.length;
     expect(await sources().agendaNow("closed", "main")).toBeNull();
@@ -92,7 +110,7 @@ describe("the sources' reads", () => {
 
   it("answers null when the module is unreachable", async () => {
     const down = httpSources(
-      { agenda: "http://127.0.0.1:1", tenants: base, theming: base },
+      { agenda: "http://127.0.0.1:1", tenants: base, theming: base, notify: base },
       screen,
     );
     expect(await down.agendaNow("alpha", "main")).toBeNull();

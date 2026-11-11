@@ -31,6 +31,8 @@ export interface ZoneRecord {
   /** Absent in a record stored before it was added: screens then get the defaults. */
   display?: Display;
   views: Record<Orientation, ZoneRecordView>;
+  /** When a content widget next changes by itself (epoch ms): the hub rebuilds the zone then. */
+  nextChangeAt?: number | null;
 }
 
 /** Where the zone's claims went; absent in a record stored before claims: none. */
