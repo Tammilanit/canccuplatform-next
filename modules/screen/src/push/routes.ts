@@ -29,6 +29,9 @@ export function serveFeed(
   void start(() => {
     hub.remove(stream);
   });
+  // A client that hung up during the handler's awaits fired its `close` before the listener
+  // above: end now, after `start`, so the stream's own cleanup (a session's slot) runs too.
+  if (reply.request.raw.destroyed || reply.raw.destroyed) stream.end();
   return reply.send(stream.out);
 }
 

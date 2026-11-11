@@ -60,7 +60,13 @@ export abstract class Feed<R extends FeedRequest = FeedRequest> {
   constructor(
     protected readonly deps: StreamDeps,
     readonly req: R,
-  ) {}
+  ) {
+    // Fastify destroys the output of a reply whose client is gone, and a destroyed output must
+    // not leave the ping, the hub entry or a session's stream slot running.
+    this.out.on("close", () => {
+      this.end();
+    });
+  }
 
   get tenant(): string {
     return this.req.ctx.tenant_id;

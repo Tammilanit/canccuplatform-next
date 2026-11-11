@@ -2,6 +2,8 @@
  * A zone for a signed-in person (contracts/screen.md, Preview and A zone for a session): the
  * zone's state and stream as a mirror's, and the preview of an unsaved zone.
  */
+import { once } from "node:events";
+import type { IncomingMessage } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { DATABASE_URL, SESSIONS, call, code, events, harness } from "./helpers.js";
@@ -165,6 +167,50 @@ describe.skipIf(!DATABASE_URL)("a zone for a signed-in person", () => {
       const again = client.openZone("/api/screen/zones/main/stream", "crew");
       expect(await again.status).toBe(200);
       again.close();
+    });
+
+    it("ends, and gives back its slot, when the client hangs up while it connects", async () => {
+      // The test before closes its last stream without waiting for it to leave.
+      await expect.poll(() => h.app.pushHub.size).toBe(0);
+      let raw: IncomingMessage | undefined;
+      const seen = (req: IncomingMessage): void => {
+        if (req.url?.startsWith("/api/screen/zones/main/stream")) raw = req;
+      };
+      h.app.server.on("request", seen);
+      const add = h.kv.addExpiring.bind(h.kv);
+      let slot: { key: string; member: string } | undefined;
+      let sse: ReturnType<typeof client.openZone> | undefined;
+      // The hang-up lands between the limit check and the stream's own `close` listener.
+      h.kv.addExpiring = async (key, member, expiresAtMs) => {
+        await add(key, member, expiresAtMs);
+        if (slot !== undefined || raw === undefined) return;
+        slot = { key, member };
+        // The socket's: a GET whose (empty) body nobody reads never fires the request's own.
+        const closed = once(raw.socket, "close");
+        sse?.close();
+        await closed;
+      };
+      const hub = h.app.pushHub;
+      const hubAdd = hub.add.bind(hub);
+      let added = false;
+      hub.add = (stream) => {
+        added = true;
+        hubAdd(stream);
+      };
+      try {
+        sse = client.openZone("/api/screen/zones/main/stream", "crew");
+        await sse.ended;
+        // The handler goes on after the hang-up: only then is the stream in the hub to leave it.
+        await expect.poll(() => added).toBe(true);
+        await expect.poll(() => hub.size).toBe(0);
+        if (slot === undefined) throw new Error("the stream never took a slot");
+        const { key, member } = slot;
+        await expect.poll(() => h.kv.live(key, h.clock.now)).not.toContain(member);
+      } finally {
+        h.kv.addExpiring = add;
+        hub.add = hubAdd;
+        h.app.server.off("request", seen);
+      }
     });
   });
 
