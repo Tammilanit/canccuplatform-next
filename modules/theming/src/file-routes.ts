@@ -67,6 +67,7 @@ export function fileRoutes(app: FastifyInstance, deps: DraftDeps): void {
                 bytes: checked.bytes.length,
                 refs: checked.refs,
                 warnings: checked.warnings,
+                sizes: checked.sizes,
               }
             : { problem: checked.problem };
           unused = await setDraftPath(c, path, entry);

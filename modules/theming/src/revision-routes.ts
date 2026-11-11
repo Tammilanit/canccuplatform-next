@@ -1,7 +1,14 @@
 /** Publish, restore, the history and the pinned read (contracts/theming.openapi.yaml, draft and revisions). */
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { ServiceForbidden, isTenantId, requireTenant, withTenant } from "@canccu/kit";
-import type { Bus, Logger, RightsChecker, SqlClient, TenantResolver } from "@canccu/kit";
+import type {
+  Bus,
+  Logger,
+  RightsChecker,
+  SqlClient,
+  StorageQuota,
+  TenantResolver,
+} from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import { hasError } from "./checks.js";
 import type { Manifest } from "./checks.js";
@@ -21,6 +28,7 @@ import {
 } from "./http.js";
 import { currentRevision, embedsDiffer, lockHistory, writeRevision } from "./publish.js";
 import type { ProfileSource } from "./profile.js";
+import { pruneQuietly } from "./retention.js";
 import { fillTokens } from "./tokens.js";
 import type { Published, PublishInput } from "./publish.js";
 import { resolvedRevision } from "./theme.js";
@@ -28,6 +36,7 @@ import { resolvedRevision } from "./theme.js";
 export interface RevisionDeps {
   db: Db;
   files: FileStore;
+  storage: StorageQuota;
   rights: RightsChecker;
   bus: Bus;
   audit: Audit;
@@ -61,7 +70,8 @@ interface SummaryRow {
 const SUMMARY = `SELECT r.revision, r.manifest, r.published_at, r.actor_user_id, r.restored_from,
                         r.cloned_from, p.tenant_id IS NOT NULL AS pinned
                    FROM theming_revisions r
-                   LEFT JOIN theming_pins p ON p.theme_revision = r.revision`;
+                   LEFT JOIN theming_pins p
+                          ON r.revision IN (p.theme_revision, p.restores_revision)`;
 
 /** RevisionSummary, and Revision with `manifest`. */
 function revisionBody(row: SummaryRow, withManifest: boolean): Record<string, unknown> {
@@ -146,6 +156,8 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
       .catch((err: unknown) => {
         deps.log.error({ err, revision: published.revision }, "theming.theme.published not sent");
       });
+    // The new revision may push the oldest past the newest 20.
+    await pruneQuietly(deps);
     return body;
   }
 

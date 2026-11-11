@@ -19,6 +19,7 @@ import { buildApp, themingHealth } from "./app.js";
 import { tenantsAudit } from "./audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { diskFiles } from "./files.js";
+import { listenPins } from "./pins.js";
 import { adminProfile } from "./profile.js";
 import { UPKEEP_MS, upkeepAll } from "./upkeep.js";
 
@@ -98,6 +99,7 @@ async function main(): Promise<void> {
   const db = poolDb(pool);
   const files = diskFiles(FILES_ROOT);
   const storage = tenantsStorage(tenantsUrl, service);
+  listenPins(listener, { db, files, storage, log });
   const app = buildApp({
     db,
     files,
