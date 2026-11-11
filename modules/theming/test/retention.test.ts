@@ -183,6 +183,36 @@ describe.skipIf(!DATABASE_URL)("retention and pins", () => {
     expect(row).toEqual([{ theme_revision: 1 }]);
   });
 
+  it("prunes only after a pin event that changes the pins", async () => {
+    await publish(1);
+    await pin(1, null, "2026-01-01T10:00:00.000Z");
+    // Counts the handler's transactions: its own write, and a prune's.
+    let transactions = 0;
+    const db: unknown = Object.create(d.h.db, {
+      tenant: {
+        value: (fn: Parameters<typeof d.h.db.tenant>[0]) => {
+          transactions += 1;
+          return d.h.db.tenant(fn);
+        },
+      },
+    });
+    const handle = pinHandler({ ...deps(), db: db as typeof d.h.db });
+    const event = (time: string, id: string) => ({
+      id: `01928f3e-7a2b-7c4d-9e8f-${id}`,
+      type: "screen.pin.changed",
+      version: 1,
+      time,
+      source: "screen",
+      tenant: "alpha",
+      data: { bundle_version: null, theme_revision: 1, until: null, restores: null },
+    });
+    // An older event, as the re-read at start delivers it: no change, so no prune.
+    await inAlpha(() => handle(event("2026-01-01T09:00:00.000Z", "000000000101")));
+    expect(transactions).toBe(1);
+    await inAlpha(() => handle(event("2026-01-01T11:00:00.000Z", "000000000102")));
+    expect(transactions).toBeGreaterThanOrEqual(3);
+  });
+
   it("ignores a malformed pin event", async () => {
     await publish(1);
     await inAlpha(() =>

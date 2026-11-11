@@ -41,13 +41,15 @@ export function pinHandler(deps: StoredDeps): (event: Event) => Promise<void> {
       deps.log.warn({ event_id: event.id }, "a malformed screen.pin.changed was ignored");
       return;
     }
-    await deps.db.tenant(async (c) => {
+    const changed = await deps.db.tenant(async (c) => {
       // Under the history lock, so a prune sees the pins before or after this change, never a
       // revision it is about to keep half-pinned.
       await lockHistory(c);
       // Only a later event replaces the row: at start the stream is read again from its start
-      // (listenPins), and its older events must not undo what a newer one set.
-      await c.query(
+      // (listenPins), and its older events must not undo what a newer one set. "Later" is the
+      // producer's clock, since the kit hands a handler no stream entry id: it holds while screen
+      // emits a tenant's pins from one writer, and the event id breaks a tie within a millisecond.
+      const { rows } = await c.query(
         `INSERT INTO theming_pins (theme_revision, restores_revision, event_time, event_id)
          VALUES ($1, $2, $3, $4)
          ON CONFLICT (tenant_id) DO UPDATE
@@ -56,12 +58,17 @@ export function pinHandler(deps: StoredDeps): (event: Event) => Promise<void> {
                event_time = EXCLUDED.event_time, event_id = EXCLUDED.event_id, updated_at = now()
          WHERE theming_pins.event_time IS NULL
             OR (theming_pins.event_time, theming_pins.event_id)
-               < (EXCLUDED.event_time, EXCLUDED.event_id)`,
+               < (EXCLUDED.event_time, EXCLUDED.event_id)
+         RETURNING 1`,
         [pin.theme, pin.restores, event.time, event.id],
       );
+      return rows.length > 0;
     });
-    // A pin let go may leave revisions past the newest 20 that nothing keeps any more.
-    await pruneQuietly(deps);
+    // A pin let go may leave revisions past the newest 20 that nothing keeps any more. Only a
+    // change prunes, so the re-read at start costs no prune per old event. While it catches up,
+    // the row moves forward through pins that held after it was written; a prune at one of them
+    // keeps what the prune of that time kept, so it never drops a revision a later pin names.
+    if (changed) await pruneQuietly(deps);
   };
 }
 

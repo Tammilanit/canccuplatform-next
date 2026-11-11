@@ -5,7 +5,7 @@
  * the root size one file sets changes what `rem` means in all the others.
  */
 import * as csstree from "css-tree";
-import type { CssNode, Rule, StyleSheet } from "css-tree";
+import type { CssNode, Declaration, StyleSheet } from "css-tree";
 import type { SqlClient } from "@canccu/kit";
 import type { Manifest, Problem } from "./checks.js";
 import { list } from "./checks.js";
@@ -63,57 +63,74 @@ function shorthandSize(value: CssNode): CssNode | undefined {
   return undefined;
 }
 
+/** The style rule a declaration sits in: its selectors on the screen, and whether it is nested. */
+interface InRule {
+  selectors: string[];
+  nested: boolean;
+}
+
+/** At-rules whose condition the check does not evaluate: what they hold may not apply at 1080p. */
+const CONDITIONAL = /^(media|container)$/i;
+
 /** The font sizes of a parsed, checked style sheet, for `textSmallProblems`. */
 export function fontSizes(ast: StyleSheet): FontSize[] {
   const out: FontSize[] = [];
-  const visit = (nodes: Iterable<CssNode>, applies: boolean, nested: boolean): void => {
+  const record = (node: Declaration, rule: InRule, conditional: boolean): void => {
+    const property = node.property.toLowerCase();
+    const size =
+      property === "font-size"
+        ? node.value
+        : property === "font"
+          ? shorthandSize(node.value)
+          : undefined;
+    if (size === undefined) return;
+    const value = csstree.generate(size);
+    // Each selector of the list on its own: `html, body` sets the root size as well as body's.
+    const roots = rule.nested ? [] : rule.selectors.filter((s) => ROOT.test(s));
+    const others = rule.selectors.filter((s) => !roots.includes(s));
+    // A root size under a media or container query may hold only on other screens (a phone's),
+    // and it is no text of its own, so it is left out rather than guessed.
+    if (roots.length > 0 && !conditional) {
+      out.push({ selector: roots.join(", "), value, root: true });
+    }
+    if (others.length > 0) out.push({ selector: others.join(", "), value, root: false });
+  };
+  /** Children of the sheet, of an at-rule or of a style rule; `rule` is the style rule they are in. */
+  const visit = (
+    nodes: Iterable<CssNode>,
+    rule: InRule | undefined,
+    conditional: boolean,
+  ): void => {
     for (const node of nodes) {
       if (node.type === "Atrule") {
-        const name = node.name.toLowerCase();
         // A keyframe is no selector, and what it animates passes through sizes set elsewhere.
-        if (node.block !== null && !name.endsWith("keyframes")) {
-          visit(node.block.children, applies, nested);
+        if (node.block !== null && !node.name.toLowerCase().endsWith("keyframes")) {
+          visit(node.block.children, rule, conditional || CONDITIONAL.test(node.name));
         }
-      } else if (node.type === "Rule") visitRule(node, applies, nested);
+      } else if (node.type === "Rule") {
+        const selectors =
+          node.prelude.type === "SelectorList" ? [...node.prelude.children] : [node.prelude];
+        const kept = selectors.filter(onScreen).map((s) => csstree.generate(s));
+        // Neither it nor what it nests applies on the screen.
+        if (kept.length === 0) continue;
+        visit(node.block.children, { selectors: kept, nested: rule !== undefined }, conditional);
+      } else if (node.type === "Declaration" && rule !== undefined) {
+        record(node, rule, conditional);
+      }
     }
   };
-  const visitRule = (rule: Rule, parentApplies: boolean, nested: boolean): void => {
-    const selectors =
-      rule.prelude.type === "SelectorList" ? [...rule.prelude.children] : [rule.prelude];
-    const kept = selectors.filter(onScreen).map((s) => csstree.generate(s));
-    const applies = parentApplies && kept.length > 0;
-    const selector = kept.join(", ");
-    for (const node of rule.block.children) {
-      if (node.type === "Rule") {
-        visitRule(node, applies, true);
-        continue;
-      }
-      if (node.type === "Atrule" && node.block !== null) {
-        visit(node.block.children, applies, true);
-        continue;
-      }
-      if (!applies || node.type !== "Declaration") continue;
-      const property = node.property.toLowerCase();
-      const size =
-        property === "font-size"
-          ? node.value
-          : property === "font"
-            ? shorthandSize(node.value)
-            : undefined;
-      if (size === undefined) continue;
-      out.push({ selector, value: csstree.generate(size), root: !nested && ROOT.test(selector) });
-    }
-  };
-  visit(ast.children, true, false);
+  visit(ast.children, undefined, false);
   return out;
 }
 
-/** Pixels per unit on the screen; `rem` comes from the theme's root, `em` and `%` from the platform. */
+/**
+ * Pixels per unit on the screen. `rem` comes from the theme's root, and so do `em` and `%`: the
+ * page's `<body>` inherits the root's size, and a deeper parent's is not known statically.
+ */
 function unitPx(unit: string, rootPx: number): number | undefined {
   const u = unit.toLowerCase();
   if (u === "px") return 1;
-  if (u === "rem") return rootPx;
-  if (u === "em") return PLATFORM_PX;
+  if (u === "rem" || u === "em") return rootPx;
   if (u === "pt") return 4 / 3;
   if (u === "pc") return 16;
   if (u === "in") return 96;
@@ -144,7 +161,7 @@ function evaluate(nodes: CssNode[], rootPx: number): Quantity | undefined {
       case "Number":
         return { n: Number(node.value) };
       case "Percentage":
-        return { px: (Number(node.value) / 100) * PLATFORM_PX };
+        return { px: (Number(node.value) / 100) * rootPx };
       case "Dimension": {
         const per = unitPx(node.unit, rootPx);
         return per === undefined ? undefined : { px: Number(node.value) * per };
@@ -231,7 +248,8 @@ const px = (n: number): string => `${String(Math.round(n * 10) / 10)}px`;
 
 /** The theme's CSS files in theme.yaml's order, each with the font sizes it set at upload. */
 export function textSmallProblems(files: { path: string; sizes: FontSize[] }[]): Problem[] {
-  // A root size is resolved against the platform's: `rem` and `em` on the root mean its initial size.
+  // A root size is resolved against the platform's: `rem`, `em` and `%` on the root mean its
+  // initial size. The last one in theme.yaml's order wins, as in the cascade.
   let rootPx = PLATFORM_PX;
   for (const { sizes } of files) {
     for (const s of sizes) {

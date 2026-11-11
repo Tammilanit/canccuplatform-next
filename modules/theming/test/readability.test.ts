@@ -31,6 +31,8 @@ describe("text_small", () => {
     ["rem at 27 px", ".t-a { font-size: 1.6875rem; }", false],
     ["em against the platform's 16 px", ".t-a { font-size: 1.5em; }", true],
     ["% against the platform's 16 px", ".t-a { font-size: 150%; }", true],
+    ["em against the theme's root", "html { font-size: 20px; } .t-a { font-size: 1.5em; }", false],
+    ["% against the theme's root", ":root { font-size: 20px; } .t-a { font-size: 150%; }", false],
     ["vh against 1080", ".t-a { font-size: 2vh; }", true],
     ["vh at 2.5", ".t-a { font-size: 2.5vh; }", false],
     ["vmin against 1080", ".t-a { font-size: 2vmin; }", true],
@@ -73,12 +75,16 @@ describe("text_small", () => {
     expect(small(".canccu-surface--info { & .t-a { font-size: 12px; } }")).toEqual([]);
     expect(small(".t-b { & .t-a { font-size: 12px; } }")).toHaveLength(1);
     expect(small("@media (min-width: 1px) { .t-a { font-size: 12px; } }")).toHaveLength(1);
+    expect(small(".t-a { @media (min-width: 1px) { font-size: 12px; } }")).toHaveLength(1);
+    expect(small(".canccu-surface--info { @media (min-width: 1px) { font-size: 12px; } }")).toEqual(
+      [],
+    );
     expect(small("@keyframes t-grow { from { font-size: 1px; } to { font-size: 40px; } }")).toEqual(
       [],
     );
   });
 
-  it("resolves rem against the root size the theme sets, in any of its files, last one winning", () => {
+  it("resolves rem, em and % against the root size the theme sets, in any of its files, last one winning", () => {
     expect(small(":root { font-size: 24px; } .t-a { font-size: 1.25rem; }")).toEqual([]);
     expect(small("html { font-size: 150%; }", ".t-a { font-size: 1.25rem; }")).toEqual([]);
     expect(
@@ -87,6 +93,14 @@ describe("text_small", () => {
         ":root { font-size: 16px; } .t-a { font-size: 1.25rem; }",
       ),
     ).toHaveLength(1);
+    // Each selector of a list on its own: html sets the root size, body is text.
+    const [body, ...rest] = small("html, body { font-size: 20px; } .t-a { font-size: 1.5rem; }");
+    expect(rest).toEqual([]);
+    expect(body).toMatch(/^body: font-size 20px is 20px/);
+    // A root size under a media query may be a phone's: neither a scale nor text at 1080p.
+    expect(
+      small("@media (max-width: 600px) { html { font-size: 10px; } } .t-a { font-size: 1.75rem; }"),
+    ).toEqual([]);
     // The root size is a scale, text of its own only when it shrinks the platform's.
     expect(small(":root { font-size: 10px; }")).toHaveLength(1);
     expect(small(":root { font-size: 16px; }")).toEqual([]);

@@ -4,7 +4,8 @@
  * theming into `@layer canccu-theme` cannot hide, move, cover or restyle the pairing code, the
  * offline marker or the privacy link that ui.css draws in `canccu-base` (packages/ui src/safety.ts).
  * Each attack also hits `.canccu-header`, an ordinary element, where it can: that it does hide the
- * header shows the attack works at all.
+ * header shows the attack works at all. Each element must stay where it is without a theme, and
+ * the screen must show it there, pixel by pixel.
  */
 import { readFile } from "node:fs/promises";
 import type { BrowserContext, Page } from "playwright-core";
@@ -88,7 +89,44 @@ const ATTACKS: [string, string, boolean][] = [
     false,
   ],
   ["the page's content skipped", `.canccu-page { content-visibility: hidden !important; }`, false],
+  [
+    "the page sent along an offset path",
+    `:root, .canccu-page { offset-path: path('M 0 0 L 5000 5000'); offset-distance: 100%; offset-position: 5000px 5000px; }`,
+    false,
+  ],
+  [
+    "the page blended to black",
+    `:root { background: #000000; } .canccu-page { mix-blend-mode: multiply; }`,
+    false,
+  ],
+  [
+    "the page blended to white",
+    `:root { background: #ffffff; } .canccu-page { mix-blend-mode: screen; }`,
+    false,
+  ],
+  [
+    "the page clipped",
+    `.canccu-page { position: absolute; clip: rect(0px, 0px, 0px, 0px); }`,
+    false,
+  ],
+  [
+    "the page masked by its border image",
+    `.canccu-page { -webkit-mask-box-image: linear-gradient(transparent, transparent) 0 fill; mask-border: linear-gradient(transparent, transparent) 0 fill; }`,
+    false,
+  ],
+  [
+    "the root as their box in 3D",
+    `:root { transform-style: preserve-3d; height: 0; margin-top: -300px; } .canccu-page { transform-style: preserve-3d; height: 0; margin: 0; }`,
+    false,
+  ],
 ];
+
+interface Box {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 /** How an element shows, as a viewer would judge it. */
 interface Seen {
@@ -105,10 +143,14 @@ describe.skipIf(browser === undefined)(
   () => {
     let context: BrowserContext;
     let page: Page;
+    /** Where each safety element sits on a page without a theme. */
+    const home = new Map<string, Box>();
     beforeAll(async () => {
       if (browser === undefined) return;
       context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
       page = await context.newPage();
+      await render("");
+      for (const name of SAFETY_CLASSES) home.set(name, await box(`.${name}`));
     });
     afterAll(async () => {
       await browser?.close();
@@ -161,6 +203,38 @@ describe.skipIf(browser === undefined)(
         };
       }, selector);
 
+    const box = (selector: string): Promise<Box> =>
+      page.evaluate((sel): Box => {
+        const r = (document.querySelector(sel) as Element).getBoundingClientRect();
+        return { x: r.x, y: r.y, width: r.width, height: r.height };
+      }, selector);
+
+    /**
+     * What the screen shows in the element's box: a blend or a mask on an ancestor changes the
+     * pixels while the box, the computed style and the hit test stay as they were. The safety
+     * elements are white text on black, so both must be there.
+     */
+    async function painted(at: Box): Promise<{ white: boolean; black: boolean }> {
+      const png = await page.screenshot({ clip: at });
+      return page.evaluate(async (b64) => {
+        const blob = await (await fetch(`data:image/png;base64,${b64}`)).blob();
+        const image = await createImageBitmap(blob);
+        const canvas = new OffscreenCanvas(image.width, image.height);
+        const g = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
+        g.drawImage(image, 0, 0);
+        const data = g.getImageData(0, 0, image.width, image.height).data;
+        let white = 0;
+        let black = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          const [r, gr, b] = [data[i] ?? 0, data[i + 1] ?? 0, data[i + 2] ?? 0];
+          if (r >= 230 && gr >= 230 && b >= 230) white += 1;
+          if (r <= 25 && gr <= 25 && b <= 25) black += 1;
+        }
+        // The rounded corners show the page; most of the box is the black background.
+        return { white: white > 0, black: black > data.length / 4 / 2 };
+      }, png.toString("base64"));
+    }
+
     it("shows them on a page without a theme", async () => {
       await render("");
       for (const name of SAFETY_CLASSES) {
@@ -186,6 +260,12 @@ describe.skipIf(browser === undefined)(
         expect({ name, why: s.why }).toEqual({ name, why: "" });
         expect(s).toMatchObject({ color: "rgb(255, 255, 255)", background: "rgb(0, 0, 0)" });
         expect(s.fontSize).toBeGreaterThanOrEqual(16);
+        const at = home.get(name) as Box;
+        expect({ name, box: await box(`.${name}`) }).toEqual({ name, box: at });
+        expect({ name, painted: await painted(at) }).toEqual({
+          name,
+          painted: { white: true, black: true },
+        });
       }
     });
   },

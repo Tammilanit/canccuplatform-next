@@ -297,9 +297,10 @@
   .canccu-privacy-link::first-letter {
     all: inherit !important;
   }
-  /* What an ancestor could do to them: hide, fade, move, scale or clip its whole content, or
-     become the box a fixed element is placed in. Only the root and the page are guarded, so the
-     safety elements are children of the page. */
+  /* What an ancestor could do to them: hide, fade, move, scale, clip, mask or blend its whole
+     content away, or become the box a fixed element is placed in (a transform, an offset path, a
+     3D context, containment). Only the root and the page are guarded, so the safety elements are
+     children of the page. */
   :root,
   .canccu-page {
     display: block !important;
@@ -311,8 +312,17 @@
     scale: none !important;
     rotate: none !important;
     perspective: none !important;
+    transform-style: flat !important;
+    offset-path: none !important;
+    offset-position: normal !important;
+    clip: auto !important;
     clip-path: none !important;
     mask: none !important;
+    /* Neither is reset by `mask: none` in Chromium. */
+    mask-border: none !important;
+    -webkit-mask-box-image: none !important;
+    mix-blend-mode: normal !important;
+    isolation: auto !important;
     contain: none !important;
     container-type: normal !important;
     content-visibility: visible !important;
