@@ -1,9 +1,9 @@
 /**
  * What the composed state reads from other modules, on the screens' behalf and never with a
- * device's request (contracts/screen.md, Reading other modules as a module). Now and next and the
- * venue info come from module reads that answer what a guest sees, whatever the info-page mode:
- * screen's container is no venue address, so the guest read is refused in `venue_only` and
- * `sign_in`. The theme and the event's name are still read as a guest, with the event's hostname.
+ * device's request (contracts/screen.md, Reading other modules as a module). The theme, now and
+ * next and the venue info come from module reads that answer what a guest sees, whatever the
+ * info-page mode: screen's container is no venue address, so the guest read is refused in
+ * `venue_only` and `sign_in`. The event's name is still read as a guest, with the event's hostname.
  * Either way a screen shows exactly what the hub shows and nothing crew-only: one source, two surfaces.
  */
 import { request as httpRequest } from "node:http";
@@ -28,7 +28,7 @@ export interface EventPublic {
 export interface Sources {
   agendaNow(tenantId: string, zoneKey: string): Promise<AgendaNow | null>;
   venueInfo(tenantId: string): Promise<VenueInfo | null>;
-  theme(host: string): Promise<ThemeNow | null>;
+  theme(tenantId: string): Promise<ThemeNow | null>;
   event(host: string): Promise<EventPublic | null>;
 }
 
@@ -130,8 +130,12 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       )) as VenueInfo | null;
       return body === null || !Array.isArray(body.wifi) ? null : body;
     },
-    theme: async (host) => {
-      const body = (await read(urls.theming, "/api/theming/current", { host })) as ThemeNow | null;
+    theme: async (tenantId) => {
+      const body = (await read(
+        urls.theming,
+        `/internal/theming/current?tenant_id=${encodeURIComponent(tenantId)}`,
+        service.headers("theming"),
+      )) as ThemeNow | null;
       return body === null || typeof body.revision !== "number" ? null : body;
     },
     event: async (host) => {

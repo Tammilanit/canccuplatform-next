@@ -125,9 +125,9 @@ export interface FakeSources {
   event: { name: string } | null;
   agenda: AgendaNow | null;
   venue: VenueInfo | null;
-  /** The hostnames the guest reads (theme, event) were made with. */
+  /** The hostnames the guest read (event) was made with. */
   hosts: string[];
-  /** The tenant ids the module reads (now and next, venue info) were made for. */
+  /** The tenant ids the module reads (theme, now and next, venue info) were made for. */
   tenants: string[];
 }
 
@@ -239,7 +239,7 @@ export async function harness(): Promise<Harness> {
     bundleVersion: "test",
     streamPingMs: 200,
     sources: {
-      theme: (host) => answer(fake.hosts, host, fake.theme),
+      theme: (tenantId) => answer(fake.tenants, tenantId, fake.theme),
       event: (host) => answer(fake.hosts, host, fake.event),
       agendaNow: (tenantId) => answer(fake.tenants, tenantId, fake.agenda),
       venueInfo: (tenantId) => answer(fake.tenants, tenantId, fake.venue),

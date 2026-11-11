@@ -1,8 +1,10 @@
 /** The current theme as GET /api/theming/current answers it (contracts/theming.md, Reading the current theme). */
 import type { SqlClient } from "@canccu/kit";
+import type { Db } from "./db.js";
 import { listEmbeds } from "./embeds.js";
 import type { EmbedRef } from "./embeds.js";
 import { fileName } from "./files.js";
+import type { ProfileSource } from "./profile.js";
 import { SANDBOX } from "./sandbox.js";
 import { adminTokens, fillTokens, tokensCss } from "./tokens.js";
 import type { PartialTokens, Tokens } from "./tokens.js";
@@ -132,4 +134,17 @@ export async function resolvedRevision(
   if (row === undefined) return undefined;
   const base = `${SANDBOX}${row.revision}/`;
   return fromRevision(row, await listEmbeds(client, `r:${row.revision}`, base));
+}
+
+/**
+ * The current theme of the tenant in scope: the highest revision, else revision 0 from `tenant`'s
+ * profile. The guests' read and the screens' read both answer through this one function, so a
+ * screen never shows another look than the event's own pages; the callers do the access checks.
+ */
+export async function currentTheme(
+  db: Db,
+  profile: ProfileSource,
+  tenant: string,
+): Promise<ResolvedTheme> {
+  return (await db.tenant((c) => resolvedRevision(c))) ?? revisionZero(await profile(tenant)).theme;
 }

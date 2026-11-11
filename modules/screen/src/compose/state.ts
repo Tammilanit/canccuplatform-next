@@ -130,7 +130,7 @@ export async function composeZone(
   });
   if (read === null) return null;
   const [theme, event, agenda, venue] = await Promise.all([
-    deps.sources.theme(host),
+    deps.sources.theme(ctx.tenant_id),
     deps.sources.event(host),
     deps.sources.agendaNow(ctx.tenant_id, zoneKey),
     deps.sources.venueInfo(ctx.tenant_id),
