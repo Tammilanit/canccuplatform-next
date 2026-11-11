@@ -6,7 +6,7 @@ Issue #377. Every page and state a person can open on the demo stack at main `15
 
 The platform looks like three products today:
 
-- the **admin pages** (sign-in, settings, health, profile, people) are unstyled browser HTML: white, Times-like defaults, no `ui.css`, and on a phone they render at desktop width and shrink to unreadable;
+- the **admin pages** (sign-in, settings, health, profile, people) are unstyled browser HTML: white, browser-default sans-serif, no `ui.css`, and on a phone they render at desktop width and shrink to unreadable;
 - the **event pages** (run of show, notifications, Theme studio, check-in) use `packages/ui`, but each module draws its own header, menu, page width, title size and error page;
 - the **screen** (device frames, Pulse) has its own look again, with two different backgrounds between the frames.
 
@@ -27,7 +27,7 @@ The five problems people will notice first:
 
   A second stub cookie with no rights produced the "no access" pages.
 - **Data:** the demo profile loaded with the Profile page's Load button, six run-of-show items through `POST /api/agenda/items` (one delayed), and two screens paired through the player itself (`/screen/` → code → `POST /api/screen/devices` → assign to zone `main`). The venue address check was turned off for the screen states through the audited `PUT /api/tenants/current/venue-ip-check`. The archived state was set in the database (see [D7](#d7)).
-- **Browser:** Chromium 1.64.1 (the Playwright image CI uses). Desktop 1440×900; phone 390×844 (a current mid-size phone, touch, 2×), for the pages people use on a phone (sign-in, run of show, check-in, Studio); screens at 1920×1080 (the brief's primary target, L9), 3840×2160 and 1080×1920.
+- **Browser:** Playwright 1.64.1's Chromium (the Playwright image `scripts/demo-screenshots` pins). Desktop 1440×900; phone 390×844 (a current mid-size phone, touch, 2×), for the pages people use on a phone (sign-in, run of show, check-in, Studio); screens at 1920×1080 (the brief's primary target, L9), 3840×2160 and 1080×1920.
 - **Compared with:**
   - `packages/ui` ([README](../../packages/ui/README.md), `ui.css`);
   - the step 3 mockups in [docs/briefs/step-3-screen/](../briefs/step-3-screen/), mainly [02 Pulse](../briefs/step-3-screen/02-pulse-main.svg), [05 device states](../briefs/step-3-screen/05-device-states.svg), [06 pairing](../briefs/step-3-screen/06-flow-pairing.svg), [12 brand kit](../briefs/step-3-screen/12-brand-kit.svg) and [14 check-in](../briefs/step-3-screen/14-flow-checkin-handoff.svg);
@@ -74,7 +74,7 @@ Severity: **high** = looks broken or blocks a task; **medium** = clearly inconsi
 - Health shows the module id, `ok` and `dev`, with an empty Detail column.
 - Fix: names ("Run of show"), a status badge (`packages/ui` has `healthBadge`) and a readable version.
 
-**A3 · medium · Health shows 3 of 8 modules.** The page polls only what `CANCCU_HEALTH_TARGETS` lists in `deploy/compose.yml`: `hello`, `screen` and `theming`, plus admin itself. agenda, notify, tenants and screen-render are missing, so a stopped run of show reads as healthy ([05](ux-audit-step3/05-admin-health.png)). `hello` is a test module and shows too.
+**A3 · medium · Health shows 4 of 8 modules (including the test module `hello`).** The page polls only what `CANCCU_HEALTH_TARGETS` lists in `deploy/compose.yml` (`hello`, `screen` and `theming`) and adds a row for admin itself. agenda, notify, tenants and screen-render are missing, so a stopped run of show reads as healthy ([05](ux-audit-step3/05-admin-health.png)). `hello` is a test module and shows too.
 
 ![Health](ux-audit-step3/05-admin-health.png)
 
@@ -102,7 +102,7 @@ Seen on:
 - run of show: "Quick add" in the bottom bar, "Delay" on an item, "Cancel…", "Show on screens now", "Edit or move" ([13](ux-audit-step3/13-agenda-day.png), [15](ux-audit-step3/15-agenda-item.png), [16](ux-audit-step3/16-agenda-item-phone.png));
 - templates: "New template" ([19](ux-audit-step3/19-agenda-templates.png)).
 
-The fix belongs in `packages/ui` (for example `.canccu-page a.canccu-button { color: inherit; text-decoration: none }` with the variant colours), so every module gets it.
+The fix belongs in `packages/ui`, so every module gets it. It should remove the cause, not add a rule on top: `.canccu-page a.canccu-button { color: inherit }` would itself outrank the variant rules (two classes and an element against one class), so every variant would need declaring again. Scoping the link rule instead (`.canccu-page a:not(.canccu-button)`, or `:where(.canccu-page) a`) lets the button variants win.
 
 | Run of show: empty blue button at the bottom | Item: blank "Delay", unreadable "Cancel…" |
 |---|---|
@@ -167,7 +167,7 @@ The fix belongs in `packages/ui` (for example `.canccu-page a.canccu-button { co
   - the demo event's own theme cannot be published as it is.
 - **Fix:** run the same check for both; word it ("The body font Inter is not in the theme. Upload it, or pick a system font."); and either ship the demo's font or drop it from the demo profile.
 
-![Publish error over "No problems."](ux-audit-step3/26-studio-publish-error.png)
+![Publish error on a draft whose Problems card, below this crop, reads "No problems."](ux-audit-step3/26-studio-publish-error.png)
 
 ### C2
 **C2 · high · The brand kit is a long form, not mockup 12.**
@@ -224,6 +224,7 @@ The frames follow [mockup 05](../briefs/step-3-screen/05-device-states.svg) clos
 - `ui.css` defines `canccu-pairing-code` and `canccu-offline-marker` as protected elements: fixed look, top right for the marker ([README](../../packages/ui/README.md), [theming contract](../../contracts/theming.md#advanced-mode)).
 - The player draws its own `canccu-frame__code` and `canccu-offline-mark` (`modules/screen/player/src/frames.ts`).
 - So the mark sits bottom right in muted grey ([42](ux-audit-step3/42-screen-offline.png)), where [mockup 05](../briefs/step-3-screen/05-device-states.svg) shows an amber mark top right. A theme could also restyle them.
+- The safety classes and mockup 05 do not agree either. `ui.css` resets both classes with `all: initial !important`, draws them white on black, and centres the pairing code with `position: fixed; inset: 0`. So the player cannot adopt the classes and keep mockup 05's look (the amber mark, the code inside the frame's layout) without changing `ui.css` and the theming contract's safety rule, or the mockup.
 - Contract compliance is for the reviewer of the fix; here it is the visible inconsistency.
 
 ### D3
@@ -233,11 +234,11 @@ The frames follow [mockup 05](../briefs/step-3-screen/05-device-states.svg) clos
 - The not-assigned frame says the same ("An organiser assigns it in Screen studio → Devices").
 - Until the Screen studio lands, the frames should name what exists, or the QR should open a page that says it is coming.
 
-**D4 · medium · The offline mark needs a closed stream.**
-- With the screen service stopped, "offline since 15:21" appears after 10 s ([42](ux-audit-step3/42-screen-offline.png)).
-- With the service paused, the stream stays open but silent, and after 16 s no mark had appeared.
-- The mark is set only when the stream closes (`live.ts`, `streamOpen`), so a hung uplink shows a live-looking screen with stale data.
-- Principle 5 ("fail visible") suggests also marking a stream that has sent nothing, not even a ping, for the offline time.
+**D4 · low · A silent stream is marked offline later than a closed one.**
+- With the screen service stopped, the stream closes and "offline since 15:21" appears after 10 s ([42](ux-audit-step3/42-screen-offline.png)).
+- With the service paused, the stream stays open but silent. The player's watchdog (`stream.ts`, `SILENCE_MS`: three missed 15 s pings) aborts it after 45 s, and the mark follows 10 s later (`live.ts`, `OFFLINE_AFTER_MS`): about 55 s after the last byte. The audit waited only 16 s, so it did not see the mark.
+- So a hung uplink is marked, but shows stale data as live for close to a minute, against 10 s for a closed stream.
+- This does not break principle 5 ("fail visible"): the failure is shown. Whether 55 s is too long for a screen at an event is for the PO; a shorter watchdog would cost more reconnects on a slow uplink.
 
 | Offline mark (bottom right, grey) | Identify (version reads "vdev") |
 |---|---|
@@ -266,7 +267,7 @@ The frames follow [mockup 05](../briefs/step-3-screen/05-device-states.svg) clos
 - run of show, the Studio and the check-in page looked live;
 - a new screen still showed the pairing frame, not "This event has ended".
 
-Caveat: the state was set in the database, not through `POST /api/tenants/current/status`, which needs the superadmin. A module that learns the status from the `tenants.status.changed` event, or caches the tenant, would not have seen it. Re-check through the API before acting on it. If it holds, every surface should show the same archived notice, worded alike.
+Caveat: the state was set in the database (`tenants.status`), not through `POST /api/tenants/current/status`. That API needs the event-admin role (`tenants.lifecycle.write`, held only through an `event_admins` row), and the stub user `demo-ci` was not made an event admin for this run. A module that learns the status from the `tenants.status.changed` event, or caches the tenant, would not have seen it. Re-check through the API before acting on it. If it holds, every surface should show the same archived notice, worded alike.
 
 ## E. Check-in (attendee, step 3)
 
@@ -291,18 +292,18 @@ These pages are the best of the set: phone first, clear wording, one big button,
 
 Each line names the findings it closes. Contracts and migrations are not touched by any of them, except as noted under issue 2.
 
-1. **`fix(ui): one admin shell for every organiser page`** (module:ui, module:admin, plus agenda, notify and theming for adoption):
+1. **`fix(ui): one admin shell for every organiser page`** (module:ui, module:admin, module:kit, module:deploy, plus agenda, notify and theming for adoption):
    - admin's pages move onto `packages/ui`'s `page()`, with the viewport meta (A1, A4, A5);
-   - names and badges on settings and health, and every module in the health list (A2, A3);
+   - names and badges on settings and health, and every module in the health list through `CANCCU_HEALTH_TARGETS` in `deploy/compose.yml` (A2, A3);
    - the link-button fix in `ui.css` (B1);
    - one Event menu component with the event name, current page and Sign out (B2);
-   - one error page component with plain wording by case and no right ids (B3);
+   - one error page component with plain wording by case and no right ids, including the network refusal worded by the kit's access helpers (B3);
    - one content width and title scale (B4);
    - time formats from the event's language (B5);
    - quick add, the now line and empty states (F1–F4);
    - the check-in header with the event's identity (E1, E2).
 
-   Risk normal. The admin shell touches sign-in pages only in look, not in flow; the reviewer may raise it if it touches session code.
+   Risk high: it restyles the sign-in pages and changes what the missing-right error shows, which is code for sign-in and rights under the Merge rules. If the lead wants the rest to merge automatically, the sign-in look and the error page (A1's sign-in part, B3) can go in a high-risk issue of their own and the rest stays normal.
 2. **`fix(theming): the brand kit matches mockup 12`** (module:theming):
    - the two-column layout with live previews beside the form;
    - colour fields that show their colour and hex, styled scheme and file inputs, names instead of token ids, a plain status line;
@@ -315,20 +316,28 @@ Each line names the findings it closes. Contracts and migrations are not touched
    Risk normal. If the demo font fix changes `events/demo/`, it stays in this issue.
 3. **`fix(screen): device frames are one family`** (module:screen, module:ui):
    - one background for every frame (D1);
-   - the safety classes of `packages/ui` for the pairing code and the offline marker, placed as in mockup 05 (D2);
+   - the safety classes of `packages/ui` for the pairing code and the offline marker (D2). As D2 says, they cannot be placed and coloured as in mockup 05 without changing `ui.css` and the theming contract's safety rule, or the mockup: the issue has to choose which;
    - frames and QR that point to pages that exist (D3);
-   - an offline mark for a silent stream (D4);
+   - a faster offline mark for a silent stream, if the PO finds 55 s too long (D4);
    - the identify card's version and scaling, and the not-assigned clock (D6);
    - the archived frame and notices on every surface, if D7 holds.
 
-   Risk: D2 touches a contract's safety rule, so the planner should check whether it is normal or high. The Pulse look itself (D5) stays with #375.
+   Risk: if D2 changes the safety rule in `ui.css` and the theming contract, that part is a contract change (its own PR first) and may be breaking, so the planner should size it as high unless the issue keeps the classes as they are and changes the mockup instead. The Pulse look itself (D5) stays with #375.
 
 ## Reproducing
 
-1. Start the stack with `docker compose -f deploy/compose.yml -f deploy/compose.ci.yml up -d --build --wait` ([docs/ci.md](../ci.md#demo-stack)).
-2. Use a local overlay that:
-   - points theming, agenda, notify and tenants at `session-stub` (`CANCCU_ADMIN_URL`) with screen's `CANCCU_TAILSCALE_CIDRS`;
-   - lists the rights the pages check in the stub's `demo-ci` answer.
-3. Load the profile on `/admin/profile`.
-4. Pair a screen by opening `/screen/` in a browser and posting its code to `POST /api/screen/devices` with the `demo-ci` cookie.
-5. Take screenshots with the Playwright image, as `scripts/demo-screenshots` does.
+1. Start the stack with `docker compose -f deploy/compose.yml -f deploy/compose.ci.yml up -d --build --wait` ([docs/ci.md](../ci.md#demo-stack)), under its own project name and port.
+2. Add a local overlay (never committed) that:
+   - points theming, agenda, notify and tenants at `session-stub` (`CANCCU_ADMIN_URL`) and gives them screen's `CANCCU_TAILSCALE_CIDRS`;
+   - lists every right the pages check in the stub's `demo-ci` answer;
+   - answers a second cookie with a session that holds no rights, for the "no access" pages.
+3. Load the profile on `/admin/profile`, and add run-of-show items through `POST /api/agenda/items` (one delayed).
+4. Turn the venue address check off with `PUT /api/tenants/current/venue-ip-check`, so screens can pair from the browser.
+5. Pair a screen by opening `/screen/` in a browser and posting its code to `POST /api/screen/devices` with the `demo-ci` cookie; assign it to zone `main`.
+6. For the archived shots, set `status = 'archived'` on the demo tenant's row in `tenants` (see the D7 caveat; making `demo-ci` an event admin and using `POST /api/tenants/current/status` is the better route).
+7. Take the screenshots with the Playwright image `scripts/demo-screenshots` pins, saved at 1× and cropped to the part shown (screen shots scaled down to 720 px high), at these viewports (`scripts/demo-screenshots` alone takes only full-page desktop shots):
+   - desktop 1440×900;
+   - phone 390×844, touch, device scale 2;
+   - screen 1920×1080, 3840×2160 and 1080×1920.
+
+The QR codes in the screen shots encode only the local stack's loopback origin (`127.0.0.1`), not a LAN address or hostname.
