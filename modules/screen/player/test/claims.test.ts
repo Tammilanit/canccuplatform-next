@@ -150,6 +150,25 @@ describe("claims on the screen", () => {
     expect(text(screen, "rail")).toBe("B");
   });
 
+  it("goes back to the rotation once widgets arrive after a `next` claim ended over none", () => {
+    const screen = new Screen(host);
+    screen.draw(state({ order: [], claim: claim({ on_end: "next" }) }));
+    screen.draw(state({ order: [] }));
+    expect(typeIn(screen, "rail")).toContain("canccu-widget--logo");
+    screen.draw(state());
+    expect(text(screen, "rail")).toBe("A");
+  });
+
+  it("drops a `next` skip when the region's rotation changes", () => {
+    const screen = new Screen(host);
+    screen.draw(state({ claim: claim({ on_end: "next" }) }));
+    screen.draw(state());
+    expect(text(screen, "rail")).toBe("B");
+    // B has nothing to show now; the skip into it must not outlive the old rotation.
+    screen.draw(state({ order: [0, 2] }));
+    expect(text(screen, "rail")).toBe("A");
+  });
+
   it("hides every region under a takeover, and brings a hidden claim back when it ends", async () => {
     const screen = new Screen(host);
     const takeover = claim({

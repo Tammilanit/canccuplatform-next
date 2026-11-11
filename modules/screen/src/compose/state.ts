@@ -15,7 +15,6 @@ import { resolveWinner } from "../schedule/winner.js";
 import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
 import { buildRegions } from "./build.js";
-import type { RegionView } from "./build.js";
 import { placeClaims } from "./claims.js";
 import type { Override, Placement } from "./claims.js";
 import { displayOf } from "./display.js";
@@ -113,9 +112,8 @@ const origin = (ctx: TenantContext, host: string): string =>
   ctx.primary_hostname === null ? `http://${host}` : `https://${ctx.primary_hostname}`;
 
 /** One orientation's layout, its regions with their claims, and where the claims went. */
-export interface ZoneView extends Omit<Placement, "regions"> {
+export interface ZoneView extends Placement {
   layout: Layout;
-  regions: RegionView[];
 }
 
 export interface ZoneComposed {

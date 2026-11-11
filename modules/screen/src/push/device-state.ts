@@ -74,7 +74,8 @@ export async function refreshZone(
       },
     };
     if (await deps.zones.advance(zoneKey, base, next, entry)) {
-      await reportClaims(deps, zoneKey, before, next);
+      // Best effort, and errors are caught inside: a slow bus must not hold up the state.
+      void reportClaims(deps, zoneKey, before, next);
       return next;
     }
     // Another container stored a change meanwhile, perhaps built from older inputs than these

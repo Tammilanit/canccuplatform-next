@@ -53,6 +53,10 @@ function ratioOf(aspect: string): number {
 const layoutKey = (l: Layout): string =>
   JSON.stringify([l.id, l.aspect, l.grid.columns, l.grid.rows]);
 
+/** What `shownAt` reads of a region, not the widgets' data, which every push may renew. */
+const rotationKey = (r: Region): string =>
+  JSON.stringify([r.rotation, r.order, r.widgets.map((w) => w.dwell_seconds)]);
+
 export class Screen {
   root: HTMLElement = document.createElement("main");
   private layoutKey = "";
@@ -123,6 +127,8 @@ export class Screen {
       this.regions.set(r.id, drawn);
       this.root.append(el);
     }
+    // A skip worked out on the old rotation means nothing on a new one.
+    if (rotationKey(r) !== rotationKey(drawn.state)) drawn.next = null;
     drawn.state = r;
     const { el } = drawn;
     if (r.role === null) delete el.dataset.role;
@@ -185,8 +191,11 @@ export class Screen {
       // rotation would show at its end (contracts/screen.md, `on_end`).
       if (drawn.claim.on_end === "next") {
         const at = Math.min(claimEnd(drawn.claim) ?? now, now);
-        const { until } = shownAt(r, zone, at);
-        drawn.next = { index: shownAt(r, zone, until).index, until };
+        // With nothing rotating there is nothing to skip; an endless `next` would hold the idle
+        // choice even after widgets arrive.
+        const { index: cur, until } = shownAt(r, zone, at);
+        if (cur !== null && Number.isFinite(until))
+          drawn.next = { index: shownAt(r, zone, until).index, until };
       }
     }
     if (claim?.override_id !== drawn.claim?.override_id || shown === null) drawn.claim = null;
