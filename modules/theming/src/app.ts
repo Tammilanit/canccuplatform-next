@@ -1,4 +1,4 @@
-/** The theming module's Fastify app: health, tenancy, the theme, its draft and history, the served files and the sandbox. */
+/** The theming module's Fastify app: health, tenancy, the theme, its draft and history, the served files, the sandbox and the Studio pages. */
 import { constants } from "node:fs";
 import { access } from "node:fs/promises";
 import Fastify from "fastify";
@@ -26,6 +26,7 @@ import { packageRoutes } from "./package-routes.js";
 import { internalRoutes, revisionRoutes } from "./revision-routes.js";
 import { themeRoutes } from "./routes.js";
 import { sandboxGuard, sandboxRoutes } from "./sandbox.js";
+import { studioRoutes } from "./studio.js";
 import type { ProfileSource } from "./profile.js";
 
 export interface ThemingDeps {
@@ -102,6 +103,7 @@ export function buildApp(deps: ThemingDeps): FastifyInstance {
     packageRoutes(event, deps);
     revisionRoutes(event, deps);
     sandboxRoutes(event, deps);
+    studioRoutes(event, deps);
     done();
   });
   return app;

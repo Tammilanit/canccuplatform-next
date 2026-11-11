@@ -1,0 +1,164 @@
+/** The advanced page and the history page (plan issue-185 D8): package, tokens, files, restore. */
+import { COLOR_TOKENS, FONT_TOKENS, SIZE_TOKENS, attrs, html } from "@canccu/ui";
+import type { Html } from "@canccu/ui";
+import type { DraftRow } from "./drafts.js";
+import { fillTokens } from "./tokens.js";
+import type { PartialTokens } from "./tokens.js";
+import { STUDIO, actionButton, brandOf, card, problemsView, root, status } from "./studio-views.js";
+import type { StudioState } from "./studio-views.js";
+
+function tokensForm(draft: DraftRow): Html {
+  const given = draft.manifest.tokens as (PartialTokens & { motion?: unknown }) | undefined;
+  const tokens = fillTokens(given ?? {});
+  const groups: [keyof typeof tokens, string, object][] = [
+    ["colors", "Colours", COLOR_TOKENS],
+    ["fonts", "Fonts", FONT_TOKENS],
+    ["sizes", "Sizes", SIZE_TOKENS],
+  ];
+  const fieldsets = groups.map(([group, label, names]) => {
+    const fields = Object.keys(names).map((name) => {
+      const id = `canccu-studio-${group}-${name}`;
+      return html`<div class="canccu-field"><label class="canccu-field__label"${attrs({ for: id })}><code>${name}</code></label><input${attrs({ class: "canccu-input", type: "text", id, name: `${group}.${name}`, value: tokens[group][name] })}></div>`;
+    });
+    return html`<fieldset class="canccu-studio-tokens">
+      <legend>${label}</legend>
+      ${fields}
+    </fieldset>`;
+  });
+  const motion = typeof given?.motion === "string" ? given.motion : "moderate";
+  const motions = ["moderate", "calm", "none"].map(
+    (m) => html`<option${attrs({ value: m, selected: m === motion })}>${m}</option>`,
+  );
+  return card(
+    "Tokens",
+    html`<form class="canccu-studio-form" data-action="tokens">
+      ${fieldsets}
+      <div class="canccu-field">
+        <label class="canccu-field__label" for="canccu-studio-motion">Motion</label
+        ><select class="canccu-input" id="canccu-studio-motion" name="motion">
+          ${motions}
+        </select>
+      </div>
+      <p class="canccu-field__hint">
+        Only the tokens you change are saved. Changing a colour, font or size makes the theme
+        advanced.
+      </p>
+      <button class="canccu-button canccu-button--primary" type="submit">Save tokens</button>
+    </form>`,
+  );
+}
+
+function filesView(draft: DraftRow): Html {
+  if (draft.files.length === 0) return html`<p>The draft holds no files.</p>`;
+  const rows = draft.files.map(
+    (f) => html`<li><code>${f.path}</code> ${Math.ceil(f.bytes / 1024)} KB</li>`,
+  );
+  return html`<ul class="canccu-studio-files">
+    ${rows}
+  </ul>`;
+}
+
+export function advancedView(state: StudioState): Html {
+  const d = state.draft;
+  const upload = card(
+    "Package",
+    html`<form class="canccu-studio-form" data-action="package">
+      <div class="canccu-field">
+        <label class="canccu-field__label" for="canccu-studio-package">Theme package (zip)</label
+        ><input
+          class="canccu-input"
+          type="file"
+          id="canccu-studio-package"
+          name="package"
+          accept=".zip,application/zip"
+          required
+        />
+        <p class="canccu-field__hint">
+          Replaces the draft's whole content with theme.yaml, CSS, fonts, images, templates and
+          embeds. Embeds need the embeds right.
+        </p>
+      </div>
+      <button class="canccu-button canccu-button--primary" type="submit">Upload package</button>
+    </form>`,
+  );
+  if (d === undefined) return root(state, html`${status(state)}${upload}`);
+  const simple =
+    d.manifest.mode !== "advanced"
+      ? ""
+      : brandOf(state) === undefined
+        ? card(
+            "Back to simple mode",
+            html`<p>
+              Save the brand kit first: simple mode makes its colours from the brand's two colours.
+              <a href="${STUDIO}">Brand kit</a>
+            </p>`,
+          )
+        : card(
+            "Back to simple mode",
+            html`<details class="canccu-studio-confirm">
+              <summary>Remove the advanced parts</summary>
+              <form class="canccu-studio-form" data-action="simple">
+                <p>
+                  This removes the draft's CSS, fonts, templates and embeds, and its font and size
+                  tokens. Images and layouts stay; the colours are made again from the brand kit.
+                </p>
+                <button class="canccu-button canccu-button--danger" type="submit">
+                  Remove them and go back to simple
+                </button>
+              </form>
+            </details>`,
+          );
+  return root(
+    state,
+    html`${status(state)} ${card("Problems", problemsView(d.problems))} ${upload}
+      ${card("Files", filesView(d))} ${tokensForm(d)} ${simple}
+      <p><a href="${STUDIO}">Preview and publish on the brand kit page</a></p>`,
+  );
+}
+
+interface RevisionSummary {
+  revision: number;
+  name?: string;
+  mode: string;
+  published_at: string;
+  actor_user_id: string | null;
+  restored_from?: number;
+  pinned: boolean;
+}
+
+export function historyView(list: {
+  current_revision: number;
+  revisions: Record<string, unknown>[];
+}): Html {
+  const current = list.current_revision;
+  const revisions = list.revisions as unknown as RevisionSummary[];
+  const rows = revisions.map((r) => {
+    const restore =
+      r.revision === current
+        ? html`<strong>On every screen</strong>`
+        : actionButton("Restore", {
+            "data-action": "restore",
+            "data-revision": String(r.revision),
+          });
+    return html`<li class="canccu-studio-revision"><span class="canccu-studio-revision__title">Revision ${r.revision}</span> ${r.name ?? ""} · ${r.mode} · <time${attrs({ datetime: r.published_at })}>${r.published_at.slice(0, 16).replace("T", " ")}</time>${r.actor_user_id === null ? "" : ` · ${r.actor_user_id}`}${r.restored_from === undefined ? "" : ` · restored from ${r.restored_from}`}${r.pinned ? html` · <span class="canccu-badge canccu-badge--degraded">Pinned</span>` : ""}
+<span class="canccu-studio-row">${restore} <a${attrs({ href: `/api/theming/revisions/${r.revision}/package` })}>Export</a></span></li>`;
+  });
+  const last = revisions.at(-1);
+  const more =
+    revisions.length === 20 && last !== undefined
+      ? html`<p><a${attrs({ href: `${STUDIO}history?before=${last.revision}` })}>Older revisions</a></p>`
+      : "";
+  return html`<div class="canccu-studio" ${attrs({ "data-current-revision": current })}>
+    ${
+      revisions.length === 0
+        ? html`<p>Nothing published yet: screens show the platform's default look.</p>`
+        : html`<p>
+              Restore publishes a copy of an earlier revision as a new one; history only grows. The
+              last 20 revisions are kept, and every pinned one.
+            </p>
+            <ol class="canccu-studio-revisions">
+              ${rows}
+            </ol>`
+    }${more}
+  </div>`;
+}

@@ -20,6 +20,7 @@ NAV = (
 EVENT_NAV = (
     ("/agenda/", "Run of show", ("agenda.items.write", "agenda.crew.read")),
     ("/notify/admin/topics", "Notifications", ("notify.topics.write", "notify.stats.read")),
+    ("/theming/studio/", "Theme", ("theming.theme.write",)),
 )
 SIGN_OUT = (
     f"<form method=post action={BASE}/sign-out style='display:inline'>"

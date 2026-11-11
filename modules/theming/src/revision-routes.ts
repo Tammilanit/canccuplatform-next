@@ -95,6 +95,22 @@ async function oneRevision(c: SqlClient, revision: number): Promise<Record<strin
   return revisionBody(row, true);
 }
 
+/** RevisionList: the history newest first, below `before`; the Studio's history page reads it too. */
+export async function revisionList(
+  c: SqlClient,
+  before: number | undefined,
+  limit: number,
+): Promise<{ current_revision: number; revisions: Record<string, unknown>[] }> {
+  const { rows } = await c.query(
+    `${SUMMARY} WHERE $1::integer IS NULL OR r.revision < $1 ORDER BY r.revision DESC LIMIT $2`,
+    [before ?? null, limit],
+  );
+  return {
+    current_revision: await currentRevision(c),
+    revisions: (rows as unknown as SummaryRow[]).map((r) => revisionBody(r, false)),
+  };
+}
+
 export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
   const writer = { preHandler: needs(deps.rights, WRITE) };
 
@@ -233,16 +249,7 @@ export function revisionRoutes(app: FastifyInstance, deps: RevisionDeps): void {
       const before = positiveInt(request.query.before, "before");
       const limit = positiveInt(request.query.limit, "limit") ?? 20;
       if (limit > 100) throw invalidRequest("limit is at most 100.");
-      return deps.db.tenant(async (c) => {
-        const { rows } = await c.query(
-          `${SUMMARY} WHERE $1::integer IS NULL OR r.revision < $1 ORDER BY r.revision DESC LIMIT $2`,
-          [before ?? null, limit],
-        );
-        return {
-          current_revision: await currentRevision(c),
-          revisions: (rows as unknown as SummaryRow[]).map((r) => revisionBody(r, false)),
-        };
-      });
+      return deps.db.tenant((c) => revisionList(c, before, limit));
     },
   );
 

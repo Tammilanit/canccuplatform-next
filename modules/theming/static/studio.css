@@ -1,0 +1,120 @@
+/* The Studio pages' own layout around packages/ui (plan issue-185 D8). Admin pages take no event
+   CSS, so nothing here is themed but through the tokens. */
+.canccu-studio-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--canccu-gap);
+  margin-bottom: var(--canccu-gap);
+}
+.canccu-studio-notice {
+  border-left: 4px solid var(--canccu-color-status-down);
+  padding: 0.5rem 1rem;
+}
+.canccu-studio-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.canccu-studio-card {
+  margin-bottom: var(--canccu-gap);
+}
+.canccu-studio-problems,
+.canccu-studio-swatches,
+.canccu-studio-revisions {
+  padding-left: 0;
+  list-style: none;
+}
+.canccu-studio-problem {
+  border-left: 4px solid var(--canccu-color-status-degraded);
+  padding-left: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+.canccu-studio-problem--error {
+  border-left-color: var(--canccu-color-status-down);
+}
+.canccu-studio-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.25rem;
+}
+.canccu-studio-chip {
+  width: 1.25rem;
+  height: 1.25rem;
+  vertical-align: middle;
+  border: 1px solid var(--canccu-color-border);
+}
+.canccu-studio-logo {
+  display: block;
+  max-height: 4rem;
+  max-width: 12rem;
+  margin-bottom: 0.5rem;
+}
+.canccu-studio-radio {
+  margin-right: var(--canccu-gap);
+}
+.canccu-studio-tokens {
+  border: 0;
+  padding: 0;
+}
+.canccu-studio-revision {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--canccu-color-border);
+}
+.canccu-studio-revision__title {
+  font-weight: 600;
+}
+
+/* The previews: each surface page at its real size, scaled into a fixed box. */
+.canccu-studio-previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--canccu-gap);
+}
+.canccu-studio-preview {
+  margin: 0;
+}
+.canccu-studio-preview__box {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--canccu-color-border);
+}
+.canccu-studio-preview__frame {
+  border: 0;
+  transform-origin: 0 0;
+}
+.canccu-studio-preview--screen .canccu-studio-preview__box {
+  width: 320px;
+  height: 180px;
+}
+.canccu-studio-preview--screen .canccu-studio-preview__frame {
+  width: 1920px;
+  height: 1080px;
+  transform: scale(0.1667);
+}
+.canccu-studio-preview--hub .canccu-studio-preview__box {
+  width: 195px;
+  height: 340px;
+}
+.canccu-studio-preview--hub .canccu-studio-preview__frame {
+  width: 390px;
+  height: 680px;
+  transform: scale(0.5);
+}
+.canccu-studio-preview--admin .canccu-studio-preview__box {
+  width: 320px;
+  height: 200px;
+}
+.canccu-studio-preview--admin .canccu-studio-preview__frame {
+  width: 1280px;
+  height: 800px;
+  transform: scale(0.25);
+}
+.canccu-studio-preview--discord .canccu-studio-preview__box {
+  width: 320px;
+  height: 160px;
+}
+.canccu-studio-preview--discord .canccu-studio-preview__frame {
+  width: 320px;
+  height: 160px;
+}

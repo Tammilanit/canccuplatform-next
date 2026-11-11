@@ -37,49 +37,82 @@ export async function compileStyle(
   source: string,
   manifest: Manifest,
 ): Promise<CompiledStyle> {
-  const { rows } = await c.query(
-    `SELECT path, file FROM theming_package_files WHERE owner = $1 AND file IS NOT NULL`,
-    [source],
-  );
-  const held = new Map((rows as { path: string; file: string }[]).map((r) => [r.path, r.file]));
-  // Only what the served paths answer: an image or a font, never a template's or licence's text.
-  const served = (path: string): string | undefined => {
-    const file = held.get(path);
-    return file !== undefined && FILE_NAME.test(file) ? SERVED + file : undefined;
-  };
-  const read = async (path: string): Promise<Buffer> => {
-    const file = held.get(path);
-    const bytes = file === undefined ? undefined : await files.read(file);
-    if (bytes === undefined) {
-      throw new StyleError({
-        severity: "error",
-        code: "file_missing",
-        path,
-        message: `theme.yaml names ${path}, which the package does not hold.`,
-      });
-    }
-    return bytes;
-  };
-
-  const cssPaths = list(manifest.css).filter((p): p is string => typeof p === "string");
-  let css: string | null = null;
-  if (cssPaths.length > 0) {
-    const sources = [];
-    for (const path of cssPaths) sources.push({ path, bytes: await read(path) });
-    css = await files.put(c, Buffer.from(compileCss(sources, served)), "css");
-  }
-
+  const held = await heldFiles(c, source);
+  const css = await cssOf(held, files, manifest, SERVED);
   const templates: ParsedTemplate[] = [];
   for (const [name, spec] of Object.entries(
     isObject(manifest.templates) ? manifest.templates : {},
   )) {
     if (!isObject(spec) || typeof spec.file !== "string" || typeof spec.widget !== "string")
       continue;
-    const parsed = parseTemplate(spec.file, await read(spec.file));
+    const parsed = parseTemplate(spec.file, await read(held, files, spec.file));
     if (!parsed.ok) throw new StyleError(parsed.problem);
+    const served = (path: string): string | undefined => servedAt(held, path, SERVED);
     templates.push({ name, widget: spec.widget, tree: servedTree(parsed.tree, served, spec.file) });
   }
-  return { css, templates };
+  return {
+    css: css === null ? null : await files.put(c, css, "css"),
+    templates,
+  };
+}
+
+/**
+ * The CSS `manifest` lists, compiled from the package files of `source` with every `url()` at
+ * `prefix` + its file's name, without storing it: publish stores it under SERVED; the Studio's
+ * preview serves the draft's under `/theming/draft/`, and compares it with the current revision's
+ * (plan issue-185 D10). Null for a theme without CSS; a StyleError as for compileStyle.
+ */
+export async function compiledCss(
+  c: SqlClient,
+  files: FileStore,
+  source: string,
+  manifest: Manifest,
+  prefix: string,
+): Promise<Buffer | null> {
+  return cssOf(await heldFiles(c, source), files, manifest, prefix);
+}
+
+type Held = Map<string, string>;
+
+async function heldFiles(c: SqlClient, source: string): Promise<Held> {
+  const { rows } = await c.query(
+    `SELECT path, file FROM theming_package_files WHERE owner = $1 AND file IS NOT NULL`,
+    [source],
+  );
+  return new Map((rows as { path: string; file: string }[]).map((r) => [r.path, r.file]));
+}
+
+/** Only what the served paths answer: an image or a font, never a template's or licence's text. */
+function servedAt(held: Held, path: string, prefix: string): string | undefined {
+  const file = held.get(path);
+  return file !== undefined && FILE_NAME.test(file) ? prefix + file : undefined;
+}
+
+async function read(held: Held, files: FileStore, path: string): Promise<Buffer> {
+  const file = held.get(path);
+  const bytes = file === undefined ? undefined : await files.read(file);
+  if (bytes === undefined) {
+    throw new StyleError({
+      severity: "error",
+      code: "file_missing",
+      path,
+      message: `theme.yaml names ${path}, which the package does not hold.`,
+    });
+  }
+  return bytes;
+}
+
+async function cssOf(
+  held: Held,
+  files: FileStore,
+  manifest: Manifest,
+  prefix: string,
+): Promise<Buffer | null> {
+  const cssPaths = list(manifest.css).filter((p): p is string => typeof p === "string");
+  if (cssPaths.length === 0) return null;
+  const sources = [];
+  for (const path of cssPaths) sources.push({ path, bytes: await read(held, files, path) });
+  return Buffer.from(compileCss(sources, (path) => servedAt(held, path, prefix)));
 }
 
 /**
