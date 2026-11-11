@@ -42,6 +42,36 @@ export function liveView(type: string, view: View, nowMs: number, timeZone: stri
   };
 }
 
+/** Widgets the device keeps current itself, also offline: they never dim (mockup 16). */
+const KEPT_ON_DEVICE = new Set(["clock", "countdown", "playlist"]);
+/** What makes a `checkin_qr` a live code (src/push/session.ts drops the same for its sample). */
+const CODE_FIELDS = ["url", "image_url", "rotates_at", "valid_until", "qr"];
+
+/**
+ * A view as the screen may show it now. A check-in code past its `valid_until` (or, without one,
+ * its `rotates_at`) checks no one in, so it shows its empty state instead, whatever the link: a
+ * screen that heard no new code (offline, or a cold boot from the kept state before the 10 s mark)
+ * must not send attendees to scan a dead one. Online the server pushes the next code at every
+ * rotation, ahead of that time. Offline, the widgets whose content the server keeps dim
+ * (`canccu-is-stale`); the clock, countdowns and the kept playlist run on at full strength.
+ */
+export function shownView(type: string, view: View, nowMs: number, offline: boolean): View {
+  let out = view;
+  if (type === "checkin_qr" && codeExpired(view, nowMs)) {
+    out = { ...view, empty: true };
+    for (const field of CODE_FIELDS) out[field] = null;
+  }
+  if (offline && !KEPT_ON_DEVICE.has(type) && out.stale !== true) out = { ...out, stale: true };
+  return out;
+}
+
+function codeExpired(view: View, nowMs: number): boolean {
+  const until = typeof view.valid_until === "string" ? view.valid_until : view.rotates_at;
+  if (typeof until !== "string") return false;
+  const ms = Date.parse(until);
+  return !Number.isNaN(ms) && nowMs >= ms;
+}
+
 const two = (n: number): string => String(n).padStart(2, "0");
 
 /** `00:47:18`: hours run past 24 rather than turn into days, so the text stays one shape. */

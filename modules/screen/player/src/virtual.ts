@@ -77,6 +77,7 @@ export class VirtualScreen {
     });
     this.screen = new Screen({
       serverNow: () => this.live.heartbeat.serverNow(),
+      offline: () => this.live.offline,
       reducedMotion: env.reducedMotion,
     });
   }

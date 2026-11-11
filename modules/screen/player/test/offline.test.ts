@@ -107,9 +107,9 @@ describe("a cold boot", () => {
     return player;
   }
 
-  async function keptState(caches: FakeCaches): Promise<void> {
+  async function keptState(caches: FakeCaches, kept = screenState()): Promise<void> {
     // A first boot with the server up keeps its state; the stream then dies with the uplink.
-    const up = new FakeApi().on("GET /api/screen/device/state", () => json(200, screenState()));
+    const up = new FakeApi().on("GET /api/screen/device/state", () => json(200, kept));
     const first = await boot(up, caches);
     await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
     first.live.stop();
@@ -136,6 +136,55 @@ describe("a cold boot", () => {
       player.live.stop();
     });
   }
+
+  it("dims the kept widgets the server keeps once it marks itself offline, not the clock", async () => {
+    const regionOf = (id: string, widget: string, view: Record<string, unknown>) => ({
+      id,
+      role: id,
+      area: { column: 1, row: 1, columns: 12, rows: 1 },
+      layer: 0,
+      rotation: "sequence",
+      order: [0],
+      cycle_started_at: new Date(T0).toISOString(),
+      idle: "logo",
+      idle_view: null,
+      widgets: [
+        {
+          widget,
+          template: null,
+          dwell_seconds: 600,
+          view: { qr: null, stale: false, empty: false, ...view },
+        },
+      ],
+      claim: null,
+    });
+    const caches = new FakeCaches();
+    await keptState(
+      caches,
+      screenState({
+        layout: { id: "pulse", aspect: "16:9", grid: { columns: 12, rows: 12 } },
+        regions: [
+          regionOf("header", "clock", { iso: "", time: "18:40", date: "" }),
+          regionOf("ticker", "ticker", { text: "Doors open" }),
+        ],
+        display: { motion: "none", drift: false },
+      }),
+    );
+    const api = new FakeApi().on("GET /api/screen/device/state", () =>
+      Promise.reject(new TypeError("Failed to fetch")),
+    );
+    api.streamAnswer = () => Promise.reject(new TypeError("offline"));
+    const player = await boot(api, caches);
+    const stale = (id: string) =>
+      document
+        .querySelector(`.canccu-region--${id} > .canccu-widget`)
+        ?.classList.contains("canccu-is-stale");
+    expect(stale("ticker")).toBe(false);
+    await vi.advanceTimersByTimeAsync(OFFLINE_AFTER_MS + 1000);
+    expect(stale("ticker")).toBe(true);
+    expect(stale("header")).toBe(false);
+    player.live.stop();
+  });
 
   it("follows an answer about the device rather than the old state", async () => {
     const caches = new FakeCaches();

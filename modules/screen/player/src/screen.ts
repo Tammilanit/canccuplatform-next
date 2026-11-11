@@ -10,13 +10,15 @@ import { driftAt, effectiveMotion, FADE_MS } from "./display.js";
 import type { Motion } from "./display.js";
 import { shownAt } from "./rotation.js";
 import type { Layout, Region, ScreenState } from "./state.js";
-import { drawWidget, fillCountdowns, liveView } from "./widget.js";
+import { drawWidget, fillCountdowns, liveView, shownView } from "./widget.js";
 import type { View } from "./widget.js";
 
 export interface ScreenHost {
   /** This device's clock corrected to the server's. */
   serverNow(): number;
   reducedMotion(): boolean;
+  /** The page marked itself offline (`canccu-is-offline`): server-kept widgets dim. */
+  offline?(): boolean;
 }
 
 /** How long a widget may wait for its images before it fades in anyway. */
@@ -203,7 +205,8 @@ export class Screen {
     const { index } = drawn.next ?? shownAt(r, zone, now);
     const w = index === null ? undefined : r.widgets[index];
     if (w !== undefined) {
-      const view = liveView(w.widget, w.view, now, state.tenant.time_zone);
+      const live = liveView(w.widget, w.view, now, state.tenant.time_zone);
+      const view = shownView(w.widget, live, now, this.host.offline?.() ?? false);
       // A ticker's new text is a new thing to show, so it fades in (the calm fading line, L13).
       const text = w.widget === "ticker" ? JSON.stringify(view.text) : "";
       return {

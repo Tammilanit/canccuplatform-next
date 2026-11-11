@@ -100,16 +100,29 @@ body.canccu-surface--screen {
   color: var(--canccu-color-text, #f3f4f6);
 }
 
-.canccu-offline-mark {
-  position: fixed;
-  right: var(--canccu-safe-inset, 48px);
-  bottom: var(--canccu-safe-inset, 48px);
-  padding: 0.6vh 1.2vh;
-  border-radius: var(--canccu-radius, 0.5rem);
-  background: var(--canccu-color-surface, #1f2937);
-  color: var(--canccu-color-text-muted, #9ca3af);
-  font-size: 2vh;
-  opacity: 0.85;
+/*
+ * The offline mark reads from 20 m (the readability rule, L7): solid, bold, at the header's own
+ * size, at the top centre between the header's logo (left) and clock (right), so it never covers
+ * the ticker at the bottom (mockup 05). In `canccu-base`, so a theme's layer can restyle it with
+ * no `!important`; unlayered, it would beat every theme rule.
+ */
+@layer canccu-base {
+  .canccu-offline-mark {
+    position: fixed;
+    z-index: 1;
+    top: var(--canccu-safe-inset, 48px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.2em 0.6em;
+    border-radius: 999px;
+    background: var(--canccu-color-status-degraded, #fbbf24);
+    color: var(--canccu-color-background, #0f1115);
+    font-size: min(4.4vh, 4.4vw);
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 .canccu-identify {

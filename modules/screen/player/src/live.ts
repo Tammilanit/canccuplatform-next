@@ -47,6 +47,8 @@ export interface LiveHost {
 export class Live {
   state: ScreenState | null = null;
   running = false;
+  /** The page carries `canccu-is-offline` now; the screen dims what the server keeps. */
+  offline = false;
   readonly heartbeat: Heartbeat;
   private readonly stream: StreamClient;
   private streamOpen = false;
@@ -210,6 +212,7 @@ export class Live {
     this.offlineTimer = setTimeout(() => {
       if (this.streamOpen || !this.running) return;
       const root = this.host.root;
+      this.offline = true;
       root.classList.add("canccu-is-offline");
       root.querySelector(".canccu-offline-mark")?.remove();
       root.append(offlineMark(clockText(since, this.state?.tenant.time_zone)));
@@ -221,6 +224,7 @@ export class Live {
     this.offlineTimer = undefined;
     clearInterval(this.pollTimer);
     this.pollTimer = undefined;
+    this.offline = false;
     this.host.root.classList.remove("canccu-is-offline");
     this.host.root.querySelector(".canccu-offline-mark")?.remove();
   }
