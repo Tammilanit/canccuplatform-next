@@ -4,6 +4,9 @@
 # OUT_DIR as an artifact. A page that does not answer 200 fails the run, so a screenshot of
 # an error page never passes for a real one.
 # Usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR]   (defaults http://127.0.0.1, screenshots)
+# The pages open on the demo event's hostname CANCCU_DEMO_HOST (default demo.localhost; the CI
+# stack has two events, so IP mode serves none) at BASE_URL's port. Chromium resolves `*.localhost`
+# to the loopback itself, so BASE_URL must be this machine.
 #        demo-screenshots --install   pulls the Playwright image (CI)
 # Needs Docker. The run happens in Playwright's image, which ships Chromium and its system
 # libraries: installing them with apt on the runner failed CI whenever the Ubuntu mirrors were
@@ -35,10 +38,14 @@ BASE=${1:-http://127.0.0.1}
 BASE=${BASE%/}
 OUT=${2:-screenshots}
 SESSION=${DEMO_SESSION:-demo-ci}
+DEMO_HOST=${CANCCU_DEMO_HOST:-demo.localhost}
+authority=${BASE#*://}; authority=${authority%%/*}
+port=""
+[[ $authority =~ :([0-9]+)$ ]] && port=":${BASH_REMATCH[1]}"
 
 if [ "$dry" = 1 ]; then
   echo "dry run, would screenshot (chromium in $IMAGE) into $OUT/:"
-  for p in "${PAGES[@]}"; do echo "  ${p%%|*}.png  $BASE${p#*|}"; done
+  for p in "${PAGES[@]}"; do echo "  ${p%%|*}.png  http://$DEMO_HOST$port${p#*|}"; done
   exit 0
 fi
 
@@ -48,6 +55,7 @@ if [ "${PLAYWRIGHT_BROWSERS_PATH:-}" != /ms-playwright ]; then
   command -v docker >/dev/null || { echo "error: docker not found" >&2; exit 2; }
   mkdir -p "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
   exec docker run --rm --network host -u "$(id -u):$(id -g)" -e HOME=/tmp -e DEMO_SESSION="$SESSION" \
+    -e CANCCU_DEMO_HOST="$DEMO_HOST" \
     -v "$PWD:/repo:ro" -v "$out:$out" -w /repo "$IMAGE" scripts/demo-screenshots "$BASE" "$out"
 fi
 
@@ -60,20 +68,20 @@ if ! curl -s -o /dev/null --max-time 5 "$BASE/"; then
   exit 1
 fi
 
-host=${BASE#*://}; host=${host%%/*}; host=${host%%:*}
 mkdir -p "$OUT"
 state=$(mktemp)
 log=$(mktemp)
 trap 'rm -f "$state" "$log"' EXIT
 cat > "$state" <<JSON
-{"cookies": [{"name": "canccu_session", "value": "$SESSION", "domain": "$host", "path": "/",
+{"cookies": [{"name": "canccu_session", "value": "$SESSION", "domain": "$DEMO_HOST", "path": "/",
   "expires": -1, "httpOnly": true, "secure": false, "sameSite": "Lax"}], "origins": []}
 JSON
 
 fail=0
 for p in "${PAGES[@]}"; do
-  name=${p%%|*} url=$BASE${p#*|}
-  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "cookie: canccu_session=$SESSION" "$url") || code=000
+  name=${p%%|*} url=http://$DEMO_HOST$port${p#*|}
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "host: $DEMO_HOST" \
+    -H "cookie: canccu_session=$SESSION" "$BASE${p#*|}") || code=000
   if [ "$code" != 200 ]; then
     echo "FAIL $name: $url answered HTTP $code, not 200"; fail=1; continue
   fi
