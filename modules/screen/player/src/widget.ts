@@ -105,18 +105,20 @@ const CODE_FIELDS = ["url", "image_url", "rotates_at", "valid_until", "qr"];
  * its `rotates_at`) checks no one in, so it shows its empty state instead, whatever the link: a
  * screen that heard no new code (offline, or a cold boot from the kept state before the 10 s mark)
  * must not send attendees to scan a dead one. Online the server pushes the next code at every
- * rotation, ahead of that time. Offline, the widgets whose content the server keeps dim
- * (`canccu-is-stale`); the clock, countdowns and the kept playlist run on at full strength.
+ * rotation, ahead of that time.
  */
-export function shownView(type: string, view: View, nowMs: number, offline: boolean): View {
-  let out = view;
-  if (type === "checkin_qr" && codeExpired(view, nowMs)) {
-    out = { ...view, empty: true };
-    for (const field of CODE_FIELDS) out[field] = null;
-  }
-  if (offline && !KEPT_ON_DEVICE.has(type) && out.stale !== true) out = { ...out, stale: true };
+export function shownView(type: string, view: View, nowMs: number): View {
+  if (type !== "checkin_qr" || !codeExpired(view, nowMs)) return view;
+  const out: View = { ...view, empty: true };
+  for (const field of CODE_FIELDS) out[field] = null;
   return out;
 }
+
+/**
+ * Offline, the widgets whose content the server keeps dim (`canccu-is-stale`); the clock,
+ * countdowns and the kept playlist run on at full strength.
+ */
+export const dimsOffline = (type: string): boolean => !KEPT_ON_DEVICE.has(type);
 
 function codeExpired(view: View, nowMs: number): boolean {
   const until = typeof view.valid_until === "string" ? view.valid_until : view.rotates_at;

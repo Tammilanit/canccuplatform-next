@@ -86,6 +86,26 @@ describe("offline, the screen", () => {
     expect(stale(screen, "ticker")).toBe(false);
     screen.stop();
   });
+
+  // A frame redrawn as the uplink drops cannot load again: it would show the browser's error page.
+  it("dims an embed without drawing its frame again", async () => {
+    const screen = new Screen(host);
+    draw(screen, [
+      region("hero", widget("embed", { frame_url: "/theming/sandbox/3/fireworks/index.html" })),
+    ]);
+    screen.start();
+    const frame = screen.root.querySelector("iframe");
+    expect(frame).not.toBeNull();
+    offline = true;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(stale(screen, "hero")).toBe(true);
+    expect(screen.root.querySelector("iframe")).toBe(frame);
+    offline = false;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(stale(screen, "hero")).toBe(false);
+    expect(screen.root.querySelector("iframe")).toBe(frame);
+    screen.stop();
+  });
 });
 
 describe("the check-in QR", () => {

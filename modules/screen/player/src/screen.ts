@@ -11,7 +11,14 @@ import type { Motion } from "./display.js";
 import { shownAt } from "./rotation.js";
 import type { Layout, Region, ScreenState } from "./state.js";
 import { whenReady } from "./media.js";
-import { drawWidget, fillCountdowns, identity, liveView, shownView } from "./widget.js";
+import {
+  dimsOffline,
+  drawWidget,
+  fillCountdowns,
+  identity,
+  liveView,
+  shownView,
+} from "./widget.js";
 import type { View } from "./widget.js";
 
 export interface ScreenHost {
@@ -31,6 +38,11 @@ interface Shown {
   type: string;
   template: string | null;
   view: View;
+  /**
+   * Dims while the page is offline. Kept out of the view `show()` compares: going offline must
+   * not redraw a widget, which would reload an embed's frame just as the uplink drops.
+   */
+  dims: boolean;
 }
 
 interface Drawn {
@@ -187,7 +199,7 @@ export class Screen {
       if (!claim.hidden || !takeover) {
         drawn.claim = claim;
         drawn.next = null;
-        return { ...shown, template: null };
+        return { ...shown, template: null, dims: false };
       }
     } else if (drawn.claim !== null) {
       // The claim ended here, or a state dropped it: `next` skips the rest of the widget the
@@ -207,7 +219,7 @@ export class Screen {
     const w = index === null ? undefined : r.widgets[index];
     if (w !== undefined) {
       const live = liveView(w.widget, w.view, now, state.tenant.time_zone);
-      const view = shownView(w.widget, live, now, this.host.offline?.() ?? false);
+      const view = shownView(w.widget, live, now);
       // A ticker's new text is a new thing to show, so it fades in (the calm fading line, L13);
       // so are a new photo and a new playlist frame.
       const text = w.widget === "ticker" ? JSON.stringify(view.text) : identity(w.widget, view);
@@ -216,19 +228,38 @@ export class Screen {
         type: w.widget,
         template: w.template ?? null,
         view,
+        dims: dimsOffline(w.widget),
       };
     }
     if (r.idle === "blank") return null;
     if (r.idle === "collapse") return "collapse";
     if (r.idle === "next" && r.idle_view !== null) {
-      return { key: "idle:next", type: "countdown", template: null, view: r.idle_view.view };
+      return {
+        key: "idle:next",
+        type: "countdown",
+        template: null,
+        view: r.idle_view.view,
+        dims: false,
+      };
     }
     // `logo`, and any idle value this player does not know (contracts/screen.md, The Pulse options).
     const view = { url: state.theme.logo_url, name: state.tenant.name, qr: null, empty: false };
-    return { key: "idle:logo", type: "logo", template: null, view: { ...view, stale: false } };
+    const idle = { ...view, stale: false };
+    return { key: "idle:logo", type: "logo", template: null, view: idle, dims: false };
   }
 
   private show(drawn: Drawn, shown: Shown | "collapse" | null, motion: Motion): void {
+    this.redraw(drawn, shown, motion);
+    const s = drawn.shown;
+    const offline = this.host.offline?.() ?? false;
+    drawn.slot?.classList.toggle(
+      "canccu-is-stale",
+      s !== null && (s.view.stale === true || (offline && s.dims)),
+    );
+  }
+
+  /** Draws what the region shows now: a new thing fades in, new data for the same redraws it. */
+  private redraw(drawn: Drawn, shown: Shown | "collapse" | null, motion: Motion): void {
     drawn.el.hidden = shown === "collapse";
     const next = shown === "collapse" ? null : shown;
     const templates = this.state?.theme.templates;
