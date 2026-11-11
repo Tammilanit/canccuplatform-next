@@ -19,7 +19,7 @@ describe("the sources' reads", () => {
   beforeAll(async () => {
     server = createServer((request, response) => {
       const header = request.headers["x-canccu-service"];
-      const module = request.url?.startsWith("/internal/agenda/") ? "agenda" : "tenants";
+      const module = /^\/internal\/(agenda|theming)\//.exec(request.url ?? "")?.[1] ?? "tenants";
       let caller: string | null;
       try {
         caller = audience(module).verify(typeof header === "string" ? header : null);
@@ -39,8 +39,10 @@ describe("the sources' reads", () => {
         json(200, { time: "t", agenda_version: 1, current: [], next: [{ id: "i1" }] });
       } else if (request.url?.startsWith("/internal/tenants/venue-info")) {
         json(200, { house_rules: "", wifi: [{ ssid: "guest" }], floor_plan: null });
-      } else {
+      } else if (request.url?.startsWith("/internal/theming/current")) {
         json(200, { revision: 3, tokens_css_url: "/t.css", css_url: null, logo_url: null });
+      } else {
+        json(404, { error: { code: "not_found", message: "no" } });
       }
     });
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -55,10 +57,13 @@ describe("the sources' reads", () => {
       warn: (...args: unknown[]) => warnings.push(args),
     });
 
-  it("reads the theme with the event's hostname, which theming resolves the event from", async () => {
-    const theme = await sources().theme("demo.example");
+  it("reads the current theme as a module, signed for theming, so no info-page mode refuses it", async () => {
+    const theme = await sources().theme("alpha");
     expect(theme?.revision).toBe(3);
-    expect(seen.at(-1)).toMatchObject({ host: "demo.example", path: "/api/theming/current" });
+    expect(seen.at(-1)).toMatchObject({
+      path: "/internal/theming/current?tenant_id=alpha",
+      caller: "screen",
+    });
   });
 
   it("reads now and next as a module, signed for the agenda, so no info-page mode refuses it", async () => {

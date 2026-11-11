@@ -98,8 +98,9 @@ describe.skipIf(!DATABASE_URL)("the composed state", () => {
     expect(body.regions.map((r) => r.id)).toContain("_full");
     expect(body.sound).toEqual({ enabled: false, sounded_claims: [] });
     expect(h.sources.hosts.at(-1)).toBe("alpha.test");
-    // Module reads by the event's id: the info-page mode cannot refuse them, as it does a guest.
-    expect(h.sources.tenants.slice(-2)).toEqual(["alpha", "alpha"]);
+    // Module reads by the event's id (theme, now and next, venue info): the info-page mode cannot
+    // refuse them, as it does a guest.
+    expect(h.sources.tenants.slice(-3)).toEqual(["alpha", "alpha", "alpha"]);
   });
 
   it("moves `state_version` only when what the screen draws changes", async () => {
