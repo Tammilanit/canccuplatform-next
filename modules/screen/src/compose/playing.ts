@@ -9,6 +9,7 @@
  * moves no `state_version`, and only a new frame pushes a `widget` message.
  */
 import { showBreak } from "../playback/break-play.js";
+import { slideUrl } from "../render/jobs.js";
 import type { BreakPlaylist } from "../playback/break-play.js";
 import { resolveFrame, resumeBookmark, START_BOOKMARK } from "../playback/engine.js";
 import type { Bookmark, Frame } from "../playback/engine.js";
@@ -45,9 +46,6 @@ export interface PlayingInput {
   assets: Assets;
   files: ReadonlyMap<string, AssetFile>;
 }
-
-const slideUrl = (assetId: string, version: number, n: number): string =>
-  `/api/screen/renders/${assetId}/${String(version)}/slide-${String(n)}.png`;
 
 interface Timed {
   item: PlayItem;
@@ -135,17 +133,37 @@ function ownAt(input: PlayingInput, t: number, resumeAt: number): Timed | null {
   return frame === null ? null : itemOf(input, found.playlist, frame, t, Infinity);
 }
 
-/** The running break at `t`, if it still shows something then. */
-function breakAt(input: PlayingInput, t: number): (Timed & { breakEndsAt: number }) | null {
+/** The running break's playlist and what it shows at `t`; null when no break runs. */
+function breakShow(input: PlayingInput, t: number) {
   const active = input.state.breaks.active;
   if (active === null) return null;
   const playlist = input.breakPlaylists.find((p) => p.id === active.playlistId);
   const entry = input.state.breaks.playlists[active.playlistId];
   if (playlist === undefined || entry === undefined) return null;
   const show = showBreak(playlist, input.assets, entry, input.zoneKey, active.startedAt, t);
-  if (show === null || show.frame === null || t >= show.endsAt) return null;
+  return show === null ? null : { playlist, show };
+}
+
+/** The running break at `t`, if it still shows something then. */
+function breakAt(input: PlayingInput, t: number): (Timed & { breakEndsAt: number }) | null {
+  const found = breakShow(input, t);
+  if (found === null) return null;
+  const { playlist, show } = found;
+  if (show.frame === null || t >= show.endsAt) return null;
   const timed = itemOf(input, playlist, show.frame, t, show.endsAt);
   return timed === null ? null : { ...timed, breakEndsAt: show.endsAt };
+}
+
+/**
+ * When the zone's own bookmark, paused by a break that shows nothing here, runs again: the break's
+ * end once it has passed (as the tick will resume it), else the break's start. Never `nowMs`, or
+ * every rebuild would move `started_at` and restart the video on every screen.
+ */
+function resumeAt(input: PlayingInput, nowMs: number): number {
+  const active = input.state.breaks.active;
+  if (active === null) return nowMs;
+  const endsAt = breakShow(input, nowMs)?.show.endsAt;
+  return endsAt !== undefined && nowMs >= endsAt ? endsAt : active.startedAt;
 }
 
 /**
@@ -163,8 +181,9 @@ export function playlistNow(
       end < inBreak.breakEndsAt ? breakAt(input, end) : ownAt(input, end, inBreak.breakEndsAt);
     return { view: { item: inBreak.item, next_item: next?.item ?? null }, changesAt: end };
   }
-  const now = ownAt(input, nowMs, nowMs);
+  const resume = resumeAt(input, nowMs);
+  const now = ownAt(input, nowMs, resume);
   if (now === null) return null;
-  const next = ownAt(input, now.endsAt, nowMs);
+  const next = ownAt(input, now.endsAt, resume);
   return { view: { item: now.item, next_item: next?.item ?? null }, changesAt: now.endsAt };
 }

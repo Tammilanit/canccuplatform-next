@@ -186,6 +186,29 @@ describe("playlistNow", () => {
     expect(at(T0 + 12_000)?.changesAt).toBe(T0 + 15_000);
   });
 
+  it("keeps the same start across rebuilds while a break runs that shows nothing here", () => {
+    // The break's images have no file, so the zone's own content shows during the break.
+    const b = breakPlaylist("b1", { breakSeconds: 15 }, [10, 10]);
+    const assets = new Map(input().assets);
+    for (const i of b.items) assets.set(i.assetId, asset(i.assetId, "image"));
+    const state: ZoneState = {
+      ...playing(),
+      bookmarks: { p1: { itemId: "p1-0", slideNumber: null, offsetMs: 4_000, runningSince: null } },
+      breaks: {
+        playlists: { b1: { dueAt: T0 + 200_000, bookmark: null, nextImageId: null } },
+        active: { playlistId: "b1", startedAt: T0 },
+        chainEndedAt: null,
+      },
+    };
+    const at = (ms: number) => playlistNow(input({ state, assets, breakPlaylists: [b] }), ms);
+    const first = at(T0 + 2_000)?.view;
+    expect(first?.item).toMatchObject({ url: "/api/screen/files/aaa.png" });
+    expect(at(T0 + 5_000)?.view).toEqual(first);
+    // Past the break's end before the tick ends it: resumed at the end, as the tick will.
+    expect(at(T0 + 16_000)?.view.item.started_at).toBe(iso(T0 + 11_000));
+    expect(at(T0 + 18_000)?.view.item.started_at).toBe(iso(T0 + 11_000));
+  });
+
   it("skips what has no file to show", () => {
     const files = new Map(input().files);
     files.delete("img");

@@ -5,6 +5,7 @@
  */
 import type { SqlClient, TenantContext } from "@canccu/kit";
 import { playbackOf, readAssetRows } from "../assets/reader.js";
+import { fileUrl } from "../assets/store.js";
 import type { AssetRow } from "../assets/store.js";
 import type { Db } from "../db.js";
 import type { Settings } from "../health.js";
@@ -17,7 +18,11 @@ import type { PhotoRow } from "./photos.js";
 import type { Sources } from "./sources.js";
 import type { ZoneFacts } from "./widgets.js";
 
-const fileUrl = (name: string): string => `/api/screen/files/${name}`;
+/**
+ * A code whose rotation this clock has already passed (notify's clock a little behind ours) is
+ * asked for again this soon, rather than left expired on screen until the next refresh.
+ */
+export const ROTATE_RETRY_MS = 1000;
 
 export async function readPlaying(
   c: SqlClient,
@@ -95,7 +100,7 @@ export async function contentFacts(
             ? photoNow(await readPhotos(c), photoDwell(deps.settings), nowMs)
             : null;
         facts.photo = now?.view ?? null;
-        if (now !== null) changes.push(now.changesAt);
+        if (typeof now?.changesAt === "number") changes.push(now.changesAt);
       }
     });
   }
@@ -103,7 +108,10 @@ export async function contentFacts(
     // `arrival` only: a tournament's purpose comes with the tournament module's events.
     const code = await deps.sources.checkinCode(ctx.tenant_id, "arrival");
     facts.checkin = code;
-    if (code !== null) changes.push(Date.parse(code.rotates_at));
+    if (code !== null) {
+      const rotatesAt = Date.parse(code.rotates_at);
+      changes.push(rotatesAt > nowMs ? rotatesAt : nowMs + ROTATE_RETRY_MS);
+    }
   }
   const future = changes.filter((t) => Number.isFinite(t) && t > nowMs);
   return { facts, changesAt: future.length === 0 ? null : Math.min(...future) };

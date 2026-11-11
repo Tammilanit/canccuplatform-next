@@ -72,6 +72,11 @@ export class PushHub {
     const set = this.streams.get(stream.tenant);
     set?.delete(stream);
     if (set?.size === 0) this.streams.delete(stream.tenant);
+    // A planned change with no stream left here would still take the claim and then build nothing,
+    // leaving a container that does hold a stream to wait for the refresh.
+    const zone = stream.zoneKey;
+    if (zone !== null && !this.zonesOf(stream.tenant).has(zone))
+      this.plan(stream.tenant, zone, null);
   }
 
   /** How many streams this container holds, for tests and logs. */
@@ -192,6 +197,8 @@ export class PushHub {
     const delay = Math.max(0, at - (this.deps.now ?? Date.now)());
     const timer = setTimeout(() => {
       this.changes.delete(key);
+      // Claim only for a zone this container still draws for (see `remove`).
+      if (!this.zonesOf(tenant).has(zone)) return;
       void withTenant(tenant, () =>
         this.deps.kv.setIfAbsent(
           tenantKey("screen", "zone", zone, "change", String(at)),

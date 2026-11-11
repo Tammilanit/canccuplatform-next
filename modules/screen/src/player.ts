@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { FastifyInstance } from "fastify";
 import { eventPageCsp, newNonce, normalizeHost } from "@canccu/kit";
-import { allowedOrigins } from "./assets/links.js";
+import { allowedOrigins, YOUTUBE_ORIGIN } from "./assets/links.js";
 import type { Settings } from "./health.js";
 import { notFound } from "./http.js";
 
@@ -27,16 +27,13 @@ export interface PlayerDeps {
   settings: Settings;
 }
 
-/** The one origin YouTube assets are framed from (src/assets/links.ts). */
-const YOUTUBE = "https://www.youtube-nocookie.com";
-
 /**
  * The screen page's one widening of the event page CSP (contracts/screen.md, CSP): web assets'
  * origins and YouTube in `frame-src`. Only parsed https origins go in, so no list entry can end
  * the directive or add one of its own.
  */
 function withFrames(csp: string, allowlist: unknown): string {
-  const extra = [YOUTUBE, ...allowedOrigins(allowlist)].join(" ");
+  const extra = [YOUTUBE_ORIGIN, ...allowedOrigins(allowlist)].join(" ");
   return csp.replace(/(^|; )frame-src ([^;]*)/, (_m, pre: string, src: string) => {
     return `${pre}frame-src ${src} ${extra}`;
   });

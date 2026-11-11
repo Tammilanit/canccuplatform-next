@@ -41,12 +41,19 @@ const isItem = (v: unknown): v is PlayItem => {
   );
 };
 
-/** The view's item, or its `next_item` once the item is over and the next has begun. */
+/**
+ * The view's item, or its `next_item` once the item is over. The switch goes by the item's own
+ * end, not the next one's `started_at`: content resumed after a break carries the virtual start
+ * it would have had from its beginning, which falls before the break's last item ends.
+ */
 export function currentItem(view: Record<string, unknown>, nowMs: number): PlayItem | null {
   if (!isItem(view.item)) return null;
+  const item = view.item;
   const next = view.next_item;
-  if (isItem(next) && nowMs >= Date.parse(next.started_at)) return next;
-  return view.item;
+  const endsAt =
+    Date.parse(item.started_at) + (item.duration_seconds - (item.offset_seconds || 0)) * 1000;
+  if (isItem(next) && nowMs >= endsAt) return next;
+  return item;
 }
 
 /** Seconds into the item at `nowMs`. */

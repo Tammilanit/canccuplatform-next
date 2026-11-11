@@ -134,6 +134,8 @@ export async function composeZone(
   ctx: TenantContext,
   host: string,
   zoneKey: string,
+  /** False for the hub's view, which drops every content widget anyway (NOW_TYPES). */
+  withContent = true,
 ): Promise<ZoneComposed | null> {
   const at = new Date((deps.now ?? Date.now)());
   const read = await deps.db.tenant(async (c) => {
@@ -181,7 +183,9 @@ export async function composeZone(
   let views = { landscape: build(false), portrait: build(true) };
   // The content widgets' sources are read only for a zone that shows them, so their changes
   // (every frame, photo and code) never move another zone's version.
-  const content = await contentFacts(deps, ctx, zoneKey, typesOf(views), at.getTime());
+  const content = withContent
+    ? await contentFacts(deps, ctx, zoneKey, typesOf(views), at.getTime())
+    : { facts: {}, changesAt: null };
   if (Object.keys(content.facts).length > 0) {
     Object.assign(facts, content.facts);
     views = { landscape: build(false), portrait: build(true) };
@@ -275,7 +279,7 @@ export async function nowView(
   zoneKey: string,
   member: boolean,
 ): Promise<Record<string, unknown> | null> {
-  const composed = await composeZone(deps, ctx, host, zoneKey);
+  const composed = await composeZone(deps, ctx, host, zoneKey, false);
   if (composed === null) return null;
   const regions = composed.views.landscape.regions.map((r) => {
     const kept = r.widgets.flatMap((w, i) => (NOW_TYPES.has(w.widget) ? [{ w, i }] : []));

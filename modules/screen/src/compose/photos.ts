@@ -56,7 +56,7 @@ export function photoNow(
   photos: readonly PhotoRow[],
   dwellSeconds: number,
   nowMs: number,
-): { view: Record<string, unknown>; changesAt: number } | null {
+): { view: Record<string, unknown>; changesAt: number | null } | null {
   if (photos.length === 0) return null;
   const dwellMs = dwellSeconds * 1000;
   const until = featuredUntil(photos, dwellSeconds);
@@ -67,5 +67,7 @@ export function photoNow(
   const newest = [...photos].sort(byArrival).reverse();
   const slot = Math.floor(nowMs / dwellMs);
   const shown = newest[slot % newest.length] as PhotoRow;
-  return { view: viewOf(shown, false), changesAt: (slot + 1) * dwellMs };
+  // One photo turns into itself: nothing to rebuild for until a new photo arrives (its event).
+  const changesAt = newest.length === 1 ? null : (slot + 1) * dwellMs;
+  return { view: viewOf(shown, false), changesAt };
 }

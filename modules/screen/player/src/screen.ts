@@ -180,17 +180,28 @@ export class Screen {
     drawn.el.hidden = shown === "collapse";
     const next = shown === "collapse" ? null : shown;
     const templates = this.state?.theme.templates;
-    const json =
-      next === null ? "" : JSON.stringify([next.type, next.template, next.view, templates]);
-    if (next?.key === drawn.shown?.key && json === drawn.json) return;
-    const sameThing = next !== null && next.key === drawn.shown?.key && drawn.slot !== null;
-    drawn.shown = next;
-    drawn.json = json;
     const media = {
       sound: (this.state?.sound as { enabled?: unknown } | undefined)?.enabled === true,
       nowMs: this.host.serverNow(),
       reducedMotion: this.host.reducedMotion(),
     };
+    // The media options belong in the comparison: when the zone's sound moves to another device,
+    // a playing video or YouTube frame must be redrawn muted here (only one device sounds).
+    const json =
+      next === null
+        ? ""
+        : JSON.stringify([
+            next.type,
+            next.template,
+            next.view,
+            templates,
+            media.sound,
+            media.reducedMotion,
+          ]);
+    if (next?.key === drawn.shown?.key && json === drawn.json) return;
+    const sameThing = next !== null && next.key === drawn.shown?.key && drawn.slot !== null;
+    drawn.shown = next;
+    drawn.json = json;
     if (sameThing) {
       // New data for what is already shown: redraw it in place, with no fade.
       const fresh = drawWidget(next.type, next.template, next.view, templates, media);

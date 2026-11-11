@@ -55,6 +55,10 @@ describe("photoNow", () => {
     });
     expect(at(slot * 8_000)?.changesAt).toBe(slot * 8_000 + 8_000);
   });
+
+  it("plans no change for a single photo past its feature: it turns into itself", () => {
+    expect(photoNow([photo("a", T0 - 100_000)], 8, T0)?.changesAt).toBeNull();
+  });
 });
 
 describe("featuredUntil", () => {

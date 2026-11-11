@@ -31,6 +31,16 @@ describe("the playlist widget's item", () => {
     expect(currentItem(view({ empty: true }), T0)).toBeNull();
   });
 
+  it("plays a break's last item to its end when the next item resumes with an earlier start", () => {
+    // Own content paused 14 s in resumes when the break item ends at T0+10 s: its virtual start
+    // is T0−4 s, before the break item even began.
+    const resumed = item({ url: "/api/screen/files/own.png", started_at: iso(T0 - 4_000) });
+    const v = playlist(item(), resumed);
+    expect(currentItem(v, T0)?.url).toBe("/api/screen/files/aaa.png");
+    expect(currentItem(v, T0 + 9_999)?.url).toBe("/api/screen/files/aaa.png");
+    expect(currentItem(v, T0 + 10_000)?.url).toBe("/api/screen/files/own.png");
+  });
+
   it("draws the same thing before and after the push that brings the item it already shows", () => {
     const before = liveView("playlist", playlist(item(), next), T0 + 10_500, "UTC");
     const pushed = liveView("playlist", playlist(next, null), T0 + 10_500, "UTC");

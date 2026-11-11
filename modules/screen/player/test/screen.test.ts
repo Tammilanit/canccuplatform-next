@@ -338,4 +338,15 @@ describe("the playlist on the screen", () => {
     expect(src(screen)).toBe("/api/screen/files/b.png");
     screen.stop();
   });
+
+  it("mutes a playing video here when the zone's sound moves to another device", () => {
+    const screen = new Screen(host);
+    const video = { ...frame("v.mp4", 0), kind: "video", muted: false };
+    const hero = region("hero", { widgets: [widget("playlist", { item: video }, 60)] });
+    const el = () => screen.root.querySelector<HTMLVideoElement>(".canccu-region--hero video");
+    screen.draw(state([hero], { sound: { enabled: true } }));
+    expect(el()?.muted).toBe(false);
+    screen.draw(state([hero], { sound: { enabled: false } }));
+    expect(el()?.muted).toBe(true);
+  });
 });
