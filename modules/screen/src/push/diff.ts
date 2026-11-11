@@ -13,11 +13,13 @@ function stableWidget(w: WidgetView): WidgetView {
   return { ...w, view: { ...w.view, iso: null, time: null, date: null } };
 }
 
+// A shuffle's order is the screen's own, but which widgets take part (`skip_empty`) is not: the
+// player cycles through `order`, so a change of members must reach it as a `region` message.
 function stableRegion(r: RegionView): RegionView {
   return {
     ...r,
     cycle_started_at: "",
-    order: r.rotation === "shuffle" ? [] : r.order,
+    order: r.rotation === "shuffle" ? [...r.order].sort((a, b) => a - b) : r.order,
     widgets: r.widgets.map(stableWidget),
   };
 }
@@ -34,7 +36,8 @@ const sameShell = (a: RegionView, b: RegionView): boolean => {
 
 /**
  * The messages for one orientation, or null when only a whole `state` will do: no state before,
- * a new zone epoch, name, event name or sound device (these are in the device's own part), or
+ * a new zone epoch, name, event name, sound device (these are in the device's own part) or display
+ * (the contract sends motion and drift as a `state`), or
  * another layout or set of regions. An orientation the change left as it was gets a `ticker`
  * message anyway, so its screens learn the new `state_version` and show no lag.
  */
@@ -48,7 +51,8 @@ export function diffZone(
     before === null ||
     !isDeepStrictEqual(before.zone, after.zone) ||
     before.eventName !== after.eventName ||
-    !isDeepStrictEqual(before.sound, after.sound)
+    !isDeepStrictEqual(before.sound, after.sound) ||
+    !isDeepStrictEqual(before.display, after.display)
   ) {
     return null;
   }

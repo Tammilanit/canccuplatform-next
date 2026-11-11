@@ -10,6 +10,7 @@ import type { Answer, Fetch } from "./api.js";
 import { clockText, frame, minutesLeft, setFoot } from "./frames.js";
 import type { FrameKind, FrameText } from "./frames.js";
 import { Live, STATE_PATH } from "./live.js";
+import { Screen } from "./screen.js";
 import { isState } from "./state.js";
 import type { ScreenState } from "./state.js";
 import { backoffMs } from "./stream.js";
@@ -42,21 +43,14 @@ export interface PlayerEnv {
   /** `<body>`: frames replace its content. */
   root: HTMLElement;
   bundle: string;
-  /** Draws a zone's state; the player's rendering (#306) plugs in here. */
-  draw?: (state: ScreenState) => HTMLElement;
+  /** Whether the browser asks for reduced motion; the default reads `prefers-reduced-motion`. */
+  reducedMotion?: () => boolean;
   now?: () => number;
   random?: () => number;
 }
 
-/** Until the renderer lands: the event and zone, so a playing screen is never blank. */
-function holding(state: ScreenState): HTMLElement {
-  return frame("starting", {
-    event: state.tenant.name,
-    device: state.device.name,
-    title: state.tenant.name,
-    lines: [state.zone?.name ?? ""],
-  });
-}
+const prefersReducedMotion = (): boolean =>
+  typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export class Player {
   private generation = 0;
@@ -70,6 +64,7 @@ export class Player {
   private readonly now: () => number;
   private readonly random: () => number;
   readonly live: Live;
+  private readonly screen: Screen;
 
   constructor(private readonly env: PlayerEnv) {
     this.now = env.now ?? Date.now;
@@ -89,6 +84,10 @@ export class Player {
       settle: (answer) => {
         this.settle(answer);
       },
+    });
+    this.screen = new Screen({
+      serverNow: () => this.live.heartbeat.serverNow(),
+      reducedMotion: env.reducedMotion ?? prefersReducedMotion,
     });
   }
 
@@ -117,6 +116,7 @@ export class Player {
   /** Leave whatever flow runs: its timers stop, its late answers are dropped. */
   private next(): number {
     clearTimeout(this.timer);
+    this.screen.stop();
     this.tick = null;
     return ++this.generation;
   }
@@ -137,6 +137,9 @@ export class Player {
 
   private mount(node: HTMLElement): void {
     this.drawn = true;
+    // The screen keeps its layout between states: moving it out and back in would restart its
+    // fades and, later, its videos.
+    if (this.env.root.firstElementChild === node) return;
     const keep = [...this.env.root.children].filter((c) =>
       c.matches(".canccu-offline-mark, .canccu-identify"),
     );
@@ -163,6 +166,7 @@ export class Player {
     this.live.play(state);
     this.tick = null;
     const who = { event: state.tenant.name, device: state.device.name };
+    if (state.tenant.status === "archived" || state.zone === null) this.screen.stop();
     if (state.tenant.status === "archived") {
       this.show({ kind: "archived", ...who, ...ARCHIVED });
     } else if (state.zone === null) {
@@ -180,7 +184,8 @@ export class Player {
       };
       this.tick();
     } else {
-      this.mount((this.env.draw ?? holding)(state));
+      this.mount(this.screen.draw(state));
+      this.screen.start();
     }
   }
 

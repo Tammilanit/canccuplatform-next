@@ -1,5 +1,6 @@
 /** The bundle's entry: the loader page (`/screen/`) runs this as its one script. */
 import "./player.css";
+import "./screen.css";
 import { Player } from "./player.js";
 
 const body = document.body;

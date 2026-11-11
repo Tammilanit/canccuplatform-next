@@ -48,3 +48,7 @@ settings:
     max: 60
     label: Photo dwell (seconds)
     default: 8
+  - key: burn_in_drift
+    type: boolean
+    label: Shift the screen layout slowly against burn-in
+    default: false

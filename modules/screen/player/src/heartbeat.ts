@@ -27,6 +27,8 @@ export function newInstanceId(random: () => number = Math.random): string {
 export class Heartbeat {
   /** The server's clock minus this device's, from the last answered beat. */
   offsetMs = 0;
+  /** Whether a beat has been answered, so `offsetMs` is measured rather than guessed. */
+  synced = false;
   readonly instanceId: string;
   private rttMs: number | null = null;
   private timer: ReturnType<typeof setInterval> | undefined;
@@ -95,5 +97,6 @@ export class Heartbeat {
     this.rttMs = Math.min(rtt, 600_000);
     // The server read its clock about halfway through the round trip.
     this.offsetMs = serverMs - (sent + rtt / 2);
+    this.synced = true;
   }
 }

@@ -42,7 +42,7 @@ export class FakeApi {
     const route = `${init?.method ?? "GET"} ${path}`;
     this.calls.push(route);
     if (path === "/api/screen/device/stream") return this.streamAnswer();
-    if (path === "/api/screen/device/heartbeat") {
+    if (path === "/api/screen/device/heartbeat" && !this.routes.has(route)) {
       return json(200, { server_time: new Date(Date.now()).toISOString() });
     }
     const handler = this.routes.get(route);

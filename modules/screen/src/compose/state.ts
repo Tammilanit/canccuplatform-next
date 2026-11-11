@@ -15,6 +15,8 @@ import { resolveWinner } from "../schedule/winner.js";
 import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
 import { buildRegions } from "./build.js";
+import { displayOf } from "./display.js";
+import type { Display } from "./display.js";
 import { themeLayouts } from "./layouts.js";
 import type { HeaderMode, HubQrMode } from "./parts.js";
 import type { Sources, ThemeNow } from "./sources.js";
@@ -41,6 +43,8 @@ export interface ZoneRow {
   sound: { enabled: boolean; device_id: string | null };
   epoch: string;
 }
+
+export const NO_DISPLAY: Display = { motion: "moderate", drift: false };
 
 /** Until theming serves a revision (or the pinned one, #265), the platform defaults. */
 export const NO_THEME: ThemeNow = {
@@ -109,6 +113,7 @@ export interface ZoneComposed {
   /** Landscape and portrait screens of a zone differ only in the layout and its regions. */
   views: Record<Orientation, ReturnType<typeof buildRegions>>;
   ticker: ZoneFacts["ticker"] & { appearance: string };
+  display: Display;
 }
 
 /** Everything of a zone's state that is the same for all its screens, in both orientations. */
@@ -162,6 +167,7 @@ export async function composeZone(
     });
   const setting = deps.settings.get("ticker_appearance", "default");
   const appearance = typeof setting === "string" ? setting : "default";
+  const display = displayOf(theme?.tokens, agenda, deps.settings.get("burn_in_drift", false));
   return {
     fingerprint: zoneFingerprint({
       zone: read.zone,
@@ -169,12 +175,14 @@ export async function composeZone(
       theme: { revision: theme?.revision ?? 0, layouts: theme?.layouts ?? [] },
       facts,
       tickerAppearance: appearance,
+      display,
     }),
     zone: read.zone,
     theme: theme ?? NO_THEME,
     eventName,
     views: { landscape: build(false), portrait: build(true) },
     ticker: { ...read.ticker, appearance },
+    display,
   };
 }
 
@@ -184,6 +192,8 @@ export interface FingerprintInput {
   theme: { revision: number; layouts: unknown[] };
   facts: ZoneFacts;
   tickerAppearance?: string;
+  /** Holds the `burn_in_drift` setting, which no other input carries. */
+  display?: Display;
 }
 
 /**
@@ -199,6 +209,7 @@ export function zoneFingerprint(input: FingerprintInput): string {
     theme: input.theme,
     facts: { ...input.facts, now: null },
     ticker: input.tickerAppearance ?? "default",
+    display: input.display ?? NO_DISPLAY,
   };
   return createHash("sha256").update(JSON.stringify(stable)).digest("base64url");
 }

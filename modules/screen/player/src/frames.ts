@@ -8,8 +8,7 @@ import { qrSvg } from "./qr.js";
 
 export const PLATFORM_MARK = "Canccu";
 
-export type FrameKind =
-  "pairing" | "unassigned" | "refused" | "archived" | "moved" | "unknown" | "starting";
+export type FrameKind = "pairing" | "unassigned" | "refused" | "archived" | "moved" | "unknown";
 
 export interface FrameText {
   /** The event's name, when the page knows it. */
