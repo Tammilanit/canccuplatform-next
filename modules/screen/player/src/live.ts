@@ -88,6 +88,12 @@ export class Live {
   /** Take a state: the first one starts the stream and the heartbeat. */
   play(state: ScreenState): void {
     this.state = state;
+    // Until a heartbeat is answered, the state's own time is the best guess at the server's clock
+    // (contracts/screen.md, Motion and burn-in drift).
+    const stateMs = Date.parse(state.time);
+    if (!this.heartbeat.synced && !Number.isNaN(stateMs)) {
+      this.heartbeat.offsetMs = stateMs - this.host.now();
+    }
     this.setTheme(state.theme);
     if (this.running) return;
     this.running = true;

@@ -5,7 +5,14 @@
  */
 import type { TenantContext } from "@canccu/kit";
 import type { DeviceRow } from "../db.js";
-import { NO_THEME, composeZone, isPortrait, placement, themeView } from "../compose/state.js";
+import {
+  NO_DISPLAY,
+  NO_THEME,
+  composeZone,
+  isPortrait,
+  placement,
+  themeView,
+} from "../compose/state.js";
 import type { ComposeDeps, ZoneComposed } from "../compose/state.js";
 import { diffZone } from "./diff.js";
 import type { Orientation, ZoneRecord } from "./store.js";
@@ -23,6 +30,7 @@ function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
     theme: themeView(composed.theme),
     ticker: composed.ticker,
     sound: { enabled: composed.zone.sound.enabled, device_id: composed.zone.sound.device_id },
+    display: composed.display,
     views: { landscape: view("landscape"), portrait: view("portrait") },
   };
 }
@@ -117,6 +125,7 @@ export function assemble(
     },
     prefetch: [],
     offline: { marker_after_seconds: 10 },
+    display: record?.display ?? NO_DISPLAY,
   };
 }
 

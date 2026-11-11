@@ -7,6 +7,7 @@
 import { tenantKey } from "@canccu/kit";
 import type { Valkey } from "iovalkey";
 import type { RegionView } from "../compose/build.js";
+import type { Display } from "../compose/display.js";
 
 export type Orientation = "landscape" | "portrait";
 export const ORIENTATIONS: readonly Orientation[] = ["landscape", "portrait"];
@@ -27,6 +28,8 @@ export interface ZoneRecord {
   theme: Record<string, unknown>;
   ticker: Record<string, unknown>;
   sound: { enabled: boolean; device_id: string | null };
+  /** Absent in a record stored before it was added: screens then get the defaults. */
+  display?: Display;
   views: Record<Orientation, { layout: unknown; regions: RegionView[] }>;
 }
 

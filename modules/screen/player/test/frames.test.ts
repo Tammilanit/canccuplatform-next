@@ -14,8 +14,11 @@ function setup(api: FakeApi, hash = "") {
   return { player, nav };
 }
 
+/** The frame on screen, or `playing` while a zone's layout is drawn. */
 const shown = (): string | undefined =>
-  document.body.querySelector<HTMLElement>(".canccu-frame")?.dataset.frame;
+  document.body.querySelector(".canccu-layout") === null
+    ? document.body.querySelector<HTMLElement>(".canccu-frame")?.dataset.frame
+    : "playing";
 const text = (): string => document.body.textContent;
 const settle = async (ms = 0): Promise<void> => {
   await vi.advanceTimersByTimeAsync(ms);
@@ -205,7 +208,7 @@ describe("the device-state frames", () => {
     const { player, nav } = setup(api, "#transfer=abcdefghijklmnopqrstuvwxyz");
     await player.start();
     expect(nav.hashValue).toBe("");
-    expect(shown()).toBe("starting");
+    expect(shown()).toBe("playing");
 
     const working = new FakeApi().on("GET /api/screen/device/state", () =>
       json(200, screenState()),
@@ -227,8 +230,7 @@ describe("the device-state frames", () => {
     expect(text()).toContain("Connecting…");
     up = true;
     await settle(2000);
-    expect(shown()).toBe("starting");
-    expect(text()).toContain("Main hall");
+    expect(shown()).toBe("playing");
   });
 
   it("is never blank while the first read hangs, and retries once it times out", async () => {
@@ -245,7 +247,7 @@ describe("the device-state frames", () => {
     expect(text()).toContain("Trying again in");
     up = true;
     await settle(2000);
-    expect(shown()).toBe("starting");
+    expect(shown()).toBe("playing");
   });
 });
 
@@ -269,7 +271,7 @@ describe("while playing", () => {
     await settle(1);
     expect(document.body.classList.contains("canccu-is-offline")).toBe(true);
     expect(document.querySelector(".canccu-offline-mark")?.textContent).toBe("offline since 18:40");
-    expect(shown()).toBe("starting");
+    expect(shown()).toBe("playing");
     api.streamAnswer = () => api.openStream();
     await settle(30_000);
     expect(document.body.classList.contains("canccu-is-offline")).toBe(false);
@@ -309,6 +311,55 @@ describe("while playing", () => {
     expect(shown()).toBe("moved");
     await settle(MOVE_MS);
     expect(nav.went).toEqual(["https://next.test/screen/"]);
+  });
+
+  it("draws the zone's layout and keeps it while pushes change what it shows", async () => {
+    const ticker = (text: string) => ({
+      id: "ticker",
+      role: "ticker",
+      area: { column: 1, row: 1, columns: 1, rows: 1 },
+      layer: 0,
+      rotation: "sequence",
+      order: [0],
+      cycle_started_at: "2026-01-01T00:00:00Z",
+      idle: "logo",
+      idle_view: null,
+      widgets: [
+        {
+          widget: "ticker",
+          dwell_seconds: 15,
+          view: { text, qr: null, stale: false, empty: false },
+        },
+      ],
+      claim: null,
+    });
+    const playing = screenState({
+      layout: { id: "pulse", aspect: "16:9", grid: { columns: 1, rows: 1 } },
+      regions: [ticker("Hello")],
+    });
+    const api = new FakeApi().on("GET /api/screen/device/state", () => json(200, playing));
+    const layout = () => document.body.querySelector(".canccu-layout");
+    const { player } = setup(api);
+    await player.start();
+    await settle();
+    const first = layout();
+    expect(first?.textContent).toBe("Hello");
+    api.send("widget", { state_version: 4, region_id: "ticker", index: 0, view: { text: "Bye" } });
+    await settle(2000);
+    expect(layout()).toBe(first);
+    expect(first?.textContent).toBe("Bye");
+  });
+
+  it("takes the server's time from the state until a heartbeat answers", async () => {
+    const api = new FakeApi()
+      .on("GET /api/screen/device/state", () =>
+        json(200, screenState({ time: new Date(T0 + 3_600_000).toISOString() })),
+      )
+      .on("POST /api/screen/device/heartbeat", () => problem(503, "unavailable"));
+    const { player } = setup(api);
+    await player.start();
+    await settle();
+    expect(player.live.heartbeat.serverNow()).toBe(T0 + 3_600_000);
   });
 
   it("runs the identify and reload commands", async () => {

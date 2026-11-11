@@ -13,6 +13,8 @@ import type { AgendaItem, AgendaNow, VenueInfo } from "./widgets.js";
 
 export interface ThemeNow {
   revision: number;
+  /** Complete, defaults filled in; only `motion` is read here (the display). */
+  tokens?: { motion?: unknown };
   tokens_css_url: string;
   css_url: string | null;
   logo_url: string | null;

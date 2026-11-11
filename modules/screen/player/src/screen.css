@@ -1,0 +1,277 @@
+/*
+ * The Pulse on the screen (plan #109, S7, S11): the layout letterboxed to its aspect, its grid at
+ * the screen's size, and type in `cqmin` of the layout, so a widget reads the same at 1080p and
+ * 4K, landscape and portrait, from 20 m. Colours, fonts and sizes are the theme's custom
+ * properties with the platform's defaults; all of it sits in `canccu-base`, below the theme's layer.
+ */
+@layer canccu-base {
+  .canccu-layout {
+    --canccu-layout-ratio: 1.7778;
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    box-sizing: border-box;
+    width: min(100vw, calc(100vh * var(--canccu-layout-ratio)));
+    height: min(100vh, calc(100vw / var(--canccu-layout-ratio)));
+    display: grid;
+    gap: var(--canccu-gap, 1rem);
+    padding: var(--canccu-safe-inset, 48px);
+    container-type: size;
+    overflow: hidden;
+    /* Burn-in drift: a unit vector from the player, a quarter of the safe inset long. */
+    transform: translate(
+      calc(var(--canccu-safe-inset, 48px) * 0.25 * var(--canccu-drift-x, 0)),
+      calc(var(--canccu-safe-inset, 48px) * 0.25 * var(--canccu-drift-y, 0))
+    );
+  }
+
+  .canccu-layout[data-motion="moderate"],
+  .canccu-layout[data-motion="calm"] {
+    transition: transform 4s ease-in-out;
+  }
+
+  .canccu-region {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .canccu-region > .canccu-widget {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1cqmin;
+    padding: 2cqmin 2.4cqmin;
+    overflow: hidden;
+    border-radius: var(--canccu-radius, 0.5rem);
+    background: var(--canccu-color-surface, #1f2937);
+    color: var(--canccu-color-text, #f3f4f6);
+    font-family: var(--canccu-font-body, system-ui, sans-serif);
+    font-size: 3cqmin;
+    line-height: 1.25;
+  }
+
+  /* Two slots, load then fade: `moderate` also rises a little, `calm` only fades, slowly. */
+  .canccu-layout[data-motion="moderate"] .canccu-region > .canccu-widget {
+    transition:
+      opacity 600ms ease,
+      transform 600ms ease;
+  }
+
+  .canccu-layout[data-motion="calm"] .canccu-region > .canccu-widget {
+    transition: opacity 1500ms ease;
+  }
+
+  .canccu-region > .canccu-slot--in,
+  .canccu-region > .canccu-slot--out {
+    opacity: 0;
+  }
+
+  .canccu-layout[data-motion="moderate"] .canccu-region > .canccu-slot--in {
+    transform: translateY(1.5cqmin);
+  }
+
+  .canccu-widget.canccu-is-stale {
+    opacity: 0.7;
+  }
+
+  .canccu-widget p,
+  .canccu-widget figure,
+  .canccu-widget ul,
+  .canccu-widget ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .canccu-widget__title {
+    font-size: 2.8cqmin;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--canccu-color-primary, #60a5fa);
+  }
+
+  .canccu-widget__big {
+    font-family: var(--canccu-font-display, var(--canccu-font-heading, system-ui, sans-serif));
+    font-size: 9cqmin;
+    font-weight: 700;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .canccu-widget__meta,
+  .canccu-widget__caption {
+    font-size: 2.6cqmin;
+    color: var(--canccu-color-text-muted, #9ca3af);
+  }
+
+  .canccu-widget__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4cqmin;
+    min-height: 0;
+  }
+
+  .canccu-widget__row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    column-gap: 1.6cqmin;
+  }
+
+  .canccu-widget__state {
+    font-size: 2.6cqmin;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--canccu-color-accent, #f472b6);
+  }
+
+  .canccu-widget__row--next .canccu-widget__state {
+    color: var(--canccu-color-text-muted, #9ca3af);
+  }
+
+  .canccu-widget__name {
+    font-size: 3.4cqmin;
+    font-weight: 700;
+  }
+
+  /* A row's details go under its name. */
+  .canccu-widget__row > .canccu-widget__meta {
+    grid-column: 2;
+  }
+
+  .canccu-widget__delay {
+    font-size: 2.6cqmin;
+    font-weight: 700;
+    color: var(--canccu-color-status-degraded, #fbbf24);
+  }
+
+  /* The view-model has the delay on every row; it shows only on a delayed one. */
+  .canccu-widget__delay:not(.canccu-widget__delay--delayed) {
+    display: none;
+  }
+
+  .canccu-widget__qr {
+    display: flex;
+    align-items: center;
+    gap: 1.6cqmin;
+  }
+
+  .canccu-widget__code {
+    height: 16cqmin;
+    aspect-ratio: 1;
+    border-radius: var(--canccu-radius, 0.5rem);
+    background: #fff;
+  }
+
+  .canccu-widget--qr .canccu-widget__qr,
+  .canccu-widget--checkin_qr .canccu-widget__qr {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .canccu-widget--qr .canccu-widget__code,
+  .canccu-widget--checkin_qr .canccu-widget__code {
+    height: auto;
+    width: min(100%, 22cqmin);
+  }
+
+  .canccu-widget__image {
+    min-height: 0;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .canccu-widget--photo .canccu-widget__image {
+    flex: 1;
+  }
+
+  .canccu-widget__level--urgent .canccu-widget__title {
+    color: var(--canccu-color-status-degraded, #fbbf24);
+  }
+
+  .canccu-widget__level--emergency .canccu-widget__title {
+    color: var(--canccu-color-status-down, #f87171);
+  }
+
+  .canccu-region[data-role="hero"] .canccu-widget__name {
+    font-size: 4.4cqmin;
+  }
+
+  /* The idle hero's countdown is the screen's headline (contracts/screen.md, idle: next). */
+  .canccu-region[data-role="hero"] .canccu-widget--countdown {
+    align-items: center;
+    text-align: center;
+  }
+
+  .canccu-region[data-role="hero"] .canccu-widget--countdown .canccu-widget__title {
+    font-size: 4cqmin;
+  }
+
+  .canccu-region[data-role="hero"] .canccu-widget--countdown .canccu-widget__big {
+    font-size: 16cqmin;
+  }
+
+  /* The header: logo and clock on the background, no card. */
+  .canccu-region[data-role="header"] > .canccu-widget,
+  .canccu-region > .canccu-widget--logo {
+    background: none;
+    padding: 0 1cqmin;
+  }
+
+  .canccu-region[data-role="header"] .canccu-widget--clock {
+    flex-flow: row wrap;
+    justify-content: flex-end;
+    align-content: center;
+    align-items: baseline;
+    gap: 2cqmin;
+  }
+
+  .canccu-region[data-role="header"] .canccu-widget__big {
+    font-size: 5cqmin;
+  }
+
+  .canccu-region[data-role="header"] .canccu-widget--logo {
+    align-items: flex-start;
+  }
+
+  .canccu-widget--logo .canccu-widget__big {
+    font-size: 4cqmin;
+  }
+
+  /* The ticker: one calm line (L13) that fades between texts; a long text takes a second line. */
+  .canccu-region > .canccu-widget--ticker {
+    justify-content: center;
+    padding: 0 2.4cqmin;
+  }
+
+  .canccu-widget__line {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: 3.2cqmin;
+  }
+
+  .canccu-layout[data-ticker="high_contrast"] .canccu-widget--ticker {
+    background: #000;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .canccu-layout[data-ticker="minimal"] .canccu-widget--ticker {
+    background: none;
+    color: var(--canccu-color-text, #f3f4f6);
+  }
+
+  .canccu-layout[data-ticker="broadcast"] .canccu-widget--ticker {
+    background: var(--canccu-color-primary, #60a5fa);
+    color: var(--canccu-color-primary-text, #0f1115);
+    font-weight: 600;
+  }
+}

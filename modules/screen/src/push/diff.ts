@@ -34,7 +34,8 @@ const sameShell = (a: RegionView, b: RegionView): boolean => {
 
 /**
  * The messages for one orientation, or null when only a whole `state` will do: no state before,
- * a new zone epoch, name, event name or sound device (these are in the device's own part), or
+ * a new zone epoch, name, event name, sound device (these are in the device's own part) or display
+ * (the contract sends motion and drift as a `state`), or
  * another layout or set of regions. An orientation the change left as it was gets a `ticker`
  * message anyway, so its screens learn the new `state_version` and show no lag.
  */
@@ -48,7 +49,8 @@ export function diffZone(
     before === null ||
     !isDeepStrictEqual(before.zone, after.zone) ||
     before.eventName !== after.eventName ||
-    !isDeepStrictEqual(before.sound, after.sound)
+    !isDeepStrictEqual(before.sound, after.sound) ||
+    !isDeepStrictEqual(before.display, after.display)
   ) {
     return null;
   }

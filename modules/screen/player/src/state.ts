@@ -4,9 +4,42 @@
  * along for the renderer.
  */
 
+export interface Area {
+  column: number;
+  row: number;
+  columns: number;
+  rows: number;
+}
+
+export interface WidgetState {
+  widget: string;
+  template?: string | null;
+  dwell_seconds: number;
+  view: Record<string, unknown>;
+  [field: string]: unknown;
+}
+
 export interface Region {
   id: string;
-  widgets: { widget: string; view: unknown }[];
+  role: string | null;
+  area: Area;
+  layer: number;
+  rotation: string;
+  /** The widgets that take part in the rotation, in this cycle's order. */
+  order: number[];
+  cycle_started_at: string;
+  idle: string;
+  idle_view: { widget: string; view: Record<string, unknown> } | null;
+  widgets: WidgetState[];
+  /** Drawn by the claims slice (#307). */
+  claim: unknown;
+  [field: string]: unknown;
+}
+
+export interface Layout {
+  id: string;
+  aspect: string;
+  grid: { columns: number; rows: number };
   [field: string]: unknown;
 }
 
@@ -24,8 +57,10 @@ export interface ScreenState {
     logo_url: string | null;
     [field: string]: unknown;
   };
+  layout?: Layout | null;
   regions: Region[];
   ticker: unknown;
+  display?: { motion: string; drift: boolean };
   [field: string]: unknown;
 }
 
@@ -46,7 +81,7 @@ interface Patch {
   state_version?: number;
   region_id?: string;
   index?: number;
-  view?: unknown;
+  view?: Record<string, unknown>;
   region?: Region;
   ticker?: unknown;
   theme?: ScreenState["theme"];
@@ -67,7 +102,7 @@ export function applyPatch(state: ScreenState, event: string, data: Patch): Scre
     const widget = region?.widgets[index];
     if (region === undefined || widget === undefined) return null;
     const widgets = region.widgets.slice();
-    widgets[index] = { ...widget, view: data.view };
+    widgets[index] = { ...widget, view: data.view ?? {} };
     next.regions = state.regions.slice();
     next.regions[at] = { ...region, widgets };
     return next;

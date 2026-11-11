@@ -44,6 +44,7 @@ function record(over: Partial<ZoneRecord> = {}, regions?: RegionView[]): ZoneRec
     theme: { revision: 1, tokens_css_url: "/t.css", css_url: null, logo_url: null, templates: [] },
     ticker: { text: null, until: null, source: null, appearance: "default" },
     sound: { enabled: false, device_id: null },
+    display: { motion: "moderate", drift: false },
     views: {
       landscape: { layout: { id: "pulse" }, regions: rs },
       portrait: { layout: { id: "pulse_portrait" }, regions: rs },
@@ -61,6 +62,14 @@ describe("the push diff", () => {
       record({ zone: { key: "main", name: "Old name", epoch: "e1" } }),
       record({ eventName: "Old event" }),
       record({ sound: { enabled: true, device_id: "dv_1" } }),
+      // Motion and drift reach screens as a whole state (contracts/screen.md).
+      record({ display: { motion: "calm", drift: false } }),
+      record({ display: { motion: "moderate", drift: true } }),
+      // A record stored before `display` existed.
+      ((old: ZoneRecord) => {
+        delete old.display;
+        return old;
+      })(record()),
     ]) {
       expect(diffZone(before, after, "landscape", 2)).toBeNull();
     }

@@ -20,6 +20,7 @@ interface State {
   regions: Region[];
   sound: { enabled: boolean; sounded_claims: string[] };
   offline: { marker_after_seconds: number };
+  display: { motion: string; drift: boolean };
 }
 
 const NEXT = {
@@ -126,6 +127,35 @@ describe.skipIf(!DATABASE_URL)("the composed state", () => {
       },
     });
     expect((await state(token)).json<State>().layout?.id).toBe("pulse_portrait");
+  });
+
+  it("says how the screens move: the theme's motion, calm in quiet hours, drift from the setting", async () => {
+    const { id, token } = await pairDevice(h, "alpha.test", "Stage");
+    await assignMain(id);
+    expect((await state(token)).json<State>().display).toEqual({
+      motion: "moderate",
+      drift: false,
+    });
+    h.sources.theme = {
+      revision: 4,
+      tokens: { motion: "moderate" },
+      tokens_css_url: "/theming/a/t.css",
+      css_url: null,
+      logo_url: null,
+      layouts: [],
+      templates: [],
+    };
+    const quiet = { ...NEXT, id: "q1", kind: "quiet_hours", starts_at: "2026-01-01T11:00:00Z" };
+    h.sources.agenda = { current: [quiet], next: [NEXT] };
+    h.settings.alpha = { ...h.settings.alpha, burn_in_drift: true };
+    const before = (await state(token)).json<State>();
+    expect(before.display).toEqual({ motion: "calm", drift: true });
+    // The setting alone changes nothing else, so only the fingerprint can move the version.
+    h.settings.alpha = { ...h.settings.alpha, burn_in_drift: false };
+    const after = (await state(token)).json<State>();
+    expect(after.display).toEqual({ motion: "calm", drift: false });
+    expect(after.state_version).toBe(before.state_version + 1);
+    h.settings.alpha = {};
   });
 
   it("keeps a screen drawing when every source is down", async () => {

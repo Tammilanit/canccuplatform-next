@@ -57,11 +57,13 @@ def test_screen_declaration_matches_the_contract() -> None:
     assert screen["ticker_appearance"].choices == appearances
     assert screen["ticker_appearance"].default == "default"
     assert screen["ready_fallback_asset_id"].default == ""
+    assert (screen["burn_in_drift"].type, screen["burn_in_drift"].default) == ("boolean", False)
     assert set(screen) == set(bounded) | {
         "web_allowlist",
         "progress_bars",
         "ticker_appearance",
         "ready_fallback_asset_id",
+        "burn_in_drift",
     }
 
 
