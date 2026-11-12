@@ -7,11 +7,11 @@
   /* A claim in a region (an announcement in the rail) is framed in the primary colour. */
   .canccu-region > .canccu-widget.canccu-is-claim {
     border-color: var(--canccu-color-primary);
-    box-shadow: inset 0 0 0 0.3cqmin var(--canccu-color-primary);
+    box-shadow: inset 0 0 0 calc(0.3 * var(--canccu-u)) var(--canccu-color-primary);
   }
 
   .canccu-widget--announcement .canccu-widget__title {
-    font-size: 6.6cqmin;
+    font-size: calc(6.6 * var(--canccu-u));
     font-weight: 700;
     letter-spacing: 0;
     text-transform: none;
@@ -19,7 +19,7 @@
   }
 
   .canccu-widget--announcement .canccu-widget__body {
-    font-size: 4cqmin;
+    font-size: calc(4 * var(--canccu-u));
   }
 
   /* A takeover hides every region but itself and the overlay; the overlay is a lower-third band. */
@@ -31,19 +31,19 @@
   .canccu-region--_full > .canccu-widget {
     align-items: center;
     justify-content: center;
-    gap: 2.4cqmin;
+    gap: calc(2.4 * var(--canccu-u));
     text-align: center;
-    font-size: 5cqmin;
+    font-size: calc(5 * var(--canccu-u));
   }
 
   .canccu-region--_full .canccu-widget__big,
   .canccu-region--_full .canccu-widget--announcement .canccu-widget__title {
-    font-size: 12.4cqmin;
+    font-size: calc(12.4 * var(--canccu-u));
     line-height: 1.05;
   }
 
   .canccu-region--_full .canccu-widget--announcement .canccu-widget__body {
-    font-size: 5cqmin;
+    font-size: calc(5 * var(--canccu-u));
   }
 
   /* An emergency (sheet 9): white on a fixed red, the same in every theme a theme leaves alone. */
@@ -65,9 +65,9 @@
   .canccu-region--_full .canccu-widget__level--emergency::before {
     content: "";
     display: block;
-    width: 12cqmin;
-    height: 12cqmin;
-    margin: 0 auto 2cqmin;
+    width: calc(12 * var(--canccu-u));
+    height: calc(12 * var(--canccu-u));
+    margin: 0 auto calc(2 * var(--canccu-u));
     background: #fff;
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01'/%3E%3C/svg%3E")
       center / contain no-repeat;
@@ -88,8 +88,8 @@
     flex-flow: row wrap;
     align-content: center;
     align-items: baseline;
-    column-gap: 2cqmin;
-    row-gap: 0.6cqmin;
+    column-gap: calc(2 * var(--canccu-u));
+    row-gap: calc(0.6 * var(--canccu-u));
     border-color: var(--canccu-color-primary);
     background: var(--canccu-color-primary);
     color: var(--canccu-color-primary-text);
@@ -110,12 +110,12 @@
   .canccu-region--_overlay .canccu-widget__big,
   .canccu-region--_overlay .canccu-widget__meta,
   .canccu-region--_overlay .canccu-widget__name {
-    font-size: 4.4cqmin;
+    font-size: calc(4.4 * var(--canccu-u));
   }
 
   .canccu-region--_overlay .canccu-widget__body {
     flex-direction: row;
-    gap: 2cqmin;
+    gap: calc(2 * var(--canccu-u));
     color: inherit;
   }
 
@@ -124,7 +124,7 @@
     display: grid;
     grid-template-columns: auto 1fr;
     align-content: center;
-    column-gap: 4cqmin;
+    column-gap: calc(4 * var(--canccu-u));
   }
 
   .canccu-widget--hot_game > * {
@@ -134,18 +134,18 @@
   .canccu-widget--hot_game > .canccu-widget__image {
     grid-column: 1;
     grid-row: 1 / span 4;
-    width: 24cqmin;
-    max-height: 32cqmin;
+    width: calc(24 * var(--canccu-u));
+    max-height: calc(32 * var(--canccu-u));
     object-fit: cover;
     border-radius: var(--canccu-card-radius);
   }
 
   .canccu-widget--hot_game > .canccu-widget__big {
-    font-size: 9.3cqmin;
+    font-size: calc(9.3 * var(--canccu-u));
   }
 
   .canccu-widget--hot_game .canccu-widget__meta {
-    font-size: 4.4cqmin;
+    font-size: calc(4.4 * var(--canccu-u));
   }
 
   /* A photo fills its card (mockup 03), its caption on a dark band across the bottom. */
@@ -169,7 +169,7 @@
   .canccu-widget--photo .canccu-widget__caption {
     position: absolute;
     inset: auto 0 0;
-    padding: 2cqmin 2.8cqmin;
+    padding: calc(2 * var(--canccu-u)) calc(2.8 * var(--canccu-u));
     background: rgb(0 0 0 / 72%);
     color: #fff;
   }

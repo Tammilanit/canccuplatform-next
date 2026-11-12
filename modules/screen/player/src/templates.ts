@@ -41,7 +41,7 @@ const OWN_QR: TreeNode[] = [
 // The tree has no `{{.}}` (theming's names are `a.b` only), so no template can show a list of plain
 // strings: the `names` and `voice_channels` lists stay off the defaults.
 // A row carries both its end and its start: the look shows the end on a now row and the start on a
-// next row (screen.css), since a template cannot branch on a field's value.
+// next or delayed row (widgets.css), since a template cannot branch on a field's value.
 const AGENDA_ROW = el(
   "li",
   null,

@@ -8,6 +8,18 @@
 import { call, isDeviceAnswer } from "./api.js";
 import type { Answer, Fetch } from "./api.js";
 import { frame, keepSafetyLast, minutesLeft, safetyCode, setClock, setFoot } from "./frames.js";
+import {
+  archived,
+  CONNECTING,
+  MOVED,
+  MOVED_HELP,
+  NO_VENUE,
+  PARKED,
+  REFUSED,
+  SETUP,
+  TOO_MANY,
+  UNREACHABLE,
+} from "./frame-words.js";
 import type { FrameKind, FrameText } from "./frames.js";
 import { Live, STATE_PATH } from "./live.js";
 import type { Saved } from "./offline.js";
@@ -368,49 +380,3 @@ export class Player {
     }
   }
 }
-
-const SETUP = "Screen setup";
-// The words of sheet 9 (docs/design): a lead line for everyone, then help for the crew.
-const CONNECTING = {
-  kicker: "Starting",
-  title: "Connecting…",
-  lines: ["This screen is waiting for the event's server."],
-};
-const UNREACHABLE = {
-  title: "No connection yet",
-  lines: ["This screen starts when it reaches the event.", "Crew: check the cable or the Wi-Fi."],
-};
-const REFUSED = {
-  title: "Not at the venue",
-  lines: [
-    "This screen plays only on the venue's network.",
-    "Crew: check the venue uplink, or ask an organiser about the emergency switch (48 h max).",
-  ],
-  foot: "Trying again every 30 s · nothing is shown while refused",
-};
-const archived = (event: string | null | undefined) => ({
-  title: "This event has ended",
-  lines: [
-    event ? `Thank you for coming to ${event}.` : "Thank you for coming.",
-    "Crew: the platform admin moves screens between events.",
-  ],
-});
-const MOVED = { title: "This screen has moved" };
-const MOVED_HELP = "Crew: update the kiosk's start address when convenient.";
-const PARKED = {
-  title: "Not assigned to an event",
-  lines: [
-    "This screen is paired, but no event holds it right now.",
-    "Crew: the platform admin moves screens between events.",
-  ],
-};
-const NO_VENUE = {
-  title: "This event has no venue yet",
-  lines: ["Screens pair only once the event has a venue.", "Ask an organiser to set it."],
-  foot: "Trying again every 30 s",
-};
-const TOO_MANY = {
-  title: "Too many open pairing codes",
-  lines: ["Use an open code, or wait until one expires."],
-  foot: "Trying again every 30 s",
-};

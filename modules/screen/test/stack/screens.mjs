@@ -36,7 +36,8 @@ export function planned() {
       for (const view of UNTHEMED) out.push(nameOf(theme, view, size));
     }
   }
-  for (const size of HD) for (const view of ["photo", ...CLAIMS]) out.push(nameOf("default", view, size));
+  for (const size of HD)
+    for (const view of ["photo", ...CLAIMS]) out.push(nameOf("default", view, size));
   out.push(nameOf("default", "entrance", HD[1]));
   return out;
 }
@@ -89,7 +90,10 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
     await page.screenshot({ path: `${out}/${name}.png` });
     const problems = judgePage(await page.evaluate(collectSamples));
     if (problems.length === 0) ok(`${name}.png`);
-    else fail(`${name}: ${problems.length} readability problems\n      ${problems.slice(0, 8).join("\n      ")}`);
+    else
+      fail(
+        `${name}: ${problems.length} readability problems\n      ${problems.slice(0, 8).join("\n      ")}`,
+      );
   };
   const attempt = async (name, run) => {
     try {
@@ -116,13 +120,20 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
           await context.close();
         });
         await attempt(nameOf(theme, "archived", size), () =>
-          handed(theme, "archived", size, (s) => ({ ...s, tenant: { ...s.tenant, status: "archived" } })),
+          handed(theme, "archived", size, (s) => ({
+            ...s,
+            tenant: { ...s.tenant, status: "archived" },
+          })),
         );
-        if (theme === "default") for (const view of UNTHEMED) await attempt(nameOf(theme, view, size), () => untouched(view, size));
+        if (theme === "default")
+          for (const view of UNTHEMED)
+            await attempt(nameOf(theme, view, size), () => untouched(view, size));
       }
     }
     for (const size of HD) {
-      await attempt(nameOf("default", "photo", size), () => handed("default", "photo", size, withPhoto));
+      await attempt(nameOf("default", "photo", size), () =>
+        handed("default", "photo", size, withPhoto),
+      );
       for (const view of CLAIMS) {
         const [role, placed] = CLAIM_OF[view];
         await attempt(nameOf("default", view, size), () =>
@@ -148,18 +159,23 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       const { context, page } = await open(size, main.cookie);
       await page.goto(at("/screen/"));
       await layout(page, size);
+      await railShowsAgenda(page);
       await settle(page);
       await shot(nameOf(theme, "pulse", size), page);
       expect(
-        await demo.call("POST", `/api/screen/devices/${main.id}/commands`, { body: { command: "identify" } }),
+        await demo.call("POST", `/api/screen/devices/${main.id}/commands`, {
+          body: { command: "identify" },
+        }),
         202,
         "the identify command",
       );
       await page.waitForSelector(".canccu-identify");
       await shot(nameOf(theme, "identify", size), page);
+      // The uplink drops: a stream that cannot connect. Going offline in the browser would leave
+      // the stream already open connected, and the page would never miss it.
+      await page.route("**/api/screen/device/stream", (route) => route.abort());
       await page.reload();
       await layout(page, size);
-      await context.setOffline(true);
       await page.waitForSelector(".canccu-offline-marker", { timeout: 30_000 });
       await settle(page);
       await shot(nameOf(theme, "offline", size), page);
@@ -169,6 +185,12 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
     /** The page handed a changed state, with no stream to replace it before the shot. */
     async function handed(theme, view, size, change) {
       const { context, page } = await open(size, main.cookie);
+      // The server picks the layout of the orientation a heartbeat reports, so the page first plays
+      // as it is, and the state handed to it then has its layout.
+      if (view !== "archived") {
+        await page.goto(at("/screen/"));
+        await layout(page, size);
+      }
       await page.route("**/api/screen/device/stream", (route) => route.abort());
       await page.route("**/api/screen/device/state", async (route) => {
         const answer = await route.fetch();
@@ -177,6 +199,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await page.goto(at("/screen/"));
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
       else await layout(page, size);
+      if (!["archived", "claim-rail", "claim-takeover"].includes(view)) await railShowsAgenda(page);
       await settle(page);
       await shot(nameOf(theme, view, size), page);
       await context.close();
@@ -189,6 +212,14 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
         moved: [409, { error: { code: "device_moved", message: "moved" } }],
         unreachable: [503, { error: { code: "unavailable", message: "down" } }],
       };
+      // The loopback holds 3 open pairing codes at most (contracts/screen.md, Pairing), and each
+      // pairing frame leaves one.
+      if (view === "pairing")
+        expect(
+          await demo.call("DELETE", "/api/screen/pairing"),
+          204,
+          "clearing open pairing codes",
+        );
       const { context, page } = await open(size, view === "pairing" ? null : main.cookie);
       if (view in answers) {
         const [status, json] = answers[view];
@@ -198,7 +229,11 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
         );
       }
       await page.goto(at(view === "check" ? "/screen/check" : "/screen/"));
-      const ready = { pairing: ".canccu-pairing-code", check: ".canccu-check__row", unreachable: ".canccu-frame__foot:not(:empty)" };
+      const ready = {
+        pairing: ".canccu-pairing-code",
+        check: ".canccu-check__row",
+        unreachable: ".canccu-frame__foot:not(:empty)",
+      };
       await page.waitForSelector(ready[view] ?? `.canccu-frame--${view}`);
       await page.waitForTimeout(300);
       await shot(nameOf("default", view, size), page);
@@ -239,6 +274,16 @@ async function layout(page, [width, height]) {
     height > width,
     { timeout: 30_000 },
   );
+}
+
+/**
+ * The rail turns between the run of show and a countdown every 15 s (BUILT_IN_LAYOUTS); the shot
+ * waits for the run of show, which mockup 02 draws there, so the hero's countdown is not shown twice.
+ */
+async function railShowsAgenda(page) {
+  await page.waitForSelector(".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active", {
+    timeout: 40_000,
+  });
 }
 
 /** Fonts and images loaded, the entry fade done. */

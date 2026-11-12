@@ -1,8 +1,8 @@
-{{! Field names are placeholders until the screen contract names the ticker widget's fields. }}
-{{! The items render twice so the scroll loops without a gap; the copy is hidden from screen readers. }}
+{{! The ticker's line (contracts/screen.md, ticker: text). It renders twice so the scroll loops without
+    a gap; the copy is hidden from screen readers. }}
 <div class="t-ticker">
   <div class="t-ticker__track">
-    <span class="t-ticker__run">{{#items}}<span class="t-ticker__item">{{text}}</span>{{/items}}</span>
-    <span class="t-ticker__run" aria-hidden="true">{{#items}}<span class="t-ticker__item">{{text}}</span>{{/items}}</span>
+    <span class="t-ticker__run"><span class="t-ticker__item">{{text}}</span></span>
+    <span class="t-ticker__run" aria-hidden="true"><span class="t-ticker__item">{{text}}</span></span>
   </div>
 </div>

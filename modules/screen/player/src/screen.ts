@@ -8,6 +8,7 @@ import { claimEnd, claimOf, claimShown } from "./claims.js";
 import type { ClaimState } from "./claims.js";
 import { driftAt, effectiveMotion, FADE_MS } from "./display.js";
 import type { Motion } from "./display.js";
+import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
 import type { Layout, Region, ScreenState } from "./state.js";
 import { whenReady } from "./media.js";
@@ -57,19 +58,6 @@ interface Drawn {
   next: { index: number | null; until: number } | null;
   /** The hero's rotation marks while it rotates (mockup 02): a bar and a dot per widget. */
   marks: HTMLElement | null;
-}
-
-function rotationMarks(count: number): HTMLElement {
-  const marks = document.createElement("div");
-  marks.className = "canccu-rotation";
-  const part = (cls: string): HTMLElement => {
-    const span = document.createElement("span");
-    span.className = cls;
-    return span;
-  };
-  marks.append(part("canccu-rotation__bar"));
-  for (let i = 0; i < count; i++) marks.append(part("canccu-rotation__dot"));
-  return marks;
 }
 
 const grid = (n: number): string => `repeat(${String(n)}, minmax(0, 1fr))`;
@@ -195,7 +183,15 @@ export class Screen {
     for (const drawn of this.regions.values()) {
       const shown = this.choose(drawn, state, now, takeover);
       this.show(drawn, shown, motion);
-      this.marks(drawn, shown, state, now);
+      const widget = typeof shown === "object" && shown !== null && !shown.key.startsWith("claim:");
+      drawn.marks = syncMarks(
+        drawn.marks,
+        drawn.el,
+        drawn.state,
+        widget,
+        state.zone?.key ?? "",
+        now,
+      );
     }
     fillCountdowns(this.root, now);
     if (state.display?.drift === true) {
@@ -344,42 +340,6 @@ export class Screen {
     const el = drawWidget(shown.type, shown.template, shown.view, templates, media);
     if (shown.key.startsWith("claim:")) el.classList.add("canccu-is-claim");
     return el;
-  }
-
-  /**
-   * The hero's rotation marks: a bar through the shown widget's time and a dot per widget, the
-   * shown one active. Only while its rotation shows more than one thing, and not over a claim.
-   */
-  private marks(
-    drawn: Drawn,
-    shown: Shown | "collapse" | null,
-    state: ScreenState,
-    now: number,
-  ): void {
-    const r = drawn.state;
-    const widget = typeof shown === "object" && shown !== null && !shown.key.startsWith("claim:");
-    const at =
-      widget && r.role === "hero" && r.order.length > 1
-        ? shownAt(r, state.zone?.key ?? "", now)
-        : null;
-    if (at === null || at.index === null) {
-      drawn.marks?.remove();
-      drawn.marks = null;
-      return;
-    }
-    if (drawn.marks?.childElementCount !== r.order.length + 1) {
-      drawn.marks?.remove();
-      drawn.marks = rotationMarks(r.order.length);
-      drawn.el.append(drawn.marks);
-    }
-    const dwellMs = (r.widgets[at.index]?.dwell_seconds ?? 0) * 1000;
-    const progress = dwellMs > 0 ? 1 - (at.until - now) / dwellMs : 0;
-    drawn.marks.style.setProperty("--canccu-progress", String(Math.round(progress * 1000) / 1000));
-    // The dots follow the place order, so a shuffled cycle still lights the widget it shows.
-    const plain = [...r.order].sort((x, y) => x - y);
-    drawn.marks.querySelectorAll(".canccu-rotation__dot").forEach((dot, i) => {
-      dot.classList.toggle("canccu-is-active", plain[i] === at.index);
-    });
   }
 
   /**

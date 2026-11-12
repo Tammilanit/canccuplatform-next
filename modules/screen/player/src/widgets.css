@@ -1,0 +1,370 @@
+/*
+ * Each widget's own look in the Pulse's built-in look (#375: mockups 02–04 of the step 3 brief,
+ * sheet 9 of docs/design): the header, the hero, the run of show, the venue card, the QRs and the
+ * ticker. On screen.css's frame, type scale and unit (`--canccu-u`), and in `canccu-base` like it,
+ * so a theme restyles any of it without `!important`.
+ */
+@layer canccu-base {
+  /*
+   * The header: logo, event and zone on the left, date and clock on the right; no card. A widget's
+   * own rules name the region too, to outweigh `.canccu-region > .canccu-widget` (screen.css).
+   */
+  .canccu-region[data-role="header"] > .canccu-widget,
+  .canccu-region > .canccu-widget--logo {
+    border: 0;
+    background: none;
+    padding: 0;
+  }
+
+  .canccu-region > .canccu-widget--logo {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: calc(1.8 * var(--canccu-u));
+    white-space: nowrap;
+  }
+
+  .canccu-widget--logo .canccu-widget__image {
+    height: calc(4.6 * var(--canccu-u));
+    max-width: calc(18 * var(--canccu-u));
+  }
+
+  .canccu-widget--logo .canccu-widget__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: calc(3.6 * var(--canccu-u));
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .canccu-widget--logo .canccu-widget__zone {
+    font-size: calc(3.4 * var(--canccu-u));
+    color: var(--canccu-color-text-muted);
+  }
+
+  /*
+   * On a portrait layout the header's half is narrow and two rows high: the zone goes under the
+   * event's name, beside the logo, so the name is not cut short.
+   */
+  @container (aspect-ratio < 1) {
+    .canccu-region[data-role="header"] > .canccu-widget--logo {
+      display: grid;
+      grid-template: "image name" auto "image zone" auto / auto minmax(0, 1fr);
+      align-content: center;
+      row-gap: calc(0.6 * var(--canccu-u));
+    }
+  }
+
+  /* Out of the query: a theme that makes its widgets containers would turn it off for these. */
+  .canccu-widget--logo > .canccu-widget__image {
+    grid-area: image;
+  }
+
+  .canccu-widget--logo > .canccu-widget__name {
+    grid-area: name;
+  }
+
+  .canccu-widget--logo > .canccu-widget__zone {
+    grid-area: zone;
+  }
+
+  /* An empty region's idle logo: the event, large, in the middle of its card. */
+  .canccu-region:not([data-role="header"]) > .canccu-widget--logo {
+    justify-content: center;
+  }
+
+  /* A wrapping row, so its one line of date and time centres in the band (`align-content`). */
+  .canccu-region > .canccu-widget--clock {
+    flex-flow: row wrap;
+    justify-content: flex-end;
+    align-content: center;
+    align-items: baseline;
+    gap: calc(1.8 * var(--canccu-u));
+  }
+
+  .canccu-widget--clock .canccu-widget__big {
+    font-family: var(--canccu-font-body);
+    font-size: calc(5.5 * var(--canccu-u));
+    font-weight: 500;
+  }
+
+  /*
+   * The hero: one large card on a glow of the theme's two colours (mockup 02). A countdown (the
+   * idle `next`) stacks its kicker, headline and end at the top and its count at the bottom.
+   */
+  .canccu-region[data-role="hero"] > .canccu-widget {
+    justify-content: flex-start;
+    gap: calc(1.6 * var(--canccu-u));
+    padding: calc(4 * var(--canccu-u)) calc(4.4 * var(--canccu-u));
+    background-image: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--canccu-color-primary) 16%, var(--canccu-color-surface)),
+      var(--canccu-color-surface) 55%,
+      color-mix(in srgb, var(--canccu-color-accent) 12%, var(--canccu-color-surface))
+    );
+  }
+
+  .canccu-region[data-role="hero"] .canccu-widget__meta {
+    font-size: calc(4 * var(--canccu-u));
+  }
+
+  .canccu-region[data-role="hero"] .canccu-widget--countdown .canccu-widget__bar {
+    margin-top: calc(1.4 * var(--canccu-u));
+  }
+
+  /* The hero's rotation marks (screen.ts): a bar through the shown widget's time and its dots. */
+  .canccu-rotation {
+    position: absolute;
+    z-index: 1;
+    inset: auto calc(4.4 * var(--canccu-u)) calc(2.4 * var(--canccu-u));
+    display: flex;
+    align-items: center;
+    gap: calc(1.2 * var(--canccu-u));
+  }
+
+  .canccu-rotation__bar {
+    flex: 1;
+    margin-right: calc(1.2 * var(--canccu-u));
+  }
+
+  .canccu-rotation__dot {
+    width: calc(1.2 * var(--canccu-u));
+    height: calc(1.2 * var(--canccu-u));
+    border-radius: 50%;
+    background: var(--canccu-color-border);
+  }
+
+  .canccu-rotation__dot.canccu-is-active {
+    background: var(--canccu-color-primary);
+  }
+
+  .canccu-region:has(> .canccu-rotation) > .canccu-widget {
+    padding-bottom: calc(7 * var(--canccu-u));
+  }
+
+  /*
+   * Now and next (mockup 02, sheet 9): a now row shows its name and end, a next row its start and
+   * place, each with its label; the rail shows two rows, the rest wait for the hub.
+   */
+  .canccu-region > .canccu-widget--agenda_now {
+    justify-content: flex-start;
+  }
+
+  .canccu-widget--agenda_now > .canccu-widget__title {
+    display: none;
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__row {
+    grid-template-areas: "state state" "name name" "until until" "where delay";
+    row-gap: calc(0.4 * var(--canccu-u));
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__row + .canccu-widget__row {
+    padding-top: calc(2 * var(--canccu-u));
+    border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__state {
+    grid-area: state;
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__name {
+    grid-area: name;
+    font-size: calc(6.2 * var(--canccu-u));
+  }
+
+  .canccu-widget__until,
+  .canccu-widget__starts {
+    grid-area: until;
+    font-size: calc(5.5 * var(--canccu-u));
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__where {
+    grid-area: where;
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__delay {
+    grid-area: delay;
+  }
+
+  /*
+   * A delayed row shows its new start beside the badge: agenda counts a delay from the planned
+   * start (contracts/agenda.md), so the delay is about when it starts, running or not.
+   */
+  .canccu-widget__row--now .canccu-widget__starts,
+  .canccu-widget__row--delayed .canccu-widget__until,
+  .canccu-widget__row--next .canccu-widget__until,
+  .canccu-widget__row--cancelled .canccu-widget__until {
+    display: none;
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__row--next,
+  .canccu-widget--agenda_now .canccu-widget__row--cancelled {
+    grid-template-areas: "state state" "until where" "name name";
+    grid-template-columns: auto 1fr;
+  }
+
+  /* A delayed row reads as a next one, its badge beside the label, so two rows fit the rail. */
+  .canccu-widget--agenda_now .canccu-widget__row--delayed {
+    grid-template-areas: "state delay" "until where" "name name";
+    grid-template-columns: auto 1fr;
+  }
+
+  .canccu-widget__row--next .canccu-widget__name,
+  .canccu-widget__row--delayed .canccu-widget__name,
+  .canccu-widget__row--cancelled .canccu-widget__name {
+    font-size: calc(3.4 * var(--canccu-u));
+    font-weight: 400;
+  }
+
+  .canccu-widget__row--next .canccu-widget__where,
+  .canccu-widget__row--delayed .canccu-widget__where,
+  .canccu-widget__row--cancelled .canccu-widget__where {
+    font-size: calc(5.5 * var(--canccu-u));
+    font-weight: 700;
+    color: var(--canccu-color-text);
+  }
+
+  .canccu-widget__row--next .canccu-widget__where::before,
+  .canccu-widget__row--delayed .canccu-widget__where::before {
+    content: "· ";
+  }
+
+  .canccu-widget__row--cancelled {
+    text-decoration: line-through;
+  }
+
+  .canccu-region[data-role="rail"] .canccu-widget__row:nth-child(n + 3) {
+    display: none;
+  }
+
+  .canccu-region[data-role="rail"] .canccu-widget__headline {
+    font-size: calc(6.2 * var(--canccu-u));
+  }
+
+  /* The venue card (mockup 02): the Wi-Fi beside the hub QR, the two parts drawn as one card. */
+  .canccu-widget--venue_info .canccu-widget__row {
+    grid-template-columns: 1fr;
+  }
+
+  .canccu-widget--venue_info .canccu-widget__name {
+    font-size: calc(5.6 * var(--canccu-u));
+  }
+
+  .canccu-region--venue_rail > .canccu-widget {
+    border-right: 0;
+    border-radius: var(--canccu-card-radius) 0 0 var(--canccu-card-radius);
+  }
+
+  .canccu-region--venue_rail-2 > .canccu-widget {
+    left: calc(-1 * var(--canccu-gap));
+    border-left: 0;
+    border-radius: 0 var(--canccu-card-radius) var(--canccu-card-radius) 0;
+  }
+
+  .canccu-widget--qr .canccu-widget__qr,
+  .canccu-widget--checkin_qr .canccu-widget__qr {
+    flex-direction: column;
+    gap: calc(1.2 * var(--canccu-u));
+    text-align: center;
+  }
+
+  .canccu-widget--qr,
+  .canccu-widget--checkin_qr {
+    align-items: center;
+  }
+
+  .canccu-widget--qr .canccu-widget__code,
+  .canccu-widget--checkin_qr .canccu-widget__code {
+    height: auto;
+    width: min(100%, calc(22 * var(--canccu-u)));
+  }
+
+  .canccu-widget--qr .canccu-widget__caption,
+  .canccu-widget--checkin_qr .canccu-widget__caption {
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .canccu-widget--checkin_qr .canccu-widget__bar {
+    width: min(100%, calc(22 * var(--canccu-u)));
+  }
+
+  /* A QR in the hero is the whole card (mockup 03's entrance): large, in the middle. */
+  .canccu-region[data-role="hero"] > .canccu-widget--qr,
+  .canccu-region[data-role="hero"] > .canccu-widget--checkin_qr {
+    justify-content: center;
+  }
+
+  /* A width of its own, not a share: the figure around the code takes its width from the code. */
+  .canccu-region[data-role="hero"] > .canccu-widget--qr .canccu-widget__code,
+  .canccu-region[data-role="hero"] > .canccu-widget--checkin_qr .canccu-widget__code,
+  .canccu-region[data-role="hero"] > .canccu-widget--checkin_qr .canccu-widget__bar {
+    width: calc(44 * var(--canccu-u));
+    max-width: 100%;
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--qr .canccu-widget__caption,
+  .canccu-region[data-role="hero"] > .canccu-widget--checkin_qr .canccu-widget__caption {
+    font-size: calc(4.4 * var(--canccu-u));
+  }
+
+  /* A check-in code past its time is dropped (widget.ts, shownView): no blank square in its place. */
+  .canccu-widget--checkin_qr.canccu-is-empty .canccu-widget__code,
+  .canccu-widget--checkin_qr.canccu-is-empty .canccu-widget__bar {
+    display: none;
+  }
+
+  /* The ticker: one calm line (L13) behind its label, fading between texts. */
+  .canccu-region > .canccu-widget--ticker {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: calc(2.4 * var(--canccu-u));
+    padding: 0 calc(2.4 * var(--canccu-u)) 0 0;
+  }
+
+  .canccu-widget--ticker .canccu-widget__label {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    padding: 0 calc(2.4 * var(--canccu-u));
+    background: var(--canccu-color-primary);
+    color: var(--canccu-color-primary-text);
+    font-size: calc(3.4 * var(--canccu-u));
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .canccu-widget__line {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: calc(4.4 * var(--canccu-u));
+  }
+
+  .canccu-layout[data-ticker="high_contrast"] .canccu-widget--ticker {
+    background: #000;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .canccu-layout[data-ticker="minimal"] .canccu-widget--ticker {
+    border: 0;
+    background: none;
+    color: var(--canccu-color-text);
+  }
+
+  .canccu-layout[data-ticker="broadcast"] .canccu-widget--ticker {
+    background: var(--canccu-color-primary);
+    color: var(--canccu-color-primary-text);
+    font-weight: 600;
+  }
+}

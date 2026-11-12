@@ -6,10 +6,13 @@
 import { expect } from "./client.mjs";
 
 const MIN = 60_000;
-/** Title, kind, start and end in minutes from the quarter hour before now, place, delay. */
+/**
+ * Title, kind, start and end in minutes from the quarter hour before now, place, delay. The delayed
+ * item has not started: a running item's delay moves only its end, so agenda shows no delay for it.
+ */
 const ITEMS = [
-  ["Dinner", "meal", -30, 45, "Café", 15],
-  ["Demo Game Cup, semis", "tournament", 60, 150, "Stage", 0],
+  ["Dinner", "meal", -30, 45, "Café", 0],
+  ["Demo Game Cup, semis", "tournament", 60, 150, "Stage", 15],
   ["Board games corner", "activity", 90, 180, "Café", 0],
   ["Demo Game Cup, grand final", "tournament", 180, 270, "Stage", 0],
 ];
@@ -20,10 +23,16 @@ export const TICKER =
 export async function seedScreens(demo, now = Date.now()) {
   const quarter = Math.floor(now / (15 * MIN)) * 15 * MIN;
   const at = (minutes) => new Date(quarter + minutes * MIN).toISOString();
-  const { items } = expect(await demo.call("GET", "/api/agenda/items"), 200, "the run of show").body;
+  const { items } = expect(
+    await demo.call("GET", "/api/agenda/items"),
+    200,
+    "the run of show",
+  ).body;
   for (const [title, kind, start, end, location, delay] of ITEMS) {
     let item = items.find((i) => i.title === title);
-    if (item === undefined) {
+    // Delayed once, when added: a rerun on the same stack would move it again.
+    const added = item === undefined;
+    if (added) {
       const body = { title, kind, starts_at: at(start), ends_at: at(end), location };
       item = expect(
         await demo.call("POST", "/api/agenda/items", { body: { ...body, visibility: "public" } }),
@@ -31,7 +40,7 @@ export async function seedScreens(demo, now = Date.now()) {
         `adding "${title}" to the run of show`,
       ).body;
     }
-    if (delay > 0 && item.delay_minutes === 0) {
+    if (delay > 0 && added) {
       expect(
         await demo.call("POST", `/api/agenda/items/${item.id}/delay`, {
           body: { revision: item.revision, minutes: delay },
@@ -69,7 +78,10 @@ export async function publishTheme(demo, theme) {
   const draft = await demo.call("GET", "/api/theming/draft");
   const query = draft.status === 200 ? `?draft_version=${draft.body.draft_version}` : "";
   const put = expect(
-    await demo.call("PUT", `/api/theming/draft/package${query}`, { body: zip, type: "application/zip" }),
+    await demo.call("PUT", `/api/theming/draft/package${query}`, {
+      body: zip,
+      type: "application/zip",
+    }),
     200,
     `the ${theme} package as the draft`,
   );
@@ -87,6 +99,12 @@ export async function publishTheme(demo, theme) {
  * Q4): the public reads answer a guest, with no session and no check-in.
  */
 export async function guestReads(demo) {
-  const paths = ["/api/agenda/now", "/api/screen/now?zone=main", "/api/theming/current", "/api/notify/topics"];
-  for (const path of paths) expect(await demo.call("GET", path, { cookie: "" }), 200, `a guest's ${path}`);
+  const paths = [
+    "/api/agenda/now",
+    "/api/screen/now?zone=main",
+    "/api/theming/current",
+    "/api/notify/topics",
+  ];
+  for (const path of paths)
+    expect(await demo.call("GET", path, { cookie: "" }), 200, `a guest's ${path}`);
 }

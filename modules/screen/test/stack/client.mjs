@@ -16,8 +16,7 @@ export function event(host) {
   /** A `Buffer` body goes as it is, with `type`; anything else as JSON. The answer's raw bytes are `bytes`. */
   function call(method, path, { cookie = SESSION, body, type = "application/json" } = {}) {
     return new Promise((resolve, reject) => {
-      const payload =
-        body === undefined || Buffer.isBuffer(body) ? body : JSON.stringify(body);
+      const payload = body === undefined || Buffer.isBuffer(body) ? body : JSON.stringify(body);
       const req = request(
         {
           ...SCREEN,
