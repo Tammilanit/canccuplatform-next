@@ -40,7 +40,7 @@ describe.skipIf(!DATABASE_URL)("theming drafts", () => {
     await h.close();
   });
   beforeEach(async () => {
-    for (const tenant of ["alpha", "beta"]) {
+    for (const tenant of ["alpha", "beta", "fonted"]) {
       await withTenant(tenant, () =>
         h.db.tenant(async (c) => {
           await c.query("DELETE FROM theming_drafts");
@@ -90,6 +90,25 @@ describe.skipIf(!DATABASE_URL)("theming drafts", () => {
 
     it("from current without a revision is the defaults", async () => {
       expect((await fresh("current")).base_revision).toBe(0);
+    });
+
+    it("from a profile font no package holds: the error publish names, in words (UX audit C1)", async () => {
+      const fonted = { host: "fonted.test" };
+      const res = await send(h, "POST", "/api/theming/draft", { from: "current" }, fonted);
+      expect(res.statusCode).toBe(201);
+      const problems = res.json<DraftBody>().problems;
+      expect(problems).toEqual([
+        {
+          severity: "error",
+          code: "reference_unknown",
+          path: "theme.yaml#/tokens/fonts/body",
+          message:
+            "The text font Inter isn't in the theme, so screens would fall back to another font. Use the system font, or upload Inter.",
+        },
+      ]);
+      const refused = await send(h, "POST", "/api/theming/draft/publish", { draft_version: 1 }, fonted);
+      expect([refused.statusCode, code(refused)]).toEqual([422, "theme_invalid"]);
+      expect(refused.json<{ error: { problems: unknown[] } }>().error.problems).toEqual(problems);
     });
 
     it("refuses a second draft, an unknown revision and a bad body", async () => {

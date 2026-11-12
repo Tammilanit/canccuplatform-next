@@ -62,12 +62,16 @@ const TENANTS: Record<string, TenantContext> = {
   "closed.test": context("closed", { info_page_mode: "sign_in" }),
   "zeta.test": context("zeta", { admin_access: "restricted" }),
   "archived.test": context("archived", { status: "archived" }),
+  "fonted.test": context("fonted"),
   // The browser tests: a browser sends fetch metadata over plain http only to localhost.
   localhost: context("local"),
 };
 
-/** Profile themes by event; only `venue` has one. */
-const PROFILES: Record<string, PartialTokens> = { venue: { colors: { primary: "#14b8a6" } } };
+/** Profile themes by event: `fonted` names a font no package holds, as the demo profile once did. */
+const PROFILES: Record<string, PartialTokens> = {
+  venue: { colors: { primary: "#14b8a6" } },
+  fonted: { fonts: { body: "Inter" } },
+};
 
 const SESSIONS: Record<string, string[]> = {
   admin: ["theming.theme.write"],

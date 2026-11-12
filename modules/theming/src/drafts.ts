@@ -189,11 +189,10 @@ export async function createDraft(
      VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING RETURNING ${COLUMNS}`,
     [newDraftKey(), base, JSON.stringify(manifest), JSON.stringify(checkManifest(manifest)), actor],
   );
-  const created = rows[0] as DraftRow | undefined;
-  if (created === undefined) throw draftExists();
-  if (base === null) return created;
-  await copyOwned(c, `r:${base}`, "draft");
-  // Checked again with the files just copied, and read again for them.
+  if (rows[0] === undefined) throw draftExists();
+  if (base !== null) await copyOwned(c, `r:${base}`, "draft");
+  // Checked again by publish's own check (with any files just copied), so the draft never shows
+  // fewer problems than publish refuses with: revision 0's profile may name a font no package holds.
   await c.query(`UPDATE theming_drafts SET problems = $1`, [
     JSON.stringify(await draftProblems(c, manifest)),
   ]);
