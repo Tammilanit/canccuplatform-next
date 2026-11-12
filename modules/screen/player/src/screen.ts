@@ -272,7 +272,9 @@ export class Screen {
     }
     // `logo`, and any idle value this player does not know (contracts/screen.md, The Pulse options).
     const view = { url: state.theme.logo_url, name: state.tenant.name, qr: null, empty: false };
-    const idle = { ...view, stale: false };
+    // The server sends no logo view without a theme logo, so the header's zone comes from here too.
+    const zoneName = state.zone === null ? {} : { zone_name: state.zone.name };
+    const idle = { ...view, ...zoneName, stale: false };
     return { key: "idle:logo", type: "logo", template: null, view: idle, dims: false };
   }
 

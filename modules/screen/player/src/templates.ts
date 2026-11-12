@@ -60,14 +60,30 @@ const AGENDA_ROW = el(
 
 /**
  * A bar that fills as `field`'s time comes near, over the last `span` seconds (widget.ts,
- * fillCountdowns): a countdown's last hour, a check-in code's 30 s period. A template may hold no
- * `data-` attribute (theming.md, Widget templates), so the span travels in the class.
+ * fillCountdowns): a countdown's last hour. A template may hold no `data-` attribute (theming.md,
+ * Widget templates), so the span travels in the class.
  */
 const bar = (field: string, span: number): TreeNode =>
   el("time", null, [], {
     class: [t(`canccu-widget__bar canccu-widget__bar--${String(span)}s`)],
     datetime: [f(field)],
   });
+
+/**
+ * A check-in code's bar, over one rotation period. The period is an event setting (15–120 s,
+ * notify.md, Settings) the view does not carry, but a code is valid for its own period and the
+ * next (notify.openapi.yaml, CheckInCodeNow), so the bar holds `valid_until` in a child and the
+ * span is `valid_until − rotates_at`.
+ */
+const CODE_BAR: TreeNode = sec(
+  "rotates_at",
+  sec(
+    "valid_until",
+    el("time", "bar", [el("time", "bar-end", [], { datetime: [f("valid_until")] })], {
+      datetime: [f("rotates_at")],
+    }),
+  ),
+);
 
 export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = {
   clock: [el("p", "meta", [f("date")]), el("time", "big", [f("time")], { datetime: [f("iso")] })],
@@ -152,7 +168,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     QR,
   ],
   qr: OWN_QR,
-  checkin_qr: [...OWN_QR, sec("rotates_at", bar("rotates_at", 30))],
+  checkin_qr: [...OWN_QR, CODE_BAR],
   venue_info: [
     el("ul", "body", [
       sec(

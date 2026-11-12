@@ -71,16 +71,50 @@ describe("the built-in templates", () => {
     expect(bar?.textContent).toBe("");
   });
 
-  it("shows how long a check-in code lasts", () => {
+  it("fills a check-in code's bar over its own rotation period", () => {
+    const at = (s: number): string => new Date(T0 + s * 1000).toISOString();
+    const code = (period: number, left: number) => ({
+      url: "https://a.test/notify/check-in?p=arrival&c=x",
+      label: "Check in",
+      image_url: "data:image/svg+xml;base64,QQ",
+      rotates_at: at(left),
+      // A code is valid for its own period and the next (notify.openapi.yaml, CheckInCodeNow).
+      valid_until: at(left + period),
+    });
+    const progress = (view: Record<string, unknown>): string | undefined => {
+      const box = draw("checkin_qr", view);
+      fillCountdowns(box, T0);
+      return box
+        .querySelector<HTMLElement>(".canccu-widget__bar")
+        ?.style.getPropertyValue("--canccu-progress");
+    };
+    // 12 s left of a 30 s period, 45 s of 60 s, 3 s of 15 s.
+    expect(progress(code(30, 12))).toBe("0.6");
+    expect(progress(code(60, 45))).toBe("0.25");
+    expect(progress(code(15, 3))).toBe("0.8");
+  });
+
+  it("writes no countdown into a check-in bar or its end", () => {
+    const box = draw("checkin_qr", {
+      url: "https://a.test/notify/check-in?p=arrival&c=x",
+      label: "Check in",
+      image_url: "data:image/svg+xml;base64,QQ",
+      rotates_at: new Date(T0 + 40_000).toISOString(),
+      valid_until: new Date(T0 + 100_000).toISOString(),
+    });
+    fillCountdowns(box, T0);
+    expect(box.querySelector(".canccu-widget__bar")?.textContent).toBe("");
+  });
+
+  it("draws no check-in bar when the code's period is unknown", () => {
     const box = draw("checkin_qr", {
       url: "https://a.test/notify/check-in?p=arrival&c=x",
       label: "Check in",
       image_url: "data:image/svg+xml;base64,QQ",
       rotates_at: new Date(T0 + 12_000).toISOString(),
+      valid_until: null,
     });
-    fillCountdowns(box, T0);
-    const bar = box.querySelector<HTMLElement>(".canccu-widget__bar");
-    expect(bar?.style.getPropertyValue("--canccu-progress")).toBe("0.6");
+    expect(box.querySelector(".canccu-widget__bar")).toBeNull();
   });
 
   it("names what a claim brings: an announcement, a hot game", () => {
@@ -139,6 +173,18 @@ describe("the screen's own parts of the look", () => {
     });
     const root = screen.draw(state([header]));
     expect(root.querySelector(".canccu-widget__zone")?.textContent).toBe("Main hall");
+  });
+
+  it("names the zone in the header when the theme has no logo", () => {
+    // Without a theme logo the server sends the logo widget no view, so the region shows its idle
+    // logo (modules/screen/src/compose/widgets.ts).
+    const screen = new Screen(host);
+    const s = state([region("header", { widgets: [] })]);
+    expect(s.theme.logo_url).toBeNull();
+    const root = screen.draw(s);
+    expect(root.querySelector(".canccu-widget--logo .canccu-widget__zone")?.textContent).toBe(
+      "Main hall",
+    );
   });
 
   it("shows where a rotating hero is: a bar through the widget's time and a dot per widget", () => {
