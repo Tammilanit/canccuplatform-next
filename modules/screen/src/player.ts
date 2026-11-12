@@ -1,8 +1,8 @@
 /**
  * The kiosk's page (docs/plans/issue-109.md, S4): `/screen/` is a tiny loader that names one bundle
  * version, and `/screen/b/<version>/` serves that version's files under immutable addresses, so a
- * kiosk that runs for days never mixes the files of two releases. Until pins exist (#265) the
- * version is the platform's own, the only one a container holds. The same loader, with another
+ * kiosk that runs for days never mixes the files of two releases. The version is the event's
+ * pinned one while the bundle store keeps it, else the platform's own. The same loader, with another
  * `data-page`, serves a zone's virtual screen (`/screen/zones/<zone_key>`) and the kiosk check
  * (`/screen/check`); `/screen/sw.js` is the service worker that keeps the kiosk going offline (S9).
  */
@@ -12,20 +12,20 @@ import { fileURLToPath } from "node:url";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { eventPageCsp, newNonce, normalizeHost } from "@canccu/kit";
 import { allowedOrigins, YOUTUBE_ORIGIN } from "./assets/links.js";
+import type { Db } from "./db.js";
 import type { Settings } from "./health.js";
 import { notFound } from "./http.js";
+import { BUNDLE_FILES } from "./pins/bundles.js";
+import type { BundleStore } from "./pins/bundles.js";
+import { readPin } from "./pins/store.js";
 import { ZONE_KEY_RE } from "./zone-input.js";
 
 /** Where `npm run build` puts the bundle: next to this file in dist/. */
 export const PLAYER_DIR = fileURLToPath(new URL("./player/", import.meta.url));
 
-const FILES = new Map([
-  ["player.js", "text/javascript; charset=utf-8"],
-  ["player.css", "text/css; charset=utf-8"],
-]);
-
 export interface PlayerDeps {
-  bundleVersion: string;
+  db: Db;
+  bundles: BundleStore;
   playerDir?: string;
   settings: Settings;
 }
@@ -82,26 +82,25 @@ function loaderHtml(version: string, page: Page): string {
 }
 
 export function playerRoutes(app: FastifyInstance, deps: PlayerDeps): void {
-  const version = deps.bundleVersion;
   const dir = deps.playerDir ?? PLAYER_DIR;
-  const kiosk = loaderHtml(version, { page: "kiosk" });
-  const check = loaderHtml(version, { page: "check" });
-  // The files never change under one version: read once, on first use (a failed read is not kept).
-  const bytes = new Map<string, Promise<Buffer>>();
-  const read = async (file: string): Promise<Buffer> => {
-    let pending = bytes.get(file);
-    if (pending === undefined) {
-      pending = readFile(join(dir, file));
-      pending.catch(() => bytes.delete(file));
-      bytes.set(file, pending);
-    }
+  // The worker is this container's, whatever bundle a page loads: one worker per origin.
+  let worker: Promise<Buffer> | undefined;
+  const readWorker = async (): Promise<Buffer> => {
+    worker ??= readFile(join(dir, "sw.js"));
     try {
-      return await pending;
+      return await worker;
     } catch (err) {
+      worker = undefined;
       // Not built (a dev server without the player build): a missing file, not a server fault.
       if ((err as NodeJS.ErrnoException).code === "ENOENT") throw notFound();
       throw err;
     }
+  };
+  /** The event's pinned bundle while the store keeps it, else the platform's. */
+  const versionFor = async (): Promise<string> => {
+    const pinned = (await deps.db.tenant(readPin)).bundle_version;
+    if (pinned !== null && (await deps.bundles.available()).includes(pinned)) return pinned;
+    return deps.bundles.current;
   };
 
   app.get("/screen", async (request, reply) => {
@@ -127,14 +126,18 @@ export function playerRoutes(app: FastifyInstance, deps: PlayerDeps): void {
       .send(html);
   };
 
-  app.get("/screen/", (request, reply) => sendPage(request, reply, kiosk));
-  app.get("/screen/check", (request, reply) => sendPage(request, reply, check));
+  app.get("/screen/", async (request, reply) =>
+    sendPage(request, reply, loaderHtml(await versionFor(), { page: "kiosk" })),
+  );
+  app.get("/screen/check", async (request, reply) =>
+    sendPage(request, reply, loaderHtml(await versionFor(), { page: "check" })),
+  );
   // The page asks for the zone itself, with the person's session: an unknown key or a missing
   // right is the API's answer there, so this page holds nothing but the key.
-  app.get<{ Params: { zone_key: string } }>("/screen/zones/:zone_key", (request, reply) => {
+  app.get<{ Params: { zone_key: string } }>("/screen/zones/:zone_key", async (request, reply) => {
     const zone = request.params.zone_key;
     if (!ZONE_KEY_RE.test(zone)) throw notFound();
-    return sendPage(request, reply, loaderHtml(version, { page: "zone", zone }));
+    return sendPage(request, reply, loaderHtml(await versionFor(), { page: "zone", zone }));
   });
 
   // At a fixed address the browser checks for updates on each load; the page registers it with
@@ -145,16 +148,16 @@ export function playerRoutes(app: FastifyInstance, deps: PlayerDeps): void {
       .header("content-type", "text/javascript; charset=utf-8")
       .header("cache-control", "no-cache")
       .header("x-content-type-options", "nosniff")
-      .send(await read("sw.js")),
+      .send(await readWorker()),
   );
 
   app.get<{ Params: { version: string; file: string } }>(
     "/screen/b/:version/:file",
     async (request, reply) => {
-      const { file } = request.params;
-      const type = FILES.get(file);
-      if (request.params.version !== version || type === undefined) throw notFound();
-      const body = await read(file);
+      const { version, file } = request.params;
+      const type = BUNDLE_FILES.get(file);
+      if (type === undefined) throw notFound();
+      const body = await deps.bundles.read(version, file);
       return reply
         .header("content-type", type)
         .header("cache-control", "public, max-age=31536000, immutable")

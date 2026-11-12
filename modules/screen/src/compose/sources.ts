@@ -33,6 +33,8 @@ export interface Sources {
   agendaNow(tenantId: string, zoneKey: string): Promise<AgendaNow | null>;
   venueInfo(tenantId: string): Promise<VenueInfo | null>;
   theme(tenantId: string): Promise<ThemeNow | null>;
+  /** One revision of the event's theme, for a pin (contracts/screen.md, Pins). */
+  themeRevision(tenantId: string, revision: number): Promise<ThemeNow | null>;
   event(host: string): Promise<EventPublic | null>;
   checkinCode(tenantId: string, purpose: string): Promise<CheckinCode | null>;
 }
@@ -144,6 +146,14 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       )) as ThemeNow | null;
       return body === null || typeof body.revision !== "number" ? null : body;
     },
+    themeRevision: async (tenantId, revision) => {
+      const body = (await read(
+        urls.theming,
+        `/internal/theming/revisions/${revision}?tenant_id=${encodeURIComponent(tenantId)}`,
+        service.headers("theming"),
+      )) as ThemeNow | null;
+      return body === null || body.revision !== revision ? null : body;
+    },
     checkinCode: async (tenantId, purpose) => {
       const query = `tenant_id=${encodeURIComponent(tenantId)}&purpose=${encodeURIComponent(purpose)}`;
       const body = (await read(
@@ -168,6 +178,7 @@ export const noSources: Sources = {
   agendaNow: () => Promise.resolve(null),
   venueInfo: () => Promise.resolve(null),
   theme: () => Promise.resolve(null),
+  themeRevision: () => Promise.resolve(null),
   event: () => Promise.resolve(null),
   checkinCode: () => Promise.resolve(null),
 };

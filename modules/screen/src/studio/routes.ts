@@ -4,8 +4,6 @@
  * pages only read; every change goes through the JSON API from static/studio.js, which checks the
  * right again and audits, so a page holds no right the API does not check itself.
  */
-import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import type {
   FastifyError,
   FastifyInstance,
@@ -32,6 +30,9 @@ import { listDevices } from "../devices.js";
 import type { Settings } from "../health.js";
 import { notFound, tenantOf } from "../http.js";
 import type { Kv } from "../kv.js";
+import type { BundleStore } from "../pins/bundles.js";
+import { PIN_READ_RIGHTS, inEffect } from "../pins/routes.js";
+import { readPin } from "../pins/store.js";
 import type { ZoneStore } from "../push/store.js";
 import { tickerNow } from "../ticker/store.js";
 import { readZones } from "../zones.js";
@@ -41,6 +42,8 @@ import type { SeenDevice } from "./help.js";
 import { CLIENT_KEYS, translator } from "./messages.js";
 import type { MessageKey, Translate } from "./messages.js";
 import { devicesActions, devicesView } from "./devices-view.js";
+import { frozenBanner, pinsView } from "./pins-view.js";
+import { STATIC_TYPES, staticFile } from "./static.js";
 import { tickerView } from "./ticker-view.js";
 import { STUDIO, liveActions, liveView, startUrlOf } from "./views.js";
 import type { ViewContext } from "./views.js";
@@ -55,6 +58,7 @@ export interface StudioDeps {
   /** Admin's own settings, which hold the event's `language` (contracts/admin.md, #394). */
   adminSettings: Settings;
   sources: Sources;
+  bundles: BundleStore;
   log?: Logger | undefined;
   /** Names the event in the shell's header; without it the header shows what the tenant says. */
   publicEvent?: ((host: string | undefined) => Promise<PublicEvent | null>) | undefined;
@@ -62,18 +66,21 @@ export interface StudioDeps {
 }
 
 const SIGN_IN = "/admin/sign-in";
-const STATIC = new URL("../../static/", import.meta.url);
 const READ = "screen.devices.read";
 const ZONES = "screen.zones.write";
 const TICKER = "screen.ticker.write";
 
-/** The tabs, each shown only to holders of its right (Live and Devices share one). */
-const TABS: [path: string, label: MessageKey, right: string][] = [
-  ["live", "tab.live", READ],
-  ["devices", "tab.devices", READ],
-  ["zones", "tab.zones", ZONES],
-  ["ticker", "tab.ticker", TICKER],
+/** The tabs, each shown only to holders of one of its rights (Live and Devices share one). */
+const TABS: [path: string, label: MessageKey, rights: readonly string[]][] = [
+  ["live", "tab.live", [READ]],
+  ["devices", "tab.devices", [READ]],
+  ["zones", "tab.zones", [ZONES]],
+  ["ticker", "tab.ticker", [TICKER]],
+  ["pins", "tab.pins", PIN_READ_RIGHTS],
 ];
+const ANY_TAB = [...new Set(TABS.flatMap(([, , rights]) => rights))];
+const holds = (rights: ReadonlySet<string>, any: readonly string[]) =>
+  any.some((r) => rights.has(r));
 
 /** Sign-in first (so a signed-out browser is sent to sign in), then the address rule, then a right. */
 function pageNeeds(rights: RightsChecker, any: readonly string[]): preHandlerAsyncHookHandler {
@@ -81,7 +88,7 @@ function pageNeeds(rights: RightsChecker, any: readonly string[]): preHandlerAsy
     const session = await rights.session(request.headers.cookie);
     request.session = session;
     checkAdminAccess(tenantOf(request), request.ip);
-    if (!any.some((r) => session.rights.has(r))) {
+    if (!holds(session.rights, any)) {
       throw new MissingRight(`needs one of the rights ${any.join(", ")}`);
     }
   };
@@ -139,6 +146,11 @@ async function studioPage(
 ): Promise<FastifyReply> {
   const nonce = newNonce();
   const rights = request.session?.rights ?? new Set<string>();
+  // While frozen, every page says so to whoever may read the pin (an error page reads nothing).
+  const banner =
+    o.plain || !holds(rights, PIN_READ_RIGHTS)
+      ? ""
+      : await frozenBanner(deps, tenantOf(request), t);
   const doc = shellPage({
     title: o.title,
     nonce,
@@ -159,13 +171,14 @@ async function studioPage(
     ...(o.tab === undefined
       ? {}
       : {
-          tabs: TABS.filter(([, , right]) => rights.has(right)).map(([path, label]) => ({
+          tabs: TABS.filter(([, , any]) => holds(rights, any)).map(([path, label]) => ({
             href: STUDIO + path,
             label: t(label),
             current: path === o.tab,
           })),
         }),
-    body: html`<p class="canccu-studio-notice" role="status" hidden></p>
+    body: html`${banner}
+      <p class="canccu-studio-notice" role="status" hidden></p>
       ${o.body}${clientText(t)}
       <script src="${STUDIO}static/studio.js" defer></script>
       ${o.own === undefined ? "" : html`<script src="${STUDIO}static/${o.own}.js" defer></script>`}`,
@@ -178,33 +191,6 @@ async function studioPage(
     .header("x-content-type-options", "nosniff")
     .status(o.status ?? 200)
     .send(doc.toString());
-}
-
-const STATIC_TYPES: Record<string, string> = {
-  "ui.css": "text/css; charset=utf-8",
-  "studio.css": "text/css; charset=utf-8",
-  "studio.js": "text/javascript; charset=utf-8",
-  "studio-zone.css": "text/css; charset=utf-8",
-  "studio-zone.js": "text/javascript; charset=utf-8",
-};
-
-const staticFiles = new Map<string, Promise<Buffer>>();
-function staticFile(name: string): Promise<Buffer> {
-  let bytes = staticFiles.get(name);
-  if (bytes === undefined) {
-    // ui.css is packages/ui's own, so the Studio looks like every other organiser page.
-    const path =
-      name === "ui.css"
-        ? createRequire(import.meta.url).resolve("@canccu/ui/ui.css")
-        : new URL(name, STATIC);
-    // A failed read is forgotten, so the next request tries again instead of failing forever.
-    bytes = readFile(path).catch((err: unknown) => {
-      staticFiles.delete(name);
-      throw err;
-    });
-    staticFiles.set(name, bytes);
-  }
-  return bytes;
 }
 
 /** The built-in layouts, each replaced by a theme layout of the same id, then the theme's own. */
@@ -262,16 +248,12 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       studioPage(request, reply, deps, c.t, { ...o, title: o.title || c.t("studio.title") });
 
     // Home (U5): Live while the event runs, Zones before it, or the first tab this person has.
-    studio.get(
-      STUDIO,
-      { preHandler: pageNeeds(deps.rights, [READ, ZONES, TICKER]) },
-      async (request, reply) => {
-        const rights = request.session?.rights ?? new Set<string>();
-        const order = tenantOf(request).status === "live" ? TABS : [TABS[2], ...TABS];
-        const first = order.find((tab) => tab !== undefined && rights.has(tab[2]));
-        return reply.redirect(`${STUDIO}${first?.[0] ?? "live"}`, 303);
-      },
-    );
+    studio.get(STUDIO, { preHandler: pageNeeds(deps.rights, ANY_TAB) }, async (request, reply) => {
+      const rights = request.session?.rights ?? new Set<string>();
+      const order = tenantOf(request).status === "live" ? TABS : [TABS[2], ...TABS];
+      const first = order.find((tab) => tab !== undefined && holds(rights, tab[2]));
+      return reply.redirect(`${STUDIO}${first?.[0] ?? "live"}`, 303);
+    });
 
     studio.get(
       `${STUDIO}live`,
@@ -354,6 +336,23 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
           tab: "ticker",
           description: c.t("ticker.desc"),
           body: tickerView(c, ticker),
+        });
+      },
+    );
+
+    studio.get(
+      `${STUDIO}pins`,
+      { preHandler: pageNeeds(deps.rights, PIN_READ_RIGHTS) },
+      async (request, reply) => {
+        const c = await context(request);
+        const ctx = tenantOf(request);
+        const pin = await deps.db.tenant(readPin);
+        const event = await deps.publicEvent?.(request.headers.host).catch(() => null);
+        return page(request, reply, c, {
+          title: "",
+          tab: "pins",
+          description: c.t("pins.desc"),
+          body: pinsView(c, pin, await inEffect(deps, ctx.tenant_id, pin), event?.ends_at),
         });
       },
     );

@@ -29,6 +29,10 @@ import { ValkeyKv } from "./kv.js";
 import { applyAgendaEvent } from "./content/agenda.js";
 import { applyOverrideEvent } from "./compose/overrides.js";
 import { httpSources } from "./compose/sources.js";
+import { BundleStore, bundlesDir } from "./pins/bundles.js";
+import { keepBundles } from "./pins/store.js";
+import { pinTickRunner } from "./pins/tick.js";
+import { PLAYER_DIR } from "./player.js";
 import { REFRESH_MS } from "./push/hub.js";
 import { ValkeyFanout, ValkeyZoneStore } from "./push/store.js";
 import { renderLoop } from "./render/dispatch.js";
@@ -168,6 +172,26 @@ async function main(): Promise<void> {
 
   const audit = tenantsAudit(tenantsUrl, service);
   const storage = tenantsStorage(tenantsUrl, service);
+  // The service names of deploy/compose.yml; a stack that moves them sets the variables.
+  const sources = httpSources(
+    {
+      agenda: process.env.CANCCU_AGENDA_URL ?? "http://agenda:8080",
+      tenants: tenantsUrl,
+      theming: process.env.CANCCU_THEMING_URL ?? "http://theming:8080",
+      notify: process.env.CANCCU_NOTIFY_URL ?? "http://notify:8080",
+    },
+    service,
+    log,
+  );
+  const bundles = new BundleStore({
+    dir: bundlesDir(FILES_ROOT),
+    current: config.version,
+    playerDir: PLAYER_DIR,
+  });
+  // A failed copy leaves this version served from the image only; pins can still name it.
+  await keepBundles({ db, store: bundles }).catch((err: unknown) => {
+    log.warn({ err }, "keeping the player bundles failed");
+  });
   const app = buildApp({
     db,
     kv,
@@ -184,18 +208,9 @@ async function main(): Promise<void> {
     settings,
     adminSettings,
     publicEvent: (host) => tenants.event(host),
-    // The service names of deploy/compose.yml; a stack that moves them sets the variables.
-    sources: httpSources(
-      {
-        agenda: process.env.CANCCU_AGENDA_URL ?? "http://agenda:8080",
-        tenants: tenantsUrl,
-        theming: process.env.CANCCU_THEMING_URL ?? "http://theming:8080",
-        notify: process.env.CANCCU_NOTIFY_URL ?? "http://notify:8080",
-      },
-      service,
-      log,
-    ),
+    sources,
     bundleVersion: config.version,
+    bundles,
     push,
     health: screenHealth({
       module: config.module,
@@ -284,12 +299,24 @@ async function main(): Promise<void> {
       app.pushHub.played(tenant, zones);
     },
   });
+  const pinTick = pinTickRunner({
+    db,
+    kv,
+    bus,
+    audit,
+    sources,
+    bundles,
+    fanout: push.fanout,
+    tenantById: (id) => tenants.byId(id),
+    now: Date.now,
+    log,
+  });
   let ticking = false;
   const ticker = setInterval(() => {
     // A slow step is never doubled up: the next second starts once this one is done.
     if (ticking) return;
     ticking = true;
-    tick()
+    Promise.all([tick(), pinTick()])
       .catch((err: unknown) => {
         log.warn({ err }, "screen tick failed");
       })

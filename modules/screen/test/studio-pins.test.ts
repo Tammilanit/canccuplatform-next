@@ -39,7 +39,12 @@ describe.skipIf(!DATABASE_URL)("studio pins", () => {
   });
   beforeEach(async () => {
     h.clock.now = NOON;
-    h.publicEvents["alpha.test"] = { id: "alpha", name: "Demo Party", status: "live", ends_at: ENDS };
+    h.publicEvents["alpha.test"] = {
+      id: "alpha",
+      name: "Demo Party",
+      status: "live",
+      ends_at: ENDS,
+    };
     await put({ bundle_version: null, theme_revision: null });
   });
 
@@ -82,7 +87,9 @@ describe.skipIf(!DATABASE_URL)("studio pins", () => {
 
   it("shows a plain banner on every Studio page while frozen, and Unfreeze on Pins", async () => {
     for (const url of ["live", "devices", "zones", "ticker", "pins"]) {
-      expect((await page(`/admin/screen/${url}`, "admin")).body).not.toContain("canccu-studio-frozen");
+      expect((await page(`/admin/screen/${url}`, "admin")).body).not.toContain(
+        "canccu-studio-frozen",
+      );
     }
     expect((await put({ freeze: true, until: ENDS })).statusCode).toBe(200);
     const banner =
@@ -96,7 +103,9 @@ describe.skipIf(!DATABASE_URL)("studio pins", () => {
     expect((await page("/admin/screen/zones", "zoner")).body).not.toContain("canccu-studio-frozen");
     const pins = (await page("/admin/screen/pins", "admin")).body;
     expect(pins).toContain("Unfreeze");
-    expect(pins).toContain(`data-body="${JSON.stringify({ freeze: false }).replace(/"/g, "&quot;")}"`);
+    expect(pins).toContain(
+      `data-body="${JSON.stringify({ freeze: false }).replace(/"/g, "&quot;")}"`,
+    );
     expect(pins).toContain("Pinned by admin");
     expect(pins).not.toContain("Freeze for the event");
     expect((await page("/admin/screen/pins", "crew")).body).not.toContain("Unfreeze");

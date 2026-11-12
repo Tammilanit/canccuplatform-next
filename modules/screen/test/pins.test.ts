@@ -157,10 +157,11 @@ describe.skipIf(!DATABASE_URL)("pins", () => {
         actor_user_id: "u_bundler",
         action: "screen.pin.set",
         target: { type: "pin", id: "pin" },
-        changes: expect.objectContaining({
+        changes: {
           bundle_version: { from: null, to: "0.9.0" },
           theme_revision: { from: null, to: 3 },
-        }),
+          until: { from: null, to: null },
+        },
       }),
     ]);
     expect(await commands()).toEqual(["reload"]);
@@ -191,7 +192,8 @@ describe.skipIf(!DATABASE_URL)("pins", () => {
   });
 
   it("takes an until in the future, up to the event's end or 14 days ahead, whichever is later", async () => {
-    const at = (until: number) => put({ bundle_version: null, theme_revision: 3, until: iso(until) });
+    const at = (until: number) =>
+      put({ bundle_version: null, theme_revision: 3, until: iso(until) });
     expect((await at(NOON - 1000)).statusCode).toBe(400);
     expect((await at(NOON)).statusCode).toBe(400);
     expect((await at(NOON + 14 * DAY)).statusCode).toBe(200);
@@ -317,7 +319,7 @@ describe.skipIf(!DATABASE_URL)("pins", () => {
     expect(h.audits).toEqual([
       expect.objectContaining({ action: "screen.pin.expired", tenant_id: "alpha" }),
     ]);
-    expect(h.audits[0]).not.toHaveProperty("actor_user_id");
+    expect(h.audits[0]?.actor_user_id).toBeNull();
     expect(await commands()).toEqual(["reload"]);
     // Once only.
     h.clock.now = NOON + DAY + 1000;
@@ -327,9 +329,10 @@ describe.skipIf(!DATABASE_URL)("pins", () => {
 
   it("clears the pin at until when what it restores no longer exists", async () => {
     await put({ bundle_version: null, theme_revision: 3 });
-    await put({ freeze: true, until: iso(NOON + DAY) });
+    // A later second than the test before, whose tick claimed its own seconds.
+    await put({ freeze: true, until: iso(NOON + 2 * DAY) });
     delete h.sources.revisions[3];
-    h.clock.now = NOON + DAY;
+    h.clock.now = NOON + 2 * DAY;
     await tick();
     expect(await pin()).toMatchObject({ bundle_version: null, theme_revision: null, until: null });
     expect(changes().at(-1)).toMatchObject({ reason: "expired", theme_revision: null });
@@ -358,7 +361,12 @@ describe.skipIf(!DATABASE_URL)("pins", () => {
 
   it("draws the pinned revision and names the pinned bundle in the screens' state", async () => {
     await call(h, "GET", "/api/screen/zones", as("admin"));
-    await call(h, "PUT", `/api/screen/devices/${device}/assignment`, as("admin", { zone_key: "main" }));
+    await call(
+      h,
+      "PUT",
+      `/api/screen/devices/${device}/assignment`,
+      as("admin", { zone_key: "main" }),
+    );
     await put({ bundle_version: "0.9.0", theme_revision: 3 });
     const state = await call(h, "GET", "/api/screen/device/state", {
       host: "alpha.test",

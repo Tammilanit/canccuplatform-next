@@ -1,7 +1,7 @@
 /**
  * The screen module's Fastify app: health, tenancy, and the device, pairing, heartbeat, moving,
- * registry, zone, assignment, playlist, schedule, push, asset, ticker, photo and render-job routes,
- * and the composed state.
+ * registry, zone, assignment, playlist, schedule, push, asset, ticker, photo, render-job and pin
+ * routes, and the composed state.
  */
 import { constants } from "node:fs";
 import { access } from "node:fs/promises";
@@ -41,7 +41,9 @@ import { notFound } from "./http.js";
 import { movingRoutes } from "./moving.js";
 import { pairingRoutes } from "./pairing.js";
 import { photoRoutes } from "./photos.js";
-import { playerRoutes } from "./player.js";
+import { BundleStore, bundlesDir } from "./pins/bundles.js";
+import { pinRoutes } from "./pins/routes.js";
+import { PLAYER_DIR, playerRoutes } from "./player.js";
 import { PushHub } from "./push/hub.js";
 import { streamRoutes } from "./push/routes.js";
 import { zoneViewRoutes } from "./push/zone-routes.js";
@@ -85,6 +87,8 @@ export interface ScreenDeps {
   bundleVersion?: string;
   /** The built player bundle; tests point it at a temporary directory. */
   playerDir?: string;
+  /** The kept bundle versions; by default the store in `filesRoot` with this version. */
+  bundles?: BundleStore;
   /** The zones' states and the fan-out between containers; main gives the Valkey ones. */
   push?: { zones: ZoneStore; fanout: Fanout };
   /** How often an open stream pings (15 s); tests shorten it. */
@@ -206,12 +210,21 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   app.decorateRequest("deviceToken", null);
   const fanout = deps.push?.fanout ?? new MemoryFanout();
   const zones = deps.push?.zones ?? new MemoryZoneStore(fanout, deps.now);
+  const bundleVersion = deps.bundleVersion ?? "dev";
+  const bundles =
+    deps.bundles ??
+    new BundleStore({
+      dir: bundlesDir(deps.filesRoot ?? FILES_ROOT),
+      current: bundleVersion,
+      playerDir: deps.playerDir ?? PLAYER_DIR,
+    });
   const compose = {
     ...deps,
     fanout,
     zones,
     sources: deps.sources ?? noSources,
-    bundleVersion: deps.bundleVersion ?? "dev",
+    bundleVersion,
+    bundles,
   };
   const push = {
     ...compose,
@@ -238,6 +251,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   tickerRoutes(app, deps);
   composeRoutes(app, compose);
   playerRoutes(app, compose);
+  pinRoutes(app, compose);
   studioRoutes(app, {
     ...compose,
     adminSettings: deps.adminSettings ?? ENGLISH,
