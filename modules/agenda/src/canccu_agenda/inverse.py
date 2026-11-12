@@ -18,10 +18,15 @@ class Inverse:
     steps: list[dict[str, Any]] = field(default_factory=list)
 
     def restore(
-        self, before: Any, after: Any, columns: list[str], minutes: int | None = None
+        self,
+        before: Any,
+        after: Any,
+        columns: list[str],
+        minutes: int | None = None,
+        announce: bool = True,
     ) -> None:
         """Set `columns` back to their values in `before`; with `minutes`, it undoes a delay and
-        is told as the opposite delay."""
+        is told as the opposite delay. The undo of a quiet change is quiet too (`announce`)."""
         self.steps.append(
             {
                 "op": "restore",
@@ -29,6 +34,7 @@ class Inverse:
                 "revision": after["revision"],
                 "values": {c: to_json(before[c]) for c in columns},
                 "minutes": minutes,
+                "announce": announce,
             }
         )
 

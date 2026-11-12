@@ -72,6 +72,20 @@ const OTHERS = [
   ["error-not-found", MISSING, DESK, { status: 404 }],
   ["error-not-found-phone", MISSING, PHONE, { status: 404 }],
 ];
+// The Delay and Edit views of one item (#388), next to their mockups (docs/design/mockups.html):
+// told, with the items after it, quiet, and the edit form. The items are made for the run.
+// `chosen` is what the page's own form sends: then an unticked box means off.
+const ITEM_PAGES = [
+  ["agenda-delay", "/delay?minutes=10", DESK],
+  [
+    "agenda-delay-following",
+    "/delay?minutes=10&following=1&announce=1&chosen=1",
+    DESK,
+  ],
+  ["agenda-delay-quiet", "/delay?minutes=10&chosen=1", DESK],
+  ["agenda-delay-phone", "/delay?minutes=10", PHONE],
+  ["agenda-edit", "/edit", DESK],
+];
 
 if (opts["dry-run"]) {
   console.log(`dry run, would screenshot into ${opts.out}/:`);
@@ -83,6 +97,10 @@ if (opts["dry-run"]) {
   for (const [name, path, { width, height }, o] of OTHERS) {
     const how = o.cookie === null ? ", signed out" : `, answering ${o.status}`;
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height}${how})`);
+  }
+  for (const [name, suffix, { width, height }] of ITEM_PAGES) {
+    const path = `/agenda/items/<an item made for the run>${suffix}`;
+    console.log(`  ${name}.png  ${at(path)}  (${width}×${height})`);
   }
   for (const name of planned()) {
     console.log(`  ${name}.png  ${at("/screen/")}  (a paired screen)`);
@@ -156,6 +174,15 @@ async function shot(
         .catch(() => undefined);
     if (refused.length)
       throw new Error(`its API reads answered ${refused.join(", ")}`);
+    // A phone page is shot as tall as it is, so what sticks to the bottom (the bar, an action
+    // row) sits where it does once the page is scrolled to its end, not over its middle.
+    if (fullPage && viewport.width === PHONE.width) {
+      const height = await page.evaluate(
+        () => document.documentElement.scrollHeight,
+      );
+      if (height > viewport.height)
+        await page.setViewportSize({ ...viewport, height });
+    }
     await page.screenshot({ path: `${opts.out}/${name}.png`, fullPage });
     console.log(`ok   ${name}.png  ${url}`);
     count++;
@@ -179,6 +206,34 @@ async function changeSettings(module, values) {
   };
   const put = await demo.call("PUT", `/api/admin/settings/${module}`, { body });
   expect(put, 200, `a change to the ${module} settings`);
+}
+
+// An item starting `from` minutes from now, through the agenda's API; the run removes it after.
+const made = [];
+async function addItem(title, kind, from, minutes) {
+  const time = (m) =>
+    new Date(Date.now() + m * 60_000).toISOString().replace(/\.\d{3}Z$/, "Z");
+  const body = {
+    title,
+    kind,
+    starts_at: time(from),
+    ends_at: time(from + minutes),
+    visibility: "public",
+  };
+  const res = await demo.call("POST", "/api/agenda/items", { body });
+  const item = expect(res, 201, `adding ${title}`).body;
+  made.push(item);
+  return item;
+}
+async function removeMade() {
+  for (const { id, title } of made.splice(0)) {
+    try {
+      const path = `/api/agenda/items/${id}?revision=1`;
+      expect(await demo.call("DELETE", path), 204, `removing ${title}`);
+    } catch (err) {
+      fail(`cleanup: ${firstLine(err)}`);
+    }
+  }
 }
 
 try {
@@ -214,6 +269,21 @@ try {
   for (const [name, path, viewport, o] of OTHERS) {
     await shot(name, path, viewport, o.cookie === null ? null : SESSION, o);
   }
+  let item;
+  try {
+    item = await addItem("Demo Game Cup: semi-final", "tournament", 60, 75);
+    await addItem("Board games corner", "activity", 150, 60);
+    await addItem("Quiz night", "activity", 240, 60);
+  } catch (err) {
+    fail(`agenda items for the shots: ${firstLine(err)}`);
+  }
+  if (item) {
+    for (const [name, suffix, viewport] of ITEM_PAGES) {
+      await shot(name, `/agenda/items/${item.id}${suffix}`, viewport, SESSION);
+    }
+  }
+  // Gone before the screens: their fixture finds its run of show by title and would take these.
+  await removeMade();
 
   // A guest who never checked in reads every public page; the screens play without it too.
   try {
@@ -239,6 +309,7 @@ try {
   }
 } finally {
   await browser.close();
+  await removeMade();
   // The pairing frame leaves an open code of the 3 the loopback may hold (contracts/screen.md,
   // Pairing); the screens revoke their own devices.
   try {
