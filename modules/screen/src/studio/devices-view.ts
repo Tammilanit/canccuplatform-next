@@ -62,7 +62,7 @@ const step = (c: ViewContext, key: MessageKey): string =>
     ? c.t("help.offline.restart_plain")
     : c.t(key, { url: c.startUrl ?? "" });
 
-function statusPart(c: ViewContext, d: SeenDevice, fleet: Fleet, uplink: boolean): Html {
+function statusPart(c: ViewContext, d: SeenDevice, fleet: Fleet): Html {
   const { t } = c;
   const h = d.health;
   const on = h?.online === true;
@@ -98,7 +98,7 @@ function statusPart(c: ViewContext, d: SeenDevice, fleet: Fleet, uplink: boolean
         ? ""
         : t("device.up_to_date"),
   ].filter(Boolean);
-  const problems = problemsOf(d, uplink);
+  const problems = problemsOf(d, fleet.all);
   const help =
     problems.length === 0
       ? ""
@@ -281,7 +281,7 @@ export function devicesView(
           </div>`
         : thumb(zone, t("device.preview", { device: d.name }), { portrait: portraitOf(d) });
     return html`<article class="canccu-card canccu-studio-device" id="device-${d.id}">
-      ${view}${statusPart(c, d, fleet, uplink)}${deviceActions(c, d, fleet)}
+      ${view}${statusPart(c, d, fleet)}${deviceActions(c, d, fleet)}
     </article>`;
   });
   const list =

@@ -55,12 +55,16 @@ export interface Problem {
 }
 
 /**
- * What needs help on this device, most urgent first; empty for a healthy one. While the uplink is
- * down the offline steps start there, and otherwise say the uplink is fine.
+ * What needs help on this device among `all` the event's devices, most urgent first; empty for a
+ * healthy one. While the uplink is down the offline steps start there. They say the uplink is fine
+ * only while another screen is online: one screen alone, or all of them down but not together,
+ * prove nothing about it.
  */
-export function problemsOf(device: SeenDevice, uplink: boolean): Problem[] {
+export function problemsOf(device: SeenDevice, all: readonly SeenDevice[]): Problem[] {
   const h = device.health;
   const problems: Problem[] = [];
+  const uplink = uplinkDown(all);
+  const otherOnline = all.some((o) => o.id !== device.id && o.health?.online === true);
   if (h !== undefined && !h.online && h.last_seen_at !== null) {
     problems.push({
       title: "help.offline",
@@ -68,7 +72,7 @@ export function problemsOf(device: SeenDevice, uplink: boolean): Problem[] {
         ...(uplink ? ["help.offline.uplink_down" as const] : []),
         "help.offline.power",
         "help.offline.network",
-        ...(uplink ? [] : ["help.offline.uplink_fine" as const]),
+        ...(otherOnline ? ["help.offline.uplink_fine" as const] : []),
         "help.offline.refused",
         "help.offline.restart",
         "help.offline.catches_up",

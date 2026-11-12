@@ -4,6 +4,7 @@ import { problemsOf, shownZone, uplinkDown } from "../src/studio/help.js";
 import type { SeenDevice } from "../src/studio/help.js";
 import { counted, languageOf, nameOf, readable, translator } from "../src/studio/messages.js";
 import { nowShowing } from "../src/studio/now-line.js";
+import { shownAt as playerShownAt } from "../player/src/rotation.js";
 import type { RegionView, WidgetView } from "../src/compose/build.js";
 import type { ZoneRecord } from "../src/push/store.js";
 
@@ -42,31 +43,48 @@ describe("uplinkDown", () => {
 
 describe("problemsOf", () => {
   it("gives a healthy screen no steps", () => {
-    expect(problemsOf(online("a"), false)).toEqual([]);
+    expect(problemsOf(online("a"), [online("a")])).toEqual([]);
   });
 
   it("gives an offline screen plain steps, starting at the uplink while it is down", () => {
-    const alone = problemsOf(offline("a", 0), false)[0];
-    expect(alone?.title).toBe("help.offline");
-    expect(alone?.steps).toContain("help.offline.uplink_fine");
-    expect(alone?.steps).toContain("help.offline.refused");
-    const together = problemsOf(offline("a", 0), true)[0];
+    const a = offline("a", 0);
+    const beside = problemsOf(a, [a, online("b")])[0];
+    expect(beside?.title).toBe("help.offline");
+    expect(beside?.steps).toContain("help.offline.uplink_fine");
+    expect(beside?.steps).toContain("help.offline.refused");
+    const together = problemsOf(a, [a, offline("b", 30)])[0];
     expect(together?.steps[0]).toBe("help.offline.uplink_down");
     expect(together?.steps).not.toContain("help.offline.uplink_fine");
   });
 
+  it("says the uplink is fine only while another screen is online", () => {
+    const a = offline("a", 0);
+    // One screen alone proves nothing about the uplink.
+    const alone = problemsOf(a, [a])[0];
+    expect(alone?.title).toBe("help.offline");
+    expect(alone?.steps).not.toContain("help.offline.uplink_fine");
+    expect(alone?.steps).not.toContain("help.offline.uplink_down");
+    // All down, but more than a minute apart: not one cause, and not a working uplink either.
+    const spread = problemsOf(a, [a, offline("b", 61), offline("c", 200)])[0];
+    expect(spread?.steps).not.toContain("help.offline.uplink_fine");
+    expect(spread?.steps).not.toContain("help.offline.uplink_down");
+    // A screen never seen is no proof the uplink works.
+    const unseen = device("b", { online: false, last_seen_at: null });
+    expect(problemsOf(a, [a, unseen])[0]?.steps).not.toContain("help.offline.uplink_fine");
+  });
+
   it("names a copied cookie, a wrong clock, a screen behind its zone and one not assigned", () => {
     const flagged = online("a", { flags: ["shared_token", "clock_drift"], state_lag: 3 });
-    expect(problemsOf(flagged, false).map((p) => p.title)).toEqual([
+    expect(problemsOf(flagged, [flagged]).map((p) => p.title)).toEqual([
       "help.shared_token",
       "help.clock_drift",
       "help.behind",
     ]);
     // One or two changes behind is a heartbeat not sent yet.
-    expect(problemsOf(online("a", { state_lag: 2 }), false)).toEqual([]);
-    expect(problemsOf(device("b", undefined, null), false).map((p) => p.title)).toEqual([
-      "help.unassigned",
-    ]);
+    const lagging = online("a", { state_lag: 2 });
+    expect(problemsOf(lagging, [lagging])).toEqual([]);
+    const unassigned = device("b", undefined, null);
+    expect(problemsOf(unassigned, [unassigned]).map((p) => p.title)).toEqual(["help.unassigned"]);
   });
 });
 
@@ -128,7 +146,7 @@ describe("what a device card says a screen shows now", () => {
   const hero = (over: Partial<RegionView>): RegionView =>
     ({ id: "hero", role: "hero", order: [], cycle_started_at: new Date(start).toISOString(), idle: "next", idle_view: null, widgets: [], claim: null, ...over }) as unknown as RegionView; // prettier-ignore
   const record = (regions: RegionView[], portrait: RegionView[] = []) =>
-    ({ views: { landscape: { layout: null, regions }, portrait: { layout: null, regions: portrait } } }) as unknown as ZoneRecord; // prettier-ignore
+    ({ zone: { key: "main" }, views: { landscape: { layout: null, regions }, portrait: { layout: null, regions: portrait } } }) as unknown as ZoneRecord; // prettier-ignore
 
   it("names the hero's idle countdown by the item it counts down to", () => {
     const idle = hero({ idle_view: { widget: "countdown", view: { label: "Dinner" } } as unknown as RegionView["idle_view"] }); // prettier-ignore
@@ -144,6 +162,24 @@ describe("what a device card says a screen shows now", () => {
     expect(nowShowing(t, record([turning]), false, start + 3_000)).toBe("Photo");
     expect(nowShowing(t, record([turning]), false, start + 13_000)).toBe("Finals countdown");
     expect(nowShowing(t, record([turning]), false, start + 23_000)).toBe("Photo");
+  });
+
+  it("follows a shuffled hero into later cycles, as the player reshuffles it", () => {
+    const names = ["photo", "clock", "qr", "agenda_now"];
+    const shuffled = hero({ rotation: "shuffle", order: [2, 0, 3, 1], widgets: names.map((n) => widget(n)) }); // prettier-ignore
+    const shown: number[] = [];
+    // Three cycles of 40 s, every 10 s, each mid-dwell.
+    for (let s = 0; s < 120; s += 10) {
+      const at = start + s * 1000 + 5_000;
+      const index = playerShownAt(shuffled, "main", at).index as number;
+      shown.push(index);
+      expect(nowShowing(t, record([shuffled]), false, at), `+${s}s`).toBe(
+        nameOf(t, "widget", names[index] as string),
+      );
+    }
+    // The stored order alone, repeated, would have named other widgets.
+    const repeated = shown.map((_, i) => shuffled.order[i % 4]);
+    expect(shown).not.toEqual(repeated);
   });
 
   it("says a takeover or the hero's claim before its widgets, and nothing without a state", () => {
