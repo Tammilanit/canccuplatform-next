@@ -19,6 +19,7 @@ import {
 import { guestReads } from "../modules/screen/test/stack/fixture.mjs";
 import { planned, screenShots } from "../modules/screen/test/stack/screens.mjs";
 import {
+  SCHEDULE_PAGES,
   STUDIO_PAGES,
   studioShots,
 } from "../modules/screen/test/stack/studio-shots.mjs";
@@ -112,6 +113,11 @@ if (opts["dry-run"]) {
   for (const [name, path, { width, height }] of STUDIO_PAGES) {
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, while two screens play)`,
+    );
+  }
+  for (const [name, path, { width, height }] of SCHEDULE_PAGES) {
+    console.log(
+      `  ${name}.png  ${at(path)}  (${width}×${height}, on windows made for it)`,
     );
   }
   process.exit(0);
