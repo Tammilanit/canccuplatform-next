@@ -123,7 +123,7 @@ export async function loadAgendaItems(c: SqlClient): Promise<Map<string, AgendaT
   );
 }
 
-/** What the schedule calendar shows of a bound window's item: its title, and whether only crew may see it. */
+/** What the schedule calendar shows of a bound window's item: its title, and whether only crew may see it (also when its visibility is unknown). */
 export interface AgendaLabel {
   title: string | null;
   crew: boolean;
@@ -136,7 +136,12 @@ export async function loadAgendaLabels(c: SqlClient): Promise<Map<string, Agenda
   return new Map(
     rows.map((r) => [
       r.id as string,
-      { title: (r.title as string | null) ?? null, crew: r.visibility === "crew" },
+      // Fails closed: a row kept before migration 010 whose last event the replay could not
+      // re-apply (a trimmed stream, or an `agenda.items.cloned` copy) has no visibility yet.
+      {
+        title: (r.title as string | null) ?? null,
+        crew: r.visibility !== "public" && r.visibility !== "attendees",
+      },
     ]),
   );
 }

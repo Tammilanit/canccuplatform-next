@@ -137,6 +137,48 @@ describe.skipIf(!DATABASE_URL)("schedule calendar", () => {
     });
   });
 
+  it("withholds the id of an item whose visibility is unknown, as if it were crew-only", async () => {
+    // A row kept before migration 010 that no replayed event has filled: no visibility.
+    await withTenant("alpha", () =>
+      applyAgendaEvent(h.db, {
+        id: "e_unlabelled",
+        type: "agenda.item.added",
+        version: 2,
+        time: "",
+        source: "agenda",
+        tenant: "alpha",
+        data: {
+          item: {
+            id: "it_unlabelled",
+            starts_at: "2026-01-01T15:00:00Z",
+            ends_at: "2026-01-01T16:00:00Z",
+            status: "scheduled",
+            revision: 1,
+          },
+          agenda_version: 2,
+        },
+      }),
+    );
+    const bound = await call(h, "POST", "/api/screen/schedules", {
+      host: "alpha.test",
+      session: "admin",
+      body: { zone_key: "main", playlist_id: main, priority: 40, agenda_item_id: "it_unlabelled" },
+    });
+    const id = bound.json<{ id: string }>().id;
+    const windowOf = async (session: string) =>
+      (await calendar(`${RANGE}&zone=main`, session))
+        .json<{ zones: { windows: { schedule_id: string }[] }[] }>()
+        .zones[0]?.windows.find((w) => w.schedule_id === id);
+    expect(await windowOf("content")).toMatchObject({
+      agenda_item_id: null,
+      agenda_item_crew: true,
+    });
+    expect(await windowOf("crewlead")).toMatchObject({
+      agenda_item_id: "it_unlabelled",
+      agenda_item_crew: true,
+    });
+  });
+
   it("needs screen.content.read: 403 without it, 401 signed out", async () => {
     const refused = await calendar(RANGE, "crew");
     expect(refused.statusCode).toBe(403);
