@@ -60,7 +60,16 @@ export function isInBreakWindow(
 ): boolean {
   const { windowStartMinute: start, windowEndMinute: end } = rules;
   if (start === null || end === null) return true;
-  const { minuteOfDay } = localClock(new Date(atMs), timeZone);
+  return isInBreakWindowAt(rules, localClock(new Date(atMs), timeZone).minuteOfDay);
+}
+
+/** The same rule at a local minute of the day, for a caller that already read the clock. */
+export function isInBreakWindowAt(
+  rules: Pick<BreakRules, "windowStartMinute" | "windowEndMinute">,
+  minuteOfDay: number,
+): boolean {
+  const { windowStartMinute: start, windowEndMinute: end } = rules;
+  if (start === null || end === null) return true;
   return start < end
     ? minuteOfDay >= start && minuteOfDay < end
     : minuteOfDay >= start || minuteOfDay < end;

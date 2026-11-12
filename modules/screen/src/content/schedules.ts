@@ -1,7 +1,7 @@
 /**
  * `/api/screen/schedules…` (contracts/screen.md, Schedule windows): weekly and agenda-bound
  * windows per zone with a revision (409 `version_conflict` on a stale one), audited; and
- * simulate, built from the same read and rule as the tick. Adapted from the legacy signage
+ * simulate and the calendar, built from the same read and rule as the tick. Adapted from the legacy signage
  * `schedule-repo.ts` (one day per window there; ISO `days` here).
  */
 import type { FastifyInstance } from "fastify";
@@ -26,6 +26,7 @@ import { breakInputFor, loadContent } from "../tick/content.js";
 import { breakGapSeconds, loadZoneState } from "../tick/run.js";
 import { EMPTY_ZONE } from "../tick/zone.js";
 import { zoneExistsHere } from "../zones.js";
+import { calendarRange, readCalendar } from "./calendar.js";
 import { scheduleInput, type ScheduleInput } from "./input.js";
 import { checkPlayable, type ContentDeps } from "./playlists.js";
 
@@ -208,6 +209,23 @@ export function scheduleRoutes(app: FastifyInstance, deps: ScheduleDeps): void {
         });
       });
       return reply.status(204).send();
+    },
+  );
+
+  app.get<{ Querystring: { zone?: string; from?: string; to?: string } }>(
+    "/api/screen/schedules/calendar",
+    { preHandler: read },
+    async (request) => {
+      const { zone, from, to } = request.query;
+      const range = calendarRange(from, to);
+      return db.tenant((c) =>
+        readCalendar(c, {
+          ...range,
+          zone,
+          timeZone: tenantOf(request).time_zone,
+          revealCrew: request.session?.rights.has("agenda.crew.read") ?? false,
+        }),
+      );
     },
   );
 

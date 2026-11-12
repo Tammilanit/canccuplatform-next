@@ -1,0 +1,360 @@
+/* The schedule page (mockup 09), on top of ui.css and studio.css: the week calendar beside the
+   side panel; on a phone one day at a time, full width, with the panel below. Places come from the
+   page's own style block (top, height, left, width and the axis's hour count), never from inline
+   styles (the CSP). */
+
+.canccu-sched__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.canccu-sched__bar p {
+  margin: 0;
+}
+
+.canccu-sched__zones,
+.canccu-sched__days {
+  align-items: center;
+}
+
+/* The day switch is the phone's; wider screens show every day of the page. */
+.canccu-sched__switch {
+  display: none;
+  margin-bottom: 1rem;
+}
+
+.canccu-sched__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
+  gap: 1rem;
+  align-items: start;
+}
+
+.canccu-sched__main {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.canccu-sched__side {
+  display: grid;
+  gap: 1rem;
+}
+
+.canccu-sched__side .canccu-card > * + * {
+  margin-top: 0.5rem;
+}
+
+.canccu-sched__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--canccu-text-sm);
+  color: var(--canccu-color-text-muted);
+}
+
+.canccu-sched__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.canccu-sched__swatch {
+  display: inline-block;
+  width: 1.25rem;
+  height: 0.875rem;
+  border-radius: 3px;
+}
+
+.canccu-sched__swatch--wins,
+.canccu-sched__block {
+  background: color-mix(in srgb, var(--canccu-color-primary) 22%, var(--canccu-color-surface));
+  border: var(--canccu-border-width) solid var(--canccu-color-primary);
+}
+
+.canccu-sched__swatch--loses,
+.canccu-sched__lose {
+  background: var(--canccu-color-surface);
+  border: var(--canccu-border-width) dashed var(--canccu-color-text-muted);
+}
+
+.canccu-sched__swatch--break,
+.canccu-sched__break {
+  background: var(--canccu-color-accent);
+}
+
+.canccu-sched__scroll {
+  overflow-x: auto;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  background: var(--canccu-color-surface);
+}
+
+.canccu-sched__scroll:focus-visible {
+  outline: 3px solid var(--canccu-color-primary);
+  outline-offset: 2px;
+}
+
+/* `--canccu-sched-hours` (the axis's length) comes from the page's style block. */
+.canccu-sched__grid {
+  --canccu-sched-hour: 3rem;
+  --canccu-sched-head: 2.5rem;
+  --canccu-sched-height: calc(var(--canccu-sched-hours, 24) * var(--canccu-sched-hour));
+  display: flex;
+  min-width: min-content;
+}
+
+.canccu-sched__grid--lanes {
+  --canccu-sched-head: 4.25rem;
+}
+
+.canccu-sched__head {
+  height: var(--canccu-sched-head);
+  border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+
+.canccu-sched__gutter {
+  flex: 0 0 4.75rem;
+}
+
+.canccu-sched__hours {
+  position: relative;
+  height: var(--canccu-sched-height);
+}
+
+.canccu-sched__hours > div {
+  display: grid;
+  grid-template-rows: repeat(var(--canccu-sched-hours, 24), 1fr);
+  height: 100%;
+  padding-right: 0.5rem;
+  font-size: var(--canccu-text-xs);
+  color: var(--canccu-color-text-muted);
+  text-align: right;
+}
+
+/* `--canccu-sched-across` (from the page's style block) is how many windows sit side by side
+   in the day: each keeps room for its playlist's name. */
+.canccu-sched__day {
+  flex: 1 0 max(10rem, calc(var(--canccu-sched-across, 1) * 6.5rem));
+  min-width: 0;
+  border-left: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+
+.canccu-sched__date {
+  margin: 0;
+  padding: 0.5rem;
+  font-size: var(--canccu-text-sm);
+}
+
+.canccu-sched__lane-names {
+  display: flex;
+  margin: 0;
+  font-size: var(--canccu-text-xs);
+  color: var(--canccu-color-text-muted);
+}
+
+.canccu-sched__lane-names span {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The hour lines: one per hour of the axis. */
+.canccu-sched__body {
+  position: relative;
+  display: flex;
+  height: var(--canccu-sched-height);
+  background-image: linear-gradient(var(--canccu-color-border) 1px, transparent 1px);
+  background-size: 100% var(--canccu-sched-hour);
+}
+
+.canccu-sched__lane {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.canccu-sched__lane + .canccu-sched__lane {
+  border-left: 1px dashed var(--canccu-color-border);
+}
+
+/* Where breaks may interrupt: a stripe at the lane's left edge, beside the blocks. */
+.canccu-sched__break {
+  position: absolute;
+  left: 0.125rem;
+  width: 0.3125rem;
+  border-radius: 2px;
+}
+
+.canccu-sched__blocks {
+  position: absolute;
+  inset: 0 0.25rem 0 0.625rem;
+}
+
+/* A button, for the tap that opens its details: its text starts at the top, as a block's does. */
+.canccu-sched__block {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  overflow: hidden;
+  padding: 0.25rem 0.375rem;
+  border-left-width: 4px;
+  border-radius: calc(var(--canccu-radius) / 2);
+  box-shadow: 0 0 0 1px var(--canccu-color-surface);
+  color: var(--canccu-color-text);
+  font: inherit;
+  font-size: var(--canccu-text-xs);
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+}
+
+.canccu-sched__block:focus-visible {
+  outline: 3px solid var(--canccu-color-primary);
+  outline-offset: 1px;
+  z-index: 3;
+}
+
+.canccu-sched__block--from-before {
+  border-top-style: dashed;
+}
+
+.canccu-sched__block--to-after {
+  border-bottom-style: dashed;
+}
+
+.canccu-sched__line {
+  position: relative;
+  z-index: 1;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.canccu-sched__time,
+.canccu-sched__more {
+  color: var(--canccu-color-text-muted);
+}
+
+.canccu-sched__block--short .canccu-sched__more {
+  display: none;
+}
+
+/* Where the window loses: greyed and dashed over the block, below its text. */
+.canccu-sched__lose {
+  position: absolute;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  color: var(--canccu-color-text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* One now line across the day; its time sits in the gutter beside it. */
+.canccu-sched__now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  border-top: 2px solid var(--canccu-color-status-down);
+  pointer-events: none;
+}
+
+.canccu-sched__now-badge {
+  position: absolute;
+  right: 0.25rem;
+  z-index: 2;
+  transform: translateY(-50%);
+  padding: 0 0.25rem;
+  border-radius: calc(var(--canccu-radius) / 2);
+  background: var(--canccu-color-status-down);
+  color: var(--canccu-color-primary-text);
+  font-size: var(--canccu-text-xs);
+  white-space: nowrap;
+}
+
+/* A block's details, on tap or Enter: the browser's popover, centred, no script. */
+.canccu-sched__about {
+  max-width: min(26rem, calc(100vw - 2rem));
+  padding: 1rem 1.25rem;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  background: var(--canccu-raised);
+  color: var(--canccu-color-text);
+  box-shadow: var(--canccu-shadow);
+}
+
+.canccu-sched__about > * {
+  margin: 0;
+}
+
+.canccu-sched__about > * + * {
+  margin-top: 0.5rem;
+}
+
+.canccu-sched__zone {
+  margin: 0.75rem 0 0;
+  font-size: var(--canccu-text-sm);
+}
+
+.canccu-sched__list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: var(--canccu-text-sm);
+}
+
+.canccu-sched__list li + li {
+  margin-top: 0.25rem;
+}
+
+.canccu-sched__warn {
+  color: var(--canccu-ink-degraded);
+}
+
+@media (max-width: 60rem) {
+  .canccu-sched__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A phone: one day, full width, picked with the day switch. */
+@media (max-width: 40rem) {
+  /* It scrolls sideways within the page: without the containment its row of days would set the
+     page's minimum width. */
+  .canccu-sched__switch {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    contain: inline-size;
+    scrollbar-width: none;
+  }
+
+  .canccu-sched__day--off,
+  .canccu-sched__now-badge--off {
+    display: none;
+  }
+
+  .canccu-sched__day {
+    flex: 1 1 auto;
+  }
+
+  .canccu-sched__grid {
+    min-width: 0;
+  }
+}
