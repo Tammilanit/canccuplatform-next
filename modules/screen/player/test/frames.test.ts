@@ -32,7 +32,7 @@ describe("the device-state frames", () => {
     vi.useRealTimers();
   });
 
-  it("pairs a screen without a device: the code, the pair dialog's QR, then the state", async () => {
+  it("pairs a screen without a device: the code, then the state", async () => {
     let claimed = false;
     const api = new FakeApi()
       .on("GET /api/screen/device/state", () =>
@@ -54,18 +54,16 @@ describe("the device-state frames", () => {
     await player.start();
     await settle();
     expect(shown()).toBe("pairing");
-    expect(text()).toContain("Demo Event · screen setup");
+    expect(text()).toContain("Demo EventScreen setup");
     expect(text()).toContain("K7Q4 9WXP");
     expect(text()).toContain("Code expires in 9:41");
-    const qr = document.querySelector("svg.canccu-qr path");
-    expect(qr?.getAttribute("d")).toMatch(/^M4 4h1v1h-1z/);
     await settle(2000);
     expect(api.calls).toContain("GET /api/screen/pairing/pr_1");
     claimed = true;
     await settle(2000);
     expect(shown()).toBe("unassigned");
     expect(text()).toContain("Hall left");
-    expect(text()).toContain("Paired. Not assigned to a zone yet.");
+    expect(text()).toContain("Paired. Waiting for a zone.");
     expect(api.calls).toContain("GET /api/screen/device/stream");
     await player.start();
   });
@@ -107,21 +105,21 @@ describe("the device-state frames", () => {
     const { player } = setup(api);
     await player.start();
     expect(shown()).toBe("refused");
-    expect(text()).toContain("Not at the event's venue");
+    expect(text()).toContain("Not at the venue");
     expect(text()).toContain("emergency switch");
     await settle(RETRY_MS);
     expect(api.calls.filter((c) => c === "GET /api/screen/device/state")).toHaveLength(2);
   });
 
-  it("keeps the venue frame for the venue check: another 403 retries behind connecting", async () => {
+  it("keeps the venue frame for the venue check: another 403 retries as unreachable", async () => {
     const api = new FakeApi().on("GET /api/screen/device/state", () =>
       problem(403, "missing_right"),
     );
     const { player } = setup(api);
     await player.start();
     expect(shown()).toBe("unknown");
-    expect(text()).toContain("Connecting…");
-    expect(text()).not.toContain("Not at the event's venue");
+    expect(text()).toContain("No connection yet");
+    expect(text()).not.toContain("Not at the venue");
   });
 
   it("counts the code's time on the server's clock, not a kiosk clock that runs fast", async () => {
@@ -190,7 +188,7 @@ describe("the device-state frames", () => {
     home = json(503, { error: { code: "unavailable", message: "x" } });
     await settle(RETRY_MS);
     expect(shown()).toBe("moved");
-    expect(text()).toContain("Moved, ask the crew");
+    expect(text()).toContain("Crew: open its new address on the kiosk.");
     expect(nav.went).toEqual([]);
   });
 
@@ -219,7 +217,7 @@ describe("the device-state frames", () => {
     expect(second.nav.hashValue).toBe("");
   });
 
-  it("retries behind a connecting frame when the server does not answer", async () => {
+  it("retries behind a no-connection frame when the server does not answer", async () => {
     let up = false;
     const api = new FakeApi().on("GET /api/screen/device/state", () =>
       up ? json(200, screenState()) : problem(502, "bad_gateway"),
@@ -227,7 +225,7 @@ describe("the device-state frames", () => {
     const { player } = setup(api);
     await player.start();
     expect(shown()).toBe("unknown");
-    expect(text()).toContain("Connecting…");
+    expect(text()).toContain("No connection yet");
     up = true;
     await settle(2000);
     expect(shown()).toBe("playing");
@@ -270,12 +268,14 @@ describe("while playing", () => {
     expect(document.body.classList.contains("canccu-is-offline")).toBe(false);
     await settle(1);
     expect(document.body.classList.contains("canccu-is-offline")).toBe(true);
-    expect(document.querySelector(".canccu-offline-mark")?.textContent).toBe("offline since 18:40");
+    expect(document.querySelector(".canccu-offline-marker")?.textContent).toBe(
+      "offline since 18:40",
+    );
     expect(shown()).toBe("playing");
     api.streamAnswer = () => api.openStream();
     await settle(30_000);
     expect(document.body.classList.contains("canccu-is-offline")).toBe(false);
-    expect(document.querySelector(".canccu-offline-mark")).toBeNull();
+    expect(document.querySelector(".canccu-offline-marker")).toBeNull();
   });
 
   it("polls the state every 10 s after three failed connects", async () => {
@@ -347,11 +347,11 @@ describe("while playing", () => {
     await player.start();
     await settle();
     const first = layout();
-    expect(first?.textContent).toBe("Hello");
+    expect(first?.querySelector(".canccu-widget__line")?.textContent).toBe("Hello");
     api.send("widget", { state_version: 4, region_id: "ticker", index: 0, view: { text: "Bye" } });
     await settle(2000);
     expect(layout()).toBe(first);
-    expect(first?.textContent).toBe("Bye");
+    expect(first?.querySelector(".canccu-widget__line")?.textContent).toBe("Bye");
   });
 
   it("takes the server's time from the state until a heartbeat answers", async () => {
@@ -380,8 +380,8 @@ describe("while playing", () => {
     api.send("command", { command: "identify", expires_at: expires });
     await settle();
     expect(document.querySelector(".canccu-identify")?.textContent).toContain("Hall left");
-    expect(text()).toContain("zone: Main hall · v1.0.0");
-    expect(text()).toContain("identify · 15 s left");
+    expect(text()).toContain("Main hall · version 1.0.0");
+    expect(text()).toContain("15 s left");
     await settle(15_000);
     expect(document.querySelector(".canccu-identify")).toBeNull();
     api.send("command", { command: "reload", expires_at: expires });

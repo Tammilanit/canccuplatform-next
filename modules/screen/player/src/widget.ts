@@ -127,6 +127,24 @@ function codeExpired(view: View, nowMs: number): boolean {
   return !Number.isNaN(ms) && nowMs >= ms;
 }
 
+/** A template's progress bar (templates.ts, `bar`) and the seconds it spans. */
+const BAR_SPAN = /(?:^| )canccu-widget__bar--(\d+)s(?: |$)/;
+
+/**
+ * The milliseconds a bar spans: from its class, or from its `canccu-widget__bar-end` child, the
+ * time one span after the bar's own (templates.ts, `CODE_BAR`). `undefined` for a time that is no
+ * bar, `null` for a bar whose span is unknown.
+ */
+function barSpan(el: HTMLTimeElement, target: number): number | null | undefined {
+  const fixed = BAR_SPAN.exec(el.className)?.[1];
+  if (fixed !== undefined) return Number(fixed) * 1000;
+  if (!el.classList.contains("canccu-widget__bar")) return undefined;
+  const end = Date.parse(
+    el.querySelector(".canccu-widget__bar-end")?.getAttribute("datetime") ?? "",
+  );
+  return Number.isNaN(end) || end <= target ? null : end - target;
+}
+
 const two = (n: number): string => String(n).padStart(2, "0");
 
 /** `00:47:18`: hours run past 24 rather than turn into days, so the text stays one shape. */
@@ -142,9 +160,19 @@ export function countdownText(ms: number): string {
  */
 export function fillCountdowns(root: ParentNode, nowMs: number): void {
   for (const el of root.querySelectorAll<HTMLTimeElement>("time[datetime]")) {
-    if (el.textContent !== "" && el.dataset.canccuCountdown === undefined) continue;
+    // A bar's end is data for the bar, not a countdown of its own.
+    if (el.classList.contains("canccu-widget__bar-end")) continue;
     const target = Date.parse(el.getAttribute("datetime") ?? "");
     if (Number.isNaN(target)) continue;
+    const span = barSpan(el, target);
+    if (span === null) continue;
+    if (span !== undefined) {
+      // Empty before its last `span`, full at its time.
+      const progress = Math.min(1, Math.max(0, 1 - (target - nowMs) / span));
+      el.style.setProperty("--canccu-progress", String(Math.round(progress * 1000) / 1000));
+      continue;
+    }
+    if (el.textContent !== "" && el.dataset.canccuCountdown === undefined) continue;
     el.dataset.canccuCountdown = "";
     el.textContent = countdownText(target - nowMs);
   }

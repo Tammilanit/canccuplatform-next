@@ -130,7 +130,7 @@ describe("a cold boot", () => {
       expect(player.state?.zone?.key).toBe("main");
       await vi.advanceTimersByTimeAsync(OFFLINE_AFTER_MS);
       expect(document.body.classList.contains("canccu-is-offline")).toBe(true);
-      expect(document.querySelector(".canccu-offline-mark")?.textContent).toBe(
+      expect(document.querySelector(".canccu-offline-marker")?.textContent).toBe(
         "offline since 18:40",
       );
       player.live.stop();
