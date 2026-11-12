@@ -126,7 +126,8 @@ async def test_rights_required(parts: Parts) -> None:
 async def test_settings_form_generated_and_saved(parts: Parts) -> None:
     client, service, _, _ = parts
     page = await client.get("/settings/admin")
-    assert "name=timezone" in page.text and "<option selected>en</option>" in page.text
+    assert "name=timezone" in page.text
+    assert '<option value="en" selected>English</option>' in page.text
     r = await client.post(
         "/settings/admin",
         data={"settings_version": "0", "timezone": "Europe/Helsinki", "language": "fi"},

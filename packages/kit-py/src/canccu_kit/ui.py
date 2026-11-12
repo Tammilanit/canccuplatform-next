@@ -5,13 +5,21 @@ module serves. Every function returns HTML text with every value escaped."""
 from __future__ import annotations
 
 import html
+import os
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Literal, Protocol
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .errors import KitError
+
+# The stylesheet each module serves; its image sets CANCCU_UI_CSS, since an installed kit has no
+# packages/ui beside it.
+UI_CSS = Path(
+    os.environ.get("CANCCU_UI_CSS", Path(__file__).resolve().parents[3] / "ui" / "ui.css")
+)
 
 # packages/ui/src/menu.json, which tests/test_ui.py holds this copy to.
 MENU: dict[str, Any] = {
@@ -94,7 +102,8 @@ MENU: dict[str, Any] = {
 class Viewer(Protocol):
     """Who is signed in: the kit's Session."""
 
-    user_name: str
+    @property
+    def user_name(self) -> str: ...
 
     def has(self, right: str) -> bool: ...
 

@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable
 
 from canccu_kit import Event, KitError, error_body
 from canccu_kit.rights import SESSION_COOKIE, Session, session_id_from_cookie
+from canccu_kit.ui import empty_state, notice
 from canccu_kit.web_security import SAFE_METHODS
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
@@ -14,7 +15,7 @@ from starlette.routing import Route
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from .auth import ABSOLUTE, FLOW_LIFETIME, Auth, safe_return_path
-from .pages import BASE, page
+from .pages import BASE, front, page
 
 Authorize = Callable[[str | None, str], Awaitable[Session]]
 OnEvent = Callable[[Event], Awaitable[None]]
@@ -60,12 +61,45 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
         )
         return response
 
-    def failed(exc: KitError, title: str = "Sign-in failed") -> Response:
-        return page(
-            title,
-            f"<p>{html.escape(exc.message)}</p><p><a href={BASE}/sign-in>Back to sign-in</a></p>",
-            exc.status,
+    async def failed(request: Request, exc: KitError) -> Response:
+        """The sign-in page again, with what went wrong said above its button."""
+        warning = notice("warn", "Sign-in didn't finish", exc.message)
+        return await sign_in_card(request, warning, exc.status)
+
+    async def sign_in_card(request: Request, warning: str = "", status: int = 200) -> Response:
+        # The page tells people what to do, never operator wording such as env names (UX A5).
+        intro = (
+            '<p class="canccu-overline">Organisers and crew</p><h1>Sign in to run the event</h1>'
         )
+        if auth.discord is None:
+            card = intro + notice(
+                "info",
+                "Sign-in isn't switched on yet",
+                "The person who installed the platform finishes it in the setup guide."
+                " It works here as soon as they do.",
+            )
+        else:
+            back = safe_return_path(request.query_params.get("next"))
+            hidden = f'<input type=hidden name=next value="{html.escape(back)}">' if back else ""
+            card = (
+                intro
+                + (
+                    warning
+                    or '<p class="canccu-muted">Use the Discord account you have a role with.'
+                    " You come back here signed in.</p>"
+                )
+                + f'<form method=post action="{FLOW_PATH}">{hidden}<button class="canccu-button '
+                'canccu-button--primary canccu-button--lg canccu-button--block">'
+                "Continue with Discord</button></form>"
+                '<p class="canccu-small canccu-muted">No role yet? Sign in once anyway, then ask'
+                " an event owner to give you one.</p>"
+            )
+        if not await auth.store.has_owner():
+            card += (
+                f'<p class="canccu-small">First start? <a href="{BASE}/first-run">'
+                "Use the first-run code</a>.</p>"
+            )
+        return await front(request, "Sign in", card, status)
 
     async def to_discord(claim_hash: str | None, return_path: str | None = None) -> Response:
         url, nonce = await auth.start(claim_hash, return_path)
@@ -91,25 +125,14 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
 
     # --- pages
     async def sign_in_page(request: Request) -> Response:
-        if auth.discord is None:
-            body = (
-                "<p>Discord sign-in is not configured: set CANCCU_DISCORD_CLIENT_ID,"
-                " CANCCU_DISCORD_CLIENT_SECRET and CANCCU_PUBLIC_URL.</p>"
-            )
-        else:
-            back = safe_return_path(request.query_params.get("next"))
-            hidden = f'<input type=hidden name=next value="{html.escape(back)}">' if back else ""
-            body = f"<form method=post>{hidden}<button>Sign in with Discord</button></form>"
-        if not await auth.store.has_owner():
-            body += f"<p>First start? <a href={BASE}/first-run>Use the first-run code</a>.</p>"
-        return page("Sign in", body)
+        return await sign_in_card(request)
 
     async def sign_in_start(request: Request) -> Response:
         back = (await request.form()).get("next")
         try:
             return await to_discord(None, back if isinstance(back, str) else None)
         except KitError as exc:
-            return failed(exc)
+            return await failed(request, exc)
 
     def clear_flow(response: Response) -> Response:
         # The flow is used up whatever the outcome; its nonce has no further use.
@@ -122,7 +145,7 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
         query = request.query_params
         if "error" in query:
             cancelled = KitError("Sign-in was cancelled.", status=400, code="sign_in_cancelled")
-            return clear_flow(failed(cancelled))
+            return clear_flow(await failed(request, cancelled))
         try:
             token, _, back = await auth.finish(
                 query.get("state", ""),
@@ -131,7 +154,7 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
                 session_id(request),
             )
         except KitError as exc:
-            return clear_flow(failed(exc))
+            return clear_flow(await failed(request, exc))
         response = clear_flow(RedirectResponse(back or f"{BASE}/", status_code=303))
         response.set_cookie(
             SESSION_COOKIE,
@@ -145,18 +168,30 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
         return response
 
     async def first_run_page(request: Request) -> Response:
+        return await first_run_card(request)
+
+    async def first_run_card(request: Request, warning: str = "", status: int = 200) -> Response:
         if await auth.store.has_owner():
-            return page(
-                "First run",
-                f"<p>This platform has an owner. <a href={BASE}/sign-in>Sign in</a>.</p>",
+            card = (
+                "<h1>This platform has an owner</h1>"
+                f'<a class="canccu-button canccu-button--primary canccu-button--lg '
+                f'canccu-button--block" href="{BASE}/sign-in">Sign in</a>'
             )
-        return page(
-            "First run",
-            "<p>Enter the first-run code from admin's log, then sign in with Discord:"
-            " that Discord account becomes the owner.</p>"
-            "<form method=post><input name=code autocomplete=off required>"
-            " <button>Continue with Discord</button></form>",
-        )
+        else:
+            card = (
+                '<p class="canccu-overline">First start</p><h1>Become the owner</h1>'
+                + (
+                    warning
+                    or '<p class="canccu-muted">Enter the first-run code from admin\'s log, then'
+                    " sign in with Discord: that Discord account becomes the owner.</p>"
+                )
+                + '<form method=post><div class="canccu-field"><label class="canccu-field__label"'
+                ' for="canccu-field-code">First-run code</label><input class="canccu-input"'
+                ' id="canccu-field-code" name=code autocomplete=off required></div>'
+                '<button class="canccu-button canccu-button--primary canccu-button--lg '
+                'canccu-button--block">Continue with Discord</button></form>'
+            )
+        return await front(request, "First run", card, status)
 
     async def first_run_start(request: Request) -> Response:
         form = await request.form()
@@ -164,7 +199,8 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
             claim = await auth.check_first_run_code(str(form.get("code", "")))
             return await to_discord(claim)
         except KitError as exc:
-            return failed(exc, "First run")
+            warning = notice("warn", "That didn't work", exc.message)
+            return await first_run_card(request, warning, exc.status)
 
     async def sign_out_page(request: Request) -> Response:
         await auth.sign_out(session_id(request))
@@ -172,26 +208,53 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
 
     async def people_page(request: Request) -> Response:
         session = await authorize(request.headers.get("cookie"), "admin.rights.write")
+        people = await auth.users()
         rows = []
-        for user, role in await auth.users():
+        for user, role in people:
             if role == "owner":
-                change = "owner"
+                change = '<span class="canccu-badge canccu-badge--primary">Owner</span>'
             else:
                 options = "".join(
-                    f"<option value={v}{' selected' if (role or 'none') == v else ''}>{v}</option>"
-                    for v in ("none", "admin")
+                    f"<option value={v}{' selected' if (role or 'none') == v else ''}>{label}"
+                    "</option>"
+                    for v, label in (("none", "No role"), ("admin", "Admin"))
                 )
                 change = (
-                    f"<form method=post action={BASE}/people/{html.escape(user.id)}>"
-                    f"<select name=role>{options}</select> <button>Save</button></form>"
+                    f'<form method=post action="{BASE}/people/{html.escape(user.id)}"'
+                    ' class="canccu-cluster"><select class="canccu-input canccu-select-inline"'
+                    f' name=role aria-label="Role of {html.escape(user.name)}">{options}</select>'
+                    '<button class="canccu-button canccu-button--secondary canccu-button--sm">'
+                    "Save</button></form>"
                 )
-            rows.append(f"<tr><td>{html.escape(user.name)}</td><td>{change}</td></tr>")
-        return page(
+            rows.append(
+                f'<tr><td><span class="canccu-user"><span class="canccu-avatar" aria-hidden="true">'
+                f"{html.escape(''.join(w[0] for w in user.name.split()[:2]).upper())}</span>"
+                f"{html.escape(user.name)}</span></td><td>{change}</td></tr>"
+            )
+        if len(people) > 1:
+            body = (
+                '<section class="canccu-card canccu-card--flush"><table class="canccu-table">'
+                f"<thead><tr><th>Who</th><th>Role</th></tr></thead><tbody>{''.join(rows)}"
+                "</tbody></table></section>"
+            )
+        else:
+            body = (
+                '<section class="canccu-card">'
+                + empty_state(
+                    "users",
+                    "Only you so far",
+                    "People get a role here after they sign in once with Discord.",
+                )
+                + "</section>"
+            )
+        return await page(
+            request,
             "People",
-            "<p>Everyone who has signed in. An admin may change settings and the profile;"
-            " only the owner hands out roles.</p>"
-            f"<table border=1 cellpadding=4><tr><th>Name<th>Role</tr>{''.join(rows)}</table>",
+            body,
             session=session,
+            current="people",
+            description="Everyone who has signed in. An admin may change settings and the"
+            " profile; only the owner hands out roles.",
         )
 
     async def people_save(request: Request) -> Response:

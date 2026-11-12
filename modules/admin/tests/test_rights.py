@@ -78,10 +78,11 @@ async def test_signed_in_without_a_role_gets_a_friendly_page(
     for path in ("/admin/settings", "/admin/people"):
         r = await world.browser(member).get(path)
         assert r.status_code == 403 and r.headers["content-type"].startswith("text/html")
-        assert "ask the owner for a role" in r.text.lower()
+        assert "ask an event owner to add it to your role" in r.text
+        assert "admin." not in r.text  # the right it lacked goes to the log only (UX audit B3)
         assert "/admin/sign-out" in r.text  # a way out for the wrong account
     r = await world.browser(member).get("/admin/", follow_redirects=True)
-    assert r.status_code == 403 and "ask the owner for a role" in r.text.lower()
+    assert r.status_code == 403 and "ask an event owner" in r.text
 
 
 async def test_people_link_needs_the_rights_right(

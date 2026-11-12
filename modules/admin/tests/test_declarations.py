@@ -143,7 +143,7 @@ def test_form_integer_input_and_parse() -> None:
 
 def test_form_integer_list() -> None:
     (s,) = parse({"key": "k", "type": "list", "items": "integer", "default": [30, 10]})
-    assert "value='30, 10'" in field_html(s, None)
+    assert 'value="30, 10"' in field_html(s, None)
     assert from_form([s], {"k": "30, 5"}) == {"k": [30, 5]}
     with pytest.raises(BadSettings):
         from_form([s], {"k": "30, x"})

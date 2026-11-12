@@ -1,51 +1,96 @@
-"""The page frame shared by every server-rendered admin page."""
+"""The frame of admin's server-rendered pages: packages/ui's organiser shell (canccu_kit.ui)."""
 
 from __future__ import annotations
 
-import html
+from typing import Any
 
+from canccu_kit import TenantResolver
 from canccu_kit.rights import Session
-from starlette.responses import HTMLResponse
+from canccu_kit.ui import UI_CSS, EventInfo, front_page, shell_page
+from starlette.requests import Request
+from starlette.responses import FileResponse, HTMLResponse, Response
 
 BASE = "/admin"  # Caddy serves module pages under /admin/ and strips it
-# (path, label, the right the page needs): a link the user cannot follow is not shown.
-NAV = (
-    ("settings", "Settings", "admin.settings.read"),
-    ("health-view", "Health", "admin.settings.read"),
-    ("profile", "Profile", "admin.profile.read"),
-    ("people", "People", "admin.rights.write"),
-)
-# The "Event" menu (brief P4, plan issue-187 D9): the event's pages, served by the modules that
-# own them; (href, label, the rights of which any one opens the page).
-EVENT_NAV = (
-    ("/agenda/", "Run of show", ("agenda.items.write", "agenda.crew.read")),
-    ("/notify/admin/topics", "Notifications", ("notify.topics.write", "notify.stats.read")),
-    ("/theming/studio/", "Theme", ("theming.theme.write",)),
-)
-SIGN_OUT = (
-    f"<form method=post action={BASE}/sign-out style='display:inline'>"
-    "<button>Sign out</button></form>"
-)
+CSS = f"{BASE}/static/ui.css"
+# Parts of the platform by name, not id (UX audit A2); Health keeps the id in its log column.
+PART_NAMES = {
+    "admin": "Admin",
+    "agenda": "Run of show",
+    "notify": "Notifications",
+    "screen": "Screens",
+    "theming": "Themes",
+    "tenants": "Events",
+    "games": "Games",
+    "tournament": "Tournament",
+    "hello": "Test module",
+}
+SETTINGS_NAMES = {"admin": "General"}
+MODULE_ICONS = {
+    "admin": "sliders",
+    "agenda": "calendar",
+    "notify": "bell",
+    "screen": "monitor",
+    "games": "flag",
+}
+HEALTH_WORDS = {"ok": "Running", "degraded": "Slow", "down": "Down"}
+HEALTH_ORDER = {"down": -2, "degraded": -1}  # trouble first
+# What a refused page is, for "Your role doesn't include …".
+PAGE_NAMES = {
+    "settings": "Settings",
+    "health-view": "Health",
+    "profile": "the event profile",
+    "people": "People",
+}
 
 
-def page(
-    title: str, body: str, status: int = 200, *, session: Session | None = None
+def part_name(module: str, *, settings: bool = False) -> str:
+    named = SETTINGS_NAMES.get(module) if settings else None
+    return named or PART_NAMES.get(module) or module.replace("-", " ").capitalize()
+
+
+def is_page(request: Request) -> bool:
+    path = request.url.path
+    return not (path.startswith("/api/") or path.startswith("/internal/"))
+
+
+async def event_of(request: Request) -> EventInfo | None:
+    resolver: TenantResolver | None = getattr(request.app.state, "tenants", None)
+    return None if resolver is None else await resolver.event(request.headers.get("host"))
+
+
+async def page(
+    request: Request,
+    title: str,
+    body: str,
+    status: int = 200,
+    *,
+    session: Session | None = None,
+    current: str | None = None,
+    **shell: Any,
 ) -> HTMLResponse:
-    """A page; with a session it gets the navigation that session may follow."""
-    header = ""
-    if session is not None:
-        links = [f'<a href="{BASE}/{p}">{n}</a>' for p, n, right in NAV if session.has(right)]
-        event = [
-            f'<a href="{href}">{n}</a>'
-            for href, n, rights in EVENT_NAV
-            if any(session.has(r) for r in rights)
-        ]
-        if event:
-            links.append(f"Event: {' · '.join(event)}")
-        header = f"<nav>{' · '.join([*links, SIGN_OUT])}</nav>"
-    return HTMLResponse(
-        f"<!doctype html><meta charset=utf-8><title>{html.escape(title)}</title>"
-        f"<body style='font-family:sans-serif;max-width:48rem;margin:2rem auto'>"
-        f"{header}<h1>{html.escape(title)}</h1>{body}</body>",
-        status_code=status,
+    """A page in the shell; with a session it gets the menu that session may follow."""
+    doc = shell_page(
+        title,
+        body,
+        session=session,
+        event=await event_of(request),
+        current=current,
+        css=[CSS],
+        **shell,
     )
+    return HTMLResponse(doc, status_code=status)
+
+
+async def front(
+    request: Request, title: str, card: str, status: int = 200, **shell: Any
+) -> HTMLResponse:
+    """A front door (sign-in, first run): the event's poster and one card."""
+    doc = front_page(title, card, event=await event_of(request), css=[CSS], **shell)
+    return HTMLResponse(doc, status_code=status)
+
+
+async def static_ui_css(request: Request) -> Response:
+    response = FileResponse(UI_CSS, media_type="text/css")
+    response.headers["Cache-Control"] = "public, max-age=300"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response

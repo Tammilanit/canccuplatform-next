@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-import html
+import logging
 from urllib.parse import urlencode
 
 from canccu_kit import (
@@ -17,8 +17,9 @@ from canccu_kit import (
     is_tenant_id,
     tenant_scope,
 )
-from canccu_kit.rights import Session
+from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.starlette import install, install_service_identity
+from canccu_kit.ui import empty_state, error_view, esc, icon, notice
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.requests import Request
@@ -28,9 +29,22 @@ from starlette.routing import Route
 from .auth import Auth
 from .auth_routes import Authorize, OnEvent, OriginCheck, auth_routes
 from .forms import field_html, from_form
-from .pages import BASE, SIGN_OUT, page
+from .pages import (
+    BASE,
+    HEALTH_ORDER,
+    HEALTH_WORDS,
+    MODULE_ICONS,
+    PAGE_NAMES,
+    event_of,
+    is_page,
+    page,
+    part_name,
+    static_ui_css,
+)
 from .service import BadSettings, Service
 from .tenancy import TenantPaths
+
+log = logging.getLogger("canccu.admin")
 
 MODULES = (
     "screen",
@@ -173,18 +187,58 @@ def create_app(
         return JSONResponse(await service.import_zip(await request.body(), session.user_id))
 
     # --- pages
+    async def page_error(request: Request, exc: Exception) -> Response:
+        """The API keeps its JSON body; a page says the refusal in words, in the shell of the
+        session it has, and the right it lacked goes to the log only (UX audit B3)."""
+        assert isinstance(exc, KitError)
+        if not is_page(request):
+            return JSONResponse(exc.to_body(), status_code=exc.status)
+        if isinstance(exc, MissingRight):
+            log.info("page %s refused: %s", request.url.path, exc.message)
+        try:
+            session = await auth.session(session_id_from_cookie(request.headers.get("cookie")))
+        except KitError:
+            session = None
+        event = await event_of(request)
+        title, view = error_view(
+            exc,
+            session=session,
+            page=PAGE_NAMES.get(request.url.path.split("/")[1], "this page"),
+            event=event.name if event else None,
+            retry=f"{BASE}{request.url.path}",
+            back=(f"{BASE}/settings", "Back to Settings"),
+        )
+        return await page(request, title, view, exc.status, session=session, plain=True)
+
     async def index(request: Request) -> Response:
         return RedirectResponse(f"{BASE}/settings", status_code=303)
 
     async def settings_index(request: Request) -> Response:
         session = await need(request, "admin.settings.read")
-        links = "".join(
-            f'<li><a href="{BASE}/settings/{m}">{m}</a></li>' for m in service.declarations
+        rows = "".join(
+            f'<a class="canccu-list__row" href="{BASE}/settings/{m}">'
+            f'<span class="canccu-list__icon">{icon(MODULE_ICONS.get(m, "sliders"))}</span>'
+            '<span class="canccu-list__main"><p class="canccu-list__title">'
+            f"{esc(part_name(m, settings=True))}</p>"
+            f'<p class="canccu-list__meta">{esc(", ".join(s.label for s in declared[:3]))}</p>'
+            f'</span><span class="canccu-list__end">{len(declared)} '
+            f"{'setting' if len(declared) == 1 else 'settings'}{icon('right')}</span></a>"
+            for m, declared in service.declarations.items()
         )
-        return page(
+        body = (
+            f'<section class="canccu-card canccu-card--flush"><div class="canccu-list">{rows}'
+            "</div></section>"
+            if rows
+            else empty_state("sliders", "Nothing to set yet", "No module declares settings.")
+        )
+        return await page(
+            request,
             "Settings",
-            f"<ul>{links}</ul>" if links else "<p>No module declares settings.</p>",
+            body,
             session=session,
+            current="settings",
+            narrow=True,
+            description="How each part of the event behaves. A change applies when you save it.",
         )
 
     async def settings_form(request: Request) -> Response:
@@ -193,13 +247,25 @@ def create_app(
         declared = service.declarations.get(module, [])
         current = await service.get_settings(module)
         fields = "".join(field_html(s, current["values"].get(s.key)) for s in declared)
-        notice = (request.query_params.get("saved") and "<p><b>Saved.</b></p>") or ""
-        return page(
-            f"Settings: {module}",
-            f"{notice}<form method=post>"
+        saved = (
+            notice("ok", "Saved", "The change applies now.")
+            if request.query_params.get("saved")
+            else ""
+        )
+        form = (
+            f'{saved}<form method=post class="canccu-card canccu-form">'
             f"<input type=hidden name=settings_version value={current['settings_version']}>"
-            f"{fields}<button>Save</button></form>",
+            f'{fields}<div class="canccu-cluster">'
+            '<button class="canccu-button canccu-button--primary">Save</button></div></form>'
+        )
+        return await page(
+            request,
+            part_name(module, settings=True),
+            form,
             session=session,
+            current="settings",
+            narrow=True,
+            crumb=(f"{BASE}/settings", "Settings"),
         )
 
     async def settings_save(request: Request) -> Response:
@@ -222,30 +288,65 @@ def create_app(
         own = (await health.run()).body
         rows = [(health.module, own["status"], own["version"], "")]
         rows += [(h.module, h.status, h.version, h.detail) for h in await service.health_view()]
+        rows.sort(key=lambda r: (HEALTH_ORDER.get(r[1], 0), part_name(r[0])))
         trs = "".join(
-            f"<tr><td>{html.escape(m)}</td><td>{html.escape(s)}</td><td>{html.escape(v)}</td>"
-            f"<td>{html.escape(d)}</td></tr>"
+            f"<tr><td><b>{esc(part_name(m))}</b></td>"
+            f'<td><span class="canccu-badge canccu-badge--{esc(s)}">'
+            f"{esc(HEALTH_WORDS.get(s, s))}</span></td><td>{esc(d)}</td>"
+            f'<td class="canccu-hide-phone canccu-num">{esc(v)}</td>'
+            f'<td class="canccu-hide-phone"><code class="canccu-muted">{esc(m)}</code></td></tr>'
             for m, s, v, d in rows
         )
-        return page(
+        counts = [
+            f"{n} {HEALTH_WORDS[k].lower()}"
+            for k in ("ok", "degraded", "down")
+            if (n := sum(1 for r in rows if r[1] == k))
+        ]
+        table = (
+            '<section class="canccu-card canccu-card--flush"><table class="canccu-table">'
+            "<thead><tr><th>Part</th><th>Status</th><th>What it says</th>"
+            '<th class="canccu-hide-phone">Version</th><th class="canccu-hide-phone">Log name</th>'
+            f"</tr></thead><tbody>{trs}</tbody></table></section>"
+        )
+        return await page(
+            request,
             "Health",
-            "<table border=1 cellpadding=4><tr><th>Module<th>Status<th>Version"
-            f"<th>Detail</tr>{trs}</table>",
+            table,
             session=session,
+            current="health",
+            description=f"{len(rows)} parts: {', '.join(counts)}. Checked when you open the page.",
+            actions=f'<a class="canccu-button canccu-button--secondary" href="{BASE}/health-view">'
+            f"{icon('refresh')}Check now</a>",
         )
 
     async def profile_page(request: Request) -> Response:
         session = await need(request, "admin.profile.read")
-        message = html.escape(request.query_params.get("message", ""))
-        warns = "".join(f"<li>{html.escape(w)}</li>" for w in request.query_params.getlist("warn"))
-        return page(
-            "Profile",
-            (f"<p><b>{message}</b></p>" if message else "")
-            + (f"<p>Warnings:</p><ul>{warns}</ul>" if warns else "")
-            + f"<form method=post action={BASE}/profile/save><button>Save profile to event folder"
-            f"</button></form><form method=post action={BASE}/profile/load>"
-            "<button>Load profile from event folder</button></form>",
+        message = request.query_params.get("message", "")
+        warns = request.query_params.getlist("warn")
+        notes = notice("ok", message) if message else ""
+        if warns:
+            notes += notice("warn", "Loaded with warnings", "; ".join(warns))
+        cards = (
+            '<section class="canccu-card"><h2 class="canccu-card__title">Save</h2>'
+            '<p class="canccu-card__desc">Writes the event\'s name, modules, settings and look'
+            " to the event folder, as one profile.</p>"
+            f'<form method=post action="{BASE}/profile/save"><button class="canccu-button '
+            'canccu-button--secondary">Save to the event folder</button></form></section>'
+            '<section class="canccu-card"><h2 class="canccu-card__title">Replace</h2>'
+            '<p class="canccu-card__desc">Loads the profile in the event folder. It replaces'
+            " settings and look, and can't be undone; run of show and people stay.</p>"
+            f'<form method=post action="{BASE}/profile/load"><button class="canccu-button '
+            'canccu-button--danger-ghost">Load the profile from the event folder</button>'
+            "</form></section>"
+        )
+        return await page(
+            request,
+            "Event profile",
+            notes + cards,
             session=session,
+            current="profile",
+            narrow=True,
+            description="The event's name, modules, settings and look, as one file.",
         )
 
     async def profile_save(request: Request) -> Response:
@@ -276,6 +377,7 @@ def create_app(
             Route("/settings/{module}", settings_form, methods=["GET"]),
             Route("/settings/{module}", settings_save, methods=["POST"]),
             Route("/health-view", health_page),
+            Route("/static/ui.css", static_ui_css, methods=["GET"]),
             Route("/profile", profile_page),
             Route("/profile/save", profile_save, methods=["POST"]),
             Route("/profile/load", profile_load, methods=["POST"]),
@@ -284,6 +386,7 @@ def create_app(
     )
     # Added before install(): Starlette wraps each later middleware around the earlier ones,
     # so the kit's correlation middleware also covers the origin check's 403.
+    app.state.tenants = resolver  # the event the shell's header names (pages.event_of)
     app.add_middleware(OriginCheck, origin=auth.public_origin)
     install(app, health)
     # Innermost, as the kit's install_tenancy places it: the correlation id and the origin check
@@ -291,7 +394,7 @@ def create_app(
     app.user_middleware.append(Middleware(TenantPaths, resolver=resolver))
     install_service_identity(app, identity)
     app.add_exception_handler(NotSignedIn, _not_signed_in)
-    app.add_exception_handler(MissingRight, _missing_right)
+    app.add_exception_handler(KitError, page_error)
     return app
 
 
@@ -301,17 +404,3 @@ async def _not_signed_in(request: Request, exc: Exception) -> Response:
         assert isinstance(exc, NotSignedIn)
         return JSONResponse(exc.to_body(), status_code=exc.status)
     return RedirectResponse(f"{BASE}/sign-in", status_code=303)
-
-
-async def _missing_right(request: Request, exc: Exception) -> Response:
-    """The API answers 403 `missing_right`; a page explains what to do instead."""
-    assert isinstance(exc, MissingRight)
-    if request.url.path.startswith("/api/"):
-        return JSONResponse(exc.to_body(), status_code=exc.status)
-    return page(
-        "No access",
-        "<p>You are signed in, but your account has no right to this page"
-        f" ({html.escape(exc.message)}). Ask the owner for a role, then reload.</p>"
-        f"<p>Wrong account? {SIGN_OUT}</p>",
-        exc.status,
-    )
