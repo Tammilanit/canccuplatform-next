@@ -1,4 +1,4 @@
-// The Screen studio's screenshots (#189; mockups 06, 07, 08 and 13), taken after the screens on
+// The Screen studio's screenshots (#189, #265; mockups 06, 07, 08 and 13), taken after the screens on
 // the same demo fixture (fixture.mjs) and theme, so its live views draw the Pulse the screens do.
 // Two screens play while they are taken, one landscape and one portrait, each in the browser at
 // its own size, so their heartbeats give the device cards an orientation, a size and a state.
@@ -17,6 +17,7 @@ export const STUDIO_PAGES = [
   ["screen-zones", "/admin/screen/zones"],
   ["screen-zone-editor", "/admin/screen/zones/main"],
   ["screen-ticker", "/admin/screen/ticker"],
+  ["screen-pins", "/admin/screen/pins"],
 ].flatMap(([name, path]) => [
   [name, path, DESK],
   [`${name}-phone`, path, PHONE],
@@ -25,6 +26,13 @@ STUDIO_PAGES.push(
   ["screen-pair-phone", "/admin/screen/devices#pair=K7Q49WXP", PHONE],
   ["screen-devices-wide", "/admin/screen/devices", WIDE],
 );
+
+/** Taken while the event is frozen for an hour, then unfrozen: the Pins page and the banner. */
+export const FROZEN_PAGES = [
+  ["screen-pins-frozen", "/admin/screen/pins", DESK],
+  ["screen-pins-frozen-phone", "/admin/screen/pins", PHONE],
+  ["screen-live-frozen", "/admin/screen/live", DESK],
+];
 
 // Live views keep their streams open, so there is no network idle: each view the page has loaded
 // must draw the run of show, then a second lets the entry motion end. Through the iframe element:
@@ -91,7 +99,17 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
     for (const [name, path, viewport] of STUDIO_PAGES) {
       await shot(name, path, viewport, { ready: studioReady });
     }
+    const until = new Date(Date.now() + 3600_000).toISOString();
+    expect(
+      await demo.call("PUT", "/api/screen/pin", { body: { freeze: true, until } }),
+      200,
+      "the freeze",
+    );
+    for (const [name, path, viewport] of FROZEN_PAGES) {
+      await shot(name, path, viewport, { ready: studioReady });
+    }
   } finally {
+    await demo.call("PUT", "/api/screen/pin", { body: { freeze: false } }).catch(() => undefined);
     for (const context of contexts) await context.close();
     for (const device of devices) await demo.revoke(device.id);
   }

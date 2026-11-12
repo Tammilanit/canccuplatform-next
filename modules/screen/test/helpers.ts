@@ -5,7 +5,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
-import type { FastifyInstance, LightMyRequestResponse } from "fastify";
+import type { FastifyInstance } from "fastify";
 import {
   AdminClient,
   Bus,
@@ -16,7 +16,7 @@ import {
   requireTenant,
   runMigrations,
 } from "@canccu/kit";
-import type { Event, PublicEvent, SettingValue, StorageQuota } from "@canccu/kit";
+import type { PublicEvent, SettingValue, StorageQuota } from "@canccu/kit";
 import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
 import type { AuditEntry } from "../src/audit.js";
@@ -29,12 +29,13 @@ import { dispatchOnce, sweepLeases } from "../src/render/dispatch.js";
 import type { DispatchDeps } from "../src/render/dispatch.js";
 import type { RenderDeps } from "../src/render/jobs.js";
 import { MemoryRenderQueue } from "../src/render/queue.js";
+import { call, setCookie } from "./calls.js";
 import { SIGNIN_HOST, SUPERADMIN_HOST, fakeTenants } from "./tenants.js";
 
 /** Tests run only on a database named `*_test` (dropTables refuses any other). */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
 
-export const VENUE_IP = "10.0.0.5";
+export { VENUE_IP } from "./calls.js";
 export const OUTSIDE_IP = "192.0.2.9";
 
 export { SIGNIN_HOST, SUPERADMIN_HOST, TENANTS, context } from "./tenants.js";
@@ -334,55 +335,6 @@ export async function harness(): Promise<Harness> {
   };
 }
 
-export interface Call {
-  host?: string;
-  ip?: string;
-  session?: string;
-  cookies?: Record<string, string>;
-  body?: unknown;
-}
-
-export function call(
-  h: Harness,
-  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
-  url: string,
-  c: Call = {},
-): Promise<LightMyRequestResponse> {
-  const cookies = { ...(c.session ? { canccu_session: c.session } : {}), ...c.cookies };
-  return h.app.inject({
-    method,
-    url,
-    headers: {
-      host: c.host ?? "alpha.test",
-      "x-forwarded-for": c.ip ?? VENUE_IP,
-      cookie: Object.entries(cookies)
-        .map(([k, v]) => `${k}=${v}`)
-        .join("; "),
-      ...(c.body === undefined ? {} : { "content-type": "application/json" }),
-    },
-    ...(c.body === undefined ? {} : { payload: JSON.stringify(c.body) }),
-  });
-}
-
-/** The value a response sets for a cookie, or undefined. */
-export function setCookie(res: LightMyRequestResponse, name: string): string | undefined {
-  const header = [res.headers["set-cookie"] ?? []].flat();
-  const line = header.find((h) => h.startsWith(`${name}=`));
-  return line?.slice(name.length + 1).split(";")[0];
-}
-
-/** The data of the bus events of `type` on `tenant`'s screen stream, oldest first. */
-export function events(h: Harness, type: string, tenant = "alpha"): Record<string, unknown>[] {
-  return (h.store.streams.get(`t:${tenant}:events:screen`) ?? [])
-    .map(([, fields]) => JSON.parse(fields.event ?? "{}") as Event)
-    .filter((e) => e.type === type)
-    .map((e) => e.data);
-}
-
-export function code(res: LightMyRequestResponse): string {
-  return res.json<{ error: { code: string } }>().error.code;
-}
-
 /** Pair a device on `host` end to end; returns its id and the kiosk's device cookie. */
 export async function pairDevice(
   h: Harness,
@@ -407,3 +359,5 @@ export async function pairDevice(
 export { APP_ROLE };
 
 export { fixture, png, upload } from "./uploads.js";
+export { call, code, events, setCookie } from "./calls.js";
+export type { Call } from "./calls.js";
