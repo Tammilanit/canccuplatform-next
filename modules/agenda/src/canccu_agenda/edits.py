@@ -150,7 +150,9 @@ async def delay(
             if inverse is not None:
                 inverse.restore(r, new_row, ["starts_at", "ends_at"], -minutes, announce)
         kinds = await store.kinds(conn)
-        await timers.reschedule(conn, [r for r, _ in updated], kinds, leads, now, announce=announce)
+        moved = [r for r, _ in updated]
+        rearm = {r["id"] for r in moved} if announce else set()
+        await timers.reschedule(conn, moved, kinds, leads, now, rearm=rearm)
         shifted = [(model.item_json(r, kinds, channels), v) for r, v in updated]
         # One correlation id, in order of the new start: a consumer that takes the first of a
         # correlation id gets the earliest.

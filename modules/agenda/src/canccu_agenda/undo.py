@@ -124,9 +124,15 @@ async def undo_page(request: Request) -> Response:
         for step, row in zip(steps, rows, strict=True):
             touched += await _apply(conn, step, row, actor, out)
         kinds = await store.kinds(conn)
-        # One page action, so one choice; steps saved before `announce` existed were announced.
-        announce = all(step.get("announce", True) for step in steps)
-        await timers.reschedule(conn, touched, kinds, leads, now, announce=announce)
+        # Steps saved before `announce` existed were announced.
+        rearm = {
+            step["item_id"]
+            for step in steps
+            if step["op"] == "restore"
+            and step.get("announce", True)
+            and "starts_at" in step["values"]
+        }
+        await timers.reschedule(conn, touched, kinds, leads, now, rearm=rearm)
         rendered = {r["id"]: model.item_json(r, kinds, channels) for r in touched}
         await _store(d, conn, session, out, rendered)
     await d.outbox.flush()

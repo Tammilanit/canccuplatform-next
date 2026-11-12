@@ -216,7 +216,8 @@ async def _move(
     new = await store.update_item(conn, row, values, store.TOURNAMENT)
     version = await store.bump(conn, "agenda_version")
     kinds = await store.kinds(conn)
-    await timers.reschedule(conn, [new], kinds, leads, d.now())
+    rearm = {new["id"]} if "starts_at" in values else set()
+    await timers.reschedule(conn, [new], kinds, leads, d.now(), rearm=rearm)
     item = model.item_json(new, kinds, channels)
     out.append(
         (

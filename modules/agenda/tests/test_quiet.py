@@ -9,10 +9,13 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
+from canccu_kit import Event, tenant_scope
 from conftest import NOW, Env, at
 from test_items import add
 from test_timers import run_at
 from test_undo import undo_id
+
+from canccu_agenda import timers
 
 NOTIFY = Path(__file__).resolve().parents[3] / "contracts" / "notify.md"
 
@@ -107,6 +110,75 @@ async def test_a_quiet_change_moves_a_reminder_an_announced_change_armed(env: En
         await c.patch(path, json=moved, headers=h)
     assert await run_at(env, 45) == []
     assert await run_at(env, 50) == [("agenda.reminder.triggered", 30)]
+
+
+async def _quiet_delay_after_the_30_fired(env: Env, c: Any, h: dict[str, str]) -> str:
+    """A doors item at 60 whose 30-minute reminder has fired, then delayed quietly to 75."""
+    item = await add(c, h, kind="doors", ends_at=at(120))
+    assert await run_at(env, 30) == [("agenda.reminder.triggered", 30)]
+    env.clock[0] = NOW + timedelta(minutes=35)
+    path = f"/api/agenda/items/{item['id']}"
+    await c.post(f"{path}/delay", json={"revision": 1, "minutes": 15, "announce": False}, headers=h)
+    return path
+
+
+async def test_after_a_quiet_delay_a_kind_save_fires_no_reminder_again(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        await _quiet_delay_after_the_30_fired(env, c, h)
+        saved = await c.put(
+            "/api/agenda/kinds/doors", json={"name": "Gates", "revision": 1}, headers=h
+        )
+        assert saved.status_code == 200
+    assert await run_at(env, 45) == []
+    assert await run_at(env, 65) == [("agenda.reminder.triggered", 10)]
+
+
+async def test_after_a_quiet_delay_a_lead_setting_change_fires_no_reminder_again(
+    env: Env,
+) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        await _quiet_delay_after_the_30_fired(env, c, h)
+    env.settings.values["ev-a"] = {"reminder_leads_minutes": [30, 5]}
+    changed = Event(
+        "e1",
+        "admin.settings.changed",
+        1,
+        "t",
+        "admin",
+        {"module": "agenda", "keys": ["reminder_leads_minutes"], "settings_version": 1},
+        tenant="ev-a",
+    )
+    with tenant_scope("ev-a"):
+        await timers.on_settings_changed(env.deps, changed)
+    assert await run_at(env, 45) == []
+    assert await run_at(env, 70) == [("agenda.reminder.triggered", 5)]
+
+
+async def test_after_a_quiet_delay_an_announced_edit_of_other_fields_fires_no_reminder_again(
+    env: Env,
+) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        path = await _quiet_delay_after_the_30_fired(env, c, h)
+        await c.patch(path, json={"revision": 2, "description": "Pizza"}, headers=h)
+    assert await run_at(env, 45) == []
+
+
+async def test_a_reminder_armed_again_by_an_announced_delay_counts_as_unfired(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        item = await add(c, h, ends_at=at(120), reminder_leads_minutes=[30])
+        assert await run_at(env, 30) == [("agenda.reminder.triggered", 30)]
+        env.clock[0] = NOW + timedelta(minutes=35)
+        path = f"/api/agenda/items/{item['id']}"
+        await c.post(f"{path}/delay", json={"revision": 1, "minutes": 15}, headers=h)
+        # Quiet edits drop the armed 30 and bring it back: it has not told anyone of the delay.
+        for revision, leads in ((2, [10]), (3, [30])):
+            quiet = {"revision": revision, "reminder_leads_minutes": leads, "announce": False}
+            await c.patch(path, json=quiet, headers=h)
+    assert await run_at(env, 45) == [("agenda.reminder.triggered", 30)]
 
 
 async def test_undoing_a_quiet_delay_is_quiet_too(env: Env) -> None:

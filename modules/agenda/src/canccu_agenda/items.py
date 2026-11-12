@@ -266,7 +266,8 @@ async def edit(
         row = new_row
         version = await store.bump(conn, "agenda_version")
         kinds = await store.kinds(conn)
-        await timers.reschedule(conn, [row], kinds, leads, d.now(), announce=announce)
+        rearm = {row["id"]} if announce and "starts_at" in values else set()
+        await timers.reschedule(conn, [row], kinds, leads, d.now(), rearm=rearm)
         item = model.item_json(row, kinds, channels)
         await d.outbox.add(
             conn,
