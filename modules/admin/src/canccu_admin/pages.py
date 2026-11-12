@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
-from typing import Any
+import logging
+from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING, Any
 
-from canccu_kit import TenantResolver
-from canccu_kit.rights import Session
-from canccu_kit.ui import UI_CSS, EventInfo, front_page, shell_page
+from canccu_kit import KitError, MissingRight, TenantResolver
+from canccu_kit.rights import Session, session_id_from_cookie
+from canccu_kit.ui import UI_CSS, EventInfo, error_view, front_page, shell_page
 from starlette.requests import Request
-from starlette.responses import FileResponse, HTMLResponse, Response
+from starlette.responses import FileResponse, HTMLResponse, JSONResponse, Response
+
+if TYPE_CHECKING:
+    from .auth import Auth
+
+log = logging.getLogger("canccu.admin")
 
 BASE = "/admin"  # Caddy serves module pages under /admin/ and strips it
 CSS = f"{BASE}/static/ui.css"
@@ -94,3 +101,32 @@ async def static_ui_css(request: Request) -> Response:
     response.headers["Cache-Control"] = "public, max-age=300"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
+
+
+def page_error_handler(auth: Auth) -> Callable[[Request, Exception], Awaitable[Response]]:
+    """The KitError handler of every admin path."""
+
+    async def page_error(request: Request, exc: Exception) -> Response:
+        """The API keeps its JSON body; a page says the refusal in words, in the shell of the
+        session it has, and the right it lacked goes to the log only (UX audit B3)."""
+        assert isinstance(exc, KitError)
+        if not is_page(request):
+            return JSONResponse(exc.to_body(), status_code=exc.status)
+        if isinstance(exc, MissingRight):
+            log.info("page %s refused: %s", request.url.path, exc.message)
+        try:
+            session = await auth.session(session_id_from_cookie(request.headers.get("cookie")))
+        except KitError:
+            session = None
+        event = await event_of(request)
+        title, view = error_view(
+            exc,
+            session=session,
+            page=PAGE_NAMES.get(request.url.path.split("/")[1], "this page"),
+            event=event.name if event else None,
+            retry=f"{BASE}{request.url.path}",
+            back=(f"{BASE}/settings", "Back to Settings"),
+        )
+        return await page(request, title, view, exc.status, session=session, plain=True)
+
+    return page_error

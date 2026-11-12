@@ -9,7 +9,6 @@ from urllib.parse import urlencode
 from canccu_kit import (
     Health,
     KitError,
-    MissingRight,
     NotSignedIn,
     ServiceForbidden,
     ServiceIdentity,
@@ -17,9 +16,9 @@ from canccu_kit import (
     is_tenant_id,
     tenant_scope,
 )
-from canccu_kit.rights import Session, session_id_from_cookie
+from canccu_kit.rights import Session
 from canccu_kit.starlette import install, install_service_identity
-from canccu_kit.ui import empty_state, error_view, esc, icon, notice
+from canccu_kit.ui import empty_state, esc, icon, notice
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.requests import Request
@@ -34,10 +33,8 @@ from .pages import (
     HEALTH_ORDER,
     HEALTH_WORDS,
     MODULE_ICONS,
-    PAGE_NAMES,
-    event_of,
-    is_page,
     page,
+    page_error_handler,
     part_name,
     static_ui_css,
 )
@@ -187,28 +184,6 @@ def create_app(
         return JSONResponse(await service.import_zip(await request.body(), session.user_id))
 
     # --- pages
-    async def page_error(request: Request, exc: Exception) -> Response:
-        """The API keeps its JSON body; a page says the refusal in words, in the shell of the
-        session it has, and the right it lacked goes to the log only (UX audit B3)."""
-        assert isinstance(exc, KitError)
-        if not is_page(request):
-            return JSONResponse(exc.to_body(), status_code=exc.status)
-        if isinstance(exc, MissingRight):
-            log.info("page %s refused: %s", request.url.path, exc.message)
-        try:
-            session = await auth.session(session_id_from_cookie(request.headers.get("cookie")))
-        except KitError:
-            session = None
-        event = await event_of(request)
-        title, view = error_view(
-            exc,
-            session=session,
-            page=PAGE_NAMES.get(request.url.path.split("/")[1], "this page"),
-            event=event.name if event else None,
-            retry=f"{BASE}{request.url.path}",
-            back=(f"{BASE}/settings", "Back to Settings"),
-        )
-        return await page(request, title, view, exc.status, session=session, plain=True)
 
     async def index(request: Request) -> Response:
         return RedirectResponse(f"{BASE}/settings", status_code=303)
@@ -394,7 +369,7 @@ def create_app(
     app.user_middleware.append(Middleware(TenantPaths, resolver=resolver))
     install_service_identity(app, identity)
     app.add_exception_handler(NotSignedIn, _not_signed_in)
-    app.add_exception_handler(KitError, page_error)
+    app.add_exception_handler(KitError, page_error_handler(auth))
     return app
 
 
