@@ -90,14 +90,17 @@
     frames.forEach((f) => seen.observe(f));
   } else frames.forEach((f) => (f.src = f.dataset.src));
 
-  // Each live view drawn at 1920×1080 is scaled to its box (static/studio.css).
+  // Each live view drawn at its screen's size (1920×1080, or 1080×1920 upright) is scaled to the
+  // box that holds it (static/studio.css); offsetWidth is that size, as a transform leaves it.
   const fit = new ResizeObserver((entries) => {
     for (const e of entries) {
-      const frame = e.target.querySelector("iframe");
-      if (frame) frame.style.transform = `scale(${e.contentRect.width / 1920})`;
+      const frame = e.target.querySelector(":scope > iframe");
+      if (frame) frame.style.transform = `scale(${e.contentRect.width / frame.offsetWidth})`;
     }
   });
-  document.querySelectorAll(".canccu-studio-thumb").forEach((box) => fit.observe(box));
+  document
+    .querySelectorAll(".canccu-studio-thumb iframe")
+    .forEach((frame) => fit.observe(frame.parentElement));
 
   // Health and counts stay current: the page is read again and each `data-live` part replaced.
   const live = document.querySelectorAll("[data-live]");

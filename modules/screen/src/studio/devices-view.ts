@@ -7,15 +7,24 @@ import { attrs, emptyState, html, notice } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import { problemsOf, shownZone, uplinkDown } from "./help.js";
 import type { SeenDevice } from "./help.js";
-import { counted, nameOf } from "./messages.js";
+import { counted } from "./messages.js";
 import type { MessageKey } from "./messages.js";
+import { nowShowing } from "./now-line.js";
 import { ago, clockTime, online, since, thumb } from "./views.js";
 import type { ViewContext, ZoneSummary } from "./views.js";
+import type { ZoneRecord } from "../push/store.js";
 
-type Fleet = { zones: readonly ZoneSummary[]; all: readonly SeenDevice[] };
+/** Each zone's composed state by its key, for what its screens show now. */
+export type ZoneStates = ReadonlyMap<string, ZoneRecord | null>;
+type Fleet = { zones: readonly ZoneSummary[]; all: readonly SeenDevice[]; states: ZoneStates };
 
-/** "Main", "mirrors Hall left" or "no zone · paired 10 min ago", then sound and screen size. */
-function placeLine(c: ViewContext, d: SeenDevice, { zones, all }: Fleet): string {
+const portraitOf = (d: SeenDevice): boolean => {
+  const v = d.health?.viewport;
+  return v !== undefined && v.height > v.width;
+};
+
+/** "Main · sound on", "mirrors Hall left · silent" or "no zone · paired 10 min ago", then its size. */
+function placeLine(c: ViewContext, d: SeenDevice, { zones, all }: Omit<Fleet, "states">): string {
   const { t } = c;
   const zoneName = (key: string) => zones.find((z) => z.key === key)?.name ?? key;
   const m = d.mirror_of;
@@ -24,7 +33,8 @@ function placeLine(c: ViewContext, d: SeenDevice, { zones, all }: Fleet): string
     parts.push(t("device.zone", { zone: zoneName(d.zone_key) }));
     const sound = zones.find((z) => z.key === d.zone_key)?.sound;
     // Only the zone's named sound device plays; a mirror never does (contracts/screen.md, Zones).
-    if (sound?.enabled === true && sound.device_id === d.id) parts.push(t("device.sound"));
+    const on = sound?.enabled === true && sound.device_id === d.id;
+    parts.push(t(on ? "device.sound" : "device.sound_off"));
   } else if (m === null) {
     parts.push(t("device.unassigned"));
     if (d.paired_at) parts.push(t("device.paired", { ago: since(t, d.paired_at, c.nowMs) }));
@@ -67,16 +77,15 @@ function statusPart(c: ViewContext, d: SeenDevice, fleet: Fleet, uplink: boolean
         >${f === "clock_drift" ? t("device.flag.clock_drift") : t("device.flag.shared_token")}</span
       >`,
   );
-  const playing = h?.now_playing;
+  const zone = shownZone(d, fleet.all);
+  const what = zone === null ? null : nowShowing(t, fleet.states.get(zone), portraitOf(d), c.nowMs);
+  // An offline screen keeps drawing the last state it got, so it shows what that state shows.
   const shows =
-    shownZone(d, fleet.all) === null
+    zone === null
       ? t("device.now_name")
-      : playing
-        ? t(on ? "device.now" : "device.last", {
-            region: nameOf(t, "region", playing.region_id),
-            widget: nameOf(t, "widget", playing.widget),
-          })
-        : "";
+      : what === null
+        ? ""
+        : t(on ? "device.now" : "device.last", { what });
   const lag = h?.state_lag ?? 0;
   const seen = h?.last_seen_at ?? null;
   const state = [
@@ -253,10 +262,11 @@ export function devicesView(
   c: ViewContext,
   zones: readonly ZoneSummary[],
   devices: readonly SeenDevice[],
+  states: ZoneStates,
 ): Html {
   const { t } = c;
   const uplink = uplinkDown(devices);
-  const fleet = { zones, all: devices };
+  const fleet = { zones, all: devices, states };
   const summary = html`<div data-live="devices-summary">
     <p class="canccu-muted canccu-studio-summary">${summaryLine(c, devices)}</p>
     ${uplink ? notice({ kind: "down", title: t("devices.uplink_title"), text: t("devices.uplink_text") }) : ""}
@@ -269,7 +279,7 @@ export function devicesView(
             <p class="canccu-studio-thumb__name">${d.name}</p>
             <p class="canccu-small canccu-muted">${t("device.not_assigned")}</p>
           </div>`
-        : thumb(zone, t("device.preview", { device: d.name }));
+        : thumb(zone, t("device.preview", { device: d.name }), { portrait: portraitOf(d) });
     return html`<article class="canccu-card canccu-studio-device" id="device-${d.id}">
       ${view}${statusPart(c, d, fleet, uplink)}${deviceActions(c, d, fleet)}
     </article>`;

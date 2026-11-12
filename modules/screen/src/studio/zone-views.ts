@@ -61,13 +61,15 @@ export function zonesView(
   const rows = zones.map((z) => {
     const layout =
       z.layout_id === null ? t("zones.theme_layout") : t("zones.layout", { layout: z.layout_id });
+    // Only the name is the link; the key, layout and screens are its muted second line.
+    const meta = [z.key, layout, counted(t, "zones.screens", screensOf(z.key, devices))];
     return html`<li class="canccu-list__row">
-      <a class="canccu-list__main" href="${STUDIO}zones/${encodeURIComponent(z.key)}"
-        ><span class="canccu-list__title">${z.name}</span
-        ><span class="canccu-list__meta">${z.key} · ${layout}</span></a
-      ><span class="canccu-list__end canccu-small"
-        >${counted(t, "zones.screens", screensOf(z.key, devices))}</span
-      >
+      <div class="canccu-list__main">
+        <p class="canccu-list__title">
+          <a href="${STUDIO}zones/${encodeURIComponent(z.key)}">${z.name}</a>
+        </p>
+        <p class="canccu-list__meta">${meta.join(" · ")}</p>
+      </div>
     </li>`;
   });
   const list =

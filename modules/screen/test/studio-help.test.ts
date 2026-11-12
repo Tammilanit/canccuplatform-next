@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import { problemsOf, shownZone, uplinkDown } from "../src/studio/help.js";
 import type { SeenDevice } from "../src/studio/help.js";
 import { counted, languageOf, nameOf, readable, translator } from "../src/studio/messages.js";
+import { nowShowing } from "../src/studio/now-line.js";
+import type { RegionView, WidgetView } from "../src/compose/build.js";
+import type { ZoneRecord } from "../src/push/store.js";
 
 const at = (s: number) => new Date(Date.parse("2026-03-14T18:00:00Z") + s * 1000).toISOString();
 
@@ -114,5 +117,41 @@ describe("messages", () => {
     expect(languageOf("fi")).toBe("en");
     expect(languageOf(42)).toBe("en");
     expect(translator("fi")("tab.live")).toBe("Live");
+  });
+});
+
+describe("what a device card says a screen shows now", () => {
+  const t = translator("en");
+  const start = Date.parse("2026-03-14T18:00:00Z");
+  const widget = (name: string, view: Record<string, unknown> = {}) =>
+    ({ widget: name, template: null, embed: null, dwell_seconds: 10, stale_after_seconds: null, view }) as unknown as WidgetView; // prettier-ignore
+  const hero = (over: Partial<RegionView>): RegionView =>
+    ({ id: "hero", role: "hero", order: [], cycle_started_at: new Date(start).toISOString(), idle: "next", idle_view: null, widgets: [], claim: null, ...over }) as unknown as RegionView; // prettier-ignore
+  const record = (regions: RegionView[], portrait: RegionView[] = []) =>
+    ({ views: { landscape: { layout: null, regions }, portrait: { layout: null, regions: portrait } } }) as unknown as ZoneRecord; // prettier-ignore
+
+  it("names the hero's idle countdown by the item it counts down to", () => {
+    const idle = hero({ idle_view: { widget: "countdown", view: { label: "Dinner" } } as unknown as RegionView["idle_view"] }); // prettier-ignore
+    expect(nowShowing(t, record([idle]), false, start)).toBe("Dinner countdown");
+    // The portrait layout is a view of its own: a portrait screen reads that one.
+    expect(nowShowing(t, record([idle], [hero({ idle: "logo" })]), true, start)).toBe(
+      "the event's logo",
+    );
+  });
+
+  it("follows the hero's rotation from the epoch-anchored cycle, as every screen of the zone does", () => {
+    const turning = hero({ order: [0, 1], widgets: [widget("photo"), widget("countdown", { label: "Finals" })] }); // prettier-ignore
+    expect(nowShowing(t, record([turning]), false, start + 3_000)).toBe("Photo");
+    expect(nowShowing(t, record([turning]), false, start + 13_000)).toBe("Finals countdown");
+    expect(nowShowing(t, record([turning]), false, start + 23_000)).toBe("Photo");
+  });
+
+  it("says a takeover or the hero's claim before its widgets, and nothing without a state", () => {
+    const claim = (title: unknown) => ({ template: "announcement", content: { title } }) as unknown as RegionView["claim"]; // prettier-ignore
+    const claimed = hero({ widgets: [widget("photo")], order: [0], claim: claim("Dinner is served") }); // prettier-ignore
+    expect(nowShowing(t, record([claimed]), false, start)).toBe("Dinner is served");
+    const full = hero({ id: "_full", role: "full", claim: claim("Please leave the hall") });
+    expect(nowShowing(t, record([claimed, full]), false, start)).toBe("Please leave the hall");
+    expect(nowShowing(t, null, false, start)).toBeNull();
   });
 });

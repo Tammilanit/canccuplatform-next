@@ -91,6 +91,33 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect(viewer).not.toContain('id="canccu-studio-pair"');
   });
 
+  it("draws a screen's card in its own orientation, with its zone, sound and what it shows now", async () => {
+    const { id, token } = await pairDevice(h, "alpha.test", "Café TV");
+    const device = { host: "alpha.test", cookies: { canccu_device: token } };
+    const assigned = await call(h, "PUT", `/api/screen/devices/${id}/assignment`, {
+      host: "alpha.test",
+      session: "admin",
+      body: { zone_key: "main" },
+    });
+    expect(assigned.statusCode).toBe(200);
+    await call(h, "POST", "/api/screen/device/heartbeat", {
+      ...device,
+      body: { state_version: 0, bundle_version: "b1", theme_revision: 0, viewport: { width: 1080, height: 1920 } },
+    }); // prettier-ignore
+    // The state read composes the zone's record, which the card reads for its Now line.
+    expect((await call(h, "GET", "/api/screen/device/state", device)).statusCode).toBe(200);
+    const body = (await page("/admin/screen/devices", "admin")).body;
+    const card = body.slice(body.indexOf(`id="device-${id}"`));
+    expect(card).toMatch(/· sound off · portrait 1080×1920</);
+    expect(card).toMatch(/<p class="canccu-small">Now: [^<]+<\/p>/);
+    expect(card).toContain("canccu-studio-thumb--portrait");
+    expect(card).toContain('data-src="/screen/zones/main?orientation=portrait"');
+    // Only the zone's name is its link in the zones list; the key, layout and screens are muted.
+    const zones = (await page("/admin/screen/zones", "zoner")).body;
+    expect(zones).toMatch(/<a href="\/admin\/screen\/zones\/main">[^<·]+<\/a>/);
+    expect(zones).toMatch(/<p class="canccu-list__meta">main · [^<]+ · \d+ screens?<\/p>/);
+  });
+
   it("names the event's own start address in the offline steps, never the request's host", async () => {
     // An alias of alpha, and an event that has no hostname yet.
     TENANTS["alias.alpha.test"] = context("alpha");

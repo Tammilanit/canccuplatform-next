@@ -36,6 +36,7 @@ import type { ZoneStore } from "../push/store.js";
 import { tickerNow } from "../ticker/store.js";
 import { readZones } from "../zones.js";
 import type { Bus } from "@canccu/kit";
+import { shownZone } from "./help.js";
 import type { SeenDevice } from "./help.js";
 import { CLIENT_KEYS, translator } from "./messages.js";
 import type { MessageKey, Translate } from "./messages.js";
@@ -294,12 +295,17 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       async (request, reply) => {
         const c = await context(request);
         const [zones, all] = [await readZones(deps, tenantOf(request)), await devices()];
+        // What each card shows now comes from its zone's composed state, as its screens draw it.
+        const keys = [...new Set(all.flatMap((d) => shownZone(d, all) ?? []))];
+        const states = new Map(
+          await Promise.all(keys.map(async (k) => [k, await deps.zones.read(k)] as const)),
+        );
         return page(request, reply, c, {
           title: "",
           tab: "devices",
           description: c.t("devices.desc"),
           actions: devicesActions(c),
-          body: devicesView(c, zones, all),
+          body: devicesView(c, zones, all, states),
         });
       },
     );

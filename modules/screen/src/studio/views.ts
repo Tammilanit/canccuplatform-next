@@ -36,12 +36,23 @@ export const startUrlOf = (primaryHostname: string | null): string | null =>
 
 export const zoneFrame = (key: string): string => `/screen/zones/${encodeURIComponent(key)}`;
 
-/** A live view of a zone, loaded by the page script only while it is on screen (20 streams cap). */
-export function thumb(key: string, title: string, href?: string): Html {
-  const frame = html`<iframe${attrs({ "data-src": zoneFrame(key), title, tabindex: -1 })}></iframe>`;
-  return href === undefined
-    ? html`<div class="canccu-studio-thumb">${frame}</div>`
-    : html`<a${attrs({ class: "canccu-studio-thumb", href, target: "_blank", "aria-label": title })}>${frame}</a>`;
+/**
+ * A live view of a zone, loaded by the page script only while it is on screen (20 streams cap). A
+ * portrait screen's view is the zone's portrait layout, drawn upright inside the same box.
+ */
+export function thumb(
+  key: string,
+  title: string,
+  o: { href?: string; portrait?: boolean } = {},
+): Html {
+  const src = zoneFrame(key) + (o.portrait === true ? "?orientation=portrait" : "");
+  const frame = html`<iframe${attrs({ "data-src": src, title, tabindex: -1 })}></iframe>`;
+  const inner =
+    o.portrait === true ? html`<div class="canccu-studio-thumb__screen">${frame}</div>` : frame;
+  const cls = `canccu-studio-thumb${o.portrait === true ? " canccu-studio-thumb--portrait" : ""}`;
+  return o.href === undefined
+    ? html`<div class="${cls}">${inner}</div>`
+    : html`<a${attrs({ class: cls, href: o.href, target: "_blank", "aria-label": title })}>${inner}</a>`;
 }
 
 /** "3 s ago", "2 min ago": how long since `iso`. */
@@ -88,7 +99,7 @@ export function liveView(
         ? t("live.no_screens")
         : counted(t, "live.screens", here.length, { online: online(here), total: here.length });
     return html`<section class="canccu-card canccu-studio-zone">
-      ${thumb(z.key, t("live.open", { zone: z.name }), zoneFrame(z.key))}
+      ${thumb(z.key, t("live.open", { zone: z.name }), { href: zoneFrame(z.key) })}
       <h2 class="canccu-card__title">${z.name}</h2>
       <p class="canccu-small canccu-muted" ${attrs({ "data-live": `zone-${z.key}` })}>${count}</p>
     </section>`;
