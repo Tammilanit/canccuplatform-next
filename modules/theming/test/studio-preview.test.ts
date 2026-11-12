@@ -96,16 +96,25 @@ describe.skipIf(!DATABASE_URL)("the Studio previews", () => {
       expect(res.body).toContain("canccu-surface--hub");
     });
 
-    it("give the admin surface the admin tokens and never the event's CSS", async () => {
+    it("draw the organiser pages as they are: the shell in the platform's look, no theme", async () => {
       const draft = await terminal();
       const v = draft.draft_version;
       const res = await as(`/theming/studio/preview/admin?canccu_theme=draft&v=${v}`);
+      // No organiser page links the event's tokens yet (UX audit C3): the preview shows that.
       expect(links(res.body)).toEqual([
         "/theming/studio/static/ui.css",
         "/theming/studio/static/preview.css",
-        `/theming/studio/draft/admin-tokens.css?v=${v}`,
       ]);
       expect(res.body).toContain("canccu-surface--admin");
+      expect(res.body).toContain('class="canccu-header"');
+      expect(res.body).toContain('class="canccu-tabs"');
+    });
+
+    it("draw the hub's Now card without a badge that means nothing", async () => {
+      const res = await as("/theming/studio/preview/hub");
+      expect(res.body).not.toContain("canccu-badge--ok");
+      expect(res.body).toContain("canccu-badge--late");
+      expect(res.body).toContain("Turn on alerts");
     });
 
     it("draw the Discord card in the embed colour, the primary's unless the brand sets one", async () => {
@@ -122,6 +131,9 @@ describe.skipIf(!DATABASE_URL)("the Studio previews", () => {
       expect(res.statusCode).toBe(200);
       res = await as("/theming/studio/preview/discord?canccu_theme=draft");
       expect(res.body).toContain('fill="#12ab34"');
+      // A whole embed: who posts it, the message and its text, as the bot sends it.
+      expect(res.body).toContain('class="canccu-preview-discord__author"');
+      expect(res.body).toContain("Dinner is 15 min late");
     });
   });
 
