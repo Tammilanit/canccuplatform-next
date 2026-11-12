@@ -1,46 +1,82 @@
 /**
- * What the Studio pages show (plan issue-185 D8–D10): the state they read, the brand kit page and
- * the parts the other pages share. Every control is marked `data-action`, which
- * static/studio.js turns into a call of the JSON API; the markup holds no script and no `style`.
+ * What the Studio pages show (plan issue-185 D8–D10; UX audit C1, C2, C5): the state they read
+ * and the parts the pages share: the status line, the publish check and the colour fields. Every
+ * control is marked `data-action`, which static/studio.js turns into a call of the JSON API; the
+ * markup holds no script and no `style`.
  */
 import type { SqlClient } from "@canccu/kit";
-import { COLOR_TOKENS, attrs, html } from "@canccu/ui";
+import { COLOR_TOKENS, attrs, html, notice } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import { generateColors } from "./brand.js";
 import type { Brand } from "./brand.js";
 import type { Problem } from "./checks.js";
 import { isObject } from "./checks.js";
-import { compiledCss } from "./compile.js";
+import { compiledCss, parsedTemplates } from "./compile.js";
 import { contrastRatio } from "./contrast.js";
 import { StyleError } from "./css.js";
-import { loadDraft } from "./drafts.js";
+import { draftProblems, loadDraft } from "./drafts.js";
 import type { DraftRow } from "./drafts.js";
 import { FILE_NAME, fileName } from "./files.js";
 import type { FileStore } from "./files.js";
 import { SERVED } from "./theme.js";
-import { fillTokens } from "./tokens.js";
 
 export const STUDIO = "/theming/studio/";
 export const STARTERS = ["default", "terminal", "level-up"] as const;
+export const STARTER_NAMES: Record<(typeof STARTERS)[number], string> = {
+  default: "Default",
+  terminal: "Terminal",
+  "level-up": "Level-up",
+};
 /**
  * The starters that hold embeds, so uploading one needs `theming.embeds.write` as well; a writer
  * without it is not offered them (test/studio.test.ts checks this against events/demo/themes/).
  */
 export const STARTERS_WITH_EMBEDS: ReadonlySet<string> = new Set(["terminal", "level-up"]);
-const SURFACES: [string, string][] = [
-  ["screen", "Screen"],
-  ["hub", "Phone hub"],
-  ["admin", "Admin (tokens only, no event CSS)"],
-  ["discord", "Discord"],
-];
+
+/** The colour tokens as organisers name them; ids stay in the markup's data attributes only. */
+export const COLOUR_NAMES: Record<keyof typeof COLOR_TOKENS, string> = {
+  background: "Background",
+  surface: "Cards",
+  border: "Lines",
+  text: "Text",
+  text_muted: "Muted text",
+  primary: "Primary",
+  primary_text: "Text on primary",
+  accent: "Accent",
+  status_ok: "Running",
+  status_degraded: "Slow",
+  status_down: "Down",
+};
+
+/** Every colour the schema takes (contracts/theme.schema.json, `color`). */
+export const COLOUR_PATTERN = "#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})";
 
 export interface StudioState {
   draft: DraftRow | undefined;
+  /** Publish's own check of the draft, run again for the page (UX audit C1). */
+  problems: Problem[];
   current: number;
   /** Whether publishing the draft changes the compiled CSS, so its preview must be seen first (D10). */
   cssChanged: boolean;
   /** The draft logo's address, when it has one. */
   logoUrl: string | undefined;
+  /** What the screen preview gives the real player in place of the published theme. */
+  screenTheme: ScreenTheme | undefined;
+}
+
+/** The draft's part of a `ScreenState`'s `theme` (contracts/screen.md), at its draft addresses. */
+export interface ScreenTheme {
+  tokens_css_url: string;
+  css_url: string | null;
+  logo_url: string | null;
+  templates: unknown[];
+}
+
+/** A page's body and what goes in the shell's title row. */
+export interface StudioView {
+  body: Html;
+  description?: Slot;
+  actions?: Slot;
 }
 
 /** The address of the draft file at a package path, when it holds a served one. */
@@ -79,11 +115,41 @@ export async function studioState(
     }
   }
   const images = isObject(draft?.manifest.images) ? draft.manifest.images : {};
+  const logoUrl = draft === undefined ? undefined : await draftFileUrl(c, images.logo);
   return {
     draft,
+    problems: draft === undefined ? [] : await draftProblems(c, draft.manifest),
     current: head?.revision ?? 0,
     cssChanged,
-    logoUrl: draft === undefined ? undefined : await draftFileUrl(c, images.logo),
+    logoUrl,
+    screenTheme:
+      draft === undefined || !compare
+        ? undefined
+        : await screenTheme(c, files, draft, logoUrl),
+  };
+}
+
+async function screenTheme(
+  c: SqlClient,
+  files: FileStore,
+  draft: DraftRow,
+  logoUrl: string | undefined,
+): Promise<ScreenTheme> {
+  const v = `?v=${draft.draft_version}`;
+  let templates: unknown[] = [];
+  try {
+    templates = await parsedTemplates(c, files, "draft", draft.manifest, "/theming/draft/");
+  } catch (err) {
+    // The draft's problems already name it; the preview draws the widgets without templates.
+    if (!(err instanceof StyleError)) throw err;
+  }
+  return {
+    tokens_css_url: `${STUDIO}draft/tokens.css${v}`,
+    css_url: Array.isArray(draft.manifest.css) && draft.manifest.css.length > 0
+      ? `${STUDIO}draft/theme.css${v}`
+      : null,
+    logo_url: logoUrl ?? null,
+    templates,
   };
 }
 
@@ -94,7 +160,7 @@ export const card = (title: string, body: Slot): Html =>
   </section>`;
 
 export const actionButton = (
-  label: string,
+  label: Slot,
   action: Record<string, string | boolean | undefined>,
   variant = "secondary",
 ): Html =>
@@ -104,177 +170,132 @@ export const actionButton = (
 export const root = (state: { draft?: DraftRow | undefined }, body: Slot): Html =>
   html`<div${attrs({ class: "canccu-studio", "data-draft-version": state.draft?.draft_version })}>${body}</div>`;
 
-export function status(state: StudioState): Html {
+/** Where the draft stands, in words: no versions, ids or modes (UX audit C2). */
+export function status(state: StudioState, viewerId: string | undefined): Html {
+  const published = state.current > 0;
   const d = state.draft;
   if (d === undefined) {
-    return html`<p class="canccu-studio-status">
-      No draft. Revision ${state.current} is on every screen.
-    </p>`;
+    return html`${
+      published
+        ? "No draft. Screens show the published theme."
+        : "No draft. Nothing published yet: screens show the platform's default look."
+    }`;
   }
-  const who = d.updated_by === null ? "" : `, last changed by ${d.updated_by}`;
-  return html`<p class="canccu-studio-status">
-    Draft version ${d.draft_version}, ${d.manifest.mode === "advanced" ? "advanced" : "simple"}
-    mode, from revision ${d.created_from ?? 0}${who}. Revision ${state.current} is on every screen.
-  </p>`;
+  const who =
+    d.updated_by === null
+      ? ""
+      : ` · last changed by ${d.updated_by === viewerId ? "you" : "another organiser"}`;
+  return html`<span class="canccu-badge canccu-badge--plain">Draft</span>
+    ${published ? "Changes to the published theme, not published yet" : "Nothing published yet"}${who}`;
 }
 
-export function problemsView(problems: readonly Problem[]): Html {
-  if (problems.length === 0) return html`<p class="canccu-studio-ok">No problems.</p>`;
-  const items = problems.map(
-    (p) =>
-      html`<li${attrs({ class: `canccu-studio-problem canccu-studio-problem--${p.severity}` })}><strong>${p.severity === "error" ? "Error" : "Warning"}</strong> <code>${p.code}</code> <code>${p.path}</code> ${p.message}</li>`,
-  );
-  return html`<ul class="canccu-studio-problems">
-    ${items}
-  </ul>`;
+/** A problem in words: its message, after the file it is in when that is not theme.yaml. */
+const said = (p: Problem): string =>
+  p.path === undefined || p.path.startsWith("theme.yaml") ? p.message : `${p.path}: ${p.message}`;
+
+/** The token of a profile or theme font no package holds, which "Use the system font" removes. */
+function unknownFont(p: Problem): string | undefined {
+  return p.code === "reference_unknown"
+    ? /^theme\.yaml#\/tokens\/fonts\/([a-z_]+)$/.exec(p.path ?? "")?.[1]
+    : undefined;
 }
 
-function startView(embedsAllowed: boolean): Html {
-  const starters = STARTERS.filter((name) => embedsAllowed || !STARTERS_WITH_EMBEDS.has(name)).map(
-    (name) => actionButton(name, { "data-action": "starter", "data-starter": name }),
-  );
-  const missing = embedsAllowed
-    ? ""
-    : html`<p class="canccu-field__hint">
-        The ${[...STARTERS_WITH_EMBEDS].join(" and ")} themes hold embeds, which your role doesn't
-        include. If you need them, ask an event owner to add embeds to your role.
-      </p>`;
-  return card(
-    "Start a draft",
-    html`<p>Edit a copy of what screens show now, or start from one of the platform's themes.</p>
-      <p class="canccu-studio-row">
-        ${actionButton("The current theme", { "data-action": "start" }, "primary")} ${starters}
-      </p>
-      ${missing}`,
-  );
+/**
+ * The publish check (UX audit C1): the same problems publish refuses with, worded, with the fixes
+ * that are one click as buttons; `details` holds the numbers behind it.
+ */
+export function checkView(problems: readonly Problem[], details: Slot = ""): Html {
+  const errors = problems.filter((p) => p.severity === "error");
+  const warnings = problems.filter((p) => p.severity !== "error");
+  const items = (list: Problem[]): Html =>
+    html`<ul class="canccu-studio-problems">
+      ${list.map((p) => html`<li>${said(p)}</li>`)}
+    </ul>`;
+  if (errors.length > 0) {
+    const fixes = errors
+      .map(unknownFont)
+      .filter((t): t is string => t !== undefined)
+      .map((token) =>
+        actionButton("Use the system font", { "data-action": "font-system", "data-token": token }),
+      );
+    return notice({
+      kind: "down",
+      title: "Can't publish yet",
+      text: items(errors),
+      actions: fixes.length > 0 ? fixes : undefined,
+    });
+  }
+  if (warnings.length > 0) {
+    return notice({
+      kind: "warn",
+      title: `Ready to publish, with ${warnings.length === 1 ? "one thing" : `${warnings.length} things`} to check`,
+      text: html`${items(warnings)}${details}`,
+    });
+  }
+  return notice({
+    kind: "ok",
+    title: "Ready to publish",
+    text: html`All text reads clearly on every surface.${details}`,
+  });
 }
 
-const chip = (hex: string): Html =>
-  html`<svg class="canccu-studio-chip" viewBox="0 0 1 1" aria-hidden="true">
-    <rect width="1" height="1" ${attrs({ fill: hex })} />
-  </svg>`;
+/** A colour as a swatch and its hex; the hex field is the one the form sends. */
+export function colourField(o: {
+  name: string;
+  label: string;
+  value: string | undefined;
+  /** The swatch's colour while the field is empty. */
+  fallback?: string | undefined;
+  placeholder?: string;
+}): Html {
+  const id = `canccu-studio-${o.name.replace(".", "-")}`;
+  const swatch = (o.value ?? o.fallback ?? "#000000").slice(0, 7);
+  return html`<div class="canccu-field canccu-studio-colour"><label class="canccu-field__label"${attrs({ for: id })}>${o.label}</label><span class="canccu-studio-colour__row"><input${attrs({ class: "canccu-studio-colour__swatch", type: "color", "aria-label": `${o.label}: pick a colour`, "data-hex-for": o.name, value: swatch })}><input${attrs({ class: "canccu-input canccu-studio-colour__hex", name: o.name, pattern: COLOUR_PATTERN, type: "text", id, value: o.value, placeholder: o.placeholder, spellcheck: "false", autocomplete: "off" })}></span></div>`;
+}
 
-export const brandOf = (state: StudioState): Brand | undefined => {
+export const brandOf = (state: { draft?: DraftRow | undefined }): Brand | undefined => {
   const b = state.draft?.manifest.brand;
   return isObject(b) && typeof b.primary === "string" && typeof b.accent === "string"
     ? (b as unknown as Brand)
     : undefined;
 };
 
-function brandForm(state: StudioState, colors: Record<string, string>): Html {
-  const brand = brandOf(state);
-  const images = isObject(state.draft?.manifest.images) ? state.draft.manifest.images : {};
-  const scheme = brand?.scheme ?? "dark";
-  const hidden = (["logo", "icon"] as const).map((role) => {
-    const value = images[role];
-    // Prettier formats `html` templates as HTML and closes a lone `<input${…}>` with an invalid
-    // end tag that repeats the attributes, so it must leave this line alone.
-    // prettier-ignore
-    return typeof value === "string" ? html`<input${attrs({ type: "hidden", name: role, value })}>` : "";
-  });
-  const colour = (name: "primary" | "accent", label: string) =>
-    html`<div class="canccu-field"><label class="canccu-field__label"${attrs({ for: `canccu-studio-${name}` })}>${label}</label><input${attrs({ class: "canccu-input canccu-studio-colour", type: "color", id: `canccu-studio-${name}`, name, value: (brand?.[name] ?? colors[name] ?? "#000000").slice(0, 7) })}></div>`;
-  const schemes = (["dark", "light"] as const).map(
-    (s) =>
-      html`<label class="canccu-studio-radio"><input${attrs({ type: "radio", name: "scheme", value: s, checked: s === scheme })}> ${s === "dark" ? "Dark" : "Light"}</label>`,
-  );
-  const logo =
-    state.logoUrl === undefined
-      ? html`<p class="canccu-field__hint">No logo yet.</p>`
-      : html`<img
-          class="canccu-studio-logo"
-          ${attrs({ src: state.logoUrl, alt: "The draft's logo" })}
-        />`;
-  return card(
-    "Brand kit",
-    html`<form class="canccu-studio-form" data-action="brand">${hidden}
-<div class="canccu-field"><label class="canccu-field__label" for="canccu-studio-logo">Logo</label>${logo}<input class="canccu-input" type="file" id="canccu-studio-logo" name="logo_file" accept="image/png,image/jpeg,image/webp,image/svg+xml"><p class="canccu-field__hint">PNG, JPEG, WebP or SVG, up to 5 MB. A PNG of it is made for Discord and the hub's icons.</p></div>
-${colour("primary", "Primary colour")}${colour("accent", "Accent colour")}
-<fieldset class="canccu-field"><legend class="canccu-field__label">Scheme</legend>${schemes}</fieldset>
-<div class="canccu-field"><label class="canccu-field__label" for="canccu-studio-embed-color">Discord embed colour</label><input${attrs({ class: "canccu-input", type: "text", id: "canccu-studio-embed-color", name: "embed_color", pattern: "#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})", placeholder: "the primary colour", value: brand?.embed_color })}></div>
-<button class="canccu-button canccu-button--primary" type="submit">Save</button></form>`,
-  );
-}
+const chip = (hex: string): Html =>
+  html`<svg class="canccu-studio-chip" viewBox="0 0 1 1" aria-hidden="true">
+    <rect width="1" height="1" ${attrs({ fill: hex })} />
+  </svg>`;
 
-function coloursView(state: StudioState, colors: Record<string, string>): Html {
-  const swatches = Object.keys(COLOR_TOKENS).map(
-    (token) =>
-      html`<li class="canccu-studio-swatch" ${attrs({ "data-token": token })}>
-        ${chip(colors[token] ?? "#000000")} <code>${token}</code> ${colors[token]}
-      </li>`,
-  );
-  const brand = brandOf(state);
+/** The colours the theme ends up with, by name, and what the brand kit shaded and why. */
+export function coloursDetails(
+  brand: Brand | undefined,
+  colors: Record<string, string>,
+  open = false,
+): Html {
   const notes: Html[] = [];
   if (brand !== undefined) {
     for (const token of generateColors(brand).adjusted) {
       const given = token === "primary" ? brand.primary : brand.accent;
       notes.push(
-        html`<li${attrs({ "data-adjusted": token })}>${token === "primary" ? "Primary" : "Accent"}: ${given} is shown as ${colors[token]}, so it stands out from the background (3:1).</li>`,
+        html`<li${attrs({ "data-adjusted": token })}>${token === "primary" ? "Primary" : "Accent"}: ${given} is used as ${colors[token]}, so it stands out from the background (3:1).</li>`,
       );
     }
   }
-  const primary = colors.primary ?? "#000000";
   const text = colors.primary_text ?? "#000000";
-  const ratio = contrastRatio(text, primary).toFixed(1);
-  return card(
-    "Colours",
-    html`<p>Text on primary uses ${text} (${ratio}:1).</p>
-      ${
-        notes.length > 0
-          ? html`<ul class="canccu-studio-adjusted">
-              ${notes}
-            </ul>`
-          : html`<p class="canccu-studio-ok">Every given colour is used as it is.</p>`
-      }
-      <ul class="canccu-studio-swatches">
-        ${swatches}
-      </ul>`,
+  const ratio = contrastRatio(text, colors.primary ?? "#000000").toFixed(1);
+  const swatches = Object.entries(COLOUR_NAMES).map(
+    ([token, name]) =>
+      html`<li class="canccu-studio-swatch"${attrs({ "data-token": token })}>${chip(colors[token] ?? "#000000")} ${name} <span class="canccu-muted canccu-num">${colors[token]}</span></li>`,
   );
-}
-
-function previewView(state: StudioState): Html {
-  const v = state.draft?.draft_version;
-  const frames = SURFACES.map(([surface, label]) => {
-    const src = `${STUDIO}preview/${surface}${v === undefined ? "" : `?canccu_theme=draft&v=${v}`}`;
-    return html`<figure${attrs({ class: `canccu-studio-preview canccu-studio-preview--${surface}` })}><figcaption>${label}</figcaption><div class="canccu-studio-preview__box"><iframe${attrs({ class: "canccu-studio-preview__frame", src, title: `${label} preview`, "data-preview": true })}></iframe></div></figure>`;
-  });
-  return card(
-    state.draft === undefined ? "What screens show now" : "Preview of this draft",
-    html`<div class="canccu-studio-previews">${frames}</div>`,
-  );
-}
-
-function publishView(state: StudioState, draft: DraftRow): Html {
-  const errors = draft.problems.some((p) => p.severity === "error");
-  const held = !errors && state.cssChanged;
-  const hint = errors
-    ? "Fix the errors first: a draft with an error cannot be published."
-    : held
-      ? "The CSS changed: Publish turns on once the preview of this version has loaded."
-      : `Publishing makes revision ${state.current + 1}; every screen and hub switches without a reload.`;
-  return card(
-    "Publish",
-    html`<p class="canccu-studio-row">
-        ${actionButton("Publish", { "data-action": "publish", "data-needs-preview": held, disabled: errors || held }, "primary")}
-      </p>
-      <p class="canccu-field__hint canccu-studio-publish-hint">${hint}</p>
-      <details class="canccu-studio-confirm">
-        <summary>Discard the draft</summary>
-        <p>The draft and its files go; what screens show stays.</p>
-        ${actionButton("Discard the draft", { "data-action": "discard" }, "danger")}
-      </details>`,
-  );
-}
-
-/** `embedsAllowed`: whether the session holds `theming.embeds.write`, for the starters offered. */
-export function brandKitView(state: StudioState, embedsAllowed: boolean): Html {
-  const d = state.draft;
-  if (d === undefined)
-    return root(state, html`${status(state)}${startView(embedsAllowed)}${previewView(state)}`);
-  const colors = fillTokens(d.manifest.tokens ?? {}).colors;
-  return root(
-    state,
-    html`${status(state)} ${brandForm(state, colors)} ${coloursView(state, colors)}
-    ${card("Problems", problemsView(d.problems))} ${previewView(state)} ${publishView(state, d)}`,
-  );
+  const summary =
+    notes.length === 0
+      ? "Every colour you picked is used as it is."
+      : `${notes.length === 1 ? "One colour was" : `${notes.length} colours were`} adjusted so text reads.`;
+  return html`<details class="canccu-studio-details"${attrs({ open })}>
+    <summary>Details</summary>
+    <p>${summary} Text on primary uses ${text} (${ratio}:1).</p>
+    ${notes.length > 0 ? html`<ul class="canccu-studio-adjusted">${notes}</ul>` : ""}
+    <ul class="canccu-studio-swatches">
+      ${swatches}
+    </ul>
+  </details>`;
 }
