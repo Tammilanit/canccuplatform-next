@@ -345,43 +345,6 @@
     font-size: var(--canccu-text-sm);
   }
   .canccu-agenda-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  /* A confirm's facts: the shared card with label and value rows (sheet 5). */
-  .canccu-agenda-preview .canccu-dl,
-  .canccu-agenda-variant .canccu-dl { grid-template-columns: 6.5rem minmax(0, 1fr); }
-  .canccu-agenda-confirm { display: grid; gap: 1rem; }
-  .canccu-agenda-confirm .canccu-card__title { margin: 0; }
-  .canccu-agenda-confirm-choices {
-    display: grid;
-    gap: 0.75rem;
-    padding: 0.75rem 0;
-    border-block: var(--canccu-border-width) solid var(--canccu-color-border);
-  }
-  .canccu-agenda-variant { display: grid; gap: 1.25rem; }
-  .canccu-agenda-confirm-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
-  .canccu-agenda-variant b { font-weight: 650; }
-  .canccu-agenda-variant s { color: var(--canccu-ink-muted); }
-  /* On a phone the action comes first, full width, and stays in reach above the bar (sheet 5):
-     the bar is 4.25rem high, and Quick add stands 2rem out of it. */
-  @media (max-width: 40rem) {
-    .canccu-agenda-confirm-actions {
-      position: sticky;
-      bottom: calc(4.25rem + var(--canccu-border-width));
-      flex-direction: column-reverse;
-      margin: 0 -1.25rem -1.25rem;
-      padding: 0.75rem 1.25rem 2.25rem;
-      background: var(--canccu-color-surface);
-      border-top: var(--canccu-border-width) solid var(--canccu-color-border);
-      border-radius: 0 0 calc(var(--canccu-radius) + 4px) calc(var(--canccu-radius) + 4px);
-    }
-  }
-  /* The pages run no script: a form draws its rows and buttons once per choice, and this shows
-     the ones that match the ticked boxes (delay_pages.py, item_pages.py). */
-  .canccu-agenda-choice:has(input[name="following"]:checked) [data-following="0"],
-  .canccu-agenda-choice:not(:has(input[name="following"]:checked)) [data-following="1"],
-  .canccu-agenda-choice:has(input[name="announce"]:checked) [data-announce="0"],
-  .canccu-agenda-choice:not(:has(input[name="announce"]:checked)) [data-announce="1"] {
-    display: none;
-  }
   .canccu-agenda-hidden {
     position: absolute;
     width: 1px;

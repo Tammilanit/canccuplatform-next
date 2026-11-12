@@ -118,7 +118,8 @@ const DRAFT = [
 ];
 // The run of show's day view (sheet 5, #400) on the fixture's filled day: at both widths, at 1440 px
 // with the item beside the list and the live miniature of the main zone, which the shot waits for,
-// and an item a row picks, over the day. `pick` names the fixture's item.
+// an item a row picks, over the day, and the delay confirm a chip opens over the day. `pick` and
+// `delay` name the fixture's item.
 const MINI = ".canccu-agenda-mini iframe";
 const miniDrawn = async (page) => {
   await page
@@ -139,7 +140,17 @@ const DAY_VIEW = [
     PHONE,
     { pick: "Demo Game Cup, semis", fullPage: false },
   ],
+  ["agenda-delay", DESK, { delay: "Demo Game Cup, semis", fullPage: false }],
+  [
+    "agenda-delay-phone",
+    PHONE,
+    { delay: "Demo Game Cup, semis", fullPage: false },
+  ],
 ];
+const dayPath = (o, id) => {
+  if (o.delay) return `/agenda/?delay=${id}&minutes=10`;
+  return o.pick ? `/agenda/?item=${id}` : "/agenda/";
+};
 // The front door, signed out, and one page of the error family (an item that does not exist),
 // each at both widths. The error page must answer its own status, not 200.
 const SIGN_IN = "/admin/sign-in";
@@ -150,18 +161,16 @@ const OTHERS = [
   ["error-not-found", MISSING, DESK, { status: 404 }],
   ["error-not-found-phone", MISSING, PHONE, { status: 404 }],
 ];
-// The Delay and Edit views of one item (#388), next to their mockups (docs/design/mockups.html):
-// told, with the items after it, quiet, and the edit form. The items are made for the run.
+// The Delay page and Edit view of one item (#388), next to their mockups (docs/design/mockups.html):
+// with the items after it, quiet, and the edit form. The items are made for the run.
 // `chosen` is what the page's own form sends: then an unticked box means off.
 const ITEM_PAGES = [
-  ["agenda-delay", "/delay?minutes=10", DESK],
   [
     "agenda-delay-following",
     "/delay?minutes=10&following=1&announce=1&chosen=1",
     DESK,
   ],
   ["agenda-delay-quiet", "/delay?minutes=10&chosen=1", DESK],
-  ["agenda-delay-phone", "/delay?minutes=10", PHONE],
   ["agenda-edit", "/edit", DESK],
 ];
 
@@ -188,7 +197,7 @@ if (opts["dry-run"]) {
     );
   }
   for (const [name, { width, height }, o] of DAY_VIEW) {
-    const path = o.pick ? `/agenda/?item=<${o.pick}>` : "/agenda/";
+    const path = dayPath(o, `<${o.pick ?? o.delay}>`);
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, the fixture's day)`,
     );
@@ -404,15 +413,10 @@ try {
       "the run of show",
     ).body;
     for (const [name, viewport, o] of DAY_VIEW) {
-      const id = o.pick && items.find((i) => i.title === o.pick)?.id;
-      if (o.pick && !id) throw new Error(`the fixture has no "${o.pick}"`);
-      await shot(
-        name,
-        id ? `/agenda/?item=${id}` : "/agenda/",
-        viewport,
-        SESSION,
-        o,
-      );
+      const title = o.pick ?? o.delay;
+      const id = title && items.find((i) => i.title === title)?.id;
+      if (title && !id) throw new Error(`the fixture has no "${title}"`);
+      await shot(name, dayPath(o, id), viewport, SESSION, o);
     }
   } catch (err) {
     fail(`the run of show's day: ${firstLine(err)}`);

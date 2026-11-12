@@ -97,8 +97,10 @@ async def test_the_day_view_has_on_now_the_day_list_and_a_selected_item(env: Env
     assert "On now · 1 h 5 min left" in hero and ">Dinner</h2>" in hero
     assert "Café · until 18:05 <s>17:50</s>" in hero and "+15 min" in hero
     base = f"/agenda/items/{dinner['id']}"
+    # A chip opens the confirm over this day; Other… goes to the delay page and its field.
+    sheet = f"/agenda/?day=2026-11-20&amp;delay={dinner['id']}&amp;minutes="
     for minutes in (5, 10, 15):
-        assert f'href="{base}/delay?minutes={minutes}">+{minutes}</a>' in hero
+        assert f'href="{sheet}{minutes}">+{minutes}</a>' in hero
     assert f'href="{base}/delay">Other…</a>' in hero and f'href="{base}/show-now"' in hero
     # What screens show now: the main zone's own player, for someone who may read screens.
     assert 'src="/screen/zones/main"' in hero
@@ -111,7 +113,7 @@ async def test_the_day_view_has_on_now_the_day_list_and_a_selected_item(env: Env
     # Beside the list, the item that comes next is selected, with its actions.
     side = rest.split('class="canccu-card canccu-agenda-side')[1].split("</aside>")[0]
     assert ">Briefing</a></h2>" in side and f"/agenda/items/{brief['id']}/edit" in side
-    assert f"/agenda/items/{brief['id']}/delay?minutes=10" in side
+    assert f"&amp;delay={brief['id']}&amp;minutes=10" in side
     assert "Cancel this item…" in side and "Close" not in side
     # A row picks the item; then the panel opens over the day with a way to close it.
     assert 'canccu-agenda-side is-open"' in chosen
@@ -119,7 +121,7 @@ async def test_the_day_view_has_on_now_the_day_list_and_a_selected_item(env: Env
     assert ">Dinner</a></h2>" in chosen.split("canccu-agenda-side")[1]
     # Crew who only read see the day, without the actions or the screens they may not read.
     assert "On now · 1 h 5 min left" in crew
-    assert "/delay" not in crew and "/screen/zones/" not in crew
+    assert "/delay" not in crew and "delay=" not in crew and "/screen/zones/" not in crew
 
 
 async def test_the_list_reads_times_in_the_events_time_zone(env: Env) -> None:

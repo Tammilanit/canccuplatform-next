@@ -1,0 +1,110 @@
+/* The confirm of a change, on the delay and edit pages and as the sheet over the day view: its
+   choices, its label and value rows, and its buttons (sheet 5). Loaded after agenda.css. */
+@layer canccu-module {
+  /* A confirm's facts: the shared card with label and value rows (sheet 5). */
+  .canccu-agenda-preview .canccu-dl,
+  .canccu-agenda-variant .canccu-dl { grid-template-columns: 6.5rem minmax(0, 1fr); }
+  .canccu-agenda-confirm { display: grid; gap: 1rem; }
+  .canccu-agenda-confirm .canccu-card__title { margin: 0; }
+  .canccu-agenda-confirm-choices {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-block: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+  .canccu-agenda-variant { display: grid; gap: 1.25rem; }
+  .canccu-agenda-confirm-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
+  .canccu-agenda-variant b { font-weight: 650; }
+  .canccu-agenda-variant s { color: var(--canccu-ink-muted); }
+  /* On a phone the action comes first, full width, and stays in reach above the bar (sheet 5):
+     the bar is 4.25rem high, and Quick add stands 2rem out of it. */
+  @media (max-width: 40rem) {
+    .canccu-agenda-confirm-actions {
+      position: sticky;
+      bottom: calc(4.25rem + var(--canccu-border-width));
+      flex-direction: column-reverse;
+      margin: 0 -1.25rem -1.25rem;
+      padding: 0.75rem 1.25rem 2.25rem;
+      background: var(--canccu-color-surface);
+      border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+      border-radius: 0 0 calc(var(--canccu-radius) + 4px) calc(var(--canccu-radius) + 4px);
+    }
+  }
+  /* The pages run no script: a form draws its rows and buttons once per choice, and this shows
+     the ones that match the ticked boxes (delay_pages.py, item_pages.py). */
+  .canccu-agenda-choice:has(input[name="following"]:checked) [data-following="0"],
+  .canccu-agenda-choice:not(:has(input[name="following"]:checked)) [data-following="1"],
+  .canccu-agenda-choice:has(input[name="announce"]:checked) [data-announce="0"],
+  .canccu-agenda-choice:not(:has(input[name="announce"]:checked)) [data-announce="1"] {
+    display: none;
+  }
+  /* The delay confirm over the day view (delay_pages.sheet, sheet 5): a bottom sheet on a phone,
+     a dialog from 40 rem. Above the shell's bar and the item panel over the day (z-index 40). */
+  .canccu-agenda-scrim { position: fixed; inset: 0; z-index: 50; background: rgb(0 0 0 / 0.5); }
+  .canccu-agenda-sheet {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 51;
+    width: auto;
+    max-width: none;
+    max-height: 90dvh;
+    margin: 0;
+    overflow-y: auto;
+    padding: 0.5rem 1rem 1.25rem;
+    color: inherit;
+    background: var(--canccu-color-surface);
+    border: 0;
+    border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+    border-radius: 1.25rem 1.25rem 0 0;
+    box-shadow: 0 -12px 32px rgb(0 0 0 / 0.35);
+  }
+  .canccu-agenda-sheet::before {
+    content: "";
+    display: block;
+    width: 2.5rem;
+    height: 0.25rem;
+    margin: 0 auto 0.5rem;
+    border-radius: 99px;
+    background: var(--canccu-color-border);
+  }
+  .canccu-agenda-sheet .canccu-agenda-form { gap: 0.875rem; }
+  .canccu-agenda-sheet__head { display: flex; align-items: center; gap: 0.75rem; }
+  .canccu-agenda-sheet__head .canccu-card__title { flex: 1; margin: 0; font-size: 1.25rem; font-weight: 650; }
+  /* The sheet scrolls on its own, so its buttons need not stick above the bar. */
+  @media (max-width: 40rem) {
+    .canccu-agenda-sheet .canccu-agenda-confirm-actions {
+      position: static;
+      display: grid;
+      justify-content: stretch;
+      margin: 0;
+      padding: 0;
+      background: none;
+      border: 0;
+      border-radius: 0;
+    }
+    .canccu-agenda-sheet .canccu-agenda-confirm-actions > :last-child { order: -1; }
+    .canccu-agenda-sheet .canccu-agenda-confirm-actions .canccu-button { min-height: 3rem; }
+  }
+  @media (min-width: 40.01rem) {
+    .canccu-agenda-sheet {
+      inset: 0;
+      width: min(31rem, calc(100% - 2rem));
+      height: fit-content;
+      max-height: calc(100dvh - 2rem);
+      margin: auto;
+      padding: 1.5rem;
+      border: var(--canccu-border-width) solid var(--canccu-color-border);
+      border-radius: calc(var(--canccu-radius) + 8px);
+      box-shadow: 0 24px 60px rgb(0 0 0 / 0.45);
+    }
+    .canccu-agenda-sheet::before { content: none; }
+    /* An icon alone, top right, as the mockup's dialog; the link keeps its name. */
+    .canccu-agenda-sheet__close > span:not(.canccu-i) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+  }
+}

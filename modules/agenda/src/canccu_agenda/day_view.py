@@ -1,6 +1,7 @@
 """The run of show's day view (docs/design/mockups.html, sheet 5): what is on now, the day as one
-list, and one item beside it. No script: a row picks its item through the query, and agenda.css
-puts the item beside the list from 1440 px and over the day below that."""
+list, and one item beside it. No script: a row picks its item, and a delay chip opens its confirm
+(delay_pages.sheet), through the query; agenda.css puts the item beside the list from 1440 px and
+over the day below that."""
 
 from __future__ import annotations
 
@@ -72,16 +73,19 @@ def _where(row: Any) -> str:
     return " · ".join(v for v in (row["location"], row["zone"] and f"zone {row['zone']}") if v)
 
 
-def _delay(row: Any, grid: bool = False) -> str:
-    base = f"{BASE}/items/{esc(row['id'])}/delay"
+def _delay(row: Any, here: str, grid: bool = False) -> str:
+    """The delay chips. A chip opens the confirm as a sheet over this view (`here`, the day view's
+    own address); Other… goes to the delay page, which has the field for any minutes."""
+    sheet = f"{here}&delay={row['id']}&minutes="
     links = "".join(
-        f'<a class="canccu-button canccu-button--secondary" href="{base}?minutes={m}">+{m}</a>'
+        f'<a class="canccu-button canccu-button--secondary" href="{esc(sheet)}{m}">+{m}</a>'
         for m in DELAY_CHIPS
     )
     return (
         f'<div class="canccu-agenda-delay{" canccu-agenda-delay--grid" if grid else ""}">'
         f'<span class="canccu-agenda-muted">Delay by</span>{links}'
-        f'<a class="canccu-button canccu-button--secondary" href="{base}">Other…</a></div>'
+        f'<a class="canccu-button canccu-button--secondary"'
+        f' href="{BASE}/items/{esc(row["id"])}/delay">Other…</a></div>'
     )
 
 
@@ -110,7 +114,7 @@ def on_now(rows: list[Any], now: datetime, tz: ZoneInfo) -> Any | None:
     )
 
 
-def hero_html(row: Any, now: datetime, tz: ZoneInfo, session: Session) -> str:
+def hero_html(row: Any, now: datetime, tz: ZoneInfo, session: Session, here: str) -> str:
     state = state_of(row, now)
     if state == "running":
         left = _minutes(row["ends_at"] - now)
@@ -127,7 +131,7 @@ def hero_html(row: Any, now: datetime, tz: ZoneInfo, session: Session) -> str:
     line = f"{esc(where)} · {when}" if where else when
     actions = ""
     if session.has(WRITE):
-        parts = [_delay(row)] if can_delay(row, state) else []
+        parts = [_delay(row, here)] if can_delay(row, state) else []
         parts += [_show(row)] if can_show(row, state) else []
         actions = f'<div class="canccu-agenda-hero__actions">{"".join(parts)}</div>'
     screen = ""
@@ -228,8 +232,10 @@ def side_html(
     session: Session,
     close: str | None,
     changes: str,
+    here: str,
 ) -> str:
-    """The picked item with its actions. `close` is where Close goes when a row picked it."""
+    """The picked item with its actions. `close` is where Close goes when a row picked it; `here`
+    is the day view's own address, which its delay chips return to."""
     state = state_of(row, now)
     base = f"{BASE}/items/{esc(row['id'])}"
     when = f"<b>{hhmm(row['starts_at'], tz)}"
@@ -258,7 +264,7 @@ def side_html(
     )
     if session.has(WRITE) and state != "cancelled":
         if can_delay(row, state):
-            body += _delay(row, grid=True)
+            body += _delay(row, here, grid=True)
         actions = [_show(row, "On screens now")] if can_show(row, state) else []
         actions.append(
             f'<a class="canccu-button canccu-button--secondary" href="{base}/edit">Edit or move</a>'

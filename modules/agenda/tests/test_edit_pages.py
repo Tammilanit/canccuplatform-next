@@ -6,14 +6,14 @@ from datetime import timedelta
 
 import pytest
 from canccu_kit import KitError, tenant_scope
-from conftest import NOW, Env, at
+from conftest import CREW, NOW, Env, at
 from test_items import add
 
 from canccu_agenda import edits
 
 
 def variant(html: str, following: int, announce: int) -> str:
-    """The rows and buttons agenda.css shows when these boxes are ticked (delay_pages.py)."""
+    """The rows and buttons confirm.css shows when these boxes are ticked (delay_pages.py)."""
     start = html.index(f'data-following="{following}" data-announce="{announce}"')
     end = html.find('class="canccu-agenda-variant"', start)
     return html[start : end if end != -1 else len(html)]
@@ -46,7 +46,7 @@ async def test_delay_confirms_what_moves_what_stays_and_who_hears(env: Env) -> N
     assert "Semis <b>18:45</b> <s>18:30</s> · Breakfast <b>09:15</b> <s>09:00</s>" in both
     assert "Quiet stays at 01:00: quiet hours never move with a delay." in both
     assert "<dt>Phones</dt><dd>One notice per audience (everyone)" in both
-    assert "Quiet for 1 item(s) starting more than 2 h from now." in both
+    assert "Quiet for 1 item starting more than 2 h from now." in both
     assert "<dt>Discord</dt><dd>A post in the event&#x27;s channel.</dd>" in both
     assert ">Delay 3 items and tell everyone</button>" in both
     assert ">Don't delay</a>" in both
@@ -59,6 +59,43 @@ async def test_delay_confirms_what_moves_what_stays_and_who_hears(env: Env) -> N
     assert ">Delay 3 items quietly</button>" in variant(text, 1, 0)
     assert env.store.calls == []  # a confirm changes nothing
     del quiet, far, semis
+
+
+async def test_a_delay_chip_opens_the_confirm_over_the_day(env: Env) -> None:
+    """Sheet 5: the confirm as a dialog over the run of show (a bottom sheet on a phone), with the
+    delay page's rows and buttons; Close and Don't delay lead back to the same day view."""
+    h = env.writer()
+    async with env.client() as c:
+        await add(c, h, title="Dinner", starts_at=at(-30), ends_at=at(60))
+        semis = await add(c, h, title="Semis", kind="tournament", starts_at=at(90))
+        await add(c, h, title="Final", kind="tournament", starts_at=at(150))
+        day = await c.get(f"/?item={semis['id']}", headers=h)
+        query = {"day": "2026-11-20", "item": semis["id"], "delay": semis["id"], "minutes": "10"}
+        opened = await c.get("/", params=query, headers=h)
+        crew = await c.get("/", params=query, headers=env.rights.sign_in("u_crew", CREW))
+        gone = await c.get("/", params={**query, "delay": "nope"}, headers=h)
+    back = f"/agenda/?day=2026-11-20&amp;item={semis['id']}"
+    assert "<dialog" not in day.text
+    assert f'href="{back}&amp;delay={semis["id"]}&amp;minutes=10">+10</a>' in day.text
+    text = opened.text
+    sheet = text.split('<dialog open class="canccu-agenda-sheet"')[1].split("</dialog>")[0]
+    assert ">Delay Semis by 10 min?</h2>" in sheet
+    assert f'action="/agenda/items/{semis["id"]}/delay"' in sheet
+    assert 'name="revision" value="1"' in sheet and 'name="minutes" value="10"' in sheet
+    assert "Also move the 1 item after it" in sheet
+    assert 'name="announce" value=1 checked>' in sheet
+    assert "<dt>Starts</dt><dd><b>18:40</b> <s>18:30</s>" in variant(sheet, 0, 1)
+    assert "<dt>Also moves</dt><dd>Nothing else moves.</dd>" in variant(sheet, 0, 1)
+    assert ">Delay and tell everyone</button>" in variant(sheet, 0, 1)
+    assert "Final <b>19:40</b> <s>19:30</s>" in variant(sheet, 1, 1)
+    assert ">Delay 2 items quietly</button>" in variant(sheet, 1, 0)
+    assert f'class="canccu-button canccu-button--secondary" href="{back}">Don' in sheet
+    assert f'canccu-agenda-sheet__close" href="{back}">' in sheet
+    assert f'<a class="canccu-agenda-scrim" href="{back}"' in text
+    # The day stays under it, its picked item included.
+    assert "canccu-agenda-list" in text and ">Semis</a></h2>" in text
+    # Only for those who may delay, and only for an item there is.
+    assert "<dialog" not in crew.text and "<dialog" not in gone.text
 
 
 async def test_confirming_a_delay_applies_it_unless_the_agenda_changed(env: Env) -> None:

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from typing import Any
+from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
 from canccu_kit.ui import empty_state, icon
@@ -12,7 +13,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
 
-from . import day_view, model, store, undo
+from . import day_view, delay_pages, model, store, undo
 from .access import WRITE, viewer
 from .day_view import can_delay, can_show, state_of
 from .deps import deps
@@ -112,9 +113,11 @@ async def run_of_show(request: Request) -> Response:
     body = (notice(done) if done else "") + await undo.offer_html(
         d, session, request.query_params.get("undo")
     )
+    # This view's own address, where a delay sheet's Close and Don't delay lead back to.
+    here = f"{BASE}/?" + urlencode({"day": day.isoformat(), **({"item": wanted} if wanted else {})})
     hero = day_view.on_now(rows, now, tz) if day == today else None
     if hero is not None:
-        body += day_view.hero_html(hero, now, tz, session)
+        body += day_view.hero_html(hero, now, tz, session, here)
     body += day_view.days_html(days, day, today)
     writes = session.has(WRITE)
     if on_day:
@@ -123,7 +126,7 @@ async def run_of_show(request: Request) -> Response:
             item = model.item_json(side, kind_rows, channels)
             close = f"{BASE}/?day={day.isoformat()}" if wanted == side["id"] else None
             history = changes_html(log, tz, today)
-            aside = day_view.side_html(side, item, kinds, now, tz, session, close, history)
+            aside = day_view.side_html(side, item, kinds, now, tz, session, close, history, here)
         tail = "" if now_shown else nowline
         body += f'<div class="canccu-agenda-day">{day_view.list_html(lines, tail)}{aside}</div>'
     else:
@@ -140,6 +143,7 @@ async def run_of_show(request: Request) -> Response:
             + empty_state("calendar", f"Nothing {what} yet", text, add)
             + "</section>"
         )
+    body += await _delay_sheet(request, rows, now, here) if writes else ""
     actions = (
         f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/new?day={day}">'
         "Full form</a>"
@@ -159,6 +163,16 @@ async def run_of_show(request: Request) -> Response:
         description=about,
         narrow=False,
     )
+
+
+async def _delay_sheet(request: Request, rows: list[Any], now: datetime, here: str) -> str:
+    """The delay confirm a chip asked for (`delay` and `minutes`), over the day; none for an item
+    this session does not see or that can no longer be delayed."""
+    wanted = request.query_params.get("delay")
+    row = next((r for r in rows if r["id"] == wanted), None) if wanted else None
+    if row is None or not can_delay(row, state_of(row, now)):
+        return ""
+    return await delay_pages.sheet(request, row, request.query_params.get("minutes", ""), here)
 
 
 async def item_page(request: Request) -> Response:
