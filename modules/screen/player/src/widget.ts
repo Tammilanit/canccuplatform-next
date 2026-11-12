@@ -127,6 +127,9 @@ function codeExpired(view: View, nowMs: number): boolean {
   return !Number.isNaN(ms) && nowMs >= ms;
 }
 
+/** A template's progress bar (templates.ts, `bar`) and the seconds it spans. */
+const BAR_SPAN = /(?:^| )canccu-widget__bar--(\d+)s(?: |$)/;
+
 const two = (n: number): string => String(n).padStart(2, "0");
 
 /** `00:47:18`: hours run past 24 rather than turn into days, so the text stays one shape. */
@@ -142,9 +145,16 @@ export function countdownText(ms: number): string {
  */
 export function fillCountdowns(root: ParentNode, nowMs: number): void {
   for (const el of root.querySelectorAll<HTMLTimeElement>("time[datetime]")) {
-    if (el.textContent !== "" && el.dataset.canccuCountdown === undefined) continue;
     const target = Date.parse(el.getAttribute("datetime") ?? "");
     if (Number.isNaN(target)) continue;
+    const span = BAR_SPAN.exec(el.className)?.[1];
+    if (span !== undefined) {
+      // Empty before its last `span` seconds, full at its time.
+      const progress = Math.min(1, Math.max(0, 1 - (target - nowMs) / (Number(span) * 1000)));
+      el.style.setProperty("--canccu-progress", String(Math.round(progress * 1000) / 1000));
+      continue;
+    }
+    if (el.textContent !== "" && el.dataset.canccuCountdown === undefined) continue;
     el.dataset.canccuCountdown = "";
     el.textContent = countdownText(target - nowMs);
   }

@@ -6,7 +6,7 @@
 import { call, isDeviceAnswer } from "./api.js";
 import { audioUnlocked } from "./audio.js";
 import type { Answer, Fetch } from "./api.js";
-import { clockText, identifyCard, offlineMark } from "./frames.js";
+import { clockText, identifyCard, keepSafetyLast, offlineMark } from "./frames.js";
 import { Heartbeat } from "./heartbeat.js";
 import { applyPatch, isState } from "./state.js";
 import type { ScreenState } from "./state.js";
@@ -191,6 +191,7 @@ export class Live {
     const until = this.host.now() + IDENTIFY_MS;
     this.identify = card;
     this.host.root.append(card);
+    keepSafetyLast(this.host.root);
     const left = card.querySelector(".canccu-identify__left");
     const step = (): void => {
       const ms = until - this.host.now();
@@ -200,7 +201,7 @@ export class Live {
         if (this.identify === card) this.identify = null;
         return;
       }
-      if (left !== null) left.textContent = `identify · ${Math.ceil(ms / 1000)} s left`;
+      if (left !== null) left.textContent = `${Math.ceil(ms / 1000)} s left`;
     };
     const timer = setInterval(step, 1000);
     step();
@@ -214,7 +215,7 @@ export class Live {
       const root = this.host.root;
       this.offline = true;
       root.classList.add("canccu-is-offline");
-      root.querySelector(".canccu-offline-mark")?.remove();
+      root.querySelector(".canccu-offline-marker")?.remove();
       root.append(offlineMark(clockText(since, this.state?.tenant.time_zone)));
     }, OFFLINE_AFTER_MS);
   }
@@ -226,7 +227,7 @@ export class Live {
     this.pollTimer = undefined;
     this.offline = false;
     this.host.root.classList.remove("canccu-is-offline");
-    this.host.root.querySelector(".canccu-offline-mark")?.remove();
+    this.host.root.querySelector(".canccu-offline-marker")?.remove();
   }
 
   private startPolling(): void {

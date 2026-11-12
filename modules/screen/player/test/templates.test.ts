@@ -25,7 +25,7 @@ describe("the player's default templates", () => {
   it("draws each widget's view-model fields", () => {
     const t = (type: string, view: Record<string, unknown>) =>
       draw(DEFAULT_TEMPLATES[type] ?? [], view).textContent;
-    expect(t("clock", { time: "18:42", date: "Sat 14 Mar" })).toBe("18:42Sat 14 Mar");
+    expect(t("clock", { time: "18:42", date: "Sat 14 Mar" })).toBe("Sat 14 Mar18:42");
     const items = [
       { name: "Dinner", state: "now", starts_text: "18:00", ends_text: "19:15", location: "Café", delay_minutes: 15 },
       { name: "Semis", state: "next", starts_text: "19:30", ends_text: null, location: null, delay_minutes: 0 },
@@ -34,7 +34,7 @@ describe("the player's default templates", () => {
     expect(agenda).toContain("Dinner");
     expect(agenda).toContain("+15 min");
     expect(agenda).toContain("Semis");
-    expect(t("ticker", { text: "Seats open 20:30." })).toBe("Seats open 20:30.");
+    expect(t("ticker", { text: "Seats open 20:30." })).toBe("InfoSeats open 20:30.");
     expect(
       t("venue_info", { wifi: [{ ssid: "demo-guest", password: null, note: null }] }),
     ).toContain("demo-guest");
@@ -50,7 +50,9 @@ describe("the player's default templates", () => {
       ends_text: null,
     });
     expect(box.textContent).toContain("Semis start in");
-    expect(box.querySelector("time")?.getAttribute("datetime")).toBe("2026-01-01T19:30:00Z");
+    expect(box.querySelector("time.canccu-widget__big")?.getAttribute("datetime")).toBe(
+      "2026-01-01T19:30:00Z",
+    );
   });
 
   it("draws the QR handoff of a widget, and a QR widget's own code", () => {
@@ -71,7 +73,8 @@ describe("the player's default templates", () => {
       url: "/theming/a/l.svg",
       name: "Demo Event",
     });
-    expect(logo.querySelector("img")?.getAttribute("alt")).toBe("Demo Event");
+    expect(logo.querySelector("img")?.getAttribute("src")).toBe("/theming/a/l.svg");
+    expect(logo.textContent).toBe("Demo Event");
     expect(draw(DEFAULT_TEMPLATES.logo ?? [], { url: null, name: "Demo Event" }).textContent).toBe(
       "Demo Event",
     );

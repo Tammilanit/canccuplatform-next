@@ -55,6 +55,21 @@ interface Drawn {
   claim: ClaimState | null;
   /** After a claim with `on_end: next`: the widget shown instead of the rotation's, until when. */
   next: { index: number | null; until: number } | null;
+  /** The hero's rotation marks while it rotates (mockup 02): a bar and a dot per widget. */
+  marks: HTMLElement | null;
+}
+
+function rotationMarks(count: number): HTMLElement {
+  const marks = document.createElement("div");
+  marks.className = "canccu-rotation";
+  const part = (cls: string): HTMLElement => {
+    const span = document.createElement("span");
+    span.className = cls;
+    return span;
+  };
+  marks.append(part("canccu-rotation__bar"));
+  for (let i = 0; i < count; i++) marks.append(part("canccu-rotation__dot"));
+  return marks;
 }
 
 const grid = (n: number): string => `repeat(${String(n)}, minmax(0, 1fr))`;
@@ -138,7 +153,16 @@ export class Screen {
     if (drawn === undefined) {
       const el = document.createElement("section");
       el.className = `canccu-region canccu-region--${r.id}`;
-      drawn = { el, shown: null, json: "", slot: null, state: r, claim: null, next: null };
+      drawn = {
+        el,
+        shown: null,
+        json: "",
+        slot: null,
+        state: r,
+        claim: null,
+        next: null,
+        marks: null,
+      };
       this.regions.set(r.id, drawn);
       this.root.append(el);
     }
@@ -168,8 +192,11 @@ export class Screen {
     const takeover = full !== null && !full.hidden && claimShown(full, now) !== null;
     if (takeover) this.root.dataset.takeover = "";
     else delete this.root.dataset.takeover;
-    for (const drawn of this.regions.values())
-      this.show(drawn, this.choose(drawn, state, now, takeover), motion);
+    for (const drawn of this.regions.values()) {
+      const shown = this.choose(drawn, state, now, takeover);
+      this.show(drawn, shown, motion);
+      this.marks(drawn, shown, state, now);
+    }
     fillCountdowns(this.root, now);
     if (state.display?.drift === true) {
       const { x, y } = driftAt(now);
@@ -219,7 +246,12 @@ export class Screen {
     const w = index === null ? undefined : r.widgets[index];
     if (w !== undefined) {
       const live = liveView(w.widget, w.view, now, state.tenant.time_zone);
-      const view = shownView(w.widget, live, now);
+      const shown = shownView(w.widget, live, now);
+      // The header names the zone beside the event (mockup 02); the state has it, the logo's view not.
+      const view =
+        w.widget === "logo" && state.zone !== null
+          ? { ...shown, zone_name: state.zone.name }
+          : shown;
       // A ticker's new text is a new thing to show, so it fades in (the calm fading line, L13);
       // so are a new photo and a new playlist frame.
       const text = w.widget === "ticker" ? JSON.stringify(view.text) : identity(w.widget, view);
@@ -287,7 +319,7 @@ export class Screen {
     drawn.json = json;
     if (sameThing) {
       // New data for what is already shown: redraw it in place, with no fade.
-      const fresh = drawWidget(next.type, next.template, next.view, templates, media);
+      const fresh = this.widgetOf(next, templates, media);
       drawn.slot?.replaceChildren(...fresh.childNodes);
       // Keep a fade that is still waiting for its images (`canccu-slot--in`), or it pops in.
       if (drawn.slot !== null) {
@@ -297,11 +329,57 @@ export class Screen {
       }
       return;
     }
-    const incoming =
-      next === null ? null : drawWidget(next.type, next.template, next.view, templates, media);
+    const incoming = next === null ? null : this.widgetOf(next, templates, media);
     incoming?.classList.add("canccu-is-active");
     drawn.slot = incoming;
     this.enter(drawn, incoming, motion);
+  }
+
+  /** A widget as drawn; one a claim brings is marked, so the look can frame it (mockup 04). */
+  private widgetOf(
+    shown: Shown,
+    templates: unknown,
+    media: Parameters<typeof drawWidget>[4],
+  ): HTMLElement {
+    const el = drawWidget(shown.type, shown.template, shown.view, templates, media);
+    if (shown.key.startsWith("claim:")) el.classList.add("canccu-is-claim");
+    return el;
+  }
+
+  /**
+   * The hero's rotation marks: a bar through the shown widget's time and a dot per widget, the
+   * shown one active. Only while its rotation shows more than one thing, and not over a claim.
+   */
+  private marks(
+    drawn: Drawn,
+    shown: Shown | "collapse" | null,
+    state: ScreenState,
+    now: number,
+  ): void {
+    const r = drawn.state;
+    const widget = typeof shown === "object" && shown !== null && !shown.key.startsWith("claim:");
+    const at =
+      widget && r.role === "hero" && r.order.length > 1
+        ? shownAt(r, state.zone?.key ?? "", now)
+        : null;
+    if (at === null || at.index === null) {
+      drawn.marks?.remove();
+      drawn.marks = null;
+      return;
+    }
+    if (drawn.marks?.childElementCount !== r.order.length + 1) {
+      drawn.marks?.remove();
+      drawn.marks = rotationMarks(r.order.length);
+      drawn.el.append(drawn.marks);
+    }
+    const dwellMs = (r.widgets[at.index]?.dwell_seconds ?? 0) * 1000;
+    const progress = dwellMs > 0 ? 1 - (at.until - now) / dwellMs : 0;
+    drawn.marks.style.setProperty("--canccu-progress", String(Math.round(progress * 1000) / 1000));
+    // The dots follow the place order, so a shuffled cycle still lights the widget it shows.
+    const plain = [...r.order].sort((x, y) => x - y);
+    drawn.marks.querySelectorAll(".canccu-rotation__dot").forEach((dot, i) => {
+      dot.classList.toggle("canccu-is-active", plain[i] === at.index);
+    });
   }
 
   /**
@@ -313,6 +391,7 @@ export class Screen {
     const region = drawn.el;
     if (motion === "none" || incoming === null) {
       region.replaceChildren(...(incoming === null ? [] : [incoming]));
+      if (drawn.marks !== null) region.append(drawn.marks);
       return;
     }
     incoming.classList.add("canccu-slot--in");
@@ -329,7 +408,7 @@ export class Screen {
       incoming.getBoundingClientRect(); // Lay out the invisible start, so the fade runs from it.
       incoming.classList.remove("canccu-slot--in");
       for (const old of [...region.children]) {
-        if (old === incoming || !(old instanceof HTMLElement)) continue;
+        if (old === incoming || !(old instanceof HTMLElement) || old === drawn.marks) continue;
         old.classList.remove("canccu-is-active");
         old.classList.add("canccu-slot--out");
         setTimeout(() => {

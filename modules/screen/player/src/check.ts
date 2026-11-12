@@ -6,7 +6,7 @@
 import { call } from "./api.js";
 import type { Answer, Fetch } from "./api.js";
 import { audioSettled, audioUnlocked, beep, unlockAudio } from "./audio.js";
-import { PLATFORM_MARK, el } from "./frames.js";
+import { el, frameHead, setClock } from "./frames.js";
 import { STATE_PATH } from "./live.js";
 import { isState } from "./state.js";
 
@@ -151,8 +151,7 @@ export class CheckPage {
   async start(): Promise<void> {
     const page = el("main", "canccu-frame canccu-frame--check");
     page.dataset.frame = "check";
-    const head = el("header", "canccu-frame__head");
-    head.append(el("span", "canccu-frame__mark", PLATFORM_MARK));
+    const head = frameHead({ where: "Kiosk check" });
     const body = el("section", "canccu-frame__body");
     const button = el("button", "canccu-check__unlock", "Tap to test the sound");
     button.type = "button";
@@ -181,6 +180,7 @@ export class CheckPage {
 
   private async run(): Promise<void> {
     const mine = ++this.latest;
+    setClock(this.env.root, (this.env.now ?? Date.now)());
     const { answer, offsetMs } = await measure(this.env.fetch, this.env.now ?? Date.now);
     const withoutTap = await this.withoutTap;
     if (mine !== this.latest) return;

@@ -7,7 +7,7 @@
  */
 import { call, isDeviceAnswer } from "./api.js";
 import type { Answer, Fetch } from "./api.js";
-import { clockText, frame, minutesLeft, setFoot } from "./frames.js";
+import { frame, keepSafetyLast, minutesLeft, safetyCode, setClock, setFoot } from "./frames.js";
 import type { FrameKind, FrameText } from "./frames.js";
 import { Live, STATE_PATH } from "./live.js";
 import type { Saved } from "./offline.js";
@@ -69,6 +69,10 @@ export class Player {
   /** Whether any frame has been drawn: the loader's `<body>` starts empty. */
   private drawn = false;
   private eventName: string | null | undefined;
+  /** The event's time zone, once the page has heard it; the frames' clocks show its time. */
+  private timeZone: string | undefined;
+  /** The theme's logo of the last state, for the frames' header. */
+  private logo: string | null = null;
   private readonly now: () => number;
   private readonly random: () => number;
   readonly live: Live;
@@ -109,7 +113,10 @@ export class Player {
   }
 
   async start(): Promise<void> {
-    this.ticker ??= setInterval(() => this.tick?.(), 1000);
+    this.ticker ??= setInterval(() => {
+      this.tick?.();
+      this.clock();
+    }, 1000);
     const gen = this.next();
     const transfer = /^#transfer=([A-Za-z0-9_-]{16,64})$/.exec(this.env.nav.hash())?.[1];
     if (transfer !== undefined) this.env.nav.clearHash();
@@ -153,21 +160,28 @@ export class Player {
     }, ms);
   }
 
-  private show(text: FrameText & { kind: FrameKind }): HTMLElement {
-    const node = frame(text.kind, text);
-    this.mount(node);
+  private show(text: FrameText & { kind: FrameKind }, code?: string): HTMLElement {
+    const node = frame(text.kind, { logo: this.logo, ...text });
+    this.mount(node, code === undefined ? [] : [safetyCode(code)]);
+    this.clock();
     return node;
   }
 
-  private mount(node: HTMLElement): void {
+  /** The shown frame's date and clock, on the server's time once a heartbeat has set it. */
+  private clock(): void {
+    setClock(this.env.root, this.live.heartbeat.serverNow(), this.timeZone);
+  }
+
+  private mount(node: HTMLElement, safety: HTMLElement[] = []): void {
     this.drawn = true;
     // The screen keeps its layout between states: moving it out and back in would restart its
     // fades and, later, its videos.
     if (this.env.root.firstElementChild === node) return;
     const keep = [...this.env.root.children].filter((c) =>
-      c.matches(".canccu-offline-mark, .canccu-identify"),
+      c.matches(".canccu-offline-marker, .canccu-identify"),
     );
-    this.env.root.replaceChildren(node, ...keep);
+    this.env.root.replaceChildren(node, ...keep, ...safety);
+    keepSafetyLast(this.env.root);
   }
 
   settle(answer: Answer): void {
@@ -198,24 +212,23 @@ export class Player {
   private draw(state: ScreenState, offlineSince?: number): void {
     if (offlineSince === undefined) this.env.offline?.save(state);
     this.tick = null;
-    const who = { event: state.tenant.name, device: state.device.name };
+    this.eventName = state.tenant.name;
+    this.timeZone = state.tenant.time_zone;
+    this.logo = state.theme.logo_url;
+    const who = { event: state.tenant.name, where: state.device.name };
     if (state.tenant.status === "archived" || state.zone === null) this.screen.stop();
     if (state.tenant.status === "archived") {
-      this.show({ kind: "archived", ...who, ...ARCHIVED });
+      this.show({ kind: "archived", ...who, ...archived(state.tenant.name) });
     } else if (state.zone === null) {
-      const node = this.show({
+      this.show({
         kind: "unassigned",
         ...who,
         title: state.device.name,
         lines: [
-          "Paired. Not assigned to a zone yet.",
-          "An organiser assigns it in Screen studio → Devices.",
+          "Paired. Waiting for a zone.",
+          "An organiser assigns it to a zone. It starts by itself.",
         ],
       });
-      this.tick = () => {
-        setFoot(node, clockText(this.live.heartbeat.serverNow(), state.tenant.time_zone));
-      };
-      this.tick();
     } else {
       this.mount(this.screen.draw(state));
       this.screen.start();
@@ -227,11 +240,15 @@ export class Player {
     if (this.eventName === undefined) {
       const current = await call(this.env.fetch, "GET", "/api/tenants/current");
       if (gen !== this.generation) return;
-      const name = (current.body as { name?: unknown } | null)?.name;
-      // A draft event shows guests no name; the frame then says only "screen setup".
+      const { name, time_zone: zone } = (current.body ?? {}) as {
+        name?: unknown;
+        time_zone?: unknown;
+      };
+      // A draft event shows guests no name; the frame then shows the platform's mark instead.
       if (current.status === 200) this.eventName = typeof name === "string" ? name : null;
+      if (typeof zone === "string") this.timeZone = zone;
     }
-    const event = [this.eventName ?? null, "screen setup"].filter(Boolean).join(" · ");
+    const event = this.eventName ?? null;
     const answer = await call(this.env.fetch, "POST", "/api/screen/pairing");
     if (gen !== this.generation) return;
     const body = answer.body as { pairing_id?: string; code?: string; expires_at?: string } | null;
@@ -241,16 +258,16 @@ export class Player {
     } else if (venueRefused(answer)) this.refused();
     else if (answer.status === 409 && answer.code === "event_archived") this.archived();
     else if (answer.status === 409 && answer.code === "no_venue") {
-      this.show({ kind: "unknown", event, ...NO_VENUE });
+      this.show({ kind: "unknown", event, where: SETUP, ...NO_VENUE });
       this.wait(RETRY_MS, () => this.pair());
     } else if (answer.status === 429) {
-      this.show({ kind: "unknown", event, ...TOO_MANY });
+      this.show({ kind: "unknown", event, where: SETUP, ...TOO_MANY });
       this.wait(RETRY_MS, () => this.pair());
     } else this.unknown();
   }
 
   private showCode(
-    event: string,
+    event: string | null,
     id: string,
     code: string,
     expiresAt: string,
@@ -261,17 +278,19 @@ export class Player {
     const serverNow = Number.isNaN(serverMs) ? this.now() : serverMs;
     const left = Math.min(CODE_MAX_MS, Math.max(0, Date.parse(expiresAt) - serverNow || 0));
     const until = this.now() + left;
-    const node = this.show({
-      kind: "pairing",
-      event,
-      title: "Pair this screen",
-      code,
-      lines: ["Screen studio → Devices → Pair, and type the code."],
-      qr: {
-        url: `${this.env.nav.origin()}/admin/screen/devices#pair=${code}`,
-        label: "Or scan with a signed-in phone",
+    // No QR and no Studio path until Screen studio's Devices page exists (#190): the frame must
+    // not send anyone to a page that answers 404 (UX audit, D3).
+    const node = this.show(
+      {
+        kind: "pairing",
+        event,
+        where: SETUP,
+        kicker: "New screen",
+        title: "Pair this screen",
+        lines: ["Ask an organiser to pair it with this code."],
       },
-    });
+      code,
+    );
     this.tick = () => {
       setFoot(
         node,
@@ -303,7 +322,7 @@ export class Player {
 
   private archived(): void {
     this.next();
-    this.show({ kind: "archived", event: this.eventName, ...ARCHIVED });
+    this.show({ kind: "archived", event: this.eventName, ...archived(this.eventName) });
     this.wait(RETRY_MS, () => this.start());
   }
 
@@ -313,7 +332,8 @@ export class Player {
     const ms = backoffMs(this.failures, 2000, this.random);
     this.show({
       kind: "unknown",
-      ...CONNECTING,
+      event: this.eventName,
+      ...UNREACHABLE,
       foot: `Trying again in ${Math.ceil(ms / 1000)} s`,
     });
     this.wait(ms, () => this.start());
@@ -325,7 +345,11 @@ export class Player {
     if (gen !== this.generation) return;
     const url = (answer.body as { url?: unknown } | null)?.url;
     if (answer.status === 200 && typeof url === "string" && /^https?:\/\//.test(url)) {
-      this.show({ kind: "moved", ...MOVED, lines: ["to its next event. Taking you there…"] });
+      this.show({
+        kind: "moved",
+        ...MOVED,
+        lines: ["to its next event. Taking you there…", MOVED_HELP],
+      });
       this.wait(MOVE_MS, () => {
         this.env.nav.go(url);
       });
@@ -338,47 +362,55 @@ export class Player {
       this.show({
         kind: "moved",
         ...MOVED,
-        lines: ["Moved, ask the crew to open its new address."],
+        lines: ["to its next event.", "Crew: open its new address on the kiosk."],
       });
       this.wait(RETRY_MS, () => this.start());
     }
   }
 }
 
+const SETUP = "Screen setup";
+// The words of sheet 9 (docs/design): a lead line for everyone, then help for the crew.
 const CONNECTING = {
+  kicker: "Starting",
   title: "Connecting…",
   lines: ["This screen is waiting for the event's server."],
 };
+const UNREACHABLE = {
+  title: "No connection yet",
+  lines: ["This screen starts when it reaches the event.", "Crew: check the cable or the Wi-Fi."],
+};
 const REFUSED = {
-  title: "Not at the event's venue",
+  title: "Not at the venue",
   lines: [
-    "This screen only plays from the venue network.",
-    "The screen is paired, but this network is not the venue.",
-    "Crew: check the venue uplink, or ask an organiser about the audited emergency switch (48 h max).",
+    "This screen plays only on the venue's network.",
+    "Crew: check the venue uplink, or ask an organiser about the emergency switch (48 h max).",
   ],
-  foot: "Retrying every 30 s · no content is sent while refused",
+  foot: "Trying again every 30 s · nothing is shown while refused",
 };
-const ARCHIVED = {
+const archived = (event: string | null | undefined) => ({
   title: "This event has ended",
-  lines: ["This screen waits here until it is moved to its next event."],
-  foot: "Crew: the platform admin moves screens between events",
-};
-const MOVED = {
-  title: "This screen has moved",
-  foot: "Crew: update the kiosk start URL when convenient",
-};
+  lines: [
+    event ? `Thank you for coming to ${event}.` : "Thank you for coming.",
+    "Crew: the platform admin moves screens between events.",
+  ],
+});
+const MOVED = { title: "This screen has moved" };
+const MOVED_HELP = "Crew: update the kiosk's start address when convenient.";
 const PARKED = {
   title: "Not assigned to an event",
-  lines: ["This screen is paired, but no event holds it right now."],
-  foot: "Crew: the platform admin moves screens between events",
+  lines: [
+    "This screen is paired, but no event holds it right now.",
+    "Crew: the platform admin moves screens between events.",
+  ],
 };
 const NO_VENUE = {
   title: "This event has no venue yet",
-  lines: ["Screens pair only once the event has a venue. Ask an organiser to set it."],
-  foot: "Retrying every 30 s",
+  lines: ["Screens pair only once the event has a venue.", "Ask an organiser to set it."],
+  foot: "Trying again every 30 s",
 };
 const TOO_MANY = {
   title: "Too many open pairing codes",
-  lines: ["Use an open code, or clear them in Screen studio → Devices."],
-  foot: "Retrying every 30 s",
+  lines: ["Use an open code, or wait until one expires."],
+  foot: "Trying again every 30 s",
 };

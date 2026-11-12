@@ -40,13 +40,17 @@ const OWN_QR: TreeNode[] = [
 
 // The tree has no `{{.}}` (theming's names are `a.b` only), so no template can show a list of plain
 // strings: the `names` and `voice_channels` lists stay off the defaults.
+// A row carries both its end and its start: the look shows the end on a now row and the start on a
+// next row (screen.css), since a template cannot branch on a field's value.
 const AGENDA_ROW = el(
   "li",
   null,
   [
     el("span", "state", [f("state")]),
     el("strong", "name", [f("name")]),
-    el("span", "meta", [sec("location", f("location"), t(" · ")), f("starts_text")]),
+    sec("ends_text", el("span", "until", [t("until "), f("ends_text")])),
+    el("span", "starts", [f("starts_text")]),
+    sec("location", el("span", "where", [f("location")])),
     el("span", null, [t("+"), f("delay_minutes"), t(" min")], {
       class: [t("canccu-widget__delay canccu-widget__delay--"), f("state")],
     }),
@@ -54,15 +58,29 @@ const AGENDA_ROW = el(
   { class: [t("canccu-widget__row canccu-widget__row--"), f("state")] },
 );
 
+/**
+ * A bar that fills as `field`'s time comes near, over the last `span` seconds (widget.ts,
+ * fillCountdowns): a countdown's last hour, a check-in code's 30 s period. A template may hold no
+ * `data-` attribute (theming.md, Widget templates), so the span travels in the class.
+ */
+const bar = (field: string, span: number): TreeNode =>
+  el("time", null, [], {
+    class: [t(`canccu-widget__bar canccu-widget__bar--${String(span)}s`)],
+    datetime: [f(field)],
+  });
+
 export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = {
-  clock: [el("time", "big", [f("time")], { datetime: [f("iso")] }), el("p", "meta", [f("date")])],
+  clock: [el("p", "meta", [f("date")]), el("time", "big", [f("time")], { datetime: [f("iso")] })],
   agenda_now: [title("title"), el("ul", "body", [sec("items", AGENDA_ROW)]), QR],
   countdown: [
-    title("label"),
-    el("time", "big", [], { datetime: [f("target_at")] }),
+    el("p", "kicker", [t("Next up")]),
+    el("p", "headline", [f("label")]),
     sec("ends_text", el("p", "meta", [t("until "), f("ends_text")])),
+    el("p", "count", [t("Starts in "), el("time", "big", [], { datetime: [f("target_at")] })]),
+    bar("target_at", 3600),
   ],
   hot_game: [
+    el("p", "kicker", [t("Hot right now")]),
     sec("game", sec("cover_url", img("cover_url", "image")), el("p", "big", [f("name")])),
     el("p", "meta", [f("players"), t(" playing now")]),
     QR,
@@ -117,11 +135,16 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     ]),
   ],
   announcement: [
-    el("div", null, [title("title"), el("p", "body", [f("body")])], {
-      class: [t("canccu-widget__level canccu-widget__level--"), f("level")],
-    }),
+    el(
+      "div",
+      null,
+      [el("p", "kicker", [t("Announcement")]), title("title"), el("p", "body", [f("body")])],
+      {
+        class: [t("canccu-widget__level canccu-widget__level--"), f("level")],
+      },
+    ),
   ],
-  ticker: [el("p", "line", [f("text")])],
+  ticker: [el("p", "label", [t("Info")]), el("p", "line", [f("text")])],
   food_status: [
     el("p", "title", [f("pizzeria_name")]),
     el("p", "big", [f("state")]),
@@ -129,7 +152,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     QR,
   ],
   qr: OWN_QR,
-  checkin_qr: OWN_QR,
+  checkin_qr: [...OWN_QR, sec("rotates_at", bar("rotates_at", 30))],
   venue_info: [
     el("ul", "body", [
       sec(
@@ -165,7 +188,12 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     sec("points", el("p", "meta", [f("points"), t(" points")])),
   ],
   sting: [sec("image_url", img("image_url", "image")), el("p", "big", [f("text")])],
-  logo: [sec("url", img("url", "image", [f("name")])), not("url", el("p", "big", [f("name")]))],
+  // The name is written out beside the image, so the image's `alt` stays empty.
+  logo: [
+    sec("url", img("url", "image")),
+    el("p", "name", [f("name")]),
+    sec("zone_name", el("p", "zone", [f("zone_name")])),
+  ],
 };
 
 interface ThemeTemplate {
