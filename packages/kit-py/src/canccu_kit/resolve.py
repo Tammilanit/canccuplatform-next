@@ -22,6 +22,7 @@ from .config import ConfigError
 from .errors import KitError
 from .service import ServiceIdentity
 from .tenant import is_tenant_id
+from .ui import EventInfo
 
 DEMO_TENANT = "demo"
 """The tenant the IP-mode demo stack serves."""
@@ -104,6 +105,13 @@ class _Cached:
     context: TenantContext | None
 
 
+@dataclass
+class _CachedEvent:
+    at: float
+    event: EventInfo | None
+    tenant: str | None
+
+
 class TenantResolver:
     """Resolves a request's Host to its tenant, caching answers (unknown hosts too) briefly.
 
@@ -136,6 +144,7 @@ class TenantResolver:
         self._max_entries = max_entries
         # Insertion-ordered, so the first key is the oldest entry.
         self._cache: OrderedDict[str, _Cached] = OrderedDict()
+        self._events: OrderedDict[str, _CachedEvent] = OrderedDict()
 
     async def resolve(self, raw_host: str | None) -> Resolution:
         host = normalize_host(raw_host)
@@ -153,6 +162,32 @@ class TenantResolver:
         if context is None:
             raise UnknownHost()
         return Resolution("tenant", context)
+
+    async def event(self, raw_host: str | None) -> EventInfo | None:
+        """The event on this host as `GET /api/tenants/current` tells anyone (its name, dates,
+        state and venue), for the organiser shell's header. None when the tenants module does not
+        answer: a page then shows a plain header rather than failing."""
+        host = normalize_host(raw_host)
+        if host is None:
+            return None
+        hit = self._events.get(host)
+        if hit is not None and self._now() - hit.at < self._cache_seconds:
+            return hit.event
+        event, tenant = None, None
+        try:
+            response = await self._http.get(
+                f"{self._tenants_url}/api/tenants/current", headers={"host": host}
+            )
+            body = response.json() if response.is_success else None
+        except (httpx.HTTPError, ValueError):
+            body = None
+        if isinstance(body, dict):
+            event, tenant = EventInfo.from_api(body), body.get("id")
+        self._events.pop(host, None)
+        self._events[host] = _CachedEvent(self._now(), event, tenant)
+        while len(self._events) > self._max_entries:
+            self._events.popitem(last=False)
+        return event
 
     @property
     def cache_size(self) -> int:
@@ -222,7 +257,10 @@ class TenantResolver:
             return
         if event.tenant is None:
             self._cache.clear()
+            self._events.clear()
             return
+        for host in [h for h, e in self._events.items() if e.tenant in (None, event.tenant)]:
+            del self._events[host]
         for host in [
             h
             for h, c in self._cache.items()
