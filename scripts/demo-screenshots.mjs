@@ -16,7 +16,10 @@ import {
   event,
   expect,
 } from "../modules/screen/test/stack/client.mjs";
-import { guestReads } from "../modules/screen/test/stack/fixture.mjs";
+import {
+  guestReads,
+  seedScreens,
+} from "../modules/screen/test/stack/fixture.mjs";
 import { planned, screenShots } from "../modules/screen/test/stack/screens.mjs";
 import {
   STUDIO_PAGES,
@@ -47,7 +50,6 @@ const SHELL = [
   ["health-view", "/admin/health-view"],
   ["profile", "/admin/profile"],
   ["people", "/admin/people"],
-  ["agenda", "/agenda/"],
   ["notify-topics", "/notify/admin/topics"],
 ];
 const PAGES = [
@@ -60,6 +62,8 @@ const PAGES = [
   ["studio-advanced", "/theming/studio/advanced", DESK],
   ["studio-history", "/theming/studio/history", DESK],
   ["hub-preview-phone", "/theming/studio/preview/hub", PHONE],
+  // Before the fixture fills the run of show, so its empty state stays checked.
+  ["agenda-empty", "/agenda/", DESK],
   ["agenda-new-item", "/agenda/items/new", DESK],
   ["agenda-quick-add-phone", "/agenda/add", PHONE],
   ["notify-new-topic", "/notify/admin/topics/new", DESK],
@@ -112,6 +116,30 @@ const DRAFT = [
     },
   ],
 ];
+// The run of show's day view (sheet 5, #400) on the fixture's filled day: at both widths, at 1440 px
+// with the item beside the list and the live miniature of the main zone, which the shot waits for,
+// and an item a row picks, over the day. `pick` names the fixture's item.
+const MINI = ".canccu-agenda-mini iframe";
+const miniDrawn = async (page) => {
+  await page
+    .frameLocator(MINI)
+    .locator(
+      ".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active",
+    )
+    .waitFor({ timeout: 40000 });
+  await page.waitForTimeout(1500);
+};
+const DAY_VIEW = [
+  ["agenda", DESK, {}],
+  ["agenda-wide", WIDE, { ready: miniDrawn }],
+  ["agenda-phone", PHONE, {}],
+  ["agenda-item", DESK, { pick: "Demo Game Cup, semis", fullPage: false }],
+  [
+    "agenda-item-phone",
+    PHONE,
+    { pick: "Demo Game Cup, semis", fullPage: false },
+  ],
+];
 // The front door, signed out, and one page of the error family (an item that does not exist),
 // each at both widths. The error page must answer its own status, not 200.
 const SIGN_IN = "/admin/sign-in";
@@ -157,6 +185,12 @@ if (opts["dry-run"]) {
     const path = o.path ?? "/theming/studio/";
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, with a draft)`,
+    );
+  }
+  for (const [name, { width, height }, o] of DAY_VIEW) {
+    const path = o.pick ? `/agenda/?item=<${o.pick}>` : "/agenda/";
+    console.log(
+      `  ${name}.png  ${at(path)}  (${width}×${height}, the fixture's day)`,
     );
   }
   for (const [name, suffix, { width, height }] of ITEM_PAGES) {
@@ -359,8 +393,30 @@ try {
       await shot(name, `/agenda/items/${item.id}${suffix}`, viewport, SESSION);
     }
   }
-  // Gone before the screens: their fixture finds its run of show by title and would take these.
+  // Gone before the fixture: it finds its run of show by title and would take these.
   await removeMade();
+
+  try {
+    await seedScreens(demo);
+    const { items } = expect(
+      await demo.call("GET", "/api/agenda/items"),
+      200,
+      "the run of show",
+    ).body;
+    for (const [name, viewport, o] of DAY_VIEW) {
+      const id = o.pick && items.find((i) => i.title === o.pick)?.id;
+      if (o.pick && !id) throw new Error(`the fixture has no "${o.pick}"`);
+      await shot(
+        name,
+        id ? `/agenda/?item=${id}` : "/agenda/",
+        viewport,
+        SESSION,
+        o,
+      );
+    }
+  } catch (err) {
+    fail(`the run of show's day: ${firstLine(err)}`);
+  }
 
   // A guest who never checked in reads every public page; the screens play without it too.
   try {

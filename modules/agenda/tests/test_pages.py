@@ -83,13 +83,10 @@ async def test_the_list_shows_the_day_with_now_delays_and_cancellations(env: Env
 async def test_the_day_view_has_on_now_the_day_list_and_a_selected_item(env: Env) -> None:
     h = env.writer("screen.devices.read")
     async with env.client() as c:
-        dinner = await add(
-            c, h, title="Dinner", starts_at=at(-10), ends_at=at(50), location="Café"
-        )
+        dinner = await add(c, h, title="Dinner", starts_at=at(-10), ends_at=at(50), location="Café")
         # A running item's delay moves only its end.
-        await c.post(
-            f"/api/agenda/items/{dinner['id']}/delay", json={"revision": 1, "minutes": 15}, headers=h
-        )
+        delay = {"revision": 1, "minutes": 15}
+        await c.post(f"/api/agenda/items/{dinner['id']}/delay", json=delay, headers=h)
         brief = await add(c, h, title="Briefing", visibility="crew", starts_at=at(30))
         await add(c, h, title="Tomorrow's doors", kind="doors", starts_at=at(60 * 20))
         text = (await c.get("/", headers=h)).text
@@ -97,7 +94,7 @@ async def test_the_day_view_has_on_now_the_day_list_and_a_selected_item(env: Env
         crew = (await c.get("/", headers=env.rights.sign_in("u_crew", CREW))).text
     hero, rest = text.split('class="canccu-agenda-hero"')[1].split("</section>", 1)
     # On now (sheet 5): its end, the delay of that end, the delay chips and Show on screens now.
-    assert "On now · 65 min left" in hero and ">Dinner</h2>" in hero
+    assert "On now · 1 h 5 min left" in hero and ">Dinner</h2>" in hero
     assert "Café · until 18:05 <s>17:50</s>" in hero and "+15 min" in hero
     base = f"/agenda/items/{dinner['id']}"
     for minutes in (5, 10, 15):
@@ -112,15 +109,17 @@ async def test_the_day_view_has_on_now_the_day_list_and_a_selected_item(env: Env
         assert f"<span>{column}</span>" in rest
     assert "canccu-agenda-row--running" in rest and ">Meal<" in rest and ">crew<" in rest
     # Beside the list, the item that comes next is selected, with its actions.
-    side = rest.split('class="canccu-card canccu-agenda-side')[1]
+    side = rest.split('class="canccu-card canccu-agenda-side')[1].split("</aside>")[0]
     assert ">Briefing</a></h2>" in side and f"/agenda/items/{brief['id']}/edit" in side
     assert f"/agenda/items/{brief['id']}/delay?minutes=10" in side
     assert "Cancel this item…" in side and "Close" not in side
     # A row picks the item; then the panel opens over the day with a way to close it.
-    assert 'canccu-agenda-side is-open"' in chosen and 'href="/agenda/?day=2026-11-20"' in chosen
+    assert 'canccu-agenda-side is-open"' in chosen
+    assert 'canccu-agenda-close" href="/agenda/?day=2026-11-20"' in chosen
     assert ">Dinner</a></h2>" in chosen.split("canccu-agenda-side")[1]
     # Crew who only read see the day, without the actions or the screens they may not read.
-    assert "On now · 65 min left" in crew and "/delay" not in crew and "/screen/zones/" not in crew
+    assert "On now · 1 h 5 min left" in crew
+    assert "/delay" not in crew and "/screen/zones/" not in crew
 
 
 async def test_the_list_reads_times_in_the_events_time_zone(env: Env) -> None:

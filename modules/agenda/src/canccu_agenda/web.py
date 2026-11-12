@@ -93,6 +93,7 @@ def page(
     description: str = "",
     back: bool = True,
     plain: bool = False,
+    narrow: bool = True,
 ) -> HTMLResponse:
     """A run-of-show page in the organiser shell: the three main pages carry the tabs, the others
     a way back to the run of show."""
@@ -115,7 +116,7 @@ def page(
         crumb=crumb,
         actions=actions,
         description=esc(description),
-        narrow=True,
+        narrow=narrow,
         plain=plain,
     )
     response = HTMLResponse(doc, status_code=status)

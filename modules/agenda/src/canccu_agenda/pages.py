@@ -1,5 +1,5 @@
-"""The run-of-show page and an item's page: one column for a phone, the day's items in order with
-now, delays and cancellations, and the actions an organiser takes on the floor."""
+"""The run-of-show page and an item's page: the day view (day_view.py) with now, delays and
+cancellations, and the actions an organiser takes on the floor."""
 
 from __future__ import annotations
 
@@ -12,8 +12,9 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
 
-from . import model, store, undo
+from . import day_view, model, store, undo
 from .access import WRITE, viewer
+from .day_view import can_delay, can_show, state_of
 from .deps import deps
 from .effective import read_channels
 from .history import changes_html
@@ -59,16 +60,6 @@ def _day(request: Request, days: list[date], today: date) -> date:
     return next((d for d in days if d > today), days[-1])
 
 
-def state_of(row: Any, now: datetime) -> str:
-    if row["status"] == "cancelled":
-        return "cancelled"
-    if row["starts_at"] <= now and row["ends_at"] is not None and now < row["ends_at"]:
-        return "running"
-    if row["starts_at"] <= now:
-        return "over"
-    return "ahead"
-
-
 def chips(row: Any, item: dict[str, Any], now: datetime, tz: ZoneInfo) -> str:
     out = []
     state = state_of(row, now)
@@ -91,27 +82,6 @@ def chips(row: Any, item: dict[str, Any], now: datetime, tz: ZoneInfo) -> str:
     )
 
 
-def row_html(
-    row: Any, item: dict[str, Any], kinds: dict[str, str], now: datetime, tz: ZoneInfo
-) -> str:
-    state = state_of(row, now)
-    planned = ""
-    if item["delay_minutes"]:
-        planned = f' <s class="canccu-agenda-muted">{hhmm(row["planned_starts_at"], tz)}</s>'
-    meta = [kinds.get(row["kind"], row["kind"])]
-    meta += [v for v in (row["location"], row["zone"] and f"zone {row['zone']}") if v]
-    if row["ends_at"] is not None:
-        meta.append(f"until {hhmm(row['ends_at'], tz)}")
-    return (
-        f'<li><a class="canccu-agenda-row canccu-agenda-row--{state}"'
-        f' href="{BASE}/items/{esc(row["id"])}">'
-        f'<span class="canccu-agenda-row__time">{hhmm(row["starts_at"], tz)}{planned}</span>'
-        f'<span class="canccu-agenda-row__title">{esc(row["title"])}</span>'
-        f'<span class="canccu-agenda-row__meta">{esc(" · ".join(meta))}</span>'
-        f'<span class="canccu-agenda-chips">{chips(row, item, now, tz)}</span></a></li>'
-    )
-
-
 async def run_of_show(request: Request) -> Response:
     session = await page_session(request)
     d = deps(request)
@@ -121,40 +91,41 @@ async def run_of_show(request: Request) -> Response:
     async with d.db.tenant() as conn:
         rows = await store.items(conn, seen.visibilities)
         kind_rows = await store.kinds(conn)
-    items = [model.item_json(r, kind_rows, channels) for r in rows]
+        today = now.astimezone(tz).date()
+        days = sorted({r["starts_at"].astimezone(tz).date() for r in rows})
+        day = _day(request, days, today)
+        on_day = [r for r in rows if r["starts_at"].astimezone(tz).date() == day]
+        wanted = request.query_params.get("item")
+        side = day_view.picked(rows if wanted else on_day, wanted, now)
+        log = await store.changes(conn, side["id"]) if side is not None else []
     kinds = {k: str(r["name"]) for k, r in kind_rows.items()}
-    today = now.astimezone(tz).date()
-    days = sorted({r["starts_at"].astimezone(tz).date() for r in rows})
-    day = _day(request, days, today)
-    tabs = "".join(
-        f'<a class="canccu-agenda-tab" href="{BASE}/?day={d.isoformat()}"'
-        f"{' aria-current=page' if d == day else ''}>"
-        f"{'Today' if d == today else day_label(d)}</a>"
-        for d in sorted({*days, today})
-    )
     lines = []
     now_shown = day != today
-    nowline = f'<li class="canccu-agenda-nowline"><span>Now {hhmm(now, tz)}</span></li>'
-    for row, item in zip(rows, items, strict=True):
-        if row["starts_at"].astimezone(tz).date() != day:
-            continue
+    nowline = f'<li class="canccu-agenda-nowline" id="now"><span>Now {hhmm(now, tz)}</span></li>'
+    for row in on_day:
         if not now_shown and row["starts_at"] > now:
             lines.append(nowline)
             now_shown = True
-        lines.append(row_html(row, item, kinds, now, tz))
-    if not now_shown:
-        lines.append(nowline)
+        picked = side is not None and row["id"] == side["id"]
+        lines.append(day_view.row_html(row, kinds, now, tz, day, picked))
     done = DONE.get(request.query_params.get("done", ""))
-    body = (
-        (notice(done) if done else "")
-        + await undo.offer_html(d, session, request.query_params.get("undo"))
-        + f'<nav class="canccu-agenda-tabs" aria-label="Days">{tabs}</nav>'
+    body = (notice(done) if done else "") + await undo.offer_html(
+        d, session, request.query_params.get("undo")
     )
+    hero = day_view.on_now(rows, now, tz) if day == today else None
+    if hero is not None:
+        body += day_view.hero_html(hero, now, tz, session)
+    body += day_view.days_html(days, day, today)
     writes = session.has(WRITE)
-    if any(r["starts_at"].astimezone(tz).date() == day for r in rows):
-        body += (
-            f'<ol class="canccu-card canccu-card--flush canccu-agenda-list">{"".join(lines)}</ol>'
-        )
+    if on_day:
+        aside = ""
+        if side is not None:
+            item = model.item_json(side, kind_rows, channels)
+            close = f"{BASE}/?day={day.isoformat()}" if wanted == side["id"] else None
+            history = changes_html(log, tz, today)
+            aside = day_view.side_html(side, item, kinds, now, tz, session, close, history)
+        tail = "" if now_shown else nowline
+        body += f'<div class="canccu-agenda-day">{day_view.list_html(lines, tail)}{aside}</div>'
     else:
         add = (
             f'<a class="canccu-button canccu-button--primary" href="{BASE}/add?day={day}">'
@@ -177,7 +148,17 @@ async def run_of_show(request: Request) -> Response:
         if writes
         else ""
     )
-    return page(request, "Run of show", body, session=session, actions=actions)
+    count = f"{len(on_day)} item{'' if len(on_day) == 1 else 's'}, {len(rows)} in all"
+    about = f"{day:%A} {day.day} {day:%B} · {count} · times in {tz}"
+    return page(
+        request,
+        "Run of show",
+        body,
+        session=session,
+        actions=actions,
+        description=about,
+        narrow=False,
+    )
 
 
 async def item_page(request: Request) -> Response:
@@ -219,10 +200,9 @@ async def item_page(request: Request) -> Response:
     if session.has(WRITE) and state != "cancelled":
         base = f"{BASE}/items/{esc(row['id'])}"
         actions = []
-        if state == "ahead" or (state == "running" and row["ends_at"] is not None):
+        if can_delay(row, state):
             actions.append(("delay", "Delay…", "primary"))
-        if state == "ahead" or (state == "running" and row["kind"] != "quiet_hours"):
-            # A running item is on screens already; its page still sends the announcement.
+        if can_show(row, state):
             actions.append(("show-now", "Show on screens now", "secondary"))
         actions.append(("edit", "Edit or move", "secondary"))
         if row["managed_by"] is None:
