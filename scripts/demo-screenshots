@@ -56,10 +56,13 @@ fi
 # The script and the stack client keep their repo layout, so the import between them holds.
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-mkdir -p "$work/scripts" "$work/$STACK" "$work/events/demo/assets" "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
+MEDIA=modules/screen/test/fixtures/media
+mkdir -p "$work/scripts" "$work/$STACK" "$work/$MEDIA" "$work/events/demo/assets" "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
 cp scripts/demo-screenshots.mjs "$work/scripts/" && cp "$STACK"/*.mjs "$work/$STACK/" || exit 2
 # The Theme studio's draft takes the demo logo, as an organiser would upload it.
 cp events/demo/assets/logo.svg "$work/events/demo/assets/" || exit 2
+# The Content page's library uploads a video and a sound (content-fixture.mjs).
+cp "$MEDIA/clip-h264-aac.mp4" "$MEDIA/sound.ogg" "$work/$MEDIA/" || exit 2
 user="$(id -u):$(id -g)"
 # On the default network: Caddy's namespace may not reach the registry.
 if ! docker run --rm -u "$user" -e HOME=/tmp -v "$work:/work" -w /work "$IMAGE" \
