@@ -198,7 +198,9 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
       held.push(route);
     });
     await page.goto(`${origin}/theming/studio/`, { waitUntil: "domcontentloaded" });
-    const publish = page.locator('[data-action="publish"]');
+    // Both Publish buttons, the title row's and the phone row's, wait for the previews.
+    const publish = page.locator('.canccu-pagehead [data-action="publish"]');
+    const phonePublish = page.locator('.canccu-studio-pendbar [data-action="publish"]');
     await expect.poll(() => held.length).toBe(4);
     expect(await publish.isDisabled()).toBe(true);
     await Promise.all(held.slice(0, 3).map((r) => r.continue()));
@@ -206,10 +208,11 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
     expect(await publish.isDisabled()).toBe(true);
     await held[3]?.continue();
     await expect.poll(() => publish.isDisabled()).toBe(false);
+    expect(await phonePublish.isDisabled()).toBe(false);
 
     // The reload after publishing loads its previews unheld.
     await page.unroute("**/theming/studio/preview/**");
-    await act(page, '[data-action="publish"]');
+    await act(page, '.canccu-pagehead [data-action="publish"]');
     expect(await page.textContent(".canccu-pagehead__desc")).toContain(
       "Screens show the published theme",
     );
@@ -288,10 +291,59 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
       tokens: { fonts: { body: "Inter" } },
     });
     const page = await open("/theming/studio/");
-    expect(await page.locator('[data-action="publish"]').isDisabled()).toBe(true);
+    expect(await page.locator('.canccu-pagehead [data-action="publish"]').isDisabled()).toBe(true);
+    expect(await page.inputValue('select[name="body"]')).toBe("Inter");
     await act(page, '[data-action="font-system"][data-token="body"]');
     expect((await draft()).problems).toEqual([]);
     expect(await page.textContent(".canccu-notice__title")).toBe("Ready to publish");
+    expect(await page.inputValue('select[name="body"]')).toBe("");
+  });
+
+  it("sets the text font to a font the theme holds, and back to the system font", async () => {
+    const res = await fetch(`${origin}/api/theming/draft/package`, {
+      method: "PUT",
+      headers: { cookie: "canccu_session=embedder", origin, "content-type": "application/zip" },
+      body: new Uint8Array(await demoZip("terminal")),
+    });
+    expect(res.status).toBe(200);
+    const fonts = (await draft()).manifest.fonts as { family: string }[];
+    const family = fonts[0]?.family ?? "";
+    expect(family).not.toBe("");
+    const page = await open("/theming/studio/");
+    await change(page, () => page.selectOption('select[name="body"]', ""));
+    const tokens = () =>
+      draft().then((d) => (d.manifest.tokens as { fonts?: { body?: string } }).fonts?.body);
+    expect(await tokens()).toBeUndefined();
+    await change(page, () => page.selectOption('select[name="body"]', family));
+    expect(await tokens()).toBe(family);
+    expect(await page.inputValue('select[name="body"]')).toBe(family);
+  });
+
+  it("puts the preview first on a phone, one at a time, and Publish above the bottom bar", async () => {
+    await api("POST", "/api/theming/draft", { from: "defaults" });
+    const page = await open("/theming/studio/");
+    await page.setViewportSize({ width: 390, height: 844 });
+    const top = (sel: string) =>
+      page
+        .locator(sel)
+        .first()
+        .evaluate((el) => el.getBoundingClientRect().top);
+    expect(await top(".canccu-studio-preview--screen")).toBeLessThan(
+      await top('form[data-action="brand"]'),
+    );
+    expect(await page.locator(".canccu-pagehead [data-action='publish']").isVisible()).toBe(false);
+    expect(await page.locator(".canccu-studio-pendbar [data-action='publish']").isVisible()).toBe(
+      true,
+    );
+    expect(await page.locator(".canccu-studio-preview--hub").isVisible()).toBe(false);
+    await page.click('.canccu-studio-surfaces input[value="hub"]');
+    expect(await page.locator(".canccu-studio-preview--hub").isVisible()).toBe(true);
+    expect(await page.locator(".canccu-studio-preview--screen").isVisible()).toBe(false);
+    await page.click('.canccu-studio-surfaces input[value="screen"]');
+    await page.click(".canccu-studio-tap");
+    expect(
+      await page.locator(".canccu-studio-preview--screen.canccu-studio-preview--full").isVisible(),
+    ).toBe(true);
   });
 
   it("restores a revision in one click", async () => {

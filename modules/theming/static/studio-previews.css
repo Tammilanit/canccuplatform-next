@@ -1,0 +1,205 @@
+/* The brand kit's previews (UX audit C3, C4) and its phone layout (design sheet 6), beside
+   studio.css: admin pages take no event CSS, so nothing here is themed but through the tokens. */
+/* The previews: each surface page at the size it is drawn, scaled by static/studio.js to its box's
+   width (`--canccu-studio-scale`), so the screen is as large as the column lets it be. */
+.canccu-studio-previews .canccu-card__desc {
+  margin-top: -0.5rem;
+}
+.canccu-studio-previews__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+  gap: var(--canccu-gap);
+  align-items: start;
+}
+.canccu-studio-preview {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0 0 var(--canccu-gap);
+}
+.canccu-studio-preview p {
+  margin: 0;
+}
+.canccu-studio-preview__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+.canccu-studio-zones {
+  width: auto;
+  min-height: 2.25rem;
+  margin-left: auto;
+  padding-block: 0.25rem;
+}
+.canccu-studio-preview__box {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: var(--canccu-studio-aspect);
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+}
+.canccu-studio-preview__frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--canccu-studio-w);
+  height: var(--canccu-studio-h);
+  border: 0;
+  transform-origin: 0 0;
+  transform: scale(var(--canccu-studio-scale, 0.2));
+}
+.canccu-studio-preview--screen {
+  --canccu-studio-w: 1920px;
+  --canccu-studio-h: 1080px;
+  --canccu-studio-aspect: 16 / 9;
+}
+.canccu-studio-preview--hub {
+  --canccu-studio-w: 390px;
+  --canccu-studio-h: 340px;
+  --canccu-studio-aspect: 390 / 340;
+}
+.canccu-studio-preview--admin {
+  --canccu-studio-w: 760px;
+  --canccu-studio-h: 400px;
+  --canccu-studio-aspect: 760 / 400;
+}
+.canccu-studio-preview--discord {
+  --canccu-studio-w: 360px;
+  --canccu-studio-h: 170px;
+  --canccu-studio-aspect: 360 / 170;
+}
+
+/* Preview: the screen at full size over the page; on a phone held upright, turned on its side. */
+.canccu-studio-full-close {
+  display: none;
+}
+.canccu-studio-preview--full {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  align-content: center;
+  justify-items: center;
+  margin: 0;
+  padding: 1rem;
+  overflow: hidden;
+  background: rgb(0 0 0 / 0.85);
+}
+.canccu-studio-preview--full .canccu-studio-preview__head {
+  width: 100%;
+  color: #ffffff;
+}
+.canccu-studio-preview--full .canccu-studio-full-close {
+  display: inline-flex;
+  margin-left: auto;
+}
+.canccu-studio-preview--full .canccu-studio-zones:not([hidden]) + .canccu-studio-full-close {
+  margin-left: 0;
+}
+.canccu-studio-preview--full .canccu-studio-preview__box {
+  width: min(100%, calc((100dvh - 6rem) * 16 / 9));
+}
+@media (orientation: portrait) {
+  .canccu-studio-preview--full .canccu-studio-preview__box {
+    width: min(calc(100dvh - 7rem), calc((100vw - 2rem) * 16 / 9));
+    rotate: 90deg;
+    margin-block: calc(min(calc(100dvh - 7rem), calc((100vw - 2rem) * 16 / 9)) * 7 / 32);
+  }
+}
+
+/* The phone's parts of sheet 6, shown only under 60rem: the preview switch, the thumbnail's way to
+   full size, and Preview and Publish in a row above the bottom bar. */
+.canccu-studio-surfaces,
+.canccu-studio-tap,
+.canccu-studio-pendbar {
+  display: none;
+}
+@media (max-width: 60rem) {
+  .canccu-main:has(.canccu-studio-pendbar) .canccu-pagehead .canccu-cluster {
+    display: none;
+  }
+  .canccu-studio-kit > .canccu-studio-previews {
+    order: -1;
+    display: grid;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+  .canccu-studio-previews > .canccu-card__title,
+  .canccu-studio-previews > .canccu-card__desc {
+    display: none;
+  }
+  .canccu-studio-previews__row {
+    display: contents;
+  }
+  .canccu-studio-previews .canccu-studio-preview {
+    margin: 0;
+  }
+  .canccu-studio-previews:not(:has(input[value="screen"]:checked))
+    .canccu-studio-preview--screen:not(.canccu-studio-preview--full),
+  .canccu-studio-previews:not(:has(input[value="hub"]:checked)) .canccu-studio-preview--hub,
+  .canccu-studio-previews:not(:has(input[value="admin"]:checked)) .canccu-studio-preview--admin,
+  .canccu-studio-previews:not(:has(input[value="discord"]:checked))
+    .canccu-studio-preview--discord {
+    display: none;
+  }
+  .canccu-studio-surfaces {
+    order: 1;
+    display: inline-flex;
+    justify-self: center;
+    margin-top: 0.625rem;
+  }
+  .canccu-studio-surfaces .canccu-studio-segment {
+    min-height: 2.75rem;
+    padding: 0 0.75rem;
+  }
+  .canccu-studio-tap {
+    position: absolute;
+    right: 0.375rem;
+    bottom: 0.375rem;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2.75rem;
+    padding: 0 0.75rem;
+    font: inherit;
+    font-size: var(--canccu-text-sm);
+    font-weight: 600;
+    color: var(--canccu-color-text);
+    background: var(--canccu-color-surface);
+    border: var(--canccu-border-width) solid var(--canccu-line-field);
+    border-radius: 99px;
+    cursor: pointer;
+  }
+  .canccu-studio-preview--full .canccu-studio-tap {
+    display: none;
+  }
+  .canccu-studio-pendbar {
+    position: sticky;
+    bottom: var(--canccu-studio-bar, 0);
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-inline: -1rem;
+    padding: 0.625rem 1rem;
+    background: var(--canccu-color-surface);
+    border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+    transition:
+      opacity 0.2s,
+      translate 0.2s;
+  }
+  .canccu-studio-pendbar--moving {
+    opacity: 0;
+    translate: 0 100%;
+    pointer-events: none;
+  }
+}
+@media (max-width: 60rem) and (prefers-reduced-motion: reduce) {
+  .canccu-studio-pendbar {
+    transition: none;
+  }
+}

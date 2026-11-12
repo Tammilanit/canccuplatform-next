@@ -118,6 +118,16 @@
     root.dataset.draftVersion = String(saved.draft.draft_version);
   }
 
+  /** The text font: a family the theme holds, or none for the system font. */
+  async function saveFont(form) {
+    const family = form.elements.namedItem("body").value;
+    const saved = await call("PATCH", "/api/theming/draft/tokens", {
+      draft_version: draftVersion(),
+      tokens: { fonts: { body: family || null } },
+    });
+    root.dataset.draftVersion = String(saved.draft_version);
+  }
+
   function keepLogo(form, path) {
     let field = form.elements.namedItem("logo");
     if (field === null) {
@@ -171,6 +181,7 @@
         current_revision: Number(root.dataset.currentRevision),
       }),
     brand: saveBrand,
+    font: saveFont,
     tokens: saveTokens,
     package: (form) => putPackage(form.elements.namedItem("package").files[0]),
     simple: () =>
@@ -183,8 +194,9 @@
 
   let busy = false;
   let running;
-  /** The brand form changed while its last save ran: it is saved again before the reload. */
-  let brandAgain = null;
+  /** The forms that save as they change; one changed while a save ran is saved before the reload. */
+  const SAVES_AS_CHANGED = new Set([saveBrand, saveFont]);
+  const again = new Map();
   async function attempt(action, el) {
     try {
       await action(el);
@@ -197,17 +209,17 @@
     if (action === undefined) return;
     if (busy) {
       // The brand kit has no Save, so a change dropped here would be lost without a word.
-      if (action === saveBrand && running === saveBrand) brandAgain = el;
+      if (SAVES_AS_CHANGED.has(action) && SAVES_AS_CHANGED.has(running)) again.set(action, el);
       return;
     }
     busy = true;
     running = action;
     control.disabled = true;
     await attempt(action, el);
-    while (brandAgain !== null) {
-      const form = brandAgain;
-      brandAgain = null;
-      await attempt(saveBrand, form);
+    while (again.size > 0) {
+      const [save, form] = again.entries().next().value;
+      again.delete(save);
+      await attempt(save, form);
     }
     location.reload();
   }
@@ -256,9 +268,32 @@
     const file = event.target.closest(".canccu-studio-file");
     const shown = file?.closest(".canccu-field")?.querySelector(".canccu-studio-drop__name");
     if (shown && file.files[0]) shown.textContent = file.files[0].name;
-    const form = event.target.closest('form[data-action="brand"]');
+    const form = event.target.closest('form[data-action="brand"], form[data-action="font"]');
     if (form !== null) void run(form, form);
   });
+
+  /*
+   * On a phone Preview and Publish share a row above the bottom bar (sheet 6); it hides while the
+   * page moves, so the form gets the height, and comes back when it stops.
+   */
+  const pendbar = document.querySelector(".canccu-studio-pendbar");
+  const tabbar = document.querySelector(".canccu-tabbar");
+  if (pendbar !== null) {
+    const above = () =>
+      pendbar.style.setProperty("--canccu-studio-bar", `${tabbar?.offsetHeight ?? 0}px`);
+    above();
+    addEventListener("resize", above);
+    let still;
+    addEventListener(
+      "scroll",
+      () => {
+        pendbar.classList.add("canccu-studio-pendbar--moving");
+        clearTimeout(still);
+        still = setTimeout(() => pendbar.classList.remove("canccu-studio-pendbar--moving"), 400);
+      },
+      { passive: true },
+    );
+  }
 
   /* Each preview is a page at its own size, scaled to its box's width. */
   const scaled = new ResizeObserver((entries) => {
@@ -369,11 +404,11 @@
     );
   }
   const shown = (frame) => (frame === screenFrame ? screenShown : isSurface(frame));
-  const held = document.querySelector("[data-needs-preview]");
+  const held = [...document.querySelectorAll("[data-needs-preview]")];
   const frames = [...document.querySelectorAll("iframe[data-preview]")];
   function check() {
-    if (held === null || !frames.every(shown)) return;
-    held.disabled = false;
+    if (held.length === 0 || !frames.every(shown)) return;
+    for (const button of held) button.disabled = false;
     const hint = document.querySelector(".canccu-studio-publish-hint");
     if (hint !== null) hint.textContent = "Previews shown: this version can be published.";
   }

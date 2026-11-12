@@ -14,6 +14,9 @@ const BROWSER = Object.fromEntries(
     "CSS",
     "ResizeObserver",
     "getComputedStyle",
+    "addEventListener",
+    "setTimeout",
+    "clearTimeout",
     "Option",
   ].map((name) => [name, "readonly"]),
 );

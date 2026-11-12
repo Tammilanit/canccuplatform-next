@@ -231,6 +231,7 @@ describe.skipIf(!DATABASE_URL)("the Studio previews", () => {
       for (const [name, type] of [
         ["ui.css", "text/css"],
         ["studio.css", "text/css"],
+        ["studio-previews.css", "text/css"],
         ["preview.css", "text/css"],
         ["studio.js", "text/javascript"],
       ] as const) {

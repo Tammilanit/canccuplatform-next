@@ -48,7 +48,8 @@ async function studioPage(
     nonce,
     surface: "admin",
     cssHref: `${STUDIO}static/ui.css`,
-    head: html`<link rel="stylesheet" href="${STUDIO}static/studio.css" />`,
+    head: html`<link rel="stylesheet" href="${STUDIO}static/studio.css" />
+      <link rel="stylesheet" href="${STUDIO}static/studio-previews.css" />`,
     event: await eventOf(request, deps.tenants),
     session: request.session ?? undefined,
     current: "theme",
@@ -81,6 +82,7 @@ function signIn(request: FastifyRequest, reply: FastifyReply): FastifyReply {
 const STATIC_TYPES: Record<string, string> = {
   "ui.css": "text/css; charset=utf-8",
   "studio.css": "text/css; charset=utf-8",
+  "studio-previews.css": "text/css; charset=utf-8",
   "preview.css": "text/css; charset=utf-8",
   "studio.js": "text/javascript; charset=utf-8",
 };

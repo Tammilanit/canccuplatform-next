@@ -162,18 +162,33 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(body).toContain(`data-tokens-css-url="/theming/studio/draft/tokens.css?v=${v}"`);
     });
 
-    it("puts the form beside the previews, and Discard, Preview and Publish in one row", async () => {
+    it("puts the form beside the previews, Preview and Publish in the title row, Discard under the form", async () => {
       await t.fresh();
       const body = (await page("/theming/studio/")).body;
       expect(body).toMatch(
         /class="canccu-studio-kit"[\s\S]*data-action="brand"[\s\S]*data-screen-preview/,
       );
       const row = /<div class="canccu-cluster">([\s\S]*?)<\/div><\/div>/.exec(body)?.[1] ?? "";
-      expect(row).toMatch(
-        /data-action="discard-ask"[\s\S]*data-action="preview"[\s\S]*data-action="publish"/,
+      expect(row).toMatch(/data-action="preview"[\s\S]*data-action="publish"/);
+      expect(row).not.toContain("discard");
+      // Sheet 6: Discard under the form, apart from Publish; on a phone the same two buttons
+      // share a row above the bottom bar.
+      expect(body).toMatch(
+        /class="canccu-studio-side"[\s\S]*data-action="font"[\s\S]*canccu-studio-danger-link[^>]*data-action="discard-ask"/,
+      );
+      expect(body).toMatch(
+        /class="canccu-studio-pendbar"><button[^>]*data-action="preview"[\s\S]*data-action="publish"/,
       );
       // Discard asks first, in a dialog of the page's own.
       expect(body).toMatch(/<dialog[^>]*canccu-studio-dialog[\s\S]*data-action="discard"/);
+    });
+
+    it("offers the system font as the text font while the theme holds no font", async () => {
+      await t.fresh();
+      const body = (await page("/theming/studio/")).body;
+      const select = /<select[^>]*name="body"[^>]*>([\s\S]*?)<\/select>/.exec(body)?.[1] ?? "";
+      expect(select).toMatch(/<option value="" selected>System font<\/option>/);
+      expect(select.match(/<option/g)).toHaveLength(1);
     });
 
     it("says where the draft stands in words", async () => {
@@ -202,6 +217,11 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(body).toContain("The text font Inter isn&#39;t in the theme");
       expect(body).toMatch(/data-action="font-system"[^>]*data-token="body"/);
       expect(body).toMatch(/<button[^>]*data-action="publish"[^>]*disabled/);
+      // The field shows the font the problem names, and the problem sits right under it (sheet 6).
+      expect(body).toMatch(/<option value="Inter" selected>Inter<\/option>/);
+      expect(body).toMatch(
+        /data-action="font"[\s\S]*?<\/form>\s*<div class="canccu-notice canccu-notice--down"/,
+      );
       expect(body).not.toContain("theme.yaml#");
     });
 

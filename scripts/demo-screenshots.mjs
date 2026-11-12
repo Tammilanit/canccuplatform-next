@@ -43,7 +43,6 @@ const SHELL = [
   ["health-view", "/admin/health-view"],
   ["profile", "/admin/profile"],
   ["people", "/admin/people"],
-  ["studio", "/theming/studio/"],
   ["agenda", "/agenda/"],
   ["notify-topics", "/notify/admin/topics"],
 ];
@@ -62,8 +61,11 @@ const PAGES = [
   ["notify-new-topic", "/notify/admin/topics/new", DESK],
   ["check-in-phone", CHECK_IN, PHONE],
 ];
-// The brand kit with a draft (mockup 12), after the pages above: the screen preview is screen's
-// player of the main zone with the draft's look, and Preview shows it at full size.
+// The brand kit (mockup 12, design sheet 6), after the screens, so its screen preview is screen's
+// player of the main zone with the fixture's run of show: first with no draft, then with one in the
+// draft's look, and Preview shows it at full size. The shot waits for the Pulse's run of show, never
+// a player that has drawn only the event's name. A phone page is shot with the window as tall as
+// the page, so the bottom bar sits at its foot, as a phone shows it, not over the middle.
 const SCREEN_PREVIEW = "iframe[data-screen-preview]";
 const LOGO = new URL("../events/demo/assets/logo.svg", import.meta.url);
 const drawn = async (page) => {
@@ -76,12 +78,22 @@ const drawn = async (page) => {
     SCREEN_PREVIEW,
     { timeout: 10000 },
   );
-  // The player draws the posted state on its next frames; the rotation needs no more.
-  await page.waitForTimeout(2500);
+  // The rail turns between the run of show and a countdown (modules/screen/test/stack/screens.mjs).
+  await page
+    .frameLocator(SCREEN_PREVIEW)
+    .locator(
+      ".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active",
+    )
+    .waitFor({ timeout: 40000 });
+  await page.waitForTimeout(1500);
 };
+const STUDIO = [
+  ["studio", DESK, { ready: drawn }],
+  ["studio-phone", PHONE, { ready: drawn, tall: true }],
+];
 const DRAFT = [
   ["studio-draft", DESK, { ready: drawn }],
-  ["studio-draft-phone", PHONE, { ready: drawn }],
+  ["studio-draft-phone", PHONE, { ready: drawn, tall: true }],
   ["studio-draft-advanced", DESK, { path: "/theming/studio/advanced" }],
   [
     "studio-draft-preview",
@@ -117,6 +129,11 @@ if (opts["dry-run"]) {
   for (const [name, path, { width, height }, o] of OTHERS) {
     const how = o.cookie === null ? ", signed out" : `, answering ${o.status}`;
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height}${how})`);
+  }
+  for (const [name, { width, height }] of STUDIO) {
+    console.log(
+      `  ${name}.png  ${at("/theming/studio/")}  (${width}×${height})`,
+    );
   }
   for (const [name, { width, height }, o] of DRAFT) {
     const path = o.path ?? "/theming/studio/";
@@ -163,7 +180,7 @@ async function shot(
   path,
   viewport,
   cookie,
-  { fullPage = true, ready, status = 200 } = {},
+  { fullPage = true, ready, status = 200, tall = false } = {},
 ) {
   const url = at(path);
   const context = await browser.newContext({ viewport });
@@ -196,7 +213,19 @@ async function shot(
         .catch(() => undefined);
     if (refused.length)
       throw new Error(`its API reads answered ${refused.join(", ")}`);
-    await page.screenshot({ path: `${opts.out}/${name}.png`, fullPage });
+    if (tall) {
+      // A full-page capture would leave the sticky bottom bar where the window ended.
+      const { width, height } = page.viewportSize();
+      const full = await page.evaluate(
+        () => document.documentElement.scrollHeight,
+      );
+      if (full > height) await page.setViewportSize({ width, height: full });
+      await page.waitForTimeout(500);
+    }
+    await page.screenshot({
+      path: `${opts.out}/${name}.png`,
+      fullPage: fullPage && !tall,
+    });
     console.log(`ok   ${name}.png  ${url}`);
     count++;
   } catch (err) {
@@ -276,6 +305,9 @@ try {
     });
   } catch (err) {
     fail(`screens: ${firstLine(err)}`);
+  }
+  for (const [name, viewport, o] of STUDIO) {
+    await shot(name, "/theming/studio/", viewport, SESSION, o);
   }
   // After the screens, so the zone plays the fixture's run of show: a draft with mockup 12's
   // brand and the demo logo, which the previews draw before anything is published.
