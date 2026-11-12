@@ -14,9 +14,8 @@ import { assertWritable, body, invalidRequest, needs, needsAny, tenantOf } from 
 import type { Kv } from "../kv.js";
 import type { Fanout } from "../push/store.js";
 import { onlyKeys } from "../zone-input.js";
-import { publishAll } from "../zones.js";
 import type { BundleStore } from "./bundles.js";
-import { changePin, lockPin, readPin } from "./store.js";
+import { announcePin, changePin, lockPin, readPin } from "./store.js";
 import type { PinReason, PinRow, PinValues } from "./store.js";
 
 /** Who may read the pin: every Studio page can then say that screens are frozen. */
@@ -213,19 +212,19 @@ export function pinRoutes(app: FastifyInstance, deps: PinDeps): void {
       assertWritable(ctx);
       const nowMs = now();
       const form = await formOf(deps, request, nowMs);
-      const { pin, emit } = await deps.db.tenant(async (c) => {
+      const { pin, change } = await deps.db.tenant(async (c) => {
         const before = await lockPin(c);
-        const change = nextPin(form, before, deps.bundles.current);
-        if (change === null) return { pin: before, emit: null };
+        const step = nextPin(form, before, deps.bundles.current);
+        if (step === null) return { pin: before, change: null };
         const next: PinRow = {
-          ...change.next,
+          ...step.next,
           changed_by: request.session?.userId ?? null,
           changed_by_name: request.session?.userName ?? null,
           changed_at: new Date(nowMs),
         };
-        return { pin: next, emit: await changePin(deps, c, before, next, change.reason, nowMs) };
+        return { pin: next, change: await changePin(deps, c, before, next, step.reason) };
       });
-      if (emit !== null) await publishAll(deps.bus, [emit]);
+      if (change !== null) await announcePin(deps, change, nowMs);
       return pinView(deps, ctx.tenant_id, pin);
     },
   );

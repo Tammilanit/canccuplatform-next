@@ -8,6 +8,7 @@ import { withTenant } from "@canccu/kit";
 import { takeCommands } from "../src/assignments.js";
 import type { ThemeNow } from "../src/compose/sources.js";
 import { BundleStore, bundlesDir } from "../src/pins/bundles.js";
+import { readPin } from "../src/pins/store.js";
 import { pinTickRunner } from "../src/pins/tick.js";
 import { DATABASE_URL, TENANTS, call, code, events, harness, pairDevice } from "./helpers.js";
 import type { Harness } from "./helpers.js";
@@ -357,6 +358,28 @@ describe.skipIf(!DATABASE_URL)("pins", () => {
     expect(file.headers["cache-control"]).toContain("immutable");
     expect((await call(h, "GET", "/screen/b/0.1.0/player.js")).statusCode).toBe(404);
     expect((await call(h, "GET", "/screen/b/0.9.0/sw.js")).statusCode).toBe(404);
+  });
+
+  it("queues the reload only once the change is committed, from the PUT and from the tick", async () => {
+    // A screen reloads on the nudge at once: what it then reads is the pin it loads.
+    const seen: (string | null)[] = [];
+    const addExpiring = h.kv.addExpiring.bind(h.kv);
+    h.kv.addExpiring = async (key, member, expiresAtMs) => {
+      if (key.includes("commands")) {
+        seen.push((await withTenant("alpha", () => h.db.tenant(readPin))).bundle_version);
+      }
+      return addExpiring(key, member, expiresAtMs);
+    };
+    try {
+      // A second no other test ticks in: their tick claims are still held in the shared Valkey.
+      const end = NOON + 2 * DAY + 3600_000;
+      await put({ bundle_version: "0.9.0", theme_revision: null, until: iso(end) });
+      h.clock.now = end;
+      await tick();
+    } finally {
+      h.kv.addExpiring = addExpiring;
+    }
+    expect(seen).toEqual(["0.9.0", null]);
   });
 
   it("draws the pinned revision and names the pinned bundle in the screens' state", async () => {

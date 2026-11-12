@@ -4,12 +4,13 @@
  * that holds every version a pin names or restores.
  */
 import { isTenantId, requireTenant, withTenant } from "@canccu/kit";
-import type { SqlClient } from "@canccu/kit";
+import type { Bus, SqlClient } from "@canccu/kit";
 import { queueCommand } from "../assignments.js";
 import type { Audit } from "../audit.js";
 import type { Db } from "../db.js";
 import type { Kv } from "../kv.js";
 import type { Fanout } from "../push/store.js";
+import { publishAll } from "../zones.js";
 import type { Emit } from "../zones.js";
 import type { BundleStore } from "./bundles.js";
 
@@ -53,25 +54,23 @@ export async function lockPin(c: SqlClient): Promise<PinRow> {
   return rows[0] as unknown as PinRow;
 }
 
-export interface PinChangeDeps {
-  audit: Audit;
-  kv: Kv;
-  fanout: Pick<Fanout, "publish">;
+/** A committed change still to announce: its event, and the screens of the event to reload. */
+export interface PinChange {
+  emit: Emit;
+  devices: string[];
 }
 
 /**
- * Writes `next` over `before` under the pin's lock, audits it (without `actor_user_id` for the
- * tick's restore) and queues a `reload` for every screen of the event; the caller publishes the
- * returned event after commit.
+ * Writes `next` over `before` under the pin's lock and audits it (without `actor_user_id` for the
+ * tick's restore); the caller hands the result to `announcePin` after commit.
  */
 export async function changePin(
-  deps: PinChangeDeps,
+  deps: { audit: Audit },
   c: SqlClient,
   before: PinRow,
   next: PinRow,
   reason: PinReason,
-  nowMs: number,
-): Promise<Emit> {
+): Promise<PinChange> {
   const tenant = requireTenant();
   await c.query(
     `UPDATE screen_pins SET bundle_version = $1, theme_revision = $2, until = $3, restores = $4,
@@ -111,18 +110,34 @@ export async function changePin(
     "SELECT id FROM devices WHERE current_tenant_id = $1 AND revoked_at IS NULL",
     [tenant],
   );
-  for (const row of rows) await queueCommand(deps, row.id as string, "reload", nowMs);
-  return [
-    "screen.pin.changed",
-    {
-      bundle_version: next.bundle_version,
-      theme_revision: next.theme_revision,
-      until: until(next),
-      restores: next.restores,
-      reason,
-      actor_user_id: reason === "expired" ? null : next.changed_by,
-    },
-  ];
+  return {
+    emit: [
+      "screen.pin.changed",
+      {
+        bundle_version: next.bundle_version,
+        theme_revision: next.theme_revision,
+        until: until(next),
+        restores: next.restores,
+        reason,
+        actor_user_id: reason === "expired" ? null : next.changed_by,
+      },
+    ],
+    devices: rows.map((r) => r.id as string),
+  };
+}
+
+/**
+ * Publishes the change and queues a `reload` for every screen of the event. Only after commit:
+ * a screen reloads on the nudge at once and reads the pin then, so a reload before commit would
+ * load the old bundle and stay on it.
+ */
+export async function announcePin(
+  deps: { bus: Bus; kv: Kv; fanout: Pick<Fanout, "publish"> },
+  change: PinChange,
+  nowMs: number,
+): Promise<void> {
+  await publishAll(deps.bus, [change.emit]);
+  for (const device of change.devices) await queueCommand(deps, device, "reload", nowMs);
 }
 
 /** Every bundle version an event's pin names or its timed pin restores, across events. */
