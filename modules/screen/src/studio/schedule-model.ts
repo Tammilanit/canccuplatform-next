@@ -61,7 +61,6 @@ export interface ScheduleDay {
 
 export interface ScheduleModel {
   days: ScheduleDay[];
-  legend: { playlistId: string; playlistName: string }[];
   now: { date: string; minute: number } | null;
 }
 
@@ -144,18 +143,13 @@ export function scheduleModel(input: ScheduleModelInput): ScheduleModel {
     startMs: dayStartMs(date, tz),
     endMs: dayStartMs(addDays(date, 1), tz),
   }));
-  const legend = new Map<string, string>();
   const days = bounds.map((day) => ({
     date: day.date,
     lanes: calendar.zones.map((zone) => {
-      const blocks = blocksOf(zone, day, input);
-      for (const block of blocks) {
-        for (const row of block.rows) legend.set(row.playlistId, row.playlistName);
-      }
       return {
         zoneKey: zone.zone_key,
         zoneName: input.zoneNames.get(zone.zone_key) ?? zone.zone_key,
-        blocks,
+        blocks: blocksOf(zone, day, input),
         breaks: breakBands(zone, day, tz),
       };
     }),
@@ -163,9 +157,6 @@ export function scheduleModel(input: ScheduleModelInput): ScheduleModel {
   const today = bounds.find((d) => d.startMs <= input.nowMs && input.nowMs < d.endMs);
   return {
     days,
-    legend: [...legend]
-      .map(([playlistId, playlistName]) => ({ playlistId, playlistName }))
-      .sort((a, b) => a.playlistName.localeCompare(b.playlistName)),
     now: today === undefined ? null : { date: today.date, minute: wallMinute(input.nowMs, tz) },
   };
 }

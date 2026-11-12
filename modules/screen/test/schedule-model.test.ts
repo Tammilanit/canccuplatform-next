@@ -260,13 +260,9 @@ describe("scheduleModel", () => {
     ]);
   });
 
-  test("puts the now marker on today's column in the event's time zone, and a legend", () => {
+  test("puts the now marker on today's column in the event's time zone", () => {
     const model = scheduleModel(input(calendarOf(schedules), "2026-04-17T07:00:00.000Z"));
     expect(model.now).toEqual({ date: "2026-04-17", minute: 600 });
-    expect(model.legend).toEqual([
-      { playlistId: "evening", playlistName: "Evening sponsors" },
-      { playlistId: "main", playlistName: "Main rotation" },
-    ]);
     expect(scheduleModel(input(calendarOf(schedules), "2026-05-01T07:00:00.000Z")).now).toBeNull();
   });
 });

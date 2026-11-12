@@ -1,0 +1,220 @@
+/* The schedule page (mockup 09), on top of ui.css and studio.css: the week calendar beside the
+   side panel; on a phone the days scroll sideways and the panel follows below. Blocks are placed
+   by the page's own style block (their top and height), never by inline styles (the CSP). */
+
+.canccu-sched__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.canccu-sched__bar p {
+  margin: 0;
+}
+
+.canccu-sched__days {
+  align-items: center;
+}
+
+.canccu-sched__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
+  gap: 1rem;
+  align-items: start;
+}
+
+.canccu-sched__main {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.canccu-sched__side {
+  display: grid;
+  gap: 1rem;
+}
+
+.canccu-sched__side .canccu-card > * + * {
+  margin-top: 0.5rem;
+}
+
+.canccu-sched__scroll {
+  overflow-x: auto;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  background: var(--canccu-color-surface);
+}
+
+.canccu-sched__scroll:focus-visible {
+  outline: 3px solid var(--canccu-color-primary);
+  outline-offset: 2px;
+}
+
+.canccu-sched__grid {
+  --canccu-sched-day: 48rem;
+  display: flex;
+  min-width: min-content;
+}
+
+.canccu-sched__hours {
+  flex: 0 0 3.5rem;
+  display: grid;
+  grid-template-rows: repeat(24, 1fr);
+  height: var(--canccu-sched-day);
+  margin-top: 2.5rem;
+  font-size: var(--canccu-text-xs);
+  color: var(--canccu-color-text-muted);
+  text-align: right;
+  padding-right: 0.5rem;
+}
+
+.canccu-sched__day {
+  flex: 1 0 9rem;
+  border-left: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+
+.canccu-sched__date {
+  height: 2.5rem;
+  margin: 0;
+  padding: 0.5rem;
+  font-size: var(--canccu-text-sm);
+  border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+
+.canccu-sched__lanes {
+  display: flex;
+}
+
+.canccu-sched__lane {
+  flex: 1 1 0;
+  min-width: 7rem;
+  position: relative;
+}
+
+.canccu-sched__lane + .canccu-sched__lane {
+  border-left: 1px dashed var(--canccu-color-border);
+}
+
+.canccu-sched__lane-name {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  right: 0.25rem;
+  z-index: 3;
+  margin: 0;
+  font-size: var(--canccu-text-xs);
+  color: var(--canccu-color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The hour lines: one every 2 rem, the height of a day divided by 24. */
+.canccu-sched__track {
+  position: relative;
+  height: var(--canccu-sched-day);
+  background-image: linear-gradient(var(--canccu-color-border) 1px, transparent 1px);
+  background-size: 100% calc(var(--canccu-sched-day) / 24);
+}
+
+.canccu-sched__block {
+  position: absolute;
+  left: 0.5rem;
+  right: 0.25rem;
+  z-index: 1;
+  overflow: hidden;
+  padding: 0.25rem 0.375rem;
+  border: var(--canccu-border-width) solid var(--canccu-color-primary);
+  border-left-width: 4px;
+  border-radius: calc(var(--canccu-radius) / 2);
+  background: var(--canccu-color-background);
+  font-size: var(--canccu-text-xs);
+  line-height: 1.3;
+}
+
+.canccu-sched__block p {
+  margin: 0;
+}
+
+.canccu-sched__block--overlap {
+  border-color: var(--canccu-color-accent);
+}
+
+.canccu-sched__block--from-before {
+  border-top-style: dashed;
+}
+
+.canccu-sched__block--to-after {
+  border-bottom-style: dashed;
+}
+
+.canccu-sched__name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.canccu-sched__note {
+  color: var(--canccu-color-text-muted);
+}
+
+.canccu-sched__loser {
+  color: var(--canccu-color-text-muted);
+  text-decoration: line-through;
+}
+
+/* Where breaks may interrupt: a stripe at the lane's left edge. */
+.canccu-sched__break {
+  position: absolute;
+  left: 0;
+  width: 0.375rem;
+  background: var(--canccu-color-accent);
+  opacity: 0.6;
+}
+
+.canccu-sched__now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  border-top: 2px solid var(--canccu-color-status-down);
+}
+
+.canccu-sched__now span {
+  position: absolute;
+  right: 0.25rem;
+  top: -1.1rem;
+  padding: 0 0.25rem;
+  border-radius: calc(var(--canccu-radius) / 2);
+  background: var(--canccu-color-status-down);
+  color: var(--canccu-color-primary-text);
+  font-size: var(--canccu-text-xs);
+}
+
+.canccu-sched__zone {
+  margin: 0.75rem 0 0;
+  font-size: var(--canccu-text-sm);
+}
+
+.canccu-sched__list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: var(--canccu-text-sm);
+}
+
+.canccu-sched__list li + li {
+  margin-top: 0.25rem;
+}
+
+.canccu-sched__warn {
+  color: var(--canccu-ink-degraded);
+}
+
+@media (max-width: 60rem) {
+  .canccu-sched__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
