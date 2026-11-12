@@ -79,7 +79,11 @@ describe("the virtual screen", () => {
     const zone = setup(api);
     await zone.start();
     await vi.advanceTimersByTimeAsync(100);
-    const layout = () => document.body.querySelector(".canccu-layout")?.textContent;
+    // The ticker's lines, without the "Info" label every ticker carries.
+    const layout = () =>
+      [...document.body.querySelectorAll(".canccu-layout .canccu-widget__line")]
+        .map((l) => l.textContent)
+        .join("");
     expect(layout()).toBe("AB");
     api.send("widget", { state_version: 4, region_id: "a", index: 0, view: { text: "A2" } });
     api.send("widget", { state_version: 5, region_id: "b", index: 0, view: { text: "B2" } });
@@ -112,7 +116,7 @@ describe("the virtual screen", () => {
     await vi.advanceTimersByTimeAsync(5000);
     expect(frameText()).toBe("No such zone");
     expect(zone.live.running).toBe(false);
-    expect(document.body.querySelector(".canccu-offline-mark")).toBeNull();
+    expect(document.body.querySelector(".canccu-offline-marker")).toBeNull();
     const connects = api.calls.filter((c) => c === `GET ${ZONE_STREAM}`).length;
     await vi.advanceTimersByTimeAsync(60_000);
     expect(api.calls.filter((c) => c === `GET ${ZONE_STREAM}`)).toHaveLength(connects);

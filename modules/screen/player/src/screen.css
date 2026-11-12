@@ -1,12 +1,33 @@
 /*
- * The Pulse on the screen (plan #109, S7, S11): the layout letterboxed to its aspect, its grid at
- * the screen's size, and type in `cqmin` of the layout, so a widget reads the same at 1080p and
- * 4K, landscape and portrait, from 20 m. Colours, fonts and sizes are the theme's custom
- * properties with the platform's defaults; all of it sits in `canccu-base`, below the theme's layer.
+ * The Pulse on the screen (plan #109, S7, S11) and its built-in look (#375: mockups 02–04 of the
+ * step 3 brief, with the sizes of sheet 9 of docs/design): the layout letterboxed to its aspect,
+ * its grid at the screen's size, and type in `--canccu-u`, 1 % of the layout's short side, so a
+ * widget reads the same at 1080p and 4K, landscape and portrait, from 20 m. Nothing is under
+ * 3.4u, 33 px at 1080p, and what people look for from the back (times, names) is 5.5u or more.
+ * Colours, fonts and sizes are the theme's custom properties; all of it sits in `canccu-base`,
+ * below the theme's layer, so a theme restyles any of it without `!important`. Claims, media and
+ * embeds: claims.css; each widget's own look: widgets.css and rail.css.
  */
+/*
+ * The unit, measured once on the layout's children and inherited as pixels: a bare `cqmin` reads
+ * the nearest container, so a theme that makes its widgets size containers (the level-up demo
+ * theme does) would shrink every letter to its widget. Registered, so it inherits as a length, not
+ * as the text `1cqmin`; on the children, since a container's own units read the one around it.
+ */
+@property --canccu-u {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 1vmin;
+}
+
 @layer canccu-base {
+  .canccu-layout > * {
+    --canccu-u: 1cqmin;
+  }
+
   .canccu-layout {
     --canccu-layout-ratio: 1.7778;
+    --canccu-card-radius: calc(var(--canccu-radius) * 1.5);
     position: fixed;
     inset: 0;
     margin: auto;
@@ -14,14 +35,14 @@
     width: min(100vw, calc(100vh * var(--canccu-layout-ratio)));
     height: min(100vh, calc(100vw / var(--canccu-layout-ratio)));
     display: grid;
-    gap: var(--canccu-gap, 1rem);
-    padding: var(--canccu-safe-inset, 48px);
+    gap: var(--canccu-gap);
+    padding: var(--canccu-safe-inset);
     container-type: size;
     overflow: hidden;
     /* Burn-in drift: a unit vector from the player, a quarter of the safe inset long. */
     transform: translate(
-      calc(var(--canccu-safe-inset, 48px) * 0.25 * var(--canccu-drift-x, 0)),
-      calc(var(--canccu-safe-inset, 48px) * 0.25 * var(--canccu-drift-y, 0))
+      calc(var(--canccu-safe-inset) * 0.25 * var(--canccu-drift-x, 0)),
+      calc(var(--canccu-safe-inset) * 0.25 * var(--canccu-drift-y, 0))
     );
   }
 
@@ -43,15 +64,16 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 1cqmin;
-    padding: 2cqmin 2.4cqmin;
+    gap: calc(1 * var(--canccu-u));
+    padding: calc(2.4 * var(--canccu-u)) calc(2.8 * var(--canccu-u));
     overflow: hidden;
-    border-radius: var(--canccu-radius, 0.5rem);
-    background: var(--canccu-color-surface, #1f2937);
-    color: var(--canccu-color-text, #f3f4f6);
-    font-family: var(--canccu-font-body, system-ui, sans-serif);
-    font-size: 3cqmin;
-    line-height: 1.25;
+    border: var(--canccu-border-width) solid var(--canccu-color-border);
+    border-radius: var(--canccu-card-radius);
+    background: var(--canccu-color-surface);
+    color: var(--canccu-color-text);
+    font-family: var(--canccu-font-body);
+    font-size: calc(3.4 * var(--canccu-u));
+    line-height: 1.2;
   }
 
   /* Two slots, load then fade: `moderate` also rises a little, `calm` only fades, slowly. */
@@ -76,7 +98,7 @@
   }
 
   .canccu-layout[data-motion="moderate"] .canccu-region > .canccu-slot--in {
-    transform: translateY(1.5cqmin);
+    transform: translateY(calc(1.5 * var(--canccu-u)));
   }
 
   .canccu-widget p,
@@ -88,70 +110,106 @@
     list-style: none;
   }
 
-  .canccu-widget__title {
-    font-size: 2.8cqmin;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+  /* Small labels: NOW, NEXT, WI-FI, a widget's title. */
+  .canccu-widget__title,
+  .canccu-widget__kicker,
+  .canccu-widget__state {
+    font-size: calc(3.4 * var(--canccu-u));
+    font-weight: 600;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--canccu-color-primary, #60a5fa);
+    color: var(--canccu-color-text-muted);
+  }
+
+  .canccu-widget__kicker {
+    color: var(--canccu-color-primary);
+  }
+
+  .canccu-widget__headline {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    font-family: var(--canccu-font-display);
+    font-size: calc(9.3 * var(--canccu-u));
+    font-weight: 700;
+    line-height: 1.05;
+    text-wrap: balance;
   }
 
   .canccu-widget__big {
-    font-family: var(--canccu-font-display, var(--canccu-font-heading, system-ui, sans-serif));
-    font-size: 9cqmin;
+    font-family: var(--canccu-font-display);
+    font-size: calc(6.6 * var(--canccu-u));
     font-weight: 700;
     line-height: 1.05;
     font-variant-numeric: tabular-nums;
   }
 
   .canccu-widget__meta,
-  .canccu-widget__caption {
-    font-size: 2.6cqmin;
-    color: var(--canccu-color-text-muted, #9ca3af);
+  .canccu-widget__caption,
+  .canccu-widget__where,
+  .canccu-widget__body {
+    font-size: calc(3.4 * var(--canccu-u));
+    color: var(--canccu-color-text-muted);
+  }
+
+  /* Pinned to the bottom of its card; `.canccu-widget p` above would reset a lone class's margin. */
+  .canccu-widget .canccu-widget__count {
+    margin-top: auto;
+    display: flex;
+    align-items: baseline;
+    gap: calc(1.6 * var(--canccu-u));
+    font-size: calc(4.4 * var(--canccu-u));
+  }
+
+  .canccu-widget__count .canccu-widget__big {
+    color: var(--canccu-color-primary);
+  }
+
+  /* A bar filled to `--canccu-progress` (widget.ts, fillCountdowns), in the theme's two colours. */
+  .canccu-widget__bar,
+  .canccu-rotation__bar {
+    display: block;
+    flex: none;
+    height: calc(0.7 * var(--canccu-u));
+    border-radius: calc(1 * var(--canccu-u));
+    background:
+      linear-gradient(90deg, var(--canccu-color-primary), var(--canccu-color-accent)) 0 0 /
+        calc(var(--canccu-progress, 0) * 100%) 100% no-repeat,
+      var(--canccu-color-border);
   }
 
   .canccu-widget__body {
     display: flex;
     flex-direction: column;
-    gap: 1.4cqmin;
+    gap: calc(2 * var(--canccu-u));
     min-height: 0;
   }
 
   .canccu-widget__row {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 1fr auto;
     align-items: baseline;
-    column-gap: 1.6cqmin;
-  }
-
-  .canccu-widget__state {
-    font-size: 2.6cqmin;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--canccu-color-accent, #f472b6);
-  }
-
-  .canccu-widget__row--next .canccu-widget__state {
-    color: var(--canccu-color-text-muted, #9ca3af);
+    column-gap: calc(1.6 * var(--canccu-u));
   }
 
   .canccu-widget__name {
-    font-size: 3.4cqmin;
+    font-size: calc(4.4 * var(--canccu-u));
     font-weight: 700;
   }
 
-  /* A row's details go under its name. */
-  .canccu-widget__row > .canccu-widget__meta {
-    grid-column: 2;
-  }
-
+  /* The view-model has the delay on every row; it shows only on a delayed one, as a solid badge. */
   .canccu-widget__delay {
-    font-size: 2.6cqmin;
+    justify-self: end;
+    padding: calc(0.3 * var(--canccu-u)) calc(1.4 * var(--canccu-u));
+    border-radius: calc(99 * var(--canccu-u));
+    background: var(--canccu-color-status-degraded);
+    color: var(--canccu-color-background);
+    font-size: calc(3.4 * var(--canccu-u));
     font-weight: 700;
-    color: var(--canccu-color-status-degraded, #fbbf24);
+    white-space: nowrap;
   }
 
-  /* The view-model has the delay on every row; it shows only on a delayed one. */
   .canccu-widget__delay:not(.canccu-widget__delay--delayed) {
     display: none;
   }
@@ -159,31 +217,14 @@
   .canccu-widget__qr {
     display: flex;
     align-items: center;
-    gap: 1.6cqmin;
+    gap: calc(1.6 * var(--canccu-u));
   }
 
   .canccu-widget__code {
-    height: 16cqmin;
+    height: calc(16 * var(--canccu-u));
     aspect-ratio: 1;
-    border-radius: var(--canccu-radius, 0.5rem);
+    border-radius: var(--canccu-radius);
     background: #fff;
-  }
-
-  .canccu-widget--qr .canccu-widget__qr,
-  .canccu-widget--checkin_qr .canccu-widget__qr {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .canccu-widget--qr .canccu-widget__code,
-  .canccu-widget--checkin_qr .canccu-widget__code {
-    height: auto;
-    width: min(100%, 22cqmin);
-  }
-
-  /* A check-in code past its time is dropped (widget.ts, shownView): no blank square in its place. */
-  .canccu-widget--checkin_qr.canccu-is-empty .canccu-widget__code {
-    display: none;
   }
 
   .canccu-widget__image {
@@ -193,186 +234,7 @@
     object-fit: contain;
   }
 
-  .canccu-widget--photo .canccu-widget__image {
-    flex: 1;
-  }
-
   .canccu-widget__level--urgent .canccu-widget__title {
-    color: var(--canccu-color-status-degraded, #fbbf24);
-  }
-
-  .canccu-widget__level--emergency .canccu-widget__title {
-    color: var(--canccu-color-status-down, #f87171);
-  }
-
-  .canccu-region[data-role="hero"] .canccu-widget__name {
-    font-size: 4.4cqmin;
-  }
-
-  /* The idle hero's countdown is the screen's headline (contracts/screen.md, idle: next). */
-  .canccu-region[data-role="hero"] .canccu-widget--countdown {
-    align-items: center;
-    text-align: center;
-  }
-
-  .canccu-region[data-role="hero"] .canccu-widget--countdown .canccu-widget__title {
-    font-size: 4cqmin;
-  }
-
-  .canccu-region[data-role="hero"] .canccu-widget--countdown .canccu-widget__big {
-    font-size: 16cqmin;
-  }
-
-  /* The header: logo and clock on the background, no card. */
-  .canccu-region[data-role="header"] > .canccu-widget,
-  .canccu-region > .canccu-widget--logo {
-    background: none;
-    padding: 0 1cqmin;
-  }
-
-  .canccu-region[data-role="header"] .canccu-widget--clock {
-    flex-flow: row wrap;
-    justify-content: flex-end;
-    align-content: center;
-    align-items: baseline;
-    gap: 2cqmin;
-  }
-
-  .canccu-region[data-role="header"] .canccu-widget__big {
-    font-size: 5cqmin;
-  }
-
-  .canccu-region[data-role="header"] .canccu-widget--logo {
-    align-items: flex-start;
-  }
-
-  .canccu-widget--logo .canccu-widget__big {
-    font-size: 4cqmin;
-  }
-
-  /* The ticker: one calm line (L13) that fades between texts; a long text takes a second line. */
-  .canccu-region > .canccu-widget--ticker {
-    justify-content: center;
-    padding: 0 2.4cqmin;
-  }
-
-  .canccu-widget__line {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-    font-size: 3.2cqmin;
-  }
-
-  .canccu-layout[data-ticker="high_contrast"] .canccu-widget--ticker {
-    background: #000;
-    color: #fff;
-    font-weight: 700;
-  }
-
-  .canccu-layout[data-ticker="minimal"] .canccu-widget--ticker {
-    background: none;
-    color: var(--canccu-color-text, #f3f4f6);
-  }
-
-  .canccu-layout[data-ticker="broadcast"] .canccu-widget--ticker {
-    background: var(--canccu-color-primary, #60a5fa);
-    color: var(--canccu-color-primary-text, #0f1115);
-    font-weight: 600;
-  }
-
-  /* The playlist's media fill the widget edge to edge, with no card (src/media.ts). The widget
-     stays absolute, inset 0 like every widget: it is the media's containing block, and set back
-     to relative it would collapse to its absolute children's height, 0 px. */
-  .canccu-region > .canccu-widget--playlist {
-    padding: 0;
-    overflow: hidden;
-    background: #000;
-  }
-
-  .canccu-widget__media {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    object-fit: contain;
-  }
-
-  .canccu-widget__media.canccu-is-failed {
-    visibility: hidden;
-  }
-
-  /* The embed widget, as packages/ui's ui.css draws it (the screen page loads no ui.css): the
-     still fills the widget and the frame lies over it, transparent until the embed paints. */
-  .canccu-region > .canccu-widget--embed {
-    padding: 0;
-    overflow: hidden;
-    background: var(--canccu-color-background, #0f1115);
-  }
-
-  .canccu-widget--embed > .canccu-widget__body {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    height: 100%;
-  }
-
-  .canccu-widget--embed > .canccu-widget__body > img {
-    max-width: 40%;
-    max-height: 40%;
-  }
-
-  .canccu-embed {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    background: transparent;
-    color-scheme: normal;
-  }
-
-  /*
-   * Claims (contracts/screen.md, Moments drive it: claims). A takeover hides every region but
-   * itself and the overlay; the overlay draws its claim as a lower-third band on top of all.
-   */
-  .canccu-layout[data-takeover]
-    > .canccu-region:not(.canccu-region--_full, .canccu-region--_overlay) {
-    visibility: hidden;
-  }
-
-  .canccu-region--_full > .canccu-widget {
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: 5cqmin;
-  }
-
-  .canccu-region--_full .canccu-widget__title,
-  .canccu-region--_full .canccu-widget__big {
-    font-size: 9cqmin;
-  }
-
-  .canccu-region--_overlay > .canccu-widget {
-    inset: auto 0 0;
-    min-height: 16%;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: baseline;
-    column-gap: 2cqmin;
-    background: var(--canccu-color-primary, #60a5fa);
-    color: var(--canccu-color-primary-text, #0f1115);
-  }
-
-  /* An emergency stands out in the default look. A theme may restyle it: only a safety class
-     (packages/ui) would hold against a theme, and none exists for claims. */
-  .canccu-widget--announcement:has(.canccu-widget__level--emergency) {
-    background: #7f1d1d;
-    color: #fff;
-  }
-
-  .canccu-widget__level--emergency .canccu-widget__title {
-    color: #fff;
+    color: var(--canccu-color-status-degraded);
   }
 }

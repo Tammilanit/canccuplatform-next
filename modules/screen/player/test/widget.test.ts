@@ -9,7 +9,7 @@ describe("a widget on the screen", () => {
   it("carries its type, and the empty and stale states as the stable classes", () => {
     const w = drawWidget("ticker", null, view({ text: "Hi" }), []);
     expect(w.className).toBe("canccu-widget canccu-widget--ticker");
-    expect(w.textContent).toBe("Hi");
+    expect(w.querySelector(".canccu-widget__line")?.textContent).toBe("Hi");
     const gone = drawWidget("agenda_now", null, view({ empty: true, stale: true }), []);
     expect(gone.classList.contains("canccu-is-empty")).toBe(true);
     expect(gone.classList.contains("canccu-is-stale")).toBe(true);

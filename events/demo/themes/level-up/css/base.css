@@ -58,7 +58,8 @@
   gap: 0.55em;
   margin: 0 0 14px;
   font-family: var(--canccu-font-heading);
-  font-size: 1.6rem;
+  /* 28px: the screens' readability check wants 27px (2.5 % of 1080p) of every title. */
+  font-size: 1.75rem;
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: 0.12em;
@@ -207,10 +208,6 @@
 .canccu-surface--screen .canccu-widget--logo::before,
 .canccu-surface--screen .canccu-widget--embed::before {
   content: none;
-}
-.canccu-widget--logo {
-  display: flex;
-  align-items: center;
 }
 .canccu-widget--logo img {
   display: block;

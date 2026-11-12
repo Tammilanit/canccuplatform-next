@@ -48,10 +48,16 @@ const host = { serverNow: () => Date.now() + shift, reducedMotion: () => reduced
 const advance = async (ms: number) => {
   await vi.advanceTimersByTimeAsync(ms);
 };
+/** A widget's text without the ticker's "Info" label, which every ticker carries. */
+const unlabelled = (el: Element | null | undefined): string => {
+  const copy = el?.cloneNode(true) as Element | undefined;
+  copy?.querySelectorAll(".canccu-widget__label").forEach((label) => {
+    label.remove();
+  });
+  return copy?.textContent ?? "";
+};
 const shownIn = (screen: Screen, id: string) =>
-  [...(screen.root.querySelector(`.canccu-region--${id}`)?.children ?? [])].map(
-    (c) => c.textContent,
-  );
+  [...(screen.root.querySelector(`.canccu-region--${id}`)?.children ?? [])].map(unlabelled);
 
 describe("the screen's layout", () => {
   beforeEach(() => {
@@ -187,7 +193,9 @@ describe("what a region shows", () => {
     const screen = new Screen(host);
     const motion = { display: { motion: "moderate", drift: false } } as const;
     const ticker = (text: string, stale: boolean) =>
-      region("rail", { widgets: [widget("agenda_now", { title: text, items: [], stale })] });
+      region("rail", {
+        widgets: [widget("agenda_now", { items: [{ name: text, state: "now" }], stale })],
+      });
     screen.draw(state([region("rail")], motion));
     screen.draw(state([ticker("Now", false)], motion));
     const incoming = screen.root.querySelector(".canccu-region--rail > :last-child");
@@ -260,7 +268,7 @@ describe("what a region shows", () => {
     );
     expect(at("b")?.children.length).toBe(0);
     expect(at("c")?.hidden).toBe(true);
-    expect(at("d")?.querySelector(".canccu-widget--logo img")?.getAttribute("alt")).toBe(
+    expect(at("d")?.querySelector(".canccu-widget--logo .canccu-widget__name")?.textContent).toBe(
       "Demo Event",
     );
   });
