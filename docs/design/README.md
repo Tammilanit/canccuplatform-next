@@ -1,58 +1,121 @@
-# One design: the design language, the organiser shell and the screens
+# One design
 
-Issue #382. The UX audit ([docs/reports/ux-audit-step3.md](../reports/ux-audit-step3.md)) found that the platform looks like three products: admin unstyled, the event pages each with their own frame, the screens a third look. These mockups are the one design the product owner accepts before any build. Then #383 (the shell and the language on every organiser page), #384 (the brand kit) and #385 (the device frames) build them.
+**This is the accepted design guideline (PO, 2026-11-12) for every later step that touches anything users see.** Issues name the sheet of `mockups.html` they follow; PRs carry screenshots of the built page next to that sheet.
 
-**Open [`mockups.html`](mockups.html) in a browser** (download it or open it from a checkout; GitHub shows only its source). It is one self-contained page, with no scripts and no external files. A bar at the top jumps between the nine sheets. A switch at the top right recolours every mockup with three themes: the platform default, "Demo night" (the palette of the Pulse mockups 02–05) and a light scheme. Use it to see that the whole design follows an event's theme. Desktop frames are drawn at 1440 px and phones at 390 px. On a smaller monitor the board shrinks the desktop frames.
+**What is in the repo and what is not.** This folder holds `mockups.html`, `stage.html`, this README, `widgets.md`, `experience-map.md` and `strips/*.png`. The per-sheet renders (`png/`, 64 files, about 84 MB) and the clips (`video/`, about 29 MB) are too large for the repo: they stay in the handover folder on the maintainer host, `/home/debian/handover/design-final/png/` and `/home/debian/handover/design-final/video/`. Wherever this README says `png/` or `video/`, it means those folders. The generator `build/` it names is in neither the repo nor the handover folder.
 
-## The sheets
+The one design language, organiser shell and screens (issue #382). The base is PR #387's `mockups.html`, with the hybrid from the design review, the fixes from four judging rounds, round 5's layouts and motion, and round 6's scenes, Director, cues, backgrounds and widgets.
 
-| # | Sheet | Shows | Audit findings |
+**Open `mockups.html` in a browser.** It is one self-contained file: no scripts, no external files. The screens on sheets 10 and 11 move. The switch at the top right recolours every mockup with four themes: Default, Demo night, Light and Hostile (yellow primary on white, pale status colours, grey text). `png/<sheet>-<theme>.png` holds every sheet in every theme (64 files). `build/` holds the generator (`build.py`, with `colour.py` for the contrast rule), the renderer (`render.sh`) and a per-figure zoom tool; none is needed to read the mockups.
+
+The sheets carry no version or review tags.
+
+## Changes since v7
+
+The finishing pass: seven narrow changes, no new sheets.
+
+| # | Change | Where | What is drawn |
 |---|---|---|---|
-| 1 | Design language | Colour use, type scale, spacing, widths, date and time format, buttons (every kind as link and button, every state, every size), form fields, cards, tables, badges, notices, empty states | A1 and A4 (design side), B1, B4, B5, F2–F4 |
-| 2 | Organiser shell | Header, Event menu, sub-page row and content width at 1440 px; the phone layout at 390 px with the menu closed and open | A1, A2, B2, B4 |
-| 3 | Sign-in | Desktop and phone, plus the failed, not-set-up and first-run states | A1, A5, E2 wording |
-| 4 | Admin pages | Settings of a module (desktop), health (desktop), event profile and people (phone); settings itself is on sheet 2 | A1–A5, F4 |
-| 5 | Run of show | The day (desktop and phone), one item (phone), Quick add (phone) | B1, B2, B5, F1, F2 |
-| 6 | Theme studio | The Studio frame with the brand kit (mockup 12) inside the shell | B2, B4; C2–C4 (frame side only) |
-| 7 | Check-in | The attendee's four steps on a phone, with the event's header | E1, E2 |
-| 8 | Errors | No access (desktop); not found, not at the venue and event archived (phone); the archived banner on a read page | B3, D7 (design side) |
-| 9 | Screens | Pulse for reference, then pairing, not assigned, refused, event ended, offline and identify, as one family | D1–D3, D6, D7 (design side) |
+| 1 | Dashboard: the hero is a role, not a box | Sheets 10 and 13; `experience-map.md` | One of the six boxes holds the hero role (top-left by default) and plays the Director's features. A showcase grows it to 2 × 2: drawn for a surging game (sheet 10) and a crew spotlight (sheet 13), with the other five boxes slid aside and shrunk to a headline. The Screen studio card where the crew picks the hero box and switches growing on or off. Clip: `video/dashboard-showcase.webm` |
+| 2 | Cues last long enough to be noticed | Sheet 14 | Every box effect is a small move (0.6 s) followed by a frame and soft glow that hold 60–120 s and fade over 10 s. The storyboards show 0 s, 0.3 s, 1 min and 2 min. Each event's hold time is a setting. On screen, a surge's glow now holds as long as its stage tint |
+| 3 | Sound is fully configurable and linkable | Sheet 14, Screen studio → Cues | Two sections. "Screen effects": the effect boxes, the hold time, and whether a sound is linked. "Sound": any trigger (scene, widget event, crew button, agenda item, outside signal as planned) linked to any sound, with volume, cooldown, the zones that play it, a preview, and whether it plays with a picture or alone. A sound library with upload and preview. Master switches |
+| 4 | "Right now": arrows on the baseline | Every screen with the widget | The arrow sits on the number's baseline. The dash that used to sit under the arrow is gone (it fades out as the arrow fades in). Measured at 1080p: the arrow's bottom is 1 px from the digits' bottom (`build/measure.mjs`, crop in `build/right-now.png`) |
+| 5 | No half-empty large panel | Sheets 10, 11, 12, 13, 15 | Every feature fills the panel: the highlight carries the game's art, the hot game its numbers, "Today in numbers" a graph of the day, the spotlight's rows spread out |
+| 6 | Photo wall | Sheets 13, 16 | Five tiles in two rows; the panel keeps a clear band for the "starts in" chip |
+| 7 | Tournament roster and bracket | `experience-map.md` | Their own widget family under the Games system, to be planned later; the drawings are placeholders |
 
-## The rules in short
+**Re-rendered:** `layouts`, `motion`, `scenes`, `director`, `cues`, `backgrounds`, `widgets` in all four themes. The other nine sheets are unchanged from v7.
 
-- **Tokens only.** Every colour comes from the eleven theme tokens. Tints, hovers, the current-page fill and the badge and notice fills are mixed from them (`color-mix()`), so no new token is needed. An event theme, dark or light, restyles every page.
-- **One job per colour.** Primary marks the action, links, focus and "now"; the now line is primary, not red (F2). Accent is for highlights only. Status colours mean status and nothing else. A badge is always a word, never colour alone.
-- **Type.** Seven sizes: 12, 14, 16, 18, 22, 28 and 36 px. Every page title is 28 px (24 px on a phone), and it appears once: the header names the event, the menu the section, the title the page (B4).
-- **Space and width.** Spacing on a 4 px rhythm. Two content widths, set by `page()` per kind of page: 40rem for forms, 64rem for workspaces (B4).
-- **Buttons.** Four kinds: primary, secondary, ghost and danger, plus a quiet danger for links that ask first. Each looks the same whether it is an `<a>` or a `<button>`. The link colour moves into `:where(.canccu-page) a`, so every button variant beats it (B1).
-- **Fields.** The label above, the hint below, the error under the hint, units beside the number. Checkboxes and switches are rows with their hint under the label (A4).
-- **Words.** Plain words everywhere, no ids: module names instead of `screen` (A2); "Draft" instead of revision numbers; the page name instead of a right id (B3); the font's name instead of a schema path (C1). Dates and times follow the event's `language` and `timezone`, inputs included (B5).
-- **Never a dead end.** The Event menu lists only the pages this person may open. Every empty state and every error page names the next step.
+**Clips:** all eight were re-recorded, because changes 4–6 show in every Pulse clip. New: `dashboard-showcase.webm`. In the `cues` clip the 1–2 minute hold is compressed to about 3 seconds, and the clip says so.
 
-## Decisions made
+**Not re-run:** the full measuring audit. Only the "Right now" alignment was measured in this pass.
 
-These choices are open to the product owner and the reviewer:
+## Changes since v6
 
-1. **One file, not one per surface.** One style block serves every sheet, and the theme switch reaches every mockup at once. Nine files would repeat the style block nine times.
-2. **`docs/design/`, not `docs/briefs/step-3-screen/`.** The language applies past step 3, and the step 3 brief's mockups stay as they are ([docs/briefs/README.md](../briefs/README.md)). `scripts/file-size-exemptions.txt` gets one line for `docs/design/*.html`, the same exemption the brief mockups have.
-3. **The Event menu sits at the side on desktop.** The accepted mockup 07 already puts the Screen studio's navigation there, and a side menu still has room as steps add modules. On a phone the same menu opens from the header as a full-screen sheet.
-4. **Sub-pages are tabs under the page title.** Actions such as Quick add and New topic are buttons, not tabs. Admin's pages (Settings, Health, Event profile, People) are menu items with no tab row.
-5. **The header shows the event's time and its time zone.** Organisers run the day from that clock, and it shows what the time-zone setting does (B5).
-6. **The safety elements stay as they are (D2).** The pairing code and the offline marker look exactly as `ui.css` and the theming contract draw them today: white on black, the code centred, the marker top right. The frames are laid out around them, and mockup 05's amber marker is retired. This needs no contract change. Q2 offers the other way.
-7. **"Not at the venue" has no menu.** The network refusal comes before any session is read, so the page shows only the event's header.
-8. **New class names** (for example `canccu-notice`, `canccu-empty`, `canccu-menu`, `canccu-tabs`) are only a proposal. #383 decides which ones become stable classes in `contracts/theming.md`; that is an additive contract change, in its own PR first.
+Everything is drawn night-first: the board opens on "Demo night". Five new sheets (12–16), an ownership map, a wider widget catalogue, seven clips.
+
+### Files
+
+| What | Where |
+|---|---|
+| The mockups: 16 sheets, four themes, animating in a browser | `mockups.html` |
+| Every sheet as PNG | `png/<sheet>-<theme>.png` (64 files). New sheets: `scenes`, `director`, `cues`, `backgrounds`, `widgets` |
+| Who builds what | `experience-map.md` |
+| The widget catalogue | `widgets.md` |
+| Clips (WebM, 1280×720, 10–24 s, 1–6 MB) | `video/lively.webm`, `party.webm`, `spotlight.webm`, `cues.webm`, `tint.webm`, `reactions.webm`, `heartbeat.webm`, `dashboard-showcase.webm` |
+| Each clip as five frames | `strips/<name>.png` |
+| The page the clips are recorded from; it opens on a menu | `stage.html` |
+
+### The brief, section by section
+
+| Brief | Where | What is drawn |
+|---|---|---|
+| 0 · Ownership map | `experience-map.md` | Each concept, its home module, step, issue and contract touch points; where each setting lives |
+| 1 · Scenes | Sheet 12 | Screen studio → Scenes: a band chart of every day of the event, the scene list in priority order, one scene's conditions and changes, hold and blend times, the crew button, an outside signal drawn as planned. Five presets. Three scenes on screen (Daytime, Peak, Quiet). Quiet hours are a scene |
+| 2 · Director and spotlight | Sheet 13 | Seven hero features; how the next is picked; the choreographer's pacing as lanes; the turn indicator as line, ring or off; the crew spotlight as four phone steps and its result on screen; a break arriving and playing |
+| 3 · Cues | Sheet 14 | Six box-level effects as storyboards (pop, tilt, flip, ripple, slide, magnetic glow); sound categories with cooldowns; the effect-pool editor in Screen studio → Cues; the heartbeat at low and high activity |
+| 4 · Two backgrounds | Sheet 15 | Stage against card as a table; a surge washing the stage in the game's art and promoting the game; card backgrounds for top games, photo wall, bracket and hot game |
+| 5 · Widgets | Sheet 16 | Top games with banners, bars, tags and the leader's art; the activity graph as bars coloured by top game, as an area over the whole event, and as hour by day, with its settings; "Right now" without a sparkline; live standings and bracket; match called; reactions |
+| 6 · Fixes | Sheets 4, 5, 11, 16 | See below |
+
+### Fixes from the product owner
+
+| Fix | Done |
+|---|---|
+| "Add between 19:45 and 21:15" | The gap line names both neighbours; the form picks the time and length (sheet 5) |
+| "Seconds per photo" out of admin settings | It is a setting of the Photo wall widget in Screen studio (sheet 16); admin keeps "Default seconds per slide" |
+| People tooltip contrast | The tooltip text is the background colour on the text colour |
+| The screen's name on screens | Automatic (hidden with one screen), Always or Never: a setting drawn on sheet 16. The frames still show "Main hall", since the demo event has four screens |
+| Glows never static | Every screen's stage has glows that drift all the time (44 s a turn at calm, 18 s at lively, 10 s at party) |
+| Lively is livelier | At lively the large panel rotates, the stage breathes with a heartbeat, a changed box gets a sweep of light, the 5-minute chip pops, and the glows move more than twice as fast as at calm |
+| Broadcast and Arcade | Motion packs a theme can choose: the setting and the three packs side by side on sheet 11. The separate alternatives page is gone |
+| `stage.html` blank without a hash | It opens on a menu |
+
+### What I checked, and how
+
+- I cannot play video. I checked every clip through its strip of five frames, which are screenshots taken during the recording.
+- In `cues`, the four transform effects (pop, tilt, flip, slide) last under half a second each, so the strip's five frames mostly catch ripple and glow. The storyboards on sheet 14 show all six.
+- The measuring audit was run on the new sheets in two themes; see the end of this section for what it found.
+
+## Decisions
+
+1. **Ink is computed per ground, not per theme only.** Primary and status inks cover pages, cards, tints and notices; a second primary ink covers the hero panel, the glow and screens; muted text covers all of them.
+2. **Fills that carry text are opaque computed colours**, so their contrast does not depend on what is behind them.
+3. **A delay is one solid badge everywhere.**
+4. **Pulse departs from mockup 02**: a 33 px floor, 54 px or more for times, the countdown in the hero, the solid delay badge, no developer words. The second "next" item, the slide credit and "Code changes every 30 s" are left out.
+5. **The bottom bar always ends in More.** A page's pending row (Save, Publish) sits above the bar, is 52 px, and hides while scrolling.
+6. **The run of show is one continuous list;** the day switch jumps and follows the scroll.
+7. **Front pages keep the poster at one height** in every state.
 
 ## Questions for the product owner
 
-- **Q1 · The Event menu on desktop.** (a) At the side, as drawn. (b) Behind a Menu button, as on a phone. *Recommended: (a).* The current page is always in view, and the menu has room for later modules.
-- **Q2 · Safety elements on screens (D2).** (a) Keep `ui.css`'s fixed white-on-black look, as drawn; no contract change. (b) Change the theming contract's safety rule so the marker can be amber and the code can sit inside the frame's layout, as in mockup 05; that is a contract change, possibly breaking, and high risk. *Recommended: (a).*
-- **Q3 · The pairing and refused frames before a screen has a zone.** (a) Use the event's published theme tokens (never its CSS) wherever the server can send them, else the defaults. (b) Always use the defaults. *Recommended: (a).* Either way the background is the same family, so nothing jumps (D1).
-- **Q4 · Desktop item page.** The run-of-show item is drawn on a phone, where live edits happen. On desktop it uses the same content in the 40rem column. (a) That is enough. (b) Draw it as a side panel next to the day. *Recommended: (a)* for step 3.
-- **Q5 · The demo theme's font (C1).** Mockups use the system font. (a) Drop Inter from the demo profile. (b) Ship Inter as a theme font file. *Recommended: (a).* The Studio's fix is #384's.
+- **Q1 · Event menu on desktop.** (a) At the side; it folds under 1100 px. *Recommended: (a).*
+- **Q2 · Offline marker.** Fixed white on black, 42 px, in the header row in place of the date. (a) Accept; this is a contract change for size and position. (b) Keep `ui.css`'s corner and size. *Recommended: (a).* Someone must also check what `ui.css` draws today.
+- **Q3 · Frames before a zone.** (a) The event's published tokens, with a fade. *Recommended: (a).*
+- **Q4 · Item beside the day.** (a) Build it in step 3. (b) The item as its own page first. *Recommended: (a) if #383 has room.*
+- **Q5 · Demo font.** (a) Drop Inter. *Recommended: (a).*
+- **Q6 · Privacy on attendee pages.** v4 keeps the contract's colours but draws a small tag in a 44 px target. (a) Accept; a contract change for size. (b) Keep the slab. *Recommended: (a).*
+- **Q7 · The phone's bottom bar.** Run of show, Notifications, Quick add, Screens, More. *Recommended: as drawn.*
+- **Q8 · The live miniature Pulse** needs the virtual screen render. (a) Build it with #384. (b) A static preview until then. *Recommended: (a).*
+- **Q9 · Pulse against mockup 02.** (a) Accept sheet 9; #375 builds from it. (b) Keep 02's sizes. *Recommended: (a).*
+- **Q10 · A hostile theme.** (a) Publish with computed fixes, and say so. (b) Refuse past a set number of fixes. *Recommended: (a).*
+- **Q11 · A light scheme on screens.** The Studio asks once and offers a dark variant for screens. (a) Accept; this means a theme can carry two schemes. (b) Warn only. *Recommended: (b) for step 3, (a) later.*
+- **Q12 · Where the motion level is set.** The event sets it, a zone may pin its own, and "Follow the day" moves it one step with the phase. (a) As drawn. (b) Event level only. *Recommended: (a).*
+- **Q13 · Motion in the theme.** Themes get a speed (slower, normal, faster), an intensity and a choice of spotlight effect, beside the eleven colour tokens. This is an additive theming-contract change. (a) Accept. (b) Fixed motion for every theme. *Recommended: (a).*
+- **Q14 · Game art in the background.** Covers are blurred once on the server and sit under a computed scrim. (a) Accept, with the event able to switch the layer off. (b) Theme base and phase tint only. *Recommended: (a).*
+- **Q15 · "Tell people" off.** A quiet delay or edit announces nothing; screens and the hub still show the new time. It needs the additive agenda contract change. (a) As drawn. *Recommended: (a).*
+- **Q16 · Statistics widgets before the history exists.** `stats_history`, `top_games` and milestones need the bot's history in the platform database. (a) Ship the widgets with "Collecting…" until then. (b) Hold them back. *Recommended: (a).*
+- **Q17 · Scenes belong to Moments, with their page in Screen studio.** (a) As drawn. (b) Scenes in Screen. *Recommended: (a); Screen only renders what a scene sets.*
+- **Q18 · Scene priority.** The first scene in the list whose conditions hold wins, with Quiet at the top. (a) As drawn. (b) Scenes carry a rank number. *Recommended: (a).*
+- **Q19 · Dynamic theme switching by a scene.** A scene may switch the palette or the whole theme. (a) Palette only in step 4, whole themes later. (b) Both at once. *Recommended: (a).*
+- **Q20 · Reactions.** A fixed set (heart, star, four short words), one a second per screen, off in a quiet scene. (a) As drawn. (b) Free emoji with moderation. *Recommended: (a).*
+- **Q21 · Sound cooldowns.** The table on sheet 14 is my proposal, not taken from the legacy engine. Someone who knows that engine should set the real values.
+- **Q22 · The turn indicator's default.** (a) A thin line. (b) Off. *Recommended: (a).*
 
-## Not in these mockups
+## Known limits
 
-- The brand kit's own layout and previews beyond the frame: mockup 12 and #384.
-- The Pulse look itself: mockups 02–04 and #375.
-- The phone hub: the App track.
-- The Screen studio pages: mockups 07–10 and #189.
+- Contrast is now measured on the rendered pages by `build/audit.sh`. Six samples inside `<code>` spans still read low; they look like sampling artefacts, unconfirmed.
+- In Default, the stricter rule makes links and muted text lighter than the raw tokens (primary `#3b82f6` becomes `#89b4fa` as text, and text on a blue button is black).
+- Under the Hostile theme pages read, but they stay pale: fills keep the event's tokens.
+- The Screen studio pages (07–10) are not redrawn in the new shell.
+- The takeover's red, the pairing code's black and the Discord preview's colours are fixed values outside the tokens, on purpose.
