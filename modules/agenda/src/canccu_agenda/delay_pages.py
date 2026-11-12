@@ -222,7 +222,9 @@ async def delay_page(request: Request) -> Response:
         + '<label class="canccu-field"><span class="canccu-field__label">Other (minutes;'
         " negative brings it forward)</span>"
         + '<input class="canccu-input" type=number name=other min=-720 max=720'
-        + f' value="{esc(q.get("other", ""))}"></label>'
+        # A tapped chip wins over the field, so the field is emptied; a stale typed value would
+        # otherwise ride along with the chip's confirm.
+        + f' value="{"" if q.get("minutes") else esc(q.get("other", ""))}"></label>'
         + '<section class="canccu-card canccu-agenda-confirm" aria-label="Confirm">'
         + (f'<h2 class="canccu-card__title">{esc(title)}</h2>' if title else "")
         + f'<div class="canccu-agenda-confirm-choices">{choices}</div>{confirm}</section></form>'
@@ -248,6 +250,20 @@ async def delay_save(request: Request) -> Response:
     # From this page's form an unticked box sends nothing; a form from before the choice existed
     # sent no `chosen` and told.
     announcing = form.get("announce", "" if "chosen" in form else "1") == "1"
+    typed = str(form.get("other") or "").strip()
+    if typed and as_int(typed) != minutes:
+        # The action button carries the minutes its confirm was drawn for, and its label no longer
+        # names them: minutes typed into "Other" after that get their own confirm, never the
+        # drawn one's change.
+        query = urlencode(
+            {
+                "other": typed,
+                "following": "1" if following else "",
+                "announce": "1" if announcing else "",
+                "chosen": 1,
+            }
+        )
+        return redirect(f"/items/{item_id}/delay?{query}")
     revision = model.revision(as_int(form.get("revision")))
     shown = as_int(form.get("agenda_version"))
     inverse = Inverse()

@@ -150,6 +150,28 @@ async def test_enter_in_other_previews_the_typed_minutes_not_a_chip(env: Env) ->
     assert "Delay it by 15 min?" in chip.text  # a tapped chip wins
 
 
+async def test_minutes_typed_after_the_confirm_get_their_own_confirm(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        item = await add(c, h, ends_at=at(120))
+        chip = await c.get(f"/items/{item['id']}/delay?minutes=5&other=20", headers=h)
+        form = {"revision": "1", "minutes": "5", "other": "20", "chosen": "1"}
+        form["agenda_version"] = "1"
+        retyped = await c.post(f"/items/{item['id']}/delay", data=form, headers=h)
+        again = await c.get(retyped.headers["location"].removeprefix("/agenda"), headers=h)
+        unchanged = (await c.get(f"/api/agenda/items/{item['id']}", headers=h)).json()
+        delayed = [e for e in env.events() if e["type"] == "agenda.item.delayed"]
+        same = await c.post(f"/items/{item['id']}/delay", data={**form, "other": "5"}, headers=h)
+        moved = (await c.get(f"/api/agenda/items/{item['id']}", headers=h)).json()
+    assert 'name=other min=-720 max=720 value="">' in chip.text  # a tapped chip empties it
+    assert retyped.status_code == 303 and "other=20" in retyped.headers["location"]
+    assert "minutes=" not in retyped.headers["location"]
+    assert "Delay it by 20 min?" in again.text and ">Delay quietly<" in again.text
+    assert unchanged["revision"] == 1 and unchanged["delay_minutes"] == 0
+    assert delayed == []
+    assert same.status_code == 303 and moved["delay_minutes"] == 5
+
+
 async def test_the_delay_refuses_a_change_of_the_agenda_under_its_lock(env: Env) -> None:
     h = env.writer()
     async with env.client() as c:
