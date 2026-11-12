@@ -16,7 +16,7 @@ import {
   requireTenant,
   runMigrations,
 } from "@canccu/kit";
-import type { Event, SettingValue, StorageQuota } from "@canccu/kit";
+import type { Event, PublicEvent, SettingValue, StorageQuota } from "@canccu/kit";
 import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
 import type { AuditEntry } from "../src/audit.js";
@@ -49,6 +49,7 @@ const ALL_RIGHTS = [
   "screen.push.write",
   "screen.ticker.write",
   "screen.photos.write",
+  "screen.bundle.write",
 ];
 /** The sessions the fake admin knows; a test may add or remove one (then drop it from `h.rights`). */
 export const SESSIONS: Record<string, string[]> = {
@@ -58,6 +59,7 @@ export const SESSIONS: Record<string, string[]> = {
   editor: ["screen.content.read", "screen.content.write"],
   ticker: ["screen.ticker.write"],
   photos: ["screen.photos.write"],
+  bundler: ["screen.bundle.write"],
   nobody: [],
   // `superadmin` as admin answers it: a platform-bound session with `mfa_enabled` (G2).
   root: [],
@@ -109,6 +111,8 @@ export interface Harness {
   oembedStatus: { value: number };
   /** What the fake agenda, tenants and theming answer the composed state; null is "down". */
   sources: FakeSources;
+  /** host → the event's public answer (its `ends_at`); unset hosts answer nothing. */
+  publicEvents: Record<string, PublicEvent>;
   /** The app's tenant cache; a test that changes TENANTS clears it with a tenants event. */
   tenants: TenantResolver;
   /** The app's rights cache; a test that changes SESSIONS clears it with `admin.rights.changed`. */
@@ -128,6 +132,8 @@ export interface Harness {
 
 export interface FakeSources {
   theme: ThemeNow | null;
+  /** The event's theme revisions by number, as the pinned read answers them. */
+  revisions: Record<number, ThemeNow>;
   event: { name: string } | null;
   agenda: AgendaNow | null;
   venue: VenueInfo | null;
@@ -147,7 +153,8 @@ export async function dropTables(admin: pg.Client): Promise<void> {
     `DROP TABLE IF EXISTS screen_agenda_items, screen_zone_playback, screen_pushes, screen_schedules,
        screen_playlist_items, screen_playlists, assignments, screen_assignments, screen_zones,
        screen_zone_seeds, devices, screen_migrations, screen_render_jobs, screen_asset_versions,
-       screen_assets, screen_files, screen_ticker, screen_ticker_windows, screen_photos, screen_claims CASCADE`,
+       screen_assets, screen_files, screen_ticker, screen_ticker_windows, screen_photos, screen_claims, screen_pins,
+       screen_pin_tenants CASCADE`,
   );
 }
 
@@ -181,6 +188,7 @@ export async function harness(): Promise<Harness> {
   const oembedStatus = { value: 200 };
   const fake: FakeSources = {
     theme: null,
+    revisions: {},
     event: null,
     agenda: null,
     venue: null,
@@ -220,6 +228,7 @@ export async function harness(): Promise<Harness> {
     },
   };
   const queue = new MemoryRenderQueue();
+  const publicEvents: Record<string, PublicEvent> = {};
   const tenants = new TenantResolver({
     tenantsUrl: "http://tenants",
     fetch: fakeTenants,
@@ -261,8 +270,11 @@ export async function harness(): Promise<Harness> {
     bundleVersion: "test",
     playerDir,
     streamPingMs: 200,
+    publicEvent: (host) => Promise.resolve(publicEvents[host ?? ""] ?? null),
     sources: {
       theme: (tenantId) => answer(fake.tenants, tenantId, fake.theme),
+      themeRevision: (tenantId, revision) =>
+        answer(fake.tenants, tenantId, fake.revisions[revision] ?? null),
       event: (host) => answer(fake.hosts, host, fake.event),
       agendaNow: (tenantId) => answer(fake.tenants, tenantId, fake.agenda),
       venueInfo: (tenantId) => answer(fake.tenants, tenantId, fake.venue),
@@ -304,6 +316,7 @@ export async function harness(): Promise<Harness> {
     playerDir,
     oembedStatus,
     sources: fake,
+    publicEvents,
     tenants,
     rights,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
