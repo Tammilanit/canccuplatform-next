@@ -1,0 +1,76 @@
+{
+  "$comment": "The Event menu of the organiser shell (docs/design/mockups.html, sheet 2): every page in it, its icon and the rights of which any one opens it. src/shell.ts and kit-py's canccu_kit.ui draw it; kit-py's tests hold its copy to this file.",
+  "groups": [
+    {
+      "label": "Run the event",
+      "items": [
+        {
+          "id": "agenda",
+          "label": "Run of show",
+          "href": "/agenda/",
+          "icon": "calendar",
+          "rights": ["agenda.items.write", "agenda.crew.read"]
+        },
+        {
+          "id": "notify",
+          "label": "Notifications",
+          "href": "/notify/admin/topics",
+          "icon": "bell",
+          "rights": ["notify.topics.write", "notify.stats.read"]
+        }
+      ]
+    },
+    {
+      "label": "Screens and look",
+      "items": [
+        {
+          "id": "theme",
+          "label": "Theme studio",
+          "href": "/theming/studio/",
+          "icon": "palette",
+          "rights": ["theming.theme.write"]
+        }
+      ]
+    },
+    {
+      "label": "Admin",
+      "items": [
+        {
+          "id": "settings",
+          "label": "Settings",
+          "href": "/admin/settings",
+          "icon": "sliders",
+          "rights": ["admin.settings.read"]
+        },
+        {
+          "id": "health",
+          "label": "Health",
+          "href": "/admin/health-view",
+          "icon": "pulse",
+          "rights": ["admin.settings.read"]
+        },
+        {
+          "id": "profile",
+          "label": "Event profile",
+          "href": "/admin/profile",
+          "icon": "box",
+          "rights": ["admin.profile.read"]
+        },
+        {
+          "id": "people",
+          "label": "People",
+          "href": "/admin/people",
+          "icon": "users",
+          "rights": ["admin.rights.write"]
+        }
+      ]
+    }
+  ],
+  "quick_add": {
+    "label": "Quick add",
+    "href": "/agenda/add",
+    "icon": "plus",
+    "rights": ["agenda.items.write"]
+  },
+  "sign_out": "/admin/sign-out"
+}

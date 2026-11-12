@@ -1,5 +1,6 @@
 /* @canccu/ui base stylesheet. Token defaults live in :root; themeCss() overrides them from the profile. */
 /* Event CSS compiles into @layer canccu-theme, declared after this layer, so it wins without !important. */
+/* The look follows docs/design/mockups.html (sheets 1–4, 7, 8): the accepted design guideline. */
 @layer canccu-base {
   :root {
     --canccu-color-background: #0f172a;
@@ -23,6 +24,52 @@
     --canccu-safe-inset: 48px;
   }
 
+  /* Derived values, not tokens: an event's tokens restyle them all at once. A colour used as text
+     (an "ink") is mixed toward the text colour, which every theme already keeps readable on its
+     grounds, so a dim primary or status colour still reads as text (design README, Decisions 1). */
+  .canccu-page {
+    --canccu-ink-primary: color-mix(
+      in oklab,
+      var(--canccu-color-primary) 80%,
+      var(--canccu-color-text)
+    );
+    --canccu-ink-muted: color-mix(
+      in oklab,
+      var(--canccu-color-text-muted) 70%,
+      var(--canccu-color-text)
+    );
+    --canccu-ink-ok: color-mix(
+      in oklab,
+      var(--canccu-color-status-ok) 75%,
+      var(--canccu-color-text)
+    );
+    --canccu-ink-degraded: color-mix(
+      in oklab,
+      var(--canccu-color-status-degraded) 75%,
+      var(--canccu-color-text)
+    );
+    --canccu-ink-down: color-mix(
+      in oklab,
+      var(--canccu-color-status-down) 75%,
+      var(--canccu-color-text)
+    );
+    --canccu-on-primary: var(--canccu-color-primary-text);
+    --canccu-line-field: color-mix(
+      in oklab,
+      var(--canccu-color-border) 60%,
+      var(--canccu-color-text)
+    );
+    --canccu-tint: color-mix(in srgb, var(--canccu-color-text) 6%, transparent);
+    --canccu-raised: color-mix(in srgb, var(--canccu-color-surface) 86%, var(--canccu-color-text));
+    --canccu-shadow: 0 1px 2px rgb(0 0 0 / 0.18), 0 8px 24px -8px rgb(0 0 0 / 0.35);
+    /* Type 12 · 14 · 16 · 18 · 22 · 28 px; space 4 · 8 · 12 · 16 · 24 · 32 px. */
+    --canccu-text-xs: 0.75rem;
+    --canccu-text-sm: 0.875rem;
+    --canccu-text-lg: 1.125rem;
+    --canccu-text-xl: 1.375rem;
+    --canccu-text-2xl: 1.75rem;
+  }
+
   /* Page layout */
   *,
   *::before,
@@ -36,34 +83,87 @@
     color: var(--canccu-color-text);
     font-family: var(--canccu-font-body);
     line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
   .canccu-page h1,
   .canccu-page h2,
   .canccu-page h3 {
     font-family: var(--canccu-font-heading);
-    line-height: 1.2;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
   }
-  .canccu-page a {
-    color: var(--canccu-color-primary);
+  /* B1 (UX audit): the link colour sits in :where(), at zero specificity, so a button made from a
+     link keeps its variant's colours. */
+  :where(.canccu-page) a {
+    color: var(--canccu-ink-primary);
+    text-underline-offset: 0.2em;
   }
   .canccu-page code {
     font-family: var(--canccu-font-mono);
+    font-size: 0.875em;
+  }
+  .canccu-muted {
+    color: var(--canccu-ink-muted);
+  }
+  .canccu-small {
+    font-size: var(--canccu-text-sm);
+  }
+  .canccu-overline {
+    margin: 0;
+    font-size: var(--canccu-text-xs);
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--canccu-ink-muted);
+  }
+  .canccu-num {
+    font-variant-numeric: tabular-nums;
+  }
+  .canccu-cluster {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
   }
   .canccu-header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.75rem 1.5rem;
+    min-height: 3.5rem;
+    padding: 0 1.25rem;
+    min-width: 0;
     border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
     background: var(--canccu-color-surface);
   }
   .canccu-header__logo {
-    height: 2rem;
+    display: block;
+    flex: none;
+    height: 1.75rem;
     width: auto;
+    max-width: 10rem;
   }
   .canccu-header__title {
+    min-width: 0;
     font-family: var(--canccu-font-heading);
-    font-weight: 600;
+    font-weight: 650;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .canccu-header__meta {
+    flex: none;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+    white-space: nowrap;
+  }
+  .canccu-header__sep {
+    flex: none;
+    width: 1px;
+    height: 1.25rem;
+    background: var(--canccu-color-border);
+  }
+  .canccu-header .canccu-badge {
+    flex: none;
   }
   .canccu-main {
     max-width: 64rem;
@@ -73,16 +173,430 @@
     gap: var(--canccu-gap);
   }
 
-  /* Card */
+  /* The organiser shell (src/shell.ts, canccu_kit.ui): the header across, the Event menu at the
+     side, the content from one left edge. Under 1100 px the menu becomes a sheet behind More in a
+     bottom bar; it is one `popover` element, so it needs no script. */
+  .canccu-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 16rem minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+  }
+  .canccu-shell > .canccu-header,
+  .canccu-banner {
+    grid-column: 1 / -1;
+  }
+  .canccu-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1.25rem;
+    font-size: var(--canccu-text-sm);
+    background: color-mix(
+      in srgb,
+      var(--canccu-color-text-muted) 18%,
+      var(--canccu-color-background)
+    );
+    border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+  .canccu-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1rem 0.75rem;
+    color: inherit;
+    background: color-mix(in srgb, var(--canccu-color-surface) 45%, var(--canccu-color-background));
+    border: 0;
+    border-right: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+  .canccu-menu__group {
+    display: grid;
+    gap: 2px;
+  }
+  .canccu-menu__label {
+    padding: 0 0.75rem 0.375rem;
+  }
+  .canccu-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: calc(var(--canccu-radius) - 2px);
+    color: color-mix(in srgb, var(--canccu-color-text) 80%, var(--canccu-color-background));
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9375rem;
+  }
+  :where(.canccu-page) a.canccu-menu__item {
+    color: color-mix(in srgb, var(--canccu-color-text) 80%, var(--canccu-color-background));
+  }
+  .canccu-menu__item .canccu-i {
+    color: var(--canccu-ink-muted);
+  }
+  .canccu-menu__item:hover {
+    background: var(--canccu-tint);
+    color: var(--canccu-color-text);
+  }
+  :where(.canccu-page) a.canccu-menu__item[aria-current="page"] {
+    background: color-mix(in srgb, var(--canccu-color-primary) 16%, transparent);
+    color: var(--canccu-color-text);
+    box-shadow: inset 3px 0 0 var(--canccu-ink-primary);
+    font-weight: 600;
+  }
+  .canccu-menu__item[aria-current="page"] .canccu-i {
+    color: var(--canccu-ink-primary);
+  }
+  .canccu-menu__foot {
+    margin-top: auto;
+    display: grid;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+  .canccu-menu__foot form {
+    display: grid;
+  }
+  .canccu-menu__foot .canccu-button {
+    justify-content: flex-start;
+  }
+  .canccu-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 0.5rem;
+    min-width: 0;
+    font-weight: 600;
+    font-size: var(--canccu-text-sm);
+  }
+  .canccu-avatar {
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: var(--canccu-text-xs);
+    color: var(--canccu-on-primary);
+    background: linear-gradient(135deg, var(--canccu-color-primary), var(--canccu-color-accent));
+  }
+  .canccu-content {
+    min-width: 0;
+    padding: 2rem 2.5rem 3rem;
+  }
+  /* One left edge: a form page is narrower, never re-centred. */
+  .canccu-content > .canccu-main {
+    margin: 0;
+    padding: 0;
+    gap: 1.5rem;
+    align-content: start;
+  }
+  .canccu-main--narrow {
+    max-width: 40rem;
+  }
+  .canccu-pagehead {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+  }
+  .canccu-pagehead__title {
+    margin: 0;
+    font-size: var(--canccu-text-2xl);
+    font-weight: 650;
+  }
+  .canccu-pagehead__desc {
+    margin: 0.25rem 0 0;
+    color: var(--canccu-ink-muted);
+    font-size: 0.9375rem;
+  }
+  :where(.canccu-page) a.canccu-crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.375rem;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+    font-weight: 550;
+    text-decoration: none;
+  }
+  .canccu-tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin-top: -0.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+  :where(.canccu-page) .canccu-tabs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0 0.875rem;
+    margin-bottom: calc(-1 * var(--canccu-border-width));
+    color: var(--canccu-ink-muted);
+    font-weight: 550;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+  }
+  :where(.canccu-page) .canccu-tabs a[aria-current="page"] {
+    color: var(--canccu-color-text);
+    border-color: var(--canccu-ink-primary);
+  }
+  .canccu-tabbar {
+    display: none;
+  }
+  @media (min-width: 1100px) {
+    /* At the side the popover is always shown: these undo the browser's popover styles. */
+    .canccu-menu {
+      position: sticky;
+      top: 0;
+      inset: auto;
+      align-self: start;
+      width: auto;
+      height: auto;
+      min-height: calc(100vh - 3.5rem);
+      max-height: 100vh;
+      margin: 0;
+      overflow: auto;
+    }
+    .canccu-shell--bare {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 1099.98px) {
+    .canccu-shell {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto 1fr auto;
+    }
+    .canccu-header {
+      padding: 0 1rem;
+      gap: 0.5rem;
+    }
+    .canccu-header__sep,
+    .canccu-header__meta {
+      display: none;
+    }
+    .canccu-content {
+      padding: 1.25rem 1rem 2rem;
+    }
+    .canccu-pagehead__title {
+      font-size: 1.5rem;
+    }
+    .canccu-tabs {
+      margin-inline: -1rem;
+      padding: 0 1rem;
+    }
+    .canccu-menu:not(:popover-open) {
+      display: none;
+    }
+    /* More opens the menu as a sheet from the bottom, above the bar. */
+    .canccu-menu:popover-open {
+      position: fixed;
+      inset: auto 0 0 0;
+      width: 100%;
+      max-height: 85vh;
+      margin: 0;
+      padding: 1.25rem 1rem 1.5rem;
+      overflow: auto;
+      background: var(--canccu-color-surface);
+      border: 0;
+      border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+      border-radius: 1.25rem 1.25rem 0 0;
+      box-shadow: 0 -12px 32px rgb(0 0 0 / 0.35);
+    }
+    .canccu-menu::backdrop {
+      background: rgb(0 0 0 / 0.5);
+    }
+    .canccu-menu__item {
+      min-height: 2.875rem;
+      font-size: 1rem;
+    }
+    .canccu-tabbar {
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      padding: 0.375rem 0.25rem 1rem;
+      background: var(--canccu-color-surface);
+      border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+    }
+    .canccu-tabbar__item {
+      flex: 1;
+      max-width: 7rem;
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 0.125rem;
+      min-height: 2.875rem;
+      padding: 0;
+      border: 0;
+      background: none;
+      font: 600 var(--canccu-text-xs) / 1rem var(--canccu-font-body);
+      white-space: nowrap;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    :where(.canccu-page) .canccu-tabbar__item {
+      color: var(--canccu-ink-muted);
+    }
+    :where(.canccu-page) .canccu-tabbar__item[aria-current="page"] {
+      color: var(--canccu-color-text);
+    }
+    .canccu-tabbar__item[aria-current="page"] .canccu-i {
+      color: var(--canccu-ink-primary);
+    }
+    .canccu-tabbar__item .canccu-i {
+      width: 1.375rem;
+      height: 1.375rem;
+    }
+    /* Quick add: the one round primary button in the middle of the bar. */
+    .canccu-tabbar__add .canccu-i {
+      width: 3.25rem;
+      height: 3.25rem;
+      margin-top: -1.625rem;
+      border-radius: 50%;
+      color: var(--canccu-on-primary);
+      background-color: var(--canccu-color-primary);
+      box-shadow:
+        0 0 0 4px var(--canccu-color-background),
+        0 6px 14px rgb(0 0 0 / 0.3);
+      -webkit-mask: none;
+      mask: none;
+      background-image: none;
+      display: grid;
+      place-items: center;
+    }
+    .canccu-tabbar__add .canccu-i::after {
+      content: "";
+      width: 1.625rem;
+      height: 1.625rem;
+      background: currentColor;
+      -webkit-mask: var(--canccu-icon) center / contain no-repeat;
+      mask: var(--canccu-icon) center / contain no-repeat;
+    }
+  }
+
+  /* Card, list, table, details */
   .canccu-card {
     background: var(--canccu-color-surface);
     border: var(--canccu-border-width) solid var(--canccu-color-border);
-    border-radius: var(--canccu-radius);
-    padding: 1rem 1.25rem;
+    border-radius: calc(var(--canccu-radius) + 4px);
+    box-shadow: var(--canccu-shadow);
+    padding: 1.125rem 1.25rem 1.25rem;
+    min-width: 0;
   }
   .canccu-card__title {
     margin: 0 0 0.75rem;
-    font-size: 1.125rem;
+    font-size: var(--canccu-text-lg);
+    font-weight: 650;
+  }
+  .canccu-card__desc {
+    margin: -0.5rem 0 1rem;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+  }
+  .canccu-card--flush {
+    padding: 0;
+    overflow: hidden;
+  }
+  .canccu-list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .canccu-list__row {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    min-height: 3.5rem;
+    padding: 0.75rem 1.25rem;
+    color: inherit;
+    text-decoration: none;
+    border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+  .canccu-list__row:first-child {
+    border-top: 0;
+  }
+  :where(.canccu-page) a.canccu-list__row {
+    color: inherit;
+  }
+  a.canccu-list__row:hover {
+    background: var(--canccu-tint);
+  }
+  .canccu-list__icon {
+    flex: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--canccu-radius);
+    color: var(--canccu-ink-primary);
+    background: color-mix(in srgb, var(--canccu-color-primary) 14%, transparent);
+  }
+  .canccu-list__main {
+    flex: 1;
+    min-width: 0;
+  }
+  .canccu-list__title {
+    margin: 0;
+    font-weight: 600;
+  }
+  .canccu-list__meta {
+    margin: 0;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+  }
+  .canccu-list__end {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+  }
+  .canccu-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+  }
+  .canccu-table th {
+    padding: 0.75rem 1.25rem;
+    text-align: left;
+    white-space: nowrap;
+    font-size: var(--canccu-text-xs);
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--canccu-ink-muted);
+    background: var(--canccu-tint);
+    border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+  .canccu-table td {
+    padding: 0.875rem 1.25rem;
+    vertical-align: middle;
+    border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+  .canccu-table tr:last-child td {
+    border-bottom: 0;
+  }
+  .canccu-dl {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 0.625rem 1rem;
+    margin: 0;
+    font-size: 0.9375rem;
+  }
+  .canccu-dl dt {
+    color: var(--canccu-ink-muted);
+  }
+  .canccu-dl dd {
+    margin: 0;
   }
 
   /* Surfaces: the root a theme's CSS targets (contracts/theming.md) */
@@ -111,97 +625,489 @@
     filter: grayscale(1);
   }
 
-  /* Button */
+  /* Button: one look whether the element is <a> or <button>. */
   .canccu-button {
-    font: inherit;
-    padding: 0.5rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0 1rem;
     border-radius: var(--canccu-radius);
     border: var(--canccu-border-width) solid transparent;
+    font: 600 0.9375rem / 1.2 var(--canccu-font-body);
+    text-decoration: none;
+    white-space: nowrap;
     cursor: pointer;
   }
   .canccu-button:focus-visible,
   .canccu-input:focus-visible,
-  .canccu-check:focus-visible {
-    outline: 2px solid var(--canccu-color-primary);
+  .canccu-check:focus-visible,
+  .canccu-tabbar__item:focus-visible,
+  .canccu-menu__item:focus-visible {
+    outline: 2px solid var(--canccu-ink-primary);
     outline-offset: 2px;
   }
   .canccu-button:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
   }
   .canccu-button--primary {
     background: var(--canccu-color-primary);
-    color: var(--canccu-color-primary-text);
+    color: var(--canccu-on-primary);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.18),
+      0 1px 2px rgb(0 0 0 / 0.2);
+  }
+  .canccu-button--primary:hover {
+    background: color-mix(in srgb, var(--canccu-color-primary) 86%, var(--canccu-color-text));
   }
   .canccu-button--secondary {
+    background: var(--canccu-color-surface);
+    color: var(--canccu-color-text);
+    border-color: var(--canccu-line-field);
+  }
+  .canccu-button--secondary:hover {
+    background: var(--canccu-raised);
+  }
+  .canccu-button--ghost {
     background: transparent;
     color: var(--canccu-color-text);
-    border-color: var(--canccu-color-border);
+  }
+  .canccu-button--ghost:hover {
+    background: var(--canccu-tint);
   }
   .canccu-button--danger {
     background: var(--canccu-color-status-down);
     color: var(--canccu-color-primary-text);
   }
+  .canccu-button--danger-ghost {
+    background: transparent;
+    color: var(--canccu-ink-down);
+  }
+  .canccu-button--danger-ghost:hover {
+    background: color-mix(in srgb, var(--canccu-color-status-down) 12%, transparent);
+  }
+  .canccu-button--sm {
+    min-height: 2.25rem;
+    padding: 0 0.75rem;
+    font-size: var(--canccu-text-sm);
+  }
+  .canccu-button--lg {
+    min-height: 3rem;
+    padding: 0 1.5rem;
+    font-size: 1rem;
+  }
+  .canccu-button--block {
+    width: 100%;
+  }
 
-  /* Form field */
+  /* Form field: the label above, the hint below, the error under it; checks as rows. */
+  .canccu-form {
+    display: grid;
+    gap: 1.25rem;
+  }
   .canccu-field {
     display: grid;
-    gap: 0.25rem;
+    gap: 0.375rem;
+    align-content: start;
     margin-bottom: 0.75rem;
+  }
+  .canccu-form > .canccu-field {
+    margin-bottom: 0;
   }
   .canccu-field--check {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.25rem 0.75rem;
   }
   .canccu-field__label {
-    font-weight: 500;
+    font-weight: 600;
+    font-size: var(--canccu-text-sm);
+  }
+  .canccu-field--check .canccu-field__label {
+    font-size: 0.9375rem;
+    font-weight: 550;
   }
   .canccu-input {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
     font: inherit;
-    padding: 0.45rem 0.6rem;
+    font-size: 0.9375rem;
     color: var(--canccu-color-text);
-    background: var(--canccu-color-background);
-    border: var(--canccu-border-width) solid var(--canccu-color-border);
+    background: color-mix(in srgb, var(--canccu-color-background) 70%, var(--canccu-color-surface));
+    border: var(--canccu-border-width) solid var(--canccu-line-field);
     border-radius: var(--canccu-radius);
   }
+  .canccu-input:focus {
+    outline: none;
+    border-color: var(--canccu-ink-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--canccu-ink-primary) 30%, transparent);
+  }
   .canccu-input[aria-invalid="true"] {
-    border-color: var(--canccu-color-status-down);
+    border-color: var(--canccu-ink-down);
+  }
+  textarea.canccu-input {
+    min-height: 5.5rem;
+    resize: vertical;
+  }
+  .canccu-inputgroup {
+    display: flex;
+    max-width: 14rem;
+  }
+  .canccu-inputgroup .canccu-input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .canccu-inputgroup__add {
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    font-size: var(--canccu-text-sm);
+    color: var(--canccu-ink-muted);
+    white-space: nowrap;
+    background: var(--canccu-tint);
+    border: var(--canccu-border-width) solid var(--canccu-line-field);
+    border-left: 0;
+    border-radius: 0 var(--canccu-radius) var(--canccu-radius) 0;
   }
   .canccu-check {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0;
     accent-color: var(--canccu-color-primary);
   }
   .canccu-field__hint,
   .canccu-field__error {
     margin: 0;
-    font-size: 0.875rem;
+    font-size: var(--canccu-text-sm);
     flex-basis: 100%;
   }
   .canccu-field__hint {
-    color: var(--canccu-color-text-muted);
+    color: var(--canccu-ink-muted);
   }
   .canccu-field__error {
-    color: var(--canccu-color-status-down);
+    color: var(--canccu-ink-down);
+    font-weight: 500;
   }
 
-  /* Health badge */
+  /* Badge: a word, never colour alone; a status badge carries a dot. */
   .canccu-badge {
-    display: inline-block;
-    padding: 0.1rem 0.6rem;
+    --canccu-b: var(--canccu-color-text-muted);
+    --canccu-k: var(--canccu-ink-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.125rem 0.5rem;
     border-radius: 999px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--canccu-color-background);
+    font-size: var(--canccu-text-xs);
+    font-weight: 650;
+    line-height: 1.4;
+    white-space: nowrap;
+    color: var(--canccu-k);
+    background: color-mix(in oklab, var(--canccu-b) 18%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--canccu-b) 40%, transparent);
+  }
+  .canccu-badge::before {
+    content: "";
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+    background: var(--canccu-k);
+  }
+  .canccu-badge--plain::before {
+    content: none;
   }
   .canccu-badge--ok {
-    background: var(--canccu-color-status-ok);
+    --canccu-b: var(--canccu-color-status-ok);
+    --canccu-k: var(--canccu-ink-ok);
   }
   .canccu-badge--degraded {
-    background: var(--canccu-color-status-degraded);
+    --canccu-b: var(--canccu-color-status-degraded);
+    --canccu-k: var(--canccu-ink-degraded);
   }
   .canccu-badge--down {
-    background: var(--canccu-color-status-down);
+    --canccu-b: var(--canccu-color-status-down);
+    --canccu-k: var(--canccu-ink-down);
+  }
+  .canccu-badge--primary {
+    --canccu-b: var(--canccu-color-primary);
+    --canccu-k: var(--canccu-ink-primary);
+  }
+  /* A delay is one solid badge everywhere (design README, Decisions 3). */
+  .canccu-badge--late {
+    color: var(--canccu-color-primary-text);
+    background: var(--canccu-color-status-degraded);
+    box-shadow: none;
+    font-weight: 750;
+  }
+  .canccu-badge--late::before {
+    content: none;
+  }
+
+  /* Notice: a status colour, an icon, a title and a sentence, at most two actions. */
+  .canccu-notice {
+    --canccu-n: var(--canccu-color-primary);
+    --canccu-k: var(--canccu-ink-primary);
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.875rem 1rem;
+    border-radius: var(--canccu-radius);
+    font-size: 0.9375rem;
+    background: color-mix(in oklab, var(--canccu-n) 13%, var(--canccu-color-surface));
+    border: var(--canccu-border-width) solid color-mix(in oklab, var(--canccu-n) 45%, transparent);
+  }
+  .canccu-notice > .canccu-i {
+    margin-top: 0.1rem;
+    color: var(--canccu-k);
+  }
+  .canccu-notice__body {
+    flex: 1;
+    min-width: 0;
+  }
+  .canccu-notice__body p {
+    margin: 0;
+  }
+  .canccu-notice__title {
+    font-weight: 650;
+  }
+  .canccu-notice__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.625rem;
+  }
+  .canccu-notice--ok {
+    --canccu-n: var(--canccu-color-status-ok);
+    --canccu-k: var(--canccu-ink-ok);
+  }
+  .canccu-notice--warn {
+    --canccu-n: var(--canccu-color-status-degraded);
+    --canccu-k: var(--canccu-ink-degraded);
+  }
+  .canccu-notice--down {
+    --canccu-n: var(--canccu-color-status-down);
+    --canccu-k: var(--canccu-ink-down);
+  }
+
+  /* Empty state: what is missing, why it matters, the one next step. */
+  .canccu-empty {
+    display: grid;
+    justify-items: center;
+    gap: 0.5rem;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+  }
+  .canccu-empty__icon,
+  .canccu-error__icon,
+  .canccu-task__icon {
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 1rem;
+    color: var(--canccu-ink-primary);
+    background: color-mix(in srgb, var(--canccu-color-primary) 14%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--canccu-color-primary) 25%, transparent);
+  }
+  .canccu-empty__icon .canccu-i,
+  .canccu-task__icon .canccu-i {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+  .canccu-empty__title {
+    margin: 0;
+    font-size: var(--canccu-text-lg);
+    font-weight: 650;
+  }
+  .canccu-empty__text {
+    margin: 0;
+    max-width: 38ch;
+    color: var(--canccu-ink-muted);
+  }
+  .canccu-empty .canccu-cluster {
+    justify-content: center;
+    margin-top: 0.75rem;
+  }
+
+  /* The error page family: one layout, a title by case, plain words, the next step. An error
+     replaces a page and has nothing to align with, so it is centred. */
+  .canccu-error {
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+    max-width: 30rem;
+    margin: 3rem auto 0;
+    text-align: center;
+  }
+  .canccu-error__icon {
+    width: 4.5rem;
+    height: 4.5rem;
+    margin-bottom: 0.75rem;
+    border-radius: 1.25rem;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--canccu-color-primary) 28%, transparent),
+      0 0 0 10px color-mix(in srgb, var(--canccu-color-primary) 5%, transparent);
+  }
+  .canccu-error__icon .canccu-i {
+    width: 2rem;
+    height: 2rem;
+  }
+  .canccu-error__title {
+    margin: 0;
+    font-size: var(--canccu-text-2xl);
+    font-weight: 700;
+  }
+  .canccu-error__text {
+    margin: 0;
+    font-size: 1.0625rem;
+  }
+  .canccu-error__next {
+    margin: 0;
+    color: var(--canccu-ink-muted);
+    font-size: 0.9375rem;
+  }
+  .canccu-error .canccu-cluster {
+    justify-content: center;
+    margin-top: 0.75rem;
+  }
+  .canccu-error form {
+    display: contents;
+  }
+
+  /* Front door (sign-in, check-in): the event's poster on the glow the screens use, one card. */
+  .canccu-front {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 27rem;
+    gap: 4rem;
+    align-items: center;
+    padding: 3rem 6rem 4.5rem;
+    position: relative;
+    background:
+      radial-gradient(
+        52rem 30rem at 24% 44%,
+        color-mix(in oklab, var(--canccu-color-primary) 26%, transparent),
+        transparent 70%
+      ),
+      var(--canccu-color-background);
+  }
+  .canccu-poster__name {
+    margin: 0 0 0.875rem;
+    font-family: var(--canccu-font-display);
+    font-size: 4.5rem;
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+  .canccu-poster__name--long {
+    font-size: 3rem;
+    line-height: 1.08;
+  }
+  .canccu-poster__meta,
+  .canccu-poster__venue {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin: 0;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-xl);
+  }
+  .canccu-poster__venue {
+    margin-top: 0.625rem;
+    font-size: var(--canccu-text-lg);
+  }
+  .canccu-poster__meta .canccu-badge {
+    font-size: var(--canccu-text-sm);
+  }
+  .canccu-front__card {
+    display: grid;
+    gap: 1rem;
+    padding: 2rem;
+    background: var(--canccu-color-surface);
+    border: var(--canccu-border-width) solid var(--canccu-color-border);
+    border-radius: calc(var(--canccu-radius) + 8px);
+    box-shadow: var(--canccu-shadow);
+  }
+  .canccu-front__card h1 {
+    margin: 0;
+    font-size: var(--canccu-text-2xl);
+    font-weight: 700;
+  }
+  .canccu-front__card p {
+    margin: 0;
+  }
+  .canccu-front__card form {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .canccu-front__card--center {
+    justify-items: center;
+    text-align: center;
+  }
+  .canccu-front__card--center > * {
+    justify-self: stretch;
+  }
+  .canccu-front__card--center > .canccu-task__icon {
+    justify-self: center;
+    margin-bottom: 0;
+  }
+  @media (max-width: 1099.98px) {
+    .canccu-front {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 2rem;
+      padding: 4.5rem 1rem 1.5rem;
+      background:
+        radial-gradient(
+          30rem 22rem at 30% 22%,
+          color-mix(in oklab, var(--canccu-color-primary) 28%, transparent),
+          transparent 70%
+        ),
+        var(--canccu-color-background);
+    }
+    .canccu-poster {
+      align-self: start;
+      padding: 0 0.5rem;
+    }
+    .canccu-poster__name {
+      font-size: 2.75rem;
+      margin: 0 0 0.625rem;
+    }
+    .canccu-poster__name--long {
+      font-size: 1.875rem;
+      line-height: 1.12;
+    }
+    .canccu-poster__meta,
+    .canccu-poster__venue {
+      font-size: 1rem;
+    }
+    .canccu-front__card {
+      align-self: end;
+      padding: 1.375rem;
+    }
+    .canccu-front__card h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+  /* Icons: each a mask over currentColor, so it takes the text colour of where it sits. */
+  .canccu-i {
+    display: inline-block;
+    flex: none;
+    width: 1.25em;
+    height: 1.25em;
+    vertical-align: -0.25em;
+    background: currentColor;
+    -webkit-mask: var(--canccu-icon) center / contain no-repeat;
+    mask: var(--canccu-icon) center / contain no-repeat;
   }
 
   /* The embed widget (src/embed.ts): the still fills the widget and the frame lies over it,
@@ -338,5 +1244,78 @@
   .canccu-page::before,
   .canccu-page::after {
     z-index: auto !important;
+  }
+
+  .canccu-i--calendar {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='5' width='17' height='15.5' rx='2.5'/%3E%3Cpath d='M3.5 10h17M8 3v4M16 3v4'/%3E%3C/svg%3E");
+  }
+  .canccu-i--bell {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z'/%3E%3Cpath d='M10 21h4'/%3E%3C/svg%3E");
+  }
+  .canccu-i--palette {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3a9 9 0 1 0 0 18c1.4 0 2-1 2-2 0-1.6-1.5-1.8-1.5-3.2 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4C21 6.4 17 3 12 3z'/%3E%3Ccircle cx='7.5' cy='11' r='1.2'/%3E%3Ccircle cx='10.5' cy='7.2' r='1.2'/%3E%3Ccircle cx='15' cy='7.5' r='1.2'/%3E%3C/svg%3E");
+  }
+  .canccu-i--sliders {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1'/%3E%3Ccircle cx='15' cy='6' r='2'/%3E%3Ccircle cx='9' cy='12' r='2'/%3E%3Ccircle cx='17' cy='18' r='2'/%3E%3C/svg%3E");
+  }
+  .canccu-i--pulse {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12h4l2.5-7 5 14 2.5-7h4'/%3E%3C/svg%3E");
+  }
+  .canccu-i--box {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 7.5L12 3.5l8.5 4v9L12 20.5l-8.5-4z'/%3E%3Cpath d='M3.5 7.5L12 11.5l8.5-4M12 11.5v9'/%3E%3C/svg%3E");
+  }
+  .canccu-i--users {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8.5' r='3.5'/%3E%3Cpath d='M2.5 20a6.5 6.5 0 0 1 13 0'/%3E%3Cpath d='M16 5a3.5 3.5 0 0 1 0 7M18 14.5a6 6 0 0 1 3.5 5.5'/%3E%3C/svg%3E");
+  }
+  .canccu-i--out {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4'/%3E%3Cpath d='M10 16l-4-4 4-4M6 12h10'/%3E%3C/svg%3E");
+  }
+  .canccu-i--more {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='6' cy='12' r='1.3'/%3E%3Ccircle cx='12' cy='12' r='1.3'/%3E%3Ccircle cx='18' cy='12' r='1.3'/%3E%3C/svg%3E");
+  }
+  .canccu-i--plus {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E");
+  }
+  .canccu-i--lock {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='10.5' width='14' height='10' rx='2.5'/%3E%3Cpath d='M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2'/%3E%3C/svg%3E");
+  }
+  .canccu-i--compass {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M15.5 8.5l-2 5-5 2 2-5z'/%3E%3C/svg%3E");
+  }
+  .canccu-i--alert {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7.5v5.5M12 16.4v.1'/%3E%3C/svg%3E");
+  }
+  .canccu-i--pin {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z'/%3E%3Ccircle cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E");
+  }
+  .canccu-i--archive {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='5' rx='1.2'/%3E%3Cpath d='M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4'/%3E%3C/svg%3E");
+  }
+  .canccu-i--refresh {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 11.5A8 8 0 0 0 5.6 7.2L4 9M4 4.5V9h4.5M4 12.5a8 8 0 0 0 14.4 4.3L20 15M20 19.5V15h-4.5'/%3E%3C/svg%3E");
+  }
+  .canccu-i--left {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 6l-6 6 6 6'/%3E%3C/svg%3E");
+  }
+  .canccu-i--right {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E");
+  }
+  .canccu-i--x {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
+  }
+  .canccu-i--check {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E");
+  }
+  .canccu-i--info {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v5.5M12 7.6v.1'/%3E%3C/svg%3E");
+  }
+  .canccu-i--warn {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 4.2L2.8 17.5a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z'/%3E%3Cpath d='M12 10v4M12 17.2v.1'/%3E%3C/svg%3E");
+  }
+  .canccu-i--check-circle {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M8 12.5l3 3 5-6'/%3E%3C/svg%3E");
+  }
+  .canccu-i--clock {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3.2 2'/%3E%3C/svg%3E");
   }
 }
