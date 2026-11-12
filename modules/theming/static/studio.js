@@ -94,11 +94,18 @@
     const f = form.elements;
     let version = draftVersion();
     let logo = f.namedItem("logo")?.value;
-    const file = f.namedItem("logo_file").files[0];
-    if (file !== undefined) ({ path: logo, version } = await uploadLogo(file, version));
+    const fileInput = f.namedItem("logo_file");
+    const file = fileInput.files[0];
+    if (file !== undefined) {
+      ({ path: logo, version } = await uploadLogo(file, version));
+      // A save queued behind this one names the stored logo instead of uploading it again.
+      fileInput.value = "";
+      keepLogo(form, logo);
+      root.dataset.draftVersion = String(version);
+    }
     const icon = f.namedItem("icon")?.value;
     const embed = f.namedItem("embed_color").value.trim();
-    await call("PUT", "/api/theming/draft/brand", {
+    const saved = await call("PUT", "/api/theming/draft/brand", {
       draft_version: version,
       primary: f.namedItem("primary").value,
       accent: f.namedItem("accent").value,
@@ -107,6 +114,17 @@
       ...(icon ? { icon } : {}),
       ...(embed ? { embed_color: embed } : {}),
     });
+    // A save queued behind this one sends the version this one made.
+    root.dataset.draftVersion = String(saved.draft.draft_version);
+  }
+
+  function keepLogo(form, path) {
+    let field = form.elements.namedItem("logo");
+    if (field === null) {
+      field = Object.assign(document.createElement("input"), { type: "hidden", name: "logo" });
+      form.prepend(field);
+    }
+    field.value = path;
   }
 
   /** Only what changed: sending a token unchanged would still make the theme advanced. */
@@ -164,15 +182,32 @@
   };
 
   let busy = false;
-  async function run(el, control) {
-    const action = ACTIONS[el.dataset.action];
-    if (action === undefined || busy) return;
-    busy = true;
-    control.disabled = true;
+  let running;
+  /** The brand form changed while its last save ran: it is saved again before the reload. */
+  let brandAgain = null;
+  async function attempt(action, el) {
     try {
       await action(el);
     } catch (err) {
       sessionStorage.setItem(NOTICE_KEY, err instanceof Error ? err.message : String(err));
+    }
+  }
+  async function run(el, control) {
+    const action = ACTIONS[el.dataset.action];
+    if (action === undefined) return;
+    if (busy) {
+      // The brand kit has no Save, so a change dropped here would be lost without a word.
+      if (action === saveBrand && running === saveBrand) brandAgain = el;
+      return;
+    }
+    busy = true;
+    running = action;
+    control.disabled = true;
+    await attempt(action, el);
+    while (brandAgain !== null) {
+      const form = brandAgain;
+      brandAgain = null;
+      await attempt(saveBrand, form);
     }
     location.reload();
   }

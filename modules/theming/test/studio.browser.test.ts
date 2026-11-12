@@ -133,6 +133,43 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
     expect(again.manifest.images).toEqual({ logo: "images/logo.png" });
   });
 
+  it("saves a change made while the last one is still saving, then reloads once", async () => {
+    await api("POST", "/api/theming/draft", { from: "defaults" });
+    const page = await open("/theming/studio/");
+    const logo = { name: "logo.png", mimeType: "image/png", buffer: await png("#ff7a45", 32) };
+    let release = (): void => undefined;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    let saves = 0;
+    // The first save waits until every other change is made, so they all land mid-save.
+    await page.route("**/api/theming/draft/brand", async (route: Route) => {
+      saves += 1;
+      if (saves === 1) await held;
+      await route.continue();
+    });
+    let loads = 0;
+    page.on("load", () => (loads += 1));
+    const loaded = page.waitForEvent("load");
+    await page.setInputFiles('input[name="logo_file"]', logo);
+    const field = page.locator('input[name="primary"]');
+    await field.fill("#7c5cff");
+    await field.blur();
+    await page.check('input[name="scheme"][value="light"]');
+    release();
+    await loaded;
+
+    expect(saves).toBe(2);
+    expect(loads).toBe(1);
+    const saved = await draft();
+    expect(saved.manifest.brand).toEqual({
+      primary: "#7c5cff",
+      accent: "#f59e0b",
+      scheme: "light",
+    });
+    expect(saved.manifest.images).toEqual({ logo: "images/logo.png" });
+    expect(await page.isChecked('input[name="scheme"][value="light"]')).toBe(true);
+    expect(await page.isHidden(".canccu-studio-notice")).toBe(true);
+  });
+
   it("takes a refused logo out of the draft again and says why", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
     const page = await open("/theming/studio/");
