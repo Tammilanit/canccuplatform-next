@@ -357,4 +357,6 @@ export const CLIENT_KEYS = [
   "link.added",
   "asset.replacing",
   "asset.replaced",
+  "sound.play",
+  "sound.stop",
 ] as const satisfies readonly MessageKey[];

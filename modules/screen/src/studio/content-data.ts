@@ -12,7 +12,8 @@ import type { Db } from "../db.js";
 import { currentJobs } from "../render/jobs.js";
 import type { JobRow } from "../render/jobs.js";
 import type { RenderQueue } from "../render/queue.js";
-import type { ContentAsset, ContentData, DeckJob } from "./content-view.js";
+import type { DeckJob } from "./content-render.js";
+import type { ContentAsset, ContentData } from "./content-view.js";
 
 export interface ContentDeps {
   db: Db;

@@ -32,8 +32,7 @@ export const CONTENT_EN = {
 
   "upload.drop": "Drop images, videos, decks or sounds here",
   "upload.choose": "Choose files",
-  "upload.hint":
-    "Up to 100 MB each. Video as MP4 (H.264 or H.265) or WebM; decks as PPTX or PDF; sounds as MP3 or OGG.",
+  "upload.hint": "up to 100 MB each",
   "upload.list": "Uploads",
   "upload.progress": "Uploading {done} of {total}",
   "upload.waiting": "Waiting",
@@ -65,8 +64,7 @@ export const CONTENT_EN = {
   "link.title": "Add a web page or YouTube video",
   "link.kind": "Kind",
   "link.url": "Address",
-  "link.url_hint":
-    "Starts with https://. A web page's site must be on the event's allowlist (Settings).",
+  "link.paste": "Paste a web or YouTube link",
   "link.name": "Title",
   "link.add": "Add link",
   "link.added": "Link added.",
@@ -85,6 +83,8 @@ export const CONTENT_EN = {
   "asset.deleted": "Asset deleted.",
   "asset.recheck": "Check again",
   "asset.rechecked": "The screens try it again.",
+  "sound.play": "Play",
+  "sound.stop": "Stop",
   "asset.web_off": "Web and YouTube are off for this event: the screens skip it.",
   "asset.degraded": "May not play: {message}",
   "asset.error": "Does not play: {message}",
@@ -104,7 +104,11 @@ export const CONTENT_EN = {
   "render.again_done": "The deck waits for its turn to render.",
   "render.slides": "Slides of {title}",
   "render.slide": "Slide {n}",
+  "render.more_label": "{count} more slides",
+  "render.more_label.one": "1 more slide",
   "render.font_missing": "{font} is not in the renderer: slides {slides} use a stand-in font.",
   "render.font_missing.one": "{font} is not in the renderer: slide {slides} uses a stand-in font.",
+  "render.font_missing_every":
+    "{font} is not in the renderer: all {count} slides use a stand-in font.",
   "render.font_missing_all": "{font} is not in the renderer: a stand-in font is used.",
 } as const;

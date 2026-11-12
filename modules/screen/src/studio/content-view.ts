@@ -1,7 +1,7 @@
 /**
  * The Content page (step 3 plan S5, S6; mockup 10): the asset library with search and kinds, the
  * event's storage use, the drop zone, links while `screen.web` is on, and per asset its replace,
- * one-step revert and delete; a deck shows its render job slide by slide. Server-drawn from the
+ * one-step revert and delete; a deck shows its render job (content-render.ts). Server-drawn from the
  * reads the API answers; static/studio-content.js uploads and acts only through the API. Each
  * control shows only to holders of the right its API checks (S10).
  */
@@ -9,8 +9,9 @@ import { attrs, emptyState, html, raw } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import { ASSET_KINDS, FILE_KINDS, isDeck } from "../assets/store.js";
 import type { AssetKind } from "../assets/store.js";
-import type { RenderWarning, SlideMeta } from "../render/client.js";
 import { slideUrl } from "../render/jobs.js";
+import { button, renderPart, WRITE } from "./content-render.js";
+import type { DeckJob } from "./content-render.js";
 import { counted } from "./messages.js";
 import type { MessageKey, Translate } from "./messages.js";
 import { STUDIO } from "./views.js";
@@ -31,18 +32,6 @@ export interface ContentAsset {
   used_by: string[];
 }
 
-/** A deck's newest job of its current version, with its place in the fair queue. */
-export interface DeckJob {
-  id: string;
-  asset_version: number;
-  state: "queued" | "running" | "succeeded" | "failed" | "cancelled";
-  position: number | null;
-  slides_done: number;
-  slides: SlideMeta[] | null;
-  warnings: RenderWarning[] | null;
-  error_message: string | null;
-}
-
 export interface ContentData {
   assets: ContentAsset[];
   next: string | null;
@@ -53,10 +42,8 @@ export interface ContentData {
   index: Record<string, [kind: string, used: boolean]> | null;
 }
 
-const WRITE = "screen.content.write";
 const PAGE = `${STUDIO}content`;
 const ICONS: Partial<Record<AssetKind, string>> = {
-  audio: "bell",
   web: "compass",
   youtube: "monitor",
 };
@@ -82,34 +69,16 @@ const lengthText = (seconds: number): string => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 };
 
-interface Call {
-  call: string;
-  url: string;
-  body?: string;
-  done?: string;
-  confirm?: string;
-}
-
-/** A control static/studio.js acts on: the call, then a reload that says `done`. */
-const button = (label: string, a: Call, kind = "secondary"): Html => {
-  const data = { "data-call": a.call, "data-url": a.url, "data-body": a.body };
-  const then = { "data-done": a.done, "data-confirm": a.confirm };
-  return html`<button
-    class="canccu-button canccu-button--${kind} canccu-button--sm"
-    type="button"
-    ${attrs({ ...data, ...then })}
-  >
-    ${label}
-  </button>`;
-};
-
 function meta(c: ViewContext, a: ContentAsset): string {
   const { t } = c;
   const parts: string[] = [];
   if (a.kind === "web" || a.kind === "youtube") {
     parts.push(a.url === null ? "" : (URL.parse(a.url)?.hostname ?? a.url));
   } else {
-    if (a.duration_seconds !== null) parts.push(lengthText(a.duration_seconds));
+    // A sound's length is on its play row.
+    if (a.duration_seconds !== null && a.kind !== "audio") {
+      parts.push(lengthText(a.duration_seconds));
+    }
     if (a.size_bytes !== null) parts.push(sizeText(t, a.size_bytes));
     if (a.version > 1) parts.push(t("asset.version", { n: a.version }));
   }
@@ -117,6 +86,25 @@ function meta(c: ViewContext, a: ContentAsset): string {
     a.used_by.length === 0 ? t("asset.unused") : counted(t, "asset.used", a.used_by.length),
   );
   return parts.filter((p) => p !== "").join(" · ");
+}
+
+/** A sound has nothing to look at: a short row with its length and a play button instead. */
+function sound(c: ViewContext, a: ContentAsset): Html {
+  const play =
+    a.url === null
+      ? ""
+      : html`<button
+          class="canccu-button canccu-button--secondary canccu-button--sm"
+          type="button"
+          data-play="${a.url}"
+        >
+          ${c.t("sound.play")}
+        </button>`;
+  const length = a.duration_seconds === null ? "" : lengthText(a.duration_seconds);
+  return html`<div class="canccu-studio-sound">
+    <span class="canccu-studio-sound__note" aria-hidden="true">♪</span>
+    <span class="canccu-small canccu-muted">${length}</span>${play}
+  </div>`;
 }
 
 function preview(a: ContentAsset, job: DeckJob | undefined): Html {
@@ -137,85 +125,6 @@ function preview(a: ContentAsset, job: DeckJob | undefined): Html {
               aria-hidden="true"
             ></span>`;
   return html`<div class="canccu-studio-asset__preview">${inner}</div>`;
-}
-
-function warning(t: Translate, w: RenderWarning): string {
-  if (w.code !== "font_missing" || w.font === null) return w.message;
-  if (w.slides.length === 0) return t("render.font_missing_all", { font: w.font });
-  return counted(t, "render.font_missing", w.slides.length, {
-    font: w.font,
-    slides: w.slides.join(", "),
-  });
-}
-
-/** The render job's part: redrawn by the page's live refresh, quickly while the job is live. */
-function renderPart(c: ViewContext, a: ContentAsset, job: DeckJob | undefined): Html {
-  const { t } = c;
-  const write = c.rights.has(WRITE);
-  const again = write
-    ? button(t("render.again"), {
-        call: "POST",
-        url: "/api/screen/render-jobs",
-        body: JSON.stringify({ asset_id: a.id }),
-        done: t("render.again_done"),
-      })
-    : "";
-  const cancel =
-    write && job !== undefined
-      ? button(t("render.cancel"), {
-          call: "DELETE",
-          url: `/api/screen/render-jobs/${job.id}`,
-          done: t("render.cancel_done"),
-        })
-      : "";
-  const fast = html`<span data-live-fast hidden></span>`;
-  let body: Slot;
-  if (job === undefined)
-    body = html`<p class="canccu-small">${t("render.none")}</p>
-      ${again}`;
-  else if (job.state === "queued") {
-    const text =
-      job.position === null ? t("render.queued_next") : t("render.queued", { place: job.position });
-    body = html`<p class="canccu-small">${text}</p>
-      ${cancel}${fast}`;
-  } else if (job.state === "running") {
-    body = html`<p class="canccu-small">${counted(t, "render.running", job.slides_done)}</p>
-      <progress aria-label="${t("render.running", { count: job.slides_done })}"></progress
-      >${cancel}${fast}`;
-  } else if (job.state === "succeeded") {
-    const slides = job.slides ?? [];
-    const strip = slides.map(
-      (s) =>
-        html`<li>
-          <img${attrs({ src: slideUrl(a.id, job.asset_version, s.index), alt: t("render.slide", { n: s.index }), width: s.width, height: s.height, loading: "lazy" })} />
-        </li>`,
-    );
-    const warnings = (job.warnings ?? []).map(
-      (w) =>
-        html`<li>
-          <span class="canccu-i canccu-i--warn" aria-hidden="true"></span> ${warning(t, w)}
-        </li>`,
-    );
-    body = html`<p class="canccu-small">${counted(t, "render.succeeded", slides.length)}</p>
-      <ol class="canccu-studio-slides" aria-label="${t("render.slides", { title: a.title })}">
-        ${strip}
-      </ol>
-      ${
-        warnings.length === 0
-          ? ""
-          : html`<ul class="canccu-studio-warnings canccu-small">
-              ${warnings}
-            </ul>`
-      }`;
-  } else if (job.state === "failed") {
-    body = html`<p class="canccu-small canccu-studio-refused">
-        ${t("render.failed", { message: job.error_message ?? "" })}
-      </p>
-      ${again}`;
-  } else
-    body = html`<p class="canccu-small">${t("render.cancelled")}</p>
-      ${again}`;
-  return html`<div class="canccu-studio-render" data-live="render-${a.id}">${body}</div>`;
 }
 
 function assetCard(c: ViewContext, d: ContentData, a: ContentAsset): Html {
@@ -274,7 +183,7 @@ function assetCard(c: ViewContext, d: ContentData, a: ContentAsset): Html {
     );
   }
   return html`<article class="canccu-card canccu-studio-asset" id="asset-${a.id}">
-    ${preview(a, job)}
+    ${a.kind === "audio" ? sound(c, a) : preview(a, job)}
     <p class="canccu-overline">${t(`kind.${a.kind}`)}</p>
     <h3 class="canccu-studio-asset__title">${a.title}</h3>
     <p class="canccu-small canccu-muted" data-asset-status>${meta(c, a)}</p>
@@ -313,50 +222,65 @@ function finder(c: ViewContext, d: ContentData): Html {
       </button>
     </form>
     <div class="canccu-studio-storage" data-storage="/api/tenants/current/storage" hidden>
-      <span class="canccu-small"></span
-      ><meter min="0" max="1" value="0" aria-label="${t("storage.label")}"></meter>
+      <span class="canccu-small"></span>
+      <div
+        class="canccu-studio-storage__track"
+        role="meter"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+        aria-label="${t("storage.label")}"
+      >
+        <span class="canccu-studio-storage__fill"></span>
+      </div>
     </div>
   </div>`;
 }
 
+/** One drop band (mockup 10): files on its first line, a pasted web or YouTube link on its second. */
 function adders(c: ViewContext, d: ContentData): Html {
   const { t } = c;
-  const drop = html`<section
-    class="canccu-studio-drop"
-    data-upload
-    aria-label="${t("upload.drop")}"
-  >
-    <p class="canccu-studio-drop__text">${t("upload.drop")}</p>
-    <p class="canccu-small canccu-muted">${t("upload.hint")}</p>
-    <label class="canccu-button canccu-button--primary"
-      >${t("upload.choose")}<input type="file" multiple hidden data-upload-input
-    /></label>
+  const link = d.webOn
+    ? html`<form class="canccu-studio-drop__link" data-add-link aria-label="${t("link.title")}">
+        <span class="canccu-small canccu-muted">${t("link.title")}</span>
+        <select class="canccu-input" name="kind" aria-label="${t("link.kind")}">
+          <option value="web">${t("kind.web")}</option>
+          <option value="youtube">${t("kind.youtube")}</option>
+        </select>
+        <input
+          class="canccu-input canccu-studio-drop__url"
+          name="url"
+          type="url"
+          required
+          pattern="https://.+"
+          ${attrs({ placeholder: t("link.paste"), "aria-label": t("link.url") })}
+        />
+        <input
+          class="canccu-input"
+          name="title"
+          required
+          maxlength="200"
+          ${attrs({ placeholder: t("link.name"), "aria-label": t("link.name") })}
+        />
+        <button class="canccu-button canccu-button--secondary canccu-button--sm" type="submit">
+          ${t("link.add")}
+        </button>
+      </form>`
+    : "";
+  return html`<section class="canccu-studio-drop" data-upload aria-label="${t("upload.drop")}">
+    <div class="canccu-studio-drop__files">
+      <p class="canccu-studio-drop__text">
+        <strong>${t("upload.drop")}</strong>
+        <span class="canccu-small canccu-muted">· ${t("upload.hint")}</span>
+      </p>
+      <label class="canccu-button canccu-button--primary canccu-button--sm"
+        >${t("upload.choose")}<input type="file" multiple hidden data-upload-input
+      /></label>
+    </div>
+    ${link}
     <div class="canccu-studio-plan" data-upload-plan hidden></div>
     <ul class="canccu-studio-uploads" data-upload-list aria-label="${t("upload.list")}" hidden></ul>
   </section>`;
-  if (!d.webOn) return drop;
-  const field = (name: string, label: string, control: Html, hint?: string) =>
-    html`<div class="canccu-field">
-      <label class="canccu-field__label" for="canccu-studio-link-${name}">${label}</label
-      >${control}${hint === undefined ? "" : html`<p class="canccu-field__hint">${hint}</p>`}
-    </div>`;
-  return html`${drop}
-    <details class="canccu-card canccu-studio-link" data-add-link>
-      <summary>${t("link.title")}</summary>
-      <form class="canccu-form">
-        ${field(
-          "kind",
-          t("link.kind"),
-          html`<select class="canccu-input" id="canccu-studio-link-kind" name="kind">
-            <option value="web">${t("kind.web")}</option>
-            <option value="youtube">${t("kind.youtube")}</option>
-          </select>`,
-        )}
-        ${field("url", t("link.url"), html`<input class="canccu-input" id="canccu-studio-link-url" name="url" type="url" required pattern="https://.+" />`, t("link.url_hint"))}
-        ${field("title", t("link.name"), html`<input class="canccu-input" id="canccu-studio-link-title" name="title" required maxlength="200" />`)}
-        <button class="canccu-button canccu-button--primary" type="submit">${t("link.add")}</button>
-      </form>
-    </details>`;
 }
 
 export function contentView(c: ViewContext, d: ContentData): Html {

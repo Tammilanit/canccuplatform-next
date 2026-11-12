@@ -42,7 +42,10 @@ if (storage) {
         used: size(s.used_bytes),
         quota: size(s.quota_bytes),
       });
-      storage.querySelector("meter").value = Math.min(1, s.used_bytes / s.quota_bytes);
+      // The share used; CSS keeps a sliver visible, so a little use never reads as none.
+      const percent = Math.min(100, (s.used_bytes / s.quota_bytes) * 100);
+      storage.querySelector("[role=meter]").setAttribute("aria-valuenow", percent.toFixed(1));
+      storage.querySelector(".canccu-studio-storage__fill").style.width = `${percent}%`;
       storage.hidden = false;
     })
     .catch(() => {});
@@ -301,7 +304,15 @@ if (drop) {
   drop.addEventListener("drop", (e) => {
     e.preventDefault();
     drop.classList.remove("canccu-is-active");
-    take(e.dataTransfer?.files ?? []);
+    const files = e.dataTransfer?.files ?? [];
+    // A link dragged in from a browser tab goes to the band's link field, for its title.
+    const url = files.length === 0 ? e.dataTransfer?.getData("text/uri-list").split("\n")[0] : "";
+    const field = drop.querySelector("[data-add-link] [name=url]");
+    if (url && field) {
+      field.value = url.trim();
+      return drop.querySelector("[data-add-link] [name=title]").focus();
+    }
+    take(files);
   });
 }
 
@@ -319,8 +330,30 @@ document.addEventListener("change", async (event) => {
   show(refusal(r.status, r.data));
 });
 
+// A sound's play button: one sound at a time, the button saying Stop while it plays.
+let playing = null;
+document.addEventListener("click", (event) => {
+  const button = event.target.closest?.("button[data-play]");
+  if (!button) return;
+  const was = playing;
+  if (was) {
+    was.audio.pause();
+    was.button.textContent = say("sound.play");
+    playing = null;
+  }
+  if (was?.button === button) return;
+  const audio = new window.Audio(button.dataset.play);
+  audio.addEventListener("ended", () => {
+    button.textContent = say("sound.play");
+    if (playing?.audio === audio) playing = null;
+  });
+  audio.play().catch(() => (button.textContent = say("sound.play")));
+  button.textContent = say("sound.stop");
+  playing = { audio, button };
+});
+
 // A web page or YouTube video: one call, then the page again.
-const link = document.querySelector("[data-add-link] form");
+const link = document.querySelector("form[data-add-link]");
 if (link) {
   link.addEventListener("submit", async (event) => {
     event.preventDefault();
