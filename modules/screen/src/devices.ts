@@ -94,34 +94,33 @@ async function shownVersions(zones: ZoneStore, rows: EventDevice[]): Promise<Map
   return new Map(shown.map(([id, key]) => [id, versions.get(key) ?? 0]));
 }
 
+/** The event's devices with their health, as `GET /api/screen/devices` answers; Studio reads it too. */
+export async function listDevices(
+  deps: Pick<DeviceDeps, "db" | "kv" | "zones" | "now">,
+): Promise<Record<string, unknown>[]> {
+  const rows = await deps.db.tenant(
+    async (c) =>
+      (await c.query(`${EVENT_DEVICES_SQL} ORDER BY d.name, d.id`, [requireTenant()]))
+        .rows as unknown as EventDevice[],
+  );
+  const health = await healthOf(
+    deps.kv,
+    rows.map((r) => r.id),
+    (deps.now ?? Date.now)(),
+    await shownVersions(deps.zones, rows),
+  );
+  return rows.map((r) => ({ ...deviceView(r), health: health.get(r.id) }));
+}
+
 type ById = { Params: { device_id: string } };
 
 export function deviceRoutes(app: FastifyInstance, deps: DeviceDeps): void {
   const { db } = deps;
-  const now = deps.now ?? Date.now;
 
   app.get(
     "/api/screen/devices",
     { preHandler: needs(deps.rights, "screen.devices.read") },
-    async () => {
-      const rows = await db.tenant(
-        async (c) =>
-          (await c.query(`${EVENT_DEVICES_SQL} ORDER BY d.name, d.id`, [requireTenant()]))
-            .rows as unknown as EventDevice[],
-      );
-      const health = await healthOf(
-        deps.kv,
-        rows.map((r) => r.id),
-        now(),
-        await shownVersions(deps.zones, rows),
-      );
-      return {
-        devices: rows.map((r) => ({
-          ...deviceView(r),
-          health: health.get(r.id),
-        })),
-      };
-    },
+    async () => ({ devices: await listDevices(deps) }),
   );
 
   app.patch<ById>(

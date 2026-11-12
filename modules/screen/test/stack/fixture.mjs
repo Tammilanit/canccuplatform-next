@@ -59,7 +59,7 @@ export async function seedScreens(demo, now = Date.now()) {
 }
 
 /** A zone with these fields: a new one, or the one saved before with them changed. */
-async function saveZone(demo, key, fields) {
+export async function saveZone(demo, key, fields) {
   const before = await demo.call("GET", `/api/screen/zones/${key}`);
   const answer =
     before.status === 200

@@ -171,8 +171,18 @@ export function pairingRoutes(app: FastifyInstance, deps: PairingDeps): void {
     "/api/screen/pairing",
     { preHandler: needs(deps.rights, "screen.devices.pair") },
     async (request, reply) => {
-      assertWritable(tenantOf(request));
-      for (const id of await kv.live(keys.open(), now())) {
+      const ctx = tenantOf(request);
+      assertWritable(ctx);
+      const open = await kv.live(keys.open(), now());
+      // Recorded first: if the audit log is down, the codes stay and the person can try again.
+      await deps.audit({
+        tenant_id: ctx.tenant_id,
+        actor_user_id: actorOf(request),
+        action: "screen.pairing.cleared",
+        target: { type: "pairing_codes", id: ctx.tenant_id },
+        changes: { open_codes: { from: open.length, to: 0 } },
+      });
+      for (const id of open) {
         const rec = await record(id);
         if (rec !== null)
           await kv.del(keys.code(rec.code), keys.record(id), keys.byAddress(rec.address));

@@ -122,6 +122,9 @@ async function main(): Promise<void> {
   const admin = new AdminClient(config.adminUrl);
   const rights = new RightsChecker(admin);
   const settings = new SettingsClient(admin, config.module, { service });
+  // Admin's own settings hold the event's language, the one other module's settings screen reads
+  // (contracts/admin.md, #394), so Studio's pages follow it.
+  const adminSettings = new SettingsClient(admin, "admin", { service });
   const db = poolDb(pool);
   const seed = seedMainZone(db, bus);
   // One loop for both sources, so neither waits behind the other's blocking read.
@@ -130,6 +133,9 @@ async function main(): Promise<void> {
       rights.handleEvent(event);
       void settings.handleEvent(event).catch((err: unknown) => {
         log.warn({ err }, "re-reading the screen settings failed");
+      });
+      void adminSettings.handleEvent(event).catch((err: unknown) => {
+        log.warn({ err }, "re-reading the event's language failed");
       });
       return;
     }
@@ -176,6 +182,8 @@ async function main(): Promise<void> {
       ? { superadminHost: process.env.CANCCU_SUPERADMIN_HOSTNAME }
       : {}),
     settings,
+    adminSettings,
+    publicEvent: (host) => tenants.event(host),
     // The service names of deploy/compose.yml; a stack that moves them sets the variables.
     sources: httpSources(
       {

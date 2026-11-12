@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildRegions } from "../src/compose/build.js";
+import { buildRegions, shownAt as serverShownAt } from "../src/compose/build.js";
 import type { BuildInput, RegionView } from "../src/compose/build.js";
 import type { ZoneFacts } from "../src/compose/widgets.js";
 import { shownAt } from "../player/src/rotation.js";
@@ -61,9 +61,10 @@ describe("the player's rotation", () => {
       const state = build(T0, rotation);
       for (let s = 0; s < 400; s += 3) {
         const at = T0 + s * 1000;
-        expect(shownAt(state, "main", at).index, `${rotation} at +${s}s`).toBe(
-          serverShown(at, rotation),
-        );
+        const index = shownAt(state, "main", at).index;
+        expect(index, `${rotation} at +${s}s`).toBe(serverShown(at, rotation));
+        // Studio's "Now:" line reads the same widget from the same state (src/studio/now-line.ts).
+        expect(serverShownAt(state, "main", at)).toBe(index === null ? null : state.widgets[index]);
       }
     }
   });

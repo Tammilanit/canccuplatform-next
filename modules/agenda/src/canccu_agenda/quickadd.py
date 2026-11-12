@@ -14,7 +14,6 @@ from starlette.responses import Response
 from starlette.routing import Route
 
 from . import forms, items, model, store, templates, undo
-from .access import writer
 from .deps import deps
 from .inverse import Inverse
 from .web import (
@@ -28,6 +27,7 @@ from .web import (
     next_minute,
     notice,
     page,
+    page_writer,
     redirect,
     text_input,
     zone_of,
@@ -110,7 +110,7 @@ async def _choices(request: Request) -> tuple[list[tuple[str, str]], list[Any], 
 
 
 async def quick_page(request: Request) -> Response:
-    await writer(request)
+    await page_writer(request)
     tz, now = zone_of(request), deps(request).now()
     today = now.astimezone(tz).date()
     what, _, _ = await _choices(request)
@@ -152,7 +152,7 @@ def item_fields(
 
 
 async def quick_add(request: Request) -> Response:
-    session = await writer(request)
+    session = await page_writer(request)
     d = deps(request)
     tz, now = zone_of(request), d.now()
     today = now.astimezone(tz).date()

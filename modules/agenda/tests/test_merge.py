@@ -87,6 +87,21 @@ async def test_an_overlapping_stale_edit_shows_who_changed_what_and_saves_nothin
     assert env.store.calls == []
 
 
+async def test_the_clash_page_keeps_the_tell_people_choice(env: Env) -> None:
+    async with env.client() as c:
+        h, sam, item_id = await setup(env, c)
+        await c.patch(
+            f"/api/agenda/items/{item_id}", json={"revision": 1, "title": "Supper"}, headers=sam
+        )
+        quiet = await c.post(f"/items/{item_id}/edit", data=form_of(title="Tea"), headers=h)
+        told = await c.post(
+            f"/items/{item_id}/edit", data=form_of(title="Tea", announce="1"), headers=h
+        )
+    assert quiet.status_code == told.status_code == 409
+    assert 'name="announce" value=1>' in quiet.text  # unticked stays unticked
+    assert 'name="announce" value=1 checked>' in told.text
+
+
 async def test_without_the_full_log_a_stale_edit_is_not_merged(env: Env) -> None:
     async with env.client() as c:
         h, sam, item_id = await setup(env, c)

@@ -1,4 +1,5 @@
-"""The full item form: add an item, or edit and move one. A move shows its preview first."""
+"""The full item form: add an item, or edit and move one. A move shows its preview first. An
+edit tells people unless the organiser unticks "Tell people" for a quiet fix (#388)."""
 
 from __future__ import annotations
 
@@ -13,7 +14,6 @@ from starlette.responses import Response
 from starlette.routing import Route
 
 from . import forms, history, items, merge, model, store, templates, undo
-from .access import writer
 from .deps import Deps, deps
 from .effective import read_channels
 from .inverse import Inverse
@@ -23,6 +23,7 @@ from .web import (
     BASE,
     api_time,
     button,
+    check,
     esc,
     field,
     from_local,
@@ -31,6 +32,7 @@ from .web import (
     next_minute,
     notice,
     page,
+    page_writer,
     posted_when,
     redirect,
     text_input,
@@ -43,7 +45,7 @@ def _form(values: dict[str, Any], kinds: Any, action: str, error: str = "") -> s
     revision = values.get("revision")
     return (
         (notice(error, "error") if error else "")
-        + f'<form method=post action="{action}" class="canccu-agenda-form">'
+        + f'<form method=post action="{action}" class="canccu-agenda-form canccu-agenda-choice">'
         + (hidden({"revision": revision}) if revision else "")
         + field(
             "Title",
@@ -63,7 +65,29 @@ def _form(values: dict[str, Any], kinds: Any, action: str, error: str = "") -> s
             f'<textarea class="canccu-input" name=description maxlength=2000>'
             f"{esc(values.get('description') or '')}</textarea>",
         )
-        + f'<div class="canccu-agenda-actions">{button("Save")}</div></form>'
+        + (_announce_check(values) if revision else "")
+        + f'<div class="canccu-agenda-actions">{_save(bool(revision))}</div></form>'
+    )
+
+
+def _save(editing: bool) -> str:
+    """An edit's button says what it does (sheet 5, "Edit has the same choice"); agenda.css shows
+    the one that matches the "Tell people" box."""
+    if not editing:
+        return button("Save")
+    told = button("Save and tell everyone", **{"data-announce": "1"})
+    return told + button("Save quietly", **{"data-announce": "0"})
+
+
+def _announce_check(values: dict[str, Any]) -> str:
+    """Only an edit has the choice: an added item has nothing to announce yet. Ticked unless the
+    form comes back after a refusal with it unticked."""
+    return check(
+        "announce",
+        "Tell people (Discord, phones)",
+        values.get("announce", "1") == "1",
+        "Untick for a quiet fix, such as a typo: nothing is announced, and a reminder that has"
+        " gone out does not go out again. Screens and the hub still show the change.",
     )
 
 
@@ -76,6 +100,7 @@ def _posted(form: FormData) -> dict[str, Any]:
     except KitError:
         values["reminder_leads_minutes"] = None
     values["notify"] = forms.notify_from(form)
+    values["announce"] = form.get("announce") or ""
     return values
 
 
@@ -100,7 +125,7 @@ async def _kinds(d: Deps) -> Any:
 
 
 async def new_page(request: Request) -> Response:
-    await writer(request)
+    await page_writer(request)
     d = deps(request)
     tz, now = zone_of(request), d.now()
     try:
@@ -133,7 +158,7 @@ async def new_page(request: Request) -> Response:
 
 
 async def add_page(request: Request) -> Response:
-    session = await writer(request)
+    session = await page_writer(request)
     d = deps(request)
     tz = zone_of(request)
     form = await request.form()
@@ -170,7 +195,7 @@ def _values_of(item: dict[str, Any], tz: ZoneInfo) -> dict[str, Any]:
 
 
 async def edit_page(request: Request) -> Response:
-    await writer(request)
+    await page_writer(request)
     d = deps(request)
     tz = zone_of(request)
     row, item, kinds = await load_item(d, request.path_params["item_id"])
@@ -179,7 +204,7 @@ async def edit_page(request: Request) -> Response:
 
 
 async def save_page(request: Request) -> Response:
-    session = await writer(request)
+    session = await page_writer(request)
     d = deps(request)
     tz = zone_of(request)
     row, item, kinds = await load_item(d, request.path_params["item_id"])
@@ -192,8 +217,9 @@ async def save_page(request: Request) -> Response:
         if sent != row["revision"]:
             rebased = await merge.rebase(d, row, sent, fields, tz)
             if not rebased.complete or rebased.clash:
-                return _clash_page(request, rebased, item, kinds, tz)
+                return _clash_page(request, form, rebased, item, kinds, tz)
             fields = rebased.fields
+        fields["announce"] = form.get("announce") == "1"
         # Only times the organiser changed are sent: sending the current time of a delayed item
         # would be a move that clears its delay.
         for key, name in (("starts_at", "starts"), ("ends_at", "ends")):
@@ -215,11 +241,19 @@ async def save_page(request: Request) -> Response:
 
 
 def _clash_page(
-    request: Request, rebased: merge.Rebased, item: dict[str, Any], kinds: Any, tz: ZoneInfo
+    request: Request,
+    form: FormData,
+    rebased: merge.Rebased,
+    item: dict[str, Any],
+    kinds: Any,
+    tz: ZoneInfo,
 ) -> Response:
     """Who changed what since the form was read, and the form again as the item is now."""
     if not rebased.complete:
         raise model.conflict("version_conflict", "the item changed: read it again")
+    values = _values_of(item, tz)
+    # The organiser's "Tell people" choice stays: re-entering a quiet fix must not announce it.
+    values["announce"] = form.get("announce") or ""
     changes = "".join(f"<li>{esc(history.line(r, tz))}</li>" for r in rebased.log)
     body = (
         notice(
@@ -228,7 +262,7 @@ def _clash_page(
             "error",
         )
         + f'<ul class="canccu-agenda-changes">{changes}</ul>'
-        + _form(_values_of(item, tz), kinds, f"{BASE}/items/{esc(item['id'])}/edit")
+        + _form(values, kinds, f"{BASE}/items/{esc(item['id'])}/edit")
     )
     return page(request, f"Edit {item['title']}", body, status=409)
 
@@ -242,10 +276,12 @@ def _move_preview(
     if ends is not None and ends <= starts:
         raise model.invalid("the end must be after the start")
     channels = list(model.DEFAULT_CHANNELS)  # moves tell nobody, so channels do not matter
+    now = deps(request).now()
+    change = change_of(row, kinds, channels, starts)
     preview = preview_html(
         [moved_line(row, starts, ends, tz) + " (a new plan: no delay shows)"],
         [],
-        told("move", [change_of(row, kinds, channels, starts)], deps(request).now()),
+        told("move", [change], now, announce=fields["announce"]),
     )
     keep = {k: form.getlist(k) for k in form}
     body = (
@@ -253,7 +289,7 @@ def _move_preview(
         + f'<form method=post action="{BASE}/items/{esc(row["id"])}/edit"'
         + ' class="canccu-agenda-actions">'
         + hidden({**keep, "confirm": "1"})
-        + button("Move it")
+        + button("Move it" if fields["announce"] else "Move it quietly")
         + f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/{esc(row["id"])}">'
         "Back</a></form>"
     )

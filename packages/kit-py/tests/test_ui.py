@@ -71,10 +71,8 @@ def test_shell_page() -> None:
     )
     assert '<meta name="viewport" content="width=device-width, initial-scale=1">' in doc
     assert "Demo &lt;Event&gt;" in doc and "Demo <Event>" not in doc
-    assert (
-        '<a class="canccu-menu__item canccu-menu__item--bar" href="/theming/studio/"'
-        ' aria-current="page">' in doc
-    )
+    # The Theme studio sits in the menu only: the bar's Screens slot is the Screen studio's.
+    assert '<a class="canccu-menu__item" href="/theming/studio/" aria-current="page">' in doc
     assert 'href="/theming/studio/" aria-current="page">Brand kit' in doc
     assert "/agenda/" not in doc and "Quick add" not in doc
     assert '<form method="post" action="/admin/sign-out">' in doc
@@ -84,12 +82,12 @@ def test_shell_page() -> None:
 
 
 def test_bar_puts_quick_add_in_the_middle() -> None:
-    every = Viewer("agenda.items.write", "notify.topics.write", "theming.theme.write")
+    every = Viewer("agenda.items.write", "notify.topics.write", "screen.devices.read")
     assert [b["label"] for b in bar_for(every)] == [
         "Run of show",
         "Notifications",
         "Quick add",
-        "Theme",
+        "Screens",
     ]
     assert [b["id"] for b in bar_for(Viewer("agenda.crew.read"))] == ["agenda"]
 

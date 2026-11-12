@@ -7,6 +7,7 @@ import { randomBytes } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import { requireTenant } from "@canccu/kit";
 import type { Bus, RightsChecker, SqlClient, TenantContext } from "@canccu/kit";
+import type { Audit } from "./audit.js";
 import type { Db } from "./db.js";
 import {
   actorOf,
@@ -201,10 +202,25 @@ export async function releaseSound(
   ]);
 }
 
+/** The event's zones by key, the event's first read seeding `main`; Studio's pages read it too. */
+export async function readZones(
+  deps: Pick<ZoneDeps, "db" | "bus">,
+  ctx: TenantContext,
+): Promise<ZoneRow[]> {
+  const [emits, rows] = await deps.db.tenant(async (c) => {
+    const seeded = await seededFor(ctx, c);
+    const all = await c.query(`SELECT ${ZONE_COLUMNS} FROM screen_zones ORDER BY key`);
+    return [seeded, all.rows] as const;
+  });
+  await publishAll(deps.bus, emits);
+  return rows.map(zoneView);
+}
+
 export interface ZoneDeps {
   db: Db;
   bus: Bus;
   rights: RightsChecker;
+  audit: Audit;
 }
 
 type ByKey = { Params: { zone_key: string } };
@@ -214,16 +230,9 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
   const read = needsAny(deps.rights, ["screen.devices.read", "screen.content.read"]);
   const write = needs(deps.rights, "screen.zones.write");
 
-  app.get("/api/screen/zones", { preHandler: read }, async (request) => {
-    const ctx = tenantOf(request);
-    const [emits, rows] = await db.tenant(async (c) => {
-      const seeded = await seededFor(ctx, c);
-      const all = await c.query(`SELECT ${ZONE_COLUMNS} FROM screen_zones ORDER BY key`);
-      return [seeded, all.rows] as const;
-    });
-    await publishAll(bus, emits);
-    return { zones: rows.map(zoneView) };
-  });
+  app.get("/api/screen/zones", { preHandler: read }, async (request) => ({
+    zones: await readZones(deps, tenantOf(request)),
+  }));
 
   app.get<ByKey>("/api/screen/zones/:zone_key", { preHandler: read }, async (request) => {
     const ctx = tenantOf(request);
@@ -265,6 +274,13 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
       if (zone.sound.device_id !== null) {
         throw invalidRequest("`sound.device_id` must be a screen assigned to this zone.");
       }
+      await deps.audit({
+        tenant_id: ctx.tenant_id,
+        actor_user_id: actor,
+        action: "screen.zone.created",
+        target: { type: "zone", id: zone.key },
+        changes: { name: { from: null, to: zone.name } },
+      });
       const saved: Emit = [
         "screen.zone.saved",
         { zone_key: zone.key, revision: 1, changed: [...ZONE_FIELDS], actor_user_id: actor },
@@ -317,6 +333,13 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
         ],
       );
       const saved = zoneView(after.rows[0] ?? {});
+      await deps.audit({
+        tenant_id: ctx.tenant_id,
+        actor_user_id: actor,
+        action: "screen.zone.changed",
+        target: { type: "zone", id: zone.key },
+        changes: Object.fromEntries(changed.map((f) => [f, { from: before[f], to: saved[f] }])),
+      });
       const event: Emit = [
         "screen.zone.saved",
         { zone_key: zone.key, revision: saved.revision, changed, actor_user_id: actor },
@@ -347,6 +370,12 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
           if (why !== null) throw zoneInUse(why);
         }
         await c.query("DELETE FROM screen_zones WHERE key = $1", [key]);
+        await deps.audit({
+          tenant_id: ctx.tenant_id,
+          actor_user_id: actor,
+          action: "screen.zone.deleted",
+          target: { type: "zone", id: key },
+        });
         return [
           ...seeded,
           ["screen.zone.removed", { zone_key: key, actor_user_id: actor }] as Emit,

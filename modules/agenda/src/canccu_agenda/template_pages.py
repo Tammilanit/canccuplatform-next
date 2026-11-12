@@ -11,10 +11,21 @@ from starlette.responses import Response
 from starlette.routing import Route
 
 from . import forms, store, templates
-from .access import WRITE, writer
+from .access import WRITE
 from .deps import deps
 from .kinds import not_found
-from .web import BASE, button, esc, field, notice, page, page_session, redirect, text_input
+from .web import (
+    BASE,
+    button,
+    esc,
+    field,
+    notice,
+    page,
+    page_session,
+    page_writer,
+    redirect,
+    text_input,
+)
 
 
 async def _template_writer(request: Request) -> None:
@@ -121,7 +132,7 @@ async def edit_page(request: Request) -> Response:
 
 
 async def save_page(request: Request) -> Response:
-    await writer(request)
+    await page_writer(request)
     template_id = request.path_params.get("template_id")
     form = await request.form()
     async with deps(request).db.tenant() as conn:
@@ -148,7 +159,7 @@ def _safe(form: Any) -> dict[str, Any]:
 
 
 async def remove_page(request: Request) -> Response:
-    await writer(request)
+    await page_writer(request)
     async with deps(request).db.tenant() as conn:
         await templates.remove(conn, request.path_params["template_id"])
     return redirect("/templates")

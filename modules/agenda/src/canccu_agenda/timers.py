@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Iterable, Mapping
+from collections.abc import Collection, Iterable, Mapping
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -50,14 +50,22 @@ async def reschedule(
     kinds: Mapping[str, Any],
     leads: list[int],
     now: datetime,
+    *,
+    rearm: Collection[str] = frozenset(),
 ) -> None:
     """Make the items' pending timers match the items, inside the write's transaction.
 
     A timer that is due but not yet fired stays when the item still wants it at that time, so an
     unrelated edit in the seconds before the loop runs never loses a start. A reminder is added
     only while its time is ahead: a lead that has passed is skipped, and a reminder that fired
-    fires again only for a new time still ahead. A start or end that has not fired yet always
-    fires, also when a move puts it at or before now: the next tick fires it late.
+    fires again only for the items in `rearm`, those this write moved to a new start in an
+    announced change. Any other write (a quiet change, a kind, the lead-time setting) would
+    announce a quiet change by firing it again. The fired record is kept when a lead is armed
+    again: if that reminder is dropped before it fires (an announced move back), a later quiet
+    change must still see the lead as spent. While a reminder for the lead is pending it still
+    moves with a quiet change; it has told nobody of this change yet. A start or end that has
+    not fired yet always fires, also when a move puts it at or before now: the next tick fires
+    it late.
     """
     rows = list(rows)
     if not rows:
@@ -65,18 +73,32 @@ async def reschedule(
     have: dict[str, set[Timer]] = {r["id"]: set() for r in rows}
     for t in await conn.fetch(
         "SELECT item_id, kind, lead_minutes, due_at FROM agenda_timers"
-        " WHERE item_id = ANY($1::text[])",
+        # Locked: a row the loop is firing right now is waited for, and then is gone here and in
+        # agenda_reminders_fired, so this write sees the reminder as fired.
+        " WHERE item_id = ANY($1::text[]) FOR UPDATE",
         list(have),
     ):
         have[t["item_id"]].add((t["kind"], t["lead_minutes"], t["due_at"]))
+    fired: dict[str, set[int]] = {r: set() for r in have}
+    for f in await conn.fetch(
+        "SELECT item_id, lead_minutes FROM agenda_reminders_fired WHERE item_id = ANY($1::text[])",
+        list(have),
+    ):
+        fired[f["item_id"]].add(f["lead_minutes"])
     stale: list[tuple[str, str, int]] = []
     new: list[tuple[str, str, int, datetime]] = []
     for row in rows:
         kind = kinds.get(row["kind"])
         want = set(wanted(row, None if kind is None else kind["reminder_leads_minutes"], leads))
         pending = {k for k, _, _ in have[row["id"]] if k != "reminder"}
+        armed = {lead for k, lead, _ in have[row["id"]] if k == "reminder"}
+        spent = set() if row["id"] in rearm else fired[row["id"]] - armed
         stale += [(row["id"], k, lead) for k, lead, _ in have[row["id"]] - want]
-        new += [(row["id"], *t) for t in want - have[row["id"]] if t[2] > now or t[0] in pending]
+        new += [
+            (row["id"], *t)
+            for t in want - have[row["id"]]
+            if (t[2] > now or t[0] in pending) and not (t[0] == "reminder" and t[1] in spent)
+        ]
     if stale:
         await conn.execute(
             "DELETE FROM agenda_timers WHERE (item_id, kind, lead_minutes) IN"
@@ -166,6 +188,7 @@ async def _fire(d: Deps, tenant: str, batch: int) -> int:
         }
         kinds = await store.kinds(conn)
         published = 0
+        told: list[tuple[str, int]] = []  # the reminders fired, for a later quiet change
         for timer in due:
             row = rows[timer["item_id"]]
             if timer["kind"] == "reminder" and row["starts_at"] <= now:
@@ -180,6 +203,7 @@ async def _fire(d: Deps, tenant: str, batch: int) -> int:
                     leads,
                 )
                 event_type = "agenda.reminder.triggered"
+                told.append((row["id"], timer["lead_minutes"]))
             else:
                 event_type = f"agenda.item.{timer['kind']}"
             await d.outbox.add(conn, event_type, data, version=1)
@@ -188,6 +212,12 @@ async def _fire(d: Deps, tenant: str, batch: int) -> int:
             "DELETE FROM agenda_timers WHERE item_id = $1 AND kind = $2 AND lead_minutes = $3",
             [(t["item_id"], t["kind"], t["lead_minutes"]) for t in due],
         )
+        if told:
+            await conn.executemany(
+                "INSERT INTO agenda_reminders_fired (item_id, lead_minutes) VALUES ($1, $2)"
+                " ON CONFLICT DO NOTHING",
+                told,
+            )
         if len(due) < batch:
             await _forget_if_idle(conn)
     await d.outbox.flush(tenant)

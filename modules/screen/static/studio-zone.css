@@ -1,0 +1,236 @@
+/* The zone editor's layout (static/studio-zone.js), on top of ui.css and studio.css. */
+
+/* Zone editor (mockup 08): settings, the region map and the chosen region beside a sticky
+   column with the preview, the changes and Go live; one column on a phone, the preview last. */
+.canccu-studio-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+  gap: 1rem;
+  align-items: start;
+}
+
+.canccu-studio-editor__main,
+.canccu-studio-side {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.canccu-studio-side {
+  position: sticky;
+  top: 1rem;
+}
+
+.canccu-studio-side .canccu-card > * + * {
+  margin-top: 0.75rem;
+}
+
+.canccu-studio-side .canccu-card__title {
+  margin-bottom: 0;
+}
+
+.canccu-studio-thumb--preview iframe {
+  pointer-events: auto;
+}
+
+.canccu-studio-preview-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+}
+
+.canccu-studio-preview-row p {
+  flex: 1 1 10rem;
+  margin: 0;
+}
+
+.canccu-studio-changes {
+  margin: 0;
+  padding-left: 1.125rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.canccu-studio-changes .canccu-muted {
+  list-style: none;
+  margin-left: -1.125rem;
+}
+
+/* The map: the layout's grid at the screen's shape, each region a button with what it shows. */
+.canccu-studio-map {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.375rem;
+  padding: 0.375rem;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  background: var(--canccu-color-background);
+}
+
+.canccu-studio-map--portrait {
+  max-width: 22rem;
+  margin: 0 auto;
+}
+
+/* Its name and what it shows on one line where they fit, as a one-row header or ticker needs. */
+.canccu-studio-map__region {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: baseline;
+  gap: 0.125rem 0.5rem;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.375rem 0.5rem;
+  overflow: hidden;
+  text-align: left;
+  font: inherit;
+  color: var(--canccu-color-text);
+  background: var(--canccu-color-surface);
+  border: var(--canccu-border-width) dashed var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  cursor: pointer;
+}
+
+.canccu-studio-map__region:hover {
+  border-color: var(--canccu-color-primary);
+}
+
+.canccu-studio-map__region[aria-pressed="true"] {
+  border-style: solid;
+  border-color: var(--canccu-color-primary);
+  box-shadow: inset 0 0 0 1px var(--canccu-color-primary);
+}
+
+.canccu-studio-map__name {
+  font-weight: 600;
+  font-size: var(--canccu-text-sm);
+  color: var(--canccu-ink-primary);
+}
+
+.canccu-studio-map__shows {
+  font-size: var(--canccu-text-xs, 0.75rem);
+  color: var(--canccu-ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.canccu-studio-region {
+  margin: 0;
+}
+
+.canccu-studio-region[hidden] {
+  display: none;
+}
+
+.canccu-studio-region > * + * {
+  margin-top: 0.75rem;
+}
+
+.canccu-studio-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.canccu-studio-row .canccu-field {
+  margin: 0;
+}
+
+.canccu-studio-widgets {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.375rem;
+}
+
+.canccu-studio-widgets--layout {
+  opacity: 0.6;
+}
+
+.canccu-studio-widget {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 2.75rem;
+  padding: 0 0.25rem 0 0.5rem;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  background: var(--canccu-color-surface);
+}
+
+/* Six dots: the row's drag handle. */
+.canccu-studio-widget__handle {
+  flex: none;
+  width: 0.625rem;
+  height: 1rem;
+  margin-right: 0.375rem;
+  cursor: grab;
+  background-image: radial-gradient(circle, var(--canccu-ink-muted) 1.25px, transparent 1.5px);
+  background-size: 0.3125rem 0.3333rem;
+}
+
+.canccu-studio-widget__name {
+  font-weight: 600;
+}
+
+.canccu-studio-widget__meta {
+  flex: 1;
+}
+
+.canccu-studio-widget__meta::before {
+  content: "· ";
+}
+
+.canccu-studio-icon {
+  min-width: 2.75rem;
+  padding: 0;
+  justify-content: center;
+}
+
+.canccu-studio-icon--up .canccu-i,
+.canccu-studio-icon--down .canccu-i {
+  transform: rotate(90deg);
+}
+
+.canccu-studio-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.canccu-studio-add select {
+  flex: 1 1 12rem;
+  width: auto;
+}
+
+.canccu-studio-remove {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 60rem) {
+  .canccu-studio-editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .canccu-studio-side {
+    position: static;
+  }
+}
+
+.canccu-studio-settings {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.canccu-studio-settings .canccu-field {
+  margin: 0;
+}
+
+.canccu-studio-row--end {
+  align-items: end;
+}

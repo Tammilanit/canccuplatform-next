@@ -53,6 +53,8 @@ import { scheduleRoutes } from "./content/schedules.js";
 import type { RenderQueue } from "./render/queue.js";
 import { REGISTRY_PREFIX, onSuperadminHost, registryRoutes } from "./registry.js";
 import { renderRoutes } from "./render/routes.js";
+import { studioRoutes } from "./studio/routes.js";
+import type { StudioDeps } from "./studio/routes.js";
 import { tickerRoutes } from "./ticker/routes.js";
 import { zoneRoutes } from "./zones.js";
 
@@ -87,7 +89,16 @@ export interface ScreenDeps {
   push?: { zones: ZoneStore; fanout: Fanout };
   /** How often an open stream pings (15 s); tests shorten it. */
   streamPingMs?: number;
+  /** Admin's own settings, for the event's language on Studio's pages; English without them. */
+  adminSettings?: Settings;
+  /** The event's public answer, for the Studio shell's header. */
+  publicEvent?: StudioDeps["publicEvent"];
 }
+
+const ENGLISH: Settings = {
+  ensure: () => Promise.resolve(),
+  get: (_key, fallback) => fallback,
+};
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -227,6 +238,10 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   tickerRoutes(app, deps);
   composeRoutes(app, compose);
   playerRoutes(app, compose);
+  studioRoutes(app, {
+    ...compose,
+    adminSettings: deps.adminSettings ?? ENGLISH,
+  });
   streamRoutes(app, {
     ...push,
     hub,
