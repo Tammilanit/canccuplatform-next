@@ -50,7 +50,10 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       const res = await page("/theming/studio/", "member");
       expect(res.statusCode).toBe(403);
       expect(res.headers["content-type"]).toMatch(/^text\/html/);
-      expect(res.body).toContain("theming.theme.write");
+      expect(res.body).toContain("No access");
+      expect(res.body).toContain("the Theme studio");
+      // The right's id goes to the log, never to the page (UX audit B3).
+      expect(res.body).not.toContain("theming.theme.write");
     });
 
     it("keeps the admin address rule", async () => {
