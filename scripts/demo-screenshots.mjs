@@ -68,6 +68,32 @@ const OTHERS = [
   ["error-not-found", MISSING, DESK, { status: 404 }],
   ["error-not-found-phone", MISSING, PHONE, { status: 404 }],
 ];
+// The Screen studio, shot while the screen below is paired, so Devices and Live show it. The pair
+// dialog opens from the fragment a kiosk's QR carries; the editor is shot with a preview drawn.
+const STUDIO_PAGES = [
+  ["screen-live", "/admin/screen/live"],
+  ["screen-devices", "/admin/screen/devices"],
+  ["screen-zones", "/admin/screen/zones"],
+  ["screen-zone-editor", "/admin/screen/zones/main"],
+  ["screen-ticker", "/admin/screen/ticker"],
+].flatMap(([name, path]) => [
+  [name, path, DESK],
+  [`${name}-phone`, path, PHONE],
+]);
+STUDIO_PAGES.push([
+  "screen-pair-phone",
+  "/admin/screen/devices#pair=K7Q49WXP",
+  PHONE,
+]);
+// Live views keep their streams open, so there is no network idle: a fixed wait lets them draw.
+const studioReady = async (page) => {
+  await page
+    .locator("[data-zone-preview]")
+    .click({ timeout: 1000 })
+    .catch(() => undefined);
+  await page.waitForTimeout(3000);
+};
+
 // The demo event's main zone in the default theme. Every theme and the 4K sizes are #191's.
 const SCREENS = [
   ["pulse-landscape", { width: 1920, height: 1080 }],
@@ -88,6 +114,11 @@ if (opts["dry-run"]) {
   for (const [name, { width, height }] of SCREENS) {
     console.log(
       `  ${name}.png  ${at("/screen/")}  (${width}×${height}, a paired screen)`,
+    );
+  }
+  for (const [name, path, { width, height }] of STUDIO_PAGES) {
+    console.log(
+      `  ${name}.png  ${at(path)}  (${width}×${height}, while paired)`,
     );
   }
   process.exit(0);
@@ -241,6 +272,9 @@ try {
           await page.waitForTimeout(1000);
         },
       });
+    }
+    for (const [name, path, viewport] of STUDIO_PAGES) {
+      await shot(name, path, viewport, SESSION, { ready: studioReady });
     }
   }
 } finally {

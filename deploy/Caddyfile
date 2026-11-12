@@ -125,6 +125,16 @@
 		reverse_proxy notify:8080
 	}
 
+	# Screen's Studio pages, which the kiosk's pairing QR opens (/admin/screen/devices#pair=,
+	# contracts/screen.md, Pairing): screen's own paths, not stripped, ahead of admin's pages.
+	handle /admin/screen {
+		redir * /admin/screen/{?query} 308
+	}
+
+	handle /admin/screen/* {
+		reverse_proxy screen:8080
+	}
+
 	handle_path /admin/* {
 		reverse_proxy admin:8080
 	}

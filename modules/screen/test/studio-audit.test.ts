@@ -78,7 +78,11 @@ describe.skipIf(!DATABASE_URL)("studio essentials audit", () => {
       body: { ...zone, name: "Café bar", hub_qr: "rotate", revision: 2 },
     });
     expect((await call(h, "DELETE", "/api/screen/zones/cafe", admin)).statusCode).toBe(204);
-    expect(actions()).toEqual(["screen.zone.created", "screen.zone.changed", "screen.zone.deleted"]);
+    expect(actions()).toEqual([
+      "screen.zone.created",
+      "screen.zone.changed",
+      "screen.zone.deleted",
+    ]);
     expect(h.audits[1]?.changes).toEqual({
       name: { from: "Café", to: "Café bar" },
       hub_qr: { from: "always", to: "rotate" },

@@ -37,12 +37,12 @@ describe("menuFor", () => {
 
 describe("barFor", () => {
   it("puts Quick add in the middle of five slots for an organiser", () => {
-    const all = new Set(["agenda.items.write", "notify.topics.write", "theming.theme.write"]);
+    const all = new Set(["agenda.items.write", "notify.topics.write", "screen.devices.read"]);
     expect(barFor(all).map((b) => b.label)).toEqual([
       "Run of show",
       "Notifications",
       "Quick add",
-      "Theme",
+      "Screens",
     ]);
   });
   it("gives fewer slots for fewer rights", () => {

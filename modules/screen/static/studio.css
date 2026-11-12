@@ -1,0 +1,252 @@
+/* The Screen studio's own layout on top of packages/ui's ui.css: its tokens and components only. */
+
+.canccu-studio-notice {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  background: var(--canccu-color-surface);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.canccu-studio-quick {
+  margin-bottom: 1rem;
+}
+
+/* Live: every zone at once (U7), one column on a phone. */
+.canccu-studio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 1rem;
+}
+
+.canccu-studio-zone .canccu-card__title {
+  margin: 0.75rem 0 0.25rem;
+}
+
+/* A live view: the virtual screen at 16:9, never taking the tap (its link does). */
+.canccu-studio-thumb {
+  display: block;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--canccu-radius);
+  overflow: hidden;
+  background: var(--canccu-color-background);
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+
+.canccu-studio-thumb iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  pointer-events: none;
+}
+
+.canccu-studio-thumb--none {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--canccu-color-surface) 0 0.5rem,
+    var(--canccu-color-background) 0.5rem 1rem
+  );
+}
+
+/* Devices (mockup 07): thumbnail beside the facts on a desk, above them on a phone. */
+.canccu-studio-devices {
+  display: grid;
+  gap: 1rem;
+}
+
+.canccu-studio-device {
+  display: grid;
+  grid-template-columns: minmax(10rem, 16rem) 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.canccu-studio-device__main > * + * {
+  margin-top: 0.5rem;
+}
+
+.canccu-studio-device .canccu-card__title {
+  margin: 0;
+}
+
+.canccu-studio-help,
+.canccu-studio-edit {
+  border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+  padding-top: 0.5rem;
+}
+
+.canccu-studio-help summary,
+.canccu-studio-edit summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.canccu-studio-help ol {
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.canccu-studio-dialog {
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  background: var(--canccu-color-surface);
+  color: var(--canccu-color-text);
+  padding: 1.25rem;
+  width: min(28rem, calc(100vw - 2rem));
+}
+
+.canccu-studio-dialog::backdrop {
+  background: rgb(0 0 0 / 0.5);
+}
+
+.canccu-studio-code {
+  font-family: var(--canccu-font-mono);
+  font-size: var(--canccu-text-xl);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* Zone editor (mockup 08): the form beside a sticky preview on a desk, the preview first on a phone. */
+.canccu-studio-editor {
+  display: grid;
+  grid-template-columns: 1fr minmax(18rem, 26rem);
+  gap: 1rem;
+  align-items: start;
+}
+
+.canccu-studio-editor__form {
+  display: grid;
+  gap: 1rem;
+}
+
+.canccu-studio-preview {
+  position: sticky;
+  top: 1rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.canccu-studio-thumb--preview iframe {
+  pointer-events: auto;
+}
+
+.canccu-studio-region {
+  margin: 0;
+}
+
+.canccu-studio-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.canccu-studio-widgets {
+  margin: 0 0 0.5rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: canccu-widget;
+}
+
+.canccu-studio-widgets--layout {
+  opacity: 0.6;
+}
+
+.canccu-studio-widget {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0;
+  border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+  counter-increment: canccu-widget;
+}
+
+.canccu-studio-widget__name {
+  flex: 1;
+  font-family: var(--canccu-font-mono);
+}
+
+.canccu-studio-widget__name::before {
+  content: counter(canccu-widget) ". ";
+  color: var(--canccu-ink-muted);
+}
+
+.canccu-studio-savebar {
+  grid-column: 1 / -1;
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem 0;
+  background: var(--canccu-color-background);
+  border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+
+.canccu-studio-savebar .canccu-button--danger-ghost {
+  margin-left: auto;
+}
+
+/* Ticker (mockup 13): one line, big targets for the phone remote. */
+.canccu-studio-ticker-line {
+  font-size: var(--canccu-text-lg);
+  margin: 0 0 0.25rem;
+}
+
+.canccu-studio-choices {
+  border: 0;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.canccu-studio-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  cursor: pointer;
+}
+
+.canccu-studio-choice:has(input:checked) {
+  border-color: var(--canccu-color-primary);
+  color: var(--canccu-ink-primary);
+}
+
+.canccu-studio-at {
+  width: auto;
+}
+
+.canccu-studio-choices + .canccu-cluster .canccu-button--lg,
+[data-ticker] textarea {
+  width: 100%;
+}
+
+@media (max-width: 40rem) {
+  .canccu-studio-device,
+  .canccu-studio-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .canccu-studio-preview {
+    position: static;
+    order: -1;
+  }
+}
