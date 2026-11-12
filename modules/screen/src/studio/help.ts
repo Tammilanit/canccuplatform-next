@@ -11,11 +11,15 @@ export interface SeenDevice {
   name: string;
   zone_key: string | null;
   mirror_of: { device_id: string } | { zone_key: string } | null;
+  paired_at?: string;
   health?: {
     online: boolean;
     last_seen_at: string | null;
     flags?: string[];
     state_lag?: number;
+    now_playing?: { region_id: string; widget: string } | null;
+    bundle_version?: string;
+    viewport?: { width: number; height: number };
   };
 }
 

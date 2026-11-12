@@ -15,6 +15,7 @@ const EN = {
 
   "live.desc": "What every zone shows now. Tap a zone for its full view.",
   "live.screens": "{online} of {total} screens online",
+  "live.screens.one": "{online} of 1 screen online",
   "live.no_screens": "No screens yet",
   "live.open": "Open {zone} full size",
   "live.quick": "Quick actions",
@@ -25,6 +26,14 @@ const EN = {
 
   "devices.desc": "Every screen of the event: what it shows, its health and what to do.",
   "devices.summary": "{total} screens · {online} online · {offline} offline",
+  "devices.summary.one": "1 screen · {online} online · {offline} offline",
+  "devices.bundle": "all on bundle {version}",
+  "devices.bundles": "bundles {versions}",
+  "devices.recent": "Recent",
+  "devices.recent_desc": "Pairings and screens going offline, newest first.",
+  "devices.recent_none": "Nothing has happened yet.",
+  "recent.paired": "{device} paired",
+  "recent.offline": "{device} went offline",
   "devices.pair": "Pair a screen",
   "devices.clear_codes": "Clear open codes",
   "devices.clear_codes_confirm":
@@ -36,23 +45,34 @@ const EN = {
   "devices.uplink_title": "The venue uplink may be down",
   "devices.uplink_text":
     "Every screen went offline within one minute. Check the venue's internet connection first; the screens catch up by themselves when it is back.",
-  "device.zone": "Zone {zone}",
-  "device.mirrors_device": "Mirrors {device}",
-  "device.mirrors_zone": "Mirrors zone {zone}",
-  "device.unassigned": "Not assigned",
+  "device.zone": "{zone}",
+  "device.mirrors_device": "mirrors {device}",
+  "device.mirrors_zone": "mirrors zone {zone}",
+  "device.unassigned": "no zone",
+  "device.paired": "paired {ago}",
+  "device.sound": "sound device",
+  "device.silent": "silent",
+  "device.portrait": "portrait {size}",
+  "device.not_assigned": "not assigned",
+  "device.now_name": "Now: its name, “not assigned”",
+  "device.last": "Last: {region} · {widget}",
+  "device.up_to_date": "state up to date",
+  "device.offline_for": "offline since {time}",
   "device.online": "Online",
   "device.offline": "Offline",
-  "device.seen": "Seen {ago}",
+  "device.seen": "seen {ago}",
   "device.never_seen": "Not seen yet",
-  "device.now": "Now: {widget} in {region}",
+  "device.now": "Now: {region} · {widget}",
   "device.behind": "{count} changes behind",
+  "device.behind.one": "1 change behind",
   "device.flag.clock_drift": "Clock off",
   "device.flag.shared_token": "Cookie copied",
   "device.identify": "Identify",
   "device.identified": "The screen shows its name for a few seconds.",
   "device.reload": "Reload",
   "device.reloaded": "The screen reloads now.",
-  "device.edit": "Name and zone",
+  "device.edit": "Assign",
+  "device.assign": "Assign to a zone",
   "device.name": "Name",
   "device.shows": "Shows",
   "device.shows_none": "Nothing (not assigned)",
@@ -82,7 +102,7 @@ const EN = {
   "help.behind": "It has not taken the zone's latest changes.",
   "help.behind.fix": "Reload it. If it stays behind, check its network.",
   "help.unassigned": "It shows only its name.",
-  "help.unassigned.fix": "Choose a zone for it under Name and zone.",
+  "help.unassigned.fix": "Choose a zone for it with Assign to a zone.",
 
   "pair.title": "Pair a screen",
   "pair.code": "Code",
@@ -97,6 +117,7 @@ const EN = {
 
   "zones.desc": "Each zone is a group of screens that show the same thing.",
   "zones.screens": "{count} screens",
+  "zones.screens.one": "1 screen",
   "zones.layout": "Layout {layout}",
   "zones.theme_layout": "Theme's layout",
   "zones.new": "New zone",
@@ -124,6 +145,13 @@ const EN = {
   "zone.sound_device": "Sound from",
   "zone.sound_auto": "The first screen of the zone",
   "zone.region": "Region: {region}",
+  "zone.regions": "Regions",
+  "zone.regions_desc": "What each part of the screen shows. Choose one to change it.",
+  "zone.region_layout": "From the layout",
+  "zone.region_own": "Set for this zone",
+  "zone.region_empty": "Nothing",
+  "zone.widget_dwell": "{seconds} s",
+  "zone.handle": "Drag to reorder",
   "zone.layout_widgets": "Use the layout's widgets",
   "zone.widgets": "Widgets, in order",
   "zone.add_widget": "Add widget",
@@ -134,6 +162,7 @@ const EN = {
   "zone.rotation.sequence": "In order",
   "zone.rotation.shuffle": "Shuffle",
   "zone.dwell": "Seconds each",
+  "zone.dwell_hint": "Empty: the layout's {seconds} s.",
   "zone.skip_empty": "Skip empty widgets",
   "zone.idle": "When all are empty",
   "zone.idle.logo": "Show the logo",
@@ -144,6 +173,19 @@ const EN = {
   "zone.preview_title": "Preview: what its screens would show",
   "zone.preview_hint": "The real player with the event's data. Nothing is saved.",
   "zone.save": "Go live",
+  "zone.save_none": "Go live (no screens show it yet)",
+  "zone.save_on": "Go live on {count} screens",
+  "zone.save_on.one": "Go live on 1 screen",
+  "zone.changes": "Changes",
+  "zone.discard": "Discard",
+  "change.none": "Nothing changed yet.",
+  "change.field": "{what}: {from} → {to}",
+  "change.added": "{region}: {widget} added",
+  "change.removed": "{region}: {widget} removed",
+  "change.order": "{region}: new order",
+  "change.on": "on",
+  "change.off": "off",
+  "change.default": "default",
   "zone.saved": "Live on the zone's screens.",
   "zone.undo": "Undo",
   "zone.undone": "The earlier version is back.",
@@ -174,6 +216,26 @@ const EN = {
   "ticker.clear": "Clear",
   "ticker.clear_done": "The ticker line is cleared.",
 
+  "widget.playlist": "Playlist",
+  "widget.photo": "Photo",
+  "widget.agenda_now": "Now and next",
+  "widget.countdown": "Countdown",
+  "widget.clock": "Clock",
+  "widget.logo": "Logo",
+  "widget.qr": "QR code",
+  "widget.venue_info": "Venue info",
+  "widget.checkin_qr": "Check-in QR",
+  "widget.ticker": "Ticker",
+  "widget.hot_game": "Hot game",
+  "widget.bracket": "Bracket",
+  "widget.food_status": "Food status",
+  "widget.embed": "Theme embed",
+  "region.header": "Header",
+  "region.hero": "Hero",
+  "region.rail": "Side rail",
+  "region.venue_rail": "Venue card",
+  "region.ticker": "Ticker",
+
   "ago.now": "just now",
   "ago.s": "{n} s ago",
   "ago.min": "{n} min ago",
@@ -203,6 +265,33 @@ export function translator(language: string): Translate {
     );
 }
 
+/** Text for people from a key without a message: `food_status` reads "Food status". */
+export function readable(key: string): string {
+  const words = key.replace(/[_-]+/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/**
+ * A widget's or region's name in words: its message, or the key made readable for one the
+ * catalogue does not know (a theme's own region), so a page never shows a raw key.
+ */
+export function nameOf(t: Translate, kind: "widget" | "region", key: string): string {
+  const id = `${kind}.${key}`;
+  return Object.hasOwn(EN, id) ? t(id as MessageKey) : readable(key);
+}
+
+/** `key.one` for one, `key` otherwise, when the catalogue has both. */
+export function counted(
+  t: Translate,
+  key: MessageKey,
+  count: number,
+  values: Record<string, string | number> = {},
+): string {
+  const one = `${key}.one`;
+  const id = count === 1 && Object.hasOwn(EN, one) ? (one as MessageKey) : key;
+  return t(id, { count, ...values });
+}
+
 /** The keys the page script needs, in the page's language, for the JSON block it reads. */
 export const CLIENT_KEYS = [
   "device.identified",
@@ -215,6 +304,15 @@ export const CLIENT_KEYS = [
   "zone.undone",
   "zone.conflict",
   "zone.reload",
+  "change.none",
+  "change.field",
+  "change.added",
+  "change.removed",
+  "change.order",
+  "change.on",
+  "change.off",
+  "change.default",
+  "zone.widget_dwell",
   "ticker.set_done",
   "ticker.clear_done",
   "ticker.chars",

@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { problemsOf, shownZone, uplinkDown } from "../src/studio/help.js";
 import type { SeenDevice } from "../src/studio/help.js";
-import { languageOf, translator } from "../src/studio/messages.js";
+import { counted, languageOf, nameOf, readable, translator } from "../src/studio/messages.js";
 
 const at = (s: number) => new Date(Date.parse("2026-03-14T18:00:00Z") + s * 1000).toISOString();
 
@@ -91,6 +91,23 @@ describe("messages", () => {
       "4 screens · 3 online · 1 offline",
     );
     expect(t("pair.done")).toBe("{device} is paired.");
+  });
+
+  it("names widgets and regions in words, and a key it does not know readably, never raw", () => {
+    const t = translator("en");
+    expect(nameOf(t, "widget", "agenda_now")).toBe("Now and next");
+    expect(nameOf(t, "region", "venue_rail")).toBe("Venue card");
+    expect(nameOf(t, "region", "side_panel")).toBe("Side panel");
+    expect(readable("hot-game_2")).toBe("Hot game 2");
+  });
+
+  it("says one screen, not one screens", () => {
+    const t = translator("en");
+    expect(counted(t, "devices.summary", 1, { total: 1, online: 1, offline: 0 })).toBe(
+      "1 screen · 1 online · 0 offline",
+    );
+    expect(counted(t, "zone.save_on", 2)).toBe("Go live on 2 screens");
+    expect(counted(t, "zone.save_on", 1)).toBe("Go live on 1 screen");
   });
 
   it("falls back to English for a language without a catalogue yet", () => {

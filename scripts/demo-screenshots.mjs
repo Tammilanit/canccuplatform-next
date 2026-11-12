@@ -80,18 +80,28 @@ const STUDIO_PAGES = [
   [name, path, DESK],
   [`${name}-phone`, path, PHONE],
 ]);
-STUDIO_PAGES.push([
-  "screen-pair-phone",
-  "/admin/screen/devices#pair=K7Q49WXP",
-  PHONE,
-]);
-// Live views keep their streams open, so there is no network idle: a fixed wait lets them draw.
+STUDIO_PAGES.push(
+  ["screen-pair-phone", "/admin/screen/devices#pair=K7Q49WXP", PHONE],
+  // Devices' Recent panel sits beside the screens from 1440 px, as Settings' last changes.
+  ["screen-devices-wide", "/admin/screen/devices", WIDE],
+);
+// The Pulse with the demo run of show (seedPulse below): the rail's Now and next, not the idle
+// logo every region falls back to while nothing runs. A screen that never draws it fails the shot.
+const PULSE_DRAWN = ".canccu-widget--agenda_now";
+const drawn = (frame) => frame.locator(PULSE_DRAWN).first().waitFor({ timeout: 30_000 });
+// Live views keep their streams open, so there is no network idle: each zone view the page has
+// loaded must draw the run of show, then a second lets the entry motion end. Through the iframe
+// element: page.frames() gave the page's own document for an iframe the server drew with `src`.
 const studioReady = async (page) => {
   await page
     .locator("[data-zone-preview]")
     .click({ timeout: 1000 })
     .catch(() => undefined);
-  await page.waitForTimeout(3000);
+  await page.waitForTimeout(500);
+  const views = page.locator(".canccu-studio-thumb iframe[src]");
+  const count = await views.count();
+  for (let i = 0; i < count; i++) await drawn(views.nth(i).contentFrame());
+  await page.waitForTimeout(1500);
 };
 
 // The demo event's main zone in the default theme. Every theme and the 4K sizes are #191's.
@@ -215,6 +225,56 @@ async function changeSettings(module, values) {
   expect(put, 200, `a change to the ${module} settings`);
 }
 
+// What the Pulse shows comes from the event's data, and the demo event starts with none: a run of
+// show (one item running, two next), a ticker line and the venue's Wi-Fi, all placeholder text.
+// Added after the other pages' shots, so those still show a new event; the run of show and the
+// ticker are removed again at the end (the Wi-Fi stays, as a rerun writes the same).
+const MIN = 60_000;
+const inMinutes = (n) => new Date(Date.now() + n * MIN).toISOString();
+const seeded = [];
+async function seedPulse() {
+  const items = [
+    ["Demo Game Cup: group stage", "tournament", -20, 70, "Main stage"],
+    ["Dinner", "meal", 35, 95, "Café"],
+    ["Demo Game Cup: finals", "tournament", 120, 210, "Main stage"],
+  ];
+  for (const [title, kind, start, end, location] of items) {
+    const body = {
+      title,
+      kind,
+      starts_at: inMinutes(start),
+      ends_at: inMinutes(end),
+      location,
+      visibility: "public",
+    };
+    const added = await demo.call("POST", "/api/agenda/items", { body });
+    seeded.push(expect(added, 201, `the run-of-show item ${title}`).body);
+  }
+  const text = "Welcome to Demo Event · the finals start on the main stage tonight";
+  expect(
+    await demo.call("PUT", "/api/screen/ticker", { body: { text, until: null } }),
+    200,
+    "the ticker line",
+  );
+  const venue = expect(
+    await demo.call("GET", "/api/tenants/current/venue-info"),
+    200,
+    "the venue info",
+  ).body;
+  const wifi = [{ ssid: "DemoEvent", password: "demo-guest", note: "", visibility: "public" }];
+  const put = await demo.call("PUT", "/api/tenants/current/venue-info", {
+    body: { revision: venue.revision, house_rules: venue.house_rules ?? "", wifi },
+  });
+  expect(put, 200, "the venue's Wi-Fi");
+}
+async function unseedPulse() {
+  for (const item of seeded) {
+    const path = `/api/agenda/items/${item.id}?revision=${item.revision}`;
+    expect(await demo.call("DELETE", path), 204, `removing ${item.title}`);
+  }
+  expect(await demo.call("DELETE", "/api/screen/ticker"), 204, "clearing the ticker");
+}
+
 let device;
 try {
   try {
@@ -253,6 +313,7 @@ try {
   // Paired as a kiosk would be (contracts/screen.md, Pairing), from a venue address.
   let reads = false;
   try {
+    await seedPulse();
     device = await demo.pair("Screenshots", "main");
     const state = await demo.call("GET", "/api/screen/device/state", {
       cookie: device.cookie,
@@ -265,10 +326,10 @@ try {
     for (const [name, viewport] of SCREENS) {
       await shot(name, "/screen/", viewport, device.cookie, {
         fullPage: false,
-        // The layout is drawn only from a state read; a pairing or error page has none. The player
-        // keeps its stream open, so there is no network idle: a second lets the entry motion end.
+        // The run of show is drawn only from a state read; a pairing or error page has none. The
+        // player keeps its stream open, so there is no network idle: a second lets the motion end.
         ready: async (page) => {
-          await page.waitForSelector(".canccu-layout", { timeout: 30_000 });
+          await drawn(page);
           await page.waitForTimeout(1000);
         },
       });
@@ -279,6 +340,11 @@ try {
   }
 } finally {
   await browser.close();
+  try {
+    await unseedPulse();
+  } catch (err) {
+    fail(`cleanup: ${firstLine(err)}`);
+  }
   // A rerun on the same stack would otherwise leave one more paired screen each time, or, after a
   // failed pairing, an open code of the 3 the loopback may hold (contracts/screen.md, Pairing).
   const [what, method, path] = device

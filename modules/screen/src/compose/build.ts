@@ -55,7 +55,7 @@ export interface RegionView {
   claim: Claim | null;
 }
 
-const DEFAULT_DWELL_S = 15;
+export const DEFAULT_DWELL_S = 15;
 const IDLES: readonly Idle[] = ["logo", "blank", "collapse", "next"];
 
 const clampDwell = (value: unknown): number | undefined =>

@@ -8,8 +8,6 @@
 
 (() => {
   const NOTICE_KEY = "canccu-studio-notice";
-  const UNDO_MS = 10 * 60_000;
-  const PREVIEW_MESSAGE = "canccu-screen-preview";
   const text = JSON.parse(document.getElementById("canccu-studio-text")?.textContent || "{}");
   const notice = document.querySelector(".canccu-studio-notice");
   const say = (key, values = {}) =>
@@ -49,6 +47,8 @@
     r.status >= 500 || !r.data?.error?.message
       ? say("error.failed")
       : say("error.refused", { message: r.data.error.message });
+  // The zone editor's own script (static/studio-zone.js) acts through the same helpers.
+  window.canccuStudio = { api, failure, reloadWith, say, show, notice };
 
   // A destructive action asks once more on the button itself; a second tap within 5 s acts.
   function confirmed(button) {
@@ -212,142 +212,6 @@
       if (!r.ok) return show(failure(r));
       location.assign(`/admin/screen/zones/${encodeURIComponent(body.key)}`);
     });
-  }
-
-  const editor = document.querySelector("form[data-zone]");
-  if (editor) zoneEditor(editor);
-
-  function zoneEditor(form) {
-    const original = JSON.parse(form.dataset.zone);
-    const undoKey = `canccu-studio-undo:${original.key}`;
-    const url = `/api/screen/zones/${encodeURIComponent(original.key)}`;
-
-    form.addEventListener("click", (event) => {
-      const move = event.target.closest("[data-widget-move]");
-      const add = event.target.closest("[data-widget-add]");
-      if (move) {
-        const row = move.closest("li");
-        const how = move.dataset.widgetMove;
-        if (how === "up" && row.previousElementSibling) row.after(row.previousElementSibling);
-        else if (how === "down" && row.nextElementSibling) row.before(row.nextElementSibling);
-        else if (how === "remove") row.remove();
-      }
-      if (add) {
-        const region = add.closest("[data-region]");
-        const list = region.querySelector("[data-widgets]");
-        const row = form
-          .querySelector("template[data-widget-row]")
-          .content.firstElementChild.cloneNode(true);
-        const widget = region.querySelector("[name=add]").value;
-        row.dataset.entry = JSON.stringify({ widget });
-        row.querySelector(".canccu-studio-widget__name").textContent = widget;
-        list.append(row);
-        region.querySelector("[name=layout_widgets]").checked = false;
-      }
-      if (move || add) syncRegions();
-    });
-    // The list stays visible while the layout's widgets are used, as what the screen shows now.
-    const syncRegions = () => {
-      for (const r of form.querySelectorAll("[data-region]")) {
-        r.querySelector("[data-widgets]").classList.toggle(
-          "canccu-studio-widgets--layout",
-          r.querySelector("[name=layout_widgets]").checked,
-        );
-      }
-    };
-    form.addEventListener("change", syncRegions);
-    syncRegions();
-
-    // The zone the form says, on top of what was read, so fields Studio does not edit are kept.
-    function zone() {
-      const f = form.elements;
-      const z = structuredClone(original);
-      delete z.revision;
-      z.name = f.name.value.trim();
-      z.layout_id = f.layout_id.value || null;
-      z.header = f.header.value || null;
-      z.hub_qr = f.hub_qr.value;
-      z.sound = { enabled: f.sound_enabled.checked, device_id: f.sound_device.value || null };
-      for (const r of form.querySelectorAll("[data-region]")) {
-        const id = r.dataset.region;
-        const s = { ...(z.regions[id] || {}) };
-        if (r.querySelector("[name=layout_widgets]").checked) delete s.widgets;
-        else
-          s.widgets = [...r.querySelectorAll("[data-widgets] li")].map((li) =>
-            JSON.parse(li.dataset.entry),
-          );
-        const set = (name, value, fallback) => {
-          if (value === fallback && !(name in (original.regions[id] || {})))
-            Reflect.deleteProperty(s, name);
-          else s[name] = value;
-        };
-        set("rotation", r.querySelector("[name=rotation]").value || "sequence", "sequence");
-        set("idle", r.querySelector("[name=idle]").value || "logo", "logo");
-        set("skip_empty", r.querySelector("[name=skip_empty]").checked, true);
-        const dwell = r.querySelector("[name=dwell_seconds]").value;
-        if (dwell === "") delete s.dwell_seconds;
-        else s.dwell_seconds = Number(dwell);
-        if (Object.keys(s).length > 0) z.regions[id] = s;
-        else Reflect.deleteProperty(z.regions, id);
-      }
-      return z;
-    }
-
-    // A true preview: the server composes the zone as it would be saved, and the real player draws it.
-    const frame = form.querySelector("iframe[data-preview]");
-    form.querySelector("[data-zone-preview]").addEventListener("click", async () => {
-      const r = await api("POST", `${url}/preview`, zone());
-      if (!r.ok) return show(failure(r));
-      frame.contentWindow.postMessage({ type: PREVIEW_MESSAGE, state: r.data }, location.origin);
-    });
-
-    async function put(body) {
-      const r = await api("PUT", url, body);
-      if (r.status === 409 && r.data?.error?.code === "version_conflict") {
-        const again = document.createElement("button");
-        again.type = "button";
-        again.className = "canccu-button canccu-button--secondary canccu-button--sm";
-        again.textContent = say("zone.reload");
-        again.addEventListener("click", () => location.reload());
-        show(say("zone.conflict"), again);
-        return null;
-      }
-      if (!r.ok) {
-        show(failure(r));
-        return null;
-      }
-      return r.data;
-    }
-
-    // Undo for 10 minutes: the page keeps the zone it replaced and saves it back (contracts/screen.md, Preview).
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const saved = await put({ ...zone(), revision: original.revision });
-      if (saved === null) return;
-      if (saved.revision !== original.revision) {
-        const kept = { ...original };
-        delete kept.revision;
-        sessionStorage.setItem(
-          undoKey,
-          JSON.stringify({ zone: kept, revision: saved.revision, until: Date.now() + UNDO_MS }),
-        );
-      }
-      reloadWith(say("zone.saved"));
-    });
-    const undo = JSON.parse(sessionStorage.getItem(undoKey) || "null");
-    if (undo && undo.until > Date.now() && undo.revision === original.revision) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "canccu-button canccu-button--secondary canccu-button--sm";
-      button.textContent = say("zone.undo");
-      button.addEventListener("click", async () => {
-        if ((await put({ ...undo.zone, revision: original.revision })) === null) return;
-        sessionStorage.removeItem(undoKey);
-        reloadWith(say("zone.undone"));
-      });
-      setTimeout(() => button.remove(), undo.until - Date.now());
-      show(notice?.hidden ? say("zone.saved") : notice.textContent, button);
-    } else sessionStorage.removeItem(undoKey);
   }
 
   // The ticker, also the phone remote: one line, an end, one tap.

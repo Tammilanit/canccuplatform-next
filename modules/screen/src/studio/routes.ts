@@ -39,9 +39,11 @@ import type { Bus } from "@canccu/kit";
 import type { SeenDevice } from "./help.js";
 import { CLIENT_KEYS, translator } from "./messages.js";
 import type { MessageKey, Translate } from "./messages.js";
-import { STUDIO, devicesActions, devicesView, liveView } from "./views.js";
+import { devicesActions, devicesView } from "./devices-view.js";
+import { tickerView } from "./ticker-view.js";
+import { STUDIO, liveActions, liveView } from "./views.js";
 import type { ViewContext } from "./views.js";
-import { tickerView, zoneEditorView, zonesView } from "./zone-views.js";
+import { zoneEditorView, zonesView } from "./zone-views.js";
 
 export interface StudioDeps {
   db: Db;
@@ -123,6 +125,8 @@ interface PageOptions {
   crumb?: { href: string; label: string };
   status?: number;
   plain?: boolean;
+  /** A page's own stylesheet and script (`<name>.css`, `<name>.js`); the script uses studio.js's helpers. */
+  own?: string;
 }
 
 async function studioPage(
@@ -139,7 +143,10 @@ async function studioPage(
     nonce,
     surface: "admin",
     cssHref: `${STUDIO}static/ui.css`,
-    head: html`<link rel="stylesheet" href="${STUDIO}static/studio.css" />`,
+    head: html`<link
+        rel="stylesheet"
+        href="${STUDIO}static/studio.css"
+      />${o.own === undefined ? "" : html`<link rel="stylesheet" href="${STUDIO}static/${o.own}.css" />`}`,
     event: await eventOf(request, deps),
     session: request.session ?? undefined,
     current: "screen",
@@ -159,7 +166,8 @@ async function studioPage(
         }),
     body: html`<p class="canccu-studio-notice" role="status" hidden></p>
       ${o.body}${clientText(t)}
-      <script src="${STUDIO}static/studio.js" defer></script>`,
+      <script src="${STUDIO}static/studio.js" defer></script>
+      ${o.own === undefined ? "" : html`<script src="${STUDIO}static/${o.own}.js" defer></script>`}`,
   });
   // Admin pages frame surface pages (the virtual screen) and are never framed themselves.
   return reply
@@ -175,6 +183,8 @@ const STATIC_TYPES: Record<string, string> = {
   "ui.css": "text/css; charset=utf-8",
   "studio.css": "text/css; charset=utf-8",
   "studio.js": "text/javascript; charset=utf-8",
+  "studio-zone.css": "text/css; charset=utf-8",
+  "studio-zone.js": "text/javascript; charset=utf-8",
 };
 
 const staticFiles = new Map<string, Promise<Buffer>>();
@@ -270,6 +280,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
           title: "",
           tab: "live",
           description: c.t("live.desc"),
+          actions: liveActions(c),
           body: liveView(c, zones, all),
         });
       },
@@ -319,6 +330,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
           title: zone.name,
           crumb: { href: `${STUDIO}zones`, label: c.t("zone.back") },
           body: zoneEditorView(c, zone, layouts, all),
+          own: "studio-zone",
         });
       },
     );

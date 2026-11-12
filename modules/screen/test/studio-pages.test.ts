@@ -64,6 +64,10 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body).toContain('data-src="/screen/zones/main"');
     expect(res.body).toContain('href="/screen/zones/main"');
+    // Pairing looks as it does on Devices, where it is the main action.
+    expect(res.body).toContain(
+      '<a class="canccu-button canccu-button--primary" href="/admin/screen/devices#pair=">',
+    );
     expect(res.headers["content-security-policy"]).toContain("frame-ancestors 'none'");
     expect(res.headers["content-security-policy"]).toContain("frame-src 'self'");
   });
@@ -77,6 +81,10 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect(admin).toContain("Clear open codes");
     // Never seen by a heartbeat: not online, and no live view of nothing.
     expect(admin).toContain("Not seen yet");
+    expect(admin).toMatch(/\b1 screen · 0 online · 1 offline/);
+    expect(admin).toContain(">Assign");
+    expect(admin).toContain(">Recent<");
+    expect(admin).toContain("Hall left paired");
     const viewer = (await page("/admin/screen/devices", "viewer")).body;
     expect(viewer).toContain("Hall left");
     expect(viewer).not.toContain("/commands");
@@ -90,6 +98,14 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect(res.body).toContain('data-region="ticker"');
     expect(res.body).toContain('data-zone="{&quot;key&quot;:&quot;main&quot;');
     expect(res.body).toContain('src="/screen/zones/main"');
+    // Regions and widgets in words (mockup 08), the hero open first, the layout's seconds shown.
+    expect(res.body).toContain("Venue card");
+    expect(res.body).toContain("Now and next → Countdown");
+    expect(res.body).toContain('<option value="agenda_now">Now and next</option>');
+    expect(res.body).not.toMatch(/>\s*(venue_rail|agenda_now|hot_game)\s*</);
+    expect(res.body).toMatch(/data-pick="hero"[^>]*aria-pressed="true"/);
+    expect(res.body).toContain('placeholder="15"');
+    expect(res.body).toContain("studio-zone.js");
     expect((await page("/admin/screen/zones/nope", "zoner")).statusCode).toBe(404);
     const list = (await page("/admin/screen/zones", "zoner")).body;
     expect(list).toContain('href="/admin/screen/zones/main"');
