@@ -122,7 +122,7 @@ async def env() -> AsyncIterator[Env]:
         await conn.execute(
             "TRUNCATE agenda_state, agenda_kinds, agenda_items, agenda_timers,"
             " agenda_timer_tenants, agenda_sessions, agenda_templates, agenda_changes, agenda_undo,"
-            " agenda_outbox, agenda_outbox_tenants"
+            " agenda_outbox, agenda_outbox_tenants, agenda_reminders_fired"
         )
     contexts = {tid: context(tid) for tid in HOSTS.values()}
 

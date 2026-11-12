@@ -67,8 +67,12 @@ def _audiences(changes: Iterable[Change]) -> str:
     return ", ".join(VISIBILITY_LABELS[v].lower() for v in model.VISIBILITIES if v in seen)
 
 
-def told(action: Action, changes: Sequence[Change], now: datetime) -> list[str]:
-    """Who hears about the change, one line per channel."""
+def told(
+    action: Action, changes: Sequence[Change], now: datetime, *, announce: bool = True
+) -> list[str]:
+    """Who hears about the change, one line per channel. A quiet change (`announce` false) is
+    announced nowhere: screens show the new times with no notice (agenda.md, Notification
+    channels)."""
     lines = []
     shown = [c for c in changes if c.visibility != "crew"]
     if shown:
@@ -77,12 +81,20 @@ def told(action: Action, changes: Sequence[Change], now: datetime) -> list[str]:
             if any(c.zone is None for c in shown)
             else "screens of zone " + ", ".join(sorted({c.zone for c in shown if c.zone}))
         )
-        with_notice = action != "move" and any("screen" in c.channels for c in shown)
+        with_notice = announce and action != "move" and any("screen" in c.channels for c in shown)
         lines.append(
             f"Screens: {where}, within a second{', with a notice' if with_notice else ''}."
         )
     else:
         lines.append("Screens: nothing; crew items never show on a screen.")
+    managed = [c.title for c in changes if c.managed]
+    following = "Tournament: its sessions follow (" + ", ".join(managed) + ")."
+    if not announce:
+        lines.append(
+            "People: nobody is told. No Discord post, no push, and a reminder that has gone"
+            " out does not go out again."
+        )
+        return lines + ([following] if managed and action == "delay" else [])
     if action == "move":
         lines.append("Phones and Discord: nobody is told; a move is a new plan.")
         return lines
@@ -102,9 +114,8 @@ def told(action: Action, changes: Sequence[Change], now: datetime) -> list[str]:
         lines.append(f"Phones stay quiet for {later} item(s) starting more than 2 h from now.")
     if any("discord_channel" in c.channels and c.visibility != "crew" for c in told_items):
         lines.append("Discord: a post in the event's channel.")
-    managed = [c.title for c in changes if c.managed]
     if managed and action == "delay":
-        lines.append("Tournament: its sessions follow (" + ", ".join(managed) + ").")
+        lines.append(following)
     return lines
 
 

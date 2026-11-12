@@ -235,6 +235,16 @@ def field(label: str, control: str, hint: str = "") -> str:
     )
 
 
+def check(name: str, label: str, on: bool, hint: str = "") -> str:
+    """A checkbox as a row, its hint under it; it posts `1` when ticked and nothing otherwise."""
+    hint_html = f'<span class="canccu-field__hint">{esc(hint)}</span>' if hint else ""
+    return (
+        '<label class="canccu-field canccu-field--check"><input class=canccu-check type=checkbox'
+        f' name="{esc(name)}" value=1{" checked" if on else ""}>'
+        f'<span class="canccu-field__label">{esc(label)}</span>{hint_html}</label>'
+    )
+
+
 def text_input(name: str, value: Any = "", kind: str = "text", **attrs: Any) -> str:
     extra = "".join(
         f" {k.rstrip('_')}" if v is True else f' {k.rstrip("_")}="{esc(v)}"'

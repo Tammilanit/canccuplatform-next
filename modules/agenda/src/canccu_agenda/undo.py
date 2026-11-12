@@ -124,7 +124,9 @@ async def undo_page(request: Request) -> Response:
         for step, row in zip(steps, rows, strict=True):
             touched += await _apply(conn, step, row, actor, out)
         kinds = await store.kinds(conn)
-        await timers.reschedule(conn, touched, kinds, leads, now)
+        # One page action, so one choice; steps saved before `announce` existed were announced.
+        announce = all(step.get("announce", True) for step in steps)
+        await timers.reschedule(conn, touched, kinds, leads, now, announce=announce)
         rendered = {r["id"]: model.item_json(r, kinds, channels) for r in touched}
         await _store(d, conn, session, out, rendered)
     await d.outbox.flush()
@@ -178,12 +180,13 @@ async def _apply(
     values = _values(step["values"])
     new = await store.update_item(conn, row, values, actor)
     version = await store.bump(conn, "agenda_version")
+    announce = step.get("announce", True)
     if step["minutes"] is not None:
-        data = {"minutes": step["minutes"], "agenda_version": version}
+        data = {"minutes": step["minutes"], "announce": announce, "agenda_version": version}
         out.append(("agenda.item.delayed", new["id"], data))
     else:
         changed = list(dict.fromkeys(k.removeprefix("planned_") for k in values))
-        data = {"changed": changed, "agenda_version": version}
+        data = {"changed": changed, "announce": announce, "agenda_version": version}
         out.append(("agenda.item.changed", new["id"], data))
     return [new]
 

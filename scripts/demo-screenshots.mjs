@@ -68,6 +68,15 @@ const OTHERS = [
   ["error-not-found", MISSING, DESK, { status: 404 }],
   ["error-not-found-phone", MISSING, PHONE, { status: 404 }],
 ];
+// The Delay and Edit views of one item (#388), next to their mockups (docs/design/mockups.html):
+// told, with the items after it, quiet, and the edit form. The items are made for the run.
+const ITEM_PAGES = [
+  ["agenda-delay", "/delay?minutes=10&announce=1", DESK],
+  ["agenda-delay-following", "/delay?minutes=10&following=1&announce=1", DESK],
+  ["agenda-delay-quiet", "/delay?minutes=10", DESK],
+  ["agenda-delay-phone", "/delay?minutes=10&announce=1", PHONE],
+  ["agenda-edit", "/edit", DESK],
+];
 // The demo event's main zone in the default theme. Every theme and the 4K sizes are #191's.
 const SCREENS = [
   ["pulse-landscape", { width: 1920, height: 1080 }],
@@ -84,6 +93,10 @@ if (opts["dry-run"]) {
   for (const [name, path, { width, height }, o] of OTHERS) {
     const how = o.cookie === null ? ", signed out" : `, answering ${o.status}`;
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height}${how})`);
+  }
+  for (const [name, suffix, { width, height }] of ITEM_PAGES) {
+    const path = `/agenda/items/<an item made for the run>${suffix}`;
+    console.log(`  ${name}.png  ${at(path)}  (${width}×${height})`);
   }
   for (const [name, { width, height }] of SCREENS) {
     console.log(
@@ -184,6 +197,24 @@ async function changeSettings(module, values) {
   expect(put, 200, `a change to the ${module} settings`);
 }
 
+// An item starting `from` minutes from now, through the agenda's API; the run removes it after.
+const made = [];
+async function addItem(title, kind, from, minutes) {
+  const time = (m) =>
+    new Date(Date.now() + m * 60_000).toISOString().replace(/\.\d{3}Z$/, "Z");
+  const body = {
+    title,
+    kind,
+    starts_at: time(from),
+    ends_at: time(from + minutes),
+    visibility: "public",
+  };
+  const res = await demo.call("POST", "/api/agenda/items", { body });
+  const item = expect(res, 201, `adding ${title}`).body;
+  made.push(item);
+  return item;
+}
+
 let device;
 try {
   try {
@@ -218,6 +249,19 @@ try {
   for (const [name, path, viewport, o] of OTHERS) {
     await shot(name, path, viewport, o.cookie === null ? null : SESSION, o);
   }
+  let item;
+  try {
+    item = await addItem("Demo Game Cup: semi-final", "tournament", 60, 75);
+    await addItem("Board games corner", "activity", 150, 60);
+    await addItem("Quiz night", "activity", 240, 60);
+  } catch (err) {
+    fail(`agenda items for the shots: ${firstLine(err)}`);
+  }
+  if (item) {
+    for (const [name, suffix, viewport] of ITEM_PAGES) {
+      await shot(name, `/agenda/items/${item.id}${suffix}`, viewport, SESSION);
+    }
+  }
 
   // Paired as a kiosk would be (contracts/screen.md, Pairing), from a venue address.
   let reads = false;
@@ -245,6 +289,14 @@ try {
   }
 } finally {
   await browser.close();
+  for (const { id, title } of made) {
+    try {
+      const path = `/api/agenda/items/${id}?revision=1`;
+      expect(await demo.call("DELETE", path), 204, `removing ${title}`);
+    } catch (err) {
+      fail(`cleanup: ${firstLine(err)}`);
+    }
+  }
   // A rerun on the same stack would otherwise leave one more paired screen each time, or, after a
   // failed pairing, an open code of the 3 the loopback may hold (contracts/screen.md, Pairing).
   const [what, method, path] = device

@@ -219,7 +219,10 @@ async def _move(
     await timers.reschedule(conn, [new], kinds, leads, d.now())
     item = model.item_json(new, kinds, channels)
     out.append(
-        ("agenda.item.changed", {"item": item, "changed": changed, "agenda_version": version})
+        (
+            "agenda.item.changed",
+            {"item": item, "changed": changed, "announce": True, "agenda_version": version},
+        )
     )
 
 

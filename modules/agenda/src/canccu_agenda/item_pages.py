@@ -1,4 +1,5 @@
-"""The full item form: add an item, or edit and move one. A move shows its preview first."""
+"""The full item form: add an item, or edit and move one. A move shows its preview first. An
+edit tells people unless the organiser unticks "Tell people" for a quiet fix (#388)."""
 
 from __future__ import annotations
 
@@ -23,6 +24,7 @@ from .web import (
     BASE,
     api_time,
     button,
+    check,
     esc,
     field,
     from_local,
@@ -63,7 +65,20 @@ def _form(values: dict[str, Any], kinds: Any, action: str, error: str = "") -> s
             f'<textarea class="canccu-input" name=description maxlength=2000>'
             f"{esc(values.get('description') or '')}</textarea>",
         )
+        + (_announce_check(values) if revision else "")
         + f'<div class="canccu-agenda-actions">{button("Save")}</div></form>'
+    )
+
+
+def _announce_check(values: dict[str, Any]) -> str:
+    """Only an edit has the choice: an added item has nothing to announce yet. Ticked unless the
+    form comes back after a refusal with it unticked."""
+    return check(
+        "announce",
+        "Tell people (Discord, phones)",
+        values.get("announce", "1") == "1",
+        "Untick for a quiet fix, such as a typo: nothing is announced, and a reminder that has"
+        " gone out does not go out again. Screens and the hub still show the change.",
     )
 
 
@@ -76,6 +91,7 @@ def _posted(form: FormData) -> dict[str, Any]:
     except KitError:
         values["reminder_leads_minutes"] = None
     values["notify"] = forms.notify_from(form)
+    values["announce"] = form.get("announce") or ""
     return values
 
 
@@ -194,6 +210,7 @@ async def save_page(request: Request) -> Response:
             if not rebased.complete or rebased.clash:
                 return _clash_page(request, rebased, item, kinds, tz)
             fields = rebased.fields
+        fields["announce"] = form.get("announce") == "1"
         # Only times the organiser changed are sent: sending the current time of a delayed item
         # would be a move that clears its delay.
         for key, name in (("starts_at", "starts"), ("ends_at", "ends")):
@@ -242,10 +259,12 @@ def _move_preview(
     if ends is not None and ends <= starts:
         raise model.invalid("the end must be after the start")
     channels = list(model.DEFAULT_CHANNELS)  # moves tell nobody, so channels do not matter
+    now = deps(request).now()
+    change = change_of(row, kinds, channels, starts)
     preview = preview_html(
         [moved_line(row, starts, ends, tz) + " (a new plan: no delay shows)"],
         [],
-        told("move", [change_of(row, kinds, channels, starts)], deps(request).now()),
+        told("move", [change], now, announce=fields["announce"]),
     )
     keep = {k: form.getlist(k) for k in form}
     body = (
@@ -253,7 +272,7 @@ def _move_preview(
         + f'<form method=post action="{BASE}/items/{esc(row["id"])}/edit"'
         + ' class="canccu-agenda-actions">'
         + hidden({**keep, "confirm": "1"})
-        + button("Move it")
+        + button("Move it" if fields["announce"] else "Move it quietly")
         + f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/{esc(row["id"])}">'
         "Back</a></form>"
     )

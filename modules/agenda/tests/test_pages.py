@@ -151,6 +151,7 @@ async def test_a_move_shows_its_preview_before_it_changes_anything(env: Env) -> 
             "starts": "2026-11-20T19:00",
             "ends": "2026-11-20T20:00",
             "visibility": "public",
+            "announce": "1",
         }
         preview = await c.post(f"/items/{item['id']}/edit", data=fields, headers=h)
         unchanged = (await c.get(f"/api/agenda/items/{item['id']}", headers=h)).json()

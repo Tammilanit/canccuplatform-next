@@ -31,6 +31,14 @@ async def target(conn: Any, item_id: str, sent_revision: int) -> Any:
     return row
 
 
+def announce_of(data: dict[str, Any]) -> bool:
+    """The write's optional `announce` (default true): false changes the agenda quietly."""
+    value = data.get("announce", True)
+    if not isinstance(value, bool):
+        raise model.invalid("announce must be true or false")
+    return value
+
+
 def minutes_of(value: Any) -> int:
     if type(value) is not int or value == 0 or not -720 <= value <= 720:
         raise model.invalid("minutes must be a whole number from -720 to 720, not 0")
@@ -99,8 +107,11 @@ async def delay_item(request: Request) -> Response:
     following = data.get("following", False)
     if not isinstance(following, bool):
         raise model.invalid("following must be true or false")
+    announce = announce_of(data)
     item_id = request.path_params["item_id"]
-    version, items = await delay(deps(request), session, item_id, sent_revision, minutes, following)
+    version, items = await delay(
+        deps(request), session, item_id, sent_revision, minutes, following, announce=announce
+    )
     return JSONResponse({"agenda_version": version, "items": items})
 
 
@@ -112,12 +123,14 @@ async def delay(
     minutes: int,
     following: bool,
     *,
+    announce: bool = True,
     expected_version: int | None = None,
     inverse: Inverse | None = None,
 ) -> tuple[int, list[dict[str, Any]]]:
     """Applies a delay; answers the last `agenda_version` and the shifted items, the delayed
     item first. With `expected_version` (a page's preview), any change of the agenda since is
-    409 `agenda_changed`, checked under the event's write lock."""
+    409 `agenda_changed`, checked under the event's write lock. With `announce` false, every
+    event of the shift says so and no reminder that has fired fires again."""
     minutes = minutes_of(minutes)
     channels, leads = await event_settings(d)
     now = d.now()
@@ -135,9 +148,9 @@ async def delay(
             )
             updated.append((new_row, await store.bump(conn, "agenda_version")))
             if inverse is not None:
-                inverse.restore(r, new_row, ["starts_at", "ends_at"], -minutes)
+                inverse.restore(r, new_row, ["starts_at", "ends_at"], -minutes, announce)
         kinds = await store.kinds(conn)
-        await timers.reschedule(conn, [r for r, _ in updated], kinds, leads, now)
+        await timers.reschedule(conn, [r for r, _ in updated], kinds, leads, now, announce=announce)
         shifted = [(model.item_json(r, kinds, channels), v) for r, v in updated]
         # One correlation id, in order of the new start: a consumer that takes the first of a
         # correlation id gets the earliest.
@@ -149,6 +162,7 @@ async def delay(
                 {
                     "item": item,
                     "minutes": minutes,
+                    "announce": announce,
                     "agenda_version": version,
                     "actor_user_id": session.user_id,
                 },

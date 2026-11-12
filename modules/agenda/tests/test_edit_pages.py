@@ -23,9 +23,15 @@ async def test_delay_previews_what_moves_what_stays_and_who_hears(env: Env) -> N
         far = await add(c, h, title="Breakfast", starts_at=at(960))
         env.store.calls.clear()
         choose = await c.get(f"/items/{dinner['id']}/delay", headers=h)
-        preview = await c.get(f"/items/{dinner['id']}/delay?minutes=15&following=1", headers=h)
-        alone = await c.get(f"/items/{dinner['id']}/delay?minutes=15", headers=h)
-    assert "and everything after it" in choose.text and " checked>" in choose.text
+        preview = await c.get(
+            f"/items/{dinner['id']}/delay?minutes=15&following=1&announce=1", headers=h
+        )
+        alone = await c.get(f"/items/{dinner['id']}/delay?minutes=15&announce=1", headers=h)
+    # Only this item by default (#388): the items after it are an option, counted; telling
+    # people is the default.
+    assert "Also move the 2 items after it" in choose.text
+    assert 'name="following" value=1>' in choose.text
+    assert 'name="announce" value=1 checked>' in choose.text
     assert "This will change" not in choose.text
     text = preview.text
     assert "Dinner is running: its end moves, its start stays." in text
@@ -34,8 +40,9 @@ async def test_delay_previews_what_moves_what_stays_and_who_hears(env: Env) -> N
     assert "Quiet stays at 01:00: quiet hours never move with a delay." in text
     assert "Phones: one notice per audience (everyone)" in text
     assert "Phones stay quiet for 1 item(s) starting more than 2 h from now." in text
-    assert "Delay 3 items +15 min" in text
+    assert "Delay 3 items +15 min and tell people" in text
     assert "Semis" not in alone.text.split("This will change")[1]
+    assert "Delay 1 item +15 min and tell people" in alone.text
     assert env.store.calls == []  # a preview changes nothing
     del quiet, far, semis
 

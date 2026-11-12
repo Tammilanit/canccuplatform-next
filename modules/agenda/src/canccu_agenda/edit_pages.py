@@ -1,5 +1,7 @@
-"""Delay ("and everything after it"), cancel and "show on screens now", each with its preview:
-what moves, what does not and why, and who is told (plan issue-187 D10, D14).
+"""Delay (this item, or with the items after it), cancel and "show on screens now", each with its
+preview: what moves, what does not and why, and who is told (plan issue-187 D10, D14). A delay
+moves only its item unless the organiser ticks the items after it, and tells people unless they
+untick it (#388, the accepted design #382).
 
 The preview and the change share `edits.plan_delay`. A delay with following also moves items
 the preview listed, so its confirm carries the `agenda_version` it was shown at: if the run of
@@ -28,6 +30,7 @@ from .preview import change_of, moved_line, preview_html, told, told_announce
 from .web import (
     BASE,
     button,
+    check,
     esc,
     field,
     hhmm,
@@ -55,8 +58,18 @@ async def _plan(d: Deps, row: Any, minutes: int, following: bool, now: datetime)
     return plan, version, kinds
 
 
+async def _after(d: Deps, row: Any, now: datetime) -> int:
+    """How many items "Also move the items after it" would move, from the delay's own plan: which
+    items follow does not depend on the minutes, and a shift of one minute is never refused."""
+    try:
+        plan, _, _ = await _plan(d, row, 1, True, now)
+    except KitError:
+        return 0  # the item cannot be delayed; the preview says why
+    return len(plan.moves) - 1
+
+
 async def _delay_preview(
-    request: Request, row: Any, minutes: int, following: bool
+    request: Request, row: Any, minutes: int, following: bool, announce: bool = True
 ) -> tuple[str, int, int]:
     """The preview of a delay, the `agenda_version` it shows and the number of items it moves."""
     d = deps(request)
@@ -67,7 +80,8 @@ async def _delay_preview(
     if row["starts_at"] <= now:
         changed.insert(0, f"{row['title']} is running: its end moves, its start stays.")
     kept = [f"{r['title']} stays at {hhmm(r['starts_at'], tz)}: {why}." for r, why in plan.kept]
-    who = told("delay", [change_of(r, kinds, channels, s) for r, s, _ in plan.moves], now)
+    changes = [change_of(r, kinds, channels, s) for r, s, _ in plan.moves]
+    who = told("delay", changes, now, announce=announce)
     return preview_html(changed, kept, who), version, len(plan.moves)
 
 
@@ -77,7 +91,10 @@ async def delay_page(request: Request) -> Response:
     row, _, _ = await load_item(d, request.path_params["item_id"])
     q = request.query_params
     chosen = "minutes" in q or "other" in q
-    following = q.get("following") == "1" if chosen else True
+    # Unticked boxes send nothing, so the defaults hold only before the first preview.
+    following = q.get("following") == "1"
+    announcing = q.get("announce") == "1" if chosen else True
+    after = await _after(d, row, d.now())
     base = f"{BASE}/items/{esc(row['id'])}"
     chips = "".join(
         button(
@@ -98,9 +115,23 @@ async def delay_page(request: Request) -> Response:
         " negative brings it forward)</span>"
         f'<input class="canccu-input" type=number name=other min=-720 max=720'
         f' value="{esc(q.get("other", ""))}"></label>'
-        '<label class="canccu-field canccu-field--check"><input class=canccu-check type=checkbox'
-        f" name=following value=1{' checked' if following else ''}> and everything after it</label>"
-        f"{button('Preview', 'secondary')}</form>"
+        + (
+            check(
+                "following",
+                f"Also move the {after} item{'s' if after != 1 else ''} after it",
+                following,
+                "Off: they keep their times; only this item moves.",
+            )
+            if after
+            else ""
+        )
+        + check(
+            "announce",
+            "Tell people (Discord, phones)",
+            announcing,
+            "Off: nothing is announced. Screens and the hub still show the new time.",
+        )
+        + f"{button('Preview', 'secondary')}</form>"
     )
     body = (
         notice("The run of show changed meanwhile: check the preview again.", "error")
@@ -111,7 +142,9 @@ async def delay_page(request: Request) -> Response:
     if chosen:
         try:
             minutes = edits.minutes_of(_int(q.get("minutes") or q.get("other")))
-            preview, version, count = await _delay_preview(request, row, minutes, following)
+            preview, version, count = await _delay_preview(
+                request, row, minutes, following, announcing
+            )
         except KitError as exc:
             body += notice(exc.message, "error")
         else:
@@ -121,6 +154,7 @@ async def delay_page(request: Request) -> Response:
                 if minutes > 0
                 else (f"Bring {items} forward {-minutes} min")
             )
+            label += " and tell people" if announcing else " quietly"
             body += preview + (
                 f'<form method=post action="{base}/delay" class="canccu-agenda-actions">'
                 + hidden(
@@ -128,6 +162,7 @@ async def delay_page(request: Request) -> Response:
                         "revision": row["revision"],
                         "minutes": minutes,
                         "following": "1" if following else "",
+                        "announce": "1" if announcing else "",
                         "agenda_version": version,
                     }
                 )
@@ -151,6 +186,8 @@ async def delay_save(request: Request) -> Response:
     item_id = request.path_params["item_id"]
     minutes = edits.minutes_of(_int(form.get("minutes")))
     following = form.get("following") == "1"
+    # The confirm always sends it ("" when quiet); a form from before the choice existed told.
+    announcing = form.get("announce", "1") == "1"
     revision = model.revision(_int(form.get("revision")))
     shown = _int(form.get("agenda_version"))
     inverse = Inverse()
@@ -162,13 +199,21 @@ async def delay_save(request: Request) -> Response:
             revision,
             minutes,
             following,
+            announce=announcing,
             expected_version=shown if isinstance(shown, int) else -1,
             inverse=inverse,
         )
     except KitError as exc:
         if exc.code != "agenda_changed":
             raise
-        query = urlencode({"minutes": minutes, "following": "1" if following else "", "changed": 1})
+        query = urlencode(
+            {
+                "minutes": minutes,
+                "following": "1" if following else "",
+                "announce": "1" if announcing else "",
+                "changed": 1,
+            }
+        )
         return redirect(f"/items/{item_id}/delay?{query}")
     path = f"/?day={_day_of(items[0]['starts_at'], request)}&done=delayed"
     return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))

@@ -37,6 +37,7 @@ async def test_delay_shifts_current_times_and_keeps_the_plan(env: Env) -> None:
     assert event["data"] == {
         "item": moved,
         "minutes": 15,
+        "announce": True,
         "agenda_version": 3,
         "actor_user_id": "u_org",
     }

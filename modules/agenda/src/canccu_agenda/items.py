@@ -15,7 +15,7 @@ from starlette.routing import Route
 from . import model, store, timers
 from .access import viewer, writer
 from .deps import Deps, deps
-from .edits import target
+from .edits import announce_of, target
 from .effective import event_settings, read_channels
 from .inverse import Inverse
 from .kinds import body, not_found
@@ -231,8 +231,10 @@ async def edit(
     *,
     inverse: Inverse | None = None,
 ) -> dict[str, Any]:
-    """Edits or moves an item from the fields of a request body (`revision` included)."""
+    """Edits or moves an item from the fields of a request body (`revision` and the optional
+    `announce` included)."""
     sent_revision = model.revision(data.get("revision"))
+    announce = announce_of(data)
     edits = edit_values(data)
     channels, leads = await event_settings(d)
     async with d.db.tenant() as conn:
@@ -260,17 +262,19 @@ async def edit(
             return item
         new_row = await store.update_item(conn, row, values, store.actor_of(session))
         if inverse is not None:
-            inverse.restore(row, new_row, list(values))
+            inverse.restore(row, new_row, list(values), announce=announce)
         row = new_row
         version = await store.bump(conn, "agenda_version")
-        await timers.reschedule(conn, [row], await store.kinds(conn), leads, d.now())
-        (item,) = await render(conn, [row], channels)
+        kinds = await store.kinds(conn)
+        await timers.reschedule(conn, [row], kinds, leads, d.now(), announce=announce)
+        item = model.item_json(row, kinds, channels)
         await d.outbox.add(
             conn,
             "agenda.item.changed",
             {
                 "item": item,
                 "changed": changed,
+                "announce": announce,
                 "agenda_version": version,
                 "actor_user_id": session.user_id,
             },
