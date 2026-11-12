@@ -222,6 +222,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
       else await layout(page, size);
       if (view === "rail-empty") await railShowsIdle(page);
+      else if (view === "dashboard-showcase") await stripNamesCountdown(page);
       else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
         await railShowsAgenda(page);
       await settle(page);
@@ -290,6 +291,19 @@ async function railShowsAgenda(page) {
   await page.waitForSelector(".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active", {
     timeout: 40_000,
   });
+}
+
+/** A strip's countdown says what it counts down to: its name drawn whole inside the strip. */
+async function stripNamesCountdown(page) {
+  const sel = ".canccu-region--rail > .canccu-widget--countdown.canccu-is-active";
+  await page.waitForSelector(sel, { timeout: 40_000 });
+  const fits = await page.$eval(sel, (card) => {
+    const name = card.querySelector(".canccu-widget__headline");
+    if (name === null || name.textContent.trim() === "") return false;
+    const [c, n] = [card.getBoundingClientRect(), name.getBoundingClientRect()];
+    return n.height > 0 && n.top >= c.top && n.bottom <= c.bottom;
+  });
+  if (!fits) throw new Error("the showcase's rail strip draws its countdown without its name");
 }
 
 /** The rail shows its idle choice, on both of its turns: never the emptied run of show. */

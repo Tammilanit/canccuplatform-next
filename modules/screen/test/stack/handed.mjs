@@ -70,6 +70,7 @@ export function withHeroItemOnly(s) {
 /**
  * Dashboard during a showcase (contracts/screen.md, The hero role and the showcase): a spotlight in
  * the hero, grown to 8×10, and the five other boxes stacked beside it, 4×2 each, in layout order.
+ * The rail stays on its countdown, the tallest widget a strip has to fit on two lines.
  */
 export function withShowcase(s) {
   const stacked = ["online", "voice", "top_games", "right_now", "rail"];
@@ -80,7 +81,12 @@ export function withShowcase(s) {
       if (r.id === "hero")
         return { ...r, claim: spotlight, area: { column: 1, row: 2, columns: 8, rows: 10 } };
       const i = stacked.indexOf(r.id);
-      return i < 0 ? r : { ...r, area: { column: 9, row: 2 + 2 * i, columns: 4, rows: 2 } };
+      if (i < 0) return r;
+      const area = { column: 9, row: 2 + 2 * i, columns: 4, rows: 2 };
+      if (r.id !== "rail") return { ...r, area };
+      const countdown = r.widgets.findIndex((w) => w.widget === "countdown" && !w.view.empty);
+      if (countdown < 0) throw new Error("the demo Dashboard's rail has no countdown to show");
+      return { ...r, area, order: [countdown] };
     }),
   };
 }

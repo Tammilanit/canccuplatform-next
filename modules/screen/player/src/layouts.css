@@ -321,8 +321,80 @@
       .canccu-widget__until,
     .canccu-layout--dashboard
       .canccu-region:not([data-role="header"], [data-role="ticker"])
-      .canccu-widget__starts {
+      .canccu-widget__starts,
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown
+      .canccu-widget__delay {
       font-size: calc(3.4 * var(--canccu-u));
+    }
+
+    /*
+     * A countdown in full is taller than a strip, and centring it clips its name off the top: a
+     * strip shows the name on one line, the start and count under it, and no bar. A start, a delay
+     * badge and the count are too wide together, so a delayed item shows the badge, not its start.
+     */
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown {
+      display: grid;
+      grid-template-areas: "headline headline" "when count";
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-content: center;
+      align-items: baseline;
+      gap: calc(1 * var(--canccu-u)) calc(2 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown
+      :is(
+        .canccu-widget__kicker,
+        .canccu-widget__bar,
+        .canccu-widget__when:has(.canccu-widget__delay) .canccu-widget__starts
+      ) {
+      display: none;
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown
+      .canccu-widget__headline {
+      grid-area: headline;
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: calc(4.4 * var(--canccu-u));
+      line-height: 1.2;
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown
+      .canccu-widget__when {
+      grid-area: when;
+      flex-wrap: nowrap;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown
+      .canccu-widget__count {
+      grid-area: count;
+      margin-top: 0;
+      white-space: nowrap;
+      font-size: calc(3.4 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown
+      .canccu-widget__count
+      .canccu-widget__big {
+      font-size: calc(4.4 * var(--canccu-u));
     }
   }
 }
