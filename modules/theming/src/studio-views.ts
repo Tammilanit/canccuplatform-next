@@ -17,7 +17,6 @@ import { loadDraft } from "./drafts.js";
 import type { DraftRow } from "./drafts.js";
 import { FILE_NAME, fileName } from "./files.js";
 import type { FileStore } from "./files.js";
-import { EMBEDS } from "./http.js";
 import { SERVED } from "./theme.js";
 import { fillTokens } from "./tokens.js";
 
@@ -137,8 +136,8 @@ function startView(embedsAllowed: boolean): Html {
   const missing = embedsAllowed
     ? ""
     : html`<p class="canccu-field__hint">
-        The ${[...STARTERS_WITH_EMBEDS].join(" and ")} themes hold embeds, which need the right
-        <code>${EMBEDS}</code>.
+        The ${[...STARTERS_WITH_EMBEDS].join(" and ")} themes hold embeds, which your role doesn't
+        include. If you need them, ask an event owner to add embeds to your role.
       </p>`;
   return card(
     "Start a draft",
