@@ -3,38 +3,82 @@
 from __future__ import annotations
 
 import html
+import re
 from typing import Any
 
 from .declarations import Setting
 from .service import BadSettings
 
+_UNIT = re.compile(r"^(.*\S)\s*\(([^()]+)\)$")
+
+
+_LANGUAGES = {"en": "English", "fi": "Finnish"}
+
+
+def _words(value: str) -> str:
+    """A choice's value as words: `high_contrast` reads "High contrast", `en` "English"."""
+    return _LANGUAGES.get(value) or value.replace("_", " ").capitalize()
+
 
 def field_html(s: Setting, value: Any) -> str:
-    name, label = html.escape(s.key), html.escape(s.label)
+    """A declared setting as a packages/ui form field: a label's trailing "(seconds)" becomes
+    the field's unit, an integer's bounds its hint (UX audit A4)."""
+    fid, name = f"canccu-field-{html.escape(s.key)}", html.escape(s.key)
     value = s.default if value is None else value
     if s.type == "boolean":
         checked = " checked" if value else ""
-        return f"<p><label><input type=checkbox name={name}{checked}> {label}</label></p>"
+        return (
+            f'<div class="canccu-field canccu-field--check"><input class="canccu-check" '
+            f"type=checkbox id={fid} name={name}{checked}>"
+            f'<label class="canccu-field__label" for={fid}>{html.escape(s.label)}</label></div>'
+        )
+    label, unit = s.label, ""
+    if match := _UNIT.match(s.label):
+        label, unit = match.group(1), match.group(2)
+    hint = ""
     if s.choices and s.type == "string":
         opts = "".join(
-            f"<option{' selected' if c == value else ''}>{html.escape(c)}</option>"
+            f'<option value="{html.escape(c)}"{" selected" if c == value else ""}>'
+            f"{html.escape(_words(c))}</option>"
             for c in s.choices
         )
-        return f"<p><label>{label} <select name={name}>{opts}</select></label></p>"
-    text = (
-        ", ".join(map(str, value)) if isinstance(value, list) else ("" if value is None else value)
-    )
-    attrs = "type=text"
-    if s.type == "number":
-        attrs = "type=number step=any"
-    elif s.type == "integer":
-        attrs = "type=number step=1"
-        # Browser-side hints only; the server check in check_values is the rule.
-        attrs += "".join(f" {k}={v}" for k, v in (("min", s.min), ("max", s.max)) if v is not None)
-    hint = f" ({', '.join(s.choices)})" if s.type == "list" and s.choices else ""
+        control = f'<select class="canccu-input" id={fid} name={name}>{opts}</select>'
+    else:
+        text = (
+            ", ".join(map(str, value))
+            if isinstance(value, list)
+            else ("" if value is None else value)
+        )
+        attrs = "type=text"
+        if s.type == "number":
+            attrs = "type=number step=any inputmode=decimal"
+        elif s.type == "integer":
+            attrs = "type=number step=1 inputmode=numeric"
+            # Browser-side hints only; the server check in check_values is the rule.
+            attrs += "".join(
+                f" {k}={v}" for k, v in (("min", s.min), ("max", s.max)) if v is not None
+            )
+            if s.min is not None and s.max is not None:
+                hint = f"From {s.min} to {s.max}."
+        elif s.type == "list":
+            hint = "Separate them with commas."
+            if s.choices:
+                hint = f"Any of {', '.join(s.choices)}, separated with commas."
+        control = (
+            f'<input class="canccu-input" {attrs} id={fid} name={name} '
+            f'value="{html.escape(str(text))}">'
+        )
+    if unit and s.type in ("integer", "number"):
+        control = (
+            f'<span class="canccu-inputgroup">{control}'
+            f'<span class="canccu-inputgroup__add">{html.escape(unit)}</span></span>'
+        )
+    elif unit:
+        label = s.label
+    hint_html = f'<p class="canccu-field__hint">{html.escape(hint)}</p>' if hint else ""
     return (
-        f"<p><label>{label}{html.escape(hint)} <input {attrs} name={name} "
-        f"value='{html.escape(str(text))}'></label></p>"
+        f'<div class="canccu-field"><label class="canccu-field__label" for={fid}>'
+        f"{html.escape(label)}</label>{control}{hint_html}</div>"
     )
 
 

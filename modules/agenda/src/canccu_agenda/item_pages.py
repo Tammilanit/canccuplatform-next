@@ -31,8 +31,10 @@ from .web import (
     next_minute,
     notice,
     page,
+    posted_when,
     redirect,
     text_input,
+    when_inputs,
     zone_of,
 )
 
@@ -48,13 +50,10 @@ def _form(values: dict[str, Any], kinds: Any, action: str, error: str = "") -> s
             text_input("title", values.get("title") or "", required=True, maxlength=120),
         )
         + forms.kind_select(kinds, values.get("kind"))
-        + field(
-            "Starts",
-            text_input("starts", values.get("starts") or "", "datetime-local", required=True),
-        )
+        + field("Starts", when_inputs("starts", "Starts", values.get("starts"), required=True))
         + field(
             "Ends",
-            text_input("ends", values.get("ends") or "", "datetime-local"),
+            when_inputs("ends", "Ends", values.get("ends")),
             "Empty for a moment in time, like doors opening.",
         )
         + forms.visibility_select(values.get("visibility"))
@@ -71,6 +70,7 @@ def _form(values: dict[str, Any], kinds: Any, action: str, error: str = "") -> s
 def _posted(form: FormData) -> dict[str, Any]:
     """The form as posted, for showing it again after a refusal."""
     values: dict[str, Any] = {k: form.get(k) for k in form}
+    values["starts"], values["ends"] = posted_when(form, "starts"), posted_when(form, "ends")
     try:
         values["reminder_leads_minutes"] = forms.leads_from(str(form.get("reminders") or ""))
     except KitError:
@@ -81,11 +81,11 @@ def _posted(form: FormData) -> dict[str, Any]:
 
 def _fields(form: FormData, tz: ZoneInfo) -> dict[str, Any]:
     """The posted form as the API's fields."""
-    ends = forms.opt_text(form, "ends")
+    ends = posted_when(form, "ends").strip() or None
     return {
         "title": forms.opt_text(form, "title"),
         "kind": form.get("kind"),
-        "starts_at": from_local(str(form.get("starts") or ""), tz, "starts"),
+        "starts_at": from_local(posted_when(form, "starts"), tz, "starts"),
         "ends_at": None if ends is None else from_local(ends, tz, "ends"),
         "visibility": form.get("visibility"),
         "description": forms.opt_text(form, "description"),
@@ -197,7 +197,7 @@ async def save_page(request: Request) -> Response:
         # Only times the organiser changed are sent: sending the current time of a delayed item
         # would be a move that clears its delay.
         for key, name in (("starts_at", "starts"), ("ends_at", "ends")):
-            if key in fields and (form.get(name) or "") == current[name]:
+            if key in fields and posted_when(form, name) == current[name]:
                 del fields[key]
         fields["revision"] = row["revision"]
         moving = "starts_at" in fields or "ends_at" in fields

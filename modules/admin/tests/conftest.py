@@ -67,6 +67,10 @@ def fake_resolver(
     and by id those tenants plus `ids` and the `archived` ones."""
 
     def registry(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/tenants/current":  # what the shell's header names
+            known = hosts.get(request.headers["host"])
+            body = {"id": known, "name": "Demo Event", "status": "live", "time_zone": "UTC"}
+            return httpx.Response(200 if known else 404, json=body)
         by_id = request.url.path.removeprefix("/internal/tenants/tenants/")
         if by_id != request.url.path:
             tenant = by_id if by_id in {*hosts.values(), *ids, *archived} else None

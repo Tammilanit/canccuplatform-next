@@ -1,11 +1,5 @@
 /* The Studio pages' own layout around packages/ui (plan issue-185 D8). Admin pages take no event
    CSS, so nothing here is themed but through the tokens. */
-.canccu-studio-menu {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--canccu-gap);
-  margin-bottom: var(--canccu-gap);
-}
 .canccu-studio-notice {
   border-left: 4px solid var(--canccu-color-status-down);
   padding: 0.5rem 1rem;

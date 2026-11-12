@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parts > empty state and notice 1`] = `"<div class="canccu-empty"><span class="canccu-empty__icon"><span class="canccu-i canccu-i--calendar" aria-hidden="true"></span></span><p class="canccu-empty__title">Nothing yet</p><p class="canccu-empty__text">Add one.</p><div class="canccu-cluster"><a>Add</a></div></div>"`;
+
+exports[`parts > empty state and notice 2`] = `"<div class="canccu-notice canccu-notice--ok" role="status"><span class="canccu-i canccu-i--check-circle" aria-hidden="true"></span><div class="canccu-notice__body"><p class="canccu-notice__title">Saved</p><p>Applies now.</p></div></div>"`;

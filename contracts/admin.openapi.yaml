@@ -115,7 +115,8 @@ paths:
       description: |
         For the kit's settings client: a module reads its own settings for the tenant it serves, on admin's
         internal address, where no hostname names a tenant. The same answer as `GET /api/admin/settings/{module}`
-        for that tenant. Internal network only.
+        for that tenant. Every module may also read `admin`'s own settings (the event's `language`); any other
+        module's settings are 403 `service_forbidden`. Internal network only.
       security:
         - {}
       parameters:
@@ -137,6 +138,8 @@ paths:
           $ref: "common.openapi.yaml#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/ServiceUnauthenticated"
+        "403":
+          $ref: "#/components/responses/ServiceForbidden"
         "404":
           $ref: "#/components/responses/NotFound"
     patch:

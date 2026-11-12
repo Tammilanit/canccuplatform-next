@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from conftest import CREW, Env, at
 from test_items import add
 
@@ -74,7 +76,7 @@ async def test_the_list_shows_the_day_with_now_delays_and_cancellations(env: Env
     assert "canccu-agenda-row--running" in text and "canccu-agenda-row--cancelled" in text
     assert "+15 min" in text and "<s class=" in text  # the planned time, struck through
     assert "Crew only" in text and crew_only["id"] in text
-    assert "Nothing on this day yet." in tomorrow.text
+    assert "Nothing on Sat 21 Nov yet" in tomorrow.text  # the empty state names the day
 
 
 async def test_the_list_reads_times_in_the_events_time_zone(env: Env) -> None:
@@ -84,7 +86,7 @@ async def test_the_list_reads_times_in_the_events_time_zone(env: Env) -> None:
         await add(c, h, title="Late", starts_at=at(60 * 6))  # 23:00 UTC is 01:00 the next day
         today = await c.get("/?day=2026-11-20", headers=h)
         next_day = await c.get("/?day=2026-11-21", headers=h)
-    assert "Late" not in today.text and "Now 19:00" in today.text
+    assert ">Late<" not in today.text and "Nothing today yet" in today.text
     assert "Late" in next_day.text and ">01:00" in next_day.text
 
 
@@ -125,7 +127,8 @@ async def test_the_full_form_adds_an_item_in_the_events_time_zone(env: Env) -> N
         response = await c.post("/items/new", data=form, headers=h)
         refused = await c.post("/items/new", data={**form, "ends": form["starts"]}, headers=h)
         (item,) = (await c.get("/api/agenda/items", headers=h)).json()["items"]
-    assert 'value="2026-11-20T19:01"' in new.text  # the next whole minute, local time
+    # The next whole minute, local time, as a day and a 24-hour time (UX audit B5).
+    assert 'value="2026-11-20"' in new.text and 'value="19:01"' in new.text
     assert response.status_code == 303
     assert response.headers["location"].startswith("/agenda/?day=2026-11-20&done=added&undo=un_")
     assert item["starts_at"] == at(60) and item["ends_at"] == at(150)
@@ -140,7 +143,7 @@ async def test_a_move_shows_its_preview_before_it_changes_anything(env: Env) -> 
     async with env.client() as c:
         item = await add(c, h, ends_at=at(120))
         form = (await c.get(f"/items/{item['id']}/edit", headers=h)).text
-        assert 'value="2026-11-20T18:00"' in form
+        assert 'name=starts_day value="2026-11-20"' in form and 'value="18:00"' in form
         fields = {
             "revision": "1",
             "title": "Dinner",
@@ -202,16 +205,27 @@ async def test_every_menu_link_reaches_a_page_and_readers_get_no_writer_links(en
     h = env.writer()
     crew = env.rights.sign_in("u_crew", CREW)
     async with env.client() as c:
-        menu = (await c.get("/", headers=h)).text.split('aria-label="Event">')[1]
-        hrefs = [part.split('"')[0] for part in menu.split("</nav>")[0].split('href="')[1:]]
-        assert hrefs == ["/agenda/", "/agenda/add", "/agenda/templates", "/admin/"]
-        for href in hrefs[:3]:
+        tabs = (await c.get("/", headers=h)).text.split('class="canccu-tabs"')[1]
+        hrefs = [part.split('"')[0] for part in tabs.split("</nav>")[0].split('href="')[1:]]
+        # Quick add is the page's button, not a tab as well (sheet 2: nothing twice).
+        assert hrefs == ["/agenda/", "/agenda/templates"]
+        for href in [*hrefs, "/agenda/add"]:
             # As Caddy forwards it: the prefix stripped, the path kept exactly.
             path = href.removeprefix("/agenda")
             assert (await c.get(path, headers=h)).status_code == 200, href
         refused = await c.get("/add", headers=crew)
     assert refused.status_code == 403
     assert 'href="/agenda/add"' not in refused.text and 'href="/agenda/"' in refused.text
+    # Said in words; the right it lacked goes to the log only (UX audit B3).
+    assert "No access" in refused.text and "agenda.items.write" not in refused.text
+
+
+async def test_quick_add_offers_each_choice_once(env: Env) -> None:
+    async with env.client() as c:
+        text = (await c.get("/add", headers=env.writer())).text
+    # A kind a template already brings is not offered again (UX audit F1).
+    labels = re.findall(r'name=what value="[^"]*"(?: checked)?><span>([^<]*)</span>', text)
+    assert labels and len(labels) == len({label.casefold() for label in labels})
 
 
 async def test_a_broken_revision_on_the_edit_form_is_a_refusal_not_an_error(env: Env) -> None:

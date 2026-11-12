@@ -61,6 +61,7 @@ def create_app(
     # Starlette's slash redirects would drop the /agenda prefix Caddy strips.
     app.router.redirect_slashes = False
     app.state.deps = d
+    app.state.tenants = resolver  # the event the shell's header names (web.event_of)
     install(app, health)
     install_tenancy(app, resolver)
     # After install(), so these replace the kit's JSON handler for the pages only.
@@ -88,4 +89,4 @@ async def _kit_error(request: Request, exc: Exception) -> Response:
     assert isinstance(exc, KitError)
     if request.url.path.startswith("/api/"):
         return JSONResponse(exc.to_body(), status_code=exc.status)
-    return web.error_page(request, exc)
+    return await web.error_page(request, exc)

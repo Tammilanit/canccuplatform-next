@@ -85,6 +85,20 @@ app.get("/", (_req, reply) => {
 - Components return `Html`, and `Html` nested in a slot is inserted as is.
 - `raw()` marks trusted markup. Never pass user or profile text to it.
 
+## The organiser shell
+
+Every organiser page sits in one shell ([docs/design/mockups.html](../../docs/design/mockups.html), sheets 2, 3, 7 and 8). `src/shell.ts` draws it for the TypeScript modules; kit-py's `canccu_kit.ui` writes the same markup for the Python ones, and its tests hold its menu to `src/menu.json`.
+
+- **`shellPage({ title, body, session, current, event, … })`:** the event's header (name, dates, state badge, the event clock with its zone), the Event menu with only the pages the session's rights open and `current` marked, the page title with an optional crumb, description and actions, sub-page `tabs`, one content width (`width: "narrow"` for forms) and, under 1100 px, the bottom bar (the pages used most, Quick add raised in the middle, More last; fewer rights, fewer slots) whose More opens the rest of the menu as a sheet without script. Without a session (a refusal before sign-in) the page has no menu. An archived event gets a read-only banner.
+- **`src/menu.json`:** the menu's groups, each page's id, label, address, icon and the rights of which any one opens it, plus Quick add, the bottom bar's slots (`bar`) and Sign out. A new organiser page joins here (and kit-py's copy).
+- **`frontPage({ title, card, event })`:** the front door (sign-in, first run, check-in): the event's poster beside or above one card.
+- **`errorView(err, context)` and `errorTitle(err)`:** the error page family (No access, Not found, Not at the venue, Event archived, Something went wrong, Couldn't do that), chosen by status and code, each with one plain sentence, the next step and a way on. A right's id, a path or an address never reaches the page; it goes to the server log.
+- **`.canccu-split`, `.canccu-history`:** a form page with a side column shown from 1440 px (Settings' last changes), and a dated list of changes.
+- **`emptyState`, `notice`, `icon`:** what is missing and the one next step; a status notice; a decorative icon from `ui.css`.
+- **`timeLabel`, `dayLabel`, `dateRange`, `stateBadge`, `eventClock` (`src/event.ts`):** times in the event's zone, 24-hour, in English until the event's language decides it.
+
+The event comes from the kit's `TenantResolver.event(host)` (`GET /api/tenants/current`, cached); without an answer the header is plain rather than the page failing.
+
 ## Markup (any language)
 
 A Python module with pages copies `ui.css` into its image, links it and writes the same markup. To apply the profile theme, it emits a `<style>:root { --canccu-color-primary: …; }</style>` block, holding only values that match the rules above.

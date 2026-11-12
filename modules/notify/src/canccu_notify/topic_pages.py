@@ -11,6 +11,7 @@ from datetime import timedelta
 from typing import Any
 
 from canccu_kit import VersionConflict
+from canccu_kit.ui import empty_state, icon
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
@@ -149,8 +150,22 @@ async def topics_page(request: Request) -> Response:
         top += notice("Admin is unreachable: the topics show their defaults.", "error")
     cards = "".join(_card(f, every, counts, writable) for f in every.values())
     if not cards:
-        cards = "<p>No module has registered a topic yet.</p>"
-    return page(request, "Notifications", top + cards)
+        cards = (
+            '<section class="canccu-card">'
+            + empty_state(
+                "bell",
+                "No topics yet",
+                "Topics appear here when a module that sends notifications is switched on.",
+            )
+            + "</section>"
+        )
+    new = ""
+    if writable:
+        new = (
+            f'<a class="canccu-button canccu-button--primary" href="{TOPICS}/new">'
+            f"{icon('plus')}New topic</a>"
+        )
+    return page(request, "Notifications", top + cards, actions=new)
 
 
 def _param_value(p: dict[str, Any], raw: Any) -> Any:

@@ -116,6 +116,23 @@ async def test_settings_roundtrip_and_conflict(parts: Parts) -> None:
     assert json.loads(streams.calls[0].fields["event"])["tenant"] == "demo"
 
 
+async def test_settings_event_survives_a_failed_change_log(
+    parts: Parts, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client, service, streams, _ = parts
+
+    async def broken(*_: object) -> None:
+        raise RuntimeError("database gone")
+
+    monkeypatch.setattr(service.store, "record_change", broken)
+    r = await client.put(
+        "/api/admin/settings/admin", json={"settings_version": 0, "values": {"language": "fi"}}
+    )
+    assert r.status_code == 200 and r.json()["settings_version"] == 1
+    events = [json.loads(c.fields["event"]) for c in streams.calls]
+    assert [e["type"] for e in events] == ["admin.settings.changed"]
+
+
 async def test_rights_required(parts: Parts) -> None:
     client, *_ = parts
     client.cookies.clear()
@@ -126,7 +143,8 @@ async def test_rights_required(parts: Parts) -> None:
 async def test_settings_form_generated_and_saved(parts: Parts) -> None:
     client, service, _, _ = parts
     page = await client.get("/settings/admin")
-    assert "name=timezone" in page.text and "<option selected>en</option>" in page.text
+    assert "name=timezone" in page.text
+    assert '<option value="en" selected>English</option>' in page.text
     r = await client.post(
         "/settings/admin",
         data={"settings_version": "0", "timezone": "Europe/Helsinki", "language": "fi"},

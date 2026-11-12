@@ -6,15 +6,23 @@ while every link a page writes carries `/agenda`.
 
 from __future__ import annotations
 
-import html
+import logging
 import os
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from canccu_kit import KitError, MissingRight, check_admin_access, tailscale_cidrs
+from canccu_kit import (
+    KitError,
+    MissingRight,
+    TenantResolver,
+    check_admin_access,
+    tailscale_cidrs,
+    ui,
+)
 from canccu_kit.rights import Session
+from canccu_kit.ui import esc as esc  # the pages' escaping, re-exported
 from canccu_kit.web_security import event_page_csp, new_nonce
 from starlette.requests import Request
 from starlette.responses import FileResponse, HTMLResponse, RedirectResponse, Response
@@ -26,11 +34,18 @@ from .deps import deps
 BASE = "/agenda"
 SIGN_IN = "/admin/sign-in"
 _STATIC = Path(__file__).resolve().parent / "static"
-# The image sets CANCCU_UI_CSS: an installed package has no packages/ui next to it.
+# The image sets CANCCU_UI_CSS; elsewhere packages/ui sits beside this module's source (an
+# editable install), while an installed kit has no packages/ui next to it.
 UI_CSS = Path(
     os.environ.get("CANCCU_UI_CSS", Path(__file__).resolve().parents[4] / "packages/ui/ui.css")
 )
-MENU = (("/", "Run of show"), ("/add", "Quick add"), ("/templates", "Templates"))
+# The run of show's own pages, as tabs under its title (docs/design/mockups.html, sheet 2). Quick
+# add is an action, so it is the page's button and the bar's, never a tab: nothing twice.
+TABS = (("/", "Run of show"), ("/templates", "Templates"))
+CSS = (f"{BASE}/static/ui.css", f"{BASE}/static/agenda.css")
+# A 24-hour time: native time fields follow the browser's locale, which may be 12-hour (UX B5).
+TIME_PATTERN = "[0-2][0-9]:[0-5][0-9]"
+log = logging.getLogger("canccu.agenda")
 VISIBILITY_LABELS = {"public": "Everyone", "attendees": "Attendees", "crew": "Crew only"}
 CHANNEL_LABELS = {
     "screen": "Screen notice",
@@ -38,10 +53,6 @@ CHANNEL_LABELS = {
     "discord_dm": "Discord DM",
     "push": "Push",
 }
-
-
-def esc(value: Any) -> str:
-    return html.escape("" if value is None else str(value), quote=True)
 
 
 async def page_session(request: Request) -> Session:
@@ -53,33 +64,55 @@ async def page_session(request: Request) -> Session:
     if not (session.has(WRITE) or session.has(CREW_READ)):
         raise MissingRight(f"needs right {WRITE} or {CREW_READ}")
     check_admin_access(ctx, request.client.host if request.client else None, tailscale_cidrs())
+    request.state.agenda_event = await event_of(request)
     return session
 
 
+async def event_of(request: Request) -> ui.EventInfo | None:
+    """The event the shell's header names (canccu_kit.ui)."""
+    resolver: TenantResolver | None = getattr(request.app.state, "tenants", None)
+    return None if resolver is None else await resolver.event(request.headers.get("host"))
+
+
 def page(
-    request: Request, title: str, body: str, *, status: int = 200, session: Session | None = None
+    request: Request,
+    title: str,
+    body: str,
+    *,
+    status: int = 200,
+    session: Session | None = None,
+    actions: str = "",
+    description: str = "",
+    back: bool = True,
+    plain: bool = False,
 ) -> HTMLResponse:
-    nonce = new_nonce()
+    """A run-of-show page in the organiser shell: the three main pages carry the tabs, the others
+    a way back to the run of show."""
     # The session a page's check already read (access.remember); without one, as on an error
-    # page, only the links every reader may follow.
+    # page, the shell shows no menu.
     session = session or getattr(request.state, "agenda_session", None)
-    links = MENU if session is not None and session.has(WRITE) else MENU[:1]
-    menu = "".join(f'<a href="{BASE}{path}">{esc(label)}</a>' for path, label in links)
-    menu += '<a href="/admin/">Admin</a>'
-    response = HTMLResponse(
-        "<!doctype html><html lang=en><meta charset=utf-8>"
-        '<meta name=viewport content="width=device-width, initial-scale=1">'
-        f"<title>{esc(title)}</title>"
-        f'<link rel=stylesheet href="{BASE}/static/ui.css">'
-        f'<link rel=stylesheet href="{BASE}/static/agenda.css">'
-        '<body class="canccu-page canccu-surface canccu-surface--admin">'
-        f'<header class="canccu-header"><span class="canccu-header__title">Event</span>'
-        f'<nav class="canccu-agenda-menu" aria-label="Event">{menu}</nav></header>'
-        f'<main class="canccu-main canccu-agenda"><h1>{esc(title)}</h1>{body}</main></body></html>',
-        status_code=status,
+    path = request.url.path
+    tabs: list[tuple[str, str, bool]] = []
+    if session is not None and session.has(WRITE) and path in (p for p, _ in TABS):
+        tabs = [(f"{BASE}{p}", label, p == path) for p, label in TABS]
+    crumb = None if tabs or not back or path == "/" else (f"{BASE}/", "Run of show")
+    doc = ui.shell_page(
+        title,
+        body,
+        session=session,
+        event=getattr(request.state, "agenda_event", None),
+        current="agenda",
+        css=CSS,
+        tabs=tabs,
+        crumb=crumb,
+        actions=actions,
+        description=esc(description),
+        narrow=True,
+        plain=plain,
     )
+    response = HTMLResponse(doc, status_code=status)
     host = request.url.hostname or "localhost"
-    response.headers["Content-Security-Policy"] = event_page_csp(nonce, host, page="admin")
+    response.headers["Content-Security-Policy"] = event_page_csp(new_nonce(), host, page="admin")
     response.headers["Cache-Control"] = "no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
@@ -90,19 +123,32 @@ def redirect(path: str) -> RedirectResponse:
 
 
 def notice(message: str, kind: str = "ok") -> str:
-    role = "alert" if kind == "error" else "status"
-    classes = f"canccu-agenda-notice canccu-agenda-notice--{kind}"
-    return f'<p class="{classes}" role={role}>{esc(message)}</p>'
+    """A notice in the module's words: `ok` or `error`."""
+    return ui.notice("down" if kind == "error" else "ok", message)
 
 
-def error_page(request: Request, exc: KitError) -> HTMLResponse:
-    """A refused change, said in words, with the way back."""
+async def error_page(request: Request, exc: KitError) -> HTMLResponse:
+    """A refusal said in words, with the way on (canccu_kit.ui); a missing right goes to the
+    log, never to the page (UX audit B3)."""
+    if isinstance(exc, MissingRight):
+        log.info("page %s refused: %s", request.url.path, exc.message)
     if exc.code == "version_conflict":
-        text = "Someone changed this item meanwhile. Open it again to see it as it is now."
-    else:
-        text = exc.message
-    body = notice(text, "error") + f'<p><a class=canccu-button href="{BASE}/">Back</a></p>'
-    return page(request, "Not changed", body, status=exc.status)
+        exc = KitError(
+            "Someone changed this item meanwhile. Open it again to see it as it is now.",
+            status=exc.status,
+            code=exc.code,
+        )
+    event = getattr(request.state, "agenda_event", None) or await event_of(request)
+    request.state.agenda_event = event
+    title, view = ui.error_view(
+        exc,
+        session=getattr(request.state, "agenda_session", None),
+        page="the run of show",
+        event=event.name if event else None,
+        retry=f"{BASE}{request.url.path}",
+        back=(f"{BASE}/", "Back to the run of show"),
+    )
+    return page(request, title, view, status=exc.status, plain=True)
 
 
 def zone_of(request: Request) -> ZoneInfo:
@@ -114,15 +160,11 @@ def zone_of(request: Request) -> ZoneInfo:
 
 
 def hhmm(value: datetime | str | None, tz: ZoneInfo) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, str):
-        value = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    return value.astimezone(tz).strftime("%H:%M")
+    return "" if value is None else ui.time_label(value, str(tz))
 
 
 def day_label(day: date) -> str:
-    return f"{day:%a} {day.day} {day:%b}"
+    return f"{day:%a} {day.day} {day:%b}"  # canccu_kit.ui's day format, for a date
 
 
 def local_input(value: str | None, tz: ZoneInfo) -> str:
@@ -152,6 +194,37 @@ def api_time(value: datetime) -> str:
 def next_minute(now: datetime) -> datetime:
     """'Now' on a page: the next whole minute, so the item is still ahead when it lands."""
     return now.replace(second=0, microsecond=0) + timedelta(minutes=1)
+
+
+def when_inputs(name: str, label: str, value: str | None, *, required: bool = False) -> str:
+    """A date and a 24-hour time for a datetime-local value (`posted_when` joins them back)."""
+    day, _, hm = (value or "").partition("T")
+    return (
+        '<span class="canccu-agenda-when">'
+        + text_input(
+            f"{name}_day", day, "date", required=required, **{"aria-label": f"{label}: day"}
+        )
+        + text_input(
+            f"{name}_time",
+            hm[:5],
+            required=required,
+            inputmode="numeric",
+            pattern=TIME_PATTERN,
+            placeholder="HH:MM",
+            maxlength=5,
+            **{"aria-label": f"{label}: time, 24-hour"},
+        )
+        + "</span>"
+    )
+
+
+def posted_when(form: Any, name: str) -> str:
+    """A posted date and time as one datetime-local value; a form that sends the value whole
+    (an older page, a test) still works."""
+    if f"{name}_day" not in form and f"{name}_time" not in form:
+        return str(form.get(name) or "")
+    day, hm = str(form.get(f"{name}_day") or ""), str(form.get(f"{name}_time") or "")
+    return f"{day}T{hm}" if day or hm else ""
 
 
 def field(label: str, control: str, hint: str = "") -> str:

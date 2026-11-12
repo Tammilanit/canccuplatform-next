@@ -60,6 +60,10 @@ async def test_sign_in_comes_back_to_the_page_that_asked(env: Env) -> None:
     assert api.status_code == 401
 
 
+# The shell's Sign out is a form on every page, so look for the topics' own forms.
+TOPIC_FORM = '<form method=post action="/notify/admin/topics/'
+
+
 async def test_counts_need_the_stats_right_and_show_no_forms_without_the_write_right(
     env: Env,
 ) -> None:
@@ -69,9 +73,9 @@ async def test_counts_need_the_stats_right_and_show_no_forms_without_the_write_r
         stats = await c.get(LIST, headers=env.rights.sign_in("u_stats", STATS))
         both = await c.get(LIST, headers=env.rights.sign_in("u_both", STATS, TOPICS))
     assert stats.status_code == 200
-    assert "<form" not in stats.text and "New topic" not in stats.text
+    assert TOPIC_FORM not in stats.text and "New topic" not in stats.text
     assert "1 in the last 24 hours, 1 in all" in stats.text
-    assert "<form" in both.text and "1 in the last 24 hours" in both.text
+    assert TOPIC_FORM in both.text and "1 in the last 24 hours" in both.text
 
 
 async def page_form(c: Any, env: Env, key: str) -> dict[str, str]:
@@ -157,7 +161,7 @@ async def test_an_archived_event_shows_its_topics_without_forms(env: Env) -> Non
     env.contexts["ev-a"]["status"] = "archived"
     async with env.client() as c:
         shown = await c.get(LIST, headers=env.admin())
-    assert "archived" in shown.text and "<form" not in shown.text
+    assert "archived" in shown.text and TOPIC_FORM not in shown.text
 
 
 async def test_a_custom_topic_is_made_in_two_steps(env: Env) -> None:

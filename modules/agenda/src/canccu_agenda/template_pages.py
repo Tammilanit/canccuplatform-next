@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from canccu_kit import KitError, MissingRight
+from canccu_kit.ui import empty_state, icon
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
@@ -28,19 +29,32 @@ async def list_page(request: Request) -> Response:
         rows = await templates.all_templates(conn)
         kinds = await store.kinds(conn)
     items = "".join(
-        f'<li><a class="canccu-agenda-row" href="{BASE}/templates/{esc(r["id"])}">'
-        f'<span class="canccu-agenda-row__title">{esc(r["name"])}</span>'
-        f'<span class="canccu-agenda-row__meta">{esc(_summary(r, kinds))}</span></a></li>'
+        f'<a class="canccu-list__row" href="{BASE}/templates/{esc(r["id"])}">'
+        f'<span class="canccu-list__main"><p class="canccu-list__title">{esc(r["name"])}</p>'
+        f'<p class="canccu-list__meta">{esc(_summary(r, kinds))}</p></span>'
+        f'<span class="canccu-list__end">{icon("right")}</span></a>'
         for r in rows
     )
-    body = (
-        "<p>Quick-add fills an item from a template: its kind, length, place, audience,"
-        " reminders and channels.</p>"
-        + (f'<ul class="canccu-agenda-list">{items}</ul>' if items else "<p>No templates yet.</p>")
-        + f'<p><a class="canccu-button canccu-button--primary" href="{BASE}/templates/new">'
-        "New template</a></p>"
+    new = (
+        f'<a class="canccu-button canccu-button--primary" href="{BASE}/templates/new">'
+        f"{icon('plus')}New template</a>"
     )
-    return page(request, "Templates", body)
+    body = (
+        f'<section class="canccu-card canccu-card--flush"><div class="canccu-list">{items}</div>'
+        "</section>"
+        if items
+        else '<section class="canccu-card">'
+        + empty_state("calendar", "No templates yet", "A template fills a quick add.", new)
+        + "</section>"
+    )
+    return page(
+        request,
+        "Templates",
+        body,
+        actions=new if items else "",
+        description="Quick add fills an item from a template: its kind, length, place,"
+        " audience, reminders and channels.",
+    )
 
 
 def _summary(row: Any, kinds: dict[str, Any]) -> str:

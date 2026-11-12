@@ -7,8 +7,8 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { KitError, NotSignedIn, eventPageCsp, newNonce } from "@canccu/kit";
-import { html, page } from "@canccu/ui";
-import type { Slot } from "@canccu/ui";
+import { errorView, errorTitle, html, shellPage } from "@canccu/ui";
+import type { EventInfo, Slot } from "@canccu/ui";
 import { EMBEDS, WRITE, pageNeeds, positiveInt } from "./http.js";
 import { revisionList } from "./revision-routes.js";
 import { draftCssRoutes, htmlHeaders, previewRoutes } from "./studio-preview.js";
@@ -20,36 +20,62 @@ const SIGN_IN = "/admin/sign-in";
 const HISTORY_PAGE = 20;
 const STATIC = new URL("../static/", import.meta.url);
 
-const MENU: [string, string][] = [
+const TABS: [string, string][] = [
   ["", "Brand kit"],
   ["advanced", "Advanced"],
   ["history", "History"],
 ];
 
-/** A Studio page: ui.css, the menu, the body, the script; an admin page that is never framed. */
-function studioPage(
+/** The shell's view of the event, from the tenants module's public answer. */
+async function eventOf(
+  request: FastifyRequest,
+  tenants: StudioDeps["tenants"],
+): Promise<EventInfo | undefined> {
+  const e = await tenants?.event(request.headers.host);
+  if (!e) return undefined;
+  return {
+    name: e.name,
+    status: e.status,
+    timeZone: e.time_zone ?? "UTC",
+    startsAt: e.starts_at,
+    endsAt: e.ends_at,
+    venue: e.venue?.name,
+  };
+}
+
+/** A Studio page in the organiser shell, with its own tabs and script; never framed. */
+async function studioPage(
   request: FastifyRequest,
   reply: FastifyReply,
-  title: string,
-  body: Slot,
-  status = 200,
-): FastifyReply {
+  deps: StudioDeps,
+  o: { title: string; tab?: string; body: Slot; status?: number; plain?: boolean },
+): Promise<FastifyReply> {
   const nonce = newNonce();
-  const menu = MENU.map(([path, label]) => html`<a href="${STUDIO + path}">${label}</a>`);
-  const doc = page({
-    title,
-    surface: "admin",
+  const doc = shellPage({
+    title: o.title,
     nonce,
+    surface: "admin",
     cssHref: `${STUDIO}static/ui.css`,
-    body: html`<link rel="stylesheet" href="${STUDIO}static/studio.css" />
-      <nav class="canccu-studio-menu" aria-label="Theme">${menu}<a href="/admin/">Admin</a></nav>
-      <h1>${title}</h1>
-      <p class="canccu-studio-notice" role="alert" hidden></p>
-      ${body}
+    head: html`<link rel="stylesheet" href="${STUDIO}static/studio.css" />`,
+    event: await eventOf(request, deps.tenants),
+    session: request.session ?? undefined,
+    current: "theme",
+    plain: o.plain ?? false,
+    ...(o.tab === undefined
+      ? {}
+      : {
+          tabs: TABS.map(([path, label]) => ({
+            href: STUDIO + path,
+            label,
+            current: path === o.tab,
+          })),
+        }),
+    body: html`<p class="canccu-studio-notice" role="alert" hidden></p>
+      ${o.body}
       <script src="${STUDIO}static/studio.js" defer></script>`,
   });
   return htmlHeaders(reply, eventPageCsp(nonce, request.hostname, { page: "admin" }))
-    .status(status)
+    .status(o.status ?? 200)
     .send(doc.toString());
 }
 
@@ -87,19 +113,29 @@ function staticFile(name: string): Promise<Buffer> {
 export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
   void app.register((studio, _opts, done) => {
     // Pages answer pages: a browser without a session goes to sign in, a refusal is said in words.
-    studio.setErrorHandler((err: FastifyError, request, reply) => {
+    studio.setErrorHandler(async (err: FastifyError, request, reply) => {
       if (err instanceof NotSignedIn) return signIn(request, reply);
-      if (err instanceof KitError) {
-        const body = html`<p class="canccu-studio-problem canccu-studio-problem--error">
-          ${err.message}
-        </p>`;
-        return studioPage(request, reply, "Not available", body, err.status);
-      }
-      deps.log.error({ err }, "a Studio page failed");
-      const body = html`<p class="canccu-studio-problem canccu-studio-problem--error">
-        Something went wrong. Try again.
-      </p>`;
-      return studioPage(request, reply, "Not available", body, 500);
+      // Right ids and the module's words for a refused page go to the log, not the page (B3).
+      const known = err instanceof KitError;
+      if (known) deps.log.info({ code: err.code, msg: err.message }, "a Studio page was refused");
+      else deps.log.error({ err }, "a Studio page failed");
+      const pageErr = known
+        ? { status: err.status, code: err.code, message: err.message }
+        : { status: 500, code: "internal", message: "" };
+      const event = await eventOf(request, deps.tenants);
+      const view = errorView(pageErr, {
+        session: request.session ?? undefined,
+        page: "the Theme studio",
+        event: event?.name,
+        retry: request.url,
+        back: { href: STUDIO, label: "Back to the Theme studio" },
+      });
+      return studioPage(request, reply, deps, {
+        title: errorTitle(pageErr),
+        body: view,
+        status: pageErr.status,
+        plain: true,
+      });
     });
     const reader = { preHandler: pageNeeds(deps.rights, WRITE) };
     previewRoutes(studio, deps);
@@ -108,12 +144,20 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       const state = await deps.db.tenant((c) => studioState(c, deps.files));
       // The page only offers; the package upload checks the embeds right itself.
       const embedsAllowed = request.session?.rights.has(EMBEDS) ?? false;
-      return studioPage(request, reply, "Theme", brandKitView(state, embedsAllowed));
+      return studioPage(request, reply, deps, {
+        title: "Theme studio",
+        tab: "",
+        body: brandKitView(state, embedsAllowed),
+      });
     });
 
     studio.get(`${STUDIO}advanced`, reader, async (request, reply) => {
       const state = await deps.db.tenant((c) => studioState(c, deps.files, false));
-      return studioPage(request, reply, "Theme: advanced", advancedView(state));
+      return studioPage(request, reply, deps, {
+        title: "Theme studio",
+        tab: "advanced",
+        body: advancedView(state),
+      });
     });
 
     studio.get<{ Querystring: { before?: string } }>(
@@ -124,12 +168,11 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         // One row more than shown tells whether older revisions exist: retention keeps exactly a
         // page of them, so a full page alone says nothing.
         const list = await deps.db.tenant((c) => revisionList(c, before, HISTORY_PAGE + 1));
-        return studioPage(
-          request,
-          reply,
-          "Theme: history",
-          historyView(list, HISTORY_PAGE, before),
-        );
+        return studioPage(request, reply, deps, {
+          title: "Theme studio",
+          tab: "history",
+          body: historyView(list, HISTORY_PAGE, before),
+        });
       },
     );
 

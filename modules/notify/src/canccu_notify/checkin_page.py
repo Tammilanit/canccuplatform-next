@@ -8,12 +8,11 @@ checking in adds (D11).
 
 from __future__ import annotations
 
-import html
 from datetime import datetime
 from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
-from canccu_kit import KitError
+from canccu_kit import KitError, ui
 from canccu_kit.access import TenantContext
 from canccu_kit.web_security import event_page_csp, new_nonce
 from starlette.requests import Request
@@ -31,70 +30,77 @@ from .checkin import (
     valid_purpose,
 )
 from .deps import deps
+from .web import CSS, event_of
 
 PATH = "/notify/check-in"  # as the browser sees it
 OPTIONAL = (
-    "<p class=hint>Checking in is optional. It lets the organisers see that you have arrived;"
-    " everything at the event works the same without it.</p>"
+    '<p class="canccu-small canccu-muted">Checking in is optional. It lets the organisers see'
+    " that you have arrived; everything at the event works the same without it.</p>"
 )
 SCAN_AGAIN = "Scan the screen again to get a fresh code."
-# The ui.css token names with their defaults (packages/ui), so an event theme can restyle it.
-STYLE = """
-body{margin:0;background:var(--canccu-color-background,#0f172a);
-color:var(--canccu-color-text,#f8fafc);font:1.1rem/1.5 var(--canccu-font-body,system-ui,sans-serif)}
-main{max-width:28rem;margin:0 auto;padding:2rem 1.25rem}
-h1{font-size:1.6rem;margin:0 0 1rem}
-.hint{color:var(--canccu-color-text-muted,#94a3b8);font-size:.95rem}
-.canccu-button{display:block;width:100%;box-sizing:border-box;padding:.9rem;border:0;
-border-radius:.5rem;text-align:center;text-decoration:none;font:inherit;font-weight:600;
-background:var(--canccu-color-primary,#3b82f6);color:var(--canccu-color-primary-text,#0f172a)}
-"""
 
 
-def _page(request: Request, title: str, body: str, status: int = 200) -> HTMLResponse:
-    nonce = new_nonce()
-    response = HTMLResponse(
-        "<!doctype html><html lang=en><meta charset=utf-8>"
-        "<meta name=viewport content='width=device-width,initial-scale=1'>"
-        f"<title>{html.escape(title)}</title><style nonce='{nonce}'>{STYLE}</style>"
-        f"<main><h1>{html.escape(title)}</h1>{body}{OPTIONAL}</main></html>",
-        status_code=status,
+async def _page(
+    request: Request,
+    title: str,
+    text: str,
+    action: str = "",
+    *,
+    icon: str = "pin",
+    status: int = 200,
+) -> HTMLResponse:
+    """One step of checking in: the event's poster above one card with an icon, a title, a
+    sentence and the next step (docs/design/mockups.html, sheet 7)."""
+    card = (
+        f'<span class="canccu-task__icon">{ui.icon(icon)}</span><h1>{ui.esc(title)}</h1>'
+        f"<p>{ui.esc(text)}</p>{action}{OPTIONAL}"
     )
+    doc = ui.front_page(
+        title, card, event=await event_of(request), css=CSS, centred=True, surface="hub"
+    )
+    response = HTMLResponse(doc, status_code=status)
     # "sign_in": never framed, so nobody can lay a look-alike over the check-in button.
     host = (request.url.hostname or "").lower()
-    response.headers["content-security-policy"] = event_page_csp(nonce, host, page="sign_in")
+    response.headers["content-security-policy"] = event_page_csp(new_nonce(), host, page="sign_in")
     # The code in the page is short-lived; a cached copy is useless and should not linger.
     response.headers["cache-control"] = "no-store"
     return response
 
 
-def _sign_in(request: Request, purpose: str, code: str, status: int = 200) -> HTMLResponse:
+def _button(label: str, ico: str = "") -> str:
+    icon = ui.icon(ico) if ico else ""
+    cls = "canccu-button canccu-button--primary canccu-button--lg"
+    return f'<button class="{cls}">{icon}{label}</button>'
+
+
+async def _sign_in(request: Request, purpose: str, code: str, status: int = 200) -> HTMLResponse:
     back = f"{PATH}?{urlencode({'p': purpose, 'c': code})}"
-    href = html.escape(f"/admin/sign-in?{urlencode({'next': back})}")
-    return _page(
-        request,
-        "Sign in to check in",
-        "<p>Sign in once on this phone; you come back here to check in. If the code has expired"
-        " by then, scan the screen again.</p>"
-        f'<p><a class=canccu-button href="{href}">Sign in</a></p>',
-        status,
+    href = ui.esc(f"/admin/sign-in?{urlencode({'next': back})}")
+    link = (
+        f'<a class="canccu-button canccu-button--primary canccu-button--lg" href="{href}">'
+        "Continue with Discord</a>"
     )
+    text = (
+        "Tell the crew you have arrived. You sign in with Discord once on this phone and come"
+        " back here; if the code has expired by then, scan the screen again."
+    )
+    return await _page(request, "Check in", text, link, status=status)
 
 
-def _invalid(request: Request, status: int = 400) -> HTMLResponse:
-    body = f"<p>This check-in code is not valid. {SCAN_AGAIN}</p>"
-    return _page(request, "Code not valid", body, status)
+async def _invalid(request: Request, status: int = 400) -> HTMLResponse:
+    text = f"This check-in code is not valid. {SCAN_AGAIN}"
+    return await _page(request, "Code not valid", text, icon="alert", status=status)
 
 
-def error_page(request: Request, exc: KitError) -> HTMLResponse:
+async def error_page(request: Request, exc: KitError) -> HTMLResponse:
     """Every other refusal, also those of the kit's middleware (the tenants module or admin
     unreachable, a refused origin, a hostname that is no event's): a phone gets the page, never
     the API's JSON body."""
-    body = (
-        "<p>Checking in did not work this time. Try again in a moment; if the code has expired"
-        " by then, scan the screen again.</p>"
+    text = (
+        "Checking in did not work this time. Try again in a moment; if the code has expired"
+        " by then, scan the screen again."
     )
-    return _page(request, "Check-in not available", body, exc.status)
+    return await _page(request, "Check-in not available", text, icon="alert", status=exc.status)
 
 
 def _local_time(ctx: TenantContext, iso: str) -> str:
@@ -107,17 +113,17 @@ async def show(request: Request) -> Response:
     purpose = valid_purpose(request.query_params.get("p"))
     code = valid_code(request.query_params.get("c"))
     if purpose is None or code is None:
-        return _invalid(request)
-    if await session_of(request) is None:
-        return _sign_in(request, purpose, code)
-    return _page(
-        request,
-        "Check in",
+        return await _invalid(request)
+    session = await session_of(request)
+    if session is None:
+        return await _sign_in(request, purpose, code)
+    form = (
         f'<form method=post action="{PATH}">'
-        f'<input type=hidden name=p value="{html.escape(purpose)}">'
-        f'<input type=hidden name=c value="{html.escape(code)}">'
-        "<button class=canccu-button>Check in</button></form>",
+        f'<input type=hidden name=p value="{ui.esc(purpose)}">'
+        f'<input type=hidden name=c value="{ui.esc(code)}">{_button("Check in", "check")}</form>'
     )
+    text = f"You're signed in as {session.user_name}. One tap and the crew knows you're here."
+    return await _page(request, "Check in", text, form)
 
 
 async def submit(request: Request) -> Response:
@@ -125,31 +131,33 @@ async def submit(request: Request) -> Response:
     form = await request.form()
     purpose, code = valid_purpose(form.get("p")), valid_code(form.get("c"))
     if purpose is None or code is None:
-        return _invalid(request)
+        return await _invalid(request)
     session = await session_of(request)
     if session is None:
-        return _sign_in(request, purpose, code, 401)
+        return await _sign_in(request, purpose, code, 401)
     try:
         found, created = await record(deps(request), ctx, session, purpose, code)
     except CodeExpired:
-        return _page(request, "Code expired", f"<p>This code has expired. {SCAN_AGAIN}</p>", 400)
+        text = f"This code has expired. {SCAN_AGAIN}"
+        return await _page(request, "Code expired", text, icon="clock", status=400)
     except CodeInvalid:
-        return _invalid(request)
+        return await _invalid(request)
     except EventArchived:
-        return _page(request, "Event ended", "<p>This event has ended.</p>", 409)
+        text = "This event has ended. Nothing more to do here."
+        return await _page(request, "Event ended", text, icon="archive", status=409)
     except NotAMember:
         # No link: the hub's join page (App track) does not exist yet.
-        return _page(
-            request,
-            "Not a member yet",
-            "<p>Only members of this event can check in. Join the event with its join link"
-            " from the organisers, then scan the screen again.</p>",
-            403,
+        text = (
+            "Only members of this event can check in. Join the event with its join link"
+            " from the organisers, then scan the screen again."
         )
-    if created:
-        return _page(request, "You are checked in", "<p>Welcome!</p>", 201)
+        return await _page(request, "Not a member yet", text, icon="users", status=403)
     at = _local_time(ctx, found["checked_in_at"])
-    return _page(request, "Checked in", f"<p>You were already checked in at {at}.</p>")
+    if created:
+        text = f"Welcome! Checked in at {at}."
+        return await _page(request, "You're checked in", text, icon="check-circle", status=201)
+    text = f"You were already checked in at {at}. Nothing more to do."
+    return await _page(request, "You're already checked in", text, icon="check-circle")
 
 
 ROUTES = [
