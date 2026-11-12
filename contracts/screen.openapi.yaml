@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Screen API
-  version: 1.3.0
+  version: 1.4.0
   summary: Devices, zones, the composed screen state and its push channel, content, scheduling and the PPTX and PDF render job.
   description: |
     Machine-readable part of the screen contract. Prose, widgets, claims, the Pulse options and events: contracts/screen.md.
@@ -640,7 +640,9 @@ components:
           maxLength: 80
         layout_id:
           type: [string, "null"]
-          description: A layout of the current theme, or `pulse` / `pulse_portrait`; null uses `pulse`.
+          description: |
+            A layout of the current theme, or a built-in: `pulse`, `dashboard`, `hero`, `split`, `ambient` or `pulse_portrait`;
+            null uses `pulse` (`pulse_portrait` on a portrait screen).
         regions:
           type: object
           description: Keyed by region id of the layout.
@@ -660,6 +662,20 @@ components:
           description: |
             `always`: the hub QR (a `qr` widget with `props.url` `/notify/`) has a fixed place beside its region's
             rotating widgets; `rotate`: it is one of them (contracts/screen.md, Header and hub QR).
+        hero_region:
+          type: [string, "null"]
+          pattern: "^[a-z][a-z0-9_-]{0,31}$"
+          default: null
+          description: |
+            A region id of the zone's layout that holds the hero role: it and the hero region trade areas. Null, the hero
+            region's own id, an id the layout does not have, or a region whose role is `header`, `ticker` or `backdrop`
+            trades nothing (contracts/screen.md, The hero role and the showcase).
+        grow_for_showcase:
+          type: boolean
+          default: true
+          description: |
+            While the hero region shows a showcase (a claim in it, or a surging `hot_game`), it grows to two by two of its
+            size where the layout leaves room (contracts/screen.md, The hero role and the showcase).
         sound:
           type: object
           properties:
