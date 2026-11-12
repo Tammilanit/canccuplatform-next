@@ -42,7 +42,8 @@ UI_CSS = Path(
 # The run of show's own pages, as tabs under its title (docs/design/mockups.html, sheet 2). Quick
 # add is an action, so it is the page's button and the bar's, never a tab: nothing twice.
 TABS = (("/", "Run of show"), ("/templates", "Templates"))
-CSS = (f"{BASE}/static/ui.css", f"{BASE}/static/agenda.css")
+STYLESHEETS = ("ui.css", "agenda.css", "confirm.css")
+CSS = tuple(f"{BASE}/static/{name}" for name in STYLESHEETS)
 # A 24-hour time: native time fields follow the browser's locale, which may be 12-hour (UX B5).
 TIME_PATTERN = "[0-2][0-9]:[0-5][0-9]"
 log = logging.getLogger("canccu.agenda")
@@ -93,6 +94,7 @@ def page(
     description: str = "",
     back: bool = True,
     plain: bool = False,
+    narrow: bool = True,
 ) -> HTMLResponse:
     """A run-of-show page in the organiser shell: the three main pages carry the tabs, the others
     a way back to the run of show."""
@@ -115,7 +117,7 @@ def page(
         crumb=crumb,
         actions=actions,
         description=esc(description),
-        narrow=True,
+        narrow=narrow,
         plain=plain,
     )
     response = HTMLResponse(doc, status_code=status)
@@ -286,7 +288,7 @@ def button(label: str, kind: str = "primary", **attrs: Any) -> str:
 async def static_file(request: Request) -> Response:
     name = request.path_params["name"]
     path = UI_CSS if name == "ui.css" else _STATIC / name
-    if name not in ("ui.css", "agenda.css") or not path.is_file():
+    if name not in STYLESHEETS or not path.is_file():
         raise KitError("not found", status=404, code="not_found")
     response = FileResponse(path, media_type="text/css")
     response.headers["Cache-Control"] = "public, max-age=300"

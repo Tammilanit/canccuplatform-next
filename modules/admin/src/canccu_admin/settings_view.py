@@ -60,12 +60,30 @@ def when(at: datetime | None, now: datetime, time_zone: str) -> str:
     return day_label(at, time_zone)
 
 
+# A history line is short, so a unit reads as sheet 2 writes it: "45 s", not "45 seconds".
+_SHORT_UNITS = {"seconds": "s", "minutes": "min"}
+_KEY_UNITS = {"_seconds": "seconds", "_minutes": "minutes"}
+
+
+def _label_of(key: str, declared: list[Setting]) -> tuple[str, Setting | None]:
+    """The setting's label as the form shows it, or for an undeclared key (a profile can carry
+    any) its words: `rotation_seconds` reads "Rotation (seconds)"."""
+    if setting := next((s for s in declared if s.key == key), None):
+        return setting.label, setting
+    for suffix, unit in _KEY_UNITS.items():
+        if key.endswith(suffix) and key != suffix[1:]:
+            return f"{_words(key.removesuffix(suffix))} ({unit})", None
+    return _words(key), None
+
+
 def _line(change: SettingsChange, key: str, group: str, declared: list[Setting]) -> str:
-    setting = next((s for s in declared if s.key == key), None)
-    label, unit = (setting.label if setting else key), ""
-    if match := _UNIT.match(label):
-        label, unit = match.group(1), f" {match.group(2)}"
+    label, setting = _label_of(key, declared)
     value = change.changes[key]
+    unit = ""
+    # As the form does: only a number's "(seconds)" is a unit; any other keeps its whole label.
+    numeric = setting is None or setting.type in ("integer", "number") or setting.items == "integer"
+    if (match := _UNIT.match(label)) and numeric:
+        label, unit = match.group(1), " " + _SHORT_UNITS.get(match.group(2), match.group(2))
     where = f"{esc(group)} → {esc(label)}"
     if isinstance(value, bool):
         return f"turned {'on' if value else 'off'} {where}"
