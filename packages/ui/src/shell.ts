@@ -6,16 +6,9 @@
 import { attrs, html, raw, type Html, type Slot } from "./html.js";
 import { themeStyle, type ProfileLike } from "./theme.js";
 import menu from "./menu.json" with { type: "json" };
+import { dateRange, eventClock, stateBadge, type EventInfo } from "./event.js";
 
-/** The event as `GET /api/tenants/current` describes it to anyone (contracts/tenants.md). */
-export interface EventInfo {
-  name?: string | undefined;
-  status: "draft" | "live" | "archived";
-  timeZone: string;
-  startsAt?: string | null | undefined;
-  endsAt?: string | null | undefined;
-  venue?: string | null | undefined;
-}
+export { dateRange, dayLabel, eventClock, stateBadge, timeLabel, type EventInfo } from "./event.js";
 
 /** Who is signed in: the kit's session. */
 export interface Viewer {
@@ -52,57 +45,6 @@ export function menuFor(rights: ReadonlySet<string>): { label: string; items: Me
 export const icon = (name: string): Html =>
   html`<span class="canccu-i canccu-i--${name}" aria-hidden="true"></span>`;
 
-// The event's language decides the format (UX audit B5); English is the only one until step 10.
-function parts(iso: string, timeZone: string): Record<string, string> {
-  const fmt = new Intl.DateTimeFormat("en-GB", {
-    timeZone,
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  });
-  return Object.fromEntries(fmt.formatToParts(new Date(iso)).map((p) => [p.type, p.value]));
-}
-
-/** "18:42", in the event's time zone. */
-export function timeLabel(iso: string, timeZone: string): string {
-  const p = parts(iso, timeZone);
-  return `${p.hour}:${p.minute}`;
-}
-
-/** "Sat 14 Mar", in the event's time zone. */
-export function dayLabel(iso: string, timeZone: string): string {
-  const p = parts(iso, timeZone);
-  return `${p.weekday} ${p.day} ${p.month}`;
-}
-
-/** The event's days: "Sat 14 – Sun 15 Mar", or "" without dates. */
-export function dateRange(event: EventInfo): string {
-  if (!event.startsAt) return "";
-  const a = parts(event.startsAt, event.timeZone);
-  if (!event.endsAt) return dayLabel(event.startsAt, event.timeZone);
-  const b = parts(event.endsAt, event.timeZone);
-  if (a.day === b.day && a.month === b.month) return `${a.weekday} ${a.day} ${a.month}`;
-  if (a.month === b.month) return `${a.weekday} ${a.day} – ${b.weekday} ${b.day} ${b.month}`;
-  return `${a.weekday} ${a.day} ${a.month} – ${b.weekday} ${b.day} ${b.month}`;
-}
-
-/** Live, Starts <day>, Archived or Draft, as a badge. */
-export function stateBadge(event: EventInfo, now: Date = new Date()): Html {
-  const badge = (kind: string, text: string): Html =>
-    html`<span class="${kind ? `canccu-badge ${kind}` : "canccu-badge"}">${text}</span>`;
-  if (event.status === "archived") return badge("canccu-badge--plain", "Archived");
-  if (event.startsAt && now < new Date(event.startsAt)) {
-    return badge(
-      "canccu-badge--primary",
-      `Starts ${parts(event.startsAt, event.timeZone).weekday}`,
-    );
-  }
-  return event.status === "live" ? badge("canccu-badge--ok", "Live") : badge("", "Draft");
-}
-
 function initials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
   return (
@@ -117,34 +59,49 @@ function signOutForm(label: string, cls: string): Html {
   return html`<form method="post" action="${menu.sign_out}"><button class="${cls}" type="submit">${icon("out")}${label}</button></form>`;
 }
 
-function menuNav(viewer: Viewer, current: string | undefined): Html {
+/** The bottom bar's slots this person may open, in order; Quick add is `quick_add`. */
+export function barFor(rights: ReadonlySet<string>): { id: string; label: string }[] {
+  const viewer = { userName: "", rights };
+  const pages = new Map(menuFor(rights).flatMap((g) => g.items.map((i) => [i.id, i] as const)));
+  return menu.bar.flatMap((slot) => {
+    if (slot.id === "quick_add") {
+      return mayOpen(menu.quick_add, viewer) ? [{ id: slot.id, label: menu.quick_add.label }] : [];
+    }
+    const page = pages.get(slot.id);
+    return page ? [{ id: slot.id, label: slot.label ?? page.label }] : [];
+  });
+}
+
+function menuNav(viewer: Viewer, current: string | undefined, event: EventInfo | undefined): Html {
+  // On a phone the menu is More's sheet: what the bar already shows is left out of it.
+  const inBar = new Set(barFor(viewer.rights).map((b) => b.id));
   const groups = menuFor(viewer.rights).map(
     (g) =>
-      html`<div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">${g.label}</p>${g.items.map(
+      html`<div class="${g.items.every((i) => inBar.has(i.id)) ? "canccu-menu__group canccu-menu__group--bar" : "canccu-menu__group"}"><p class="canccu-overline canccu-menu__label">${g.label}</p>${g.items.map(
         (i) =>
-          html`<a${attrs({ class: "canccu-menu__item", href: i.href, "aria-current": i.id === current ? "page" : undefined })}>${icon(i.icon)}${i.label}</a>`,
+          html`<a${attrs({ class: inBar.has(i.id) ? "canccu-menu__item canccu-menu__item--bar" : "canccu-menu__item", href: i.href, "aria-current": i.id === current ? "page" : undefined })}>${icon(i.icon)}${i.label}</a>`,
       )}</div>`,
   );
-  return html`<nav class="canccu-menu" id="canccu-menu" popover aria-label="Event">${groups}<div class="canccu-menu__foot"><div class="canccu-user"><span class="canccu-avatar" aria-hidden="true">${initials(viewer.userName)}</span>${viewer.userName}</div>${signOutForm("Sign out", "canccu-button canccu-button--ghost")}</div></nav>`;
+  const about = [event ? dateRange(event) : "", event?.venue ?? ""].filter(Boolean).join(" · ");
+  const sheet = html`<div class="canccu-menu__sheet"><p class="canccu-menu__title">More</p><button class="canccu-button canccu-button--ghost" type="button" popovertarget="canccu-menu" popovertargetaction="hide">${icon("close")}Close</button>${about ? html`<p class="canccu-menu__about">${about}</p>` : ""}</div>`;
+  return html`<nav class="canccu-menu" id="canccu-menu" popover aria-label="Event">${sheet}${groups}<div class="canccu-menu__foot"><div class="canccu-user"><span class="canccu-avatar" aria-hidden="true">${initials(viewer.userName)}</span>${viewer.userName}</div>${signOutForm("Sign out", "canccu-button canccu-button--ghost")}</div></nav>`;
 }
 
 function tabbar(viewer: Viewer, current: string | undefined): Html {
-  const item = (href: string, name: string, label: string, here: boolean, cls = ""): Html =>
-    html`<a${attrs({ class: `canccu-tabbar__item${cls}`, href, "aria-current": here ? "page" : undefined })}>${icon(name)}${label}</a>`;
-  const run = menuFor(viewer.rights)
-    .filter((g) => g.label === menu.groups[0]?.label)
-    .flatMap((g) => g.items);
-  const add = mayOpen(menu.quick_add, viewer)
-    ? item(
-        menu.quick_add.href,
-        menu.quick_add.icon,
-        menu.quick_add.label,
-        false,
-        " canccu-tabbar__add",
-      )
-    : "";
-  const [first, ...rest] = run.map((i) => item(i.href, i.icon, i.label, i.id === current));
-  return html`<nav class="canccu-tabbar" aria-label="Shortcuts">${first}${add}${rest}<button class="canccu-tabbar__item" type="button" popovertarget="canccu-menu">${icon("more")}More</button></nav>`;
+  const pages = new Map(menu.groups.flatMap((g) => g.items.map((i) => [i.id, i] as const)));
+  const narrow = new Map(menu.bar.map((b) => [b.id, "narrow" in b ? b.narrow : undefined]));
+  const slots = barFor(viewer.rights).map((b) => {
+    const short = narrow.get(b.id);
+    const label = short
+      ? html`<span class="canccu-tabbar__wide">${b.label}</span><span class="canccu-tabbar__narrow">${short}</span>`
+      : b.label;
+    if (b.id === "quick_add") {
+      return html`<a class="canccu-tabbar__item canccu-tabbar__add" href="${menu.quick_add.href}">${icon(menu.quick_add.icon)}${label}</a>`;
+    }
+    const page = pages.get(b.id);
+    return html`<a${attrs({ class: "canccu-tabbar__item", href: page?.href ?? "", "aria-current": b.id === current ? "page" : undefined })}>${icon(page?.icon ?? "")}${label}</a>`;
+  });
+  return html`<nav class="canccu-tabbar" aria-label="Shortcuts">${slots}<button class="canccu-tabbar__item" type="button" popovertarget="canccu-menu">${icon("more")}More</button></nav>`;
 }
 
 function header(event: EventInfo | undefined, logoUrl: string | undefined, now: Date): Html {
@@ -153,7 +110,8 @@ function header(event: EventInfo | undefined, logoUrl: string | undefined, now: 
       ? ""
       : html`<img${attrs({ class: "canccu-header__logo", src: logoUrl, alt: "" })}>`;
   const dates = event === undefined ? "" : dateRange(event);
-  return html`<header class="canccu-header">${logo}<span class="canccu-header__title">${event?.name ?? "Event"}</span>${dates ? html`<span class="canccu-header__sep"></span><span class="canccu-header__meta">${dates}</span>` : ""}${event === undefined ? "" : stateBadge(event, now)}</header>`;
+  const end = event === undefined ? "" : eventClock(event, now);
+  return html`<header class="canccu-header">${logo}<span class="canccu-header__title">${event?.name ?? "Event"}</span>${dates ? html`<span class="canccu-header__sep"></span><span class="canccu-header__meta">${dates}</span>` : ""}${event === undefined ? "" : stateBadge(event, now)}<span class="canccu-header__end">${end}</span></header>`;
 }
 
 function document(title: string, o: DocumentOptions, body: Slot): Html {
@@ -226,7 +184,7 @@ export function shellPage(o: ShellOptions): Html {
     : "";
   const main = html`<div class="canccu-content"><main class="canccu-main${o.width === "narrow" ? " canccu-main--narrow" : ""}">${head}${tabs}${o.body}</main></div>`;
   const shell = o.session
-    ? html`<div class="canccu-shell">${header(o.event, o.logoUrl, now)}${archived}${menuNav(o.session, o.current)}${main}${tabbar(o.session, o.current)}</div>`
+    ? html`<div class="canccu-shell">${header(o.event, o.logoUrl, now)}${archived}${menuNav(o.session, o.current, o.event)}${main}${tabbar(o.session, o.current)}</div>`
     : html`<div class="canccu-shell canccu-shell--bare">${header(o.event, o.logoUrl, now)}${archived}${main}</div>`;
   return document(o.title, o, shell);
 }

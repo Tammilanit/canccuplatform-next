@@ -13,6 +13,8 @@ import json
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -38,12 +40,28 @@ def _conflict() -> VersionConflict:
     return VersionConflict("settings changed since they were read; read again and retry")
 
 
+@dataclass(frozen=True)
+class SettingsChange:
+    """One saved change: each changed key's new value, who saved it and when."""
+
+    module: str
+    changes: dict[str, Any]
+    actor_user_id: str
+    changed_at: datetime
+
+
 class Store(Protocol):
     async def get_settings(self, module: str) -> tuple[int, dict[str, Any]]: ...
 
     async def put_settings(
         self, module: str, expected_version: int, values: dict[str, Any]
     ) -> int: ...
+
+    async def record_change(self, module: str, changes: dict[str, Any], actor: str) -> None: ...
+
+    async def recent_changes(self, limit: int) -> list[SettingsChange]: ...
+
+    async def last_changed(self) -> dict[str, datetime]: ...
 
     async def get_profile(self) -> dict[str, Any] | None: ...
 
@@ -58,6 +76,7 @@ class MemoryStore:
     def __init__(self) -> None:
         self.settings: dict[tuple[str, str], tuple[int, dict[str, Any]]] = {}
         self.profiles: dict[str, dict[str, Any]] = {}
+        self.changes: dict[str, list[SettingsChange]] = {}
         self.healthy = True
 
     async def get_settings(self, module: str) -> tuple[int, dict[str, Any]]:
@@ -71,6 +90,16 @@ class MemoryStore:
             raise _conflict()
         self.settings[key] = (version + 1, dict(values))
         return version + 1
+
+    async def record_change(self, module: str, changes: dict[str, Any], actor: str) -> None:
+        change = SettingsChange(module, dict(changes), actor, datetime.now(UTC))
+        self.changes.setdefault(require_tenant(), []).append(change)
+
+    async def recent_changes(self, limit: int) -> list[SettingsChange]:
+        return list(reversed(self.changes.get(require_tenant(), [])))[:limit]
+
+    async def last_changed(self) -> dict[str, datetime]:
+        return {c.module: c.changed_at for c in self.changes.get(require_tenant(), [])}
 
     async def get_profile(self) -> dict[str, Any] | None:
         return self.profiles.get(require_tenant())
@@ -169,6 +198,38 @@ class PgStore:
         if row is None:
             raise _conflict()
         return int(row["settings_version"])
+
+    async def record_change(self, module: str, changes: dict[str, Any], actor: str) -> None:
+        async with self._tenant() as conn:
+            await conn.execute(
+                "INSERT INTO admin_tenant_settings_changes (module, changes, actor_user_id)"
+                " VALUES ($1, $2::jsonb, $3)",
+                module,
+                json.dumps(changes),
+                actor,
+            )
+
+    async def recent_changes(self, limit: int) -> list[SettingsChange]:
+        async with self._tenant() as conn:
+            rows = await conn.fetch(
+                "SELECT module, changes, actor_user_id, changed_at"
+                " FROM admin_tenant_settings_changes ORDER BY changed_at DESC, id DESC LIMIT $1",
+                limit,
+            )
+        return [
+            SettingsChange(
+                r["module"], json.loads(r["changes"]), r["actor_user_id"], r["changed_at"]
+            )
+            for r in rows
+        ]
+
+    async def last_changed(self) -> dict[str, datetime]:
+        async with self._tenant() as conn:
+            rows = await conn.fetch(
+                "SELECT module, max(changed_at) AS at FROM admin_tenant_settings_changes"
+                " GROUP BY module"
+            )
+        return {r["module"]: r["at"] for r in rows}
 
     async def get_profile(self) -> dict[str, Any] | None:
         async with self._tenant() as conn:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from canccu_kit import tenant_scope
 from conftest import World, owner_and_member
 
 
@@ -44,3 +45,26 @@ async def test_an_unknown_settings_page_is_not_found_in_words(
     r = await world.browser(owner).get("/admin/settings/nope")
     assert r.status_code == 404 and 'canccu-error__title">Not found' in r.text
     assert "unknown module" not in r.text
+
+
+async def test_settings_rows_glance_and_last_changes(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    olli = next(u.id for u, _ in await world.store.list_users() if u.name == "Olli")
+    with tenant_scope("demo"):
+        await world.service.put_settings("admin", 0, {"timezone": "UTC", "language": "fi"}, olli)
+    r = await world.browser(owner).get("/admin/settings")
+    # A short summary and the values at a glance, not every label or a count (sheet 2).
+    assert ">Time zone, language</p>" in r.text
+    assert "UTC · Finnish" in r.text and "today " in r.text and "never changed" in r.text
+    assert "Last changes" in r.text
+    assert "<b>Olli</b> set General → Language to Finnish" in r.text
+
+
+async def test_health_has_no_empty_message_column(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    r = await world.browser(owner).get("/admin/health-view")
+    assert "What it says" not in r.text

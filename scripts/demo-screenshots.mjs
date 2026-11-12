@@ -29,6 +29,8 @@ const at = (path) => `http://${DEMO_HOST}${port}${path}`;
 
 const DESK = { width: 1280, height: 800 };
 const PHONE = { width: 390, height: 844 };
+// Settings' Last changes sit beside the list only from 1440 px (docs/design/mockups.html, sheet 2).
+const WIDE = { width: 1440, height: 900 };
 const CHECK_IN = "@check-in";
 // Each surface people use, at the width they use it at, full page. A new page joins here. The
 // organiser shell's pages are shot at both widths: on a phone the menu becomes the bottom bar.
@@ -46,6 +48,7 @@ const PAGES = [
     [name, path, DESK],
     [`${name}-phone`, path, PHONE],
   ]),
+  ["settings-wide", "/admin/settings", WIDE],
   ["settings-admin", "/admin/settings/admin", DESK],
   ["studio-advanced", "/theming/studio/advanced", DESK],
   ["studio-history", "/theming/studio/history", DESK],
@@ -166,8 +169,31 @@ async function shot(
   }
 }
 
+// Saved changes, so Settings shows when its parts last changed and what changed.
+async function changeSettings(module, values) {
+  const now = expect(
+    await demo.call("GET", `/api/admin/settings/${module}`),
+    200,
+    `the ${module} settings`,
+  ).body;
+  const body = {
+    settings_version: now.settings_version,
+    values: { ...now.values, ...values(now.values) },
+  };
+  const put = await demo.call("PUT", `/api/admin/settings/${module}`, { body });
+  expect(put, 200, `a change to the ${module} settings`);
+}
+
 let device;
 try {
+  try {
+    await changeSettings("screen", (v) => ({
+      offline_after_seconds: v.offline_after_seconds === 60 ? 45 : 60,
+    }));
+    await changeSettings("admin", () => ({ timezone: "UTC", language: "en" }));
+  } catch (err) {
+    fail(`settings changes: ${firstLine(err)}`);
+  }
   for (const [name, page, viewport] of PAGES) {
     let path = page;
     if (path === CHECK_IN) {

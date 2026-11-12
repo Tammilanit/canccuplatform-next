@@ -207,8 +207,9 @@ async def test_every_menu_link_reaches_a_page_and_readers_get_no_writer_links(en
     async with env.client() as c:
         tabs = (await c.get("/", headers=h)).text.split('class="canccu-tabs"')[1]
         hrefs = [part.split('"')[0] for part in tabs.split("</nav>")[0].split('href="')[1:]]
-        assert hrefs == ["/agenda/", "/agenda/add", "/agenda/templates"]
-        for href in hrefs[:3]:
+        # Quick add is the page's button, not a tab as well (sheet 2: nothing twice).
+        assert hrefs == ["/agenda/", "/agenda/templates"]
+        for href in [*hrefs, "/agenda/add"]:
             # As Caddy forwards it: the prefix stripped, the path kept exactly.
             path = href.removeprefix("/agenda")
             assert (await c.get(path, headers=h)).status_code == 200, href

@@ -12,6 +12,7 @@ from canccu_kit import KitError, MissingRight
 from canccu_kit.ui import (
     MENU,
     EventInfo,
+    bar_for,
     date_range,
     empty_state,
     error_view,
@@ -70,12 +71,41 @@ def test_shell_page() -> None:
     )
     assert '<meta name="viewport" content="width=device-width, initial-scale=1">' in doc
     assert "Demo &lt;Event&gt;" in doc and "Demo <Event>" not in doc
-    assert '<a class="canccu-menu__item" href="/theming/studio/" aria-current="page">' in doc
+    assert (
+        '<a class="canccu-menu__item canccu-menu__item--bar" href="/theming/studio/"'
+        ' aria-current="page">' in doc
+    )
     assert 'href="/theming/studio/" aria-current="page">Brand kit' in doc
     assert "/agenda/" not in doc and "Quick add" not in doc
     assert '<form method="post" action="/admin/sign-out">' in doc
     assert "Sat 14 \u2013 Sun 15 Mar" in doc
     assert 'class="canccu-badge canccu-badge--ok">Live' in doc
+    assert ">18:42<small>UTC</small></time>" in doc
+
+
+def test_bar_puts_quick_add_in_the_middle() -> None:
+    every = Viewer("agenda.items.write", "notify.topics.write", "theming.theme.write")
+    assert [b["label"] for b in bar_for(every)] == [
+        "Run of show",
+        "Notifications",
+        "Quick add",
+        "Theme",
+    ]
+    assert [b["id"] for b in bar_for(Viewer("agenda.crew.read"))] == ["agenda"]
+
+
+def test_no_clock_before_the_event_starts() -> None:
+    doc = shell_page("x", "", event=EVENT, now=datetime(2026, 3, 13, 12, tzinfo=UTC))
+    assert "Starts Sat" in doc and "canccu-clock" not in doc
+
+
+def test_more_leaves_out_what_the_bar_shows() -> None:
+    doc = shell_page(
+        "x", "", event=EVENT, session=Viewer("agenda.items.write", "admin.settings.read")
+    )
+    assert 'class="canccu-menu__item canccu-menu__item--bar" href="/agenda/"' in doc
+    assert 'class="canccu-menu__item" href="/admin/settings"' in doc
+    assert "Sat 14 \u2013 Sun 15 Mar \u00b7 Demo Venue" in doc
 
 
 def test_shell_offers_quick_add_with_the_right() -> None:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+from datetime import UTC, datetime
 from urllib.parse import urlencode
 
 from canccu_kit import (
@@ -18,7 +19,7 @@ from canccu_kit import (
 )
 from canccu_kit.rights import Session
 from canccu_kit.starlette import install, install_service_identity
-from canccu_kit.ui import empty_state, esc, icon, notice
+from canccu_kit.ui import esc, icon, notice
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.requests import Request
@@ -33,12 +34,14 @@ from .pages import (
     HEALTH_ORDER,
     HEALTH_WORDS,
     MODULE_ICONS,
+    event_of,
     page,
     page_error_handler,
     part_name,
     static_ui_css,
 )
 from .service import BadSettings, Service
+from .settings_view import SHOWN_CHANGES, glance, last_changes, settings_list, when
 from .tenancy import TenantPaths
 
 log = logging.getLogger("canccu.admin")
@@ -190,30 +193,37 @@ def create_app(
 
     async def settings_index(request: Request) -> Response:
         session = await need(request, "admin.settings.read")
-        rows = "".join(
-            f'<a class="canccu-list__row" href="{BASE}/settings/{m}">'
-            f'<span class="canccu-list__icon">{icon(MODULE_ICONS.get(m, "sliders"))}</span>'
-            '<span class="canccu-list__main"><p class="canccu-list__title">'
-            f"{esc(part_name(m, settings=True))}</p>"
-            f'<p class="canccu-list__meta">{esc(", ".join(s.label for s in declared[:3]))}</p>'
-            f'</span><span class="canccu-list__end">{len(declared)} '
-            f"{'setting' if len(declared) == 1 else 'settings'}{icon('right')}</span></a>"
-            for m, declared in service.declarations.items()
-        )
-        body = (
-            f'<section class="canccu-card canccu-card--flush"><div class="canccu-list">{rows}'
-            "</div></section>"
-            if rows
-            else empty_state("sliders", "Nothing to set yet", "No module declares settings.")
-        )
+        event = await event_of(request)
+        zone, now = (event.time_zone if event else "UTC"), datetime.now(UTC)
+        changed = await service.store.last_changed()
+        groups = {m: part_name(m, settings=True) for m in service.declarations}
+        rows = []
+        for m, declared in service.declarations.items():
+            _, values = await service.store.get_settings(m)
+            about, values_now = glance(m, declared, values)
+            rows.append(
+                (
+                    f"{BASE}/settings/{m}",
+                    MODULE_ICONS.get(m, "sliders"),
+                    groups[m],
+                    about,
+                    values_now,
+                    when(changed.get(m), now, zone),
+                )
+            )
+        recent = await service.store.recent_changes(SHOWN_CHANGES)
+        # Signed-in names; a session from elsewhere (the CI stub) names at least itself.
+        names = {u.id: u.name for u, _ in await auth.users()} if recent else {}
+        names.setdefault(session.user_id, session.user_name)
+        side = last_changes(recent, names, groups, service.declarations, now, zone)
+        name = event.name if event and event.name else "the event"
         return await page(
             request,
             "Settings",
-            body,
+            f'<div class="canccu-split">{settings_list(rows)}{side}</div>',
             session=session,
             current="settings",
-            narrow=True,
-            description="How each part of the event behaves. A change applies when you save it.",
+            description=f"How each part of {esc(name)} behaves. A change applies when you save it.",
         )
 
     async def settings_form(request: Request) -> Response:
@@ -264,10 +274,12 @@ def create_app(
         rows = [(health.module, own["status"], own["version"], "")]
         rows += [(h.module, h.status, h.version, h.detail) for h in await service.health_view()]
         rows.sort(key=lambda r: (HEALTH_ORDER.get(r[1], 0), part_name(r[0])))
+        # "What it says" only when some part says something: an empty column is only noise.
+        said = any(d for *_, d in rows)
         trs = "".join(
             f"<tr><td><b>{esc(part_name(m))}</b></td>"
             f'<td><span class="canccu-badge canccu-badge--{esc(s)}">'
-            f"{esc(HEALTH_WORDS.get(s, s))}</span></td><td>{esc(d)}</td>"
+            f"{esc(HEALTH_WORDS.get(s, s))}</span></td>{f'<td>{esc(d)}</td>' if said else ''}"
             f'<td class="canccu-hide-phone canccu-num">{esc(v)}</td>'
             f'<td class="canccu-hide-phone"><code class="canccu-muted">{esc(m)}</code></td></tr>'
             for m, s, v, d in rows
@@ -279,7 +291,7 @@ def create_app(
         ]
         table = (
             '<section class="canccu-card canccu-card--flush"><table class="canccu-table">'
-            "<thead><tr><th>Part</th><th>Status</th><th>What it says</th>"
+            f"<thead><tr><th>Part</th><th>Status</th>{'<th>What it says</th>' if said else ''}"
             '<th class="canccu-hide-phone">Version</th><th class="canccu-hide-phone">Log name</th>'
             f"</tr></thead><tbody>{trs}</tbody></table></section>"
         )

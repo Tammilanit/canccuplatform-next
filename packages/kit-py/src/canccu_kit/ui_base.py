@@ -84,6 +84,12 @@ MENU: dict[str, Any] = {
         "icon": "plus",
         "rights": ["agenda.items.write"],
     },
+    "bar": [
+        {"id": "agenda", "label": "Run of show", "narrow": "Show"},
+        {"id": "notify", "label": "Notifications"},
+        {"id": "quick_add"},
+        {"id": "theme", "label": "Theme"},
+    ],
     "sign_out": "/admin/sign-out",
 }
 
@@ -138,6 +144,23 @@ def menu_for(viewer: Viewer) -> list[dict[str, Any]]:
     return [g for g in groups if g["items"]]
 
 
+def bar_for(viewer: Viewer) -> list[dict[str, Any]]:
+    """The bottom bar's slots this person may open, in order: id, label, href, icon and the
+    label under 360 px; Quick add is `quick_add`."""
+    pages = {i["id"]: i for g in menu_for(viewer) for i in g["items"]}
+    slots = []
+    for slot in MENU["bar"]:
+        page = MENU["quick_add"] if slot["id"] == "quick_add" else pages.get(slot["id"])
+        if page is None or not _may(page, viewer):
+            continue
+        label = slot.get("label") or page["label"]
+        slots.append(
+            {"id": slot["id"], "label": label, "href": page["href"], "icon": page["icon"]}
+            | {"narrow": slot.get("narrow")}
+        )
+    return slots
+
+
 def icon(name: str) -> str:
     return f'<span class="canccu-i canccu-i--{esc(name)}" aria-hidden="true"></span>'
 
@@ -181,12 +204,33 @@ def date_range(event: EventInfo) -> str:
     return f"{a:%a} {a.day} {a:%b} {DASH} {b:%a} {b.day} {b:%b}"
 
 
+def _upcoming(event: EventInfo, now: datetime) -> bool:
+    return (
+        event.status != "archived"
+        and event.starts_at is not None
+        and now < _local(event.starts_at, event.time_zone)
+    )
+
+
+def event_clock(event: EventInfo, now: datetime | None = None) -> str:
+    """The event clock, "18:42 UTC", as the page was drawn; before the event starts there is
+    none (the badge says when it starts)."""
+    now = now or datetime.now().astimezone()
+    if _upcoming(event, now):
+        return ""
+    local = _local(now.isoformat(), event.time_zone)
+    return (
+        f'<time class="canccu-clock" datetime="{esc(now.isoformat())}">{local:%H:%M}'
+        f"<small>{esc(local.tzname() or event.time_zone)}</small></time>"
+    )
+
+
 def state_badge(event: EventInfo, now: datetime | None = None) -> str:
     """Live, Starts <day>, Archived or Draft, as a badge."""
     now = now or datetime.now().astimezone()
     if event.status == "archived":
         return '<span class="canccu-badge canccu-badge--plain">Archived</span>'
-    if event.starts_at and now < _local(event.starts_at, event.time_zone):
+    if _upcoming(event, now) and event.starts_at:
         day = f"{_local(event.starts_at, event.time_zone):%a}"
         return f'<span class="canccu-badge canccu-badge--primary">Starts {day}</span>'
     if event.status == "live":

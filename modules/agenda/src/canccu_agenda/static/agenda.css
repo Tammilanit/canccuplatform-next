@@ -3,14 +3,16 @@
    theme's custom properties (packages/ui, contracts/theming.md), so an event's theme applies. */
 @layer canccu-module {
   .canccu-agenda-tabs { display: flex; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; }
+  /* The day chips sit under the page's tabs, so they keep the chip scale, a step below them. */
   .canccu-agenda-tab {
     display: inline-flex;
     align-items: center;
-    min-height: 2.75rem;
-    padding: 0 1rem;
+    min-height: 2rem;
+    padding: 0 0.75rem;
     border-radius: 999px;
     white-space: nowrap;
     text-decoration: none;
+    font-size: var(--canccu-text-sm);
     font-weight: 550;
     border: var(--canccu-border-width) solid var(--canccu-line-field);
     background: var(--canccu-color-surface);

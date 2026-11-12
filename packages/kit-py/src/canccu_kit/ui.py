@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from .errors import KitError
 from .ui_base import (
@@ -14,10 +14,11 @@ from .ui_base import (
     MENU,
     EventInfo,
     Viewer,
-    _may,
+    bar_for,
     date_range,
     day_label,
     esc,
+    event_clock,
     icon,
     menu_for,
     state_badge,
@@ -30,12 +31,14 @@ __all__ = [
     "MENU",
     "EventInfo",
     "Viewer",
+    "bar_for",
     "date_range",
     "day_label",
     "document",
     "empty_state",
     "error_view",
     "esc",
+    "event_clock",
     "front_page",
     "icon",
     "menu_for",
@@ -62,17 +65,31 @@ def _current(item_id: str, current: str | None) -> str:
     return ' aria-current="page"' if item_id == current else ""
 
 
-def _menu(viewer: Viewer, current: str | None) -> str:
+def _menu(viewer: Viewer, current: str | None, event: EventInfo | None) -> str:
+    # On a phone the menu is More's sheet: what the bar already shows is left out of it.
+    in_bar = {b["id"] for b in bar_for(viewer)}
+
+    def cls(base: str, bar: bool) -> str:
+        return f"{base} {base}--bar" if bar else base
+
     groups = "".join(
-        '<div class="canccu-menu__group"><p class="canccu-overline canccu-menu__label">'
-        f"{esc(g['label'])}</p>"
+        f'<div class="{cls("canccu-menu__group", all(i["id"] in in_bar for i in g["items"]))}">'
+        f'<p class="canccu-overline canccu-menu__label">{esc(g["label"])}</p>'
         + "".join(
-            f'<a class="canccu-menu__item" href="{esc(i["href"])}"{_current(i["id"], current)}>'
-            f"{icon(i['icon'])}{esc(i['label'])}</a>"
+            f'<a class="{cls("canccu-menu__item", i["id"] in in_bar)}" href="{esc(i["href"])}"'
+            f"{_current(i['id'], current)}>{icon(i['icon'])}{esc(i['label'])}</a>"
             for i in g["items"]
         )
         + "</div>"
         for g in menu_for(viewer)
+    )
+    about = " · ".join(x for x in (date_range(event) if event else "", event and event.venue) if x)
+    sheet = (
+        '<div class="canccu-menu__sheet"><p class="canccu-menu__title">More</p>'
+        '<button class="canccu-button canccu-button--ghost" type="button" '
+        f'popovertarget="canccu-menu" popovertargetaction="hide">{icon("close")}Close</button>'
+        + (f'<p class="canccu-menu__about">{esc(about)}</p>' if about else "")
+        + "</div>"
     )
     user = (
         f'<div class="canccu-user"><span class="canccu-avatar" aria-hidden="true">'
@@ -80,26 +97,27 @@ def _menu(viewer: Viewer, current: str | None) -> str:
     )
     foot = user + sign_out_form("Sign out", "canccu-button canccu-button--ghost")
     return (
-        f'<nav class="canccu-menu" id="canccu-menu" popover aria-label="Event">{groups}'
+        f'<nav class="canccu-menu" id="canccu-menu" popover aria-label="Event">{sheet}{groups}'
         f'<div class="canccu-menu__foot">{foot}</div></nav>'
     )
 
 
-def _tab(href: str, name: str, label: str, here: bool, cls: str = "") -> str:
-    current = ' aria-current="page"' if here else ""
-    return (
-        f'<a class="canccu-tabbar__item{cls}" href="{esc(href)}"{current}>'
-        f"{icon(name)}{esc(label)}</a>"
-    )
+def _tab(slot: dict[str, Any], current: str | None) -> str:
+    label = esc(slot["label"])
+    if slot["narrow"]:
+        label = (
+            f'<span class="canccu-tabbar__wide">{label}</span>'
+            f'<span class="canccu-tabbar__narrow">{esc(slot["narrow"])}</span>'
+        )
+    if slot["id"] == "quick_add":
+        cls, here = "canccu-tabbar__item canccu-tabbar__add", ""
+    else:
+        cls, here = "canccu-tabbar__item", _current(slot["id"], current)
+    return f'<a class="{cls}" href="{esc(slot["href"])}"{here}>{icon(slot["icon"])}{label}</a>'
 
 
 def _tabbar(viewer: Viewer, current: str | None) -> str:
-    first_group = MENU["groups"][0]["label"]
-    run = [i for g in menu_for(viewer) if g["label"] == first_group for i in g["items"]]
-    links = [_tab(i["href"], i["icon"], i["label"], i["id"] == current) for i in run]
-    add = MENU["quick_add"]
-    if _may(add, viewer):
-        links.insert(1, _tab(add["href"], add["icon"], add["label"], False, " canccu-tabbar__add"))
+    links = [_tab(slot, current) for slot in bar_for(viewer)]
     more = (
         '<button class="canccu-tabbar__item" type="button" popovertarget="canccu-menu">'
         f"{icon('more')}More</button>"
@@ -119,7 +137,8 @@ def _header(event: EventInfo | None, now: datetime | None) -> str:
         else ""
     )
     badge = state_badge(event, now) if event else ""
-    return f'<header class="canccu-header">{title}{meta}{badge}</header>'
+    end = f'<span class="canccu-header__end">{event_clock(event, now) if event else ""}</span>'
+    return f'<header class="canccu-header">{title}{meta}{badge}{end}</header>'
 
 
 def document(
@@ -194,7 +213,7 @@ def shell_page(
     if session is None:
         shell = f'<div class="canccu-shell canccu-shell--bare">{top}{main}</div>'
     else:
-        nav, bar = _menu(session, current), _tabbar(session, current)
+        nav, bar = _menu(session, current, event), _tabbar(session, current)
         shell = f'<div class="canccu-shell">{top}{nav}{main}{bar}</div>'
     return document(title, shell, event=event, css=css)
 

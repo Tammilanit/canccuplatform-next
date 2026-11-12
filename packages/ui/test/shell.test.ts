@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { html } from "../src/html.js";
 import {
+  barFor,
   dateRange,
   emptyState,
   errorView,
@@ -34,6 +35,21 @@ describe("menuFor", () => {
   });
 });
 
+describe("barFor", () => {
+  it("puts Quick add in the middle of five slots for an organiser", () => {
+    const all = new Set(["agenda.items.write", "notify.topics.write", "theming.theme.write"]);
+    expect(barFor(all).map((b) => b.label)).toEqual([
+      "Run of show",
+      "Notifications",
+      "Quick add",
+      "Theme",
+    ]);
+  });
+  it("gives fewer slots for fewer rights", () => {
+    expect(barFor(new Set(["agenda.crew.read"])).map((b) => b.id)).toEqual(["agenda"]);
+  });
+});
+
 describe("shellPage", () => {
   const doc = s(
     shellPage({
@@ -57,7 +73,7 @@ describe("shellPage", () => {
   });
   it("marks the current page in the menu and the tabs", () => {
     expect(doc).toMatch(
-      /<a class="canccu-menu__item" href="\/theming\/studio\/" aria-current="page">/,
+      /<a class="canccu-menu__item[^"]*" href="\/theming\/studio\/" aria-current="page">/,
     );
     expect(doc).toMatch(/href="\/theming\/studio\/" aria-current="page">Brand kit/);
     expect(doc).not.toContain("/agenda/");
@@ -66,9 +82,27 @@ describe("shellPage", () => {
     expect(doc).toContain("Demo Organiser");
     expect(doc).toContain('<form method="post" action="/admin/sign-out">');
   });
-  it("shows the event's dates and state", () => {
+  it("shows the event's dates, state and clock with its zone", () => {
     expect(doc).toContain("Sat 14 – Sun 15 Mar");
     expect(doc).toContain('canccu-badge canccu-badge--ok">Live');
+    expect(doc).toMatch(/class="canccu-clock"[^>]*>18:42<small>UTC<\/small>/);
+  });
+  it("has no clock before the event starts", () => {
+    const early = s(
+      shellPage({ title: "x", event: EVENT, body: "", now: new Date("2026-03-13T12:00:00Z") }),
+    );
+    expect(early).toContain("Starts Sat");
+    expect(early).not.toContain("canccu-clock");
+  });
+  it("leaves out of More what the bar shows", () => {
+    const writer = {
+      userName: "W",
+      rights: new Set(["agenda.items.write", "admin.settings.read"]),
+    };
+    const page = s(shellPage({ title: "x", event: EVENT, session: writer, body: "" }));
+    expect(page).toContain('class="canccu-menu__item canccu-menu__item--bar" href="/agenda/"');
+    expect(page).toContain('class="canccu-menu__item" href="/admin/settings"');
+    expect(page).toContain("Sat 14 – Sun 15 Mar · Demo Venue");
   });
   it("offers Quick add only with the right to add", () => {
     expect(doc).not.toContain("Quick add");

@@ -39,8 +39,9 @@ _STATIC = Path(__file__).resolve().parent / "static"
 UI_CSS = Path(
     os.environ.get("CANCCU_UI_CSS", Path(__file__).resolve().parents[4] / "packages/ui/ui.css")
 )
-# The run of show's own pages, as tabs under its title (docs/design/mockups.html, sheet 2).
-TABS = (("/", "Run of show"), ("/add", "Quick add"), ("/templates", "Templates"))
+# The run of show's own pages, as tabs under its title (docs/design/mockups.html, sheet 2). Quick
+# add is an action, so it is the page's button and the bar's, never a tab: nothing twice.
+TABS = (("/", "Run of show"), ("/templates", "Templates"))
 CSS = (f"{BASE}/static/ui.css", f"{BASE}/static/agenda.css")
 # A 24-hour time: native time fields follow the browser's locale, which may be 12-hour (UX B5).
 TIME_PATTERN = "[0-2][0-9]:[0-5][0-9]"

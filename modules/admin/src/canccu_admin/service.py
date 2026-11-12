@@ -104,6 +104,8 @@ class Service:
         _, old = await self.store.get_settings(module)
         version = await self.store.put_settings(module, expected_version, values)
         keys = sorted(k for k in old.keys() | values.keys() if old.get(k) != values.get(k))
+        if keys:
+            await self.store.record_change(module, {k: values.get(k) for k in keys}, actor)
         await self.bus.publish(
             "admin.settings.changed",
             {"module": module, "keys": keys, "settings_version": version, "actor_user_id": actor},
