@@ -14,7 +14,8 @@
 #   screen, theming, agenda and notify ask it, not admin, for GET /api/admin/session. The cookie
 #   canccu_session=demo-ci is a session with every admin right, screen's content, pairing, device,
 #   ticker and zone rights (the push latency test pairs a screen and changes the ticker; the
-#   screenshots set the demo zones up), and the rights
+#   screenshots set the demo zones up), the right to read a zone's screens (the Theme studio's
+#   screen preview draws a zone with the draft's look), and the rights
 #   of the Theme studio (all three, as an event admin holds them), the agenda and the notify pages
 #   and the check-in code, which scripts/demo-screenshots shows; any other cookie is 401
 #   not_signed_in. Every other path goes on to admin, so the modules still read their settings
@@ -155,7 +156,7 @@ configs:
       	}
       	handle @demo {
       		header Content-Type application/json
-      		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.pair", "screen.devices.write", "screen.ticker.write", "screen.zones.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display"], "expires_at": "2099-01-01T00:00:00Z"}` 200
+      		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.pair", "screen.devices.read", "screen.devices.write", "screen.ticker.write", "screen.zones.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display"], "expires_at": "2099-01-01T00:00:00Z"}` 200
       	}
       	handle /api/admin/session {
       		header Content-Type application/json

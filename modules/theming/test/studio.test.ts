@@ -370,5 +370,6 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
     // The kept logo is one void <input>: an end tag is invalid HTML and leaves a second input.
     expect(body).toContain('<input type="hidden" name="logo" value="images/logo.png">');
     expect(body).not.toContain("</input");
+    expect(body).not.toContain("</img");
   });
 });

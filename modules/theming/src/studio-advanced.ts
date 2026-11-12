@@ -12,6 +12,7 @@ import {
   card,
   checkView,
   colourField,
+  fileDrop,
   root,
 } from "./studio-views.js";
 import type { StudioState } from "./studio-views.js";
@@ -83,21 +84,15 @@ export function advancedView(state: StudioState): Html {
   const upload = card(
     "Package",
     html`<form class="canccu-studio-form" data-action="package">
-      <div class="canccu-field">
-        <label class="canccu-field__label" for="canccu-studio-package">Theme package (zip)</label
-        ><input
-          class="canccu-input"
-          type="file"
-          id="canccu-studio-package"
-          name="package"
-          accept=".zip,application/zip"
-          required
-        />
-        <p class="canccu-field__hint">
-          Replaces the draft's whole content with theme.yaml, CSS, fonts, images, templates and
-          embeds. Embeds need the embeds right.
-        </p>
-      </div>
+      ${fileDrop({
+        id: "canccu-studio-package",
+        name: "package",
+        label: "Theme package (zip)",
+        accept: ".zip,application/zip",
+        title: "Choose a package",
+        hint: "It replaces the draft's whole content: theme.yaml, CSS, fonts, images, templates and embeds. Embeds need the embeds right.",
+        required: true,
+      })}
       <button class="canccu-button canccu-button--primary" type="submit">Upload package</button>
     </form>`,
   );

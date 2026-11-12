@@ -7,7 +7,7 @@
 // from across a hall fails the run, so a screenshot of an error never passes for a real one. Runs
 // in Caddy's network namespace (scripts/demo-screenshots says why).
 // Usage: node demo-screenshots.mjs [--dry-run] [--base BASE_URL] [--out DIR]
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import {
   DEMO_HOST,
@@ -62,6 +62,40 @@ const PAGES = [
   ["notify-new-topic", "/notify/admin/topics/new", DESK],
   ["check-in-phone", CHECK_IN, PHONE],
 ];
+// The brand kit with a draft (mockup 12), after the pages above: the screen preview is screen's
+// player of the main zone with the draft's look, and Preview shows it at full size.
+const SCREEN_PREVIEW = "iframe[data-screen-preview]";
+const LOGO = new URL("../events/demo/assets/logo.svg", import.meta.url);
+const drawn = async (page) => {
+  await page.waitForFunction(
+    (sel) =>
+      document
+        .querySelector(sel)
+        ?.getAttribute("src")
+        ?.startsWith("/screen/zones/"),
+    SCREEN_PREVIEW,
+    { timeout: 10000 },
+  );
+  // The player draws the posted state on its next frames; the rotation needs no more.
+  await page.waitForTimeout(2500);
+};
+const DRAFT = [
+  ["studio-draft", DESK, { ready: drawn }],
+  ["studio-draft-phone", PHONE, { ready: drawn }],
+  ["studio-draft-advanced", DESK, { path: "/theming/studio/advanced" }],
+  [
+    "studio-draft-preview",
+    DESK,
+    {
+      fullPage: false,
+      ready: async (page) => {
+        await drawn(page);
+        await page.click('[data-action="preview"]');
+        await page.waitForTimeout(500);
+      },
+    },
+  ],
+];
 // The front door, signed out, and one page of the error family (an item that does not exist),
 // each at both widths. The error page must answer its own status, not 200.
 const SIGN_IN = "/admin/sign-in";
@@ -83,6 +117,12 @@ if (opts["dry-run"]) {
   for (const [name, path, { width, height }, o] of OTHERS) {
     const how = o.cookie === null ? ", signed out" : `, answering ${o.status}`;
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height}${how})`);
+  }
+  for (const [name, { width, height }, o] of DRAFT) {
+    const path = o.path ?? "/theming/studio/";
+    console.log(
+      `  ${name}.png  ${at(path)}  (${width}×${height}, with a draft)`,
+    );
   }
   for (const name of planned()) {
     console.log(`  ${name}.png  ${at("/screen/")}  (a paired screen)`);
@@ -236,6 +276,44 @@ try {
     });
   } catch (err) {
     fail(`screens: ${firstLine(err)}`);
+  }
+  // After the screens, so the zone plays the fixture's run of show: a draft with mockup 12's
+  // brand and the demo logo, which the previews draw before anything is published.
+  try {
+    const draft = await demo.call("POST", "/api/theming/draft", {
+      body: { from: "defaults" },
+    });
+    let version = expect(draft, 201, "a draft").body.draft_version;
+    const logo = await demo.call(
+      "PUT",
+      `/api/theming/draft/file?path=images/logo.svg&draft_version=${version}`,
+      { body: readFileSync(LOGO), type: "image/svg+xml" },
+    );
+    version = expect(logo, 200, "the draft's logo").body.draft_version;
+    const brand = {
+      primary: "#ff7a45",
+      accent: "#7c5cff",
+      scheme: "dark",
+      logo: "images/logo.svg",
+    };
+    const set = await demo.call("PUT", "/api/theming/draft/brand", {
+      body: { draft_version: version, ...brand },
+    });
+    version = expect(set, 200, "the draft's brand").body.draft.draft_version;
+    try {
+      for (const [name, viewport, o] of DRAFT) {
+        await shot(name, o.path ?? "/theming/studio/", viewport, SESSION, o);
+      }
+    } finally {
+      // Left behind, the draft would greet the next run's "studio" shot instead of the start.
+      const gone = await demo.call(
+        "DELETE",
+        `/api/theming/draft?draft_version=${version}`,
+      );
+      expect(gone, 204, "discarding the draft");
+    }
+  } catch (err) {
+    fail(`studio draft: ${firstLine(err)}`);
   }
 } finally {
   await browser.close();

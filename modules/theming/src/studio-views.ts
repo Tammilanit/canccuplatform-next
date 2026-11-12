@@ -5,7 +5,7 @@
  * markup holds no script and no `style`.
  */
 import type { SqlClient } from "@canccu/kit";
-import { COLOR_TOKENS, attrs, html, notice } from "@canccu/ui";
+import { COLOR_TOKENS, attrs, html, icon, notice } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import { generateColors } from "./brand.js";
 import type { Brand } from "./brand.js";
@@ -306,4 +306,26 @@ export function coloursDetails(
       ${swatches}
     </ul>
   </details>`;
+}
+
+/**
+ * A file field as a drop box over a hidden file input, never the browser's "Choose File"
+ * (UX audit C2); static/studio.js names the file chosen. `image` shows the file there is.
+ */
+export function fileDrop(o: {
+  id: string;
+  name: string;
+  label: string;
+  accept: string;
+  title: string;
+  hint: string;
+  image?: string | undefined;
+  required?: boolean;
+}): Html {
+  // Prettier formats `html` templates as HTML and closes a lone `<img${…}>` or `<input${…}>` with
+  // an invalid end tag that repeats the attributes, so it must leave these lines alone.
+  // prettier-ignore
+  const shown = o.image === undefined ? html`<span class="canccu-studio-drop__empty">${icon("plus")}</span>` : html`<img${attrs({ class: "canccu-studio-drop__logo", src: o.image, alt: "" })}>`;
+  // prettier-ignore
+  return html`<div class="canccu-field"><span class="canccu-field__label">${o.label}</span><label class="canccu-studio-drop"${attrs({ for: o.id })}>${shown}<span><span class="canccu-studio-drop__name">${o.title}</span><span class="canccu-small canccu-muted">${o.hint}</span></span></label><input${attrs({ class: "canccu-studio-file", type: "file", id: o.id, name: o.name, accept: o.accept, required: o.required })}></div>`;
 }

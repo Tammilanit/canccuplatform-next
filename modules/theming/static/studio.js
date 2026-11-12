@@ -218,6 +218,9 @@
   });
   // The brand kit has no Save: each finished change saves the brand and reloads its previews.
   document.addEventListener("change", (event) => {
+    const file = event.target.closest(".canccu-studio-file");
+    const shown = file?.closest(".canccu-field")?.querySelector(".canccu-studio-drop__name");
+    if (shown && file.files[0]) shown.textContent = file.files[0].name;
     const form = event.target.closest('form[data-action="brand"]');
     if (form !== null) void run(form, form);
   });

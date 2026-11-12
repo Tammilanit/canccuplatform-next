@@ -220,14 +220,9 @@
 }
 .canccu-studio-previews__row {
   display: grid;
-  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
   gap: var(--canccu-gap);
   align-items: start;
-}
-@media (max-width: 48rem) {
-  .canccu-studio-previews__row {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 .canccu-studio-preview {
   display: grid;
@@ -274,18 +269,18 @@
 }
 .canccu-studio-preview--hub {
   --canccu-studio-w: 390px;
-  --canccu-studio-h: 600px;
-  --canccu-studio-aspect: 390 / 600;
+  --canccu-studio-h: 340px;
+  --canccu-studio-aspect: 390 / 340;
 }
 .canccu-studio-preview--admin {
   --canccu-studio-w: 760px;
-  --canccu-studio-h: 560px;
-  --canccu-studio-aspect: 760 / 560;
+  --canccu-studio-h: 400px;
+  --canccu-studio-aspect: 760 / 400;
 }
 .canccu-studio-preview--discord {
-  --canccu-studio-w: 440px;
-  --canccu-studio-h: 200px;
-  --canccu-studio-aspect: 440 / 200;
+  --canccu-studio-w: 360px;
+  --canccu-studio-h: 170px;
+  --canccu-studio-aspect: 360 / 170;
 }
 
 /* Preview: the screen at full size over the page; on a phone held upright, turned on its side. */
@@ -310,6 +305,9 @@
 .canccu-studio-preview--full .canccu-studio-full-close {
   display: inline-flex;
   margin-left: auto;
+}
+.canccu-studio-preview--full .canccu-studio-zones:not([hidden]) + .canccu-studio-full-close {
+  margin-left: 0;
 }
 .canccu-studio-preview--full .canccu-studio-preview__box {
   width: min(100%, calc((100dvh - 6rem) * 16 / 9));

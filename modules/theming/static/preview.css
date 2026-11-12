@@ -31,13 +31,38 @@
     color: var(--canccu-color-text-muted);
   }
 
-  /* Discord's own look: only the embed colour and the logo are the event's. */
+  /* Discord's own look: only the embed colour and the logo are the event's. The page is the
+     channel, so it has no header of the event's. */
+  .canccu-page:has(.canccu-preview-discord) > .canccu-header {
+    display: none;
+  }
+  .canccu-page:has(.canccu-preview-discord) > .canccu-main {
+    max-width: none;
+    padding: 0;
+  }
   .canccu-preview-discord {
-    display: flex;
     min-height: 100vh;
+    padding: 1rem;
     background: #313338;
     color: #dbdee1;
     font-family: system-ui, sans-serif;
+  }
+  .canccu-preview-discord__embed {
+    display: flex;
+    overflow: hidden;
+    background: #2b2d31;
+    border-radius: 4px;
+  }
+  .canccu-preview-discord__body p {
+    margin: 0 0 0.375rem;
+  }
+  .canccu-preview-discord__author {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #f2f3f5;
   }
   .canccu-preview-discord__bar {
     flex: 0 0 4px;
@@ -47,9 +72,8 @@
     padding: 0.75rem 1rem;
   }
   .canccu-preview-discord__logo {
-    float: right;
-    max-width: 4rem;
-    max-height: 4rem;
+    max-width: 2.5rem;
+    max-height: 1.5rem;
   }
   .canccu-preview-discord__title {
     font-weight: 600;

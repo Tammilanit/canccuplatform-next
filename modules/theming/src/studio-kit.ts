@@ -19,6 +19,7 @@ import {
   checkView,
   colourField,
   coloursDetails,
+  fileDrop,
   root,
   status,
 } from "./studio-views.js";
@@ -57,28 +58,15 @@ function startView(embedsAllowed: boolean): Html {
 
 function logoField(state: StudioState, path: unknown): Html {
   const name = typeof path === "string" ? path.split("/").pop() : undefined;
-  const shown =
-    state.logoUrl === undefined
-      ? html`<span class="canccu-studio-drop__empty">${icon("plus")}</span>`
-      : html`<img${attrs({ class: "canccu-studio-drop__logo", src: state.logoUrl, alt: "" })}></img${attrs({ class: "canccu-studio-drop__logo", src: state.logoUrl, alt: "" })}>`;
-  return html`<div class="canccu-field">
-    <span class="canccu-field__label">Logo</span
-    ><label class="canccu-studio-drop" for="canccu-studio-logo"
-      >${shown}<span
-        ><span class="canccu-studio-drop__name">${name ?? "Add a logo"}</span
-        ><span class="canccu-small canccu-muted"
-          >${name === undefined ? "Choose" : "Choose another to replace it:"} PNG, JPEG, WebP or
-          SVG, up to 5 MB.</span
-        ></span
-      ></label
-    ><input
-      class="canccu-studio-file"
-      type="file"
-      id="canccu-studio-logo"
-      name="logo_file"
-      accept="image/png,image/jpeg,image/webp,image/svg+xml"
-    />
-  </div>`;
+  return fileDrop({
+    id: "canccu-studio-logo",
+    name: "logo_file",
+    label: "Logo",
+    accept: "image/png,image/jpeg,image/webp,image/svg+xml",
+    title: name ?? "Add a logo",
+    hint: `${name === undefined ? "" : "Choose another file to replace it. "}PNG, JPEG, WebP or SVG, up to 5 MB.`,
+    image: state.logoUrl,
+  });
 }
 
 function brandForm(state: StudioState, draft: DraftRow, colors: Record<string, string>): Html {
