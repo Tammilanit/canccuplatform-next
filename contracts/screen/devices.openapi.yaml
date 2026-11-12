@@ -27,7 +27,7 @@
     tags: [pairing]
     operationId: clearPairings
     summary: Clear every open pairing code of the event
-    description: Right `screen.devices.pair`. For when someone on the venue network holds the open codes.
+    description: Right `screen.devices.pair`. For when someone on the venue network holds the open codes. Audited.
     responses:
       "204":
         description: Cleared.
@@ -349,7 +349,7 @@
     tags: [devices]
     operationId: sendCommand
     summary: Send a command to a device
-    description: Right `screen.devices.write`. Delivered on the push channel; dropped when not delivered within 60 seconds.
+    description: Right `screen.devices.write`. Delivered on the push channel; dropped when not delivered within 60 seconds. Audited.
     requestBody:
       required: true
       content:
@@ -478,7 +478,7 @@
     tags: [zones]
     operationId: addZone
     summary: Add a zone
-    description: Right `screen.zones.write`. 409 `zone_exists`. Emits `screen.zone.saved`.
+    description: Right `screen.zones.write`. 409 `zone_exists`. Audited; emits `screen.zone.saved`.
     requestBody:
       required: true
       content:
@@ -525,7 +525,7 @@
     tags: [zones]
     operationId: saveZone
     summary: Replace a zone
-    description: Right `screen.zones.write`, with the `revision` read. Emits `screen.zone.saved`.
+    description: Right `screen.zones.write`, with the `revision` read. Audited; emits `screen.zone.saved`.
     requestBody:
       required: true
       content:
@@ -553,7 +553,7 @@
     tags: [zones]
     operationId: removeZone
     summary: Remove a zone
-    description: Right `screen.zones.write`. 409 `zone_in_use` while devices are assigned to it or mirror it, or schedule windows, active pushes or break playlists name it. Emits `screen.zone.removed`.
+    description: Right `screen.zones.write`. 409 `zone_in_use` while devices are assigned to it or mirror it, or schedule windows, active pushes or break playlists name it. Audited; emits `screen.zone.removed`.
     responses:
       "204":
         description: Removed.
