@@ -9,7 +9,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { eventPageCsp, newNonce, requireTenant } from "@canccu/kit";
-import type { Logger, RightsChecker, SqlClient } from "@canccu/kit";
+import type { Logger, RightsChecker, SqlClient, TenantResolver } from "@canccu/kit";
 import { html, page } from "@canccu/ui";
 import type { Html, Surface } from "@canccu/ui";
 import { isObject, list } from "./checks.js";
@@ -33,6 +33,8 @@ export interface StudioDeps {
   rights: RightsChecker;
   profile: ProfileSource;
   log: Logger;
+  /** Names the event in the shell's header. */
+  tenants?: Pick<TenantResolver, "event">;
 }
 
 /** Security headers every Studio HTML response carries, the policy given. */

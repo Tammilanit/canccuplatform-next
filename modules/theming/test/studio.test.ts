@@ -50,7 +50,10 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       const res = await page("/theming/studio/", "member");
       expect(res.statusCode).toBe(403);
       expect(res.headers["content-type"]).toMatch(/^text\/html/);
-      expect(res.body).toContain("theming.theme.write");
+      expect(res.body).toContain("No access");
+      expect(res.body).toContain("the Theme studio");
+      // The right's id goes to the log, never to the page (UX audit B3).
+      expect(res.body).not.toContain("theming.theme.write");
     });
 
     it("keeps the admin address rule", async () => {
@@ -99,8 +102,9 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       for (const name of ["terminal", "level-up"]) {
         expect(res.body).not.toContain(`data-starter="${name}"`);
       }
-      // Says why the others are missing, rather than leaving them to a refusal.
-      expect(res.body).toContain("theming.embeds.write");
+      // Says why the others are missing, rather than leaving them to a refusal, in words.
+      expect(res.body).toContain("ask an event owner to add embeds");
+      expect(res.body).not.toContain("theming.embeds.write");
       expect(res.body).not.toContain('data-action="brand"');
       // The current theme is shown, not a draft.
       expect(res.body).toContain('src="/theming/studio/preview/screen"');

@@ -4,3 +4,4 @@
 # five lines) need no entry. The health pass reviews this list.
 docs/briefs/*.html design mockups, self-contained by rule so they cannot be split (0026)
 docs/design/*.html design mockups, self-contained by rule so they cannot be split (docs/briefs/README.md)
+packages/ui/ui.css the one shared stylesheet of every page and the organiser shell (docs/design/mockups.html); its sections share tokens and the cascade layer, so splitting it would make every page load several files

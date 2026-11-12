@@ -167,7 +167,7 @@ async def test_signing_in_again_rotates_the_session(world: World) -> None:
 async def test_sign_in_without_discord_config_says_so(world: World) -> None:
     world.auth.discord = None
     page = await world.client.get("/admin/sign-in")
-    assert "CANCCU_DISCORD_CLIENT_ID" in page.text
+    assert "switched on yet" in page.text and "CANCCU_" not in page.text
     assert (await world.client.post("/admin/sign-in")).status_code == 503
 
 

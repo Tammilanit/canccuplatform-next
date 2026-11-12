@@ -2,6 +2,8 @@
  * Host → tenant (0013 item 2, contracts/tenants.md, Resolving the tenant). The tenant comes only
  * from the request's hostname, through the tenants API; a module never reads the registry itself.
  */
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
 import { isIP } from "node:net";
 import type { TenantContext } from "./access.js";
 import type { Event } from "./bus.js";
@@ -72,6 +74,42 @@ export interface TenantResolverOptions {
 
 type Cached = { at: number; context: TenantContext | null };
 
+/** What `GET /api/tenants/current` tells anyone about an event (contracts/tenants.md). */
+export interface PublicEvent {
+  id: string;
+  name?: string;
+  status: "draft" | "live" | "archived";
+  time_zone?: string;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  venue?: { id: string; name: string } | null;
+}
+
+/** GET `url` with this Host header, as JSON; fetch() would drop the header. */
+function getJson(url: string, host: string): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const send = url.startsWith("https:") ? httpsRequest : httpRequest;
+    const req = send(url, { headers: { host }, timeout: 5000 }, (res) => {
+      const chunks: Buffer[] = [];
+      res.on("data", (c: Buffer) => chunks.push(c));
+      res.on("end", () => {
+        if (res.statusCode !== 200) {
+          resolve(null);
+          return;
+        }
+        try {
+          resolve(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+        } catch (err) {
+          reject(err instanceof Error ? err : new Error(String(err)));
+        }
+      });
+    });
+    req.on("timeout", () => req.destroy(new Error("timeout")));
+    req.on("error", reject);
+    req.end();
+  });
+}
+
 export class TenantResolver {
   private readonly tenantsUrl: string;
   private readonly platformHosts: Set<string>;
@@ -80,6 +118,7 @@ export class TenantResolver {
   private readonly maxEntries: number;
   private readonly now: () => number;
   private readonly cache = new Map<string, Cached>();
+  private readonly events = new Map<string, { at: number; event: PublicEvent | null }>();
 
   constructor(private readonly options: TenantResolverOptions) {
     if (options.ipMode !== undefined && options.ipMode.version !== "dev") {
@@ -110,6 +149,28 @@ export class TenantResolver {
     }
     if (context === null) throw new UnknownHost();
     return { kind: "tenant", context };
+  }
+
+  /**
+   * The event on this host as `GET /api/tenants/current` tells anyone (its name, dates, state and
+   * venue), for the organiser shell's header. Null when the tenants module does not answer: a page
+   * then shows a plain header rather than failing.
+   */
+  async event(rawHost: string | null | undefined): Promise<PublicEvent | null> {
+    const host = normalizeHost(rawHost);
+    if (host === undefined) return null;
+    const hit = this.events.get(host);
+    if (hit !== undefined && this.now() - hit.at < this.cacheMs) return hit.event;
+    const body = await getJson(`${this.tenantsUrl}/api/tenants/current`, host).catch(() => null);
+    const event = typeof body === "object" && body !== null ? (body as PublicEvent) : null;
+    this.events.delete(host);
+    this.events.set(host, { at: this.now(), event });
+    while (this.events.size > this.maxEntries) {
+      const oldest = this.events.keys().next().value;
+      if (oldest === undefined) break;
+      this.events.delete(oldest);
+    }
+    return event;
   }
 
   get cacheSize(): number {
@@ -189,7 +250,11 @@ export class TenantResolver {
     if (event.source !== "tenants") return;
     if (event.tenant === undefined) {
       this.cache.clear();
+      this.events.clear();
       return;
+    }
+    for (const [host, cached] of this.events) {
+      if (cached.event === null || cached.event.id === event.tenant) this.events.delete(host);
     }
     for (const [host, cached] of this.cache) {
       if (cached.context === null || cached.context.tenant_id === event.tenant) {

@@ -19,6 +19,7 @@ from .deps import deps
 from .inverse import Inverse
 from .web import (
     BASE,
+    TIME_PATTERN,
     api_time,
     button,
     day_label,
@@ -69,7 +70,15 @@ def _form(values: dict[str, Any], what: list[tuple[str, str]], day: date, today:
         + f'<div class="canccu-agenda-chips-row">{picks}</div></fieldset>'
         + f'<fieldset class="canccu-agenda-fieldset"><legend>When{esc(on_day)}</legend>'
         f'<div class="canccu-agenda-chips-row">{whens}</div>'
-        + text_input("at", values.get("at") or "", "time", **{"aria-label": "At what time"})
+        + text_input(
+            "at",
+            values.get("at") or "",
+            inputmode="numeric",
+            pattern=TIME_PATTERN,
+            placeholder="HH:MM",
+            maxlength=5,
+            **{"aria-label": "At what time, 24-hour"},
+        )
         + "</fieldset>"
         + field(
             "Where",
@@ -83,13 +92,20 @@ def _form(values: dict[str, Any], what: list[tuple[str, str]], day: date, today:
 
 
 async def _choices(request: Request) -> tuple[list[tuple[str, str]], list[Any], dict[str, Any]]:
-    """Templates first, then kinds. Quiet hours need an end, so only a template offers them."""
+    """Templates first, then the kinds no template already brings, so no choice shows twice
+    (UX audit F1). Quiet hours need an end, so only a template offers them."""
     async with deps(request).db.tenant() as conn:
         rows = await templates.all_templates(conn)
         kinds = await store.kinds(conn)
     rows = [r for r in rows if r["kind"] in kinds]  # a removed kind: fix it on its template page
     what = [(f"template:{r['id']}", str(r["name"])) for r in rows]
-    what += [(f"kind:{k}", str(r["name"])) for k, r in kinds.items() if k != "quiet_hours"]
+    covered = {r["kind"] for r in rows} | {"quiet_hours"}
+    named = {str(r["name"]).casefold() for r in rows}
+    what += [
+        (f"kind:{k}", str(r["name"]))
+        for k, r in kinds.items()
+        if k not in covered and str(r["name"]).casefold() not in named
+    ]
     return what, rows, kinds
 
 

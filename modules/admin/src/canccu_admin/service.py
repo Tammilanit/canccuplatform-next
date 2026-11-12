@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 import shutil
 import tempfile
 from dataclasses import dataclass
@@ -22,6 +23,8 @@ from jsonschema import Draft202012Validator
 from . import profile as prof
 from .db import Store
 from .declarations import KEY_RE, Setting, check_values
+
+log = logging.getLogger("canccu.admin")
 
 
 class BadSettings(KitError):
@@ -109,6 +112,13 @@ class Service:
             {"module": module, "keys": keys, "settings_version": version, "actor_user_id": actor},
             version=1,
         )
+        if keys:
+            # The settings are already committed: the change log only feeds the Settings page,
+            # so a failed write must not lose the event or answer 500 for a save that happened.
+            try:
+                await self.store.record_change(module, {k: values.get(k) for k in keys}, actor)
+            except Exception:
+                log.exception("could not record the settings change of %s", module)
         return {"module": module, "settings_version": version, "values": values}
 
     async def patch_settings(

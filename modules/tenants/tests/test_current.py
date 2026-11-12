@@ -342,3 +342,14 @@ async def test_two_seeds_at_once_create_one_demo(env: Env) -> None:
         *(seed.seed_demo(env.db, env.deps.files, none, None) for _ in range(3))
     )
     assert sorted(created) == [False, False, True]
+
+
+async def test_the_demo_event_has_dates_so_the_shell_shows_them(env: Env) -> None:
+    from pathlib import Path
+
+    from canccu_tenants import seed
+
+    await seed.seed_demo(env.db, env.deps.files, Path("/nonexistent/profile.yaml"), None)
+    async with env.db.tenant("demo") as conn:
+        row = await conn.fetchrow("SELECT starts_at, ends_at FROM tenants WHERE id = 'demo'")
+    assert row["starts_at"] is not None and row["ends_at"] > row["starts_at"]

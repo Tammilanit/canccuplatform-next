@@ -2,6 +2,7 @@
 **
 !packages/kit-py
 !contracts/profile.schema.json
+!packages/ui/ui.css
 !modules/admin
 **/.venv
 **/__pycache__

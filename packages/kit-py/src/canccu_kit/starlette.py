@@ -7,6 +7,7 @@ Install with the extra: `canccu-kit[starlette]`.
 from __future__ import annotations
 
 import functools
+import inspect
 import logging
 from collections.abc import Awaitable, Callable
 from typing import Any, Literal
@@ -31,12 +32,15 @@ from .web_security import check_origin
 
 log = logging.getLogger("canccu.kit.http")
 
-ErrorResponse = Callable[[Request, KitError], Response | None]
-"""Renders a KitError for a request, e.g. as a page; None leaves it to the JSON error body."""
+ErrorResponse = Callable[[Request, KitError], Response | Awaitable[Response | None] | None]
+"""Renders a KitError for a request, e.g. as a page; None leaves it to the JSON error body. It
+may be async: a page's shell reads the event it names."""
 
 
-def _error_response(request: Request, exc: KitError, hook: ErrorResponse | None) -> Response:
+async def _error_response(request: Request, exc: KitError, hook: ErrorResponse | None) -> Response:
     response = None if hook is None else hook(request, exc)
+    if inspect.isawaitable(response):
+        response = await response
     return response or JSONResponse(exc.to_body(), status_code=exc.status)
 
 
@@ -96,7 +100,7 @@ def require_right(
 def _kit_error(hook: ErrorResponse | None) -> Callable[[Request, Exception], Awaitable[Response]]:
     async def handler(request: Request, exc: Exception) -> Response:
         assert isinstance(exc, KitError)
-        return _error_response(request, exc, hook)
+        return await _error_response(request, exc, hook)
 
     return handler
 
@@ -162,7 +166,7 @@ class OriginCheckMiddleware:
                     header(b"sec-fetch-site"),
                 )
             except KitError as exc:
-                response = _error_response(Request(scope), exc, self.error_response)
+                response = await _error_response(Request(scope), exc, self.error_response)
                 await response(scope, receive, send)
                 return
         await self.app(scope, receive, send)
@@ -259,7 +263,7 @@ class TenancyMiddleware:
             if resolution.kind == "platform" and self.platform_hosts != "serve":
                 raise UnknownHost()
         except KitError as exc:
-            response = _error_response(Request(scope), exc, self.error_response)
+            response = await _error_response(Request(scope), exc, self.error_response)
             await response(scope, receive, send)
             return
         if resolution.context is None:

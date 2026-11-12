@@ -131,7 +131,7 @@ async def test_templates_are_added_edited_and_removed(env: Env) -> None:
     assert item["visibility"] == "attendees" and item["location"] == "Info desk"
     assert item["reminder_leads_minutes"] == [5] and item["notify"] == ["discord_channel"]
     assert 'value="Info desk"' in edit.text and 'value="5"' in edit.text
-    assert 'Raffle</span><span class="canccu-agenda-row__meta">Activity · a moment' in after
+    assert 'Raffle</p><p class="canccu-list__meta">Activity · a moment' in after
     assert quiet.status_code == 400 and "needs a length" in quiet.text
     assert gone.status_code == 404
 
@@ -142,7 +142,7 @@ async def test_removed_starters_do_not_come_back(env: Env) -> None:
         for value in (await templates_of(c, h)).values():
             await c.post(f"/templates/{value.removeprefix('template:')}/delete", headers=h)
         listed = (await c.get("/templates", headers=h)).text
-    assert "No templates yet." in listed
+    assert "No templates yet" in listed
 
 
 async def test_quick_add_leaves_out_templates_whose_kind_is_gone(env: Env) -> None:

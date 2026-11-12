@@ -4,13 +4,14 @@ ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
 WORKDIR /repo
 COPY packages/kit-py/ packages/kit-py/
 COPY contracts/profile.schema.json contracts/profile.schema.json
+COPY packages/ui/ui.css packages/ui/ui.css
 COPY modules/admin/ modules/admin/
 # pip resolves the relative kit path against the wrong directory in a build; make it absolute.
 RUN sed -i 's#file:../../packages/kit-py#file:///repo/packages/kit-py#' modules/admin/pyproject.toml \
  && pip install ./modules/admin
 WORKDIR /repo/modules/admin
 ENV CANCCU_CONTRACTS_DIR=/repo/contracts CANCCU_DECLARATIONS_DIR=/repo/modules/admin/declarations \
-    CANCCU_MIGRATIONS_DIR=/repo/modules/admin/migrations
+    CANCCU_MIGRATIONS_DIR=/repo/modules/admin/migrations CANCCU_UI_CSS=/repo/packages/ui/ui.css
 USER nobody
 EXPOSE 8080
 CMD ["python", "-m", "canccu_admin.main"]

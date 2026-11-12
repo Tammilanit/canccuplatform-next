@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from canccu_kit import KitError
+from canccu_kit.ui import empty_state
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
@@ -239,6 +240,17 @@ async def new_page(request: Request) -> Response:
     base = regs.get(request.query_params.get("based_on") or "")
     if base is None:
         options = [(k, r["title"]) for k, r in regs.items()]
+        if not options:  # nothing to narrow yet: no empty choice with a Next (UX audit F3)
+            text = (
+                "A topic of this event's own narrows one a module offers. No module offers one yet."
+            )
+            back = f'<a class="canccu-button canccu-button--secondary" href="{TOPICS}">Back</a>'
+            body = (
+                '<section class="canccu-card">'
+                + empty_state("bell", "Nothing to base a topic on", text, back)
+                + "</section>"
+            )
+            return page(request, "New topic", body)
         body = (
             "<p>A topic of this event's own narrows one a module offers, for example only the"
             " cosplay items of the schedule.</p>"

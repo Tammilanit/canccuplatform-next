@@ -6,6 +6,31 @@ export { Html, attrs, escapeHtml, html, raw } from "./html.js";
 export type { Slot } from "./html.js";
 export { button, card, field, healthBadge, page } from "./components.js";
 export { embedWidget } from "./embed.js";
+export {
+  dateRange,
+  dayLabel,
+  emptyState,
+  errorTitle,
+  errorView,
+  frontPage,
+  icon,
+  menuFor,
+  notice,
+  shellPage,
+  stateBadge,
+  timeLabel,
+} from "./shell.js";
+export type {
+  DocumentOptions,
+  ErrorContext,
+  EventInfo,
+  FrontOptions,
+  MenuItem,
+  PageError,
+  ShellOptions,
+  Tab,
+  Viewer,
+} from "./shell.js";
 export { SAFETY_CLASSES } from "./safety.js";
 export type { SafetyClass } from "./safety.js";
 export type { EmbedOptions } from "./embed.js";

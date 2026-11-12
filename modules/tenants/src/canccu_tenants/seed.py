@@ -28,8 +28,9 @@ def demo_name(profile: Path) -> str:
 
 
 async def seed_demo(db: Db, files: core.Files, profile: Path, platform_domain: str | None) -> bool:
-    """Creates the demo venue, the live demo tenant and, with a platform domain, its hostname
-    `demo.<domain>`. Returns False when the demo tenant exists already (nothing is changed)."""
+    """Creates the demo venue, the live demo tenant (today and tomorrow) and, with a platform
+    domain, its hostname `demo.<domain>`. Returns False when the demo tenant exists already
+    (nothing is changed)."""
     outbox = core.Outbox()
     async with db.tenant(DEMO_TENANT) as conn:
         # Several containers may start at once on a fresh database: one seeds, the rest wait
@@ -43,9 +44,11 @@ async def seed_demo(db: Db, files: core.Files, profile: Path, platform_domain: s
             DEMO_VENUE,
             DEMO_ADDRESSES,
         )
+        # Two days from the day it is made, so the shell shows the event's dates and clock.
         await conn.execute(
-            "INSERT INTO tenants (id, name, time_zone, venue_id, status)"
-            " VALUES ($1, $2, 'UTC', $3, 'live')",
+            "INSERT INTO tenants (id, name, time_zone, venue_id, status, starts_at, ends_at)"
+            " VALUES ($1, $2, 'UTC', $3, 'live', date_trunc('day', now(), 'UTC'),"
+            " date_trunc('day', now(), 'UTC') + interval '1 day 18 hours')",
             DEMO_TENANT,
             demo_name(profile),
             DEMO_VENUE,

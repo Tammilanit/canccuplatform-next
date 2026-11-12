@@ -7,6 +7,7 @@ from datetime import date, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
+from canccu_kit.ui import empty_state, icon
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
@@ -82,8 +83,11 @@ def chips(row: Any, item: dict[str, Any], now: datetime, tz: ZoneInfo) -> str:
         out.append(("managed", "Tournament"))
     if row["visibility"] != "public":
         out.append(("audience", VISIBILITY_LABELS[row["visibility"]]))
+    # A badge says it in a word; a delay is the one solid badge (design README, Decisions 3).
+    badge = {"running": "primary", "cancelled": "down", "delayed": "late"}
     return "".join(
-        f'<span class="canccu-agenda-chip canccu-agenda-chip--{k}">{esc(t)}</span>' for k, t in out
+        f'<span class="canccu-badge canccu-badge--{badge.get(k, "plain")}">{esc(t)}</span>'
+        for k, t in out
     )
 
 
@@ -130,33 +134,50 @@ async def run_of_show(request: Request) -> Response:
     )
     lines = []
     now_shown = day != today
+    nowline = f'<li class="canccu-agenda-nowline"><span>Now {hhmm(now, tz)}</span></li>'
     for row, item in zip(rows, items, strict=True):
         if row["starts_at"].astimezone(tz).date() != day:
             continue
         if not now_shown and row["starts_at"] > now:
-            lines.append(f'<li class="canccu-agenda-nowline">Now {hhmm(now, tz)}</li>')
+            lines.append(nowline)
             now_shown = True
         lines.append(row_html(row, item, kinds, now, tz))
     if not now_shown:
-        lines.append(f'<li class="canccu-agenda-nowline">Now {hhmm(now, tz)}</li>')
+        lines.append(nowline)
     done = DONE.get(request.query_params.get("done", ""))
     body = (
         (notice(done) if done else "")
         + await undo.offer_html(d, session, request.query_params.get("undo"))
         + f'<nav class="canccu-agenda-tabs" aria-label="Days">{tabs}</nav>'
-        + f'<ol class="canccu-agenda-list">{"".join(lines)}</ol>'
     )
-    if not any(r["starts_at"].astimezone(tz).date() == day for r in rows):
-        body += "<p>Nothing on this day yet.</p>"
-    if session.has(WRITE):
+    writes = session.has(WRITE)
+    if any(r["starts_at"].astimezone(tz).date() == day for r in rows):
         body += (
-            '<div class="canccu-agenda-bar">'
-            f'<a class="canccu-button canccu-button--primary" href="{BASE}/add?day={day}">'
-            "Quick add</a>"
-            f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/new?day={day}">'
-            "Full form</a></div>"
+            f'<ol class="canccu-card canccu-card--flush canccu-agenda-list">{"".join(lines)}</ol>'
         )
-    return page(request, "Run of show", body, session=session)
+    else:
+        add = (
+            f'<a class="canccu-button canccu-button--primary" href="{BASE}/add?day={day}">'
+            f"{icon('plus')}Add the first item</a>"
+            if writes
+            else ""
+        )
+        what = "today" if day == today else f"on {day_label(day)}"
+        text = "Add the first item, or start from a template." if writes else "Check back later."
+        body += (
+            '<section class="canccu-card">'
+            + empty_state("calendar", f"Nothing {what} yet", text, add)
+            + "</section>"
+        )
+    actions = (
+        f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/new?day={day}">'
+        "Full form</a>"
+        f'<a class="canccu-button canccu-button--primary" href="{BASE}/add?day={day}">'
+        f"{icon('plus')}Quick add</a>"
+        if writes
+        else ""
+    )
+    return page(request, "Run of show", body, session=session, actions=actions)
 
 
 async def item_page(request: Request) -> Response:
@@ -191,8 +212,8 @@ async def item_page(request: Request) -> Response:
     if row["description"]:
         facts.append(("About", row["description"]))
     body = f'<p class="canccu-agenda-chips">{chips(row, item, now, tz)}</p>'
-    body += '<dl class="canccu-agenda-facts">'
-    body += "".join(f"<dt>{esc(k)}</dt><dd>{esc(v)}</dd>" for k, v in facts) + "</dl>"
+    body += '<section class="canccu-card"><dl class="canccu-dl">'
+    body += "".join(f"<dt>{esc(k)}</dt><dd>{esc(v)}</dd>" for k, v in facts) + "</dl></section>"
     if row["managed_by"] is not None:
         body += "<p>Its title and times come from the tournament module.</p>"
     if session.has(WRITE) and state != "cancelled":
@@ -205,7 +226,7 @@ async def item_page(request: Request) -> Response:
             actions.append(("show-now", "Show on screens now", "secondary"))
         actions.append(("edit", "Edit or move", "secondary"))
         if row["managed_by"] is None:
-            actions.append(("cancel", "Cancel…", "danger"))
+            actions.append(("cancel", "Cancel…", "danger-ghost"))
         body += (
             '<div class="canccu-agenda-actions">'
             + "".join(

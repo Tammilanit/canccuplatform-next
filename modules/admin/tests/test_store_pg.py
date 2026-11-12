@@ -34,7 +34,9 @@ async def store() -> AsyncIterator[PgStore]:
         pytest.skip("CANCCU_DATABASE_URL not set")
     store = await connect_store(URL)
     async with store.pool.acquire() as conn:  # the login role: RLS does not bind it
-        await conn.execute("TRUNCATE admin_tenant_settings, admin_tenant_profile")
+        await conn.execute(
+            "TRUNCATE admin_tenant_settings, admin_tenant_profile, admin_tenant_settings_changes"
+        )
     yield store
     await store.close()
 
@@ -78,6 +80,20 @@ async def test_settings_version_and_conflict_per_tenant(store: PgStore) -> None:
         assert await store.get_settings("admin") == (2, {"language": "fi"})
     with tenant_scope("leak-b"):
         assert await store.get_settings("admin") == (1, {"language": "leak-b"})
+
+
+async def test_settings_changes_are_kept_per_tenant(store: PgStore) -> None:
+    with tenant_scope("leak-a"):
+        await store.record_change("admin", {"language": "fi"}, "u-1")
+        await store.record_change("screen", {"progress_bars": False}, "u-1")
+        recent = await store.recent_changes(5)
+        assert [(c.module, c.changes) for c in recent] == [
+            ("screen", {"progress_bars": False}),
+            ("admin", {"language": "fi"}),
+        ]
+        assert set(await store.last_changed()) == {"admin", "screen"}
+    with tenant_scope("leak-b"):
+        assert await store.recent_changes(5) == [] and await store.last_changed() == {}
 
 
 async def test_refuses_work_without_a_tenant(store: PgStore) -> None:

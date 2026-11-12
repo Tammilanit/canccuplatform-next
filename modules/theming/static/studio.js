@@ -29,6 +29,10 @@
   function messageOf(data, status) {
     const error = data?.error;
     if (error === undefined) return `The request failed (${status}).`;
+    // A right's id stays in the server log, never on the page (UX audit B3).
+    if (error.code === "missing_right") {
+      return "Your role doesn't include this. If you need it, ask an event owner to add it to your role.";
+    }
     const problems = (error.problems ?? [])
       .filter((p) => p.severity === "error")
       .map((p) => `${p.path}: ${p.message}`);
