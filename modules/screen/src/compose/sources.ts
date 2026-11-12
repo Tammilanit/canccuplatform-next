@@ -9,6 +9,7 @@
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import type { ServiceIdentity } from "@canccu/kit";
+import { laterOf } from "./widgets.js";
 import type { AgendaItem, AgendaNow, CheckinCode, VenueInfo } from "./widgets.js";
 
 export interface ThemeNow {
@@ -45,6 +46,8 @@ export interface SourceUrls {
 }
 
 const READ_TIMEOUT_MS = 1500;
+/** Events whose whole agenda is kept; past it the oldest read goes first. */
+const MAX_AGENDAS = 256;
 const MAX_BODY_BYTES = 1024 * 1024;
 const WARN_EVERY_MS = 60_000;
 
@@ -117,6 +120,33 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       return null;
     }
   };
+  // The whole agenda, per event, for `agenda_now`'s `later`: read again only when now and next
+  // say the agenda moved (contracts/screen.md, Reading other modules as a module), so the 10 s zone
+  // refresh of every zone costs one small read, not the event's whole agenda. Keyed by the version,
+  // a container never serves an older agenda than the now and next it read. The promise is kept, so
+  // the zones of one event rebuilt together share one read.
+  const agendas = new Map<string, { version: number; items: Promise<AgendaItem[] | null> }>();
+  const allItems = (tenantId: string, version: number): Promise<AgendaItem[] | null> => {
+    const kept = agendas.get(tenantId);
+    if (kept !== undefined && kept.version === version) return kept.items;
+    const items = read(
+      urls.agenda,
+      `/internal/agenda/items?tenant_id=${encodeURIComponent(tenantId)}`,
+      service.headers("agenda"),
+    ).then((body) => {
+      const list = (body as { items?: unknown } | null)?.items;
+      // A failed read is tried again at the next build rather than kept.
+      if (!Array.isArray(list)) {
+        if (agendas.get(tenantId)?.items === items) agendas.delete(tenantId);
+        return null;
+      }
+      return (list as AgendaItem[]).map((i) => ({ ...i, location: i.location ?? null }));
+    });
+    agendas.delete(tenantId);
+    if (agendas.size >= MAX_AGENDAS) agendas.delete(agendas.keys().next().value as string);
+    agendas.set(tenantId, { version, items });
+    return items;
+  };
   return {
     agendaNow: async (tenantId, zoneKey) => {
       const query = `tenant_id=${encodeURIComponent(tenantId)}&zone=${encodeURIComponent(zoneKey)}`;
@@ -124,9 +154,13 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
         urls.agenda,
         `/internal/agenda/now?${query}`,
         service.headers("agenda"),
-      )) as { current?: AgendaItem[]; next?: AgendaItem[] } | null;
+      )) as { agenda_version?: unknown; current?: AgendaItem[]; next?: AgendaItem[] } | null;
       if (body === null || !Array.isArray(body.current) || !Array.isArray(body.next)) return null;
-      return { current: body.current, next: body.next };
+      const now = { current: body.current, next: body.next };
+      if (body.next.length === 0 || typeof body.agenda_version !== "number") return now;
+      // Without the whole agenda the rail still shows now and next, only nothing after them.
+      const all = await allItems(tenantId, body.agenda_version);
+      return { ...now, later: all === null ? [] : laterOf(all, body.next, zoneKey) };
     },
     venueInfo: async (tenantId) => {
       const body = (await read(

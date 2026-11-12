@@ -1,7 +1,7 @@
 /**
  * Which layout a zone draws and the role of each region (contracts/screen.md, Layouts and
- * regions). Layouts are theming data in the theme.schema.json `layout` shape; the two built-ins
- * are used while the theme has none of that id.
+ * regions). Layouts are theming data in the theme.schema.json `layout` shape; the built-ins are
+ * used while the theme has none of that id.
  */
 
 export interface Area {
@@ -57,29 +57,74 @@ const VENUE_RAIL: WidgetEntry[] = [
 const HERO = w("playlist", "hot_game", "bracket", "photo");
 const RAIL = w("agenda_now", "countdown");
 
+const HEADER = (): LayoutRegion => ({
+  id: "header",
+  area: at(1, 1, 12, 1),
+  widgets: w("logo", "clock"),
+});
+const TICKER = (): LayoutRegion => ({
+  id: "ticker",
+  area: at(1, 12, 12, 1),
+  layer: 1,
+  widgets: w("ticker"),
+});
+const landscape = (id: string, name: string, regions: LayoutRegion[]): Layout => ({
+  id,
+  name,
+  aspect: "16:9",
+  grid: { columns: 12, rows: 12 },
+  regions,
+});
+
+// The six of contracts/screen.md, Built-in layouts, in the order Studio offers them. Dashboard's
+// `stats` and `now_playing` boxes show `empty` until the bot's presence reaches Screen (#389), so
+// they follow their idle rule meanwhile.
 export const BUILT_IN_LAYOUTS: readonly Layout[] = [
-  {
-    id: "pulse",
-    name: "Pulse",
-    aspect: "16:9",
-    grid: { columns: 12, rows: 12 },
-    regions: [
-      { id: "header", area: at(1, 1, 12, 1), widgets: w("logo", "clock") },
-      { id: "hero", area: at(1, 2, 8, 10), widgets: HERO },
-      { id: "rail", area: at(9, 2, 4, 6), widgets: RAIL },
-      { id: "venue_rail", area: at(9, 8, 4, 4), widgets: VENUE_RAIL },
-      { id: "ticker", area: at(1, 12, 12, 1), layer: 1, widgets: w("ticker") },
-    ],
-  },
+  landscape("pulse", "Pulse", [
+    HEADER(),
+    { id: "hero", area: at(1, 2, 8, 10), widgets: HERO },
+    { id: "rail", area: at(9, 2, 4, 6), widgets: RAIL },
+    { id: "venue_rail", area: at(9, 8, 4, 4), widgets: VENUE_RAIL },
+    TICKER(),
+  ]),
+  landscape("dashboard", "Dashboard", [
+    HEADER(),
+    { id: "hero", area: at(1, 2, 4, 5), widgets: HERO },
+    { id: "online", area: at(5, 2, 4, 5), widgets: w("stats") },
+    { id: "voice", area: at(9, 2, 4, 5), widgets: w("stats") },
+    { id: "top_games", area: at(1, 7, 4, 5), widgets: w("now_playing") },
+    { id: "right_now", area: at(5, 7, 4, 5), widgets: w("stats") },
+    { id: "rail", area: at(9, 7, 4, 5), widgets: RAIL },
+    TICKER(),
+  ]),
+  landscape("hero", "Hero", [
+    HEADER(),
+    { id: "hero", area: at(1, 2, 12, 10), widgets: HERO },
+    { id: "rail", area: at(1, 12, 12, 1), widgets: w("agenda_now") },
+  ]),
+  landscape("split", "Split", [
+    HEADER(),
+    { id: "hero", area: at(1, 2, 7, 10), widgets: HERO },
+    { id: "rail", area: at(8, 2, 5, 5), widgets: RAIL },
+    { id: "venue_rail", area: at(8, 7, 5, 5), widgets: VENUE_RAIL },
+    TICKER(),
+  ]),
+  landscape("ambient", "Ambient", [
+    { id: "header", area: at(1, 1, 12, 1), widgets: w("logo") },
+    { id: "hero", area: at(2, 3, 10, 6), widgets: w("clock") },
+    { id: "rail", area: at(2, 9, 10, 2), widgets: w("agenda_now") },
+  ]),
   {
     id: "pulse_portrait",
-    name: "Pulse portrait",
+    name: "Portrait",
     aspect: "9:16",
     grid: { columns: 6, rows: 16 },
+    // The Pulse's boxes stacked (sheet 10): the venue rail fills what was an empty band under the rail.
     regions: [
       { id: "header", area: at(1, 1, 6, 2), widgets: w("logo", "clock") },
-      { id: "hero", area: at(1, 3, 6, 7), widgets: HERO },
-      { id: "rail", area: at(1, 10, 6, 6), widgets: RAIL },
+      { id: "hero", area: at(1, 3, 6, 6), widgets: HERO },
+      { id: "rail", area: at(1, 9, 6, 4), widgets: RAIL },
+      { id: "venue_rail", area: at(1, 13, 6, 3), widgets: VENUE_RAIL },
       { id: "ticker", area: at(1, 16, 6, 1), widgets: w("ticker") },
     ],
   },

@@ -73,4 +73,16 @@ describe.skipIf(!DATABASE_URL)("migrations", () => {
       admin.query("UPDATE screen_zones SET header = 'rotating' WHERE key = 'hall'"),
     ).rejects.toThrow();
   });
+
+  // The same zone shows what 010 gives existing zones.
+  it("gives existing zones the contract's defaults for `hero_region` and `grow_for_showcase`", async () => {
+    const kept = await admin.query("SELECT key, hero_region, grow_for_showcase FROM screen_zones");
+    expect(kept.rows).toEqual([{ key: "hall", hero_region: null, grow_for_showcase: true }]);
+    await expect(
+      admin.query("UPDATE screen_zones SET hero_region = 'Not an id' WHERE key = 'hall'"),
+    ).rejects.toThrow();
+    await expect(
+      admin.query("UPDATE screen_zones SET grow_for_showcase = null WHERE key = 'hall'"),
+    ).rejects.toThrow();
+  });
 });

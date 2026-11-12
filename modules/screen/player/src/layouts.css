@@ -1,0 +1,328 @@
+/*
+ * The built-in layouts besides the Pulse in its built-in look (#401, #404; sheet 10 of docs/design,
+ * contracts/screen.md, Built-in layouts), keyed on the layout's `canccu-layout--<id>` class. Every
+ * size is in `--canccu-u` like the Pulse's (screen.css), so nothing reads smaller than 3.4u, and
+ * all of it sits in `canccu-base`, so a theme restyles any of it without `!important`.
+ */
+@layer canccu-base {
+  /*
+   * A rail shorter than the Pulse's (Split, Dashboard, Portrait) keeps its two rows by putting the
+   * now row's place beside its end: three lines a row, not four.
+   */
+  .canccu-layout--split .canccu-region[data-role="rail"] .canccu-widget__row--now,
+  .canccu-layout--dashboard .canccu-region[data-role="rail"] .canccu-widget__row--now,
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__row--now {
+    grid-template-areas: "state delay" "name name" "until where";
+    grid-template-columns: auto 1fr;
+  }
+
+  .canccu-layout--split
+    .canccu-region[data-role="rail"]
+    .canccu-widget__row--now
+    .canccu-widget__where,
+  .canccu-layout--dashboard
+    .canccu-region[data-role="rail"]
+    .canccu-widget__row--now
+    .canccu-widget__where,
+  .canccu-layout--pulse_portrait
+    .canccu-region[data-role="rail"]
+    .canccu-widget__row--now
+    .canccu-widget__where {
+    font-size: calc(4 * var(--canccu-u));
+  }
+
+  .canccu-layout--split
+    .canccu-region[data-role="rail"]
+    .canccu-widget__row--now
+    .canccu-widget__where::before,
+  .canccu-layout--dashboard
+    .canccu-region[data-role="rail"]
+    .canccu-widget__row--now
+    .canccu-widget__where::before,
+  .canccu-layout--pulse_portrait
+    .canccu-region[data-role="rail"]
+    .canccu-widget__row--now
+    .canccu-widget__where::before {
+    content: "· ";
+  }
+
+  /* Its upcoming rows put the label beside the time and place: two lines, the name under them. */
+  .canccu-layout--split .canccu-region[data-role="rail"] .canccu-widget__row--next,
+  .canccu-layout--split .canccu-region[data-role="rail"] .canccu-widget__row--cancelled,
+  .canccu-layout--dashboard .canccu-region[data-role="rail"] .canccu-widget__row--next,
+  .canccu-layout--dashboard .canccu-region[data-role="rail"] .canccu-widget__row--cancelled,
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__row--next,
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__row--cancelled {
+    grid-template-areas: "state until where" "name name name";
+    grid-template-columns: auto auto 1fr;
+  }
+
+  .canccu-layout--split .canccu-region[data-role="rail"] .canccu-widget__row--delayed,
+  .canccu-layout--dashboard .canccu-region[data-role="rail"] .canccu-widget__row--delayed,
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__row--delayed {
+    grid-template-areas: "state delay until where" "name name name name";
+    grid-template-columns: auto auto auto 1fr;
+  }
+
+  .canccu-layout--split .canccu-region[data-role="rail"] .canccu-widget__delay,
+  .canccu-layout--dashboard .canccu-region[data-role="rail"] .canccu-widget__delay,
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__delay {
+    justify-self: start;
+  }
+
+  /*
+   * Hero: one panel, and under it the run of show as a slim band, its rows side by side on one
+   * line, each its label, time and name; the place waits for the hub.
+   */
+  .canccu-layout--hero .canccu-region[data-role="rail"] > .canccu-widget--agenda_now {
+    flex-direction: row;
+    align-items: center;
+    padding-block: 0;
+  }
+
+  .canccu-layout--hero .canccu-region[data-role="rail"] .canccu-widget__body {
+    flex-direction: row;
+    align-items: center;
+    gap: calc(3 * var(--canccu-u));
+    min-width: 0;
+  }
+
+  .canccu-layout--hero .canccu-region[data-role="rail"] .canccu-widget__row {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: baseline;
+    gap: calc(1.6 * var(--canccu-u));
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  /* Two rows, as on every rail (rail.css), which the flex above would bring back. */
+  .canccu-layout--hero .canccu-region[data-role="rail"] .canccu-widget__row:nth-child(n + 3) {
+    display: none;
+  }
+
+  /* Only a name too long for the band is cut; labels, times and the badge stay whole. */
+  .canccu-layout--hero .canccu-region[data-role="rail"] .canccu-widget__row > * {
+    flex: none;
+  }
+
+  .canccu-layout--hero .canccu-region[data-role="rail"] .canccu-widget__row + .canccu-widget__row {
+    padding: 0 0 0 calc(3 * var(--canccu-u));
+    border-top: 0;
+    border-left: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+
+  .canccu-layout--hero .canccu-region[data-role="rail"] .canccu-widget__name,
+  .canccu-layout--hero .canccu-region[data-role="rail"] .canccu-widget__until,
+  .canccu-layout--hero .canccu-region[data-role="rail"] .canccu-widget__starts {
+    font-size: calc(4.4 * var(--canccu-u));
+  }
+
+  .canccu-layout--hero .canccu-region[data-role="rail"] .canccu-widget__row > .canccu-widget__name {
+    display: block;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .canccu-layout--hero
+    .canccu-region[data-role="rail"]
+    .canccu-widget__row--now
+    .canccu-widget__starts,
+  .canccu-layout--hero
+    .canccu-region[data-role="rail"]
+    .canccu-widget__row:not(.canccu-widget__row--now)
+    .canccu-widget__until,
+  .canccu-layout--hero .canccu-region[data-role="rail"] .canccu-widget__where {
+    display: none;
+  }
+
+  /* The time first on an upcoming row, as on the Pulse's rail: it is what people look for. */
+  .canccu-layout--hero
+    .canccu-region[data-role="rail"]
+    .canccu-widget__row:not(.canccu-widget__row--now)
+    .canccu-widget__starts {
+    order: -1;
+  }
+
+  .canccu-layout--hero .canccu-region[data-role="rail"] .canccu-widget__state {
+    order: -2;
+  }
+
+  /*
+   * Ambient, for the night and the quiet hours: no cards, only large type over the background. The
+   * clock is the hero, its time over its date; the run of show under it, its rows side by side.
+   */
+  .canccu-layout--ambient .canccu-region > .canccu-widget {
+    border: 0;
+    background: none;
+  }
+
+  .canccu-layout--ambient .canccu-region[data-role="hero"] > .canccu-widget--clock {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: calc(1.6 * var(--canccu-u));
+  }
+
+  .canccu-layout--ambient .canccu-region[data-role="hero"] .canccu-widget__big {
+    order: -1;
+    font-family: var(--canccu-font-display);
+    font-size: calc(26 * var(--canccu-u));
+    font-weight: 300;
+    line-height: 1;
+  }
+
+  .canccu-layout--ambient .canccu-region[data-role="hero"] .canccu-widget__meta {
+    font-size: calc(5.5 * var(--canccu-u));
+  }
+
+  .canccu-layout--ambient .canccu-region[data-role="rail"] > .canccu-widget--agenda_now {
+    align-items: center;
+  }
+
+  .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__body {
+    flex-direction: row;
+    justify-content: center;
+    gap: calc(8 * var(--canccu-u));
+  }
+
+  .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__row,
+  .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__row--next,
+  .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__row--delayed,
+  .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__row--cancelled {
+    grid-template-areas: "state until delay" "name name name";
+    grid-template-columns: auto auto auto;
+    justify-content: start;
+    justify-items: start;
+  }
+
+  .canccu-layout--ambient
+    .canccu-region[data-role="rail"]
+    .canccu-widget__row
+    + .canccu-widget__row {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__where {
+    display: none;
+  }
+
+  .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__name {
+    font-size: calc(5.5 * var(--canccu-u));
+  }
+
+  .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__until,
+  .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__starts {
+    font-size: calc(3.4 * var(--canccu-u));
+    font-weight: 600;
+    color: var(--canccu-color-text-muted);
+  }
+
+  /*
+   * Dashboard: six equal boxes, so the hero's own widgets take the rail's headline size; a claim
+   * keeps its own (claims.css). Each box is a size container, for its showcase shape below.
+   */
+  .canccu-layout--dashboard > .canccu-region {
+    container-type: size;
+  }
+
+  .canccu-layout--dashboard
+    .canccu-region[data-role="hero"]
+    > .canccu-widget:not(.canccu-is-claim) {
+    padding: calc(2.4 * var(--canccu-u)) calc(2.8 * var(--canccu-u));
+  }
+
+  .canccu-layout--dashboard
+    .canccu-region[data-role="hero"]
+    > .canccu-widget:not(.canccu-is-claim)
+    .canccu-widget__headline {
+    flex: none;
+    -webkit-line-clamp: 2;
+    font-size: calc(6.2 * var(--canccu-u));
+  }
+
+  /*
+   * While a showcase grows the hero (contracts/screen.md, The hero role and the showcase), the
+   * other boxes stack beside it, each a wide strip of two rows: one line of what it shows. The
+   * header and the ticker are wide strips anyway and keep their own look.
+   */
+  @container (aspect-ratio > 2) {
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget {
+      padding: calc(1.2 * var(--canccu-u)) calc(2.4 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--logo {
+      flex-direction: row;
+      gap: calc(2 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--logo
+      .canccu-widget__image {
+      height: calc(6 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--logo
+      .canccu-widget__name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: calc(4.4 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__row,
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__row--now,
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__row--next,
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__row--delayed {
+      grid-template-areas: "state until delay" "name name name";
+      grid-template-columns: auto auto 1fr;
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__row:nth-child(n + 2),
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__where {
+      display: none;
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__name {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: calc(4.4 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__until,
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__starts {
+      font-size: calc(3.4 * var(--canccu-u));
+    }
+  }
+}
