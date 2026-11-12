@@ -37,7 +37,7 @@ function httpsUrl(value: string): URL {
 }
 
 /** The origins of `web_allowlist`; entries that are not https:// origins never match. */
-function allowedOrigins(allowlist: unknown): Set<string> {
+export function allowedOrigins(allowlist: unknown): Set<string> {
   const origins = new Set<string>();
   for (const entry of Array.isArray(allowlist) ? allowlist : []) {
     if (typeof entry !== "string") continue;
@@ -95,13 +95,16 @@ export interface YouTubeLink {
 }
 
 /** A watch, short, live, embed or youtu.be link as the embed the screens frame. */
+/** The one origin YouTube assets are framed from; the screen page's CSP allows it. */
+export const YOUTUBE_ORIGIN = "https://www.youtube-nocookie.com";
+
 export function youtubeLink(value: string): YouTubeLink {
   const url = httpsUrl(value);
   const id = videoId(url);
   if (id === null) {
     throw invalidRequest("This is not a link to one YouTube video.");
   }
-  const embed = new URL(`https://www.youtube-nocookie.com/embed/${id}`);
+  const embed = new URL(`${YOUTUBE_ORIGIN}/embed/${id}`);
   const start = startSeconds(url);
   if (start > 0) embed.searchParams.set("start", String(start));
   // The player starts it alone, shows no suggestions after it, and listens for its errors.

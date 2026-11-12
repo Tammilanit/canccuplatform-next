@@ -15,6 +15,8 @@ export interface Report {
   state_version: number;
   bundle_version: string;
   theme_revision: number;
+  /** Whether sound may play now (the kiosk's autoplay flag, or a tap on the page). */
+  audio_unlocked: boolean;
   viewport: { width: number; height: number };
 }
 
@@ -76,7 +78,6 @@ export class Heartbeat {
     const sent = this.now();
     const body = {
       ...this.report(),
-      audio_unlocked: false,
       client_time: new Date(sent).toISOString(),
       instance_id: this.instanceId,
       ...(this.rttMs === null ? {} : { rtt_ms: this.rttMs }),

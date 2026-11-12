@@ -3,23 +3,67 @@
  * properties) around its template drawn from the view-model, and the parts that tick on the device
  * between pushes: the clock's fields and the time left to a `<time datetime>`.
  */
+import { embedWidget } from "@canccu/ui";
+import type { EmbedOptions } from "@canccu/ui";
+import { currentItem, drawMedia } from "./media.js";
+import type { MediaOptions } from "./media.js";
 import { templateFor } from "./templates.js";
 import { renderTree } from "./tree.js";
 
 export type View = Record<string, unknown>;
+
+/**
+ * The `embed` widget is theming's, drawn only by the platform's own component (plan L4):
+ * `embedWidget()` escapes every value and frames only sandbox paths. Its markup is parsed here
+ * because it is the component's, never a theme's template or data (those go through the tree).
+ * An embed cannot be trusted to honour reduced motion, so then the frame is left out (ui.css hides
+ * it; the screen's stylesheet may not use `!important`, so no theme CSS could be kept from undoing it).
+ */
+function drawEmbed(view: View, reducedMotion: boolean): HTMLElement {
+  const options: EmbedOptions = {};
+  if (typeof view.frame_url === "string" && !reducedMotion) options.frameUrl = view.frame_url;
+  if (typeof view.logo_url === "string") options.logoUrl = view.logo_url;
+  const holder = document.createElement("template");
+  holder.innerHTML = embedWidget(options).toString();
+  const el = holder.content.firstElementChild;
+  return el instanceof HTMLElement ? el : document.createElement("div");
+}
 
 export function drawWidget(
   type: string,
   template: string | null,
   view: View,
   themeTemplates: unknown,
+  media: MediaOptions = { sound: false, nowMs: Date.now() },
 ): HTMLElement {
-  const el = document.createElement("div");
+  const el =
+    type === "embed"
+      ? drawEmbed(view, media.reducedMotion === true)
+      : document.createElement("div");
   el.className = `canccu-widget canccu-widget--${type}`;
   if (view.empty === true) el.classList.add("canccu-is-empty");
   if (view.stale === true) el.classList.add("canccu-is-stale");
-  el.append(...renderTree(templateFor(type, template, themeTemplates), view));
+  if (type === "playlist") {
+    const item = currentItem(view, media.nowMs);
+    const shown = item === null ? null : drawMedia(item, media);
+    if (shown !== null) el.append(shown);
+  } else if (type !== "embed") {
+    el.append(...renderTree(templateFor(type, template, themeTemplates), view));
+  }
   return el;
+}
+
+/**
+ * What a widget shows, beyond its place in the rotation: a new photo or playlist frame is a new
+ * thing, so it fades in; other new data redraws in place.
+ */
+export function identity(type: string, view: View): string {
+  if (type === "photo") return JSON.stringify(view.url);
+  if (type === "playlist") {
+    const item = view.item as { url?: unknown; started_at?: unknown } | null | undefined;
+    return JSON.stringify([item?.url, item?.started_at]);
+  }
+  return "";
 }
 
 function format(ms: number, timeZone: string, options: Intl.DateTimeFormatOptions): string {
@@ -30,8 +74,17 @@ function format(ms: number, timeZone: string, options: Intl.DateTimeFormatOption
   }
 }
 
-/** The clock's view-model at `nowMs`, as the server builds it (src/compose/widgets.ts). */
+/**
+ * The view as it stands at `nowMs`: the clock's fields as the server builds them
+ * (src/compose/widgets.ts), and the playlist's item, which moves on to `next_item` by itself. The
+ * playlist keeps only the item it shows, so the push that later brings that same item redraws
+ * nothing and a playing video never restarts.
+ */
 export function liveView(type: string, view: View, nowMs: number, timeZone: string): View {
+  if (type === "playlist") {
+    const rest = Object.fromEntries(Object.entries(view).filter(([k]) => k !== "next_item"));
+    return { ...rest, item: currentItem(view, nowMs) };
+  }
   if (type !== "clock") return view;
   return {
     ...view,
@@ -40,6 +93,38 @@ export function liveView(type: string, view: View, nowMs: number, timeZone: stri
     time: format(nowMs, timeZone, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
     date: format(nowMs, timeZone, { weekday: "short", day: "numeric", month: "short" }),
   };
+}
+
+/** Widgets the device keeps current itself, also offline: they never dim (mockup 16). */
+const KEPT_ON_DEVICE = new Set(["clock", "countdown", "playlist"]);
+/** What makes a `checkin_qr` a live code (src/push/session.ts drops the same for its sample). */
+const CODE_FIELDS = ["url", "image_url", "rotates_at", "valid_until", "qr"];
+
+/**
+ * A view as the screen may show it now. A check-in code past its `valid_until` (or, without one,
+ * its `rotates_at`) checks no one in, so it shows its empty state instead, whatever the link: a
+ * screen that heard no new code (offline, or a cold boot from the kept state before the 10 s mark)
+ * must not send attendees to scan a dead one. Online the server pushes the next code at every
+ * rotation, ahead of that time.
+ */
+export function shownView(type: string, view: View, nowMs: number): View {
+  if (type !== "checkin_qr" || !codeExpired(view, nowMs)) return view;
+  const out: View = { ...view, empty: true };
+  for (const field of CODE_FIELDS) out[field] = null;
+  return out;
+}
+
+/**
+ * Offline, the widgets whose content the server keeps dim (`canccu-is-stale`); the clock,
+ * countdowns and the kept playlist run on at full strength.
+ */
+export const dimsOffline = (type: string): boolean => !KEPT_ON_DEVICE.has(type);
+
+function codeExpired(view: View, nowMs: number): boolean {
+  const until = typeof view.valid_until === "string" ? view.valid_until : view.rotates_at;
+  if (typeof until !== "string") return false;
+  const ms = Date.parse(until);
+  return !Number.isNaN(ms) && nowMs >= ms;
 }
 
 const two = (n: number): string => String(n).padStart(2, "0");

@@ -18,7 +18,8 @@ import type { ComposeDeps, ZoneComposed } from "../compose/state.js";
 import { diffZone } from "./diff.js";
 import type { Orientation, ZoneRecord, ZoneRecordView } from "./store.js";
 
-function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
+/** A composed zone as the store keeps it, at `version`. */
+export function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
   const view = (o: Orientation): ZoneRecordView => {
     const { layout, regions, placed, unplaced, hidden } = composed.views[o];
     return { layout, regions, placed, unplaced, hidden };
@@ -33,6 +34,7 @@ function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
     sound: { enabled: composed.zone.sound.enabled, device_id: composed.zone.sound.device_id },
     display: composed.display,
     views: { landscape: view("landscape"), portrait: view("portrait") },
+    nextChangeAt: composed.nextChangeAt,
   };
 }
 

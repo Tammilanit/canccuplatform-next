@@ -1,6 +1,6 @@
 /** A screen app on a real Postgres (RLS needs one) with fake tenants, admin and Valkey. */
 import type { ThemeNow } from "../src/compose/sources.js";
-import type { AgendaNow, VenueInfo } from "../src/compose/widgets.js";
+import type { AgendaNow, CheckinCode, VenueInfo } from "../src/compose/widgets.js";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -50,7 +50,8 @@ const ALL_RIGHTS = [
   "screen.ticker.write",
   "screen.photos.write",
 ];
-const SESSIONS: Record<string, string[]> = {
+/** The sessions the fake admin knows; a test may add or remove one (then drop it from `h.rights`). */
+export const SESSIONS: Record<string, string[]> = {
   admin: ALL_RIGHTS,
   crew: ["screen.devices.read"],
   content: ["screen.content.read"],
@@ -100,12 +101,16 @@ export interface Harness {
   /** The fake quota itself, for calls made outside a request. */
   quota: StorageQuota;
   filesRoot: string;
+  /** The player's built files, which a test may take away. */
+  playerDir: string;
   /** What the fake oEmbed answers for YouTube probes. */
   oembedStatus: { value: number };
   /** What the fake agenda, tenants and theming answer the composed state; null is "down". */
   sources: FakeSources;
   /** The app's tenant cache; a test that changes TENANTS clears it with a tenants event. */
   tenants: TenantResolver;
+  /** The app's rights cache; a test that changes SESSIONS clears it with `admin.rights.changed`. */
+  rights: RightsChecker;
   /** One run of the offline sweep, as main starts every 5 seconds. */
   sweep(): Promise<void>;
   queue: MemoryRenderQueue;
@@ -128,6 +133,9 @@ export interface FakeSources {
   hosts: string[];
   /** The tenant ids the module reads (theme, now and next, venue info) were made for. */
   tenants: string[];
+  checkin: CheckinCode | null;
+  /** The purposes notify's check-in code was read for. */
+  checkinReads: string[];
 }
 
 /** Drops every screen table; `assignments` too, the name before migration 007. */
@@ -166,6 +174,7 @@ export async function harness(): Promise<Harness> {
   const playerDir = await mkdtemp(join(tmpdir(), "canccu-screen-player-"));
   await writeFile(join(playerDir, "player.js"), "export {};\n");
   await writeFile(join(playerDir, "player.css"), "body {}\n");
+  await writeFile(join(playerDir, "sw.js"), "self;\n");
   const oembedStatus = { value: 200 };
   const fake: FakeSources = {
     theme: null,
@@ -174,6 +183,8 @@ export async function harness(): Promise<Harness> {
     venue: null,
     hosts: [],
     tenants: [],
+    checkin: null,
+    checkinReads: [],
   };
   const answer = <T>(seen: string[], key: string, value: T): Promise<T> => {
     seen.push(key);
@@ -211,11 +222,12 @@ export async function harness(): Promise<Harness> {
     fetch: fakeTenants,
     platformHosts: [SUPERADMIN_HOST, SIGNIN_HOST],
   });
+  const rights = new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin }));
   const app = buildApp({
     db,
     kv,
     bus,
-    rights: new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin })),
+    rights,
     audit: (entry) => {
       if (failAudit.next) {
         failAudit.next = false;
@@ -246,6 +258,7 @@ export async function harness(): Promise<Harness> {
       event: (host) => answer(fake.hosts, host, fake.event),
       agendaNow: (tenantId) => answer(fake.tenants, tenantId, fake.agenda),
       venueInfo: (tenantId) => answer(fake.tenants, tenantId, fake.venue),
+      checkinCode: (_tenantId, purpose) => answer(fake.checkinReads, purpose, fake.checkin),
     },
   });
   // A stand-in for the device routes later slices add (the state, the stream): it runs only the check.
@@ -279,9 +292,11 @@ export async function harness(): Promise<Harness> {
     storage,
     quota,
     filesRoot,
+    playerDir,
     oembedStatus,
     sources: fake,
     tenants,
+    rights,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
     queue,
     dispatch: (socketPath, opts = {}) =>

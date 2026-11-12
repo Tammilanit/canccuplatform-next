@@ -158,6 +158,17 @@ describe.skipIf(!DATABASE_URL)("photos", () => {
     expect(photos.map((p) => p.caption)).toEqual(["Newest", null, "Finals crowd"]);
   });
 
+  it("lists a photo as featured until the screens have featured it once", async () => {
+    const saved = h.clock.now;
+    // Created by the database's clock: a moment later every photo is still new.
+    h.clock.now = Date.now() + 1_000;
+    expect((await list()).some((p) => p.featured)).toBe(true);
+    // Three photos, each featured for the default eight seconds, one after another.
+    h.clock.now = Date.now() + 60_000;
+    expect((await list()).map((p) => p.featured)).toEqual([false, false, false]);
+    h.clock.now = saved;
+  });
+
   it("removes a photo with its file, and announces it", async () => {
     const photo = (await add(await png(6))).json<Photo>();
     const used = h.storage.used.iota ?? 0;

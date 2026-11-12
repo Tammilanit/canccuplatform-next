@@ -181,6 +181,11 @@
     width: min(100%, 22cqmin);
   }
 
+  /* A check-in code past its time is dropped (widget.ts, shownView): no blank square in its place. */
+  .canccu-widget--checkin_qr.canccu-is-empty .canccu-widget__code {
+    display: none;
+  }
+
   .canccu-widget__image {
     min-height: 0;
     max-width: 100%;
@@ -274,6 +279,58 @@
     background: var(--canccu-color-primary, #60a5fa);
     color: var(--canccu-color-primary-text, #0f1115);
     font-weight: 600;
+  }
+
+  /* The playlist's media fill the widget edge to edge, with no card (src/media.ts). The widget
+     stays absolute, inset 0 like every widget: it is the media's containing block, and set back
+     to relative it would collapse to its absolute children's height, 0 px. */
+  .canccu-region > .canccu-widget--playlist {
+    padding: 0;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .canccu-widget__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: contain;
+  }
+
+  .canccu-widget__media.canccu-is-failed {
+    visibility: hidden;
+  }
+
+  /* The embed widget, as packages/ui's ui.css draws it (the screen page loads no ui.css): the
+     still fills the widget and the frame lies over it, transparent until the embed paints. */
+  .canccu-region > .canccu-widget--embed {
+    padding: 0;
+    overflow: hidden;
+    background: var(--canccu-color-background, #0f1115);
+  }
+
+  .canccu-widget--embed > .canccu-widget__body {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .canccu-widget--embed > .canccu-widget__body > img {
+    max-width: 40%;
+    max-height: 40%;
+  }
+
+  .canccu-embed {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    color-scheme: normal;
   }
 
   /*

@@ -37,7 +37,7 @@ jobs:
         run: scripts/demo-stack-test http://127.0.0.1
       - name: Install the browser
         run: scripts/demo-screenshots --install
-      - name: Screenshots of the admin pages
+      - name: Screenshots of every user-facing surface
         run: scripts/demo-screenshots http://127.0.0.1 screenshots
       - name: Upload screenshots
         if: always()

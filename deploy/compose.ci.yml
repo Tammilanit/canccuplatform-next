@@ -10,11 +10,14 @@
 # - event-seed copies events/demo/ into the demo tenant's event folder of the files volume
 #   (/files/demo/admin/event), owned by the modules' user (65534, see files-init), before admin
 #   starts.
-# - session-stub stands in for Discord sign-in, which CI cannot run: admin's and screen's rights
-#   checks ask it, not admin, for GET /api/admin/session. The cookie canccu_session=demo-ci is a
-#   session with every admin right and screen's content, pairing, device and ticker rights (the
-#   push latency test pairs a screen and changes the ticker); any other cookie is 401
-#   not_signed_in. Every other path goes on to admin, so screen still reads its settings there.
+# - session-stub stands in for Discord sign-in, which CI cannot run: the rights checks of admin,
+#   screen, theming, agenda and notify ask it, not admin, for GET /api/admin/session. The cookie
+#   canccu_session=demo-ci is a session with every admin right, screen's content, pairing, device
+#   and ticker rights (the push latency test pairs a screen and changes the ticker), and the rights
+#   of the Theme studio (all three, as an event admin holds them), the agenda and the notify pages
+#   and the check-in code, which scripts/demo-screenshots shows; any other cookie is 401
+#   not_signed_in. Every other path goes on to admin, so the modules still read their settings
+#   there.
 #   Anyone who can reach Caddy can send that cookie, which is why this file is for CI only.
 services:
   # tenants has no path that makes an event before the superadmin's sign-in (#52, #150), so the
@@ -108,6 +111,27 @@ services:
       session-stub:
         condition: service_healthy
 
+  theming:
+    environment:
+      CANCCU_ADMIN_URL: http://session-stub:8080
+    depends_on:
+      session-stub:
+        condition: service_healthy
+
+  agenda:
+    environment:
+      CANCCU_ADMIN_URL: http://session-stub:8080
+    depends_on:
+      session-stub:
+        condition: service_healthy
+
+  notify:
+    environment:
+      CANCCU_ADMIN_URL: http://session-stub:8080
+    depends_on:
+      session-stub:
+        condition: service_healthy
+
 configs:
   session-stub:
     content: |
@@ -125,7 +149,7 @@ configs:
       	}
       	handle @demo {
       		header Content-Type application/json
-      		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "screen.content.read", "screen.content.write", "screen.devices.pair", "screen.devices.write", "screen.ticker.write"], "expires_at": "2099-01-01T00:00:00Z"}` 200
+      		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "screen.content.read", "screen.content.write", "screen.devices.pair", "screen.devices.write", "screen.ticker.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display"], "expires_at": "2099-01-01T00:00:00Z"}` 200
       	}
       	handle /api/admin/session {
       		header Content-Type application/json

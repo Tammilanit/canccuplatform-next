@@ -19,6 +19,8 @@ describe.skipIf(!DATABASE_URL)("tick", () => {
   let day: string;
   let evening: string;
   const archived = new Set<string>();
+  // The zones each step reported as stored (PushHub.played), newest last.
+  const played: string[][] = [];
   beforeAll(async () => {
     h = await harness();
     await pairDevice(h);
@@ -62,6 +64,9 @@ describe.skipIf(!DATABASE_URL)("tick", () => {
         return Promise.resolve(archived.has(id) ? { ...ctx, status: "archived" as const } : ctx);
       },
       now: () => h.clock.now,
+      played: (tenant, zones) => {
+        played.push([tenant, ...zones]);
+      },
     });
   });
   afterAll(async () => {
@@ -82,13 +87,16 @@ describe.skipIf(!DATABASE_URL)("tick", () => {
     const row = await state();
     expect(row?.state.playing).toMatchObject({ source: "schedule", playlistId: day, since: start });
     expect(row?.state.bookmarks[day]).toMatchObject({ runningSince: start, offsetMs: 0 });
+    expect(played).toEqual([["alpha", "main"]]);
   });
 
-  it("writes nothing when nothing changed", async () => {
+  it("writes nothing when nothing changed, and reports nothing", async () => {
     const before = await state();
+    played.length = 0;
     h.clock.now += 5000;
     await tick();
     expect((await state())?.updated_at).toEqual(before?.updated_at);
+    expect(played).toEqual([]);
   });
 
   it("a push takes over at the next second, and the window's playlist keeps its place", async () => {
@@ -101,11 +109,14 @@ describe.skipIf(!DATABASE_URL)("tick", () => {
       as("admin", { zones: ["main"], playlist_id: evening, until }),
     );
     const pushId = res.json<{ id: string }>().id;
+    played.length = 0;
     await tick();
     // The zone's step for this second was taken already: nothing more until the next one.
     await tick();
     let row = await state();
     expect(row?.state.playing).toMatchObject({ source: "push", pushId, playlistId: evening });
+    // So the hub rebuilds the zone now rather than at the old frame's end.
+    expect(played).toEqual([["alpha", "main"]]);
     const read = await call(h, "GET", `/api/screen/playlists/${day}`, as("admin"));
     const second = read.json<{ items: { id: string }[] }>().items[1]?.id;
     expect(row?.state.bookmarks[day]).toEqual({

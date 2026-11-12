@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
-# Screenshots of the admin pages in the running demo stack, signed in with the CI session
-# stub's cookie (deploy/compose.ci.yml). CI runs it in the `demo-stack` check and uploads
-# OUT_DIR as an artifact. A page that does not answer 200 fails the run, so a screenshot of
-# an error page never passes for a real one.
+# Screenshots of every user-facing surface of the running demo stack (#376): the admin pages, the
+# Theme studio, the phone hub's preview, the agenda and notify pages and a paired Pulse screen in
+# landscape and portrait (the list is in scripts/demo-screenshots.mjs). CI runs it in the
+# `demo-stack` check and uploads OUT_DIR as an artifact, which a user-visible PR's reviewer holds
+# against the mockups (AGENTS.md, A package run).
 # Usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR]   (defaults http://127.0.0.1, screenshots)
-# The pages open on the demo event's hostname CANCCU_DEMO_HOST (default demo.localhost; the CI
-# stack has two events, so IP mode serves none) at BASE_URL's port. Chromium resolves `*.localhost`
-# to the loopback itself, so BASE_URL must be this machine.
 #        demo-screenshots --install   pulls the Playwright image (CI)
-# Needs Docker. The run happens in Playwright's image, which ships Chromium and its system
-# libraries: installing them with apt on the runner failed CI whenever the Ubuntu mirrors were
-# down (#378). Inside the image the script runs itself directly and needs curl and npx.
+# BASE_URL is Caddy's address as seen from inside the Caddy container (so not a remote or
+# host-published address); the pages open on the demo event's hostname CANCCU_DEMO_HOST (default
+# demo.localhost; the CI stack has two events, so IP mode serves none) at its port.
+# Needs Docker (the dry run only node). The run happens in Playwright's image, which ships Chromium
+# and its system libraries: installing them with apt on the runner failed CI whenever the Ubuntu
+# mirrors were down (#378). The image joins the network namespace of the stack's Caddy container,
+# found through CANCCU_DEMO_COMPOSE (default `docker compose -f deploy/compose.yml -f
+# deploy/compose.ci.yml`, as in scripts/demo-stack-test). The browser then comes from the
+# loopback, an address of the demo venue, which the venue IP check needs before a screen pairs or
+# plays (contracts/screen.md); from the host, Docker's gateway is the source.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
@@ -18,13 +23,7 @@ cd "$(dirname "$0")/.." || exit 2
 # image in modules/theming/README.md); bump them together.
 PLAYWRIGHT=1.64.1
 IMAGE=mcr.microsoft.com/playwright:v$PLAYWRIGHT-noble
-# name|path: the admin pages, in menu order.
-PAGES=(
-  "settings|/admin/settings"
-  "settings-admin|/admin/settings/admin"
-  "health-view|/admin/health-view"
-  "profile|/admin/profile"
-)
+CLIENT=modules/screen/test/stack/client.mjs
 
 usage() { echo "usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR] | --install" >&2; exit 2; }
 if [ "${1:-}" = "--install" ]; then
@@ -35,63 +34,36 @@ dry=0
 if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
 [ $# -le 2 ] || usage
 BASE=${1:-http://127.0.0.1}
-BASE=${BASE%/}
 OUT=${2:-screenshots}
-SESSION=${DEMO_SESSION:-demo-ci}
-DEMO_HOST=${CANCCU_DEMO_HOST:-demo.localhost}
-authority=${BASE#*://}; authority=${authority%%/*}
-port=""
-[[ $authority =~ :([0-9]+)$ ]] && port=":${BASH_REMATCH[1]}"
 
 if [ "$dry" = 1 ]; then
-  echo "dry run, would screenshot (chromium in $IMAGE) into $OUT/:"
-  for p in "${PAGES[@]}"; do echo "  ${p%%|*}.png  http://$DEMO_HOST$port${p#*|}"; done
-  exit 0
+  command -v node >/dev/null || { echo "error: node not found" >&2; exit 2; }
+  echo "(chromium in $IMAGE, in Caddy's network namespace)"
+  exec node scripts/demo-screenshots.mjs --dry-run --base "$BASE" --out "$OUT"
 fi
 
-# The image sets PLAYWRIGHT_BROWSERS_PATH to its browsers; anywhere else, run this script there.
-# Host network, so BASE_URL means the same in the container; the caller's uid owns the PNGs.
-if [ "${PLAYWRIGHT_BROWSERS_PATH:-}" != /ms-playwright ]; then
-  command -v docker >/dev/null || { echo "error: docker not found" >&2; exit 2; }
-  mkdir -p "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
-  exec docker run --rm --network host -u "$(id -u):$(id -g)" -e HOME=/tmp -e DEMO_SESSION="$SESSION" \
-    -e CANCCU_DEMO_HOST="$DEMO_HOST" \
-    -v "$PWD:/repo:ro" -v "$out:$out" -w /repo "$IMAGE" scripts/demo-screenshots "$BASE" "$out"
-fi
-
-for tool in curl npx; do
-  command -v "$tool" >/dev/null || { echo "error: $tool not found" >&2; exit 2; }
-done
-if ! curl -s -o /dev/null --max-time 5 "$BASE/"; then
-  echo "error: $BASE does not answer; start the stack first:" >&2
+command -v docker >/dev/null || { echo "error: docker not found" >&2; exit 2; }
+read -ra COMPOSE <<< "${CANCCU_DEMO_COMPOSE:-docker compose -f deploy/compose.yml -f deploy/compose.ci.yml}"
+caddy=$("${COMPOSE[@]}" ps -q caddy 2>/dev/null | head -n1)
+if [ -z "$caddy" ]; then
+  echo "error: the stack's caddy container is not running; start the stack first:" >&2
   echo "  docker compose -f deploy/compose.yml -f deploy/compose.ci.yml up -d --build --wait" >&2
+  echo "  (another project or files: set CANCCU_DEMO_COMPOSE to its compose command)" >&2
   exit 1
 fi
 
-mkdir -p "$OUT"
-state=$(mktemp)
-log=$(mktemp)
-trap 'rm -f "$state" "$log"' EXIT
-cat > "$state" <<JSON
-{"cookies": [{"name": "canccu_session", "value": "$SESSION", "domain": "$DEMO_HOST", "path": "/",
-  "expires": -1, "httpOnly": true, "secure": false, "sameSite": "Lax"}], "origins": []}
-JSON
-
-fail=0
-for p in "${PAGES[@]}"; do
-  name=${p%%|*} url=http://$DEMO_HOST$port${p#*|}
-  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "host: $DEMO_HOST" \
-    -H "cookie: canccu_session=$SESSION" "$BASE${p#*|}") || code=000
-  if [ "$code" != 200 ]; then
-    echo "FAIL $name: $url answered HTTP $code, not 200"; fail=1; continue
-  fi
-  if npx --yes "playwright@$PLAYWRIGHT" screenshot --browser chromium --full-page \
-      --viewport-size "1280, 800" --load-storage "$state" "$url" "$OUT/$name.png" >"$log" 2>&1; then
-    echo "ok   $name.png  $url"
-  else
-    echo "FAIL $name: screenshot of $url failed:"; grep -m3 -i 'error' "$log" | cut -c1-300; fail=1
-  fi
-done
-
-if [ "$fail" = 0 ]; then echo "demo-screenshots: ${#PAGES[@]} pages in $OUT/"; else echo "demo-screenshots: failed" >&2; fi
-exit "$fail"
+# The script and the stack client keep their repo layout, so the import between them holds.
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+mkdir -p "$work/scripts" "$work/${CLIENT%/*}" "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
+cp scripts/demo-screenshots.mjs "$work/scripts/" && cp "$CLIENT" "$work/$CLIENT" || exit 2
+user="$(id -u):$(id -g)"
+# On the default network: Caddy's namespace may not reach the registry.
+if ! docker run --rm -u "$user" -e HOME=/tmp -v "$work:/work" -w /work "$IMAGE" \
+  npm install --no-save --no-audit --no-fund --loglevel=error "playwright-core@$PLAYWRIGHT" >&2; then
+  echo "error: could not install playwright-core $PLAYWRIGHT in $IMAGE" >&2
+  exit 1
+fi
+docker run --rm --network "container:$caddy" -u "$user" -e HOME=/tmp \
+  -e CANCCU_DEMO_HOST -e DEMO_SESSION -v "$work:/work" -v "$out:/out" -w /work "$IMAGE" \
+  node scripts/demo-screenshots.mjs --base "$BASE" --out /out

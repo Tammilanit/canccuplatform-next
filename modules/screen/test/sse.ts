@@ -34,6 +34,23 @@ export function pushClient(h: Harness, port: number) {
   }
 
   function open(token: string, lastEventId?: string): Sse {
+    return connect("/api/screen/device/stream", {
+      "x-forwarded-for": VENUE_IP,
+      cookie: `canccu_device=${token}`,
+      ...(lastEventId === undefined ? {} : { "last-event-id": lastEventId }),
+    });
+  }
+
+  /** A signed-in person's stream of a zone (`session` is a SESSIONS key). */
+  function openZone(path: string, session: string, lastEventId?: string): Sse {
+    return connect(path, {
+      "x-forwarded-for": VENUE_IP,
+      cookie: `canccu_session=${session}`,
+      ...(lastEventId === undefined ? {} : { "last-event-id": lastEventId }),
+    });
+  }
+
+  function connect(path: string, headers: Record<string, string>): Sse {
     const frames: Frame[] = [];
     const waiters: (() => void)[] = [];
     let status!: (code: number) => void;
@@ -44,13 +61,8 @@ export function pushClient(h: Harness, port: number) {
       {
         host: "127.0.0.1",
         port,
-        path: "/api/screen/device/stream",
-        headers: {
-          host: "alpha.test",
-          "x-forwarded-for": VENUE_IP,
-          cookie: `canccu_device=${token}`,
-          ...(lastEventId === undefined ? {} : { "last-event-id": lastEventId }),
-        },
+        path,
+        headers: { host: "alpha.test", ...headers },
       },
       (res) => {
         status(res.statusCode ?? 0);
@@ -117,5 +129,5 @@ export function pushClient(h: Harness, port: number) {
     pump();
     return device;
   }
-  return { pump, open, screen };
+  return { pump, open, openZone, screen };
 }

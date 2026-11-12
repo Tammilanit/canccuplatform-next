@@ -10,6 +10,7 @@ const report = () => ({
   state_version: 7,
   bundle_version: "1.2.3",
   theme_revision: 2,
+  audio_unlocked: false,
   viewport: { width: 1920, height: 1080 },
 });
 

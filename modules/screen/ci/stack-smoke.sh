@@ -20,3 +20,11 @@ done
 echo "-- /screen without the slash goes to the page"
 curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' "$base/screen" | tee "$t/r.txt"
 grep -qxF "308 $base/screen/" "$t/r.txt"
+echo "-- the offline worker, the virtual screen and the kiosk check come through Caddy"
+curl -fsS -o /dev/null -w '%{http_code} %{content_type}\n' "$base/screen/sw.js?v=x" | tee "$t/r.txt"
+grep -qxF "200 text/javascript; charset=utf-8" "$t/r.txt"
+curl -fsS "$base/screen/zones/main" | grep -qF 'data-page="zone" data-zone="main"'
+curl -fsS "$base/screen/check" | grep -qF 'data-page="check"'
+echo "-- a zone's state is for a signed-in person only (403 where admin is for the venue alone)"
+curl -sS -o /dev/null -w '%{http_code}\n' "$base/api/screen/zones/main/state" | tee "$t/r.txt"
+grep -qxE '40[13]' "$t/r.txt"

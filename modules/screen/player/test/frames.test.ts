@@ -298,10 +298,14 @@ describe("while playing", () => {
     const { player, nav } = setup(api);
     await player.start();
     await settle();
+    const plays = vi.spyOn(player.live, "play");
     api.send("ticker", { state_version: 4, ticker: { text: "Hello" } }, "main.e1.4");
     await settle();
     expect(player.state?.state_version).toBe(4);
     expect(player.state?.ticker).toEqual({ text: "Hello" });
+    // Played once, by the live flow; the player only draws it.
+    expect(plays).toHaveBeenCalledTimes(1);
+    plays.mockRestore();
     api.send("state", screenState({ state_version: 5, zone: null }), "none.0.5");
     await settle();
     expect(shown()).toBe("unassigned");

@@ -26,7 +26,7 @@ export interface StreamHandlers {
   lost(): void;
   /** Connects in a row that got no stream; the player polls the state from the third on. */
   failed(count: number): void;
-  /** An answer about the device (401, 403, 409): the stream has stopped. */
+  /** An answer about the device (401, 403, 409), or another one it `refuses`: the stream stopped. */
   refused(answer: Answer): void;
 }
 
@@ -53,6 +53,10 @@ export class StreamClient {
     private readonly fetchFn: Fetch,
     private readonly on: StreamHandlers,
     private readonly random: () => number = Math.random,
+    /** A device's channel, or a zone's for a signed-in person (the virtual screen). */
+    private readonly path: string = STREAM_PATH,
+    /** The answers that stop the stream and go to `refused` instead of a retry. */
+    private readonly refuses: (status: number) => boolean = isDeviceAnswer,
   ) {}
 
   start(): void {
@@ -80,7 +84,7 @@ export class StreamClient {
     const stale = (): boolean => !this.running || abort !== this.abort;
     let response: Response;
     try {
-      response = await fetchUntil(this.fetchFn, STREAM_PATH, {
+      response = await fetchUntil(this.fetchFn, this.path, {
         headers,
         credentials: "same-origin",
         cache: "no-store",
@@ -101,7 +105,7 @@ export class StreamClient {
       clearTimeout(connectTimer);
       // A connect that was replaced meanwhile must not stop the stream that replaced it.
       if (stale()) return;
-      if (isDeviceAnswer(answer.status)) {
+      if (this.refuses(answer.status)) {
         this.stop();
         this.on.refused(answer);
       } else {

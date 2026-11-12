@@ -5,11 +5,12 @@
  * "connecting" frame. Every wait goes through one timer and every flow through one generation, so
  * a late answer of a flow the page has left never draws over the current one.
  */
-import { call } from "./api.js";
+import { call, isDeviceAnswer } from "./api.js";
 import type { Answer, Fetch } from "./api.js";
 import { clockText, frame, minutesLeft, setFoot } from "./frames.js";
 import type { FrameKind, FrameText } from "./frames.js";
 import { Live, STATE_PATH } from "./live.js";
+import type { Saved } from "./offline.js";
 import { Screen } from "./screen.js";
 import { isState } from "./state.js";
 import type { ScreenState } from "./state.js";
@@ -47,6 +48,13 @@ export interface PlayerEnv {
   reducedMotion?: () => boolean;
   now?: () => number;
   random?: () => number;
+  /** The last state kept for a boot without the server (offline.ts); none on the virtual screen. */
+  offline?: {
+    load(): Promise<Saved | null>;
+    save(state: ScreenState): void;
+    clear(): void;
+    seen(): void;
+  };
 }
 
 const prefersReducedMotion = (): boolean =>
@@ -78,15 +86,20 @@ export class Player {
       },
       now: this.now,
       random: this.random,
+      // Live has played it already (take): only draw it, else every push plays twice.
       show: (state) => {
-        this.run(state);
+        this.draw(state);
       },
       settle: (answer) => {
         this.settle(answer);
       },
+      seen: () => {
+        env.offline?.seen();
+      },
     });
     this.screen = new Screen({
       serverNow: () => this.live.heartbeat.serverNow(),
+      offline: () => this.live.offline,
       reducedMotion: env.reducedMotion ?? prefersReducedMotion,
     });
   }
@@ -110,7 +123,18 @@ export class Player {
       });
       if (redeemed.status === 200) answer = await call(this.env.fetch, "GET", STATE_PATH);
     }
-    if (gen === this.generation) this.settle(answer);
+    if (gen !== this.generation) return;
+    // No server to ask (or none that answers): what this screen showed last, never "connecting".
+    // An answer about the device still wins, so a revoked screen never plays its old state.
+    if (answer.status !== 200 && !isDeviceAnswer(answer.status) && !this.live.running) {
+      const saved = await this.env.offline?.load();
+      if (gen !== this.generation) return;
+      if (saved) {
+        this.run(saved.state, saved.seenAt);
+        return;
+      }
+    }
+    this.settle(answer);
   }
 
   /** Leave whatever flow runs: its timers stop, its late answers are dropped. */
@@ -154,6 +178,8 @@ export class Player {
     }
     this.next();
     this.live.stop();
+    // Only while the server is reachable do these answers win over the kept state (start()).
+    if (isDeviceAnswer(answer.status)) this.env.offline?.clear();
     if (answer.status === 401) void this.pair();
     else if (venueRefused(answer)) this.refused();
     else if (answer.status === 409 && answer.code === "device_moved") void this.moved();
@@ -161,9 +187,16 @@ export class Player {
     else this.unknown();
   }
 
-  private run(state: ScreenState): void {
+  /** `offlineSince`: a state from the offline store, which is kept already. */
+  private run(state: ScreenState, offlineSince?: number): void {
     if (!this.live.running) this.next();
-    this.live.play(state);
+    this.live.play(state, offlineSince);
+    this.draw(state, offlineSince);
+  }
+
+  /** A state the live flow has taken already (a pushed one), or that `run` just played. */
+  private draw(state: ScreenState, offlineSince?: number): void {
+    if (offlineSince === undefined) this.env.offline?.save(state);
     this.tick = null;
     const who = { event: state.tenant.name, device: state.device.name };
     if (state.tenant.status === "archived" || state.zone === null) this.screen.stop();
