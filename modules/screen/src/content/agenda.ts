@@ -4,7 +4,8 @@
  * event carries the whole item as crew sees it, so a crew item keeps its windows too. Main reads
  * the agenda streams from their start at every boot, so events may come twice or out of turn:
  * `agenda_version` (or, on started and ended, which carry none, the item's `revision`) decides,
- * and a removed item stays removed.
+ * and a removed item stays removed. A replay of the event that wrote a row applies again, so a row
+ * kept before titles and visibility were (migration 010) fills at the next start.
  */
 import type { Event, SqlClient } from "@canccu/kit";
 import type { Db } from "../db.js";
@@ -20,6 +21,8 @@ const UNVERSIONED = new Set(["agenda.item.started", "agenda.item.ended"]);
 
 interface Item {
   id: string;
+  title: string | null;
+  visibility: string | null;
   startsAt: string;
   endsAt: string | null;
   status: "scheduled" | "cancelled";
@@ -44,12 +47,22 @@ function itemOf(value: unknown): Item | null {
   ) {
     return null;
   }
-  return { id: v.id, startsAt, endsAt, status: v.status, revision: v.revision as number };
+  return {
+    id: v.id,
+    title: typeof v.title === "string" ? v.title : null,
+    visibility: typeof v.visibility === "string" ? v.visibility : null,
+    startsAt,
+    endsAt,
+    status: v.status,
+    revision: v.revision as number,
+  };
 }
 
-const UPSERT = `INSERT INTO screen_agenda_items (id, starts_at, ends_at, status, revision, agenda_version)
-  VALUES ($1, $2, $3, $4, $5, $6)
+const UPSERT = `INSERT INTO screen_agenda_items
+    (id, starts_at, ends_at, status, revision, agenda_version, title, visibility)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
   ON CONFLICT (tenant_id, id) DO UPDATE SET starts_at = EXCLUDED.starts_at,
+    title = EXCLUDED.title, visibility = EXCLUDED.visibility,
     ends_at = EXCLUDED.ends_at, status = EXCLUDED.status, revision = EXCLUDED.revision,
     agenda_version = COALESCE(EXCLUDED.agenda_version, screen_agenda_items.agenda_version),
     removed = false`;
@@ -76,7 +89,7 @@ export async function applyAgendaEvent(db: Db, event: Event): Promise<void> {
   const item = itemOf(event.data.item);
   if (item === null || (versioned && !Number.isInteger(version))) return;
   const guard = versioned
-    ? "WHERE screen_agenda_items.agenda_version IS NULL OR screen_agenda_items.agenda_version < EXCLUDED.agenda_version"
+    ? "WHERE screen_agenda_items.agenda_version IS NULL OR screen_agenda_items.agenda_version <= EXCLUDED.agenda_version"
     : "WHERE NOT screen_agenda_items.removed AND screen_agenda_items.revision < EXCLUDED.revision";
   await db.tenant((c) =>
     c.query(`${UPSERT} ${guard}`, [
@@ -86,6 +99,8 @@ export async function applyAgendaEvent(db: Db, event: Event): Promise<void> {
       item.status,
       item.revision,
       versioned ? version : null,
+      item.title,
+      item.visibility,
     ]),
   );
 }
@@ -104,6 +119,24 @@ export async function loadAgendaItems(c: SqlClient): Promise<Map<string, AgendaT
         endsAt: (r.ends_at as Date | null) ?? null,
         status: r.status as AgendaTimes["status"],
       },
+    ]),
+  );
+}
+
+/** What the schedule calendar shows of a bound window's item: its title, and whether only crew may see it. */
+export interface AgendaLabel {
+  title: string | null;
+  crew: boolean;
+}
+
+export async function loadAgendaLabels(c: SqlClient): Promise<Map<string, AgendaLabel>> {
+  const { rows } = await c.query(
+    "SELECT id, title, visibility FROM screen_agenda_items WHERE NOT removed",
+  );
+  return new Map(
+    rows.map((r) => [
+      r.id as string,
+      { title: (r.title as string | null) ?? null, crew: r.visibility === "crew" },
     ]),
   );
 }
