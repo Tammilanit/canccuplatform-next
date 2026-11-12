@@ -36,7 +36,7 @@ Each topic type has an event-wide part, a personal part, or both. An attendee op
 | Topic | Owner | Part: scope (push, DM by default) | Trigger event | Recipients | Filter, dedupe | Urgent |
 |---|---|---|---|---|---|---|
 | `schedule` | agenda | event: event (on, off) | `agenda.reminder.triggered` | `data.item.visibility` | kind not `quiet_hours`; `data.lead_minutes` `nearest_in` `data.leads_minutes` to param `lead_minutes` (default 10; on a tie the larger), so an item with leads `[15]` is still announced, at 15, and one with `[]` never | no |
-| | | | `agenda.item.delayed`, `agenda.item.cancelled` | `data.item.visibility` | kind not `quiet_hours`; `data.item.starts_at` `within_minutes` 120; dedupe by `correlation_id` and `audience`, so a delay with `following` gives one notification per audience, for the earliest shifted item it may see | no |
+| | | | `agenda.item.delayed`, `agenda.item.cancelled` | `data.item.visibility` | kind not `quiet_hours`; `data.item.starts_at` `within_minutes` 120; a delay only when `data.announce` is `true` (a quiet shift is never announced, [agenda.md](agenda.md#notification-channels)); dedupe by `correlation_id` and `audience`, so a delay with `following` gives one notification per audience, for the earliest shifted item it may see | no |
 | | | | `agenda.item.announced` | `data.item.visibility` | kind not `quiet_hours`; one notification per announcement (dedupe by the event's `id`); title the item's, body the organiser's `data.message` (empty when none was given) | no |
 | `announcements` | admin (provisional: the announce action, step 4) | event: event (on, off) | the announce action's event (step 4) | its visibility | — | `data.urgent` |
 | `food` | pizza | event: event (off, off); personal: user (on, off) | `pizza.order.opened`, `pizza.order.closed` (provisional) | event: `public` | — | no |
@@ -69,7 +69,8 @@ The `schedule` registration in full, as the agenda module sends it:
   {"event": "agenda.item.delayed", "part": "event", "audience": {"field": "data.item.visibility"},
    "channels_field": "data.item.notify_channels",
    "where": [{"field": "data.item.kind", "op": "ne", "value": "quiet_hours"},
-             {"field": "data.item.starts_at", "op": "within_minutes", "value": 120}],
+             {"field": "data.item.starts_at", "op": "within_minutes", "value": 120},
+             {"field": "data.announce", "op": "eq", "value": true}],
    "dedupe_by": ["correlation_id", "audience"],
    "title": "{data.item.title} moved", "body": "Now at {data.item.starts_at|time} ({data.minutes|signed} min)",
    "url": "/notify/agenda/{data.item.id}", "expires_at": "data.item.starts_at"},
@@ -86,7 +87,7 @@ The `schedule` registration in full, as the agenda module sends it:
    "url": "/notify/agenda/{data.item.id}", "expires_at": "data.item.ends_at", "expires_after_minutes": 60}]}
 ```
 
-**Quiet hours** are not a topic: Notify follows `agenda.item.added`, `.changed`, `.delayed`, `.cancelled` and `.removed` of `quiet_hours` items, and `agenda.items.cloned`, to time them (Delivery rules).
+**Quiet hours** are not a topic: Notify follows `agenda.item.added`, `.changed`, `.delayed`, `.cancelled` and `.removed` of `quiet_hours` items, and `agenda.items.cloned`, to time them (Delivery rules), whether or not the change was announced (`data.announce`).
 
 ## Topic registry
 ### Topic types

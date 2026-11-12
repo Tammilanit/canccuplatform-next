@@ -926,7 +926,7 @@
     tags: [ticker]
     operationId: setTicker
     summary: Set the ticker
-    description: Right `screen.ticker.write` (also the bot's `/ticker set`, with the person's rights). Emits `screen.ticker.changed`.
+    description: Right `screen.ticker.write` (also the bot's `/ticker set`, with the person's rights). Audited; emits `screen.ticker.changed`.
     requestBody:
       required: true
       content:
@@ -952,7 +952,7 @@
     tags: [ticker]
     operationId: clearTicker
     summary: Clear the ticker
-    description: Right `screen.ticker.write`. Emits `screen.ticker.changed`.
+    description: Right `screen.ticker.write`. Audited; emits `screen.ticker.changed`.
     responses:
       "204":
         description: Cleared.

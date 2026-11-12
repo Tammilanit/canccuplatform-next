@@ -51,7 +51,7 @@ Emitter: `agenda`. Audience: event-wide, by the item's `visibility`. Payloads: [
 | `agenda.kind.saved` | A kind of the event's kind list was added or changed. Audience: event-wide, `public` | screen, bot, notify (re-read items whose defaults changed) |
 | `agenda.kind.removed` | A kind was removed. Audience: event-wide, `public` | screen, bot |
 
-Every item in these events carries `notify_channels`, the channels the organiser chose for it ([agenda.md](agenda.md#notification-channels)); each consumer announces only on its own.
+Every item in these events carries `notify_channels`, the channels the organiser chose for it ([agenda.md](agenda.md#notification-channels)); each consumer announces only on its own. `agenda.item.changed` and `agenda.item.delayed` also carry `announce`: on `false` no consumer announces the change ([agenda.md](agenda.md#notification-channels)).
 
 ## Bot connections
 Emitter: `bot`. Audience: system. Payloads: [bot.md](bot.md#events-version-1). The bot's other events (presence, activities, voice channels) are still provisional: see [Bot](#bot) below.

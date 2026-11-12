@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Agenda API
-  version: 1.3.0
+  version: 1.4.0
   summary: The run-of-show of one event, editable live.
   description: |
     Machine-readable part of the agenda contract. Prose, rules, reminders and events: contracts/agenda.md.
@@ -117,7 +117,8 @@ paths:
       description: |
         Needs right `agenda.items.write`. A move is a new plan: each given time becomes both its planned and
         its current value, so giving `starts_at` resets `delay_minutes` to 0. Fields left out stay as they
-        are; `null` clears `description`, `location` or `zone`. Emits `agenda.item.changed`.
+        are; `null` clears `description`, `location` or `zone`. Emits `agenda.item.changed`, which carries
+        `announce`: with `announce: false` no consumer tells people about the change.
       security:
         - session: []
       requestBody:
@@ -184,7 +185,8 @@ paths:
         `quiet_hours` items. A running item keeps its start and only its end moves. A shift that would put an
         item's end at or before its start is 400 `invalid_request` and nothing shifts; an item that has started
         and has no end is 409 `item_started`. Emits one `agenda.item.delayed` per shifted item, with one
-        `correlation_id`.
+        `correlation_id`; each carries `announce`. With `announce: false` no consumer tells people about the
+        shift; screens still show the new times and the delay.
       security:
         - session: []
       requestBody:
@@ -786,7 +788,7 @@ components:
           $ref: "#/components/schemas/Links"
     ItemEdit:
       type: object
-      description: "`revision` plus the fields to change; fields left out stay as they are, `null` clears an optional text field or the zone, or hands reminder leads and `notify` back to the kind."
+      description: "`revision`, optionally `announce`, plus the fields to change; fields left out stay as they are, `null` clears an optional text field or the zone, or hands reminder leads and `notify` back to the kind."
       required: [revision]
       properties:
         revision:
@@ -823,6 +825,12 @@ components:
           $ref: "#/components/schemas/ChannelChoice"
         links:
           $ref: "#/components/schemas/Links"
+        announce:
+          type: boolean
+          default: true
+          description: >-
+            Tell people about this change (Discord, phones, screen notices). `false` changes the agenda quietly:
+            the event carries `announce: false` and no consumer announces it; see contracts/agenda.md.
     Delay:
       type: object
       required: [revision, minutes]
@@ -841,6 +849,12 @@ components:
           type: boolean
           default: false
           description: Also shift every later scheduled item, except `quiet_hours` items.
+        announce:
+          type: boolean
+          default: true
+          description: >-
+            Tell people about this change (Discord, phones, screen notices). `false` changes the agenda quietly:
+            the event carries `announce: false` and no consumer announces it; see contracts/agenda.md.
     RevisionOnly:
       type: object
       required: [revision]
