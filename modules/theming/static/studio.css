@@ -1,5 +1,6 @@
-/* The Studio pages' own layout around packages/ui (plan issue-185 D8). Admin pages take no event
-   CSS, so nothing here is themed but through the tokens. */
+/* The Studio pages' own layout around packages/ui (plan issue-185 D8; UX audit C2–C5). Admin
+   pages take no event CSS, so nothing here is themed but through the tokens. Every grid track is
+   `minmax(0, …)` and every box shrinks with its column: a phone never scrolls sideways (C4). */
 .canccu-studio-notice {
   border-left: 4px solid var(--canccu-color-status-down);
   padding: 0.5rem 1rem;
@@ -10,27 +11,214 @@
   align-items: center;
   gap: 0.5rem;
 }
+.canccu-studio,
+.canccu-studio-card {
+  min-width: 0;
+}
 .canccu-studio-card {
   margin-bottom: var(--canccu-gap);
 }
 .canccu-studio-problems,
 .canccu-studio-swatches,
+.canccu-studio-adjusted,
 .canccu-studio-revisions {
   padding-left: 0;
   list-style: none;
 }
-.canccu-studio-problem {
-  border-left: 4px solid var(--canccu-color-status-degraded);
-  padding-left: 0.5rem;
-  margin-bottom: 0.25rem;
+.canccu-studio-problems li + li {
+  margin-top: 0.25rem;
 }
-.canccu-studio-problem--error {
-  border-left-color: var(--canccu-color-status-down);
+
+/* The brand kit: the form beside the previews (mockup 12), one column under 60rem. */
+.canccu-main:has(.canccu-studio-kit) {
+  max-width: 100rem;
+}
+.canccu-studio-kit {
+  display: grid;
+  grid-template-columns: minmax(18rem, 26rem) minmax(0, 1fr);
+  gap: var(--canccu-gap);
+  align-items: start;
+}
+@media (max-width: 60rem) {
+  .canccu-studio-kit {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.canccu-studio-form {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+.canccu-studio-side {
+  display: grid;
+  min-width: 0;
+}
+.canccu-studio-font {
+  margin-bottom: 0.75rem;
+}
+
+/* Discard: under the form, apart from Publish, a quiet danger link (sheet 6). */
+.canccu-studio-discard {
+  padding: 0 0.25rem;
+}
+.canccu-studio-discard p {
+  margin: 0.25rem 0 0;
+}
+.canccu-studio-danger-link {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--canccu-ink-down);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.canccu-studio-advanced-note {
+  margin: 0 0 var(--canccu-gap);
+  color: var(--canccu-ink-muted);
+}
+
+/* The logo: a drop box over a hidden file input, never the browser's "Choose File". */
+.canccu-studio-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.canccu-studio-drop {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  border: var(--canccu-border-width) dashed var(--canccu-line-field);
+  border-radius: var(--canccu-radius);
+  cursor: pointer;
+}
+.canccu-studio-drop:hover,
+.canccu-field:has(.canccu-studio-file:focus-visible) .canccu-studio-drop {
+  border-color: var(--canccu-ink-primary);
+}
+.canccu-studio-drop > span:last-child {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+.canccu-studio-drop__logo,
+.canccu-studio-drop__empty {
+  flex: none;
+  width: 4.5rem;
+  height: 3rem;
+  border-radius: calc(var(--canccu-radius) / 2);
+}
+.canccu-studio-drop__logo {
+  object-fit: contain;
+}
+.canccu-studio-drop__empty {
+  display: grid;
+  place-items: center;
+  background: var(--canccu-tint);
+}
+.canccu-studio-drop__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* A colour: its swatch (the picker) and its hex. */
+.canccu-studio-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 0.75rem;
+}
+.canccu-studio-colour__row {
+  display: flex;
+  gap: 0.5rem;
+}
+.canccu-studio-colour__swatch {
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  background: none;
+  border: var(--canccu-border-width) solid var(--canccu-line-field);
+  border-radius: var(--canccu-radius);
+  cursor: pointer;
+}
+.canccu-studio-colour__swatch::-webkit-color-swatch-wrapper {
+  padding: 0.1875rem;
+}
+.canccu-studio-colour__swatch::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--canccu-radius) - 0.1875rem);
+}
+.canccu-studio-colour__swatch::-moz-color-swatch {
+  border: 0;
+  border-radius: calc(var(--canccu-radius) - 0.1875rem);
+}
+.canccu-studio-colour__hex {
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+.canccu-studio-colours {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(13rem, 100%), 1fr));
+  gap: 0 1rem;
+}
+
+/* The scheme: one segmented choice. */
+.canccu-studio-scheme {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+.canccu-studio-segments {
+  display: inline-flex;
+  justify-self: start;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: var(--canccu-border-width) solid var(--canccu-line-field);
+  border-radius: var(--canccu-radius);
+}
+.canccu-studio-segment {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  color: var(--canccu-ink-muted);
+  border-radius: calc(var(--canccu-radius) - 0.25rem);
+  cursor: pointer;
+}
+.canccu-studio-segment input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.canccu-studio-segment:has(input:checked) {
+  color: var(--canccu-color-text);
+  font-weight: 600;
+  background: var(--canccu-tint);
+}
+.canccu-studio-segment:has(input:focus-visible) {
+  outline: 2px solid var(--canccu-ink-primary);
+  outline-offset: 2px;
+}
+
+/* The publish check's details: the colours by name. */
+.canccu-studio-details summary {
+  margin-top: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 .canccu-studio-swatches {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: 0.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(11rem, 100%), 1fr));
+  gap: 0.25rem 0.75rem;
 }
 .canccu-studio-chip {
   width: 1.25rem;
@@ -38,16 +226,8 @@
   vertical-align: middle;
   border: 1px solid var(--canccu-color-border);
 }
-.canccu-studio-logo {
-  display: block;
-  max-height: 4rem;
-  max-width: 12rem;
-  margin-bottom: 0.5rem;
-}
-.canccu-studio-radio {
-  margin-right: var(--canccu-gap);
-}
 .canccu-studio-tokens {
+  min-width: 0;
   border: 0;
   padding: 0;
 }
@@ -59,56 +239,18 @@
   font-weight: 600;
 }
 
-/* The previews: each surface page at its real size, scaled into a fixed box. */
-.canccu-studio-previews {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--canccu-gap);
+.canccu-studio-dialog {
+  max-width: min(28rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+  color: var(--canccu-color-text);
+  background: var(--canccu-color-surface);
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
 }
-.canccu-studio-preview {
-  margin: 0;
+.canccu-studio-dialog::backdrop {
+  background: rgb(0 0 0 / 0.6);
 }
-.canccu-studio-preview__box {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--canccu-color-border);
-}
-.canccu-studio-preview__frame {
-  border: 0;
-  transform-origin: 0 0;
-}
-.canccu-studio-preview--screen .canccu-studio-preview__box {
-  width: 320px;
-  height: 180px;
-}
-.canccu-studio-preview--screen .canccu-studio-preview__frame {
-  width: 1920px;
-  height: 1080px;
-  transform: scale(0.1667);
-}
-.canccu-studio-preview--hub .canccu-studio-preview__box {
-  width: 195px;
-  height: 340px;
-}
-.canccu-studio-preview--hub .canccu-studio-preview__frame {
-  width: 390px;
-  height: 680px;
-  transform: scale(0.5);
-}
-.canccu-studio-preview--admin .canccu-studio-preview__box {
-  width: 320px;
-  height: 200px;
-}
-.canccu-studio-preview--admin .canccu-studio-preview__frame {
-  width: 1280px;
-  height: 800px;
-  transform: scale(0.25);
-}
-.canccu-studio-preview--discord .canccu-studio-preview__box {
-  width: 320px;
-  height: 160px;
-}
-.canccu-studio-preview--discord .canccu-studio-preview__frame {
-  width: 320px;
-  height: 160px;
+.canccu-studio-dialog__actions {
+  justify-content: flex-end;
+  margin-top: 1rem;
 }

@@ -39,6 +39,34 @@ export async function compileStyle(
 ): Promise<CompiledStyle> {
   const held = await heldFiles(c, source);
   const css = await cssOf(held, files, manifest, SERVED);
+  const templates = await templatesOf(held, files, manifest, SERVED);
+  return {
+    css: css === null ? null : await files.put(c, css, "css"),
+    templates,
+  };
+}
+
+/**
+ * The templates `manifest` names, parsed from the package files of `source` with every image at
+ * `prefix` + its file's name: the Studio's screen preview draws the draft's at `/theming/draft/`.
+ * A StyleError as for compileStyle.
+ */
+export async function parsedTemplates(
+  c: SqlClient,
+  files: FileStore,
+  source: string,
+  manifest: Manifest,
+  prefix: string,
+): Promise<ParsedTemplate[]> {
+  return templatesOf(await heldFiles(c, source), files, manifest, prefix);
+}
+
+async function templatesOf(
+  held: Held,
+  files: FileStore,
+  manifest: Manifest,
+  prefix: string,
+): Promise<ParsedTemplate[]> {
   const templates: ParsedTemplate[] = [];
   for (const [name, spec] of Object.entries(
     isObject(manifest.templates) ? manifest.templates : {},
@@ -47,13 +75,10 @@ export async function compileStyle(
       continue;
     const parsed = parseTemplate(spec.file, await read(held, files, spec.file));
     if (!parsed.ok) throw new StyleError(parsed.problem);
-    const served = (path: string): string | undefined => servedAt(held, path, SERVED);
+    const served = (path: string): string | undefined => servedAt(held, path, prefix);
     templates.push({ name, widget: spec.widget, tree: servedTree(parsed.tree, served, spec.file) });
   }
-  return {
-    css: css === null ? null : await files.put(c, css, "css"),
-    templates,
-  };
+  return templates;
 }
 
 /**

@@ -4,17 +4,34 @@ import type { Html } from "@canccu/ui";
 import type { DraftRow } from "./drafts.js";
 import { fillTokens } from "./tokens.js";
 import type { PartialTokens } from "./tokens.js";
-import { STUDIO, actionButton, brandOf, card, problemsView, root, status } from "./studio-views.js";
+import {
+  COLOUR_NAMES,
+  STUDIO,
+  actionButton,
+  brandOf,
+  card,
+  checkView,
+  colourField,
+  fileDrop,
+  root,
+} from "./studio-views.js";
 import type { StudioState } from "./studio-views.js";
 
 function tokensForm(draft: DraftRow): Html {
   const given = draft.manifest.tokens as (PartialTokens & { motion?: unknown }) | undefined;
   const tokens = fillTokens(given ?? {});
   const groups: [keyof typeof tokens, string, object][] = [
-    ["colors", "Colours", COLOR_TOKENS],
     ["fonts", "Fonts", FONT_TOKENS],
     ["sizes", "Sizes", SIZE_TOKENS],
   ];
+  // Colours as swatches with their hex, by name (UX audit C5).
+  const colours = Object.keys(COLOR_TOKENS).map((name) =>
+    colourField({
+      name: `colors.${name}`,
+      label: COLOUR_NAMES[name as keyof typeof COLOUR_NAMES],
+      value: tokens.colors[name],
+    }),
+  );
   const fieldsets = groups.map(([group, label, names]) => {
     const fields = Object.keys(names).map((name) => {
       const id = `canccu-studio-${group}-${name}`;
@@ -32,6 +49,10 @@ function tokensForm(draft: DraftRow): Html {
   return card(
     "Tokens",
     html`<form class="canccu-studio-form" data-action="tokens">
+      <fieldset class="canccu-studio-tokens">
+        <legend>Colours</legend>
+        <div class="canccu-studio-colours">${colours}</div>
+      </fieldset>
       ${fieldsets}
       <div class="canccu-field">
         <label class="canccu-field__label" for="canccu-studio-motion">Motion</label
@@ -63,25 +84,19 @@ export function advancedView(state: StudioState): Html {
   const upload = card(
     "Package",
     html`<form class="canccu-studio-form" data-action="package">
-      <div class="canccu-field">
-        <label class="canccu-field__label" for="canccu-studio-package">Theme package (zip)</label
-        ><input
-          class="canccu-input"
-          type="file"
-          id="canccu-studio-package"
-          name="package"
-          accept=".zip,application/zip"
-          required
-        />
-        <p class="canccu-field__hint">
-          Replaces the draft's whole content with theme.yaml, CSS, fonts, images, templates and
-          embeds. Embeds need the embeds right.
-        </p>
-      </div>
+      ${fileDrop({
+        id: "canccu-studio-package",
+        name: "package",
+        label: "Theme package (zip)",
+        accept: ".zip,application/zip",
+        title: "Choose a package",
+        hint: "It replaces the draft's whole content: theme.yaml, CSS, fonts, images, templates and embeds. Embeds need the embeds right.",
+        required: true,
+      })}
       <button class="canccu-button canccu-button--primary" type="submit">Upload package</button>
     </form>`,
   );
-  if (d === undefined) return root(state, html`${status(state)}${upload}`);
+  if (d === undefined) return root(state, upload);
   const simple =
     d.manifest.mode !== "advanced"
       ? ""
@@ -110,7 +125,7 @@ export function advancedView(state: StudioState): Html {
           );
   return root(
     state,
-    html`${status(state)} ${card("Problems", problemsView(d.problems))} ${upload}
+    html`${card("Before publishing", checkView(state.problems))} ${upload}
       ${card("Files", filesView(d))} ${tokensForm(d)} ${simple}
       <p><a href="${STUDIO}">Preview and publish on the brand kit page</a></p>`,
   );

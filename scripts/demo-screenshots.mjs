@@ -7,7 +7,7 @@
 // from across a hall fails the run, so a screenshot of an error never passes for a real one. Runs
 // in Caddy's network namespace (scripts/demo-screenshots says why).
 // Usage: node demo-screenshots.mjs [--dry-run] [--base BASE_URL] [--out DIR]
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import {
   DEMO_HOST,
@@ -48,7 +48,6 @@ const SHELL = [
   ["health-view", "/admin/health-view"],
   ["profile", "/admin/profile"],
   ["people", "/admin/people"],
-  ["studio", "/theming/studio/"],
   ["agenda", "/agenda/"],
   ["notify-topics", "/notify/admin/topics"],
 ];
@@ -66,6 +65,53 @@ const PAGES = [
   ["agenda-quick-add-phone", "/agenda/add", PHONE],
   ["notify-new-topic", "/notify/admin/topics/new", DESK],
   ["check-in-phone", CHECK_IN, PHONE],
+];
+// The brand kit (mockup 12, design sheet 6), after the screens, so its screen preview is screen's
+// player of the main zone with the fixture's run of show: first with no draft, then with one in the
+// draft's look, and Preview shows it at full size. The shot waits for the Pulse's run of show, never
+// a player that has drawn only the event's name. A phone page is shot with the window as tall as
+// the page, so the bottom bar sits at its foot, as a phone shows it, not over the middle.
+const SCREEN_PREVIEW = "iframe[data-screen-preview]";
+const LOGO = new URL("../events/demo/assets/logo.svg", import.meta.url);
+const drawn = async (page) => {
+  await page.waitForFunction(
+    (sel) =>
+      document
+        .querySelector(sel)
+        ?.getAttribute("src")
+        ?.startsWith("/screen/zones/"),
+    SCREEN_PREVIEW,
+    { timeout: 10000 },
+  );
+  // The rail turns between the run of show and a countdown (modules/screen/test/stack/screens.mjs).
+  await page
+    .frameLocator(SCREEN_PREVIEW)
+    .locator(
+      ".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active",
+    )
+    .waitFor({ timeout: 40000 });
+  await page.waitForTimeout(1500);
+};
+const STUDIO = [
+  ["studio", DESK, { ready: drawn }],
+  ["studio-phone", PHONE, { ready: drawn, tall: true }],
+];
+const DRAFT = [
+  ["studio-draft", DESK, { ready: drawn }],
+  ["studio-draft-phone", PHONE, { ready: drawn, tall: true }],
+  ["studio-draft-advanced", DESK, { path: "/theming/studio/advanced" }],
+  [
+    "studio-draft-preview",
+    DESK,
+    {
+      fullPage: false,
+      ready: async (page) => {
+        await drawn(page);
+        await page.click('[data-action="preview"]');
+        await page.waitForTimeout(500);
+      },
+    },
+  ],
 ];
 // The front door, signed out, and one page of the error family (an item that does not exist),
 // each at both widths. The error page must answer its own status, not 200.
@@ -102,6 +148,17 @@ if (opts["dry-run"]) {
   for (const [name, path, { width, height }, o] of OTHERS) {
     const how = o.cookie === null ? ", signed out" : `, answering ${o.status}`;
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height}${how})`);
+  }
+  for (const [name, { width, height }] of STUDIO) {
+    console.log(
+      `  ${name}.png  ${at("/theming/studio/")}  (${width}×${height})`,
+    );
+  }
+  for (const [name, { width, height }, o] of DRAFT) {
+    const path = o.path ?? "/theming/studio/";
+    console.log(
+      `  ${name}.png  ${at(path)}  (${width}×${height}, with a draft)`,
+    );
   }
   for (const [name, suffix, { width, height }] of ITEM_PAGES) {
     const path = `/agenda/items/<an item made for the run>${suffix}`;
@@ -156,7 +213,7 @@ async function shot(
   path,
   viewport,
   cookie,
-  { fullPage = true, ready, status = 200 } = {},
+  { fullPage = true, ready, status = 200, tall = false } = {},
 ) {
   const url = at(path);
   const context = await browser.newContext({ viewport });
@@ -189,16 +246,27 @@ async function shot(
         .catch(() => undefined);
     if (refused.length)
       throw new Error(`its API reads answered ${refused.join(", ")}`);
-    // A phone page is shot as tall as it is, so what sticks to the bottom (the bar, an action
-    // row) sits where it does once the page is scrolled to its end, not over its middle.
-    if (fullPage && viewport.width === PHONE.width) {
+    if (tall) {
+      // A full-page capture would leave the sticky bottom bar where the window ended.
+      const { width, height } = page.viewportSize();
+      const full = await page.evaluate(
+        () => document.documentElement.scrollHeight,
+      );
+      if (full > height) await page.setViewportSize({ width, height: full });
+      await page.waitForTimeout(500);
+    } else if (fullPage && viewport.width === PHONE.width) {
+      // A phone page is shot as tall as it is, so what sticks to the bottom (the bar, an action
+      // row) sits where it does once the page is scrolled to its end, not over its middle.
       const height = await page.evaluate(
         () => document.documentElement.scrollHeight,
       );
       if (height > viewport.height)
         await page.setViewportSize({ ...viewport, height });
     }
-    await page.screenshot({ path: `${opts.out}/${name}.png`, fullPage });
+    await page.screenshot({
+      path: `${opts.out}/${name}.png`,
+      fullPage: fullPage && !tall,
+    });
     console.log(`ok   ${name}.png  ${url}`);
     count++;
   } catch (err) {
@@ -321,6 +389,47 @@ try {
     });
   } catch (err) {
     fail(`screens: ${firstLine(err)}`);
+  }
+  for (const [name, viewport, o] of STUDIO) {
+    await shot(name, "/theming/studio/", viewport, SESSION, o);
+  }
+  // After the screens, so the zone plays the fixture's run of show: a draft with mockup 12's
+  // brand and the demo logo, which the previews draw before anything is published.
+  try {
+    const draft = await demo.call("POST", "/api/theming/draft", {
+      body: { from: "defaults" },
+    });
+    let version = expect(draft, 201, "a draft").body.draft_version;
+    const logo = await demo.call(
+      "PUT",
+      `/api/theming/draft/file?path=images/logo.svg&draft_version=${version}`,
+      { body: readFileSync(LOGO), type: "image/svg+xml" },
+    );
+    version = expect(logo, 200, "the draft's logo").body.draft_version;
+    const brand = {
+      primary: "#ff7a45",
+      accent: "#7c5cff",
+      scheme: "dark",
+      logo: "images/logo.svg",
+    };
+    const set = await demo.call("PUT", "/api/theming/draft/brand", {
+      body: { draft_version: version, ...brand },
+    });
+    version = expect(set, 200, "the draft's brand").body.draft.draft_version;
+    try {
+      for (const [name, viewport, o] of DRAFT) {
+        await shot(name, o.path ?? "/theming/studio/", viewport, SESSION, o);
+      }
+    } finally {
+      // Left behind, the draft would greet the next run's "studio" shot instead of the start.
+      const gone = await demo.call(
+        "DELETE",
+        `/api/theming/draft?draft_version=${version}`,
+      );
+      expect(gone, 204, "discarding the draft");
+    }
+  } catch (err) {
+    fail(`studio draft: ${firstLine(err)}`);
   }
   // The Screen studio, on the fixture and theme the screens left.
   try {
