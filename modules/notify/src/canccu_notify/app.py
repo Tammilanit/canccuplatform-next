@@ -57,6 +57,7 @@ def create_app(
     # Starlette's slash redirects would drop the /notify prefix Caddy strips.
     public.router.redirect_slashes = False
     public.state.deps = d
+    public.state.tenants = resolver  # the event the shell's header names (web.event_of)
     install(public, health, error_response=_page_error)
     install_tenancy(public, resolver, error_response=_page_error)
     # After install(), so it replaces the kit's handler for NotSignedIn.
@@ -83,8 +84,8 @@ async def _not_signed_in(request: Request, exc: Exception) -> Response:
     return RedirectResponse(f"{web.SIGN_IN}?{urlencode({'next': back})}", status_code=303)
 
 
-def _page_error(request: Request, exc: KitError) -> Response | None:
+async def _page_error(request: Request, exc: KitError) -> Response | None:
     """A page gets its errors as a page, the API as the kit's JSON body (None)."""
     if request.url.path == checkin_page.PATH.removeprefix("/notify"):
-        return checkin_page.error_page(request, exc)
-    return web.error_page(request, exc) if _is_page(request) else None
+        return await checkin_page.error_page(request, exc)
+    return await web.error_page(request, exc) if _is_page(request) else None
