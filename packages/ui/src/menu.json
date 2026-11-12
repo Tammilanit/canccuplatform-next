@@ -1,5 +1,5 @@
 {
-  "$comment": "The Event menu of the organiser shell (docs/design/mockups.html, sheet 2): every page in it, its icon and the rights of which any one opens it. `bar` is the phone's bottom bar: the pages used most, in order, with Quick add in the middle and More last; a slot the person may not open is left out (fewer rights, fewer slots), `label` is the slot's own short label and `narrow` its label under 360 px. Until a Screen studio exists, the Theme studio holds the sheet's Screens slot. src/shell.ts and kit-py's canccu_kit.ui draw it; kit-py's tests hold its copy to this file.",
+  "$comment": "The Event menu of the organiser shell (docs/design/mockups.html, sheet 2): every page in it, its icon and the rights of which any one opens it. `bar` is the phone's bottom bar: the pages used most, in order, with Quick add in the middle and More last; a slot the person may not open is left out (fewer rights, fewer slots), `label` is the slot's own short label and `narrow` its label under 360 px. The Screen studio holds the sheet's Screens slot. src/shell.ts and kit-py's canccu_kit.ui draw it; kit-py's tests hold its copy to this file.",
   "groups": [
     {
       "label": "Run the event",
@@ -23,6 +23,13 @@
     {
       "label": "Screens and look",
       "items": [
+        {
+          "id": "screen",
+          "label": "Screen studio",
+          "href": "/admin/screen/",
+          "icon": "monitor",
+          "rights": ["screen.devices.read", "screen.zones.write", "screen.ticker.write"]
+        },
         {
           "id": "theme",
           "label": "Theme studio",
@@ -86,8 +93,8 @@
       "id": "quick_add"
     },
     {
-      "id": "theme",
-      "label": "Theme"
+      "id": "screen",
+      "label": "Screens"
     }
   ],
   "sign_out": "/admin/sign-out"

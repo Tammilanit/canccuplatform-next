@@ -96,6 +96,8 @@ export interface Harness {
   clock: { now: number };
   /** tenant → the admin settings it answers; unset keys take their default. */
   settings: Record<string, Record<string, SettingValue>>;
+  /** tenant → admin's own settings (the event's `language`), as Studio reads them. */
+  adminSettings: Record<string, Record<string, SettingValue>>;
   /** The fake storage quota: bytes per tenant, and the limit each gets (default 2 GiB). */
   storage: { used: Record<string, number>; quota: Record<string, number> };
   /** The fake quota itself, for calls made outside a request. */
@@ -169,6 +171,7 @@ export async function harness(): Promise<Harness> {
   const kv = new MemoryKv(() => clock.now);
   const bus = new Bus(store, "screen");
   const settings: Record<string, Record<string, SettingValue>> = {};
+  const adminSettings: Record<string, Record<string, SettingValue>> = {};
   const storage = { used: {} as Record<string, number>, quota: {} as Record<string, number> };
   const filesRoot = await mkdtemp(join(tmpdir(), "canccu-screen-files-"));
   const playerDir = await mkdtemp(join(tmpdir(), "canccu-screen-player-"));
@@ -245,6 +248,11 @@ export async function harness(): Promise<Harness> {
       ensure: () => Promise.resolve(),
       get: (key: string, fallback: SettingValue) => settings[requireTenant()]?.[key] ?? fallback,
     },
+    adminSettings: {
+      ensure: () => Promise.resolve(),
+      get: (key: string, fallback: SettingValue) =>
+        adminSettings[requireTenant()]?.[key] ?? fallback,
+    },
     storage: quota,
     renderQueue: queue,
     filesRoot,
@@ -289,6 +297,7 @@ export async function harness(): Promise<Harness> {
     failAudit,
     clock,
     settings,
+    adminSettings,
     storage,
     quota,
     filesRoot,

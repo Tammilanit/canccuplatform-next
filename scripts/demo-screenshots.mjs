@@ -18,6 +18,10 @@ import {
 } from "../modules/screen/test/stack/client.mjs";
 import { guestReads } from "../modules/screen/test/stack/fixture.mjs";
 import { planned, screenShots } from "../modules/screen/test/stack/screens.mjs";
+import {
+  STUDIO_PAGES,
+  studioShots,
+} from "../modules/screen/test/stack/studio-shots.mjs";
 
 const { values: opts } = parseArgs({
   options: {
@@ -104,6 +108,11 @@ if (opts["dry-run"]) {
   }
   for (const name of planned()) {
     console.log(`  ${name}.png  ${at("/screen/")}  (a paired screen)`);
+  }
+  for (const [name, path, { width, height }] of STUDIO_PAGES) {
+    console.log(
+      `  ${name}.png  ${at(path)}  (${width}×${height}, while two screens play)`,
+    );
   }
   process.exit(0);
 }
@@ -306,6 +315,18 @@ try {
     });
   } catch (err) {
     fail(`screens: ${firstLine(err)}`);
+  }
+  // The Screen studio, on the fixture and theme the screens left.
+  try {
+    await studioShots({
+      browser,
+      demo,
+      at,
+      cookieOn,
+      shot: (name, path, viewport, o) => shot(name, path, viewport, SESSION, o),
+    });
+  } catch (err) {
+    fail(`studio: ${firstLine(err)}`);
   }
 } finally {
   await browser.close();

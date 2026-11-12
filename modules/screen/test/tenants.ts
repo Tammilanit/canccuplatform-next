@@ -32,6 +32,8 @@ export const TENANTS: Record<string, TenantContext> = {
     },
   }),
   "zeta.test": context("zeta", { admin_access: "restricted" }),
+  // Before the event: Studio opens on Zones, not Live.
+  "eta.test": context("eta", { status: "draft" }),
   // Another venue: no device of alpha's venue may move here.
   "far.test": context("far", {
     venue: { id: "v_2", name: "Far Hall", addresses: ["10.9.0.0/24"] },

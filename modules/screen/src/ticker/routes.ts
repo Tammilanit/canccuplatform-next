@@ -2,7 +2,7 @@
  * `/api/screen/ticker` and its windows (contracts/screen.md, Ticker): a person's line with an
  * optional end, and weekly windows that set the text in advance. Every change of what the ticker
  * shows is announced once as `screen.ticker.changed`, here or by the tick (`tickTicker`).
- * Window adds and deletes are audited; the line is not, as the contract's audit list says.
+ * The line (set and clear) and window adds and deletes are audited, in the transaction that makes them.
  */
 import type { FastifyInstance } from "fastify";
 import type { Bus, RightsChecker, SqlClient, TenantContext } from "@canccu/kit";
@@ -53,6 +53,13 @@ function tickerUntil(value: unknown, nowMs: number): Date | null {
     throw invalidRequest("`until` must be a date and time, or null for no end.");
   if (ms <= nowMs) throw invalidRequest("`until` must be in the future.");
   return new Date(ms);
+}
+
+/** The person's line as it stands, for the audit's `from`; read under the ticker's lock. */
+async function lineNow(c: SqlClient): Promise<{ text: string | null; until: string | null }> {
+  const { rows } = await c.query("SELECT text, until FROM screen_ticker");
+  const row = rows[0] as { text: string | null; until: Date | null } | undefined;
+  return { text: row?.text ?? null, until: row?.until?.toISOString() ?? null };
 }
 
 /**
@@ -113,18 +120,44 @@ export function tickerRoutes(app: FastifyInstance, deps: TickerDeps): void {
     const text = tickerText(input.text);
     const until = tickerUntil(input.until, now());
     // The bot (step 6) will set `source: bot`; a person's request today is always admin's.
-    const ticker = await changeTicker(deps, ctx, actorOf(request), (c) =>
-      c.query("UPDATE screen_ticker SET text = $1, until = $2, source = 'admin'", [text, until]),
-    );
+    const actor = actorOf(request);
+    const ticker = await changeTicker(deps, ctx, actor, async (c) => {
+      const before = await lineNow(c);
+      await c.query("UPDATE screen_ticker SET text = $1, until = $2, source = 'admin'", [
+        text,
+        until,
+      ]);
+      await deps.audit({
+        tenant_id: ctx.tenant_id,
+        actor_user_id: actor,
+        action: "screen.ticker.set",
+        target: { type: "ticker", id: "line" },
+        changes: {
+          text: { from: before.text, to: text },
+          until: { from: before.until, to: until?.toISOString() ?? null },
+        },
+      });
+    });
     return withAppearance(deps.settings, ticker);
   });
 
   app.delete("/api/screen/ticker", write, async (request, reply) => {
     const ctx = tenantOf(request);
     assertWritable(ctx);
-    await changeTicker(deps, ctx, actorOf(request), (c) =>
-      c.query("UPDATE screen_ticker SET text = NULL, until = NULL, source = NULL"),
-    );
+    const actor = actorOf(request);
+    await changeTicker(deps, ctx, actor, async (c) => {
+      const before = await lineNow(c);
+      await c.query("UPDATE screen_ticker SET text = NULL, until = NULL, source = NULL");
+      // Clearing an empty line changes nothing, so there is nothing to record.
+      if (before.text === null) return;
+      await deps.audit({
+        tenant_id: ctx.tenant_id,
+        actor_user_id: actor,
+        action: "screen.ticker.cleared",
+        target: { type: "ticker", id: "line" },
+        changes: { text: { from: before.text, to: null } },
+      });
+    });
     return reply.status(204).send();
   });
 

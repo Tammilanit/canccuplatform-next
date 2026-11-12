@@ -36,12 +36,19 @@ MENU: dict[str, Any] = {
             "label": "Screens and look",
             "items": [
                 {
+                    "id": "screen",
+                    "label": "Screen studio",
+                    "href": "/admin/screen/",
+                    "icon": "monitor",
+                    "rights": ["screen.devices.read", "screen.zones.write", "screen.ticker.write"],
+                },
+                {
                     "id": "theme",
                     "label": "Theme studio",
                     "href": "/theming/studio/",
                     "icon": "palette",
                     "rights": ["theming.theme.write"],
-                }
+                },
             ],
         },
         {
@@ -88,7 +95,7 @@ MENU: dict[str, Any] = {
         {"id": "agenda", "label": "Run of show", "narrow": "Show"},
         {"id": "notify", "label": "Notifications"},
         {"id": "quick_add"},
-        {"id": "theme", "label": "Theme"},
+        {"id": "screen", "label": "Screens"},
     ],
     "sign_out": "/admin/sign-out",
 }

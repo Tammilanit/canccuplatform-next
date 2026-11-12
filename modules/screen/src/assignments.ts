@@ -181,12 +181,21 @@ export function assignmentRoutes(app: FastifyInstance, deps: AssignmentDeps): vo
     "/api/screen/devices/:device_id/commands",
     { preHandler: write },
     async (request, reply) => {
-      assertWritable(tenantOf(request));
+      const ctx = tenantOf(request);
+      assertWritable(ctx);
       const command = body(request).command;
       if (command !== "reload" && command !== "identify") {
         throw invalidRequest("`command` must be `reload` or `identify`.");
       }
       const device = await db.tenant((c) => eventDevice(c, request.params.device_id));
+      // Recorded before it is queued, so no command reaches a screen unrecorded.
+      await deps.audit({
+        tenant_id: ctx.tenant_id,
+        actor_user_id: actorOf(request),
+        action: "screen.device.command_sent",
+        target: { type: "device", id: device.id },
+        changes: { command: { from: null, to: command } },
+      });
       const expiresAt = now() + COMMAND_TTL_MS;
       const entry = { id: newId("cm"), command, expires_at: new Date(expiresAt).toISOString() };
       await deps.kv.addExpiring(commandsKey(device.id), JSON.stringify(entry), expiresAt);

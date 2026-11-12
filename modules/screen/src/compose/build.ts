@@ -55,7 +55,7 @@ export interface RegionView {
   claim: Claim | null;
 }
 
-const DEFAULT_DWELL_S = 15;
+export const DEFAULT_DWELL_S = 15;
 const IDLES: readonly Idle[] = ["logo", "blank", "collapse", "next"];
 
 const clampDwell = (value: unknown): number | undefined =>
@@ -85,6 +85,33 @@ function shuffled(order: number[], seed: string): number[] {
     [out[i], out[j]] = [out[j] as number, out[i] as number];
   }
   return out;
+}
+
+/**
+ * The widget a region shows at `nowMs`, or null when none takes part. A state's `order` is only
+ * its own cycle's: later cycles follow the epoch, and a shuffle reshuffles each cycle with the
+ * seed `region()` uses, as the player does between pushes (player/src/rotation.ts).
+ */
+export function shownAt(
+  region: Pick<RegionView, "id" | "rotation" | "order" | "widgets">,
+  zoneKey: string,
+  nowMs: number,
+): WidgetView | null {
+  const dwellMs = (i: number): number => (region.widgets[i]?.dwell_seconds ?? 0) * 1000;
+  // A shuffled order is a permutation of the plain one, which lists the widgets in place order.
+  const plain =
+    region.rotation === "shuffle" ? [...region.order].sort((a, b) => a - b) : region.order;
+  const cycleMs = plain.reduce((sum, i) => sum + dwellMs(i), 0);
+  if (cycleMs <= 0) return null;
+  const cycle = Math.floor(nowMs / cycleMs);
+  const order =
+    region.rotation === "shuffle" ? shuffled(plain, `${zoneKey}:${region.id}:${cycle}`) : plain;
+  let end = cycle * cycleMs;
+  for (const i of order) {
+    end += dwellMs(i);
+    if (nowMs < end) return region.widgets[i] ?? null;
+  }
+  return null;
 }
 
 /** A region as the zone sets it, drawn whole or as its parts. */
