@@ -8,13 +8,14 @@ import { createRequire } from "node:module";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { KitError, NotSignedIn, eventPageCsp, newNonce } from "@canccu/kit";
 import { errorView, errorTitle, html, shellPage } from "@canccu/ui";
-import type { EventInfo, Slot } from "@canccu/ui";
+import type { Slot } from "@canccu/ui";
 import { EMBEDS, WRITE, pageNeeds, positiveInt } from "./http.js";
 import { revisionList } from "./revision-routes.js";
-import { draftCssRoutes, htmlHeaders, previewRoutes } from "./studio-preview.js";
+import { draftCssRoutes, eventOf, htmlHeaders, previewRoutes } from "./studio-preview.js";
 import type { StudioDeps } from "./studio-preview.js";
 import { advancedView, historyView } from "./studio-advanced.js";
-import { STUDIO, brandKitView, studioState } from "./studio-views.js";
+import { brandKitView } from "./studio-kit.js";
+import { STUDIO, status, studioState } from "./studio-views.js";
 
 const SIGN_IN = "/admin/sign-in";
 const HISTORY_PAGE = 20;
@@ -26,29 +27,20 @@ const TABS: [string, string][] = [
   ["history", "History"],
 ];
 
-/** The shell's view of the event, from the tenants module's public answer. */
-async function eventOf(
-  request: FastifyRequest,
-  tenants: StudioDeps["tenants"],
-): Promise<EventInfo | undefined> {
-  const e = await tenants?.event(request.headers.host);
-  if (!e) return undefined;
-  return {
-    name: e.name,
-    status: e.status,
-    timeZone: e.time_zone ?? "UTC",
-    startsAt: e.starts_at,
-    endsAt: e.ends_at,
-    venue: e.venue?.name,
-  };
-}
-
 /** A Studio page in the organiser shell, with its own tabs and script; never framed. */
 async function studioPage(
   request: FastifyRequest,
   reply: FastifyReply,
   deps: StudioDeps,
-  o: { title: string; tab?: string; body: Slot; status?: number; plain?: boolean },
+  o: {
+    title: string;
+    tab?: string;
+    body: Slot;
+    description?: Slot;
+    actions?: Slot;
+    status?: number;
+    plain?: boolean;
+  },
 ): Promise<FastifyReply> {
   const nonce = newNonce();
   const doc = shellPage({
@@ -56,11 +48,14 @@ async function studioPage(
     nonce,
     surface: "admin",
     cssHref: `${STUDIO}static/ui.css`,
-    head: html`<link rel="stylesheet" href="${STUDIO}static/studio.css" />`,
+    head: html`<link rel="stylesheet" href="${STUDIO}static/studio.css" />
+      <link rel="stylesheet" href="${STUDIO}static/studio-previews.css" />`,
     event: await eventOf(request, deps.tenants),
     session: request.session ?? undefined,
     current: "theme",
     plain: o.plain ?? false,
+    ...(o.description === undefined ? {} : { description: o.description }),
+    ...(o.actions === undefined ? {} : { actions: o.actions }),
     ...(o.tab === undefined
       ? {}
       : {
@@ -87,6 +82,7 @@ function signIn(request: FastifyRequest, reply: FastifyReply): FastifyReply {
 const STATIC_TYPES: Record<string, string> = {
   "ui.css": "text/css; charset=utf-8",
   "studio.css": "text/css; charset=utf-8",
+  "studio-previews.css": "text/css; charset=utf-8",
   "preview.css": "text/css; charset=utf-8",
   "studio.js": "text/javascript; charset=utf-8",
 };
@@ -147,7 +143,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       return studioPage(request, reply, deps, {
         title: "Theme studio",
         tab: "",
-        body: brandKitView(state, embedsAllowed),
+        ...brandKitView(state, embedsAllowed, request.session?.userId),
       });
     });
 
@@ -156,6 +152,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       return studioPage(request, reply, deps, {
         title: "Theme studio",
         tab: "advanced",
+        description: status(state, request.session?.userId),
         body: advancedView(state),
       });
     });

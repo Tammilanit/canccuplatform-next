@@ -11,6 +11,13 @@ const BROWSER = Object.fromEntries(
     "Blob",
     "HTMLSelectElement",
     "encodeURIComponent",
+    "CSS",
+    "ResizeObserver",
+    "getComputedStyle",
+    "addEventListener",
+    "setTimeout",
+    "clearTimeout",
+    "Option",
   ].map((name) => [name, "readonly"]),
 );
 
