@@ -83,7 +83,14 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
     if (cookie) await context.addCookies([cookieOn(cookie)]);
     // The screen's state and stream are the only things the page waits on; nothing leaves the stack.
     await context.route(/^https:\/\/next-event\.example\//, (route) => route.abort());
-    return { context, page: await context.newPage() };
+    const page = await context.newPage();
+    // A request still routed when the context closes (a state poll) would throw out of the run.
+    const close = async () => {
+      await page.unrouteAll({ behavior: "ignoreErrors" });
+      await context.unrouteAll({ behavior: "ignoreErrors" });
+      await context.close();
+    };
+    return { page, close };
   };
   /** The screenshot, then its text against the readability rules. */
   const shot = async (name, page) => {
@@ -112,12 +119,12 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       for (const size of sizesOf(theme)) {
         await attempt(nameOf(theme, "pulse", size), () => pulse(theme, size));
         await attempt(nameOf(theme, "unassigned", size), async () => {
-          const { context, page } = await open(size, spare.cookie);
+          const { page, close } = await open(size, spare.cookie);
           await page.goto(at("/screen/"));
           await page.waitForSelector(".canccu-frame--unassigned");
           await settle(page);
           await shot(nameOf(theme, "unassigned", size), page);
-          await context.close();
+          await close();
         });
         await attempt(nameOf(theme, "archived", size), () =>
           handed(theme, "archived", size, (s) => ({
@@ -145,18 +152,18 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       }
     }
     await attempt(nameOf("default", "entrance", HD[1]), async () => {
-      const { context, page } = await open(HD[1], entrance.cookie);
+      const { page, close } = await open(HD[1], entrance.cookie);
       await page.goto(at("/screen/"));
       await layout(page, HD[1]);
       await page.waitForSelector(".canccu-widget--checkin_qr img");
       await settle(page);
       await shot(nameOf("default", "entrance", HD[1]), page);
-      await context.close();
+      await close();
     });
 
     /** The Pulse, then identify over it, then the offline marker. */
     async function pulse(theme, size) {
-      const { context, page } = await open(size, main.cookie);
+      const { page, close } = await open(size, main.cookie);
       await page.goto(at("/screen/"));
       await layout(page, size);
       await railShowsAgenda(page);
@@ -179,12 +186,12 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await page.waitForSelector(".canccu-offline-marker", { timeout: 30_000 });
       await settle(page);
       await shot(nameOf(theme, "offline", size), page);
-      await context.close();
+      await close();
     }
 
     /** The page handed a changed state, with no stream to replace it before the shot. */
     async function handed(theme, view, size, change) {
-      const { context, page } = await open(size, main.cookie);
+      const { page, close } = await open(size, main.cookie);
       // The server picks the layout of the orientation a heartbeat reports, so the page first plays
       // as it is, and the state handed to it then has its layout.
       if (view !== "archived") {
@@ -193,8 +200,12 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       }
       await page.route("**/api/screen/device/stream", (route) => route.abort());
       await page.route("**/api/screen/device/state", async (route) => {
-        const answer = await route.fetch();
-        route.fulfill({ response: answer, json: change(await answer.json()) });
+        try {
+          const answer = await route.fetch();
+          await route.fulfill({ response: answer, json: change(await answer.json()) });
+        } catch {
+          // The page closed while its poll was in flight: nobody waits for the answer.
+        }
       });
       await page.goto(at("/screen/"));
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
@@ -202,7 +213,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       if (!["archived", "claim-rail", "claim-takeover"].includes(view)) await railShowsAgenda(page);
       await settle(page);
       await shot(nameOf(theme, view, size), page);
-      await context.close();
+      await close();
     }
 
     /** The frames drawn before a theme: a new screen, and the device answers of contracts/screen.md. */
@@ -220,7 +231,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
           204,
           "clearing open pairing codes",
         );
-      const { context, page } = await open(size, view === "pairing" ? null : main.cookie);
+      const { page, close } = await open(size, view === "pairing" ? null : main.cookie);
       if (view in answers) {
         const [status, json] = answers[view];
         await page.route("**/api/screen/device/state", (route) => route.fulfill({ status, json }));
@@ -237,7 +248,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await page.waitForSelector(ready[view] ?? `.canccu-frame--${view}`);
       await page.waitForTimeout(300);
       await shot(nameOf("default", view, size), page);
-      await context.close();
+      await close();
     }
   } finally {
     for (const device of devices) await demo.revoke(device.id);
