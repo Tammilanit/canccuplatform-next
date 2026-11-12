@@ -27,7 +27,11 @@ import type { StudioState, StudioView } from "./studio-views.js";
 /** The surfaces beside the screen: each a page of the Studio's own, at the size it is drawn. */
 const SURFACES: [string, string, string][] = [
   ["hub", "Phone", "The phone hub takes the same look as the screens."],
-  ["admin", "Organiser pages", "Organiser pages keep the platform's look: a theme does not change them."],
+  [
+    "admin",
+    "Organiser pages",
+    "Organiser pages keep the platform's look: a theme does not change them.",
+  ],
   ["discord", "Discord", "Discord draws this itself: the theme gives the bar colour and the logo."],
 ];
 
@@ -56,8 +60,25 @@ function logoField(state: StudioState, path: unknown): Html {
   const shown =
     state.logoUrl === undefined
       ? html`<span class="canccu-studio-drop__empty">${icon("plus")}</span>`
-      : html`<img${attrs({ class: "canccu-studio-drop__logo", src: state.logoUrl, alt: "" })}>`;
-  return html`<div class="canccu-field"><span class="canccu-field__label">Logo</span><label class="canccu-studio-drop" for="canccu-studio-logo">${shown}<span><span class="canccu-studio-drop__name">${name ?? "Add a logo"}</span><span class="canccu-small canccu-muted">${name === undefined ? "Choose" : "Choose another to replace it:"} PNG, JPEG, WebP or SVG, up to 5 MB.</span></span></label><input class="canccu-studio-file" type="file" id="canccu-studio-logo" name="logo_file" accept="image/png,image/jpeg,image/webp,image/svg+xml"></div>`;
+      : html`<img${attrs({ class: "canccu-studio-drop__logo", src: state.logoUrl, alt: "" })}></img${attrs({ class: "canccu-studio-drop__logo", src: state.logoUrl, alt: "" })}>`;
+  return html`<div class="canccu-field">
+    <span class="canccu-field__label">Logo</span
+    ><label class="canccu-studio-drop" for="canccu-studio-logo"
+      >${shown}<span
+        ><span class="canccu-studio-drop__name">${name ?? "Add a logo"}</span
+        ><span class="canccu-small canccu-muted"
+          >${name === undefined ? "Choose" : "Choose another to replace it:"} PNG, JPEG, WebP or
+          SVG, up to 5 MB.</span
+        ></span
+      ></label
+    ><input
+      class="canccu-studio-file"
+      type="file"
+      id="canccu-studio-logo"
+      name="logo_file"
+      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+    />
+  </div>`;
 }
 
 function brandForm(state: StudioState, draft: DraftRow, colors: Record<string, string>): Html {
@@ -82,11 +103,18 @@ function brandForm(state: StudioState, draft: DraftRow, colors: Record<string, s
       ? "The CSS changed: Publish turns on once the previews of this version have loaded."
       : "Publish makes it live: every screen and phone switches without a reload.";
   return html`<section class="canccu-card canccu-studio-card">
-    <form class="canccu-studio-form" data-action="brand">${hidden}${logoField(state, images.logo)}
-<div class="canccu-studio-pair">${colourField({ name: "primary", label: "Primary", value: brand?.primary ?? colors.primary })}${colourField({ name: "accent", label: "Accent", value: brand?.accent ?? colors.accent })}</div>
-<fieldset class="canccu-field canccu-studio-scheme"><legend class="canccu-field__label">Scheme</legend><span class="canccu-studio-segments">${schemes}</span></fieldset>
-${colourField({ name: "embed_color", label: "Discord colour", value: brand?.embed_color, fallback: brand?.primary ?? colors.primary, placeholder: "Same as primary" })}
-<p class="canccu-field__hint">Changes are saved as you make them.</p></form>
+    <form class="canccu-studio-form" data-action="brand">
+      ${hidden}${logoField(state, images.logo)}
+      <div class="canccu-studio-pair">
+        ${colourField({ name: "primary", label: "Primary", value: brand?.primary ?? colors.primary })}${colourField({ name: "accent", label: "Accent", value: brand?.accent ?? colors.accent })}
+      </div>
+      <fieldset class="canccu-field canccu-studio-scheme">
+        <legend class="canccu-field__label">Scheme</legend>
+        <span class="canccu-studio-segments">${schemes}</span>
+      </fieldset>
+      ${colourField({ name: "embed_color", label: "Discord colour", value: brand?.embed_color, fallback: brand?.primary ?? colors.primary, placeholder: "Same as primary" })}
+      <p class="canccu-field__hint">Changes are saved as you make them.</p>
+    </form>
     ${checkView(state.problems, coloursDetails(brand, colors))}
     <p class="canccu-field__hint canccu-studio-publish-hint">${hint}</p>
   </section>`;
@@ -113,9 +141,11 @@ function previewsView(state: StudioState): Html {
   return html`<section class="canccu-card canccu-studio-card canccu-studio-previews">
     <h2 class="canccu-card__title">Previews</h2>
     <p class="canccu-card__desc">
-      ${v === undefined
-        ? "What the event shows now."
-        : "The real pages, drawn with the draft. They change as you edit."}
+      ${
+        v === undefined
+          ? "What the event shows now."
+          : "The real pages, drawn with the draft. They change as you edit."
+      }
     </p>
     ${screenPreview(state, v)}
     <div class="canccu-studio-previews__row">
@@ -124,7 +154,11 @@ function previewsView(state: StudioState): Html {
   </section>`;
 }
 
-const discardDialog = html`<dialog class="canccu-studio-dialog" id="canccu-studio-discard" aria-labelledby="canccu-studio-discard-title">
+const discardDialog = html`<dialog
+  class="canccu-studio-dialog"
+  id="canccu-studio-discard"
+  aria-labelledby="canccu-studio-discard-title"
+>
   <h2 id="canccu-studio-discard-title" class="canccu-card__title">Discard the draft?</h2>
   <p>Its changes and files are dropped. Every screen and page keeps the published theme, as now.</p>
   <div class="canccu-studio-row canccu-studio-dialog__actions">
@@ -144,7 +178,12 @@ export function brandKitView(
   if (d === undefined) {
     return {
       description,
-      body: root(state, html`<div class="canccu-studio-kit">${startView(embedsAllowed)}${previewsView(state)}</div>`),
+      body: root(
+        state,
+        html`<div class="canccu-studio-kit">
+          ${startView(embedsAllowed)}${previewsView(state)}
+        </div>`,
+      ),
     };
   }
   const colors = fillTokens(d.manifest.tokens ?? {}).colors;
@@ -162,7 +201,9 @@ export function brandKitView(
     actions: html`${actionButton("Discard draft…", { "data-action": "discard-ask" }, "danger-ghost")}${actionButton(html`${icon("monitor")}Preview`, { "data-action": "preview" })}${actionButton("Publish", { "data-action": "publish", "data-needs-preview": held, disabled: errors || held }, "primary")}`,
     body: root(
       state,
-      html`${advanced}<div class="canccu-studio-kit">${brandForm(state, d, colors)}${previewsView(state)}</div>${discardDialog}`,
+      html`${advanced}
+        <div class="canccu-studio-kit">${brandForm(state, d, colors)}${previewsView(state)}</div>
+        ${discardDialog}`,
     ),
   };
 }

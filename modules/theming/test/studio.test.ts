@@ -136,7 +136,9 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(body).toMatch(/<input[^>]*value="light"[^>]*checked/);
       expect(body).toContain('data-token="primary_text"');
       // Each colour shows its colour and its hex; the made colours go by name, not token id.
-      expect(body).toMatch(/<input[^>]*type="color"[^>]*data-hex-for="primary"[^>]*value="#1e1b4b"/);
+      expect(body).toMatch(
+        /<input[^>]*type="color"[^>]*data-hex-for="primary"[^>]*value="#1e1b4b"/,
+      );
       expect(body).toContain("Text on primary");
       expect(body).not.toMatch(/<code>[a-z_]+<\/code>/);
       // The light scheme keeps the dark primary; the accent fails 3:1 on white and is shaded.
@@ -149,7 +151,9 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       const v = draft.draft_version;
       const body = (await page("/theming/studio/")).body;
       for (const surface of ["hub", "admin", "discord"]) {
-        expect(body).toContain(`src="/theming/studio/preview/${surface}?canccu_theme=draft&amp;v=${v}"`);
+        expect(body).toContain(
+          `src="/theming/studio/preview/${surface}?canccu_theme=draft&amp;v=${v}"`,
+        );
       }
       // The screen is the real player of a zone, given the draft's look; the sample is its fallback.
       expect(body).toContain(
@@ -161,9 +165,13 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
     it("puts the form beside the previews, and Discard, Preview and Publish in one row", async () => {
       await t.fresh();
       const body = (await page("/theming/studio/")).body;
-      expect(body).toMatch(/class="canccu-studio-kit"[\s\S]*data-action="brand"[\s\S]*data-screen-preview/);
+      expect(body).toMatch(
+        /class="canccu-studio-kit"[\s\S]*data-action="brand"[\s\S]*data-screen-preview/,
+      );
       const row = /<div class="canccu-cluster">([\s\S]*?)<\/div><\/div>/.exec(body)?.[1] ?? "";
-      expect(row).toMatch(/data-action="discard-ask"[\s\S]*data-action="preview"[\s\S]*data-action="publish"/);
+      expect(row).toMatch(
+        /data-action="discard-ask"[\s\S]*data-action="preview"[\s\S]*data-action="publish"/,
+      );
       // Discard asks first, in a dialog of the page's own.
       expect(body).toMatch(/<dialog[^>]*canccu-studio-dialog[\s\S]*data-action="discard"/);
     });

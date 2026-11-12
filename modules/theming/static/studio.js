@@ -2,7 +2,8 @@
  * The Studio pages' controls (plan issue-185 D8, D10). Each `data-action` control calls the JSON
  * API, which checks every right itself; the page then reloads, so it always shows the draft as
  * stored. A refusal is carried over the reload and said in words: after a conflict the page is the
- * one to read again, with no native dialog (brief N1).
+ * one to read again, with no native dialog (brief N1). The brand kit saves as it changes, so its
+ * previews follow the form (UX audit C2).
  */
 "use strict";
 
@@ -33,9 +34,12 @@
     if (error.code === "missing_right") {
       return "Your role doesn't include this. If you need it, ask an event owner to add it to your role.";
     }
+    // In words: a file's name before its message, never a path into theme.yaml (UX audit C1).
     const problems = (error.problems ?? [])
       .filter((p) => p.severity === "error")
-      .map((p) => `${p.path}: ${p.message}`);
+      .map((p) =>
+        !p.path || p.path.startsWith("theme.yaml") ? p.message : `${p.path}: ${p.message}`,
+      );
     return [error.message, ...problems].join(" ");
   }
 
@@ -86,6 +90,7 @@
   }
 
   async function saveBrand(form) {
+    if (!form.reportValidity()) throw new Error("A colour is a # and six or eight hex digits.");
     const f = form.elements;
     let version = draftVersion();
     let logo = f.namedItem("logo")?.value;
@@ -137,6 +142,11 @@
     start: () => call("POST", "/api/theming/draft", { from: "current" }),
     starter: (el) => starter(el.dataset.starter),
     publish: () => call("POST", "/api/theming/draft/publish", { draft_version: draftVersion() }),
+    "font-system": (el) =>
+      call("PATCH", "/api/theming/draft/tokens", {
+        draft_version: draftVersion(),
+        tokens: { fonts: { [el.dataset.token]: null } },
+      }),
     discard: () => call("DELETE", `/api/theming/draft?${query({ draft_version: draftVersion() })}`),
     restore: (el) =>
       call("POST", `/api/theming/revisions/${el.dataset.revision}/restore`, {
@@ -173,35 +183,163 @@
     event.preventDefault();
     void run(form, event.submitter ?? form);
   });
+  /** Controls that change only the page: they call no API and never reload. */
+  const screenFigure = document.querySelector(".canccu-studio-preview--screen");
+  const fullSize = (on) => screenFigure?.classList.toggle("canccu-studio-preview--full", on);
+  const LOCAL = {
+    "discard-ask": () => document.getElementById("canccu-studio-discard")?.showModal(),
+    "dialog-close": (el) => el.closest("dialog")?.close(),
+    preview: () => fullSize(true),
+    "preview-close": () => fullSize(false),
+  };
+
   document.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-action]");
     if (button === null) return;
-    void run(button, button);
+    const local = LOCAL[button.dataset.action];
+    if (local !== undefined) local(button);
+    else void run(button, button);
   });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") fullSize(false);
+  });
+
+  /* A colour's swatch and its hex field show the same colour. */
+  const hexOf = (swatch) => swatch.form?.elements.namedItem(swatch.dataset.hexFor);
+  document.addEventListener("input", (event) => {
+    const el = event.target;
+    if (el.matches("input[data-hex-for]")) {
+      const hex = hexOf(el);
+      if (hex) hex.value = el.value;
+    } else if (el.matches(".canccu-studio-colour__hex") && /^#[0-9a-fA-F]{6}/.test(el.value)) {
+      const swatch = el.form?.querySelector(`input[data-hex-for="${CSS.escape(el.name)}"]`);
+      if (swatch) swatch.value = el.value.slice(0, 7).toLowerCase();
+    }
+  });
+  // The brand kit has no Save: each finished change saves the brand and reloads its previews.
+  document.addEventListener("change", (event) => {
+    const form = event.target.closest('form[data-action="brand"]');
+    if (form !== null) void run(form, form);
+  });
+
+  /* Each preview is a page at its own size, scaled to its box's width. */
+  const scaled = new ResizeObserver((entries) => {
+    for (const { target } of entries) {
+      const width = parseFloat(getComputedStyle(target).getPropertyValue("--canccu-studio-w"));
+      if (width > 0) target.style.setProperty("--canccu-studio-scale", target.clientWidth / width);
+    }
+  });
+  for (const box of document.querySelectorAll(".canccu-studio-preview__box")) scaled.observe(box);
+
+  /*
+   * The screen preview is screen's virtual screen of one of the event's zones: the real player and
+   * layout with the zone's real content (contracts/screen.md, A zone for a session). The page reads
+   * the zone's state with this session, gives it the draft's look and posts it to the frame, which
+   * draws a posted state instead of the live zone. Where the zones cannot be read (no right to see
+   * the event's screens, or no screen module), the Studio's own sample screen stands in.
+   */
+  const screenFrame = document.querySelector("iframe[data-screen-preview]");
+  let screenShown = false;
+  const PREVIEW_MESSAGE = "canccu-screen-preview";
+
+  async function readJson(url) {
+    const res = await fetch(url, { credentials: "same-origin" }).catch(() => undefined);
+    return res?.ok ? res.json().catch(() => undefined) : undefined;
+  }
+
+  function withDraft(state) {
+    const d = screenFrame.dataset;
+    if (d.tokensCssUrl === undefined) return undefined;
+    const logo = d.logoUrl;
+    const withLogo = (w) =>
+      w?.widget === "logo" && logo !== undefined && w.view
+        ? { ...w, view: { ...w.view, url: logo } }
+        : w;
+    return {
+      ...state,
+      theme: {
+        ...state.theme,
+        tokens_css_url: d.tokensCssUrl,
+        css_url: d.cssUrl ?? null,
+        logo_url: logo ?? null,
+        templates: JSON.parse(d.templates ?? "[]"),
+      },
+      regions: state.regions.map((r) => ({
+        ...r,
+        widgets: r.widgets.map(withLogo),
+        idle_view: withLogo(r.idle_view),
+      })),
+    };
+  }
+
+  function load(src, onLoad) {
+    screenShown = false;
+    screenFrame.addEventListener("load", onLoad, { once: true });
+    screenFrame.src = src;
+  }
+
+  const fallback = () =>
+    load(screenFrame.dataset.fallbackSrc, () => {
+      screenShown = isSurface(screenFrame);
+      check();
+    });
+
+  async function showZone(zone) {
+    const key = encodeURIComponent(zone.key);
+    const state = await readJson(`/api/screen/zones/${key}/state`);
+    if (state === undefined || !Array.isArray(state.regions)) return fallback();
+    const caption = document.querySelector(".canccu-studio-zone");
+    if (caption !== null) caption.textContent = `· ${zone.name}`;
+    const draft = withDraft(state);
+    load(`/screen/zones/${key}`, () => {
+      if (draft !== undefined) {
+        screenFrame.contentWindow.postMessage(
+          { type: PREVIEW_MESSAGE, state: draft },
+          location.origin,
+        );
+      }
+      screenShown = true;
+      check();
+    });
+  }
+
+  async function startScreen() {
+    const zones = (await readJson("/api/screen/zones"))?.zones;
+    if (!Array.isArray(zones) || zones.length === 0) return fallback();
+    const select = document.querySelector(".canccu-studio-zones");
+    const first = zones.find((z) => z.key === "main") ?? zones[0];
+    if (select !== null && zones.length > 1) {
+      for (const z of zones) select.add(new Option(z.name, z.key, false, z === first));
+      select.hidden = false;
+      select.addEventListener("change", () => {
+        const zone = zones.find((z) => z.key === select.value);
+        if (zone !== undefined) void showZone(zone);
+      });
+    }
+    await showZone(first);
+  }
 
   /*
    * Publishing changed CSS needs its preview first (D10): the button waits until every preview
-   * frame shows this draft version as a surface page. A frame may finish before this script runs.
+   * frame shows this draft version: a surface page of the Studio's, or the screen given the draft.
+   * A frame may finish before this script runs.
    */
-  const held = document.querySelector("[data-needs-preview]");
-  if (held !== null) {
-    const frames = [...document.querySelectorAll("iframe[data-preview]")];
-    const shown = (frame) => {
-      const doc = frame.contentDocument;
-      return (
-        doc !== null &&
-        doc.readyState === "complete" &&
-        doc.querySelector(".canccu-surface") !== null
-      );
-    };
-    const check = () => {
-      if (frames.every(shown)) {
-        held.disabled = false;
-        const hint = document.querySelector(".canccu-studio-publish-hint");
-        if (hint !== null) hint.textContent = "Preview shown: this version can be published.";
-      }
-    };
-    for (const frame of frames) frame.addEventListener("load", check);
-    check();
+  function isSurface(frame) {
+    const doc = frame.contentDocument;
+    return (
+      doc !== null && doc.readyState === "complete" && doc.querySelector(".canccu-surface") !== null
+    );
   }
+  const shown = (frame) => (frame === screenFrame ? screenShown : isSurface(frame));
+  const held = document.querySelector("[data-needs-preview]");
+  const frames = [...document.querySelectorAll("iframe[data-preview]")];
+  function check() {
+    if (held === null || !frames.every(shown)) return;
+    held.disabled = false;
+    const hint = document.querySelector(".canccu-studio-publish-hint");
+    if (hint !== null) hint.textContent = "Previews shown: this version can be published.";
+  }
+  for (const frame of frames) if (frame !== screenFrame) frame.addEventListener("load", check);
+  if (screenFrame !== null) void startScreen();
+  check();
 })();

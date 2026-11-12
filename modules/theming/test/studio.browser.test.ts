@@ -90,6 +90,18 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
     await Promise.all([page.waitForEvent("load"), page.click(selector)]);
   }
 
+  /** A change the brand kit saves at once (it has no Save), and the reload that follows. */
+  async function change(page: Page, edit: () => Promise<unknown>): Promise<void> {
+    await Promise.all([page.waitForEvent("load"), edit()]);
+  }
+  /** Types a hex colour; leaving the field is what saves it. */
+  const typeHex = (page: Page, name: string, value: string) =>
+    change(page, async () => {
+      const field = page.locator(`input[name="${name}"]`);
+      await field.fill(value);
+      await field.blur();
+    });
+
   it("starts a draft from a starting point", async () => {
     const page = await open("/theming/studio/");
     await act(page, '[data-action="starter"][data-starter="level-up"]');
@@ -100,14 +112,10 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
   it("saves the brand kit with a new logo, keeping what it does not show", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
     const page = await open("/theming/studio/");
-    await page.setInputFiles('input[name="logo_file"]', {
-      name: "Our Logo.PNG",
-      mimeType: "image/png",
-      buffer: await png("#ff7a45", 32),
-    });
-    await page.fill('input[name="primary"]', "#ff7a45");
-    await page.check('input[name="scheme"][value="light"]');
-    await act(page, '[data-action="brand"] button[type="submit"]');
+    const logo = { name: "Our Logo.PNG", mimeType: "image/png", buffer: await png("#ff7a45", 32) };
+    await change(page, () => page.setInputFiles('input[name="logo_file"]', logo));
+    await typeHex(page, "primary", "#ff7a45");
+    await change(page, () => page.check('input[name="scheme"][value="light"]'));
     const saved = await draft();
     expect(saved.manifest.brand).toEqual({
       primary: "#ff7a45",
@@ -115,23 +123,21 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
       scheme: "light",
     });
     expect(saved.manifest.images).toEqual({ logo: "images/logo.png" });
-    expect(await page.locator("img.canccu-studio-logo").count()).toBe(1);
+    expect(await page.locator("img.canccu-studio-drop__logo").count()).toBe(1);
 
-    // Saving again without a new file keeps the logo.
-    await page.fill('input[name="accent"]', "#7c5cff");
-    await act(page, '[data-action="brand"] button[type="submit"]');
-    expect((await draft()).manifest.images).toEqual({ logo: "images/logo.png" });
+    // A colour picked on the swatch is its hex too; saving without a new file keeps the logo.
+    await change(page, () => page.fill('input[data-hex-for="accent"]', "#7c5cff"));
+    expect(await page.inputValue('input[name="accent"]')).toBe("#7c5cff");
+    const again = await draft();
+    expect((again.manifest.brand as { accent: string }).accent).toBe("#7c5cff");
+    expect(again.manifest.images).toEqual({ logo: "images/logo.png" });
   });
 
   it("takes a refused logo out of the draft again and says why", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
     const page = await open("/theming/studio/");
-    await page.setInputFiles('input[name="logo_file"]', {
-      name: "logo.svg",
-      mimeType: "image/svg+xml",
-      buffer: SCRIPTED,
-    });
-    await act(page, '[data-action="brand"] button[type="submit"]');
+    const logo = { name: "logo.svg", mimeType: "image/svg+xml", buffer: SCRIPTED };
+    await change(page, () => page.setInputFiles('input[name="logo_file"]', logo));
     expect(await page.textContent(".canccu-studio-notice")).toContain("images/logo.svg");
     const after = await draft();
     expect((after.files ?? []).map((f) => f.path)).not.toContain("images/logo.svg");
@@ -167,9 +173,88 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
     // The reload after publishing loads its previews unheld.
     await page.unroute("**/theming/studio/preview/**");
     await act(page, '[data-action="publish"]');
-    expect(await page.textContent(".canccu-studio-status")).toContain(
-      "Revision 1 is on every screen",
+    expect(await page.textContent(".canccu-pagehead__desc")).toContain(
+      "Screens show the published theme",
     );
+  });
+
+  it("draws the real player of a zone with the draft's look", async () => {
+    await api("POST", "/api/theming/draft", { from: "defaults" });
+    const v = (await draft()).draft_version;
+    if (browser === undefined) throw new Error("no browser");
+    const context = await browser.newContext();
+    contexts.push(context);
+    await context.addCookies([{ name: "canccu_session", value: "embedder", url: origin }]);
+    const page = await context.newPage();
+    // Screen's API and its virtual screen, as the screen module answers them; the page keeps
+    // what the Studio posts it.
+    await page.route("**/api/screen/zones", (r) =>
+      r.fulfill({
+        json: {
+          zones: [
+            { key: "cafe", name: "Café" },
+            { key: "main", name: "Main hall" },
+          ],
+        },
+      }),
+    );
+    const state = {
+      state_version: 3,
+      time: new Date().toISOString(),
+      tenant: { id: "local", name: "Demo Event", time_zone: "UTC", status: "live" },
+      device: { id: "mirror", name: "Main hall", mirror: true },
+      theme: {
+        revision: 0,
+        tokens_css_url: "/theming/a/tokens.css",
+        css_url: null,
+        logo_url: null,
+      },
+      regions: [
+        {
+          id: "header",
+          widgets: [{ widget: "logo", view: { url: "/theming/a/old.png", name: "Demo Event" } }],
+          idle_view: null,
+        },
+      ],
+    };
+    await page.route("**/api/screen/zones/main/state", (r) => r.fulfill({ json: state }));
+    await page.route("**/screen/zones/main", (r) =>
+      r.fulfill({
+        contentType: "text/html",
+        body: `<body><script>addEventListener("message", (e) => { window.posted = e.data; });</script></body>`,
+      }),
+    );
+    await page.goto(`${origin}/theming/studio/`);
+    await expect
+      .poll(() => page.locator("iframe[data-screen-preview]").getAttribute("src"))
+      .toBe("/screen/zones/main");
+    const posted = () =>
+      page
+        .frame({ url: /\/screen\/zones\/main$/ })
+        ?.evaluate(() => (window as { posted?: unknown }).posted);
+    await expect.poll(posted).toMatchObject({
+      type: "canccu-screen-preview",
+      state: {
+        state_version: 3,
+        theme: { tokens_css_url: `/theming/studio/draft/tokens.css?v=${v}`, css_url: null },
+      },
+    });
+    expect(await page.textContent(".canccu-studio-zone")).toContain("Main hall");
+    expect(await page.locator(".canccu-studio-zones option").count()).toBe(2);
+  });
+
+  it("fixes a font the theme does not hold in one click", async () => {
+    await api("POST", "/api/theming/draft", { from: "defaults" });
+    const v = (await draft()).draft_version;
+    await api("PATCH", "/api/theming/draft/tokens", {
+      draft_version: v,
+      tokens: { fonts: { body: "Inter" } },
+    });
+    const page = await open("/theming/studio/");
+    expect(await page.locator('[data-action="publish"]').isDisabled()).toBe(true);
+    await act(page, '[data-action="font-system"][data-token="body"]');
+    expect((await draft()).problems).toEqual([]);
+    expect(await page.textContent(".canccu-notice__title")).toBe("Ready to publish");
   });
 
   it("restores a revision in one click", async () => {
@@ -209,7 +294,7 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
     expect((await draft()).manifest.mode).toBe("advanced");
     // The colours of simple mode come from a brand, which the terminal theme has none of.
     await page.goto(`${origin}/theming/studio/`);
-    await act(page, '[data-action="brand"] button[type="submit"]');
+    await change(page, () => page.check('input[name="scheme"][value="light"]'));
     await page.goto(`${origin}/theming/studio/advanced`);
     await page.click('[data-action="simple"] >> xpath=ancestor::details/summary');
     await act(page, '[data-action="simple"] button[type="submit"]');
@@ -225,7 +310,7 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
       draft_version: v,
       tokens: { motion: "calm" },
     });
-    await act(page, '[data-action="brand"] button[type="submit"]');
+    await change(page, () => page.check('input[name="scheme"][value="light"]'));
     const notice = page.locator(".canccu-studio-notice");
     expect(await notice.isVisible()).toBe(true);
     expect(await notice.textContent()).toContain("changed by someone else");
@@ -235,7 +320,9 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
   it("discards the draft", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
     const page = await open("/theming/studio/");
-    await page.click(".canccu-studio-confirm summary");
+    // Discard asks first, in the page's own dialog.
+    await page.click('[data-action="discard-ask"]');
+    expect(await page.locator("#canccu-studio-discard").isVisible()).toBe(true);
     await act(page, '[data-action="discard"]');
     expect(await page.getAttribute(".canccu-studio", "data-draft-version")).toBeNull();
     expect((await api("GET", "/api/theming/draft")).status).toBe(404);

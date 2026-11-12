@@ -123,9 +123,7 @@ export async function studioState(
     cssChanged,
     logoUrl,
     screenTheme:
-      draft === undefined || !compare
-        ? undefined
-        : await screenTheme(c, files, draft, logoUrl),
+      draft === undefined || !compare ? undefined : await screenTheme(c, files, draft, logoUrl),
   };
 }
 
@@ -145,9 +143,10 @@ async function screenTheme(
   }
   return {
     tokens_css_url: `${STUDIO}draft/tokens.css${v}`,
-    css_url: Array.isArray(draft.manifest.css) && draft.manifest.css.length > 0
-      ? `${STUDIO}draft/theme.css${v}`
-      : null,
+    css_url:
+      Array.isArray(draft.manifest.css) && draft.manifest.css.length > 0
+        ? `${STUDIO}draft/theme.css${v}`
+        : null,
     logo_url: logoUrl ?? null,
     templates,
   };
@@ -284,16 +283,25 @@ export function coloursDetails(
   const ratio = contrastRatio(text, colors.primary ?? "#000000").toFixed(1);
   const swatches = Object.entries(COLOUR_NAMES).map(
     ([token, name]) =>
-      html`<li class="canccu-studio-swatch"${attrs({ "data-token": token })}>${chip(colors[token] ?? "#000000")} ${name} <span class="canccu-muted canccu-num">${colors[token]}</span></li>`,
+      html`<li class="canccu-studio-swatch" ${attrs({ "data-token": token })}>
+        ${chip(colors[token] ?? "#000000")} ${name}
+        <span class="canccu-muted canccu-num">${colors[token]}</span>
+      </li>`,
   );
   const summary =
     notes.length === 0
       ? "Every colour you picked is used as it is."
       : `${notes.length === 1 ? "One colour was" : `${notes.length} colours were`} adjusted so text reads.`;
-  return html`<details class="canccu-studio-details"${attrs({ open })}>
+  return html`<details class="canccu-studio-details" ${attrs({ open })}>
     <summary>Details</summary>
     <p>${summary} Text on primary uses ${text} (${ratio}:1).</p>
-    ${notes.length > 0 ? html`<ul class="canccu-studio-adjusted">${notes}</ul>` : ""}
+    ${
+      notes.length > 0
+        ? html`<ul class="canccu-studio-adjusted">
+            ${notes}
+          </ul>`
+        : ""
+    }
     <ul class="canccu-studio-swatches">
       ${swatches}
     </ul>

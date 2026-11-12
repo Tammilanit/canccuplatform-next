@@ -106,7 +106,13 @@ describe.skipIf(!DATABASE_URL)("theming drafts", () => {
             "The text font Inter isn't in the theme, so screens would fall back to another font. Use the system font, or upload Inter.",
         },
       ]);
-      const refused = await send(h, "POST", "/api/theming/draft/publish", { draft_version: 1 }, fonted);
+      const refused = await send(
+        h,
+        "POST",
+        "/api/theming/draft/publish",
+        { draft_version: 1 },
+        fonted,
+      );
       expect([refused.statusCode, code(refused)]).toEqual([422, "theme_invalid"]);
       expect(refused.json<{ error: { problems: unknown[] } }>().error.problems).toEqual(problems);
     });
