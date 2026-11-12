@@ -60,17 +60,21 @@ export function frame(kind: FrameKind, text: FrameText): HTMLElement {
   const root = el("main", `canccu-frame canccu-frame--${kind}`);
   root.dataset.frame = kind;
   const body = el("section", "canccu-frame__body");
-  if (text.kicker !== undefined) body.append(el("p", "canccu-frame__kicker", text.kicker));
+  const top = el("div", "canccu-frame__top");
+  if (text.kicker !== undefined) top.append(el("p", "canccu-frame__kicker", text.kicker));
   // Drawn by the look per frame kind (player.css); it holds no text.
   const icon = el("span", "canccu-frame__icon");
   icon.setAttribute("aria-hidden", "true");
-  body.append(icon, el("h1", "canccu-frame__title", text.title));
-  // The pairing code is packages/ui's safety element, placed on the page itself (safetyCode):
-  // this keeps its place in the frame's column.
+  top.append(icon, el("h1", "canccu-frame__title", text.title));
+  body.append(top);
+  // The pairing code is packages/ui's safety element, centred on the page itself (safetyCode):
+  // the frame leaves it the middle of its column.
   if (kind === "pairing") body.append(el("div", "canccu-frame__code-space"));
+  const bottom = el("div", "canccu-frame__bottom");
   const [lead, ...help] = text.lines ?? [];
-  if (lead !== undefined) body.append(el("p", "canccu-frame__lead", lead));
-  for (const line of help) body.append(el("p", "canccu-frame__line", line));
+  if (lead !== undefined) bottom.append(el("p", "canccu-frame__lead", lead));
+  for (const line of help) bottom.append(el("p", "canccu-frame__line", line));
+  body.append(bottom);
   root.append(frameHead(text), body, el("footer", "canccu-frame__foot", text.foot ?? ""));
   return root;
 }

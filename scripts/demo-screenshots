@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Screenshots of every user-facing surface of the running demo stack (#376): the admin pages, the
-# Theme studio, the phone hub's preview, the agenda and notify pages and a paired Pulse screen in
-# landscape and portrait (the list is in scripts/demo-screenshots.mjs). CI runs it in the
+# Theme studio, the phone hub's preview, the agenda and notify pages, and the screens of every
+# demo theme, Pulse and device frames, with their readability check (#191; the lists are in
+# scripts/demo-screenshots.mjs and modules/screen/test/stack/screens.mjs). CI runs it in the
 # `demo-stack` check and uploads OUT_DIR as an artifact, which a user-visible PR's reviewer holds
 # against the mockups (AGENTS.md, A package run).
 # Usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR]   (defaults http://127.0.0.1, screenshots)
@@ -23,7 +24,7 @@ cd "$(dirname "$0")/.." || exit 2
 # image in modules/theming/README.md); bump them together.
 PLAYWRIGHT=1.64.1
 IMAGE=mcr.microsoft.com/playwright:v$PLAYWRIGHT-noble
-CLIENT=modules/screen/test/stack/client.mjs
+STACK=modules/screen/test/stack
 
 usage() { echo "usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR] | --install" >&2; exit 2; }
 if [ "${1:-}" = "--install" ]; then
@@ -55,8 +56,8 @@ fi
 # The script and the stack client keep their repo layout, so the import between them holds.
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-mkdir -p "$work/scripts" "$work/${CLIENT%/*}" "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
-cp scripts/demo-screenshots.mjs "$work/scripts/" && cp "$CLIENT" "$work/$CLIENT" || exit 2
+mkdir -p "$work/scripts" "$work/$STACK" "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
+cp scripts/demo-screenshots.mjs "$work/scripts/" && cp "$STACK"/*.mjs "$work/$STACK/" || exit 2
 user="$(id -u):$(id -g)"
 # On the default network: Caddy's namespace may not reach the registry.
 if ! docker run --rm -u "$user" -e HOME=/tmp -v "$work:/work" -w /work "$IMAGE" \

@@ -1,0 +1,228 @@
+/*
+ * The Pulse's claims (contracts/screen.md, Moments drive it: claims) as mockup 04 and sheet 9 of
+ * docs/design draw them, the photo, the hot game, and the media and embeds a playlist or theme
+ * brings. In `canccu-base` like screen.css, so a theme restyles all of it.
+ */
+@layer canccu-base {
+  /* A claim in a region (an announcement in the rail) is framed in the primary colour. */
+  .canccu-region > .canccu-widget.canccu-is-claim {
+    border-color: var(--canccu-color-primary);
+    box-shadow: inset 0 0 0 0.3cqmin var(--canccu-color-primary);
+  }
+
+  .canccu-widget--announcement .canccu-widget__title {
+    font-size: 6.6cqmin;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--canccu-color-text);
+  }
+
+  .canccu-widget--announcement .canccu-widget__body {
+    font-size: 4cqmin;
+  }
+
+  /* A takeover hides every region but itself and the overlay; the overlay is a lower-third band. */
+  .canccu-layout[data-takeover]
+    > .canccu-region:not(.canccu-region--_full, .canccu-region--_overlay) {
+    visibility: hidden;
+  }
+
+  .canccu-region--_full > .canccu-widget {
+    align-items: center;
+    justify-content: center;
+    gap: 2.4cqmin;
+    text-align: center;
+    font-size: 5cqmin;
+  }
+
+  .canccu-region--_full .canccu-widget__big,
+  .canccu-region--_full .canccu-widget--announcement .canccu-widget__title {
+    font-size: 12.4cqmin;
+    line-height: 1.05;
+  }
+
+  .canccu-region--_full .canccu-widget--announcement .canccu-widget__body {
+    font-size: 5cqmin;
+  }
+
+  /* An emergency (sheet 9): white on a fixed red, the same in every theme a theme leaves alone. */
+  .canccu-widget--announcement:has(.canccu-widget__level--emergency) {
+    border-color: #b91c1c;
+    background: #b91c1c;
+    color: #fff;
+  }
+
+  .canccu-widget__level--emergency .canccu-widget__kicker {
+    display: none;
+  }
+
+  .canccu-widget__level--emergency .canccu-widget__title,
+  .canccu-widget__level--emergency .canccu-widget__body {
+    color: #fff;
+  }
+
+  .canccu-region--_full .canccu-widget__level--emergency::before {
+    content: "";
+    display: block;
+    width: 12cqmin;
+    height: 12cqmin;
+    margin: 0 auto 2cqmin;
+    background: #fff;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+  }
+
+  /* A sting: a short word across the screen on the primary colour. */
+  .canccu-region > .canccu-widget--sting {
+    border-color: var(--canccu-color-primary);
+    background: var(--canccu-color-primary);
+    color: var(--canccu-color-primary-text);
+  }
+
+  /* The lower-third band (mockup 04 d): its heading on its own line, the rest after it. The band
+     is the primary colour with the theme's text for it, the pair the contrast rules check. */
+  .canccu-region--_overlay > .canccu-widget {
+    inset: auto 0 0;
+    min-height: 16%;
+    flex-flow: row wrap;
+    align-content: center;
+    align-items: baseline;
+    column-gap: 2cqmin;
+    row-gap: 0.6cqmin;
+    border-color: var(--canccu-color-primary);
+    background: var(--canccu-color-primary);
+    color: var(--canccu-color-primary-text);
+  }
+
+  .canccu-region--_overlay .canccu-widget__title,
+  .canccu-region--_overlay .canccu-widget__kicker,
+  .canccu-region--_overlay .canccu-widget__meta,
+  .canccu-region--_overlay .canccu-widget__state {
+    color: inherit;
+  }
+
+  .canccu-region--_overlay .canccu-widget__title {
+    flex-basis: 100%;
+    font-weight: 700;
+  }
+
+  .canccu-region--_overlay .canccu-widget__big,
+  .canccu-region--_overlay .canccu-widget__meta,
+  .canccu-region--_overlay .canccu-widget__name {
+    font-size: 4.4cqmin;
+  }
+
+  .canccu-region--_overlay .canccu-widget__body {
+    flex-direction: row;
+    gap: 2cqmin;
+    color: inherit;
+  }
+
+  /* The hot game (mockup 04 c): its cover at the left, the game and its numbers beside it. */
+  .canccu-region > .canccu-widget--hot_game {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-content: center;
+    column-gap: 4cqmin;
+  }
+
+  .canccu-widget--hot_game > * {
+    grid-column: 2;
+  }
+
+  .canccu-widget--hot_game > .canccu-widget__image {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    width: 24cqmin;
+    max-height: 32cqmin;
+    object-fit: cover;
+    border-radius: var(--canccu-card-radius);
+  }
+
+  .canccu-widget--hot_game > .canccu-widget__big {
+    font-size: 9.3cqmin;
+  }
+
+  .canccu-widget--hot_game .canccu-widget__meta {
+    font-size: 4.4cqmin;
+  }
+
+  /* A photo fills its card (mockup 03), its caption on a dark band across the bottom. */
+  .canccu-region > .canccu-widget--photo {
+    padding: 0;
+  }
+
+  .canccu-widget__photo {
+    position: absolute;
+    inset: 0;
+  }
+
+  .canccu-widget--photo .canccu-widget__image {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    object-fit: cover;
+  }
+
+  .canccu-widget--photo .canccu-widget__caption {
+    position: absolute;
+    inset: auto 0 0;
+    padding: 2cqmin 2.8cqmin;
+    background: rgb(0 0 0 / 72%);
+    color: #fff;
+  }
+
+  /* The playlist's media fill the widget edge to edge, with no card (src/media.ts). The widget
+     stays absolute, inset 0 like every widget: it is the media's containing block, and set back
+     to relative it would collapse to its absolute children's height, 0 px. */
+  .canccu-region > .canccu-widget--playlist {
+    padding: 0;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .canccu-widget__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: contain;
+  }
+
+  .canccu-widget__media.canccu-is-failed {
+    visibility: hidden;
+  }
+
+  /* The embed widget, as packages/ui's ui.css draws it: the still fills the widget and the frame
+     lies over it, transparent until the embed paints. */
+  .canccu-region > .canccu-widget--embed {
+    padding: 0;
+    overflow: hidden;
+    background: var(--canccu-color-background);
+  }
+
+  .canccu-widget--embed > .canccu-widget__body {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .canccu-widget--embed > .canccu-widget__body > img {
+    max-width: 40%;
+    max-height: 40%;
+  }
+
+  .canccu-embed {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    color-scheme: normal;
+  }
+}
