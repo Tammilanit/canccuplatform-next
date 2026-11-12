@@ -41,7 +41,7 @@ const OWN_QR: TreeNode[] = [
 // The tree has no `{{.}}` (theming's names are `a.b` only), so no template can show a list of plain
 // strings: the `names` and `voice_channels` lists stay off the defaults.
 // A row carries both its end and its start: the look shows the end on a now row and the start on a
-// next or delayed row (widgets.css), since a template cannot branch on a field's value.
+// next or delayed row (rail.css), since a template cannot branch on a field's value.
 const AGENDA_ROW = el(
   "li",
   null,
@@ -87,11 +87,23 @@ const CODE_BAR: TreeNode = sec(
 
 export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = {
   clock: [el("p", "meta", [f("date")]), el("time", "big", [f("time")], { datetime: [f("iso")] })],
-  agenda_now: [title("title"), el("ul", "body", [sec("items", AGENDA_ROW)]), QR],
+  // No title: each row is labelled (NOW, NEXT), so "Now and next" above them says it twice.
+  agenda_now: [el("ul", "body", [sec("items", AGENDA_ROW)]), QR],
+  // `starts_text`, `location` and `delay_minutes` are the player's (hero-rail.ts): the countdown's
+  // view-model has only the target, so the player adds what the rail's row of the same item says.
   countdown: [
     el("p", "kicker", [t("Next up")]),
     el("p", "headline", [f("label")]),
-    sec("ends_text", el("p", "meta", [t("until "), f("ends_text")])),
+    el("p", "when", [
+      sec("starts_text", el("span", "starts", [f("starts_text")])),
+      sec("location", el("span", "where", [f("location")])),
+      sec(
+        "delay_minutes",
+        el("span", null, [t("+"), f("delay_minutes"), t(" min")], {
+          class: [t("canccu-widget__delay canccu-widget__delay--delayed")],
+        }),
+      ),
+    ]),
     el("p", "count", [t("Starts in "), el("time", "big", [], { datetime: [f("target_at")] })]),
     bar("target_at", 3600),
   ],
@@ -177,7 +189,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
           el("span", "state", [t("Wi-Fi")]),
           el("strong", "name", [f("ssid")]),
           sec("password", el("span", "meta", [f("password")])),
-          not("password", el("span", "meta", [t("password on the hub")])),
+          not("password", el("span", "meta", [t("Password on the hub")])),
           sec("note", el("span", "meta", [f("note")])),
         ]),
       ),

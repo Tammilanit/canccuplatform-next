@@ -53,6 +53,18 @@
     color: #fff;
   }
 
+  /* A safety alarm wears no claim frame; as a takeover it fills the screen to its edges. */
+  .canccu-region > .canccu-widget.canccu-is-claim:has(.canccu-widget__level--emergency) {
+    border-color: #b91c1c;
+    box-shadow: none;
+  }
+
+  .canccu-region--_full > .canccu-widget:has(.canccu-widget__level--emergency) {
+    inset: calc(-1 * var(--canccu-safe-inset));
+    border: 0;
+    border-radius: 0;
+  }
+
   .canccu-widget__level--emergency .canccu-widget__kicker {
     display: none;
   }
@@ -172,6 +184,11 @@
     padding: calc(2 * var(--canccu-u)) calc(2.8 * var(--canccu-u));
     background: rgb(0 0 0 / 72%);
     color: #fff;
+  }
+
+  /* Over a rotating hero the band also holds its rotation marks (widgets.css), under the text. */
+  .canccu-region:has(> .canccu-rotation) .canccu-widget--photo .canccu-widget__caption {
+    padding-bottom: calc(5.6 * var(--canccu-u));
   }
 
   /* The playlist's media fill the widget edge to edge, with no card (src/media.ts). The widget

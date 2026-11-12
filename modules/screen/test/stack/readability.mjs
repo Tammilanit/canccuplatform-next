@@ -6,7 +6,10 @@
 //   side, not the height, so a portrait screen, the same panel turned, keeps the same letters;
 // - contrast (the theming contract's rules, WCAG 2.2 ratio): text in the theme's primary, accent
 //   or a status colour at least 3:1 on its ground, any other text 4.5:1, on every ground under it
-//   (each stop of a gradient, see-through grounds laid over what is below).
+//   (each stop of a gradient, see-through grounds laid over what is below);
+// - clipping: no text cut by the box around it (a card's edge through its last line). Text a box
+//   ends on purpose is fine: an ellipsis or a line clamp cuts inside the text's own box, and a
+//   marquee's text runs through its box while an endless animation moves it.
 
 /** Every colour in a computed CSS value, as [r, g, b, a] with r, g, b in 0–255. */
 export function parseColors(value) {
@@ -78,6 +81,7 @@ export function judge(samples, viewport, tokens) {
   const problems = [];
   for (const s of samples) {
     const what = `"${s.text}" at ${s.where}`;
+    if (s.clipped === true) problems.push(`${what}: cut off by the box around it`);
     if (s.fontPx < minPx - 0.05) {
       problems.push(`${what}: ${round1(s.fontPx)} px, under ${round1(minPx)} px`);
     }
@@ -126,9 +130,8 @@ export function collectSamples() {
     }
     return parts.join(" > ");
   };
-  const shown = (el) => {
-    let r = el.getBoundingClientRect();
-    if (r.width < 1 || r.height < 1) return false;
+  /** The part of the page an element's ancestors let it draw on. */
+  const clipBox = (el) => {
     let box = { left: 0, top: 0, right: vw, bottom: vh };
     for (let n = el.parentElement; n; n = n.parentElement) {
       if (getComputedStyle(n).overflow === "visible") continue;
@@ -140,7 +143,27 @@ export function collectSamples() {
         bottom: Math.min(box.bottom, c.bottom),
       };
     }
-    return r.right > box.left && r.left < box.right && r.bottom > box.top && r.top < box.bottom;
+    return box;
+  };
+  const shown = (r, box) =>
+    r.width >= 1 &&
+    r.height >= 1 &&
+    r.right > box.left &&
+    r.left < box.right &&
+    r.bottom > box.top &&
+    r.top < box.bottom;
+  // Two pixels of slack, for boxes laid out at fractions of a pixel.
+  const cut = (r, box) =>
+    r.left < box.left - 2 ||
+    r.top < box.top - 2 ||
+    r.right > box.right + 2 ||
+    r.bottom > box.bottom + 2;
+  const moving = (el) => {
+    for (let n = el; n; n = n.parentElement) {
+      const endless = n.getAnimations().some((a) => a.effect?.getTiming().iterations === Infinity);
+      if (endless) return true;
+    }
+    return false;
   };
   const samples = [];
   for (const el of document.body.querySelectorAll("*")) {
@@ -151,7 +174,9 @@ export function collectSamples() {
       .trim();
     if (own === "" || el.closest("svg, script, style")) continue;
     if (!el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue;
-    if (!shown(el)) continue;
+    const rect = el.getBoundingClientRect();
+    const box = clipBox(el);
+    if (!shown(rect, box)) continue;
     const style = getComputedStyle(el);
     const layers = [];
     for (let n = el; n; n = n.parentElement) {
@@ -163,6 +188,7 @@ export function collectSamples() {
       text: own.slice(0, 60),
       where: where(el),
       fontPx: parseFloat(style.fontSize),
+      clipped: cut(rect, box) && !moving(el),
       color: style.color,
       layers,
     });

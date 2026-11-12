@@ -193,7 +193,9 @@ describe("what a region shows", () => {
     const screen = new Screen(host);
     const motion = { display: { motion: "moderate", drift: false } } as const;
     const ticker = (text: string, stale: boolean) =>
-      region("rail", { widgets: [widget("agenda_now", { title: text, items: [], stale })] });
+      region("rail", {
+        widgets: [widget("agenda_now", { items: [{ name: text, state: "now" }], stale })],
+      });
     screen.draw(state([region("rail")], motion));
     screen.draw(state([ticker("Now", false)], motion));
     const incoming = screen.root.querySelector(".canccu-region--rail > :last-child");

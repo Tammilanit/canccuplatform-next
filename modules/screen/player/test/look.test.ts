@@ -42,6 +42,13 @@ describe("the built-in templates", () => {
     expect(textOf(box, "line")).toBe("Pizza orders close at 20:00");
   });
 
+  it("labels each row, with no title above the rows to say it twice", () => {
+    const items = [{ name: "Dinner", state: "now", starts_text: "18:00", ends_text: "19:15" }];
+    const box = draw("agenda_now", { title: "Now and next", items });
+    expect(box.textContent).not.toContain("Now and next");
+    expect(textOf(box, "state")).toBe("now");
+  });
+
   it("gives a now row its end and a next row its start", () => {
     const items = [
       { name: "Dinner", state: "delayed", starts_text: "18:00", ends_text: "19:15", location: "Café", delay_minutes: 15 },
@@ -59,9 +66,16 @@ describe("the built-in templates", () => {
       label: "Grand final",
       target_at: "2026-03-14T18:30:00Z",
       ends_text: "21:45",
+      starts_text: "18:30",
+      location: "Stage",
+      delay_minutes: 15,
     });
     expect(textOf(box, "kicker")).toBe("Next up");
     expect(textOf(box, "headline")).toBe("Grand final");
+    // When and where it starts, and its delay as the badge; not its end (sheet 9).
+    expect(textOf(box, "when")).toBe("18:30Stage+15 min");
+    expect(box.querySelector(".canccu-widget__delay--delayed")).not.toBeNull();
+    expect(box.textContent).not.toContain("21:45");
     const bar = box.querySelector<HTMLElement>(".canccu-widget__bar");
     expect(bar?.getAttribute("datetime")).toBe("2026-03-14T18:30:00Z");
     fillCountdowns(box, T0);
@@ -210,6 +224,51 @@ describe("the screen's own parts of the look", () => {
     const screen = new Screen(host);
     const root = screen.draw(state([region("hero")]));
     expect(root.querySelector(".canccu-rotation")).toBeNull();
+  });
+
+  describe("the hero and the rail as one", () => {
+    const semis = "2026-03-14T19:30:00Z";
+    const rows = [
+      { name: "Dinner", state: "now", starts_text: "17:30", ends_text: "19:15", starts_at: "2026-03-14T17:30:00Z", location: "Café", delay_minutes: 0 },
+      { name: "Semis", state: "delayed", starts_text: "19:30", ends_text: "21:00", starts_at: semis, location: "Stage", delay_minutes: 15 },
+    ]; // prettier-ignore
+    const next = { label: "Semis", target_at: semis, ends_text: "21:00", qr: null, stale: false, empty: false }; // prettier-ignore
+    const hero = region("hero", { widgets: [], idle: "next", idle_view: { widget: "countdown", view: next } }); // prettier-ignore
+
+    it("says when and where the hero's item starts, with its delay, and leaves it off the rail", () => {
+      const rail = region("rail", { widgets: [widget("agenda_now", { items: rows })] });
+      const root = new Screen(host).draw(state([hero, rail]));
+      const when = root.querySelector(".canccu-region--hero .canccu-widget__when");
+      expect(when?.textContent).toBe("19:30Stage+15 min");
+      const names = [...root.querySelectorAll(".canccu-region--rail .canccu-widget__name")];
+      expect(names.map((n) => n.textContent)).toEqual(["Dinner"]);
+    });
+
+    it("gives the rail's countdown of the hero's item to the rail's run of show", () => {
+      const rail = region("rail", {
+        order: [0, 1],
+        widgets: [widget("agenda_now", { items: rows }), widget("countdown", next)],
+      });
+      // The countdown's turn in the rail's rotation.
+      vi.setSystemTime(T0 + 12_000);
+      const root = new Screen(host).draw(state([hero, rail]));
+      expect(root.querySelector(".canccu-region--rail .canccu-widget--countdown")).toBeNull();
+      expect(root.querySelector(".canccu-region--rail .canccu-widget__name")?.textContent).toBe(
+        "Dinner",
+      );
+      // The hero still finds its item's place in the run of show the rail is not showing.
+      vi.setSystemTime(T0 + 2_000);
+      const other = new Screen(host).draw(state([hero, { ...rail, order: [1] }]));
+      expect(other.querySelector(".canccu-region--hero .canccu-widget__where")?.textContent).toBe(
+        "Stage",
+      );
+    });
+
+    it("keeps the rail whole when the hero shows something else", () => {
+      const rail = region("rail", { widgets: [widget("agenda_now", { items: rows })] });
+      const root = new Screen(host).draw(state([region("hero"), rail]));
+      expect(root.querySelectorAll(".canccu-region--rail .canccu-widget__name")).toHaveLength(2);
+    });
   });
 
   it("marks a widget a claim brings, so the look can frame it", () => {

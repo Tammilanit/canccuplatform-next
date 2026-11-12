@@ -1,0 +1,207 @@
+/*
+ * The rails in the Pulse's built-in look (#375, sheet 9 of docs/design): the run of show, the
+ * venue card and the QRs. On screen.css's frame and unit, in `canccu-base` like widgets.css, so a
+ * theme restyles any of it without `!important`.
+ */
+@layer canccu-base {
+  /*
+   * Now and next (mockup 02, sheet 9): a now row shows its name and end, a next row its start and
+   * place, each with its label; the rail shows two rows, the rest wait for the hub. The rows sit
+   * in the middle of the card (`safe`: never cut at the top), so one row is no card half empty.
+   */
+  .canccu-region > .canccu-widget--agenda_now {
+    justify-content: safe center;
+  }
+
+  /* The list in full colour: `__body` alone is a muted paragraph's (screen.css). */
+  .canccu-widget--agenda_now .canccu-widget__body,
+  .canccu-widget--venue_info .canccu-widget__body {
+    color: var(--canccu-color-text);
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__row {
+    grid-template-areas: "state state" "name name" "until until" "where delay";
+    row-gap: calc(0.4 * var(--canccu-u));
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__row + .canccu-widget__row {
+    padding-top: calc(2 * var(--canccu-u));
+    border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__state {
+    grid-area: state;
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__name {
+    grid-area: name;
+    font-size: calc(6.2 * var(--canccu-u));
+  }
+
+  .canccu-widget__until,
+  .canccu-widget__starts {
+    grid-area: until;
+    font-size: calc(5.5 * var(--canccu-u));
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__where {
+    grid-area: where;
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__delay {
+    grid-area: delay;
+  }
+
+  /*
+   * A delayed row shows its new start beside the badge: agenda counts a delay from the planned
+   * start (contracts/agenda.md), so the delay is about when it starts, running or not.
+   */
+  .canccu-widget__row--now .canccu-widget__starts,
+  .canccu-widget__row--delayed .canccu-widget__until,
+  .canccu-widget__row--next .canccu-widget__until,
+  .canccu-widget__row--cancelled .canccu-widget__until {
+    display: none;
+  }
+
+  .canccu-widget--agenda_now .canccu-widget__row--next,
+  .canccu-widget--agenda_now .canccu-widget__row--cancelled {
+    grid-template-areas: "state state" "until where" "name name";
+    grid-template-columns: auto 1fr;
+  }
+
+  /* A delayed row reads as a next one, its badge beside the label, so two rows fit the rail. */
+  .canccu-widget--agenda_now .canccu-widget__row--delayed {
+    grid-template-areas: "state delay" "until where" "name name";
+    grid-template-columns: auto 1fr;
+  }
+
+  /* The time is what people look for; the place after it and the name under it say the rest. */
+  .canccu-widget__row--next .canccu-widget__name,
+  .canccu-widget__row--delayed .canccu-widget__name,
+  .canccu-widget__row--cancelled .canccu-widget__name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: calc(4 * var(--canccu-u));
+    font-weight: 600;
+  }
+
+  .canccu-widget__row--next .canccu-widget__where,
+  .canccu-widget__row--delayed .canccu-widget__where,
+  .canccu-widget__row--cancelled .canccu-widget__where {
+    font-size: calc(4 * var(--canccu-u));
+  }
+
+  .canccu-widget__row--next .canccu-widget__where::before,
+  .canccu-widget__row--delayed .canccu-widget__where::before {
+    content: "· ";
+  }
+
+  .canccu-widget__row--cancelled {
+    text-decoration: line-through;
+  }
+
+  .canccu-region[data-role="rail"] .canccu-widget__row:nth-child(n + 3) {
+    display: none;
+  }
+
+  .canccu-region[data-role="rail"] .canccu-widget__headline {
+    font-size: calc(6.2 * var(--canccu-u));
+  }
+
+  /*
+   * The venue card (mockup 02, sheet 9): the Wi-Fi beside the hub QR, the two parts drawn as one
+   * card. The name stays on one line, never broken inside a word: an ellipsis ends a name too long.
+   */
+  .canccu-widget--venue_info .canccu-widget__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .canccu-widget--venue_info .canccu-widget__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: calc(5.1 * var(--canccu-u));
+  }
+
+  /*
+   * The parts split the rail's columns evenly (contracts/screen.md, Header and hub QR); the seam
+   * moves `--canccu-venue-seam` into the QR's half, which needs only the code's width. Margins,
+   * not offsets: they move an edge whether a theme places the widget absolutely or in the flow.
+   */
+  .canccu-region--venue_rail > .canccu-widget {
+    margin-right: calc(-1 * var(--canccu-venue-seam));
+    padding-right: calc(1 * var(--canccu-u));
+    border-right: 0;
+    border-radius: var(--canccu-card-radius) 0 0 var(--canccu-card-radius);
+  }
+
+  .canccu-region--venue_rail-2 > .canccu-widget {
+    margin-left: calc(var(--canccu-venue-seam) - var(--canccu-gap));
+    padding-inline: calc(1.2 * var(--canccu-u));
+    border-left: 0;
+    border-radius: 0 var(--canccu-card-radius) var(--canccu-card-radius) 0;
+  }
+
+  .canccu-region--venue_rail,
+  .canccu-region--venue_rail-2 {
+    --canccu-venue-seam: calc(4 * var(--canccu-u));
+  }
+
+  .canccu-widget--qr .canccu-widget__qr,
+  .canccu-widget--checkin_qr .canccu-widget__qr {
+    flex-direction: column;
+    gap: calc(1.2 * var(--canccu-u));
+    text-align: center;
+  }
+
+  .canccu-widget--qr,
+  .canccu-widget--checkin_qr {
+    align-items: center;
+  }
+
+  .canccu-widget--qr .canccu-widget__code,
+  .canccu-widget--checkin_qr .canccu-widget__code {
+    height: auto;
+    width: min(100%, calc(18 * var(--canccu-u)));
+  }
+
+  /* One line under the code (sheet 9), in sentence case: capitals and spacing would wrap it. */
+  .canccu-widget--qr .canccu-widget__caption,
+  .canccu-widget--checkin_qr .canccu-widget__caption {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .canccu-widget--checkin_qr .canccu-widget__bar {
+    width: min(100%, calc(18 * var(--canccu-u)));
+  }
+
+  /* A QR in the hero is the whole card (mockup 03's entrance): large, in the middle. */
+  .canccu-region[data-role="hero"] > .canccu-widget--qr,
+  .canccu-region[data-role="hero"] > .canccu-widget--checkin_qr {
+    justify-content: center;
+  }
+
+  /* A width of its own, not a share: the figure around the code takes its width from the code. */
+  .canccu-region[data-role="hero"] > .canccu-widget--qr .canccu-widget__code,
+  .canccu-region[data-role="hero"] > .canccu-widget--checkin_qr .canccu-widget__code,
+  .canccu-region[data-role="hero"] > .canccu-widget--checkin_qr .canccu-widget__bar {
+    width: calc(44 * var(--canccu-u));
+    max-width: 100%;
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--qr .canccu-widget__caption,
+  .canccu-region[data-role="hero"] > .canccu-widget--checkin_qr .canccu-widget__caption {
+    font-size: calc(4.4 * var(--canccu-u));
+  }
+
+  /* A check-in code past its time is dropped (widget.ts, shownView): no blank square in its place. */
+  .canccu-widget--checkin_qr.canccu-is-empty .canccu-widget__code,
+  .canccu-widget--checkin_qr.canccu-is-empty .canccu-widget__bar {
+    display: none;
+  }
+}

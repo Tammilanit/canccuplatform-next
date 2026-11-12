@@ -233,9 +233,11 @@ body.canccu-surface--screen {
   height: calc(max(32px, 8vmin) * 1.7);
 }
 
-/* While offline, packages/ui's marker takes the top right corner: the header moves down under it. */
-body.canccu-is-offline .canccu-frame,
-body.canccu-is-offline .canccu-layout {
+/*
+ * While offline, packages/ui's marker takes the top right corner: a frame's header moves down
+ * under it. The Pulse keeps its place and makes room in its header instead (widgets.css).
+ */
+body.canccu-is-offline .canccu-frame {
   padding-top: calc(max(8px, 1.5vmin) + max(16px, 3.9vmin) * 1.7 + 1vmin);
 }
 

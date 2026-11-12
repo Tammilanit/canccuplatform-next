@@ -6,7 +6,7 @@
  * 3.4u, 33 px at 1080p, and what people look for from the back (times, names) is 5.5u or more.
  * Colours, fonts and sizes are the theme's custom properties; all of it sits in `canccu-base`,
  * below the theme's layer, so a theme restyles any of it without `!important`. Claims, media and
- * embeds: claims.css; each widget's own look: widgets.css.
+ * embeds: claims.css; each widget's own look: widgets.css and rail.css.
  */
 /*
  * The unit, measured once on the layout's children and inherited as pixels: a bare `cqmin` reads
@@ -153,7 +153,8 @@
     color: var(--canccu-color-text-muted);
   }
 
-  .canccu-widget__count {
+  /* Pinned to the bottom of its card; `.canccu-widget p` above would reset a lone class's margin. */
+  .canccu-widget .canccu-widget__count {
     margin-top: auto;
     display: flex;
     align-items: baseline;

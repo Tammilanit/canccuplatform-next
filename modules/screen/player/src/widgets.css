@@ -1,8 +1,8 @@
 /*
  * Each widget's own look in the Pulse's built-in look (#375: mockups 02–04 of the step 3 brief,
- * sheet 9 of docs/design): the header, the hero, the run of show, the venue card, the QRs and the
- * ticker. On screen.css's frame, type scale and unit (`--canccu-u`), and in `canccu-base` like it,
- * so a theme restyles any of it without `!important`.
+ * sheet 9 of docs/design): the header, the hero and the ticker (the run of show, the venue card
+ * and the QRs: rail.css). On screen.css's frame, type scale and unit (`--canccu-u`), and in
+ * `canccu-base` like it, so a theme restyles any of it without `!important`.
  */
 @layer canccu-base {
   /*
@@ -91,8 +91,26 @@
   }
 
   /*
+   * Offline (sheet 9): packages/ui's marker sits in the header's row, in place of the date, and
+   * nothing moves. ui.css fixes it to the screen's top right corner, at most 40 % of the short side
+   * wide ("offline since 13:20" at 3.9 %); the clock's box ends left of it (a margin, which no
+   * theme's padding undoes). On a portrait screen the header is two rows high and the marker sits
+   * above its text, so nothing changes there.
+   */
+  @media (orientation: landscape) {
+    body.canccu-is-offline .canccu-region > .canccu-widget--clock {
+      margin-right: calc(40vmin - var(--canccu-safe-inset));
+    }
+
+    body.canccu-is-offline .canccu-widget--clock .canccu-widget__meta {
+      display: none;
+    }
+  }
+
+  /*
    * The hero: one large card on a glow of the theme's two colours (mockup 02). A countdown (the
-   * idle `next`) stacks its kicker, headline and end at the top and its count at the bottom.
+   * idle `next`) stacks its kicker, headline and when and where at the top, and its count and bar
+   * at the bottom (sheet 9).
    */
   .canccu-region[data-role="hero"] > .canccu-widget {
     justify-content: flex-start;
@@ -112,6 +130,34 @@
 
   .canccu-region[data-role="hero"] .canccu-widget--countdown .canccu-widget__bar {
     margin-top: calc(1.4 * var(--canccu-u));
+  }
+
+  /*
+   * A countdown's start, place and delay (hero-rail.ts): the time strong, the place after it. It
+   * grows, so the count and bar sit at the bottom even under a theme that resets every
+   * paragraph's margin (the count's `margin-top: auto`).
+   */
+  .canccu-widget__when {
+    flex: 1 0 auto;
+    align-content: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: calc(1.6 * var(--canccu-u));
+    row-gap: calc(0.6 * var(--canccu-u));
+  }
+
+  .canccu-widget__when .canccu-widget__where {
+    font-size: calc(4.4 * var(--canccu-u));
+  }
+
+  .canccu-widget__when .canccu-widget__starts + .canccu-widget__where::before {
+    content: "· ";
+  }
+
+  .canccu-widget__when .canccu-widget__delay {
+    align-self: center;
+    font-size: calc(4 * var(--canccu-u));
   }
 
   /* The hero's rotation marks (screen.ts): a bar through the shown widget's time and its dots. */
@@ -142,182 +188,6 @@
 
   .canccu-region:has(> .canccu-rotation) > .canccu-widget {
     padding-bottom: calc(7 * var(--canccu-u));
-  }
-
-  /*
-   * Now and next (mockup 02, sheet 9): a now row shows its name and end, a next row its start and
-   * place, each with its label; the rail shows two rows, the rest wait for the hub.
-   */
-  .canccu-region > .canccu-widget--agenda_now {
-    justify-content: flex-start;
-  }
-
-  .canccu-widget--agenda_now > .canccu-widget__title {
-    display: none;
-  }
-
-  .canccu-widget--agenda_now .canccu-widget__row {
-    grid-template-areas: "state state" "name name" "until until" "where delay";
-    row-gap: calc(0.4 * var(--canccu-u));
-  }
-
-  .canccu-widget--agenda_now .canccu-widget__row + .canccu-widget__row {
-    padding-top: calc(2 * var(--canccu-u));
-    border-top: var(--canccu-border-width) solid var(--canccu-color-border);
-  }
-
-  .canccu-widget--agenda_now .canccu-widget__state {
-    grid-area: state;
-  }
-
-  .canccu-widget--agenda_now .canccu-widget__name {
-    grid-area: name;
-    font-size: calc(6.2 * var(--canccu-u));
-  }
-
-  .canccu-widget__until,
-  .canccu-widget__starts {
-    grid-area: until;
-    font-size: calc(5.5 * var(--canccu-u));
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .canccu-widget--agenda_now .canccu-widget__where {
-    grid-area: where;
-  }
-
-  .canccu-widget--agenda_now .canccu-widget__delay {
-    grid-area: delay;
-  }
-
-  /*
-   * A delayed row shows its new start beside the badge: agenda counts a delay from the planned
-   * start (contracts/agenda.md), so the delay is about when it starts, running or not.
-   */
-  .canccu-widget__row--now .canccu-widget__starts,
-  .canccu-widget__row--delayed .canccu-widget__until,
-  .canccu-widget__row--next .canccu-widget__until,
-  .canccu-widget__row--cancelled .canccu-widget__until {
-    display: none;
-  }
-
-  .canccu-widget--agenda_now .canccu-widget__row--next,
-  .canccu-widget--agenda_now .canccu-widget__row--cancelled {
-    grid-template-areas: "state state" "until where" "name name";
-    grid-template-columns: auto 1fr;
-  }
-
-  /* A delayed row reads as a next one, its badge beside the label, so two rows fit the rail. */
-  .canccu-widget--agenda_now .canccu-widget__row--delayed {
-    grid-template-areas: "state delay" "until where" "name name";
-    grid-template-columns: auto 1fr;
-  }
-
-  .canccu-widget__row--next .canccu-widget__name,
-  .canccu-widget__row--delayed .canccu-widget__name,
-  .canccu-widget__row--cancelled .canccu-widget__name {
-    font-size: calc(3.4 * var(--canccu-u));
-    font-weight: 400;
-  }
-
-  .canccu-widget__row--next .canccu-widget__where,
-  .canccu-widget__row--delayed .canccu-widget__where,
-  .canccu-widget__row--cancelled .canccu-widget__where {
-    font-size: calc(5.5 * var(--canccu-u));
-    font-weight: 700;
-    color: var(--canccu-color-text);
-  }
-
-  .canccu-widget__row--next .canccu-widget__where::before,
-  .canccu-widget__row--delayed .canccu-widget__where::before {
-    content: "· ";
-  }
-
-  .canccu-widget__row--cancelled {
-    text-decoration: line-through;
-  }
-
-  .canccu-region[data-role="rail"] .canccu-widget__row:nth-child(n + 3) {
-    display: none;
-  }
-
-  .canccu-region[data-role="rail"] .canccu-widget__headline {
-    font-size: calc(6.2 * var(--canccu-u));
-  }
-
-  /* The venue card (mockup 02): the Wi-Fi beside the hub QR, the two parts drawn as one card. */
-  .canccu-widget--venue_info .canccu-widget__row {
-    grid-template-columns: 1fr;
-  }
-
-  .canccu-widget--venue_info .canccu-widget__name {
-    font-size: calc(5.6 * var(--canccu-u));
-  }
-
-  .canccu-region--venue_rail > .canccu-widget {
-    border-right: 0;
-    border-radius: var(--canccu-card-radius) 0 0 var(--canccu-card-radius);
-  }
-
-  .canccu-region--venue_rail-2 > .canccu-widget {
-    left: calc(-1 * var(--canccu-gap));
-    border-left: 0;
-    border-radius: 0 var(--canccu-card-radius) var(--canccu-card-radius) 0;
-  }
-
-  .canccu-widget--qr .canccu-widget__qr,
-  .canccu-widget--checkin_qr .canccu-widget__qr {
-    flex-direction: column;
-    gap: calc(1.2 * var(--canccu-u));
-    text-align: center;
-  }
-
-  .canccu-widget--qr,
-  .canccu-widget--checkin_qr {
-    align-items: center;
-  }
-
-  .canccu-widget--qr .canccu-widget__code,
-  .canccu-widget--checkin_qr .canccu-widget__code {
-    height: auto;
-    width: min(100%, calc(22 * var(--canccu-u)));
-  }
-
-  .canccu-widget--qr .canccu-widget__caption,
-  .canccu-widget--checkin_qr .canccu-widget__caption {
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .canccu-widget--checkin_qr .canccu-widget__bar {
-    width: min(100%, calc(22 * var(--canccu-u)));
-  }
-
-  /* A QR in the hero is the whole card (mockup 03's entrance): large, in the middle. */
-  .canccu-region[data-role="hero"] > .canccu-widget--qr,
-  .canccu-region[data-role="hero"] > .canccu-widget--checkin_qr {
-    justify-content: center;
-  }
-
-  /* A width of its own, not a share: the figure around the code takes its width from the code. */
-  .canccu-region[data-role="hero"] > .canccu-widget--qr .canccu-widget__code,
-  .canccu-region[data-role="hero"] > .canccu-widget--checkin_qr .canccu-widget__code,
-  .canccu-region[data-role="hero"] > .canccu-widget--checkin_qr .canccu-widget__bar {
-    width: calc(44 * var(--canccu-u));
-    max-width: 100%;
-  }
-
-  .canccu-region[data-role="hero"] > .canccu-widget--qr .canccu-widget__caption,
-  .canccu-region[data-role="hero"] > .canccu-widget--checkin_qr .canccu-widget__caption {
-    font-size: calc(4.4 * var(--canccu-u));
-  }
-
-  /* A check-in code past its time is dropped (widget.ts, shownView): no blank square in its place. */
-  .canccu-widget--checkin_qr.canccu-is-empty .canccu-widget__code,
-  .canccu-widget--checkin_qr.canccu-is-empty .canccu-widget__bar {
-    display: none;
   }
 
   /* The ticker: one calm line (L13) behind its label, fading between texts. */

@@ -8,6 +8,7 @@ import { claimEnd, claimOf, claimShown } from "./claims.js";
 import type { ClaimState } from "./claims.js";
 import { driftAt, effectiveMotion, FADE_MS } from "./display.js";
 import type { Motion } from "./display.js";
+import { agendaOf, joinHeroAndRail } from "./hero-rail.js";
 import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
 import type { Layout, Region, ScreenState } from "./state.js";
@@ -180,8 +181,18 @@ export class Screen {
     const takeover = full !== null && !full.hidden && claimShown(full, now) !== null;
     if (takeover) this.root.dataset.takeover = "";
     else delete this.root.dataset.takeover;
-    for (const drawn of this.regions.values()) {
-      const shown = this.choose(drawn, state, now, takeover);
+    const drawns = [...this.regions.values()];
+    const chosen = drawns.map((drawn) => this.choose(drawn, state, now, takeover));
+    const joined = joinHeroAndRail(
+      chosen.map((s, i) => {
+        const r = drawns[i]?.state;
+        if (typeof s !== "object" || s === null || r === undefined) return null;
+        return { ...s, role: r.role, agenda: agendaOf(r) };
+      }),
+      state.tenant.time_zone,
+    );
+    for (const [i, drawn] of drawns.entries()) {
+      const shown = joined[i] ?? chosen[i] ?? null;
       this.show(drawn, shown, motion);
       const widget = typeof shown === "object" && shown !== null && !shown.key.startsWith("claim:");
       drawn.marks = syncMarks(

@@ -70,6 +70,13 @@ describe("the readability check", () => {
     expect(judge([onGradient], viewport, tokens)[0]).toContain("contrast");
   });
 
+  it("fails text the box around it cuts off", () => {
+    const [problem] = judge([sample({ text: "Demo Game Cup, semis", clipped: true })], viewport, tokens); // prettier-ignore
+    expect(problem).toContain('"Demo Game Cup, semis"');
+    expect(problem).toContain("cut off");
+    expect(judge([sample({ clipped: false })], viewport, tokens)).toEqual([]);
+  });
+
   it("names the text and where it is", () => {
     const [problem] = judge([sample({ text: "Wi-Fi", where: "section.canccu-region--venue_rail > p", fontPx: 12 })], viewport, tokens); // prettier-ignore
     expect(problem).toContain('"Wi-Fi"');

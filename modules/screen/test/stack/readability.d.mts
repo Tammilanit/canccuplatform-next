@@ -8,6 +8,8 @@ export interface Sample {
   text: string;
   where: string;
   fontPx: number;
+  /** Cut by the box around it (readability.mjs, collectSamples). */
+  clipped?: boolean;
   color: Rgba;
   /** The backgrounds under the text, outermost first. */
   layers: Layer[];

@@ -5,7 +5,7 @@ const read = (file: string) =>
   readFileSync(new URL(`../player/src/${file}`, import.meta.url), "utf8");
 const css = read("screen.css");
 /** The built-in look's sheets: the frame and unit, each widget's look, the claims. */
-const SHEETS = ["screen.css", "widgets.css", "claims.css"] as const;
+const SHEETS = ["screen.css", "widgets.css", "rail.css", "claims.css"] as const;
 const looks = SHEETS.map(read).join("\n");
 /** The rules alone: the comments name what the rules must not hold. */
 const rules = looks.replace(/\/\*[\s\S]*?\*\//g, "");
