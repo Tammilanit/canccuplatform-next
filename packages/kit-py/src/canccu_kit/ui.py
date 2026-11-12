@@ -12,7 +12,6 @@ from .errors import KitError
 from .ui_base import (
     DASH,
     MENU,
-    UI_CSS,
     EventInfo,
     Viewer,
     _may,
@@ -29,7 +28,6 @@ from .ui_base import (
 __all__ = [
     "DASH",
     "MENU",
-    "UI_CSS",
     "EventInfo",
     "Viewer",
     "date_range",

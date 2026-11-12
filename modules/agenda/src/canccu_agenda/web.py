@@ -7,6 +7,7 @@ while every link a page writes carries `/agenda`.
 from __future__ import annotations
 
 import logging
+import os
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -33,6 +34,11 @@ from .deps import deps
 BASE = "/agenda"
 SIGN_IN = "/admin/sign-in"
 _STATIC = Path(__file__).resolve().parent / "static"
+# The image sets CANCCU_UI_CSS; elsewhere packages/ui sits beside this module's source (an
+# editable install), while an installed kit has no packages/ui next to it.
+UI_CSS = Path(
+    os.environ.get("CANCCU_UI_CSS", Path(__file__).resolve().parents[4] / "packages/ui/ui.css")
+)
 # The run of show's own pages, as tabs under its title (docs/design/mockups.html, sheet 2).
 TABS = (("/", "Run of show"), ("/add", "Quick add"), ("/templates", "Templates"))
 CSS = (f"{BASE}/static/ui.css", f"{BASE}/static/agenda.css")
@@ -260,7 +266,7 @@ def button(label: str, kind: str = "primary", **attrs: Any) -> str:
 
 async def static_file(request: Request) -> Response:
     name = request.path_params["name"]
-    path = ui.UI_CSS if name == "ui.css" else _STATIC / name
+    path = UI_CSS if name == "ui.css" else _STATIC / name
     if name not in ("ui.css", "agenda.css") or not path.is_file():
         raise KitError("not found", status=404, code="not_found")
     response = FileResponse(path, media_type="text/css")

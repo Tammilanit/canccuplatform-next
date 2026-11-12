@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from canccu_kit import KitError, MissingRight, TenantResolver
 from canccu_kit.rights import Session, session_id_from_cookie
-from canccu_kit.ui import UI_CSS, EventInfo, error_view, front_page, shell_page
+from canccu_kit.ui import EventInfo, error_view, front_page, shell_page
 from starlette.requests import Request
 from starlette.responses import FileResponse, HTMLResponse, JSONResponse, Response
 
@@ -19,6 +21,11 @@ log = logging.getLogger("canccu.admin")
 
 BASE = "/admin"  # Caddy serves module pages under /admin/ and strips it
 CSS = f"{BASE}/static/ui.css"
+# The image sets CANCCU_UI_CSS; elsewhere packages/ui sits beside this module's source (an
+# editable install), while an installed kit has no packages/ui next to it.
+UI_CSS = Path(
+    os.environ.get("CANCCU_UI_CSS", Path(__file__).resolve().parents[4] / "packages/ui/ui.css")
+)
 # Parts of the platform by name, not id (UX audit A2); Health keeps the id in its log column.
 PART_NAMES = {
     "admin": "Admin",

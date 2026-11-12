@@ -157,7 +157,9 @@ check "${TESTS[10]}" export_has_demo
 call GET /admin/health-view -H "cookie: $COOKIE"
 # shellcheck disable=SC2329
 lists_admin_and_hello() {
-  status_is 200 && grep -q "<td>admin</td>" "$TMP/body" && grep -q "<td>hello</td>" "$TMP/body"
+  # Each part by name, its id in the Log name column (UX audit A2).
+  status_is 200 && grep -q '<b>Admin</b>' "$TMP/body" && grep -q '<b>Test module</b>' "$TMP/body" \
+    && grep -q '<code class="canccu-muted">hello</code>' "$TMP/body"
 }
 check "${TESTS[11]}" lists_admin_and_hello
 

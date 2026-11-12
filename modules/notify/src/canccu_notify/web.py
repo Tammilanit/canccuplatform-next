@@ -8,6 +8,7 @@ Caddy serves the pages under /notify/ and strips the prefix, so routes here are 
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,11 @@ BASE = "/notify"
 TOPICS = f"{BASE}/admin/topics"
 SIGN_IN = "/admin/sign-in"
 _STATIC = Path(__file__).resolve().parent / "static"
+# The image sets CANCCU_UI_CSS; elsewhere packages/ui sits beside this module's source (an
+# editable install), while an installed kit has no packages/ui next to it.
+UI_CSS = Path(
+    os.environ.get("CANCCU_UI_CSS", Path(__file__).resolve().parents[4] / "packages/ui/ui.css")
+)
 CSS = (f"{BASE}/static/ui.css", f"{BASE}/static/notify.css")
 log = logging.getLogger("canccu.notify")
 CHANNEL_LABELS = {"push": "Push", "discord_dm": "Discord DM"}
@@ -190,7 +196,7 @@ def button(label: str, kind: str = "primary") -> str:
 
 async def static_file(request: Request) -> Response:
     name = request.path_params["name"]
-    path = ui.UI_CSS if name == "ui.css" else _STATIC / name
+    path = UI_CSS if name == "ui.css" else _STATIC / name
     if name not in ("ui.css", "notify.css") or not path.is_file():
         raise KitError("not found", status=404, code="not_found")
     response = FileResponse(path, media_type="text/css")

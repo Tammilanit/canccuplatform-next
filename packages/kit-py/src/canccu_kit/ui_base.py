@@ -4,19 +4,11 @@ badge. canccu_kit.ui draws the pages from them and re-exports them for the modul
 from __future__ import annotations
 
 import html
-import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Protocol
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
-
-# The stylesheet each module serves; its image sets CANCCU_UI_CSS, since an installed kit has no
-# packages/ui beside it.
-UI_CSS = Path(
-    os.environ.get("CANCCU_UI_CSS", Path(__file__).resolve().parents[3] / "ui" / "ui.css")
-)
 
 # packages/ui/src/menu.json, which tests/test_ui.py holds this copy to.
 MENU: dict[str, Any] = {
