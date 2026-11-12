@@ -142,7 +142,7 @@ export interface CheckEnv {
 export class CheckPage {
   /** Read before anything on the page could have been tapped. */
   private readonly withoutTap = audioSettled();
-  private readonly list = el("ul", "canccu-check");
+  private readonly list = el("ul", "canccu-selfcheck");
   /** The latest check started; a tap's check may overlap the timed one, and the later wins. */
   private latest = 0;
 
@@ -153,7 +153,7 @@ export class CheckPage {
     page.dataset.frame = "check";
     const head = frameHead({ where: "Kiosk check" });
     const body = el("section", "canccu-frame__body");
-    const button = el("button", "canccu-check__unlock", "Tap to test the sound");
+    const button = el("button", "canccu-selfcheck__unlock", "Tap to test the sound");
     button.type = "button";
     button.addEventListener("click", () => {
       void unlockAudio().then(() => {
@@ -194,11 +194,14 @@ export class CheckPage {
     });
     this.list.replaceChildren(
       ...rows.map((r) => {
-        const row = el("li", `canccu-check__row canccu-check__row--${r.ok ? "ok" : "warn"}`);
+        const row = el(
+          "li",
+          `canccu-selfcheck__row canccu-selfcheck__row--${r.ok ? "ok" : "warn"}`,
+        );
         row.append(
-          el("span", "canccu-check__mark", r.ok ? "✓" : "!"),
-          el("span", "canccu-check__name", r.name),
-          el("span", "canccu-check__value", r.value),
+          el("span", "canccu-selfcheck__mark", r.ok ? "✓" : "!"),
+          el("span", "canccu-selfcheck__name", r.name),
+          el("span", "canccu-selfcheck__value", r.value),
         );
         return row;
       }),

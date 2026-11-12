@@ -242,7 +242,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await page.goto(at(view === "check" ? "/screen/check" : "/screen/"));
       const ready = {
         pairing: ".canccu-pairing-code",
-        check: ".canccu-check__row",
+        check: ".canccu-selfcheck__row",
         unreachable: ".canccu-frame__foot:not(:empty)",
       };
       await page.waitForSelector(ready[view] ?? `.canccu-frame--${view}`);

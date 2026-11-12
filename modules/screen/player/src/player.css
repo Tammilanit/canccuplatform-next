@@ -300,7 +300,8 @@ body:has(.canccu-frame--check) {
   text-align: left;
 }
 
-.canccu-check {
+/* Not `canccu-check`: that is the theming contract's checkbox, whose fixed size would clip this list. */
+.canccu-selfcheck {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -310,28 +311,28 @@ body:has(.canccu-frame--check) {
   font-size: 4vmin;
 }
 
-.canccu-check__row {
+.canccu-selfcheck__row {
   display: contents;
 }
 
-.canccu-check__mark {
+.canccu-selfcheck__mark {
   font-weight: 700;
 }
 
-.canccu-check__row--ok .canccu-check__mark {
+.canccu-selfcheck__row--ok .canccu-selfcheck__mark {
   color: var(--canccu-color-status-ok);
 }
 
-.canccu-check__row--warn .canccu-check__mark,
-.canccu-check__row--warn .canccu-check__value {
+.canccu-selfcheck__row--warn .canccu-selfcheck__mark,
+.canccu-selfcheck__row--warn .canccu-selfcheck__value {
   color: var(--canccu-color-status-degraded);
 }
 
-.canccu-check__name {
+.canccu-selfcheck__name {
   color: var(--canccu-color-text-muted);
 }
 
-.canccu-check__unlock {
+.canccu-selfcheck__unlock {
   justify-self: start;
   margin-top: 3vmin;
   padding: 1.6vmin 3vmin;
