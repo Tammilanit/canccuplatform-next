@@ -88,7 +88,11 @@ def test_templates_and_formatters() -> None:
 
 def test_dedupe_by_audience_and_missing_values() -> None:
     trigger = {**schedule()["triggers"][1]}
-    data = {"item": {**reminder()["item"], "starts_at": "2026-11-20T18:00:00Z"}, "minutes": 15}
+    data = {
+        "item": {**reminder()["item"], "starts_at": "2026-11-20T18:00:00Z"},
+        "minutes": 15,
+        "announce": True,
+    }
     envelope = {"id": "e9", "type": "agenda.item.delayed", "correlation_id": "c1", "data": data}
     [c] = engine.evaluate("schedule", trigger, ["push"], {}, envelope, NOW, HELSINKI)
     assert c.dedupe_key == "schedule\x1fc1\x1fpublic"
@@ -96,6 +100,8 @@ def test_dedupe_by_audience_and_missing_values() -> None:
     del envelope["correlation_id"]
     [c] = engine.evaluate("schedule", trigger, ["push"], {}, envelope, NOW, HELSINKI)
     assert c.dedupe_key == "schedule\x1fe9\x1fpublic"
+    quiet = {**envelope, "data": {**data, "announce": False}}
+    assert engine.evaluate("schedule", trigger, ["push"], {}, quiet, NOW, HELSINKI) == []
 
 
 def test_personal_recipients_are_user_ids_only() -> None:
