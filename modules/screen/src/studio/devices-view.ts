@@ -8,6 +8,7 @@ import type { Html, Slot } from "@canccu/ui";
 import { problemsOf, shownZone, uplinkDown } from "./help.js";
 import type { SeenDevice } from "./help.js";
 import { counted, nameOf } from "./messages.js";
+import type { MessageKey } from "./messages.js";
 import { ago, clockTime, online, since, thumb } from "./views.js";
 import type { ViewContext, ZoneSummary } from "./views.js";
 
@@ -44,6 +45,12 @@ function placeLine(c: ViewContext, d: SeenDevice, { zones, all }: Fleet): string
   }
   return parts.join(" · ");
 }
+
+/** A help step in words; the restart step names the start address only when the event has one. */
+const step = (c: ViewContext, key: MessageKey): string =>
+  key === "help.offline.restart" && c.startUrl === null
+    ? c.t("help.offline.restart_plain")
+    : c.t(key, { url: c.startUrl ?? "" });
 
 function statusPart(c: ViewContext, d: SeenDevice, fleet: Fleet, uplink: boolean): Html {
   const { t } = c;
@@ -94,7 +101,7 @@ function statusPart(c: ViewContext, d: SeenDevice, fleet: Fleet, uplink: boolean
                   ${t(p.title, { device: d.name, since: seen ? clockTime(seen, c.timeZone) : "" })}
                 </p>
                 <ol>
-                  ${p.steps.map((s) => html`<li>${t(s, { url: c.startUrl })}</li>`)}
+                  ${p.steps.map((s) => html`<li>${step(c, s)}</li>`)}
                 </ol>`,
           )}
         </details>`;

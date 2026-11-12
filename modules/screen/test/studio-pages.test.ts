@@ -3,7 +3,7 @@
  * event's state, the pair dialog, the zone editor, the ticker and the page's headers.
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { DATABASE_URL, SESSIONS, call, harness, pairDevice } from "./helpers.js";
+import { DATABASE_URL, SESSIONS, TENANTS, call, context, harness, pairDevice } from "./helpers.js";
 import type { Harness } from "./helpers.js";
 
 describe.skipIf(!DATABASE_URL)("studio pages", () => {
@@ -89,6 +89,37 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect(viewer).toContain("Hall left");
     expect(viewer).not.toContain("/commands");
     expect(viewer).not.toContain('id="canccu-studio-pair"');
+  });
+
+  it("names the event's own start address in the offline steps, never the request's host", async () => {
+    // An alias of alpha, and an event that has no hostname yet.
+    TENANTS["alias.alpha.test"] = context("alpha");
+    TENANTS["bare.test"] = context("bare", { primary_hostname: null });
+    try {
+      const offline = async (host: string, name: string) => {
+        const { token } = await pairDevice(h, host, name);
+        await call(h, "POST", "/api/screen/device/heartbeat", {
+          host,
+          cookies: { canccu_device: token },
+          body: { state_version: 3, bundle_version: "b1", theme_revision: 2 },
+        });
+        h.clock.now += 120_000;
+      };
+      await offline("alpha.test", "Stage right");
+      const alias = (await page("/admin/screen/devices", "admin", "alias.alpha.test")).body;
+      expect(alias).toContain("Stage right is offline since");
+      expect(alias).toContain("Open the start address again: https://alpha.test/screen/");
+      expect(alias).not.toContain("alias.alpha.test/screen/");
+
+      await offline("bare.test", "Bar");
+      const bare = (await page("/admin/screen/devices", "admin", "bare.test")).body;
+      expect(bare).toContain("Bar is offline since");
+      expect(bare).toContain("Open the screen&#39;s start address again.");
+      expect(bare).not.toContain("bare.test/screen/");
+    } finally {
+      Reflect.deleteProperty(TENANTS, "alias.alpha.test");
+      Reflect.deleteProperty(TENANTS, "bare.test");
+    }
   });
 
   it("draws the zone editor with the zone read, its layout's regions and a true preview", async () => {

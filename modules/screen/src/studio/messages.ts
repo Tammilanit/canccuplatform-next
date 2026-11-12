@@ -93,6 +93,7 @@ const EN = {
   "help.offline.refused":
     "Does it say it is not at the venue? The venue's address changed: ask the platform admin to update it, or turn off the venue check for a while in the event's settings.",
   "help.offline.restart": "Still dark? Open the start address again: {url}",
+  "help.offline.restart_plain": "Still dark? Open the screen's start address again.",
   "help.offline.catches_up": "When it is back it catches up by itself: no reload needed.",
   "help.clock_drift": "Its clock is wrong, so timed things show at the wrong moment.",
   "help.clock_drift.fix": "Set the computer's clock to set itself from the internet, then reload.",

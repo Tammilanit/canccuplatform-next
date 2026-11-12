@@ -27,9 +27,12 @@ export interface ViewContext {
   rights: ReadonlySet<string>;
   nowMs: number;
   timeZone: string;
-  /** The kiosk's start address, for the offline steps. */
-  startUrl: string;
+  /** The kiosk's start address, for the offline steps; null while the event has no hostname. */
+  startUrl: string | null;
 }
+
+export const startUrlOf = (primaryHostname: string | null): string | null =>
+  primaryHostname === null ? null : `https://${primaryHostname}/screen/`;
 
 export const zoneFrame = (key: string): string => `/screen/zones/${encodeURIComponent(key)}`;
 

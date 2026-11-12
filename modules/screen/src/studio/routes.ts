@@ -41,7 +41,7 @@ import { CLIENT_KEYS, translator } from "./messages.js";
 import type { MessageKey, Translate } from "./messages.js";
 import { devicesActions, devicesView } from "./devices-view.js";
 import { tickerView } from "./ticker-view.js";
-import { STUDIO, liveActions, liveView } from "./views.js";
+import { STUDIO, liveActions, liveView, startUrlOf } from "./views.js";
 import type { ViewContext } from "./views.js";
 import { zoneEditorView, zonesView } from "./zone-views.js";
 
@@ -252,7 +252,9 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       rights: request.session?.rights ?? new Set(),
       nowMs: now(),
       timeZone: tenantOf(request).time_zone,
-      startUrl: `${request.protocol}://${request.host}/screen/`,
+      // The tenant's own address, never the request's Host (contracts/tenants.md, 0013 item 10):
+      // an organiser on an alias would otherwise send kiosks to a hostname that may be retired.
+      startUrl: startUrlOf(tenantOf(request).primary_hostname),
     });
     const devices = async () => (await listDevices(deps)) as unknown as SeenDevice[];
     const page = (request: FastifyRequest, reply: FastifyReply, c: ViewContext, o: PageOptions) =>
