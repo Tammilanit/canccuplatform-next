@@ -1,48 +1,38 @@
-"""Delay (this item, or with the items after it), cancel and "show on screens now", each with its
-preview: what moves, what does not and why, and who is told (plan issue-187 D10, D14). A delay
-moves only its item unless the organiser ticks the items after it, and tells people unless they
-untick it (#388, the accepted design #382).
-
-The preview and the change share `edits.plan_delay`. A delay with following also moves items
-the preview listed, so its confirm carries the `agenda_version` it was shown at: if the run of
-show changed meanwhile, the organiser sees the new preview instead of a different change.
-"""
+"""Cancel and "show on screens now", each with its preview: what moves, what does not and why,
+and who is told (plan issue-187 D10, D14). The delay has its own page (delay_pages.py)."""
 
 from __future__ import annotations
 
 import math
 from datetime import datetime, timedelta
 from typing import Any
-from urllib.parse import urlencode
 
 from canccu_kit import KitError
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
 
-from . import announce, edits, forms, model, store, undo
-from .access import writer
-from .deps import Deps, deps
+from . import announce, edits, forms, model, undo
+from .delay_pages import as_int, day_of, preview
+from .deps import deps
 from .effective import read_channels
 from .inverse import Inverse
 from .item_pages import load_item
-from .preview import change_of, moved_line, preview_html, told, told_announce
+from .preview import change_of, preview_html, told, told_announce
 from .web import (
     BASE,
     button,
-    check,
     esc,
     field,
     hhmm,
     hidden,
     notice,
     page,
+    page_writer,
     redirect,
     text_input,
     zone_of,
 )
-
-CHIPS = (5, 10, 15, 30)
 
 
 def _day(row: Any, request: Request) -> str:
@@ -50,182 +40,8 @@ def _day(row: Any, request: Request) -> str:
     return starts.astimezone(zone_of(request)).date().isoformat()
 
 
-async def _plan(d: Deps, row: Any, minutes: int, following: bool, now: datetime) -> Any:
-    async with d.db.tenant() as conn:
-        plan = await edits.plan_delay(conn, row, minutes, following, now, lock=False)
-        version = (await store.state(conn))["agenda_version"]
-        kinds = await store.kinds(conn)
-    return plan, version, kinds
-
-
-async def _after(d: Deps, row: Any, now: datetime) -> int:
-    """How many items "Also move the items after it" would move, from the delay's own plan: which
-    items follow does not depend on the minutes, and a shift of one minute is never refused."""
-    try:
-        plan, _, _ = await _plan(d, row, 1, True, now)
-    except KitError:
-        return 0  # the item cannot be delayed; the preview says why
-    return len(plan.moves) - 1
-
-
-async def _delay_preview(
-    request: Request, row: Any, minutes: int, following: bool, announce: bool = True
-) -> tuple[str, int, int]:
-    """The preview of a delay, the `agenda_version` it shows and the number of items it moves."""
-    d = deps(request)
-    tz, now = zone_of(request), d.now()
-    plan, version, kinds = await _plan(d, row, minutes, following, now)
-    channels = await read_channels(d)
-    changed = [moved_line(r, s, e, tz) for r, s, e in plan.moves]
-    if row["starts_at"] <= now:
-        changed.insert(0, f"{row['title']} is running: its end moves, its start stays.")
-    kept = [f"{r['title']} stays at {hhmm(r['starts_at'], tz)}: {why}." for r, why in plan.kept]
-    changes = [change_of(r, kinds, channels, s) for r, s, _ in plan.moves]
-    who = told("delay", changes, now, announce=announce)
-    return preview_html(changed, kept, who), version, len(plan.moves)
-
-
-async def delay_page(request: Request) -> Response:
-    await writer(request)
-    d = deps(request)
-    row, _, _ = await load_item(d, request.path_params["item_id"])
-    q = request.query_params
-    chosen = "minutes" in q or "other" in q
-    # Unticked boxes send nothing, so the defaults hold only before the first preview.
-    following = q.get("following") == "1"
-    announcing = q.get("announce") == "1" if chosen else True
-    after = await _after(d, row, d.now())
-    base = f"{BASE}/items/{esc(row['id'])}"
-    chips = "".join(
-        button(
-            f"+{m}",
-            "primary" if q.get("minutes") == str(m) else "secondary",
-            name="minutes",
-            value=str(m),
-        )
-        for m in CHIPS
-    )
-    choose = (
-        f'<form method=get action="{base}/delay" class="canccu-agenda-form">'
-        # Enter in a field submits with the form's first button: this one sends no chip, so the
-        # typed minutes count.
-        '<button class="canccu-agenda-hidden" tabindex=-1 aria-hidden=true>Preview</button>'
-        f'<div class="canccu-agenda-chips-row">{chips}</div>'
-        '<label class="canccu-field"><span class="canccu-field__label">Other (minutes;'
-        " negative brings it forward)</span>"
-        f'<input class="canccu-input" type=number name=other min=-720 max=720'
-        f' value="{esc(q.get("other", ""))}"></label>'
-        + (
-            check(
-                "following",
-                f"Also move the {after} item{'s' if after != 1 else ''} after it",
-                following,
-                "Off: they keep their times; only this item moves.",
-            )
-            if after
-            else ""
-        )
-        + check(
-            "announce",
-            "Tell people (Discord, phones)",
-            announcing,
-            "Off: nothing is announced. Screens and the hub still show the new time.",
-        )
-        + f"{button('Preview', 'secondary')}</form>"
-    )
-    body = (
-        notice("The run of show changed meanwhile: check the preview again.", "error")
-        if q.get("changed")
-        else ""
-    )
-    body += choose
-    if chosen:
-        try:
-            minutes = edits.minutes_of(_int(q.get("minutes") or q.get("other")))
-            preview, version, count = await _delay_preview(
-                request, row, minutes, following, announcing
-            )
-        except KitError as exc:
-            body += notice(exc.message, "error")
-        else:
-            items = f"{count} item{'s' if count != 1 else ''}"
-            label = (
-                f"Delay {items} +{minutes} min"
-                if minutes > 0
-                else (f"Bring {items} forward {-minutes} min")
-            )
-            label += " and tell people" if announcing else " quietly"
-            body += preview + (
-                f'<form method=post action="{base}/delay" class="canccu-agenda-actions">'
-                + hidden(
-                    {
-                        "revision": row["revision"],
-                        "minutes": minutes,
-                        "following": "1" if following else "",
-                        "announce": "1" if announcing else "",
-                        "agenda_version": version,
-                    }
-                )
-                + button(label)
-                + "</form>"
-            )
-    return page(request, f"Delay {row['title']}", body)
-
-
-def _int(value: Any) -> Any:
-    try:
-        return int(str(value))
-    except ValueError:
-        return value  # minutes_of refuses it with the API's message
-
-
-async def delay_save(request: Request) -> Response:
-    session = await writer(request)
-    d = deps(request)
-    form = await request.form()
-    item_id = request.path_params["item_id"]
-    minutes = edits.minutes_of(_int(form.get("minutes")))
-    following = form.get("following") == "1"
-    # The confirm always sends it ("" when quiet); a form from before the choice existed told.
-    announcing = form.get("announce", "1") == "1"
-    revision = model.revision(_int(form.get("revision")))
-    shown = _int(form.get("agenda_version"))
-    inverse = Inverse()
-    try:
-        _, items = await edits.delay(
-            d,
-            session,
-            item_id,
-            revision,
-            minutes,
-            following,
-            announce=announcing,
-            expected_version=shown if isinstance(shown, int) else -1,
-            inverse=inverse,
-        )
-    except KitError as exc:
-        if exc.code != "agenda_changed":
-            raise
-        query = urlencode(
-            {
-                "minutes": minutes,
-                "following": "1" if following else "",
-                "announce": "1" if announcing else "",
-                "changed": 1,
-            }
-        )
-        return redirect(f"/items/{item_id}/delay?{query}")
-    path = f"/?day={_day_of(items[0]['starts_at'], request)}&done=delayed"
-    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
-
-
-def _day_of(value: str, request: Request) -> str:
-    when = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    return when.astimezone(zone_of(request)).date().isoformat()
-
-
 async def cancel_page(request: Request) -> Response:
-    await writer(request)
+    await page_writer(request)
     d = deps(request)
     tz, now = zone_of(request), d.now()
     row, _, kinds = await load_item(d, request.path_params["item_id"])
@@ -253,13 +69,13 @@ async def cancel_page(request: Request) -> Response:
 
 
 async def cancel_save(request: Request) -> Response:
-    session = await writer(request)
+    session = await page_writer(request)
     form = await request.form()
-    revision = model.revision(_int(form.get("revision")))
+    revision = model.revision(as_int(form.get("revision")))
     d, inverse = deps(request), Inverse()
     item_id = request.path_params["item_id"]
     item = await edits.cancel_one(d, session, item_id, revision, inverse=inverse)
-    path = f"/?day={_day_of(item['starts_at'], request)}&done=cancelled"
+    path = f"/?day={day_of(item['starts_at'], request)}&done=cancelled"
     return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
 
 
@@ -297,7 +113,7 @@ def _announce_form(row: Any, kinds: Any, channels: list[str]) -> str:
 
 
 async def show_now_page(request: Request) -> Response:
-    await writer(request)
+    await page_writer(request)
     d = deps(request)
     row, _, kinds = await load_item(d, request.path_params["item_id"])
     if row["status"] == "cancelled":
@@ -312,10 +128,10 @@ async def show_now_page(request: Request) -> Response:
         body = notice("Screens already show it in now and next; you can still announce it.")
         label = "Announce now"
     else:
-        preview, _, _ = await _delay_preview(request, row, -minutes, False)
         body = (
             "<p>Brings it forward to now with a delay, so every screen shows it in now and next"
-            " at once and its planned time stays visible.</p>" + preview
+            " at once and its planned time stays visible.</p>"
+            + await preview(request, row, -minutes)
         )
         label = "Show on screens now"
     body += (
@@ -329,7 +145,7 @@ async def show_now_page(request: Request) -> Response:
 
 
 async def show_now_save(request: Request) -> Response:
-    session = await writer(request)
+    session = await page_writer(request)
     d = deps(request)
     form = await request.form()
     row, _, _ = await load_item(d, request.path_params["item_id"])
@@ -344,7 +160,7 @@ async def show_now_save(request: Request) -> Response:
         raise model.invalid("screens already show it; tick Announce it too to announce it")
     inverse = Inverse()
     if minutes:
-        revision = model.revision(_int(form.get("revision")))
+        revision = model.revision(as_int(form.get("revision")))
         await edits.delay(d, session, row["id"], revision, -minutes, False, inverse=inverse)
     # Saved before the announcement: the move has happened whatever the announcement does, so its
     # undo is offered either way. An announcement cannot be taken back.
@@ -364,8 +180,6 @@ async def show_now_save(request: Request) -> Response:
 
 
 ROUTES = [
-    Route("/items/{item_id}/delay", delay_page, methods=["GET"]),
-    Route("/items/{item_id}/delay", delay_save, methods=["POST"]),
     Route("/items/{item_id}/cancel", cancel_page, methods=["GET"]),
     Route("/items/{item_id}/cancel", cancel_save, methods=["POST"]),
     Route("/items/{item_id}/show-now", show_now_page, methods=["GET"]),

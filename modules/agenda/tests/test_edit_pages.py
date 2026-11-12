@@ -12,7 +12,14 @@ from test_items import add
 from canccu_agenda import edits
 
 
-async def test_delay_previews_what_moves_what_stays_and_who_hears(env: Env) -> None:
+def variant(html: str, following: int, announce: int) -> str:
+    """The rows and buttons agenda.css shows when these boxes are ticked (delay_pages.py)."""
+    start = html.index(f'data-following="{following}" data-announce="{announce}"')
+    end = html.find('class="canccu-agenda-variant"', start)
+    return html[start : end if end != -1 else len(html)]
+
+
+async def test_delay_confirms_what_moves_what_stays_and_who_hears(env: Env) -> None:
     h = env.writer()
     async with env.client() as c:
         dinner = await add(c, h, starts_at=at(-30), ends_at=at(60))
@@ -23,27 +30,34 @@ async def test_delay_previews_what_moves_what_stays_and_who_hears(env: Env) -> N
         far = await add(c, h, title="Breakfast", starts_at=at(960))
         env.store.calls.clear()
         choose = await c.get(f"/items/{dinner['id']}/delay", headers=h)
-        preview = await c.get(
-            f"/items/{dinner['id']}/delay?minutes=15&following=1&announce=1", headers=h
-        )
-        alone = await c.get(f"/items/{dinner['id']}/delay?minutes=15&announce=1", headers=h)
+        confirm = await c.get(f"/items/{dinner['id']}/delay?minutes=15", headers=h)
     # Only this item by default (#388): the items after it are an option, counted; telling
     # people is the default.
     assert "Also move the 2 items after it" in choose.text
     assert 'name="following" value=1>' in choose.text
     assert 'name="announce" value=1 checked>' in choose.text
-    assert "This will change" not in choose.text
-    text = preview.text
-    assert "Dinner is running: its end moves, its start stays." in text
-    assert "Dinner ends 18:15 instead of 18:00" in text
-    assert "Semis 18:30 → 18:45" in text and "Breakfast 09:00 → 09:15" in text
-    assert "Quiet stays at 01:00: quiet hours never move with a delay." in text
-    assert "Phones: one notice per audience (everyone)" in text
-    assert "Phones stay quiet for 1 item(s) starting more than 2 h from now." in text
-    assert "Delay 3 items +15 min and tell people" in text
-    assert "Semis" not in alone.text.split("This will change")[1]
-    assert "Delay 1 item +15 min and tell people" in alone.text
-    assert env.store.calls == []  # a preview changes nothing
+    assert "Pick how long" in choose.text and "canccu-agenda-variant" not in choose.text
+    # The confirm shows at once, with the defaults ticked: no separate preview step.
+    text = confirm.text
+    assert 'name="following" value=1>' in text and 'name="announce" value=1 checked>' in text
+    assert '<h2 class="canccu-card__title">Delay it by 15 min?</h2>' in text
+    both = variant(text, 1, 1)
+    assert "Running, so its start stays; it ends <b>18:15</b> <s>18:00</s>" in both
+    assert "Semis <b>18:45</b> <s>18:30</s> · Breakfast <b>09:15</b> <s>09:00</s>" in both
+    assert "Quiet stays at 01:00: quiet hours never move with a delay." in both
+    assert "<dt>Phones</dt><dd>One notice per audience (everyone)" in both
+    assert "Quiet for 1 item(s) starting more than 2 h from now." in both
+    assert "<dt>Discord</dt><dd>A post in the event&#x27;s channel.</dd>" in both
+    assert ">Delay 3 items and tell everyone</button>" in both
+    assert ">Don't delay</a>" in both
+    alone = variant(text, 0, 1)
+    assert "<dt>Also moves</dt><dd>Nothing else moves.</dd>" in alone and "Semis" not in alone
+    assert ">Delay and tell everyone</button>" in alone
+    quietly = variant(text, 0, 0)
+    assert "<dt>Phones</dt><dd>No push, and a reminder" in quietly
+    assert ">Delay quietly</button>" in quietly
+    assert ">Delay 3 items quietly</button>" in variant(text, 1, 0)
+    assert env.store.calls == []  # a confirm changes nothing
     del quiet, far, semis
 
 
@@ -74,7 +88,8 @@ async def test_a_refused_delay_says_why_on_the_page(env: Env) -> None:
     async with env.client() as c:
         item = await add(c, h, starts_at=at(-30), ends_at=at(60))
         response = await c.get(f"/items/{item['id']}/delay?other=-90", headers=h)
-    assert "the shift would end" in response.text and "This will change" not in response.text
+    assert "the shift would end" in response.text and "<dt>Starts</dt>" not in response.text
+    assert "Delay quietly" not in response.text
 
 
 async def test_cancel_previews_then_cancels(env: Env) -> None:
@@ -86,8 +101,8 @@ async def test_cancel_previews_then_cancels(env: Env) -> None:
         again = await c.get(f"/items/{item['id']}/cancel", headers=h)
         cancelled = (await c.get(f"/api/agenda/items/{item['id']}", headers=h)).json()
     assert "Crew lunch at 17:30 is cancelled" in preview.text
-    assert "Screens: nothing; crew items never show on a screen." in preview.text
-    assert "Phones: a notice (crew only)" in preview.text
+    assert "<dt>Screens</dt><dd>Nothing; crew items never show on a screen.</dd>" in preview.text
+    assert "<dt>Phones</dt><dd>A notice (crew only)" in preview.text
     assert done.status_code == 303 and cancelled["status"] == "cancelled"
     assert again.status_code == 409 and "already cancelled" in again.text
 
@@ -102,7 +117,7 @@ async def test_show_now_brings_an_item_forward_so_screens_show_it(env: Env) -> N
         await c.post(f"/items/{quiz['id']}/show-now", data={"revision": "1"}, headers=h)
         await c.post(f"/items/{doors['id']}/show-now", data={"revision": "1"}, headers=h)
         now = (await c.get("/api/agenda/now", headers=h)).json()
-    assert "Quiz 17:45 → 17:00" in preview.text
+    assert "<dt>Starts</dt><dd><b>17:00</b> <s>17:45</s>, ends 18:00</dd>" in preview.text
     # With an end it runs now; a moment becomes the next thing, within the minute.
     assert [i["id"] for i in now["current"]] == [quiz["id"]]
     assert now["current"][0]["delay_minutes"] == -45
@@ -129,10 +144,10 @@ async def test_enter_in_other_previews_the_typed_minutes_not_a_chip(env: Env) ->
         typed = await c.get(f"/items/{item['id']}/delay?other=-20&following=1", headers=h)
         chip = await c.get(f"/items/{item['id']}/delay?minutes=15&other=-20", headers=h)
     # The form's first button, the one Enter uses, sends no chip.
-    first = form.split('class="canccu-agenda-form">')[1].split("</button>")[0]
-    assert "name=" not in first
-    assert "Bring 1 item forward 20 min" in typed.text
-    assert "Delay 1 item +15 min" in chip.text  # a tapped chip wins
+    first = form.split('canccu-agenda-choice">')[1].split("<button ")[1].split("</button>")[0]
+    assert "name=" not in first and "formmethod=get" in first
+    assert "Bring it forward 20 min?" in typed.text and ">Bring forward quietly<" in typed.text
+    assert "Delay it by 15 min?" in chip.text  # a tapped chip wins
 
 
 async def test_the_delay_refuses_a_change_of_the_agenda_under_its_lock(env: Env) -> None:

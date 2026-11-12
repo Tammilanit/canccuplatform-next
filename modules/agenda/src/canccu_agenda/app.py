@@ -19,6 +19,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from . import (
     announce,
+    delay_pages,
     edit_pages,
     edits,
     internal,
@@ -54,6 +55,7 @@ def create_app(
         + announce.ROUTES
         + kinds.ROUTES
         + item_pages.ROUTES
+        + delay_pages.ROUTES
         + edit_pages.ROUTES
     )
     routes += pages.ROUTES + quickadd.ROUTES + template_pages.ROUTES + undo.ROUTES + web.ROUTES

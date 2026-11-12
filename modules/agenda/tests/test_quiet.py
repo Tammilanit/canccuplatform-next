@@ -11,6 +11,7 @@ from typing import Any
 
 from canccu_kit import Event, tenant_scope
 from conftest import NOW, Env, at
+from test_edit_pages import variant
 from test_items import add
 from test_timers import run_at
 from test_undo import undo_id
@@ -196,16 +197,18 @@ async def test_the_delay_page_offers_a_quiet_delay(env: Env) -> None:
     async with env.client() as c:
         dinner = await add(c, h, ends_at=at(120))
         alone = await add(c, h, title="Last", starts_at=at(600))
-        quiet = await c.get(f"/items/{dinner['id']}/delay?minutes=10", headers=h)
+        quiet = await c.get(f"/items/{dinner['id']}/delay?minutes=10&chosen=1", headers=h)
         last = await c.get(f"/items/{alone['id']}/delay", headers=h)
-        form = {"revision": "1", "minutes": "10", "announce": "", "agenda_version": "2"}
+        # The confirm posts what is ticked: an unticked box sends nothing.
+        form = {"chosen": "1", "revision": "1", "minutes": "10", "agenda_version": "2"}
         done = await c.post(f"/items/{dinner['id']}/delay", data=form, headers=h)
     text = quiet.text
     assert 'name="announce" value=1>' in text  # unticked stays unticked
-    assert "People: nobody is told. No Discord post, no push" in text
-    assert "with a notice" not in text and "Phones:" not in text
-    assert "Delay 1 item +10 min quietly" in text
-    assert 'name="announce" value=""' in text  # the confirm keeps the choice
+    assert 'name="chosen" value="1"' in text
+    rows = variant(text, 0, 0)
+    assert "<dt>Discord</dt><dd>No post.</dd>" in rows
+    assert "<dt>Phones</dt><dd>No push, and a reminder that has gone out" in rows
+    assert "with a notice" not in rows and ">Delay quietly</button>" in rows
     assert "Also move the 1 item after it" in quiet.text
     assert "items after it" not in last.text and "item after it" not in last.text
     assert done.status_code == 303
@@ -234,5 +237,8 @@ async def test_the_edit_form_tells_people_unless_unticked(env: Env) -> None:
     assert 'name="announce" value=1 checked>' in edit.text
     assert "Tell people (Discord, phones)" in edit.text
     assert "Tell people" not in new.text  # an added item has nothing to announce yet
-    assert "People: nobody is told" in preview.text and "Move it quietly" in preview.text
+    assert "<dt>Discord</dt><dd>No post.</dd>" in preview.text
+    assert "Move it quietly" in preview.text
+    assert ">Save and tell everyone</button>" in edit.text and ">Save quietly</button>" in edit.text
+    assert ">Save</button>" in new.text and "Save quietly" not in new.text
     assert [e["data"]["announce"] for e in of(env, "agenda.item.changed")] == [False, True]

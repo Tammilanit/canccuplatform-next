@@ -110,6 +110,14 @@ class Env:
 
 
 HOSTS = {"a.example.test": "ev-a", "b.example.test": "ev-b"}
+# The event as GET /api/tenants/current tells it: started, and not over while the tests run.
+EVENT = {
+    "name": "Demo Event",
+    "status": "live",
+    "time_zone": "UTC",
+    "starts_at": "2026-01-02T09:00:00Z",
+    "ends_at": "2099-01-04T18:00:00Z",
+}
 
 
 @pytest.fixture
@@ -127,6 +135,11 @@ async def env() -> AsyncIterator[Env]:
     contexts = {tid: context(tid) for tid in HOSTS.values()}
 
     def registry(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/tenants/current":  # the shell's header (TenantResolver.event)
+            tid = HOSTS.get(request.headers.get("host", ""))
+            if tid is None:
+                return httpx.Response(404, json={"error": {"code": "not_found", "message": "x"}})
+            return httpx.Response(200, json={"id": tid, **EVENT})
         by_id = request.url.path.removeprefix("/internal/tenants/tenants/")
         tid = by_id if by_id in contexts else HOSTS.get(request.url.params.get("host", ""))
         if tid is None:

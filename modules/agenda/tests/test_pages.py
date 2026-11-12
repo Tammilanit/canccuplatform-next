@@ -158,7 +158,7 @@ async def test_a_move_shows_its_preview_before_it_changes_anything(env: Env) -> 
         done = await c.post(f"/items/{item['id']}/edit", data={**fields, "confirm": "1"}, headers=h)
         moved = (await c.get(f"/api/agenda/items/{item['id']}", headers=h)).json()
     assert "Dinner 18:00 → 19:00" in preview.text
-    assert "nobody is told; a move is a new plan" in preview.text
+    assert "No push; a move is a new plan." in preview.text
     assert unchanged["revision"] == 1
     assert done.status_code == 303
     assert moved["starts_at"] == at(120) and moved["planned_starts_at"] == at(120)
@@ -245,3 +245,21 @@ async def test_a_broken_revision_on_the_edit_form_is_a_refusal_not_an_error(env:
             headers=h,
         )
     assert response.status_code == 400 and "revision" in response.text
+
+
+async def test_every_agenda_page_has_the_events_header(env: Env) -> None:
+    """The shell's header names the event, its days, its state and its clock on every page, the
+    pages that write included (#390)."""
+    h = env.writer()
+    async with env.client() as c:
+        item = await add(c, h, ends_at=at(120))
+        base = f"/items/{item['id']}"
+        paths = ["/", "/add", "/items/new", "/templates", "/templates/new", base, f"{base}/edit"]
+        paths += [f"{base}/delay", f"{base}/delay?minutes=10", f"{base}/cancel", f"{base}/show-now"]
+        pages = {p: await c.get(p, headers=h) for p in paths}
+    for path, response in pages.items():
+        assert response.status_code == 200, path
+        header = response.text.split('<header class="canccu-header">')[1].split("</header>")[0]
+        assert '<span class="canccu-header__title">Demo Event</span>' in header, path
+        assert "Fri 2 Jan" in header and ">Live</span>" in header, path
+        assert 'class="canccu-clock"' in header, path

@@ -70,11 +70,16 @@ const OTHERS = [
 ];
 // The Delay and Edit views of one item (#388), next to their mockups (docs/design/mockups.html):
 // told, with the items after it, quiet, and the edit form. The items are made for the run.
+// `chosen` is what the page's own form sends: then an unticked box means off.
 const ITEM_PAGES = [
-  ["agenda-delay", "/delay?minutes=10&announce=1", DESK],
-  ["agenda-delay-following", "/delay?minutes=10&following=1&announce=1", DESK],
-  ["agenda-delay-quiet", "/delay?minutes=10", DESK],
-  ["agenda-delay-phone", "/delay?minutes=10&announce=1", PHONE],
+  ["agenda-delay", "/delay?minutes=10", DESK],
+  [
+    "agenda-delay-following",
+    "/delay?minutes=10&following=1&announce=1&chosen=1",
+    DESK,
+  ],
+  ["agenda-delay-quiet", "/delay?minutes=10&chosen=1", DESK],
+  ["agenda-delay-phone", "/delay?minutes=10", PHONE],
   ["agenda-edit", "/edit", DESK],
 ];
 // The demo event's main zone in the default theme. Every theme and the 4K sizes are #191's.
@@ -172,6 +177,15 @@ async function shot(
         .catch(() => undefined);
     if (refused.length)
       throw new Error(`its API reads answered ${refused.join(", ")}`);
+    // A phone page is shot as tall as it is, so what sticks to the bottom (the bar, an action
+    // row) sits where it does once the page is scrolled to its end, not over its middle.
+    if (fullPage && viewport.width === PHONE.width) {
+      const height = await page.evaluate(
+        () => document.documentElement.scrollHeight,
+      );
+      if (height > viewport.height)
+        await page.setViewportSize({ ...viewport, height });
+    }
     await page.screenshot({ path: `${opts.out}/${name}.png`, fullPage });
     console.log(`ok   ${name}.png  ${url}`);
     count++;

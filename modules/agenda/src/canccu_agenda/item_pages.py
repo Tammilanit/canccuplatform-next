@@ -14,7 +14,6 @@ from starlette.responses import Response
 from starlette.routing import Route
 
 from . import forms, history, items, merge, model, store, templates, undo
-from .access import writer
 from .deps import Deps, deps
 from .effective import read_channels
 from .inverse import Inverse
@@ -33,6 +32,7 @@ from .web import (
     next_minute,
     notice,
     page,
+    page_writer,
     posted_when,
     redirect,
     text_input,
@@ -45,7 +45,7 @@ def _form(values: dict[str, Any], kinds: Any, action: str, error: str = "") -> s
     revision = values.get("revision")
     return (
         (notice(error, "error") if error else "")
-        + f'<form method=post action="{action}" class="canccu-agenda-form">'
+        + f'<form method=post action="{action}" class="canccu-agenda-form canccu-agenda-choice">'
         + (hidden({"revision": revision}) if revision else "")
         + field(
             "Title",
@@ -66,8 +66,17 @@ def _form(values: dict[str, Any], kinds: Any, action: str, error: str = "") -> s
             f"{esc(values.get('description') or '')}</textarea>",
         )
         + (_announce_check(values) if revision else "")
-        + f'<div class="canccu-agenda-actions">{button("Save")}</div></form>'
+        + f'<div class="canccu-agenda-actions">{_save(bool(revision))}</div></form>'
     )
+
+
+def _save(editing: bool) -> str:
+    """An edit's button says what it does (sheet 5, "Edit has the same choice"); agenda.css shows
+    the one that matches the "Tell people" box."""
+    if not editing:
+        return button("Save")
+    told = button("Save and tell everyone", **{"data-announce": "1"})
+    return told + button("Save quietly", **{"data-announce": "0"})
 
 
 def _announce_check(values: dict[str, Any]) -> str:
@@ -116,7 +125,7 @@ async def _kinds(d: Deps) -> Any:
 
 
 async def new_page(request: Request) -> Response:
-    await writer(request)
+    await page_writer(request)
     d = deps(request)
     tz, now = zone_of(request), d.now()
     try:
@@ -149,7 +158,7 @@ async def new_page(request: Request) -> Response:
 
 
 async def add_page(request: Request) -> Response:
-    session = await writer(request)
+    session = await page_writer(request)
     d = deps(request)
     tz = zone_of(request)
     form = await request.form()
@@ -186,7 +195,7 @@ def _values_of(item: dict[str, Any], tz: ZoneInfo) -> dict[str, Any]:
 
 
 async def edit_page(request: Request) -> Response:
-    await writer(request)
+    await page_writer(request)
     d = deps(request)
     tz = zone_of(request)
     row, item, kinds = await load_item(d, request.path_params["item_id"])
@@ -195,7 +204,7 @@ async def edit_page(request: Request) -> Response:
 
 
 async def save_page(request: Request) -> Response:
-    session = await writer(request)
+    session = await page_writer(request)
     d = deps(request)
     tz = zone_of(request)
     row, item, kinds = await load_item(d, request.path_params["item_id"])

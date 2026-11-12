@@ -25,7 +25,7 @@ def change(**fields: object) -> Change:
 
 
 def test_a_delay_tells_screens_phones_once_per_audience_and_discord() -> None:
-    lines = told(
+    rows = told(
         "delay",
         [
             change(),
@@ -34,42 +34,56 @@ def test_a_delay_tells_screens_phones_once_per_audience_and_discord() -> None:
         ],
         NOW,
     )
-    assert lines == [
-        "Screens: every screen, within a second, with a notice.",
-        "Phones: one notice per audience (everyone, attendees), to those who follow the schedule"
-        " by push or Discord DM.",
-        "Discord: a post in the event's channel.",
-        "Tournament: its sessions follow (Semis).",
+    assert rows == [
+        ("Screens", "Every screen, within a second, with a notice."),
+        ("Discord", "A post in the event's channel."),
+        (
+            "Phones",
+            "One notice per audience (everyone, attendees), to those who follow the schedule"
+            " by push or Discord DM.",
+        ),
+        ("Tournament", "Its sessions follow (Semis)."),
     ]
 
 
 def test_items_more_than_two_hours_out_stay_quiet_on_phones() -> None:
-    lines = told("cancel", [change(starts_at=NOW + timedelta(minutes=121))], NOW)
-    assert "Phones stay quiet for 1 item(s) starting more than 2 h from now." in lines
-    assert not any(line.startswith("Phones: ") for line in lines)
+    rows = dict(told("cancel", [change(starts_at=NOW + timedelta(minutes=121))], NOW))
+    assert rows["Phones"] == "Quiet for 1 item(s) starting more than 2 h from now."
 
 
 def test_crew_items_never_reach_screens_or_the_channel() -> None:
-    lines = told("cancel", [change(visibility="crew", zone="stage")], NOW)
-    assert lines[0] == "Screens: nothing; crew items never show on a screen."
-    assert "Discord: a post in the event's channel." not in lines
-    assert any("(crew only)" in line for line in lines)
+    rows = dict(told("cancel", [change(visibility="crew", zone="stage")], NOW))
+    assert rows["Screens"] == "Nothing; crew items never show on a screen."
+    assert rows["Discord"] == "No post."
+    assert "(crew only)" in rows["Phones"]
 
 
 def test_zone_items_reach_only_their_zone_and_silenced_items_no_phone() -> None:
-    lines = told("delay", [change(zone="cafe", channels=())], NOW)
-    assert lines == [
-        "Screens: screens of zone cafe, within a second.",
-        "Phones: nothing; the item's channels leave phones out.",
+    assert told("delay", [change(zone="cafe", channels=())], NOW) == [
+        ("Screens", "Screens of zone cafe, within a second."),
+        ("Discord", "No post."),
+        ("Phones", "Nothing; the item's channels leave phones out."),
     ]
 
 
 def test_a_move_tells_nobody_and_quiet_hours_are_never_announced() -> None:
-    assert told("move", [change()], NOW)[1] == (
-        "Phones and Discord: nobody is told; a move is a new plan."
-    )
+    assert told("move", [change()], NOW)[1:] == [
+        ("Discord", "No post; a move is a new plan."),
+        ("Phones", "No push; a move is a new plan."),
+    ]
     assert told("delay", [change(kind="quiet_hours")], NOW) == [
-        "Screens: every screen, within a second, with a notice."
+        ("Screens", "Every screen, within a second, with a notice."),
+        ("Discord", "No post."),
+        ("Phones", "Nothing; quiet hours are never announced."),
+    ]
+
+
+def test_a_quiet_delay_tells_nobody_but_its_sessions_follow() -> None:
+    assert told("delay", [change(title="Semis", managed=True)], NOW, announce=False) == [
+        ("Screens", "Every screen, within a second."),
+        ("Discord", "No post."),
+        ("Phones", "No push, and a reminder that has gone out does not go out again."),
+        ("Tournament", "Its sessions follow (Semis)."),
     ]
 
 

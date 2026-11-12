@@ -28,7 +28,7 @@ from starlette.requests import Request
 from starlette.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from starlette.routing import Route
 
-from .access import CREW_READ, WRITE, tenant_of
+from .access import CREW_READ, WRITE, tenant_of, writer
 from .deps import deps
 
 BASE = "/agenda"
@@ -64,6 +64,14 @@ async def page_session(request: Request) -> Session:
     if not (session.has(WRITE) or session.has(CREW_READ)):
         raise MissingRight(f"needs right {WRITE} or {CREW_READ}")
     check_admin_access(ctx, request.client.host if request.client else None, tailscale_cidrs())
+    request.state.agenda_event = await event_of(request)
+    return session
+
+
+async def page_writer(request: Request) -> Session:
+    """The session of a page that writes (access.writer), with the event the shell's header names:
+    every page in the shell shows the same header (#390)."""
+    session = await writer(request)
     request.state.agenda_event = await event_of(request)
     return session
 
