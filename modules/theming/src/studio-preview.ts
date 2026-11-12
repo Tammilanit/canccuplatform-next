@@ -1,8 +1,9 @@
 /**
  * The Studio's preview (plan issue-185 D9): sample surface pages that render the draft with
  * `?canccu_theme=draft` (else the current theme), the draft's CSS they link, and the demo themes as
- * starting points (D7). The screen player and the hub do not exist yet; the preview needs only the
- * stable classes, which every later surface keeps (contracts/theming.md).
+ * starting points (D7). The hub does not exist yet; its sample needs only the stable classes, which
+ * every later surface keeps (contracts/theming.md). The screen sample is only the fallback of the
+ * brand kit's screen preview, which is screen's real player (studio-kit.ts).
  */
 import { readFile, readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
@@ -10,8 +11,8 @@ import { fileURLToPath } from "node:url";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { eventPageCsp, newNonce, requireTenant } from "@canccu/kit";
 import type { Logger, RightsChecker, SqlClient, TenantResolver } from "@canccu/kit";
-import { html, page } from "@canccu/ui";
-import type { Html, Surface } from "@canccu/ui";
+import { html, page, shellPage } from "@canccu/ui";
+import type { EventInfo, Html, Surface } from "@canccu/ui";
 import { isObject, list } from "./checks.js";
 import { compiledCss } from "./compile.js";
 import { StyleError } from "./css.js";
@@ -37,6 +38,23 @@ export interface StudioDeps {
   tenants?: Pick<TenantResolver, "event">;
 }
 
+/** The shell's view of the event, from the tenants module's public answer. */
+export async function eventOf(
+  request: FastifyRequest,
+  tenants: StudioDeps["tenants"],
+): Promise<EventInfo | undefined> {
+  const e = await tenants?.event(request.headers.host);
+  if (!e) return undefined;
+  return {
+    name: e.name,
+    status: e.status,
+    timeZone: e.time_zone ?? "UTC",
+    startsAt: e.starts_at,
+    endsAt: e.ends_at,
+    venue: e.venue?.name,
+  };
+}
+
 /** Security headers every Studio HTML response carries, the policy given. */
 export function htmlHeaders(reply: FastifyReply, csp: string): FastifyReply {
   return reply
@@ -49,7 +67,6 @@ export function htmlHeaders(reply: FastifyReply, csp: string): FastifyReply {
 /** What one preview links: the token CSS, the event CSS, the logo and the Discord colour. */
 interface Look {
   tokens: string;
-  adminTokens: string;
   css: string | undefined;
   logo: string | undefined;
   embedColor: string;
@@ -67,7 +84,6 @@ async function draftLook(c: SqlClient): Promise<Look | undefined> {
   const images = isObject(m.images) ? m.images : {};
   return {
     tokens: `${STUDIO}draft/tokens.css${v}`,
-    adminTokens: `${STUDIO}draft/admin-tokens.css${v}`,
     css: list(m.css).length > 0 ? `${STUDIO}draft/theme.css${v}` : undefined,
     logo: await draftFileUrl(c, images.logo),
     // As publish sets it: the brand's own, else the primary, alpha dropped.
@@ -80,7 +96,6 @@ async function currentLook(c: SqlClient, deps: StudioDeps): Promise<Look> {
     (await resolvedRevision(c)) ?? revisionZero(await deps.profile(requireTenant())).theme;
   return {
     tokens: theme.tokens_css_url,
-    adminTokens: theme.admin_tokens_css_url,
     css: theme.css_url,
     logo: theme.logo_url,
     embedColor: hex(theme.embed_color),
@@ -127,56 +142,75 @@ const SAMPLES: Record<string, { title: string; surface: Surface; body: () => Htm
     surface: "hub",
     body: () =>
       html`<section class="canccu-card">
-          <h2 class="canccu-card__title">Now</h2>
-          <p>Dinner, 15 minutes late</p>
-          <p><span class="canccu-badge canccu-badge--ok">ok</span></p>
+          <p class="canccu-overline">Now</p>
+          <h2 class="canccu-card__title">
+            Dinner <span class="canccu-badge canccu-badge--late">+15 min</span>
+          </h2>
+          <p>Café · until 19:15</p>
         </section>
-        <p>
-          <button class="canccu-button canccu-button--primary" type="button">Turn on alerts</button>
-          <button class="canccu-button canccu-button--secondary" type="button">Agenda</button>
-        </p>`,
-  },
-  admin: {
-    title: "Demo Event · admin",
-    surface: "admin",
-    body: () =>
-      html`<section class="canccu-card">
-        <h2 class="canccu-card__title">Settings</h2>
-        <div class="canccu-field">
-          <label class="canccu-field__label" for="p-name">Event name</label
-          ><input class="canccu-input" id="p-name" value="Demo Event" />
-          <p class="canccu-field__hint">Shown on every page.</p>
-        </div>
-        <p>
-          <button class="canccu-button canccu-button--primary" type="button">Save</button>
-          <button class="canccu-button canccu-button--danger" type="button">Delete</button>
-          <span class="canccu-badge canccu-badge--degraded">degraded</span>
-        </p>
-      </section>`,
+        <button class="canccu-button canccu-button--primary canccu-button--block" type="button">
+          Turn on alerts
+        </button>`,
   },
 };
 
-function discordCard(look: Look): Html {
+/** A whole embed as the bot posts it: Discord's own look, the event's bar colour and logo. */
+function discordCard(look: Look, event: string): Html {
   const logo =
     look.logo === undefined
       ? ""
       : html`<img class="canccu-preview-discord__logo" src="${look.logo}" alt="" />`;
   // An SVG bar, not a style attribute: the page policy allows no inline styles.
   return html`<div class="canccu-preview-discord">
-    <svg
-      class="canccu-preview-discord__bar"
-      viewBox="0 0 1 1"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      <rect width="1" height="1" fill="${look.embedColor}" />
-    </svg>
-    <div class="canccu-preview-discord__body">
-      ${logo}
-      <p class="canccu-preview-discord__title">Dinner is 15 min late</p>
-      <p>Pizza orders close at 20:00.</p>
+    <div class="canccu-preview-discord__embed">
+      <svg
+        class="canccu-preview-discord__bar"
+        viewBox="0 0 1 1"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <rect width="1" height="1" fill="${look.embedColor}" />
+      </svg>
+      <div class="canccu-preview-discord__body">
+        <p class="canccu-preview-discord__author">${logo}${event}</p>
+        <p class="canccu-preview-discord__title">Dinner is 15 min late</p>
+        <p>Now until 19:15 in the café. The semi-finals start at 19:45.</p>
+      </div>
     </div>
   </div>`;
+}
+
+/**
+ * The organiser pages as they are: the shell in the platform's own look. No organiser page links
+ * the event's tokens yet, so the preview takes none (UX audit C3: the preview shows what is).
+ */
+function organiserPage(nonce: string, event: EventInfo | undefined): Html {
+  return shellPage({
+    title: "Run of show",
+    nonce,
+    surface: "admin",
+    cssHref: `${STUDIO}static/ui.css`,
+    head: html`<link rel="stylesheet" href="${STUDIO}static/preview.css" />`,
+    event,
+    tabs: [
+      { href: "#", label: "Day", current: true },
+      { href: "#", label: "Templates" },
+    ],
+    body: html`<section class="canccu-card">
+      <h2 class="canccu-card__title">Dinner</h2>
+      <p class="canccu-muted">Café · until 19:15</p>
+      <p class="canccu-cluster">
+        <button class="canccu-button canccu-button--primary" type="button">Save</button>
+        <button class="canccu-button canccu-button--ghost" type="button">Undo</button>
+        <a href="#">A link</a>
+      </p>
+      <p class="canccu-cluster">
+        <span class="canccu-badge canccu-badge--ok">Running</span>
+        <span class="canccu-badge canccu-badge--degraded">Slow</span>
+        <span class="canccu-badge canccu-badge--down">Down</span>
+      </p>
+    </section>`,
+  });
 }
 
 function previewPage(
@@ -184,35 +218,33 @@ function previewPage(
   reply: FastifyReply,
   surface: string,
   look: Look,
+  event: EventInfo | undefined,
 ): FastifyReply {
   const nonce = newNonce();
-  const base = [`${STUDIO}static/preview.css`];
-  let body: Html;
-  let title: string;
-  let kind: Surface = "admin";
-  let links: (string | undefined)[];
-  if (surface === "discord") {
-    title = "Discord";
-    body = discordCard(look);
-    links = base;
+  const base = `${STUDIO}static/preview.css`;
+  let doc: Html;
+  if (surface === "admin") {
+    doc = organiserPage(nonce, event);
+  } else if (surface === "discord") {
+    doc = page({
+      title: "Discord",
+      nonce,
+      cssHref: `${STUDIO}static/ui.css`,
+      body: html`${stylesheet(base)}${discordCard(look, event?.name ?? "Event")}`,
+    });
   } else {
     // Own keys only: `toString` and the like are no surface.
     const sample = Object.hasOwn(SAMPLES, surface) ? SAMPLES[surface] : undefined;
     if (sample === undefined) throw notFound();
-    title = sample.title;
-    kind = sample.surface;
-    body = sample.body();
-    // Admin pages take the tokens only, never event CSS (contracts/theming.md, What applies where).
-    links = kind === "admin" ? [...base, look.adminTokens] : [...base, look.tokens, look.css];
+    doc = page({
+      title: event?.name ?? sample.title,
+      surface: sample.surface,
+      nonce,
+      cssHref: `${STUDIO}static/ui.css`,
+      ...(look.logo === undefined ? {} : { logoUrl: look.logo }),
+      body: html`${[base, look.tokens, look.css].map(stylesheet)}${sample.body()}`,
+    });
   }
-  const doc = page({
-    title,
-    surface: kind,
-    nonce,
-    cssHref: `${STUDIO}static/ui.css`,
-    ...(surface === "discord" || look.logo === undefined ? {} : { logoUrl: look.logo }),
-    body: html`${links.map(stylesheet)}${body}`,
-  });
   return htmlHeaders(reply, eventPageCsp(nonce, request.hostname, { page: "surface" })).send(
     doc.toString(),
   );
@@ -229,7 +261,8 @@ export function previewRoutes(app: FastifyInstance, deps: StudioDeps): void {
           (request.query.canccu_theme === "draft" ? await draftLook(c) : undefined) ??
           currentLook(c, deps),
       );
-      return previewPage(request, reply, request.params.surface, look);
+      const event = await eventOf(request, deps.tenants);
+      return previewPage(request, reply, request.params.surface, look, event);
     },
   );
 }

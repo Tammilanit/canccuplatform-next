@@ -14,7 +14,8 @@
 #   screen, theming, agenda and notify ask it, not admin, for GET /api/admin/session. The cookie
 #   canccu_session=demo-ci is a session with every admin right, screen's content, device (read,
 #   pair, write), ticker and zone rights (the push latency test pairs a screen and changes the
-#   ticker; the screenshots set the demo zones up and show the Screen studio), and the rights
+#   ticker; the screenshots set the demo zones up and show the Screen studio; the Theme studio's
+#   screen preview reads a zone's screens to draw it with the draft's look), and the rights
 #   of the Theme studio (all three, as an event admin holds them), the agenda and the notify pages
 #   and the check-in code, which scripts/demo-screenshots shows; any other cookie is 401
 #   not_signed_in. Every other path goes on to admin, so the modules still read their settings

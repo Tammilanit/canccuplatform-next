@@ -92,6 +92,9 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       for (const name of ["default", "terminal", "level-up"]) {
         expect(res.body).toContain(`data-starter="${name}"`);
       }
+      // Named as organisers read them, not by their slugs (UX audit C2).
+      expect(res.body).toMatch(/data-starter="level-up"[^>]*>Level-up</);
+      expect(res.body).not.toContain(">level-up<");
       expect(res.body).not.toContain("theming.embeds.write");
     });
 
@@ -107,7 +110,8 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(res.body).not.toContain("theming.embeds.write");
       expect(res.body).not.toContain('data-action="brand"');
       // The current theme is shown, not a draft.
-      expect(res.body).toContain('src="/theming/studio/preview/screen"');
+      expect(res.body).toContain('data-fallback-src="/theming/studio/preview/screen"');
+      expect(res.body).toContain('src="/theming/studio/preview/hub"');
     });
 
     it("shows the draft's brand, its colours and what was adjusted", async () => {
@@ -131,6 +135,12 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(body).toContain('value="#1e1b4b"');
       expect(body).toMatch(/<input[^>]*value="light"[^>]*checked/);
       expect(body).toContain('data-token="primary_text"');
+      // Each colour shows its colour and its hex; the made colours go by name, not token id.
+      expect(body).toMatch(
+        /<input[^>]*type="color"[^>]*data-hex-for="primary"[^>]*value="#1e1b4b"/,
+      );
+      expect(body).toContain("Text on primary");
+      expect(body).not.toMatch(/<code>[a-z_]+<\/code>/);
       // The light scheme keeps the dark primary; the accent fails 3:1 on white and is shaded.
       expect(body).toContain('data-adjusted="accent"');
       expect(body).not.toContain('data-adjusted="primary"');
@@ -138,12 +148,81 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
 
     it("frames the draft preview of the current version on four surfaces", async () => {
       const draft = await t.fresh();
+      const v = draft.draft_version;
       const body = (await page("/theming/studio/")).body;
-      for (const surface of ["screen", "hub", "admin", "discord"]) {
+      for (const surface of ["hub", "admin", "discord"]) {
         expect(body).toContain(
-          `src="/theming/studio/preview/${surface}?canccu_theme=draft&amp;v=${draft.draft_version}"`,
+          `src="/theming/studio/preview/${surface}?canccu_theme=draft&amp;v=${v}"`,
         );
       }
+      // The screen is the real player of a zone, given the draft's look; the sample is its fallback.
+      expect(body).toContain(
+        `data-fallback-src="/theming/studio/preview/screen?canccu_theme=draft&amp;v=${v}"`,
+      );
+      expect(body).toContain(`data-tokens-css-url="/theming/studio/draft/tokens.css?v=${v}"`);
+    });
+
+    it("puts the form beside the previews, Preview and Publish in the title row, Discard under the form", async () => {
+      await t.fresh();
+      const body = (await page("/theming/studio/")).body;
+      expect(body).toMatch(
+        /class="canccu-studio-kit"[\s\S]*data-action="brand"[\s\S]*data-screen-preview/,
+      );
+      const row = /<div class="canccu-cluster">([\s\S]*?)<\/div><\/div>/.exec(body)?.[1] ?? "";
+      expect(row).toMatch(/data-action="preview"[\s\S]*data-action="publish"/);
+      expect(row).not.toContain("discard");
+      // Sheet 6: Discard under the form, apart from Publish; on a phone the same two buttons
+      // share a row above the bottom bar.
+      expect(body).toMatch(
+        /class="canccu-studio-side"[\s\S]*data-action="font"[\s\S]*canccu-studio-danger-link[^>]*data-action="discard-ask"/,
+      );
+      expect(body).toMatch(
+        /class="canccu-studio-pendbar"><button[^>]*data-action="preview"[\s\S]*data-action="publish"/,
+      );
+      // Discard asks first, in a dialog of the page's own.
+      expect(body).toMatch(/<dialog[^>]*canccu-studio-dialog[\s\S]*data-action="discard"/);
+    });
+
+    it("offers the system font as the text font while the theme holds no font", async () => {
+      await t.fresh();
+      const body = (await page("/theming/studio/")).body;
+      const select = /<select[^>]*name="body"[^>]*>([\s\S]*?)<\/select>/.exec(body)?.[1] ?? "";
+      expect(select).toMatch(/<option value="" selected>System font<\/option>/);
+      expect(select.match(/<option/g)).toHaveLength(1);
+    });
+
+    it("says where the draft stands in words", async () => {
+      await t.fresh();
+      const body = (await page("/theming/studio/")).body;
+      expect(body).toContain("last changed by you");
+      expect(body).toContain("Nothing published yet");
+      for (const jargon of ["advanced mode", "Revision 0", "u_admin", "Draft version"]) {
+        expect(body).not.toContain(jargon);
+      }
+    });
+
+    it("says a clean draft is ready to publish", async () => {
+      await t.fresh();
+      const body = (await page("/theming/studio/")).body;
+      expect(body).toContain("Ready to publish");
+      expect(body).toMatch(/<button[^>]*data-action="publish"(?![^>]*disabled)[^>]*>/);
+    });
+
+    it("runs publish's check, in words, with the fix as a button (UX audit C1)", async () => {
+      const fonted = { host: "fonted.test", session: "admin" };
+      const res = await send(t.h, "POST", "/api/theming/draft", { from: "current" }, fonted);
+      expect(res.statusCode).toBe(201);
+      const body = (await get(t.h, "/theming/studio/", fonted)).body;
+      expect(body).toContain("Can&#39;t publish yet");
+      expect(body).toContain("The text font Inter isn&#39;t in the theme");
+      expect(body).toMatch(/data-action="font-system"[^>]*data-token="body"/);
+      expect(body).toMatch(/<button[^>]*data-action="publish"[^>]*disabled/);
+      // The field shows the font the problem names, and the problem sits right under it (sheet 6).
+      expect(body).toMatch(/<option value="Inter" selected>Inter<\/option>/);
+      expect(body).toMatch(
+        /data-action="font"[\s\S]*?<\/form>\s*<div class="canccu-notice canccu-notice--down"/,
+      );
+      expect(body).not.toContain("theme.yaml#");
     });
 
     it("lets a draft without CSS changes publish at once", async () => {
@@ -185,7 +264,7 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       const body = (await page("/theming/studio/")).body;
       expect(body).toMatch(/<button[^>]*data-action="publish"[^>]*disabled/);
       expect(body).toContain("images/bad.png");
-      expect(body).toContain('class="canccu-studio-problem canccu-studio-problem--error"');
+      expect(body).toContain("Can&#39;t publish yet");
     });
   });
 
@@ -197,9 +276,12 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(body).toContain('type="file"');
       expect(body).toContain('data-action="tokens"');
       expect(body).toContain('name="colors.primary"');
+      // Colours as swatches with their hex, by name (UX audit C5).
+      expect(body).toMatch(/<input[^>]*type="color"[^>]*data-hex-for="colors.text_muted"/);
+      expect(body).toContain("Muted text");
       expect(body).toContain('name="sizes.radius"');
       expect(body).toContain(`data-draft-version="${draft.draft_version}"`);
-      expect(body).toContain("No problems");
+      expect(body).toContain("Ready to publish");
     });
 
     it("offers the way back to simple only for an advanced draft", async () => {
@@ -308,5 +390,6 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
     // The kept logo is one void <input>: an end tag is invalid HTML and leaves a second input.
     expect(body).toContain('<input type="hidden" name="logo" value="images/logo.png">');
     expect(body).not.toContain("</input");
+    expect(body).not.toContain("</img");
   });
 });

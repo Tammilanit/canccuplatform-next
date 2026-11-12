@@ -1,8 +1,9 @@
 /** Publish around revision 0 and the bus: the profile's theme, `changed`, a lost event. */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { withTenant } from "@canccu/kit";
-import { DATABASE_URL, get, harness, send } from "./helpers.js";
+import { DATABASE_URL, code, get, harness, send } from "./helpers.js";
 import type { Harness } from "./helpers.js";
+import type { DraftBody } from "./drafting.js";
 
 interface Revision {
   mode: string;
@@ -19,7 +20,7 @@ describe.skipIf(!DATABASE_URL)("theming publish at revision 0", () => {
   });
   beforeEach(async () => {
     h.store.streams.clear();
-    for (const tenant of ["alpha", "venue"]) {
+    for (const tenant of ["alpha", "venue", "fonted"]) {
       await withTenant(tenant, () =>
         h.db.tenant(async (c) => {
           for (const table of ["drafts", "revisions", "file_refs", "embed_files"]) {
@@ -36,6 +37,31 @@ describe.skipIf(!DATABASE_URL)("theming publish at revision 0", () => {
       expect((await send(h, "POST", "/api/theming/draft", { from }, venue)).statusCode).toBe(201);
       return send(h, "POST", "/api/theming/draft/publish", { draft_version: 1 }, venue);
     };
+
+    it("from a profile font no package holds: the error publish names, in words (UX audit C1)", async () => {
+      const fonted = { host: "fonted.test" };
+      const res = await send(h, "POST", "/api/theming/draft", { from: "current" }, fonted);
+      expect(res.statusCode).toBe(201);
+      const problems = res.json<DraftBody>().problems;
+      expect(problems).toEqual([
+        {
+          severity: "error",
+          code: "reference_unknown",
+          path: "theme.yaml#/tokens/fonts/body",
+          message:
+            "The text font Inter isn't in the theme, so screens would fall back to another font. Use the system font, or upload Inter.",
+        },
+      ]);
+      const refused = await send(
+        h,
+        "POST",
+        "/api/theming/draft/publish",
+        { draft_version: 1 },
+        fonted,
+      );
+      expect([refused.statusCode, code(refused)]).toEqual([422, "theme_invalid"]);
+      expect(refused.json<{ error: { problems: unknown[] } }>().error.problems).toEqual(problems);
+    });
 
     it("keeps the profile's colours in a draft from current, published unchanged", async () => {
       const shown = (await get(h, "/api/theming/current", venue)).json<{

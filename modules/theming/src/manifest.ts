@@ -94,6 +94,14 @@ function missing(m: Manifest, p: PackagePaths): Problem[] {
     );
 }
 
+/** The font tokens as organisers name them (UX audit C1: problems in words). */
+const FONT_ROLES: Record<string, string> = {
+  body: "text font",
+  heading: "heading font",
+  display: "display font",
+  mono: "monospace font",
+};
+
 function unknownNames(m: Manifest): Problem[] {
   const out: Problem[] = [];
   const families = new Set([...GENERIC_FAMILIES, ...list(m.fonts).map((f) => record(f).family)]);
@@ -103,7 +111,7 @@ function unknownNames(m: Manifest): Problem[] {
         problem(
           "reference_unknown",
           `theme.yaml#/tokens/fonts/${token}`,
-          `No package font is ${family}.`,
+          `The ${FONT_ROLES[token] ?? `${token} font`} ${family} isn't in the theme, so screens would fall back to another font. Use the system font, or upload ${family}.`,
         ),
       );
     }
