@@ -39,7 +39,7 @@ describe.skipIf(!DATABASE_URL)("studio content", () => {
     await h.pool.query(
       "UPDATE screen_render_jobs SET state = 'cancelled' WHERE state IN ('queued', 'running')",
     );
-    for (let j; (j = await h.queue.take(1, h.clock.now)); ) await h.queue.release(j.tenant, j.jobId);
+    for (let j; (j = await h.queue.take(1, h.clock.now));) await h.queue.release(j.tenant, j.jobId);
     await renderer.close();
   });
 
@@ -64,7 +64,9 @@ describe.skipIf(!DATABASE_URL)("studio content", () => {
     return res.json<Asset>();
   };
   const addDeck = async (name = "Keynote.pdf"): Promise<Asset> => {
-    const res = await upload(h, "/api/screen/assets", pdfPages(seed++), name, { session: "editor" });
+    const res = await upload(h, "/api/screen/assets", pdfPages(seed++), name, {
+      session: "editor",
+    });
     expect(res.statusCode).toBe(201);
     return res.json<Asset>();
   };
@@ -175,7 +177,11 @@ describe.skipIf(!DATABASE_URL)("studio content", () => {
     const actions = h.audits
       .filter((a) => (a.target as { id?: string } | undefined)?.id === menu.id)
       .map((a) => a.action);
-    expect(actions).toEqual(["screen.asset.added", "screen.asset.replaced", "screen.asset.reverted"]);
+    expect(actions).toEqual([
+      "screen.asset.added",
+      "screen.asset.replaced",
+      "screen.asset.reverted",
+    ]);
   });
 
   it("refuses every content write without screen.content.write, and audits none of them", async () => {

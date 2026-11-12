@@ -102,12 +102,18 @@
     .querySelectorAll(".canccu-studio-thumb iframe")
     .forEach((frame) => fit.observe(frame.parentElement));
 
-  // Health and counts stay current: the page is read again and each `data-live` part replaced.
+  // Health and counts stay current: the page is read again and each `data-live` part replaced,
+  // every 10 s, or every 2 s while a part holds a `data-live-fast` mark (a deck rendering).
   const live = document.querySelectorAll("[data-live]");
   if (live.length > 0) {
+    let ticks = 0;
     setInterval(async () => {
+      ticks += 1;
       if (document.hidden) return;
-      const response = await fetch(location.pathname, { credentials: "same-origin" });
+      if (ticks % 5 !== 0 && document.querySelector("[data-live-fast]") === null) return;
+      const response = await fetch(location.pathname + location.search, {
+        credentials: "same-origin",
+      });
       if (!response.ok) return;
       const fresh = new DOMParser().parseFromString(await response.text(), "text/html");
       for (const part of document.querySelectorAll("[data-live]")) {
@@ -119,7 +125,7 @@
           if (details && open !== undefined) details.open = open;
         }
       }
-    }, 10_000);
+    }, 2_000);
   }
 
   // Pairing: by the button, or by the kiosk's QR, whose code rides in the fragment. The fragment is

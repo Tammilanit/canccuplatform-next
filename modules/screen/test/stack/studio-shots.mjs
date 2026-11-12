@@ -1,8 +1,9 @@
-// The Screen studio's screenshots (#189; mockups 06, 07, 08 and 13), taken after the screens on
+// The Screen studio's screenshots (#189, #263; mockups 06, 07, 08, 10 and 13), taken after the screens on
 // the same demo fixture (fixture.mjs) and theme, so its live views draw the Pulse the screens do.
 // Two screens play while they are taken, one landscape and one portrait, each in the browser at
 // its own size, so their heartbeats give the device cards an orientation, a size and a state.
 import { expect } from "./client.mjs";
+import { removeContent, seedContent } from "./content-fixture.mjs";
 import { saveZone } from "./fixture.mjs";
 
 const DESK = { width: 1280, height: 800 };
@@ -16,6 +17,7 @@ export const STUDIO_PAGES = [
   ["screen-devices", "/admin/screen/devices"],
   ["screen-zones", "/admin/screen/zones"],
   ["screen-zone-editor", "/admin/screen/zones/main"],
+  ["screen-content", "/admin/screen/content"],
   ["screen-ticker", "/admin/screen/ticker"],
 ].flatMap(([name, path]) => [
   [name, path, DESK],
@@ -77,7 +79,9 @@ async function reported(demo, ids) {
 export async function studioShots({ browser, demo, at, cookieOn, shot }) {
   const devices = [];
   const contexts = [];
+  let assets = [];
   try {
+    assets = await seedContent(demo);
     const hall = await demo.pair("Hall left", "main");
     devices.push(hall);
     const entrance = await demo.pair("Entrance", "entrance");
@@ -94,5 +98,6 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
   } finally {
     for (const context of contexts) await context.close();
     for (const device of devices) await demo.revoke(device.id);
+    await removeContent(demo, assets);
   }
 }

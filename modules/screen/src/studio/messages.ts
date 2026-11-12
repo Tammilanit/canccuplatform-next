@@ -3,8 +3,10 @@
  * catalogue, English first. Finnish joins in step 10; until then, and for any language without a
  * catalogue, English is used, so a page never shows a bare key.
  */
+import { CONTENT_EN } from "./content-messages.js";
 
 const EN = {
+  ...CONTENT_EN,
   "studio.title": "Screen studio",
   "studio.page": "the Screen studio",
   "studio.back": "Back to the Screen studio",
@@ -322,4 +324,37 @@ export const CLIENT_KEYS = [
   "ticker.chars",
   "error.failed",
   "error.refused",
+  "storage.used",
+  "size.b",
+  "size.kb",
+  "size.mb",
+  "size.gb",
+  "upload.progress",
+  "upload.waiting",
+  "upload.sending",
+  "upload.checking",
+  "upload.added",
+  "upload.replaced",
+  "upload.refused",
+  "upload.too_large",
+  "upload.quota",
+  "upload.failed",
+  "upload.summary",
+  "upload.all_done",
+  "upload.all_done.one",
+  "upload.show",
+  "upload.same_name",
+  "upload.keep",
+  "upload.replace",
+  "upload.pick",
+  "upload.pick_one",
+  "upload.replace_all",
+  "upload.reason_batch",
+  "upload.reason_kind",
+  "upload.only_one_used",
+  "upload.start",
+  "upload.cancel",
+  "link.added",
+  "asset.replacing",
+  "asset.replaced",
 ] as const satisfies readonly MessageKey[];

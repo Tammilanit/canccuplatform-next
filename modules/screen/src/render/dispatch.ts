@@ -85,7 +85,7 @@ async function start(
     );
     const { rows } = await c.query(
       `UPDATE screen_render_jobs SET state = 'running', attempts = attempts + 1, started_at = $2,
-         lease_until = $3, reserved_bytes = 0
+         lease_until = $3, reserved_bytes = 0, slides_done = 0
        WHERE id = $1 RETURNING ${JOB_COLUMNS}`,
       [jobId, new Date(d.now()), new Date(d.now() + LEASE_MS)],
     );
@@ -184,7 +184,7 @@ async function runJob(d: DispatchDeps, jobId: string): Promise<{ ran: boolean; s
             let held = false;
             try {
               const { rows } = await c.query(
-                `UPDATE screen_render_jobs SET reserved_bytes = $3
+                `UPDATE screen_render_jobs SET reserved_bytes = $3, slides_done = slides_done + 1
                  WHERE id = $1 AND attempts = $2 RETURNING 1`,
                 [jobId, attempt, reserved + png.length],
               );
