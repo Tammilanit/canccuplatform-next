@@ -123,8 +123,19 @@ function regionPart(
   );
   const f = `canccu-studio-r-${id}`;
   const str = (v: unknown) => (typeof v === "string" ? v : "");
-  return html`<fieldset class="canccu-card canccu-studio-region" data-region="${id}">
-    <legend class="canccu-card__title">${t("zone.region", { region: id })}</legend>
+  const names = (own ? (settings.widgets as Record<string, unknown>[]) : defaults)
+    .map((e) => (typeof e.widget === "string" ? e.widget : ""))
+    .join(", ");
+  // Closed but the hero, so the page reads as the list of regions it is; one opens to edit.
+  return html`<details
+    class="canccu-card canccu-studio-region"
+    data-region="${id}"
+    ${attrs({ open: id === "hero" })}
+  >
+    <summary>
+      <span class="canccu-card__title">${t("zone.region", { region: id })}</span
+      ><span class="canccu-small canccu-muted">${names}</span>
+    </summary>
     <div class="canccu-field canccu-field--check">
       <input
         class="canccu-check"
@@ -182,7 +193,7 @@ function regionPart(
       />
       <label class="canccu-field__label" for="${f}-skip">${t("zone.skip_empty")}</label>
     </div>
-  </fieldset>`;
+  </details>`;
 }
 
 export function zoneEditorView(

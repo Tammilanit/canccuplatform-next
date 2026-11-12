@@ -13,6 +13,7 @@ const BROWSER = Object.fromEntries(
     "FormData",
     "DOMParser",
     "IntersectionObserver",
+    "ResizeObserver",
     "CSS",
     "setTimeout",
     "setInterval",
