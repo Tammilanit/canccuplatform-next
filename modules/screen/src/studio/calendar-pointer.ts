@@ -34,9 +34,18 @@ export function snapMinuteDelta(delta: number, step = CALENDAR_SNAP_MINUTES): nu
   return Math.round(delta / step) * step;
 }
 
-/** Top and height in percent of a day column; a block stays tall enough to see and to tap. */
-export function placement(startMinute: number, endMinute: number): { top: number; height: number } {
-  const top = (startMinute / MINUTES_PER_DAY) * 100;
-  const height = ((endMinute - startMinute) / MINUTES_PER_DAY) * 100;
-  return { top, height: Math.max(height, (CALENDAR_SNAP_MINUTES / MINUTES_PER_DAY) * 100) };
+/**
+ * Top and height in percent of a column that runs from minute `from` to `to` (the whole day by
+ * default; the schedule page's axis otherwise); a block stays tall enough to see and to tap.
+ */
+export function placement(
+  startMinute: number,
+  endMinute: number,
+  from = 0,
+  to = MINUTES_PER_DAY,
+): { top: number; height: number } {
+  const length = to - from;
+  const top = ((startMinute - from) / length) * 100;
+  const height = ((endMinute - startMinute) / length) * 100;
+  return { top, height: Math.max(height, (CALENDAR_SNAP_MINUTES / length) * 100) };
 }

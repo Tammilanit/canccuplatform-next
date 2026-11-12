@@ -355,14 +355,14 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       },
     );
 
-    studio.get<{ Querystring: { zone?: string; from?: string } }>(
+    studio.get<{ Querystring: { zone?: string; from?: string; day?: string } }>(
       `${STUDIO}schedule`,
       { preHandler: pageNeeds(deps.rights, [CONTENT]) },
       async (request, reply) => {
         const c = await context(request);
-        const zones = await readZones(deps, tenantOf(request));
+        const [zones, all] = [await readZones(deps, tenantOf(request)), await devices()];
         const event = await eventOf(request, deps);
-        const view = await schedulePage(deps.db, c, event, zones, request.query);
+        const view = await schedulePage(deps.db, c, event, zones, all, request.query);
         const o = { title: "", tab: "schedule", description: c.t("schedule.desc") };
         return page(request, reply, c, { ...o, own: "studio-schedule", ...view });
       },

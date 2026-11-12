@@ -1,47 +1,65 @@
 /**
- * The Studio's schedule page (plan #190, S2–S3; mockup 09): the week calendar of the event's days
- * with one lane per zone, and beside it what plays now, the breaks and the conflicts. Read-only;
- * the window editor and "what plays at…" are #267's. The Studio's CSP refuses inline styles, so a
- * block's place goes into the page's nonce'd style block, keyed by the block's id, as numbers only.
+ * The Studio's schedule page (plan #190, S2–S3; mockup 09): one zone's week calendar on the hours
+ * that matter, a key to what it draws, and beside it what plays now, the breaks and the conflicts.
+ * Read-only; the window editor and "what plays at…" are #267's. A block says one line (playlist
+ * and time), a second when it is tall enough, and the rest on hover (its title) or tap (a
+ * popover, which needs no script). On a phone one day shows, picked with the day switch. The
+ * Studio's CSP refuses inline styles, so places go into the page's nonce'd style block, keyed by
+ * id, as numbers only.
  */
 import { attrs, dayLabel, emptyState, html, timeLabel } from "@canccu/ui";
-import type { Html, Slot } from "@canccu/ui";
+import type { Html } from "@canccu/ui";
 import type { PlaylistView } from "../content/playlists.js";
 import type { Calendar } from "../content/calendar.js";
-import type { Span, ZoneCalendar } from "../schedule/calendar.js";
-import { breakOverlaps } from "./break-overlap.js";
+import type { Axis } from "./schedule-axis.js";
 import { placement } from "./calendar-pointer.js";
-import { counted } from "./messages.js";
 import type { MessageKey } from "./messages.js";
-import type { ScheduleBlock, ScheduleModel, ScheduleRow } from "./schedule-model.js";
-import { zoneInsight } from "./schedule-insights.js";
+import type { ScheduleBlock, ScheduleModel } from "./schedule-model.js";
+import { side, when } from "./schedule-side.js";
 import { STUDIO } from "./views.js";
 import type { ViewContext, ZoneSummary } from "./views.js";
+
+/** The `zone` of the page that shows every zone. */
+export const ALL_ZONES = "all";
 
 export interface ScheduleViewData {
   model: ScheduleModel;
   calendar: Calendar;
-  /** Every zone of the event, for the filter. */
+  /** Every zone of the event, for the picker. */
   zones: readonly ZoneSummary[];
-  /** The zone shown, or every zone. */
-  zone: string | undefined;
+  /** The zone shown, or `ALL_ZONES`. */
+  zone: string;
   page: { days: string[]; prev: string | null; next: string | null };
+  /** The day a phone shows. */
+  day: string;
   playlists: ReadonlyMap<string, Pick<PlaylistView, "name" | "break">>;
 }
 
-const HOURS = Array.from({ length: 24 }, (_, h) => h);
-/** Lines per side-panel list before "and N more": the panel stays readable on a phone. */
-const LIST_MAX = 6;
+/** A block shorter than this has room for its first line only. */
+const TWO_LINES = 60;
+/** A losing stretch shorter than this is drawn but not labelled. */
+const LABELLED = 30;
 const ID = "canccu-sched-";
 
 /** A date column's label, read at noon UTC so no time zone moves it to another day. */
 const dateLabel = (date: string): string => dayLabel(`${date}T12:00:00Z`, "UTC");
 
+/** Places an element between two minutes of `within` (the axis by default), and across. */
+type Place = (
+  id: string,
+  start: number,
+  end: number,
+  o?: { across?: [number, number]; within?: [number, number] },
+) => void;
+
 export function scheduleView(c: ViewContext, d: ScheduleViewData): { body: Html; style: string } {
-  const rules: string[] = [];
-  const place = (id: string, start: number, end: number) => {
-    const p = placement(start, end);
-    rules.push(`#${id}{top:${p.top.toFixed(4)}%;height:${p.height.toFixed(4)}%}`);
+  const { axis } = d.model;
+  const rules = [`#${ID}0{--canccu-sched-hours:${(axis.endMinute - axis.startMinute) / 60}}`];
+  const place: Place = (id, start, end, o = {}) => {
+    const [from, to] = o.within ?? [axis.startMinute, axis.endMinute];
+    const p = placement(start, end, from, to);
+    const x = o.across === undefined ? "" : `;left:${pct(o.across[0])}%;width:${pct(o.across[1])}%`;
+    rules.push(`#${id}{top:${pct(p.top)}%;height:${pct(p.height)}%${x}}`);
   };
   const empty = d.model.days.every((day) => day.lanes.every((l) => l.blocks.length === 0));
   const body = html`<div class="canccu-sched">
@@ -57,7 +75,7 @@ export function scheduleView(c: ViewContext, d: ScheduleViewData): { body: Html;
               })
             : ""
         }
-        ${grid(c, d, place, rules)}
+        ${legend(c)} ${grid(c, d, place, rules)}
       </div>
       <aside class="canccu-sched__side">${side(c, d)}</aside>
     </div>
@@ -65,22 +83,26 @@ export function scheduleView(c: ViewContext, d: ScheduleViewData): { body: Html;
   return { body, style: rules.join("") };
 }
 
+const pct = (n: number): string => n.toFixed(4);
+
+function link(q: { zone: string; from: string | null; day?: string | undefined }): string {
+  const params = new URLSearchParams({ zone: q.zone });
+  if (q.from) params.set("from", q.from);
+  if (q.day !== undefined) params.set("day", q.day);
+  return `${STUDIO}schedule?${params.toString()}`;
+}
+
 function toolbar(c: ViewContext, d: ScheduleViewData): Html {
   const { t } = c;
-  const link = (q: { zone?: string | undefined; from?: string | null }) => {
-    const params = new URLSearchParams();
-    if (q.zone !== undefined) params.set("zone", q.zone);
-    if (q.from) params.set("from", q.from);
-    const query = params.toString();
-    return `${STUDIO}schedule${query === "" ? "" : `?${query}`}`;
-  };
   const from = d.page.days[0] ?? null;
-  const chip = (label: string, zone: string | undefined) =>
+  const chip = (label: string, href: string, current: boolean) =>
     html`<a${attrs({
-      class: `canccu-button canccu-button--${zone === d.zone ? "primary" : "secondary"}`,
-      href: link({ zone, from }),
-      "aria-current": zone === d.zone ? "page" : undefined,
+      class: `canccu-button canccu-button--${current ? "primary" : "secondary"}`,
+      href,
+      "aria-current": current ? "page" : undefined,
     })}>${label}</a>`;
+  const zone = (label: string, key: string) =>
+    chip(label, link({ zone: key, from }), key === d.zone);
   const step = (to: string | null, label: MessageKey, iconName: string) =>
     to === null
       ? ""
@@ -91,59 +113,110 @@ function toolbar(c: ViewContext, d: ScheduleViewData): Html {
         })}><span class="canccu-i canccu-i--${iconName}" aria-hidden="true"></span></a>`;
   const first = d.page.days[0];
   const last = d.page.days.at(-1);
+  const daySwitch =
+    d.page.days.length < 2
+      ? ""
+      : html`<nav class="canccu-cluster canccu-sched__switch" aria-label="${t("schedule.day")}">
+          ${d.page.days.map((day) =>
+            chip(dateLabel(day), link({ zone: d.zone, from, day }), day === d.day),
+          )}
+        </nav>`;
   return html`<div class="canccu-sched__bar">
-    <nav class="canccu-cluster" aria-label="${t("schedule.zone_filter")}">
-      ${chip(t("schedule.all_zones"), undefined)}${d.zones.map((z) => chip(z.name, z.key))}
-    </nav>
-    <nav class="canccu-cluster canccu-sched__days" aria-label="${t("schedule.week")}">
-      ${step(d.page.prev, "schedule.prev", "left")}
-      <strong
-        >${first === undefined ? "" : dateLabel(first)}${last !== undefined && last !== first ? ` – ${dateLabel(last)}` : ""}</strong
-      >
-      ${step(d.page.next, "schedule.next", "right")}
-    </nav>
-    <p class="canccu-small canccu-muted">${t("schedule.tz", { tz: d.calendar.time_zone })}</p>
-  </div>`;
+      <nav class="canccu-cluster canccu-sched__zones" aria-label="${t("schedule.zone_filter")}">
+        <span class="canccu-small canccu-muted">${t("schedule.zone_filter")}</span>
+        ${d.zones.map((z) => zone(z.name, z.key))}${zone(t("schedule.all_zones"), ALL_ZONES)}
+      </nav>
+      <nav class="canccu-cluster canccu-sched__days" aria-label="${t("schedule.week")}">
+        ${step(d.page.prev, "schedule.prev", "left")}
+        <strong
+          >${first === undefined ? "" : dateLabel(first)}${last !== undefined && last !== first ? ` – ${dateLabel(last)}` : ""}</strong
+        >
+        ${step(d.page.next, "schedule.next", "right")}
+      </nav>
+      <p class="canccu-small canccu-muted">${t("schedule.tz", { tz: d.calendar.time_zone })}</p>
+    </div>
+    ${daySwitch}`;
 }
 
-function grid(
-  c: ViewContext,
-  d: ScheduleViewData,
-  place: (id: string, start: number, end: number) => void,
-  rules: string[],
-): Html {
+function legend(c: ViewContext): Html {
   const { t } = c;
+  const item = (kind: string, label: string) =>
+    html`<li><span class="canccu-sched__swatch canccu-sched__swatch--${kind}"></span>${label}</li>`;
+  return html`<ul class="canccu-sched__legend" aria-label="${t("schedule.legend")}">
+    ${item("wins", t("schedule.legend_wins"))}${item("loses", t("schedule.legend_loses"))}${item(
+      "break",
+      t("schedule.breaks_band"),
+    )}
+  </ul>`;
+}
+
+/** The hour labels down the gutter: "07:00" … "23:00", "00:00" … past midnight. */
+function hours(axis: Axis): Html[] {
+  const out: Html[] = [];
+  for (let m = axis.startMinute; m < axis.endMinute; m += 60) {
+    out.push(html`<span>${String((m / 60) % 24).padStart(2, "0")}:00</span>`);
+  }
+  return out;
+}
+
+function grid(c: ViewContext, d: ScheduleViewData, place: Place, rules: string[]): Html {
+  const { t } = c;
+  const { model } = d;
   const first = d.page.days[0] ?? "";
   const last = d.page.days.at(-1) ?? "";
+  const many = d.calendar.zones.length > 1;
   let n = 0;
-  const columns = d.model.days.map((day) => {
+  const next = () => `${ID}${(n += 1)}`;
+  // One now line across its day, and one badge with the time in the gutter beside it.
+  let badge: Html | string = "";
+  let nowId = "";
+  if (model.now !== null) {
+    const top = pct(
+      placement(model.now.minute, model.now.minute, model.axis.startMinute, model.axis.endMinute)
+        .top,
+    );
+    const badgeId = next();
+    nowId = next();
+    rules.push(`#${badgeId}{top:${top}%}`, `#${nowId}{top:${top}%}`);
+    badge = html`<span${attrs({
+      id: badgeId,
+      class: `canccu-sched__now-badge${model.now.date === d.day ? "" : " canccu-sched__now-badge--off"}`,
+    })}>${t("schedule.now_line", { time: timeLabel(new Date(c.nowMs).toISOString(), c.timeZone) })}</span>`;
+  }
+  const columns = model.days.map((day) => {
     const lanes = day.lanes.map((lane) => {
       const bands = lane.breaks.map((b) => {
-        const id = `${ID}${(n += 1)}`;
+        const id = next();
         place(id, b.startMinute, b.endMinute);
-        return html`<div${attrs({ id, class: "canccu-sched__break", title: t("schedule.breaks_band") })}></div>`;
+        return html`<div${attrs({ id, class: "canccu-sched__break" })}></div>`;
       });
-      const blocks = lane.blocks.map((block) => {
-        const id = `${ID}${(n += 1)}`;
-        place(id, block.startMinute, block.endMinute);
-        return blockView(c, id, block);
-      });
-      let now: Slot = "";
-      if (d.model.now !== null && d.model.now.date === day.date) {
-        const id = `${ID}${(n += 1)}`;
-        rules.push(
-          `#${id}{top:${placement(d.model.now.minute, d.model.now.minute).top.toFixed(4)}%}`,
-        );
-        now = html`<div${attrs({ id, class: "canccu-sched__now" })}><span>${t("schedule.now_line", { time: timeLabel(new Date(c.nowMs).toISOString(), c.timeZone) })}</span></div>`;
-      }
+      const blocks = lane.blocks.map((block) => blockView(c, block, next, place));
       return html`<div class="canccu-sched__lane">
-        ${day.lanes.length > 1 ? html`<p class="canccu-sched__lane-name">${lane.zoneName}</p>` : ""}
-        <div class="canccu-sched__track">${bands}${blocks}${now}</div>
+        ${bands}
+        <div class="canccu-sched__blocks">${blocks}</div>
       </div>`;
     });
-    return html`<section class="canccu-sched__day">
-      <h2 class="canccu-sched__date">${dateLabel(day.date)}</h2>
-      <div class="canccu-sched__lanes">${lanes}</div>
+    const now =
+      model.now?.date === day.date
+        ? html`<div${attrs({ id: nowId, class: "canccu-sched__now" })}></div>`
+        : "";
+    const off = day.date === d.day ? "" : " canccu-sched__day--off";
+    // Its least width: enough for every window side by side in its busiest lane, in every lane.
+    const across = Math.max(1, ...day.lanes.flatMap((l) => l.blocks.map((b) => b.columns)));
+    const id = next();
+    rules.push(`#${id}{--canccu-sched-across:${across * day.lanes.length}}`);
+    return html`<section id="${id}" class="canccu-sched__day${off}">
+      <div class="canccu-sched__head">
+        <h2 class="canccu-sched__date">${dateLabel(day.date)}</h2>
+        ${
+          many
+            ? html`<p class="canccu-sched__lane-names">
+                ${day.lanes.map((l) => html`<span>${l.zoneName}</span>`)}
+              </p>`
+            : ""
+        }
+      </div>
+      <div class="canccu-sched__body">${lanes}${now}</div>
     </section>`;
   });
   return html`<div
@@ -152,189 +225,85 @@ function grid(
     tabindex="0"
     aria-label="${t("schedule.calendar", { first: dateLabel(first), last: dateLabel(last) })}"
   >
-    <div class="canccu-sched__grid">
-      <div class="canccu-sched__hours" aria-hidden="true">
-        ${HOURS.map((h) => html`<span>${String(h).padStart(2, "0")}:00</span>`)}
+    <div id="${ID}0" class="canccu-sched__grid${many ? " canccu-sched__grid--lanes" : ""}">
+      <div class="canccu-sched__gutter">
+        <div class="canccu-sched__head"></div>
+        <div class="canccu-sched__hours">
+          <div aria-hidden="true">${hours(model.axis)}</div>
+          ${badge}
+        </div>
       </div>
       ${columns}
     </div>
   </div>`;
 }
 
-function blockView(c: ViewContext, id: string, block: ScheduleBlock): Html {
-  const [winner, ...losers] = block.rows;
-  if (winner === undefined) return html``;
-  const times = `${timeLabel(block.startsAt, c.timeZone)}–${timeLabel(block.endsAt, c.timeZone)}`;
-  const lines = [
-    `${winner.playlistName} · ${times}`,
-    rowNote(c, winner),
-    ...losers.map((l) => `${l.playlistName}: ${c.t(`schedule.lost.${l.lostOn ?? "id"}`)}`),
-  ];
+function blockView(c: ViewContext, block: ScheduleBlock, next: () => string, place: Place): Html {
+  const { t } = c;
+  const time = (iso: string) => timeLabel(iso, c.timeZone);
+  const id = next();
+  const pop = `${id}-about`;
+  place(id, block.startMinute, block.endMinute, {
+    across: [(block.column / block.columns) * 100, 100 / block.columns],
+  });
+  const span = `${time(block.startsAt)}–${time(block.endsAt)}`;
+  const opening = block.losing[0]?.startsAt === block.startsAt ? block.losing[0] : undefined;
+  const second = [
+    t("schedule.priority", { n: block.priority }),
+    boundNote(c, block),
+    opening === undefined ? null : t("schedule.loses_to", { playlist: opening.to }),
+  ].filter((x) => x !== null);
+  const insets = block.losing.map((l) => {
+    const inset = next();
+    place(inset, l.startMinute, l.endMinute, { within: [block.startMinute, block.endMinute] });
+    const labelled = l !== opening && l.endMinute - l.startMinute >= LABELLED;
+    const label = labelled ? t("schedule.loses_to", { playlist: l.to }) : "";
+    return html`<span${attrs({ id: inset, class: "canccu-sched__lose" })}>${label}</span>`;
+  });
+  const losing = block.losing.map((l) =>
+    t("schedule.loses_at", {
+      when: `${time(l.startsAt)}–${time(l.endsAt)}`,
+      playlist: l.to,
+      rule: t(`schedule.lost.${l.lostOn}`),
+    }),
+  );
+  const notes = [
+    block.continuesBefore ? t("schedule.from_before") : null,
+    block.continuesAfter ? t("schedule.to_after") : null,
+  ].filter((x) => x !== null);
   const cls = [
     "canccu-sched__block",
-    losers.length > 0 ? "canccu-sched__block--overlap" : "",
+    block.endMinute - block.startMinute < TWO_LINES ? "canccu-sched__block--short" : "",
     block.continuesBefore ? "canccu-sched__block--from-before" : "",
     block.continuesAfter ? "canccu-sched__block--to-after" : "",
   ]
     .filter(Boolean)
     .join(" ");
-  return html`<div${attrs({ id, class: cls, title: lines.join("\n") })}>
-    <p class="canccu-sched__name">${winner.playlistName}</p>
-    <p class="canccu-sched__note">${times} · ${rowNote(c, winner)}</p>
-    ${losers.map(
-      (l) =>
-        html`<p class="canccu-sched__loser">
-          ${l.playlistName} · ${c.t(`schedule.lost.${l.lostOn ?? "id"}`)}
-        </p>`,
-    )}
-  </div>`;
-}
-
-/** Its priority, and for a bound window the item it follows. */
-function rowNote(c: ViewContext, row: ScheduleRow): string {
-  const priority = c.t("schedule.priority", { n: row.priority });
-  if (row.boundTo === null) return priority;
-  const item =
-    row.boundTo.title !== null
-      ? c.t("schedule.while", { title: row.boundTo.title })
-      : row.boundTo.crew
-        ? c.t("schedule.while_crew")
-        : c.t("schedule.while_item");
-  return `${priority} · ${item}`;
-}
-
-/** "Thu 1 Jan 13:00–14:00"; an end at midnight is 24:00 of the day it ends, as the grid draws it. */
-function when(c: ViewContext, s: Span): string {
-  const day = (iso: string) => dayLabel(iso, c.timeZone);
-  const time = (iso: string) => timeLabel(iso, c.timeZone);
-  const start = `${day(s.starts_at)} ${time(s.starts_at)}`;
-  const midnight = time(s.ends_at) === "00:00" && s.ends_at > s.starts_at;
-  const endDay = midnight ? day(new Date(Date.parse(s.ends_at) - 1).toISOString()) : day(s.ends_at);
-  const endTime = midnight ? "24:00" : time(s.ends_at);
-  return `${start}–${endDay === day(s.starts_at) ? "" : `${endDay} `}${endTime}`;
-}
-
-function side(c: ViewContext, d: ScheduleViewData): Html {
-  const { t } = c;
-  const name = (zone: ZoneCalendar, scheduleId: string | null) => {
-    const w = zone.windows.find((x) => x.schedule_id === scheduleId);
-    return d.playlists.get(w?.playlist_id ?? "")?.name ?? "";
-  };
-  const zoneName = (key: string) => d.zones.find((z) => z.key === key)?.name ?? key;
-  const range = { starts_at: d.calendar.from, ends_at: d.calendar.to };
-  const many = d.calendar.zones.length > 1;
-  const heading = (zone: ZoneCalendar) =>
-    many ? html`<h3 class="canccu-sched__zone">${zoneName(zone.zone_key)}</h3>` : "";
-
-  const nowCard =
-    d.model.now === null
-      ? ""
-      : html`<section class="canccu-card">
-          <h2 class="canccu-card__title">${t("schedule.now")}</h2>
-          ${d.calendar.zones.map((zone) => {
-            const i = zoneInsight(zone, c.nowMs, range);
-            const time = (iso: string) => timeLabel(iso, c.timeZone);
-            const plays =
-              i.now === null
-                ? null
-                : { playlist: name(zone, i.now.winner), time: time(i.now.until) };
-            const nowText =
-              i.now === null || plays === null
-                ? t("schedule.idle")
-                : i.now.overlapping === 1
-                  ? t("schedule.plays", plays)
-                  : counted(t, "schedule.plays_over", i.now.overlapping - 1, plays);
-            const next =
-              i.next === null
-                ? ""
-                : i.next.winner === null
-                  ? t("schedule.next_idle", { time: time(i.next.at) })
-                  : t("schedule.next_change", {
-                      playlist: name(zone, i.next.winner),
-                      time: time(i.next.at),
-                    });
-            return html`${heading(zone)}
-              <p>${nowText}</p>
-              ${next === "" ? "" : html`<p class="canccu-small canccu-muted">${next}</p>`}`;
-          })}
-        </section>`;
-
-  const minutes = (m: number) =>
-    `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-  const length = (s: number) =>
-    s % 60 === 0 ? t("schedule.min", { n: s / 60 }) : t("schedule.s", { n: s });
-  const breaksCard = html`<section class="canccu-card">
-    <h2 class="canccu-card__title">${t("schedule.breaks")}</h2>
-    <p class="canccu-small canccu-muted">${t("schedule.breaks_desc")}</p>
-    ${d.calendar.zones.map((zone) => {
-      const lines = zone.breaks.map((b) => {
-        const rules = d.playlists.get(b.playlist_id)?.break;
-        const hours =
-          rules?.window_start_minute == null || rules.window_end_minute == null
-            ? t("schedule.break_always")
-            : t("schedule.break_hours", {
-                start: minutes(rules.window_start_minute),
-                end: minutes(rules.window_end_minute),
-              });
-        const text = t("schedule.break", {
-          playlist: d.playlists.get(b.playlist_id)?.name ?? b.playlist_id,
-          period: length(b.period_seconds),
-          length: length(b.break_seconds),
-        });
-        return html`<li>${text} · ${hours}</li>`;
-      });
-      const overlaps = breakOverlaps(zone.breaks).map(
-        (o) =>
-          html`<li class="canccu-sched__warn">
-            ${t("schedule.break_overlap", {
-              a: d.playlists.get(o.a)?.name ?? o.a,
-              b: d.playlists.get(o.b)?.name ?? o.b,
-              when: when(c, o),
-            })}
-          </li>`,
-      );
-      return html`${heading(zone)}${
-        lines.length === 0
-          ? html`<p class="canccu-small">${t("schedule.breaks_none")}</p>`
+  const title = [`${block.playlistName} · ${span}`, second.join(" · "), ...losing].join("\n");
+  return html`<button${attrs({ id, type: "button", class: cls, popovertarget: pop, title })}>
+      ${insets}
+      <span class="canccu-sched__line"
+        ><strong>${block.playlistName}</strong> <span class="canccu-sched__time">${span}</span></span
+      >
+      <span class="canccu-sched__line canccu-sched__more">${second.join(" · ")}</span>
+    </button>
+    <div${attrs({ id: pop, class: "canccu-sched__about", popover: true })}>
+      <h3 class="canccu-card__title">${block.playlistName}</h3>
+      <p>${when(c, { starts_at: block.startsAt, ends_at: block.endsAt })}</p>
+      <p class="canccu-small canccu-muted">${[...second, ...notes].join(" · ")}</p>
+      ${
+        losing.length === 0
+          ? ""
           : html`<ul class="canccu-sched__list">
-              ${lines}${overlaps}
+              ${losing.map((x) => html`<li>${x}</li>`)}
             </ul>`
-      }`;
-    })}
-  </section>`;
+      }
+    </div>`;
+}
 
-  const conflictsCard = html`<section class="canccu-card">
-    <h2 class="canccu-card__title">${t("schedule.conflicts")}</h2>
-    ${d.calendar.zones.map((zone) => {
-      const i = zoneInsight(zone, c.nowMs, range);
-      const items = [
-        ...i.conflicts.map((x) => ({
-          at: x.starts_at,
-          text: t("schedule.conflict", {
-            when: when(c, x),
-            loser: name(zone, x.loser),
-            winner: name(zone, x.winner),
-            rule: t(`schedule.lost.${x.lost_on}`),
-          }),
-        })),
-        ...i.gaps.map((g) => ({ at: g.starts_at, text: t("schedule.gap", { when: when(c, g) }) })),
-      ].sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
-      const shown = items.slice(0, LIST_MAX).map((x) => html`<li>${x.text}</li>`);
-      const more =
-        items.length > LIST_MAX
-          ? html`<li class="canccu-muted">
-              ${t("schedule.more", { n: items.length - LIST_MAX })}
-            </li>`
-          : "";
-      return html`${heading(zone)}${
-        items.length === 0
-          ? html`<p class="canccu-small">${t("schedule.conflicts_none")}</p>`
-          : html`<ul class="canccu-sched__list">
-              ${shown}${more}
-            </ul>`
-      }`;
-    })}
-  </section>`;
-
-  return html`${nowCard}${breaksCard}${conflictsCard}`;
+/** For a bound window, the run-of-show item it follows; a crew item stays unnamed without the right. */
+function boundNote(c: ViewContext, block: ScheduleBlock): string | null {
+  if (block.boundTo === null) return null;
+  if (block.boundTo.title !== null) return c.t("schedule.while", { title: block.boundTo.title });
+  return block.boundTo.crew ? c.t("schedule.while_crew") : c.t("schedule.while_item");
 }

@@ -26,10 +26,29 @@ STUDIO_PAGES.push(
   ["screen-devices-wide", "/admin/screen/devices", WIDE],
 );
 
-/** The Schedule page (#190, mockup 09), last, on windows made for it and removed after it. */
+/** A tap on the shown day's first window opens its details. */
+async function openDetails(page) {
+  await page
+    .locator(".canccu-sched__day:not(.canccu-sched__day--off) .canccu-sched__block")
+    .first()
+    .click();
+  await page.waitForTimeout(300);
+}
+
+/**
+ * The Schedule page (#190, mockup 09), last, on windows made for it and removed after it: the
+ * zone it opens on, every zone, a phone's one day, and a window's details on tap.
+ */
 export const SCHEDULE_PAGES = [
   ["screen-schedule", "/admin/screen/schedule", WIDE],
+  ["screen-schedule-all-zones", "/admin/screen/schedule?zone=all", WIDE],
   ["screen-schedule-phone", "/admin/screen/schedule", PHONE],
+  [
+    "screen-schedule-details-phone",
+    "/admin/screen/schedule",
+    PHONE,
+    { ready: openDetails, fullPage: false },
+  ],
 ];
 
 /**
@@ -173,7 +192,7 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
       await shot(name, path, viewport, { ready: studioReady });
     }
     made = await scheduleFixture(demo);
-    for (const [name, path, viewport] of SCHEDULE_PAGES) await shot(name, path, viewport);
+    for (const [name, path, viewport, o] of SCHEDULE_PAGES) await shot(name, path, viewport, o);
   } finally {
     if (made !== null) await removeSchedule(demo, made);
     for (const context of contexts) await context.close();

@@ -9,7 +9,8 @@ import { zoneCalendar } from "../src/schedule/calendar.js";
 import type { CalendarBreak, ZoneCalendar } from "../src/schedule/calendar.js";
 import type { ScheduleWindow, WeeklyWindow } from "../src/schedule/winner.js";
 import { breakOverlaps } from "../src/studio/break-overlap.js";
-import { dayStartMs, eventDays, pageOfDays, scheduleModel } from "../src/studio/schedule-model.js";
+import { clipCalendar, dayStartMs, FULL_DAY, scheduleAxis } from "../src/studio/schedule-axis.js";
+import { eventDays, pageOfDays, scheduleModel } from "../src/studio/schedule-model.js";
 import type { ScheduleModelInput } from "../src/studio/schedule-model.js";
 import { zoneInsight } from "../src/studio/schedule-insights.js";
 
@@ -68,6 +69,11 @@ function calendarOf(windows: ScheduleWindow[], days = DAYS, extra = {}): Calenda
   return { from: from.toISOString(), to: to.toISOString(), time_zone: TZ, zones: [zone] };
 }
 
+function item(id: string, startsAt: string, endsAt: string) {
+  const status = "scheduled" as const;
+  return { id, startsAt: new Date(startsAt), endsAt: new Date(endsAt), status };
+}
+
 function nextDay(date: string): string {
   const t = Date.parse(`${date}T00:00:00Z`) + 86_400_000;
   return new Date(t).toISOString().slice(0, 10);
@@ -77,6 +83,7 @@ function input(calendar: Calendar, nowIso = "2026-04-17T07:00:00.000Z"): Schedul
   return {
     calendar,
     days: DAYS,
+    axis: FULL_DAY,
     zoneNames: new Map([["main", "Main hall"]]),
     playlistNames: new Map([
       ["main", "Main rotation"],
@@ -140,52 +147,49 @@ describe("scheduleModel", () => {
     ]);
   });
 
-  test("renders an overlap as one block with the scheduler's winner first and the loser greyed", () => {
+  test("draws one block per window, side by side where they overlap, and where each loses", () => {
     const friday = scheduleModel(input(calendarOf(schedules))).days[1];
     const blocks = friday?.lanes[0]?.blocks ?? [];
-    expect(blocks.map((b) => [b.startMinute, b.endMinute, b.rows.length])).toEqual([
-      [540, 600, 1],
-      [600, 660, 2],
-      [660, 1020, 1],
-      [1020, 1320, 1],
+    expect(
+      blocks.map((b) => [b.scheduleId, b.startMinute, b.endMinute, b.column, b.columns]),
+    ).toEqual([
+      ["fri-main", 540, 1020, 0, 2],
+      ["fri-ads", 600, 660, 1, 2],
+      ["fri-evening", 1020, 1320, 0, 1],
     ]);
-    expect(blocks[1]?.rows).toEqual([
-      expect.objectContaining({ scheduleId: "fri-ads", winner: true, lostOn: null }),
+    // The scheduler's winner: fri-ads (priority 50) beats fri-main from 10:00 to 11:00.
+    expect(blocks[0]).toMatchObject({ playlistName: "Main rotation", priority: 10 });
+    expect(blocks[0]?.losing).toEqual([
       expect.objectContaining({
-        scheduleId: "fri-main",
-        playlistName: "Main rotation",
-        winner: false,
+        startMinute: 600,
+        endMinute: 660,
+        to: "Evening sponsors",
         lostOn: "priority",
       }),
     ]);
+    expect(blocks[1]?.losing).toEqual([]);
   });
 
-  test("orders a three-way overlap: winner first, then the losers by priority", () => {
+  test("splits a three-way overlap in three, and both losers lose to the winner", () => {
     const triple = [
       weekly("wed-low", "ads", 4, 12 * 60, 14 * 60, 5),
       weekly("wed-mid", "main", 4, 12 * 60, 14 * 60, 10),
       weekly("wed-high", "evening", 4, 12 * 60, 14 * 60, 20),
     ];
-    const thursday = scheduleModel(input(calendarOf(triple))).days[0];
-    expect(thursday?.lanes[0]?.blocks[0]?.rows.map((r) => r.scheduleId)).toEqual([
-      "wed-high",
-      "wed-mid",
-      "wed-low",
+    const blocks = scheduleModel(input(calendarOf(triple))).days[0]?.lanes[0]?.blocks ?? [];
+    expect(blocks.map((b) => [b.scheduleId, b.column, b.columns])).toEqual([
+      ["wed-low", 0, 3],
+      ["wed-mid", 1, 3],
+      ["wed-high", 2, 3],
+    ]);
+    expect(blocks.map((b) => b.losing.map((l) => l.to))).toEqual([
+      ["Evening sponsors"],
+      ["Evening sponsors"],
+      [],
     ]);
   });
 
-  test("merges adjacent pieces with the same winner and the same windows", () => {
-    // Two runs of one window that meet at midnight, drawn in two columns, never merge across days;
-    // within a day, a window that every day starts a new run stays one block per day.
-    const allDay = [{ ...weekly("all", "main", 4, 0, 1440, 1), days: [4, 5] }];
-    const model = scheduleModel(input(calendarOf(allDay)));
-    expect(model.days[0]?.lanes[0]?.blocks).toHaveLength(1);
-    expect(model.days[1]?.lanes[0]?.blocks).toEqual([
-      expect.objectContaining({ startMinute: 0, endMinute: 1440 }),
-    ]);
-  });
-
-  test("marks a block that goes on past midnight", () => {
+  test("on a whole-day axis, cuts a run at midnight and marks both pieces", () => {
     const night = [weekly("late", "main", 4, 22 * 60, 2 * 60, 1)];
     const model = scheduleModel(input(calendarOf(night)));
     expect(model.days[0]?.lanes[0]?.blocks[0]).toMatchObject({
@@ -198,6 +202,21 @@ describe("scheduleModel", () => {
       endMinute: 120,
       continuesBefore: true,
     });
+  });
+
+  test("on an axis past midnight, keeps an evening run that ends at 02:00 one block", () => {
+    const night = [weekly("late", "main", 4, 22 * 60, 2 * 60, 1)];
+    const axis = { startMinute: 1200, endMinute: 1560 };
+    const model = scheduleModel({ ...input(calendarOf(night)), axis });
+    expect(model.days[0]?.lanes[0]?.blocks).toEqual([
+      expect.objectContaining({
+        startMinute: 1320,
+        endMinute: 1560,
+        continuesBefore: false,
+        continuesAfter: false,
+      }),
+    ]);
+    expect(model.days[1]?.lanes[0]?.blocks).toEqual([]);
   });
 
   test("names a bound window's item, or says it is a crew item when its id is withheld", () => {
@@ -223,24 +242,8 @@ describe("scheduleModel", () => {
       DAYS,
       {
         agendaItems: new Map([
-          [
-            "dinner",
-            {
-              id: "dinner",
-              startsAt: new Date("2026-04-17T15:00:00Z"),
-              endsAt: new Date("2026-04-17T16:00:00Z"),
-              status: "scheduled" as const,
-            },
-          ],
-          [
-            "crew",
-            {
-              id: "crew",
-              startsAt: new Date("2026-04-17T05:00:00Z"),
-              endsAt: new Date("2026-04-17T06:00:00Z"),
-              status: "scheduled" as const,
-            },
-          ],
+          ["dinner", item("dinner", "2026-04-17T15:00:00Z", "2026-04-17T16:00:00Z")],
+          ["crew", item("crew", "2026-04-17T05:00:00Z", "2026-04-17T06:00:00Z")],
         ]),
         crewItems: new Set(["crew"]),
         revealCrew: false,
@@ -253,8 +256,8 @@ describe("scheduleModel", () => {
         ["crew", { title: "Crew briefing", crew: true }],
       ]),
     });
-    const rows = model.days[1]?.lanes[0]?.blocks.map((b) => b.rows[0]?.boundTo);
-    expect(rows).toEqual([
+    const bound = model.days[1]?.lanes[0]?.blocks.map((b) => b.boundTo);
+    expect(bound).toEqual([
       { title: null, crew: true },
       { title: "Dinner", crew: false },
     ]);
@@ -264,6 +267,55 @@ describe("scheduleModel", () => {
     const model = scheduleModel(input(calendarOf(schedules), "2026-04-17T07:00:00.000Z"));
     expect(model.now).toEqual({ date: "2026-04-17", minute: 600 });
     expect(scheduleModel(input(calendarOf(schedules), "2026-05-01T07:00:00.000Z")).now).toBeNull();
+  });
+});
+
+describe("scheduleAxis and clipCalendar", () => {
+  const axisOf = (windows: ScheduleWindow[]) => scheduleAxis(calendarOf(windows).zones, DAYS, TZ);
+
+  test("starts an hour before the first window after the empty night and ends at the last", () => {
+    expect(axisOf(schedules)).toEqual({ startMinute: 480, endMinute: 1320 });
+  });
+
+  test("runs past midnight when the longest empty stretch is the small hours", () => {
+    const windows = [...schedules, weekly("late", "main", 4, 22 * 60, 2 * 60, 1)];
+    expect(axisOf(windows)).toEqual({ startMinute: 480, endMinute: 1560 });
+  });
+
+  test("counts the breaks as well as the windows", () => {
+    const zone = calendarOf(schedules).zones[0] as ZoneCalendar;
+    const late: CalendarBreak = {
+      playlist_id: "partners",
+      period_seconds: 3600,
+      break_seconds: 45,
+      spans: [{ starts_at: "2026-04-17T19:00:00.000Z", ends_at: "2026-04-17T19:30:00.000Z" }],
+    };
+    // 19:00Z is 22:00 in Helsinki: the axis ends at the hour after the break's 22:30.
+    expect(scheduleAxis([{ ...zone, breaks: [late] }], DAYS, TZ)).toEqual({
+      startMinute: 480,
+      endMinute: 1380,
+    });
+  });
+
+  test("keeps the whole day when nothing is scheduled, or nothing is empty for two hours", () => {
+    expect(axisOf([])).toEqual(FULL_DAY);
+    expect(axisOf([weekly("long", "main", FRI, 30, 23 * 60, 1)])).toEqual(FULL_DAY);
+    expect(axisOf([weekly("all", "main", FRI, 0, 1440, 1)])).toEqual(FULL_DAY);
+  });
+
+  test("cuts the segments to the columns and keeps each run whole", () => {
+    const calendar = calendarOf(schedules);
+    const range = { starts_at: "2026-04-17T08:00:00.000Z", ends_at: "2026-04-17T12:00:00.000Z" };
+    const clipped = clipCalendar(calendar, range);
+    expect(clipped.from).toBe(range.starts_at);
+    const zone = clipped.zones[0];
+    expect(zone?.segments.map((s) => [s.starts_at, s.ends_at])).toEqual([
+      ["2026-04-17T08:00:00.000Z", "2026-04-17T12:00:00.000Z"],
+    ]);
+    expect(zone?.windows.find((w) => w.schedule_id === "fri-main")?.runs).toEqual([
+      { starts_at: "2026-04-17T06:00:00.000Z", ends_at: "2026-04-17T14:00:00.000Z" },
+    ]);
+    expect(zone?.windows.find((w) => w.schedule_id === "fri-ads")?.runs).toEqual([]);
   });
 });
 

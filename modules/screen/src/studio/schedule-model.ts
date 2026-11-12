@@ -1,22 +1,24 @@
 /**
- * The week calendar's view-model for the Studio's schedule page (plan #190, S2): the event's days
- * as columns, one lane per zone, each segment of the calendar answer cut at local midnights into
- * blocks with the winner first and the windows it beat below it. Adapted from the legacy signage
- * `week-calendar-model.ts`: legacy cut a generic week at the windows' minutes and asked the
- * scheduler for each block's winner; here the calendar answer already holds the scheduler's
- * winners for real instants (`src/schedule/calendar.ts`), so this only lays them out by day.
- * Blocks sit at the local wall time of their edges, the time the organiser set and the hour lines
- * show, so a window from 01:00 to 04:00 reads that way also on the day the clock skips an hour.
+ * The week calendar's view-model for the Studio's schedule page (plan #190, S2; mockup 09): the
+ * event's days as columns on the hour axis (`schedule-axis.ts`), one lane per zone, and in a lane
+ * one block per run of a window, side by side where runs overlap, as mockup 09 draws them. Where a
+ * window loses, its block carries the stretch and the window it loses to, from the calendar
+ * answer's segments, so every winner shown is the scheduler's own (`src/schedule/calendar.ts`).
+ * Adapted from the legacy signage `week-calendar-model.ts`, which drew one block per segment.
+ * Blocks sit at the wall time of their edges, the time the organiser set and the hour lines show,
+ * so a window from 01:00 to 04:00 reads that way also on the day the clock skips an hour.
  */
 import type { AgendaLabel } from "../content/agenda.js";
 import type { Calendar } from "../content/calendar.js";
-import type { CalendarWindow, LostOn, ZoneCalendar } from "../schedule/calendar.js";
-import { localClock, MINUTES_PER_DAY } from "../schedule/window.js";
+import type { CalendarWindow, LostOn, Span, ZoneCalendar } from "../schedule/calendar.js";
+import { addDays, columnSpan, localDate, minuteFrom } from "./schedule-axis.js";
+import type { Axis } from "./schedule-axis.js";
 
 export interface ScheduleModelInput {
   calendar: Calendar;
   /** The columns: local dates (`YYYY-MM-DD`) in the event's time zone, in order. */
   days: readonly string[];
+  axis: Axis;
   zoneNames: ReadonlyMap<string, string>;
   playlistNames: ReadonlyMap<string, string>;
   /** The run-of-show items' titles; a crew item's is used only when the calendar gave its id. */
@@ -24,26 +26,33 @@ export interface ScheduleModelInput {
   nowMs: number;
 }
 
-export interface ScheduleRow {
-  scheduleId: string;
-  playlistId: string;
-  playlistName: string;
-  priority: number;
-  winner: boolean;
-  lostOn: LostOn | null;
-  /** The run-of-show item a bound window follows; null for a weekly window. */
-  boundTo: { title: string | null; crew: boolean } | null;
-}
-
-export interface ScheduleBlock {
+/** A piece of a column: wall minutes from the column's midnight, and the instants. */
+export interface Piece {
   startMinute: number;
   endMinute: number;
   startsAt: string;
   endsAt: string;
+}
+
+export interface Losing extends Piece {
+  /** The playlist that plays instead. */
+  to: string;
+  lostOn: LostOn;
+}
+
+export interface ScheduleBlock extends Piece {
+  scheduleId: string;
+  playlistName: string;
+  priority: number;
+  /** The run-of-show item a bound window follows; null for a weekly window. */
+  boundTo: { title: string | null; crew: boolean } | null;
   continuesBefore: boolean;
   continuesAfter: boolean;
-  /** The winner first, then the windows it beat, the closest (highest priority) first. */
-  rows: ScheduleRow[];
+  /** Its place among the runs it overlaps: sub-column `column` of `columns`. */
+  column: number;
+  columns: number;
+  /** Where another window plays instead, in order. */
+  losing: Losing[];
 }
 
 export interface ScheduleLane {
@@ -60,40 +69,12 @@ export interface ScheduleDay {
 }
 
 export interface ScheduleModel {
+  axis: Axis;
   days: ScheduleDay[];
   now: { date: string; minute: number } | null;
 }
 
-const DAY_MS = 86_400_000;
 const WEEK = 7;
-
-const dateFormatters = new Map<string, Intl.DateTimeFormat>();
-
-/** The local date (`YYYY-MM-DD`) of an instant in `timeZone`. */
-export function localDate(ms: number, timeZone: string): string {
-  let f = dateFormatters.get(timeZone);
-  if (f === undefined) {
-    f = new Intl.DateTimeFormat("en-CA", {
-      timeZone,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-    dateFormatters.set(timeZone, f);
-  }
-  return f.format(new Date(ms));
-}
-
-export function addDays(date: string, n: number): string {
-  return new Date(Date.parse(`${date}T00:00:00Z`) + n * DAY_MS).toISOString().slice(0, 10);
-}
-
-/** The instant a local date begins: its midnight, found from the zone's offset there. */
-export function dayStartMs(date: string, timeZone: string): number {
-  const wallMs = Date.parse(`${date}T00:00:00Z`);
-  const guess = wallMs - localClock(new Date(wallMs), timeZone).offsetMinutes * 60_000;
-  return wallMs - localClock(new Date(guess), timeZone).offsetMinutes * 60_000;
-}
 
 /**
  * The event's days: from its start's local date to the local date its end reaches into; a week
@@ -131,135 +112,160 @@ export function pageOfDays(
   };
 }
 
-function wallMinute(ms: number, timeZone: string): number {
-  return localClock(new Date(ms), timeZone).minuteOfDay;
-}
-
 export function scheduleModel(input: ScheduleModelInput): ScheduleModel {
-  const { calendar } = input;
+  const { calendar, axis } = input;
   const tz = calendar.time_zone;
-  const bounds = input.days.map((date) => ({
-    date,
-    startMs: dayStartMs(date, tz),
-    endMs: dayStartMs(addDays(date, 1), tz),
+  const columns = input.days.map((date) => {
+    const span = columnSpan(date, axis, tz);
+    return { date, startMs: Date.parse(span.starts_at), endMs: Date.parse(span.ends_at) };
+  });
+  const days = columns.map((column) => ({
+    date: column.date,
+    lanes: calendar.zones.map((zone) => ({
+      zoneKey: zone.zone_key,
+      zoneName: input.zoneNames.get(zone.zone_key) ?? zone.zone_key,
+      blocks: blocksOf(zone, column, input),
+      breaks: breakBands(zone, column, tz),
+    })),
   }));
-  const days = bounds.map((day) => ({
-    date: day.date,
-    lanes: calendar.zones.map((zone) => {
-      return {
-        zoneKey: zone.zone_key,
-        zoneName: input.zoneNames.get(zone.zone_key) ?? zone.zone_key,
-        blocks: blocksOf(zone, day, input),
-        breaks: breakBands(zone, day, tz),
-      };
-    }),
-  }));
-  const today = bounds.find((d) => d.startMs <= input.nowMs && input.nowMs < d.endMs);
+  const today = columns.find((d) => d.startMs <= input.nowMs && input.nowMs < d.endMs);
   return {
+    axis,
     days,
-    now: today === undefined ? null : { date: today.date, minute: wallMinute(input.nowMs, tz) },
+    now:
+      today === undefined
+        ? null
+        : { date: today.date, minute: minuteFrom(today.date, input.nowMs, tz) },
   };
 }
 
-interface DayBounds {
+interface Column {
+  date: string;
   startMs: number;
   endMs: number;
 }
 
-/** The day's piece of each span: its wall minutes, the end at 1440 when it reaches the next day. */
-function piece(startsAt: string, endsAt: string, day: DayBounds, tz: string) {
-  const s = Date.parse(startsAt);
-  const e = Date.parse(endsAt);
-  if (e <= day.startMs || s >= day.endMs) return null;
-  const startMinute = s <= day.startMs ? 0 : wallMinute(s, tz);
-  const endMinute = e >= day.endMs ? MINUTES_PER_DAY : wallMinute(e, tz);
+/** The column's piece of a span, or null when it is not in the column. */
+function piece(span: Span, column: Column, tz: string) {
+  const s = Date.parse(span.starts_at);
+  const e = Date.parse(span.ends_at);
+  if (e <= column.startMs || s >= column.endMs) return null;
+  const startMs = Math.max(s, column.startMs);
+  const endMs = Math.min(e, column.endMs);
+  const startMinute = minuteFrom(column.date, startMs, tz);
   return {
-    startMs: Math.max(s, day.startMs),
-    endMs: Math.min(e, day.endMs),
     startMinute,
-    // The repeated hour can put an end's wall time before its start's; keep the block visible.
-    endMinute: Math.max(endMinute, startMinute + 1),
-    continuesBefore: s < day.startMs,
-    continuesAfter: e > day.endMs,
+    // The repeated hour can put an end's wall time before its start's; keep the piece visible.
+    endMinute: Math.max(minuteFrom(column.date, endMs, tz), startMinute + 1),
+    startsAt: new Date(startMs).toISOString(),
+    endsAt: new Date(endMs).toISOString(),
+    continuesBefore: s < column.startMs,
+    continuesAfter: e > column.endMs,
   };
 }
 
-function blocksOf(zone: ZoneCalendar, day: DayBounds, input: ScheduleModelInput): ScheduleBlock[] {
+/** Where each window loses in the column; segments lost in a row to one window on one rule are one. */
+function losingOf(zone: ZoneCalendar, column: Column, input: ScheduleModelInput) {
   const tz = input.calendar.time_zone;
-  const windows = new Map(zone.windows.map((w) => [w.schedule_id, w]));
-  const blocks: ScheduleBlock[] = [];
+  const playlistOf = new Map(zone.windows.map((w) => [w.schedule_id, w.playlist_id]));
+  const losing = new Map<string, Losing[]>();
   for (const segment of zone.segments) {
-    const p = piece(segment.starts_at, segment.ends_at, day, tz);
+    const p = piece(segment, column, tz);
     if (p === null) continue;
-    const losers = [...segment.losers].sort(
-      (a, b) =>
-        (windows.get(b.schedule_id)?.priority ?? 0) - (windows.get(a.schedule_id)?.priority ?? 0),
-    );
-    const rows = [
-      row(windows.get(segment.winner), segment.winner, null, input),
-      ...losers.map((l) => row(windows.get(l.schedule_id), l.schedule_id, l.lost_on, input)),
-    ];
-    const previous = blocks.at(-1);
-    // Legacy's merge: the same winner over the same windows, edge to edge, is one block.
-    if (
-      previous !== undefined &&
-      previous.endMinute === p.startMinute &&
-      sameRows(previous.rows, rows)
-    ) {
-      previous.endMinute = p.endMinute;
-      previous.endsAt = new Date(p.endMs).toISOString();
-      previous.continuesAfter = p.continuesAfter;
-      continue;
+    const to = playlistName(playlistOf.get(segment.winner) ?? "", input);
+    for (const l of segment.losers) {
+      const list = losing.get(l.schedule_id) ?? [];
+      const last = list.at(-1);
+      if (last?.endsAt === p.startsAt && last.to === to && last.lostOn === l.lost_on) {
+        last.endMinute = p.endMinute;
+        last.endsAt = p.endsAt;
+      } else {
+        list.push({
+          startMinute: p.startMinute,
+          endMinute: p.endMinute,
+          startsAt: p.startsAt,
+          endsAt: p.endsAt,
+          to,
+          lostOn: l.lost_on,
+        });
+      }
+      losing.set(l.schedule_id, list);
     }
-    blocks.push({
-      startMinute: p.startMinute,
-      endMinute: p.endMinute,
-      startsAt: new Date(p.startMs).toISOString(),
-      endsAt: new Date(p.endMs).toISOString(),
-      continuesBefore: p.continuesBefore,
-      continuesAfter: p.continuesAfter,
-      rows,
-    });
   }
+  return losing;
+}
+
+function blocksOf(zone: ZoneCalendar, column: Column, input: ScheduleModelInput): ScheduleBlock[] {
+  const losing = losingOf(zone, column, input);
+  const blocks: ScheduleBlock[] = [];
+  for (const window of zone.windows) {
+    for (const run of window.runs) {
+      const p = piece(run, column, input.calendar.time_zone);
+      if (p === null) continue;
+      blocks.push({
+        ...p,
+        scheduleId: window.schedule_id,
+        playlistName: playlistName(window.playlist_id, input),
+        priority: window.priority,
+        boundTo: boundTo(window, input),
+        column: 0,
+        columns: 1,
+        losing: (losing.get(window.schedule_id) ?? []).filter(
+          (l) => l.startsAt < p.endsAt && l.endsAt > p.startsAt,
+        ),
+      });
+    }
+  }
+  return sideBySide(blocks);
+}
+
+/**
+ * Overlapping runs share their lane's width: each takes the first sub-column free at its start,
+ * and a group of runs that overlap one another splits the width between as many as it needed.
+ * Of two runs that start together the longer goes first, so a whole-day window stays at the left.
+ */
+function sideBySide(blocks: ScheduleBlock[]): ScheduleBlock[] {
+  blocks.sort(
+    (a, b) =>
+      a.startMinute - b.startMinute ||
+      b.endMinute - a.endMinute ||
+      a.priority - b.priority ||
+      a.scheduleId.localeCompare(b.scheduleId),
+  );
+  let group: ScheduleBlock[] = [];
+  const ends: number[] = [];
+  const close = () => {
+    for (const b of group) b.columns = ends.length;
+    group = [];
+    ends.length = 0;
+  };
+  for (const block of blocks) {
+    if (ends.every((end) => end <= block.startMinute)) close();
+    let column = ends.findIndex((end) => end <= block.startMinute);
+    if (column < 0) column = ends.length;
+    ends[column] = block.endMinute;
+    block.column = column;
+    group.push(block);
+  }
+  close();
   return blocks;
 }
 
-function sameRows(a: readonly ScheduleRow[], b: readonly ScheduleRow[]): boolean {
-  const ids = (rows: readonly ScheduleRow[]) =>
-    rows
-      .map((r) => r.scheduleId)
-      .sort()
-      .join("|");
-  return a[0]?.scheduleId === b[0]?.scheduleId && ids(a) === ids(b);
+function playlistName(playlistId: string, input: ScheduleModelInput): string {
+  return input.playlistNames.get(playlistId) ?? playlistId;
 }
 
-function row(
-  window: CalendarWindow | undefined,
-  scheduleId: string,
-  lostOn: LostOn | null,
-  input: ScheduleModelInput,
-): ScheduleRow {
-  const playlistId = window?.playlist_id ?? "";
-  const itemId = window?.agenda_item_id ?? null;
-  const crew = window?.agenda_item_crew ?? false;
-  const bound = itemId !== null || crew;
-  return {
-    scheduleId,
-    playlistId,
-    playlistName: input.playlistNames.get(playlistId) ?? playlistId,
-    priority: window?.priority ?? 0,
-    winner: lostOn === null,
-    lostOn,
-    boundTo: bound
-      ? { title: itemId === null ? null : (input.labels.get(itemId)?.title ?? null), crew }
-      : null,
-  };
+function boundTo(window: CalendarWindow, input: ScheduleModelInput): ScheduleBlock["boundTo"] {
+  const itemId = window.agenda_item_id;
+  const crew = window.agenda_item_crew;
+  if (itemId === null && !crew) return null;
+  return { title: itemId === null ? null : (input.labels.get(itemId)?.title ?? null), crew };
 }
 
-function breakBands(zone: ZoneCalendar, day: DayBounds, tz: string) {
+function breakBands(zone: ZoneCalendar, column: Column, timeZone: string) {
   const pieces = zone.breaks
     .flatMap((b) => b.spans)
-    .map((s) => piece(s.starts_at, s.ends_at, day, tz))
+    .map((s) => piece(s, column, timeZone))
     .filter((p) => p !== null)
     .sort((a, b) => a.startMinute - b.startMinute);
   const bands: { startMinute: number; endMinute: number }[] = [];

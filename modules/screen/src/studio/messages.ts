@@ -222,8 +222,9 @@ const EN = {
   "ticker.clear_done": "The ticker line is cleared.",
 
   "schedule.desc":
-    "What each zone's playlist widget plays, on the event's days. The winner of each time is on top; the windows it beats are greyed below it.",
-  "schedule.zone_filter": "Zones",
+    "What each zone's playlist widget plays, on the event's days. Where windows overlap, the one that loses is greyed. Tap a window for its details.",
+  "schedule.zone_filter": "Zone",
+  "schedule.day": "Day",
   "schedule.all_zones": "All zones",
   "schedule.week": "Days",
   "schedule.prev": "Earlier days",
@@ -233,7 +234,12 @@ const EN = {
   "schedule.empty_title": "Nothing scheduled on these days",
   "schedule.empty_text":
     "Windows decide which playlist a zone's playlist widget plays. Without one, the hero shows its idle view.",
-  "schedule.priority": "priority {n}",
+  "schedule.priority": "prio {n}",
+  "schedule.loses_to": "loses to {playlist}",
+  "schedule.loses_at": "{when}: loses to {playlist} ({rule})",
+  "schedule.legend": "What the calendar shows",
+  "schedule.legend_wins": "Window, plays",
+  "schedule.legend_loses": "Window, loses to another",
   "schedule.while": "while \u201c{title}\u201d runs",
   "schedule.while_crew": "while a crew item runs",
   "schedule.while_item": "while its run-of-show item runs",
