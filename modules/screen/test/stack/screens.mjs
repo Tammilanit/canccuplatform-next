@@ -37,7 +37,7 @@ export function planned() {
     }
   }
   for (const size of HD)
-    for (const view of ["photo", ...CLAIMS]) out.push(nameOf("default", view, size));
+    for (const view of ["photo", "rail-empty", ...CLAIMS]) out.push(nameOf("default", view, size));
   out.push(nameOf("default", "entrance", HD[1]));
   return out;
 }
@@ -141,6 +141,9 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await attempt(nameOf("default", "photo", size), () =>
         handed("default", "photo", size, withPhoto),
       );
+      await attempt(nameOf("default", "rail-empty", size), () =>
+        handed("default", "rail-empty", size, withHeroItemOnly),
+      );
       for (const view of CLAIMS) {
         const [role, placed] = CLAIM_OF[view];
         await attempt(nameOf("default", view, size), () =>
@@ -210,7 +213,9 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await page.goto(at("/screen/"));
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
       else await layout(page, size);
-      if (!["archived", "claim-rail", "claim-takeover"].includes(view)) await railShowsAgenda(page);
+      if (view === "rail-empty") await railShowsIdle(page);
+      else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
+        await railShowsAgenda(page);
       await settle(page);
       await shot(nameOf(theme, view, size), page);
       await close();
@@ -274,6 +279,23 @@ function withPhoto(s) {
   };
 }
 
+/**
+ * A gap in the run of show: the rail's only row is the item the hero counts down to, which the
+ * rail leaves out (player/src/hero-rail.ts), so the rail shows its idle choice, not an empty card.
+ */
+function withHeroItemOnly(s) {
+  const next = s.regions.find((r) => r.role === "hero")?.idle_view?.view;
+  if (next === undefined) throw new Error("the demo zone's hero has no idle countdown");
+  const only = (w) =>
+    w.widget !== "agenda_now"
+      ? w
+      : { ...w, view: { ...w.view, items: w.view.items.filter((row) => row.name === next.label && row.starts_at === next.target_at) } }; // prettier-ignore
+  return {
+    ...s,
+    regions: s.regions.map((r) => (r.role === "rail" ? { ...r, widgets: r.widgets.map(only) } : r)),
+  };
+}
+
 /** The layout of the screen's orientation is on the page (the heartbeat tells the server). */
 async function layout(page, [width, height]) {
   await page.waitForFunction(
@@ -295,6 +317,15 @@ async function railShowsAgenda(page) {
   await page.waitForSelector(".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active", {
     timeout: 40_000,
   });
+}
+
+/** The rail shows its idle choice, on both of its turns: never the emptied run of show. */
+async function railShowsIdle(page) {
+  await page.waitForSelector(".canccu-region--rail > .canccu-widget--logo.canccu-is-active", {
+    timeout: 40_000,
+  });
+  if ((await page.$(".canccu-region--rail .canccu-widget--agenda_now")) !== null)
+    throw new Error("the rail drew its run of show without a row");
 }
 
 /** Fonts and images loaded, the entry fade done. */

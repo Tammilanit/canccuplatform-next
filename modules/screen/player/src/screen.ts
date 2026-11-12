@@ -192,7 +192,12 @@ export class Screen {
       state.tenant.time_zone,
     );
     for (const [i, drawn] of drawns.entries()) {
-      const shown = joined[i] ?? chosen[i] ?? null;
+      const part = joined[i];
+      const own = chosen[i];
+      // The join took the rail's only row for the hero (hero-rail.ts): never an empty card.
+      const emptied =
+        part?.view.empty === true && !(typeof own === "object" && own?.view.empty === true);
+      const shown = emptied ? idleOf(drawn.state, state) : (part ?? own ?? null);
       this.show(drawn, shown, motion);
       const widget = typeof shown === "object" && shown !== null && !shown.key.startsWith("claim:");
       drawn.marks = syncMarks(
@@ -270,23 +275,7 @@ export class Screen {
         dims: dimsOffline(w.widget),
       };
     }
-    if (r.idle === "blank") return null;
-    if (r.idle === "collapse") return "collapse";
-    if (r.idle === "next" && r.idle_view !== null) {
-      return {
-        key: "idle:next",
-        type: "countdown",
-        template: null,
-        view: r.idle_view.view,
-        dims: false,
-      };
-    }
-    // `logo`, and any idle value this player does not know (contracts/screen.md, The Pulse options).
-    const view = { url: state.theme.logo_url, name: state.tenant.name, qr: null, empty: false };
-    // The server sends no logo view without a theme logo, so the header's zone comes from here too.
-    const zoneName = state.zone === null ? {} : { zone_name: state.zone.name };
-    const idle = { ...view, ...zoneName, stale: false };
-    return { key: "idle:logo", type: "logo", template: null, view: idle, dims: false };
+    return idleOf(r, state);
   }
 
   private show(drawn: Drawn, shown: Shown | "collapse" | null, motion: Motion): void {
@@ -390,4 +379,20 @@ export class Screen {
       }
     });
   }
+}
+
+/** The region's idle choice: what it shows with nothing to rotate, or with its rail emptied. */
+function idleOf(r: Region, state: ScreenState): Shown | "collapse" | null {
+  if (r.idle === "blank") return null;
+  if (r.idle === "collapse") return "collapse";
+  const base = { template: null, dims: false };
+  if (r.idle === "next" && r.idle_view !== null) {
+    const view = { ...r.idle_view.view, next_up: true };
+    return { ...base, key: "idle:next", type: "countdown", view };
+  }
+  // `logo`, and any idle value this player does not know (contracts/screen.md, The Pulse options).
+  const view = { url: state.theme.logo_url, name: state.tenant.name, qr: null, empty: false };
+  // The server sends no logo view without a theme logo, so the header's zone comes from here too.
+  const zoneName = state.zone === null ? {} : { zone_name: state.zone.name };
+  return { ...base, key: "idle:logo", type: "logo", view: { ...view, ...zoneName, stale: false } };
 }

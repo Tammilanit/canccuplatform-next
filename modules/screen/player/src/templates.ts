@@ -91,8 +91,10 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
   agenda_now: [el("ul", "body", [sec("items", AGENDA_ROW)]), QR],
   // `starts_text`, `location` and `delay_minutes` are the player's (hero-rail.ts): the countdown's
   // view-model has only the target, so the player adds what the rail's row of the same item says.
+  // `next_up` is the player's too (screen.ts, idleOf): only the idle `next` countdown is surely the
+  // next item; a widget's countdown may count to any item, and a claim's to anything.
   countdown: [
-    el("p", "kicker", [t("Next up")]),
+    sec("next_up", el("p", "kicker", [t("Next up")])),
     el("p", "headline", [f("label")]),
     el("p", "when", [
       sec("starts_text", el("span", "starts", [f("starts_text")])),

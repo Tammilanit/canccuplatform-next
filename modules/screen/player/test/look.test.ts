@@ -69,6 +69,7 @@ describe("the built-in templates", () => {
       starts_text: "18:30",
       location: "Stage",
       delay_minutes: 15,
+      next_up: true,
     });
     expect(textOf(box, "kicker")).toBe("Next up");
     expect(textOf(box, "headline")).toBe("Grand final");
@@ -226,6 +227,14 @@ describe("the screen's own parts of the look", () => {
     expect(root.querySelector(".canccu-rotation")).toBeNull();
   });
 
+  it('says "Next up" only on the idle next countdown, not on any countdown', () => {
+    const next = { label: "Semis", target_at: "2026-03-14T19:30:00Z", ends_text: null };
+    expect(textOf(draw("countdown", next), "kicker")).toBeUndefined();
+    const idle = region("hero", { widgets: [], idle: "next", idle_view: { widget: "countdown", view: { ...next, qr: null, stale: false, empty: false } } }); // prettier-ignore
+    const root = new Screen(host).draw(state([idle]));
+    expect(root.querySelector(".canccu-widget__kicker")?.textContent).toBe("Next up");
+  });
+
   describe("the hero and the rail as one", () => {
     const semis = "2026-03-14T19:30:00Z";
     const rows = [
@@ -262,6 +271,41 @@ describe("the screen's own parts of the look", () => {
       expect(other.querySelector(".canccu-region--hero .canccu-widget__where")?.textContent).toBe(
         "Stage",
       );
+    });
+
+    it("shows the rail's idle choice, never an empty card, when its only row is the hero's", () => {
+      const only = rows.slice(1);
+      const rail = region("rail", { widgets: [widget("agenda_now", { items: only })] });
+      const root = new Screen(host).draw(state([hero, rail]));
+      const box = root.querySelector(".canccu-region--rail");
+      expect(box?.querySelector(".canccu-widget--agenda_now")).toBeNull();
+      expect(box?.querySelector(".canccu-widget--logo")).not.toBeNull();
+      // The hero still takes its item's place and delay from the row the rail leaves out.
+      expect(root.querySelector(".canccu-region--hero .canccu-widget__when")?.textContent).toBe(
+        "19:30Stage+15 min",
+      );
+    });
+
+    it("leaves a claim's countdown alone, even of the hero's item", () => {
+      const claim = {
+        override_id: "ov_2",
+        hidden: false,
+        role: "rail",
+        rank: 80,
+        template: "countdown",
+        content: { label: "Semis", target_at: semis },
+        steps: null,
+        sound: null,
+        on_end: "resume",
+        starts_at: new Date(T0 - 1000).toISOString(),
+        ends_at: null,
+        expires_at: null,
+      };
+      const rail = region("rail", { widgets: [widget("agenda_now", { items: rows })], claim });
+      const root = new Screen(host).draw(state([hero, rail]));
+      const box = root.querySelector(".canccu-region--rail");
+      expect(box?.querySelector(".canccu-widget--countdown")).not.toBeNull();
+      expect(box?.querySelector(".canccu-widget--agenda_now")).toBeNull();
     });
 
     it("keeps the rail whole when the hero shows something else", () => {

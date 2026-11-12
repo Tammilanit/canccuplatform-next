@@ -5,6 +5,7 @@
  * Widgets), so its place and delay come from the rail's row of the same item: both views come
  * from the same agenda read, so a row with the countdown's name and start is its item.
  */
+import { clockText } from "./frames.js";
 import type { Region } from "./state.js";
 import type { View } from "./widget.js";
 
@@ -47,19 +48,10 @@ const isItem = (row: Row, countdown: View): boolean =>
   row.name === countdown.label &&
   row.starts_at === countdown.target_at;
 
-function clockText(iso: unknown, timeZone: string): string | null {
+/** The countdown's start as `HH:MM`, or null when its target is not a time. */
+function startsText(iso: unknown, timeZone: string): string | null {
   const ms = typeof iso === "string" ? Date.parse(iso) : NaN;
-  if (Number.isNaN(ms)) return null;
-  const options: Intl.DateTimeFormatOptions = {
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  };
-  try {
-    return new Intl.DateTimeFormat("en-GB", { ...options, timeZone }).format(ms);
-  } catch {
-    return new Intl.DateTimeFormat("en-GB", options).format(ms);
-  }
+  return Number.isNaN(ms) ? null : clockText(ms, timeZone);
 }
 
 /** A countdown with its start as text and, when a row names its item, its place and delay. */
@@ -68,21 +60,26 @@ function withItem(view: View, rows: Row[], timeZone: string): View {
   const delay = typeof row?.delay_minutes === "number" && row.delay_minutes > 0;
   return {
     ...view,
-    starts_text: clockText(view.target_at, timeZone),
+    starts_text: startsText(view.target_at, timeZone),
     location: typeof row?.location === "string" ? row.location : null,
     // Left out at 0: a template's section shows for any number, 0 too.
     delay_minutes: delay ? row.delay_minutes : null,
   };
 }
 
+/** A claim is the crew's own message: the join never takes it for the hero or swaps it away. */
+const isClaim = (p: Part): boolean => p.key.startsWith("claim:");
+
 const isCountdownOf = (p: Part, hero: Part): boolean =>
+  !isClaim(p) &&
   p.type === "countdown" &&
   p.view.label === hero.view.label &&
   p.view.target_at === hero.view.target_at;
 
 /**
  * The parts as drawn: countdowns joined to their rows, and the rail without the hero's item. A
- * rail's countdown of that item gives its turn to the rail's run of show.
+ * rail's countdown of that item gives its turn to the rail's run of show. A run of show left
+ * with no row comes back `empty`.
  */
 export function joinHeroAndRail<P extends Part>(
   parts: (P | null)[],
@@ -94,12 +91,14 @@ export function joinHeroAndRail<P extends Part>(
     ...(p.agenda === null ? [] : rowsOf(p.agenda.view)),
   ]);
   const hero = shown.find(
-    (p) => p.role === "hero" && p.type === "countdown" && p.view.empty !== true,
+    (p) => p.role === "hero" && p.type === "countdown" && !isClaim(p) && p.view.empty !== true,
   );
   const without = (view: View): View => {
     if (hero === undefined) return view;
     const items = rowsOf(view).filter((r) => !isItem(r, hero.view));
-    return items.length === rowsOf(view).length ? view : { ...view, items };
+    if (items.length === rowsOf(view).length) return view;
+    // Nothing left: `empty` hands the region to its idle choice (screen.ts), never an empty card.
+    return items.length === 0 ? { ...view, items, empty: true } : { ...view, items };
   };
   return parts.map((p) => {
     if (p === null) return p;

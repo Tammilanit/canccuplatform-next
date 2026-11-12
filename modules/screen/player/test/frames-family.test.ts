@@ -75,7 +75,8 @@ describe("the device frames as one family", () => {
     await settle();
     expect(document.querySelector(".canccu-frame__logo")?.getAttribute("src")).toBe("/l.svg");
     expect(part("event")).toBe("Demo Event");
-    expect(part("where")).toBe("Hall left");
+    // Named once: the title, not the header too.
+    expect(document.querySelector(".canccu-frame__where")).toBeNull();
     expect(part("date")).toBe("Sat 14 Mar");
     expect(part("clock")).toBe("18:42");
     expect(part("title")).toBe("Hall left");

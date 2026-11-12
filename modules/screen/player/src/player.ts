@@ -232,9 +232,11 @@ export class Player {
     if (state.tenant.status === "archived") {
       this.show({ kind: "archived", ...who, ...archived(state.tenant.name) });
     } else if (state.zone === null) {
+      // The device's name is the frame's title (sheet 9), so the header does not say it again.
       this.show({
         kind: "unassigned",
         ...who,
+        where: null,
         title: state.device.name,
         lines: [
           "Paired. Waiting for a zone.",
