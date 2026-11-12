@@ -145,7 +145,9 @@ body.canccu-surface--screen {
   color: var(--canccu-color-text-muted);
 }
 
+/* The frame's last row, named: a body taken out of the grid (pairing) would pull it up into `1fr`. */
 .canccu-frame__foot {
+  grid-row: -2 / -1;
   min-height: 1lh;
 }
 
@@ -226,6 +228,11 @@ body.canccu-surface--screen {
 
 .canccu-frame--pairing .canccu-frame__bottom {
   align-self: start;
+}
+
+/* The code's expiry: the last line, under the instruction (mockup 05, sheet 9). */
+.canccu-frame--pairing .canccu-frame__foot {
+  text-align: center;
 }
 
 /* ui.css's code box: its font size, its line height and its padding of 0.25em above and below. */

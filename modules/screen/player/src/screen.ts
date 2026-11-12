@@ -261,7 +261,7 @@ export class Screen {
       const shown = shownView(w.widget, live, now);
       // The header names the zone beside the event (mockup 02); the state has it, the logo's view not.
       const view =
-        w.widget === "logo" && state.zone !== null
+        w.widget === "logo" && r.role === "header" && state.zone !== null
           ? { ...shown, zone_name: state.zone.name }
           : shown;
       // A ticker's new text is a new thing to show, so it fades in (the calm fading line, L13);
@@ -392,7 +392,8 @@ function idleOf(r: Region, state: ScreenState): Shown | "collapse" | null {
   }
   // `logo`, and any idle value this player does not know (contracts/screen.md, The Pulse options).
   const view = { url: state.theme.logo_url, name: state.tenant.name, qr: null, empty: false };
-  // The server sends no logo view without a theme logo, so the header's zone comes from here too.
-  const zoneName = state.zone === null ? {} : { zone_name: state.zone.name };
+  // The server sends no logo view without a theme logo, so the header's zone comes from here too;
+  // only the header's: elsewhere the logo is the event's card, not a second header.
+  const zoneName = r.role !== "header" || state.zone === null ? {} : { zone_name: state.zone.name };
   return { ...base, key: "idle:logo", type: "logo", view: { ...view, ...zoneName, stale: false } };
 }

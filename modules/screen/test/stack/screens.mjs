@@ -252,6 +252,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       };
       await page.waitForSelector(ready[view] ?? `.canccu-frame--${view}`);
       await page.waitForTimeout(300);
+      if (view === "pairing") await expiryLast(page);
       await shot(nameOf("default", view, size), page);
       await close();
     }
@@ -326,6 +327,19 @@ async function railShowsIdle(page) {
   });
   if ((await page.$(".canccu-region--rail .canccu-widget--agenda_now")) !== null)
     throw new Error("the rail drew its run of show without a row");
+  if ((await page.$(".canccu-region--rail .canccu-widget__zone")) !== null)
+    throw new Error("the rail's logo names the zone: a second header, not the event's card");
+}
+
+/** The pairing code's expiry is the frame's last line, under the instruction (mockup 05, sheet 9). */
+async function expiryLast(page) {
+  const [foot, lines] = await Promise.all(
+    [".canccu-frame__foot", ".canccu-frame--pairing .canccu-frame__bottom"].map((sel) =>
+      page.$eval(sel, (node) => node.getBoundingClientRect().toJSON()),
+    ),
+  );
+  if (foot.top < lines.bottom)
+    throw new Error("the pairing frame's expiry sits above its instruction");
 }
 
 /** Fonts and images loaded, the entry fade done. */

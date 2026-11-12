@@ -190,6 +190,14 @@ describe("the screen's own parts of the look", () => {
     expect(root.querySelector(".canccu-widget__zone")?.textContent).toBe("Main hall");
   });
 
+  it("names the zone only in the header, not in a logo elsewhere", () => {
+    const logo = widget("logo", { url: null, name: "Demo Event" });
+    const header = region("header", { widgets: [logo] });
+    const root = new Screen(host).draw(state([header, region("rail", { widgets: [logo] })]));
+    expect(root.querySelectorAll(".canccu-widget__zone")).toHaveLength(1);
+    expect(root.querySelector(".canccu-region--rail .canccu-widget__zone")).toBeNull();
+  });
+
   it("names the zone in the header when the theme has no logo", () => {
     // Without a theme logo the server sends the logo widget no view, so the region shows its idle
     // logo (modules/screen/src/compose/widgets.ts).
@@ -280,6 +288,8 @@ describe("the screen's own parts of the look", () => {
       const box = root.querySelector(".canccu-region--rail");
       expect(box?.querySelector(".canccu-widget--agenda_now")).toBeNull();
       expect(box?.querySelector(".canccu-widget--logo")).not.toBeNull();
+      // The event's card, not a second header: the zone is the header's alone.
+      expect(box?.querySelector(".canccu-widget__zone")).toBeNull();
       // The hero still takes its item's place and delay from the row the rail leaves out.
       expect(root.querySelector(".canccu-region--hero .canccu-widget__when")?.textContent).toBe(
         "19:30Stage+15 min",
