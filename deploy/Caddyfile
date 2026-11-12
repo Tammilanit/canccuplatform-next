@@ -125,18 +125,24 @@
 		reverse_proxy notify:8080
 	}
 
-	# Screen's Studio pages, which the kiosk's pairing QR opens (/admin/screen/devices#pair=,
-	# contracts/screen.md, Pairing): screen's own paths, not stripped, ahead of admin's pages.
-	handle /admin/screen {
-		redir * /admin/screen/{?query} 308
-	}
-
-	handle /admin/screen/* {
-		reverse_proxy screen:8080
-	}
-
+	# Admin's pages, and inside them screen's Studio pages, which the kiosk's pairing QR opens
+	# (/admin/screen/devices#pair=, contracts/screen.md, Pairing): screen's own paths, given back
+	# their prefix. They sit in this block, not in a handle of their own: Caddy sorts the top-level
+	# path routes, and one more there reorders the hidden-path rules above behind their prefixes.
 	handle_path /admin/* {
-		reverse_proxy admin:8080
+		@screen-studio path /screen/*
+		handle @screen-studio {
+			rewrite * /admin{path}
+			reverse_proxy screen:8080
+		}
+
+		handle /screen {
+			redir * /admin/screen/{?query} 308
+		}
+
+		handle {
+			reverse_proxy admin:8080
+		}
 	}
 
 	handle {
