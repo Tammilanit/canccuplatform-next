@@ -668,7 +668,8 @@ components:
           default: null
           description: |
             A region id of the zone's layout that holds the hero role: it and the hero region trade areas. Null, the hero
-            region's own id or an id the layout does not have trades nothing (contracts/screen.md, The hero role and the showcase).
+            region's own id, an id the layout does not have, or a region whose role is `header`, `ticker` or `backdrop`
+            trades nothing (contracts/screen.md, The hero role and the showcase).
         grow_for_showcase:
           type: boolean
           default: true
