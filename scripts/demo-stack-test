@@ -37,7 +37,7 @@ TESTS=(
   "PUT settings with a stale version is 409 version_conflict"
   "unknown module is 404 not_found"
   "GET /api/admin/profile exports a zip with profile.yaml and its assets"
-  "health view page lists admin and hello"
+  "health view page names admin and the run of show"
   "importing the demo zip again restores the demo profile's settings"
   "admin's own GET /api/admin/session without a session is 401 not_signed_in"
   "the sign-in page answers and offers the first-run code"
@@ -156,12 +156,13 @@ check "${TESTS[10]}" export_has_demo
 
 call GET /admin/health-view -H "cookie: $COOKIE"
 # shellcheck disable=SC2329
-lists_admin_and_hello() {
-  # Each part by name, its id in the Log name column (UX audit A2).
-  status_is 200 && grep -q '<b>Admin</b>' "$TMP/body" && grep -q '<b>Test module</b>' "$TMP/body" \
-    && grep -q '<code class="canccu-muted">hello</code>' "$TMP/body"
+names_the_parts() {
+  # Each part by name, its id in the Log name column (UX audit A2); the test module hello is
+  # left out of Health (deploy/compose.yml).
+  status_is 200 && grep -q '<b>Admin</b>' "$TMP/body" && grep -q '<b>Run of show</b>' "$TMP/body" \
+    && grep -q '<code class="canccu-muted">agenda</code>' "$TMP/body"
 }
-check "${TESTS[11]}" lists_admin_and_hello
+check "${TESTS[11]}" names_the_parts
 
 # The export above saved the changed settings into the event folder; import the demo again
 # so the screenshots that follow show the demo event.
