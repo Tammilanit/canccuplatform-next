@@ -48,7 +48,10 @@ def test_a_delay_tells_screens_phones_once_per_audience_and_discord() -> None:
 
 def test_items_more_than_two_hours_out_stay_quiet_on_phones() -> None:
     rows = dict(told("cancel", [change(starts_at=NOW + timedelta(minutes=121))], NOW))
-    assert rows["Phones"] == "Quiet for 1 item(s) starting more than 2 h from now."
+    assert rows["Phones"] == "Quiet for 1 item starting more than 2 h from now."
+    later = [change(starts_at=NOW + timedelta(minutes=m)) for m in (121, 180)]
+    rows = dict(told("cancel", later, NOW))
+    assert rows["Phones"] == "Quiet for 2 items starting more than 2 h from now."
 
 
 def test_crew_items_never_reach_screens_or_the_channel() -> None:

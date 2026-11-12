@@ -3,7 +3,7 @@
 import { withTenant } from "@canccu/kit";
 import type { Event } from "@canccu/kit";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { applyAgendaEvent, loadAgendaItems } from "../src/content/agenda.js";
+import { applyAgendaEvent, loadAgendaItems, loadAgendaLabels } from "../src/content/agenda.js";
 import { DATABASE_URL, harness } from "./helpers.js";
 import type { Harness } from "./helpers.js";
 
@@ -111,9 +111,55 @@ describe.skipIf(!DATABASE_URL)("agenda items", () => {
     expect((await items()).get("it_2")?.endsAt).toBeNull();
   });
 
+  it("keeps each item's title and whether it is crew-only, for the schedule calendar", async () => {
+    await apply(
+      event("agenda.item.added", {
+        item: item("it_4", "2026-01-02T18:00:00Z", "2026-01-02T19:00:00Z", {
+          title: "Crew briefing",
+          visibility: "crew",
+        }),
+        agenda_version: 6,
+      }),
+    );
+    await apply(
+      event("agenda.item.added", {
+        item: item("it_5", "2026-01-02T19:00:00Z", "2026-01-02T20:00:00Z", {
+          title: "Dinner",
+          visibility: "public",
+        }),
+        agenda_version: 7,
+      }),
+    );
+    const labels = await withTenant("alpha", () => h.db.tenant(loadAgendaLabels));
+    expect(labels.get("it_4")).toEqual({ title: "Crew briefing", crew: true });
+    expect(labels.get("it_5")).toEqual({ title: "Dinner", crew: false });
+  });
+
+  it("fills the title of a row kept before titles were, when its last event is replayed", async () => {
+    await withTenant("alpha", () =>
+      h.db.tenant((c) =>
+        c.query(
+          `INSERT INTO screen_agenda_items (id, starts_at, ends_at, status, revision, agenda_version)
+           VALUES ('it_6', '2026-01-03T10:00:00Z', '2026-01-03T11:00:00Z', 'scheduled', 1, 8)`,
+        ),
+      ),
+    );
+    await apply(
+      event("agenda.item.added", {
+        item: item("it_6", "2026-01-03T10:00:00Z", "2026-01-03T11:00:00Z", {
+          title: "Quiz",
+          visibility: "crew",
+        }),
+        agenda_version: 8,
+      }),
+    );
+    const labels = await withTenant("alpha", () => h.db.tenant(loadAgendaLabels));
+    expect(labels.get("it_6")).toEqual({ title: "Quiz", crew: true });
+  });
+
   it("ignores what it does not use and malformed items", async () => {
     await apply(event("agenda.kind.saved", { kind: { key: "talk" }, kinds_version: 1 }));
     await apply(event("agenda.item.added", { item: { id: "it_3" }, agenda_version: 5 }));
-    expect([...(await items()).keys()].sort()).toEqual(["it_2"]);
+    expect([...(await items()).keys()].sort()).toEqual(["it_2", "it_4", "it_5", "it_6"]);
   });
 });

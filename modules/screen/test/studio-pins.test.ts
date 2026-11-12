@@ -61,7 +61,7 @@ describe.skipIf(!DATABASE_URL)("studio pins", () => {
     for (const session of ["nobody", "ticker", "zoner"]) {
       expect((await page("/admin/screen/pins", session)).statusCode, session).toBe(403);
     }
-    expect((await page("/admin/screen/", "content")).headers.location).toBe("/admin/screen/pins");
+    expect((await page("/admin/screen/", "bundler")).headers.location).toBe("/admin/screen/pins");
   });
 
   it("offers Freeze for the event, until its end, only to screen.bundle.write", async () => {

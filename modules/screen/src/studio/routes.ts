@@ -43,6 +43,7 @@ import { CLIENT_KEYS, translator } from "./messages.js";
 import type { MessageKey, Translate } from "./messages.js";
 import { devicesActions, devicesView } from "./devices-view.js";
 import { frozenBanner, pinsView } from "./pins-view.js";
+import { schedulePage } from "./schedule-page.js";
 import { STATIC_TYPES, staticFile } from "./static.js";
 import { tickerView } from "./ticker-view.js";
 import { STUDIO, liveActions, liveView, startUrlOf } from "./views.js";
@@ -69,12 +70,14 @@ const SIGN_IN = "/admin/sign-in";
 const READ = "screen.devices.read";
 const ZONES = "screen.zones.write";
 const TICKER = "screen.ticker.write";
+const CONTENT = "screen.content.read";
 
 /** The tabs, each shown only to holders of one of its rights (Live and Devices share one). */
 const TABS: [path: string, label: MessageKey, rights: readonly string[]][] = [
   ["live", "tab.live", [READ]],
   ["devices", "tab.devices", [READ]],
   ["zones", "tab.zones", [ZONES]],
+  ["schedule", "tab.schedule", [CONTENT]],
   ["ticker", "tab.ticker", [TICKER]],
   ["pins", "tab.pins", PIN_READ_RIGHTS],
 ];
@@ -133,8 +136,10 @@ interface PageOptions {
   crumb?: { href: string; label: string };
   status?: number;
   plain?: boolean;
-  /** A page's own stylesheet and script (`<name>.css`, `<name>.js`); the script uses studio.js's helpers. */
+  /** A page's own stylesheet and script, if it has one (`<name>.css`, `<name>.js`, using studio.js's helpers). */
   own?: string;
+  /** Rules made of numbers only (the schedule's block places), under the page's nonce. */
+  style?: string;
 }
 
 async function studioPage(
@@ -159,7 +164,13 @@ async function studioPage(
     head: html`<link
         rel="stylesheet"
         href="${STUDIO}static/studio.css"
-      />${o.own === undefined ? "" : html`<link rel="stylesheet" href="${STUDIO}static/${o.own}.css" />`}`,
+      />${o.own === undefined ? "" : html`<link rel="stylesheet" href="${STUDIO}static/${o.own}.css" />`}${
+        o.style === undefined
+          ? ""
+          : html`<style nonce="${nonce}">
+              ${raw(o.style)}
+            </style>`
+      }`,
     event: await eventOf(request, deps),
     session: request.session ?? undefined,
     current: "screen",
@@ -181,7 +192,7 @@ async function studioPage(
       <p class="canccu-studio-notice" role="status" hidden></p>
       ${o.body}${clientText(t)}
       <script src="${STUDIO}static/studio.js" defer></script>
-      ${o.own === undefined ? "" : html`<script src="${STUDIO}static/${o.own}.js" defer></script>`}`,
+      ${o.own === undefined || !Object.hasOwn(STATIC_TYPES, `${o.own}.js`) ? "" : html`<script src="${STUDIO}static/${o.own}.js" defer></script>`}`,
   });
   // Admin pages frame surface pages (the virtual screen) and are never framed themselves.
   return reply
@@ -322,6 +333,19 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
           body: zoneEditorView(c, zone, layouts, all),
           own: "studio-zone",
         });
+      },
+    );
+
+    studio.get<{ Querystring: { zone?: string; from?: string; day?: string } }>(
+      `${STUDIO}schedule`,
+      { preHandler: pageNeeds(deps.rights, [CONTENT]) },
+      async (request, reply) => {
+        const c = await context(request);
+        const [zones, all] = [await readZones(deps, tenantOf(request)), await devices()];
+        const event = await eventOf(request, deps);
+        const view = await schedulePage(deps.db, c, event, zones, all, request.query);
+        const o = { title: "", tab: "schedule", description: c.t("schedule.desc") };
+        return page(request, reply, c, { ...o, own: "studio-schedule", ...view });
       },
     );
 

@@ -117,7 +117,8 @@ def told(
         parts.append("Nothing; the item's channels leave phones out.")
     later = len(told_items) - len(soon)
     if later:
-        parts.append(f"Quiet for {later} item(s) starting more than 2 h from now.")
+        items = "item" if later == 1 else "items"
+        parts.append(f"Quiet for {later} {items} starting more than 2 h from now.")
     rows.append(("Phones", " ".join(parts) or "Nothing; quiet hours are never announced."))
     return rows + following
 
