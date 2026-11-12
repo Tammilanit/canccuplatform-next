@@ -1,51 +1,30 @@
 // The demo event's screen fixture for the screenshots (#375: "the demo event's fixture data"): a
-// run of show around now over two days with a running and a delayed item, a ticker line, the main
+// run of show around now over two days with a running and a delayed item (day.mjs), a ticker line, the main
 // zone named as mockup 02 names it and an entrance zone with the check-in QR in its hero (mockup
 // 03). The venue's Wi-Fi is seeded by deploy/compose.ci.yml, since tenants takes no CI session. A
 // rerun on the same stack adds nothing twice. Also the theme switch the screenshots of every demo
 // theme need.
 import { expect } from "./client.mjs";
+import { placeDay } from "./day.mjs";
 
-const MIN = 60_000;
-/**
- * Title, kind, start and end in minutes from the quarter hour before now, place, delay: a filled
- * day for the run of show's day view (#400), one item running and one delayed, and two items a day
- * later, so its day switch has two days whenever the run is. The delayed item has not started: a
- * running item's delay moves only its end, so agenda shows no delay for it.
- */
-const DAY = 24 * 60;
-const ITEMS = [
-  ["Doors open", "doors", -240, -180, "Entrance", 0],
-  ["Opening ceremony", "activity", -180, -150, "Stage", 0],
-  ["Demo Game Cup, group stage", "tournament", -150, -45, "Stage", 0],
-  ["Dinner", "meal", -30, 45, "Café", 0],
-  ["Demo Game Cup, semis", "tournament", 60, 150, "Stage", 15],
-  ["Board games corner", "activity", 90, 180, "Café", 0],
-  ["Pub quiz", "activity", 150, 210, "Café", 0],
-  ["Demo Game Cup, grand final", "tournament", 180, 270, "Stage", 0],
-  ["Breakfast", "meal", DAY - 60, DAY + 30, "Café", 0],
-  ["Demo Game Cup, awards", "activity", DAY + 60, DAY + 90, "Stage", 0],
-];
 export const TICKER =
   "Pizza orders close at 20:00 · Lost and found at the info desk · Grand final on stage tonight";
 
 /** The run of show, the ticker and the zones; answers the zones' keys. */
 export async function seedScreens(demo, now = Date.now()) {
-  const quarter = Math.floor(now / (15 * MIN)) * 15 * MIN;
-  const at = (minutes) => new Date(quarter + minutes * MIN).toISOString();
   const { items } = expect(
     await demo.call("GET", "/api/agenda/items"),
     200,
     "the run of show",
   ).body;
-  for (const [title, kind, start, end, location, delay] of ITEMS) {
+  for (const { delay, ...placed } of placeDay(now)) {
+    const { title } = placed;
     let item = items.find((i) => i.title === title);
     // Delayed once, when added: a rerun on the same stack would move it again.
     const added = item === undefined;
     if (added) {
-      const body = { title, kind, starts_at: at(start), ends_at: at(end), location };
       item = expect(
-        await demo.call("POST", "/api/agenda/items", { body: { ...body, visibility: "public" } }),
+        await demo.call("POST", "/api/agenda/items", { body: { ...placed, visibility: "public" } }),
         201,
         `adding "${title}" to the run of show`,
       ).body;
