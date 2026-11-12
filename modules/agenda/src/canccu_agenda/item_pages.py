@@ -217,7 +217,7 @@ async def save_page(request: Request) -> Response:
         if sent != row["revision"]:
             rebased = await merge.rebase(d, row, sent, fields, tz)
             if not rebased.complete or rebased.clash:
-                return _clash_page(request, rebased, item, kinds, tz)
+                return _clash_page(request, form, rebased, item, kinds, tz)
             fields = rebased.fields
         fields["announce"] = form.get("announce") == "1"
         # Only times the organiser changed are sent: sending the current time of a delayed item
@@ -241,11 +241,19 @@ async def save_page(request: Request) -> Response:
 
 
 def _clash_page(
-    request: Request, rebased: merge.Rebased, item: dict[str, Any], kinds: Any, tz: ZoneInfo
+    request: Request,
+    form: FormData,
+    rebased: merge.Rebased,
+    item: dict[str, Any],
+    kinds: Any,
+    tz: ZoneInfo,
 ) -> Response:
     """Who changed what since the form was read, and the form again as the item is now."""
     if not rebased.complete:
         raise model.conflict("version_conflict", "the item changed: read it again")
+    values = _values_of(item, tz)
+    # The organiser's "Tell people" choice stays: re-entering a quiet fix must not announce it.
+    values["announce"] = form.get("announce") or ""
     changes = "".join(f"<li>{esc(history.line(r, tz))}</li>" for r in rebased.log)
     body = (
         notice(
@@ -254,7 +262,7 @@ def _clash_page(
             "error",
         )
         + f'<ul class="canccu-agenda-changes">{changes}</ul>'
-        + _form(_values_of(item, tz), kinds, f"{BASE}/items/{esc(item['id'])}/edit")
+        + _form(values, kinds, f"{BASE}/items/{esc(item['id'])}/edit")
     )
     return page(request, f"Edit {item['title']}", body, status=409)
 

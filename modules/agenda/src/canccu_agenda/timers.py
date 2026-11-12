@@ -60,10 +60,12 @@ async def reschedule(
     only while its time is ahead: a lead that has passed is skipped, and a reminder that fired
     fires again only for the items in `rearm`, those this write moved to a new start in an
     announced change. Any other write (a quiet change, a kind, the lead-time setting) would
-    announce a quiet change by firing it again. Arming a fired lead again forgets that it fired,
-    so the new reminder counts as unfired for later changes. A pending reminder still moves with
-    a quiet change; it has told nobody yet. A start or end that has not fired yet always fires,
-    also when a move puts it at or before now: the next tick fires it late.
+    announce a quiet change by firing it again. The fired record is kept when a lead is armed
+    again: if that reminder is dropped before it fires (an announced move back), a later quiet
+    change must still see the lead as spent. While a reminder for the lead is pending it still
+    moves with a quiet change; it has told nobody of this change yet. A start or end that has
+    not fired yet always fires, also when a move puts it at or before now: the next tick fires
+    it late.
     """
     rows = list(rows)
     if not rows:
@@ -89,19 +91,14 @@ async def reschedule(
         kind = kinds.get(row["kind"])
         want = set(wanted(row, None if kind is None else kind["reminder_leads_minutes"], leads))
         pending = {k for k, _, _ in have[row["id"]] if k != "reminder"}
-        spent = set() if row["id"] in rearm else fired[row["id"]]
+        armed = {lead for k, lead, _ in have[row["id"]] if k == "reminder"}
+        spent = set() if row["id"] in rearm else fired[row["id"]] - armed
         stale += [(row["id"], k, lead) for k, lead, _ in have[row["id"]] - want]
         new += [
             (row["id"], *t)
             for t in want - have[row["id"]]
             if (t[2] > now or t[0] in pending) and not (t[0] == "reminder" and t[1] in spent)
         ]
-    # A row left behind would count the new reminder as fired: a quiet change could drop it.
-    again = [(i, lead) for i, k, lead, _ in new if k == "reminder" and lead in fired[i]]
-    if again:
-        await conn.executemany(
-            "DELETE FROM agenda_reminders_fired WHERE item_id = $1 AND lead_minutes = $2", again
-        )
     if stale:
         await conn.execute(
             "DELETE FROM agenda_timers WHERE (item_id, kind, lead_minutes) IN"

@@ -9,6 +9,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
+import pytest
 from canccu_kit import Event, tenant_scope
 from conftest import NOW, Env, at
 from test_edit_pages import variant
@@ -167,7 +168,9 @@ async def test_after_a_quiet_delay_an_announced_edit_of_other_fields_fires_no_re
     assert await run_at(env, 45) == []
 
 
-async def test_a_reminder_armed_again_by_an_announced_delay_counts_as_unfired(env: Env) -> None:
+async def test_a_fired_lead_dropped_and_restored_by_quiet_edits_does_not_fire_again(
+    env: Env,
+) -> None:
     h = env.writer()
     async with env.client() as c:
         item = await add(c, h, ends_at=at(120), reminder_leads_minutes=[30])
@@ -175,11 +178,39 @@ async def test_a_reminder_armed_again_by_an_announced_delay_counts_as_unfired(en
         env.clock[0] = NOW + timedelta(minutes=35)
         path = f"/api/agenda/items/{item['id']}"
         await c.post(f"{path}/delay", json={"revision": 1, "minutes": 15}, headers=h)
-        # Quiet edits drop the armed 30 and bring it back: it has not told anyone of the delay.
+        # Quiet edits drop the armed 30 and bring it back: once it is no longer pending, the 30
+        # counts as fired, and bringing it back quietly would announce the delay a second time.
         for revision, leads in ((2, [10]), (3, [30])):
             quiet = {"revision": revision, "reminder_leads_minutes": leads, "announce": False}
             await c.patch(path, json=quiet, headers=h)
-    assert await run_at(env, 45) == [("agenda.reminder.triggered", 30)]
+    assert await run_at(env, 45) == []
+    assert await run_at(env, 75) == [("agenda.item.started", "Dinner")]
+
+
+@pytest.mark.parametrize("back", ["undo", "edit"])
+async def test_a_quiet_delay_after_an_announced_delay_and_its_reversal_fires_no_reminder_again(
+    env: Env, back: str
+) -> None:
+    """The armed reminder is dropped when the item goes back to a start whose lead has passed;
+    the 30 that went out still counts as fired for the quiet delay that follows."""
+    h = env.writer()
+    async with env.client() as c:
+        item = await add(c, h, ends_at=at(120), reminder_leads_minutes=[30])
+        assert await run_at(env, 30) == [("agenda.reminder.triggered", 30)]
+        env.clock[0] = NOW + timedelta(minutes=35)
+        form = {"revision": "1", "minutes": "15", "announce": "1", "agenda_version": "1"}
+        done = await c.post(f"/items/{item['id']}/delay", data=form, headers=h)
+        if back == "undo":
+            await c.post(f"/undo/{undo_id(done)}", headers=h)
+        else:
+            moved = {"revision": 2, "starts_at": at(60), "ends_at": at(120)}
+            await c.patch(f"/api/agenda/items/{item['id']}", json=moved, headers=h)
+        quiet = {"revision": 3, "minutes": 60, "announce": False}
+        await c.post(f"/api/agenda/items/{item['id']}/delay", json=quiet, headers=h)
+    assert [e["data"]["announce"] for e in of(env, "agenda.item.delayed")][-1] is False
+    assert await run_at(env, 45) == []
+    assert await run_at(env, 90) == []  # the 30 before the quiet new start: a second reminder
+    assert await run_at(env, 120) == [("agenda.item.started", "Dinner")]
 
 
 async def test_undoing_a_quiet_delay_is_quiet_too(env: Env) -> None:

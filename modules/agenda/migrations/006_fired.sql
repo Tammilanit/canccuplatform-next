@@ -15,5 +15,5 @@ ALTER TABLE agenda_reminders_fired ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agenda_reminders_fired FORCE ROW LEVEL SECURITY;
 CREATE POLICY canccu_tenant ON agenda_reminders_fired USING (tenant_id = NULLIF(current_setting('canccu.tenant', true), '')) WITH CHECK (tenant_id = NULLIF(current_setting('canccu.tenant', true), ''));
 
--- DELETE: an announced move that arms a fired reminder again forgets that it fired.
-GRANT SELECT, INSERT, DELETE ON agenda_reminders_fired TO canccu_agenda_app;
+-- No DELETE: a fired reminder stays recorded, also when an announced move arms it again.
+GRANT SELECT, INSERT ON agenda_reminders_fired TO canccu_agenda_app;
