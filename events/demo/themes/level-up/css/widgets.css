@@ -39,6 +39,19 @@
 .canccu-widget--clock::before {
   content: none;
 }
+/* In a built-in layout's header the clock's part spans half the screen: a glass panel that wide,
+   holding one line of date and time, read as an empty box. The panel frames its content only, at
+   the right edge, with the accent edge of every other panel. */
+.canccu-surface--screen .canccu-region--header > .canccu-widget--clock,
+.canccu-surface--screen .canccu-region--header-2 > .canccu-widget--clock {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+}
+.canccu-surface--screen .canccu-region--header > .canccu-widget--clock::before,
+.canccu-surface--screen .canccu-region--header-2 > .canccu-widget--clock::before {
+  content: "";
+}
 
 /* agenda_now: the running item with its bar, then the next ones */
 .t-agenda {
