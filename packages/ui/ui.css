@@ -1301,18 +1301,21 @@
     line-height: 1.2 !important;
     white-space: nowrap !important;
   }
+  /* Sized by the screen's short side, so a portrait screen's code fits its width and a 4K one
+     doubles with the rest of the page (sheet 9 of docs/design: the marker at 42 px at 1080p). */
   .canccu-pairing-code {
     inset: 0 !important;
     width: fit-content !important;
     height: fit-content !important;
     margin: auto !important;
     font-family: ui-monospace, monospace !important;
-    font-size: max(32px, 8vh) !important;
+    font-size: max(32px, 8vmin) !important;
     letter-spacing: 0.1em !important;
   }
   .canccu-offline-marker {
-    top: max(8px, 1.5vh) !important;
-    right: max(8px, 1.5vh) !important;
+    top: max(8px, 1.5vmin) !important;
+    right: max(8px, 1.5vmin) !important;
+    font-size: max(16px, 3.9vmin) !important;
   }
   .canccu-privacy-link {
     bottom: 8px !important;

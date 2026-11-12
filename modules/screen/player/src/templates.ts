@@ -40,13 +40,17 @@ const OWN_QR: TreeNode[] = [
 
 // The tree has no `{{.}}` (theming's names are `a.b` only), so no template can show a list of plain
 // strings: the `names` and `voice_channels` lists stay off the defaults.
+// A row carries both its end and its start: the look shows the end on a now row and the start on a
+// next or delayed row (rail.css), since a template cannot branch on a field's value.
 const AGENDA_ROW = el(
   "li",
   null,
   [
     el("span", "state", [f("state")]),
     el("strong", "name", [f("name")]),
-    el("span", "meta", [sec("location", f("location"), t(" · ")), f("starts_text")]),
+    sec("ends_text", el("span", "until", [t("until "), f("ends_text")])),
+    el("span", "starts", [f("starts_text")]),
+    sec("location", el("span", "where", [f("location")])),
     el("span", null, [t("+"), f("delay_minutes"), t(" min")], {
       class: [t("canccu-widget__delay canccu-widget__delay--"), f("state")],
     }),
@@ -54,15 +58,59 @@ const AGENDA_ROW = el(
   { class: [t("canccu-widget__row canccu-widget__row--"), f("state")] },
 );
 
+/**
+ * A bar that fills as `field`'s time comes near, over the last `span` seconds (widget.ts,
+ * fillCountdowns): a countdown's last hour. A template may hold no `data-` attribute (theming.md,
+ * Widget templates), so the span travels in the class.
+ */
+const bar = (field: string, span: number): TreeNode =>
+  el("time", null, [], {
+    class: [t(`canccu-widget__bar canccu-widget__bar--${String(span)}s`)],
+    datetime: [f(field)],
+  });
+
+/**
+ * A check-in code's bar, over one rotation period. The period is an event setting (15–120 s,
+ * notify.md, Settings) the view does not carry, but a code is valid for its own period and the
+ * next (notify.openapi.yaml, CheckInCodeNow), so the bar holds `valid_until` in a child and the
+ * span is `valid_until − rotates_at`.
+ */
+const CODE_BAR: TreeNode = sec(
+  "rotates_at",
+  sec(
+    "valid_until",
+    el("time", "bar", [el("time", "bar-end", [], { datetime: [f("valid_until")] })], {
+      datetime: [f("rotates_at")],
+    }),
+  ),
+);
+
 export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = {
-  clock: [el("time", "big", [f("time")], { datetime: [f("iso")] }), el("p", "meta", [f("date")])],
-  agenda_now: [title("title"), el("ul", "body", [sec("items", AGENDA_ROW)]), QR],
+  clock: [el("p", "meta", [f("date")]), el("time", "big", [f("time")], { datetime: [f("iso")] })],
+  // No title: each row is labelled (NOW, NEXT), so "Now and next" above them says it twice.
+  agenda_now: [el("ul", "body", [sec("items", AGENDA_ROW)]), QR],
+  // `starts_text`, `location` and `delay_minutes` are the player's (hero-rail.ts): the countdown's
+  // view-model has only the target, so the player adds what the rail's row of the same item says.
+  // `next_up` is the player's too (screen.ts, idleOf): only the idle `next` countdown is surely the
+  // next item; a widget's countdown may count to any item, and a claim's to anything.
   countdown: [
-    title("label"),
-    el("time", "big", [], { datetime: [f("target_at")] }),
-    sec("ends_text", el("p", "meta", [t("until "), f("ends_text")])),
+    sec("next_up", el("p", "kicker", [t("Next up")])),
+    el("p", "headline", [f("label")]),
+    el("p", "when", [
+      sec("starts_text", el("span", "starts", [f("starts_text")])),
+      sec("location", el("span", "where", [f("location")])),
+      sec(
+        "delay_minutes",
+        el("span", null, [t("+"), f("delay_minutes"), t(" min")], {
+          class: [t("canccu-widget__delay canccu-widget__delay--delayed")],
+        }),
+      ),
+    ]),
+    el("p", "count", [t("Starts in "), el("time", "big", [], { datetime: [f("target_at")] })]),
+    bar("target_at", 3600),
   ],
   hot_game: [
+    el("p", "kicker", [t("Hot right now")]),
     sec("game", sec("cover_url", img("cover_url", "image")), el("p", "big", [f("name")])),
     el("p", "meta", [f("players"), t(" playing now")]),
     QR,
@@ -117,11 +165,16 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     ]),
   ],
   announcement: [
-    el("div", null, [title("title"), el("p", "body", [f("body")])], {
-      class: [t("canccu-widget__level canccu-widget__level--"), f("level")],
-    }),
+    el(
+      "div",
+      null,
+      [el("p", "kicker", [t("Announcement")]), title("title"), el("p", "body", [f("body")])],
+      {
+        class: [t("canccu-widget__level canccu-widget__level--"), f("level")],
+      },
+    ),
   ],
-  ticker: [el("p", "line", [f("text")])],
+  ticker: [el("p", "label", [t("Info")]), el("p", "line", [f("text")])],
   food_status: [
     el("p", "title", [f("pizzeria_name")]),
     el("p", "big", [f("state")]),
@@ -129,7 +182,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     QR,
   ],
   qr: OWN_QR,
-  checkin_qr: OWN_QR,
+  checkin_qr: [...OWN_QR, CODE_BAR],
   venue_info: [
     el("ul", "body", [
       sec(
@@ -138,7 +191,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
           el("span", "state", [t("Wi-Fi")]),
           el("strong", "name", [f("ssid")]),
           sec("password", el("span", "meta", [f("password")])),
-          not("password", el("span", "meta", [t("password on the hub")])),
+          not("password", el("span", "meta", [t("Password on the hub")])),
           sec("note", el("span", "meta", [f("note")])),
         ]),
       ),
@@ -165,7 +218,12 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     sec("points", el("p", "meta", [f("points"), t(" points")])),
   ],
   sting: [sec("image_url", img("image_url", "image")), el("p", "big", [f("text")])],
-  logo: [sec("url", img("url", "image", [f("name")])), not("url", el("p", "big", [f("name")]))],
+  // The name is written out beside the image, so the image's `alt` stays empty.
+  logo: [
+    sec("url", img("url", "image")),
+    el("p", "name", [f("name")]),
+    sec("zone_name", el("p", "zone", [f("zone_name")])),
+  ],
 };
 
 interface ThemeTemplate {

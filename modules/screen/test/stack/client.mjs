@@ -13,9 +13,10 @@ const WAIT_MS = 5000;
 
 /** One event's calls: every request names `host`, which is how screen finds the event. */
 export function event(host) {
-  function call(method, path, { cookie = SESSION, body } = {}) {
+  /** A `Buffer` body goes as it is, with `type`; anything else as JSON. The answer's raw bytes are `bytes`. */
+  function call(method, path, { cookie = SESSION, body, type = "application/json" } = {}) {
     return new Promise((resolve, reject) => {
-      const payload = body === undefined ? undefined : JSON.stringify(body);
+      const payload = body === undefined || Buffer.isBuffer(body) ? body : JSON.stringify(body);
       const req = request(
         {
           ...SCREEN,
@@ -24,15 +25,16 @@ export function event(host) {
           headers: {
             host,
             cookie,
-            ...(payload === undefined ? {} : { "content-type": "application/json" }),
+            ...(payload === undefined ? {} : { "content-type": type }),
           },
           timeout: WAIT_MS,
         },
         (res) => {
-          let text = "";
-          res.setEncoding("utf8");
-          res.on("data", (c) => (text += c));
+          const chunks = [];
+          res.on("data", (c) => chunks.push(c));
           res.on("end", () => {
+            const bytes = Buffer.concat(chunks);
+            const text = bytes.toString("utf8");
             const cookies = [res.headers["set-cookie"] ?? []].flat();
             let parsed = null;
             try {
@@ -40,7 +42,7 @@ export function event(host) {
             } catch {
               parsed = text;
             }
-            resolve({ status: res.statusCode, body: parsed, cookies });
+            resolve({ status: res.statusCode, body: parsed, cookies, bytes });
           });
         },
       );

@@ -90,9 +90,11 @@ describe("the kiosk check", () => {
       viewport: () => good.viewport,
       offline: () => good.offline,
     }).start();
-    const names = [...document.querySelectorAll(".canccu-check__name")].map((n) => n.textContent);
+    const names = [...document.querySelectorAll(".canccu-selfcheck__name")].map(
+      (n) => n.textContent,
+    );
     expect(names).toEqual(["Screen", "Clock", "Device", "Sound", "Offline", "Player"]);
-    expect(document.querySelector("button.canccu-check__unlock")).not.toBeNull();
+    expect(document.querySelector("button.canccu-selfcheck__unlock")).not.toBeNull();
   });
 
   it("checks again only once the last check ended, and a late answer never lands over a newer one", async () => {
@@ -112,8 +114,8 @@ describe("the kiosk check", () => {
         offline: () => good.offline,
       }).start();
       const device = () =>
-        [...document.querySelectorAll(".canccu-check__row")].find(
-          (li) => li.querySelector(".canccu-check__name")?.textContent === "Device",
+        [...document.querySelectorAll(".canccu-selfcheck__row")].find(
+          (li) => li.querySelector(".canccu-selfcheck__name")?.textContent === "Device",
         )?.className;
       const answered = device();
       await vi.advanceTimersByTimeAsync(5000);
@@ -121,7 +123,7 @@ describe("the kiosk check", () => {
       // No third read while the second is out.
       await vi.advanceTimersByTimeAsync(5000);
       expect(reads).toBe(2);
-      document.querySelector<HTMLButtonElement>("button.canccu-check__unlock")?.click();
+      document.querySelector<HTMLButtonElement>("button.canccu-selfcheck__unlock")?.click();
       await vi.advanceTimersByTimeAsync(0);
       expect(reads).toBe(3);
       // The hung read (out since 5 s) gives up with no answer, after the tap's check answered;

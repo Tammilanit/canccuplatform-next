@@ -70,8 +70,16 @@ function state(rail: Partial<Region> = {}, full: unknown = null, overlay: unknow
 
 let shift = 0;
 const host = { serverNow: () => Date.now() + shift, reducedMotion: () => false };
+/** A widget's text without the ticker's "Info" label, which every ticker carries. */
+const unlabelled = (el: Element | null | undefined): string => {
+  const copy = el?.cloneNode(true) as Element | undefined;
+  copy?.querySelectorAll(".canccu-widget__label").forEach((label) => {
+    label.remove();
+  });
+  return copy?.textContent ?? "";
+};
 const text = (screen: Screen, id: string) =>
-  screen.root.querySelector(`.canccu-region--${id}`)?.textContent ?? "";
+  unlabelled(screen.root.querySelector(`.canccu-region--${id}`));
 const typeIn = (screen: Screen, id: string) =>
   screen.root.querySelector(`.canccu-region--${id} > .canccu-widget`)?.className ?? "";
 

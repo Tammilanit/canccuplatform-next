@@ -1,9 +1,11 @@
 // The views scripts/demo-screenshots takes (#376), in one Chromium: every user-facing surface of
-// the demo event, signed in with the CI session stub's cookie (deploy/compose.ci.yml), and a
-// screen paired for the run in landscape and portrait. A user-visible PR's reviewer holds them
-// against the mockups (AGENTS.md, A package run). A page that does not answer 200 itself or whose
-// API reads are refused, or a screen that does not draw the event, fails the run, so a screenshot of an error never passes for a
-// real one. Runs in Caddy's network namespace (scripts/demo-screenshots says why).
+// the demo event, signed in with the CI session stub's cookie (deploy/compose.ci.yml), and the
+// screens of every demo theme with their readability check (#191,
+// modules/screen/test/stack/screens.mjs). A user-visible PR's reviewer holds them against the
+// mockups (AGENTS.md, A package run). A page that does not answer its own status or whose API
+// reads are refused, a screen that does not draw the event, or a screen whose text does not read
+// from across a hall fails the run, so a screenshot of an error never passes for a real one. Runs
+// in Caddy's network namespace (scripts/demo-screenshots says why).
 // Usage: node demo-screenshots.mjs [--dry-run] [--base BASE_URL] [--out DIR]
 import { mkdirSync } from "node:fs";
 import { parseArgs } from "node:util";
@@ -14,6 +16,8 @@ import {
   event,
   expect,
 } from "../modules/screen/test/stack/client.mjs";
+import { guestReads } from "../modules/screen/test/stack/fixture.mjs";
+import { planned, screenShots } from "../modules/screen/test/stack/screens.mjs";
 
 const { values: opts } = parseArgs({
   options: {
@@ -82,11 +86,6 @@ const ITEM_PAGES = [
   ["agenda-delay-phone", "/delay?minutes=10", PHONE],
   ["agenda-edit", "/edit", DESK],
 ];
-// The demo event's main zone in the default theme. Every theme and the 4K sizes are #191's.
-const SCREENS = [
-  ["pulse-landscape", { width: 1920, height: 1080 }],
-  ["pulse-portrait", { width: 1080, height: 1920 }],
-];
 
 if (opts["dry-run"]) {
   console.log(`dry run, would screenshot into ${opts.out}/:`);
@@ -103,10 +102,8 @@ if (opts["dry-run"]) {
     const path = `/agenda/items/<an item made for the run>${suffix}`;
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height})`);
   }
-  for (const [name, { width, height }] of SCREENS) {
-    console.log(
-      `  ${name}.png  ${at("/screen/")}  (${width}×${height}, a paired screen)`,
-    );
+  for (const name of planned()) {
+    console.log(`  ${name}.png  ${at("/screen/")}  (a paired screen)`);
   }
   process.exit(0);
 }
@@ -228,8 +225,17 @@ async function addItem(title, kind, from, minutes) {
   made.push(item);
   return item;
 }
+async function removeMade() {
+  for (const { id, title } of made.splice(0)) {
+    try {
+      const path = `/api/agenda/items/${id}?revision=1`;
+      expect(await demo.call("DELETE", path), 204, `removing ${title}`);
+    } catch (err) {
+      fail(`cleanup: ${firstLine(err)}`);
+    }
+  }
+}
 
-let device;
 try {
   try {
     await changeSettings("screen", (v) => ({
@@ -276,48 +282,42 @@ try {
       await shot(name, `/agenda/items/${item.id}${suffix}`, viewport, SESSION);
     }
   }
+  // Gone before the screens: their fixture finds its run of show by title and would take these.
+  await removeMade();
 
-  // Paired as a kiosk would be (contracts/screen.md, Pairing), from a venue address.
-  let reads = false;
+  // A guest who never checked in reads every public page; the screens play without it too.
   try {
-    device = await demo.pair("Screenshots", "main");
-    const state = await demo.call("GET", "/api/screen/device/state", {
-      cookie: device.cookie,
-    });
-    reads = Boolean(expect(state, 200, "the paired screen's state"));
+    await guestReads(demo);
   } catch (err) {
-    fail(`pulse: ${firstLine(err)}`);
+    fail(`guest: ${firstLine(err)}`);
   }
-  if (reads) {
-    for (const [name, viewport] of SCREENS) {
-      await shot(name, "/screen/", viewport, device.cookie, {
-        fullPage: false,
-        // The layout is drawn only from a state read; a pairing or error page has none. The player
-        // keeps its stream open, so there is no network idle: a second lets the entry motion end.
-        ready: async (page) => {
-          await page.waitForSelector(".canccu-layout", { timeout: 30_000 });
-          await page.waitForTimeout(1000);
-        },
-      });
-    }
+  try {
+    await screenShots({
+      browser,
+      demo,
+      at,
+      out: opts.out,
+      cookieOn,
+      fail,
+      ok: (name) => {
+        console.log(`ok   ${name}`);
+        count++;
+      },
+    });
+  } catch (err) {
+    fail(`screens: ${firstLine(err)}`);
   }
 } finally {
   await browser.close();
-  for (const { id, title } of made) {
-    try {
-      const path = `/api/agenda/items/${id}?revision=1`;
-      expect(await demo.call("DELETE", path), 204, `removing ${title}`);
-    } catch (err) {
-      fail(`cleanup: ${firstLine(err)}`);
-    }
-  }
-  // A rerun on the same stack would otherwise leave one more paired screen each time, or, after a
-  // failed pairing, an open code of the 3 the loopback may hold (contracts/screen.md, Pairing).
-  const [what, method, path] = device
-    ? ["revoking the screen", "POST", `/api/screen/devices/${device.id}/revoke`]
-    : ["clearing open pairing codes", "DELETE", "/api/screen/pairing"];
+  await removeMade();
+  // The pairing frame leaves an open code of the 3 the loopback may hold (contracts/screen.md,
+  // Pairing); the screens revoke their own devices.
   try {
-    expect(await demo.call(method, path), 204, what);
+    expect(
+      await demo.call("DELETE", "/api/screen/pairing"),
+      204,
+      "clearing open pairing codes",
+    );
   } catch (err) {
     fail(`cleanup: ${firstLine(err)}`);
   }

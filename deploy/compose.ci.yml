@@ -12,8 +12,9 @@
 #   starts.
 # - session-stub stands in for Discord sign-in, which CI cannot run: the rights checks of admin,
 #   screen, theming, agenda and notify ask it, not admin, for GET /api/admin/session. The cookie
-#   canccu_session=demo-ci is a session with every admin right, screen's content, pairing, device
-#   and ticker rights (the push latency test pairs a screen and changes the ticker), and the rights
+#   canccu_session=demo-ci is a session with every admin right, screen's content, pairing, device,
+#   ticker and zone rights (the push latency test pairs a screen and changes the ticker; the
+#   screenshots set the demo zones up), and the rights
 #   of the Theme studio (all three, as an event admin holds them), the agenda and the notify pages
 #   and the check-in code, which scripts/demo-screenshots shows; any other cookie is 401
 #   not_signed_in. Every other path goes on to admin, so the modules still read their settings
@@ -22,7 +23,9 @@
 services:
   # tenants has no path that makes an event before the superadmin's sign-in (#52, #150), so the
   # second event is written as the tenants module's own seed writes the first one. The superuser
-  # bypasses RLS, so `tenant_id` is given rather than taken from the transaction's setting.
+  # bypasses RLS, so `tenant_id` is given rather than taken from the transaction's setting. The
+  # demo event's Wi-Fi is written here too, for the screenshots' venue card (#375): tenants takes
+  # no CI session, so no API call can set it.
   tenant-two-seed:
     image: postgres:17.11-alpine
     environment:
@@ -39,6 +42,9 @@ services:
           VALUES ('demo-two', 'Demo Event Two', 'UTC', 'demo-venue', 'live') ON CONFLICT DO NOTHING;
         INSERT INTO venue_info (tenant_id, venue_id, copied_at, revision)
           VALUES ('demo-two', 'demo-venue', now(), 1) ON CONFLICT DO NOTHING;
+        UPDATE venue_info
+          SET wifi = '[{"ssid": "demo-guest", "password": null, "note": null, "visibility": "public"}]'
+          WHERE tenant_id = 'demo' AND wifi = '[]';
         INSERT INTO hostnames (hostname, tenant_id, kind, status, is_primary)
           VALUES ('demo-two.localhost', 'demo-two', 'platform', 'active', true) ON CONFLICT DO NOTHING;
         COMMIT;
@@ -149,7 +155,7 @@ configs:
       	}
       	handle @demo {
       		header Content-Type application/json
-      		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.pair", "screen.devices.write", "screen.ticker.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display"], "expires_at": "2099-01-01T00:00:00Z"}` 200
+      		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.pair", "screen.devices.write", "screen.ticker.write", "screen.zones.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display"], "expires_at": "2099-01-01T00:00:00Z"}` 200
       	}
       	handle /api/admin/session {
       		header Content-Type application/json

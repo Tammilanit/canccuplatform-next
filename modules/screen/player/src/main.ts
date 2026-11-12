@@ -6,6 +6,9 @@
  */
 import "./player.css";
 import "./screen.css";
+import "./widgets.css";
+import "./rail.css";
+import "./claims.css";
 import { audioSettled, unlockOnGesture } from "./audio.js";
 import { CheckPage } from "./check.js";
 import { OfflineStore } from "./offline.js";

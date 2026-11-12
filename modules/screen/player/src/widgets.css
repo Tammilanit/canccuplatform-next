@@ -1,0 +1,254 @@
+/*
+ * Each widget's own look in the Pulse's built-in look (#375: mockups 02–04 of the step 3 brief,
+ * sheet 9 of docs/design): the header, the hero and the ticker (the run of show, the venue card
+ * and the QRs: rail.css). On screen.css's frame, type scale and unit (`--canccu-u`), and in
+ * `canccu-base` like it, so a theme restyles any of it without `!important`.
+ */
+@layer canccu-base {
+  /*
+   * The header: logo, event and zone on the left, date and clock on the right; no card. A widget's
+   * own rules name the region too, to outweigh `.canccu-region > .canccu-widget` (screen.css).
+   */
+  .canccu-region[data-role="header"] > .canccu-widget {
+    border: 0;
+    background: none;
+    padding: 0;
+  }
+
+  .canccu-region[data-role="header"] > .canccu-widget--logo {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: calc(1.8 * var(--canccu-u));
+    white-space: nowrap;
+  }
+
+  .canccu-widget--logo .canccu-widget__image {
+    height: calc(4.6 * var(--canccu-u));
+    max-width: calc(18 * var(--canccu-u));
+  }
+
+  .canccu-widget--logo .canccu-widget__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: calc(3.6 * var(--canccu-u));
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .canccu-widget--logo .canccu-widget__zone {
+    font-size: calc(3.4 * var(--canccu-u));
+    color: var(--canccu-color-text-muted);
+  }
+
+  /*
+   * On a portrait layout the header's half is narrow and two rows high: the zone goes under the
+   * event's name, beside the logo, so the name is not cut short.
+   */
+  @container (aspect-ratio < 1) {
+    .canccu-region[data-role="header"] > .canccu-widget--logo {
+      display: grid;
+      grid-template: "image name" auto "image zone" auto / auto minmax(0, 1fr);
+      align-content: center;
+      row-gap: calc(0.6 * var(--canccu-u));
+    }
+  }
+
+  /* Out of the query: a theme that makes its widgets containers would turn it off for these. */
+  .canccu-widget--logo > .canccu-widget__image {
+    grid-area: image;
+  }
+
+  .canccu-widget--logo > .canccu-widget__name {
+    grid-area: name;
+  }
+
+  .canccu-widget--logo > .canccu-widget__zone {
+    grid-area: zone;
+  }
+
+  /*
+   * A logo out of the header (an empty region's idle choice): a card like the rail's others, the
+   * mark large over the event's name, both in its middle.
+   */
+  .canccu-region:not([data-role="header"]) > .canccu-widget--logo {
+    justify-content: center;
+    align-items: center;
+    gap: calc(2.4 * var(--canccu-u));
+    text-align: center;
+  }
+
+  .canccu-region:not([data-role="header"]) > .canccu-widget--logo .canccu-widget__image {
+    height: calc(14 * var(--canccu-u));
+    max-width: 80%;
+  }
+
+  .canccu-region:not([data-role="header"]) > .canccu-widget--logo .canccu-widget__name {
+    font-size: calc(5.5 * var(--canccu-u));
+  }
+
+  /* A wrapping row, so its one line of date and time centres in the band (`align-content`). */
+  .canccu-region > .canccu-widget--clock {
+    flex-flow: row wrap;
+    justify-content: flex-end;
+    align-content: center;
+    align-items: baseline;
+    gap: calc(1.8 * var(--canccu-u));
+  }
+
+  .canccu-widget--clock .canccu-widget__big {
+    font-family: var(--canccu-font-body);
+    font-size: calc(5.5 * var(--canccu-u));
+    font-weight: 500;
+  }
+
+  /*
+   * Offline (sheet 9): packages/ui's marker sits in the header's row, in place of the date, and
+   * nothing moves. ui.css fixes it to the screen's top right corner, at most 40 % of the short side
+   * wide ("offline since 13:20" at 3.9 %); the clock's box ends left of it (a margin, which no
+   * theme's padding undoes). On a portrait screen the header is two rows high and the marker sits
+   * above its text, so nothing changes there.
+   */
+  @media (orientation: landscape) {
+    body.canccu-is-offline .canccu-region > .canccu-widget--clock {
+      margin-right: calc(40vmin - var(--canccu-safe-inset));
+    }
+
+    body.canccu-is-offline .canccu-widget--clock .canccu-widget__meta {
+      display: none;
+    }
+  }
+
+  /*
+   * The hero: one large card on a glow of the theme's two colours (mockup 02). A countdown (the
+   * idle `next`) stacks its kicker, headline and when and where at the top, and its count and bar
+   * at the bottom (sheet 9).
+   */
+  .canccu-region[data-role="hero"] > .canccu-widget {
+    justify-content: flex-start;
+    gap: calc(1.6 * var(--canccu-u));
+    padding: calc(4 * var(--canccu-u)) calc(4.4 * var(--canccu-u));
+    background-image: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--canccu-color-primary) 16%, var(--canccu-color-surface)),
+      var(--canccu-color-surface) 55%,
+      color-mix(in srgb, var(--canccu-color-accent) 12%, var(--canccu-color-surface))
+    );
+  }
+
+  .canccu-region[data-role="hero"] .canccu-widget__meta {
+    font-size: calc(4 * var(--canccu-u));
+  }
+
+  .canccu-region[data-role="hero"] .canccu-widget--countdown .canccu-widget__bar {
+    margin-top: calc(1.4 * var(--canccu-u));
+  }
+
+  /*
+   * A countdown's start, place and delay (hero-rail.ts): the time strong, the place after it. It
+   * grows, so the count and bar sit at the bottom even under a theme that resets every
+   * paragraph's margin (the count's `margin-top: auto`).
+   */
+  .canccu-widget__when {
+    flex: 1 0 auto;
+    align-content: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: calc(1.6 * var(--canccu-u));
+    row-gap: calc(0.6 * var(--canccu-u));
+  }
+
+  .canccu-widget__when .canccu-widget__where {
+    font-size: calc(4.4 * var(--canccu-u));
+  }
+
+  .canccu-widget__when .canccu-widget__starts + .canccu-widget__where::before {
+    content: "· ";
+  }
+
+  .canccu-widget__when .canccu-widget__delay {
+    align-self: center;
+    font-size: calc(4 * var(--canccu-u));
+  }
+
+  /* The hero's rotation marks (screen.ts): a bar through the shown widget's time and its dots. */
+  .canccu-rotation {
+    position: absolute;
+    z-index: 1;
+    inset: auto calc(4.4 * var(--canccu-u)) calc(2.4 * var(--canccu-u));
+    display: flex;
+    align-items: center;
+    gap: calc(1.2 * var(--canccu-u));
+  }
+
+  .canccu-rotation__bar {
+    flex: 1;
+    margin-right: calc(1.2 * var(--canccu-u));
+  }
+
+  .canccu-rotation__dot {
+    width: calc(1.2 * var(--canccu-u));
+    height: calc(1.2 * var(--canccu-u));
+    border-radius: 50%;
+    background: var(--canccu-color-border);
+  }
+
+  .canccu-rotation__dot.canccu-is-active {
+    background: var(--canccu-color-primary);
+  }
+
+  .canccu-region:has(> .canccu-rotation) > .canccu-widget {
+    padding-bottom: calc(7 * var(--canccu-u));
+  }
+
+  /* The ticker: one calm line (L13) behind its label, fading between texts. */
+  .canccu-region > .canccu-widget--ticker {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: calc(2.4 * var(--canccu-u));
+    padding: 0 calc(2.4 * var(--canccu-u)) 0 0;
+  }
+
+  .canccu-widget--ticker .canccu-widget__label {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    padding: 0 calc(2.4 * var(--canccu-u));
+    background: var(--canccu-color-primary);
+    color: var(--canccu-color-primary-text);
+    font-size: calc(3.4 * var(--canccu-u));
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .canccu-widget__line {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: calc(4.4 * var(--canccu-u));
+  }
+
+  .canccu-layout[data-ticker="high_contrast"] .canccu-widget--ticker {
+    background: #000;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .canccu-layout[data-ticker="minimal"] .canccu-widget--ticker {
+    border: 0;
+    background: none;
+    color: var(--canccu-color-text);
+  }
+
+  .canccu-layout[data-ticker="broadcast"] .canccu-widget--ticker {
+    background: var(--canccu-color-primary);
+    color: var(--canccu-color-primary-text);
+    font-weight: 600;
+  }
+}

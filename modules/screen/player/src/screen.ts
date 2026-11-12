@@ -8,6 +8,8 @@ import { claimEnd, claimOf, claimShown } from "./claims.js";
 import type { ClaimState } from "./claims.js";
 import { driftAt, effectiveMotion, FADE_MS } from "./display.js";
 import type { Motion } from "./display.js";
+import { agendaOf, joinHeroAndRail } from "./hero-rail.js";
+import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
 import type { Layout, Region, ScreenState } from "./state.js";
 import { whenReady } from "./media.js";
@@ -55,6 +57,8 @@ interface Drawn {
   claim: ClaimState | null;
   /** After a claim with `on_end: next`: the widget shown instead of the rotation's, until when. */
   next: { index: number | null; until: number } | null;
+  /** The hero's rotation marks while it rotates (mockup 02): a bar and a dot per widget. */
+  marks: HTMLElement | null;
 }
 
 const grid = (n: number): string => `repeat(${String(n)}, minmax(0, 1fr))`;
@@ -138,7 +142,16 @@ export class Screen {
     if (drawn === undefined) {
       const el = document.createElement("section");
       el.className = `canccu-region canccu-region--${r.id}`;
-      drawn = { el, shown: null, json: "", slot: null, state: r, claim: null, next: null };
+      drawn = {
+        el,
+        shown: null,
+        json: "",
+        slot: null,
+        state: r,
+        claim: null,
+        next: null,
+        marks: null,
+      };
       this.regions.set(r.id, drawn);
       this.root.append(el);
     }
@@ -168,8 +181,34 @@ export class Screen {
     const takeover = full !== null && !full.hidden && claimShown(full, now) !== null;
     if (takeover) this.root.dataset.takeover = "";
     else delete this.root.dataset.takeover;
-    for (const drawn of this.regions.values())
-      this.show(drawn, this.choose(drawn, state, now, takeover), motion);
+    const drawns = [...this.regions.values()];
+    const chosen = drawns.map((drawn) => this.choose(drawn, state, now, takeover));
+    const joined = joinHeroAndRail(
+      chosen.map((s, i) => {
+        const r = drawns[i]?.state;
+        if (typeof s !== "object" || s === null || r === undefined) return null;
+        return { ...s, role: r.role, agenda: agendaOf(r) };
+      }),
+      state.tenant.time_zone,
+    );
+    for (const [i, drawn] of drawns.entries()) {
+      const part = joined[i];
+      const own = chosen[i];
+      // The join took the rail's only row for the hero (hero-rail.ts): never an empty card.
+      const emptied =
+        part?.view.empty === true && !(typeof own === "object" && own?.view.empty === true);
+      const shown = emptied ? idleOf(drawn.state, state) : (part ?? own ?? null);
+      this.show(drawn, shown, motion);
+      const widget = typeof shown === "object" && shown !== null && !shown.key.startsWith("claim:");
+      drawn.marks = syncMarks(
+        drawn.marks,
+        drawn.el,
+        drawn.state,
+        widget,
+        state.zone?.key ?? "",
+        now,
+      );
+    }
     fillCountdowns(this.root, now);
     if (state.display?.drift === true) {
       const { x, y } = driftAt(now);
@@ -219,7 +258,12 @@ export class Screen {
     const w = index === null ? undefined : r.widgets[index];
     if (w !== undefined) {
       const live = liveView(w.widget, w.view, now, state.tenant.time_zone);
-      const view = shownView(w.widget, live, now);
+      const shown = shownView(w.widget, live, now);
+      // The header names the zone beside the event (mockup 02); the state has it, the logo's view not.
+      const view =
+        w.widget === "logo" && r.role === "header" && state.zone !== null
+          ? { ...shown, zone_name: state.zone.name }
+          : shown;
       // A ticker's new text is a new thing to show, so it fades in (the calm fading line, L13);
       // so are a new photo and a new playlist frame.
       const text = w.widget === "ticker" ? JSON.stringify(view.text) : identity(w.widget, view);
@@ -231,21 +275,7 @@ export class Screen {
         dims: dimsOffline(w.widget),
       };
     }
-    if (r.idle === "blank") return null;
-    if (r.idle === "collapse") return "collapse";
-    if (r.idle === "next" && r.idle_view !== null) {
-      return {
-        key: "idle:next",
-        type: "countdown",
-        template: null,
-        view: r.idle_view.view,
-        dims: false,
-      };
-    }
-    // `logo`, and any idle value this player does not know (contracts/screen.md, The Pulse options).
-    const view = { url: state.theme.logo_url, name: state.tenant.name, qr: null, empty: false };
-    const idle = { ...view, stale: false };
-    return { key: "idle:logo", type: "logo", template: null, view: idle, dims: false };
+    return idleOf(r, state);
   }
 
   private show(drawn: Drawn, shown: Shown | "collapse" | null, motion: Motion): void {
@@ -287,7 +317,7 @@ export class Screen {
     drawn.json = json;
     if (sameThing) {
       // New data for what is already shown: redraw it in place, with no fade.
-      const fresh = drawWidget(next.type, next.template, next.view, templates, media);
+      const fresh = this.widgetOf(next, templates, media);
       drawn.slot?.replaceChildren(...fresh.childNodes);
       // Keep a fade that is still waiting for its images (`canccu-slot--in`), or it pops in.
       if (drawn.slot !== null) {
@@ -297,11 +327,21 @@ export class Screen {
       }
       return;
     }
-    const incoming =
-      next === null ? null : drawWidget(next.type, next.template, next.view, templates, media);
+    const incoming = next === null ? null : this.widgetOf(next, templates, media);
     incoming?.classList.add("canccu-is-active");
     drawn.slot = incoming;
     this.enter(drawn, incoming, motion);
+  }
+
+  /** A widget as drawn; one a claim brings is marked, so the look can frame it (mockup 04). */
+  private widgetOf(
+    shown: Shown,
+    templates: unknown,
+    media: Parameters<typeof drawWidget>[4],
+  ): HTMLElement {
+    const el = drawWidget(shown.type, shown.template, shown.view, templates, media);
+    if (shown.key.startsWith("claim:")) el.classList.add("canccu-is-claim");
+    return el;
   }
 
   /**
@@ -313,6 +353,7 @@ export class Screen {
     const region = drawn.el;
     if (motion === "none" || incoming === null) {
       region.replaceChildren(...(incoming === null ? [] : [incoming]));
+      if (drawn.marks !== null) region.append(drawn.marks);
       return;
     }
     incoming.classList.add("canccu-slot--in");
@@ -329,7 +370,7 @@ export class Screen {
       incoming.getBoundingClientRect(); // Lay out the invisible start, so the fade runs from it.
       incoming.classList.remove("canccu-slot--in");
       for (const old of [...region.children]) {
-        if (old === incoming || !(old instanceof HTMLElement)) continue;
+        if (old === incoming || !(old instanceof HTMLElement) || old === drawn.marks) continue;
         old.classList.remove("canccu-is-active");
         old.classList.add("canccu-slot--out");
         setTimeout(() => {
@@ -338,4 +379,21 @@ export class Screen {
       }
     });
   }
+}
+
+/** The region's idle choice: what it shows with nothing to rotate, or with its rail emptied. */
+function idleOf(r: Region, state: ScreenState): Shown | "collapse" | null {
+  if (r.idle === "blank") return null;
+  if (r.idle === "collapse") return "collapse";
+  const base = { template: null, dims: false };
+  if (r.idle === "next" && r.idle_view !== null) {
+    const view = { ...r.idle_view.view, next_up: true };
+    return { ...base, key: "idle:next", type: "countdown", view };
+  }
+  // `logo`, and any idle value this player does not know (contracts/screen.md, The Pulse options).
+  const view = { url: state.theme.logo_url, name: state.tenant.name, qr: null, empty: false };
+  // The server sends no logo view without a theme logo, so the header's zone comes from here too;
+  // only the header's: elsewhere the logo is the event's card, not a second header.
+  const zoneName = r.role !== "header" || state.zone === null ? {} : { zone_name: state.zone.name };
+  return { ...base, key: "idle:logo", type: "logo", view: { ...view, ...zoneName, stale: false } };
 }
