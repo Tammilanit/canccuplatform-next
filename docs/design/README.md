@@ -10,6 +10,31 @@ The one design language, organiser shell and screens (issue #382). The base is P
 
 The sheets carry no version or review tags.
 
+## Amendments accepted by the PO (2026-11-12), binding for the build
+
+These two amendments came after the sheets were drawn. Where a sheet, a clip, `widgets.md` or a later section of this README says otherwise (for example the drift times under "Fixes from the product owner"), the amendments win.
+
+### 1 · Energy levels: clearly different look, same pace
+
+The three energy levels must look clearly different, but the pace never changes. The hero rotation stays the same at calm, lively and party (the zone's dwell), so the screen never gets busier or hastier. Higher levels only make effects more visible.
+
+| | Calm | Lively | Party |
+|---|---|---|---|
+| Changed box | Numbers roll only | Plus a light sweep | Plus box-level effects (pop, tilt) |
+| Spotlight | Steady outline | Glow plus a tracing border | Glow, tracing, pop and a ring burst |
+| Background drift | Slow, 2 min a turn, no stage tint | 45 s a turn, tints on surges | 20 s a turn, frequent tints |
+| Heartbeat | None | Visible | Strong |
+| Celebrations | None | Milestones | Milestones, confetti and reactions |
+| Sound | Essential cues only | Normal | Full |
+| Hero rotation | The zone's dwell | The zone's dwell | The zone's dwell |
+
+A test or CI clip shows the three levels side by side.
+
+### 2 · The six-box dashboard gets more air
+
+- Each box shows at most 3–4 rows, with larger type.
+- During a showcase the 2 × 2 hero takes four cells. The two remaining cells show at most two widgets; the others pause.
+
 ## Changes since v7
 
 The finishing pass: seven narrow changes, no new sheets.
