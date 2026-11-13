@@ -47,7 +47,8 @@ function bounds(areas: Area[]): Area {
 
 /**
  * The regions with the hero grown to the band's height and twice its columns, and the other boxes
- * of its layer stacked in the columns it leaves free; as they are when the layout leaves no room.
+ * of its layer stacked in the columns it leaves free; the same array when the layout leaves no
+ * room, which build.ts reads as "the hero does not grow".
  */
 export function grown(
   regions: readonly LayoutRegion[],

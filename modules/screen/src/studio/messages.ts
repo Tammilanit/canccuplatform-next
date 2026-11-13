@@ -286,11 +286,11 @@ const EN = {
   "pins.no_right": "Only someone who may pin bundles can freeze the screens.",
   "frozen.title": "Screens are frozen",
   "frozen.banner":
-    "Screens are frozen on bundle {bundle} and theme revision {revision} until {time}, by {name}.",
+    "Bundle {bundle} and theme revision {revision} are held until {time} (set by {name}).",
   "frozen.banner_bundle":
-    "Screens are frozen on bundle {bundle} until {time}, by {name}. The theme still changes when one is published.",
+    "Bundle {bundle} is held until {time} (set by {name}). The theme still changes when one is published.",
   "frozen.banner_theme":
-    "Screens are frozen on theme revision {revision} until {time}, by {name}. The bundle follows the platform.",
+    "Theme revision {revision} is held until {time} (set by {name}). The bundle follows the platform.",
 } as const;
 
 export type MessageKey = keyof typeof EN;

@@ -59,6 +59,23 @@ const AGENDA_ROW = el(
 );
 
 /**
+ * A statistic's trend arrow (contracts/screen.md, Trend arrows): `up`, `down` or `flat` in the
+ * class, the glyph drawn by the look (widgets.css), since a template cannot branch on a value. An
+ * absent field (under 20 minutes of counts) draws no arrow.
+ */
+const trend = (field: string): TreeNode =>
+  sec(
+    field,
+    el("span", null, [], { class: [t("canccu-widget__trend canccu-widget__trend--"), f(field)] }),
+  );
+/** A number with its trend and its label under it, as sheet 10's statistics draw it. */
+const stat = (field: string, label: string): TreeNode =>
+  el("li", "stat", [
+    el("strong", "big", [f(field), trend(`${field}_trend`)]),
+    el("span", "meta", [t(label)]),
+  ]);
+
+/**
  * A bar that fills as `field`'s time comes near, over the last `span` seconds (widget.ts,
  * fillCountdowns): a countdown's last hour. A template may hold no `data-` attribute (theming.md,
  * Widget templates), so the span travels in the class.
@@ -120,7 +137,10 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     el("ul", "body", [
       sec(
         "games",
-        el("li", "row", [el("strong", "name", [f("name")]), el("span", "meta", [f("players")])]),
+        el("li", "row", [
+          el("strong", "name", [f("name")]),
+          el("span", "meta", [f("players"), trend("trend")]),
+        ]),
       ),
     ]),
     QR,
@@ -200,10 +220,11 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     QR,
   ],
   stats: [
-    el("ul", "body", [
-      el("li", "row", [el("strong", "big", [f("members")]), el("span", "meta", [t("members")])]),
-      el("li", "row", [el("strong", "big", [f("online")]), el("span", "meta", [t("online")])]),
-      el("li", "row", [el("strong", "big", [f("in_voice")]), el("span", "meta", [t("in voice")])]),
+    el("p", "kicker", [t("Right now")]),
+    el("ul", "stats", [
+      stat("members", "members"),
+      stat("online", "online"),
+      stat("in_voice", "in voice"),
     ]),
   ],
   match_called: [

@@ -93,11 +93,14 @@ describe.skipIf(!DATABASE_URL)("studio pins", () => {
     }
     expect((await put({ freeze: true, until: ENDS })).statusCode).toBe(200);
     const banner =
-      "Screens are frozen on bundle test and theme revision 5 until Sun 4 Jan 16:00, by admin.";
+      "Bundle test and theme revision 5 are held until Sun 4 Jan 16:00 (set by admin).";
     for (const url of ["live", "devices", "zones", "ticker", "pins"]) {
       const body = (await page(`/admin/screen/${url}`, "admin")).body;
       expect(body, url).toContain("canccu-studio-frozen");
       expect(body, url).toContain(banner);
+      // The title says the screens are frozen; the line under it only says what is held (#414).
+      expect(body, url).toContain('<p class="canccu-notice__title">Screens are frozen</p>');
+      expect(body, url).not.toContain("<p>Screens are frozen");
     }
     // The banner says what GET /api/screen/pin says: never to someone without its read rights.
     expect((await page("/admin/screen/zones", "zoner")).body).not.toContain("canccu-studio-frozen");
@@ -115,11 +118,11 @@ describe.skipIf(!DATABASE_URL)("studio pins", () => {
     h.sources.theme = theme(0);
     await put({ freeze: true, until: ENDS });
     const body = (await page("/admin/screen/live", "admin")).body;
-    expect(body).toContain("Screens are frozen on bundle test until Sun 4 Jan 16:00, by admin.");
+    expect(body).toContain("Bundle test is held until Sun 4 Jan 16:00 (set by admin).");
     // A publish after the freeze moves the theme: the banner still names only the bundle.
     h.sources.theme = theme(1);
     const later = (await page("/admin/screen/live", "admin")).body;
-    expect(later).toContain("Screens are frozen on bundle test until Sun 4 Jan 16:00, by admin.");
+    expect(later).toContain("Bundle test is held until Sun 4 Jan 16:00 (set by admin).");
     expect(later).toContain("The theme still changes when one is published.");
     expect(later).not.toContain("theme revision 1");
     h.sources.theme = theme(5);
@@ -129,7 +132,7 @@ describe.skipIf(!DATABASE_URL)("studio pins", () => {
     await put({ bundle_version: null, theme_revision: 5, until: ENDS });
     const body = (await page("/admin/screen/live", "admin")).body;
     expect(body).toContain(
-      "Screens are frozen on theme revision 5 until Sun 4 Jan 16:00, by admin. The bundle follows the platform.",
+      "Theme revision 5 is held until Sun 4 Jan 16:00 (set by admin). The bundle follows the platform.",
     );
   });
 });

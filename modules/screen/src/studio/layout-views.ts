@@ -7,6 +7,7 @@
 import { attrs, html } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import type { Area, Layout } from "../compose/layouts.js";
+import { hasStatisticsBoxes } from "../compose/waiting.js";
 import { STUDIO } from "./views.js";
 import type { ViewContext } from "./views.js";
 
@@ -52,9 +53,14 @@ const thumb = (layout: Layout): Html =>
     >${layout.regions.map((r) => html`<i data-area="${gridArea(r.area)}"></i>`)}</span
   >`;
 
-/** Thumbnails of the built-ins and the theme's layouts; picking one redraws the editor with it. */
+/**
+ * Thumbnails of the built-ins and the theme's layouts; picking one redraws the editor with it. A
+ * layout with statistics boxes says they come with the bot's data, and, once picked, where their
+ * space goes until then (contracts/screen.md, Boxes waiting for their source).
+ */
 export function layoutGallery(c: ViewContext, layouts: readonly Layout[], current: string): Html {
   const { t } = c;
+  const picked = layouts.find((l) => l.id === current);
   return html`<section class="canccu-card">
     <h2 class="canccu-card__title">${t("layout.title")}</h2>
     <p class="canccu-card__desc">${t("layout.desc")}</p>
@@ -64,10 +70,21 @@ export function layoutGallery(c: ViewContext, layouts: readonly Layout[], curren
           html`<a
             class="canccu-studio-laypick__item"
             ${attrs({ href: `?layout=${encodeURIComponent(l.id)}`, "data-layout-pick": l.id, "aria-current": l.id === current ? "true" : undefined, "aria-label": t("layout.pick", { layout: l.name }) })}
-            >${thumb(l)}<span class="canccu-studio-laypick__name">${l.name}</span></a
+            >${thumb(l)}<span class="canccu-studio-laypick__name">${l.name}</span>${
+              hasStatisticsBoxes(l)
+                ? html`<span class="canccu-studio-laypick__note">${t("layout.statistics")}</span>`
+                : ""
+            }</a
           >`,
       )}
     </div>
+    ${
+      picked !== undefined && hasStatisticsBoxes(picked)
+        ? html`<p class="canccu-field__hint" data-statistics-note>
+            ${t("layout.statistics_waiting", { layout: picked.name })}
+          </p>`
+        : ""
+    }
   </section>`;
 }
 

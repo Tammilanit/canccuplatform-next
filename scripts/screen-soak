@@ -54,13 +54,14 @@ trap 'rm -rf "$work"' EXIT
 mkdir -p "$out" "$work/stack"
 cp modules/screen/test/stack/*.mjs "$work/stack/"
 user="$(id -u):$(id -g)"
-# On the default network: the screen container's namespace may not reach the registry.
-if ! docker run --rm -u "$user" -e HOME=/tmp -v "$work:/work" -w /work "$IMAGE" \
+# On the default network: the screen container's namespace may not reach the registry. Quiet: the
+# pull's progress would fill the head of the output that demo-stack-test prints on a failure.
+if ! docker run --rm --quiet -u "$user" -e HOME=/tmp -v "$work:/work" -w /work "$IMAGE" \
   npm install --no-save --no-audit --no-fund --loglevel=error "playwright-core@$PLAYWRIGHT" >&2; then
   echo "error: could not install playwright-core $PLAYWRIGHT in $IMAGE" >&2
   exit 1
 fi
-docker run --rm --network "container:$screen" -u "$user" -e HOME=/tmp \
+docker run --rm --quiet --network "container:$screen" -u "$user" -e HOME=/tmp \
   -e CANCCU_DEMO_HOST -e DEMO_SESSION \
   -v "$work:/work" -v "$(cd "$out" && pwd):/out" -w /work "$IMAGE" \
   node stack/soak.mjs "${args[@]}" --out /out

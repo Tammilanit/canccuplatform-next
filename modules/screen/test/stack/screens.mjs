@@ -6,10 +6,19 @@
 // stack cannot reach (refused, moved, archived, a claim from Moments) are the player's own answer
 // to a device answer or a state the page is handed, so the frame is the real one. The other
 // built-in layouts (#404, sheet 10) are shot landscape in every theme, at 4K in the default one,
-// and Ambient once under an emergency takeover, which keeps its fixed red there too.
+// and Ambient once under an emergency takeover, which keeps its fixed red there too. Dashboard is
+// handed sample statistics (#416), and shot once as the server draws it while they are missing.
 import { expect } from "./client.mjs";
+import { boxesGivenAway, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
-import { CLAIM_OF, withHeroItemOnly, withPhoto, withShowcase, withTakeover } from "./handed.mjs";
+import {
+  CLAIM_OF,
+  withHeroItemOnly,
+  withPhoto,
+  withShowcase,
+  withStats,
+  withTakeover,
+} from "./handed.mjs";
 import { collectSamples, judgePage } from "./readability.mjs";
 
 export const THEMES = ["terminal", "level-up", "default"];
@@ -45,6 +54,7 @@ export function planned() {
       for (const view of LAYOUTS) out.push(nameOf(theme, view, size));
   }
   out.push(nameOf("default", "dashboard-showcase", HD[0]));
+  out.push(nameOf("default", "dashboard-waiting", HD[0]));
   out.push(nameOf("default", "ambient-takeover", HD[0]));
   for (const size of HD)
     for (const view of ["photo", "rail-empty", ...CLAIMS]) out.push(nameOf("default", view, size));
@@ -127,6 +137,10 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
             layoutShot(theme, "dashboard", HD[0], "dashboard-showcase"),
           );
         if (theme === "default")
+          await attempt(nameOf(theme, "dashboard-waiting", HD[0]), () =>
+            layoutShot(theme, "dashboard", HD[0], "dashboard-waiting"),
+          );
+        if (theme === "default")
           await attempt(nameOf(theme, "ambient-takeover", HD[0]), () =>
             layoutShot(theme, "ambient", HD[0], "ambient-takeover"),
           );
@@ -190,18 +204,22 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
     }
 
     /**
-     * The main zone on another built-in layout, as the server composes it. The showcase is the
-     * Dashboard handed a spotlight in its hero, grown as the server grows it for one (a claim
-     * from Moments, which the demo stack has not).
+     * The main zone on another built-in layout, as the server composes it. Dashboard is handed
+     * the statistics the demo stack has no bot for, and its showcase a spotlight in its hero too,
+     * grown as the server grows it for one (a claim from Moments, which the demo stack has not).
+     * `dashboard-waiting` is the server's own Dashboard without them.
      */
     async function layoutShot(theme, id, size, view = id) {
       await saveZone(demo, "main", { layout_id: id });
-      if (view === "dashboard-showcase") return handed(theme, view, size, withShowcase);
+      if (view === "dashboard") return handed(theme, view, size, withStats);
+      if (view === "dashboard-showcase")
+        return handed(theme, view, size, (s) => withShowcase(withStats(s)));
       if (view === "ambient-takeover") return handed(theme, view, size, withTakeover);
       const { page, close } = await open(size, main.cookie);
       await page.goto(at("/screen/"));
       await page.waitForSelector(`.canccu-layout--${id}`, { timeout: 30_000 });
       await railShowsAgenda(page);
+      if (view === "dashboard-waiting") await boxesGivenAway(page);
       await settle(page);
       await shot(nameOf(theme, view, size), page);
       await close();
@@ -228,6 +246,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await page.goto(at("/screen/"));
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
       else await layout(page, size);
+      if (view.startsWith("dashboard")) await statsApart(page);
       if (view === "rail-empty") await railShowsIdle(page);
       else if (view === "dashboard-showcase") await stripNamesCountdown(page);
       else if (view === "ambient-takeover") await takeoverIsRed(page);
@@ -299,19 +318,6 @@ async function railShowsAgenda(page) {
   await page.waitForSelector(".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active", {
     timeout: 40_000,
   });
-}
-
-/** A strip's countdown says what it counts down to: its name drawn whole inside the strip. */
-async function stripNamesCountdown(page) {
-  const sel = ".canccu-region--rail > .canccu-widget--countdown.canccu-is-active";
-  await page.waitForSelector(sel, { timeout: 40_000 });
-  const fits = await page.$eval(sel, (card) => {
-    const name = card.querySelector(".canccu-widget__headline");
-    if (name === null || name.textContent.trim() === "") return false;
-    const [c, n] = [card.getBoundingClientRect(), name.getBoundingClientRect()];
-    return n.height > 0 && n.top >= c.top && n.bottom <= c.bottom;
-  });
-  if (!fits) throw new Error("the showcase's rail strip draws its countdown without its name");
 }
 
 /** The emergency takeover wears its fixed red (claims.css) whatever the layout does to its cards. */

@@ -9,6 +9,9 @@ export const LAYOUT_EN = {
   "layout.pick": "Use the layout {layout}",
   "layout.portrait": "9:16",
   "layout.discard": "Picking another layout drops the changes not yet live. Go on?",
+  "layout.statistics": "Statistics come with the bot's data",
+  "layout.statistics_waiting":
+    "{layout}'s statistics come with the bot's data. Until it arrives, its statistics boxes give their space to the boxes beside them on the screens.",
   "boxes.title": "Boxes",
   "boxes.desc": "Click a box to change what it shows; drag a handle to resize it.",
   "boxes.desc_phone": "Tap a box to change what it shows or its size.",
