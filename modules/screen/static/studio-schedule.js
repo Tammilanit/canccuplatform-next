@@ -191,6 +191,9 @@ if (dialog && form) {
 
     grid.addEventListener("pointermove", (event) => {
       if (!drag) return;
+      // No button down means the release went unheard (outside the browser, say): drop the drag,
+      // or the next hover would carry it on and the click after would save a move nobody made.
+      if (event.buttons === 0) return end(event, true);
       const dy = event.clientY - drag.fromY;
       if (!drag.moved) {
         if (Math.abs(dy) < 4) return;
@@ -221,6 +224,7 @@ if (dialog && form) {
       const d = drag;
       drag = null;
       d.mark?.remove();
+      // Clears a move's transform and a resize's height, whichever way the drag ended.
       if (d.block) d.block.removeAttribute("style");
       if (!d.moved || cancelled) return;
       swallow = true;
@@ -246,8 +250,9 @@ if (dialog && form) {
       };
       await act("PUT", `${API}/${encodeURIComponent(w.id)}`, body, "window.saved");
     };
-    grid.addEventListener("pointerup", (event) => end(event, false));
-    grid.addEventListener("pointercancel", (event) => end(event, true));
+    // On the window: a release outside the grid before the drag is captured must end it too.
+    window.addEventListener("pointerup", (event) => end(event, false));
+    window.addEventListener("pointercancel", (event) => end(event, true));
     grid.addEventListener(
       "click",
       (event) => {
