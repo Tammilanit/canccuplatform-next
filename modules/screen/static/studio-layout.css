@@ -1,0 +1,199 @@
+/* Zones and layouts (#405; v8 sheet 10, static/studio-layout.js): the zone tabs, the layout gallery, the boxes to scale
+   with the chosen box's handles, and Dashboard's hero role. */
+.canccu-studio-editor [hidden] {
+  display: none;
+}
+
+.canccu-studio-zonetabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.canccu-studio-zonetabs a {
+  padding: 0.5rem 0.875rem;
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  color: var(--canccu-color-text);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.canccu-studio-zonetabs a[aria-current="page"] {
+  border-color: var(--canccu-color-primary);
+  background: var(--canccu-color-primary);
+  color: var(--canccu-on-primary);
+}
+
+.canccu-studio-laypick {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  gap: 0.75rem;
+}
+
+.canccu-studio-laypick__item {
+  display: grid;
+  gap: 0.375rem;
+  padding: 0.25rem;
+  border-radius: var(--canccu-radius);
+  color: var(--canccu-color-text);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: var(--canccu-text-sm);
+  text-align: center;
+}
+
+.canccu-studio-laypick__item[aria-current="true"] .canccu-studio-lay {
+  outline: 3px solid var(--canccu-color-primary);
+  outline-offset: 2px;
+}
+
+.canccu-studio-lay {
+  display: grid;
+  gap: 2px;
+  aspect-ratio: 16 / 9;
+  padding: 3px;
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  background: var(--canccu-color-background);
+}
+
+/* A 9:16 layout as tall as the 16:9 thumbnails beside it. */
+.canccu-studio-lay--portrait {
+  aspect-ratio: 9 / 16;
+  width: 31.64%;
+  margin-inline: auto;
+}
+
+.canccu-studio-lay i {
+  border-radius: 2px;
+  background: var(--canccu-color-surface);
+  border: var(--canccu-border-width) solid var(--canccu-color-border);
+}
+
+/* The boxes to scale: the screen's shape, each row a twelfth of its height. */
+.canccu-studio-boxes,
+.canccu-studio-hero {
+  aspect-ratio: 16 / 9;
+  gap: 0.25rem;
+}
+
+.canccu-studio-boxes.canccu-studio-map--portrait {
+  aspect-ratio: 9 / 16;
+}
+
+/* Centred and tight, so a one-row header or ticker still reads its name. */
+.canccu-studio-boxes .canccu-studio-map__region,
+.canccu-studio-hero .canccu-studio-map__region {
+  position: relative;
+  min-height: 0;
+  padding: 0 0.375rem;
+  align-content: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.1;
+  border-style: solid;
+}
+
+.canccu-studio-hero .canccu-studio-map__region[aria-pressed="false"] [data-hero-role] {
+  display: none;
+}
+
+.canccu-studio-handle {
+  position: absolute;
+  display: none;
+  background: var(--canccu-color-primary);
+  border-radius: 999px;
+  touch-action: none;
+}
+
+.canccu-studio-handle--left,
+.canccu-studio-handle--right {
+  top: 50%;
+  width: 0.375rem;
+  height: 1.5rem;
+  max-height: 70%;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.canccu-studio-handle--top,
+.canccu-studio-handle--bottom {
+  left: 50%;
+  width: 1.5rem;
+  height: 0.375rem;
+  max-width: 70%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.canccu-studio-handle--left {
+  left: 2px;
+}
+
+.canccu-studio-handle--right {
+  right: 2px;
+}
+
+.canccu-studio-handle--top {
+  top: 2px;
+}
+
+.canccu-studio-handle--bottom {
+  bottom: 2px;
+}
+
+.canccu-studio-hidden {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.canccu-studio-hidden .canccu-overline {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+[data-boxes-reset] {
+  margin-top: 0.75rem;
+}
+
+/* With a mouse the chosen box shows its handles; on a phone the size buttons replace them. */
+.canccu-studio-phone {
+  display: none;
+}
+
+@media (pointer: fine) and (min-width: 40rem) {
+  .canccu-studio-map__region[aria-pressed="true"] .canccu-studio-handle {
+    display: block;
+  }
+}
+
+@media (pointer: coarse), (max-width: 40rem) {
+  .canccu-studio-desk {
+    display: none;
+  }
+
+  /* A one-row header or ticker would be a sliver: each row keeps a fingertip's height. */
+  .canccu-studio-boxes,
+  .canccu-studio-boxes.canccu-studio-map--portrait,
+  .canccu-studio-hero {
+    --canccu-studio-row: 1.375rem;
+    aspect-ratio: auto;
+  }
+
+  .canccu-studio-phone {
+    display: block;
+  }
+
+  .canccu-studio-boxes .canccu-studio-map__shows,
+  .canccu-studio-hero .canccu-studio-map__shows {
+    display: none;
+  }
+}

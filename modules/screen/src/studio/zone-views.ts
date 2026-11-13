@@ -6,11 +6,15 @@
  */
 import { attrs, emptyState, html } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
+import { boxProblem } from "../compose/boxes.js";
 import { DEFAULT_DWELL_S } from "../compose/build.js";
-import type { Layout, LayoutRegion } from "../compose/layouts.js";
+import { roleOf } from "../compose/layouts.js";
+import type { Area, Layout } from "../compose/layouts.js";
 import type { ZoneInput } from "../zone-input.js";
 import type { SeenDevice } from "./help.js";
 import { shownZone } from "./help.js";
+import { boxPart, boxesCard, heroCard, layoutGallery, zoneTabs } from "./layout-views.js";
+import type { BoxInfo } from "./layout-views.js";
 import { counted, nameOf } from "./messages.js";
 import { STUDIO, zoneFrame } from "./views.js";
 import type { ViewContext } from "./views.js";
@@ -123,86 +127,60 @@ function widgetRow(c: ViewContext, entry: Entry, regionDwell: number): Html {
   </li>`;
 }
 
-interface RegionInfo {
-  id: string;
-  label: string;
+interface RegionInfo extends BoxInfo {
   entries: Entry[];
   own: boolean;
   settings: Entry;
   /** The layout's seconds for the region, shown when the zone sets none. */
   layoutDwell: number;
-  area: LayoutRegion["area"] | undefined;
 }
 
-function regionsOf(c: ViewContext, zone: Zone, layout: Layout | undefined): RegionInfo[] {
-  // The layout's regions first, in its order, then any the zone keeps for another layout.
-  const ids = [
-    ...(layout?.regions.map((r) => r.id) ?? []),
-    ...Object.keys(zone.regions).filter((id) => !layout?.regions.some((r) => r.id === id)),
-  ];
-  return ids.map((id) => {
-    const source = layout?.regions.find((r) => r.id === id);
-    const settings = (zone.regions[id] ?? {}) as Entry;
-    const own = Array.isArray(settings.widgets);
-    return {
-      id,
-      label: nameOf(c.t, "region", id),
-      entries: own
-        ? (settings.widgets as Entry[])
-        : ((source?.widgets ?? []) as unknown as Entry[]),
-      own,
-      settings,
-      layoutDwell: source?.rotate_seconds ?? DEFAULT_DWELL_S,
-      area: source?.area,
-    };
-  });
-}
-
-const shows = (c: ViewContext, r: RegionInfo): string =>
+const shows = (c: ViewContext, r: { entries: Entry[] }): string =>
   r.entries.length === 0
     ? c.t("zone.region_empty")
     : r.entries
         .map((e) => nameOf(c.t, "widget", typeof e.widget === "string" ? e.widget : ""))
         .join(" → ");
 
-/** All regions at a glance on the layout's grid (placed by the page script; CSP has no inline style). */
-function regionMap(
-  c: ViewContext,
-  regions: RegionInfo[],
-  layout: Layout | undefined,
-  picked: string | undefined,
-): Html {
-  const { t } = c;
-  // A region the zone keeps for another layout has no place on this grid: it follows the map.
-  const placed = [...regions].sort(
-    (a, b) => Number(a.area === undefined) - Number(b.area === undefined),
-  );
-  const buttons = placed.map(
-    (r) =>
-      html`<button
-        type="button"
-        class="canccu-studio-map__region"
-        ${attrs({ "data-pick": r.id, "aria-pressed": r.id === picked ? "true" : "false", "data-area": r.area ? `${r.area.row} / ${r.area.column} / span ${r.area.rows} / span ${r.area.columns}` : undefined })}
-      >
-        <span class="canccu-studio-map__name">${r.label}</span
-        ><span class="canccu-studio-map__shows" data-shows>${shows(c, r)}</span>
-      </button>`,
-  );
-  const portrait = layout?.aspect === "9:16";
-  return html`<section class="canccu-card">
-    <h2 class="canccu-card__title">${t("zone.regions")}</h2>
-    <p class="canccu-card__desc">${t("zone.regions_desc")}</p>
-    <div
-      class="canccu-studio-map${portrait ? " canccu-studio-map--portrait" : ""}"
-      ${attrs({ "data-grid": layout ? `${layout.grid.columns} ${layout.grid.rows}` : undefined })}
-    >
-      ${buttons}
-    </div>
-  </section>`;
+const FRAME = new Set(["header", "ticker", "backdrop"]);
+
+function regionsOf(c: ViewContext, zone: Zone, layout: Layout): RegionInfo[] {
+  // The layout's regions first, in its order, then any the zone keeps for another layout.
+  const ids = [
+    ...layout.regions.map((r) => r.id),
+    ...Object.keys(zone.regions).filter((id) => !layout.regions.some((r) => r.id === id)),
+  ];
+  // As the screens draw it: saved areas that stopped fitting give way to the layout's.
+  const fit = boxProblem(layout, zone.regions) === null;
+  return ids.map((id) => {
+    const source = layout.regions.find((r) => r.id === id);
+    const settings = (zone.regions[id] ?? {}) as Entry;
+    const own = Array.isArray(settings.widgets);
+    const entries = own
+      ? (settings.widgets as Entry[])
+      : ((source?.widgets ?? []) as unknown as Entry[]);
+    const area =
+      fit && source ? ((settings.area as Area | null | undefined) ?? undefined) : undefined;
+    const r = {
+      id,
+      label: nameOf(c.t, "region", id),
+      entries,
+      own,
+      settings,
+      layoutDwell: source?.rotate_seconds ?? DEFAULT_DWELL_S,
+      area: area ?? source?.area,
+      layoutArea: source?.area,
+      layer: source?.layer ?? 0,
+      hidden: source !== undefined && settings.hidden === true,
+      frame: FRAME.has(roleOf(id, settings.role) ?? ""),
+      shows: "",
+    };
+    return { ...r, shows: shows(c, r) };
+  });
 }
 
 /** The chosen region's detail; the others wait hidden until picked on the map. */
-function regionPart(c: ViewContext, r: RegionInfo, shown: boolean): Html {
+function regionPart(c: ViewContext, r: RegionInfo, layout: Layout, shown: boolean): Html {
   const { t } = c;
   const f = `canccu-studio-r-${r.id}`;
   const str = (v: unknown) => (typeof v === "string" ? v : "");
@@ -212,7 +190,9 @@ function regionPart(c: ViewContext, r: RegionInfo, shown: boolean): Html {
     class="canccu-card canccu-studio-region"
     ${attrs({ "data-region": r.id, "data-label": r.label, "data-layout-dwell": r.layoutDwell, hidden: !shown })}
   >
+    <p class="canccu-overline">${t("box.selected")}</p>
     <h2 class="canccu-card__title">${t("zone.region", { region: r.label })}</h2>
+    ${r.layoutArea === undefined ? "" : boxPart(c, r, layout)}
     <div class="canccu-field canccu-field--check">
       <input
         class="canccu-check"
@@ -274,26 +254,14 @@ function regionPart(c: ViewContext, r: RegionInfo, shown: boolean): Html {
   </section>`;
 }
 
-function settingsCard(
-  c: ViewContext,
-  zone: Zone,
-  layouts: readonly Layout[],
-  devices: readonly SeenDevice[],
-): Html {
+function settingsCard(c: ViewContext, zone: Zone, devices: readonly SeenDevice[]): Html {
   const { t } = c;
   const f = "canccu-studio-zone";
-  const layoutOptions: [string, string][] = [
-    ["", t("zone.layout_default")],
-    ...layouts.map((l): [string, string] => [l.id, l.name]),
-    ...(zone.layout_id !== null && !layouts.some((l) => l.id === zone.layout_id)
-      ? [[zone.layout_id, zone.layout_id] as [string, string]]
-      : []),
-  ];
   const inZone = devices.filter((d) => d.zone_key === zone.key);
   return html`<section class="canccu-card canccu-studio-settings">
     ${labelled(`${f}-name`, t("zone.name"), html`<input class="canccu-input" id="${f}-name" name="name" required maxlength="80" ${attrs({ value: zone.name })} />`)}
     <div class="canccu-studio-row">
-      ${labelled(`${f}-layout`, t("zone.layout"), select(`${f}-layout`, "layout_id", zone.layout_id ?? "", layoutOptions))}${labelled(
+      ${labelled(
         `${f}-header`,
         t("zone.header"),
         select(`${f}-header`, "header", zone.header ?? "", [
@@ -326,19 +294,43 @@ function settingsCard(
   </section>`;
 }
 
+/**
+ * The editor for `zone` as saved, drawn with `layoutId` when the crew picked another layout in
+ * the gallery: Studio then clears the boxes' sizes and hidden boxes (contracts/screen.md, Box
+ * sizes and hidden boxes), and the page saves the pick with the rest.
+ */
 export function zoneEditorView(
   c: ViewContext,
   zone: Zone,
   layouts: readonly Layout[],
   devices: readonly SeenDevice[],
+  zones: readonly Zone[],
+  layoutId: string | null = zone.layout_id,
 ): Html {
   const { t } = c;
-  const layout = layouts.find((l) => l.id === (zone.layout_id ?? "pulse")) ?? layouts[0];
-  const regions = regionsOf(c, zone, layout);
+  const picked = layoutId !== zone.layout_id;
+  const draft: Zone = picked
+    ? {
+        ...zone,
+        layout_id: layoutId,
+        regions: Object.fromEntries(
+          Object.entries(zone.regions).flatMap(([id, settings]) => {
+            const rest = Object.entries(settings).filter(([k]) => k !== "area" && k !== "hidden");
+            return rest.length === 0 ? [] : [[id, Object.fromEntries(rest)]];
+          }),
+        ),
+      }
+    : zone;
+  // A layout neither the theme nor the built-ins have draws the Pulse, as its screens do; the
+  // routes always pass the built-ins, so the Pulse is there.
+  const layout =
+    layouts.find((l) => l.id === (layoutId ?? "pulse")) ?? layouts.find((l) => l.id === "pulse");
+  if (layout === undefined) throw new Error("zoneEditorView needs the built-in layouts");
+  const regions = regionsOf(c, draft, layout);
   // The hero first, as the mockup opens it: what most of the screen shows.
   const first =
-    regions.find((r) => r.id === "hero" && r.area !== undefined) ??
-    regions.find((r) => r.area !== undefined) ??
+    regions.find((r) => r.id === "hero" && r.area !== undefined && !r.hidden) ??
+    regions.find((r) => r.area !== undefined && !r.hidden) ??
     regions[0];
   const screens = screensOf(zone.key, devices);
   const save = screens === 0 ? t("zone.save_none") : counted(t, "zone.save_on", screens);
@@ -367,10 +359,18 @@ export function zoneEditorView(
   const row = html`<template data-widget-row
     >${widgetRow(c, { widget: "" }, DEFAULT_DWELL_S)}</template
   >`;
-  return html`<form class="canccu-studio-editor" ${attrs({ "data-zone": JSON.stringify(zone) })}>
-    <div class="canccu-studio-editor__main">
-      ${settingsCard(c, zone, layouts, devices)}${regionMap(c, regions, layout, first?.id)}${regions.map((r) => regionPart(c, r, r === first))}${remove}
-    </div>
-    ${side}${row}
-  </form>`;
+  const names = Object.fromEntries(layouts.map((l) => [l.id, l.name]));
+  const form = {
+    "data-zone": JSON.stringify(zone),
+    "data-layout": layoutId ?? "",
+    "data-layout-names": JSON.stringify({ "": names.pulse ?? "pulse", ...names }),
+    "data-region-names": JSON.stringify(Object.fromEntries(regions.map((r) => [r.id, r.label]))),
+  };
+  return html`${zoneTabs(c, zones, zone.key)}
+    <form class="canccu-studio-editor" ${attrs(form)}>
+      <div class="canccu-studio-editor__main">
+        ${layoutGallery(c, layouts, layout.id)}${boxesCard(c, regions, layout, first?.id)}${regions.map((r) => regionPart(c, r, layout, r === first))}${layout.id === "dashboard" ? heroCard(c, regions, layout, zone) : ""}${settingsCard(c, zone, devices)}${remove}
+      </div>
+      ${side}${row}
+    </form>`;
 }

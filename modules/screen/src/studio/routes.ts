@@ -320,20 +320,26 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       },
     );
 
-    studio.get<{ Params: { zone_key: string } }>(
+    studio.get<{ Params: { zone_key: string }; Querystring: { layout?: string } }>(
       `${STUDIO}zones/:zone_key`,
       { preHandler: pageNeeds(deps.rights, [ZONES]) },
       async (request, reply) => {
         const c = await context(request);
         const ctx = tenantOf(request);
-        const zone = (await readZones(deps, ctx)).find((z) => z.key === request.params.zone_key);
+        const zones = await readZones(deps, ctx);
+        const zone = zones.find((z) => z.key === request.params.zone_key);
         if (zone === undefined) throw notFound();
         const [layouts, all] = [await layoutsOf(deps, ctx.tenant_id), await devices()];
+        // The gallery's pick, drawn unsaved; the zone's own (`null`: `pulse`) or an unknown id is none.
+        const asked = layouts.find((l) => l.id === request.query.layout)?.id;
+        const layoutId =
+          asked === (zone.layout_id ?? "pulse") ? zone.layout_id : (asked ?? zone.layout_id);
         return page(request, reply, c, {
           title: zone.name,
           crumb: { href: `${STUDIO}zones`, label: c.t("zone.back") },
-          body: zoneEditorView(c, zone, layouts, all),
+          body: zoneEditorView(c, zone, layouts, all, zones, layoutId),
           own: "studio-zone",
+          module: true,
         });
       },
     );
