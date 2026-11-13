@@ -20,7 +20,7 @@ import {
   newNonce,
 } from "@canccu/kit";
 import type { Logger, PublicEvent, RightsChecker } from "@canccu/kit";
-import { errorTitle, errorView, html, raw, shellPage } from "@canccu/ui";
+import { errorTitle, errorView, html, notice, raw, shellPage } from "@canccu/ui";
 import type { EventInfo, Slot } from "@canccu/ui";
 import type { Sources } from "../compose/sources.js";
 import type { Db } from "../db.js";
@@ -90,6 +90,20 @@ const TABS: [path: string, label: MessageKey, rights: readonly string[]][] = [
   ["pins", "tab.pins", PIN_READ_RIGHTS],
 ];
 const ANY_TAB = [...new Set(TABS.flatMap(([, , rights]) => rights))];
+/**
+ * The rights to change something in the Studio. An archived event changes nothing (sheets 2 and
+ * 8), so its pages are drawn without them: every action is absent, as for a reader.
+ */
+const CHANGE_RIGHTS = new Set([
+  "screen.bundle.write",
+  "screen.content.write",
+  "screen.devices.pair",
+  "screen.devices.write",
+  "screen.push.write",
+  "screen.ticker.write",
+  "screen.zones.write",
+]);
+const archived = (request: FastifyRequest): boolean => tenantOf(request).status === "archived";
 const holds = (rights: ReadonlySet<string>, any: readonly string[]) =>
   any.some((r) => rights.has(r));
 
@@ -200,7 +214,7 @@ async function studioPage(
             current: path === o.tab,
           })),
         }),
-    body: html`${banner}
+    body: html`${banner}${o.plain || !archived(request) ? "" : notice({ kind: "info", title: t("studio.archived") })}
       <p class="canccu-studio-notice" role="status" hidden></p>
       ${o.body}${clientText(t)}
       <script src="${STUDIO}static/studio.js" defer></script>
@@ -255,7 +269,11 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
 
     const context = async (request: FastifyRequest): Promise<ViewContext> => ({
       t: await translate(deps),
-      rights: request.session?.rights ?? new Set(),
+      rights: new Set(
+        [...(request.session?.rights ?? [])].filter(
+          (r) => !archived(request) || !CHANGE_RIGHTS.has(r),
+        ),
+      ),
       nowMs: now(),
       timeZone: tenantOf(request).time_zone,
       // The tenant's own address, never the request's Host (contracts/tenants.md, 0013 item 10):

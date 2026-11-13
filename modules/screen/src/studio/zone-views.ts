@@ -56,6 +56,8 @@ const labelled = (id: string, label: string, control: Slot, hint?: string): Html
 const screensOf = (key: string, devices: readonly SeenDevice[]): number =>
   devices.filter((d) => shownZone(d, devices) === key).length;
 
+const ZONES_WRITE = "screen.zones.write";
+
 export function zonesView(
   c: ViewContext,
   zones: readonly Zone[],
@@ -90,7 +92,7 @@ export function zonesView(
       <button class="canccu-button canccu-button--primary" type="submit">${t("zones.add")}</button>
     </form>
   </section>`;
-  return html`${list}${add}`;
+  return html`${list}${c.rights.has(ZONES_WRITE) ? add : ""}`;
 }
 
 /** The seconds a widget shows: its own, else the region's, else the layout's default. */
@@ -308,6 +310,14 @@ export function zoneEditorView(
   layoutId: string | null = zone.layout_id,
 ): Html {
   const { t } = c;
+  if (!c.rights.has(ZONES_WRITE)) {
+    // Read only (an archived event): what the zone shows, without the editor.
+    return html`${zoneTabs(c, zones, zone.key)}
+      <section class="canccu-card">
+        <h2 class="canccu-card__title">${t("zone.preview_title")}</h2>
+        <div class="canccu-studio-thumb canccu-studio-thumb--preview"><iframe${attrs({ src: zoneFrame(zone.key), title: t("zone.preview_title") })}></iframe></div>
+      </section>`;
+  }
   const picked = layoutId !== zone.layout_id;
   const draft: Zone = picked
     ? {
