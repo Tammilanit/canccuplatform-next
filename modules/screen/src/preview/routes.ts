@@ -77,6 +77,7 @@ function input(value: Record<string, unknown>, nowMs: number): Input {
       regions: z.regions,
       header: z.header,
       hub_qr: z.hub_qr,
+      screen_name: z.screen_name,
       hero_region: z.hero_region,
       grow_for_showcase: z.grow_for_showcase,
       sound: z.sound,

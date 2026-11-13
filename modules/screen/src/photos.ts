@@ -1,6 +1,6 @@
 /**
- * The photo carousel's API (contracts/screen.md, Photos; flag `screen.photos`): images stored as
- * the event's files, listed newest first, each `featured` until the player has featured it once.
+ * The photo wall's API (contracts/screen.md, Photos; flag `screen.photos`): images stored as the
+ * event's files, listed newest first, each `featured` until its pop slot has ended.
  * Ported from the legacy `carousel/photos.ts` (adapted: one photo per request, rights instead of
  * a bearer token, its own table instead of assets on a designated playlist). The `photo` widget
  * that shows them is the player's (#109).
@@ -21,7 +21,7 @@ import {
 import { preparePhoto, readMultipart } from "./assets/upload.js";
 import { writeDroppingFiles, writeWithFile } from "./assets/write.js";
 import type { AssetDeps, FileDeps } from "./assets/write.js";
-import { featuredUntil, photoDwell } from "./compose/photos.js";
+import { popUntil } from "./compose/photos.js";
 import { publishAll } from "./zones.js";
 import type { Emit } from "./zones.js";
 
@@ -126,11 +126,9 @@ export function photoRoutes(app: FastifyInstance, deps: AssetDeps & { bus: Bus }
     const { rows } = await deps.db.tenant((c) =>
       c.query(`${PHOTO_SELECT} ORDER BY created_at DESC, id DESC`),
     );
-    await deps.settings.ensure();
-    // Featured once its feature on the screens is over: the `photo` widget's own rule.
-    const until = featuredUntil(
+    // Featured until its pop slot ends, the slot every `pop_new` wall draws it in; no zone's.
+    const until = popUntil(
       rows.map((r) => ({ id: r.id as string, created_at: (r.created_at as Date).getTime() })),
-      photoDwell(deps.settings),
     );
     const now = deps.now();
     return {

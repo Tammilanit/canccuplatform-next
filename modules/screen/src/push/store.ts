@@ -23,7 +23,8 @@ export interface ZoneRecord {
   version: number;
   /** Of the zone's inputs (compose/state.ts, zoneFingerprint): an equal one changes nothing. */
   fingerprint: string;
-  zone: { key: string; name: string; epoch: string };
+  /** `show_name` is absent in a record stored before the setting: shown. */
+  zone: { key: string; name: string; epoch: string; show_name?: boolean };
   eventName: string;
   theme: Record<string, unknown>;
   /** The pinned bundle version; null or absent (a record stored before pins) for the platform's. */

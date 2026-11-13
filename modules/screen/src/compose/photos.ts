@@ -1,18 +1,40 @@
 /**
- * The `photo` widget's choice (contracts/screen.md, Photos): a new photo first, `featured` once,
- * then all of them in turn, each for `photo_dwell_seconds`. A pure function of the photos and the
- * time, so every container and every screen of a zone agree and no read has to write down that a
- * photo was featured: each photo's feature follows the one before it, in the order they came.
+ * The `photo` widget's wall (contracts/screen.md, Photos; design guideline v8, change 6): five
+ * tiles from the lead on, a new lead every `photo_seconds`, and a new photo popping in large for
+ * its pop slot. A pure function of the photos, the widget's props and the time, so every container
+ * and every screen of a zone agree and no read has to write down that a photo has popped.
  */
-import type { Settings } from "../health.js";
+import type { Props } from "./layouts.js";
+import { shuffled } from "./seeded.js";
 
-/** `photo_dwell_seconds` (5–60, 8: contracts/screen.md, Settings). */
-export function photoDwell(settings: Settings): number {
-  const value = settings.get("photo_dwell_seconds", 8);
-  return typeof value === "number" && Number.isFinite(value)
-    ? Math.min(60, Math.max(5, Math.round(value)))
-    : 8;
+/** A new photo's pop slot, the same for the whole event. */
+export const POP_SECONDS = 10;
+const TILES = 5;
+const ORDERS = ["newest", "oldest", "shuffle"] as const;
+export type PhotoOrder = (typeof ORDERS)[number];
+
+export interface WallSettings {
+  seconds: number;
+  order: PhotoOrder;
+  popNew: boolean;
 }
+
+export const WALL_DEFAULTS: WallSettings = { seconds: 8, order: "newest", popNew: true };
+
+/** The widget's props; one out of range or unknown falls back to its default, never breaks the wall. */
+export function wallSettings(props: Props): WallSettings {
+  const s = props.photo_seconds;
+  const order = ORDERS.find((o) => o === props.order);
+  return {
+    seconds: typeof s === "number" && Number.isInteger(s) && s >= 5 && s <= 60 ? s : 8,
+    order: order ?? WALL_DEFAULTS.order,
+    popNew: typeof props.pop_new === "boolean" ? props.pop_new : WALL_DEFAULTS.popNew,
+  };
+}
+
+/** One key per distinct wall, so entries with equal settings share one view-model. */
+export const wallKey = (s: WallSettings): string =>
+  `${String(s.seconds)}:${s.order}:${s.popNew ? "pop" : "still"}`;
 
 export interface PhotoRow {
   id: string;
@@ -29,45 +51,70 @@ type Arrival = Pick<PhotoRow, "id" | "created_at">;
 const byArrival = (a: Arrival, b: Arrival): number =>
   a.created_at - b.created_at || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
-/** When each photo's feature ends: one dwell from its arrival, or from the end of the one before. */
-export function featuredUntil(
-  photos: readonly Arrival[],
-  dwellSeconds: number,
-): Map<string, number> {
+/**
+ * When each photo's pop slot ends: one slot from its arrival, or from the end of the one before,
+ * in the order they came. The photo list's `featured` and every `pop_new` zone read the same slots.
+ */
+export function popUntil(photos: readonly Arrival[]): Map<string, number> {
   const until = new Map<string, number>();
   let end = -Infinity;
   for (const p of [...photos].sort(byArrival)) {
-    end = Math.max(p.created_at, end) + dwellSeconds * 1000;
+    end = Math.max(p.created_at, end) + POP_SECONDS * 1000;
     until.set(p.id, end);
   }
   return until;
 }
 
-const viewOf = (p: PhotoRow, featured: boolean): Record<string, unknown> => ({
+const tileOf = (p: PhotoRow): Record<string, unknown> => ({
   url: p.url,
   caption: p.caption,
   author_name: p.author_name,
   posted_at: p.posted_at,
-  featured,
 });
 
-/** The photo shown at `nowMs` and when that changes; null without photos. */
-export function photoNow(
+/** The wall's order this round; a shuffle draws a new one each round, alike on every screen. */
+function orderOf(photos: readonly PhotoRow[], s: WallSettings, seed: string, slot: number) {
+  const oldest = [...photos].sort(byArrival);
+  if (s.order === "oldest") return oldest;
+  if (s.order === "newest") return oldest.reverse();
+  const round = Math.floor(slot / oldest.length);
+  return shuffled(oldest, `${seed}:photo:${String(round)}`);
+}
+
+/**
+ * The wall at `nowMs` and when it next changes; null without photos. `seed` is the zone's key, so
+ * a shuffled wall is the same on all of the zone's screens.
+ */
+export function photoWall(
   photos: readonly PhotoRow[],
-  dwellSeconds: number,
+  s: WallSettings,
+  seed: string,
   nowMs: number,
 ): { view: Record<string, unknown>; changesAt: number | null } | null {
   if (photos.length === 0) return null;
-  const dwellMs = dwellSeconds * 1000;
-  const until = featuredUntil(photos, dwellSeconds);
-  for (const p of photos) {
-    const end = until.get(p.id) ?? 0;
-    if (nowMs >= end - dwellMs && nowMs < end) return { view: viewOf(p, true), changesAt: end };
+  const slotMs = s.seconds * 1000;
+  const slot = Math.floor(nowMs / slotMs);
+  const order = orderOf(photos, s, seed, slot);
+  const changes: number[] = order.length > 1 ? [(slot + 1) * slotMs] : [];
+  let lead = slot % order.length;
+  let featured = false;
+  if (s.popNew) {
+    const popMs = POP_SECONDS * 1000;
+    for (const [id, end] of popUntil(photos)) {
+      if (nowMs >= end - popMs && nowMs < end) {
+        lead = order.findIndex((p) => p.id === id);
+        featured = true;
+      }
+      if (end > nowMs) changes.push(nowMs < end - popMs ? end - popMs : end);
+    }
   }
-  const newest = [...photos].sort(byArrival).reverse();
-  const slot = Math.floor(nowMs / dwellMs);
-  const shown = newest[slot % newest.length] as PhotoRow;
-  // One photo turns into itself: nothing to rebuild for until a new photo arrives (its event).
-  const changesAt = newest.length === 1 ? null : (slot + 1) * dwellMs;
-  return { view: viewOf(shown, false), changesAt };
+  const tiles = Array.from(
+    { length: Math.min(TILES, order.length) },
+    (_, i) => order[(lead + i) % order.length] as PhotoRow,
+  );
+  const first = tiles[0] as PhotoRow;
+  return {
+    view: { ...tileOf(first), featured, tiles: tiles.map(tileOf) },
+    changesAt: changes.length === 0 ? null : Math.min(...changes),
+  };
 }

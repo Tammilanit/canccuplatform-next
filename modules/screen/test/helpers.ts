@@ -151,6 +151,10 @@ export interface FakeSources {
   checkin: CheckinCode | null;
   /** The purposes notify's check-in code was read for. */
   checkinReads: string[];
+  /** Notify's count of check-ins; null is "down". */
+  checkins: number | null;
+  /** The purposes the count was read for. */
+  countReads: string[];
 }
 
 /** Drops every screen table; `assignments` too, the name before migration 007. */
@@ -206,6 +210,8 @@ export async function harness(): Promise<Harness> {
     tenants: [],
     checkin: null,
     checkinReads: [],
+    checkins: null,
+    countReads: [],
   };
   const answer = <T>(seen: string[], key: string, value: T): Promise<T> => {
     seen.push(key);
@@ -295,6 +301,7 @@ export async function harness(): Promise<Harness> {
       agendaItems: (tenantId) => answer(fake.tenants, tenantId, fake.agendaItems),
       venueInfo: (tenantId) => answer(fake.tenants, tenantId, fake.venue),
       checkinCode: (_tenantId, purpose) => answer(fake.checkinReads, purpose, fake.checkin),
+      checkinCount: (_tenantId, purpose) => answer(fake.countReads, purpose, fake.checkins),
     },
   });
   // A stand-in for the device routes later slices add (the state, the stream): it runs only the check.

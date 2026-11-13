@@ -132,20 +132,33 @@ describe("the built-in layouts", () => {
     expect(areas(regions)).toMatchObject({ hero: at(2, 3, 10, 6), rail: at(2, 9, 10, 2) });
   });
 
-  it("stacks the Pulse's boxes in Portrait, the venue rail filling the space under the rail", () => {
-    const regions = build({ layoutId: null }, { portrait: true });
+  it("stacks the Pulse's boxes in Portrait, the Right now box between the rail and the venue rail", () => {
+    const counted = { ...facts, stats: { checked_in: 164 } };
+    const regions = build({ layoutId: null }, { portrait: true, facts: counted });
     expect(areas(regions)).toEqual({
       header: at(1, 1, 3, 2),
       "header-2": at(4, 1, 3, 2),
       hero: at(1, 3, 6, 6),
-      rail: at(1, 9, 6, 4),
-      venue_rail: at(1, 13, 3, 3),
-      "venue_rail-2": at(4, 13, 3, 3),
+      rail: at(1, 9, 6, 3),
+      right_now: at(1, 12, 6, 2),
+      venue_rail: at(1, 14, 3, 2),
+      "venue_rail-2": at(4, 14, 3, 2),
       ticker: at(1, 16, 6, 1),
     });
+    expect(types(regions).right_now).toEqual(["stats"]);
     // With `rotate` the hub QR takes turns in the venue rail instead.
     const rotating = build({ layoutId: null, hubQr: "rotate" }, { portrait: true });
-    expect(areas(rotating).venue_rail).toEqual(at(1, 13, 6, 3));
+    expect(areas(rotating).venue_rail).toEqual(at(1, 14, 6, 2));
+    // With nothing counted yet the Right now box waits; no box beside it takes its rows.
+    expect(areas(rotating).right_now).toBeUndefined();
+  });
+
+  it("puts Ambient's one line of statistics under its rail", () => {
+    const counted = { ...facts, stats: { online: 218, online_trend: "up" } };
+    const regions = build({ layoutId: "ambient" }, { facts: counted });
+    expect(areas(regions).online).toEqual(at(2, 11, 10, 1));
+    expect(types(regions).online).toEqual(["stats"]);
+    expect(areas(build({ layoutId: "ambient" })).online).toBeUndefined();
   });
 });
 
