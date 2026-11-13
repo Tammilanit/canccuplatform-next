@@ -4,7 +4,6 @@ docs/plans/issue-188.md, area M and Q2)."""
 from __future__ import annotations
 
 from datetime import timedelta
-from urllib.parse import quote
 
 import httpx
 import pytest
@@ -31,9 +30,9 @@ async def test_signed_out_it_offers_sign_in_and_comes_back(env: Env) -> None:
     query = f"p=arrival&c={shown}"
     r = await page(env, query)
     assert r.status_code == 200
-    back = quote(f"/notify/check-in?{query}", safe="")
-    assert f'href="/admin/sign-in?next={back}"' in r.text
-    assert "optional" in r.text and "scan the screen again" in r.text and recorded(env) == []
+    back = f"/notify/check-in?{query}".replace("&", "&amp;")
+    assert 'action="/admin/sign-in"' in r.text and f'name="next" value="{back}"' in r.text
+    assert "optional" in r.text and recorded(env) == []
     csp = r.headers["content-security-policy"]
     assert "frame-ancestors 'none'" in csp and "script-src 'self'" in csp
     assert r.headers["cache-control"] == "no-store"
@@ -60,7 +59,7 @@ async def test_an_expired_or_wrong_code_says_scan_again(env: Env) -> None:
     form = {"p": "arrival", "c": (await code(env))["code"]}
     env.clock[0] = NOW + timedelta(minutes=2)
     expired = await submit(env, form, "u_a")
-    assert expired.status_code == 400 and "Scan the screen again" in expired.text
+    assert expired.status_code == 400 and "Point your camera at the screen again" in expired.text
     wrong = await submit(env, {"p": "arrival", "c": "A" * 22}, "u_a")
     assert wrong.status_code == 400 and "not valid" in wrong.text
     malformed = await page(env, "p=../x&c=1", "u_a")
@@ -73,7 +72,7 @@ async def test_a_signed_out_submit_and_a_non_member_are_told_what_to_do(
 ) -> None:
     form = {"p": "arrival", "c": (await code(env))["code"]}
     signed_out = await submit(env, form)
-    assert signed_out.status_code == 401 and "/admin/sign-in?next=" in signed_out.text
+    assert signed_out.status_code == 401 and 'action="/admin/sign-in"' in signed_out.text
     monkeypatch.setattr(checkin, "is_member", lambda session: False)
     outsider = await submit(env, form, "u_a")
     assert outsider.status_code == 403 and "join link" in outsider.text
@@ -108,8 +107,12 @@ async def test_the_page_says_try_again_when_the_event_cannot_be_resolved(
 ) -> None:
     async with env.client(host) as c:
         r = await c.get("/check-in?p=arrival&c=" + "x" * 22)
+        bare = await c.get("/check-in")
     assert r.status_code == status and r.headers["content-type"].startswith("text/html")
     assert "Try again" in r.text and '"error"' not in r.text
+    # The path as the browser sees it: Caddy has stripped /notify before it reached the module.
+    assert f'href="/notify/check-in?p=arrival&amp;c={"x" * 22}"' in r.text
+    assert bare.status_code == status and 'href="/notify/check-in"' in bare.text
 
 
 async def test_the_page_says_try_again_while_admin_is_down(env: Env) -> None:

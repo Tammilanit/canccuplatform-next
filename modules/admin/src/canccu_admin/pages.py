@@ -8,11 +8,17 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from canccu_kit import KitError, MissingRight, TenantResolver
+from canccu_kit import KitError, MissingRight, NotSignedIn, TenantResolver
 from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.ui import EventInfo, error_view, front_page, shell_page
 from starlette.requests import Request
-from starlette.responses import FileResponse, HTMLResponse, JSONResponse, Response
+from starlette.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+    Response,
+)
 
 if TYPE_CHECKING:
     from .auth import Auth
@@ -21,6 +27,8 @@ log = logging.getLogger("canccu.admin")
 
 BASE = "/admin"  # Caddy serves module pages under /admin/ and strips it
 CSS = f"{BASE}/static/ui.css"
+# What signing in keeps, said on notify's privacy page with what checking in keeps (#441).
+PRIVACY = "/notify/privacy"
 # The image sets CANCCU_UI_CSS; elsewhere packages/ui sits beside this module's source (an
 # editable install), while an installed kit has no packages/ui next to it.
 UI_CSS = Path(
@@ -99,7 +107,9 @@ async def front(
     request: Request, title: str, card: str, status: int = 200, **shell: Any
 ) -> HTMLResponse:
     """A front door (sign-in, first run): the event's poster and one card."""
-    doc = front_page(title, card, event=await event_of(request), css=[CSS], **shell)
+    doc = front_page(
+        title, card, event=await event_of(request), css=[CSS], privacy=PRIVACY, **shell
+    )
     return HTMLResponse(doc, status_code=status)
 
 
@@ -125,6 +135,10 @@ def page_error_handler(auth: Auth) -> Callable[[Request, Exception], Awaitable[R
             session = await auth.session(session_id_from_cookie(request.headers.get("cookie")))
         except KitError:
             session = None
+        if isinstance(exc, MissingRight) and session is not None and not session.rights:
+            # Without any role "No access" names a page they never asked for; the sign-in page
+            # says what to do instead (sheet 3, "No role yet").
+            return RedirectResponse(f"{BASE}/sign-in", status_code=303)
         event = await event_of(request)
         title, view = error_view(
             exc,
@@ -137,3 +151,11 @@ def page_error_handler(auth: Auth) -> Callable[[Request, Exception], Awaitable[R
         return await page(request, title, view, exc.status, session=session, plain=True)
 
     return page_error
+
+
+async def not_signed_in(request: Request, exc: Exception) -> Response:
+    """The API answers 401 (contracts/admin.md); a page sends the browser to sign in."""
+    if request.url.path.startswith("/api/"):
+        assert isinstance(exc, NotSignedIn)
+        return JSONResponse(exc.to_body(), status_code=exc.status)
+    return RedirectResponse(f"{BASE}/sign-in", status_code=303)

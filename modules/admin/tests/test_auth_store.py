@@ -15,7 +15,8 @@ from datetime import UTC, datetime, timedelta
 import asyncpg
 import pytest
 
-from canccu_admin.auth_db import AuthStore, Flow, MemoryAuthStore, PgAuthStore
+from canccu_admin.auth_db import AuthStore, Flow, PgAuthStore
+from canccu_admin.auth_memory import MemoryAuthStore
 from canccu_admin.db import MIGRATIONS
 
 NOW = datetime(2026, 11, 7, 12, 0, tzinfo=UTC)
@@ -119,3 +120,37 @@ async def test_users_and_roles(store: AuthStore) -> None:
     await store.set_role(first.id, None, owner.id, NOW)
     assert await store.get_role(first.id) == (renamed, None)
     assert await store.get_role("u_missing") is None
+
+
+async def test_people_have_a_handle_and_a_last_here(store: AuthStore) -> None:
+    """People (#437): the Discord handle beside the name, and when they were last here."""
+    aino = await store.upsert_user("d1", "Aino", NOW, handle="aino.k")
+    assert aino.handle == "aino.k"
+    await store.create_session("a", aino.id, NOW, NOW + timedelta(hours=24))
+    await store.touch_session("a", NOW + timedelta(hours=1))
+    [person] = await store.people()
+    assert person.user == aino and person.role is None
+    assert person.last_seen_at == NOW + timedelta(hours=1)
+
+
+async def test_removing_someone_ends_their_sessions_and_role(store: AuthStore) -> None:
+    await store.set_first_run_code("h", NOW)
+    owner = await store.claim_owner("d0", "Olli", "h", NOW)
+    assert owner is not None
+    aino = await store.upsert_user("d1", "Aino", NOW)
+    await store.set_role(aino.id, "admin", owner.id, NOW)
+    await store.create_session("a", aino.id, NOW, NOW + timedelta(hours=24))
+    await store.remove_user(aino.id, NOW)
+    assert await store.get_session("a") is None
+    assert await store.get_role(aino.id) == (aino, None)
+    assert [p.user.name for p in await store.people()] == ["Olli"]
+    # Their name stays for the history of what they changed.
+    assert aino in [u for u, _ in await store.list_users()]
+    # The owner is never removed, and signing in again brings someone back without a role.
+    await store.remove_user(owner.id, NOW)
+    assert await store.get_role(owner.id) == (owner, "owner")
+    await store.upsert_user("d1", "Aino", NOW + timedelta(hours=1))
+    assert [(p.user.name, p.role) for p in await store.people()] == [
+        ("Aino", None),
+        ("Olli", "owner"),
+    ]

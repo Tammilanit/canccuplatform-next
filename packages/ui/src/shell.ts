@@ -166,6 +166,10 @@ export interface ShellOptions extends DocumentOptions {
   plain?: boolean;
 }
 
+/** Registers admin's service worker, which shows the offline page when a signed-in phone loses
+ * its connection (#440); only a session's pages need it, as only they have a shell to keep. */
+const OFFLINE_SCRIPT = raw('<script src="/admin/static/shell.js" defer></script>');
+
 /** An organiser page in the shell. */
 export function shellPage(o: ShellOptions): Html {
   const now = o.now ?? new Date();
@@ -184,8 +188,10 @@ export function shellPage(o: ShellOptions): Html {
     ? html`<nav class="canccu-tabs" aria-label="${o.title}">${o.tabs.map((t) => html`<a${attrs({ href: t.href, "aria-current": t.current ? "page" : undefined })}>${t.label}</a>`)}</nav>`
     : "";
   const main = html`<div class="canccu-content"><main class="canccu-main${o.width === "narrow" ? " canccu-main--narrow" : ""}">${head}${tabs}${o.body}</main></div>`;
+  // An error page is nowhere in the menu, so nothing in it is marked (sheet 8).
+  const here = o.plain ? undefined : o.current;
   const shell = o.session
-    ? html`<div class="canccu-shell">${header(o.event, o.logoUrl, now)}${archived}${menuNav(o.session, o.current, o.event)}${main}${tabbar(o.session, o.current)}</div>`
+    ? html`<div class="canccu-shell">${header(o.event, o.logoUrl, now)}${archived}${menuNav(o.session, here, o.event)}${main}${tabbar(o.session, here)}</div>${OFFLINE_SCRIPT}`
     : html`<div class="canccu-shell canccu-shell--bare">${header(o.event, o.logoUrl, now)}${archived}${main}</div>`;
   return document(o.title, o, shell);
 }
@@ -196,6 +202,9 @@ export interface FrontOptions extends DocumentOptions {
   card: Slot;
   /** Centred, as the check-in steps are. */
   centred?: boolean;
+  /** Where the Privacy tag leads: the safety element of pages that take the event's look, which
+   * must be the page's last child (README, the safety elements). */
+  privacy?: string;
 }
 
 /** A front door (sign-in, check-in): the event's poster beside or above one card. */
@@ -211,7 +220,14 @@ export function frontPage(o: FrontOptions): Html {
   const venue = e?.venue ? html`<p class="canccu-poster__venue">${icon("pin")}${e.venue}</p>` : "";
   const poster = html`<div class="canccu-poster"><div class="canccu-poster__name${long}">${name}</div>${meta}${venue}</div>`;
   const card = html`<div class="canccu-front__card${o.centred ? " canccu-front__card--center" : ""}">${o.card}</div>`;
-  return document(o.title, o, html`<div class="canccu-front">${poster}${card}</div>`);
+  if (!o.privacy)
+    return document(o.title, o, html`<div class="canccu-front">${poster}${card}</div>`);
+  // The page keeps a free row at its foot, so the tag never covers the card.
+  return document(
+    o.title,
+    o,
+    html`<div class="canccu-front canccu-front--privacy">${poster}${card}</div><a class="canccu-privacy-link" href="${o.privacy}">Privacy</a>`,
+  );
 }
 
 export interface PageError {

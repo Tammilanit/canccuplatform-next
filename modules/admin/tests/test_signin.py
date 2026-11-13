@@ -128,7 +128,8 @@ async def test_callback_refuses_an_expired_or_reused_state(world: World) -> None
 async def test_callback_reports_a_cancelled_sign_in(world: World) -> None:
     await world.client.post("/admin/sign-in")
     r = await world.client.get("/admin/sign-in/callback", params={"error": "access_denied"})
-    assert r.status_code == 400 and "cancelled" in r.text
+    assert r.status_code == 400 and "Discord was closed before it said yes." in r.text
+    assert "Try again with Discord" in r.text
     assert_flow_cookie_cleared(r)
 
 
@@ -321,3 +322,20 @@ async def test_the_return_path_lives_with_the_flow_not_the_browser(world: World)
         CALLBACK, params={"code": "c", "state": query["state"][0], "next": "//evil.example"}
     )
     assert r.headers["location"] == CHECK_IN
+
+
+async def test_a_cancelled_sign_in_goes_back_to_where_it_started(world: World) -> None:
+    """Check-in has its own "Discord sign-in was cancelled" card (#441), so the browser goes back
+    there, marked, rather than to the organisers' sign-in page."""
+    start = await world.client.post("/admin/sign-in", data={"next": CHECK_IN})
+    state = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
+    r = await world.client.get(CALLBACK, params={"error": "access_denied", "state": state})
+    assert r.status_code == 303 and r.headers["location"] == f"{CHECK_IN}&signin=cancelled"
+    assert_flow_cookie_cleared(r)
+    # The state is used up, and a state from another browser (no flow cookie) is not followed.
+    again = await world.client.get(CALLBACK, params={"error": "access_denied", "state": state})
+    assert again.status_code == 400
+    start = await world.client.post("/admin/sign-in", data={"next": CHECK_IN})
+    state = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
+    other = await world.browser().get(CALLBACK, params={"error": "access_denied", "state": state})
+    assert other.status_code == 400 and "location" not in other.headers

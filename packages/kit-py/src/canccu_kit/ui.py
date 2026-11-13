@@ -50,6 +50,11 @@ __all__ = [
 ]
 
 
+# Registers admin's service worker, which shows the offline page when a signed-in phone loses its
+# connection (#440); only a session's pages need it, as only they have a shell to keep.
+OFFLINE_SCRIPT = '<script src="/admin/static/shell.js" defer></script>'
+
+
 def _initials(name: str) -> str:
     return "".join(w[0].upper() for w in name.split()[:2]) or "?"
 
@@ -221,8 +226,10 @@ def shell_page(
     if session is None:
         shell = f'<div class="canccu-shell canccu-shell--bare">{top}{main}</div>'
     else:
-        nav, bar = _menu(session, current, event), _tabbar(session, current)
-        shell = f'<div class="canccu-shell">{top}{nav}{main}{bar}</div>'
+        # An error page is nowhere in the menu, so nothing in it is marked (sheet 8).
+        here = None if plain else current
+        nav, bar = _menu(session, here, event), _tabbar(session, here)
+        shell = f'<div class="canccu-shell">{top}{nav}{main}{bar}</div>{OFFLINE_SCRIPT}'
     return document(title, shell, event=event, css=css)
 
 
@@ -235,8 +242,11 @@ def front_page(
     centred: bool = False,
     surface: Literal["admin", "hub"] = "admin",
     now: datetime | None = None,
+    privacy: str | None = None,
 ) -> str:
-    """A front door (sign-in, check-in): the event's poster beside or above one card (HTML)."""
+    """A front door (sign-in, check-in): the event's poster beside or above one card (HTML).
+    `privacy` is where the Privacy tag leads: the safety element of pages that take the event's
+    look, which must be the page's last child (packages/ui README, the safety elements)."""
     name = (event.name if event else None) or ""
     long = " canccu-poster__name--long" if len(name) > 28 else ""
     meta = ""
@@ -255,7 +265,14 @@ def front_page(
     )
     centre = " canccu-front__card--center" if centred else ""
     front_card = f'<div class="canccu-front__card{centre}">{card}</div>'
-    body = f'<div class="canccu-front">{poster}{front_card}</div>'
+    if privacy:
+        # The page keeps a free row at its foot, so the tag never covers the card.
+        body = (
+            f'<div class="canccu-front canccu-front--privacy">{poster}{front_card}</div>'
+            f'<a class="canccu-privacy-link" href="{esc(privacy)}">Privacy</a>'
+        )
+    else:
+        body = f'<div class="canccu-front">{poster}{front_card}</div>'
     return document(title, body, event=event, css=css, surface=surface)
 
 
