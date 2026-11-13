@@ -34,6 +34,7 @@ from .auth_routes import CALLBACK_PATH
 from .db import PgStore
 from .declarations import load_declarations
 from .discord import Discord
+from .health import HealthWatch
 from .profile import make_validator
 from .service import Service
 
@@ -123,7 +124,6 @@ async def serve() -> None:
         declarations=load_declarations(
             Path(os.environ.get("CANCCU_DECLARATIONS_DIR", "declarations"))
         ),
-        health_targets=parse_targets(os.environ.get("CANCCU_HEALTH_TARGETS", "")),
     )
     health = Health(
         config.module,
@@ -136,9 +136,10 @@ async def serve() -> None:
     # Admin checks its own pages through the kit like any module, so CI's session stub
     # (deploy/compose.ci.yml) can stand in for it; its own role changes and ended sessions
     # drop the cache at once.
+    watch = HealthWatch(health, parse_targets(os.environ.get("CANCCU_HEALTH_TARGETS", "")))
     app = create_app(
         service,
-        health,
+        watch,
         rights.check,
         auth,
         resolver,
@@ -156,9 +157,11 @@ async def serve() -> None:
         bus.subscribe_tenants(["tenants"], drop_cached_tenants),
     ]
     server = uvicorn.Server(uvicorn.Config(app, host="0.0.0.0", port=8080, log_config=None))
+    watching = asyncio.create_task(watch.run())
     try:
         await server.serve()
     finally:
+        watching.cancel()
         for subscription in subscriptions:
             await subscription.close()
 

@@ -2,9 +2,23 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 import pytest
 from canccu_kit import tenant_scope
-from conftest import World, owner_and_member
+from conftest import START, World, owner_and_member
+
+from canccu_admin.health import Check, Part
+
+TROUBLE = Check(
+    START,
+    (
+        Part("admin", "ok", "v1", answer_ms=3),
+        Part("notify", "down", down_since=START - timedelta(minutes=3)),
+        Part("screen", "degraded", "v1", "valkey: slow", answer_ms=41),
+        Part("screen-render", "ok", "v1", answer_ms=41),
+    ),
+)
 
 
 async def test_pages_are_in_the_shell_with_the_event_and_menu(
@@ -90,3 +104,72 @@ async def test_health_has_no_empty_message_column(
     owner, _ = await owner_and_member(world, caplog)
     r = await world.browser(owner).get("/admin/health-view")
     assert "What it says" not in r.text
+
+
+async def test_health_counts_parts_and_says_when_it_last_checked(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    world.watch.latest = TROUBLE
+    text = (await world.browser(owner).get("/admin/health-view")).text
+    for value, label in (("4", "parts"), ("2", "running"), ("1", "slow"), ("1", "down")):
+        assert f'stat__value">{value}</p><p class="canccu-stat__label">{label}</p>' in text
+    last = '<span data-canccu-live="last-check">Last check 12:00:00.</span>'
+    assert f"checked every 10 seconds. {last}" in text
+    # health.js follows the checks by swapping only these, never by reloading the page.
+    assert '<div class="canccu-stats" data-canccu-live="tiles">' in text
+    assert 'data-canccu-live="parts"><table class="canccu-table">' in text
+    assert '<script src="/admin/static/health.js" defer></script>' in text
+    assert 'href="/admin/health-view?check=now"' in text
+
+
+async def test_health_says_what_each_part_does_and_how_fast_it_answered(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    world.watch.latest = TROUBLE
+    text = (await world.browser(owner).get("/admin/health-view")).text
+    assert "<b>Screen rendering</b>" in text and "Turns decks into slides" in text
+    assert "<b>Admin</b>" in text and "Sign-in, settings, people" in text
+    assert 'canccu-num">3 ms</td>' in text and ">no answer</td>" in text
+    assert '<code class="canccu-muted">screen-render</code>' in text
+    # Trouble first: the part that is down leads.
+    assert (
+        text.index("<b>Notifications</b>")
+        < text.index("<b>Screens</b>")
+        < text.index("<b>Admin</b>")
+    )
+
+
+async def test_a_part_in_trouble_says_what_it_means_and_offers_a_way_on(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    world.watch.latest = TROUBLE
+    text = (await world.browser(owner).get("/admin/health-view")).text
+    assert "No answer since 11:57. Messages wait and go out when it is back." in text
+    # Keyed by part, so an open one stays open when health.js swaps the table.
+    way = '<details class="canccu-way" data-canccu-part="notify"><summary>What to check</summary>'
+    assert way in text
+    assert "<code>notify</code>" in text
+    assert "valkey: slow" in text
+    assert 'href="/admin/screen/devices">Open devices</a>' in text
+
+
+async def test_check_now_checks_again(world: World, caplog: pytest.LogCaptureFixture) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    world.watch.latest = TROUBLE
+    text = (await world.browser(owner).get("/admin/health-view?check=now")).text
+    assert world.watch.latest is not TROUBLE and "<b>Notifications</b>" not in text
+
+
+async def test_the_menu_says_when_health_needs_a_look(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    world.watch.latest = TROUBLE
+    text = (await world.browser(owner).get("/admin/settings")).text
+    assert 'Health<span class="canccu-badge canccu-badge--down">1 down, 1 slow</span>' in text
+    world.watch.latest = Check(START, (Part("admin", "ok"),))
+    text = (await world.browser(owner).get("/admin/settings")).text
+    assert "Health</a>" in text

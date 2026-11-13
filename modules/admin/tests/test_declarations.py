@@ -25,7 +25,7 @@ def one(**kw: Any) -> list[Setting]:
 
 
 def test_shipped_declarations_load_with_contract_defaults() -> None:
-    d = load_declarations(DECL)
+    d = {m: decl.settings for m, decl in load_declarations(DECL).items()}
     assert {"admin", "agenda", "notify", "games"} <= set(d)
     agenda = {s.key: s for s in d["agenda"]}
     assert agenda["reminder_leads_minutes"].default == [30, 10]
@@ -40,7 +40,7 @@ def test_shipped_declarations_load_with_contract_defaults() -> None:
 
 def test_screen_declaration_matches_the_contract() -> None:
     # contracts/screen.md, Settings: the bounds and defaults the screen module reads.
-    screen = {s.key: s for s in load_declarations(DECL)["screen"]}
+    screen = {s.key: s for s in load_declarations(DECL)["screen"].settings}
     bounded = {
         "heartbeat_seconds": (5, 60, 15),
         "offline_after_seconds": (15, 300, 45),

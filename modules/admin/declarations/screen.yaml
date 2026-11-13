@@ -46,3 +46,16 @@ settings:
     type: boolean
     label: Shift the screen layout slowly against burn-in
     default: false
+groups:
+  - id: playing
+    label: Playing
+    description: What a screen does between slides.
+    keys: [photo_dwell_seconds, break_min_gap_seconds, ticker_appearance, progress_bars, burn_in_drift]
+  - id: network
+    label: When the network is slow
+    description: How long a screen waits before it says so.
+    keys: [heartbeat_seconds, offline_after_seconds, ready_timeout_seconds, ready_fallback_asset_id]
+  - id: web_pages
+    label: Web pages
+    description: Outside pages a screen may show.
+    keys: [web_allowlist]

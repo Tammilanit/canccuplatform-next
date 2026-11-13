@@ -19,3 +19,12 @@ settings:
     type: boolean
     label: Members may add games
     default: true
+groups:
+  - id: surges
+    label: Surges
+    description: When many players start the same game, the screens say so.
+    keys: [surges, surge_threshold, surge_cooldown_minutes]
+  - id: members
+    label: Games members add
+    description: Games that are not on the list yet.
+    keys: [attendee_additions]

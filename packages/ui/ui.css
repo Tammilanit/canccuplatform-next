@@ -266,6 +266,10 @@
   .canccu-menu__item .canccu-i {
     color: var(--canccu-ink-muted);
   }
+  /* A page that needs a look says so at its item's end: "Health 1 slow" (sheet 2). */
+  .canccu-menu__item .canccu-badge {
+    margin-left: auto;
+  }
   .canccu-menu__item:hover {
     background: var(--canccu-tint);
     color: var(--canccu-color-text);
@@ -628,6 +632,82 @@
     }
   }
 
+  /* A form of cards with a save bar (Settings, sheet 4): the bar says how much is unsaved and
+     stays at the window's foot while the form runs on; at the page's end it sits on the content's
+     foot. Its surface and top line reach past its box to the column's edges while its words keep
+     the form's width: a border image is ink overflow, so it never makes the page scroll sideways. */
+  .canccu-settings {
+    display: grid;
+    gap: 1.5rem;
+  }
+  .canccu-form__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+  }
+  .canccu-form__row > .canccu-field {
+    margin-bottom: 0;
+  }
+  .canccu-savebar {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: -3rem;
+    padding: 0.75rem 0;
+    border-image: linear-gradient(
+        var(--canccu-color-border) 0 var(--canccu-border-width),
+        var(--canccu-color-surface) 0
+      )
+      0 fill / 0 / 0 100vmax 0 2.5rem;
+  }
+  .canccu-savebar[hidden] {
+    display: none;
+  }
+  .canccu-savebar__text {
+    margin-right: auto;
+    min-width: 0;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+  }
+  .canccu-savebar__text.is-down {
+    color: var(--canccu-ink-down);
+  }
+  /* On a phone: a 52 px row fully above the bottom bar and its Quick add, out of the way while
+     the page scrolls (docs/design/README.md, decision 5). Quick add rises 1.1875 rem and a 4 px
+     ring over the bar (4.25 rem and its top line), so the row sits 1.75 rem higher, clear of the
+     button and its shadow; its surface reaches down to the bar, so the page never shows between. */
+  @media (max-width: 1099.98px) {
+    .canccu-savebar {
+      bottom: 6rem;
+      min-height: 3.25rem;
+      margin-bottom: -2rem;
+      padding: 0.25rem 0;
+      border-image-outset: 0 1rem 1.75rem;
+      transition:
+        transform 0.2s,
+        opacity 0.2s;
+    }
+    .canccu-savebar.is-away {
+      transform: translateY(100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+  @media (max-width: 40rem) {
+    .canccu-form__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.25rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .canccu-savebar {
+      transition: none;
+    }
+  }
+
   /* A form page with a side column (Settings' last changes): the side only where it fits. */
   .canccu-split {
     display: grid;
@@ -743,6 +823,29 @@
     display: grid;
     justify-items: end;
     text-align: right;
+  }
+  /* On a phone the values go under the description, so the label and its words keep their width. */
+  @media (max-width: 40rem) {
+    .canccu-list__row:has(> .canccu-list__end > .canccu-list__glance) {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 0.125rem 0.875rem;
+    }
+    .canccu-list__row:has(> .canccu-list__end > .canccu-list__glance) > .canccu-list__icon {
+      grid-area: 1 / 1 / 3;
+    }
+    .canccu-list__row > .canccu-list__end:has(> .canccu-list__glance) {
+      display: contents;
+    }
+    .canccu-list__end > .canccu-list__glance {
+      grid-area: 2 / 2;
+      justify-items: start;
+      text-align: left;
+    }
+    .canccu-list__end:has(> .canccu-list__glance) > :last-child {
+      grid-area: 1 / 3 / 3;
+      align-self: center;
+    }
   }
   .canccu-table {
     width: 100%;
@@ -933,6 +1036,80 @@
   .canccu-dl dd {
     margin: 0;
   }
+  /* A card's actions after its facts keep their distance (Event profile, sheet 4). */
+  .canccu-dl + .canccu-cluster {
+    margin-top: 1rem;
+  }
+  /* A table cell's second line, quieter: what a row's part does (Health, sheet 4). */
+  .canccu-table__sub {
+    display: block;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+  }
+  /* Count tiles over a list (Health, sheet 4): four across, two by two on a phone. */
+  .canccu-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: var(--canccu-gap);
+  }
+  .canccu-stat {
+    padding: 1rem 1.25rem;
+  }
+  .canccu-stat__value {
+    margin: 0;
+    font-size: var(--canccu-text-2xl);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .canccu-stat__label {
+    margin: 0;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+  }
+  .canccu-stat--ok .canccu-stat__value {
+    color: var(--canccu-ink-ok);
+  }
+  .canccu-stat--degraded .canccu-stat__value {
+    color: var(--canccu-ink-degraded);
+  }
+  .canccu-stat--down .canccu-stat__value {
+    color: var(--canccu-ink-down);
+  }
+  /* The way on from a row in trouble ("Open devices", "What to check"): a link in the text on a
+     desktop, a 44 px button of its own on a phone (sheet 4). */
+  .canccu-way {
+    display: inline;
+  }
+  .canccu-way > summary {
+    display: inline;
+    cursor: pointer;
+    color: var(--canccu-ink-primary);
+    text-decoration: underline;
+  }
+  .canccu-way > p {
+    margin: 0.5rem 0 0;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+  }
+  @media (max-width: 40rem) {
+    a.canccu-way,
+    .canccu-way > summary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.75rem;
+      margin-top: 0.5rem;
+      padding: 0 1rem;
+      border: var(--canccu-border-width) solid var(--canccu-color-border);
+      border-radius: var(--canccu-radius);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .canccu-way {
+      display: block;
+    }
+  }
 
   /* Surfaces: the root a theme's CSS targets (contracts/theming.md) */
   .canccu-surface--screen {
@@ -1062,8 +1239,14 @@
     font-size: var(--canccu-text-sm);
   }
   .canccu-field--check .canccu-field__label {
+    flex: 1 1 0;
+    min-width: 0;
     font-size: 0.9375rem;
     font-weight: 550;
+  }
+  /* A box's hint sits under its label: the box and the gap beside it. */
+  .canccu-field--check .canccu-field__hint {
+    padding-left: 2rem;
   }
   .canccu-input {
     width: 100%;
@@ -1229,6 +1412,26 @@
   }
 
   /* Empty state: what is missing, why it matters, the one next step. */
+  /* A question before a step that can't be undone (sheet 4): what goes, what stays, then the
+     actions; with three they stack, the danger button last. */
+  .canccu-dialog {
+    display: grid;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-radius: calc(var(--canccu-radius) + 8px);
+  }
+  .canccu-dialog .canccu-card__title {
+    font-size: 1.25rem;
+  }
+  .canccu-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .canccu-dialog__actions--stack {
+    display: grid;
+  }
   .canccu-empty {
     display: grid;
     justify-items: center;
@@ -1689,6 +1892,9 @@
   }
   .canccu-i--archive {
     --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='5' rx='1.2'/%3E%3Cpath d='M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4'/%3E%3C/svg%3E");
+  }
+  .canccu-i--download {
+    --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v11M7 10l5 5 5-5M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15'/%3E%3C/svg%3E");
   }
   .canccu-i--refresh {
     --canccu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 11.5A8 8 0 0 0 5.6 7.2L4 9M4 4.5V9h4.5M4 12.5a8 8 0 0 0 14.4 4.3L20 15M20 19.5V15h-4.5'/%3E%3C/svg%3E");

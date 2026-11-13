@@ -76,10 +76,10 @@ fi
 shoot() {
   docker run --rm --network "container:$caddy" -u "$user" -e HOME=/tmp \
     -e CANCCU_DEMO_HOST -e DEMO_SESSION -v "$work:/work" -v "$out:/out" -w /work "$IMAGE" \
-    node "scripts/$1" --base "$BASE" --out /out
+    node "scripts/$1" --base "$BASE" --out /out "${@:2}"
 }
 shoot demo-screenshots.mjs
-first=$?
+status=$?
 # The second pass needs people, a session without a role and events before, after and away from
 # their venue, which no API of the CI stack makes; the first pass shows People with nobody else.
 if ! "${COMPOSE[@]}" exec -T postgres psql -U canccu -d canccu -v ON_ERROR_STOP=1 -q \
@@ -87,6 +87,20 @@ if ! "${COMPOSE[@]}" exec -T postgres psql -U canccu -d canccu -v ON_ERROR_STOP=
   echo "error: could not seed the front-door screenshots" >&2
   exit 1
 fi
-shoot demo-screenshots-front.mjs
-second=$?
-[ "$first" = 0 ] && [ "$second" = 0 ]
+shoot demo-screenshots-front.mjs || status=1
+# Health with a part down (docs/design/mockups.html, sheet 4), last, as it stops notify (whose
+# check-in the front pass shows) for longer than admin's 10 s check. The pass asks for notify
+# back (the file start-notify) once its shots of the part down are taken, then follows Health
+# until the menu's note clears; notify starts again whatever the pass did.
+"${COMPOSE[@]}" stop notify >/dev/null || status=1
+sleep 15
+rm -f "$work/start-notify"
+shoot demo-screenshots.mjs --trouble &
+pass=$!
+for _ in $(seq 240); do
+  if [ -e "$work/start-notify" ] || ! kill -0 "$pass" 2>/dev/null; then break; fi
+  sleep 1
+done
+"${COMPOSE[@]}" start notify >/dev/null || status=1
+wait "$pass" || status=1
+exit "$status"

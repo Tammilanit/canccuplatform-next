@@ -11,3 +11,8 @@ settings:
     choices: [screen, discord_channel, discord_dm, push]
     label: Notification channels
     default: [screen, discord_channel, push]
+groups:
+  - id: reminders
+    label: Reminders
+    description: When and where people hear that an item is about to start.
+    keys: [reminder_leads_minutes, notify_channels]

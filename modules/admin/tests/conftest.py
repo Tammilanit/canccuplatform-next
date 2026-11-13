@@ -33,6 +33,7 @@ from canccu_admin.auth_routes import OnEvent
 from canccu_admin.db import MemoryStore, Store
 from canccu_admin.declarations import load_declarations
 from canccu_admin.discord import Discord
+from canccu_admin.health import HealthWatch
 from canccu_admin.profile import make_validator
 from canccu_admin.service import Service
 
@@ -144,6 +145,7 @@ class World:
     discord: FakeDiscord
     clock: list[datetime]
     checker: RightsChecker
+    watch: HealthWatch
     event: dict[str, str] = field(default_factory=dict)
     """What `GET /api/tenants/current` adds for the shell's event (set before the first page)."""
 
@@ -184,7 +186,6 @@ def world(tmp_path: Path) -> World:
         make_validator(ROOT / "contracts/profile.schema.json"),
         tmp_path,
         load_declarations(Path(__file__).parents[1] / "declarations"),
-        {},
     )
     fake = FakeDiscord()
     discord = Discord(
@@ -207,9 +208,10 @@ def world(tmp_path: Path) -> World:
     async def authorize(cookie: str | None, right: str) -> Session:
         return await holder[0].check(cookie, right)
 
+    watch = HealthWatch(Health("admin", "dev", {}), {}, clock=lambda: clock[0])
     app = create_app(
         service,
-        Health("admin", "dev", {}),
+        watch,
         authorize,
         auth,
         fake_resolver(
@@ -228,7 +230,9 @@ def world(tmp_path: Path) -> World:
     )
     holder.append(checker)
     client = httpx.AsyncClient(transport=asgi, base_url=PUBLIC)
-    return World(client, internal, service, auth, store, streams, fake, clock, checker, event)
+    return World(
+        client, internal, service, auth, store, streams, fake, clock, checker, watch, event
+    )
 
 
 def caddy(app: ASGIApp) -> ASGIApp:

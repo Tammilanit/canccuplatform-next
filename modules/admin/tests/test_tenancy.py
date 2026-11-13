@@ -26,6 +26,7 @@ from canccu_admin.auth import Auth
 from canccu_admin.auth_memory import MemoryAuthStore
 from canccu_admin.db import MemoryStore
 from canccu_admin.declarations import load_declarations
+from canccu_admin.health import HealthWatch
 from canccu_admin.profile import make_validator
 from canccu_admin.service import Service
 
@@ -51,12 +52,11 @@ class Env:
             make_validator(ROOT / "contracts/profile.schema.json"),
             tmp_path,
             load_declarations(Path(__file__).parents[1] / "declarations"),
-            {},
         )
         auth = Auth(MemoryAuthStore(), self.service.bus, None, None)
         self.app = create_app(
             self.service,
-            Health("admin", "dev", {}),
+            HealthWatch(Health("admin", "dev", {}), {}),
             authorize,
             auth,
             fake_resolver({host: tenant for tenant, host in HOSTS.items()}),

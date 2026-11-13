@@ -1,4 +1,4 @@
-"""Settings, profile and health logic behind the API and the pages.
+"""Settings and profile logic behind the API and the pages.
 
 Settings and the profile are per tenant: every method that touches them runs for the current
 tenant (set by the kit from the request's hostname), reads and writes only that tenant's rows and
@@ -12,17 +12,15 @@ import hashlib
 import logging
 import shutil
 import tempfile
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import httpx
 from canccu_kit import Bus, KitError, tenant_file
 from jsonschema import Draft202012Validator
 
 from . import profile as prof
 from .db import Store
-from .declarations import KEY_RE, Setting, check_values
+from .declarations import KEY_RE, Declaration, check_values
 
 log = logging.getLogger("canccu.admin")
 
@@ -55,14 +53,6 @@ def _replace_dir(target: Path, staging: Path) -> None:
         shutil.move(str(child), target / child.name)
 
 
-@dataclass
-class ModuleHealth:
-    module: str
-    status: str
-    version: str = ""
-    detail: str = ""
-
-
 class Service:
     def __init__(
         self,
@@ -70,17 +60,14 @@ class Service:
         bus: Bus,
         validator: Draft202012Validator,
         files_root: Path,
-        declarations: dict[str, list[Setting]],
-        health_targets: dict[str, str],
-        http: httpx.AsyncClient | None = None,
+        declarations: dict[str, Declaration],
     ) -> None:
         self.store = store
         self.bus = bus
         self.validator = validator
         self.files_root = files_root
-        self.declarations = declarations
-        self.health_targets = health_targets
-        self._http = http or httpx.AsyncClient(timeout=2.0)
+        self.declarations = {m: d.settings for m, d in declarations.items()}
+        self.groups = {m: d.groups for m, d in declarations.items()}
 
     @property
     def event_dir(self) -> Path:
@@ -88,9 +75,14 @@ class Service:
         return Path(tenant_file("admin", "event", root=str(self.files_root)))
 
     # settings
+    def _answer(self, module: str, version: int, values: dict[str, Any]) -> dict[str, Any]:
+        """The contract's Settings shape; a module that declares nothing has no groups."""
+        groups = [g.as_json() for g in self.groups.get(module, [])]
+        return {"module": module, "settings_version": version, "values": values, "groups": groups}
+
     async def get_settings(self, module: str) -> dict[str, Any]:
         version, values = await self.store.get_settings(module)
-        return {"module": module, "settings_version": version, "values": values}
+        return self._answer(module, version, values)
 
     async def put_settings(
         self, module: str, expected_version: int, values: dict[str, Any], actor: str
@@ -119,7 +111,7 @@ class Service:
                 await self.store.record_change(module, {k: values.get(k) for k in keys}, actor)
             except Exception:
                 log.exception("could not record the settings change of %s", module)
-        return {"module": module, "settings_version": version, "values": values}
+        return self._answer(module, version, values)
 
     async def patch_settings(
         self, module: str, expected_version: int, values: dict[str, Any], actor: str
@@ -175,14 +167,32 @@ class Service:
             if problem:
                 raise prof.ProfileInvalid(f"settings/{module}: {problem}")
         record = {k: v for k, v in document.items() if k != "settings"}
-        await self.store.set_profile(record)
+        await self.store.set_profile(record, loaded_by=actor)
         for module, values in document.get("settings", {}).items():
             version, _ = await self.store.get_settings(module)
             await self.put_settings(module, version, values, actor)
 
     async def export_zip(self, actor: str) -> bytes:
-        await self.save_profile(actor)
-        return await asyncio.to_thread(prof.pack_zip, self.event_dir)
+        """The current profile as a zip, built aside: the event folder keeps the profile that
+        "Load again" loads, so downloading first never changes what a load replaces it with."""
+        document = await self._document()
+        with tempfile.TemporaryDirectory() as tmp:
+            staging = Path(tmp)
+            await asyncio.to_thread(prof.write_profile_dir, staging, document, self.event_dir)
+            data = await asyncio.to_thread(prof.pack_zip, staging)
+        await self._publish_profile("admin.profile.saved", document, actor)
+        return data
+
+    async def folder_profile(self) -> tuple[str | None, KitError | None]:
+        """The name of the profile in the event folder, which Load loads, or why it can't be
+        loaded; (None, None) only when the folder holds no profile.yaml at all."""
+        if not (self.event_dir / "profile.yaml").is_file():
+            return None, None
+        try:
+            loaded = await asyncio.to_thread(prof.read_profile_dir, self.event_dir, self.validator)
+        except KitError as exc:
+            return None, exc
+        return str(loaded.document["name"]), None
 
     async def import_zip(self, data: bytes, actor: str) -> dict[str, Any]:
         """Apply a profile zip; every file it names must be in it (contracts/profile.md)."""
@@ -221,24 +231,3 @@ class Service:
         if not file.is_relative_to(event) or not file.is_file():
             return None
         return await asyncio.to_thread(file.read_bytes)
-
-    # health view
-    async def _probe(self, module: str, url: str) -> ModuleHealth:
-        try:
-            body = (await self._http.get(url)).json()
-            checks = body.get("checks", {})
-            bad = [
-                f"{n}: {c.get('detail') or c.get('status')}"
-                for n, c in checks.items()
-                if c.get("status") != "ok"
-            ]
-            return ModuleHealth(
-                module, str(body["status"]), str(body.get("version", "")), "; ".join(bad)
-            )
-        except Exception as exc:
-            return ModuleHealth(module, "down", detail=f"no answer ({type(exc).__name__})")
-
-    async def health_view(self) -> list[ModuleHealth]:
-        return list(
-            await asyncio.gather(*(self._probe(m, u) for m, u in self.health_targets.items()))
-        )
