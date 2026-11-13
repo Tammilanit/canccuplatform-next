@@ -574,6 +574,80 @@
     }
   }
 
+  /* A form of cards with a save bar (Settings, sheet 4): the bar says how much is unsaved and
+     stays at the window's foot while the form runs on; at the page's end it sits on the content's
+     foot. Its surface and top line reach past its box to the column's edges while its words keep
+     the form's width: a border image is ink overflow, so it never makes the page scroll sideways. */
+  .canccu-settings {
+    display: grid;
+    gap: 1.5rem;
+  }
+  .canccu-form__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+  }
+  .canccu-form__row > .canccu-field {
+    margin-bottom: 0;
+  }
+  .canccu-savebar {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: -3rem;
+    padding: 0.75rem 0;
+    border-image: linear-gradient(
+        var(--canccu-color-border) 0 var(--canccu-border-width),
+        var(--canccu-color-surface) 0
+      )
+      0 fill / 0 / 0 100vmax 0 2.5rem;
+  }
+  .canccu-savebar[hidden] {
+    display: none;
+  }
+  .canccu-savebar__text {
+    margin-right: auto;
+    min-width: 0;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+  }
+  .canccu-savebar__text.is-down {
+    color: var(--canccu-ink-down);
+  }
+  /* On a phone: a 52 px row right above the bottom bar, out of the way while the page scrolls
+     (docs/design/README.md, decision 5). The bar is 4.25 rem and its top line. */
+  @media (max-width: 1099.98px) {
+    .canccu-savebar {
+      bottom: calc(4.25rem + var(--canccu-border-width));
+      min-height: 3.25rem;
+      margin-bottom: -2rem;
+      padding: 0.25rem 0;
+      border-image-outset: 0 1rem;
+      transition:
+        transform 0.2s,
+        opacity 0.2s;
+    }
+    .canccu-savebar.is-away {
+      transform: translateY(100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+  @media (max-width: 40rem) {
+    .canccu-form__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.25rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .canccu-savebar {
+      transition: none;
+    }
+  }
+
   /* A form page with a side column (Settings' last changes): the side only where it fits. */
   .canccu-split {
     display: grid;
@@ -936,8 +1010,14 @@
     font-size: var(--canccu-text-sm);
   }
   .canccu-field--check .canccu-field__label {
+    flex: 1 1 0;
+    min-width: 0;
     font-size: 0.9375rem;
     font-weight: 550;
+  }
+  /* A box's hint sits under its label: the box and the gap beside it. */
+  .canccu-field--check .canccu-field__hint {
+    padding-left: 2rem;
   }
   .canccu-input {
     width: 100%;

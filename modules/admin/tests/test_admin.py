@@ -102,11 +102,25 @@ def demo() -> Iterator[None]:
 async def test_settings_roundtrip_and_conflict(parts: Parts) -> None:
     client, _, streams, _ = parts
     r = await client.get("/api/admin/settings/admin")
-    assert r.json() == {"module": "admin", "settings_version": 0, "values": {}}
+    # contracts/admin.md, Groups: how the form groups the declared keys, every key once.
+    assert r.json() == {
+        "module": "admin",
+        "settings_version": 0,
+        "values": {},
+        "groups": [
+            {
+                "id": "time_and_language",
+                "label": "Time and language",
+                "description": "How every page of the event shows times and words.",
+                "keys": ["timezone", "language"],
+            }
+        ],
+    }
     r = await client.put(
         "/api/admin/settings/admin", json={"settings_version": 0, "values": {"language": "fi"}}
     )
     assert r.status_code == 200 and r.json()["settings_version"] == 1
+    assert r.json()["groups"][0]["keys"] == ["timezone", "language"]
     r = await client.put(
         "/api/admin/settings/admin", json={"settings_version": 0, "values": {"language": "en"}}
     )

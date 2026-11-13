@@ -20,7 +20,7 @@ from jsonschema import Draft202012Validator
 
 from . import profile as prof
 from .db import Store
-from .declarations import KEY_RE, Setting, check_values
+from .declarations import KEY_RE, Declaration, check_values
 
 log = logging.getLogger("canccu.admin")
 
@@ -60,13 +60,14 @@ class Service:
         bus: Bus,
         validator: Draft202012Validator,
         files_root: Path,
-        declarations: dict[str, list[Setting]],
+        declarations: dict[str, Declaration],
     ) -> None:
         self.store = store
         self.bus = bus
         self.validator = validator
         self.files_root = files_root
-        self.declarations = declarations
+        self.declarations = {m: d.settings for m, d in declarations.items()}
+        self.groups = {m: d.groups for m, d in declarations.items()}
 
     @property
     def event_dir(self) -> Path:
@@ -74,9 +75,14 @@ class Service:
         return Path(tenant_file("admin", "event", root=str(self.files_root)))
 
     # settings
+    def _answer(self, module: str, version: int, values: dict[str, Any]) -> dict[str, Any]:
+        """The contract's Settings shape; a module that declares nothing has no groups."""
+        groups = [g.as_json() for g in self.groups.get(module, [])]
+        return {"module": module, "settings_version": version, "values": values, "groups": groups}
+
     async def get_settings(self, module: str) -> dict[str, Any]:
         version, values = await self.store.get_settings(module)
-        return {"module": module, "settings_version": version, "values": values}
+        return self._answer(module, version, values)
 
     async def put_settings(
         self, module: str, expected_version: int, values: dict[str, Any], actor: str
@@ -105,7 +111,7 @@ class Service:
                 await self.store.record_change(module, {k: values.get(k) for k in keys}, actor)
             except Exception:
                 log.exception("could not record the settings change of %s", module)
-        return {"module": module, "settings_version": version, "values": values}
+        return self._answer(module, version, values)
 
     async def patch_settings(
         self, module: str, expected_version: int, values: dict[str, Any], actor: str

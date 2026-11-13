@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import logging
 from datetime import UTC, datetime
+from typing import Any
 
 from canccu_kit import (
     KitError,
@@ -12,12 +13,13 @@ from canccu_kit import (
     ServiceForbidden,
     ServiceIdentity,
     TenantResolver,
+    VersionConflict,
     is_tenant_id,
     tenant_scope,
 )
 from canccu_kit.rights import Session
 from canccu_kit.starlette import install, install_service_identity
-from canccu_kit.ui import esc, icon, notice
+from canccu_kit.ui import esc, icon
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.requests import Request
@@ -26,7 +28,7 @@ from starlette.routing import Route
 
 from .auth import Auth
 from .auth_routes import Authorize, OnEvent, OriginCheck, auth_routes
-from .forms import field_html, from_form
+from .forms import from_form
 from .health import HealthWatch
 from .health_view import health_body
 from .pages import (
@@ -41,6 +43,8 @@ from .pages import (
 )
 from .profile_pages import profile_routes
 from .service import BadSettings, Service
+from .settings_form import failure
+from .settings_form import settings_form as settings_form_html
 from .settings_view import SHOWN_CHANGES, glance, last_changes, settings_list, when
 from .tenancy import TenantPaths
 
@@ -228,46 +232,72 @@ def create_app(
             description=f"How each part of {esc(name)} behaves. A change applies when you save it.",
         )
 
-    async def settings_form(request: Request) -> Response:
-        module = module_of(request)
-        session = await need(request, "admin.settings.read")
-        declared = service.declarations.get(module, [])
-        current = await service.get_settings(module)
-        fields = "".join(field_html(s, current["values"].get(s.key)) for s in declared)
-        saved = (
-            notice("ok", "Saved", "The change applies now.")
-            if request.query_params.get("saved")
-            else ""
-        )
-        form = (
-            f'{saved}<form method=post class="canccu-card canccu-form">'
-            f"<input type=hidden name=settings_version value={current['settings_version']}>"
-            f'{fields}<div class="canccu-cluster">'
-            '<button class="canccu-button canccu-button--primary">Save</button></div></form>'
-        )
+    async def form_page(
+        request: Request,
+        module: str,
+        session: Session,
+        body: str,
+        status: int = 200,
+    ) -> Response:
         return await page(
             request,
             part_name(module, settings=True),
-            form,
+            body,
+            status,
             session=session,
             current="settings",
             narrow=True,
             crumb=(f"{BASE}/settings", "Settings"),
         )
 
+    async def settings_form(request: Request) -> Response:
+        module = module_of(request)
+        session = await need(request, "admin.settings.read")
+        version, stored = await service.store.get_settings(module)
+        body = settings_form_html(
+            service.declarations.get(module, []),
+            service.groups.get(module, []),
+            stored,
+            stored,
+            version,
+            f"{BASE}/settings/{module}",
+            saved=bool(request.query_params.get("saved")),
+        )
+        return await form_page(request, module, session, body)
+
     async def settings_save(request: Request) -> Response:
         module = module_of(request)
         session = await need(request, "admin.settings.write")
         form = await request.form()
-        values = from_form(service.declarations.get(module, []), form)
+        declared = service.declarations.get(module, [])
         try:
             version = int(str(form.get("settings_version", "")))
         except ValueError as exc:
             raise BadSettings("settings_version missing") from exc
         # Keep stored keys the form does not declare.
         _, stored = await service.store.get_settings(module)
-        merged = {**stored, **values}
-        await service.put_settings(module, version, merged, session.user_id)
+        try:
+            values = from_form(declared, form)
+            await service.put_settings(module, version, {**stored, **values}, session.user_id)
+        except (BadSettings, VersionConflict) as exc:
+            # The form again with what was typed, so nothing is lost (sheet 4, "Couldn't
+            # save"); after a conflict it compares with, and saves over, what is saved now.
+            if isinstance(exc, VersionConflict):
+                version, stored = await service.store.get_settings(module)
+            typed: dict[str, Any] = {
+                s.key: form.get(s.key) for s in declared if s.type != "boolean"
+            }
+            typed |= {s.key: form.get(s.key) is not None for s in declared if s.type == "boolean"}
+            body = settings_form_html(
+                declared,
+                service.groups.get(module, []),
+                typed,
+                stored,
+                version,
+                f"{BASE}/settings/{module}",
+                failed=failure(declared, exc),
+            )
+            return await form_page(request, module, session, body, exc.status)
         return RedirectResponse(f"{BASE}/settings/{module}?saved=1", status_code=303)
 
     async def health_page(request: Request) -> Response:

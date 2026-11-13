@@ -8,3 +8,8 @@ settings:
     label: Language
     default: en
     choices: [en, fi]
+groups:
+  - id: time_and_language
+    label: Time and language
+    description: How every page of the event shows times and words.
+    keys: [timezone, language]

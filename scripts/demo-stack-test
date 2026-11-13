@@ -32,7 +32,7 @@ TESTS=(
   "admin API with an unknown session is 401 not_signed_in"
   "admin Load reads the demo event from the seeded event folder"
   "PUT /api/admin/profile imports the demo event as a zip"
-  "admin settings hold the demo profile's values"
+  "admin settings hold the demo profile's values, in their form's groups"
   "PUT settings with the current version saves"
   "PUT settings with a stale version is 409 version_conflict"
   "unknown module is 404 not_found"
@@ -125,7 +125,7 @@ call PUT /api/admin/profile -H "cookie: $COOKIE" -H "content-type: application/z
 check "${TESTS[5]}" body_is 200 ".name == \"$profile_name\" and .schema_version == 1"
 
 call GET /api/admin/settings/admin -H "cookie: $COOKIE"
-check "${TESTS[6]}" body_is 200 '.module == "admin" and .values.timezone == "UTC" and .values.language == "en" and (.settings_version | type == "number")'
+check "${TESTS[6]}" body_is 200 '.module == "admin" and .values.timezone == "UTC" and .values.language == "en" and (.settings_version | type == "number") and ([.groups[].keys[]] == ["timezone", "language"])'
 version=$(jq -r '.settings_version // 0' "$TMP/body" 2>/dev/null || echo 0)
 
 call PUT /api/admin/settings/admin -H "cookie: $COOKIE" -H "content-type: application/json" \

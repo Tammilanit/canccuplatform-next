@@ -78,6 +78,34 @@ const PAGES = [
   ["profile-load-ask-phone", "/admin/profile/load", PHONE],
   ["profile-upload-ask", "/admin/profile/upload", DESK],
 ];
+// A part's Settings (sheet 4): its groups, then each state of the save bar, shot as the window
+// shows it, so the bar sits at the foot. A change waits out the bar's step aside on a phone, which
+// the field's scroll into view starts. "Couldn't save" is a save that never reaches the platform.
+const SETTINGS_FORM = "/admin/settings/screen";
+const OFFLINE = "#canccu-field-offline_after_seconds";
+const typed = (value) => async (page) => {
+  await page.fill(OFFLINE, value);
+  await page.waitForTimeout(900);
+};
+const unanswered = async (page) => {
+  await page.route(`**${SETTINGS_FORM}`, (route) =>
+    route.request().method() === "POST" ? route.abort() : route.continue(),
+  );
+  await typed("30")(page);
+  await page.click("[data-canccu-save]");
+  await page.locator("[data-canccu-unanswered]:not([hidden])").waitFor();
+};
+const SETTINGS_STATES = [
+  ["settings-screen", DESK, {}],
+  ["settings-screen-change", DESK, { ready: typed("30"), fullPage: false }],
+  [
+    "settings-screen-change-phone",
+    PHONE,
+    { ready: typed("30"), fullPage: false },
+  ],
+  ["settings-screen-invalid", DESK, { ready: typed("3"), fullPage: false }],
+  ["settings-screen-failed", DESK, { ready: unanswered, fullPage: false }],
+];
 // Health with a part down (sheet 4), and the menu saying so: the second pass, `--trouble`, which
 // scripts/demo-screenshots runs while it holds notify stopped.
 const TROUBLE = [
@@ -230,6 +258,9 @@ if (opts["dry-run"]) {
     const shown =
       path === CHECK_IN ? "/notify/check-in?p=arrival&c=<a fresh code>" : path;
     console.log(`  ${name}.png  ${at(shown)}  (${width}×${height})`);
+  }
+  for (const [name, { width, height }] of SETTINGS_STATES) {
+    console.log(`  ${name}.png  ${at(SETTINGS_FORM)}  (${width}×${height})`);
   }
   for (const [name, path, { width, height }, o] of OTHERS) {
     const how = o.cookie === null ? ", signed out" : `, answering ${o.status}`;
@@ -467,6 +498,9 @@ try {
       }
     }
     await shot(name, path, viewport, SESSION);
+  }
+  for (const [name, viewport, o] of SETTINGS_STATES) {
+    await shot(name, SETTINGS_FORM, viewport, SESSION, o);
   }
   for (const [name, path, viewport, o] of OTHERS) {
     await shot(name, path, viewport, o.cookie === null ? null : SESSION, o);

@@ -22,7 +22,17 @@ settings:
     type: list
     choices: [screen, push]   # allowed items, string items only
     default: [screen]
+groups:                       # the form's cards, in order; every key in exactly one
+  - id: playing               # lowercase snake_case, unique in the module
+    label: Playing            # the card's heading
+    description: What a screen does between slides.   # one line under it; may be left out
+    keys: [rotation_seconds, hourly_cap]
+  - id: reminders
+    label: Reminders
+    keys: [reminder_leads_minutes, notify_channels]
 ```
+
+The groups are the `groups` of the settings answer (contracts/admin.md, Settings).
 
 A bad declaration fails at load, so a typo in a YAML file stops the module at
 start instead of surfacing as a confusing 400 on some later save.
@@ -56,6 +66,28 @@ class Setting:
     min: int | None = None
     max: int | None = None
     items: str = "string"
+
+
+@dataclass(frozen=True)
+class Group:
+    id: str
+    label: str
+    description: str
+    keys: tuple[str, ...]
+
+    def as_json(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "label": self.label,
+            "description": self.description,
+            "keys": list(self.keys),
+        }
+
+
+@dataclass(frozen=True)
+class Declaration:
+    settings: list[Setting]
+    groups: list[Group]
 
 
 def _is_int(v: Any) -> bool:
@@ -119,12 +151,46 @@ def _parse(module: str, raw: Any) -> list[Setting]:
     return out
 
 
-def load_declarations(directory: Path) -> dict[str, list[Setting]]:
-    result: dict[str, list[Setting]] = {}
+def _groups(module: str, raw: Any, settings: list[Setting]) -> list[Group]:
+    items = raw.get("groups", []) if isinstance(raw, dict) else None
+    if not isinstance(items, list):
+        raise DeclarationError(f"{module}: 'groups' must be a list")
+    out: list[Group] = []
+    for item in items:
+        if not isinstance(item, dict) or not KEY_RE.match(str(item.get("id", ""))):
+            raise DeclarationError(f"{module}: bad group {item!r}")
+        where = f"{module} group {item['id']}"
+        label, about, keys = item.get("label"), item.get("description", ""), item.get("keys")
+        if not isinstance(label, str) or not label or not isinstance(about, str):
+            raise DeclarationError(f"{where}: needs a label, and a description that is text")
+        if not isinstance(keys, list) or not keys or not all(isinstance(k, str) for k in keys):
+            raise DeclarationError(f"{where}: needs a list of keys")
+        out.append(Group(item["id"], label, about, tuple(keys)))
+    ids = [g.id for g in out]
+    if len(set(ids)) != len(ids):
+        raise DeclarationError(f"{module}: group ids must be unique")
+    # The contract's rule: every declared key in exactly one group, so the form shows each once.
+    grouped = [k for g in out for k in g.keys]
+    declared = [s.key for s in settings]
+    if sorted(grouped) != sorted(declared):
+        missing = sorted(set(declared) - set(grouped))
+        extra = sorted(set(grouped) - set(declared))
+        twice = sorted({k for k in grouped if grouped.count(k) > 1})
+        raise DeclarationError(
+            f"{module}: every setting in exactly one group"
+            f" (not grouped: {missing}, not declared: {extra}, twice: {twice})"
+        )
+    return out
+
+
+def load_declarations(directory: Path) -> dict[str, Declaration]:
+    result: dict[str, Declaration] = {}
     if not directory.is_dir():
         return result
     for path in sorted(directory.glob("*.yaml")):
-        result[path.stem] = _parse(path.stem, yaml.safe_load(path.read_text()))
+        raw = yaml.safe_load(path.read_text())
+        settings = _parse(path.stem, raw)
+        result[path.stem] = Declaration(settings, _groups(path.stem, raw, settings))
     return result
 
 
