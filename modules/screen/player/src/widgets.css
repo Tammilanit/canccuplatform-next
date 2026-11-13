@@ -206,16 +206,19 @@
 
   /*
    * Statistics (sheet 10, Right now): each number big with its trend arrow beside it on the same
-   * line and its label under it, side by side. Now playing ranks its games, each row's count with
-   * its arrow. The arrow's glyph is drawn here, as the template names only its direction. Colours
-   * are the theme's own tokens, not ui.css's inks: an ink is an oklab mix, which the rendered
-   * readability check (test/stack/readability.mjs) cannot read.
+   * line and its label under it, side by side. Each keeps its own width, with a real gap: in equal
+   * columns a long number ran into the next one, and its flat arrow read as a minus. One that does
+   * not fit wraps to a line of its own rather than overlap (test/stack/screens.mjs checks it). Now
+   * playing ranks its games, each row's count with its arrow. The arrow's glyph is drawn here, as
+   * the template names only its direction. Colours are the theme's own tokens, not ui.css's inks:
+   * an ink is an oklab mix, which the rendered readability check (test/stack/readability.mjs)
+   * cannot read.
    */
   .canccu-widget__stats {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 1fr);
-    gap: calc(2 * var(--canccu-u));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: calc(1.2 * var(--canccu-u)) calc(2 * var(--canccu-u));
     margin: auto 0;
   }
 
@@ -223,7 +226,6 @@
     display: flex;
     flex-direction: column;
     gap: calc(0.6 * var(--canccu-u));
-    min-width: 0;
   }
 
   .canccu-widget__stat .canccu-widget__big,
@@ -276,18 +278,29 @@
   }
 
   /*
-   * A Dashboard box stacked beside a grown hero is a strip of two rows (layouts.css): the numbers
-   * in one line, each label beside its number, and no title.
+   * A Dashboard box is a third of the screen wide: the numbers at the size of the times people
+   * look for from the back (screen.css), so three of them fit on one line.
+   */
+  .canccu-layout--dashboard .canccu-region > .canccu-widget--stats .canccu-widget__big {
+    font-size: calc(5.5 * var(--canccu-u));
+  }
+
+  /*
+   * A Dashboard box stacked beside a grown hero is a strip of two rows (layouts.css): no title, and
+   * each number at the strip's countdown size with its label close under it. A label beside its
+   * number made a line three times too wide for the strip.
    */
   @container (aspect-ratio > 2) {
     .canccu-layout--dashboard .canccu-region > .canccu-widget--stats .canccu-widget__stat {
-      flex-direction: row;
-      align-items: baseline;
-      gap: calc(1.2 * var(--canccu-u));
+      gap: 0;
     }
 
     .canccu-layout--dashboard .canccu-region > .canccu-widget--stats .canccu-widget__big {
-      font-size: calc(5 * var(--canccu-u));
+      font-size: calc(4.4 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard .canccu-region > .canccu-widget--stats .canccu-widget__meta {
+      line-height: 1.1;
     }
 
     .canccu-layout--dashboard .canccu-region > .canccu-widget--stats .canccu-widget__kicker,

@@ -9,6 +9,7 @@
 // and Ambient once under an emergency takeover, which keeps its fixed red there too. Dashboard is
 // handed sample statistics (#416), and shot once as the server draws it while they are missing.
 import { expect } from "./client.mjs";
+import { boxesGivenAway, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
 import {
   CLAIM_OF,
@@ -245,8 +246,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await page.goto(at("/screen/"));
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
       else await layout(page, size);
-      if (view.startsWith("dashboard"))
-        await page.waitForSelector(".canccu-widget--stats .canccu-widget__trend--up");
+      if (view.startsWith("dashboard")) await statsApart(page);
       if (view === "rail-empty") await railShowsIdle(page);
       else if (view === "dashboard-showcase") await stripNamesCountdown(page);
       else if (view === "ambient-takeover") await takeoverIsRed(page);
@@ -318,42 +318,6 @@ async function railShowsAgenda(page) {
   await page.waitForSelector(".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active", {
     timeout: 40_000,
   });
-}
-
-/**
- * Dashboard without its statistics (contracts/screen.md, Boxes waiting for their source): no
- * statistics box and no logo out of the header; the hero and the rail span the screen's width,
- * as the ticker does.
- */
-async function boxesGivenAway(page) {
-  const drawn = await page.evaluate(() => {
-    const width = (sel) => document.querySelector(sel)?.getBoundingClientRect().width ?? 0;
-    return {
-      boxes: document.querySelectorAll(
-        ".canccu-region--online, .canccu-region--voice, .canccu-region--top_games, .canccu-region--right_now",
-      ).length,
-      logos: document.querySelectorAll('.canccu-region:not([data-role="header"]) > .canccu-widget--logo').length,
-      hero: width(".canccu-region--hero"),
-      rail: width(".canccu-region--rail"),
-      ticker: width(".canccu-region--ticker"),
-    };
-  }); // prettier-ignore
-  const wide = (w) => drawn.ticker > 0 && Math.abs(w - drawn.ticker) <= 2;
-  if (drawn.boxes > 0 || drawn.logos > 0 || !wide(drawn.hero) || !wide(drawn.rail))
-    throw new Error(`the Dashboard without statistics: ${JSON.stringify(drawn)}`);
-}
-
-/** A strip's countdown says what it counts down to: its name drawn whole inside the strip. */
-async function stripNamesCountdown(page) {
-  const sel = ".canccu-region--rail > .canccu-widget--countdown.canccu-is-active";
-  await page.waitForSelector(sel, { timeout: 40_000 });
-  const fits = await page.$eval(sel, (card) => {
-    const name = card.querySelector(".canccu-widget__headline");
-    if (name === null || name.textContent.trim() === "") return false;
-    const [c, n] = [card.getBoundingClientRect(), name.getBoundingClientRect()];
-    return n.height > 0 && n.top >= c.top && n.bottom <= c.bottom;
-  });
-  if (!fits) throw new Error("the showcase's rail strip draws its countdown without its name");
 }
 
 /** The emergency takeover wears its fixed red (claims.css) whatever the layout does to its cards. */
