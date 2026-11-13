@@ -340,6 +340,11 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
     expect(await page.locator(".canccu-studio-preview--hub").isVisible()).toBe(true);
     expect(await page.locator(".canccu-studio-preview--screen").isVisible()).toBe(false);
     await page.click('.canccu-studio-surfaces input[value="screen"]');
+    // The way to full size sits under the thumbnail, never over the screen it shows (#406).
+    const thumbEnd = await page
+      .locator(".canccu-studio-preview--screen .canccu-studio-preview__box")
+      .evaluate((el) => el.getBoundingClientRect().bottom);
+    expect(await top(".canccu-studio-tap")).toBeGreaterThanOrEqual(thumbEnd);
     await page.click(".canccu-studio-tap");
     expect(
       await page.locator(".canccu-studio-preview--screen.canccu-studio-preview--full").isVisible(),

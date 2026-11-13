@@ -62,6 +62,28 @@ async def test_settings_rows_glance_and_last_changes(
     assert "<b>Olli</b> set General → Language to Finnish" in r.text
 
 
+async def test_last_changes_name_settings_in_words_never_by_key(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    # The demo profile's load records these: an undeclared module and key, and declared ones.
+    owner, _ = await owner_and_member(world, caplog)
+    olli = next(u.id for u, _ in await world.store.list_users() if u.name == "Olli")
+    with tenant_scope("demo"):
+        await world.service.put_settings("pizza", 0, {"ordering_open": False}, olli)
+        await world.service.put_settings("screen", 0, {"rotation_seconds": 15}, olli)
+        await world.service.put_settings(
+            "screen", 1, {"rotation_seconds": 15, "offline_after_seconds": 45}, olli
+        )
+        await world.service.put_settings("agenda", 0, {"reminder_leads_minutes": [30, 10]}, olli)
+    text = (await world.browser(owner).get("/admin/settings")).text
+    assert "turned off Pizza → Ordering open" in text
+    assert "set Screens → Rotation to 15 s" in text
+    assert "set Screens → Screen offline after to 45 s" in text
+    assert "set Run of show → Reminder lead times to 30, 10 min" in text
+    assert "ordering_open" not in text and "rotation_seconds" not in text
+    assert "→ pizza" not in text
+
+
 async def test_health_has_no_empty_message_column(
     world: World, caplog: pytest.LogCaptureFixture
 ) -> None:
