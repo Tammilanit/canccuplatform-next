@@ -68,12 +68,27 @@ const trend = (field: string): TreeNode =>
     field,
     el("span", null, [], { class: [t("canccu-widget__trend canccu-widget__trend--"), f(field)] }),
   );
-/** A number with its trend and its label under it, as sheet 10's statistics draw it. */
-const stat = (field: string, label: string): TreeNode =>
-  el("li", "stat", [
-    el("strong", "big", [f(field), trend(`${field}_trend`)]),
-    el("span", "meta", [t(label)]),
-  ]);
+/**
+ * A number with its trend, its label under it and, where it has one, the day's peak under that,
+ * as sheet 10's Right now draws it. An absent number draws nothing, not an empty label.
+ */
+const stat = (field: string, label: string, peak?: string): TreeNode =>
+  sec(
+    field,
+    el("li", "stat", [
+      el("strong", "big", [f(field), trend(`${field}_trend`)]),
+      el("span", "meta", [t(label)]),
+      ...(peak === undefined
+        ? []
+        : [sec(peak, el("span", "peak", [t("peak "), f("count"), t(" · "), f("time_text")]))]),
+    ]),
+  );
+
+/** A photo with its caption, as a tile of the wall and as the pop over it. */
+const PHOTO: TreeNode[] = [
+  img("url", "image", [f("caption")]),
+  el("figcaption", "caption", [f("caption"), sec("author_name", t(" · "), f("author_name"))]),
+];
 
 /**
  * A bar that fills as `field`'s time comes near, over the last `span` seconds (widget.ts,
@@ -178,11 +193,11 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
       ),
     ]),
   ],
+  // The wall (change 6): five tiles, the lead first (wall.css draws it large); a new photo pops
+  // over the whole box while `featured`.
   photo: [
-    el("figure", "photo", [
-      img("url", "image", [f("caption")]),
-      el("figcaption", "caption", [f("caption"), sec("author_name", t(" · "), f("author_name"))]),
-    ]),
+    el("div", "wall", [sec("tiles", el("figure", "tile", PHOTO))]),
+    sec("featured", el("figure", "pop", PHOTO)),
   ],
   announcement: [
     el(
@@ -219,13 +234,15 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     sec("has_floor_plan", el("p", "meta", [t("Floor plan on the hub")])),
     QR,
   ],
+  // Right now (sheet 10); `line` is Ambient's one line, "N still online" (wall.css).
   stats: [
     el("p", "kicker", [t("Right now")]),
     el("ul", "stats", [
-      stat("members", "members"),
-      stat("online", "online"),
-      stat("in_voice", "in voice"),
+      stat("online", "online", "online_peak"),
+      stat("in_voice", "in voice", "in_voice_peak"),
+      stat("checked_in", "checked in"),
     ]),
+    sec("online", el("p", "line", [f("online"), t(" still online"), trend("online_trend")])),
   ],
   match_called: [
     el("p", "title", [t("Match called")]),

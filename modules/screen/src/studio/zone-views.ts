@@ -5,7 +5,7 @@
  * a `Zone`, lists what changed, previews it in the real player and saves it with the revision read.
  */
 import { attrs, emptyState, html } from "@canccu/ui";
-import type { Html, Slot } from "@canccu/ui";
+import type { Html } from "@canccu/ui";
 import { boxProblem } from "../compose/boxes.js";
 import { DEFAULT_DWELL_S } from "../compose/build.js";
 import { roleOf } from "../compose/layouts.js";
@@ -17,6 +17,7 @@ import { boxPart, boxesCard, heroCard, layoutGallery, zoneTabs } from "./layout-
 import type { BoxInfo } from "./layout-views.js";
 import { counted, nameOf } from "./messages.js";
 import { STUDIO, zoneFrame } from "./views.js";
+import { labelled, photoWallPart, screenNamePart, select } from "./widget-settings.js";
 import type { ViewContext } from "./views.js";
 import {
   previewDialog,
@@ -41,23 +42,6 @@ export const WIDGETS = [
   "checkin_qr",
   "ticker",
 ] as const;
-
-const select = (
-  id: string,
-  name: string,
-  value: string,
-  options: readonly [string, string][],
-  label?: string,
-): Html =>
-  html`<select class="canccu-input" id="${id}" name="${name}" ${attrs({ "aria-label": label })}>
-    ${options.map(([v, label]) => html`<option${attrs({ value: v, selected: v === value })}>${label}</option>`)}
-  </select>`;
-
-const labelled = (id: string, label: string, control: Slot, hint?: string): Html =>
-  html`<div class="canccu-field">
-    <label class="canccu-field__label" for="${id}">${label}</label
-    >${control}${hint === undefined ? "" : html`<p class="canccu-field__hint">${hint}</p>`}
-  </div>`;
 
 const screensOf = (key: string, devices: readonly SeenDevice[]): number =>
   devices.filter((d) => shownZone(d, devices) === key).length;
@@ -187,8 +171,17 @@ function regionsOf(c: ViewContext, zone: Zone, layout: Layout): RegionInfo[] {
   });
 }
 
-/** The chosen region's detail; the others wait hidden until picked on the map. */
-function regionPart(c: ViewContext, r: RegionInfo, layout: Layout, shown: boolean): Html {
+/**
+ * The chosen region's detail; the others wait hidden until picked on the map. `screenName` is the
+ * zone's setting, drawn only with its (first) header box.
+ */
+function regionPart(
+  c: ViewContext,
+  r: RegionInfo,
+  layout: Layout,
+  shown: boolean,
+  screenName: string | null,
+): Html {
   const { t } = c;
   const f = `canccu-studio-r-${r.id}`;
   const str = (v: unknown) => (typeof v === "string" ? v : "");
@@ -211,6 +204,7 @@ function regionPart(c: ViewContext, r: RegionInfo, layout: Layout, shown: boolea
       />
       <label class="canccu-field__label" for="${f}-layout">${t("zone.layout_widgets")}</label>
     </div>
+    ${screenName === null ? "" : screenNamePart(c, screenName)}
     <p class="canccu-overline">${t("zone.widgets")}</p>
     <ol class="canccu-studio-widgets" data-widgets>
       ${r.entries.map((e) => widgetRow(c, e, regionDwell))}
@@ -259,6 +253,7 @@ function regionPart(c: ViewContext, r: RegionInfo, layout: Layout, shown: boolea
       />
       <label class="canccu-field__label" for="${f}-skip">${t("zone.skip_empty")}</label>
     </div>
+    ${photoWallPart(c, r.id, r.entries)}
   </section>`;
 }
 
@@ -348,6 +343,7 @@ export function zoneEditorView(
     regions.find((r) => r.id === "hero" && r.area !== undefined && !r.hidden) ??
     regions.find((r) => r.area !== undefined && !r.hidden) ??
     regions[0];
+  const header = regions.find((r) => roleOf(r.id, r.settings.role) === "header")?.id;
   const screens = screensOf(zone.key, devices);
   const save = screens === 0 ? t("zone.save_none") : counted(t, "zone.save_on", screens);
   const side = html`<aside class="canccu-studio-side">
@@ -387,7 +383,7 @@ export function zoneEditorView(
   return html`${zoneTabs(c, zones, zone.key)}${previewNotice(c)}
     <form class="canccu-studio-editor" ${attrs(form)}>
       <div class="canccu-studio-editor__main">
-        ${layoutGallery(c, layouts, layout.id)}${boxesCard(c, regions, layout, first?.id)}${regions.map((r) => regionPart(c, r, layout, r === first))}${layout.id === "dashboard" ? heroCard(c, regions, layout, zone) : ""}${settingsCard(c, zone, devices)}${remove}
+        ${layoutGallery(c, layouts, layout.id)}${boxesCard(c, regions, layout, first?.id)}${regions.map((r) => regionPart(c, r, layout, r === first, r.id === header ? zone.screen_name : null))}${layout.id === "dashboard" ? heroCard(c, regions, layout, zone) : ""}${settingsCard(c, zone, devices)}${remove}
       </div>
       ${side}${row}
     </form>

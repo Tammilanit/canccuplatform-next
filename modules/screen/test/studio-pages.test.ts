@@ -221,6 +221,17 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     }
     expect(body).toContain("Reset to the built-in layout…");
     expect(body).not.toContain("Which box is the hero?");
+    // Sheet 16: the screen name with the header box, the wall's settings with a box of photos.
+    const headerPart = /<section[^>]*data-region="header"[\s\S]*?<\/section>/.exec(body)?.[0] ?? "";
+    expect(headerPart).toContain('name="screen_name"');
+    expect(headerPart).toContain("Automatic (hidden with one screen)");
+    expect(body.match(/name="screen_name"/g)).toHaveLength(1);
+    const heroPart = /<section[^>]*data-region="hero"[\s\S]*?<\/section>/.exec(body)?.[0] ?? "";
+    expect(heroPart).toMatch(/<fieldset[^>]*data-photo-wall(?![^>]*hidden)/);
+    for (const word of ["Seconds per photo", "Newest first", "New photo pops in large"]) {
+      expect(heroPart).toContain(word);
+    }
+    expect(body).toMatch(/data-region="rail"[\s\S]*?<fieldset[^>]*data-photo-wall[^>]*hidden/);
     // A layout picked in the gallery is drawn unsaved, without the Pulse's sizes and hidden boxes.
     const dash = (await page("/admin/screen/zones/main?layout=dashboard", "zoner")).body;
     expect(dash).toContain('data-layout="dashboard"');

@@ -1,0 +1,105 @@
+/*
+ * The photo wall (contracts/screen.md, Photos; design guideline v8, change 6, sheets 13 and 16) and
+ * Right now's peaks and Ambient's line (sheet 10). In `canccu-base` like screen.css, so a theme
+ * restyles all of it.
+ */
+@layer canccu-base {
+  /*
+   * Five tiles in a 4×2 grid, the lead two by two and outlined, with a clear band under them for the
+   * hero's "starts in" chip and its rotation marks. Only the lead carries its caption: five
+   * captions in one box would be read by nobody.
+   */
+  .canccu-region > .canccu-widget--photo {
+    justify-content: flex-start;
+    padding: calc(1.6 * var(--canccu-u)) calc(1.6 * var(--canccu-u)) calc(7 * var(--canccu-u));
+  }
+
+  .canccu-widget__wall {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: calc(0.8 * var(--canccu-u));
+  }
+
+  .canccu-widget__tile {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    border-radius: calc(0.6 * var(--canccu-u));
+    background: var(--canccu-color-border);
+  }
+
+  .canccu-widget__tile:first-child {
+    grid-column: span 2;
+    grid-row: span 2;
+    outline: calc(0.3 * var(--canccu-u)) solid var(--canccu-color-primary);
+    outline-offset: calc(-0.3 * var(--canccu-u));
+  }
+
+  .canccu-widget--photo .canccu-widget__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    object-fit: cover;
+  }
+
+  .canccu-widget--photo .canccu-widget__caption {
+    position: absolute;
+    inset: auto 0 0;
+    padding: calc(1.6 * var(--canccu-u)) calc(2 * var(--canccu-u));
+    background: rgb(0 0 0 / 72%);
+    color: #fff;
+  }
+
+  .canccu-widget__tile:not(:first-child) .canccu-widget__caption {
+    display: none;
+  }
+
+  /* A new photo pops in large over the whole box for its 10 seconds, then the wall goes on. */
+  .canccu-widget__pop {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    margin: 0;
+    background: #000;
+  }
+
+  .canccu-widget__peak {
+    font-size: calc(3.4 * var(--canccu-u));
+    color: var(--canccu-color-text-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Ambient's statistics are one line under its rail: "N still online" with its trend. */
+  .canccu-widget__line {
+    display: none;
+  }
+
+  .canccu-layout--ambient .canccu-region--online > .canccu-widget--stats {
+    align-items: center;
+    padding: 0;
+  }
+
+  .canccu-layout--ambient .canccu-region--online .canccu-widget__kicker,
+  .canccu-layout--ambient .canccu-region--online .canccu-widget__stats {
+    display: none;
+  }
+
+  .canccu-layout--ambient .canccu-region--online .canccu-widget__line {
+    display: flex;
+    align-items: baseline;
+    gap: calc(1 * var(--canccu-u));
+    margin: 0;
+    font-size: calc(4.4 * var(--canccu-u));
+    font-weight: 600;
+    color: var(--canccu-color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+}

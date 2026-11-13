@@ -269,12 +269,9 @@
     content: "▼";
   }
 
+  /* A flat trend draws no mark at all, so only a change catches the eye (v8, fix 4). */
   .canccu-widget__trend--flat {
-    color: var(--canccu-color-text-muted);
-  }
-
-  .canccu-widget__trend--flat::before {
-    content: "–";
+    display: none;
   }
 
   /*

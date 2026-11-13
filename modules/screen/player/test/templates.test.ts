@@ -52,12 +52,14 @@ describe("the player's default templates", () => {
       online_trend: "up",
       in_voice_trend: "down",
     });
-    const trends = [...stats.querySelectorAll(".canccu-widget__trend")].map((e) => e.className);
+    const trends = [...stats.querySelectorAll(".canccu-widget__stats .canccu-widget__trend")].map(
+      (e) => e.className,
+    );
     expect(trends).toEqual([
       "canccu-widget__trend canccu-widget__trend--up",
       "canccu-widget__trend canccu-widget__trend--down",
     ]);
-    expect(stats.querySelector(".canccu-widget__big")?.textContent).toBe("1240");
+    expect(stats.querySelector(".canccu-widget__big")?.textContent).toBe("218");
     const playing = draw(DEFAULT_TEMPLATES.now_playing ?? [], {
       available: true,
       games: [
@@ -75,6 +77,50 @@ describe("the player's default templates", () => {
     expect(odd.querySelector(".canccu-widget__trend")?.className).toBe(
       "canccu-widget__trend canccu-widget__trend--upx",
     );
+  });
+
+  // Sheet 10, Right now: online, in voice and checked in, each peak under its number.
+  it("draws Right now with the day's peaks, and only the numbers it has", () => {
+    const full = draw(DEFAULT_TEMPLATES.stats ?? [], {
+      members: 400,
+      online: 218,
+      in_voice: 38,
+      checked_in: 164,
+      online_peak: { count: 231, at: "2026-11-20T23:30:00Z", time_text: "01:30" },
+      in_voice_peak: { count: 64, at: "2026-11-20T21:00:00Z", time_text: "23:00" },
+    });
+    const stats = [...full.querySelectorAll(".canccu-widget__stat")].map((s) => s.textContent);
+    expect(stats).toEqual([
+      "218onlinepeak 231 · 01:30",
+      "38in voicepeak 64 · 23:00",
+      "164checked in",
+    ]);
+    expect(full.querySelector(".canccu-widget__line")?.textContent).toBe("218 still online");
+    // Before the bot counts, only the check-ins: no empty labels, and no line for Ambient.
+    const arrivals = draw(DEFAULT_TEMPLATES.stats ?? [], { checked_in: 0 });
+    expect(
+      [...arrivals.querySelectorAll(".canccu-widget__stat")].map((s) => s.textContent),
+    ).toEqual(["0checked in"]);
+    expect(arrivals.querySelector(".canccu-widget__line")).toBeNull();
+  });
+
+  // Change 6: the wall of five tiles, the lead first with its caption, and the pop over it.
+  it("draws the photo wall, and the pop only while the photo is featured", () => {
+    const tile = (id: string) => ({ url: `/f/${id}.jpg`, caption: id, author_name: null });
+    const view = { ...tile("a"), featured: false, tiles: ["a", "b", "c", "d", "e"].map(tile) };
+    const wall = draw(DEFAULT_TEMPLATES.photo ?? [], view);
+    const srcs = [...wall.querySelectorAll(".canccu-widget__tile img")].map((i) =>
+      i.getAttribute("src"),
+    );
+    expect(srcs).toEqual(["/f/a.jpg", "/f/b.jpg", "/f/c.jpg", "/f/d.jpg", "/f/e.jpg"]);
+    expect(wall.querySelector(".canccu-widget__pop")).toBeNull();
+    const pop = draw(DEFAULT_TEMPLATES.photo ?? [], {
+      ...view,
+      featured: true,
+      author_name: "Sam",
+    });
+    expect(pop.querySelector(".canccu-widget__pop img")?.getAttribute("src")).toBe("/f/a.jpg");
+    expect(pop.querySelector(".canccu-widget__pop figcaption")?.textContent).toBe("a · Sam");
   });
 
   it("puts the countdown's target in a <time> the player keeps counting", () => {

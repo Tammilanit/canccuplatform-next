@@ -42,12 +42,6 @@ settings:
     type: string
     label: Asset shown when content is not ready in time
     default: ""
-  - key: photo_dwell_seconds
-    type: integer
-    min: 5
-    max: 60
-    label: Photo dwell (seconds)
-    default: 8
   - key: burn_in_drift
     type: boolean
     label: Shift the screen layout slowly against burn-in
