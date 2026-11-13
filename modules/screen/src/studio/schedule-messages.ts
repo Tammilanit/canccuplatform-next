@@ -129,6 +129,7 @@ export const SCHEDULE_EN = {
   "at.ticker": "Ticker: \u201c{text}\u201d ({from}, {until})",
   "at.ticker_none": "Ticker: no line",
   "at.every": "every {days} {start}\u2013{end}",
+  "at.every_day": "every day {start}\u2013{end}",
   "at.layout": "layout: {layout}",
   "at.beat": "{playlist} ({rule})",
   "at.beats": "It wins over {list}.",

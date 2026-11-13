@@ -43,7 +43,11 @@ function about(c: ViewContext, w: WindowFacts, n: AtNames): string {
   } else {
     const days = (w.days ?? []).map((d) => t(`window.day.${d}` as MessageKey)).join(", ");
     const [start, end] = [clock(w.start_minute ?? 0), clock(w.end_minute ?? 0)];
-    when = t("at.every", { days, start, end });
+    // The API keeps days unique, so seven of them are the whole week.
+    when =
+      w.days?.length === 7
+        ? t("at.every_day", { start, end })
+        : t("at.every", { days, start, end });
   }
   const layout = w.layout_id === null ? null : (n.layouts.get(w.layout_id) ?? w.layout_id);
   return [t("schedule.priority", { n: w.priority }), when]

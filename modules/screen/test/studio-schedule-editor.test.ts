@@ -65,8 +65,9 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
     loopWindow = await window({ zone_key: "main", playlist_id: loop, priority: 10, days: [4], start_minute: 540, end_minute: 1020 }); // prettier-ignore
     eveningWindow = await window({ zone_key: "main", playlist_id: evening, priority: 20, days: [4], start_minute: 900, end_minute: 960 }); // prettier-ignore
     menuWindow = await window({ zone_key: "main", playlist_id: menu, priority: 50, agenda_item_id: "it_brief" }); // prettier-ignore
-    // A theme layout the theme has since dropped, in a zone and on a day no other test reads.
-    droppedWindow = await window({ zone_key: "cafe", playlist_id: menu, priority: 5, layout_id: "dropped", days: [1], start_minute: 540, end_minute: 600 }); // prettier-ignore
+    // A theme layout the theme has since dropped, every day, in a zone and at an hour no other
+    // test reads.
+    droppedWindow = await window({ zone_key: "cafe", playlist_id: menu, priority: 5, layout_id: "dropped", days: [1, 2, 3, 4, 5, 6, 7], start_minute: 1320, end_minute: 1380 }); // prettier-ignore
     const device = (await pairDevice(h)).id;
     await admin("PUT", `/api/screen/devices/${device}/assignment`, { zone_key: "main" });
   });
@@ -309,6 +310,11 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
         // A day that is no real date is not offered in the day select.
         expect(c).not.toMatch(/<option value="(x|2026-13-01|2026-02-30|2026-01-01,[^"]*)"/);
       }
+    });
+
+    it("says every day for a window on all seven days, rather than listing them", async () => {
+      const res = await page("/admin/screen/schedule?at_zone=cafe&at_day=2026-01-01&at=22:30", "content"); // prettier-ignore
+      expect(card(tight(res.body))).toContain("prio 5 · every day 22:00–23:00");
     });
 
     it("asks about one zone, the default one, while the page shows every zone", async () => {
