@@ -1103,6 +1103,26 @@
   }
 
   /* Empty state: what is missing, why it matters, the one next step. */
+  /* A question before a step that can't be undone (sheet 4): what goes, what stays, then the
+     actions; with three they stack, the danger button last. */
+  .canccu-dialog {
+    display: grid;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-radius: calc(var(--canccu-radius) + 8px);
+  }
+  .canccu-dialog .canccu-card__title {
+    font-size: 1.25rem;
+  }
+  .canccu-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .canccu-dialog__actions--stack {
+    display: grid;
+  }
   .canccu-empty {
     display: grid;
     justify-items: center;

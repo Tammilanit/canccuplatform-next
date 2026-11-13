@@ -244,3 +244,33 @@ async def test_zip_export_import(parts: Parts, demo: None) -> None:
         z.writestr("../evil", "x")
     r = await client.put("/api/admin/profile", content=bad.getvalue())
     assert r.status_code == 400 and r.json()["error"]["code"] == "profile_invalid"
+
+
+async def test_export_leaves_the_event_folder_as_it_is(parts: Parts, demo: None) -> None:
+    # "Download current profile" before "Load again" must not overwrite what Load would load.
+    client, service, _, event = parts
+    await service.load_profile("u_1")
+    before = (event / "profile.yaml").read_text()
+    version, _ = await service.store.get_settings("admin")
+    await service.put_settings("admin", version, {"timezone": "Europe/Helsinki"}, "u_1")
+    r = await client.get("/api/admin/profile")
+    exported = yaml.safe_load(zipfile.ZipFile(io.BytesIO(r.content)).read("profile.yaml"))
+    assert exported["settings"]["admin"] == {"timezone": "Europe/Helsinki"}
+    assert "assets/logo.svg" in zipfile.ZipFile(io.BytesIO(r.content)).namelist()
+    assert (event / "profile.yaml").read_text() == before
+
+
+async def test_a_load_records_when_and_by_whom(parts: Parts, demo: None) -> None:
+    _client, service, _, _event = parts
+    assert await service.store.profile_loaded() is None
+    await service.load_profile("u_1")
+    loaded = await service.store.profile_loaded()
+    assert loaded is not None and loaded[1] == "u_1"
+    assert datetime.now(UTC) - loaded[0] < timedelta(minutes=1)
+
+
+async def test_the_event_folder_names_its_profile(parts: Parts, demo: None) -> None:
+    _client, service, _, event = parts
+    assert await service.folder_profile_name() == "Demo Event"
+    (event / "profile.yaml").unlink()
+    assert await service.folder_profile_name() is None

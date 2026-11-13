@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import logging
 from datetime import UTC, datetime
-from urllib.parse import urlencode
 
 from canccu_kit import (
     KitError,
@@ -40,6 +39,7 @@ from .pages import (
     static_script,
     static_ui_css,
 )
+from .profile_pages import profile_routes
 from .service import BadSettings, Service
 from .settings_view import SHOWN_CHANGES, glance, last_changes, settings_list, when
 from .tenancy import TenantPaths
@@ -288,49 +288,6 @@ def create_app(
             f'href="{BASE}/health-view?check=now">{icon("refresh")}Check now</a>',
         )
 
-    async def profile_page(request: Request) -> Response:
-        session = await need(request, "admin.profile.read")
-        message = request.query_params.get("message", "")
-        warns = request.query_params.getlist("warn")
-        notes = notice("ok", message) if message else ""
-        if warns:
-            notes += notice("warn", "Loaded with warnings", "; ".join(warns))
-        cards = (
-            '<section class="canccu-card"><h2 class="canccu-card__title">Save</h2>'
-            '<p class="canccu-card__desc">Writes the event\'s name, modules, settings and look'
-            " to the event folder, as one profile.</p>"
-            f'<form method=post action="{BASE}/profile/save"><button class="canccu-button '
-            'canccu-button--secondary">Save to the event folder</button></form></section>'
-            '<section class="canccu-card"><h2 class="canccu-card__title">Replace</h2>'
-            '<p class="canccu-card__desc">Loads the profile in the event folder. It replaces'
-            " settings and look, and can't be undone; run of show and people stay.</p>"
-            f'<form method=post action="{BASE}/profile/load"><button class="canccu-button '
-            'canccu-button--danger-ghost">Load the profile from the event folder</button>'
-            "</form></section>"
-        )
-        return await page(
-            request,
-            "Event profile",
-            notes + cards,
-            session=session,
-            current="profile",
-            narrow=True,
-            description="The event's name, modules, settings and look, as one file.",
-        )
-
-    async def profile_save(request: Request) -> Response:
-        session = await need(request, "admin.profile.write")
-        result = await service.save_profile(session.user_id)
-        return RedirectResponse(f"{BASE}/profile?message=Saved+{result['name']}", status_code=303)
-
-    async def profile_load(request: Request) -> Response:
-        session = await need(request, "admin.profile.write")
-        result = await service.load_profile(session.user_id)
-        query = urlencode(
-            [("message", f"Loaded {result['name']}")] + [("warn", w) for w in result["warnings"]]
-        )
-        return RedirectResponse(f"{BASE}/profile?{query}", status_code=303)
-
     app = Starlette(
         routes=[
             Route("/api/admin/settings/{module}", get_settings, methods=["GET"]),
@@ -348,9 +305,7 @@ def create_app(
             Route("/health-view", health_page),
             Route("/static/ui.css", static_ui_css, methods=["GET"]),
             Route("/static/{name}.js", static_script, methods=["GET"]),
-            Route("/profile", profile_page),
-            Route("/profile/save", profile_save, methods=["POST"]),
-            Route("/profile/load", profile_load, methods=["POST"]),
+            *profile_routes(service, auth, authorize),
             *auth_routes(auth, authorize, on_event),
         ]
     )

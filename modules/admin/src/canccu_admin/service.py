@@ -161,14 +161,29 @@ class Service:
             if problem:
                 raise prof.ProfileInvalid(f"settings/{module}: {problem}")
         record = {k: v for k, v in document.items() if k != "settings"}
-        await self.store.set_profile(record)
+        await self.store.set_profile(record, loaded_by=actor)
         for module, values in document.get("settings", {}).items():
             version, _ = await self.store.get_settings(module)
             await self.put_settings(module, version, values, actor)
 
     async def export_zip(self, actor: str) -> bytes:
-        await self.save_profile(actor)
-        return await asyncio.to_thread(prof.pack_zip, self.event_dir)
+        """The current profile as a zip, built aside: the event folder keeps the profile that
+        "Load again" loads, so downloading first never changes what a load replaces it with."""
+        document = await self._document()
+        with tempfile.TemporaryDirectory() as tmp:
+            staging = Path(tmp)
+            await asyncio.to_thread(prof.write_profile_dir, staging, document, self.event_dir)
+            data = await asyncio.to_thread(prof.pack_zip, staging)
+        await self._publish_profile("admin.profile.saved", document, actor)
+        return data
+
+    async def folder_profile_name(self) -> str | None:
+        """The name of the profile in the event folder, which Load loads; None without one."""
+        try:
+            loaded = await asyncio.to_thread(prof.read_profile_dir, self.event_dir, self.validator)
+        except (KitError, OSError):
+            return None
+        return str(loaded.document["name"])
 
     async def import_zip(self, data: bytes, actor: str) -> dict[str, Any]:
         """Apply a profile zip; every file it names must be in it (contracts/profile.md)."""

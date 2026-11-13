@@ -152,3 +152,15 @@ async def test_migration_drops_the_single_event_tables_once(store: PgStore) -> N
             assert (left, runs) == (0, len(list(MIGRATIONS.glob("*.sql"))))
     finally:
         await again.close()
+
+
+async def test_a_load_is_recorded_per_tenant_and_a_plain_write_keeps_it(store: PgStore) -> None:
+    with tenant_scope("leak-a"):
+        assert await store.profile_loaded() is None
+        await store.set_profile({"name": "A"}, loaded_by="u_1")
+        loaded = await store.profile_loaded()
+        assert loaded is not None and loaded[1] == "u_1"
+        await store.set_profile({"name": "A2"})
+        assert await store.profile_loaded() == loaded
+    with tenant_scope("leak-b"):
+        assert await store.profile_loaded() is None

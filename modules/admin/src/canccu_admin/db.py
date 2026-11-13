@@ -65,7 +65,11 @@ class Store(Protocol):
 
     async def get_profile(self) -> dict[str, Any] | None: ...
 
-    async def set_profile(self, document: dict[str, Any]) -> None: ...
+    async def set_profile(self, document: dict[str, Any], loaded_by: str | None = None) -> None:
+        """Store the profile record; `loaded_by` (a user id) marks it as loaded now."""
+
+    async def profile_loaded(self) -> tuple[datetime, str] | None:
+        """When the profile was last loaded and by whom, or None if never."""
 
     async def ping(self) -> None: ...
 
@@ -76,6 +80,7 @@ class MemoryStore:
     def __init__(self) -> None:
         self.settings: dict[tuple[str, str], tuple[int, dict[str, Any]]] = {}
         self.profiles: dict[str, dict[str, Any]] = {}
+        self.loads: dict[str, tuple[datetime, str]] = {}
         self.changes: dict[str, list[SettingsChange]] = {}
         self.healthy = True
 
@@ -104,8 +109,13 @@ class MemoryStore:
     async def get_profile(self) -> dict[str, Any] | None:
         return self.profiles.get(require_tenant())
 
-    async def set_profile(self, document: dict[str, Any]) -> None:
+    async def set_profile(self, document: dict[str, Any], loaded_by: str | None = None) -> None:
         self.profiles[require_tenant()] = document
+        if loaded_by is not None:
+            self.loads[require_tenant()] = (datetime.now(UTC), loaded_by)
+
+    async def profile_loaded(self) -> tuple[datetime, str] | None:
+        return self.loads.get(require_tenant())
 
     async def ping(self) -> None:
         if not self.healthy:
@@ -236,13 +246,24 @@ class PgStore:
             raw = await conn.fetchval("SELECT document FROM admin_tenant_profile")
         return json.loads(raw) if raw is not None else None
 
-    async def set_profile(self, document: dict[str, Any]) -> None:
+    async def set_profile(self, document: dict[str, Any], loaded_by: str | None = None) -> None:
         async with self._tenant() as conn:
             await conn.execute(
-                "INSERT INTO admin_tenant_profile (document) VALUES ($1::jsonb)"
-                " ON CONFLICT (tenant_id) DO UPDATE SET document = EXCLUDED.document",
+                "INSERT INTO admin_tenant_profile (document, loaded_at, loaded_by)"
+                " VALUES ($1::jsonb, CASE WHEN $2::text IS NULL THEN NULL ELSE now() END, $2)"
+                " ON CONFLICT (tenant_id) DO UPDATE SET document = EXCLUDED.document,"
+                " loaded_at = COALESCE(EXCLUDED.loaded_at, admin_tenant_profile.loaded_at),"
+                " loaded_by = COALESCE(EXCLUDED.loaded_by, admin_tenant_profile.loaded_by)",
                 json.dumps(document),
+                loaded_by,
             )
+
+    async def profile_loaded(self) -> tuple[datetime, str] | None:
+        async with self._tenant() as conn:
+            row = await conn.fetchrow(
+                "SELECT loaded_at, loaded_by FROM admin_tenant_profile WHERE loaded_at IS NOT NULL"
+            )
+        return None if row is None else (row["loaded_at"], row["loaded_by"])
 
     async def ping(self) -> None:
         await self._pool.fetchval("SELECT 1")
