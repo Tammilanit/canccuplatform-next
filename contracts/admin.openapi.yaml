@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Admin API
-  version: 1.5.0
+  version: 1.6.0
   summary: Settings, health, session and rights, profile save and load.
   description: |
     Machine-readable part of the admin contract. Prose, rules and events: contracts/admin.md.
@@ -690,6 +690,37 @@ components:
           description: Never secrets.
           additionalProperties:
             $ref: "#/components/schemas/SettingValue"
+        groups:
+          type: array
+          description: |
+            How the organiser's Settings form groups the module's declared settings, in the order the form
+            shows them. Every declared key is in exactly one group; `[]` for a module that declares none. A
+            client that draws no form ignores it; an answer without it reads as `[]`.
+          items:
+            $ref: "#/components/schemas/SettingsGroup"
+    SettingsGroup:
+      type: object
+      required: [id, label, description, keys]
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z][a-z0-9_]{0,63}$"
+          description: Unique in the module.
+          examples: [network]
+        label:
+          type: string
+          description: The group's heading.
+          examples: [When the network is slow]
+        description:
+          type: string
+          description: One line under the heading; may be empty.
+          examples: [How long a screen waits before it says so.]
+        keys:
+          type: array
+          description: The group's settings, in the order the form shows them.
+          items:
+            type: string
+            pattern: "^[a-z][a-z0-9_]{0,63}$"
     SettingsUpdate:
       type: object
       required: [settings_version, values]

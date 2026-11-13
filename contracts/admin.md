@@ -21,6 +21,7 @@ Every module serves `GET /health` with the same shape (`Health` in the OpenAPI f
   - Optimistic concurrency: send the `settings_version` you read. A stale one gets 409 `version_conflict`; read again and retry.
   - On success `settings_version` goes up by one and `admin.settings.changed` is emitted.
 - `settings_version` is 0 for a module with no stored settings.
+- **Groups:** the settings answer (the `Settings` shape of `GET` and `PUT`, and of the internal read and write below) also carries `groups`: how the organiser's Settings form groups the module's declared settings, in the order the form shows them, each `{"id", "label", "description", "keys"}`. `id` is lowercase `snake_case` and unique in the module; `label` is the group's heading and `description` one line under it; `keys` lists the group's settings in order. Every declared key is in exactly one group, and a module that declares no settings has `[]`. Groups describe the form, never the values: a client that draws no form ignores them, and a key in `values` that no group names (a profile may carry any) is still a setting. An answer without `groups` reads as `[]`.
 - Values are strings, numbers, booleans or flat lists of those, keyed by lowercase `snake_case` keys, the same as in a profile ([profile.md](profile.md)).
 - Settings are never secrets. A setting that needs one names the environment variable instead.
 - Modules read their settings at start and follow `admin.settings.changed` instead of polling.
