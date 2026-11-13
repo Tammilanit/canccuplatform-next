@@ -176,9 +176,18 @@ describe("hub_qr", () => {
     ]);
   });
 
-  it("changes nothing on the portrait built-in, which has no hub QR", () => {
-    const portrait = (hubQr: "always" | "rotate") => shape(build({ hubQr }, { portrait: true }));
-    expect(portrait("always")).toEqual(portrait("rotate"));
+  it("splits the portrait built-in's venue rail as the Pulse's", () => {
+    const portrait = (hubQr: "always" | "rotate") =>
+      shape(build({ hubQr }, { portrait: true })).filter(([id]) =>
+        String(id).startsWith("venue_rail"),
+      );
+    expect(portrait("always")).toEqual([
+      ["venue_rail", "venue_rail", [1, 13, 3, 3], ["venue_info", "food_status"]],
+      ["venue_rail-2", null, [4, 13, 3, 3], ["qr"]],
+    ]);
+    expect(portrait("rotate")).toEqual([
+      ["venue_rail", "venue_rail", [1, 13, 6, 3], ["qr", "venue_info", "food_status"]],
+    ]);
   });
 
   it("gives the hub QR's part the region's settings but no role", () => {
@@ -219,6 +228,8 @@ describe("the fingerprint", () => {
     regions: {},
     header: null,
     hub_qr: "always" as const,
+    hero_region: null,
+    grow_for_showcase: true,
     sound: { enabled: true, device_id: null },
     epoch: "e1",
   };

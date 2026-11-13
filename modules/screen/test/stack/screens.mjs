@@ -4,9 +4,12 @@
 // theme. Each PNG is named as the view it shows, `theming-<theme>-screen-<view>-<w>x<h>.png`, and
 // fails the run when its text does not read from across a hall (readability.mjs). States the demo
 // stack cannot reach (refused, moved, archived, a claim from Moments) are the player's own answer
-// to a device answer or a state the page is handed, so the frame is the real one.
+// to a device answer or a state the page is handed, so the frame is the real one. The other
+// built-in layouts (#404, sheet 10) are shot landscape in every theme, at 4K in the default one,
+// and Ambient once under an emergency takeover, which keeps its fixed red there too.
 import { expect } from "./client.mjs";
-import { publishTheme, seedScreens } from "./fixture.mjs";
+import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
+import { CLAIM_OF, withHeroItemOnly, withPhoto, withShowcase, withTakeover } from "./handed.mjs";
 import { collectSamples, judgePage } from "./readability.mjs";
 
 export const THEMES = ["terminal", "level-up", "default"];
@@ -23,6 +26,9 @@ const sizesOf = (theme) => (theme === "default" ? [...HD, ...UHD] : HD);
 const THEMED = ["pulse", "identify", "offline", "unassigned", "archived"];
 const UNTHEMED = ["pairing", "refused", "moved", "unreachable", "check"];
 const CLAIMS = ["claim-rail", "claim-hero", "claim-overlay", "claim-takeover"];
+/** The built-ins besides the Pulse and Portrait: 16:9 each, so drawn landscape only. */
+const LAYOUTS = ["dashboard", "hero", "split", "ambient"];
+const landscapeOf = (theme) => sizesOf(theme).filter(([w, h]) => w > h);
 
 const nameOf = (theme, view, [w, h]) => `theming-${theme}-screen-${view}-${w}x${h}`;
 
@@ -35,40 +41,16 @@ export function planned() {
       if (theme !== "default") continue;
       for (const view of UNTHEMED) out.push(nameOf(theme, view, size));
     }
+    for (const size of landscapeOf(theme))
+      for (const view of LAYOUTS) out.push(nameOf(theme, view, size));
   }
+  out.push(nameOf("default", "dashboard-showcase", HD[0]));
+  out.push(nameOf("default", "ambient-takeover", HD[0]));
   for (const size of HD)
     for (const view of ["photo", "rail-empty", ...CLAIMS]) out.push(nameOf("default", view, size));
   out.push(nameOf("default", "entrance", HD[1]));
   return out;
 }
-
-const ago = (ms) => new Date(Date.now() - ms).toISOString();
-const claim = (role, template, content) => ({
-  override_id: `ov_${role}`,
-  hidden: false,
-  role,
-  rank: role === "full" ? 100 : 80,
-  template,
-  content,
-  steps: null,
-  sound: null,
-  on_end: "resume",
-  starts_at: ago(1000),
-  ends_at: null,
-  expires_at: null,
-});
-// A cover and a photo drawn here: the page takes data: images (src/tree.ts).
-const picture = (a, b) =>
-  `data:image/svg+xml;base64,${Buffer.from(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120"><defs><linearGradient id="g" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="160" height="120" fill="url(#g)"/><circle cx="80" cy="52" r="22" fill="#fff" fill-opacity=".35"/><rect x="44" y="80" width="72" height="30" rx="12" fill="#fff" fill-opacity=".35"/></svg>`,
-  ).toString("base64")}`;
-/** What each claim view puts in the state (mockup 04). */
-const CLAIM_OF = {
-  "claim-rail": ["rail", claim("rail", "announcement", { title: "Dinner is served", body: "Café, until 19:15", level: "info" })],
-  "claim-hero": ["hero", claim("hero", "hot_game", { game: { id: "g_1", name: "Demo Game", cover_url: picture("#7c3aed", "#0ea5e9") }, players: 14, since: ago(600_000) })],
-  "claim-overlay": ["overlay", claim("overlay", "match_called", { label: "Team Alpha vs Team Gamma", game_name: "Go to Stage 2 · voice: Match 7", teams: [] })],
-  "claim-takeover": ["full", claim("full", "announcement", { title: "Please leave the hall", body: "Follow the exit signs.", level: "emergency" })],
-}; // prettier-ignore
 
 export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }) {
   await seedScreens(demo);
@@ -136,6 +118,21 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
           for (const view of UNTHEMED)
             await attempt(nameOf(theme, view, size), () => untouched(view, size));
       }
+      try {
+        for (const size of landscapeOf(theme))
+          for (const view of LAYOUTS)
+            await attempt(nameOf(theme, view, size), () => layoutShot(theme, view, size));
+        if (theme === "default")
+          await attempt(nameOf(theme, "dashboard-showcase", HD[0]), () =>
+            layoutShot(theme, "dashboard", HD[0], "dashboard-showcase"),
+          );
+        if (theme === "default")
+          await attempt(nameOf(theme, "ambient-takeover", HD[0]), () =>
+            layoutShot(theme, "ambient", HD[0], "ambient-takeover"),
+          );
+      } finally {
+        await saveZone(demo, "main", { layout_id: null });
+      }
     }
     for (const size of HD) {
       await attempt(nameOf("default", "photo", size), () =>
@@ -192,6 +189,24 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await close();
     }
 
+    /**
+     * The main zone on another built-in layout, as the server composes it. The showcase is the
+     * Dashboard handed a spotlight in its hero, grown as the server grows it for one (a claim
+     * from Moments, which the demo stack has not).
+     */
+    async function layoutShot(theme, id, size, view = id) {
+      await saveZone(demo, "main", { layout_id: id });
+      if (view === "dashboard-showcase") return handed(theme, view, size, withShowcase);
+      if (view === "ambient-takeover") return handed(theme, view, size, withTakeover);
+      const { page, close } = await open(size, main.cookie);
+      await page.goto(at("/screen/"));
+      await page.waitForSelector(`.canccu-layout--${id}`, { timeout: 30_000 });
+      await railShowsAgenda(page);
+      await settle(page);
+      await shot(nameOf(theme, view, size), page);
+      await close();
+    }
+
     /** The page handed a changed state, with no stream to replace it before the shot. */
     async function handed(theme, view, size, change) {
       const { page, close } = await open(size, main.cookie);
@@ -214,6 +229,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
       else await layout(page, size);
       if (view === "rail-empty") await railShowsIdle(page);
+      else if (view === "dashboard-showcase") await stripNamesCountdown(page);
+      else if (view === "ambient-takeover") await takeoverIsRed(page);
       else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
         await railShowsAgenda(page);
       await settle(page);
@@ -261,42 +278,6 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
   }
 }
 
-/** A photo in the hero beside the countdown, so the hero rotates (mockup 03's café). */
-function withPhoto(s) {
-  const photo = {
-    widget: "photo",
-    template: null,
-    dwell_seconds: 3600,
-    stale_after_seconds: null,
-    view: { url: picture("#1e3a8a", "#6d28d9"), caption: 'New photo · "Setup day"', author_name: "Player One", qr: null, stale: false, empty: false },
-  }; // prettier-ignore
-  return {
-    ...s,
-    regions: s.regions.map((r) =>
-      r.role !== "hero" || r.idle_view === null
-        ? r
-        : { ...r, order: [0, 1], widgets: [photo, { ...r.idle_view, template: null, dwell_seconds: 15, stale_after_seconds: null }] },
-    ), // prettier-ignore
-  };
-}
-
-/**
- * A gap in the run of show: the rail's only row is the item the hero counts down to, which the
- * rail leaves out (player/src/hero-rail.ts), so the rail shows its idle choice, not an empty card.
- */
-function withHeroItemOnly(s) {
-  const next = s.regions.find((r) => r.role === "hero")?.idle_view?.view;
-  if (next === undefined) throw new Error("the demo zone's hero has no idle countdown");
-  const only = (w) =>
-    w.widget !== "agenda_now"
-      ? w
-      : { ...w, view: { ...w.view, items: w.view.items.filter((row) => row.name === next.label && row.starts_at === next.target_at) } }; // prettier-ignore
-  return {
-    ...s,
-    regions: s.regions.map((r) => (r.role === "rail" ? { ...r, widgets: r.widgets.map(only) } : r)),
-  };
-}
-
 /** The layout of the screen's orientation is on the page (the heartbeat tells the server). */
 async function layout(page, [width, height]) {
   await page.waitForFunction(
@@ -318,6 +299,28 @@ async function railShowsAgenda(page) {
   await page.waitForSelector(".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active", {
     timeout: 40_000,
   });
+}
+
+/** A strip's countdown says what it counts down to: its name drawn whole inside the strip. */
+async function stripNamesCountdown(page) {
+  const sel = ".canccu-region--rail > .canccu-widget--countdown.canccu-is-active";
+  await page.waitForSelector(sel, { timeout: 40_000 });
+  const fits = await page.$eval(sel, (card) => {
+    const name = card.querySelector(".canccu-widget__headline");
+    if (name === null || name.textContent.trim() === "") return false;
+    const [c, n] = [card.getBoundingClientRect(), name.getBoundingClientRect()];
+    return n.height > 0 && n.top >= c.top && n.bottom <= c.bottom;
+  });
+  if (!fits) throw new Error("the showcase's rail strip draws its countdown without its name");
+}
+
+/** The emergency takeover wears its fixed red (claims.css) whatever the layout does to its cards. */
+async function takeoverIsRed(page) {
+  const sel = ".canccu-region--_full > .canccu-widget--announcement";
+  await page.waitForSelector(sel, { timeout: 30_000 });
+  const background = await page.$eval(sel, (card) => getComputedStyle(card).backgroundColor);
+  if (background !== "rgb(185, 28, 28)")
+    throw new Error(`the emergency takeover's background is ${background}, not its fixed red`);
 }
 
 /** The rail shows its idle choice, on both of its turns: never the emptied run of show. */
