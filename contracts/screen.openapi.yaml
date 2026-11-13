@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Screen API
-  version: 1.4.0
+  version: 1.5.0
   summary: Devices, zones, the composed screen state and its push channel, content, scheduling and the PPTX and PDF render job.
   description: |
     Machine-readable part of the screen contract. Prose, widgets, claims, the Pulse options and events: contracts/screen.md.
@@ -625,6 +625,38 @@ components:
             `next`: the zone's next run-of-show item with a big countdown, else the logo (contracts/screen.md, The Pulse options).
           enum: [logo, blank, collapse, next]
           default: logo
+        area:
+          type: [object, "null"]
+          default: null
+          description: |
+            The region's place on the grid in place of the layout's, 1-based. Applies only while the zone's screens draw
+            its own `layout_id`; must fit the grid and not overlap another drawn region of its layer, else 400
+            `invalid_request` (contracts/screen.md, Box sizes and hidden boxes).
+          required: [column, row, columns, rows]
+          additionalProperties: false
+          properties:
+            column:
+              type: integer
+              minimum: 1
+              maximum: 48
+            row:
+              type: integer
+              minimum: 1
+              maximum: 48
+            columns:
+              type: integer
+              minimum: 1
+              maximum: 48
+            rows:
+              type: integer
+              minimum: 1
+              maximum: 48
+        hidden:
+          type: boolean
+          default: false
+          description: |
+            `true`: the region is not drawn and its role is not offered to claims. Applies only while the zone's screens
+            draw its own `layout_id` (contracts/screen.md, Box sizes and hidden boxes).
     Role:
       type: string
       enum: [full, hero, rail, venue_rail, ticker, header, backdrop, overlay]
