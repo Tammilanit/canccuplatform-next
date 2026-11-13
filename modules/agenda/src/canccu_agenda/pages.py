@@ -103,12 +103,15 @@ async def run_of_show(request: Request) -> Response:
     lines = []
     now_shown = day != today
     nowline = f'<li class="canccu-agenda-nowline" id="now"><span>Now {hhmm(now, tz)}</span></li>'
-    for row in on_day:
+    writes = session.has(WRITE)
+    for i, row in enumerate(on_day):
         if not now_shown and row["starts_at"] > now:
             lines.append(nowline)
             now_shown = True
         picked = side is not None and row["id"] == side["id"]
         lines.append(day_view.row_html(row, kinds, now, tz, day, picked))
+        if writes and i + 1 < len(on_day):
+            lines.append(day_view.gap_html(row, on_day[i + 1], tz, day))
     done = DONE.get(request.query_params.get("done", ""))
     body = (notice(done) if done else "") + await undo.offer_html(
         d, session, request.query_params.get("undo")
@@ -119,7 +122,6 @@ async def run_of_show(request: Request) -> Response:
     if hero is not None:
         body += day_view.hero_html(hero, now, tz, session, here)
     body += day_view.days_html(days, day, today)
-    writes = session.has(WRITE)
     if on_day:
         aside = ""
         if side is not None:
@@ -128,6 +130,7 @@ async def run_of_show(request: Request) -> Response:
             history = changes_html(log, tz, today)
             aside = day_view.side_html(side, item, kinds, now, tz, session, close, history, here)
         tail = "" if now_shown else nowline
+        tail += day_view.add_row_html(day) if writes else ""
         body += f'<div class="canccu-agenda-day">{day_view.list_html(lines, tail)}{aside}</div>'
     else:
         add = (
@@ -144,6 +147,9 @@ async def run_of_show(request: Request) -> Response:
             + "</section>"
         )
     body += await _delay_sheet(request, rows, now, here) if writes else ""
+    # Only a phone needs it: a long press shows a gap's line, and the bar's Quick add follows the
+    # gap in view. Hover and focus show the line through the stylesheet, with no script.
+    body += f'<script src="{BASE}/static/day.js" defer></script>' if writes else ""
     actions = (
         f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/new?day={day}">'
         "Full form</a>"
