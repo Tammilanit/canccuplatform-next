@@ -152,8 +152,12 @@
    * Ambient, for the night and the quiet hours: no cards, only large type over the background. The
    * clock is the hero, its time over its date; the run of show under it, its rows side by side, each
    * row's name across a free last track, so a long name never pushes its label, time and badge apart.
+   * Only the layout's own widgets lose their card: a claim keeps its frame, and an emergency its
+   * fixed red (claims.css), which this rule would otherwise outrank.
    */
-  .canccu-layout--ambient .canccu-region > .canccu-widget {
+  .canccu-layout--ambient
+    .canccu-region:not(.canccu-region--_full, .canccu-region--_overlay)
+    > .canccu-widget:not(.canccu-is-claim) {
     border: 0;
     background: none;
   }

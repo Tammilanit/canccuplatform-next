@@ -90,3 +90,9 @@ export function withShowcase(s) {
     }),
   };
 }
+
+/** An emergency takeover over whatever layout the zone is on (contracts/screen.md, Claims). */
+export function withTakeover(s) {
+  const [role, placed] = CLAIM_OF["claim-takeover"];
+  return { ...s, regions: s.regions.map((r) => (r.role === role ? { ...r, claim: placed } : r)) };
+}

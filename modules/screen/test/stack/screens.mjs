@@ -5,10 +5,11 @@
 // fails the run when its text does not read from across a hall (readability.mjs). States the demo
 // stack cannot reach (refused, moved, archived, a claim from Moments) are the player's own answer
 // to a device answer or a state the page is handed, so the frame is the real one. The other
-// built-in layouts (#404, sheet 10) are shot landscape in every theme, at 4K in the default one.
+// built-in layouts (#404, sheet 10) are shot landscape in every theme, at 4K in the default one,
+// and Ambient once under an emergency takeover, which keeps its fixed red there too.
 import { expect } from "./client.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
-import { CLAIM_OF, withHeroItemOnly, withPhoto, withShowcase } from "./handed.mjs";
+import { CLAIM_OF, withHeroItemOnly, withPhoto, withShowcase, withTakeover } from "./handed.mjs";
 import { collectSamples, judgePage } from "./readability.mjs";
 
 export const THEMES = ["terminal", "level-up", "default"];
@@ -44,6 +45,7 @@ export function planned() {
       for (const view of LAYOUTS) out.push(nameOf(theme, view, size));
   }
   out.push(nameOf("default", "dashboard-showcase", HD[0]));
+  out.push(nameOf("default", "ambient-takeover", HD[0]));
   for (const size of HD)
     for (const view of ["photo", "rail-empty", ...CLAIMS]) out.push(nameOf("default", view, size));
   out.push(nameOf("default", "entrance", HD[1]));
@@ -124,6 +126,10 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
           await attempt(nameOf(theme, "dashboard-showcase", HD[0]), () =>
             layoutShot(theme, "dashboard", HD[0], "dashboard-showcase"),
           );
+        if (theme === "default")
+          await attempt(nameOf(theme, "ambient-takeover", HD[0]), () =>
+            layoutShot(theme, "ambient", HD[0], "ambient-takeover"),
+          );
       } finally {
         await saveZone(demo, "main", { layout_id: null });
       }
@@ -191,6 +197,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
     async function layoutShot(theme, id, size, view = id) {
       await saveZone(demo, "main", { layout_id: id });
       if (view === "dashboard-showcase") return handed(theme, view, size, withShowcase);
+      if (view === "ambient-takeover") return handed(theme, view, size, withTakeover);
       const { page, close } = await open(size, main.cookie);
       await page.goto(at("/screen/"));
       await page.waitForSelector(`.canccu-layout--${id}`, { timeout: 30_000 });
@@ -223,6 +230,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       else await layout(page, size);
       if (view === "rail-empty") await railShowsIdle(page);
       else if (view === "dashboard-showcase") await stripNamesCountdown(page);
+      else if (view === "ambient-takeover") await takeoverIsRed(page);
       else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
         await railShowsAgenda(page);
       await settle(page);
@@ -304,6 +312,15 @@ async function stripNamesCountdown(page) {
     return n.height > 0 && n.top >= c.top && n.bottom <= c.bottom;
   });
   if (!fits) throw new Error("the showcase's rail strip draws its countdown without its name");
+}
+
+/** The emergency takeover wears its fixed red (claims.css) whatever the layout does to its cards. */
+async function takeoverIsRed(page) {
+  const sel = ".canccu-region--_full > .canccu-widget--announcement";
+  await page.waitForSelector(sel, { timeout: 30_000 });
+  const background = await page.$eval(sel, (card) => getComputedStyle(card).backgroundColor);
+  if (background !== "rgb(185, 28, 28)")
+    throw new Error(`the emergency takeover's background is ${background}, not its fixed red`);
 }
 
 /** The rail shows its idle choice, on both of its turns: never the emptied run of show. */
