@@ -138,7 +138,14 @@ async def serve() -> None:
     # drop the cache at once.
     watch = HealthWatch(health, parse_targets(os.environ.get("CANCCU_HEALTH_TARGETS", "")))
     app = create_app(
-        service, watch, rights.check, auth, resolver, rights.handle_event, identity=identity
+        service,
+        watch,
+        rights.check,
+        auth,
+        resolver,
+        rights.handle_event,
+        identity=identity,
+        viewer=rights.session,
     )
 
     async def drop_cached_tenants(event: Event) -> None:

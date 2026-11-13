@@ -40,7 +40,9 @@ OUT=${2:-screenshots}
 if [ "$dry" = 1 ]; then
   command -v node >/dev/null || { echo "error: node not found" >&2; exit 2; }
   echo "(chromium in $IMAGE, in Caddy's network namespace)"
-  exec node scripts/demo-screenshots.mjs --dry-run --base "$BASE" --out "$OUT"
+  node scripts/demo-screenshots.mjs --dry-run --base "$BASE" --out "$OUT" || exit 1
+  echo "then, after scripts/demo-screenshots-front.sql seeds people and three more events:"
+  exec node scripts/demo-screenshots-front.mjs --dry-run --base "$BASE" --out "$OUT"
 fi
 
 command -v docker >/dev/null || { echo "error: docker not found" >&2; exit 2; }
@@ -58,7 +60,8 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 MEDIA=modules/screen/test/fixtures/media
 mkdir -p "$work/scripts" "$work/$STACK" "$work/$MEDIA" "$work/events/demo/assets" "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
-cp scripts/demo-screenshots.mjs "$work/scripts/" && cp "$STACK"/*.mjs "$work/$STACK/" || exit 2
+cp scripts/demo-screenshots.mjs scripts/demo-screenshots-front.mjs "$work/scripts/" \
+  && cp "$STACK"/*.mjs "$work/$STACK/" || exit 2
 # The Theme studio's draft takes the demo logo, as an organiser would upload it.
 cp events/demo/assets/logo.svg "$work/events/demo/assets/" || exit 2
 # The Content page's library uploads a video and a sound (content-fixture.mjs).
@@ -70,17 +73,26 @@ if ! docker run --rm -u "$user" -e HOME=/tmp -v "$work:/work" -w /work "$IMAGE" 
   echo "error: could not install playwright-core $PLAYWRIGHT in $IMAGE" >&2
   exit 1
 fi
-shots() {
+shoot() {
   docker run --rm --network "container:$caddy" -u "$user" -e HOME=/tmp \
     -e CANCCU_DEMO_HOST -e DEMO_SESSION -v "$work:/work" -v "$out:/out" -w /work "$IMAGE" \
-    node scripts/demo-screenshots.mjs --base "$BASE" --out /out "$@"
+    node "scripts/$1" --base "$BASE" --out /out "${@:2}"
 }
-shots
+shoot demo-screenshots.mjs
 status=$?
-# Health with a part down (docs/design/mockups.html, sheet 4): notify stops for one pass, longer
-# than admin's 10 s check, and starts again whatever the pass did.
+# The second pass needs people, a session without a role and events before, after and away from
+# their venue, which no API of the CI stack makes; the first pass shows People with nobody else.
+if ! "${COMPOSE[@]}" exec -T postgres psql -U canccu -d canccu -v ON_ERROR_STOP=1 -q \
+  < scripts/demo-screenshots-front.sql; then
+  echo "error: could not seed the front-door screenshots" >&2
+  exit 1
+fi
+shoot demo-screenshots-front.mjs || status=1
+# Health with a part down (docs/design/mockups.html, sheet 4), last, as it stops notify (whose
+# check-in the front pass shows) for longer than admin's 10 s check; it starts again whatever
+# the pass did.
 "${COMPOSE[@]}" stop notify >/dev/null || status=1
 sleep 15
-shots --trouble || status=1
+shoot demo-screenshots.mjs --trouble || status=1
 "${COMPOSE[@]}" start notify >/dev/null || status=1
 exit "$status"

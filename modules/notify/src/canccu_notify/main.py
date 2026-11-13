@@ -35,6 +35,7 @@ from . import consumer, delivery, lifecycle, quiet
 from .app import create_app
 from .db import Db
 from .deps import Deps
+from .hub import HubReader
 from .push import Pusher
 from .webpush import Vapid
 
@@ -165,6 +166,7 @@ async def serve() -> None:
         {"postgres": postgres_check(ping), "valkey": valkey_check(streams)},
     )
     audit = TenantsAudit(os.environ["CANCCU_TENANTS_URL"], identity)
+    agenda_url = os.environ.get("CANCCU_AGENDA_URL", "http://agenda:8080")
     d = Deps(
         db=db,
         bus=bus,
@@ -175,7 +177,8 @@ async def serve() -> None:
         tenants=resolver,
         push=Pusher(vapid),
         outbox=Outbox(bus, db),
-        agenda=AgendaReader(os.environ.get("CANCCU_AGENDA_URL", "http://agenda:8080"), identity),
+        agenda=AgendaReader(agenda_url, identity),
+        hub=HubReader(os.environ["CANCCU_TENANTS_URL"], agenda_url, httpx.AsyncClient(timeout=2.0)),
         users=UsersReader(os.environ["CANCCU_TENANTS_URL"], identity),
     )
 

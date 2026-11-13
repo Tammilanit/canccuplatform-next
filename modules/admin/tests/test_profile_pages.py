@@ -114,5 +114,7 @@ async def test_replacing_needs_the_right_to_write_the_profile(
     world: World, event: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     _, member = await owner_and_member(world, caplog)
+    # Without a role the sign-in page says what to do (#453, sheet 3 "No role yet").
     for path in ("/admin/profile/load", "/admin/profile/upload"):
-        assert (await world.browser(member).get(path)).status_code == 403
+        r = await world.browser(member).get(path)
+        assert r.status_code == 303 and r.headers["location"] == "/admin/sign-in"

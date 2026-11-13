@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Screen API
-  version: 1.5.0
+  version: 1.6.0
   summary: Devices, zones, the composed screen state and its push channel, content, scheduling and the PPTX and PDF render job.
   description: |
     Machine-readable part of the screen contract. Prose, widgets, claims, the Pulse options and events: contracts/screen.md.
@@ -88,6 +88,10 @@ paths:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1devices~1{device_id}~1assignment"
   /api/screen/devices/{device_id}/commands:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1devices~1{device_id}~1commands"
+  /api/screen/devices/{device_id}/preview:
+    $ref: "screen/devices.openapi.yaml#/~1api~1screen~1devices~1{device_id}~1preview"
+  /api/screen/previews:
+    $ref: "screen/devices.openapi.yaml#/~1api~1screen~1previews"
   /api/screen/registry/devices:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1registry~1devices"
   /api/screen/registry/devices/{device_id}:
@@ -1013,7 +1017,10 @@ components:
               type: string
         theme:
           type: object
-          description: The theme revision in effect (the pinned one, else the current).
+          description: |
+            The theme revision in effect (the pinned one, else the current). While `preview.theme` is true, `revision`
+            stays the revision in effect and the URLs and `templates` are the draft's, from theming's
+            `GET /internal/theming/previews/{preview_key}` (contracts/screen.md, Composed state and the push channel).
           required: [revision, tokens_css_url, css_url, logo_url, templates]
           properties:
             revision:
@@ -1111,6 +1118,65 @@ components:
             drift:
               type: boolean
               description: The event's `burn_in_drift` setting; the player then shifts the layout by at most `safe_inset` / 4.
+        preview:
+          type: [object, "null"]
+          description: |
+            Set while a preview on a screen runs on this device (contracts/screen.md, Zones and assignments): the
+            player draws a "Preview" mark in its corner. Null or absent otherwise.
+          required: [until, at, theme]
+          properties:
+            until:
+              type: [string, "null"]
+              format: date-time
+            at:
+              type: [string, "null"]
+              format: date-time
+              description: The preview time, or null for now.
+            theme:
+              type: boolean
+              description: True while the device draws the theme's draft; false once the draft key no longer resolves.
+    PreviewInput:
+      type: object
+      required: [minutes]
+      properties:
+        minutes:
+          type: [integer, "null"]
+          minimum: 1
+          maximum: 60
+          description: How long it runs; null until it is ended, at most 12 hours.
+        zone:
+          $ref: "#/components/schemas/Zone"
+          description: An unsaved zone as `PUT` takes it, whose `key` is the device's zone's; without it, the device's own zone.
+        at:
+          type: [string, "null"]
+          format: date-time
+          description: The preview time, from now to 14 days ahead; null or absent for now.
+        theme_preview_key:
+          type: [string, "null"]
+          description: Theming's key to the event's draft (contracts/theming.md, Draft, preview, publish).
+    Preview:
+      type: object
+      required: [device_id, device_name, zone_key, until, at, theme, started_by, started_at]
+      properties:
+        device_id:
+          $ref: "#/components/schemas/Id"
+        device_name:
+          type: string
+        zone_key:
+          $ref: "#/components/schemas/ZoneKey"
+        until:
+          type: [string, "null"]
+          format: date-time
+        at:
+          type: [string, "null"]
+          format: date-time
+        theme:
+          type: boolean
+        started_by:
+          type: string
+          description: The user id of who started it.
+        started_at:
+          $ref: "#/components/schemas/Time"
     StreamMessage:
       type: object
       description: The `data` of one push-channel message; which fields are present depends on the SSE event name.
