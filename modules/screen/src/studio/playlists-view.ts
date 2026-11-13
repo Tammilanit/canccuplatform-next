@@ -49,7 +49,13 @@ function newPlaylist(c: ViewContext): Html {
   </details>`;
 }
 
-function playlistPanel(c: ViewContext, d: PlaylistsData): Html {
+/** The library's search and page ride along the picker, so picking a playlist keeps the library. */
+const libraryKeep = (q: ContentData["query"]): Html[] =>
+  Object.entries(q)
+    .filter(([, v]) => v !== "")
+    .map(([name, value]) => html`<input type="hidden" name="${name}" value="${value}" />`);
+
+function playlistPanel(c: ViewContext, d: PlaylistsData, library: ContentData["query"]): Html {
   const { t } = c;
   const write = c.rights.has(BUILD);
   const pick =
@@ -69,6 +75,7 @@ function playlistPanel(c: ViewContext, d: PlaylistsData): Html {
                 </option>`,
             )}
           </select>
+          ${libraryKeep(library)}
         </form>`;
   const editor =
     d.chosen === null
@@ -184,9 +191,14 @@ function pushList(c: ViewContext, d: PlaylistsData, zones: readonly ZoneSummary[
   </section>`;
 }
 
-function playlistsView(c: ViewContext, d: PlaylistsData, zones: readonly ZoneSummary[]): Html {
+function playlistsView(
+  c: ViewContext,
+  d: PlaylistsData,
+  zones: readonly ZoneSummary[],
+  library: ContentData["query"],
+): Html {
   const { t } = c;
-  return html`${playlistPanel(c, d)}
+  return html`${playlistPanel(c, d, library)}
     <div class="canccu-card canccu-studio-panel canccu-studio-panel--push">
       <h2 class="canccu-studio-panel__title">${t("push.title")}</h2>
       <p class="canccu-small canccu-muted">${t("push.desc")}</p>
@@ -203,7 +215,9 @@ export const contentPage = (
 ): Html =>
   html`<div class="canccu-studio-content">
     <div class="canccu-studio-content__grid">
-      <div class="canccu-studio-content__main">${contentView(c, content)}</div>
-      <aside class="canccu-studio-content__side">${playlistsView(c, d, zones)}</aside>
+      <div class="canccu-studio-content__main">${contentView(c, content, d.chosen?.id ?? "")}</div>
+      <aside class="canccu-studio-content__side">
+        ${playlistsView(c, d, zones, content.query)}
+      </aside>
     </div>
   </div>`;

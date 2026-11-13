@@ -103,6 +103,19 @@ describe.skipIf(!DATABASE_URL)("studio playlists and push", () => {
     ).toBe(ads);
   });
 
+  it("keeps the chosen playlist through the library's search, and the search through the picker", async () => {
+    const body = (await content("editor", `?playlist=${loop}&q=trailer&kind=video`)).body;
+    expect((json(body, "canccu-studio-playlist") as Doc).id).toBe(loop);
+    expect(body).toContain('id="asset-as_trailer"');
+    expect(body).not.toContain('id="asset-as_poster"');
+    const find = /<form[^>]*role="search"[^>]*>(.*?)<\/form>/s.exec(body)?.[1] ?? "";
+    expect(find).toContain(`<input type="hidden" name="playlist" value="${loop}" />`);
+    const pick = /<form[^>]*canccu-studio-pick[^>]*>(.*?)<\/form>/s.exec(body)?.[1] ?? "";
+    expect(pick).toContain('<input type="hidden" name="q" value="trailer" />');
+    expect(pick).toContain('<input type="hidden" name="kind" value="video" />');
+    expect(pick).not.toContain('name="after"');
+  });
+
   it("gives the builder the whole library it draws from, without sounds", async () => {
     const library = json((await content("editor")).body, "canccu-studio-library") as Record<
       string,

@@ -201,7 +201,7 @@ function pageUrl(q: Record<string, string>): string {
   return params.size === 0 ? PAGE : `${PAGE}?${params.toString()}`;
 }
 
-function finder(c: ViewContext, d: ContentData): Html {
+function finder(c: ViewContext, d: ContentData, playlist: string): Html {
   const { t } = c;
   const kinds: [string, string][] = [
     ["", t("content.kind_all")],
@@ -219,6 +219,7 @@ function finder(c: ViewContext, d: ContentData): Html {
       <select class="canccu-input" name="kind" aria-label="${t("content.kind_all")}">
         ${kinds.map(([v, label]) => html`<option${attrs({ value: v, selected: v === d.query.kind })}>${label}</option>`)}
       </select>
+      ${playlist === "" ? "" : html`<input type="hidden" name="playlist" value="${playlist}" />`}
       <button class="canccu-button canccu-button--secondary" type="submit">
         ${t("content.find")}
       </button>
@@ -285,7 +286,11 @@ function adders(c: ViewContext, d: ContentData): Html {
   </section>`;
 }
 
-export function contentView(c: ViewContext, d: ContentData): Html {
+/**
+ * `playlist` is the side column's open playlist: the search and the pager carry it, so a writer
+ * can drag from a filtered or older page into that playlist rather than the default one.
+ */
+export function contentView(c: ViewContext, d: ContentData, playlist = ""): Html {
   const { t } = c;
   const searched = d.query.q !== "" || d.query.kind !== "";
   const library =
@@ -298,7 +303,7 @@ export function contentView(c: ViewContext, d: ContentData): Html {
             title: t("content.empty_title"),
             text: t("content.empty_text"),
           });
-  const filters = { q: d.query.q, kind: d.query.kind };
+  const filters = { q: d.query.q, kind: d.query.kind, playlist };
   const pager = [
     d.query.after === ""
       ? ""
@@ -319,7 +324,7 @@ export function contentView(c: ViewContext, d: ContentData): Html {
       : raw(
           `<script type="application/json" id="canccu-studio-assets">${JSON.stringify(d.index).replace(/</g, "\\u003c")}</script>`,
         );
-  return html`${finder(c, d)}${c.rights.has(WRITE) ? adders(c, d) : ""}${library}
+  return html`${finder(c, d, playlist)}${c.rights.has(WRITE) ? adders(c, d) : ""}${library}
     <div class="canccu-cluster">${pager}</div>
     ${index}`;
 }
