@@ -199,7 +199,7 @@ function playlistsView(
 ): Html {
   const { t } = c;
   return html`${playlistPanel(c, d, library)}
-    <div class="canccu-card canccu-studio-panel canccu-studio-panel--push">
+    <div class="canccu-card canccu-studio-panel canccu-studio-panel--push" id="push">
       <h2 class="canccu-studio-panel__title">${t("push.title")}</h2>
       <p class="canccu-small canccu-muted">${t("push.desc")}</p>
       ${c.rights.has(PUSH) ? pushForm(c, d, zones) : ""}${pushList(c, d, zones)}

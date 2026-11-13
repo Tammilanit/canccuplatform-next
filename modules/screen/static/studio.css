@@ -27,6 +27,30 @@
   margin: 0.75rem 0 0.25rem;
 }
 
+/*
+ * Live's quick actions (mockup 13): where the shell is the phone's (the bottom bar, under 1100px,
+ * as ui.css switches), one full-width tap each below the zones. On a desk the title row has them.
+ */
+.canccu-studio-quick {
+  margin-top: 1rem;
+}
+
+.canccu-studio-quick__actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.canccu-studio-quick__actions .canccu-button {
+  justify-content: flex-start;
+  min-height: 3rem;
+}
+
+@media (min-width: 1100px) {
+  .canccu-studio-quick {
+    display: none;
+  }
+}
+
 /* A live view: the virtual screen at 16:9, never taking the tap (its link does). */
 .canccu-studio-thumb {
   display: block;
