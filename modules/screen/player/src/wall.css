@@ -128,4 +128,39 @@
     > li:nth-child(n + 3) {
     display: none;
   }
+
+  /* Side by side a row is half as wide: a long name wraps, and a delayed row takes three lines. */
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__row--delayed {
+    grid-template-areas: "state delay" "name name" "until where";
+    grid-template-columns: auto 1fr;
+  }
+
+  /* Its venue rail is two rows high too: a QR's caption goes beside its code, not under it. */
+  .canccu-layout--pulse_portrait .canccu-region--venue_rail-2 .canccu-widget__qr,
+  .canccu-layout--pulse_portrait .canccu-region--venue_rail .canccu-widget--qr .canccu-widget__qr {
+    flex-direction: row;
+    text-align: start;
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region--venue_rail-2 .canccu-widget__code,
+  .canccu-layout--pulse_portrait
+    .canccu-region--venue_rail
+    .canccu-widget--qr
+    .canccu-widget__code {
+    width: auto;
+    height: calc(14 * var(--canccu-u));
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region--venue_rail-2 .canccu-widget__caption,
+  .canccu-layout--pulse_portrait
+    .canccu-region--venue_rail
+    .canccu-widget--qr
+    .canccu-widget__caption {
+    white-space: normal;
+  }
 }
