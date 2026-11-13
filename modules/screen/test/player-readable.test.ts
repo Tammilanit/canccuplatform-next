@@ -70,6 +70,12 @@ describe("the screen's stylesheet", () => {
     for (const motion of ["moderate", "calm"]) expect(looks).toContain(`[data-motion="${motion}"]`);
   });
 
+  it("colours its text with the theme's tokens, never ui.css's oklab inks (#416)", () => {
+    // The rendered readability check parses rgb and srgb colours only; an ink read as black there
+    // failed every Dashboard shot at 1.44:1.
+    expect(rules).not.toMatch(/var\(--canccu-ink-/);
+  });
+
   it("draws a QR glyph where a code has no image, never a blank square (#414)", () => {
     // A mirror's or preview's check-in widget is a sample without its code (contracts/screen.md,
     // A zone for a session), so its image has no `src`.
