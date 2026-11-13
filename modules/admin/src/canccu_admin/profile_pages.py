@@ -23,6 +23,7 @@ from .settings_view import when
 DOWNLOAD = '<a class="canccu-button canccu-button--secondary" href="/api/admin/profile" '
 DOWNLOAD += f'download="profile.zip">{icon("download")}'
 KEPT = "The run of show, people and their roles."
+UNLOADABLE = "The profile in the event folder can't be loaded"
 
 
 def _loaded_card(name: str, by: str, modules: int, zone: str, saved: str) -> str:
@@ -36,17 +37,21 @@ def _loaded_card(name: str, by: str, modules: int, zone: str, saved: str) -> str
     )
 
 
-def _replace_card(folder: str | None, again: bool) -> str:
+def _replace_card(folder: str | None, problem: KitError | None, again: bool) -> str:
+    # A broken folder profile says why, so Upload stays the way out (no silent "no profile").
+    broken = notice("down", UNLOADABLE, problem.message) if problem else ""
     load = (
         f'<a class="canccu-button canccu-button--danger-ghost" href="{BASE}/profile/load">'
         f"Load the {esc(folder)} profile{' again' if again else ''}…</a>"
         if folder
+        else ""
+        if problem
         else '<p class="canccu-muted canccu-small">The event folder holds no profile to load.</p>'
     )
     return (
         '<section class="canccu-card"><h2 class="canccu-card__title">Replace with another '
         'profile</h2><p class="canccu-card__desc">Replaces settings and look, and can\'t be '
-        "undone. Run of show and people stay. Both ask first.</p>"
+        f"undone. Run of show and people stay. Both ask first.</p>{broken}"
         f'<div class="canccu-cluster">{load}<a class="canccu-button canccu-button--danger-ghost" '
         f'href="{BASE}/profile/upload">Upload a profile…</a></div></section>'
     )
@@ -113,11 +118,11 @@ def profile_routes(service: Service, auth: Auth, authorize: Authorize) -> list[R
             _, general = await service.store.get_settings("admin")
             zone = str(general.get("timezone") or "UTC")
             in_use = _loaded_card(str(record["name"]), by, len(record["modules"]), zone, saved)
-        folder = await service.folder_profile_name()
+        folder, problem = await service.folder_profile()
         return await page(
             request,
             "Event profile",
-            notes + in_use + _replace_card(folder, record is not None),
+            notes + in_use + _replace_card(folder, problem, record is not None),
             session=session,
             current="profile",
             narrow=True,
@@ -126,8 +131,10 @@ def profile_routes(service: Service, auth: Auth, authorize: Authorize) -> list[R
 
     async def ask_load(request: Request) -> Response:
         session = await need(request, "admin.profile.write")
-        folder = await service.folder_profile_name()
+        folder, problem = await service.folder_profile()
         loaded = await service.store.get_profile() is not None
+        if problem is not None:
+            raise problem
         if folder is None:
             raise KitError("the event folder holds no profile", status=404, code="not_found")
         form = f'<form method=post action="{BASE}/profile/load" id="canccu-replace"></form>'

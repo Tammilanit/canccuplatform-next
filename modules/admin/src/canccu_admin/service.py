@@ -183,13 +183,16 @@ class Service:
         await self._publish_profile("admin.profile.saved", document, actor)
         return data
 
-    async def folder_profile_name(self) -> str | None:
-        """The name of the profile in the event folder, which Load loads; None without one."""
+    async def folder_profile(self) -> tuple[str | None, KitError | None]:
+        """The name of the profile in the event folder, which Load loads, or why it can't be
+        loaded; (None, None) only when the folder holds no profile.yaml at all."""
+        if not (self.event_dir / "profile.yaml").is_file():
+            return None, None
         try:
             loaded = await asyncio.to_thread(prof.read_profile_dir, self.event_dir, self.validator)
-        except (KitError, OSError):
-            return None
-        return str(loaded.document["name"])
+        except KitError as exc:
+            return None, exc
+        return str(loaded.document["name"]), None
 
     async def import_zip(self, data: bytes, actor: str) -> dict[str, Any]:
         """Apply a profile zip; every file it names must be in it (contracts/profile.md)."""

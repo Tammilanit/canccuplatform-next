@@ -118,3 +118,20 @@ async def test_replacing_needs_the_right_to_write_the_profile(
     for path in ("/admin/profile/load", "/admin/profile/upload"):
         r = await world.browser(member).get(path)
         assert r.status_code == 303 and r.headers["location"] == "/admin/sign-in"
+
+
+async def test_a_broken_folder_profile_says_why_and_upload_stays(
+    world: World, event: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    browser = world.browser(owner)
+    for broken, reason in ((b"name: [", "not valid YAML"), (b"name: \xff\xfe", "not UTF-8")):
+        (event / "profile.yaml").write_bytes(broken)
+        r = await browser.get("/admin/profile")
+        assert r.status_code == 200
+        assert "The profile in the event folder can&#x27;t be loaded" in r.text and reason in r.text
+        assert "holds no profile" not in r.text and 'href="/admin/profile/load"' not in r.text
+        assert 'href="/admin/profile/upload">Upload a profile…</a>' in r.text
+        # The question answers the same problem instead of "no profile".
+        r = await browser.get("/admin/profile/load")
+        assert r.status_code == 400 and reason in r.text

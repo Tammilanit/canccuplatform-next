@@ -285,6 +285,9 @@ async def test_a_load_records_when_and_by_whom(parts: Parts, demo: None) -> None
 
 async def test_the_event_folder_names_its_profile(parts: Parts, demo: None) -> None:
     _client, service, _, event = parts
-    assert await service.folder_profile_name() == "Demo Event"
+    assert await service.folder_profile() == ("Demo Event", None)
+    (event / "profile.yaml").write_bytes(b"name: \xff\xfe")
+    name, problem = await service.folder_profile()
+    assert name is None and problem is not None and "not UTF-8" in problem.message
     (event / "profile.yaml").unlink()
-    assert await service.folder_profile_name() is None
+    assert await service.folder_profile() == (None, None)

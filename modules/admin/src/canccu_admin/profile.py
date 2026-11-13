@@ -82,9 +82,14 @@ def read_profile_dir(directory: Path, validator: Draft202012Validator) -> Loaded
     if not file.is_file():
         raise ProfileInvalid(f"no profile.yaml in {directory}")
     try:
-        document = yaml.safe_load(file.read_text())
+        document = yaml.safe_load(file.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
         raise ProfileInvalid(f"profile.yaml is not valid YAML: {exc}") from exc
+    # Both would otherwise escape as a 500 and take the Event profile page down with them.
+    except UnicodeDecodeError as exc:
+        raise ProfileInvalid("profile.yaml is not UTF-8 text") from exc
+    except OSError as exc:
+        raise ProfileInvalid(f"profile.yaml can't be read: {exc.strerror or exc}") from exc
     if not isinstance(document, dict):
         raise ProfileInvalid("profile.yaml must hold a mapping")
     document, upgraded_from = upgrade(document)
