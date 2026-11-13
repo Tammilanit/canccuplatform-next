@@ -155,6 +155,23 @@ class FakeUsers:
 
 
 @dataclass
+class FakeHub:
+    """What the check-in's done page reads as the person: the venue's Wi-Fi and what is on now
+    (`GET /api/tenants/current/venue-info`, `GET /api/agenda/now`)."""
+
+    wifi: list[dict[str, Any]] = field(default_factory=list)
+    now: dict[str, Any] = field(default_factory=lambda: {"current": [], "next": []})
+    asked: list[tuple[str, str | None]] = field(default_factory=list)
+
+    async def venue_wifi(self, host: str, cookie: str | None) -> list[dict[str, Any]]:
+        self.asked.append((host, cookie))
+        return self.wifi
+
+    async def agenda_now(self, host: str, cookie: str | None) -> dict[str, Any] | None:
+        return self.now
+
+
+@dataclass
 class Env:
     db: Db
     rights: FakeRights
@@ -168,6 +185,9 @@ class Env:
     push: FakePushService
     agenda: FakeAgenda
     users: FakeUsers
+    hub: FakeHub = field(default_factory=FakeHub)
+    events: dict[str, dict[str, Any]] = field(default_factory=dict)
+    """What `GET /api/tenants/current` adds for an event's poster, by hostname."""
 
     def client(self, host: str = "a.example.test") -> httpx.AsyncClient:
         return httpx.AsyncClient(
@@ -242,8 +262,13 @@ async def env() -> AsyncIterator[Env]:
             " notify_source_state, notify_agenda_tenants, notify_people, notify_follows"
         )
     contexts = {tid: context(tid) for tid in HOSTS.values()}
+    events: dict[str, dict[str, Any]] = {}
 
     def registry(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/tenants/current":  # the poster: name, dates, state
+            host = request.headers["host"]
+            body = {"id": HOSTS.get(host), "name": "Demo Event", "status": "live"}
+            return httpx.Response(200, json=body | events.get(host, {}))
         if request.url.params.get("host") == DOWN_HOST:
             return httpx.Response(502)
         tid = HOSTS.get(request.url.params.get("host", ""))
@@ -264,7 +289,7 @@ async def env() -> AsyncIterator[Env]:
     bus = Bus(store, "notify")
     vapid = Vapid(load_private_key(keygen()))
     fake = FakePushService(vapid.public_key)
-    agenda, users = FakeAgenda(), FakeUsers()
+    agenda, users, hub = FakeAgenda(), FakeUsers(), FakeHub()
     pusher = Pusher(vapid, httpx.AsyncClient(transport=httpx.MockTransport(fake.handler)))
     d = Deps(
         db=db,
@@ -278,10 +303,13 @@ async def env() -> AsyncIterator[Env]:
         outbox=Outbox(bus, db),
         agenda=agenda,
         users=users,
+        hub=hub,
         now=lambda: clock[0],
     )
     app = create_app(d, Health("notify", "dev", {}), resolver, ServiceIdentity("notify", KEY))
-    yield Env(db, rights, settings, store, contexts, app, clock, audit, d, fake, agenda, users)
+    yield Env(
+        db, rights, settings, store, contexts, app, clock, audit, d, fake, agenda, users, hub, events
+    )
     await db.close()
 
 
