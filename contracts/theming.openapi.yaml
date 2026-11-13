@@ -801,13 +801,22 @@ paths:
         address instead of reading the theme. With a logo in the current theme (`logo_url` of `GET
         /api/theming/current`, the profile's main logo at revision 0) a `302` to that immutable address; without
         one, the event's initials (the first letter of each of the first two words of its name, `?` without a
-        name) as a square SVG in the theme's primary and accent colours, as the shell's avatar draws them. Public,
-        like `/theming/a/`; `Cache-Control: no-cache`, so a newly published logo shows on the next page.
+        name) as a square SVG in the theme's primary and accent colours, as the shell's avatar draws them. The name
+        comes from `GET /api/tenants/current`; a tenants module that does not answer gives `?`. Public in `live`
+        and `archived`, like `/theming/a/`; `Cache-Control: no-cache`, so a newly published logo shows on the next
+        page.
+
+        While the event is `draft`, guests see no event (tenants.md, Lifecycle): theming reads `GET
+        /api/tenants/current` with the request's own `Cookie` header. An answer with the event's name (a session
+        of the event's member, event admin or a superadmin in a support window) gets the logo or initials as
+        above; any other answer (a `DraftTenant`, an error, no answer) gets the `?` SVG in the platform default
+        colours, never the `302`.
       security:
         - {}
+        - session: []
       responses:
         "200":
-          description: The initials, when the current theme has no logo.
+          description: The initials, when the current theme has no logo; the `?` of the draft case (see above).
           headers:
             Cache-Control:
               description: "`no-cache`."
