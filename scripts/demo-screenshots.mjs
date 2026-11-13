@@ -182,20 +182,39 @@ const DAY_VIEW = [
     PHONE,
     { delay: "Demo Game Cup, semis", fullPage: false },
   ],
+  // The whole event with the earlier items shown (#433), and on a phone the strip that keeps what
+  // is on now in view once the hero has scrolled away.
+  ["agenda-earlier", DESK, { query: "?earlier=1" }],
+  ["agenda-strip-phone", PHONE, { ready: scrollPast, fullPage: false }],
 ];
+async function scrollPast(page) {
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page
+    .locator(".canccu-agenda-strip.is-shown")
+    .waitFor({ timeout: 5000 });
+  await page.waitForTimeout(300);
+}
 const dayPath = (o, id) => {
   if (o.delay) return `/agenda/?delay=${id}&minutes=10`;
+  if (o.query) return `/agenda/${o.query}`;
   return o.pick ? `/agenda/?item=${id}` : "/agenda/";
 };
 // The front door, signed out, and one page of the error family (an item that does not exist),
 // each at both widths. The error page must answer its own status, not 200.
 const SIGN_IN = "/admin/sign-in";
+async function typeNight(page) {
+  await page.fill('input[name="at"]', "00:30");
+  await page.waitForTimeout(200);
+}
 const MISSING = "/agenda/items/00000000-0000-0000-0000-000000000000/delay";
 const OTHERS = [
   ["sign-in", SIGN_IN, DESK, { cookie: null }],
   ["sign-in-phone", SIGN_IN, PHONE, { cookie: null }],
   ["error-not-found", MISSING, DESK, { status: 404 }],
   ["error-not-found-phone", MISSING, PHONE, { status: 404 }],
+  // Quick add with a time after midnight typed: the next day picked, said why, and the button
+  // repeating day and time (#434).
+  ["agenda-quick-add-night-phone", "/agenda/add", PHONE, { ready: typeNight }],
 ];
 // The Delay page and Edit view of one item (#388), next to their mockups (docs/design/mockups.html):
 // with the items after it, quiet, and the edit form. The items are made for the run.
@@ -207,7 +226,16 @@ const ITEM_PAGES = [
     DESK,
   ],
   ["agenda-delay-quiet", "/delay?minutes=10&chosen=1", DESK],
+  // Only this item moves and it now runs into Board games corner: the confirm names the overlap
+  // (#434).
+  ["agenda-delay-overlap", "/delay?minutes=30&announce=1&chosen=1", DESK],
   ["agenda-edit", "/edit", DESK],
+  ["agenda-cancel", "/cancel", DESK],
+];
+// A cancelled item comes back until the event ends (#434): its page after the cancel.
+const CANCELLED = [
+  ["agenda-bring-back", DESK],
+  ["agenda-bring-back-phone", PHONE],
 ];
 
 if (opts["dry-run"]) {
@@ -218,7 +246,12 @@ if (opts["dry-run"]) {
     console.log(`  ${name}.png  ${at(shown)}  (${width}×${height})`);
   }
   for (const [name, path, { width, height }, o] of OTHERS) {
-    const how = o.cookie === null ? ", signed out" : `, answering ${o.status}`;
+    const how =
+      o.cookie === null
+        ? ", signed out"
+        : o.status
+          ? `, answering ${o.status}`
+          : "";
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height}${how})`);
   }
   for (const [name, { width, height }] of STUDIO) {
@@ -240,6 +273,10 @@ if (opts["dry-run"]) {
   }
   for (const [name, suffix, { width, height }] of ITEM_PAGES) {
     const path = `/agenda/items/<an item made for the run>${suffix}`;
+    console.log(`  ${name}.png  ${at(path)}  (${width}×${height})`);
+  }
+  for (const [name, { width, height }] of CANCELLED) {
+    const path = "/agenda/items/<an item made for the run, cancelled>";
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height})`);
   }
   for (const name of planned()) {
@@ -404,9 +441,9 @@ async function addItem(title, kind, from, minutes) {
   return item;
 }
 async function removeMade() {
-  for (const { id, title } of made.splice(0)) {
+  for (const { id, title, revision } of made.splice(0)) {
     try {
-      const path = `/api/agenda/items/${id}?revision=1`;
+      const path = `/api/agenda/items/${id}?revision=${revision}`;
       expect(await demo.call("DELETE", path), 204, `removing ${title}`);
     } catch (err) {
       fail(`cleanup: ${firstLine(err)}`);
@@ -459,6 +496,24 @@ try {
     for (const [name, suffix, viewport] of ITEM_PAGES) {
       await shot(name, `/agenda/items/${item.id}${suffix}`, viewport, SESSION);
     }
+  }
+  try {
+    const raffle = await addItem("Raffle", "activity", 300, 15);
+    const cancel = await demo.call(
+      "POST",
+      `/api/agenda/items/${raffle.id}/cancel`,
+      { body: { revision: 1 } },
+    );
+    raffle.revision = expect(
+      cancel,
+      200,
+      "cancelling the raffle",
+    ).body.revision;
+    for (const [name, viewport] of CANCELLED) {
+      await shot(name, `/agenda/items/${raffle.id}`, viewport, SESSION);
+    }
+  } catch (err) {
+    fail(`a cancelled item: ${firstLine(err)}`);
   }
   // Gone before the fixture: it finds its run of show by title and would take these.
   await removeMade();
