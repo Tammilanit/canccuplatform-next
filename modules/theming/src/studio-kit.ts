@@ -35,7 +35,7 @@ const SURFACES: [string, string, string][] = [
   [
     "admin",
     "Organiser pages",
-    "Organiser pages keep the platform's look: a theme does not change them.",
+    "Organiser pages take the theme's colours, or the platform's where the theme fails the contrast rules.",
   ],
   ["discord", "Discord", "Discord draws this itself: the theme gives the bar colour and the logo."],
 ];

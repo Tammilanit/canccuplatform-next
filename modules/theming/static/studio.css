@@ -255,7 +255,8 @@
   margin-top: 1rem;
 }
 
-/* "Preview on a screen…" (sheet 6): one screen per row, with where it is or why it cannot. */
+/* "Preview on a screen…" (sheet 6): one screen per row, its name over where it is or why it
+   cannot, then the durations in a row. */
 .canccu-studio-screens {
   display: grid;
   gap: 0.5rem;
@@ -263,8 +264,25 @@
   padding: 0;
   border: 0;
 }
+.canccu-studio-screens > legend {
+  margin-bottom: 0.5rem;
+  padding: 0;
+}
+[data-screen-preview-list] {
+  display: grid;
+  gap: 0.5rem;
+}
+.canccu-studio-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 .canccu-studio-screen {
+  display: flex;
   align-items: flex-start;
+}
+.canccu-studio-screen > span {
+  line-height: 1.35;
 }
 .canccu-studio-screen-notice {
   margin-bottom: 1rem;
