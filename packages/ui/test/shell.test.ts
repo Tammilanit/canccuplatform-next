@@ -80,7 +80,13 @@ describe("shellPage", () => {
   });
   it("marks no menu item on an error page, which is nowhere in the menu", () => {
     const error = s(
-      shellPage({ title: "Not found", current: "theme", session: ORGANISER, body: "", plain: true }),
+      shellPage({
+        title: "Not found",
+        current: "theme",
+        session: ORGANISER,
+        body: "",
+        plain: true,
+      }),
     );
     expect(error).not.toContain("aria-current");
   });

@@ -40,6 +40,7 @@ from .pages import (
     part_name,
     static_ui_css,
 )
+from .people_pages import people_routes
 from .service import BadSettings, Service
 from .settings_view import SHOWN_CHANGES, glance, last_changes, settings_list, when
 from .tenancy import TenantPaths
@@ -381,6 +382,7 @@ def create_app(
             Route("/profile/save", profile_save, methods=["POST"]),
             Route("/profile/load", profile_load, methods=["POST"]),
             *auth_routes(auth, authorize, on_event, viewer),
+            *people_routes(auth, authorize, on_event),
         ]
     )
     # Added before install(): Starlette wraps each later middleware around the earlier ones,

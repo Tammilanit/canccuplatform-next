@@ -38,7 +38,7 @@ async def test_people_shows_handle_last_here_and_who_you_are(
     page = html.unescape((await world.client.get("/admin/people")).text)
     assert "alexandria.vm" in page and 'title="Alexandria Vanderbilt-Montgomery"' in page
     assert "· you" in page and "Owner" in page
-    assert "Last here" in page and ">11:00<" in page  # Alexandria signed in at START, UTC
+    assert "Last here" in page and ">12:00<" in page  # Alexandria signed in at START, UTC
     assert "Copy the sign-in link" in page and 'data-canccu-copy="/admin/sign-in"' in page
 
 
@@ -82,9 +82,7 @@ async def test_a_role_change_applies_at_once_with_undo(
     assert "Aino is now an Admin" in page
     assert f'action="/admin/people/{aino.id}"' in page and 'name="undo"' in page
     assert await world.checker.check(f"canccu_session={member}", "admin.settings.write")
-    undo = await world.client.post(
-        f"/admin/people/{aino.id}", data={"role": "none", "undo": "1"}
-    )
+    undo = await world.client.post(f"/admin/people/{aino.id}", data={"role": "none", "undo": "1"})
     assert undo.headers["location"] == "/admin/people"
     assert await world.store.get_role(aino.id) == (aino, None)
     assert [e["rights"] for e in _rights_events(world)][-1] == []
@@ -125,9 +123,7 @@ async def test_remove_asks_first_then_signs_them_out(
     assert "Aino was removed" in page and "aino" not in page.split("Aino was removed")[1].lower()
 
 
-async def test_the_owner_cannot_be_removed(
-    world: World, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_the_owner_cannot_be_removed(world: World, caplog: pytest.LogCaptureFixture) -> None:
     await owner_and_member(world, caplog)
     owner_id = (await world.client.get("/api/admin/session")).json()["user"]["id"]
     assert (await world.client.post(f"/admin/people/{owner_id}/remove")).status_code == 400

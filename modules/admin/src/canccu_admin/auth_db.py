@@ -21,6 +21,17 @@ class User:
     id: str
     discord_id: str
     name: str
+    handle: str | None = None
+    """The Discord username, shown beside the display name on People."""
+
+
+@dataclass(frozen=True)
+class Person:
+    """A row of People: someone who signed in and was not removed since."""
+
+    user: User
+    role: str | None
+    last_seen_at: datetime | None
 
 
 @dataclass(frozen=True)
@@ -57,10 +68,13 @@ class AuthStore(Protocol):
     async def take_flow(self, state_hash: str, now: datetime) -> Flow | None:
         """Remove and return an unexpired flow: each state works once."""
 
-    async def upsert_user(self, discord_id: str, name: str, now: datetime) -> User: ...
+    async def upsert_user(
+        self, discord_id: str, name: str, now: datetime, handle: str | None = None
+    ) -> User:
+        """Signing in: also marks them here now, and brings back someone the owner removed."""
 
     async def claim_owner(
-        self, discord_id: str, name: str, code_hash: str, now: datetime
+        self, discord_id: str, name: str, code_hash: str, now: datetime, handle: str | None = None
     ) -> User | None:
         """Atomically: check the code, upsert the user, make them owner, use up the code."""
 
@@ -70,14 +84,22 @@ class AuthStore(Protocol):
 
     async def get_session(self, id_hash: str) -> SessionRow | None: ...
 
-    async def touch_session(self, id_hash: str, now: datetime) -> None: ...
+    async def touch_session(self, id_hash: str, now: datetime) -> None:
+        """Also the user's "Last here" on People."""
 
     async def delete_session(self, id_hash: str) -> None: ...
 
     async def prune(self, now: datetime, idle_before: datetime) -> None:
         """Drop expired sessions and flows."""
 
-    async def list_users(self) -> list[tuple[User, str | None]]: ...
+    async def list_users(self) -> list[tuple[User, str | None]]:
+        """Everyone who ever signed in, removed people too: history names them."""
+
+    async def people(self) -> list[Person]:
+        """Everyone People lists: those not removed, by name."""
+
+    async def remove_user(self, user_id: str, now: datetime) -> None:
+        """Ends their sessions, takes their role and hides them from People; never the owner."""
 
     async def get_role(self, user_id: str) -> tuple[User, str | None] | None: ...
 
@@ -93,6 +115,8 @@ class MemoryAuthStore:
     def __init__(self) -> None:
         self.users: dict[str, User] = {}
         self.roles: dict[str, str] = {}
+        self.seen: dict[str, datetime] = {}
+        self.removed: set[str] = set()
         self.sessions: dict[str, tuple[str, datetime, datetime]] = {}
         self.flows: dict[str, Flow] = {}
         self.first_run: tuple[str, bool] | None = None
@@ -116,18 +140,25 @@ class MemoryAuthStore:
         flow = self.flows.pop(state_hash, None)
         return flow if flow is not None and flow.expires_at > now else None
 
-    async def upsert_user(self, discord_id: str, name: str, now: datetime) -> User:
+    async def upsert_user(
+        self, discord_id: str, name: str, now: datetime, handle: str | None = None
+    ) -> User:
         found = next((u for u in self.users.values() if u.discord_id == discord_id), None)
-        user = replace(found, name=name) if found else User(_user_id(), discord_id, name)
+        if found:
+            user = replace(found, name=name, handle=handle)
+        else:
+            user = User(_user_id(), discord_id, name, handle)
         self.users[user.id] = user
+        self.seen[user.id] = now
+        self.removed.discard(user.id)
         return user
 
     async def claim_owner(
-        self, discord_id: str, name: str, code_hash: str, now: datetime
+        self, discord_id: str, name: str, code_hash: str, now: datetime, handle: str | None = None
     ) -> User | None:
         if not await self.first_run_matches(code_hash):
             return None
-        user = await self.upsert_user(discord_id, name, now)
+        user = await self.upsert_user(discord_id, name, now, handle)
         self.roles[user.id] = "owner"
         self.first_run = (code_hash, True)
         return user
@@ -147,6 +178,7 @@ class MemoryAuthStore:
     async def touch_session(self, id_hash: str, now: datetime) -> None:
         user_id, _, expires = self.sessions[id_hash]
         self.sessions[id_hash] = (user_id, now, expires)
+        self.seen[user_id] = now
 
     async def delete_session(self, id_hash: str) -> None:
         self.sessions.pop(id_hash, None)
@@ -159,6 +191,21 @@ class MemoryAuthStore:
 
     async def list_users(self) -> list[tuple[User, str | None]]:
         return [(u, self.roles.get(u.id)) for u in sorted(self.users.values(), key=_by_name)]
+
+    async def people(self) -> list[Person]:
+        return [
+            Person(u, self.roles.get(u.id), self.seen.get(u.id))
+            for u in sorted(self.users.values(), key=_by_name)
+            if u.id not in self.removed
+        ]
+
+    async def remove_user(self, user_id: str, now: datetime) -> None:
+        if self.roles.get(user_id) == "owner":
+            return
+        self.roles.pop(user_id, None)
+        self.sessions = {k: v for k, v in self.sessions.items() if v[0] != user_id}
+        if user_id in self.users:
+            self.removed.add(user_id)
 
     async def get_role(self, user_id: str) -> tuple[User, str | None] | None:
         user = self.users.get(user_id)
@@ -176,7 +223,7 @@ def _by_name(user: User) -> str:
 
 
 def _user(row: asyncpg.Record) -> User:
-    return User(str(row["id"]), str(row["discord_id"]), str(row["name"]))
+    return User(str(row["id"]), str(row["discord_id"]), str(row["name"]), row["handle"])
 
 
 class PgAuthStore:
@@ -237,26 +284,35 @@ class PgAuthStore:
             row["return_path"],
         )
 
-    async def upsert_user(self, discord_id: str, name: str, now: datetime) -> User:
-        return await self._upsert(self._pool, discord_id, name, now)
+    async def upsert_user(
+        self, discord_id: str, name: str, now: datetime, handle: str | None = None
+    ) -> User:
+        return await self._upsert(self._pool, discord_id, name, now, handle)
 
     @staticmethod
     async def _upsert(
-        conn: asyncpg.Pool | asyncpg.Connection, discord_id: str, name: str, now: datetime
+        conn: asyncpg.Pool | asyncpg.Connection,
+        discord_id: str,
+        name: str,
+        now: datetime,
+        handle: str | None,
     ) -> User:
         row = await conn.fetchrow(
-            "INSERT INTO admin_users (id, discord_id, name, created_at) VALUES ($1, $2, $3, $4)"
-            " ON CONFLICT (discord_id) DO UPDATE SET name = EXCLUDED.name"
-            " RETURNING id, discord_id, name",
+            "INSERT INTO admin_users (id, discord_id, name, handle, created_at, last_seen_at)"
+            " VALUES ($1, $2, $3, $4, $5, $5)"
+            " ON CONFLICT (discord_id) DO UPDATE SET name = EXCLUDED.name,"
+            " handle = EXCLUDED.handle, last_seen_at = EXCLUDED.last_seen_at, removed_at = NULL"
+            " RETURNING id, discord_id, name, handle",
             _user_id(),
             discord_id,
             name,
+            handle,
             now,
         )
         return _user(row)
 
     async def claim_owner(
-        self, discord_id: str, name: str, code_hash: str, now: datetime
+        self, discord_id: str, name: str, code_hash: str, now: datetime, handle: str | None = None
     ) -> User | None:
         async with self._pool.acquire() as conn, conn.transaction():
             # The row lock serialises claims; the one-owner index backs it up.
@@ -265,7 +321,7 @@ class PgAuthStore:
                 return None
             if await conn.fetchval(OWNER_EXISTS):
                 return None
-            user = await self._upsert(conn, discord_id, name, now)
+            user = await self._upsert(conn, discord_id, name, now, handle)
             await conn.execute(
                 "INSERT INTO admin_roles (user_id, role, granted_at) VALUES ($1, 'owner', $2)"
                 " ON CONFLICT (user_id) DO UPDATE SET role = 'owner', granted_at = $2,"
@@ -292,7 +348,7 @@ class PgAuthStore:
 
     async def get_session(self, id_hash: str) -> SessionRow | None:
         row = await self._pool.fetchrow(
-            "SELECT u.id, u.discord_id, u.name, r.role, s.last_seen_at, s.expires_at"
+            "SELECT u.id, u.discord_id, u.name, u.handle, r.role, s.last_seen_at, s.expires_at"
             " FROM admin_sessions s JOIN admin_users u ON u.id = s.user_id"
             " LEFT JOIN admin_roles r ON r.user_id = u.id WHERE s.id_hash = $1",
             id_hash,
@@ -303,7 +359,11 @@ class PgAuthStore:
 
     async def touch_session(self, id_hash: str, now: datetime) -> None:
         await self._pool.execute(
-            "UPDATE admin_sessions SET last_seen_at = $2 WHERE id_hash = $1", id_hash, now
+            "WITH s AS (UPDATE admin_sessions SET last_seen_at = $2 WHERE id_hash = $1"
+            " RETURNING user_id) UPDATE admin_users SET last_seen_at = $2"
+            " WHERE id = (SELECT user_id FROM s)",
+            id_hash,
+            now,
         )
 
     async def delete_session(self, id_hash: str) -> None:
@@ -319,14 +379,32 @@ class PgAuthStore:
 
     async def list_users(self) -> list[tuple[User, str | None]]:
         rows = await self._pool.fetch(
-            "SELECT u.id, u.discord_id, u.name, r.role FROM admin_users u"
+            "SELECT u.id, u.discord_id, u.name, u.handle, r.role FROM admin_users u"
             " LEFT JOIN admin_roles r ON r.user_id = u.id ORDER BY lower(u.name), u.id"
         )
         return [(_user(r), r["role"]) for r in rows]
 
+    async def people(self) -> list[Person]:
+        rows = await self._pool.fetch(
+            "SELECT u.id, u.discord_id, u.name, u.handle, u.last_seen_at, r.role"
+            " FROM admin_users u LEFT JOIN admin_roles r ON r.user_id = u.id"
+            " WHERE u.removed_at IS NULL ORDER BY lower(u.name), u.id"
+        )
+        return [Person(_user(r), r["role"], r["last_seen_at"]) for r in rows]
+
+    async def remove_user(self, user_id: str, now: datetime) -> None:
+        async with self._pool.acquire() as conn, conn.transaction():
+            # The owner's role never changes once set (set_role and claim_owner keep it).
+            role = await conn.fetchval("SELECT role FROM admin_roles WHERE user_id = $1", user_id)
+            if role == "owner":
+                return
+            await conn.execute("DELETE FROM admin_roles WHERE user_id = $1", user_id)
+            await conn.execute("DELETE FROM admin_sessions WHERE user_id = $1", user_id)
+            await conn.execute("UPDATE admin_users SET removed_at = $2 WHERE id = $1", user_id, now)
+
     async def get_role(self, user_id: str) -> tuple[User, str | None] | None:
         row = await self._pool.fetchrow(
-            "SELECT u.id, u.discord_id, u.name, r.role FROM admin_users u"
+            "SELECT u.id, u.discord_id, u.name, u.handle, r.role FROM admin_users u"
             " LEFT JOIN admin_roles r ON r.user_id = u.id WHERE u.id = $1",
             user_id,
         )

@@ -8,7 +8,7 @@ from pathlib import Path
 
 from canccu_kit import Event, KitError, NotSignedIn, error_body
 from canccu_kit.rights import SESSION_COOKIE, Session, session_id_from_cookie
-from canccu_kit.ui import empty_state, notice
+from canccu_kit.ui import notice
 from canccu_kit.web_security import SAFE_METHODS
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, RedirectResponse, Response
@@ -236,68 +236,6 @@ def auth_routes(
         view = views.offline_view()
         return await page(request, "You're offline", view, session=session, plain=True)
 
-    async def people_page(request: Request) -> Response:
-        session = await authorize(request.headers.get("cookie"), "admin.rights.write")
-        people = await auth.users()
-        rows = []
-        for user, role in people:
-            if role == "owner":
-                change = '<span class="canccu-badge canccu-badge--primary">Owner</span>'
-            else:
-                options = "".join(
-                    f"<option value={v}{' selected' if (role or 'none') == v else ''}>{label}"
-                    "</option>"
-                    for v, label in (("none", "No role"), ("admin", "Admin"))
-                )
-                change = (
-                    f'<form method=post action="{BASE}/people/{html.escape(user.id)}"'
-                    ' class="canccu-cluster"><select class="canccu-input canccu-select-inline"'
-                    f' name=role aria-label="Role of {html.escape(user.name)}">{options}</select>'
-                    '<button class="canccu-button canccu-button--secondary canccu-button--sm">'
-                    "Save</button></form>"
-                )
-            rows.append(
-                f'<tr><td><span class="canccu-user"><span class="canccu-avatar" aria-hidden="true">'
-                f"{html.escape(''.join(w[0] for w in user.name.split()[:2]).upper())}</span>"
-                f"{html.escape(user.name)}</span></td><td>{change}</td></tr>"
-            )
-        if len(people) > 1:
-            body = (
-                '<section class="canccu-card canccu-card--flush"><table class="canccu-table">'
-                f"<thead><tr><th>Who</th><th>Role</th></tr></thead><tbody>{''.join(rows)}"
-                "</tbody></table></section>"
-            )
-        else:
-            body = (
-                '<section class="canccu-card">'
-                + empty_state(
-                    "users",
-                    "Only you so far",
-                    "People get a role here after they sign in once with Discord.",
-                )
-                + "</section>"
-            )
-        return await page(
-            request,
-            "People",
-            body,
-            session=session,
-            current="people",
-            description="Everyone who has signed in. An admin may change settings and the"
-            " profile; only the owner hands out roles.",
-        )
-
-    async def people_save(request: Request) -> Response:
-        session = await authorize(request.headers.get("cookie"), "admin.rights.write")
-        role = str((await request.form()).get("role", ""))
-        event = await auth.set_role(
-            str(request.path_params["user_id"]), None if role == "none" else role, session.user_id
-        )
-        if on_event is not None:
-            # Drops this process's cached rights for that user at once (contracts/admin.md).
-            await on_event(event)
-        return RedirectResponse(f"{BASE}/people", status_code=303)
-
     return [
         Route("/api/admin/session", get_session, methods=["GET"]),
         Route("/api/admin/session/sign-out", sign_out_api, methods=["POST"]),
@@ -310,6 +248,5 @@ def auth_routes(
         Route("/offline", offline_page, methods=["GET"]),
         Route("/static/sw.js", static_script, methods=["GET"]),
         Route("/static/shell.js", static_script, methods=["GET"]),
-        Route("/people", people_page, methods=["GET"]),
-        Route("/people/{user_id}", people_save, methods=["POST"]),
+        Route("/static/people.js", static_script, methods=["GET"]),
     ]
