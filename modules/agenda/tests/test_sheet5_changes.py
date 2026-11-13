@@ -4,6 +4,8 @@ makes, Bring back after a cancel, and dates in the event's format."""
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import conftest
 import pytest
 from conftest import Env, at
@@ -50,6 +52,61 @@ async def test_a_time_after_midnight_picks_the_next_day(env: Env) -> None:
     assert snacks["title"] == "Snacks" and snacks["starts_at"] == at(60 * 7 + 30)
     assert early["title"] == "Early" and early["starts_at"] == at(-60 * 16 - 30)
     assert "Added to the next day: its time is after midnight." in page
+
+
+async def test_in_the_small_hours_a_night_time_stays_on_the_calendar_day(env: Env) -> None:
+    """At 00:30, "At 01:00" means in half an hour, not tomorrow night: the form offers no day of
+    its own to move from. In the evening it does."""
+    h = env.writer()
+    async with env.client() as c:
+        food = (await templates_of(c, h))["Food"]
+        evening = (await c.get("/add", headers=h)).text
+        env.clock[0] = datetime(2026, 11, 21, 0, 30, tzinfo=UTC)
+        night = (await c.get("/add", headers=h)).text
+        form = {"what": food, "when": "at", "at": "01:00", "day": "2026-11-21"}
+        sent = await c.post("/add", data={**form, "title": "Snacks"}, headers=h)
+        (item,) = await items(c, h)
+    assert '<input type=hidden name=day_auto value="2026-11-20">' in evening
+    assert "name=day_auto" not in night
+    assert 'name=day value="2026-11-21" checked>' in night
+    assert item["starts_at"] == "2026-11-21T01:00:00Z"
+    assert "done=added&" in sent.headers["location"]
+
+
+async def test_a_refused_quick_add_moves_the_day_once_when_sent_again(env: Env) -> None:
+    h = env.writer()
+    async with env.client() as c:
+        food = (await templates_of(c, h))["Food"]
+        form = {"what": food, "when": "at", "at": "00:30", "day": "2026-11-20"}
+        auto = {**form, "day_auto": "2026-11-20"}
+        no_title = await c.post("/add", data=auto, headers=h)
+        no_minutes = await c.post(
+            "/add", data={**auto, "title": "Snacks", "length": "other"}, headers=h
+        )
+        await c.post("/add", data={**auto, "title": "Snacks"}, headers=h)
+        (item,) = await items(c, h)
+    for refused in (no_title, no_minutes):
+        # Drawn again as sent: the day the form chose, which the next send moves once.
+        assert refused.status_code == 400
+        assert 'name=day value="2026-11-20" checked>' in refused.text
+        assert '<input type=hidden name=day_auto value="2026-11-20">' in refused.text
+    assert item["starts_at"] == "2026-11-21T00:30:00Z"
+
+
+async def test_a_day_picked_by_hand_is_never_moved(env: Env) -> None:
+    """The script drops the form's own day once the organiser picks one; the server then keeps
+    a night time on the day sent, even after a refusal."""
+    h = env.writer()
+    async with env.client() as c:
+        food = (await templates_of(c, h))["Food"]
+        form = {"what": food, "when": "at", "at": "02:00", "day": "2026-11-20"}
+        refused = await c.post("/add", data=form, headers=h)
+        await c.post("/add", data={**form, "title": "Early"}, headers=h)
+        (item,) = await items(c, h)
+        script = (await c.get("/static/quickadd.js")).text
+    assert refused.status_code == 400 and "name=day_auto" not in refused.text
+    assert item["starts_at"] == "2026-11-20T02:00:00Z"
+    assert 'if (e.target.name === "day" && auto) {' in script and "auto.remove();" in script
 
 
 async def test_quick_add_takes_the_length_chip(env: Env) -> None:
@@ -124,6 +181,40 @@ async def test_date_inputs_use_the_events_date_format(env: Env) -> None:
     assert '<option value="2026-11-21">Sat 21 Nov</option>' in new
     ends = edit.split("name=ends_day")[1].split("</select>")[0]
     assert '<option value="2026-11-20" selected>Fri 20 Nov</option>' in ends
+
+
+async def test_the_item_form_reaches_the_days_around_the_event_and_any_other(
+    env: Env, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Build and teardown days are offered; "Other date…" takes any day, typed in the event's
+    format, and one it cannot read comes back as typed."""
+    h = env.writer()
+    monkeypatch.setitem(conftest.EVENT, "starts_at", "2026-12-05T09:00:00Z")
+    monkeypatch.setitem(conftest.EVENT, "ends_at", "2026-12-06T18:00:00Z")
+    form = {"title": "Build", "kind": "other", "visibility": "public", "starts_time": "10:00"}
+    async with env.client() as c:
+        new = (await c.get("/items/new", headers=h)).text
+        await c.post("/items/new", data={**form, "starts_day": "2026-12-07"}, headers=h)
+        other = {**form, "starts_day": "other", "starts_other": "Wed 13 Jan 2027"}
+        await c.post("/items/new", data=other, headers=h)
+        unread = await c.post(
+            "/items/new", data={**other, "starts_other": "32 Jan 2027"}, headers=h
+        )
+        monkeypatch.setitem(conftest.EVENT, "starts_at", None)
+        monkeypatch.setitem(conftest.EVENT, "ends_at", None)
+        undated = (await c.get("/items/new", headers=h)).text
+        teardown, later = await items(c, h)
+    starts = new.split("name=starts_day")[1].split("</select>")[0]
+    for day in ("Fri 20 Nov", "Sat 21 Nov", "Fri 4 Dec", "Sat 5 Dec", "Sun 6 Dec", "Mon 7 Dec"):
+        assert f">{day}</option>" in starts
+    assert '<option value="other">Other date…</option>' in starts
+    assert 'name=starts_other value="" pattern=' in new and 'placeholder="7 Dec 2026"' in new
+    assert teardown["starts_at"] == "2026-12-07T10:00:00Z"
+    assert later["starts_at"] == "2027-01-13T10:00:00Z"
+    assert unread.status_code == 400
+    assert '<option value="other" selected>Other date…</option>' in unread.text
+    assert 'name=starts_other value="32 Jan 2027"' in unread.text
+    assert '<option value="other">Other date…</option>' in undated
 
 
 async def test_an_archived_event_is_read_only(env: Env, monkeypatch: pytest.MonkeyPatch) -> None:

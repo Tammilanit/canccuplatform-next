@@ -29,6 +29,7 @@ from .web import (
     field,
     from_local,
     hidden,
+    iso_day,
     local_input,
     next_minute,
     notice,
@@ -52,7 +53,7 @@ def _form(
     revision = values.get("revision")
     days = _days(request)
     starts = values.get("starts") or ""
-    starts_day = date.fromisoformat(starts[:10]) if starts[:10] else None
+    starts_day = iso_day(starts[:10])
     return (
         (notice(error, "error") if error else "")
         + f'<form method=post action="{action}" class="canccu-agenda-form canccu-agenda-choice">'

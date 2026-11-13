@@ -48,6 +48,9 @@ CSS = tuple(f"{BASE}/static/{name}" for name in STYLESHEETS)
 SCRIPTS = ("day.js", "quickadd.js")
 # A 24-hour time: native time fields follow the browser's locale, which may be 12-hour (UX B5).
 TIME_PATTERN = "[0-2][0-9]:[0-5][0-9]"
+# "Other date…": a day typed in the event's format with its year, "16 Mar 2027" (or "Tue 16 Mar
+# 2027"), so a form reaches any day, not only those it offers.
+DATE_PATTERN = "([A-Za-z]{3} )?[0-9]{1,2} [A-Za-z]{3} [0-9]{4}"
 # A longer event (or one with odd dates) offers no day list of its own: today, tomorrow and the
 # form's own days stay.
 MAX_EVENT_DAYS = 31
@@ -234,16 +237,21 @@ def when_inputs(
 ) -> str:
     """A day and a 24-hour time for a datetime-local value (`posted_when` joins them back). The
     day is a choice of the event's days in its own format ("Sat 14 Mar", sheet 1): a native date
-    field follows the browser's locale (mm/dd/yyyy). Without a value the day is `fallback`."""
-    day, _, hm = (value or "").partition("T")
+    field follows the browser's locale (mm/dd/yyyy). "Other date…" reaches any other day, typed
+    in the same format. Without a value the day is `fallback`."""
+    day, _, hm = (value or "").rpartition("T")
     chosen = day or (fallback.isoformat() if fallback else "")
-    known = {d.isoformat() for d in days}
-    shown = sorted(days + ([date.fromisoformat(chosen)] if chosen and chosen not in known else []))
+    parsed = iso_day(chosen)
+    # A typed day the form could not read comes back as typed, under "Other date…".
+    other = parsed is None and bool(chosen or hm)
+    shown = sorted(set(days) | ({parsed} if parsed else set()))
     options = "".join(
-        f'<option value="{d.isoformat()}"{" selected" if d.isoformat() == chosen else ""}>'
+        f'<option value="{d.isoformat()}"{" selected" if d == parsed else ""}>'
         f"{day_label(d)}</option>"
         for d in shown
     )
+    options += f'<option value="other"{" selected" if other else ""}>Other date…</option>'
+    example = shown[-1] if shown else date.today()
     return (
         '<span class="canccu-agenda-when">'
         f'<select class="canccu-input" name={name}_day aria-label="{esc(label)}: day">'
@@ -258,17 +266,46 @@ def when_inputs(
             maxlength=5,
             **{"aria-label": f"{label}: time, 24-hour"},
         )
-        + "</span>"
+        + '<span class="canccu-agenda-when__other">'
+        + text_input(
+            f"{name}_other",
+            chosen if other else "",
+            pattern=DATE_PATTERN,
+            placeholder=f"{example.day} {example:%b %Y}",
+            maxlength=16,
+            **{"aria-label": f"{label}: other date, as {example.day} {example:%b %Y}"},
+        )
+        + "</span></span>"
     )
+
+
+def iso_day(raw: str) -> date | None:
+    try:
+        return date.fromisoformat(raw)
+    except ValueError:
+        return None
+
+
+def typed_day(raw: str) -> date | None:
+    """A day typed as DATE_PATTERN has it; the weekday, when given, is not checked."""
+    parts = raw.split()
+    try:
+        return datetime.strptime(" ".join(parts[-3:]), "%d %b %Y").date()
+    except ValueError:
+        return None
 
 
 def posted_when(form: Any, name: str) -> str:
     """A posted day and time as one datetime-local value; a form that sends the value whole
     (an older page, a test) still works. A day without a time is no value: the day field always
-    holds one."""
+    holds one. An "Other date…" the form cannot read stays as typed, so the time is refused."""
     if f"{name}_day" not in form and f"{name}_time" not in form:
         return str(form.get(name) or "")
     day, hm = str(form.get(f"{name}_day") or ""), str(form.get(f"{name}_time") or "")
+    if day == "other":
+        typed = str(form.get(f"{name}_other") or "").strip()
+        found = typed_day(typed) if len(typed.split()) in (3, 4) else None
+        day = found.isoformat() if found else typed
     return f"{day}T{hm}" if hm else ""
 
 
@@ -277,8 +314,9 @@ def _parsed(value: str) -> datetime:
 
 
 def event_days(request: Request, today: date, *extra: date | None) -> list[date]:
-    """The days a form offers: the event's own (when it has dates, at most MAX_EVENT_DAYS), today
-    and tomorrow, and the days the form already holds."""
+    """The days a form offers: the event's own and one on each side for setting up and clearing
+    away (when it has dates, at most MAX_EVENT_DAYS), today and tomorrow, and the days the form
+    already holds. "Other date…" reaches the rest."""
     days = {today, today + timedelta(days=1), *(d for d in extra if d is not None)}
     event = getattr(request.state, "agenda_event", None)
     if event is not None and event.starts_at and event.ends_at:
@@ -286,7 +324,7 @@ def event_days(request: Request, today: date, *extra: date | None) -> list[date]
         first = _parsed(event.starts_at).astimezone(tz).date()
         last = _parsed(event.ends_at).astimezone(tz).date()
         if 0 <= (last - first).days < MAX_EVENT_DAYS:
-            days |= {first + timedelta(days=n) for n in range((last - first).days + 1)}
+            days |= {first + timedelta(days=n) for n in range(-1, (last - first).days + 2)}
     return sorted(days)
 
 
