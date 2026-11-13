@@ -4,8 +4,6 @@
  * pages only read; every change goes through the JSON API from static/studio.js, which checks the
  * right again and audits, so a page holds no right the API does not check itself.
  */
-import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import type {
   FastifyError,
   FastifyInstance,
@@ -41,13 +39,17 @@ import type { SeenDevice } from "./help.js";
 import { CLIENT_KEYS, translator } from "./messages.js";
 import type { MessageKey, Translate } from "./messages.js";
 import { devicesActions, devicesView } from "./devices-view.js";
+import { readContent } from "./content-data.js";
+import { STATIC_TYPES, staticFile } from "./static-files.js";
+import type { ContentDeps } from "./content-data.js";
+import { contentView } from "./content-view.js";
 import { schedulePage } from "./schedule-page.js";
 import { tickerView } from "./ticker-view.js";
 import { STUDIO, liveActions, liveView, startUrlOf } from "./views.js";
 import type { ViewContext } from "./views.js";
 import { zoneEditorView, zonesView } from "./zone-views.js";
 
-export interface StudioDeps {
+export interface StudioDeps extends Omit<ContentDeps, "now"> {
   db: Db;
   bus: Bus;
   kv: Kv;
@@ -63,7 +65,6 @@ export interface StudioDeps {
 }
 
 const SIGN_IN = "/admin/sign-in";
-const STATIC = new URL("../../static/", import.meta.url);
 const READ = "screen.devices.read";
 const ZONES = "screen.zones.write";
 const TICKER = "screen.ticker.write";
@@ -75,6 +76,7 @@ const TABS: [path: string, label: MessageKey, right: string][] = [
   ["devices", "tab.devices", READ],
   ["zones", "tab.zones", ZONES],
   ["schedule", "tab.schedule", CONTENT],
+  ["content", "tab.content", CONTENT],
   ["ticker", "tab.ticker", TICKER],
 ];
 
@@ -131,6 +133,8 @@ interface PageOptions {
   plain?: boolean;
   /** A page's own stylesheet and script, if it has one (`<name>.css`, `<name>.js`, using studio.js's helpers). */
   own?: string;
+  /** The page's own script is a module, which may import its neighbours in static/. */
+  module?: boolean;
   /** Rules made of numbers only (the schedule's block places), under the page's nonce. */
   style?: string;
 }
@@ -179,7 +183,14 @@ async function studioPage(
     body: html`<p class="canccu-studio-notice" role="status" hidden></p>
       ${o.body}${clientText(t)}
       <script src="${STUDIO}static/studio.js" defer></script>
-      ${o.own === undefined || !Object.hasOwn(STATIC_TYPES, `${o.own}.js`) ? "" : html`<script src="${STUDIO}static/${o.own}.js" defer></script>`}`,
+      ${
+        // A page with a stylesheet only (the schedule) has no script to load.
+        o.own === undefined || !Object.hasOwn(STATIC_TYPES, `${o.own}.js`)
+          ? ""
+          : o.module === true
+            ? html`<script type="module" src="${STUDIO}static/${o.own}.js"></script>`
+            : html`<script src="${STUDIO}static/${o.own}.js" defer></script>`
+      }`,
   });
   // Admin pages frame surface pages (the virtual screen) and are never framed themselves.
   return reply
@@ -189,34 +200,6 @@ async function studioPage(
     .header("x-content-type-options", "nosniff")
     .status(o.status ?? 200)
     .send(doc.toString());
-}
-
-const STATIC_TYPES: Record<string, string> = {
-  "ui.css": "text/css; charset=utf-8",
-  "studio.css": "text/css; charset=utf-8",
-  "studio.js": "text/javascript; charset=utf-8",
-  "studio-zone.css": "text/css; charset=utf-8",
-  "studio-zone.js": "text/javascript; charset=utf-8",
-  "studio-schedule.css": "text/css; charset=utf-8",
-};
-
-const staticFiles = new Map<string, Promise<Buffer>>();
-function staticFile(name: string): Promise<Buffer> {
-  let bytes = staticFiles.get(name);
-  if (bytes === undefined) {
-    // ui.css is packages/ui's own, so the Studio looks like every other organiser page.
-    const path =
-      name === "ui.css"
-        ? createRequire(import.meta.url).resolve("@canccu/ui/ui.css")
-        : new URL(name, STATIC);
-    // A failed read is forgotten, so the next request tries again instead of failing forever.
-    bytes = readFile(path).catch((err: unknown) => {
-      staticFiles.delete(name);
-      throw err;
-    });
-    staticFiles.set(name, bytes);
-  }
-  return bytes;
 }
 
 /** The built-in layouts, each replaced by a theme layout of the same id, then the theme's own. */
@@ -365,6 +348,19 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         const view = await schedulePage(deps.db, c, event, zones, all, request.query);
         const o = { title: "", tab: "schedule", description: c.t("schedule.desc") };
         return page(request, reply, c, { ...o, own: "studio-schedule", ...view });
+      },
+    );
+
+    studio.get(
+      `${STUDIO}content`,
+      { preHandler: pageNeeds(deps.rights, [CONTENT]) },
+      async (request, reply) => {
+        const c = await context(request);
+        const ctx = tenantOf(request);
+        const data = await readContent({ ...deps, now }, ctx, c.rights, request.query);
+        const o = { title: "", tab: "content", description: c.t("content.desc") };
+        const own = { own: "studio-content", module: true };
+        return page(request, reply, c, { ...o, ...own, body: contentView(c, data) });
       },
     );
 
