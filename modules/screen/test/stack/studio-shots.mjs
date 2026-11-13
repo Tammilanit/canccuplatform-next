@@ -77,6 +77,17 @@ export const LAYOUT_PAGES = [
 ];
 
 /**
+ * The main zone saved with Pulse's hero one column narrower: the editor shades that column and
+ * warns about it as the page loads, before any edit (#422).
+ */
+const HERO_SAVED_NARROWER = { column: 1, row: 2, columns: 7, rows: 10 };
+async function gapOnLoad(page) {
+  await page.locator(".canccu-studio-gap").first().waitFor({ state: "attached", timeout: 5000 });
+  await page.locator("[data-fill-gap]").first().waitFor({ timeout: 5000 });
+  await studioReady(page);
+}
+
+/**
  * The Schedule page (#190, mockup 09), last, on windows made for it and removed after it: the
  * zone it opens on, every zone, a phone's one day, and a window's details on tap.
  */
@@ -220,6 +231,7 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
   let assets = [];
   let made = null;
   let lists = null;
+  let savedRegions = null;
   try {
     assets = await seedContent(demo);
     const hall = await demo.pair("Hall left", "main");
@@ -240,9 +252,26 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
     await removePlaylist(demo, lists);
     lists = null;
     for (const [name, path, viewport, o] of LAYOUT_PAGES) await shot(name, path, viewport, o);
+    const main = expect(
+      await demo.call("GET", "/api/screen/zones/main"),
+      200,
+      "the main zone",
+    ).body;
+    savedRegions = main.regions ?? {};
+    await saveZone(demo, "main", {
+      regions: {
+        ...savedRegions,
+        hero: { ...savedRegions.hero, area: HERO_SAVED_NARROWER },
+      },
+    });
+    await shot("screen-zone-gap-saved", "/admin/screen/zones/main", DESK, { ready: gapOnLoad });
+    await saveZone(demo, "main", { regions: savedRegions });
+    savedRegions = null;
     made = await scheduleFixture(demo);
     for (const [name, path, viewport, o] of SCHEDULE_PAGES) await shot(name, path, viewport, o);
   } finally {
+    if (savedRegions !== null)
+      await saveZone(demo, "main", { regions: savedRegions }).catch(() => undefined);
     if (made !== null) await removeSchedule(demo, made);
     if (lists !== null) await removePlaylist(demo, lists);
     for (const context of contexts) await context.close();

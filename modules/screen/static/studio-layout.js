@@ -36,6 +36,17 @@ export function boxEditor(form, { say, tell, changed }) {
   const by = (attr, id) => form.querySelectorAll(`[${attr}="${CSS.escape(id)}"]`);
   const nameOf = (id) => regionNames[id] ?? id;
 
+  function shadeGaps() {
+    for (const el of map.querySelectorAll("[data-gap]")) el.remove();
+    for (const g of gaps(boxes, grid)) {
+      const shade = document.createElement("i");
+      shade.className = "canccu-studio-gap";
+      shade.dataset.gap = "";
+      shade.setAttribute("aria-hidden", "true");
+      shade.style.gridArea = place(g.area);
+      map.append(shade);
+    }
+  }
   function draw() {
     for (const b of boxes) {
       for (const el of [...by("data-pick", b.id), ...by("data-hero", b.id)]) {
@@ -48,15 +59,7 @@ export function boxEditor(form, { say, tell, changed }) {
       if (check) check.checked = b.hidden;
     }
     form.querySelector("[data-hidden-boxes]").hidden = !boxes.some((b) => b.hidden);
-    for (const el of map.querySelectorAll("[data-gap]")) el.remove();
-    for (const g of gaps(boxes, grid)) {
-      const shade = document.createElement("i");
-      shade.className = "canccu-studio-gap";
-      shade.dataset.gap = "";
-      shade.setAttribute("aria-hidden", "true");
-      shade.style.gridArea = place(g.area);
-      map.append(shade);
-    }
+    shadeGaps();
     for (const el of form.querySelectorAll("[data-hero]"))
       el.setAttribute("aria-pressed", String(el.dataset.hero === (hero ?? "hero")));
     changed();
@@ -122,6 +125,9 @@ export function boxEditor(form, { say, tell, changed }) {
       once: true,
     });
   });
+  // A zone may be saved with a gap, and its warning shows from load. Not draw(): it calls
+  // changed(), and the zone page has no editor to ask until this returns.
+  shadeGaps();
 
   return {
     /** The zone's box settings: a box at the layout's area or shown sets nothing. */
