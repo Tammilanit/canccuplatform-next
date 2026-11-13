@@ -20,9 +20,11 @@ from .effective import read_channels
 from .history import changes_html
 from .kinds import not_found
 from .web import (
+    ARCHIVED_ITEM,
     BASE,
     CHANNEL_LABELS,
     VISIBILITY_LABELS,
+    archived,
     day_label,
     esc,
     event_over,
@@ -121,8 +123,9 @@ async def run_of_show(request: Request) -> Response:
             close = view.href(item=None) + f"#r-{side['id']}" if picked_here else None
             history = changes_html(log, tz, today)
             back = _bring_back(request, side, session, now)
+            why = _read_only(request)
             aside = day_view.side_html(
-                side, item, kinds, now, tz, session, close, history, here, back
+                side, item, kinds, now, tz, session, close, history, here, back, why
             )
         body += f'<div class="canccu-agenda-day">{listed}{aside}</div>'
     else:
@@ -162,6 +165,10 @@ async def run_of_show(request: Request) -> Response:
         description=about,
         narrow=False,
     )
+
+
+def _read_only(request: Request) -> str:
+    return f'<p class="canccu-agenda-muted">{ARCHIVED_ITEM}</p>' if archived(request) else ""
 
 
 def _bring_back(request: Request, row: Any, session: Any, now: datetime) -> str:
@@ -236,9 +243,8 @@ async def item_page(request: Request) -> Response:
             )
             + "</div>"
         )
-    body += changes_html(log, tz, now.astimezone(tz).date()) + _bring_back(
-        request, row, session, now
-    )
+    body += changes_html(log, tz, now.astimezone(tz).date())
+    body += _bring_back(request, row, session, now) + _read_only(request)
     return page(request, row["title"], body, session=session)
 
 

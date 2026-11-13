@@ -269,10 +269,12 @@ def side_html(
     changes: str,
     here: str,
     bring_back: str = "",
+    read_only: str = "",
 ) -> str:
     """The picked item with its actions. `close` is where Close goes when a row picked it; `here`
     is the day view's own address, which its delay chips return to; `bring_back` is a cancelled
-    item's way back, when it has one."""
+    item's way back, when it has one; `read_only` says why an archived event's item has no
+    actions."""
     state = state_of(row, now)
     base = f"{BASE}/items/{esc(row['id'])}"
     when = f"<b>{hhmm(row['starts_at'], tz)}"
@@ -307,7 +309,7 @@ def side_html(
             f'<a class="canccu-button canccu-button--secondary" href="{base}/edit">Edit or move</a>'
         )
         body += f'<div class="canccu-agenda-side__actions">{"".join(actions)}</div>'
-    body += changes + bring_back
+    body += changes + bring_back + read_only
     if session.has(WRITE) and state != "cancelled" and row["managed_by"] is None:
         body += f'<a class="canccu-agenda-danger" href="{base}/cancel">Cancel this item…</a>'
     opened = " is-open" if close else ""

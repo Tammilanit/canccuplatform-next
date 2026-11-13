@@ -4,7 +4,7 @@ badge. canccu_kit.ui draws the pages from them and re-exports them for the modul
 from __future__ import annotations
 
 import html
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Protocol
@@ -151,12 +151,15 @@ def menu_for(viewer: Viewer) -> list[dict[str, Any]]:
     return [g for g in groups if g["items"]]
 
 
-def bar_for(viewer: Viewer) -> list[dict[str, Any]]:
+def bar_for(viewer: Viewer, archived: bool = False) -> list[dict[str, Any]]:
     """The bottom bar's slots this person may open, in order: id, label, href, icon and the
-    label under 360 px; Quick add is `quick_add`."""
+    label under 360 px; Quick add is `quick_add`. An archived event changes nothing, so its bar
+    has no Quick add (sheets 2 and 8)."""
     pages = {i["id"]: i for g in menu_for(viewer) for i in g["items"]}
     slots = []
     for slot in MENU["bar"]:
+        if slot["id"] == "quick_add" and archived:
+            continue
         page = MENU["quick_add"] if slot["id"] == "quick_add" else pages.get(slot["id"])
         if page is None or not _may(page, viewer):
             continue
@@ -243,3 +246,43 @@ def state_badge(event: EventInfo, now: datetime | None = None) -> str:
     if event.status == "live":
         return '<span class="canccu-badge canccu-badge--ok">Live</span>'
     return '<span class="canccu-badge">Draft</span>'
+
+
+# Theming's one address for the event's logo, or its initials without one (contracts/theming.md,
+# Reading the current theme), so a page shows it without reading the theme.
+LOGO_URL = "/theming/logo"
+# Tabs a phone shows; the rest sit behind a count (sheet 2: no sideways scroll).
+PHONE_TABS = 3
+
+
+def logo(event: EventInfo | None, cls: str) -> str:
+    return f'<img class="{cls}" src="{LOGO_URL}" alt="">' if event else ""
+
+
+def tabs_nav(title: str, tabs: Sequence[tuple[str, str, bool]]) -> str:
+    """A section's sub-pages. On a phone three show, the current one among them, and the rest
+    open from "N more" (a popover, no script); a desktop shows them all in their order."""
+    here = next((i for i, (_, _, current) in enumerate(tabs) if current), -1)
+    shown = set(range(min(PHONE_TABS, len(tabs))))
+    if len(tabs) > PHONE_TABS and here >= PHONE_TABS:
+        shown = (shown - {PHONE_TABS - 1}) | {here}
+
+    def link(href: str, label: str, current: bool, cls: str = "") -> str:
+        attr = f' class="{cls}"' if cls else ""
+        mark = ' aria-current="page"' if current else ""
+        return f'<a{attr} href="{esc(href)}"{mark}>{esc(label)}</a>'
+
+    links = "".join(
+        link(h, label, c, "" if i in shown else "canccu-tabs__extra")
+        for i, (h, label, c) in enumerate(tabs)
+    )
+    rest = [t for i, t in enumerate(tabs) if i not in shown]
+    more = (
+        '<button class="canccu-tabs__more" type="button" popovertarget="canccu-tabs-more">'
+        f'{len(rest)} more</button><div class="canccu-tabs__menu" id="canccu-tabs-more" popover>'
+        + "".join(link(*t) for t in rest)
+        + "</div>"
+        if rest
+        else ""
+    )
+    return f'<nav class="canccu-tabs" aria-label="{esc(title)}">{links}{more}</nav>'

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import os
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -70,7 +71,19 @@ async def page_session(request: Request) -> Session:
         raise MissingRight(f"needs right {WRITE} or {CREW_READ}")
     check_admin_access(ctx, request.client.host if request.client else None, tailscale_cidrs())
     request.state.agenda_event = await event_of(request)
+    if ctx["status"] == "archived":
+        # Read only (sheets 2 and 8): the pages draw no change at all, as for crew who read.
+        session = replace(session, rights=session.rights - {WRITE})
+        request.state.agenda_session = session
     return session
+
+
+def archived(request: Request) -> bool:
+    return bool(tenant_of(request)["status"] == "archived")
+
+
+# What an item of an archived event says instead of its actions (sheet 8, Errors).
+ARCHIVED_ITEM = "The event is archived, so this item can't be delayed, edited or cancelled."
 
 
 async def page_writer(request: Request) -> Session:

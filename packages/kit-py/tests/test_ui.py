@@ -117,6 +117,34 @@ def test_archived_event_has_badge_and_banner() -> None:
     assert ">Archived<" in doc and "canccu-banner" in doc
 
 
+def test_an_archived_event_has_no_quick_add_in_the_bar() -> None:
+    archived = EventInfo(**{**EVENT.__dict__, "status": "archived"})
+    doc = shell_page("x", "", event=archived, session=Viewer("agenda.items.write"))
+    assert 'href="/agenda/add"' not in doc and 'href="/agenda/"' in doc
+
+
+def test_the_header_shows_the_event_s_logo_or_initials() -> None:
+    doc = shell_page("x", "", event=EVENT, session=Viewer())
+    assert (
+        '<header class="canccu-header"><img class="canccu-header__logo" src="/theming/logo" alt="">'
+    ) in doc
+    assert "canccu-header__logo" not in shell_page("x", "")
+
+
+def test_a_phone_shows_three_tabs_and_the_rest_behind_a_count() -> None:
+    labels = ["Live", "Devices", "Zones", "Schedule", "Content", "Ticker"]
+    tabs = [(f"/s/{label}", label, label == "Content") for label in labels]
+    doc = shell_page("Studio", "", session=Viewer(), tabs=tabs)
+    nav = doc.split('<nav class="canccu-tabs"')[1].split("</nav>")[0]
+    assert '<a href="/s/Live">Live</a>' in nav
+    assert '<a href="/s/Content" aria-current="page">Content</a>' in nav
+    for extra in ("Zones", "Schedule", "Ticker"):
+        assert f'<a class="canccu-tabs__extra" href="/s/{extra}">{extra}</a>' in nav
+    assert 'popovertarget="canccu-tabs-more">3 more</button>' in nav
+    assert '<a href="/s/Zones">Zones</a>' in nav.split('id="canccu-tabs-more"')[1]
+    assert "canccu-tabs__more" not in shell_page("x", "", session=Viewer(), tabs=tabs[:3])
+
+
 def test_no_access_never_shows_the_right() -> None:
     title, view = error_view(
         MissingRight("needs right theming.theme.write"),
@@ -154,7 +182,10 @@ def test_parts() -> None:
     )
     assert 'class="canccu-notice canccu-notice--ok" role="status"' in notice("ok", "Saved")
     page = front_page("Sign in", "<h1>Sign in</h1>", event=EVENT, now=NOW)
-    assert 'class="canccu-poster__name">Demo &lt;Event&gt;' in page
+    assert (
+        '<div class="canccu-poster"><img class="canccu-poster__logo" src="/theming/logo" alt="">'
+        '<div class="canccu-poster__name">Demo &lt;Event&gt;'
+    ) in page
 
 
 def test_time_is_24_hour_in_the_event_zone() -> None:

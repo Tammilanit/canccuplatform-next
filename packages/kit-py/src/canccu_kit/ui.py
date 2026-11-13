@@ -20,8 +20,10 @@ from .ui_base import (
     esc,
     event_clock,
     icon,
+    logo,
     menu_for,
     state_badge,
+    tabs_nav,
     time_label,
 )
 
@@ -67,7 +69,7 @@ def _current(item_id: str, current: str | None) -> str:
 
 def _menu(viewer: Viewer, current: str | None, event: EventInfo | None) -> str:
     # On a phone the menu is More's sheet: what the bar already shows is left out of it.
-    in_bar = {b["id"] for b in bar_for(viewer)}
+    in_bar = {b["id"] for b in bar_for(viewer, _archived(event))}
 
     def cls(base: str, bar: bool) -> str:
         return f"{base} {base}--bar" if bar else base
@@ -116,8 +118,12 @@ def _tab(slot: dict[str, Any], current: str | None) -> str:
     return f'<a class="{cls}" href="{esc(slot["href"])}"{here}>{icon(slot["icon"])}{label}</a>'
 
 
-def _tabbar(viewer: Viewer, current: str | None) -> str:
-    links = [_tab(slot, current) for slot in bar_for(viewer)]
+def _archived(event: EventInfo | None) -> bool:
+    return event is not None and event.status == "archived"
+
+
+def _tabbar(viewer: Viewer, current: str | None, event: EventInfo | None) -> str:
+    links = [_tab(slot, current) for slot in bar_for(viewer, _archived(event))]
     more = (
         '<button class="canccu-tabbar__item" type="button" popovertarget="canccu-menu">'
         f"{icon('more')}More</button>"
@@ -138,7 +144,8 @@ def _header(event: EventInfo | None, now: datetime | None) -> str:
     )
     badge = state_badge(event, now) if event else ""
     end = f'<span class="canccu-header__end">{event_clock(event, now) if event else ""}</span>'
-    return f'<header class="canccu-header">{title}{meta}{badge}{end}</header>'
+    mark = logo(event, "canccu-header__logo")
+    return f'<header class="canccu-header">{mark}{title}{meta}{badge}{end}</header>'
 
 
 def document(
@@ -197,13 +204,7 @@ def shell_page(
             f'<div class="canccu-pagehead"><div>{back}<h1 class="canccu-pagehead__title">'
             f"{esc(title)}</h1>{desc}</div>{end}</div>"
         )
-    tab_links = "".join(
-        f'<a href="{esc(href)}"{' aria-current="page"' if here else ""}>{esc(label)}</a>'
-        for href, label, here in tabs
-    )
-    tab_nav = (
-        f'<nav class="canccu-tabs" aria-label="{esc(title)}">{tab_links}</nav>' if tabs else ""
-    )
+    tab_nav = tabs_nav(title, tabs) if tabs else ""
     width = " canccu-main--narrow" if narrow else ""
     main = (
         f'<div class="canccu-content"><main class="canccu-main{width}">'
@@ -213,7 +214,7 @@ def shell_page(
     if session is None:
         shell = f'<div class="canccu-shell canccu-shell--bare">{top}{main}</div>'
     else:
-        nav, bar = _menu(session, current, event), _tabbar(session, current)
+        nav, bar = _menu(session, current, event), _tabbar(session, current, event)
         shell = f'<div class="canccu-shell">{top}{nav}{main}{bar}</div>'
     return document(title, shell, event=event, css=css)
 
@@ -242,7 +243,8 @@ def front_page(
         else ""
     )
     poster = (
-        f'<div class="canccu-poster"><div class="canccu-poster__name{long}">{esc(name)}</div>'
+        f'<div class="canccu-poster">{logo(event, "canccu-poster__logo")}'
+        f'<div class="canccu-poster__name{long}">{esc(name)}</div>'
         f"{meta}{venue}</div>"
     )
     centre = " canccu-front__card--center" if centred else ""

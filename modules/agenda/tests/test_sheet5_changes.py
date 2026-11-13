@@ -124,3 +124,25 @@ async def test_date_inputs_use_the_events_date_format(env: Env) -> None:
     assert '<option value="2026-11-21">Sat 21 Nov</option>' in new
     ends = edit.split("name=ends_day")[1].split("</select>")[0]
     assert '<option value="2026-11-20" selected>Fri 20 Nov</option>' in ends
+
+
+async def test_an_archived_event_is_read_only(env: Env, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Sheet 2 and Errors: Quick add leaves the bar and the page; an item has no delay, Edit or
+    Cancel, and says why in one line (#439)."""
+    h = env.writer("screen.devices.read")
+    async with env.client() as c:
+        show = await add(c, h, title="Show", starts_at=at(30), ends_at=at(90))
+        await add(c, h, title="Quiz", starts_at=at(120))
+        env.contexts["ev-a"]["status"] = "archived"
+        monkeypatch.setitem(conftest.EVENT, "status", "archived")
+        day = (await c.get(f"/?item={show['id']}", headers=h)).text
+        item = (await c.get(f"/items/{show['id']}", headers=h)).text
+        add_page = await c.get("/add", headers=h)
+    why = "The event is archived, so this item can't be delayed, edited or cancelled."
+    main = day.split("</header>")[1]
+    assert "/agenda/add" not in main and "Full form" not in main
+    assert "canccu-agenda-gap" not in day and "Add item on" not in day
+    assert "delay=" not in day and "/edit" not in day and "/cancel" not in day
+    assert why in day.split("canccu-agenda-side")[1] and why in item
+    assert "/delay" not in item and "/edit" not in item and "/cancel" not in item
+    assert add_page.status_code == 409 and "Event archived" in add_page.text
