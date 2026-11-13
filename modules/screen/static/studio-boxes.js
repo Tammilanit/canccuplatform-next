@@ -178,3 +178,89 @@ export function show(boxes, id, layoutAreas, grid) {
   );
   return clash ? null : out;
 }
+
+const inside = (a, column, row) =>
+  column >= a.column && column < a.column + a.columns && row >= a.row && row < a.row + a.rows;
+
+// The edge of a box that meets a gap on each side of it, and the box's edge line there.
+const SIDES = [
+  ["right", (g) => g.column, (a) => a.column + a.columns],
+  ["left", (g) => g.column + g.columns, (a) => a.column],
+  ["bottom", (g) => g.row, (a) => a.row + a.rows],
+  ["top", (g) => g.row + g.rows, (a) => a.row],
+];
+const across = (edge) => edge === "left" || edge === "right";
+/** The gap's size away from the box's edge: columns beside it, rows above or below it. */
+const depth = (gap, edge) => (across(edge) ? gap.columns : gap.rows);
+
+/**
+ * The space an edit left empty (#422): cells the layout's own areas cover and no drawn box does,
+ * as rectangles, row by row. Space the layout itself leaves (Ambient's margins) is no gap. Each
+ * names the box beside it whose edge would grow into it: one that covers it whole first, else
+ * one that covers part of it, else a frame or a box that cannot grow, then `fills` is false.
+ */
+export function gaps(boxes, grid) {
+  const drawn = boxes.filter((b) => !b.hidden && b.area);
+  const wanted = boxes.map((b) => b.layoutArea).filter(Boolean);
+  const taken = new Set();
+  const empty = (c, r) =>
+    !taken.has(`${c},${r}`) &&
+    wanted.some((a) => inside(a, c, r)) &&
+    !drawn.some((b) => inside(b.area, c, r));
+  const out = [];
+  for (let row = 1; row <= grid.rows; row++) {
+    for (let column = 1; column <= grid.columns; column++) {
+      if (!empty(column, row)) continue;
+      let columns = 1;
+      while (column + columns <= grid.columns && empty(column + columns, row)) columns++;
+      let rows = 1;
+      const rowFree = (r) =>
+        Array.from({ length: columns }, (_, i) => column + i).every((c) => empty(c, r));
+      while (row + rows <= grid.rows && rowFree(row + rows)) rows++;
+      for (let r = row; r < row + rows; r++)
+        for (let c = column; c < column + columns; c++) taken.add(`${c},${r}`);
+      out.push(besideGap(boxes, { column, row, columns, rows }, grid));
+    }
+  }
+  return out;
+}
+
+function besideGap(boxes, area, grid) {
+  const touching = [];
+  for (const [edge, gapLine, boxLine] of SIDES) {
+    for (const b of boxes) {
+      if (b.hidden || !b.area || boxLine(b.area) !== gapLine(area)) continue;
+      const [start, span, gStart, gSpan] = across(edge)
+        ? [b.area.row, b.area.rows, area.row, area.rows]
+        : [b.area.column, b.area.columns, area.column, area.columns];
+      if (start >= gStart + gSpan || gStart >= start + span) continue;
+      const fills = !b.frame && free(boxes, b, moved(b.area, edge, depth(area, edge)), grid);
+      touching.push({ box: b.id, edge, fills, whole: start === gStart && span === gSpan });
+    }
+  }
+  const pick =
+    touching.find((t) => t.fills && t.whole) ??
+    touching.find((t) => t.fills) ??
+    touching.find((t) => !boxes.find((b) => b.id === t.box).frame) ??
+    touching[0];
+  return pick
+    ? { area, box: pick.box, edge: pick.edge, fills: pick.fills }
+    : { area, box: null, edge: null, fills: false };
+}
+
+/** The box beside the gap grown into it ("Fill the gap"), or null when it cannot. */
+export function fill(boxes, gap) {
+  if (!gap.fills) return null;
+  const box = boxes.find((b) => b.id === gap.box);
+  return replaced(boxes, gap.box, { area: moved(box.area, gap.edge, depth(gap.area, gap.edge)) });
+}
+
+// The Changes line's message by the side of the box the gap is on (studio-layout.js words it).
+const WORDS = { right: "gap.right", left: "gap.left", bottom: "gap.below", top: "gap.above" };
+
+/** The gap's message key (`.one` for one column, row or cell) and its count. */
+export function gapWords(gap) {
+  const key = gap.edge ? WORDS[gap.edge] : "gap.cells";
+  const count = gap.edge ? depth(gap.area, gap.edge) : gap.area.columns * gap.area.rows;
+  return { key: count === 1 ? `${key}.one` : key, count };
+}

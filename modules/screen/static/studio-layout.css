@@ -99,6 +99,17 @@
   border-style: solid;
 }
 
+/* Space an edit left empty (#422): the screen shows the background there, so it reads as a fault. */
+.canccu-studio-gap {
+  border: var(--canccu-border-width) dashed var(--canccu-color-status-degraded);
+  border-radius: var(--canccu-radius);
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--canccu-color-status-degraded) 28%, transparent) 0 0.375rem,
+    transparent 0.375rem 0.75rem
+  );
+}
+
 .canccu-studio-hero .canccu-studio-map__region[aria-pressed="false"] [data-hero-role] {
   display: none;
 }
