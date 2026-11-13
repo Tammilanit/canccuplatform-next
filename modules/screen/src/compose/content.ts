@@ -68,21 +68,25 @@ export async function readPhotos(c: SqlClient): Promise<PhotoRow[]> {
   }));
 }
 
-/** The props of every `photo` entry of the zone's layouts, as build.ts picks the entries. */
-export function photoProps(
+/**
+ * Every widget entry of the zone's layouts, as build.ts picks them, also those of a box that waits
+ * for its source and so is not in the built regions: its source must be read for it to come back.
+ */
+export function entriesOf(
   views: readonly { layout: Layout }[],
   zoneRegions: Record<string, Record<string, unknown>>,
-): Props[] {
-  const props: Props[] = [];
-  for (const view of views) {
-    for (const r of view.layout.regions) {
+): WidgetEntry[] {
+  return views.flatMap((view) =>
+    view.layout.regions.flatMap((r) => {
       const own = zoneRegions[r.id]?.widgets;
-      const entries = Array.isArray(own) ? (own as WidgetEntry[]) : r.widgets;
-      for (const e of entries) if (e.widget === "photo") props.push(e.props ?? {});
-    }
-  }
-  return props;
+      return Array.isArray(own) ? (own as WidgetEntry[]) : r.widgets;
+    }),
+  );
 }
+
+/** The props of every `photo` entry. */
+export const photoProps = (entries: readonly WidgetEntry[]): Props[] =>
+  entries.filter((e) => e.widget === "photo").map((e) => e.props ?? {});
 
 export interface ContentDeps {
   db: Db;

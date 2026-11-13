@@ -95,13 +95,13 @@ describe("the player's default templates", () => {
       "38in voicepeak 64 · 23:00",
       "164checked in",
     ]);
-    expect(full.querySelector(".canccu-widget__line")?.textContent).toBe("218 still online");
+    expect(full.querySelector(".canccu-widget__still")?.textContent).toBe("218 still online");
     // Before the bot counts, only the check-ins: no empty labels, and no line for Ambient.
     const arrivals = draw(DEFAULT_TEMPLATES.stats ?? [], { checked_in: 0 });
     expect(
       [...arrivals.querySelectorAll(".canccu-widget__stat")].map((s) => s.textContent),
     ).toEqual(["0checked in"]);
-    expect(arrivals.querySelector(".canccu-widget__line")).toBeNull();
+    expect(arrivals.querySelector(".canccu-widget__still")).toBeNull();
   });
 
   // Change 6: the wall of five tiles, the lead first with its caption, and the pop over it.

@@ -45,7 +45,7 @@ const landscapeOf = (theme) => sizesOf(theme).filter(([w, h]) => w > h);
 const NEW_VIEWS = {
   photo: ".canccu-widget__wall .canccu-widget__tile:nth-child(5) img",
   "photo-pop": ".canccu-widget__pop img",
-  "ambient-online": ".canccu-region--online .canccu-widget__line",
+  "ambient-online": ".canccu-region--online .canccu-widget__still",
   "portrait-right-now": ".canccu-region--right_now .canccu-widget__peak",
 };
 

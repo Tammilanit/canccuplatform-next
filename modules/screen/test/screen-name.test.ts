@@ -72,6 +72,27 @@ describe.skipIf(!DATABASE_URL)("screen_name", () => {
     }
   });
 
+  // Not the screen name's, but the same zone state: a box waiting for its source still has it read.
+  it("reads the check-ins for a Right now box that waits for them, which then comes back", async () => {
+    const zone = (await call(h, "GET", "/api/screen/zones/bar", { session: "admin" })).json<{
+      revision: number;
+    }>();
+    await call(h, "PUT", "/api/screen/zones/bar", {
+      session: "admin",
+      body: { ...zone, layout_id: "ambient" },
+    });
+    const regions = async () =>
+      (await call(h, "GET", "/api/screen/zones/bar/state", { session: "admin" })).json<{
+        regions: { id: string; widgets: { view: Record<string, unknown> }[] }[];
+      }>().regions;
+    expect((await regions()).some((r) => r.id === "online")).toBe(false);
+    h.sources.checkins = 164;
+    // Notify was down at the first read, so nothing was kept and the next build reads again.
+    const online = (await regions()).find((r) => r.id === "online");
+    expect(online?.widgets[0]?.view).toMatchObject({ checked_in: 164, empty: false });
+    expect(h.sources.countReads).toContain("arrival");
+  });
+
   it("previews the setting without saving it", async () => {
     const zone = (await call(h, "GET", "/api/screen/zones/hall", { session: "admin" })).json<{
       revision: number;

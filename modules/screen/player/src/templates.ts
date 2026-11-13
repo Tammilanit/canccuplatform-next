@@ -234,7 +234,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     sec("has_floor_plan", el("p", "meta", [t("Floor plan on the hub")])),
     QR,
   ],
-  // Right now (sheet 10); `line` is Ambient's one line, "N still online" (wall.css).
+  // Right now (sheet 10); `still` is Ambient's one line, "N still online" (wall.css).
   stats: [
     el("p", "kicker", [t("Right now")]),
     el("ul", "stats", [
@@ -242,7 +242,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
       stat("in_voice", "in voice", "in_voice_peak"),
       stat("checked_in", "checked in"),
     ]),
-    sec("online", el("p", "line", [f("online"), t(" still online"), trend("online_trend")])),
+    sec("online", el("p", "still", [f("online"), t(" still online"), trend("online_trend")])),
   ],
   match_called: [
     el("p", "title", [t("Match called")]),

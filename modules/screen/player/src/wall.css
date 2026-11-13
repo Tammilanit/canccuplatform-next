@@ -78,7 +78,7 @@
   }
 
   /* Ambient's statistics are one line under its rail: "N still online" with its trend. */
-  .canccu-widget__line {
+  .canccu-widget__still {
     display: none;
   }
 
@@ -92,7 +92,7 @@
     display: none;
   }
 
-  .canccu-layout--ambient .canccu-region--online .canccu-widget__line {
+  .canccu-layout--ambient .canccu-region--online .canccu-widget__still {
     display: flex;
     align-items: baseline;
     gap: calc(1 * var(--canccu-u));
@@ -101,5 +101,31 @@
     font-weight: 600;
     color: var(--canccu-color-text-muted);
     font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * Portrait's rail is three rows high since it shares the band with Right now (contracts/screen.md,
+   * Built-in layouts): its two rows of the run of show side by side, not stacked.
+   */
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__body {
+    flex-direction: row;
+    gap: calc(3 * var(--canccu-u));
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__body > li {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__body > li + li {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .canccu-layout--pulse_portrait
+    .canccu-region[data-role="rail"]
+    .canccu-widget__body
+    > li:nth-child(n + 3) {
+    display: none;
   }
 }

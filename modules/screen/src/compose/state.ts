@@ -17,7 +17,7 @@ import { tickerNow } from "../ticker/store.js";
 import { buildRegions } from "./build.js";
 import { placeClaims } from "./claims.js";
 import type { Override, Placement } from "./claims.js";
-import { contentFacts, photoProps } from "./content.js";
+import { contentFacts, entriesOf, photoProps } from "./content.js";
 import { displayOf } from "./display.js";
 import type { Display } from "./display.js";
 import { themeLayouts } from "./layouts.js";
@@ -255,16 +255,11 @@ export async function composeZone(
   // The content widgets' sources are read only for a zone that shows them, so their changes
   // (every frame, photo and code) never move another zone's version. The hub's view keeps only
   // `stats` of them (NOW_TYPES).
+  const entries = entriesOf(Object.values(views), read.zone.regions);
   const used = typesOf(views);
+  for (const e of entries) used.add(e.widget);
   if (!withContent) for (const type of used) if (type !== "stats") used.delete(type);
-  const content = await contentFacts(
-    deps,
-    ctx,
-    zoneKey,
-    used,
-    photoProps(Object.values(views), read.zone.regions),
-    real.getTime(),
-  );
+  const content = await contentFacts(deps, ctx, zoneKey, used, photoProps(entries), real.getTime());
   if (Object.keys(content.facts).length > 0) {
     Object.assign(facts, content.facts);
     views = { landscape: build(false), portrait: build(true) };
