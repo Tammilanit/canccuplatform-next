@@ -4,7 +4,7 @@
  * catalogue, English is used, so a page never shows a bare key.
  */
 import { CONTENT_EN } from "./content-messages.js";
-import { SCHEDULE_EN } from "./schedule-messages.js";
+import { SCHEDULE_CLIENT_KEYS, SCHEDULE_EN } from "./schedule-messages.js";
 
 const EN = {
   ...CONTENT_EN,
@@ -361,4 +361,5 @@ export const CLIENT_KEYS = [
   "asset.replaced",
   "sound.play",
   "sound.stop",
+  ...SCHEDULE_CLIENT_KEYS,
 ] as const satisfies readonly MessageKey[];

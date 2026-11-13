@@ -1,9 +1,11 @@
 /**
  * The Studio's schedule page (plan #190, S2–S3; mockup 09): one zone's week calendar on the hours
  * that matter, a key to what it draws, and beside it what plays now, the breaks and the conflicts.
- * Read-only; the window editor and "what plays at…" are #267's. A block says one line (playlist
- * and time), a second when it is tall enough, and the rest on hover (its title) or tap (a
- * popover, which needs no script). On a phone one day shows, picked with the day switch. The
+ * A block says one line (playlist and time), a second when it is tall enough, and the rest on
+ * hover (its title) or tap (a popover, which needs no script). For writers (#267) the page adds
+ * the window editor: the button, the dialog, an Edit button in each popover, and the marks
+ * static/studio-schedule.js drags by (a weekly window's block, its lower edge, each column's date
+ * and lane's zone, the axis's minutes); a bound window moves with its item, so it only opens. On a phone one day shows, picked with the day switch. The
  * Studio's CSP refuses inline styles, so places go into the page's nonce'd style block, keyed by
  * id, as numbers only.
  */
@@ -15,6 +17,7 @@ import type { Axis } from "./schedule-axis.js";
 import { placement } from "./calendar-pointer.js";
 import type { MessageKey } from "./messages.js";
 import type { ScheduleBlock, ScheduleModel } from "./schedule-model.js";
+import type { EditorView } from "./schedule-editor.js";
 import { side, when } from "./schedule-side.js";
 import { STUDIO } from "./views.js";
 import type { ViewContext, ZoneSummary } from "./views.js";
@@ -33,6 +36,10 @@ export interface ScheduleViewData {
   /** The day a phone shows. */
   day: string;
   playlists: ReadonlyMap<string, Pick<PlaylistView, "name" | "break">>;
+  /** The "what plays at…" card. */
+  at: Html;
+  /** The window editor, for holders of `screen.content.write` only. */
+  editor: EditorView | null;
 }
 
 /** A block shorter than this has room for its first line only. */
@@ -79,6 +86,7 @@ export function scheduleView(c: ViewContext, d: ScheduleViewData): { body: Html;
       </div>
       <aside class="canccu-sched__side">${side(c, d)}</aside>
     </div>
+    ${d.editor?.dialog ?? ""}
   </div>`;
   return { body, style: rules.join("") };
 }
@@ -134,6 +142,7 @@ function toolbar(c: ViewContext, d: ScheduleViewData): Html {
         ${step(d.page.next, "schedule.next", "right")}
       </nav>
       <p class="canccu-small canccu-muted">${t("schedule.tz", { tz: d.calendar.time_zone })}</p>
+      ${d.editor?.add ?? ""}
     </div>
     ${daySwitch}`;
 }
@@ -190,8 +199,10 @@ function grid(c: ViewContext, d: ScheduleViewData, place: Place, rules: string[]
         place(id, b.startMinute, b.endMinute);
         return html`<div${attrs({ id, class: "canccu-sched__break" })}></div>`;
       });
-      const blocks = lane.blocks.map((block) => blockView(c, block, next, place));
-      return html`<div class="canccu-sched__lane">
+      const blocks = lane.blocks.map((block) =>
+        blockView(c, block, next, place, d.editor !== null),
+      );
+      return html`<div class="canccu-sched__lane" data-zone="${lane.zoneKey}">
         ${bands}
         <div class="canccu-sched__blocks">${blocks}</div>
       </div>`;
@@ -205,7 +216,7 @@ function grid(c: ViewContext, d: ScheduleViewData, place: Place, rules: string[]
     const across = Math.max(1, ...day.lanes.flatMap((l) => l.blocks.map((b) => b.columns)));
     const id = next();
     rules.push(`#${id}{--canccu-sched-across:${across * day.lanes.length}}`);
-    return html`<section id="${id}" class="canccu-sched__day${off}">
+    return html`<section id="${id}" class="canccu-sched__day${off}" data-date="${day.date}">
       <div class="canccu-sched__head">
         <h2 class="canccu-sched__date">${dateLabel(day.date)}</h2>
         ${
@@ -225,7 +236,11 @@ function grid(c: ViewContext, d: ScheduleViewData, place: Place, rules: string[]
     tabindex="0"
     aria-label="${t("schedule.calendar", { first: dateLabel(first), last: dateLabel(last) })}"
   >
-    <div id="${ID}0" class="canccu-sched__grid${many ? " canccu-sched__grid--lanes" : ""}">
+    <div
+      id="${ID}0"
+      class="canccu-sched__grid${many ? " canccu-sched__grid--lanes" : ""}"
+      data-axis="${model.axis.startMinute} ${model.axis.endMinute}"
+    >
       <div class="canccu-sched__gutter">
         <div class="canccu-sched__head"></div>
         <div class="canccu-sched__hours">
@@ -238,7 +253,13 @@ function grid(c: ViewContext, d: ScheduleViewData, place: Place, rules: string[]
   </div>`;
 }
 
-function blockView(c: ViewContext, block: ScheduleBlock, next: () => string, place: Place): Html {
+function blockView(
+  c: ViewContext,
+  block: ScheduleBlock,
+  next: () => string,
+  place: Place,
+  editable: boolean,
+): Html {
   const { t } = c;
   const time = (iso: string) => timeLabel(iso, c.timeZone);
   const id = next();
@@ -280,12 +301,34 @@ function blockView(c: ViewContext, block: ScheduleBlock, next: () => string, pla
     .filter(Boolean)
     .join(" ");
   const title = [`${block.playlistName} · ${span}`, second.join(" · "), ...losing].join("\n");
-  return html`<button${attrs({ id, type: "button", class: cls, popovertarget: pop, title })}>
+  // A run carried over from the day before has its start off this column: it opens, never drags.
+  const drags = editable && block.boundTo === null && !block.continuesBefore;
+  const edit = editable
+    ? html`<button${attrs({
+        class: "canccu-button canccu-button--secondary canccu-button--sm",
+        type: "button",
+        "data-window-edit": block.scheduleId,
+      })}>${t("window.edit")}</button>`
+    : "";
+  return html`<button${attrs({
+    id,
+    type: "button",
+    class: cls,
+    popovertarget: pop,
+    title,
+    "data-window": editable ? block.scheduleId : undefined,
+    "data-drag": drags,
+  })}>
       ${insets}
       <span class="canccu-sched__line"
         ><strong>${block.playlistName}</strong> <span class="canccu-sched__time">${span}</span></span
       >
       <span class="canccu-sched__line canccu-sched__more">${second.join(" · ")}</span>
+      ${
+        drags && !block.continuesAfter
+          ? html`<span class="canccu-sched__resize" data-resize aria-hidden="true"></span>`
+          : ""
+      }
     </button>
     <div${attrs({ id: pop, class: "canccu-sched__about", popover: true })}>
       <h3 class="canccu-card__title">${block.playlistName}</h3>
@@ -298,6 +341,7 @@ function blockView(c: ViewContext, block: ScheduleBlock, next: () => string, pla
               ${losing.map((x) => html`<li>${x}</li>`)}
             </ul>`
       }
+      ${edit}
     </div>`;
 }
 

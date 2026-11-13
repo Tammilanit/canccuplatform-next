@@ -327,6 +327,35 @@
   color: var(--canccu-ink-degraded);
 }
 
+/* The window editor (#267): writers drag on the days; a drag never selects text. */
+.canccu-sched__body {
+  user-select: none;
+}
+
+.canccu-sched__block[data-drag] {
+  cursor: grab;
+}
+
+.canccu-sched__resize {
+  position: absolute;
+  inset: auto 0 0;
+  height: 0.5rem;
+  cursor: ns-resize;
+}
+
+.canccu-sched__drawing {
+  position: absolute;
+  inset-inline: 0;
+  z-index: 2;
+  border: 2px dashed var(--canccu-color-primary);
+  border-radius: calc(var(--canccu-radius) / 2);
+}
+
+.canccu-sched__at {
+  display: grid;
+  gap: 0.5rem;
+}
+
 @media (max-width: 60rem) {
   .canccu-sched__layout {
     grid-template-columns: minmax(0, 1fr);

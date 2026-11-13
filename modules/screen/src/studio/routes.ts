@@ -22,8 +22,6 @@ import {
 import type { Logger, PublicEvent, RightsChecker } from "@canccu/kit";
 import { errorTitle, errorView, html, raw, shellPage } from "@canccu/ui";
 import type { EventInfo, Slot } from "@canccu/ui";
-import { BUILT_IN_LAYOUTS, themeLayouts } from "../compose/layouts.js";
-import type { Layout } from "../compose/layouts.js";
 import type { Sources } from "../compose/sources.js";
 import type { Db } from "../db.js";
 import { listDevices } from "../devices.js";
@@ -39,11 +37,14 @@ import type { SeenDevice } from "./help.js";
 import { CLIENT_KEYS, translator } from "./messages.js";
 import type { MessageKey, Translate } from "./messages.js";
 import { devicesActions, devicesView } from "./devices-view.js";
+import { layoutsOf } from "./event-layouts.js";
 import { readContent } from "./content-data.js";
 import { STATIC_TYPES, staticFile } from "./static-files.js";
 import type { ContentDeps } from "./content-data.js";
 import { contentView } from "./content-view.js";
+import { WRITE } from "./schedule-editor.js";
 import { schedulePage } from "./schedule-page.js";
+import type { ScheduleQuery } from "./schedule-page.js";
 import { tickerView } from "./ticker-view.js";
 import { STUDIO, liveActions, liveView, startUrlOf } from "./views.js";
 import type { ViewContext } from "./views.js";
@@ -58,6 +59,8 @@ export interface StudioDeps extends Omit<ContentDeps, "now"> {
   /** Admin's own settings, which hold the event's `language` (contracts/admin.md, #394). */
   adminSettings: Settings;
   sources: Sources;
+  /** The module's own settings: simulate's break gap, for "what plays at…". */
+  settings: Settings;
   log?: Logger | undefined;
   /** Names the event in the shell's header; without it the header shows what the tenant says. */
   publicEvent?: ((host: string | undefined) => Promise<PublicEvent | null>) | undefined;
@@ -135,6 +138,8 @@ interface PageOptions {
   own?: string;
   /** The page's own script is a module, which may import its neighbours in static/. */
   module?: boolean;
+  /** Whether the page's own script loads: by default when it has one; the schedule's is writers'. */
+  script?: boolean;
   /** Rules made of numbers only (the schedule's block places), under the page's nonce. */
   style?: string;
 }
@@ -184,8 +189,7 @@ async function studioPage(
       ${o.body}${clientText(t)}
       <script src="${STUDIO}static/studio.js" defer></script>
       ${
-        // A page with a stylesheet only (the schedule) has no script to load.
-        o.own === undefined || !Object.hasOwn(STATIC_TYPES, `${o.own}.js`)
+        o.own === undefined || !(o.script ?? Object.hasOwn(STATIC_TYPES, `${o.own}.js`))
           ? ""
           : o.module === true
             ? html`<script type="module" src="${STUDIO}static/${o.own}.js"></script>`
@@ -200,16 +204,6 @@ async function studioPage(
     .header("x-content-type-options", "nosniff")
     .status(o.status ?? 200)
     .send(doc.toString());
-}
-
-/** The built-in layouts, each replaced by a theme layout of the same id, then the theme's own. */
-async function layoutsOf(deps: StudioDeps, tenantId: string): Promise<Layout[]> {
-  const theme = await deps.sources.theme(tenantId).catch(() => null);
-  const own = themeLayouts(theme?.layouts);
-  return [
-    ...BUILT_IN_LAYOUTS.map((b) => own.find((l) => l.id === b.id) ?? b),
-    ...own.filter((l) => !BUILT_IN_LAYOUTS.some((b) => b.id === l.id)),
-  ];
 }
 
 export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
@@ -328,7 +322,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         const ctx = tenantOf(request);
         const zone = (await readZones(deps, ctx)).find((z) => z.key === request.params.zone_key);
         if (zone === undefined) throw notFound();
-        const [layouts, all] = [await layoutsOf(deps, ctx.tenant_id), await devices()];
+        const [layouts, all] = [await layoutsOf(deps.sources, ctx.tenant_id), await devices()];
         return page(request, reply, c, {
           title: zone.name,
           crumb: { href: `${STUDIO}zones`, label: c.t("zone.back") },
@@ -338,16 +332,19 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       },
     );
 
-    studio.get<{ Querystring: { zone?: string; from?: string; day?: string } }>(
+    studio.get<{ Querystring: ScheduleQuery }>(
       `${STUDIO}schedule`,
       { preHandler: pageNeeds(deps.rights, [CONTENT]) },
       async (request, reply) => {
         const c = await context(request);
-        const [zones, all] = [await readZones(deps, tenantOf(request)), await devices()];
+        const ctx = tenantOf(request);
+        const [zones, all] = [await readZones(deps, ctx), await devices()];
         const event = await eventOf(request, deps);
-        const view = await schedulePage(deps.db, c, event, zones, all, request.query);
+        const query = request.query;
+        const view = await schedulePage(deps, ctx.tenant_id, c, event, zones, all, query);
         const o = { title: "", tab: "schedule", description: c.t("schedule.desc") };
-        return page(request, reply, c, { ...o, own: "studio-schedule", ...view });
+        const own = { own: "studio-schedule", module: true, script: c.rights.has(WRITE) };
+        return page(request, reply, c, { ...o, ...own, ...view });
       },
     );
 

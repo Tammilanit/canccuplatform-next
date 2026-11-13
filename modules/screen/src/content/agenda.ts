@@ -145,3 +145,23 @@ export async function loadAgendaLabels(c: SqlClient): Promise<Map<string, Agenda
     ]),
   );
 }
+
+/** A run-of-show item a window may follow, for the window editor's picker (#267). */
+export interface AgendaChoice extends AgendaLabel {
+  id: string;
+  startsAt: string;
+}
+
+/** The items a window may be bound to, in run-of-show order. */
+export async function loadAgendaChoices(c: SqlClient): Promise<AgendaChoice[]> {
+  const labels = await loadAgendaLabels(c);
+  const items = await loadAgendaItems(c);
+  return [...items.values()]
+    .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime() || a.id.localeCompare(b.id))
+    .map((item) => ({
+      id: item.id,
+      startsAt: item.startsAt.toISOString(),
+      title: labels.get(item.id)?.title ?? null,
+      crew: labels.get(item.id)?.crew ?? true,
+    }));
+}

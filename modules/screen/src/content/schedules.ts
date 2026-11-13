@@ -21,6 +21,7 @@ import {
 } from "../http.js";
 import { projectBreaks } from "../playback/break-projection.js";
 import { NEXT_CHANGE_HORIZON_MS, simulate } from "../schedule/simulate.js";
+import type { Simulation } from "../schedule/simulate.js";
 import { readAssets } from "../assets/reader.js";
 import { breakInputFor, loadContent } from "../tick/content.js";
 import { breakGapSeconds, loadZoneState } from "../tick/run.js";
@@ -83,6 +84,20 @@ function values(window: ScheduleInput) {
   ];
 }
 
+/** The windows as `GET /api/screen/schedules` answers them; the window editor reads the same (#267). */
+export async function listSchedules(
+  c: SqlClient,
+  zone?: string,
+): Promise<Record<string, unknown>[]> {
+  const { rows } =
+    zone === undefined
+      ? await c.query(`SELECT ${COLUMNS} FROM screen_schedules ORDER BY zone_key, id`)
+      : await c.query(`SELECT ${COLUMNS} FROM screen_schedules WHERE zone_key = $1 ORDER BY id`, [
+          zone,
+        ]);
+  return rows.map(scheduleView);
+}
+
 export interface ScheduleDeps extends ContentDeps {
   settings: Settings;
 }
@@ -98,20 +113,9 @@ export function scheduleRoutes(app: FastifyInstance, deps: ScheduleDeps): void {
   app.get<{ Querystring: { zone?: string } }>(
     "/api/screen/schedules",
     { preHandler: read },
-    async (request) => {
-      const zone = request.query.zone;
-      const rows = await db.tenant(async (c) =>
-        zone === undefined
-          ? (await c.query(`SELECT ${COLUMNS} FROM screen_schedules ORDER BY zone_key, id`)).rows
-          : (
-              await c.query(
-                `SELECT ${COLUMNS} FROM screen_schedules WHERE zone_key = $1 ORDER BY id`,
-                [zone],
-              )
-            ).rows,
-      );
-      return { schedules: rows.map(scheduleView) };
-    },
+    async (request) => ({
+      schedules: await db.tenant((c) => listSchedules(c, request.query.zone)),
+    }),
   );
 
   app.post("/api/screen/schedules", { preHandler: write }, async (request, reply) => {
@@ -233,48 +237,60 @@ export function scheduleRoutes(app: FastifyInstance, deps: ScheduleDeps): void {
     "/api/screen/schedules/simulate",
     { preHandler: read },
     async (request) => {
-      const ctx = tenantOf(request);
       const { zone, at } = request.query;
       const atMs = typeof at === "string" ? Date.parse(at) : NaN;
       if (Number.isNaN(atMs)) throw invalidRequest("`at` must be a time (RFC 3339).");
-      const nowMs = now();
-      await deps.settings.ensure();
-      const gap = breakGapSeconds(deps.settings);
-      const [content, state] = await db.tenant(
-        async (c) =>
-          [
-            await loadContent(c, readAssets, nowMs),
-            zone === undefined ? EMPTY_ZONE : await loadZoneState(c, zone),
-          ] as const,
-      );
-      const here = content.zones.find((z) => z.key === zone);
-      if (zone === undefined || here === undefined) throw unknownZone();
-      const breakInput = breakInputFor(content, here.key, ctx.time_zone, gap);
-      // Breaks follow the zone's stored state forward from now; the past has no projection, and
-      // `projectBreaks` stops after its step bound (about two weeks of steps, less with frequent
-      // breaks), so `in_break` beyond it is false. Simulate answers the schedule and its breaks:
-      // a push plays only from now to its `until`, so it is no part of "what would play at…".
-      const breaks =
-        atMs < nowMs
-          ? []
-          : projectBreaks(
-              state.breaks,
-              breakInput,
-              new Date(nowMs),
-              new Date(atMs + NEXT_CHANGE_HORIZON_MS),
-            );
-      return simulate(
-        {
-          windows: content.windows,
-          timeZone: ctx.time_zone,
-          agendaItems: content.agendaItems,
-          playlistPriorities: content.playlistPriorities,
-          zoneKey: here.key,
-          zoneLayoutId: here.layoutId ?? DEFAULT_LAYOUT,
-          breaks,
-        },
-        new Date(atMs),
-      );
+      return simulateZone(deps, tenantOf(request).time_zone, zone, atMs, now());
     },
+  );
+}
+
+/**
+ * "What would play at…" for one zone: the simulate route's answer, which the Studio's schedule
+ * page gives too (#267), so the page and the API answer from one read and one rule.
+ */
+export async function simulateZone(
+  deps: Pick<ScheduleDeps, "db" | "settings">,
+  timeZone: string,
+  zone: string | undefined,
+  atMs: number,
+  nowMs: number,
+): Promise<Simulation> {
+  await deps.settings.ensure();
+  const gap = breakGapSeconds(deps.settings);
+  const [content, state] = await deps.db.tenant(
+    async (c) =>
+      [
+        await loadContent(c, readAssets, nowMs),
+        zone === undefined ? EMPTY_ZONE : await loadZoneState(c, zone),
+      ] as const,
+  );
+  const here = content.zones.find((z) => z.key === zone);
+  if (zone === undefined || here === undefined) throw unknownZone();
+  const breakInput = breakInputFor(content, here.key, timeZone, gap);
+  // Breaks follow the zone's stored state forward from now; the past has no projection, and
+  // `projectBreaks` stops after its step bound (about two weeks of steps, less with frequent
+  // breaks), so `in_break` beyond it is false. Simulate answers the schedule and its breaks:
+  // a push plays only from now to its `until`, so it is no part of "what would play at…".
+  const breaks =
+    atMs < nowMs
+      ? []
+      : projectBreaks(
+          state.breaks,
+          breakInput,
+          new Date(nowMs),
+          new Date(atMs + NEXT_CHANGE_HORIZON_MS),
+        );
+  return simulate(
+    {
+      windows: content.windows,
+      timeZone,
+      agendaItems: content.agendaItems,
+      playlistPriorities: content.playlistPriorities,
+      zoneKey: here.key,
+      zoneLayoutId: here.layoutId ?? DEFAULT_LAYOUT,
+      breaks,
+    },
+    new Date(atMs),
   );
 }

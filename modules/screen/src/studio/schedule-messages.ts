@@ -1,6 +1,6 @@
 /**
- * The Schedule page's strings (#190, mockup 09), English first; messages.ts adds them to the
- * catalogue, as it does the Content page's.
+ * The Schedule page's strings (#190, #267, mockup 09), English first; messages.ts adds them to the
+ * catalogue, as it does the Content page's, and the editor's client strings to its client keys.
  */
 export const SCHEDULE_EN = {
   "tab.schedule": "Schedule",
@@ -55,4 +55,84 @@ export const SCHEDULE_EN = {
   "schedule.more": "and {n} more",
   "schedule.min": "{n} min",
   "schedule.s": "{n} s",
+
+  "window.add": "Add window",
+  "window.new_title": "New window",
+  "window.edit": "Edit window",
+  "window.zone": "Zone",
+  "window.playlist": "Playlist",
+  "window.priority": "Priority",
+  "window.priority_hint": "0 to 999. Where windows overlap, the higher priority plays.",
+  "window.layout": "Layout",
+  "window.layout_zone": "The zone's own layout",
+  "window.kind": "When it plays",
+  "window.kind_weekly": "Every week, on these days",
+  "window.kind_bound": "While a run-of-show item runs",
+  "window.days": "Days",
+  "window.day.1": "Mon",
+  "window.day.2": "Tue",
+  "window.day.3": "Wed",
+  "window.day.4": "Thu",
+  "window.day.5": "Fri",
+  "window.day.6": "Sat",
+  "window.day.7": "Sun",
+  "window.start": "From",
+  "window.end": "Until",
+  "window.times_hint": "An end before the start runs past midnight; 24:00 is the end of the day.",
+  "window.item": "Run-of-show item",
+  "window.item_hint": "The window follows the item, delays included.",
+  "window.item_pick": "Pick an item",
+  "window.crew_item": "A crew item",
+  "window.item_label": "{title} \u00b7 {when}",
+  "window.untitled": "An item without a title",
+  "window.save": "Save",
+  "window.cancel": "Cancel",
+  "window.delete": "Delete window",
+  "window.delete_confirm": "Tap again to delete",
+  "window.drag_hint":
+    "Drag on a day to add a window; drag a window to move it, or its lower edge to change its end.",
+  "window.created": "Window added.",
+  "window.saved": "Window saved.",
+  "window.deleted": "Window deleted.",
+  "window.conflict":
+    "This window was changed by someone else. Reload to see their change, then edit again.",
+  "window.reload": "Reload",
+  "window.need_days": "Pick at least one day.",
+  "window.need_times": "Give a start and an end time, 24:00 at the latest.",
+  "window.same_times": "The start and the end cannot be the same.",
+  "window.need_item": "Pick the run-of-show item it follows.",
+  "window.need_playlist": "Pick a playlist.",
+  "window.need_priority": "Give a priority from 0 to 999.",
+
+  "at.title": "What plays at\u2026",
+  "at.when": "Day and time",
+  "at.zone": "Zone",
+  "at.ask": "Show",
+  "at.heading": "{when} in {zone}",
+  "at.plays": "{playlist} plays",
+  "at.every": "every {days} {start}\u2013{end}",
+  "at.layout": "layout: {layout}",
+  "at.beat": "{playlist} ({rule})",
+  "at.beats": "It wins over {list}.",
+  "at.alone": "No other window wants this time.",
+  "at.idle": "Nothing scheduled: the hero shows its idle view.",
+  "at.break": "A break playlist interrupts it then.",
+  "at.next": "Next change: {when}",
+  "at.no_next": "Nothing changes for a day after this.",
+  "at.bad": "Pick a day and a time.",
 } as const;
+
+/** The editor's strings that static/studio-schedule.js says. */
+export const SCHEDULE_CLIENT_KEYS = [
+  "window.created",
+  "window.saved",
+  "window.deleted",
+  "window.conflict",
+  "window.reload",
+  "window.need_days",
+  "window.need_times",
+  "window.same_times",
+  "window.need_item",
+  "window.need_playlist",
+  "window.need_priority",
+] as const;

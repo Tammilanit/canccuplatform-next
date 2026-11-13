@@ -80,16 +80,19 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
 
   it("gives a writer the editor: the button, the form and each window with its revision", async () => {
     const body = tight((await page("/admin/screen/schedule", "editor")).body);
-    expect(body).toContain('data-window-new type="button"');
+    expect(body).toMatch(/data-window-new\s+type="button"/);
     expect(body).toContain("Add window");
     const editor = editorOf(body);
-    expect(editor).toContain('<option value="main">Main</option>');
+    // A new window starts in the zone shown.
+    expect(editor).toContain('<option value="main" selected>Main</option>');
     expect(editor).toContain('<option value="cafe">Café</option>');
     expect(editor).toContain(">Welcome loop</option>");
     expect(editor).toContain(">Menu</option>");
     // A break playlist interrupts; no window plays it.
     expect(editor).not.toContain(">Partners</option>");
-    expect(editor).toContain('<option value="">The zone\'s own layout</option>');
+    expect(editor).toMatch(
+      /<option value="" selected>The zone(&#39;|&#x27;|')s own layout<\/option>/,
+    );
     expect(editor).toContain('<option value="pulse">Pulse</option>');
     // Run-of-show items: the public one by title; a crew item not at all without agenda.crew.read.
     expect(editor).toMatch(/<option value="it_dinner">Dinner · Thu 1 Jan 18:00<\/option>/);
@@ -99,7 +102,7 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
       /data-confirm="[^"]+"[^>]*data-window-delete|data-window-delete[^>]*data-confirm/,
     );
     for (const day of ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]) {
-      expect(editor).toContain(`>${day}</label>`);
+      expect(editor).toMatch(new RegExp(`>${day}</label\\s*>`));
     }
     // Each window as GET /api/screen/schedules answers it, so a save sends the revision read.
     const windows = windowsOf(body);
@@ -114,6 +117,14 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
     expect(body).toMatch(new RegExp(`data-window="${menuWindow}"`));
     expect(body).not.toMatch(new RegExp(`data-window="${menuWindow}"[^>]*data-drag`));
     expect(body).toContain("Edit window");
+    expect(body).toContain('<script type="module" src="/admin/screen/static/studio-schedule.js">');
+    // The script, the helpers it imports, and its words in the event's language.
+    for (const name of ["studio-schedule.js", "studio-schedule-edit.js"]) {
+      const file = await call(h, "GET", `/admin/screen/static/${name}`, { host: "alpha.test" });
+      expect(file.statusCode).toBe(200);
+      expect(file.headers["content-type"]).toContain("text/javascript");
+    }
+    expect(body).toContain('"window.conflict":"This window was changed by someone else.');
   });
 
   it("names a crew item in the picker only to crew readers; others see it as a crew item when bound", async () => {
@@ -143,7 +154,7 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
       const c = card(await at(""));
       expect(c).toContain("What plays at…");
       expect(c).toContain('<form method="get" action="/admin/screen/schedule"');
-      expect(c).toContain('name="at" type="datetime-local" value="2026-01-01T12:00"');
+      expect(c).toMatch(/name="at"\s+type="datetime-local"\s+value="2026-01-01T12:00"/);
       expect(c).toContain('<option value="main" selected>Main</option>');
       expect(c).not.toContain("plays at Thu");
     });
@@ -151,7 +162,7 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
     it("answers the winner and that nothing else plays then", async () => {
       const c = card(await at("at=2026-01-01T10:00"));
       expect(c).toContain("Thu 1 Jan 10:00 in Main");
-      expect(c).toContain("<strong>Welcome loop</strong> plays");
+      expect(c).toMatch(/<strong>Welcome loop<\/strong>\s*plays/);
       expect(c).toContain("prio 10 · every Thu 09:00–17:00");
       expect(c).toContain("No other window wants this time.");
       expect(c).toContain("Next change: Thu 1 Jan 13:00");
@@ -159,7 +170,7 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
 
     it("says why the winner won over each window it beat", async () => {
       const c = card(await at("at=2026-01-01T13:30"));
-      expect(c).toContain("<strong>Menu</strong> plays");
+      expect(c).toMatch(/<strong>Menu<\/strong>\s*plays/);
       expect(c).toContain("prio 50 · while a crew item runs");
       expect(c).toContain("It wins over Welcome loop (lower priority).");
       expect(c).toContain("Next change: Thu 1 Jan 14:00");
@@ -182,7 +193,7 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
     it("asks about one zone, the default one, while the page shows every zone", async () => {
       const res = await page("/admin/screen/schedule?zone=all&at=2026-01-01T10:00", "content");
       const c = card(tight(res.body));
-      expect(c).toContain("<strong>Welcome loop</strong> plays");
+      expect(c).toMatch(/<strong>Welcome loop<\/strong>\s*plays/);
       expect(c).toContain('<select class="canccu-input" id="canccu-sched-at-zone" name="at_zone">');
       expect(c).toContain('<option value="main" selected>Main</option>');
       // The calendar stays on every zone.

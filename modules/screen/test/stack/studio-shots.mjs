@@ -1,4 +1,4 @@
-// The Screen studio's screenshots (#189, #190, #263; mockups 06–10 and 13), taken after the screens on
+// The Screen studio's screenshots (#189, #190, #263, #267; mockups 06–10 and 13), taken after the screens on
 // the same demo fixture (fixture.mjs) and theme, so its live views draw the Pulse the screens do.
 // Two screens play while they are taken, one landscape and one portrait, each in the browser at
 // its own size, so their heartbeats give the device cards an orientation, a size and a state.
@@ -37,9 +37,30 @@ async function openDetails(page) {
   await page.waitForTimeout(300);
 }
 
+/** The window editor (#267): a new window from Add window. */
+async function openNew(page) {
+  await page.locator("[data-window-new]").click();
+  await page.locator("#canccu-sched-editor[open]").waitFor();
+}
+
+/** The window editor on a window: its details, then Edit window. */
+async function openEdit(page) {
+  await openDetails(page);
+  await page.locator(".canccu-sched__about:popover-open [data-window-edit]").click();
+  await page.locator("#canccu-sched-editor[open]").waitFor();
+  await page.waitForTimeout(300);
+}
+
+/** "What plays at…" asked for the time it shows, now, and answered. */
+async function askNow(page) {
+  await page.locator("#canccu-sched-at button[type=submit]").click();
+  await page.locator("#canccu-sched-at h3").waitFor();
+}
+
 /**
- * The Schedule page (#190, mockup 09), last, on windows made for it and removed after it: the
- * zone it opens on, every zone, a phone's one day, and a window's details on tap.
+ * The Schedule page (#190, #267; mockup 09), last, on windows made for it and removed after it:
+ * the zone it opens on, every zone, a phone's one day, a window's details on tap, the window
+ * editor for a new window and for one there, and "what plays at…" answered.
  */
 export const SCHEDULE_PAGES = [
   ["screen-schedule", "/admin/screen/schedule", WIDE],
@@ -51,6 +72,15 @@ export const SCHEDULE_PAGES = [
     PHONE,
     { ready: openDetails, fullPage: false },
   ],
+  ["screen-schedule-editor", "/admin/screen/schedule", WIDE, { ready: openNew, fullPage: false }],
+  [
+    "screen-schedule-editor-phone",
+    "/admin/screen/schedule",
+    PHONE,
+    { ready: openEdit, fullPage: false },
+  ],
+  ["screen-schedule-at", "/admin/screen/schedule", WIDE, { ready: askNow }],
+  ["screen-schedule-at-phone", "/admin/screen/schedule", PHONE, { ready: askNow }],
 ];
 
 /**
