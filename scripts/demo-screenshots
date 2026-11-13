@@ -89,10 +89,18 @@ if ! "${COMPOSE[@]}" exec -T postgres psql -U canccu -d canccu -v ON_ERROR_STOP=
 fi
 shoot demo-screenshots-front.mjs || status=1
 # Health with a part down (docs/design/mockups.html, sheet 4), last, as it stops notify (whose
-# check-in the front pass shows) for longer than admin's 10 s check; it starts again whatever
-# the pass did.
+# check-in the front pass shows) for longer than admin's 10 s check. The pass asks for notify
+# back (the file start-notify) once its shots of the part down are taken, then follows Health
+# until the menu's note clears; notify starts again whatever the pass did.
 "${COMPOSE[@]}" stop notify >/dev/null || status=1
 sleep 15
-shoot demo-screenshots.mjs --trouble || status=1
+rm -f "$work/start-notify"
+shoot demo-screenshots.mjs --trouble &
+pass=$!
+for _ in $(seq 240); do
+  if [ -e "$work/start-notify" ] || ! kill -0 "$pass" 2>/dev/null; then break; fi
+  sleep 1
+done
 "${COMPOSE[@]}" start notify >/dev/null || status=1
+wait "$pass" || status=1
 exit "$status"

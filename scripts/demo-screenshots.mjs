@@ -7,7 +7,7 @@
 // from across a hall fails the run, so a screenshot of an error never passes for a real one. Runs
 // in Caddy's network namespace (scripts/demo-screenshots says why).
 // Usage: node demo-screenshots.mjs [--dry-run] [--base BASE_URL] [--out DIR]
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import {
   DEMO_HOST,
@@ -132,9 +132,31 @@ const followsACheck = async (page) => {
   if (!(await page.locator(NOTIFY_WAY).evaluate((way) => way.open)))
     throw new Error('an open "What to check" closed when a check came in');
 };
+// Last, the page asks scripts/demo-screenshots to start notify again (a file in the work
+// directory, which it watches) and must clear the menu's "1 down" from a check, not a reload.
+const HEALTH_NOTE = 'a.canccu-menu__item[href$="/health-view"] .canccu-badge';
+const followsRecovery = async (page) => {
+  if (!(await page.locator(HEALTH_NOTE).count()))
+    throw new Error("the menu's Health item has no note while notify is down");
+  await page.evaluate(() => (window.canccuSameDocument = true));
+  writeFileSync("start-notify", "");
+  await page.waitForFunction(
+    (sel) => !document.querySelector(sel),
+    HEALTH_NOTE,
+    { timeout: 90000 },
+  );
+  if (!(await page.evaluate(() => window.canccuSameDocument === true)))
+    throw new Error("Health reloaded the page instead of swapping the check");
+};
 const TROUBLE = [
   ["health-view-trouble", "/admin/health-view", DESK, { ready: followsACheck }],
   ["health-view-trouble-phone", "/admin/health-view", PHONE, {}],
+  [
+    "health-view-recovered",
+    "/admin/health-view",
+    DESK,
+    { ready: followsRecovery },
+  ],
 ];
 // The brand kit (mockup 12, design sheet 6), after the screens, so its screen preview is screen's
 // player of the main zone with the fixture's run of show: first with no draft, then with one in the
