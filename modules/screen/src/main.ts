@@ -298,6 +298,7 @@ async function main(): Promise<void> {
     played: (tenant, zones) => {
       app.pushHub.played(tenant, zones);
     },
+    fanout: push.fanout,
   });
   const pinTick = pinTickRunner({
     db,

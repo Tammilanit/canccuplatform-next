@@ -9,6 +9,7 @@ import type { Bus, Logger, SqlClient } from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import { forgetHealth } from "./health.js";
 import type { Kv } from "./kv.js";
+import { endPreview } from "./preview/store.js";
 import { releaseSound } from "./zones.js";
 import type { Emit } from "./zones.js";
 
@@ -20,8 +21,8 @@ export interface Left {
 }
 
 /**
- * The current event's side of a device leaving it: mirrors and sound go, then its assignment
- * row. `last` is what the event hears about the device itself; none when it heard it already (a
+ * The current event's side of a device leaving it: mirrors, sound and its preview go, then its
+ * assignment row. `last` is what the event hears about the device itself; none when it heard it already (a
  * device revoked earlier). The caller holds the device's row lock.
  */
 export async function leaveEvent(
@@ -31,6 +32,8 @@ export async function leaveEvent(
   last?: Emit,
 ): Promise<Left> {
   const emits = await detachDevice(c, deviceId, by);
+  // Before the row its preview refers to: ended with the module as actor, so the log says why.
+  await endPreview(c, deviceId, by.audit, null);
   await c.query("DELETE FROM screen_assignments WHERE device_id = $1", [deviceId]);
   return { tenant: requireTenant(), deviceId, emits: last ? [...emits, last] : emits };
 }

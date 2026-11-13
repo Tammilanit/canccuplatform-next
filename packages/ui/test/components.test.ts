@@ -112,6 +112,18 @@ describe("page", () => {
       '<body class="canccu-page canccu-surface canccu-surface--screen">',
     );
   });
+  it("links the event's current tokens after ui.css and the profile's style (#432)", () => {
+    const profile = { theme: { colors: { primary: "#ff0000" } } };
+    const admin = s(page({ title: "x", body: "", profile }));
+    const link = admin.indexOf('<link rel="stylesheet" href="/theming/current/admin-tokens.css">');
+    expect(admin.indexOf("/ui/ui.css")).toBeLessThan(admin.indexOf("</style>"));
+    expect(admin.indexOf("</style>")).toBeLessThan(link);
+    for (const surface of ["hub", "info", "screen"] as const) {
+      expect(s(page({ title: "x", body: "", surface }))).toContain(
+        '<link rel="stylesheet" href="/theming/current/tokens.css">',
+      );
+    }
+  });
   it("puts the response nonce on the theme <style>", () => {
     const nonce = "abcdEFGH0123+/==-_xyz";
     const profile = { theme: { colors: { primary: "#ff0000" } } };

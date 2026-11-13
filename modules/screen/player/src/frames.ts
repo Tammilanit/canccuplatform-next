@@ -90,7 +90,7 @@ export function safetyCode(code: string): HTMLElement {
  */
 export function keepSafetyLast(root: HTMLElement): void {
   for (const node of root.querySelectorAll(
-    ":scope > .canccu-pairing-code, :scope > .canccu-offline-marker",
+    ":scope > .canccu-pairing-code, :scope > .canccu-offline-marker, :scope > .canccu-preview-mark",
   )) {
     root.append(node);
   }

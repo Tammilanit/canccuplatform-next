@@ -66,6 +66,12 @@ describe("shellPage", () => {
     }),
   );
 
+  it("links the event's admin tokens after ui.css, and the hub's own tokens on a front page (#432)", () => {
+    const tokens = doc.indexOf('href="/theming/current/admin-tokens.css"');
+    expect(doc.indexOf("/ui/ui.css")).toBeLessThan(tokens);
+    const front = s(frontPage({ title: "Check in", card: "", event: EVENT, surface: "hub" }));
+    expect(front).toContain('<link rel="stylesheet" href="/theming/current/tokens.css">');
+  });
   it("is phone-ready and escapes the event's name", () => {
     expect(doc).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
     expect(doc).toContain("Demo &lt;Event&gt;");

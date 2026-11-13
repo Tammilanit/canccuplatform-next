@@ -30,6 +30,7 @@ import { fileRoutes } from "./assets/serve.js";
 import { MAX_UPLOAD_BYTES } from "./assets/upload.js";
 import { versionRoutes } from "./assets/versions.js";
 import { assignmentRoutes } from "./assignments.js";
+import { previewRoutes } from "./preview/routes.js";
 import { composeRoutes } from "./compose/routes.js";
 import { noSources } from "./compose/sources.js";
 import type { Sources } from "./compose/sources.js";
@@ -245,6 +246,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   registryRoutes(app, deps);
   zoneRoutes(app, compose);
   assignmentRoutes(app, compose);
+  previewRoutes(app, compose);
   playlistRoutes(app, deps);
   scheduleRoutes(app, deps);
   pushRoutes(app, deps);

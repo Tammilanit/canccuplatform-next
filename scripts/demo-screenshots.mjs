@@ -29,6 +29,7 @@ import {
   FROZEN_PAGES,
   studioShots,
 } from "../modules/screen/test/stack/studio-shots.mjs";
+import { PREVIEW_PAGES } from "../modules/screen/test/stack/preview-shots.mjs";
 
 const { values: opts } = parseArgs({
   options: {
@@ -119,6 +120,11 @@ const DRAFT = [
       },
     },
   ],
+];
+// Publishing a light look asks first (sheet 6).
+const LIGHT = [
+  ["studio-draft-light", DESK],
+  ["studio-draft-light-phone", PHONE],
 ];
 // The run of show's day view (sheet 5, #400) on the fixture's filled day: at both widths, at 1440 px
 // with the item beside the list and the live miniature of the main zone, which the shot waits for,
@@ -265,6 +271,11 @@ if (opts["dry-run"]) {
       `  ${name}.png  ${at(path)}  (${width}×${height}, with a draft)`,
     );
   }
+  for (const [name, { width, height }] of LIGHT) {
+    console.log(
+      `  ${name}.png  ${at("/theming/studio/")}  (${width}×${height}, a light draft, Publish asked)`,
+    );
+  }
   for (const [name, { width, height }, o] of DAY_VIEW) {
     const path = dayPath(o, `<${o.pick ?? o.delay}>`);
     console.log(
@@ -285,6 +296,11 @@ if (opts["dry-run"]) {
   for (const [name, path, { width, height }] of STUDIO_PAGES) {
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, while two screens play)`,
+    );
+  }
+  for (const [name, path, { width, height }] of PREVIEW_PAGES) {
+    console.log(
+      `  ${name}.png  ${at(path)}  (${width}×${height}, while a preview on a screen runs)`,
     );
   }
   for (const [name, path, { width, height }] of FROZEN_PAGES) {
@@ -587,6 +603,25 @@ try {
       for (const [name, viewport, o] of DRAFT) {
         await shot(name, o.path ?? "/theming/studio/", viewport, SESSION, o);
       }
+      // The same brand, light: Publish asks first (#444, sheet 6, Q11 b: warn only).
+      const light = await demo.call("PUT", "/api/theming/draft/brand", {
+        body: { draft_version: version, ...brand, scheme: "light" },
+      });
+      version = expect(light, 200, "a light brand").body.draft.draft_version;
+      for (const [name, viewport] of LIGHT) {
+        await shot(name, "/theming/studio/", viewport, SESSION, {
+          fullPage: false,
+          ready: async (page) => {
+            await drawn(page);
+            await page
+              .locator('[data-action="light-ask"]:visible')
+              .first()
+              .click();
+            await page.locator("#canccu-studio-light[open]").waitFor();
+            await page.waitForTimeout(300);
+          },
+        });
+      }
     } finally {
       // Left behind, the draft would greet the next run's "studio" shot instead of the start.
       const gone = await demo.call(
@@ -605,7 +640,9 @@ try {
       demo,
       at,
       cookieOn,
-      shot: (name, path, viewport, o) => shot(name, path, viewport, SESSION, o),
+      // A screen's own view (the preview's mark) is shot with its device cookie.
+      shot: (name, path, viewport, o) =>
+        shot(name, path, viewport, o?.cookie ?? SESSION, o),
     });
   } catch (err) {
     fail(`studio: ${firstLine(err)}`);

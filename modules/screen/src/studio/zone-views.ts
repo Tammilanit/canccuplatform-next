@@ -18,6 +18,12 @@ import type { BoxInfo } from "./layout-views.js";
 import { counted, nameOf } from "./messages.js";
 import { STUDIO, zoneFrame } from "./views.js";
 import type { ViewContext } from "./views.js";
+import {
+  previewDialog,
+  previewNotice,
+  previewOnScreenButton,
+  previewTimeField,
+} from "./preview-view.js";
 
 export type Zone = Omit<ZoneInput, "revision"> & { revision: number };
 type Entry = Record<string, unknown>;
@@ -348,8 +354,10 @@ export function zoneEditorView(
     <section class="canccu-card">
       <h2 class="canccu-card__title">${t("zone.preview_title")}</h2>
       <div class="canccu-studio-thumb canccu-studio-thumb--preview"><iframe${attrs({ src: zoneFrame(zone.key), title: t("zone.preview_title"), "data-preview": true })}></iframe></div>
+      ${previewTimeField(c)}
       <div class="canccu-studio-preview-row">
         <button class="canccu-button canccu-button--secondary" type="button" data-zone-preview>${t("zone.preview")}</button>
+        ${previewOnScreenButton(c)}
         <p class="canccu-small canccu-muted">${t("zone.preview_hint")}</p>
       </div>
     </section>
@@ -376,11 +384,12 @@ export function zoneEditorView(
     "data-layout-names": JSON.stringify({ "": names.pulse ?? "pulse", ...names }),
     "data-region-names": JSON.stringify(Object.fromEntries(regions.map((r) => [r.id, r.label]))),
   };
-  return html`${zoneTabs(c, zones, zone.key)}
+  return html`${zoneTabs(c, zones, zone.key)}${previewNotice(c)}
     <form class="canccu-studio-editor" ${attrs(form)}>
       <div class="canccu-studio-editor__main">
         ${layoutGallery(c, layouts, layout.id)}${boxesCard(c, regions, layout, first?.id)}${regions.map((r) => regionPart(c, r, layout, r === first))}${layout.id === "dashboard" ? heroCard(c, regions, layout, zone) : ""}${settingsCard(c, zone, devices)}${remove}
       </div>
       ${side}${row}
-    </form>`;
+    </form>
+    ${previewDialog(c, zone.key, devices)}`;
 }

@@ -55,7 +55,12 @@ async function checkReader(request: FastifyRequest, rights: RightsChecker): Prom
 const SVG_POLICY = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
 const IMMUTABLE = "public, max-age=31536000, immutable";
 
-function sendFile(reply: FastifyReply, name: string, bytes: Buffer, cache: string): FastifyReply {
+export function sendFile(
+  reply: FastifyReply,
+  name: string,
+  bytes: Buffer,
+  cache: string,
+): FastifyReply {
   const ext = extOf(name);
   void reply
     .header("content-type", CONTENT_TYPES[ext])
@@ -72,7 +77,7 @@ function sendFile(reply: FastifyReply, name: string, bytes: Buffer, cache: strin
 }
 
 /** Whether `owner` refers to the file: the transaction ends before the disk read, freeing its connection. */
-function referenced(db: Db, name: string, draft: boolean): Promise<boolean> {
+export function referenced(db: Db, name: string, draft: boolean): Promise<boolean> {
   return db.tenant(async (c) => {
     const { rows } = await c.query(
       `SELECT 1 FROM theming_file_refs WHERE file = $1 AND (owner = 'draft') = $2 LIMIT 1`,

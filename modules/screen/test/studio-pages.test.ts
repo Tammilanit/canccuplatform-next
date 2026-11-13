@@ -169,6 +169,28 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect(list).toContain('href="/admin/screen/zones/main"');
   });
 
+  it("offers a preview time and Preview on a screen… with the zone's own screens (#444)", async () => {
+    const own = await pairDevice(h);
+    await call(h, "PUT", `/api/screen/devices/${own.id}/assignment`, {
+      session: "admin",
+      body: { zone_key: "main" },
+    });
+    const body = (await page("/admin/screen/zones/main", "zoner")).body;
+    const at = /<select[^>]*data-preview-at[\s\S]*?<\/select>/.exec(body)?.[0] ?? "";
+    expect(at).toContain('<option value="">Now</option>');
+    // Each whole hour of the next day, in the event's time zone (UTC here): 13:00 first.
+    expect(at).toContain('value="2026-01-01T13:00:00.000Z"');
+    expect(at.match(/<option/g)).toHaveLength(25);
+    expect(body).toContain("Preview on a screen…");
+    const dialog = /<dialog[^>]*data-screen-preview-dialog[\s\S]*?<\/dialog>/.exec(body)?.[0] ?? "";
+    expect(dialog).toContain("Preview this zone on a screen");
+    expect(dialog).toContain(`value="${own.id}"`);
+    expect(dialog).toContain("Until I end it");
+    expect(body).toMatch(/data-screen-preview-notice[^>]*hidden/);
+    const script = await page("/admin/screen/static/studio-screen-preview.js", "zoner");
+    expect(script.statusCode).toBe(200);
+  });
+
   it("draws Zones and layouts: zone tabs, the gallery, the boxes and Dashboard's hero", async () => {
     const zone = (await call(h, "GET", "/api/screen/zones/main", { session: "admin" })).json<{
       revision: number;

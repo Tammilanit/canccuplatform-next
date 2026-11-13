@@ -4,7 +4,7 @@
  * `canccu_kit.ui` writes the same markup for the Python modules; ui.css styles both.
  */
 import { attrs, html, raw, type Html, type Slot } from "./html.js";
-import { themeStyle, type ProfileLike } from "./theme.js";
+import { eventTokens, themeStyle, type ProfileLike } from "./theme.js";
 import menu from "./menu.json" with { type: "json" };
 import { dateRange, eventClock, stateBadge, type EventInfo } from "./event.js";
 
@@ -137,7 +137,8 @@ function document(title: string, o: DocumentOptions, body: Slot): Html {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${full}</title>
 <link${attrs({ rel: "stylesheet", href: o.cssHref ?? "/ui/ui.css" })}>
-${o.head ?? ""}${style}</head>
+${style}${eventTokens(o.surface ?? "admin")}
+${o.head ?? ""}</head>
 <body class="canccu-page canccu-surface canccu-surface--${o.surface ?? "admin"}">
 ${body}
 </body>

@@ -147,7 +147,11 @@ async def test_the_service_worker_keeps_what_the_offline_page_links(
     found = re.search(r"const ASSETS = (\[[^\]]*\]);", worker)
     assert found is not None
     kept = set(json.loads(found.group(1)))
-    assert linked == kept == {"/admin/static/ui.css", "/admin/static/shell.js"}
+    assert kept == {"/admin/static/ui.css", "/admin/static/shell.js"}
+    # The event's look is kept too, when the event answers it (#432), outside the all or nothing.
+    look = re.search(r'const LOOK = "([^"]+)";', worker)
+    assert look is not None and look.group(1) == "/theming/current/admin-tokens.css"
+    assert linked == kept | {look.group(1)}
     for url in kept:  # the worker keeps nothing unless every one of them answers
         assert (await world.client.get(url)).status_code == 200
 

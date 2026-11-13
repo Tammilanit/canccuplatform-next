@@ -5,6 +5,7 @@
  * read, the real player previews it, and Go live saves it with the revision read.
  */
 import { boxEditor } from "./studio-layout.js";
+import { previewAt, screenPreview } from "./studio-screen-preview.js";
 
 (() => {
   const studio = window.canccuStudio;
@@ -235,10 +236,14 @@ import { boxEditor } from "./studio-layout.js";
   // A true preview: the server composes the zone as it would be saved, and the real player draws it.
   const frame = form.querySelector("iframe[data-preview]");
   form.querySelector("[data-zone-preview]").addEventListener("click", async () => {
-    const r = await api("POST", `${url}/preview`, zone());
+    const at = previewAt(document);
+    const query = at === null ? "" : `?at=${encodeURIComponent(at)}`;
+    const r = await api("POST", `${url}/preview${query}`, zone());
     if (!r.ok) return show(failure(r));
     frame.contentWindow.postMessage({ type: PREVIEW_MESSAGE, state: r.data }, location.origin);
   });
+
+  screenPreview(document, { api, failure, say, zone });
 
   async function put(body) {
     const r = await api("PUT", url, body);

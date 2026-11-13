@@ -45,10 +45,25 @@ function bounds(areas: Area[]): Area {
   return { column, row, columns: right - column, rows: bottom - row };
 }
 
+// A showcase keeps at most this many other boxes beside it, so it never squeezes the rest into
+// headline strips (the design guideline's amendment 2).
+const BESIDE = 2;
+
 /**
- * The regions with the hero grown to the band's height and twice its columns, and the other boxes
- * of its layer stacked in the columns it leaves free; the same array when the layout leaves no
- * room, which build.ts reads as "the hero does not grow".
+ * The boxes that stay beside the grown hero: picked `rail` first, then the others in layout order,
+ * and stacked in layout order, so on Dashboard the rail keeps its own place at the bottom right.
+ */
+function beside(others: readonly LayoutRegion[], settings: Settings): LayoutRegion[] {
+  const rails = others.filter((r) => roleIn(r, settings) === "rail");
+  const picked = new Set([...rails, ...others.filter((r) => !rails.includes(r))].slice(0, BESIDE));
+  return others.filter((r) => picked.has(r));
+}
+
+/**
+ * The regions with the hero grown to the band's height and twice its columns, two other boxes of
+ * its layer stacked in the columns it leaves free and the rest of that layer's boxes paused (left
+ * out); the same array when the layout leaves no room, which build.ts reads as "the hero does not
+ * grow".
  */
 export function grown(
   regions: readonly LayoutRegion[],
@@ -58,11 +73,14 @@ export function grown(
   if (hero === undefined) return regions;
   const layer = hero.layer ?? 0;
   const boxes = regions.filter((r) => (r.layer ?? 0) === layer && !FRAME.has(roleIn(r, settings)));
-  const others = boxes.filter((r) => r !== hero);
+  const kept = beside(
+    boxes.filter((r) => r !== hero),
+    settings,
+  );
   const band = bounds(boxes.map((r) => r.area));
   const columns = hero.area.columns * 2;
   const free = band.columns - columns;
-  if (free <= 0 || band.rows < others.length) return regions;
+  if (free <= 0 || band.rows < kept.length) return regions;
   const right = (hero.area.column - band.column) * 2 >= band.columns;
   const areas = new Map<LayoutRegion, Area>([
     [
@@ -72,14 +90,16 @@ export function grown(
   ]);
   const freeColumn = right ? band.column : band.column + columns;
   let row = band.row;
-  others.forEach((r, i) => {
-    const rows = Math.floor(band.rows / others.length) + (i < band.rows % others.length ? 1 : 0);
+  kept.forEach((r, i) => {
+    const rows = Math.floor(band.rows / kept.length) + (i < band.rows % kept.length ? 1 : 0);
     areas.set(r, { column: freeColumn, row, columns: free, rows });
     row += rows;
   });
-  return regions.map((r) => {
+  const paused = new Set(boxes.filter((r) => !areas.has(r)));
+  return regions.flatMap((r) => {
+    if (paused.has(r)) return [];
     const area = areas.get(r);
-    return area === undefined ? r : { ...r, area };
+    return area === undefined ? [r] : [{ ...r, area }];
   });
 }
 

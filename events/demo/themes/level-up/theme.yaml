@@ -1,25 +1,26 @@
 # Demo theme in the advanced mode: "Level up", an original look built on progression (bars that
 # fill, a rank ladder, achievement cards, a HUD clock). Format: contracts/theming.md.
 # Fonts: Chakra Petch and Exo 2, SIL OFL 1.1 (fonts/OFL-chakra-petch.txt, fonts/OFL-exo-2.txt).
-# Every contrast rule passes with room to spare (text 15.8:1, text_muted 8.1:1 on surface), so the
+# Its warm ember palette is its own, so it never looks like the Default theme's Demo night (#432).
+# Every contrast rule passes with room to spare (text 15.9:1, text_muted 9.3:1 on surface), so the
 # CSS can draw the panels as glass over the embed and still keep text above 4.5:1.
 schema_version: 1
 name: Level up
-description: Dark glass panels and one electric cyan-to-violet gradient; countdowns fill like progress bars and the leaderboard reads as a rank ladder.
+description: Dark glass panels over warm embers and one orange-to-pink gradient; countdowns fill like progress bars and the leaderboard reads as a rank ladder.
 mode: advanced
 tokens:
   colors:
-    background: "#0b0d1a"
-    surface: "#161a2e"
-    border: "#343c66"
-    text: "#f3f5ff"
-    text_muted: "#a9b1d6"
-    primary: "#3ddcff"
-    primary_text: "#0b0d1a"
-    accent: "#b98cff"
-    status_ok: "#3ee39a"
-    status_degraded: "#ffc94d"
-    status_down: "#ff6b7d"
+    background: "#140d0b"
+    surface: "#25170f"
+    border: "#5b3b2c"
+    text: "#fff3ea"
+    text_muted: "#d6b8a6"
+    primary: "#ff9a3c"
+    primary_text: "#140d0b"
+    accent: "#ff6fae"
+    status_ok: "#4ee39a"
+    status_degraded: "#ffd94a"
+    status_down: "#ff5d5d"
   fonts:
     body: Exo 2
     heading: Chakra Petch

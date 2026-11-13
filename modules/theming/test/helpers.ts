@@ -143,7 +143,7 @@ export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness>
   try {
     await requireTestDatabase(admin);
     await admin.query(
-      "DROP TABLE IF EXISTS theming_files, theming_drafts, theming_revisions, theming_file_refs, theming_pins, theming_embed_files, theming_package_files, theming_migrations CASCADE",
+      "DROP TABLE IF EXISTS theming_files, theming_drafts, theming_revisions, theming_file_refs, theming_pins, theming_embed_files, theming_package_files, theming_preview_keys, theming_migrations CASCADE",
     );
     await runMigrations(admin, MIGRATIONS_DIR, { ledger: "theming_migrations", lock: 2 });
   } finally {

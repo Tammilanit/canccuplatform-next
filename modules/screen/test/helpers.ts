@@ -1,5 +1,5 @@
 /** A screen app on a real Postgres (RLS needs one) with fake tenants, admin and Valkey. */
-import type { ThemeNow } from "../src/compose/sources.js";
+import type { DraftTheme, ThemeNow } from "../src/compose/sources.js";
 import type { AgendaItem, AgendaNow, CheckinCode, VenueInfo } from "../src/compose/widgets.js";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -137,6 +137,8 @@ export interface FakeSources {
   revisions: Record<number, ThemeNow>;
   /** The revision read fails (a 500, a timeout) while the current read may still answer. */
   revisionsDown: boolean;
+  /** Theming's drafts by preview key; a key not here is one theming no longer knows. */
+  drafts: Record<string, DraftTheme>;
   event: { name: string } | null;
   agenda: AgendaNow | null;
   /** The whole run of show (`GET /internal/agenda/items`); null is "down". */
@@ -159,7 +161,7 @@ export async function dropTables(admin: pg.Client): Promise<void> {
        screen_playlist_items, screen_playlists, assignments, screen_assignments, screen_zones,
        screen_zone_seeds, devices, screen_migrations, screen_render_jobs, screen_asset_versions,
        screen_assets, screen_files, screen_ticker, screen_ticker_windows, screen_photos, screen_claims, screen_pins,
-       screen_pin_tenants CASCADE`,
+       screen_pin_tenants, screen_previews CASCADE`,
   );
 }
 
@@ -195,6 +197,7 @@ export async function harness(): Promise<Harness> {
     theme: null,
     revisions: {},
     revisionsDown: false,
+    drafts: {},
     event: null,
     agenda: null,
     agendaItems: null,
@@ -286,6 +289,7 @@ export async function harness(): Promise<Harness> {
           tenantId,
           fake.revisionsDown ? null : (fake.revisions[revision] ?? "gone"),
         ),
+      themePreview: (tenantId, key) => answer(fake.tenants, tenantId, fake.drafts[key] ?? "gone"),
       event: (host) => answer(fake.hosts, host, fake.event),
       agendaNow: (tenantId) => answer(fake.tenants, tenantId, fake.agenda),
       agendaItems: (tenantId) => answer(fake.tenants, tenantId, fake.agendaItems),

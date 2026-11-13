@@ -6,6 +6,7 @@
 import { CONTENT_EN } from "./content-messages.js";
 import { PLAYLIST_CLIENT_KEYS, PLAYLIST_EN } from "./playlist-messages.js";
 import { LAYOUT_CLIENT_KEYS, LAYOUT_EN } from "./layout-messages.js";
+import { PREVIEW_CLIENT_KEYS, PREVIEW_EN } from "./preview-messages.js";
 import { SCHEDULE_CLIENT_KEYS, SCHEDULE_EN } from "./schedule-messages.js";
 
 const EN = {
@@ -13,6 +14,7 @@ const EN = {
   ...SCHEDULE_EN,
   ...PLAYLIST_EN,
   ...LAYOUT_EN,
+  ...PREVIEW_EN,
   "studio.title": "Screen studio",
   "studio.page": "the Screen studio",
   "studio.back": "Back to the Screen studio",
@@ -29,6 +31,10 @@ const EN = {
   "live.no_screens": "No screens yet",
   "live.open": "Open {zone} full size",
   "live.quick": "Quick actions",
+  "live.delay_now": "Delay what\u2019s on now\u2026",
+  "live.delay_none": "Nothing runs now: open the run of show.",
+  "live.ticker_now": "Set the ticker\u2026",
+  "live.push_now": "Push content now\u2026",
   "live.set_ticker": "Set the ticker",
   "live.pair": "Pair a screen",
   "live.empty_title": "No zones yet",
@@ -407,4 +413,5 @@ export const CLIENT_KEYS = [
   ...PLAYLIST_CLIENT_KEYS,
   ...LAYOUT_CLIENT_KEYS,
   ...SCHEDULE_CLIENT_KEYS,
+  ...PREVIEW_CLIENT_KEYS,
 ] as const satisfies readonly MessageKey[];

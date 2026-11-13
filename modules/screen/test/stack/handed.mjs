@@ -119,24 +119,27 @@ export function withStats(s) {
 
 /**
  * Dashboard during a showcase (contracts/screen.md, The hero role and the showcase): a spotlight in
- * the hero, grown to 8×10, and the five other boxes stacked beside it, 4×2 each, in layout order.
- * The rail stays on its countdown, the tallest widget a strip has to fit on two lines.
+ * the hero, grown to 8×10, and two boxes beside it, `rail` picked first, stacked in layout order:
+ * `online` and `rail`, 4×5 each (src/compose/showcase.ts). `voice`, `top_games` and `right_now`
+ * pause. The rail stays on its countdown, the tallest widget its box has to fit.
  */
 export function withShowcase(s) {
-  const stacked = ["online", "voice", "top_games", "right_now", "rail"];
+  const kept = ["online", "rail"];
+  const paused = new Set(["voice", "top_games", "right_now"]);
   const spotlight = claim("hero", "announcement", { title: "Grand final on stage", body: "Seats open 20:30 · bring your own headset", level: "info" }); // prettier-ignore
   return {
     ...s,
-    regions: s.regions.map((r) => {
+    regions: s.regions.flatMap((r) => {
+      if (paused.has(r.id)) return [];
       if (r.id === "hero")
-        return { ...r, claim: spotlight, area: { column: 1, row: 2, columns: 8, rows: 10 } };
-      const i = stacked.indexOf(r.id);
-      if (i < 0) return r;
-      const area = { column: 9, row: 2 + 2 * i, columns: 4, rows: 2 };
-      if (r.id !== "rail") return { ...r, area };
+        return [{ ...r, claim: spotlight, area: { column: 1, row: 2, columns: 8, rows: 10 } }];
+      const i = kept.indexOf(r.id);
+      if (i < 0) return [r];
+      const area = { column: 9, row: 2 + 5 * i, columns: 4, rows: 5 };
+      if (r.id !== "rail") return [{ ...r, area }];
       const countdown = r.widgets.findIndex((w) => w.widget === "countdown" && !w.view.empty);
       if (countdown < 0) throw new Error("the demo Dashboard's rail has no countdown to show");
-      return { ...r, area, order: [countdown] };
+      return [{ ...r, area, order: [countdown] }];
     }),
   };
 }

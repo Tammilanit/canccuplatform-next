@@ -27,10 +27,11 @@ function declarations(selector: RegExp): string[] {
 }
 
 describe("the safety rules in canccu-base", () => {
-  it("names the three safety elements", () => {
+  it("names the four safety elements", () => {
     expect(SAFETY_CLASSES).toEqual([
       "canccu-pairing-code",
       "canccu-offline-marker",
+      "canccu-preview-mark",
       "canccu-privacy-link",
     ]);
   });

@@ -51,6 +51,7 @@ import { WRITE } from "./schedule-editor.js";
 import { schedulePage } from "./schedule-page.js";
 import type { ScheduleQuery } from "./schedule-page.js";
 import { tickerView } from "./ticker-view.js";
+import { quickActions, runningNow } from "./live-quick.js";
 import { STUDIO, liveActions, liveView, startUrlOf } from "./views.js";
 import type { ViewContext } from "./views.js";
 import { zoneEditorView, zonesView } from "./zone-views.js";
@@ -298,12 +299,16 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       async (request, reply) => {
         const c = await context(request);
         const [zones, all] = [await readZones(deps, tenantOf(request)), await devices()];
+        // A run of show that cannot be read leaves Delay pointing at the run of show itself.
+        const items = c.rights.has("agenda.items.write")
+          ? await deps.sources.agendaItems(tenantOf(request).tenant_id).catch(() => null)
+          : null;
         return page(request, reply, c, {
           title: "",
           tab: "live",
           description: c.t("live.desc"),
           actions: liveActions(c),
-          body: liveView(c, zones, all),
+          body: html`${liveView(c, zones, all)}${quickActions(c, runningNow(items, c.nowMs))}`,
         });
       },
     );
