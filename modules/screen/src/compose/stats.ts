@@ -158,11 +158,16 @@ async function checkedIn(
   if (kept !== null && nowMs - kept.read_at < CHECKINS_REREAD_MS) {
     return { count: kept.count, retryAt: kept.read_at + CHECKINS_REREAD_MS };
   }
-  const read = await sources.checkinCount(tenant, "arrival");
-  // A failed read keeps what was read before, and tries again at the next build.
-  if (read === null) return { count: kept?.count ?? null, retryAt: null };
-  await kv.set(checkinsKey(), JSON.stringify({ count: read, read_at: nowMs }), DAY_MS);
+  // The mark goes before the read, never after: a check-in that lands while Notify counts sets it
+  // again, so the next build reads once more instead of keeping a count that misses it.
   if (stale) await kv.del(staleKey());
+  const read = await sources.checkinCount(tenant, "arrival");
+  if (read === null) {
+    // A failed read keeps what was read before, and tries again at the next build.
+    if (stale) await kv.set(staleKey(), "1", DAY_MS);
+    return { count: kept?.count ?? null, retryAt: null };
+  }
+  await kv.set(checkinsKey(), JSON.stringify({ count: read, read_at: nowMs }), DAY_MS);
   return { count: read, retryAt: null };
 }
 

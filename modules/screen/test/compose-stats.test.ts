@@ -148,7 +148,7 @@ describe("statsView", () => {
 });
 
 describe("readStats", () => {
-  const sources = (counts: number[]): Sources & { reads: number } => {
+  const sources = (counts: (number | null)[]): Sources & { reads: number } => {
     const s = {
       ...noSources,
       reads: 0,
@@ -186,6 +186,40 @@ describe("readStats", () => {
     // Read 4 s ago: the next read waits until 10 s have passed, and the build plans it.
     expect(await read(T0 + 35_000)).toEqual({ view: { checked_in: 4 }, changesAt: T0 + 41_000 });
     expect((await read(T0 + 41_000)).view).toEqual({ checked_in: 5 });
+    expect(notify.reads).toBe(3);
+  });
+
+  it("reads again after a check-in that lands while Notify counts", async () => {
+    const kv = new MemoryKv(() => T0);
+    const counts = [40, 41, 42];
+    let reads = 0;
+    const notify: Sources = {
+      ...noSources,
+      checkinCount: async () => {
+        reads += 1;
+        // Member 42 checks in after Notify counted 41, before this read returns.
+        if (reads === 2) await checkinsMoved(kv, "alpha");
+        return counts[reads - 1] ?? null;
+      },
+    };
+    const read = (now: number) =>
+      withTenant("alpha", () => readStats(kv, notify, "alpha", "UTC", now));
+    expect((await read(T0)).view).toEqual({ checked_in: 40 });
+    await checkinsMoved(kv, "alpha");
+    expect((await read(T0 + 20_000)).view).toEqual({ checked_in: 41 });
+    expect((await read(T0 + 40_000)).view).toEqual({ checked_in: 42 });
+    expect(reads).toBe(3);
+  });
+
+  it("tries again at the next build when the read after a check-in fails", async () => {
+    const kv = new MemoryKv(() => T0);
+    const notify = sources([3, null, 4]);
+    const read = (now: number) =>
+      withTenant("alpha", () => readStats(kv, notify, "alpha", "UTC", now));
+    expect((await read(T0)).view).toEqual({ checked_in: 3 });
+    await checkinsMoved(kv, "alpha");
+    expect((await read(T0 + 20_000)).view).toEqual({ checked_in: 3 });
+    expect((await read(T0 + 40_000)).view).toEqual({ checked_in: 4 });
     expect(notify.reads).toBe(3);
   });
 });
