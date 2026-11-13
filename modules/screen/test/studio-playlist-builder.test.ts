@@ -24,7 +24,7 @@ import type {
 import { cycleSeconds } from "../src/playback/timeline.js";
 import type { PlaybackAsset } from "../src/playback/timeline.js";
 
-const ASSETS: Record<string, BuilderAsset> = {
+const ASSETS = {
   poster: {
     kind: "image",
     title: "poster.png",
@@ -49,7 +49,7 @@ const ASSETS: Record<string, BuilderAsset> = {
   draft: { kind: "pdf", title: "draft.pdf", duration_seconds: null, slides: null, health: "ok" },
   board: { kind: "web", title: "status board", duration_seconds: null, slides: null, health: "ok" },
   dead: { kind: "youtube", title: "gone", duration_seconds: null, slides: null, health: "error" },
-};
+} satisfies Record<string, BuilderAsset>;
 
 const item = (asset_id: string, over: Partial<BuilderItem> = {}): BuilderItem => ({
   id: null,

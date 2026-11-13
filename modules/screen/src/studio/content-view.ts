@@ -182,7 +182,9 @@ function assetCard(c: ViewContext, d: ContentData, a: ContentAsset): Html {
       ),
     );
   }
-  return html`<article class="canccu-card canccu-studio-asset" id="asset-${a.id}">
+  // A writer drags any asset a playlist can play into the builder (static/studio-playlists.js).
+  const drag = write && a.kind !== "audio" ? html` draggable="true" data-drag-asset="${a.id}"` : "";
+  return html`<article class="canccu-card canccu-studio-asset" id="asset-${a.id}" ${drag}>
     ${a.kind === "audio" ? sound(c, a) : preview(a, job)}
     <p class="canccu-overline">${t(`kind.${a.kind}`)}</p>
     <h3 class="canccu-studio-asset__title">${a.title}</h3>

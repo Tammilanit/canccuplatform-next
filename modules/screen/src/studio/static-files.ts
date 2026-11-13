@@ -14,6 +14,9 @@ export const STATIC_TYPES: Record<string, string> = {
   "studio-content.css": "text/css; charset=utf-8",
   "studio-content.js": "text/javascript; charset=utf-8",
   "studio-replace-plan.js": "text/javascript; charset=utf-8",
+  "studio-playlists.css": "text/css; charset=utf-8",
+  "studio-playlists.js": "text/javascript; charset=utf-8",
+  "studio-playlist-builder.js": "text/javascript; charset=utf-8",
 };
 
 const staticFiles = new Map<string, Promise<Buffer>>();

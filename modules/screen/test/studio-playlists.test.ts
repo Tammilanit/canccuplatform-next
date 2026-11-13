@@ -56,12 +56,10 @@ describe.skipIf(!DATABASE_URL)("studio playlists and push", () => {
       break: { period_seconds: 60, break_seconds: 5 },
     });
     for (const day of [1, 2]) {
-      await call(
-        h,
-        "POST",
-        "/api/screen/schedules",
-        as("admin", { zone_key: "main", playlist_id: loop, priority: 10, days: [day] }),
-      );
+      const window = { zone_key: "main", playlist_id: loop, priority: 10, days: [day] };
+      const at = { start_minute: 600, end_minute: 1200 };
+      const res = await call(h, "POST", "/api/screen/schedules", as("admin", { ...window, ...at }));
+      expect(res.statusCode).toBe(201);
     }
   });
   afterAll(async () => {
@@ -71,12 +69,12 @@ describe.skipIf(!DATABASE_URL)("studio playlists and push", () => {
 
   const content = (session: string, query = "") =>
     call(h, "GET", `/admin/screen/content${query}`, { host: "alpha.test", session });
-  const json = <T>(body: string, id: string): T =>
+  const json = (body: string, id: string): unknown =>
     JSON.parse(
       new RegExp(`<script type="application/json" id="${id}">(.*?)</script>`, "s").exec(
         body,
       )?.[1] ?? "null",
-    ) as T;
+    );
   const until = (hours: number) => new Date(h.clock.now + hours * 3600_000).toISOString();
 
   it("draws the builder beside the library, on the first playlist or the one asked for", async () => {
@@ -87,27 +85,29 @@ describe.skipIf(!DATABASE_URL)("studio playlists and push", () => {
     expect(pick.indexOf("Ads")).toBeLessThan(pick.indexOf("Menu"));
     expect(pick).toContain(`value="${loop}"`);
     // It opens on the first playlist a window or a push can play, as mockup 10 does.
-    expect(json<Doc>(body, "canccu-studio-playlist").id).toBe(menu);
-    const chosen = json<Doc>(
+    expect((json(body, "canccu-studio-playlist") as Doc).id).toBe(menu);
+    const chosen = json(
       (await content("editor", `?playlist=${loop}`)).body,
       "canccu-studio-playlist",
-    );
+    ) as Doc;
     expect(chosen).toMatchObject({ id: loop, name: "Welcome loop", revision: 1, windows: 2 });
     expect(chosen.items.map((i) => i.asset_id)).toEqual(["as_deck", "as_poster"]);
     // An unknown id falls back to the first, rather than an editor for nothing.
     expect(
-      json<Doc>((await content("editor", "?playlist=pl_none")).body, "canccu-studio-playlist").id,
+      (json((await content("editor", "?playlist=pl_none")).body, "canccu-studio-playlist") as Doc)
+        .id,
     ).toBe(menu);
     expect(
-      json<Doc>((await content("editor", `?playlist=${ads}`)).body, "canccu-studio-playlist").id,
+      (json((await content("editor", `?playlist=${ads}`)).body, "canccu-studio-playlist") as Doc)
+        .id,
     ).toBe(ads);
   });
 
   it("gives the builder the whole library it draws from, without sounds", async () => {
-    const library = json<Record<string, Record<string, unknown>>>(
-      (await content("editor")).body,
-      "canccu-studio-library",
-    );
+    const library = json((await content("editor")).body, "canccu-studio-library") as Record<
+      string,
+      Record<string, unknown>
+    >;
     expect(library.as_deck).toMatchObject({ kind: "pptx", title: "as_deck", slides: 12 });
     expect(library.as_trailer).toMatchObject({ kind: "video", duration_seconds: 101 });
     expect(library.as_chime).toBeUndefined();
@@ -126,7 +126,7 @@ describe.skipIf(!DATABASE_URL)("studio playlists and push", () => {
     expect(reader).toMatch(/data-playlist-editor[^>]*data-write="false"/);
     expect(reader).not.toContain("data-playlist-new");
     expect(reader).not.toContain("data-drag-asset");
-    expect(json<Doc>(reader, "canccu-studio-playlist").id).toBe(loop);
+    expect((json(reader, "canccu-studio-playlist") as Doc).id).toBe(loop);
   });
 
   it("offers Push now only to holders of screen.push.write, with every zone and the presets", async () => {
@@ -244,7 +244,10 @@ describe.skipIf(!DATABASE_URL)("studio playlists and push", () => {
       expect(res.statusCode, name).toBe(200);
       expect(res.headers["content-type"]).toContain("text/javascript");
     }
-    const text = json<Record<string, string>>((await content("admin")).body, "canccu-studio-text");
+    const text = json((await content("admin")).body, "canccu-studio-text") as Record<
+      string,
+      string
+    >;
     const t = translator("en");
     for (const key of CLIENT_KEYS.filter(
       (k) => k.startsWith("playlist.") || k.startsWith("push."),

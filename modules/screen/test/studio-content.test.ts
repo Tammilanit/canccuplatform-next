@@ -134,13 +134,19 @@ describe.skipIf(!DATABASE_URL)("studio content", () => {
   });
 
   it("finds assets by title and kind, a page of 50 at a time", async () => {
+    // The library itself; the builder beside it lists every asset to add (#264).
+    const grid = (body: string) =>
+      body.slice(
+        body.indexOf("canccu-studio-content__main"),
+        body.indexOf("canccu-studio-content__side"),
+      );
     await addImage("menu-board.png");
     await addDeck("Sponsors.pdf");
-    const byTitle = (await content("editor", "?q=menu-board")).body;
+    const byTitle = grid((await content("editor", "?q=menu-board")).body);
     expect(byTitle).toContain("menu-board.png");
     expect(byTitle).not.toContain("Sponsors.pdf");
     expect(byTitle).toContain('value="menu-board"');
-    const byKind = (await content("editor", "?kind=pdf")).body;
+    const byKind = grid((await content("editor", "?kind=pdf")).body);
     expect(byKind).toContain("Sponsors.pdf");
     expect(byKind).not.toContain("menu-board.png");
     await h.pool.query(
@@ -149,12 +155,12 @@ describe.skipIf(!DATABASE_URL)("studio content", () => {
               now() - n * interval '1 minute'
        FROM generate_series(1, 51) AS n`,
     );
-    const first = (await content("editor", "", "beta.test")).body;
+    const first = grid((await content("editor", "", "beta.test")).body);
     expect(first).toContain(">Board 50<");
     expect(first).not.toContain(">Board 51<");
     const next = /href="(\/admin\/screen\/content\?after=[^"]+)"/.exec(first)?.[1] ?? "";
     expect(next).not.toBe("");
-    const second = (await page(next.replace(/&amp;/g, "&"), "editor", "beta.test")).body;
+    const second = grid((await page(next.replace(/&amp;/g, "&"), "editor", "beta.test")).body);
     expect(second).toContain(">Board 51<");
     expect(second).not.toContain(">Board 50<");
   });

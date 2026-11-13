@@ -57,7 +57,12 @@ export default tseslint.config(
   },
   // The Content page's script is a module, so it may import the replace plan it shares with tests.
   {
-    files: ["static/studio-content.js", "static/studio-replace-plan.js"],
+    files: [
+      "static/studio-content.js",
+      "static/studio-replace-plan.js",
+      "static/studio-playlists.js",
+      "static/studio-playlist-builder.js",
+    ],
     languageOptions: { sourceType: "module" },
   },
 );

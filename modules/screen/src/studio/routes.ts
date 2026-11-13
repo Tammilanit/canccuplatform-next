@@ -39,10 +39,11 @@ import type { SeenDevice } from "./help.js";
 import { CLIENT_KEYS, translator } from "./messages.js";
 import type { MessageKey, Translate } from "./messages.js";
 import { devicesActions, devicesView } from "./devices-view.js";
-import { readContent } from "./content-data.js";
+import { param, readContent } from "./content-data.js";
+import { readPlaylists } from "./playlists-data.js";
+import { contentPage } from "./playlists-view.js";
 import { STATIC_TYPES, staticFile } from "./static-files.js";
 import type { ContentDeps } from "./content-data.js";
-import { contentView } from "./content-view.js";
 import { schedulePage } from "./schedule-page.js";
 import { tickerView } from "./ticker-view.js";
 import { STUDIO, liveActions, liveView, startUrlOf } from "./views.js";
@@ -358,9 +359,10 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         const c = await context(request);
         const ctx = tenantOf(request);
         const data = await readContent({ ...deps, now }, ctx, c.rights, request.query);
-        const o = { title: "", tab: "content", description: c.t("content.desc") };
-        const own = { own: "studio-content", module: true };
-        return page(request, reply, c, { ...o, ...own, body: contentView(c, data) });
+        const lists = await readPlaylists(deps.db, c.nowMs, param(request.query, "playlist"));
+        const body = contentPage(c, data, lists, await readZones(deps, ctx));
+        const o = { title: "", tab: "content", description: c.t("content.desc"), body };
+        return page(request, reply, c, { ...o, own: "studio-content", module: true });
       },
     );
 
