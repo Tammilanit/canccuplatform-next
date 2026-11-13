@@ -1,6 +1,6 @@
 /** A screen app on a real Postgres (RLS needs one) with fake tenants, admin and Valkey. */
 import type { ThemeNow } from "../src/compose/sources.js";
-import type { AgendaNow, CheckinCode, VenueInfo } from "../src/compose/widgets.js";
+import type { AgendaItem, AgendaNow, CheckinCode, VenueInfo } from "../src/compose/widgets.js";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -130,6 +130,8 @@ export interface FakeSources {
   theme: ThemeNow | null;
   event: { name: string } | null;
   agenda: AgendaNow | null;
+  /** The whole run of show (`GET /internal/agenda/items`); null is "down". */
+  agendaItems: AgendaItem[] | null;
   venue: VenueInfo | null;
   /** The hostnames the guest read (event) was made with. */
   hosts: string[];
@@ -183,6 +185,7 @@ export async function harness(): Promise<Harness> {
     theme: null,
     event: null,
     agenda: null,
+    agendaItems: null,
     venue: null,
     hosts: [],
     tenants: [],
@@ -265,6 +268,7 @@ export async function harness(): Promise<Harness> {
       theme: (tenantId) => answer(fake.tenants, tenantId, fake.theme),
       event: (host) => answer(fake.hosts, host, fake.event),
       agendaNow: (tenantId) => answer(fake.tenants, tenantId, fake.agenda),
+      agendaItems: (tenantId) => answer(fake.tenants, tenantId, fake.agendaItems),
       venueInfo: (tenantId) => answer(fake.tenants, tenantId, fake.venue),
       checkinCode: (_tenantId, purpose) => answer(fake.checkinReads, purpose, fake.checkin),
     },

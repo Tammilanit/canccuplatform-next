@@ -163,7 +163,7 @@ describe.skipIf(!DATABASE_URL)("studio schedule page", () => {
     expect(today).toContain(
       '<a class="canccu-button canccu-button--primary" href="/admin/screen/schedule?zone=main&amp;from=2026-01-01&amp;day=2026-01-01" aria-current="page">Thu 1 Jan</a>',
     );
-    expect(today.match(/<section id="canccu-sched-\d+" class="canccu-sched__day">/g)).toHaveLength(
+    expect(today.match(/<section id="canccu-sched-\d+" class="canccu-sched__day" /g)).toHaveLength(
       1,
     );
     expect(today.match(/class="canccu-sched__day canccu-sched__day--off"/g)).toHaveLength(6);
