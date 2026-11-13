@@ -38,6 +38,20 @@
     border-block: var(--canccu-border-width) solid var(--canccu-color-border);
     background: color-mix(in oklch, var(--canccu-color-primary) 16%, var(--canccu-color-surface));
   }
+  /* The Now marker follows the gap that now falls in, where a line centred on the boundary would
+     hide it. There the shown line lies over the marker's row instead, the marker is raised over
+     the line and the line's words start after it, so both read. The marker lets the pointer
+     through, so pointing at it keeps the line shown. (A shown line on a touch screen is a row of
+     its own above the marker, below.) */
+  @media (hover: hover) {
+    .canccu-agenda-gap:has(+ .canccu-agenda-nowline) a:hover,
+    .canccu-agenda-gap:has(+ .canccu-agenda-nowline) a:focus-visible,
+    .canccu-agenda-gap.is-shown:has(+ .canccu-agenda-nowline) a {
+      inset-block-start: -0.25rem;
+      padding-inline-start: 6.25rem;
+    }
+    .canccu-agenda-nowline span { position: relative; z-index: 3; pointer-events: none; }
+  }
   .canccu-agenda-gap a:focus-visible { outline-offset: -2px; }
   /* Without hover a hidden line would catch taps meant for the rows beside it. Shown, it is a
      row of its own with a full 44 px target. */
