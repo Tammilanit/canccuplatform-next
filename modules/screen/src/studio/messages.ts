@@ -4,9 +4,11 @@
  * catalogue, English is used, so a page never shows a bare key.
  */
 import { CONTENT_EN } from "./content-messages.js";
+import { SCHEDULE_EN } from "./schedule-messages.js";
 
 const EN = {
   ...CONTENT_EN,
+  ...SCHEDULE_EN,
   "studio.title": "Screen studio",
   "studio.page": "the Screen studio",
   "studio.back": "Back to the Screen studio",

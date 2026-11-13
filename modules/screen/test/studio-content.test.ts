@@ -85,12 +85,15 @@ describe.skipIf(!DATABASE_URL)("studio content", () => {
     expect(crew.body).not.toContain("screen.content.read");
   });
 
-  it("shows the Content tab only to holders of screen.content.read, and opens on it for them", async () => {
+  // Schedule shares the right and comes first (mockups 09, 10), so the home opens on it.
+  it("shows the Content tab only to holders of screen.content.read, after Schedule", async () => {
     const tabs = (body: string) =>
       [...body.matchAll(/<nav class="canccu-tabs"[^>]*>(.*?)<\/nav>/g)][0]?.[1] ?? "";
     expect(tabs((await page("/admin/screen/live", "admin")).body)).toContain(">Content<");
     expect(tabs((await page("/admin/screen/live", "crew")).body)).not.toContain(">Content<");
-    expect((await page("/admin/screen/", "decks")).headers.location).toBe("/admin/screen/content");
+    const nav = tabs((await page("/admin/screen/live", "admin")).body);
+    expect(nav.indexOf(">Schedule<")).toBeLessThan(nav.indexOf(">Content<"));
+    expect((await page("/admin/screen/", "decks")).headers.location).toBe("/admin/screen/schedule");
   });
 
   it("offers upload, links, replace and delete only to holders of screen.content.write", async () => {

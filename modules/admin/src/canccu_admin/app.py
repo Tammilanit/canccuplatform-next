@@ -196,7 +196,10 @@ def create_app(
         event = await event_of(request)
         zone, now = (event.time_zone if event else "UTC"), datetime.now(UTC)
         changed = await service.store.last_changed()
-        groups = {m: part_name(m, settings=True) for m in service.declarations}
+        recent = await service.store.recent_changes(SHOWN_CHANGES)
+        # A loaded profile can set a module that declares nothing (pizza): it still has a name.
+        parts = [*service.declarations, *(c.module for c in recent)]
+        groups = {m: part_name(m, settings=True) for m in parts}
         rows = []
         for m, declared in service.declarations.items():
             _, values = await service.store.get_settings(m)
@@ -211,7 +214,6 @@ def create_app(
                     when(changed.get(m), now, zone),
                 )
             )
-        recent = await service.store.recent_changes(SHOWN_CHANGES)
         # Signed-in names; a session from elsewhere (the CI stub) names at least itself.
         names = {u.id: u.name for u, _ in await auth.users()} if recent else {}
         names.setdefault(session.user_id, session.user_name)

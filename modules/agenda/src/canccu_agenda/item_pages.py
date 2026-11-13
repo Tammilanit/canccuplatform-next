@@ -71,7 +71,7 @@ def _form(values: dict[str, Any], kinds: Any, action: str, error: str = "") -> s
 
 
 def _save(editing: bool) -> str:
-    """An edit's button says what it does (sheet 5, "Edit has the same choice"); agenda.css shows
+    """An edit's button says what it does (sheet 5, "Edit has the same choice"); confirm.css shows
     the one that matches the "Tell people" box."""
     if not editing:
         return button("Save")

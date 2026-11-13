@@ -4,19 +4,21 @@
 
 The pages run no script, so the confirm follows the choices without one: it is drawn once for each
 combination of "Also move the N items after it" and "Tell people", and the stylesheet shows the one
-whose boxes are ticked (agenda.css, `.canccu-agenda-choice`). The preview and the change share
+whose boxes are ticked (confirm.css, `.canccu-agenda-choice`). The preview and the change share
 `edits.plan_delay`; a confirm carries the `agenda_version` it was drawn at, and if the run of show
 changed meanwhile the organiser sees the new confirm instead of a different change.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
 from canccu_kit import KitError
+from canccu_kit.ui import icon
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
@@ -122,15 +124,18 @@ def _label(minutes: int, count: int, told_: bool) -> str:
 
 
 def _confirm(
-    request: Request, row: Any, minutes: int, plans: dict[bool, Any], kinds: Any, channels: Any
+    request: Request,
+    row: Any,
+    minutes: int,
+    plans: dict[bool, Any],
+    kinds: Any,
+    channels: Any,
+    back: str,
 ) -> str:
-    """One set of rows and buttons per combination of the two choices; agenda.css shows the one
+    """One set of rows and buttons per combination of the two choices; confirm.css shows the one
     the ticked boxes name. Every button posts the same form, so what is sent is what is ticked."""
     tz, now = zone_of(request), deps(request).now()
-    back = (
-        f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/{esc(row["id"])}">'
-    )
-    back += "Don't delay</a>"
+    back = f'<a class="canccu-button canccu-button--secondary" href="{esc(back)}">Don\'t delay</a>'
     out = ""
     for following, plan in plans.items():
         for told_ in (True, False):
@@ -149,27 +154,28 @@ def _confirm(
     return out
 
 
-async def delay_page(request: Request) -> Response:
-    await page_writer(request)
+@dataclass
+class Confirm:
+    title: str  # empty until the minutes are picked
+    choices: str
+    body: str
+    version: int  # the `agenda_version` the confirm was drawn at
+
+
+async def confirm(
+    request: Request,
+    row: Any,
+    raw: str | None,
+    following: bool,
+    announcing: bool,
+    back: str,
+    subject: str = "it",
+) -> Confirm:
+    """The confirm of a delay by `raw` minutes, shared by the delay page and the sheet over the day
+    view: its title, the two choices, and the rows and buttons of each. "Don't delay" goes to
+    `back`; the title calls the item `subject`."""
     d = deps(request)
-    row, _, _ = await load_item(d, request.path_params["item_id"])
-    q = request.query_params
-    # This page's own form sends `chosen`; there an unticked box sends nothing. From a link,
-    # telling people is the default and the items after it stay.
-    following = q.get("following") == "1"
-    announcing = q.get("announce") == "1" if "chosen" in q else True
     after = await _after(d, row, d.now())
-    raw = q.get("minutes") or q.get("other")
-    chips = "".join(
-        button(
-            f"+{m}",
-            "primary" if raw == str(m) else "secondary",
-            formmethod="get",
-            name="minutes",
-            value=m,
-        )
-        for m in CHIPS
-    )
     choices = (
         check(
             "following",
@@ -185,35 +191,84 @@ async def delay_page(request: Request) -> Response:
         announcing,
         "Off: nothing is announced. Screens and the hub still show the new time.",
     )
-    confirm, title, version = "", "", 0
-    if raw:
-        try:
-            minutes = edits.minutes_of(as_int(raw))
-        except KitError as exc:
-            confirm = notice(exc.message, "error")
-        else:
-            options = [False, True] if after else [False]
-            plans, version, kinds = await _plans(d, row, minutes, options, d.now())
-            channels = await read_channels(d)
-            confirm = _confirm(request, row, minutes, plans, kinds, channels)
-            title = (
-                f"Delay it by {minutes} min?"
-                if minutes > 0
-                else f"Bring it forward {-minutes} min?"
-            )
+    if not raw:
+        hint = '<p class="canccu-agenda-muted">Pick how long to see what moves and who is told.</p>'
+        return Confirm("", choices, hint, 0)
+    try:
+        minutes = edits.minutes_of(as_int(raw))
+    except KitError as exc:
+        return Confirm("", choices, notice(exc.message, "error"), 0)
+    options = [False, True] if after else [False]
+    plans, version, kinds = await _plans(d, row, minutes, options, d.now())
+    channels = await read_channels(d)
+    body = _confirm(request, row, minutes, plans, kinds, channels, back)
+    if minutes > 0:
+        title = f"Delay {subject} by {minutes} min?"
     else:
-        confirm = (
-            '<p class="canccu-agenda-muted">Pick how long to see what moves and who is told.</p>'
+        title = f"Bring {subject} forward {-minutes} min?"
+    return Confirm(title, choices, body, version)
+
+
+def _form(row: Any, version: int) -> str:
+    return (
+        f'<form method=post action="{BASE}/items/{esc(row["id"])}/delay"'
+        ' class="canccu-agenda-form canccu-agenda-choice">'
+        + hidden({"chosen": 1, "revision": row["revision"], "agenda_version": version})
+    )
+
+
+async def sheet(request: Request, row: Any, raw: str, back: str) -> str:
+    """The confirm as sheet 5 draws it over the day view: a dialog on a desktop, a bottom sheet on a
+    phone (confirm.css). The day view's delay chips open it through the query, so it needs no
+    script; the scrim and Close lead back to the day. Other… keeps the delay page, which is also
+    where a confirm drawn before the run of show changed sends the organiser."""
+    # From a chip, as from a link to the page: telling people is the default and the items after
+    # it stay.
+    drawn = await confirm(request, row, raw, False, True, back, subject=row["title"])
+    title = drawn.title or f"Delay {row['title']}"
+    shut = (
+        '<a class="canccu-button canccu-button--ghost canccu-button--sm'
+        f' canccu-agenda-sheet__close" href="{esc(back)}">{icon("close")}<span>Close</span></a>'
+    )
+    return (
+        f'<a class="canccu-agenda-scrim" href="{esc(back)}" tabindex="-1" aria-hidden="true"></a>'
+        '<dialog open class="canccu-agenda-sheet" aria-labelledby="canccu-agenda-sheet">'
+        + _form(row, drawn.version)
+        + f'<div class="canccu-agenda-sheet__head"><h2 class="canccu-card__title"'
+        f' id="canccu-agenda-sheet">{esc(title)}</h2>{shut}</div>'
+        f'<div class="canccu-agenda-confirm-choices">{drawn.choices}</div>{drawn.body}'
+        "</form></dialog>"
+    )
+
+
+async def delay_page(request: Request) -> Response:
+    await page_writer(request)
+    d = deps(request)
+    row, _, _ = await load_item(d, request.path_params["item_id"])
+    q = request.query_params
+    # This page's own form sends `chosen`; there an unticked box sends nothing. From a link,
+    # telling people is the default and the items after it stay.
+    following = q.get("following") == "1"
+    announcing = q.get("announce") == "1" if "chosen" in q else True
+    raw = q.get("minutes") or q.get("other")
+    chips = "".join(
+        button(
+            f"+{m}",
+            "primary" if raw == str(m) else "secondary",
+            formmethod="get",
+            name="minutes",
+            value=m,
         )
+        for m in CHIPS
+    )
+    drawn = await confirm(request, row, raw, following, announcing, f"{BASE}/items/{row['id']}")
     body = (
         notice("The run of show changed meanwhile: check the confirm again.", "error")
         if q.get("changed")
         else ""
     )
     body += (
-        f'<form method=post action="{BASE}/items/{esc(row["id"])}/delay"'
-        ' class="canccu-agenda-form canccu-agenda-choice">'
-        + hidden({"chosen": 1, "revision": row["revision"], "agenda_version": version})
+        _form(row, drawn.version)
         # Enter in the field submits with the form's first button: this one sends no chip, so the
         # typed minutes count.
         + '<button formmethod=get class="canccu-agenda-hidden" tabindex=-1 aria-hidden=true>'
@@ -226,8 +281,9 @@ async def delay_page(request: Request) -> Response:
         # otherwise ride along with the chip's confirm.
         + f' value="{"" if q.get("minutes") else esc(q.get("other", ""))}"></label>'
         + '<section class="canccu-card canccu-agenda-confirm" aria-label="Confirm">'
-        + (f'<h2 class="canccu-card__title">{esc(title)}</h2>' if title else "")
-        + f'<div class="canccu-agenda-confirm-choices">{choices}</div>{confirm}</section></form>'
+        + (f'<h2 class="canccu-card__title">{esc(drawn.title)}</h2>' if drawn.title else "")
+        + f'<div class="canccu-agenda-confirm-choices">{drawn.choices}</div>{drawn.body}'
+        "</section></form>"
     )
     return page(request, f"Delay {row['title']}", body)
 

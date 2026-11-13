@@ -10,6 +10,7 @@ export const STATIC_TYPES: Record<string, string> = {
   "studio.js": "text/javascript; charset=utf-8",
   "studio-zone.css": "text/css; charset=utf-8",
   "studio-zone.js": "text/javascript; charset=utf-8",
+  "studio-schedule.css": "text/css; charset=utf-8",
   "studio-content.css": "text/css; charset=utf-8",
   "studio-content.js": "text/javascript; charset=utf-8",
   "studio-replace-plan.js": "text/javascript; charset=utf-8",
