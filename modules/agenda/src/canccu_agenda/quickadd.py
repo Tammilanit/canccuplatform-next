@@ -3,6 +3,7 @@ everything else from a template or a kind (plan issue-187 D11)."""
 
 from __future__ import annotations
 
+import re
 from datetime import date, datetime, time, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -81,6 +82,17 @@ def _form(values: dict[str, Any], what: list[tuple[str, str]], day: date, today:
         )
         + "</fieldset>"
         + field(
+            "Length",
+            text_input(
+                "minutes",
+                values.get("minutes") or "",
+                inputmode="numeric",
+                pattern="[0-9]{1,4}",
+                maxlength=4,
+            ),
+            "Minutes. Empty for the template's length.",
+        )
+        + field(
             "Where",
             text_input("location", values.get("location") or "", maxlength=120),
             "Empty for the template's place.",
@@ -115,7 +127,34 @@ async def quick_page(request: Request) -> Response:
     today = now.astimezone(tz).date()
     what, _, _ = await _choices(request)
     day = _day(request.query_params.get("day"), today)
-    return page(request, "Quick add", _form({}, what, day, today))
+    return page(request, "Quick add", _form(_from_gap(request), what, day, today))
+
+
+def _from_gap(request: Request) -> dict[str, str]:
+    """A gap's line opens the form at the gap's start, with the room before the next item
+    (day_view.gap_html); what is not a time or a length is left out."""
+    values: dict[str, str] = {}
+    at = request.query_params.get("at", "")
+    if _time(at) is not None:
+        values.update(when="at", at=at)
+    minutes = request.query_params.get("minutes", "")
+    if _length(minutes) is not None:
+        values["minutes"] = minutes
+    return values
+
+
+def _time(raw: str) -> time | None:
+    if not re.fullmatch(TIME_PATTERN, raw):
+        return None
+    try:
+        return time.fromisoformat(raw)
+    except ValueError:
+        return None
+
+
+def _length(raw: str) -> int | None:
+    """Minutes, up to a day: a longer item is the full form's."""
+    return int(raw) if raw.isascii() and raw.isdigit() and 0 < int(raw) <= 1440 else None
 
 
 def _starts(form: FormData, day: date, now: datetime, tz: ZoneInfo) -> datetime:
@@ -123,10 +162,9 @@ def _starts(form: FormData, day: date, now: datetime, tz: ZoneInfo) -> datetime:
     if when == "in30":
         return now.replace(second=0, microsecond=0) + timedelta(minutes=30)
     if when == "at":
-        try:
-            at = time.fromisoformat(str(form.get("at") or ""))
-        except ValueError:
-            raise model.invalid("pick a time, or now") from None
+        at = _time(str(form.get("at") or ""))
+        if at is None:
+            raise model.invalid("pick a time, or now")
         return datetime.combine(day, at, tz)
     return next_minute(now)
 
@@ -143,8 +181,12 @@ def item_fields(
     }
     if template is not None:
         fields.update({k: template[k] for k in templates.FIELDS if k not in ("name", "minutes")})
-        if template["minutes"]:
-            fields["ends_at"] = api_time(starts + timedelta(minutes=template["minutes"]))
+    raw = str(form.get("minutes") or "").strip()
+    minutes = _length(raw) if raw else (template["minutes"] if template is not None else None)
+    if raw and minutes is None:
+        raise model.invalid("the length is in minutes, from 1 to 1440")
+    if minutes:
+        fields["ends_at"] = api_time(starts + timedelta(minutes=minutes))
     location = forms.opt_text(form, "location")
     if location is not None:
         fields["location"] = location
