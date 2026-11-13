@@ -14,6 +14,8 @@ import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
 import {
   CLAIM_OF,
   withHeroItemOnly,
+  withCounts,
+  withOneScreen,
   withPhoto,
   withShowcase,
   withStats,
@@ -39,6 +41,14 @@ const CLAIMS = ["claim-rail", "claim-hero", "claim-overlay", "claim-takeover"];
 const LAYOUTS = ["dashboard", "hero", "split", "ambient"];
 const landscapeOf = (theme) => sizesOf(theme).filter(([w, h]) => w > h);
 
+/** What each view of #443 must show (sheets 10, 13 and 16), waited for before its shot. */
+const NEW_VIEWS = {
+  photo: ".canccu-widget__wall .canccu-widget__tile:nth-child(5) img",
+  "photo-pop": ".canccu-widget__pop img",
+  "ambient-online": ".canccu-region--online .canccu-widget__line",
+  "portrait-right-now": ".canccu-region--right_now .canccu-widget__peak",
+};
+
 const nameOf = (theme, view, [w, h]) => `theming-${theme}-screen-${view}-${w}x${h}`;
 
 /** Every PNG the run takes, in order, for the dry run. */
@@ -56,9 +66,13 @@ export function planned() {
   out.push(nameOf("default", "dashboard-showcase", HD[0]));
   out.push(nameOf("default", "dashboard-waiting", HD[0]));
   out.push(nameOf("default", "ambient-takeover", HD[0]));
+  out.push(nameOf("default", "ambient-online", HD[0]));
   for (const size of HD)
-    for (const view of ["photo", "rail-empty", ...CLAIMS]) out.push(nameOf("default", view, size));
+    for (const view of ["photo", "photo-pop", "rail-empty", ...CLAIMS])
+      out.push(nameOf("default", view, size));
   out.push(nameOf("default", "entrance", HD[1]));
+  out.push(nameOf("default", "pulse-one-screen", HD[0]));
+  out.push(nameOf("default", "portrait-right-now", HD[1]));
   return out;
 }
 
@@ -144,6 +158,10 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
           await attempt(nameOf(theme, "ambient-takeover", HD[0]), () =>
             layoutShot(theme, "ambient", HD[0], "ambient-takeover"),
           );
+        if (theme === "default")
+          await attempt(nameOf(theme, "ambient-online", HD[0]), () =>
+            layoutShot(theme, "ambient", HD[0], "ambient-online"),
+          );
       } finally {
         await saveZone(demo, "main", { layout_id: null });
       }
@@ -151,6 +169,9 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
     for (const size of HD) {
       await attempt(nameOf("default", "photo", size), () =>
         handed("default", "photo", size, withPhoto),
+      );
+      await attempt(nameOf("default", "photo-pop", size), () =>
+        handed("default", "photo-pop", size, (s) => withPhoto(s, true)),
       );
       await attempt(nameOf("default", "rail-empty", size), () =>
         handed("default", "rail-empty", size, withHeroItemOnly),
@@ -174,6 +195,13 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await shot(nameOf("default", "entrance", HD[1]), page);
       await close();
     });
+
+    await attempt(nameOf("default", "pulse-one-screen", HD[0]), () =>
+      handed("default", "pulse-one-screen", HD[0], withOneScreen),
+    );
+    await attempt(nameOf("default", "portrait-right-now", HD[1]), () =>
+      handed("default", "portrait-right-now", HD[1], withCounts),
+    );
 
     /** The Pulse, then identify over it, then the offline marker. */
     async function pulse(theme, size) {
@@ -216,6 +244,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       if (view === "dashboard-showcase")
         return handed(theme, view, size, (s) => withShowcase(withStats(s)));
       if (view === "ambient-takeover") return handed(theme, view, size, withTakeover);
+      if (view === "ambient-online") return handed(theme, view, size, withCounts);
       const { page, close } = await open(size, main.cookie);
       await page.goto(at("/screen/"));
       await page.waitForSelector(`.canccu-layout--${id}`, { timeout: 30_000 });
@@ -248,6 +277,9 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
       else await layout(page, size);
       if (view.startsWith("dashboard")) await statsApart(page);
+      // #443's views draw what they are named for before the shot.
+      const drawn = NEW_VIEWS[view];
+      if (drawn !== undefined) await page.waitForSelector(drawn, { timeout: 30_000 });
       if (view === "rail-empty") await railShowsIdle(page);
       else if (view === "dashboard-showcase") {
         await stripNamesCountdown(page);

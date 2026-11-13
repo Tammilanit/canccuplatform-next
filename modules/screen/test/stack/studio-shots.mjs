@@ -86,7 +86,20 @@ const editBoxes = (railWider) => async (page) => {
     await page.click('section[data-region="rail"] [data-size="wider"]');
   await studioReady(page);
 };
+/** Sheet 16 (#443): the screen name with the header box, the photo wall's settings with the hero's. */
+const pickHeader = async (page) => {
+  await page.click('[data-pick="header"]');
+  await page.selectOption('section[data-region="header"] [name=screen_name]', "always");
+  await studioReady(page);
+};
+const editWall = async (page) => {
+  await page.fill('section[data-region="hero"] [name=photo_seconds]', "12");
+  await page.selectOption('section[data-region="hero"] [name=photo_order]', "shuffle");
+  await studioReady(page);
+};
 export const LAYOUT_PAGES = [
+  ["screen-zone-screen-name", "/admin/screen/zones/main", DESK, { ready: pickHeader }],
+  ["screen-zone-photo-wall", "/admin/screen/zones/main", DESK, { ready: editWall }],
   ["screen-zone-boxes", "/admin/screen/zones/main", DESK, { ready: editBoxes(2) }],
   ["screen-zone-boxes-phone", "/admin/screen/zones/main", PHONE, { ready: editBoxes(2) }],
   ["screen-zone-gap", "/admin/screen/zones/main", DESK, { ready: editBoxes(1) }],
