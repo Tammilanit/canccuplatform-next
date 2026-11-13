@@ -42,8 +42,9 @@ UI_CSS = Path(
 # The run of show's own pages, as tabs under its title (docs/design/mockups.html, sheet 2). Quick
 # add is an action, so it is the page's button and the bar's, never a tab: nothing twice.
 TABS = (("/", "Run of show"), ("/templates", "Templates"))
-STYLESHEETS = ("ui.css", "agenda.css", "confirm.css")
+STYLESHEETS = ("ui.css", "agenda.css", "confirm.css", "gap.css")
 CSS = tuple(f"{BASE}/static/{name}" for name in STYLESHEETS)
+SCRIPTS = ("day.js",)
 # A 24-hour time: native time fields follow the browser's locale, which may be 12-hour (UX B5).
 TIME_PATTERN = "[0-2][0-9]:[0-5][0-9]"
 log = logging.getLogger("canccu.agenda")
@@ -288,9 +289,10 @@ def button(label: str, kind: str = "primary", **attrs: Any) -> str:
 async def static_file(request: Request) -> Response:
     name = request.path_params["name"]
     path = UI_CSS if name == "ui.css" else _STATIC / name
-    if name not in STYLESHEETS or not path.is_file():
+    if name not in (*STYLESHEETS, *SCRIPTS) or not path.is_file():
         raise KitError("not found", status=404, code="not_found")
-    response = FileResponse(path, media_type="text/css")
+    kind = "text/javascript" if name in SCRIPTS else "text/css"
+    response = FileResponse(path, media_type=kind)
     response.headers["Cache-Control"] = "public, max-age=300"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response

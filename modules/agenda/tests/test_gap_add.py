@@ -9,7 +9,9 @@ from test_quickadd import items, templates_of
 
 
 def _list(text: str) -> str:
-    return text.split('class="canccu-card canccu-card--flush canccu-agenda-list"')[1].split("</ol>")[0]
+    return text.split('class="canccu-card canccu-card--flush canccu-agenda-list"')[1].split(
+        "</ol>"
+    )[0]
 
 
 async def test_each_gap_names_both_neighbours_and_opens_quick_add_with_its_time(env: Env) -> None:
@@ -63,7 +65,7 @@ async def test_quick_add_opens_with_the_gaps_time_and_length(env: Env) -> None:
     # Without a gap: now, and the template's length.
     assert 'name=when value="now" checked' in plain and 'name=minutes value=""' in plain
     # What is not a time or a length is left out, not shown back.
-    assert 'name=when value="now" checked' in odd and "29:00" not in odd and "-5" not in odd
+    assert 'name=when value="now" checked' in odd and "29:00" not in odd and 'value="-5"' not in odd
 
 
 async def test_quick_add_takes_the_length_the_form_sets(env: Env) -> None:
