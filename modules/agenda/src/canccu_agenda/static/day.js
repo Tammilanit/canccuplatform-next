@@ -4,6 +4,8 @@
 // the page still works: focus shows a gap's line and every day ends with its own add row.
 const list = document.querySelector(".canccu-agenda-list");
 const bar = document.querySelector(".canccu-tabbar__add");
+// With no gap or add row in view the bar goes back to its own link (Quick add "Now").
+const home = bar && bar.href;
 const HOLD_MS = 450;
 const SLOP_PX = 10; // a finger that moves this far is scrolling, not pressing
 
@@ -71,7 +73,7 @@ if (list) {
   );
 
   // The bar's Quick add opens at the line a long press showed while it is in view, else at the
-  // first gap (or the day's add row) in view.
+  // first gap (or the day's add row) in view, else at its own link.
   const inView = (el) => {
     const r = el.getBoundingClientRect();
     return r.bottom > 0 && r.top < window.innerHeight;
@@ -80,7 +82,7 @@ if (list) {
     if (!bar) return;
     const own = shown && shown.querySelector("a");
     const target = own && inView(own) ? own : adds.find(inView);
-    if (target) bar.href = target.href;
+    bar.href = target ? target.href : home;
   };
   let queued = false;
   document.addEventListener(
