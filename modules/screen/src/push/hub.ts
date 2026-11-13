@@ -7,6 +7,7 @@
  */
 import { platformKey, tenantKey, withTenant } from "@canccu/kit";
 import type { Event, Logger } from "@canccu/kit";
+import { PREVIEW_CHANNEL } from "../preview/store.js";
 import { refreshZone } from "./device-state.js";
 import type { Feed, StreamDeps } from "./feed.js";
 
@@ -75,9 +76,16 @@ export class PushHub {
   private readonly unsubscribe: () => void;
 
   constructor(private readonly deps: HubDeps) {
-    this.unsubscribe = deps.fanout.subscribe(PLAYED_CHANNEL, (message) => {
+    const played = deps.fanout.subscribe(PLAYED_CHANNEL, (message) => {
       this.onPlayed(message);
     });
+    const previews = deps.fanout.subscribe(PREVIEW_CHANNEL, (message) => {
+      this.onPreview(message);
+    });
+    this.unsubscribe = () => {
+      played();
+      previews();
+    };
   }
 
   add(stream: Feed): void {
@@ -160,6 +168,24 @@ export class PushHub {
     const held = this.zonesOf(tenant);
     for (const zone of zones)
       if (typeof zone === "string" && held.has(zone)) this.schedule(tenant, zone);
+  }
+
+  /**
+   * A preview on a screen started, was replaced or ended on a device (src/preview/store.ts): its
+   * streams and every mirror draw again, as after an assignment, each with one whole `state`.
+   */
+  private onPreview(message: string): void {
+    let notice: { tenant?: unknown; device_id?: unknown };
+    try {
+      notice = JSON.parse(message) as typeof notice;
+    } catch {
+      return;
+    }
+    const { tenant, device_id: deviceId } = notice;
+    if (typeof tenant !== "string" || typeof deviceId !== "string") return;
+    for (const s of this.streams.get(tenant) ?? []) {
+      if (s.deviceId === deviceId || s.mirror) void s.replace();
+    }
   }
 
   /** Main runs it every REFRESH_MS. */

@@ -29,6 +29,7 @@ import {
   FROZEN_PAGES,
   studioShots,
 } from "../modules/screen/test/stack/studio-shots.mjs";
+import { PREVIEW_PAGES } from "../modules/screen/test/stack/preview-shots.mjs";
 
 const { values: opts } = parseArgs({
   options: {
@@ -182,6 +183,11 @@ const DRAFT = [
     },
   ],
 ];
+// Publishing a light look asks first (sheet 6).
+const LIGHT = [
+  ["studio-draft-light", DESK],
+  ["studio-draft-light-phone", PHONE],
+];
 // The run of show's day view (sheet 5, #400) on the fixture's filled day: at both widths, at 1440 px
 // with the item beside the list and the live miniature of the main zone, which the shot waits for,
 // an item a row picks, over the day, and the delay confirm a chip opens over the day. `pick` and
@@ -244,20 +250,39 @@ const DAY_VIEW = [
     PHONE,
     { delay: "Demo Game Cup, semis", fullPage: false },
   ],
+  // The whole event with the earlier items shown (#433), and on a phone the strip that keeps what
+  // is on now in view once the hero has scrolled away.
+  ["agenda-earlier", DESK, { query: "?earlier=1" }],
+  ["agenda-strip-phone", PHONE, { ready: scrollPast, fullPage: false }],
 ];
+async function scrollPast(page) {
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page
+    .locator(".canccu-agenda-strip.is-shown")
+    .waitFor({ timeout: 5000 });
+  await page.waitForTimeout(300);
+}
 const dayPath = (o, id) => {
   if (o.delay) return `/agenda/?delay=${id}&minutes=10`;
+  if (o.query) return `/agenda/${o.query}`;
   return o.pick ? `/agenda/?item=${id}` : "/agenda/";
 };
 // The front door, signed out, and one page of the error family (an item that does not exist),
 // each at both widths. The error page must answer its own status, not 200.
 const SIGN_IN = "/admin/sign-in";
+async function typeNight(page) {
+  await page.fill('input[name="at"]', "00:30");
+  await page.waitForTimeout(200);
+}
 const MISSING = "/agenda/items/00000000-0000-0000-0000-000000000000/delay";
 const OTHERS = [
   ["sign-in", SIGN_IN, DESK, { cookie: null }],
   ["sign-in-phone", SIGN_IN, PHONE, { cookie: null }],
   ["error-not-found", MISSING, DESK, { status: 404 }],
   ["error-not-found-phone", MISSING, PHONE, { status: 404 }],
+  // Quick add with a time after midnight typed: the next day picked, said why, and the button
+  // repeating day and time (#434).
+  ["agenda-quick-add-night-phone", "/agenda/add", PHONE, { ready: typeNight }],
 ];
 // The Delay page and Edit view of one item (#388), next to their mockups (docs/design/mockups.html):
 // with the items after it, quiet, and the edit form. The items are made for the run.
@@ -269,7 +294,16 @@ const ITEM_PAGES = [
     DESK,
   ],
   ["agenda-delay-quiet", "/delay?minutes=10&chosen=1", DESK],
+  // Only this item moves and it now runs into Board games corner: the confirm names the overlap
+  // (#434).
+  ["agenda-delay-overlap", "/delay?minutes=30&announce=1&chosen=1", DESK],
   ["agenda-edit", "/edit", DESK],
+  ["agenda-cancel", "/cancel", DESK],
+];
+// A cancelled item comes back until the event ends (#434): its page after the cancel.
+const CANCELLED = [
+  ["agenda-bring-back", DESK],
+  ["agenda-bring-back-phone", PHONE],
 ];
 
 if (opts["dry-run"]) {
@@ -286,7 +320,12 @@ if (opts["dry-run"]) {
     console.log(`  ${name}.png  ${at(SETTINGS_FORM)}  (${width}×${height})`);
   }
   for (const [name, path, { width, height }, o] of OTHERS) {
-    const how = o.cookie === null ? ", signed out" : `, answering ${o.status}`;
+    const how =
+      o.cookie === null
+        ? ", signed out"
+        : o.status
+          ? `, answering ${o.status}`
+          : "";
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height}${how})`);
   }
   for (const [name, { width, height }] of STUDIO) {
@@ -300,6 +339,11 @@ if (opts["dry-run"]) {
       `  ${name}.png  ${at(path)}  (${width}×${height}, with a draft)`,
     );
   }
+  for (const [name, { width, height }] of LIGHT) {
+    console.log(
+      `  ${name}.png  ${at("/theming/studio/")}  (${width}×${height}, a light draft, Publish asked)`,
+    );
+  }
   for (const [name, { width, height }, o] of DAY_VIEW) {
     const path = dayPath(o, `<${o.pick ?? o.delay}>`);
     console.log(
@@ -310,12 +354,21 @@ if (opts["dry-run"]) {
     const path = `/agenda/items/<an item made for the run>${suffix}`;
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height})`);
   }
+  for (const [name, { width, height }] of CANCELLED) {
+    const path = "/agenda/items/<an item made for the run, cancelled>";
+    console.log(`  ${name}.png  ${at(path)}  (${width}×${height})`);
+  }
   for (const name of planned()) {
     console.log(`  ${name}.png  ${at("/screen/")}  (a paired screen)`);
   }
   for (const [name, path, { width, height }] of STUDIO_PAGES) {
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, while two screens play)`,
+    );
+  }
+  for (const [name, path, { width, height }] of PREVIEW_PAGES) {
+    console.log(
+      `  ${name}.png  ${at(path)}  (${width}×${height}, while a preview on a screen runs)`,
     );
   }
   for (const [name, path, { width, height }] of FROZEN_PAGES) {
@@ -482,9 +535,9 @@ async function addItem(title, kind, from, minutes) {
   return item;
 }
 async function removeMade() {
-  for (const { id, title } of made.splice(0)) {
+  for (const { id, title, revision } of made.splice(0)) {
     try {
-      const path = `/api/agenda/items/${id}?revision=1`;
+      const path = `/api/agenda/items/${id}?revision=${revision}`;
       expect(await demo.call("DELETE", path), 204, `removing ${title}`);
     } catch (err) {
       fail(`cleanup: ${firstLine(err)}`);
@@ -540,6 +593,24 @@ try {
     for (const [name, suffix, viewport] of ITEM_PAGES) {
       await shot(name, `/agenda/items/${item.id}${suffix}`, viewport, SESSION);
     }
+  }
+  try {
+    const raffle = await addItem("Raffle", "activity", 300, 15);
+    const cancel = await demo.call(
+      "POST",
+      `/api/agenda/items/${raffle.id}/cancel`,
+      { body: { revision: 1 } },
+    );
+    raffle.revision = expect(
+      cancel,
+      200,
+      "cancelling the raffle",
+    ).body.revision;
+    for (const [name, viewport] of CANCELLED) {
+      await shot(name, `/agenda/items/${raffle.id}`, viewport, SESSION);
+    }
+  } catch (err) {
+    fail(`a cancelled item: ${firstLine(err)}`);
   }
   // Gone before the fixture: it finds its run of show by title and would take these.
   await removeMade();
@@ -613,6 +684,25 @@ try {
       for (const [name, viewport, o] of DRAFT) {
         await shot(name, o.path ?? "/theming/studio/", viewport, SESSION, o);
       }
+      // The same brand, light: Publish asks first (#444, sheet 6, Q11 b: warn only).
+      const light = await demo.call("PUT", "/api/theming/draft/brand", {
+        body: { draft_version: version, ...brand, scheme: "light" },
+      });
+      version = expect(light, 200, "a light brand").body.draft.draft_version;
+      for (const [name, viewport] of LIGHT) {
+        await shot(name, "/theming/studio/", viewport, SESSION, {
+          fullPage: false,
+          ready: async (page) => {
+            await drawn(page);
+            await page
+              .locator('[data-action="light-ask"]:visible')
+              .first()
+              .click();
+            await page.locator("#canccu-studio-light[open]").waitFor();
+            await page.waitForTimeout(300);
+          },
+        });
+      }
     } finally {
       // Left behind, the draft would greet the next run's "studio" shot instead of the start.
       const gone = await demo.call(
@@ -631,7 +721,9 @@ try {
       demo,
       at,
       cookieOn,
-      shot: (name, path, viewport, o) => shot(name, path, viewport, SESSION, o),
+      // A screen's own view (the preview's mark) is shot with its device cookie.
+      shot: (name, path, viewport, o) =>
+        shot(name, path, viewport, o?.cookie ?? SESSION, o),
     });
   } catch (err) {
     fail(`studio: ${firstLine(err)}`);

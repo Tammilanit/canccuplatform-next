@@ -4,7 +4,7 @@
  * `canccu_kit.ui` writes the same markup for the Python modules; ui.css styles both.
  */
 import { attrs, html, raw, type Html, type Slot } from "./html.js";
-import { themeStyle, type ProfileLike } from "./theme.js";
+import { eventTokens, themeStyle, type ProfileLike } from "./theme.js";
 import menu from "./menu.json" with { type: "json" };
 import { dateRange, eventClock, stateBadge, type EventInfo } from "./event.js";
 
@@ -59,13 +59,21 @@ function signOutForm(label: string, cls: string): Html {
   return html`<form method="post" action="${menu.sign_out}"><button class="${cls}" type="submit">${icon("out")}${label}</button></form>`;
 }
 
-/** The bottom bar's slots this person may open, in order; Quick add is `quick_add`. */
-export function barFor(rights: ReadonlySet<string>): { id: string; label: string }[] {
+/**
+ * The bottom bar's slots this person may open, in order; Quick add is `quick_add`. An archived
+ * event changes nothing, so its bar has no Quick add (sheets 2 and 8).
+ */
+export function barFor(
+  rights: ReadonlySet<string>,
+  archived = false,
+): { id: string; label: string }[] {
   const viewer = { userName: "", rights };
   const pages = new Map(menuFor(rights).flatMap((g) => g.items.map((i) => [i.id, i] as const)));
   return menu.bar.flatMap((slot) => {
     if (slot.id === "quick_add") {
-      return mayOpen(menu.quick_add, viewer) ? [{ id: slot.id, label: menu.quick_add.label }] : [];
+      return mayOpen(menu.quick_add, viewer) && !archived
+        ? [{ id: slot.id, label: menu.quick_add.label }]
+        : [];
     }
     const page = pages.get(slot.id);
     return page ? [{ id: slot.id, label: slot.label ?? page.label }] : [];
@@ -74,7 +82,7 @@ export function barFor(rights: ReadonlySet<string>): { id: string; label: string
 
 function menuNav(viewer: Viewer, current: string | undefined, event: EventInfo | undefined): Html {
   // On a phone the menu is More's sheet: what the bar already shows is left out of it.
-  const inBar = new Set(barFor(viewer.rights).map((b) => b.id));
+  const inBar = new Set(barFor(viewer.rights, event?.status === "archived").map((b) => b.id));
   const groups = menuFor(viewer.rights).map(
     (g) =>
       html`<div class="${g.items.every((i) => inBar.has(i.id)) ? "canccu-menu__group canccu-menu__group--bar" : "canccu-menu__group"}"><p class="canccu-overline canccu-menu__label">${g.label}</p>${g.items.map(
@@ -87,10 +95,10 @@ function menuNav(viewer: Viewer, current: string | undefined, event: EventInfo |
   return html`<nav class="canccu-menu" id="canccu-menu" popover aria-label="Event">${sheet}${groups}<div class="canccu-menu__foot"><div class="canccu-user"><span class="canccu-avatar" aria-hidden="true">${initials(viewer.userName)}</span>${viewer.userName}</div>${signOutForm("Sign out", "canccu-button canccu-button--ghost")}</div></nav>`;
 }
 
-function tabbar(viewer: Viewer, current: string | undefined): Html {
+function tabbar(viewer: Viewer, current: string | undefined, archived: boolean): Html {
   const pages = new Map(menu.groups.flatMap((g) => g.items.map((i) => [i.id, i] as const)));
   const narrow = new Map(menu.bar.map((b) => [b.id, "narrow" in b ? b.narrow : undefined]));
-  const slots = barFor(viewer.rights).map((b) => {
+  const slots = barFor(viewer.rights, archived).map((b) => {
     const short = narrow.get(b.id);
     const label = short
       ? html`<span class="canccu-tabbar__wide">${b.label}</span><span class="canccu-tabbar__narrow">${short}</span>`
@@ -104,11 +112,16 @@ function tabbar(viewer: Viewer, current: string | undefined): Html {
   return html`<nav class="canccu-tabbar" aria-label="Shortcuts">${slots}<button class="canccu-tabbar__item" type="button" popovertarget="canccu-menu">${icon("more")}More</button></nav>`;
 }
 
+/**
+ * Theming's one address for the event's logo, or its initials without one (contracts/theming.md,
+ * Reading the current theme), so a page shows it without reading the theme.
+ */
+export const LOGO_URL = "/theming/logo";
+
 function header(event: EventInfo | undefined, logoUrl: string | undefined, now: Date): Html {
+  const src = logoUrl ?? (event === undefined ? undefined : LOGO_URL);
   const logo =
-    logoUrl === undefined
-      ? ""
-      : html`<img${attrs({ class: "canccu-header__logo", src: logoUrl, alt: "" })}>`;
+    src === undefined ? "" : html`<img${attrs({ class: "canccu-header__logo", src, alt: "" })}>`;
   const dates = event === undefined ? "" : dateRange(event);
   const end = event === undefined ? "" : eventClock(event, now);
   return html`<header class="canccu-header">${logo}<span class="canccu-header__title">${event?.name ?? "Event"}</span>${dates ? html`<span class="canccu-header__sep"></span><span class="canccu-header__meta">${dates}</span>` : ""}${event === undefined ? "" : stateBadge(event, now)}<span class="canccu-header__end">${end}</span></header>`;
@@ -124,12 +137,36 @@ function document(title: string, o: DocumentOptions, body: Slot): Html {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${full}</title>
 <link${attrs({ rel: "stylesheet", href: o.cssHref ?? "/ui/ui.css" })}>
-${o.head ?? ""}${style}</head>
+${style}${eventTokens(o.surface ?? "admin")}
+${o.head ?? ""}</head>
 <body class="canccu-page canccu-surface canccu-surface--${o.surface ?? "admin"}">
 ${body}
 </body>
 </html>
 `;
+}
+
+/** Tabs a phone shows; the rest sit behind a count (sheet 2: no sideways scroll). */
+const PHONE_TABS = 3;
+
+/**
+ * A section's sub-pages. On a phone three show, the current one among them, and the rest open
+ * from "N more" (a popover, no script); a desktop shows them all in their order.
+ */
+function tabsNav(title: string, tabs: readonly Tab[]): Html {
+  const here = tabs.findIndex((t) => t.current);
+  const shown = new Set(tabs.slice(0, PHONE_TABS).map((_, i) => i));
+  if (tabs.length > PHONE_TABS && here >= PHONE_TABS) {
+    shown.delete(PHONE_TABS - 1);
+    shown.add(here);
+  }
+  const link = (t: Tab, cls?: string) =>
+    html`<a${attrs({ class: cls, href: t.href, "aria-current": t.current ? "page" : undefined })}>${t.label}</a>`;
+  const rest = tabs.filter((_, i) => !shown.has(i));
+  const more = rest.length
+    ? html`<button class="canccu-tabs__more" type="button" popovertarget="canccu-tabs-more">${rest.length} more</button><div class="canccu-tabs__menu" id="canccu-tabs-more" popover>${rest.map((t) => link(t))}</div>`
+    : "";
+  return html`<nav class="canccu-tabs" aria-label="${title}">${tabs.map((t, i) => link(t, shown.has(i) ? undefined : "canccu-tabs__extra"))}${more}</nav>`;
 }
 
 export interface DocumentOptions {
@@ -183,14 +220,12 @@ export function shellPage(o: ShellOptions): Html {
   const head = o.plain
     ? ""
     : html`<div class="canccu-pagehead"><div>${crumb}<h1 class="canccu-pagehead__title">${o.title}</h1>${desc}</div>${o.actions ? html`<div class="canccu-cluster">${o.actions}</div>` : ""}</div>`;
-  const tabs = o.tabs?.length
-    ? html`<nav class="canccu-tabs" aria-label="${o.title}">${o.tabs.map((t) => html`<a${attrs({ href: t.href, "aria-current": t.current ? "page" : undefined })}>${t.label}</a>`)}</nav>`
-    : "";
+  const tabs = o.tabs?.length ? tabsNav(o.title, o.tabs) : "";
   const main = html`<div class="canccu-content"><main class="canccu-main${o.width === "narrow" ? " canccu-main--narrow" : ""}">${head}${tabs}${o.body}</main></div>`;
   // An error page is nowhere in the menu, so nothing in it is marked (sheet 8).
   const here = o.plain ? undefined : o.current;
   const shell = o.session
-    ? html`<div class="canccu-shell">${header(o.event, o.logoUrl, now)}${archived}${menuNav(o.session, here, o.event)}${main}${tabbar(o.session, here)}</div>${OFFLINE_SCRIPT}`
+    ? html`<div class="canccu-shell">${header(o.event, o.logoUrl, now)}${archived}${menuNav(o.session, here, o.event)}${main}${tabbar(o.session, here, o.event?.status === "archived")}</div>${OFFLINE_SCRIPT}`
     : html`<div class="canccu-shell canccu-shell--bare">${header(o.event, o.logoUrl, now)}${archived}${main}</div>`;
   return document(o.title, o, shell);
 }
@@ -217,7 +252,11 @@ export function frontPage(o: FrontOptions): Html {
       ? ""
       : html`<p class="canccu-poster__meta">${dates}${stateBadge(e, o.now ?? new Date())}</p>`;
   const venue = e?.venue ? html`<p class="canccu-poster__venue">${icon("pin")}${e.venue}</p>` : "";
-  const poster = html`<div class="canccu-poster"><div class="canccu-poster__name${long}">${name}</div>${meta}${venue}</div>`;
+  const logo =
+    e === undefined
+      ? ""
+      : html`<img${attrs({ class: "canccu-poster__logo", src: o.logoUrl ?? LOGO_URL, alt: "" })}>`;
+  const poster = html`<div class="canccu-poster">${logo}<div class="canccu-poster__name${long}">${name}</div>${meta}${venue}</div>`;
   const card = html`<div class="canccu-front__card${o.centred ? " canccu-front__card--center" : ""}">${o.card}</div>`;
   if (!o.privacy)
     return document(o.title, o, html`<div class="canccu-front">${poster}${card}</div>`);

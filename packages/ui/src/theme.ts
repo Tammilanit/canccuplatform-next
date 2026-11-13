@@ -1,3 +1,4 @@
+import { html, type Html } from "./html.js";
 import {
   COLOR_TOKENS,
   FONT_STACKS,
@@ -107,4 +108,16 @@ export function themeStyle(profile?: ProfileLike, nonce?: string): string {
 export function logoPath(profile?: ProfileLike): string | undefined {
   const main = profile?.logos?.["main"];
   return typeof main === "string" && main !== "" ? main : undefined;
+}
+
+/**
+ * The event's look at theming's stable address (contracts/theming.md, The current tokens, for
+ * pages): organiser pages take the admin tokens, which fall back to the platform colours when the
+ * theme fails the contrast rules; the hub and the public pages take the theme's own. After the
+ * profile's `<style>`, so a published theme wins over the profile it started from; a hostname with
+ * no event answers 404 and the page keeps ui.css's defaults.
+ */
+export function eventTokens(surface: "screen" | "hub" | "info" | "admin"): Html {
+  const file = surface === "admin" ? "admin-tokens.css" : "tokens.css";
+  return html`<link rel="stylesheet" href="/theming/current/${file}">`;
 }

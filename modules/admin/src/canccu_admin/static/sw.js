@@ -14,6 +14,10 @@ const REFRESH_MS = 10 * 60 * 1000;
 // cache is no help: offline, a browser does not serve a copy past its max-age, and sign-out's
 // Clear-Site-Data empties it, so without these the page shows unstyled.
 const ASSETS = ["/admin/static/ui.css", "/admin/static/shell.js"];
+// The event's look, which every organiser page links after ui.css (contracts/theming.md, The
+// current tokens, for pages). Kept when it answers, outside the all-or-nothing above: a hostname
+// with no event answers 404, and the offline page then keeps ui.css's defaults.
+const LOOK = "/theming/current/admin-tokens.css";
 let fetchedAt = 0;
 
 async function refresh() {
@@ -24,6 +28,8 @@ async function refresh() {
   const cache = await caches.open(CACHE);
   await Promise.all(answers.map((answer, i) => cache.put(urls[i], answer)));
   fetchedAt = Date.now();
+  const look = await fetch(LOOK, { cache: "no-store" }).catch(() => undefined);
+  if (look?.ok) await cache.put(LOOK, look);
 }
 
 async function cached(path) {
@@ -43,7 +49,7 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (request.method === "GET" && ASSETS.includes(url.pathname)) {
+  if (request.method === "GET" && [...ASSETS, LOOK].includes(url.pathname)) {
     event.respondWith(fetch(request).catch(() => cached(url.pathname)));
     return;
   }

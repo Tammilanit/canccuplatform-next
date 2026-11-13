@@ -260,3 +260,26 @@ export function viewOf(
     empty: found === null,
   };
 }
+
+/**
+ * The rail's run of show at `atMs`, as the screens read it (`agenda_now`): the zone's items and
+ * those of no zone, public and scheduled; what runs then, and the first to start after it.
+ */
+export function railAt(
+  items: readonly AgendaItem[],
+  zone: string,
+  atMs: number,
+): { now: AgendaItem[]; next: AgendaItem | null } {
+  const shown = items
+    .filter(
+      (i) =>
+        i.visibility === "public" &&
+        (i.status ?? "scheduled") === "scheduled" &&
+        (i.zone == null || i.zone === zone),
+    )
+    .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at));
+  const now = shown.filter(
+    (i) => Date.parse(i.starts_at) <= atMs && i.ends_at !== null && atMs < Date.parse(i.ends_at),
+  );
+  return { now, next: shown.find((i) => Date.parse(i.starts_at) > atMs) ?? null };
+}

@@ -331,12 +331,46 @@
     text-transform: uppercase;
   }
 
+  /*
+   * The line never ends in "…" (#442): one too wide for its box crawls, or with no motion steps a
+   * line at a time (ticker.ts sets `data-fit`). Clipped, never ellipsised, while it is measured.
+   */
   .canccu-widget__line {
+    flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
     font-size: calc(4.4 * var(--canccu-u));
+    line-height: 1.25;
+  }
+
+  .canccu-widget__line[data-fit="crawl"] {
+    mask-image: linear-gradient(90deg, transparent, #000 2%, #000 96%, transparent);
+  }
+
+  .canccu-widget__crawl {
+    display: inline-flex;
+    animation: canccu-crawl var(--canccu-crawl-seconds, 30s) linear infinite;
+  }
+
+  .canccu-widget__run {
+    flex: none;
+    padding-right: calc(12 * var(--canccu-u));
+  }
+
+  .canccu-widget__line[data-fit="step"] {
+    height: 1.25em;
+    white-space: normal;
+  }
+
+  .canccu-widget__steps {
+    display: block;
+  }
+
+  @keyframes canccu-crawl {
+    to {
+      transform: translateX(-50%);
+    }
   }
 
   .canccu-layout[data-ticker="high_contrast"] .canccu-widget--ticker {

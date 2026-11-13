@@ -81,7 +81,11 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
         expect(res.headers["cache-control"]).toBe("no-store");
         expect(res.headers["x-content-type-options"]).toBe("nosniff");
         expect(res.body).toContain('<script src="/theming/studio/static/studio.js"');
+        expect(res.body).toContain('<script src="/theming/studio/static/studio-screen.js"');
       }
+      const script = await page("/theming/studio/static/studio-screen.js");
+      expect(script.statusCode).toBe(200);
+      expect(script.headers["content-type"]).toMatch(/^text\/javascript/);
     });
   });
 

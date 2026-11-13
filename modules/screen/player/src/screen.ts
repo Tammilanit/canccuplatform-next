@@ -11,6 +11,7 @@ import type { Motion } from "./display.js";
 import { agendaOf, joinHeroAndRail } from "./hero-rail.js";
 import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
+import { fitTickers } from "./ticker.js";
 import type { Layout, Region, ScreenState } from "./state.js";
 import { whenReady } from "./media.js";
 import {
@@ -210,6 +211,7 @@ export class Screen {
       );
     }
     fillCountdowns(this.root, now);
+    fitTickers(this.root, motion, now);
     if (state.display?.drift === true) {
       const { x, y } = driftAt(now);
       this.root.style.setProperty("--canccu-drift-x", String(x));

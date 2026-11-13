@@ -62,6 +62,7 @@ const TENANTS: Record<string, TenantContext> = {
   "closed.test": context("closed", { info_page_mode: "sign_in" }),
   "zeta.test": context("zeta", { admin_access: "restricted" }),
   "archived.test": context("archived", { status: "archived" }),
+  "draft.test": context("draft", { status: "draft" }),
   "fonted.test": context("fonted"),
   // The browser tests: a browser sends fetch metadata over plain http only to localhost.
   localhost: context("local"),
@@ -70,6 +71,7 @@ const TENANTS: Record<string, TenantContext> = {
 /** Profile themes by event: `fonted` names a font no package holds, as the demo profile once did. */
 const PROFILES: Record<string, PartialTokens> = {
   venue: { colors: { primary: "#14b8a6" } },
+  draft: { colors: { primary: "#14b8a6" } },
   fonted: { fonts: { body: "Inter" } },
 };
 
@@ -141,7 +143,7 @@ export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness>
   try {
     await requireTestDatabase(admin);
     await admin.query(
-      "DROP TABLE IF EXISTS theming_files, theming_drafts, theming_revisions, theming_file_refs, theming_pins, theming_embed_files, theming_package_files, theming_migrations CASCADE",
+      "DROP TABLE IF EXISTS theming_files, theming_drafts, theming_revisions, theming_file_refs, theming_pins, theming_embed_files, theming_package_files, theming_preview_keys, theming_migrations CASCADE",
     );
     await runMigrations(admin, MIGRATIONS_DIR, { ledger: "theming_migrations", lock: 2 });
   } finally {

@@ -20,8 +20,10 @@ from .ui_base import (
     esc,
     event_clock,
     icon,
+    logo,
     menu_for,
     state_badge,
+    tabs_nav,
     time_label,
 )
 
@@ -77,7 +79,7 @@ def _menu(
     notes: Mapping[str, tuple[str, str]],
 ) -> str:
     # On a phone the menu is More's sheet: what the bar already shows is left out of it.
-    in_bar = {b["id"] for b in bar_for(viewer)}
+    in_bar = {b["id"] for b in bar_for(viewer, _archived(event))}
 
     def cls(base: str, bar: bool) -> str:
         return f"{base} {base}--bar" if bar else base
@@ -134,8 +136,12 @@ def _tab(slot: dict[str, Any], current: str | None) -> str:
     return f'<a class="{cls}" href="{esc(slot["href"])}"{here}>{icon(slot["icon"])}{label}</a>'
 
 
-def _tabbar(viewer: Viewer, current: str | None) -> str:
-    links = [_tab(slot, current) for slot in bar_for(viewer)]
+def _archived(event: EventInfo | None) -> bool:
+    return event is not None and event.status == "archived"
+
+
+def _tabbar(viewer: Viewer, current: str | None, event: EventInfo | None) -> str:
+    links = [_tab(slot, current) for slot in bar_for(viewer, _archived(event))]
     more = (
         '<button class="canccu-tabbar__item" type="button" popovertarget="canccu-menu">'
         f"{icon('more')}More</button>"
@@ -156,7 +162,8 @@ def _header(event: EventInfo | None, now: datetime | None) -> str:
     )
     badge = state_badge(event, now) if event else ""
     end = f'<span class="canccu-header__end">{event_clock(event, now) if event else ""}</span>'
-    return f'<header class="canccu-header">{title}{meta}{badge}{end}</header>'
+    mark = logo(event, "canccu-header__logo")
+    return f'<header class="canccu-header">{mark}{title}{meta}{badge}{end}</header>'
 
 
 def document(
@@ -167,9 +174,17 @@ def document(
     css: Iterable[str] = (),
     surface: Literal["admin", "hub"] = "admin",
 ) -> str:
-    """The HTML document around a shell or front page; `css` are the stylesheets, ui.css first."""
+    """The HTML document around a shell or front page; `css` are the stylesheets, ui.css first.
+
+    The event's look follows ui.css from theming's stable address (contracts/theming.md, The
+    current tokens, for pages): organiser pages take the admin tokens, which fall back to the
+    platform colours when the theme fails the contrast rules; the hub and check-in the theme's own.
+    A hostname with no event answers 404 there and the page keeps ui.css's defaults."""
     full = f"{title} · {event.name}" if event and event.name else title
-    links = "".join(f'<link rel="stylesheet" href="{esc(href)}">' for href in css)
+    tokens = "admin-tokens.css" if surface == "admin" else "tokens.css"
+    hrefs = list(css)
+    hrefs[1:1] = [f"/theming/current/{tokens}"]
+    links = "".join(f'<link rel="stylesheet" href="{esc(href)}">' for href in hrefs)
     return (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
@@ -217,13 +232,7 @@ def shell_page(
             f'<div class="canccu-pagehead"><div>{back}<h1 class="canccu-pagehead__title">'
             f"{esc(title)}</h1>{desc}</div>{end}</div>"
         )
-    tab_links = "".join(
-        f'<a href="{esc(href)}"{' aria-current="page"' if here else ""}>{esc(label)}</a>'
-        for href, label, here in tabs
-    )
-    tab_nav = (
-        f'<nav class="canccu-tabs" aria-label="{esc(title)}">{tab_links}</nav>' if tabs else ""
-    )
+    tab_nav = tabs_nav(title, tabs) if tabs else ""
     width = " canccu-main--narrow" if narrow else ""
     main = (
         f'<div class="canccu-content"><main class="canccu-main{width}">'
@@ -235,7 +244,7 @@ def shell_page(
     else:
         # An error page is nowhere in the menu, so nothing in it is marked (sheet 8).
         here = None if plain else current
-        nav, bar = _menu(session, here, event, menu_notes or {}), _tabbar(session, here)
+        nav, bar = _menu(session, here, event, menu_notes or {}), _tabbar(session, here, event)
         shell = f'<div class="canccu-shell">{top}{nav}{main}{bar}</div>{OFFLINE_SCRIPT}'
     return document(title, shell, event=event, css=css)
 
@@ -267,7 +276,8 @@ def front_page(
         else ""
     )
     poster = (
-        f'<div class="canccu-poster"><div class="canccu-poster__name{long}">{esc(name)}</div>'
+        f'<div class="canccu-poster">{logo(event, "canccu-poster__logo")}'
+        f'<div class="canccu-poster__name{long}">{esc(name)}</div>'
         f"{meta}{venue}</div>"
     )
     centre = " canccu-front__card--center" if centred else ""

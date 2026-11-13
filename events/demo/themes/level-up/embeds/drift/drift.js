@@ -8,9 +8,9 @@ const ctx = canvas.getContext("2d");
 const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // Colours are the theme's background, primary and accent tokens; an embed cannot read them.
-const BASE = "#0b0d1a";
-const CYAN = [61, 220, 255];
-const VIOLET = [185, 140, 255];
+const BASE = "#140d0b";
+const ORANGE = [255, 154, 60];
+const PINK = [255, 111, 174];
 
 let seed = 1337;
 function random() {
@@ -26,7 +26,7 @@ const MOTES = Array.from({ length: 220 }, () => ({
   speed: 0.004 + random() * 0.01,
   sway: random() * Math.PI * 2,
   alpha: 0.12 + random() * 0.38,
-  violet: random() < 0.4,
+  pink: random() < 0.4,
 }));
 
 const rgba = (c, a) => `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${a})`;
@@ -64,7 +64,7 @@ function contours(t) {
       else ctx.lineTo(x, y + wave);
     }
     const share = y / height;
-    ctx.strokeStyle = rgba(share < 0.5 ? CYAN : VIOLET, 0.07);
+    ctx.strokeStyle = rgba(share < 0.5 ? ORANGE : PINK, 0.07);
     ctx.stroke();
   }
 }
@@ -76,7 +76,7 @@ function motes(t) {
     const x = m.x + Math.sin(t * 0.25 + m.sway) * 0.006;
     // Fade in at the bottom and out at the top, so motes never pop.
     const fade = Math.min(1, y * 4, (1 - y) * 4);
-    const colour = m.violet ? VIOLET : CYAN;
+    const colour = m.pink ? PINK : ORANGE;
     ctx.fillStyle = rgba(colour, m.alpha * fade);
     ctx.beginPath();
     ctx.arc(x * width, y * height, m.size, 0, Math.PI * 2);
@@ -92,8 +92,8 @@ function draw(t) {
   ctx.fillStyle = BASE;
   ctx.fillRect(0, 0, width, height);
   const span = Math.max(width, height);
-  glow(width * 0.1, height * 0.08, span * 0.55, CYAN, 0.13);
-  glow(width * 0.92, height * 0.95, span * 0.6, VIOLET, 0.13);
+  glow(width * 0.1, height * 0.08, span * 0.55, ORANGE, 0.13);
+  glow(width * 0.92, height * 0.95, span * 0.6, PINK, 0.13);
   contours(t);
   motes(t);
 }

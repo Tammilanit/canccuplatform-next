@@ -181,6 +181,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await page.goto(at("/screen/"));
       await layout(page, size);
       await railShowsAgenda(page);
+      await tickerFitted(page, theme === "default" && size === HD[0]);
       await settle(page);
       await shot(nameOf(theme, "pulse", size), page);
       expect(
@@ -248,8 +249,10 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       else await layout(page, size);
       if (view.startsWith("dashboard")) await statsApart(page);
       if (view === "rail-empty") await railShowsIdle(page);
-      else if (view === "dashboard-showcase") await stripNamesCountdown(page);
-      else if (view === "ambient-takeover") await takeoverIsRed(page);
+      else if (view === "dashboard-showcase") {
+        await stripNamesCountdown(page);
+        await tickerFitted(page, true);
+      } else if (view === "ambient-takeover") await takeoverIsRed(page);
       else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
         await railShowsAgenda(page);
       await settle(page);
@@ -318,6 +321,27 @@ async function railShowsAgenda(page) {
   await page.waitForSelector(".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active", {
     timeout: 40_000,
   });
+}
+
+/**
+ * The built-in ticker is never cut off (#442): every line that says it fits does, so one measured
+ * off the page cannot pass. With `crawls`, where the demo's ticker is wider than its box, the line
+ * crawls. A theme's own ticker template draws no built-in line and is left alone.
+ */
+async function tickerFitted(page, crawls) {
+  const sel = ".canccu-widget--ticker .canccu-widget__line";
+  await page.waitForFunction(
+    (lines) => [...document.querySelectorAll(lines)].every((el) => el.dataset.fit !== undefined),
+    sel,
+    { timeout: 10_000 },
+  );
+  const lines = await page.$$eval(sel, (els) =>
+    els.map((el) => ({ fit: el.dataset.fit, cut: el.scrollWidth > el.clientWidth + 1 })),
+  );
+  if (lines.some((line) => line.fit === "fits" && line.cut))
+    throw new Error("the ticker's line is cut off: it was measured as fitting");
+  if (crawls && !lines.some((line) => line.fit === "crawl"))
+    throw new Error("the demo's long ticker does not crawl");
 }
 
 /** The emergency takeover wears its fixed red (claims.css) whatever the layout does to its cards. */

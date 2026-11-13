@@ -286,7 +286,7 @@ export interface InternalDeps {
   profile: ProfileSource;
 }
 
-function onlyScreen(request: FastifyRequest): void {
+export function onlyScreen(request: FastifyRequest): void {
   if (request.service !== "screen")
     throw new ServiceForbidden(`module ${String(request.service)} may not call this`);
 }

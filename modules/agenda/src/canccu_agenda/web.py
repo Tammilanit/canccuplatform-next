@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import os
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -42,11 +43,17 @@ UI_CSS = Path(
 # The run of show's own pages, as tabs under its title (docs/design/mockups.html, sheet 2). Quick
 # add is an action, so it is the page's button and the bar's, never a tab: nothing twice.
 TABS = (("/", "Run of show"), ("/templates", "Templates"))
-STYLESHEETS = ("ui.css", "agenda.css", "confirm.css", "gap.css")
+STYLESHEETS = ("ui.css", "agenda.css", "list.css", "confirm.css", "gap.css")
 CSS = tuple(f"{BASE}/static/{name}" for name in STYLESHEETS)
-SCRIPTS = ("day.js",)
+SCRIPTS = ("day.js", "quickadd.js")
 # A 24-hour time: native time fields follow the browser's locale, which may be 12-hour (UX B5).
 TIME_PATTERN = "[0-2][0-9]:[0-5][0-9]"
+# "Other date…": a day typed in the event's format with its year, "16 Mar 2027" (or "Tue 16 Mar
+# 2027"), so a form reaches any day, not only those it offers.
+DATE_PATTERN = "([A-Za-z]{3} )?[0-9]{1,2} [A-Za-z]{3} [0-9]{4}"
+# A longer event (or one with odd dates) offers no day list of its own: today, tomorrow and the
+# form's own days stay.
+MAX_EVENT_DAYS = 31
 log = logging.getLogger("canccu.agenda")
 VISIBILITY_LABELS = {"public": "Everyone", "attendees": "Attendees", "crew": "Crew only"}
 CHANNEL_LABELS = {
@@ -67,7 +74,19 @@ async def page_session(request: Request) -> Session:
         raise MissingRight(f"needs right {WRITE} or {CREW_READ}")
     check_admin_access(ctx, request.client.host if request.client else None, tailscale_cidrs())
     request.state.agenda_event = await event_of(request)
+    if ctx["status"] == "archived":
+        # Read only (sheets 2 and 8): the pages draw no change at all, as for crew who read.
+        session = replace(session, rights=session.rights - {WRITE})
+        request.state.agenda_session = session
     return session
+
+
+def archived(request: Request) -> bool:
+    return bool(tenant_of(request)["status"] == "archived")
+
+
+# What an item of an archived event says instead of its actions (sheet 8, Errors).
+ARCHIVED_ITEM = "The event is archived, so this item can't be delayed, edited or cancelled."
 
 
 async def page_writer(request: Request) -> Session:
@@ -207,14 +226,36 @@ def next_minute(now: datetime) -> datetime:
     return now.replace(second=0, microsecond=0) + timedelta(minutes=1)
 
 
-def when_inputs(name: str, label: str, value: str | None, *, required: bool = False) -> str:
-    """A date and a 24-hour time for a datetime-local value (`posted_when` joins them back)."""
-    day, _, hm = (value or "").partition("T")
+def when_inputs(
+    name: str,
+    label: str,
+    value: str | None,
+    days: list[date],
+    *,
+    required: bool = False,
+    fallback: date | None = None,
+) -> str:
+    """A day and a 24-hour time for a datetime-local value (`posted_when` joins them back). The
+    day is a choice of the event's days in its own format ("Sat 14 Mar", sheet 1): a native date
+    field follows the browser's locale (mm/dd/yyyy). "Other date…" reaches any other day, typed
+    in the same format. Without a value the day is `fallback`."""
+    day, _, hm = (value or "").rpartition("T")
+    chosen = day or (fallback.isoformat() if fallback else "")
+    parsed = iso_day(chosen)
+    # A typed day the form could not read comes back as typed, under "Other date…".
+    other = parsed is None and bool(chosen or hm)
+    shown = sorted(set(days) | ({parsed} if parsed else set()))
+    options = "".join(
+        f'<option value="{d.isoformat()}"{" selected" if d == parsed else ""}>'
+        f"{day_label(d)}</option>"
+        for d in shown
+    )
+    options += f'<option value="other"{" selected" if other else ""}>Other date…</option>'
+    example = shown[-1] if shown else date.today()
     return (
         '<span class="canccu-agenda-when">'
-        + text_input(
-            f"{name}_day", day, "date", required=required, **{"aria-label": f"{label}: day"}
-        )
+        f'<select class="canccu-input" name={name}_day aria-label="{esc(label)}: day">'
+        f"{options}</select>"
         + text_input(
             f"{name}_time",
             hm[:5],
@@ -225,17 +266,72 @@ def when_inputs(name: str, label: str, value: str | None, *, required: bool = Fa
             maxlength=5,
             **{"aria-label": f"{label}: time, 24-hour"},
         )
-        + "</span>"
+        + '<span class="canccu-agenda-when__other">'
+        + text_input(
+            f"{name}_other",
+            chosen if other else "",
+            pattern=DATE_PATTERN,
+            placeholder=f"{example.day} {example:%b %Y}",
+            maxlength=16,
+            **{"aria-label": f"{label}: other date, as {example.day} {example:%b %Y}"},
+        )
+        + "</span></span>"
     )
 
 
+def iso_day(raw: str) -> date | None:
+    try:
+        return date.fromisoformat(raw)
+    except ValueError:
+        return None
+
+
+def typed_day(raw: str) -> date | None:
+    """A day typed as DATE_PATTERN has it; the weekday, when given, is not checked."""
+    parts = raw.split()
+    try:
+        return datetime.strptime(" ".join(parts[-3:]), "%d %b %Y").date()
+    except ValueError:
+        return None
+
+
 def posted_when(form: Any, name: str) -> str:
-    """A posted date and time as one datetime-local value; a form that sends the value whole
-    (an older page, a test) still works."""
+    """A posted day and time as one datetime-local value; a form that sends the value whole
+    (an older page, a test) still works. A day without a time is no value: the day field always
+    holds one. An "Other date…" the form cannot read stays as typed, so the time is refused."""
     if f"{name}_day" not in form and f"{name}_time" not in form:
         return str(form.get(name) or "")
     day, hm = str(form.get(f"{name}_day") or ""), str(form.get(f"{name}_time") or "")
-    return f"{day}T{hm}" if day or hm else ""
+    if day == "other":
+        typed = str(form.get(f"{name}_other") or "").strip()
+        found = typed_day(typed) if len(typed.split()) in (3, 4) else None
+        day = found.isoformat() if found else typed
+    return f"{day}T{hm}" if hm else ""
+
+
+def _parsed(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def event_days(request: Request, today: date, *extra: date | None) -> list[date]:
+    """The days a form offers: the event's own and one on each side for setting up and clearing
+    away (when it has dates, at most MAX_EVENT_DAYS), today and tomorrow, and the days the form
+    already holds. "Other date…" reaches the rest."""
+    days = {today, today + timedelta(days=1), *(d for d in extra if d is not None)}
+    event = getattr(request.state, "agenda_event", None)
+    if event is not None and event.starts_at and event.ends_at:
+        tz = zone_of(request)
+        first = _parsed(event.starts_at).astimezone(tz).date()
+        last = _parsed(event.ends_at).astimezone(tz).date()
+        if 0 <= (last - first).days < MAX_EVENT_DAYS:
+            days |= {first + timedelta(days=n) for n in range(-1, (last - first).days + 2)}
+    return sorted(days)
+
+
+def event_over(request: Request, now: datetime) -> bool:
+    """Whether the event has ended: a cancelled item comes back only until then (sheet 5)."""
+    event = getattr(request.state, "agenda_event", None)
+    return bool(event is not None and event.ends_at and _parsed(event.ends_at) <= now)
 
 
 def field(label: str, control: str, hint: str = "") -> str:

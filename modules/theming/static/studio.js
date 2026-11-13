@@ -235,6 +235,7 @@
   const fullSize = (on) => screenFigure?.classList.toggle("canccu-studio-preview--full", on);
   const LOCAL = {
     "discard-ask": () => document.getElementById("canccu-studio-discard")?.showModal(),
+    "light-ask": () => document.getElementById("canccu-studio-light")?.showModal(),
     "dialog-close": (el) => el.closest("dialog")?.close(),
     preview: () => fullSize(true),
     "preview-close": () => fullSize(false),

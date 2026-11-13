@@ -23,7 +23,9 @@ import { draftRoutes } from "./draft-routes.js";
 import { fileRoutes } from "./file-routes.js";
 import type { FileStore } from "./files.js";
 import { packageRoutes } from "./package-routes.js";
+import { internalPreviewRoutes, keyRoutes } from "./preview.js";
 import { internalRoutes, revisionRoutes } from "./revision-routes.js";
+import { logoRoutes } from "./logo.js";
 import { themeRoutes } from "./routes.js";
 import { sandboxGuard, sandboxRoutes } from "./sandbox.js";
 import { studioRoutes } from "./studio.js";
@@ -92,11 +94,14 @@ export function buildApp(deps: ThemingDeps): FastifyInstance {
   void app.register((internal, _opts, done) => {
     installServiceIdentity(internal, deps.service);
     internalRoutes(internal, deps);
+    internalPreviewRoutes(internal, deps);
     done();
   });
   void app.register((event, _opts, done) => {
     installTenancy(event, deps.tenants);
     themeRoutes(event, deps);
+    logoRoutes(event, deps);
+    keyRoutes(event, deps);
     draftRoutes(event, deps);
     brandRoutes(event, deps);
     fileRoutes(event, deps);

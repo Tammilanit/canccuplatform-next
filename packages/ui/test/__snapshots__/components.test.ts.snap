@@ -36,6 +36,7 @@ exports[`page > defaults, no logo, no theme 1`] = `
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin</title>
 <link rel="stylesheet" href="/ui/ui.css">
+<link rel="stylesheet" href="/theming/current/admin-tokens.css">
 </head>
 <body class="canccu-page canccu-surface canccu-surface--admin">
 <header class="canccu-header"><span class="canccu-header__title">Admin</span></header>
@@ -59,6 +60,7 @@ exports[`page > with logo, theme and css href 1`] = `
   --canccu-font-body: "Inter", system-ui, sans-serif;
 }
 </style>
+<link rel="stylesheet" href="/theming/current/admin-tokens.css">
 </head>
 <body class="canccu-page canccu-surface canccu-surface--admin">
 <header class="canccu-header"><img class="canccu-header__logo" src="/files/assets/logo.svg" alt=""><span class="canccu-header__title">Admin</span></header>
