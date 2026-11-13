@@ -82,7 +82,7 @@ export function scheduleView(c: ViewContext, d: ScheduleViewData): { body: Html;
               })
             : ""
         }
-        ${legend(c)} ${grid(c, d, place, rules)}
+        ${legend(c)} ${d.editor?.hint ?? ""} ${grid(c, d, place, rules)}
       </div>
       <aside class="canccu-sched__side">${side(c, d)}</aside>
     </div>

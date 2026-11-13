@@ -221,6 +221,15 @@
   border: 0;
 }
 
+/* Its own display would otherwise show a group the form hides. */
+.canccu-studio-fieldset[hidden] {
+  display: none;
+}
+
+.canccu-studio-fieldset > legend {
+  padding: 0;
+}
+
 .canccu-studio-pick {
   display: inline-flex;
   align-items: center;

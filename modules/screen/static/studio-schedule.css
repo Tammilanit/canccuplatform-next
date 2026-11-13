@@ -328,6 +328,10 @@
 }
 
 /* The window editor (#267): writers drag on the days; a drag never selects text. */
+.canccu-sched__main > p {
+  margin: 0;
+}
+
 .canccu-sched__body {
   user-select: none;
 }

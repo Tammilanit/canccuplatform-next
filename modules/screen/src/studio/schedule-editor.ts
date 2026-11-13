@@ -32,6 +32,8 @@ export interface EditorData {
 export interface EditorView {
   add: Html;
   dialog: Html;
+  /** How to drag, under the calendar's key. */
+  hint: Html;
 }
 
 export function editorView(c: ViewContext, d: EditorData): EditorView {
@@ -139,7 +141,7 @@ export function editorView(c: ViewContext, d: EditorData): EditorView {
             ${t("window.times_hint")}
           </p>
         </fieldset>
-        <div class="canccu-field" data-kind="bound" hidden>
+        <div class="canccu-studio-fieldset" data-kind="bound" hidden>
           <label class="canccu-field__label" for="canccu-sched-item">${t("window.item")}</label>
           <select
             class="canccu-input"
@@ -172,9 +174,9 @@ export function editorView(c: ViewContext, d: EditorData): EditorView {
         </div>
       </form>
     </dialog>
-    <p class="canccu-small canccu-muted canccu-sched__hint">${t("window.drag_hint")}</p>
     ${windowsJson(d.windows)}`;
-  return { add, dialog };
+  const hint = html`<p class="canccu-small canccu-muted">${t("window.drag_hint")}</p>`;
+  return { add, dialog, hint };
 }
 
 /** The windows for the script; `<` escaped so no value can close the element. */
