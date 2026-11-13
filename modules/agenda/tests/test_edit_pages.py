@@ -51,7 +51,8 @@ async def test_delay_confirms_what_moves_what_stays_and_who_hears(env: Env) -> N
     assert ">Delay 3 items and tell everyone</button>" in both
     assert ">Don't delay</a>" in both
     alone = variant(text, 0, 1)
-    assert "<dt>Also moves</dt><dd>Nothing else moves.</dd>" in alone and "Semis" not in alone
+    assert "<dt>The day</dt><dd>The 2 items after it keep their times.</dd>" in alone
+    assert "Semis" not in alone
     assert ">Delay and tell everyone</button>" in alone
     quietly = variant(text, 0, 0)
     assert "<dt>Phones</dt><dd>No push, and a reminder" in quietly
@@ -85,7 +86,7 @@ async def test_a_delay_chip_opens_the_confirm_over_the_day(env: Env) -> None:
     assert "Also move the 1 item after it" in sheet
     assert 'name="announce" value=1 checked>' in sheet
     assert "<dt>Starts</dt><dd><b>18:40</b> <s>18:30</s>" in variant(sheet, 0, 1)
-    assert "<dt>Also moves</dt><dd>Nothing else moves.</dd>" in variant(sheet, 0, 1)
+    assert "<dt>The day</dt><dd>The item after it keeps its time.</dd>" in variant(sheet, 0, 1)
     assert ">Delay and tell everyone</button>" in variant(sheet, 0, 1)
     assert "Final <b>19:40</b> <s>19:30</s>" in variant(sheet, 1, 1)
     assert ">Delay 2 items quietly</button>" in variant(sheet, 1, 0)

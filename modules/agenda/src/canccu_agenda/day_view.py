@@ -68,7 +68,7 @@ def late_badge(row: Any) -> str:
     return _late(_slip(row))
 
 
-def _span(minutes: int) -> str:
+def span(minutes: int) -> str:
     hours, rest = divmod(minutes, 60)
     if not hours:
         return f"{rest} min"
@@ -133,12 +133,12 @@ def hero_html(
     state = state_of(row, now)
     if state == "running":
         left = _minutes(row["ends_at"] - now)
-        kicker = f"On now · {_span(left)} left"
+        kicker = f"On now · {span(left)} left"
         when = f"until {hhmm(row['ends_at'], tz)}"
         if row["ends_at"] != row["planned_ends_at"] and row["planned_ends_at"] is not None:
             when += f" <s>{hhmm(row['planned_ends_at'], tz)}</s>"
     else:
-        kicker = f"Up next · in {_span(_minutes(row['starts_at'] - now))}"
+        kicker = f"Up next · in {span(_minutes(row['starts_at'] - now))}"
         when = hhmm(row["starts_at"], tz)
         if row["starts_at"] != row["planned_starts_at"]:
             when += f" <s>{hhmm(row['planned_starts_at'], tz)}</s>"
@@ -268,9 +268,11 @@ def side_html(
     close: str | None,
     changes: str,
     here: str,
+    bring_back: str = "",
 ) -> str:
     """The picked item with its actions. `close` is where Close goes when a row picked it; `here`
-    is the day view's own address, which its delay chips return to."""
+    is the day view's own address, which its delay chips return to; `bring_back` is a cancelled
+    item's way back, when it has one."""
     state = state_of(row, now)
     base = f"{BASE}/items/{esc(row['id'])}"
     when = f"<b>{hhmm(row['starts_at'], tz)}"
@@ -305,7 +307,7 @@ def side_html(
             f'<a class="canccu-button canccu-button--secondary" href="{base}/edit">Edit or move</a>'
         )
         body += f'<div class="canccu-agenda-side__actions">{"".join(actions)}</div>'
-    body += changes
+    body += changes + bring_back
     if session.has(WRITE) and state != "cancelled" and row["managed_by"] is None:
         body += f'<a class="canccu-agenda-danger" href="{base}/cancel">Cancel this item…</a>'
     opened = " is-open" if close else ""

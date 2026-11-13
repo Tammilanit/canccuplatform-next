@@ -134,7 +134,7 @@ async def undo_page(request: Request) -> Response:
         }
         await timers.reschedule(conn, touched, kinds, leads, now, rearm=rearm)
         rendered = {r["id"]: model.item_json(r, kinds, channels) for r in touched}
-        await _store(d, conn, session, out, rendered)
+        await store_events(d, conn, session, out, rendered)
     await d.outbox.flush()
     day = min((r["starts_at"] for r in touched), default=now)
     return redirect(f"/?day={day.astimezone(zone_of(request)).date().isoformat()}&done=undone")
@@ -173,16 +173,7 @@ async def _apply(
         await _remove(conn, row, actor, out)
         return []
     if step["op"] == "add_again":
-        # The add's own check: an item of a kind the event no longer has would be unknown to all.
-        if await store.kind(conn, row["kind"]) is None:
-            raise model.conflict(
-                "undo_stale", f"the kind of {row['title']} was removed since: nothing was undone."
-            )
-        new = await store.insert_item(conn, {k: row[k] for k in COPIED}, actor)
-        version = await store.bump(conn, "agenda_version")
-        out.append(("agenda.item.added", new["id"], {"agenda_version": version}))
-        await _remove(conn, row, actor, out)
-        return [new]
+        return [await add_again(conn, row, actor, out, "undo_stale")]
     values = _values(step["values"])
     new = await store.update_item(conn, row, values, actor)
     version = await store.bump(conn, "agenda_version")
@@ -197,13 +188,29 @@ async def _apply(
     return [new]
 
 
+async def add_again(conn: Any, row: Any, actor: store.Actor, out: Pending, code: str) -> Any:
+    """A cancelled item back as a new one with its fields, and the cancelled one removed, since
+    cancelling is final (contracts/agenda.md): the undo of a cancel, and Bring back. `code` is
+    the refusal's when the item's kind is gone."""
+    # The add's own check: an item of a kind the event no longer has would be unknown to all.
+    if await store.kind(conn, row["kind"]) is None:
+        raise model.conflict(
+            code, f"the kind of {row['title']} was removed since: nothing changed."
+        )
+    new = await store.insert_item(conn, {k: row[k] for k in COPIED}, actor)
+    version = await store.bump(conn, "agenda_version")
+    out.append(("agenda.item.added", new["id"], {"agenda_version": version}))
+    await _remove(conn, row, actor, out)
+    return new
+
+
 async def _remove(conn: Any, row: Any, actor: store.Actor, out: Pending) -> None:
     version = await remove(conn, row, actor)
     data = {"item_id": row["id"], "visibility": row["visibility"], "agenda_version": version}
     out.append(("agenda.item.removed", None, data))
 
 
-async def _store(
+async def store_events(
     d: Deps, conn: Any, session: Session, out: Pending, rendered: dict[str, dict[str, Any]]
 ) -> None:
     """An undone delay is told as one delay: one correlation id, in order of the new start, as

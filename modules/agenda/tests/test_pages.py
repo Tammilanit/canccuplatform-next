@@ -192,7 +192,8 @@ async def test_a_move_shows_its_preview_before_it_changes_anything(env: Env) -> 
     async with env.client() as c:
         item = await add(c, h, ends_at=at(120))
         form = (await c.get(f"/items/{item['id']}/edit", headers=h)).text
-        assert 'name=starts_day value="2026-11-20"' in form and 'value="18:00"' in form
+        assert '<option value="2026-11-20" selected>Fri 20 Nov</option>' in form
+        assert 'value="18:00"' in form
         fields = {
             "revision": "1",
             "title": "Dinner",

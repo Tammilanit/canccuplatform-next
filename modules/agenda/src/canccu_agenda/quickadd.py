@@ -15,6 +15,7 @@ from starlette.responses import Response
 from starlette.routing import Route
 
 from . import forms, items, model, store, templates, undo
+from .day_view import NIGHT_ENDS
 from .deps import deps
 from .inverse import Inverse
 from .web import (
@@ -24,6 +25,7 @@ from .web import (
     button,
     day_label,
     esc,
+    event_days,
     field,
     next_minute,
     notice,
@@ -35,6 +37,12 @@ from .web import (
 )
 
 WHEN = (("now", "Now"), ("in30", "In 30 min"), ("at", "At"))
+LENGTHS = (("15", "15 min"), ("30", "30 min"), ("60", "1 h"), ("other", "Other…"))
+
+
+def _chip(minutes: str) -> str:
+    """The Length chip of a number of minutes: its own, or Other…"""
+    return minutes if minutes in {v for v, _ in LENGTHS} else "other"
 
 
 def _day(raw: Any, today: date) -> date:
@@ -52,24 +60,43 @@ def _radio(name: str, value: str, label: str, checked: bool) -> str:
     )
 
 
-def _form(values: dict[str, Any], what: list[tuple[str, str]], day: date, today: date) -> str:
+def _button(values: dict[str, Any], day: date) -> str:
+    """The button repeats day and time (sheet 5); quickadd.js keeps it in step with the form."""
+    when, at = values.get("when") or "now", str(values.get("at") or "")
+    if when == "at" and _time(at) is not None:
+        return f"Add on {day:%a} at {at}"
+    return "Add in 30 min" if when == "in30" else "Add now"
+
+
+def _form(
+    values: dict[str, Any], what: list[tuple[str, str]], day: date, days: list[date], auto: bool
+) -> str:
+    """`auto`: the day is the form's own choice, not one a link named, so a time after midnight
+    may move it to the next day."""
     chosen = values.get("what") or (what[0][0] if what else "")
     picks = "".join(_radio("what", v, label, v == chosen) for v, label in what)
     when = values.get("when") or "now"
     whens = "".join(_radio("when", v, label, v == when) for v, label in WHEN)
-    on_day = "" if day == today else f" on {day_label(day)}"
+    on = "".join(_radio("day", d.isoformat(), day_label(d), d == day) for d in days)
+    minutes = str(values.get("minutes") or "")
+    length = str(values.get("length") or (_chip(minutes) if minutes else ""))
+    lengths = "".join(_radio("length", v, label, v == length) for v, label in LENGTHS)
+    auto_day = f'<input type=hidden name=day_auto value="{day.isoformat()}">' if auto else ""
     return (
-        f'<form method=post action="{BASE}/add" class="canccu-agenda-form">'
-        f'<input type=hidden name=day value="{day.isoformat()}">'
+        f'<form method=post action="{BASE}/add" class="canccu-agenda-form canccu-agenda-quick">'
+        + auto_day
+        + '<fieldset class="canccu-agenda-fieldset"><legend>What</legend>'
+        + f'<div class="canccu-agenda-chips-row">{picks}</div></fieldset>'
         + field(
             "Title",
             text_input(
                 "title", values.get("title") or "", required=True, maxlength=120, autofocus=True
             ),
         )
-        + '<fieldset class="canccu-agenda-fieldset"><legend>What</legend>'
-        + f'<div class="canccu-agenda-chips-row">{picks}</div></fieldset>'
-        + f'<fieldset class="canccu-agenda-fieldset"><legend>When{esc(on_day)}</legend>'
+        + '<fieldset class="canccu-agenda-fieldset"><legend>Day</legend>'
+        f'<div class="canccu-agenda-chips-row">{on}</div>'
+        '<p class="canccu-field__hint canccu-agenda-night" hidden></p></fieldset>'
+        + '<fieldset class="canccu-agenda-fieldset"><legend>When</legend>'
         f'<div class="canccu-agenda-chips-row">{whens}</div>'
         + text_input(
             "at",
@@ -82,24 +109,25 @@ def _form(values: dict[str, Any], what: list[tuple[str, str]], day: date, today:
         )
         + "</fieldset>"
         + field(
-            "Length",
-            text_input(
-                "minutes",
-                values.get("minutes") or "",
-                inputmode="numeric",
-                pattern="[0-9]{1,4}",
-                maxlength=4,
-            ),
-            "Minutes. Empty for the template's length.",
-        )
-        + field(
             "Where",
             text_input("location", values.get("location") or "", maxlength=120),
             "Empty for the template's place.",
         )
-        + f'<div class="canccu-agenda-actions">{button("Add")}'
+        + '<fieldset class="canccu-agenda-fieldset"><legend>Length</legend>'
+        f'<div class="canccu-agenda-chips-row">{lengths}</div>'
+        + text_input(
+            "minutes",
+            minutes,
+            inputmode="numeric",
+            pattern="[0-9]{1,4}",
+            maxlength=4,
+            **{"aria-label": "Other length, in minutes"},
+        )
+        + '<p class="canccu-field__hint">None picked: the template\'s length.</p></fieldset>'
+        + f'<div class="canccu-agenda-actions">{button(_button(values, day))}'
         f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/new?day={day}">'
         "Full form</a></div></form>"
+        f'<script src="{BASE}/static/quickadd.js" defer></script>'
     )
 
 
@@ -126,8 +154,10 @@ async def quick_page(request: Request) -> Response:
     tz, now = zone_of(request), deps(request).now()
     today = now.astimezone(tz).date()
     what, _, _ = await _choices(request)
-    day = _day(request.query_params.get("day"), today)
-    return page(request, "Quick add", _form(_from_gap(request), what, day, today))
+    named = request.query_params.get("day")
+    day = _day(named, today)
+    days = event_days(request, today, day)
+    return page(request, "Quick add", _form(_from_gap(request), what, day, days, not named))
 
 
 def _from_gap(request: Request) -> dict[str, str]:
@@ -181,7 +211,10 @@ def item_fields(
     }
     if template is not None:
         fields.update({k: template[k] for k in templates.FIELDS if k not in ("name", "minutes")})
-    raw = str(form.get("minutes") or "").strip()
+    chip = str(form.get("length") or "")
+    raw = chip if chip not in ("", "other") else str(form.get("minutes") or "").strip()
+    if chip == "other" and not raw:
+        raise model.invalid("give the length in minutes, or pick one")
     minutes = _length(raw) if raw else (template["minutes"] if template is not None else None)
     if raw and minutes is None:
         raise model.invalid("the length is in minutes, from 1 to 1440")
@@ -193,6 +226,17 @@ def item_fields(
     return fields
 
 
+def _night(form: FormData, day: date) -> bool:
+    """A time after midnight on the day the form chose by itself is the next day's (sheet 5)."""
+    at = _time(str(form.get("at") or ""))
+    return (
+        form.get("day_auto") == day.isoformat()
+        and form.get("when") == "at"
+        and at is not None
+        and at.hour < NIGHT_ENDS
+    )
+
+
 async def quick_add(request: Request) -> Response:
     session = await page_writer(request)
     d = deps(request)
@@ -200,6 +244,9 @@ async def quick_add(request: Request) -> Response:
     today = now.astimezone(tz).date()
     form = await request.form()
     day = _day(form.get("day"), today)
+    night = _night(form, day)
+    if night:
+        day += timedelta(days=1)
     what, rows, _ = await _choices(request)
     picked = str(form.get("what") or "")
     template = next((r for r in rows if f"template:{r['id']}" == picked), None)
@@ -211,10 +258,13 @@ async def quick_add(request: Request) -> Response:
         fields = item_fields(form, template, kind, _starts(form, day, now, tz))
         item = await items.add(d, session, fields, inverse=inverse)
     except KitError as exc:
-        body = notice(exc.message, "error") + _form(dict(form), what, day, today)
+        days = event_days(request, today, day)
+        auto = form.get("day_auto") is not None
+        body = notice(exc.message, "error") + _form(dict(form), what, day, days, auto)
         return page(request, "Quick add", body, status=400)
     added_day = datetime.fromisoformat(item["starts_at"].replace("Z", "+00:00")).astimezone(tz)
-    path = f"/?day={added_day.date().isoformat()}&done=added"
+    done = "added_next_day" if night else "added"
+    path = f"/?day={added_day.date().isoformat()}&done={done}"
     return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
 
 

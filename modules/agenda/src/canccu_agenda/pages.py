@@ -12,7 +12,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
 
-from . import day_list, day_view, delay_pages, model, posts, store, undo
+from . import day_list, day_view, delay_pages, edit_pages, model, posts, store, undo
 from .access import WRITE, viewer
 from .day_view import can_delay, can_show, state_of
 from .deps import deps
@@ -25,6 +25,7 @@ from .web import (
     VISIBILITY_LABELS,
     day_label,
     esc,
+    event_over,
     hhmm,
     notice,
     page,
@@ -35,6 +36,8 @@ from .web import (
 # Fixed texts for the notice after a change: a query parameter never puts its own words on a page.
 DONE = {
     "added": "Added.",
+    "added_next_day": "Added to the next day: its time is after midnight.",
+    "brought_back": "Brought back.",
     "saved": "Saved.",
     "delayed": "Delayed.",
     "cancelled": "Cancelled.",
@@ -117,7 +120,10 @@ async def run_of_show(request: Request) -> Response:
             picked_here = view.item == side["id"]
             close = view.href(item=None) + f"#r-{side['id']}" if picked_here else None
             history = changes_html(log, tz, today)
-            aside = day_view.side_html(side, item, kinds, now, tz, session, close, history, here)
+            back = _bring_back(request, side, session, now)
+            aside = day_view.side_html(
+                side, item, kinds, now, tz, session, close, history, here, back
+            )
         body += f'<div class="canccu-agenda-day">{listed}{aside}</div>'
     else:
         add = (
@@ -156,6 +162,14 @@ async def run_of_show(request: Request) -> Response:
         description=about,
         narrow=False,
     )
+
+
+def _bring_back(request: Request, row: Any, session: Any, now: datetime) -> str:
+    """A cancelled item comes back until the event ends (sheet 5); a session's item comes back
+    in the tournament module."""
+    if not session.has(WRITE) or row["status"] != "cancelled" or row["managed_by"] is not None:
+        return ""
+    return "" if event_over(request, now) else edit_pages.bring_back_form(row)
 
 
 async def _delay_sheet(request: Request, rows: list[Any], now: datetime, here: str) -> str:
@@ -222,7 +236,9 @@ async def item_page(request: Request) -> Response:
             )
             + "</div>"
         )
-    body += changes_html(log, tz, now.astimezone(tz).date())
+    body += changes_html(log, tz, now.astimezone(tz).date()) + _bring_back(
+        request, row, session, now
+    )
     return page(request, row["title"], body, session=session)
 
 

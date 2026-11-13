@@ -24,6 +24,7 @@ from starlette.responses import Response
 from starlette.routing import Route
 
 from . import edits, model, store, undo
+from .day_view import span
 from .deps import Deps, deps
 from .effective import read_channels
 from .inverse import Inverse
@@ -77,11 +78,48 @@ def _time(new: datetime, old: datetime, tz: ZoneInfo) -> str:
     return f"<b>{esc(when_moved(new, old, tz))}</b> <s>{esc(hhmm(old, tz))}</s>"
 
 
+def _overlap(starts: datetime, ends: datetime, other: Any) -> int:
+    """Minutes `other` shares with the span; a moment shares from its start to the span's end."""
+    if other["ends_at"] is None:
+        inside = starts <= other["starts_at"] < ends
+        return int((ends - other["starts_at"]).total_seconds() // 60) if inside else 0
+    shared = min(ends, other["ends_at"]) - max(starts, other["starts_at"])
+    return max(0, int(shared.total_seconds() // 60))
+
+
+def _the_day(
+    row: Any, starts: datetime, ends: datetime | None, later: list[Any], tz: ZoneInfo
+) -> str:
+    """What a delay of this item alone does to the items after it (sheet 5, "The day"): they keep
+    their times, and each one it now runs into more than before is named."""
+    if len(later) == 1:
+        out = "The item after it keeps its time."
+    else:
+        out = f"The {len(later)} items after it keep their times."
+    for other in later if ends is not None else []:
+        before = _overlap(row["starts_at"], row["ends_at"], other) if row["ends_at"] else 0
+        now_ = _overlap(starts, ends, other)  # type: ignore[arg-type]
+        if now_ > before:
+            out += (
+                f" {other['title']} ({hhmm(other['starts_at'], tz)}) now overlaps it by"
+                f" {span(now_)}."
+            )
+    return esc(out)
+
+
 def facts(
-    plan: Any, row: Any, kinds: Any, channels: list[str], tz: ZoneInfo, now: datetime, told_: bool
+    plan: Any,
+    row: Any,
+    kinds: Any,
+    channels: list[str],
+    tz: ZoneInfo,
+    now: datetime,
+    told_: bool,
+    later: list[Any] | None = None,
 ) -> list[tuple[str, str]]:
-    """The confirm's rows for one plan: the item's new times, what else moves and what stays,
-    then what each surface does. Values are HTML."""
+    """The confirm's rows for one plan: the item's new times, what else moves and what stays (or,
+    when only this item moves, what that does to the `later` items), then what each surface
+    does. Values are HTML."""
     own = next(m for m in plan.moves if m[0]["id"] == row["id"])
     _, starts, ends = own
     if row["starts_at"] <= now:  # running: its start stays (edits._shifted)
@@ -101,7 +139,8 @@ def facts(
         also += '<br><span class="canccu-agenda-muted">' + "<br>".join(map(esc, kept)) + "</span>"
     changes = [change_of(r, kinds, channels, s) for r, s, _ in plan.moves]
     who = told("delay", changes, now, announce=told_)
-    return [("Starts", when), ("Also moves", also)] + [(k, esc(v)) for k, v in who]
+    day = ("The day", _the_day(row, starts, ends, later, tz)) if later and not others else None
+    return [("Starts", when), day or ("Also moves", also)] + [(k, esc(v)) for k, v in who]
 
 
 async def preview(request: Request, row: Any, minutes: int) -> str:
@@ -137,6 +176,9 @@ def _confirm(
     tz, now = zone_of(request), deps(request).now()
     back = f'<a class="canccu-button canccu-button--secondary" href="{esc(back)}">Don\'t delay</a>'
     out = ""
+    after = plans.get(True)
+    later = [] if not after or isinstance(after, KitError) else after.moves
+    later = [r for r, _, _ in later if r["id"] != row["id"]]
     for following, plan in plans.items():
         for told_ in (True, False):
             tags = f'data-following="{int(following)}" data-announce="{int(told_)}"'
@@ -144,7 +186,7 @@ def _confirm(
                 out += f'<div class="canccu-agenda-variant" {tags}>{notice(plan.message, "error")}'
                 out += f'<div class="canccu-agenda-confirm-actions">{back}</div></div>'
                 continue
-            rows = facts(plan, row, kinds, channels, tz, now, told_)
+            rows = facts(plan, row, kinds, channels, tz, now, told_, later)
             body = "".join(f"<dt>{esc(k)}</dt><dd>{v}</dd>" for k, v in rows)
             action = button(_label(minutes, len(plan.moves), told_), name="minutes", value=minutes)
             out += (

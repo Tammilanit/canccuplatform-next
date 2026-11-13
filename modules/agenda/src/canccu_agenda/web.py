@@ -44,9 +44,12 @@ UI_CSS = Path(
 TABS = (("/", "Run of show"), ("/templates", "Templates"))
 STYLESHEETS = ("ui.css", "agenda.css", "list.css", "confirm.css", "gap.css")
 CSS = tuple(f"{BASE}/static/{name}" for name in STYLESHEETS)
-SCRIPTS = ("day.js",)
+SCRIPTS = ("day.js", "quickadd.js")
 # A 24-hour time: native time fields follow the browser's locale, which may be 12-hour (UX B5).
 TIME_PATTERN = "[0-2][0-9]:[0-5][0-9]"
+# A longer event (or one with odd dates) offers no day list of its own: today, tomorrow and the
+# form's own days stay.
+MAX_EVENT_DAYS = 31
 log = logging.getLogger("canccu.agenda")
 VISIBILITY_LABELS = {"public": "Everyone", "attendees": "Attendees", "crew": "Crew only"}
 CHANNEL_LABELS = {
@@ -207,14 +210,31 @@ def next_minute(now: datetime) -> datetime:
     return now.replace(second=0, microsecond=0) + timedelta(minutes=1)
 
 
-def when_inputs(name: str, label: str, value: str | None, *, required: bool = False) -> str:
-    """A date and a 24-hour time for a datetime-local value (`posted_when` joins them back)."""
+def when_inputs(
+    name: str,
+    label: str,
+    value: str | None,
+    days: list[date],
+    *,
+    required: bool = False,
+    fallback: date | None = None,
+) -> str:
+    """A day and a 24-hour time for a datetime-local value (`posted_when` joins them back). The
+    day is a choice of the event's days in its own format ("Sat 14 Mar", sheet 1): a native date
+    field follows the browser's locale (mm/dd/yyyy). Without a value the day is `fallback`."""
     day, _, hm = (value or "").partition("T")
+    chosen = day or (fallback.isoformat() if fallback else "")
+    known = {d.isoformat() for d in days}
+    shown = sorted(days + ([date.fromisoformat(chosen)] if chosen and chosen not in known else []))
+    options = "".join(
+        f'<option value="{d.isoformat()}"{" selected" if d.isoformat() == chosen else ""}>'
+        f"{day_label(d)}</option>"
+        for d in shown
+    )
     return (
         '<span class="canccu-agenda-when">'
-        + text_input(
-            f"{name}_day", day, "date", required=required, **{"aria-label": f"{label}: day"}
-        )
+        f'<select class="canccu-input" name={name}_day aria-label="{esc(label)}: day">'
+        f"{options}</select>"
         + text_input(
             f"{name}_time",
             hm[:5],
@@ -230,12 +250,37 @@ def when_inputs(name: str, label: str, value: str | None, *, required: bool = Fa
 
 
 def posted_when(form: Any, name: str) -> str:
-    """A posted date and time as one datetime-local value; a form that sends the value whole
-    (an older page, a test) still works."""
+    """A posted day and time as one datetime-local value; a form that sends the value whole
+    (an older page, a test) still works. A day without a time is no value: the day field always
+    holds one."""
     if f"{name}_day" not in form and f"{name}_time" not in form:
         return str(form.get(name) or "")
     day, hm = str(form.get(f"{name}_day") or ""), str(form.get(f"{name}_time") or "")
-    return f"{day}T{hm}" if day or hm else ""
+    return f"{day}T{hm}" if hm else ""
+
+
+def _parsed(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def event_days(request: Request, today: date, *extra: date | None) -> list[date]:
+    """The days a form offers: the event's own (when it has dates, at most MAX_EVENT_DAYS), today
+    and tomorrow, and the days the form already holds."""
+    days = {today, today + timedelta(days=1), *(d for d in extra if d is not None)}
+    event = getattr(request.state, "agenda_event", None)
+    if event is not None and event.starts_at and event.ends_at:
+        tz = zone_of(request)
+        first = _parsed(event.starts_at).astimezone(tz).date()
+        last = _parsed(event.ends_at).astimezone(tz).date()
+        if 0 <= (last - first).days < MAX_EVENT_DAYS:
+            days |= {first + timedelta(days=n) for n in range((last - first).days + 1)}
+    return sorted(days)
+
+
+def event_over(request: Request, now: datetime) -> bool:
+    """Whether the event has ended: a cancelled item comes back only until then (sheet 5)."""
+    event = getattr(request.state, "agenda_event", None)
+    return bool(event is not None and event.ends_at and _parsed(event.ends_at) <= now)
 
 
 def field(label: str, control: str, hint: str = "") -> str:

@@ -25,6 +25,7 @@ from .web import (
     button,
     check,
     esc,
+    event_days,
     field,
     from_local,
     hidden,
@@ -41,8 +42,17 @@ from .web import (
 )
 
 
-def _form(values: dict[str, Any], kinds: Any, action: str, error: str = "") -> str:
+def _days(request: Request) -> list[date]:
+    return event_days(request, deps(request).now().astimezone(zone_of(request)).date())
+
+
+def _form(
+    request: Request, values: dict[str, Any], kinds: Any, action: str, error: str = ""
+) -> str:
     revision = values.get("revision")
+    days = _days(request)
+    starts = values.get("starts") or ""
+    starts_day = date.fromisoformat(starts[:10]) if starts[:10] else None
     return (
         (notice(error, "error") if error else "")
         + f'<form method=post action="{action}" class="canccu-agenda-form canccu-agenda-choice">'
@@ -52,10 +62,10 @@ def _form(values: dict[str, Any], kinds: Any, action: str, error: str = "") -> s
             text_input("title", values.get("title") or "", required=True, maxlength=120),
         )
         + forms.kind_select(kinds, values.get("kind"))
-        + field("Starts", when_inputs("starts", "Starts", values.get("starts"), required=True))
+        + field("Starts", when_inputs("starts", "Starts", starts, days, required=True))
         + field(
             "Ends",
-            when_inputs("ends", "Ends", values.get("ends")),
+            when_inputs("ends", "Ends", values.get("ends"), days, fallback=starts_day),
             "Empty for a moment in time, like doors opening.",
         )
         + forms.visibility_select(values.get("visibility"))
@@ -152,7 +162,7 @@ async def new_page(request: Request) -> Response:
         for r in rows
     )
     body = (f"<p>Start from a template: {links}</p>" if links else "") + _form(
-        values, kinds, f"{BASE}/items/new"
+        request, values, kinds, f"{BASE}/items/new"
     )
     return page(request, "New item", body)
 
@@ -166,7 +176,7 @@ async def add_page(request: Request) -> Response:
     try:
         item = await items.add(d, session, _fields(form, tz), inverse=inverse)
     except KitError as exc:
-        body = _form(_posted(form), await _kinds(d), f"{BASE}/items/new", exc.message)
+        body = _form(request, _posted(form), await _kinds(d), f"{BASE}/items/new", exc.message)
         return page(request, "New item", body, status=400)
     path = f"/?day={_day(item['starts_at'], tz)}&done=added"
     return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
@@ -200,7 +210,9 @@ async def edit_page(request: Request) -> Response:
     tz = zone_of(request)
     row, item, kinds = await load_item(d, request.path_params["item_id"])
     action = f"{BASE}/items/{esc(row['id'])}/edit"
-    return page(request, f"Edit {row['title']}", _form(_values_of(item, tz), kinds, action))
+    return page(
+        request, f"Edit {row['title']}", _form(request, _values_of(item, tz), kinds, action)
+    )
 
 
 async def save_page(request: Request) -> Response:
@@ -234,7 +246,7 @@ async def save_page(request: Request) -> Response:
     except KitError as exc:
         if exc.code == "version_conflict":
             raise
-        body = _form(_posted(form), kinds, action, exc.message)
+        body = _form(request, _posted(form), kinds, action, exc.message)
         return page(request, f"Edit {row['title']}", body, status=400)
     path = f"/?day={_day(fields.get('starts_at') or item['starts_at'], tz)}&done=saved"
     return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
@@ -262,7 +274,7 @@ def _clash_page(
             "error",
         )
         + f'<ul class="canccu-agenda-changes">{changes}</ul>'
-        + _form(values, kinds, f"{BASE}/items/{esc(item['id'])}/edit")
+        + _form(request, values, kinds, f"{BASE}/items/{esc(item['id'])}/edit")
     )
     return page(request, f"Edit {item['title']}", body, status=409)
 
