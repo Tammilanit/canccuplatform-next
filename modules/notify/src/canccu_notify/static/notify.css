@@ -23,3 +23,29 @@
   .canccu-notify-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .canccu-notify-actions .canccu-button { min-height: 44px; }
 }
+/* The check-in's done rows and the in-page camera of "Scan again" (sheet 7, check-in.js). */
+@layer canccu-module {
+  .canccu-checkin__rows { display: grid; gap: 0.75rem; text-align: left; }
+  .canccu-checkin__row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem;
+    align-items: start;
+    padding: 0.75rem;
+    border: var(--canccu-border-width) solid var(--canccu-color-border);
+    border-radius: var(--canccu-radius);
+  }
+  .canccu-checkin__row p { margin: 0.25rem 0 0; }
+  .canccu-checkin__reveal summary { min-height: 2.75rem; display: flex; align-items: center; cursor: pointer; }
+  .canccu-scan {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    gap: 1rem;
+    padding: 1rem;
+    background: #000;
+  }
+  .canccu-scan video { width: 100%; height: 100%; object-fit: cover; }
+}

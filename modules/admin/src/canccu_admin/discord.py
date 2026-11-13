@@ -21,6 +21,7 @@ class DiscordFailed(Exception):
 class DiscordUser:
     id: str
     name: str
+    handle: str | None = None
 
 
 class Discord:
@@ -72,6 +73,10 @@ class Discord:
             if me.status_code != 200:
                 raise DiscordFailed(f"user lookup answered {me.status_code}")
             body = me.json()
-            return DiscordUser(str(body["id"]), str(body.get("global_name") or body["username"]))
+            return DiscordUser(
+                str(body["id"]),
+                str(body.get("global_name") or body["username"]),
+                str(body["username"]),
+            )
         except (httpx.HTTPError, KeyError, ValueError) as exc:
             raise DiscordFailed(type(exc).__name__) from exc
