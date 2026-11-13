@@ -121,6 +121,8 @@ async def test_couldnt_check_in_is_said_plainly(env: Env) -> None:
     env.settings.down = True
     text = _text(await submit(env, form, "u_a"))
     assert "Couldn't check you in" in text and "Try again" in text
+    # Try again comes back to the scanned code, not to a bare page that says "Code not valid".
+    assert f'href="/notify/check-in?p=arrival&c={form["c"]}"' in text
     # The page also carries the card for a phone that never reaches the event (check-in.js).
     env.settings.down = False
     ready = _text(await page(env, f"p=arrival&c={form['c']}", "u_a"))

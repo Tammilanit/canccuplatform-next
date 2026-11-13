@@ -107,8 +107,12 @@ async def test_the_page_says_try_again_when_the_event_cannot_be_resolved(
 ) -> None:
     async with env.client(host) as c:
         r = await c.get("/check-in?p=arrival&c=" + "x" * 22)
+        bare = await c.get("/check-in")
     assert r.status_code == status and r.headers["content-type"].startswith("text/html")
     assert "Try again" in r.text and '"error"' not in r.text
+    # The path as the browser sees it: Caddy has stripped /notify before it reached the module.
+    assert f'href="/notify/check-in?p=arrival&amp;c={"x" * 22}"' in r.text
+    assert bare.status_code == status and 'href="/notify/check-in"' in bare.text
 
 
 async def test_the_page_says_try_again_while_admin_is_down(env: Env) -> None:

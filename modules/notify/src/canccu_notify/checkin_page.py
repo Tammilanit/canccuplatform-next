@@ -74,11 +74,15 @@ async def error_page(request: Request, exc: KitError) -> HTMLResponse:
     """Every other refusal, also those of the kit's middleware (the tenants module or admin
     unreachable, a refused origin, a hostname that is no event's): a phone gets the page, never
     the API's JSON body."""
-    retry = request.url.path if request.method == "GET" else PATH
-    if request.url.query and request.method == "GET":
-        retry = f"{PATH}?{request.url.query}"
+    # The browser's path, not request.url.path: Caddy has stripped `/notify`. A failed tap never
+    # gets here with its code (submit says that itself), so a POST has only the bare page.
+    retry = f"{PATH}?{request.url.query}" if request.url.query else PATH
+    return await _failed(request, retry, exc.status)
+
+
+async def _failed(request: Request, retry: str, status: int) -> HTMLResponse:
     card = views.failed(retry)
-    return await _page(request, "Couldn't check you in", card, status=exc.status)
+    return await _page(request, "Couldn't check you in", card, status=status)
 
 
 def _local_time(ctx: TenantContext, iso: str) -> str:
@@ -146,13 +150,24 @@ async def show(request: Request) -> Response:
 
 
 async def submit(request: Request) -> Response:
-    ctx = await tenant_ctx(request)
-    d = deps(request)
+    tenant_of(request)
     form = await request.form()
     purpose, code = valid_purpose(form.get("p")), valid_code(form.get("c"))
     if purpose is None or code is None:
         return await _invalid(request)
     back = _back(purpose, code)
+    try:
+        return await _check_in(request, purpose, code, back)
+    except KitError as exc:
+        if exc.status < 500:
+            raise
+        # Try again must come back to this code: the form's p and c are gone once this answers.
+        return await _failed(request, back, exc.status)
+
+
+async def _check_in(request: Request, purpose: str, code: str, back: str) -> Response:
+    ctx = await tenant_ctx(request)
+    d = deps(request)
     gate = await _closed_or_early(request, ctx, d.now(), 409) or await _off_venue(
         request, ctx, d.now(), back, 403
     )
