@@ -140,7 +140,11 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
         if (agendas.get(tenantId)?.items === items) agendas.delete(tenantId);
         return null;
       }
-      return (list as AgendaItem[]).map((i) => ({ ...i, location: i.location ?? null }));
+      // A promise that rejected here would stay kept and break every zone of the event until the
+      // agenda moves, so entries that are not items are skipped, never read.
+      return list
+        .filter((i): i is AgendaItem => typeof i === "object" && i !== null && !Array.isArray(i))
+        .map((i) => ({ ...i, location: i.location ?? null }));
     });
     agendas.delete(tenantId);
     if (agendas.size >= MAX_AGENDAS) agendas.delete(agendas.keys().next().value as string);

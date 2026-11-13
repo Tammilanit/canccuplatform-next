@@ -20,6 +20,8 @@ describe("the sources' reads", () => {
   // The agenda's version and whether its whole read fails, as a test sets them.
   let agendaVersion = 1;
   let itemsFail = false;
+  // Entries that are not items, which the agenda's read must skip, as a test sets them.
+  let itemsJunk: unknown[] = [];
   const allItems = [
     { id: "i1", title: "Semis", starts_at: "2026-03-14T19:30:00Z", visibility: "public", status: "scheduled" },
     { id: "i2", title: "Final", starts_at: "2026-03-14T21:15:00Z", visibility: "public", status: "scheduled", location: "Stage", zone: "main hall" },
@@ -54,7 +56,7 @@ describe("the sources' reads", () => {
         });
       } else if (request.url?.startsWith("/internal/agenda/items")) {
         if (itemsFail) json(500, { error: { code: "internal", message: "no" } });
-        else json(200, { agenda_version: agendaVersion, items: allItems });
+        else json(200, { agenda_version: agendaVersion, items: [...itemsJunk, ...allItems] });
       } else if (request.url?.startsWith("/internal/tenants/venue-info")) {
         json(200, { house_rules: "", wifi: [{ ssid: "guest" }], floor_plan: null });
       } else if (request.url?.startsWith("/internal/notify/check-in/code")) {
@@ -132,6 +134,19 @@ describe("the sources' reads", () => {
     expect(now?.later).toEqual([]);
     itemsFail = false;
     expect((await one.agendaNow("alpha", "main hall"))?.later).toHaveLength(1);
+  });
+
+  it("skips entries of the whole agenda that are not items, and keeps no failure for the version", async () => {
+    const one = sources();
+    itemsJunk = [null, "i9", 7, ["i8"]];
+    const zones = await Promise.all([
+      one.agendaNow("alpha", "main hall"),
+      one.agendaNow("alpha", "café"),
+    ]);
+    expect(zones.map((now) => now?.later?.map((i) => i.id))).toEqual([["i2"], []]);
+    // The same version again: the kept read still answers, it did not reject.
+    expect((await one.agendaNow("alpha", "main hall"))?.later?.map((i) => i.id)).toEqual(["i2"]);
+    itemsJunk = [];
   });
 
   it("reads the venue info as a module, signed for tenants", async () => {
