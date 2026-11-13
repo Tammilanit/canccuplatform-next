@@ -475,6 +475,42 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
+  /internal/notify/check-ins/count:
+    get:
+      tags: [check-in]
+      operationId: getCheckInCountInternal
+      summary: How many members have checked in for a purpose, for a module
+      description: |
+        For the screen module's server, which shows the count of `arrival` check-ins in its Right now box
+        (contracts/screen.md, `stats`' `checked_in`) and reads it again on `notify.checkin.recorded`. Each member
+        counts once per purpose. A count names nobody. Internal network only.
+      security:
+        - {}
+      parameters:
+        - name: tenant_id
+          in: query
+          required: true
+          description: The tenant the calling module serves, set by its kit, never from a client's input.
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
+        - name: purpose
+          in: query
+          required: true
+          description: "`arrival`, or `<module>:<ref>` for a check-in another module owns."
+          schema:
+            $ref: "#/components/schemas/Purpose"
+      responses:
+        "200":
+          description: The count.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckInCount"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /api/notify/check-ins:
     post:
       tags: [check-in]
@@ -1204,6 +1240,16 @@ components:
       type: string
       description: 128 bits of HMAC-SHA256, base64url without padding.
       pattern: "^[A-Za-z0-9_-]{22}$"
+    CheckInCount:
+      type: object
+      required: [purpose, count]
+      properties:
+        purpose:
+          $ref: "#/components/schemas/Purpose"
+        count:
+          type: integer
+          minimum: 0
+          description: The members checked in for `purpose` at this event, each once.
     CheckInCodeNow:
       type: object
       required: [purpose, code, url, valid_until, rotates_at]
