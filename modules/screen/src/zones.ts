@@ -8,6 +8,7 @@ import type { FastifyInstance } from "fastify";
 import { requireTenant } from "@canccu/kit";
 import type { Bus, RightsChecker, SqlClient, TenantContext } from "@canccu/kit";
 import type { Audit } from "./audit.js";
+import type { Sources } from "./compose/sources.js";
 import type { Db } from "./db.js";
 import {
   actorOf,
@@ -22,7 +23,7 @@ import {
   zoneExists,
   zoneInUse,
 } from "./http.js";
-import { zoneInput } from "./zone-input.js";
+import { checkBoxes, zoneInput } from "./zone-input.js";
 import type { ZoneInput } from "./zone-input.js";
 
 /** A bus event to publish once the transaction that caused it has committed. */
@@ -32,23 +33,24 @@ export async function publishAll(bus: Bus, emits: readonly Emit[]): Promise<void
   for (const [type, data] of emits) await bus.publish(type, data, { version: 1 });
 }
 
-const ZONE_FIELDS = ["name", "layout_id", "regions", "header", "hub_qr", "sound"] as const;
-const ZONE_COLUMNS = "key, name, layout_id, regions, header, hub_qr, sound, revision";
+const ZONE_FIELDS = [
+  "name",
+  "layout_id",
+  "regions",
+  "header",
+  "hub_qr",
+  "hero_region",
+  "grow_for_showcase",
+  "sound",
+] as const;
+const ZONE_KEYS = ["key", ...ZONE_FIELDS, "revision"] as const;
+const ZONE_COLUMNS = ZONE_KEYS.join(", ");
 
 type ZoneRow = Omit<ZoneInput, "revision"> & { revision: number };
 
-/** The contract's `Zone`; the epoch stays inside the module (the composed state shows it). */
+/** The contract's `Zone`, as its columns hold it; the epoch stays inside the module. */
 function zoneView(row: Record<string, unknown>): ZoneRow {
-  return {
-    key: row.key as string,
-    name: row.name as string,
-    layout_id: row.layout_id as string | null,
-    regions: row.regions as ZoneRow["regions"],
-    header: row.header as ZoneRow["header"],
-    hub_qr: row.hub_qr as ZoneRow["hub_qr"],
-    sound: row.sound as ZoneRow["sound"],
-    revision: row.revision as number,
-  };
+  return Object.fromEntries(ZONE_KEYS.map((k) => [k, row[k]])) as unknown as ZoneRow;
 }
 
 function newEpoch(): string {
@@ -221,6 +223,7 @@ export interface ZoneDeps {
   bus: Bus;
   rights: RightsChecker;
   audit: Audit;
+  sources: Pick<Sources, "theme">;
 }
 
 type ByKey = { Params: { zone_key: string } };
@@ -252,12 +255,15 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
     const ctx = tenantOf(request);
     assertWritable(ctx);
     const zone = zoneInput(body(request));
+    await checkBoxes(deps.sources, ctx.tenant_id, zone);
     const actor = actorOf(request);
     const [emits, row] = await db.tenant(async (c) => {
       const seeded = await seededFor(ctx, c);
       const { rows } = await c.query(
-        `INSERT INTO screen_zones (key, name, layout_id, regions, header, hub_qr, sound, epoch)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT DO NOTHING RETURNING ${ZONE_COLUMNS}`,
+        `INSERT INTO screen_zones (key, name, layout_id, regions, header, hub_qr, hero_region,
+           grow_for_showcase, sound, epoch)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT DO NOTHING
+         RETURNING ${ZONE_COLUMNS}`,
         [
           zone.key,
           zone.name,
@@ -265,6 +271,8 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
           JSON.stringify(zone.regions),
           zone.header,
           zone.hub_qr,
+          zone.hero_region,
+          zone.grow_for_showcase,
           JSON.stringify(zone.sound),
           newEpoch(),
         ],
@@ -303,6 +311,7 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
     if (zone.revision === undefined) {
       throw invalidRequest("`revision` is required: send the revision you read.");
     }
+    await checkBoxes(deps.sources, ctx.tenant_id, zone);
     const actor = actorOf(request);
     const [emits, row] = await db.tenant(async (c) => {
       const seeded = await seededFor(ctx, c);
@@ -320,7 +329,8 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
       if (changed.length === 0) return [seeded, zoneView(before)] as const;
       const after = await c.query(
         `UPDATE screen_zones SET name = $2, layout_id = $3, regions = $4, header = $5, hub_qr = $6,
-           sound = $7, revision = revision + 1, updated_at = now()
+           hero_region = $7, grow_for_showcase = $8, sound = $9, revision = revision + 1,
+           updated_at = now()
          WHERE key = $1 RETURNING ${ZONE_COLUMNS}`,
         [
           zone.key,
@@ -329,6 +339,8 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
           JSON.stringify(zone.regions),
           zone.header,
           zone.hub_qr,
+          zone.hero_region,
+          zone.grow_for_showcase,
           JSON.stringify(zone.sound),
         ],
       );

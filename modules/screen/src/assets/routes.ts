@@ -1,8 +1,7 @@
 /**
  * The asset library (contracts/screen.md, Content and scheduling): list, upload a file or add a
- * web or YouTube link, check names before an upload, rename or reset health. Ported from the
- * legacy `asset-catalog.ts` (adapted: cursor pages instead of numbered ones, titles searched
- * alone) and the add paths of `web-asset.ts` and `youtube-asset.ts`.
+ * web or YouTube link, check names before an upload, rename or reset health. The list is
+ * catalog.ts; the add paths are ported from the legacy `web-asset.ts` and `youtube-asset.ts`.
  */
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { KitError } from "@canccu/kit";
@@ -18,48 +17,25 @@ import {
   tenantOf,
 } from "../http.js";
 import { probeYouTube, webUrl, youtubeLink } from "./links.js";
-import {
-  ASSET_KINDS,
-  ASSET_SELECT,
-  assetView,
-  isDeck,
-  readAsset,
-  usedBy,
-  viewAsset,
-} from "./store.js";
-import type { AssetKind, AssetRow } from "./store.js";
+import { listAssets } from "./catalog.js";
+import { isDeck, readAsset, viewAsset } from "./store.js";
+import type { AssetKind } from "./store.js";
 import { assetTitle, prepare, readUpload, uploadTitle } from "./upload.js";
 import { writeWithFile } from "./write.js";
 import { announce, submitJob } from "../render/jobs.js";
 import type { JobRow } from "../render/jobs.js";
 import type { AssetDeps } from "./write.js";
 
-const PAGE = 50;
+/** `screen.web` (default on): web and YouTube assets may be added; Studio offers them by it too. */
+export const webOn = (ctx: TenantContext): boolean => ctx.flags["screen.web"] !== false;
 
 function featureOn(ctx: TenantContext): void {
-  if (ctx.flags["screen.web"] === false) {
+  if (!webOn(ctx)) {
     throw new KitError("Web and YouTube assets are off for this event.", {
       status: 403,
       code: "feature_off",
     });
   }
-}
-
-/**
- * `<created_at in microseconds since 1970>|<id>`, base64url: the last row of the page, newest
- * first. Microseconds, as Postgres keeps them: a JS Date has only milliseconds, and a cursor cut
- * to them would skip every row created within the same millisecond as the page's last.
- */
-function decodeCursor(cursor: string): [string, string] {
-  const match = /^(\d{1,17})\|([A-Za-z0-9_-]{1,64})$/.exec(
-    Buffer.from(cursor, "base64url").toString(),
-  );
-  if (!match?.[1] || !match[2]) throw invalidRequest("`cursor` is not valid.");
-  return [match[1], match[2]];
-}
-
-function encodeCursor(row: AssetRow & { cursor_us: string }): string {
-  return Buffer.from(`${row.cursor_us}|${row.id}`).toString("base64url");
 }
 
 /** A query parameter given once, or undefined; `?q=a&q=b` is a client's mistake, not ours. */
@@ -68,9 +44,6 @@ function param(query: unknown, name: string): string | undefined {
   if (value === undefined || typeof value === "string") return value;
   throw invalidRequest(`\`${name}\` may be given once.`);
 }
-
-/** `%`, `_` and `\` in a search are meant literally. */
-const likeText = (q: string): string => `%${q.replace(/[\\%_]/g, (ch) => `\\${ch}`)}%`;
 
 async function addLink(deps: AssetDeps, request: FastifyRequest, ctx: TenantContext) {
   featureOn(ctx);
@@ -152,50 +125,13 @@ export function assetRoutes(app: FastifyInstance, deps: AssetDeps): void {
   const read = { preHandler: needs(deps.rights, "screen.content.read") };
   const write = { preHandler: needs(deps.rights, "screen.content.write") };
 
-  app.get("/api/screen/assets", read, async (request) => {
-    const query = {
+  app.get("/api/screen/assets", read, (request) =>
+    listAssets(deps, {
       q: param(request.query, "q"),
       kind: param(request.query, "kind"),
       cursor: param(request.query, "cursor"),
-    };
-    const where: string[] = [];
-    const values: unknown[] = [];
-    if (query.q !== undefined && query.q.trim() !== "") {
-      if (query.q.length > 120) throw invalidRequest("`q` may be at most 120 characters.");
-      values.push(likeText(query.q.trim()));
-      where.push(`a.title ILIKE $${values.length}`);
-    }
-    if (query.kind !== undefined) {
-      if (!ASSET_KINDS.includes(query.kind as AssetKind)) throw invalidRequest("Unknown `kind`.");
-      values.push(query.kind);
-      where.push(`a.kind = $${values.length}`);
-    }
-    if (query.cursor !== undefined) {
-      const [micros, id] = decodeCursor(query.cursor);
-      values.push(micros, id);
-      const at = `timestamptz 'epoch' + $${values.length - 1}::bigint * interval '1 microsecond'`;
-      where.push(`(a.created_at, a.id) < (${at}, $${values.length})`);
-    }
-    const select = ASSET_SELECT.replace(
-      "SELECT ",
-      "SELECT (extract(epoch FROM a.created_at) * 1000000)::bigint::text AS cursor_us, ",
-    );
-    const sql = `${select} ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-      ORDER BY a.created_at DESC, a.id DESC LIMIT ${PAGE + 1}`;
-    const [rows, users] = await deps.db.tenant(async (c) => {
-      const found = (await c.query(sql, values)).rows as unknown as (AssetRow & {
-        cursor_us: string;
-      })[];
-      const ids = found.slice(0, PAGE).map((r) => r.id);
-      return [found, await usedBy(c, ids, deps.now())] as const;
-    });
-    const page = rows.slice(0, PAGE);
-    const last = page.at(-1);
-    return {
-      assets: page.map((row) => assetView(row, users.get(row.id) ?? [])),
-      next_cursor: rows.length > PAGE && last ? encodeCursor(last) : null,
-    };
-  });
+    }),
+  );
 
   app.post("/api/screen/assets", write, async (request, reply) => {
     const ctx = tenantOf(request);

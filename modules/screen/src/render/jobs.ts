@@ -41,10 +41,13 @@ export interface JobRow {
   warnings: RenderWarning[] | null;
   bytes: string;
   reserved_bytes: string;
+  /** Slides the running attempt has drawn so far; Studio's progress, not in the contract. */
+  slides_done: number;
 }
 
 export const JOB_COLUMNS = `id, asset_id, asset_version, state, attempts, lease_until, submitted_at,
-  started_at, finished_at, error_code, error_message, slides, warnings, bytes, reserved_bytes`;
+  started_at, finished_at, error_code, error_message, slides, warnings, bytes, reserved_bytes,
+  slides_done`;
 
 /** A container lost twice while drawing the same deck is the deck's doing, not bad luck. */
 export const MAX_ATTEMPTS = 2;
@@ -96,6 +99,23 @@ export async function viewJobs(
   const queued = rows.filter((r) => r.state === "queued").map((r) => r.id);
   const positions = await deps.queue.positions(requireTenant(), queued);
   return rows.map((row) => jobView(row, positions.get(row.id) ?? null));
+}
+
+/** By asset, the newest job of the asset's current version, as its `render_state` reads it. */
+export async function currentJobs(
+  c: SqlClient,
+  assetIds: readonly string[],
+): Promise<Map<string, JobRow>> {
+  const { rows } = await c.query(
+    `SELECT DISTINCT ON (j.asset_id) ${JOB_COLUMNS.replace(/(\w+)/g, "j.$1")}
+     FROM screen_render_jobs j
+     JOIN screen_assets a
+       ON a.tenant_id = j.tenant_id AND a.id = j.asset_id AND a.version = j.asset_version
+     WHERE j.asset_id = ANY($1)
+     ORDER BY j.asset_id, j.submitted_at DESC, j.id DESC`,
+    [[...assetIds]],
+  );
+  return new Map((rows as unknown as JobRow[]).map((r) => [r.asset_id, r]));
 }
 
 /** The scratch directory of one attempt, where its slides wait until the job is recorded. */

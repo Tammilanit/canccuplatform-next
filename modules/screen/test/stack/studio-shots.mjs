@@ -1,8 +1,9 @@
-// The Screen studio's screenshots (#189, #190, #265; mockups 06–09 and 13), taken after the screens on
+// The Screen studio's screenshots (#189, #190, #263, #264, #265; mockups 06–10 and 13), taken after the screens on
 // the same demo fixture (fixture.mjs) and theme, so its live views draw the Pulse the screens do.
 // Two screens play while they are taken, one landscape and one portrait, each in the browser at
 // its own size, so their heartbeats give the device cards an orientation, a size and a state.
 import { expect } from "./client.mjs";
+import { removeContent, removePlaylist, seedContent, seedPlaylist } from "./content-fixture.mjs";
 import { saveZone } from "./fixture.mjs";
 
 const DESK = { width: 1280, height: 800 };
@@ -16,6 +17,7 @@ export const STUDIO_PAGES = [
   ["screen-devices", "/admin/screen/devices"],
   ["screen-zones", "/admin/screen/zones"],
   ["screen-zone-editor", "/admin/screen/zones/main"],
+  ["screen-content", "/admin/screen/content"],
   ["screen-ticker", "/admin/screen/ticker"],
   ["screen-pins", "/admin/screen/pins"],
 ].flatMap(([name, path]) => [
@@ -34,6 +36,15 @@ export const FROZEN_PAGES = [
   ["screen-live-frozen", "/admin/screen/live", DESK],
 ];
 
+/**
+ * The Content page with a playlist in the builder and its push playing (#264, mockup 10), at the
+ * mockup's width and on a phone, where the builder and Push now follow the library.
+ */
+export const PLAYLIST_PAGES = [
+  ["screen-content-playlist", "/admin/screen/content", { width: 1920, height: 1100 }],
+  ["screen-content-playlist-phone", "/admin/screen/content", PHONE],
+];
+
 /** A tap on the shown day's first window opens its details. */
 async function openDetails(page) {
   await page
@@ -42,6 +53,32 @@ async function openDetails(page) {
     .click();
   await page.waitForTimeout(300);
 }
+
+/**
+ * Zones and layouts' box editor (#405, sheet 10's lower frames), unsaved: the venue card hidden
+ * (the rail grows into its space) and the hero two cells narrower, then the preview the real
+ * player draws of it; and Dashboard's hero role, picked in the gallery.
+ */
+async function editBoxes(page) {
+  await page.click('[data-pick="venue_rail"]');
+  await page.click('section[data-region="venue_rail"] [data-box-hide]');
+  await page.click('[data-pick="hero"]');
+  for (let i = 0; i < 2; i++)
+    await page.click('section[data-region="hero"] [data-size="narrower"]');
+  await page.click('[data-pick="rail"]');
+  await page.click('section[data-region="rail"] [data-size="wider"]');
+  await studioReady(page);
+}
+export const LAYOUT_PAGES = [
+  ["screen-zone-boxes", "/admin/screen/zones/main", DESK, { ready: editBoxes }],
+  ["screen-zone-boxes-phone", "/admin/screen/zones/main", PHONE, { ready: editBoxes }],
+  [
+    "screen-zone-dashboard",
+    "/admin/screen/zones/main?layout=dashboard",
+    DESK,
+    { ready: studioReady },
+  ],
+];
 
 /**
  * The Schedule page (#190, mockup 09), last, on windows made for it and removed after it: the
@@ -184,8 +221,11 @@ async function reported(demo, ids) {
 export async function studioShots({ browser, demo, at, cookieOn, shot }) {
   const devices = [];
   const contexts = [];
+  let assets = [];
   let made = null;
+  let lists = null;
   try {
+    assets = await seedContent(demo);
     const hall = await demo.pair("Hall left", "main");
     devices.push(hall);
     const entrance = await demo.pair("Entrance", "entrance");
@@ -199,6 +239,11 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
     for (const [name, path, viewport] of STUDIO_PAGES) {
       await shot(name, path, viewport, { ready: studioReady });
     }
+    lists = await seedPlaylist(demo, assets);
+    for (const [name, path, viewport] of PLAYLIST_PAGES) await shot(name, path, viewport);
+    await removePlaylist(demo, lists);
+    lists = null;
+    for (const [name, path, viewport, o] of LAYOUT_PAGES) await shot(name, path, viewport, o);
     made = await scheduleFixture(demo);
     for (const [name, path, viewport, o] of SCHEDULE_PAGES) await shot(name, path, viewport, o);
     const until = new Date(Date.now() + 3600_000).toISOString();
@@ -213,7 +258,9 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
   } finally {
     await demo.call("PUT", "/api/screen/pin", { body: { freeze: false } }).catch(() => undefined);
     if (made !== null) await removeSchedule(demo, made);
+    if (lists !== null) await removePlaylist(demo, lists);
     for (const context of contexts) await context.close();
     for (const device of devices) await demo.revoke(device.id);
+    await removeContent(demo, assets);
   }
 }

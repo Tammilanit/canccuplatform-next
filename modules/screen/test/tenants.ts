@@ -34,6 +34,8 @@ export const TENANTS: Record<string, TenantContext> = {
   "zeta.test": context("zeta", { admin_access: "restricted" }),
   // Before the event: Studio opens on Zones, not Live.
   "eta.test": context("eta", { status: "draft" }),
+  // Web and YouTube assets off: Studio offers no links (contracts/screen.md, Feature flags).
+  "iota.test": context("iota", { flags: { "screen.web": false } }),
   // Another venue: no device of alpha's venue may move here.
   "far.test": context("far", {
     venue: { id: "v_2", name: "Far Hall", addresses: ["10.9.0.0/24"] },

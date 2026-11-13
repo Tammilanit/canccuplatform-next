@@ -1,9 +1,9 @@
 // The demo event's screen fixture for the screenshots (#375: "the demo event's fixture data"): a
 // run of show around now over two days with a running and a delayed item (day.mjs), a ticker line, the main
 // zone named as mockup 02 names it and an entrance zone with the check-in QR in its hero (mockup
-// 03). The venue's Wi-Fi is seeded by deploy/compose.ci.yml, since tenants takes no CI session. A
-// rerun on the same stack adds nothing twice. Also the theme switch the screenshots of every demo
-// theme need.
+// 03). The venue's Wi-Fi is seeded by deploy/compose.ci.yml, since the CI session holds no tenants
+// right. A rerun on the same stack adds nothing twice. Also the theme switch the screenshots of
+// every demo theme need.
 import { expect } from "./client.mjs";
 import { placeDay } from "./day.mjs";
 

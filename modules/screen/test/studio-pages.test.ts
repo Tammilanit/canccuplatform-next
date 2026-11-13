@@ -51,11 +51,11 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     const tabs = (body: string) =>
       [...body.matchAll(/<nav class="canccu-tabs"[^>]*>(.*?)<\/nav>/g)][0]?.[1] ?? "";
     const all = tabs((await page("/admin/screen/live", "admin")).body);
-    expect(all).toContain(">Zones<");
+    expect(all).toContain(">Zones and layouts<");
     expect(all).toContain(">Ticker<");
     const crew = tabs((await page("/admin/screen/live", "crew")).body);
     expect(crew).toContain(">Devices<");
-    expect(crew).not.toContain(">Zones<");
+    expect(crew).not.toContain(">Zones and layouts<");
     expect(crew).not.toContain(">Ticker<");
   });
 
@@ -167,6 +167,55 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect((await page("/admin/screen/zones/nope", "zoner")).statusCode).toBe(404);
     const list = (await page("/admin/screen/zones", "zoner")).body;
     expect(list).toContain('href="/admin/screen/zones/main"');
+  });
+
+  it("draws Zones and layouts: zone tabs, the gallery, the boxes and Dashboard's hero", async () => {
+    const zone = (await call(h, "GET", "/api/screen/zones/main", { session: "admin" })).json<{
+      revision: number;
+    }>();
+    const area = { column: 9, row: 2, columns: 4, rows: 10 };
+    const regions = { venue_rail: { hidden: true }, rail: { area } };
+    const put = await call(h, "PUT", "/api/screen/zones/main", {
+      session: "admin",
+      body: { key: "main", name: "Main", regions, revision: zone.revision },
+    });
+    expect(put.statusCode, put.body).toBe(200);
+    const body = (await page("/admin/screen/zones/main", "zoner")).body;
+    expect(body).toMatch(
+      /canccu-studio-zonetabs[\s\S]*href="\/admin\/screen\/zones\/main"\s*aria-current="page"/,
+    );
+    for (const id of ["pulse", "dashboard", "hero", "split", "ambient", "pulse_portrait"]) {
+      expect(body).toContain(`data-layout-pick="${id}"`);
+    }
+    expect(body).toMatch(/data-layout-pick="pulse"[^>]*aria-current="true"/);
+    // The rail at its own size, the venue card hidden and offered back; size and hide in words.
+    expect(body).toContain(
+      'data-pick="rail" aria-pressed="false" data-area="2 / 9 / span 10 / span 4"',
+    );
+    expect(body).toMatch(/data-pick="venue_rail"[^>]*\shidden[\s>=]/);
+    expect(body).toContain("Show Venue card");
+    for (const word of ["Narrower", "Wider", "Shorter", "Taller", "Hide this box"]) {
+      expect(body).toContain(word);
+    }
+    expect(body).toContain("Reset to the built-in layout…");
+    expect(body).not.toContain("Which box is the hero?");
+    // A layout picked in the gallery is drawn unsaved, without the Pulse's sizes and hidden boxes.
+    const dash = (await page("/admin/screen/zones/main?layout=dashboard", "zoner")).body;
+    expect(dash).toContain('data-layout="dashboard"');
+    expect(dash).toMatch(/data-layout-pick="dashboard"[^>]*aria-current="true"/);
+    expect(dash).toContain("Which box is the hero?");
+    expect(dash).toMatch(/data-hero="hero"[^>]*aria-pressed="true"/);
+    expect(dash).toContain('name="grow_for_showcase"');
+    expect(dash).not.toMatch(/data-pick="[a-z_]+"[^>]*\shidden[\s>=]/);
+    for (const asked of ["pulse", "nope"]) {
+      expect((await page(`/admin/screen/zones/main?layout=${asked}`, "zoner")).body).toContain(
+        'data-layout=""',
+      );
+    }
+    await call(h, "PUT", "/api/screen/zones/main", {
+      session: "admin",
+      body: { key: "main", name: "Main", regions: {}, revision: zone.revision + 1 },
+    });
   });
 
   it("shows the ticker line with its source and end, and offers Clear only for a person's line", async () => {

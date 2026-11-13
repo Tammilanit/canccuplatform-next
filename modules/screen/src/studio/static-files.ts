@@ -1,4 +1,4 @@
-/** The Studio's own stylesheets and scripts, and packages/ui's ui.css, read once each. */
+/** The Studio's own stylesheets and scripts, served from static/, and packages/ui's ui.css. */
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 
@@ -10,7 +10,18 @@ export const STATIC_TYPES: Record<string, string> = {
   "studio.js": "text/javascript; charset=utf-8",
   "studio-zone.css": "text/css; charset=utf-8",
   "studio-zone.js": "text/javascript; charset=utf-8",
+  "studio-layout.css": "text/css; charset=utf-8",
   "studio-schedule.css": "text/css; charset=utf-8",
+  "studio-content.css": "text/css; charset=utf-8",
+  "studio-content.js": "text/javascript; charset=utf-8",
+  "studio-replace-plan.js": "text/javascript; charset=utf-8",
+  "studio-playlists.css": "text/css; charset=utf-8",
+  "studio-playlists.js": "text/javascript; charset=utf-8",
+  "studio-playlist-builder.js": "text/javascript; charset=utf-8",
+  "studio-playlist-editor.js": "text/javascript; charset=utf-8",
+  "studio-playlist-item.js": "text/javascript; charset=utf-8",
+  "studio-boxes.js": "text/javascript; charset=utf-8",
+  "studio-layout.js": "text/javascript; charset=utf-8",
 };
 
 const staticFiles = new Map<string, Promise<Buffer>>();

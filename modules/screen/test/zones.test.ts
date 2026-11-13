@@ -45,6 +45,8 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
         regions: { hero: { idle: "next" } },
         header: null,
         hub_qr: "always",
+        hero_region: null,
+        grow_for_showcase: true,
         sound: { enabled: true, device_id: null },
         revision: 1,
       },
@@ -81,6 +83,8 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
       ...zone,
       header: null,
       hub_qr: "always",
+      hero_region: null,
+      grow_for_showcase: true,
       sound: { enabled: true, device_id: null },
       revision: 1,
     });
@@ -164,6 +168,67 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
     await call(h, "DELETE", "/api/screen/zones/lobby", admin());
   });
 
+  it("keeps `hero_region`, also an id no layout has, and `grow_for_showcase`", async () => {
+    const zone = { key: "hall", name: "Hall", layout_id: "dashboard", hero_region: "online" };
+    const added = await call(h, "POST", "/api/screen/zones", { ...admin(), body: zone });
+    expect(added.json()).toMatchObject({ hero_region: "online", grow_for_showcase: true });
+    const saved = await call(h, "PUT", "/api/screen/zones/hall", {
+      ...admin(),
+      body: { ...zone, hero_region: "gone", grow_for_showcase: false, revision: 1 },
+    });
+    expect(saved.json()).toMatchObject({ hero_region: "gone", grow_for_showcase: false });
+    expect(events(h, "screen.zone.saved").at(-1)).toMatchObject({
+      changed: ["hero_region", "grow_for_showcase"],
+    });
+    await call(h, "DELETE", "/api/screen/zones/hall", admin());
+  });
+
+  it("keeps box sizes and hidden boxes that fit the zone's own layout, and refuses the rest", async () => {
+    const area = (column: number, row: number, columns: number, rows: number) => ({
+      column,
+      row,
+      columns,
+      rows,
+    });
+    const grown = { venue_rail: { hidden: true }, rail: { area: area(9, 2, 4, 10) } };
+    const zone = { key: "hall", name: "Hall", layout_id: null, regions: grown };
+    const added = await call(h, "POST", "/api/screen/zones", { ...admin(), body: zone });
+    expect([added.statusCode, added.json<Zone>().regions]).toEqual([201, grown]);
+    const refused = [
+      // Off the Pulse's grid; over the venue rail once it is drawn again; over the header.
+      { rail: { area: area(9, 2, 5, 10) } },
+      { rail: { area: area(9, 2, 4, 10) } },
+      { hero: { area: area(1, 1, 8, 11) } },
+    ];
+    for (const regions of refused) {
+      for (const [method, url] of [
+        ["PUT", "/api/screen/zones/hall"],
+        ["POST", "/api/screen/zones/hall/preview"],
+      ] as const) {
+        const body = { ...zone, regions, revision: 1 };
+        const res = await call(h, method, url, { ...admin(), body });
+        expect([res.statusCode, code(res)], `${method} ${JSON.stringify(regions)}`).toEqual([
+          400,
+          "invalid_request",
+        ]);
+      }
+    }
+    // In Dashboard the rail's area would cover the voice box.
+    const dashboard = { ...zone, layout_id: "dashboard", revision: 1 };
+    const elsewhere = await call(h, "PUT", "/api/screen/zones/hall", {
+      ...admin(),
+      body: dashboard,
+    });
+    expect([elsewhere.statusCode, code(elsewhere)]).toEqual([400, "invalid_request"]);
+    const reset = await call(h, "PUT", "/api/screen/zones/hall", {
+      ...admin(),
+      body: { ...zone, regions: {}, revision: 1 },
+    });
+    expect(reset.json<Zone>().regions).toEqual({});
+    expect(events(h, "screen.zone.saved").at(-1)).toMatchObject({ changed: ["regions"] });
+    await call(h, "DELETE", "/api/screen/zones/hall", admin());
+  });
+
   it("gives a zone made again under the same key a new epoch", async () => {
     const body = { key: "stage", name: "Stage" };
     await call(h, "POST", "/api/screen/zones", { ...admin(), body });
@@ -203,10 +268,26 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
         name: "x",
         regions: { hero: { widgets: [{ widget: "clock", props: { a: {} } }] } },
       },
+      { key: "ok", name: "x", regions: { hero: { hidden: "yes" } } },
+      { key: "ok", name: "x", regions: { hero: { area: { column: 1, row: 1, columns: 2 } } } },
+      {
+        key: "ok",
+        name: "x",
+        regions: { hero: { area: { column: 0, row: 1, columns: 1, rows: 1 } } },
+      },
+      {
+        key: "ok",
+        name: "x",
+        regions: { hero: { area: { column: 1, row: 1, columns: 1, rows: 1, z: 1 } } },
+      },
       { key: "ok", name: "x", header: "rotating" },
       { key: "ok", name: "x", header: true },
       { key: "ok", name: "x", hub_qr: null },
       { key: "ok", name: "x", hub_qr: "never" },
+      { key: "ok", name: "x", hero_region: "Online" },
+      { key: "ok", name: "x", hero_region: 3 },
+      { key: "ok", name: "x", grow_for_showcase: "yes" },
+      { key: "ok", name: "x", grow_for_showcase: null },
       { key: "ok", name: "x", sound: { enabled: "no" } },
       { key: "ok", name: "x", sound: { device_id: "dv_nobody" } },
     ];

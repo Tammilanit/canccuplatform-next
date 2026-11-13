@@ -20,6 +20,7 @@ const BROWSER = Object.fromEntries(
     "structuredClone",
     "encodeURIComponent",
     "decodeURIComponent",
+    "XMLHttpRequest",
   ].map((name) => [name, "readonly"]),
 );
 
@@ -53,5 +54,17 @@ export default tseslint.config(
       sourceType: "script",
       globals: BROWSER,
     },
+  },
+  // The Content page's script is a module, so it may import the replace plan it shares with tests.
+  {
+    files: [
+      "static/studio-content.js",
+      "static/studio-replace-plan.js",
+      "static/studio-playlists.js",
+      "static/studio-playlist-builder.js",
+      "static/studio-playlist-editor.js",
+      "static/studio-playlist-item.js",
+    ],
+    languageOptions: { sourceType: "module" },
   },
 );

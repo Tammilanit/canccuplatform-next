@@ -43,14 +43,18 @@ import { CLIENT_KEYS, translator } from "./messages.js";
 import type { MessageKey, Translate } from "./messages.js";
 import { devicesActions, devicesView } from "./devices-view.js";
 import { frozenBanner, pinsView } from "./pins-view.js";
+import { param, readContent } from "./content-data.js";
+import { readPlaylists } from "./playlists-data.js";
+import { contentPage } from "./playlists-view.js";
+import { STATIC_TYPES, staticFile } from "./static-files.js";
+import type { ContentDeps } from "./content-data.js";
 import { schedulePage } from "./schedule-page.js";
-import { STATIC_TYPES, staticFile } from "./static.js";
 import { tickerView } from "./ticker-view.js";
 import { STUDIO, liveActions, liveView, startUrlOf } from "./views.js";
 import type { ViewContext } from "./views.js";
 import { zoneEditorView, zonesView } from "./zone-views.js";
 
-export interface StudioDeps {
+export interface StudioDeps extends Omit<ContentDeps, "now"> {
   db: Db;
   bus: Bus;
   kv: Kv;
@@ -78,6 +82,7 @@ const TABS: [path: string, label: MessageKey, rights: readonly string[]][] = [
   ["devices", "tab.devices", [READ]],
   ["zones", "tab.zones", [ZONES]],
   ["schedule", "tab.schedule", [CONTENT]],
+  ["content", "tab.content", [CONTENT]],
   ["ticker", "tab.ticker", [TICKER]],
   ["pins", "tab.pins", PIN_READ_RIGHTS],
 ];
@@ -138,6 +143,8 @@ interface PageOptions {
   plain?: boolean;
   /** A page's own stylesheet and script, if it has one (`<name>.css`, `<name>.js`, using studio.js's helpers). */
   own?: string;
+  /** The page's own script is a module, which may import its neighbours in static/. */
+  module?: boolean;
   /** Rules made of numbers only (the schedule's block places), under the page's nonce. */
   style?: string;
 }
@@ -192,7 +199,14 @@ async function studioPage(
       <p class="canccu-studio-notice" role="status" hidden></p>
       ${o.body}${clientText(t)}
       <script src="${STUDIO}static/studio.js" defer></script>
-      ${o.own === undefined || !Object.hasOwn(STATIC_TYPES, `${o.own}.js`) ? "" : html`<script src="${STUDIO}static/${o.own}.js" defer></script>`}`,
+      ${
+        // A page with a stylesheet only (the schedule) has no script to load.
+        o.own === undefined || !Object.hasOwn(STATIC_TYPES, `${o.own}.js`)
+          ? ""
+          : o.module === true
+            ? html`<script type="module" src="${STUDIO}static/${o.own}.js"></script>`
+            : html`<script src="${STUDIO}static/${o.own}.js" defer></script>`
+      }`,
   });
   // Admin pages frame surface pages (the virtual screen) and are never framed themselves.
   return reply
@@ -318,20 +332,26 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       },
     );
 
-    studio.get<{ Params: { zone_key: string } }>(
+    studio.get<{ Params: { zone_key: string }; Querystring: { layout?: string } }>(
       `${STUDIO}zones/:zone_key`,
       { preHandler: pageNeeds(deps.rights, [ZONES]) },
       async (request, reply) => {
         const c = await context(request);
         const ctx = tenantOf(request);
-        const zone = (await readZones(deps, ctx)).find((z) => z.key === request.params.zone_key);
+        const zones = await readZones(deps, ctx);
+        const zone = zones.find((z) => z.key === request.params.zone_key);
         if (zone === undefined) throw notFound();
         const [layouts, all] = [await layoutsOf(deps, ctx.tenant_id), await devices()];
+        // The gallery's pick, drawn unsaved; the zone's own (`null`: `pulse`) or an unknown id is none.
+        const asked = layouts.find((l) => l.id === request.query.layout)?.id;
+        const layoutId =
+          asked === (zone.layout_id ?? "pulse") ? zone.layout_id : (asked ?? zone.layout_id);
         return page(request, reply, c, {
           title: zone.name,
           crumb: { href: `${STUDIO}zones`, label: c.t("zone.back") },
-          body: zoneEditorView(c, zone, layouts, all),
+          body: zoneEditorView(c, zone, layouts, all, zones, layoutId),
           own: "studio-zone",
+          module: true,
         });
       },
     );
@@ -346,6 +366,20 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         const view = await schedulePage(deps.db, c, event, zones, all, request.query);
         const o = { title: "", tab: "schedule", description: c.t("schedule.desc") };
         return page(request, reply, c, { ...o, own: "studio-schedule", ...view });
+      },
+    );
+
+    studio.get(
+      `${STUDIO}content`,
+      { preHandler: pageNeeds(deps.rights, [CONTENT]) },
+      async (request, reply) => {
+        const c = await context(request);
+        const ctx = tenantOf(request);
+        const data = await readContent({ ...deps, now }, ctx, c.rights, request.query);
+        const lists = await readPlaylists(deps.db, c.nowMs, param(request.query, "playlist"));
+        const body = contentPage(c, data, lists, await readZones(deps, ctx));
+        const o = { title: "", tab: "content", description: c.t("content.desc"), body };
+        return page(request, reply, c, { ...o, own: "studio-content", module: true });
       },
     );
 

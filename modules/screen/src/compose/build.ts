@@ -3,11 +3,13 @@
  * pure function of the zone, the layout and what the sources said, so every screen of a zone
  * gets the same answer and the rules are tested without a stack.
  */
+import { placedBoxes } from "./boxes.js";
 import type { Claim } from "./claims.js";
 import { chooseLayout, roleOf } from "./layouts.js";
 import type { Area, Layout, LayoutRegion, Props, Role, WidgetEntry } from "./layouts.js";
 import { partsOf } from "./parts.js";
 import type { HeaderMode, HubQrMode, Part } from "./parts.js";
+import { grown, traded } from "./showcase.js";
 import { countdownFields, viewOf } from "./widgets.js";
 import type { View, ZoneFacts } from "./widgets.js";
 
@@ -19,6 +21,8 @@ export interface ZoneSetup {
   header?: HeaderMode | null;
   /** Absent: `always`. */
   hubQr?: HubQrMode;
+  /** Absent or null: the hero stays in the hero region. */
+  heroRegion?: string | null;
 }
 
 export interface BuildInput {
@@ -27,6 +31,8 @@ export interface BuildInput {
   themeLayouts: readonly Layout[];
   portrait: boolean;
   facts: ZoneFacts;
+  /** The hero grows for a showcase (src/compose/showcase.ts); the caller decides when. */
+  grow?: boolean;
 }
 
 export interface WidgetView {
@@ -211,7 +217,11 @@ export function buildRegions(input: BuildInput): { layout: Layout; regions: Regi
     themeLayouts: input.themeLayouts,
     portrait: input.portrait,
   });
-  const regions = layout.regions.flatMap((r) => regionsOf(r, layout, input));
+  // The zone's boxes first, then the trade and the growth, then parts (contracts/screen.md, Order).
+  const boxes = placedBoxes(layout, input.zone.layoutId, input.zone.regions);
+  const swapped = traded(boxes, input.zone.regions, input.zone.heroRegion ?? null);
+  const placed = input.grow === true ? grown(swapped, input.zone.regions) : swapped;
+  const regions = placed.flatMap((r) => regionsOf(r, layout, input));
   return {
     layout,
     regions: [

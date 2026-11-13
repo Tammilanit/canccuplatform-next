@@ -22,6 +22,8 @@ import {
 } from "../modules/screen/test/stack/fixture.mjs";
 import { planned, screenShots } from "../modules/screen/test/stack/screens.mjs";
 import {
+  PLAYLIST_PAGES,
+  LAYOUT_PAGES,
   SCHEDULE_PAGES,
   STUDIO_PAGES,
   FROZEN_PAGES,
@@ -219,6 +221,16 @@ if (opts["dry-run"]) {
   for (const [name, path, { width, height }] of FROZEN_PAGES) {
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, while frozen)`,
+    );
+  }
+  for (const [name, path, { width, height }] of PLAYLIST_PAGES) {
+    console.log(
+      `  ${name}.png  ${at(path)}  (${width}×${height}, with a playlist and its push)`,
+    );
+  }
+  for (const [name, path, { width, height }] of LAYOUT_PAGES) {
+    console.log(
+      `  ${name}.png  ${at(path)}  (${width}×${height}, the box editor, unsaved)`,
     );
   }
   for (const [name, path, { width, height }] of SCHEDULE_PAGES) {
