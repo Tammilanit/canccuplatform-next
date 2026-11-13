@@ -127,6 +127,8 @@ export function zoneViewRoutes(
         regions: zone.regions,
         header: zone.header,
         hub_qr: zone.hub_qr,
+        hero_region: zone.hero_region,
+        grow_for_showcase: zone.grow_for_showcase,
         // A preview never sounds, so whose sound it is does not matter.
         sound: zone.sound,
         epoch: "preview",

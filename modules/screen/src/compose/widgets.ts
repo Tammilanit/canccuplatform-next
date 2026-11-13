@@ -53,10 +53,37 @@ export interface AgendaItem {
   delay_minutes: number;
   location: string | null;
   visibility: string;
+  /** Only in the module read of all items (`GET /internal/agenda/items`). */
+  status?: string;
+  zone?: string | null;
 }
 export interface AgendaNow {
   current: AgendaItem[];
   next: AgendaItem[];
+  /** The items after next (`agenda_now`'s `later`, laterOf); absent: none. */
+  later?: AgendaItem[];
+}
+
+const LATER_MAX = 2;
+
+/**
+ * The `public`, `scheduled` items of the zone or of no zone that start after the next ones, at most
+ * two, in order of start (contracts/screen.md, `agenda_now`): what follows the item a hero counts
+ * down to. None while nothing is next.
+ */
+export function laterOf(all: AgendaItem[], next: AgendaItem[], zoneKey: string): AgendaItem[] {
+  const after = Math.max(...next.map((i) => Date.parse(i.starts_at)));
+  if (!Number.isFinite(after)) return [];
+  return all
+    .filter(
+      (i) =>
+        i.visibility === "public" &&
+        i.status === "scheduled" &&
+        (i.zone == null || i.zone === zoneKey) &&
+        Date.parse(i.starts_at) > after,
+    )
+    .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))
+    .slice(0, LATER_MAX);
 }
 export interface VenueInfo {
   wifi: { ssid: string; password: string | null; note: string | null; visibility: string }[];
@@ -105,23 +132,24 @@ const textOf = (iso: string | null, facts: ZoneFacts): string | null =>
 const publicOnly = (items: AgendaItem[]): AgendaItem[] =>
   items.filter((i) => i.visibility === "public");
 
+const rows = (items: AgendaItem[], state: "now" | "next", facts: ZoneFacts) =>
+  publicOnly(items).map((i) => ({
+    id: i.id,
+    name: i.title,
+    state: i.delay_minutes > 0 ? "delayed" : state,
+    starts_text: textOf(i.starts_at, facts),
+    ends_text: textOf(i.ends_at, facts),
+    starts_at: i.starts_at,
+    ends_at: i.ends_at,
+    delay_minutes: i.delay_minutes,
+    location: i.location,
+    kind: i.kind,
+  }));
+
 function agendaRows(facts: ZoneFacts): Record<string, unknown>[] {
-  const rows = (items: AgendaItem[], state: "now" | "next") =>
-    publicOnly(items).map((i) => ({
-      id: i.id,
-      name: i.title,
-      state: i.delay_minutes > 0 ? "delayed" : state,
-      starts_text: textOf(i.starts_at, facts),
-      ends_text: textOf(i.ends_at, facts),
-      starts_at: i.starts_at,
-      ends_at: i.ends_at,
-      delay_minutes: i.delay_minutes,
-      location: i.location,
-      kind: i.kind,
-    }));
   return facts.agenda === null
     ? []
-    : [...rows(facts.agenda.current, "now"), ...rows(facts.agenda.next, "next")];
+    : [...rows(facts.agenda.current, "now", facts), ...rows(facts.agenda.next, "next", facts)];
 }
 
 /** The `countdown` view-model of `props.item_id`, else of the zone's next public item. */
@@ -165,7 +193,8 @@ function fields(
       };
     case "agenda_now": {
       const items = agendaRows(facts);
-      return items.length === 0 ? null : { title: "Now and next", items };
+      const later = rows(facts.agenda?.later ?? [], "next", facts);
+      return items.length === 0 ? null : { title: "Now and next", items, later };
     }
     case "countdown":
       return countdownFields(facts, typeof props.item_id === "string" ? props.item_id : undefined);

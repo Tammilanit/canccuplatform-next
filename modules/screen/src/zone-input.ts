@@ -40,6 +40,9 @@ export interface ZoneInput {
   /** Null: the layout's `header`, else `separate` (src/compose/parts.ts). */
   header: "separate" | "shared" | null;
   hub_qr: "always" | "rotate";
+  /** Null: no trade (src/compose/showcase.ts). */
+  hero_region: string | null;
+  grow_for_showcase: boolean;
   sound: ZoneSound;
   /** Required on PUT; ignored on POST, where it is read-only. */
   revision?: number;
@@ -125,7 +128,18 @@ export function zoneInput(value: unknown): ZoneInput {
   if (!isObject(value)) throw invalidRequest("The body must be a JSON object.");
   onlyKeys(
     value,
-    ["key", "name", "layout_id", "regions", "header", "hub_qr", "sound", "revision"],
+    [
+      "key",
+      "name",
+      "layout_id",
+      "regions",
+      "header",
+      "hub_qr",
+      "hero_region",
+      "grow_for_showcase",
+      "sound",
+      "revision",
+    ],
     "zone",
   );
   const { key, name } = value;
@@ -155,6 +169,14 @@ export function zoneInput(value: unknown): ZoneInput {
   // Unlike `header`, `hub_qr` has no null: the contract gives it a plain default.
   const hubQr = value.hub_qr === undefined ? "always" : value.hub_qr;
   oneOf(hubQr, HUB_QRS, "`hub_qr`");
+  // Any region id is kept, also one the layout lacks: the zone survives a layout change.
+  const heroRegion = value.hero_region ?? null;
+  if (heroRegion !== null && (typeof heroRegion !== "string" || !NAME_RE.test(heroRegion))) {
+    throw invalidRequest("`hero_region` must be a region id such as `online`, or null.");
+  }
+  // Like `hub_qr`, no null: the contract gives it a plain default.
+  const grow = value.grow_for_showcase === undefined ? true : value.grow_for_showcase;
+  if (typeof grow !== "boolean") throw invalidRequest("`grow_for_showcase` must be true or false.");
   const sound = value.sound ?? {};
   if (!isObject(sound)) throw invalidRequest("`sound` must be an object.");
   onlyKeys(sound, ["enabled", "device_id"], "sound");
@@ -175,6 +197,8 @@ export function zoneInput(value: unknown): ZoneInput {
     regions: regions as Record<string, Json>,
     header: header as ZoneInput["header"],
     hub_qr: hubQr as ZoneInput["hub_qr"],
+    hero_region: heroRegion,
+    grow_for_showcase: grow,
     sound: { enabled, device_id: deviceId },
     ...(revision === undefined ? {} : { revision: revision as number }),
   };

@@ -318,6 +318,35 @@ describe("the screen's own parts of the look", () => {
       expect(box?.querySelector(".canccu-widget--agenda_now")).toBeNull();
     });
 
+    // #397: `later` is what comes after next, so the rail's Next is the item after the hero's.
+    const final = { id: "it_final", name: "Final", state: "delayed", starts_text: "21:15", ends_text: null, starts_at: "2026-03-14T21:15:00Z", location: "Stage", delay_minutes: 10 }; // prettier-ignore
+
+    it("shows the item after the hero's as the rail's Next, with its delay", () => {
+      const rail = region("rail", { widgets: [widget("agenda_now", { items: rows, later: [final] })] }); // prettier-ignore
+      const root = new Screen(host).draw(state([hero, rail]));
+      const box = root.querySelector(".canccu-region--rail");
+      const names = [...(box?.querySelectorAll(".canccu-widget__name") ?? [])];
+      expect(names.map((n) => n.textContent)).toEqual(["Dinner", "Final"]);
+      const after = box?.querySelectorAll(".canccu-widget__row")[1];
+      expect(after?.classList).toContain("canccu-widget__row--delayed");
+      expect(after?.querySelector(".canccu-widget__delay")?.textContent).toBe("+10 min");
+    });
+
+    it("fills the rail with the item after next when the hero takes its only row", () => {
+      const only = rows.slice(1);
+      const rail = region("rail", { widgets: [widget("agenda_now", { items: only, later: [final] })] }); // prettier-ignore
+      const root = new Screen(host).draw(state([hero, rail]));
+      const names = [...root.querySelectorAll(".canccu-region--rail .canccu-widget__name")];
+      expect(names.map((n) => n.textContent)).toEqual(["Final"]);
+    });
+
+    it("puts `later` after the rail's own rows when the hero shows something else", () => {
+      const rail = region("rail", { widgets: [widget("agenda_now", { items: rows, later: [final] })] }); // prettier-ignore
+      const root = new Screen(host).draw(state([region("hero"), rail]));
+      const names = [...root.querySelectorAll(".canccu-region--rail .canccu-widget__name")];
+      expect(names.map((n) => n.textContent)).toEqual(["Dinner", "Semis", "Final"]);
+    });
+
     it("keeps the rail whole when the hero shows something else", () => {
       const rail = region("rail", { widgets: [widget("agenda_now", { items: rows })] });
       const root = new Screen(host).draw(state([region("hero"), rail]));
