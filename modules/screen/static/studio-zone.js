@@ -4,7 +4,7 @@
  * their buttons. The form becomes a `Zone` again, the Changes list says what differs from the zone
  * read, the real player previews it, and Go live saves it with the revision read.
  */
-"use strict";
+import { boxEditor } from "./studio-layout.js";
 
 (() => {
   const studio = window.canccuStudio;
@@ -20,16 +20,9 @@
   const entriesOf = (r) =>
     [...r.querySelectorAll("[data-widgets] li")].map((li) => JSON.parse(li.dataset.entry));
 
-  // The map: grid areas from the layout (the CSP allows no inline style), a tap opens a region.
-  const map = form.querySelector(".canccu-studio-map");
-  const [columns, rows] = (map?.dataset.grid || "").split(" ").map(Number);
-  if (map && columns && rows) {
-    map.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
-    // Rows grow with their text, so a one-row header or ticker still reads.
-    map.style.gridTemplateRows = `repeat(${rows}, minmax(1.25rem, auto))`;
-  }
+  // The boxes, the gallery and the hero role (studio-layout.js); a tap on a box opens its region.
+  const boxes = boxEditor(form, { say, tell: show, changed: () => changed() });
   for (const pick of form.querySelectorAll("[data-pick]")) {
-    if (pick.dataset.area) pick.style.gridArea = pick.dataset.area;
     pick.addEventListener("click", () => {
       for (const p of form.querySelectorAll("[data-pick]"))
         p.setAttribute("aria-pressed", String(p === pick));
@@ -110,7 +103,6 @@
     const z = structuredClone(original);
     delete z.revision;
     z.name = f.name.value.trim();
-    z.layout_id = f.layout_id.value || null;
     z.header = f.header.value || null;
     z.hub_qr = f.hub_qr.value;
     z.sound = { enabled: f.sound_enabled.checked, device_id: f.sound_device.value || null };
@@ -133,6 +125,7 @@
       if (Object.keys(s).length > 0) z.regions[id] = s;
       else Reflect.deleteProperty(z.regions, id);
     }
+    boxes.apply(z);
     return z;
   }
 
@@ -183,7 +176,7 @@
           .join();
       if (kept(now, was) !== kept(was, now)) lines.push(say("change.order", { region }));
     }
-    return lines;
+    return [...boxes.changes(), ...lines];
   }
   const list = form.querySelector("[data-changes]");
   const save = form.querySelector("[data-save]");
@@ -205,7 +198,18 @@
   form.addEventListener("input", (event) => changed(event.target.closest("[data-region]")));
   form.addEventListener("change", (event) => changed(event.target.closest("[data-region]")));
   regions().forEach(refreshRegion);
-  discard.addEventListener("click", () => location.reload());
+  // A layout picked in the gallery is a change from the first moment.
+  changed();
+  // Discard goes back to the zone as saved, also from a layout picked in the gallery.
+  discard.addEventListener("click", () => location.assign(location.pathname));
+  // Another layout redraws the page with it, so changes not yet live would be lost.
+  const picked = (form.dataset.layout || null) !== original.layout_id;
+  for (const link of form.querySelectorAll("[data-layout-pick]")) {
+    link.addEventListener("click", (event) => {
+      if (changes().length > (picked ? 1 : 0) && !window.confirm(say("layout.discard")))
+        event.preventDefault();
+    });
+  }
 
   // A true preview: the server composes the zone as it would be saved, and the real player draws it.
   const frame = form.querySelector("iframe[data-preview]");

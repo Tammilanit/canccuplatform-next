@@ -47,6 +47,32 @@ async function openDetails(page) {
 }
 
 /**
+ * Zones and layouts' box editor (#405, sheet 10's lower frames), unsaved: the venue card hidden
+ * (the rail grows into its space) and the hero two cells narrower, then the preview the real
+ * player draws of it; and Dashboard's hero role, picked in the gallery.
+ */
+async function editBoxes(page) {
+  await page.click('[data-pick="venue_rail"]');
+  await page.click('section[data-region="venue_rail"] [data-box-hide]');
+  await page.click('[data-pick="hero"]');
+  for (let i = 0; i < 2; i++)
+    await page.click('section[data-region="hero"] [data-size="narrower"]');
+  await page.click('[data-pick="rail"]');
+  await page.click('section[data-region="rail"] [data-size="wider"]');
+  await studioReady(page);
+}
+export const LAYOUT_PAGES = [
+  ["screen-zone-boxes", "/admin/screen/zones/main", DESK, { ready: editBoxes }],
+  ["screen-zone-boxes-phone", "/admin/screen/zones/main", PHONE, { ready: editBoxes }],
+  [
+    "screen-zone-dashboard",
+    "/admin/screen/zones/main?layout=dashboard",
+    DESK,
+    { ready: studioReady },
+  ],
+];
+
+/**
  * The Schedule page (#190, mockup 09), last, on windows made for it and removed after it: the
  * zone it opens on, every zone, a phone's one day, and a window's details on tap.
  */
@@ -209,6 +235,7 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
     for (const [name, path, viewport] of PLAYLIST_PAGES) await shot(name, path, viewport);
     await removePlaylist(demo, lists);
     lists = null;
+    for (const [name, path, viewport, o] of LAYOUT_PAGES) await shot(name, path, viewport, o);
     made = await scheduleFixture(demo);
     for (const [name, path, viewport, o] of SCHEDULE_PAGES) await shot(name, path, viewport, o);
   } finally {

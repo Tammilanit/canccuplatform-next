@@ -10,6 +10,7 @@ export const STATIC_TYPES: Record<string, string> = {
   "studio.js": "text/javascript; charset=utf-8",
   "studio-zone.css": "text/css; charset=utf-8",
   "studio-zone.js": "text/javascript; charset=utf-8",
+  "studio-layout.css": "text/css; charset=utf-8",
   "studio-schedule.css": "text/css; charset=utf-8",
   "studio-content.css": "text/css; charset=utf-8",
   "studio-content.js": "text/javascript; charset=utf-8",
@@ -19,6 +20,8 @@ export const STATIC_TYPES: Record<string, string> = {
   "studio-playlist-builder.js": "text/javascript; charset=utf-8",
   "studio-playlist-editor.js": "text/javascript; charset=utf-8",
   "studio-playlist-item.js": "text/javascript; charset=utf-8",
+  "studio-boxes.js": "text/javascript; charset=utf-8",
+  "studio-layout.js": "text/javascript; charset=utf-8",
 };
 
 const staticFiles = new Map<string, Promise<Buffer>>();

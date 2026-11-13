@@ -5,18 +5,20 @@
  */
 import { CONTENT_EN } from "./content-messages.js";
 import { PLAYLIST_CLIENT_KEYS, PLAYLIST_EN } from "./playlist-messages.js";
+import { LAYOUT_CLIENT_KEYS, LAYOUT_EN } from "./layout-messages.js";
 import { SCHEDULE_EN } from "./schedule-messages.js";
 
 const EN = {
   ...CONTENT_EN,
   ...SCHEDULE_EN,
   ...PLAYLIST_EN,
+  ...LAYOUT_EN,
   "studio.title": "Screen studio",
   "studio.page": "the Screen studio",
   "studio.back": "Back to the Screen studio",
   "tab.live": "Live",
   "tab.devices": "Devices",
-  "tab.zones": "Zones",
+  "tab.zones": "Zones and layouts",
   "tab.ticker": "Ticker",
 
   "live.desc": "What every zone shows now. Tap a zone for its full view.",
@@ -141,8 +143,6 @@ const EN = {
 
   "zone.back": "All zones",
   "zone.name": "Name",
-  "zone.layout": "Layout",
-  "zone.layout_default": "The screen's default (Pulse)",
   "zone.header": "Header",
   "zone.header_default": "As the layout says",
   "zone.header.separate": "Its own row",
@@ -155,8 +155,6 @@ const EN = {
   "zone.sound_device": "Sound from",
   "zone.sound_auto": "The first screen of the zone",
   "zone.region": "Region: {region}",
-  "zone.regions": "Regions",
-  "zone.regions_desc": "What each part of the screen shows. Choose one to change it.",
   "zone.region_layout": "From the layout",
   "zone.region_own": "Set for this zone",
   "zone.region_empty": "Nothing",
@@ -364,4 +362,5 @@ export const CLIENT_KEYS = [
   "sound.play",
   "sound.stop",
   ...PLAYLIST_CLIENT_KEYS,
+  ...LAYOUT_CLIENT_KEYS,
 ] as const satisfies readonly MessageKey[];
