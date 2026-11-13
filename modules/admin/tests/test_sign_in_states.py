@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import html
+import json
+import re
 from datetime import timedelta
 
 import pytest
@@ -130,6 +132,24 @@ async def test_the_service_worker_may_serve_every_organiser_page(world: World) -
     assert "/admin/offline" in r.text
     shell = await world.client.get("/admin/static/shell.js")
     assert shell.status_code == 200 and "serviceWorker" in shell.text
+
+
+async def test_the_service_worker_keeps_what_the_offline_page_links(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Offline, the page's stylesheet and script come from the worker's cache or not at all: the
+    HTTP cache's copy is gone after max-age or sign-out (sw.js, ASSETS)."""
+    owner, _ = await owner_and_member(world, caplog)
+    page = await world.browser(owner).get("/admin/offline")
+    links = re.findall(r'<link rel="stylesheet" href="([^"]+)"|<script src="([^"]+)"', page.text)
+    linked = {css or script for css, script in links}
+    worker = (await world.client.get("/admin/static/sw.js")).text
+    found = re.search(r"const ASSETS = (\[[^\]]*\]);", worker)
+    assert found is not None
+    kept = set(json.loads(found.group(1)))
+    assert linked == kept == {"/admin/static/ui.css", "/admin/static/shell.js"}
+    for url in kept:  # the worker keeps nothing unless every one of them answers
+        assert (await world.client.get(url)).status_code == 200
 
 
 async def test_the_sign_in_page_carries_the_privacy_tag(world: World) -> None:
