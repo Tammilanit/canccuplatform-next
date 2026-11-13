@@ -7,6 +7,7 @@ import { mkdirSync } from "node:fs";
 import { parseArgs } from "node:util";
 import {
   DEMO_HOST,
+  SCREEN,
   SESSION,
   event,
   expect,
@@ -189,6 +190,8 @@ if (opts["dry-run"]) {
   process.exit(0);
 }
 
+// Every API call goes through Caddy, as in the first pass (demo-screenshots.mjs says why).
+Object.assign(SCREEN, { host: base.hostname, port: Number(base.port || 80) });
 const demo = event(DEMO_HOST);
 const code = async () => {
   const answer = await demo.call(
