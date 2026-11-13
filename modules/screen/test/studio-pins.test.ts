@@ -116,6 +116,20 @@ describe.skipIf(!DATABASE_URL)("studio pins", () => {
     await put({ freeze: true, until: ENDS });
     const body = (await page("/admin/screen/live", "admin")).body;
     expect(body).toContain("Screens are frozen on bundle test until Sun 4 Jan 16:00, by admin.");
+    // A publish after the freeze moves the theme: the banner still names only the bundle.
+    h.sources.theme = theme(1);
+    const later = (await page("/admin/screen/live", "admin")).body;
+    expect(later).toContain("Screens are frozen on bundle test until Sun 4 Jan 16:00, by admin.");
+    expect(later).toContain("The theme still changes when one is published.");
+    expect(later).not.toContain("theme revision 1");
     h.sources.theme = theme(5);
+  });
+
+  it("says only the theme is frozen when the pin leaves the bundle to the platform", async () => {
+    await put({ bundle_version: null, theme_revision: 5, until: ENDS });
+    const body = (await page("/admin/screen/live", "admin")).body;
+    expect(body).toContain(
+      "Screens are frozen on theme revision 5 until Sun 4 Jan 16:00, by admin. The bundle follows the platform.",
+    );
   });
 });

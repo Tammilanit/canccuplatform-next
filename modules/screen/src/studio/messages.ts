@@ -287,7 +287,10 @@ const EN = {
   "frozen.title": "Screens are frozen",
   "frozen.banner":
     "Screens are frozen on bundle {bundle} and theme revision {revision} until {time}, by {name}.",
-  "frozen.banner_bundle": "Screens are frozen on bundle {bundle} until {time}, by {name}.",
+  "frozen.banner_bundle":
+    "Screens are frozen on bundle {bundle} until {time}, by {name}. The theme still changes when one is published.",
+  "frozen.banner_theme":
+    "Screens are frozen on theme revision {revision} until {time}, by {name}. The bundle follows the platform.",
 } as const;
 
 export type MessageKey = keyof typeof EN;

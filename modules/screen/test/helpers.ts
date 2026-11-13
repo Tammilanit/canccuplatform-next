@@ -135,6 +135,8 @@ export interface FakeSources {
   theme: ThemeNow | null;
   /** The event's theme revisions by number, as the pinned read answers them. */
   revisions: Record<number, ThemeNow>;
+  /** The revision read fails (a 500, a timeout) while the current read may still answer. */
+  revisionsDown: boolean;
   event: { name: string } | null;
   agenda: AgendaNow | null;
   /** The whole run of show (`GET /internal/agenda/items`); null is "down". */
@@ -192,6 +194,7 @@ export async function harness(): Promise<Harness> {
   const fake: FakeSources = {
     theme: null,
     revisions: {},
+    revisionsDown: false,
     event: null,
     agenda: null,
     agendaItems: null,
@@ -278,7 +281,11 @@ export async function harness(): Promise<Harness> {
     sources: {
       theme: (tenantId) => answer(fake.tenants, tenantId, fake.theme),
       themeRevision: (tenantId, revision) =>
-        answer(fake.tenants, tenantId, fake.revisions[revision] ?? null),
+        answer(
+          fake.tenants,
+          tenantId,
+          fake.revisionsDown ? null : (fake.revisions[revision] ?? "gone"),
+        ),
       event: (host) => answer(fake.hosts, host, fake.event),
       agendaNow: (tenantId) => answer(fake.tenants, tenantId, fake.agenda),
       agendaItems: (tenantId) => answer(fake.tenants, tenantId, fake.agendaItems),

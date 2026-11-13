@@ -23,7 +23,7 @@ export interface PinTickDeps {
   kv: Kv;
   bus: Bus;
   audit: Audit;
-  sources: Pick<Sources, "theme" | "themeRevision">;
+  sources: Pick<Sources, "themeRevision">;
   bundles: Pick<BundleStore, "available">;
   fanout: Pick<Fanout, "publish">;
   tenantById: (id: string) => Promise<TenantContext | null>;
@@ -41,12 +41,11 @@ async function restoreOf(deps: PinTickDeps, restores: PinValues): Promise<PinVal
   const bundle = restores.bundle_version;
   if (bundle !== null && !(await deps.bundles.available()).includes(bundle)) return none;
   const theme = restores.theme_revision;
-  if (theme !== null && (await deps.sources.themeRevision(requireTenant(), theme)) === null) {
-    // Theming down says nothing about the revision: the next second asks again.
-    if ((await deps.sources.theme(requireTenant())) === null) return undefined;
-    return none;
-  }
-  return restores;
+  if (theme === null) return restores;
+  const found = await deps.sources.themeRevision(requireTenant(), theme);
+  if (found === "gone") return none;
+  // A failed read says nothing about the revision: the next second asks again.
+  return found === null ? undefined : restores;
 }
 
 /** Restores the current tenant's pin when its `until` has come. */

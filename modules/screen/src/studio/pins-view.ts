@@ -7,8 +7,6 @@ import { attrs, dayLabel, html, notice, timeLabel } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import type { TenantContext } from "@canccu/kit";
 import type { Db } from "../db.js";
-import { inEffect } from "../pins/routes.js";
-import type { PinDeps } from "../pins/routes.js";
 import { readPin } from "../pins/store.js";
 import type { PinRow, PinValues } from "../pins/store.js";
 import type { Translate } from "./messages.js";
@@ -28,35 +26,35 @@ const when = (c: Pick<ViewContext, "timeZone">, iso: string) =>
 
 const nameOf = (pin: PinRow) => pin.changed_by_name ?? pin.changed_by ?? "";
 
-/** The one sentence that says what is frozen, until when and by whom. */
-function frozenText(
-  c: Pick<ViewContext, "t" | "timeZone">,
-  pin: PinRow,
-  now: InEffect,
-): string | null {
+/**
+ * The one sentence that says what is frozen, until when and by whom: from the pinned values, not
+ * from what is in effect, since a side the pin leaves null still moves (a publish, a platform update).
+ */
+function frozenText(c: Pick<ViewContext, "t" | "timeZone">, pin: PinRow): string | null {
   if (pin.until === null) return null;
-  const values = {
-    bundle: now.bundle_version,
-    revision: now.theme_revision,
-    time: when(c, pin.until.toISOString()),
-    name: nameOf(pin),
-  };
-  return c.t(now.theme_revision === 0 ? "frozen.banner_bundle" : "frozen.banner", values);
+  const { bundle_version: bundle, theme_revision: revision } = pin;
+  const time = when(c, pin.until.toISOString());
+  const name = nameOf(pin);
+  if (bundle !== null && revision !== null) {
+    return c.t("frozen.banner", { bundle, revision, time, name });
+  }
+  if (bundle !== null) return c.t("frozen.banner_bundle", { bundle, time, name });
+  if (revision !== null) return c.t("frozen.banner_theme", { revision, time, name });
+  // A timed pin that holds nothing: screens follow both, so nothing is frozen to warn about.
+  return null;
 }
 
 /** The banner for the current tenant's pin, or nothing while no pin has an end. */
 export async function frozenBanner(
-  deps: Pick<PinDeps, "sources" | "bundles"> & { db: Db },
+  deps: { db: Db },
   ctx: TenantContext,
   t: Translate,
 ): Promise<Html | ""> {
   const pin = await deps.db.tenant(readPin);
-  if (pin.until === null) return "";
-  const c = { t, timeZone: ctx.time_zone };
-  const text = frozenText(c, pin, await inEffect(deps, ctx.tenant_id, pin));
+  const text = frozenText({ t, timeZone: ctx.time_zone }, pin);
   if (text === null) return "";
   return html`<div class="canccu-studio-frozen">
-    ${notice({ kind: "warn", title: c.t("frozen.title"), text })}
+    ${notice({ kind: "warn", title: t("frozen.title"), text })}
   </div>`;
 }
 

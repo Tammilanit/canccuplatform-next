@@ -71,8 +71,8 @@ describe.skipIf(!DATABASE_URL)("pins", () => {
         return Promise.resolve();
       },
       sources: {
-        theme: () => Promise.resolve(h.sources.theme),
-        themeRevision: (_t, n) => Promise.resolve(h.sources.revisions[n] ?? null),
+        themeRevision: (_t, n) =>
+          Promise.resolve(h.sources.revisionsDown ? null : (h.sources.revisions[n] ?? "gone")),
       },
       bundles: new BundleStore({
         dir: bundlesDir(h.filesRoot),
@@ -338,6 +338,34 @@ describe.skipIf(!DATABASE_URL)("pins", () => {
     expect(await pin()).toMatchObject({ bundle_version: null, theme_revision: null, until: null });
     expect(changes().at(-1)).toMatchObject({ reason: "expired", theme_revision: null });
     h.sources.revisions[3] = theme(3);
+  });
+
+  it("keeps the pin past until while theming fails to read the revision, and restores it later", async () => {
+    await put({ bundle_version: null, theme_revision: 3 });
+    const until = NOON + 2 * DAY + 10_000;
+    await put({ freeze: true, until: iso(until) });
+    // A 500 or a timeout on the revision while the current theme still answers.
+    h.sources.revisionsDown = true;
+    h.clock.now = until;
+    await tick();
+    expect(await pin()).toMatchObject({
+      until: iso(until),
+      restores: { bundle_version: null, theme_revision: 3 },
+    });
+    expect(changes().at(-1)).not.toMatchObject({ reason: "expired" });
+    h.sources.revisionsDown = false;
+    h.clock.now = until + 1000;
+    await tick();
+    expect(await pin()).toMatchObject({ theme_revision: 3, until: null, restores: null });
+    expect(changes().at(-1)).toMatchObject({ reason: "expired", theme_revision: 3 });
+  });
+
+  it("answers 503 for a revision theming fails to read, not 400", async () => {
+    h.sources.revisionsDown = true;
+    const res = await put({ bundle_version: null, theme_revision: 3 });
+    h.sources.revisionsDown = false;
+    expect(res.statusCode).toBe(503);
+    expect(code(res)).toBe("theming_unavailable");
   });
 
   it("refuses writes on an archived event", async () => {

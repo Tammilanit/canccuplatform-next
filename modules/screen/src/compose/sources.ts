@@ -36,8 +36,11 @@ export interface Sources {
   agendaItems(tenantId: string): Promise<AgendaItem[] | null>;
   venueInfo(tenantId: string): Promise<VenueInfo | null>;
   theme(tenantId: string): Promise<ThemeNow | null>;
-  /** One revision of the event's theme, for a pin (contracts/screen.md, Pins). */
-  themeRevision(tenantId: string, revision: number): Promise<ThemeNow | null>;
+  /**
+   * One revision of the event's theme, for a pin (contracts/screen.md, Pins). `gone` only when
+   * theming says the revision is not kept (404): a pin is cleared for that, never for a failed read.
+   */
+  themeRevision(tenantId: string, revision: number): Promise<ThemeNow | "gone" | null>;
   event(host: string): Promise<EventPublic | null>;
   checkinCode(tenantId: string, purpose: string): Promise<CheckinCode | null>;
 }
@@ -108,15 +111,18 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
     lastWarned.set(path, now);
     log.warn({ path, ...detail }, "composed state source unavailable; its widgets show empty");
   };
-  const read = async (
+  /** The body, `gone` for a 404 when `gone404` is set, else null for every failure. */
+  const readOr = async (
     base: string,
     path: string,
     headers: Record<string, string>,
+    gone404: boolean,
   ): Promise<unknown> => {
     const route = path.split("?")[0] ?? path;
     try {
       const { status, body } = await getJson(`${base.replace(/\/+$/, "")}${path}`, headers);
       if (status >= 200 && status < 300) return body;
+      if (gone404 && status === 404) return "gone";
       warn(route, { status });
       return null;
     } catch (err) {
@@ -124,6 +130,8 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       return null;
     }
   };
+  const read = (base: string, path: string, headers: Record<string, string>) =>
+    readOr(base, path, headers, false);
   // The whole agenda, per event, for `agenda_now`'s `later`: read again only when now and next
   // say the agenda moved (contracts/screen.md, Reading other modules as a module), so the 10 s zone
   // refresh of every zone costs one small read, not the event's whole agenda. Keyed by the version,
@@ -190,11 +198,13 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       return body === null || typeof body.revision !== "number" ? null : body;
     },
     themeRevision: async (tenantId, revision) => {
-      const body = (await read(
+      const body = (await readOr(
         urls.theming,
         `/internal/theming/revisions/${revision}?tenant_id=${encodeURIComponent(tenantId)}`,
         service.headers("theming"),
-      )) as ThemeNow | null;
+        true,
+      )) as ThemeNow | "gone" | null;
+      if (body === "gone") return body;
       return body === null || body.revision !== revision ? null : body;
     },
     checkinCode: async (tenantId, purpose) => {

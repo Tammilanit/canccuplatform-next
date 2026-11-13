@@ -43,7 +43,7 @@ export interface PinDeps {
 }
 
 const themingDown = (): KitError =>
-  new KitError("Theming did not answer, so what screens draw cannot be frozen. Try again.", {
+  new KitError("Theming did not answer, so the theme cannot be pinned or frozen now. Try again.", {
     status: 503,
     code: "theming_unavailable",
   });
@@ -118,10 +118,9 @@ async function valuesInput(
     if (typeof theme !== "number" || !Number.isInteger(theme) || theme < 1) {
       throw invalidRequest("`theme_revision` must be a revision number, or null.");
     }
-    if ((await deps.sources.themeRevision(tenantId, theme)) === null) {
-      if ((await deps.sources.theme(tenantId)) === null) throw themingDown();
-      throw invalidRequest(`The event's theme has no revision ${theme}.`);
-    }
+    const found = await deps.sources.themeRevision(tenantId, theme);
+    if (found === "gone") throw invalidRequest(`The event's theme has no revision ${theme}.`);
+    if (found === null) throw themingDown();
   }
   return { bundle_version: bundle, theme_revision: theme };
 }
