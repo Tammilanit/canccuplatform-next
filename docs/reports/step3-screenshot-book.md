@@ -1,24 +1,26 @@
 # Step 3 screenshot book: every surface with its use case
 
-Issue #386. Every page, state and screen a person meets on the demo stack at main `9fd103e` (2026-11-13), after #383, #384, #385 and #375 merged. Each image has one short paragraph: who uses it, when, what they do there, and the mockup it follows. The book is grouped by person: [the organiser](#the-organiser), [the crew](#the-crew), [the attendee](#the-attendee) and [the room](#the-room). The product owner reads it before the step 3 checkpoint. The lead adds [an evaluation and a plan](#leads-evaluation) at the end.
+Issue #386. Every page, state and screen a person meets on the demo stack at main `07ea9ac` (2026-11-13), after #383, #384, #385, #375 and, since the first version of this book, #411, #413, #424, #426 and #427 merged. Each image has one short paragraph: who uses it, when, what they do there, and the mockup it follows. The book is grouped by person: [the organiser](#the-organiser), [the crew](#the-crew), [the attendee](#the-attendee) and [the room](#the-room). The product owner reads it before the step 3 checkpoint. The lead adds [an evaluation and a plan](#leads-evaluation) at the end.
 
 ## How it was made
 
-- **Source:** the artifact `demo-screenshots` of the demo-stack run for main `9fd103e` (merge-queue run [43370607779](https://github.com/Tammilanit/canccuplatform-next/actions/runs/43370607779), green). The content widgets (R14–R20) are not in that artifact: they were taken the same way on a local demo stack of the same commit (`deploy/compose.ci.yml`), with the CI fixture's library and its "Welcome loop" pushed to every zone, as for O34. `scripts/demo-screenshots` took the rest: Chromium with the demo event and its fixture, signed in with the CI session stub, which holds every right the pages check ([docs/ci.md](../ci.md#demo-stack)). The run fails if a page does not answer, if a screen does not draw the event or if a screen's text does not pass the readability check, so each image shows a working page, not an error caught by accident.
-- **Data:** the demo profile; a run of show around the time of the run, over two days, with Dinner on now and the semi-final 15 min late; a ticker line; two zones, Main hall (landscape) and Entrance (portrait), each with a screen paired; five assets in the Screen studio and, for its playlist and schedule shots, four playlists with schedule windows and a break. A screen state the stack cannot reach on its own (refused, moved, archived, a claim, a photo) is the player's own answer to that state, handed to the page.
-- **Sizes:** desktop pages at 1280 px wide (Settings, Devices and Schedule also at 1440 px, the playlist editor at 1920 px), phone pages at 390 px; all shown 1:1, as full pages. Screens at 1920×1080, 3840×2160, 1080×1920 and 2160×3840, scaled down here to 720 px on the short side (JPEG), with one 1:1 crop of a 4K screen. The full set (154 PNGs, every theme at every size) is in the artifact.
-- **Time:** the run ran at about 05:25 UTC, so the clocks show 05:2x and the countdowns about an hour; R14–R20 were taken at about 06:08 UTC on 13 November.
+- **Source:** the artifact `demo-screenshots` of the demo-stack run for main `07ea9ac`, the push run after #427 merged ([43414841370](https://github.com/Tammilanit/canccuplatform-next/actions/runs/43414841370), green). The content widgets (R14–R20) are not in that artifact: they exist only locally, taken the same way on a local demo stack of the same commit (`deploy/compose.ci.yml`), with the CI fixture's library and its "Welcome loop" pushed to every zone, as for O34; each of their paragraphs says so. `scripts/demo-screenshots` took the rest: Chromium with the demo event and its fixture, signed in with the CI session stub, which holds every right the pages check ([docs/ci.md](../ci.md#demo-stack)). The run fails if a page does not answer, if a screen does not draw the event or if a screen's text does not pass the readability check, so each image shows a working page, not an error caught by accident.
+- **Data:** the demo profile; a run of show around the time of the run, over two days, with Dinner on now and the semi-final 15 min late; a ticker line; two zones, Main hall (landscape) and Entrance (portrait), each with a screen paired; five assets in the Screen studio and, for its playlist and schedule shots, four playlists with schedule windows and a break. For the Pins shots the stack freezes its screens for an hour. A screen state the stack cannot reach on its own (refused, moved, archived, a claim, a photo) is the player's own answer to that state, handed to the page.
+- **Sizes:** desktop pages at 1280 px wide (Settings, Devices and Schedule also at 1440 px, and the schedule's window editor and What plays at… only at 1440 px; the playlist editor at 1920 px), phone pages at 390 px; all shown 1:1, as full pages. Screens at 1920×1080, 3840×2160, 1080×1920 and 2160×3840, scaled down here to 720 px on the short side (JPEG), with one 1:1 crop of a 4K screen. The full set (167 PNGs, every theme at every size) is in the artifact.
+- **Time:** the run ran at about 11:20 UTC, so the clocks show 11:2x and the countdowns about an hour; R14–R20 were taken at about 12:27 UTC on 13 November, so their clocks and run of show sit an hour later.
 - **Mockups:** "sheet N" is sheet N of the accepted design guideline [docs/design/mockups.html](../design/mockups.html) (PO, 2026-11-12); "mockup NN" is the step 3 brief's mockup in [docs/briefs/step-3-screen/](../briefs/step-3-screen/).
 
 ## Contents
 
 | Person | Surfaces | Images |
 |---|---|---|
-| Organiser, desktop | Sign-in, Settings, Health, Event profile, People, errors, Run of show, Notifications, Theme studio, Screen studio | [O1–O37](#organiser-at-the-desk) |
-| Organiser, phone | The same pages in one column with the bottom bar | [O38–O52](#organiser-on-a-phone) |
+| Organiser, desktop | Sign-in, Settings, Health, Event profile, People, errors, Run of show, Notifications, Theme studio, Screen studio | [O1–O37, O53–O59](#organiser-at-the-desk) |
+| Organiser, phone | The same pages in one column with the bottom bar | [O38–O52, O60–O64](#organiser-on-a-phone) |
 | Crew | Sign-in, run of show and Screen studio on a phone; the kiosk frames | [C1–C18](#the-crew) |
 | Attendee | Check-in, the phone hub's preview | [A1–A2](#the-attendee) |
-| The room | The Pulse at 1080p, 4K and portrait; the other layouts, widgets, claims, offline, the end, the other themes | [R1–R42](#the-room) |
+| The room | The Pulse at 1080p, 4K and portrait; the other layouts, widgets, claims, offline, the end, the other themes, the Dashboard waiting for statistics | [R1–R43](#the-room) |
+
+The IDs of the first version stay with their screens, so comments on them still hold; the pages added in the refresh for main `07ea9ac` take the next free number of their group (O53–O64, R43) and stand where they belong.
 
 ## The organiser
 
@@ -154,17 +156,17 @@ The admin looks back at what was published and when. Here nothing is published y
 #### O26 · Screen studio, Live
 ![Screen studio Live with two zone miniatures](step3-screenshot-book/o26-screen-live.png)
 
-During the event the organiser sees what every zone shows right now, as live miniatures, with how many of its screens are online; a tap opens the zone. Set the ticker and Pair a screen are one tap away. Mockup: mockups 07 and 13.
+During the event the organiser sees what every zone shows right now, as live miniatures, with how many of its screens are online; a tap opens the zone. Set the ticker and Pair a screen are one tap away. Here Main hall's hero plays the pushed playlist's test video, a plain blue frame (see R18). Mockup: mockups 07 and 13.
 
 #### O27 · Screen studio, Devices
 ![Screen studio Devices](step3-screenshot-book/o27-screen-devices.png)
 
-The organiser or crew lead checks the fleet: each screen's live miniature, online dot, zone, sound, orientation and size, what it shows now, when it was last seen and whether it is up to date, with Identify, Reload and Assign. Mockup: mockup 07.
+The organiser or crew lead checks the fleet: a summary line on top (how many screens, online, offline, and the player bundle they run), then each screen's live miniature, online dot, zone, sound, orientation and size, what it shows now, when it was last seen and whether it is up to date, with Identify, Reload and Assign. Clear open codes drops pairing codes nobody used. Mockup: mockup 07.
 
 #### O28 · Devices at 1440 px
 ![Screen studio Devices at 1440 px with Recent](step3-screenshot-book/o28-screen-devices-wide.png)
 
-On a wide screen, Recent stands beside the screens: pairings and screens going offline, newest first. Mockup: mockup 07.
+On a wide screen, Recent stands beside the screens: pairings and screens going offline, newest first, so the crew lead sees which screen dropped and when without opening each one. Mockup: mockup 07.
 
 #### O29 · Zones and layouts
 ![Screen studio zones list and new zone form](step3-screenshot-book/o29-screen-zones.png)
@@ -174,17 +176,17 @@ Before the event the organiser groups screens into zones (a zone shows one thing
 #### O30 · Zone editor, the Pulse
 ![Zone editor for Main hall with the Pulse layout](step3-screenshot-book/o30-screen-zone-editor.png)
 
-The organiser composes what Main hall shows: picks a built-in layout from the gallery, clicks a box to choose its widgets, their order, rotation and what shows when all are empty, sets the header, hub QR and sound, and previews the real player before going live. Changes list what will change; undo stays for 10 minutes after going live. Mockup: mockup 08, sheet 10.
+The organiser composes what Main hall shows: picks a built-in layout from the gallery (Dashboard says its statistics come with the bot's data), clicks a box to choose its widgets, their order, rotation and what shows when all are empty, sets the header, hub QR and sound, and previews the real player before going live. Changes list what will change; undo stays for 10 minutes after going live. Mockup: mockup 08, sheet 10.
 
 #### O31 · Zone editor, boxes resized and one hidden
 ![Zone editor with resized boxes and the Venue card hidden](step3-screenshot-book/o31-screen-zone-boxes.png)
 
-The organiser drags a box's handles or uses Narrower/Wider/Shorter/Taller to give the hero more room, hides the Venue card and sees the change list before Go live. Mockup: mockup 08, sheet 10.
+The organiser drags a box's handles or uses Narrower/Wider/Shorter/Taller to give the side rail more room and hides the Venue card: its space goes to the boxes beside it, and it waits under Hidden boxes with Show Venue card to bring it back. The change list names each change before Go live; Reset to the built-in layout… undoes them all. Mockup: mockup 08, sheet 10.
 
 #### O32 · Zone editor, the Dashboard
 ![Zone editor with the Dashboard layout and the hero role](step3-screenshot-book/o32-screen-zone-dashboard.png)
 
-The organiser switches Main hall to the six-box Dashboard and picks which box holds the hero role, and whether it grows for a showcase. Mockup: sheet 10 (README change 1).
+The organiser switches Main hall to the six-box Dashboard: the hero, Online, In voice, Top games, Right now and the side rail. A note says the statistics come with the bot's data, and until it arrives those boxes give their space to the boxes beside them on the screens (R43). Below the boxes, Which box is the hero? moves the hero role with a click, and Grow for a showcase decides whether the hero grows to four cells when something is showcased (R9). Mockup: sheet 10 (README change 1).
 
 #### O33 · Content
 ![Screen studio Content: assets and push now](step3-screenshot-book/o33-screen-content.png)
@@ -199,7 +201,7 @@ The organiser builds a playlist from the assets (slides per deck, seconds per im
 #### O35 · Schedule, one zone
 ![Screen studio Schedule for one zone](step3-screenshot-book/o35-screen-schedule.png)
 
-The organiser plans what each zone's playlist widget plays on the event's days: windows per day, breaks that interrupt them, and a list of conflicts and gaps, such as hours with no window. A tap on a window shows its details. Mockup: mockup 09.
+The organiser plans what each zone's playlist widget plays on the event's days: windows per day with the now line, breaks that interrupt them, and a list of conflicts and gaps, such as hours with no window. Beside the calendar, Now says what plays and what comes next, and What plays at… answers for any time (O59). Add window, or a drag on a day, adds a window (O58); a drag moves one or changes its end. A tap on a window shows its details. Mockup: mockup 09.
 
 #### O36 · Schedule, all zones
 ![Screen studio Schedule across all zones](step3-screenshot-book/o36-screen-schedule-all-zones.png)
@@ -210,6 +212,41 @@ The same plan for every zone side by side, where a window that loses to a higher
 ![Screen studio Ticker](step3-screenshot-book/o37-screen-ticker.png)
 
 An organiser or crew member sets the one calm line across the bottom of every screen, for 15 min, 1 h, 4 h, until a time or with no end, and clears it. Mockup: mockup 13.
+
+#### O53 · Pins
+![Screen studio Pins, nothing pinned](step3-screenshot-book/o53-screen-pins.png)
+
+An event admin checks which player bundle and theme revision every screen draws (In effect) and whether they follow the platform version and the published theme or are held (Pinned). Shortly before the doors open, Freeze for the event holds both until the event ends, so no update or publish changes the screens mid-event; the freeze ends by itself. Here nothing is pinned yet. Mockup: none draws it; the step 3 brief's operations item O5 ("freeze for the event") asks for it, in sheet 2's shell.
+
+#### O54 · Pins, frozen
+![Screen studio Pins while the screens are frozen](step3-screenshot-book/o54-screen-pins-frozen.png)
+
+After the freeze: a banner says the screens are frozen, what is held, until when and by whom; Pinned lists the held bundle and theme revision, the end, and what follows afterwards. Unfreeze puts back what was pinned before the freeze. The demo stack freezes for an hour. Mockup: none draws it; the step 3 brief's operations item O5 ("freeze for the event") asks for it, in sheet 2's shell.
+
+#### O55 · Live, frozen
+![Screen studio Live with the frozen banner](step3-screenshot-book/o55-screen-live-frozen.png)
+
+While a freeze holds, the same banner stands on every Screen studio page, here Live, so whoever runs the screens during the event knows that a new theme or update will not reach them until it ends. Mockup: mockups 07 and 13, with O54's banner.
+
+#### O56 · Zone editor, a resize leaves a gap
+![Zone editor warning that a column right of the hero is empty](step3-screenshot-book/o56-screen-zone-gap.png)
+
+The organiser resizes the boxes and one column right of the hero is left uncovered: it is shaded on the map, and Changes warns "1 column on the right of Hero is empty" with Fill the gap, which grows the box beside it into the space. The organiser can still go live with the gap. Mockup: mockup 08, sheet 10; no mockup draws the warning (#422).
+
+#### O57 · Zone editor, a saved layout with a gap
+![Zone editor opening on a saved layout with an empty column](step3-screenshot-book/o57-screen-zone-gap-saved.png)
+
+The same warning when the zone's saved layout already has a gap, for example from an earlier edit: nothing has changed yet, and Fill the gap turns the fix into a change to go live. Mockup: mockup 08, sheet 10; no mockup draws the warning (#422).
+
+#### O58 · Schedule, a new window
+![Schedule's window editor dialog over the calendar](step3-screenshot-book/o58-screen-schedule-editor.png)
+
+The organiser adds a window with Add window or a drag on a day: the zone, the playlist, a priority (0 to 999; where windows overlap, the higher plays), a layout (the zone's own or another), and when it plays, every week on chosen days from and until, or while a run-of-show item runs. Saving checks that nobody else changed the window meanwhile. Mockup: mockup 09.
+
+#### O59 · Schedule, what plays at…
+![Schedule's What plays at… answer for Main hall at 19:20](step3-screenshot-book/o59-screen-schedule-at.png)
+
+Before the event, or when someone asks "what will the hall show during dinner?", the organiser picks a day, a time and a zone: the answer says box by box what plays (the hero's playlist and its item, the rail's now and next, the ticker's line), which window wins and why, how a run-of-show delay moved things, the next break and the next change, with a link to see it on a virtual screen. Mockup: mockup 09.
 
 ### Organiser on a phone
 
@@ -287,6 +324,31 @@ A tap on a window shows its playlist, time and priority. Mockup: mockup 09.
 ![Not found on a phone](step3-screenshot-book/o52-error-not-found-phone.png)
 
 The error page with the bottom bar. Mockup: sheet 8.
+
+#### O60 · Pins
+![Pins on a phone](step3-screenshot-book/o60-screen-pins-phone.png)
+
+The Pins page in one column, so an admin can freeze the screens from the floor. Mockup: none draws it; the step 3 brief's operations item O5 ("freeze for the event") asks for it, in sheet 2's shell.
+
+#### O61 · Pins, frozen
+![Pins on a phone while frozen](step3-screenshot-book/o61-screen-pins-frozen-phone.png)
+
+The frozen banner, what is held and Unfreeze in one column. Mockup: none draws it; the step 3 brief's operations item O5 ("freeze for the event") asks for it, in sheet 2's shell.
+
+#### O62 · Zone editor, a gap
+![Zone editor on a phone with the gap warning](step3-screenshot-book/o62-screen-zone-gap-phone.png)
+
+The gap warning and Fill the gap in the change list at the foot of the one-column editor. Mockup: mockup 08; no mockup draws the warning (#422).
+
+#### O63 · Schedule, editing a window
+![Window editor on a phone](step3-screenshot-book/o63-screen-schedule-editor-phone.png)
+
+A tap on a window, then Edit window, opens the same editor as a full-height sheet, here for the Welcome loop window, with Delete window… at its foot. Mockup: mockup 09.
+
+#### O64 · Schedule, what plays at…
+![Schedule on a phone with What plays at…](step3-screenshot-book/o64-screen-schedule-at-phone.png)
+
+What plays at… under the day's calendar, for answering a crew member's question on the spot. Mockup: mockup 09.
 
 ## The crew
 
@@ -448,7 +510,7 @@ The hero and a two-card rail, for a screen that should carry both the main momen
 #### R8 · Dashboard
 ![Dashboard layout](step3-screenshot-book/r08-default-dashboard-1920x1080.jpg)
 
-Six boxes for a busy hall; the hero box holds the next item, one box now and next, and the boxes whose widgets have nothing to show yet (stats, top games) show the event's logo. Mockup: sheet 10.
+Six boxes for a busy hall: the hero box holds the next item with its countdown, the side rail now and next, the three statistics boxes members, online and in voice, and Top games what people play now, each figure with its trend arrow. The demo stack feeds them sample statistics, the same in each statistics box; the bot sends the real ones in a later step. Mockup: sheet 10.
 
 #### R9 · Dashboard, a showcase
 ![Dashboard with the hero grown to a showcase](step3-screenshot-book/r09-default-dashboard-showcase-1920x1080.jpg)
@@ -478,37 +540,42 @@ When the run of show has nothing beyond the item the hero already shows, the rai
 #### R14 · Playlist in the hero: a deck slide
 ![Pulse with a slide of the pushed deck in the hero](step3-screenshot-book/r14-default-playlist-slide-1920x1080.jpg)
 
-What the room sees once the organiser pushes "Welcome loop" to every zone (O34): the `playlist` widget takes the hero and plays the deck's rendered slides, here the first; the rail keeps now and next. Slides, posters and sponsor loops between the peaks are the content a screen shows on most evenings. Mockup: mockup 02 (the hero's playlist), mockup 10 (the push), sheet 9.
+What the room sees once the organiser pushes "Welcome loop" to every zone (O34): the `playlist` widget takes the hero and plays the deck's rendered slides, here the first; the rail keeps now and next. Slides, posters and sponsor loops between the peaks are the content a screen shows on most evenings. Mockup: mockup 02 (the hero's playlist), mockup 10 (the push), sheet 9. This image exists only locally: it was taken on a local demo stack of main `07ea9ac`, since the CI artifact has no screen with a pushed playlist or an embed (see [How it was made](#how-it-was-made)).
 
 #### R15 · Playlist in the hero, portrait: a deck slide
 ![Portrait screen with a slide of the pushed deck in the hero](step3-screenshot-book/r15-default-playlist-slide-1080x1920.jpg)
 
-The same push on a portrait screen: the 16:9 slide fits the hero's width, with the run of show below it. Mockup: mockup 03, mockup 10.
+The same push on a portrait screen: the 16:9 slide fits the hero's width, with the run of show below it. Mockup: mockup 03, mockup 10. This image exists only locally: it was taken on a local demo stack of main `07ea9ac`, since the CI artifact has no screen with a pushed playlist or an embed (see [How it was made](#how-it-was-made)).
 
 #### R16 · Playlist in the hero: an image
 ![Pulse with the pushed poster image in the hero](step3-screenshot-book/r16-default-playlist-image-1920x1080.jpg)
 
-The playlist's next item, a poster image (the stack's two-colour test poster), shown for its 15 seconds. The rail has turned to its countdown to the semi-final. A break playlist plays in this same box (see [Not in this book](#not-in-this-book)). Mockup: mockup 02, mockup 10, sheet 9.
+The playlist's next item, a poster image (the stack's two-colour test poster), shown for its 15 seconds. The rail has turned to its countdown to the semi-final. A break playlist plays in this same box (see [Not in this book](#not-in-this-book)). Mockup: mockup 02, mockup 10, sheet 9. This image exists only locally: it was taken on a local demo stack of main `07ea9ac`, since the CI artifact has no screen with a pushed playlist or an embed (see [How it was made](#how-it-was-made)).
 
 #### R17 · Playlist in the hero, portrait: an image
 ![Portrait screen with the pushed poster image in the hero](step3-screenshot-book/r17-default-playlist-image-1080x1920.jpg)
 
-The poster on the portrait screen. Mockup: mockup 03, mockup 10.
+The poster on the portrait screen. Mockup: mockup 03, mockup 10. This image exists only locally: it was taken on a local demo stack of main `07ea9ac`, since the CI artifact has no screen with a pushed playlist or an embed (see [How it was made](#how-it-was-made)).
 
 #### R18 · Playlist in the hero: a video
 ![Pulse with the pushed video playing in the hero](step3-screenshot-book/r18-default-playlist-video-1920x1080.jpg)
 
-The playlist's last item, a video played at its own length, muted unless the screen is the zone's sound device. The video is the stack's test clip, a plain blue frame a few pixels wide, so the hero shows a blue box where a trailer would play. Mockup: mockup 02, mockup 10, sheet 9.
+The playlist's last item, a video played at its own length, muted unless the screen is the zone's sound device. The video is the stack's test clip, a plain blue frame a few pixels wide, so the hero shows a blue box where a trailer would play. Mockup: mockup 02, mockup 10, sheet 9. This image exists only locally: it was taken on a local demo stack of main `07ea9ac`, since the CI artifact has no screen with a pushed playlist or an embed (see [How it was made](#how-it-was-made)).
 
 #### R19 · Playlist in the hero, portrait: a video
 ![Portrait screen with the pushed video playing in the hero](step3-screenshot-book/r19-default-playlist-video-1080x1920.jpg)
 
-The video on the portrait screen. Mockup: mockup 03, mockup 10.
+The video on the portrait screen. Mockup: mockup 03, mockup 10. This image exists only locally: it was taken on a local demo stack of main `07ea9ac`, since the CI artifact has no screen with a pushed playlist or an embed (see [How it was made](#how-it-was-made)).
 
 #### R20 · Terminal, a theme embed in the hero
 ![Terminal theme with its starfield embed in the hero](step3-screenshot-book/r20-terminal-embed-1920x1080.jpg)
 
-The `embed` widget: a page that ships in the theme package and runs sandboxed, here the Terminal theme's moving starfield, set as the main zone's hero. A theme designer uses it for an ambient background between the peaks, and a zone lists it in a box like any other widget. The screen leaves it out when the device asks for reduced motion. Mockup: none draws a theme embed; [contracts/theming.md](../../contracts/theming.md#embeds-custom-html-and-js) defines it.
+The `embed` widget: a page that ships in the theme package and runs sandboxed, here the Terminal theme's moving starfield, set as the main zone's hero. A theme designer uses it for an ambient background between the peaks, and a zone lists it in a box like any other widget. The screen leaves it out when the device asks for reduced motion. Mockup: none draws a theme embed; [contracts/theming.md](../../contracts/theming.md#embeds-custom-html-and-js) defines it. This image exists only locally: it was taken on a local demo stack of main `07ea9ac`, since the CI artifact has no screen with a pushed playlist or an embed (see [How it was made](#how-it-was-made)).
+
+#### R43 · Dashboard, waiting for statistics
+![Dashboard with its statistics boxes giving their space away](step3-screenshot-book/r43-default-dashboard-waiting-1920x1080.jpg)
+
+A Dashboard zone before any statistics arrive, as at an event whose bot is not connected yet: the statistics and top-games boxes give their cells to the boxes beside them, so the next item and now fill the screen instead of four empty cards or four logos. When the statistics come, the screen turns into R8 by itself. Mockup: sheet 10; [contracts/screen.md](../../contracts/screen.md) (Boxes waiting for their source, #426).
 
 ### Claims
 
