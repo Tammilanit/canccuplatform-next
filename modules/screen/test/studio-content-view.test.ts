@@ -126,6 +126,18 @@ describe("the font warning", () => {
   });
 });
 
+describe("the library's pager", () => {
+  it("keeps the search and the open playlist on its links", () => {
+    const d = { ...data([]), next: "cur2", query: { q: "menu", kind: "image", after: "cur1" } };
+    const body = String(contentView(ctx(), d, "pl_b"));
+    expect(body).toContain('href="/admin/screen/content?q=menu&amp;kind=image&amp;playlist=pl_b"');
+    expect(body).toContain(
+      'href="/admin/screen/content?after=cur2&amp;q=menu&amp;kind=image&amp;playlist=pl_b"',
+    );
+    expect(String(contentView(ctx(), d))).not.toContain("playlist=");
+  });
+});
+
 describe("the page's head and drop band", () => {
   it("draws storage as a meter bar, not a native meter", () => {
     const body = String(contentView(ctx(), data([])));

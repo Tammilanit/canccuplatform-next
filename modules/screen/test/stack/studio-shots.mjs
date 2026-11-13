@@ -1,9 +1,9 @@
-// The Screen studio's screenshots (#189, #190, #263, #267; mockups 06–10 and 13), taken after the screens on
+// The Screen studio's screenshots (#189, #190, #263, #264, #267; mockups 06–10 and 13), taken after the screens on
 // the same demo fixture (fixture.mjs) and theme, so its live views draw the Pulse the screens do.
 // Two screens play while they are taken, one landscape and one portrait, each in the browser at
 // its own size, so their heartbeats give the device cards an orientation, a size and a state.
 import { expect } from "./client.mjs";
-import { removeContent, seedContent } from "./content-fixture.mjs";
+import { removeContent, removePlaylist, seedContent, seedPlaylist } from "./content-fixture.mjs";
 import { saveZone } from "./fixture.mjs";
 
 const DESK = { width: 1280, height: 800 };
@@ -27,6 +27,15 @@ STUDIO_PAGES.push(
   ["screen-pair-phone", "/admin/screen/devices#pair=K7Q49WXP", PHONE],
   ["screen-devices-wide", "/admin/screen/devices", WIDE],
 );
+
+/**
+ * The Content page with a playlist in the builder and its push playing (#264, mockup 10), at the
+ * mockup's width and on a phone, where the builder and Push now follow the library.
+ */
+export const PLAYLIST_PAGES = [
+  ["screen-content-playlist", "/admin/screen/content", { width: 1920, height: 1100 }],
+  ["screen-content-playlist-phone", "/admin/screen/content", PHONE],
+];
 
 /** A tap on the shown day's first window opens its details. */
 async function openDetails(page) {
@@ -276,6 +285,7 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
   const contexts = [];
   let assets = [];
   let made = null;
+  let lists = null;
   try {
     assets = await seedContent(demo);
     const hall = await demo.pair("Hall left", "main");
@@ -291,11 +301,16 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
     for (const [name, path, viewport] of STUDIO_PAGES) {
       await shot(name, path, viewport, { ready: studioReady });
     }
+    lists = await seedPlaylist(demo, assets);
+    for (const [name, path, viewport] of PLAYLIST_PAGES) await shot(name, path, viewport);
+    await removePlaylist(demo, lists);
+    lists = null;
     for (const [name, path, viewport, o] of LAYOUT_PAGES) await shot(name, path, viewport, o);
     made = await scheduleFixture(demo, assets);
     for (const [name, path, viewport, o] of SCHEDULE_PAGES) await shot(name, path, viewport, o);
   } finally {
     if (made !== null) await removeSchedule(demo, made);
+    if (lists !== null) await removePlaylist(demo, lists);
     for (const context of contexts) await context.close();
     for (const device of devices) await demo.revoke(device.id);
     await removeContent(demo, assets);

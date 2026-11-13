@@ -22,7 +22,7 @@ export interface ContentDeps {
 }
 
 /** A query parameter once, or empty; a repeated one reads as its first, as a form never sends it. */
-function param(query: unknown, name: string): string {
+export function param(query: unknown, name: string): string {
   const value = (query as Record<string, unknown>)[name];
   const first: unknown = Array.isArray(value) ? value[0] : value;
   return typeof first === "string" ? first : "";
