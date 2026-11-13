@@ -23,6 +23,8 @@ import {
   type EventContent,
 } from "./content.js";
 import { advanceZone, EMPTY_ZONE, type ZoneState } from "./zone.js";
+import { announcePreview, endExpired } from "../preview/store.js";
+import type { Fanout } from "../push/store.js";
 
 export const TICK_MS = 1000;
 /** Shorter than a tick, so the next second's step is free to any container. */
@@ -46,6 +48,8 @@ export interface TickDeps {
    * `playlist` widget reads that state, so the screens see the change only after a rebuild.
    */
   played?: (tenant: string, zones: string[]) => void;
+  /** Tells the streams of a device whose preview on a screen ended by itself; none in tests. */
+  fanout?: Fanout;
 }
 
 export function breakGapSeconds(settings: Settings): number {
@@ -68,6 +72,13 @@ export async function tickTenant(deps: TickDeps, ctx: TenantContext): Promise<vo
   const tenantId = ctx.tenant_id;
   const ended = await deps.db.tenant((c) => expirePushes(c, deps.audit, tenantId, deps.now()));
   await publishAll(deps.bus, ended);
+  // Previews past their `until` end here, audited with the module as actor; a stream drawing one
+  // already went back to the live zone at its own ping (src/push/stream.ts).
+  const previews = await deps.db.tenant((c) => endExpired(c, deps.audit, deps.now()));
+  const fanout = deps.fanout;
+  if (fanout !== undefined) {
+    for (const id of previews) await announcePreview({ kv: deps.kv, fanout }, id);
+  }
   // Not under "tick": a zone may be called `ticker`.
   if (await deps.kv.setIfAbsent(tenantKey("screen", "ticker", "tick"), "1", CLAIM_MS)) {
     const ticker = await deps.db.tenant((c) => tickTicker(c, ctx.time_zone, deps.now()));

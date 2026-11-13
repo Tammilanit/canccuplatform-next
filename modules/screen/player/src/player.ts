@@ -222,7 +222,8 @@ export class Player {
 
   /** A state the live flow has taken already (a pushed one), or that `run` just played. */
   private draw(state: ScreenState, offlineSince?: number): void {
-    if (offlineSince === undefined) this.env.offline?.save(state);
+    // A preview is never kept: a reboot without the server must show the live zone, not a draft.
+    if (offlineSince === undefined && !state.preview) this.env.offline?.save(state);
     this.tick = null;
     this.eventName = state.tenant.name;
     this.timeZone = state.tenant.time_zone;

@@ -10,6 +10,7 @@ import { composeZone } from "../compose/state.js";
 import { body, invalidRequest, needs, notFound, rateLimited, tenantOf } from "../http.js";
 import { zoneExistsHere } from "../zones.js";
 import { checkBoxes, zoneInput } from "../zone-input.js";
+import { previewTime } from "../preview/look.js";
 import { recordOf, refreshZone } from "./device-state.js";
 import { PING_MS } from "./feed.js";
 import type { HubDeps, PushHub } from "./hub.js";
@@ -22,7 +23,10 @@ import type { Orientation } from "./store.js";
 export const MAX_SESSION_STREAMS = 20;
 export const MAX_PREVIEWS_PER_MINUTE = 30;
 
-type ZoneQuery = { Params: { zone_key: string }; Querystring: { orientation?: string } };
+type ZoneQuery = {
+  Params: { zone_key: string };
+  Querystring: { orientation?: string; at?: string };
+};
 
 function orientationOf(value: string | undefined): Orientation {
   if (value === undefined || value === "landscape") return "landscape";
@@ -111,6 +115,7 @@ export function zoneViewRoutes(
     { preHandler: write },
     async (request) => {
       const orientation = orientationOf(request.query.orientation);
+      const at = previewTime(request.query.at, now());
       const zone = zoneInput(body(request));
       if (zone.key !== request.params.zone_key) {
         throw invalidRequest("The body's `key` must be the zone key of the path.");
@@ -121,19 +126,27 @@ export function zoneViewRoutes(
       }
       const ctx = tenantOf(request);
       await checkBoxes(deps.sources, ctx.tenant_id, zone);
-      const composed = await composeZone(deps, ctx, hostOf(request), zone.key, {
-        key: zone.key,
-        name: zone.name,
-        layout_id: zone.layout_id,
-        regions: zone.regions,
-        header: zone.header,
-        hub_qr: zone.hub_qr,
-        hero_region: zone.hero_region,
-        grow_for_showcase: zone.grow_for_showcase,
-        // A preview never sounds, so whose sound it is does not matter.
-        sound: zone.sound,
-        epoch: "preview",
-      });
+      const composed = await composeZone(
+        deps,
+        ctx,
+        hostOf(request),
+        zone.key,
+        {
+          key: zone.key,
+          name: zone.name,
+          layout_id: zone.layout_id,
+          regions: zone.regions,
+          header: zone.header,
+          hub_qr: zone.hub_qr,
+          hero_region: zone.hero_region,
+          grow_for_showcase: zone.grow_for_showcase,
+          // A preview never sounds, so whose sound it is does not matter.
+          sound: zone.sound,
+          epoch: "preview",
+        },
+        true,
+        { at },
+      );
       // composeZone answers null only when it reads the zone itself.
       if (composed === null) throw notFound();
       // Saved zones fall back to `pulse` for a layout a theme dropped later; a preview is where

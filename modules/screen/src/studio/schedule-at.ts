@@ -9,6 +9,9 @@
  * script and holds no time-zone arithmetic in the browser. The view is schedule-at-view.ts.
  */
 import type { AgendaItem } from "../compose/widgets.js";
+import { railAt } from "../compose/widgets.js";
+
+export { railAt };
 import type { Layout, Role } from "../compose/layouts.js";
 import { BUILT_IN_LAYOUTS, roleOf } from "../compose/layouts.js";
 import type { Sources } from "../compose/sources.js";
@@ -179,29 +182,6 @@ function runStart(segments: readonly CalendarSegment[], here: number, atMs: numb
     i--;
   }
   return Date.parse(segments[i]?.starts_at ?? new Date(atMs).toISOString());
-}
-
-/**
- * The rail's run of show at `atMs`, as the screens read it (`agenda_now`): the zone's items and
- * those of no zone, public and scheduled; what runs then, and the first to start after it.
- */
-export function railAt(
-  items: readonly AgendaItem[],
-  zone: string,
-  atMs: number,
-): { now: AgendaItem[]; next: AgendaItem | null } {
-  const shown = items
-    .filter(
-      (i) =>
-        i.visibility === "public" &&
-        (i.status ?? "scheduled") === "scheduled" &&
-        (i.zone == null || i.zone === zone),
-    )
-    .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at));
-  const now = shown.filter(
-    (i) => Date.parse(i.starts_at) <= atMs && i.ends_at !== null && atMs < Date.parse(i.ends_at),
-  );
-  return { now, next: shown.find((i) => Date.parse(i.starts_at) > atMs) ?? null };
 }
 
 /** Minutes a delay moved the item: its start's delay, else its end's (a running item's end). */

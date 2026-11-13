@@ -7,6 +7,7 @@ import type { FastifyInstance } from "fastify";
 import { tenantKey } from "@canccu/kit";
 import type { Bus, RightsChecker, SqlClient } from "@canccu/kit";
 import type { Audit } from "./audit.js";
+import { announcePreview, endPreview } from "./preview/store.js";
 import type { Db } from "./db.js";
 import { deviceView, eventDevice, findEventDevice, mirrorOf } from "./devices.js";
 import type { EventDevice } from "./devices.js";
@@ -125,9 +126,11 @@ export function assignmentRoutes(app: FastifyInstance, deps: AssignmentDeps): vo
     const actor = actorOf(request);
     const id = (request.params as { device_id: string }).device_id;
     const next = target ?? NONE;
-    const [emits, view] = await db.tenant(async (c) => {
+    const [emits, view, previewEnded] = await db.tenant(async (c) => {
       const seeded = await seededFor(ctx, c);
       const before = await lockForTarget(c, id, next);
+      // Even to the same zone: a preview never outlives the assignment it was started for.
+      const ended = await endPreview(c, before.id, deps.audit, null);
       // Upsert: a device the superadmin moves here (#221) may have no row in this event yet.
       await c.query(
         `INSERT INTO screen_assignments (device_id, zone_key, mirror_device_id, mirror_zone_key)
@@ -156,9 +159,10 @@ export function assignmentRoutes(app: FastifyInstance, deps: AssignmentDeps): vo
           actor_user_id: actor,
         },
       ];
-      return [[...seeded, ...released, assigned], deviceView(after)] as const;
+      return [[...seeded, ...released, assigned], deviceView(after), ended] as const;
     });
     await publishAll(bus, emits);
+    if (previewEnded) await announcePreview(deps, id);
     return view;
   }
 

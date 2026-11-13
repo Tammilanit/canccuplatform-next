@@ -9,6 +9,7 @@ import { PassThrough } from "node:stream";
 import { withTenant } from "@canccu/kit";
 import type { Bus, Logger, TenantContext } from "@canccu/kit";
 import type { ComposeDeps } from "../compose/state.js";
+import type { RunningPreview } from "../preview/state.js";
 import { keys } from "./store.js";
 import type { Entry, Fanout, Message, Orientation, ZoneRecord } from "./store.js";
 
@@ -41,6 +42,10 @@ export interface FeedPlace {
   orientation: Orientation;
   record: ZoneRecord | null;
   state: Record<string, unknown>;
+  /** A preview on a screen the state shows (src/preview/state.ts); a person's zone view has none. */
+  preview?: RunningPreview | null;
+  /** False: send a whole state even when the page's `Last-Event-ID` could resume. */
+  resumable?: boolean;
 }
 
 export abstract class Feed<R extends FeedRequest = FeedRequest> {
@@ -51,6 +56,11 @@ export abstract class Feed<R extends FeedRequest = FeedRequest> {
   protected epoch = "0";
   protected version = 0;
   protected orientation: Orientation = "landscape";
+  /**
+   * The preview the stream draws, or null. While one runs, every change of the zone is composed
+   * again from the preview and sent whole: the zone's messages describe the live state.
+   */
+  protected preview: RunningPreview | null = null;
   protected closed = false;
   private chain: Promise<void> = Promise.resolve();
   private stopZone: (() => void) | undefined;
@@ -161,6 +171,7 @@ export abstract class Feed<R extends FeedRequest = FeedRequest> {
     }
     this.zoneKey = placed.zoneKey;
     this.orientation = placed.orientation;
+    this.preview = placed.preview ?? null;
     const record = placed.record;
     if (record !== null && placed.zoneKey !== null) {
       this.deps.onPlaced?.(this.tenant, placed.zoneKey, record.nextChangeAt ?? null);
@@ -169,6 +180,7 @@ export abstract class Feed<R extends FeedRequest = FeedRequest> {
     if (
       record !== null &&
       last !== null &&
+      placed.resumable !== false &&
       last[1] === record.zone.key &&
       last[2] === record.zone.epoch
     ) {
@@ -191,7 +203,7 @@ export abstract class Feed<R extends FeedRequest = FeedRequest> {
   /** One change from the zone's channel, in order; a gap is filled from the log. */
   private async apply(entry: Entry): Promise<void> {
     if (this.zoneKey === null || entry.version <= this.version) return;
-    if (entry.epoch !== this.epoch) {
+    if (entry.epoch !== this.epoch || this.preview !== null) {
       await this.place(undefined);
       return;
     }
@@ -202,6 +214,10 @@ export abstract class Feed<R extends FeedRequest = FeedRequest> {
   protected async catchUp(): Promise<void> {
     if (this.zoneKey === null) return;
     if ((await this.deps.zones.version(this.zoneKey)) <= this.version) return;
+    if (this.preview !== null) {
+      await this.place(undefined);
+      return;
+    }
     const missed = await this.deps.zones.since(this.zoneKey, this.version);
     if (missed === null) {
       await this.sendState();

@@ -17,6 +17,9 @@ import {
 import type { ComposeDeps, ZoneComposed } from "../compose/state.js";
 import { themeFor } from "../pins/look.js";
 import { readPin } from "../pins/store.js";
+import { previewed } from "../preview/state.js";
+import type { RunningPreview } from "../preview/state.js";
+import { previewChanged } from "../preview/store.js";
 import { diffZone } from "./diff.js";
 import type { Orientation, ZoneRecord, ZoneRecordView } from "./store.js";
 
@@ -173,6 +176,10 @@ export interface Placed {
   orientation: Orientation;
   record: ZoneRecord | null;
   state: Record<string, unknown>;
+  /** The preview on a screen the state was composed from, or null for the live zone. */
+  preview: RunningPreview | null;
+  /** False when a resume could hand the screen the wrong state (a preview changed lately). */
+  resumable: boolean;
 }
 
 /** Where the device is, its zone's state brought up to date, and its `ScreenState`. */
@@ -196,11 +203,21 @@ export async function placeDevice(
           bundle: pin.bundle_version,
         };
   const side = { nowMs, ctx, device, mirror: where.mirror, bundleVersion: deps.bundleVersion };
+  // A mirror of a device shows what the device shows, its preview too; a zone's mirror the live zone.
+  const owner = where.mirror ? where.mirrorOf : device.id;
+  const shown =
+    record === null || owner === null
+      ? null
+      : await previewed(deps, ctx, host, { owner, record, orientation, side });
+  const changed = owner !== null && (await previewChanged(deps.kv, owner).catch(() => true));
   return {
     zoneKey: record === null ? null : where.zoneKey,
     mirror: where.mirror,
     orientation,
     record,
-    state: assemble(record, orientation, { ...side, ...(fallback ? { fallback } : {}) }),
+    state:
+      shown?.state ?? assemble(record, orientation, { ...side, ...(fallback ? { fallback } : {}) }),
+    preview: shown?.preview ?? null,
+    resumable: shown === null && !changed,
   };
 }

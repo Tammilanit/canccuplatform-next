@@ -107,6 +107,22 @@ describe("the screen's layout", () => {
     );
     expect(other).not.toBe(first);
   });
+
+  it("marks a preview on a screen, with its time, and takes the mark off when it ends (#444)", () => {
+    const screen = new Screen(host);
+    const mark = () => screen.root.querySelector(".canccu-preview-mark");
+    screen.draw(state([region("rail")], { preview: { until: null, at: null, theme: true } }));
+    expect(mark()?.textContent).toBe("Preview");
+    screen.draw(
+      state([region("rail")], {
+        preview: { until: null, at: "2026-03-15T19:30:00Z", theme: false },
+      }),
+    );
+    expect(mark()?.textContent).toBe("Preview · Sun 19:30");
+    expect(screen.root.querySelectorAll(".canccu-preview-mark")).toHaveLength(1);
+    screen.draw(state([region("rail")], { preview: null }));
+    expect(mark()).toBeNull();
+  });
 });
 
 describe("what a region shows", () => {
