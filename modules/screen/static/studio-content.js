@@ -6,6 +6,8 @@
  * card's replace and adding a web or YouTube link. Every change goes through the JSON API.
  */
 import { replacePlan } from "./studio-replace-plan.js";
+// The builder and Push now share the page (mockup 10).
+import "./studio-playlists.js";
 
 const { api, failure, reloadWith, say, show } = window.canccuStudio;
 const ASSETS = "/api/screen/assets";

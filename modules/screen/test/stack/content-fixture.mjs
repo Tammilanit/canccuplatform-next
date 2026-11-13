@@ -110,3 +110,35 @@ export async function seedContent(demo) {
 export async function removeContent(demo, ids) {
   for (const id of ids) await demo.call("DELETE", `/api/screen/assets/${id}`).catch(() => {});
 }
+
+/**
+ * The builder's shots (#264; mockup 10): "Welcome loop" of the deck, the poster and the trailer,
+ * pushed to every zone for an hour. Answers what `removePlaylist` takes away again, before the
+ * assets can go (a playlist or a push playing holds them).
+ */
+export async function seedPlaylist(demo, [trailer, , posterId, slides]) {
+  const items = [
+    { asset_id: slides, duration_seconds: 8 },
+    { asset_id: posterId, duration_seconds: 15 },
+    { asset_id: trailer, duration_seconds: null },
+  ];
+  const body = { name: "Welcome loop", type: "regular", priority: 10, items };
+  const playlist = expect(
+    await demo.call("POST", "/api/screen/playlists", { body }),
+    201,
+    "a playlist",
+  ).body;
+  const until = new Date(Date.now() + 3600_000).toISOString();
+  const push = { zones: [], playlist_id: playlist.id, until };
+  const pushed = expect(
+    await demo.call("POST", "/api/screen/push", { body: push }),
+    201,
+    "a push",
+  ).body;
+  return { playlist: playlist.id, push: pushed.id };
+}
+
+export async function removePlaylist(demo, made) {
+  await demo.call("DELETE", `/api/screen/push/${made.push}`).catch(() => {});
+  await demo.call("DELETE", `/api/screen/playlists/${made.playlist}`).catch(() => {});
+}

@@ -1,5 +1,7 @@
 /* The Content page's layout (static/studio-content.js; mockup 10), on top of ui.css and studio.css. */
 
+@import url("studio-playlists.css");
+
 /* Search and kinds at the left, the event's storage at the right; stacked on a phone. */
 .canccu-studio-library-head {
   display: flex;

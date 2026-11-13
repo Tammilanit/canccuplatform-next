@@ -162,7 +162,7 @@ configs:
       	}
       	handle @demo {
       		header Content-Type application/json
-      		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.read", "screen.devices.pair", "screen.devices.write", "screen.ticker.write", "screen.zones.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display"], "expires_at": "2099-01-01T00:00:00Z"}` 200
+      		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.read", "screen.devices.pair", "screen.devices.write", "screen.push.write", "screen.ticker.write", "screen.zones.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display"], "expires_at": "2099-01-01T00:00:00Z"}` 200
       	}
       	handle /api/admin/session {
       		header Content-Type application/json
