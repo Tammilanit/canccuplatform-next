@@ -22,13 +22,18 @@ const DEMO_NIGHT = {
   status_down: "#ff6b7d",
 };
 
-async function manifest(theme: string): Promise<Record<string, any>> {
+interface Demo {
+  brand?: Record<string, string>;
+  tokens: { colors: Record<string, string> };
+}
+
+async function manifest(theme: string): Promise<Demo> {
   const bytes = await readFile(
     new URL(`../../../events/demo/themes/${theme}/theme.yaml`, import.meta.url),
   );
   const parsed = parseManifest(bytes);
   if (!parsed.ok) throw new Error(parsed.why);
-  return parsed.manifest as Record<string, any>;
+  return parsed.manifest as unknown as Demo;
 }
 
 describe("the demo palettes", () => {
@@ -39,7 +44,7 @@ describe("the demo palettes", () => {
   });
 
   it("gives Level up colours of its own", async () => {
-    const colors = (await manifest("level-up")).tokens.colors as Record<string, string>;
+    const { colors } = (await manifest("level-up")).tokens;
     for (const token of ["background", "surface", "primary", "accent"] as const) {
       expect(colors[token]).not.toBe(DEMO_NIGHT[token]);
     }

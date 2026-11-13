@@ -9,6 +9,7 @@ import { attrs, html, icon } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import { isObject, list } from "./checks.js";
 import type { DraftRow } from "./drafts.js";
+import { contrastRatio } from "./contrast.js";
 import { fillTokens } from "./tokens.js";
 import {
   STARTERS,
@@ -216,6 +217,34 @@ const discardDialog = html`<dialog
   </div>
 </dialog>`;
 
+/**
+ * The light-scheme warning (design sheet 6; Q11 b of docs/design/README.md: warn only in step 3,
+ * the dark variant for screens comes later). Asked once, before the publish itself.
+ */
+const lightDialog = html`<dialog
+  class="canccu-studio-dialog"
+  id="canccu-studio-light"
+  aria-labelledby="canccu-studio-light-title"
+>
+  <h2 id="canccu-studio-light-title" class="canccu-card__title">A light look on venue screens</h2>
+  <p>
+    This draft is light. In a dark hall a light screen is bright and tiring, and it lights the room.
+    Phones and organiser pages are fine.
+  </p>
+  <div class="canccu-studio-row canccu-studio-dialog__actions">
+    ${actionButton("Keep editing", { "data-action": "dialog-close" })}
+    ${actionButton("Publish as it is", { "data-action": "publish" }, "primary")}
+  </div>
+</dialog>`;
+
+/**
+ * A light look is one whose background reads better under black text than under white: judged on
+ * the colours, not the brand's `scheme`, which an advanced draft's tokens may contradict.
+ */
+function isLight(background: string): boolean {
+  return contrastRatio(background, "#000000") > contrastRatio(background, "#ffffff");
+}
+
 /** `embedsAllowed`: whether the session holds `theming.embeds.write`, for the starters offered. */
 export function brandKitView(
   state: StudioState,
@@ -245,8 +274,9 @@ export function brandKitView(
           <a href="${STUDIO}advanced">Advanced</a>.
         </p>`
       : "";
+  const light = isLight(colors.background ?? "#000000");
   // Twice: in the title row, and on a phone in the row above the bottom bar (sheet 6).
-  const actions = html`${actionButton(html`${icon("monitor")}Preview`, { "data-action": "preview" })}${actionButton("Publish", { "data-action": "publish", "data-needs-preview": held, disabled: errors || held }, "primary")}`;
+  const actions = html`${actionButton(html`${icon("monitor")}Preview`, { "data-action": "preview" })}${actionButton("Publish", { "data-action": light ? "light-ask" : "publish", "data-needs-preview": held, disabled: errors || held }, "primary")}`;
   return {
     description,
     actions,
@@ -258,7 +288,7 @@ export function brandKitView(
           ${previewsView(state)}
         </div>
         <div class="canccu-studio-pendbar">${actions}</div>
-        ${discardDialog}`,
+        ${discardDialog}${light ? lightDialog : ""}`,
     ),
   };
 }
