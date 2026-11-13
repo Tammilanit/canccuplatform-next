@@ -128,7 +128,8 @@ async def test_callback_refuses_an_expired_or_reused_state(world: World) -> None
 async def test_callback_reports_a_cancelled_sign_in(world: World) -> None:
     await world.client.post("/admin/sign-in")
     r = await world.client.get("/admin/sign-in/callback", params={"error": "access_denied"})
-    assert r.status_code == 400 and "cancelled" in r.text
+    assert r.status_code == 400 and "Discord was closed before it said yes." in r.text
+    assert "Try again with Discord" in r.text
     assert_flow_cookie_cleared(r)
 
 

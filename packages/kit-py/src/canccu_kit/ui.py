@@ -50,6 +50,11 @@ __all__ = [
 ]
 
 
+# Registers admin's service worker, which shows the offline page when a signed-in phone loses its
+# connection (#440); only a session's pages need it, as only they have a shell to keep.
+OFFLINE_SCRIPT = '<script src="/admin/static/shell.js" defer></script>'
+
+
 def _initials(name: str) -> str:
     return "".join(w[0].upper() for w in name.split()[:2]) or "?"
 
@@ -213,8 +218,10 @@ def shell_page(
     if session is None:
         shell = f'<div class="canccu-shell canccu-shell--bare">{top}{main}</div>'
     else:
-        nav, bar = _menu(session, current, event), _tabbar(session, current)
-        shell = f'<div class="canccu-shell">{top}{nav}{main}{bar}</div>'
+        # An error page is nowhere in the menu, so nothing in it is marked (sheet 8).
+        here = None if plain else current
+        nav, bar = _menu(session, here, event), _tabbar(session, here)
+        shell = f'<div class="canccu-shell">{top}{nav}{main}{bar}</div>{OFFLINE_SCRIPT}'
     return document(title, shell, event=event, css=css)
 
 

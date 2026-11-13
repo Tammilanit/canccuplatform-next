@@ -1113,6 +1113,39 @@
   .canccu-error form {
     display: contents;
   }
+  /* Offline is not a fault of the platform: amber, not red or the primary colour. */
+  .canccu-error--warn .canccu-error__icon {
+    color: var(--canccu-ink-degraded);
+    background: color-mix(in srgb, var(--canccu-color-status-degraded) 16%, transparent);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--canccu-color-status-degraded) 32%, transparent),
+      0 0 0 10px color-mix(in srgb, var(--canccu-color-status-degraded) 6%, transparent);
+  }
+  /* On a phone the words sit in the middle of the page and the way on in its bottom third,
+     within thumb reach (sheet 8): the view fills the space between the header and the bar. */
+  @media (max-width: 40rem) {
+    .canccu-error {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: calc(100dvh - 11rem);
+      margin-top: 0;
+    }
+    .canccu-error__icon {
+      margin-top: auto;
+    }
+    .canccu-error .canccu-cluster {
+      flex-direction: column;
+      align-self: stretch;
+      margin-top: auto;
+      padding-top: 2rem;
+    }
+    .canccu-error .canccu-cluster .canccu-button {
+      justify-content: center;
+      width: 100%;
+      min-height: 2.75rem;
+    }
+  }
 
   /* Front door (sign-in, check-in): the event's poster on the glow the screens use, one card. */
   .canccu-front {

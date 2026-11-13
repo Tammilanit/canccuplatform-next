@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import html
 from datetime import timedelta
 
 import pytest
@@ -16,7 +17,9 @@ async def test_signed_in_without_a_role_lands_on_no_role_yet(world: World) -> No
     page = await world.client.get(r.headers["location"], follow_redirects=True)
     assert page.status_code == 200 and str(page.url).endswith("/admin/sign-in")
     assert "No role yet" in page.text
-    assert "You're signed in as Aino, but you have no role in Demo Event yet." in page.text
+    assert "You're signed in as Aino, but you have no role in Demo Event yet." in html.unescape(
+        page.text
+    )
     assert "They now see you under People." in page.text
     assert 'href="/admin/">Check again</a>' in page.text
     assert 'action="/admin/sign-out"' in page.text and "Sign in as someone else" in page.text
@@ -64,10 +67,17 @@ async def test_an_archived_event_offers_to_look_back(world: World) -> None:
 async def test_not_set_up_offers_check_again_and_what_to_tell(world: World) -> None:
     world.auth.discord = None
     page = await world.client.get("/admin/sign-in")
-    assert "Sign-in isn't switched on yet" in page.text
+    assert "Sign-in isn't switched on yet" in html.unescape(page.text)
     assert 'href="/admin/sign-in">Check again</a>' in page.text
     assert "Running the event today? Tell them: “Discord sign-in is not set up”." in page.text
     assert "Continue with Discord" not in page.text
+
+
+async def test_an_archived_event_says_so_while_sign_in_is_not_set_up(world: World) -> None:
+    world.auth.discord = None
+    world.event["status"] = "archived"
+    page = html.unescape((await world.client.get("/admin/sign-in")).text)
+    assert "Sign in to look back" in page and "Sign-in isn't switched on yet" in page
 
 
 @pytest.mark.parametrize("how", ["expired", "unknown"])
@@ -104,8 +114,8 @@ async def test_the_offline_page_keeps_the_shell(
     owner, _ = await owner_and_member(world, caplog)
     page = await world.browser(owner).get("/admin/offline")
     assert page.status_code == 200
-    assert "You're offline" in page.text
-    assert "It loads by itself when you're back online." in page.text
+    assert "You're offline" in html.unescape(page.text)
+    assert "It loads by itself when you're back online." in html.unescape(page.text)
     assert "canccu-error--warn" in page.text  # amber: not a fault of the platform
     assert 'class="canccu-tabbar"' in page.text and "aria-current" not in page.text
     assert "data-canccu-offline" in page.text

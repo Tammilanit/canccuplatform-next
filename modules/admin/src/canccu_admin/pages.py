@@ -12,7 +12,13 @@ from canccu_kit import KitError, MissingRight, TenantResolver
 from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.ui import EventInfo, error_view, front_page, shell_page
 from starlette.requests import Request
-from starlette.responses import FileResponse, HTMLResponse, JSONResponse, Response
+from starlette.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+    Response,
+)
 
 if TYPE_CHECKING:
     from .auth import Auth
@@ -125,6 +131,10 @@ def page_error_handler(auth: Auth) -> Callable[[Request, Exception], Awaitable[R
             session = await auth.session(session_id_from_cookie(request.headers.get("cookie")))
         except KitError:
             session = None
+        if isinstance(exc, MissingRight) and session is not None and not session.rights:
+            # Without any role "No access" names a page they never asked for; the sign-in page
+            # says what to do instead (sheet 3, "No role yet").
+            return RedirectResponse(f"{BASE}/sign-in", status_code=303)
         event = await event_of(request)
         title, view = error_view(
             exc,

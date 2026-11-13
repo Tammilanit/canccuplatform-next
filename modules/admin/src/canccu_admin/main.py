@@ -137,7 +137,14 @@ async def serve() -> None:
     # (deploy/compose.ci.yml) can stand in for it; its own role changes and ended sessions
     # drop the cache at once.
     app = create_app(
-        service, health, rights.check, auth, resolver, rights.handle_event, identity=identity
+        service,
+        health,
+        rights.check,
+        auth,
+        resolver,
+        rights.handle_event,
+        identity=identity,
+        viewer=rights.session,
     )
 
     async def drop_cached_tenants(event: Event) -> None:

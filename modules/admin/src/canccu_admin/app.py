@@ -17,9 +17,9 @@ from canccu_kit import (
     is_tenant_id,
     tenant_scope,
 )
-from canccu_kit.rights import Session
+from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.starlette import install, install_service_identity
-from canccu_kit.ui import esc, icon, notice
+from canccu_kit.ui import esc, icon, menu_for, notice
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.requests import Request
@@ -27,7 +27,7 @@ from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.routing import Route
 
 from .auth import Auth
-from .auth_routes import Authorize, OnEvent, OriginCheck, auth_routes
+from .auth_routes import Authorize, OnEvent, OriginCheck, Viewer, auth_routes
 from .forms import field_html, from_form
 from .pages import (
     BASE,
@@ -71,7 +71,14 @@ def create_app(
     on_event: OnEvent | None = None,
     *,
     identity: ServiceIdentity,
+    viewer: Viewer | None = None,
 ) -> Starlette:
+    """`viewer` reads a cookie's session as the kit does, for pages that need no right."""
+    if viewer is None:
+
+        async def viewer(cookie: str | None) -> Session:
+            return await auth.session(session_id_from_cookie(cookie))
+
     async def need(request: Request, right: str) -> Session:
         return await authorize(request.headers.get("cookie"), right)
 
@@ -189,7 +196,10 @@ def create_app(
     # --- pages
 
     async def index(request: Request) -> Response:
-        return RedirectResponse(f"{BASE}/settings", status_code=303)
+        """The first page this person may open; without a role, "No role yet" on sign-in."""
+        session = await auth.session(session_id_from_cookie(request.headers.get("cookie")))
+        pages = [i["href"] for g in menu_for(session) for i in g["items"]]
+        return RedirectResponse(pages[0] if pages else f"{BASE}/sign-in", status_code=303)
 
     async def settings_index(request: Request) -> Response:
         session = await need(request, "admin.settings.read")
@@ -370,7 +380,7 @@ def create_app(
             Route("/profile", profile_page),
             Route("/profile/save", profile_save, methods=["POST"]),
             Route("/profile/load", profile_load, methods=["POST"]),
-            *auth_routes(auth, authorize, on_event),
+            *auth_routes(auth, authorize, on_event, viewer),
         ]
     )
     # Added before install(): Starlette wraps each later middleware around the earlier ones,
