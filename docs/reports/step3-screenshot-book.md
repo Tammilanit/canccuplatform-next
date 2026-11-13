@@ -4,10 +4,10 @@ Issue #386. Every page, state and screen a person meets on the demo stack at mai
 
 ## How it was made
 
-- **Source:** the artifact `demo-screenshots` of the demo-stack run for main `9fd103e` (merge-queue run [43370607779](https://github.com/Tammilanit/canccuplatform-next/actions/runs/43370607779), green). `scripts/demo-screenshots` took them: Chromium with the demo event and its fixture, signed in with the CI session stub, which holds every right the pages check ([docs/ci.md](../ci.md#demo-stack)). The run fails if a page does not answer, if a screen does not draw the event or if a screen's text does not pass the readability check, so each image shows a working page, not an error caught by accident.
+- **Source:** the artifact `demo-screenshots` of the demo-stack run for main `9fd103e` (merge-queue run [43370607779](https://github.com/Tammilanit/canccuplatform-next/actions/runs/43370607779), green). The content widgets (R14–R20) are not in that artifact: they were taken the same way on a local demo stack of the same commit (`deploy/compose.ci.yml`), with the CI fixture's library and its "Welcome loop" pushed to every zone, as for O34. `scripts/demo-screenshots` took the rest: Chromium with the demo event and its fixture, signed in with the CI session stub, which holds every right the pages check ([docs/ci.md](../ci.md#demo-stack)). The run fails if a page does not answer, if a screen does not draw the event or if a screen's text does not pass the readability check, so each image shows a working page, not an error caught by accident.
 - **Data:** the demo profile; a run of show around the time of the run, over two days, with Dinner on now and the semi-final 15 min late; a ticker line; two zones, Main hall (landscape) and Entrance (portrait), each with a screen paired; five assets in the Screen studio and, for its playlist and schedule shots, four playlists with schedule windows and a break. A screen state the stack cannot reach on its own (refused, moved, archived, a claim, a photo) is the player's own answer to that state, handed to the page.
 - **Sizes:** desktop pages at 1280 px wide (Settings, Devices and Schedule also at 1440 px, the playlist editor at 1920 px), phone pages at 390 px; all shown 1:1, as full pages. Screens at 1920×1080, 3840×2160, 1080×1920 and 2160×3840, scaled down here to 720 px on the short side (JPEG), with one 1:1 crop of a 4K screen. The full set (154 PNGs, every theme at every size) is in the artifact.
-- **Time:** the run ran at about 05:25 UTC, so the clocks show 05:2x and the countdowns about an hour.
+- **Time:** the run ran at about 05:25 UTC, so the clocks show 05:2x and the countdowns about an hour; R14–R20 were taken at about 06:08 UTC on 13 November.
 - **Mockups:** "sheet N" is sheet N of the accepted design guideline [docs/design/mockups.html](../design/mockups.html) (PO, 2026-11-12); "mockup NN" is the step 3 brief's mockup in [docs/briefs/step-3-screen/](../briefs/step-3-screen/).
 
 ## Contents
@@ -18,7 +18,7 @@ Issue #386. Every page, state and screen a person meets on the demo stack at mai
 | Organiser, phone | The same pages in one column with the bottom bar | [O38–O52](#organiser-on-a-phone) |
 | Crew | Sign-in, run of show and Screen studio on a phone; the kiosk frames | [C1–C18](#the-crew) |
 | Attendee | Check-in, the phone hub's preview | [A1–A2](#the-attendee) |
-| The room | The Pulse at 1080p, 4K and portrait; the other layouts, widgets, claims, offline, the end, the other themes | [R1–R35](#the-room) |
+| The room | The Pulse at 1080p, 4K and portrait; the other layouts, widgets, claims, offline, the end, the other themes | [R1–R42](#the-room) |
 
 ## The organiser
 
@@ -468,76 +468,111 @@ A photo from the event plays in the hero with its caption, album and author; the
 #### R12 · Photo, portrait
 ![Portrait screen with a photo in the hero](step3-screenshot-book/r12-default-photo-1080x1920.jpg)
 
-The café's portrait screen with a photo. This shot was taken while the player was marked offline, so the offline marker shows top right (see R22). Mockup: mockup 03.
+The café's portrait screen with a photo. This shot was taken while the player was marked offline, so the offline marker shows top right (see R29). Mockup: mockup 03.
 
 #### R13 · Rail with nothing to show
 ![Pulse with an empty rail box showing the logo](step3-screenshot-book/r13-default-rail-empty-1920x1080.jpg)
 
 When the run of show has nothing beyond the item the hero already shows, the rail's now-and-next box shows the event's logo instead of repeating the hero or standing empty. Mockup: sheet 9.
 
+#### R14 · Playlist in the hero: a deck slide
+![Pulse with a slide of the pushed deck in the hero](step3-screenshot-book/r14-default-playlist-slide-1920x1080.jpg)
+
+What the room sees once the organiser pushes "Welcome loop" to every zone (O34): the `playlist` widget takes the hero and plays the deck's rendered slides, here the first; the rail keeps now and next. Slides, posters and sponsor loops between the peaks are the content a screen shows on most evenings. Mockup: mockup 02 (the hero's playlist), mockup 10 (the push), sheet 9.
+
+#### R15 · Playlist in the hero, portrait: a deck slide
+![Portrait screen with a slide of the pushed deck in the hero](step3-screenshot-book/r15-default-playlist-slide-1080x1920.jpg)
+
+The same push on a portrait screen: the 16:9 slide fits the hero's width, with the run of show below it. Mockup: mockup 03, mockup 10.
+
+#### R16 · Playlist in the hero: an image
+![Pulse with the pushed poster image in the hero](step3-screenshot-book/r16-default-playlist-image-1920x1080.jpg)
+
+The playlist's next item, a poster image (the stack's two-colour test poster), shown for its 15 seconds. The rail has turned to its countdown to the semi-final. A break playlist plays in this same box (see [Not in this book](#not-in-this-book)). Mockup: mockup 02, mockup 10, sheet 9.
+
+#### R17 · Playlist in the hero, portrait: an image
+![Portrait screen with the pushed poster image in the hero](step3-screenshot-book/r17-default-playlist-image-1080x1920.jpg)
+
+The poster on the portrait screen. Mockup: mockup 03, mockup 10.
+
+#### R18 · Playlist in the hero: a video
+![Pulse with the pushed video playing in the hero](step3-screenshot-book/r18-default-playlist-video-1920x1080.jpg)
+
+The playlist's last item, a video played at its own length, muted unless the screen is the zone's sound device. The video is the stack's test clip, a plain blue frame a few pixels wide, so the hero shows a blue box where a trailer would play. Mockup: mockup 02, mockup 10, sheet 9.
+
+#### R19 · Playlist in the hero, portrait: a video
+![Portrait screen with the pushed video playing in the hero](step3-screenshot-book/r19-default-playlist-video-1080x1920.jpg)
+
+The video on the portrait screen. Mockup: mockup 03, mockup 10.
+
+#### R20 · Terminal, a theme embed in the hero
+![Terminal theme with its starfield embed in the hero](step3-screenshot-book/r20-terminal-embed-1920x1080.jpg)
+
+The `embed` widget: a page that ships in the theme package and runs sandboxed, here the Terminal theme's moving starfield, set as the main zone's hero. A theme designer uses it for an ambient background between the peaks, and a zone lists it in a box like any other widget. The screen leaves it out when the device asks for reduced motion. Mockup: none draws a theme embed; [contracts/theming.md](../../contracts/theming.md#embeds-custom-html-and-js) defines it.
+
 ### Claims
 
 A claim is something that briefly takes over part of the screen: an announcement, a game that is hot right now, a match being called, an emergency. In step 3 the Screen draws them; Moments decides them in step 4.
 
-#### R14 · Claim on the rail
-![Announcement claim on the rail](step3-screenshot-book/r14-default-claim-rail-1920x1080.jpg)
+#### R21 · Claim on the rail
+![Announcement claim on the rail](step3-screenshot-book/r21-default-claim-rail-1920x1080.jpg)
 
 An announcement ("Dinner is served") takes the rail's now-and-next box for a while. Mockup: mockup 04.
 
-#### R15 · Claim on the rail, portrait
-![Announcement claim on a portrait screen](step3-screenshot-book/r15-default-claim-rail-1080x1920.jpg)
+#### R22 · Claim on the rail, portrait
+![Announcement claim on a portrait screen](step3-screenshot-book/r22-default-claim-rail-1080x1920.jpg)
 
 The same on a portrait screen. Mockup: mockup 04.
 
-#### R16 · Claim on the hero
-![Hot right now claim on the hero](step3-screenshot-book/r16-default-claim-hero-1920x1080.jpg)
+#### R23 · Claim on the hero
+![Hot right now claim on the hero](step3-screenshot-book/r23-default-claim-hero-1920x1080.jpg)
 
 A game that is hot right now takes the hero, with how many are playing; the rail moves the delayed item up. Mockup: mockup 04.
 
-#### R17 · Claim on the hero, portrait
-![Hot right now on a portrait screen](step3-screenshot-book/r17-default-claim-hero-1080x1920.jpg)
+#### R24 · Claim on the hero, portrait
+![Hot right now on a portrait screen](step3-screenshot-book/r24-default-claim-hero-1080x1920.jpg)
 
 The same on a portrait screen. Mockup: mockup 04.
 
-#### R18 · Overlay claim
-![Match called overlay](step3-screenshot-book/r18-default-claim-overlay-1920x1080.jpg)
+#### R25 · Overlay claim
+![Match called overlay](step3-screenshot-book/r25-default-claim-overlay-1920x1080.jpg)
 
 A match is called: a band over the foot of the screen says who plays and where to go, while the rest keeps playing. Mockup: mockup 04.
 
-#### R19 · Overlay claim, portrait
-![Match called overlay on a portrait screen](step3-screenshot-book/r19-default-claim-overlay-1080x1920.jpg)
+#### R26 · Overlay claim, portrait
+![Match called overlay on a portrait screen](step3-screenshot-book/r26-default-claim-overlay-1080x1920.jpg)
 
 The same on a portrait screen. Mockup: mockup 04.
 
-#### R20 · Takeover
-![Emergency takeover](step3-screenshot-book/r20-default-claim-takeover-1920x1080.jpg)
+#### R27 · Takeover
+![Emergency takeover](step3-screenshot-book/r27-default-claim-takeover-1920x1080.jpg)
 
 An emergency takes the whole screen in fixed red with one instruction, on every screen, whatever the theme. Mockup: mockup 04, sheet 9.
 
-#### R21 · Takeover over Ambient
-![Emergency takeover over the Ambient layout](step3-screenshot-book/r21-default-ambient-takeover-1920x1080.jpg)
+#### R28 · Takeover over Ambient
+![Emergency takeover over the Ambient layout](step3-screenshot-book/r28-default-ambient-takeover-1920x1080.jpg)
 
 The same takeover on a zone with the Ambient layout: it looks the same, so nobody has to read a different screen in an emergency. Mockup: mockup 04, sheet 10.
 
 ### Offline and the end
 
-#### R22 · Offline
-![Pulse offline with the marker](step3-screenshot-book/r22-default-offline-1920x1080.jpg)
+#### R29 · Offline
+![Pulse offline with the marker](step3-screenshot-book/r29-default-offline-1920x1080.jpg)
 
 When the venue's uplink drops, every screen keeps playing what it has and marks "offline since" in a corner, so the crew sees it and attendees still see the programme. Mockup: mockup 16, sheet 9.
 
-#### R23 · Offline, portrait 4K
-![Offline on a portrait 4K screen, scaled down](step3-screenshot-book/r23-default-offline-2160x3840.jpg)
+#### R30 · Offline, portrait 4K
+![Offline on a portrait 4K screen, scaled down](step3-screenshot-book/r30-default-offline-2160x3840.jpg)
 
 The same on a portrait 4K screen. Mockup: mockups 03 and 16.
 
-#### R24 · The event has ended
-![Archived frame: this event has ended](step3-screenshot-book/r24-default-archived-1920x1080.jpg)
+#### R31 · The event has ended
+![Archived frame: this event has ended](step3-screenshot-book/r31-default-archived-1920x1080.jpg)
 
 After the event is archived, its screens thank people for coming; the platform admin moves them to the next event. Mockup: mockup 05, sheet 9.
 
-#### R25 · The event has ended, portrait
-![Archived frame, portrait](step3-screenshot-book/r25-default-archived-1080x1920.jpg)
+#### R32 · The event has ended, portrait
+![Archived frame, portrait](step3-screenshot-book/r32-default-archived-1080x1920.jpg)
 
 The same on a portrait screen. Mockup: mockup 05.
 
@@ -545,53 +580,53 @@ The same on a portrait screen. Mockup: mockup 05.
 
 The same screens in the demo event's two other themes, to show that a theme changes the look but not the layout or the content.
 
-#### R26 · Level-up, Pulse
-![Level-up theme, Pulse](step3-screenshot-book/r26-level-up-pulse-1920x1080.jpg)
+#### R33 · Level-up, Pulse
+![Level-up theme, Pulse](step3-screenshot-book/r33-level-up-pulse-1920x1080.jpg)
 
 The Pulse in the Level-up theme: its logo, accent lines on the cards, a framed clock and a pill-shaped ticker. Mockup: mockup 02 in the theme's colours.
 
-#### R27 · Level-up, Pulse portrait
-![Level-up theme, Pulse portrait](step3-screenshot-book/r27-level-up-pulse-1080x1920.jpg)
+#### R34 · Level-up, Pulse portrait
+![Level-up theme, Pulse portrait](step3-screenshot-book/r34-level-up-pulse-1080x1920.jpg)
 
 The same on a portrait screen. Mockup: mockup 03.
 
-#### R28 · Level-up, Dashboard
-![Level-up theme, Dashboard](step3-screenshot-book/r28-level-up-dashboard-1920x1080.jpg)
+#### R35 · Level-up, Dashboard
+![Level-up theme, Dashboard](step3-screenshot-book/r35-level-up-dashboard-1920x1080.jpg)
 
 The Dashboard in Level-up; the logo boxes draw without a card. Mockup: sheet 10.
 
-#### R29 · Level-up, Ambient
-![Level-up theme, Ambient](step3-screenshot-book/r29-level-up-ambient-1920x1080.jpg)
+#### R36 · Level-up, Ambient
+![Level-up theme, Ambient](step3-screenshot-book/r36-level-up-ambient-1920x1080.jpg)
 
 Ambient in Level-up, with the clock in a card. Mockup: sheet 10.
 
-#### R30 · Level-up, offline
-![Level-up theme, offline](step3-screenshot-book/r30-level-up-offline-1920x1080.jpg)
+#### R37 · Level-up, offline
+![Level-up theme, offline](step3-screenshot-book/r37-level-up-offline-1920x1080.jpg)
 
 The offline marker in Level-up. Mockup: mockup 16.
 
-#### R31 · Terminal, Pulse
-![Terminal theme, Pulse](step3-screenshot-book/r31-terminal-pulse-1920x1080.jpg)
+#### R38 · Terminal, Pulse
+![Terminal theme, Pulse](step3-screenshot-book/r38-terminal-pulse-1920x1080.jpg)
 
 The Pulse in the Terminal theme: outlined boxes, a cyan accent and a flat dark ground. Mockup: mockup 02 in the theme's colours.
 
-#### R32 · Terminal, Pulse portrait
-![Terminal theme, Pulse portrait](step3-screenshot-book/r32-terminal-pulse-1080x1920.jpg)
+#### R39 · Terminal, Pulse portrait
+![Terminal theme, Pulse portrait](step3-screenshot-book/r39-terminal-pulse-1080x1920.jpg)
 
 The same on a portrait screen. Mockup: mockup 03.
 
-#### R33 · Terminal, Dashboard
-![Terminal theme, Dashboard](step3-screenshot-book/r33-terminal-dashboard-1920x1080.jpg)
+#### R40 · Terminal, Dashboard
+![Terminal theme, Dashboard](step3-screenshot-book/r40-terminal-dashboard-1920x1080.jpg)
 
 The Dashboard in Terminal. Mockup: sheet 10.
 
-#### R34 · Terminal, Split
-![Terminal theme, Split](step3-screenshot-book/r34-terminal-split-1920x1080.jpg)
+#### R41 · Terminal, Split
+![Terminal theme, Split](step3-screenshot-book/r41-terminal-split-1920x1080.jpg)
 
 Split in Terminal. Mockup: sheet 10.
 
-#### R35 · Terminal, waiting for a zone
-![Terminal theme, paired but not assigned](step3-screenshot-book/r35-terminal-unassigned-1920x1080.jpg)
+#### R42 · Terminal, waiting for a zone
+![Terminal theme, paired but not assigned](step3-screenshot-book/r42-terminal-unassigned-1920x1080.jpg)
 
 A device frame in a theme: a screen paired but not yet assigned follows the published theme. Mockup: mockup 05.
 
@@ -604,6 +639,8 @@ What a person can meet on main that the demo stack cannot show, and what is draw
 - **The superadmin's device registry** (mockup 15): an API on the superadmin hostname, with no page yet.
 - **The hub's own pages:** the App track's; A2 is only the Theme studio's preview of one.
 - **Screens in motion, scenes, the Director, cues and the two backgrounds** (sheets 11–16): the screenshots are still images of the step 3 player; motion and these features are later steps' work.
+- **A full-screen break:** a `break` playlist set to `full` plays inside the hero's playlist widget on main, as R16 does, because the screen's composed state has no full-screen place for it yet (`modules/screen/src/compose/playing.ts`). A break inside the hero looks like R14–R19, so it has no shot of its own.
+- **A web page or a video link as a playlist item:** the screen frames only `https://` pages on the event's `web_allowlist` and YouTube's no-cookie player, and the demo stack serves neither, so these items are not shot. The theme embed (R20) is the framed page the stack can show.
 - **Every theme at every size:** the book shows a selection; the artifact holds each demo theme's Pulse, frames and layouts at every size it was shot.
 
 ## Lead's evaluation
