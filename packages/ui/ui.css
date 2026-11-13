@@ -1499,12 +1499,10 @@
     font-size: max(16px, 3.9vmin) !important;
   }
   /* A preview on a screen (contracts/screen.md): nobody takes it for the live screen. Top left,
-     as the offline marker holds the top right, in the Demo night degraded yellow. */
+     as the offline marker holds the top right, in the safety elements' white on black. */
   .canccu-preview-mark {
     top: max(8px, 1.5vmin) !important;
     left: max(8px, 1.5vmin) !important;
-    background: #ffc94d !important;
-    color: #0b0d1a !important;
     font-size: max(16px, 3.9vmin) !important;
     font-weight: 700 !important;
   }
