@@ -623,6 +623,8 @@ components:
           type: string
           description: |
             `next`: the zone's next run-of-show item with a big countdown, else the logo (contracts/screen.md, The Pulse options).
+            With `logo`, set or left at the default, a region of only `stats` and `now_playing` that are all empty gives
+            its cells to the regions beside it instead (contracts/screen.md, Boxes waiting for their source).
           enum: [logo, blank, collapse, next]
           default: logo
         area:
