@@ -111,6 +111,35 @@ async def test_the_screen_module_fetches_the_code_internally(env: Env) -> None:
         assert bad.status_code == 400
 
 
+async def test_the_screen_module_reads_the_count_of_check_ins(env: Env) -> None:
+    url = "/internal/notify/check-ins/count"
+
+    async def count(params: dict[str, str], service: str = "screen") -> httpx.Response:
+        async with env.internal() as c:
+            headers = ServiceIdentity(service, KEY).headers("notify")
+            return await c.get(url, params=params, headers=headers)
+
+    arrival = {"tenant_id": "ev-a", "purpose": "arrival"}
+    empty = await count(arrival)
+    assert empty.status_code == 200 and empty.json() == {"purpose": "arrival", "count": 0}
+    now = await code(env)
+    for user in ("u_a", "u_b", "u_a"):
+        await check_in(env, user, {"purpose": "arrival", "code": now["code"]})
+    match = await code(env, "tournament:s_12")
+    await check_in(env, "u_c", {"purpose": "tournament:s_12", "code": match["code"]})
+    # Each member once, per purpose and per event.
+    assert (await count(arrival)).json() == {"purpose": "arrival", "count": 2}
+    other = await count({"tenant_id": "ev-a", "purpose": "tournament:s_12"})
+    assert other.json() == {"purpose": "tournament:s_12", "count": 1}
+    assert (await count({"tenant_id": "ev-b", "purpose": "arrival"})).json()["count"] == 0
+    assert (await count({"tenant_id": "ev-gone", "purpose": "arrival"})).status_code == 404
+    assert (await count({"tenant_id": "ev-a", "purpose": "no spaces"})).status_code == 400
+    refused = await count(arrival, "pizza")
+    assert refused.status_code == 403 and refused.json()["error"]["code"] == "service_forbidden"
+    async with env.internal() as c:
+        assert (await c.get(url, params=arrival)).status_code == 401
+
+
 async def test_checking_in_once_per_purpose(env: Env) -> None:
     now = await code(env)
     first = await check_in(env, "u_a", {"purpose": "arrival", "code": now["code"]})

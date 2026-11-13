@@ -6,6 +6,7 @@
 import { CONTENT_EN } from "./content-messages.js";
 import { PLAYLIST_CLIENT_KEYS, PLAYLIST_EN } from "./playlist-messages.js";
 import { LAYOUT_CLIENT_KEYS, LAYOUT_EN } from "./layout-messages.js";
+import { WIDGET_SETTINGS_EN } from "./widget-settings.js";
 import { PREVIEW_CLIENT_KEYS, PREVIEW_EN } from "./preview-messages.js";
 import { SCHEDULE_CLIENT_KEYS, SCHEDULE_EN } from "./schedule-messages.js";
 
@@ -14,6 +15,7 @@ const EN = {
   ...SCHEDULE_EN,
   ...PLAYLIST_EN,
   ...LAYOUT_EN,
+  ...WIDGET_SETTINGS_EN,
   ...PREVIEW_EN,
   "studio.title": "Screen studio",
   "studio.page": "the Screen studio",

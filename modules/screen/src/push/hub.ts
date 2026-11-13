@@ -7,6 +7,7 @@
  */
 import { platformKey, tenantKey, withTenant } from "@canccu/kit";
 import type { Event, Logger } from "@canccu/kit";
+import { checkinsMoved, keepPresence, presenceOf } from "../compose/stats.js";
 import { PREVIEW_CHANNEL } from "../preview/store.js";
 import { refreshZone } from "./device-state.js";
 import type { Feed, StreamDeps } from "./feed.js";
@@ -112,13 +113,20 @@ export class PushHub {
     return n;
   }
 
-  /** One event of the screen, agenda, tenants, theming or moments tenant streams. */
+  /** One event of the screen, agenda, tenants, theming, notify, bot or moments tenant streams. */
   handleEvent(event: Event): void {
     if (event.source === "tenants") this.deps.tenantChanged(event);
     const tenant = event.tenant;
+    if (tenant !== undefined && (event.source === "bot" || event.source === "notify")) {
+      void this.countsMoved(tenant, event);
+      return;
+    }
     const streams = tenant === undefined ? undefined : this.streams.get(tenant);
     if (tenant === undefined || streams === undefined) return;
     const deviceId = event.data.device_id;
+    // The event's count of screens may have moved, and with it every zone's `show_name`.
+    const recount = ENDS.has(event.type) || event.type === "screen.device.assigned";
+    if (recount) for (const key of this.zonesOf(tenant)) this.schedule(tenant, key);
     if (ENDS.has(event.type)) {
       for (const s of [...streams]) if (s.deviceId === deviceId) s.end();
       return;
@@ -140,6 +148,29 @@ export class PushHub {
     for (const key of this.zonesOf(tenant)) {
       if (zone === undefined || zone === key) this.schedule(tenant, key);
     }
+  }
+
+  /**
+   * The `stats` widget's counts (src/compose/stats.ts): kept, or marked to be read again, by every
+   * container, also one without a stream of the event, so a peak is never missed; then the zones
+   * shown here are rebuilt, and only those that show `stats` move.
+   */
+  private async countsMoved(tenant: string, event: Event): Promise<void> {
+    try {
+      if (event.type === "bot.presence.counted") {
+        const count = presenceOf(event.data);
+        if (count === null) return;
+        await keepPresence(this.deps.kv, tenant, count);
+      } else if (event.type === "notify.checkin.recorded" && event.data.purpose === "arrival") {
+        await checkinsMoved(this.deps.kv, tenant);
+      } else {
+        return;
+      }
+    } catch (err) {
+      this.deps.log?.warn({ err, tenant_id: tenant, type: event.type }, "keeping a count failed");
+      return;
+    }
+    for (const key of this.zonesOf(tenant)) this.schedule(tenant, key);
   }
 
   /**

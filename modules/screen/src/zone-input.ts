@@ -26,6 +26,7 @@ const ROTATIONS = ["sequence", "shuffle"];
 const IDLES = ["logo", "blank", "collapse", "next"];
 const HEADERS = ["separate", "shared"];
 const HUB_QRS = ["always", "rotate"];
+const SCREEN_NAMES = ["auto", "always", "never"];
 const MAX_REGIONS = 32;
 const MAX_WIDGETS = 12;
 const MAX_PROPS = 32;
@@ -43,6 +44,8 @@ export interface ZoneInput {
   /** Null: the layout's `header`, else `separate` (src/compose/parts.ts). */
   header: "separate" | "shared" | null;
   hub_qr: "always" | "rotate";
+  /** `auto`: shown while the event has two or more screens (src/compose/state.ts, showsName). */
+  screen_name: "auto" | "always" | "never";
   /** Null: no trade (src/compose/showcase.ts). */
   hero_region: string | null;
   grow_for_showcase: boolean;
@@ -159,6 +162,7 @@ export function zoneInput(value: unknown): ZoneInput {
       "regions",
       "header",
       "hub_qr",
+      "screen_name",
       "hero_region",
       "grow_for_showcase",
       "sound",
@@ -193,6 +197,8 @@ export function zoneInput(value: unknown): ZoneInput {
   // Unlike `header`, `hub_qr` has no null: the contract gives it a plain default.
   const hubQr = value.hub_qr === undefined ? "always" : value.hub_qr;
   oneOf(hubQr, HUB_QRS, "`hub_qr`");
+  const screenName = value.screen_name === undefined ? "auto" : value.screen_name;
+  oneOf(screenName, SCREEN_NAMES, "`screen_name`");
   // Any region id is kept, also one the layout lacks: the zone survives a layout change.
   const heroRegion = value.hero_region ?? null;
   if (heroRegion !== null && (typeof heroRegion !== "string" || !NAME_RE.test(heroRegion))) {
@@ -221,6 +227,7 @@ export function zoneInput(value: unknown): ZoneInput {
     regions: regions as Record<string, Json>,
     header: header as ZoneInput["header"],
     hub_qr: hubQr as ZoneInput["hub_qr"],
+    screen_name: screenName as ZoneInput["screen_name"],
     hero_region: heroRegion,
     grow_for_showcase: grow,
     sound: { enabled, device_id: deviceId },

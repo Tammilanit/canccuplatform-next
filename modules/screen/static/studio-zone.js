@@ -45,6 +45,9 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
         seconds: dwellOf(r),
       });
     }
+    // The photo wall's settings show while the box lists a photo (src/studio/widget-settings.ts).
+    const wall = r.querySelector("[data-photo-wall]");
+    if (wall) wall.hidden = !entriesOf(r).some((e) => e.widget === "photo");
     const names = [...r.querySelectorAll(".canccu-studio-widget__name")].map((n) => n.textContent);
     const shows = form.querySelector(`[data-pick="${CSS.escape(r.dataset.region)}"] [data-shows]`);
     if (shows && names.length > 0) shows.textContent = names.join(" → ");
@@ -98,6 +101,37 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
     changed(region);
   });
 
+  // Key order apart: a theme's props in another order are no change.
+  const canonical = (value) =>
+    JSON.stringify(value, (_, v) =>
+      v && typeof v === "object" && !Array.isArray(v)
+        ? Object.fromEntries(Object.entries(v).sort())
+        : v,
+    );
+
+  /**
+   * The box's entries with the photo wall's settings on each `photo` entry: only the props that
+   * differ from the wall's defaults (contracts/screen.md, Photos), so an untouched wall saves none.
+   */
+  function withWall(r, entries) {
+    const wall = r.querySelector("[data-photo-wall]");
+    if (!wall) return entries;
+    const seconds = wall.querySelector("[name=photo_seconds]").value;
+    const order = wall.querySelector("[name=photo_order]").value;
+    const pop = wall.querySelector("[name=pop_new]").checked;
+    return entries.map((e) => {
+      if (e.widget !== "photo") return e;
+      const props = { ...(e.props || {}) };
+      for (const key of ["photo_seconds", "order", "pop_new"]) Reflect.deleteProperty(props, key);
+      if (seconds !== "") props.photo_seconds = Number(seconds);
+      if (order !== "newest") props.order = order;
+      if (!pop) props.pop_new = false;
+      const next = { ...e, props };
+      if (Object.keys(props).length === 0) delete next.props;
+      return next;
+    });
+  }
+
   // The zone the form says, on top of what was read, so fields Studio does not edit are kept.
   function zone() {
     const f = form.elements;
@@ -106,12 +140,18 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
     z.name = f.name.value.trim();
     z.header = f.header.value || null;
     z.hub_qr = f.hub_qr.value;
+    const screenName = form.querySelector("[name=screen_name]");
+    if (screenName) z.screen_name = screenName.value;
     z.sound = { enabled: f.sound_enabled.checked, device_id: f.sound_device.value || null };
     for (const r of regions()) {
       const id = r.dataset.region;
       const s = { ...(z.regions[id] || {}) };
-      if (r.querySelector("[name=layout_widgets]").checked) delete s.widgets;
-      else s.widgets = entriesOf(r);
+      const listed = entriesOf(r);
+      const entries = withWall(r, listed);
+      // A wall setting on the layout's widgets makes them the box's own, so the setting is kept.
+      const changedWall = canonical(entries) !== canonical(listed);
+      if (r.querySelector("[name=layout_widgets]").checked && !changedWall) delete s.widgets;
+      else s.widgets = entries;
       const set = (name, value, fallback) => {
         if (value === fallback && !(name in (original.regions[id] || {})))
           Reflect.deleteProperty(s, name);

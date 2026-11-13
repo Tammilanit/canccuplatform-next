@@ -225,7 +225,7 @@ async function main(): Promise<void> {
   // state, and the refresh below catches what came while no container read the bus.
   const pushStore = ValkeyStreamStore.fromUrl(config.valkeyUrl);
   new Bus(pushStore, config.module, log).subscribeTenants(
-    ["screen", "agenda", "tenants", "theming"],
+    ["screen", "agenda", "tenants", "theming", "notify", "bot"],
     (event) => {
       app.pushHub.handleEvent(event);
     },

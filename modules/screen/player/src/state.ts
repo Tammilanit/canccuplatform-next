@@ -48,7 +48,8 @@ export interface ScreenState {
   time: string;
   tenant: { id: string; name: string; time_zone: string; status: string };
   device: { id: string; name: string; mirror: boolean };
-  zone: { key: string; name: string; epoch: string } | null;
+  /** `show_name` absent (a server before the setting): the name shows, as it did before. */
+  zone: { key: string; name: string; epoch: string; show_name?: boolean } | null;
   bundle: { version: string };
   theme: {
     revision: number;

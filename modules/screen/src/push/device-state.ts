@@ -32,7 +32,12 @@ export function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
   return {
     version,
     fingerprint: composed.fingerprint,
-    zone: { key: composed.zone.key, name: composed.zone.name, epoch: composed.zone.epoch },
+    zone: {
+      key: composed.zone.key,
+      name: composed.zone.name,
+      epoch: composed.zone.epoch,
+      show_name: composed.showName,
+    },
     eventName: composed.eventName,
     theme: themeView(composed.theme),
     bundle: composed.bundle,

@@ -8,6 +8,7 @@ import type { Claim } from "./claims.js";
 import { chooseLayout, roleOf } from "./layouts.js";
 import type { Area, Layout, LayoutRegion, Props, Role, WidgetEntry } from "./layouts.js";
 import { partsOf } from "./parts.js";
+import { shuffled } from "./seeded.js";
 import type { HeaderMode, HubQrMode, Part } from "./parts.js";
 import { grown, traded } from "./showcase.js";
 import { handedOver, isWaiting } from "./waiting.js";
@@ -69,30 +70,6 @@ const clampDwell = (value: unknown): number | undefined =>
   typeof value === "number" && Number.isInteger(value)
     ? Math.min(3600, Math.max(5, value))
     : undefined;
-
-/** mulberry32 over a string hash: small, and the same in every container and every reload. */
-function seeded(seed: string): () => number {
-  let h = 1779033703;
-  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
-  let a = h >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function shuffled(order: number[], seed: string): number[] {
-  const out = [...order];
-  const random = seeded(seed);
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(random() * (i + 1));
-    [out[i], out[j]] = [out[j] as number, out[i] as number];
-  }
-  return out;
-}
 
 /**
  * The widget a region shows at `nowMs`, or null when none takes part. A state's `order` is only

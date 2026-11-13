@@ -5,6 +5,7 @@
 import qrcode from "qrcode-generator";
 import type { Props } from "./layouts.js";
 import type { PlaylistView } from "./playing.js";
+import { wallKey, wallSettings } from "./photos.js";
 
 export type View = Record<string, unknown> & { qr: Qr | null; stale: boolean; empty: boolean };
 export interface Qr {
@@ -29,8 +30,11 @@ export interface ZoneFacts {
    * (src/compose/state.ts). Absent: not read; `null`: nothing to show, or (`checkin`) the read failed.
    */
   playlist?: PlaylistView | null;
-  photo?: Record<string, unknown> | null;
+  /** Each distinct wall the zone's `photo` entries ask for, by wallKey; null: no photos to show. */
+  photos?: Record<string, Record<string, unknown> | null>;
   checkin?: CheckinCode | null;
+  /** The `stats` view-model's fields (src/compose/stats.ts); null: nothing counted yet. */
+  stats?: Record<string, unknown> | null;
   /** The theme's embeds (contracts/theming.md, Embeds). */
   embeds?: { name: string; frame_url: string }[];
 }
@@ -225,7 +229,9 @@ function fields(
     case "playlist":
       return facts.playlist == null ? null : { ...facts.playlist };
     case "photo":
-      return facts.photo ?? null;
+      return facts.photos?.[wallKey(wallSettings(props))] ?? null;
+    case "stats":
+      return facts.stats ?? null;
     case "checkin_qr":
       return facts.checkin == null ? null : checkinFields(facts.checkin, facts);
     case "embed": {

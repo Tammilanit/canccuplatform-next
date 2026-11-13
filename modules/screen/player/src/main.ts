@@ -10,6 +10,7 @@ import "./widgets.css";
 import "./rail.css";
 import "./claims.css";
 import "./layouts.css";
+import "./wall.css";
 import { audioSettled, unlockOnGesture } from "./audio.js";
 import { CheckPage } from "./check.js";
 import { OfflineStore } from "./offline.js";

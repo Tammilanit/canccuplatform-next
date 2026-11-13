@@ -270,19 +270,36 @@ async def get_code(request: Request) -> Response:
     return JSONResponse(await code_now(d, ctx, _purpose_param(request)))
 
 
-async def get_code_internal(request: Request) -> Response:
-    """For the screen module's server: a door screen is a device with no session."""
+async def _screen_read(request: Request, what: str) -> tuple[Deps, TenantContext, str]:
+    """The event and purpose of an internal read, which only the screen module may make."""
     caller = request.state.service
     if caller != "screen":
-        raise ServiceForbidden(f"module {caller} may not fetch check-in codes")
+        raise ServiceForbidden(f"module {caller} may not {what}")
     d = deps(request)
     purpose = _purpose_param(request)
     tenant_id = request.query_params.get("tenant_id", "")
     ctx = await d.tenants.by_id(tenant_id) if is_tenant_id(tenant_id) else None
     if ctx is None:
         raise KitError("no such event", status=404, code="not_found")
-    with tenant_scope(tenant_id):
+    return d, ctx, purpose
+
+
+async def get_code_internal(request: Request) -> Response:
+    """For the screen module's server: a door screen is a device with no session."""
+    d, ctx, purpose = await _screen_read(request, "fetch check-in codes")
+    with tenant_scope(ctx["tenant_id"]):
         return JSONResponse(await code_now(d, ctx, purpose))
+
+
+async def get_count_internal(request: Request) -> Response:
+    """For the screen's Right now box: a count names nobody, so it is no presence data."""
+    d, ctx, purpose = await _screen_read(request, "read check-in counts")
+    with tenant_scope(ctx["tenant_id"]):
+        async with d.db.tenant() as conn:
+            count = await conn.fetchval(
+                "SELECT count(*) FROM notify_check_ins WHERE purpose = $1", purpose
+            )
+    return JSONResponse({"purpose": purpose, "count": count})
 
 
 async def post_check_in(request: Request) -> Response:
@@ -315,4 +332,7 @@ ROUTES = [
     Route("/api/notify/check-ins", post_check_in, methods=["POST"]),
     Route("/api/notify/check-ins/mine", mine, methods=["GET"]),
 ]
-INTERNAL_ROUTES = [Route("/internal/notify/check-in/code", get_code_internal, methods=["GET"])]
+INTERNAL_ROUTES = [
+    Route("/internal/notify/check-in/code", get_code_internal, methods=["GET"]),
+    Route("/internal/notify/check-ins/count", get_count_internal, methods=["GET"]),
+]

@@ -28,6 +28,7 @@ describe("the check-in code's next change", () => {
       ctx,
       "main",
       new Set(["checkin_qr"]),
+      [],
       NOW,
     );
     expect(changesAt).toBe(Date.parse("2026-01-01T12:01:00Z"));
@@ -35,7 +36,14 @@ describe("the check-in code's next change", () => {
 
   it("is a short retry when this clock has already passed the rotation", async () => {
     for (const at of ["2026-01-01T12:00:30Z", "2026-01-01T12:00:29.500Z"]) {
-      const { changesAt } = await contentFacts(deps(at), ctx, "main", new Set(["checkin_qr"]), NOW);
+      const { changesAt } = await contentFacts(
+        deps(at),
+        ctx,
+        "main",
+        new Set(["checkin_qr"]),
+        [],
+        NOW,
+      );
       expect(changesAt).toBe(NOW + ROTATE_RETRY_MS);
     }
   });

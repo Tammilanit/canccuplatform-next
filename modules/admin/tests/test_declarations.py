@@ -46,12 +46,13 @@ def test_screen_declaration_matches_the_contract() -> None:
         "offline_after_seconds": (15, 300, 45),
         "break_min_gap_seconds": (0, 3600, 60),
         "ready_timeout_seconds": (1, 30, 8),
-        "photo_dwell_seconds": (5, 60, 8),
     }
     for key, (low, high, default) in bounded.items():
         assert (screen[key].type, screen[key].min, screen[key].max) == ("integer", low, high)
         assert screen[key].default == default
     assert (screen["web_allowlist"].type, screen["web_allowlist"].default) == ("list", [])
+    # Seconds per photo is the photo wall's own prop now (contracts/screen.md, Photos; sheet 16).
+    assert "photo_dwell_seconds" not in screen
     assert (screen["progress_bars"].type, screen["progress_bars"].default) == ("boolean", True)
     appearances = ("default", "high_contrast", "minimal", "broadcast")
     assert screen["ticker_appearance"].choices == appearances

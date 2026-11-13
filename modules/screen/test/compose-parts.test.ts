@@ -182,11 +182,11 @@ describe("hub_qr", () => {
         String(id).startsWith("venue_rail"),
       );
     expect(portrait("always")).toEqual([
-      ["venue_rail", "venue_rail", [1, 13, 3, 3], ["venue_info", "food_status"]],
-      ["venue_rail-2", null, [4, 13, 3, 3], ["qr"]],
+      ["venue_rail", "venue_rail", [1, 14, 3, 2], ["venue_info", "food_status"]],
+      ["venue_rail-2", null, [4, 14, 3, 2], ["qr"]],
     ]);
     expect(portrait("rotate")).toEqual([
-      ["venue_rail", "venue_rail", [1, 13, 6, 3], ["qr", "venue_info", "food_status"]],
+      ["venue_rail", "venue_rail", [1, 14, 6, 2], ["qr", "venue_info", "food_status"]],
     ]);
   });
 

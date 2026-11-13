@@ -85,4 +85,13 @@ describe.skipIf(!DATABASE_URL)("migrations", () => {
       admin.query("UPDATE screen_zones SET grow_for_showcase = null WHERE key = 'hall'"),
     ).rejects.toThrow();
   });
+
+  // The same zone shows what 013 gives existing zones.
+  it("gives existing zones the contract's default for `screen_name`", async () => {
+    const kept = await admin.query("SELECT key, screen_name FROM screen_zones");
+    expect(kept.rows).toEqual([{ key: "hall", screen_name: "auto" }]);
+    await expect(
+      admin.query("UPDATE screen_zones SET screen_name = 'sometimes' WHERE key = 'hall'"),
+    ).rejects.toThrow();
+  });
 });

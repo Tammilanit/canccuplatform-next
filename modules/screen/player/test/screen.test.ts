@@ -83,6 +83,28 @@ describe("the screen's layout", () => {
     expect(hero?.dataset.role).toBe("hero");
   });
 
+  // contracts/screen.md, `screen_name`: the header names the zone unless the zone hides it.
+  it("names the zone in the header beside the event, unless the state hides the name", () => {
+    const header = region("header", {
+      widgets: [widget("logo", { url: null, name: "Demo Event" })],
+    });
+    const zoneOf = (over: Partial<ScreenState>) =>
+      new Screen(host).draw(state([header], over)).querySelector(".canccu-widget__zone")
+        ?.textContent ?? null;
+    expect(zoneOf({})).toBe("Main hall");
+    const zone = { key: "main", name: "Main hall", epoch: "e1" };
+    expect(zoneOf({ zone: { ...zone, show_name: true } })).toBe("Main hall");
+    expect(zoneOf({ zone: { ...zone, show_name: false } })).toBeNull();
+    // The idle logo of an empty header follows the same setting.
+    const idle = region("header", { order: [], widgets: [] });
+    const idleZone = (show: boolean) =>
+      new Screen(host)
+        .draw(state([idle], { zone: { ...zone, show_name: show } }))
+        .querySelector(".canccu-widget__zone")?.textContent ?? null;
+    expect(idleZone(true)).toBe("Main hall");
+    expect(idleZone(false)).toBeNull();
+  });
+
   it("letterboxes a portrait layout to its own shape", () => {
     const screen = new Screen(host);
     const root = screen.draw(

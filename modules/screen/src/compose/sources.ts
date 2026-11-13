@@ -51,6 +51,8 @@ export interface Sources {
   themePreview(tenantId: string, key: string): Promise<DraftTheme | "gone" | null>;
   event(host: string): Promise<EventPublic | null>;
   checkinCode(tenantId: string, purpose: string): Promise<CheckinCode | null>;
+  /** How many members have checked in for `purpose` (contracts/notify.md). */
+  checkinCount(tenantId: string, purpose: string): Promise<number | null>;
 }
 
 export interface SourceUrls {
@@ -239,6 +241,16 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       const fields = ["purpose", "code", "url", "valid_until", "rotates_at"] as const;
       return body === null || fields.some((f) => typeof body[f] !== "string") ? null : body;
     },
+    checkinCount: async (tenantId, purpose) => {
+      const query = `tenant_id=${encodeURIComponent(tenantId)}&purpose=${encodeURIComponent(purpose)}`;
+      const body = (await read(
+        urls.notify,
+        `/internal/notify/check-ins/count?${query}`,
+        service.headers("notify"),
+      )) as { count?: unknown } | null;
+      const n = body?.count;
+      return typeof n === "number" && Number.isInteger(n) && n >= 0 ? n : null;
+    },
     event: async (host) => {
       const body = (await read(urls.tenants, "/api/tenants/current", {
         host,
@@ -258,4 +270,5 @@ export const noSources: Sources = {
   themePreview: () => Promise.resolve(null),
   event: () => Promise.resolve(null),
   checkinCode: () => Promise.resolve(null),
+  checkinCount: () => Promise.resolve(null),
 };

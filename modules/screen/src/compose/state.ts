@@ -17,7 +17,7 @@ import { tickerNow } from "../ticker/store.js";
 import { buildRegions } from "./build.js";
 import { placeClaims } from "./claims.js";
 import type { Override, Placement } from "./claims.js";
-import { contentFacts } from "./content.js";
+import { contentFacts, entriesOf, photoProps } from "./content.js";
 import { displayOf } from "./display.js";
 import type { Display } from "./display.js";
 import { themeLayouts } from "./layouts.js";
@@ -53,6 +53,8 @@ export interface ZoneRow {
   regions: Record<string, Record<string, unknown>>;
   header: HeaderMode | null;
   hub_qr: HubQrMode;
+  /** Absent in a preview stored before the setting: `auto`. */
+  screen_name?: "auto" | "always" | "never";
   hero_region: string | null;
   grow_for_showcase: boolean;
   sound: { enabled: boolean; device_id: string | null };
@@ -73,7 +75,8 @@ export const NO_THEME: ThemeNow = {
 
 async function zoneRow(c: SqlClient, key: string): Promise<ZoneRow | null> {
   const { rows } = await c.query(
-    `SELECT key, name, layout_id, regions, header, hub_qr, hero_region, grow_for_showcase, sound, epoch
+    `SELECT key, name, layout_id, regions, header, hub_qr, screen_name, hero_region, grow_for_showcase,
+       sound, epoch
      FROM screen_zones WHERE key = $1`,
     [key],
   );
@@ -98,6 +101,24 @@ export async function placement(
     return { zoneKey: row.target_zone ?? null, mirror: true, mirrorOf: row.mirror_device_id };
   }
   return { zoneKey: row.zone_key ?? null, mirror: false, mirrorOf: null };
+}
+
+/**
+ * Whether the header names the zone (contracts/screen.md, `screen_name`): with `auto`, while the
+ * event has two or more screens, counted as its devices assigned to a zone or mirroring one; a
+ * session's mirror and a preview are no devices, so they never count.
+ */
+export async function showsName(
+  c: SqlClient,
+  zone: Pick<ZoneRow, "screen_name">,
+): Promise<boolean> {
+  if (zone.screen_name === "always") return true;
+  if (zone.screen_name === "never") return false;
+  const { rows } = await c.query(
+    `SELECT count(*)::int AS n FROM screen_assignments
+     WHERE zone_key IS NOT NULL OR mirror_device_id IS NOT NULL OR mirror_zone_key IS NOT NULL`,
+  );
+  return ((rows[0] as { n: number } | undefined)?.n ?? 0) >= 2;
 }
 
 async function windowLayoutId(
@@ -131,6 +152,8 @@ export interface ZoneComposed {
   /** Fingerprint of the zone's inputs, the same for every screen of the zone (see zoneFingerprint). */
   fingerprint: string;
   zone: ZoneRow;
+  /** Whether the header names the zone (`zone.show_name`). */
+  showName: boolean;
   theme: ThemeNow;
   /** The pinned bundle version, or null for the platform's. */
   bundle: string | null;
@@ -180,6 +203,7 @@ export async function composeZone(
       ticker: await tickerNow(c, ctx.time_zone, real.getTime()),
       claims: await loadOverrides(c, zone.key, real.getTime()),
       pin: await readPin(c),
+      showName: await showsName(c, zone),
     };
   });
   if (read === null) return null;
@@ -229,10 +253,13 @@ export async function composeZone(
   };
   let views = { landscape: build(false), portrait: build(true) };
   // The content widgets' sources are read only for a zone that shows them, so their changes
-  // (every frame, photo and code) never move another zone's version.
-  const content = withContent
-    ? await contentFacts(deps, ctx, zoneKey, typesOf(views), real.getTime())
-    : { facts: {}, changesAt: null };
+  // (every frame, photo and code) never move another zone's version. The hub's view keeps only
+  // `stats` of them (NOW_TYPES).
+  const entries = entriesOf(Object.values(views), read.zone.regions);
+  const used = typesOf(views);
+  for (const e of entries) used.add(e.widget);
+  if (!withContent) for (const type of used) if (type !== "stats") used.delete(type);
+  const content = await contentFacts(deps, ctx, zoneKey, used, photoProps(entries), real.getTime());
   if (Object.keys(content.facts).length > 0) {
     Object.assign(facts, content.facts);
     views = { landscape: build(false), portrait: build(true) };
@@ -250,8 +277,10 @@ export async function composeZone(
       display,
       claims: read.claims,
       bundle: read.pin.bundle_version,
+      showName: read.showName,
     }),
     zone: read.zone,
+    showName: read.showName,
     bundle: read.pin.bundle_version,
     theme: theme ?? NO_THEME,
     eventName,
@@ -275,6 +304,8 @@ export interface FingerprintInput {
   claims?: readonly Override[];
   /** The pinned bundle: a pin change moves the version, so streams send the new `bundle`. */
   bundle?: string | null;
+  /** Moves with the event's count of screens, which no other input carries. */
+  showName?: boolean;
 }
 
 /**
@@ -293,6 +324,7 @@ export function zoneFingerprint(input: FingerprintInput): string {
     display: input.display ?? NO_DISPLAY,
     claims: input.claims ?? [],
     bundle: input.bundle ?? null,
+    show_name: input.showName ?? true,
   };
   return createHash("sha256").update(JSON.stringify(stable)).digest("base64url");
 }

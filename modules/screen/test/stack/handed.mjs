@@ -30,14 +30,30 @@ export const CLAIM_OF = {
   "claim-takeover": ["full", claim("full", "announcement", { title: "Please leave the hall", body: "Follow the exit signs.", level: "emergency" })],
 }; // prettier-ignore
 
-/** A photo in the hero beside the countdown, so the hero rotates (mockup 03's café). */
-export function withPhoto(s) {
+const TILES = [
+  [picture("#1e3a8a", "#6d28d9"), "Setup day"],
+  [picture("#065f46", "#0e7490"), "Cable art"],
+  [picture("#7c2d12", "#b45309"), "Midnight pizza"],
+  [picture("#4c1d95", "#be185d"), "The finals"],
+  [picture("#134e4a", "#4d7c0f"), "Team photo"],
+].map(([url, caption]) => ({
+  url,
+  caption,
+  author_name: "Player One",
+  posted_at: "2026-03-14T17:00:00Z",
+}));
+
+/**
+ * The photo wall in the hero beside the countdown, so the hero rotates (change 6, sheets 13 and 16):
+ * five tiles, the lead large; `featured` is a new photo popping over the whole box.
+ */
+export function withPhoto(s, featured = false) {
   const photo = {
     widget: "photo",
     template: null,
     dwell_seconds: 3600,
     stale_after_seconds: null,
-    view: { url: picture("#1e3a8a", "#6d28d9"), caption: 'New photo · "Setup day"', author_name: "Player One", qr: null, stale: false, empty: false },
+    view: { ...TILES[0], featured, tiles: TILES, qr: null, stale: false, empty: false },
   }; // prettier-ignore
   return {
     ...s,
@@ -69,7 +85,12 @@ export function withHeroItemOnly(s) {
 
 /** Sample statistics as the bot's data will bring them (#389), with sheet 10's trend arrows. */
 const SAMPLE = {
-  stats: { members: 1240, online: 218, in_voice: 38, members_trend: "flat", online_trend: "up", in_voice_trend: "up" },
+  stats: {
+    members: 1240, online: 218, in_voice: 38, checked_in: 164,
+    members_trend: "flat", online_trend: "up", in_voice_trend: "flat",
+    online_peak: { count: 231, at: "2026-03-14T23:30:00Z", time_text: "01:30" },
+    in_voice_peak: { count: 64, at: "2026-03-14T21:00:00Z", time_text: "23:00" },
+  },
   now_playing: {
     available: true,
     games: [
@@ -80,6 +101,20 @@ const SAMPLE = {
   },
 }; // prettier-ignore
 const STATISTICS = ["online", "voice", "top_games", "right_now"];
+
+/** The zone's `stats` regions given the sample counts: Portrait's Right now, Ambient's line. */
+export function withCounts(s) {
+  const counted = (w) =>
+    w.widget !== "stats"
+      ? w
+      : { ...w, view: { ...SAMPLE.stats, qr: null, stale: false, empty: false } };
+  return { ...s, regions: s.regions.map((r) => ({ ...r, widgets: r.widgets.map(counted) })) };
+}
+
+/** One screen at the event: the header leaves the zone's name out (`screen_name` auto). */
+export function withOneScreen(s) {
+  return { ...s, zone: { ...s.zone, show_name: false } };
+}
 
 /**
  * Dashboard with its statistics: the server leaves the four boxes out while their source is not
