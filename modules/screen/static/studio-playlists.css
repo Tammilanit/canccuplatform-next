@@ -1,8 +1,14 @@
 /* The Content page's side column (static/studio-playlists.js; mockup 10): the playlist builder,
-   Push now and the pushes playing now, beside the library from 1280 px, below it on narrower
-   screens. Imported by studio-content.css. */
+   Push now and the pushes playing now, beside the library, or below it where there is no room.
+   Imported by studio-content.css. */
 
+/* The shell holds its content to 64rem whatever the window, so the column follows the room the
+   page has, not the window: beside the library once there are 52rem, as mockup 10 sets them. */
 .canccu-studio-content {
+  container: canccu-content / inline-size;
+}
+
+.canccu-studio-content__grid {
   display: grid;
   gap: 1.5rem;
   align-items: start;
@@ -18,24 +24,13 @@
   gap: 1rem;
 }
 
-/* Beside the library, the library keeps a card a little narrower than when it has the width. */
-@media (min-width: 1280px) {
-  .canccu-studio-content {
-    grid-template-columns: minmax(0, 1fr) 26rem;
+@container canccu-content (min-width: 52rem) {
+  .canccu-studio-content__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 42%);
   }
 
   .canccu-studio-content__main .canccu-studio-library {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1600px) {
-  .canccu-studio-content {
-    grid-template-columns: minmax(0, 1fr) 34rem;
-  }
-
-  .canccu-studio-content__main .canccu-studio-library {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -100,6 +95,10 @@
   gap: 0.75rem;
 }
 
+.canccu-studio-builder h3 {
+  margin: 0.25rem 0 0;
+}
+
 .canccu-studio-builder__settings {
   display: flex;
   flex-wrap: wrap;
@@ -132,13 +131,28 @@
 
 .canccu-studio-item {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
-  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.25rem 0.5rem;
   align-items: center;
   padding: 0.5rem 0.625rem;
   border: var(--canccu-border-width) solid var(--canccu-color-border);
   border-radius: var(--canccu-radius);
   background: var(--canccu-color-surface);
+}
+
+/* An editor's row: the handle, the title, its length and tools; its fields and any refusal below. */
+.canccu-studio-item--edit {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.canccu-studio-item--edit > .canccu-studio-item__fields,
+.canccu-studio-item--edit > .canccu-studio-refused {
+  grid-column: 2 / -1;
+}
+
+.canccu-studio-item > .canccu-studio-refused {
+  grid-column: 1 / -1;
+  margin: 0;
 }
 
 .canccu-studio-item[draggable="true"] {
@@ -151,16 +165,14 @@
 }
 
 .canccu-studio-item__main {
-  display: grid;
-  gap: 0.25rem;
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .canccu-studio-item__title {
-  overflow: hidden;
   font-weight: 600;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 .canccu-studio-item__fields {
@@ -271,6 +283,8 @@
 
 .canccu-input.canccu-studio-push__at {
   width: auto;
+  min-height: 1.75rem;
+  padding-block: 0;
 }
 
 .canccu-studio-push > .canccu-button {

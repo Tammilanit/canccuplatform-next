@@ -239,7 +239,12 @@ describe.skipIf(!DATABASE_URL)("studio playlists and push", () => {
   });
 
   it("serves the builder's scripts and gives them every string behind a message key", async () => {
-    for (const name of ["studio-playlists.js", "studio-playlist-builder.js"]) {
+    for (const name of [
+      "studio-playlists.js",
+      "studio-playlist-editor.js",
+      "studio-playlist-item.js",
+      "studio-playlist-builder.js",
+    ]) {
       const res = await call(h, "GET", `/admin/screen/static/${name}`, { host: "alpha.test" });
       expect(res.statusCode, name).toBe(200);
       expect(res.headers["content-type"]).toContain("text/javascript");

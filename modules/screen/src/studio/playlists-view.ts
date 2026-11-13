@@ -101,11 +101,17 @@ function pushForm(c: ViewContext, d: PlaylistsData, zones: readonly ZoneSummary[
       ><input type="checkbox" name="zone" ${attrs({ value, checked: all, "data-all": all })} />
       ${label}</label
     >`;
-  const preset = (value: string, label: string, checked = false) =>
+  const preset = (value: string, label: string, checked = false, extra: Html | string = "") =>
     html`<label class="canccu-studio-chip"
       ><input type="radio" name="for" ${attrs({ value, checked, "data-preset": value })} />
-      ${label}</label
+      ${label}${extra}</label
     >`;
+  const at = html`<input
+    class="canccu-input canccu-studio-push__at"
+    type="time"
+    name="at"
+    aria-label="${t("push.at_label")}"
+  />`;
   return html`<form
     class="canccu-studio-push"
     data-push-form
@@ -132,13 +138,7 @@ function pushForm(c: ViewContext, d: PlaylistsData, zones: readonly ZoneSummary[
       <legend class="canccu-label">${t("push.until")}</legend>
       <div class="canccu-cluster">
         ${preset("15", t("push.15"))}${preset("60", t("push.60"), true)}${preset("day", t("push.day"))}
-        ${preset("at", t("push.at"))}
-        <input
-          class="canccu-input canccu-studio-push__at"
-          type="time"
-          name="at"
-          aria-label="${t("push.at_label")}"
-        />
+        ${preset("at", t("push.at"), false, at)}
       </div>
     </fieldset>
     <button class="canccu-button canccu-button--primary" type="submit">${t("push.submit")}</button>
@@ -194,7 +194,7 @@ function playlistsView(c: ViewContext, d: PlaylistsData, zones: readonly ZoneSum
     </div>`;
 }
 
-/** Mockup 10: the library beside the builder and Push now; stacked on narrower screens. */
+/** Mockup 10: the library beside the builder and Push now, or above them where there is no room. */
 export const contentPage = (
   c: ViewContext,
   content: ContentData,
@@ -202,6 +202,8 @@ export const contentPage = (
   zones: readonly ZoneSummary[],
 ): Html =>
   html`<div class="canccu-studio-content">
-    <div class="canccu-studio-content__main">${contentView(c, content)}</div>
-    <aside class="canccu-studio-content__side">${playlistsView(c, d, zones)}</aside>
+    <div class="canccu-studio-content__grid">
+      <div class="canccu-studio-content__main">${contentView(c, content)}</div>
+      <aside class="canccu-studio-content__side">${playlistsView(c, d, zones)}</aside>
+    </div>
   </div>`;

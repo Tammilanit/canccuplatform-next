@@ -62,6 +62,8 @@ export default tseslint.config(
       "static/studio-replace-plan.js",
       "static/studio-playlists.js",
       "static/studio-playlist-builder.js",
+      "static/studio-playlist-editor.js",
+      "static/studio-playlist-item.js",
     ],
     languageOptions: { sourceType: "module" },
   },
