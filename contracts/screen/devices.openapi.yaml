@@ -810,6 +810,61 @@
         $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
       "404":
         $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+/api/screen/motion:
+  get:
+    tags: [zones]
+    operationId: getMotion
+    summary: The event's motion settings and each zone's level now and next
+    description: Right `screen.devices.read`. The Motion card of Screen studio (contracts/screen.md, Motion and burn-in drift).
+    responses:
+      "200":
+        description: The settings and the zones.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/Motion"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+  put:
+    tags: [zones]
+    operationId: saveMotion
+    summary: Set the event's motion level and Follow the day
+    description: |
+      Right `screen.zones.write`. Written as Screen's own settings through admin's internal settings write, with the
+      person as actor. 409 `version_conflict` for a stale `settings_version`, 409 `event_archived`. Audited.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [settings_version, motion_level, follow_the_day]
+            properties:
+              settings_version:
+                type: integer
+                minimum: 0
+              motion_level:
+                $ref: "../screen.openapi.yaml#/components/schemas/MotionLevel"
+              follow_the_day:
+                type: boolean
+    responses:
+      "200":
+        description: The settings and the zones, as `GET` answers them.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/Motion"
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
 /api/screen/pin:
   get:
     tags: [pin]

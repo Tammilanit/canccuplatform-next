@@ -41,8 +41,9 @@ These are the contract every surface keeps and every theme may rely on (theming 
 | `fonts` | `body`, `heading`, `display` (new: big screen text, defaults to `heading`), `mono` | `--canccu-font-<name>`: the family, quoted unless it is a generic family (`system-ui`, `ui-monospace`, `sans-serif`, `serif`, `monospace` stay unquoted), then a generic fallback the platform appends (`system-ui, sans-serif`; for `mono` `ui-monospace, monospace`) |
 | `sizes` (new) | `radius` (default `0.5rem`), `border_width` (`1px`), `gap` (`1rem`), `safe_inset` (screen edge margin, `48px`) | `--canccu-<name>` (`--canccu-radius`, `--canccu-border-width`, …) |
 | `motion` (new, one value) | `moderate` (default), `calm` or `none` | None: it is not a CSS value. Screens get it as `ScreenState.display.motion` ([screen.md](screen.md#motion-and-burn-in-drift)) |
+| `motion_style` (new) | `speed` (`slower`, `normal` (default), `faster`), `intensity` (`subtle`, `normal` (default), `strong`), `spotlight` (`glow_and_trace` (default), `glow`, `trace`), `pack` (`standard` (default), `broadcast`, `arcade`) | `--canccu-motion-speed`: a factor on every effect's duration (`slower` 1.4, `normal` 1, `faster` 0.75); `--canccu-motion-intensity`: a factor on its glow and scale (`subtle` 0.6, `normal` 1, `strong` 1.4). Screens get the four as `ScreenState.display.motion_style`; see Motion vocabulary |
 
-**`motion`** says how much the screen moves: `moderate` allows region transitions and the ticker's fades, `calm` keeps only slow fades, `none` swaps at once. Screen lowers it to `calm` during the event's quiet hours, and the player to `none` under `prefers-reduced-motion: reduce`; nothing raises it. It is not styling, so it may be set in either mode: setting it never makes a theme advanced, and Back to simple keeps it.
+**`motion`** caps how much the screen moves: `moderate` caps nothing, `calm` keeps every zone at most at the energy level `calm`, `none` keeps it still. The level itself is the event's and the zone's (`ScreenState.display.motion_level`, [screen.md](screen.md#motion-and-burn-in-drift)); Screen lowers it during the event's quiet hours, and the player to `none` under `prefers-reduced-motion: reduce`. It is not styling, so it may be set in either mode: setting it never makes a theme advanced, and Back to simple keeps it. The same holds for `motion_style`.
 
 **Classes** (BEM; the `canccu-` prefix is reserved for the platform, [0017](../docs/decisions/0017-naming.md)):
 
@@ -62,8 +63,30 @@ These are the contract every surface keeps and every theme may rely on (theming 
 | `canccu-widget` | `--<widget type>`, `__title`, `__body`, `__footer` | A widget in a region, on the screen or the hub |
 | `canccu-embed` | — | The frame of an embed |
 | `canccu-is-active`, `canccu-is-empty`, `canccu-is-stale`, `canccu-is-offline` | — | State: the widget now shown in a rotation; a widget with nothing to show; data older than its widget allows; a screen without uplink |
+| `canccu-motion` | `--none`, `--calm`, `--lively`, `--party`; `canccu-motion-pack--standard`, `--broadcast`, `--arcade` | `<body>` of a screen: the energy level and motion pack it draws now (Motion vocabulary) |
+| `canccu-fx` | `--roll`, `--flap`, `--sweep`, `--pop`, `--tilt` | An element while it plays that effect (Motion vocabulary) |
+| `canccu-spotlight` | `--outline`, `--glow`, `--trace`, `--pop`, `--burst` | The box that holds the screen's spotlight, with the parts it draws at the level |
 
 Templates and a theme's CSS may add classes of their own only with the prefix `t-` (`t-clock`), so no event class collides with a platform class now or later.
+
+## Motion vocabulary
+How a screen moves is theme data: the theme picks the feel (`motion_style`), the event and the zone pick the energy level ([screen.md](screen.md#motion-and-burn-in-drift)), and the player draws the effects below with CSS animation (design guideline sheet 11 and amendment 1). The level changes how a screen moves, never what it says or its pace: rotations keep the zone's dwell at every level.
+
+| Effect | Kind | When | Levels | Lasts | The theme sets |
+|---|---|---|---|---|---|
+| Number roll (`canccu-fx--roll`) | Change | A number changes: counts, hours, places | calm, lively, party | 0.7 s | speed |
+| Split-flap (`canccu-fx--flap`) | Change | A time changes: a delay, a new start | calm, lively, party | 0.6 s | speed |
+| Sweep (`canccu-fx--sweep`) | Spotlight | A box's content changed: a light sweeps across it once | lively, party | 1.1 s | speed, intensity |
+| Pop, tilt (`canccu-fx--pop`, `--tilt`) | Spotlight | A box's content changed: a small move of the whole box, after the sweep | party | 0.45 s | speed, intensity |
+| The countdown's spotlight (`canccu-spotlight`) | Spotlight | A countdown is 5 minutes or less from its start, until the start | none and calm: a steady outline (`--outline`); lively: the theme's `spotlight` (`--glow`, a glow pulse, 1.6 s a turn, and/or `--trace`, a tracing border, 2.4 s a turn); party: the same, plus a pop and a ring burst at the 5-minute mark (`--pop`, `--burst`) | while it holds | spotlight, speed, intensity |
+| Background drift | Ambient | Always: the stage's glows drift | none: still; calm: 120 s a turn; lively: 45 s; party: 20 s | always | colours |
+
+- **`speed`** scales each effect's duration by `--canccu-motion-speed`, never a rotation's dwell or the background drift. **`intensity`** scales its glow and scale by `--canccu-motion-intensity`. **`spotlight`** picks the lively and party spotlight: `glow_and_trace` both, `glow` or `trace` one; at none and calm the spotlight is always the steady outline.
+- **`pack`** gives the same effects another personality: `standard` soft fades and slides; `broadcast` slabs, skewed tabs and hard wipes; `arcade` chunky cards and stepped motion. A pack changes the shapes and easing of the effects, never which effects play at a level or how long they hold.
+- **The 3-per-second rule:** nothing on a screen flashes, and nothing blinks or pulses more than three times a second (WCAG 2.3.1); the fastest repeating effect is the glow pulse, once every 1.6 s at `normal` speed and once every 1.2 s at `faster`. A theme's CSS keeps the same rule.
+- **One spotlight at a time:** a screen holds at most one spotlight, and starts at most one every 10 seconds; another waits its turn.
+- **Cheap to run:** effects move only `opacity` and `transform` (and the split-flap's one stepped reveal), with no live blur or filters, so a kiosk PC runs them all day.
+- **The reduced-motion rule:** a device whose browser asks for reduced motion draws the level `none`: values swap without motion, nothing drifts, and the countdown's spotlight is the steady outline. The ticker then steps line by line.
 
 ## The theme package
 A folder (or a zip of it) with `theme.yaml` at its root ([theme.schema.json](theme.schema.json)). It is the format of an upload, a git sync and an export, so a theme moves between events and into an event's repo unchanged. Demo packages: [events/demo/themes/](../events/demo/themes/).
@@ -95,7 +118,7 @@ An organiser uploads a logo and picks two colours; the module generates the whol
 ## Advanced mode
 The same package edited directly: tokens, CSS on the stable classes, fonts, images, templates and embeds, with the same draft → preview → publish and rollback.
 
-- Any token change (except `motion`, see Stable classes and custom properties), CSS, font, template or embed sets `mode: advanced`. Saving `brand` from the simple editor keeps `advanced` (see Brand kit).
+- Any token change (except `motion` and `motion_style`, see Stable classes and custom properties), CSS, font, template or embed sets `mode: advanced`. Saving `brand` from the simple editor keeps `advanced` (see Brand kit).
 - **Back to simple** only by the explicit switch `POST /api/theming/draft/mode` with `mode: simple` and `remove_advanced: true`: the client has told the person that the CSS, fonts, templates and embeds will be removed. The switch removes them and the font and size tokens, keeps images and layouts, regenerates the colours from `brand` (409 `brand_missing` without it) and answers with the draft and the removed paths. Removing embeds needs `theming.embeds.write` and is audited. So a round trip through the editors never mixes the modes; `mode_mismatch` arises only from an uploaded or synced package that declares `simple` with advanced files.
 - Contrast failures are warnings (`contrast_low`) in advanced mode, never blocking, except that admin and sign-in pages then use the platform default colours (What applies where).
 - **Small text** is a warning too (`text_small`), never blocking: text on the screen surface under 2.5 % of the screen height, 27 px at 1080p, is hard to read across a hall. Theming checks the CSS without rendering it: each `font-size` (and `font` shorthand) whose selector can apply on the screen surface, resolved for a 1920×1080 screen: `px` as it is; `rem` against the root size the theme sets, or the platform's; `vh` and `vmin` against 1080 px, `vw` and `vmax` against 1920 px; `%` and `em` against the platform's inherited size; `calc()` and `clamp()` at their minimum. A value it cannot resolve, such as one with `var()`, is skipped. `path` is the CSS file and `message` names the selector. Like `contrast_low`, it is listed among the draft's `problems`, so the publish page shows it before publishing. CI's rendered readability check catches what a static check cannot.

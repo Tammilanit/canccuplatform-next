@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Screen API
-  version: 1.6.0
+  version: 1.7.0
   summary: Devices, zones, the composed screen state and its push channel, content, scheduling and the PPTX and PDF render job.
   description: |
     Machine-readable part of the screen contract. Prose, widgets, claims, the Pulse options and events: contracts/screen.md.
@@ -108,6 +108,8 @@ paths:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1zones~1{zone_key}~1stream"
   /api/screen/now:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1now"
+  /api/screen/motion:
+    $ref: "screen/devices.openapi.yaml#/~1api~1screen~1motion"
   /api/screen/pin:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1pin"
   /api/screen/assets:
@@ -723,6 +725,14 @@ components:
           description: |
             While the hero region shows a showcase (a claim in it, or a surging `hot_game`), it grows to two by two of its
             size where the layout leaves room (contracts/screen.md, The hero role and the showcase).
+        motion_level:
+          oneOf:
+            - $ref: "#/components/schemas/MotionLevel"
+            - type: "null"
+          default: null
+          description: |
+            A level the zone keeps all day; null takes the event's `motion_level`, moved by the day's phase while
+            `follow_the_day` is on (contracts/screen.md, Motion and burn-in drift).
         sound:
           type: object
           properties:
@@ -1123,9 +1133,15 @@ components:
           description: How the zone's screens move (contracts/screen.md, Motion and burn-in drift).
           required: [motion, drift]
           properties:
+            motion_level:
+              $ref: "#/components/schemas/MotionLevel"
+            motion_style:
+              $ref: "#/components/schemas/MotionStyle"
             motion:
               type: string
-              description: The theme's `motion` token, lowered to `calm` while a public quiet-hours item of the zone runs.
+              description: |
+                Derived from `motion_level` for players that predate it: `lively` and `party` are `moderate`, `calm` is
+                `calm`, `none` is `none`.
               enum: [moderate, calm, none]
             drift:
               type: boolean
@@ -1147,6 +1163,79 @@ components:
             theme:
               type: boolean
               description: True while the device draws the theme's draft; false once the draft key no longer resolves.
+    MotionLevel:
+      type: string
+      description: The energy level (contracts/screen.md, Motion and burn-in drift).
+      enum: [none, calm, lively, party]
+    MotionPhase:
+      type: string
+      description: The day's phase from the agenda (contracts/screen.md, Motion and burn-in drift).
+      enum: [quiet_hours, wind_down, doors, peak, build_up]
+    MotionStyle:
+      type: object
+      description: The theme's `motion_style` token with defaults filled in (contracts/theming.md, Motion vocabulary).
+      required: [speed, intensity, spotlight, pack]
+      properties:
+        speed:
+          type: string
+          enum: [slower, normal, faster]
+        intensity:
+          type: string
+          enum: [subtle, normal, strong]
+        spotlight:
+          type: string
+          enum: [glow_and_trace, glow, trace]
+        pack:
+          type: string
+          enum: [standard, broadcast, arcade]
+    Motion:
+      type: object
+      required: [settings_version, motion_level, follow_the_day, theme_motion, zones]
+      properties:
+        settings_version:
+          type: integer
+          minimum: 0
+        motion_level:
+          $ref: "#/components/schemas/MotionLevel"
+        follow_the_day:
+          type: boolean
+        theme_motion:
+          type: string
+          description: The theme's `motion` token, which caps every zone's level.
+          enum: [moderate, calm, none]
+        zones:
+          type: array
+          items:
+            type: object
+            required: [key, name, motion_level, level, phase, next]
+            properties:
+              key:
+                $ref: "#/components/schemas/ZoneKey"
+              name:
+                type: string
+              motion_level:
+                description: The zone's pin, or null.
+                oneOf:
+                  - $ref: "#/components/schemas/MotionLevel"
+                  - type: "null"
+              level:
+                $ref: "#/components/schemas/MotionLevel"
+              phase:
+                $ref: "#/components/schemas/MotionPhase"
+              next:
+                description: The next change of the zone's level within 24 hours, or null.
+                oneOf:
+                  - type: object
+                    required: [level, phase, at]
+                    properties:
+                      level:
+                        $ref: "#/components/schemas/MotionLevel"
+                      phase:
+                        $ref: "#/components/schemas/MotionPhase"
+                      at:
+                        type: string
+                        format: date-time
+                  - type: "null"
     PreviewInput:
       type: object
       required: [minutes]
