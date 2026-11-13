@@ -243,12 +243,14 @@ export async function editDraft(
 }
 
 /**
- * Removes the draft and what refers to it. The files stay: a revision may hold the same bytes, so
+ * Removes the draft and what refers to it, its preview keys too. The files stay: a revision may hold the same bytes, so
  * the caller lets go of those nothing else holds (stored.ts, `writingFiles`), or publish has just
  * copied them all to the revision.
  */
 export async function removeDraft(c: SqlClient): Promise<void> {
   await c.query(`DELETE FROM theming_drafts`);
+  // A preview key dies with its draft (publish or discard): a screen then draws what is in effect.
+  await c.query(`DELETE FROM theming_preview_keys`);
   await removeDraftPaths(c);
   await c.query(`DELETE FROM theming_embed_files WHERE owner = 'draft'`);
 }

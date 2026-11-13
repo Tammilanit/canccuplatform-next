@@ -234,3 +234,52 @@ describe("a cold boot", () => {
     expect(shown()).toBe("unknown");
   });
 });
+
+describe("a preview on a screen (#444)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ now: T0 });
+    document.body.replaceChildren();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const boot = async (state: ReturnType<typeof screenState>, caches: FakeCaches) => {
+    const api = new FakeApi().on("GET /api/screen/device/state", () => json(200, state));
+    const player = new Player({
+      fetch: api.fetch,
+      nav: fakeNav(),
+      root: document.body,
+      bundle: "1.0.0",
+      offline: store(caches),
+    });
+    await player.start();
+    return player;
+  };
+
+  it("draws its mark last on the page, with the preview time, and never keeps its state", async () => {
+    const caches = new FakeCaches();
+    const preview = { until: null, at: "2026-01-02T19:30:00Z", theme: true };
+    const player = await boot(screenState({ preview }), caches);
+    const mark = document.body.lastElementChild;
+    expect(mark?.className).toBe("canccu-preview-mark");
+    expect(mark?.textContent).toBe("Preview · Fri 19:30");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    // A reboot without the server must show the live zone, never a draft someone previewed.
+    expect(await store(caches).load()).toBeNull();
+    player.live.stop();
+  });
+
+  it("takes the mark off when the preview ends", async () => {
+    const player = await boot(
+      screenState({ preview: { until: null, at: null, theme: false } }),
+      new FakeCaches(),
+    );
+    expect(document.querySelector(".canccu-preview-mark")?.textContent).toBe("Preview");
+    player.settle({ status: 200, body: screenState({ preview: null }) } as Parameters<
+      typeof player.settle
+    >[0]);
+    expect(document.querySelector(".canccu-preview-mark")).toBeNull();
+    player.live.stop();
+  });
+});

@@ -167,6 +167,7 @@ describe.skipIf(browser === undefined)(
           '<main class="canccu-main">Content</main>' +
           '<p class="canccu-pairing-code">K7Q2-9XW4</p>' +
           '<p class="canccu-offline-marker">Offline</p>' +
+          '<p class="canccu-preview-mark">Preview</p>' +
           '<a class="canccu-privacy-link" href="/privacy">Privacy</a></body></html>',
       );
     }

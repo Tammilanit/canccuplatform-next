@@ -154,9 +154,17 @@ def document(
     css: Iterable[str] = (),
     surface: Literal["admin", "hub"] = "admin",
 ) -> str:
-    """The HTML document around a shell or front page; `css` are the stylesheets, ui.css first."""
+    """The HTML document around a shell or front page; `css` are the stylesheets, ui.css first.
+
+    The event's look follows ui.css from theming's stable address (contracts/theming.md, The
+    current tokens, for pages): organiser pages take the admin tokens, which fall back to the
+    platform colours when the theme fails the contrast rules; the hub and check-in the theme's own.
+    A hostname with no event answers 404 there and the page keeps ui.css's defaults."""
     full = f"{title} · {event.name}" if event and event.name else title
-    links = "".join(f'<link rel="stylesheet" href="{esc(href)}">' for href in css)
+    tokens = "admin-tokens.css" if surface == "admin" else "tokens.css"
+    hrefs = list(css)
+    hrefs[1:1] = [f"/theming/current/{tokens}"]
+    links = "".join(f'<link rel="stylesheet" href="{esc(href)}">' for href in hrefs)
     return (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'

@@ -29,6 +29,8 @@ import { readPin } from "../pins/store.js";
 import { themeFor } from "../pins/look.js";
 import type { Sources, ThemeNow } from "./sources.js";
 import type { ZoneFacts } from "./widgets.js";
+import { agendaAt, lookFor } from "../preview/look.js";
+import type { DraftUse, PreviewLook } from "../preview/look.js";
 
 export interface ComposeDeps {
   db: Db;
@@ -82,7 +84,7 @@ async function zoneRow(c: SqlClient, key: string): Promise<ZoneRow | null> {
 export async function placement(
   c: SqlClient,
   deviceId: string,
-): Promise<{ zoneKey: string | null; mirror: boolean }> {
+): Promise<{ zoneKey: string | null; mirror: boolean; mirrorOf: string | null }> {
   const { rows } = await c.query(
     `SELECT a.zone_key, a.mirror_device_id, a.mirror_zone_key, t.zone_key AS target_zone
      FROM screen_assignments a LEFT JOIN screen_assignments t ON t.device_id = a.mirror_device_id
@@ -90,10 +92,12 @@ export async function placement(
     [deviceId],
   );
   const row = rows[0] as Record<string, string | null> | undefined;
-  if (row === undefined) return { zoneKey: null, mirror: false };
-  if (row.mirror_zone_key) return { zoneKey: row.mirror_zone_key, mirror: true };
-  if (row.mirror_device_id) return { zoneKey: row.target_zone ?? null, mirror: true };
-  return { zoneKey: row.zone_key ?? null, mirror: false };
+  if (row === undefined) return { zoneKey: null, mirror: false, mirrorOf: null };
+  if (row.mirror_zone_key) return { zoneKey: row.mirror_zone_key, mirror: true, mirrorOf: null };
+  if (row.mirror_device_id) {
+    return { zoneKey: row.target_zone ?? null, mirror: true, mirrorOf: row.mirror_device_id };
+  }
+  return { zoneKey: row.zone_key ?? null, mirror: false, mirrorOf: null };
 }
 
 async function windowLayoutId(
@@ -137,6 +141,8 @@ export interface ZoneComposed {
   display: Display;
   /** When a content widget next changes by itself (epoch ms), or null. */
   nextChangeAt: number | null;
+  /** Whether a preview's draft was drawn (PreviewLook.themeKey); `none` without one. */
+  draft: DraftUse;
 }
 
 /** The widget types a zone's regions show, in either orientation. */
@@ -160,26 +166,32 @@ export async function composeZone(
   proposed?: ZoneRow,
   /** False for the hub's view, which drops every content widget anyway (NOW_TYPES). */
   withContent = true,
+  preview: PreviewLook = {},
 ): Promise<ZoneComposed | null> {
-  const at = new Date((deps.now ?? Date.now)());
+  const real = new Date((deps.now ?? Date.now)());
+  // Claims, pushes, the ticker and the live sources stay as they are now: nobody knows them ahead.
+  const at = preview.at == null ? real : new Date(preview.at);
   const read = await deps.db.tenant(async (c) => {
     const zone = proposed ?? (await zoneRow(c, zoneKey));
     if (zone === null) return null;
     return {
       zone,
       windowLayout: await windowLayoutId(c, zone.key, ctx.time_zone, at),
-      ticker: await tickerNow(c, ctx.time_zone, at.getTime()),
-      claims: await loadOverrides(c, zone.key, at.getTime()),
+      ticker: await tickerNow(c, ctx.time_zone, real.getTime()),
+      claims: await loadOverrides(c, zone.key, real.getTime()),
       pin: await readPin(c),
     };
   });
   if (read === null) return null;
-  const [theme, event, agenda, venue] = await Promise.all([
+  const [live, event, agenda, venue] = await Promise.all([
     themeFor(deps.sources, ctx.tenant_id, read.pin),
     deps.sources.event(host),
-    deps.sources.agendaNow(ctx.tenant_id, zoneKey),
+    preview.at == null
+      ? deps.sources.agendaNow(ctx.tenant_id, zoneKey)
+      : agendaAt(deps.sources, ctx.tenant_id, zoneKey, at.getTime()),
     deps.sources.venueInfo(ctx.tenant_id),
   ]);
+  const { theme, draft } = await lookFor(deps.sources, ctx.tenant_id, live, preview.themeKey);
   const eventName = event?.name ?? ctx.primary_hostname ?? "";
   const facts: ZoneFacts = {
     now: at,
@@ -219,7 +231,7 @@ export async function composeZone(
   // The content widgets' sources are read only for a zone that shows them, so their changes
   // (every frame, photo and code) never move another zone's version.
   const content = withContent
-    ? await contentFacts(deps, ctx, zoneKey, typesOf(views), at.getTime())
+    ? await contentFacts(deps, ctx, zoneKey, typesOf(views), real.getTime())
     : { facts: {}, changesAt: null };
   if (Object.keys(content.facts).length > 0) {
     Object.assign(facts, content.facts);
@@ -247,6 +259,7 @@ export async function composeZone(
     ticker: { ...read.ticker, appearance },
     display,
     nextChangeAt: content.changesAt,
+    draft,
   };
 }
 

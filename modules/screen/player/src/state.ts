@@ -61,6 +61,8 @@ export interface ScreenState {
   regions: Region[];
   ticker: unknown;
   display?: { motion: string; drift: boolean };
+  /** A preview on a screen runs on the device (contracts/screen.md, Zones and assignments). */
+  preview?: { until: string | null; at: string | null; theme: boolean } | null;
   [field: string]: unknown;
 }
 

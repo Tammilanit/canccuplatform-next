@@ -67,6 +67,7 @@ describe.skipIf(!DATABASE_URL)("the Studio previews", () => {
       const theme = current.json<{ tokens_css_url: string }>();
       expect(links(res.body)).toEqual([
         "/theming/studio/static/ui.css",
+        "/theming/current/tokens.css",
         "/theming/studio/static/preview.css",
         theme.tokens_css_url,
       ]);
@@ -79,6 +80,7 @@ describe.skipIf(!DATABASE_URL)("the Studio previews", () => {
       const res = await as(`/theming/studio/preview/screen?canccu_theme=draft&v=${v}`);
       expect(links(res.body)).toEqual([
         "/theming/studio/static/ui.css",
+        "/theming/current/tokens.css",
         "/theming/studio/static/preview.css",
         `/theming/studio/draft/tokens.css?v=${v}`,
         `/theming/studio/draft/theme.css?v=${v}`,
@@ -96,14 +98,17 @@ describe.skipIf(!DATABASE_URL)("the Studio previews", () => {
       expect(res.body).toContain("canccu-surface--hub");
     });
 
-    it("draw the organiser pages as they are: the shell in the platform's look, no theme", async () => {
+    it("draw the organiser pages as they are: the shell with the draft's admin tokens", async () => {
       const draft = await terminal();
       const v = draft.draft_version;
       const res = await as(`/theming/studio/preview/admin?canccu_theme=draft&v=${v}`);
-      // No organiser page links the event's tokens yet (UX audit C3): the preview shows that.
+      // Every organiser page links the event's admin tokens (#432), so the preview does, the
+      // draft's after the current ones.
       expect(links(res.body)).toEqual([
         "/theming/studio/static/ui.css",
+        "/theming/current/admin-tokens.css",
         "/theming/studio/static/preview.css",
+        `/theming/studio/draft/admin-tokens.css?v=${v}`,
       ]);
       expect(res.body).toContain("canccu-surface--admin");
       expect(res.body).toContain('class="canccu-header"');

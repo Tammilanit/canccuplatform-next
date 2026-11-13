@@ -25,6 +25,9 @@ export interface ThemeNow {
   embeds?: { name: string; frame_url: string }[];
 }
 
+/** The draft as theming answers a preview key: a theme that is no revision. */
+export type DraftTheme = Omit<ThemeNow, "revision"> & { revision: null };
+
 export interface EventPublic {
   name: string;
 }
@@ -41,6 +44,11 @@ export interface Sources {
    * theming says the revision is not kept (404): a pin is cleared for that, never for a failed read.
    */
   themeRevision(tenantId: string, revision: number): Promise<ThemeNow | "gone" | null>;
+  /**
+   * The event's draft behind theming's preview key, for a preview on a screen (contracts/screen.md,
+   * Zones and assignments). Its `revision` is null; `gone` once theming no longer knows the key.
+   */
+  themePreview(tenantId: string, key: string): Promise<DraftTheme | "gone" | null>;
   event(host: string): Promise<EventPublic | null>;
   checkinCode(tenantId: string, purpose: string): Promise<CheckinCode | null>;
 }
@@ -117,8 +125,10 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
     path: string,
     headers: Record<string, string>,
     gone404: boolean,
+    /** What the warning names instead of the path, for a path that holds a secret. */
+    label?: string,
   ): Promise<unknown> => {
-    const route = path.split("?")[0] ?? path;
+    const route = label ?? path.split("?")[0] ?? path;
     try {
       const { status, body } = await getJson(`${base.replace(/\/+$/, "")}${path}`, headers);
       if (status >= 200 && status < 300) return body;
@@ -207,6 +217,18 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       if (body === "gone") return body;
       return body === null || body.revision !== revision ? null : body;
     },
+    themePreview: async (tenantId, key) => {
+      const body = (await readOr(
+        urls.theming,
+        `/internal/theming/previews/${encodeURIComponent(key)}?tenant_id=${encodeURIComponent(tenantId)}`,
+        service.headers("theming"),
+        true,
+        // The key opens the draft: it never goes into a log.
+        "/internal/theming/previews/{preview_key}",
+      )) as DraftTheme | "gone" | null;
+      if (body === "gone") return body;
+      return body === null || typeof body.tokens_css_url !== "string" ? null : body;
+    },
     checkinCode: async (tenantId, purpose) => {
       const query = `tenant_id=${encodeURIComponent(tenantId)}&purpose=${encodeURIComponent(purpose)}`;
       const body = (await read(
@@ -233,6 +255,7 @@ export const noSources: Sources = {
   venueInfo: () => Promise.resolve(null),
   theme: () => Promise.resolve(null),
   themeRevision: () => Promise.resolve(null),
+  themePreview: () => Promise.resolve(null),
   event: () => Promise.resolve(null),
   checkinCode: () => Promise.resolve(null),
 };

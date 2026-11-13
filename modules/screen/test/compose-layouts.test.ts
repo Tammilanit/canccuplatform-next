@@ -169,22 +169,38 @@ describe("the hero role", () => {
 });
 
 describe("the showcase", () => {
-  it("grows Dashboard's hero to 8×10 and stacks the five other boxes beside it, 4×2 each", () => {
-    expect(areas(build({ regions: DRAWN }, { grow: true }))).toMatchObject({
+  it("grows Dashboard's hero to 8×10, keeps the rail and one box beside it and pauses the rest", () => {
+    const grown = areas(build({ regions: DRAWN }, { grow: true }));
+    expect(grown).toMatchObject({
       hero: at(1, 2, 8, 10),
-      online: at(9, 2, 4, 2),
-      voice: at(9, 4, 4, 2),
-      top_games: at(9, 6, 4, 2),
-      right_now: at(9, 8, 4, 2),
-      rail: at(9, 10, 4, 2),
+      online: at(9, 2, 4, 5),
+      rail: at(9, 7, 4, 5),
       header: at(1, 1, 6, 1),
       ticker: at(1, 12, 12, 1),
     });
+    for (const id of ["voice", "top_games", "right_now"]) expect(grown).not.toHaveProperty(id);
+    // The paused boxes come back at their own areas when the showcase ends.
+    expect(areas(build({ regions: DRAWN }))).toMatchObject({
+      voice: at(9, 2, 4, 5),
+      top_games: at(1, 7, 4, 5),
+      right_now: at(5, 7, 4, 5),
+    });
+  });
+
+  it("keeps the first two boxes in layout order when none is a rail", () => {
+    const regions = { ...DRAWN, rail: { role: "venue_rail" } };
+    const grown = areas(build({ regions }, { grow: true }));
+    expect(grown).toMatchObject({ online: at(9, 2, 4, 5), voice: at(9, 7, 4, 5) });
+    for (const id of ["rail", "top_games", "right_now"]) expect(grown).not.toHaveProperty(id);
   });
 
   it("grows a hero in the band's right half against its right edge", () => {
     const grown = areas(build({ heroRegion: "voice", regions: DRAWN }, { grow: true }));
-    expect(grown).toMatchObject({ hero: at(5, 2, 8, 10), online: at(1, 2, 4, 2) });
+    expect(grown).toMatchObject({
+      hero: at(5, 2, 8, 10),
+      online: at(1, 2, 4, 5),
+      rail: at(1, 7, 4, 5),
+    });
   });
 
   it("grows no other built-in: their heroes leave no column free", () => {

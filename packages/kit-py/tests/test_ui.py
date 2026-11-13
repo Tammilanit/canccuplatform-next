@@ -181,6 +181,19 @@ def test_event_info_from_the_tenants_api() -> None:
     assert EventInfo.from_api({"id": "demo", "status": "draft"}).name is None
 
 
+def test_pages_link_the_event_s_tokens_after_ui_css() -> None:
+    # contracts/theming.md, The current tokens, for pages (#432).
+    page = shell_page("Settings", "<p>x</p>", css=["/ui/ui.css", "/admin/static/admin.css"])
+    assert (
+        '<link rel="stylesheet" href="/ui/ui.css">'
+        '<link rel="stylesheet" href="/theming/current/admin-tokens.css">'
+        '<link rel="stylesheet" href="/admin/static/admin.css">'
+    ) in page
+    hub = front_page("Check in", "", css=["/ui/ui.css"], surface="hub")
+    assert '<link rel="stylesheet" href="/theming/current/tokens.css">' in hub
+    assert "admin-tokens.css" not in hub
+
+
 def test_an_error_page_marks_no_menu_item() -> None:
     """An error page is nowhere in the menu (sheet 8): on a phone no bar item is current."""
     doc = shell_page(

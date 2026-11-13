@@ -1459,12 +1459,14 @@
     }
   }
 
-  /* Safety (src/safety.ts): the pairing code, the offline marker and the privacy link. Every
-     declaration is `!important` in this first layer, so no theme layer hides, moves, covers or
-     restyles them: `all: initial` first resets whatever a theme could set, then the look is set
-     again here, in fixed colours and fonts, since the tokens and fonts are the theme's. */
+  /* Safety (src/safety.ts): the pairing code, the offline marker, the preview mark and the
+     privacy link. Every declaration is `!important` in this first layer, so no theme layer hides,
+     moves, covers or restyles them: `all: initial` first resets whatever a theme could set, then
+     the look is set again here, in fixed colours and fonts, since the tokens and fonts are the
+     theme's. */
   .canccu-pairing-code,
   .canccu-offline-marker,
+  .canccu-preview-mark,
   .canccu-privacy-link {
     all: initial !important;
     display: block !important;
@@ -1496,6 +1498,14 @@
     right: max(8px, 1.5vmin) !important;
     font-size: max(16px, 3.9vmin) !important;
   }
+  /* A preview on a screen (contracts/screen.md): nobody takes it for the live screen. Top left,
+     as the offline marker holds the top right, in the safety elements' white on black. */
+  .canccu-preview-mark {
+    top: max(8px, 1.5vmin) !important;
+    left: max(8px, 1.5vmin) !important;
+    font-size: max(16px, 3.9vmin) !important;
+    font-weight: 700 !important;
+  }
   /* A small tag inside a 44 px target (sheet 7, Q6): the transparent border is the rest of the
      target, so the tag stays small but a thumb still finds it. Most of the box stays black. */
   .canccu-privacy-link {
@@ -1515,6 +1525,8 @@
   .canccu-pairing-code::after,
   .canccu-offline-marker::before,
   .canccu-offline-marker::after,
+  .canccu-preview-mark::before,
+  .canccu-preview-mark::after,
   .canccu-privacy-link::before,
   .canccu-privacy-link::after {
     content: none !important;
@@ -1523,6 +1535,8 @@
   .canccu-pairing-code::first-letter,
   .canccu-offline-marker::first-line,
   .canccu-offline-marker::first-letter,
+  .canccu-preview-mark::first-line,
+  .canccu-preview-mark::first-letter,
   .canccu-privacy-link::first-line,
   .canccu-privacy-link::first-letter {
     all: inherit !important;

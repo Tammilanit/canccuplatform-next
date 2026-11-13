@@ -295,7 +295,9 @@ describe.skipIf(browser === undefined)("the Studio in Chromium", { timeout: 30_0
     expect(await page.inputValue('select[name="body"]')).toBe("Inter");
     await act(page, '[data-action="font-system"][data-token="body"]');
     expect((await draft()).problems).toEqual([]);
-    expect(await page.textContent(".canccu-notice__title")).toBe("Ready to publish");
+    // Not the notice of a preview on a screen, which waits hidden above (#444).
+    const title = ".canccu-notice__title:not([data-screen-preview-title])";
+    expect(await page.textContent(title)).toBe("Ready to publish");
     expect(await page.inputValue('select[name="body"]')).toBe("");
   });
 
