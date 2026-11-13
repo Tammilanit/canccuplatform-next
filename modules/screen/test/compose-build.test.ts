@@ -314,6 +314,8 @@ describe("review fixes", () => {
         regions: { hero: { rotation: "shuffle" } },
         header: null,
         hub_qr: "always",
+        hero_region: null,
+        grow_for_showcase: true,
         sound: { enabled: true, device_id: null },
         epoch: "e1",
       },
@@ -335,6 +337,8 @@ describe("review fixes", () => {
       regions: {},
       header: null,
       hub_qr: "always" as const,
+      hero_region: null,
+      grow_for_showcase: true,
       sound: { enabled: true, device_id: null },
       epoch: "e1",
     };

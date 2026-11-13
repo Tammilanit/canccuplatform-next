@@ -45,6 +45,8 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
         regions: { hero: { idle: "next" } },
         header: null,
         hub_qr: "always",
+        hero_region: null,
+        grow_for_showcase: true,
         sound: { enabled: true, device_id: null },
         revision: 1,
       },
@@ -81,6 +83,8 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
       ...zone,
       header: null,
       hub_qr: "always",
+      hero_region: null,
+      grow_for_showcase: true,
       sound: { enabled: true, device_id: null },
       revision: 1,
     });
@@ -164,6 +168,21 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
     await call(h, "DELETE", "/api/screen/zones/lobby", admin());
   });
 
+  it("keeps `hero_region`, also an id no layout has, and `grow_for_showcase`", async () => {
+    const zone = { key: "hall", name: "Hall", layout_id: "dashboard", hero_region: "online" };
+    const added = await call(h, "POST", "/api/screen/zones", { ...admin(), body: zone });
+    expect(added.json()).toMatchObject({ hero_region: "online", grow_for_showcase: true });
+    const saved = await call(h, "PUT", "/api/screen/zones/hall", {
+      ...admin(),
+      body: { ...zone, hero_region: "gone", grow_for_showcase: false, revision: 1 },
+    });
+    expect(saved.json()).toMatchObject({ hero_region: "gone", grow_for_showcase: false });
+    expect(events(h, "screen.zone.saved").at(-1)).toMatchObject({
+      changed: ["hero_region", "grow_for_showcase"],
+    });
+    await call(h, "DELETE", "/api/screen/zones/hall", admin());
+  });
+
   it("gives a zone made again under the same key a new epoch", async () => {
     const body = { key: "stage", name: "Stage" };
     await call(h, "POST", "/api/screen/zones", { ...admin(), body });
@@ -207,6 +226,10 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
       { key: "ok", name: "x", header: true },
       { key: "ok", name: "x", hub_qr: null },
       { key: "ok", name: "x", hub_qr: "never" },
+      { key: "ok", name: "x", hero_region: "Online" },
+      { key: "ok", name: "x", hero_region: 3 },
+      { key: "ok", name: "x", grow_for_showcase: "yes" },
+      { key: "ok", name: "x", grow_for_showcase: null },
       { key: "ok", name: "x", sound: { enabled: "no" } },
       { key: "ok", name: "x", sound: { device_id: "dv_nobody" } },
     ];

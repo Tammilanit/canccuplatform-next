@@ -13,21 +13,6 @@
     justify-content: safe center;
   }
 
-  /*
-   * A portrait rail is as wide as the screen and six rows high, far more than its rows need
-   * (sheet 9's portrait): its card ends where its content does, right under the hero. The
-   * region's area is the contract's (contracts/screen.md, Built-in layouts), so the card, not the
-   * region, shrinks; past the region's height it clips as before. The idle logo's card keeps the
-   * region's height: shrunk to its content it would be one line under the hero.
-   */
-  @container (aspect-ratio < 1) {
-    .canccu-region[data-role="rail"] > .canccu-widget:not(.canccu-widget--logo) {
-      bottom: auto;
-      max-height: 100%;
-      justify-content: flex-start;
-    }
-  }
-
   /* The list in full colour: `__body` alone is a muted paragraph's (screen.css). */
   .canccu-widget--agenda_now .canccu-widget__body,
   .canccu-widget--venue_info .canccu-widget__body {

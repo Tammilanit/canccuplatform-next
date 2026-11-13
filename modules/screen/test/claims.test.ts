@@ -18,7 +18,7 @@ interface Claim {
 }
 interface State {
   state_version: number;
-  regions: { id: string; claim: Claim | null }[];
+  regions: { id: string; area: { columns: number; rows: number }; claim: Claim | null }[];
   unplaced: string[];
   hidden: string[];
   sound: { sounded_claims: string[] };
@@ -234,6 +234,33 @@ describe.skipIf(!DATABASE_URL)("claims", () => {
     expect((await beat(["ov_10"])).statusCode).toBe(200);
     expect((await beat([7])).statusCode).toBe(400);
     expect((await state()).sound.sounded_claims).toEqual([]);
+  });
+
+  // contracts/screen.md, The hero role and the showcase (#404).
+  it("grows Dashboard's hero while a claim plays in it, unless the zone says not to", async () => {
+    const save = async (fields: Record<string, unknown>) => {
+      const zone = (await call(h, "GET", "/api/screen/zones/main", { session: "admin" })).json<
+        Record<string, unknown>
+      >();
+      const res = await call(h, "PUT", "/api/screen/zones/main", {
+        session: "admin",
+        body: { ...zone, ...fields },
+      });
+      expect(res.statusCode).toBe(200);
+    };
+    const size = (s: State, id: string) => {
+      const area = s.regions.find((r) => r.id === id)?.area;
+      return `${String(area?.columns)}×${String(area?.rows)}`;
+    };
+    await save({ layout_id: "dashboard" });
+    expect(size(await state(), "hero")).toBe("4×5");
+    await start(override("ov_10", { regions: ["hero"] }));
+    const grown = await state();
+    expect(claims(grown)).toEqual({ hero: "ov_10" });
+    expect([size(grown, "hero"), size(grown, "online")]).toEqual(["8×10", "4×2"]);
+    await save({ layout_id: "dashboard", grow_for_showcase: false });
+    expect(size(await state(), "hero")).toBe("4×5");
+    await save({ layout_id: null, grow_for_showcase: true });
   });
 
   it("shows the hub the zone's active claims", async () => {

@@ -3,7 +3,9 @@
  * where its item starts, with its delay, and the rail never repeats the item the hero shows. The
  * countdown's view-model has only `label`, `target_at` and `ends_text` (contracts/screen.md,
  * Widgets), so its place and delay come from the rail's row of the same item: both views come
- * from the same agenda read, so a row with the countdown's name and start is its item.
+ * from the same agenda read, so a row with the countdown's name and start is its item. The items
+ * after next (`later`) follow the rail's rows, so a rail that gives the hero's item away shows the
+ * item after it as its Next (#397).
  */
 import { clockText } from "./frames.js";
 import type { Region } from "./state.js";
@@ -38,10 +40,9 @@ export function agendaOf(r: Region): Agenda | null {
 
 type Row = Record<string, unknown>;
 
-const rowsOf = (view: View): Row[] =>
-  Array.isArray(view.items)
-    ? view.items.filter((r): r is Row => typeof r === "object" && r !== null)
-    : [];
+const rowsIn = (list: unknown): Row[] =>
+  Array.isArray(list) ? list.filter((r): r is Row => typeof r === "object" && r !== null) : [];
+const rowsOf = (view: View): Row[] => rowsIn(view.items);
 
 const isItem = (row: Row, countdown: View): boolean =>
   typeof countdown.label === "string" &&
@@ -93,10 +94,14 @@ export function joinHeroAndRail<P extends Part>(
   const hero = shown.find(
     (p) => p.role === "hero" && p.type === "countdown" && !isClaim(p) && p.view.empty !== true,
   );
+  // The run of show without the hero's item, and what comes after next behind it: the look shows
+  // the first rows (rail.css), so the rail's Next is the first item the hero does not show.
   const without = (view: View): View => {
-    if (hero === undefined) return view;
-    const items = rowsOf(view).filter((r) => !isItem(r, hero.view));
-    if (items.length === rowsOf(view).length) return view;
+    const later = rowsIn(view.later);
+    const kept = rowsOf(view).filter((r) => hero === undefined || !isItem(r, hero.view));
+    if (kept.length === rowsOf(view).length && later.length === 0) return view;
+    const ids = new Set(kept.map((r) => r.id));
+    const items = [...kept, ...later.filter((r) => !ids.has(r.id))];
     // Nothing left: `empty` hands the region to its idle choice (screen.ts), never an empty card.
     return items.length === 0 ? { ...view, items, empty: true } : { ...view, items };
   };

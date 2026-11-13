@@ -23,6 +23,7 @@ import type { Display } from "./display.js";
 import { themeLayouts } from "./layouts.js";
 import type { Layout } from "./layouts.js";
 import { loadOverrides } from "./overrides.js";
+import { isShowcase } from "./showcase.js";
 import type { HeaderMode, HubQrMode } from "./parts.js";
 import type { Sources, ThemeNow } from "./sources.js";
 import type { ZoneFacts } from "./widgets.js";
@@ -48,6 +49,8 @@ export interface ZoneRow {
   regions: Record<string, Record<string, unknown>>;
   header: HeaderMode | null;
   hub_qr: HubQrMode;
+  hero_region: string | null;
+  grow_for_showcase: boolean;
   sound: { enabled: boolean; device_id: string | null };
   epoch: string;
 }
@@ -66,7 +69,8 @@ export const NO_THEME: ThemeNow = {
 
 async function zoneRow(c: SqlClient, key: string): Promise<ZoneRow | null> {
   const { rows } = await c.query(
-    "SELECT key, name, layout_id, regions, header, hub_qr, sound, epoch FROM screen_zones WHERE key = $1",
+    `SELECT key, name, layout_id, regions, header, hub_qr, hero_region, grow_for_showcase, sound, epoch
+     FROM screen_zones WHERE key = $1`,
     [key],
   );
   return (rows[0] as ZoneRow | undefined) ?? null;
@@ -184,20 +188,27 @@ export async function composeZone(
     embeds: theme?.embeds ?? [],
   };
   const build = (portrait: boolean): ZoneView => {
-    const { layout, regions } = buildRegions({
-      zone: {
-        key: read.zone.key,
-        layoutId: read.zone.layout_id,
-        regions: read.zone.regions,
-        header: read.zone.header,
-        hubQr: read.zone.hub_qr,
-      },
-      windowLayoutId: read.windowLayout,
-      themeLayouts: themeLayouts(theme?.layouts),
-      portrait,
-      facts,
-    });
-    return { layout, ...placeClaims(regions, read.claims) };
+    const once = (grow: boolean): ZoneView => {
+      const { layout, regions } = buildRegions({
+        zone: {
+          key: read.zone.key,
+          layoutId: read.zone.layout_id,
+          regions: read.zone.regions,
+          header: read.zone.header,
+          hubQr: read.zone.hub_qr,
+          heroRegion: read.zone.hero_region,
+        },
+        windowLayoutId: read.windowLayout,
+        themeLayouts: themeLayouts(theme?.layouts),
+        portrait,
+        facts,
+        grow,
+      });
+      return { layout, ...placeClaims(regions, read.claims) };
+    };
+    const plain = once(false);
+    // A claim's place follows roles alone, so the grown build places every claim as this one did.
+    return read.zone.grow_for_showcase && isShowcase(plain.regions) ? once(true) : plain;
   };
   let views = { landscape: build(false), portrait: build(true) };
   // The content widgets' sources are read only for a zone that shows them, so their changes
