@@ -56,6 +56,8 @@ export interface AgendaItem {
   /** Only in the module read of all items (`GET /internal/agenda/items`). */
   status?: string;
   zone?: string | null;
+  /** The planned end, before any delay (contracts/agenda.md); a moved end differs from it. */
+  planned_ends_at?: string | null;
 }
 export interface AgendaNow {
   current: AgendaItem[];

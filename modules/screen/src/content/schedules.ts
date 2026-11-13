@@ -20,12 +20,16 @@ import {
   versionConflict,
 } from "../http.js";
 import { projectBreaks } from "../playback/break-projection.js";
+import type { BreakInterval } from "../playback/break-projection.js";
+import type { BreakInput } from "../playback/breaks.js";
 import { NEXT_CHANGE_HORIZON_MS, simulate } from "../schedule/simulate.js";
 import type { Simulation } from "../schedule/simulate.js";
 import { readAssets } from "../assets/reader.js";
 import { breakInputFor, loadContent } from "../tick/content.js";
+import type { EventContent } from "../tick/content.js";
 import { breakGapSeconds, loadZoneState } from "../tick/run.js";
 import { EMPTY_ZONE } from "../tick/zone.js";
+import type { ZoneState } from "../tick/zone.js";
 import { zoneExistsHere } from "../zones.js";
 import { calendarRange, readCalendar } from "./calendar.js";
 import { scheduleInput, type ScheduleInput } from "./input.js";
@@ -256,6 +260,25 @@ export async function simulateZone(
   atMs: number,
   nowMs: number,
 ): Promise<Simulation> {
+  return (await simulateRead(deps, timeZone, zone, atMs, nowMs)).simulation;
+}
+
+/** The answer with the read it came from, so the page can say what each region shows then. */
+export interface SimulateRead {
+  simulation: Simulation;
+  content: EventContent;
+  state: ZoneState;
+  breaks: readonly BreakInterval[];
+  breakInput: BreakInput;
+}
+
+export async function simulateRead(
+  deps: Pick<ScheduleDeps, "db" | "settings">,
+  timeZone: string,
+  zone: string | undefined,
+  atMs: number,
+  nowMs: number,
+): Promise<SimulateRead> {
   await deps.settings.ensure();
   const gap = breakGapSeconds(deps.settings);
   const [content, state] = await deps.db.tenant(
@@ -281,7 +304,7 @@ export async function simulateZone(
           new Date(nowMs),
           new Date(atMs + NEXT_CHANGE_HORIZON_MS),
         );
-  return simulate(
+  const simulation = simulate(
     {
       windows: content.windows,
       timeZone,
@@ -293,4 +316,5 @@ export async function simulateZone(
     },
     new Date(atMs),
   );
+  return { simulation, content, state, breaks, breakInput };
 }

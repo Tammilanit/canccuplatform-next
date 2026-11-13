@@ -51,8 +51,14 @@ async function openEdit(page) {
   await page.waitForTimeout(300);
 }
 
-/** "What plays at…" asked for the time it shows, now, and answered. */
-async function askNow(page) {
+/**
+ * "What plays at…" asked about the main hall at 19:20 on the day it offers (today), as mockup 09
+ * asks: the welcome loop plays over the evening sponsors, and the menu bound to the evening's
+ * dinner has just ended with it, moved by its delay (scheduleFixture).
+ */
+async function askEvening(page) {
+  await page.locator("#canccu-sched-at-zone").selectOption("main");
+  await page.locator("#canccu-sched-at-time").fill(EVENING);
   await page.locator("#canccu-sched-at button[type=submit]").click();
   await page.locator("#canccu-sched-at h3").waitFor();
 }
@@ -79,17 +85,21 @@ export const SCHEDULE_PAGES = [
     PHONE,
     { ready: openEdit, fullPage: false },
   ],
-  ["screen-schedule-at", "/admin/screen/schedule", WIDE, { ready: askNow }],
-  ["screen-schedule-at-phone", "/admin/screen/schedule", PHONE, { ready: askNow }],
+  ["screen-schedule-at", "/admin/screen/schedule", WIDE, { ready: askEvening }],
+  ["screen-schedule-at-phone", "/admin/screen/schedule", PHONE, { ready: askEvening }],
 ];
 
+/** When "what plays at…" asks: in the evening, while two windows overlap. */
+const EVENING = "19:20";
+
 /**
- * Two playlists, a break playlist and windows to draw: every day in the main zone and the
- * entrance, an evening window that loses to it, and one bound to the first run-of-show item that
- * has an end. Empty playlists are enough: the calendar shows windows, not what they play.
+ * Playlists, a break playlist and windows to draw: every day in the main zone and the entrance,
+ * an evening window that loses to it, and one bound to the evening's dinner, which ran 15 minutes
+ * over (the demo event's zone is UTC, so today's 18:00 is UTC's). The welcome loop and the break
+ * play the library's assets, so "what plays at…" can name the item and the next break.
  */
-async function scheduleFixture(demo) {
-  const made = { playlists: [], windows: [] };
+async function scheduleFixture(demo, assets) {
+  const made = { playlists: [], windows: [], items: [] };
   const create = async (path, body, what) =>
     expect(await demo.call("POST", path, { body }), 201, what).body.id;
   const playlist = async (body) => {
@@ -103,13 +113,21 @@ async function scheduleFixture(demo) {
   };
   const window = async (body) =>
     made.windows.push(await create("/api/screen/schedules", body, "a window"));
-  const loop = await playlist({ name: "Welcome loop", type: "regular", priority: 0 });
+  const shown = (ids) => ids.map((asset_id) => ({ asset_id, duration_seconds: 20 }));
+  const loop = await playlist({
+    name: "Welcome loop",
+    type: "regular",
+    priority: 0,
+    // The trailer, the poster and the deck; the chime is sound only.
+    items: shown([assets[0], assets[2], assets[3]]),
+  });
   const evening = await playlist({ name: "Evening sponsors", type: "regular", priority: 0 });
   const menu = await playlist({ name: "Menu", type: "regular", priority: 0 });
   await playlist({
     name: "Partners loop",
     type: "break",
     priority: 0,
+    items: shown(assets.slice(2, 3)),
     break: {
       period_seconds: 3600,
       break_seconds: 45,
@@ -142,15 +160,37 @@ async function scheduleFixture(demo) {
     start_minute: 420,
     end_minute: 1440,
   });
-  const { items } = expect(await demo.call("GET", "/api/agenda/items"), 200, "the agenda").body;
-  const item = items.find((i) => i.ends_at !== null && i.status === "scheduled");
-  if (item !== undefined) {
-    await window({ zone_key: "main", playlist_id: menu, priority: 50, agenda_item_id: item.id });
-  }
+  const today = new Date().toISOString().slice(0, 10);
+  const dinner = expect(
+    await demo.call("POST", "/api/agenda/items", {
+      body: {
+        title: "Evening dinner",
+        kind: "meal",
+        starts_at: `${today}T18:00:00Z`,
+        ends_at: `${today}T19:00:00Z`,
+        location: "Café",
+        visibility: "public",
+      },
+    }),
+    201,
+    "adding the evening's dinner",
+  ).body;
+  made.items.push(dinner.id);
+  // A late run may find the dinner over; the window and its calendar block still stand.
+  const delayed = await demo.call("POST", `/api/agenda/items/${dinner.id}/delay`, {
+    body: { revision: dinner.revision, minutes: 15 },
+  });
+  if (delayed.status !== 200) console.warn(`delaying the dinner answered ${delayed.status}`);
+  await window({ zone_key: "main", playlist_id: menu, priority: 50, agenda_item_id: dinner.id });
   return made;
 }
 
 async function removeSchedule(demo, made) {
+  for (const id of made.items) {
+    const { body } = await demo.call("GET", `/api/agenda/items/${id}`).catch(() => ({}));
+    if (body?.revision === undefined) continue;
+    await demo.call("DELETE", `/api/agenda/items/${id}?revision=${body.revision}`).catch(() => undefined); // prettier-ignore
+  }
   for (const id of made.windows)
     await demo.call("DELETE", `/api/screen/schedules/${id}`).catch(() => undefined);
   for (const id of made.playlists)
@@ -225,7 +265,7 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
     for (const [name, path, viewport] of STUDIO_PAGES) {
       await shot(name, path, viewport, { ready: studioReady });
     }
-    made = await scheduleFixture(demo);
+    made = await scheduleFixture(demo, assets);
     for (const [name, path, viewport, o] of SCHEDULE_PAGES) await shot(name, path, viewport, o);
   } finally {
     if (made !== null) await removeSchedule(demo, made);

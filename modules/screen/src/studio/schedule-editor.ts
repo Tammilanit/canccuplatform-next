@@ -53,10 +53,14 @@ export function editorView(c: ViewContext, d: EditorData): EditorView {
     });
     return [html`<option${attrs({ value: i.id })}>${label}</option>`];
   });
+  // Seven toggles in one row, as the shell's segmented chips: checkboxes under the chips, so the
+  // form, the keyboard and a screen reader still treat them as the days they are.
   const days = [1, 2, 3, 4, 5, 6, 7].map(
     (n) =>
-      html`<label class="canccu-studio-pick"
-        ><input${attrs({ type: "checkbox", name: "days", value: n, checked: n === d.isoDay })} />${t(`window.day.${n}` as MessageKey)}</label
+      html`<label class="canccu-studio-day"
+        ><input${attrs({ type: "checkbox", name: "days", value: n, checked: n === d.isoDay })} /><span
+          >${t(`window.day.${n}` as MessageKey)}</span
+        ></label
       >`,
   );
   const time = (name: string, label: MessageKey, value: string) =>
@@ -83,93 +87,103 @@ export function editorView(c: ViewContext, d: EditorData): EditorView {
   >
     <span class="canccu-i canccu-i--plus" aria-hidden="true"></span>${t("window.add")}
   </button>`;
+  // One markup for both widths: a dialog on a desk, a bottom sheet on a phone (studio.css), with
+  // the head and the actions outside the scrolling form so Close, Save and Cancel stay in reach.
   const dialog = html`<dialog
-      class="canccu-studio-dialog"
+      class="canccu-studio-dialog canccu-studio-sheet"
       id="canccu-sched-editor"
       aria-labelledby="canccu-sched-editor-title"
       data-zone="${d.zone}"
     >
-      <form class="canccu-form" method="dialog" novalidate data-window-form>
-        <h2
-          class="canccu-card__title"
-          id="canccu-sched-editor-title"
-          data-new="${t("window.new_title")}"
-          data-edit="${t("window.edit")}"
-        >
-          ${t("window.new_title")}
-        </h2>
-        <input type="hidden" name="id" value="" /><input type="hidden" name="revision" value="" />
-        ${field({
-          name: "zone_key",
-          label: t("window.zone"),
-          value: d.zone,
-          options: d.zones.map((z) => ({ value: z.key, label: z.name })),
-        })}
-        ${field({
-          name: "playlist_id",
-          label: t("window.playlist"),
-          options: d.playlists.map((p) => ({ value: p.id, label: p.name })),
-        })}
-        ${field({
-          name: "priority",
-          label: t("window.priority"),
-          type: "number",
-          value: 10,
-          hint: t("window.priority_hint"),
-        })}
-        ${field({
-          name: "layout_id",
-          label: t("window.layout"),
-          value: "",
-          options: [
-            { value: "", label: t("window.layout_zone") },
-            ...d.layouts.map((l) => ({ value: l.id, label: l.name })),
-          ],
-        })}
-        <fieldset class="canccu-studio-fieldset">
-          <legend class="canccu-field__label">${t("window.kind")}</legend>
-          ${kind("weekly", "window.kind_weekly")}${kind("bound", "window.kind_bound")}
-        </fieldset>
-        <fieldset class="canccu-studio-fieldset" data-kind="weekly">
-          <legend class="canccu-field__label">${t("window.days")}</legend>
-          <div class="canccu-cluster">${days}</div>
-          <div class="canccu-studio-columns">
-            <div>${time("start", "window.start", "09:00")}</div>
-            <div>${time("end", "window.end", "10:00")}</div>
-          </div>
-          <p class="canccu-small canccu-muted" id="canccu-sched-times-hint">
-            ${t("window.times_hint")}
-          </p>
-        </fieldset>
-        <div class="canccu-studio-fieldset" data-kind="bound" hidden>
-          <label class="canccu-field__label" for="canccu-sched-item">${t("window.item")}</label>
-          <select
-            class="canccu-input"
-            id="canccu-sched-item"
-            name="agenda_item_id"
-            aria-describedby="canccu-sched-item-hint"
+      <form class="canccu-studio-sheet__form" method="dialog" novalidate data-window-form>
+        <div class="canccu-studio-sheet__head">
+          <h2
+            class="canccu-card__title"
+            id="canccu-sched-editor-title"
+            data-new="${t("window.new_title")}"
+            data-edit="${t("window.edit")}"
           >
-            <option value="">${t("window.item_pick")}</option>
-            ${items}
-          </select>
-          <p class="canccu-small canccu-muted" id="canccu-sched-item-hint">
-            ${t("window.item_hint")}
-          </p>
+            ${t("window.new_title")}
+          </h2>
+          <button class="canccu-button canccu-button--ghost" type="button" data-close>
+            <span class="canccu-i canccu-i--close" aria-hidden="true"></span>${t("window.close")}
+          </button>
         </div>
-        <p class="canccu-sched__warn" role="alert" data-window-error hidden></p>
-        <div class="canccu-cluster">
-          <button class="canccu-button canccu-button--primary" type="submit">
-            ${t("window.save")}</button
-          ><button class="canccu-button canccu-button--ghost" type="button" data-close>
-            ${t("window.cancel")}</button
-          ><button
-            class="canccu-button canccu-button--danger"
+        <div class="canccu-studio-sheet__body canccu-form">
+          <input type="hidden" name="id" value="" /><input type="hidden" name="revision" value="" />
+          ${field({
+            name: "zone_key",
+            label: t("window.zone"),
+            value: d.zone,
+            options: d.zones.map((z) => ({ value: z.key, label: z.name })),
+          })}
+          ${field({
+            name: "playlist_id",
+            label: t("window.playlist"),
+            options: d.playlists.map((p) => ({ value: p.id, label: p.name })),
+          })}
+          ${field({
+            name: "priority",
+            label: t("window.priority"),
+            type: "number",
+            value: 10,
+            hint: t("window.priority_hint"),
+          })}
+          ${field({
+            name: "layout_id",
+            label: t("window.layout"),
+            value: "",
+            options: [
+              { value: "", label: t("window.layout_zone") },
+              ...d.layouts.map((l) => ({ value: l.id, label: l.name })),
+            ],
+          })}
+          <fieldset class="canccu-studio-fieldset">
+            <legend class="canccu-field__label">${t("window.kind")}</legend>
+            ${kind("weekly", "window.kind_weekly")}${kind("bound", "window.kind_bound")}
+          </fieldset>
+          <fieldset class="canccu-studio-fieldset" data-kind="weekly">
+            <legend class="canccu-field__label">${t("window.days")}</legend>
+            <div class="canccu-studio-days">${days}</div>
+            <div class="canccu-studio-columns">
+              <div>${time("start", "window.start", "09:00")}</div>
+              <div>${time("end", "window.end", "10:00")}</div>
+            </div>
+            <p class="canccu-small canccu-muted" id="canccu-sched-times-hint">
+              ${t("window.times_hint")}
+            </p>
+          </fieldset>
+          <div class="canccu-studio-fieldset" data-kind="bound" hidden>
+            <label class="canccu-field__label" for="canccu-sched-item">${t("window.item")}</label>
+            <select
+              class="canccu-input"
+              id="canccu-sched-item"
+              name="agenda_item_id"
+              aria-describedby="canccu-sched-item-hint"
+            >
+              <option value="">${t("window.item_pick")}</option>
+              ${items}
+            </select>
+            <p class="canccu-small canccu-muted" id="canccu-sched-item-hint">
+              ${t("window.item_hint")}
+            </p>
+          </div>
+          <p class="canccu-sched__warn" role="alert" data-window-error hidden></p>
+        </div>
+        <div class="canccu-studio-sheet__foot">
+          <button
+            class="canccu-studio-danger-link"
             type="button"
             data-window-delete
             data-confirm="${t("window.delete_confirm")}"
             hidden
           >
             ${t("window.delete")}
+          </button>
+          <button class="canccu-button canccu-button--ghost" type="button" data-close>
+            ${t("window.cancel")}</button
+          ><button class="canccu-button canccu-button--primary" type="submit">
+            ${t("window.save")}
           </button>
         </div>
       </form>

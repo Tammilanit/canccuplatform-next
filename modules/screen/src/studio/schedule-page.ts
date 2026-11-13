@@ -15,10 +15,18 @@ import type { ScheduleDeps } from "../content/schedules.js";
 import type { Sources } from "../compose/sources.js";
 import { shownZone } from "./help.js";
 import type { SeenDevice } from "./help.js";
-import { addDays, clipCalendar, columnSpan, dayStartMs, scheduleAxis } from "./schedule-axis.js";
+import {
+  addDays,
+  clipCalendar,
+  columnSpan,
+  dayStartMs,
+  localDate,
+  scheduleAxis,
+} from "./schedule-axis.js";
 import { layoutsOf } from "./event-layouts.js";
-import { readWhatPlays, whatPlaysCard } from "./schedule-at.js";
+import { readWhatPlays } from "./schedule-at.js";
 import type { WindowFacts } from "./schedule-at.js";
+import { whatPlaysCard } from "./schedule-at-view.js";
 import { WRITE, editorView } from "./schedule-editor.js";
 import { eventDays, pageOfDays, scheduleModel } from "./schedule-model.js";
 import { ALL_ZONES, scheduleView } from "./schedule-view.js";
@@ -29,7 +37,8 @@ export interface ScheduleQuery {
   from?: string | undefined;
   /** The day a phone shows. */
   day?: string | undefined;
-  /** "What plays at…": a `datetime-local` value in the event's time zone, and its zone. */
+  /** "What plays at…": a day (`YYYY-MM-DD`) and a 24 h `HH:MM` in the event's time zone, and its zone. */
+  at_day?: string | undefined;
   at?: string | undefined;
   at_zone?: string | undefined;
 }
@@ -100,7 +109,12 @@ export async function schedulePage(
   const day =
     [query.day, model.now?.date].find((d) => d !== undefined && page.days.includes(d)) ?? first;
   const atZone = zones.some((z) => z.key === query.at_zone) ? query.at_zone : (zone ?? fallback);
-  const at = await readWhatPlays(deps, c, atZone, query.at);
+  const today = localDate(c.nowMs, tz);
+  const at = await readWhatPlays(deps, c, { tenantId, layouts }, atZone, {
+    // Asked without a day (an old link, or the page's first ask), the event's day today or its first.
+    day: query.at_day ?? (days.includes(today) ? today : days[0]),
+    time: query.at,
+  });
   const names = new Map(playlists.map((p) => [p.id, p.name]));
   const shown = zone ?? ALL_ZONES;
   return scheduleView(c, {
@@ -117,6 +131,7 @@ export async function schedulePage(
       playlists: names,
       layouts: new Map(layouts.map((l) => [l.id, l.name])),
       labels,
+      days,
       page: { zone: shown, from: page.days[0] ?? null, day },
     }),
     editor: writer

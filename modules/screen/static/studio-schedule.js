@@ -102,7 +102,10 @@ if (dialog && form) {
     edit.closest("[popover]")?.hidePopover();
     open(w);
   });
-  dialog.querySelector("[data-close]").addEventListener("click", () => dialog.close());
+  // The sheet's Close at the top and Cancel by Save both leave without saving.
+  for (const close of dialog.querySelectorAll("[data-close]")) {
+    close.addEventListener("click", () => dialog.close());
+  }
   dialog.addEventListener("close", () => disarm());
 
   form.addEventListener("submit", async (event) => {
