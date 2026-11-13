@@ -48,7 +48,7 @@
       ? say("error.failed")
       : say("error.refused", { message: r.data.error.message });
   // The zone editor's own script (static/studio-zone.js) acts through the same helpers.
-  window.canccuStudio = { api, failure, reloadWith, say, show, notice };
+  window.canccuStudio = { api, confirmed, failure, reloadWith, say, show, notice };
 
   // A destructive action asks once more on the button itself; a second tap within 5 s acts.
   function confirmed(button) {

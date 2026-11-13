@@ -6,6 +6,8 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  BREAK_DWELL_SECONDS,
+  breakDwell,
   checkItem,
   checkPlaylist,
   clock,
@@ -21,6 +23,7 @@ import type {
   BuilderItem,
   BuilderPlaylist,
 } from "../static/studio-playlist-builder.js";
+import { showBreak } from "../src/playback/break-play.js";
 import { cycleSeconds } from "../src/playback/timeline.js";
 import type { PlaybackAsset } from "../src/playback/timeline.js";
 
@@ -111,6 +114,10 @@ describe("playlist builder: an item", () => {
     expect(checkItem(item("welcome", { slide_seconds: 0 }), ASSETS.welcome, "regular")).toEqual({
       key: "playlist.too_short",
     });
+    // The API takes a slide time in whole seconds only, so the page says so before a save.
+    expect(checkItem(item("welcome", { slide_seconds: 2.5 }), ASSETS.welcome, "regular")).toEqual({
+      key: "playlist.seconds_whole",
+    });
   });
 
   it("keeps a slide range in order and inside the deck", () => {
@@ -156,11 +163,20 @@ describe("playlist builder: the list", () => {
     expect(checkPlaylist({ ...ok, name: "x".repeat(81) }, ASSETS)).toEqual([
       { field: "name", key: "playlist.name_long" },
     ]);
-    for (const priority of [-1, 1000, 2.5]) {
+    // An emptied Priority field is null: refused, never saved as 0.
+    for (const priority of [-1, 1000, 2.5, null as unknown as number]) {
       expect(checkPlaylist({ ...ok, priority }, ASSETS)).toEqual([
         { field: "priority", key: "playlist.priority_range" },
       ]);
     }
+    for (const slideshow_image_seconds of [0, 2.5]) {
+      expect(checkPlaylist({ ...ok, type: "slideshow", slideshow_image_seconds }, ASSETS)).toEqual([
+        { field: "slideshow_image_seconds", key: "playlist.seconds_whole" },
+      ]);
+    }
+    expect(checkPlaylist({ ...ok, type: "slideshow", slideshow_image_seconds: 7 }, ASSETS)).toEqual(
+      [],
+    );
     const many = playlist(Array.from({ length: 501 }, () => item("poster")));
     expect(checkPlaylist(many, ASSETS)).toEqual([{ field: "items", key: "playlist.too_many" }]);
     const bad = playlist([item("poster"), item("poster", { duration_seconds: 0 })]);
@@ -268,6 +284,69 @@ describe("playlist builder: the run order", () => {
         playback,
       );
       expect(runOrder(playlist(items), ASSETS).total).toBe(tick);
+    }
+  });
+
+  // A break in slideshow mode plays as break-play.ts does: its dwell floored, or the tick's default.
+  it("agrees with the tick's break slideshow on the time per image and the cycle", () => {
+    expect(breakDwell(null)).toBe(BREAK_DWELL_SECONDS);
+    const playback = new Map(
+      Object.entries(ASSETS).map(([id, a]): [string, PlaybackAsset] => [
+        id,
+        {
+          id,
+          kind: a.kind,
+          durationSeconds: a.duration_seconds,
+          slideCount: a.slides,
+          health: a.health,
+        },
+      ]),
+    );
+    const items = [item("poster"), item("trailer"), item("poster"), item("dead"), item("poster")];
+    for (const dwell of [null, 20, 7.6, 0.4]) {
+      const shown = showBreak(
+        {
+          id: "pl",
+          type: "break",
+          slideshowImageSeconds: null,
+          name: "Break",
+          priority: 0,
+          items: items.map((i, n) => ({
+            id: `pi_${n}`,
+            assetId: i.asset_id,
+            durationSeconds: i.duration_seconds,
+            slideStart: i.slide_start,
+            slideEnd: i.slide_end,
+            slideSeconds: i.slide_seconds,
+          })),
+          break: {
+            zones: [],
+            periodSeconds: 3600,
+            breakSeconds: 600,
+            windowStartMinute: null,
+            windowEndMinute: null,
+            playOnce: false,
+            region: "playlist",
+            mode: "slideshow",
+            slideshowDwellSeconds: dwell,
+            shuffle: false,
+          },
+        },
+        playback,
+        { dueAt: 0, bookmark: null, nextImageId: null },
+        "zone",
+        0,
+        0,
+      );
+      const run = runOrder(
+        playlist(items, { type: "slideshow", slideshow_image_seconds: breakDwell(dwell) }),
+        ASSETS,
+      );
+      expect(shown?.frame?.durationSeconds).toBe(breakDwell(dwell));
+      expect(run.total).toBe(shown?.frame?.cycleSeconds);
+      expect(run.rows.filter((r) => r.skipped === null).map((r) => r.seconds)).toEqual(
+        Array(3).fill(breakDwell(dwell)),
+      );
     }
   });
 

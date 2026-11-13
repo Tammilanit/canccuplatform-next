@@ -42,6 +42,8 @@ export interface RunRow {
 }
 
 export const PUSH_MAX_MS: number;
+export const BREAK_DWELL_SECONDS: number;
+export function breakDwell(seconds: number | null): number;
 export function newItem(assetId: string, asset: BuilderAsset): BuilderItem;
 export function checkItem(
   item: BuilderItem,
@@ -51,7 +53,10 @@ export function checkItem(
 export function checkPlaylist(
   playlist: BuilderPlaylist,
   assets: Record<string, BuilderAsset>,
-): ({ field: "name" | "priority" | "items"; index?: number } & Refusal)[];
+): ({
+  field: "name" | "priority" | "slideshow_image_seconds" | "items";
+  index?: number;
+} & Refusal)[];
 export function moveItem(items: BuilderItem[], from: number, to: number): BuilderItem[];
 export function removeItem(items: BuilderItem[], index: number): BuilderItem[];
 export function runOrder(

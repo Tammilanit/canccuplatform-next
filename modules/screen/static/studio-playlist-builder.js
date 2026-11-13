@@ -15,6 +15,8 @@ const isDeck = (kind) => kind === "pptx" || kind === "pdf";
 // As the tick: an item that has no length of its own, and a slideshow's default time per image.
 const FALLBACK_SECONDS = 30;
 const SLIDESHOW_SECONDS = 10;
+/** A break slideshow's default dwell: src/playback/break-play.ts's, which a test holds this to. */
+export const BREAK_DWELL_SECONDS = 6;
 const MAX_ITEMS = 500;
 /** "At most 12 hours ahead" (contracts/screen.md, Push content). */
 export const PUSH_MAX_MS = 12 * 3600_000;
@@ -32,6 +34,11 @@ export function newItem(assetId, asset) {
 
 const wholeFrom1 = (n) => Number.isInteger(n) && n >= 1;
 
+/** The seconds a break slideshow shows each image, as the tick: its dwell floored, or 6. */
+export function breakDwell(seconds) {
+  return Math.max(1, Math.floor(seconds ?? BREAK_DWELL_SECONDS));
+}
+
 /** null when the item can be saved, else the refusal's key (and its values). */
 export function checkItem(item, asset, type) {
   if (!asset) return { key: "playlist.item_missing" };
@@ -45,6 +52,10 @@ export function checkItem(item, asset, type) {
   if (!isDeck(asset.kind)) return { key: "playlist.deck_only" };
   if (slideSeconds !== null && !(Number.isFinite(slideSeconds) && slideSeconds >= 1)) {
     return { key: "playlist.too_short" };
+  }
+  // The API takes a slide time in whole seconds only.
+  if (slideSeconds !== null && !Number.isInteger(slideSeconds)) {
+    return { key: "playlist.seconds_whole" };
   }
   if ((start !== null && !wholeFrom1(start)) || (end !== null && !wholeFrom1(end))) {
     return { key: "playlist.slide_whole" };
@@ -67,6 +78,10 @@ export function checkPlaylist(playlist, assets) {
   const p = playlist.priority;
   if (!Number.isInteger(p) || p < 0 || p > 999) {
     out.push({ field: "priority", key: "playlist.priority_range" });
+  }
+  const image = playlist.slideshow_image_seconds;
+  if (image !== null && !wholeFrom1(image)) {
+    out.push({ field: "slideshow_image_seconds", key: "playlist.seconds_whole" });
   }
   if (playlist.items.length > MAX_ITEMS) {
     out.push({ field: "items", key: "playlist.too_many" });

@@ -7,6 +7,7 @@
  * conflict, never lost. The rules are studio-playlist-builder.js's, which the API checks again.
  */
 import {
+  breakDwell,
   checkPlaylist,
   clock,
   moveItem,
@@ -16,7 +17,7 @@ import {
 } from "./studio-playlist-builder.js";
 import { el, itemDetail, itemFields, numberField } from "./studio-playlist-item.js";
 
-const { api, failure, reloadWith, say, show } = window.canccuStudio;
+const { api, confirmed, failure, reloadWith, say, show } = window.canccuStudio;
 export const PAGE = "/admin/screen/content";
 export const ASSET = "application/x-canccu-asset";
 const ITEM = "application/x-canccu-item";
@@ -46,7 +47,7 @@ export function builder(box, doc, write, library) {
     type: slideshow ? "slideshow" : doc.type,
     slideshow_image_seconds:
       doc.type === "break"
-        ? (doc.break?.slideshow_dwell_seconds ?? null)
+        ? breakDwell(doc.break?.slideshow_dwell_seconds ?? null)
         : state.slideshow_image_seconds,
   });
   const summary = el("p", { className: "canccu-small canccu-muted" });
@@ -109,7 +110,9 @@ export function builder(box, doc, write, library) {
     const asset = library[item.asset_id];
     const length = el("span", { className: "canccu-studio-item__length" });
     const error = el("p", { className: "canccu-small canccu-studio-refused", hidden: true });
-    const text = write ? null : itemDetail(item, asset, slideshow, state.slideshow_image_seconds);
+    const text = write
+      ? null
+      : itemDetail(item, asset, slideshow, asPlayed().slideshow_image_seconds);
     const li = el(
       "li",
       { className: write ? "canccu-studio-item canccu-studio-item--edit" : "canccu-studio-item" },
@@ -221,7 +224,7 @@ export function builder(box, doc, write, library) {
         "label",
         { className: "canccu-field", title: say("playlist.priority_hint") },
         el("span", { className: "canccu-label", textContent: say("playlist.priority") }),
-        number(say("playlist.priority"), state.priority, 0, (v) => (state.priority = v ?? 0), {
+        number(say("playlist.priority"), state.priority, 0, (v) => (state.priority = v), {
           max: 999,
         }),
       ),
@@ -333,17 +336,17 @@ export function builder(box, doc, write, library) {
         className: "canccu-button canccu-button--danger-ghost canccu-button--sm",
         textContent: say("playlist.delete"),
       });
-      // studio.js acts on it: a second tap within 5 s deletes, then the page without it; that
-      // second tap reaches this listener first, so leaving asks nothing about unsaved edits.
-      remove.addEventListener("click", () => {
-        if (remove.dataset.armed === "1") dirty = false;
-      });
-      Object.assign(remove.dataset, {
-        call: "DELETE",
-        url: `/api/screen/playlists/${encodeURIComponent(doc.id)}`,
-        confirm: say("playlist.delete_confirm"),
-        done: say("playlist.deleted"),
-        next: PAGE,
+      // Asks once more on the button (studio.js's `confirmed`), then deletes; unsaved edits keep
+      // their guard on leaving until the delete has gone through.
+      Object.assign(remove.dataset, { confirm: say("playlist.delete_confirm") });
+      remove.addEventListener("click", async () => {
+        if (!confirmed(remove)) return;
+        remove.disabled = true;
+        const r = await api("DELETE", `/api/screen/playlists/${encodeURIComponent(doc.id)}`);
+        remove.disabled = false;
+        if (!r.ok) return show(failure(r));
+        dirty = false;
+        reloadWith(say("playlist.deleted"), PAGE);
       });
       parts.push(
         el(
