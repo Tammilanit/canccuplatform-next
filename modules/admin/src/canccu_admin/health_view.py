@@ -55,7 +55,9 @@ def _says(part: Part, zone: str) -> str:
         way = f'<a class="canccu-way" href="{DEVICES}">Open devices</a>'
     elif part.status == "down":
         way = (
-            '<details class="canccu-way"><summary>What to check</summary>'
+            # Keyed by part, so health.js keeps it open across a check.
+            f'<details class="canccu-way" data-canccu-part="{esc(part.key)}">'
+            "<summary>What to check</summary>"
             "<p>Ask whoever runs the platform to look at "
             f"<code>{esc(part.key)}</code>: is it running, and what does its log say?</p>"
             "</details>"
@@ -70,7 +72,7 @@ def _tiles(check: Check) -> str:
         for k in ("ok", "degraded", "down")
     ]
     return (
-        '<div class="canccu-stats">'
+        '<div class="canccu-stats" data-canccu-live="tiles">'
         + "".join(
             f'<div class="canccu-card canccu-stat{cls}"><p class="canccu-stat__value">{n}</p>'
             f'<p class="canccu-stat__label">{label}</p></div>'
@@ -81,7 +83,7 @@ def _tiles(check: Check) -> str:
 
 
 def health_body(check: Check, zone: str) -> tuple[str, str]:
-    """(the page's description, its body) for one check, in the event's time zone."""
+    """(the page's description, its body), both HTML, for one check in the event's time zone."""
     parts = sorted(check.parts, key=lambda p: (HEALTH_ORDER.get(p.status, 0), part_name(p.key)))
     says = {p.key: _says(p, zone) for p in parts}
     # "What it says" only when some part says something: an empty column is only noise.
@@ -99,7 +101,8 @@ def health_body(check: Check, zone: str) -> tuple[str, str]:
         for p in parts
     )
     table = (
-        '<section class="canccu-card canccu-card--flush"><table class="canccu-table">'
+        '<section class="canccu-card canccu-card--flush" data-canccu-live="parts">'
+        '<table class="canccu-table">'
         f"<thead><tr><th>Part</th><th>Status</th>{'<th>What it says</th>' if said else ''}"
         '<th class="canccu-hide-phone">Version</th><th class="canccu-hide-phone">Answer</th>'
         '<th class="canccu-hide-phone">Log name</th>'
@@ -107,8 +110,8 @@ def health_body(check: Check, zone: str) -> tuple[str, str]:
     )
     description = (
         f"Every part of the platform, checked every {EVERY_SECONDS} seconds. "
-        f"Last check {_clock(check, zone)}."
+        f'<span data-canccu-live="last-check">Last check {_clock(check, zone)}.</span>'
     )
-    # health.js reloads the page as the checks come in; it is the page's only script.
+    # health.js swaps each data-canccu-live part as the checks come in; the page's only script.
     script = f'<script src="{BASE}/static/health.js" defer></script>'
     return description, _tiles(check) + table + script

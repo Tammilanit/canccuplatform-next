@@ -2,9 +2,13 @@
 // saved (data-canccu-was, in the words control_value in forms.py writes); the bar counts the
 // controls that differ, each shows "Was 45." while it does, and Undo puts them back. Save posts
 // without leaving the page, so a save that fails keeps the change in the form. Without this script
-// the form posts as usual and the server answers the same states.
+// the form posts as usual and the server answers the same states. The form also posts the values
+// it was built from (was.<key>), so after a conflict only the fields the user changed keep what
+// they typed (settings_form.kept_after_conflict).
 const FORM = "form[data-canccu-settings]";
 const phone = matchMedia("(max-width: 1099.98px)");
+// One save at a time: an edit while a save is out must not enable Save again (refresh).
+let saving = false;
 
 const read = (el) => {
   if (el.type === "checkbox") return el.checked ? "on" : "";
@@ -39,7 +43,7 @@ function refresh() {
     ? `${bad} ${bad === 1 ? "field needs" : "fields need"} fixing before you can save`
     : `${changed} ${changed === 1 ? "change" : "changes"} not saved`;
   text.classList.toggle("is-down", bad > 0);
-  form.querySelector("[data-canccu-save]").disabled = bad > 0;
+  form.querySelector("[data-canccu-save]").disabled = bad > 0 || saving;
   form.querySelector("[data-canccu-savebar]").hidden = !changed && !bad;
 }
 
@@ -64,9 +68,8 @@ function unsaved(res) {
   return `The platform refused the change (HTTP ${res.status}). ${kept}`;
 }
 
-async function save(form) {
-  const button = form.querySelector("[data-canccu-save]");
-  button.disabled = true;
+// Posts the form; true when the save went through and the page is on its way to "Saved".
+async function post(form) {
   let res = null;
   try {
     // Followed, so the two 303s can be told apart: a saved form goes to its page with "Saved",
@@ -80,7 +83,7 @@ async function save(form) {
   }
   if (res?.redirected && new URL(res.url).searchParams.has("saved")) {
     location.assign(res.url);
-    return;
+    return true;
   }
   // A refused save answers the form again, with what was typed and why (settings_form.py).
   const next =
@@ -99,13 +102,28 @@ async function save(form) {
     notice.querySelector(".canccu-notice__body > p:last-child").textContent =
       unsaved(res);
     notice.hidden = false;
-    button.textContent = "Save again";
+    form.querySelector("[data-canccu-save]").textContent = "Save again";
   }
-  button.disabled = false;
+  return false;
+}
+
+async function save(form) {
+  if (saving) return;
+  saving = true;
   refresh();
-  document
-    .querySelector(`${FORM} .canccu-notice`)
-    ?.scrollIntoView({ block: "nearest" });
+  let leaving = false;
+  try {
+    leaving = await post(form);
+  } finally {
+    // Saved: Save stays off while the page goes to "Saved".
+    if (!leaving) {
+      saving = false;
+      refresh();
+      document
+        .querySelector(`${FORM} .canccu-notice`)
+        ?.scrollIntoView({ block: "nearest" });
+    }
+  }
 }
 
 document.addEventListener("input", refresh);

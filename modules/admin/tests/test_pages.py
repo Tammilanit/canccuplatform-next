@@ -114,8 +114,11 @@ async def test_health_counts_parts_and_says_when_it_last_checked(
     text = (await world.browser(owner).get("/admin/health-view")).text
     for value, label in (("4", "parts"), ("2", "running"), ("1", "slow"), ("1", "down")):
         assert f'stat__value">{value}</p><p class="canccu-stat__label">{label}</p>' in text
-    assert "checked every 10 seconds. Last check 12:00:00." in text
-    # The page follows the checks without a reload by hand.
+    last = '<span data-canccu-live="last-check">Last check 12:00:00.</span>'
+    assert f"checked every 10 seconds. {last}" in text
+    # health.js follows the checks by swapping only these, never by reloading the page.
+    assert '<div class="canccu-stats" data-canccu-live="tiles">' in text
+    assert 'data-canccu-live="parts"><table class="canccu-table">' in text
     assert '<script src="/admin/static/health.js" defer></script>' in text
     assert 'href="/admin/health-view?check=now"' in text
 
@@ -145,7 +148,10 @@ async def test_a_part_in_trouble_says_what_it_means_and_offers_a_way_on(
     world.watch.latest = TROUBLE
     text = (await world.browser(owner).get("/admin/health-view")).text
     assert "No answer since 11:57. Messages wait and go out when it is back." in text
-    assert "What to check</summary>" in text and "<code>notify</code>" in text
+    # Keyed by part, so an open one stays open when health.js swaps the table.
+    way = '<details class="canccu-way" data-canccu-part="notify"><summary>What to check</summary>'
+    assert way in text
+    assert "<code>notify</code>" in text
     assert "valkey: slow" in text
     assert 'href="/admin/screen/devices">Open devices</a>' in text
 

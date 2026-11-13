@@ -45,7 +45,7 @@ from .pages import (
 from .people_pages import people_routes
 from .profile_pages import profile_routes
 from .service import BadSettings, Service
-from .settings_form import failure
+from .settings_form import failure, kept_after_conflict
 from .settings_form import settings_form as settings_form_html
 from .settings_view import SHOWN_CHANGES, glance, last_changes, settings_list, when
 from .tenancy import TenantPaths
@@ -291,12 +291,13 @@ def create_app(
         except (BadSettings, VersionConflict) as exc:
             # The form again with what was typed, so nothing is lost (sheet 4, "Couldn't
             # save"); after a conflict it compares with, and saves over, what is saved now.
-            if isinstance(exc, VersionConflict):
-                version, stored = await service.store.get_settings(module)
             typed: dict[str, Any] = {
                 s.key: form.get(s.key) for s in declared if s.type != "boolean"
             }
             typed |= {s.key: form.get(s.key) is not None for s in declared if s.type == "boolean"}
+            if isinstance(exc, VersionConflict):
+                version, stored = await service.store.get_settings(module)
+                typed = kept_after_conflict(declared, form, typed, stored)
             body = settings_form_html(
                 declared,
                 service.groups.get(module, []),

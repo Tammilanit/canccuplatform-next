@@ -98,6 +98,37 @@ async def test_a_conflict_compares_with_what_is_saved_now(
     assert "<div data-canccu-saved>" in text and "data-canccu-failed" not in text
 
 
+async def test_a_conflict_keeps_only_the_fields_the_user_changed(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    browser = await screen_form(world, caplog)
+    text = (await browser.get(SCREEN)).text
+    # The form posts the values it was built from, so the server can tell what the user changed.
+    assert '<input type=hidden name="was.offline_after_seconds" value="45">' in text
+    assert '<input type=hidden name="was.progress_bars" value="on">' in text
+    with tenant_scope("demo"):
+        await world.service.put_settings(
+            "screen", 1, {"offline_after_seconds": 45, "heartbeat_seconds": 20}, "u2"
+        )
+    # The user changed only "Screen offline after"; the heartbeat goes as the page had it (15).
+    bases = dict(re.findall(r'name="(was\.[a-z_]+)" value="([^"]*)"', text))
+    form = {
+        **bases,
+        **dict(re.findall(r'name=([a-z_]+) value="([^"]*)" data-canccu-was', text)),
+        "settings_version": "1",
+        "offline_after_seconds": "30",
+        "progress_bars": "on",
+    }
+    assert form["heartbeat_seconds"] == bases["was.heartbeat_seconds"] == "15"
+    r = await browser.post(SCREEN, data=form, headers=ORIGIN)
+    assert r.status_code == 409
+    # What the user changed is kept; the rest shows what someone else saved, unchanged.
+    assert 'value="30" data-canccu-was="45"' in field_of(r.text, "offline_after_seconds")
+    assert 'value="20" data-canccu-was="20"' in field_of(r.text, "heartbeat_seconds")
+    assert '<input type=hidden name="was.heartbeat_seconds" value="20">' in r.text
+    assert "data-canccu-count>1 change not saved</span>" in r.text
+
+
 def test_was_names_each_kind_in_words() -> None:
     [box, look, hosts] = _parse(
         "m",

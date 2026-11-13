@@ -111,10 +111,29 @@ const SETTINGS_STATES = [
   ["settings-screen-failed", DESK, { ready: unanswered, fullPage: false }],
 ];
 // Health with a part down (sheet 4), and the menu saying so: the second pass, `--trouble`, which
-// scripts/demo-screenshots runs while it holds notify stopped.
+// scripts/demo-screenshots runs while it holds notify stopped. On the desktop shot, the page
+// follows a check with notify's "What to check" open (health.js): the run fails if the page
+// reloads instead of swapping the check in, or if the open "What to check" closes.
+const LAST_CHECK = '[data-canccu-live="last-check"]';
+const NOTIFY_WAY = 'details[data-canccu-part="notify"]';
+const followsACheck = async (page) => {
+  await page.click(`${NOTIFY_WAY} > summary`);
+  const before = await page.locator(LAST_CHECK).textContent();
+  // Gone with the document if the page reloads.
+  await page.evaluate(() => (window.canccuSameDocument = true));
+  await page.waitForFunction(
+    ([sel, was]) => document.querySelector(sel)?.textContent !== was,
+    [LAST_CHECK, before],
+    { timeout: 30000 },
+  );
+  if (!(await page.evaluate(() => window.canccuSameDocument === true)))
+    throw new Error("Health reloaded the page instead of swapping the check");
+  if (!(await page.locator(NOTIFY_WAY).evaluate((way) => way.open)))
+    throw new Error('an open "What to check" closed when a check came in');
+};
 const TROUBLE = [
-  ["health-view-trouble", "/admin/health-view", DESK],
-  ["health-view-trouble-phone", "/admin/health-view", PHONE],
+  ["health-view-trouble", "/admin/health-view", DESK, { ready: followsACheck }],
+  ["health-view-trouble-phone", "/admin/health-view", PHONE, {}],
 ];
 // The brand kit (mockup 12, design sheet 6), after the screens, so its screen preview is screen's
 // player of the main zone with the fixture's run of show: first with no draft, then with one in the
@@ -421,8 +440,8 @@ async function shot(
 }
 
 if (opts.trouble) {
-  for (const [name, path, viewport] of TROUBLE) {
-    await shot(name, path, viewport, SESSION);
+  for (const [name, path, viewport, how] of TROUBLE) {
+    await shot(name, path, viewport, SESSION, how);
   }
   await browser.close();
   if (failures.length) process.exit(1);
