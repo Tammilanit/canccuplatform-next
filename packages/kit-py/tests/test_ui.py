@@ -81,6 +81,19 @@ def test_shell_page() -> None:
     assert ">18:42<small>UTC</small></time>" in doc
 
 
+def test_a_menu_item_says_when_its_page_needs_a_look() -> None:
+    # Sheets 2 and 4: "Health 1 slow", a status badge at the item's end.
+    doc = shell_page(
+        "Settings",
+        "",
+        session=Viewer("admin.settings.read"),
+        menu_notes={"health": ("degraded", "1 <slow>")},
+    )
+    badge = '<span class="canccu-badge canccu-badge--degraded">1 &lt;slow&gt;</span>'
+    assert f"Health{badge}</a>" in doc
+    assert doc.count("canccu-badge--degraded") == 1
+
+
 def test_bar_puts_quick_add_in_the_middle() -> None:
     every = Viewer("agenda.items.write", "notify.topics.write", "screen.devices.read")
     assert [b["label"] for b in bar_for(every)] == [

@@ -5,21 +5,21 @@ from __future__ import annotations
 import hashlib
 import logging
 from datetime import UTC, datetime
-from urllib.parse import urlencode
+from typing import Any
 
 from canccu_kit import (
-    Health,
     KitError,
     NotSignedIn,
     ServiceForbidden,
     ServiceIdentity,
     TenantResolver,
+    VersionConflict,
     is_tenant_id,
     tenant_scope,
 )
 from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.starlette import install, install_service_identity
-from canccu_kit.ui import esc, icon, menu_for, notice
+from canccu_kit.ui import esc, icon, menu_for
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.requests import Request
@@ -28,21 +28,25 @@ from starlette.routing import Route
 
 from .auth import Auth
 from .auth_routes import Authorize, OnEvent, OriginCheck, Viewer, auth_routes
-from .forms import field_html, from_form
+from .forms import from_form
+from .health import HealthWatch
+from .health_view import health_body
 from .pages import (
     BASE,
-    HEALTH_ORDER,
-    HEALTH_WORDS,
     MODULE_ICONS,
     event_of,
     not_signed_in,
     page,
     page_error_handler,
     part_name,
+    static_script,
     static_ui_css,
 )
 from .people_pages import people_routes
+from .profile_pages import profile_routes
 from .service import BadSettings, Service
+from .settings_form import failure, kept_after_conflict
+from .settings_form import settings_form as settings_form_html
 from .settings_view import SHOWN_CHANGES, glance, last_changes, settings_list, when
 from .tenancy import TenantPaths
 
@@ -66,7 +70,7 @@ MODULES = (
 
 def create_app(
     service: Service,
-    health: Health,
+    watch: HealthWatch,
     authorize: Authorize,
     auth: Auth,
     resolver: TenantResolver,
@@ -237,128 +241,92 @@ def create_app(
             description=f"How each part of {esc(name)} behaves. A change applies when you save it.",
         )
 
-    async def settings_form(request: Request) -> Response:
-        module = module_of(request)
-        session = await need(request, "admin.settings.read")
-        declared = service.declarations.get(module, [])
-        current = await service.get_settings(module)
-        fields = "".join(field_html(s, current["values"].get(s.key)) for s in declared)
-        saved = (
-            notice("ok", "Saved", "The change applies now.")
-            if request.query_params.get("saved")
-            else ""
-        )
-        form = (
-            f'{saved}<form method=post class="canccu-card canccu-form">'
-            f"<input type=hidden name=settings_version value={current['settings_version']}>"
-            f'{fields}<div class="canccu-cluster">'
-            '<button class="canccu-button canccu-button--primary">Save</button></div></form>'
-        )
+    async def form_page(
+        request: Request,
+        module: str,
+        session: Session,
+        body: str,
+        status: int = 200,
+    ) -> Response:
         return await page(
             request,
             part_name(module, settings=True),
-            form,
+            body,
+            status,
             session=session,
             current="settings",
             narrow=True,
             crumb=(f"{BASE}/settings", "Settings"),
         )
 
+    async def settings_form(request: Request) -> Response:
+        module = module_of(request)
+        session = await need(request, "admin.settings.read")
+        version, stored = await service.store.get_settings(module)
+        body = settings_form_html(
+            service.declarations.get(module, []),
+            service.groups.get(module, []),
+            stored,
+            stored,
+            version,
+            f"{BASE}/settings/{module}",
+            saved=bool(request.query_params.get("saved")),
+        )
+        return await form_page(request, module, session, body)
+
     async def settings_save(request: Request) -> Response:
         module = module_of(request)
         session = await need(request, "admin.settings.write")
         form = await request.form()
-        values = from_form(service.declarations.get(module, []), form)
+        declared = service.declarations.get(module, [])
         try:
             version = int(str(form.get("settings_version", "")))
         except ValueError as exc:
             raise BadSettings("settings_version missing") from exc
         # Keep stored keys the form does not declare.
         _, stored = await service.store.get_settings(module)
-        merged = {**stored, **values}
-        await service.put_settings(module, version, merged, session.user_id)
+        try:
+            values = from_form(declared, form)
+            await service.put_settings(module, version, {**stored, **values}, session.user_id)
+        except (BadSettings, VersionConflict) as exc:
+            # The form again with what was typed, so nothing is lost (sheet 4, "Couldn't
+            # save"); after a conflict it compares with, and saves over, what is saved now.
+            typed: dict[str, Any] = {
+                s.key: form.get(s.key) for s in declared if s.type != "boolean"
+            }
+            typed |= {s.key: form.get(s.key) is not None for s in declared if s.type == "boolean"}
+            if isinstance(exc, VersionConflict):
+                version, stored = await service.store.get_settings(module)
+                typed = kept_after_conflict(declared, form, typed, stored)
+            body = settings_form_html(
+                declared,
+                service.groups.get(module, []),
+                typed,
+                stored,
+                version,
+                f"{BASE}/settings/{module}",
+                failed=failure(declared, exc),
+            )
+            return await form_page(request, module, session, body, exc.status)
         return RedirectResponse(f"{BASE}/settings/{module}?saved=1", status_code=303)
 
     async def health_page(request: Request) -> Response:
         session = await need(request, "admin.settings.read")
-        own = (await health.run()).body
-        rows = [(health.module, own["status"], own["version"], "")]
-        rows += [(h.module, h.status, h.version, h.detail) for h in await service.health_view()]
-        rows.sort(key=lambda r: (HEALTH_ORDER.get(r[1], 0), part_name(r[0])))
-        # "What it says" only when some part says something: an empty column is only noise.
-        said = any(d for *_, d in rows)
-        trs = "".join(
-            f"<tr><td><b>{esc(part_name(m))}</b></td>"
-            f'<td><span class="canccu-badge canccu-badge--{esc(s)}">'
-            f"{esc(HEALTH_WORDS.get(s, s))}</span></td>{f'<td>{esc(d)}</td>' if said else ''}"
-            f'<td class="canccu-hide-phone canccu-num">{esc(v)}</td>'
-            f'<td class="canccu-hide-phone"><code class="canccu-muted">{esc(m)}</code></td></tr>'
-            for m, s, v, d in rows
-        )
-        counts = [
-            f"{n} {HEALTH_WORDS[k].lower()}"
-            for k in ("ok", "degraded", "down")
-            if (n := sum(1 for r in rows if r[1] == k))
-        ]
-        table = (
-            '<section class="canccu-card canccu-card--flush"><table class="canccu-table">'
-            f"<thead><tr><th>Part</th><th>Status</th>{'<th>What it says</th>' if said else ''}"
-            '<th class="canccu-hide-phone">Version</th><th class="canccu-hide-phone">Log name</th>'
-            f"</tr></thead><tbody>{trs}</tbody></table></section>"
-        )
+        # "Check now" checks at once; the page's own reloads read the watch's latest check.
+        fresh = request.query_params.get("check") == "now"
+        check = await (watch.check() if fresh else watch.current())
+        event = await event_of(request)
+        description, body = health_body(check, event.time_zone if event else "UTC")
         return await page(
             request,
             "Health",
-            table,
+            body,
             session=session,
             current="health",
-            description=f"{len(rows)} parts: {', '.join(counts)}. Checked when you open the page.",
-            actions=f'<a class="canccu-button canccu-button--secondary" href="{BASE}/health-view">'
-            f"{icon('refresh')}Check now</a>",
+            description=description,
+            actions=f'<a class="canccu-button canccu-button--secondary" '
+            f'href="{BASE}/health-view?check=now">{icon("refresh")}Check now</a>',
         )
-
-    async def profile_page(request: Request) -> Response:
-        session = await need(request, "admin.profile.read")
-        message = request.query_params.get("message", "")
-        warns = request.query_params.getlist("warn")
-        notes = notice("ok", message) if message else ""
-        if warns:
-            notes += notice("warn", "Loaded with warnings", "; ".join(warns))
-        cards = (
-            '<section class="canccu-card"><h2 class="canccu-card__title">Save</h2>'
-            '<p class="canccu-card__desc">Writes the event\'s name, modules, settings and look'
-            " to the event folder, as one profile.</p>"
-            f'<form method=post action="{BASE}/profile/save"><button class="canccu-button '
-            'canccu-button--secondary">Save to the event folder</button></form></section>'
-            '<section class="canccu-card"><h2 class="canccu-card__title">Replace</h2>'
-            '<p class="canccu-card__desc">Loads the profile in the event folder. It replaces'
-            " settings and look, and can't be undone; run of show and people stay.</p>"
-            f'<form method=post action="{BASE}/profile/load"><button class="canccu-button '
-            'canccu-button--danger-ghost">Load the profile from the event folder</button>'
-            "</form></section>"
-        )
-        return await page(
-            request,
-            "Event profile",
-            notes + cards,
-            session=session,
-            current="profile",
-            narrow=True,
-            description="The event's name, modules, settings and look, as one file.",
-        )
-
-    async def profile_save(request: Request) -> Response:
-        session = await need(request, "admin.profile.write")
-        result = await service.save_profile(session.user_id)
-        return RedirectResponse(f"{BASE}/profile?message=Saved+{result['name']}", status_code=303)
-
-    async def profile_load(request: Request) -> Response:
-        session = await need(request, "admin.profile.write")
-        result = await service.load_profile(session.user_id)
-        query = urlencode(
-            [("message", f"Loaded {result['name']}")] + [("warn", w) for w in result["warnings"]]
-        )
-        return RedirectResponse(f"{BASE}/profile?{query}", status_code=303)
 
     app = Starlette(
         routes=[
@@ -376,9 +344,8 @@ def create_app(
             Route("/settings/{module}", settings_save, methods=["POST"]),
             Route("/health-view", health_page),
             Route("/static/ui.css", static_ui_css, methods=["GET"]),
-            Route("/profile", profile_page),
-            Route("/profile/save", profile_save, methods=["POST"]),
-            Route("/profile/load", profile_load, methods=["POST"]),
+            Route("/static/{name}.js", static_script, methods=["GET"]),
+            *profile_routes(service, auth, authorize),
             *auth_routes(auth, authorize, on_event, viewer),
             *people_routes(auth, authorize, on_event),
         ]
@@ -386,8 +353,9 @@ def create_app(
     # Added before install(): Starlette wraps each later middleware around the earlier ones,
     # so the kit's correlation middleware also covers the origin check's 403.
     app.state.tenants = resolver  # the event the shell's header names (pages.event_of)
+    app.state.health_watch = watch  # the menu's note on Health (pages.page)
     app.add_middleware(OriginCheck, origin=auth.public_origin)
-    install(app, health)
+    install(app, watch.own)
     # Innermost, as the kit's install_tenancy places it: the correlation id and the origin check
     # cover its 404s, and settings and profile handlers run inside the request's tenant.
     app.user_middleware.append(Middleware(TenantPaths, resolver=resolver))

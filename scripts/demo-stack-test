@@ -32,12 +32,12 @@ TESTS=(
   "admin API with an unknown session is 401 not_signed_in"
   "admin Load reads the demo event from the seeded event folder"
   "PUT /api/admin/profile imports the demo event as a zip"
-  "admin settings hold the demo profile's values"
+  "admin settings hold the demo profile's values, in their form's groups"
   "PUT settings with the current version saves"
   "PUT settings with a stale version is 409 version_conflict"
   "unknown module is 404 not_found"
   "GET /api/admin/profile exports a zip with profile.yaml and its assets"
-  "health view page names admin and the run of show"
+  "health view page names admin, the run of show and screen rendering"
   "importing the demo zip again restores the demo profile's settings"
   "admin's own GET /api/admin/session without a session is 401 not_signed_in"
   "the sign-in page answers and offers the first-run code"
@@ -52,6 +52,7 @@ TESTS=(
   "the second event answers on its own hostname"
   "screen keeps 100 screens of two events current, each change within a second (p95)"
   "the player holds 24 accelerated hours within its heap budget"
+  "Event profile's Load asks first and replaces nothing"
 )
 
 if [ "$dry" = 1 ]; then
@@ -124,7 +125,7 @@ call PUT /api/admin/profile -H "cookie: $COOKIE" -H "content-type: application/z
 check "${TESTS[5]}" body_is 200 ".name == \"$profile_name\" and .schema_version == 1"
 
 call GET /api/admin/settings/admin -H "cookie: $COOKIE"
-check "${TESTS[6]}" body_is 200 '.module == "admin" and .values.timezone == "UTC" and .values.language == "en" and (.settings_version | type == "number")'
+check "${TESTS[6]}" body_is 200 '.module == "admin" and .values.timezone == "UTC" and .values.language == "en" and (.settings_version | type == "number") and ([.groups[].keys[]] == ["timezone", "language"])'
 version=$(jq -r '.settings_version // 0' "$TMP/body" 2>/dev/null || echo 0)
 
 call PUT /api/admin/settings/admin -H "cookie: $COOKIE" -H "content-type: application/json" \
@@ -159,14 +160,25 @@ call GET /admin/health-view -H "cookie: $COOKIE"
 # shellcheck disable=SC2329
 names_the_parts() {
   # Each part by name, its id in the Log name column (UX audit A2); the test module hello is
-  # left out of Health (deploy/compose.yml).
+  # left out of Health (deploy/compose.yml); screen's render check is a part of its own.
   status_is 200 && grep -q '<b>Admin</b>' "$TMP/body" && grep -q '<b>Run of show</b>' "$TMP/body" \
-    && grep -q '<code class="canccu-muted">agenda</code>' "$TMP/body"
+    && grep -q '<code class="canccu-muted">agenda</code>' "$TMP/body" \
+    && grep -q '<b>Screen rendering</b>' "$TMP/body"
 }
 check "${TESTS[11]}" names_the_parts
 
-# The export above saved the changed settings into the event folder; import the demo again
-# so the screenshots that follow show the demo event.
+call GET /admin/profile/load -H "cookie: $COOKIE"
+cp "$TMP/body" "$TMP/ask.html"
+call GET /api/admin/settings/admin -H "cookie: $COOKIE"
+# shellcheck disable=SC2329
+asks_first() {
+  grep -q '>Replace settings and look</button>' "$TMP/ask.html" \
+    && jq -e '.values.language == "fi"' "$TMP/body" >/dev/null
+}
+check "${TESTS[26]}" asks_first
+
+# The settings changed above; import the demo again so the screenshots that follow show the
+# demo event.
 call PUT /api/admin/profile -H "cookie: $COOKIE" -H "content-type: application/zip" --data-binary "@$TMP/demo.zip"
 call GET /api/admin/settings/admin -H "cookie: $COOKIE"
 check "${TESTS[12]}" body_is 200 '.values.language == "en"'

@@ -4,22 +4,19 @@ from __future__ import annotations
 
 import html
 from collections.abc import Awaitable, Callable
-from pathlib import Path
 
 from canccu_kit import Event, KitError, NotSignedIn, error_body
 from canccu_kit.rights import SESSION_COOKIE, Session, session_id_from_cookie
 from canccu_kit.ui import notice
 from canccu_kit.web_security import SAFE_METHODS
 from starlette.requests import Request
-from starlette.responses import FileResponse, JSONResponse, RedirectResponse, Response
+from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.routing import Route
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from . import sign_in_views as views
 from .auth import ABSOLUTE, FLOW_LIFETIME, Auth, safe_return_path
 from .pages import BASE, event_of, front, page
-
-STATIC = Path(__file__).parent / "static"
 
 Authorize = Callable[[str | None, str], Awaitable[Session]]
 OnEvent = Callable[[Event], Awaitable[None]]
@@ -54,17 +51,6 @@ class OriginCheck:
                 await JSONResponse(body, status_code=403)(scope, receive, send)
                 return
         await self.app(scope, receive, send)
-
-
-async def static_script(request: Request) -> Response:
-    # Only the two routes below reach here, each naming its own file.
-    name = request.url.path.rsplit("/", 1)[1]
-    response = FileResponse(STATIC / name, media_type="text/javascript")
-    response.headers["Cache-Control"] = "no-cache"  # a changed worker must reach every phone
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    # The worker shows the offline page for every module's organiser pages, not only /admin/'s.
-    response.headers["Service-Worker-Allowed"] = "/"
-    return response
 
 
 def auth_routes(
@@ -255,7 +241,4 @@ def auth_routes(
         Route("/first-run", first_run_start, methods=["POST"]),
         Route("/sign-out", sign_out_page, methods=["POST"]),
         Route("/offline", offline_page, methods=["GET"]),
-        Route("/static/sw.js", static_script, methods=["GET"]),
-        Route("/static/shell.js", static_script, methods=["GET"]),
-        Route("/static/people.js", static_script, methods=["GET"]),
     ]

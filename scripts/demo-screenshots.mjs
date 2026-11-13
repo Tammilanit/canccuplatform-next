@@ -7,7 +7,7 @@
 // from across a hall fails the run, so a screenshot of an error never passes for a real one. Runs
 // in Caddy's network namespace (scripts/demo-screenshots says why).
 // Usage: node demo-screenshots.mjs [--dry-run] [--base BASE_URL] [--out DIR]
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import {
   DEMO_HOST,
@@ -36,6 +36,7 @@ const { values: opts } = parseArgs({
     "dry-run": { type: "boolean", default: false },
     base: { type: "string", default: "http://127.0.0.1" },
     out: { type: "string", default: "screenshots" },
+    trouble: { type: "boolean", default: false },
   },
 });
 const base = new URL(opts.base);
@@ -73,6 +74,89 @@ const PAGES = [
   ["agenda-quick-add-phone", "/agenda/add", PHONE],
   ["notify-new-topic", "/notify/admin/topics/new", DESK],
   ["check-in-phone", CHECK_IN, PHONE],
+  // Event profile (sheet 4): Load and Upload ask first.
+  ["profile-load-ask", "/admin/profile/load", DESK],
+  ["profile-load-ask-phone", "/admin/profile/load", PHONE],
+  ["profile-upload-ask", "/admin/profile/upload", DESK],
+];
+// A part's Settings (sheet 4): its groups, then each state of the save bar, shot as the window
+// shows it, so the bar sits at the foot. The changed field is scrolled to the middle, clear of the
+// bar, so its "Was 45." shows; the shot waits out the bar's step aside on a phone, which the scroll
+// starts. "Couldn't save" is a save that never reaches the platform.
+const SETTINGS_FORM = "/admin/settings/screen";
+const OFFLINE = "#canccu-field-offline_after_seconds";
+const typed = (value) => async (page) => {
+  await page.fill(OFFLINE, value);
+  await page
+    .locator(OFFLINE)
+    .evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await page.waitForTimeout(900);
+};
+const unanswered = async (page) => {
+  await page.route(`**${SETTINGS_FORM}`, (route) =>
+    route.request().method() === "POST" ? route.abort() : route.continue(),
+  );
+  await typed("30")(page);
+  await page.click("[data-canccu-save]");
+  await page.locator("[data-canccu-unanswered]:not([hidden])").waitFor();
+};
+const SETTINGS_STATES = [
+  ["settings-screen", DESK, {}],
+  ["settings-screen-change", DESK, { ready: typed("30"), fullPage: false }],
+  [
+    "settings-screen-change-phone",
+    PHONE,
+    { ready: typed("30"), fullPage: false },
+  ],
+  ["settings-screen-invalid", DESK, { ready: typed("3"), fullPage: false }],
+  ["settings-screen-failed", DESK, { ready: unanswered, fullPage: false }],
+];
+// Health with a part down (sheet 4), and the menu saying so: the second pass, `--trouble`, which
+// scripts/demo-screenshots runs while it holds notify stopped. On the desktop shot, the page
+// follows a check with notify's "What to check" open (health.js): the run fails if the page
+// reloads instead of swapping the check in, or if the open "What to check" closes.
+const LAST_CHECK = '[data-canccu-live="last-check"]';
+const NOTIFY_WAY = 'details[data-canccu-part="notify"]';
+const followsACheck = async (page) => {
+  await page.click(`${NOTIFY_WAY} > summary`);
+  const before = await page.locator(LAST_CHECK).textContent();
+  // Gone with the document if the page reloads.
+  await page.evaluate(() => (window.canccuSameDocument = true));
+  await page.waitForFunction(
+    ([sel, was]) => document.querySelector(sel)?.textContent !== was,
+    [LAST_CHECK, before],
+    { timeout: 30000 },
+  );
+  if (!(await page.evaluate(() => window.canccuSameDocument === true)))
+    throw new Error("Health reloaded the page instead of swapping the check");
+  if (!(await page.locator(NOTIFY_WAY).evaluate((way) => way.open)))
+    throw new Error('an open "What to check" closed when a check came in');
+};
+// Last, the page asks scripts/demo-screenshots to start notify again (a file in the work
+// directory, which it watches) and must clear the menu's "1 down" from a check, not a reload.
+const HEALTH_NOTE = 'a.canccu-menu__item[href$="/health-view"] .canccu-badge';
+const followsRecovery = async (page) => {
+  if (!(await page.locator(HEALTH_NOTE).count()))
+    throw new Error("the menu's Health item has no note while notify is down");
+  await page.evaluate(() => (window.canccuSameDocument = true));
+  writeFileSync("start-notify", "");
+  await page.waitForFunction(
+    (sel) => !document.querySelector(sel),
+    HEALTH_NOTE,
+    { timeout: 90000 },
+  );
+  if (!(await page.evaluate(() => window.canccuSameDocument === true)))
+    throw new Error("Health reloaded the page instead of swapping the check");
+};
+const TROUBLE = [
+  ["health-view-trouble", "/admin/health-view", DESK, { ready: followsACheck }],
+  ["health-view-trouble-phone", "/admin/health-view", PHONE, {}],
+  [
+    "health-view-recovered",
+    "/admin/health-view",
+    DESK,
+    { ready: followsRecovery },
+  ],
 ];
 // The brand kit (mockup 12, design sheet 6), after the screens, so its screen preview is screen's
 // player of the main zone with the fixture's run of show: first with no draft, then with one in the
@@ -246,10 +330,16 @@ const CANCELLED = [
 
 if (opts["dry-run"]) {
   console.log(`dry run, would screenshot into ${opts.out}/:`);
+  for (const [name, path, { width, height }] of TROUBLE) {
+    console.log(`  ${name}.png  ${at(path)}  (${width}×${height}, --trouble)`);
+  }
   for (const [name, path, { width, height }] of PAGES) {
     const shown =
       path === CHECK_IN ? "/notify/check-in?p=arrival&c=<a fresh code>" : path;
     console.log(`  ${name}.png  ${at(shown)}  (${width}×${height})`);
+  }
+  for (const [name, { width, height }] of SETTINGS_STATES) {
+    console.log(`  ${name}.png  ${at(SETTINGS_FORM)}  (${width}×${height})`);
   }
   for (const [name, path, { width, height }, o] of OTHERS) {
     const how =
@@ -424,6 +514,16 @@ async function shot(
   }
 }
 
+if (opts.trouble) {
+  for (const [name, path, viewport, how] of TROUBLE) {
+    await shot(name, path, viewport, SESSION, how);
+  }
+  await browser.close();
+  if (failures.length) process.exit(1);
+  console.log(`demo-screenshots: ${count} views in ${opts.out}/`);
+  process.exit(0);
+}
+
 // Saved changes, so Settings shows when its parts last changed and what changed.
 async function changeSettings(module, values) {
   const now = expect(
@@ -496,6 +596,9 @@ try {
       }
     }
     await shot(name, path, viewport, SESSION);
+  }
+  for (const [name, viewport, o] of SETTINGS_STATES) {
+    await shot(name, SETTINGS_FORM, viewport, SESSION, o);
   }
   for (const [name, path, viewport, o] of OTHERS) {
     await shot(name, path, viewport, o.cookie === null ? null : SESSION, o);

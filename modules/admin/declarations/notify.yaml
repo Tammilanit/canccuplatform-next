@@ -24,3 +24,16 @@ settings:
     max: 120
     label: Check-in code rotation (seconds)
     default: 30
+groups:
+  - id: topics
+    label: Topics
+    description: What people can choose to hear about at this event.
+    keys: [topics]
+  - id: push_limits
+    label: Push limits
+    description: How often one person is notified, and how.
+    keys: [hourly_cap, dm_fallback, schedule_lead_minutes]
+  - id: check_in
+    label: Check-in codes
+    description: How often the code on the check-in screen changes.
+    keys: [check_in_rotation_seconds]
