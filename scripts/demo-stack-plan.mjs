@@ -150,6 +150,34 @@ const selftest = () => {
     for (const path of ["modules/admin/x", "modules/agenda/x", "modules/notify/x", "modules/screen/x", "modules/tenants/x"])
       for (const g of needsOf(path)) assert.ok(GROUPS.includes(g), `${path}: ${g}`);
   });
+  const shots = (script, ...args) =>
+    execFileSync("node", [new URL(script, import.meta.url).pathname, "--dry-run", ...args], {
+      encoding: "utf8",
+    })
+      .split("\n")
+      .filter((l) => /^ {2}\S+\.png /.test(l))
+      .map((l) => l.trim().split(/\s+/)[0]);
+  for (const script of ["demo-screenshots.mjs", "demo-screenshots-front.mjs"]) {
+    check(`the shards of ${script} take every shot of the full run, each once`, () => {
+      const all = shots(script);
+      const sharded = SHARDS.flatMap(({ groups }) => shots(script, "--groups", groups.join(",")));
+      assert.ok(all.length > 0);
+      assert.deepEqual([...sharded].sort(), [...all].sort());
+    });
+    check(`${script} refuses a group it does not know`, () =>
+      assert.throws(() => shots(script, "--groups", "agenda,nope"), /unknown group nope/));
+  }
+  check("one group takes only its own shots", () => {
+    const agenda = shots("demo-screenshots.mjs", "--groups", "agenda");
+    assert.ok(agenda.includes("agenda-wide.png") && agenda.includes("error-not-found.png"));
+    assert.ok(!agenda.some((n) => /^(settings|studio|screen-|theming-)/.test(n)), agenda.join(" "));
+  });
+  check("the merge queue's check skips the 4K screens and keeps every theme", () => {
+    const checked = shots("demo-screenshots.mjs", "--check", "--groups", "screens");
+    assert.ok(!checked.some((n) => /3840|2160x/.test(n)));
+    for (const theme of ["terminal", "level-up", "default"])
+      assert.ok(checked.includes(`theming-${theme}-screen-pulse-1920x1080.png`), theme);
+  });
   check("the output is one KEY=value line each, the shards as JSON", () =>
     assert.equal(
       format(pr("modules/agenda/x.py")),

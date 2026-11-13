@@ -7,6 +7,13 @@
 /** One group per surface: the module serving the page, with screen's two kinds apart. */
 export const GROUPS = ["admin", "agenda", "notify", "theming", "screens", "screen-studio"];
 
+/** The groups a `--groups a,b` option names; a typo fails the run rather than skip its shots. */
+export function pickGroups(list) {
+  const picked = list.split(",").filter(Boolean);
+  for (const g of picked) if (!GROUPS.includes(g)) throw new Error(`unknown group ${g}`);
+  return new Set(picked);
+}
+
 // Longest prefix first: the Screen studio is served under /admin/.
 const PAGE_GROUPS = [
   ["/admin/screen", "screen-studio"],

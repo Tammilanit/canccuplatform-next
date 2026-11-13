@@ -6,7 +6,10 @@
 // reads are refused, a screen that does not draw the event, or a screen whose text does not read
 // from across a hall fails the run, so a screenshot of an error never passes for a real one. Runs
 // in Caddy's network namespace (scripts/demo-screenshots says why).
-// Usage: node demo-screenshots.mjs [--dry-run] [--base BASE_URL] [--out DIR]
+// Usage: node demo-screenshots.mjs [--dry-run] [--base BASE_URL] [--out DIR] [--groups LIST] [--check]
+//   --groups  only these screenshot groups (scripts/demo-screenshots-groups.mjs; default all): a
+//             shard of CI's demo stack, or a module PR's surfaces (docs/ci.md#tiers).
+//   --check   the merge queue's pass: every check, no PNG written and no 4K screen.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import {
@@ -18,9 +21,14 @@ import {
 } from "../modules/screen/test/stack/client.mjs";
 import {
   guestReads,
+  publishTheme,
   seedScreens,
 } from "../modules/screen/test/stack/fixture.mjs";
-import { planned, screenShots } from "../modules/screen/test/stack/screens.mjs";
+import {
+  THEMES,
+  planned,
+  screenShots,
+} from "../modules/screen/test/stack/screens.mjs";
 import {
   PLAYLIST_PAGES,
   LAYOUT_PAGES,
@@ -30,6 +38,7 @@ import {
   studioShots,
 } from "../modules/screen/test/stack/studio-shots.mjs";
 import { PREVIEW_PAGES } from "../modules/screen/test/stack/preview-shots.mjs";
+import { GROUPS, groupOf, pickGroups } from "./demo-screenshots-groups.mjs";
 
 const { values: opts } = parseArgs({
   options: {
@@ -37,8 +46,12 @@ const { values: opts } = parseArgs({
     base: { type: "string", default: "http://127.0.0.1" },
     out: { type: "string", default: "screenshots" },
     trouble: { type: "boolean", default: false },
+    groups: { type: "string", default: GROUPS.join(",") },
+    check: { type: "boolean", default: false },
   },
 });
+const wanted = pickGroups(opts.groups);
+const want = (group) => wanted.has(group);
 const base = new URL(opts.base);
 const port = base.port ? `:${base.port}` : "";
 // Chromium resolves `*.localhost` to the loopback itself, so the event's hostname reaches Caddy.
@@ -328,8 +341,21 @@ const CANCELLED = [
   ["agenda-bring-back-phone", PHONE],
 ];
 
+// Only the groups this run takes (--groups): a shard, or a module PR's surfaces.
+const only = (list, group) =>
+  list.splice(0, list.length, ...list.filter((entry) => want(group(entry))));
+only(TROUBLE, () => "admin");
+only(PAGES, ([, path]) => groupOf(path === CHECK_IN ? "/notify/" : path));
+only(SETTINGS_STATES, () => "admin");
+only(OTHERS, ([, path]) => groupOf(path));
+for (const list of [STUDIO, DRAFT, LIGHT]) only(list, () => "theming");
+for (const list of [DAY_VIEW, ITEM_PAGES, CANCELLED]) only(list, () => "agenda");
+// The Screen studio's lists are studio-shots.mjs's own, and taken all or none.
+const studio = (list) => (want("screen-studio") ? list : []);
+
 if (opts["dry-run"]) {
-  console.log(`dry run, would screenshot into ${opts.out}/:`);
+  const would = opts.check ? "check, writing no PNG" : `screenshot into ${opts.out}/`;
+  console.log(`dry run, would ${would}:`);
   for (const [name, path, { width, height }] of TROUBLE) {
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height}, --trouble)`);
   }
@@ -380,35 +406,35 @@ if (opts["dry-run"]) {
     const path = "/agenda/items/<an item made for the run, cancelled>";
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height})`);
   }
-  for (const name of planned()) {
+  for (const name of want("screens") ? planned(opts.check) : []) {
     console.log(`  ${name}.png  ${at("/screen/")}  (a paired screen)`);
   }
-  for (const [name, path, { width, height }] of STUDIO_PAGES) {
+  for (const [name, path, { width, height }] of studio(STUDIO_PAGES)) {
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, while two screens play)`,
     );
   }
-  for (const [name, path, { width, height }] of PREVIEW_PAGES) {
+  for (const [name, path, { width, height }] of studio(PREVIEW_PAGES)) {
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, while a preview on a screen runs)`,
     );
   }
-  for (const [name, path, { width, height }] of FROZEN_PAGES) {
+  for (const [name, path, { width, height }] of studio(FROZEN_PAGES)) {
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, while frozen)`,
     );
   }
-  for (const [name, path, { width, height }] of PLAYLIST_PAGES) {
+  for (const [name, path, { width, height }] of studio(PLAYLIST_PAGES)) {
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, with a playlist and its push)`,
     );
   }
-  for (const [name, path, { width, height }] of LAYOUT_PAGES) {
+  for (const [name, path, { width, height }] of studio(LAYOUT_PAGES)) {
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, the box editor, unsaved)`,
     );
   }
-  for (const [name, path, { width, height }] of SCHEDULE_PAGES) {
+  for (const [name, path, { width, height }] of studio(SCHEDULE_PAGES)) {
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, on windows made for it)`,
     );
@@ -501,10 +527,11 @@ async function shot(
       if (height > viewport.height)
         await page.setViewportSize({ ...viewport, height });
     }
-    await page.screenshot({
-      path: `${opts.out}/${name}.png`,
-      fullPage: fullPage && !tall,
-    });
+    if (!opts.check)
+      await page.screenshot({
+        path: `${opts.out}/${name}.png`,
+        fullPage: fullPage && !tall,
+      });
     console.log(`ok   ${name}.png  ${url}`);
     count++;
   } catch (err) {
@@ -568,13 +595,15 @@ async function removeMade() {
 }
 
 try {
-  try {
-    await changeSettings("screen", (v) => ({
-      offline_after_seconds: v.offline_after_seconds === 60 ? 45 : 60,
-    }));
-    await changeSettings("admin", () => ({ timezone: "UTC", language: "en" }));
-  } catch (err) {
-    fail(`settings changes: ${firstLine(err)}`);
+  if (want("admin")) {
+    try {
+      await changeSettings("screen", (v) => ({
+        offline_after_seconds: v.offline_after_seconds === 60 ? 45 : 60,
+      }));
+      await changeSettings("admin", () => ({ timezone: "UTC", language: "en" }));
+    } catch (err) {
+      fail(`settings changes: ${firstLine(err)}`);
+    }
   }
   for (const [name, page, viewport] of PAGES) {
     let path = page;
@@ -603,55 +632,61 @@ try {
   for (const [name, path, viewport, o] of OTHERS) {
     await shot(name, path, viewport, o.cookie === null ? null : SESSION, o);
   }
-  let item;
-  try {
-    item = await addItem("Demo Game Cup: semi-final", "tournament", 60, 75);
-    await addItem("Board games corner", "activity", 150, 60);
-    await addItem("Quiz night", "activity", 240, 60);
-  } catch (err) {
-    fail(`agenda items for the shots: ${firstLine(err)}`);
-  }
-  if (item) {
-    for (const [name, suffix, viewport] of ITEM_PAGES) {
-      await shot(name, `/agenda/items/${item.id}${suffix}`, viewport, SESSION);
+  if (want("agenda")) {
+    let item;
+    try {
+      item = await addItem("Demo Game Cup: semi-final", "tournament", 60, 75);
+      await addItem("Board games corner", "activity", 150, 60);
+      await addItem("Quiz night", "activity", 240, 60);
+    } catch (err) {
+      fail(`agenda items for the shots: ${firstLine(err)}`);
     }
-  }
-  try {
-    const raffle = await addItem("Raffle", "activity", 300, 15);
-    const cancel = await demo.call(
-      "POST",
-      `/api/agenda/items/${raffle.id}/cancel`,
-      { body: { revision: 1 } },
-    );
-    raffle.revision = expect(
-      cancel,
-      200,
-      "cancelling the raffle",
-    ).body.revision;
-    for (const [name, viewport] of CANCELLED) {
-      await shot(name, `/agenda/items/${raffle.id}`, viewport, SESSION);
+    if (item) {
+      for (const [name, suffix, viewport] of ITEM_PAGES) {
+        await shot(name, `/agenda/items/${item.id}${suffix}`, viewport, SESSION);
+      }
     }
-  } catch (err) {
-    fail(`a cancelled item: ${firstLine(err)}`);
+    try {
+      const raffle = await addItem("Raffle", "activity", 300, 15);
+      const cancel = await demo.call(
+        "POST",
+        `/api/agenda/items/${raffle.id}/cancel`,
+        { body: { revision: 1 } },
+      );
+      raffle.revision = expect(
+        cancel,
+        200,
+        "cancelling the raffle",
+      ).body.revision;
+      for (const [name, viewport] of CANCELLED) {
+        await shot(name, `/agenda/items/${raffle.id}`, viewport, SESSION);
+      }
+    } catch (err) {
+      fail(`a cancelled item: ${firstLine(err)}`);
+    }
   }
   // Gone before the fixture: it finds its run of show by title and would take these.
   await removeMade();
 
-  try {
-    await seedScreens(demo);
-    const { items } = expect(
-      await demo.call("GET", "/api/agenda/items"),
-      200,
-      "the run of show",
-    ).body;
-    for (const [name, viewport, o] of DAY_VIEW) {
-      const title = o.pick ?? o.delay;
-      const id = title && items.find((i) => i.title === title)?.id;
-      if (title && !id) throw new Error(`the fixture has no "${title}"`);
-      await shot(name, dayPath(o, id), viewport, SESSION, o);
+  // The fixture's run of show, ticker and zones, which the day view and the studios draw (the
+  // screens seed it themselves).
+  if (want("agenda") || want("theming") || want("screen-studio")) {
+    try {
+      await seedScreens(demo);
+      const { items } = expect(
+        await demo.call("GET", "/api/agenda/items"),
+        200,
+        "the run of show",
+      ).body;
+      for (const [name, viewport, o] of DAY_VIEW) {
+        const title = o.pick ?? o.delay;
+        const id = title && items.find((i) => i.title === title)?.id;
+        if (title && !id) throw new Error(`the fixture has no "${title}"`);
+        await shot(name, dayPath(o, id), viewport, SESSION, o);
+      }
+    } catch (err) {
+      fail(`the run of show's day: ${firstLine(err)}`);
     }
-  } catch (err) {
-    fail(`the run of show's day: ${firstLine(err)}`);
   }
 
   // A guest who never checked in reads every public page; the screens play without it too.
@@ -660,95 +695,110 @@ try {
   } catch (err) {
     fail(`guest: ${firstLine(err)}`);
   }
-  try {
-    await screenShots({
-      browser,
-      demo,
-      at,
-      out: opts.out,
-      cookieOn,
-      fail,
-      ok: (name) => {
-        console.log(`ok   ${name}`);
-        count++;
-      },
-    });
-  } catch (err) {
-    fail(`screens: ${firstLine(err)}`);
+  if (want("screens")) {
+    try {
+      await screenShots({
+        browser,
+        demo,
+        at,
+        out: opts.out,
+        cookieOn,
+        check: opts.check,
+        fail,
+        ok: (name) => {
+          console.log(`ok   ${name}`);
+          count++;
+        },
+      });
+    } catch (err) {
+      fail(`screens: ${firstLine(err)}`);
+    }
+  } else if (want("theming") || want("screen-studio")) {
+    // Without the screens in this run, the themes they publish, in their order, so the studios
+    // draw the same look and history as in one run of every group.
+    try {
+      for (const theme of THEMES) await publishTheme(demo, theme);
+    } catch (err) {
+      fail(`the screens' themes: ${firstLine(err)}`);
+    }
   }
   for (const [name, viewport, o] of STUDIO) {
     await shot(name, "/theming/studio/", viewport, SESSION, o);
   }
-  // After the screens, so the zone plays the fixture's run of show: a draft with mockup 12's
-  // brand and the demo logo, which the previews draw before anything is published.
-  try {
-    const draft = await demo.call("POST", "/api/theming/draft", {
-      body: { from: "defaults" },
-    });
-    let version = expect(draft, 201, "a draft").body.draft_version;
-    const logo = await demo.call(
-      "PUT",
-      `/api/theming/draft/file?path=images/logo.svg&draft_version=${version}`,
-      { body: readFileSync(LOGO), type: "image/svg+xml" },
-    );
-    version = expect(logo, 200, "the draft's logo").body.draft_version;
-    const brand = {
-      primary: "#ff7a45",
-      accent: "#7c5cff",
-      scheme: "dark",
-      logo: "images/logo.svg",
-    };
-    const set = await demo.call("PUT", "/api/theming/draft/brand", {
-      body: { draft_version: version, ...brand },
-    });
-    version = expect(set, 200, "the draft's brand").body.draft.draft_version;
+  if (want("theming")) {
+    // After the screens, so the zone plays the fixture's run of show: a draft with mockup 12's
+    // brand and the demo logo, which the previews draw before anything is published.
     try {
-      for (const [name, viewport, o] of DRAFT) {
-        await shot(name, o.path ?? "/theming/studio/", viewport, SESSION, o);
-      }
-      // The same brand, light: Publish asks first (#444, sheet 6, Q11 b: warn only).
-      const light = await demo.call("PUT", "/api/theming/draft/brand", {
-        body: { draft_version: version, ...brand, scheme: "light" },
+      const draft = await demo.call("POST", "/api/theming/draft", {
+        body: { from: "defaults" },
       });
-      version = expect(light, 200, "a light brand").body.draft.draft_version;
-      for (const [name, viewport] of LIGHT) {
-        await shot(name, "/theming/studio/", viewport, SESSION, {
-          fullPage: false,
-          ready: async (page) => {
-            await drawn(page);
-            await page
-              .locator('[data-action="light-ask"]:visible')
-              .first()
-              .click();
-            await page.locator("#canccu-studio-light[open]").waitFor();
-            await page.waitForTimeout(300);
-          },
-        });
-      }
-    } finally {
-      // Left behind, the draft would greet the next run's "studio" shot instead of the start.
-      const gone = await demo.call(
-        "DELETE",
-        `/api/theming/draft?draft_version=${version}`,
+      let version = expect(draft, 201, "a draft").body.draft_version;
+      const logo = await demo.call(
+        "PUT",
+        `/api/theming/draft/file?path=images/logo.svg&draft_version=${version}`,
+        { body: readFileSync(LOGO), type: "image/svg+xml" },
       );
-      expect(gone, 204, "discarding the draft");
+      version = expect(logo, 200, "the draft's logo").body.draft_version;
+      const brand = {
+        primary: "#ff7a45",
+        accent: "#7c5cff",
+        scheme: "dark",
+        logo: "images/logo.svg",
+      };
+      const set = await demo.call("PUT", "/api/theming/draft/brand", {
+        body: { draft_version: version, ...brand },
+      });
+      version = expect(set, 200, "the draft's brand").body.draft.draft_version;
+      try {
+        for (const [name, viewport, o] of DRAFT) {
+          await shot(name, o.path ?? "/theming/studio/", viewport, SESSION, o);
+        }
+        // The same brand, light: Publish asks first (#444, sheet 6, Q11 b: warn only).
+        const light = await demo.call("PUT", "/api/theming/draft/brand", {
+          body: { draft_version: version, ...brand, scheme: "light" },
+        });
+        version = expect(light, 200, "a light brand").body.draft.draft_version;
+        for (const [name, viewport] of LIGHT) {
+          await shot(name, "/theming/studio/", viewport, SESSION, {
+            fullPage: false,
+            ready: async (page) => {
+              await drawn(page);
+              await page
+                .locator('[data-action="light-ask"]:visible')
+                .first()
+                .click();
+              await page.locator("#canccu-studio-light[open]").waitFor();
+              await page.waitForTimeout(300);
+            },
+          });
+        }
+      } finally {
+        // Left behind, the draft would greet the next run's "studio" shot instead of the start.
+        const gone = await demo.call(
+          "DELETE",
+          `/api/theming/draft?draft_version=${version}`,
+        );
+        expect(gone, 204, "discarding the draft");
+      }
+    } catch (err) {
+      fail(`studio draft: ${firstLine(err)}`);
     }
-  } catch (err) {
-    fail(`studio draft: ${firstLine(err)}`);
   }
-  // The Screen studio, on the fixture and theme the screens left.
-  try {
-    await studioShots({
-      browser,
-      demo,
-      at,
-      cookieOn,
-      // A screen's own view (the preview's mark) is shot with its device cookie.
-      shot: (name, path, viewport, o) =>
-        shot(name, path, viewport, o?.cookie ?? SESSION, o),
-    });
-  } catch (err) {
-    fail(`studio: ${firstLine(err)}`);
+  if (want("screen-studio")) {
+    // The Screen studio, on the fixture and theme the screens left.
+    try {
+      await studioShots({
+        browser,
+        demo,
+        at,
+        cookieOn,
+        // A screen's own view (the preview's mark) is shot with its device cookie.
+        shot: (name, path, viewport, o) =>
+          shot(name, path, viewport, o?.cookie ?? SESSION, o),
+      });
+    } catch (err) {
+      fail(`studio: ${firstLine(err)}`);
+    }
   }
 } finally {
   await browser.close();

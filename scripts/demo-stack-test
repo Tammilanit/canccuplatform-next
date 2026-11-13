@@ -2,7 +2,12 @@
 # API tests against the running demo stack (deploy/compose.yml + deploy/compose.ci.yml).
 # CI runs it in the `demo-stack` check. Hand-written smoke tests; tests generated from
 # contracts/ come later.
-# Usage: demo-stack-test [--dry-run] [BASE_URL]   (default http://127.0.0.1)
+# Usage: demo-stack-test [--dry-run] [--only LIST] [BASE_URL]   (default http://127.0.0.1)
+#   --only LIST  the platform smoke (every health check, sign-in, one page per module, the demo
+#                event imported) plus the tests of these modules, comma-separated (`all`: every
+#                module's); `soak` adds the player's soak. Without it, everything, the soak too.
+#                CI's tiers run the changed modules' tests and the soak in a job of its own
+#                (docs/ci.md#tiers).
 # BASE_URL is where Caddy listens; every request names the event in `Host`: the demo event's
 # hostname CANCCU_DEMO_HOST (default demo.localhost), since the CI stack has two events and IP
 # mode serves none then (deploy/compose.ci.yml).
@@ -14,9 +19,14 @@
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
-usage() { echo "usage: demo-stack-test [--dry-run] [BASE_URL]" >&2; exit 2; }
+usage() { echo "usage: demo-stack-test [--dry-run] [--only LIST] [BASE_URL]" >&2; exit 2; }
 dry=0
+only=everything
 if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
+if [ "${1:-}" = "--only" ]; then
+  [ $# -ge 2 ] || usage
+  only=$2; shift 2
+fi
 [ $# -le 1 ] || usage
 BASE=${1:-http://127.0.0.1}
 BASE=${BASE%/}
@@ -53,11 +63,35 @@ TESTS=(
   "screen keeps 100 screens of two events current, each change within a second (p95)"
   "the player holds 24 accelerated hours within its heap budget"
   "Event profile's Load asks first and replaces nothing"
+  "every module's health through Caddy is ok"
+  "one page of each module answers a signed-in organiser"
 )
+# Whose test each is, in TESTS' order: `platform` always runs; a test of several modules runs
+# for any of them.
+TAGS=(
+  platform platform platform platform admin platform admin admin admin admin admin admin admin
+  platform platform platform notify notify agenda screen "agenda notify" "agenda notify" screen
+  platform screen soak admin platform platform
+)
+# want TAG...: whether --only asks for any of these tests.
+want() {
+  local tag
+  for tag in "$@"; do
+    case "$tag" in
+      platform) return 0 ;;
+      soak) [ "$only" = everything ] || [[ ,$only, == *,soak,* ]] && return 0 ;;
+      *) [ "$only" = everything ] || [ "$only" = all ] || [[ ,$only, == *,$tag,* ]] && return 0 ;;
+    esac
+  done
+  return 1
+}
 
 if [ "$dry" = 1 ]; then
   echo "dry run, would test $BASE with $EVENT_DIR:"
-  for t in "${TESTS[@]}"; do echo "  $t"; done
+  for i in "${!TESTS[@]}"; do
+    # shellcheck disable=SC2086  # a tag list splits into its modules
+    want ${TAGS[i]} && echo "  ${TESTS[i]}"
+  done
   exit 0
 fi
 
@@ -113,38 +147,41 @@ call GET /api/admin/settings/admin -H "cookie: canccu_session=not-a-session"
 check "${TESTS[3]}" body_is 401 '.error.code == "not_signed_in"'
 
 profile_name=$(grep -m1 '^name:' "$EVENT_DIR/profile.yaml" | sed 's/^name:[[:space:]]*//')
-call POST /admin/profile/load -H "cookie: $COOKIE" -D "$TMP/headers"
-# shellcheck disable=SC2329
-redirects_with_loaded() {
-  status_is 303 && grep -qi "^location: .*/profile?message=Loaded+${profile_name// /+}[&[:space:]]" "$TMP/headers"
-}
-check "${TESTS[4]}" redirects_with_loaded
+if want admin; then
+  call POST /admin/profile/load -H "cookie: $COOKIE" -D "$TMP/headers"
+  # shellcheck disable=SC2329
+  redirects_with_loaded() {
+    status_is 303 && grep -qi "^location: .*/profile?message=Loaded+${profile_name// /+}[&[:space:]]" "$TMP/headers"
+  }
+  check "${TESTS[4]}" redirects_with_loaded
+fi
 
 (cd "$EVENT_DIR" && python3 -m zipfile -c "$TMP/demo.zip" profile.yaml assets/)
 call PUT /api/admin/profile -H "cookie: $COOKIE" -H "content-type: application/zip" --data-binary "@$TMP/demo.zip"
 check "${TESTS[5]}" body_is 200 ".name == \"$profile_name\" and .schema_version == 1"
 
-call GET /api/admin/settings/admin -H "cookie: $COOKIE"
-check "${TESTS[6]}" body_is 200 '.module == "admin" and .values.timezone == "UTC" and .values.language == "en" and (.settings_version | type == "number") and ([.groups[].keys[]] == ["timezone", "language"])'
-version=$(jq -r '.settings_version // 0' "$TMP/body" 2>/dev/null || echo 0)
+if want admin; then
+  call GET /api/admin/settings/admin -H "cookie: $COOKIE"
+  check "${TESTS[6]}" body_is 200 '.module == "admin" and .values.timezone == "UTC" and .values.language == "en" and (.settings_version | type == "number") and ([.groups[].keys[]] == ["timezone", "language"])'
+  version=$(jq -r '.settings_version // 0' "$TMP/body" 2>/dev/null || echo 0)
 
-call PUT /api/admin/settings/admin -H "cookie: $COOKIE" -H "content-type: application/json" \
-  --data "{\"settings_version\": $version, \"values\": {\"timezone\": \"UTC\", \"language\": \"fi\"}}"
-check "${TESTS[7]}" body_is 200 ".values.language == \"fi\" and .settings_version > $version"
+  call PUT /api/admin/settings/admin -H "cookie: $COOKIE" -H "content-type: application/json" \
+    --data "{\"settings_version\": $version, \"values\": {\"timezone\": \"UTC\", \"language\": \"fi\"}}"
+  check "${TESTS[7]}" body_is 200 ".values.language == \"fi\" and .settings_version > $version"
 
-call PUT /api/admin/settings/admin -H "cookie: $COOKIE" -H "content-type: application/json" \
-  --data "{\"settings_version\": $version, \"values\": {\"timezone\": \"UTC\", \"language\": \"en\"}}"
-check "${TESTS[8]}" body_is 409 '.error.code == "version_conflict"'
+  call PUT /api/admin/settings/admin -H "cookie: $COOKIE" -H "content-type: application/json" \
+    --data "{\"settings_version\": $version, \"values\": {\"timezone\": \"UTC\", \"language\": \"en\"}}"
+  check "${TESTS[8]}" body_is 409 '.error.code == "version_conflict"'
 
-call GET /api/admin/settings/no-such-module -H "cookie: $COOKIE"
-check "${TESTS[9]}" body_is 404 '.error.code == "not_found"'
+  call GET /api/admin/settings/no-such-module -H "cookie: $COOKIE"
+  check "${TESTS[9]}" body_is 404 '.error.code == "not_found"'
 
-call GET /api/admin/profile -H "cookie: $COOKIE"
-cp "$TMP/body" "$TMP/export.zip"
-# shellcheck disable=SC2329
-export_has_demo() {
-  status_is 200 || return 1
-  python3 - "$TMP/export.zip" "$EVENT_DIR" <<'PY'
+  call GET /api/admin/profile -H "cookie: $COOKIE"
+  cp "$TMP/body" "$TMP/export.zip"
+  # shellcheck disable=SC2329
+  export_has_demo() {
+    status_is 200 || return 1
+    python3 - "$TMP/export.zip" "$EVENT_DIR" <<'PY'
 import pathlib, sys, zipfile
 names = set(zipfile.ZipFile(sys.argv[1]).namelist())
 event = pathlib.Path(sys.argv[2])
@@ -153,35 +190,36 @@ missing = want - names
 print("missing:", sorted(missing)) if missing else None
 sys.exit(1 if missing else 0)
 PY
-}
-check "${TESTS[10]}" export_has_demo
+  }
+  check "${TESTS[10]}" export_has_demo
 
-call GET /admin/health-view -H "cookie: $COOKIE"
-# shellcheck disable=SC2329
-names_the_parts() {
-  # Each part by name, its id in the Log name column (UX audit A2); the test module hello is
-  # left out of Health (deploy/compose.yml); screen's render check is a part of its own.
-  status_is 200 && grep -q '<b>Admin</b>' "$TMP/body" && grep -q '<b>Run of show</b>' "$TMP/body" \
-    && grep -q '<code class="canccu-muted">agenda</code>' "$TMP/body" \
-    && grep -q '<b>Screen rendering</b>' "$TMP/body"
-}
-check "${TESTS[11]}" names_the_parts
+  call GET /admin/health-view -H "cookie: $COOKIE"
+  # shellcheck disable=SC2329
+  names_the_parts() {
+    # Each part by name, its id in the Log name column (UX audit A2); the test module hello is
+    # left out of Health (deploy/compose.yml); screen's render check is a part of its own.
+    status_is 200 && grep -q '<b>Admin</b>' "$TMP/body" && grep -q '<b>Run of show</b>' "$TMP/body" \
+      && grep -q '<code class="canccu-muted">agenda</code>' "$TMP/body" \
+      && grep -q '<b>Screen rendering</b>' "$TMP/body"
+  }
+  check "${TESTS[11]}" names_the_parts
 
-call GET /admin/profile/load -H "cookie: $COOKIE"
-cp "$TMP/body" "$TMP/ask.html"
-call GET /api/admin/settings/admin -H "cookie: $COOKIE"
-# shellcheck disable=SC2329
-asks_first() {
-  grep -q '>Replace settings and look</button>' "$TMP/ask.html" \
-    && jq -e '.values.language == "fi"' "$TMP/body" >/dev/null
-}
-check "${TESTS[26]}" asks_first
+  call GET /admin/profile/load -H "cookie: $COOKIE"
+  cp "$TMP/body" "$TMP/ask.html"
+  call GET /api/admin/settings/admin -H "cookie: $COOKIE"
+  # shellcheck disable=SC2329
+  asks_first() {
+    grep -q '>Replace settings and look</button>' "$TMP/ask.html" \
+      && jq -e '.values.language == "fi"' "$TMP/body" >/dev/null
+  }
+  check "${TESTS[26]}" asks_first
 
-# The settings changed above; import the demo again so the screenshots that follow show the
-# demo event.
-call PUT /api/admin/profile -H "cookie: $COOKIE" -H "content-type: application/zip" --data-binary "@$TMP/demo.zip"
-call GET /api/admin/settings/admin -H "cookie: $COOKIE"
-check "${TESTS[12]}" body_is 200 '.values.language == "en"'
+  # The settings changed above; import the demo again so the screenshots that follow show the
+  # demo event.
+  call PUT /api/admin/profile -H "cookie: $COOKIE" -H "content-type: application/zip" --data-binary "@$TMP/demo.zip"
+  call GET /api/admin/settings/admin -H "cookie: $COOKIE"
+  check "${TESTS[12]}" body_is 200 '.values.language == "en"'
+fi
 
 # Admin itself serves the session API (the stub only answers admin's own rights checks).
 call GET /api/admin/session
@@ -197,52 +235,60 @@ CALL_HOST=no-tenant.example.test call GET /api/admin/settings/admin -H "cookie: 
 check "${TESTS[15]}" body_is 404 '.error.code == "not_found"'
 
 # The page is routed (a malformed code gets the page's own answer); internal paths never are.
-call GET "/notify/check-in?p=arrival&c=x"
-# shellcheck disable=SC2329
-page_says_invalid() { status_is 400 && grep -q "not valid" "$TMP/body"; }
-check "${TESTS[16]}" page_says_invalid
-call GET "/notify/internal/notify/check-in/code?tenant_id=demo&purpose=arrival"
-check "${TESTS[17]}" status_is 404
-call GET "/agenda/internal/agenda/items?tenant_id=demo"
-check "${TESTS[18]}" status_is 404
+if want notify; then
+  call GET "/notify/check-in?p=arrival&c=x"
+  # shellcheck disable=SC2329
+  page_says_invalid() { status_is 400 && grep -q "not valid" "$TMP/body"; }
+  check "${TESTS[16]}" page_says_invalid
+  call GET "/notify/internal/notify/check-in/code?tenant_id=demo&purpose=arrival"
+  check "${TESTS[17]}" status_is 404
+fi
+if want agenda; then
+  call GET "/agenda/internal/agenda/items?tenant_id=demo"
+  check "${TESTS[18]}" status_is 404
+fi
 
-# The files volume is writable by the modules (#286): screen keeps the upload as sent (a sound
-# is stored unchanged) and serves the same bytes back. Files are content-addressed, so on a reused
-# volume the fixture's bytes would match a copy an earlier run stored and prove no write: an
-# ID3v1 tag (128 bytes, the last thing in an MP3) with a title of this run makes them new.
-SOUND="$TMP/sound.mp3"
-{ cat modules/screen/test/fixtures/media/sound.mp3
-  printf 'TAG%-30.30s%-30s%-30s%-4s%-30s\377' "canccu-$(date +%s%N)-$$" "" "" "" ""; } > "$SOUND"
-call POST /api/screen/assets -H "cookie: $COOKIE" -F "file=@$SOUND"
-file_url=$(jq -r '.url // ""' "$TMP/body" 2>/dev/null)
-# shellcheck disable=SC2329
-serves_upload_back() {
-  status_is 201 && [[ $file_url == /api/screen/files/* ]] || return 1
-  call GET "$file_url" -H "cookie: $COOKIE"
-  status_is 200 && cmp -s "$TMP/body" "$SOUND"
-}
-check "${TESTS[19]}" serves_upload_back
+if want screen; then
+  # The files volume is writable by the modules (#286): screen keeps the upload as sent (a sound
+  # is stored unchanged) and serves the same bytes back. Files are content-addressed, so on a reused
+  # volume the fixture's bytes would match a copy an earlier run stored and prove no write: an
+  # ID3v1 tag (128 bytes, the last thing in an MP3) with a title of this run makes them new.
+  SOUND="$TMP/sound.mp3"
+  { cat modules/screen/test/fixtures/media/sound.mp3
+    printf 'TAG%-30.30s%-30s%-30s%-4s%-30s\377' "canccu-$(date +%s%N)-$$" "" "" "" ""; } > "$SOUND"
+  call POST /api/screen/assets -H "cookie: $COOKIE" -F "file=@$SOUND"
+  file_url=$(jq -r '.url // ""' "$TMP/body" 2>/dev/null)
+  # shellcheck disable=SC2329
+  serves_upload_back() {
+    status_is 201 && [[ $file_url == /api/screen/files/* ]] || return 1
+    call GET "$file_url" -H "cookie: $COOKIE"
+    status_is 200 && cmp -s "$TMP/body" "$SOUND"
+  }
+  check "${TESTS[19]}" serves_upload_back
+fi
 
-# shellcheck disable=SC2329
-redirects_to() {
-  call GET "$1" -D "$TMP/headers"
-  status_is 308 && grep -qiF "location: $2"$'\r' "$TMP/headers"
-}
-# shellcheck disable=SC2329
-bare_prefixes_redirect() {
-  redirects_to "/agenda?day=2026-11-10" "/agenda/?day=2026-11-10" && redirects_to /agenda /agenda/ &&
-    redirects_to "/notify?x=1" "/notify/admin/topics?x=1" && redirects_to /notify/ /notify/admin/topics
-}
-check "${TESTS[20]}" bare_prefixes_redirect
-# shellcheck disable=SC2329
-hidden_under_prefix() {
-  local p
-  for p in /agenda/api/agenda/now /agenda/health /notify/api/notify/topic-types /notify/health; do
-    call GET "$p"
-    status_is 404 || return 1
-  done
-}
-check "${TESTS[21]}" hidden_under_prefix
+if want agenda notify; then
+  # shellcheck disable=SC2329
+  redirects_to() {
+    call GET "$1" -D "$TMP/headers"
+    status_is 308 && grep -qiF "location: $2"$'\r' "$TMP/headers"
+  }
+  # shellcheck disable=SC2329
+  bare_prefixes_redirect() {
+    redirects_to "/agenda?day=2026-11-10" "/agenda/?day=2026-11-10" && redirects_to /agenda /agenda/ &&
+      redirects_to "/notify?x=1" "/notify/admin/topics?x=1" && redirects_to /notify/ /notify/admin/topics
+  }
+  check "${TESTS[20]}" bare_prefixes_redirect
+  # shellcheck disable=SC2329
+  hidden_under_prefix() {
+    local p
+    for p in /agenda/api/agenda/now /agenda/health /notify/api/notify/topic-types /notify/health; do
+      call GET "$p"
+      status_is 404 || return 1
+    done
+  }
+  check "${TESTS[21]}" hidden_under_prefix
+fi
 
 # The stack tests of screen (modules/screen/test/stack/) run in the screen container against
 # screen itself, since a device stream opens only from the demo venue's addresses (the loopback
@@ -254,9 +300,11 @@ in_screen() {
     "${COMPOSE[@]}" exec -T -e CANCCU_DEMO_HOST="$DEMO_HOST" -w /tmp/canccu-stack screen \
       node "$@" > "$TMP/body" 2>&1
 }
-# The push channel (#304): from the ticker's PUT to its message on an open device stream.
-check "${TESTS[22]}" in_screen push-latency.mjs
-sed -n 's/^push latency: /     /p' "$TMP/body"
+if want screen; then
+  # The push channel (#304): from the ticker's PUT to its message on an open device stream.
+  check "${TESTS[22]}" in_screen push-latency.mjs
+  sed -n 's/^push latency: /     /p' "$TMP/body"
+fi
 
 call GET /api/tenants/current
 demo_name=$(jq -r '.name // ""' "$TMP/body" 2>/dev/null)
@@ -267,20 +315,46 @@ two_events() {
 }
 check "${TESTS[23]}" two_events
 
-# The load test (#310, plan O1): 50 screens in each event, every change timed on every screen.
-check "${TESTS[24]}" in_screen load.mjs
-sed -n 's/^load: /     /p' "$TMP/body"
+if want screen; then
+  # The load test (#310, plan O1): 50 screens in each event, every change timed on every screen.
+  check "${TESTS[24]}" in_screen load.mjs
+  sed -n 's/^load: /     /p' "$TMP/body"
+fi
 
-# The player's soak (#310, plan O3): a fake clock runs 24 hours in 6 minutes; the real 24-hour run
-# is the lead's, on the test VM (modules/screen/README.md, Soak and load).
+if want soak; then
+  # The player's soak (#310, plan O3): a fake clock runs 24 hours in 6 minutes; the real 24-hour run
+  # is the lead's, on the test VM (modules/screen/README.md, Soak and load).
+  # shellcheck disable=SC2329
+  soak_holds() {
+    code=
+    CANCCU_DEMO_HOST="$DEMO_HOST" scripts/screen-soak --hours 24 --minutes 6 --out "$TMP/soak" \
+      > "$TMP/body" 2>&1
+  }
+  check "${TESTS[25]}" soak_holds
+  sed -n 's/^soak: /     /p' "$TMP/body"
+fi
+
+# The platform smoke a module PR's tier still runs (docs/ci.md#tiers): every module behind
+# Caddy is healthy, and each one's organiser page answers the session itself, not a redirect to
+# sign in.
 # shellcheck disable=SC2329
-soak_holds() {
-  code=
-  CANCCU_DEMO_HOST="$DEMO_HOST" scripts/screen-soak --hours 24 --minutes 6 --out "$TMP/soak" \
-    > "$TMP/body" 2>&1
+all_healthy() {
+  local m
+  for m in hello admin tenants screen theming agenda notify; do
+    call GET "/api/$m/health"
+    body_is 200 ".status == \"ok\" and .module == \"$m\"" || { echo "$m" >> "$TMP/body"; return 1; }
+  done
 }
-check "${TESTS[25]}" soak_holds
-sed -n 's/^soak: /     /p' "$TMP/body"
+check "${TESTS[27]}" all_healthy
+# shellcheck disable=SC2329
+pages_answer() {
+  local p
+  for p in /admin/settings /admin/screen/live /theming/studio/ /agenda/ /notify/admin/topics; do
+    call GET "$p" -H "cookie: $COOKIE"
+    status_is 200 || { echo "$p" >> "$TMP/body"; return 1; }
+  done
+}
+check "${TESTS[28]}" pages_answer
 
 if [ "$fail" = 0 ]; then echo "demo-stack-test: all $n tests passed"; else echo "demo-stack-test: tests failed" >&2; fi
 exit "$fail"

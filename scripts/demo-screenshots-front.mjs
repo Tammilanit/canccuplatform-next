@@ -3,7 +3,8 @@
 // scripts/demo-screenshots-front.sql seeded people, a session without a role, events before,
 // after and away from their venue, and the archived one's item. Each shot must answer its own
 // status and show its state's words, so a screenshot of the wrong state fails.
-// Usage: node demo-screenshots-front.mjs [--dry-run] [--base BASE_URL] [--out DIR]
+// Usage: node demo-screenshots-front.mjs [--dry-run] [--base BASE_URL] [--out DIR] [--groups LIST]
+//          [--check]   (the groups and the check as in demo-screenshots.mjs)
 import { mkdirSync } from "node:fs";
 import { parseArgs } from "node:util";
 import {
@@ -13,14 +14,18 @@ import {
   event,
   expect,
 } from "../modules/screen/test/stack/client.mjs";
+import { GROUPS, groupOf, pickGroups } from "./demo-screenshots-groups.mjs";
 
 const { values: opts } = parseArgs({
   options: {
     "dry-run": { type: "boolean", default: false },
     base: { type: "string", default: "http://127.0.0.1" },
     out: { type: "string", default: "screenshots" },
+    groups: { type: "string", default: GROUPS.join(",") },
+    check: { type: "boolean", default: false },
   },
 });
+const wanted = pickGroups(opts.groups);
 const base = new URL(opts.base);
 const port = base.port ? `:${base.port}` : "";
 const DESK = { width: 1280, height: 800 };
@@ -199,6 +204,11 @@ const SHOTS = [
   ],
 ];
 
+// Only the groups this run takes; a fresh or stale code is a check-in page.
+const takes = ([, path]) =>
+  wanted.has(groupOf(path.startsWith("@") ? "/notify/" : path));
+SHOTS.splice(0, SHOTS.length, ...SHOTS.filter(takes));
+
 const at = (path, host = DEMO_HOST) => `http://${host}${port}${path}`;
 if (opts["dry-run"]) {
   for (const [name, path, { width, height }, o] of SHOTS) {
@@ -230,7 +240,9 @@ const failures = [];
 let count = 0;
 const browser = await chromium.launch();
 // A code is valid for its period and the next; it reads as expired for the 10 after those.
-const stale = { path: await code(), at: Date.now() };
+const stale = SHOTS.some(([, path]) => path === STALE)
+  ? { path: await code(), at: Date.now() }
+  : undefined;
 try {
   for (const [name, wanted, viewport, o] of SHOTS) {
     const host = o.host ?? DEMO_HOST;
@@ -274,10 +286,11 @@ try {
         if (height > viewport.height)
           await page.setViewportSize({ ...viewport, height });
       }
-      await page.screenshot({
-        path: `${opts.out}/${name}.png`,
-        fullPage: true,
-      });
+      if (!opts.check)
+        await page.screenshot({
+          path: `${opts.out}/${name}.png`,
+          fullPage: true,
+        });
       console.log(`ok   ${name}.png`);
       count++;
     } catch (err) {
