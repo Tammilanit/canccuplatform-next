@@ -6,17 +6,17 @@
  * "Logo and name"); only theming knows whether there is a logo, so the page never has to.
  */
 import { createHash } from "node:crypto";
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import type { TenantResolver } from "@canccu/kit";
 import type { Db } from "./db.js";
 import type { ProfileSource } from "./profile.js";
 import { currentTheme } from "./theme.js";
-import { adminTokens } from "./tokens.js";
+import { adminTokens, platformTokens } from "./tokens.js";
 
 export interface LogoDeps {
   db: Db;
   profile: ProfileSource;
-  /** Names the event; a tenants module that does not answer leaves "?". */
+  /** Names the event (with the request's Cookie while it is draft); no answer leaves "?". */
   tenants?: Pick<TenantResolver, "event">;
 }
 
@@ -54,14 +54,39 @@ export function initialsSvg(text: string, colors: Record<string, string>): strin
   );
 }
 
+/**
+ * The name the logo may show, or null for none. A draft event shows guests nothing
+ * (contracts/tenants.md, Lifecycle): tenants alone decides, from the request's own Cookie, who
+ * learns its name, and every other answer hides the event behind a plain "?".
+ */
+async function visibleName(
+  deps: LogoDeps,
+  request: FastifyRequest,
+): Promise<{ name: string } | null> {
+  const host = request.headers.host;
+  if (request.tenant?.status !== "draft") {
+    const event = await deps.tenants?.event(host).catch(() => null);
+    return { name: event?.name ?? "" };
+  }
+  const cookie = request.headers.cookie;
+  if (cookie === undefined || deps.tenants === undefined) return null;
+  const event = await deps.tenants.event(host, cookie).catch(() => null);
+  return typeof event?.name === "string" && event.name !== "" ? { name: event.name } : null;
+}
+
 export function logoRoutes(app: FastifyInstance, deps: LogoDeps): void {
   app.get("/theming/logo", async (request, reply) => {
-    const theme = await currentTheme(deps.db, deps.profile);
     // Short-lived: a newly published logo shows on the next page.
     void reply.header("cache-control", "no-cache");
-    if (theme.logo_url !== undefined) return reply.redirect(theme.logo_url, 302);
-    const event = await deps.tenants?.event(request.headers.host).catch(() => null);
-    const svg = initialsSvg(initials(event?.name ?? ""), adminTokens(theme.tokens).colors);
+    const named = await visibleName(deps, request);
+    let svg: string;
+    if (named === null) {
+      svg = initialsSvg("?", adminTokens(platformTokens()).colors);
+    } else {
+      const theme = await currentTheme(deps.db, deps.profile);
+      if (theme.logo_url !== undefined) return reply.redirect(theme.logo_url, 302);
+      svg = initialsSvg(initials(named.name), adminTokens(theme.tokens).colors);
+    }
     const etag = `"${createHash("sha256").update(svg).digest("hex").slice(0, 32)}"`;
     void reply.header("etag", etag);
     if (request.headers["if-none-match"] === etag) return reply.code(304).send();

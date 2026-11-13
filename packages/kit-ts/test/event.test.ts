@@ -4,10 +4,14 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TenantResolver } from "../src/resolve.js";
 
 // A real server: fetch() drops a Host header, so the resolver must send it another way.
-const asked: { path: string | undefined; host: string | undefined }[] = [];
+const asked: { path: string | undefined; host: string | undefined; cookie?: string }[] = [];
 let status = 200;
 const server = createServer((req, res) => {
-  asked.push({ path: req.url, host: req.headers.host });
+  asked.push({
+    path: req.url,
+    host: req.headers.host,
+    ...(req.headers.cookie === undefined ? {} : { cookie: req.headers.cookie }),
+  });
   res.statusCode = status;
   res.setHeader("content-type", "application/json");
   res.end(JSON.stringify({ id: "demo", name: "Demo Event", status: "live", time_zone: "UTC" }));
@@ -41,6 +45,19 @@ describe("TenantResolver.event", () => {
     clock = 31_000;
     await r.event("demo.localhost");
     expect(asked).toHaveLength(3);
+  });
+
+  it("sends the request's own cookie when given, and never caches that answer", async () => {
+    asked.length = 0;
+    const r = new TenantResolver({ tenantsUrl: url });
+    await r.event("demo.localhost");
+    expect(await r.event("demo.localhost", "canccu_session=s1")).toMatchObject({ id: "demo" });
+    await r.event("demo.localhost", "canccu_session=s1");
+    expect(asked).toEqual([
+      { path: "/api/tenants/current", host: "demo.localhost" },
+      { path: "/api/tenants/current", host: "demo.localhost", cookie: "canccu_session=s1" },
+      { path: "/api/tenants/current", host: "demo.localhost", cookie: "canccu_session=s1" },
+    ]);
   });
 
   it("answers null, never an error, when the tenants module does not answer", async () => {

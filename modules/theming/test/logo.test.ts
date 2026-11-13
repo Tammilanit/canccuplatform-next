@@ -63,6 +63,39 @@ describe.skipIf(!DATABASE_URL)("the current logo", () => {
     expect(res.headers["cache-control"]).toBe("no-cache");
   });
 
+  it("hides a draft event from whoever tenants does not name it to", async () => {
+    await seedRevision(h, "draft", 1);
+    await withTenant("draft", () =>
+      h.db.tenant(async (c) => {
+        const file = await h.files.put(c, SVG, "svg");
+        await c.query("UPDATE theming_revisions SET logo = $1 WHERE revision = 1", [file]);
+        await c.query("INSERT INTO theming_file_refs (owner, file) VALUES ('r:1', $1)", [file]);
+      }),
+    );
+    const event = vi.spyOn(TenantResolver.prototype, "event");
+    // A guest: no cookie, so no read at all, and the platform's colours, not the event's.
+    const guest = await get(h, "/theming/logo", { host: "draft.test" });
+    expect(guest.statusCode).toBe(200);
+    expect(guest.body).toContain(">?</text>");
+    expect(guest.body).toContain('stop-color="#3b82f6"');
+    expect(event).not.toHaveBeenCalled();
+    // A session tenants answers a DraftTenant to.
+    event.mockResolvedValue({ id: "draft", status: "draft" });
+    const other = await get(h, "/theming/logo", { host: "draft.test", session: "member" });
+    expect(other.statusCode).toBe(200);
+    expect(other.body).toContain(">?</text>");
+    expect(event).toHaveBeenLastCalledWith("draft.test", "canccu_session=member");
+    // The tenants module failing hides it as well.
+    event.mockRejectedValue(new Error("down"));
+    const down = await get(h, "/theming/logo", { host: "draft.test", session: "member" });
+    expect(down.body).toContain(">?</text>");
+    // A session tenants names the event to gets its logo.
+    event.mockResolvedValue({ id: "draft", name: "Demo Event", status: "draft" });
+    const member = await get(h, "/theming/logo", { host: "draft.test", session: "admin" });
+    expect(member.statusCode).toBe(302);
+    expect(String(member.headers.location)).toMatch(/^\/theming\/a\//);
+  });
+
   it("is 404 on a hostname that is no event", async () => {
     expect((await get(h, "/theming/logo", { host: "nope.test" })).statusCode).toBe(404);
   });
