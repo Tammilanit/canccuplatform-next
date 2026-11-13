@@ -266,6 +266,10 @@
   .canccu-menu__item .canccu-i {
     color: var(--canccu-ink-muted);
   }
+  /* A page that needs a look says so at its item's end: "Health 1 slow" (sheet 2). */
+  .canccu-menu__item .canccu-badge {
+    margin-left: auto;
+  }
   .canccu-menu__item:hover {
     background: var(--canccu-tint);
     color: var(--canccu-color-text);
@@ -732,6 +736,76 @@
   }
   .canccu-dl dd {
     margin: 0;
+  }
+  /* A table cell's second line, quieter: what a row's part does (Health, sheet 4). */
+  .canccu-table__sub {
+    display: block;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+  }
+  /* Count tiles over a list (Health, sheet 4): four across, two by two on a phone. */
+  .canccu-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: var(--canccu-gap);
+  }
+  .canccu-stat {
+    padding: 1rem 1.25rem;
+  }
+  .canccu-stat__value {
+    margin: 0;
+    font-size: var(--canccu-text-2xl);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .canccu-stat__label {
+    margin: 0;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+  }
+  .canccu-stat--ok .canccu-stat__value {
+    color: var(--canccu-ink-ok);
+  }
+  .canccu-stat--degraded .canccu-stat__value {
+    color: var(--canccu-ink-degraded);
+  }
+  .canccu-stat--down .canccu-stat__value {
+    color: var(--canccu-ink-down);
+  }
+  /* The way on from a row in trouble ("Open devices", "What to check"): a link in the text on a
+     desktop, a 44 px button of its own on a phone (sheet 4). */
+  .canccu-way {
+    display: inline;
+  }
+  .canccu-way > summary {
+    display: inline;
+    cursor: pointer;
+    color: var(--canccu-ink-primary);
+    text-decoration: underline;
+  }
+  .canccu-way > p {
+    margin: 0.5rem 0 0;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+  }
+  @media (max-width: 40rem) {
+    a.canccu-way,
+    .canccu-way > summary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.75rem;
+      margin-top: 0.5rem;
+      padding: 0 1rem;
+      border: var(--canccu-border-width) solid var(--canccu-color-border);
+      border-radius: var(--canccu-radius);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .canccu-way {
+      display: block;
+    }
   }
 
   /* Surfaces: the root a theme's CSS targets (contracts/theming.md) */

@@ -16,6 +16,7 @@ from starlette.responses import FileResponse, HTMLResponse, JSONResponse, Respon
 
 if TYPE_CHECKING:
     from .auth import Auth
+    from .health import HealthWatch
 
 log = logging.getLogger("canccu.admin")
 
@@ -29,6 +30,7 @@ UI_CSS = Path(
 # Parts of the platform by name, not id (UX audit A2); Health keeps the id in its log column.
 PART_NAMES = {
     "admin": "Admin",
+    "screen-render": "Screen rendering",
     "agenda": "Run of show",
     "notify": "Notifications",
     "screen": "Screens",
@@ -83,6 +85,9 @@ async def page(
     **shell: Any,
 ) -> HTMLResponse:
     """A page in the shell; with a session it gets the menu that session may follow."""
+    watch: HealthWatch | None = getattr(request.app.state, "health_watch", None)
+    # The watch's latest check only: a page never waits for a part that does not answer.
+    note = watch.latest.menu_note() if watch and watch.latest else None
     doc = shell_page(
         title,
         body,
@@ -90,6 +95,7 @@ async def page(
         event=await event_of(request),
         current=current,
         css=[CSS],
+        menu_notes={"health": note} if note else None,
         **shell,
     )
     return HTMLResponse(doc, status_code=status)
@@ -101,6 +107,20 @@ async def front(
     """A front door (sign-in, first run): the event's poster and one card."""
     doc = front_page(title, card, event=await event_of(request), css=[CSS], **shell)
     return HTMLResponse(doc, status_code=status)
+
+
+SCRIPTS = Path(__file__).parent / "static"
+
+
+async def static_script(request: Request) -> Response:
+    """Admin's own page scripts, by name from the files beside this module only."""
+    path = SCRIPTS / f"{request.path_params['name']}.js"
+    if path.parent != SCRIPTS or not path.is_file():
+        raise KitError("no such script", status=404, code="not_found")
+    response = FileResponse(path, media_type="text/javascript")
+    response.headers["Cache-Control"] = "public, max-age=300"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 async def static_ui_css(request: Request) -> Response:

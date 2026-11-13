@@ -21,6 +21,7 @@ from canccu_admin.auth import Auth
 from canccu_admin.auth_db import MemoryAuthStore
 from canccu_admin.db import MemoryStore
 from canccu_admin.declarations import load_declarations
+from canccu_admin.health import HealthWatch
 from canccu_admin.profile import make_validator
 from canccu_admin.service import Service
 
@@ -70,14 +71,16 @@ def parts(tmp_path: Path) -> Parts:
         make_validator(ROOT / "contracts/profile.schema.json"),
         tmp_path,
         load_declarations(Path(__file__).parents[1] / "declarations"),
+    )
+    watch = HealthWatch(
+        Health("admin", "dev", {}),
         {"hello": "http://hello/health"},
         httpx.AsyncClient(transport=httpx.MockTransport(hello_handler)),
     )
-    health = Health("admin", "dev", {})
     auth = Auth(MemoryAuthStore(), service.bus, None, None)
     app = create_app(
         service,
-        health,
+        watch,
         authorize,
         auth,
         fake_resolver({"t": "demo"}),

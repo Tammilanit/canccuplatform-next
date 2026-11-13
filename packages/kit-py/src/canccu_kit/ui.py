@@ -4,7 +4,7 @@ module serves. Every function returns HTML text with every value escaped."""
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from typing import Any, Literal
 
@@ -65,7 +65,12 @@ def _current(item_id: str, current: str | None) -> str:
     return ' aria-current="page"' if item_id == current else ""
 
 
-def _menu(viewer: Viewer, current: str | None, event: EventInfo | None) -> str:
+def _menu(
+    viewer: Viewer,
+    current: str | None,
+    event: EventInfo | None,
+    notes: Mapping[str, tuple[str, str]],
+) -> str:
     # On a phone the menu is More's sheet: what the bar already shows is left out of it.
     in_bar = {b["id"] for b in bar_for(viewer)}
 
@@ -77,7 +82,8 @@ def _menu(viewer: Viewer, current: str | None, event: EventInfo | None) -> str:
         f'<p class="canccu-overline canccu-menu__label">{esc(g["label"])}</p>'
         + "".join(
             f'<a class="{cls("canccu-menu__item", i["id"] in in_bar)}" href="{esc(i["href"])}"'
-            f"{_current(i['id'], current)}>{icon(i['icon'])}{esc(i['label'])}</a>"
+            f"{_current(i['id'], current)}>{icon(i['icon'])}{esc(i['label'])}"
+            f"{_note(notes, i['id'])}</a>"
             for i in g["items"]
         )
         + "</div>"
@@ -100,6 +106,13 @@ def _menu(viewer: Viewer, current: str | None, event: EventInfo | None) -> str:
         f'<nav class="canccu-menu" id="canccu-menu" popover aria-label="Event">{sheet}{groups}'
         f'<div class="canccu-menu__foot">{foot}</div></nav>'
     )
+
+
+def _note(notes: Mapping[str, tuple[str, str]], item_id: str) -> str:
+    if item_id not in notes:
+        return ""
+    status, text = notes[item_id]
+    return f'<span class="canccu-badge canccu-badge--{esc(status)}">{esc(text)}</span>'
 
 
 def _tab(slot: dict[str, Any], current: str | None) -> str:
@@ -175,9 +188,11 @@ def shell_page(
     narrow: bool = False,
     plain: bool = False,
     now: datetime | None = None,
+    menu_notes: Mapping[str, tuple[str, str]] | None = None,
 ) -> str:
     """An organiser page in the shell. `body`, `actions` are HTML; `tabs` are (href, label,
-    current); `plain` leaves out the title row, for an error view that is its own title."""
+    current); `plain` leaves out the title row, for an error view that is its own title;
+    `menu_notes` badge a menu item by id with (status, text) when its page needs a look."""
     banner = ""
     if event and event.status == "archived":
         banner = (
@@ -213,7 +228,7 @@ def shell_page(
     if session is None:
         shell = f'<div class="canccu-shell canccu-shell--bare">{top}{main}</div>'
     else:
-        nav, bar = _menu(session, current, event), _tabbar(session, current)
+        nav, bar = _menu(session, current, event, menu_notes or {}), _tabbar(session, current)
         shell = f'<div class="canccu-shell">{top}{nav}{main}{bar}</div>'
     return document(title, shell, event=event, css=css)
 

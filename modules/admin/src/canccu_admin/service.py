@@ -1,4 +1,4 @@
-"""Settings, profile and health logic behind the API and the pages.
+"""Settings and profile logic behind the API and the pages.
 
 Settings and the profile are per tenant: every method that touches them runs for the current
 tenant (set by the kit from the request's hostname), reads and writes only that tenant's rows and
@@ -12,11 +12,9 @@ import hashlib
 import logging
 import shutil
 import tempfile
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import httpx
 from canccu_kit import Bus, KitError, tenant_file
 from jsonschema import Draft202012Validator
 
@@ -55,14 +53,6 @@ def _replace_dir(target: Path, staging: Path) -> None:
         shutil.move(str(child), target / child.name)
 
 
-@dataclass
-class ModuleHealth:
-    module: str
-    status: str
-    version: str = ""
-    detail: str = ""
-
-
 class Service:
     def __init__(
         self,
@@ -71,16 +61,12 @@ class Service:
         validator: Draft202012Validator,
         files_root: Path,
         declarations: dict[str, list[Setting]],
-        health_targets: dict[str, str],
-        http: httpx.AsyncClient | None = None,
     ) -> None:
         self.store = store
         self.bus = bus
         self.validator = validator
         self.files_root = files_root
         self.declarations = declarations
-        self.health_targets = health_targets
-        self._http = http or httpx.AsyncClient(timeout=2.0)
 
     @property
     def event_dir(self) -> Path:
@@ -221,24 +207,3 @@ class Service:
         if not file.is_relative_to(event) or not file.is_file():
             return None
         return await asyncio.to_thread(file.read_bytes)
-
-    # health view
-    async def _probe(self, module: str, url: str) -> ModuleHealth:
-        try:
-            body = (await self._http.get(url)).json()
-            checks = body.get("checks", {})
-            bad = [
-                f"{n}: {c.get('detail') or c.get('status')}"
-                for n, c in checks.items()
-                if c.get("status") != "ok"
-            ]
-            return ModuleHealth(
-                module, str(body["status"]), str(body.get("version", "")), "; ".join(bad)
-            )
-        except Exception as exc:
-            return ModuleHealth(module, "down", detail=f"no answer ({type(exc).__name__})")
-
-    async def health_view(self) -> list[ModuleHealth]:
-        return list(
-            await asyncio.gather(*(self._probe(m, u) for m, u in self.health_targets.items()))
-        )

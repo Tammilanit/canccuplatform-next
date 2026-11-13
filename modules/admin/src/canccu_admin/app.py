@@ -8,7 +8,6 @@ from datetime import UTC, datetime
 from urllib.parse import urlencode
 
 from canccu_kit import (
-    Health,
     KitError,
     NotSignedIn,
     ServiceForbidden,
@@ -29,15 +28,16 @@ from starlette.routing import Route
 from .auth import Auth
 from .auth_routes import Authorize, OnEvent, OriginCheck, auth_routes
 from .forms import field_html, from_form
+from .health import HealthWatch
+from .health_view import health_body
 from .pages import (
     BASE,
-    HEALTH_ORDER,
-    HEALTH_WORDS,
     MODULE_ICONS,
     event_of,
     page,
     page_error_handler,
     part_name,
+    static_script,
     static_ui_css,
 )
 from .service import BadSettings, Service
@@ -64,7 +64,7 @@ MODULES = (
 
 def create_app(
     service: Service,
-    health: Health,
+    watch: HealthWatch,
     authorize: Authorize,
     auth: Auth,
     resolver: TenantResolver,
@@ -272,40 +272,20 @@ def create_app(
 
     async def health_page(request: Request) -> Response:
         session = await need(request, "admin.settings.read")
-        own = (await health.run()).body
-        rows = [(health.module, own["status"], own["version"], "")]
-        rows += [(h.module, h.status, h.version, h.detail) for h in await service.health_view()]
-        rows.sort(key=lambda r: (HEALTH_ORDER.get(r[1], 0), part_name(r[0])))
-        # "What it says" only when some part says something: an empty column is only noise.
-        said = any(d for *_, d in rows)
-        trs = "".join(
-            f"<tr><td><b>{esc(part_name(m))}</b></td>"
-            f'<td><span class="canccu-badge canccu-badge--{esc(s)}">'
-            f"{esc(HEALTH_WORDS.get(s, s))}</span></td>{f'<td>{esc(d)}</td>' if said else ''}"
-            f'<td class="canccu-hide-phone canccu-num">{esc(v)}</td>'
-            f'<td class="canccu-hide-phone"><code class="canccu-muted">{esc(m)}</code></td></tr>'
-            for m, s, v, d in rows
-        )
-        counts = [
-            f"{n} {HEALTH_WORDS[k].lower()}"
-            for k in ("ok", "degraded", "down")
-            if (n := sum(1 for r in rows if r[1] == k))
-        ]
-        table = (
-            '<section class="canccu-card canccu-card--flush"><table class="canccu-table">'
-            f"<thead><tr><th>Part</th><th>Status</th>{'<th>What it says</th>' if said else ''}"
-            '<th class="canccu-hide-phone">Version</th><th class="canccu-hide-phone">Log name</th>'
-            f"</tr></thead><tbody>{trs}</tbody></table></section>"
-        )
+        # "Check now" checks at once; the page's own reloads read the watch's latest check.
+        fresh = request.query_params.get("check") == "now"
+        check = await (watch.check() if fresh else watch.current())
+        event = await event_of(request)
+        description, body = health_body(check, event.time_zone if event else "UTC")
         return await page(
             request,
             "Health",
-            table,
+            body,
             session=session,
             current="health",
-            description=f"{len(rows)} parts: {', '.join(counts)}. Checked when you open the page.",
-            actions=f'<a class="canccu-button canccu-button--secondary" href="{BASE}/health-view">'
-            f"{icon('refresh')}Check now</a>",
+            description=description,
+            actions=f'<a class="canccu-button canccu-button--secondary" '
+            f'href="{BASE}/health-view?check=now">{icon("refresh")}Check now</a>',
         )
 
     async def profile_page(request: Request) -> Response:
@@ -367,6 +347,7 @@ def create_app(
             Route("/settings/{module}", settings_save, methods=["POST"]),
             Route("/health-view", health_page),
             Route("/static/ui.css", static_ui_css, methods=["GET"]),
+            Route("/static/{name}.js", static_script, methods=["GET"]),
             Route("/profile", profile_page),
             Route("/profile/save", profile_save, methods=["POST"]),
             Route("/profile/load", profile_load, methods=["POST"]),
@@ -376,8 +357,9 @@ def create_app(
     # Added before install(): Starlette wraps each later middleware around the earlier ones,
     # so the kit's correlation middleware also covers the origin check's 403.
     app.state.tenants = resolver  # the event the shell's header names (pages.event_of)
+    app.state.health_watch = watch  # the menu's note on Health (pages.page)
     app.add_middleware(OriginCheck, origin=auth.public_origin)
-    install(app, health)
+    install(app, watch.own)
     # Innermost, as the kit's install_tenancy places it: the correlation id and the origin check
     # cover its 404s, and settings and profile handlers run inside the request's tenant.
     app.user_middleware.append(Middleware(TenantPaths, resolver=resolver))
