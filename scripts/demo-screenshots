@@ -70,6 +70,17 @@ if ! docker run --rm -u "$user" -e HOME=/tmp -v "$work:/work" -w /work "$IMAGE" 
   echo "error: could not install playwright-core $PLAYWRIGHT in $IMAGE" >&2
   exit 1
 fi
-docker run --rm --network "container:$caddy" -u "$user" -e HOME=/tmp \
-  -e CANCCU_DEMO_HOST -e DEMO_SESSION -v "$work:/work" -v "$out:/out" -w /work "$IMAGE" \
-  node scripts/demo-screenshots.mjs --base "$BASE" --out /out
+shots() {
+  docker run --rm --network "container:$caddy" -u "$user" -e HOME=/tmp \
+    -e CANCCU_DEMO_HOST -e DEMO_SESSION -v "$work:/work" -v "$out:/out" -w /work "$IMAGE" \
+    node scripts/demo-screenshots.mjs --base "$BASE" --out /out "$@"
+}
+shots
+status=$?
+# Health with a part down (docs/design/mockups.html, sheet 4): notify stops for one pass, longer
+# than admin's 10 s check, and starts again whatever the pass did.
+"${COMPOSE[@]}" stop notify >/dev/null || status=1
+sleep 15
+shots --trouble || status=1
+"${COMPOSE[@]}" start notify >/dev/null || status=1
+exit "$status"

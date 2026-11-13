@@ -35,6 +35,7 @@ const { values: opts } = parseArgs({
     "dry-run": { type: "boolean", default: false },
     base: { type: "string", default: "http://127.0.0.1" },
     out: { type: "string", default: "screenshots" },
+    trouble: { type: "boolean", default: false },
   },
 });
 const base = new URL(opts.base);
@@ -72,6 +73,16 @@ const PAGES = [
   ["agenda-quick-add-phone", "/agenda/add", PHONE],
   ["notify-new-topic", "/notify/admin/topics/new", DESK],
   ["check-in-phone", CHECK_IN, PHONE],
+  // Event profile (sheet 4): Load and Upload ask first.
+  ["profile-load-ask", "/admin/profile/load", DESK],
+  ["profile-load-ask-phone", "/admin/profile/load", PHONE],
+  ["profile-upload-ask", "/admin/profile/upload", DESK],
+];
+// Health with a part down (sheet 4), and the menu saying so: the second pass, `--trouble`, which
+// scripts/demo-screenshots runs while it holds notify stopped.
+const TROUBLE = [
+  ["health-view-trouble", "/admin/health-view", DESK],
+  ["health-view-trouble-phone", "/admin/health-view", PHONE],
 ];
 // The brand kit (mockup 12, design sheet 6), after the screens, so its screen preview is screen's
 // player of the main zone with the fixture's run of show: first with no draft, then with one in the
@@ -180,6 +191,9 @@ const ITEM_PAGES = [
 
 if (opts["dry-run"]) {
   console.log(`dry run, would screenshot into ${opts.out}/:`);
+  for (const [name, path, { width, height }] of TROUBLE) {
+    console.log(`  ${name}.png  ${at(path)}  (${width}×${height}, --trouble)`);
+  }
   for (const [name, path, { width, height }] of PAGES) {
     const shown =
       path === CHECK_IN ? "/notify/check-in?p=arrival&c=<a fresh code>" : path;
@@ -335,6 +349,16 @@ async function shot(
   } finally {
     await context.close();
   }
+}
+
+if (opts.trouble) {
+  for (const [name, path, viewport] of TROUBLE) {
+    await shot(name, path, viewport, SESSION);
+  }
+  await browser.close();
+  if (failures.length) process.exit(1);
+  console.log(`demo-screenshots: ${count} views in ${opts.out}/`);
+  process.exit(0);
 }
 
 // Saved changes, so Settings shows when its parts last changed and what changed.
