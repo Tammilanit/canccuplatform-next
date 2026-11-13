@@ -1,6 +1,7 @@
 /**
  * The schedule page's side panel (plan #190, S3; mockup 09): what plays now in each zone shown,
- * the break playlists and where they share time, and the conflicts and gaps, in plain words.
+ * "what plays at…" (#267), the break playlists and where they share time, and the conflicts and
+ * gaps, in plain words.
  */
 import { dayLabel, html, timeLabel } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
@@ -147,5 +148,5 @@ export function side(c: ViewContext, d: ScheduleViewData): Html {
     })}
   </section>`;
 
-  return html`${nowCard}${breaksCard}${conflictsCard}`;
+  return html`${nowCard}${d.at}${breaksCard}${conflictsCard}`;
 }

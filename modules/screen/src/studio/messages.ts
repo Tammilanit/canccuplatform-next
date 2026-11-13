@@ -6,7 +6,7 @@
 import { CONTENT_EN } from "./content-messages.js";
 import { PLAYLIST_CLIENT_KEYS, PLAYLIST_EN } from "./playlist-messages.js";
 import { LAYOUT_CLIENT_KEYS, LAYOUT_EN } from "./layout-messages.js";
-import { SCHEDULE_EN } from "./schedule-messages.js";
+import { SCHEDULE_CLIENT_KEYS, SCHEDULE_EN } from "./schedule-messages.js";
 
 const EN = {
   ...CONTENT_EN,
@@ -402,4 +402,5 @@ export const CLIENT_KEYS = [
   "sound.stop",
   ...PLAYLIST_CLIENT_KEYS,
   ...LAYOUT_CLIENT_KEYS,
+  ...SCHEDULE_CLIENT_KEYS,
 ] as const satisfies readonly MessageKey[];

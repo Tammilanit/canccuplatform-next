@@ -62,6 +62,20 @@ describe("field", () => {
       ),
     ).toMatchSnapshot();
   });
+  it("select with a hidden option it can still hold", () => {
+    const h = s(
+      field({
+        name: "mode",
+        label: "Mode",
+        options: [
+          { value: "a", label: "A" },
+          { value: "gone", label: "Gone", hidden: true },
+        ],
+      }),
+    );
+    expect(h).toContain('<option value="a">A</option>');
+    expect(h).toContain('<option value="gone" hidden>Gone</option>');
+  });
 });
 
 describe("card", () => {
