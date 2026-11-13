@@ -69,10 +69,14 @@ def _button(values: dict[str, Any], day: date) -> str:
 
 
 def _form(
-    values: dict[str, Any], what: list[tuple[str, str]], day: date, days: list[date], auto: bool
+    values: dict[str, Any],
+    what: list[tuple[str, str]],
+    day: date,
+    days: list[date],
+    auto: str | None,
 ) -> str:
-    """`auto`: the day is the form's own choice, not one a link named, so a time after midnight
-    may move it to the next day."""
+    """`auto`: the day the form chose by itself (not a link, not the organiser), on which a time
+    after midnight moves to the next day; None when nothing may move it."""
     chosen = values.get("what") or (what[0][0] if what else "")
     picks = "".join(_radio("what", v, label, v == chosen) for v, label in what)
     when = values.get("when") or "now"
@@ -81,7 +85,7 @@ def _form(
     minutes = str(values.get("minutes") or "")
     length = str(values.get("length") or (_chip(minutes) if minutes else ""))
     lengths = "".join(_radio("length", v, label, v == length) for v, label in LENGTHS)
-    auto_day = f'<input type=hidden name=day_auto value="{day.isoformat()}">' if auto else ""
+    auto_day = f'<input type=hidden name=day_auto value="{esc(auto)}">' if auto else ""
     return (
         f'<form method=post action="{BASE}/add" class="canccu-agenda-form canccu-agenda-quick">'
         + auto_day
@@ -157,7 +161,10 @@ async def quick_page(request: Request) -> Response:
     named = request.query_params.get("day")
     day = _day(named, today)
     days = event_days(request, today, day)
-    return page(request, "Quick add", _form(_from_gap(request), what, day, days, not named))
+    # In the small hours the calendar day already is the night's: 01:00 then means in a while,
+    # not tomorrow night, so nothing moves (review of #455).
+    auto = None if named or now.astimezone(tz).hour < NIGHT_ENDS else day.isoformat()
+    return page(request, "Quick add", _form(_from_gap(request), what, day, days, auto))
 
 
 def _from_gap(request: Request) -> dict[str, str]:
@@ -243,10 +250,9 @@ async def quick_add(request: Request) -> Response:
     tz, now = zone_of(request), d.now()
     today = now.astimezone(tz).date()
     form = await request.form()
-    day = _day(form.get("day"), today)
-    night = _night(form, day)
-    if night:
-        day += timedelta(days=1)
+    posted = _day(form.get("day"), today)
+    night = _night(form, posted)
+    day = posted + timedelta(days=1) if night else posted
     what, rows, _ = await _choices(request)
     picked = str(form.get("what") or "")
     template = next((r for r in rows if f"template:{r['id']}" == picked), None)
@@ -258,9 +264,10 @@ async def quick_add(request: Request) -> Response:
         fields = item_fields(form, template, kind, _starts(form, day, now, tz))
         item = await items.add(d, session, fields, inverse=inverse)
     except KitError as exc:
-        days = event_days(request, today, day)
-        auto = form.get("day_auto") is not None
-        body = notice(exc.message, "error") + _form(dict(form), what, day, days, auto)
+        # As it was sent, not as moved: the next send moves it once, as this one would have.
+        days = event_days(request, today, posted)
+        auto = str(form.get("day_auto") or "") or None
+        body = notice(exc.message, "error") + _form(dict(form), what, posted, days, auto)
         return page(request, "Quick add", body, status=400)
     added_day = datetime.fromisoformat(item["starts_at"].replace("Z", "+00:00")).astimezone(tz)
     done = "added_next_day" if night else "added"
