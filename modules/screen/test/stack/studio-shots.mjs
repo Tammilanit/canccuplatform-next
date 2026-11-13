@@ -63,21 +63,25 @@ async function openEdit(page) {
 /**
  * Zones and layouts' box editor (#405, sheet 10's lower frames), unsaved: the venue card hidden
  * (the rail grows into its space) and the hero two cells narrower, then the preview the real
- * player draws of it; and Dashboard's hero role, picked in the gallery.
+ * player draws of it; and Dashboard's hero role, picked in the gallery. The tidy edit has the rail
+ * take both columns the hero gave up; with one, a column stays empty and the editor says so (#422).
  */
-async function editBoxes(page) {
+const editBoxes = (railWider) => async (page) => {
   await page.click('[data-pick="venue_rail"]');
   await page.click('section[data-region="venue_rail"] [data-box-hide]');
   await page.click('[data-pick="hero"]');
   for (let i = 0; i < 2; i++)
     await page.click('section[data-region="hero"] [data-size="narrower"]');
   await page.click('[data-pick="rail"]');
-  await page.click('section[data-region="rail"] [data-size="wider"]');
+  for (let i = 0; i < railWider; i++)
+    await page.click('section[data-region="rail"] [data-size="wider"]');
   await studioReady(page);
-}
+};
 export const LAYOUT_PAGES = [
-  ["screen-zone-boxes", "/admin/screen/zones/main", DESK, { ready: editBoxes }],
-  ["screen-zone-boxes-phone", "/admin/screen/zones/main", PHONE, { ready: editBoxes }],
+  ["screen-zone-boxes", "/admin/screen/zones/main", DESK, { ready: editBoxes(2) }],
+  ["screen-zone-boxes-phone", "/admin/screen/zones/main", PHONE, { ready: editBoxes(2) }],
+  ["screen-zone-gap", "/admin/screen/zones/main", DESK, { ready: editBoxes(1) }],
+  ["screen-zone-gap-phone", "/admin/screen/zones/main", PHONE, { ready: editBoxes(1) }],
   [
     "screen-zone-dashboard",
     "/admin/screen/zones/main?layout=dashboard",
@@ -85,6 +89,17 @@ export const LAYOUT_PAGES = [
     { ready: studioReady },
   ],
 ];
+
+/**
+ * The main zone saved with Pulse's hero one column narrower: the editor shades that column and
+ * warns about it as the page loads, before any edit (#422).
+ */
+const HERO_SAVED_NARROWER = { column: 1, row: 2, columns: 7, rows: 10 };
+async function gapOnLoad(page) {
+  await page.locator(".canccu-studio-gap").first().waitFor({ state: "attached", timeout: 5000 });
+  await page.locator("[data-fill-gap]").first().waitFor({ timeout: 5000 });
+  await studioReady(page);
+}
 
 /**
  * "What plays at…" asked about the main hall at 19:20 on the day it offers (today), as mockup 09
@@ -286,6 +301,7 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
   let assets = [];
   let made = null;
   let lists = null;
+  let savedRegions = null;
   try {
     assets = await seedContent(demo);
     const hall = await demo.pair("Hall left", "main");
@@ -306,9 +322,26 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
     await removePlaylist(demo, lists);
     lists = null;
     for (const [name, path, viewport, o] of LAYOUT_PAGES) await shot(name, path, viewport, o);
+    const main = expect(
+      await demo.call("GET", "/api/screen/zones/main"),
+      200,
+      "the main zone",
+    ).body;
+    savedRegions = main.regions ?? {};
+    await saveZone(demo, "main", {
+      regions: {
+        ...savedRegions,
+        hero: { ...savedRegions.hero, area: HERO_SAVED_NARROWER },
+      },
+    });
+    await shot("screen-zone-gap-saved", "/admin/screen/zones/main", DESK, { ready: gapOnLoad });
+    await saveZone(demo, "main", { regions: savedRegions });
+    savedRegions = null;
     made = await scheduleFixture(demo, assets);
     for (const [name, path, viewport, o] of SCHEDULE_PAGES) await shot(name, path, viewport, o);
   } finally {
+    if (savedRegions !== null)
+      await saveZone(demo, "main", { regions: savedRegions }).catch(() => undefined);
     if (made !== null) await removeSchedule(demo, made);
     if (lists !== null) await removePlaylist(demo, lists);
     for (const context of contexts) await context.close();
