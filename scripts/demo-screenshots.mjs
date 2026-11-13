@@ -22,6 +22,7 @@ import {
 } from "../modules/screen/test/stack/fixture.mjs";
 import { planned, screenShots } from "../modules/screen/test/stack/screens.mjs";
 import {
+  LAYOUT_PAGES,
   SCHEDULE_PAGES,
   STUDIO_PAGES,
   studioShots,
@@ -213,6 +214,11 @@ if (opts["dry-run"]) {
   for (const [name, path, { width, height }] of STUDIO_PAGES) {
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, while two screens play)`,
+    );
+  }
+  for (const [name, path, { width, height }] of LAYOUT_PAGES) {
+    console.log(
+      `  ${name}.png  ${at(path)}  (${width}×${height}, the box editor, unsaved)`,
     );
   }
   for (const [name, path, { width, height }] of SCHEDULE_PAGES) {

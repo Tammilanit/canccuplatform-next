@@ -8,6 +8,7 @@ import type { FastifyInstance } from "fastify";
 import { requireTenant } from "@canccu/kit";
 import type { Bus, RightsChecker, SqlClient, TenantContext } from "@canccu/kit";
 import type { Audit } from "./audit.js";
+import type { Sources } from "./compose/sources.js";
 import type { Db } from "./db.js";
 import {
   actorOf,
@@ -22,7 +23,7 @@ import {
   zoneExists,
   zoneInUse,
 } from "./http.js";
-import { zoneInput } from "./zone-input.js";
+import { checkBoxes, zoneInput } from "./zone-input.js";
 import type { ZoneInput } from "./zone-input.js";
 
 /** A bus event to publish once the transaction that caused it has committed. */
@@ -222,6 +223,7 @@ export interface ZoneDeps {
   bus: Bus;
   rights: RightsChecker;
   audit: Audit;
+  sources: Pick<Sources, "theme">;
 }
 
 type ByKey = { Params: { zone_key: string } };
@@ -253,6 +255,7 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
     const ctx = tenantOf(request);
     assertWritable(ctx);
     const zone = zoneInput(body(request));
+    await checkBoxes(deps.sources, ctx.tenant_id, zone);
     const actor = actorOf(request);
     const [emits, row] = await db.tenant(async (c) => {
       const seeded = await seededFor(ctx, c);
@@ -308,6 +311,7 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
     if (zone.revision === undefined) {
       throw invalidRequest("`revision` is required: send the revision you read.");
     }
+    await checkBoxes(deps.sources, ctx.tenant_id, zone);
     const actor = actorOf(request);
     const [emits, row] = await db.tenant(async (c) => {
       const seeded = await seededFor(ctx, c);

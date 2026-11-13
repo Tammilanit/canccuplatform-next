@@ -1,4 +1,6 @@
-/* The zone editor's layout (static/studio-zone.js), on top of ui.css and studio.css. */
+/* The zone editor's layout (static/studio-zone.js), on top of ui.css and studio.css; the boxes
+   and the layout gallery are studio-layout.css. */
+@import url("studio-layout.css");
 
 /* Zone editor (mockup 08): settings, the region map and the chosen region beside a sticky
    column with the preview, the changes and Go live; one column on a phone, the preview last. */

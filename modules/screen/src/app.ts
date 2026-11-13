@@ -230,7 +230,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   heartbeatRoutes(app, deps);
   movingRoutes(app, deps);
   registryRoutes(app, deps);
-  zoneRoutes(app, deps);
+  zoneRoutes(app, compose);
   assignmentRoutes(app, compose);
   playlistRoutes(app, deps);
   scheduleRoutes(app, deps);
