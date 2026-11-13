@@ -145,8 +145,40 @@ const miniDrawn = async (page) => {
     .waitFor({ timeout: 40000 });
   await page.waitForTimeout(1500);
 };
+// Adding an item where it goes (#429): the line between Dinner and the next item, pointed at on a
+// desktop and long-pressed on a phone (a touch held through the DevTools protocol, which Playwright
+// has no call for). The day's own add row ends the full-page shots above.
+const gapAfter = (page, title) =>
+  page
+    .locator(".canccu-agenda-row", { hasText: title })
+    .locator("xpath=../following-sibling::li[1]");
+const pointGap = async (page) => {
+  await gapAfter(page, "Dinner").locator("a").hover();
+  await page.waitForTimeout(300);
+};
+const pressGap = async (page) => {
+  const gap = gapAfter(page, "Dinner");
+  // Clear of the bottom bar, which would take the touch.
+  await gap.evaluate((el) => el.scrollIntoView({ block: "center" }));
+  const box = await gap.boundingBox();
+  const cdp = await page.context().newCDPSession(page);
+  const touch = (type, points) =>
+    cdp.send("Input.dispatchTouchEvent", { type, touchPoints: points });
+  await touch("touchStart", [{ x: box.x + box.width / 2, y: box.y }]);
+  await page.waitForTimeout(700);
+  await touch("touchEnd", []);
+  await page.locator(".canccu-agenda-gap.is-shown").waitFor({ timeout: 5000 });
+  await page.waitForTimeout(300);
+};
 const DAY_VIEW = [
   ["agenda", DESK, {}],
+  ["agenda-gap", DESK, { ready: pointGap, fullPage: false }],
+  ["agenda-gap-wide", WIDE, { ready: pointGap, fullPage: false }],
+  [
+    "agenda-gap-phone",
+    PHONE,
+    { ready: pressGap, fullPage: false, touch: true },
+  ],
   ["agenda-wide", WIDE, { ready: miniDrawn }],
   ["agenda-phone", PHONE, {}],
   ["agenda-item", DESK, { pick: "Demo Game Cup, semis", fullPage: false }],
@@ -288,10 +320,12 @@ async function shot(
   path,
   viewport,
   cookie,
-  { fullPage = true, ready, status = 200, tall = false } = {},
+  { fullPage = true, ready, status = 200, tall = false, touch = false } = {},
 ) {
   const url = at(path);
-  const context = await browser.newContext({ viewport });
+  // A touch screen has no hover, so a phone page's `(hover: none)` rules apply.
+  const finger = touch ? { hasTouch: true, isMobile: true } : {};
+  const context = await browser.newContext({ viewport, ...finger });
   try {
     if (cookie !== null) await context.addCookies([cookieOn(cookie)]);
     const page = await context.newPage();

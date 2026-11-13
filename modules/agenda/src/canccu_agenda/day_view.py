@@ -199,12 +199,36 @@ def row_html(
     )
 
 
-def list_html(rows: list[str], now_line: str) -> str:
+def gap_html(before: Any, after: Any, tz: ZoneInfo, day: date) -> str:
+    """The line between two items (sheet 5, "Adding an item where it goes"): it names both by
+    their starts, and Quick add opens at the end of the first with the room left before the next.
+    A moment has no end, so the room starts at its start; items that overlap leave no room, and
+    then the template's length stands."""
+    start = before["ends_at"] if before["ends_at"] is not None else before["starts_at"]
+    start = min(start, after["starts_at"])
+    room = _minutes(after["starts_at"] - start)
+    href = f"{BASE}/add?day={day.isoformat()}&amp;at={hhmm(start, tz)}"
+    href += f"&amp;minutes={room}" if room > 0 else ""
+    names = f"{hhmm(before['starts_at'], tz)} and {hhmm(after['starts_at'], tz)}"
+    return (
+        f'<li class="canccu-agenda-gap"><a href="{href}">{icon("plus")}Add between {names}</a></li>'
+    )
+
+
+def add_row_html(day: date) -> str:
+    return (
+        f'<li class="canccu-agenda-addrow"><a href="{BASE}/add?day={day.isoformat()}">'
+        f"{icon('plus')}Add item on {day:%A}</a></li>"
+    )
+
+
+def list_html(rows: list[str], tail: str) -> str:
+    """The day as one list; `tail` ends it: the now line once the day is over, the add row."""
     head = "".join(f"<span>{c}</span>" for c in ("Time", "Was", "What", "Where", "For"))
     return (
         '<ol class="canccu-card canccu-card--flush canccu-agenda-list">'
         f'<li class="canccu-agenda-head" aria-hidden="true">{head}</li>{"".join(rows)}'
-        f"{now_line}</ol>"
+        f"{tail}</ol>"
     )
 
 
