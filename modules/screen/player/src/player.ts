@@ -8,6 +8,7 @@
 import { call, isDeviceAnswer } from "./api.js";
 import type { Answer, Fetch } from "./api.js";
 import { frame, keepSafetyLast, minutesLeft, safetyCode, setClock, setFoot } from "./frames.js";
+import { previewMark } from "./preview-mark.js";
 import {
   archived,
   CONNECTING,
@@ -174,6 +175,8 @@ export class Player {
 
   private show(text: FrameText & { kind: FrameKind }, code?: string): HTMLElement {
     const node = frame(text.kind, { logo: this.logo, ...text });
+    // A frame (pairing, refused, moved…) is never a preview's.
+    previewMark(this.env.root, null);
     this.mount(node, code === undefined ? [] : [safetyCode(code)]);
     this.clock();
     return node;
@@ -190,7 +193,7 @@ export class Player {
     // fades and, later, its videos.
     if (this.env.root.firstElementChild === node) return;
     const keep = [...this.env.root.children].filter((c) =>
-      c.matches(".canccu-offline-marker, .canccu-identify"),
+      c.matches(".canccu-offline-marker, .canccu-preview-mark, .canccu-identify"),
     );
     this.env.root.replaceChildren(node, ...keep, ...safety);
     keepSafetyLast(this.env.root);
@@ -248,6 +251,8 @@ export class Player {
       this.mount(this.screen.draw(state));
       this.screen.start();
     }
+    previewMark(this.env.root, state.zone === null ? null : state);
+    keepSafetyLast(this.env.root);
   }
 
   private async pair(): Promise<void> {

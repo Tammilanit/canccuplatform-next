@@ -238,26 +238,3 @@
     color: var(--canccu-color-status-degraded);
   }
 }
-
-/* A preview on a screen (contracts/screen.md, Zones and assignments): the crew must never take it
-   for the live screen, so, like the offline marker, a theme cannot hide or move it. Top left, as
-   the offline marker holds the top right. */
-.canccu-preview-mark {
-  display: block !important;
-  position: fixed !important;
-  z-index: 2147483646 !important;
-  top: max(8px, 1.5vmin) !important;
-  left: max(8px, 1.5vmin) !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  transform: none !important;
-  box-sizing: border-box;
-  padding: 0.2em 0.6em;
-  border-radius: 0.25em;
-  background: #ffc94d !important;
-  color: #0b0d1a !important;
-  font:
-    700 max(16px, 3.9vmin) / 1.2 system-ui,
-    sans-serif;
-  white-space: nowrap;
-}

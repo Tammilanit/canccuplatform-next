@@ -110,38 +110,8 @@ export class Screen {
       }
     }
     for (const r of state.regions) this.place(r);
-    this.mark(state);
     this.tick();
     return this.root;
-  }
-
-  /**
-   * The "Preview" mark of a preview on a screen, so nobody takes it for the live screen; with
-   * the preview time when it shows another time than now.
-   */
-  private mark(state: ScreenState): void {
-    let mark = this.root.querySelector<HTMLElement>(":scope > .canccu-preview-mark");
-    const preview = state.preview ?? null;
-    if (preview === null) {
-      mark?.remove();
-      return;
-    }
-    if (mark === null) {
-      mark = document.createElement("div");
-      mark.className = "canccu-preview-mark";
-      mark.setAttribute("role", "status");
-      this.root.append(mark);
-    }
-    const at =
-      preview.at === null
-        ? ""
-        : ` · ${new Intl.DateTimeFormat("en-GB", {
-            weekday: "short",
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: state.tenant.time_zone,
-          }).format(new Date(preview.at))}`;
-    mark.textContent = `Preview${at}`;
   }
 
   /** Run the screen's clock: every whole second of server time, so rotations change on time. */
