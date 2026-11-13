@@ -378,8 +378,9 @@
     summary: Preview a change on one real screen for a while
     description: |
       Right `screen.zones.write`. The device's states are composed from the preview (its zone or `zone`, at `at`,
-      in the draft when `theme_preview_key` is given) until `until` or a `DELETE`, with `ScreenState.preview` set;
-      every other screen of the zone keeps the live zone. Replaces the device's running preview. Saves nothing of
+      in the draft when `theme_preview_key` is given) until `until`, a `DELETE`, or the device's reassignment,
+      unassignment, move, revocation or deletion, with `ScreenState.preview` set; once the draft key no longer
+      resolves the preview drops the draft. Every other screen of the zone keeps the live zone. Replaces the device's running preview. Saves nothing of
       the zone, emits no event, audited (contracts/screen.md, Zones and assignments).
     requestBody:
       required: true

@@ -1017,7 +1017,10 @@ components:
               type: string
         theme:
           type: object
-          description: The theme revision in effect (the pinned one, else the current).
+          description: |
+            The theme revision in effect (the pinned one, else the current). While `preview.theme` is true, `revision`
+            stays the revision in effect and the URLs and `templates` are the draft's, from theming's
+            `GET /internal/theming/previews/{preview_key}` (contracts/screen.md, Composed state and the push channel).
           required: [revision, tokens_css_url, css_url, logo_url, templates]
           properties:
             revision:
@@ -1131,7 +1134,7 @@ components:
               description: The preview time, or null for now.
             theme:
               type: boolean
-              description: True while the device draws the theme's draft.
+              description: True while the device draws the theme's draft; false once the draft key no longer resolves.
     PreviewInput:
       type: object
       required: [minutes]
