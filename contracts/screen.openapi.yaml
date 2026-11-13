@@ -1645,7 +1645,7 @@ components:
           $ref: "#/components/schemas/Time"
         featured:
           type: boolean
-          description: True until it has been featured once.
+          description: "True until the photo's pop slot has ended: 10 seconds on the server clock from its arrival, or from the end of the slot before it, in the order photos came. The same for every zone; a zone whose `photo` widget has `pop_new` makes the photo lead during that slot (screen.md, Photos)."
     PhotoUpload:
       type: object
       required: [file, posted_at]
