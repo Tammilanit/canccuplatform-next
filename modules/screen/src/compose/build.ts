@@ -3,6 +3,7 @@
  * pure function of the zone, the layout and what the sources said, so every screen of a zone
  * gets the same answer and the rules are tested without a stack.
  */
+import { placedBoxes } from "./boxes.js";
 import type { Claim } from "./claims.js";
 import { chooseLayout, roleOf } from "./layouts.js";
 import type { Area, Layout, LayoutRegion, Props, Role, WidgetEntry } from "./layouts.js";
@@ -216,8 +217,9 @@ export function buildRegions(input: BuildInput): { layout: Layout; regions: Regi
     themeLayouts: input.themeLayouts,
     portrait: input.portrait,
   });
-  // The trade and the growth move areas before parts split them (contracts/screen.md).
-  const swapped = traded(layout.regions, input.zone.regions, input.zone.heroRegion ?? null);
+  // The zone's boxes first, then the trade and the growth, then parts (contracts/screen.md, Order).
+  const boxes = placedBoxes(layout, input.zone.layoutId, input.zone.regions);
+  const swapped = traded(boxes, input.zone.regions, input.zone.heroRegion ?? null);
   const placed = input.grow === true ? grown(swapped, input.zone.regions) : swapped;
   const regions = placed.flatMap((r) => regionsOf(r, layout, input));
   return {
