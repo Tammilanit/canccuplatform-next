@@ -1,4 +1,4 @@
-// The Screen studio's screenshots (#189, #190, #263, #264, #267; mockups 06–10 and 13), taken after the screens on
+// The Screen studio's screenshots (#189, #190, #263, #264, #265, #267; mockups 06–10 and 13), taken after the screens on
 // the same demo fixture (fixture.mjs) and theme, so its live views draw the Pulse the screens do.
 // Two screens play while they are taken, one landscape and one portrait, each in the browser at
 // its own size, so their heartbeats give the device cards an orientation, a size and a state.
@@ -19,6 +19,7 @@ export const STUDIO_PAGES = [
   ["screen-zone-editor", "/admin/screen/zones/main"],
   ["screen-content", "/admin/screen/content"],
   ["screen-ticker", "/admin/screen/ticker"],
+  ["screen-pins", "/admin/screen/pins"],
 ].flatMap(([name, path]) => [
   [name, path, DESK],
   [`${name}-phone`, path, PHONE],
@@ -27,6 +28,13 @@ STUDIO_PAGES.push(
   ["screen-pair-phone", "/admin/screen/devices#pair=K7Q49WXP", PHONE],
   ["screen-devices-wide", "/admin/screen/devices", WIDE],
 );
+
+/** Taken while the event is frozen for an hour, then unfrozen: the Pins page and the banner. */
+export const FROZEN_PAGES = [
+  ["screen-pins-frozen", "/admin/screen/pins", DESK],
+  ["screen-pins-frozen-phone", "/admin/screen/pins", PHONE],
+  ["screen-live-frozen", "/admin/screen/live", DESK],
+];
 
 /**
  * The Content page with a playlist in the builder and its push playing (#264, mockup 10), at the
@@ -339,7 +347,17 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
     savedRegions = null;
     made = await scheduleFixture(demo, assets);
     for (const [name, path, viewport, o] of SCHEDULE_PAGES) await shot(name, path, viewport, o);
+    const until = new Date(Date.now() + 3600_000).toISOString();
+    expect(
+      await demo.call("PUT", "/api/screen/pin", { body: { freeze: true, until } }),
+      200,
+      "the freeze",
+    );
+    for (const [name, path, viewport] of FROZEN_PAGES) {
+      await shot(name, path, viewport, { ready: studioReady });
+    }
   } finally {
+    await demo.call("PUT", "/api/screen/pin", { body: { freeze: false } }).catch(() => undefined);
     if (savedRegions !== null)
       await saveZone(demo, "main", { regions: savedRegions }).catch(() => undefined);
     if (made !== null) await removeSchedule(demo, made);

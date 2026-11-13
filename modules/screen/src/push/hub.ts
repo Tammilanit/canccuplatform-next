@@ -34,6 +34,7 @@ const REBUILDS = [
   "screen.ticker.changed",
   "screen.content.",
   "screen.photo.",
+  "screen.pin.changed",
   "agenda.item.",
   "agenda.items.",
   "agenda.kind.",

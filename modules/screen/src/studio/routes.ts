@@ -28,6 +28,9 @@ import { listDevices } from "../devices.js";
 import type { Settings } from "../health.js";
 import { notFound, tenantOf } from "../http.js";
 import type { Kv } from "../kv.js";
+import type { BundleStore } from "../pins/bundles.js";
+import { PIN_READ_RIGHTS, inEffect } from "../pins/routes.js";
+import { readPin } from "../pins/store.js";
 import type { ZoneStore } from "../push/store.js";
 import { tickerNow } from "../ticker/store.js";
 import { readZones } from "../zones.js";
@@ -38,6 +41,7 @@ import { CLIENT_KEYS, translator } from "./messages.js";
 import type { MessageKey, Translate } from "./messages.js";
 import { devicesActions, devicesView } from "./devices-view.js";
 import { layoutsOf } from "./event-layouts.js";
+import { frozenBanner, pinsView } from "./pins-view.js";
 import { param, readContent } from "./content-data.js";
 import { readPlaylists } from "./playlists-data.js";
 import { contentPage } from "./playlists-view.js";
@@ -60,6 +64,7 @@ export interface StudioDeps extends Omit<ContentDeps, "now"> {
   /** Admin's own settings, which hold the event's `language` (contracts/admin.md, #394). */
   adminSettings: Settings;
   sources: Sources;
+  bundles: BundleStore;
   /** The module's own settings: simulate's break gap, for "what plays at…". */
   settings: Settings;
   log?: Logger | undefined;
@@ -74,15 +79,19 @@ const ZONES = "screen.zones.write";
 const TICKER = "screen.ticker.write";
 const CONTENT = "screen.content.read";
 
-/** The tabs, each shown only to holders of its right (Live and Devices share one). */
-const TABS: [path: string, label: MessageKey, right: string][] = [
-  ["live", "tab.live", READ],
-  ["devices", "tab.devices", READ],
-  ["zones", "tab.zones", ZONES],
-  ["schedule", "tab.schedule", CONTENT],
-  ["content", "tab.content", CONTENT],
-  ["ticker", "tab.ticker", TICKER],
+/** The tabs, each shown only to holders of one of its rights (Live and Devices share one). */
+const TABS: [path: string, label: MessageKey, rights: readonly string[]][] = [
+  ["live", "tab.live", [READ]],
+  ["devices", "tab.devices", [READ]],
+  ["zones", "tab.zones", [ZONES]],
+  ["schedule", "tab.schedule", [CONTENT]],
+  ["content", "tab.content", [CONTENT]],
+  ["ticker", "tab.ticker", [TICKER]],
+  ["pins", "tab.pins", PIN_READ_RIGHTS],
 ];
+const ANY_TAB = [...new Set(TABS.flatMap(([, , rights]) => rights))];
+const holds = (rights: ReadonlySet<string>, any: readonly string[]) =>
+  any.some((r) => rights.has(r));
 
 /** Sign-in first (so a signed-out browser is sent to sign in), then the address rule, then a right. */
 function pageNeeds(rights: RightsChecker, any: readonly string[]): preHandlerAsyncHookHandler {
@@ -90,7 +99,7 @@ function pageNeeds(rights: RightsChecker, any: readonly string[]): preHandlerAsy
     const session = await rights.session(request.headers.cookie);
     request.session = session;
     checkAdminAccess(tenantOf(request), request.ip);
-    if (!any.some((r) => session.rights.has(r))) {
+    if (!holds(session.rights, any)) {
       throw new MissingRight(`needs one of the rights ${any.join(", ")}`);
     }
   };
@@ -154,6 +163,11 @@ async function studioPage(
 ): Promise<FastifyReply> {
   const nonce = newNonce();
   const rights = request.session?.rights ?? new Set<string>();
+  // While frozen, every page says so to whoever may read the pin (an error page reads nothing).
+  const banner =
+    o.plain || !holds(rights, PIN_READ_RIGHTS)
+      ? ""
+      : await frozenBanner(deps, tenantOf(request), t);
   const doc = shellPage({
     title: o.title,
     nonce,
@@ -180,13 +194,14 @@ async function studioPage(
     ...(o.tab === undefined
       ? {}
       : {
-          tabs: TABS.filter(([, , right]) => rights.has(right)).map(([path, label]) => ({
+          tabs: TABS.filter(([, , any]) => holds(rights, any)).map(([path, label]) => ({
             href: STUDIO + path,
             label: t(label),
             current: path === o.tab,
           })),
         }),
-    body: html`<p class="canccu-studio-notice" role="status" hidden></p>
+    body: html`${banner}
+      <p class="canccu-studio-notice" role="status" hidden></p>
       ${o.body}${clientText(t)}
       <script src="${STUDIO}static/studio.js" defer></script>
       ${
@@ -252,16 +267,12 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       studioPage(request, reply, deps, c.t, { ...o, title: o.title || c.t("studio.title") });
 
     // Home (U5): Live while the event runs, Zones before it, or the first tab this person has.
-    studio.get(
-      STUDIO,
-      { preHandler: pageNeeds(deps.rights, [READ, ZONES, CONTENT, TICKER]) },
-      async (request, reply) => {
-        const rights = request.session?.rights ?? new Set<string>();
-        const order = tenantOf(request).status === "live" ? TABS : [TABS[2], ...TABS];
-        const first = order.find((tab) => tab !== undefined && rights.has(tab[2]));
-        return reply.redirect(`${STUDIO}${first?.[0] ?? "live"}`, 303);
-      },
-    );
+    studio.get(STUDIO, { preHandler: pageNeeds(deps.rights, ANY_TAB) }, async (request, reply) => {
+      const rights = request.session?.rights ?? new Set<string>();
+      const order = tenantOf(request).status === "live" ? TABS : [TABS[2], ...TABS];
+      const first = order.find((tab) => tab !== undefined && holds(rights, tab[2]));
+      return reply.redirect(`${STUDIO}${first?.[0] ?? "live"}`, 303);
+    });
 
     studio.get(
       `${STUDIO}live`,
@@ -380,6 +391,23 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
           tab: "ticker",
           description: c.t("ticker.desc"),
           body: tickerView(c, ticker),
+        });
+      },
+    );
+
+    studio.get(
+      `${STUDIO}pins`,
+      { preHandler: pageNeeds(deps.rights, PIN_READ_RIGHTS) },
+      async (request, reply) => {
+        const c = await context(request);
+        const ctx = tenantOf(request);
+        const pin = await deps.db.tenant(readPin);
+        const event = await deps.publicEvent?.(request.headers.host).catch(() => null);
+        return page(request, reply, c, {
+          title: "",
+          tab: "pins",
+          description: c.t("pins.desc"),
+          body: pinsView(c, pin, await inEffect(deps, ctx.tenant_id, pin), event?.ends_at),
         });
       },
     );

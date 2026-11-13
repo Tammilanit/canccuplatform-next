@@ -25,6 +25,8 @@ import type { Layout } from "./layouts.js";
 import { loadOverrides } from "./overrides.js";
 import { isShowcase } from "./showcase.js";
 import type { HeaderMode, HubQrMode } from "./parts.js";
+import { readPin } from "../pins/store.js";
+import { themeFor } from "../pins/look.js";
 import type { Sources, ThemeNow } from "./sources.js";
 import type { ZoneFacts } from "./widgets.js";
 
@@ -57,7 +59,7 @@ export interface ZoneRow {
 
 export const NO_DISPLAY: Display = { motion: "moderate", drift: false };
 
-/** Until theming serves a revision (or the pinned one, #265), the platform defaults. */
+/** Until theming serves a revision (the pinned one or the current), the platform defaults. */
 export const NO_THEME: ThemeNow = {
   revision: 0,
   tokens_css_url: "/theming/a/tokens.css",
@@ -126,6 +128,8 @@ export interface ZoneComposed {
   fingerprint: string;
   zone: ZoneRow;
   theme: ThemeNow;
+  /** The pinned bundle version, or null for the platform's. */
+  bundle: string | null;
   eventName: string;
   /** Landscape and portrait screens of a zone differ in the layout, its regions and so its claims. */
   views: Record<Orientation, ZoneView>;
@@ -166,11 +170,12 @@ export async function composeZone(
       windowLayout: await windowLayoutId(c, zone.key, ctx.time_zone, at),
       ticker: await tickerNow(c, ctx.time_zone, at.getTime()),
       claims: await loadOverrides(c, zone.key, at.getTime()),
+      pin: await readPin(c),
     };
   });
   if (read === null) return null;
   const [theme, event, agenda, venue] = await Promise.all([
-    deps.sources.theme(ctx.tenant_id),
+    themeFor(deps.sources, ctx.tenant_id, read.pin),
     deps.sources.event(host),
     deps.sources.agendaNow(ctx.tenant_id, zoneKey),
     deps.sources.venueInfo(ctx.tenant_id),
@@ -232,8 +237,10 @@ export async function composeZone(
       tickerAppearance: appearance,
       display,
       claims: read.claims,
+      bundle: read.pin.bundle_version,
     }),
     zone: read.zone,
+    bundle: read.pin.bundle_version,
     theme: theme ?? NO_THEME,
     eventName,
     views,
@@ -253,6 +260,8 @@ export interface FingerprintInput {
   display?: Display;
   /** The overrides active on the zone now: one that ends changes the inputs, so it is drawn away. */
   claims?: readonly Override[];
+  /** The pinned bundle: a pin change moves the version, so streams send the new `bundle`. */
+  bundle?: string | null;
 }
 
 /**
@@ -270,6 +279,7 @@ export function zoneFingerprint(input: FingerprintInput): string {
     ticker: input.tickerAppearance ?? "default",
     display: input.display ?? NO_DISPLAY,
     claims: input.claims ?? [],
+    bundle: input.bundle ?? null,
   };
   return createHash("sha256").update(JSON.stringify(stable)).digest("base64url");
 }

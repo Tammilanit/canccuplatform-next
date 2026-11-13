@@ -15,6 +15,8 @@ import {
   themeView,
 } from "../compose/state.js";
 import type { ComposeDeps, ZoneComposed } from "../compose/state.js";
+import { themeFor } from "../pins/look.js";
+import { readPin } from "../pins/store.js";
 import { diffZone } from "./diff.js";
 import type { Orientation, ZoneRecord, ZoneRecordView } from "./store.js";
 
@@ -30,6 +32,7 @@ export function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
     zone: { key: composed.zone.key, name: composed.zone.name, epoch: composed.zone.epoch },
     eventName: composed.eventName,
     theme: themeView(composed.theme),
+    bundle: composed.bundle,
     ticker: composed.ticker,
     sound: { enabled: composed.zone.sound.enabled, device_id: composed.zone.sound.device_id },
     display: composed.display,
@@ -121,8 +124,8 @@ export interface DeviceSide {
   device: Pick<DeviceRow, "id" | "name">;
   mirror: boolean;
   bundleVersion: string;
-  /** Only for a device without a zone: the theme and the event's name it shows. */
-  fallback?: { theme: Record<string, unknown>; eventName: string };
+  /** Only for a device without a zone: the theme, the event's name and the pinned bundle. */
+  fallback?: { theme: Record<string, unknown>; eventName: string; bundle: string | null };
 }
 
 /** The `ScreenState` of one device: the zone's part, and its own `device` and `sound`. */
@@ -145,7 +148,7 @@ export function assemble(
     },
     device: { id: side.device.id, name: side.device.name, mirror: side.mirror },
     zone: record?.zone ?? null,
-    bundle: { version: side.bundleVersion },
+    bundle: { version: record?.bundle ?? side.fallback?.bundle ?? side.bundleVersion },
     theme: record?.theme ?? side.fallback?.theme ?? themeView(NO_THEME),
     layout: view?.layout ?? null,
     regions: view?.regions ?? [],
@@ -183,13 +186,15 @@ export async function placeDevice(
   const where = await deps.db.tenant((c) => placement(c, device.id));
   const record = where.zoneKey === null ? null : await refreshZone(deps, ctx, host, where.zoneKey);
   const orientation = (await isPortrait(deps.kv, device.id, nowMs)) ? "portrait" : "landscape";
+  const pin = record === null ? await deps.db.tenant(readPin) : null;
   const fallback =
-    record === null
-      ? {
-          theme: themeView((await deps.sources.theme(ctx.tenant_id)) ?? NO_THEME),
+    pin === null
+      ? undefined
+      : {
+          theme: themeView((await themeFor(deps.sources, ctx.tenant_id, pin)) ?? NO_THEME),
           eventName: (await deps.sources.event(host))?.name ?? "",
-        }
-      : undefined;
+          bundle: pin.bundle_version,
+        };
   const side = { nowMs, ctx, device, mirror: where.mirror, bundleVersion: deps.bundleVersion };
   return {
     zoneKey: record === null ? null : where.zoneKey,

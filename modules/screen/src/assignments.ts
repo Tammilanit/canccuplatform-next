@@ -196,11 +196,7 @@ export function assignmentRoutes(app: FastifyInstance, deps: AssignmentDeps): vo
         target: { type: "device", id: device.id },
         changes: { command: { from: null, to: command } },
       });
-      const expiresAt = now() + COMMAND_TTL_MS;
-      const entry = { id: newId("cm"), command, expires_at: new Date(expiresAt).toISOString() };
-      await deps.kv.addExpiring(commandsKey(device.id), JSON.stringify(entry), expiresAt);
-      // Best effort: a stream that misses the nudge takes the command at its next ping.
-      await deps.fanout.publish(keys.deviceChannel(device.id), "commands").catch(() => undefined);
+      await queueCommand(deps, device.id, command, now());
       return reply.status(202).send();
     },
   );
@@ -208,6 +204,20 @@ export function assignmentRoutes(app: FastifyInstance, deps: AssignmentDeps): vo
 
 /** A command not delivered within this is dropped (contracts/screen.md, Commands). */
 export const COMMAND_TTL_MS = 60_000;
+
+/** Queues `command` for the device, in the current event's keys, and nudges its open streams. */
+export async function queueCommand(
+  deps: { kv: Kv; fanout: Pick<Fanout, "publish"> },
+  deviceId: string,
+  command: PendingCommand["command"],
+  nowMs: number,
+): Promise<void> {
+  const expiresAt = nowMs + COMMAND_TTL_MS;
+  const entry = { id: newId("cm"), command, expires_at: new Date(expiresAt).toISOString() };
+  await deps.kv.addExpiring(commandsKey(deviceId), JSON.stringify(entry), expiresAt);
+  // Best effort: a stream that misses the nudge takes the command at its next ping.
+  await deps.fanout.publish(keys.deviceChannel(deviceId), "commands").catch(() => undefined);
+}
 
 /** Per device, in the current event's keys: a moved device never gets the old event's commands. */
 function commandsKey(deviceId: string): string {

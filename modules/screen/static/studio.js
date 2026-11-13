@@ -253,4 +253,17 @@
       reloadWith(say("ticker.set_done"));
     });
   }
+
+  // "Freeze for the event" when the event has no end: the end comes from this form, in the
+  // browser's own time, as the ticker's end does.
+  const freeze = document.querySelector("form[data-freeze]");
+  if (freeze) {
+    freeze.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const until = new Date(freeze.elements.until.value).toISOString();
+      const r = await api("PUT", "/api/screen/pin", { freeze: true, until });
+      if (!r.ok) return show(failure(r));
+      reloadWith(say("pins.freeze_done"));
+    });
+  }
 })();
