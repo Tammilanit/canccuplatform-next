@@ -21,7 +21,10 @@ export function minutesOf(text: string): number | null;
 export function clock(minutes: number): string;
 export function isoDay(date: string): number;
 export function createdTimes(date: string, a: number, b: number): Times & { date: string };
-export function movedTimes(times: Times, delta: number): Times | null;
+export function movedTimes(
+  w: Times & { days: number[] },
+  delta: number,
+): (Times & { days: number[] }) | null;
 export function resizedTimes(times: Times, delta: number): Times | null;
 export function windowBody(
   f: WindowFields,

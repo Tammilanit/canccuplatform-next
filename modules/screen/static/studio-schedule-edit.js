@@ -4,7 +4,8 @@
  * date's midnight, past 1440 where the axis runs on into the small hours. A weekly window holds
  * wall-clock minutes (contracts/screen.md, Schedule windows): an end of 1440 is midnight, an end
  * not after the start runs overnight, and the start and end are never equal. The legacy
- * `week-calendar-edit-client.ts` moved and resized one weekday; here a window keeps its days.
+ * `week-calendar-edit-client.ts` moved and resized one weekday; here a window keeps its days, and
+ * a move whose start crosses midnight shifts all of them with it.
  */
 
 const DAY = 1440;
@@ -52,13 +53,23 @@ const lengthOf = (t) =>
     ? t.end_minute - t.start_minute
     : t.end_minute + DAY - t.start_minute;
 
-/** The window moved by `delta` minutes, snapped; null when that changes nothing. */
-export function movedTimes(times, delta) {
+/** Weekday `day` (1 = Monday … 7 = Sunday) `n` days on, Sunday wrapping to Monday. */
+const weekdayAfter = (day, n) => mod7(day - 1 + n) + 1;
+const mod7 = (n) => ((n % 7) + 7) % 7;
+
+/**
+ * The window moved by `delta` minutes, snapped; null when that changes nothing. A start pushed
+ * past midnight lands on the next day, so the days move with it: otherwise the window would be
+ * saved about a day away from where it was dropped.
+ */
+export function movedTimes(w, delta) {
   const step = snap(delta);
-  if (step === 0 || lengthOf(times) >= DAY) return null;
+  if (step === 0 || lengthOf(w) >= DAY) return null;
+  const shift = Math.floor((w.start_minute + step) / DAY);
   return {
-    start_minute: mod(times.start_minute + step),
-    end_minute: endOf(times.end_minute + step),
+    days: w.days.map((d) => weekdayAfter(d, shift)).sort((x, y) => x - y),
+    start_minute: mod(w.start_minute + step),
+    end_minute: endOf(w.end_minute + step),
   };
 }
 

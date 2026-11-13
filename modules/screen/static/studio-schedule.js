@@ -70,6 +70,10 @@ if (dialog && form) {
 
   /** The dialog for a new window (`w` without an id, maybe from a drag) or for window `w`. */
   function open(w) {
+    // The markup holds a new window's defaults; without the reset a new window would start from
+    // whatever the last dialog held, and a quick Save would copy it.
+    form.reset();
+    disarm();
     const editing = w.id !== undefined;
     title.textContent = editing ? title.dataset.edit : title.dataset.new;
     f.id.value = w.id ?? "";
@@ -99,6 +103,7 @@ if (dialog && form) {
     open(w);
   });
   dialog.querySelector("[data-close]").addEventListener("click", () => dialog.close());
+  dialog.addEventListener("close", () => disarm());
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -126,16 +131,20 @@ if (dialog && form) {
     return act("PUT", `${API}/${encodeURIComponent(f.id.value)}`, body, "window.saved");
   });
 
-  // A second tap within 5 s deletes; the first only asks.
+  // A second tap within 5 s deletes; the first only asks. Opening or closing the dialog disarms,
+  // so the first tap on one window never counts as the second on another.
+  const label = remove.textContent;
+  let disarming = 0;
+  function disarm() {
+    window.clearTimeout(disarming);
+    remove.dataset.armed = "";
+    remove.textContent = label;
+  }
   remove.addEventListener("click", () => {
     if (remove.dataset.armed !== "1") {
-      const label = remove.textContent;
       remove.dataset.armed = "1";
       remove.textContent = remove.dataset.confirm;
-      setTimeout(() => {
-        remove.dataset.armed = "";
-        remove.textContent = label;
-      }, 5000);
+      disarming = setTimeout(disarm, 5000);
       return;
     }
     const url = `${API}/${encodeURIComponent(f.id.value)}?revision=${encodeURIComponent(f.revision.value)}`;
@@ -227,6 +236,7 @@ if (dialog && form) {
         playlist_id: w.playlist_id,
         priority: w.priority,
         layout_id: w.layout_id,
+        // A move carries its shifted days; a resize keeps the window's own.
         days: w.days,
         ...times,
         revision: w.revision,

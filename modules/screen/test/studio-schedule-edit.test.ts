@@ -63,30 +63,52 @@ describe("the window editor's times", () => {
     expect(createdTimes("2026-01-01", 1380, 1440)).toMatchObject({ end_minute: 1440 });
   });
 
-  it("moves a window by whole quarters, across midnight too, keeping its length", () => {
-    expect(movedTimes({ start_minute: 540, end_minute: 1020 }, 62)).toEqual({
+  it("moves a window by whole quarters, keeping its length and days", () => {
+    expect(movedTimes({ days: [1, 5], start_minute: 540, end_minute: 1020 }, 62)).toEqual({
+      days: [1, 5],
       start_minute: 600,
       end_minute: 1080,
     });
-    expect(movedTimes({ start_minute: 1320, end_minute: 1380 }, 60)).toEqual({
+    expect(movedTimes({ days: [4], start_minute: 1320, end_minute: 1380 }, 60)).toEqual({
+      days: [4],
       start_minute: 1380,
       end_minute: 1440,
     });
-    expect(movedTimes({ start_minute: 1380, end_minute: 1440 }, 60)).toEqual({
-      start_minute: 0,
-      end_minute: 60,
-    });
-    expect(movedTimes({ start_minute: 1380, end_minute: 60 }, -60)).toEqual({
+    // Its end crosses midnight, its start does not: the same day, now overnight.
+    expect(movedTimes({ days: [4], start_minute: 1380, end_minute: 60 }, -60)).toEqual({
+      days: [4],
       start_minute: 1320,
       end_minute: 1440,
     });
-    expect(movedTimes({ start_minute: 30, end_minute: 90 }, -60)).toEqual({
+    // A whole day has nowhere to move.
+    expect(movedTimes({ days: [4], start_minute: 0, end_minute: 1440 }, 60)).toBeNull();
+    expect(movedTimes({ days: [4], start_minute: 540, end_minute: 1020 }, 5)).toBeNull();
+  });
+
+  it("moves a window whose start crosses midnight onto the day it lands on", () => {
+    // Thursday 23:00–24:00 down an hour is Friday 00:00–01:00, not Thursday's small hours.
+    expect(movedTimes({ days: [4], start_minute: 1380, end_minute: 1440 }, 60)).toEqual({
+      days: [5],
+      start_minute: 0,
+      end_minute: 60,
+    });
+    // Friday 00:30 up an hour is Thursday 23:30.
+    expect(movedTimes({ days: [5], start_minute: 30, end_minute: 90 }, -60)).toEqual({
+      days: [4],
       start_minute: 1410,
       end_minute: 30,
     });
-    // A whole day has nowhere to move.
-    expect(movedTimes({ start_minute: 0, end_minute: 1440 }, 60)).toBeNull();
-    expect(movedTimes({ start_minute: 540, end_minute: 1020 }, 5)).toBeNull();
+    // Every day moves, and the week wraps both ways.
+    expect(movedTimes({ days: [1, 3, 7], start_minute: 1380, end_minute: 1440 }, 120)).toEqual({
+      days: [1, 2, 4],
+      start_minute: 60,
+      end_minute: 120,
+    });
+    expect(movedTimes({ days: [1, 6], start_minute: 60, end_minute: 120 }, -120)).toEqual({
+      days: [5, 7],
+      start_minute: 1380,
+      end_minute: 1440,
+    });
   });
 
   it("resizes a window's end, a quarter at least and less than a day", () => {
