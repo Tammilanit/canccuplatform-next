@@ -216,6 +216,14 @@ class Auth:
         url = self.discord.authorize_url(state, challenge.rstrip(b"=").decode())
         return url, nonce
 
+    async def cancelled(self, state: str, nonce: str | None) -> str | None:
+        """Discord said no: uses up the flow and gives its return path, if this browser
+        started it (the nonce cookie), so the page it came from can say so."""
+        flow = await self.store.take_flow(digest(state), self._now()) if state else None
+        if flow is None or not nonce or not hmac.compare_digest(flow.nonce_hash, digest(nonce)):
+            return None
+        return flow.return_path
+
     async def finish(
         self, state: str, nonce: str | None, code: str, old_session: str | None
     ) -> tuple[str, User, str | None]:

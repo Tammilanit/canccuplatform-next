@@ -159,6 +159,12 @@ def auth_routes(
     async def callback(request: Request) -> Response:
         query = request.query_params
         if "error" in query:
+            back = await auth.cancelled(query.get("state", ""), request.cookies.get(FLOW_COOKIE))
+            if back:
+                path, _, fragment = back.partition("#")
+                marked = f"{path}{'&' if '?' in path else '?'}signin=cancelled"
+                marked += f"#{fragment}" if fragment else ""
+                return clear_flow(RedirectResponse(marked, status_code=303))
             cancelled = KitError(
                 "Discord was closed before it said yes. Nothing was changed.",
                 status=400,

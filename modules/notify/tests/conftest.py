@@ -308,7 +308,20 @@ async def env() -> AsyncIterator[Env]:
     )
     app = create_app(d, Health("notify", "dev", {}), resolver, ServiceIdentity("notify", KEY))
     yield Env(
-        db, rights, settings, store, contexts, app, clock, audit, d, fake, agenda, users, hub, events
+        db,
+        rights,
+        settings,
+        store,
+        contexts,
+        app,
+        clock,
+        audit,
+        d,
+        fake,
+        agenda,
+        users,
+        hub,
+        events,
     )
     await db.close()
 

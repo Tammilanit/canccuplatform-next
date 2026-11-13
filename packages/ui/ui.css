@@ -1406,6 +1406,10 @@
     .canccu-front__card h1 {
       font-size: 1.5rem;
     }
+    /* A free row for the Privacy tag, so it never covers the card. */
+    .canccu-front--privacy {
+      padding-bottom: 4rem;
+    }
   }
 
   /* Icons: each a mask over currentColor, so it takes the text colour of where it sits. */
@@ -1492,9 +1496,16 @@
     right: max(8px, 1.5vmin) !important;
     font-size: max(16px, 3.9vmin) !important;
   }
+  /* A small tag inside a 44 px target (sheet 7, Q6): the transparent border is the rest of the
+     target, so the tag stays small but a thumb still finds it. Most of the box stays black. */
   .canccu-privacy-link {
     bottom: 8px !important;
     right: 8px !important;
+    padding: 6px 10px !important;
+    border-style: solid !important;
+    border-color: transparent !important;
+    border-width: 7px 4px !important;
+    background-clip: padding-box !important;
     font-size: 16px !important;
     text-decoration: underline !important;
     cursor: pointer !important;

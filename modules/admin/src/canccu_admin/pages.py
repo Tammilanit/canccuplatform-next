@@ -27,6 +27,8 @@ log = logging.getLogger("canccu.admin")
 
 BASE = "/admin"  # Caddy serves module pages under /admin/ and strips it
 CSS = f"{BASE}/static/ui.css"
+# What signing in keeps, said on notify's privacy page with what checking in keeps (#441).
+PRIVACY = "/notify/privacy"
 # The image sets CANCCU_UI_CSS; elsewhere packages/ui sits beside this module's source (an
 # editable install), while an installed kit has no packages/ui next to it.
 UI_CSS = Path(
@@ -105,7 +107,9 @@ async def front(
     request: Request, title: str, card: str, status: int = 200, **shell: Any
 ) -> HTMLResponse:
     """A front door (sign-in, first run): the event's poster and one card."""
-    doc = front_page(title, card, event=await event_of(request), css=[CSS], **shell)
+    doc = front_page(
+        title, card, event=await event_of(request), css=[CSS], privacy=PRIVACY, **shell
+    )
     return HTMLResponse(doc, status_code=status)
 
 

@@ -74,12 +74,16 @@ async def test_off_the_venue_network_it_says_which_network(env: Env) -> None:
     assert "Check in at the venue" in _text(refused) and recorded(env) == []
     # The venue's emergency switch (its address changed mid-event) lets check-in through.
     until = (NOW + timedelta(hours=2)).isoformat()
-    env.contexts["ev-a"]["venue_ip_check"] = {"enabled": False, "disabled_until": until}
+    env.contexts["ev-a"]["venue_ip_check"] = {
+        "enabled": False,
+        "disabled_until": until,
+        "reason": "moved",
+    }
     assert (await submit(env, form, "u_a")).status_code == 201
 
 
 async def test_on_the_venue_network_it_checks_in(env: Env) -> None:
-    env.contexts["ev-a"]["venue"] = {"id": "v", "name": "Hall", "addresses": ["127.0.0.0/8"]}
+    env.contexts["ev-a"]["venue"] = {"id": "v", "name": "Hall", "addresses": ["198.51.100.0/24"]}
     form = {"p": "arrival", "c": (await code(env))["code"]}
     assert (await submit(env, form, "u_a")).status_code == 201
 
@@ -142,7 +146,9 @@ async def test_the_hub_reader_reads_as_the_person_and_never_fails_the_page() -> 
         return httpx.Response(500)
 
     reader = HubReader(
-        "http://tenants:8080", "http://agenda:8080", httpx.AsyncClient(transport=httpx.MockTransport(answer))
+        "http://tenants:8080",
+        "http://agenda:8080",
+        httpx.AsyncClient(transport=httpx.MockTransport(answer)),
     )
     assert await reader.venue_wifi(HOST, "canccu_session=s") == [
         {"ssid": "x", "visibility": "public"}
@@ -150,3 +156,12 @@ async def test_the_hub_reader_reads_as_the_person_and_never_fails_the_page() -> 
     assert await reader.agenda_now(HOST, "canccu_session=s") is None
     assert [r.headers["host"] for r in seen] == [HOST, HOST]
     assert seen[0].headers["cookie"] == "canccu_session=s"
+
+
+async def test_already_checked_in_on_an_earlier_day_names_the_day(env: Env) -> None:
+    form = {"p": "arrival", "c": (await code(env))["code"]}
+    assert (await submit(env, form, "u_a")).status_code == 201
+    env.clock[0] = NOW + timedelta(days=1)
+    form = {"p": "arrival", "c": (await code(env))["code"]}
+    text = _text(await submit(env, form, "u_a"))
+    assert "Since Fri 20 Nov, 17:00. Nothing more to do." in text

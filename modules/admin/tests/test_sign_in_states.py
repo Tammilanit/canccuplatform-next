@@ -130,3 +130,10 @@ async def test_the_service_worker_may_serve_every_organiser_page(world: World) -
     assert "/admin/offline" in r.text
     shell = await world.client.get("/admin/static/shell.js")
     assert shell.status_code == 200 and "serviceWorker" in shell.text
+
+
+async def test_the_sign_in_page_carries_the_privacy_tag(world: World) -> None:
+    page = await world.client.get("/admin/sign-in")
+    assert page.text.endswith(
+        '<a class="canccu-privacy-link" href="/notify/privacy">Privacy</a></body></html>'
+    )

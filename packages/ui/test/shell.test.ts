@@ -194,6 +194,13 @@ describe("parts", () => {
       s(frontPage({ title: "Sign in", event: EVENT, card: html`<h1>Sign in</h1>`, now: NOW })),
     ).toContain('class="canccu-poster__name">Demo &lt;Event&gt;');
   });
+  it("front page with the privacy tag as the page's last child", () => {
+    const doc = s(frontPage({ title: "Check in", card: "", privacy: "/notify/privacy" }));
+    expect(doc).toContain(
+      '<a class="canccu-privacy-link" href="/notify/privacy">Privacy</a>\n</body>',
+    );
+    expect(doc).toContain("canccu-front--privacy");
+  });
 });
 
 describe("time", () => {

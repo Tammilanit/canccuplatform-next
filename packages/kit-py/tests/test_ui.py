@@ -197,3 +197,13 @@ def test_a_signed_in_shell_loads_the_offline_fallback() -> None:
     signed_in = shell_page("Settings", "", session=Viewer("admin.settings.read"))
     assert '<script src="/admin/static/shell.js" defer></script>' in signed_in
     assert "shell.js" not in shell_page("Signed out", "")
+
+
+def test_a_front_page_carries_the_privacy_tag_last() -> None:
+    """The safety element must be the page's last child, holding text only (packages/ui)."""
+    doc = front_page("Check in", "<h1>Check in</h1>", privacy="/notify/privacy")
+    assert doc.endswith(
+        '<a class="canccu-privacy-link" href="/notify/privacy">Privacy</a></body></html>'
+    )
+    assert "canccu-front--privacy" in doc
+    assert "canccu-privacy-link" not in front_page("Sign in", "")

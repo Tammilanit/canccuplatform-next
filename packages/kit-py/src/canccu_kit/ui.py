@@ -234,8 +234,11 @@ def front_page(
     centred: bool = False,
     surface: Literal["admin", "hub"] = "admin",
     now: datetime | None = None,
+    privacy: str | None = None,
 ) -> str:
-    """A front door (sign-in, check-in): the event's poster beside or above one card (HTML)."""
+    """A front door (sign-in, check-in): the event's poster beside or above one card (HTML).
+    `privacy` is where the Privacy tag leads: the safety element of pages that take the event's
+    look, which must be the page's last child (packages/ui README, the safety elements)."""
     name = (event.name if event else None) or ""
     long = " canccu-poster__name--long" if len(name) > 28 else ""
     meta = ""
@@ -254,7 +257,14 @@ def front_page(
     )
     centre = " canccu-front__card--center" if centred else ""
     front_card = f'<div class="canccu-front__card{centre}">{card}</div>'
-    body = f'<div class="canccu-front">{poster}{front_card}</div>'
+    if privacy:
+        # The page keeps a free row at its foot, so the tag never covers the card.
+        body = (
+            f'<div class="canccu-front canccu-front--privacy">{poster}{front_card}</div>'
+            f'<a class="canccu-privacy-link" href="{esc(privacy)}">Privacy</a>'
+        )
+    else:
+        body = f'<div class="canccu-front">{poster}{front_card}</div>'
     return document(title, body, event=event, css=css, surface=surface)
 
 
