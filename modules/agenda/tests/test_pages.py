@@ -66,18 +66,22 @@ async def test_the_list_shows_the_day_with_now_delays_and_cancellations(env: Env
             headers=h,
         )
         crew_only = await add(c, h, title="Briefing", visibility="crew", starts_at=at(30))
-        response = await c.get("/", headers=h)
-        tomorrow = await c.get("/?day=2026-11-21", headers=h)
+        response = await c.get("/?earlier=1", headers=h)  # Doors is over: opened from the fold
     assert response.status_code == 200
     text = response.text.split('class="canccu-card canccu-card--flush canccu-agenda-list"')[1]
     order = ["Doors", "Dinner", "Now 17:00", "Briefing", "Gone", "Show"]  # Show is +15
     assert [text.index(t) for t in order] == sorted(text.index(t) for t in order)
-    assert f'href="/agenda/?day=2026-11-20&amp;item={dinner["id"]}"' in text
+    assert f'href="/agenda/?earlier=1&amp;item={dinner["id"]}#r-{dinner["id"]}"' in text
     assert "canccu-agenda-row--running" in text and "canccu-agenda-row--cancelled" in text
     # The item that slipped carries the badge; its planned time stands struck through in Was.
     assert "+15 min" in text and '<s class="canccu-agenda-was">18:30</s>' in text
     assert "Crew only" in text and crew_only["id"] in text
-    assert "Nothing on Sat 21 Nov yet" in tomorrow.text  # the empty state names the day
+
+
+async def test_an_empty_run_of_show_says_so(env: Env) -> None:
+    async with env.client() as c:
+        text = (await c.get("/", headers=env.writer())).text
+    assert "Nothing in the run of show yet" in text and 'href="/agenda/add"' in text
 
 
 async def test_the_day_view_has_on_now_the_day_list_and_a_selected_item(env: Env) -> None:
@@ -98,26 +102,26 @@ async def test_the_day_view_has_on_now_the_day_list_and_a_selected_item(env: Env
     assert "Café · until 18:05 <s>17:50</s>" in hero and "+15 min" in hero
     base = f"/agenda/items/{dinner['id']}"
     # A chip opens the confirm over this day; Other… goes to the delay page and its field.
-    sheet = f"/agenda/?day=2026-11-20&amp;delay={dinner['id']}&amp;minutes="
+    sheet = f"/agenda/?delay={dinner['id']}&amp;minutes="
     for minutes in (5, 10, 15):
         assert f'href="{sheet}{minutes}">+{minutes}</a>' in hero
     assert f'href="{base}/delay">Other…</a>' in hero and f'href="{base}/show-now"' in hero
     # What screens show now: the main zone's own player, for someone who may read screens.
     assert 'src="/screen/zones/main"' in hero
     # The day switch and Jump to now; the list's columns; the current row marked.
-    assert 'aria-current="page">Fri 20 Nov</a>' in rest and ">Sat 21 Nov</a>" in rest
-    assert 'href="/agenda/?day=2026-11-20#now"' in rest and 'id="now"' in rest
+    assert 'aria-current="true">Fri 20 Nov</a>' in rest and ">Sat 21 Nov</a>" in rest
+    assert 'href="#now"' in rest and 'id="now"' in rest
     for column in ("Time", "Was", "What", "Where", "For"):
         assert f"<span>{column}</span>" in rest
     assert "canccu-agenda-row--running" in rest and ">Meal<" in rest and ">crew<" in rest
     # Beside the list, the item that comes next is selected, with its actions.
     side = rest.split('class="canccu-card canccu-agenda-side')[1].split("</aside>")[0]
     assert ">Briefing</a></h2>" in side and f"/agenda/items/{brief['id']}/edit" in side
-    assert f"&amp;delay={brief['id']}&amp;minutes=10" in side
+    assert f"?delay={brief['id']}&amp;minutes=10" in side
     assert "Cancel this item…" in side and "Close" not in side
     # A row picks the item; then the panel opens over the day with a way to close it.
     assert 'canccu-agenda-side is-open"' in chosen
-    assert 'canccu-agenda-close" href="/agenda/?day=2026-11-20"' in chosen
+    assert f'canccu-agenda-close" href="/agenda/#r-{dinner["id"]}"' in chosen
     assert ">Dinner</a></h2>" in chosen.split("canccu-agenda-side")[1]
     # Crew who only read see the day, without the actions or the screens they may not read.
     assert "On now · 1 h 5 min left" in crew
@@ -129,10 +133,10 @@ async def test_the_list_reads_times_in_the_events_time_zone(env: Env) -> None:
     h = env.writer()
     async with env.client() as c:
         await add(c, h, title="Late", starts_at=at(60 * 6))  # 23:00 UTC is 01:00 the next day
-        today = await c.get("/?day=2026-11-20", headers=h)
-        next_day = await c.get("/?day=2026-11-21", headers=h)
-    assert ">Late<" not in today.text and "Nothing today yet" in today.text
-    assert "Late" in next_day.text and ">01:00" in next_day.text
+        text = (await c.get("/", headers=h)).text
+    # 23:00 UTC is 01:00 the next day there, a night item: its row says its day.
+    saturday = text.split('id="day-2026-11-21"')[1]
+    assert ">Late<" in saturday and ">01:00<small>Sat</small>" in saturday
 
 
 async def test_an_item_page_offers_the_actions_its_state_allows(env: Env) -> None:

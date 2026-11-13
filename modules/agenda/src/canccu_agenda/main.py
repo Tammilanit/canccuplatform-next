@@ -13,7 +13,6 @@ from canccu_kit import (
     Event,
     Health,
     IpMode,
-    Outbox,
     RightsChecker,
     ServiceIdentity,
     SettingsClient,
@@ -26,7 +25,7 @@ from canccu_kit import (
     valkey_check,
 )
 
-from . import mirror, timers
+from . import mirror, posts, timers
 from .app import create_app
 from .db import Db
 from .deps import Deps
@@ -61,7 +60,7 @@ async def serve() -> None:
         service=identity,
     )
 
-    d = Deps(db=db, bus=bus, rights=rights, settings=settings, outbox=Outbox(bus, db))
+    d = Deps(db=db, bus=bus, rights=rights, settings=settings, outbox=posts.Outbox(bus, db))
 
     async def on_admin(event: Event) -> None:
         await rights.handle_event(event)

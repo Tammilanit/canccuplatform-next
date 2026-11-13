@@ -42,7 +42,7 @@ UI_CSS = Path(
 # The run of show's own pages, as tabs under its title (docs/design/mockups.html, sheet 2). Quick
 # add is an action, so it is the page's button and the bar's, never a tab: nothing twice.
 TABS = (("/", "Run of show"), ("/templates", "Templates"))
-STYLESHEETS = ("ui.css", "agenda.css", "confirm.css", "gap.css")
+STYLESHEETS = ("ui.css", "agenda.css", "list.css", "confirm.css", "gap.css")
 CSS = tuple(f"{BASE}/static/{name}" for name in STYLESHEETS)
 SCRIPTS = ("day.js",)
 # A 24-hour time: native time fields follow the browser's locale, which may be 12-hour (UX B5).

@@ -70,11 +70,11 @@ async def test_a_delay_chip_opens_the_confirm_over_the_day(env: Env) -> None:
         semis = await add(c, h, title="Semis", kind="tournament", starts_at=at(90))
         await add(c, h, title="Final", kind="tournament", starts_at=at(150))
         day = await c.get(f"/?item={semis['id']}", headers=h)
-        query = {"day": "2026-11-20", "item": semis["id"], "delay": semis["id"], "minutes": "10"}
+        query = {"item": semis["id"], "delay": semis["id"], "minutes": "10"}
         opened = await c.get("/", params=query, headers=h)
         crew = await c.get("/", params=query, headers=env.rights.sign_in("u_crew", CREW))
         gone = await c.get("/", params={**query, "delay": "nope"}, headers=h)
-    back = f"/agenda/?day=2026-11-20&amp;item={semis['id']}"
+    back = f"/agenda/?item={semis['id']}"
     assert "<dialog" not in day.text
     assert f'href="{back}&amp;delay={semis["id"]}&amp;minutes=10">+10</a>' in day.text
     text = opened.text

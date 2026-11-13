@@ -13,13 +13,15 @@ from canccu_kit.rights import Session
 from canccu_kit.ui import icon
 
 from .access import WRITE
-from .web import BASE, CHANNEL_LABELS, VISIBILITY_LABELS, day_label, esc, hhmm
+from .web import BASE, CHANNEL_LABELS, VISIBILITY_LABELS, esc, hhmm
 
 # Screen's own player of a zone for a signed-in person (contracts/screen.md, A zone for a
 # session), so the miniature is the live Pulse with this list's delays. Every event has `main`.
 SCREEN_READ = "screen.devices.read"
 MAIN_ZONE = "/screen/zones/main"
 DELAY_CHIPS = (5, 10, 15)
+# Until this hour an item belongs to the night before (sheet 5: "00:15 Sun").
+NIGHT_ENDS = 6
 FOR = {"public": "everyone", "attendees": "attendees", "crew": "crew"}
 
 
@@ -62,6 +64,10 @@ def _late(minutes: int) -> str:
     return f'<span class="canccu-badge canccu-badge--late">{minutes:+d} min</span>'
 
 
+def late_badge(row: Any) -> str:
+    return _late(_slip(row))
+
+
 def _span(minutes: int) -> str:
     hours, rest = divmod(minutes, 60)
     if not hours:
@@ -76,7 +82,7 @@ def _where(row: Any) -> str:
 def _delay(row: Any, here: str, grid: bool = False) -> str:
     """The delay chips. A chip opens the confirm as a sheet over this view (`here`, the day view's
     own address); Other… goes to the delay page, which has the field for any minutes."""
-    sheet = f"{here}&delay={row['id']}&minutes="
+    sheet = f"{here}{'&' if '?' in here else '?'}delay={row['id']}&minutes="
     links = "".join(
         f'<a class="canccu-button canccu-button--secondary" href="{esc(sheet)}{m}">+{m}</a>'
         for m in DELAY_CHIPS
@@ -114,7 +120,16 @@ def on_now(rows: list[Any], now: datetime, tz: ZoneInfo) -> Any | None:
     )
 
 
-def hero_html(row: Any, now: datetime, tz: ZoneInfo, session: Session, here: str) -> str:
+def hero_html(
+    row: Any,
+    now: datetime,
+    tz: ZoneInfo,
+    session: Session,
+    here: str,
+    post: tuple[str, str] | None = None,
+) -> str:
+    """What is on now (or next) with its actions, and beside it from 1440 px what the main zone's
+    screens show, with the run of show's last Discord post under it (posts.py)."""
     state = state_of(row, now)
     if state == "running":
         left = _minutes(row["ends_at"] - now)
@@ -141,7 +156,13 @@ def hero_html(row: Any, now: datetime, tz: ZoneInfo, session: Session, here: str
             '<div class="canccu-agenda-hero__screen">'
             '<p class="canccu-overline">What people see · main zone, live</p>'
             f'<div class="canccu-agenda-mini"><iframe src="{MAIN_ZONE}" loading="lazy"'
-            ' tabindex="-1" title="The main zone\'s screens, live"></iframe></div></div>'
+            ' tabindex="-1" title="The main zone\'s screens, live"></iframe></div>'
+            + (
+                f'<p class="canccu-agenda-post">Discord, {post[0]}: “{esc(post[1])}”</p>'
+                if post
+                else ""
+            )
+            + "</div>"
         )
     return (
         '<section class="canccu-agenda-hero"><div>'
@@ -152,23 +173,14 @@ def hero_html(row: Any, now: datetime, tz: ZoneInfo, session: Session, here: str
     )
 
 
-def days_html(days: list[date], day: date, today: date) -> str:
-    current = ' aria-current="page"'
-    links = "".join(
-        f'<a href="{BASE}/?day={d.isoformat()}"{current if d == day else ""}>{day_label(d)}</a>'
-        for d in sorted({*days, today})
-    )
-    return (
-        f'<div class="canccu-agenda-bar"><nav class="canccu-agenda-days" aria-label="Days">{links}'
-        f'</nav><a class="canccu-button canccu-button--ghost canccu-button--sm"'
-        f' href="{BASE}/?day={today.isoformat()}#now">{icon("clock")}Jump to now</a></div>'
-    )
-
-
 def row_html(
-    row: Any, kinds: dict[str, str], now: datetime, tz: ZoneInfo, day: date, selected: bool
+    row: Any, kinds: dict[str, str], now: datetime, tz: ZoneInfo, href: str, selected: bool
 ) -> str:
+    """One item's row, which picks it (`href`). An item before NIGHT_ENDS belongs to the night
+    before, so its time says its day ("00:15 Sun")."""
     state = state_of(row, now)
+    local = row["starts_at"].astimezone(tz)
+    night = f"<small>{local:%a}</small>" if local.hour < NIGHT_ENDS else ""
     was = ""
     if row["starts_at"] != row["planned_starts_at"]:
         was = f'<s class="canccu-agenda-was">{hhmm(row["planned_starts_at"], tz)}</s>'
@@ -185,9 +197,9 @@ def row_html(
     where = _where(row)
     pick = " is-selected" if selected else ""
     return (
-        f'<li><a class="canccu-agenda-row canccu-agenda-row--{state}{pick}"'
-        f' href="{BASE}/?day={day.isoformat()}&amp;item={esc(row["id"])}">'
-        f'<span class="canccu-agenda-row__time">{hhmm(row["starts_at"], tz)}</span>'
+        f'<li id="r-{esc(row["id"])}"><a class="canccu-agenda-row canccu-agenda-row--{state}{pick}"'
+        f' href="{esc(href)}">'
+        f'<span class="canccu-agenda-row__time">{hhmm(row["starts_at"], tz)}{night}</span>'
         f'<span class="canccu-agenda-row__was">{was}</span>'
         f'<span class="canccu-agenda-row__what"><span class="canccu-agenda-row__title">'
         f'{esc(row["title"])}</span><span class="canccu-agenda-row__kind">{esc(kind)}</span>'
@@ -222,13 +234,12 @@ def add_row_html(day: date) -> str:
     )
 
 
-def list_html(rows: list[str], tail: str) -> str:
-    """The day as one list; `tail` ends it: the now line once the day is over, the add row."""
+def list_html(rows: list[str]) -> str:
+    """The list under its header row, which stays at the top while the list scrolls."""
     head = "".join(f"<span>{c}</span>" for c in ("Time", "Was", "What", "Where", "For"))
     return (
         '<ol class="canccu-card canccu-card--flush canccu-agenda-list">'
-        f'<li class="canccu-agenda-head" aria-hidden="true">{head}</li>{"".join(rows)}'
-        f"{tail}</ol>"
+        f'<li class="canccu-agenda-head" aria-hidden="true">{head}</li>{"".join(rows)}</ol>'
     )
 
 

@@ -95,7 +95,7 @@
     font-weight: 550;
     color: var(--canccu-ink-muted);
   }
-  :where(.canccu-page) .canccu-agenda-days a[aria-current="page"] {
+  :where(.canccu-page) .canccu-agenda-days a[aria-current] {
     background: var(--canccu-raised);
     border-color: color-mix(in srgb, var(--canccu-color-text) 55%, transparent);
     box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
