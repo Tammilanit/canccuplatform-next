@@ -702,6 +702,13 @@ components:
           description: |
             `always`: the hub QR (a `qr` widget with `props.url` `/notify/`) has a fixed place beside its region's
             rotating widgets; `rotate`: it is one of them (contracts/screen.md, Header and hub QR).
+        screen_name:
+          type: string
+          enum: [auto, always, never]
+          default: auto
+          description: |
+            Whether the header shows the zone's name: `auto` while the event has two or more screens (devices assigned
+            to a zone or mirroring one), `always`, or `never` (contracts/screen.md, Header and hub QR).
         hero_region:
           type: [string, "null"]
           pattern: "^[a-z][a-z0-9_-]{0,31}$"
@@ -1009,6 +1016,11 @@ components:
             epoch:
               type: string
               description: Set when the zone is created; part of every stream message id.
+            show_name:
+              type: boolean
+              description: |
+                Whether the header shows `name`, from the zone's `screen_name` (contracts/screen.md, Header and hub QR).
+                Absent: shown, as before the setting.
         bundle:
           type: object
           required: [version]
