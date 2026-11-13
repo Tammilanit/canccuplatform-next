@@ -35,6 +35,14 @@ function build(zone: Partial<ZoneSetup> = {}, over: Partial<BuildInput> = {}): R
   }).regions.filter((r) => !r.id.startsWith("_"));
 }
 
+/**
+ * Dashboard's statistics boxes kept drawn: their source is not on main yet (#389), so with the
+ * default idle they would leave the composed state (compose-waiting.test.ts).
+ */
+const DRAWN = Object.fromEntries(
+  ["online", "voice", "top_games", "right_now"].map((id) => [id, { idle: "blank" }]),
+);
+
 const at = (column: number, row: number, columns: number, rows: number): Area => ({
   column,
   row,
@@ -76,7 +84,7 @@ describe("the built-in layouts", () => {
   });
 
   it("draws Dashboard's six boxes as the contract tables them, one the hero", () => {
-    const regions = build();
+    const regions = build({ regions: DRAWN });
     expect(areas(regions)).toMatchObject({
       header: at(1, 1, 6, 1),
       "header-2": at(7, 1, 6, 1),
@@ -98,6 +106,7 @@ describe("the built-in layouts", () => {
     expect(regions.find((r) => r.id === "hero")?.role).toBe("hero");
     // Boxes whose source is not on main yet (#389) are empty, so they follow their idle rule.
     expect(regions.find((r) => r.id === "online")?.widgets[0]?.view.empty).toBe(true);
+    expect(regions.find((r) => r.id === "online")?.idle).toBe("blank");
   });
 
   it("draws Hero as one panel with a one-line now-and-next band, and no ticker", () => {
@@ -142,7 +151,7 @@ describe("the built-in layouts", () => {
 
 describe("the hero role", () => {
   it("trades the hero's area with the region `hero_region` names", () => {
-    const regions = build({ heroRegion: "online" });
+    const regions = build({ heroRegion: "online", regions: DRAWN });
     expect(areas(regions)).toMatchObject({ hero: at(5, 2, 4, 5), online: at(1, 2, 4, 5) });
     // The widgets, settings and role travel with the region, not with the area.
     expect(regions.find((r) => r.id === "hero")?.role).toBe("hero");
@@ -161,7 +170,7 @@ describe("the hero role", () => {
 
 describe("the showcase", () => {
   it("grows Dashboard's hero to 8×10 and stacks the five other boxes beside it, 4×2 each", () => {
-    expect(areas(build({}, { grow: true }))).toMatchObject({
+    expect(areas(build({ regions: DRAWN }, { grow: true }))).toMatchObject({
       hero: at(1, 2, 8, 10),
       online: at(9, 2, 4, 2),
       voice: at(9, 4, 4, 2),
@@ -174,7 +183,7 @@ describe("the showcase", () => {
   });
 
   it("grows a hero in the band's right half against its right edge", () => {
-    const grown = areas(build({ heroRegion: "voice" }, { grow: true }));
+    const grown = areas(build({ heroRegion: "voice", regions: DRAWN }, { grow: true }));
     expect(grown).toMatchObject({ hero: at(5, 2, 8, 10), online: at(1, 2, 4, 2) });
   });
 

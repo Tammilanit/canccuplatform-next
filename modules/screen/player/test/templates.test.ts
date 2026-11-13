@@ -43,6 +43,40 @@ describe("the player's default templates", () => {
     );
   });
 
+  // contracts/screen.md, Trend arrows (#416): the direction in the class, no arrow without one.
+  it("draws a trend arrow beside each statistic that has one", () => {
+    const stats = draw(DEFAULT_TEMPLATES.stats ?? [], {
+      members: 1240,
+      online: 218,
+      in_voice: 38,
+      online_trend: "up",
+      in_voice_trend: "down",
+    });
+    const trends = [...stats.querySelectorAll(".canccu-widget__trend")].map((e) => e.className);
+    expect(trends).toEqual([
+      "canccu-widget__trend canccu-widget__trend--up",
+      "canccu-widget__trend canccu-widget__trend--down",
+    ]);
+    expect(stats.querySelector(".canccu-widget__big")?.textContent).toBe("1240");
+    const playing = draw(DEFAULT_TEMPLATES.now_playing ?? [], {
+      available: true,
+      games: [
+        { game_id: "g_1", name: "Demo Game", players: 41, trend: "flat" },
+        { game_id: "g_2", name: "Demo Racer", players: 23 },
+      ],
+    });
+    const rows = [...playing.querySelectorAll(".canccu-widget__row")];
+    expect(rows.map((r) => r.querySelector(".canccu-widget__trend")?.className ?? null)).toEqual([
+      "canccu-widget__trend canccu-widget__trend--flat",
+      null,
+    ]);
+    // A value that is not a direction never adds a class of its own.
+    const odd = draw(DEFAULT_TEMPLATES.stats ?? [], { online: 1, online_trend: "up x" });
+    expect(odd.querySelector(".canccu-widget__trend")?.className).toBe(
+      "canccu-widget__trend canccu-widget__trend--upx",
+    );
+  });
+
   it("puts the countdown's target in a <time> the player keeps counting", () => {
     const box = draw(DEFAULT_TEMPLATES.countdown ?? [], {
       label: "Semis start in",

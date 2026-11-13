@@ -206,6 +206,12 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect(dash).toContain("Which box is the hero?");
     expect(dash).toMatch(/data-hero="hero"[^>]*aria-pressed="true"/);
     expect(dash).toContain('name="grow_for_showcase"');
+    // Its statistics have no source yet (#389): the gallery says where they come from (#416).
+    expect(dash).toMatch(
+      /data-layout-pick="dashboard"(?:(?!<\/a)[\s\S])*Statistics come with the bot&#39;s data/,
+    );
+    expect(dash).toContain("data-statistics-note");
+    expect(body).not.toContain("data-statistics-note");
     expect(dash).not.toMatch(/data-pick="[a-z_]+"[^>]*\shidden[\s>=]/);
     for (const asked of ["pulse", "nope"]) {
       expect((await page(`/admin/screen/zones/main?layout=${asked}`, "zoner")).body).toContain(

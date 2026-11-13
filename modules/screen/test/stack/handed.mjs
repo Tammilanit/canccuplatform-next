@@ -1,6 +1,6 @@
 // The states the screen shots hand the page instead of the server's (screens.mjs, `handed`): the
 // views the demo stack cannot reach by itself, a claim from Moments, a photo beside the countdown,
-// a gap in the run of show, a Dashboard showcase. Each changes the server's real state, so the
+// a gap in the run of show, a Dashboard with statistics and its showcase. Each changes the server's real state, so the
 // frame around it is the real one.
 const ago = (ms) => new Date(Date.now() - ms).toISOString();
 export const claim = (role, template, content) => ({
@@ -65,6 +65,56 @@ export function withHeroItemOnly(s) {
     ...s,
     regions: s.regions.map((r) => (r.role === "rail" ? { ...r, widgets: r.widgets.map(only) } : r)),
   };
+}
+
+/** Sample statistics as the bot's data will bring them (#389), with sheet 10's trend arrows. */
+const SAMPLE = {
+  stats: { members: 1240, online: 218, in_voice: 38, members_trend: "flat", online_trend: "up", in_voice_trend: "up" },
+  now_playing: {
+    available: true,
+    games: [
+      { game_id: "g_1", name: "Demo Game", players: 41, trend: "flat" },
+      { game_id: "g_2", name: "Demo Racer", players: 23, trend: "up" },
+      { game_id: "g_3", name: "Demo Quest", players: 17, trend: "down" },
+    ],
+  },
+}; // prettier-ignore
+const STATISTICS = ["online", "voice", "top_games", "right_now"];
+
+/**
+ * Dashboard with its statistics: the server leaves the four boxes out while their source is not
+ * there (contracts/screen.md, Boxes waiting for their source), so they come back here at the
+ * layout's areas, with the hero and the rail at theirs, as the server composes them once the
+ * statistics reach it.
+ */
+export function withStats(s) {
+  const placed = new Map(s.layout.regions.map((r) => [r.id, r]));
+  const rail = s.regions.find((r) => r.id === "rail");
+  if (rail === undefined || !STATISTICS.every((id) => placed.has(id)))
+    throw new Error("the demo zone is not on the Dashboard");
+  const boxes = STATISTICS.map((id) => ({
+    ...rail,
+    id,
+    role: null,
+    area: placed.get(id).area,
+    order: [0],
+    idle: "logo",
+    idle_view: null,
+    claim: null,
+    widgets: placed.get(id).widgets.map((w) => ({
+      widget: w.widget,
+      template: null,
+      embed: null,
+      dwell_seconds: 15,
+      stale_after_seconds: null,
+      view: { ...SAMPLE[w.widget], qr: null, stale: false, empty: false },
+    })),
+  }));
+  const regions = s.regions.map((r) =>
+    r.id === "hero" || r.id === "rail" ? { ...r, area: placed.get(r.id).area } : r,
+  );
+  const at = regions.findIndex((r) => r.id === "rail");
+  return { ...s, regions: [...regions.slice(0, at), ...boxes, ...regions.slice(at)] };
 }
 
 /**

@@ -204,6 +204,96 @@
     padding-bottom: calc(7 * var(--canccu-u));
   }
 
+  /*
+   * Statistics (sheet 10, Right now): each number big with its trend arrow beside it on the same
+   * line and its label under it, side by side. Now playing ranks its games, each row's count with
+   * its arrow. The arrow's glyph is drawn here, as the template names only its direction.
+   */
+  .canccu-widget__stats {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: calc(2 * var(--canccu-u));
+    margin: auto 0;
+  }
+
+  .canccu-widget__stat {
+    display: flex;
+    flex-direction: column;
+    gap: calc(0.6 * var(--canccu-u));
+    min-width: 0;
+  }
+
+  .canccu-widget__stat .canccu-widget__big,
+  .canccu-widget--now_playing .canccu-widget__meta {
+    display: flex;
+    align-items: baseline;
+    gap: calc(1 * var(--canccu-u));
+    white-space: nowrap;
+  }
+
+  .canccu-widget--now_playing .canccu-widget__meta {
+    font-weight: 700;
+    color: var(--canccu-color-text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .canccu-widget--now_playing .canccu-widget__row:first-child .canccu-widget__name {
+    color: var(--canccu-ink-primary);
+  }
+
+  .canccu-widget__trend {
+    font-family: var(--canccu-font-body);
+    font-size: calc(3.4 * var(--canccu-u));
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .canccu-widget__trend--up {
+    color: var(--canccu-ink-ok);
+  }
+
+  .canccu-widget__trend--up::before {
+    content: "▲";
+  }
+
+  .canccu-widget__trend--down {
+    color: var(--canccu-ink-down);
+  }
+
+  .canccu-widget__trend--down::before {
+    content: "▼";
+  }
+
+  .canccu-widget__trend--flat {
+    color: var(--canccu-ink-muted);
+  }
+
+  .canccu-widget__trend--flat::before {
+    content: "–";
+  }
+
+  /*
+   * A Dashboard box stacked beside a grown hero is a strip of two rows (layouts.css): the numbers
+   * in one line, each label beside its number, and no title.
+   */
+  @container (aspect-ratio > 2) {
+    .canccu-layout--dashboard .canccu-region > .canccu-widget--stats .canccu-widget__stat {
+      flex-direction: row;
+      align-items: baseline;
+      gap: calc(1.2 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard .canccu-region > .canccu-widget--stats .canccu-widget__big {
+      font-size: calc(5 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard .canccu-region > .canccu-widget--stats .canccu-widget__kicker,
+    .canccu-layout--dashboard .canccu-region > .canccu-widget--now_playing .canccu-widget__title {
+      display: none;
+    }
+  }
+
   /* The ticker: one calm line (L13) behind its label, fading between texts. */
   .canccu-region > .canccu-widget--ticker {
     flex-direction: row;

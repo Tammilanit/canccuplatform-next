@@ -252,14 +252,16 @@ describe.skipIf(!DATABASE_URL)("claims", () => {
       const area = s.regions.find((r) => r.id === id)?.area;
       return `${String(area?.columns)}×${String(area?.rows)}`;
     };
+    // The statistics boxes wait for their source (#389): the hero takes online and voice (#416).
     await save({ layout_id: "dashboard" });
-    expect(size(await state(), "hero")).toBe("4×5");
+    expect(size(await state(), "hero")).toBe("12×5");
     await start(override("ov_10", { regions: ["hero"] }));
     const grown = await state();
     expect(claims(grown)).toEqual({ hero: "ov_10" });
-    expect([size(grown, "hero"), size(grown, "online")]).toEqual(["8×10", "4×2"]);
+    expect([size(grown, "hero"), size(grown, "rail")]).toEqual(["8×10", "4×10"]);
+    expect(grown.regions.some((r) => r.id === "online")).toBe(false);
     await save({ layout_id: "dashboard", grow_for_showcase: false });
-    expect(size(await state(), "hero")).toBe("4×5");
+    expect(size(await state(), "hero")).toBe("12×5");
     await save({ layout_id: null, grow_for_showcase: true });
   });
 
