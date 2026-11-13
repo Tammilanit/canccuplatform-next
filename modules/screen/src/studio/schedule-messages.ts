@@ -65,6 +65,8 @@ export const SCHEDULE_EN = {
   "window.priority_hint": "0 to 999. Where windows overlap, the higher priority plays.",
   "window.layout": "Layout",
   "window.layout_zone": "The zone's own layout",
+  "window.layout_kept": "Its current layout (not offered)",
+  "window.playlist_kept": "Its current playlist (not offered)",
   "window.kind": "When it plays",
   "window.kind_weekly": "Every week, on these days",
   "window.kind_bound": "While a run-of-show item runs",

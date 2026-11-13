@@ -17,6 +17,7 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
   let loopWindow = "";
   let menuWindow = "";
   let eveningWindow = "";
+  let droppedWindow = "";
   const item = (id: string, title: string, visibility: string, from: string, to: string) => ({
     id: `e_${id}`,
     type: "agenda.item.added",
@@ -64,6 +65,8 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
     loopWindow = await window({ zone_key: "main", playlist_id: loop, priority: 10, days: [4], start_minute: 540, end_minute: 1020 }); // prettier-ignore
     eveningWindow = await window({ zone_key: "main", playlist_id: evening, priority: 20, days: [4], start_minute: 900, end_minute: 960 }); // prettier-ignore
     menuWindow = await window({ zone_key: "main", playlist_id: menu, priority: 50, agenda_item_id: "it_brief" }); // prettier-ignore
+    // A theme layout the theme has since dropped, in a zone and on a day no other test reads.
+    droppedWindow = await window({ zone_key: "cafe", playlist_id: menu, priority: 5, layout_id: "dropped", days: [1], start_minute: 540, end_minute: 600 }); // prettier-ignore
     const device = (await pairDevice(h)).id;
     await admin("PUT", `/api/screen/devices/${device}/assignment`, { zone_key: "main" });
   });
@@ -84,6 +87,16 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
         body,
       )?.[1] ?? "null",
     ) as { schedules: { id: string; revision: number; agenda_item_id: string | null }[] } | null;
+
+  it("keeps a window's layout the page no longer offers, so a plain Save does not change it", async () => {
+    const editor = editorOf(tight((await page("/admin/screen/schedule", "editor")).body));
+    expect(editor).toContain(
+      '<option value="dropped" hidden>Its current layout (not offered)</option>',
+    );
+    expect(editor.match(/value="dropped"/g)).toHaveLength(1);
+    // Every playlist the windows play is offered, so none is kept hidden.
+    expect(editor).not.toContain("Its current playlist");
+  });
 
   it("gives a writer the editor: the button, the form and each window with its revision", async () => {
     const body = tight((await page("/admin/screen/schedule", "editor")).body);
@@ -129,6 +142,7 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
         [loopWindow, 1],
         [menuWindow, 1],
         [eveningWindow, 1],
+        [droppedWindow, 1],
       ].sort(),
     );
     // A weekly block drags; a bound one moves with its item, so it only opens the editor.
@@ -276,10 +290,24 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
     });
 
     it("asks again for a time it cannot read, rather than failing the page", async () => {
-      for (const query of ["at=yesterday", "at=24:00", "at_day=soon&at=10:00"]) {
+      for (const query of [
+        "at=yesterday",
+        "at=24:00",
+        "at_day=soon&at=10:00",
+        // Each of these once threw on the way to a time-zone formatter and failed the page.
+        "at_day=2026-13-01&at=10:00",
+        "at_day=2026-13-01",
+        "at_day=x",
+        "at_day=2026-02-30&at=10:00",
+        "at_day=2026-01-01&at_day=2026-01-02&at=10:00",
+        "at_day=2026-01-01&at=10:00&at=11:00",
+      ]) {
         const res = await page(`/admin/screen/schedule?zone=main&${query}`, "content");
         expect(res.statusCode).toBe(200);
-        expect(card(tight(res.body))).toContain("Pick a day and a time.");
+        const c = card(tight(res.body));
+        expect(c).toContain("Pick a day and a time.");
+        // A day that is no real date is not offered in the day select.
+        expect(c).not.toMatch(/<option value="(x|2026-13-01|2026-02-30|2026-01-01,[^"]*)"/);
       }
     });
 

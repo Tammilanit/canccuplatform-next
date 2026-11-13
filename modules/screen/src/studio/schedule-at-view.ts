@@ -9,7 +9,7 @@ import { attrs, dayLabel, html, timeLabel } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import type { AgendaLabel } from "../content/agenda.js";
 import type { Answer, WhatPlays, WindowFacts } from "./schedule-at.js";
-import { wallInstant } from "./schedule-axis.js";
+import { isDate, wallInstant } from "./schedule-axis.js";
 import type { MessageKey } from "./messages.js";
 import { STUDIO, zoneFrame } from "./views.js";
 import type { ViewContext, ZoneSummary } from "./views.js";
@@ -170,8 +170,9 @@ export function whatPlaysCard(c: ViewContext, w: WhatPlays, n: AtNames): Html {
   const { t } = c;
   const hidden = (name: string, value: string | null) =>
     value === null ? "" : html`<input type="hidden" name="${name}" value="${value}" />`;
-  // A day asked outside the event's days (an old link) stays choosable, so the answer matches.
-  const days = n.days.includes(w.day) || w.day === "" ? n.days : [...n.days, w.day].sort();
+  // A day asked outside the event's days (an old link) stays choosable, so the answer matches;
+  // one that is no real date cannot be drawn, so it is left out.
+  const days = n.days.includes(w.day) || !isDate(w.day) ? n.days : [...n.days, w.day].sort();
   const dayName = (d: string) => dayLabel(new Date(wallInstant(d, 720, c.timeZone)).toISOString(), c.timeZone); // prettier-ignore
   return html`<section class="canccu-card" id="canccu-sched-at">
     <h2 class="canccu-card__title">${t("at.title")}</h2>

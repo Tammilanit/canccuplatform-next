@@ -25,6 +25,8 @@ export function button(o: ButtonOptions): Html {
 export interface FieldOption {
   value: string;
   label: string;
+  /** Never offered, but a script may still set the select to it, so a value it holds is kept. */
+  hidden?: boolean;
 }
 
 export interface FieldOptions {
@@ -55,7 +57,7 @@ export function field(o: FieldOptions): Html {
   if (type === "select") {
     const options = (o.options ?? []).map(
       (opt) =>
-        html`<option${attrs({ value: opt.value, selected: String(o.value) === opt.value })}>${opt.label}</option>`,
+        html`<option${attrs({ value: opt.value, selected: String(o.value) === opt.value, hidden: opt.hidden })}>${opt.label}</option>`,
     );
     control = html`<select${attrs({ class: "canccu-input", ...common })}>${options}</select>`;
   } else if (type === "checkbox") {

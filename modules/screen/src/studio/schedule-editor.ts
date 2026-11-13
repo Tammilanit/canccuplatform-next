@@ -53,6 +53,18 @@ export function editorView(c: ViewContext, d: EditorData): EditorView {
     });
     return [html`<option${attrs({ value: i.id })}>${label}</option>`];
   });
+  // A window's layout or playlist that is no longer offered (a layout its theme dropped, a break
+  // playlist) stays as a hidden option: without it the select falls back to its first choice, and a
+  // Save made to change only the priority would change what the screens show.
+  const kept = (
+    offered: readonly { id: string }[],
+    of: (w: WindowFacts) => string | null,
+    label: string,
+  ) => {
+    const ids = new Set(offered.map((o) => o.id));
+    const gone = new Set(d.windows.flatMap((w) => of(w) ?? []).filter((id) => !ids.has(id)));
+    return [...gone].map((value) => ({ value, label, hidden: true }));
+  };
   // Seven toggles in one row, as the shell's segmented chips: checkboxes under the chips, so the
   // form, the keyboard and a screen reader still treat them as the days they are.
   const days = [1, 2, 3, 4, 5, 6, 7].map(
@@ -120,7 +132,10 @@ export function editorView(c: ViewContext, d: EditorData): EditorView {
           ${field({
             name: "playlist_id",
             label: t("window.playlist"),
-            options: d.playlists.map((p) => ({ value: p.id, label: p.name })),
+            options: [
+              ...d.playlists.map((p) => ({ value: p.id, label: p.name })),
+              ...kept(d.playlists, (w) => w.playlist_id, t("window.playlist_kept")),
+            ],
           })}
           ${field({
             name: "priority",
@@ -136,6 +151,7 @@ export function editorView(c: ViewContext, d: EditorData): EditorView {
             options: [
               { value: "", label: t("window.layout_zone") },
               ...d.layouts.map((l) => ({ value: l.id, label: l.name })),
+              ...kept(d.layouts, (w) => w.layout_id, t("window.layout_kept")),
             ],
           })}
           <fieldset class="canccu-studio-fieldset">

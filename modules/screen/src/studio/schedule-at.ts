@@ -21,7 +21,7 @@ import type { Simulation } from "../schedule/simulate.js";
 import { localClock } from "../schedule/window.js";
 import { tickerNow } from "../ticker/store.js";
 import type { TickerNow } from "../ticker/resolve.js";
-import { localDate, wallInstant } from "./schedule-axis.js";
+import { isDate, localDate, wallInstant } from "./schedule-axis.js";
 import type { ViewContext } from "./views.js";
 
 /** What the page needs of a window to say what plays: the API's `Schedule`. */
@@ -76,7 +76,6 @@ export interface AtDeps extends Pick<ScheduleDeps, "db" | "settings"> {
   sources: Sources;
 }
 
-const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -92,13 +91,14 @@ export async function readWhatPlays(
 ): Promise<WhatPlays> {
   const nowDay = localDate(c.nowMs, c.timeZone);
   const nowTime = clock(localClock(new Date(c.nowMs), c.timeZone).minuteOfDay);
-  const day = asked.day ?? nowDay;
-  const time = asked.time ?? nowTime;
+  // A query value may be an array (a repeated key) or an unreal date, whatever its type says.
+  const day: unknown = asked.day ?? nowDay;
+  const time: unknown = asked.time ?? nowTime;
+  if (!isDate(day)) return { day: "", time: "", zone: zone ?? "", answer: "bad" };
   if (zone === undefined || asked.time === undefined)
-    return { day, time, zone: zone ?? "", answer: null };
-  const m = TIME_RE.exec(time);
-  if (m === null || !DAY_RE.test(day))
-    return { day: DAY_RE.test(day) ? day : "", time: "", zone, answer: "bad" };
+    return { day, time: nowTime, zone: zone ?? "", answer: null };
+  const m = typeof time === "string" ? TIME_RE.exec(time) : null;
+  if (m === null) return { day, time: "", zone, answer: "bad" };
   const atMs = wallInstant(day, Number(m[1]) * 60 + Number(m[2]), c.timeZone);
   const read = await simulateRead(deps, c.timeZone, zone, atMs, c.nowMs);
   const sim = read.simulation;
@@ -141,7 +141,7 @@ export async function readWhatPlays(
   const next = read.breaks.find((b) => b.startsAt.getTime() > atMs);
   return {
     day,
-    time,
+    time: m[0],
     zone,
     answer: {
       ...sim,
