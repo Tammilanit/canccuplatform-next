@@ -78,6 +78,16 @@ describe("shellPage", () => {
     expect(doc).toMatch(/href="\/theming\/studio\/" aria-current="page">Brand kit/);
     expect(doc).not.toContain("/agenda/");
   });
+  it("marks no menu item on an error page, which is nowhere in the menu", () => {
+    const error = s(
+      shellPage({ title: "Not found", current: "theme", session: ORGANISER, body: "", plain: true }),
+    );
+    expect(error).not.toContain("aria-current");
+  });
+  it("loads the offline fallback for a signed-in shell only", () => {
+    expect(doc).toContain('<script src="/admin/static/shell.js" defer></script>');
+    expect(s(shellPage({ title: "x", body: "" }))).not.toContain("shell.js");
+  });
   it("shows who is signed in and signs out by POST", () => {
     expect(doc).toContain("Demo Organiser");
     expect(doc).toContain('<form method="post" action="/admin/sign-out">');
