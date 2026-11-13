@@ -5,10 +5,8 @@
  * all of it sits in `canccu-base`, so a theme restyles any of it without `!important`.
  */
 @layer canccu-base {
-  /*
-   * A rail shorter than the Pulse's (Split, Dashboard, Portrait) keeps its two rows by putting the
-   * now row's place beside its end: three lines a row, not four.
-   */
+  /* A rail shorter than the Pulse's (Split, Dashboard, Portrait) keeps its two rows by putting the
+   * now row's place beside its end: three lines a row, not four. */
   .canccu-layout--split .canccu-region[data-role="rail"] .canccu-widget__row--now,
   .canccu-layout--dashboard .canccu-region[data-role="rail"] .canccu-widget__row--now,
   .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__row--now {
@@ -152,7 +150,8 @@
 
   /*
    * Ambient, for the night and the quiet hours: no cards, only large type over the background. The
-   * clock is the hero, its time over its date; the run of show under it, its rows side by side.
+   * clock is the hero, its time over its date; the run of show under it, its rows side by side, each
+   * row's name across a free last track, so a long name never pushes its label, time and badge apart.
    */
   .canccu-layout--ambient .canccu-region > .canccu-widget {
     border: 0;
@@ -193,8 +192,8 @@
   .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__row--next,
   .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__row--delayed,
   .canccu-layout--ambient .canccu-region[data-role="rail"] .canccu-widget__row--cancelled {
-    grid-template-areas: "state until delay" "name name name";
-    grid-template-columns: auto auto auto;
+    grid-template-areas: "state until delay ." "name name name name";
+    grid-template-columns: auto auto auto 1fr;
     justify-content: start;
     justify-items: start;
   }
