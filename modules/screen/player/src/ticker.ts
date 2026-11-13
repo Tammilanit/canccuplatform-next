@@ -31,6 +31,9 @@ function fit(line: HTMLElement, motion: Motion, nowMs: number): void {
     if (fitted === "step") step(line, nowMs);
     return;
   }
+  // A line off the page (a new layout's `<main>` before the player mounts it) or not laid out yet
+  // measures 0 wide and would pass as fitting for good: it waits unfitted for a tick on the page.
+  if (!line.isConnected || line.clientWidth === 0) return;
   line.replaceChildren(text);
   line.style.removeProperty("--canccu-crawl-seconds");
   line.dataset.text = text;

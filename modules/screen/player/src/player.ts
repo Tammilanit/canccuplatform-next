@@ -249,6 +249,8 @@ export class Player {
       });
     } else {
       this.mount(this.screen.draw(state));
+      // Once more on the page: the ticker is only measured there, not up to a second later.
+      this.screen.tick();
       this.screen.start();
     }
     previewMark(this.env.root, state.zone === null ? null : state);
