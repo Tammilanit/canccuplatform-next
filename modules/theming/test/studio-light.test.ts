@@ -63,3 +63,31 @@ describe("publishing a light look", () => {
     expect(body.match(/data-action="publish"/g)).toHaveLength(2);
   });
 });
+
+describe("preview on a screen (#444, sheet 6)", () => {
+  it("offers it beside Preview, with the screen, how long, and the notice while it runs", () => {
+    const body = page(stateOf(DARK, "dark"));
+    expect(body.match(/data-screen-preview="open"/g)).toHaveLength(2);
+    expect(body).toContain("Preview on a screen…");
+    const dialog = /<dialog[^>]*id="canccu-studio-screen"[\s\S]*?<\/dialog>/.exec(body)?.[0] ?? "";
+    expect(dialog).toContain("Preview the draft on a screen");
+    expect(dialog).toContain("data-screen-preview-list");
+    for (const [value, label] of [
+      ["2", "2 min"],
+      ["5", "5 min"],
+      ["", "Until I end it"],
+    ]) {
+      expect(dialog).toContain(`value="${value}"`);
+      expect(dialog).toContain(label);
+    }
+    expect(dialog).toContain("Start preview");
+    const notice = /<div[^>]*data-screen-preview-notice[\s\S]*?End preview/.exec(body)?.[0] ?? "";
+    expect(notice).toContain("hidden");
+    expect(notice).toContain("Every other screen shows the published theme.");
+  });
+
+  it("is not offered without a draft", () => {
+    const none = brandKitView({ ...stateOf(DARK, "dark"), draft: undefined }, false, undefined);
+    expect(String(none.body)).not.toContain("canccu-studio-screen");
+  });
+});

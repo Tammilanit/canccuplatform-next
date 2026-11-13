@@ -10,6 +10,7 @@ import type { Html } from "@canccu/ui";
 import { isObject, list } from "./checks.js";
 import type { DraftRow } from "./drafts.js";
 import { contrastRatio } from "./contrast.js";
+import { screenButton, screenDialog, screenNotice } from "./studio-screen.js";
 import { fillTokens } from "./tokens.js";
 import {
   STARTERS,
@@ -276,19 +277,19 @@ export function brandKitView(
       : "";
   const light = isLight(colors.background ?? "#000000");
   // Twice: in the title row, and on a phone in the row above the bottom bar (sheet 6).
-  const actions = html`${actionButton(html`${icon("monitor")}Preview`, { "data-action": "preview" })}${actionButton("Publish", { "data-action": light ? "light-ask" : "publish", "data-needs-preview": held, disabled: errors || held }, "primary")}`;
+  const actions = html`${actionButton(html`${icon("monitor")}Preview`, { "data-action": "preview" })}${screenButton}${actionButton("Publish", { "data-action": light ? "light-ask" : "publish", "data-needs-preview": held, disabled: errors || held }, "primary")}`;
   return {
     description,
     actions,
     body: root(
       state,
-      html`${advanced}
+      html`${screenNotice}${advanced}
         <div class="canccu-studio-kit">
           <div class="canccu-studio-side">${brandForm(state, d, colors)}${discardView(state)}</div>
           ${previewsView(state)}
         </div>
         <div class="canccu-studio-pendbar">${actions}</div>
-        ${discardDialog}${light ? lightDialog : ""}`,
+        ${discardDialog}${light ? lightDialog : ""}${screenDialog}`,
     ),
   };
 }

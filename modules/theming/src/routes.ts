@@ -55,7 +55,12 @@ async function checkReader(request: FastifyRequest, rights: RightsChecker): Prom
 const SVG_POLICY = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
 const IMMUTABLE = "public, max-age=31536000, immutable";
 
-export function sendFile(reply: FastifyReply, name: string, bytes: Buffer, cache: string): FastifyReply {
+export function sendFile(
+  reply: FastifyReply,
+  name: string,
+  bytes: Buffer,
+  cache: string,
+): FastifyReply {
   const ext = extOf(name);
   void reply
     .header("content-type", CONTENT_TYPES[ext])
