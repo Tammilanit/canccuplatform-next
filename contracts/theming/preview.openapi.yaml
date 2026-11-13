@@ -1,0 +1,158 @@
+# Part of theming.openapi.yaml (contracts/README.md, Parts): the current tokens for pages, and the draft on a
+# screen (contracts/theming.md, Reading the current theme; Draft, preview, publish).
+/theming/current/{file}:
+  parameters:
+    - name: file
+      in: path
+      required: true
+      description: The current theme's token CSS (`tokens.css`) or admin token CSS (`admin-tokens.css`).
+      schema:
+        type: string
+        enum: [tokens.css, admin-tokens.css]
+  get:
+    tags: [files]
+    operationId: getCurrentTokensCss
+    summary: The current theme's token CSS, at a stable address, for pages
+    description: |
+      The body `tokens_css_url` or `admin_tokens_css_url` names for the current theme (revision 0's too), so a page
+      links its event's look with one `<link>` after `ui.css`. Admin, sign-in and privacy pages link
+      `admin-tokens.css`; the phone hub and the public info pages link `tokens.css`. Public in every info-page mode.
+      A hostname with no event is 404.
+    security:
+      - {}
+    responses:
+      "200":
+        description: The token CSS.
+        headers:
+          Cache-Control:
+            description: "`no-cache`: revalidated with the `ETag` on every load, so a publish shows at the next one."
+            schema:
+              type: string
+              const: no-cache
+          ETag:
+            description: The CSS's SHA-256, quoted.
+            schema:
+              type: string
+          X-Content-Type-Options:
+            $ref: "../theming.openapi.yaml#/components/headers/NoSniff"
+          Cross-Origin-Resource-Policy:
+            $ref: "../theming.openapi.yaml#/components/headers/SameOriginResource"
+        content:
+          text/css:
+            schema:
+              type: string
+      "304":
+        description: Unchanged since the `If-None-Match` the request sent.
+      "404":
+        $ref: "../theming.openapi.yaml#/components/responses/NotFound"
+/api/theming/draft/preview-key:
+  post:
+    tags: [draft]
+    operationId: createDraftPreviewKey
+    summary: A key to the draft for a preview on a screen
+    description: |
+      Needs right `theming.theme.write`. An unguessable key that lets a paired screen, which has no session, load
+      the event's draft: Screen's preview on a screen takes it as `theme_preview_key` (contracts/screen.md, Zones
+      and assignments). It lives 12 hours at most and dies with the draft (discard or publish); a new key leaves
+      older ones alive. `Cache-Control: no-store`.
+    responses:
+      "201":
+        description: The key.
+        headers:
+          Cache-Control:
+            $ref: "../theming.openapi.yaml#/components/headers/NoStore"
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [preview_key, expires_at]
+              properties:
+                preview_key:
+                  $ref: "../theming.openapi.yaml#/components/schemas/PreviewKey"
+                expires_at:
+                  type: string
+                  format: date-time
+      "401":
+        $ref: "../theming.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../theming.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../theming.openapi.yaml#/components/responses/NotFound"
+        description: "`no_draft`: the event has no draft."
+      "409":
+        $ref: "../theming.openapi.yaml#/components/responses/Conflict"
+/internal/theming/previews/{preview_key}:
+  parameters:
+    - $ref: "../theming.openapi.yaml#/components/parameters/PreviewKey"
+  get:
+    tags: [internal]
+    operationId: getDraftPreviewInternal
+    summary: The draft behind a preview key, for the screens
+    description: |
+      Answers like `GET /api/theming/draft/preview`, with `revision: null` and the draft's addresses under
+      `/theming/preview/<preview_key>/`, the draft as it is when read. No session: the kit's service identity;
+      only the screen module may call it. Internal network only.
+    security:
+      - {}
+    parameters:
+      - name: tenant_id
+        in: query
+        required: true
+        description: The tenant the calling module serves, set by its kit, never from a client's input.
+        schema:
+          $ref: "../theming.openapi.yaml#/components/schemas/TenantId"
+    responses:
+      "200":
+        description: The draft, resolved.
+        content:
+          application/json:
+            schema:
+              $ref: "../theming.openapi.yaml#/components/schemas/ResolvedTheme"
+      "400":
+        $ref: "../theming.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../theming.openapi.yaml#/components/responses/ServiceUnauthenticated"
+      "403":
+        $ref: "../theming.openapi.yaml#/components/responses/Forbidden"
+        description: "`service_forbidden`: the calling module is not the screen module."
+      "404":
+        $ref: "../theming.openapi.yaml#/components/responses/NotFound"
+        description: "`not_found`: no such event, or the key is unknown, expired or its draft is gone."
+/theming/preview/{preview_key}/{file}:
+  parameters:
+    - $ref: "../theming.openapi.yaml#/components/parameters/PreviewKey"
+    - name: file
+      in: path
+      required: true
+      description: "`tokens.css`, `theme.css` (the draft's CSS compiled as publish would), or a draft file by its SHA-256 and extension."
+      schema:
+        type: string
+        pattern: "^(tokens\\.css|theme\\.css|[0-9a-f]{64}\\.(css|woff2|png|jpg|webp|svg))$"
+  get:
+    tags: [files]
+    operationId: getPreviewFile
+    summary: A file of the draft, for a preview on a screen
+    description: |
+      The key is the address: no session. The same rules and headers as draft files, never cached. 404 once the
+      key is unknown, expired or its draft is gone, or for a file the draft no longer refers to.
+    security:
+      - {}
+    responses:
+      "200":
+        description: The file.
+        headers:
+          Cache-Control:
+            $ref: "../theming.openapi.yaml#/components/headers/NoStore"
+          X-Content-Type-Options:
+            $ref: "../theming.openapi.yaml#/components/headers/NoSniff"
+          Cross-Origin-Resource-Policy:
+            $ref: "../theming.openapi.yaml#/components/headers/SameOriginResource"
+          Content-Security-Policy:
+            $ref: "../theming.openapi.yaml#/components/headers/SvgPolicy"
+        content:
+          "*/*":
+            schema:
+              type: string
+              format: binary
+      "404":
+        $ref: "../theming.openapi.yaml#/components/responses/NotFound"

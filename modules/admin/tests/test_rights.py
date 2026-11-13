@@ -71,18 +71,17 @@ async def test_origin_refusal_carries_a_correlation_id(world: World) -> None:
     assert r.status_code == 403 and r.headers.get("x-correlation-id")
 
 
-async def test_signed_in_without_a_role_gets_a_friendly_page(
+async def test_a_page_outside_the_role_gets_a_friendly_page(
     world: World, caplog: pytest.LogCaptureFixture
 ) -> None:
     _, member = await owner_and_member(world, caplog)
-    for path in ("/admin/settings", "/admin/people"):
-        r = await world.browser(member).get(path)
-        assert r.status_code == 403 and r.headers["content-type"].startswith("text/html")
-        assert "ask an event owner to add it to your role" in r.text
-        assert "admin." not in r.text  # the right it lacked goes to the log only (UX audit B3)
-        assert "/admin/sign-out" in r.text  # a way out for the wrong account
-    r = await world.browser(member).get("/admin/", follow_redirects=True)
-    assert r.status_code == 403 and "ask an event owner" in r.text
+    aino = next(u for u, _ in await world.store.list_users() if u.name == "Aino")
+    await world.auth.set_role(aino.id, "admin", "u_owner")
+    r = await world.browser(member).get("/admin/people")
+    assert r.status_code == 403 and r.headers["content-type"].startswith("text/html")
+    assert "ask an event owner to add it to your role" in r.text
+    assert "admin." not in r.text  # the right it lacked goes to the log only (UX audit B3)
+    assert "/admin/sign-out" in r.text  # a way out for the wrong account
 
 
 async def test_people_link_needs_the_rights_right(

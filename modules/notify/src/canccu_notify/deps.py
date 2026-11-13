@@ -63,6 +63,14 @@ class Users(Protocol):
     async def discord_id(self, user_id: str) -> str | None: ...
 
 
+class Hub(Protocol):
+    """The person's view of the venue's Wi-Fi and of what is on now (hub.HubReader)."""
+
+    async def venue_wifi(self, host: str, cookie: str | None) -> list[dict[str, Any]]: ...
+
+    async def agenda_now(self, host: str, cookie: str | None) -> dict[str, Any] | None: ...
+
+
 def utc_now() -> datetime:
     return datetime.now(UTC)
 
@@ -80,6 +88,8 @@ class Deps:
     outbox: Outbox
     agenda: Agenda
     users: Users
+    hub: Hub | None = None
+    """None leaves the check-in's done page without its Wi-Fi and "Now" rows."""
     now: Callable[[], datetime] = field(default=utc_now)
     check_in_keys: dict[str, bytes | None] = field(default_factory=dict)
     """Each event's opened check-in key, by tenant id: a key never changes once made, only its

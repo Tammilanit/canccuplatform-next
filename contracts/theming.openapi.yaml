@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Theming API
-  version: 1.5.0
+  version: 1.6.0
   summary: One event's theme, its draft, preview, publish and rollback, git sync, clone and the served theme files.
   description: |
     Machine-readable part of the theming contract. Prose, stable classes, package rules, upload safety, CSP and
@@ -466,6 +466,10 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/theming/draft/preview-key:
+    $ref: "theming/preview.openapi.yaml#/~1api~1theming~1draft~1preview-key"
+  /internal/theming/previews/{preview_key}:
+    $ref: "theming/preview.openapi.yaml#/~1internal~1theming~1previews~1{preview_key}"
   /api/theming/draft/publish:
     post:
       tags: [draft]
@@ -791,6 +795,10 @@ paths:
                 format: binary
         "404":
           $ref: "#/components/responses/NotFound"
+  /theming/current/{file}:
+    $ref: "theming/preview.openapi.yaml#/~1theming~1current~1{file}"
+  /theming/preview/{preview_key}/{file}:
+    $ref: "theming/preview.openapi.yaml#/~1theming~1preview~1{preview_key}~1{file}"
   /theming/draft/{file}:
     parameters:
       - $ref: "#/components/parameters/ServedFile"
@@ -901,6 +909,13 @@ components:
       schema:
         type: integer
         minimum: 1
+    PreviewKey:
+      name: preview_key
+      in: path
+      required: true
+      description: A key to the draft for a preview on a screen (`POST /api/theming/draft/preview-key`).
+      schema:
+        $ref: "#/components/schemas/PreviewKey"
     ServedFile:
       name: file
       in: path
@@ -1089,6 +1104,10 @@ components:
     Name:
       type: string
       pattern: "^[a-z][a-z0-9_-]{0,31}$"
+    PreviewKey:
+      type: string
+      description: Unguessable, base64url.
+      pattern: "^[A-Za-z0-9_-]{32,64}$"
     TenantId:
       type: string
       pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"

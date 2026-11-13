@@ -17,9 +17,9 @@ from canccu_kit import (
     is_tenant_id,
     tenant_scope,
 )
-from canccu_kit.rights import Session
+from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.starlette import install, install_service_identity
-from canccu_kit.ui import esc, icon, notice
+from canccu_kit.ui import esc, icon, menu_for, notice
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.requests import Request
@@ -27,7 +27,7 @@ from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.routing import Route
 
 from .auth import Auth
-from .auth_routes import Authorize, OnEvent, OriginCheck, auth_routes
+from .auth_routes import Authorize, OnEvent, OriginCheck, Viewer, auth_routes
 from .forms import field_html, from_form
 from .pages import (
     BASE,
@@ -35,11 +35,13 @@ from .pages import (
     HEALTH_WORDS,
     MODULE_ICONS,
     event_of,
+    not_signed_in,
     page,
     page_error_handler,
     part_name,
     static_ui_css,
 )
+from .people_pages import people_routes
 from .service import BadSettings, Service
 from .settings_view import SHOWN_CHANGES, glance, last_changes, settings_list, when
 from .tenancy import TenantPaths
@@ -71,7 +73,11 @@ def create_app(
     on_event: OnEvent | None = None,
     *,
     identity: ServiceIdentity,
+    viewer: Viewer | None = None,
 ) -> Starlette:
+    """`viewer` reads a cookie's session as the kit does, for pages that need no right; without
+    it, admin's own sessions."""
+
     async def need(request: Request, right: str) -> Session:
         return await authorize(request.headers.get("cookie"), right)
 
@@ -189,7 +195,10 @@ def create_app(
     # --- pages
 
     async def index(request: Request) -> Response:
-        return RedirectResponse(f"{BASE}/settings", status_code=303)
+        """The first page this person may open; without a role, "No role yet" on sign-in."""
+        session = await auth.session(session_id_from_cookie(request.headers.get("cookie")))
+        pages = [i["href"] for g in menu_for(session) for i in g["items"]]
+        return RedirectResponse(pages[0] if pages else f"{BASE}/sign-in", status_code=303)
 
     async def settings_index(request: Request) -> Response:
         session = await need(request, "admin.settings.read")
@@ -370,7 +379,8 @@ def create_app(
             Route("/profile", profile_page),
             Route("/profile/save", profile_save, methods=["POST"]),
             Route("/profile/load", profile_load, methods=["POST"]),
-            *auth_routes(auth, authorize, on_event),
+            *auth_routes(auth, authorize, on_event, viewer),
+            *people_routes(auth, authorize, on_event),
         ]
     )
     # Added before install(): Starlette wraps each later middleware around the earlier ones,
@@ -382,14 +392,6 @@ def create_app(
     # cover its 404s, and settings and profile handlers run inside the request's tenant.
     app.user_middleware.append(Middleware(TenantPaths, resolver=resolver))
     install_service_identity(app, identity)
-    app.add_exception_handler(NotSignedIn, _not_signed_in)
+    app.add_exception_handler(NotSignedIn, not_signed_in)
     app.add_exception_handler(KitError, page_error_handler(auth))
     return app
-
-
-async def _not_signed_in(request: Request, exc: Exception) -> Response:
-    """The API answers 401 (contracts/admin.md); a page sends the browser to sign in."""
-    if request.url.path.startswith("/api/"):
-        assert isinstance(exc, NotSignedIn)
-        return JSONResponse(exc.to_body(), status_code=exc.status)
-    return RedirectResponse(f"{BASE}/sign-in", status_code=303)

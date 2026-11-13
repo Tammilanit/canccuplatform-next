@@ -28,7 +28,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from canccu_admin.app import create_app
 from canccu_admin.auth import Auth
-from canccu_admin.auth_db import MemoryAuthStore
+from canccu_admin.auth_memory import MemoryAuthStore
 from canccu_admin.auth_routes import OnEvent
 from canccu_admin.db import MemoryStore, Store
 from canccu_admin.declarations import load_declarations
@@ -61,7 +61,10 @@ def tenant_context(tenant_id: str) -> TenantContext:
 
 
 def fake_resolver(
-    hosts: dict[str, str], ids: tuple[str, ...] = (), archived: tuple[str, ...] = ()
+    hosts: dict[str, str],
+    ids: tuple[str, ...] = (),
+    archived: tuple[str, ...] = (),
+    event: dict[str, str] | None = None,
 ) -> TenantResolver:
     """The kit's resolver against a fake tenants module that knows `hosts` (host -> tenant),
     and by id those tenants plus `ids` and the `archived` ones."""
@@ -70,6 +73,7 @@ def fake_resolver(
         if request.url.path == "/api/tenants/current":  # what the shell's header names
             known = hosts.get(request.headers["host"])
             body = {"id": known, "name": "Demo Event", "status": "live", "time_zone": "UTC"}
+            body |= event or {}
             return httpx.Response(200 if known else 404, json=body)
         by_id = request.url.path.removeprefix("/internal/tenants/tenants/")
         if by_id != request.url.path:
@@ -140,6 +144,8 @@ class World:
     discord: FakeDiscord
     clock: list[datetime]
     checker: RightsChecker
+    event: dict[str, str] = field(default_factory=dict)
+    """What `GET /api/tenants/current` adds for the shell's event (set before the first page)."""
 
     def browser(self, session: str | None = None) -> httpx.AsyncClient:
         """Another browser, optionally holding a session cookie."""
@@ -169,6 +175,7 @@ class World:
 @pytest.fixture
 def world(tmp_path: Path) -> World:
     clock = [START]
+    event: dict[str, str] = {}
     streams = MemoryStreamStore()
     bus = Bus(streams, "admin")
     service = Service(
@@ -205,7 +212,9 @@ def world(tmp_path: Path) -> World:
         Health("admin", "dev", {}),
         authorize,
         auth,
-        fake_resolver({"admin.example.test": "demo"}, ids=("other",), archived=("gone",)),
+        fake_resolver(
+            {"admin.example.test": "demo"}, ids=("other",), archived=("gone",), event=event
+        ),
         holder_event(holder),
         identity=ServiceIdentity("admin", SERVICE_KEY),
     )
@@ -219,7 +228,7 @@ def world(tmp_path: Path) -> World:
     )
     holder.append(checker)
     client = httpx.AsyncClient(transport=asgi, base_url=PUBLIC)
-    return World(client, internal, service, auth, store, streams, fake, clock, checker)
+    return World(client, internal, service, auth, store, streams, fake, clock, checker, event)
 
 
 def caddy(app: ASGIApp) -> ASGIApp:

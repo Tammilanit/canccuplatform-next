@@ -197,12 +197,14 @@ def button(label: str, kind: str = "primary") -> str:
 async def static_file(request: Request) -> Response:
     name = request.path_params["name"]
     path = UI_CSS if name == "ui.css" else _STATIC / name
-    if name not in ("ui.css", "notify.css") or not path.is_file():
+    media = _STATIC_TYPES.get(name)
+    if media is None or not path.is_file():
         raise KitError("not found", status=404, code="not_found")
-    response = FileResponse(path, media_type="text/css")
+    response = FileResponse(path, media_type=media)
     response.headers["Cache-Control"] = "public, max-age=300"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
 
 
+_STATIC_TYPES = {"ui.css": "text/css", "notify.css": "text/css", "check-in.js": "text/javascript"}
 ROUTES = [Route("/static/{name}", static_file, methods=["GET"])]

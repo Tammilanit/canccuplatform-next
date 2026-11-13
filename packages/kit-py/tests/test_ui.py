@@ -210,3 +210,31 @@ def test_event_info_from_the_tenants_api() -> None:
     )
     # A draft event shows a guest only its status.
     assert EventInfo.from_api({"id": "demo", "status": "draft"}).name is None
+
+
+def test_an_error_page_marks_no_menu_item() -> None:
+    """An error page is nowhere in the menu (sheet 8): on a phone no bar item is current."""
+    doc = shell_page(
+        "Not found",
+        "<div></div>",
+        session=Viewer("agenda.items.write"),
+        current="agenda",
+        plain=True,
+    )
+    assert "aria-current" not in doc
+
+
+def test_a_signed_in_shell_loads_the_offline_fallback() -> None:
+    signed_in = shell_page("Settings", "", session=Viewer("admin.settings.read"))
+    assert '<script src="/admin/static/shell.js" defer></script>' in signed_in
+    assert "shell.js" not in shell_page("Signed out", "")
+
+
+def test_a_front_page_carries_the_privacy_tag_last() -> None:
+    """The safety element must be the page's last child, holding text only (packages/ui)."""
+    doc = front_page("Check in", "<h1>Check in</h1>", privacy="/notify/privacy")
+    assert doc.endswith(
+        '<a class="canccu-privacy-link" href="/notify/privacy">Privacy</a></body></html>'
+    )
+    assert "canccu-front--privacy" in doc
+    assert "canccu-privacy-link" not in front_page("Sign in", "")
