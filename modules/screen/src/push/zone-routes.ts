@@ -9,7 +9,7 @@ import { BUILT_IN_LAYOUTS, themeLayouts } from "../compose/layouts.js";
 import { composeZone } from "../compose/state.js";
 import { body, invalidRequest, needs, notFound, rateLimited, tenantOf } from "../http.js";
 import { zoneExistsHere } from "../zones.js";
-import { zoneInput } from "../zone-input.js";
+import { checkBoxes, zoneInput } from "../zone-input.js";
 import { recordOf, refreshZone } from "./device-state.js";
 import { PING_MS } from "./feed.js";
 import type { HubDeps, PushHub } from "./hub.js";
@@ -120,6 +120,7 @@ export function zoneViewRoutes(
         throw rateLimited(`At most ${MAX_PREVIEWS_PER_MINUTE} previews a minute.`);
       }
       const ctx = tenantOf(request);
+      await checkBoxes(deps.sources, ctx.tenant_id, zone);
       const composed = await composeZone(deps, ctx, hostOf(request), zone.key, {
         key: zone.key,
         name: zone.name,
