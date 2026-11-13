@@ -51,7 +51,8 @@ async def test_delay_confirms_what_moves_what_stays_and_who_hears(env: Env) -> N
     assert ">Delay 3 items and tell everyone</button>" in both
     assert ">Don't delay</a>" in both
     alone = variant(text, 0, 1)
-    assert "<dt>Also moves</dt><dd>Nothing else moves.</dd>" in alone and "Semis" not in alone
+    assert "<dt>The day</dt><dd>The 2 items after it keep their times.</dd>" in alone
+    assert "Semis" not in alone
     assert ">Delay and tell everyone</button>" in alone
     quietly = variant(text, 0, 0)
     assert "<dt>Phones</dt><dd>No push, and a reminder" in quietly
@@ -70,11 +71,11 @@ async def test_a_delay_chip_opens_the_confirm_over_the_day(env: Env) -> None:
         semis = await add(c, h, title="Semis", kind="tournament", starts_at=at(90))
         await add(c, h, title="Final", kind="tournament", starts_at=at(150))
         day = await c.get(f"/?item={semis['id']}", headers=h)
-        query = {"day": "2026-11-20", "item": semis["id"], "delay": semis["id"], "minutes": "10"}
+        query = {"item": semis["id"], "delay": semis["id"], "minutes": "10"}
         opened = await c.get("/", params=query, headers=h)
         crew = await c.get("/", params=query, headers=env.rights.sign_in("u_crew", CREW))
         gone = await c.get("/", params={**query, "delay": "nope"}, headers=h)
-    back = f"/agenda/?day=2026-11-20&amp;item={semis['id']}"
+    back = f"/agenda/?item={semis['id']}"
     assert "<dialog" not in day.text
     assert f'href="{back}&amp;delay={semis["id"]}&amp;minutes=10">+10</a>' in day.text
     text = opened.text
@@ -85,7 +86,7 @@ async def test_a_delay_chip_opens_the_confirm_over_the_day(env: Env) -> None:
     assert "Also move the 1 item after it" in sheet
     assert 'name="announce" value=1 checked>' in sheet
     assert "<dt>Starts</dt><dd><b>18:40</b> <s>18:30</s>" in variant(sheet, 0, 1)
-    assert "<dt>Also moves</dt><dd>Nothing else moves.</dd>" in variant(sheet, 0, 1)
+    assert "<dt>The day</dt><dd>The item after it keeps its time.</dd>" in variant(sheet, 0, 1)
     assert ">Delay and tell everyone</button>" in variant(sheet, 0, 1)
     assert "Final <b>19:40</b> <s>19:30</s>" in variant(sheet, 1, 1)
     assert ">Delay 2 items quietly</button>" in variant(sheet, 1, 0)
