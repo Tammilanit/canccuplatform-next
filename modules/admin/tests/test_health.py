@@ -77,6 +77,26 @@ async def test_screens_keep_their_own_trouble_beside_the_renderer() -> None:
     assert parts["screen-render"].status == "ok"
 
 
+async def test_screen_rendering_stays_a_part_when_screens_do_not_say() -> None:
+    clock = [T0]
+    answers: dict[str, Any] = {"screen": None}
+    watch, _ = watch_of(answers, clock)
+    render = by_key(await watch.check())["screen-render"]
+    assert render.status == "down" and render.down_since == T0
+    assert render.detail == "Screens didn't answer, so rendering can't be checked"
+    # Back with its render check: the renderer's "since" is cleared, not kept for the next failure.
+    clock[0] = T0 + timedelta(seconds=10)
+    answers["screen"] = {"status": "ok", "version": "v1", "checks": {"render": {"status": "ok"}}}
+    assert by_key(await watch.check())["screen-render"].status == "ok"
+    clock[0] = T0 + timedelta(seconds=20)
+    answers["screen"] = {"status": "ok", "version": "v1", "checks": {}}
+    check = await watch.check()
+    render = by_key(check)["screen-render"]
+    assert render.status == "down" and render.down_since == clock[0]
+    assert render.detail == "Screens answered without a rendering check"
+    assert len(check.parts) == 3  # admin, Screens and Screen rendering
+
+
 async def test_a_part_without_an_answer_is_down_since_its_first_failed_check() -> None:
     clock = [T0]
     answers: dict[str, Any] = {"notify": None}

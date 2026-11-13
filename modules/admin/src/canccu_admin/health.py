@@ -24,6 +24,9 @@ log = logging.getLogger("canccu.admin")
 EVERY_SECONDS = 10
 # screen-render has no network; screen's `render` check speaks for it (contracts/screen.md).
 RENDER_CHECK, RENDER_PART = "render", "screen-render"
+# Without screen's word the renderer is down too: the part stays on the page and in the counts.
+RENDER_UNANSWERED = "Screens didn't answer, so rendering can't be checked"
+RENDER_UNSAID = "Screens answered without a rendering check"
 WORDS = {"degraded": "slow", "down": "down"}
 
 
@@ -75,6 +78,8 @@ def _parts_of(key: str, body: dict[str, Any], answer_ms: int) -> list[Part]:
         # A slow renderer slows screen's own answer to `degraded`; Screens itself still runs.
         if status == "degraded" and not _troubles(checks):
             status = "ok"
+    elif key == "screen":
+        parts.append(Part(RENDER_PART, "down", version, RENDER_UNSAID))
     return [Part(key, status, version, _troubles(checks), answer_ms), *parts]
 
 
@@ -101,6 +106,8 @@ class HealthWatch:
             return _parts_of(key, body, round((time.perf_counter() - start) * 1000))
         except Exception as exc:
             log.info("health of %s: no answer (%s)", key, type(exc).__name__)
+            if key == "screen":
+                return [Part(key, "down"), Part(RENDER_PART, "down", detail=RENDER_UNANSWERED)]
             return [Part(key, "down")]
 
     async def _probe_own(self) -> Part:

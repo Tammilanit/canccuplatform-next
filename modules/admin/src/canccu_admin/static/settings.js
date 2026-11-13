@@ -54,11 +54,12 @@ function undo(form) {
   refresh();
 }
 
-// Caddy answers 502 for a part that is down: to the organiser, that is no answer.
+// Caddy answers 502 for a part that is down: to the organiser, that is no answer. Any redirect
+// but the saved one is a page's answer to an ended session: on to sign-in (app._not_signed_in).
 function unsaved(res) {
   const kept = "Your change is still in the form.";
   if (!res || res.status >= 500) return `The platform didn't answer. ${kept}`;
-  if (res.status === 401)
+  if (res.redirected)
     return `You were signed out. Sign in again in another tab, then save again. ${kept}`;
   return `The platform refused the change (HTTP ${res.status}). ${kept}`;
 }
@@ -68,22 +69,24 @@ async function save(form) {
   button.disabled = true;
   let res = null;
   try {
-    // Manual: a saved form answers 303 to the page with "Saved", which is then simply loaded.
+    // Followed, so the two 303s can be told apart: a saved form goes to its page with "Saved",
+    // an ended session to sign-in.
     res = await fetch(location.pathname, {
       method: "POST",
       body: new URLSearchParams(new FormData(form)),
-      redirect: "manual",
     });
   } catch {
     // Nothing answered; the form keeps the change below.
   }
-  if (res?.type === "opaqueredirect") {
-    location.assign(`${location.pathname}?saved=1`);
+  if (res?.redirected && new URL(res.url).searchParams.has("saved")) {
+    location.assign(res.url);
     return;
   }
   // A refused save answers the form again, with what was typed and why (settings_form.py).
   const next =
-    res && res.headers.get("content-type")?.startsWith("text/html")
+    res &&
+    !res.redirected &&
+    res.headers.get("content-type")?.startsWith("text/html")
       ? new DOMParser()
           .parseFromString(await res.text(), "text/html")
           .querySelector(FORM)
