@@ -131,8 +131,9 @@ export function statsView(
     view.in_voice_peak = peakOf(sorted, fields.in_voice, timeZone);
   }
   if (checkedIn !== null) view.checked_in = checkedIn;
-  for (const k of Object.keys(view)) if (view[k] === undefined) delete view[k];
-  return Object.keys(view).length === 0 ? null : view;
+  // An absent field, never an undefined one: the fingerprint and the player read the same JSON.
+  const fields = Object.entries(view).filter(([, v]) => v !== undefined);
+  return fields.length === 0 ? null : Object.fromEntries(fields);
 }
 
 interface Kept {
