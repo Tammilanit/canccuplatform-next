@@ -79,12 +79,16 @@ const PAGES = [
   ["profile-upload-ask", "/admin/profile/upload", DESK],
 ];
 // A part's Settings (sheet 4): its groups, then each state of the save bar, shot as the window
-// shows it, so the bar sits at the foot. A change waits out the bar's step aside on a phone, which
-// the field's scroll into view starts. "Couldn't save" is a save that never reaches the platform.
+// shows it, so the bar sits at the foot. The changed field is scrolled to the middle, clear of the
+// bar, so its "Was 45." shows; the shot waits out the bar's step aside on a phone, which the scroll
+// starts. "Couldn't save" is a save that never reaches the platform.
 const SETTINGS_FORM = "/admin/settings/screen";
 const OFFLINE = "#canccu-field-offline_after_seconds";
 const typed = (value) => async (page) => {
   await page.fill(OFFLINE, value);
+  await page
+    .locator(OFFLINE)
+    .evaluate((el) => el.scrollIntoView({ block: "center" }));
   await page.waitForTimeout(900);
 };
 const unanswered = async (page) => {

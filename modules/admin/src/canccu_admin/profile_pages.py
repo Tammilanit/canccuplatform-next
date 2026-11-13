@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 
 from canccu_kit import KitError
 from canccu_kit.rights import Session
-from canccu_kit.ui import empty_state, esc, notice
+from canccu_kit.ui import empty_state, esc, icon, notice
 from starlette.datastructures import UploadFile
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
@@ -21,7 +21,7 @@ from .service import Service
 from .settings_view import when
 
 DOWNLOAD = '<a class="canccu-button canccu-button--secondary" href="/api/admin/profile" '
-DOWNLOAD += 'download="profile.zip">'
+DOWNLOAD += f'download="profile.zip">{icon("download")}'
 KEPT = "The run of show, people and their roles."
 
 
@@ -62,7 +62,7 @@ def _ask(title: str, replaced: str, loaded: bool, form: str, problem: str = "") 
         f'<dl class="canccu-dl"><dt>Replaced</dt><dd>{esc(replaced)}</dd>'
         f"<dt>Kept</dt><dd>{KEPT}</dd><dt>Undo</dt><dd>{esc(undo)}</dd></dl>"
         f'{form}<div class="canccu-dialog__actions canccu-dialog__actions--stack">{download}'
-        f'<a class="canccu-button canccu-button--ghost" href="{BASE}/profile">Cancel</a>'
+        f'<a class="canccu-button canccu-button--secondary" href="{BASE}/profile">Cancel</a>'
         '<button class="canccu-button canccu-button--danger" form="canccu-replace">'
         "Replace settings and look</button></div></section>"
     )
@@ -106,6 +106,8 @@ def profile_routes(service: Service, auth: Auth, authorize: Authorize) -> list[R
             if loaded is not None:
                 event = await event_of(request)
                 names = {u.id: u.name for u, _ in await auth.users()}
+                # A session from elsewhere (CI's stub) is not among admin's users: it names itself.
+                names.setdefault(session.user_id, session.user_name)
                 moment = when(loaded[0], datetime.now(UTC), event.time_zone if event else "UTC")
                 by = f" · {moment} by {names.get(loaded[1], 'someone')}"
             _, general = await service.store.get_settings("admin")

@@ -52,8 +52,9 @@ async def test_load_asks_first_and_offers_the_current_profile(
     assert "Load the Demo Event profile again?" in text
     assert "<dt>Replaced</dt><dd>Every setting and the theme, with the profile&#x27;s.</dd>" in text
     assert "<dt>Kept</dt><dd>The run of show, people and their roles.</dd>" in text
-    assert 'href="/api/admin/profile" download="profile.zip">Download current profile</a>' in text
-    assert 'href="/admin/profile">Cancel</a>' in text
+    assert 'href="/api/admin/profile" download="profile.zip">' in text
+    assert 'canccu-i--download" aria-hidden="true"></span>Download current profile</a>' in text
+    assert 'canccu-button--secondary" href="/admin/profile">Cancel</a>' in text
     assert '<form method=post action="/admin/profile/load"' in text
     assert ">Replace settings and look</button>" in text
     # Asking replaces nothing.
