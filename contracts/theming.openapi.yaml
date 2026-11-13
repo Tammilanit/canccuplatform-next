@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Theming API
-  version: 1.7.0
+  version: 1.8.0
   summary: One event's theme, its draft, preview, publish and rollback, git sync, clone and the served theme files.
   description: |
     Machine-readable part of the theming contract. Prose, stable classes, package rules, upload safety, CSP and
@@ -1234,6 +1234,22 @@ components:
           description: "`moderate` when the theme sets none."
           type: string
           enum: [moderate, calm, none]
+        motion_style:
+          description: The theme's `motion_style` token as set; a field it does not set takes its default (contracts/theming.md, Motion vocabulary).
+          type: object
+          properties:
+            speed:
+              type: string
+              enum: [slower, normal, faster]
+            intensity:
+              type: string
+              enum: [subtle, normal, strong]
+            spotlight:
+              type: string
+              enum: [glow_and_trace, glow, trace]
+            pack:
+              type: string
+              enum: [standard, broadcast, arcade]
     TokensEdit:
       type: object
       additionalProperties: false
@@ -1341,6 +1357,21 @@ components:
             motion:
               description: Setting it never makes the theme advanced (contracts/theming.md).
               enum: [moderate, calm, none, null]
+            motion_style:
+              description: Setting it never makes the theme advanced (contracts/theming.md, Motion vocabulary). A `null` field goes back to its default.
+              oneOf:
+                - type: object
+                  additionalProperties: false
+                  properties:
+                    speed:
+                      enum: [slower, normal, faster, null]
+                    intensity:
+                      enum: [subtle, normal, strong, null]
+                    spotlight:
+                      enum: [glow_and_trace, glow, trace, null]
+                    pack:
+                      enum: [standard, broadcast, arcade, null]
+                - type: "null"
     BrandInput:
       type: object
       additionalProperties: false
