@@ -317,3 +317,14 @@
 [data-ticker] textarea {
   width: 100%;
 }
+
+/* "Preview on a screen…" (mockup 08): the notice under the title while one runs, one screen per row. */
+.canccu-studio-screen-notice {
+  margin-bottom: 1rem;
+}
+.canccu-studio-screen-notice[hidden] {
+  display: none;
+}
+.canccu-studio-screen {
+  align-items: flex-start;
+}
