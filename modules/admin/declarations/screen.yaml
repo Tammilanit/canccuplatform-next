@@ -50,7 +50,7 @@ groups:
   - id: playing
     label: Playing
     description: What a screen does between slides.
-    keys: [photo_dwell_seconds, break_min_gap_seconds, ticker_appearance, progress_bars, burn_in_drift]
+    keys: [break_min_gap_seconds, ticker_appearance, progress_bars, burn_in_drift]
   - id: network
     label: When the network is slow
     description: How long a screen waits before it says so.
