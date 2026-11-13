@@ -2,10 +2,11 @@
  * Zones and layouts' box editor (#405; v8 sheet 10, the lower frames), loaded by
  * static/studio-zone.js. It places every thumbnail and box on its grid (the CSP allows no inline
  * style), resizes the chosen box by its buttons or, with a fine pointer, its handles, hides and
- * shows boxes, resets them, and for Dashboard picks the hero's box. The geometry is
- * studio-boxes.js; the zone page asks this for the zone's box settings and their Changes lines.
+ * shows boxes, resets them, and for Dashboard picks the hero's box. It shades the space an edit
+ * left empty and fills it on request (#422). The geometry is studio-boxes.js; the zone page asks
+ * this for the zone's box settings, their Changes lines and the gaps' warnings.
  */
-import { drag, hide, resize, sameArea, show } from "./studio-boxes.js";
+import { drag, fill, gapWords, gaps, hide, resize, sameArea, show } from "./studio-boxes.js";
 
 const place = (a) => `${a.row} / ${a.column} / span ${a.rows} / span ${a.columns}`;
 
@@ -47,6 +48,15 @@ export function boxEditor(form, { say, tell, changed }) {
       if (check) check.checked = b.hidden;
     }
     form.querySelector("[data-hidden-boxes]").hidden = !boxes.some((b) => b.hidden);
+    for (const el of map.querySelectorAll("[data-gap]")) el.remove();
+    for (const g of gaps(boxes, grid)) {
+      const shade = document.createElement("i");
+      shade.className = "canccu-studio-gap";
+      shade.dataset.gap = "";
+      shade.setAttribute("aria-hidden", "true");
+      shade.style.gridArea = place(g.area);
+      map.append(shade);
+    }
     for (const el of form.querySelectorAll("[data-hero]"))
       el.setAttribute("aria-pressed", String(el.dataset.hero === (hero ?? "hero")));
     changed();
@@ -63,7 +73,9 @@ export function boxEditor(form, { say, tell, changed }) {
     const size = event.target.closest("[data-size]");
     const again = event.target.closest("[data-show-box]");
     const role = event.target.closest("[data-hero]");
-    if (size) update(resize(boxes, regionOf(size), size.dataset.size, grid), "box.blocked");
+    const gap = event.target.closest("[data-fill-gap]");
+    if (gap) update(fill(boxes, gaps(boxes, grid)[Number(gap.dataset.fillGap)]), "box.blocked");
+    else if (size) update(resize(boxes, regionOf(size), size.dataset.size, grid), "box.blocked");
     else if (again) {
       update(show(boxes, again.dataset.showBox, layoutAreas(), grid), "box.show_blocked");
       if (!boxes.find((b) => b.id === again.dataset.showBox)?.hidden)
@@ -153,6 +165,13 @@ export function boxEditor(form, { say, tell, changed }) {
           }),
         );
       return lines;
+    },
+    /** A warning per gap, by the box beside it, and whether Fill the gap can close it. */
+    gaps() {
+      return gaps(boxes, grid).map((g) => {
+        const { key, count } = gapWords(g);
+        return { text: say(key, { count, box: nameOf(g.box) }), fills: g.fills };
+      });
     },
   };
 }

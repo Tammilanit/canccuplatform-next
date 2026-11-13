@@ -8,7 +8,7 @@ import { boxProblem } from "../src/compose/boxes.js";
 import { BUILT_IN_LAYOUTS } from "../src/compose/layouts.js";
 import type { Layout } from "../src/compose/layouts.js";
 import { drag, fill, gaps, gapWords, hide, resize, show } from "../static/studio-boxes.js";
-import type { Area, Box } from "../static/studio-boxes.js";
+import type { Area, Box, Gap } from "../static/studio-boxes.js";
 
 const layout = (id: string): Layout => BUILT_IN_LAYOUTS.find((l) => l.id === id) as Layout;
 const FRAME = new Set(["header", "ticker"]);
@@ -29,6 +29,7 @@ const at = (column: number, row: number, columns: number, rows: number): Area =>
 });
 const areaOf = (boxes: Box[] | null, id: string) => boxes?.find((b) => b.id === id)?.area;
 const GRID = { columns: 12, rows: 12 };
+const firstGap = (boxes: Box[]) => gaps(boxes, GRID)[0] as Gap;
 const PULSE = boxesOf(layout("pulse"));
 const LAYOUT_AREAS = Object.fromEntries(PULSE.map((b) => [b.id, b.area]));
 
@@ -128,8 +129,8 @@ describe("the empty space an edit leaves", () => {
     boxes = resize(boxes, "rail", "wider", GRID) as Box[];
     const found = gaps(boxes, GRID);
     expect(found).toEqual([{ area: at(7, 2, 1, 10), box: "hero", edge: "right", fills: true }]);
-    expect(gapWords(found[0])).toEqual({ key: "gap.right.one", count: 1 });
-    const filled = fill(boxes, found[0]) as Box[];
+    expect(gapWords(found[0] as Gap)).toEqual({ key: "gap.right.one", count: 1 });
+    const filled = fill(boxes, found[0] as Gap) as Box[];
     expect(areaOf(filled, "hero")).toEqual(at(1, 2, 7, 10));
     expect(areaOf(filled, "rail")).toEqual(at(8, 2, 5, 10));
     expect(gaps(filled, GRID)).toEqual([]);
@@ -138,11 +139,11 @@ describe("the empty space an edit leaves", () => {
 
   it("counts columns or rows by the side it is on", () => {
     const narrow = drag(PULSE, "hero", "right", 7, GRID);
-    const [wide] = gaps(narrow, GRID);
+    const wide = firstGap(narrow);
     expect(wide).toMatchObject({ area: at(7, 2, 2, 10), box: "hero", edge: "right" });
     expect(gapWords(wide)).toEqual({ key: "gap.right", count: 2 });
     const short = resize(PULSE, "hero", "shorter", GRID) as Box[];
-    const [below] = gaps(short, GRID);
+    const below = firstGap(short);
     expect(below).toMatchObject({ area: at(1, 11, 8, 1), box: "hero", edge: "bottom" });
     expect(gapWords(below)).toEqual({ key: "gap.below.one", count: 1 });
     expect(areaOf(fill(short, below), "hero")).toEqual(at(1, 2, 8, 10));
@@ -172,7 +173,7 @@ describe("the empty space an edit leaves", () => {
       { ...box("d", at(8, 1, 5, 5)), layoutArea: at(7, 1, 6, 5) },
       { ...box("e", at(8, 6, 5, 7)), layoutArea: at(7, 6, 6, 7) },
     ];
-    const [first] = gaps(parts, GRID);
+    const first = firstGap(parts);
     expect(first).toEqual({ area: at(7, 1, 1, 12), box: "a", edge: "right", fills: true });
     const once = fill(parts, first) as Box[];
     expect(areaOf(once, "a")).toEqual(at(1, 1, 7, 5));
@@ -185,12 +186,12 @@ describe("the empty space an edit leaves", () => {
     const hero = boxesOf(layout("pulse")).map((b) =>
       b.id === "header" || b.id === "ticker" ? b : { ...b, hidden: true },
     );
-    const [band] = gaps(hero, GRID);
+    const band = firstGap(hero);
     expect(band).toEqual({ area: at(1, 2, 12, 10), box: "header", edge: "bottom", fills: false });
     expect(gapWords(band)).toEqual({ key: "gap.below", count: 10 });
     expect(fill(hero, band)).toBeNull();
-    const alone = [{ ...PULSE[1], hidden: true }];
-    const [all] = gaps(alone, GRID);
+    const alone = [{ ...(PULSE[1] as Box), hidden: true }];
+    const all = firstGap(alone);
     expect(all).toEqual({ area: at(1, 2, 8, 10), box: null, edge: null, fills: false });
     expect(gapWords(all)).toEqual({ key: "gap.cells", count: 80 });
   });

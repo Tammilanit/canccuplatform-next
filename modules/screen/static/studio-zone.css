@@ -59,6 +59,28 @@
   margin-left: -1.125rem;
 }
 
+/* A gap's warning (studio-zone.js) under the changes: the words, then Fill the gap. */
+.canccu-studio-changes__gap {
+  list-style: none;
+  margin-left: -1.125rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border-left: 3px solid var(--canccu-color-status-degraded);
+  border-radius: var(--canccu-radius);
+  background: color-mix(in srgb, var(--canccu-color-status-degraded) 12%, transparent);
+}
+
+.canccu-studio-changes__gap .canccu-i {
+  color: var(--canccu-color-status-degraded);
+}
+
+.canccu-studio-changes__gap > span:not(.canccu-i) {
+  flex: 1 1 10rem;
+}
+
 /* The map: the layout's grid at the screen's shape, each region a button with what it shows. */
 .canccu-studio-map {
   display: grid;

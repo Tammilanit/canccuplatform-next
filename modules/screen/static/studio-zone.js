@@ -181,6 +181,26 @@ import { boxEditor } from "./studio-layout.js";
   const list = form.querySelector("[data-changes]");
   const save = form.querySelector("[data-save]");
   const discard = form.querySelector("[data-discard]");
+  // A gap is a warning, not a change: it never enables Go live, and saving with it is allowed.
+  function gapLine({ text, fills }, i) {
+    const li = document.createElement("li");
+    li.className = "canccu-studio-changes__gap";
+    const icon = document.createElement("span");
+    icon.className = "canccu-i canccu-i--warn";
+    icon.setAttribute("aria-hidden", "true");
+    const words = document.createElement("span");
+    words.textContent = text;
+    li.append(icon, words);
+    if (fills) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "canccu-button canccu-button--secondary canccu-button--sm";
+      button.dataset.fillGap = String(i);
+      button.textContent = say("gap.fill");
+      li.append(button);
+    }
+    return li;
+  }
   function changed(region) {
     if (region) refreshRegion(region);
     const lines = changes();
@@ -191,6 +211,7 @@ import { boxEditor } from "./studio-layout.js";
         if (!lines.length) li.className = "canccu-muted";
         return li;
       }),
+      ...boxes.gaps().map(gapLine),
     );
     save.disabled = lines.length === 0;
     discard.disabled = lines.length === 0;

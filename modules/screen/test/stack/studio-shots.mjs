@@ -49,21 +49,25 @@ async function openDetails(page) {
 /**
  * Zones and layouts' box editor (#405, sheet 10's lower frames), unsaved: the venue card hidden
  * (the rail grows into its space) and the hero two cells narrower, then the preview the real
- * player draws of it; and Dashboard's hero role, picked in the gallery.
+ * player draws of it; and Dashboard's hero role, picked in the gallery. The tidy edit has the rail
+ * take both columns the hero gave up; with one, a column stays empty and the editor says so (#422).
  */
-async function editBoxes(page) {
+const editBoxes = (railWider) => async (page) => {
   await page.click('[data-pick="venue_rail"]');
   await page.click('section[data-region="venue_rail"] [data-box-hide]');
   await page.click('[data-pick="hero"]');
   for (let i = 0; i < 2; i++)
     await page.click('section[data-region="hero"] [data-size="narrower"]');
   await page.click('[data-pick="rail"]');
-  await page.click('section[data-region="rail"] [data-size="wider"]');
+  for (let i = 0; i < railWider; i++)
+    await page.click('section[data-region="rail"] [data-size="wider"]');
   await studioReady(page);
-}
+};
 export const LAYOUT_PAGES = [
-  ["screen-zone-boxes", "/admin/screen/zones/main", DESK, { ready: editBoxes }],
-  ["screen-zone-boxes-phone", "/admin/screen/zones/main", PHONE, { ready: editBoxes }],
+  ["screen-zone-boxes", "/admin/screen/zones/main", DESK, { ready: editBoxes(2) }],
+  ["screen-zone-boxes-phone", "/admin/screen/zones/main", PHONE, { ready: editBoxes(2) }],
+  ["screen-zone-gap", "/admin/screen/zones/main", DESK, { ready: editBoxes(1) }],
+  ["screen-zone-gap-phone", "/admin/screen/zones/main", PHONE, { ready: editBoxes(1) }],
   [
     "screen-zone-dashboard",
     "/admin/screen/zones/main?layout=dashboard",
