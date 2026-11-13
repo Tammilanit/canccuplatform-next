@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Theming API
-  version: 1.5.0
+  version: 1.6.0
   summary: One event's theme, its draft, preview, publish and rollback, git sync, clone and the served theme files.
   description: |
     Machine-readable part of the theming contract. Prose, stable classes, package rules, upload safety, CSP and
@@ -789,6 +789,57 @@ paths:
               schema:
                 type: string
                 format: binary
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /theming/logo:
+    get:
+      tags: [files]
+      operationId: getCurrentLogo
+      summary: The event's current logo, or its initials
+      description: |
+        For the organiser shell's header and the sign-in and check-in posters (packages/ui), which name this one
+        address instead of reading the theme. With a logo in the current theme (`logo_url` of `GET
+        /api/theming/current`, the profile's main logo at revision 0) a `302` to that immutable address; without
+        one, the event's initials (the first letter of each of the first two words of its name, `?` without a
+        name) as a square SVG in the theme's primary and accent colours, as the shell's avatar draws them. Public,
+        like `/theming/a/`; `Cache-Control: no-cache`, so a newly published logo shows on the next page.
+      security:
+        - {}
+      responses:
+        "200":
+          description: The initials, when the current theme has no logo.
+          headers:
+            Cache-Control:
+              description: "`no-cache`."
+              schema:
+                type: string
+                const: no-cache
+            ETag:
+              description: Changes when the initials or the colours change.
+              schema:
+                type: string
+            X-Content-Type-Options:
+              $ref: "#/components/headers/NoSniff"
+            Cross-Origin-Resource-Policy:
+              $ref: "#/components/headers/SameOriginResource"
+            Content-Security-Policy:
+              $ref: "#/components/headers/SvgPolicy"
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+        "302":
+          description: The current logo.
+          headers:
+            Location:
+              description: The current theme's `logo_url`, a `/theming/a/` address.
+              schema:
+                type: string
+            Cache-Control:
+              description: "`no-cache`."
+              schema:
+                type: string
+                const: no-cache
         "404":
           $ref: "#/components/responses/NotFound"
   /theming/draft/{file}:
