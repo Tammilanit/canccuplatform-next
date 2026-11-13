@@ -154,7 +154,9 @@ export function builder(box, doc, write, library) {
       const last = i === state.items.length - 1;
       tool(say("playlist.move_down"), "↓", () => setItems(moveItem(state.items, i, i + 1)), last);
       tool(say("playlist.remove"), "✕", () => setItems(removeItem(state.items, i)), false);
-      li.append(tools, itemFields(item, asset, slideshow, changed));
+      // itemFields is null for a slideshow image or a missing asset; append would print "null".
+      const fields = itemFields(item, asset, slideshow, changed);
+      li.append(...[tools, fields].filter((n) => n !== null));
     }
     li.append(error);
     rows.push({ length, error });
