@@ -630,8 +630,10 @@ components:
           default: null
           description: |
             The region's place on the grid in place of the layout's, 1-based. Applies only while the zone's screens draw
-            its own `layout_id`; must fit the grid and not overlap another drawn region of its layer, else 400
-            `invalid_request` (contracts/screen.md, Box sizes and hidden boxes).
+            its own `layout_id`; must fit that layout's grid in the theme revision in effect (the pinned one, else the
+            current, else the built-in) and not overlap another drawn region of its layer, else 400 `invalid_request`.
+            When saved areas stop fitting there, the screens draw the layout's areas until the zone is saved again
+            (contracts/screen.md, Box sizes and hidden boxes).
           required: [column, row, columns, rows]
           additionalProperties: false
           properties:
