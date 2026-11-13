@@ -369,6 +369,81 @@
         $ref: "../screen.openapi.yaml#/components/responses/NotFound"
       "409":
         $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+/api/screen/devices/{device_id}/preview:
+  parameters:
+    - $ref: "../screen.openapi.yaml#/components/parameters/DeviceId"
+  put:
+    tags: [devices]
+    operationId: startDevicePreview
+    summary: Preview a change on one real screen for a while
+    description: |
+      Right `screen.zones.write`. The device's states are composed from the preview (its zone or `zone`, at `at`,
+      in the draft when `theme_preview_key` is given) until `until` or a `DELETE`, with `ScreenState.preview` set;
+      every other screen of the zone keeps the live zone. Replaces the device's running preview. Saves nothing of
+      the zone, emits no event, audited (contracts/screen.md, Zones and assignments).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../screen.openapi.yaml#/components/schemas/PreviewInput"
+    responses:
+      "200":
+        description: The running preview.
+        content:
+          application/json:
+            schema:
+              $ref: "../screen.openapi.yaml#/components/schemas/Preview"
+      "400":
+        $ref: "../screen.openapi.yaml#/components/responses/BadRequest"
+        description: "`invalid_request` (also a `zone.key` that is not the device's zone, an `at` out of range, or a `theme_preview_key` theming does not know) or `unknown_layout`."
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+        description: "`not_found`: no such device, a revoked one, or one with no zone."
+      "409":
+        $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [devices]
+    operationId: endDevicePreview
+    summary: End a device's preview now
+    description: Right `screen.zones.write`. The device gets a `state` without `preview`. Audited.
+    responses:
+      "204":
+        description: Ended.
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+        description: "`not_found`: no such device, or no preview runs on it."
+/api/screen/previews:
+  get:
+    tags: [devices]
+    operationId: listPreviews
+    summary: The previews running now
+    description: Right `screen.devices.read`. For Studio's "Previewing on … · 1:42 left" notice.
+    responses:
+      "200":
+        description: The running previews, soonest end first, the ones without an end last.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [previews]
+              properties:
+                previews:
+                  type: array
+                  items:
+                    $ref: "../screen.openapi.yaml#/components/schemas/Preview"
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
 /api/screen/registry/devices:
   get:
     tags: [registry]
@@ -589,6 +664,16 @@
           type: string
           enum: [landscape, portrait]
           default: landscape
+      - name: at
+        in: query
+        required: false
+        description: |
+          The preview time: what the zone would show then, from now to 14 days ahead (else 400 `invalid_request`).
+          Schedule windows, the run of show's now and next, countdowns and quiet hours follow it; claims, pushes, the
+          ticker and live sources stay as they are now (contracts/screen.md, Zones and assignments).
+        schema:
+          type: string
+          format: date-time
     requestBody:
       required: true
       content:
