@@ -26,6 +26,8 @@ export interface ZoneRecord {
   zone: { key: string; name: string; epoch: string };
   eventName: string;
   theme: Record<string, unknown>;
+  /** The pinned bundle version; null or absent (a record stored before pins) for the platform's. */
+  bundle?: string | null;
   ticker: Record<string, unknown>;
   sound: { enabled: boolean; device_id: string | null };
   /** Absent in a record stored before it was added: screens then get the defaults. */

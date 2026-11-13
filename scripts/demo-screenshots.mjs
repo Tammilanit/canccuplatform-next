@@ -26,6 +26,7 @@ import {
   LAYOUT_PAGES,
   SCHEDULE_PAGES,
   STUDIO_PAGES,
+  FROZEN_PAGES,
   studioShots,
 } from "../modules/screen/test/stack/studio-shots.mjs";
 
@@ -215,6 +216,11 @@ if (opts["dry-run"]) {
   for (const [name, path, { width, height }] of STUDIO_PAGES) {
     console.log(
       `  ${name}.png  ${at(path)}  (${width}×${height}, while two screens play)`,
+    );
+  }
+  for (const [name, path, { width, height }] of FROZEN_PAGES) {
+    console.log(
+      `  ${name}.png  ${at(path)}  (${width}×${height}, while frozen)`,
     );
   }
   for (const [name, path, { width, height }] of PLAYLIST_PAGES) {

@@ -125,7 +125,11 @@ describe("the composed state", () => {
 
   it("makes the first drawn hero region the hero, and trades and grows after the boxes", () => {
     const dashboard = { layoutId: "dashboard", heroRegion: "online" };
-    const resized = { voice: { area: at(9, 2, 4, 4) } };
+    // `idle: blank` keeps the statistics boxes drawn while they wait for their source.
+    const resized = {
+      online: { idle: "blank" },
+      voice: { area: at(9, 2, 4, 4), idle: "blank" },
+    };
     expect(areas(build({ ...dashboard, regions: resized }))).toMatchObject({
       hero: at(5, 2, 4, 5),
       online: at(1, 2, 4, 5),
@@ -133,12 +137,9 @@ describe("the composed state", () => {
     });
     const hidden = build({ layoutId: "dashboard", regions: { hero: { hidden: true } } });
     expect(hidden.some((r) => r.role === "hero")).toBe(false);
-    const grown = build(
-      { layoutId: "dashboard", regions: { online: { hidden: true } } },
-      {
-        grow: true,
-      },
-    );
+    const blank = { idle: "blank" };
+    const regions = { online: { hidden: true }, voice: blank, top_games: blank, right_now: blank };
+    const grown = build({ layoutId: "dashboard", regions }, { grow: true });
     expect(areas(grown)).toMatchObject({ hero: at(1, 2, 8, 10), voice: at(9, 2, 4, 3) });
   });
 

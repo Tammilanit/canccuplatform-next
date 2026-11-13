@@ -1,11 +1,11 @@
 /** A screen app on a real Postgres (RLS needs one) with fake tenants, admin and Valkey. */
 import type { ThemeNow } from "../src/compose/sources.js";
-import type { AgendaNow, CheckinCode, VenueInfo } from "../src/compose/widgets.js";
+import type { AgendaItem, AgendaNow, CheckinCode, VenueInfo } from "../src/compose/widgets.js";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
-import type { FastifyInstance, LightMyRequestResponse } from "fastify";
+import type { FastifyInstance } from "fastify";
 import {
   AdminClient,
   Bus,
@@ -16,7 +16,7 @@ import {
   requireTenant,
   runMigrations,
 } from "@canccu/kit";
-import type { Event, SettingValue, StorageQuota } from "@canccu/kit";
+import type { PublicEvent, SettingValue, StorageQuota } from "@canccu/kit";
 import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
 import type { AuditEntry } from "../src/audit.js";
@@ -29,12 +29,13 @@ import { dispatchOnce, sweepLeases } from "../src/render/dispatch.js";
 import type { DispatchDeps } from "../src/render/dispatch.js";
 import type { RenderDeps } from "../src/render/jobs.js";
 import { MemoryRenderQueue } from "../src/render/queue.js";
+import { call, setCookie } from "./calls.js";
 import { SIGNIN_HOST, SUPERADMIN_HOST, fakeTenants } from "./tenants.js";
 
 /** Tests run only on a database named `*_test` (dropTables refuses any other). */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
 
-export const VENUE_IP = "10.0.0.5";
+export { VENUE_IP } from "./calls.js";
 export const OUTSIDE_IP = "192.0.2.9";
 
 export { SIGNIN_HOST, SUPERADMIN_HOST, TENANTS, context } from "./tenants.js";
@@ -49,6 +50,7 @@ const ALL_RIGHTS = [
   "screen.push.write",
   "screen.ticker.write",
   "screen.photos.write",
+  "screen.bundle.write",
 ];
 /** The sessions the fake admin knows; a test may add or remove one (then drop it from `h.rights`). */
 export const SESSIONS: Record<string, string[]> = {
@@ -58,6 +60,7 @@ export const SESSIONS: Record<string, string[]> = {
   editor: ["screen.content.read", "screen.content.write"],
   ticker: ["screen.ticker.write"],
   photos: ["screen.photos.write"],
+  bundler: ["screen.bundle.write"],
   nobody: [],
   // `superadmin` as admin answers it: a platform-bound session with `mfa_enabled` (G2).
   root: [],
@@ -109,6 +112,8 @@ export interface Harness {
   oembedStatus: { value: number };
   /** What the fake agenda, tenants and theming answer the composed state; null is "down". */
   sources: FakeSources;
+  /** host → the event's public answer (its `ends_at`); unset hosts answer nothing. */
+  publicEvents: Record<string, PublicEvent>;
   /** The app's tenant cache; a test that changes TENANTS clears it with a tenants event. */
   tenants: TenantResolver;
   /** The app's rights cache; a test that changes SESSIONS clears it with `admin.rights.changed`. */
@@ -128,8 +133,14 @@ export interface Harness {
 
 export interface FakeSources {
   theme: ThemeNow | null;
+  /** The event's theme revisions by number, as the pinned read answers them. */
+  revisions: Record<number, ThemeNow>;
+  /** The revision read fails (a 500, a timeout) while the current read may still answer. */
+  revisionsDown: boolean;
   event: { name: string } | null;
   agenda: AgendaNow | null;
+  /** The whole run of show (`GET /internal/agenda/items`); null is "down". */
+  agendaItems: AgendaItem[] | null;
   venue: VenueInfo | null;
   /** The hostnames the guest read (event) was made with. */
   hosts: string[];
@@ -147,7 +158,8 @@ export async function dropTables(admin: pg.Client): Promise<void> {
     `DROP TABLE IF EXISTS screen_agenda_items, screen_zone_playback, screen_pushes, screen_schedules,
        screen_playlist_items, screen_playlists, assignments, screen_assignments, screen_zones,
        screen_zone_seeds, devices, screen_migrations, screen_render_jobs, screen_asset_versions,
-       screen_assets, screen_files, screen_ticker, screen_ticker_windows, screen_photos, screen_claims CASCADE`,
+       screen_assets, screen_files, screen_ticker, screen_ticker_windows, screen_photos, screen_claims, screen_pins,
+       screen_pin_tenants CASCADE`,
   );
 }
 
@@ -181,8 +193,11 @@ export async function harness(): Promise<Harness> {
   const oembedStatus = { value: 200 };
   const fake: FakeSources = {
     theme: null,
+    revisions: {},
+    revisionsDown: false,
     event: null,
     agenda: null,
+    agendaItems: null,
     venue: null,
     hosts: [],
     tenants: [],
@@ -220,6 +235,7 @@ export async function harness(): Promise<Harness> {
     },
   };
   const queue = new MemoryRenderQueue();
+  const publicEvents: Record<string, PublicEvent> = {};
   const tenants = new TenantResolver({
     tenantsUrl: "http://tenants",
     fetch: fakeTenants,
@@ -261,10 +277,18 @@ export async function harness(): Promise<Harness> {
     bundleVersion: "test",
     playerDir,
     streamPingMs: 200,
+    publicEvent: (host) => Promise.resolve(publicEvents[host ?? ""] ?? null),
     sources: {
       theme: (tenantId) => answer(fake.tenants, tenantId, fake.theme),
+      themeRevision: (tenantId, revision) =>
+        answer(
+          fake.tenants,
+          tenantId,
+          fake.revisionsDown ? null : (fake.revisions[revision] ?? "gone"),
+        ),
       event: (host) => answer(fake.hosts, host, fake.event),
       agendaNow: (tenantId) => answer(fake.tenants, tenantId, fake.agenda),
+      agendaItems: (tenantId) => answer(fake.tenants, tenantId, fake.agendaItems),
       venueInfo: (tenantId) => answer(fake.tenants, tenantId, fake.venue),
       checkinCode: (_tenantId, purpose) => answer(fake.checkinReads, purpose, fake.checkin),
     },
@@ -304,6 +328,7 @@ export async function harness(): Promise<Harness> {
     playerDir,
     oembedStatus,
     sources: fake,
+    publicEvents,
     tenants,
     rights,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
@@ -319,55 +344,6 @@ export async function harness(): Promise<Harness> {
       await rm(playerDir, { recursive: true, force: true });
     },
   };
-}
-
-export interface Call {
-  host?: string;
-  ip?: string;
-  session?: string;
-  cookies?: Record<string, string>;
-  body?: unknown;
-}
-
-export function call(
-  h: Harness,
-  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
-  url: string,
-  c: Call = {},
-): Promise<LightMyRequestResponse> {
-  const cookies = { ...(c.session ? { canccu_session: c.session } : {}), ...c.cookies };
-  return h.app.inject({
-    method,
-    url,
-    headers: {
-      host: c.host ?? "alpha.test",
-      "x-forwarded-for": c.ip ?? VENUE_IP,
-      cookie: Object.entries(cookies)
-        .map(([k, v]) => `${k}=${v}`)
-        .join("; "),
-      ...(c.body === undefined ? {} : { "content-type": "application/json" }),
-    },
-    ...(c.body === undefined ? {} : { payload: JSON.stringify(c.body) }),
-  });
-}
-
-/** The value a response sets for a cookie, or undefined. */
-export function setCookie(res: LightMyRequestResponse, name: string): string | undefined {
-  const header = [res.headers["set-cookie"] ?? []].flat();
-  const line = header.find((h) => h.startsWith(`${name}=`));
-  return line?.slice(name.length + 1).split(";")[0];
-}
-
-/** The data of the bus events of `type` on `tenant`'s screen stream, oldest first. */
-export function events(h: Harness, type: string, tenant = "alpha"): Record<string, unknown>[] {
-  return (h.store.streams.get(`t:${tenant}:events:screen`) ?? [])
-    .map(([, fields]) => JSON.parse(fields.event ?? "{}") as Event)
-    .filter((e) => e.type === type)
-    .map((e) => e.data);
-}
-
-export function code(res: LightMyRequestResponse): string {
-  return res.json<{ error: { code: string } }>().error.code;
 }
 
 /** Pair a device on `host` end to end; returns its id and the kiosk's device cookie. */
@@ -394,3 +370,5 @@ export async function pairDevice(
 export { APP_ROLE };
 
 export { fixture, png, upload } from "./uploads.js";
+export { call, code, events, setCookie } from "./calls.js";
+export type { Call } from "./calls.js";

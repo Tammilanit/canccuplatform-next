@@ -10,6 +10,7 @@ import type { Area, Layout, LayoutRegion, Props, Role, WidgetEntry } from "./lay
 import { partsOf } from "./parts.js";
 import type { HeaderMode, HubQrMode, Part } from "./parts.js";
 import { grown, traded } from "./showcase.js";
+import { handedOver, isWaiting } from "./waiting.js";
 import { countdownFields, viewOf } from "./widgets.js";
 import type { View, ZoneFacts } from "./widgets.js";
 
@@ -120,12 +121,28 @@ export function shownAt(
   return null;
 }
 
+const idleOf = (setting: Record<string, unknown>): Idle =>
+  IDLES.includes(setting.idle as Idle) ? (setting.idle as Idle) : "logo";
+
+/** The zone's widgets for a region, else the layout's. */
+const entriesOf = (source: LayoutRegion, input: BuildInput): WidgetEntry[] => {
+  const widgets = input.zone.regions[source.id]?.widgets;
+  return Array.isArray(widgets) ? (widgets as WidgetEntry[]) : source.widgets;
+};
+
+/** A box of statistics still waiting for its source (waiting.ts). */
+function waits(source: LayoutRegion, input: BuildInput): boolean {
+  return isWaiting(
+    entriesOf(source, input),
+    idleOf(input.zone.regions[source.id] ?? {}),
+    (e) => viewOf(e.widget, e.props ?? {}, input.facts, e.embed ?? null).empty,
+  );
+}
+
 /** A region as the zone sets it, drawn whole or as its parts. */
 function regionsOf(source: LayoutRegion, layout: Layout, input: BuildInput): RegionView[] {
   const setting = input.zone.regions[source.id] ?? {};
-  const entries = Array.isArray(setting.widgets)
-    ? (setting.widgets as WidgetEntry[])
-    : source.widgets;
+  const entries = entriesOf(source, input);
   const role = roleOf(source.id, setting.role);
   const modes = {
     header: input.zone.header ?? layout.header ?? "separate",
@@ -170,7 +187,7 @@ function region(
   const nowMs = input.facts.now.getTime();
   const cycle = cycleMs === 0 ? 0 : Math.floor(nowMs / cycleMs);
   const rotation = setting.rotation === "shuffle" ? "shuffle" : "sequence";
-  const idle = IDLES.includes(setting.idle as Idle) ? (setting.idle as Idle) : "logo";
+  const idle = idleOf(setting);
   const next = idle === "next" ? countdownFields(input.facts) : null;
   return {
     id: part.id,
@@ -217,10 +234,14 @@ export function buildRegions(input: BuildInput): { layout: Layout; regions: Regi
     themeLayouts: input.themeLayouts,
     portrait: input.portrait,
   });
-  // The zone's boxes first, then the trade and the growth, then parts (contracts/screen.md, Order).
+  // The zone's boxes first, then the trade, then the waiting boxes leave, then the growth or, when
+  // the hero does not grow, the waiting boxes' hand-over; parts last (contracts/screen.md, Order).
   const boxes = placedBoxes(layout, input.zone.layoutId, input.zone.regions);
   const swapped = traded(boxes, input.zone.regions, input.zone.heroRegion ?? null);
-  const placed = input.grow === true ? grown(swapped, input.zone.regions) : swapped;
+  const waiting = new Set(swapped.filter((r) => waits(r, input)).map((r) => r.id));
+  const kept = swapped.filter((r) => !waiting.has(r.id));
+  const growth = input.grow === true ? grown(kept, input.zone.regions) : kept;
+  const placed = growth !== kept ? growth : handedOver(swapped, waiting);
   const regions = placed.flatMap((r) => regionsOf(r, layout, input));
   return {
     layout,

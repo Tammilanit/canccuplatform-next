@@ -3,15 +3,31 @@
  * through the same read as `GET /api/screen/schedules/calendar`, and the names it shows. Mockup 09
  * shows one zone at a time: the page opens on the first zone that has screens, and `zone=all`
  * shows every zone. A zone the event has not (an old link) opens the default zone, not an error.
+ * Writers also get the window editor (#267); every reader gets "what plays at…".
  */
 import type { EventInfo, Html } from "@canccu/ui";
-import { loadAgendaLabels } from "../content/agenda.js";
+import { loadAgendaChoices, loadAgendaLabels } from "../content/agenda.js";
+import type { AgendaChoice } from "../content/agenda.js";
 import { readCalendar } from "../content/calendar.js";
 import { loadPlaylists } from "../content/playlists.js";
-import type { Db } from "../db.js";
+import { listSchedules } from "../content/schedules.js";
+import type { ScheduleDeps } from "../content/schedules.js";
+import type { Sources } from "../compose/sources.js";
 import { shownZone } from "./help.js";
 import type { SeenDevice } from "./help.js";
-import { addDays, clipCalendar, columnSpan, dayStartMs, scheduleAxis } from "./schedule-axis.js";
+import {
+  addDays,
+  clipCalendar,
+  columnSpan,
+  dayStartMs,
+  localDate,
+  scheduleAxis,
+} from "./schedule-axis.js";
+import { layoutsOf } from "./event-layouts.js";
+import { readWhatPlays } from "./schedule-at.js";
+import type { WindowFacts } from "./schedule-at.js";
+import { whatPlaysCard } from "./schedule-at-view.js";
+import { WRITE, editorView } from "./schedule-editor.js";
 import { eventDays, pageOfDays, scheduleModel } from "./schedule-model.js";
 import { ALL_ZONES, scheduleView } from "./schedule-view.js";
 import type { ViewContext, ZoneSummary } from "./views.js";
@@ -21,10 +37,22 @@ export interface ScheduleQuery {
   from?: string | undefined;
   /** The day a phone shows. */
   day?: string | undefined;
+  /** "What plays at…": a day (`YYYY-MM-DD`) and a 24 h `HH:MM` in the event's time zone, and its zone. */
+  at_day?: string | undefined;
+  at?: string | undefined;
+  at_zone?: string | undefined;
 }
 
+export interface SchedulePageDeps extends Pick<ScheduleDeps, "db" | "settings"> {
+  sources: Sources;
+}
+
+/** The ISO weekday of a `YYYY-MM-DD` date. */
+const isoDayOf = (date: string): number => new Date(`${date}T12:00:00Z`).getUTCDay() || 7;
+
 export async function schedulePage(
-  db: Db,
+  deps: SchedulePageDeps,
+  tenantId: string,
   c: ViewContext,
   event: EventInfo,
   zones: readonly ZoneSummary[],
@@ -45,7 +73,8 @@ export async function schedulePage(
         : fallback;
   const first = page.days[0] as string;
   const last = page.days.at(-1) as string;
-  const [read, playlists, labels] = await db.tenant(
+  const writer = c.rights.has(WRITE);
+  const [read, playlists, labels, windows, items] = await deps.db.tenant(
     async (t) =>
       [
         // A day past the last: the axis may run the last column on into the small hours.
@@ -58,8 +87,11 @@ export async function schedulePage(
         }),
         await loadPlaylists(t),
         await loadAgendaLabels(t),
+        (await listSchedules(t)) as unknown as WindowFacts[],
+        writer ? await loadAgendaChoices(t) : ([] as AgendaChoice[]),
       ] as const,
   );
+  const layouts = await layoutsOf(deps.sources, tenantId);
   const axis = scheduleAxis(read.zones, page.days, tz);
   const calendar = clipCalendar(read, {
     starts_at: columnSpan(first, axis, tz).starts_at,
@@ -76,13 +108,42 @@ export async function schedulePage(
   });
   const day =
     [query.day, model.now?.date].find((d) => d !== undefined && page.days.includes(d)) ?? first;
+  const atZone = zones.some((z) => z.key === query.at_zone) ? query.at_zone : (zone ?? fallback);
+  const today = localDate(c.nowMs, tz);
+  const at = await readWhatPlays(deps, c, { tenantId, layouts }, atZone, {
+    // Asked without a day (an old link, or the page's first ask), the event's day today or its first.
+    day: query.at_day ?? (days.includes(today) ? today : days[0]),
+    time: query.at,
+  });
+  const names = new Map(playlists.map((p) => [p.id, p.name]));
+  const shown = zone ?? ALL_ZONES;
   return scheduleView(c, {
     model,
     calendar,
     zones,
-    zone: zone ?? ALL_ZONES,
+    zone: shown,
     page,
     day,
     playlists: new Map(playlists.map((p) => [p.id, p])),
+    at: whatPlaysCard(c, at, {
+      zones,
+      windows,
+      playlists: names,
+      layouts: new Map(layouts.map((l) => [l.id, l.name])),
+      labels,
+      days,
+      page: { zone: shown, from: page.days[0] ?? null, day },
+    }),
+    editor: writer
+      ? editorView(c, {
+          zones,
+          playlists: playlists.filter((p) => p.type !== "break"),
+          layouts,
+          items,
+          windows,
+          zone: zone ?? fallback ?? "",
+          isoDay: isoDayOf(day),
+        })
+      : null,
   });
 }

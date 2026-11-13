@@ -22,14 +22,15 @@ import {
 import type { Logger, PublicEvent, RightsChecker } from "@canccu/kit";
 import { errorTitle, errorView, html, raw, shellPage } from "@canccu/ui";
 import type { EventInfo, Slot } from "@canccu/ui";
-import { BUILT_IN_LAYOUTS, themeLayouts } from "../compose/layouts.js";
-import type { Layout } from "../compose/layouts.js";
 import type { Sources } from "../compose/sources.js";
 import type { Db } from "../db.js";
 import { listDevices } from "../devices.js";
 import type { Settings } from "../health.js";
 import { notFound, tenantOf } from "../http.js";
 import type { Kv } from "../kv.js";
+import type { BundleStore } from "../pins/bundles.js";
+import { PIN_READ_RIGHTS, inEffect } from "../pins/routes.js";
+import { readPin } from "../pins/store.js";
 import type { ZoneStore } from "../push/store.js";
 import { tickerNow } from "../ticker/store.js";
 import { readZones } from "../zones.js";
@@ -39,12 +40,16 @@ import type { SeenDevice } from "./help.js";
 import { CLIENT_KEYS, translator } from "./messages.js";
 import type { MessageKey, Translate } from "./messages.js";
 import { devicesActions, devicesView } from "./devices-view.js";
+import { layoutsOf } from "./event-layouts.js";
+import { frozenBanner, pinsView } from "./pins-view.js";
 import { param, readContent } from "./content-data.js";
 import { readPlaylists } from "./playlists-data.js";
 import { contentPage } from "./playlists-view.js";
 import { STATIC_TYPES, staticFile } from "./static-files.js";
 import type { ContentDeps } from "./content-data.js";
+import { WRITE } from "./schedule-editor.js";
 import { schedulePage } from "./schedule-page.js";
+import type { ScheduleQuery } from "./schedule-page.js";
 import { tickerView } from "./ticker-view.js";
 import { STUDIO, liveActions, liveView, startUrlOf } from "./views.js";
 import type { ViewContext } from "./views.js";
@@ -59,6 +64,9 @@ export interface StudioDeps extends Omit<ContentDeps, "now"> {
   /** Admin's own settings, which hold the event's `language` (contracts/admin.md, #394). */
   adminSettings: Settings;
   sources: Sources;
+  bundles: BundleStore;
+  /** The module's own settings: simulate's break gap, for "what plays at…". */
+  settings: Settings;
   log?: Logger | undefined;
   /** Names the event in the shell's header; without it the header shows what the tenant says. */
   publicEvent?: ((host: string | undefined) => Promise<PublicEvent | null>) | undefined;
@@ -71,15 +79,19 @@ const ZONES = "screen.zones.write";
 const TICKER = "screen.ticker.write";
 const CONTENT = "screen.content.read";
 
-/** The tabs, each shown only to holders of its right (Live and Devices share one). */
-const TABS: [path: string, label: MessageKey, right: string][] = [
-  ["live", "tab.live", READ],
-  ["devices", "tab.devices", READ],
-  ["zones", "tab.zones", ZONES],
-  ["schedule", "tab.schedule", CONTENT],
-  ["content", "tab.content", CONTENT],
-  ["ticker", "tab.ticker", TICKER],
+/** The tabs, each shown only to holders of one of its rights (Live and Devices share one). */
+const TABS: [path: string, label: MessageKey, rights: readonly string[]][] = [
+  ["live", "tab.live", [READ]],
+  ["devices", "tab.devices", [READ]],
+  ["zones", "tab.zones", [ZONES]],
+  ["schedule", "tab.schedule", [CONTENT]],
+  ["content", "tab.content", [CONTENT]],
+  ["ticker", "tab.ticker", [TICKER]],
+  ["pins", "tab.pins", PIN_READ_RIGHTS],
 ];
+const ANY_TAB = [...new Set(TABS.flatMap(([, , rights]) => rights))];
+const holds = (rights: ReadonlySet<string>, any: readonly string[]) =>
+  any.some((r) => rights.has(r));
 
 /** Sign-in first (so a signed-out browser is sent to sign in), then the address rule, then a right. */
 function pageNeeds(rights: RightsChecker, any: readonly string[]): preHandlerAsyncHookHandler {
@@ -87,7 +99,7 @@ function pageNeeds(rights: RightsChecker, any: readonly string[]): preHandlerAsy
     const session = await rights.session(request.headers.cookie);
     request.session = session;
     checkAdminAccess(tenantOf(request), request.ip);
-    if (!any.some((r) => session.rights.has(r))) {
+    if (!holds(session.rights, any)) {
       throw new MissingRight(`needs one of the rights ${any.join(", ")}`);
     }
   };
@@ -136,6 +148,8 @@ interface PageOptions {
   own?: string;
   /** The page's own script is a module, which may import its neighbours in static/. */
   module?: boolean;
+  /** Whether the page's own script loads: by default when it has one; the schedule's is writers'. */
+  script?: boolean;
   /** Rules made of numbers only (the schedule's block places), under the page's nonce. */
   style?: string;
 }
@@ -149,6 +163,11 @@ async function studioPage(
 ): Promise<FastifyReply> {
   const nonce = newNonce();
   const rights = request.session?.rights ?? new Set<string>();
+  // While frozen, every page says so to whoever may read the pin (an error page reads nothing).
+  const banner =
+    o.plain || !holds(rights, PIN_READ_RIGHTS)
+      ? ""
+      : await frozenBanner(deps, tenantOf(request), t);
   const doc = shellPage({
     title: o.title,
     nonce,
@@ -175,18 +194,18 @@ async function studioPage(
     ...(o.tab === undefined
       ? {}
       : {
-          tabs: TABS.filter(([, , right]) => rights.has(right)).map(([path, label]) => ({
+          tabs: TABS.filter(([, , any]) => holds(rights, any)).map(([path, label]) => ({
             href: STUDIO + path,
             label: t(label),
             current: path === o.tab,
           })),
         }),
-    body: html`<p class="canccu-studio-notice" role="status" hidden></p>
+    body: html`${banner}
+      <p class="canccu-studio-notice" role="status" hidden></p>
       ${o.body}${clientText(t)}
       <script src="${STUDIO}static/studio.js" defer></script>
       ${
-        // A page with a stylesheet only (the schedule) has no script to load.
-        o.own === undefined || !Object.hasOwn(STATIC_TYPES, `${o.own}.js`)
+        o.own === undefined || !(o.script ?? Object.hasOwn(STATIC_TYPES, `${o.own}.js`))
           ? ""
           : o.module === true
             ? html`<script type="module" src="${STUDIO}static/${o.own}.js"></script>`
@@ -201,16 +220,6 @@ async function studioPage(
     .header("x-content-type-options", "nosniff")
     .status(o.status ?? 200)
     .send(doc.toString());
-}
-
-/** The built-in layouts, each replaced by a theme layout of the same id, then the theme's own. */
-async function layoutsOf(deps: StudioDeps, tenantId: string): Promise<Layout[]> {
-  const theme = await deps.sources.theme(tenantId).catch(() => null);
-  const own = themeLayouts(theme?.layouts);
-  return [
-    ...BUILT_IN_LAYOUTS.map((b) => own.find((l) => l.id === b.id) ?? b),
-    ...own.filter((l) => !BUILT_IN_LAYOUTS.some((b) => b.id === l.id)),
-  ];
 }
 
 export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
@@ -258,16 +267,12 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       studioPage(request, reply, deps, c.t, { ...o, title: o.title || c.t("studio.title") });
 
     // Home (U5): Live while the event runs, Zones before it, or the first tab this person has.
-    studio.get(
-      STUDIO,
-      { preHandler: pageNeeds(deps.rights, [READ, ZONES, CONTENT, TICKER]) },
-      async (request, reply) => {
-        const rights = request.session?.rights ?? new Set<string>();
-        const order = tenantOf(request).status === "live" ? TABS : [TABS[2], ...TABS];
-        const first = order.find((tab) => tab !== undefined && rights.has(tab[2]));
-        return reply.redirect(`${STUDIO}${first?.[0] ?? "live"}`, 303);
-      },
-    );
+    studio.get(STUDIO, { preHandler: pageNeeds(deps.rights, ANY_TAB) }, async (request, reply) => {
+      const rights = request.session?.rights ?? new Set<string>();
+      const order = tenantOf(request).status === "live" ? TABS : [TABS[2], ...TABS];
+      const first = order.find((tab) => tab !== undefined && holds(rights, tab[2]));
+      return reply.redirect(`${STUDIO}${first?.[0] ?? "live"}`, 303);
+    });
 
     studio.get(
       `${STUDIO}live`,
@@ -330,7 +335,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         const zones = await readZones(deps, ctx);
         const zone = zones.find((z) => z.key === request.params.zone_key);
         if (zone === undefined) throw notFound();
-        const [layouts, all] = [await layoutsOf(deps, ctx.tenant_id), await devices()];
+        const [layouts, all] = [await layoutsOf(deps.sources, ctx.tenant_id), await devices()];
         // The gallery's pick, drawn unsaved; the zone's own (`null`: `pulse`) or an unknown id is none.
         const asked = layouts.find((l) => l.id === request.query.layout)?.id;
         const layoutId =
@@ -345,16 +350,19 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       },
     );
 
-    studio.get<{ Querystring: { zone?: string; from?: string; day?: string } }>(
+    studio.get<{ Querystring: ScheduleQuery }>(
       `${STUDIO}schedule`,
       { preHandler: pageNeeds(deps.rights, [CONTENT]) },
       async (request, reply) => {
         const c = await context(request);
-        const [zones, all] = [await readZones(deps, tenantOf(request)), await devices()];
+        const ctx = tenantOf(request);
+        const [zones, all] = [await readZones(deps, ctx), await devices()];
         const event = await eventOf(request, deps);
-        const view = await schedulePage(deps.db, c, event, zones, all, request.query);
+        const query = request.query;
+        const view = await schedulePage(deps, ctx.tenant_id, c, event, zones, all, query);
         const o = { title: "", tab: "schedule", description: c.t("schedule.desc") };
-        return page(request, reply, c, { ...o, own: "studio-schedule", ...view });
+        const own = { own: "studio-schedule", module: true, script: c.rights.has(WRITE) };
+        return page(request, reply, c, { ...o, ...own, ...view });
       },
     );
 
@@ -383,6 +391,23 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
           tab: "ticker",
           description: c.t("ticker.desc"),
           body: tickerView(c, ticker),
+        });
+      },
+    );
+
+    studio.get(
+      `${STUDIO}pins`,
+      { preHandler: pageNeeds(deps.rights, PIN_READ_RIGHTS) },
+      async (request, reply) => {
+        const c = await context(request);
+        const ctx = tenantOf(request);
+        const pin = await deps.db.tenant(readPin);
+        const event = await deps.publicEvent?.(request.headers.host).catch(() => null);
+        return page(request, reply, c, {
+          title: "",
+          tab: "pins",
+          description: c.t("pins.desc"),
+          body: pinsView(c, pin, await inEffect(deps, ctx.tenant_id, pin), event?.ends_at),
         });
       },
     );

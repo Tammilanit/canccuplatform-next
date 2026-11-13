@@ -32,8 +32,15 @@ export interface EventPublic {
 /** Every read answers `null` when its module is down or refuses, so a screen never goes blank. */
 export interface Sources {
   agendaNow(tenantId: string, zoneKey: string): Promise<AgendaNow | null>;
+  /** The event's whole run of show, read each time: the Studio's "what plays at…" (#267). */
+  agendaItems(tenantId: string): Promise<AgendaItem[] | null>;
   venueInfo(tenantId: string): Promise<VenueInfo | null>;
   theme(tenantId: string): Promise<ThemeNow | null>;
+  /**
+   * One revision of the event's theme, for a pin (contracts/screen.md, Pins). `gone` only when
+   * theming says the revision is not kept (404): a pin is cleared for that, never for a failed read.
+   */
+  themeRevision(tenantId: string, revision: number): Promise<ThemeNow | "gone" | null>;
   event(host: string): Promise<EventPublic | null>;
   checkinCode(tenantId: string, purpose: string): Promise<CheckinCode | null>;
 }
@@ -104,15 +111,18 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
     lastWarned.set(path, now);
     log.warn({ path, ...detail }, "composed state source unavailable; its widgets show empty");
   };
-  const read = async (
+  /** The body, `gone` for a 404 when `gone404` is set, else null for every failure. */
+  const readOr = async (
     base: string,
     path: string,
     headers: Record<string, string>,
+    gone404: boolean,
   ): Promise<unknown> => {
     const route = path.split("?")[0] ?? path;
     try {
       const { status, body } = await getJson(`${base.replace(/\/+$/, "")}${path}`, headers);
       if (status >= 200 && status < 300) return body;
+      if (gone404 && status === 404) return "gone";
       warn(route, { status });
       return null;
     } catch (err) {
@@ -120,31 +130,35 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       return null;
     }
   };
+  const read = (base: string, path: string, headers: Record<string, string>) =>
+    readOr(base, path, headers, false);
   // The whole agenda, per event, for `agenda_now`'s `later`: read again only when now and next
   // say the agenda moved (contracts/screen.md, Reading other modules as a module), so the 10 s zone
   // refresh of every zone costs one small read, not the event's whole agenda. Keyed by the version,
   // a container never serves an older agenda than the now and next it read. The promise is kept, so
   // the zones of one event rebuilt together share one read.
+  const readItems = async (tenantId: string): Promise<AgendaItem[] | null> => {
+    const body = await read(
+      urls.agenda,
+      `/internal/agenda/items?tenant_id=${encodeURIComponent(tenantId)}`,
+      service.headers("agenda"),
+    );
+    const list = (body as { items?: unknown } | null)?.items;
+    if (!Array.isArray(list)) return null;
+    // A promise that rejected here would stay kept and break every zone of the event until the
+    // agenda moves, so entries that are not items are skipped, never read.
+    return list
+      .filter((i): i is AgendaItem => typeof i === "object" && i !== null && !Array.isArray(i))
+      .map((i) => ({ ...i, location: i.location ?? null }));
+  };
   const agendas = new Map<string, { version: number; items: Promise<AgendaItem[] | null> }>();
   const allItems = (tenantId: string, version: number): Promise<AgendaItem[] | null> => {
     const kept = agendas.get(tenantId);
     if (kept !== undefined && kept.version === version) return kept.items;
-    const items = read(
-      urls.agenda,
-      `/internal/agenda/items?tenant_id=${encodeURIComponent(tenantId)}`,
-      service.headers("agenda"),
-    ).then((body) => {
-      const list = (body as { items?: unknown } | null)?.items;
+    const items = readItems(tenantId).then((list) => {
       // A failed read is tried again at the next build rather than kept.
-      if (!Array.isArray(list)) {
-        if (agendas.get(tenantId)?.items === items) agendas.delete(tenantId);
-        return null;
-      }
-      // A promise that rejected here would stay kept and break every zone of the event until the
-      // agenda moves, so entries that are not items are skipped, never read.
-      return list
-        .filter((i): i is AgendaItem => typeof i === "object" && i !== null && !Array.isArray(i))
-        .map((i) => ({ ...i, location: i.location ?? null }));
+      if (list === null && agendas.get(tenantId)?.items === items) agendas.delete(tenantId);
+      return list;
     });
     agendas.delete(tenantId);
     if (agendas.size >= MAX_AGENDAS) agendas.delete(agendas.keys().next().value as string);
@@ -152,6 +166,7 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
     return items;
   };
   return {
+    agendaItems: readItems,
     agendaNow: async (tenantId, zoneKey) => {
       const query = `tenant_id=${encodeURIComponent(tenantId)}&zone=${encodeURIComponent(zoneKey)}`;
       const body = (await read(
@@ -182,6 +197,16 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       )) as ThemeNow | null;
       return body === null || typeof body.revision !== "number" ? null : body;
     },
+    themeRevision: async (tenantId, revision) => {
+      const body = (await readOr(
+        urls.theming,
+        `/internal/theming/revisions/${revision}?tenant_id=${encodeURIComponent(tenantId)}`,
+        service.headers("theming"),
+        true,
+      )) as ThemeNow | "gone" | null;
+      if (body === "gone") return body;
+      return body === null || body.revision !== revision ? null : body;
+    },
     checkinCode: async (tenantId, purpose) => {
       const query = `tenant_id=${encodeURIComponent(tenantId)}&purpose=${encodeURIComponent(purpose)}`;
       const body = (await read(
@@ -204,8 +229,10 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
 /** Nothing reachable: what tests and a stack without the other modules get. */
 export const noSources: Sources = {
   agendaNow: () => Promise.resolve(null),
+  agendaItems: () => Promise.resolve(null),
   venueInfo: () => Promise.resolve(null),
   theme: () => Promise.resolve(null),
+  themeRevision: () => Promise.resolve(null),
   event: () => Promise.resolve(null),
   checkinCode: () => Promise.resolve(null),
 };
