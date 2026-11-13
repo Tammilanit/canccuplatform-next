@@ -15,7 +15,8 @@ from datetime import UTC, datetime, timedelta
 import asyncpg
 import pytest
 
-from canccu_admin.auth_db import AuthStore, Flow, MemoryAuthStore, PgAuthStore
+from canccu_admin.auth_db import AuthStore, Flow, PgAuthStore
+from canccu_admin.auth_memory import MemoryAuthStore
 from canccu_admin.db import MIGRATIONS
 
 NOW = datetime(2026, 11, 7, 12, 0, tzinfo=UTC)

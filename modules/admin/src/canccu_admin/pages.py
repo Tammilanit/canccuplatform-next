@@ -8,7 +8,7 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from canccu_kit import KitError, MissingRight, TenantResolver
+from canccu_kit import KitError, MissingRight, NotSignedIn, TenantResolver
 from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.ui import EventInfo, error_view, front_page, shell_page
 from starlette.requests import Request
@@ -151,3 +151,11 @@ def page_error_handler(auth: Auth) -> Callable[[Request, Exception], Awaitable[R
         return await page(request, title, view, exc.status, session=session, plain=True)
 
     return page_error
+
+
+async def not_signed_in(request: Request, exc: Exception) -> Response:
+    """The API answers 401 (contracts/admin.md); a page sends the browser to sign in."""
+    if request.url.path.startswith("/api/"):
+        assert isinstance(exc, NotSignedIn)
+        return JSONResponse(exc.to_body(), status_code=exc.status)
+    return RedirectResponse(f"{BASE}/sign-in", status_code=303)

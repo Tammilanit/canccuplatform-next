@@ -35,6 +35,7 @@ from .pages import (
     HEALTH_WORDS,
     MODULE_ICONS,
     event_of,
+    not_signed_in,
     page,
     page_error_handler,
     part_name,
@@ -74,11 +75,8 @@ def create_app(
     identity: ServiceIdentity,
     viewer: Viewer | None = None,
 ) -> Starlette:
-    """`viewer` reads a cookie's session as the kit does, for pages that need no right."""
-    if viewer is None:
-
-        async def viewer(cookie: str | None) -> Session:
-            return await auth.session(session_id_from_cookie(cookie))
+    """`viewer` reads a cookie's session as the kit does, for pages that need no right; without
+    it, admin's own sessions."""
 
     async def need(request: Request, right: str) -> Session:
         return await authorize(request.headers.get("cookie"), right)
@@ -394,14 +392,6 @@ def create_app(
     # cover its 404s, and settings and profile handlers run inside the request's tenant.
     app.user_middleware.append(Middleware(TenantPaths, resolver=resolver))
     install_service_identity(app, identity)
-    app.add_exception_handler(NotSignedIn, _not_signed_in)
+    app.add_exception_handler(NotSignedIn, not_signed_in)
     app.add_exception_handler(KitError, page_error_handler(auth))
     return app
-
-
-async def _not_signed_in(request: Request, exc: Exception) -> Response:
-    """The API answers 401 (contracts/admin.md); a page sends the browser to sign in."""
-    if request.url.path.startswith("/api/"):
-        assert isinstance(exc, NotSignedIn)
-        return JSONResponse(exc.to_body(), status_code=exc.status)
-    return RedirectResponse(f"{BASE}/sign-in", status_code=303)

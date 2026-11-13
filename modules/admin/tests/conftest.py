@@ -28,7 +28,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from canccu_admin.app import create_app
 from canccu_admin.auth import Auth
-from canccu_admin.auth_db import MemoryAuthStore
+from canccu_admin.auth_memory import MemoryAuthStore
 from canccu_admin.auth_routes import OnEvent
 from canccu_admin.db import MemoryStore, Store
 from canccu_admin.declarations import load_declarations

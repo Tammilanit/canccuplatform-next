@@ -68,7 +68,7 @@ async def static_script(request: Request) -> Response:
 
 
 def auth_routes(
-    auth: Auth, authorize: Authorize, on_event: OnEvent | None, viewer: Viewer
+    auth: Auth, authorize: Authorize, on_event: OnEvent | None, viewer: Viewer | None
 ) -> list[Route]:
     def session_id(request: Request) -> str | None:
         return session_id_from_cookie(request.headers.get("cookie"))
@@ -236,7 +236,10 @@ def auth_routes(
 
     async def offline_page(request: Request) -> Response:
         try:
-            session: Session | None = await viewer(request.headers.get("cookie"))
+            cookie = request.headers.get("cookie")
+            session: Session | None = await (
+                viewer(cookie) if viewer else auth.session(session_id_from_cookie(cookie))
+            )
         except NotSignedIn:
             session = None
         view = views.offline_view()
