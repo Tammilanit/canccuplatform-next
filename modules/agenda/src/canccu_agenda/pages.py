@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from typing import Any
-from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
 from canccu_kit.ui import empty_state, icon
@@ -13,7 +12,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
 
-from . import day_view, delay_pages, model, store, undo
+from . import day_list, day_view, delay_pages, edit_pages, model, posts, store, undo
 from .access import WRITE, viewer
 from .day_view import can_delay, can_show, state_of
 from .deps import deps
@@ -21,11 +20,14 @@ from .effective import read_channels
 from .history import changes_html
 from .kinds import not_found
 from .web import (
+    ARCHIVED_ITEM,
     BASE,
     CHANNEL_LABELS,
     VISIBILITY_LABELS,
+    archived,
     day_label,
     esc,
+    event_over,
     hhmm,
     notice,
     page,
@@ -36,6 +38,8 @@ from .web import (
 # Fixed texts for the notice after a change: a query parameter never puts its own words on a page.
 DONE = {
     "added": "Added.",
+    "added_next_day": "Added to the next day: its time is after midnight.",
+    "brought_back": "Brought back.",
     "saved": "Saved.",
     "delayed": "Delayed.",
     "cancelled": "Cancelled.",
@@ -50,15 +54,12 @@ DONE = {
 
 
 def _day(request: Request, days: list[date], today: date) -> date:
-    raw = request.query_params.get("day")
-    if raw:
-        try:
-            return date.fromisoformat(raw)
-        except ValueError:
-            pass
-    if today in days or not days:
+    """The day the switch marks first: the one a change came back to (`day`), else today."""
+    try:
+        wanted = date.fromisoformat(request.query_params.get("day", ""))
+    except ValueError:
         return today
-    return next((d for d in days if d > today), days[-1])
+    return wanted if wanted in days else today
 
 
 def chips(row: Any, item: dict[str, Any], now: datetime, tz: ZoneInfo) -> str:
@@ -89,77 +90,72 @@ async def run_of_show(request: Request) -> Response:
     tz, now = zone_of(request), d.now()
     seen = await viewer(request, session)
     channels = await read_channels(d)
+    view = day_list.view_of(request, seen.visibilities)
     async with d.db.tenant() as conn:
         rows = await store.items(conn, seen.visibilities)
         kind_rows = await store.kinds(conn)
-        today = now.astimezone(tz).date()
-        days = sorted({r["starts_at"].astimezone(tz).date() for r in rows})
-        day = _day(request, days, today)
-        on_day = [r for r in rows if r["starts_at"].astimezone(tz).date() == day]
-        wanted = request.query_params.get("item")
-        side = day_view.picked(rows if wanted else on_day, wanted, now)
+        side = day_view.picked(rows, view.item, now)
         log = await store.changes(conn, side["id"]) if side is not None else []
+        post = await posts.last(conn, tz)
     kinds = {k: str(r["name"]) for k, r in kind_rows.items()}
-    lines = []
-    now_shown = day != today
-    nowline = f'<li class="canccu-agenda-nowline" id="now"><span>Now {hhmm(now, tz)}</span></li>'
+    today = now.astimezone(tz).date()
     writes = session.has(WRITE)
-    for i, row in enumerate(on_day):
-        if not now_shown and row["starts_at"] > now:
-            lines.append(nowline)
-            now_shown = True
-        picked = side is not None and row["id"] == side["id"]
-        lines.append(day_view.row_html(row, kinds, now, tz, day, picked))
-        if writes and i + 1 < len(on_day):
-            lines.append(day_view.gap_html(row, on_day[i + 1], tz, day))
     done = DONE.get(request.query_params.get("done", ""))
     body = (notice(done) if done else "") + await undo.offer_html(
         d, session, request.query_params.get("undo")
     )
     # This view's own address, where a delay sheet's Close and Don't delay lead back to.
-    here = f"{BASE}/?" + urlencode({"day": day.isoformat(), **({"item": wanted} if wanted else {})})
-    hero = day_view.on_now(rows, now, tz) if day == today else None
+    here = view.href()
+    hero = day_view.on_now(rows, now, tz)
     if hero is not None:
-        body += day_view.hero_html(hero, now, tz, session, here)
-    body += day_view.days_html(days, day, today)
-    if on_day:
+        body += day_list.strip_html(hero, now, tz)
+        body += day_view.hero_html(hero, now, tz, session, here, post)
+    if rows:
+        listed, days = day_list.build(
+            rows, kinds, now, tz, view, None if side is None else side["id"], writes
+        )
+        filters = day_list.filter_html(view, seen.visibilities)
+        body += day_list.days_html(days, _day(request, days, today), filters)
         aside = ""
         if side is not None:
             item = model.item_json(side, kind_rows, channels)
-            close = f"{BASE}/?day={day.isoformat()}" if wanted == side["id"] else None
+            picked_here = view.item == side["id"]
+            close = view.href(item=None) + f"#r-{side['id']}" if picked_here else None
             history = changes_html(log, tz, today)
-            aside = day_view.side_html(side, item, kinds, now, tz, session, close, history, here)
-        tail = "" if now_shown else nowline
-        tail += day_view.add_row_html(day) if writes else ""
-        body += f'<div class="canccu-agenda-day">{day_view.list_html(lines, tail)}{aside}</div>'
+            back = _bring_back(request, side, session, now)
+            why = _read_only(request)
+            aside = day_view.side_html(
+                side, item, kinds, now, tz, session, close, history, here, back, why
+            )
+        body += f'<div class="canccu-agenda-day">{listed}{aside}</div>'
     else:
         add = (
-            f'<a class="canccu-button canccu-button--primary" href="{BASE}/add?day={day}">'
+            f'<a class="canccu-button canccu-button--primary" href="{BASE}/add">'
             f"{icon('plus')}Add the first item</a>"
             if writes
             else ""
         )
-        what = "today" if day == today else f"on {day_label(day)}"
         text = "Add the first item, or start from a template." if writes else "Check back later."
         body += (
             '<section class="canccu-card">'
-            + empty_state("calendar", f"Nothing {what} yet", text, add)
+            + empty_state("calendar", "Nothing in the run of show yet", text, add)
             + "</section>"
         )
     body += await _delay_sheet(request, rows, now, here) if writes else ""
-    # Only a phone needs it: a long press shows a gap's line, and the bar's Quick add follows the
-    # gap in view. Hover and focus show the line through the stylesheet, with no script.
-    body += f'<script src="{BASE}/static/day.js" defer></script>' if writes else ""
+    # The day switch follows the scroll and a phone keeps what is on now in view; for a writer
+    # a long press shows a gap's line. The page works without it.
+    body += f'<script src="{BASE}/static/day.js" defer></script>'
     actions = (
-        f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/new?day={day}">'
+        f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/new">'
         "Full form</a>"
-        f'<a class="canccu-button canccu-button--primary" href="{BASE}/add?day={day}">'
+        f'<a class="canccu-button canccu-button--primary" href="{BASE}/add">'
         f"{icon('plus')}Quick add</a>"
         if writes
         else ""
     )
-    count = f"{len(on_day)} item{'' if len(on_day) == 1 else 's'}, {len(rows)} in all"
-    about = f"{day:%A} {day.day} {day:%B} · {count} · times in {tz}"
+    on_today = sum(1 for r in rows if r["starts_at"].astimezone(tz).date() == today)
+    count = f"{on_today} item{'' if on_today == 1 else 's'} today, {len(rows)} in all"
+    about = f"{today:%A} {today.day} {today:%B} · {count} · times in {tz}"
     return page(
         request,
         "Run of show",
@@ -169,6 +165,18 @@ async def run_of_show(request: Request) -> Response:
         description=about,
         narrow=False,
     )
+
+
+def _read_only(request: Request) -> str:
+    return f'<p class="canccu-agenda-muted">{ARCHIVED_ITEM}</p>' if archived(request) else ""
+
+
+def _bring_back(request: Request, row: Any, session: Any, now: datetime) -> str:
+    """A cancelled item comes back until the event ends (sheet 5); a session's item comes back
+    in the tournament module."""
+    if not session.has(WRITE) or row["status"] != "cancelled" or row["managed_by"] is not None:
+        return ""
+    return "" if event_over(request, now) else edit_pages.bring_back_form(row)
 
 
 async def _delay_sheet(request: Request, rows: list[Any], now: datetime, here: str) -> str:
@@ -236,6 +244,7 @@ async def item_page(request: Request) -> Response:
             + "</div>"
         )
     body += changes_html(log, tz, now.astimezone(tz).date())
+    body += _bring_back(request, row, session, now) + _read_only(request)
     return page(request, row["title"], body, session=session)
 
 

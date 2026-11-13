@@ -65,5 +65,5 @@ export function tickerView(c: ViewContext, now: TickerNow): Html {
     </div>
   </form>`;
   return html`<section class="canccu-card" data-live="ticker-now">${showing}</section>
-    ${form}`;
+    ${c.rights.has("screen.ticker.write") ? form : ""}`;
 }

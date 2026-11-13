@@ -18,6 +18,7 @@ const EN = {
   "studio.title": "Screen studio",
   "studio.page": "the Screen studio",
   "studio.back": "Back to the Screen studio",
+  "studio.archived": "The event is archived, so nothing in the Screen studio can be changed.",
   "tab.live": "Live",
   "tab.devices": "Devices",
   "tab.zones": "Zones and layouts",

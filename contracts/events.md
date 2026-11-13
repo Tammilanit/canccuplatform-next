@@ -82,7 +82,7 @@ Emitter: `notify`. Audience: personal. Payloads: [notify.md](notify.md#events-ve
 | Type | Meaning | Consumers |
 |---|---|---|
 | `notify.dm.requested` | A notification should reach a user as a Discord DM: the person chose DMs for its topic, or no push reached them | bot |
-| `notify.checkin.recorded` | A signed-in attendee checked in by the rotating QR | The module named in `purpose` (tournament for match check-in), admin |
+| `notify.checkin.recorded` | A signed-in attendee checked in by the rotating QR | The module named in `purpose` (tournament for match check-in), admin, screen (re-reads the count of arrival check-ins) |
 
 ## Screen
 Emitter: `screen`. Audience: system, except where noted. Payloads: [screen.md](screen.md#events-version-1).

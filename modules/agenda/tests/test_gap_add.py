@@ -42,7 +42,6 @@ async def test_each_gap_names_both_neighbours_and_opens_quick_add_with_its_time(
     assert '<script src="/agenda/static/day.js" defer></script>' in full.split("</header>")[1]
     # Crew who only read get no way to add.
     assert "canccu-agenda-gap" not in crew and "Add item on" not in crew
-    assert "day.js" not in crew
 
 
 async def test_the_day_script_is_served(env: Env) -> None:

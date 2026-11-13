@@ -28,7 +28,7 @@ from .deps import Deps, deps
 from .effective import read_channels
 from .inverse import Inverse
 from .item_pages import load_item
-from .preview import change_of, confirm_rows, told, when_moved
+from .preview import change_of, confirm_rows, the_day, told, when_moved
 from .web import (
     BASE,
     button,
@@ -78,10 +78,18 @@ def _time(new: datetime, old: datetime, tz: ZoneInfo) -> str:
 
 
 def facts(
-    plan: Any, row: Any, kinds: Any, channels: list[str], tz: ZoneInfo, now: datetime, told_: bool
+    plan: Any,
+    row: Any,
+    kinds: Any,
+    channels: list[str],
+    tz: ZoneInfo,
+    now: datetime,
+    told_: bool,
+    later: list[Any] | None = None,
 ) -> list[tuple[str, str]]:
-    """The confirm's rows for one plan: the item's new times, what else moves and what stays,
-    then what each surface does. Values are HTML."""
+    """The confirm's rows for one plan: the item's new times, what else moves and what stays (or,
+    when only this item moves, what that does to the `later` items), then what each surface
+    does. Values are HTML."""
     own = next(m for m in plan.moves if m[0]["id"] == row["id"])
     _, starts, ends = own
     if row["starts_at"] <= now:  # running: its start stays (edits._shifted)
@@ -101,7 +109,8 @@ def facts(
         also += '<br><span class="canccu-agenda-muted">' + "<br>".join(map(esc, kept)) + "</span>"
     changes = [change_of(r, kinds, channels, s) for r, s, _ in plan.moves]
     who = told("delay", changes, now, announce=told_)
-    return [("Starts", when), ("Also moves", also)] + [(k, esc(v)) for k, v in who]
+    day = ("The day", the_day(row, starts, ends, later, tz)) if later and not others else None
+    return [("Starts", when), day or ("Also moves", also)] + [(k, esc(v)) for k, v in who]
 
 
 async def preview(request: Request, row: Any, minutes: int) -> str:
@@ -137,6 +146,9 @@ def _confirm(
     tz, now = zone_of(request), deps(request).now()
     back = f'<a class="canccu-button canccu-button--secondary" href="{esc(back)}">Don\'t delay</a>'
     out = ""
+    after = plans.get(True)
+    later = [] if not after or isinstance(after, KitError) else after.moves
+    later = [r for r, _, _ in later if r["id"] != row["id"]]
     for following, plan in plans.items():
         for told_ in (True, False):
             tags = f'data-following="{int(following)}" data-announce="{int(told_)}"'
@@ -144,7 +156,7 @@ def _confirm(
                 out += f'<div class="canccu-agenda-variant" {tags}>{notice(plan.message, "error")}'
                 out += f'<div class="canccu-agenda-confirm-actions">{back}</div></div>'
                 continue
-            rows = facts(plan, row, kinds, channels, tz, now, told_)
+            rows = facts(plan, row, kinds, channels, tz, now, told_, later)
             body = "".join(f"<dt>{esc(k)}</dt><dd>{v}</dd>" for k, v in rows)
             action = button(_label(minutes, len(plan.moves), told_), name="minutes", value=minutes)
             out += (

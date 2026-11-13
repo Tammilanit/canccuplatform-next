@@ -1,7 +1,8 @@
-// The second pass of scripts/demo-screenshots (#440, #437, #441): the front doors and People in
-// the states the first pass cannot reach, after scripts/demo-screenshots-front.sql seeded people,
-// a session without a role and events before, after and away from their venue. Each shot must
-// answer its own status and show its state's words, so a screenshot of the wrong state fails.
+// The second pass of scripts/demo-screenshots (#440, #437, #441, #439): the front doors, People
+// and an archived event's pages in the states the first pass cannot reach, after
+// scripts/demo-screenshots-front.sql seeded people, a session without a role, events before,
+// after and away from their venue, and the archived one's item. Each shot must answer its own
+// status and show its state's words, so a screenshot of the wrong state fails.
 // Usage: node demo-screenshots-front.mjs [--dry-run] [--base BASE_URL] [--out DIR]
 import { mkdirSync } from "node:fs";
 import { parseArgs } from "node:util";
@@ -171,6 +172,25 @@ const SHOTS = [
     PHONE,
     { act: tap, text: "This code has expired" },
   ],
+  // An archived event is read-only (#439, sheet 2 and 8): no Quick add in the bar, an item
+  // without its actions, and the Studio without what changes something.
+  ...[DESK, PHONE].flatMap((viewport) => {
+    const phone = viewport === PHONE ? "-phone" : "";
+    return [
+      [
+        `agenda-archived${phone}`,
+        "/agenda/?earlier=1&item=demo-archived-show",
+        viewport,
+        { host: ARCHIVED, text: "is archived, so this item" },
+      ],
+      [
+        `screen-studio-archived${phone}`,
+        "/admin/screen/",
+        viewport,
+        { host: ARCHIVED, text: "nothing in the Screen studio can be changed" },
+      ],
+    ];
+  }),
   [
     "privacy-phone",
     "/notify/privacy",

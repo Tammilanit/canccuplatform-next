@@ -1,7 +1,8 @@
 -- What the front-door screenshots (scripts/demo-screenshots-front.mjs) need and the CI stack has
 -- no API for: people who signed in (admin's sign-in needs Discord, which CI cannot run), a session
--- without a role, and events before, after and away from their venue. Run by
--- scripts/demo-screenshots as the database superuser, after the first pass, on the CI stack only.
+-- without a role, events before, after and away from their venue, and the archived one's item.
+-- Run by scripts/demo-screenshots as the database superuser, after the first pass, on the CI
+-- stack only.
 -- Superuser writes bypass RLS, so `tenant_id` is given, as deploy/compose.ci.yml's seed does.
 BEGIN;
 
@@ -52,5 +53,17 @@ INSERT INTO hostnames (hostname, tenant_id, kind, status, is_primary) VALUES
   ('demo-archived.localhost', 'demo-archived', 'platform', 'active', true),
   ('demo-soon.localhost', 'demo-soon', 'platform', 'active', true),
   ('demo-elsewhere.localhost', 'demo-elsewhere', 'platform', 'active', true)
+  ON CONFLICT DO NOTHING;
+-- The archived event's run of show (#439): one item of its day, which its pages show read-only.
+-- Its state row too, so the agenda never adds its starter kinds beside this one (store.ensure_event).
+INSERT INTO agenda_state (tenant_id) VALUES ('demo-archived') ON CONFLICT DO NOTHING;
+INSERT INTO agenda_kinds (tenant_id, key, name, builtin) VALUES ('demo-archived', 'other', 'Other', true)
+  ON CONFLICT DO NOTHING;
+INSERT INTO agenda_items (tenant_id, id, title, kind, starts_at, ends_at, planned_starts_at,
+                          planned_ends_at, visibility)
+  VALUES ('demo-archived', 'demo-archived-show', 'Show', 'other',
+          now() - interval '30 days' + interval '2 hours', now() - interval '30 days' + interval '3 hours',
+          now() - interval '30 days' + interval '2 hours', now() - interval '30 days' + interval '3 hours',
+          'public')
   ON CONFLICT DO NOTHING;
 COMMIT;

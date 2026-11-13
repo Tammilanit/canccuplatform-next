@@ -19,6 +19,7 @@ from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
 from . import model
+from .day_view import span
 from .web import VISIBILITY_LABELS, day_label, esc, hhmm
 
 Action = Literal["delay", "cancel", "move"]
@@ -186,3 +187,32 @@ def confirm_rows(rows: Sequence[tuple[str, str]]) -> str:
         '<section class="canccu-card canccu-agenda-preview" aria-label="Preview">'
         f'<dl class="canccu-dl">{body}</dl></section>'
     )
+
+
+def _overlap(starts: datetime, ends: datetime, other: Any) -> int:
+    """Minutes `other` shares with the span; a moment shares from its start to the span's end."""
+    if other["ends_at"] is None:
+        inside = starts <= other["starts_at"] < ends
+        return int((ends - other["starts_at"]).total_seconds() // 60) if inside else 0
+    shared = min(ends, other["ends_at"]) - max(starts, other["starts_at"])
+    return max(0, int(shared.total_seconds() // 60))
+
+
+def the_day(
+    row: Any, starts: datetime, ends: datetime | None, later: list[Any], tz: ZoneInfo
+) -> str:
+    """What a delay of this item alone does to the items after it (sheet 5, "The day"): they keep
+    their times, and each one it now runs into more than before is named."""
+    if len(later) == 1:
+        out = "The item after it keeps its time."
+    else:
+        out = f"The {len(later)} items after it keep their times."
+    for other in later if ends is not None else []:
+        before = _overlap(row["starts_at"], row["ends_at"], other) if row["ends_at"] else 0
+        now_ = _overlap(starts, ends, other)  # type: ignore[arg-type]
+        if now_ > before:
+            out += (
+                f" {other['title']} ({hhmm(other['starts_at'], tz)}) now overlaps it by"
+                f" {span(now_)}."
+            )
+    return esc(out)

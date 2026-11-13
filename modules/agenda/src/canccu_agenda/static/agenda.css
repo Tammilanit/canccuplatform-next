@@ -95,7 +95,7 @@
     font-weight: 550;
     color: var(--canccu-ink-muted);
   }
-  :where(.canccu-page) .canccu-agenda-days a[aria-current="page"] {
+  :where(.canccu-page) .canccu-agenda-days a[aria-current] {
     background: var(--canccu-raised);
     border-color: color-mix(in srgb, var(--canccu-color-text) 55%, transparent);
     box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
@@ -335,8 +335,13 @@
     outline-offset: 2px;
   }
   .canccu-agenda-form { display: grid; gap: 1.25rem; }
+  /* Quick add's own length field only for Other… (sheet 5). */
+  .canccu-agenda-quick fieldset:has(input[name="length"][value="other"]:not(:checked)) input[name="minutes"] { display: none; }
   .canccu-agenda-form > .canccu-field { margin: 0; }
   .canccu-agenda-when { display: grid; grid-template-columns: minmax(0, 1fr) 6.5rem; gap: 0.5rem; }
+  /* The typed day only for "Other date…" (web.when_inputs), below the day and the time. */
+  .canccu-agenda-when__other { grid-column: 1 / -1; }
+  .canccu-agenda-when:has(option[value="other"]:not(:checked)) .canccu-agenda-when__other { display: none; }
   .canccu-agenda-fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 0.5rem; }
   .canccu-agenda-fieldset legend {
     padding: 0;
