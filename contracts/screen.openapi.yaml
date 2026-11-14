@@ -37,7 +37,7 @@ tags:
   - name: ticker
     description: The manual ticker and its windows.
   - name: photos
-    description: The photo carousel.
+    description: The photo wall.
   - name: clone
     description: Copying screen content from another event of the series.
 security:
@@ -1148,7 +1148,7 @@ components:
         display:
           type: object
           description: How the zone's screens move (contracts/screen.md, Motion and burn-in drift).
-          required: [motion, drift]
+          required: [motion_level, motion_style, motion, drift]
           properties:
             motion_level:
               $ref: "#/components/schemas/MotionLevel"
@@ -1321,7 +1321,10 @@ components:
           description: The preview time, from now to 14 days ahead; null or absent for now.
         theme_preview_key:
           type: [string, "null"]
-          description: Theming's key to the event's draft (contracts/theming.md, Draft, preview, publish).
+          description: |
+            Theming's key to the event's draft (contracts/theming.md, Draft, preview, publish), in the pattern of
+            theming's `PreviewKey`. The device draws the draft over the revision in effect, a pinned or frozen one too.
+          pattern: "^[A-Za-z0-9_-]{32,64}$"
     Preview:
       type: object
       required: [device_id, device_name, zone_key, until, at, theme, started_by, started_at]

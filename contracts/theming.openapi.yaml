@@ -770,8 +770,8 @@ paths:
       operationId: getRevisionFile
       summary: A file of a kept revision
       description: |
-        Public, immutable, content-addressed. Answers only CSS, WOFF2, PNG, JPEG, WebP and SVG of this event's
-        kept revisions; never HTML or JS. SVG also carries a sandboxing CSP and `Content-Disposition: attachment`.
+        Public in every status, immutable, content-addressed. Answers only CSS, WOFF2, PNG, JPEG, WebP and SVG of
+        this event's kept revisions and of revision 0 (its generated files); never HTML or JS. SVG also carries a sandboxing CSP and `Content-Disposition: attachment`.
       security:
         - {}
       responses:
@@ -803,12 +803,14 @@ paths:
       description: |
         For the organiser shell's header and the sign-in and check-in posters (packages/ui), which name this one
         address instead of reading the theme. With a logo in the current theme (`logo_url` of `GET
-        /api/theming/current`, the profile's main logo at revision 0) a `302` to that immutable address; without
-        one, the event's initials (the first letter of each of the first two words of its name, whole characters,
-        XML-escaped; `?` without a name) as a square SVG in the theme's primary and accent colours, as the shell's avatar draws them. The name
-        comes from `GET /api/tenants/current`; a tenants module that does not answer gives `?`. Public in `live`
-        and `archived`, like `/theming/a/`; `Cache-Control: no-cache`, so a newly published logo shows on the next
-        page.
+        /api/theming/current`; at revision 0 the profile's main logo, once theming takes it in, under `/theming/a/`)
+        a `302` to that immutable address; without one, the event's initials (the first letter of each of the first
+        two words of its name, whole characters, upper-cased and XML-escaped; `?` when tenants gives no name) as a
+        square SVG: `primary_text` letters on a `primary`-to-`accent` gradient, in the colours of
+        `admin_tokens_css_url`. The name comes from `GET /api/tenants/current` on tenants' internal address with the
+        request's own hostname as `Host`, its public answer kept up to 30 s per hostname; a tenants module that does
+        not answer gives `?`. Public in `live` and `archived`; `Cache-Control: no-cache`, so a newly published logo
+        shows on the next page. Only this address hides a draft's logo: `/theming/a/` is public in every status.
 
         While the event is `draft`, guests see no event (tenants.md, Lifecycle): theming reads `GET
         /api/tenants/current` with the request's own `Cookie` header. An answer with the event's name (a session
@@ -854,6 +856,12 @@ paths:
               schema:
                 type: string
                 enum: [no-cache, "private, no-cache"]
+            X-Content-Type-Options:
+              $ref: "#/components/headers/NoSniff"
+            Cross-Origin-Resource-Policy:
+              $ref: "#/components/headers/SameOriginResource"
+        "304":
+          description: The SVG is unchanged since the `If-None-Match` the request sent (its `ETag`).
         "404":
           $ref: "#/components/responses/NotFound"
   /theming/current/{file}:
@@ -1236,7 +1244,10 @@ components:
           type: string
           enum: [moderate, calm, none]
         motion_style:
-          description: The theme's `motion_style` token as set; a field it does not set takes its default (contracts/theming.md, Motion vocabulary).
+          description: |
+            The theme's `motion_style` token as set: only the fields the theme sets, the others left out (and the whole
+            token absent when it sets none); a reader takes each missing field's default (contracts/theming.md, Motion
+            vocabulary).
           type: object
           properties:
             speed:

@@ -407,6 +407,7 @@
         description: "`not_found`: no such device, a revoked one, or one with no zone."
       "409":
         $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+        description: "`event_archived`: the event is read-only."
   delete:
     tags: [devices]
     operationId: endDevicePreview

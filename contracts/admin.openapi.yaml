@@ -725,7 +725,8 @@ components:
           description: |
             How the organiser's Settings form groups the module's declared settings, in the order the form
             shows them. Every declared key is in exactly one group; `[]` for a module that declares none. A
-            client that draws no form ignores it; an answer without it reads as `[]`.
+            client that draws no form ignores it, and a form draws no key it leaves out; an answer without it
+            reads as `[]`. A deploy can change it without a new `settings_version`.
           items:
             $ref: "#/components/schemas/SettingsGroup"
     SettingsGroup:
@@ -739,15 +740,17 @@ components:
           examples: [network]
         label:
           type: string
-          description: The group's heading.
+          description: The group's heading, in the event's language (admin's `language` setting).
           examples: [When the network is slow]
         description:
           type: string
-          description: One line under the heading; may be empty.
+          description: One line under the heading, in the same language; may be empty.
           examples: [How long a screen waits before it says so.]
         keys:
           type: array
           description: The group's settings, in the order the form shows them.
+          minItems: 1
+          uniqueItems: true
           items:
             type: string
             pattern: "^[a-z][a-z0-9_]{0,63}$"
