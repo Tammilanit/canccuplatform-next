@@ -24,7 +24,7 @@ export function pickGroups(list) {
 
 // Longest prefix first: the Screen studio is served under /admin/.
 const PAGE_GROUPS = [
-  ["/admin/screen", "screen-studio"],
+  ["/admin/screen/", "screen-studio"],
   ["/admin/", "admin"],
   ["/agenda/", "agenda"],
   ["/notify/", "notify"],
@@ -80,6 +80,28 @@ const MAP = [
   ["modules/*", []],
 ];
 
+// Contract files a module's image copies and reads at runtime (its Dockerfile): a change to one is
+// a change to that module, not a doc.
+const READ_AT_RUNTIME = new Map([
+  ["contracts/profile.schema.json", "admin"],
+  ["contracts/theme.schema.json", "theming"],
+  ["contracts/flags.yaml", "tenants"],
+]);
+const asModule = (path) =>
+  READ_AT_RUNTIME.has(path)
+    ? `modules/${READ_AT_RUNTIME.get(path)}/${path}`
+    : path;
+
+/** The module a changed path of a module tier belongs to. */
+export const moduleOf = (path) => asModule(path).split("/")[1];
+
+// scripts/demo-stack-test has tests of admin, agenda, notify and screen only: tenants serves
+// admin's People and sign-in, screen-render renders for screen.
+const API_OF = { tenants: "admin", "screen-render": "screen" };
+
+/** The module whose API tests (scripts/demo-stack-test --only) cover a module. */
+export const apiOf = (module) => API_OF[module] ?? module;
+
 const glob = (pattern) =>
   new RegExp(
     `^${pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`,
@@ -88,5 +110,6 @@ const RULES = MAP.map(([pattern, needs]) => [glob(pattern), needs]);
 
 /** `docs`, `full` or the screenshot groups a changed path needs. */
 export function needsOf(path) {
-  return RULES.find(([re]) => re.test(path))?.[1] ?? "full";
+  const own = asModule(path);
+  return RULES.find(([re]) => re.test(own))?.[1] ?? "full";
 }
