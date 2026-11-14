@@ -55,13 +55,19 @@
     justify-content: space-between;
   }
 
-  /* A line with no height, so its value centres on it; the rule runs on to the box's edge. */
+  /*
+   * A line one label tall, pulled back by half of it on both sides: its outer height is 0, so
+   * space-between puts its centre at its value, and the value and rule centre on that point. (A
+   * grid of height 0 still sizes its row to the label and hangs it below the line, #524.) The rule
+   * runs on to the box's edge.
+   */
   .canccu-widget__gridline {
     display: grid;
     grid-template-columns: var(--canccu-graph-gutter) 1fr;
     column-gap: var(--canccu-u);
     align-items: center;
-    height: 0;
+    height: calc(3 * var(--canccu-u));
+    margin-block: calc(-1.5 * var(--canccu-u));
     font-size: calc(3 * var(--canccu-u));
     line-height: 1;
     font-variant-numeric: tabular-nums;
