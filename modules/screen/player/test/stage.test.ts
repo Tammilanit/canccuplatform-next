@@ -174,3 +174,43 @@ describe("the stage on the kiosk's page", () => {
     }
   }); // prettier-ignore
 });
+
+describe("the promoted hot game (sheet 15)", () => {
+  it("says since when the game surges, in the event's time zone, as a widget and as a claim", async () => {
+    const { Screen } = await import("../src/screen.js");
+    const { screenState } = await import("./fake.js");
+    const since = new Date(T0 - 600_000).toISOString(); // 21:00:30 UTC, 23:00 in Helsinki
+    const hot = { game: { name: "Demo Game", cover_url: null }, players: 14, since, qr: null, stale: false, empty: false };
+    const region = (over: Record<string, unknown>) => ({
+      id: "hero", role: "hero", area: { column: 1, row: 1, columns: 6, rows: 6 }, layer: 0,
+      rotation: "sequence", order: [0], cycle_started_at: new Date(T0).toISOString(), idle: "logo",
+      idle_view: null, widgets: [], claim: null, ...over,
+    });
+    const claim = {
+      override_id: "ov_1", hidden: false, role: "hero", rank: 80, template: "hot_game", content: hot,
+      steps: null, sound: null, on_end: "resume", starts_at: new Date(T0 - 1000).toISOString(),
+      ends_at: null, expires_at: null,
+    };
+    const host = { serverNow: () => T0, reducedMotion: () => true };
+    const surging = (r: Record<string, unknown>) => {
+      const s = screenState({
+        tenant: { id: "alpha", name: "Demo Event", time_zone: "Europe/Helsinki", status: "live" },
+        layout: { id: "pulse", aspect: "16:9", grid: { columns: 12, rows: 12 } },
+        regions: [region(r)],
+        display: { motion: "none", drift: false },
+      });
+      return new Screen(host).draw(s).querySelector(".canccu-widget--hot_game .canccu-widget__since")?.textContent;
+    };
+    const asWidget = { widgets: [{ widget: "hot_game", template: null, dwell_seconds: 10, view: hot }] };
+    expect(surging(asWidget)).toBe("surging since 23:00");
+    expect(surging({ claim })).toBe("surging since 23:00");
+  }); // prettier-ignore
+
+  it("leaves the line out without a since", () => {
+    const box = document.createElement("div");
+    box.append(
+      ...renderTree(DEFAULT_TEMPLATES.hot_game ?? [], { game: { name: "Demo Game" }, players: 14 }),
+    );
+    expect(box.querySelector(".canccu-widget__since")).toBeNull();
+  });
+});

@@ -160,6 +160,12 @@
     font-size: calc(4.4 * var(--canccu-u));
   }
 
+  /* Under its players, quieter (sheet 15): since when the game surges. */
+  .canccu-widget--hot_game .canccu-widget__since {
+    font-size: calc(3.4 * var(--canccu-u));
+    color: var(--canccu-color-text-muted);
+  }
+
   /* The playlist's media fill the widget edge to edge, with no card (src/media.ts). The widget
      stays absolute, inset 0 like every widget: it is the media's containing block, and set back
      to relative it would collapse to its absolute children's height, 0 px. */

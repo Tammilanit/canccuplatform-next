@@ -185,6 +185,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     el("p", "kicker", [t("Hot right now")]),
     sec("game", sec("cover_url", img("cover_url", "image")), el("p", "big", [f("name")])),
     el("p", "meta", [f("players"), t(" playing now")]),
+    sec("since_text", el("p", "since", [t("surging since "), f("since_text")])),
     QR,
   ],
   now_playing: [

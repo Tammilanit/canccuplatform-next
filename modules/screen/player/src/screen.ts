@@ -249,7 +249,8 @@ export class Screen {
       if (!claim.hidden || !takeover) {
         drawn.claim = claim;
         drawn.next = null;
-        return { ...shown, template: null, dims: false };
+        const view = liveView(shown.type, shown.view, now, state.tenant.time_zone);
+        return { ...shown, view, template: null, dims: false };
       }
     } else if (drawn.claim !== null) {
       // The claim ended here, or a state dropped it: `next` skips the rest of the widget the

@@ -212,9 +212,10 @@
    * playing ranks its games, each row's count with its arrow. The arrow's glyph is drawn here, as
    * the template names only its direction. Colours are the theme's own tokens, not ui.css's inks:
    * an ink is an oklab mix, which the rendered readability check (test/stack/readability.mjs)
-   * cannot read.
+   * cannot read. Under the parent class, or screen.css's `.canccu-widget ul { margin: 0 }` would
+   * win and the row would not take the box's free height around it.
    */
-  .canccu-widget__stats {
+  .canccu-widget .canccu-widget__stats {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;

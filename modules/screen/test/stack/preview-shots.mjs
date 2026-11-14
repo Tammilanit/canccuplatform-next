@@ -2,6 +2,7 @@
 // play (studio-shots.mjs): the zone editor's dialog and its notice, the hall screen with its
 // "Preview" mark, and the Theme studio's dialog and notice on a draft made for it. Every preview
 // and the draft are removed afterwards, so the shots after these see the live zone.
+import { markCoversNothing } from "./clear.mjs";
 import { expect } from "./client.mjs";
 
 const DESK = { width: 1280, height: 800 };
@@ -20,6 +21,7 @@ const noticed = async (page) => {
 const marked = async (page) => {
   await page.locator(".canccu-preview-mark").waitFor({ timeout: 30_000 });
   await page.waitForTimeout(2000);
+  await markCoversNothing(page);
 };
 // The Theme studio's screen preview is screen's player of the main zone (scripts/demo-screenshots).
 const kitDrawn = async (page) => {
