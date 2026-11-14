@@ -39,6 +39,10 @@ runs:
         } >> "$GITHUB_OUTPUT"
     - name: Build the module images
       uses: docker/bake-action@v6
+      # Each stack job would otherwise upload a build record per run, beside demo-screenshots.
+      env:
+        DOCKER_BUILD_RECORD_UPLOAD: "false"
+        DOCKER_BUILD_SUMMARY: "false"
       with:
         source: .
         workdir: deploy

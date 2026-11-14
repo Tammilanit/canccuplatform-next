@@ -94,9 +94,13 @@ shoot() {
     node "scripts/$1" --base "$BASE" --out /out "${picks[@]}" "${@:2}"
 }
 # Whether a pass takes a shot in the chosen groups: its dry run, in the image as the pass runs.
+# Read whole, then searched: `grep -q` in the pipe stops at the first match, breaks the dry run's
+# pipe, and pipefail would read that as "no shot", skipping the pass in silence.
 takes() {
-  docker run --rm -u "$user" -e HOME=/tmp -v "$work:/work" -w /work "$IMAGE" \
-    node "scripts/$1" --dry-run "${picks[@]}" | grep -q "$2"
+  local listed
+  listed=$(docker run --rm -u "$user" -e HOME=/tmp -v "$work:/work" -w /work "$IMAGE" \
+    node "scripts/$1" --dry-run "${picks[@]}") || { echo "error: $1 --dry-run failed" >&2; exit 1; }
+  grep -q -- "$2" <<< "$listed"
 }
 shoot demo-screenshots.mjs
 status=$?
