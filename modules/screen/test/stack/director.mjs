@@ -2,7 +2,8 @@
 // design guideline sheet 13), handed to the main zone's Pulse as screens.mjs hands its other
 // views: the hero's features in turn with the thin line, a surge jumping the queue with the ring,
 // and two boxes that would turn together pushed three seconds apart.
-import { GAME, TILES } from "./handed.mjs";
+import { graphsScaled } from "./dashboard.mjs";
+import { GAME, TILES, hour } from "./handed.mjs";
 
 const ago = (ms) => new Date(Date.now() - ms).toISOString();
 const feature = (widget, view, dwell) => ({
@@ -20,11 +21,10 @@ const TODAY = {
   day_text: "Saturday",
   online_peak: { count: 231, at: "2026-03-14T23:30:00Z", time_text: "01:30" },
   photos: 38,
-  points: [40, 62, 88, 120, 150, 171, 160, 198, 231, 212].map((value, i) => ({
-    time_text: `${String(10 + i).padStart(2, "0")}:00`,
-    value,
-    level: Math.round((10 * value) / 231),
-  })),
+  scale: [300, 200, 100, 0].map((value) => ({ value })),
+  points: [40, 62, 88, 120, 150, 171, 160, 198, 231, 212].map((value, i) =>
+    hour(10 + i, value, 300, 3),
+  ),
 };
 
 /** Each strip: its view, its frames, and the gap before each frame after the first. */
@@ -102,9 +102,11 @@ const untilStill = (page) =>
  * The first two take each frame once every fade has settled; the choreographer's show the turns.
  */
 export async function directorStrip(page, view, shoot) {
+  let graphs = 0;
   const frame = async (n) => {
     if (view !== "choreographer") await untilStill(page);
-    return shoot(`f${n}`);
+    await shoot(`f${n}`);
+    graphs += await graphsScaled(page);
   };
   if (view === "director-ring") {
     await page.waitForSelector(".canccu-region--hero .canccu-widget--hot_game.canccu-is-active");
@@ -121,6 +123,8 @@ export async function directorStrip(page, view, shoot) {
       await frame(n);
       if (n < 3) await page.waitForTimeout(6000);
     }
+    // The line's turn passes "Today in numbers", whose graph must show its scale (#523).
+    if (graphs === 0) throw new Error("director-line: no frame drew a graph");
     return;
   }
   await untilTurn(page, 6, 5000);

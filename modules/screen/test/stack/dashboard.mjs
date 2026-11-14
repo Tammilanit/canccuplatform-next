@@ -98,3 +98,43 @@ export function crowded(boxes, gap) {
   });
   return problems;
 }
+
+/**
+ * Each graph the screen shows draws its value scale and its hours (#523): three gridlines or more
+ * with their values, and at least one hour named, all inside the graph's card. The top line sits
+ * on the bars' box's top and the "0" line on the bars' feet, within 2 px, or the scale misreads
+ * every bar (#524). Answers how many graphs it found, so a strip can tell that one of its frames
+ * held one.
+ */
+export async function graphsScaled(page) {
+  const graphs = await page.evaluate(() =>
+    [...document.querySelectorAll(".canccu-widget.canccu-is-active .canccu-widget__graph")].map((graph) => {
+      const card = graph.closest(".canccu-widget").getBoundingClientRect();
+      const inside = (el) => {
+        const r = el.getBoundingClientRect();
+        return el.textContent.trim() !== "" && r.width > 0 && r.left >= card.left - 1 &&
+          r.right <= card.right + 1 && r.top >= card.top - 1 && r.bottom <= card.bottom + 1;
+      };
+      const count = (sel) => [...graph.querySelectorAll(sel)].filter(inside).length;
+      const middle = (el) => {
+        const r = el.getBoundingClientRect();
+        return (r.top + r.bottom) / 2;
+      };
+      const lines = [...graph.querySelectorAll(".canccu-widget__gridline")];
+      const feet = Math.max(...[...graph.querySelectorAll(".canccu-widget__point")].map((p) => p.getBoundingClientRect().bottom));
+      const top = graph.getBoundingClientRect().top + parseFloat(getComputedStyle(graph).paddingTop);
+      return {
+        lines: count(".canccu-widget__gridline"), hours: count(".canccu-widget__hour"),
+        topOff: lines.length ? Math.round(middle(lines[0]) - top) : null,
+        baseOff: lines.length ? Math.round(middle(lines[lines.length - 1]) - feet) : null,
+      };
+    }),
+  ); // prettier-ignore
+  const bare = graphs.filter((g) => g.lines < 3 || g.hours < 1);
+  if (bare.length > 0)
+    throw new Error(`a graph without its scale or hours: ${JSON.stringify(bare)}`);
+  const off = graphs.filter((g) => Math.abs(g.topOff) > 2 || Math.abs(g.baseOff) > 2);
+  if (off.length > 0)
+    throw new Error(`a graph whose gridlines miss their values (px): ${JSON.stringify(off)}`);
+  return graphs.length;
+}

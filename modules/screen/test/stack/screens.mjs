@@ -12,7 +12,7 @@
 // The Director's strips (#447, director.mjs) are frames a few seconds apart.
 import { CLEAR_CHECKS, panelFilled } from "./clear.mjs";
 import { expect } from "./client.mjs";
-import { boxesGivenAway, statsApart, stripNamesCountdown } from "./dashboard.mjs";
+import { boxesGivenAway, graphsScaled, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, stripNames, withDirector } from "./director.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
 import {
@@ -351,6 +351,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       else await layout(page, size);
       // A showcase pauses Right now, the Dashboard's one `stats` box (#447): no numbers to keep apart.
       if (view.startsWith("dashboard") && view !== "dashboard-showcase") await statsApart(page);
+      if (view === "dashboard") await graphsScaled(page);
       // #443's views draw what they are named for before the shot.
       const drawn = NEW_VIEWS[view];
       if (drawn !== undefined) await page.waitForSelector(drawn, { timeout: 30_000 });
