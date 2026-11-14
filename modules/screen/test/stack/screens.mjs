@@ -15,9 +15,9 @@ import { expect } from "./client.mjs";
 import {
   boxesGivenAway,
   graphsScaled,
-  railSettled,
   statsApart,
   stripNamesCountdown,
+  turnsSettled,
 } from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, stripNames, withDirector } from "./director.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
@@ -405,7 +405,6 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         await railShowsAgenda(page);
       await settle(page);
       if (showcase) await CLEAR_CHECKS[view]?.(page);
-      if (view === "dashboard-showcase-small") await railSettled(page);
       await playing(nameOf(theme, view, size), page);
       await close();
     }
@@ -536,8 +535,9 @@ async function expiryLast(page) {
     throw new Error("the pairing frame's expiry sits above its instruction");
 }
 
-/** Fonts and images loaded, the entry fade done. */
+/** Fonts and images loaded, the entry fade done, and no turn caught mid-crossfade (#535). */
 async function settle(page) {
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(1500);
+  await turnsSettled(page);
 }

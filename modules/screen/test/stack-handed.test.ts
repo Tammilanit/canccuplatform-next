@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withSmallShowcase } from "./stack/handed.mjs";
+import { withShowcase, withSmallShowcase } from "./stack/handed.mjs";
 
 const region = (id: string, widgets: string[], order: number[]) => ({
   id,
@@ -38,5 +38,20 @@ describe("withSmallShowcase", () => {
   it("fails on a rail without a run of show", () => {
     const s = { regions: [region("hero", ["playlist"], [0]), region("rail", ["countdown"], [0])] };
     expect(() => withSmallShowcase(s)).toThrow(/run of show/);
+  });
+});
+
+describe("withShowcase", () => {
+  it("holds the rail on the countdown the player would draw: only `empty: true` is empty", () => {
+    const s = dashboard();
+    // A view the player does not take as empty (hero-rail.ts, `w.view.empty !== true`).
+    const rail = s.regions[1];
+    if (rail?.widgets[0] !== undefined) Object.assign(rail.widgets[0].view, { empty: "no" });
+    expect(withShowcase(s).regions.find((r) => r.id === "rail")?.order).toEqual([0]);
+  });
+
+  it("fails on a rail without a countdown", () => {
+    const s = { regions: [region("hero", ["playlist"], [0]), region("rail", ["agenda_now"], [0])] };
+    expect(() => withShowcase(s)).toThrow(/countdown/);
   });
 });

@@ -3,6 +3,7 @@ interface Region {
   id: string;
   order: number[];
   claim: { template: string } | null;
-  widgets: { widget: string }[];
+  widgets: { widget: string; view: { empty?: boolean } }[];
 }
+export function withShowcase<S extends { regions: Region[] }>(s: S): S;
 export function withSmallShowcase<S extends { regions: Region[] }>(s: S): S;
