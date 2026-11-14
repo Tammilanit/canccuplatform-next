@@ -14,6 +14,7 @@ Every module serves `GET /health` with the same shape (`Health` in the OpenAPI f
 - `status`: `ok` (all checks ok), `degraded` (works with reduced function, e.g. a non-essential dependency down), `down` (cannot serve).
 - HTTP 200 for `ok` and `degraded`, 503 for `down`, so plain HTTP probes work.
 - `version` is the platform version (git tag) the module runs. `checks` has one entry per dependency, with an optional `detail` for people.
+- **Health note:** `GET /api/admin/health/note` → `{"status", "text"}`, what the organiser menu's Health item says on every module's shell ("Health 1 down", docs/design/mockups.html sheet 2). Right: `admin.settings.read`, the right that opens Health. It answers from admin's latest check of every part (every 10 seconds) and never waits for a new one. `status` is `down` when some part is down, else `degraded` when some part is slow, else `ok`; `text` says how many, down first (`"1 down, 2 slow"`), and is `""` with `ok`. Before admin's first check it is `ok` with `""`. For the shell only: a module reads health from each part's own `/health`.
 
 ## Settings
 - `GET /api/admin/settings/{module}` → `{"module", "settings_version", "values"}`. Right: `admin.settings.read`, or `<module>.settings.read` for a module reading its own settings.

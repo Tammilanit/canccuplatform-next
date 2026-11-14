@@ -22,14 +22,14 @@ from canccu_kit.ui import esc, icon, menu_for
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse, RedirectResponse, Response
+from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from starlette.routing import Route
 
 from .auth import Auth
 from .auth_routes import Authorize, OnEvent, OriginCheck, Viewer, auth_routes
 from .forms import from_form, typed
 from .health import HealthWatch
-from .health_view import health_body
+from .health_view import health_body, health_live
 from .pages import (
     BASE,
     MODULE_ICONS,
@@ -327,6 +327,20 @@ def create_app(
             f'href="{BASE}/health-view?check=now">{icon("refresh")}Check now</a>',
         )
 
+    async def health_note(request: Request) -> Response:
+        """The Health menu note for every organiser shell (admin's shell.js draws it): the watch's
+        latest check only, as every page of every module asks."""
+        await need(request, "admin.settings.read")
+        note = watch.latest.menu_note() if watch.latest else None
+        status, text = note or ("ok", "")
+        return JSONResponse({"status": status, "text": text})
+
+    async def health_page_live(request: Request) -> Response:
+        """The Health page's live parts alone, which health.js swaps in every 10 s."""
+        await need(request, "admin.settings.read")
+        event = await event_of(request)
+        return HTMLResponse(health_live(await watch.current(), event.time_zone if event else "UTC"))
+
     app = Starlette(
         routes=[
             Route("/api/admin/settings/{module}", get_settings, methods=["GET"]),
@@ -337,11 +351,13 @@ def create_app(
             Route("/internal/admin/profile/logo", internal_profile_logo, methods=["GET"]),
             Route("/api/admin/profile", get_profile, methods=["GET"]),
             Route("/api/admin/profile", put_profile, methods=["PUT"]),
+            Route("/api/admin/health/note", health_note, methods=["GET"]),
             Route("/", index),
             Route("/settings", settings_index),
             Route("/settings/{module}", settings_form, methods=["GET"]),
             Route("/settings/{module}", settings_save, methods=["POST"]),
             Route("/health-view", health_page),
+            Route("/health-view/live", health_page_live),
             Route("/static/ui.css", static_ui_css, methods=["GET"]),
             Route("/static/{name}.js", static_script, methods=["GET"]),
             *profile_routes(service, auth, need),

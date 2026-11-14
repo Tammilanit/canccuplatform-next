@@ -1,13 +1,14 @@
-"""The organiser shell's data and small parts: the menu, the event, icons, times and the state
-badge. canccu_kit.ui draws the pages from them and re-exports them for the modules."""
+"""The organiser shell's data and small parts: the menu, the event, icons, times, the state badge,
+the sign-out form and the HTML document around a page. canccu_kit.ui draws the shell and
+canccu_kit.ui_views the other views from them; canccu_kit.ui re-exports them for the modules."""
 
 from __future__ import annotations
 
 import html
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 # packages/ui/src/menu.json, which tests/test_ui.py holds this copy to.
@@ -286,3 +287,37 @@ def tabs_nav(title: str, tabs: Sequence[tuple[str, str, bool]]) -> str:
         else ""
     )
     return f'<nav class="canccu-tabs" aria-label="{esc(title)}">{links}{more}</nav>'
+
+
+def sign_out_form(label: str, cls: str) -> str:
+    return (
+        f'<form method="post" action="{MENU["sign_out"]}"><button class="{cls}" type="submit">'
+        f"{icon('out')}{esc(label)}</button></form>"
+    )
+
+
+def document(
+    title: str,
+    body: str,
+    *,
+    event: EventInfo | None = None,
+    css: Iterable[str] = (),
+    surface: Literal["admin", "hub"] = "admin",
+) -> str:
+    """The HTML document around a shell or front page; `css` are the stylesheets, ui.css first.
+
+    The event's look follows ui.css from theming's stable address (contracts/theming.md, The
+    current tokens, for pages): organiser pages take the admin tokens, which fall back to the
+    platform colours when the theme fails the contrast rules; the hub and check-in the theme's own.
+    A hostname with no event answers 404 there and the page keeps ui.css's defaults."""
+    full = f"{title} · {event.name}" if event and event.name else title
+    tokens = "admin-tokens.css" if surface == "admin" else "tokens.css"
+    hrefs = list(css)
+    hrefs[1:1] = [f"/theming/current/{tokens}"]
+    links = "".join(f'<link rel="stylesheet" href="{esc(href)}">' for href in hrefs)
+    return (
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        f"<title>{esc(full)}</title>{links}</head>"
+        f'<body class="canccu-page canccu-surface canccu-surface--{surface}">{body}</body></html>'
+    )

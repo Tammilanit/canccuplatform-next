@@ -46,6 +46,7 @@ const { values: opts } = parseArgs({
     base: { type: "string", default: "http://127.0.0.1" },
     out: { type: "string", default: "screenshots" },
     trouble: { type: "boolean", default: false },
+    "agenda-down": { type: "boolean", default: false },
     groups: { type: "string", default: GROUPS.join(",") },
     check: { type: "boolean", default: false },
   },
@@ -161,15 +162,27 @@ const followsRecovery = async (page) => {
   if (!(await page.evaluate(() => window.canccuSameDocument === true)))
     throw new Error("Health reloaded the page instead of swapping the check");
 };
+// Every module's shell says so too (#478): its menu's note comes from admin after the page loads
+// (admin's shell.js), and the shot waits for it.
+const noted = async (page) => {
+  await page.locator(HEALTH_NOTE).waitFor({ timeout: 30000 });
+};
 const TROUBLE = [
   ["health-view-trouble", "/admin/health-view", DESK, { ready: followsACheck }],
   ["health-view-trouble-phone", "/admin/health-view", PHONE, {}],
+  ["agenda-trouble", "/agenda/", DESK, { ready: noted }],
+  ["screen-devices-trouble", "/admin/screen/devices", DESK, { ready: noted }],
   [
     "health-view-recovered",
     "/admin/health-view",
     DESK,
     { ready: followsRecovery },
   ],
+];
+// Notify's own page can't be shot while notify is down: the third pass, `--agenda-down`, which
+// scripts/demo-screenshots runs while it holds the run of show stopped.
+const AGENDA_DOWN = [
+  ["notify-topics-trouble", "/notify/admin/topics", DESK, { ready: noted }],
 ];
 // The brand kit (mockup 12, design sheet 6), after the screens, so its screen preview is screen's
 // player of the main zone with the fixture's run of show: first with no draft, then with one in the
@@ -356,7 +369,9 @@ const CANCELLED = [
 // Only the groups this run takes (--groups): a shard, or a module PR's surfaces.
 const only = (list, group) =>
   list.splice(0, list.length, ...list.filter((entry) => want(group(entry))));
-only(TROUBLE, () => "admin");
+// The Health shots are admin's; the other pages' shots, their own module's.
+only(TROUBLE, ([, path]) => groupOf(path));
+only(AGENDA_DOWN, ([, path]) => groupOf(path));
 only(PAGES, ([, path]) => groupOf(path === CHECK_IN ? "/notify/" : path));
 only(SETTINGS_STATES, () => "admin");
 only(OTHERS, ([, path]) => groupOf(path));
@@ -373,6 +388,11 @@ if (opts["dry-run"]) {
   console.log(`dry run, would ${would}:`);
   for (const [name, path, { width, height }] of TROUBLE) {
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height}, --trouble)`);
+  }
+  for (const [name, path, { width, height }] of AGENDA_DOWN) {
+    console.log(
+      `  ${name}.png  ${at(path)}  (${width}×${height}, --agenda-down)`,
+    );
   }
   for (const [name, path, { width, height }] of PAGES) {
     const shown =
@@ -556,8 +576,10 @@ async function shot(
   }
 }
 
-if (opts.trouble) {
-  for (const [name, path, viewport, how] of TROUBLE) {
+if (opts.trouble || opts["agenda-down"]) {
+  for (const [name, path, viewport, how] of opts.trouble
+    ? TROUBLE
+    : AGENDA_DOWN) {
     await shot(name, path, viewport, SESSION, how);
   }
   await browser.close();
