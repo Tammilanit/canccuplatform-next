@@ -346,12 +346,17 @@ all_healthy() {
   done
 }
 check "${TESTS[27]}" all_healthy
+# The pages are asked from Caddy's own loopback, an address of the demo venue, as an organiser at
+# the event asks them: this runner reaches Caddy from Docker's gateway, which organiser pages
+# refuse by default (admin access, venue or Tailscale only: contracts/tenants.md). The first
+# status counts, so a redirect to sign in fails.
 # shellcheck disable=SC2329
 pages_answer() {
   local p
   for p in /admin/settings /admin/screen/live /theming/studio/ /agenda/ /notify/admin/topics; do
-    call GET "$p" -H "cookie: $COOKIE"
-    status_is 200 || { echo "$p" >> "$TMP/body"; return 1; }
+    code=$("${COMPOSE[@]}" exec -T caddy wget -S -q -O /dev/null --header "host: $DEMO_HOST" \
+      --header "cookie: $COOKIE" "http://127.0.0.1$p" 2>&1 | sed -n 's|^ *HTTP/[0-9.]* \([0-9]*\).*|\1|p' | head -n1)
+    status_is 200 || { echo "$p" > "$TMP/body"; return 1; }
   done
 }
 check "${TESTS[28]}" pages_answer
