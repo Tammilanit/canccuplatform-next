@@ -228,10 +228,11 @@ describe("the hero's features", () => {
     expect(lines.map((l) => l.textContent)).toEqual(["300", "200", "100", "0"]);
     // The bars' own labels say what a bar holds; the scale would only repeat it.
     expect(box.querySelector(".canccu-widget__scale")?.getAttribute("aria-hidden")).toBe("true");
-    const bars = [...box.querySelectorAll(".canccu-widget__point")];
-    expect(bars.map((b) => b.querySelector(".canccu-widget__hour")?.textContent)).toEqual([
-      undefined,
-      "18:00",
-    ]);
+    // One cell per bar, outside the bars: a label inside one would stand on the bar's colour.
+    const hours = box.querySelector(".canccu-widget__hours");
+    expect(hours?.getAttribute("aria-hidden")).toBe("true");
+    const cells = [...(hours?.querySelectorAll(".canccu-widget__hour") ?? [])];
+    expect(cells.map((c) => c.textContent)).toEqual(["", "18:00"]);
+    expect(box.querySelectorAll(".canccu-widget__point .canccu-widget__hour")).toHaveLength(0);
   });
 });

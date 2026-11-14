@@ -121,23 +121,23 @@ const CODE_BAR: TreeNode = sec(
  * A graph's hours as bars (the Dashboard's activity graph, "Today in numbers"): a template holds
  * no styles, so each bar's height out of 10 against the scale's top travels in its class, and the
  * look spaces the scale's gridlines evenly from the top down to 0 (director.css). The scale and the
- * hours are hidden from a reader: each bar's own label already says its hour and its count.
+ * hours are hidden from a reader: each bar's own label already says its hour and its count. The
+ * hours are a row of their own, one cell per bar, not inside the bars: text inside a bar stands on
+ * its colour for the readability check and in the tree, though it is drawn under the base.
  */
 const GRAPH: TreeNode = el("div", "graph", [
   el("div", "scale", [sec("scale", el("span", "gridline", [f("value")]))], {
     "aria-hidden": [t("true")],
   }),
+  el("div", "hours", [sec("points", el("span", "hour", [f("tick_text")]))], {
+    "aria-hidden": [t("true")],
+  }),
   sec(
     "points",
-    el(
-      "span",
-      null,
-      [sec("tick_text", el("span", "hour", [f("tick_text")], { "aria-hidden": [t("true")] }))],
-      {
-        class: [t("canccu-widget__point canccu-widget__point--"), f("level")],
-        "aria-label": [f("time_text"), t(": "), f("value")],
-      },
-    ),
+    el("span", null, [], {
+      class: [t("canccu-widget__point canccu-widget__point--"), f("level")],
+      "aria-label": [f("time_text"), t(": "), f("value")],
+    }),
   ),
 ]);
 

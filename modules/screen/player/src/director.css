@@ -74,12 +74,28 @@
     border-top: max(1px, calc(0.12 * var(--canccu-u))) solid var(--canccu-color-border);
   }
 
-  /* Under the half of the base's "0" that hangs below the line, so the first hour clears it. */
-  .canccu-widget__hour {
+  /*
+   * The hours: one cell per bar, laid out as the bars are (same box edges, same gap), so a named
+   * hour centres under its bar. It hangs below the half of the base's "0" under the line, so the
+   * first hour clears it.
+   */
+  .canccu-widget__hours {
     position: absolute;
-    top: calc(100% + 1.8 * var(--canccu-u));
-    left: 50%;
-    translate: -50% 0;
+    left: calc(var(--canccu-graph-gutter) + var(--canccu-u));
+    right: 0;
+    bottom: 0;
+    display: flex;
+    gap: calc(0.5 * var(--canccu-u));
+    height: var(--canccu-graph-hours);
+  }
+
+  /* No min-width, so a label wider than its bar overflows both sides instead of widening the cell. */
+  .canccu-widget__hour {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+    padding-top: calc(1.8 * var(--canccu-u));
     font-size: calc(3 * var(--canccu-u));
     line-height: 1;
     white-space: nowrap;
@@ -88,10 +104,8 @@
   }
 
   /* The newest hour's label ends on the box's edge instead of running past it. */
-  .canccu-widget__point:last-child .canccu-widget__hour {
-    left: auto;
-    right: 0;
-    translate: none;
+  .canccu-widget__hour:last-child {
+    justify-content: flex-end;
   }
 
   /* Ambient is large type over the background (layouts.css): its bars stand alone. */
@@ -100,12 +114,11 @@
   }
 
   .canccu-layout--ambient .canccu-widget__scale,
-  .canccu-layout--ambient .canccu-widget__hour {
+  .canccu-layout--ambient .canccu-widget__hours {
     display: none;
   }
 
   .canccu-widget__point {
-    position: relative;
     flex: 1;
     min-height: calc(0.6 * var(--canccu-u));
     border-radius: calc(0.4 * var(--canccu-u)) calc(0.4 * var(--canccu-u)) 0 0;
