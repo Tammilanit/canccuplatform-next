@@ -1,0 +1,119 @@
+/*
+ * The Director's look (contracts/screen.md, The Director; design guideline sheet 13): the turn
+ * indicator as a ring, and the graphs and figures of "Today in numbers" and the Dashboard's
+ * activity graph. The thin line is the rotation marks' bar (widgets.css). Colours are the theme's
+ * own tokens, as the readability check reads them (test/stack/readability.mjs).
+ */
+@layer canccu-base {
+  /* The ring: the turn fills clockwise in the top right corner; no dots, no bar. */
+  .canccu-rotation--ring {
+    inset: calc(2.2 * var(--canccu-u)) calc(2.2 * var(--canccu-u)) auto auto;
+    width: calc(4 * var(--canccu-u));
+    height: calc(4 * var(--canccu-u));
+    border-radius: 50%;
+    background: conic-gradient(
+      var(--canccu-color-primary) calc(var(--canccu-progress, 0) * 1turn),
+      var(--canccu-color-border) 0
+    );
+    mask: radial-gradient(closest-side, transparent 72%, #000 74%);
+  }
+
+  .canccu-rotation--ring > * {
+    display: none;
+  }
+
+  /* The ring sits in a corner, so the widget keeps its usual padding. */
+  .canccu-region:has(> .canccu-rotation--ring) > .canccu-widget {
+    padding-bottom: calc(2.4 * var(--canccu-u));
+  }
+
+  /* A graph: one bar per hour, from the baseline, its height out of 10 in its class. */
+  .canccu-widget__graph {
+    display: flex;
+    flex: 1;
+    align-items: flex-end;
+    gap: calc(0.5 * var(--canccu-u));
+    min-height: calc(10 * var(--canccu-u));
+    padding-top: calc(2 * var(--canccu-u));
+  }
+
+  .canccu-widget__point {
+    flex: 1;
+    min-height: calc(0.6 * var(--canccu-u));
+    border-radius: calc(0.4 * var(--canccu-u)) calc(0.4 * var(--canccu-u)) 0 0;
+    background: linear-gradient(180deg, var(--canccu-color-primary), var(--canccu-color-accent));
+  }
+
+  .canccu-widget__point:last-child {
+    background: var(--canccu-color-primary);
+  }
+
+  .canccu-widget__point--0 {
+    height: 0;
+  }
+  .canccu-widget__point--1 {
+    height: 10%;
+  }
+  .canccu-widget__point--2 {
+    height: 20%;
+  }
+  .canccu-widget__point--3 {
+    height: 30%;
+  }
+  .canccu-widget__point--4 {
+    height: 40%;
+  }
+  .canccu-widget__point--5 {
+    height: 50%;
+  }
+  .canccu-widget__point--6 {
+    height: 60%;
+  }
+  .canccu-widget__point--7 {
+    height: 70%;
+  }
+  .canccu-widget__point--8 {
+    height: 80%;
+  }
+  .canccu-widget__point--9 {
+    height: 90%;
+  }
+  .canccu-widget__point--10 {
+    height: 100%;
+  }
+
+  /* "Today in numbers": three figures side by side, the graph of the day under them. */
+  .canccu-widget__figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: calc(2.4 * var(--canccu-u));
+    margin: calc(2 * var(--canccu-u)) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .canccu-widget__figure {
+    display: flex;
+    flex-direction: column;
+    gap: calc(0.6 * var(--canccu-u));
+  }
+
+  .canccu-widget__figure .canccu-widget__big {
+    font-size: calc(9 * var(--canccu-u));
+    font-weight: 800;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+    color: var(--canccu-color-primary);
+  }
+
+  .canccu-widget__figure .canccu-widget__label {
+    font-size: calc(3.4 * var(--canccu-u));
+    color: var(--canccu-color-text-muted);
+  }
+
+  .canccu-widget--today_numbers .canccu-widget__meta,
+  .canccu-widget--activity_graph .canccu-widget__peak {
+    font-size: calc(3.4 * var(--canccu-u));
+    color: var(--canccu-color-text-muted);
+  }
+}

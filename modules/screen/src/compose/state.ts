@@ -190,7 +190,11 @@ export async function composeZone(
   const { theme, draft } = await lookFor(deps.sources, ctx.tenant_id, live, preview.themeKey);
   const eventName = event?.name ?? ctx.primary_hostname ?? "";
   // The phase and the highlight come before the build: the hero's features read them.
-  const items = phaseSource((await deps.sources.agendaDay?.(ctx.tenant_id)) ?? null, agenda, zoneKey);
+  const items = phaseSource(
+    (await deps.sources.agendaDay?.(ctx.tenant_id)) ?? null,
+    agenda,
+    zoneKey,
+  );
   const { display, motion } = displayOf({
     tokens: theme?.tokens,
     items,

@@ -85,7 +85,11 @@ describe("today in numbers", () => {
   };
 
   it("adds up the last 24 hours at wind-down only", () => {
-    const view = viewOf("today_numbers", {}, facts({ phase: "wind_down", presence, photosToday: 38 }));
+    const view = viewOf(
+      "today_numbers",
+      {},
+      facts({ phase: "wind_down", presence, photosToday: 38 }),
+    );
     expect(view).toMatchObject({
       empty: false,
       title: "Today in numbers",
@@ -143,7 +147,14 @@ describe("the Dashboard", () => {
     const dashboard = BUILT_IN_LAYOUTS.find((l) => l.id === "dashboard");
     const boxes = dashboard?.regions.filter((r) => !["header", "ticker"].includes(r.id)) ?? [];
     const firsts = boxes.map((r) => r.widgets[0]?.widget);
-    expect(firsts).toEqual(["playlist", "activity_graph", "voice_rooms", "now_playing", "stats", "agenda_now"]);
+    expect(firsts).toEqual([
+      "playlist",
+      "activity_graph",
+      "voice_rooms",
+      "now_playing",
+      "stats",
+      "agenda_now",
+    ]);
     expect(new Set(firsts).size).toBe(6);
   });
 

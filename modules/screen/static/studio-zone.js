@@ -157,7 +157,10 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
           Reflect.deleteProperty(s, name);
         else s[name] = value;
       };
-      set("rotation", r.querySelector("[name=rotation]").value || "sequence", "sequence");
+      // The hero's default is the Director's (contracts/screen.md, The Director).
+      set("rotation", r.querySelector("[name=rotation]").value, r.dataset.rotation);
+      const indicator = r.querySelector("[name=indicator]");
+      if (indicator) set("indicator", indicator.value, "line");
       set("idle", r.querySelector("[name=idle]").value || "logo", "logo");
       set("skip_empty", r.querySelector("[name=skip_empty]").checked, true);
       const dwell = r.querySelector("[name=dwell_seconds]").value;

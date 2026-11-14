@@ -618,8 +618,15 @@ components:
             $ref: "#/components/schemas/WidgetEntry"
         rotation:
           type: string
-          enum: [sequence, shuffle]
-          default: sequence
+          description: |
+            `director`: the Director picks the features (contracts/screen.md, The Director). Without the setting, a region
+            whose role is `hero` rotates by `director` and any other by `sequence`.
+          enum: [sequence, shuffle, director]
+        indicator:
+          type: string
+          description: How a hero region's screens show its turn (contracts/screen.md, The Director).
+          enum: [line, ring, "off"]
+          default: line
         dwell_seconds:
           type: integer
           minimum: 5
@@ -631,7 +638,8 @@ components:
           type: string
           description: |
             `next`: the zone's next run-of-show item with a big countdown, else the logo (contracts/screen.md, The Pulse options).
-            With `logo`, set or left at the default, a region of only `stats` and `now_playing` that are all empty gives
+            With `logo`, set or left at the default, a region of only statistics (`stats`, `now_playing`, `activity_graph`,
+            `voice_rooms`) that are all empty gives
             its cells to the regions beside it instead (contracts/screen.md, Boxes waiting for their source).
           enum: [logo, blank, collapse, next]
           default: logo
@@ -888,12 +896,17 @@ components:
           type: integer
         rotation:
           type: string
-          enum: [sequence, shuffle]
+          description: A screen that does not know the value rotates by `sequence`.
+          enum: [sequence, shuffle, director]
         order:
           type: array
-          description: Indexes into `widgets` for the current cycle.
+          description: Indexes into `widgets` for the current cycle; for `director`, in the Director's order.
           items:
             type: integer
+        indicator:
+          type: string
+          description: The hero's turn indicator (contracts/screen.md, The Director); `off` for the synthetic regions.
+          enum: [line, ring, "off"]
         cycle_started_at:
           $ref: "#/components/schemas/Time"
         idle:

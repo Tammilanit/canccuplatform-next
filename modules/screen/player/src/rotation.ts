@@ -45,7 +45,7 @@ export function shownAt(
   region: Rotating,
   zoneKey: string,
   nowMs: number,
-): { index: number | null; until: number } {
+): { index: number | null; until: number; from?: number } {
   const jump = region.rotation === "director" ? jumpAt(region.widgets, region.order, nowMs) : null;
   if (jump !== null) return jump;
   const dwellMs = (i: number): number => (region.widgets[i]?.dwell_seconds ?? 0) * 1000;

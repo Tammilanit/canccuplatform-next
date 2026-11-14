@@ -1,13 +1,15 @@
 /**
- * The hero's rotation marks (#375, mockup 02): a bar through the shown widget's time and a dot per
- * widget, the shown one active (widgets.css draws them).
+ * The hero's rotation marks (#375, mockup 02) and the Director's turn indicator (sheet 13, Q22):
+ * as a thin line, a bar through the shown widget's time and a dot per widget, the shown one
+ * active; as a ring, a ring filling over that time; or nothing (widgets.css draws them). A queue
+ * jump's turn fills over the jump's own time.
  */
 import { shownAt } from "./rotation.js";
 import type { Region } from "./state.js";
 
-function rotationMarks(count: number): HTMLElement {
+function rotationMarks(count: number, ring: boolean): HTMLElement {
   const marks = document.createElement("div");
-  marks.className = "canccu-rotation";
+  marks.className = ring ? "canccu-rotation canccu-rotation--ring" : "canccu-rotation";
   const part = (cls: string): HTMLElement => {
     const span = document.createElement("span");
     span.className = cls;
@@ -32,7 +34,7 @@ export function syncMarks(
   now: number,
 ): HTMLElement | null {
   const at =
-    widget && region.role === "hero" && region.order.length > 1
+    widget && region.role === "hero" && region.order.length > 1 && region.indicator !== "off"
       ? shownAt(region, zoneKey, now)
       : null;
   if (at === null || at.index === null) {
@@ -40,13 +42,18 @@ export function syncMarks(
     return null;
   }
   let marks = current;
-  if (marks?.childElementCount !== region.order.length + 1) {
+  const ring = region.indicator === "ring";
+  if (
+    marks?.childElementCount !== region.order.length + 1 ||
+    marks.classList.contains("canccu-rotation--ring") !== ring
+  ) {
     marks?.remove();
-    marks = rotationMarks(region.order.length);
+    marks = rotationMarks(region.order.length, ring);
     el.append(marks);
   }
   const dwellMs = (region.widgets[at.index]?.dwell_seconds ?? 0) * 1000;
-  const progress = dwellMs > 0 ? 1 - (at.until - now) / dwellMs : 0;
+  const turnMs = at.from === undefined ? dwellMs : at.until - at.from;
+  const progress = turnMs > 0 ? 1 - (at.until - now) / turnMs : 0;
   marks.style.setProperty("--canccu-progress", String(Math.round(progress * 1000) / 1000));
   // The dots follow the place order, so a shuffled cycle still lights the widget it shows.
   const plain = [...region.order].sort((x, y) => x - y);

@@ -65,10 +65,7 @@ const METRICS = {
 } as const;
 
 /** The activity graph (`props.metric`: `online`, the default, or `in_voice`) of the last 24 hours. */
-export function graphFields(
-  metric: unknown,
-  facts: FeatureFacts,
-): Record<string, unknown> | null {
+export function graphFields(metric: unknown, facts: FeatureFacts): Record<string, unknown> | null {
   const key = metric === "in_voice" ? "in_voice" : "online";
   const points = facts.presence?.[key] ?? [];
   if (points.length < GRAPH_MIN_HOURS) return null;

@@ -11,6 +11,9 @@ import type { Motion } from "./display.js";
 import { MotionLayer, levelOf, styleOf, transitionsOf } from "./motion.js";
 import { StageLayer } from "./stage.js";
 import { agendaOf, joinHeroAndRail } from "./hero-rail.js";
+import { idleOf, zoneNameOf } from "./idle.js";
+import type { Shown } from "./idle.js";
+import { Choreographer } from "./pacing.js";
 import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
 import { fitTickers } from "./ticker.js";
@@ -24,7 +27,6 @@ import {
   liveView,
   shownView,
 } from "./widget.js";
-import type { View } from "./widget.js";
 
 export interface ScreenHost {
   /** This device's clock corrected to the server's. */
@@ -36,19 +38,6 @@ export interface ScreenHost {
 
 /** How long a widget may wait for its images, video or page before it fades in anyway. */
 export const READY_MS = 2000;
-
-/** What a region shows: `key` names the thing, so a new key fades and the same key updates. */
-interface Shown {
-  key: string;
-  type: string;
-  template: string | null;
-  view: View;
-  /**
-   * Dims while the page is offline. Kept out of the view `show()` compares: going offline must
-   * not redraw a widget, which would reload an embed's frame just as the uplink drops.
-   */
-  dims: boolean;
-}
 
 interface Drawn {
   el: HTMLElement;
@@ -88,6 +77,7 @@ export class Screen {
   /** The level, pack and effects live on `<body>` (contracts/theming.md, Classes). */
   private readonly motion = new MotionLayer(document.body);
   private readonly stage = new StageLayer(document.body);
+  private readonly pace = new Choreographer();
 
   constructor(private readonly host: ScreenHost) {}
 
@@ -198,15 +188,26 @@ export class Screen {
       }),
       state.tenant.time_zone,
     );
-    for (const [i, drawn] of drawns.entries()) {
+    const shown = drawns.map((drawn, i) => {
       const part = joined[i];
       const own = chosen[i];
       // The join took the rail's only row for the hero (hero-rail.ts): never an empty card.
       const emptied =
         part?.view.empty === true && !(typeof own === "object" && own?.view.empty === true);
-      const shown = emptied ? idleOf(drawn.state, state) : (part ?? own ?? null);
-      this.show(drawn, shown, motion);
-      const widget = typeof shown === "object" && shown !== null && !shown.key.startsWith("claim:");
+      return emptied ? idleOf(drawn.state, state) : (part ?? own ?? null);
+    });
+    const released = this.pace.release(
+      drawns.flatMap((d, i) => (paced(d.shown, shown[i]) ? [d.state.id] : [])),
+      now,
+    );
+    for (const [i, drawn] of drawns.entries()) {
+      const next = shown[i] ?? null;
+      // A change the choreographer holds back keeps the box as it is, until its turn.
+      const held = paced(drawn.shown, next) && released !== drawn.state.id;
+      this.show(drawn, held ? drawn.shown : next, motion);
+      const onScreen = held ? drawn.shown : next;
+      const widget =
+        typeof onScreen === "object" && onScreen !== null && !onScreen.key.startsWith("claim:");
       drawn.marks = syncMarks(
         drawn.marks,
         drawn.el,
@@ -388,28 +389,16 @@ export class Screen {
   }
 }
 
-/** The region's idle choice: what it shows with nothing to rotate, or with its rail emptied. */
-function idleOf(r: Region, state: ScreenState): Shown | "collapse" | null {
-  if (r.idle === "blank") return null;
-  if (r.idle === "collapse") return "collapse";
-  const base = { template: null, dims: false };
-  if (r.idle === "next" && r.idle_view !== null) {
-    const view = { ...r.idle_view.view, next_up: true };
-    return { ...base, key: "idle:next", type: "countdown", view };
-  }
-  // `logo`, and any idle value this player does not know (contracts/screen.md, The Pulse options).
-  const view = { url: state.theme.logo_url, name: state.tenant.name, qr: null, empty: false };
-  // The server sends no logo view without a theme logo, so the header's zone comes from here too.
-  const zoneName = zoneNameOf(r, state);
-  return { ...base, key: "idle:logo", type: "logo", view: { ...view, ...zoneName, stale: false } };
-}
+/** What a key names before its content: the rotation's index, `idle` or `claim` (`choose`). */
+const turnOf = (key: string): string => key.slice(0, key.indexOf(":"));
 
 /**
- * The zone's name for a header logo, unless the zone hides it (`zone.show_name`, sheet 16: one
- * screen has nothing to tell apart). Only the header's: elsewhere the logo is the event's card.
+ * A notable change for the choreographer (pacing.ts): a box turning to another of its widgets.
+ * New content in the same widget (a ticker's line, the next slide) is the widget's own. A claim
+ * is the crew's or a cue's and shows at once; a first draw and a box emptying never wait.
  */
-function zoneNameOf(r: Region, state: ScreenState): { zone_name?: string } {
-  const zone = state.zone;
-  if (r.role !== "header" || zone === null || zone.show_name === false) return {};
-  return { zone_name: zone.name };
+function paced(from: Shown | null, to: Shown | "collapse" | null | undefined): boolean {
+  if (from === null || typeof to !== "object" || to === null) return false;
+  const [a, b] = [turnOf(from.key), turnOf(to.key)];
+  return a !== b && a !== "claim" && b !== "claim";
 }

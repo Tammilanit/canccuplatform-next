@@ -3,6 +3,7 @@ import { buildRegions, shownAt } from "../src/compose/build.js";
 import type { BuildInput, RegionView } from "../src/compose/build.js";
 import { directorOrder, jumpAt } from "../src/compose/director.js";
 import type { ZoneFacts } from "../src/compose/widgets.js";
+import { zoneInput } from "../src/zone-input.js";
 import { shownAt as playerShownAt } from "../player/src/rotation.js";
 
 // The Director (contracts/screen.md, The Director; design guideline sheet 13).
@@ -55,11 +56,32 @@ describe("the Director's settings", () => {
     expect(regionOf({ hero: { indicator: "off" } }, "hero").indicator).toBe("off");
     expect(regionOf({ hero: { indicator: "spin" } }, "hero").indicator).toBe("line");
   });
+
+  it("takes the Director and the indicator as zone settings, and refuses another indicator", () => {
+    const zone = (hero: Record<string, unknown>) => ({
+      key: "main",
+      name: "Main",
+      regions: { hero },
+    });
+    expect(zoneInput(zone({ rotation: "director", indicator: "ring" })).regions.hero).toEqual({
+      rotation: "director",
+      indicator: "ring",
+    });
+    expect(() => zoneInput(zone({ indicator: "spin" }))).toThrow(/indicator/);
+  });
 });
 
 describe("the Director's order", () => {
   it("puts the features in the sheet's order, the rest after them as placed", () => {
-    const widgets = ["qr", "photo", "playlist", "hot_game", "countdown", "today_numbers", "bracket"];
+    const widgets = [
+      "qr",
+      "photo",
+      "playlist",
+      "hot_game",
+      "countdown",
+      "today_numbers",
+      "bracket",
+    ];
     const order = directorOrder(
       widgets.map((widget) => ({ widget })),
       [0, 1, 2, 3, 4, 5, 6],
@@ -94,9 +116,15 @@ describe("queue jumps", () => {
 
   it("gives a new photo the turn while it pops in large", () => {
     const until = new Date(NOW + 6000).toISOString();
-    const widgets = [feature("playlist"), feature("photo", { featured: true, featured_until: until })];
+    const widgets = [
+      feature("playlist"),
+      feature("photo", { featured: true, featured_until: until }),
+    ];
     expect(jumpAt(widgets, [0, 1], NOW)).toEqual({ index: 1, until: NOW + 6000 });
-    const still = [feature("playlist"), feature("photo", { featured: false, featured_until: null })];
+    const still = [
+      feature("playlist"),
+      feature("photo", { featured: false, featured_until: null }),
+    ];
     expect(jumpAt(still, [0, 1], NOW)).toBeNull();
   });
 
@@ -118,7 +146,11 @@ describe("queue jumps", () => {
       widgets: [feature("countdown"), feature("playlist"), feature("hot_game", { since })],
     };
     expect(shownAt(region, "main", NOW)?.widget).toBe("hot_game");
-    expect(playerShownAt(region, "main", NOW)).toEqual({ index: 2, until: NOW + 40_000 });
+    expect(playerShownAt(region, "main", NOW)).toEqual({
+      index: 2,
+      from: NOW - 20_000,
+      until: NOW + 40_000,
+    });
     for (let t = NOW; t < NOW + 120_000; t += 1000) {
       const server = shownAt(region, "main", t);
       const player = playerShownAt(region, "main", t);

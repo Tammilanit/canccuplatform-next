@@ -242,8 +242,12 @@ function fields(
     }
     case "countdown": {
       if (props.highlight !== true)
-        return countdownFields(facts, typeof props.item_id === "string" ? props.item_id : undefined);
-      const highlight = facts.highlight == null ? null : countdownFields(facts, undefined, facts.highlight);
+        return countdownFields(
+          facts,
+          typeof props.item_id === "string" ? props.item_id : undefined,
+        );
+      const highlight =
+        facts.highlight == null ? null : countdownFields(facts, undefined, facts.highlight);
       return highlight === null ? null : { ...highlight, highlight: true };
     }
     case "today_numbers":
