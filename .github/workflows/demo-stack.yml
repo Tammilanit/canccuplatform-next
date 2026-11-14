@@ -58,7 +58,7 @@ jobs:
           BASE: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_sha || 'HEAD^1' }}
         run: |
           node scripts/demo-stack-plan.mjs --event "$EVENT" --base "$BASE"
-          printf '%s\n' 'tier=docs' 'api=' 'soak=false' 'check=false' 'shards=[]' | tee -a "$GITHUB_OUTPUT"
+          printf '%s\n' 'tier=module' 'api=agenda' 'soak=false' 'check=false' 'shards=[{"shard":"pages","groups":"agenda"}]' | tee -a "$GITHUB_OUTPUT"
       - name: TEMPORARY the queue entry's base fetch, with this PR's base as the entry's base
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
