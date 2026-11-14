@@ -1,15 +1,16 @@
 // The screens' screenshots and their readability check (#191, L7, L9): every demo theme on the
 // Pulse and the device-state frames, the default theme at 1080p and 4K, landscape and portrait,
-// the others at 1080p; the claims of mockup 04 and the entrance zone of mockup 03 in the default
-// theme. Each PNG is named as the view it shows, `theming-<theme>-screen-<view>-<w>x<h>.png`, and
-// fails the run when its text does not read from across a hall (readability.mjs). States the demo
-// stack cannot reach (refused, moved, archived, a claim from Moments) are the player's own answer
-// to a device answer or a state the page is handed, so the frame is the real one. The other
-// built-in layouts (#404, sheet 10) are shot landscape in every theme, at 4K in the default one,
-// and Ambient once under an emergency takeover, which keeps its fixed red there too. Dashboard is
-// handed sample statistics (#416), and shot once as the server draws it while they are missing.
+// the others at 1080p; the claims of mockup 04, an emergency in the hero and the entrance zone of
+// mockup 03 in the default theme. Each PNG is named as the view it shows,
+// `theming-<theme>-screen-<view>-<w>x<h>.png`, and fails the run when its text does not read from
+// across a hall (readability.mjs). States the demo stack cannot reach (refused, moved, archived, a
+// claim from Moments) are the player's own answer to a device answer or a state the page is
+// handed, so the frame is the real one. The other built-in layouts (#404, sheet 10) are shot
+// landscape in every theme, at 4K in the default one, and Ambient once under an emergency
+// takeover, which keeps its fixed red there too. Dashboard is handed sample statistics (#416),
+// and shot once as the server draws it while they are missing.
 // The Director's strips (#447, director.mjs) are frames a few seconds apart.
-import { CLEAR_CHECKS } from "./clear.mjs";
+import { CLEAR_CHECKS, panelFilled } from "./clear.mjs";
 import { expect } from "./client.mjs";
 import { boxesGivenAway, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, stripNames, withDirector } from "./director.mjs";
@@ -47,7 +48,13 @@ const sizesOf = (theme, check) => (theme === "default" && !check ? [...HD, ...UH
 /** The frames that differ by theme; the others are drawn before any theme reaches the page. */
 const THEMED = ["pulse", "identify", "offline", "unassigned", "archived"];
 const UNTHEMED = ["pairing", "refused", "moved", "unreachable", "check"];
-const CLAIMS = ["claim-rail", "claim-hero", "claim-overlay", "claim-takeover"];
+const CLAIMS = [
+  "claim-rail",
+  "claim-hero",
+  "claim-overlay",
+  "claim-takeover",
+  "claim-hero-emergency",
+];
 /** The built-ins besides the Pulse and Portrait: 16:9 each, so drawn landscape only. */
 const LAYOUTS = ["dashboard", "hero", "split", "ambient"];
 const landscapeOf = (theme, check) => sizesOf(theme, check).filter(([w, h]) => w > h);
@@ -79,8 +86,8 @@ export function planned(check = false) {
     }
     for (const size of landscapeOf(theme, check))
       for (const view of LAYOUTS) out.push(nameOf(theme, view, size));
+    out.push(nameOf(theme, "dashboard-showcase", HD[0]));
   }
-  out.push(nameOf("default", "dashboard-showcase", HD[0]));
   out.push(nameOf("default", "dashboard-waiting", HD[0]));
   out.push(nameOf("default", "ambient-takeover", HD[0]));
   out.push(nameOf("default", "ambient-online", HD[0]));
@@ -176,10 +183,9 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         for (const size of landscapeOf(theme, check))
           for (const view of LAYOUTS)
             await attempt(nameOf(theme, view, size), () => layoutShot(theme, view, size));
-        if (theme === "default")
-          await attempt(nameOf(theme, "dashboard-showcase", HD[0]), () =>
-            layoutShot(theme, "dashboard", HD[0], "dashboard-showcase"),
-          );
+        await attempt(nameOf(theme, "dashboard-showcase", HD[0]), () =>
+          layoutShot(theme, "dashboard", HD[0], "dashboard-showcase"),
+        );
         if (theme === "default")
           await attempt(nameOf(theme, "dashboard-waiting", HD[0]), () =>
             layoutShot(theme, "dashboard", HD[0], "dashboard-waiting"),
@@ -258,6 +264,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await railShowsAgenda(page);
       await tickerFitted(page, theme === "default" && size === HD[0]);
       await settle(page);
+      await panelFilled(page);
       await shot(nameOf(theme, "pulse", size), page);
       expect(
         await demo.call("POST", `/api/screen/devices/${main.id}/commands`, {
@@ -298,6 +305,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await railShowsAgenda(page);
       if (view === "dashboard-waiting") await boxesGivenAway(page);
       await settle(page);
+      if (view === "hero") await panelFilled(page);
       await shot(nameOf(theme, view, size), page);
       await close();
     }
@@ -350,8 +358,10 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       if (view === "rail-empty") await railShowsIdle(page);
       else if (view === "dashboard-showcase") {
         await stripNamesCountdown(page);
-        await tickerFitted(page, true);
-      } else if (view === "ambient-takeover") await takeoverIsRed(page);
+        // Level-up draws its own ticker template: no built-in line there to crawl.
+        await tickerFitted(page, theme !== "level-up");
+      } else if (view === "ambient-takeover") await emergencyIsRed(page, "_full");
+      else if (view === "claim-hero-emergency") await emergencyIsRed(page, "hero");
       else if (view === "stage-surge") return await surgeStrip(page, theme, view, size, close);
       else if (view.startsWith("director-") || view === "choreographer") {
         await settle(page);
@@ -464,13 +474,24 @@ async function tickerFitted(page, crawls) {
     throw new Error("the demo's long ticker does not crawl");
 }
 
-/** The emergency takeover wears its fixed red (claims.css) whatever the layout does to its cards. */
-async function takeoverIsRed(page) {
-  const sel = ".canccu-region--_full > .canccu-widget--announcement";
+/**
+ * An emergency wears its fixed red (claims.css) whatever the layout does to its cards, and in the
+ * hero no theme band paints the theme's glows over it (stage.css).
+ */
+async function emergencyIsRed(page, region) {
+  const sel = `.canccu-region--${region} > .canccu-widget--announcement`;
   await page.waitForSelector(sel, { timeout: 30_000 });
-  const background = await page.$eval(sel, (card) => getComputedStyle(card).backgroundColor);
+  const { background, band } = await page.$eval(sel, (card) => {
+    const theme = card.querySelector(".canccu-widget__band--theme");
+    return {
+      background: getComputedStyle(card).backgroundColor,
+      band: theme === null ? "none" : getComputedStyle(theme).display,
+    };
+  });
   if (background !== "rgb(185, 28, 28)")
-    throw new Error(`the emergency takeover's background is ${background}, not its fixed red`);
+    throw new Error(`the emergency in the ${region} region is ${background}, not its fixed red`);
+  if (band !== "none")
+    throw new Error(`the emergency in the ${region} region shows the theme's band`);
 }
 
 /** The rail shows its idle choice, on both of its turns: never the emptied run of show. */
