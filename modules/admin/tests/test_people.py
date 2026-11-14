@@ -123,6 +123,20 @@ async def test_remove_asks_first_then_signs_them_out(
     assert "Aino was removed" in page and "aino" not in page.split("Aino was removed")[1].lower()
 
 
+async def test_a_removed_person_gets_no_role(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A stale sheet or People tab after Remove in another tab: the grant is refused."""
+    await owner_and_member(world, caplog)
+    aino = next(u for u, _ in await world.store.list_users() if u.name == "Aino")
+    await world.client.post(f"/admin/people/{aino.id}/remove")
+    before = len(_rights_events(world))
+    r = await world.client.post(f"/admin/people/{aino.id}", data={"role": "admin"})
+    assert r.status_code == 404
+    assert await world.store.get_role(aino.id) == (aino, None)
+    assert len(_rights_events(world)) == before
+
+
 async def test_the_owner_cannot_be_removed(world: World, caplog: pytest.LogCaptureFixture) -> None:
     await owner_and_member(world, caplog)
     owner_id = (await world.client.get("/api/admin/session")).json()["user"]["id"]
