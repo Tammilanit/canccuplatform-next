@@ -214,4 +214,24 @@ describe("the hero's features", () => {
     expect(box.querySelector(".canccu-widget__peak")?.textContent).toBe("peak 231 · 01:30");
     expect(box.querySelectorAll(".canccu-widget__point--5")).toHaveLength(1);
   });
+
+  it("draws a graph's value scale beside its bars and the labelled hours under them", () => {
+    const box = draw("activity_graph", {
+      label: "Online · 24 h",
+      scale: [{ value: 300 }, { value: 200 }, { value: 100 }, { value: 0 }],
+      points: [
+        { time_text: "17:00", value: 120, level: 4 },
+        { time_text: "18:00", value: 231, level: 8, tick_text: "18:00" },
+      ],
+    });
+    const lines = [...box.querySelectorAll(".canccu-widget__scale .canccu-widget__gridline")];
+    expect(lines.map((l) => l.textContent)).toEqual(["300", "200", "100", "0"]);
+    // The bars' own labels say what a bar holds; the scale would only repeat it.
+    expect(box.querySelector(".canccu-widget__scale")?.getAttribute("aria-hidden")).toBe("true");
+    const bars = [...box.querySelectorAll(".canccu-widget__point")];
+    expect(bars.map((b) => b.querySelector(".canccu-widget__hour")?.textContent)).toEqual([
+      undefined,
+      "18:00",
+    ]);
+  });
 });

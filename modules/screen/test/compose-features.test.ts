@@ -111,7 +111,13 @@ describe("today in numbers", () => {
       online_peak: { count: 231, time_text: "15:42" },
       photos: 38,
     });
-    expect((view.points as unknown[]).length).toBe(3);
+    expect(view.points).toEqual([
+      { time_text: "13:00", value: 100, level: 3 },
+      // "Today in numbers" labels every third hour: the hero panel is wider than a box.
+      { time_text: "15:00", value: 231, level: 8, tick_text: "15:00" },
+      { time_text: "17:00", value: 212, level: 7 },
+    ]);
+    expect(view.scale).toEqual([{ value: 300 }, { value: 200 }, { value: 100 }, { value: 0 }]);
     expect(viewOf("today_numbers", {}, facts({ phase: "peak", presence })).empty).toBe(true);
   });
 
@@ -126,7 +132,7 @@ describe("today in numbers", () => {
 });
 
 describe("the activity graph", () => {
-  it("averages each hour of the last 24 and scales its bars to the highest", () => {
+  it("averages each hour of the last 24", () => {
     const points = hourlyOf(
       [count(26, 999), count(2.5, 100), count(2.2, 120), count(0.5, 220)],
       (c) => c.online,
@@ -134,23 +140,32 @@ describe("the activity graph", () => {
       NOW,
     );
     expect(points).toEqual([
-      { time_text: "18:00", value: 110, level: 5 },
-      { time_text: "20:00", value: 220, level: 10 },
+      { time_text: "18:00", value: 110 },
+      { time_text: "20:00", value: 220 },
     ]);
   });
 
   it("draws online or in voice, and waits under three hours of counts", () => {
-    const three = [count(3, 100, 5), count(2, 150, 9), count(1, 200, 12)];
+    const hours = [count(3, 100, 5), count(2, 150, 9), count(1, 200, 12), count(0.5, 230, 12)];
     const presence = {
-      online: hourlyOf(three, (c) => c.online, "UTC", NOW),
-      in_voice: hourlyOf(three, (c) => c.in_voice, "UTC", NOW),
+      online: hourlyOf(hours, (c) => c.online, "UTC", NOW),
+      in_voice: hourlyOf(hours, (c) => c.in_voice, "UTC", NOW),
       in_voice_peak: { count: 12, at: "", time_text: "17:42" },
     };
     const online = viewOf("activity_graph", {}, facts({ presence }));
     expect(online).toMatchObject({ empty: false, metric: "online", label: "Online · 24 h" });
     const voice = viewOf("activity_graph", { metric: "in_voice" }, facts({ presence }));
     expect(voice).toMatchObject({ metric: "in_voice", peak: { count: 12 } });
-    const two = { online: presence.online.slice(1), in_voice: [] };
+    expect(voice.scale).toEqual([{ value: 15 }, { value: 10 }, { value: 5 }, { value: 0 }]);
+    expect(online.scale).toEqual([{ value: 300 }, { value: 200 }, { value: 100 }, { value: 0 }]);
+    // The 24-hour graph labels every sixth hour, on its bar.
+    expect(online.points).toEqual([
+      { time_text: "15:00", value: 100, level: 3 },
+      { time_text: "16:00", value: 150, level: 5 },
+      { time_text: "17:00", value: 200, level: 7 },
+      { time_text: "18:00", value: 230, level: 8, tick_text: "18:00" },
+    ]);
+    const two = { online: presence.online.slice(2), in_voice: [] };
     expect(viewOf("activity_graph", {}, facts({ presence: two })).empty).toBe(true);
     expect(viewOf("activity_graph", {}, facts()).empty).toBe(true);
   });
