@@ -30,7 +30,7 @@ import { referenced, sendFile } from "./routes.js";
 import { SANDBOX } from "./sandbox.js";
 import { SERVED, THEMING_VERSION, colorInt, currentTheme, revisionZero } from "./theme.js";
 import type { ResolvedTheme } from "./theme.js";
-import { fillTokens, tokensCss } from "./tokens.js";
+import { themeTokens, tokensCss } from "./tokens.js";
 import type { RightsChecker } from "@canccu/kit";
 
 export interface PreviewDeps {
@@ -68,7 +68,8 @@ async function resolvedDraft(
   // The version busts the screen's cached link: the address stays, the draft behind it changes.
   const v = `?v=${draft.draft_version}`;
   const m = draft.manifest;
-  const tokens = fillTokens(m.tokens ?? {});
+  // With `motion` and `motion_style`: a screen previewing the draft moves as the draft says.
+  const tokens = themeTokens(m.tokens);
   let templates: unknown[] = [];
   try {
     templates = await parsedTemplates(c, files, "draft", m, base);
@@ -154,7 +155,7 @@ export function keyRoutes(app: FastifyInstance, deps: PreviewDeps): void {
       const found = await deps.db.tenant(async (c) => {
         const draft = await draftOfKey(c, key);
         if (draft === undefined) return undefined;
-        if (file === "tokens.css") return tokensCss(fillTokens(draft.manifest.tokens ?? {}));
+        if (file === "tokens.css") return tokensCss(themeTokens(draft.manifest.tokens));
         if (file !== "theme.css") return null;
         try {
           const css = await compiledCss(

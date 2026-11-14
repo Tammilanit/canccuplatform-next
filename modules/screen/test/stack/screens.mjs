@@ -13,6 +13,8 @@ import { boxesGivenAway, statsApart, stripNamesCountdown } from "./dashboard.mjs
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
 import {
   CLAIM_OF,
+  MOTION_VIEWS,
+  withMotion,
   withHeroItemOnly,
   withCounts,
   withOneScreen,
@@ -199,6 +201,11 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await close();
     });
 
+    for (const { view, level, pack } of MOTION_VIEWS) {
+      await attempt(nameOf("default", view, HD[0]), () =>
+        handed("default", view, HD[0], withMotion(level, pack)),
+      );
+    }
     await attempt(nameOf("default", "pulse-one-screen", HD[0]), () =>
       handed("default", "pulse-one-screen", HD[0], withOneScreen),
     );
@@ -288,7 +295,19 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         await stripNamesCountdown(page);
         await tickerFitted(page, true);
       } else if (view === "ambient-takeover") await takeoverIsRed(page);
-      else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
+      else if (view.startsWith("motion-")) {
+        // A strip of four frames 0.4 s apart from the spotlight's start (sheet 11, #445).
+        // From the moment the box has faded in (1.5 s at calm), so each frame shows the level.
+        await page.waitForFunction(() => {
+          const box = document.querySelector(".canccu-spotlight");
+          return box !== null && getComputedStyle(box).opacity === "1";
+        });
+        for (const n of [1, 2, 3, 4]) {
+          await shot(`${nameOf(theme, view, size)}-f${n}`, page);
+          await page.waitForTimeout(400);
+        }
+        return await close();
+      } else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
         await railShowsAgenda(page);
       await settle(page);
       await shot(nameOf(theme, view, size), page);

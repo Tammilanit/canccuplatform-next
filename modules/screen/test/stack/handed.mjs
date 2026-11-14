@@ -184,3 +184,30 @@ export function withTakeover(s) {
   const [role, placed] = CLAIM_OF["claim-takeover"];
   return { ...s, regions: s.regions.map((r) => (r.role === role ? { ...r, claim: placed } : r)) };
 }
+
+/**
+ * The energy levels and packs at the countdown's 5-minute mark (sheet 11, #445): the hero counts
+ * down to an item 4 m 50 s away, so its spotlight holds, and the frames show how each level draws it.
+ */
+export const MOTION_VIEWS = [
+  ["none", "standard"],
+  ["calm", "standard"],
+  ["lively", "standard"],
+  ["party", "standard"],
+  ["lively", "broadcast"],
+  ["lively", "arcade"],
+  ["party", "arcade"],
+].map(([level, pack]) => ({ view: `motion-${level}-${pack}`, level, pack }));
+
+export function withMotion(level, pack) {
+  const target_at = new Date(Date.now() + 290_000).toISOString();
+  return (s) => ({
+    ...s,
+    display: { ...s.display, motion_level: level, motion_style: { ...s.display?.motion_style, pack } },
+    regions: s.regions.map((r) =>
+      r.role !== "hero" || r.idle_view === null
+        ? r
+        : { ...r, idle_view: { ...r.idle_view, view: { ...r.idle_view.view, target_at } } },
+    ),
+  }); // prettier-ignore
+}

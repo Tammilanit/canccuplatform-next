@@ -14,8 +14,8 @@ import type { AgendaItem, AgendaNow, CheckinCode, VenueInfo } from "./widgets.js
 
 export interface ThemeNow {
   revision: number;
-  /** Complete, defaults filled in; only `motion` is read here (the display). */
-  tokens?: { motion?: unknown };
+  /** Complete, defaults filled in; only `motion` and `motion_style` are read here (the display). */
+  tokens?: { motion?: unknown; motion_style?: unknown };
   tokens_css_url: string;
   css_url: string | null;
   logo_url: string | null;
@@ -37,6 +37,11 @@ export interface Sources {
   agendaNow(tenantId: string, zoneKey: string): Promise<AgendaNow | null>;
   /** The event's whole run of show, read each time: the Studio's "what plays at…" (#267). */
   agendaItems(tenantId: string): Promise<AgendaItem[] | null>;
+  /**
+   * The whole run of show as last kept for the agenda version `agendaNow` read, for the day's
+   * phase (contracts/screen.md, Motion and burn-in drift); null when none is kept.
+   */
+  agendaDay?(tenantId: string): Promise<AgendaItem[] | null>;
   venueInfo(tenantId: string): Promise<VenueInfo | null>;
   theme(tenantId: string): Promise<ThemeNow | null>;
   /**
@@ -179,6 +184,7 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
   };
   return {
     agendaItems: readItems,
+    agendaDay: (tenantId) => agendas.get(tenantId)?.items ?? Promise.resolve(null),
     agendaNow: async (tenantId, zoneKey) => {
       const query = `tenant_id=${encodeURIComponent(tenantId)}&zone=${encodeURIComponent(zoneKey)}`;
       const body = (await read(
@@ -188,9 +194,11 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       )) as { agenda_version?: unknown; current?: AgendaItem[]; next?: AgendaItem[] } | null;
       if (body === null || !Array.isArray(body.current) || !Array.isArray(body.next)) return null;
       const now = { current: body.current, next: body.next };
-      if (body.next.length === 0 || typeof body.agenda_version !== "number") return now;
-      // Without the whole agenda the rail still shows now and next, only nothing after them.
+      if (typeof body.agenda_version !== "number") return now;
+      // Kept per version also while nothing is next: the day's phase reads it (agendaDay).
       const all = await allItems(tenantId, body.agenda_version);
+      if (body.next.length === 0) return now;
+      // Without the whole agenda the rail still shows now and next, only nothing after them.
       return { ...now, later: all === null ? [] : laterOf(all, body.next, zoneKey) };
     },
     venueInfo: async (tenantId) => {

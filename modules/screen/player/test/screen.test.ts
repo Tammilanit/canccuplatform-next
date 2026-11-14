@@ -269,6 +269,42 @@ describe("what a region shows", () => {
     expect(screen.root.querySelector(".canccu-widget--clock")?.textContent).toContain("18:01");
   });
 
+  it("keeps the countdown's spotlight when new data redraws it in place", async () => {
+    const screen = new Screen(host);
+    const hero = (label: string) =>
+      state(
+        [
+          region("hero", {
+            order: [],
+            idle: "next",
+            idle_view: {
+              widget: "countdown",
+              view: {
+                label,
+                target_at: "2026-03-14T18:04:00Z",
+                ends_text: null,
+                qr: null,
+                stale: false,
+                empty: false,
+              },
+            },
+          }),
+        ],
+        { display: { motion: "calm", motion_level: "calm", drift: false } },
+      );
+    screen.draw(hero("Semis start in"));
+    screen.start();
+    await advance(FADE_MS.calm);
+    const box = screen.root.querySelector(".canccu-region--hero .canccu-widget");
+    const spotlit = () =>
+      [...(box?.classList ?? [])].filter((c) => c.startsWith("canccu-spotlight")).sort();
+    expect(spotlit()).toEqual(["canccu-spotlight", "canccu-spotlight--outline"]);
+    screen.draw(hero("Semis, moved, start in"));
+    expect(screen.root.querySelector(".canccu-region--hero .canccu-widget")).toBe(box);
+    expect(box?.textContent).toContain("moved");
+    expect(spotlit()).toEqual(["canccu-spotlight", "canccu-spotlight--outline"]);
+  });
+
   it("shows the idle choice when nothing takes part: logo, blank, collapse", () => {
     const screen = new Screen(host);
     const idle = (id: string, how: string) =>

@@ -6,6 +6,8 @@
  */
 import { boxProblem } from "./compose/boxes.js";
 import { BUILT_IN_LAYOUTS, themeLayouts } from "./compose/layouts.js";
+import { MOTION_LEVELS } from "./compose/motion.js";
+import type { MotionLevel } from "./compose/motion.js";
 import type { Sources } from "./compose/sources.js";
 import { invalidRequest } from "./http.js";
 
@@ -49,6 +51,8 @@ export interface ZoneInput {
   /** Null: no trade (src/compose/showcase.ts). */
   hero_region: string | null;
   grow_for_showcase: boolean;
+  /** Null: the event's level, moved by the day (src/compose/motion.ts). */
+  motion_level: MotionLevel | null;
   sound: ZoneSound;
   /** Required on PUT; ignored on POST, where it is read-only. */
   revision?: number;
@@ -165,6 +169,7 @@ export function zoneInput(value: unknown): ZoneInput {
       "screen_name",
       "hero_region",
       "grow_for_showcase",
+      "motion_level",
       "sound",
       "revision",
     ],
@@ -207,6 +212,8 @@ export function zoneInput(value: unknown): ZoneInput {
   // Like `hub_qr`, no null: the contract gives it a plain default.
   const grow = value.grow_for_showcase === undefined ? true : value.grow_for_showcase;
   if (typeof grow !== "boolean") throw invalidRequest("`grow_for_showcase` must be true or false.");
+  const motionLevel = value.motion_level ?? null;
+  if (motionLevel !== null) oneOf(motionLevel, [...MOTION_LEVELS], "`motion_level`");
   const sound = value.sound ?? {};
   if (!isObject(sound)) throw invalidRequest("`sound` must be an object.");
   onlyKeys(sound, ["enabled", "device_id"], "sound");
@@ -230,6 +237,7 @@ export function zoneInput(value: unknown): ZoneInput {
     screen_name: screenName as ZoneInput["screen_name"],
     hero_region: heroRegion,
     grow_for_showcase: grow,
+    motion_level: motionLevel as MotionLevel | null,
     sound: { enabled, device_id: deviceId },
     ...(revision === undefined ? {} : { revision: revision as number }),
   };

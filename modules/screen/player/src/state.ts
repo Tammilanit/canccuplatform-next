@@ -61,7 +61,8 @@ export interface ScreenState {
   layout?: Layout | null;
   regions: Region[];
   ticker: unknown;
-  display?: { motion: string; drift: boolean };
+  /** `motion_level` and `motion_style` are absent from a server that predates them. */
+  display?: { motion: string; drift: boolean; motion_level?: string; motion_style?: unknown };
   /** A preview on a screen runs on the device (contracts/screen.md, Zones and assignments). */
   preview?: { until: string | null; at: string | null; theme: boolean } | null;
   [field: string]: unknown;

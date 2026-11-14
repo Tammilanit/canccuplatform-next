@@ -159,6 +159,9 @@ export function collectSamples() {
     r.right > box.right + 2 ||
     r.bottom > box.bottom + 2;
   const moving = (el) => {
+    // A stepping ticker (no motion) shows its wrapped text a line at a time, so the rest is cut
+    // off by design, as a crawl's is (player/src/ticker.ts).
+    if (el.closest(".canccu-widget__steps") !== null) return true;
     for (let n = el; n; n = n.parentElement) {
       const endless = n.getAnimations().some((a) => a.effect?.getTiming().iterations === Infinity);
       if (endless) return true;

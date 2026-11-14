@@ -48,6 +48,7 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
         screen_name: "auto",
         hero_region: null,
         grow_for_showcase: true,
+        motion_level: null,
         sound: { enabled: true, device_id: null },
         revision: 1,
       },
@@ -87,6 +88,7 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
       screen_name: "auto",
       hero_region: null,
       grow_for_showcase: true,
+      motion_level: null,
       sound: { enabled: true, device_id: null },
       revision: 1,
     });

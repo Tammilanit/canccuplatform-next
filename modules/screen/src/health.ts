@@ -14,6 +14,10 @@ import type { Kv } from "./kv.js";
 export interface Settings {
   ensure(): Promise<void>;
   get(key: string, fallback: SettingValue): SettingValue;
+  /** The held settings' version (the kit's SettingsClient); 0 when absent. */
+  readonly settingsVersion?: number;
+  /** Re-read a tenant's settings from admin (the kit's SettingsClient). */
+  load?(tenant: string): Promise<void>;
 }
 
 export interface NowPlaying {

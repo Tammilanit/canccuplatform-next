@@ -55,7 +55,14 @@ function mergeTokens(manifest: Manifest, edit: TokensEdit["tokens"]): Manifest {
   }
   const motion = edit.motion === undefined ? tokens.motion : edit.motion;
   if (motion !== undefined && motion !== null) merged.motion = motion;
-  // Setting any token but motion is styling, which makes the theme advanced (contracts/theming.md,
+  // `null` resets the whole style; a field set to null goes back to its default.
+  const style = Object.entries(
+    edit.motion_style === null
+      ? {}
+      : { ...(tokens.motion_style as Record<string, unknown> | undefined), ...edit.motion_style },
+  ).filter(([, v]) => v !== null);
+  if (style.length > 0) merged.motion_style = Object.fromEntries(style);
+  // Setting any token but motion and motion_style is styling, which makes the theme advanced (contracts/theming.md,
   // Advanced mode); removing one only goes back towards what the simple mode generates.
   const styling = (["colors", "fonts", "sizes"] as const).some((g) =>
     Object.values(edit[g] ?? {}).some((v) => v !== null),

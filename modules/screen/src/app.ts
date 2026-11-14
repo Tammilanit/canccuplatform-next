@@ -39,6 +39,8 @@ import type { Settings } from "./health.js";
 import { heartbeatRoutes } from "./heartbeat.js";
 import type { Kv } from "./kv.js";
 import { notFound } from "./http.js";
+import { motionRoutes } from "./motion-routes.js";
+import type { SettingsWrite } from "./motion-routes.js";
 import { movingRoutes } from "./moving.js";
 import { pairingRoutes } from "./pairing.js";
 import { photoRoutes } from "./photos.js";
@@ -96,6 +98,8 @@ export interface ScreenDeps {
   streamPingMs?: number;
   /** Admin's own settings, for the event's language on Studio's pages; English without them. */
   adminSettings?: Settings;
+  /** Admin's write of Screen's own settings, for the Motion card (src/motion-routes.ts). */
+  writeSettings?: SettingsWrite;
   /** The event's public answer, for the Studio shell's header. */
   publicEvent?: StudioDeps["publicEvent"];
 }
@@ -254,6 +258,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   composeRoutes(app, compose);
   playerRoutes(app, compose);
   pinRoutes(app, compose);
+  motionRoutes(app, compose);
   studioRoutes(app, {
     ...compose,
     adminSettings: deps.adminSettings ?? ENGLISH,

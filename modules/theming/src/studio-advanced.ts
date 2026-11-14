@@ -2,7 +2,7 @@
 import { COLOR_TOKENS, FONT_TOKENS, SIZE_TOKENS, attrs, html } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import type { DraftRow } from "./drafts.js";
-import { fillTokens } from "./tokens.js";
+import { MOTION_STYLE, fillTokens, motionStyleOf } from "./tokens.js";
 import type { PartialTokens } from "./tokens.js";
 import {
   COLOUR_NAMES,
@@ -17,8 +17,45 @@ import {
 } from "./studio-views.js";
 import type { StudioState } from "./studio-views.js";
 
+const STYLE_LABELS: Record<keyof typeof MOTION_STYLE, string> = {
+  speed: "Speed",
+  intensity: "Intensity",
+  spotlight: "Spotlight",
+  pack: "Motion pack",
+};
+/** The spotlight's names as Screen studio's Motion card says them. */
+const SPOTLIGHTS: Record<string, string> = {
+  glow_and_trace: "Glow and tracing border",
+  trace: "Tracing border",
+};
+const words = (value: string): string =>
+  SPOTLIGHTS[value] ?? value.charAt(0).toUpperCase() + value.slice(1);
+
+/**
+ * The `motion_style` token's four choices (contracts/theming.md, Motion vocabulary). Like
+ * `motion`, they are no styling: saving them keeps a simple theme simple.
+ */
+function motionStyleFields(given: unknown): Html {
+  const style = motionStyleOf(given);
+  const fields = (Object.keys(MOTION_STYLE) as (keyof typeof MOTION_STYLE)[]).map((field) => {
+    const id = `canccu-studio-motion-${field}`;
+    const options = MOTION_STYLE[field].map(
+      (v) => html`<option${attrs({ value: v, selected: v === style[field] })}>${words(v)}</option>`,
+    );
+    return html`<div class="canccu-field"><label class="canccu-field__label"${attrs({ for: id })}>${STYLE_LABELS[field]}</label><select${attrs({ class: "canccu-input", id, name: `motion_style.${field}` })}>${options}</select></div>`;
+  });
+  return html`<fieldset class="canccu-studio-tokens">
+    <legend>Motion style</legend>
+    ${fields}
+    <p class="canccu-field__hint">
+      How the screens' effects feel. The event and each zone choose how lively they are.
+    </p>
+  </fieldset>`;
+}
+
 function tokensForm(draft: DraftRow): Html {
-  const given = draft.manifest.tokens as (PartialTokens & { motion?: unknown }) | undefined;
+  const given = draft.manifest.tokens as
+    (PartialTokens & { motion?: unknown; motion_style?: unknown }) | undefined;
   const tokens = fillTokens(given ?? {});
   const groups: [keyof typeof tokens, string, object][] = [
     ["fonts", "Fonts", FONT_TOKENS],
@@ -60,6 +97,7 @@ function tokensForm(draft: DraftRow): Html {
           ${motions}
         </select>
       </div>
+      ${motionStyleFields(given?.motion_style)}
       <p class="canccu-field__hint">
         Only the tokens you change are saved. Changing a colour, font or size makes the theme
         advanced.

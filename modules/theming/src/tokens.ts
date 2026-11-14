@@ -15,6 +15,48 @@ export interface PartialTokens {
   sizes?: Record<string, unknown>;
 }
 
+/** The `motion_style` token (contracts/theming.md, Motion vocabulary): each field's choices, default first. */
+export const MOTION_STYLE = {
+  speed: ["normal", "slower", "faster"],
+  intensity: ["normal", "subtle", "strong"],
+  spotlight: ["glow_and_trace", "glow", "trace"],
+  pack: ["standard", "broadcast", "arcade"],
+} as const;
+export type MotionStyle = { [K in keyof typeof MOTION_STYLE]: (typeof MOTION_STYLE)[K][number] };
+const SPEED_FACTOR = { slower: 1.4, normal: 1, faster: 0.75 } as const;
+const INTENSITY_FACTOR = { subtle: 0.6, normal: 1, strong: 1.4 } as const;
+
+/** Each field as given, else its default; an unknown value counts as unset. */
+export function motionStyleOf(given: unknown): MotionStyle {
+  const g = (typeof given === "object" && given !== null ? given : {}) as Record<string, unknown>;
+  const pick = <K extends keyof MotionStyle>(k: K): MotionStyle[K] =>
+    ((MOTION_STYLE[k] as readonly string[]).includes(g[k] as string)
+      ? g[k]
+      : MOTION_STYLE[k][0]) as MotionStyle[K];
+  return {
+    speed: pick("speed"),
+    intensity: pick("intensity"),
+    spotlight: pick("spotlight"),
+    pack: pick("pack"),
+  };
+}
+
+/** A theme's tokens as revisions keep them: every token filled in, plus `motion` and `motion_style` when set. */
+export type ThemeTokens = Tokens & { motion?: string; motion_style?: Partial<MotionStyle> };
+
+export function themeTokens(given: unknown): ThemeTokens {
+  const g = (typeof given === "object" && given !== null ? given : {}) as PartialTokens & {
+    motion?: unknown;
+    motion_style?: unknown;
+  };
+  const tokens: ThemeTokens = fillTokens(g);
+  if (typeof g.motion === "string") tokens.motion = g.motion;
+  if (typeof g.motion_style === "object" && g.motion_style !== null) {
+    tokens.motion_style = g.motion_style;
+  }
+  return tokens;
+}
+
 const GENERIC_FAMILIES = new Set(["system-ui", "ui-monospace", "sans-serif", "serif", "monospace"]);
 
 /**
@@ -40,12 +82,21 @@ export function fontValue(token: string, family: string): string {
   return [first, ...stack].join(", ");
 }
 
-/** A `:root` block of every token, then the `@font-face` rules; tokens must be filled. */
-export function tokensCss(tokens: Tokens, fontFaces: readonly string[] = []): string {
+/**
+ * A `:root` block of every token, then the `@font-face` rules; tokens must be filled. The motion
+ * factors are always there, at their defaults when the theme sets no `motion_style`.
+ */
+export function tokensCss(
+  tokens: Tokens & { motion_style?: unknown },
+  fontFaces: readonly string[] = [],
+): string {
+  const style = motionStyleOf(tokens.motion_style);
   const lines = [
     ...Object.entries(tokens.colors).map(([n, v]) => `  ${cssVar("color", n)}: ${v};`),
     ...Object.entries(tokens.fonts).map(([n, v]) => `  ${cssVar("font", n)}: ${fontValue(n, v)};`),
     ...Object.entries(tokens.sizes).map(([n, v]) => `  ${cssVar("size", n)}: ${v};`),
+    `  --canccu-motion-speed: ${SPEED_FACTOR[style.speed]};`,
+    `  --canccu-motion-intensity: ${INTENSITY_FACTOR[style.intensity]};`,
   ];
   return [`:root {\n${lines.join("\n")}\n}\n`, ...fontFaces].join("\n");
 }
