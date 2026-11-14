@@ -154,7 +154,10 @@ export function troubleListed(at) {
       ([name, path, { width, height }]) =>
         `  ${name}.png  ${at(path)}  (${width}×${height}, ${pass})`,
     );
-  return [...listed(TROUBLE, "--trouble"), ...listed(AGENDA_DOWN, "--agenda-down")];
+  return [
+    ...listed(TROUBLE, "--trouble"),
+    ...listed(AGENDA_DOWN, "--agenda-down"),
+  ];
 }
 
 /** The dry run's lines of the first pass's pages, in the order they are shot. */
