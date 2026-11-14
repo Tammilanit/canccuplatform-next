@@ -34,9 +34,16 @@ jobs:
       check: ${{ steps.plan.outputs.check }}
       shards: ${{ steps.plan.outputs.shards }}
     steps:
+      # The planner diffs two trees, so it needs those two commits, not the history: a pull
+      # request's merge commit and its first parent (depth 2), a queue entry's head and its base.
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
+      - name: The queue entry's base
+        if: github.event_name == 'merge_group'
+        env:
+          BASE_SHA: ${{ github.event.merge_group.base_sha }}
+        run: git fetch --no-tags --depth=1 origin "$BASE_SHA"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -59,7 +66,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      # The one cache writer: every run that builds a stack runs this job. A queue entry's ref is
+      # never built again, so its cache would only push older entries out.
       - uses: ./.github/actions/demo-stack-up
+        with:
+          write-cache: ${{ github.event_name != 'merge_group' }}
       - name: API tests of the changed modules, and the platform smoke
         env:
           ONLY: ${{ needs.plan.outputs.api }}
@@ -152,8 +163,24 @@ jobs:
     needs: [plan, shots]
     if: always() && needs.plan.result == 'success' && needs.plan.outputs.shards != '[]' && needs.plan.outputs.check != 'true'
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
     steps:
-      - uses: actions/upload-artifact/merge@v4
+      # The merge fails when it finds no artifact; when every shard failed before its first PNG,
+      # that second failure would hide the shards' own in the demo-stack check.
+      - name: The shards' artifacts
+        id: found
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          names=$(gh api --paginate "repos/$REPO/actions/runs/$RUN_ID/artifacts" --jq '.artifacts[].name')
+          n=$(grep -c '^demo-screenshots-' <<<"$names" || true)
+          echo "count=$n" | tee -a "$GITHUB_OUTPUT"
+          if [ "$n" = 0 ]; then echo "::warning::no shard uploaded a screenshot; see the shards' own failures"; fi
+      - if: steps.found.outputs.count != '0'
+        uses: actions/upload-artifact/merge@v4
         with:
           name: demo-screenshots
           pattern: demo-screenshots-*

@@ -60,11 +60,6 @@ fi
 # missing value is filled, never a set one: a new secrets key loses the stored secrets, and a new
 # VAPID key every phone's push subscription.
 newsecretskey() { k=$(openssl rand -base64 32) || return 1; echo "1:$k"; }
-# A fresh P-256 key from openssl; its DER form holds the 32-byte private scalar after 7 header bytes.
-newvapidkey() {
-  openssl ecparam -name prime256v1 -genkey -noout -outform DER | tail -c +8 | head -c 32 \
-    | base64 | tr '+/' '-_' | tr -d '=\n'
-}
 fillsecret() {  # <name> <generator>
   [ -e "$env" ] && grep -qE "^$1=.+" "$env" && return 0
   step "generate $1 in $env"
