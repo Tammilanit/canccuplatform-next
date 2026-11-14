@@ -33,6 +33,7 @@ import { call, setCookie } from "./calls.js";
 import { SIGNIN_HOST, SUPERADMIN_HOST, fakeTenants } from "./tenants.js";
 import { fakeSettingsWrite } from "./settings-write.js";
 import type { SettingsWrites } from "./settings-write.js";
+import { ArtCache } from "../src/stage/art.js";
 
 /** Tests run only on a database named `*_test` (dropTables refuses any other). */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
@@ -123,6 +124,8 @@ export interface Harness {
   /** The app's rights cache; a test that changes SESSIONS clears it with `admin.rights.changed`. */
   rights: RightsChecker;
   /** One run of the offline sweep, as main starts every 5 seconds. */
+  /** The covers the edge answers for the stage's art, by path, on any host. */
+  covers: Record<string, Buffer>;
   sweep(): Promise<void>;
   queue: MemoryRenderQueue;
   /**
@@ -201,6 +204,7 @@ export async function harness(): Promise<Harness> {
   await writeFile(join(playerDir, "player.css"), "body {}\n");
   await writeFile(join(playerDir, "sw.js"), "self;\n");
   const oembedStatus = { value: 200 };
+  const covers: Record<string, Buffer> = {};
   const fake: FakeSources = {
     theme: null,
     revisions: {},
@@ -304,6 +308,7 @@ export async function harness(): Promise<Harness> {
     playerDir,
     streamPingMs: 200,
     publicEvent: (host) => Promise.resolve(publicEvents[host ?? ""] ?? null),
+    art: new ArtCache(kv, (_host, path) => Promise.resolve(covers[path] ?? null)),
     sources: {
       theme: (tenantId) => answer(fake.tenants, tenantId, fake.theme),
       themeRevision: (tenantId, revision) =>
@@ -360,6 +365,7 @@ export async function harness(): Promise<Harness> {
     publicEvents,
     tenants,
     rights,
+    covers,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
     queue,
     dispatch: (socketPath, opts = {}) =>

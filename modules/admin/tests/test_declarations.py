@@ -63,6 +63,8 @@ def test_screen_declaration_matches_the_contract() -> None:
     assert screen["motion_level"].choices == ("none", "calm", "lively", "party")
     assert screen["motion_level"].default == "lively"
     assert (screen["follow_the_day"].type, screen["follow_the_day"].default) == ("boolean", True)
+    # The stage's game art (contracts/screen.md, The stage).
+    assert (screen["stage_art"].type, screen["stage_art"].default) == ("boolean", True)
     assert set(screen) == set(bounded) | {
         "web_allowlist",
         "progress_bars",
@@ -71,6 +73,7 @@ def test_screen_declaration_matches_the_contract() -> None:
         "burn_in_drift",
         "motion_level",
         "follow_the_day",
+        "stage_art",
     }
 
 

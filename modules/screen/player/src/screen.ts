@@ -9,6 +9,7 @@ import type { ClaimState } from "./claims.js";
 import { driftAt, FADE_MS } from "./display.js";
 import type { Motion } from "./display.js";
 import { MotionLayer, levelOf, styleOf, transitionsOf } from "./motion.js";
+import { StageLayer } from "./stage.js";
 import { agendaOf, joinHeroAndRail } from "./hero-rail.js";
 import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
@@ -86,6 +87,7 @@ export class Screen {
   private timer: ReturnType<typeof setTimeout> | undefined;
   /** The level, pack and effects live on `<body>` (contracts/theming.md, Classes). */
   private readonly motion = new MotionLayer(document.body);
+  private readonly stage = new StageLayer(document.body);
 
   constructor(private readonly host: ScreenHost) {}
 
@@ -216,6 +218,7 @@ export class Screen {
     }
     fillCountdowns(this.root, now);
     this.motion.apply(this.root, level, styleOf(state.display?.motion_style), now);
+    this.stage.apply(state.display?.stage, level, now);
     fitTickers(this.root, motion, now);
     if (state.display?.drift === true) {
       const { x, y } = driftAt(now);

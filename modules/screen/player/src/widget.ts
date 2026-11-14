@@ -50,7 +50,29 @@ export function drawWidget(
   } else if (type !== "embed") {
     el.append(...renderTree(templateFor(type, template, themeTemplates), view));
   }
+  const art = cardArt(view);
+  if (art !== null) el.prepend(art);
   return el;
+}
+
+/** An image on the event's hostname, or a picture handed in as data (the demo shots). */
+const CARD_URL = /^(\/(?!\/)[\x21-\x7e]*|data:image\/[a-z+]+;base64,[A-Za-z0-9+/=]+)$/;
+
+/**
+ * The card's own ground (contracts/theming.md, The two backgrounds): its art under a veil of the
+ * theme's `surface` at the server's `veil`, so the box's text reads on any image.
+ */
+function cardArt(view: View): HTMLElement | null {
+  const given = view.card_art as { url?: unknown; veil?: unknown } | null | undefined;
+  const url = given?.url;
+  const veil = given?.veil;
+  if (typeof url !== "string" || !CARD_URL.test(url) || typeof veil !== "number") return null;
+  const art = document.createElement("div");
+  art.className = "canccu-widget__art";
+  art.setAttribute("aria-hidden", "true");
+  art.style.backgroundImage = `url("${url.replace(/["\\]/g, "\\$&")}")`;
+  art.style.setProperty("--canccu-card-veil", String(Math.min(1, Math.max(0.5, veil))));
+  return art;
 }
 
 /**

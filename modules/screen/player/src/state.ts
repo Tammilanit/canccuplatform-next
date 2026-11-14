@@ -3,6 +3,7 @@
  * messages that change it in place. Only the fields the player reads are typed; the rest travel
  * along for the renderer.
  */
+import type { StageView } from "./stage.js";
 
 export interface Area {
   column: number;
@@ -62,7 +63,14 @@ export interface ScreenState {
   regions: Region[];
   ticker: unknown;
   /** `motion_level` and `motion_style` are absent from a server that predates them. */
-  display?: { motion: string; drift: boolean; motion_level?: string; motion_style?: unknown };
+  display?: {
+    motion: string;
+    drift: boolean;
+    motion_level?: string;
+    motion_style?: unknown;
+    /** Absent from a server that predates the stage: then only its glows show. */
+    stage?: StageView;
+  };
   /** A preview on a screen runs on the device (contracts/screen.md, Zones and assignments). */
   preview?: { until: string | null; at: string | null; theme: boolean } | null;
   [field: string]: unknown;
