@@ -60,6 +60,8 @@ export const CLAIM_OF = {
   "claim-hero": ["hero", claim("hero", "hot_game", { game: GAME, players: 14, since: ago(600_000) })],
   "claim-overlay": ["overlay", claim("overlay", "match_called", { label: "Team Alpha vs Team Gamma", game_name: "Go to Stage 2 · voice: Match 7", teams: [] })],
   "claim-takeover": ["full", claim("full", "announcement", { title: "Please leave the hall", body: "Follow the exit signs.", level: "emergency" })],
+  // A `block` override starts at the hero (contracts/screen.md): an alarm sent as one lands there.
+  "claim-hero-emergency": ["hero", claim("hero", "announcement", { title: "Please leave the hall", body: "Follow the exit signs.", level: "emergency" })],
 }; // prettier-ignore
 
 export const TILES = [

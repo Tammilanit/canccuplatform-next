@@ -247,13 +247,16 @@
    * Without the game's art, the theme's own band (v8 rule 5, "No half-empty large panel"): the
    * theme's glows under the band's veil, in the hero only. It takes the room the panel's text
    * leaves, so a large panel is never empty below its title and a full one keeps its layout: at
-   * no height, its bottom margin and the gap after it make up its pull into the padding.
+   * no height, its bottom margin and the gap after it make up its pull into the padding. An
+   * emergency keeps none: its fixed red is the same in every theme (claims.css).
    */
   .canccu-widget__band--theme {
     display: none;
   }
 
-  .canccu-region[data-role="hero"] > .canccu-widget > .canccu-widget__band--theme {
+  .canccu-region[data-role="hero"]
+    > .canccu-widget:not(:has(.canccu-widget__level--emergency))
+    > .canccu-widget__band--theme {
     display: block;
     flex: 1 1 0;
     height: auto;
