@@ -81,6 +81,7 @@
         description: "`no_draft`: the event has no draft."
       "409":
         $ref: "../theming.openapi.yaml#/components/responses/Conflict"
+        description: "`event_archived`: the event is read-only."
 /internal/theming/previews/{preview_key}:
   parameters:
     - $ref: "../theming.openapi.yaml#/components/parameters/PreviewKey"

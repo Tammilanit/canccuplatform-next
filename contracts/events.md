@@ -95,7 +95,7 @@ Emitter: `screen`. Audience: system, except where noted. Payloads: [screen.md](s
 | `screen.pin.changed` | The event's pinned screen bundle or theme revision changed | theming (keeps the pinned revision and the one a timed pin restores) |
 | `screen.content.pushed`, `screen.content.cleared` | Content was pushed to zones, or a push ended | admin |
 | `screen.ticker.changed` | The ticker text changed. Audience: event-wide, `public` | bot (`/ticker status`), voices |
-| `screen.photo.added`, `screen.photo.removed` | A carousel photo was added or removed. Audience: event-wide, `public` | moments |
+| `screen.photo.added`, `screen.photo.removed` | A photo of the photo wall was added or removed. Audience: event-wide, `public` | moments |
 | `screen.claims.changed` | Where Moments' claims are placed on a zone, and which are unplaced or hidden | moments |
 | `screen.render.queued`, `.started`, `.succeeded`, `.failed`, `.cancelled` | A render job (PPTX or PDF deck) moved | admin |
 

@@ -284,7 +284,8 @@
     summary: A game's art, blurred for the stage
     description: |
       For the event's devices (cookie and venue address) and sessions with `screen.devices.read` (contracts/screen.md, The
-      stage). Immutable. Served from Screen's cache of the current tenant only; an id the cache no longer holds is 404.
+      stage). Immutable. Served from Screen's cache of the current tenant only; an id the cache no longer holds is 404
+      until Screen next composes the zone, which makes the art again.
     security:
       - device: []
       - session: []
@@ -1072,7 +1073,7 @@
   get:
     tags: [photos]
     operationId: listPhotos
-    summary: Carousel photos
+    summary: The photo wall's photos
     description: Right `screen.content.read`. Flag `screen.photos`.
     responses:
       "200":
@@ -1094,7 +1095,7 @@
   post:
     tags: [photos]
     operationId: addPhoto
-    summary: Add a carousel photo
+    summary: Add a photo to the photo wall
     description: Right `screen.photos.write`. Flag `screen.photos` (otherwise 403 `feature_off`). Emits `screen.photo.added`.
     requestBody:
       required: true
@@ -1130,7 +1131,7 @@
   delete:
     tags: [photos]
     operationId: deletePhoto
-    summary: Remove a carousel photo
+    summary: Remove a photo from the photo wall
     description: Right `screen.photos.write`. Emits `screen.photo.removed`.
     responses:
       "204":
