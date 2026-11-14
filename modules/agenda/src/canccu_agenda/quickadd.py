@@ -17,6 +17,7 @@ from starlette.routing import Route
 from . import forms, items, model, store, templates, undo
 from .day_view import NIGHT_ENDS
 from .deps import deps
+from .event_dates import event_days
 from .inverse import Inverse
 from .web import (
     BASE,
@@ -26,7 +27,6 @@ from .web import (
     button,
     day_label,
     esc,
-    event_days,
     field,
     next_minute,
     notice,

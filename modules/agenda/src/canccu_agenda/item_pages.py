@@ -16,6 +16,7 @@ from starlette.routing import Route
 from . import forms, history, items, merge, model, store, templates, undo
 from .deps import Deps, deps
 from .effective import read_channels
+from .event_dates import event_days
 from .inverse import Inverse
 from .kinds import int_query, not_found
 from .preview import change_of, moved_line, preview_html, told
@@ -25,7 +26,6 @@ from .web import (
     button,
     check,
     esc,
-    event_days,
     field,
     from_local,
     hidden,

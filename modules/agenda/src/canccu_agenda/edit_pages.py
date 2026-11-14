@@ -16,6 +16,7 @@ from . import announce, edits, forms, model, store, timers, undo
 from .delay_pages import as_int, day_of, preview
 from .deps import deps
 from .effective import event_settings, read_channels
+from .event_dates import event_over
 from .inverse import Inverse
 from .item_pages import load_item
 from .kinds import not_found
@@ -24,7 +25,6 @@ from .web import (
     BASE,
     button,
     esc,
-    event_over,
     field,
     hhmm,
     hidden,

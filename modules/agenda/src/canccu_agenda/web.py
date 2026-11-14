@@ -54,9 +54,6 @@ TIME_PATTERN = "[0-2][0-9]:[0-5][0-9]"
 # "Other date…": a day typed in the event's format with its year, "16 Mar 2027" (or "Tue 16 Mar
 # 2027"), so a form reaches any day, not only those it offers.
 DATE_PATTERN = "([A-Za-z]{3} )?[0-9]{1,2} [A-Za-z]{3} [0-9]{4}"
-# A longer event (or one with odd dates) offers no day list of its own: today, tomorrow and the
-# form's own days stay.
-MAX_EVENT_DAYS = 31
 log = logging.getLogger("canccu.agenda")
 VISIBILITY_LABELS = {"public": "Everyone", "attendees": "Attendees", "crew": "Crew only"}
 CHANNEL_LABELS = {
@@ -312,39 +309,6 @@ def posted_when(form: Any, name: str) -> str:
         found = typed_day(typed) if len(typed.split()) in (3, 4) else None
         day = found.isoformat() if found else typed
     return f"{day}T{hm}" if hm else ""
-
-
-def _parsed(value: str) -> datetime:
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
-
-
-def event_span(request: Request) -> tuple[date, date] | None:
-    """The event's first and last day in its time zone; None while it has no dates."""
-    event = getattr(request.state, "agenda_event", None)
-    if event is None or not event.starts_at or not event.ends_at:
-        return None
-    tz = zone_of(request)
-    return _parsed(event.starts_at).astimezone(tz).date(), _parsed(event.ends_at).astimezone(
-        tz
-    ).date()
-
-
-def event_days(request: Request, today: date, *extra: date | None) -> list[date]:
-    """The days a form offers: the event's own and one on each side for setting up and clearing
-    away (when it has dates, at most MAX_EVENT_DAYS), today and tomorrow, and the days the form
-    already holds. "Other date…" reaches the rest."""
-    days = {today, today + timedelta(days=1), *(d for d in extra if d is not None)}
-    span = event_span(request)
-    if span is not None and 0 <= (span[1] - span[0]).days < MAX_EVENT_DAYS:
-        first, last = span
-        days |= {first + timedelta(days=n) for n in range(-1, (last - first).days + 2)}
-    return sorted(days)
-
-
-def event_over(request: Request, now: datetime) -> bool:
-    """Whether the event has ended: a cancelled item comes back only until then (sheet 5)."""
-    event = getattr(request.state, "agenda_event", None)
-    return bool(event is not None and event.ends_at and _parsed(event.ends_at) <= now)
 
 
 def field(label: str, control: str, hint: str = "") -> str:

@@ -17,6 +17,7 @@ from .access import WRITE, viewer
 from .day_view import can_delay, can_show, state_of
 from .deps import deps
 from .effective import read_channels
+from .event_dates import event_over, event_span
 from .history import changes_html
 from .kinds import not_found
 from .web import (
@@ -28,8 +29,6 @@ from .web import (
     archived,
     day_label,
     esc,
-    event_over,
-    event_span,
     hhmm,
     notice,
     page,
