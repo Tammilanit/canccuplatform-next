@@ -75,6 +75,12 @@ describe("the stage", () => {
     expect(tintAsked(v, NOW - 20_000)).toBeNull();
   });
 
+  it("counts a since a few seconds ahead of Screen's clock as now", () => {
+    // Moments' clock may run ahead; nothing would recompose at `since`, so the tint would be lost.
+    const v = views([region("hero", { claim: claimOf("hot_game", hot("g_1", NOW + 3_000)) })]);
+    expect(tintAsked(v, NOW)?.until).toBe(NOW + 3_000 + TINT_MS);
+  });
+
   it("lets the newest surge win, and ignores hidden claims and empty widgets", () => {
     const v = views([
       region("hero", { claim: claimOf("hot_game", hot("g_1", NOW - 30_000)) }),

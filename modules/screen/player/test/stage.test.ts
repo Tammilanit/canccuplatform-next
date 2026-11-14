@@ -2,7 +2,7 @@
 // The two backgrounds on the device (contracts/theming.md, The two backgrounds): the stage's
 // classes and art at each level and over time, the card's art and veil, and the Pulse hero.
 import { describe, expect, it } from "vitest";
-import { StageLayer, stageLook } from "../src/stage.js";
+import { StageLayer, mountBehindStage, stageLook } from "../src/stage.js";
 import { DEFAULT_TEMPLATES } from "../src/templates.js";
 import { renderTree } from "../src/tree.js";
 import { drawWidget } from "../src/widget.js";
@@ -125,6 +125,24 @@ describe("the Pulse hero", () => {
     const box = draw({ label: "Dinner", target_at: "2026-03-14T19:00:00Z", game: null, chip: null, description: null, next_up: true });
     expect(text(box, "kicker")).toBe("Next on stage");
     for (const part of ["band", "chip", "teams", "description"]) expect(text(box, part)).toBeNull();
+  }); // prettier-ignore
+});
+
+describe("mounting a screen behind the stage", () => {
+  it("keeps the stage first and the marks after the screen, and leaves a mounted screen in place", () => {
+    const el = (cls: string) => Object.assign(document.createElement("div"), { className: cls });
+    const body = document.createElement("div");
+    const [stageEl, mark, old, screen] = [el("canccu-stage"), el("canccu-mark"), el("old"), el("new")];
+    body.append(old, mark, stageEl);
+    expect(mountBehindStage(body, screen, ".canccu-mark")).toBe(true);
+    expect([...body.children]).toEqual([stageEl, screen, mark]);
+    expect(mountBehindStage(body, screen, ".canccu-mark")).toBe(false);
+    expect([...body.children]).toEqual([stageEl, screen, mark]);
+    // Without a stage the screen is simply first.
+    const bare = document.createElement("div");
+    bare.append(old);
+    expect(mountBehindStage(bare, screen, ".canccu-mark")).toBe(true);
+    expect([...bare.children]).toEqual([screen]);
   }); // prettier-ignore
 });
 

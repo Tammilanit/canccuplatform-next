@@ -1,8 +1,10 @@
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import { withTenant } from "@canccu/kit";
 import { MemoryKv } from "../src/kv.js";
-import { ART_WIDTH, ArtCache, coverPath } from "../src/stage/art.js";
+import { ART_WIDTH, ArtCache, coverPath, edgeReader } from "../src/stage/art.js";
 
 const TENANT = "demo";
 const OTHER = "other-event";
@@ -97,5 +99,60 @@ describe("the stage's art", () => {
     const again = await withTenant(TENANT, () => art.of("event.example", "/c.png"));
     expect(again?.id).toBe(info?.id);
     expect(r.calls).toHaveLength(2);
+  });
+
+  it("shares a read already in flight between composes", async () => {
+    const bytes = await cover();
+    const calls: string[] = [];
+    let release: (b: Buffer) => void = () => undefined;
+    const slow = new Promise<Buffer>((resolve) => (release = resolve));
+    const art = new ArtCache(new MemoryKv(), (_host, path) => {
+      calls.push(path);
+      return slow;
+    });
+    const of = () => withTenant(TENANT, () => art.of("event.example", "/c.png"));
+    const both = Promise.all([of(), of()]);
+    release(bytes);
+    const [a, b] = await both;
+    expect(a?.id).toMatch(/^[a-f0-9]{64}$/);
+    expect(b?.id).toBe(a?.id);
+    expect(calls).toEqual(["/c.png"]);
+    // Another event's compose of the same path reads its own.
+    await withTenant(OTHER, () => art.of("event.example", "/c.png"));
+    expect(calls).toHaveLength(2);
+  });
+
+  it("refuses a cover of more than about 40 Mpx instead of decoding it", async () => {
+    // 7000 × 6000 = 42 Mpx, a small file: one colour compresses to almost nothing.
+    const huge = await sharp({
+      create: { width: 7000, height: 6000, channels: 3, background: "#336699" },
+    })
+      .png({ compressionLevel: 1 })
+      .toBuffer();
+    const art = new ArtCache(new MemoryKv(), reader(huge).read);
+    expect(await withTenant(TENANT, () => art.of("event.example", "/huge.png"))).toBeNull();
+  });
+
+  it("gives up on a cover that trickles in past the overall deadline", async () => {
+    // A byte every 50 ms never trips the socket's idle timeout; only the deadline ends it.
+    const server = createServer((_req, res) => {
+      res.writeHead(200, { "content-type": "image/png" });
+      const drip = setInterval(() => res.write(Buffer.from([0])), 50);
+      res.on("close", () => {
+        clearInterval(drip);
+      });
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    try {
+      const { port } = server.address() as AddressInfo;
+      const read = edgeReader(`http://127.0.0.1:${port}`, 300);
+      const started = Date.now();
+      const late = new Promise<"late">((resolve) => setTimeout(() => resolve("late"), 2000));
+      expect(await Promise.race([read("event.example", "/slow.png"), late])).toBeNull();
+      expect(Date.now() - started).toBeLessThan(1500);
+    } finally {
+      server.closeAllConnections();
+      await new Promise((resolve) => server.close(resolve));
+    }
   });
 });
