@@ -19,7 +19,7 @@ from starlette.routing import Route
 
 from .auth import Auth, UnknownUser
 from .auth_db import Person
-from .auth_routes import Authorize, OnEvent
+from .auth_routes import Need, OnEvent
 from .pages import BASE, event_of, page
 
 RIGHT = "admin.rights.write"
@@ -136,9 +136,9 @@ def _changed_notice(
     return notice("ok", title, ALLOWS[person.role], undo)
 
 
-def people_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> list[Route]:
+def people_routes(auth: Auth, need: Need, on_event: OnEvent | None) -> list[Route]:
     async def owner(request: Request) -> Session:
-        return await authorize(request.headers.get("cookie"), RIGHT)
+        return await need(request, RIGHT)
 
     async def everyone(viewer: Session) -> tuple[list[Person], dict[str, Person]]:
         rank = {"owner": 0, "admin": 1}
@@ -260,7 +260,8 @@ def people_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) ->
         body = (
             '<section class="canccu-card canccu-person">'
             f'<div class="canccu-user"><span class="canccu-avatar" aria-hidden="true">'
-            f"{esc(_initials(user.name))}</span><span><b>{esc(user.name)}</b>"
+            f'{esc(_initials(user.name))}</span><span class="canccu-people__names">'
+            f"<b>{esc(user.name)}</b>"
             f'<span class="canccu-people__handle">{esc(handle)}</span></span></div>'
             f'<p class="canccu-field__label">Role</p>{role_control(person)}'
             f'<p class="canccu-muted">{ALLOWS[person.role]}</p>'

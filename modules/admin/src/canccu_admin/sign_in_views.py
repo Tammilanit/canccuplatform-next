@@ -66,7 +66,8 @@ def no_role_card(user_name: str, event_name: str | None) -> str:
     """Signed in, but no role: who you are, who can help, and a way to check."""
     event = esc(event_name) if event_name else "this event"
     return (
-        '<p class="canccu-overline">Signed in</p><h1>No role yet</h1>'
+        # settings.js tells this card from an ended session after a save is sent to sign in.
+        '<p class="canccu-overline" data-canccu-no-role>Signed in</p><h1>No role yet</h1>'
         f"<p>You're signed in as {esc(user_name)}, but you have no role in {event} yet.</p>"
         '<p class="canccu-muted">Ask an event owner to give you one. They now see you under'
         " People. This page lets you in as soon as they do.</p>"

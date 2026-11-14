@@ -14,6 +14,7 @@ export {
   errorView,
   frontPage,
   icon,
+  initials,
   menuFor,
   notice,
   shellPage,

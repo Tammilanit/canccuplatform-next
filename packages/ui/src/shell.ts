@@ -45,12 +45,17 @@ export function menuFor(rights: ReadonlySet<string>): { label: string; items: Me
 export const icon = (name: string): Html =>
   html`<span class="canccu-i canccu-i--${name}" aria-hidden="true"></span>`;
 
-function initials(name: string): string {
+/**
+ * The first letter of each of the first two words, `?` without any: the avatar's letters, and
+ * theming's logo without a logo draws the same (contracts/theming.md, Reading the current theme).
+ * Whole code points, since a UTF-16 unit would cut an emoji in half. Not escaped: the caller does.
+ */
+export function initials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
   return (
     words
       .slice(0, 2)
-      .map((w) => w.charAt(0).toUpperCase())
+      .map((w) => (Array.from(w)[0] ?? "").toUpperCase())
       .join("") || "?"
   );
 }
