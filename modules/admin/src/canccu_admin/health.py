@@ -79,7 +79,8 @@ def _parts_of(key: str, body: dict[str, Any], answer_ms: int) -> list[Part]:
         if status == "degraded" and not _troubles(checks):
             status = "ok"
     elif key == "screen":
-        parts.append(Part(RENDER_PART, "down", version, RENDER_UNSAID))
+        # Screens did answer; only its word on rendering is missing.
+        parts.append(Part(RENDER_PART, "down", version, RENDER_UNSAID, answer_ms))
     return [Part(key, status, version, _troubles(checks), answer_ms), *parts]
 
 
@@ -97,6 +98,7 @@ class HealthWatch:
         self._http = http or httpx.AsyncClient(timeout=2.0)
         self._clock = clock
         self._down_since: dict[str, datetime] = {}
+        self._checking: asyncio.Task[Check] | None = None
         self.latest: Check | None = None
 
     async def _probe(self, key: str, url: str) -> list[Part]:
@@ -113,11 +115,17 @@ class HealthWatch:
     async def _probe_own(self) -> Part:
         start = time.perf_counter()
         body = (await self.own.run()).body
-        answer_ms = round((time.perf_counter() - start) * 1000)
-        checks: dict[str, Any] = body.get("checks") or {}
-        return Part(self.own.module, body["status"], body["version"], _troubles(checks), answer_ms)
+        return _parts_of(self.own.module, body, round((time.perf_counter() - start) * 1000))[0]
 
     async def check(self) -> Check:
+        """A new check; asked while one runs, the one running (a burst of "Check now" or the
+        loop's own tick never probes every part more than once at a time)."""
+        if self._checking is None or self._checking.done():
+            self._checking = asyncio.ensure_future(self._check())
+        # Shielded: one caller going away must not cancel the check the others wait for.
+        return await asyncio.shield(self._checking)
+
+    async def _check(self) -> Check:
         own, others = await asyncio.gather(
             self._probe_own(), asyncio.gather(*(self._probe(k, u) for k, u in self.targets.items()))
         )
@@ -138,6 +146,9 @@ class HealthWatch:
         if latest is None or self._clock() - latest.at > timedelta(seconds=2 * EVERY_SECONDS):
             return await self.check()
         return latest
+
+    async def aclose(self) -> None:
+        await self._http.aclose()
 
     async def run(self) -> None:
         while True:

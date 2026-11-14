@@ -312,9 +312,12 @@ def create_app(
 
     async def health_page(request: Request) -> Response:
         session = await need(request, "admin.settings.read")
-        # "Check now" checks at once; the page's own reloads read the watch's latest check.
-        fresh = request.query_params.get("check") == "now"
-        check = await (watch.check() if fresh else watch.current())
+        # "Check now" checks at once, then sends the browser on to the plain page, so a reload
+        # (or health.js) reads the watch's latest check instead of checking again.
+        if request.query_params.get("check") == "now":
+            await watch.check()
+            return RedirectResponse(f"{BASE}/health-view", status_code=303)
+        check = await watch.current()
         event = await event_of(request)
         description, body = health_body(check, event.time_zone if event else "UTC")
         return await page(
