@@ -12,7 +12,7 @@
 #                  CI's demo stack, or a module PR's surfaces (docs/ci.md#tiers). A pass with no
 #                  shot in them is skipped, so the front pass's seed and the trouble pass's stopped
 #                  notify happen only where their shots are taken.
-#   --check        the merge queue's pass: every check, no PNG written and no 4K screen.
+#   --check        the merge queue's pass: every check, no 4K screen, no PNG of a page.
 # BASE_URL is Caddy's address as seen from inside the Caddy container (so not a remote or
 # host-published address); the pages open on the demo event's hostname CANCCU_DEMO_HOST (default
 # demo.localhost; the CI stack has two events, so IP mode serves none) at its port.

@@ -101,7 +101,9 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
   };
   /** The screenshot, then its text against the readability rules. */
   const shot = async (name, page) => {
-    if (!check) await page.screenshot({ path: `${out}/${name}.png` });
+    // Taken in the merge queue's check too: without it the next view of the same screen did not
+    // draw within its wait (CI, #461), as the shot paces the views; the queue uploads none.
+    await page.screenshot({ path: `${out}/${name}.png` });
     const problems = judgePage(await page.evaluate(collectSamples));
     if (problems.length === 0) ok(`${name}.png`);
     else

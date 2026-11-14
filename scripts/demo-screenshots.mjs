@@ -9,7 +9,7 @@
 // Usage: node demo-screenshots.mjs [--dry-run] [--base BASE_URL] [--out DIR] [--groups LIST] [--check]
 //   --groups  only these screenshot groups (scripts/demo-screenshots-groups.mjs; default all): a
 //             shard of CI's demo stack, or a module PR's surfaces (docs/ci.md#tiers).
-//   --check   the merge queue's pass: every check, no PNG written and no 4K screen.
+//   --check   the merge queue's pass: every check, no 4K screen, no PNG of a page.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import {
@@ -356,7 +356,7 @@ const studio = (list) => (want("screen-studio") ? list : []);
 
 if (opts["dry-run"]) {
   const would = opts.check
-    ? "check, writing no PNG"
+    ? "check, writing no PNG of a page"
     : `screenshot into ${opts.out}/`;
   console.log(`dry run, would ${would}:`);
   for (const [name, path, { width, height }] of TROUBLE) {
