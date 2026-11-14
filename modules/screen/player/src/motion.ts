@@ -105,7 +105,12 @@ export class MotionLayer {
   /** Once per tick, after the regions are drawn and the countdowns filled. */
   apply(root: ParentNode, level: Level, style: MotionStyle, now: number): void {
     this.mark(level, style);
-    const boxes = [...root.querySelectorAll(".canccu-region > .canccu-widget.canccu-is-active")];
+    // A box still waiting to fade in is not shown yet: its spotlight starts when it is.
+    const boxes = [
+      ...root.querySelectorAll(
+        ".canccu-region > .canccu-widget.canccu-is-active:not(.canccu-slot--in)",
+      ),
+    ];
     for (const box of boxes) this.changes(box, level, style);
     this.spotlightCountdown(boxes, level, style, now);
     this.sweep(level, style, now);

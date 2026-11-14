@@ -127,6 +127,16 @@ describe("the motion layer", () => {
     expect(document.querySelector(".canccu-fx-layer--burst")).not.toBeNull();
   });
 
+  it("starts the spotlight only once its box has begun to fade in", () => {
+    const { root, box } = stage(countdown(4 * 60_000), "countdown");
+    box.classList.add("canccu-slot--in");
+    layer.apply(root, "lively", STYLE, T0);
+    expect(box.classList.contains("canccu-spotlight")).toBe(false);
+    box.classList.remove("canccu-slot--in");
+    layer.apply(root, "lively", STYLE, T0 + 250);
+    expect(box.classList.contains("canccu-spotlight")).toBe(true);
+  });
+
   it("ends the spotlight at the start, and holds sweeps back while it lasts", () => {
     const cd = stage(countdown(4 * 60_000), "countdown");
     const other = stage("<b>1</b>");

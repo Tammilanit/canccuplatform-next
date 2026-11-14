@@ -284,6 +284,10 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(body).toMatch(/<input[^>]*type="color"[^>]*data-hex-for="colors.text_muted"/);
       expect(body).toContain("Muted text");
       expect(body).toContain('name="sizes.radius"');
+      // The motion style's four choices (contracts/theming.md, Motion vocabulary).
+      for (const field of ["speed", "intensity", "spotlight", "pack"])
+        expect(body).toContain(`name="motion_style.${field}"`);
+      expect(body).toContain("Glow and tracing border");
       expect(body).toContain(`data-draft-version="${draft.draft_version}"`);
       expect(body).toContain("Ready to publish");
     });

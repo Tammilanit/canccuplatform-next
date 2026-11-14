@@ -23,8 +23,13 @@ const STYLE_LABELS: Record<keyof typeof MOTION_STYLE, string> = {
   spotlight: "Spotlight",
   pack: "Motion pack",
 };
+/** The spotlight's names as Screen studio's Motion card says them. */
+const SPOTLIGHTS: Record<string, string> = {
+  glow_and_trace: "Glow and tracing border",
+  trace: "Tracing border",
+};
 const words = (value: string): string =>
-  value.charAt(0).toUpperCase() + value.slice(1).replaceAll("_", " ");
+  SPOTLIGHTS[value] ?? value.charAt(0).toUpperCase() + value.slice(1);
 
 /**
  * The `motion_style` token's four choices (contracts/theming.md, Motion vocabulary). Like

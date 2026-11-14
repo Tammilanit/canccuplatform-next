@@ -294,7 +294,11 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       } else if (view === "ambient-takeover") await takeoverIsRed(page);
       else if (view.startsWith("motion-")) {
         // A strip of four frames 0.4 s apart from the spotlight's start (sheet 11, #445).
-        await page.waitForSelector(".canccu-spotlight");
+        // From the moment the box has faded in (1.5 s at calm), so each frame shows the level.
+        await page.waitForFunction(() => {
+          const box = document.querySelector(".canccu-spotlight");
+          return box !== null && getComputedStyle(box).opacity === "1";
+        });
         for (const n of [1, 2, 3, 4]) {
           await shot(`${nameOf(theme, view, size)}-f${n}`, page);
           await page.waitForTimeout(400);
