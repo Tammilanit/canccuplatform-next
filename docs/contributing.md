@@ -16,7 +16,7 @@ The rules are in [AGENTS.md](../AGENTS.md); machine setup is in [CONTRIBUTING.md
 6. **Merge queue:** GitHub merges the PR when the required checks are green. Never merge by hand.
 
 ## Who accepts
-A maintainer accepts only high-risk PRs (see the risk classes in [AGENTS.md, Merge rules](../AGENTS.md#merge-rules)), plan-tier plans and step briefs; the reviewer marks these `manual — <reason>`. A contract doc that only adds is normal risk; the maintainer reviews the step's contract PRs together at the checkpoint ([0024](decisions/0024-additive-contract-docs-normal-risk.md)). A maintainer never accepts over `changes`. To accept, the maintainer labels the PR `accepted`, has `Review verdict: pass <head sha>` posted as the reviewer identity and enables auto-merge. Everything else merges on green CI and `pass`. See [AGENTS.md, Merge rules](../AGENTS.md#merge-rules).
+A maintainer accepts only high-risk PRs (see the risk classes in [AGENTS.md, Merge rules](../AGENTS.md#merge-rules)), plan-tier plans and step briefs; the reviewer marks these `manual — <reason>`. A contract doc that only adds is normal risk; the maintainer reviews the step's PRs that changed `contracts/` together at the checkpoint ([0024](decisions/0024-additive-contract-docs-normal-risk.md)). A maintainer never accepts over `changes`. To accept, the maintainer labels the PR `accepted`, has `Review verdict: pass <head sha>` posted as the reviewer identity and enables auto-merge. Everything else merges on green CI and `pass`. See [AGENTS.md, Merge rules](../AGENTS.md#merge-rules).
 
 ## What protects `main`
 - No direct pushes and no force pushes, for admins too.
