@@ -42,12 +42,16 @@ const drawn = (rail: string[], hero: string[] = [""]) => {
 }; // prettier-ignore
 
 /**
- * Stubs what happy-dom does not run: an element's animations, each with its iterations. `inside`
- * ones run in its descendants, so only `getAnimations({ subtree: true })` sees them.
+ * Stubs what happy-dom does not run: an element's animations, each with its iterations, all in
+ * `playState`. `inside` ones run in its descendants, so only `getAnimations({ subtree: true })`
+ * sees them.
  */
-const animating = (sel: string, iterations: number[], inside = false) => {
+const animating = (sel: string, iterations: number[], inside = false, playState = "running") => {
   const el = doc.querySelector(sel) as unknown as { getAnimations: unknown };
-  const list = iterations.map((n) => ({ effect: { getTiming: () => ({ iterations: n }) } }));
+  const list = iterations.map((n) => ({
+    playState,
+    effect: { getTiming: () => ({ iterations: n }) },
+  }));
   el.getAnimations = (o?: { subtree?: boolean }) => (inside && o?.subtree !== true ? [] : list);
 };
 
@@ -79,6 +83,12 @@ describe("drawnWhole", () => {
   it("passes endless animations, a ticker's crawl or a spotlight's glow, which never end", () => {
     drawn(["canccu-is-active"]);
     animating(".canccu-region--rail .canccu-widget", [Infinity]);
+    expect(drawnWhole(doc)).toBe(true);
+  });
+
+  it("passes a finished animation that holds its last frame, as a theme's `both` fill does", () => {
+    drawn(["canccu-is-active"]);
+    animating(".canccu-region--rail .canccu-widget", [1], true, "finished");
     expect(drawnWhole(doc)).toBe(true);
   });
 });
