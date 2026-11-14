@@ -180,7 +180,7 @@ Info pages are read-only, public-facing pages and data: the run-of-show, announc
 ## Feature flags
 - Per tenant (0013 item 17): `GET /api/tenants/current/flags` → `{"flags_version", "flags"}`, readable by anyone, except guests of a `draft` event (403 `info_pages_closed`); `PUT /api/tenants/current/flags` with `flags_version` and the flags to set, right `tenants.flags.write`. A stale `flags_version` is 409 `version_conflict`.
 - A flag is named `<module>.<feature>` (e.g. `bot.stats`) and is a boolean. A flag never stored has its default.
-- **Declared in one place:** [flags.yaml](flags.yaml), as `flags: {<module>.<feature>: {default: <bool>}}`. The tenants module reads that file; a flag not in it is 400 `unknown_flag`. A module's contract lists its flags with their defaults, and the same contract PR adds them to `flags.yaml`. Adding a flag is additive; removing one is breaking.
+- **Declared in one place:** [flags.yaml](flags.yaml), as `flags: {<module>.<feature>: {default: <bool>}}`. The tenants module reads that file; a flag not in it is 400 `unknown_flag`. A module's contract lists its flags with their defaults, and the PR that adds a flag to the contract adds it to `flags.yaml`. Adding a flag is additive; removing one is breaking.
 - Emits `tenants.flags.changed`. Modules follow it without a restart; the bot re-registers that guild's slash commands (0013 item 15), and handlers check the flag too.
 
 ## Series and clone

@@ -76,7 +76,7 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 MEDIA=modules/screen/test/fixtures/media
 mkdir -p "$work/scripts" "$work/$STACK" "$work/$MEDIA" "$work/events/demo/assets" "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
-cp scripts/demo-screenshots.mjs scripts/demo-screenshots-front.mjs scripts/demo-screenshots-groups.mjs "$work/scripts/" \
+cp scripts/demo-screenshots*.mjs "$work/scripts/" \
   && cp "$STACK"/*.mjs "$work/$STACK/" || exit 2
 # The Theme studio's draft takes the demo logo, as an organiser would upload it.
 cp events/demo/assets/logo.svg "$work/events/demo/assets/" || exit 2
@@ -119,6 +119,9 @@ shoot demo-screenshots-front.mjs || status=1
 # back (the file start-notify) once its shots of the part down are taken, then follows Health
 # until the menu's note clears; notify starts again whatever the pass did.
 if takes demo-screenshots.mjs ', --trouble)'; then
+  # Whatever ends the run from here (a failed pass, Ctrl-C, a cancelled CI job), notify starts
+  # again: a stack left with a part down fails every later check against it.
+  trap '"${COMPOSE[@]}" start notify >/dev/null; rm -rf "$work"' EXIT
   "${COMPOSE[@]}" stop notify >/dev/null || status=1
   sleep 15
   rm -f "$work/start-notify"
@@ -133,8 +136,10 @@ if takes demo-screenshots.mjs ', --trouble)'; then
 fi
 # Notify's own page with the menu's Health note (#478) needs another part down: the run of show,
 # stopped last, since the screens and the run of show's own pages need it. The shot waits for the
-# note, so nothing waits for admin's check here; agenda starts again whatever the pass did.
+# note, so nothing waits for admin's check here; agenda starts again whatever ends the run, as
+# notify does above.
 if ! takes demo-screenshots.mjs ', --agenda-down)'; then exit "$status"; fi
+trap '"${COMPOSE[@]}" start agenda >/dev/null; rm -rf "$work"' EXIT
 "${COMPOSE[@]}" stop agenda >/dev/null || status=1
 shoot demo-screenshots.mjs --agenda-down || status=1
 "${COMPOSE[@]}" start agenda >/dev/null || status=1

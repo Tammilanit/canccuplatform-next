@@ -17,15 +17,47 @@ export const claim = (role, template, content) => ({
   ends_at: null,
   expires_at: null,
 });
-// A cover and a photo drawn here: the page takes data: images (src/tree.ts).
+// The photos drawn here: the page takes data: images (src/tree.ts).
 const picture = (a, b) =>
   `data:image/svg+xml;base64,${Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120"><defs><linearGradient id="g" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="160" height="120" fill="url(#g)"/><circle cx="80" cy="52" r="22" fill="#fff" fill-opacity=".35"/><rect x="44" y="80" width="72" height="30" rx="12" fill="#fff" fill-opacity=".35"/></svg>`,
   ).toString("base64")}`;
+/**
+ * A handed view is a screen at play: the stream the shot holds back must not read as an outage,
+ * or the player marks itself offline after 10 s (player/src/live.ts) and the book shows it.
+ */
+export async function stillOnline(page) {
+  if ((await page.$(".canccu-offline-marker")) !== null)
+    throw new Error('it shows "offline since": the held-back stream reads as an outage');
+}
+/**
+ * The handed page's stream, answered open and empty: nothing the server pushes replaces the handed
+ * state, yet the player sees a live stream. Each answer ends at once and the player reconnects
+ * after its `retry` (1 s), well inside the 10 s after which it marks itself offline
+ * (player/src/live.ts, stream.ts); a cut stream would put "offline since" on the shot.
+ */
+export const holdStream = (page) =>
+  page.route("**/api/screen/device/stream", (route) =>
+    route
+      .fulfill({ status: 200, contentType: "text/event-stream", body: "retry: 1000\n\n" })
+      .catch(() => undefined),
+  );
+/**
+ * The demo game's cover: abstract key art in the default theme's colours (ridges under a glow, a
+ * light streak, an emblem), so its card art and the stage's wash read as a game, not as the
+ * person placeholder the photos use. `blur` is the stage's blurred copy of it.
+ */
+const keyArt = (blur = 0) =>
+  `data:image/svg+xml;base64,${Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="s" x2="0" y2="1"><stop offset="0" stop-color="#1d2142"/><stop offset="1" stop-color="#0b0d1a"/></linearGradient><radialGradient id="g" cx=".62" cy=".36" r=".45"><stop offset="0" stop-color="#b98cff" stop-opacity=".9"/><stop offset=".5" stop-color="#b98cff" stop-opacity=".3"/><stop offset="1" stop-color="#b98cff" stop-opacity="0"/></radialGradient><linearGradient id="l" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff" stop-opacity="0"/><stop offset=".55" stop-color="#3ddcff"/><stop offset="1" stop-color="#3ddcff" stop-opacity="0"/></linearGradient><filter id="b"><feGaussianBlur stdDeviation="${blur}"/></filter></defs><rect width="320" height="180" fill="#0b0d1a"/><g filter="${blur ? "url(#b)" : "none"}"><rect width="320" height="180" fill="url(#s)"/><rect width="320" height="180" fill="url(#g)"/><path d="M0 124 46 94l32 16 44-42 36 30 40-40 38 36 34-18 50 32v72H0Z" fill="#343c66"/><path d="M0 150 58 116l38 22 54-36 46 34 50-26 74 34v36H0Z" fill="#161a2e"/><path d="M20 180 296 18l8 8L44 180Z" fill="url(#l)"/><path d="M198 30l20 28-20 28-20-28Z" fill="none" stroke="#3ddcff" stroke-width="4"/><path d="M198 46l9 12-9 12-9-12Z" fill="#f3f5ff"/><circle cx="62" cy="34" r="1.6" fill="#f3f5ff"/><circle cx="118" cy="22" r="1.2" fill="#f3f5ff"/><circle cx="272" cy="40" r="1.4" fill="#f3f5ff"/></g></svg>`,
+  ).toString("base64")}`;
+const COVER = keyArt();
+const GAME = { id: "g_1", name: "Demo Game", cover_url: COVER };
+
 /** What each claim view puts in the state (mockup 04). */
 export const CLAIM_OF = {
   "claim-rail": ["rail", claim("rail", "announcement", { title: "Dinner is served", body: "Café, until 19:15", level: "info" })],
-  "claim-hero": ["hero", claim("hero", "hot_game", { game: { id: "g_1", name: "Demo Game", cover_url: picture("#7c3aed", "#0ea5e9") }, players: 14, since: ago(600_000) })],
+  "claim-hero": ["hero", claim("hero", "hot_game", { game: GAME, players: 14, since: ago(600_000) })],
   "claim-overlay": ["overlay", claim("overlay", "match_called", { label: "Team Alpha vs Team Gamma", game_name: "Go to Stage 2 · voice: Match 7", teams: [] })],
   "claim-takeover": ["full", claim("full", "announcement", { title: "Please leave the hall", body: "Follow the exit signs.", level: "emergency" })],
 }; // prettier-ignore
@@ -214,14 +246,10 @@ export function withMotion(level, pack) {
 
 /**
  * The two backgrounds (sheet 15, #446). The stage's art as the server sends it is a blurred WebP
- * of a game's cover; here a soft picture drawn as data stands in for it, so the frame is the
+ * of a game's cover; here the demo cover, blurred as data, stands in for it, so the frame is the
  * player's own. `scrim` is what the server computes for it under the default theme.
  */
-const blurred = `data:image/svg+xml;base64,${Buffer.from(
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><defs><radialGradient id="a" cx=".3" cy=".35" r=".6"><stop offset="0" stop-color="#a855f7"/><stop offset="1" stop-color="#a855f7" stop-opacity="0"/></radialGradient><radialGradient id="b" cx=".75" cy=".65" r=".55"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></radialGradient></defs><rect width="640" height="360" fill="#1e1b4b"/><rect width="640" height="360" fill="url(#a)"/><rect width="640" height="360" fill="url(#b)"/></svg>`,
-).toString("base64")}`;
-const COVER = picture("#7c3aed", "#0ea5e9");
-const GAME = { id: "g_1", name: "Demo Game", cover_url: COVER };
+const blurred = keyArt(18);
 
 /** Each stage view's level, the item's kind and the day's phase; `surge` adds a box's tint. */
 export const STAGE_VIEWS = [

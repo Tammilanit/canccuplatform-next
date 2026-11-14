@@ -25,6 +25,8 @@ import {
   withShowcase,
   withStats,
   withTakeover,
+  holdStream,
+  stillOnline,
 } from "./handed.mjs";
 import { collectSamples, judgePage } from "./readability.mjs";
 
@@ -126,6 +128,10 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       fail(
         `${name}: ${problems.length} readability problems\n      ${problems.slice(0, 8).join("\n      ")}`,
       );
+  };
+  const playing = async (name, page) => {
+    await stillOnline(page);
+    await shot(name, page);
   };
   const attempt = async (name, run) => {
     try {
@@ -294,18 +300,18 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
     async function surgeStrip(page, theme, view, size, close) {
       await page.waitForSelector(".canccu-stage--art");
       await page.waitForTimeout(STAGE_FADE_MS + 200);
-      await shot(nameOf(theme, `${view}-during`, size), page);
+      await playing(nameOf(theme, `${view}-during`, size), page);
       await page.waitForFunction(() => !document.querySelector(".canccu-stage--tinted"), null, {
         timeout: SURGE_MS + 5000,
       });
       await page.waitForTimeout(STAGE_FADE_MS + 200);
-      await shot(nameOf(theme, `${view}-after`, size), page);
+      await playing(nameOf(theme, `${view}-after`, size), page);
       await close();
       // Before: the same stage at the same level, no box asking yet.
       await handed(theme, `${view}-before`, size, withStage("lively", false));
     }
 
-    /** The page handed a changed state, with no stream to replace it before the shot. */
+    /** The page handed a changed state, its stream held open and empty so nothing replaces it. */
     async function handed(theme, view, size, change) {
       const { page, close } = await open(size, main.cookie);
       // The server picks the layout of the orientation a heartbeat reports, so the page first plays
@@ -314,7 +320,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         await page.goto(at("/screen/"));
         await layout(page, size);
       }
-      await page.route("**/api/screen/device/stream", (route) => route.abort());
+      await holdStream(page);
       await page.route("**/api/screen/device/state", async (route) => {
         try {
           const answer = await route.fetch();
@@ -348,14 +354,14 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
           return box !== null && getComputedStyle(box).opacity === "1";
         });
         for (const n of [1, 2, 3, 4]) {
-          await shot(`${nameOf(theme, view, size)}-f${n}`, page);
+          await playing(`${nameOf(theme, view, size)}-f${n}`, page);
           await page.waitForTimeout(400);
         }
         return await close();
       } else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
         await railShowsAgenda(page);
       await settle(page);
-      await shot(nameOf(theme, view, size), page);
+      await playing(nameOf(theme, view, size), page);
       await close();
     }
 

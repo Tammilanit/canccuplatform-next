@@ -8,7 +8,7 @@ const OFFLINE = "/admin/offline";
 const CACHE = "canccu-offline";
 const ORGANISER_PAGES = ["/admin/", "/agenda/", "/notify/admin/", "/theming/studio/"];
 // The cached copy holds the menu of whoever is signed in; it is fetched again now and then, so a
-// changed role shows. Signing out clears it (Clear-Site-Data on /admin/sign-out).
+// changed role shows. Signing out clears it (Clear-Site-Data "storage" on /admin/sign-out).
 const REFRESH_MS = 10 * 60 * 1000;
 // What the offline page links (tests/test_sign_in_states.py holds the two in step). The HTTP
 // cache is no help: offline, a browser does not serve a copy past its max-age, and sign-out's
