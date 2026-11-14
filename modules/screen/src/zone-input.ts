@@ -256,6 +256,16 @@ export function zoneInput(value: unknown): ZoneInput {
 }
 
 /**
+ * The zone's fields as a preview stores and composes them: all it read but the revision. One
+ * helper for both previews (a device's and a zone's), so a new field cannot be missed in one.
+ */
+export function zoneFields(zone: ZoneInput): Omit<ZoneInput, "revision"> {
+  const fields: Partial<ZoneInput> = { ...zone };
+  delete fields.revision;
+  return fields as Omit<ZoneInput, "revision">;
+}
+
+/**
  * 400 when the zone's own areas do not fit its own `layout_id` (`null`: `pulse`) as the theme in
  * effect has it, else the built-in (contracts/screen.md, Box sizes and hidden boxes). Hiding alone
  * cannot make an overlap, so a zone without areas reads no theme. An id neither has is not

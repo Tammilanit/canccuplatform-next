@@ -83,7 +83,10 @@ describe("what runs now", () => {
     expect(runningNow(null, NOW)).toBeNull();
   });
 
-  it("counts an item with no end as running from its start", () => {
-    expect(runningNow([item("open", "18:40", null)], NOW)?.id).toBe("open");
+  it("counts an item with no end as a moment, never running, as the rail does", () => {
+    // Else Delay could point at an item from hours or days ago.
+    expect(runningNow([item("open", "18:40", null)], NOW)).toBeNull();
+    const items = [item("doors", "17:00", "23:00"), item("open", "18:40", null)];
+    expect(runningNow(items, NOW)?.id).toBe("doors");
   });
 });

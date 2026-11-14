@@ -12,14 +12,16 @@ import type { ViewContext } from "./views.js";
 /**
  * What a delay should move: of the items running at `nowMs`, the one that started last, since a
  * long item (doors open all evening) usually holds a shorter one inside it, and the shorter one is
- * what the floor runs late on. A cancelled item never runs; one with no end runs from its start.
+ * what the floor runs late on. A cancelled item never runs, nor one with no end: it is a moment,
+ * as the rail counts it (railAt), else Delay could point at an item from hours or days ago.
  */
 export function runningNow(items: readonly AgendaItem[] | null, nowMs: number): AgendaItem | null {
   const running = (items ?? []).filter(
     (i) =>
       i.status !== "cancelled" &&
       Date.parse(i.starts_at) <= nowMs &&
-      (i.ends_at === null || Date.parse(i.ends_at) > nowMs),
+      i.ends_at !== null &&
+      Date.parse(i.ends_at) > nowMs,
   );
   running.sort((a, b) => Date.parse(b.starts_at) - Date.parse(a.starts_at));
   return running[0] ?? null;

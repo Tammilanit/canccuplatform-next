@@ -117,10 +117,26 @@ const idleOf = (setting: Record<string, unknown>): Idle =>
   IDLES.includes(setting.idle as Idle) ? (setting.idle as Idle) : "logo";
 
 /** The zone's widgets for a region, else the layout's. */
-const entriesOf = (source: LayoutRegion, input: BuildInput): WidgetEntry[] => {
-  const widgets = input.zone.regions[source.id]?.widgets;
+const entriesIn = (source: LayoutRegion, regions: BuildInput["zone"]["regions"]): WidgetEntry[] => {
+  const widgets = regions[source.id]?.widgets;
   return Array.isArray(widgets) ? (widgets as WidgetEntry[]) : source.widgets;
 };
+const entriesOf = (source: LayoutRegion, input: BuildInput): WidgetEntry[] =>
+  entriesIn(source, input.zone.regions);
+
+/**
+ * A box the zone, as set, leaves waiting while its statistics are empty, as they all are until
+ * their source comes (#389): Studio's gallery note follows this, not the layout alone.
+ */
+export function waitsWhileEmpty(
+  source: LayoutRegion,
+  regions: BuildInput["zone"]["regions"],
+): boolean {
+  const setting = regions[source.id] ?? {};
+  return (
+    setting.hidden !== true && isWaiting(entriesIn(source, regions), idleOf(setting), () => true)
+  );
+}
 
 /** A box of statistics still waiting for its source (waiting.ts). */
 function waits(source: LayoutRegion, input: BuildInput): boolean {

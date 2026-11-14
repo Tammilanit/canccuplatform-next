@@ -7,6 +7,7 @@
 import { attrs, html } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import type { Area, Layout } from "../compose/layouts.js";
+import { waitsWhileEmpty } from "../compose/build.js";
 import { hasStatisticsBoxes } from "../compose/waiting.js";
 import { STUDIO } from "./views.js";
 import type { ViewContext } from "./views.js";
@@ -56,9 +57,15 @@ const thumb = (layout: Layout): Html =>
 /**
  * Thumbnails of the built-ins and the theme's layouts; picking one redraws the editor with it. A
  * layout with statistics boxes says they come with the bot's data, and, once picked, where their
- * space goes until then (contracts/screen.md, Boxes waiting for their source).
+ * space goes until then, while the zone's `regions` leave a box waiting (contracts/screen.md,
+ * Boxes waiting for their source).
  */
-export function layoutGallery(c: ViewContext, layouts: readonly Layout[], current: string): Html {
+export function layoutGallery(
+  c: ViewContext,
+  layouts: readonly Layout[],
+  current: string,
+  regions: Record<string, Record<string, unknown>>,
+): Html {
   const { t } = c;
   const picked = layouts.find((l) => l.id === current);
   return html`<section class="canccu-card">
@@ -79,7 +86,7 @@ export function layoutGallery(c: ViewContext, layouts: readonly Layout[], curren
       )}
     </div>
     ${
-      picked !== undefined && hasStatisticsBoxes(picked)
+      picked?.regions.some((r) => waitsWhileEmpty(r, regions))
         ? html`<p class="canccu-field__hint" data-statistics-note>
             ${t("layout.statistics_waiting", { layout: picked.name })}
           </p>`
