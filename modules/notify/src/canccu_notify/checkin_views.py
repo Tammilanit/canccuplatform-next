@@ -6,7 +6,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from canccu_kit import ui
 
@@ -82,7 +81,7 @@ def failed(retry: str) -> str:
 
 
 def not_open(starts: datetime, time_zone: str) -> str:
-    local = starts.astimezone(ZoneInfo(time_zone))
+    local = ui.local_time(starts, time_zone)
     text = (
         f"Doors open on {ui.day_label(local, time_zone)} at {local:%H:%M}."
         " Scan the code on a screen when you arrive."

@@ -53,6 +53,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Health"
+  /api/admin/health/note:
+    get:
+      tags: [health]
+      operationId: getHealthNote
+      summary: What the organiser menu's Health item says
+      description: |
+        Needs right `admin.settings.read`. From admin's latest check of every part, never waiting for a new one;
+        `ok` with no text before the first check (contracts/admin.md, Health note).
+      responses:
+        "200":
+          description: The note.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthNote"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
   /api/admin/settings/{module}:
     parameters:
       - $ref: "#/components/parameters/Module"
@@ -643,6 +662,17 @@ components:
                 $ref: "#/components/schemas/HealthStatus"
               detail:
                 type: string
+    HealthNote:
+      type: object
+      required: [status, text]
+      additionalProperties: false
+      properties:
+        status:
+          $ref: "#/components/schemas/HealthStatus"
+        text:
+          type: string
+          description: How many parts are down and slow, down first; empty with `ok`.
+          examples: ["1 down, 2 slow"]
     SettingValue:
       anyOf:
         - type: string

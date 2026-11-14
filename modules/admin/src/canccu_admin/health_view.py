@@ -89,6 +89,18 @@ def _tiles(check: Check) -> str:
 
 def health_body(check: Check, zone: str) -> tuple[str, str]:
     """(the page's description, its body), both HTML, for one check in the event's time zone."""
+    description, body = _live(check, zone)
+    # health.js swaps each data-canccu-live part as the checks come in; the page's only script.
+    return description, body + f'<script src="{BASE}/static/health.js" defer></script>'
+
+
+def health_live(check: Check, zone: str) -> str:
+    """Only the parts health.js swaps (each data-canccu-live), as HTML: what it reads every 10 s,
+    so it never reads the whole page with its menu and header."""
+    return "".join(_live(check, zone))
+
+
+def _live(check: Check, zone: str) -> tuple[str, str]:
     parts = sorted(check.parts, key=lambda p: (HEALTH_ORDER.get(p.status, 0), part_name(p.key)))
     says = {p.key: _says(p, zone) for p in parts}
     # "What it says" only when some part says something: an empty column is only noise.
@@ -117,6 +129,4 @@ def health_body(check: Check, zone: str) -> tuple[str, str]:
         f"Every part of the platform, checked every {EVERY_SECONDS} seconds. "
         f'<span data-canccu-live="last-check">Last check {_clock(check, zone)}.</span>'
     )
-    # health.js swaps each data-canccu-live part as the checks come in; the page's only script.
-    script = f'<script src="{BASE}/static/health.js" defer></script>'
-    return description, _tiles(check) + table + script
+    return description, _tiles(check) + table

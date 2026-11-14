@@ -10,8 +10,9 @@
 #        demo-screenshots --install   pulls the Playwright image (CI)
 #   --groups LIST  only these screenshot groups (scripts/demo-screenshots-groups.mjs): one shard of
 #                  CI's demo stack, or a module PR's surfaces (docs/ci.md#tiers). A pass with no
-#                  shot in them is skipped, so the front pass's seed and the trouble pass's stopped
-#                  notify happen only where their shots are taken.
+#                  shot in them is skipped, so the front pass's seed, the trouble pass's stopped
+#                  notify and the last pass's stopped agenda happen only where their shots are
+#                  taken.
 #   --check        the merge queue's pass: every check, no 4K screen, no PNG of a page.
 # BASE_URL is Caddy's address as seen from inside the Caddy container (so not a remote or
 # host-published address); the pages open on the demo event's hostname CANCCU_DEMO_HOST (default
@@ -113,23 +114,33 @@ if ! "${COMPOSE[@]}" exec -T postgres psql -U canccu -d canccu -v ON_ERROR_STOP=
   exit 1
 fi
 shoot demo-screenshots-front.mjs || status=1
-if ! takes demo-screenshots.mjs ', --trouble)'; then exit "$status"; fi
-# Health with a part down (docs/design/mockups.html, sheet 4), last, as it stops notify (whose
+# Health with a part down (docs/design/mockups.html, sheet 4), late, as it stops notify (whose
 # check-in the front pass shows) for longer than admin's 10 s check. The pass asks for notify
 # back (the file start-notify) once its shots of the part down are taken, then follows Health
 # until the menu's note clears; notify starts again whatever the pass did.
-# Whatever ends the run from here (a failed pass, Ctrl-C, a cancelled CI job), notify starts
-# again: a stack left with a part down fails every later check against it.
-trap '"${COMPOSE[@]}" start notify >/dev/null; rm -rf "$work"' EXIT
-"${COMPOSE[@]}" stop notify >/dev/null || status=1
-sleep 15
-rm -f "$work/start-notify"
-shoot demo-screenshots.mjs --trouble &
-pass=$!
-for _ in $(seq 240); do
-  if [ -e "$work/start-notify" ] || ! kill -0 "$pass" 2>/dev/null; then break; fi
-  sleep 1
-done
-"${COMPOSE[@]}" start notify >/dev/null || status=1
-wait "$pass" || status=1
+if takes demo-screenshots.mjs ', --trouble)'; then
+  # Whatever ends the run from here (a failed pass, Ctrl-C, a cancelled CI job), notify starts
+  # again: a stack left with a part down fails every later check against it.
+  trap '"${COMPOSE[@]}" start notify >/dev/null; rm -rf "$work"' EXIT
+  "${COMPOSE[@]}" stop notify >/dev/null || status=1
+  sleep 15
+  rm -f "$work/start-notify"
+  shoot demo-screenshots.mjs --trouble &
+  pass=$!
+  for _ in $(seq 240); do
+    if [ -e "$work/start-notify" ] || ! kill -0 "$pass" 2>/dev/null; then break; fi
+    sleep 1
+  done
+  "${COMPOSE[@]}" start notify >/dev/null || status=1
+  wait "$pass" || status=1
+fi
+# Notify's own page with the menu's Health note (#478) needs another part down: the run of show,
+# stopped last, since the screens and the run of show's own pages need it. The shot waits for the
+# note, so nothing waits for admin's check here; agenda starts again whatever ends the run, as
+# notify does above.
+if ! takes demo-screenshots.mjs ', --agenda-down)'; then exit "$status"; fi
+trap '"${COMPOSE[@]}" start agenda >/dev/null; rm -rf "$work"' EXIT
+"${COMPOSE[@]}" stop agenda >/dev/null || status=1
+shoot demo-screenshots.mjs --agenda-down || status=1
+"${COMPOSE[@]}" start agenda >/dev/null || status=1
 exit "$status"

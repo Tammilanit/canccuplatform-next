@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
+from .access import parse_time
 from .admin import AdminClient
 from .bus import Event
 from .errors import MissingRight, NotSignedIn
@@ -35,11 +36,6 @@ def session_id_from_cookie(cookie_header: str | None) -> str | None:
         if sep and name == SESSION_COOKIE and value:
             return value.strip('"')
     return None
-
-
-def _parse_time(value: str) -> datetime:
-    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 
 class RightsChecker:
@@ -99,7 +95,7 @@ class RightsChecker:
             user_id=str(body["user"]["id"]),
             user_name=str(body["user"]["name"]),
             rights=frozenset(str(r) for r in body["rights"]),
-            expires_at=_parse_time(str(body["expires_at"])),
+            expires_at=parse_time(str(body["expires_at"])),
         )
         self._remember(session_id, session)
         return session
