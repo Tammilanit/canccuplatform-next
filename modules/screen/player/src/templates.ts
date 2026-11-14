@@ -147,8 +147,8 @@ const figure = (field: string, label: TreeNode[]): TreeNode =>
 
 /**
  * The theme's own art band (v8 rule 5, "No half-empty large panel"): where a large panel has no
- * game art, the band holds the theme's glows under the card's veil (stage.css). Drawn only in the
- * hero; elsewhere the look hides it.
+ * game art, the band holds the theme's glows, faded into the card by a mask (stage.css). Drawn
+ * only in the hero; elsewhere the look hides it.
  */
 const THEME_BAND: TreeNode = el("div", null, [], {
   class: [t("canccu-widget__band canccu-widget__band--theme")],

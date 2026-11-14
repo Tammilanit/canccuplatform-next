@@ -3,7 +3,8 @@
 // views: the hero's features in turn with the thin line, a surge jumping the queue with the ring,
 // and two boxes that would turn together pushed three seconds apart.
 import { graphsScaled } from "./dashboard.mjs";
-import { GAME, TILES, hour } from "./handed.mjs";
+import { graphOf } from "../../src/compose/graph.ts";
+import { GAME, TILES, hoursFrom, unitsOf } from "./handed.mjs";
 
 const ago = (ms) => new Date(Date.now() - ms).toISOString();
 const feature = (widget, view, dwell) => ({
@@ -21,10 +22,8 @@ const TODAY = {
   day_text: "Saturday",
   online_peak: { count: 231, at: "2026-03-14T23:30:00Z", time_text: "01:30" },
   photos: 38,
-  scale: [300, 200, 100, 0].map((value) => ({ value })),
-  points: [40, 62, 88, 120, 150, 171, 160, 198, 231, 212].map((value, i) =>
-    hour(10 + i, value, 300, 3),
-  ),
+  // In the Pulse hero, 8 of 12 columns wide.
+  ...graphOf(hoursFrom(10, [40, 62, 88, 120, 150, 171, 160, 198, 231, 212]), unitsOf(8)),
 };
 
 /** Each strip: its view, its frames, and the gap before each frame after the first. */

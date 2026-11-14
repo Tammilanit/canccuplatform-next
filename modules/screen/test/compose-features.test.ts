@@ -40,6 +40,9 @@ function facts(over: Partial<ZoneFacts> = {}): ZoneFacts {
   };
 }
 
+/** A Dashboard box, 4 of 12 columns of a 16:9 screen, in units of its short side. */
+const DASHBOARD_BOX_UNITS = (4 / 12) * (1600 / 9);
+
 const count = (hoursAgo: number, online: number, inVoice = 10): PresenceCount => ({
   at: NOW - hoursAgo * HOUR,
   interval_seconds: 60,
@@ -113,7 +116,7 @@ describe("today in numbers", () => {
     });
     expect(view.points).toEqual([
       { time_text: "13:00", value: 100, level: 3 },
-      // "Today in numbers" labels every third hour: the hero panel is wider than a box.
+      // Every third hour: the hero panel is wider than a box (a whole screen's width by default).
       { time_text: "15:00", value: 231, level: 8, tick_text: "15:00" },
       { time_text: "17:00", value: 212, level: 7 },
     ]);
@@ -128,6 +131,38 @@ describe("today in numbers", () => {
     const photos = viewOf("today_numbers", {}, facts({ phase: "wind_down", photosToday: 4 }));
     expect(photos).toMatchObject({ empty: false, photos: 4 });
     expect(photos.online_peak).toBeUndefined();
+  });
+
+  it("draws no graph and no scale over a day without an hour of counts (#527)", () => {
+    const photos = viewOf("today_numbers", {}, facts({ phase: "wind_down", photosToday: 4 }));
+    expect(photos).toMatchObject({ empty: false, scale: [], points: [] });
+  });
+
+  it("names every third hour in the Pulse hero, every sixth in the Dashboard's narrower hero", () => {
+    const blank = { idle: "blank" };
+    const named = (layoutId: string) => {
+      const { regions } = buildRegions({
+        // Boxes that keep their cells while their statistics wait, so the hero keeps its size.
+        zone: {
+          key: "main",
+          layoutId,
+          regions: { voice: blank, top_games: blank, right_now: blank },
+        },
+        windowLayoutId: null,
+        themeLayouts: [],
+        portrait: false,
+        facts: facts({ phase: "wind_down", presence: { ...presence, online: day } }),
+      });
+      const hero = regions.find((r) => r.role === "hero");
+      const today = hero?.widgets.find((w) => w.widget === "today_numbers");
+      return (today?.view.points as { tick_text?: string }[]).flatMap((p) => p.tick_text ?? []);
+    };
+    const day = Array.from({ length: 12 }, (_, i) => ({
+      time_text: `${String(9 + i).padStart(2, "0")}:00`,
+      value: 50 + i,
+    }));
+    expect(named("pulse")).toEqual(["09:00", "12:00", "15:00", "18:00"]);
+    expect(named("dashboard")).toEqual(["12:00", "18:00"]);
   });
 });
 
@@ -152,13 +187,13 @@ describe("the activity graph", () => {
       in_voice: hourlyOf(hours, (c) => c.in_voice, "UTC", NOW),
       in_voice_peak: { count: 12, at: "", time_text: "17:42" },
     };
-    const online = viewOf("activity_graph", {}, facts({ presence }));
+    const online = viewOf("activity_graph", {}, facts({ presence }), null, DASHBOARD_BOX_UNITS);
     expect(online).toMatchObject({ empty: false, metric: "online", label: "Online · 24 h" });
     const voice = viewOf("activity_graph", { metric: "in_voice" }, facts({ presence }));
     expect(voice).toMatchObject({ metric: "in_voice", peak: { count: 12 } });
     expect(voice.scale).toEqual([{ value: 15 }, { value: 10 }, { value: 5 }, { value: 0 }]);
     expect(online.scale).toEqual([{ value: 300 }, { value: 200 }, { value: 100 }, { value: 0 }]);
-    // The 24-hour graph labels every sixth hour, on its bar.
+    // The 24-hour graph in a Dashboard box labels every sixth hour, on its bar.
     expect(online.points).toEqual([
       { time_text: "15:00", value: 100, level: 3 },
       { time_text: "16:00", value: 150, level: 5 },

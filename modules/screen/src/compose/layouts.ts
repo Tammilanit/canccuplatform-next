@@ -11,6 +11,16 @@ export interface Area {
   rows: number;
 }
 
+/**
+ * How wide `area` is on a screen drawing `layout`, in the look's unit, 1 % of the screen's short
+ * side (player/src/screen.css, `--canccu-u`), so the server sizes what its views put in a box
+ * (the graphs' hour labels) as the player will draw it. Gaps are left out: they are small.
+ */
+export function unitsWide(area: Area, layout: Layout): number {
+  const [w, h] = layout.aspect.split(":").map(Number) as [number, number];
+  return (area.columns / layout.grid.columns) * ((100 * w) / Math.min(w, h));
+}
+
 export type Props = Record<string, string | number | boolean>;
 
 export interface WidgetEntry {
