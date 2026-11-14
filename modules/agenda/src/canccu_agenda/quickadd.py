@@ -269,7 +269,7 @@ async def quick_add(request: Request) -> Response:
     added_day = datetime.fromisoformat(item["starts_at"].replace("Z", "+00:00")).astimezone(tz)
     done = "added_next_day" if night else "added"
     path = f"/?day={added_day.date().isoformat()}&done={done}"
-    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)), item["id"])
 
 
 ROUTES = [

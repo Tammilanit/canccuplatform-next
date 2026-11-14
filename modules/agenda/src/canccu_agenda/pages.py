@@ -28,6 +28,7 @@ from .web import (
     day_label,
     esc,
     event_over,
+    event_span,
     hhmm,
     notice,
     page,
@@ -106,16 +107,25 @@ async def run_of_show(request: Request) -> Response:
     )
     # This view's own address, where a delay sheet's Close and Don't delay lead back to.
     here = view.href()
+    listed, days = day_list.build(
+        rows,
+        kinds,
+        now,
+        tz,
+        view,
+        None if side is None else side["id"],
+        writes,
+        event_span(request),
+    )
+    # Today's line carries the now line; outside the event there is neither, nor a way to them.
+    now_line = today in days
     hero = day_view.on_now(rows, now, tz)
     if hero is not None:
-        body += day_list.strip_html(hero, now, tz)
+        body += day_list.strip_html(hero, now, tz, now_line)
         body += day_view.hero_html(hero, now, tz, session, here, post)
     if rows:
-        listed, days = day_list.build(
-            rows, kinds, now, tz, view, None if side is None else side["id"], writes
-        )
         filters = day_list.filter_html(view, seen.visibilities)
-        body += day_list.days_html(days, _day(request, days, today), filters)
+        body += day_list.days_html(days, _day(request, days, today), filters, now_line)
         aside = ""
         if side is not None:
             item = model.item_json(side, kind_rows, channels)

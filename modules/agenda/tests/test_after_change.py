@@ -13,6 +13,7 @@ from conftest import NOW, Env, at
 from test_items import add
 from test_merge import form_of
 from test_quickadd import items, templates_of
+from test_undo import undo_id
 
 
 def _target(response: httpx.Response) -> str:
@@ -38,9 +39,7 @@ async def test_every_change_returns_to_its_item_in_the_list(env: Env) -> None:
         delay = {"revision": "2", "minutes": "15", "agenda_version": "3"}
         delayed = await c.post(f"/items/{quiz['id']}/delay", data=delay, headers=h)
         shown = await c.post(f"/items/{quiz['id']}/show-now", data={"revision": "3"}, headers=h)
-        undone = await c.post(
-            f"/undo/{shown.headers['location'].split('undo=')[1].split('#')[0]}", headers=h
-        )
+        undone = await c.post(f"/undo/{undo_id(shown)}", headers=h)
         cancelled = await c.post(f"/items/{pizza['id']}/cancel", data={"revision": "1"}, headers=h)
         back = await c.post(f"/items/{pizza['id']}/bring-back", headers=h)
         (again,) = [i for i in await items(c, h) if i["title"] == "Pizza"]
@@ -62,8 +61,7 @@ async def test_undoing_an_add_returns_to_the_day(env: Env) -> None:
         quick = await c.post(
             "/add", data={"title": "Pizza", "what": food, "when": "in30"}, headers=h
         )
-        token = quick.headers["location"].split("undo=")[1].split("#")[0]
-        undone = await c.post(f"/undo/{token}", headers=h)
+        undone = await c.post(f"/undo/{undo_id(quick)}", headers=h)
     assert _target(undone) == ""
 
 

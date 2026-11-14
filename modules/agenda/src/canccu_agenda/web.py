@@ -12,6 +12,7 @@ from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from canccu_kit import (
@@ -148,8 +149,10 @@ def page(
     return response
 
 
-def redirect(path: str) -> RedirectResponse:
-    return RedirectResponse(f"{BASE}{path}", status_code=303)
+def redirect(path: str, item: str | None = None) -> RedirectResponse:
+    """`item`: after a change, the list opens at that item's row, not at the top (#482)."""
+    target = f"#r-{quote(item, safe='')}" if item else ""
+    return RedirectResponse(f"{BASE}{path}{target}", status_code=303)
 
 
 def notice(message: str, kind: str = "ok") -> str:
@@ -313,18 +316,26 @@ def _parsed(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
+def event_span(request: Request) -> tuple[date, date] | None:
+    """The event's first and last day in its time zone; None while it has no dates."""
+    event = getattr(request.state, "agenda_event", None)
+    if event is None or not event.starts_at or not event.ends_at:
+        return None
+    tz = zone_of(request)
+    return _parsed(event.starts_at).astimezone(tz).date(), _parsed(event.ends_at).astimezone(
+        tz
+    ).date()
+
+
 def event_days(request: Request, today: date, *extra: date | None) -> list[date]:
     """The days a form offers: the event's own and one on each side for setting up and clearing
     away (when it has dates, at most MAX_EVENT_DAYS), today and tomorrow, and the days the form
     already holds. "Other date…" reaches the rest."""
     days = {today, today + timedelta(days=1), *(d for d in extra if d is not None)}
-    event = getattr(request.state, "agenda_event", None)
-    if event is not None and event.starts_at and event.ends_at:
-        tz = zone_of(request)
-        first = _parsed(event.starts_at).astimezone(tz).date()
-        last = _parsed(event.ends_at).astimezone(tz).date()
-        if 0 <= (last - first).days < MAX_EVENT_DAYS:
-            days |= {first + timedelta(days=n) for n in range(-1, (last - first).days + 2)}
+    span = event_span(request)
+    if span is not None and 0 <= (span[1] - span[0]).days < MAX_EVENT_DAYS:
+        first, last = span
+        days |= {first + timedelta(days=n) for n in range(-1, (last - first).days + 2)}
     return sorted(days)
 
 

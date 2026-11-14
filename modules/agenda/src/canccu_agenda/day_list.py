@@ -100,8 +100,11 @@ def build(
     view: View,
     picked: str | None,
     writes: bool,
+    span: tuple[date, date] | None,
 ) -> tuple[str, list[date]]:
-    """The list, and the days it has a line for (the day switch's)."""
+    """The list, and the days it has a line for (the day switch's). Today has a line, with the
+    now line, during the event (`span`, its first and last day; any day while it has no dates)
+    or when it has items; before or after the event it would stand alone (#482)."""
     today = now.astimezone(tz).date()
     shown = [r for r in rows if not view.audience or r["visibility"] == view.audience]
     # What has started and is over: a running item stays, whenever it started.
@@ -110,7 +113,8 @@ def build(
     visible = [r for r in shown if r["id"] not in hidden]
     counts = Counter(_day(r, tz) for r in shown)
     position = {r["id"]: i for i, r in enumerate(shown)}
-    days = sorted({_day(r, tz) for r in visible} | {today})
+    during = span is None or span[0] <= today <= span[1]
+    days = sorted({_day(r, tz) for r in visible} | ({today} if during else set()))
     nowline = f'<li class="canccu-agenda-nowline" id="now"><span>Now {hhmm(now, tz)}</span></li>'
     lines = [_fold(earlier, view, now, tz)] if earlier else []
     for day in days:
@@ -150,31 +154,39 @@ def filter_html(view: View, visibilities: frozenset[str] | set[str]) -> str:
     )
 
 
-def days_html(days: list[date], current: date, filters: str) -> str:
+def days_html(days: list[date], current: date, filters: str, now_line: bool) -> str:
     """The day switch jumps to a day's line (the script then follows the scroll), the audience
-    filter, and Jump to now."""
+    filter, and Jump to now while there is a now line."""
     mark = ' aria-current="true"'
     links = "".join(
         f'<a href="#day-{d.isoformat()}"{mark if d == current else ""}>{day_label(d)}</a>'
         for d in days
     )
+    jump = (
+        f'<a class="canccu-button canccu-button--ghost canccu-button--sm" href="#now">'
+        f"{icon('clock')}Jump to now</a>"
+        if now_line
+        else ""
+    )
     return (
         f'<div class="canccu-agenda-bar"><nav class="canccu-agenda-days" aria-label="Days">{links}'
-        f"</nav>{filters}"
-        f'<a class="canccu-button canccu-button--ghost canccu-button--sm" href="#now">'
-        f"{icon('clock')}Jump to now</a></div>"
+        f"</nav>{filters}{jump}</div>"
     )
 
 
-def strip_html(row: Any, now: datetime, tz: ZoneInfo) -> str:
-    """On a phone, what is on now stays in view once the hero has scrolled away (day.js)."""
+def strip_html(row: Any, now: datetime, tz: ZoneInfo, now_line: bool) -> str:
+    """On a phone, what is on now stays in view once the hero has scrolled away (day.js); its
+    Now goes to the now line while there is one."""
     if state_of(row, now) == "running":
         what, when = f"On now: {esc(row['title'])}", f"until {hhmm(row['ends_at'], tz)}"
     else:
         what, when = f"Up next: {esc(row['title'])}", hhmm(row["starts_at"], tz)
+    jump = (
+        f'<a class="canccu-button canccu-button--secondary" href="#now">{icon("clock")}Now</a>'
+        if now_line
+        else ""
+    )
     return (
         f'<div class="canccu-agenda-strip"><span><b>{what}</b> · {when} '
-        f"{day_view.late_badge(row)}</span>"
-        f'<a class="canccu-button canccu-button--secondary" href="#now">{icon("clock")}Now</a>'
-        "</div>"
+        f"{day_view.late_badge(row)}</span>{jump}</div>"
     )

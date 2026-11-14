@@ -180,7 +180,7 @@ async def add_page(request: Request) -> Response:
         body = _form(request, _posted(form), await _kinds(d), f"{BASE}/items/new", exc.message)
         return page(request, "New item", body, status=400)
     path = f"/?day={_day(item['starts_at'], tz)}&done=added"
-    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)), item["id"])
 
 
 def _day(value: str, tz: ZoneInfo) -> str:
@@ -250,7 +250,7 @@ async def save_page(request: Request) -> Response:
         body = _form(request, _posted(form), kinds, action, exc.message)
         return page(request, f"Edit {row['title']}", body, status=400)
     path = f"/?day={_day(fields.get('starts_at') or item['starts_at'], tz)}&done=saved"
-    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)), row["id"])
 
 
 def _clash_page(
