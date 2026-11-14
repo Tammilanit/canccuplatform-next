@@ -62,6 +62,14 @@ describe("the motion layer", () => {
     expect(box.querySelector("b")?.className).toBe("");
   });
 
+  it("rolls a changed decimal: only `:` separates a time", () => {
+    const { root, box } = stage("<b>12.50</b>");
+    layer.apply(root, "calm", STYLE, T0);
+    box.innerHTML = "<b>13.75</b>";
+    layer.apply(root, "calm", STYLE, T0 + 1000);
+    expect(box.querySelector("b")?.className).toBe("canccu-fx canccu-fx--roll");
+  });
+
   it("plays nothing at none, nor on a clock, nor on a running countdown", () => {
     const { root, box } = stage("<b>12</b>");
     layer.apply(root, "none", STYLE, T0);
@@ -125,6 +133,25 @@ describe("the motion layer", () => {
     ]);
     expect(level("party", 4 * 60_000)).toContain("canccu-spotlight--burst");
     expect(document.querySelector(".canccu-fx-layer--burst")).not.toBeNull();
+  });
+
+  it("plays the ring burst once per countdown, not again when its box comes back", () => {
+    const bursts = () => document.querySelectorAll(".canccu-fx-layer--burst").length;
+    const { root, box } = stage(countdown(4 * 60_000), "countdown");
+    layer.apply(root, "party", STYLE, T0);
+    expect(bursts()).toBe(1);
+    vi.advanceTimersByTime(1000);
+    // The rotation shows another box, then the countdown again, past the 10-second gap.
+    box.classList.remove("canccu-is-active");
+    layer.apply(root, "party", STYLE, T0 + 5_000);
+    box.classList.add("canccu-is-active");
+    layer.apply(root, "party", STYLE, T0 + 20_000);
+    expect(box.classList.contains("canccu-spotlight--burst")).toBe(true);
+    expect(bursts()).toBe(0);
+    // Another countdown has a burst of its own.
+    box.innerHTML = countdown(6 * 60_000);
+    layer.apply(root, "party", STYLE, T0 + 80_000);
+    expect(bursts()).toBe(1);
   });
 
   it("starts the spotlight only once its box has begun to fade in", () => {
