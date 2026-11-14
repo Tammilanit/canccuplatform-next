@@ -69,9 +69,9 @@ The phone hub's privacy page collects everything the platform holds on the calle
 - The tenants module holds the platform-wide part: the user, the privacy flags and the membership (`GET /api/tenants/me`, `…/me/privacy`; leaving is `DELETE /api/tenants/me/membership`). Deleting the whole account is `DELETE /api/tenants/users/{user_id}` (the superadmin's for now; self-service belongs to the App track's privacy center).
 
 ## Changing a contract
-- A contract change is its own PR and merges before its consumers.
-- Additive only: new fields, endpoints, events. Clients ignore fields they do not know.
-- Removing or renaming anything a consumer may use is breaking and needs a person's approval.
+- An additive change (new fields, endpoints, events, settings) goes in the package PR together with the code that uses it ([0029](../docs/decisions/0029-additive-contracts-ship-with-consumers.md)). Clients ignore fields they do not know.
+- Removing or renaming anything a consumer may use is breaking: its own PR, merged before its consumers, with a maintainer's accept.
+- Prefer additive changes; removing old things comes later, in a separate PR.
 
 ## Check
 `scripts/check-contracts` validates the demo profile and the demo theme packages against their schemas, checks the paths they name exist, and lints the OpenAPI files (`common.openapi.yaml` through its alias `common` in [redocly.yaml](redocly.yaml), so its components need no operation of its own). CI runs it as the `contracts` check. `scripts/check-contracts --dry-run` lists the steps without running them.
