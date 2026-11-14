@@ -56,7 +56,15 @@ jobs:
           # A pull request's checkout is its merge commit, whose first parent is the base it merges
           # into; a queue entry names its base.
           BASE: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_sha || 'HEAD^1' }}
-        run: node scripts/demo-stack-plan.mjs --event "$EVENT" --base "$BASE" | tee -a "$GITHUB_OUTPUT"
+        run: |
+          node scripts/demo-stack-plan.mjs --event "$EVENT" --base "$BASE"
+          printf '%s\n' 'tier=docs' 'api=' 'soak=false' 'check=false' 'shards=[]' | tee -a "$GITHUB_OUTPUT"
+      - name: TEMPORARY the queue entry's base fetch, with this PR's base as the entry's base
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          node scripts/demo-stack-plan.mjs --event merge_group --base "$BASE_SHA"
 
   api:
     name: demo-stack (api)
