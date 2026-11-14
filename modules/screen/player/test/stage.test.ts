@@ -127,3 +127,32 @@ describe("the Pulse hero", () => {
     for (const part of ["band", "chip", "teams", "description"]) expect(text(box, part)).toBeNull();
   }); // prettier-ignore
 });
+
+describe("the stage on the kiosk's page", () => {
+  it("stays first in the body, behind a screen the player keeps between ticks", async () => {
+    const { vi } = await import("vitest");
+    const { Player } = await import("../src/player.js");
+    const { FakeApi, fakeNav, json, screenState } = await import("./fake.js");
+    vi.useFakeTimers({ now: T0 });
+    try {
+      document.body.replaceChildren();
+      const state = screenState({});
+      const api = new FakeApi().on("GET /api/screen/device/state", () => json(200, state));
+      const player = new Player({ fetch: api.fetch, nav: fakeNav(), root: document.body, bundle: "1.0.0" });
+      await player.start();
+      await vi.advanceTimersByTimeAsync(3000);
+      const [stageEl, screen] = [...document.body.children];
+      expect(stageEl?.className).toMatch(/^canccu-stage\b/);
+      expect(screen?.matches(".canccu-layout")).toBe(true);
+      // A new state for the same layout: the screen is kept, not mounted again behind a new stage.
+      player.settle({ status: 200, body: { ...state, state_version: 2 } } as never);
+      await vi.advanceTimersByTimeAsync(3000);
+      // The same elements: mounting the screen again would restart its fades.
+      expect(document.body.children[0]).toBe(stageEl);
+      expect(document.body.children[1]).toBe(screen);
+      player.live.stop();
+    } finally {
+      vi.useRealTimers();
+    }
+  }); // prettier-ignore
+});

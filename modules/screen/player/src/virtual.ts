@@ -142,8 +142,10 @@ export class VirtualScreen {
 
   /** As the kiosk's: the screen keeps its layout between states, and the offline mark stays. */
   private mount(node: HTMLElement): void {
-    if (this.env.root.firstElementChild === node) return;
+    // The stage stays first, behind whatever is drawn (stage.ts).
+    const stage = [...this.env.root.children].filter((c) => c.matches(".canccu-stage"));
+    if ((stage[0]?.nextElementSibling ?? this.env.root.firstElementChild) === node) return;
     const keep = [...this.env.root.children].filter((c) => c.matches(".canccu-offline-marker"));
-    this.env.root.replaceChildren(node, ...keep);
+    this.env.root.replaceChildren(...stage, node, ...keep);
   }
 }
