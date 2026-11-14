@@ -18,7 +18,7 @@ export const claim = (role, template, content) => ({
   expires_at: null,
 });
 // A cover and a photo drawn here: the page takes data: images (src/tree.ts).
-const picture = (a, b) =>
+export const picture = (a, b) =>
   `data:image/svg+xml;base64,${Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120"><defs><linearGradient id="g" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="160" height="120" fill="url(#g)"/><circle cx="80" cy="52" r="22" fill="#fff" fill-opacity=".35"/><rect x="44" y="80" width="72" height="30" rx="12" fill="#fff" fill-opacity=".35"/></svg>`,
   ).toString("base64")}`;
@@ -30,7 +30,7 @@ export const CLAIM_OF = {
   "claim-takeover": ["full", claim("full", "announcement", { title: "Please leave the hall", body: "Follow the exit signs.", level: "emergency" })],
 }; // prettier-ignore
 
-const TILES = [
+export const TILES = [
   [picture("#1e3a8a", "#6d28d9"), "Setup day"],
   [picture("#065f46", "#0e7490"), "Cable art"],
   [picture("#7c2d12", "#b45309"), "Midnight pizza"],
@@ -99,8 +99,19 @@ const SAMPLE = {
       { game_id: "g_3", name: "Demo Quest", players: 17, trend: "down" },
     ],
   },
+  // The last 24 hours by the hour (sheet 10's "Online · 24 h").
+  activity_graph: {
+    metric: "online",
+    label: "Online · 24 h",
+    peak: { count: 231, at: "2026-03-14T23:30:00Z", time_text: "01:30" },
+    points: [96, 80, 61, 44, 30, 22, 25, 41, 70, 104, 132, 151, 170, 166, 158, 172, 190, 201, 214, 231, 225, 212, 205, 218].map(
+      (value, i) => ({ time_text: `${String((19 + i) % 24).padStart(2, "0")}:00`, value, level: Math.round((10 * value) / 231) }),
+    ),
+  },
 }; // prettier-ignore
-const STATISTICS = ["online", "voice", "top_games", "right_now"];
+/** `voice` waits for the bot's per-room counts (`voice_rooms`), so `online` takes its cells. */
+const STATISTICS = ["online", "top_games", "right_now"];
+const GIVEN = { online: { column: 5, row: 2, columns: 8, rows: 5 } };
 
 /** The zone's `stats` regions given the sample counts: Portrait's Right now, Ambient's line. */
 export function withCounts(s) {
@@ -120,7 +131,7 @@ export function withOneScreen(s) {
  * Dashboard with its statistics: the server leaves the four boxes out while their source is not
  * there (contracts/screen.md, Boxes waiting for their source), so they come back here at the
  * layout's areas, with the hero and the rail at theirs, as the server composes them once the
- * statistics reach it.
+ * statistics reach it; the voice rooms still wait.
  */
 export function withStats(s) {
   const placed = new Map(s.layout.regions.map((r) => [r.id, r]));
@@ -131,7 +142,7 @@ export function withStats(s) {
     ...rail,
     id,
     role: null,
-    area: placed.get(id).area,
+    area: GIVEN[id] ?? placed.get(id).area,
     order: [0],
     idle: "logo",
     idle_view: null,

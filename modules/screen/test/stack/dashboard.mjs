@@ -2,17 +2,17 @@
 // missing source gives away, the showcase's strips, and statistics that never run together.
 
 /**
- * Dashboard before the bot's data (contracts/screen.md, Boxes waiting for their source): Top games
- * waits and gives its cells to the box beside it, while the three `stats` boxes stay drawn, since
- * their check-ins come from Notify (#443); no logo out of the header.
+ * Dashboard before the bot's data (contracts/screen.md, Boxes waiting for their source): Top games,
+ * the activity graph and the voice rooms wait and give their cells to the boxes beside them, while
+ * Right now stays drawn, since its check-ins come from Notify (#443); no logo out of the header.
  */
 export async function boxesGivenAway(page) {
   const drawn = await page.evaluate(() => ({
-    waiting: document.querySelectorAll(".canccu-region--top_games").length,
+    waiting: document.querySelectorAll(".canccu-region--top_games, .canccu-region--online, .canccu-region--voice").length,
     stats: document.querySelectorAll(".canccu-region > .canccu-widget--stats").length,
     logos: document.querySelectorAll('.canccu-region:not([data-role="header"]) > .canccu-widget--logo').length,
   })); // prettier-ignore
-  if (drawn.waiting > 0 || drawn.stats !== 3 || drawn.logos > 0)
+  if (drawn.waiting > 0 || drawn.stats !== 1 || drawn.logos > 0)
     throw new Error(`the Dashboard before the bot's data: ${JSON.stringify(drawn)}`);
 }
 
