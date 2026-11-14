@@ -52,6 +52,7 @@ import {
 } from "./demo-screenshots-agenda.mjs";
 import { GROUPS, groupOf, pickGroups } from "./demo-screenshots-groups.mjs";
 import {
+  AGENDA_DOWN,
   CHECK_IN,
   OTHERS,
   PAGES,
@@ -77,6 +78,7 @@ const { values: opts } = parseArgs({
     base: { type: "string", default: "http://127.0.0.1" },
     out: { type: "string", default: "screenshots" },
     trouble: { type: "boolean", default: false },
+    "agenda-down": { type: "boolean", default: false },
     groups: { type: "string", default: GROUPS.join(",") },
     check: { type: "boolean", default: false },
   },
@@ -91,7 +93,9 @@ const at = (path) => `http://${DEMO_HOST}${port}${path}`;
 // Only the groups this run takes (--groups): a shard, or a module PR's surfaces.
 const only = (list, group) =>
   list.splice(0, list.length, ...list.filter((entry) => want(group(entry))));
-only(TROUBLE, () => "admin");
+// The Health shots are admin's; the other pages' shots, their own module's.
+only(TROUBLE, ([, path]) => groupOf(path));
+only(AGENDA_DOWN, ([, path]) => groupOf(path));
 only(PAGES, ([, path]) => groupOf(path === CHECK_IN ? "/notify/" : path));
 only(SETTINGS_STATES, () => "admin");
 only(OTHERS, ([, path]) => groupOf(path));
@@ -152,8 +156,10 @@ const browser = await chromium.launch();
 const shot = shooter({ browser, at, out: opts.out, check: opts.check, fail, ok });
 const run = { demo, at, shot, fail };
 
-if (opts.trouble) {
-  for (const [name, path, viewport, how] of TROUBLE) {
+if (opts.trouble || opts["agenda-down"]) {
+  for (const [name, path, viewport, how] of opts.trouble
+    ? TROUBLE
+    : AGENDA_DOWN) {
     await shot(name, path, viewport, SESSION, how);
   }
   await browser.close();

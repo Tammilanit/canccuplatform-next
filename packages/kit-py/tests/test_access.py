@@ -212,3 +212,11 @@ def test_tailscale_prefixes_are_read_once_per_value() -> None:
     for _ in range(3):
         ip_in_cidrs("100.100.1.1", tailscale_cidrs(env))
     assert parsed_cidrs.cache_info().misses <= before + 1
+
+
+def test_parse_time_reads_z_and_a_time_without_a_zone_as_utc() -> None:
+    from canccu_kit import parse_time
+
+    assert parse_time("2026-11-14T17:00:00Z") == datetime(2026, 11, 14, 17, tzinfo=UTC)
+    assert parse_time("2026-11-14T17:00:00") == datetime(2026, 11, 14, 17, tzinfo=UTC)
+    assert parse_time("2026-11-14T19:00:00+02:00") == datetime(2026, 11, 14, 17, tzinfo=UTC)

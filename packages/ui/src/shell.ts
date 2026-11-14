@@ -207,9 +207,10 @@ export interface ShellOptions extends DocumentOptions {
   plain?: boolean;
 }
 
-/** Registers admin's service worker, which shows the offline page when a signed-in phone loses
- * its connection (#440); only a session's pages need it, as only they have a shell to keep. */
-const OFFLINE_SCRIPT = raw('<script src="/admin/static/shell.js" defer></script>');
+/** Admin's script for the shell: it registers the service worker, which shows the offline page
+ * when a signed-in phone loses its connection (#440), and keeps the menu's Health note from
+ * admin's checks (#478); only a session's pages need it, as only they have a shell to keep. */
+const SHELL_SCRIPT = raw('<script src="/admin/static/shell.js" defer></script>');
 
 /** An organiser page in the shell. */
 export function shellPage(o: ShellOptions): Html {
@@ -230,7 +231,7 @@ export function shellPage(o: ShellOptions): Html {
   // An error page is nowhere in the menu, so nothing in it is marked (sheet 8).
   const here = o.plain ? undefined : o.current;
   const shell = o.session
-    ? html`<div class="canccu-shell">${header(o.event, o.logoUrl, now)}${archived}${menuNav(o.session, here, o.event)}${main}${tabbar(o.session, here, o.event?.status === "archived")}</div>${OFFLINE_SCRIPT}`
+    ? html`<div class="canccu-shell">${header(o.event, o.logoUrl, now)}${archived}${menuNav(o.session, here, o.event)}${main}${tabbar(o.session, here, o.event?.status === "archived")}</div>${SHELL_SCRIPT}`
     : html`<div class="canccu-shell canccu-shell--bare">${header(o.event, o.logoUrl, now)}${archived}${main}</div>`;
   return document(o.title, o, shell);
 }

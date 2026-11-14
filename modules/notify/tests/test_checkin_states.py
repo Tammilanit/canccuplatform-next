@@ -3,8 +3,10 @@ yet or closed, off the venue's network, expired, couldn't check in, and the done
 
 from __future__ import annotations
 
+import asyncio
 import html
 from datetime import timedelta
+from typing import Any
 
 import httpx
 from conftest import NOW, Env
@@ -167,3 +169,31 @@ async def test_already_checked_in_on_an_earlier_day_names_the_day(env: Env) -> N
     form = {"p": "arrival", "c": (await code(env))["code"]}
     text = _text(await submit(env, form, "u_a"))
     assert "Since Fri 20 Nov, 17:00. Nothing more to do." in text
+
+
+async def test_done_reads_the_wifi_and_what_is_on_now_at_once(env: Env) -> None:
+    # Each read waits until the other has started: read one after the other, they never finish.
+    started = {"wifi": asyncio.Event(), "now": asyncio.Event()}
+    wifi, now = env.hub.venue_wifi, env.hub.agenda_now
+
+    async def venue_wifi(host: str, cookie: str | None) -> list[dict[str, Any]]:
+        started["wifi"].set()
+        await asyncio.wait_for(started["now"].wait(), 1)
+        return await wifi(host, cookie)
+
+    async def agenda_now(host: str, cookie: str | None) -> dict[str, Any] | None:
+        started["now"].set()
+        await asyncio.wait_for(started["wifi"].wait(), 1)
+        return await now(host, cookie)
+
+    env.hub.venue_wifi, env.hub.agenda_now = venue_wifi, agenda_now  # type: ignore[method-assign]
+    env.hub.wifi = [{"ssid": "demo-guest", "password": None, "visibility": "public"}]
+    r = await submit(env, {"p": "arrival", "c": (await code(env))["code"]}, "u_a")
+    assert r.status_code == 201 and "Wi-Fi: demo-guest" in _text(r)
+
+
+async def test_not_open_yet_reads_an_unknown_time_zone_as_utc(env: Env) -> None:
+    env.contexts["ev-a"]["time_zone"] = "Mars/Olympus"
+    env.events[HOST] = {"starts_at": (NOW + timedelta(days=3)).isoformat()}
+    text = _text(await page(env, f"p=arrival&c={(await code(env))['code']}", "u_a"))
+    assert "Doors open on Mon 23 Nov at 17:00." in text
