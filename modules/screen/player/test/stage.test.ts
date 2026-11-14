@@ -121,10 +121,32 @@ describe("the Pulse hero", () => {
     expect(box.querySelector(".canccu-widget__chip-time")?.getAttribute("datetime")).toBe("2026-03-14T20:00:00Z");
   }); // prettier-ignore
 
-  it("draws no band, chip or teams while the view has none", () => {
+  it("draws no game band, chip or teams while the view has none", () => {
     const box = draw({ label: "Dinner", target_at: "2026-03-14T19:00:00Z", game: null, chip: null, description: null, next_up: true });
     expect(text(box, "kicker")).toBe("Next on stage");
-    for (const part of ["band", "chip", "teams", "description"]) expect(text(box, part)).toBeNull();
+    for (const part of ["band-image", "band-name", "chip", "teams", "description"]) expect(text(box, part)).toBeNull();
+  }); // prettier-ignore
+
+  // v8 rule 5 (docs/design/README.md, "No half-empty large panel"): without the game's art, the
+  // theme's own art takes the band, so the large panel is never empty below the title.
+  it("puts the theme's band in place of the game's art when the item has none", () => {
+    const themed = (view: Record<string, unknown>) =>
+      draw({ label: "Semis", target_at: "2026-03-14T19:00:00Z", ...view }).querySelector(".canccu-widget__band--theme");
+    for (const game of [null, undefined, { id: "g_1", name: "Demo Game", cover_url: null }]) {
+      const band = themed({ game });
+      expect(band, JSON.stringify(game)).not.toBeNull();
+      expect(band?.classList.contains("canccu-widget__band")).toBe(true);
+      expect(band?.getAttribute("aria-hidden")).toBe("true");
+      expect(band?.childElementCount).toBe(0);
+    }
+    expect(themed({ game: { id: "g_1", name: "Demo Game", cover_url: "/games/covers/g_1.webp" } })).toBeNull();
+  }); // prettier-ignore
+
+  it("gives a showcased announcement the theme's band too", () => {
+    const box = document.createElement("div");
+    box.append(...renderTree(DEFAULT_TEMPLATES.announcement ?? [], { qr: null, stale: false, empty: false, title: "Grand final on stage", body: "Seats open 20:30", level: "info" }));
+    expect(box.firstElementChild?.className).toBe("canccu-widget__band canccu-widget__band--theme");
+    expect(text(box, "title")).toBe("Grand final on stage");
   }); // prettier-ignore
 });
 
