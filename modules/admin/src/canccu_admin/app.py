@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import logging
 from datetime import UTC, datetime
-from typing import Any
 
 from canccu_kit import (
     KitError,
@@ -28,7 +27,7 @@ from starlette.routing import Route
 
 from .auth import Auth
 from .auth_routes import Authorize, OnEvent, OriginCheck, Viewer, auth_routes
-from .forms import from_form
+from .forms import from_form, typed
 from .health import HealthWatch
 from .health_view import health_body
 from .pages import (
@@ -290,18 +289,15 @@ def create_app(
             await service.put_settings(module, version, {**stored, **values}, session.user_id)
         except (BadSettings, VersionConflict) as exc:
             # The form again with what was typed, so nothing is lost (sheet 4, "Couldn't
-            # save"); after a conflict it compares with, and saves over, what is saved now.
-            typed: dict[str, Any] = {
-                s.key: form.get(s.key) for s in declared if s.type != "boolean"
-            }
-            typed |= {s.key: form.get(s.key) is not None for s in declared if s.type == "boolean"}
-            if isinstance(exc, VersionConflict):
-                version, stored = await service.store.get_settings(module)
-                typed = kept_after_conflict(declared, form, typed, stored)
+            # save"). It compares with, and saves over, what is saved now: after a conflict, and
+            # after a refused value too, since its version may be just as stale; a form that was
+            # current keeps everything typed.
+            version, stored = await service.store.get_settings(module)
+            shown = kept_after_conflict(declared, form, typed(declared, form), stored)
             body = settings_form_html(
                 declared,
                 service.groups.get(module, []),
-                typed,
+                shown,
                 stored,
                 version,
                 f"{BASE}/settings/{module}",
@@ -348,9 +344,9 @@ def create_app(
             Route("/health-view", health_page),
             Route("/static/ui.css", static_ui_css, methods=["GET"]),
             Route("/static/{name}.js", static_script, methods=["GET"]),
-            *profile_routes(service, auth, authorize),
+            *profile_routes(service, auth, need),
             *auth_routes(auth, authorize, on_event, viewer),
-            *people_routes(auth, authorize, on_event),
+            *people_routes(auth, need, on_event),
         ]
     )
     # Added before install(): Starlette wraps each later middleware around the earlier ones,

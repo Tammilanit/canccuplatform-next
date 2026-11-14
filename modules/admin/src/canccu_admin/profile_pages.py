@@ -15,7 +15,7 @@ from starlette.responses import RedirectResponse, Response
 from starlette.routing import Route
 
 from .auth import Auth
-from .auth_routes import Authorize
+from .auth_routes import Need
 from .pages import BASE, event_of, page
 from .service import Service
 from .settings_view import when
@@ -73,10 +73,7 @@ def _ask(title: str, replaced: str, loaded: bool, form: str, problem: str = "") 
     )
 
 
-def profile_routes(service: Service, auth: Auth, authorize: Authorize) -> list[Route]:
-    async def need(request: Request, right: str) -> Session:
-        return await authorize(request.headers.get("cookie"), right)
-
+def profile_routes(service: Service, auth: Auth, need: Need) -> list[Route]:
     async def ask_page(
         request: Request, session: Session, body: str, status: int = 200
     ) -> Response:

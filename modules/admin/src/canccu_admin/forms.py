@@ -142,12 +142,22 @@ def _integer(key: str, raw: str) -> int:
         raise BadSettings(f"{key} must be an integer") from exc
 
 
+def typed(declared: list[Setting], form: Any) -> dict[str, Any]:
+    """What the form holds for each setting, as typed: a box as a bool (an unticked one is left
+    out of the post), the rest as the posted text or None."""
+    return {
+        s.key: form.get(s.key) is not None if s.type == "boolean" else form.get(s.key)
+        for s in declared
+    }
+
+
 def from_form(declared: list[Setting], form: Any) -> dict[str, Any]:
     values: dict[str, Any] = {}
+    posted = typed(declared, form)
     for s in declared:
-        raw = form.get(s.key)
+        raw = posted[s.key]
         if s.type == "boolean":
-            values[s.key] = raw is not None
+            values[s.key] = raw
         elif s.type == "list":
             # An emptied list input means "no items", unlike an emptied scalar,
             # which means "leave unset": agenda allows `[]` for no channels.
