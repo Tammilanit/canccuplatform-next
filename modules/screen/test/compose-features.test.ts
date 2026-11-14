@@ -139,9 +139,15 @@ describe("today in numbers", () => {
   });
 
   it("names every third hour in the Pulse hero, every sixth in the Dashboard's narrower hero", () => {
+    const blank = { idle: "blank" };
     const named = (layoutId: string) => {
       const { regions } = buildRegions({
-        zone: { key: "main", layoutId, regions: {} },
+        // Boxes that keep their cells while their statistics wait, so the hero keeps its size.
+        zone: {
+          key: "main",
+          layoutId,
+          regions: { voice: blank, top_games: blank, right_now: blank },
+        },
         windowLayoutId: null,
         themeLayouts: [],
         portrait: false,

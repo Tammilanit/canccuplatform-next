@@ -2,6 +2,8 @@
 // views the demo stack cannot reach by itself, a claim from Moments, a photo beside the countdown,
 // a gap in the run of show, a Dashboard with statistics and its showcase. Each changes the server's real state, so the
 // frame around it is the real one.
+import { graphOf } from "../../src/compose/graph.ts";
+
 const ago = (ms) => new Date(Date.now() - ms).toISOString();
 export const claim = (role, template, content) => ({
   override_id: `ov_${role}`,
@@ -117,11 +119,23 @@ export function withHeroItemOnly(s) {
   };
 }
 
-/** One bar of a graph as graph.ts makes it: out of 10 against `top`, named on every `every`th hour. */
-export function hour(h, value, top, every) {
-  const time_text = `${String(h).padStart(2, "0")}:00`;
-  const level = Math.round((10 * value) / top);
-  return { time_text, value, level, ...(h % every === 0 ? { tick_text: time_text } : {}) };
+/** Hours of counts from `first` on, one a value, as compose/stats.ts hands them to graph.ts. */
+export const hoursFrom = (first, values) =>
+  values.map((value, i) => ({
+    time_text: `${String((first + i) % 24).padStart(2, "0")}:00`,
+    value,
+  }));
+
+/** A box `columns` of 12 wide on a 16:9 screen, in units of its short side (layouts.ts, unitsWide). */
+export const unitsOf = (columns) => (columns / 12) * (1600 / 9);
+
+/** The last 24 hours online (sheet 10's "Online · 24 h"). */
+const ONLINE = hoursFrom(19, [96, 80, 61, 44, 30, 22, 25, 41, 70, 104, 132, 151, 170, 166, 158, 172, 190, 201, 214, 231, 225, 212, 205, 218]); // prettier-ignore
+
+/** A widget as its box `area` draws it: the activity graph's scale and hours by its width. */
+function inBox(w, area) {
+  if (w.widget !== "activity_graph") return w;
+  return { ...w, view: { ...w.view, ...graphOf(ONLINE, unitsOf(area.columns)) } };
 }
 
 /** Sample statistics as the bot's data will bring them (#389), with sheet 10's trend arrows. */
@@ -145,11 +159,7 @@ const SAMPLE = {
     metric: "online",
     label: "Online · 24 h",
     peak: { count: 231, at: "2026-03-14T23:30:00Z", time_text: "01:30" },
-    // The scale and the labelled hours as graph.ts makes them: round steps, every sixth hour named.
-    scale: [300, 200, 100, 0].map((value) => ({ value })),
-    points: [96, 80, 61, 44, 30, 22, 25, 41, 70, 104, 132, 151, 170, 166, 158, 172, 190, 201, 214, 231, 225, 212, 205, 218].map(
-      (value, i) => hour((19 + i) % 24, value, 300, 6),
-    ),
+    // Its scale and named hours come from graph.ts by its box's width (inBox).
   },
 }; // prettier-ignore
 /** `voice` waits for the bot's per-room counts (`voice_rooms`), so `online` takes its cells. */
@@ -181,24 +191,19 @@ export function withStats(s) {
   const rail = s.regions.find((r) => r.id === "rail");
   if (rail === undefined || !STATISTICS.every((id) => placed.has(id)))
     throw new Error("the demo zone is not on the Dashboard");
-  const boxes = STATISTICS.map((id) => ({
-    ...rail,
-    id,
-    role: null,
-    area: GIVEN[id] ?? placed.get(id).area,
-    order: [0],
-    idle: "logo",
-    idle_view: null,
-    claim: null,
-    widgets: placed.get(id).widgets.map((w) => ({
+  const boxes = STATISTICS.map((id) => {
+    const area = GIVEN[id] ?? placed.get(id).area;
+    const widgets = placed.get(id).widgets.map((w) => ({
       widget: w.widget,
       template: null,
       embed: null,
       dwell_seconds: 15,
       stale_after_seconds: null,
       view: { ...SAMPLE[w.widget], qr: null, stale: false, empty: false },
-    })),
-  }));
+    }));
+    const box = { ...rail, id, role: null, area, order: [0], idle: "logo", idle_view: null };
+    return { ...box, claim: null, widgets: widgets.map((w) => inBox(w, area)) };
+  });
   const regions = s.regions.map((r) =>
     r.id === "hero" || r.id === "rail" ? { ...r, area: placed.get(r.id).area } : r,
   );
@@ -225,7 +230,7 @@ export function withShowcase(s) {
       const i = kept.indexOf(r.id);
       if (i < 0) return [r];
       const area = { column: 9, row: 2 + 5 * i, columns: 4, rows: 5 };
-      if (r.id !== "rail") return [{ ...r, area }];
+      if (r.id !== "rail") return [{ ...r, area, widgets: r.widgets.map((w) => inBox(w, area)) }];
       const countdown = r.widgets.findIndex((w) => w.widget === "countdown" && !w.view.empty);
       if (countdown < 0) throw new Error("the demo Dashboard's rail has no countdown to show");
       return [{ ...r, area, order: [countdown] }];

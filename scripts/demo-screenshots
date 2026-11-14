@@ -78,6 +78,9 @@ MEDIA=modules/screen/test/fixtures/media
 mkdir -p "$work/scripts" "$work/$STACK" "$work/$MEDIA" "$work/events/demo/assets" "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
 cp scripts/demo-screenshots*.mjs "$work/scripts/" \
   && cp "$STACK"/*.mjs "$work/$STACK/" || exit 2
+# The graphs handed to the page take their scale and hours from the server's own rule (#527).
+mkdir -p "$work/modules/screen/src/compose" \
+  && cp modules/screen/src/compose/graph.ts "$work/modules/screen/src/compose/" || exit 2
 # The Theme studio's draft takes the demo logo, as an organiser would upload it.
 cp events/demo/assets/logo.svg "$work/events/demo/assets/" || exit 2
 # The Content page's library uploads a video and a sound (content-fixture.mjs).

@@ -163,17 +163,18 @@ describe("the built-in layouts", () => {
 });
 
 describe("a box's width", () => {
-  const layout = (id: string) => BUILT_IN_LAYOUTS.find((l) => l.id === id)!;
-  const area = (id: string, region: string) =>
-    layout(id).regions.find((r) => r.id === region)!.area;
+  const wide = (id: string, region: string) => {
+    const layout = BUILT_IN_LAYOUTS.find((l) => l.id === id);
+    const area = layout?.regions.find((r) => r.id === region)?.area;
+    if (layout === undefined || area === undefined) throw new Error(`no ${id} ${region}`);
+    return unitsWide(area, layout);
+  };
 
   it("counts in units of the screen's short side, as the look sizes type (#527)", () => {
-    expect(unitsWide(area("pulse", "hero"), layout("pulse"))).toBeCloseTo((8 / 12) * (1600 / 9));
-    expect(unitsWide(area("dashboard", "online"), layout("dashboard"))).toBeCloseTo(
-      (4 / 12) * (1600 / 9),
-    );
+    expect(wide("pulse", "hero")).toBeCloseTo((8 / 12) * (1600 / 9));
+    expect(wide("dashboard", "online")).toBeCloseTo((4 / 12) * (1600 / 9));
     // On a portrait screen the short side is its width.
-    expect(unitsWide(area("pulse_portrait", "hero"), layout("pulse_portrait"))).toBeCloseTo(100);
+    expect(wide("pulse_portrait", "hero")).toBeCloseTo(100);
   });
 });
 

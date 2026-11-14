@@ -6,7 +6,7 @@
 import { boxWidgets, placedBoxes } from "./boxes.js";
 import type { Claim } from "./claims.js";
 import { directorOrder, jumpAt } from "./director.js";
-import { chooseLayout, roleOf } from "./layouts.js";
+import { chooseLayout, roleOf, unitsWide } from "./layouts.js";
 import type { Area, Layout, LayoutRegion, Props, Role } from "./layouts.js";
 import { partsOf } from "./parts.js";
 import { shuffled } from "./seeded.js";
@@ -150,7 +150,7 @@ function regionsOf(source: LayoutRegion, layout: Layout, input: BuildInput): Reg
   };
   const ids = new Set(layout.regions.map((r) => r.id));
   return partsOf(source, entries, role, modes, ids).map((part) =>
-    region(part, source, setting, part.hubQr ? null : role, input),
+    region(part, source, setting, part.hubQr ? null : role, input, unitsWide(part.area, layout)),
   );
 }
 
@@ -160,6 +160,7 @@ function region(
   setting: Record<string, unknown>,
   role: Role | null,
   input: BuildInput,
+  wide: number,
 ): RegionView {
   const entries = part.entries;
   const zoneDwell = clampDwell(setting.dwell_seconds);
@@ -175,7 +176,7 @@ function region(
         clampDwell(source.rotate_seconds) ??
         DEFAULT_DWELL_S,
       stale_after_seconds: null,
-      view: viewOf(entry.widget, props, input.facts, entry.embed ?? null),
+      view: viewOf(entry.widget, props, input.facts, entry.embed ?? null, wide),
     };
   });
   const skipEmpty = setting.skip_empty !== false;
