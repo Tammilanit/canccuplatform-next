@@ -225,20 +225,37 @@ function synthetic(id: "_full" | "_overlay", layout: Layout, at: Date): RegionVi
   };
 }
 
+const holds = (a: Area, column: number, row: number): boolean =>
+  column >= a.column && column < a.column + a.columns && row >= a.row && row < a.row + a.rows;
+
+/** Every cell of `box` lies in a region of its layer, so the growth leaves none of them blank. */
+function filledIn(box: LayoutRegion, regions: readonly LayoutRegion[]): boolean {
+  const layer = regions.filter((r) => (r.layer ?? 0) === (box.layer ?? 0));
+  for (let row = box.area.row; row < box.area.row + box.area.rows; row++) {
+    for (let column = box.area.column; column < box.area.column + box.area.columns; column++) {
+      if (!layer.some((r) => holds(r.area, column, row))) return false;
+    }
+  }
+  return true;
+}
+
 /**
  * The waiting boxes' cells filled by the hero, grown as for a showcase, when that pauses no box
- * still drawn (contracts/screen.md, The hero fills first); else `kept` itself, for the hand-over.
- * A neighbour that took the cells instead stretched a box made for three numbers over two thirds
- * of the screen around one, and squeezed the hero into a strip without its label (v8 rule 5).
+ * still drawn and leaves none of their cells blank (contracts/screen.md, The hero fills first);
+ * else `kept` itself, for the hand-over. A neighbour that took the cells instead stretched a box
+ * made for three numbers over two thirds of the screen around one, and squeezed the hero into a
+ * strip without its label (v8 rule 5). The hero grows within the drawn boxes' band only, so a
+ * waiting box beyond that band would be left blank, not filled: its neighbour takes it then.
  */
 function filledByHero(
   kept: readonly LayoutRegion[],
-  waiting: ReadonlySet<string>,
+  waiting: readonly LayoutRegion[],
   input: BuildInput,
 ): readonly LayoutRegion[] {
-  if (waiting.size === 0) return kept;
+  if (waiting.length === 0) return kept;
   const filled = grown(kept, input.zone.regions);
-  return filled.length === kept.length ? filled : kept;
+  if (filled.length !== kept.length) return kept;
+  return waiting.every((w) => filledIn(w, filled)) ? filled : kept;
 }
 
 /**
@@ -249,7 +266,7 @@ function filledByHero(
  */
 function roomFor(
   kept: readonly LayoutRegion[],
-  waiting: ReadonlySet<string>,
+  waiting: readonly LayoutRegion[],
   input: BuildInput,
 ): readonly LayoutRegion[] {
   if (input.showcase === "grow") return grown(kept, input.zone.regions);
@@ -270,7 +287,11 @@ export function buildRegions(input: BuildInput): { layout: Layout; regions: Regi
   const swapped = traded(boxes, input.zone.regions, input.zone.heroRegion ?? null);
   const waiting = new Set(swapped.filter((r) => waits(r, input)).map((r) => r.id));
   const kept = swapped.filter((r) => !waiting.has(r.id));
-  const growth = roomFor(kept, waiting, input);
+  const growth = roomFor(
+    kept,
+    swapped.filter((r) => waiting.has(r.id)),
+    input,
+  );
   const placed = growth !== kept ? growth : handedOver(swapped, waiting);
   const regions = placed.flatMap((r) => regionsOf(r, layout, input));
   return {

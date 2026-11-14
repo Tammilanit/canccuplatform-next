@@ -158,6 +158,38 @@ describe("a box waiting for its source", () => {
     const regions = build({ layoutId: "shallow" }, { showcase: "grow", themeLayouts: [shallow] });
     expect(areas(regions)).toEqual({ hero: at(1, 1, 12, 12) });
   });
+
+  // The hero grows within the drawn boxes' band, which here ends left of the waiting box: grown,
+  // it would cover none of their cells and leave 6×10 blank, so the rail beside them takes them.
+  it("hands over its cells when the grown hero would not cover them", () => {
+    const narrow: Layout = {
+      id: "narrow",
+      name: "Narrow",
+      aspect: "16:9",
+      grid: { columns: 12, rows: 12 },
+      regions: [
+        { id: "hero", area: at(1, 2, 2, 10), widgets: [{ widget: "clock" }] },
+        { id: "rail", area: at(3, 2, 4, 10), widgets: [{ widget: "clock" }] },
+        { id: "online", area: at(7, 2, 6, 10), widgets: [{ widget: "stats" }] },
+      ],
+    };
+    const regions = build({ layoutId: "narrow" }, { themeLayouts: [narrow] });
+    expect(areas(regions)).toEqual({ hero: at(1, 2, 2, 10), rail: at(3, 2, 10, 10) });
+    const blank: string[] = [];
+    for (let row = 2; row < 12; row++) {
+      for (let column = 1; column <= 12; column++) {
+        const covered = regions.some(
+          ({ area: a }) =>
+            column >= a.column &&
+            column < a.column + a.columns &&
+            row >= a.row &&
+            row < a.row + a.rows,
+        );
+        if (!covered) blank.push(`${column},${row}`);
+      }
+    }
+    expect(blank).toEqual([]);
+  });
 });
 
 describe("the hand-over by runs", () => {
