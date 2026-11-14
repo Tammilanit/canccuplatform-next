@@ -107,4 +107,15 @@ describe("a graph's bars and hours", () => {
     // A box of 2 of 12 columns.
     expect(named((2 / 12) * (1600 / 9))).toEqual(["00:00", "12:00"]);
   });
+
+  it("leaves unnamed an hour the newest one's label, ending on the box's edge, would meet", () => {
+    const named = (units: number) =>
+      graphOf(day(19, Array<number>(24).fill(10)), units).points.flatMap((p) => p.tick_text ?? []);
+    // The newest label, 18:00, moves left by about 3.3 units in a Dashboard box: 12:00 would meet it.
+    expect(named(BOX_UNITS)).toEqual(["00:00", "06:00", "18:00"]);
+    // Bars wide enough that the newest label hardly moves: every hour of the step stays.
+    expect(named(HERO_UNITS)).toEqual(["21:00", "00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00"]); // prettier-ignore
+    // The Portrait hero's bars are narrower: 15:00 would meet 18:00 there.
+    expect(named(100)).toEqual(["21:00", "00:00", "03:00", "06:00", "09:00", "12:00", "18:00"]);
+  });
 });

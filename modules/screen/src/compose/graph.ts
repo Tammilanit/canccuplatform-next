@@ -40,6 +40,7 @@ export function scaleOf(highest: number): number[] {
  * card's padding take the rest of the box's width from the bars.
  */
 const LABEL_ROOM_UNITS = 10;
+const LABEL_HALF_UNITS = 4.25;
 const GRAPH_CHROME_UNITS = 15;
 const TICK_HOURS = [3, 6, 12];
 
@@ -64,6 +65,7 @@ export function graphOf(
   const every = tickHoursOf(unitsWide);
   const named = hours.map((h) => Number.parseInt(h.time_text, 10) % every === 0);
   if (!named.includes(true)) named[named.length - 1] = true;
+  clearBeforeNewest(named, (unitsWide - GRAPH_CHROME_UNITS) / hours.length);
   const points = hours.map((h, i) => ({
     time_text: h.time_text,
     value: h.value,
@@ -72,4 +74,17 @@ export function graphOf(
     ...(named[i] ? { tick_text: h.time_text } : {}),
   }));
   return { scale: scale.map((value) => ({ value })), points };
+}
+
+/**
+ * The look ends the newest hour's label on the box's edge instead of centring it under its bar
+ * (director.css, `.canccu-widget__hour:last-child`), which moves it left by half a label less half
+ * a bar; the labels before it that it would then meet are left unnamed (#527).
+ */
+function clearBeforeNewest(named: boolean[], barUnits: number): void {
+  const newest = named.length - 1;
+  if (!named[newest]) return;
+  const shift = Math.max(0, LABEL_HALF_UNITS - barUnits / 2);
+  for (let i = newest - 1; i >= 0 && (newest - i) * barUnits - shift < LABEL_ROOM_UNITS; i--)
+    named[i] = false;
 }
