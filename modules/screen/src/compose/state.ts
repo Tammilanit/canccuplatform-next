@@ -11,6 +11,7 @@ import { healthOf } from "../health.js";
 import type { Settings } from "../health.js";
 import type { Kv } from "../kv.js";
 import type { CountSource, Orientation, ZoneStore } from "../push/store.js";
+import { countsOf } from "./stats.js";
 import { resolveWinner } from "../schedule/winner.js";
 import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
@@ -140,18 +141,6 @@ export interface ZoneComposed {
   counts: CountSource[];
   /** Whether a preview's draft was drawn (PreviewLook.themeKey); `none` without one. */
   draft: DraftUse;
-}
-
-/**
- * The counts the zone's widget types read: the graphs read the bot's, `stats` both. "Today in
- * numbers" counts only at wind-down; the phase's change rebuilds the zone anyway.
- */
-function countsOf(used: ReadonlySet<string>): CountSource[] {
-  const presence = ["stats", "activity_graph", "today_numbers"].some((t) => used.has(t));
-  return [
-    ...(presence ? ["presence" as const] : []),
-    ...(used.has("stats") ? ["checkins" as const] : []),
-  ];
 }
 
 /** The widget types a zone's regions show, in either orientation. */

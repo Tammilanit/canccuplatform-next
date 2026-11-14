@@ -6,6 +6,7 @@
  */
 import { tenantKey, withTenant } from "@canccu/kit";
 import type { Kv } from "../kv.js";
+import type { CountSource } from "../push/store.js";
 import type { Presence } from "./features.js";
 import type { Sources } from "./sources.js";
 
@@ -287,4 +288,16 @@ export async function readStats(
 function liveUntil(counts: readonly PresenceCount[], nowMs: number): number | null {
   const last = latest(counts, nowMs);
   return last === undefined ? null : last.at + LIVE_INTERVALS * last.interval_seconds * 1000 + 1;
+}
+
+/**
+ * The counts the zone's widget types read: the graphs read the bot's, `stats` both. "Today in
+ * numbers" counts only at wind-down; the phase's change rebuilds the zone anyway.
+ */
+export function countsOf(used: ReadonlySet<string>): CountSource[] {
+  const presence = ["stats", "activity_graph", "today_numbers"].some((t) => used.has(t));
+  return [
+    ...(presence ? ["presence" as const] : []),
+    ...(used.has("stats") ? ["checkins" as const] : []),
+  ];
 }
