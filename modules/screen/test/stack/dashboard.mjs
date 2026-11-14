@@ -45,6 +45,25 @@ export async function stripNamesCountdown(page) {
 }
 
 /**
+ * The rail drawn whole: one widget, no fade running (#532). Mid-crossfade (player/src/screen.ts,
+ * `enter`) the outgoing and incoming widgets lie on top of each other and the shot shows both.
+ */
+export async function railSettled(page) {
+  await page.waitForFunction(
+    () => {
+      const shown = [...document.querySelectorAll(".canccu-region--rail > .canccu-widget")];
+      return (
+        shown.length === 1 &&
+        !shown[0].matches(".canccu-slot--in, .canccu-slot--out") &&
+        shown[0].getAnimations().length === 0
+      );
+    },
+    null,
+    { timeout: 10_000 },
+  );
+}
+
+/**
  * Each statistic's number, arrow and label clear of the next one's (#416): in equal columns a long
  * number ran into its neighbour, and in a showcase strip the labels were drawn over the numbers.
  * An item's extent is what it draws, which may spill past its own box.
