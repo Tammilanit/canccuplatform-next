@@ -384,7 +384,7 @@ export function zoneEditorView(
   return html`${zoneTabs(c, zones, zone.key)}${previewNotice(c)}
     <form class="canccu-studio-editor" ${attrs(form)}>
       <div class="canccu-studio-editor__main">
-        ${layoutGallery(c, layouts, layout.id, zone.regions)}${boxesCard(c, regions, layout, first?.id)}${regions.map((r) => regionPart(c, r, layout, r === first, r.id === header ? zone.screen_name : null))}${layout.id === "dashboard" ? heroCard(c, regions, layout, zone) : ""}${settingsCard(c, zone, devices)}${remove}
+        ${layoutGallery(c, layouts, layout.id, draft.regions)}${boxesCard(c, regions, layout, first?.id)}${regions.map((r) => regionPart(c, r, layout, r === first, r.id === header ? zone.screen_name : null))}${layout.id === "dashboard" ? heroCard(c, regions, layout, zone) : ""}${settingsCard(c, zone, devices)}${remove}
       </div>
       ${side}${row}
     </form>
