@@ -65,13 +65,15 @@ TESTS=(
   "Event profile's Load asks first and replaces nothing"
   "every module's health through Caddy is ok"
   "one page of each module answers a signed-in organiser"
+  "Notify offers the Schedule topic the agenda registers at start"
+  "a reminder, an announced delay and an announcement each reach a subscribed phone's deliveries"
 )
 # Whose test each is, in TESTS' order: `platform` always runs; a test of several modules runs
 # for any of them.
 TAGS=(
   platform platform platform platform admin platform admin admin admin admin admin admin admin
   platform platform platform notify notify agenda screen "agenda notify" "agenda notify" screen
-  platform screen soak admin platform platform
+  platform screen soak admin platform platform "agenda notify" "agenda notify"
 )
 # TAGS pairs with TESTS by position: a test added without its tag would run every later one under
 # its neighbour's module.
@@ -366,6 +368,39 @@ pages_answer() {
   done
 }
 check "${TESTS[28]}" pages_answer
+
+if want agenda notify; then
+  # The agenda registers `schedule` with Notify at start, retrying until Notify answers (#517).
+  # shellcheck disable=SC2329
+  offers_schedule() {
+    for _ in $(seq 30); do
+      call GET /api/notify/topics -H "cookie: $COOKIE"
+      body_is 200 '.topics | map(select(.topic == "schedule" and .title == "Schedule")) | length == 1' && return
+      sleep 2
+    done; return 1
+  }
+  check "${TESTS[29]}" offers_schedule
+  # modules/agenda/ci/notify_phone.py subscribes a phone and makes the three source events; their
+  # rows are read as the superuser, past RLS. The reminder is due 20 s in, so they have 90 s.
+  # shellcheck disable=SC2329
+  phone_delivered() {
+    code=
+    "${COMPOSE[@]}" exec -T -e CANCCU_STACK_COOKIE="$COOKIE" agenda python - "$DEMO_HOST" \
+      < modules/agenda/ci/notify_phone.py > "$TMP/phone" 2> "$TMP/body" || return 1
+    local sql
+    sql="SELECT n.title FROM notify_deliveries d JOIN notify_notifications n ON n.tenant_id =
+      d.tenant_id AND n.id = d.notification_id WHERE d.channel = 'push' AND n.topic = 'schedule'
+      AND d.subscription_id = '$(jq -r .subscription_id "$TMP/phone")'"
+    for _ in $(seq 45); do
+      "${COMPOSE[@]}" exec -T postgres psql -U canccu -d canccu -tAc "$sql" > "$TMP/body"
+      grep -qF "$(jq -r .reminder "$TMP/phone")" "$TMP/body" &&
+        grep -qxF "$(jq -r .delayed "$TMP/phone")" "$TMP/body" &&
+        grep -qxF "$(jq -r .announced "$TMP/phone")" "$TMP/body" && return
+      sleep 2
+    done; return 1
+  }
+  check "${TESTS[30]}" phone_delivered
+fi
 
 if [ "$fail" = 0 ]; then echo "demo-stack-test: all $n tests passed"; else echo "demo-stack-test: tests failed" >&2; fi
 exit "$fail"
