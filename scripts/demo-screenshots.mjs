@@ -252,16 +252,25 @@ const pointGap = async (page) => {
   await page.waitForTimeout(300);
 };
 const pressGap = async (page) => {
-  const gap = gapAfter(page, "Dinner");
-  // Clear of the bottom bar, which would take the touch.
-  await gap.evaluate((el) => el.scrollIntoView({ block: "center" }));
-  const box = await gap.boundingBox();
   const cdp = await page.context().newCDPSession(page);
   const touch = (type, points) =>
     cdp.send("Input.dispatchTouchEvent", { type, touchPoints: points });
-  await touch("touchStart", [{ x: box.x + box.width / 2, y: box.y }]);
-  await page.waitForTimeout(700);
-  await touch("touchEnd", []);
+  // Clear of the bottom bar, which would take the touch.
+  const press = async (el, at) => {
+    await el.evaluate((e) => e.scrollIntoView({ block: "center" }));
+    const box = await el.boundingBox();
+    const point = { x: box.x + box.width / 2, y: box.y + box.height * at };
+    await touch("touchStart", [point]);
+    await page.waitForTimeout(700);
+    await touch("touchEnd", []);
+  };
+  // A press on a day's line, more than a row from any gap, shows none (#481).
+  await press(page.locator(".canccu-agenda-dayline").first(), 0.5);
+  await page.waitForTimeout(300);
+  if (await page.locator(".canccu-agenda-gap.is-shown").count()) {
+    throw new Error("a long press far from a gap showed one");
+  }
+  await press(gapAfter(page, "Dinner"), 0);
   await page.locator(".canccu-agenda-gap.is-shown").waitFor({ timeout: 5000 });
   await page.waitForTimeout(300);
 };

@@ -23,6 +23,7 @@ from .web import (
     ARCHIVED_ITEM,
     BASE,
     CHANNEL_LABELS,
+    SCRIPT_TAGS,
     VISIBILITY_LABELS,
     archived,
     day_label,
@@ -154,7 +155,7 @@ async def run_of_show(request: Request) -> Response:
     body += await _delay_sheet(request, rows, now, here) if writes else ""
     # The day switch follows the scroll and a phone keeps what is on now in view; for a writer
     # a long press shows a gap's line. The page works without it.
-    body += f'<script src="{BASE}/static/day.js" defer></script>'
+    body += SCRIPT_TAGS["day.js"]
     actions = (
         f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/new">'
         "Full form</a>"

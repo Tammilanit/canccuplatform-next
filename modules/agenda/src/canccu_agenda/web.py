@@ -47,6 +47,8 @@ TABS = (("/", "Run of show"), ("/templates", "Templates"))
 STYLESHEETS = ("ui.css", "agenda.css", "list.css", "confirm.css", "gap.css")
 CSS = tuple(f"{BASE}/static/{name}" for name in STYLESHEETS)
 SCRIPTS = ("day.js", "quickadd.js")
+# Each script's tag, from the list static_file serves, so a page cannot name one it does not.
+SCRIPT_TAGS = {name: f'<script src="{BASE}/static/{name}" defer></script>' for name in SCRIPTS}
 # A 24-hour time: native time fields follow the browser's locale, which may be 12-hour (UX B5).
 TIME_PATTERN = "[0-2][0-9]:[0-5][0-9]"
 # "Other date…": a day typed in the event's format with its year, "16 Mar 2027" (or "Tue 16 Mar

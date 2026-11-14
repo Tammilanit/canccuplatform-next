@@ -55,10 +55,11 @@
   }
   .canccu-agenda-gap a:focus-visible { outline-offset: -2px; }
   /* Without hover a hidden line would catch taps meant for the rows beside it. Shown, it is a
-     row of its own with a full 44 px target. */
+     row of its own with a full 44 px target. The link menu gives way to the long press only where
+     day.js handles one (a writer's list with gaps); a reader keeps it. */
   @media (hover: none) {
     :where(.canccu-page) .canccu-agenda-gap a { pointer-events: none; }
-    .canccu-agenda-list a { -webkit-touch-callout: none; }
+    .canccu-agenda-list.is-pressable a { -webkit-touch-callout: none; }
     .canccu-agenda-gap.is-shown { height: auto; }
     :where(.canccu-page) .canccu-agenda-gap.is-shown a {
       position: static;

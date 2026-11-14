@@ -20,6 +20,7 @@ from .deps import deps
 from .inverse import Inverse
 from .web import (
     BASE,
+    SCRIPT_TAGS,
     TIME_PATTERN,
     api_time,
     button,
@@ -130,8 +131,7 @@ def _form(
         + '<p class="canccu-field__hint">None picked: the template\'s length.</p></fieldset>'
         + f'<div class="canccu-agenda-actions">{button(_button(values, day))}'
         f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/new?day={day}">'
-        "Full form</a></div></form>"
-        f'<script src="{BASE}/static/quickadd.js" defer></script>'
+        "Full form</a></div></form>" + SCRIPT_TAGS["quickadd.js"]
     )
 
 
