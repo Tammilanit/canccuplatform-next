@@ -142,6 +142,7 @@ jobs:
           SHARD_GROUPS: ${{ matrix.groups }}
           CHECK: ${{ needs.plan.outputs.check }}
         run: |
+          echo "TEMPORARY: the shard fails before its first PNG"; exit 1
           args=(--groups "$SHARD_GROUPS")
           if [ "$CHECK" = true ]; then args+=(--check); fi
           scripts/demo-screenshots "${args[@]}" http://127.0.0.1 screenshots
