@@ -186,6 +186,12 @@ export function motionRoutes(app: FastifyInstance, deps: MotionDeps): void {
         values,
         actor_user_id: actor,
       });
+      // The held settings follow admin's event only later; without this the Zones page, read
+      // right after the save, shows the old values and version and the next save gets a 409.
+      // Admin holds the save already, so a failed re-read is no failed save: the event still comes.
+      await deps.settings.load?.(ctx.tenant_id).catch((err: unknown) => {
+        request.log.warn({ err }, "re-reading the screen settings after a motion save failed");
+      });
       // Admin has the values now; the audit entry is Screen's own (contracts/admin.md, Settings).
       await deps.audit({
         tenant_id: ctx.tenant_id,

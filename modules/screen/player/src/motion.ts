@@ -178,7 +178,8 @@ export class MotionLayer {
     if (this.countdown === null) {
       if (now - this.lastSpotlight < SPOTLIGHT_GAP_MS) return;
       this.lastSpotlight = now;
-    } else if (this.countdown.level === level) {
+    } else if (this.countdown.level === level && box.classList.contains("canccu-spotlight")) {
+      // An in-place redraw (screen.ts) resets the box's classes: then the parts go on again.
       return;
     }
     const parts = spotlightParts(level, style);

@@ -4,16 +4,15 @@ import type { SettingValue } from "@canccu/kit";
 import type { SettingsWrite } from "../src/motion-routes.js";
 
 export interface SettingsWrites {
-  /** tenant → its settings_version (0 until written). */
+  /** tenant → its settings_version in admin (0 until written). */
   versions: Record<string, number>;
+  /** tenant → the values admin holds; Screen's held copy follows only on load(). */
+  values: Record<string, Record<string, SettingValue>>;
   /** Every write admin took, in order. */
   log: { tenantId: string; actor: string; values: Record<string, unknown> }[];
 }
 
-export function fakeSettingsWrite(
-  settings: Record<string, Record<string, SettingValue>>,
-  writes: SettingsWrites,
-): SettingsWrite {
+export function fakeSettingsWrite(writes: SettingsWrites): SettingsWrite {
   return (tenantId, write) => {
     const version = writes.versions[tenantId] ?? 0;
     if (write.settings_version !== version) {
@@ -22,11 +21,14 @@ export function fakeSettingsWrite(
       );
     }
     writes.versions[tenantId] = version + 1;
-    settings[tenantId] = {
-      ...settings[tenantId],
+    writes.values[tenantId] = {
+      ...writes.values[tenantId],
       ...(write.values as Record<string, SettingValue>),
     };
     writes.log.push({ tenantId, actor: write.actor_user_id, values: write.values });
-    return Promise.resolve({ settings_version: version + 1, values: { ...settings[tenantId] } });
+    return Promise.resolve({
+      settings_version: version + 1,
+      values: { ...writes.values[tenantId] },
+    });
   };
 }

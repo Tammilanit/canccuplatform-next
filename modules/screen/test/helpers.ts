@@ -255,7 +255,10 @@ export async function harness(): Promise<Harness> {
     platformHosts: [SUPERADMIN_HOST, SIGNIN_HOST],
   });
   const rights = new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin }));
-  const settingsWrites: SettingsWrites = { versions: {}, log: [] };
+  const settingsWrites: SettingsWrites = { versions: {}, values: {}, log: [] };
+  // Screen's held copy of what admin answered: like the kit's SettingsClient, a write through
+  // admin reaches it only on load() (or admin's event, which the harness does not send).
+  const heldVersions: Record<string, number> = {};
   const app = buildApp({
     db,
     kv,
@@ -278,10 +281,15 @@ export async function harness(): Promise<Harness> {
       ensure: () => Promise.resolve(),
       get: (key: string, fallback: SettingValue) => settings[requireTenant()]?.[key] ?? fallback,
       get settingsVersion() {
-        return settingsWrites.versions[requireTenant()] ?? 0;
+        return heldVersions[requireTenant()] ?? 0;
+      },
+      load: (tenant: string) => {
+        settings[tenant] = { ...settings[tenant], ...settingsWrites.values[tenant] };
+        heldVersions[tenant] = settingsWrites.versions[tenant] ?? 0;
+        return Promise.resolve();
       },
     },
-    writeSettings: fakeSettingsWrite(settings, settingsWrites),
+    writeSettings: fakeSettingsWrite(settingsWrites),
     adminSettings: {
       ensure: () => Promise.resolve(),
       get: (key: string, fallback: SettingValue) =>

@@ -111,6 +111,30 @@ describe.skipIf(!DATABASE_URL)("the energy level", () => {
     expect(await display("hall")).toMatchObject({ motion_level: "party", motion: "moderate" });
   });
 
+  it("reads the saved values and version straight after a save, so the next save takes", async () => {
+    const version = (await motion()).settings_version;
+    const first = await save({
+      settings_version: version,
+      motion_level: "calm",
+      follow_the_day: true,
+    });
+    expect(first.statusCode).toBe(200);
+    expect(await motion()).toMatchObject({
+      settings_version: version + 1,
+      motion_level: "calm",
+      follow_the_day: true,
+    });
+    const second = await save({
+      settings_version: version + 1,
+      motion_level: "party",
+      follow_the_day: false,
+    });
+    expect(second.statusCode).toBe(200);
+    expect(h.audits.at(-1)).toMatchObject({
+      changes: { motion_level: { from: "calm", to: "party" } },
+    });
+  });
+
   it("refuses a stale version, a bad body, a reader and an archived event", async () => {
     const version = (await motion()).settings_version;
     const stale = await save({
