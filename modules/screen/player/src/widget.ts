@@ -100,9 +100,16 @@ function format(ms: number, timeZone: string, options: Intl.DateTimeFormatOption
  * The view as it stands at `nowMs`: the clock's fields as the server builds them
  * (src/compose/widgets.ts), and the playlist's item, which moves on to `next_item` by itself. The
  * playlist keeps only the item it shows, so the push that later brings that same item redraws
- * nothing and a playing video never restarts.
+ * nothing and a playing video never restarts. A hot game says since when it surges (sheet 15) in
+ * the event's time: its view-model has only the instant (contracts/screen.md, Widgets).
  */
 export function liveView(type: string, view: View, nowMs: number, timeZone: string): View {
+  if (type === "hot_game") {
+    const since = typeof view.since === "string" ? Date.parse(view.since) : NaN;
+    if (Number.isNaN(since)) return view;
+    const at = format(since, timeZone, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+    return { ...view, since_text: at };
+  }
   if (type === "playlist") {
     const rest = Object.fromEntries(Object.entries(view).filter(([k]) => k !== "next_item"));
     return { ...rest, item: currentItem(view, nowMs) };

@@ -62,15 +62,14 @@ function beside(others: readonly LayoutRegion[], settings: Settings): LayoutRegi
 /**
  * The regions with the hero grown to the band's height and twice its columns, two other boxes of
  * its layer stacked in the columns it leaves free and the rest of that layer's boxes paused (left
- * out); the same array when the layout leaves no room, which build.ts reads as "the hero does not
- * grow".
+ * out); null when there is no hero or the layout leaves it no room.
  */
 export function grown(
   regions: readonly LayoutRegion[],
   settings: Settings,
-): readonly LayoutRegion[] {
+): readonly LayoutRegion[] | null {
   const hero = heroOf(regions, settings);
-  if (hero === undefined) return regions;
+  if (hero === undefined) return null;
   const layer = hero.layer ?? 0;
   const boxes = regions.filter((r) => (r.layer ?? 0) === layer && !FRAME.has(roleIn(r, settings)));
   const kept = beside(
@@ -80,7 +79,7 @@ export function grown(
   const band = bounds(boxes.map((r) => r.area));
   const columns = hero.area.columns * 2;
   const free = band.columns - columns;
-  if (free <= 0 || band.rows < kept.length) return regions;
+  if (free <= 0 || band.rows < kept.length) return null;
   const right = (hero.area.column - band.column) * 2 >= band.columns;
   const areas = new Map<LayoutRegion, Area>([
     [

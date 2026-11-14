@@ -10,7 +10,8 @@ import { loadAgendaItems } from "../content/agenda.js";
 import { healthOf } from "../health.js";
 import type { Settings } from "../health.js";
 import type { Kv } from "../kv.js";
-import type { Orientation, ZoneStore } from "../push/store.js";
+import type { CountSource, Orientation, ZoneStore } from "../push/store.js";
+import { countsOf } from "./stats.js";
 import { resolveWinner } from "../schedule/winner.js";
 import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
@@ -136,6 +137,8 @@ export interface ZoneComposed {
   display: Display;
   /** When a content widget next changes by itself (epoch ms), or null. */
   nextChangeAt: number | null;
+  /** The counts its widgets read (ZoneRecord.counts). */
+  counts: CountSource[];
   /** Whether a preview's draft was drawn (PreviewLook.themeKey); `none` without one. */
   draft: DraftUse;
 }
@@ -159,7 +162,10 @@ export async function composeZone(
   host: string,
   zoneKey: string,
   proposed?: ZoneRow,
-  /** False for the hub's view, which drops every content widget anyway (NOW_TYPES). */
+  /**
+   * False where no screen draws the result (the hub's view, a preview's checks): no content
+   * widget but `stats` (NOW_TYPES), and no stage, so no cover is read for it.
+   */
   withContent = true,
   preview: PreviewLook = {},
 ): Promise<ZoneComposed | null> {
@@ -244,7 +250,7 @@ export async function composeZone(
   // The content widgets' sources are read only for a zone that shows them, so their changes
   // (every frame, photo and code) never move another zone's version. The hub's view keeps only
   // `stats` of them (NOW_TYPES).
-  const entries = entriesOf(Object.values(views), read.zone.regions);
+  const entries = entriesOf(Object.values(views), read.zone);
   const used = typesOf(views);
   for (const e of entries) used.add(e.widget);
   if (!withContent) for (const type of used) if (type !== "stats") used.delete(type);
@@ -258,20 +264,22 @@ export async function composeZone(
   }
   const setting = deps.settings.get("ticker_appearance", "default");
   const appearance = typeof setting === "string" ? setting : "default";
-  const { stage, covers } = await stageOf({
-    views,
-    phase: motion.phase,
-    agenda,
-    nowMs: at.getTime(),
-    stageArt: deps.settings.get("stage_art", true) !== false,
-    colors: themeColors(theme?.tokens),
-    hostname: ctx.primary_hostname ?? host,
-    art: deps.art,
-  });
-  display.stage = stage;
+  const { stage, covers } = withContent
+    ? await stageOf({
+        views,
+        phase: motion.phase,
+        agenda,
+        nowMs: at.getTime(),
+        stageArt: deps.settings.get("stage_art", true) !== false,
+        colors: themeColors(theme?.tokens),
+        hostname: ctx.primary_hostname ?? host,
+        art: deps.art,
+      })
+    : { stage: null, covers: [] };
+  if (stage !== null) display.stage = stage;
   // The level's and the phase's next change, the highlight's and a tint's end rebuild the zone
   // then, as a content widget's does: a pinned level never names the phase's.
-  const tintEnds = stage.tint === null ? null : Date.parse(stage.tint.until);
+  const tintEnds = stage?.tint == null ? null : Date.parse(stage.tint.until);
   const day = [nextPhaseAt(items, at.getTime()), highlightChangeAt(items, at.getTime())];
   const changes = [content.changesAt, motion.next?.at, ...day, tintEnds].filter((t) => t != null);
   return {
@@ -296,6 +304,7 @@ export async function composeZone(
     ticker: { ...read.ticker, appearance },
     display,
     nextChangeAt: changes.length === 0 ? null : Math.min(...changes),
+    counts: countsOf(used),
     draft,
   };
 }

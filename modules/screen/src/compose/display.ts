@@ -2,20 +2,14 @@
  * `ScreenState.display` (contracts/screen.md, Motion and burn-in drift): how the zone's screens
  * move. The player lowers the level once more under `prefers-reduced-motion`; nothing raises it.
  */
-import { eventMotion, legacyMotion, phaseItems, themeMotionOf, zoneMotion } from "./motion.js";
+import { DEFAULT_MOTION_STYLE, legacyMotion, motionStyleOf } from "@canccu/ui";
+import type { MotionStyle } from "@canccu/ui";
+import { eventMotion, phaseItems, themeMotionOf, zoneMotion } from "./motion.js";
 import type { LegacyMotion, MotionLevel, ZoneMotion } from "./motion.js";
 import type { Stage } from "./stage.js";
 import type { AgendaItem, AgendaNow } from "./widgets.js";
 
 export type Motion = LegacyMotion;
-
-/** The theme's `motion_style` token with its defaults (contracts/theming.md, Motion vocabulary). */
-export interface MotionStyle {
-  speed: "slower" | "normal" | "faster";
-  intensity: "subtle" | "normal" | "strong";
-  spotlight: "glow_and_trace" | "glow" | "trace";
-  pack: "standard" | "broadcast" | "arcade";
-}
 
 export interface Display {
   motion_level: MotionLevel;
@@ -26,13 +20,6 @@ export interface Display {
   stage?: Stage;
 }
 
-export const DEFAULT_MOTION_STYLE: MotionStyle = {
-  speed: "normal",
-  intensity: "normal",
-  spotlight: "glow_and_trace",
-  pack: "standard",
-};
-
 /** A state stored before `display`, and a zone not composed yet. */
 export const NO_DISPLAY: Display = {
   motion_level: "lively",
@@ -40,26 +27,6 @@ export const NO_DISPLAY: Display = {
   motion: "moderate",
   drift: false,
 };
-
-const STYLE_CHOICES: { [K in keyof MotionStyle]: readonly MotionStyle[K][] } = {
-  speed: ["slower", "normal", "faster"],
-  intensity: ["subtle", "normal", "strong"],
-  spotlight: ["glow_and_trace", "glow", "trace"],
-  pack: ["standard", "broadcast", "arcade"],
-};
-
-/** Each field as the theme sets it, else its default; an unknown value counts as unset. */
-export function motionStyleOf(given: unknown): MotionStyle {
-  const g = (typeof given === "object" && given !== null ? given : {}) as Record<string, unknown>;
-  const pick = <K extends keyof MotionStyle>(k: K): MotionStyle[K] =>
-    STYLE_CHOICES[k].find((v) => v === g[k]) ?? DEFAULT_MOTION_STYLE[k];
-  return {
-    speed: pick("speed"),
-    intensity: pick("intensity"),
-    spotlight: pick("spotlight"),
-    pack: pick("pack"),
-  };
-}
 
 /**
  * The items the phase is read from: the event's whole agenda when held, else what now and next

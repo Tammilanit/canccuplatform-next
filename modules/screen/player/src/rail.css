@@ -205,10 +205,11 @@
     display: none;
   }
 
-  /* A mirror's or preview's check-in widget is a sample without its code (contracts/screen.md, A
-     zone for a session), so the code's image has no source: a QR glyph that decodes as nothing
-     stands in its place, not a blank square (#414). */
-  .canccu-widget__code:not([src]) {
+  /* A session's mirror or preview of a zone (the zone page) gets its check-in widget as a sample
+     without its code (contracts/screen.md, A zone for a session), so the code's image has no
+     source: a QR glyph that decodes as nothing stands in its place, not a blank square (#414). A
+     kiosk's code without an image stays blank, so a broken live code never passes for one. */
+  [data-page="zone"] .canccu-widget__code:not([src]) {
     background: #fff
       url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 25 25%22%3E%3Cpath fill=%22%23222%22 fill-rule=%22evenodd%22 d=%22M2 2h7v7h-7zM3 3h5v5h-5zM4 4h3v3h-3zM16 2h7v7h-7zM17 3h5v5h-5zM18 4h3v3h-3zM2 16h7v7h-7zM3 17h5v5h-5zM4 18h3v3h-3z%22/%3E%3Cpath fill=%22%23222%22 d=%22M10 2h2v1h-2zM14 2h1v1h-1zM10 3h3v1h-3zM12 4h2v1h-2zM11 5h2v1h-2zM14 5h1v1h-1zM10 6h2v1h-2zM13 6h1v1h-1zM12 7h3v1h-3zM11 8h1v1h-1zM14 8h1v1h-1zM5 10h1v1h-1zM7 10h1v1h-1zM10 10h1v1h-1zM13 10h1v1h-1zM20 10h1v1h-1zM2 11h1v1h-1zM5 11h3v1h-3zM9 11h2v1h-2zM14 11h2v1h-2zM21 11h2v1h-2zM2 12h2v1h-2zM6 12h2v1h-2zM9 12h3v1h-3zM14 12h2v1h-2zM20 12h2v1h-2zM2 13h1v1h-1zM4 13h2v1h-2zM13 13h4v1h-4zM19 13h4v1h-4zM2 14h1v1h-1zM4 14h2v1h-2zM8 14h1v1h-1zM10 14h1v1h-1zM18 14h2v1h-2zM21 14h2v1h-2zM10 15h1v1h-1zM12 15h2v1h-2zM16 15h1v1h-1zM20 15h2v1h-2zM10 16h2v1h-2zM13 16h1v1h-1zM15 16h1v1h-1zM21 16h1v1h-1zM14 17h2v1h-2zM19 17h1v1h-1zM21 17h2v1h-2zM10 18h4v1h-4zM15 18h2v1h-2zM18 18h2v1h-2zM21 18h2v1h-2zM12 19h1v1h-1zM19 19h4v1h-4zM12 20h2v1h-2zM15 20h1v1h-1zM20 20h1v1h-1zM10 21h2v1h-2zM13 21h3v1h-3zM10 22h2v1h-2zM15 22h3v1h-3zM19 22h1v1h-1z%22/%3E%3C/svg%3E")
       center / 100% no-repeat;

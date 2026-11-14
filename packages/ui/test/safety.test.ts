@@ -53,6 +53,20 @@ describe("the safety rules in canccu-base", () => {
     expect(lines).toContain("all: inherit !important");
   });
 
+  it("puts the Preview mark flush in the top left corner, inside the screen's safe inset", () => {
+    // Set in from the edges it covered the header's logo; 1.7em of a 0.42-inset font stays under
+    // the three quarters of the inset that the layout's burn-in drift leaves free.
+    const own = declarations(/^\.canccu-preview-mark$/);
+    expect(own).toEqual(
+      expect.arrayContaining([
+        "top: 0 !important",
+        "left: 0 !important",
+        "padding: 0.25em 1.2em !important",
+        "font-size: clamp(16px, calc(var(--canccu-safe-inset, 48px) * 0.42), 3.9vmin) !important",
+      ]),
+    );
+  });
+
   it("keeps the page and the root from hiding, moving or covering what they hold", () => {
     const guard = declarations(/^:root,\s*\.canccu-page$/);
     for (const d of guard) expect(d).toMatch(/!important$/);

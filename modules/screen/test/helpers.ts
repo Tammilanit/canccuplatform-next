@@ -128,6 +128,8 @@ export interface Harness {
   /** One run of the offline sweep, as main starts every 5 seconds. */
   /** The covers the edge answers for the stage's art, by path, on any host. */
   covers: Record<string, Buffer>;
+  /** Each path the stage's art read through the edge, in order. */
+  coverReads: string[];
   sweep(): Promise<void>;
   queue: MemoryRenderQueue;
   /**
@@ -148,6 +150,8 @@ export interface FakeSources {
   revisionsDown: boolean;
   /** Theming's drafts by preview key; a key not here is one theming no longer knows. */
   drafts: Record<string, DraftTheme>;
+  /** The draft read fails (theming does not answer). */
+  draftsDown: boolean;
   event: { name: string } | null;
   agenda: AgendaNow | null;
   /** The whole run of show (`GET /internal/agenda/items`); null is "down". */
@@ -212,10 +216,12 @@ export async function harness(options: { saves?: boolean } = {}): Promise<Harnes
   await writeFile(join(playerDir, "sw.js"), "self;\n");
   const oembedStatus = { value: 200 };
   const covers: Record<string, Buffer> = {};
+  const coverReads: string[] = [];
   const fake: FakeSources = {
     theme: null,
     revisions: {},
     revisionsDown: false,
+    draftsDown: false,
     drafts: {},
     event: null,
     agenda: null,
@@ -318,7 +324,10 @@ export async function harness(options: { saves?: boolean } = {}): Promise<Harnes
     playerDir,
     streamPingMs: 200,
     publicEvent: (host) => Promise.resolve(publicEvents[host ?? ""] ?? null),
-    art: new ArtCache(kv, (_host, path) => Promise.resolve(covers[path] ?? null)),
+    art: new ArtCache(kv, (_host, path) => {
+      coverReads.push(path);
+      return Promise.resolve(covers[path] ?? null);
+    }),
     sources: {
       theme: (tenantId) => answer(fake.tenants, tenantId, fake.theme),
       themeRevision: (tenantId, revision) =>
@@ -327,7 +336,8 @@ export async function harness(options: { saves?: boolean } = {}): Promise<Harnes
           tenantId,
           fake.revisionsDown ? null : (fake.revisions[revision] ?? "gone"),
         ),
-      themePreview: (tenantId, key) => answer(fake.tenants, tenantId, fake.drafts[key] ?? "gone"),
+      themePreview: (tenantId, key) =>
+        answer(fake.tenants, tenantId, fake.draftsDown ? null : (fake.drafts[key] ?? "gone")),
       event: (host) => answer(fake.hosts, host, fake.event),
       agendaNow: (tenantId) => answer(fake.tenants, tenantId, fake.agenda),
       agendaItems: (tenantId) => answer(fake.tenants, tenantId, fake.agendaItems),
@@ -379,6 +389,7 @@ export async function harness(options: { saves?: boolean } = {}): Promise<Harnes
     tenants,
     rights,
     covers,
+    coverReads,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
     queue,
     dispatch: (socketPath, opts = {}) =>

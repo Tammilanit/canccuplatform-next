@@ -15,6 +15,7 @@ from .access import (
     hash_device_token,
     ip_in_cidrs,
     new_device_token,
+    parse_time,
     tailscale_cidrs,
     venue_ip_check_active,
 )
@@ -180,6 +181,7 @@ __all__ = [
     "new_nonce",
     "normalize_host",
     "parse_error_body",
+    "parse_time",
     "platform_files_dir",
     "platform_stream",
     "postgres_check",

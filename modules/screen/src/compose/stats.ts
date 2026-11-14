@@ -6,6 +6,7 @@
  */
 import { tenantKey, withTenant } from "@canccu/kit";
 import type { Kv } from "../kv.js";
+import type { CountSource } from "../push/store.js";
 import type { Presence } from "./features.js";
 import type { Sources } from "./sources.js";
 
@@ -15,6 +16,11 @@ const TREND_HOLD_MS = 60_000;
 /** A count older than this many intervals no longer says who is online now. */
 const LIVE_INTERVALS = 3;
 export const CHECKINS_REREAD_MS = 10_000;
+/**
+ * A kept check-in count older than this is read again at the next build: Notify also lowers its
+ * count without an event (a member's `DELETE /api/notify/me`, retention).
+ */
+const CHECKINS_KEEP_MS = 5 * 60_000;
 
 export interface PresenceCount {
   at: number;
@@ -147,6 +153,16 @@ export function hourlyOf(
   return averaged.map((p) => ({ ...p, level: Math.round((10 * p.value) / top) }));
 }
 
+/** The latest count of the last 24 hours while it is live (no older than three intervals). */
+function latest(counts: readonly PresenceCount[], nowMs: number): PresenceCount | undefined {
+  let last: PresenceCount | undefined;
+  for (const c of counts)
+    if (c.at > nowMs - DAY_MS && (last === undefined || c.at > last.at)) last = c;
+  const live =
+    last !== undefined && nowMs - last.at <= LIVE_INTERVALS * last.interval_seconds * 1000;
+  return live ? last : undefined;
+}
+
 /** The view-model's fields from the kept counts and the check-ins; null with neither. */
 export function statsView(
   counts: readonly PresenceCount[],
@@ -155,11 +171,9 @@ export function statsView(
   nowMs: number,
 ): Record<string, unknown> | null {
   const sorted = counts.filter((c) => c.at > nowMs - DAY_MS).sort((a, b) => a.at - b.at);
-  const last = sorted.at(-1);
-  const live =
-    last !== undefined && nowMs - last.at <= LIVE_INTERVALS * last.interval_seconds * 1000;
+  const last = latest(sorted, nowMs);
   const view: Record<string, unknown> = {};
-  if (live) {
+  if (last !== undefined) {
     const fields = {
       members: (c: PresenceCount) => c.members,
       online: (c: PresenceCount) => c.online,
@@ -184,8 +198,9 @@ interface Kept {
 }
 
 /**
- * Notify's count of arrival check-ins: read at the first build and again after a check-in, at
- * most every 10 seconds; `retryAt` is when a waiting re-read is due, for the zone's next build.
+ * Notify's count of arrival check-ins: read at the first build, again after a check-in, at most
+ * every 10 seconds, and once the kept count is 5 minutes old; `retryAt` is when a waiting
+ * re-read is due, for the zone's next build.
  */
 async function checkedIn(
   kv: Kv,
@@ -196,7 +211,8 @@ async function checkedIn(
   const raw = await kv.get(checkinsKey());
   const kept = raw === null ? null : (JSON.parse(raw) as Kept);
   const stale = (await kv.get(staleKey())) !== null;
-  if (kept !== null && !stale) return { count: kept.count, retryAt: null };
+  const fresh = kept !== null && nowMs - kept.read_at < CHECKINS_KEEP_MS;
+  if (kept !== null && fresh && !stale) return { count: kept.count, retryAt: null };
   if (kept !== null && nowMs - kept.read_at < CHECKINS_REREAD_MS) {
     return { count: kept.count, retryAt: kept.read_at + CHECKINS_REREAD_MS };
   }
@@ -261,5 +277,27 @@ export async function readStats(
 ): Promise<{ view: Record<string, unknown> | null; changesAt: number | null }> {
   const kept = counts ?? (await readCounts(kv, nowMs));
   const arrivals = await checkedIn(kv, sources, tenant, nowMs);
-  return { view: statsView(kept, arrivals.count, timeZone, nowMs), changesAt: arrivals.retryAt };
+  const changes = [liveUntil(kept, nowMs), arrivals.retryAt].filter((t) => t !== null);
+  return {
+    view: statsView(kept, arrivals.count, timeZone, nowMs),
+    changesAt: changes.length === 0 ? null : Math.min(...changes),
+  };
+}
+
+/** The first instant the latest count is no longer live, so a stopped bot's numbers go then. */
+function liveUntil(counts: readonly PresenceCount[], nowMs: number): number | null {
+  const last = latest(counts, nowMs);
+  return last === undefined ? null : last.at + LIVE_INTERVALS * last.interval_seconds * 1000 + 1;
+}
+
+/**
+ * The counts the zone's widget types read: the graphs read the bot's, `stats` both. "Today in
+ * numbers" counts only at wind-down; the phase's change rebuilds the zone anyway.
+ */
+export function countsOf(used: ReadonlySet<string>): CountSource[] {
+  const presence = ["stats", "activity_graph", "today_numbers"].some((t) => used.has(t));
+  return [
+    ...(presence ? ["presence" as const] : []),
+    ...(used.has("stats") ? ["checkins" as const] : []),
+  ];
 }

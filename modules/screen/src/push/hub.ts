@@ -10,6 +10,7 @@ import type { Event, Logger } from "@canccu/kit";
 import { checkinsMoved, keepPresence, presenceOf } from "../compose/stats.js";
 import { PREVIEW_CHANNEL } from "../preview/store.js";
 import { refreshZone } from "./device-state.js";
+import type { CountSource } from "./store.js";
 import type { Feed, StreamDeps } from "./feed.js";
 
 export const COALESCE_MS = 100;
@@ -124,8 +125,10 @@ export class PushHub {
     const streams = tenant === undefined ? undefined : this.streams.get(tenant);
     if (tenant === undefined || streams === undefined) return;
     const deviceId = event.data.device_id;
-    // The event's count of screens may have moved, and with it every zone's `show_name`.
-    const recount = ENDS.has(event.type) || event.type === "screen.device.assigned";
+    // The event's count of screens may have moved, and with it every zone's `show_name`. A device
+    // paired straight into a zone emits only `screen.device.paired`.
+    const paired = event.type === "screen.device.paired" && typeof event.data.zone_key === "string";
+    const recount = ENDS.has(event.type) || event.type === "screen.device.assigned" || paired;
     if (recount) for (const key of this.zonesOf(tenant)) this.schedule(tenant, key);
     if (ENDS.has(event.type)) {
       for (const s of [...streams]) if (s.deviceId === deviceId) s.end();
@@ -156,13 +159,16 @@ export class PushHub {
    * shown here are rebuilt, and only those that show `stats` move.
    */
   private async countsMoved(tenant: string, event: Event): Promise<void> {
+    let moved: CountSource;
     try {
       if (event.type === "bot.presence.counted") {
         const count = presenceOf(event.data);
         if (count === null) return;
         await keepPresence(this.deps.kv, tenant, count);
+        moved = "presence";
       } else if (event.type === "notify.checkin.recorded" && event.data.purpose === "arrival") {
         await checkinsMoved(this.deps.kv, tenant);
+        moved = "checkins";
       } else {
         return;
       }
@@ -170,6 +176,20 @@ export class PushHub {
       this.deps.log?.warn({ err, tenant_id: tenant, type: event.type }, "keeping a count failed");
       return;
     }
+    // Door bursts bring many of these: a zone whose last build read no such count is left alone.
+    for (const key of this.zonesOf(tenant)) {
+      const record = await withTenant(tenant, () => this.deps.zones.read(key)).catch(() => null);
+      if (record?.counts === undefined || record.counts.includes(moved)) {
+        this.schedule(tenant, key);
+      }
+    }
+  }
+
+  /**
+   * The event's screen settings changed (admin.settings.changed, once the settings client has
+   * read them again): every zone shown here composes again now, not at the next zone refresh.
+   */
+  settingsChanged(tenant: string): void {
     for (const key of this.zonesOf(tenant)) this.schedule(tenant, key);
   }
 

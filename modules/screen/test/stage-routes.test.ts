@@ -93,6 +93,12 @@ describe.skipIf(!DATABASE_URL)("the stage", () => {
       await call(h, "GET", "/api/screen/device/state", { cookies: { canccu_device: token } })
     ).json<State>();
 
+  it("reads no cover for the hub's view, which has no stage", async () => {
+    const now = await call(h, "GET", "/api/screen/now?zone=main", { host: "alpha.test" });
+    expect(now.statusCode).toBe(200);
+    expect(h.coverReads).toEqual([]);
+  });
+
   it("tints the stage with the blurred art, served to the event's screens only", async () => {
     const s = await state();
     const tint = s.display.stage?.tint;

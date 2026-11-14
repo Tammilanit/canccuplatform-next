@@ -264,3 +264,19 @@ def test_a_front_page_carries_the_privacy_tag_last() -> None:
     )
     assert "canccu-front--privacy" in doc
     assert "canccu-privacy-link" not in front_page("Sign in", "")
+
+
+def test_initials_are_the_avatars_letters() -> None:
+    from canccu_kit.ui import initials
+
+    assert initials("aino  virtanen  ii") == "AV"
+    assert initials("🎮 Night") == "🎮N"
+    assert initials("   ") == "?"
+
+
+def test_local_time_reads_an_unknown_zone_as_utc() -> None:
+    from canccu_kit.ui import local_time
+
+    at = datetime(2026, 11, 14, 17, 0, tzinfo=UTC)
+    assert local_time(at, "Europe/Helsinki").hour == 19
+    assert local_time("2026-11-14T17:00:00Z", "Mars/Olympus").hour == 17

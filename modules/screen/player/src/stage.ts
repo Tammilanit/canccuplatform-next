@@ -48,6 +48,24 @@ export function stageLook(
   return { classes, art: { url, scrim: Math.min(1, Math.max(0.55, scrim)) } };
 }
 
+/**
+ * Puts `node` right after the stage (or first, before the stage exists) with the elements `keep`
+ * matches after it. False when it is there already: mounting it again would restart its fades
+ * and, later, its videos.
+ */
+export function mountBehindStage(
+  root: HTMLElement,
+  node: HTMLElement,
+  keep: string,
+  after: HTMLElement[] = [],
+): boolean {
+  const stage = [...root.children].filter((c) => c.matches(".canccu-stage"));
+  if ((stage[0]?.nextElementSibling ?? root.firstElementChild) === node) return false;
+  const kept = [...root.children].filter((c) => c.matches(keep));
+  root.replaceChildren(...stage, node, ...kept, ...after);
+  return true;
+}
+
 export class StageLayer {
   private el: HTMLElement | null = null;
 

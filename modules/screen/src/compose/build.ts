@@ -3,11 +3,11 @@
  * pure function of the zone, the layout and what the sources said, so every screen of a zone
  * gets the same answer and the rules are tested without a stack.
  */
-import { placedBoxes } from "./boxes.js";
+import { boxWidgets, placedBoxes } from "./boxes.js";
 import type { Claim } from "./claims.js";
 import { directorOrder, jumpAt } from "./director.js";
 import { chooseLayout, roleOf } from "./layouts.js";
-import type { Area, Layout, LayoutRegion, Props, Role, WidgetEntry } from "./layouts.js";
+import type { Area, Layout, LayoutRegion, Props, Role } from "./layouts.js";
 import { partsOf } from "./parts.js";
 import { shuffled } from "./seeded.js";
 import type { HeaderMode, HubQrMode, Part } from "./parts.js";
@@ -116,14 +116,6 @@ export function shownAt(
 const idleOf = (setting: Record<string, unknown>): Idle =>
   IDLES.includes(setting.idle as Idle) ? (setting.idle as Idle) : "logo";
 
-/** The zone's widgets for a region, else the layout's. */
-const entriesIn = (source: LayoutRegion, regions: BuildInput["zone"]["regions"]): WidgetEntry[] => {
-  const widgets = regions[source.id]?.widgets;
-  return Array.isArray(widgets) ? (widgets as WidgetEntry[]) : source.widgets;
-};
-const entriesOf = (source: LayoutRegion, input: BuildInput): WidgetEntry[] =>
-  entriesIn(source, input.zone.regions);
-
 /**
  * A box the zone, as set, leaves waiting while its statistics are empty, as they all are until
  * their source comes (#389): Studio's gallery note follows this, not the layout alone.
@@ -134,14 +126,14 @@ export function waitsWhileEmpty(
 ): boolean {
   const setting = regions[source.id] ?? {};
   return (
-    setting.hidden !== true && isWaiting(entriesIn(source, regions), idleOf(setting), () => true)
+    setting.hidden !== true && isWaiting(boxWidgets(source, regions), idleOf(setting), () => true)
   );
 }
 
 /** A box of statistics still waiting for its source (waiting.ts). */
 function waits(source: LayoutRegion, input: BuildInput): boolean {
   return isWaiting(
-    entriesOf(source, input),
+    boxWidgets(source, input.zone.regions),
     idleOf(input.zone.regions[source.id] ?? {}),
     (e) => viewOf(e.widget, e.props ?? {}, input.facts, e.embed ?? null).empty,
   );
@@ -150,7 +142,7 @@ function waits(source: LayoutRegion, input: BuildInput): boolean {
 /** A region as the zone sets it, drawn whole or as its parts. */
 function regionsOf(source: LayoutRegion, layout: Layout, input: BuildInput): RegionView[] {
   const setting = input.zone.regions[source.id] ?? {};
-  const entries = entriesOf(source, input);
+  const entries = boxWidgets(source, input.zone.regions);
   const role = roleOf(source.id, setting.role);
   const modes = {
     header: input.zone.header ?? layout.header ?? "separate",
@@ -258,7 +250,7 @@ function filledIn(box: LayoutRegion, regions: readonly LayoutRegion[]): boolean 
 /**
  * The waiting boxes' cells filled by the hero, grown as for a showcase, when that pauses no box
  * still drawn and leaves none of their cells blank (contracts/screen.md, The hero fills first);
- * else `kept` itself, for the hand-over. A neighbour that took the cells instead stretched a box
+ * else null, for the hand-over. A neighbour that took the cells instead stretched a box
  * made for three numbers over two thirds of the screen around one, and squeezed the hero into a
  * strip without its label (v8 rule 5). The hero grows within the drawn boxes' band only, so a
  * waiting box beyond that band would be left blank, not filled: its neighbour takes it then.
@@ -267,26 +259,26 @@ function filledByHero(
   kept: readonly LayoutRegion[],
   waiting: readonly LayoutRegion[],
   input: BuildInput,
-): readonly LayoutRegion[] {
-  if (waiting.length === 0) return kept;
+): readonly LayoutRegion[] | null {
+  if (waiting.length === 0) return null;
   const filled = grown(kept, input.zone.regions);
-  if (filled.length !== kept.length) return kept;
-  return waiting.every((w) => filledIn(w, filled)) ? filled : kept;
+  if (filled === null || filled.length !== kept.length) return null;
+  return waiting.every((w) => filledIn(w, filled)) ? filled : null;
 }
 
 /**
  * Who takes the room (contracts/screen.md, A showcase goes first): a showcase the zone lets grow
  * grows the hero to the showcase size (sheet 10); one that plays at its size leaves the hero as
  * it is, so the waiting boxes hand over, since giving it their cells would grow it after all; only
- * without a showcase does the hero fill the waiting boxes' cells.
+ * without a showcase does the hero fill the waiting boxes' cells. Null: the hero keeps its size.
  */
 function roomFor(
   kept: readonly LayoutRegion[],
   waiting: readonly LayoutRegion[],
   input: BuildInput,
-): readonly LayoutRegion[] {
+): readonly LayoutRegion[] | null {
   if (input.showcase === "grow") return grown(kept, input.zone.regions);
-  if (input.showcase === "keep") return kept;
+  if (input.showcase === "keep") return null;
   return filledByHero(kept, waiting, input);
 }
 
@@ -308,7 +300,7 @@ export function buildRegions(input: BuildInput): { layout: Layout; regions: Regi
     swapped.filter((r) => waiting.has(r.id)),
     input,
   );
-  const placed = growth !== kept ? growth : handedOver(swapped, waiting);
+  const placed = growth ?? handedOver(swapped, waiting);
   const regions = placed.flatMap((r) => regionsOf(r, layout, input));
   return {
     layout,

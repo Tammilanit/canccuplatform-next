@@ -1,6 +1,7 @@
 // The pages of scripts/demo-screenshots.mjs that open at one URL each: the organiser shell, a part's
-// Settings in each state of its save bar, Health with a part down (the `--trouble` pass), and the
-// front door and error family. Their group is the one their path names
+// Settings in each state of its save bar, Health with a part down (the `--trouble` pass), the
+// menu's Health note on other modules' shells (`--trouble` and `--agenda-down`), and the front door
+// and error family. Their group is the one their path names
 // (scripts/demo-screenshots-groups.mjs). A new page joins here.
 import { writeFileSync } from "node:fs";
 import { SESSION, expect } from "../modules/screen/test/stack/client.mjs";
@@ -106,15 +107,27 @@ const followsRecovery = async (page) => {
   if (!(await page.evaluate(() => window.canccuSameDocument === true)))
     throw new Error("Health reloaded the page instead of swapping the check");
 };
+// Every module's shell says so too (#478): its menu's note comes from admin after the page loads
+// (admin's shell.js), and the shot waits for it.
+const noted = async (page) => {
+  await page.locator(HEALTH_NOTE).waitFor({ timeout: 30000 });
+};
 export const TROUBLE = [
   ["health-view-trouble", "/admin/health-view", DESK, { ready: followsACheck }],
   ["health-view-trouble-phone", "/admin/health-view", PHONE, {}],
+  ["agenda-trouble", "/agenda/", DESK, { ready: noted }],
+  ["screen-devices-trouble", "/admin/screen/devices", DESK, { ready: noted }],
   [
     "health-view-recovered",
     "/admin/health-view",
     DESK,
     { ready: followsRecovery },
   ],
+];
+// Notify's own page can't be shot while notify is down: the third pass, `--agenda-down`, which
+// scripts/demo-screenshots runs while it holds the run of show stopped.
+export const AGENDA_DOWN = [
+  ["notify-topics-trouble", "/notify/admin/topics", DESK, { ready: noted }],
 ];
 // The front door, signed out, and one page of the error family (an item that does not exist),
 // each at both widths. The error page must answer its own status, not 200.
@@ -134,12 +147,17 @@ export const OTHERS = [
   ["agenda-quick-add-night-phone", "/agenda/add", PHONE, { ready: typeNight }],
 ];
 
-/** The dry run's lines of the trouble pass. */
+/** The dry run's lines of the trouble and agenda-down passes. */
 export function troubleListed(at) {
-  return TROUBLE.map(
-    ([name, path, { width, height }]) =>
-      `  ${name}.png  ${at(path)}  (${width}×${height}, --trouble)`,
-  );
+  const listed = (list, pass) =>
+    list.map(
+      ([name, path, { width, height }]) =>
+        `  ${name}.png  ${at(path)}  (${width}×${height}, ${pass})`,
+    );
+  return [
+    ...listed(TROUBLE, "--trouble"),
+    ...listed(AGENDA_DOWN, "--agenda-down"),
+  ];
 }
 
 /** The dry run's lines of the first pass's pages, in the order they are shot. */

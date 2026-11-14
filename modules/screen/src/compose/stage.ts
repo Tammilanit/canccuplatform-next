@@ -12,6 +12,11 @@ import type { AgendaNow, View } from "./widgets.js";
 
 /** A box's tint holds this long from its surge's `since`. */
 export const TINT_MS = 60_000;
+/**
+ * A surge stamped this far ahead of Screen's clock counts as now: the modules' clocks may differ a
+ * little, and nothing recomposes the zone at a `since` still ahead, so the tint would be lost.
+ */
+const SKEW_MS = 5_000;
 
 export interface Tint {
   region_id: string;
@@ -59,14 +64,14 @@ function hotGames(views: Views): { region_id: string; view: Record<string, unkno
 
 /**
  * The tint the zone's boxes ask for at `nowMs`: a hot game's surge holds it for 60 s from its
- * `since`, and the newest surge wins. Null when none holds.
+ * `since` (a few seconds ahead counts as now), and the newest surge wins. Null when none holds.
  */
 export function tintAsked(views: Views, nowMs: number): TintAsk | null {
   let best: TintAsk | null = null;
   let bestSince = Number.NEGATIVE_INFINITY;
   for (const { region_id, view } of hotGames(views)) {
     const since = typeof view.since === "string" ? Date.parse(view.since) : NaN;
-    if (Number.isNaN(since) || since > nowMs || nowMs >= since + TINT_MS) continue;
+    if (Number.isNaN(since) || since > nowMs + SKEW_MS || nowMs >= since + TINT_MS) continue;
     // Ties keep the first found: the landscape view's region, the same on every screen.
     if (since > bestSince) {
       bestSince = since;

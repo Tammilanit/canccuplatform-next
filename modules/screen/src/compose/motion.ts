@@ -3,15 +3,16 @@
  * agenda, the level composed from the event's setting, the zone's pin, Follow the day, quiet hours
  * and the theme's cap, and the next change of that level. Pure: the clock and the items come in.
  */
+import { MOTION_LEVELS, legacyMotion } from "@canccu/ui";
+import type { LegacyMotion, MotionLevel } from "@canccu/ui";
 import type { AgendaItem } from "./widgets.js";
 
-export type MotionLevel = "none" | "calm" | "lively" | "party";
-export const MOTION_LEVELS: readonly MotionLevel[] = ["none", "calm", "lively", "party"];
+// The levels and their three-way form are the shared vocabulary's (packages/ui, motion.ts).
+export { MOTION_LEVELS, legacyMotion };
+export type { LegacyMotion, MotionLevel };
 export type MotionPhase = "quiet_hours" | "wind_down" | "doors" | "peak" | "build_up";
 /** The theme's `motion` token, which caps the level (contracts/theming.md). */
-export type ThemeMotion = "moderate" | "calm" | "none";
-/** `display.motion`, for players that predate `motion_level`. */
-export type LegacyMotion = ThemeMotion;
+export type ThemeMotion = LegacyMotion;
 
 const HOUR_MS = 60 * 60 * 1000;
 /** How far ahead the next change is looked for (the Motion card's `next`). */
@@ -95,10 +96,6 @@ export function levelOf(input: LevelInputs, phase: MotionPhase): MotionLevel {
   if (input.themeMotion === "calm") level = atMost(level, "calm");
   if (input.themeMotion === "none") level = "none";
   return level;
-}
-
-export function legacyMotion(level: MotionLevel): LegacyMotion {
-  return level === "lively" || level === "party" ? "moderate" : level;
 }
 
 /** Every time the phase may change after `at`: each item's start and end, and an hour before quiet hours. */

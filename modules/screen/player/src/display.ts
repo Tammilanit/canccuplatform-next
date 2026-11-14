@@ -2,8 +2,9 @@
  * How the screen's regions and ticker move and drift (contracts/screen.md, Motion and burn-in
  * drift); the level they follow is motion.ts's.
  */
+import type { LegacyMotion } from "@canccu/ui";
 
-export type Motion = "moderate" | "calm" | "none";
+export type Motion = LegacyMotion;
 
 /** How long a widget takes to fade in and out: `calm` keeps only slow fades, `none` swaps at once. */
 export const FADE_MS: Readonly<Record<Motion, number>> = { moderate: 600, calm: 1500, none: 0 };

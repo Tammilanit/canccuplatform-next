@@ -3,6 +3,11 @@
  * one per device at most, in Postgres so any container serves and ends them. A preview emits no
  * bus event; its start and end are audited, and each tells the device's streams to draw again
  * through the fanout (announcePreview).
+ *
+ * `theme_preview_key` is kept in clear, unlike theming's own copy, which is hashed: Screen reads
+ * the draft with it at every compose, and the draft's addresses that every previewing screen gets
+ * carry it anyway. A hash here would protect nothing those addresses do not already show. The key
+ * dies with the draft and after 12 hours at most, and never goes into a log (sources.ts).
  */
 import { platformKey, requireTenant, tenantKey } from "@canccu/kit";
 import type { SqlClient } from "@canccu/kit";
@@ -95,15 +100,21 @@ export interface StartInput {
   actor: string;
 }
 
-/** Starts the device's preview, replacing a running one. */
-export async function startPreview(c: SqlClient, input: StartInput): Promise<void> {
-  await c.query(
+/**
+ * Starts the device's preview, replacing a running one. The zone is checked again in the insert
+ * itself: the route read it in another transaction, and a reassignment committed in between
+ * would leave a row for the old zone. False when the device no longer shows `zoneKey`.
+ */
+export async function startPreview(c: SqlClient, input: StartInput): Promise<boolean> {
+  const { rows } = await c.query(
     `INSERT INTO screen_previews (device_id, zone_key, zone, at, theme_preview_key, until, ends_at,
                                   started_by, started_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now())
+     SELECT $1, $2, $3, $4, $5, $6, $7, $8, now()
+       FROM screen_assignments WHERE device_id = $1 AND zone_key = $2
      ON CONFLICT (tenant_id, device_id) DO UPDATE
        SET zone_key = $2, zone = $3, at = $4, theme_preview_key = $5, until = $6, ends_at = $7,
-           started_by = $8, started_at = now()`,
+           started_by = $8, started_at = now()
+     RETURNING device_id`,
     [
       input.deviceId,
       input.zoneKey,
@@ -115,6 +126,7 @@ export async function startPreview(c: SqlClient, input: StartInput): Promise<voi
       input.actor,
     ],
   );
+  return rows.length === 1;
 }
 
 /**
@@ -168,6 +180,7 @@ export async function dropDraft(c: SqlClient, deviceId: string, key: string): Pr
 export interface AnnounceDeps {
   kv: Kv;
   fanout: Fanout;
+  log?: { warn(obj: object, msg: string): void } | undefined;
 }
 
 /**
@@ -177,7 +190,11 @@ export interface AnnounceDeps {
  */
 export async function announcePreview(deps: AnnounceDeps, deviceId: string): Promise<void> {
   const tenant = requireTenant();
-  await deps.kv.set(changedKey(deviceId), "1", NO_RESUME_MS).catch(() => undefined);
+  await deps.kv.set(changedKey(deviceId), "1", NO_RESUME_MS).catch((err: unknown) => {
+    // Without the flag a reconnect within the change log's reach may resume onto the other state
+    // until the stream's next ping places it again: rare, but worth seeing when it happens.
+    deps.log?.warn({ err, device_id: deviceId }, "the preview's no-resume flag was not stored");
+  });
   await deps.fanout
     .publish(PREVIEW_CHANNEL, JSON.stringify({ tenant, device_id: deviceId }))
     .catch(() => undefined);

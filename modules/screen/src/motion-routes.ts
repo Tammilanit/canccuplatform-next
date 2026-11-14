@@ -6,6 +6,8 @@
 import type { FastifyInstance } from "fastify";
 import { MissingRight } from "@canccu/kit";
 import type { RightsChecker } from "@canccu/kit";
+import { motionStyleOf } from "@canccu/ui";
+import type { MotionStyle } from "@canccu/ui";
 import type { Audit } from "./audit.js";
 import type { Db } from "./db.js";
 import type { Sources } from "./compose/sources.js";
@@ -19,8 +21,6 @@ import {
   zoneMotion,
 } from "./compose/motion.js";
 import type { MotionLevel, MotionPhase, ThemeMotion } from "./compose/motion.js";
-import { motionStyleOf } from "./compose/display.js";
-import type { MotionStyle } from "./compose/display.js";
 import type { Settings } from "./health.js";
 import { actorOf, assertWritable, body, invalidRequest, needs, tenantOf } from "./http.js";
 import { themeFor } from "./pins/look.js";
