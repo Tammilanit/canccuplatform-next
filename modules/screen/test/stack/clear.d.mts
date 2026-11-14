@@ -17,7 +17,7 @@ interface ElementFacts {
   text: boolean;
   mask: string;
 }
-export function opaqueShare(mask: string): number;
+export function drawnShare(mask: string): number;
 export function drawnParts(elements: ElementFacts[]): Extent[];
 export function cutText(
   box: Extent,

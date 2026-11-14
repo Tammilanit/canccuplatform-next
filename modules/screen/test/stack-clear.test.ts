@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cutText, drawnParts, emptiestBand, opaqueShare, overlapping } from "./stack/clear.mjs";
+import { cutText, drawnParts, drawnShare, emptiestBand, overlapping } from "./stack/clear.mjs";
 
 const at = (left: number, top: number, right: number, bottom: number) => ({
   left,
@@ -83,24 +83,27 @@ describe("drawnParts", () => {
     expect(drawnParts([part(["canccu-widget__title"], { hidden: true })])).toEqual([]);
   });
 
-  it("counts only the theme band's opaque part, above where its mask fades out", () => {
+  it("counts the theme band down to the middle of its mask's fade, not the faded rest", () => {
     const band = ["canccu-widget__band", "canccu-widget__band--theme"];
-    const mask = "linear-gradient(rgb(0, 0, 0) 45%, rgba(0, 0, 0, 0))";
-    expect(drawnParts([part(band, { leaf: false, mask })])).toEqual([at(0, 100, 500, 190)]);
+    const mask = "linear-gradient(rgb(0, 0, 0) 55%, rgba(0, 0, 0, 0))";
+    expect(drawnParts([part(band, { leaf: false, mask })])).toEqual([at(0, 100, 500, 255)]);
     // A band with a class that only starts like it is not the art band.
     expect(drawnParts([part(["canccu-widget__band-name"], { leaf: false })])).toEqual([]);
   });
 });
 
-describe("opaqueShare", () => {
-  it("reads how far down a top-to-bottom mask stays opaque", () => {
-    expect(opaqueShare("none")).toBe(1);
-    expect(opaqueShare("linear-gradient(rgb(0, 0, 0) 45%, rgba(0, 0, 0, 0))")).toBeCloseTo(0.45);
-    expect(opaqueShare("linear-gradient(180deg, rgb(0, 0, 0) 60%, transparent)")).toBeCloseTo(0.6);
+describe("drawnShare", () => {
+  it("reads how far down a top-to-bottom fade stays at least half opaque", () => {
+    expect(drawnShare("none")).toBe(1);
+    // stage.css's band, as Chromium computes it.
+    expect(drawnShare("linear-gradient(rgb(0, 0, 0) 55%, rgba(0, 0, 0, 0))")).toBeCloseTo(0.775);
+    expect(drawnShare("linear-gradient(180deg, rgb(0, 0, 0) 60%, transparent)")).toBeCloseTo(0.8);
+    expect(drawnShare("linear-gradient(rgb(0, 0, 0) 20%, rgba(0, 0, 0, 0) 40%)")).toBeCloseTo(0.3);
   });
 
   it("counts none of a band whose mask it cannot read, so a fade never passes as filled", () => {
-    expect(opaqueShare("radial-gradient(rgb(0, 0, 0), transparent)")).toBe(0);
+    expect(drawnShare("radial-gradient(rgb(0, 0, 0), transparent)")).toBe(0);
+    expect(drawnShare("linear-gradient(rgb(0, 0, 0) 55%, rgba(0, 0, 0, 0.5))")).toBe(0);
   });
 });
 

@@ -262,8 +262,12 @@
     height: auto;
     min-height: 0;
     margin: calc(-4 * var(--canccu-u)) calc(-4.4 * var(--canccu-u)) calc(2.4 * var(--canccu-u));
-    /* Faded out by a mask, not a veil of `surface`: the card's own ground shows through, seamless. */
-    mask-image: linear-gradient(180deg, #000 45%, transparent);
+    /*
+     * Faded out by a mask, not a veil of `surface`: the card's own ground shows through, seamless.
+     * Opaque past half its height, so a tall band over a short text (a showcase) leaves no quarter
+     * of the panel empty once its faded tail is not counted (test/stack/clear.mjs, #528).
+     */
+    mask-image: linear-gradient(180deg, #000 55%, transparent);
     background-image:
       radial-gradient(
         ellipse 46% 120% at 74% 18%,

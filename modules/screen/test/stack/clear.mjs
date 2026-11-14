@@ -97,21 +97,28 @@ export function emptiestBand(panel, parts) {
 }
 
 /**
- * How far down a band stays opaque under its `mask-image` (stage.css: the theme band fades out
- * from 45 % down), as a share of its height; none of it for a mask this cannot read, so a fade
- * never passes as filled.
+ * How far down a band is drawn under its `mask-image`, as a share of its height: to the middle of
+ * its fade, where the mask is half opaque (stage.css: opaque to 55 %, gone at the foot). Below
+ * that it is more faded than drawn; for a linear fade it is also the band's mean opacity. Only the
+ * fully opaque part would count a glow the screen visibly carries further as empty. None of a band
+ * whose mask this cannot read, so a fade never passes as filled.
  */
-export function opaqueShare(mask) {
+export function drawnShare(mask) {
   if (mask === "" || mask === "none") return 1;
-  const stop = /^linear-gradient\((?:180deg, |to bottom, )?rgb\(0, 0, 0\) ([\d.]+)%/.exec(mask);
-  return stop === null ? 0 : Number(stop[1]) / 100;
+  const fade =
+    /^linear-gradient\((?:180deg, |to bottom, )?rgb\(0, 0, 0\) ([\d.]+)%, (?:transparent|rgba\(0, 0, 0, 0\))(?: ([\d.]+)%)?\)$/.exec(
+      mask,
+    );
+  if (fade === null) return 0;
+  const [opaque, gone] = [Number(fade[1]), Number(fade[2] ?? 100)];
+  return (opaque + gone) / 2 / 100;
 }
 
 /**
  * What of the hero's box counts as drawn, from the page's facts on each element: text, images
- * and the art bands, the theme band only down to where its mask fades it out. A box that only
- * grows (the when-row) does not count, nor the card's art behind the whole box, nor the motion
- * layers (`canccu-fx-layer`), which sweep over all of it.
+ * and the art bands, the theme band only down to the middle of its fade (drawnShare). A box that
+ * only grows (the when-row) does not count, nor the card's art behind the whole box, nor the
+ * motion layers (`canccu-fx-layer`), which sweep over all of it.
  */
 export function drawnParts(elements) {
   return elements.flatMap((e) => {
@@ -120,7 +127,7 @@ export function drawnParts(elements) {
     if (!band && !e.leaf && !e.text) return [];
     if (!e.classes.includes("canccu-widget__band--theme")) return [e.extent];
     const { top, bottom } = e.extent;
-    return [{ ...e.extent, bottom: top + (bottom - top) * opaqueShare(e.mask) }];
+    return [{ ...e.extent, bottom: top + (bottom - top) * drawnShare(e.mask) }];
   });
 }
 

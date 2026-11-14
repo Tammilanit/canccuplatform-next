@@ -56,10 +56,27 @@
   }
 
   .canccu-layout--split .canccu-region[data-role="rail"] .canccu-widget__row--delayed,
-  .canccu-layout--dashboard .canccu-region[data-role="rail"] .canccu-widget__row--delayed,
   .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__row--delayed {
     grid-template-areas: "state delay until where" "name name name name";
     grid-template-columns: auto auto auto 1fr;
+  }
+
+  /*
+   * Dashboard's rail is a third of the screen: the label, the badge, the new start and the place
+   * run past it on one line, and a third line leaves no room for the name under a now row. So a
+   * delayed row (next once a showcase takes the hero, #528) shows the badge, not its place, as the
+   * Dashboard's strips do below.
+   */
+  .canccu-layout--dashboard .canccu-region[data-role="rail"] .canccu-widget__row--delayed {
+    grid-template-areas: "state delay until" "name name name";
+    grid-template-columns: auto auto 1fr;
+  }
+
+  .canccu-layout--dashboard
+    .canccu-region[data-role="rail"]
+    .canccu-widget__row--delayed
+    .canccu-widget__where {
+    display: none;
   }
 
   .canccu-layout--split .canccu-region[data-role="rail"] .canccu-widget__delay,
