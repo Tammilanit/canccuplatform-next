@@ -351,7 +351,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       if (view === "rail-empty") await railShowsIdle(page);
       else if (view === "dashboard-showcase") {
         await stripNamesCountdown(page);
-        await tickerFitted(page, true);
+        // Level-up draws its own ticker template: no built-in line there to crawl.
+        await tickerFitted(page, theme !== "level-up");
       } else if (view === "ambient-takeover") await takeoverIsRed(page);
       else if (view === "stage-surge") return await surgeStrip(page, theme, view, size, close);
       else if (view.startsWith("director-") || view === "choreographer") {
