@@ -40,6 +40,7 @@ export function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
     display: composed.display,
     views: { landscape: view("landscape"), portrait: view("portrait") },
     nextChangeAt: composed.nextChangeAt,
+    counts: composed.counts,
   };
 }
 

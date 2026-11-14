@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
 import { driftAt, FADE_MS } from "../src/display.js";
-import { levelOf, transitionsOf } from "../src/motion.js";
+import { legacyMotion } from "@canccu/ui";
+import { levelOf } from "../src/motion.js";
 import { countdownText, drawWidget, fillCountdowns, liveView } from "../src/widget.js";
 
 const view = (over: Record<string, unknown>) => ({ qr: null, stale: false, empty: false, ...over });
@@ -76,7 +77,7 @@ describe("how the screen moves", () => {
     expect(levelOf(undefined, false)).toBe("lively");
     expect(levelOf({ motion_level: "wild", motion: "none" }, false)).toBe("none");
     // Region transitions and the ticker keep the three ways of `display.motion`.
-    expect(["none", "calm", "lively", "party"].map((l) => transitionsOf(l as never))).toEqual([
+    expect(["none", "calm", "lively", "party"].map((l) => legacyMotion(l as never))).toEqual([
       "none",
       "calm",
       "moderate",

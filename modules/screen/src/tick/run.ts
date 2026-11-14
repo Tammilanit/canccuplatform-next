@@ -77,7 +77,7 @@ export async function tickTenant(deps: TickDeps, ctx: TenantContext): Promise<vo
   const previews = await deps.db.tenant((c) => endExpired(c, deps.audit, deps.now()));
   const fanout = deps.fanout;
   if (fanout !== undefined) {
-    for (const id of previews) await announcePreview({ kv: deps.kv, fanout }, id);
+    for (const id of previews) await announcePreview({ kv: deps.kv, fanout, log: deps.log }, id);
   }
   // Not under "tick": a zone may be called `ticker`.
   if (await deps.kv.setIfAbsent(tenantKey("screen", "ticker", "tick"), "1", CLAIM_MS)) {

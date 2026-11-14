@@ -282,4 +282,16 @@ describe("a preview on a screen (#444)", () => {
     expect(document.querySelector(".canccu-preview-mark")).toBeNull();
     player.live.stop();
   });
+
+  it("puts no mark on the archived frame while a preview still runs", async () => {
+    const preview = { until: null, at: null, theme: false };
+    const player = await boot(screenState({ preview }), new FakeCaches());
+    expect(document.querySelector(".canccu-preview-mark")).not.toBeNull();
+    const tenant = { id: "alpha", name: "Demo Event", time_zone: "UTC", status: "archived" };
+    player.settle({ status: 200, body: screenState({ preview, tenant }) } as Parameters<
+      typeof player.settle
+    >[0]);
+    expect(document.querySelector(".canccu-preview-mark")).toBeNull();
+    player.live.stop();
+  });
 });

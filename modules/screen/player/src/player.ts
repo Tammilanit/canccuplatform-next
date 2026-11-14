@@ -255,7 +255,9 @@ export class Player {
       this.screen.tick();
       this.screen.start();
     }
-    previewMark(this.env.root, state.zone === null ? null : state);
+    // Only a zone's frame is a preview: the archived and unassigned notices never carry the mark.
+    const framed = state.tenant.status !== "archived" && state.zone !== null;
+    previewMark(this.env.root, framed ? state : null);
     keepSafetyLast(this.env.root);
   }
 

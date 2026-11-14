@@ -134,7 +134,7 @@ export function previewRoutes(app: FastifyInstance, deps: PreviewDeps): void {
       const until = given.minutes === null ? null : new Date(nowMs + given.minutes * 60_000);
       const actor = actorOf(request) ?? "";
       const row = await deps.db.tenant(async (c) => {
-        await startPreview(c, {
+        const started = await startPreview(c, {
           deviceId: device.id,
           zoneKey,
           zone: given.zone,
@@ -144,6 +144,12 @@ export function previewRoutes(app: FastifyInstance, deps: PreviewDeps): void {
           endsAt: until ?? new Date(nowMs + LONGEST_MS),
           actor,
         });
+        if (!started) {
+          throw new KitError("The device was reassigned meanwhile. Start the preview again.", {
+            status: 409,
+            code: "version_conflict",
+          });
+        }
         await deps.audit({
           tenant_id: ctx.tenant_id,
           actor_user_id: actor,

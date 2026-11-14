@@ -407,6 +407,7 @@
         description: "`not_found`: no such device, a revoked one, or one with no zone."
       "409":
         $ref: "../screen.openapi.yaml#/components/responses/Conflict"
+        description: "`event_archived`, or `version_conflict`: the device was reassigned while the preview started."
   delete:
     tags: [devices]
     operationId: endDevicePreview

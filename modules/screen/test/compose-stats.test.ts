@@ -222,4 +222,28 @@ describe("readStats", () => {
     expect((await read(T0 + 40_000)).view).toEqual({ checked_in: 4 });
     expect(notify.reads).toBe(3);
   });
+
+  it("reads the check-ins again once the kept count is 5 minutes old", async () => {
+    // Notify also lowers its count without an event (a member deleting their data, retention).
+    const kv = new MemoryKv(() => T0);
+    const notify = sources([41, 40]);
+    const read = (now: number) =>
+      withTenant("alpha", () => readStats(kv, notify, "alpha", "UTC", now));
+    expect((await read(T0)).view).toEqual({ checked_in: 41 });
+    expect((await read(T0 + 5 * MIN - 1)).view).toEqual({ checked_in: 41 });
+    expect((await read(T0 + 5 * MIN)).view).toEqual({ checked_in: 40 });
+    expect(notify.reads).toBe(2);
+  });
+
+  it("says when the latest count stops being live, so a stopped bot's numbers go then", async () => {
+    const kv = new MemoryKv(() => T0);
+    // Counted a minute ago, every 60 s: live for three intervals, until 2 minutes from now.
+    await keepPresence(kv, "alpha", at(1, 212));
+    const read = (now: number) =>
+      withTenant("alpha", () => readStats(kv, noSources, "alpha", "UTC", now));
+    const live = await read(T0);
+    expect(live.view).toMatchObject({ online: 212 });
+    expect(live.changesAt).toBe(T0 + 2 * MIN + 1);
+    expect(await read(T0 + 2 * MIN + 1)).toEqual({ view: null, changesAt: null });
+  });
 });

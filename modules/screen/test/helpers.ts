@@ -146,6 +146,8 @@ export interface FakeSources {
   revisionsDown: boolean;
   /** Theming's drafts by preview key; a key not here is one theming no longer knows. */
   drafts: Record<string, DraftTheme>;
+  /** The draft read fails (theming does not answer). */
+  draftsDown: boolean;
   event: { name: string } | null;
   agenda: AgendaNow | null;
   /** The whole run of show (`GET /internal/agenda/items`); null is "down". */
@@ -209,6 +211,7 @@ export async function harness(): Promise<Harness> {
     theme: null,
     revisions: {},
     revisionsDown: false,
+    draftsDown: false,
     drafts: {},
     event: null,
     agenda: null,
@@ -317,7 +320,8 @@ export async function harness(): Promise<Harness> {
           tenantId,
           fake.revisionsDown ? null : (fake.revisions[revision] ?? "gone"),
         ),
-      themePreview: (tenantId, key) => answer(fake.tenants, tenantId, fake.drafts[key] ?? "gone"),
+      themePreview: (tenantId, key) =>
+        answer(fake.tenants, tenantId, fake.draftsDown ? null : (fake.drafts[key] ?? "gone")),
       event: (host) => answer(fake.hosts, host, fake.event),
       agendaNow: (tenantId) => answer(fake.tenants, tenantId, fake.agenda),
       agendaItems: (tenantId) => answer(fake.tenants, tenantId, fake.agendaItems),

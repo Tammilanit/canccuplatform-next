@@ -1,10 +1,11 @@
 // @vitest-environment happy-dom
 /** The motion vocabulary on the screen (contracts/theming.md, Motion vocabulary). */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MotionLayer, SPOTLIGHT_GAP_MS, spotlightParts, styleOf } from "../src/motion.js";
+import { motionStyleOf } from "@canccu/ui";
+import { MotionLayer, SPOTLIGHT_GAP_MS, spotlightParts } from "../src/motion.js";
 import type { Level } from "../src/motion.js";
 
-const STYLE = styleOf(undefined);
+const STYLE = motionStyleOf(undefined);
 const T0 = Date.parse("2026-06-01T20:00:00Z");
 
 /** One region holding one shown box with the given inner HTML. */
@@ -60,6 +61,14 @@ describe("the motion layer", () => {
     expect(box.querySelector("i")?.className).toBe("");
     vi.advanceTimersByTime(700);
     expect(box.querySelector("b")?.className).toBe("");
+  });
+
+  it("rolls a changed decimal: only `:` separates a time", () => {
+    const { root, box } = stage("<b>12.50</b>");
+    layer.apply(root, "calm", STYLE, T0);
+    box.innerHTML = "<b>13.75</b>";
+    layer.apply(root, "calm", STYLE, T0 + 1000);
+    expect(box.querySelector("b")?.className).toBe("canccu-fx canccu-fx--roll");
   });
 
   it("plays nothing at none, nor on a clock, nor on a running countdown", () => {
@@ -127,6 +136,26 @@ describe("the motion layer", () => {
     expect(document.querySelector(".canccu-fx-layer--burst")).not.toBeNull();
   });
 
+  it("plays the ring burst once per countdown, not again when its box comes back", () => {
+    const bursts = () => document.querySelectorAll(".canccu-fx-layer--burst").length;
+    const { root, box } = stage(countdown(4 * 60_000), "countdown");
+    layer.apply(root, "party", STYLE, T0);
+    expect(bursts()).toBe(1);
+    vi.advanceTimersByTime(1000);
+    // The rotation shows another box, then the countdown again, past the 10-second gap.
+    box.classList.remove("canccu-is-active");
+    layer.apply(root, "party", STYLE, T0 + 5_000);
+    box.classList.add("canccu-is-active");
+    layer.apply(root, "party", STYLE, T0 + 20_000);
+    expect(box.classList.contains("canccu-spotlight--burst")).toBe(true);
+    expect(bursts()).toBe(0);
+    // Another countdown has a burst of its own; its box is drawn again, which resets its classes.
+    box.className = "canccu-widget canccu-widget--countdown canccu-is-active";
+    box.innerHTML = countdown(6 * 60_000);
+    layer.apply(root, "party", STYLE, T0 + 80_000);
+    expect(bursts()).toBe(1);
+  });
+
   it("starts the spotlight only once its box has begun to fade in", () => {
     const { root, box } = stage(countdown(4 * 60_000), "countdown");
     box.classList.add("canccu-slot--in");
@@ -156,6 +185,6 @@ describe("the motion layer", () => {
       "pop",
       "burst",
     ]);
-    expect(styleOf({ speed: "faster", pack: "wild" })).toEqual({ ...STYLE, speed: "faster" });
+    expect(motionStyleOf({ speed: "faster", pack: "wild" })).toEqual({ ...STYLE, speed: "faster" });
   });
 });

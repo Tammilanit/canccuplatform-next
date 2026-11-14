@@ -11,6 +11,7 @@ import type { Db } from "../db.js";
 import type { Kv } from "../kv.js";
 import { loadContent } from "../tick/content.js";
 import { loadZoneState } from "../tick/run.js";
+import { boxWidgets, placedBoxes } from "./boxes.js";
 import { playlistNow } from "./playing.js";
 import type { AssetFile, PlayingInput } from "./playing.js";
 import { photoWall, wallKey, wallSettings } from "./photos.js";
@@ -70,18 +71,18 @@ export async function readPhotos(c: SqlClient): Promise<PhotoRow[]> {
 }
 
 /**
- * Every widget entry of the zone's layouts, as build.ts picks them, also those of a box that waits
- * for its source and so is not in the built regions: its source must be read for it to come back.
+ * Every widget entry of the boxes the zone draws in its layouts, as build.ts picks them, also
+ * those of a box that waits for its source and so is not in the built regions: its source must
+ * be read for it to come back. A hidden box never comes back, so its source is never read.
  */
 export function entriesOf(
   views: readonly { layout: Layout }[],
-  zoneRegions: Record<string, Record<string, unknown>>,
+  zone: { layout_id: string | null; regions: Record<string, Record<string, unknown>> },
 ): WidgetEntry[] {
   return views.flatMap((view) =>
-    view.layout.regions.flatMap((r) => {
-      const own = zoneRegions[r.id]?.widgets;
-      return Array.isArray(own) ? (own as WidgetEntry[]) : r.widgets;
-    }),
+    placedBoxes(view.layout, zone.layout_id, zone.regions).flatMap((r) =>
+      boxWidgets(r, zone.regions),
+    ),
   );
 }
 
