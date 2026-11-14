@@ -129,6 +129,8 @@ export interface Harness {
   /** Audit entries appended so far; `auditDown` makes the next appends fail. */
   audit: AuditEntry[];
   auditDown: boolean;
+  /** The events whose profile theming read, one entry per read. */
+  profileReads: string[];
   /** The events theming published to one event's stream. */
   events(tenant: string): Event[];
   store: MemoryStreamStore;
@@ -156,6 +158,7 @@ export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness>
   const store = new MemoryStreamStore();
   const audit: AuditEntry[] = [];
   const state = { auditDown: false };
+  const profileReads: string[] = [];
   const { storage, quota } = fakeQuota();
   const app = buildApp({
     db,
@@ -169,7 +172,10 @@ export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness>
       audit.push(entry);
       return Promise.resolve();
     },
-    profile: (tenant) => Promise.resolve(PROFILES[tenant]),
+    profile: (tenant) => {
+      profileReads.push(tenant);
+      return Promise.resolve(PROFILES[tenant]);
+    },
     rights: new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin })),
     tenants: new TenantResolver({ tenantsUrl: "http://tenants", fetch: fakeTenants }),
     health: createHealth({ module: "theming", version: "dev", checks: {} }),
@@ -185,6 +191,7 @@ export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness>
     storage,
     quota,
     audit,
+    profileReads,
     store,
     get auditDown() {
       return state.auditDown;
