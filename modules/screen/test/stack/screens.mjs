@@ -334,7 +334,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await page.goto(at("/screen/"));
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
       else await layout(page, size);
-      if (view.startsWith("dashboard")) await statsApart(page);
+      // A showcase pauses Right now, the Dashboard's one `stats` box (#447): no numbers to keep apart.
+      if (view.startsWith("dashboard") && view !== "dashboard-showcase") await statsApart(page);
       // #443's views draw what they are named for before the shot.
       const drawn = NEW_VIEWS[view];
       if (drawn !== undefined) await page.waitForSelector(drawn, { timeout: 30_000 });

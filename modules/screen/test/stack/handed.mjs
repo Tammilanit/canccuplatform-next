@@ -212,14 +212,19 @@ export const MOTION_VIEWS = [
 
 export function withMotion(level, pack) {
   const target_at = new Date(Date.now() + 290_000).toISOString();
+  const soon = (v) => ({ ...v, view: { ...v.view, target_at } });
+  // With a tournament or ceremony ahead the hero plays tonight's highlight, a countdown, rather
+  // than its idle view (#447): that countdown then counts down, and holds the hero.
+  const hero = (r) => {
+    const widgets = r.widgets.map((w) => (w.widget === "countdown" && !w.view.empty ? soon(w) : w));
+    const counting = widgets.findIndex((w) => w.widget === "countdown" && !w.view.empty);
+    const idle_view = r.idle_view === null ? null : soon(r.idle_view);
+    return { ...r, widgets, idle_view, ...(counting < 0 ? {} : { order: [counting] }) };
+  };
   return (s) => ({
     ...s,
     display: { ...s.display, motion_level: level, motion_style: { ...s.display?.motion_style, pack } },
-    regions: s.regions.map((r) =>
-      r.role !== "hero" || r.idle_view === null
-        ? r
-        : { ...r, idle_view: { ...r.idle_view, view: { ...r.idle_view.view, target_at } } },
-    ),
+    regions: s.regions.map((r) => (r.role === "hero" ? hero(r) : r)),
   }); // prettier-ignore
 }
 
