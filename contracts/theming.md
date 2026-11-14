@@ -60,12 +60,13 @@ These are the contract every surface keeps and every theme may rely on (theming 
 | `canccu-badge` | `--ok`, `--degraded`, `--down` | Health badge |
 | `canccu-layout` | `--<layout id>` | A screen layout |
 | `canccu-region` | `--<region id>` | A layout region |
-| `canccu-widget` | `--<widget type>`, `__title`, `__body`, `__footer` | A widget in a region, on the screen or the hub |
+| `canccu-widget` | `--<widget type>`, `__title`, `__body`, `__footer`, `__art` | A widget in a region, on the screen or the hub; `__art` is its card background (The two backgrounds) |
 | `canccu-embed` | — | The frame of an embed |
 | `canccu-is-active`, `canccu-is-empty`, `canccu-is-stale`, `canccu-is-offline` | — | State: the widget now shown in a rotation; a widget with nothing to show; data older than its widget allows; a screen without uplink |
 | `canccu-motion` | `--none`, `--calm`, `--lively`, `--party`; `canccu-motion-pack--standard`, `--broadcast`, `--arcade` | `<body>` of a screen: the energy level and motion pack it draws now (Motion vocabulary) |
 | `canccu-fx` | `--roll`, `--flap`, `--sweep`, `--pop`, `--tilt` | An element while it plays that effect (Motion vocabulary) |
 | `canccu-spotlight` | `--outline`, `--glow`, `--trace`, `--pop`, `--burst` | The box that holds the screen's spotlight, with the parts it draws at the level |
+| `canccu-stage` | `__art`, `__glow`, `__kind`, `__phase`, `__tint`, `__scrim`; `--kind-<kind key>`, `--phase-<phase>`, `--tinted`, `--art` | The stage behind a screen's boxes, its layers, and what it shows now (The two backgrounds) |
 
 Templates and a theme's CSS may add classes of their own only with the prefix `t-` (`t-clock`), so no event class collides with a platform class now or later.
 
@@ -88,6 +89,24 @@ How a screen moves is theme data: the theme picks the feel (`motion_style`), the
 - **Region transitions and the ticker:** when a region's rotation moves to its next widget, and when the ticker moves to its next line: at `none` they swap at once; at `calm` they keep only slow fades, in every pack; at `lively` and `party` they play the region transitions and the ticker's fades, as `display.motion` `moderate` allows, in the pack's shapes and easing.
 - **Cheap to run:** effects move only `opacity` and `transform` (and the split-flap's one stepped reveal), with no live blur or filters, so a kiosk PC runs them all day.
 - **The reduced-motion rule:** a device whose browser asks for reduced motion draws the level `none`: values swap without motion, nothing drifts, and the countdown's spotlight is the steady outline. The ticker then steps line by line.
+
+## The two backgrounds
+A screen has two kinds of background (design guideline sheet 15, Q14). The **stage** is the whole screen behind the boxes: it belongs to the zone's moment and never stands still. The **card** is one box's own ground: it belongs to the widget. Screen composes what each shows ([screen.md](screen.md#the-stage)); the player draws it with the classes and custom properties below, so a theme's CSS restyles both.
+
+- **The stage** is one element, `canccu-stage`, the first child of the screen's `<body>`, behind every region. Its layers, from the bottom:
+
+| Layer | Shows | When |
+|---|---|---|
+| `canccu-stage__art` | The game's art, blurred by Screen's server (`display.stage.tint.art`) | While a box's tint carries art, at `lively` and `party`, unless the event switched the art off |
+| `canccu-stage__glow` | Glows in the theme's `primary` and `accent` | Always; they drift at each level's pace (Motion vocabulary, Background drift) and stand still at `none` |
+| `canccu-stage__kind` | A tint for the kind of the current item (`canccu-stage--kind-<kind key>`) | At `lively` and `party` |
+| `canccu-stage__phase` | A tint for the day's phase (`canccu-stage--phase-<phase>`: `build_up`, `doors`, `peak`, `wind_down`, `quiet_hours`) | At `lively` and `party` |
+| `canccu-stage__tint` | The tint a box asked for (`canccu-stage--tinted`) | At `lively` and `party`, until the tint's `until` |
+| `canccu-stage__scrim` | The theme's `background` at the computed opacity `--canccu-stage-scrim` (0.55–1) | While the art shows (`canccu-stage--art`) |
+
+- The platform's base layer gives the starter kinds and every phase a tint from the colour tokens; a kind an organiser adds gets none until a theme styles its class. A theme may style any layer and modifier.
+- **The card:** a widget with `card_art` in its view-model gets `canccu-widget__art` as its first child. It holds the image as its background and sets `--canccu-card-veil` (0.5–1): a veil of the theme's `surface` at that opacity over the image, so the widget's text reads on any art. A widget without art draws no `__art`.
+- **Cheap to run:** the art arrives already blurred, so the player applies no live blur or filters (Motion vocabulary); the layers move only by `opacity` and `transform`.
 
 ## The theme package
 A folder (or a zip of it) with `theme.yaml` at its root ([theme.schema.json](theme.schema.json)). It is the format of an upload, a git sync and an export, so a theme moves between events and into an event's repo unchanged. Demo packages: [events/demo/themes/](../events/demo/themes/).

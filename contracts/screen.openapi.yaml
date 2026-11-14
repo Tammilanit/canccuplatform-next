@@ -124,6 +124,8 @@ paths:
     $ref: "screen/content.openapi.yaml#/~1api~1screen~1assets~1{asset_id}~1revert"
   /api/screen/files/{file}:
     $ref: "screen/content.openapi.yaml#/~1api~1screen~1files~1{file}"
+  /api/screen/art/{art}:
+    $ref: "screen/content.openapi.yaml#/~1api~1screen~1art~1{art}"
   /api/screen/renders/{asset_id}/{asset_version}/{slide}:
     $ref: "screen/content.openapi.yaml#/~1api~1screen~1renders~1{asset_id}~1{asset_version}~1{slide}"
   /api/screen/playlists:
@@ -762,7 +764,7 @@ components:
           type: [integer, "null"]
         view:
           type: object
-          description: The widget type's fields plus `qr`, `stale` and `empty`.
+          description: The widget type's fields plus `qr`, `stale`, `empty` and, for some types, `card_art`.
           properties:
             qr:
               oneOf:
@@ -772,6 +774,8 @@ components:
               type: boolean
             empty:
               type: boolean
+            card_art:
+              $ref: "#/components/schemas/CardArt"
     Qr:
       type: object
       required: [url, label, image_url]
@@ -1146,6 +1150,8 @@ components:
             drift:
               type: boolean
               description: The event's `burn_in_drift` setting; the player then shifts the layout by at most `safe_inset` / 4.
+            stage:
+              $ref: "#/components/schemas/Stage"
         preview:
           type: [object, "null"]
           description: |
@@ -1163,6 +1169,54 @@ components:
             theme:
               type: boolean
               description: True while the device draws the theme's draft; false once the draft key no longer resolves.
+    CardArt:
+      type: object
+      description: |
+        A card's own background (contracts/screen.md, Widgets, Card backgrounds): the image under the widget's content, behind a
+        veil of the theme's `surface` at `veil`. Absent when the widget has no art.
+      required: [url, veil]
+      properties:
+        url:
+          type: string
+          description: An image on the event's hostname.
+        veil:
+          type: number
+          minimum: 0.5
+          maximum: 1
+    Stage:
+      type: object
+      description: What the zone's stage shows (contracts/screen.md, The stage). Absent for a player's state composed before it.
+      required: [phase, kind, tint]
+      properties:
+        phase:
+          $ref: "#/components/schemas/MotionPhase"
+        kind:
+          type: [string, "null"]
+          description: The kind key of the zone's current public item.
+        tint:
+          type: [object, "null"]
+          description: The tint a box asked for, until `until`.
+          required: [region_id, widget, until, art]
+          properties:
+            region_id:
+              type: string
+            widget:
+              type: string
+            until:
+              type: string
+              format: date-time
+            art:
+              type: [object, "null"]
+              description: The game's art, blurred by Screen's server; null while the event's `stage_art` is false or no art could be read.
+              required: [url, scrim]
+              properties:
+                url:
+                  type: string
+                  description: "`/api/screen/art/{art_id}.webp`."
+                scrim:
+                  type: number
+                  minimum: 0.55
+                  maximum: 1
     MotionLevel:
       type: string
       description: The energy level (contracts/screen.md, Motion and burn-in drift).
