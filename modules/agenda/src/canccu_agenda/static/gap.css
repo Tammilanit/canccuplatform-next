@@ -38,26 +38,28 @@
     border-block: var(--canccu-border-width) solid var(--canccu-color-border);
     background: color-mix(in oklch, var(--canccu-color-primary) 16%, var(--canccu-color-surface));
   }
-  /* The Now marker follows the gap that now falls in, where a line centred on the boundary would
-     hide it. There the shown line lies over the marker's row instead, the marker is raised over
+  /* The gap that now falls in follows the Now marker (day_list), where a line centred on the
+     boundary would hide the marker's row. There the shown line lies over the marker's row
+     instead, held by its bottom so the marker's height does not matter; the marker is raised over
      the line and the line's words start after it, so both read. The marker lets the pointer
      through, so pointing at it keeps the line shown. (A shown line on a touch screen is a row of
-     its own above the marker, below.) */
+     its own below the marker, below.) */
   @media (hover: hover) {
-    .canccu-agenda-gap:has(+ .canccu-agenda-nowline) a:hover,
-    .canccu-agenda-gap:has(+ .canccu-agenda-nowline) a:focus-visible,
-    .canccu-agenda-gap.is-shown:has(+ .canccu-agenda-nowline) a {
-      inset-block-start: -0.25rem;
+    .canccu-agenda-nowline + .canccu-agenda-gap a:hover,
+    .canccu-agenda-nowline + .canccu-agenda-gap a:focus-visible,
+    .canccu-agenda-nowline + .canccu-agenda-gap.is-shown a {
+      inset-block: auto -0.25rem;
       padding-inline-start: 6.25rem;
     }
     .canccu-agenda-nowline span { position: relative; z-index: 3; pointer-events: none; }
   }
   .canccu-agenda-gap a:focus-visible { outline-offset: -2px; }
   /* Without hover a hidden line would catch taps meant for the rows beside it. Shown, it is a
-     row of its own with a full 44 px target. */
+     row of its own with a full 44 px target. The link menu gives way to the long press only where
+     day.js handles one (a writer's list with gaps); a reader keeps it. */
   @media (hover: none) {
     :where(.canccu-page) .canccu-agenda-gap a { pointer-events: none; }
-    .canccu-agenda-list a { -webkit-touch-callout: none; }
+    .canccu-agenda-list.is-pressable a { -webkit-touch-callout: none; }
     .canccu-agenda-gap.is-shown { height: auto; }
     :where(.canccu-page) .canccu-agenda-gap.is-shown a {
       position: static;

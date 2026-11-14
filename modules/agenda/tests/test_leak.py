@@ -5,6 +5,7 @@ from __future__ import annotations
 from canccu_kit.testing import assert_tenant_isolation
 from conftest import Env, at
 from test_items import add
+from test_undo import undo_id
 
 
 async def test_another_events_items_do_not_exist_there(env: Env) -> None:
@@ -46,7 +47,7 @@ async def test_another_events_undo_and_announce_do_not_reach_here(env: Env) -> N
     async with env.client("a.example.test") as a, env.client("b.example.test") as b:
         item = await add(a, h, ends_at=at(120))
         done = await a.post(f"/items/{item['id']}/cancel", data={"revision": "1"}, headers=h)
-        token = done.headers["location"].split("undo=")[1]
+        token = undo_id(done)
         env.store.calls.clear()
         undo = await b.post(f"/undo/{token}", headers=h)
         announced = await b.post(f"/api/agenda/items/{item['id']}/announce", json={}, headers=h)

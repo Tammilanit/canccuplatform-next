@@ -44,11 +44,23 @@ async def one(conn: Any, template_id: str) -> Any:
     return await conn.fetchrow(f"SELECT {COLUMNS} FROM agenda_templates WHERE id = $1", template_id)
 
 
+LENGTH_RULE = "the length is in minutes, from 1 to 1440"
+
+
+def length(value: Any) -> int | None:
+    """A length of up to a day (longer is the full form's), as an int or a form's digits; None
+    when it is not one. At most four digits reach int(): it raises on over 4300 (#479)."""
+    if isinstance(value, str):
+        ok = value.isascii() and value.isdigit() and len(value) <= 4
+        value = int(value) if ok else None
+    return value if type(value) is int and 1 <= value <= 1440 else None
+
+
 def checked(values: dict[str, Any]) -> dict[str, Any]:
     """The API's own field rules, so a template never holds what an item could not."""
     minutes = values.get("minutes")
-    if minutes is not None and (type(minutes) is not int or not 1 <= minutes <= 1440):
-        raise model.invalid("length must be 1-1440 minutes, or empty for a moment in time")
+    if minutes is not None and length(minutes) is None:
+        raise model.invalid(f"{LENGTH_RULE}, or empty for a moment in time")
     if values.get("kind") == "quiet_hours" and minutes is None:
         raise model.invalid("a quiet hours template needs a length")
     return {

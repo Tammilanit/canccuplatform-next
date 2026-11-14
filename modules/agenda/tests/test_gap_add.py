@@ -3,7 +3,9 @@ each day, and Quick add starting from them."""
 
 from __future__ import annotations
 
-from conftest import CREW, Env, at
+from datetime import timedelta
+
+from conftest import CREW, NOW, Env, at
 from test_items import add
 from test_quickadd import items, templates_of
 
@@ -28,7 +30,8 @@ async def test_each_gap_names_both_neighbours_and_opens_quick_add_with_its_time(
     gaps = [
         ("/agenda/add?day=2026-11-20&amp;at=19:00&amp;minutes=75", "18:00 and 20:15"),
         ("/agenda/add?day=2026-11-20&amp;at=21:00", "20:15 and 21:00"),
-        ("/agenda/add?day=2026-11-20&amp;at=21:00&amp;minutes=30", "21:00 and 21:30"),
+        # The raffle is a moment, but the quiz still runs until 21:15 (#480).
+        ("/agenda/add?day=2026-11-20&amp;at=21:15&amp;minutes=15", "21:00 and 21:30"),
     ]
     for href, names in gaps:
         assert f'href="{href}">' in text and f"Add between {names}</a>" in text
@@ -86,3 +89,57 @@ async def test_quick_add_takes_the_length_the_form_sets(env: Env) -> None:
     assert usual["ends_at"] == at(240)  # the template's 60 minutes
     assert talk["starts_at"] == at(240) and talk["ends_at"] == at(285)
     assert bad.status_code == 400 and "length" in bad.text and 'value="Odd"' in bad.text
+
+
+async def test_a_length_or_time_too_long_to_read_is_refused_not_a_crash(env: Env) -> None:
+    """int() refuses a string over 4300 digits with a ValueError, which the form does not catch
+    (#479): a crafted value must be dropped or refused like any other wrong one."""
+    h = env.writer()
+    huge = "9" * 5000
+    async with env.client() as c:
+        food = (await templates_of(c, h))["Food"]
+        form = {"what": food, "title": "Odd", "when": "at", "at": "19:00", "day": "2026-11-20"}
+        opened = await c.get(f"/add?at=19:00&minutes={huge}", headers=h)
+        length = await c.post("/add", data={**form, "minutes": huge}, headers=h)
+        other = await c.post("/add", data={**form, "length": "other", "minutes": huge}, headers=h)
+        time = await c.post("/add", data={**form, "at": huge}, headers=h)
+        assert await items(c, h) == []
+    assert opened.status_code == 200 and huge not in opened.text
+    assert length.status_code == 400 and "1 to 1440" in length.text
+    assert other.status_code == 400 and "1 to 1440" in other.text
+    assert time.status_code == 400 and "pick a time" in time.text
+
+
+async def test_the_room_starts_after_every_earlier_item_that_still_runs(env: Env) -> None:
+    """#480: a long item overlapping several others leaves no room inside it; a cancelled one
+    takes none."""
+    h = env.writer()
+    async with env.client() as c:
+        await add(c, h, title="Long", starts_at=at(60), ends_at=at(360))
+        await add(c, h, title="Short", starts_at=at(120), ends_at=at(150))
+        await add(c, h, title="Talk", kind="other", starts_at=at(180))
+        # The next day: the long item is cancelled, so the room after the short one is free.
+        gone = await add(c, h, title="Gone", starts_at=at(1500), ends_at=at(1740))
+        await add(c, h, title="Brief", starts_at=at(1560), ends_at=at(1590))
+        await add(c, h, title="Quiz", kind="other", starts_at=at(1620))
+        cancel = await c.post(
+            f"/api/agenda/items/{gone['id']}/cancel", json={"revision": 1}, headers=h
+        )
+        assert cancel.status_code == 200, cancel.text
+        text = _list((await c.get("/", headers=h)).text)
+    assert 'href="/agenda/add?day=2026-11-20&amp;at=20:00">' in text
+    assert "Add between 19:00 and 20:00</a>" in text
+    assert 'href="/agenda/add?day=2026-11-21&amp;at=19:30&amp;minutes=30">' in text
+
+
+async def test_a_gap_containing_now_starts_at_the_next_minute_after_the_now_line(env: Env) -> None:
+    """#480: the room in the past is gone, and the line sits just above the item it adds before."""
+    env.clock[0] = NOW + timedelta(seconds=20)
+    h = env.writer()
+    async with env.client() as c:
+        await add(c, h, title="Before", starts_at=at(-60), ends_at=at(-30))
+        await add(c, h, title="After", starts_at=at(60), ends_at=at(90))
+        text = _list((await c.get("/?earlier=1", headers=h)).text)
+    assert 'href="/agenda/add?day=2026-11-20&amp;at=17:01&amp;minutes=59">' in text
+    order = ["Before", "Now 17:00", "Add between 16:00 and 18:00", "After"]
+    assert [text.index(t) for t in order] == sorted(text.index(t) for t in order)

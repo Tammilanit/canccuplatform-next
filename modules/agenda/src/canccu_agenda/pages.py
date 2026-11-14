@@ -17,17 +17,18 @@ from .access import WRITE, viewer
 from .day_view import can_delay, can_show, state_of
 from .deps import deps
 from .effective import read_channels
+from .event_dates import event_over, event_span
 from .history import changes_html
 from .kinds import not_found
 from .web import (
     ARCHIVED_ITEM,
     BASE,
     CHANNEL_LABELS,
+    SCRIPT_TAGS,
     VISIBILITY_LABELS,
     archived,
     day_label,
     esc,
-    event_over,
     hhmm,
     notice,
     page,
@@ -106,16 +107,25 @@ async def run_of_show(request: Request) -> Response:
     )
     # This view's own address, where a delay sheet's Close and Don't delay lead back to.
     here = view.href()
+    listed, days = day_list.build(
+        rows,
+        kinds,
+        now,
+        tz,
+        view,
+        None if side is None else side["id"],
+        writes,
+        event_span(request),
+    )
+    # Today's line carries the now line; outside the event there is neither, nor a way to them.
+    now_line = today in days
     hero = day_view.on_now(rows, now, tz)
     if hero is not None:
-        body += day_list.strip_html(hero, now, tz)
+        body += day_list.strip_html(hero, now, tz, now_line)
         body += day_view.hero_html(hero, now, tz, session, here, post)
     if rows:
-        listed, days = day_list.build(
-            rows, kinds, now, tz, view, None if side is None else side["id"], writes
-        )
         filters = day_list.filter_html(view, seen.visibilities)
-        body += day_list.days_html(days, _day(request, days, today), filters)
+        body += day_list.days_html(days, _day(request, days, today), filters, now_line)
         aside = ""
         if side is not None:
             item = model.item_json(side, kind_rows, channels)
@@ -144,7 +154,7 @@ async def run_of_show(request: Request) -> Response:
     body += await _delay_sheet(request, rows, now, here) if writes else ""
     # The day switch follows the scroll and a phone keeps what is on now in view; for a writer
     # a long press shows a gap's line. The page works without it.
-    body += f'<script src="{BASE}/static/day.js" defer></script>'
+    body += SCRIPT_TAGS["day.js"]
     actions = (
         f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/new">'
         "Full form</a>"

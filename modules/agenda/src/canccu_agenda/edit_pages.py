@@ -16,6 +16,7 @@ from . import announce, edits, forms, model, store, timers, undo
 from .delay_pages import as_int, day_of, preview
 from .deps import deps
 from .effective import event_settings, read_channels
+from .event_dates import event_over
 from .inverse import Inverse
 from .item_pages import load_item
 from .kinds import not_found
@@ -24,7 +25,6 @@ from .web import (
     BASE,
     button,
     esc,
-    event_over,
     field,
     hhmm,
     hidden,
@@ -83,7 +83,7 @@ async def cancel_save(request: Request) -> Response:
     item_id = request.path_params["item_id"]
     item = await edits.cancel_one(d, session, item_id, revision, inverse=inverse)
     path = f"/?day={day_of(item['starts_at'], request)}&done=cancelled"
-    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)), item_id)
 
 
 def bring_back_form(row: Any) -> str:
@@ -93,7 +93,7 @@ def bring_back_form(row: Any) -> str:
         f'<form method=post action="{BASE}/items/{esc(row["id"])}/bring-back"'
         ' class="canccu-agenda-undo">'
         + button("Bring back", "secondary")
-        + " <span>Until the event ends. People are told it is on again.</span></form>"
+        + " <span>Until the event ends.</span></form>"
     )
 
 
@@ -121,7 +121,7 @@ async def bring_back(request: Request) -> Response:
         rendered = {new["id"]: model.item_json(new, kinds, channels)}
         await undo.store_events(d, conn, session, out, rendered)
     await d.outbox.flush()
-    return redirect(f"/?day={_day(new, request)}&done=brought_back")
+    return redirect(f"/?day={_day(new, request)}&done=brought_back", new["id"])
 
 
 def bring_forward(row: Any, now: datetime) -> int:
@@ -221,7 +221,7 @@ async def show_now_save(request: Request) -> Response:
             done = "shown_not_announced"
         else:
             done = "shown_announced" if minutes else "announced"
-    return redirect(undo.with_undo(f"/?day={_day(row, request)}&done={done}", undo_id))
+    return redirect(undo.with_undo(f"/?day={_day(row, request)}&done={done}", undo_id), row["id"])
 
 
 ROUTES = [
