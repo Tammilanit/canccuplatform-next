@@ -166,11 +166,12 @@ class Service:
             problem = check_values(self.declarations.get(module, []), values)
             if problem:
                 raise prof.ProfileInvalid(f"settings/{module}: {problem}")
-        record = {k: v for k, v in document.items() if k != "settings"}
-        await self.store.set_profile(record, loaded_by=actor)
         for module, values in document.get("settings", {}).items():
             version, _ = await self.store.get_settings(module)
             await self.put_settings(module, version, values, actor)
+        # Last: "Loaded … by" must not claim a load that a failed settings write cut short.
+        record = {k: v for k, v in document.items() if k != "settings"}
+        await self.store.set_profile(record, loaded_by=actor)
 
     async def export_zip(self, actor: str) -> bytes:
         """The current profile as a zip, built aside: the event folder keeps the profile that

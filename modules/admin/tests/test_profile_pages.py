@@ -10,8 +10,11 @@ import zipfile
 from pathlib import Path
 
 import pytest
-from canccu_kit import tenant_scope
+from canccu_kit import VersionConflict, tenant_scope
 from conftest import ROOT, World, owner_and_member
+from starlette.datastructures import UploadFile
+
+from canccu_admin import profile
 
 
 @pytest.fixture
@@ -135,3 +138,127 @@ async def test_a_broken_folder_profile_says_why_and_upload_stays(
         # The question answers the same problem instead of "no profile".
         r = await browser.get("/admin/profile/load")
         assert r.status_code == 400 and reason in r.text
+
+
+ORIGIN = {"origin": "https://admin.example.test"}
+
+
+def rename(event: Path, name: str) -> None:
+    file = event / "profile.yaml"
+    file.write_text(file.read_text().replace("name: Demo Event", f"name: {name}", 1))
+
+
+async def test_again_only_for_the_profile_that_is_loaded(
+    world: World, event: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    browser = world.browser(owner)
+    await browser.post("/admin/profile/load", headers=ORIGIN)
+    # The folder now holds another profile: loading it is no "again".
+    rename(event, "Other Event")
+    text = (await browser.get("/admin/profile")).text
+    assert 'href="/admin/profile/load">Load the Other Event profile…</a>' in text
+    text = (await browser.get("/admin/profile/load")).text
+    assert "Load the Other Event profile?" in text and "again" not in text
+
+
+async def test_saved_names_the_profile_whatever_its_characters(
+    world: World, event: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    browser = world.browser(owner)
+    rename(event, '"Rock & Roll #1 + more"')
+    await browser.post("/admin/profile/load", headers=ORIGIN)
+    r = await browser.post("/admin/profile/save", headers=ORIGIN)
+    assert r.status_code == 303
+    text = (await browser.get(r.headers["location"])).text
+    assert "Saved Rock &amp; Roll #1 + more" in text
+
+
+async def test_the_loaded_card_tells_time_in_the_events_one_time_zone(
+    world: World, event: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    # The event's time zone (contracts/tenants.md) is the one source: the card's "Time zone"
+    # and its "loaded … by" moment never disagree.
+    owner, _ = await owner_and_member(world, caplog)
+    browser = world.browser(owner)
+    await browser.post("/admin/profile/load", headers=ORIGIN)
+    world.event["time_zone"] = "Europe/Helsinki"
+    with tenant_scope("demo"):
+        assert (await world.service.store.get_settings("admin"))[1].get("timezone") in (
+            None,
+            "UTC",
+        )
+    text = (await browser.get("/admin/profile")).text
+    assert "<dt>Time zone</dt><dd>Europe/Helsinki</dd>" in text
+
+
+async def test_an_upload_too_large_is_refused_before_it_is_read(
+    world: World, event: Path, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    owner, _ = await owner_and_member(world, caplog)
+    monkeypatch.setattr(profile, "MAX_ZIP_BYTES", 100)
+    reads: list[int] = []
+    real_read = UploadFile.read
+
+    async def read(self: UploadFile, size: int = -1) -> bytes:
+        reads.append(size)
+        return await real_read(self, size)
+
+    monkeypatch.setattr(UploadFile, "read", read)
+    r = await world.browser(owner).post(
+        "/admin/profile/upload",
+        files={"profile": ("profile.zip", demo_zip(), "application/zip")},
+        headers=ORIGIN,
+    )
+    assert r.status_code == 400 and "too large" in r.text
+    assert reads == []
+    with tenant_scope("demo"):
+        assert await world.service.store.get_profile() is None
+
+
+async def test_a_load_is_stamped_only_once_every_setting_is_written(
+    world: World, event: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    real = world.service.put_settings
+    calls: list[str] = []
+
+    async def put_settings(module: str, *args: object) -> object:
+        calls.append(module)
+        if len(calls) == 2:
+            raise VersionConflict("someone saved meanwhile")
+        return await real(module, *args)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(world.service, "put_settings", put_settings)
+    with tenant_scope("demo"), pytest.raises(VersionConflict):
+        await world.service.load_profile("u_1")
+    with tenant_scope("demo"):
+        assert await world.service.store.profile_loaded() is None
+
+
+def _stored_zip() -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_STORED) as archive:
+        archive.writestr("profile.yaml", "schema_version: 1\nname: Demo Event\n")
+    return buffer.getvalue()
+
+
+def _bad_crc() -> bytes:
+    data = bytearray(_stored_zip())
+    at = data.index(b"name: Demo")
+    data[at] ^= 0xFF
+    return bytes(data)
+
+
+def _unknown_method() -> bytes:
+    data = bytearray(_stored_zip())
+    for header, offset in ((b"PK\x03\x04", 8), (b"PK\x01\x02", 10)):
+        at = data.index(header) + offset
+        data[at : at + 2] = (99).to_bytes(2, "little")
+    return bytes(data)
+
+
+@pytest.mark.parametrize("data", [_bad_crc(), _unknown_method()], ids=["crc", "method"])
+def test_a_zip_that_cannot_be_read_is_an_invalid_profile(data: bytes, tmp_path: Path) -> None:
+    with pytest.raises(profile.ProfileInvalid):
+        profile.unpack_zip(data, tmp_path)

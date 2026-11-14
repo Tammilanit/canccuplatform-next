@@ -6,6 +6,7 @@ import io
 import json
 import shutil
 import zipfile
+import zlib
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
@@ -146,6 +147,11 @@ def unpack_zip(data: bytes, target: Path) -> None:
                 raise ProfileInvalid(f"unsafe path in zip: {info.filename}")
             if str(name) != "profile.yaml" and name.parts[0] != "assets":
                 raise ProfileInvalid(f"unexpected file in zip: {info.filename}")
+            try:
+                content = archive.read(info)
+            # A damaged, encrypted or oddly compressed entry: the file's fault, not a 500.
+            except (zipfile.BadZipFile, RuntimeError, NotImplementedError, zlib.error) as exc:
+                raise ProfileInvalid(f"can't read {info.filename} in the zip: {exc}") from exc
             destination = target / name
             destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_bytes(archive.read(info))
+            destination.write_bytes(content)

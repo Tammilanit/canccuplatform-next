@@ -4,6 +4,7 @@ two ways to replace it, Load from the event folder and Upload, each asking first
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 from urllib.parse import urlencode
 
 from canccu_kit import KitError
@@ -14,6 +15,7 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import Route
 
+from . import profile as prof
 from .auth import Auth
 from .auth_routes import Need
 from .pages import BASE, event_of, page
@@ -55,6 +57,11 @@ def _replace_card(folder: str | None, problem: KitError | None, again: bool) -> 
         f'<div class="canccu-cluster">{load}<a class="canccu-button canccu-button--danger-ghost" '
         f'href="{BASE}/profile/upload">Upload a profile…</a></div></section>'
     )
+
+
+def _is_loaded(record: dict[str, Any] | None, folder: str | None) -> bool:
+    """Whether the folder's profile is the one in use, so loading it is "again"."""
+    return record is not None and folder is not None and str(record.get("name")) == folder
 
 
 def _ask(title: str, replaced: str, loaded: bool, form: str, problem: str = "") -> str:
@@ -104,22 +111,22 @@ def profile_routes(service: Service, auth: Auth, need: Need) -> list[Route]:
             in_use = empty_state("box", "Nothing loaded yet", "Load a profile or upload one.")
         else:
             loaded = await service.store.profile_loaded()
+            # The event's zone (contracts/tenants.md), for the card's row and its moment alike.
+            event = await event_of(request)
+            zone = event.time_zone if event else "UTC"
             by = ""
             if loaded is not None:
-                event = await event_of(request)
                 names = {u.id: u.name for u, _ in await auth.users()}
                 # A session from elsewhere (CI's stub) is not among admin's users: it names itself.
                 names.setdefault(session.user_id, session.user_name)
-                moment = when(loaded[0], datetime.now(UTC), event.time_zone if event else "UTC")
+                moment = when(loaded[0], datetime.now(UTC), zone)
                 by = f" · {moment} by {names.get(loaded[1], 'someone')}"
-            _, general = await service.store.get_settings("admin")
-            zone = str(general.get("timezone") or "UTC")
             in_use = _loaded_card(str(record["name"]), by, len(record["modules"]), zone, saved)
         folder, problem = await service.folder_profile()
         return await page(
             request,
             "Event profile",
-            notes + in_use + _replace_card(folder, problem, record is not None),
+            notes + in_use + _replace_card(folder, problem, _is_loaded(record, folder)),
             session=session,
             current="profile",
             narrow=True,
@@ -129,13 +136,14 @@ def profile_routes(service: Service, auth: Auth, need: Need) -> list[Route]:
     async def ask_load(request: Request) -> Response:
         session = await need(request, "admin.profile.write")
         folder, problem = await service.folder_profile()
-        loaded = await service.store.get_profile() is not None
+        record = await service.store.get_profile()
+        loaded = record is not None
         if problem is not None:
             raise problem
         if folder is None:
             raise KitError("the event folder holds no profile", status=404, code="not_found")
         form = f'<form method=post action="{BASE}/profile/load" id="canccu-replace"></form>'
-        title = f"Load the {folder} profile{' again' if loaded else ''}?"
+        title = f"Load the {folder} profile{' again' if _is_loaded(record, folder) else ''}?"
         body = _ask(title, "Every setting and the theme, with the profile's.", loaded, form)
         return await ask_page(request, session, body)
 
@@ -166,6 +174,9 @@ def profile_routes(service: Service, auth: Auth, need: Need) -> list[Route]:
         try:
             if not isinstance(file, UploadFile):
                 raise KitError("choose a profile file", status=400, code="profile_invalid")
+            # Before read(): an oversized file is refused without holding it in memory.
+            if file.size is not None and file.size > prof.MAX_ZIP_BYTES:
+                raise prof.ProfileInvalid("profile zip is too large")
             result = await service.import_zip(await file.read(), session.user_id)
         except KitError as exc:
             if exc.status != 400:
@@ -186,7 +197,8 @@ def profile_routes(service: Service, auth: Auth, need: Need) -> list[Route]:
     async def profile_save(request: Request) -> Response:
         session = await need(request, "admin.profile.write")
         result = await service.save_profile(session.user_id)
-        return RedirectResponse(f"{BASE}/profile?message=Saved+{result['name']}", status_code=303)
+        query = urlencode([("message", f"Saved {result['name']}")])
+        return RedirectResponse(f"{BASE}/profile?{query}", status_code=303)
 
     async def profile_load(request: Request) -> Response:
         session = await need(request, "admin.profile.write")
