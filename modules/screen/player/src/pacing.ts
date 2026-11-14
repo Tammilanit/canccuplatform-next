@@ -5,6 +5,7 @@
  * fall on whole seconds of the server's clock, so every screen of a zone paces alike. One
  * spotlight at a time is the motion layer's rule (motion.ts).
  */
+import type { Shown } from "./idle.js";
 
 /** Changes that would collide are pushed apart by at least this much (sheet 13's lanes). */
 export const CHANGE_GAP_MS = 3000;
@@ -35,4 +36,18 @@ export class Choreographer {
     this.last = now;
     return first;
   }
+}
+
+/** What a key names before its content: the rotation's index, `idle` or `claim` (`choose`). */
+const turnOf = (key: string): string => key.slice(0, key.indexOf(":"));
+
+/**
+ * A notable change for the choreographer: a box turning to another of its widgets.
+ * New content in the same widget (a ticker's line, the next slide) is the widget's own. A claim
+ * is the crew's or a cue's and shows at once; a first draw and a box emptying never wait.
+ */
+export function paced(from: Shown | null, to: Shown | "collapse" | null | undefined): boolean {
+  if (from === null || typeof to !== "object" || to === null) return false;
+  const [a, b] = [turnOf(from.key), turnOf(to.key)];
+  return a !== b && a !== "claim" && b !== "claim";
 }

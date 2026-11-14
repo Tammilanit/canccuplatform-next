@@ -1,0 +1,183 @@
+/*
+ * Dashboard, the built-in of six boxes (#405, #416; sheet 10 of docs/design, contracts/screen.md,
+ * Built-in layouts), and its showcase shape. Sizes in `--canccu-u` and all in `canccu-base`, as
+ * the other built-ins (layouts.css), which it follows in the cascade.
+ */
+@layer canccu-base {
+  /*
+   * Dashboard: six equal boxes, so the hero's own widgets take the rail's headline size; a claim
+   * keeps its own (claims.css). Each box is a size container, for its showcase shape below.
+   */
+  .canccu-layout--dashboard > .canccu-region {
+    container-type: size;
+  }
+
+  .canccu-layout--dashboard
+    .canccu-region[data-role="hero"]
+    > .canccu-widget:not(.canccu-is-claim) {
+    padding: calc(2.4 * var(--canccu-u)) calc(2.8 * var(--canccu-u));
+  }
+
+  .canccu-layout--dashboard
+    .canccu-region[data-role="hero"]
+    > .canccu-widget:not(.canccu-is-claim)
+    .canccu-widget__headline {
+    flex: none;
+    -webkit-line-clamp: 2;
+    font-size: calc(6.2 * var(--canccu-u));
+  }
+
+  /*
+   * While a showcase grows the hero (contracts/screen.md, The hero role and the showcase), the
+   * other boxes stack beside it, each a wide strip of two rows: one line of what it shows. The
+   * header and the ticker are wide strips anyway and keep their own look.
+   */
+  @container (aspect-ratio > 2) {
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget {
+      padding: calc(1.2 * var(--canccu-u)) calc(2.4 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--logo {
+      flex-direction: row;
+      gap: calc(2 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--logo
+      .canccu-widget__image {
+      height: calc(6 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--logo
+      .canccu-widget__name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: calc(4.4 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__row,
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__row--now,
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__row--next,
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__row--delayed {
+      grid-template-areas: "state until delay" "name name name";
+      grid-template-columns: auto auto 1fr;
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__row:nth-child(n + 2),
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__where {
+      display: none;
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__name {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: calc(4.4 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__until,
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      .canccu-widget__starts,
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown
+      .canccu-widget__delay {
+      font-size: calc(3.4 * var(--canccu-u));
+    }
+
+    /*
+     * A countdown in full is taller than a strip, and centring it clips its name off the top: a
+     * strip shows the name on one line, the start and count under it, and no bar. A start, a delay
+     * badge and the count are too wide together, so a delayed item shows the badge, not its start.
+     */
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown {
+      display: grid;
+      grid-template-areas: "headline headline" "when count";
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-content: center;
+      align-items: baseline;
+      gap: calc(1 * var(--canccu-u)) calc(2 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown
+      :is(
+        .canccu-widget__kicker,
+        .canccu-widget__bar,
+        .canccu-widget__band--theme,
+        .canccu-widget__when:has(.canccu-widget__delay) .canccu-widget__starts
+      ) {
+      display: none;
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown
+      .canccu-widget__headline {
+      grid-area: headline;
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: calc(4.4 * var(--canccu-u));
+      line-height: 1.2;
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown
+      .canccu-widget__when {
+      grid-area: when;
+      flex-wrap: nowrap;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown
+      .canccu-widget__count {
+      grid-area: count;
+      margin-top: 0;
+      white-space: nowrap;
+      font-size: calc(3.4 * var(--canccu-u));
+    }
+
+    .canccu-layout--dashboard
+      .canccu-region:not([data-role="header"], [data-role="ticker"])
+      > .canccu-widget--countdown
+      .canccu-widget__count
+      .canccu-widget__big {
+      font-size: calc(4.4 * var(--canccu-u));
+    }
+  }
+}

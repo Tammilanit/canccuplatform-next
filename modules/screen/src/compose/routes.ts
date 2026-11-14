@@ -6,7 +6,7 @@ import { requireDevice } from "../device-access.js";
 import { notFound, tenantOf } from "../http.js";
 import { zoneKey } from "../zone-input.js";
 import { placeDevice } from "../push/device-state.js";
-import { nowView } from "./state.js";
+import { nowView } from "./now-view.js";
 import type { ComposeDeps } from "./state.js";
 
 export interface ComposeRouteDeps extends ComposeDeps {

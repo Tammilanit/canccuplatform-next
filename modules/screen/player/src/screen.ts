@@ -14,7 +14,7 @@ import { StageLayer } from "./stage.js";
 import { agendaOf, joinHeroAndRail } from "./hero-rail.js";
 import { idleOf, zoneNameOf } from "./idle.js";
 import type { Shown } from "./idle.js";
-import { Choreographer } from "./pacing.js";
+import { Choreographer, paced } from "./pacing.js";
 import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
 import { fitTickers } from "./ticker.js";
@@ -389,18 +389,4 @@ export class Screen {
       }
     });
   }
-}
-
-/** What a key names before its content: the rotation's index, `idle` or `claim` (`choose`). */
-const turnOf = (key: string): string => key.slice(0, key.indexOf(":"));
-
-/**
- * A notable change for the choreographer (pacing.ts): a box turning to another of its widgets.
- * New content in the same widget (a ticker's line, the next slide) is the widget's own. A claim
- * is the crew's or a cue's and shows at once; a first draw and a box emptying never wait.
- */
-function paced(from: Shown | null, to: Shown | "collapse" | null | undefined): boolean {
-  if (from === null || typeof to !== "object" || to === null) return false;
-  const [a, b] = [turnOf(from.key), turnOf(to.key)];
-  return a !== b && a !== "claim" && b !== "claim";
 }

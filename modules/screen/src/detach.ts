@@ -10,7 +10,7 @@ import type { Audit } from "./audit.js";
 import { forgetHealth } from "./health.js";
 import type { Kv } from "./kv.js";
 import { endPreview } from "./preview/store.js";
-import { releaseSound } from "./zones.js";
+import { releaseSound } from "./zone-sound.js";
 import type { Emit } from "./zones.js";
 
 /** What one event hears when a device leaves it, sent once the leaving has committed. */

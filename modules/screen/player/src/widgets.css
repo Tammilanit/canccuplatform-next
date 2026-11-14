@@ -284,7 +284,7 @@
   }
 
   /*
-   * A Dashboard box stacked beside a grown hero is a strip of two rows (layouts.css): no title, and
+   * A Dashboard box stacked beside a grown hero is a strip of two rows (dashboard.css): no title, and
    * each number at the strip's countdown size with its label close under it. A label beside its
    * number made a line three times too wide for the strip.
    */
