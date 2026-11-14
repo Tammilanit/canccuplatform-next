@@ -1,0 +1,82 @@
+# The stack of every demo-stack job that needs one (#461), so the API, soak and screenshot jobs
+# cannot drift apart: fresh secrets, the module images from the Buildx GitHub Actions layer cache,
+# the browser image from the Actions cache, and the demo stack up with every health check passing.
+# The caller checks the repo out first. See docs/ci.md#tiers.
+name: demo-stack-up
+description: Build the module images with the layer cache and start the demo stack.
+inputs:
+  browser:
+    description: Whether the job runs Chromium (the Playwright image), "true" or "false".
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Fresh secrets for this run (never a fixed key in the repo)
+      shell: bash
+      run: |
+        echo "CANCCU_SECRETS_KEY=1:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+        # A module's own (notify's VAPID key, ...) come from its ci/stack-env.sh (docs/ci.md#compose).
+        scripts/stack-smoke env >> "$GITHUB_ENV"
+    - uses: docker/setup-buildx-action@v3
+    # Bake reads the Compose files, whose build contexts are relative to deploy/. Each image gets
+    # Compose's own name, so `up` uses it and builds nothing, and the layer cache scope of
+    # release.yml, one per module, so the images main built are the cache of every PR.
+    - name: The module images' names and their layer cache
+      id: images
+      shell: bash
+      working-directory: deploy
+      run: |
+        targets=$(docker buildx bake -f compose.yml -f compose.ci.yml --print 2>/dev/null | jq -r '.target | keys[]')
+        test -n "$targets"
+        {
+          echo "set<<CANCCU_EOF"
+          for t in $targets; do
+            echo "$t.tags=canccuplatform-$t"
+            echo "$t.cache-from=type=gha,scope=$t"
+            echo "$t.cache-to=type=gha,mode=max,scope=$t,ignore-error=true"
+          done
+          echo "CANCCU_EOF"
+        } >> "$GITHUB_OUTPUT"
+    - name: Build the module images
+      uses: docker/bake-action@v6
+      # Each stack job would otherwise upload a build record per run, beside demo-screenshots.
+      env:
+        DOCKER_BUILD_RECORD_UPLOAD: "false"
+        DOCKER_BUILD_SUMMARY: "false"
+      with:
+        source: .
+        workdir: deploy
+        files: compose.yml,compose.ci.yml
+        allow: fs.read=..
+        load: true
+        set: ${{ steps.images.outputs.set }}
+    - name: The Playwright image's version
+      id: browser
+      if: inputs.browser == 'true'
+      shell: bash
+      run: echo "version=$(sed -n 's/^PLAYWRIGHT=//p' scripts/demo-screenshots)" | tee -a "$GITHUB_OUTPUT"
+    - name: The browser image from the cache
+      id: browser-cache
+      if: inputs.browser == 'true'
+      uses: actions/cache@v4
+      with:
+        path: ${{ runner.temp }}/canccu-playwright
+        key: demo-stack-playwright-${{ steps.browser.outputs.version }}
+    - name: Load the browser image, or pull it once for the cache
+      if: inputs.browser == 'true'
+      shell: bash
+      env:
+        DIR: ${{ runner.temp }}/canccu-playwright
+        HIT: ${{ steps.browser-cache.outputs.cache-hit }}
+        VERSION: ${{ steps.browser.outputs.version }}
+      run: |
+        if [ "$HIT" = true ]; then
+          docker load -q -i "$DIR/image.tar"
+        else
+          scripts/demo-screenshots --install
+          mkdir -p "$DIR"
+          docker save -o "$DIR/image.tar" "mcr.microsoft.com/playwright:v$VERSION-noble"
+        fi
+    - name: Start the stack with the demo event, wait for every health check
+      shell: bash
+      run: docker compose -f deploy/compose.yml -f deploy/compose.ci.yml up -d --wait

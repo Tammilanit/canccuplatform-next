@@ -32,14 +32,15 @@ const UHD = [
   [3840, 2160],
   [2160, 3840],
 ];
-const sizesOf = (theme) => (theme === "default" ? [...HD, ...UHD] : HD);
+// The merge queue's check (scripts/demo-screenshots --check) reads every theme at 1080p only.
+const sizesOf = (theme, check) => (theme === "default" && !check ? [...HD, ...UHD] : HD);
 /** The frames that differ by theme; the others are drawn before any theme reaches the page. */
 const THEMED = ["pulse", "identify", "offline", "unassigned", "archived"];
 const UNTHEMED = ["pairing", "refused", "moved", "unreachable", "check"];
 const CLAIMS = ["claim-rail", "claim-hero", "claim-overlay", "claim-takeover"];
 /** The built-ins besides the Pulse and Portrait: 16:9 each, so drawn landscape only. */
 const LAYOUTS = ["dashboard", "hero", "split", "ambient"];
-const landscapeOf = (theme) => sizesOf(theme).filter(([w, h]) => w > h);
+const landscapeOf = (theme, check) => sizesOf(theme, check).filter(([w, h]) => w > h);
 
 /** What each view of #443 must show (sheets 10, 13 and 16), waited for before its shot. */
 const NEW_VIEWS = {
@@ -52,15 +53,15 @@ const NEW_VIEWS = {
 const nameOf = (theme, view, [w, h]) => `theming-${theme}-screen-${view}-${w}x${h}`;
 
 /** Every PNG the run takes, in order, for the dry run. */
-export function planned() {
+export function planned(check = false) {
   const out = [];
   for (const theme of THEMES) {
-    for (const size of sizesOf(theme)) {
+    for (const size of sizesOf(theme, check)) {
       for (const view of THEMED) out.push(nameOf(theme, view, size));
       if (theme !== "default") continue;
       for (const view of UNTHEMED) out.push(nameOf(theme, view, size));
     }
-    for (const size of landscapeOf(theme))
+    for (const size of landscapeOf(theme, check))
       for (const view of LAYOUTS) out.push(nameOf(theme, view, size));
   }
   out.push(nameOf("default", "dashboard-showcase", HD[0]));
@@ -76,7 +77,7 @@ export function planned() {
   return out;
 }
 
-export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }) {
+export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, check = false }) {
   await seedScreens(demo);
   const devices = [];
   const pair = async (name, zone) => {
@@ -100,6 +101,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
   };
   /** The screenshot, then its text against the readability rules. */
   const shot = async (name, page) => {
+    // Taken in the merge queue's check too: without it the next view of the same screen did not
+    // draw within its wait (CI, #461), as the shot paces the views; the queue uploads none.
     await page.screenshot({ path: `${out}/${name}.png` });
     const problems = judgePage(await page.evaluate(collectSamples));
     if (problems.length === 0) ok(`${name}.png`);
@@ -122,7 +125,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
     const entrance = await pair("Entrance", "entrance");
     for (const theme of THEMES) {
       await publishTheme(demo, theme);
-      for (const size of sizesOf(theme)) {
+      for (const size of sizesOf(theme, check)) {
         await attempt(nameOf(theme, "pulse", size), () => pulse(theme, size));
         await attempt(nameOf(theme, "unassigned", size), async () => {
           const { page, close } = await open(size, spare.cookie);
@@ -143,7 +146,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
             await attempt(nameOf(theme, view, size), () => untouched(view, size));
       }
       try {
-        for (const size of landscapeOf(theme))
+        for (const size of landscapeOf(theme, check))
           for (const view of LAYOUTS)
             await attempt(nameOf(theme, view, size), () => layoutShot(theme, view, size));
         if (theme === "default")

@@ -5,8 +5,14 @@
 # scripts/demo-screenshots.mjs and modules/screen/test/stack/screens.mjs). CI runs it in the
 # `demo-stack` check and uploads OUT_DIR as an artifact, which a user-visible PR's reviewer holds
 # against the mockups (AGENTS.md, A package run).
-# Usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR]   (defaults http://127.0.0.1, screenshots)
+# Usage: demo-screenshots [--dry-run] [--groups LIST] [--check] [BASE_URL] [OUT_DIR]
+#          (defaults http://127.0.0.1, screenshots)
 #        demo-screenshots --install   pulls the Playwright image (CI)
+#   --groups LIST  only these screenshot groups (scripts/demo-screenshots-groups.mjs): one shard of
+#                  CI's demo stack, or a module PR's surfaces (docs/ci.md#tiers). A pass with no
+#                  shot in them is skipped, so the front pass's seed and the trouble pass's stopped
+#                  notify happen only where their shots are taken.
+#   --check        the merge queue's pass: every check, no 4K screen, no PNG of a page.
 # BASE_URL is Caddy's address as seen from inside the Caddy container (so not a remote or
 # host-published address); the pages open on the demo event's hostname CANCCU_DEMO_HOST (default
 # demo.localhost; the CI stack has two events, so IP mode serves none) at its port.
@@ -26,13 +32,22 @@ PLAYWRIGHT=1.64.1
 IMAGE=mcr.microsoft.com/playwright:v$PLAYWRIGHT-noble
 STACK=modules/screen/test/stack
 
-usage() { echo "usage: demo-screenshots [--dry-run] [BASE_URL] [OUT_DIR] | --install" >&2; exit 2; }
+usage() { echo "usage: demo-screenshots [--dry-run] [--groups LIST] [--check] [BASE_URL] [OUT_DIR] | --install" >&2; exit 2; }
 if [ "${1:-}" = "--install" ]; then
   [ $# = 1 ] || usage
   exec docker pull "$IMAGE"
 fi
 dry=0
-if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
+picks=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dry-run) dry=1; shift ;;
+    --groups) [ -n "${2:-}" ] || usage; picks+=(--groups "$2"); shift 2 ;;
+    --check) picks+=(--check); shift ;;
+    -*) usage ;;
+    *) break ;;
+  esac
+done
 [ $# -le 2 ] || usage
 BASE=${1:-http://127.0.0.1}
 OUT=${2:-screenshots}
@@ -40,9 +55,9 @@ OUT=${2:-screenshots}
 if [ "$dry" = 1 ]; then
   command -v node >/dev/null || { echo "error: node not found" >&2; exit 2; }
   echo "(chromium in $IMAGE, in Caddy's network namespace)"
-  node scripts/demo-screenshots.mjs --dry-run --base "$BASE" --out "$OUT" || exit 1
+  node scripts/demo-screenshots.mjs --dry-run "${picks[@]}" --base "$BASE" --out "$OUT" || exit 1
   echo "then, after scripts/demo-screenshots-front.sql seeds people and three more events:"
-  exec node scripts/demo-screenshots-front.mjs --dry-run --base "$BASE" --out "$OUT"
+  exec node scripts/demo-screenshots-front.mjs --dry-run "${picks[@]}" --base "$BASE" --out "$OUT"
 fi
 
 command -v docker >/dev/null || { echo "error: docker not found" >&2; exit 2; }
@@ -60,7 +75,7 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 MEDIA=modules/screen/test/fixtures/media
 mkdir -p "$work/scripts" "$work/$STACK" "$work/$MEDIA" "$work/events/demo/assets" "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
-cp scripts/demo-screenshots.mjs scripts/demo-screenshots-front.mjs "$work/scripts/" \
+cp scripts/demo-screenshots.mjs scripts/demo-screenshots-front.mjs scripts/demo-screenshots-groups.mjs "$work/scripts/" \
   && cp "$STACK"/*.mjs "$work/$STACK/" || exit 2
 # The Theme studio's draft takes the demo logo, as an organiser would upload it.
 cp events/demo/assets/logo.svg "$work/events/demo/assets/" || exit 2
@@ -76,10 +91,20 @@ fi
 shoot() {
   docker run --rm --network "container:$caddy" -u "$user" -e HOME=/tmp \
     -e CANCCU_DEMO_HOST -e DEMO_SESSION -v "$work:/work" -v "$out:/out" -w /work "$IMAGE" \
-    node "scripts/$1" --base "$BASE" --out /out "${@:2}"
+    node "scripts/$1" --base "$BASE" --out /out "${picks[@]}" "${@:2}"
+}
+# Whether a pass takes a shot in the chosen groups: its dry run, in the image as the pass runs.
+# Read whole, then searched: `grep -q` in the pipe stops at the first match, breaks the dry run's
+# pipe, and pipefail would read that as "no shot", skipping the pass in silence.
+takes() {
+  local listed
+  listed=$(docker run --rm -u "$user" -e HOME=/tmp -v "$work:/work" -w /work "$IMAGE" \
+    node "scripts/$1" --dry-run "${picks[@]}") || { echo "error: $1 --dry-run failed" >&2; exit 1; }
+  grep -q -- "$2" <<< "$listed"
 }
 shoot demo-screenshots.mjs
 status=$?
+if ! takes demo-screenshots-front.mjs '\.png '; then exit "$status"; fi
 # The second pass needs people, a session without a role and events before, after and away from
 # their venue, which no API of the CI stack makes; the first pass shows People with nobody else.
 if ! "${COMPOSE[@]}" exec -T postgres psql -U canccu -d canccu -v ON_ERROR_STOP=1 -q \
@@ -88,6 +113,7 @@ if ! "${COMPOSE[@]}" exec -T postgres psql -U canccu -d canccu -v ON_ERROR_STOP=
   exit 1
 fi
 shoot demo-screenshots-front.mjs || status=1
+if ! takes demo-screenshots.mjs ', --trouble)'; then exit "$status"; fi
 # Health with a part down (docs/design/mockups.html, sheet 4), last, as it stops notify (whose
 # check-in the front pass shows) for longer than admin's 10 s check. The pass asks for notify
 # back (the file start-notify) once its shots of the part down are taken, then follows Health

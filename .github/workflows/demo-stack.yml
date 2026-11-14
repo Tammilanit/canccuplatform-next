@@ -1,61 +1,200 @@
 name: Demo stack
 
+# Tiered (#461, docs/ci.md#tiers): a pull request or merge-queue entry runs what its changed paths
+# need; push to main, the nightly run and a manual run (the screenshot book at a checkpoint) run
+# everything.
 on:
   pull_request:
   merge_group:
   push:
     branches: [main]
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+# The event is in the group so the nightly run never cancels a push's run on main.
 concurrency:
-  group: demo-stack-${{ github.ref }}
+  group: demo-stack-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
-# The job name is the required-check name for branch rules (#4). Do not rename it.
+env:
+  COMPOSE: docker compose -f deploy/compose.yml -f deploy/compose.ci.yml
+
 jobs:
-  demo-stack:
-    name: demo-stack
+  plan:
+    name: demo-stack (plan)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      COMPOSE: docker compose -f deploy/compose.yml -f deploy/compose.ci.yml
+    outputs:
+      tier: ${{ steps.plan.outputs.tier }}
+      api: ${{ steps.plan.outputs.api }}
+      soak: ${{ steps.plan.outputs.soak }}
+      check: ${{ steps.plan.outputs.check }}
+      shards: ${{ steps.plan.outputs.shards }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Fresh secrets for this run (never a fixed key in the repo)
-        run: |
-          echo "CANCCU_SECRETS_KEY=1:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
-          # A module's own (notify's VAPID key, ...) come from its ci/stack-env.sh (docs/ci.md#compose).
-          scripts/stack-smoke env >> "$GITHUB_ENV"
-      - name: Start the stack with the demo event, wait for every health check
-        run: $COMPOSE up -d --build --wait
-      - name: API tests
-        run: scripts/demo-stack-test http://127.0.0.1
-      - name: Install the browser
-        run: scripts/demo-screenshots --install
-      - name: Screenshots of every user-facing surface
-        run: scripts/demo-screenshots http://127.0.0.1 screenshots
-      - name: Upload screenshots
-        if: always()
+      - name: Self-test the planner, the path map and the screenshot groups
+        run: node scripts/demo-stack-plan.mjs --self-test
+      - name: The tier, from the event and the changed paths
+        id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          # A pull request's checkout is its merge commit, whose first parent is the base it merges
+          # into; a queue entry names its base.
+          BASE: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_sha || 'HEAD^1' }}
+        run: node scripts/demo-stack-plan.mjs --event "$EVENT" --base "$BASE" | tee -a "$GITHUB_OUTPUT"
+
+  api:
+    name: demo-stack (api)
+    needs: plan
+    if: needs.plan.outputs.tier != 'docs'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/demo-stack-up
+      - name: API tests of the changed modules, and the platform smoke
+        env:
+          ONLY: ${{ needs.plan.outputs.api }}
+        run: scripts/demo-stack-test --only "$ONLY" http://127.0.0.1
+      - name: Logs
+        if: failure()
+        run: $COMPOSE logs --no-color > compose.log
+      - name: Upload logs
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: demo-screenshots
+          name: demo-stack-logs-api
+          path: compose.log
+          retention-days: 14
+
+  # The player's 24 accelerated hours take 6 minutes, so they run beside the API tests.
+  soak:
+    name: demo-stack (soak)
+    needs: plan
+    if: needs.plan.outputs.soak == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/demo-stack-up
+        with:
+          browser: "true"
+      - name: The player's soak, after the platform smoke
+        run: scripts/demo-stack-test --only soak http://127.0.0.1
+      - name: Logs
+        if: failure()
+        run: $COMPOSE logs --no-color > compose.log
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-stack-logs-soak
+          path: compose.log
+          retention-days: 14
+
+  shots:
+    name: demo-stack (shots ${{ matrix.shard }})
+    needs: plan
+    if: needs.plan.outputs.shards != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/demo-stack-up
+        with:
+          browser: "true"
+      # It also imports the demo event, which the shots show.
+      - name: Platform smoke
+        run: scripts/demo-stack-test --only "" http://127.0.0.1
+      - name: Screenshots of this shard's groups
+        env:
+          SHARD_GROUPS: ${{ matrix.groups }}
+          CHECK: ${{ needs.plan.outputs.check }}
+        run: |
+          args=(--groups "$SHARD_GROUPS")
+          if [ "$CHECK" = true ]; then args+=(--check); fi
+          scripts/demo-screenshots "${args[@]}" http://127.0.0.1 screenshots
+      - name: Upload screenshots
+        if: always() && needs.plan.outputs.check != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-screenshots-${{ matrix.shard }}
           path: screenshots/
           if-no-files-found: warn
           retention-days: 14
       - name: Logs
         if: failure()
-        run: $COMPOSE logs --no-color | tee compose.log
+        run: $COMPOSE logs --no-color > compose.log
       - name: Upload logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: demo-stack-logs
+          name: demo-stack-logs-shots-${{ matrix.shard }}
           path: compose.log
           retention-days: 14
-      - if: always()
-        run: $COMPOSE down -v
+
+  # The shards' PNGs as the one artifact `demo-screenshots` reviewers download (AGENTS.md, A
+  # package run), also when a shard failed, so its other views can still be held to the mockups.
+  screenshots:
+    name: demo-stack (screenshots)
+    needs: [plan, shots]
+    if: always() && needs.plan.result == 'success' && needs.plan.outputs.shards != '[]' && needs.plan.outputs.check != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/upload-artifact/merge@v4
+        with:
+          name: demo-screenshots
+          pattern: demo-screenshots-*
+          delete-merged: true
+          retention-days: 14
+
+  # The job name is the required-check name for branch rules (#4). Do not rename it. always(): a
+  # failed or cancelled job must fail this check, not skip it, because a skipped required check
+  # counts as passed.
+  demo-stack:
+    name: demo-stack
+    needs: [plan, api, soak, shots, screenshots]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job the tier needs passed, and only those were skipped
+        env:
+          PLAN: ${{ needs.plan.result }}
+          TIER: ${{ needs.plan.outputs.tier }}
+          SOAK_NEEDED: ${{ needs.plan.outputs.soak }}
+          SHARDS: ${{ needs.plan.outputs.shards }}
+          CHECK: ${{ needs.plan.outputs.check }}
+          API: ${{ needs.api.result }}
+          SOAK: ${{ needs.soak.result }}
+          SHOTS: ${{ needs.shots.result }}
+          MERGED: ${{ needs.screenshots.result }}
+        run: |
+          echo "plan: $PLAN, tier ${TIER:-none}, shards ${SHARDS:-none}, check ${CHECK:-none}"
+          test "$PLAN" = success || { echo "::error::the plan failed"; exit 1; }
+          bad=0
+          # expect JOB NEEDED RESULT: a needed job passed; one the tier does not need was skipped.
+          expect() {
+            local want=skipped
+            [ "$2" = true ] && want=success
+            echo "$1: $3 (want $want)"
+            [ "$3" = "$want" ] || { echo "::error::$1 is $3, want $want"; bad=1; }
+          }
+          need_shots=false; [ "$SHARDS" != '[]' ] && need_shots=true
+          need_merge=false; [ "$need_shots" = true ] && [ "$CHECK" != true ] && need_merge=true
+          expect api "$([ "$TIER" != docs ] && echo true)" "$API"
+          expect soak "$SOAK_NEEDED" "$SOAK"
+          expect shots "$need_shots" "$SHOTS"
+          expect screenshots "$need_merge" "$MERGED"
+          exit "$bad"
