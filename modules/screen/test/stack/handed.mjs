@@ -241,13 +241,22 @@ export function withShowcase(s) {
 /**
  * Dashboard's showcase in a zone that does not grow its hero (`grow_for_showcase: false`): the
  * spotlight stays in the 4×5 hero beside the boxes, so its title, three lines or more at a grown
- * hero's type, takes the claim's own type and leaves the body whole (#528).
+ * hero's type, takes the claim's own type and leaves the body whole (#528). The rail stays on its
+ * run of show: with a claim in the hero no countdown there takes the rail's away
+ * (player/src/hero-rail.ts), so the rail would turn to it and the shot could catch the two
+ * crossfading (#532).
  */
 export function withSmallShowcase(s) {
   const spotlight = claim("hero", "announcement", { title: "Grand final on the main stage", body: "Seats open 20:30 · bring your own headset", level: "info" }); // prettier-ignore
   return {
     ...s,
-    regions: s.regions.map((r) => (r.id === "hero" ? { ...r, claim: spotlight } : r)),
+    regions: s.regions.map((r) => {
+      if (r.id === "hero") return { ...r, claim: spotlight };
+      if (r.id !== "rail") return r;
+      const agenda = r.widgets.findIndex((w) => w.widget === "agenda_now" && !w.view.empty);
+      if (agenda < 0) throw new Error("the demo Dashboard's rail has no run of show to show");
+      return { ...r, order: [agenda] };
+    }),
   };
 }
 

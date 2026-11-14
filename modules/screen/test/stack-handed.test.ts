@@ -5,7 +5,7 @@ const region = (id: string, widgets: string[], order: number[]) => ({
   id,
   rotation: "sequence",
   order,
-  claim: null,
+  claim: null as { template: string } | null,
   widgets: widgets.map((widget) => ({ widget, dwell_seconds: 15, view: {} })),
 });
 

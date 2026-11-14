@@ -12,7 +12,13 @@
 // The Director's strips (#447, director.mjs) are frames a few seconds apart.
 import { CLEAR_CHECKS, panelFilled } from "./clear.mjs";
 import { expect } from "./client.mjs";
-import { boxesGivenAway, graphsScaled, statsApart, stripNamesCountdown } from "./dashboard.mjs";
+import {
+  boxesGivenAway,
+  graphsScaled,
+  railSettled,
+  statsApart,
+  stripNamesCountdown,
+} from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, stripNames, withDirector } from "./director.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
 import {
@@ -399,6 +405,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         await railShowsAgenda(page);
       await settle(page);
       if (showcase) await CLEAR_CHECKS[view]?.(page);
+      if (view === "dashboard-showcase-small") await railSettled(page);
       await playing(nameOf(theme, view, size), page);
       await close();
     }
