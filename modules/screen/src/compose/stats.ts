@@ -6,6 +6,7 @@
  */
 import { tenantKey, withTenant } from "@canccu/kit";
 import type { Kv } from "../kv.js";
+import type { Hour } from "./graph.js";
 import type { CountSource } from "../push/store.js";
 import type { Presence } from "./features.js";
 import type { Sources } from "./sources.js";
@@ -112,25 +113,18 @@ export function peakOf(
   return { count: pick(best), at: new Date(best.at).toISOString(), time_text };
 }
 
-/** One hour of a graph: its start as `HH:MM`, its average count, and its bar out of 10. */
-export interface HourPoint {
-  time_text: string;
-  value: number;
-  level: number;
-}
-
 const HOUR_MS = 3600_000;
 
 /**
- * The last 24 hours by the hour, oldest first: each hour that holds counts, at their average, with
- * a bar scaled to the highest hour, since a template has no styles to size a bar with.
+ * The last 24 hours by the hour, oldest first: each hour that holds counts, at their average. Each
+ * graph sizes its bars against its own scale (graph.ts).
  */
 export function hourlyOf(
   counts: readonly PresenceCount[],
   pick: (c: PresenceCount) => number,
   timeZone: string,
   nowMs: number,
-): HourPoint[] {
+): Hour[] {
   const hours = new Map<number, number[]>();
   for (const c of counts) {
     if (c.at <= nowMs - DAY_MS || c.at > nowMs) continue;
@@ -143,14 +137,12 @@ export function hourlyOf(
     hourCycle: "h23",
     timeZone,
   });
-  const averaged = [...hours.entries()]
+  return [...hours.entries()]
     .sort(([a], [b]) => a - b)
     .map(([hour, values]) => ({
       time_text: text.format(hour * HOUR_MS),
       value: Math.round(values.reduce((sum, v) => sum + v, 0) / values.length),
     }));
-  const top = Math.max(1, ...averaged.map((p) => p.value));
-  return averaged.map((p) => ({ ...p, level: Math.round((10 * p.value) / top) }));
 }
 
 /** The latest count of the last 24 hours while it is live (no older than three intervals). */

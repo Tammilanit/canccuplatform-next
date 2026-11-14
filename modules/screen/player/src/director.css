@@ -27,17 +27,85 @@
     padding-bottom: calc(2.4 * var(--canccu-u));
   }
 
-  /* A graph: one bar per hour, from the baseline, its height out of 10 in its class. */
+  /*
+   * A graph: one bar per hour, from the baseline, its height out of 10 against the scale's top in
+   * its class. The scale's values sit in a gutter on the left and the hours under the baseline
+   * (#523), so the bars keep the box between them; the scale's box is the bars' own, which puts
+   * each evenly spaced gridline at its value. Labels at 3 units: 32 px at 1080p, read at 3–5 m.
+   */
   .canccu-widget__graph {
+    --canccu-graph-gutter: calc(8 * var(--canccu-u));
+    --canccu-graph-top: calc(2 * var(--canccu-u));
+    --canccu-graph-hours: calc(5 * var(--canccu-u));
+    position: relative;
     display: flex;
     flex: 1;
     align-items: flex-end;
     gap: calc(0.5 * var(--canccu-u));
     min-height: calc(10 * var(--canccu-u));
-    padding-top: calc(2 * var(--canccu-u));
+    padding: var(--canccu-graph-top) 0 var(--canccu-graph-hours)
+      calc(var(--canccu-graph-gutter) + var(--canccu-u));
+  }
+
+  .canccu-widget__scale {
+    position: absolute;
+    inset: var(--canccu-graph-top) 0 var(--canccu-graph-hours);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* A line with no height, so its value centres on it; the rule runs on to the box's edge. */
+  .canccu-widget__gridline {
+    display: grid;
+    grid-template-columns: var(--canccu-graph-gutter) 1fr;
+    column-gap: var(--canccu-u);
+    align-items: center;
+    height: 0;
+    font-size: calc(3 * var(--canccu-u));
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+    color: var(--canccu-color-text-muted);
+  }
+
+  .canccu-widget__gridline::after {
+    content: "";
+    border-top: max(1px, calc(0.12 * var(--canccu-u))) solid var(--canccu-color-border);
+  }
+
+  /* Under the half of the base's "0" that hangs below the line, so the first hour clears it. */
+  .canccu-widget__hour {
+    position: absolute;
+    top: calc(100% + 1.8 * var(--canccu-u));
+    left: 50%;
+    translate: -50% 0;
+    font-size: calc(3 * var(--canccu-u));
+    line-height: 1;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    color: var(--canccu-color-text-muted);
+  }
+
+  /* The newest hour's label ends on the box's edge instead of running past it. */
+  .canccu-widget__point:last-child .canccu-widget__hour {
+    left: auto;
+    right: 0;
+    translate: none;
+  }
+
+  /* Ambient is large type over the background (layouts.css): its bars stand alone. */
+  .canccu-layout--ambient .canccu-widget__graph {
+    padding: var(--canccu-graph-top) 0 0;
+  }
+
+  .canccu-layout--ambient .canccu-widget__scale,
+  .canccu-layout--ambient .canccu-widget__hour {
+    display: none;
   }
 
   .canccu-widget__point {
+    position: relative;
     flex: 1;
     min-height: calc(0.6 * var(--canccu-u));
     border-radius: calc(0.4 * var(--canccu-u)) calc(0.4 * var(--canccu-u)) 0 0;

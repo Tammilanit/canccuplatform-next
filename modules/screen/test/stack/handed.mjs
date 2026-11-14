@@ -117,6 +117,13 @@ export function withHeroItemOnly(s) {
   };
 }
 
+/** One bar of a graph as graph.ts makes it: out of 10 against `top`, named on every `every`th hour. */
+export function hour(h, value, top, every) {
+  const time_text = `${String(h).padStart(2, "0")}:00`;
+  const level = Math.round((10 * value) / top);
+  return { time_text, value, level, ...(h % every === 0 ? { tick_text: time_text } : {}) };
+}
+
 /** Sample statistics as the bot's data will bring them (#389), with sheet 10's trend arrows. */
 const SAMPLE = {
   stats: {
@@ -138,8 +145,10 @@ const SAMPLE = {
     metric: "online",
     label: "Online · 24 h",
     peak: { count: 231, at: "2026-03-14T23:30:00Z", time_text: "01:30" },
+    // The scale and the labelled hours as graph.ts makes them: round steps, every sixth hour named.
+    scale: [300, 200, 100, 0].map((value) => ({ value })),
     points: [96, 80, 61, 44, 30, 22, 25, 41, 70, 104, 132, 151, 170, 166, 158, 172, 190, 201, 214, 231, 225, 212, 205, 218].map(
-      (value, i) => ({ time_text: `${String((19 + i) % 24).padStart(2, "0")}:00`, value, level: Math.round((10 * value) / 231) }),
+      (value, i) => hour((19 + i) % 24, value, 300, 6),
     ),
   },
 }; // prettier-ignore
