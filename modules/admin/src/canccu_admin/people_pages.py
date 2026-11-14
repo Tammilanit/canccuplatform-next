@@ -260,7 +260,8 @@ def people_routes(auth: Auth, need: Need, on_event: OnEvent | None) -> list[Rout
         body = (
             '<section class="canccu-card canccu-person">'
             f'<div class="canccu-user"><span class="canccu-avatar" aria-hidden="true">'
-            f"{esc(_initials(user.name))}</span><span><b>{esc(user.name)}</b>"
+            f'{esc(_initials(user.name))}</span><span class="canccu-people__names">'
+            f"<b>{esc(user.name)}</b>"
             f'<span class="canccu-people__handle">{esc(handle)}</span></span></div>'
             f'<p class="canccu-field__label">Role</p>{role_control(person)}'
             f'<p class="canccu-muted">{ALLOWS[person.role]}</p>'
