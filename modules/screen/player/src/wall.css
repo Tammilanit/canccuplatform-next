@@ -1,6 +1,6 @@
 /*
  * The photo wall (contracts/screen.md, Photos; design guideline v8, change 6, sheets 13 and 16) and
- * Right now's peaks and Ambient's line (sheet 10). In `canccu-base` like screen.css, so a theme
+ * Right now's peaks, its lone number and Ambient's line (sheet 10). In `canccu-base` like screen.css, so a theme
  * restyles all of it.
  */
 @layer canccu-base {
@@ -162,5 +162,43 @@
     .canccu-widget--qr
     .canccu-widget__caption {
     white-space: normal;
+  }
+
+  /*
+   * One number alone, as Right now before the bot's data ("checked in" only): the box's one figure,
+   * centred, and large in a Dashboard box. At the size of three it sat in a corner of an empty
+   * panel (v8 rule 5). The box is a size container there (layouts.css), so the height caps the
+   * number in a two-row strip too.
+   */
+  .canccu-region
+    > .canccu-widget--stats
+    .canccu-widget__stats:has(> .canccu-widget__stat:only-child) {
+    justify-content: center;
+  }
+
+  .canccu-region > .canccu-widget--stats .canccu-widget__stat:only-child {
+    align-items: center;
+    text-align: center;
+  }
+
+  .canccu-layout--dashboard .canccu-region > .canccu-widget--stats .canccu-widget__stat:only-child {
+    gap: calc(1 * var(--canccu-u));
+  }
+
+  .canccu-layout--dashboard
+    .canccu-region
+    > .canccu-widget--stats
+    .canccu-widget__stat:only-child
+    .canccu-widget__big {
+    font-size: min(calc(14 * var(--canccu-u)), 40cqh);
+    line-height: 1;
+  }
+
+  .canccu-layout--dashboard
+    .canccu-region
+    > .canccu-widget--stats
+    .canccu-widget__stat:only-child
+    .canccu-widget__meta {
+    font-size: min(calc(4.4 * var(--canccu-u)), 14cqh);
   }
 }

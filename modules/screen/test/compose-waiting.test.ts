@@ -1,6 +1,6 @@
 // Boxes waiting for their source (contracts/screen.md, Box sizes and hidden boxes; #416): a box of
-// statistics only leaves the composed state while they are all empty, and its cells go to the box
-// beside it by runs, unless the hero grows for a showcase.
+// statistics only leaves the composed state while they are all empty, and the hero fills its cells
+// as for a showcase when that pauses no box still drawn; else they go to the box beside it by runs.
 import { describe, expect, it } from "vitest";
 import { buildRegions } from "../src/compose/build.js";
 import type { BuildInput, RegionView, ZoneSetup } from "../src/compose/build.js";
@@ -63,14 +63,34 @@ describe("a box waiting for its source", () => {
     expect(asked).toEqual([]);
   });
 
-  it("leaves Dashboard's statistics out and hands their cells over by runs, 12×5 each", () => {
+  it("leaves Dashboard's statistics out, and the hero fills their cells: 8×10 by the rail's 4×10", () => {
     expect(areas(build())).toEqual({
       header: at(1, 1, 6, 1),
       "header-2": at(7, 1, 6, 1),
-      hero: at(1, 2, 12, 5),
-      rail: at(1, 7, 12, 5),
+      hero: at(1, 2, 8, 10),
+      rail: at(9, 2, 4, 10),
       ticker: at(1, 12, 12, 1),
     });
+  });
+
+  it("grows the hero as for a showcase while Right now is drawn (the demo before the bot's data)", () => {
+    // A 12×5 hero strip lost its label and time, and Right now spread one number over 8×5 (v8 rule 5).
+    expect(areas(build({ regions: { right_now: { idle: "blank" } } }))).toMatchObject({
+      hero: at(1, 2, 8, 10),
+      right_now: at(9, 2, 4, 5),
+      rail: at(9, 7, 4, 5),
+    });
+  });
+
+  it("hands over by runs when the hero's growth would pause a box still drawn", () => {
+    const blank = { idle: "blank" };
+    const regions = build({ regions: { online: blank, voice: blank, top_games: blank } });
+    expect(areas(regions)).toMatchObject({
+      hero: at(1, 2, 4, 5),
+      top_games: at(1, 7, 8, 5),
+      rail: at(9, 7, 4, 5),
+    });
+    expect(regions.some((r) => r.id === "right_now")).toBe(false);
   });
 
   it("counts a zone's unset idle, logo and an unknown value the same", () => {
@@ -80,13 +100,13 @@ describe("a box waiting for its source", () => {
     expect(areas(build({ regions: { online: { idle: "sparkle" } } }))).toEqual(plain);
   });
 
-  it("stays drawn with idle blank, next or collapse, and the others still hand over", () => {
+  it("stays drawn with idle blank, next or collapse, beside the hero filling the others", () => {
     for (const idle of ["blank", "next", "collapse"]) {
       const regions = build({ regions: { voice: { idle } } });
       expect(areas(regions), idle).toMatchObject({
-        hero: at(1, 2, 8, 5),
+        hero: at(1, 2, 8, 10),
         voice: at(9, 2, 4, 5),
-        rail: at(1, 7, 12, 5),
+        rail: at(9, 7, 4, 5),
       });
       expect(regions.find((r) => r.id === "voice")?.idle).toBe(idle);
     }
@@ -97,9 +117,10 @@ describe("a box waiting for its source", () => {
     expect(regions.some((r) => r.id === "hero")).toBe(false);
     // A zone that gives a statistics box a widget with content keeps it drawn.
     const clock = build({ regions: { online: { widgets: [{ widget: "clock" }] } } });
-    expect(areas(clock)).toMatchObject({ hero: at(1, 2, 4, 5), online: at(5, 2, 8, 5) });
+    expect(areas(clock)).toMatchObject({ hero: at(1, 2, 8, 10), online: at(9, 2, 4, 5) });
   });
 
+  // The hero in the right column has no free columns in the drawn boxes' band, so it does not grow.
   it("finds its runs after the trade: the hero in voice's place takes the cells on its left", () => {
     expect(areas(build({ heroRegion: "voice" }))).toMatchObject({
       hero: at(1, 2, 12, 5),

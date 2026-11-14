@@ -222,6 +222,22 @@ function synthetic(id: "_full" | "_overlay", layout: Layout, at: Date): RegionVi
   };
 }
 
+/**
+ * The waiting boxes' cells filled by the hero, grown as for a showcase, when that pauses no box
+ * still drawn (contracts/screen.md, The hero fills first); else `kept` itself, for the hand-over.
+ * A neighbour that took the cells instead stretched a box made for three numbers over two thirds
+ * of the screen around one, and squeezed the hero into a strip without its label (v8 rule 5).
+ */
+function filledByHero(
+  kept: readonly LayoutRegion[],
+  waiting: ReadonlySet<string>,
+  input: BuildInput,
+): readonly LayoutRegion[] {
+  if (waiting.size === 0) return kept;
+  const filled = grown(kept, input.zone.regions);
+  return filled.length === kept.length ? filled : kept;
+}
+
 export function buildRegions(input: BuildInput): { layout: Layout; regions: RegionView[] } {
   const layout = chooseLayout({
     windowLayoutId: input.windowLayoutId,
@@ -235,7 +251,8 @@ export function buildRegions(input: BuildInput): { layout: Layout; regions: Regi
   const swapped = traded(boxes, input.zone.regions, input.zone.heroRegion ?? null);
   const waiting = new Set(swapped.filter((r) => waits(r, input)).map((r) => r.id));
   const kept = swapped.filter((r) => !waiting.has(r.id));
-  const growth = input.grow === true ? grown(kept, input.zone.regions) : kept;
+  const growth =
+    input.grow === true ? grown(kept, input.zone.regions) : filledByHero(kept, waiting, input);
   const placed = growth !== kept ? growth : handedOver(swapped, waiting);
   const regions = placed.flatMap((r) => regionsOf(r, layout, input));
   return {
