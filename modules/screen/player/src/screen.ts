@@ -8,7 +8,8 @@ import { claimEnd, claimOf, claimShown } from "./claims.js";
 import type { ClaimState } from "./claims.js";
 import { driftAt, FADE_MS } from "./display.js";
 import type { Motion } from "./display.js";
-import { MotionLayer, levelOf, styleOf, transitionsOf } from "./motion.js";
+import { legacyMotion, motionStyleOf } from "@canccu/ui";
+import { MotionLayer, levelOf } from "./motion.js";
 import { StageLayer } from "./stage.js";
 import { agendaOf, joinHeroAndRail } from "./hero-rail.js";
 import { idleOf, zoneNameOf } from "./idle.js";
@@ -171,7 +172,7 @@ export class Screen {
     if (state === null) return;
     const now = this.host.serverNow();
     const level = levelOf(state.display, this.host.reducedMotion());
-    const motion = transitionsOf(level);
+    const motion = legacyMotion(level);
     this.root.dataset.motion = motion;
     // A takeover hides every region but itself and the overlay (screen.css), until it ends here.
     const full = claimOf(state.regions.find((r) => r.role === "full")?.claim);
@@ -218,7 +219,7 @@ export class Screen {
       );
     }
     fillCountdowns(this.root, now);
-    this.motion.apply(this.root, level, styleOf(state.display?.motion_style), now);
+    this.motion.apply(this.root, level, motionStyleOf(state.display?.motion_style), now);
     this.stage.apply(state.display?.stage, level, now);
     fitTickers(this.root, motion, now);
     if (state.display?.drift === true) {

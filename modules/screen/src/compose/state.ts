@@ -10,7 +10,8 @@ import { loadAgendaItems } from "../content/agenda.js";
 import { healthOf } from "../health.js";
 import type { Settings } from "../health.js";
 import type { Kv } from "../kv.js";
-import type { Orientation, ZoneStore } from "../push/store.js";
+import type { CountSource, Orientation, ZoneStore } from "../push/store.js";
+import { countsOf } from "./stats.js";
 import { resolveWinner } from "../schedule/winner.js";
 import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
@@ -136,6 +137,8 @@ export interface ZoneComposed {
   display: Display;
   /** When a content widget next changes by itself (epoch ms), or null. */
   nextChangeAt: number | null;
+  /** The counts its widgets read (ZoneRecord.counts). */
+  counts: CountSource[];
   /** Whether a preview's draft was drawn (PreviewLook.themeKey); `none` without one. */
   draft: DraftUse;
 }
@@ -244,7 +247,7 @@ export async function composeZone(
   // The content widgets' sources are read only for a zone that shows them, so their changes
   // (every frame, photo and code) never move another zone's version. The hub's view keeps only
   // `stats` of them (NOW_TYPES).
-  const entries = entriesOf(Object.values(views), read.zone.regions);
+  const entries = entriesOf(Object.values(views), read.zone);
   const used = typesOf(views);
   for (const e of entries) used.add(e.widget);
   if (!withContent) for (const type of used) if (type !== "stats") used.delete(type);
@@ -296,6 +299,7 @@ export async function composeZone(
     ticker: { ...read.ticker, appearance },
     display,
     nextChangeAt: changes.length === 0 ? null : Math.min(...changes),
+    counts: countsOf(used),
     draft,
   };
 }

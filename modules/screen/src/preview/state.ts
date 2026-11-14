@@ -16,6 +16,8 @@ import { dropDraft, runningPreview } from "./store.js";
 export interface RunningPreview {
   endsAt: number;
   themeKey: string | null;
+  /** False while a key is kept but its read failed: the minute's read that succeeds redraws. */
+  drawn: boolean;
 }
 
 export async function previewed(
@@ -56,6 +58,6 @@ export async function previewed(
         theme: composed.draft === "drawn",
       },
     },
-    preview: { endsAt: row.ends_at.getTime(), themeKey },
+    preview: { endsAt: row.ends_at.getTime(), themeKey, drawn: composed.draft === "drawn" },
   };
 }

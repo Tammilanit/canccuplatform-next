@@ -109,9 +109,10 @@ export class DeviceStream extends Feed<StreamRequest> {
   }
 
   /**
-   * Whether the preview this stream draws has ended by itself, or its draft key died (a publish,
-   * a discard, 12 hours), read at least once a minute (contracts/screen.md, When the draft key
-   * dies). A lost preview notice is caught up here too: the next place reads the row again.
+   * Whether the preview this stream draws has ended by itself, its draft key died (a publish, a
+   * discard, 12 hours), or a draft that could not be read when it was composed answers now, read
+   * at least once a minute (contracts/screen.md, When the draft key dies). A lost preview notice
+   * is caught up here too: the next place reads the row again.
    */
   private async previewMoved(nowMs: number): Promise<boolean> {
     const preview = this.preview;
@@ -119,7 +120,8 @@ export class DeviceStream extends Feed<StreamRequest> {
     if (nowMs >= preview.endsAt) return true;
     if (preview.themeKey === null || nowMs - this.draftReadAt < DRAFT_READ_MS) return false;
     this.draftReadAt = nowMs;
-    return (await this.deps.sources.themePreview(this.tenant, preview.themeKey)) === "gone";
+    const read = await this.deps.sources.themePreview(this.tenant, preview.themeKey);
+    return read === "gone" || (read !== null && !preview.drawn);
   }
 
   /** After the event's status or venue check changed: refused screens go, the rest redraw. */

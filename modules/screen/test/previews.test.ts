@@ -7,7 +7,8 @@ import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { withTenant } from "@canccu/kit";
 import type { DraftTheme } from "../src/compose/sources.js";
-import { endExpired, runningPreview } from "../src/preview/store.js";
+import type { Kv } from "../src/kv.js";
+import { announcePreview, endExpired, runningPreview, startPreview } from "../src/preview/store.js";
 import { DATABASE_URL, call, code, pairDevice } from "./helpers.js";
 import type { Harness } from "./helpers.js";
 import { harness } from "./helpers.js";
@@ -186,6 +187,29 @@ describe.skipIf(!DATABASE_URL)("a preview on a screen", () => {
     expect(row?.theme).toBe(false);
   });
 
+  it("draws the draft once a failed draft read succeeds at the stream's next minute", async () => {
+    const { id, token } = await client.screen();
+    h.sources.drafts[KEY] = { ...DRAFT };
+    h.sources.draftsDown = true;
+    try {
+      expect((await start(id, { minutes: 10, theme_preview_key: KEY })).json()).toMatchObject({
+        theme: true,
+      });
+      const sse = client.open(token);
+      const unread = await sse.next("state");
+      expect(unread.data.preview).toMatchObject({ theme: false });
+      h.sources.draftsDown = false;
+      h.clock.now += 61_000;
+      const drawn = await sse.next("state", 3_000);
+      expect(drawn.data.preview).toMatchObject({ theme: true });
+      expect(drawn.data.theme).toMatchObject({ tokens_css_url: DRAFT.tokens_css_url });
+      sse.close();
+    } finally {
+      h.sources.draftsDown = false;
+      await end(id);
+    }
+  });
+
   it("shows the zone at a preview time: the run of show then, the ticker as now", async () => {
     const { id, token } = await client.screen();
     h.sources.agendaItems = [
@@ -257,5 +281,43 @@ describe.skipIf(!DATABASE_URL)("a preview on a screen", () => {
       await withTenant("alpha", () => h.db.tenant((c) => runningPreview(c, id, 0))),
     ).toBeNull();
     expect(h.audits.at(-1)).toMatchObject({ action: "screen.preview.ended", actor_user_id: null });
+  });
+
+  it("starts no preview on a zone the device left after the zone was read", async () => {
+    const { id } = await client.screen();
+    const started = await withTenant("alpha", () =>
+      h.db.tenant((c) =>
+        startPreview(c, {
+          deviceId: id,
+          zoneKey: "elsewhere",
+          zone: null,
+          at: null,
+          themeKey: null,
+          until: null,
+          endsAt: new Date(h.clock.now + 60_000),
+          actor: "u_admin",
+        }),
+      ),
+    );
+    expect(started).toBe(false);
+    expect(
+      await withTenant("alpha", () => h.db.tenant((c) => runningPreview(c, id, h.clock.now))),
+    ).toBeNull();
+  });
+
+  it("logs a failed no-resume flag instead of dropping it silently", async () => {
+    const warned: string[] = [];
+    const kv = { set: () => Promise.reject(new Error("valkey down")) } as unknown as Kv;
+    await withTenant("alpha", () =>
+      announcePreview(
+        {
+          kv,
+          fanout: { subscribe: () => () => undefined, publish: () => Promise.resolve() },
+          log: { warn: (_obj: object, msg: string) => void warned.push(msg) },
+        },
+        "dv_x",
+      ),
+    );
+    expect(warned).toHaveLength(1);
   });
 });

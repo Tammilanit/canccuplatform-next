@@ -2,6 +2,8 @@
 import { describe, expect, it } from "vitest";
 import { boxProblem, placedBoxes } from "../src/compose/boxes.js";
 import { buildRegions } from "../src/compose/build.js";
+import { entriesOf } from "../src/compose/content.js";
+import { grown } from "../src/compose/showcase.js";
 import type { BuildInput, RegionView, ZoneSetup } from "../src/compose/build.js";
 import { overrideOf, placeClaims } from "../src/compose/claims.js";
 import { BUILT_IN_LAYOUTS } from "../src/compose/layouts.js";
@@ -170,5 +172,42 @@ describe("the composed state", () => {
       [claim],
     );
     expect(placed.regions.find((r) => r.claim !== null)?.id).toBe("hero");
+  });
+});
+
+describe("entriesOf", () => {
+  const photo = { widget: "photo", props: {} };
+  const dashboard = layout("dashboard");
+
+  it("leaves out a box the zone hides, so its source is never read", () => {
+    const shown = entriesOf([{ layout: dashboard }], {
+      layout_id: "dashboard",
+      regions: { hero: { widgets: [photo] } },
+    });
+    expect(shown.some((e) => e.widget === "photo")).toBe(true);
+    const hidden = entriesOf([{ layout: dashboard }], {
+      layout_id: "dashboard",
+      regions: { hero: { hidden: true, widgets: [photo] } },
+    });
+    expect(hidden.some((e) => e.widget === "photo")).toBe(false);
+    expect(hidden.length).toBeGreaterThan(0);
+  });
+});
+
+describe("grown", () => {
+  it("is null when the hero does not grow, the regions with the hero grown when it does", () => {
+    const dashboard = layout("dashboard").regions;
+    const hero = dashboard.find((r) => r.id === "hero");
+    expect(hero).toBeDefined();
+    expect(
+      grown(
+        dashboard.filter((r) => r.id !== "hero"),
+        {},
+      ),
+    ).toBeNull();
+    // A hero alone has no band to grow in.
+    expect(grown(hero === undefined ? [] : [hero], {})).toBeNull();
+    const big = grown(dashboard, {});
+    expect(big?.find((r) => r.id === "hero")?.area.columns).toBe((hero?.area.columns ?? 0) * 2);
   });
 });
