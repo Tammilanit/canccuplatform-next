@@ -27,6 +27,7 @@ import {
   withOneScreen,
   withPhoto,
   withShowcase,
+  withSmallShowcase,
   withStats,
   withTakeover,
   holdStream,
@@ -88,6 +89,7 @@ export function planned(check = false) {
       for (const view of LAYOUTS) out.push(nameOf(theme, view, size));
     out.push(nameOf(theme, "dashboard-showcase", HD[0]));
   }
+  out.push(nameOf("default", "dashboard-showcase-small", HD[0]));
   out.push(nameOf("default", "dashboard-waiting", HD[0]));
   out.push(nameOf("default", "ambient-takeover", HD[0]));
   out.push(nameOf("default", "ambient-online", HD[0]));
@@ -186,6 +188,10 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         await attempt(nameOf(theme, "dashboard-showcase", HD[0]), () =>
           layoutShot(theme, "dashboard", HD[0], "dashboard-showcase"),
         );
+        if (theme === "default")
+          await attempt(nameOf(theme, "dashboard-showcase-small", HD[0]), () =>
+            layoutShot(theme, "dashboard", HD[0], "dashboard-showcase-small"),
+          );
         if (theme === "default")
           await attempt(nameOf(theme, "dashboard-waiting", HD[0]), () =>
             layoutShot(theme, "dashboard", HD[0], "dashboard-waiting"),
@@ -289,7 +295,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
     /**
      * The main zone on another built-in layout, as the server composes it. Dashboard is handed
      * the statistics the demo stack has no bot for, and its showcase a spotlight in its hero too,
-     * grown as the server grows it for one (a claim from Moments, which the demo stack has not).
+     * grown as the server grows it for one (a claim from Moments, which the demo stack has not),
+     * or at the hero's size for a zone that does not grow it (`dashboard-showcase-small`).
      * `dashboard-waiting` is the server's own Dashboard without them.
      */
     async function layoutShot(theme, id, size, view = id) {
@@ -297,6 +304,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       if (view === "dashboard") return handed(theme, view, size, withStats);
       if (view === "dashboard-showcase")
         return handed(theme, view, size, (s) => withShowcase(withStats(s)));
+      if (view === "dashboard-showcase-small")
+        return handed(theme, view, size, (s) => withSmallShowcase(withStats(s)));
       if (view === "ambient-takeover") return handed(theme, view, size, withTakeover);
       if (view === "ambient-online") return handed(theme, view, size, withCounts);
       const { page, close } = await open(size, main.cookie);
@@ -355,7 +364,9 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       // #443's views draw what they are named for before the shot.
       const drawn = NEW_VIEWS[view];
       if (drawn !== undefined) await page.waitForSelector(drawn, { timeout: 30_000 });
-      await CLEAR_CHECKS[view]?.(page);
+      // A showcase's checks measure its hero once the claim has faded in and its fonts are in.
+      const showcase = view.startsWith("dashboard-showcase");
+      if (!showcase) await CLEAR_CHECKS[view]?.(page);
       if (view === "rail-empty") await railShowsIdle(page);
       else if (view === "dashboard-showcase") {
         await stripNamesCountdown(page);
@@ -387,6 +398,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       } else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
         await railShowsAgenda(page);
       await settle(page);
+      if (showcase) await CLEAR_CHECKS[view]?.(page);
       await playing(nameOf(theme, view, size), page);
       await close();
     }

@@ -47,6 +47,11 @@
       calc(var(--canccu-graph-gutter) + var(--canccu-u));
   }
 
+  /* A day without an hour of counts has no scale and no bars (#527): no data is not zero. */
+  .canccu-widget__graph:not(:has(.canccu-widget__point)) {
+    display: none;
+  }
+
   .canccu-widget__scale {
     position: absolute;
     inset: var(--canccu-graph-top) 0 var(--canccu-graph-hours);

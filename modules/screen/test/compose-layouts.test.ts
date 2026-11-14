@@ -5,7 +5,7 @@ import { buildRegions } from "../src/compose/build.js";
 import type { BuildInput, RegionView, ZoneSetup } from "../src/compose/build.js";
 import { overrideOf, placeClaims } from "../src/compose/claims.js";
 import type { Override } from "../src/compose/claims.js";
-import { BUILT_IN_LAYOUTS } from "../src/compose/layouts.js";
+import { BUILT_IN_LAYOUTS, unitsWide } from "../src/compose/layouts.js";
 import type { Area } from "../src/compose/layouts.js";
 import { isShowcase } from "../src/compose/showcase.js";
 import { viewOf } from "../src/compose/widgets.js";
@@ -159,6 +159,22 @@ describe("the built-in layouts", () => {
     expect(areas(regions).online).toEqual(at(2, 11, 10, 1));
     expect(types(regions).online).toEqual(["stats"]);
     expect(areas(build({ layoutId: "ambient" })).online).toBeUndefined();
+  });
+});
+
+describe("a box's width", () => {
+  const wide = (id: string, region: string) => {
+    const layout = BUILT_IN_LAYOUTS.find((l) => l.id === id);
+    const area = layout?.regions.find((r) => r.id === region)?.area;
+    if (layout === undefined || area === undefined) throw new Error(`no ${id} ${region}`);
+    return unitsWide(area, layout);
+  };
+
+  it("counts in units of the screen's short side, as the look sizes type (#527)", () => {
+    expect(wide("pulse", "hero")).toBeCloseTo((8 / 12) * (1600 / 9));
+    expect(wide("dashboard", "online")).toBeCloseTo((4 / 12) * (1600 / 9));
+    // On a portrait screen the short side is its width.
+    expect(wide("pulse_portrait", "hero")).toBeCloseTo(100);
   });
 });
 

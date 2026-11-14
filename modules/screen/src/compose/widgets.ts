@@ -221,12 +221,13 @@ function checkinFields(code: CheckinCode, facts: ZoneFacts): Record<string, unkn
   };
 }
 
-/** A type's fields, or null when it has nothing to show. */
+/** A type's fields, or null when it has nothing to show; `unitsWide` is its box's width. */
 function fields(
   type: string,
   props: Props,
   facts: ZoneFacts,
   embed: string | null,
+  unitsWide: number,
 ): Record<string, unknown> | null {
   switch (type) {
     case "clock":
@@ -251,9 +252,9 @@ function fields(
       return highlight === null ? null : { ...highlight, highlight: true };
     }
     case "today_numbers":
-      return todayFields(facts);
+      return todayFields(facts, unitsWide);
     case "activity_graph":
-      return graphFields(props.metric, facts);
+      return graphFields(props.metric, facts, unitsWide);
     case "venue_info": {
       if (facts.venue === null) return null;
       const wifi = facts.venue.wifi
@@ -302,13 +303,18 @@ function isStale(type: string, facts: ZoneFacts): boolean {
   return false;
 }
 
+/** A whole 16:9 screen's width in units of its short side (layouts.ts, unitsWide). */
+const SCREEN_UNITS_WIDE = 1600 / 9;
+
+/** A widget's view in a box `unitsWide` wide (layouts.ts, unitsWide); a whole screen if unsaid. */
 export function viewOf(
   type: string,
   props: Props,
   facts: ZoneFacts,
   embed: string | null = null,
+  unitsWide = SCREEN_UNITS_WIDE,
 ): View {
-  const found = fields(type, props, facts, embed);
+  const found = fields(type, props, facts, embed, unitsWide);
   return {
     ...(found ?? {}),
     qr: found === null ? null : qrFor(type, props, facts),
