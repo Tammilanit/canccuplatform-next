@@ -50,8 +50,17 @@ export interface Gap {
   box: string | null;
   edge: Edge | null;
   fills: boolean;
+  /** Every other box beside it, by the edge it meets it on (frames only beside a frame). */
+  others: { box: string; edge: Edge }[];
 }
 
 export function gaps(boxes: Box[], grid: { columns: number; rows: number }): Gap[];
 export function fill(boxes: Box[], gap: Gap): Box[] | null;
-export function gapWords(gap: Gap): { key: string; count: number };
+export function gapWords(gap: Gap): {
+  key: string;
+  count: number;
+  box: string | null;
+  /** The box on the gap's other side ("between"), if any. */
+  other: string | null;
+  also: string[];
+};

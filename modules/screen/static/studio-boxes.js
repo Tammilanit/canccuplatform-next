@@ -193,20 +193,23 @@ const across = (edge) => edge === "left" || edge === "right";
 /** The gap's size away from the box's edge: columns beside it, rows above or below it. */
 const depth = (gap, edge) => (across(edge) ? gap.columns : gap.rows);
 
+const OPPOSITE = { right: "left", left: "right", bottom: "top", top: "bottom" };
+
 /**
  * The space an edit left empty (#422): cells the layout's own areas cover and no drawn box does,
  * as rectangles, row by row. Space the layout itself leaves (Ambient's margins) is no gap. Each
  * names the box beside it whose edge would grow into it: one that covers it whole first, else
- * one that covers part of it, else a frame or a box that cannot grow, then `fills` is false.
+ * one that covers part of it, else a frame or a box that cannot grow, then `fills` is false; and
+ * the other boxes beside it. A rectangle no one box can fill whole is split at the edges of the
+ * boxes beside it, so each part is named by, and filled from, its own box (#486).
  */
 export function gaps(boxes, grid) {
   const drawn = boxes.filter((b) => !b.hidden && b.area);
   const wanted = boxes.map((b) => b.layoutArea).filter(Boolean);
+  const open = (c, r) =>
+    wanted.some((a) => inside(a, c, r)) && !drawn.some((b) => inside(b.area, c, r));
   const taken = new Set();
-  const empty = (c, r) =>
-    !taken.has(`${c},${r}`) &&
-    wanted.some((a) => inside(a, c, r)) &&
-    !drawn.some((b) => inside(b.area, c, r));
+  const empty = (c, r) => !taken.has(`${c},${r}`) && open(c, r);
   const out = [];
   for (let row = 1; row <= grid.rows; row++) {
     for (let column = 1; column <= grid.columns; column++) {
@@ -219,33 +222,82 @@ export function gaps(boxes, grid) {
       while (row + rows <= grid.rows && rowFree(row + rows)) rows++;
       for (let r = row; r < row + rows; r++)
         for (let c = column; c < column + columns; c++) taken.add(`${c},${r}`);
-      out.push(besideGap(boxes, { column, row, columns, rows }, grid));
+      out.push(...named({ boxes: drawn, all: boxes, grid, open }, { column, row, columns, rows }));
     }
   }
   return out;
 }
 
-function besideGap(boxes, area, grid) {
-  const touching = [];
+/** The boxes beside `area`, each with the edge it meets it on and whether that edge can grow. */
+function touching({ boxes, all, grid, open }, area) {
+  const out = [];
   for (const [edge, gapLine, boxLine] of SIDES) {
     for (const b of boxes) {
-      if (b.hidden || !b.area || boxLine(b.area) !== gapLine(area)) continue;
+      if (boxLine(b.area) !== gapLine(area)) continue;
       const [start, span, gStart, gSpan] = across(edge)
         ? [b.area.row, b.area.rows, area.row, area.rows]
         : [b.area.column, b.area.columns, area.column, area.columns];
       if (start >= gStart + gSpan || gStart >= start + span) continue;
-      const fills = !b.frame && free(boxes, b, moved(b.area, edge, depth(area, edge)), grid);
-      touching.push({ box: b.id, edge, fills, whole: start === gStart && span === gSpan });
+      const grown = moved(b.area, edge, depth(area, edge));
+      // A box longer than the gap would grow past it: only into cells that are empty too, never
+      // into the layout's margins or under a box of another layer.
+      const fills =
+        !b.frame &&
+        free(all, b, grown, grid) &&
+        cellsOf(grown, b.area).every(([c, r]) => open(c, r));
+      const whole = start === gStart && span === gSpan;
+      out.push({ box: b.id, edge, frame: b.frame, fills, whole, start, span, gStart, gSpan });
+    }
+  }
+  return out;
+}
+
+/** The cells of `grown` that `area` does not cover. */
+function cellsOf(grown, area) {
+  const out = [];
+  for (let r = grown.row; r < grown.row + grown.rows; r++)
+    for (let c = grown.column; c < grown.column + grown.columns; c++)
+      if (!inside(area, c, r)) out.push([c, r]);
+  return out;
+}
+
+/** The gap named, or its parts, cut where a box beside it starts or ends. */
+function named(scene, area) {
+  const beside = touching(scene, area);
+  if (!beside.some((t) => t.fills && t.whole)) {
+    const cuts = { columns: new Set(), rows: new Set() };
+    for (const t of beside) {
+      const set = across(t.edge) ? cuts.rows : cuts.columns;
+      for (const line of [t.start, t.start + t.span])
+        if (line > t.gStart && line < t.gStart + t.gSpan) set.add(line);
+    }
+    if (cuts.columns.size + cuts.rows.size > 0) {
+      const spans = (from, size, at) => {
+        const lines = [from, ...[...at].sort((x, y) => x - y), from + size];
+        return lines.slice(1).map((end, i) => [lines[i], end - lines[i]]);
+      };
+      return spans(area.row, area.rows, cuts.rows).flatMap(([row, rows]) =>
+        spans(area.column, area.columns, cuts.columns).flatMap(([column, columns]) =>
+          named(scene, { column, row, columns, rows }),
+        ),
+      );
     }
   }
   const pick =
-    touching.find((t) => t.fills && t.whole) ??
-    touching.find((t) => t.fills) ??
-    touching.find((t) => !boxes.find((b) => b.id === t.box).frame) ??
-    touching[0];
-  return pick
-    ? { area, box: pick.box, edge: pick.edge, fills: pick.fills }
-    : { area, box: null, edge: null, fills: false };
+    beside.find((t) => t.fills && t.whole) ??
+    beside.find((t) => t.fills) ??
+    beside.find((t) => !t.frame) ??
+    beside[0];
+  // A header or ticker runs along most gaps, and naming it says nothing; it is named only
+  // beside another frame (the band left when every box between them is hidden).
+  const others = beside
+    .filter((t) => t !== pick && (pick.frame || !t.frame))
+    .map((t) => ({ box: t.box, edge: t.edge }));
+  return [
+    pick
+      ? { area, box: pick.box, edge: pick.edge, fills: pick.fills, others }
+      : { area, box: null, edge: null, fills: false, others },
+  ];
 }
 
 /** The box beside the gap grown into it ("Fill the gap"), or null when it cannot. */
@@ -258,9 +310,30 @@ export function fill(boxes, gap) {
 // The Changes line's message by the side of the box the gap is on (studio-layout.js words it).
 const WORDS = { right: "gap.right", left: "gap.left", bottom: "gap.below", top: "gap.above" };
 
-/** The gap's message key (`.one` for one column, row or cell) and its count. */
+/**
+ * The gap's message key and count (studio.js's `counted` picks the singular), the box it names,
+ * the box on its other side when there is one ("between"), and every other box beside it.
+ */
 export function gapWords(gap) {
-  const key = gap.edge ? WORDS[gap.edge] : "gap.cells";
-  const count = gap.edge ? depth(gap.area, gap.edge) : gap.area.columns * gap.area.rows;
-  return { key: count === 1 ? `${key}.one` : key, count };
+  if (!gap.edge)
+    return {
+      key: "gap.cells",
+      count: gap.area.columns * gap.area.rows,
+      box: null,
+      other: null,
+      also: [],
+    };
+  const opposite = gap.others.find((o) => o.edge === OPPOSITE[gap.edge]);
+  const key = opposite
+    ? across(gap.edge)
+      ? "gap.between_columns"
+      : "gap.between_rows"
+    : WORDS[gap.edge];
+  return {
+    key,
+    count: depth(gap.area, gap.edge),
+    box: gap.box,
+    other: opposite?.box ?? null,
+    also: gap.others.filter((o) => o !== opposite).map((o) => o.box),
+  };
 }
