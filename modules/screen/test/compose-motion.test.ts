@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { baseLevel, eventMotion, levelOf, phaseAt, zoneMotion } from "../src/compose/motion.js";
+import {
+  baseLevel,
+  eventMotion,
+  levelOf,
+  nextPhaseAt,
+  phaseAt,
+  zoneMotion,
+} from "../src/compose/motion.js";
 import type { LevelInputs, MotionLevel } from "../src/compose/motion.js";
 import type { AgendaItem } from "../src/compose/widgets.js";
 
@@ -96,6 +103,23 @@ describe("the next change", () => {
       phase: "wind_down",
       at: T("22:00"),
     });
+  });
+});
+
+describe("the next phase change", () => {
+  it("comes at a pinned zone's wind-down and quiet hours, where its level never changes", () => {
+    const day = [item("quiet_hours", "23:00", "23:59")];
+    // A calm pin stays calm under quiet hours too, so the level names no change to rebuild at.
+    expect(zoneMotion(inputs({ pin: "calm" }), day, T("20:00")).next).toBeNull();
+    expect(nextPhaseAt(day, T("20:00"))).toBe(T("22:00"));
+    expect(nextPhaseAt(day, T("22:00"))).toBe(T("23:00"));
+    expect(nextPhaseAt(day, T("23:30"))).toBe(T("23:59"));
+  });
+  it("skips times that keep the phase, and is null with nothing ahead", () => {
+    // The doors start inside the wind-down, which wins; quiet hours start next.
+    const day = [item("quiet_hours", "23:00", "23:59"), item("doors", "22:30", "22:45")];
+    expect(nextPhaseAt(day, T("22:10"))).toBe(T("23:00"));
+    expect(nextPhaseAt([], T("12:00"))).toBeNull();
   });
 });
 

@@ -21,7 +21,10 @@ export class Choreographer {
   release(wanting: readonly string[], now: number): string | null {
     for (const id of this.waiting.keys()) if (!wanting.includes(id)) this.waiting.delete(id);
     for (const id of wanting) if (!this.waiting.has(id)) this.waiting.set(id, now);
-    if (now - this.last < CHANGE_GAP_MS) return null;
+    // A backwards step of the server clock (the offset corrected, an NTP step) counts as elapsed:
+    // a negative gap would otherwise hold every change until the clock caught up.
+    const gap = now - this.last;
+    if (gap >= 0 && gap < CHANGE_GAP_MS) return null;
     let first: string | null = null;
     for (const id of wanting) {
       const since = this.waiting.get(id) ?? now;

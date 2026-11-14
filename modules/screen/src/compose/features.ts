@@ -23,6 +23,22 @@ export function highlightOf(items: readonly AgendaItem[], nowMs: number): Agenda
   return ahead[0] ?? null;
 }
 
+/**
+ * The next time highlightOf's answer may change: the soonest big item starting (it leaves) or
+ * coming within 12 hours (it may enter). The zone is rebuilt then, as at a phase change.
+ */
+export function highlightChangeAt(items: readonly AgendaItem[], nowMs: number): number | null {
+  let soonest: number | null = null;
+  for (const i of items) {
+    if (!BIG_KINDS.has(i.kind)) continue;
+    const starts = Date.parse(i.starts_at);
+    for (const t of [starts - HIGHLIGHT_AHEAD_MS, starts]) {
+      if (t > nowMs && (soonest === null || t < soonest)) soonest = t;
+    }
+  }
+  return soonest;
+}
+
 /** Screen's presence counts as the graphs read them (compose/stats.ts, presenceFacts). */
 export interface Presence {
   online: HourPoint[];

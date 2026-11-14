@@ -110,6 +110,17 @@ describe("the choreographer", () => {
     expect(c.release(["venue", "rail"], T0 + CHANGE_GAP_MS)).toBe("venue");
   });
 
+  it("counts a backwards step of the server clock as elapsed, so the screen never freezes", () => {
+    const c = new Choreographer();
+    // A fast clock drew the last change; the offset is then corrected ten minutes back.
+    expect(c.release(["hero"], T0)).toBe("hero");
+    const corrected = T0 - 10 * 60_000;
+    expect(c.release(["rail"], corrected)).toBe("rail");
+    // From the corrected clock on, the gap holds as before.
+    expect(c.release(["venue"], corrected + 1000)).toBeNull();
+    expect(c.release(["venue"], corrected + CHANGE_GAP_MS)).toBe("venue");
+  });
+
   describe("on a screen", () => {
     const host = { serverNow: () => Date.now(), reducedMotion: () => false };
     beforeEach(() => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildRegions } from "../src/compose/build.js";
-import { highlightOf } from "../src/compose/features.js";
+import { highlightChangeAt, highlightOf } from "../src/compose/features.js";
 import { BUILT_IN_LAYOUTS } from "../src/compose/layouts.js";
 import { hourlyOf } from "../src/compose/stats.js";
 import type { PresenceCount } from "../src/compose/stats.js";
@@ -58,6 +58,20 @@ describe("tonight's highlight", () => {
     expect(highlightOf(items, NOW)?.id).toBe("final");
     expect(highlightOf([item("late", 13 * HOUR, "ceremony")], NOW)).toBeNull();
     expect(highlightOf([item("over", -HOUR, "tournament")], NOW)).toBeNull();
+  });
+
+  it("names when it next changes: the highlight's start, or a big item entering the 12 hours", () => {
+    const final = item("final", 3 * HOUR, "tournament");
+    const late = item("late", 13 * HOUR, "ceremony");
+    // The final leaves at its start, before the ceremony enters the window an hour from now.
+    expect(highlightChangeAt([final, late], NOW)).toBe(NOW + HOUR);
+    expect(highlightChangeAt([final], NOW)).toBe(NOW + 3 * HOUR);
+    // At each of those times the answer does change.
+    expect(highlightOf([late], NOW + HOUR)?.id).toBe("late");
+    expect(highlightOf([final], NOW + 3 * HOUR)).toBeNull();
+    expect(
+      highlightChangeAt([item("dinner", HOUR, "meal"), item("over", -HOUR, "tournament")], NOW),
+    ).toBeNull();
   });
 
   it("draws as the Pulse hero's countdown of that item, marked as the highlight", () => {

@@ -24,11 +24,11 @@ import type { Override, Placement } from "./claims.js";
 import { contentFacts, entriesOf, photoProps } from "./content.js";
 import { NO_DISPLAY, displayOf, phaseSource } from "./display.js";
 import type { Display } from "./display.js";
-import type { MotionLevel } from "./motion.js";
+import { nextPhaseAt, type MotionLevel } from "./motion.js";
 import { themeLayouts } from "./layouts.js";
 import type { Layout } from "./layouts.js";
 import { loadOverrides } from "./overrides.js";
-import { highlightOf } from "./features.js";
+import { highlightChangeAt, highlightOf } from "./features.js";
 import { isShowcase } from "./showcase.js";
 import type { HeaderMode, HubQrMode } from "./parts.js";
 import { readPin } from "../pins/store.js";
@@ -267,9 +267,11 @@ export async function composeZone(
     art: deps.art,
   });
   display.stage = stage;
-  // The level's next change and a tint's end rebuild the zone then, as a content widget's does.
+  // The level's and the phase's next change, the highlight's and a tint's end rebuild the zone
+  // then, as a content widget's does: a pinned level never names the phase's.
   const tintEnds = stage.tint === null ? null : Date.parse(stage.tint.until);
-  const changes = [content.changesAt, motion.next?.at, tintEnds].filter((t) => t != null);
+  const day = [nextPhaseAt(items, at.getTime()), highlightChangeAt(items, at.getTime())];
+  const changes = [content.changesAt, motion.next?.at, ...day, tintEnds].filter((t) => t != null);
   return {
     fingerprint: zoneFingerprint({
       zone: read.zone,
