@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import io
 import json
 import shutil
@@ -19,7 +20,7 @@ from conftest import SERVICE_KEY, fake_resolver
 from canccu_admin.app import create_app
 from canccu_admin.auth import Auth
 from canccu_admin.auth_memory import MemoryAuthStore
-from canccu_admin.db import MemoryStore
+from canccu_admin.db import MemoryStore, PgStore
 from canccu_admin.declarations import load_declarations
 from canccu_admin.health import HealthWatch
 from canccu_admin.profile import make_validator
@@ -291,3 +292,10 @@ async def test_the_event_folder_names_its_profile(parts: Parts, demo: None) -> N
     assert name is None and problem is not None and "not UTF-8" in problem.message
     (event / "profile.yaml").unlink()
     assert await service.folder_profile() == (None, None)
+
+
+def test_a_profile_write_always_says_who_loaded_it() -> None:
+    # Every write is a load (Service._apply): no caller may leave `loaded_by` out.
+    for store in (MemoryStore, PgStore):
+        loaded_by = inspect.signature(store.set_profile).parameters["loaded_by"]
+        assert loaded_by.default is inspect.Parameter.empty, store

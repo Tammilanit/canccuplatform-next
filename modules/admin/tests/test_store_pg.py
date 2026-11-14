@@ -100,13 +100,13 @@ async def test_refuses_work_without_a_tenant(store: PgStore) -> None:
     with pytest.raises(NoTenant):
         await store.get_settings("admin")
     with pytest.raises(NoTenant):
-        await store.set_profile({"name": "x"})
+        await store.set_profile({"name": "x"}, loaded_by="u_1")
 
 
 async def test_app_role_sees_nothing_and_writes_nothing_without_a_tenant(store: PgStore) -> None:
     with tenant_scope("leak-a"):
         await store.put_settings("admin", 0, {"language": "fi"})
-        await store.set_profile({"name": "A"})
+        await store.set_profile({"name": "A"}, loaded_by="u_1")
     async with store.pool.acquire() as conn, conn.transaction():
         await conn.execute(f"SET LOCAL ROLE {APP_ROLE}")
         assert await conn.fetchval("SELECT count(*) FROM admin_tenant_settings") == 0
@@ -154,13 +154,16 @@ async def test_migration_drops_the_single_event_tables_once(store: PgStore) -> N
         await again.close()
 
 
-async def test_a_load_is_recorded_per_tenant_and_a_plain_write_keeps_it(store: PgStore) -> None:
+async def test_a_load_is_recorded_per_tenant_and_the_next_load_replaces_it(
+    store: PgStore,
+) -> None:
     with tenant_scope("leak-a"):
         assert await store.profile_loaded() is None
         await store.set_profile({"name": "A"}, loaded_by="u_1")
         loaded = await store.profile_loaded()
         assert loaded is not None and loaded[1] == "u_1"
-        await store.set_profile({"name": "A2"})
-        assert await store.profile_loaded() == loaded
+        await store.set_profile({"name": "A2"}, loaded_by="u_2")
+        again = await store.profile_loaded()
+        assert again is not None and again[1] == "u_2" and again[0] >= loaded[0]
     with tenant_scope("leak-b"):
         assert await store.profile_loaded() is None

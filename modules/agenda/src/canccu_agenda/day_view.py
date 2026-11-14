@@ -13,7 +13,7 @@ from canccu_kit.rights import Session
 from canccu_kit.ui import icon
 
 from .access import WRITE
-from .web import BASE, CHANNEL_LABELS, VISIBILITY_LABELS, esc, hhmm
+from .web import BASE, CHANNEL_LABELS, VISIBILITY_LABELS, esc, hhmm, next_minute
 
 # Screen's own player of a zone for a signed-in person (contracts/screen.md, A zone for a
 # session), so the miniature is the live Pulse with this list's delays. Every event has `main`.
@@ -211,12 +211,19 @@ def row_html(
     )
 
 
-def gap_html(before: Any, after: Any, tz: ZoneInfo, day: date) -> str:
+def gap_html(
+    before: Any, after: Any, earlier: list[Any], now: datetime, tz: ZoneInfo, day: date
+) -> str:
     """The line between two items (sheet 5, "Adding an item where it goes"): it names both by
-    their starts, and Quick add opens at the end of the first with the room left before the next.
-    A moment has no end, so the room starts at its start; items that overlap leave no room, and
-    then the template's length stands."""
-    start = before["ends_at"] if before["ends_at"] is not None else before["starts_at"]
+    their starts, and Quick add opens where the room before the next item starts. `earlier` is
+    every item listed before `after`: the room starts once all of them that still take place have
+    ended (a moment at its start), so a long item overlapping several leaves none inside it
+    (#480); items that overlap leave no room, and then the template's length stands. Room that is
+    already past is gone: a gap containing now starts at the next minute."""
+    ends = [r["ends_at"] or r["starts_at"] for r in earlier if r["status"] != "cancelled"]
+    start = max([before["starts_at"], *ends])
+    if start <= now < after["starts_at"]:
+        start = next_minute(now)
     start = min(start, after["starts_at"])
     room = _minutes(after["starts_at"] - start)
     href = f"{BASE}/add?day={day.isoformat()}&amp;at={hhmm(start, tz)}"

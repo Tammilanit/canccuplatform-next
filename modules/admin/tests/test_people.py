@@ -143,6 +143,9 @@ async def test_the_person_sheet(world: World, caplog: pytest.LogCaptureFixture) 
     alex = await _user(world, "2002", "Alexandria Vanderbilt-Montgomery", "alexandria.vm")
     page = html.unescape((await world.client.get(f"/admin/people/{alex.id}")).text)
     assert "Alexandria Vanderbilt-Montgomery" in page and "alexandria.vm · last here" in page
+    # Name and "handle · last here" share a column that may shrink, so a long one wraps inside
+    # the card on a phone instead of running past it (#476; ui.css .canccu-person).
+    assert '<span class="canccu-people__names"><b>Alexandria Vanderbilt-Montgomery</b>' in page
     assert 'aria-pressed="true">No role<' in page and ">Admin<" in page
     assert f'href="/admin/people/{alex.id}/remove"' in page and "Remove from Demo Event" in page
     assert (await world.client.get("/admin/people/u_unknown")).status_code == 404

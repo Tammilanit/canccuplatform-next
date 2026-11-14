@@ -26,6 +26,8 @@ async def test_signed_in_without_a_role_lands_on_no_role_yet(world: World) -> No
     assert 'href="/admin/">Check again</a>' in page.text
     assert 'action="/admin/sign-out"' in page.text and "Sign in as someone else" in page.text
     assert "Continue with Discord" not in page.text
+    # settings.js tells this card from "You were signed out" after a save sent here.
+    assert "data-canccu-no-role" in page.text
 
 
 async def test_a_page_sends_someone_without_a_role_to_no_role_yet(

@@ -103,7 +103,7 @@ class StoreProbe:
 
     async def seed(self, tenant: str, marker: str) -> None:
         await self.store.put_settings("screen", 0, {"title": marker})
-        await self.store.set_profile({"name": marker})
+        await self.store.set_profile({"name": marker}, loaded_by="u_1")
 
     async def read(self, tenant: str) -> object:
         return [await self.store.get_settings("screen"), await self.store.get_profile()]
