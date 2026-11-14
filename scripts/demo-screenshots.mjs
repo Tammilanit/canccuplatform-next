@@ -240,10 +240,13 @@ const miniDrawn = async (page) => {
 // Adding an item where it goes (#429): the line between Dinner and the next item, pointed at on a
 // desktop and long-pressed on a phone (a touch held through the DevTools protocol, which Playwright
 // has no call for). The day's own add row ends the full-page shots above.
+// The next gap, past the now line when it falls there (the gap comes after it, #480).
 const gapAfter = (page, title) =>
   page
     .locator(".canccu-agenda-row", { hasText: title })
-    .locator("xpath=../following-sibling::li[1]");
+    .locator(
+      "xpath=../following-sibling::li[not(contains(@class, 'canccu-agenda-nowline'))][1]",
+    );
 const pointGap = async (page) => {
   await gapAfter(page, "Dinner").locator("a").hover();
   await page.waitForTimeout(300);
