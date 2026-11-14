@@ -109,6 +109,7 @@ def build(
     hidden = set() if view.earlier else {r["id"] for r in earlier}
     visible = [r for r in shown if r["id"] not in hidden]
     counts = Counter(_day(r, tz) for r in shown)
+    position = {r["id"]: i for i, r in enumerate(shown)}
     days = sorted({_day(r, tz) for r in visible} | {today})
     nowline = f'<li class="canccu-agenda-nowline" id="now"><span>Now {hhmm(now, tz)}</span></li>'
     lines = [_fold(earlier, view, now, tz)] if earlier else []
@@ -120,10 +121,12 @@ def build(
             if now_due and row["starts_at"] > now:
                 lines.append(nowline)
                 now_due = False
+            # After the now line, so the line sits just above the item it adds before (#480).
+            if writes and i:
+                before = shown[: position[row["id"]]]
+                lines.append(day_view.gap_html(on_day[i - 1], row, before, now, tz, day))
             href = view.href(item=row["id"]) + f"#r-{row['id']}"
             lines.append(day_view.row_html(row, kinds, now, tz, href, row["id"] == picked))
-            if writes and i + 1 < len(on_day):
-                lines.append(day_view.gap_html(row, on_day[i + 1], tz, day))
         if now_due:
             lines.append(nowline)
         if writes:
