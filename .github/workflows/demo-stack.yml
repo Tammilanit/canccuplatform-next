@@ -49,7 +49,8 @@ jobs:
           # A pull request's checkout is its merge commit, whose first parent is the base it merges
           # into; a queue entry names its base.
           BASE: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_sha || 'HEAD^1' }}
-        run: node scripts/demo-stack-plan.mjs --event "$EVENT" --base "$BASE" | tee -a "$GITHUB_OUTPUT"
+        # MEASUREMENT ONLY (#461), reverted next commit: the planner's output for a docs-only PR.
+        run: printf 'tier=docs\napi=\nsoak=false\ncheck=false\nshards=[]\n' | tee -a "$GITHUB_OUTPUT"
 
   api:
     name: demo-stack (api)
