@@ -2,7 +2,16 @@
 // publish: On a screen; Reading the current theme: The current tokens, for pages; #432, #444).
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { withTenant } from "@canccu/kit";
-import { DATABASE_URL, OUTSIDE_IP, caller, code, get, harness, send } from "./helpers.js";
+import {
+  DATABASE_URL,
+  OUTSIDE_IP,
+  caller,
+  code,
+  get,
+  harness,
+  seedRevision,
+  send,
+} from "./helpers.js";
 import type { Harness } from "./helpers.js";
 
 describe.skipIf(!DATABASE_URL)("a preview key to the draft", () => {
@@ -142,6 +151,17 @@ describe.skipIf(!DATABASE_URL)("the current tokens for pages", () => {
     // The venue's profile sets its own primary: revision 0 carries it.
     const venue = await get(h, "/theming/current/tokens.css", { host: "venue.test" });
     expect(venue.body).toContain("#14b8a6");
+  });
+
+  it("builds revision zero only while it is the current one (#485)", async () => {
+    await seedRevision(h, "zeta", 1, { colors: { primary: "#3ddcff" } });
+    h.profileReads.length = 0;
+    const published = await get(h, "/theming/current/tokens.css", { host: "zeta.test" });
+    expect(published.body).toContain("#3ddcff");
+    expect(h.profileReads).toEqual([]);
+    const zero = await get(h, "/theming/current/admin-tokens.css", { host: "venue.test" });
+    expect(zero.body).toContain(":root");
+    expect(h.profileReads).toEqual(["venue"]);
   });
 
   it("answers 304 to the ETag it gave, and 404 for any other name", async () => {

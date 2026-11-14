@@ -17,15 +17,16 @@ from starlette.routing import Route
 from . import forms, items, model, store, templates, undo
 from .day_view import NIGHT_ENDS
 from .deps import deps
+from .event_dates import event_days
 from .inverse import Inverse
 from .web import (
     BASE,
+    SCRIPT_TAGS,
     TIME_PATTERN,
     api_time,
     button,
     day_label,
     esc,
-    event_days,
     field,
     next_minute,
     notice,
@@ -130,8 +131,7 @@ def _form(
         + '<p class="canccu-field__hint">None picked: the template\'s length.</p></fieldset>'
         + f'<div class="canccu-agenda-actions">{button(_button(values, day))}'
         f'<a class="canccu-button canccu-button--secondary" href="{BASE}/items/new?day={day}">'
-        "Full form</a></div></form>"
-        f'<script src="{BASE}/static/quickadd.js" defer></script>'
+        "Full form</a></div></form>" + SCRIPT_TAGS["quickadd.js"]
     )
 
 
@@ -175,7 +175,7 @@ def _from_gap(request: Request) -> dict[str, str]:
     if _time(at) is not None:
         values.update(when="at", at=at)
     minutes = request.query_params.get("minutes", "")
-    if _length(minutes) is not None:
+    if templates.length(minutes) is not None:
         values["minutes"] = minutes
     return values
 
@@ -187,11 +187,6 @@ def _time(raw: str) -> time | None:
         return time.fromisoformat(raw)
     except ValueError:
         return None
-
-
-def _length(raw: str) -> int | None:
-    """Minutes, up to a day: a longer item is the full form's."""
-    return int(raw) if raw.isascii() and raw.isdigit() and 0 < int(raw) <= 1440 else None
 
 
 def _starts(form: FormData, day: date, now: datetime, tz: ZoneInfo) -> datetime:
@@ -222,9 +217,11 @@ def item_fields(
     raw = chip if chip not in ("", "other") else str(form.get("minutes") or "").strip()
     if chip == "other" and not raw:
         raise model.invalid("give the length in minutes, or pick one")
-    minutes = _length(raw) if raw else (template["minutes"] if template is not None else None)
+    minutes = (
+        templates.length(raw) if raw else (template["minutes"] if template is not None else None)
+    )
     if raw and minutes is None:
-        raise model.invalid("the length is in minutes, from 1 to 1440")
+        raise model.invalid(templates.LENGTH_RULE)
     if minutes:
         fields["ends_at"] = api_time(starts + timedelta(minutes=minutes))
     location = forms.opt_text(form, "location")
@@ -272,7 +269,7 @@ async def quick_add(request: Request) -> Response:
     added_day = datetime.fromisoformat(item["starts_at"].replace("Z", "+00:00")).astimezone(tz)
     done = "added_next_day" if night else "added"
     path = f"/?day={added_day.date().isoformat()}&done={done}"
-    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)), item["id"])
 
 
 ROUTES = [

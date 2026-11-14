@@ -977,6 +977,11 @@
     font-size: var(--canccu-text-lg);
     overflow-wrap: anywhere;
   }
+  /* The sheet is where the whole name and "handle · last here" are read: both wrap in the card
+     (#476), where a list row ellipsizes them. */
+  .canccu-person .canccu-people__handle {
+    white-space: normal;
+  }
   .canccu-person__remove {
     margin: 0.5rem 0 0;
     padding-top: 1rem;

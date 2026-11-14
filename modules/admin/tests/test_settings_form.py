@@ -143,6 +143,37 @@ async def test_a_conflict_keeps_only_the_fields_the_user_changed(
     assert "data-canccu-count>1 change not saved</span>" in r.text
 
 
+async def test_a_refused_save_on_a_stale_version_compares_with_what_is_saved_now(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    # Refused for a bad value while someone else saved: the form is re-based as after a conflict,
+    # so a later Save again never puts back the other person's value.
+    browser = await screen_form(world, caplog)
+    text = (await browser.get(SCREEN)).text
+    with tenant_scope("demo"):
+        await world.service.put_settings(
+            "screen", 1, {"offline_after_seconds": 45, "heartbeat_seconds": 20}, "u2"
+        )
+    bases = dict(re.findall(r'name="(was\.[a-z_]+)" value="([^"]*)"', text))
+    form = {
+        **bases,
+        **dict(re.findall(r'name=([a-z_]+) value="([^"]*)" data-canccu-was', text)),
+        "settings_version": "1",
+        "offline_after_seconds": "3",
+        "progress_bars": "on",
+        "follow_the_day": "on",
+        "stage_art": "on",
+    }
+    r = await browser.post(SCREEN, data=form, headers=ORIGIN)
+    assert r.status_code == 400
+    assert "Screen offline after (seconds) must be from 15 up to 300." in r.text
+    assert "name=settings_version value=2>" in r.text
+    assert 'value="3" data-canccu-was="45"' in field_of(r.text, "offline_after_seconds")
+    assert 'value="20" data-canccu-was="20"' in field_of(r.text, "heartbeat_seconds")
+    assert '<input type=hidden name="was.heartbeat_seconds" value="20">' in r.text
+    assert "data-canccu-count>1 change not saved</span>" in r.text
+
+
 def test_was_names_each_kind_in_words() -> None:
     [box, look, hosts] = _parse(
         "m",

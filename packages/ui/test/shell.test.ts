@@ -6,6 +6,7 @@ import {
   emptyState,
   errorView,
   frontPage,
+  initials,
   menuFor,
   notice,
   shellPage,
@@ -253,5 +254,22 @@ describe("time", () => {
   it("names both days of a range in one month once", () => {
     expect(dateRange(EVENT)).toBe("Sat 14 – Sun 15 Mar");
     expect(dateRange({ ...EVENT, endsAt: "2026-04-02T10:00:00Z" })).toBe("Sat 14 Mar – Thu 2 Apr");
+  });
+});
+
+describe("initials", () => {
+  it("takes the first letter of each of the first two words, upper-cased", () => {
+    expect(initials("  demo   event night ")).toBe("DE");
+    expect(initials("solo")).toBe("S");
+    expect(initials("   ")).toBe("?");
+  });
+
+  it("takes whole characters, so an emoji or an astral letter is never cut in half", () => {
+    expect(initials("\u{1F389} party")).toBe("\u{1F389}P");
+    expect(initials("\u{10428}\u{10429} x")).toBe("\u{10400}X");
+  });
+
+  it("leaves escaping to the page, which draws them as text", () => {
+    expect(initials("<a> & b")).toBe("<&");
   });
 });

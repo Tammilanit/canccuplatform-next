@@ -8,6 +8,7 @@
 import { createHash } from "node:crypto";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import type { TenantResolver } from "@canccu/kit";
+import { initials } from "@canccu/ui";
 import type { Db } from "./db.js";
 import type { ProfileSource } from "./profile.js";
 import { currentTheme } from "./theme.js";
@@ -21,17 +22,6 @@ export interface LogoDeps {
 }
 
 const SVG_POLICY = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
-
-/** The first letter of each of the first two words, as the shell's avatar takes them. */
-export function initials(name: string): string {
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  return (
-    words
-      .slice(0, 2)
-      .map((w) => (w[0] ?? "").toUpperCase())
-      .join("") || "?"
-  );
-}
 
 const xml = (s: string): string => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -76,8 +66,10 @@ async function visibleName(
 
 export function logoRoutes(app: FastifyInstance, deps: LogoDeps): void {
   app.get("/theming/logo", async (request, reply) => {
-    // Short-lived: a newly published logo shows on the next page.
-    void reply.header("cache-control", "no-cache");
+    // Short-lived: a newly published logo shows on the next page. A draft's answer depends on
+    // the session, so no shared cache may hand it to the next visitor.
+    const draft = request.tenant?.status === "draft";
+    void reply.header("cache-control", draft ? "private, no-cache" : "no-cache");
     const named = await visibleName(deps, request);
     let svg: string;
     if (named === null) {

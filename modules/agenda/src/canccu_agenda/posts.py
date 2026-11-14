@@ -84,10 +84,13 @@ def words(event_type: str, data: dict[str, Any], tz: ZoneInfo) -> str:
         return f"{title} is cancelled."
     if event_type == "agenda.item.announced" and data.get("message"):
         return str(data["message"])
-    if event_type == "agenda.item.delayed" and item["starts_at"] == item["planned_starts_at"]:
-        # A running item's delay moves only its end.
-        ends = _at(item["ends_at"])
-        late = _minutes(ends, _at(item["planned_ends_at"]))
+    ends = _at(item["ends_at"])
+    late = _minutes(ends, _at(item["planned_ends_at"]))
+    # A running item's delay moves only its end, so its end is later than its start by more than
+    # planned, also when it had been delayed before it started (review of #455). An end moved by
+    # an edit after a delay looks the same; that is rare enough to word as running late.
+    running = item["starts_at"] == item["planned_starts_at"] or late != item["delay_minutes"]
+    if event_type == "agenda.item.delayed" and running and ends is not None:
         return f"{title} runs {late} min late, until {hhmm(ends, tz)}"
     if event_type == "agenda.item.delayed":
         return f"{title} starts at {hhmm(starts, tz)} ({item['delay_minutes']} min late)"

@@ -12,6 +12,7 @@ from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from canccu_kit import (
@@ -46,14 +47,13 @@ TABS = (("/", "Run of show"), ("/templates", "Templates"))
 STYLESHEETS = ("ui.css", "agenda.css", "list.css", "confirm.css", "gap.css")
 CSS = tuple(f"{BASE}/static/{name}" for name in STYLESHEETS)
 SCRIPTS = ("day.js", "quickadd.js")
+# Each script's tag, from the list static_file serves, so a page cannot name one it does not.
+SCRIPT_TAGS = {name: f'<script src="{BASE}/static/{name}" defer></script>' for name in SCRIPTS}
 # A 24-hour time: native time fields follow the browser's locale, which may be 12-hour (UX B5).
 TIME_PATTERN = "[0-2][0-9]:[0-5][0-9]"
 # "Other date…": a day typed in the event's format with its year, "16 Mar 2027" (or "Tue 16 Mar
 # 2027"), so a form reaches any day, not only those it offers.
 DATE_PATTERN = "([A-Za-z]{3} )?[0-9]{1,2} [A-Za-z]{3} [0-9]{4}"
-# A longer event (or one with odd dates) offers no day list of its own: today, tomorrow and the
-# form's own days stay.
-MAX_EVENT_DAYS = 31
 log = logging.getLogger("canccu.agenda")
 VISIBILITY_LABELS = {"public": "Everyone", "attendees": "Attendees", "crew": "Crew only"}
 CHANNEL_LABELS = {
@@ -148,8 +148,10 @@ def page(
     return response
 
 
-def redirect(path: str) -> RedirectResponse:
-    return RedirectResponse(f"{BASE}{path}", status_code=303)
+def redirect(path: str, item: str | None = None) -> RedirectResponse:
+    """`item`: after a change, the list opens at that item's row, not at the top (#482)."""
+    target = f"#r-{quote(item, safe='')}" if item else ""
+    return RedirectResponse(f"{BASE}{path}{target}", status_code=303)
 
 
 def notice(message: str, kind: str = "ok") -> str:
@@ -307,31 +309,6 @@ def posted_when(form: Any, name: str) -> str:
         found = typed_day(typed) if len(typed.split()) in (3, 4) else None
         day = found.isoformat() if found else typed
     return f"{day}T{hm}" if hm else ""
-
-
-def _parsed(value: str) -> datetime:
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
-
-
-def event_days(request: Request, today: date, *extra: date | None) -> list[date]:
-    """The days a form offers: the event's own and one on each side for setting up and clearing
-    away (when it has dates, at most MAX_EVENT_DAYS), today and tomorrow, and the days the form
-    already holds. "Other date…" reaches the rest."""
-    days = {today, today + timedelta(days=1), *(d for d in extra if d is not None)}
-    event = getattr(request.state, "agenda_event", None)
-    if event is not None and event.starts_at and event.ends_at:
-        tz = zone_of(request)
-        first = _parsed(event.starts_at).astimezone(tz).date()
-        last = _parsed(event.ends_at).astimezone(tz).date()
-        if 0 <= (last - first).days < MAX_EVENT_DAYS:
-            days |= {first + timedelta(days=n) for n in range(-1, (last - first).days + 2)}
-    return sorted(days)
-
-
-def event_over(request: Request, now: datetime) -> bool:
-    """Whether the event has ended: a cancelled item comes back only until then (sheet 5)."""
-    event = getattr(request.state, "agenda_event", None)
-    return bool(event is not None and event.ends_at and _parsed(event.ends_at) <= now)
 
 
 def field(label: str, control: str, hint: str = "") -> str:

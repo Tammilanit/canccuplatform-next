@@ -159,8 +159,12 @@ async def test_a_part_in_trouble_says_what_it_means_and_offers_a_way_on(
 async def test_check_now_checks_again(world: World, caplog: pytest.LogCaptureFixture) -> None:
     owner, _ = await owner_and_member(world, caplog)
     world.watch.latest = TROUBLE
-    text = (await world.browser(owner).get("/admin/health-view?check=now")).text
-    assert world.watch.latest is not TROUBLE and "<b>Notifications</b>" not in text
+    r = await world.browser(owner).get("/admin/health-view?check=now")
+    # Sent on to the plain page, so a reload or health.js never checks again by itself.
+    assert r.status_code == 303 and r.headers["location"] == "/admin/health-view"
+    assert world.watch.latest is not TROUBLE
+    text = (await world.browser(owner).get("/admin/health-view")).text
+    assert "<b>Notifications</b>" not in text
 
 
 async def test_the_menu_says_when_health_needs_a_look(

@@ -41,6 +41,28 @@ describe.skipIf(!DATABASE_URL)("the current logo", () => {
     expect(again.statusCode).toBe(304);
   });
 
+  it("draws an emoji as one whole character, as the shell's avatar does", async () => {
+    vi.spyOn(TenantResolver.prototype, "event").mockResolvedValue({
+      ...EVENT,
+      name: "\u{1F389} party",
+    } as never);
+    const res = await get(h, "/theming/logo", { host: "beta.test" });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toContain(">\u{1F389}P</text>");
+    expect(res.body).not.toContain("\uFFFD");
+  });
+
+  it("escapes markup in the name, so the image stays well-formed", async () => {
+    vi.spyOn(TenantResolver.prototype, "event").mockResolvedValue({
+      ...EVENT,
+      name: "<a> & b",
+    } as never);
+    const res = await get(h, "/theming/logo", { host: "beta.test" });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toContain(">&#60;&#38;</text>");
+    expect(res.body).not.toMatch(/<&|<<|&</);
+  });
+
   it("names no one when the tenants module does not answer", async () => {
     vi.spyOn(TenantResolver.prototype, "event").mockResolvedValue(null);
     const res = await get(h, "/theming/logo", { host: "beta.test" });
@@ -78,12 +100,14 @@ describe.skipIf(!DATABASE_URL)("the current logo", () => {
     expect(guest.statusCode).toBe(200);
     expect(guest.body).toContain(">?</text>");
     expect(guest.body).toContain('stop-color="#3b82f6"');
+    expect(guest.headers["cache-control"]).toBe("private, no-cache");
     expect(event).not.toHaveBeenCalled();
     // A session tenants answers a DraftTenant to.
     event.mockResolvedValue({ id: "draft", status: "draft" });
     const other = await get(h, "/theming/logo", { host: "draft.test", session: "member" });
     expect(other.statusCode).toBe(200);
     expect(other.body).toContain(">?</text>");
+    expect(other.headers["cache-control"]).toBe("private, no-cache");
     expect(event).toHaveBeenLastCalledWith("draft.test", "canccu_session=member");
     // The tenants module failing hides it as well.
     event.mockRejectedValue(new Error("down"));
@@ -94,6 +118,8 @@ describe.skipIf(!DATABASE_URL)("the current logo", () => {
     const member = await get(h, "/theming/logo", { host: "draft.test", session: "admin" });
     expect(member.statusCode).toBe(302);
     expect(String(member.headers.location)).toMatch(/^\/theming\/a\//);
+    // The answer is this session's: no shared cache may keep it for the next visitor.
+    expect(member.headers["cache-control"]).toBe("private, no-cache");
   });
 
   it("is 404 on a hostname that is no event", async () => {

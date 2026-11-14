@@ -162,6 +162,7 @@ async def serve() -> None:
         await server.serve()
     finally:
         watching.cancel()
+        await watch.aclose()
         for subscription in subscriptions:
             await subscription.close()
 

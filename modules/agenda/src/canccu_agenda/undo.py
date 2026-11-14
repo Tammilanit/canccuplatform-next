@@ -136,8 +136,11 @@ async def undo_page(request: Request) -> Response:
         rendered = {r["id"]: model.item_json(r, kinds, channels) for r in touched}
         await store_events(d, conn, session, out, rendered)
     await d.outbox.flush()
-    day = min((r["starts_at"] for r in touched), default=now)
-    return redirect(f"/?day={day.astimezone(zone_of(request)).date().isoformat()}&done=undone")
+    # The earliest item still there; undoing an add leaves none, so the day alone.
+    first = min(touched, key=lambda r: r["starts_at"], default=None)
+    day = now if first is None else first["starts_at"]
+    path = f"/?day={day.astimezone(zone_of(request)).date().isoformat()}&done=undone"
+    return redirect(path, None if first is None else first["id"])
 
 
 async def _current(conn: Any, step: dict[str, Any]) -> Any:

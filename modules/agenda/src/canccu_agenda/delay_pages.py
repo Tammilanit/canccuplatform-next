@@ -361,7 +361,7 @@ async def delay_save(request: Request) -> Response:
         )
         return redirect(f"/items/{item_id}/delay?{query}")
     path = f"/?day={day_of(items[0]['starts_at'], request)}&done=delayed"
-    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)), item_id)
 
 
 def day_of(value: str, request: Request) -> str:

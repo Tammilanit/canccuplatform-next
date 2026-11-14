@@ -59,10 +59,14 @@ function undo(form) {
 }
 
 // Caddy answers 502 for a part that is down: to the organiser, that is no answer. Any redirect
-// but the saved one is a page's answer to an ended session: on to sign-in (app._not_signed_in).
-function unsaved(res) {
+// but the saved one went to sign-in: for an ended session (pages.not_signed_in), or for a session
+// whose role was taken (pages.page_error_handler), where the sign-in page shows "No role yet"
+// and signing in again would not help.
+function unsaved(res, page) {
   const kept = "Your change is still in the form.";
   if (!res || res.status >= 500) return `The platform didn't answer. ${kept}`;
+  if (res.redirected && page?.querySelector("[data-canccu-no-role]"))
+    return `You no longer have a role here, so this can't be saved. Ask an event owner. ${kept}`;
   if (res.redirected)
     return `You were signed out. Sign in again in another tab, then save again. ${kept}`;
   return `The platform refused the change (HTTP ${res.status}). ${kept}`;
@@ -86,21 +90,17 @@ async function post(form) {
     return true;
   }
   // A refused save answers the form again, with what was typed and why (settings_form.py).
-  const next =
-    res &&
-    !res.redirected &&
-    res.headers.get("content-type")?.startsWith("text/html")
-      ? new DOMParser()
-          .parseFromString(await res.text(), "text/html")
-          .querySelector(FORM)
-      : null;
+  const page = res?.headers.get("content-type")?.startsWith("text/html")
+    ? new DOMParser().parseFromString(await res.text(), "text/html")
+    : null;
+  const next = res && !res.redirected ? page?.querySelector(FORM) : null;
   if (next) {
     form.replaceWith(next);
   } else {
     form.querySelector("[data-canccu-failed]")?.remove();
     const notice = form.querySelector("[data-canccu-unanswered]");
     notice.querySelector(".canccu-notice__body > p:last-child").textContent =
-      unsaved(res);
+      unsaved(res, page);
     notice.hidden = false;
     form.querySelector("[data-canccu-save]").textContent = "Save again";
   }

@@ -22,14 +22,20 @@ if (list && list.querySelector(".canccu-agenda-gap, .canccu-agenda-addrow")) {
   // A long press that showed a line swallows the click and the menu that follow it, so the row
   // under the finger does not open.
   let held = false;
+  // Only here does a long press mean something, so only here does it lose the link menu (gap.css).
+  if (gaps.length) list.classList.add("is-pressable");
 
+  // Only a press within about a row of a gap's line shows it: farther away (the day's add row,
+  // the fold, a day of one item) the press is left to the page.
   const nearest = (y) => {
     let best = null;
     for (const gap of gaps) {
       const d = Math.abs(gap.getBoundingClientRect().top - y);
       if (!best || d < best.d) best = { gap, d };
     }
-    return best && best.gap;
+    if (!best) return null;
+    const row = best.gap.nextElementSibling; // the item the gap adds before
+    return best.d <= row.getBoundingClientRect().height ? best.gap : null;
   };
 
   const show = (gap) => {
@@ -101,6 +107,8 @@ if (list && list.querySelector(".canccu-agenda-gap, .canccu-agenda-addrow")) {
     },
     { capture: true, passive: true },
   );
+  // A phone turned on its side moves the gaps in and out of view without a scroll.
+  window.addEventListener("resize", follow, { passive: true });
   follow();
 }
 
