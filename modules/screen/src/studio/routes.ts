@@ -51,6 +51,8 @@ import { WRITE } from "./schedule-editor.js";
 import { schedulePage } from "./schedule-page.js";
 import type { ScheduleQuery } from "./schedule-page.js";
 import { tickerView } from "./ticker-view.js";
+import { motionCard } from "./motion-view.js";
+import { heldSettings, readMotion } from "../motion-routes.js";
 import { quickActions, runningNow } from "./live-quick.js";
 import { STUDIO, liveActions, liveView, startUrlOf } from "./views.js";
 import type { ViewContext } from "./views.js";
@@ -339,12 +341,15 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       { preHandler: pageNeeds(deps.rights, [ZONES]) },
       async (request, reply) => {
         const c = await context(request);
-        const [zones, all] = [await readZones(deps, tenantOf(request)), await devices()];
+        const ctx = tenantOf(request);
+        const [zones, all] = [await readZones(deps, ctx), await devices()];
+        const motion = await readMotion(deps, ctx.tenant_id, await heldSettings(deps.settings));
         return page(request, reply, c, {
           title: "",
           tab: "zones",
           description: c.t("zones.desc"),
-          body: zonesView(c, zones, all),
+          body: html`${zonesView(c, zones, all)}${motionCard(c, motion)}`,
+          own: "studio-motion",
         });
       },
     );

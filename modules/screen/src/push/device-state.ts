@@ -6,15 +6,9 @@
 import { isDeepStrictEqual } from "node:util";
 import type { TenantContext } from "@canccu/kit";
 import type { DeviceRow } from "../db.js";
-import {
-  NO_DISPLAY,
-  NO_THEME,
-  composeZone,
-  isPortrait,
-  placement,
-  themeView,
-} from "../compose/state.js";
+import { NO_THEME, composeZone, isPortrait, placement, themeView } from "../compose/state.js";
 import type { ComposeDeps, ZoneComposed } from "../compose/state.js";
+import { NO_DISPLAY } from "../compose/display.js";
 import { themeFor } from "../pins/look.js";
 import { readPin } from "../pins/store.js";
 import { previewed } from "../preview/state.js";

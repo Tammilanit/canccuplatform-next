@@ -18,8 +18,9 @@ import { buildRegions } from "./build.js";
 import { placeClaims } from "./claims.js";
 import type { Override, Placement } from "./claims.js";
 import { contentFacts, entriesOf, photoProps } from "./content.js";
-import { displayOf } from "./display.js";
+import { NO_DISPLAY, displayOf, phaseSource } from "./display.js";
 import type { Display } from "./display.js";
+import type { MotionLevel } from "./motion.js";
 import { themeLayouts } from "./layouts.js";
 import type { Layout } from "./layouts.js";
 import { loadOverrides } from "./overrides.js";
@@ -57,11 +58,11 @@ export interface ZoneRow {
   screen_name?: "auto" | "always" | "never";
   hero_region: string | null;
   grow_for_showcase: boolean;
+  /** Absent in a preview stored before the setting: no pin. */
+  motion_level?: MotionLevel | null;
   sound: { enabled: boolean; device_id: string | null };
   epoch: string;
 }
-
-export const NO_DISPLAY: Display = { motion: "moderate", drift: false };
 
 /** Until theming serves a revision (the pinned one or the current), the platform defaults. */
 export const NO_THEME: ThemeNow = {
@@ -76,7 +77,7 @@ export const NO_THEME: ThemeNow = {
 async function zoneRow(c: SqlClient, key: string): Promise<ZoneRow | null> {
   const { rows } = await c.query(
     `SELECT key, name, layout_id, regions, header, hub_qr, screen_name, hero_region, grow_for_showcase,
-       sound, epoch
+       motion_level, sound, epoch
      FROM screen_zones WHERE key = $1`,
     [key],
   );
@@ -266,7 +267,15 @@ export async function composeZone(
   }
   const setting = deps.settings.get("ticker_appearance", "default");
   const appearance = typeof setting === "string" ? setting : "default";
-  const display = displayOf(theme?.tokens, agenda, deps.settings.get("burn_in_drift", false));
+  const { display, motion } = displayOf({
+    tokens: theme?.tokens,
+    items: phaseSource((await deps.sources.agendaDay?.(ctx.tenant_id)) ?? null, agenda, zoneKey),
+    pin: read.zone.motion_level ?? null,
+    settings: deps.settings,
+    at: at.getTime(),
+  });
+  // The level's next change rebuilds the zone then, as a content widget's does.
+  const changes = [content.changesAt, motion.next?.at].filter((t) => t != null);
   return {
     fingerprint: zoneFingerprint({
       zone: read.zone,
@@ -287,7 +296,7 @@ export async function composeZone(
     views,
     ticker: { ...read.ticker, appearance },
     display,
-    nextChangeAt: content.changesAt,
+    nextChangeAt: changes.length === 0 ? null : Math.min(...changes),
     draft,
   };
 }
@@ -298,7 +307,7 @@ export interface FingerprintInput {
   theme: { revision: number; layouts: unknown[] };
   facts: ZoneFacts;
   tickerAppearance?: string;
-  /** Holds the `burn_in_drift` setting, which no other input carries. */
+  /** Holds the `burn_in_drift` setting and the energy level, which no other input carries. */
   display?: Display;
   /** The overrides active on the zone now: one that ends changes the inputs, so it is drawn away. */
   claims?: readonly Override[];

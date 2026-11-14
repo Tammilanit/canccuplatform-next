@@ -52,6 +52,22 @@ function tokensEditSchema(): object {
           fonts: nullable(groups.fonts ?? {}),
           sizes: nullable(groups.sizes ?? {}),
           motion: { enum: [...(groups.motion?.enum ?? []), null] },
+          // contracts/theming.openapi.yaml, TokensEdit: the object or null; a null field is its default.
+          motion_style: {
+            oneOf: [
+              {
+                type: "object",
+                additionalProperties: false,
+                properties: Object.fromEntries(
+                  Object.entries(groups.motion_style?.properties ?? {}).map(([name, value]) => [
+                    name,
+                    { enum: [...((value as Group).enum ?? []), null] },
+                  ]),
+                ),
+              },
+              { type: "null" },
+            ],
+          },
         },
       },
     },
@@ -98,6 +114,7 @@ export interface TokensEdit {
     fonts?: Record<string, TokenValue>;
     sizes?: Record<string, TokenValue>;
     motion?: TokenValue;
+    motion_style?: Record<string, TokenValue> | null;
   };
 }
 

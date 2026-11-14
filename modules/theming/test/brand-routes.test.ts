@@ -247,13 +247,14 @@ describe.skipIf(!DATABASE_URL)("the brand kit's paths", () => {
           fonts: { body: "Brand" },
           sizes: { radius: "0px" },
           motion: "none",
+          motion_style: { pack: "broadcast" },
         },
         layouts: [LAYOUT],
       });
       return current.draft_version;
     }
 
-    it("removes the advanced parts, keeps images, layouts and motion, and regenerates the colours", async () => {
+    it("removes the advanced parts, keeps images, layouts, motion and motion_style, and regenerates the colours", async () => {
       const version = await advanced();
       const res = await toSimple(version);
       expect(res.statusCode).toBe(200);
@@ -265,6 +266,7 @@ describe.skipIf(!DATABASE_URL)("the brand kit's paths", () => {
       expect(m.tokens).toEqual({
         colors: generateColors({ primary: "#1e1b4b", accent: "#f59e0b", scheme: "dark" }).colors,
         motion: "none",
+        motion_style: { pack: "broadcast" },
       });
       expect(m.images).toEqual({ logo: "images/logo.png" });
       expect(m.brand).toEqual(BRAND);

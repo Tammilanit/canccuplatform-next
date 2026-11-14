@@ -1,18 +1,12 @@
 /**
- * How the screen moves (contracts/screen.md, Motion and burn-in drift). The zone's `motion` comes
- * from the server; the player lowers it once more under `prefers-reduced-motion`, never raises it.
+ * How the screen's regions and ticker move and drift (contracts/screen.md, Motion and burn-in
+ * drift); the level they follow is motion.ts's.
  */
 
 export type Motion = "moderate" | "calm" | "none";
-const MOTIONS: readonly Motion[] = ["moderate", "calm", "none"];
 
 /** How long a widget takes to fade in and out: `calm` keeps only slow fades, `none` swaps at once. */
 export const FADE_MS: Readonly<Record<Motion, number>> = { moderate: 600, calm: 1500, none: 0 };
-
-export function effectiveMotion(zone: unknown, reducedMotion: boolean): Motion {
-  if (reducedMotion) return "none";
-  return MOTIONS.find((m) => m === zone) ?? "moderate";
-}
 
 /**
  * The drift's direction at minute `m` of the server's hour, a unit vector the CSS scales by a

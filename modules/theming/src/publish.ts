@@ -12,22 +12,17 @@ import { embedHoldings } from "./embeds.js";
 import type { FileStore } from "./files.js";
 import { SERVED, colorInt } from "./theme.js";
 import { versionConflict } from "./http.js";
-import { adminTokens, fillTokens, tokensCss } from "./tokens.js";
-import type { PartialTokens, Tokens } from "./tokens.js";
+import { adminTokens, themeTokens, tokensCss } from "./tokens.js";
+import type { ThemeTokens, Tokens } from "./tokens.js";
 
 /** The parts `theming.theme.published` names in `changed`, in the contract's order. */
 const PARTS = ["tokens", "css", "fonts", "images", "layouts", "templates", "embeds"] as const;
 type Part = (typeof PARTS)[number];
 
-/** Stored tokens: every token filled in, plus `motion` when the theme sets it. */
-export type RevisionTokens = Tokens & { motion?: string };
+/** Stored tokens: every token filled in, plus `motion` and `motion_style` when the theme sets them. */
+export type RevisionTokens = ThemeTokens;
 
-function revisionTokens(manifest: Manifest): RevisionTokens {
-  const given = (manifest.tokens ?? {}) as PartialTokens & { motion?: unknown };
-  const tokens: RevisionTokens = fillTokens(given);
-  if (typeof given.motion === "string") tokens.motion = given.motion;
-  return tokens;
-}
+const revisionTokens = (manifest: Manifest): RevisionTokens => themeTokens(manifest.tokens);
 
 /**
  * One lock per event's history, held to the end of the transaction, so two publishes or a publish

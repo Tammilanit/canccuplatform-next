@@ -130,10 +130,11 @@ describe.skipIf(!DATABASE_URL)("the composed state", () => {
     expect((await state(token)).json<State>().layout?.id).toBe("pulse_portrait");
   });
 
-  it("says how the screens move: the theme's motion, calm in quiet hours, drift from the setting", async () => {
+  it("says how the screens move: lively by default, calm in quiet hours, drift from the setting", async () => {
     const { id, token } = await pairDevice(h, "alpha.test", "Stage");
     await assignMain(id);
-    expect((await state(token)).json<State>().display).toEqual({
+    expect((await state(token)).json<State>().display).toMatchObject({
+      motion_level: "lively",
       motion: "moderate",
       drift: false,
     });
@@ -150,11 +151,11 @@ describe.skipIf(!DATABASE_URL)("the composed state", () => {
     h.sources.agenda = { current: [quiet], next: [NEXT] };
     h.settings.alpha = { ...h.settings.alpha, burn_in_drift: true };
     const before = (await state(token)).json<State>();
-    expect(before.display).toEqual({ motion: "calm", drift: true });
+    expect(before.display).toMatchObject({ motion_level: "calm", motion: "calm", drift: true });
     // The setting alone changes nothing else, so only the fingerprint can move the version.
     h.settings.alpha = { ...h.settings.alpha, burn_in_drift: false };
     const after = (await state(token)).json<State>();
-    expect(after.display).toEqual({ motion: "calm", drift: false });
+    expect(after.display).toMatchObject({ motion_level: "calm", motion: "calm", drift: false });
     expect(after.state_version).toBe(before.state_version + 1);
     h.settings.alpha = {};
   });

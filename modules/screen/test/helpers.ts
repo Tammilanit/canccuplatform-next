@@ -31,6 +31,8 @@ import type { RenderDeps } from "../src/render/jobs.js";
 import { MemoryRenderQueue } from "../src/render/queue.js";
 import { call, setCookie } from "./calls.js";
 import { SIGNIN_HOST, SUPERADMIN_HOST, fakeTenants } from "./tenants.js";
+import { fakeSettingsWrite } from "./settings-write.js";
+import type { SettingsWrites } from "./settings-write.js";
 
 /** Tests run only on a database named `*_test` (dropTables refuses any other). */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
@@ -99,6 +101,8 @@ export interface Harness {
   clock: { now: number };
   /** tenant → the admin settings it answers; unset keys take their default. */
   settings: Record<string, Record<string, SettingValue>>;
+  /** Screen's own settings written through admin (the Motion card). */
+  settingsWrites: SettingsWrites;
   /** tenant → admin's own settings (the event's `language`), as Studio reads them. */
   adminSettings: Record<string, Record<string, SettingValue>>;
   /** The fake storage quota: bytes per tenant, and the limit each gets (default 2 GiB). */
@@ -251,6 +255,7 @@ export async function harness(): Promise<Harness> {
     platformHosts: [SUPERADMIN_HOST, SIGNIN_HOST],
   });
   const rights = new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin }));
+  const settingsWrites: SettingsWrites = { versions: {}, log: [] };
   const app = buildApp({
     db,
     kv,
@@ -272,7 +277,11 @@ export async function harness(): Promise<Harness> {
     settings: {
       ensure: () => Promise.resolve(),
       get: (key: string, fallback: SettingValue) => settings[requireTenant()]?.[key] ?? fallback,
+      get settingsVersion() {
+        return settingsWrites.versions[requireTenant()] ?? 0;
+      },
     },
+    writeSettings: fakeSettingsWrite(settings, settingsWrites),
     adminSettings: {
       ensure: () => Promise.resolve(),
       get: (key: string, fallback: SettingValue) =>
@@ -332,6 +341,7 @@ export async function harness(): Promise<Harness> {
     failAudit,
     clock,
     settings,
+    settingsWrites,
     adminSettings,
     storage,
     quota,

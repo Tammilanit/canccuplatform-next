@@ -80,6 +80,7 @@ function input(value: Record<string, unknown>, nowMs: number): Input {
       screen_name: z.screen_name,
       hero_region: z.hero_region,
       grow_for_showcase: z.grow_for_showcase,
+      motion_level: z.motion_level,
       sound: z.sound,
     };
   }

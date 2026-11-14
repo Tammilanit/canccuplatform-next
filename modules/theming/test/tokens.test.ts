@@ -56,7 +56,19 @@ describe("tokens", () => {
     expect(css).toContain("  --canccu-color-text-muted: #94a3b8;\n");
     expect(css).toContain("  --canccu-font-display: system-ui, sans-serif;\n");
     expect(css).toContain("  --canccu-safe-inset: 48px;\n");
-    expect(css.match(/--canccu-/g)).toHaveLength(11 + 4 + 4);
+    expect(css).toContain("  --canccu-motion-speed: 1;\n  --canccu-motion-intensity: 1;\n");
+    expect(css.match(/--canccu-/g)).toHaveLength(11 + 4 + 4 + 2);
+  });
+
+  it("writes the motion style's factors (contracts/theming.md, Motion vocabulary)", () => {
+    const css = (motion_style: unknown) => tokensCss({ ...platformTokens(), motion_style });
+    expect(css({ speed: "slower", intensity: "strong" })).toContain(
+      "  --canccu-motion-speed: 1.4;\n  --canccu-motion-intensity: 1.4;\n",
+    );
+    expect(css({ speed: "faster", intensity: "subtle" })).toContain(
+      "  --canccu-motion-speed: 0.75;\n  --canccu-motion-intensity: 0.6;\n",
+    );
+    expect(css({ speed: "wild" })).toContain("  --canccu-motion-speed: 1;\n");
   });
 
   it("is stable: the same tokens give the same CSS", () => {

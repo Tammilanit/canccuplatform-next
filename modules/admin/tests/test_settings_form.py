@@ -36,7 +36,7 @@ async def test_fields_come_in_their_groups_with_a_save_bar(
     browser = await screen_form(world, caplog)
     text = (await browser.get(SCREEN)).text
     titles = re.findall(r'<h2 class="canccu-card__title">([^<]+)</h2>', text)
-    assert titles == ["Playing", "When the network is slow", "Web pages"]
+    assert titles == ["Playing", "Motion", "When the network is slow", "Web pages"]
     assert '<p class="canccu-card__desc">How long a screen waits before it says so.</p>' in text
     # Each setting once, in its group's card.
     assert text.count("name=offline_after_seconds") == 1
@@ -63,7 +63,12 @@ async def test_a_refused_save_keeps_what_was_typed(
     r = await browser.post(
         SCREEN,
         # As the form sends it: a ticked box says "on", an unticked one is left out.
-        data={"settings_version": "1", "offline_after_seconds": "3", "progress_bars": "on"},
+        data={
+            "settings_version": "1",
+            "offline_after_seconds": "3",
+            "progress_bars": "on",
+            "follow_the_day": "on",
+        },
         headers=ORIGIN,
     )
     assert r.status_code == 400
@@ -86,7 +91,12 @@ async def test_a_conflict_compares_with_what_is_saved_now(
     browser = await screen_form(world, caplog)
     with tenant_scope("demo"):
         await world.service.put_settings("screen", 1, {"offline_after_seconds": 60}, "u2")
-    form = {"settings_version": "1", "offline_after_seconds": "30", "progress_bars": "on"}
+    form = {
+        "settings_version": "1",
+        "offline_after_seconds": "30",
+        "progress_bars": "on",
+        "follow_the_day": "on",
+    }
     r = await browser.post(SCREEN, data=form, headers=ORIGIN)
     assert r.status_code == 409 and "Someone else saved these settings" in r.text
     assert "name=settings_version value=2>" in r.text
@@ -118,6 +128,7 @@ async def test_a_conflict_keeps_only_the_fields_the_user_changed(
         "settings_version": "1",
         "offline_after_seconds": "30",
         "progress_bars": "on",
+        "follow_the_day": "on",
     }
     assert form["heartbeat_seconds"] == bases["was.heartbeat_seconds"] == "15"
     r = await browser.post(SCREEN, data=form, headers=ORIGIN)

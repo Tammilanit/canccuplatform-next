@@ -59,12 +59,18 @@ def test_screen_declaration_matches_the_contract() -> None:
     assert screen["ticker_appearance"].default == "default"
     assert screen["ready_fallback_asset_id"].default == ""
     assert (screen["burn_in_drift"].type, screen["burn_in_drift"].default) == ("boolean", False)
+    # The energy level and Follow the day (contracts/screen.md, Motion and burn-in drift).
+    assert screen["motion_level"].choices == ("none", "calm", "lively", "party")
+    assert screen["motion_level"].default == "lively"
+    assert (screen["follow_the_day"].type, screen["follow_the_day"].default) == ("boolean", True)
     assert set(screen) == set(bounded) | {
         "web_allowlist",
         "progress_bars",
         "ticker_appearance",
         "ready_fallback_asset_id",
         "burn_in_drift",
+        "motion_level",
+        "follow_the_day",
     }
 
 

@@ -38,6 +38,7 @@ import { ValkeyFanout, ValkeyZoneStore } from "./push/store.js";
 import { renderLoop } from "./render/dispatch.js";
 import { ValkeyRenderQueue } from "./render/queue.js";
 import { TICK_MS, tickRunner } from "./tick/run.js";
+import type { SettingsDoc } from "./motion-routes.js";
 import { seedMainZone } from "./zones.js";
 
 const PORT = 8080;
@@ -207,6 +208,15 @@ async function main(): Promise<void> {
       : {}),
     settings,
     adminSettings,
+    writeSettings: async (tenantId, write) => {
+      const response = await admin.request("PATCH", "/internal/admin/settings/screen", {
+        headers: service.headers("admin"),
+        params: { tenant_id: tenantId },
+        json: write,
+      });
+      AdminClient.raiseForError(response);
+      return response.body as SettingsDoc;
+    },
     publicEvent: (host) => tenants.event(host),
     sources,
     bundleVersion: config.version,

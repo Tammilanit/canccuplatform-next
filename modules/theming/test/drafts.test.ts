@@ -156,6 +156,32 @@ describe.skipIf(!DATABASE_URL)("theming drafts", () => {
       expect([draft.mode, draft.manifest.tokens.motion]).toEqual(["simple", "calm"]);
     });
 
+    it("keeps simple when only the motion style changes, and a null field goes back to its default", async () => {
+      await fresh();
+      const set = await send(h, "PATCH", "/api/theming/draft/tokens", {
+        draft_version: 1,
+        tokens: { motion_style: { speed: "faster", pack: "arcade" } },
+      });
+      const draft = set.json<DraftBody>();
+      expect([draft.mode, draft.manifest.tokens.motion_style]).toEqual([
+        "simple",
+        { speed: "faster", pack: "arcade" },
+      ]);
+      const field = await send(h, "PATCH", "/api/theming/draft/tokens", {
+        draft_version: 2,
+        tokens: { motion_style: { speed: null, spotlight: "trace" } },
+      });
+      expect(field.json<DraftBody>().manifest.tokens.motion_style).toEqual({
+        pack: "arcade",
+        spotlight: "trace",
+      });
+      const reset = await send(h, "PATCH", "/api/theming/draft/tokens", {
+        draft_version: 3,
+        tokens: { motion_style: null },
+      });
+      expect(reset.json<DraftBody>().manifest.tokens).not.toHaveProperty("motion_style");
+    });
+
     it("refuses an unknown token or a bad value and changes nothing", async () => {
       await fresh();
       for (const tokens of [
@@ -164,6 +190,8 @@ describe.skipIf(!DATABASE_URL)("theming drafts", () => {
         { sizes: { gap: "1vh" } },
         { fonts: { body: "a;b" } },
         { motion: "fast" },
+        { motion_style: { speed: "ludicrous" } },
+        { motion_style: { tempo: "normal" } },
         { shadows: {} },
       ]) {
         const res = await send(h, "PATCH", "/api/theming/draft/tokens", {

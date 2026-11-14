@@ -6,8 +6,9 @@
  */
 import { claimEnd, claimOf, claimShown } from "./claims.js";
 import type { ClaimState } from "./claims.js";
-import { driftAt, effectiveMotion, FADE_MS } from "./display.js";
+import { driftAt, FADE_MS } from "./display.js";
 import type { Motion } from "./display.js";
+import { MotionLayer, levelOf, styleOf, transitionsOf } from "./motion.js";
 import { agendaOf, joinHeroAndRail } from "./hero-rail.js";
 import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
@@ -83,6 +84,8 @@ export class Screen {
   private regions = new Map<string, Drawn>();
   private state: ScreenState | null = null;
   private timer: ReturnType<typeof setTimeout> | undefined;
+  /** The level, pack and effects live on `<body>` (contracts/theming.md, Classes). */
+  private readonly motion = new MotionLayer(document.body);
 
   constructor(private readonly host: ScreenHost) {}
 
@@ -175,7 +178,8 @@ export class Screen {
     const state = this.state;
     if (state === null) return;
     const now = this.host.serverNow();
-    const motion = effectiveMotion(state.display?.motion, this.host.reducedMotion());
+    const level = levelOf(state.display, this.host.reducedMotion());
+    const motion = transitionsOf(level);
     this.root.dataset.motion = motion;
     // A takeover hides every region but itself and the overlay (screen.css), until it ends here.
     const full = claimOf(state.regions.find((r) => r.role === "full")?.claim);
@@ -211,6 +215,7 @@ export class Screen {
       );
     }
     fillCountdowns(this.root, now);
+    this.motion.apply(this.root, level, styleOf(state.display?.motion_style), now);
     fitTickers(this.root, motion, now);
     if (state.display?.drift === true) {
       const { x, y } = driftAt(now);

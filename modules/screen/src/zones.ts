@@ -42,6 +42,7 @@ const ZONE_FIELDS = [
   "screen_name",
   "hero_region",
   "grow_for_showcase",
+  "motion_level",
   "sound",
 ] as const;
 const ZONE_KEYS = ["key", ...ZONE_FIELDS, "revision"] as const;
@@ -262,8 +263,8 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
       const seeded = await seededFor(ctx, c);
       const { rows } = await c.query(
         `INSERT INTO screen_zones (key, name, layout_id, regions, header, hub_qr, hero_region,
-           grow_for_showcase, sound, epoch, screen_name)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT DO NOTHING
+           grow_for_showcase, sound, epoch, screen_name, motion_level)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) ON CONFLICT DO NOTHING
          RETURNING ${ZONE_COLUMNS}`,
         [
           zone.key,
@@ -277,6 +278,7 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
           JSON.stringify(zone.sound),
           newEpoch(),
           zone.screen_name,
+          zone.motion_level,
         ],
       );
       if (rows[0] === undefined) throw zoneExists();
@@ -332,7 +334,7 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
       const after = await c.query(
         `UPDATE screen_zones SET name = $2, layout_id = $3, regions = $4, header = $5, hub_qr = $6,
            hero_region = $7, grow_for_showcase = $8, sound = $9, screen_name = $10,
-           revision = revision + 1,
+           motion_level = $11, revision = revision + 1,
            updated_at = now()
          WHERE key = $1 RETURNING ${ZONE_COLUMNS}`,
         [
@@ -346,6 +348,7 @@ export function zoneRoutes(app: FastifyInstance, deps: ZoneDeps): void {
           zone.grow_for_showcase,
           JSON.stringify(zone.sound),
           zone.screen_name,
+          zone.motion_level,
         ],
       );
       const saved = zoneView(after.rows[0] ?? {});
