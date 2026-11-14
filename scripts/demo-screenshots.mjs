@@ -349,12 +349,15 @@ only(PAGES, ([, path]) => groupOf(path === CHECK_IN ? "/notify/" : path));
 only(SETTINGS_STATES, () => "admin");
 only(OTHERS, ([, path]) => groupOf(path));
 for (const list of [STUDIO, DRAFT, LIGHT]) only(list, () => "theming");
-for (const list of [DAY_VIEW, ITEM_PAGES, CANCELLED]) only(list, () => "agenda");
+for (const list of [DAY_VIEW, ITEM_PAGES, CANCELLED])
+  only(list, () => "agenda");
 // The Screen studio's lists are studio-shots.mjs's own, and taken all or none.
 const studio = (list) => (want("screen-studio") ? list : []);
 
 if (opts["dry-run"]) {
-  const would = opts.check ? "check, writing no PNG" : `screenshot into ${opts.out}/`;
+  const would = opts.check
+    ? "check, writing no PNG"
+    : `screenshot into ${opts.out}/`;
   console.log(`dry run, would ${would}:`);
   for (const [name, path, { width, height }] of TROUBLE) {
     console.log(`  ${name}.png  ${at(path)}  (${width}×${height}, --trouble)`);
@@ -600,7 +603,10 @@ try {
       await changeSettings("screen", (v) => ({
         offline_after_seconds: v.offline_after_seconds === 60 ? 45 : 60,
       }));
-      await changeSettings("admin", () => ({ timezone: "UTC", language: "en" }));
+      await changeSettings("admin", () => ({
+        timezone: "UTC",
+        language: "en",
+      }));
     } catch (err) {
       fail(`settings changes: ${firstLine(err)}`);
     }
@@ -643,7 +649,12 @@ try {
     }
     if (item) {
       for (const [name, suffix, viewport] of ITEM_PAGES) {
-        await shot(name, `/agenda/items/${item.id}${suffix}`, viewport, SESSION);
+        await shot(
+          name,
+          `/agenda/items/${item.id}${suffix}`,
+          viewport,
+          SESSION,
+        );
       }
     }
     try {

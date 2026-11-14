@@ -5,12 +5,20 @@
 // with pages, adds it here (AGENTS.md, A package run).
 
 /** One group per surface: the module serving the page, with screen's two kinds apart. */
-export const GROUPS = ["admin", "agenda", "notify", "theming", "screens", "screen-studio"];
+export const GROUPS = [
+  "admin",
+  "agenda",
+  "notify",
+  "theming",
+  "screens",
+  "screen-studio",
+];
 
 /** The groups a `--groups a,b` option names; a typo fails the run rather than skip its shots. */
 export function pickGroups(list) {
   const picked = list.split(",").filter(Boolean);
-  for (const g of picked) if (!GROUPS.includes(g)) throw new Error(`unknown group ${g}`);
+  for (const g of picked)
+    if (!GROUPS.includes(g)) throw new Error(`unknown group ${g}`);
   return new Set(picked);
 }
 
@@ -27,7 +35,10 @@ const PAGE_GROUPS = [
 /** The group of a shot, from the path of the page it opens. */
 export function groupOf(path) {
   const hit = PAGE_GROUPS.find(([prefix]) => path.startsWith(prefix));
-  if (!hit) throw new Error(`${path}: no screenshot group (scripts/demo-screenshots-groups.mjs)`);
+  if (!hit)
+    throw new Error(
+      `${path}: no screenshot group (scripts/demo-screenshots-groups.mjs)`,
+    );
   return hit[1];
 }
 
@@ -70,7 +81,9 @@ const MAP = [
 ];
 
 const glob = (pattern) =>
-  new RegExp(`^${pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`);
+  new RegExp(
+    `^${pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`,
+  );
 const RULES = MAP.map(([pattern, needs]) => [glob(pattern), needs]);
 
 /** `docs`, `full` or the screenshot groups a changed path needs. */
