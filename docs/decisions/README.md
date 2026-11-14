@@ -13,7 +13,7 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0005](0005-signup-site-stays-outside.md) | The event signup site stays outside the platform | 2026-11-02 |
 | [0006](0006-stack.md) | The stack | 2026-11-02 |
 | [0007](0007-stateless-containers.md) | Containers are stateless | 2026-11-02 |
-| [0008](0008-contract-first.md) | Contract first, with shared conventions | 2026-11-02 |
+| [0008](0008-contract-first.md) | Contract first, with shared conventions (amended by 0029) | 2026-11-02 |
 | [0009](0009-rust-rejected.md) | Rust is not used | 2026-11-04 |
 | [0010](0010-scope.md) | Scope: what is dropped, Moments, PPTX | 2026-11-03 |
 | [0011](0011-hosting-on-remote-vm.md) | The platform is hosted on a remote VM | 2026-11-04 |
@@ -29,11 +29,12 @@ Each record has Status, Date, Context, Decision and Consequences. New records ta
 | [0021](0021-no-fixed-dates.md) | No freeze and no target dates | 2026-11-06 |
 | [0022](0022-product-vision.md) | The product vision: who it is for, the Pulse screen at its heart, what is planned and what is not (amended by 0027) | 2026-11-06 |
 | [0023](0023-step-design-briefs.md) | Every step starts with a design brief, and issues leave room to design (its round replaced by 0026) | 2026-11-06 |
-| [0024](0024-additive-contract-docs-normal-risk.md) | Additive contract docs are normal risk; the maintainer reviews contracts at the checkpoint | 2026-11-07 |
+| [0024](0024-additive-contract-docs-normal-risk.md) | Additive contract docs are normal risk; the maintainer reviews contracts at the checkpoint (amended by 0029) | 2026-11-07 |
 | [0025](0025-finals-and-games-modules.md) | Finals and games are separate modules, on a shared tourney core | 2026-11-07 |
 | [0026](0026-briefs-are-research-packs.md) | A step brief is a research pack for an extensive brainstorming session | 2026-11-08 |
 | [0027](0027-product-decisions-2026-11-07-08.md) | The product decisions of 2026-11-07/08: joining, accounts, retention, check-in, finals, Go public and brainstorming (amends 0022) | 2026-11-08 |
 | [0028](0028-pairing-sets-a-new-devices-event.md) | Pairing sets a new device's event; moves stay the superadmin's (amends 0013 item 34) | 2026-11-08 |
+| [0029](0029-additive-contracts-ship-with-consumers.md) | Additive contract changes ship with the code that uses them; contract-first only for breaking changes (amends 0008 and 0024) | 2026-11-14 |
 
 ## How the records are applied
-- **Bundling packages** ([0019](0019-work-packages.md), 2026-11-07, #144). In step 2 most packages held one issue, so each issue paid for its own run, review, fix round and fix-check. The planner now bundles related issues into fuller packages, while a contract change still goes apart from its consumers and merges first; the rules live in [AGENTS.md, Package plan](../../AGENTS.md#how-work-flows). This refines how 0019 is applied; its text is unchanged.
+- **Bundling packages** ([0019](0019-work-packages.md), 2026-11-07, #144). In step 2 most packages held one issue, so each issue paid for its own run, review, fix round and fix-check. The planner now bundles related issues into fuller packages, while a breaking contract change still goes apart from its consumers and merges first (an additive one ships with them since [0029](0029-additive-contracts-ship-with-consumers.md)); the rules live in [AGENTS.md, Package plan](../../AGENTS.md#how-work-flows). This refines how 0019 is applied; its text is unchanged.
