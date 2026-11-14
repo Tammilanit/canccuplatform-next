@@ -246,6 +246,9 @@ export async function composeZone(
   const used = typesOf(views);
   for (const e of entries) used.add(e.widget);
   if (!withContent) for (const type of used) if (type !== "stats") used.delete(type);
+  // "Today in numbers" is empty outside wind-down: its counts would move every Pulse zone's
+  // version at each count for nothing.
+  if (facts.phase !== "wind_down") used.delete("today_numbers");
   const content = await contentFacts(deps, ctx, zoneKey, used, photoProps(entries), real.getTime());
   if (Object.keys(content.facts).length > 0) {
     Object.assign(facts, content.facts);
