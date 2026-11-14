@@ -3,10 +3,14 @@
 // the changed paths, and so which of the API tests, the soak and the screenshot shards run.
 // Usage: node demo-stack-plan.mjs --event EVENT [--base REV]   KEY=value lines for $GITHUB_OUTPUT
 //        node demo-stack-plan.mjs --self-test
-// The changed paths are `git diff --name-only REV HEAD`, read only for a pull request or a merge
-// queue entry; every other event (push to main, the nightly run, a manual run) is the full run.
+// The changed paths are `git diff --name-only --no-renames REV HEAD`, read only for a pull request
+// or a merge queue entry; every other event (push to main, the nightly run, a manual run) is the
+// full run.
 import { strict as assert } from "node:assert";
 import { execFileSync } from "node:child_process";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { parseArgs } from "node:util";
 import {
   GROUPS,
@@ -66,6 +70,16 @@ export const format = ({ tier, api, soak, check, shards }) =>
     `check=${check}`,
     `shards=${JSON.stringify(shards)}`,
   ].join("\n");
+
+// --no-renames: git lists a moved file only under its new path, so a file moved out of a shared
+// path into one module would plan that module's tier; both paths must be mapped.
+export const changedPaths = (base, cwd) =>
+  execFileSync("git", ["diff", "--name-only", "--no-renames", base, "HEAD"], {
+    cwd,
+    encoding: "utf8",
+  })
+    .split("\n")
+    .filter(Boolean);
 
 const selftest = () => {
   let failed = 0;
@@ -286,6 +300,37 @@ const selftest = () => {
         );
     },
   );
+  check("a file moved out of a shared path into one module runs full", () => {
+    const dir = mkdtempSync(join(tmpdir(), "canccu-plan-"));
+    const git = (...args) =>
+      execFileSync(
+        "git",
+        ["-c", "user.name=t", "-c", "user.email=t@t", ...args],
+        {
+          cwd: dir,
+          stdio: "ignore",
+        },
+      );
+    try {
+      git("init", "-q");
+      mkdirSync(join(dir, "packages/ui"), { recursive: true });
+      mkdirSync(join(dir, "modules/admin"), { recursive: true });
+      writeFileSync(join(dir, "packages/ui/x.ts"), "export const x = 1;\n");
+      git("add", ".");
+      git("commit", "-qm", "base");
+      git("tag", "base");
+      git("mv", "packages/ui/x.ts", "modules/admin/x.ts");
+      git("commit", "-qm", "move");
+      const paths = changedPaths("base", dir);
+      assert.deepEqual(paths.sort(), [
+        "modules/admin/x.ts",
+        "packages/ui/x.ts",
+      ]);
+      assert.deepEqual(plan({ event: "pull_request", paths }), FULL);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
   check("the output is one KEY=value line each, the shards as JSON", () =>
     assert.equal(
       format(pr("modules/agenda/x.py")),
@@ -321,11 +366,7 @@ if (opts["self-test"]) {
       console.error(`demo-stack-plan: --base is needed for ${opts.event}`);
       process.exit(2);
     }
-    paths = execFileSync("git", ["diff", "--name-only", opts.base, "HEAD"], {
-      encoding: "utf8",
-    })
-      .split("\n")
-      .filter(Boolean);
+    paths = changedPaths(opts.base);
   }
   const out = plan({ event: opts.event, paths });
   console.error(
