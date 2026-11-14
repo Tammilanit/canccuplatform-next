@@ -4,7 +4,7 @@
  */
 import { createHash, randomBytes } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { isTenantId, requireTenant, withTenant } from "@canccu/kit";
+import { isTenantId, withTenant } from "@canccu/kit";
 import type { SqlClient, TenantResolver } from "@canccu/kit";
 import { isObject, list } from "./checks.js";
 import { compiledCss, parsedTemplates } from "./compile.js";
@@ -28,7 +28,7 @@ import type { ProfileSource } from "./profile.js";
 import { onlyScreen } from "./revision-routes.js";
 import { referenced, sendFile } from "./routes.js";
 import { SANDBOX } from "./sandbox.js";
-import { SERVED, THEMING_VERSION, colorInt, currentTheme, revisionZero } from "./theme.js";
+import { SERVED, THEMING_VERSION, colorInt, currentRevision } from "./theme.js";
 import type { ResolvedTheme } from "./theme.js";
 import { themeTokens, tokensCss } from "./tokens.js";
 import type { RightsChecker } from "@canccu/kit";
@@ -185,7 +185,7 @@ export function keyRoutes(app: FastifyInstance, deps: PreviewDeps): void {
   app.get<{ Params: { file: string } }>("/theming/current/:file", async (request, reply) => {
     const { file } = request.params;
     if (file !== "tokens.css" && file !== "admin-tokens.css") throw notFound();
-    const theme = await currentTheme(deps.db, deps.profile);
+    const { theme, files } = await currentRevision(deps.db, deps.profile);
     const url = file === "tokens.css" ? theme.tokens_css_url : theme.admin_tokens_css_url;
     const name = url.slice(SERVED.length);
     const etag = `"${name.slice(0, 64)}"`;
@@ -193,9 +193,7 @@ export function keyRoutes(app: FastifyInstance, deps: PreviewDeps): void {
     if (request.headers["if-none-match"] === etag) {
       return reply.status(304).header("cache-control", "no-cache").send();
     }
-    const bytes =
-      revisionZero(await deps.profile(requireTenant())).files.get(name) ??
-      (await deps.files.read(name));
+    const bytes = files.get(name) ?? (await deps.files.read(name));
     if (bytes === undefined) throw notFound();
     return cssReply(reply, bytes.toString("utf8"), "no-cache");
   });

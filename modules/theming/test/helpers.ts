@@ -129,7 +129,6 @@ export interface Harness {
   /** Audit entries appended so far; `auditDown` makes the next appends fail. */
   audit: AuditEntry[];
   auditDown: boolean;
-  /** The events whose profile theming read, one entry per read. */
   profileReads: string[];
   /** The events theming published to one event's stream. */
   events(tenant: string): Event[];
@@ -172,10 +171,7 @@ export async function harness(opts: { ipMode?: boolean } = {}): Promise<Harness>
       audit.push(entry);
       return Promise.resolve();
     },
-    profile: (tenant) => {
-      profileReads.push(tenant);
-      return Promise.resolve(PROFILES[tenant]);
-    },
+    profile: (tenant) => Promise.resolve(PROFILES[tenant]).finally(() => profileReads.push(tenant)),
     rights: new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin })),
     tenants: new TenantResolver({ tenantsUrl: "http://tenants", fetch: fakeTenants }),
     health: createHealth({ module: "theming", version: "dev", checks: {} }),

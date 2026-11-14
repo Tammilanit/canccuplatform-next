@@ -145,8 +145,15 @@ export async function resolvedRevision(
  * profile.
  */
 export async function currentTheme(db: Db, profile: ProfileSource): Promise<ResolvedTheme> {
-  return (
-    (await db.tenant((c) => resolvedRevision(c))) ??
-    revisionZero(await profile(requireTenant())).theme
-  );
+  return (await currentRevision(db, profile)).theme;
+}
+
+/**
+ * `currentTheme` with the files revision 0 generates, none for a published revision: revision 0
+ * is built (a profile read and a token compile) only while it is the current one.
+ */
+export async function currentRevision(db: Db, profile: ProfileSource): Promise<RevisionZero> {
+  const published = await db.tenant((c) => resolvedRevision(c));
+  if (published !== undefined) return { theme: published, files: new Map() };
+  return revisionZero(await profile(requireTenant()));
 }
