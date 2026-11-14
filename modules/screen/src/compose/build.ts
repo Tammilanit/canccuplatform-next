@@ -236,7 +236,7 @@ function filledIn(box: LayoutRegion, regions: readonly LayoutRegion[]): boolean 
 /**
  * The waiting boxes' cells filled by the hero, grown as for a showcase, when that pauses no box
  * still drawn and leaves none of their cells blank (contracts/screen.md, The hero fills first);
- * else `kept` itself, for the hand-over. A neighbour that took the cells instead stretched a box
+ * else null, for the hand-over. A neighbour that took the cells instead stretched a box
  * made for three numbers over two thirds of the screen around one, and squeezed the hero into a
  * strip without its label (v8 rule 5). The hero grows within the drawn boxes' band only, so a
  * waiting box beyond that band would be left blank, not filled: its neighbour takes it then.
@@ -245,26 +245,26 @@ function filledByHero(
   kept: readonly LayoutRegion[],
   waiting: readonly LayoutRegion[],
   input: BuildInput,
-): readonly LayoutRegion[] {
-  if (waiting.length === 0) return kept;
+): readonly LayoutRegion[] | null {
+  if (waiting.length === 0) return null;
   const filled = grown(kept, input.zone.regions);
-  if (filled.length !== kept.length) return kept;
-  return waiting.every((w) => filledIn(w, filled)) ? filled : kept;
+  if (filled === null || filled.length !== kept.length) return null;
+  return waiting.every((w) => filledIn(w, filled)) ? filled : null;
 }
 
 /**
  * Who takes the room (contracts/screen.md, A showcase goes first): a showcase the zone lets grow
  * grows the hero to the showcase size (sheet 10); one that plays at its size leaves the hero as
  * it is, so the waiting boxes hand over, since giving it their cells would grow it after all; only
- * without a showcase does the hero fill the waiting boxes' cells.
+ * without a showcase does the hero fill the waiting boxes' cells. Null: the hero keeps its size.
  */
 function roomFor(
   kept: readonly LayoutRegion[],
   waiting: readonly LayoutRegion[],
   input: BuildInput,
-): readonly LayoutRegion[] {
+): readonly LayoutRegion[] | null {
   if (input.showcase === "grow") return grown(kept, input.zone.regions);
-  if (input.showcase === "keep") return kept;
+  if (input.showcase === "keep") return null;
   return filledByHero(kept, waiting, input);
 }
 
@@ -286,7 +286,7 @@ export function buildRegions(input: BuildInput): { layout: Layout; regions: Regi
     swapped.filter((r) => waiting.has(r.id)),
     input,
   );
-  const placed = growth !== kept ? growth : handedOver(swapped, waiting);
+  const placed = growth ?? handedOver(swapped, waiting);
   const regions = placed.flatMap((r) => regionsOf(r, layout, input));
   return {
     layout,

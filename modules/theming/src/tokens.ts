@@ -1,6 +1,13 @@
 /** The token set of a theme, its defaults and its CSS (contracts/theming.md, Stable classes). */
-import { COLOR_TOKENS, FONT_STACKS, cssVar, resolveTheme } from "@canccu/ui";
-import type { FontToken } from "@canccu/ui";
+import {
+  COLOR_TOKENS,
+  FONT_STACKS,
+  MOTION_STYLE,
+  cssVar,
+  motionStyleOf,
+  resolveTheme,
+} from "@canccu/ui";
+import type { FontToken, MotionStyle } from "@canccu/ui";
 import { contrastFailures } from "./contrast.js";
 
 export interface Tokens {
@@ -15,31 +22,11 @@ export interface PartialTokens {
   sizes?: Record<string, unknown>;
 }
 
-/** The `motion_style` token (contracts/theming.md, Motion vocabulary): each field's choices, default first. */
-export const MOTION_STYLE = {
-  speed: ["normal", "slower", "faster"],
-  intensity: ["normal", "subtle", "strong"],
-  spotlight: ["glow_and_trace", "glow", "trace"],
-  pack: ["standard", "broadcast", "arcade"],
-} as const;
-export type MotionStyle = { [K in keyof typeof MOTION_STYLE]: (typeof MOTION_STYLE)[K][number] };
+// The `motion_style` token's choices are the shared vocabulary's (packages/ui, motion.ts).
+export { MOTION_STYLE, motionStyleOf };
+export type { MotionStyle };
 const SPEED_FACTOR = { slower: 1.4, normal: 1, faster: 0.75 } as const;
 const INTENSITY_FACTOR = { subtle: 0.6, normal: 1, strong: 1.4 } as const;
-
-/** Each field as given, else its default; an unknown value counts as unset. */
-export function motionStyleOf(given: unknown): MotionStyle {
-  const g = (typeof given === "object" && given !== null ? given : {}) as Record<string, unknown>;
-  const pick = <K extends keyof MotionStyle>(k: K): MotionStyle[K] =>
-    ((MOTION_STYLE[k] as readonly string[]).includes(g[k] as string)
-      ? g[k]
-      : MOTION_STYLE[k][0]) as MotionStyle[K];
-  return {
-    speed: pick("speed"),
-    intensity: pick("intensity"),
-    spotlight: pick("spotlight"),
-    pack: pick("pack"),
-  };
-}
 
 /** A theme's tokens as revisions keep them: every token filled in, plus `motion` and `motion_style` when set. */
 export type ThemeTokens = Tokens & { motion?: string; motion_style?: Partial<MotionStyle> };

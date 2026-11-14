@@ -1,10 +1,11 @@
 // @vitest-environment happy-dom
 /** The motion vocabulary on the screen (contracts/theming.md, Motion vocabulary). */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MotionLayer, SPOTLIGHT_GAP_MS, spotlightParts, styleOf } from "../src/motion.js";
+import { motionStyleOf } from "@canccu/ui";
+import { MotionLayer, SPOTLIGHT_GAP_MS, spotlightParts } from "../src/motion.js";
 import type { Level } from "../src/motion.js";
 
-const STYLE = styleOf(undefined);
+const STYLE = motionStyleOf(undefined);
 const T0 = Date.parse("2026-06-01T20:00:00Z");
 
 /** One region holding one shown box with the given inner HTML. */
@@ -148,7 +149,8 @@ describe("the motion layer", () => {
     layer.apply(root, "party", STYLE, T0 + 20_000);
     expect(box.classList.contains("canccu-spotlight--burst")).toBe(true);
     expect(bursts()).toBe(0);
-    // Another countdown has a burst of its own.
+    // Another countdown has a burst of its own; its box is drawn again, which resets its classes.
+    box.className = "canccu-widget canccu-widget--countdown canccu-is-active";
     box.innerHTML = countdown(6 * 60_000);
     layer.apply(root, "party", STYLE, T0 + 80_000);
     expect(bursts()).toBe(1);
@@ -183,6 +185,6 @@ describe("the motion layer", () => {
       "pop",
       "burst",
     ]);
-    expect(styleOf({ speed: "faster", pack: "wild" })).toEqual({ ...STYLE, speed: "faster" });
+    expect(motionStyleOf({ speed: "faster", pack: "wild" })).toEqual({ ...STYLE, speed: "faster" });
   });
 });

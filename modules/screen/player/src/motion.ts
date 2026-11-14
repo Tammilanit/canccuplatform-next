@@ -5,23 +5,11 @@
  * whose content changed, and the countdown's spotlight in its last five minutes. The looks are CSS
  * (motion.css); this decides what plays when, so the one-spotlight and 10-second rules hold.
  */
-import type { Motion } from "./display.js";
+import { MOTION_LEVELS } from "@canccu/ui";
+import type { MotionLevel, MotionStyle } from "@canccu/ui";
 
-export type Level = "none" | "calm" | "lively" | "party";
-const LEVELS: readonly Level[] = ["none", "calm", "lively", "party"];
-
-export interface MotionStyle {
-  speed: "slower" | "normal" | "faster";
-  intensity: "subtle" | "normal" | "strong";
-  spotlight: "glow_and_trace" | "glow" | "trace";
-  pack: "standard" | "broadcast" | "arcade";
-}
-const STYLE: { [K in keyof MotionStyle]: readonly MotionStyle[K][] } = {
-  speed: ["normal", "slower", "faster"],
-  intensity: ["normal", "subtle", "strong"],
-  spotlight: ["glow_and_trace", "glow", "trace"],
-  pack: ["standard", "broadcast", "arcade"],
-};
+// The level names and the style's choices are the shared vocabulary's (packages/ui, motion.ts).
+export type Level = MotionLevel;
 
 /** Each effect's length at `normal` speed (the contract's table); motion.css keeps the same. */
 export const FX_MS = { roll: 700, flap: 600, sweep: 1100, pop: 450, tilt: 450, burst: 900 };
@@ -40,30 +28,15 @@ export function levelOf(
   reducedMotion: boolean,
 ): Level {
   if (reducedMotion) return "none";
-  const level = LEVELS.find((l) => l === display?.motion_level);
+  const level = MOTION_LEVELS.find((l) => l === display?.motion_level);
   if (level !== undefined) return level;
   const motion = display?.motion;
   return motion === "calm" || motion === "none" ? motion : "lively";
 }
 
-/** The region transitions and the ticker keep `display.motion`'s three ways (screen.css). */
-export const transitionsOf = (level: Level): Motion =>
-  level === "lively" || level === "party" ? "moderate" : level;
-
-export function styleOf(given: unknown): MotionStyle {
-  const g = (typeof given === "object" && given !== null ? given : {}) as Record<string, unknown>;
-  const pick = <K extends keyof MotionStyle>(k: K): MotionStyle[K] =>
-    STYLE[k].find((v) => v === g[k]) ?? STYLE[k][0] ?? ("normal" as MotionStyle[K]);
-  return {
-    speed: pick("speed"),
-    intensity: pick("intensity"),
-    spotlight: pick("spotlight"),
-    pack: pick("pack"),
-  };
-}
-
 const NUMBER = /^[+−-]?\d[\d\s.,]*%?$/;
-const TIME = /^\d{1,2}[:.]\d{2}$/;
+// Only `:` makes a time: a decimal such as `12.50` is a number, and rolls.
+const TIME = /^\d{1,2}:\d{2}$/;
 /** Widgets whose values move by themselves every second or minute: no effect for those. */
 const LIVE = new Set(["clock", "ticker"]);
 
@@ -82,13 +55,14 @@ function typeOf(box: Element): string {
   return cls === undefined ? "" : cls.slice("canccu-widget--".length);
 }
 
-/** The running countdown's time in a box, if it starts within the lead. */
-function countdownIn(box: Element, now: number): boolean {
+/** The start of the running countdown in a box, if it starts within the lead. */
+function countdownIn(box: Element, now: number): number | null {
   for (const el of box.querySelectorAll("time[data-canccu-countdown][datetime]")) {
-    const left = Date.parse(el.getAttribute("datetime") ?? "") - now;
-    if (left > 0 && left <= SPOTLIGHT_LEAD_MS) return true;
+    const start = Date.parse(el.getAttribute("datetime") ?? "");
+    const left = start - now;
+    if (left > 0 && left <= SPOTLIGHT_LEAD_MS) return start;
   }
-  return false;
+  return null;
 }
 
 const SPOTLIGHT_PARTS = ["outline", "glow", "trace", "pop", "burst"] as const;
@@ -98,6 +72,11 @@ export class MotionLayer {
   private lastSpotlight = Number.NEGATIVE_INFINITY;
   private pending: Element | null = null;
   private countdown: { box: Element; level: Level } | null = null;
+  /**
+   * The starts whose ring burst has played: it marks the 5-minute point once, not each time the
+   * rotation brings the countdown's box back.
+   */
+  private burst = new Set<number>();
   private partyTurn = 0;
 
   constructor(private readonly body: HTMLElement) {}
@@ -169,12 +148,20 @@ export class MotionLayer {
     now: number,
   ): void {
     const held = this.countdown;
-    const box = boxes.find((b) => countdownIn(b, now)) ?? null;
+    let box: Element | null = null;
+    let start: number | null = null;
+    for (const b of boxes) {
+      start = countdownIn(b, now);
+      if (start !== null) {
+        box = b;
+        break;
+      }
+    }
     if (held !== null && held.box !== box) {
       held.box.classList.remove("canccu-spotlight", ...SPOTLIGHT_PARTS.map(part));
       this.countdown = null;
     }
-    if (box === null) return;
+    if (box === null || start === null) return;
     if (this.countdown === null) {
       if (now - this.lastSpotlight < SPOTLIGHT_GAP_MS) return;
       this.lastSpotlight = now;
@@ -186,7 +173,8 @@ export class MotionLayer {
     box.classList.remove(...SPOTLIGHT_PARTS.map(part));
     box.classList.add("canccu-spotlight", ...parts.map(part));
     // The ring burst at the 5-minute mark is a layer of its own, gone once played.
-    if (parts.includes("burst") && this.countdown === null) {
+    if (parts.includes("burst") && !this.burst.has(start)) {
+      this.burst.add(start);
       this.layer(box, "burst", FX_MS.burst, style);
     }
     this.countdown = { box, level };

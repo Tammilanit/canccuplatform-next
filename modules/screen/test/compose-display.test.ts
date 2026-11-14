@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  DEFAULT_MOTION_STYLE,
-  displayOf,
-  motionStyleOf,
-  phaseSource,
-} from "../src/compose/display.js";
+import { DEFAULT_MOTION_STYLE, motionStyleOf } from "@canccu/ui";
+import { displayOf, phaseSource } from "../src/compose/display.js";
 import type { AgendaItem } from "../src/compose/widgets.js";
 
 const quiet = (over: Partial<AgendaItem> = {}): AgendaItem => ({
