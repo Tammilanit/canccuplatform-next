@@ -236,9 +236,9 @@ async def test_a_load_is_stamped_only_once_every_setting_is_written(
         assert await world.service.store.profile_loaded() is None
 
 
-def _stored_zip() -> bytes:
+def _stored_zip(method: int = zipfile.ZIP_STORED) -> bytes:
     buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_STORED) as archive:
+    with zipfile.ZipFile(buffer, "w", method) as archive:
         archive.writestr("profile.yaml", "schema_version: 1\nname: Demo Event\n")
     return buffer.getvalue()
 
@@ -258,7 +258,24 @@ def _unknown_method() -> bytes:
     return bytes(data)
 
 
-@pytest.mark.parametrize("data", [_bad_crc(), _unknown_method()], ids=["crc", "method"])
+def _corrupt_stream(method: int) -> bytes:
+    """Damage the compressed bytes, so the decompressor itself fails before any CRC check."""
+    data = bytearray(_stored_zip(method))
+    at = 30 + len("profile.yaml") + 4  # local header, name, then into the compressed data
+    data[at : at + 3] = bytes(b ^ 0xFF for b in data[at : at + 3])
+    return bytes(data)
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        _bad_crc(),
+        _unknown_method(),
+        _corrupt_stream(zipfile.ZIP_BZIP2),
+        _corrupt_stream(zipfile.ZIP_LZMA),
+    ],
+    ids=["crc", "method", "bzip2", "lzma"],
+)
 def test_a_zip_that_cannot_be_read_is_an_invalid_profile(data: bytes, tmp_path: Path) -> None:
     with pytest.raises(profile.ProfileInvalid):
         profile.unpack_zip(data, tmp_path)

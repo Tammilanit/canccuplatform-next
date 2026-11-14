@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+import lzma
 import shutil
 import zipfile
 import zlib
@@ -150,7 +151,17 @@ def unpack_zip(data: bytes, target: Path) -> None:
             try:
                 content = archive.read(info)
             # A damaged, encrypted or oddly compressed entry: the file's fault, not a 500.
-            except (zipfile.BadZipFile, RuntimeError, NotImplementedError, zlib.error) as exc:
+            # Each decompressor fails its own way: zlib.error, OSError (bzip2), LZMAError,
+            # EOFError (a stream cut short).
+            except (
+                zipfile.BadZipFile,
+                RuntimeError,
+                NotImplementedError,
+                zlib.error,
+                OSError,
+                EOFError,
+                lzma.LZMAError,
+            ) as exc:
                 raise ProfileInvalid(f"can't read {info.filename} in the zip: {exc}") from exc
             destination = target / name
             destination.parent.mkdir(parents=True, exist_ok=True)
