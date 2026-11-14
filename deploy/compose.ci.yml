@@ -19,9 +19,12 @@
 #   of the Theme studio (all three, as an event admin holds them), the agenda and the notify pages
 #   and the check-in code, which scripts/demo-screenshots shows. Holding rights makes it a member
 #   for tenants, so the Screen studio's Content page reads the event's storage use; it holds no
-#   tenants right and is no event admin, so tenants takes no change from it. Any other cookie is 401
-#   not_signed_in. Every other path goes on to admin, so the modules still read their settings
-#   there.
+#   tenants right and is no event admin, so tenants takes no change from it. The cookie
+#   canccu_session=demo-no-role is the signed-in person without a role that
+#   scripts/demo-screenshots-front.sql adds to admin: the stub answers it as admin would, so another
+#   module's page sends it to "No role yet" rather than to sign in, which admin would send straight
+#   back (a redirect loop only this stub could cause). Any other cookie is 401 not_signed_in.
+#   Every other path goes on to admin, so the modules still read their settings there.
 #   Anyone who can reach Caddy can send that cookie, which is why this file is for CI only.
 services:
   # tenants has no path that makes an event before the superadmin's sign-in (#52, #150), so the
@@ -163,6 +166,14 @@ configs:
       	handle @demo {
       		header Content-Type application/json
       		respond `{"user": {"id": "demo-ci", "name": "Demo CI"}, "rights": ["admin.settings.read", "admin.settings.write", "admin.profile.read", "admin.profile.write", "admin.rights.write", "screen.content.read", "screen.content.write", "screen.devices.read", "screen.devices.pair", "screen.devices.write", "screen.push.write", "screen.ticker.write", "screen.zones.write", "screen.bundle.write", "theming.theme.write", "theming.embeds.write", "theming.sync.write", "agenda.items.write", "agenda.crew.read", "notify.topics.write", "notify.stats.read", "notify.checkin.display"], "expires_at": "2099-01-01T00:00:00Z"}` 200
+      	}
+      	@no_role {
+      		path /api/admin/session
+      		header_regexp Cookie (^|;\s*)canccu_session=demo-no-role(;|$$)
+      	}
+      	handle @no_role {
+      		header Content-Type application/json
+      		respond `{"user": {"id": "u_demo_new", "name": "Player Zero"}, "rights": [], "expires_at": "2099-01-01T00:00:00Z"}` 200
       	}
       	handle /api/admin/session {
       		header Content-Type application/json

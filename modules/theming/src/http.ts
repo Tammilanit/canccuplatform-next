@@ -47,7 +47,12 @@ export function needs(rights: RightsChecker, right: string): preHandlerAsyncHook
  * sign in wherever it is, as admin's and agenda's pages do; the address rule then refuses the rest.
  */
 export function pageNeeds(rights: RightsChecker, right: string): preHandlerAsyncHookHandler[] {
-  return needs(rights, right).reverse();
+  // The session is kept before the right is checked: a refusal of someone with no role at all
+  // is sent to admin's "No role yet" (studio.ts), and needs to know they have none.
+  const session: preHandlerAsyncHookHandler = async (request) => {
+    request.session = await rights.session(request.headers.cookie);
+  };
+  return [session, ...needs(rights, right).reverse()];
 }
 
 /** The signed-in person; the routes that call it run after `needs`, which sets the session. */

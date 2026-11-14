@@ -73,6 +73,12 @@ TAGS=(
   platform platform platform notify notify agenda screen "agenda notify" "agenda notify" screen
   platform screen soak admin platform platform
 )
+# TAGS pairs with TESTS by position: a test added without its tag would run every later one under
+# its neighbour's module.
+if [ "${#TAGS[@]}" -ne "${#TESTS[@]}" ]; then
+  echo "error: ${#TESTS[@]} tests but ${#TAGS[@]} tags; TAGS follows TESTS' order" >&2
+  exit 2
+fi
 # want TAG...: whether --only asks for any of these tests.
 want() {
   local tag

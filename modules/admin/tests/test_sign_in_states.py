@@ -7,6 +7,7 @@ import html
 import json
 import re
 from datetime import timedelta
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from conftest import START, World, owner_and_member
@@ -59,6 +60,22 @@ async def test_a_return_path_wins_over_no_role_yet(world: World) -> None:
     assert r.status_code == 303 and r.headers["location"] == "/notify/check-in?p=arrival"
 
 
+async def test_a_cancelled_sign_in_from_another_module_says_so(world: World) -> None:
+    """Agenda sends a signed-out browser back to sign in with its own address as `next`, so a
+    cancelled flow's marker reaches the organisers' card there; it says so and drops the marker."""
+    start = await world.client.post("/admin/sign-in", data={"next": "/agenda/?day=2"})
+    state = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
+    back = await world.client.get(
+        "/admin/sign-in/callback", params={"error": "access_denied", "state": state}
+    )
+    assert back.headers["location"] == "/agenda/?day=2&signin=cancelled"
+    page = await world.client.get("/admin/sign-in", params={"next": back.headers["location"]})
+    text = html.unescape(page.text)
+    assert page.status_code == 200 and "Discord was closed before it said yes." in text
+    assert '<input type=hidden name=next value="/agenda/?day=2">' in text
+    assert "signin=cancelled" not in text
+
+
 async def test_an_archived_event_offers_to_look_back(world: World) -> None:
     world.event["status"] = "archived"
     page = await world.client.get("/admin/sign-in")
@@ -106,10 +123,15 @@ async def test_signed_out_keeps_the_return_path(world: World) -> None:
 
 
 async def test_sign_out_clears_the_offline_copy(world: World) -> None:
-    """The offline page is kept with the shell of whoever was signed in (sw.js)."""
+    """The offline page is kept with the shell of whoever was signed in (sw.js), in Cache Storage,
+    which Clear-Site-Data's "storage" empties ("cache" is only the HTTP cache): on a shared phone
+    the next person must not see the last one's name and menu."""
+    sw = (await world.client.get("/admin/static/sw.js")).text
+    assert "caches.open(" in sw
     await world.sign_in("2002", "Aino")
     r = await world.client.post("/admin/sign-out")
-    assert r.headers["clear-site-data"] == '"cache"'
+    directives = {d.strip() for d in r.headers["clear-site-data"].split(",")}
+    assert directives == {'"cache"', '"storage"'}
 
 
 async def test_the_offline_page_keeps_the_shell(

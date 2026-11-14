@@ -2,7 +2,7 @@
 // design guideline sheet 13), handed to the main zone's Pulse as screens.mjs hands its other
 // views: the hero's features in turn with the thin line, a surge jumping the queue with the ring,
 // and two boxes that would turn together pushed three seconds apart.
-import { picture, TILES } from "./handed.mjs";
+import { GAME, TILES } from "./handed.mjs";
 
 const ago = (ms) => new Date(Date.now() - ms).toISOString();
 const feature = (widget, view, dwell) => ({
@@ -46,7 +46,7 @@ function features(s, dwell, since) {
     highlight: feature("countdown", { ...next, chip: null, highlight: true }, dwell),
     photo: feature("photo", { ...TILES[0], featured: false, featured_until: null, tiles: TILES }, dwell),
     today: feature("today_numbers", TODAY, dwell),
-    surge: feature("hot_game", { game: { id: "g_1", name: "Demo Game", cover_url: picture("#7c3aed", "#0ea5e9") }, players: 14, since }, dwell),
+    surge: feature("hot_game", { game: GAME, players: 14, since }, dwell),
   }; // prettier-ignore
 }
 

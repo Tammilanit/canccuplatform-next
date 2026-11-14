@@ -154,3 +154,18 @@ async def test_removing_someone_ends_their_sessions_and_role(store: AuthStore) -
         ("Aino", None),
         ("Olli", "owner"),
     ]
+
+
+async def test_a_removed_person_gets_no_role(store: AuthStore) -> None:
+    """A grant from a stale People tab after Remove elsewhere must not bring them back as Admin."""
+    await store.set_first_run_code("h", NOW)
+    owner = await store.claim_owner("d0", "Olli", "h", NOW)
+    assert owner is not None
+    aino = await store.upsert_user("d1", "Aino", NOW)
+    await store.remove_user(aino.id, NOW)
+    assert not await store.set_role(aino.id, "admin", owner.id, NOW)
+    assert await store.get_role(aino.id) == (aino, None)
+    # Signing in again brings them back without a role; then a grant holds.
+    await store.upsert_user("d1", "Aino", NOW + timedelta(hours=1))
+    assert await store.set_role(aino.id, "admin", owner.id, NOW)
+    assert await store.get_role(aino.id) == (aino, "admin")
