@@ -49,7 +49,9 @@ describe.skipIf(!DATABASE_URL)("the energy level", () => {
     h.clock.now = NOON;
     h.sources.agenda = { current: [], next: [] };
     h.sources.agendaItems = [];
+    h.sources.agendaDay = null;
     h.sources.theme = null;
+    h.settingsDown.value = false;
   });
 
   const motion = async () =>
@@ -77,6 +79,18 @@ describe.skipIf(!DATABASE_URL)("the energy level", () => {
 
   it("follows the day and names the next change within 24 hours", async () => {
     h.sources.agendaItems = [item("ceremony", NOON + 2 * H, NOON + 3 * H)];
+    const hall = (await motion()).zones.find((z) => z.key === "hall");
+    expect(hall?.next).toEqual({
+      level: "party",
+      phase: "peak",
+      at: new Date(NOON + 2 * H).toISOString(),
+    });
+  });
+
+  it("reads the run of show the screens keep, so the card says what they show", async () => {
+    // The screens' kept copy has the ceremony; a fresh read would not have it yet.
+    h.sources.agendaDay = [item("ceremony", NOON + 2 * H, NOON + 3 * H)];
+    h.sources.agendaItems = [];
     const hall = (await motion()).zones.find((z) => z.key === "hall");
     expect(hall?.next).toEqual({
       level: "party",
@@ -220,5 +234,32 @@ describe.skipIf(!DATABASE_URL)("the energy level", () => {
     expect(body).toContain("Right now: Hall is Calm (build-up).");
     expect(body).toMatch(/<option value="calm" selected[^>]*>Always Calm<\/option>/);
     expect(body).toContain("Save motion");
+  });
+
+  it("draws Zones and layouts from the defaults while admin's settings cannot be read", async () => {
+    h.settingsDown.value = true;
+    const res = await call(h, "GET", "/admin/screen/zones", { session: "admin" });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toContain('<h2 class="canccu-card__title">Motion</h2>');
+    expect(res.body).toContain('data-version="0"');
+    expect(res.body).toMatch(/value="lively"[^>]*checked/);
+  });
+});
+
+describe.skipIf(!DATABASE_URL)("a motion save on an app without admin's settings write", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await harness({ saves: false });
+  });
+  afterAll(async () => {
+    await h.close();
+  });
+
+  it("is refused as a request, not failed as a server error", async () => {
+    const res = await call(h, "PUT", "/api/screen/motion", {
+      session: "admin",
+      body: { settings_version: 0, motion_level: "calm", follow_the_day: true },
+    });
+    expect([res.statusCode, code(res)]).toEqual([403, "missing_right"]);
   });
 });

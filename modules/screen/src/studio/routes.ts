@@ -347,7 +347,13 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         const c = await context(request);
         const ctx = tenantOf(request);
         const [zones, all] = [await readZones(deps, ctx), await devices()];
-        const motion = await readMotion(deps, ctx.tenant_id, await heldSettings(deps.settings));
+        // Admin down with nothing held fails only the card's values: it draws the defaults, and a
+        // save from it meets admin's version check.
+        const held = await heldSettings(deps.settings).catch((err: unknown) => {
+          request.log.warn({ err }, "reading the screen settings for the Motion card failed");
+          return { settings_version: 0, values: {} };
+        });
+        const motion = await readMotion(deps, ctx.tenant_id, held);
         return page(request, reply, c, {
           title: "",
           tab: "zones",

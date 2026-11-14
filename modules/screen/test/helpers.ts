@@ -104,6 +104,8 @@ export interface Harness {
   settings: Record<string, Record<string, SettingValue>>;
   /** Screen's own settings written through admin (the Motion card). */
   settingsWrites: SettingsWrites;
+  /** Set to make reading Screen's own settings fail, as while admin is down and none are held. */
+  settingsDown: { value: boolean };
   /** tenant → admin's own settings (the event's `language`), as Studio reads them. */
   adminSettings: Record<string, Record<string, SettingValue>>;
   /** The fake storage quota: bytes per tenant, and the limit each gets (default 2 GiB). */
@@ -150,6 +152,8 @@ export interface FakeSources {
   agenda: AgendaNow | null;
   /** The whole run of show (`GET /internal/agenda/items`); null is "down". */
   agendaItems: AgendaItem[] | null;
+  /** The run of show as kept for the screens' agenda version (`agendaDay`); null when none is. */
+  agendaDay: AgendaItem[] | null;
   venue: VenueInfo | null;
   /** The hostnames the guest read (event) was made with. */
   hosts: string[];
@@ -176,8 +180,11 @@ export async function dropTables(admin: pg.Client): Promise<void> {
   );
 }
 
-/** A fresh schema per file, migrated by the module's own files, as at start. */
-export async function harness(): Promise<Harness> {
+/**
+ * A fresh schema per file, migrated by the module's own files, as at start. `saves: false` leaves
+ * out admin's settings write, as an app given none.
+ */
+export async function harness(options: { saves?: boolean } = {}): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
   // finally: a refused database must not leave the client open and hold the run.
@@ -213,6 +220,7 @@ export async function harness(): Promise<Harness> {
     event: null,
     agenda: null,
     agendaItems: null,
+    agendaDay: null,
     venue: null,
     hosts: [],
     tenants: [],
@@ -260,6 +268,7 @@ export async function harness(): Promise<Harness> {
   });
   const rights = new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin }));
   const settingsWrites: SettingsWrites = { versions: {}, values: {}, log: [] };
+  const settingsDown = { value: false };
   // Screen's held copy of what admin answered: like the kit's SettingsClient, a write through
   // admin reaches it only on load() (or admin's event, which the harness does not send).
   const heldVersions: Record<string, number> = {};
@@ -282,7 +291,8 @@ export async function harness(): Promise<Harness> {
     superadminHost: SUPERADMIN_HOST,
     health: createHealth({ module: "screen", version: "dev", checks: {} }),
     settings: {
-      ensure: () => Promise.resolve(),
+      ensure: () =>
+        settingsDown.value ? Promise.reject(new Error("admin is down")) : Promise.resolve(),
       get: (key: string, fallback: SettingValue) => settings[requireTenant()]?.[key] ?? fallback,
       get settingsVersion() {
         return heldVersions[requireTenant()] ?? 0;
@@ -293,7 +303,7 @@ export async function harness(): Promise<Harness> {
         return Promise.resolve();
       },
     },
-    writeSettings: fakeSettingsWrite(settingsWrites),
+    ...(options.saves === false ? {} : { writeSettings: fakeSettingsWrite(settingsWrites) }),
     adminSettings: {
       ensure: () => Promise.resolve(),
       get: (key: string, fallback: SettingValue) =>
@@ -321,6 +331,8 @@ export async function harness(): Promise<Harness> {
       event: (host) => answer(fake.hosts, host, fake.event),
       agendaNow: (tenantId) => answer(fake.tenants, tenantId, fake.agenda),
       agendaItems: (tenantId) => answer(fake.tenants, tenantId, fake.agendaItems),
+      // Not counted in `tenants`: the kept copy is no read of agenda.
+      agendaDay: () => Promise.resolve(fake.agendaDay),
       venueInfo: (tenantId) => answer(fake.tenants, tenantId, fake.venue),
       checkinCode: (_tenantId, purpose) => answer(fake.checkinReads, purpose, fake.checkin),
       checkinCount: (_tenantId, purpose) => answer(fake.countReads, purpose, fake.checkins),
@@ -355,6 +367,7 @@ export async function harness(): Promise<Harness> {
     clock,
     settings,
     settingsWrites,
+    settingsDown,
     adminSettings,
     storage,
     quota,

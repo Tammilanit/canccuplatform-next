@@ -4,10 +4,12 @@
  * level now and next.
  */
 import type { FastifyInstance } from "fastify";
+import { MissingRight } from "@canccu/kit";
 import type { RightsChecker } from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import type { Db } from "./db.js";
 import type { Sources } from "./compose/sources.js";
+import type { AgendaItem } from "./compose/widgets.js";
 import {
   MOTION_LEVELS,
   eventMotion,
@@ -111,6 +113,14 @@ export async function heldSettings(settings: Settings): Promise<SettingsDoc> {
   };
 }
 
+/**
+ * The run of show the screens keep for their agenda version, so "Right now" says what they show;
+ * read afresh only while none is kept (no screen has been drawn since the start).
+ */
+async function runOfShow(sources: Sources, tenantId: string): Promise<AgendaItem[] | null> {
+  return (await sources.agendaDay?.(tenantId)) ?? sources.agendaItems(tenantId);
+}
+
 /** Each zone's level and phase now and its next change, for the given settings. */
 export async function readMotion(
   deps: Pick<MotionDeps, "db" | "sources" | "now">,
@@ -123,7 +133,7 @@ export async function readMotion(
     pin: await readPin(c),
   }));
   const [items, theme] = await Promise.all([
-    deps.sources.agendaItems(tenantId),
+    runOfShow(deps.sources, tenantId),
     themeFor(deps.sources, tenantId, pin),
   ]);
   const event = eventMotion({ get: (k, f) => doc.values[k] ?? f });
@@ -173,7 +183,7 @@ export function motionRoutes(app: FastifyInstance, deps: MotionDeps): void {
       const input = motionInput(body(request));
       const actor = actorOf(request);
       if (deps.writeSettings === undefined || actor === null) {
-        throw new Error("the motion settings are written by a person through admin");
+        throw new MissingRight("The motion settings are saved by a person, through admin.");
       }
       await deps.settings.ensure();
       const before = {
