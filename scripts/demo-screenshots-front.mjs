@@ -244,11 +244,11 @@ const stale = SHOTS.some(([, path]) => path === STALE)
   ? { path: await code(), at: Date.now() }
   : undefined;
 try {
-  for (const [name, wanted, viewport, o] of SHOTS) {
+  for (const [name, listed, viewport, o] of SHOTS) {
     const host = o.host ?? DEMO_HOST;
     const context = await browser.newContext({ viewport });
     try {
-      let path = wanted;
+      let path = listed;
       if (path.startsWith(FRESH))
         path = (await code()) + path.slice(FRESH.length);
       if (path === STALE) {
