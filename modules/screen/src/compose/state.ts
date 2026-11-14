@@ -216,7 +216,7 @@ export async function composeZone(
     highlight: highlightOf(items, at.getTime()),
   };
   const build = (portrait: boolean): ZoneView => {
-    const once = (grow: boolean): ZoneView => {
+    const once = (showcase?: "grow" | "keep"): ZoneView => {
       const { layout, regions } = buildRegions({
         zone: {
           key: read.zone.key,
@@ -230,13 +230,15 @@ export async function composeZone(
         themeLayouts: themeLayouts(theme?.layouts),
         portrait,
         facts,
-        grow,
+        ...(showcase === undefined ? {} : { showcase }),
       });
       return { layout, ...placeClaims(regions, read.claims) };
     };
-    const plain = once(false);
-    // A claim's place follows roles alone, so the grown build places every claim as this one did.
-    return read.zone.grow_for_showcase && isShowcase(plain.regions) ? once(true) : plain;
+    const plain = once();
+    // A claim's place follows roles alone, so the second build places every claim as this one
+    // did. A showcase decides the hero's size; only without one does it fill the waiting boxes.
+    if (!isShowcase(plain.regions)) return plain;
+    return once(read.zone.grow_for_showcase ? "grow" : "keep");
   };
   let views = { landscape: build(false), portrait: build(true) };
   // The content widgets' sources are read only for a zone that shows them, so their changes

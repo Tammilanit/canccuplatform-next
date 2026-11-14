@@ -34,8 +34,11 @@ export interface BuildInput {
   themeLayouts: readonly Layout[];
   portrait: boolean;
   facts: ZoneFacts;
-  /** The hero grows for a showcase (src/compose/showcase.ts); the caller decides when. */
-  grow?: boolean;
+  /**
+   * A showcase plays in the hero (src/compose/showcase.ts, the caller decides): `grow`, the zone
+   * lets it grow; `keep`, it plays at its size. Absent: nothing is showcased.
+   */
+  showcase?: "grow" | "keep";
 }
 
 export interface WidgetView {
@@ -238,6 +241,22 @@ function filledByHero(
   return filled.length === kept.length ? filled : kept;
 }
 
+/**
+ * Who takes the room (contracts/screen.md, A showcase goes first): a showcase the zone lets grow
+ * grows the hero to the showcase size (sheet 10); one that plays at its size leaves the hero as
+ * it is, so the waiting boxes hand over, since giving it their cells would grow it after all; only
+ * without a showcase does the hero fill the waiting boxes' cells.
+ */
+function roomFor(
+  kept: readonly LayoutRegion[],
+  waiting: ReadonlySet<string>,
+  input: BuildInput,
+): readonly LayoutRegion[] {
+  if (input.showcase === "grow") return grown(kept, input.zone.regions);
+  if (input.showcase === "keep") return kept;
+  return filledByHero(kept, waiting, input);
+}
+
 export function buildRegions(input: BuildInput): { layout: Layout; regions: RegionView[] } {
   const layout = chooseLayout({
     windowLayoutId: input.windowLayoutId,
@@ -245,14 +264,13 @@ export function buildRegions(input: BuildInput): { layout: Layout; regions: Regi
     themeLayouts: input.themeLayouts,
     portrait: input.portrait,
   });
-  // The zone's boxes first, then the trade, then the waiting boxes leave, then the growth or, when
-  // the hero does not grow, the waiting boxes' hand-over; parts last (contracts/screen.md, Order).
+  // The zone's boxes first, then the trade, then the waiting boxes leave, then the hero grows or,
+  // when it does not, the waiting boxes' hand-over; parts last (contracts/screen.md, Order).
   const boxes = placedBoxes(layout, input.zone.layoutId, input.zone.regions);
   const swapped = traded(boxes, input.zone.regions, input.zone.heroRegion ?? null);
   const waiting = new Set(swapped.filter((r) => waits(r, input)).map((r) => r.id));
   const kept = swapped.filter((r) => !waiting.has(r.id));
-  const growth =
-    input.grow === true ? grown(kept, input.zone.regions) : filledByHero(kept, waiting, input);
+  const growth = roomFor(kept, waiting, input);
   const placed = growth !== kept ? growth : handedOver(swapped, waiting);
   const regions = placed.flatMap((r) => regionsOf(r, layout, input));
   return {

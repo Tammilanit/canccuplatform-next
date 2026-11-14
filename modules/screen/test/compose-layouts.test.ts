@@ -183,7 +183,7 @@ describe("the hero role", () => {
 
 describe("the showcase", () => {
   it("grows Dashboard's hero to 8×10, keeps the rail and one box beside it and pauses the rest", () => {
-    const grown = areas(build({ regions: DRAWN }, { grow: true }));
+    const grown = areas(build({ regions: DRAWN }, { showcase: "grow" }));
     expect(grown).toMatchObject({
       hero: at(1, 2, 8, 10),
       online: at(9, 2, 4, 5),
@@ -202,13 +202,13 @@ describe("the showcase", () => {
 
   it("keeps the first two boxes in layout order when none is a rail", () => {
     const regions = { ...DRAWN, rail: { role: "venue_rail" } };
-    const grown = areas(build({ regions }, { grow: true }));
+    const grown = areas(build({ regions }, { showcase: "grow" }));
     expect(grown).toMatchObject({ online: at(9, 2, 4, 5), voice: at(9, 7, 4, 5) });
     for (const id of ["rail", "top_games", "right_now"]) expect(grown).not.toHaveProperty(id);
   });
 
   it("grows a hero in the band's right half against its right edge", () => {
-    const grown = areas(build({ heroRegion: "voice", regions: DRAWN }, { grow: true }));
+    const grown = areas(build({ heroRegion: "voice", regions: DRAWN }, { showcase: "grow" }));
     expect(grown).toMatchObject({
       hero: at(5, 2, 8, 10),
       online: at(1, 2, 4, 5),
@@ -218,11 +218,11 @@ describe("the showcase", () => {
 
   it("grows no other built-in: their heroes leave no column free", () => {
     for (const layoutId of ["pulse", "hero", "split", "ambient"]) {
-      expect(areas(build({ layoutId }, { grow: true })), layoutId).toEqual(
+      expect(areas(build({ layoutId }, { showcase: "grow" })), layoutId).toEqual(
         areas(build({ layoutId })),
       );
     }
-    expect(areas(build({ layoutId: null }, { grow: true, portrait: true }))).toEqual(
+    expect(areas(build({ layoutId: null }, { showcase: "grow", portrait: true }))).toEqual(
       areas(build({ layoutId: null }, { portrait: true })),
     );
   });
@@ -244,7 +244,7 @@ describe("the showcase", () => {
     expect(isShowcase(regions)).toBe(false);
     expect(isShowcase(placeClaims(regions, [override]).regions)).toBe(true);
     // The claim keeps its place in the grown build: placement follows roles alone.
-    const grown = placeClaims(build({}, { grow: true }), [override]).regions;
+    const grown = placeClaims(build({}, { showcase: "grow" }), [override]).regions;
     expect(grown.find((r) => r.id === "hero")?.claim?.override_id).toBe("ov_1");
     const surging = regions.map(
       (r) =>

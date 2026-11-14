@@ -130,9 +130,17 @@ describe("a box waiting for its source", () => {
   });
 
   it("gives way to a showcase: the hero grows to 8×10 and the rail alone takes the 4×10", () => {
-    expect(areas(build({}, { grow: true }))).toMatchObject({
+    expect(areas(build({}, { showcase: "grow" }))).toMatchObject({
       hero: at(1, 2, 8, 10),
       rail: at(9, 2, 4, 10),
+    });
+  });
+
+  // A showcase decides the hero's size: filling the waiting cells would grow it after all.
+  it("hands over its cells while a showcase plays at its size, as the zone says", () => {
+    expect(areas(build({}, { showcase: "keep" }))).toMatchObject({
+      hero: at(1, 2, 12, 5),
+      rail: at(1, 7, 12, 5),
     });
   });
 
@@ -147,7 +155,7 @@ describe("a box waiting for its source", () => {
         { id: "online", area: at(7, 1, 6, 12), widgets: [{ widget: "stats" }] },
       ],
     };
-    const regions = build({ layoutId: "shallow" }, { grow: true, themeLayouts: [shallow] });
+    const regions = build({ layoutId: "shallow" }, { showcase: "grow", themeLayouts: [shallow] });
     expect(areas(regions)).toEqual({ hero: at(1, 1, 12, 12) });
   });
 });
