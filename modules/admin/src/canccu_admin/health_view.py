@@ -3,7 +3,7 @@ what it does, its status, what it says with a way on, its version, answer time a
 
 from __future__ import annotations
 
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from canccu_kit.ui import esc, time_label
 
@@ -35,7 +35,12 @@ DEVICES = f"{BASE}/screen/devices"
 
 
 def _clock(check: Check, zone: str) -> str:
-    return check.at.astimezone(ZoneInfo(zone)).strftime("%H:%M:%S")
+    # As the kit's time labels do: a zone this host doesn't know reads as UTC, not a 500.
+    try:
+        tz = ZoneInfo(zone)
+    except (ZoneInfoNotFoundError, ValueError):
+        tz = ZoneInfo("UTC")
+    return check.at.astimezone(tz).strftime("%H:%M:%S")
 
 
 def _says(part: Part, zone: str) -> str:

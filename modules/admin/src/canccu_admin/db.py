@@ -65,8 +65,8 @@ class Store(Protocol):
 
     async def get_profile(self) -> dict[str, Any] | None: ...
 
-    async def set_profile(self, document: dict[str, Any], loaded_by: str | None = None) -> None:
-        """Store the profile record; `loaded_by` (a user id) marks it as loaded now."""
+    async def set_profile(self, document: dict[str, Any], loaded_by: str) -> None:
+        """Store the profile record, loaded now by `loaded_by` (a user id)."""
 
     async def profile_loaded(self) -> tuple[datetime, str] | None:
         """When the profile was last loaded and by whom, or None if never."""
@@ -109,10 +109,9 @@ class MemoryStore:
     async def get_profile(self) -> dict[str, Any] | None:
         return self.profiles.get(require_tenant())
 
-    async def set_profile(self, document: dict[str, Any], loaded_by: str | None = None) -> None:
+    async def set_profile(self, document: dict[str, Any], loaded_by: str) -> None:
         self.profiles[require_tenant()] = document
-        if loaded_by is not None:
-            self.loads[require_tenant()] = (datetime.now(UTC), loaded_by)
+        self.loads[require_tenant()] = (datetime.now(UTC), loaded_by)
 
     async def profile_loaded(self) -> tuple[datetime, str] | None:
         return self.loads.get(require_tenant())
@@ -246,14 +245,13 @@ class PgStore:
             raw = await conn.fetchval("SELECT document FROM admin_tenant_profile")
         return json.loads(raw) if raw is not None else None
 
-    async def set_profile(self, document: dict[str, Any], loaded_by: str | None = None) -> None:
+    async def set_profile(self, document: dict[str, Any], loaded_by: str) -> None:
         async with self._tenant() as conn:
             await conn.execute(
                 "INSERT INTO admin_tenant_profile (document, loaded_at, loaded_by)"
-                " VALUES ($1::jsonb, CASE WHEN $2::text IS NULL THEN NULL ELSE now() END, $2)"
+                " VALUES ($1::jsonb, now(), $2)"
                 " ON CONFLICT (tenant_id) DO UPDATE SET document = EXCLUDED.document,"
-                " loaded_at = COALESCE(EXCLUDED.loaded_at, admin_tenant_profile.loaded_at),"
-                " loaded_by = COALESCE(EXCLUDED.loaded_by, admin_tenant_profile.loaded_by)",
+                " loaded_at = EXCLUDED.loaded_at, loaded_by = EXCLUDED.loaded_by",
                 json.dumps(document),
                 loaded_by,
             )

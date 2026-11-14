@@ -19,6 +19,8 @@ from .auth import ABSOLUTE, FLOW_LIFETIME, Auth, safe_return_path
 from .pages import BASE, event_of, front, page
 
 Authorize = Callable[[str | None, str], Awaitable[Session]]
+# The request's session when it holds the right (app.create_app's `need`); refuses otherwise.
+Need = Callable[[Request, str], Awaitable[Session]]
 OnEvent = Callable[[Event], Awaitable[None]]
 Viewer = Callable[[str | None], Awaitable[Session]]
 FLOW_COOKIE = "canccu_sign_in"

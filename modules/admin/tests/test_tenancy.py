@@ -177,7 +177,7 @@ async def test_store_refuses_work_without_a_tenant() -> None:
     with pytest.raises(NoTenant):
         await store.get_settings("screen")
     with pytest.raises(NoTenant):
-        await store.set_profile({"name": "x"})
+        await store.set_profile({"name": "x"}, loaded_by="u_1")
 
 
 async def test_events_go_to_the_tenants_own_stream(env: Env) -> None:
