@@ -40,6 +40,14 @@ async def test_the_list_needs_a_session_with_a_notify_right(env: Env) -> None:
     assert "in the last 24 hours" not in writer.text  # counts need notify.stats.read
 
 
+async def test_someone_without_any_role_goes_to_no_role_yet(env: Env) -> None:
+    """Signed in from here with no role at all: admin's "No role yet" says what to do."""
+    await env.register(schedule())
+    async with env.client() as c:
+        r = await c.get(LIST, headers=env.rights.sign_in("u_nobody"))
+    assert r.status_code == 303 and r.headers["location"] == "/admin/sign-in"
+
+
 async def test_sign_in_comes_back_to_the_page_that_asked(env: Env) -> None:
     async with env.client() as c:
         page = await c.get("/admin/topics/my topic/edit", params={"from": "list"})

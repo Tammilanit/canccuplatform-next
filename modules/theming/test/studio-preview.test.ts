@@ -48,7 +48,9 @@ describe.skipIf(!DATABASE_URL)("the Studio previews", () => {
     });
 
     it("need theming.theme.write", async () => {
-      expect((await as("/theming/studio/preview/screen", "member")).statusCode).toBe(403);
+      expect((await as("/theming/studio/preview/screen", "reader")).statusCode).toBe(403);
+      const noRole = await as("/theming/studio/preview/screen", "member");
+      expect(noRole.headers.location).toBe("/admin/sign-in");
       expect((await as("/theming/studio/preview/screen", "")).statusCode).toBe(303);
     });
 

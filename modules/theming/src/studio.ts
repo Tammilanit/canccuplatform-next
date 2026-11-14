@@ -6,7 +6,7 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { KitError, NotSignedIn, eventPageCsp, newNonce } from "@canccu/kit";
+import { KitError, MissingRight, NotSignedIn, eventPageCsp, newNonce } from "@canccu/kit";
 import { errorView, errorTitle, html, shellPage } from "@canccu/ui";
 import type { Slot } from "@canccu/ui";
 import { EMBEDS, WRITE, pageNeeds, positiveInt } from "./http.js";
@@ -113,6 +113,10 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
     // Pages answer pages: a browser without a session goes to sign in, a refusal is said in words.
     studio.setErrorHandler(async (err: FastifyError, request, reply) => {
       if (err instanceof NotSignedIn) return signIn(request, reply);
+      const session = request.session;
+      if (err instanceof MissingRight && session?.rights.size === 0 && !session.superadmin) {
+        return reply.redirect(SIGN_IN, 303); // admin's "No role yet" says what to do (sheet 3)
+      }
       // Right ids and the module's words for a refused page go to the log, not the page (B3).
       const known = err instanceof KitError;
       if (known) deps.log.info({ code: err.code, msg: err.message }, "a Studio page was refused");

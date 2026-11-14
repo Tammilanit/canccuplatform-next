@@ -330,7 +330,8 @@ class Auth:
             raise UnknownUser("no such user")
         if found[1] == "owner":
             raise BadRole("the owner's role cannot be changed")
-        await self.store.set_role(user_id, role, actor, self._now())
+        if not await self.store.set_role(user_id, role, actor, self._now()):
+            raise UnknownUser("no such user")  # removed: People no longer lists them
         return await self._rights_changed(user_id, role, actor)
 
     async def _rights_changed(self, user_id: str, role: str | None, actor: str) -> Event:

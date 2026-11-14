@@ -103,8 +103,9 @@ class AuthStore(Protocol):
 
     async def get_role(self, user_id: str) -> tuple[User, str | None] | None: ...
 
-    async def set_role(self, user_id: str, role: str | None, actor: str, now: datetime) -> None:
-        """Grant `admin` or remove the role; never touches the owner (the caller checks)."""
+    async def set_role(self, user_id: str, role: str | None, actor: str, now: datetime) -> bool:
+        """Grant `admin` or remove the role; never touches the owner (the caller checks).
+        False when a grant is refused because the person is removed."""
 
 
 def new_user_id() -> str:
@@ -287,9 +288,11 @@ class PgAuthStore:
             role = await conn.fetchval("SELECT role FROM admin_roles WHERE user_id = $1", user_id)
             if role == "owner":
                 return
+            # Marked first: that locks the row before the role goes, so set_role, which locks
+            # it too, either finishes before this delete or sees removed_at and refuses.
+            await conn.execute("UPDATE admin_users SET removed_at = $2 WHERE id = $1", user_id, now)
             await conn.execute("DELETE FROM admin_roles WHERE user_id = $1", user_id)
             await conn.execute("DELETE FROM admin_sessions WHERE user_id = $1", user_id)
-            await conn.execute("UPDATE admin_users SET removed_at = $2 WHERE id = $1", user_id, now)
 
     async def get_role(self, user_id: str) -> tuple[User, str | None] | None:
         row = await self._pool.fetchrow(
@@ -299,22 +302,31 @@ class PgAuthStore:
         )
         return None if row is None else (_user(row), row["role"])
 
-    async def set_role(self, user_id: str, role: str | None, actor: str, now: datetime) -> None:
+    async def set_role(self, user_id: str, role: str | None, actor: str, now: datetime) -> bool:
         if role is None:
             await self._pool.execute(
                 "DELETE FROM admin_roles WHERE user_id = $1 AND role <> 'owner'", user_id
             )
-            return
-        await self._pool.execute(
-            "INSERT INTO admin_roles (user_id, role, granted_at, granted_by)"
-            " VALUES ($1, $2, $3, $4) ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role,"
-            " granted_at = EXCLUDED.granted_at, granted_by = EXCLUDED.granted_by"
-            " WHERE admin_roles.role <> 'owner'",
-            user_id,
-            role,
-            now,
-            actor,
-        )
+            return True
+        async with self._pool.acquire() as conn, conn.transaction():
+            # Locks the person's row so a Remove in another tab cannot land between the check
+            # and the grant; a removed person comes back only by signing in again.
+            removed = await conn.fetchval(
+                "SELECT removed_at IS NOT NULL FROM admin_users WHERE id = $1 FOR UPDATE", user_id
+            )
+            if removed:
+                return False
+            await conn.execute(
+                "INSERT INTO admin_roles (user_id, role, granted_at, granted_by)"
+                " VALUES ($1, $2, $3, $4) ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role,"
+                " granted_at = EXCLUDED.granted_at, granted_by = EXCLUDED.granted_by"
+                " WHERE admin_roles.role <> 'owner'",
+                user_id,
+                role,
+                now,
+                actor,
+            )
+        return True
 
 
 OWNER_EXISTS = "SELECT EXISTS (SELECT 1 FROM admin_roles WHERE role = 'owner')"

@@ -75,6 +75,13 @@ const SHOTS = [
     PHONE,
     { cookie: NO_ROLE, text: "No role yet" },
   ],
+  // From another module's page (#474): no role at all lands on "No role yet", not "No access".
+  [
+    "agenda-no-role-phone",
+    "/agenda/",
+    PHONE,
+    { cookie: NO_ROLE, text: "No role yet" },
+  ],
   [
     "sign-in-archived",
     "/admin/sign-in",
