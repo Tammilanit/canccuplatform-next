@@ -22,6 +22,7 @@ from .ui_base import (
     esc,
     event_clock,
     icon,
+    local_time,
     logo,
     menu_for,
     sign_out_form,
@@ -47,6 +48,8 @@ __all__ = [
     "event_clock",
     "front_page",
     "icon",
+    "initials",
+    "local_time",
     "menu_for",
     "notice",
     "shell_page",
@@ -62,7 +65,9 @@ __all__ = [
 SHELL_SCRIPT = '<script src="/admin/static/shell.js" defer></script>'
 
 
-def _initials(name: str) -> str:
+def initials(name: str) -> str:
+    """The avatar's letters: the first of each of the first two words, `?` without any (as
+    packages/ui's `initials`)."""
     return "".join(w[0].upper() for w in name.split()[:2]) or "?"
 
 
@@ -104,7 +109,7 @@ def _menu(
     )
     user = (
         f'<div class="canccu-user"><span class="canccu-avatar" aria-hidden="true">'
-        f"{esc(_initials(viewer.user_name))}</span>{esc(viewer.user_name)}</div>"
+        f"{esc(initials(viewer.user_name))}</span>{esc(viewer.user_name)}</div>"
     )
     foot = user + sign_out_form("Sign out", "canccu-button canccu-button--ghost")
     return (

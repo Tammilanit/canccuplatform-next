@@ -9,10 +9,12 @@ or an image elsewhere must not check anyone in. Checking in is optional (D11).
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
+from typing import Any
 from urllib.parse import urlencode
 
-from canccu_kit import KitError, ip_in_cidrs, ui, venue_ip_check_active
+from canccu_kit import KitError, ip_in_cidrs, parse_time, ui, venue_ip_check_active
 from canccu_kit.access import TenantContext
 from canccu_kit.web_security import event_page_csp, new_nonce
 from starlette.requests import Request
@@ -96,11 +98,11 @@ async def _closed_or_early(
     closed. The rotating code already proves presence; this keeps an early scan from counting."""
     event = await event_of(request)
     ends = event.ends_at if event else None
-    if ctx["status"] == "archived" or (ends and now >= _parse(ends)):
+    if ctx["status"] == "archived" or (ends and now >= parse_time(ends)):
         return await _page(request, "Check-in has closed", views.closed(), status=status)
     starts = event.starts_at if event else None
-    if starts and now < _parse(starts):
-        card = views.not_open(_parse(starts), ctx["time_zone"])
+    if starts and now < parse_time(starts):
+        card = views.not_open(parse_time(starts), ctx["time_zone"])
         return await _page(request, "Check-in is not open yet", card, status=status)
     return None
 
@@ -120,10 +122,6 @@ async def _off_venue(
     ssid = next((w.get("ssid") for w in wifi if w.get("visibility") == "public"), None)
     card = views.off_venue(ssid, retry)
     return await _page(request, "Check in at the venue", card, status=status)
-
-
-def _parse(iso: str) -> datetime:
-    return datetime.fromisoformat(iso.replace("Z", "+00:00"))
 
 
 def _host(request: Request) -> str:
@@ -195,8 +193,13 @@ async def _check_in(request: Request, purpose: str, code: str, back: str) -> Res
         return await _page(request, "Not a member yet", card, status=403)
     at = _local_time(ctx, found["checked_in_at"])
     cookie, zone = request.headers.get("cookie"), ctx["time_zone"]
-    wifi = await d.hub.venue_wifi(_host(request), cookie) if d.hub else []
-    now = await d.hub.agenda_now(_host(request), cookie) if d.hub else None
+    wifi: list[dict[str, Any]] = []
+    now: dict[str, Any] | None = None
+    if d.hub:
+        # At once: each read may wait its whole timeout for a slow tenants or agenda.
+        wifi, now = await asyncio.gather(
+            d.hub.venue_wifi(_host(request), cookie), d.hub.agenda_now(_host(request), cookie)
+        )
     if created:
         card = views.done("You're checked in", f"Welcome! Checked in at {at}.", wifi, now, zone)
         return await _page(request, "You're checked in", card, status=201)

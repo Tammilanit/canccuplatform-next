@@ -124,7 +124,8 @@ def _from_venue(ctx: TenantContext, client_ip: str | None) -> bool:
     return venue is not None and ip_in_cidrs(client_ip, venue["addresses"])
 
 
-def _parse_time(value: str) -> datetime:
+def parse_time(value: str) -> datetime:
+    """An ISO 8601 time from a contract (`Z` or an offset); one without a zone reads as UTC."""
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
 
@@ -140,7 +141,7 @@ def venue_ip_check_active(ctx: TenantContext, now: datetime | None = None) -> bo
     if check["enabled"] or until is None:
         return True
     try:
-        end = _parse_time(until)
+        end = parse_time(until)
     except ValueError:
         return True
     return (now or datetime.now(UTC)) >= end

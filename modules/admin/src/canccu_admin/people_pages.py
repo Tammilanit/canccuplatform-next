@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
 from canccu_kit.rights import Session
-from canccu_kit.ui import day_label, empty_state, esc, icon, notice, time_label
+from canccu_kit.ui import day_label, empty_state, esc, icon, initials, notice, time_label
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import Route
@@ -42,10 +42,6 @@ COPY = (
 
 def _role_value(role: str | None) -> str:
     return role or "none"
-
-
-def _initials(name: str) -> str:
-    return "".join(w[0] for w in name.split()[:2]).upper() or "?"
 
 
 def last_here(at: datetime | None, now: datetime, time_zone: str) -> str:
@@ -91,7 +87,7 @@ def _row(person: Person, you: bool, seen: str) -> str:
     return (
         '<tr class="canccu-people__row"><td>'
         f'<a class="canccu-people__who" href="{PEOPLE}/{esc(user.id)}">'
-        f'<span class="canccu-avatar" aria-hidden="true">{esc(_initials(user.name))}</span>'
+        f'<span class="canccu-avatar" aria-hidden="true">{esc(initials(user.name))}</span>'
         f'<span class="canccu-people__names"><span class="canccu-people__name"'
         f' title="{esc(user.name)}">{esc(user.name)}</span>'
         f'<span class="canccu-people__handle">{handle}</span></span></a></td>'
@@ -260,7 +256,7 @@ def people_routes(auth: Auth, need: Need, on_event: OnEvent | None) -> list[Rout
         body = (
             '<section class="canccu-card canccu-person">'
             f'<div class="canccu-user"><span class="canccu-avatar" aria-hidden="true">'
-            f'{esc(_initials(user.name))}</span><span class="canccu-people__names">'
+            f'{esc(initials(user.name))}</span><span class="canccu-people__names">'
             f"<b>{esc(user.name)}</b>"
             f'<span class="canccu-people__handle">{esc(handle)}</span></span></div>'
             f'<p class="canccu-field__label">Role</p>{role_control(person)}'
