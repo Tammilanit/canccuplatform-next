@@ -12,14 +12,8 @@
 // The Director's strips (#447, director.mjs) are frames a few seconds apart.
 import { CLEAR_CHECKS, panelFilled } from "./clear.mjs";
 import { expect } from "./client.mjs";
-import {
-  boxesGivenAway,
-  graphsScaled,
-  statsApart,
-  stripNamesCountdown,
-  turnsSettled,
-} from "./dashboard.mjs";
-import { DIRECTOR_STRIPS, directorStrip, stripNames, withDirector } from "./director.mjs";
+import { boxesGivenAway, graphsScaled, statsApart, stripNamesCountdown } from "./dashboard.mjs";
+import { DIRECTOR_STRIPS, directorStrip, withDirector } from "./director.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
 import {
   CLAIM_OF,
@@ -40,80 +34,30 @@ import {
   stillOnline,
 } from "./handed.mjs";
 import { collectSamples, judgePage } from "./readability.mjs";
+import {
+  THEMES,
+  HD,
+  sizesOf,
+  UNTHEMED,
+  CLAIMS,
+  LAYOUTS,
+  landscapeOf,
+  NEW_VIEWS,
+  SURGE_MS,
+  STAGE_FADE_MS,
+  nameOf,
+} from "./screen-views.mjs";
+import {
+  layout,
+  railShowsAgenda,
+  tickerFitted,
+  emergencyIsRed,
+  railShowsIdle,
+  expiryLast,
+  settle,
+} from "./screen-waits.mjs";
 
-export const THEMES = ["terminal", "level-up", "default"];
-const HD = [
-  [1920, 1080],
-  [1080, 1920],
-];
-const UHD = [
-  [3840, 2160],
-  [2160, 3840],
-];
-// The merge queue's check (scripts/demo-screenshots --check) reads every theme at 1080p only.
-const sizesOf = (theme, check) => (theme === "default" && !check ? [...HD, ...UHD] : HD);
-/** The frames that differ by theme; the others are drawn before any theme reaches the page. */
-const THEMED = ["pulse", "identify", "offline", "unassigned", "archived"];
-const UNTHEMED = ["pairing", "refused", "moved", "unreachable", "check"];
-const CLAIMS = [
-  "claim-rail",
-  "claim-hero",
-  "claim-overlay",
-  "claim-takeover",
-  "claim-hero-emergency",
-];
-/** The built-ins besides the Pulse and Portrait: 16:9 each, so drawn landscape only. */
-const LAYOUTS = ["dashboard", "hero", "split", "ambient"];
-const landscapeOf = (theme, check) => sizesOf(theme, check).filter(([w, h]) => w > h);
-
-/** What each view of #443 must show (sheets 10, 13 and 16), waited for before its shot. */
-const NEW_VIEWS = {
-  photo: ".canccu-widget__wall .canccu-widget__tile:nth-child(5) img",
-  "photo-pop": ".canccu-widget__pop img",
-  "ambient-online": ".canccu-region--online .canccu-widget__still",
-  "portrait-right-now": ".canccu-region--right_now .canccu-widget__peak",
-};
-
-/** The surge's strip (sheet 15): before the tint, while it holds with its art, after it ended. */
-const SURGE_FRAMES = ["before", "during", "after"];
-/** How long the strip's tint holds, and the stage's longest fade (stage.css). */
-const SURGE_MS = 12_000;
-const STAGE_FADE_MS = 3000;
-
-const nameOf = (theme, view, [w, h]) => `theming-${theme}-screen-${view}-${w}x${h}`;
-
-/** Every PNG the run takes, in order, for the dry run. */
-export function planned(check = false) {
-  const out = [];
-  for (const theme of THEMES) {
-    for (const size of sizesOf(theme, check)) {
-      for (const view of THEMED) out.push(nameOf(theme, view, size));
-      if (theme !== "default") continue;
-      for (const view of UNTHEMED) out.push(nameOf(theme, view, size));
-    }
-    for (const size of landscapeOf(theme, check))
-      for (const view of LAYOUTS) out.push(nameOf(theme, view, size));
-    out.push(nameOf(theme, "dashboard-showcase", HD[0]));
-  }
-  out.push(nameOf("default", "dashboard-showcase-small", HD[0]));
-  out.push(nameOf("default", "dashboard-waiting", HD[0]));
-  out.push(nameOf("default", "ambient-takeover", HD[0]));
-  out.push(nameOf("default", "ambient-online", HD[0]));
-  for (const size of HD)
-    for (const view of ["photo", "photo-pop", "rail-empty", ...CLAIMS])
-      out.push(nameOf("default", view, size));
-  out.push(nameOf("default", "entrance", HD[1]));
-  out.push(nameOf("default", "pulse-one-screen", HD[0]));
-  out.push(nameOf("default", "portrait-right-now", HD[1]));
-  for (const { view, surge } of STAGE_VIEWS) {
-    if (!surge) out.push(nameOf("default", view, HD[0]));
-    else for (const f of SURGE_FRAMES) out.push(nameOf("default", `${view}-${f}`, HD[0]));
-  }
-  out.push(nameOf("default", "pulse-hero-art", HD[0]));
-  for (const { view, frames } of DIRECTOR_STRIPS)
-    out.push(...stripNames(nameOf("default", view, HD[0]), frames));
-  return out;
-}
+export { THEMES, planned } from "./screen-views.mjs";
 
 export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, check = false }) {
   await seedScreens(demo);
@@ -447,97 +391,4 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
   } finally {
     for (const device of devices) await demo.revoke(device.id);
   }
-}
-
-/** The layout of the screen's orientation is on the page (the heartbeat tells the server). */
-async function layout(page, [width, height]) {
-  await page.waitForFunction(
-    (portrait) => {
-      const el = document.querySelector(".canccu-layout");
-      const ratio = Number(el?.style.getPropertyValue("--canccu-layout-ratio"));
-      return el !== null && ratio > 0 && ratio < 1 === portrait;
-    },
-    height > width,
-    { timeout: 30_000 },
-  );
-}
-
-/**
- * The rail turns between the run of show and a countdown every 15 s (BUILT_IN_LAYOUTS); the shot
- * waits for the run of show, which mockup 02 draws there, so the hero's countdown is not shown twice.
- */
-async function railShowsAgenda(page) {
-  await page.waitForSelector(".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active", {
-    timeout: 40_000,
-  });
-}
-
-/**
- * The built-in ticker is never cut off (#442): every line that says it fits does, so one measured
- * off the page cannot pass. With `crawls`, where the demo's ticker is wider than its box, the line
- * crawls. A theme's own ticker template draws no built-in line and is left alone.
- */
-async function tickerFitted(page, crawls) {
-  const sel = ".canccu-widget--ticker .canccu-widget__line";
-  await page.waitForFunction(
-    (lines) => [...document.querySelectorAll(lines)].every((el) => el.dataset.fit !== undefined),
-    sel,
-    { timeout: 10_000 },
-  );
-  const lines = await page.$$eval(sel, (els) =>
-    els.map((el) => ({ fit: el.dataset.fit, cut: el.scrollWidth > el.clientWidth + 1 })),
-  );
-  if (lines.some((line) => line.fit === "fits" && line.cut))
-    throw new Error("the ticker's line is cut off: it was measured as fitting");
-  if (crawls && !lines.some((line) => line.fit === "crawl"))
-    throw new Error("the demo's long ticker does not crawl");
-}
-
-/**
- * An emergency wears its fixed red (claims.css) whatever the layout does to its cards, and in the
- * hero no theme band paints the theme's glows over it (stage.css).
- */
-async function emergencyIsRed(page, region) {
-  const sel = `.canccu-region--${region} > .canccu-widget--announcement`;
-  await page.waitForSelector(sel, { timeout: 30_000 });
-  const { background, band } = await page.$eval(sel, (card) => {
-    const theme = card.querySelector(".canccu-widget__band--theme");
-    return {
-      background: getComputedStyle(card).backgroundColor,
-      band: theme === null ? "none" : getComputedStyle(theme).display,
-    };
-  });
-  if (background !== "rgb(185, 28, 28)")
-    throw new Error(`the emergency in the ${region} region is ${background}, not its fixed red`);
-  if (band !== "none")
-    throw new Error(`the emergency in the ${region} region shows the theme's band`);
-}
-
-/** The rail shows its idle choice, on both of its turns: never the emptied run of show. */
-async function railShowsIdle(page) {
-  await page.waitForSelector(".canccu-region--rail > .canccu-widget--logo.canccu-is-active", {
-    timeout: 40_000,
-  });
-  if ((await page.$(".canccu-region--rail .canccu-widget--agenda_now")) !== null)
-    throw new Error("the rail drew its run of show without a row");
-  if ((await page.$(".canccu-region--rail .canccu-widget__zone")) !== null)
-    throw new Error("the rail's logo names the zone: a second header, not the event's card");
-}
-
-/** The pairing code's expiry is the frame's last line, under the instruction (mockup 05, sheet 9). */
-async function expiryLast(page) {
-  const [foot, lines] = await Promise.all(
-    [".canccu-frame__foot", ".canccu-frame--pairing .canccu-frame__bottom"].map((sel) =>
-      page.$eval(sel, (node) => node.getBoundingClientRect().toJSON()),
-    ),
-  );
-  if (foot.top < lines.bottom)
-    throw new Error("the pairing frame's expiry sits above its instruction");
-}
-
-/** Fonts and images loaded, the entry fade done, and no turn caught mid-crossfade (#535). */
-async function settle(page) {
-  await page.evaluate(() => document.fonts.ready);
-  await page.waitForTimeout(1500);
-  await turnsSettled(page);
 }
