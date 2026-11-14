@@ -79,6 +79,9 @@ async function surgingSince(page) {
  * (v8 rule 5: no empty band over a quarter of the large panel, #520).
  */
 export function emptiestBand(panel, parts) {
+  const height = panel.bottom - panel.top;
+  // Negated, so NaN fails too: a share of NaN would pass every bound.
+  if (!(height > 0)) throw new Error(`the panel has no height (${height} px)`);
   const spans = parts
     .map((p) => [Math.max(panel.top, p.top), Math.min(panel.bottom, p.bottom)])
     .filter(([top, bottom]) => bottom > top)
@@ -90,42 +93,109 @@ export function emptiestBand(panel, parts) {
     reached = Math.max(reached, bottom);
   }
   widest = Math.max(widest, panel.bottom - reached);
-  return widest / (panel.bottom - panel.top);
+  return widest / height;
 }
 
 /**
- * The hero's shown box leaves no empty band over a quarter of its height. What counts as drawn:
- * text, images and the art bands; a box that only grows (the when-row) does not, and neither does
- * the card's art, which sits behind the whole box.
+ * How far down a band stays opaque under its `mask-image` (stage.css: the theme band fades out
+ * from 45 % down), as a share of its height; none of it for a mask this cannot read, so a fade
+ * never passes as filled.
  */
+export function opaqueShare(mask) {
+  if (mask === "" || mask === "none") return 1;
+  const stop = /^linear-gradient\((?:180deg, |to bottom, )?rgb\(0, 0, 0\) ([\d.]+)%/.exec(mask);
+  return stop === null ? 0 : Number(stop[1]) / 100;
+}
+
+/**
+ * What of the hero's box counts as drawn, from the page's facts on each element: text, images
+ * and the art bands, the theme band only down to where its mask fades it out. A box that only
+ * grows (the when-row) does not count, nor the card's art behind the whole box, nor the motion
+ * layers (`canccu-fx-layer`), which sweep over all of it.
+ */
+export function drawnParts(elements) {
+  return elements.flatMap((e) => {
+    if (e.inArt || e.inFx || e.hidden) return [];
+    const band = e.classes.includes("canccu-widget__band");
+    if (!band && !e.leaf && !e.text) return [];
+    if (!e.classes.includes("canccu-widget__band--theme")) return [e.extent];
+    const { top, bottom } = e.extent;
+    return [{ ...e.extent, bottom: top + (bottom - top) * opaqueShare(e.mask) }];
+  });
+}
+
+/**
+ * The names of `texts` not drawn whole: running out of `box`, or clamped inside it. A clamp hides
+ * a line or more; less than half a letter over is the glyphs' own overhang at a tight line height.
+ */
+export function cutText(box, texts) {
+  return texts
+    .filter(
+      ({ extent: r, scrollHeight, clientHeight, fontSize }) =>
+        r.top < box.top - 1 ||
+        r.bottom > box.bottom + 1 ||
+        r.left < box.left - 1 ||
+        r.right > box.right + 1 ||
+        scrollHeight > clientHeight + fontSize / 2,
+    )
+    .map((t) => t.name);
+}
+
+/** The hero's shown box, the first of these found: a claim, else what its rotation shows. */
+const HERO = '.canccu-region[data-role="hero"] > .canccu-widget';
+const HERO_BOX = [`${HERO}.canccu-is-claim`, `${HERO}.canccu-is-active`, HERO];
+
+/** The hero's shown box leaves no empty band over a quarter of its height (drawnParts). */
 export async function panelFilled(page) {
-  const found = await page.evaluate(() => {
-    const hero = '.canccu-region[data-role="hero"] > .canccu-widget';
-    const box =
-      document.querySelector(`${hero}.canccu-is-claim`) ??
-      document.querySelector(`${hero}.canccu-is-active`) ??
-      document.querySelector(hero);
-    if (box === null) return null;
+  const found = await page.evaluate((heroBox) => {
+    const box = heroBox.map((s) => document.querySelector(s)).find((e) => e !== null);
+    if (box === undefined) return null;
     const extent = (e) => {
       const r = e.getBoundingClientRect();
       return { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
     };
-    const drawn = [...box.querySelectorAll("*")].filter(
-      (e) =>
-        e.closest(".canccu-widget__art") === null &&
-        getComputedStyle(e).visibility !== "hidden" &&
-        (e.matches(".canccu-widget__band") ||
-          e.childElementCount === 0 ||
-          [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim() !== "")),
-    );
-    return { name: box.className, panel: extent(box), parts: drawn.map(extent) };
-  });
+    const elements = [...box.querySelectorAll("*")].map((e) => ({
+      extent: extent(e),
+      classes: [...e.classList],
+      inArt: e.closest(".canccu-widget__art") !== null,
+      inFx: e.closest(".canccu-fx-layer") !== null,
+      hidden: getComputedStyle(e).visibility === "hidden",
+      leaf: e.childElementCount === 0,
+      text: [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim() !== ""),
+      mask: getComputedStyle(e).maskImage,
+    }));
+    return { name: box.className, panel: extent(box), elements };
+  }, HERO_BOX);
   if (found === null) throw new Error("the screen shows no hero box");
-  const share = emptiestBand(found.panel, found.parts);
+  const share = emptiestBand(found.panel, drawnParts(found.elements));
   if (share > 0.25)
     throw new Error(
       `the hero (${found.name}) leaves ${Math.round(share * 100)} % of its height empty in one band`,
     );
+}
+
+/** The hero's claim shows its title and body whole, as a showcase that does not grow must. */
+export async function showcaseWhole(page) {
+  const found = await page.evaluate((heroBox) => {
+    const box = heroBox.map((s) => document.querySelector(s)).find((e) => e !== null);
+    if (box === undefined) return null;
+    const extent = (e) => {
+      const r = e.getBoundingClientRect();
+      return { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+    };
+    const texts = ["title", "body"].flatMap((name) => {
+      const e = box.querySelector(`.canccu-widget__${name}`);
+      if (e === null) return [];
+      const { scrollHeight, clientHeight } = e;
+      const fontSize = parseFloat(getComputedStyle(e).fontSize);
+      return [{ name, extent: extent(e), scrollHeight, clientHeight, fontSize }];
+    });
+    return { box: extent(box), texts };
+  }, HERO_BOX);
+  if (found === null || found.texts.length < 2)
+    throw new Error("the hero shows no announcement with a title and a body");
+  const cut = cutText(found.box, found.texts);
+  if (cut.length > 0) throw new Error(`the small showcase cuts its ${cut.join(" and ")}`);
 }
 
 /** Each view's check, run once it has drawn. */
@@ -134,4 +204,5 @@ export const CLEAR_CHECKS = {
   "portrait-right-now": rightNowFits,
   "claim-hero": surgingSince,
   "dashboard-showcase": panelFilled,
+  "dashboard-showcase-small": showcaseWhole,
 };

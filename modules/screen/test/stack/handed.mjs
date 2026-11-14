@@ -238,6 +238,19 @@ export function withShowcase(s) {
   };
 }
 
+/**
+ * Dashboard's showcase in a zone that does not grow its hero (`grow_for_showcase: false`): the
+ * spotlight stays in the 4×5 hero beside the boxes, so its title, three lines or more at a grown
+ * hero's type, takes the claim's own type and leaves the body whole (#528).
+ */
+export function withSmallShowcase(s) {
+  const spotlight = claim("hero", "announcement", { title: "Grand final on the main stage", body: "Seats open 20:30 · bring your own headset", level: "info" }); // prettier-ignore
+  return {
+    ...s,
+    regions: s.regions.map((r) => (r.id === "hero" ? { ...r, claim: spotlight } : r)),
+  };
+}
+
 /** An emergency takeover over whatever layout the zone is on (contracts/screen.md, Claims). */
 export function withTakeover(s) {
   const [role, placed] = CLAIM_OF["claim-takeover"];

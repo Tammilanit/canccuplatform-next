@@ -110,8 +110,9 @@ describe("cutText", () => {
   const text = (name: string, top: number, bottom: number, clipped = false) => ({
     name,
     extent: at(91, top, 640, bottom),
-    scrollHeight: bottom - top + (clipped ? 40 : 0),
+    scrollHeight: bottom - top + (clipped ? 40 : 8),
     clientHeight: bottom - top,
+    fontSize: 40,
   });
 
   it("names a text that runs out of its box or is clamped short", () => {
@@ -121,6 +122,7 @@ describe("cutText", () => {
     ]);
   });
 
+  // Each text above overhangs its line box by 8 px, as a title at line height 1.05 does.
   it("passes texts drawn whole inside the box", () => {
     expect(cutText(box, [text("title", 200, 420), text("body", 430, 520)])).toEqual([]);
   });
