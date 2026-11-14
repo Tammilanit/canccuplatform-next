@@ -14,8 +14,8 @@ INSERT INTO admin_users (id, discord_id, name, handle, created_at, last_seen_at)
   FROM generate_series(1, 38) AS n
   ON CONFLICT (discord_id) DO NOTHING;
 INSERT INTO admin_users (id, discord_id, name, handle, created_at, last_seen_at) VALUES
-  ('u_demo_long', 'demo-long', 'Alexandria Vanderbilt-Montgomery of the Northern Crew',
-   'alexandria.vanderbilt.montgomery', now(), now() - interval '30 minutes'),
+  ('u_demo_long', 'demo-long', 'Player With A Very Long Display Name of the Northern Crew',
+   'player.with.a.very.long.display.name', now(), now() - interval '30 minutes'),
   ('u_demo_new', 'demo-new', 'Player Zero', 'player.zero', now(), now() - interval '1 minute')
   ON CONFLICT (discord_id) DO NOTHING;
 INSERT INTO admin_roles (user_id, role, granted_at)
