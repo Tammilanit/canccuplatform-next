@@ -17,6 +17,7 @@ import {
   runMigrations,
   serviceKeyFromEnv,
   tenantsStorage,
+  requireTenant,
   withTenant,
 } from "@canccu/kit";
 import { buildApp, screenHealth } from "./app.js";
@@ -34,6 +35,7 @@ import { keepBundles } from "./pins/store.js";
 import { pinTickRunner } from "./pins/tick.js";
 import { PLAYER_DIR } from "./player.js";
 import { REFRESH_MS } from "./push/hub.js";
+import type { PushHub } from "./push/hub.js";
 import { ValkeyFanout, ValkeyZoneStore } from "./push/store.js";
 import { renderLoop } from "./render/dispatch.js";
 import { ValkeyRenderQueue } from "./render/queue.js";
@@ -127,7 +129,14 @@ async function main(): Promise<void> {
   });
   const admin = new AdminClient(config.adminUrl);
   const rights = new RightsChecker(admin);
-  const settings = new SettingsClient(admin, config.module, { service });
+  // Set once the app is built: a settings change before then has no stream here to redraw.
+  const built: { hub?: PushHub } = {};
+  const settings = new SettingsClient(admin, config.module, {
+    service,
+    // The contract's "composes the zones again" (admin.settings.changed): now, with the values
+    // just read, not at the next zone refresh. It runs in the changed event's tenant scope.
+    onChange: () => built.hub?.settingsChanged(requireTenant()),
+  });
   // Admin's own settings hold the event's language, the one other module's settings screen reads
   // (contracts/admin.md, #394), so Studio's pages follow it.
   const adminSettings = new SettingsClient(admin, "admin", { service });
@@ -263,6 +272,7 @@ async function main(): Promise<void> {
     },
     { fromId: "0", rescanMs: 5000 },
   );
+  built.hub = app.pushHub;
   const refresh = setInterval(() => {
     void app.pushHub.refreshAll();
   }, REFRESH_MS);

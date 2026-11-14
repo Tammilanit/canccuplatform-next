@@ -10,7 +10,7 @@ import { loadAgendaItems } from "../content/agenda.js";
 import { healthOf } from "../health.js";
 import type { Settings } from "../health.js";
 import type { Kv } from "../kv.js";
-import type { Orientation, ZoneStore } from "../push/store.js";
+import type { CountSource, Orientation, ZoneStore } from "../push/store.js";
 import { resolveWinner } from "../schedule/winner.js";
 import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
@@ -136,8 +136,22 @@ export interface ZoneComposed {
   display: Display;
   /** When a content widget next changes by itself (epoch ms), or null. */
   nextChangeAt: number | null;
+  /** The counts its widgets read (ZoneRecord.counts). */
+  counts: CountSource[];
   /** Whether a preview's draft was drawn (PreviewLook.themeKey); `none` without one. */
   draft: DraftUse;
+}
+
+/**
+ * The counts the zone's widget types read: the graphs read the bot's, `stats` both. "Today in
+ * numbers" counts only at wind-down; the phase's change rebuilds the zone anyway.
+ */
+function countsOf(used: ReadonlySet<string>): CountSource[] {
+  const presence = ["stats", "activity_graph", "today_numbers"].some((t) => used.has(t));
+  return [
+    ...(presence ? ["presence" as const] : []),
+    ...(used.has("stats") ? ["checkins" as const] : []),
+  ];
 }
 
 /** The widget types a zone's regions show, in either orientation. */
@@ -244,7 +258,7 @@ export async function composeZone(
   // The content widgets' sources are read only for a zone that shows them, so their changes
   // (every frame, photo and code) never move another zone's version. The hub's view keeps only
   // `stats` of them (NOW_TYPES).
-  const entries = entriesOf(Object.values(views), read.zone.regions);
+  const entries = entriesOf(Object.values(views), read.zone);
   const used = typesOf(views);
   for (const e of entries) used.add(e.widget);
   if (!withContent) for (const type of used) if (type !== "stats") used.delete(type);
@@ -296,6 +310,7 @@ export async function composeZone(
     ticker: { ...read.ticker, appearance },
     display,
     nextChangeAt: changes.length === 0 ? null : Math.min(...changes),
+    counts: countsOf(used),
     draft,
   };
 }

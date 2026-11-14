@@ -3,11 +3,11 @@
  * pure function of the zone, the layout and what the sources said, so every screen of a zone
  * gets the same answer and the rules are tested without a stack.
  */
-import { placedBoxes } from "./boxes.js";
+import { boxWidgets, placedBoxes } from "./boxes.js";
 import type { Claim } from "./claims.js";
 import { directorOrder, jumpAt } from "./director.js";
 import { chooseLayout, roleOf } from "./layouts.js";
-import type { Area, Layout, LayoutRegion, Props, Role, WidgetEntry } from "./layouts.js";
+import type { Area, Layout, LayoutRegion, Props, Role } from "./layouts.js";
 import { partsOf } from "./parts.js";
 import { shuffled } from "./seeded.js";
 import type { HeaderMode, HubQrMode, Part } from "./parts.js";
@@ -116,16 +116,10 @@ export function shownAt(
 const idleOf = (setting: Record<string, unknown>): Idle =>
   IDLES.includes(setting.idle as Idle) ? (setting.idle as Idle) : "logo";
 
-/** The zone's widgets for a region, else the layout's. */
-const entriesOf = (source: LayoutRegion, input: BuildInput): WidgetEntry[] => {
-  const widgets = input.zone.regions[source.id]?.widgets;
-  return Array.isArray(widgets) ? (widgets as WidgetEntry[]) : source.widgets;
-};
-
 /** A box of statistics still waiting for its source (waiting.ts). */
 function waits(source: LayoutRegion, input: BuildInput): boolean {
   return isWaiting(
-    entriesOf(source, input),
+    boxWidgets(source, input.zone.regions),
     idleOf(input.zone.regions[source.id] ?? {}),
     (e) => viewOf(e.widget, e.props ?? {}, input.facts, e.embed ?? null).empty,
   );
@@ -134,7 +128,7 @@ function waits(source: LayoutRegion, input: BuildInput): boolean {
 /** A region as the zone sets it, drawn whole or as its parts. */
 function regionsOf(source: LayoutRegion, layout: Layout, input: BuildInput): RegionView[] {
   const setting = input.zone.regions[source.id] ?? {};
-  const entries = entriesOf(source, input);
+  const entries = boxWidgets(source, input.zone.regions);
   const role = roleOf(source.id, setting.role);
   const modes = {
     header: input.zone.header ?? layout.header ?? "separate",
