@@ -86,3 +86,22 @@ async def test_quick_add_takes_the_length_the_form_sets(env: Env) -> None:
     assert usual["ends_at"] == at(240)  # the template's 60 minutes
     assert talk["starts_at"] == at(240) and talk["ends_at"] == at(285)
     assert bad.status_code == 400 and "length" in bad.text and 'value="Odd"' in bad.text
+
+
+async def test_a_length_or_time_too_long_to_read_is_refused_not_a_crash(env: Env) -> None:
+    """int() refuses a string over 4300 digits with a ValueError, which the form does not catch
+    (#479): a crafted value must be dropped or refused like any other wrong one."""
+    h = env.writer()
+    huge = "9" * 5000
+    async with env.client() as c:
+        food = (await templates_of(c, h))["Food"]
+        form = {"what": food, "title": "Odd", "when": "at", "at": "19:00", "day": "2026-11-20"}
+        opened = await c.get(f"/add?at=19:00&minutes={huge}", headers=h)
+        length = await c.post("/add", data={**form, "minutes": huge}, headers=h)
+        other = await c.post("/add", data={**form, "length": "other", "minutes": huge}, headers=h)
+        time = await c.post("/add", data={**form, "at": huge}, headers=h)
+        assert await items(c, h) == []
+    assert opened.status_code == 200 and huge not in opened.text
+    assert length.status_code == 400 and "1 to 1440" in length.text
+    assert other.status_code == 400 and "1 to 1440" in other.text
+    assert time.status_code == 400 and "pick a time" in time.text

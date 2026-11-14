@@ -175,7 +175,7 @@ def _from_gap(request: Request) -> dict[str, str]:
     if _time(at) is not None:
         values.update(when="at", at=at)
     minutes = request.query_params.get("minutes", "")
-    if _length(minutes) is not None:
+    if templates.length(minutes) is not None:
         values["minutes"] = minutes
     return values
 
@@ -187,11 +187,6 @@ def _time(raw: str) -> time | None:
         return time.fromisoformat(raw)
     except ValueError:
         return None
-
-
-def _length(raw: str) -> int | None:
-    """Minutes, up to a day: a longer item is the full form's."""
-    return int(raw) if raw.isascii() and raw.isdigit() and 0 < int(raw) <= 1440 else None
 
 
 def _starts(form: FormData, day: date, now: datetime, tz: ZoneInfo) -> datetime:
@@ -222,9 +217,11 @@ def item_fields(
     raw = chip if chip not in ("", "other") else str(form.get("minutes") or "").strip()
     if chip == "other" and not raw:
         raise model.invalid("give the length in minutes, or pick one")
-    minutes = _length(raw) if raw else (template["minutes"] if template is not None else None)
+    minutes = (
+        templates.length(raw) if raw else (template["minutes"] if template is not None else None)
+    )
     if raw and minutes is None:
-        raise model.invalid("the length is in minutes, from 1 to 1440")
+        raise model.invalid(templates.LENGTH_RULE)
     if minutes:
         fields["ends_at"] = api_time(starts + timedelta(minutes=minutes))
     location = forms.opt_text(form, "location")
