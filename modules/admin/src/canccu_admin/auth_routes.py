@@ -232,8 +232,10 @@ def auth_routes(
     async def sign_out_page(request: Request) -> Response:
         await auth.sign_out(session_id(request))
         response = clear_session(RedirectResponse(f"{BASE}/sign-in", status_code=303))
-        # The service worker's offline page holds this person's menu (static/sw.js).
-        response.headers["Clear-Site-Data"] = '"cache"'
+        # The service worker's offline page holds this person's menu in Cache Storage
+        # (static/sw.js), which only "storage" empties; it also drops the worker, which the next
+        # signed-in page registers again (static/shell.js).
+        response.headers["Clear-Site-Data"] = '"cache", "storage"'
         return response
 
     async def offline_page(request: Request) -> Response:

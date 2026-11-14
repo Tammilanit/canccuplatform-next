@@ -121,10 +121,15 @@ async def test_signed_out_keeps_the_return_path(world: World) -> None:
 
 
 async def test_sign_out_clears_the_offline_copy(world: World) -> None:
-    """The offline page is kept with the shell of whoever was signed in (sw.js)."""
+    """The offline page is kept with the shell of whoever was signed in (sw.js), in Cache Storage,
+    which Clear-Site-Data's "storage" empties ("cache" is only the HTTP cache): on a shared phone
+    the next person must not see the last one's name and menu."""
+    sw = (await world.client.get("/admin/static/sw.js")).text
+    assert "caches.open(" in sw
     await world.sign_in("2002", "Aino")
     r = await world.client.post("/admin/sign-out")
-    assert r.headers["clear-site-data"] == '"cache"'
+    directives = {d.strip() for d in r.headers["clear-site-data"].split(",")}
+    assert directives == {'"cache"', '"storage"'}
 
 
 async def test_the_offline_page_keeps_the_shell(
