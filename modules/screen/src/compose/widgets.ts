@@ -3,7 +3,10 @@
  * Types whose source is not on main yet answer `empty` (plan S13) and are filled by their slice.
  */
 import qrcode from "qrcode-generator";
+import { graphFields, todayFields } from "./features.js";
+import type { Presence } from "./features.js";
 import type { Props } from "./layouts.js";
+import type { MotionPhase } from "./motion.js";
 import type { PlaylistView } from "./playing.js";
 import { wallKey, wallSettings } from "./photos.js";
 
@@ -37,6 +40,14 @@ export interface ZoneFacts {
   stats?: Record<string, unknown> | null;
   /** The theme's embeds (contracts/theming.md, Embeds). */
   embeds?: { name: string; frame_url: string }[];
+  /** The zone's day phase (Motion and burn-in drift): "Today in numbers" plays at wind-down. */
+  phase?: MotionPhase;
+  /** Tonight's highlight (features.ts, highlightOf); null: none ahead. */
+  highlight?: AgendaItem | null;
+  /** The graphs' hours and the peaks of the last 24 hours (stats.ts, presenceFacts). */
+  presence?: Presence | null;
+  /** Photos shared in the last 24 hours; absent while the wall is off or not read. */
+  photosToday?: number | null;
 }
 
 /** Notify's rotating code (contracts/notify.md, Check-in by the rotating QR). */
@@ -160,14 +171,22 @@ function agendaRows(facts: ZoneFacts): Record<string, unknown>[] {
     : [...rows(facts.agenda.current, "now", facts), ...rows(facts.agenda.next, "next", facts)];
 }
 
-/** The `countdown` view-model of `props.item_id`, else of the zone's next public item. */
-export function countdownFields(facts: ZoneFacts, itemId?: string): Record<string, unknown> | null {
+/**
+ * The `countdown` view-model of `given` (tonight's highlight), else of `props.item_id`, else of
+ * the zone's next public item.
+ */
+export function countdownFields(
+  facts: ZoneFacts,
+  itemId?: string,
+  given?: AgendaItem,
+): Record<string, unknown> | null {
   if (facts.agenda === null) return null;
   const all = publicOnly([...facts.agenda.current, ...facts.agenda.next]);
   const item =
-    itemId === undefined
+    given ??
+    (itemId === undefined
       ? publicOnly(facts.agenda.next)[0]
-      : all.find((i) => i.id === itemId && Date.parse(i.starts_at) > facts.now.getTime());
+      : all.find((i) => i.id === itemId && Date.parse(i.starts_at) > facts.now.getTime()));
   if (item === undefined) return null;
   // The Pulse hero's fields (contracts/screen.md, The Pulse hero). `game` stays null until Screen
   // reads tournament sessions and the games catalogue; `teams_left` until the tournament gives it.
@@ -221,8 +240,16 @@ function fields(
       const later = rows(facts.agenda?.later ?? [], "next", facts);
       return items.length === 0 ? null : { title: "Now and next", items, later };
     }
-    case "countdown":
-      return countdownFields(facts, typeof props.item_id === "string" ? props.item_id : undefined);
+    case "countdown": {
+      if (props.highlight !== true)
+        return countdownFields(facts, typeof props.item_id === "string" ? props.item_id : undefined);
+      const highlight = facts.highlight == null ? null : countdownFields(facts, undefined, facts.highlight);
+      return highlight === null ? null : { ...highlight, highlight: true };
+    }
+    case "today_numbers":
+      return todayFields(facts);
+    case "activity_graph":
+      return graphFields(props.metric, facts);
     case "venue_info": {
       if (facts.venue === null) return null;
       const wifi = facts.venue.wifi

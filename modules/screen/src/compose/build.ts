@@ -5,6 +5,7 @@
  */
 import { placedBoxes } from "./boxes.js";
 import type { Claim } from "./claims.js";
+import { directorOrder, jumpAt } from "./director.js";
 import { chooseLayout, roleOf } from "./layouts.js";
 import type { Area, Layout, LayoutRegion, Props, Role, WidgetEntry } from "./layouts.js";
 import { partsOf } from "./parts.js";
@@ -47,15 +48,19 @@ export interface WidgetView {
 }
 
 export type Idle = "logo" | "blank" | "collapse" | "next";
+export type Rotation = "sequence" | "shuffle" | "director";
+export type Indicator = "line" | "ring" | "off";
 
 export interface RegionView {
   id: string;
   role: Role | null;
   area: Area;
   layer: number;
-  rotation: "sequence" | "shuffle";
+  rotation: Rotation;
   order: number[];
   cycle_started_at: string;
+  /** How the screen shows the hero's turn (The Director). */
+  indicator: Indicator;
   idle: Idle;
   idle_view: { widget: "countdown"; view: View } | null;
   widgets: WidgetView[];
@@ -65,6 +70,8 @@ export interface RegionView {
 
 export const DEFAULT_DWELL_S = 15;
 const IDLES: readonly Idle[] = ["logo", "blank", "collapse", "next"];
+const ROTATIONS: readonly Rotation[] = ["sequence", "shuffle", "director"];
+const INDICATORS: readonly Indicator[] = ["line", "ring", "off"];
 
 const clampDwell = (value: unknown): number | undefined =>
   typeof value === "number" && Number.isInteger(value)
@@ -74,13 +81,18 @@ const clampDwell = (value: unknown): number | undefined =>
 /**
  * The widget a region shows at `nowMs`, or null when none takes part. A state's `order` is only
  * its own cycle's: later cycles follow the epoch, and a shuffle reshuffles each cycle with the
- * seed `region()` uses, as the player does between pushes (player/src/rotation.ts).
+ * seed `region()` uses, as the player does between pushes (player/src/rotation.ts). The Director
+ * plays a jump first, over the rotation running on underneath.
  */
 export function shownAt(
-  region: Pick<RegionView, "id" | "rotation" | "order" | "widgets">,
+  region: Pick<RegionView, "id" | "rotation" | "order"> & {
+    widgets: readonly Pick<WidgetView, "widget" | "dwell_seconds" | "view">[];
+  },
   zoneKey: string,
   nowMs: number,
 ): WidgetView | null {
+  const jump = region.rotation === "director" ? jumpAt(region.widgets, region.order, nowMs) : null;
+  if (jump !== null) return (region.widgets[jump.index] as WidgetView | undefined) ?? null;
   const dwellMs = (i: number): number => (region.widgets[i]?.dwell_seconds ?? 0) * 1000;
   // A shuffled order is a permutation of the plain one, which lists the widgets in place order.
   const plain =
@@ -93,7 +105,7 @@ export function shownAt(
   let end = cycle * cycleMs;
   for (const i of order) {
     end += dwellMs(i);
-    if (nowMs < end) return region.widgets[i] ?? null;
+    if (nowMs < end) return (region.widgets[i] as WidgetView | undefined) ?? null;
   }
   return null;
 }
@@ -163,7 +175,9 @@ function region(
     sequence.reduce((sum, i) => sum + (widgets[i] as WidgetView).dwell_seconds, 0) * 1000;
   const nowMs = input.facts.now.getTime();
   const cycle = cycleMs === 0 ? 0 : Math.floor(nowMs / cycleMs);
-  const rotation = setting.rotation === "shuffle" ? "shuffle" : "sequence";
+  // The hero's features are the Director's to pick (sheet 13), unless the zone says otherwise.
+  const rotation =
+    ROTATIONS.find((r) => r === setting.rotation) ?? (role === "hero" ? "director" : "sequence");
   const idle = idleOf(setting);
   const next = idle === "next" ? countdownFields(input.facts) : null;
   return {
@@ -175,8 +189,11 @@ function region(
     order:
       rotation === "shuffle"
         ? shuffled(sequence, `${input.zone.key}:${part.id}:${cycle}`)
-        : sequence,
+        : rotation === "director"
+          ? directorOrder(widgets, sequence)
+          : sequence,
     cycle_started_at: new Date(cycle * cycleMs).toISOString(),
+    indicator: INDICATORS.find((i) => i === setting.indicator) ?? "line",
     idle,
     idle_view:
       next === null
@@ -197,6 +214,7 @@ function synthetic(id: "_full" | "_overlay", layout: Layout, at: Date): RegionVi
     rotation: "sequence",
     order: [],
     cycle_started_at: new Date(Math.floor(at.getTime() / 1000) * 1000).toISOString(),
+    indicator: "off",
     idle: "blank",
     idle_view: null,
     widgets: [],

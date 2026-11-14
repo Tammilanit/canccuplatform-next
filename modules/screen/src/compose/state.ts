@@ -28,6 +28,7 @@ import type { MotionLevel } from "./motion.js";
 import { themeLayouts } from "./layouts.js";
 import type { Layout } from "./layouts.js";
 import { loadOverrides } from "./overrides.js";
+import { highlightOf } from "./features.js";
 import { isShowcase } from "./showcase.js";
 import type { HeaderMode, HubQrMode } from "./parts.js";
 import { readPin } from "../pins/store.js";
@@ -188,6 +189,15 @@ export async function composeZone(
   ]);
   const { theme, draft } = await lookFor(deps.sources, ctx.tenant_id, live, preview.themeKey);
   const eventName = event?.name ?? ctx.primary_hostname ?? "";
+  // The phase and the highlight come before the build: the hero's features read them.
+  const items = phaseSource((await deps.sources.agendaDay?.(ctx.tenant_id)) ?? null, agenda, zoneKey);
+  const { display, motion } = displayOf({
+    tokens: theme?.tokens,
+    items,
+    pin: read.zone.motion_level ?? null,
+    settings: deps.settings,
+    at: at.getTime(),
+  });
   const facts: ZoneFacts = {
     now: at,
     timeZone: ctx.time_zone,
@@ -198,6 +208,8 @@ export async function composeZone(
     venue,
     ticker: read.ticker,
     embeds: theme?.embeds ?? [],
+    phase: motion.phase,
+    highlight: highlightOf(items, at.getTime()),
   };
   const build = (portrait: boolean): ZoneView => {
     const once = (grow: boolean): ZoneView => {
@@ -237,13 +249,6 @@ export async function composeZone(
   }
   const setting = deps.settings.get("ticker_appearance", "default");
   const appearance = typeof setting === "string" ? setting : "default";
-  const { display, motion } = displayOf({
-    tokens: theme?.tokens,
-    items: phaseSource((await deps.sources.agendaDay?.(ctx.tenant_id)) ?? null, agenda, zoneKey),
-    pin: read.zone.motion_level ?? null,
-    settings: deps.settings,
-    at: at.getTime(),
-  });
   const { stage, covers } = await stageOf({
     views,
     phase: motion.phase,

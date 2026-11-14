@@ -7,7 +7,7 @@
 import type { Area, Layout, LayoutRegion } from "./layouts.js";
 
 /** The types whose source is the bot's presence data: the ones a box may wait for. */
-const STATISTICS = new Set(["stats", "now_playing"]);
+const STATISTICS = new Set(["stats", "now_playing", "activity_graph", "voice_rooms"]);
 
 /**
  * A waiting region: its widgets are all statistics and all empty, and its idle is `logo`. An

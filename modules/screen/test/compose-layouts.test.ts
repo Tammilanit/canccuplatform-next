@@ -97,8 +97,8 @@ describe("the built-in layouts", () => {
       ticker: at(1, 12, 12, 1),
     });
     expect(types(regions)).toMatchObject({
-      online: ["stats"],
-      voice: ["stats"],
+      online: ["activity_graph"],
+      voice: ["voice_rooms"],
       top_games: ["now_playing"],
       right_now: ["stats"],
       rail: ["agenda_now", "countdown"],
@@ -168,7 +168,7 @@ describe("the hero role", () => {
     expect(areas(regions)).toMatchObject({ hero: at(5, 2, 4, 5), online: at(1, 2, 4, 5) });
     // The widgets, settings and role travel with the region, not with the area.
     expect(regions.find((r) => r.id === "hero")?.role).toBe("hero");
-    expect(types(regions).online).toEqual(["stats"]);
+    expect(types(regions).online).toEqual(["activity_graph"]);
   });
 
   it("trades nothing for null, its own id, an unknown id or a header, ticker or backdrop", () => {
