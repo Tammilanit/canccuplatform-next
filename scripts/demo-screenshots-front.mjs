@@ -75,6 +75,13 @@ const SHOTS = [
     PHONE,
     { cookie: NO_ROLE, text: "No role yet" },
   ],
+  // From another module's page (#474): no role at all lands on "No role yet", not "No access".
+  [
+    "agenda-no-role-phone",
+    "/agenda/",
+    PHONE,
+    { cookie: NO_ROLE, text: "No role yet" },
+  ],
   [
     "sign-in-archived",
     "/admin/sign-in",
@@ -244,11 +251,11 @@ const stale = SHOTS.some(([, path]) => path === STALE)
   ? { path: await code(), at: Date.now() }
   : undefined;
 try {
-  for (const [name, wanted, viewport, o] of SHOTS) {
+  for (const [name, listed, viewport, o] of SHOTS) {
     const host = o.host ?? DEMO_HOST;
     const context = await browser.newContext({ viewport });
     try {
-      let path = wanted;
+      let path = listed;
       if (path.startsWith(FRESH))
         path = (await code()) + path.slice(FRESH.length);
       if (path === STALE) {

@@ -79,6 +79,8 @@ const SESSIONS: Record<string, string[]> = {
   admin: ["theming.theme.write"],
   embedder: ["theming.theme.write", "theming.embeds.write"],
   member: [],
+  // A role elsewhere, none here: "No access" rather than "No role yet".
+  reader: ["agenda.crew.read"],
 };
 
 function fakeTenants(url: string | URL | Request): Promise<Response> {

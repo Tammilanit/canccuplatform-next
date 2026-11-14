@@ -247,6 +247,10 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       if (err instanceof NotSignedIn) {
         return reply.redirect(`${SIGN_IN}?next=${encodeURIComponent(request.url)}`, 303);
       }
+      const session = request.session;
+      if (err instanceof MissingRight && session?.rights.size === 0 && !session.superadmin) {
+        return reply.redirect(SIGN_IN, 303); // admin's "No role yet" says what to do (sheet 3)
+      }
       // Right ids and the module's words for a refused page go to the log, not the page (B3).
       const known = err instanceof KitError;
       if (known) deps.log?.info({ code: err.code, msg: err.message }, "a Studio page was refused");

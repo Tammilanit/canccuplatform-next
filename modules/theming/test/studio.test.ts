@@ -46,8 +46,14 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       );
     });
 
-    it("answers a page saying why to a session without theming.theme.write", async () => {
+    it("sends someone without any role to admin's No role yet, not No access", async () => {
       const res = await page("/theming/studio/", "member");
+      expect(res.statusCode).toBe(303);
+      expect(res.headers.location).toBe("/admin/sign-in");
+    });
+
+    it("answers a page saying why to a session without theming.theme.write", async () => {
+      const res = await page("/theming/studio/", "reader");
       expect(res.statusCode).toBe(403);
       expect(res.headers["content-type"]).toMatch(/^text\/html/);
       expect(res.body).toContain("No access");

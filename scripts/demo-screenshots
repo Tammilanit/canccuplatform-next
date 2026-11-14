@@ -75,7 +75,7 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 MEDIA=modules/screen/test/fixtures/media
 mkdir -p "$work/scripts" "$work/$STACK" "$work/$MEDIA" "$work/events/demo/assets" "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
-cp scripts/demo-screenshots.mjs scripts/demo-screenshots-front.mjs scripts/demo-screenshots-groups.mjs "$work/scripts/" \
+cp scripts/demo-screenshots*.mjs "$work/scripts/" \
   && cp "$STACK"/*.mjs "$work/$STACK/" || exit 2
 # The Theme studio's draft takes the demo logo, as an organiser would upload it.
 cp events/demo/assets/logo.svg "$work/events/demo/assets/" || exit 2
@@ -118,6 +118,9 @@ if ! takes demo-screenshots.mjs ', --trouble)'; then exit "$status"; fi
 # check-in the front pass shows) for longer than admin's 10 s check. The pass asks for notify
 # back (the file start-notify) once its shots of the part down are taken, then follows Health
 # until the menu's note clears; notify starts again whatever the pass did.
+# Whatever ends the run from here (a failed pass, Ctrl-C, a cancelled CI job), notify starts
+# again: a stack left with a part down fails every later check against it.
+trap '"${COMPOSE[@]}" start notify >/dev/null; rm -rf "$work"' EXIT
 "${COMPOSE[@]}" stop notify >/dev/null || status=1
 sleep 15
 rm -f "$work/start-notify"

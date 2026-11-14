@@ -109,11 +109,14 @@ class MemoryAuthStore:
         user = self.users.get(user_id)
         return None if user is None else (user, self.roles.get(user_id))
 
-    async def set_role(self, user_id: str, role: str | None, actor: str, now: datetime) -> None:
+    async def set_role(self, user_id: str, role: str | None, actor: str, now: datetime) -> bool:
         if role is None:
             self.roles.pop(user_id, None)
-        else:
-            self.roles[user_id] = role
+            return True
+        if user_id in self.removed:
+            return False
+        self.roles[user_id] = role
+        return True
 
 
 def _by_name(user: User) -> str:
