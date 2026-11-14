@@ -45,22 +45,30 @@ export async function stripNamesCountdown(page) {
 }
 
 /**
- * The rail drawn whole: one widget, no fade running (#532). Mid-crossfade (player/src/screen.ts,
- * `enter`) the outgoing and incoming widgets lie on top of each other and the shot shows both.
+ * Every region drawn whole (#532, #535): none mid-crossfade (player/src/screen.ts, `enter`), where
+ * the outgoing and incoming widgets lie on top of each other and a shot shows both, and the rail,
+ * which turns on its own clock, one widget with nothing in it still moving: a fade or a
+ * motion-layer flap (player/src/motion.ts). Endless animations, a ticker's crawl or a spotlight's
+ * glow, never end and are part of the frame. A finished animation that fills forwards (a theme's
+ * `both`, the level-up demo's rise) stays in `getAnimations()` holding its last frame, so only a
+ * running one counts. Runs in the page, so it closes over nothing.
  */
-export async function railSettled(page) {
-  await page.waitForFunction(
-    () => {
-      const shown = [...document.querySelectorAll(".canccu-region--rail > .canccu-widget")];
-      return (
-        shown.length === 1 &&
-        !shown[0].matches(".canccu-slot--in, .canccu-slot--out") &&
-        shown[0].getAnimations().length === 0
-      );
-    },
-    null,
-    { timeout: 10_000 },
+export function drawnWhole(doc = document) {
+  if (doc.querySelector(".canccu-region > .canccu-slot--in, .canccu-region > .canccu-slot--out"))
+    return false;
+  const rail = doc.querySelector(".canccu-region--rail");
+  if (rail === null) return true;
+  const shown = [...rail.children].filter((el) => el.classList.contains("canccu-widget"));
+  if (shown.length > 1) return false;
+  const moving = shown[0]?.getAnimations({ subtree: true }) ?? [];
+  return moving.every(
+    (a) => a.playState !== "running" || a.effect?.getTiming().iterations === Infinity,
   );
+}
+
+/** Until `drawnWhole`: the last wait before every rail shot (screens.mjs, `settle`). */
+export async function turnsSettled(page) {
+  await page.waitForFunction(drawnWhole, undefined, { timeout: 10_000 });
 }
 
 /**

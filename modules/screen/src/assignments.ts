@@ -26,7 +26,8 @@ import type { Kv } from "./kv.js";
 import { keys } from "./push/store.js";
 import type { Fanout } from "./push/store.js";
 import { zoneKey } from "./zone-input.js";
-import { publishAll, releaseSound, seededFor, zoneExistsHere } from "./zones.js";
+import { releaseSound } from "./zone-sound.js";
+import { publishAll, seededFor, zoneExistsHere } from "./zones.js";
 import type { Emit } from "./zones.js";
 
 interface Target {

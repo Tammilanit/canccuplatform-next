@@ -10,6 +10,7 @@ import "./widgets.css";
 import "./rail.css";
 import "./claims.css";
 import "./layouts.css";
+import "./dashboard.css";
 import "./wall.css";
 import "./motion.css";
 import "./stage.css";

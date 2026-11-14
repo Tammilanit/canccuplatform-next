@@ -231,9 +231,7 @@ export function withShowcase(s) {
       if (i < 0) return [r];
       const area = { column: 9, row: 2 + 5 * i, columns: 4, rows: 5 };
       if (r.id !== "rail") return [{ ...r, area, widgets: r.widgets.map((w) => inBox(w, area)) }];
-      const countdown = r.widgets.findIndex((w) => w.widget === "countdown" && !w.view.empty);
-      if (countdown < 0) throw new Error("the demo Dashboard's rail has no countdown to show");
-      return [{ ...r, area, order: [countdown] }];
+      return [{ ...holdRail(r, "countdown", "countdown"), area }];
     }),
   };
 }
@@ -252,12 +250,19 @@ export function withSmallShowcase(s) {
     ...s,
     regions: s.regions.map((r) => {
       if (r.id === "hero") return { ...r, claim: spotlight };
-      if (r.id !== "rail") return r;
-      const agenda = r.widgets.findIndex((w) => w.widget === "agenda_now" && !w.view.empty);
-      if (agenda < 0) throw new Error("the demo Dashboard's rail has no run of show to show");
-      return { ...r, order: [agenda] };
+      return r.id === "rail" ? holdRail(r, "agenda_now", "run of show") : r;
     }),
   };
+}
+
+/**
+ * The rail held on its `pick` widget, so it never turns during the shot. Empty as the player
+ * takes it (`agendaOf`, player/src/hero-rail.ts): only `empty: true`, so the two cannot drift.
+ */
+function holdRail(r, pick, what) {
+  const i = r.widgets.findIndex((w) => w.widget === pick && w.view.empty !== true);
+  if (i < 0) throw new Error(`the demo Dashboard's rail has no ${what} to show`);
+  return { ...r, order: [i] };
 }
 
 /** An emergency takeover over whatever layout the zone is on (contracts/screen.md, Claims). */

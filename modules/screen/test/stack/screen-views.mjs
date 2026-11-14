@@ -1,0 +1,78 @@
+// The screen shots' views (screens.mjs): the themes and sizes each is taken at, and every PNG
+// name in the order the run takes them, for the dry run (scripts/demo-screenshots.mjs).
+import { DIRECTOR_STRIPS, stripNames } from "./director.mjs";
+import { STAGE_VIEWS } from "./handed.mjs";
+
+export const THEMES = ["terminal", "level-up", "default"];
+export const HD = [
+  [1920, 1080],
+  [1080, 1920],
+];
+export const UHD = [
+  [3840, 2160],
+  [2160, 3840],
+];
+// The merge queue's check (scripts/demo-screenshots --check) reads every theme at 1080p only.
+export const sizesOf = (theme, check) => (theme === "default" && !check ? [...HD, ...UHD] : HD);
+/** The frames that differ by theme; the others are drawn before any theme reaches the page. */
+export const THEMED = ["pulse", "identify", "offline", "unassigned", "archived"];
+export const UNTHEMED = ["pairing", "refused", "moved", "unreachable", "check"];
+export const CLAIMS = [
+  "claim-rail",
+  "claim-hero",
+  "claim-overlay",
+  "claim-takeover",
+  "claim-hero-emergency",
+];
+/** The built-ins besides the Pulse and Portrait: 16:9 each, so drawn landscape only. */
+export const LAYOUTS = ["dashboard", "hero", "split", "ambient"];
+export const landscapeOf = (theme, check) => sizesOf(theme, check).filter(([w, h]) => w > h);
+
+/** What each view of #443 must show (sheets 10, 13 and 16), waited for before its shot. */
+export const NEW_VIEWS = {
+  photo: ".canccu-widget__wall .canccu-widget__tile:nth-child(5) img",
+  "photo-pop": ".canccu-widget__pop img",
+  "ambient-online": ".canccu-region--online .canccu-widget__still",
+  "portrait-right-now": ".canccu-region--right_now .canccu-widget__peak",
+};
+
+/** The surge's strip (sheet 15): before the tint, while it holds with its art, after it ended. */
+export const SURGE_FRAMES = ["before", "during", "after"];
+/** How long the strip's tint holds, and the stage's longest fade (stage.css). */
+export const SURGE_MS = 12_000;
+export const STAGE_FADE_MS = 3000;
+
+export const nameOf = (theme, view, [w, h]) => `theming-${theme}-screen-${view}-${w}x${h}`;
+
+/** Every PNG the run takes, in order, for the dry run. */
+export function planned(check = false) {
+  const out = [];
+  for (const theme of THEMES) {
+    for (const size of sizesOf(theme, check)) {
+      for (const view of THEMED) out.push(nameOf(theme, view, size));
+      if (theme !== "default") continue;
+      for (const view of UNTHEMED) out.push(nameOf(theme, view, size));
+    }
+    for (const size of landscapeOf(theme, check))
+      for (const view of LAYOUTS) out.push(nameOf(theme, view, size));
+    out.push(nameOf(theme, "dashboard-showcase", HD[0]));
+  }
+  out.push(nameOf("default", "dashboard-showcase-small", HD[0]));
+  out.push(nameOf("default", "dashboard-waiting", HD[0]));
+  out.push(nameOf("default", "ambient-takeover", HD[0]));
+  out.push(nameOf("default", "ambient-online", HD[0]));
+  for (const size of HD)
+    for (const view of ["photo", "photo-pop", "rail-empty", ...CLAIMS])
+      out.push(nameOf("default", view, size));
+  out.push(nameOf("default", "entrance", HD[1]));
+  out.push(nameOf("default", "pulse-one-screen", HD[0]));
+  out.push(nameOf("default", "portrait-right-now", HD[1]));
+  for (const { view, surge } of STAGE_VIEWS) {
+    if (!surge) out.push(nameOf("default", view, HD[0]));
+    else for (const f of SURGE_FRAMES) out.push(nameOf("default", `${view}-${f}`, HD[0]));
+  }
+  out.push(nameOf("default", "pulse-hero-art", HD[0]));
+  for (const { view, frames } of DIRECTOR_STRIPS)
+    out.push(...stripNames(nameOf("default", view, HD[0]), frames));
+  return out;
+}

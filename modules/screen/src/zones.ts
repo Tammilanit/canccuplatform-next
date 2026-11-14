@@ -5,7 +5,6 @@
  */
 import { randomBytes } from "node:crypto";
 import type { FastifyInstance } from "fastify";
-import { requireTenant } from "@canccu/kit";
 import type { Bus, RightsChecker, SqlClient, TenantContext } from "@canccu/kit";
 import type { Audit } from "./audit.js";
 import type { Sources } from "./compose/sources.js";
@@ -24,6 +23,7 @@ import {
   zoneInUse,
 } from "./http.js";
 import { checkBoxes, zoneInput } from "./zone-input.js";
+import { checkSoundDevice, lockSoundDevice } from "./zone-sound.js";
 import type { ZoneInput } from "./zone-input.js";
 
 /** A bus event to publish once the transaction that caused it has committed. */
@@ -156,55 +156,6 @@ export const ZONE_USES: ZoneUse[] = [
       : `The break playlist "${name}" interrupts this zone. Take the zone off it first.`;
   },
 ];
-
-/**
- * Lock order for a sound device: its `devices` row first, as reassignment and revoke take it
- * (`FOR UPDATE`) before they touch its assignment row or a zone (`releaseSound`). A zone save
- * takes it (`FOR SHARE`) before its zone row, so the two serialise on the device and never
- * deadlock. Whichever goes second sees the first's commit: a waiting save re-reads the device's
- * placement and refuses it; a waiting reassignment's `releaseSound` sees and clears the id.
- */
-async function lockSoundDevice(c: SqlClient, deviceId: string | null): Promise<void> {
-  if (deviceId !== null) {
-    await c.query("SELECT 1 FROM devices WHERE id = $1 FOR SHARE", [deviceId]);
-  }
-}
-
-/** The sound device must be a device of this event assigned to this very zone. */
-async function checkSoundDevice(c: SqlClient, key: string, deviceId: string | null): Promise<void> {
-  if (deviceId === null) return;
-  const { rows } = await c.query(
-    `SELECT 1 FROM screen_assignments a JOIN devices d ON d.id = a.device_id
-     WHERE a.device_id = $1 AND a.zone_key = $2 AND d.current_tenant_id = $3 AND d.revoked_at IS NULL
-     FOR SHARE OF a, d`,
-    [deviceId, key, requireTenant()],
-  );
-  if (rows.length === 0) {
-    throw invalidRequest("`sound.device_id` must be a screen assigned to this zone.");
-  }
-}
-
-/**
- * Zones other than `keep` whose sound device is `deviceId` lose it: the device left them
- * (contracts/screen.md, No dangling references). Each is a saved zone with a new revision.
- */
-export async function releaseSound(
-  c: SqlClient,
-  deviceId: string,
-  keep: string | null,
-  actor: string | null,
-): Promise<Emit[]> {
-  const { rows } = await c.query(
-    `UPDATE screen_zones SET sound = jsonb_set(sound, '{device_id}', 'null'::jsonb),
-       revision = revision + 1, updated_at = now()
-     WHERE sound->>'device_id' = $1 AND key IS DISTINCT FROM $2 RETURNING key, revision`,
-    [deviceId, keep],
-  );
-  return rows.map((r) => [
-    "screen.zone.saved",
-    { zone_key: r.key, revision: r.revision, changed: ["sound"], actor_user_id: actor },
-  ]);
-}
 
 /** The event's zones by key, the event's first read seeding `main`; Studio's pages read it too. */
 export async function readZones(

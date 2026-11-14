@@ -6,3 +6,5 @@ interface Extent {
   bottom: number;
 }
 export function crowded(boxes: Extent[][], gap: number): string[];
+/** `doc` is the page's document (a DOM Document; the module has no DOM types). */
+export function drawnWhole(doc?: object): boolean;
