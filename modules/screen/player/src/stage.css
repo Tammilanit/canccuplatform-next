@@ -150,10 +150,18 @@
     --canccu-stage-phase-color: var(--canccu-color-background);
   }
 
-  /* The card: its art under a veil of the surface, behind the box's content. */
+  /*
+   * The card: its art under a veil of the surface, behind the box's content. A box in a region is
+   * positioned already (screen.css), so only its stacking is set here.
+   */
   .canccu-widget:has(> .canccu-widget__art) {
-    position: relative;
     isolation: isolate;
+  }
+
+  /* Out of a card's grid (the hot game's two columns): the whole box is its ground. */
+  .canccu-widget > .canccu-widget__art {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .canccu-widget__art {
