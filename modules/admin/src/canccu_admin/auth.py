@@ -20,7 +20,7 @@ from urllib.parse import urlsplit
 from canccu_kit import Bus, Event, KitError, NotSignedIn
 from canccu_kit.rights import Session
 
-from .auth_db import AuthStore, Flow, User
+from .auth_db import AuthStore, Flow, Person, User
 from .discord import Discord, DiscordFailed
 
 log = logging.getLogger("canccu.admin")
@@ -152,6 +152,9 @@ class Auth:
         # leave that cache at once, or a copied cookie keeps working after sign-out.
         self._on_session_end = on_session_end
 
+    def now(self) -> datetime:
+        return self._now()
+
     @property
     def public_origin(self) -> str | None:
         if not self.public_url:
@@ -213,6 +216,14 @@ class Auth:
         url = self.discord.authorize_url(state, challenge.rstrip(b"=").decode())
         return url, nonce
 
+    async def cancelled(self, state: str, nonce: str | None) -> str | None:
+        """Discord said no: uses up the flow and gives its return path, if this browser
+        started it (the nonce cookie), so the page it came from can say so."""
+        flow = await self.store.take_flow(digest(state), self._now()) if state else None
+        if flow is None or not nonce or not hmac.compare_digest(flow.nonce_hash, digest(nonce)):
+            return None
+        return flow.return_path
+
     async def finish(
         self, state: str, nonce: str | None, code: str, old_session: str | None
     ) -> tuple[str, User, str | None]:
@@ -233,9 +244,11 @@ class Auth:
                 "Discord did not confirm the sign-in", status=502, code="discord_failed"
             ) from exc
         if flow.claim_hash is None:
-            user = await self.store.upsert_user(who.id, who.name, now)
+            user = await self.store.upsert_user(who.id, who.name, now, who.handle)
         else:
-            claimed = await self.store.claim_owner(who.id, who.name, flow.claim_hash, now)
+            claimed = await self.store.claim_owner(
+                who.id, who.name, flow.claim_hash, now, who.handle
+            )
             if claimed is None:
                 raise FirstRunClosed("the first-run code was used or replaced meanwhile")
             user = claimed
@@ -293,6 +306,21 @@ class Auth:
     async def users(self) -> list[tuple[User, str | None]]:
         return await self.store.list_users()
 
+    async def people(self) -> list[Person]:
+        return await self.store.people()
+
+    async def remove(self, user_id: str, actor: str) -> Event:
+        """Signs them out at once and takes their role; the owner stays. Emits
+        admin.rights.changed with no rights, which also drops every module's cached answer."""
+        found = await self.store.get_role(user_id)
+        if found is None:
+            raise UnknownUser("no such user")
+        if found[1] == "owner":
+            raise BadRole("the owner cannot be removed")
+        await self.store.remove_user(user_id, self._now())
+        log.info("user %s removed by %s", user_id, actor)
+        return await self._rights_changed(user_id, None, actor)
+
     async def set_role(self, user_id: str, role: str | None, actor: str) -> Event:
         """Grant `admin` or remove it; the owner's role is fixed. Emits admin.rights.changed."""
         if role not in ("admin", None):
@@ -302,7 +330,11 @@ class Auth:
             raise UnknownUser("no such user")
         if found[1] == "owner":
             raise BadRole("the owner's role cannot be changed")
-        await self.store.set_role(user_id, role, actor, self._now())
+        if not await self.store.set_role(user_id, role, actor, self._now()):
+            raise UnknownUser("no such user")  # removed: People no longer lists them
+        return await self._rights_changed(user_id, role, actor)
+
+    async def _rights_changed(self, user_id: str, role: str | None, actor: str) -> Event:
         return await self.bus.publish(
             "admin.rights.changed",
             {

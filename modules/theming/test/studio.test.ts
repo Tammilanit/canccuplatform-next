@@ -46,8 +46,14 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       );
     });
 
-    it("answers a page saying why to a session without theming.theme.write", async () => {
+    it("sends someone without any role to admin's No role yet, not No access", async () => {
       const res = await page("/theming/studio/", "member");
+      expect(res.statusCode).toBe(303);
+      expect(res.headers.location).toBe("/admin/sign-in");
+    });
+
+    it("answers a page saying why to a session without theming.theme.write", async () => {
+      const res = await page("/theming/studio/", "reader");
       expect(res.statusCode).toBe(403);
       expect(res.headers["content-type"]).toMatch(/^text\/html/);
       expect(res.body).toContain("No access");
@@ -81,7 +87,11 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
         expect(res.headers["cache-control"]).toBe("no-store");
         expect(res.headers["x-content-type-options"]).toBe("nosniff");
         expect(res.body).toContain('<script src="/theming/studio/static/studio.js"');
+        expect(res.body).toContain('<script src="/theming/studio/static/studio-screen.js"');
       }
+      const script = await page("/theming/studio/static/studio-screen.js");
+      expect(script.statusCode).toBe(200);
+      expect(script.headers["content-type"]).toMatch(/^text\/javascript/);
     });
   });
 
@@ -280,6 +290,10 @@ describe.skipIf(!DATABASE_URL)("the Studio pages", () => {
       expect(body).toMatch(/<input[^>]*type="color"[^>]*data-hex-for="colors.text_muted"/);
       expect(body).toContain("Muted text");
       expect(body).toContain('name="sizes.radius"');
+      // The motion style's four choices (contracts/theming.md, Motion vocabulary).
+      for (const field of ["speed", "intensity", "spotlight", "pack"])
+        expect(body).toContain(`name="motion_style.${field}"`);
+      expect(body).toContain("Glow and tracing border");
       expect(body).toContain(`data-draft-version="${draft.draft_version}"`);
       expect(body).toContain("Ready to publish");
     });

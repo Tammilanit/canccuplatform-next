@@ -6,6 +6,7 @@ import {
   emptyState,
   errorView,
   frontPage,
+  initials,
   menuFor,
   notice,
   shellPage,
@@ -66,6 +67,12 @@ describe("shellPage", () => {
     }),
   );
 
+  it("links the event's admin tokens after ui.css, and the hub's own tokens on a front page (#432)", () => {
+    const tokens = doc.indexOf('href="/theming/current/admin-tokens.css"');
+    expect(doc.indexOf("/ui/ui.css")).toBeLessThan(tokens);
+    const front = s(frontPage({ title: "Check in", card: "", event: EVENT, surface: "hub" }));
+    expect(front).toContain('<link rel="stylesheet" href="/theming/current/tokens.css">');
+  });
   it("is phone-ready and escapes the event's name", () => {
     expect(doc).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
     expect(doc).toContain("Demo &lt;Event&gt;");
@@ -77,6 +84,22 @@ describe("shellPage", () => {
     );
     expect(doc).toMatch(/href="\/theming\/studio\/" aria-current="page">Brand kit/);
     expect(doc).not.toContain("/agenda/");
+  });
+  it("marks no menu item on an error page, which is nowhere in the menu", () => {
+    const error = s(
+      shellPage({
+        title: "Not found",
+        current: "theme",
+        session: ORGANISER,
+        body: "",
+        plain: true,
+      }),
+    );
+    expect(error).not.toContain("aria-current");
+  });
+  it("loads the offline fallback for a signed-in shell only", () => {
+    expect(doc).toContain('<script src="/admin/static/shell.js" defer></script>');
+    expect(s(shellPage({ title: "x", body: "" }))).not.toContain("shell.js");
   });
   it("shows who is signed in and signs out by POST", () => {
     expect(doc).toContain("Demo Organiser");
@@ -121,6 +144,41 @@ describe("shellPage", () => {
     );
     expect(archived).toContain(">Archived<");
     expect(archived).toContain("canccu-banner");
+  });
+  it("leaves Quick add out of the bar of an archived event", () => {
+    const writer = { userName: "W", rights: new Set(["agenda.items.write"]) };
+    const event = { ...EVENT, status: "archived" as const };
+    const archived = s(shellPage({ title: "x", event, session: writer, body: "" }));
+    expect(archived).not.toContain('href="/agenda/add"');
+    expect(archived).toContain('href="/agenda/"');
+  });
+  it("shows the event's logo, which is its initials without one (theming's /theming/logo)", () => {
+    expect(doc).toContain(
+      '<header class="canccu-header"><img class="canccu-header__logo" src="/theming/logo" alt="">',
+    );
+    const bare = s(shellPage({ title: "x", body: "" }));
+    expect(bare).not.toContain("canccu-header__logo");
+  });
+  it("shows three sub-page tabs on a phone and the rest behind a count", () => {
+    const tabs = ["Live", "Devices", "Zones", "Schedule", "Content", "Ticker"].map((label) => ({
+      href: `/s/${label}`,
+      label,
+      current: label === "Content",
+    }));
+    const page = s(shellPage({ title: "Studio", session: ORGANISER, tabs, body: "" }));
+    const nav = /<nav class="canccu-tabs".*?<\/nav>/.exec(page)?.[0] ?? "";
+    // The current tab stays among the three a phone shows.
+    for (const shown of ["Live", "Devices", "Content"]) {
+      expect(nav).toMatch(new RegExp(`<a href="/s/${shown}"[^>]*>${shown}</a>`));
+    }
+    for (const extra of ["Zones", "Schedule", "Ticker"]) {
+      expect(nav).toContain(`<a class="canccu-tabs__extra" href="/s/${extra}">${extra}</a>`);
+    }
+    expect(nav).toContain('popovertarget="canccu-tabs-more">3 more</button>');
+    const more = nav.slice(nav.indexOf('id="canccu-tabs-more"'));
+    expect(more).toContain('<a href="/s/Zones">Zones</a>');
+    const two = s(shellPage({ title: "x", session: ORGANISER, tabs: tabs.slice(0, 3), body: "" }));
+    expect(two).not.toContain("canccu-tabs__more");
   });
 });
 
@@ -176,7 +234,16 @@ describe("parts", () => {
   it("front page", () => {
     expect(
       s(frontPage({ title: "Sign in", event: EVENT, card: html`<h1>Sign in</h1>`, now: NOW })),
-    ).toContain('class="canccu-poster__name">Demo &lt;Event&gt;');
+    ).toContain(
+      '<div class="canccu-poster"><img class="canccu-poster__logo" src="/theming/logo" alt=""><div class="canccu-poster__name">Demo &lt;Event&gt;',
+    );
+  });
+  it("front page with the privacy tag as the page's last child", () => {
+    const doc = s(frontPage({ title: "Check in", card: "", privacy: "/notify/privacy" }));
+    expect(doc).toContain(
+      '<a class="canccu-privacy-link" href="/notify/privacy">Privacy</a>\n</body>',
+    );
+    expect(doc).toContain("canccu-front--privacy");
   });
 });
 
@@ -187,5 +254,22 @@ describe("time", () => {
   it("names both days of a range in one month once", () => {
     expect(dateRange(EVENT)).toBe("Sat 14 – Sun 15 Mar");
     expect(dateRange({ ...EVENT, endsAt: "2026-04-02T10:00:00Z" })).toBe("Sat 14 Mar – Thu 2 Apr");
+  });
+});
+
+describe("initials", () => {
+  it("takes the first letter of each of the first two words, upper-cased", () => {
+    expect(initials("  demo   event night ")).toBe("DE");
+    expect(initials("solo")).toBe("S");
+    expect(initials("   ")).toBe("?");
+  });
+
+  it("takes whole characters, so an emoji or an astral letter is never cut in half", () => {
+    expect(initials("\u{1F389} party")).toBe("\u{1F389}P");
+    expect(initials("\u{10428}\u{10429} x")).toBe("\u{10400}X");
+  });
+
+  it("leaves escaping to the page, which draws them as text", () => {
+    expect(initials("<a> & b")).toBe("<&");
   });
 });

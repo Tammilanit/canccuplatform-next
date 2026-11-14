@@ -76,10 +76,14 @@ describe("the screen's stylesheet", () => {
     expect(rules).not.toMatch(/var\(--canccu-ink-/);
   });
 
-  it("draws a QR glyph where a code has no image, never a blank square (#414)", () => {
-    // A mirror's or preview's check-in widget is a sample without its code (contracts/screen.md,
-    // A zone for a session), so its image has no `src`.
-    const rule = /\.canccu-widget__code:not\(\[src\]\)\s*\{([^}]*)\}/.exec(rules);
+  it("draws a QR glyph where a mirror's or preview's code has no image, never a blank square (#414)", () => {
+    // A session's mirror or preview of a zone gets its check-in widget as a sample without its code
+    // (contracts/screen.md, A zone for a session): the zone page (`data-page="zone"`) draws it.
+    // A kiosk's code without an image stays blank, so a broken live code never passes for one.
+    const rule = /\[data-page="zone"\] \.canccu-widget__code:not\(\[src\]\)\s*\{([^}]*)\}/.exec(
+      rules,
+    );
+    expect(rules).not.toMatch(/(^|[{},])\s*\.canccu-widget__code:not\(\[src\]\)/m);
     expect(rule).not.toBeNull();
     const data = /url\("data:image\/svg\+xml,([^"]+)"\)/.exec(rule?.[1] ?? "");
     expect(data).not.toBeNull();
@@ -89,5 +93,23 @@ describe("the screen's stylesheet", () => {
     // The three finder squares that make it read as a QR at a glance, drawn dark on the white card.
     expect(svg.match(/<path [^>]*fill="#[0-9a-f]{3,6}"/g)?.length).toBeGreaterThanOrEqual(1);
     expect(svg.match(/M\d+ \d+h7v7h-7z/g)?.length).toBe(3);
+  });
+
+  it("lets the statistics row take the box's free height, against screen.css's list reset", () => {
+    // `.canccu-widget ul { margin: 0 }` (0,1,1) beat a bare `.canccu-widget__stats` (0,1,0).
+    const rule = /(^|\})\s*\.canccu-widget \.canccu-widget__stats\s*\{([^}]*)\}/.exec(rules);
+    expect(rule?.[2]).toContain("margin: auto 0;");
+    expect(css).toMatch(/\.canccu-widget ul,[^{]*\{[^}]*margin: 0;/);
+  });
+
+  it("keeps a popped photo out of the clear band its rotation marks sit in (change 6)", () => {
+    const wall = read("wall.css").replace(/\/\*[\s\S]*?\*\//g, "");
+    const band =
+      /\.canccu-region > \.canccu-widget--photo\s*\{[^}]*padding: [^;]* (calc\([^;]*\));/.exec(
+        wall,
+      )?.[1];
+    expect(band).toBe("calc(7 * var(--canccu-u))");
+    const pop = /\.canccu-widget__pop\s*\{[^}]*inset: ([^;]*);/.exec(wall)?.[1];
+    expect(pop).toBe(`0 0 ${band ?? ""}`);
   });
 });

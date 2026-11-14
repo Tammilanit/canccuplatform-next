@@ -24,8 +24,12 @@ export interface StreamRequest extends FeedRequest {
   lastEventId: string | undefined;
 }
 
+/** A preview's draft key is read again at least this often. */
+const DRAFT_READ_MS = 60_000;
+
 export class DeviceStream extends Feed<StreamRequest> {
   private stopDevice: (() => void) | undefined;
+  private draftReadAt = 0;
 
   get deviceId(): string {
     return this.req.device.id;
@@ -104,6 +108,22 @@ export class DeviceStream extends Feed<StreamRequest> {
     return { ok: true, changed };
   }
 
+  /**
+   * Whether the preview this stream draws has ended by itself, its draft key died (a publish, a
+   * discard, 12 hours), or a draft that could not be read when it was composed answers now, read
+   * at least once a minute (contracts/screen.md, When the draft key dies). A lost preview notice
+   * is caught up here too: the next place reads the row again.
+   */
+  private async previewMoved(nowMs: number): Promise<boolean> {
+    const preview = this.preview;
+    if (preview === null) return false;
+    if (nowMs >= preview.endsAt) return true;
+    if (preview.themeKey === null || nowMs - this.draftReadAt < DRAFT_READ_MS) return false;
+    this.draftReadAt = nowMs;
+    const read = await this.deps.sources.themePreview(this.tenant, preview.themeKey);
+    return read === "gone" || (read !== null && !preview.drawn);
+  }
+
   /** After the event's status or venue check changed: refused screens go, the rest redraw. */
   override refresh(): Promise<void> {
     return this.enqueue(async () => {
@@ -118,6 +138,10 @@ export class DeviceStream extends Feed<StreamRequest> {
     if (!ok) return;
     this.write({ event: "ping", data: { time: new Date(nowMs).toISOString() } });
     await this.seen();
+    if (await this.previewMoved(nowMs)) {
+      await this.place(undefined);
+      return;
+    }
     // The first heartbeat, with the viewport, may come after the stream opened.
     const portrait = await isPortrait(this.deps.kv, this.deviceId, nowMs);
     if (changed || (portrait ? "portrait" : "landscape") !== this.orientation) {

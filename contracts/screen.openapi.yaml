@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Screen API
-  version: 1.5.0
+  version: 1.7.0
   summary: Devices, zones, the composed screen state and its push channel, content, scheduling and the PPTX and PDF render job.
   description: |
     Machine-readable part of the screen contract. Prose, widgets, claims, the Pulse options and events: contracts/screen.md.
@@ -37,7 +37,7 @@ tags:
   - name: ticker
     description: The manual ticker and its windows.
   - name: photos
-    description: The photo carousel.
+    description: The photo wall.
   - name: clone
     description: Copying screen content from another event of the series.
 security:
@@ -88,6 +88,10 @@ paths:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1devices~1{device_id}~1assignment"
   /api/screen/devices/{device_id}/commands:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1devices~1{device_id}~1commands"
+  /api/screen/devices/{device_id}/preview:
+    $ref: "screen/devices.openapi.yaml#/~1api~1screen~1devices~1{device_id}~1preview"
+  /api/screen/previews:
+    $ref: "screen/devices.openapi.yaml#/~1api~1screen~1previews"
   /api/screen/registry/devices:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1registry~1devices"
   /api/screen/registry/devices/{device_id}:
@@ -104,6 +108,8 @@ paths:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1zones~1{zone_key}~1stream"
   /api/screen/now:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1now"
+  /api/screen/motion:
+    $ref: "screen/devices.openapi.yaml#/~1api~1screen~1motion"
   /api/screen/pin:
     $ref: "screen/devices.openapi.yaml#/~1api~1screen~1pin"
   /api/screen/assets:
@@ -118,6 +124,8 @@ paths:
     $ref: "screen/content.openapi.yaml#/~1api~1screen~1assets~1{asset_id}~1revert"
   /api/screen/files/{file}:
     $ref: "screen/content.openapi.yaml#/~1api~1screen~1files~1{file}"
+  /api/screen/art/{art}:
+    $ref: "screen/content.openapi.yaml#/~1api~1screen~1art~1{art}"
   /api/screen/renders/{asset_id}/{asset_version}/{slide}:
     $ref: "screen/content.openapi.yaml#/~1api~1screen~1renders~1{asset_id}~1{asset_version}~1{slide}"
   /api/screen/playlists:
@@ -610,8 +618,15 @@ components:
             $ref: "#/components/schemas/WidgetEntry"
         rotation:
           type: string
-          enum: [sequence, shuffle]
-          default: sequence
+          description: |
+            `director`: the Director picks the features (contracts/screen.md, The Director). Without the setting, a region
+            whose role is `hero` rotates by `director` and any other by `sequence`.
+          enum: [sequence, shuffle, director]
+        indicator:
+          type: string
+          description: How a hero region's screens show its turn (contracts/screen.md, The Director).
+          enum: [line, ring, "off"]
+          default: line
         dwell_seconds:
           type: integer
           minimum: 5
@@ -623,7 +638,8 @@ components:
           type: string
           description: |
             `next`: the zone's next run-of-show item with a big countdown, else the logo (contracts/screen.md, The Pulse options).
-            With `logo`, set or left at the default, a region of only `stats` and `now_playing` that are all empty gives
+            With `logo`, set or left at the default, a region of only statistics (`stats`, `now_playing`, `activity_graph`,
+            `voice_rooms`) that are all empty gives
             its cells to the regions beside it instead (contracts/screen.md, Boxes waiting for their source).
           enum: [logo, blank, collapse, next]
           default: logo
@@ -698,6 +714,13 @@ components:
           description: |
             `always`: the hub QR (a `qr` widget with `props.url` `/notify/`) has a fixed place beside its region's
             rotating widgets; `rotate`: it is one of them (contracts/screen.md, Header and hub QR).
+        screen_name:
+          type: string
+          enum: [auto, always, never]
+          default: auto
+          description: |
+            Whether the header shows the zone's name: `auto` while the event has two or more screens (devices assigned
+            to a zone or mirroring one), `always`, or `never` (contracts/screen.md, Header and hub QR).
         hero_region:
           type: [string, "null"]
           pattern: "^[a-z][a-z0-9_-]{0,31}$"
@@ -712,6 +735,14 @@ components:
           description: |
             While the hero region shows a showcase (a claim in it, or a surging `hot_game`), it grows to two by two of its
             size where the layout leaves room (contracts/screen.md, The hero role and the showcase).
+        motion_level:
+          oneOf:
+            - $ref: "#/components/schemas/MotionLevel"
+            - type: "null"
+          default: null
+          description: |
+            A level the zone keeps all day; null takes the event's `motion_level`, moved by the day's phase while
+            `follow_the_day` is on (contracts/screen.md, Motion and burn-in drift).
         sound:
           type: object
           properties:
@@ -741,7 +772,7 @@ components:
           type: [integer, "null"]
         view:
           type: object
-          description: The widget type's fields plus `qr`, `stale` and `empty`.
+          description: The widget type's fields plus `qr`, `stale`, `empty` and, for some types, `card_art`.
           properties:
             qr:
               oneOf:
@@ -751,6 +782,8 @@ components:
               type: boolean
             empty:
               type: boolean
+            card_art:
+              $ref: "#/components/schemas/CardArt"
     Qr:
       type: object
       required: [url, label, image_url]
@@ -863,12 +896,17 @@ components:
           type: integer
         rotation:
           type: string
-          enum: [sequence, shuffle]
+          description: A screen that does not know the value rotates by `sequence`.
+          enum: [sequence, shuffle, director]
         order:
           type: array
-          description: Indexes into `widgets` for the current cycle.
+          description: Indexes into `widgets` for the current cycle; for `director`, in the Director's order.
           items:
             type: integer
+        indicator:
+          type: string
+          description: The hero's turn indicator (contracts/screen.md, The Director); `off` for the synthetic regions.
+          enum: [line, ring, "off"]
         cycle_started_at:
           $ref: "#/components/schemas/Time"
         idle:
@@ -1005,6 +1043,11 @@ components:
             epoch:
               type: string
               description: Set when the zone is created; part of every stream message id.
+            show_name:
+              type: boolean
+              description: |
+                Whether the header shows `name`, from the zone's `screen_name` (contracts/screen.md, Header and hub QR).
+                Absent: shown, as before the setting.
         bundle:
           type: object
           required: [version]
@@ -1013,7 +1056,10 @@ components:
               type: string
         theme:
           type: object
-          description: The theme revision in effect (the pinned one, else the current).
+          description: |
+            The theme revision in effect (the pinned one, else the current). While `preview.theme` is true, `revision`
+            stays the revision in effect and the URLs and `templates` are the draft's, from theming's
+            `GET /internal/theming/previews/{preview_key}` (contracts/screen.md, Composed state and the push channel).
           required: [revision, tokens_css_url, css_url, logo_url, templates]
           properties:
             revision:
@@ -1102,15 +1148,206 @@ components:
         display:
           type: object
           description: How the zone's screens move (contracts/screen.md, Motion and burn-in drift).
-          required: [motion, drift]
+          required: [motion_level, motion_style, motion, drift]
           properties:
+            motion_level:
+              $ref: "#/components/schemas/MotionLevel"
+            motion_style:
+              $ref: "#/components/schemas/MotionStyle"
             motion:
               type: string
-              description: The theme's `motion` token, lowered to `calm` while a public quiet-hours item of the zone runs.
+              description: |
+                Derived from `motion_level` for players that predate it: `lively` and `party` are `moderate`, `calm` is
+                `calm`, `none` is `none`.
               enum: [moderate, calm, none]
             drift:
               type: boolean
               description: The event's `burn_in_drift` setting; the player then shifts the layout by at most `safe_inset` / 4.
+            stage:
+              $ref: "#/components/schemas/Stage"
+        preview:
+          type: [object, "null"]
+          description: |
+            Set while a preview on a screen runs on this device (contracts/screen.md, Zones and assignments): the
+            player draws a "Preview" mark in its corner. Null or absent otherwise.
+          required: [until, at, theme]
+          properties:
+            until:
+              type: [string, "null"]
+              format: date-time
+            at:
+              type: [string, "null"]
+              format: date-time
+              description: The preview time, or null for now.
+            theme:
+              type: boolean
+              description: True while the device draws the theme's draft; false once the draft key no longer resolves.
+    CardArt:
+      type: object
+      description: |
+        A card's own background (contracts/screen.md, Widgets, Card backgrounds): the image under the widget's content, behind a
+        veil of the theme's `surface` at `veil`. Absent when the widget has no art.
+      required: [url, veil]
+      properties:
+        url:
+          type: string
+          description: An image on the event's hostname.
+        veil:
+          type: number
+          minimum: 0.5
+          maximum: 1
+    Stage:
+      type: object
+      description: What the zone's stage shows (contracts/screen.md, The stage). Absent for a player's state composed before it.
+      required: [phase, kind, tint]
+      properties:
+        phase:
+          $ref: "#/components/schemas/MotionPhase"
+        kind:
+          type: [string, "null"]
+          description: The kind key of the zone's current public item.
+        tint:
+          type: [object, "null"]
+          description: The tint a box asked for, until `until`.
+          required: [region_id, widget, until, art]
+          properties:
+            region_id:
+              type: string
+            widget:
+              type: string
+            until:
+              type: string
+              format: date-time
+            art:
+              type: [object, "null"]
+              description: The game's art, blurred by Screen's server; null while the event's `stage_art` is false or no art could be read.
+              required: [url, scrim]
+              properties:
+                url:
+                  type: string
+                  description: "`/api/screen/art/{art_id}.webp`."
+                scrim:
+                  type: number
+                  minimum: 0.55
+                  maximum: 1
+    MotionLevel:
+      type: string
+      description: The energy level (contracts/screen.md, Motion and burn-in drift).
+      enum: [none, calm, lively, party]
+    MotionPhase:
+      type: string
+      description: The day's phase from the agenda (contracts/screen.md, Motion and burn-in drift).
+      enum: [quiet_hours, wind_down, doors, peak, build_up]
+    MotionStyle:
+      type: object
+      description: The theme's `motion_style` token with defaults filled in (contracts/theming.md, Motion vocabulary).
+      required: [speed, intensity, spotlight, pack]
+      properties:
+        speed:
+          type: string
+          enum: [slower, normal, faster]
+        intensity:
+          type: string
+          enum: [subtle, normal, strong]
+        spotlight:
+          type: string
+          enum: [glow_and_trace, glow, trace]
+        pack:
+          type: string
+          enum: [standard, broadcast, arcade]
+    Motion:
+      type: object
+      required: [settings_version, motion_level, follow_the_day, theme_motion, zones]
+      properties:
+        settings_version:
+          type: integer
+          minimum: 0
+        motion_level:
+          $ref: "#/components/schemas/MotionLevel"
+        follow_the_day:
+          type: boolean
+        theme_motion:
+          type: string
+          description: The theme's `motion` token, which caps every zone's level.
+          enum: [moderate, calm, none]
+        zones:
+          type: array
+          items:
+            type: object
+            required: [key, name, motion_level, level, phase, next]
+            properties:
+              key:
+                $ref: "#/components/schemas/ZoneKey"
+              name:
+                type: string
+              motion_level:
+                description: The zone's pin, or null.
+                oneOf:
+                  - $ref: "#/components/schemas/MotionLevel"
+                  - type: "null"
+              level:
+                $ref: "#/components/schemas/MotionLevel"
+              phase:
+                $ref: "#/components/schemas/MotionPhase"
+              next:
+                description: The next change of the zone's level within 24 hours, or null.
+                oneOf:
+                  - type: object
+                    required: [level, phase, at]
+                    properties:
+                      level:
+                        $ref: "#/components/schemas/MotionLevel"
+                      phase:
+                        $ref: "#/components/schemas/MotionPhase"
+                      at:
+                        type: string
+                        format: date-time
+                  - type: "null"
+    PreviewInput:
+      type: object
+      required: [minutes]
+      properties:
+        minutes:
+          type: [integer, "null"]
+          minimum: 1
+          maximum: 60
+          description: How long it runs; null until it is ended, at most 12 hours.
+        zone:
+          $ref: "#/components/schemas/Zone"
+          description: An unsaved zone as `PUT` takes it, whose `key` is the device's zone's; without it, the device's own zone.
+        at:
+          type: [string, "null"]
+          format: date-time
+          description: The preview time, from now to 14 days ahead; null or absent for now.
+        theme_preview_key:
+          type: [string, "null"]
+          description: |
+            Theming's key to the event's draft (contracts/theming.md, Draft, preview, publish), in the pattern of
+            theming's `PreviewKey`. The device draws the draft over the revision in effect, a pinned or frozen one too.
+          pattern: "^[A-Za-z0-9_-]{32,64}$"
+    Preview:
+      type: object
+      required: [device_id, device_name, zone_key, until, at, theme, started_by, started_at]
+      properties:
+        device_id:
+          $ref: "#/components/schemas/Id"
+        device_name:
+          type: string
+        zone_key:
+          $ref: "#/components/schemas/ZoneKey"
+        until:
+          type: [string, "null"]
+          format: date-time
+        at:
+          type: [string, "null"]
+          format: date-time
+        theme:
+          type: boolean
+        started_by:
+          type: string
+          description: The user id of who started it.
+        started_at:
+          $ref: "#/components/schemas/Time"
     StreamMessage:
       type: object
       description: The `data` of one push-channel message; which fields are present depends on the SSE event name.
@@ -1567,7 +1804,7 @@ components:
           $ref: "#/components/schemas/Time"
         featured:
           type: boolean
-          description: True until it has been featured once.
+          description: "True until the photo's pop slot has ended: 10 seconds on the server clock from its arrival, or from the end of the slot before it, in the order photos came. The same for every zone; a zone whose `photo` widget has `pop_new` makes the photo lead during that slot (screen.md, Photos)."
     PhotoUpload:
       type: object
       required: [file, posted_at]

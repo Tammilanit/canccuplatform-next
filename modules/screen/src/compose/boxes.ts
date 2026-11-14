@@ -3,7 +3,7 @@
  * per-region `area` and `hidden` settings, which apply only while the zone's screens draw the
  * zone's own layout. Pure, so the save's check and the composed state use one rule.
  */
-import type { Area, Layout, LayoutRegion } from "./layouts.js";
+import type { Area, Layout, LayoutRegion, WidgetEntry } from "./layouts.js";
 
 type Settings = Record<string, Record<string, unknown>>;
 
@@ -85,4 +85,10 @@ export function placedBoxes(
     const area = ownArea(settings, r.id);
     return area === undefined ? r : { ...r, area };
   });
+}
+
+/** The zone's widgets for a box, else the layout's. */
+export function boxWidgets(source: LayoutRegion, settings: Settings): WidgetEntry[] {
+  const widgets = settings[source.id]?.widgets;
+  return Array.isArray(widgets) ? (widgets as WidgetEntry[]) : source.widgets;
 }

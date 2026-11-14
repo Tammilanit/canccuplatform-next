@@ -159,7 +159,8 @@ describe("the builder", () => {
       regions: { hero: { skip_empty: false, dwell_seconds: 20 } },
     };
     const hero = buildRegions(input({ zone })).regions.find((r) => r.id === "hero");
-    expect(hero?.order).toEqual([0, 1, 2, 3]);
+    // The Director's order (sheet 13): bracket, highlight, playlist, photo, hot game, the day.
+    expect(hero?.order).toEqual([2, 4, 0, 3, 1, 5]);
     expect(hero?.widgets.every((w) => w.dwell_seconds === 20)).toBe(true);
   });
 
@@ -201,6 +202,10 @@ describe("the builder", () => {
         label: "Item din",
         target_at: "2026-01-01T13:00:00Z",
         ends_text: null,
+        kind: "other",
+        description: null,
+        game: null,
+        chip: null,
         qr: null,
         stale: false,
         empty: false,

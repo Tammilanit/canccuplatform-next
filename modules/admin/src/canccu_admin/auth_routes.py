@@ -4,24 +4,46 @@ from __future__ import annotations
 
 import html
 from collections.abc import Awaitable, Callable
+from urllib.parse import parse_qsl, urlencode
 
-from canccu_kit import Event, KitError, error_body
+from canccu_kit import Event, KitError, NotSignedIn, error_body
 from canccu_kit.rights import SESSION_COOKIE, Session, session_id_from_cookie
-from canccu_kit.ui import empty_state, notice
+from canccu_kit.ui import notice
 from canccu_kit.web_security import SAFE_METHODS
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.routing import Route
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from . import sign_in_views as views
 from .auth import ABSOLUTE, FLOW_LIFETIME, Auth, safe_return_path
-from .pages import BASE, front, page
+from .pages import BASE, event_of, front, page
 
 Authorize = Callable[[str | None, str], Awaitable[Session]]
+# The request's session when it holds the right (app.create_app's `need`); refuses otherwise.
+Need = Callable[[Request, str], Awaitable[Session]]
 OnEvent = Callable[[Event], Awaitable[None]]
+Viewer = Callable[[str | None], Awaitable[Session]]
 FLOW_COOKIE = "canccu_sign_in"
 FLOW_PATH = f"{BASE}/sign-in"
 CALLBACK_PATH = f"{FLOW_PATH}/callback"  # the redirect URI registered with Discord
+CANCELLED = ("signin", "cancelled")
+CANCELLED_TEXT = "Discord was closed before it said yes. Nothing was changed."
+
+
+def unmark(back: str | None) -> tuple[str | None, bool]:
+    """The return path without the cancelled marker, and whether it carried one. A module page
+    that needs a session sends the marked address straight back here as `next`."""
+    if not back:
+        return back, False
+    rest, _, fragment = back.partition("#")
+    path, _, query = rest.partition("?")
+    pairs = parse_qsl(query, keep_blank_values=True)
+    kept = [p for p in pairs if p != CANCELLED]
+    if len(kept) == len(pairs):
+        return back, False
+    unmarked = path + (f"?{urlencode(kept)}" if kept else "")
+    return unmarked + (f"#{fragment}" if fragment else ""), True
 
 
 class OriginCheck:
@@ -51,7 +73,9 @@ class OriginCheck:
         await self.app(scope, receive, send)
 
 
-def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> list[Route]:
+def auth_routes(
+    auth: Auth, authorize: Authorize, on_event: OnEvent | None, viewer: Viewer | None
+) -> list[Route]:
     def session_id(request: Request) -> str | None:
         return session_id_from_cookie(request.headers.get("cookie"))
 
@@ -67,33 +91,17 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
         return await sign_in_card(request, warning, exc.status)
 
     async def sign_in_card(request: Request, warning: str = "", status: int = 200) -> Response:
-        # The page tells people what to do, never operator wording such as env names (UX A5).
-        intro = (
-            '<p class="canccu-overline">Organisers and crew</p><h1>Sign in to run the event</h1>'
+        back, cancelled = unmark(safe_return_path(request.query_params.get("next")))
+        if cancelled and not warning:
+            warning = notice("warn", "Sign-in didn't finish", CANCELLED_TEXT)
+        hidden = f'<input type=hidden name=next value="{html.escape(back)}">' if back else ""
+        event = await event_of(request)
+        card = views.sign_in_card(
+            archived=event is not None and event.status == "archived",
+            ready=auth.discord is not None,
+            warning=warning,
+            hidden=hidden,
         )
-        if auth.discord is None:
-            card = intro + notice(
-                "info",
-                "Sign-in isn't switched on yet",
-                "The person who installed the platform finishes it in the setup guide."
-                " It works here as soon as they do.",
-            )
-        else:
-            back = safe_return_path(request.query_params.get("next"))
-            hidden = f'<input type=hidden name=next value="{html.escape(back)}">' if back else ""
-            card = (
-                intro
-                + (
-                    warning
-                    or '<p class="canccu-muted">Use the Discord account you have a role with.'
-                    " You come back here signed in.</p>"
-                )
-                + f'<form method=post action="{FLOW_PATH}">{hidden}<button class="canccu-button '
-                'canccu-button--primary canccu-button--lg canccu-button--block">'
-                "Continue with Discord</button></form>"
-                '<p class="canccu-small canccu-muted">No role yet? Sign in once anyway, then ask'
-                " an event owner to give you one.</p>"
-            )
         if not await auth.store.has_owner():
             card += (
                 f'<p class="canccu-small">First start? <a href="{BASE}/first-run">'
@@ -125,7 +133,22 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
 
     # --- pages
     async def sign_in_page(request: Request) -> Response:
-        return await sign_in_card(request)
+        """The card for the browser's state: signed in (on to the pages, or "No role yet"), a
+        session that ended by itself ("You were signed out"), or none (Discord's button)."""
+        back = safe_return_path(request.query_params.get("next"))
+        sid = session_id(request)
+        if sid is None:
+            return await sign_in_card(request)
+        try:
+            session = await auth.session(sid)
+        except NotSignedIn:
+            view = views.signed_out_view(back)
+            return clear_session(await page(request, "Signed out", view, plain=True))
+        if back or session.rights:
+            return RedirectResponse(back or f"{BASE}/", status_code=303)
+        event = await event_of(request)
+        card = views.no_role_card(session.user_name, event.name if event else None)
+        return await front(request, "No role yet", card)
 
     async def sign_in_start(request: Request) -> Response:
         back = (await request.form()).get("next")
@@ -144,7 +167,13 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
     async def callback(request: Request) -> Response:
         query = request.query_params
         if "error" in query:
-            cancelled = KitError("Sign-in was cancelled.", status=400, code="sign_in_cancelled")
+            back = await auth.cancelled(query.get("state", ""), request.cookies.get(FLOW_COOKIE))
+            if back:
+                path, _, fragment = back.partition("#")
+                marked = f"{path}{'&' if '?' in path else '?'}signin=cancelled"
+                marked += f"#{fragment}" if fragment else ""
+                return clear_flow(RedirectResponse(marked, status_code=303))
+            cancelled = KitError(CANCELLED_TEXT, status=400, code="sign_in_cancelled")
             return clear_flow(await failed(request, cancelled))
         try:
             token, _, back = await auth.finish(
@@ -204,69 +233,23 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
 
     async def sign_out_page(request: Request) -> Response:
         await auth.sign_out(session_id(request))
-        return clear_session(RedirectResponse(f"{BASE}/sign-in", status_code=303))
+        response = clear_session(RedirectResponse(f"{BASE}/sign-in", status_code=303))
+        # The service worker's offline page holds this person's menu in Cache Storage
+        # (static/sw.js), which only "storage" empties; it also drops the worker, which the next
+        # signed-in page registers again (static/shell.js).
+        response.headers["Clear-Site-Data"] = '"cache", "storage"'
+        return response
 
-    async def people_page(request: Request) -> Response:
-        session = await authorize(request.headers.get("cookie"), "admin.rights.write")
-        people = await auth.users()
-        rows = []
-        for user, role in people:
-            if role == "owner":
-                change = '<span class="canccu-badge canccu-badge--primary">Owner</span>'
-            else:
-                options = "".join(
-                    f"<option value={v}{' selected' if (role or 'none') == v else ''}>{label}"
-                    "</option>"
-                    for v, label in (("none", "No role"), ("admin", "Admin"))
-                )
-                change = (
-                    f'<form method=post action="{BASE}/people/{html.escape(user.id)}"'
-                    ' class="canccu-cluster"><select class="canccu-input canccu-select-inline"'
-                    f' name=role aria-label="Role of {html.escape(user.name)}">{options}</select>'
-                    '<button class="canccu-button canccu-button--secondary canccu-button--sm">'
-                    "Save</button></form>"
-                )
-            rows.append(
-                f'<tr><td><span class="canccu-user"><span class="canccu-avatar" aria-hidden="true">'
-                f"{html.escape(''.join(w[0] for w in user.name.split()[:2]).upper())}</span>"
-                f"{html.escape(user.name)}</span></td><td>{change}</td></tr>"
+    async def offline_page(request: Request) -> Response:
+        try:
+            cookie = request.headers.get("cookie")
+            session: Session | None = await (
+                viewer(cookie) if viewer else auth.session(session_id_from_cookie(cookie))
             )
-        if len(people) > 1:
-            body = (
-                '<section class="canccu-card canccu-card--flush"><table class="canccu-table">'
-                f"<thead><tr><th>Who</th><th>Role</th></tr></thead><tbody>{''.join(rows)}"
-                "</tbody></table></section>"
-            )
-        else:
-            body = (
-                '<section class="canccu-card">'
-                + empty_state(
-                    "users",
-                    "Only you so far",
-                    "People get a role here after they sign in once with Discord.",
-                )
-                + "</section>"
-            )
-        return await page(
-            request,
-            "People",
-            body,
-            session=session,
-            current="people",
-            description="Everyone who has signed in. An admin may change settings and the"
-            " profile; only the owner hands out roles.",
-        )
-
-    async def people_save(request: Request) -> Response:
-        session = await authorize(request.headers.get("cookie"), "admin.rights.write")
-        role = str((await request.form()).get("role", ""))
-        event = await auth.set_role(
-            str(request.path_params["user_id"]), None if role == "none" else role, session.user_id
-        )
-        if on_event is not None:
-            # Drops this process's cached rights for that user at once (contracts/admin.md).
-            await on_event(event)
-        return RedirectResponse(f"{BASE}/people", status_code=303)
+        except NotSignedIn:
+            session = None
+        view = views.offline_view()
+        return await page(request, "You're offline", view, session=session, plain=True)
 
     return [
         Route("/api/admin/session", get_session, methods=["GET"]),
@@ -277,6 +260,5 @@ def auth_routes(auth: Auth, authorize: Authorize, on_event: OnEvent | None) -> l
         Route("/first-run", first_run_page, methods=["GET"]),
         Route("/first-run", first_run_start, methods=["POST"]),
         Route("/sign-out", sign_out_page, methods=["POST"]),
-        Route("/people", people_page, methods=["GET"]),
-        Route("/people/{user_id}", people_save, methods=["POST"]),
+        Route("/offline", offline_page, methods=["GET"]),
     ]

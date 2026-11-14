@@ -2,26 +2,33 @@
 // missing source gives away, the showcase's strips, and statistics that never run together.
 
 /**
- * Dashboard without its statistics (contracts/screen.md, Boxes waiting for their source): no
- * statistics box and no logo out of the header; the hero and the rail span the screen's width,
- * as the ticker does.
+ * Dashboard before the bot's data (contracts/screen.md, Boxes waiting for their source): Top games,
+ * the activity graph and the voice rooms wait, and the hero fills their cells as for a showcase,
+ * while Right now stays drawn, since its check-ins come from Notify (#443); no logo out of the
+ * header. Right now's one number stands centred in its box (v8 rule 5): a box stretched over two
+ * thirds of the screen once held it in a corner, with the hero squeezed into a strip.
  */
 export async function boxesGivenAway(page) {
   const drawn = await page.evaluate(() => {
-    const width = (sel) => document.querySelector(sel)?.getBoundingClientRect().width ?? 0;
+    const box = (sel) => document.querySelector(sel)?.getBoundingClientRect() ?? null;
+    const [frame, hero, stat, stats] = [
+      box(".canccu-layout"),
+      box(".canccu-region--hero"),
+      box(".canccu-region--right_now .canccu-widget__stat"),
+      box(".canccu-region--right_now"),
+    ];
+    const middle = (r) => r.left + r.width / 2;
     return {
-      boxes: document.querySelectorAll(
-        ".canccu-region--online, .canccu-region--voice, .canccu-region--top_games, .canccu-region--right_now",
-      ).length,
+      waiting: document.querySelectorAll(".canccu-region--top_games, .canccu-region--online, .canccu-region--voice").length,
+      stats: document.querySelectorAll(".canccu-region > .canccu-widget--stats").length,
       logos: document.querySelectorAll('.canccu-region:not([data-role="header"]) > .canccu-widget--logo').length,
-      hero: width(".canccu-region--hero"),
-      rail: width(".canccu-region--rail"),
-      ticker: width(".canccu-region--ticker"),
+      heroGrown: frame !== null && hero !== null && hero.width > frame.width / 2 && hero.height > frame.height / 2,
+      centred: stat !== null && stats !== null && Math.abs(middle(stat) - middle(stats)) < stats.width * 0.05,
     };
   }); // prettier-ignore
-  const wide = (w) => drawn.ticker > 0 && Math.abs(w - drawn.ticker) <= 2;
-  if (drawn.boxes > 0 || drawn.logos > 0 || !wide(drawn.hero) || !wide(drawn.rail))
-    throw new Error(`the Dashboard without statistics: ${JSON.stringify(drawn)}`);
+  const wrong =
+    drawn.waiting > 0 || drawn.stats !== 1 || drawn.logos > 0 || !drawn.heroGrown || !drawn.centred;
+  if (wrong) throw new Error(`the Dashboard before the bot's data: ${JSON.stringify(drawn)}`);
 }
 
 /** A strip's countdown says what it counts down to: its name drawn whole inside the strip. */

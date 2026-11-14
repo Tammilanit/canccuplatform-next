@@ -1,0 +1,86 @@
+/* Adding an item where it goes (sheet 5, day_view.gap_html and add_row_html): the line between
+   two items and the row that ends each day. Loaded after agenda.css. */
+@layer canccu-module {
+  /* The line between two items takes no room in the list until it shows, so the rows do not
+     jump as a pointer passes over them. Hover, keyboard focus or a long press on a phone
+     (day.js) shows it. */
+  .canccu-agenda-gap { position: relative; height: 0; }
+  :where(.canccu-page) .canccu-agenda-gap a {
+    position: absolute;
+    inset: -0.375rem 0 auto;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 0.75rem;
+    padding: 0 0.875rem;
+    overflow: hidden;
+    opacity: 0;
+    color: var(--canccu-ink-primary);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .canccu-agenda-gap a::after {
+    content: "";
+    flex: 1;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--canccu-ink-primary);
+  }
+  :where(.canccu-page) .canccu-agenda-gap a:hover,
+  :where(.canccu-page) .canccu-agenda-gap a:focus-visible,
+  :where(.canccu-page) .canccu-agenda-gap.is-shown a {
+    inset-block-start: -0.875rem;
+    height: 1.75rem;
+    opacity: 1;
+    border-block: var(--canccu-border-width) solid var(--canccu-color-border);
+    background: color-mix(in oklch, var(--canccu-color-primary) 16%, var(--canccu-color-surface));
+  }
+  /* The gap that now falls in follows the Now marker (day_list), where a line centred on the
+     boundary would hide the marker's row. There the shown line lies over the marker's row
+     instead, held by its bottom so the marker's height does not matter; the marker is raised over
+     the line and the line's words start after it, so both read. The marker lets the pointer
+     through, so pointing at it keeps the line shown. (A shown line on a touch screen is a row of
+     its own below the marker, below.) */
+  @media (hover: hover) {
+    .canccu-agenda-nowline + .canccu-agenda-gap a:hover,
+    .canccu-agenda-nowline + .canccu-agenda-gap a:focus-visible,
+    .canccu-agenda-nowline + .canccu-agenda-gap.is-shown a {
+      inset-block: auto -0.25rem;
+      padding-inline-start: 6.25rem;
+    }
+    .canccu-agenda-nowline span { position: relative; z-index: 3; pointer-events: none; }
+  }
+  .canccu-agenda-gap a:focus-visible { outline-offset: -2px; }
+  /* Without hover a hidden line would catch taps meant for the rows beside it. Shown, it is a
+     row of its own with a full 44 px target. The link menu gives way to the long press only where
+     day.js handles one (a writer's list with gaps); a reader keeps it. */
+  @media (hover: none) {
+    :where(.canccu-page) .canccu-agenda-gap a { pointer-events: none; }
+    .canccu-agenda-list.is-pressable a { -webkit-touch-callout: none; }
+    .canccu-agenda-gap.is-shown { height: auto; }
+    :where(.canccu-page) .canccu-agenda-gap.is-shown a {
+      position: static;
+      height: 2.75rem;
+      pointer-events: auto;
+    }
+  }
+  :where(.canccu-page) .canccu-agenda-addrow a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0 0.875rem;
+    border-top: var(--canccu-border-width) dashed var(--canccu-line-field);
+    color: var(--canccu-ink-primary);
+    font-weight: 650;
+    text-decoration: none;
+  }
+  :where(.canccu-page) .canccu-agenda-addrow a:hover { background: var(--canccu-tint); }
+  @media (min-width: 40.01rem) {
+    :where(.canccu-page) .canccu-agenda-gap a,
+    :where(.canccu-page) .canccu-agenda-addrow a { padding: 0 1.25rem; }
+  }
+}

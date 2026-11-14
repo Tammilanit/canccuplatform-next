@@ -8,6 +8,7 @@
 import { call, isDeviceAnswer } from "./api.js";
 import type { Answer, Fetch } from "./api.js";
 import { frame, keepSafetyLast, minutesLeft, safetyCode, setClock, setFoot } from "./frames.js";
+import { previewMark } from "./preview-mark.js";
 import {
   archived,
   CONNECTING,
@@ -24,6 +25,7 @@ import type { FrameKind, FrameText } from "./frames.js";
 import { Live, STATE_PATH } from "./live.js";
 import type { Saved } from "./offline.js";
 import { Screen } from "./screen.js";
+import { mountBehindStage } from "./stage.js";
 import { isState } from "./state.js";
 import type { ScreenState } from "./state.js";
 import { backoffMs } from "./stream.js";
@@ -174,6 +176,8 @@ export class Player {
 
   private show(text: FrameText & { kind: FrameKind }, code?: string): HTMLElement {
     const node = frame(text.kind, { logo: this.logo, ...text });
+    // A frame (pairing, refused, moved…) is never a preview's.
+    previewMark(this.env.root, null);
     this.mount(node, code === undefined ? [] : [safetyCode(code)]);
     this.clock();
     return node;
@@ -186,14 +190,9 @@ export class Player {
 
   private mount(node: HTMLElement, safety: HTMLElement[] = []): void {
     this.drawn = true;
-    // The screen keeps its layout between states: moving it out and back in would restart its
-    // fades and, later, its videos.
-    if (this.env.root.firstElementChild === node) return;
-    const keep = [...this.env.root.children].filter((c) =>
-      c.matches(".canccu-offline-marker, .canccu-identify"),
-    );
-    this.env.root.replaceChildren(node, ...keep, ...safety);
-    keepSafetyLast(this.env.root);
+    // The screen keeps its layout between states; the stage stays first, behind it (stage.ts).
+    const marks = ".canccu-offline-marker, .canccu-preview-mark, .canccu-identify";
+    if (mountBehindStage(this.env.root, node, marks, safety)) keepSafetyLast(this.env.root);
   }
 
   settle(answer: Answer): void {
@@ -222,7 +221,8 @@ export class Player {
 
   /** A state the live flow has taken already (a pushed one), or that `run` just played. */
   private draw(state: ScreenState, offlineSince?: number): void {
-    if (offlineSince === undefined) this.env.offline?.save(state);
+    // A preview is never kept: a reboot without the server must show the live zone, not a draft.
+    if (offlineSince === undefined && !state.preview) this.env.offline?.save(state);
     this.tick = null;
     this.eventName = state.tenant.name;
     this.timeZone = state.tenant.time_zone;
@@ -245,8 +245,14 @@ export class Player {
       });
     } else {
       this.mount(this.screen.draw(state));
+      // Once more on the page: the ticker is only measured there, not up to a second later.
+      this.screen.tick();
       this.screen.start();
     }
+    // Only a zone's frame is a preview: the archived and unassigned notices never carry the mark.
+    const framed = state.tenant.status !== "archived" && state.zone !== null;
+    previewMark(this.env.root, framed ? state : null);
+    keepSafetyLast(this.env.root);
   }
 
   private async pair(): Promise<void> {

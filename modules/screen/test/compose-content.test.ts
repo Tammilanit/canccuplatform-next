@@ -38,16 +38,30 @@ describe("content widgets", () => {
     expect(viewOf("playlist", {}, facts({ playlist: null })).empty).toBe(true);
   });
 
-  it("photo: the carousel's photo now", () => {
-    const photo = {
+  it("photo: the wall its entry's props ask for", () => {
+    const tile = {
       url: "/api/screen/files/p.jpg",
       caption: "Hi",
       author_name: "Sam",
       posted_at: "2026-01-01T11:00:00.000Z",
-      featured: false,
     };
-    expect(viewOf("photo", {}, facts({ photo }))).toMatchObject({ ...photo, empty: false });
-    expect(viewOf("photo", {}, facts({ photo: null })).empty).toBe(true);
+    const plain = { ...tile, featured: false, tiles: [tile] };
+    const slow = { ...plain, caption: "Slow" };
+    const photos = { "8:newest:pop": plain, "20:shuffle:still": slow };
+    expect(viewOf("photo", {}, facts({ photos }))).toMatchObject({ ...plain, empty: false });
+    // A prop out of range falls back to its default, so it shares the default wall.
+    expect(viewOf("photo", { photo_seconds: 99 }, facts({ photos }))).toMatchObject(plain);
+    const props = { photo_seconds: 20, order: "shuffle", pop_new: false };
+    expect(viewOf("photo", props, facts({ photos }))).toMatchObject(slow);
+    expect(viewOf("photo", {}, facts({ photos: { "8:newest:pop": null } })).empty).toBe(true);
+  });
+
+  it("stats: the counts and check-ins as read", () => {
+    expect(viewOf("stats", {}, facts({ stats: { checked_in: 164 } }))).toMatchObject({
+      checked_in: 164,
+      empty: false,
+    });
+    expect(viewOf("stats", {}, facts({ stats: null })).empty).toBe(true);
   });
 
   it("checkin_qr: notify's rotating code as a whole URL on the event's origin, with its QR", () => {

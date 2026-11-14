@@ -86,10 +86,11 @@ export interface PublicEvent {
 }
 
 /** GET `url` with this Host header, as JSON; fetch() would drop the header. */
-function getJson(url: string, host: string): Promise<unknown> {
+function getJson(url: string, host: string, cookie?: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const send = url.startsWith("https:") ? httpsRequest : httpRequest;
-    const req = send(url, { headers: { host }, timeout: 5000 }, (res) => {
+    const headers = cookie === undefined ? { host } : { host, cookie };
+    const req = send(url, { headers, timeout: 5000 }, (res) => {
       const chunks: Buffer[] = [];
       res.on("data", (c: Buffer) => chunks.push(c));
       res.on("end", () => {
@@ -155,10 +156,20 @@ export class TenantResolver {
    * The event on this host as `GET /api/tenants/current` tells anyone (its name, dates, state and
    * venue), for the organiser shell's header. Null when the tenants module does not answer: a page
    * then shows a plain header rather than failing.
+   *
+   * With `cookie`, the request's own Cookie header goes along, so tenants answers as it would
+   * that session (a draft event's name only to its members, contracts/tenants.md, Lifecycle);
+   * that answer is the session's, so it is never cached.
    */
-  async event(rawHost: string | null | undefined): Promise<PublicEvent | null> {
+  async event(rawHost: string | null | undefined, cookie?: string): Promise<PublicEvent | null> {
     const host = normalizeHost(rawHost);
     if (host === undefined) return null;
+    if (cookie !== undefined) {
+      const own = await getJson(`${this.tenantsUrl}/api/tenants/current`, host, cookie).catch(
+        () => null,
+      );
+      return typeof own === "object" && own !== null ? (own as PublicEvent) : null;
+    }
     const hit = this.events.get(host);
     if (hit !== undefined && this.now() - hit.at < this.cacheMs) return hit.event;
     const body = await getJson(`${this.tenantsUrl}/api/tenants/current`, host).catch(() => null);

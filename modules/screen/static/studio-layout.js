@@ -10,7 +10,7 @@ import { drag, fill, gapWords, gaps, hide, resize, sameArea, show } from "./stud
 
 const place = (a) => `${a.row} / ${a.column} / span ${a.rows} / span ${a.columns}`;
 
-export function boxEditor(form, { say, tell, changed }) {
+export function boxEditor(form, { say, counted, tell, changed }) {
   for (const g of document.querySelectorAll("[data-grid]")) {
     const [columns, rows] = g.dataset.grid.split(" ").map(Number);
     g.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
@@ -35,10 +35,15 @@ export function boxEditor(form, { say, tell, changed }) {
   const layoutAreas = () => Object.fromEntries(boxes.map((b) => [b.id, b.layoutArea]));
   const by = (attr, id) => form.querySelectorAll(`[${attr}="${CSS.escape(id)}"]`);
   const nameOf = (id) => regionNames[id] ?? id;
+  const list = new Intl.ListFormat(document.documentElement.lang || "en");
+  // The gaps of the boxes drawn: worked out once per draw, for the shading, the warnings and the
+  // Fill the gap buttons alike, so a button's index always points into the list it came from.
+  let found = [];
 
   function shadeGaps() {
+    found = gaps(boxes, grid);
     for (const el of map.querySelectorAll("[data-gap]")) el.remove();
-    for (const g of gaps(boxes, grid)) {
+    for (const g of found) {
       const shade = document.createElement("i");
       shade.className = "canccu-studio-gap";
       shade.dataset.gap = "";
@@ -71,13 +76,30 @@ export function boxEditor(form, { say, tell, changed }) {
     draw();
   }
   const regionOf = (el) => el.closest("[data-region]")?.dataset.region;
+  /**
+   * Fill the gap rebuilds the Changes list and so removes the button just pressed: the focus goes
+   * to the next gap's button, else to the list, and the notice says what was filled.
+   */
+  function fillGap(gap) {
+    const next = gap && fill(boxes, gap);
+    if (!next) return;
+    update(next);
+    tell(say("gap.filled", { box: nameOf(gap.box) }));
+    const changes = form.querySelector("[data-changes]");
+    const button = changes?.querySelector("[data-fill-gap]");
+    if (button) button.focus();
+    else if (changes) {
+      changes.tabIndex = -1;
+      changes.focus();
+    }
+  }
 
   form.addEventListener("click", (event) => {
     const size = event.target.closest("[data-size]");
     const again = event.target.closest("[data-show-box]");
     const role = event.target.closest("[data-hero]");
     const gap = event.target.closest("[data-fill-gap]");
-    if (gap) update(fill(boxes, gaps(boxes, grid)[Number(gap.dataset.fillGap)]), "box.blocked");
+    if (gap) fillGap(found[Number(gap.dataset.fillGap)]);
     else if (size) update(resize(boxes, regionOf(size), size.dataset.size, grid), "box.blocked");
     else if (again) {
       update(show(boxes, again.dataset.showBox, layoutAreas(), grid), "box.show_blocked");
@@ -172,11 +194,30 @@ export function boxEditor(form, { say, tell, changed }) {
         );
       return lines;
     },
-    /** A warning per gap, by the box beside it, and whether Fill the gap can close it. */
-    gaps() {
-      return gaps(boxes, grid).map((g) => {
-        const { key, count } = gapWords(g);
-        return { text: say(key, { count, box: nameOf(g.box) }), fills: g.fills };
+    /** A warning per gap, in the shared warn notice, with Fill the gap where a box can grow. */
+    gapLines() {
+      return found.map((g, i) => {
+        const { key, count, box, other, also } = gapWords(g);
+        let text = counted(key, count, { box: nameOf(box), other: nameOf(other) });
+        if (also.length)
+          text = say("gap.also", { gap: text, boxes: list.format(also.map(nameOf)) });
+        const li = document.createElement("li");
+        li.className = "canccu-notice canccu-notice--warn canccu-studio-changes__gap";
+        const icon = document.createElement("span");
+        icon.className = "canccu-i canccu-i--warn";
+        icon.setAttribute("aria-hidden", "true");
+        const words = document.createElement("span");
+        words.textContent = text;
+        li.append(icon, words);
+        if (g.fills) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "canccu-button canccu-button--secondary canccu-button--sm";
+          button.dataset.fillGap = String(i);
+          button.textContent = say("gap.fill");
+          li.append(button);
+        }
+        return li;
       });
     },
   };

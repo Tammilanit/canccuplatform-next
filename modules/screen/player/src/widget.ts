@@ -50,7 +50,29 @@ export function drawWidget(
   } else if (type !== "embed") {
     el.append(...renderTree(templateFor(type, template, themeTemplates), view));
   }
+  const art = cardArt(view);
+  if (art !== null) el.prepend(art);
   return el;
+}
+
+/** An image on the event's hostname, or a picture handed in as data (the demo shots). */
+const CARD_URL = /^(\/(?!\/)[\x21-\x7e]*|data:image\/[a-z+]+;base64,[A-Za-z0-9+/=]+)$/;
+
+/**
+ * The card's own ground (contracts/theming.md, The two backgrounds): its art under a veil of the
+ * theme's `surface` at the server's `veil`, so the box's text reads on any image.
+ */
+function cardArt(view: View): HTMLElement | null {
+  const given = view.card_art as { url?: unknown; veil?: unknown } | null | undefined;
+  const url = given?.url;
+  const veil = given?.veil;
+  if (typeof url !== "string" || !CARD_URL.test(url) || typeof veil !== "number") return null;
+  const art = document.createElement("div");
+  art.className = "canccu-widget__art";
+  art.setAttribute("aria-hidden", "true");
+  art.style.backgroundImage = `url("${url.replace(/["\\]/g, "\\$&")}")`;
+  art.style.setProperty("--canccu-card-veil", String(Math.min(1, Math.max(0.5, veil))));
+  return art;
 }
 
 /**
@@ -78,9 +100,16 @@ function format(ms: number, timeZone: string, options: Intl.DateTimeFormatOption
  * The view as it stands at `nowMs`: the clock's fields as the server builds them
  * (src/compose/widgets.ts), and the playlist's item, which moves on to `next_item` by itself. The
  * playlist keeps only the item it shows, so the push that later brings that same item redraws
- * nothing and a playing video never restarts.
+ * nothing and a playing video never restarts. A hot game says since when it surges (sheet 15) in
+ * the event's time: its view-model has only the instant (contracts/screen.md, Widgets).
  */
 export function liveView(type: string, view: View, nowMs: number, timeZone: string): View {
+  if (type === "hot_game") {
+    const since = typeof view.since === "string" ? Date.parse(view.since) : NaN;
+    if (Number.isNaN(since)) return view;
+    const at = format(since, timeZone, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+    return { ...view, since_text: at };
+  }
   if (type === "playlist") {
     const rest = Object.fromEntries(Object.entries(view).filter(([k]) => k !== "next_item"));
     return { ...rest, item: currentItem(view, nowMs) };

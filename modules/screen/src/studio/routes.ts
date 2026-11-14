@@ -20,7 +20,7 @@ import {
   newNonce,
 } from "@canccu/kit";
 import type { Logger, PublicEvent, RightsChecker } from "@canccu/kit";
-import { errorTitle, errorView, html, raw, shellPage } from "@canccu/ui";
+import { errorTitle, errorView, html, notice, raw, shellPage } from "@canccu/ui";
 import type { EventInfo, Slot } from "@canccu/ui";
 import type { Sources } from "../compose/sources.js";
 import type { Db } from "../db.js";
@@ -51,6 +51,9 @@ import { WRITE } from "./schedule-editor.js";
 import { schedulePage } from "./schedule-page.js";
 import type { ScheduleQuery } from "./schedule-page.js";
 import { tickerView } from "./ticker-view.js";
+import { motionCard } from "./motion-view.js";
+import { heldSettings, readMotion } from "../motion-routes.js";
+import { quickActions, runningNow } from "./live-quick.js";
 import { STUDIO, liveActions, liveView, startUrlOf } from "./views.js";
 import type { ViewContext } from "./views.js";
 import { zoneEditorView, zonesView } from "./zone-views.js";
@@ -90,6 +93,20 @@ const TABS: [path: string, label: MessageKey, rights: readonly string[]][] = [
   ["pins", "tab.pins", PIN_READ_RIGHTS],
 ];
 const ANY_TAB = [...new Set(TABS.flatMap(([, , rights]) => rights))];
+/**
+ * The rights to change something in the Studio. An archived event changes nothing (sheets 2 and
+ * 8), so its pages are drawn without them: every action is absent, as for a reader.
+ */
+const CHANGE_RIGHTS = new Set([
+  "screen.bundle.write",
+  "screen.content.write",
+  "screen.devices.pair",
+  "screen.devices.write",
+  "screen.push.write",
+  "screen.ticker.write",
+  "screen.zones.write",
+]);
+const archived = (request: FastifyRequest): boolean => tenantOf(request).status === "archived";
 const holds = (rights: ReadonlySet<string>, any: readonly string[]) =>
   any.some((r) => rights.has(r));
 
@@ -200,7 +217,7 @@ async function studioPage(
             current: path === o.tab,
           })),
         }),
-    body: html`${banner}
+    body: html`${banner}${o.plain || !archived(request) ? "" : notice({ kind: "info", title: t("studio.archived") })}
       <p class="canccu-studio-notice" role="status" hidden></p>
       ${o.body}${clientText(t)}
       <script src="${STUDIO}static/studio.js" defer></script>
@@ -230,6 +247,10 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       if (err instanceof NotSignedIn) {
         return reply.redirect(`${SIGN_IN}?next=${encodeURIComponent(request.url)}`, 303);
       }
+      const session = request.session;
+      if (err instanceof MissingRight && session?.rights.size === 0 && !session.superadmin) {
+        return reply.redirect(SIGN_IN, 303); // admin's "No role yet" says what to do (sheet 3)
+      }
       // Right ids and the module's words for a refused page go to the log, not the page (B3).
       const known = err instanceof KitError;
       if (known) deps.log?.info({ code: err.code, msg: err.message }, "a Studio page was refused");
@@ -255,7 +276,11 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
 
     const context = async (request: FastifyRequest): Promise<ViewContext> => ({
       t: await translate(deps),
-      rights: request.session?.rights ?? new Set(),
+      rights: new Set(
+        [...(request.session?.rights ?? [])].filter(
+          (r) => !archived(request) || !CHANGE_RIGHTS.has(r),
+        ),
+      ),
       nowMs: now(),
       timeZone: tenantOf(request).time_zone,
       // The tenant's own address, never the request's Host (contracts/tenants.md, 0013 item 10):
@@ -279,13 +304,19 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       { preHandler: pageNeeds(deps.rights, [READ]) },
       async (request, reply) => {
         const c = await context(request);
-        const [zones, all] = [await readZones(deps, tenantOf(request)), await devices()];
+        const ctx = tenantOf(request);
+        // A run of show that cannot be read (null) leaves Delay pointing at the run of show itself.
+        const [zones, all, items] = await Promise.all([
+          readZones(deps, ctx),
+          devices(),
+          c.rights.has("agenda.items.write") ? deps.sources.agendaItems(ctx.tenant_id) : null,
+        ]);
         return page(request, reply, c, {
           title: "",
           tab: "live",
           description: c.t("live.desc"),
           actions: liveActions(c),
-          body: liveView(c, zones, all),
+          body: html`${liveView(c, zones, all)}${quickActions(c, runningNow(items, c.nowMs))}`,
         });
       },
     );
@@ -316,12 +347,21 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       { preHandler: pageNeeds(deps.rights, [ZONES]) },
       async (request, reply) => {
         const c = await context(request);
-        const [zones, all] = [await readZones(deps, tenantOf(request)), await devices()];
+        const ctx = tenantOf(request);
+        const [zones, all] = [await readZones(deps, ctx), await devices()];
+        // Admin down with nothing held fails only the card's values: it draws the defaults, and a
+        // save from it meets admin's version check.
+        const held = await heldSettings(deps.settings).catch((err: unknown) => {
+          request.log.warn({ err }, "reading the screen settings for the Motion card failed");
+          return { settings_version: 0, values: {} };
+        });
+        const motion = await readMotion(deps, ctx.tenant_id, held);
         return page(request, reply, c, {
           title: "",
           tab: "zones",
           description: c.t("zones.desc"),
-          body: zonesView(c, zones, all),
+          body: html`${zonesView(c, zones, all)}${motionCard(c, motion)}`,
+          own: "studio-motion",
         });
       },
     );

@@ -10,25 +10,36 @@ import { loadAgendaItems } from "../content/agenda.js";
 import { healthOf } from "../health.js";
 import type { Settings } from "../health.js";
 import type { Kv } from "../kv.js";
-import type { Orientation, ZoneStore } from "../push/store.js";
+import type { CountSource, Orientation, ZoneStore } from "../push/store.js";
+import { countsOf } from "./stats.js";
 import { resolveWinner } from "../schedule/winner.js";
 import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
+import { showsName } from "./zone-reads.js";
 import { buildRegions } from "./build.js";
+import { stageOf } from "./stage.js";
+import type { ArtCache } from "../stage/art.js";
+import { themeColors } from "../stage/scrim.js";
 import { placeClaims } from "./claims.js";
 import type { Override, Placement } from "./claims.js";
-import { contentFacts } from "./content.js";
-import { displayOf } from "./display.js";
+import { contentFacts, entriesOf, photoProps } from "./content.js";
+import { NO_DISPLAY, displayOf, phaseSource } from "./display.js";
 import type { Display } from "./display.js";
+import { nextPhaseAt, type MotionLevel } from "./motion.js";
 import { themeLayouts } from "./layouts.js";
 import type { Layout } from "./layouts.js";
 import { loadOverrides } from "./overrides.js";
+import { highlightChangeAt, highlightOf } from "./features.js";
 import { isShowcase } from "./showcase.js";
 import type { HeaderMode, HubQrMode } from "./parts.js";
 import { readPin } from "../pins/store.js";
 import { themeFor } from "../pins/look.js";
 import type { Sources, ThemeNow } from "./sources.js";
 import type { ZoneFacts } from "./widgets.js";
+import { agendaAt, lookFor } from "../preview/look.js";
+import type { DraftUse, PreviewLook } from "../preview/look.js";
+
+export { placement, showsName } from "./zone-reads.js";
 
 export interface ComposeDeps {
   db: Db;
@@ -38,6 +49,8 @@ export interface ComposeDeps {
   bundleVersion: string;
   /** Each zone's state and change log (src/push/store.ts). */
   zones: ZoneStore;
+  /** The stage's game art (src/stage/art.ts); none in the pure tests. */
+  art?: ArtCache;
   /** For `screen.claims.changed`; none in the pure tests. */
   bus?: Pick<Bus, "publish">;
   log?: Logger;
@@ -51,13 +64,15 @@ export interface ZoneRow {
   regions: Record<string, Record<string, unknown>>;
   header: HeaderMode | null;
   hub_qr: HubQrMode;
+  /** Absent in a preview stored before the setting: `auto`. */
+  screen_name?: "auto" | "always" | "never";
   hero_region: string | null;
   grow_for_showcase: boolean;
+  /** Absent in a preview stored before the setting: no pin. */
+  motion_level?: MotionLevel | null;
   sound: { enabled: boolean; device_id: string | null };
   epoch: string;
 }
-
-export const NO_DISPLAY: Display = { motion: "moderate", drift: false };
 
 /** Until theming serves a revision (the pinned one or the current), the platform defaults. */
 export const NO_THEME: ThemeNow = {
@@ -71,29 +86,12 @@ export const NO_THEME: ThemeNow = {
 
 async function zoneRow(c: SqlClient, key: string): Promise<ZoneRow | null> {
   const { rows } = await c.query(
-    `SELECT key, name, layout_id, regions, header, hub_qr, hero_region, grow_for_showcase, sound, epoch
+    `SELECT key, name, layout_id, regions, header, hub_qr, screen_name, hero_region, grow_for_showcase,
+       motion_level, sound, epoch
      FROM screen_zones WHERE key = $1`,
     [key],
   );
   return (rows[0] as ZoneRow | undefined) ?? null;
-}
-
-/** The zone a device draws, and whether it only mirrors it (one hop: a mirror of a mirror shows nothing). */
-export async function placement(
-  c: SqlClient,
-  deviceId: string,
-): Promise<{ zoneKey: string | null; mirror: boolean }> {
-  const { rows } = await c.query(
-    `SELECT a.zone_key, a.mirror_device_id, a.mirror_zone_key, t.zone_key AS target_zone
-     FROM screen_assignments a LEFT JOIN screen_assignments t ON t.device_id = a.mirror_device_id
-     WHERE a.device_id = $1`,
-    [deviceId],
-  );
-  const row = rows[0] as Record<string, string | null> | undefined;
-  if (row === undefined) return { zoneKey: null, mirror: false };
-  if (row.mirror_zone_key) return { zoneKey: row.mirror_zone_key, mirror: true };
-  if (row.mirror_device_id) return { zoneKey: row.target_zone ?? null, mirror: true };
-  return { zoneKey: row.zone_key ?? null, mirror: false };
 }
 
 async function windowLayoutId(
@@ -127,6 +125,8 @@ export interface ZoneComposed {
   /** Fingerprint of the zone's inputs, the same for every screen of the zone (see zoneFingerprint). */
   fingerprint: string;
   zone: ZoneRow;
+  /** Whether the header names the zone (`zone.show_name`). */
+  showName: boolean;
   theme: ThemeNow;
   /** The pinned bundle version, or null for the platform's. */
   bundle: string | null;
@@ -137,6 +137,10 @@ export interface ZoneComposed {
   display: Display;
   /** When a content widget next changes by itself (epoch ms), or null. */
   nextChangeAt: number | null;
+  /** The counts its widgets read (ZoneRecord.counts). */
+  counts: CountSource[];
+  /** Whether a preview's draft was drawn (PreviewLook.themeKey); `none` without one. */
+  draft: DraftUse;
 }
 
 /** The widget types a zone's regions show, in either orientation. */
@@ -158,29 +162,52 @@ export async function composeZone(
   host: string,
   zoneKey: string,
   proposed?: ZoneRow,
-  /** False for the hub's view, which drops every content widget anyway (NOW_TYPES). */
+  /**
+   * False where no screen draws the result (the hub's view, a preview's checks): no content
+   * widget but `stats` (NOW_TYPES), and no stage, so no cover is read for it.
+   */
   withContent = true,
+  preview: PreviewLook = {},
 ): Promise<ZoneComposed | null> {
-  const at = new Date((deps.now ?? Date.now)());
+  const real = new Date((deps.now ?? Date.now)());
+  // Claims, pushes, the ticker and the live sources stay as they are now: nobody knows them ahead.
+  const at = preview.at == null ? real : new Date(preview.at);
   const read = await deps.db.tenant(async (c) => {
     const zone = proposed ?? (await zoneRow(c, zoneKey));
     if (zone === null) return null;
     return {
       zone,
       windowLayout: await windowLayoutId(c, zone.key, ctx.time_zone, at),
-      ticker: await tickerNow(c, ctx.time_zone, at.getTime()),
-      claims: await loadOverrides(c, zone.key, at.getTime()),
+      ticker: await tickerNow(c, ctx.time_zone, real.getTime()),
+      claims: await loadOverrides(c, zone.key, real.getTime()),
       pin: await readPin(c),
+      showName: await showsName(c, zone),
     };
   });
   if (read === null) return null;
-  const [theme, event, agenda, venue] = await Promise.all([
+  const [live, event, agenda, venue] = await Promise.all([
     themeFor(deps.sources, ctx.tenant_id, read.pin),
     deps.sources.event(host),
-    deps.sources.agendaNow(ctx.tenant_id, zoneKey),
+    preview.at == null
+      ? deps.sources.agendaNow(ctx.tenant_id, zoneKey)
+      : agendaAt(deps.sources, ctx.tenant_id, zoneKey, at.getTime()),
     deps.sources.venueInfo(ctx.tenant_id),
   ]);
+  const { theme, draft } = await lookFor(deps.sources, ctx.tenant_id, live, preview.themeKey);
   const eventName = event?.name ?? ctx.primary_hostname ?? "";
+  // The phase and the highlight come before the build: the hero's features read them.
+  const items = phaseSource(
+    (await deps.sources.agendaDay?.(ctx.tenant_id)) ?? null,
+    agenda,
+    zoneKey,
+  );
+  const { display, motion } = displayOf({
+    tokens: theme?.tokens,
+    items,
+    pin: read.zone.motion_level ?? null,
+    settings: deps.settings,
+    at: at.getTime(),
+  });
   const facts: ZoneFacts = {
     now: at,
     timeZone: ctx.time_zone,
@@ -191,9 +218,11 @@ export async function composeZone(
     venue,
     ticker: read.ticker,
     embeds: theme?.embeds ?? [],
+    phase: motion.phase,
+    highlight: highlightOf(items, at.getTime()),
   };
   const build = (portrait: boolean): ZoneView => {
-    const once = (grow: boolean): ZoneView => {
+    const once = (showcase?: "grow" | "keep"): ZoneView => {
       const { layout, regions } = buildRegions({
         zone: {
           key: read.zone.key,
@@ -207,27 +236,52 @@ export async function composeZone(
         themeLayouts: themeLayouts(theme?.layouts),
         portrait,
         facts,
-        grow,
+        ...(showcase === undefined ? {} : { showcase }),
       });
       return { layout, ...placeClaims(regions, read.claims) };
     };
-    const plain = once(false);
-    // A claim's place follows roles alone, so the grown build places every claim as this one did.
-    return read.zone.grow_for_showcase && isShowcase(plain.regions) ? once(true) : plain;
+    const plain = once();
+    // A claim's place follows roles alone, so the second build places every claim as this one
+    // did. A showcase decides the hero's size; only without one does it fill the waiting boxes.
+    if (!isShowcase(plain.regions)) return plain;
+    return once(read.zone.grow_for_showcase ? "grow" : "keep");
   };
   let views = { landscape: build(false), portrait: build(true) };
   // The content widgets' sources are read only for a zone that shows them, so their changes
-  // (every frame, photo and code) never move another zone's version.
-  const content = withContent
-    ? await contentFacts(deps, ctx, zoneKey, typesOf(views), at.getTime())
-    : { facts: {}, changesAt: null };
+  // (every frame, photo and code) never move another zone's version. The hub's view keeps only
+  // `stats` of them (NOW_TYPES).
+  const entries = entriesOf(Object.values(views), read.zone);
+  const used = typesOf(views);
+  for (const e of entries) used.add(e.widget);
+  if (!withContent) for (const type of used) if (type !== "stats") used.delete(type);
+  // "Today in numbers" is empty outside wind-down: its counts would move every Pulse zone's
+  // version at each count for nothing.
+  if (facts.phase !== "wind_down") used.delete("today_numbers");
+  const content = await contentFacts(deps, ctx, zoneKey, used, photoProps(entries), real.getTime());
   if (Object.keys(content.facts).length > 0) {
     Object.assign(facts, content.facts);
     views = { landscape: build(false), portrait: build(true) };
   }
   const setting = deps.settings.get("ticker_appearance", "default");
   const appearance = typeof setting === "string" ? setting : "default";
-  const display = displayOf(theme?.tokens, agenda, deps.settings.get("burn_in_drift", false));
+  const { stage, covers } = withContent
+    ? await stageOf({
+        views,
+        phase: motion.phase,
+        agenda,
+        nowMs: at.getTime(),
+        stageArt: deps.settings.get("stage_art", true) !== false,
+        colors: themeColors(theme?.tokens),
+        hostname: ctx.primary_hostname ?? host,
+        art: deps.art,
+      })
+    : { stage: null, covers: [] };
+  if (stage !== null) display.stage = stage;
+  // The level's and the phase's next change, the highlight's and a tint's end rebuild the zone
+  // then, as a content widget's does: a pinned level never names the phase's.
+  const tintEnds = stage?.tint == null ? null : Date.parse(stage.tint.until);
+  const day = [nextPhaseAt(items, at.getTime()), highlightChangeAt(items, at.getTime())];
+  const changes = [content.changesAt, motion.next?.at, ...day, tintEnds].filter((t) => t != null);
   return {
     fingerprint: zoneFingerprint({
       zone: read.zone,
@@ -238,15 +292,20 @@ export async function composeZone(
       display,
       claims: read.claims,
       bundle: read.pin.bundle_version,
+      showName: read.showName,
+      art: covers,
     }),
     zone: read.zone,
+    showName: read.showName,
     bundle: read.pin.bundle_version,
     theme: theme ?? NO_THEME,
     eventName,
     views,
     ticker: { ...read.ticker, appearance },
     display,
-    nextChangeAt: content.changesAt,
+    nextChangeAt: changes.length === 0 ? null : Math.min(...changes),
+    counts: countsOf(used),
+    draft,
   };
 }
 
@@ -256,12 +315,16 @@ export interface FingerprintInput {
   theme: { revision: number; layouts: unknown[] };
   facts: ZoneFacts;
   tickerAppearance?: string;
-  /** Holds the `burn_in_drift` setting, which no other input carries. */
+  /** Holds the `burn_in_drift` setting and the energy level, which no other input carries. */
   display?: Display;
   /** The overrides active on the zone now: one that ends changes the inputs, so it is drawn away. */
   claims?: readonly Override[];
   /** The pinned bundle: a pin change moves the version, so streams send the new `bundle`. */
   bundle?: string | null;
+  /** Moves with the event's count of screens, which no other input carries. */
+  showName?: boolean;
+  /** The cards' and the tint's art read (compose/stage.ts): a cover read only later moves it. */
+  art?: readonly string[];
 }
 
 /**
@@ -280,6 +343,8 @@ export function zoneFingerprint(input: FingerprintInput): string {
     display: input.display ?? NO_DISPLAY,
     claims: input.claims ?? [],
     bundle: input.bundle ?? null,
+    show_name: input.showName ?? true,
+    art: input.art ?? [],
   };
   return createHash("sha256").update(JSON.stringify(stable)).digest("base64url");
 }

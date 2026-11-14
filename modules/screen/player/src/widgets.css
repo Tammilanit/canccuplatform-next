@@ -212,9 +212,10 @@
    * playing ranks its games, each row's count with its arrow. The arrow's glyph is drawn here, as
    * the template names only its direction. Colours are the theme's own tokens, not ui.css's inks:
    * an ink is an oklab mix, which the rendered readability check (test/stack/readability.mjs)
-   * cannot read.
+   * cannot read. Under the parent class, or screen.css's `.canccu-widget ul { margin: 0 }` would
+   * win and the row would not take the box's free height around it.
    */
-  .canccu-widget__stats {
+  .canccu-widget .canccu-widget__stats {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
@@ -269,12 +270,9 @@
     content: "▼";
   }
 
+  /* A flat trend draws no mark at all, so only a change catches the eye (v8, fix 4). */
   .canccu-widget__trend--flat {
-    color: var(--canccu-color-text-muted);
-  }
-
-  .canccu-widget__trend--flat::before {
-    content: "–";
+    display: none;
   }
 
   /*
@@ -331,12 +329,46 @@
     text-transform: uppercase;
   }
 
+  /*
+   * The line never ends in "…" (#442): one too wide for its box crawls, or with no motion steps a
+   * line at a time (ticker.ts sets `data-fit`). Clipped, never ellipsised, while it is measured.
+   */
   .canccu-widget__line {
+    flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
     font-size: calc(4.4 * var(--canccu-u));
+    line-height: 1.25;
+  }
+
+  .canccu-widget__line[data-fit="crawl"] {
+    mask-image: linear-gradient(90deg, transparent, #000 2%, #000 96%, transparent);
+  }
+
+  .canccu-widget__crawl {
+    display: inline-flex;
+    animation: canccu-crawl var(--canccu-crawl-seconds, 30s) linear infinite;
+  }
+
+  .canccu-widget__run {
+    flex: none;
+    padding-right: calc(12 * var(--canccu-u));
+  }
+
+  .canccu-widget__line[data-fit="step"] {
+    height: 1.25em;
+    white-space: normal;
+  }
+
+  .canccu-widget__steps {
+    display: block;
+  }
+
+  @keyframes canccu-crawl {
+    to {
+      transform: translateX(-50%);
+    }
   }
 
   .canccu-layout[data-ticker="high_contrast"] .canccu-widget--ticker {

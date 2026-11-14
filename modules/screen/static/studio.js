@@ -15,6 +15,10 @@
       name in values ? String(values[name]) : whole,
     );
 
+  /** `key.one` for one, `key` otherwise, when the catalogue has both (as messages.ts's counted). */
+  const counted = (key, count, values = {}) =>
+    say(count === 1 && `${key}.one` in text ? `${key}.one` : key, { count, ...values });
+
   function show(message, action) {
     if (notice === null) return;
     notice.replaceChildren(message);
@@ -48,7 +52,7 @@
       ? say("error.failed")
       : say("error.refused", { message: r.data.error.message });
   // The zone editor's own script (static/studio-zone.js) acts through the same helpers.
-  window.canccuStudio = { api, confirmed, failure, reloadWith, say, show, notice };
+  window.canccuStudio = { api, confirmed, counted, failure, reloadWith, say, show, notice };
 
   // A destructive action asks once more on the button itself; a second tap within 5 s acts.
   function confirmed(button) {

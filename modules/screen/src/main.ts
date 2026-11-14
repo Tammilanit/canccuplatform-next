@@ -17,6 +17,7 @@ import {
   runMigrations,
   serviceKeyFromEnv,
   tenantsStorage,
+  requireTenant,
   withTenant,
 } from "@canccu/kit";
 import { buildApp, screenHealth } from "./app.js";
@@ -34,11 +35,14 @@ import { keepBundles } from "./pins/store.js";
 import { pinTickRunner } from "./pins/tick.js";
 import { PLAYER_DIR } from "./player.js";
 import { REFRESH_MS } from "./push/hub.js";
+import type { PushHub } from "./push/hub.js";
 import { ValkeyFanout, ValkeyZoneStore } from "./push/store.js";
 import { renderLoop } from "./render/dispatch.js";
 import { ValkeyRenderQueue } from "./render/queue.js";
 import { TICK_MS, tickRunner } from "./tick/run.js";
+import type { SettingsDoc } from "./motion-routes.js";
 import { seedMainZone } from "./zones.js";
+import { ArtCache, edgeReader } from "./stage/art.js";
 
 const PORT = 8080;
 /** pg_advisory_lock key of the screen migrations; each module has its own. */
@@ -125,7 +129,14 @@ async function main(): Promise<void> {
   });
   const admin = new AdminClient(config.adminUrl);
   const rights = new RightsChecker(admin);
-  const settings = new SettingsClient(admin, config.module, { service });
+  // Set once the app is built: a settings change before then has no stream here to redraw.
+  const built: { hub?: PushHub } = {};
+  const settings = new SettingsClient(admin, config.module, {
+    service,
+    // The contract's "composes the zones again" (admin.settings.changed): now, with the values
+    // just read, not at the next zone refresh. It runs in the changed event's tenant scope.
+    onChange: () => built.hub?.settingsChanged(requireTenant()),
+  });
   // Admin's own settings hold the event's language, the one other module's settings screen reads
   // (contracts/admin.md, #394), so Studio's pages follow it.
   const adminSettings = new SettingsClient(admin, "admin", { service });
@@ -207,11 +218,22 @@ async function main(): Promise<void> {
       : {}),
     settings,
     adminSettings,
+    writeSettings: async (tenantId, write) => {
+      const response = await admin.request("PATCH", "/internal/admin/settings/screen", {
+        headers: service.headers("admin"),
+        params: { tenant_id: tenantId },
+        json: write,
+      });
+      AdminClient.raiseForError(response);
+      return response.body as SettingsDoc;
+    },
     publicEvent: (host) => tenants.event(host),
     sources,
     bundleVersion: config.version,
     bundles,
     push,
+    // Covers are read as a guest's browser reads them: through the edge, with the event's hostname.
+    art: new ArtCache(kv, edgeReader(process.env.CANCCU_EDGE_URL ?? "http://caddy")),
     health: screenHealth({
       module: config.module,
       version: config.version,
@@ -225,7 +247,7 @@ async function main(): Promise<void> {
   // state, and the refresh below catches what came while no container read the bus.
   const pushStore = ValkeyStreamStore.fromUrl(config.valkeyUrl);
   new Bus(pushStore, config.module, log).subscribeTenants(
-    ["screen", "agenda", "tenants", "theming"],
+    ["screen", "agenda", "tenants", "theming", "notify", "bot"],
     (event) => {
       app.pushHub.handleEvent(event);
     },
@@ -250,6 +272,7 @@ async function main(): Promise<void> {
     },
     { fromId: "0", rescanMs: 5000 },
   );
+  built.hub = app.pushHub;
   const refresh = setInterval(() => {
     void app.pushHub.refreshAll();
   }, REFRESH_MS);
@@ -298,6 +321,7 @@ async function main(): Promise<void> {
     played: (tenant, zones) => {
       app.pushHub.played(tenant, zones);
     },
+    fanout: push.fanout,
   });
   const pinTick = pinTickRunner({
     db,

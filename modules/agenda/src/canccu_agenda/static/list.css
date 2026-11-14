@@ -1,0 +1,74 @@
+/* The run of show as one continuous list (sheet 5, decision 6, day_list.py): the day lines, the
+   fold of earlier items, the audience filter, the header row that stays, and the phone strip. */
+@layer canccu-module {
+  /* clip, not hidden: hidden makes the card a scroll container, and the header row would then
+     stick to the card instead of the window. */
+  .canccu-agenda-list.canccu-card--flush { overflow: clip; }
+  .canccu-agenda-head { position: sticky; top: 0; z-index: 2; }
+  .canccu-agenda-dayline {
+    scroll-margin-top: 3rem;
+    padding: 0.625rem 0.875rem 0.375rem;
+    border-top: var(--canccu-border-width) solid var(--canccu-color-border);
+    background: var(--canccu-tint);
+    font-size: var(--canccu-text-sm);
+    font-weight: 700;
+  }
+  .canccu-agenda-row__time small {
+    display: block;
+    font-size: var(--canccu-text-xs);
+    font-weight: 500;
+    color: var(--canccu-ink-muted);
+  }
+  .canccu-agenda-fold {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.25rem 0.875rem;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+  }
+  :where(.canccu-page) .canccu-agenda-fold a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    margin-left: auto;
+    font-weight: 650;
+  }
+  .canccu-agenda-nowline { scroll-margin: 40vh 0; }
+  li[id^="r-"] { scroll-margin: 30vh 0; }
+  .canccu-agenda-filter { display: flex; gap: 0.5rem; }
+  .canccu-agenda-filter .canccu-input { width: 12rem; min-height: 2.75rem; }
+  .canccu-agenda-filter.is-live .canccu-agenda-filter__go { display: none; }
+  /* Shown by day.js on a phone once the hero has scrolled away. */
+  .canccu-agenda-strip { display: none; }
+  .canccu-agenda-strip.is-shown {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0 -1rem;
+    padding: 0.5rem 1rem;
+    border-bottom: var(--canccu-border-width) solid var(--canccu-color-border);
+    background: var(--canccu-color-surface);
+    font-size: var(--canccu-text-sm);
+  }
+  .canccu-agenda-strip > span { min-width: 0; }
+  .canccu-agenda-strip .canccu-button { flex: none; margin-left: auto; min-height: 2.75rem; }
+  .canccu-agenda-post {
+    max-width: 21rem;
+    margin-top: 0.5rem;
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-sm);
+  }
+  @media (min-width: 40.01rem) {
+    .canccu-agenda-strip.is-shown { display: none; }
+    .canccu-agenda-filter .canccu-input { min-height: 2rem; }
+    /* Earlier items are quieter and lower (sheet 5, the whole event opened). */
+    .canccu-agenda-row--over { min-height: 2.5rem; }
+    .canccu-agenda-dayline { padding-left: 1.25rem; }
+  }
+}

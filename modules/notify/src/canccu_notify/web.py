@@ -126,11 +126,14 @@ def notice(message: str, kind: str = "ok") -> str:
     return ui.notice("down" if kind == "error" else "ok", message)
 
 
-async def error_page(request: Request, exc: KitError) -> HTMLResponse:
+async def error_page(request: Request, exc: KitError) -> Response:
     """A refusal said in words, with the way on (canccu_kit.ui); a missing right goes to the
     log, never to the page (UX audit B3)."""
     if isinstance(exc, MissingRight):
         log.info("page %s refused: %s", request.url.path, exc.message)
+        session = getattr(request.state, "notify_session", None)
+        if session is not None and not session.rights:  # admin's "No role yet" says what to do
+            return RedirectResponse(SIGN_IN, status_code=303)
     if exc.code == "version_conflict":
         exc = KitError(
             "Someone changed this topic meanwhile. Open it again to see it as it is now.",
@@ -197,12 +200,14 @@ def button(label: str, kind: str = "primary") -> str:
 async def static_file(request: Request) -> Response:
     name = request.path_params["name"]
     path = UI_CSS if name == "ui.css" else _STATIC / name
-    if name not in ("ui.css", "notify.css") or not path.is_file():
+    media = _STATIC_TYPES.get(name)
+    if media is None or not path.is_file():
         raise KitError("not found", status=404, code="not_found")
-    response = FileResponse(path, media_type="text/css")
+    response = FileResponse(path, media_type=media)
     response.headers["Cache-Control"] = "public, max-age=300"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
 
 
+_STATIC_TYPES = {"ui.css": "text/css", "notify.css": "text/css", "check-in.js": "text/javascript"}
 ROUTES = [Route("/static/{name}", static_file, methods=["GET"])]

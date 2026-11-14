@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import io
 import json
+import lzma
 import shutil
 import zipfile
+import zlib
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
@@ -82,9 +84,14 @@ def read_profile_dir(directory: Path, validator: Draft202012Validator) -> Loaded
     if not file.is_file():
         raise ProfileInvalid(f"no profile.yaml in {directory}")
     try:
-        document = yaml.safe_load(file.read_text())
+        document = yaml.safe_load(file.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
         raise ProfileInvalid(f"profile.yaml is not valid YAML: {exc}") from exc
+    # Both would otherwise escape as a 500 and take the Event profile page down with them.
+    except UnicodeDecodeError as exc:
+        raise ProfileInvalid("profile.yaml is not UTF-8 text") from exc
+    except OSError as exc:
+        raise ProfileInvalid(f"profile.yaml can't be read: {exc.strerror or exc}") from exc
     if not isinstance(document, dict):
         raise ProfileInvalid("profile.yaml must hold a mapping")
     document, upgraded_from = upgrade(document)
@@ -141,6 +148,21 @@ def unpack_zip(data: bytes, target: Path) -> None:
                 raise ProfileInvalid(f"unsafe path in zip: {info.filename}")
             if str(name) != "profile.yaml" and name.parts[0] != "assets":
                 raise ProfileInvalid(f"unexpected file in zip: {info.filename}")
+            try:
+                content = archive.read(info)
+            # A damaged, encrypted or oddly compressed entry: the file's fault, not a 500.
+            # Each decompressor fails its own way: zlib.error, OSError (bzip2), LZMAError,
+            # EOFError (a stream cut short).
+            except (
+                zipfile.BadZipFile,
+                RuntimeError,
+                NotImplementedError,
+                zlib.error,
+                OSError,
+                EOFError,
+                lzma.LZMAError,
+            ) as exc:
+                raise ProfileInvalid(f"can't read {info.filename} in the zip: {exc}") from exc
             destination = target / name
             destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_bytes(archive.read(info))
+            destination.write_bytes(content)

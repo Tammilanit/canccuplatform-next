@@ -97,8 +97,8 @@ describe("the built-in layouts", () => {
       ticker: at(1, 12, 12, 1),
     });
     expect(types(regions)).toMatchObject({
-      online: ["stats"],
-      voice: ["stats"],
+      online: ["activity_graph"],
+      voice: ["voice_rooms"],
       top_games: ["now_playing"],
       right_now: ["stats"],
       rail: ["agenda_now", "countdown"],
@@ -132,20 +132,33 @@ describe("the built-in layouts", () => {
     expect(areas(regions)).toMatchObject({ hero: at(2, 3, 10, 6), rail: at(2, 9, 10, 2) });
   });
 
-  it("stacks the Pulse's boxes in Portrait, the venue rail filling the space under the rail", () => {
-    const regions = build({ layoutId: null }, { portrait: true });
+  it("stacks the Pulse's boxes in Portrait, the Right now box between the rail and the venue rail", () => {
+    const counted = { ...facts, stats: { checked_in: 164 } };
+    const regions = build({ layoutId: null }, { portrait: true, facts: counted });
     expect(areas(regions)).toEqual({
       header: at(1, 1, 3, 2),
       "header-2": at(4, 1, 3, 2),
       hero: at(1, 3, 6, 6),
-      rail: at(1, 9, 6, 4),
-      venue_rail: at(1, 13, 3, 3),
-      "venue_rail-2": at(4, 13, 3, 3),
+      rail: at(1, 9, 6, 3),
+      right_now: at(1, 12, 6, 2),
+      venue_rail: at(1, 14, 3, 2),
+      "venue_rail-2": at(4, 14, 3, 2),
       ticker: at(1, 16, 6, 1),
     });
+    expect(types(regions).right_now).toEqual(["stats"]);
     // With `rotate` the hub QR takes turns in the venue rail instead.
     const rotating = build({ layoutId: null, hubQr: "rotate" }, { portrait: true });
-    expect(areas(rotating).venue_rail).toEqual(at(1, 13, 6, 3));
+    expect(areas(rotating).venue_rail).toEqual(at(1, 14, 6, 2));
+    // With nothing counted yet the Right now box waits; no box beside it takes its rows.
+    expect(areas(rotating).right_now).toBeUndefined();
+  });
+
+  it("puts Ambient's one line of statistics under its rail", () => {
+    const counted = { ...facts, stats: { online: 218, online_trend: "up" } };
+    const regions = build({ layoutId: "ambient" }, { facts: counted });
+    expect(areas(regions).online).toEqual(at(2, 11, 10, 1));
+    expect(types(regions).online).toEqual(["stats"]);
+    expect(areas(build({ layoutId: "ambient" })).online).toBeUndefined();
   });
 });
 
@@ -155,7 +168,7 @@ describe("the hero role", () => {
     expect(areas(regions)).toMatchObject({ hero: at(5, 2, 4, 5), online: at(1, 2, 4, 5) });
     // The widgets, settings and role travel with the region, not with the area.
     expect(regions.find((r) => r.id === "hero")?.role).toBe("hero");
-    expect(types(regions).online).toEqual(["stats"]);
+    expect(types(regions).online).toEqual(["activity_graph"]);
   });
 
   it("trades nothing for null, its own id, an unknown id or a header, ticker or backdrop", () => {
@@ -169,31 +182,47 @@ describe("the hero role", () => {
 });
 
 describe("the showcase", () => {
-  it("grows Dashboard's hero to 8×10 and stacks the five other boxes beside it, 4×2 each", () => {
-    expect(areas(build({ regions: DRAWN }, { grow: true }))).toMatchObject({
+  it("grows Dashboard's hero to 8×10, keeps the rail and one box beside it and pauses the rest", () => {
+    const grown = areas(build({ regions: DRAWN }, { showcase: "grow" }));
+    expect(grown).toMatchObject({
       hero: at(1, 2, 8, 10),
-      online: at(9, 2, 4, 2),
-      voice: at(9, 4, 4, 2),
-      top_games: at(9, 6, 4, 2),
-      right_now: at(9, 8, 4, 2),
-      rail: at(9, 10, 4, 2),
+      online: at(9, 2, 4, 5),
+      rail: at(9, 7, 4, 5),
       header: at(1, 1, 6, 1),
       ticker: at(1, 12, 12, 1),
     });
+    for (const id of ["voice", "top_games", "right_now"]) expect(grown).not.toHaveProperty(id);
+    // The paused boxes come back at their own areas when the showcase ends.
+    expect(areas(build({ regions: DRAWN }))).toMatchObject({
+      voice: at(9, 2, 4, 5),
+      top_games: at(1, 7, 4, 5),
+      right_now: at(5, 7, 4, 5),
+    });
+  });
+
+  it("keeps the first two boxes in layout order when none is a rail", () => {
+    const regions = { ...DRAWN, rail: { role: "venue_rail" } };
+    const grown = areas(build({ regions }, { showcase: "grow" }));
+    expect(grown).toMatchObject({ online: at(9, 2, 4, 5), voice: at(9, 7, 4, 5) });
+    for (const id of ["rail", "top_games", "right_now"]) expect(grown).not.toHaveProperty(id);
   });
 
   it("grows a hero in the band's right half against its right edge", () => {
-    const grown = areas(build({ heroRegion: "voice", regions: DRAWN }, { grow: true }));
-    expect(grown).toMatchObject({ hero: at(5, 2, 8, 10), online: at(1, 2, 4, 2) });
+    const grown = areas(build({ heroRegion: "voice", regions: DRAWN }, { showcase: "grow" }));
+    expect(grown).toMatchObject({
+      hero: at(5, 2, 8, 10),
+      online: at(1, 2, 4, 5),
+      rail: at(1, 7, 4, 5),
+    });
   });
 
   it("grows no other built-in: their heroes leave no column free", () => {
     for (const layoutId of ["pulse", "hero", "split", "ambient"]) {
-      expect(areas(build({ layoutId }, { grow: true })), layoutId).toEqual(
+      expect(areas(build({ layoutId }, { showcase: "grow" })), layoutId).toEqual(
         areas(build({ layoutId })),
       );
     }
-    expect(areas(build({ layoutId: null }, { grow: true, portrait: true }))).toEqual(
+    expect(areas(build({ layoutId: null }, { showcase: "grow", portrait: true }))).toEqual(
       areas(build({ layoutId: null }, { portrait: true })),
     );
   });
@@ -215,7 +244,7 @@ describe("the showcase", () => {
     expect(isShowcase(regions)).toBe(false);
     expect(isShowcase(placeClaims(regions, [override]).regions)).toBe(true);
     // The claim keeps its place in the grown build: placement follows roles alone.
-    const grown = placeClaims(build({}, { grow: true }), [override]).regions;
+    const grown = placeClaims(build({}, { showcase: "grow" }), [override]).regions;
     expect(grown.find((r) => r.id === "hero")?.claim?.override_id).toBe("ov_1");
     const surging = regions.map(
       (r) =>

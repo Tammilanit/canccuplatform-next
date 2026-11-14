@@ -15,12 +15,13 @@ from typing import Any
 
 import httpx
 import pytest
-from canccu_kit import Bus, Health, Outbox, ServiceIdentity, TenantResolver, current_tenant
+from canccu_kit import Bus, Health, ServiceIdentity, TenantResolver, current_tenant
 from canccu_kit.access import TenantContext
 from canccu_kit.errors import AdminUnavailable, NotSignedIn
 from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.testing import MemoryStreamStore, require_test_database_url
 
+from canccu_agenda import posts
 from canccu_agenda.app import create_app
 from canccu_agenda.db import Db
 from canccu_agenda.deps import Deps
@@ -130,7 +131,7 @@ async def env() -> AsyncIterator[Env]:
         await conn.execute(
             "TRUNCATE agenda_state, agenda_kinds, agenda_items, agenda_timers,"
             " agenda_timer_tenants, agenda_sessions, agenda_templates, agenda_changes, agenda_undo,"
-            " agenda_outbox, agenda_outbox_tenants, agenda_reminders_fired"
+            " agenda_outbox, agenda_outbox_tenants, agenda_reminders_fired, agenda_last_post"
         )
     contexts = {tid: context(tid) for tid in HOSTS.values()}
 
@@ -161,7 +162,7 @@ async def env() -> AsyncIterator[Env]:
         bus=bus,
         rights=rights,
         settings=settings,
-        outbox=Outbox(bus, db),
+        outbox=posts.Outbox(bus, db),
         now=lambda: clock[0],
     )
     app = create_app(d, Health("agenda", "dev", {}), resolver, ServiceIdentity("agenda", KEY))

@@ -225,7 +225,7 @@ describe.skipIf(!DATABASE_URL)("a zone for a signed-in person", () => {
       const state = res.json<State>();
       expect(state.device).toEqual({ id: "preview", name: "Lobby", mirror: true });
       expect(state.state_version).toBe(0);
-      expect(state.zone).toEqual({ key: "lobby", name: "Lobby", epoch: "preview" });
+      expect(state.zone).toMatchObject({ key: "lobby", name: "Lobby", epoch: "preview" });
       expect(state.sound.enabled).toBe(false);
       expect(state.layout?.id).toBe("pulse");
       expect(h.store.streams.get("t:alpha:events:screen")?.length ?? 0).toBe(before);

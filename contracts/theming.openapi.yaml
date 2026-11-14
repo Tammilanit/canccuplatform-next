@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Theming API
-  version: 1.5.0
+  version: 1.9.0
   summary: One event's theme, its draft, preview, publish and rollback, git sync, clone and the served theme files.
   description: |
     Machine-readable part of the theming contract. Prose, stable classes, package rules, upload safety, CSP and
@@ -466,6 +466,10 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/theming/draft/preview-key:
+    $ref: "theming/preview.openapi.yaml#/~1api~1theming~1draft~1preview-key"
+  /internal/theming/previews/{preview_key}:
+    $ref: "theming/preview.openapi.yaml#/~1internal~1theming~1previews~1{preview_key}"
   /api/theming/draft/publish:
     post:
       tags: [draft]
@@ -766,8 +770,8 @@ paths:
       operationId: getRevisionFile
       summary: A file of a kept revision
       description: |
-        Public, immutable, content-addressed. Answers only CSS, WOFF2, PNG, JPEG, WebP and SVG of this event's
-        kept revisions; never HTML or JS. SVG also carries a sandboxing CSP and `Content-Disposition: attachment`.
+        Public in every status, immutable, content-addressed. Answers only CSS, WOFF2, PNG, JPEG, WebP and SVG of
+        this event's kept revisions and of revision 0 (its generated files); never HTML or JS. SVG also carries a sandboxing CSP and `Content-Disposition: attachment`.
       security:
         - {}
       responses:
@@ -791,6 +795,79 @@ paths:
                 format: binary
         "404":
           $ref: "#/components/responses/NotFound"
+  /theming/logo:
+    get:
+      tags: [files]
+      operationId: getCurrentLogo
+      summary: The event's current logo, or its initials
+      description: |
+        For the organiser shell's header and the sign-in and check-in posters (packages/ui), which name this one
+        address instead of reading the theme. With a logo in the current theme (`logo_url` of `GET
+        /api/theming/current`; at revision 0 the profile's main logo, once theming takes it in, under `/theming/a/`)
+        a `302` to that immutable address; without one, the event's initials (the first letter of each of the first
+        two words of its name, whole characters, upper-cased and XML-escaped; `?` when tenants gives no name) as a
+        square SVG: `primary_text` letters on a `primary`-to-`accent` gradient, in the colours of
+        `admin_tokens_css_url`. The name comes from `GET /api/tenants/current` on tenants' internal address with the
+        request's own hostname as `Host`, its public answer kept up to 30 s per hostname; a tenants module that does
+        not answer gives `?`. Public in `live` and `archived`; `Cache-Control: no-cache`, so a newly published logo
+        shows on the next page. Only this address hides a draft's logo: `/theming/a/` is public in every status.
+
+        While the event is `draft`, guests see no event (tenants.md, Lifecycle): theming reads `GET
+        /api/tenants/current` with the request's own `Cookie` header. An answer with the event's name (a session
+        of the event's member, event admin or a superadmin in a support window) gets the logo or initials as
+        above; any other answer (a `DraftTenant`, an error, no answer) gets the `?` SVG in the platform default
+        colours, never the `302`. Each of these answers depends on the session, so it is `Cache-Control:
+        private, no-cache`.
+      security:
+        - {}
+        - session: []
+      responses:
+        "200":
+          description: The initials, when the current theme has no logo; the `?` of the draft case (see above).
+          headers:
+            Cache-Control:
+              description: "`no-cache`; `private, no-cache` while the event is `draft`."
+              schema:
+                type: string
+                enum: [no-cache, "private, no-cache"]
+            ETag:
+              description: Changes when the initials or the colours change.
+              schema:
+                type: string
+            X-Content-Type-Options:
+              $ref: "#/components/headers/NoSniff"
+            Cross-Origin-Resource-Policy:
+              $ref: "#/components/headers/SameOriginResource"
+            Content-Security-Policy:
+              $ref: "#/components/headers/SvgPolicy"
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+        "302":
+          description: The current logo.
+          headers:
+            Location:
+              description: The current theme's `logo_url`, a `/theming/a/` address.
+              schema:
+                type: string
+            Cache-Control:
+              description: "`no-cache`; `private, no-cache` while the event is `draft`."
+              schema:
+                type: string
+                enum: [no-cache, "private, no-cache"]
+            X-Content-Type-Options:
+              $ref: "#/components/headers/NoSniff"
+            Cross-Origin-Resource-Policy:
+              $ref: "#/components/headers/SameOriginResource"
+        "304":
+          description: The SVG is unchanged since the `If-None-Match` the request sent (its `ETag`).
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /theming/current/{file}:
+    $ref: "theming/preview.openapi.yaml#/~1theming~1current~1{file}"
+  /theming/preview/{preview_key}/{file}:
+    $ref: "theming/preview.openapi.yaml#/~1theming~1preview~1{preview_key}~1{file}"
   /theming/draft/{file}:
     parameters:
       - $ref: "#/components/parameters/ServedFile"
@@ -901,6 +978,13 @@ components:
       schema:
         type: integer
         minimum: 1
+    PreviewKey:
+      name: preview_key
+      in: path
+      required: true
+      description: A key to the draft for a preview on a screen (`POST /api/theming/draft/preview-key`).
+      schema:
+        $ref: "#/components/schemas/PreviewKey"
     ServedFile:
       name: file
       in: path
@@ -1089,6 +1173,10 @@ components:
     Name:
       type: string
       pattern: "^[a-z][a-z0-9_-]{0,31}$"
+    PreviewKey:
+      type: string
+      description: Unguessable, base64url.
+      pattern: "^[A-Za-z0-9_-]{32,64}$"
     TenantId:
       type: string
       pattern: "^[a-z][a-z0-9-]{1,30}[a-z0-9]$"
@@ -1155,6 +1243,25 @@ components:
           description: "`moderate` when the theme sets none."
           type: string
           enum: [moderate, calm, none]
+        motion_style:
+          description: |
+            The theme's `motion_style` token as set: only the fields the theme sets, the others left out (and the whole
+            token absent when it sets none); a reader takes each missing field's default (contracts/theming.md, Motion
+            vocabulary).
+          type: object
+          properties:
+            speed:
+              type: string
+              enum: [slower, normal, faster]
+            intensity:
+              type: string
+              enum: [subtle, normal, strong]
+            spotlight:
+              type: string
+              enum: [glow_and_trace, glow, trace]
+            pack:
+              type: string
+              enum: [standard, broadcast, arcade]
     TokensEdit:
       type: object
       additionalProperties: false
@@ -1262,6 +1369,21 @@ components:
             motion:
               description: Setting it never makes the theme advanced (contracts/theming.md).
               enum: [moderate, calm, none, null]
+            motion_style:
+              description: Setting it never makes the theme advanced (contracts/theming.md, Motion vocabulary). A `null` field goes back to its default.
+              oneOf:
+                - type: object
+                  additionalProperties: false
+                  properties:
+                    speed:
+                      enum: [slower, normal, faster, null]
+                    intensity:
+                      enum: [subtle, normal, strong, null]
+                    spotlight:
+                      enum: [glow_and_trace, glow, trace, null]
+                    pack:
+                      enum: [standard, broadcast, arcade, null]
+                - type: "null"
     BrandInput:
       type: object
       additionalProperties: false

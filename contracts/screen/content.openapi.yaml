@@ -269,6 +269,40 @@
         $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
       "404":
         $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+/api/screen/art/{art}:
+  parameters:
+    - name: art
+      in: path
+      required: true
+      description: "`<art_id>.webp`: the SHA-256 of the blurred art's bytes."
+      schema:
+        type: string
+        pattern: "^[a-f0-9]{64}\\.webp$"
+  get:
+    tags: [content]
+    operationId: getStageArt
+    summary: A game's art, blurred for the stage
+    description: |
+      For the event's devices (cookie and venue address) and sessions with `screen.devices.read` (contracts/screen.md, The
+      stage). Immutable. Served from Screen's cache of the current tenant only; an id the cache no longer holds is 404
+      until Screen next composes the zone, which makes the art again.
+    security:
+      - device: []
+      - session: []
+    responses:
+      "200":
+        description: The blurred art.
+        content:
+          image/webp:
+            schema:
+              type: string
+              contentMediaType: image/webp
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../screen.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
 /api/screen/renders/{asset_id}/{asset_version}/{slide}:
   parameters:
     - $ref: "../screen.openapi.yaml#/components/parameters/AssetId"
@@ -1039,7 +1073,7 @@
   get:
     tags: [photos]
     operationId: listPhotos
-    summary: Carousel photos
+    summary: The photo wall's photos
     description: Right `screen.content.read`. Flag `screen.photos`.
     responses:
       "200":
@@ -1061,7 +1095,7 @@
   post:
     tags: [photos]
     operationId: addPhoto
-    summary: Add a carousel photo
+    summary: Add a photo to the photo wall
     description: Right `screen.photos.write`. Flag `screen.photos` (otherwise 403 `feature_off`). Emits `screen.photo.added`.
     requestBody:
       required: true
@@ -1097,7 +1131,7 @@
   delete:
     tags: [photos]
     operationId: deletePhoto
-    summary: Remove a carousel photo
+    summary: Remove a photo from the photo wall
     description: Right `screen.photos.write`. Emits `screen.photo.removed`.
     responses:
       "204":

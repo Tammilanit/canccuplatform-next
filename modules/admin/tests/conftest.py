@@ -28,11 +28,12 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from canccu_admin.app import create_app
 from canccu_admin.auth import Auth
-from canccu_admin.auth_db import MemoryAuthStore
+from canccu_admin.auth_memory import MemoryAuthStore
 from canccu_admin.auth_routes import OnEvent
 from canccu_admin.db import MemoryStore, Store
 from canccu_admin.declarations import load_declarations
 from canccu_admin.discord import Discord
+from canccu_admin.health import HealthWatch
 from canccu_admin.profile import make_validator
 from canccu_admin.service import Service
 
@@ -61,7 +62,10 @@ def tenant_context(tenant_id: str) -> TenantContext:
 
 
 def fake_resolver(
-    hosts: dict[str, str], ids: tuple[str, ...] = (), archived: tuple[str, ...] = ()
+    hosts: dict[str, str],
+    ids: tuple[str, ...] = (),
+    archived: tuple[str, ...] = (),
+    event: dict[str, str] | None = None,
 ) -> TenantResolver:
     """The kit's resolver against a fake tenants module that knows `hosts` (host -> tenant),
     and by id those tenants plus `ids` and the `archived` ones."""
@@ -70,6 +74,7 @@ def fake_resolver(
         if request.url.path == "/api/tenants/current":  # what the shell's header names
             known = hosts.get(request.headers["host"])
             body = {"id": known, "name": "Demo Event", "status": "live", "time_zone": "UTC"}
+            body |= event or {}
             return httpx.Response(200 if known else 404, json=body)
         by_id = request.url.path.removeprefix("/internal/tenants/tenants/")
         if by_id != request.url.path:
@@ -98,7 +103,7 @@ class StoreProbe:
 
     async def seed(self, tenant: str, marker: str) -> None:
         await self.store.put_settings("screen", 0, {"title": marker})
-        await self.store.set_profile({"name": marker})
+        await self.store.set_profile({"name": marker}, loaded_by="u_1")
 
     async def read(self, tenant: str) -> object:
         return [await self.store.get_settings("screen"), await self.store.get_profile()]
@@ -140,6 +145,9 @@ class World:
     discord: FakeDiscord
     clock: list[datetime]
     checker: RightsChecker
+    watch: HealthWatch
+    event: dict[str, str] = field(default_factory=dict)
+    """What `GET /api/tenants/current` adds for the shell's event (set before the first page)."""
 
     def browser(self, session: str | None = None) -> httpx.AsyncClient:
         """Another browser, optionally holding a session cookie."""
@@ -169,6 +177,7 @@ class World:
 @pytest.fixture
 def world(tmp_path: Path) -> World:
     clock = [START]
+    event: dict[str, str] = {}
     streams = MemoryStreamStore()
     bus = Bus(streams, "admin")
     service = Service(
@@ -177,7 +186,6 @@ def world(tmp_path: Path) -> World:
         make_validator(ROOT / "contracts/profile.schema.json"),
         tmp_path,
         load_declarations(Path(__file__).parents[1] / "declarations"),
-        {},
     )
     fake = FakeDiscord()
     discord = Discord(
@@ -200,12 +208,15 @@ def world(tmp_path: Path) -> World:
     async def authorize(cookie: str | None, right: str) -> Session:
         return await holder[0].check(cookie, right)
 
+    watch = HealthWatch(Health("admin", "dev", {}), {}, clock=lambda: clock[0])
     app = create_app(
         service,
-        Health("admin", "dev", {}),
+        watch,
         authorize,
         auth,
-        fake_resolver({"admin.example.test": "demo"}, ids=("other",), archived=("gone",)),
+        fake_resolver(
+            {"admin.example.test": "demo"}, ids=("other",), archived=("gone",), event=event
+        ),
         holder_event(holder),
         identity=ServiceIdentity("admin", SERVICE_KEY),
     )
@@ -219,7 +230,9 @@ def world(tmp_path: Path) -> World:
     )
     holder.append(checker)
     client = httpx.AsyncClient(transport=asgi, base_url=PUBLIC)
-    return World(client, internal, service, auth, store, streams, fake, clock, checker)
+    return World(
+        client, internal, service, auth, store, streams, fake, clock, checker, watch, event
+    )
 
 
 def caddy(app: ASGIApp) -> ASGIApp:

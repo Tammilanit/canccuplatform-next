@@ -5,7 +5,7 @@
  * a `Zone`, lists what changed, previews it in the real player and saves it with the revision read.
  */
 import { attrs, emptyState, html } from "@canccu/ui";
-import type { Html, Slot } from "@canccu/ui";
+import type { Html } from "@canccu/ui";
 import { boxProblem } from "../compose/boxes.js";
 import { DEFAULT_DWELL_S } from "../compose/build.js";
 import { roleOf } from "../compose/layouts.js";
@@ -17,7 +17,20 @@ import { boxPart, boxesCard, heroCard, layoutGallery, zoneTabs } from "./layout-
 import type { BoxInfo } from "./layout-views.js";
 import { counted, nameOf } from "./messages.js";
 import { STUDIO, zoneFrame } from "./views.js";
+import {
+  labelled,
+  photoWallPart,
+  rotationPart,
+  screenNamePart,
+  select,
+} from "./widget-settings.js";
 import type { ViewContext } from "./views.js";
+import {
+  previewDialog,
+  previewNotice,
+  previewOnScreenButton,
+  previewTimeField,
+} from "./preview-view.js";
 
 export type Zone = Omit<ZoneInput, "revision"> & { revision: number };
 type Entry = Record<string, unknown>;
@@ -34,27 +47,13 @@ export const WIDGETS = [
   "venue_info",
   "checkin_qr",
   "ticker",
+  "today_numbers",
 ] as const;
-
-const select = (
-  id: string,
-  name: string,
-  value: string,
-  options: readonly [string, string][],
-  label?: string,
-): Html =>
-  html`<select class="canccu-input" id="${id}" name="${name}" ${attrs({ "aria-label": label })}>
-    ${options.map(([v, label]) => html`<option${attrs({ value: v, selected: v === value })}>${label}</option>`)}
-  </select>`;
-
-const labelled = (id: string, label: string, control: Slot, hint?: string): Html =>
-  html`<div class="canccu-field">
-    <label class="canccu-field__label" for="${id}">${label}</label
-    >${control}${hint === undefined ? "" : html`<p class="canccu-field__hint">${hint}</p>`}
-  </div>`;
 
 const screensOf = (key: string, devices: readonly SeenDevice[]): number =>
   devices.filter((d) => shownZone(d, devices) === key).length;
+
+const ZONES_WRITE = "screen.zones.write";
 
 export function zonesView(
   c: ViewContext,
@@ -90,7 +89,7 @@ export function zonesView(
       <button class="canccu-button canccu-button--primary" type="submit">${t("zones.add")}</button>
     </form>
   </section>`;
-  return html`${list}${add}`;
+  return html`${list}${c.rights.has(ZONES_WRITE) ? add : ""}`;
 }
 
 /** The seconds a widget shows: its own, else the region's, else the layout's default. */
@@ -179,16 +178,26 @@ function regionsOf(c: ViewContext, zone: Zone, layout: Layout): RegionInfo[] {
   });
 }
 
-/** The chosen region's detail; the others wait hidden until picked on the map. */
-function regionPart(c: ViewContext, r: RegionInfo, layout: Layout, shown: boolean): Html {
+/**
+ * The chosen region's detail; the others wait hidden until picked on the map. `screenName` is the
+ * zone's setting, drawn only with its (first) header box.
+ */
+function regionPart(
+  c: ViewContext,
+  r: RegionInfo,
+  layout: Layout,
+  shown: boolean,
+  screenName: string | null,
+): Html {
   const { t } = c;
   const f = `canccu-studio-r-${r.id}`;
   const str = (v: unknown) => (typeof v === "string" ? v : "");
   const dwell = typeof r.settings.dwell_seconds === "number" ? r.settings.dwell_seconds : undefined;
   const regionDwell = dwell ?? r.layoutDwell;
+  const hero = roleOf(r.id, r.settings.role) === "hero";
   return html`<section
     class="canccu-card canccu-studio-region"
-    ${attrs({ "data-region": r.id, "data-label": r.label, "data-layout-dwell": r.layoutDwell, hidden: !shown })}
+    ${attrs({ "data-region": r.id, "data-label": r.label, "data-layout-dwell": r.layoutDwell, "data-rotation": hero ? "director" : "sequence", hidden: !shown })}
   >
     <p class="canccu-overline">${t("box.selected")}</p>
     <h2 class="canccu-card__title">${t("zone.region", { region: r.label })}</h2>
@@ -203,6 +212,7 @@ function regionPart(c: ViewContext, r: RegionInfo, layout: Layout, shown: boolea
       />
       <label class="canccu-field__label" for="${f}-layout">${t("zone.layout_widgets")}</label>
     </div>
+    ${screenName === null ? "" : screenNamePart(c, screenName)}
     <p class="canccu-overline">${t("zone.widgets")}</p>
     <ol class="canccu-studio-widgets" data-widgets>
       ${r.entries.map((e) => widgetRow(c, e, regionDwell))}
@@ -223,14 +233,7 @@ function regionPart(c: ViewContext, r: RegionInfo, layout: Layout, shown: boolea
       </button>
     </div>
     <div class="canccu-studio-row">
-      ${labelled(
-        `${f}-rotation`,
-        t("zone.rotation"),
-        select(`${f}-rotation`, "rotation", str(r.settings.rotation), [
-          ["", t("zone.rotation.sequence")],
-          ["shuffle", t("zone.rotation.shuffle")],
-        ]),
-      )}${labelled(`${f}-dwell`, t("zone.dwell"), html`<input class="canccu-input" type="number" min="5" max="3600" step="1" id="${f}-dwell" name="dwell_seconds" ${attrs({ value: dwell, placeholder: String(r.layoutDwell) })} />`, t("zone.dwell_hint", { seconds: r.layoutDwell }))}${labelled(
+      ${rotationPart(c, f, r.settings, hero)}${labelled(`${f}-dwell`, t("zone.dwell"), html`<input class="canccu-input" type="number" min="5" max="3600" step="1" id="${f}-dwell" name="dwell_seconds" ${attrs({ value: dwell, placeholder: String(r.layoutDwell) })} />`, t("zone.dwell_hint", { seconds: r.layoutDwell }))}${labelled(
         `${f}-idle`,
         t("zone.idle"),
         select(`${f}-idle`, "idle", str(r.settings.idle), [
@@ -251,6 +254,7 @@ function regionPart(c: ViewContext, r: RegionInfo, layout: Layout, shown: boolea
       />
       <label class="canccu-field__label" for="${f}-skip">${t("zone.skip_empty")}</label>
     </div>
+    ${photoWallPart(c, r.id, r.entries)}
   </section>`;
 }
 
@@ -308,6 +312,14 @@ export function zoneEditorView(
   layoutId: string | null = zone.layout_id,
 ): Html {
   const { t } = c;
+  if (!c.rights.has(ZONES_WRITE)) {
+    // Read only (an archived event): what the zone shows, without the editor.
+    return html`${zoneTabs(c, zones, zone.key)}
+      <section class="canccu-card">
+        <h2 class="canccu-card__title">${t("zone.preview_title")}</h2>
+        <div class="canccu-studio-thumb canccu-studio-thumb--preview"><iframe${attrs({ src: zoneFrame(zone.key), title: t("zone.preview_title") })}></iframe></div>
+      </section>`;
+  }
   const picked = layoutId !== zone.layout_id;
   const draft: Zone = picked
     ? {
@@ -332,14 +344,17 @@ export function zoneEditorView(
     regions.find((r) => r.id === "hero" && r.area !== undefined && !r.hidden) ??
     regions.find((r) => r.area !== undefined && !r.hidden) ??
     regions[0];
+  const header = regions.find((r) => roleOf(r.id, r.settings.role) === "header")?.id;
   const screens = screensOf(zone.key, devices);
   const save = screens === 0 ? t("zone.save_none") : counted(t, "zone.save_on", screens);
   const side = html`<aside class="canccu-studio-side">
     <section class="canccu-card">
       <h2 class="canccu-card__title">${t("zone.preview_title")}</h2>
       <div class="canccu-studio-thumb canccu-studio-thumb--preview"><iframe${attrs({ src: zoneFrame(zone.key), title: t("zone.preview_title"), "data-preview": true })}></iframe></div>
+      ${previewTimeField(c)}
       <div class="canccu-studio-preview-row">
         <button class="canccu-button canccu-button--secondary" type="button" data-zone-preview>${t("zone.preview")}</button>
+        ${previewOnScreenButton(c)}
         <p class="canccu-small canccu-muted">${t("zone.preview_hint")}</p>
       </div>
     </section>
@@ -366,11 +381,12 @@ export function zoneEditorView(
     "data-layout-names": JSON.stringify({ "": names.pulse ?? "pulse", ...names }),
     "data-region-names": JSON.stringify(Object.fromEntries(regions.map((r) => [r.id, r.label]))),
   };
-  return html`${zoneTabs(c, zones, zone.key)}
+  return html`${zoneTabs(c, zones, zone.key)}${previewNotice(c)}
     <form class="canccu-studio-editor" ${attrs(form)}>
       <div class="canccu-studio-editor__main">
-        ${layoutGallery(c, layouts, layout.id)}${boxesCard(c, regions, layout, first?.id)}${regions.map((r) => regionPart(c, r, layout, r === first))}${layout.id === "dashboard" ? heroCard(c, regions, layout, zone) : ""}${settingsCard(c, zone, devices)}${remove}
+        ${layoutGallery(c, layouts, layout.id, draft.regions)}${boxesCard(c, regions, layout, first?.id)}${regions.map((r) => regionPart(c, r, layout, r === first, r.id === header ? zone.screen_name : null))}${layout.id === "dashboard" ? heroCard(c, regions, layout, zone) : ""}${settingsCard(c, zone, devices)}${remove}
       </div>
       ${side}${row}
-    </form>`;
+    </form>
+    ${previewDialog(c, zone.key, devices)}`;
 }

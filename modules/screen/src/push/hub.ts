@@ -7,7 +7,10 @@
  */
 import { platformKey, tenantKey, withTenant } from "@canccu/kit";
 import type { Event, Logger } from "@canccu/kit";
+import { checkinsMoved, keepPresence, presenceOf } from "../compose/stats.js";
+import { PREVIEW_CHANNEL } from "../preview/store.js";
 import { refreshZone } from "./device-state.js";
+import type { CountSource } from "./store.js";
 import type { Feed, StreamDeps } from "./feed.js";
 
 export const COALESCE_MS = 100;
@@ -75,9 +78,16 @@ export class PushHub {
   private readonly unsubscribe: () => void;
 
   constructor(private readonly deps: HubDeps) {
-    this.unsubscribe = deps.fanout.subscribe(PLAYED_CHANNEL, (message) => {
+    const played = deps.fanout.subscribe(PLAYED_CHANNEL, (message) => {
       this.onPlayed(message);
     });
+    const previews = deps.fanout.subscribe(PREVIEW_CHANNEL, (message) => {
+      this.onPreview(message);
+    });
+    this.unsubscribe = () => {
+      played();
+      previews();
+    };
   }
 
   add(stream: Feed): void {
@@ -104,13 +114,22 @@ export class PushHub {
     return n;
   }
 
-  /** One event of the screen, agenda, tenants, theming or moments tenant streams. */
+  /** One event of the screen, agenda, tenants, theming, notify, bot or moments tenant streams. */
   handleEvent(event: Event): void {
     if (event.source === "tenants") this.deps.tenantChanged(event);
     const tenant = event.tenant;
+    if (tenant !== undefined && (event.source === "bot" || event.source === "notify")) {
+      void this.countsMoved(tenant, event);
+      return;
+    }
     const streams = tenant === undefined ? undefined : this.streams.get(tenant);
     if (tenant === undefined || streams === undefined) return;
     const deviceId = event.data.device_id;
+    // The event's count of screens may have moved, and with it every zone's `show_name`. A device
+    // paired straight into a zone emits only `screen.device.paired`.
+    const paired = event.type === "screen.device.paired" && typeof event.data.zone_key === "string";
+    const recount = ENDS.has(event.type) || event.type === "screen.device.assigned" || paired;
+    if (recount) for (const key of this.zonesOf(tenant)) this.schedule(tenant, key);
     if (ENDS.has(event.type)) {
       for (const s of [...streams]) if (s.deviceId === deviceId) s.end();
       return;
@@ -132,6 +151,46 @@ export class PushHub {
     for (const key of this.zonesOf(tenant)) {
       if (zone === undefined || zone === key) this.schedule(tenant, key);
     }
+  }
+
+  /**
+   * The `stats` widget's counts (src/compose/stats.ts): kept, or marked to be read again, by every
+   * container, also one without a stream of the event, so a peak is never missed; then the zones
+   * shown here are rebuilt, and only those that show `stats` move.
+   */
+  private async countsMoved(tenant: string, event: Event): Promise<void> {
+    let moved: CountSource;
+    try {
+      if (event.type === "bot.presence.counted") {
+        const count = presenceOf(event.data);
+        if (count === null) return;
+        await keepPresence(this.deps.kv, tenant, count);
+        moved = "presence";
+      } else if (event.type === "notify.checkin.recorded" && event.data.purpose === "arrival") {
+        await checkinsMoved(this.deps.kv, tenant);
+        moved = "checkins";
+      } else {
+        return;
+      }
+    } catch (err) {
+      this.deps.log?.warn({ err, tenant_id: tenant, type: event.type }, "keeping a count failed");
+      return;
+    }
+    // Door bursts bring many of these: a zone whose last build read no such count is left alone.
+    for (const key of this.zonesOf(tenant)) {
+      const record = await withTenant(tenant, () => this.deps.zones.read(key)).catch(() => null);
+      if (record?.counts === undefined || record.counts.includes(moved)) {
+        this.schedule(tenant, key);
+      }
+    }
+  }
+
+  /**
+   * The event's screen settings changed (admin.settings.changed, once the settings client has
+   * read them again): every zone shown here composes again now, not at the next zone refresh.
+   */
+  settingsChanged(tenant: string): void {
+    for (const key of this.zonesOf(tenant)) this.schedule(tenant, key);
   }
 
   /**
@@ -160,6 +219,24 @@ export class PushHub {
     const held = this.zonesOf(tenant);
     for (const zone of zones)
       if (typeof zone === "string" && held.has(zone)) this.schedule(tenant, zone);
+  }
+
+  /**
+   * A preview on a screen started, was replaced or ended on a device (src/preview/store.ts): its
+   * streams and every mirror draw again, as after an assignment, each with one whole `state`.
+   */
+  private onPreview(message: string): void {
+    let notice: { tenant?: unknown; device_id?: unknown };
+    try {
+      notice = JSON.parse(message) as typeof notice;
+    } catch {
+      return;
+    }
+    const { tenant, device_id: deviceId } = notice;
+    if (typeof tenant !== "string" || typeof deviceId !== "string") return;
+    for (const s of this.streams.get(tenant) ?? []) {
+      if (s.deviceId === deviceId || s.mirror) void s.replace();
+    }
   }
 
   /** Main runs it every REFRESH_MS. */

@@ -2,12 +2,13 @@
  * Boxes waiting for their source (contracts/screen.md, Box sizes and hidden boxes): a box of
  * statistics only, all of them empty, with the default idle, leaves the composed state, so a
  * Dashboard waiting for the bot's data (#389) does not repeat the header's logo in four boxes.
- * Its cells go to the box beside it, by runs, so the result never depends on the regions' order.
+ * Its cells go to the hero when it can fill them (build.ts), else to the box beside it, by runs,
+ * so the result never depends on the regions' order.
  */
 import type { Area, Layout, LayoutRegion } from "./layouts.js";
 
 /** The types whose source is the bot's presence data: the ones a box may wait for. */
-const STATISTICS = new Set(["stats", "now_playing"]);
+const STATISTICS = new Set(["stats", "now_playing", "activity_graph", "voice_rooms"]);
 
 /**
  * A waiting region: its widgets are all statistics and all empty, and its idle is `logo`. An

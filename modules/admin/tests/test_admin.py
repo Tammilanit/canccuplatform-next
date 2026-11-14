@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import io
 import json
 import shutil
@@ -18,9 +19,10 @@ from conftest import SERVICE_KEY, fake_resolver
 
 from canccu_admin.app import create_app
 from canccu_admin.auth import Auth
-from canccu_admin.auth_db import MemoryAuthStore
-from canccu_admin.db import MemoryStore
+from canccu_admin.auth_memory import MemoryAuthStore
+from canccu_admin.db import MemoryStore, PgStore
 from canccu_admin.declarations import load_declarations
+from canccu_admin.health import HealthWatch
 from canccu_admin.profile import make_validator
 from canccu_admin.service import Service
 
@@ -70,14 +72,16 @@ def parts(tmp_path: Path) -> Parts:
         make_validator(ROOT / "contracts/profile.schema.json"),
         tmp_path,
         load_declarations(Path(__file__).parents[1] / "declarations"),
+    )
+    watch = HealthWatch(
+        Health("admin", "dev", {}),
         {"hello": "http://hello/health"},
         httpx.AsyncClient(transport=httpx.MockTransport(hello_handler)),
     )
-    health = Health("admin", "dev", {})
     auth = Auth(MemoryAuthStore(), service.bus, None, None)
     app = create_app(
         service,
-        health,
+        watch,
         authorize,
         auth,
         fake_resolver({"t": "demo"}),
@@ -99,11 +103,25 @@ def demo() -> Iterator[None]:
 async def test_settings_roundtrip_and_conflict(parts: Parts) -> None:
     client, _, streams, _ = parts
     r = await client.get("/api/admin/settings/admin")
-    assert r.json() == {"module": "admin", "settings_version": 0, "values": {}}
+    # contracts/admin.md, Groups: how the form groups the declared keys, every key once.
+    assert r.json() == {
+        "module": "admin",
+        "settings_version": 0,
+        "values": {},
+        "groups": [
+            {
+                "id": "time_and_language",
+                "label": "Time and language",
+                "description": "How every page of the event shows times and words.",
+                "keys": ["timezone", "language"],
+            }
+        ],
+    }
     r = await client.put(
         "/api/admin/settings/admin", json={"settings_version": 0, "values": {"language": "fi"}}
     )
     assert r.status_code == 200 and r.json()["settings_version"] == 1
+    assert r.json()["groups"][0]["keys"] == ["timezone", "language"]
     r = await client.put(
         "/api/admin/settings/admin", json={"settings_version": 0, "values": {"language": "en"}}
     )
@@ -241,3 +259,43 @@ async def test_zip_export_import(parts: Parts, demo: None) -> None:
         z.writestr("../evil", "x")
     r = await client.put("/api/admin/profile", content=bad.getvalue())
     assert r.status_code == 400 and r.json()["error"]["code"] == "profile_invalid"
+
+
+async def test_export_leaves_the_event_folder_as_it_is(parts: Parts, demo: None) -> None:
+    # "Download current profile" before "Load again" must not overwrite what Load would load.
+    client, service, _, event = parts
+    await service.load_profile("u_1")
+    before = (event / "profile.yaml").read_text()
+    version, _ = await service.store.get_settings("admin")
+    await service.put_settings("admin", version, {"timezone": "Europe/Helsinki"}, "u_1")
+    r = await client.get("/api/admin/profile")
+    exported = yaml.safe_load(zipfile.ZipFile(io.BytesIO(r.content)).read("profile.yaml"))
+    assert exported["settings"]["admin"] == {"timezone": "Europe/Helsinki"}
+    assert "assets/logo.svg" in zipfile.ZipFile(io.BytesIO(r.content)).namelist()
+    assert (event / "profile.yaml").read_text() == before
+
+
+async def test_a_load_records_when_and_by_whom(parts: Parts, demo: None) -> None:
+    _client, service, _, _event = parts
+    assert await service.store.profile_loaded() is None
+    await service.load_profile("u_1")
+    loaded = await service.store.profile_loaded()
+    assert loaded is not None and loaded[1] == "u_1"
+    assert datetime.now(UTC) - loaded[0] < timedelta(minutes=1)
+
+
+async def test_the_event_folder_names_its_profile(parts: Parts, demo: None) -> None:
+    _client, service, _, event = parts
+    assert await service.folder_profile() == ("Demo Event", None)
+    (event / "profile.yaml").write_bytes(b"name: \xff\xfe")
+    name, problem = await service.folder_profile()
+    assert name is None and problem is not None and "not UTF-8" in problem.message
+    (event / "profile.yaml").unlink()
+    assert await service.folder_profile() == (None, None)
+
+
+def test_a_profile_write_always_says_who_loaded_it() -> None:
+    # Every write is a load (Service._apply): no caller may leave `loaded_by` out.
+    for store in (MemoryStore, PgStore):
+        loaded_by = inspect.signature(store.set_profile).parameters["loaded_by"]
+        assert loaded_by.default is inspect.Parameter.empty, store

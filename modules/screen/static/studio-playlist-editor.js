@@ -17,13 +17,11 @@ import {
 } from "./studio-playlist-builder.js";
 import { el, itemDetail, itemFields, numberField } from "./studio-playlist-item.js";
 
-const { api, confirmed, failure, reloadWith, say, show } = window.canccuStudio;
+const { api, confirmed, counted, failure, reloadWith, say, show } = window.canccuStudio;
 export const PAGE = "/admin/screen/content";
 export const ASSET = "application/x-canccu-asset";
 const ITEM = "application/x-canccu-item";
 
-const counted = (key, count, values = {}) =>
-  say(count === 1 ? `${key}.one` : key, { count, ...values });
 const smallButton = (label, kind = "ghost") =>
   el("button", {
     type: "button",

@@ -69,6 +69,35 @@
   }
 
   /*
+   * Portrait's Right now is a strip of two rows: each number at the Dashboard's size, with its label
+   * and peak close under it as in the Dashboard's strip (widgets.css), so the box keeps its padding. Centred with room to
+   * spare, its title stood at the box's very edge, closer than any other box's.
+   */
+  .canccu-layout--pulse_portrait .canccu-region > .canccu-widget--stats {
+    justify-content: safe center;
+    gap: calc(0.6 * var(--canccu-u));
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region > .canccu-widget--stats .canccu-widget__kicker {
+    line-height: 1;
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region > .canccu-widget--stats .canccu-widget__stat {
+    gap: 0;
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region > .canccu-widget--stats .canccu-widget__big {
+    font-size: calc(5.5 * var(--canccu-u));
+    /* Figures have no descenders: the line box need not reserve room for them. */
+    line-height: 0.9;
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region > .canccu-widget--stats .canccu-widget__meta,
+  .canccu-layout--pulse_portrait .canccu-region > .canccu-widget--stats .canccu-widget__peak {
+    line-height: 1;
+  }
+
+  /*
    * Hero: one panel, and under it the run of show as a slim band, its rows side by side on one
    * line, each its label, time and name; the place waits for the hub.
    */

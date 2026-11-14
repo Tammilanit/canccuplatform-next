@@ -164,3 +164,34 @@ ifresh; : > "$ist/head"; inst "install outside a git checkout" 2
 has "install says it needs the checkout's commit" "commit"
 if grep -E '^ExecStart' setup/canccu-stack.service | grep -q 'compose -f deploy/compose.yml up -d --wait' && ! grep -Eq '^ExecStart.*(pull|build)' setup/canccu-stack.service
 then pass "canccu-stack at boot neither pulls nor builds"; else bad "canccu-stack at boot neither pulls nor builds"; fi
+
+echo "# install: the generated VAPID key"
+# shellcheck source=setup/lib.sh
+. setup/lib.sh
+# A stub openssl that prints the DER of a fixed key (scalar 16 x 01, 16 x fe) in two writes, with a
+# pause inside the scalar, as a pipe under load may deliver it.
+vstub=$scratch/vstub; mkdir -p "$vstub"
+cat > "$vstub/openssl" <<'STUB'
+#!/usr/bin/env bash
+printf '\x30\x77\x02\x01\x01\x04\x20'; printf '\x01%.0s' {1..16}; sleep 0.2
+printf '\xfe%.0s' {1..16}; printf '\x00%.0s' {1..82}
+STUB
+printf '#!/bin/sh\nprintf "not a key"\n' > "$vstub/openssl-bad"
+chmod +x "$vstub/openssl" "$vstub/openssl-bad"
+run env PATH="$vstub:$PATH" bash -c 'set -o pipefail; . setup/lib.sh; newvapidkey'
+if [ "$rc" = 0 ] && [ "$out" = "AQEBAQEBAQEBAQEBAQEBAf7-_v7-_v7-_v7-_v7-_v4" ]; then pass "the VAPID key is the DER's private scalar, base64url"
+else bad "the VAPID key is the DER's private scalar, base64url (exit $rc)" "$out"; fi
+ln -sf openssl-bad "$vstub/openssl"
+run env PATH="$vstub:$PATH" bash -c 'set -o pipefail; . setup/lib.sh; newvapidkey'
+if [ "$rc" != 0 ] || [ -z "$out" ]; then pass "no VAPID key from output that is not a P-256 key"; else bad "no VAPID key from output that is not a P-256 key" "$out"; fi
+# 200 keys from the real openssl, 8 at a time: under that load a pipe cut short by `head` killed
+# its writer with SIGPIPE, and pipefail turned that into no key (#428).
+vkeys=$scratch/vkeys; mkdir -p "$vkeys"
+for w in 1 2 3 4 5 6 7 8; do
+  (for _ in $(seq 25); do newvapidkey 2>&1 || printf ' failed'; echo; done > "$vkeys/$w") &
+done
+wait
+vbad=$(cat "$vkeys"/* | grep -cvE '^[A-Za-z0-9_-]{43}$')
+vuniq=$(cat "$vkeys"/* | sort -u | wc -l)
+if [ "$vbad" = 0 ] && [ "$vuniq" = 200 ]; then pass "200 VAPID keys, 8 at a time: each a 32-byte key, all different"
+else bad "200 VAPID keys, 8 at a time: each a 32-byte key, all different ($vbad bad, $vuniq different)" "$(cat "$vkeys"/* | grep -vE '^[A-Za-z0-9_-]{43}$' | head -5)"; fi

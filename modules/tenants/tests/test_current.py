@@ -30,6 +30,23 @@ async def test_guest_sees_public_fields_and_nothing_of_a_draft(env: Env) -> None
     assert flags.json()["error"]["code"] == "info_pages_closed"
 
 
+async def test_members_of_a_draft_see_it_and_others_only_that_it_is_not_open(env: Env) -> None:
+    """A draft is prepared out of sight of guests only: its members read it as in a live event
+    (tenants.md, Lifecycle), so their pages can name it."""
+    await make_tenant(env.db, "beta", "beta.example.org", status="draft", admins=("u_admin",))
+    member = env.rights.sign_in("u_crew", "agenda.crew.read")
+    outsider = env.rights.sign_in("u_outsider")
+    admin = env.rights.sign_in("u_admin")
+    async with env.client("beta.example.org") as c:
+        as_member = (await c.get("/api/tenants/current", headers=member)).json()
+        as_outsider = (await c.get("/api/tenants/current", headers=outsider)).json()
+        as_admin = (await c.get("/api/tenants/current", headers=admin)).json()
+    assert as_member["id"] == "beta" and as_member["status"] == "draft" and "name" in as_member
+    assert "revision" not in as_member and "admin_access" not in as_member  # PublicTenant
+    assert as_outsider == {"id": "beta", "status": "draft"}
+    assert as_admin["revision"] == 1 and "admin_access" in as_admin
+
+
 async def test_patch_needs_a_right_and_the_role_for_access_settings(env: Env) -> None:
     await make_tenant(env.db, "alpha", HOST, admins=("u_admin",))
     granted = env.rights.sign_in("u_granted", "tenants.event.write", "tenants.access.write")

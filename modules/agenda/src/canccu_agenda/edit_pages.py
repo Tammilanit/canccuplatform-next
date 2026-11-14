@@ -12,12 +12,14 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
 
-from . import announce, edits, forms, model, undo
+from . import announce, edits, forms, model, store, timers, undo
 from .delay_pages import as_int, day_of, preview
 from .deps import deps
-from .effective import read_channels
+from .effective import event_settings, read_channels
+from .event_dates import event_over
 from .inverse import Inverse
 from .item_pages import load_item
+from .kinds import not_found
 from .preview import change_of, preview_html, told, told_announce
 from .web import (
     BASE,
@@ -53,16 +55,21 @@ async def cancel_page(request: Request) -> Response:
     preview = preview_html(
         [
             f"{row['title']} at {hhmm(row['starts_at'], tz)} is cancelled: it stays on the run"
-            " of show, struck through. Cancelling is final; add it again to bring it back."
+            " of show, struck through."
         ],
         [],
-        told("cancel", [change_of(row, kinds, channels)], now),
+        [
+            *told("cancel", [change_of(row, kinds, channels)], now),
+            ("Undo", "Changes → Bring back, until the event ends."),
+        ],
     )
+    keep = f"{BASE}/?item={esc(row['id'])}#r-{esc(row['id'])}"
     body = preview + (
         f'<form method=post action="{BASE}/items/{esc(row["id"])}/cancel"'
         ' class="canccu-agenda-actions">'
         + hidden({"revision": row["revision"]})
-        + button(f"Cancel {row['title']}", "danger")
+        + f'<a class="canccu-button canccu-button--secondary" href="{keep}">Keep the item</a>'
+        + button("Cancel the item", "danger")
         + "</form>"
     )
     return page(request, f"Cancel {row['title']}", body)
@@ -76,7 +83,45 @@ async def cancel_save(request: Request) -> Response:
     item_id = request.path_params["item_id"]
     item = await edits.cancel_one(d, session, item_id, revision, inverse=inverse)
     path = f"/?day={day_of(item['starts_at'], request)}&done=cancelled"
-    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)))
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)), item_id)
+
+
+def bring_back_form(row: Any) -> str:
+    """Bring back, for a cancelled item until the event ends (sheet 5); the item's Changes and
+    the panel beside the list offer it."""
+    return (
+        f'<form method=post action="{BASE}/items/{esc(row["id"])}/bring-back"'
+        ' class="canccu-agenda-undo">'
+        + button("Bring back", "secondary")
+        + " <span>Until the event ends.</span></form>"
+    )
+
+
+async def bring_back(request: Request) -> Response:
+    """A cancelled item back as it was, through the same write as undoing its cancel."""
+    session = await page_writer(request)
+    d = deps(request)
+    now = d.now()
+    if event_over(request, now):
+        raise model.conflict("event_over", "the event has ended, so nothing comes back.")
+    channels, leads = await event_settings(d)
+    async with d.db.tenant() as conn:
+        await store.state(conn, lock=True)
+        row = await store.item(conn, request.path_params["item_id"], lock=True)
+        if row is None:
+            raise not_found("item")
+        if row["managed_by"] is not None:
+            raise model.conflict("item_managed", "bring the session back in the tournament module")
+        if row["status"] != "cancelled":
+            raise model.conflict("item_scheduled", "the item is not cancelled")
+        out: undo.Pending = []
+        new = await undo.add_again(conn, row, store.actor_of(session), out, "kind_removed")
+        kinds = await store.kinds(conn)
+        await timers.reschedule(conn, [new], kinds, leads, now, rearm=set())
+        rendered = {new["id"]: model.item_json(new, kinds, channels)}
+        await undo.store_events(d, conn, session, out, rendered)
+    await d.outbox.flush()
+    return redirect(f"/?day={_day(new, request)}&done=brought_back", new["id"])
 
 
 def bring_forward(row: Any, now: datetime) -> int:
@@ -176,7 +221,7 @@ async def show_now_save(request: Request) -> Response:
             done = "shown_not_announced"
         else:
             done = "shown_announced" if minutes else "announced"
-    return redirect(undo.with_undo(f"/?day={_day(row, request)}&done={done}", undo_id))
+    return redirect(undo.with_undo(f"/?day={_day(row, request)}&done={done}", undo_id), row["id"])
 
 
 ROUTES = [
@@ -184,4 +229,5 @@ ROUTES = [
     Route("/items/{item_id}/cancel", cancel_save, methods=["POST"]),
     Route("/items/{item_id}/show-now", show_now_page, methods=["GET"]),
     Route("/items/{item_id}/show-now", show_now_save, methods=["POST"]),
+    Route("/items/{item_id}/bring-back", bring_back, methods=["POST"]),
 ]

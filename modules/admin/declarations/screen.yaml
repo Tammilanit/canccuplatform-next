@@ -42,13 +42,38 @@ settings:
     type: string
     label: Asset shown when content is not ready in time
     default: ""
-  - key: photo_dwell_seconds
-    type: integer
-    min: 5
-    max: 60
-    label: Photo dwell (seconds)
-    default: 8
   - key: burn_in_drift
     type: boolean
     label: Shift the screen layout slowly against burn-in
     default: false
+  # Screen studio's Motion card writes both through admin's internal settings write.
+  - key: motion_level
+    type: string
+    choices: [none, calm, lively, party]
+    label: Energy level
+    default: lively
+  - key: follow_the_day
+    type: boolean
+    label: Follow the day (calmer at doors and wind-down, livelier at peaks)
+    default: true
+  - key: stage_art
+    type: boolean
+    label: Show a hot game's art on the stage
+    default: true
+groups:
+  - id: playing
+    label: Playing
+    description: What a screen does between slides.
+    keys: [break_min_gap_seconds, ticker_appearance, progress_bars, burn_in_drift]
+  - id: motion
+    label: Motion
+    description: How lively the screens move, unless a zone pins its own level.
+    keys: [motion_level, follow_the_day, stage_art]
+  - id: network
+    label: When the network is slow
+    description: How long a screen waits before it says so.
+    keys: [heartbeat_seconds, offline_after_seconds, ready_timeout_seconds, ready_fallback_asset_id]
+  - id: web_pages
+    label: Web pages
+    description: Outside pages a screen may show.
+    keys: [web_allowlist]

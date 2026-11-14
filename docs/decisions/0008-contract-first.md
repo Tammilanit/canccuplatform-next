@@ -1,6 +1,6 @@
 # 0008. Contract first, with shared conventions
 
-- **Status:** Accepted
+- **Status:** Accepted (its contract-first and contract-change rules amended by [0029](0029-additive-contracts-ship-with-consumers.md): an additive change ships with the code that uses it)
 - **Date:** 2026-11-02
 
 ## Context

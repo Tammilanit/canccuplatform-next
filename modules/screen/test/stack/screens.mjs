@@ -8,16 +8,28 @@
 // built-in layouts (#404, sheet 10) are shot landscape in every theme, at 4K in the default one,
 // and Ambient once under an emergency takeover, which keeps its fixed red there too. Dashboard is
 // handed sample statistics (#416), and shot once as the server draws it while they are missing.
+// The Director's strips (#447, director.mjs) are frames a few seconds apart.
+import { CLEAR_CHECKS } from "./clear.mjs";
 import { expect } from "./client.mjs";
 import { boxesGivenAway, statsApart, stripNamesCountdown } from "./dashboard.mjs";
+import { DIRECTOR_STRIPS, directorStrip, stripNames, withDirector } from "./director.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
 import {
   CLAIM_OF,
+  MOTION_VIEWS,
+  STAGE_VIEWS,
+  withHeroArt,
+  withMotion,
+  withStage,
   withHeroItemOnly,
+  withCounts,
+  withOneScreen,
   withPhoto,
   withShowcase,
   withStats,
   withTakeover,
+  holdStream,
+  stillOnline,
 } from "./handed.mjs";
 import { collectSamples, judgePage } from "./readability.mjs";
 
@@ -30,39 +42,65 @@ const UHD = [
   [3840, 2160],
   [2160, 3840],
 ];
-const sizesOf = (theme) => (theme === "default" ? [...HD, ...UHD] : HD);
+// The merge queue's check (scripts/demo-screenshots --check) reads every theme at 1080p only.
+const sizesOf = (theme, check) => (theme === "default" && !check ? [...HD, ...UHD] : HD);
 /** The frames that differ by theme; the others are drawn before any theme reaches the page. */
 const THEMED = ["pulse", "identify", "offline", "unassigned", "archived"];
 const UNTHEMED = ["pairing", "refused", "moved", "unreachable", "check"];
 const CLAIMS = ["claim-rail", "claim-hero", "claim-overlay", "claim-takeover"];
 /** The built-ins besides the Pulse and Portrait: 16:9 each, so drawn landscape only. */
 const LAYOUTS = ["dashboard", "hero", "split", "ambient"];
-const landscapeOf = (theme) => sizesOf(theme).filter(([w, h]) => w > h);
+const landscapeOf = (theme, check) => sizesOf(theme, check).filter(([w, h]) => w > h);
+
+/** What each view of #443 must show (sheets 10, 13 and 16), waited for before its shot. */
+const NEW_VIEWS = {
+  photo: ".canccu-widget__wall .canccu-widget__tile:nth-child(5) img",
+  "photo-pop": ".canccu-widget__pop img",
+  "ambient-online": ".canccu-region--online .canccu-widget__still",
+  "portrait-right-now": ".canccu-region--right_now .canccu-widget__peak",
+};
+
+/** The surge's strip (sheet 15): before the tint, while it holds with its art, after it ended. */
+const SURGE_FRAMES = ["before", "during", "after"];
+/** How long the strip's tint holds, and the stage's longest fade (stage.css). */
+const SURGE_MS = 12_000;
+const STAGE_FADE_MS = 3000;
 
 const nameOf = (theme, view, [w, h]) => `theming-${theme}-screen-${view}-${w}x${h}`;
 
 /** Every PNG the run takes, in order, for the dry run. */
-export function planned() {
+export function planned(check = false) {
   const out = [];
   for (const theme of THEMES) {
-    for (const size of sizesOf(theme)) {
+    for (const size of sizesOf(theme, check)) {
       for (const view of THEMED) out.push(nameOf(theme, view, size));
       if (theme !== "default") continue;
       for (const view of UNTHEMED) out.push(nameOf(theme, view, size));
     }
-    for (const size of landscapeOf(theme))
+    for (const size of landscapeOf(theme, check))
       for (const view of LAYOUTS) out.push(nameOf(theme, view, size));
   }
   out.push(nameOf("default", "dashboard-showcase", HD[0]));
   out.push(nameOf("default", "dashboard-waiting", HD[0]));
   out.push(nameOf("default", "ambient-takeover", HD[0]));
+  out.push(nameOf("default", "ambient-online", HD[0]));
   for (const size of HD)
-    for (const view of ["photo", "rail-empty", ...CLAIMS]) out.push(nameOf("default", view, size));
+    for (const view of ["photo", "photo-pop", "rail-empty", ...CLAIMS])
+      out.push(nameOf("default", view, size));
   out.push(nameOf("default", "entrance", HD[1]));
+  out.push(nameOf("default", "pulse-one-screen", HD[0]));
+  out.push(nameOf("default", "portrait-right-now", HD[1]));
+  for (const { view, surge } of STAGE_VIEWS) {
+    if (!surge) out.push(nameOf("default", view, HD[0]));
+    else for (const f of SURGE_FRAMES) out.push(nameOf("default", `${view}-${f}`, HD[0]));
+  }
+  out.push(nameOf("default", "pulse-hero-art", HD[0]));
+  for (const { view, frames } of DIRECTOR_STRIPS)
+    out.push(...stripNames(nameOf("default", view, HD[0]), frames));
   return out;
 }
 
-export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }) {
+export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, check = false }) {
   await seedScreens(demo);
   const devices = [];
   const pair = async (name, zone) => {
@@ -86,6 +124,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
   };
   /** The screenshot, then its text against the readability rules. */
   const shot = async (name, page) => {
+    // Taken in the merge queue's check too: without it the next view of the same screen did not
+    // draw within its wait (CI, #461), as the shot paces the views; the queue uploads none.
     await page.screenshot({ path: `${out}/${name}.png` });
     const problems = judgePage(await page.evaluate(collectSamples));
     if (problems.length === 0) ok(`${name}.png`);
@@ -93,6 +133,10 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       fail(
         `${name}: ${problems.length} readability problems\n      ${problems.slice(0, 8).join("\n      ")}`,
       );
+  };
+  const playing = async (name, page) => {
+    await stillOnline(page);
+    await shot(name, page);
   };
   const attempt = async (name, run) => {
     try {
@@ -108,7 +152,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
     const entrance = await pair("Entrance", "entrance");
     for (const theme of THEMES) {
       await publishTheme(demo, theme);
-      for (const size of sizesOf(theme)) {
+      for (const size of sizesOf(theme, check)) {
         await attempt(nameOf(theme, "pulse", size), () => pulse(theme, size));
         await attempt(nameOf(theme, "unassigned", size), async () => {
           const { page, close } = await open(size, spare.cookie);
@@ -129,7 +173,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
             await attempt(nameOf(theme, view, size), () => untouched(view, size));
       }
       try {
-        for (const size of landscapeOf(theme))
+        for (const size of landscapeOf(theme, check))
           for (const view of LAYOUTS)
             await attempt(nameOf(theme, view, size), () => layoutShot(theme, view, size));
         if (theme === "default")
@@ -144,6 +188,10 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
           await attempt(nameOf(theme, "ambient-takeover", HD[0]), () =>
             layoutShot(theme, "ambient", HD[0], "ambient-takeover"),
           );
+        if (theme === "default")
+          await attempt(nameOf(theme, "ambient-online", HD[0]), () =>
+            layoutShot(theme, "ambient", HD[0], "ambient-online"),
+          );
       } finally {
         await saveZone(demo, "main", { layout_id: null });
       }
@@ -151,6 +199,9 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
     for (const size of HD) {
       await attempt(nameOf("default", "photo", size), () =>
         handed("default", "photo", size, withPhoto),
+      );
+      await attempt(nameOf("default", "photo-pop", size), () =>
+        handed("default", "photo-pop", size, (s) => withPhoto(s, true)),
       );
       await attempt(nameOf("default", "rail-empty", size), () =>
         handed("default", "rail-empty", size, withHeroItemOnly),
@@ -175,12 +226,37 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await close();
     });
 
+    for (const { view, level, pack } of MOTION_VIEWS) {
+      await attempt(nameOf("default", view, HD[0]), () =>
+        handed("default", view, HD[0], withMotion(level, pack)),
+      );
+    }
+    await attempt(nameOf("default", "pulse-one-screen", HD[0]), () =>
+      handed("default", "pulse-one-screen", HD[0], withOneScreen),
+    );
+    await attempt(nameOf("default", "portrait-right-now", HD[1]), () =>
+      handed("default", "portrait-right-now", HD[1], withCounts),
+    );
+    for (const { view, level, surge } of STAGE_VIEWS) {
+      await attempt(nameOf("default", view, HD[0]), () =>
+        handed("default", view, HD[0], withStage(level, surge, SURGE_MS)),
+      );
+    }
+    await attempt(nameOf("default", "pulse-hero-art", HD[0]), () =>
+      handed("default", "pulse-hero-art", HD[0], withHeroArt),
+    );
+    for (const { view } of DIRECTOR_STRIPS)
+      await attempt(nameOf("default", view, HD[0]), () =>
+        handed("default", view, HD[0], withDirector(view)),
+      );
+
     /** The Pulse, then identify over it, then the offline marker. */
     async function pulse(theme, size) {
       const { page, close } = await open(size, main.cookie);
       await page.goto(at("/screen/"));
       await layout(page, size);
       await railShowsAgenda(page);
+      await tickerFitted(page, theme === "default" && size === HD[0]);
       await settle(page);
       await shot(nameOf(theme, "pulse", size), page);
       expect(
@@ -215,6 +291,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       if (view === "dashboard-showcase")
         return handed(theme, view, size, (s) => withShowcase(withStats(s)));
       if (view === "ambient-takeover") return handed(theme, view, size, withTakeover);
+      if (view === "ambient-online") return handed(theme, view, size, withCounts);
       const { page, close } = await open(size, main.cookie);
       await page.goto(at("/screen/"));
       await page.waitForSelector(`.canccu-layout--${id}`, { timeout: 30_000 });
@@ -225,7 +302,25 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await close();
     }
 
-    /** The page handed a changed state, with no stream to replace it before the shot. */
+    /**
+     * The surge's strip: the stage before the tint (the state as the server had it a moment
+     * earlier), while it holds with the game's art, and after it ended on the screen's own clock.
+     */
+    async function surgeStrip(page, theme, view, size, close) {
+      await page.waitForSelector(".canccu-stage--art");
+      await page.waitForTimeout(STAGE_FADE_MS + 200);
+      await playing(nameOf(theme, `${view}-during`, size), page);
+      await page.waitForFunction(() => !document.querySelector(".canccu-stage--tinted"), null, {
+        timeout: SURGE_MS + 5000,
+      });
+      await page.waitForTimeout(STAGE_FADE_MS + 200);
+      await playing(nameOf(theme, `${view}-after`, size), page);
+      await close();
+      // Before: the same stage at the same level, no box asking yet.
+      await handed(theme, `${view}-before`, size, withStage("lively", false));
+    }
+
+    /** The page handed a changed state, its stream held open and empty so nothing replaces it. */
     async function handed(theme, view, size, change) {
       const { page, close } = await open(size, main.cookie);
       // The server picks the layout of the orientation a heartbeat reports, so the page first plays
@@ -234,7 +329,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
         await page.goto(at("/screen/"));
         await layout(page, size);
       }
-      await page.route("**/api/screen/device/stream", (route) => route.abort());
+      await holdStream(page);
       await page.route("**/api/screen/device/state", async (route) => {
         try {
           const answer = await route.fetch();
@@ -246,14 +341,42 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn }
       await page.goto(at("/screen/"));
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
       else await layout(page, size);
-      if (view.startsWith("dashboard")) await statsApart(page);
+      // A showcase pauses Right now, the Dashboard's one `stats` box (#447): no numbers to keep apart.
+      if (view.startsWith("dashboard") && view !== "dashboard-showcase") await statsApart(page);
+      // #443's views draw what they are named for before the shot.
+      const drawn = NEW_VIEWS[view];
+      if (drawn !== undefined) await page.waitForSelector(drawn, { timeout: 30_000 });
+      await CLEAR_CHECKS[view]?.(page);
       if (view === "rail-empty") await railShowsIdle(page);
-      else if (view === "dashboard-showcase") await stripNamesCountdown(page);
-      else if (view === "ambient-takeover") await takeoverIsRed(page);
-      else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
+      else if (view === "dashboard-showcase") {
+        await stripNamesCountdown(page);
+        await tickerFitted(page, true);
+      } else if (view === "ambient-takeover") await takeoverIsRed(page);
+      else if (view === "stage-surge") return await surgeStrip(page, theme, view, size, close);
+      else if (view.startsWith("director-") || view === "choreographer") {
+        await settle(page);
+        await directorStrip(page, view, (f) => shot(`${nameOf(theme, view, size)}-${f}`, page));
+        return await close();
+      } else if (view.startsWith("stage-") || view === "pulse-hero-art") {
+        // The kind and phase tints fade in over the stage's longest fade.
+        await page.waitForSelector(".canccu-stage--phase-peak");
+        await page.waitForTimeout(STAGE_FADE_MS + 200);
+      } else if (view.startsWith("motion-")) {
+        // A strip of four frames 0.4 s apart from the spotlight's start (sheet 11, #445).
+        // From the moment the box has faded in (1.5 s at calm), so each frame shows the level.
+        await page.waitForFunction(() => {
+          const box = document.querySelector(".canccu-spotlight");
+          return box !== null && getComputedStyle(box).opacity === "1";
+        });
+        for (const n of [1, 2, 3, 4]) {
+          await playing(`${nameOf(theme, view, size)}-f${n}`, page);
+          await page.waitForTimeout(400);
+        }
+        return await close();
+      } else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
         await railShowsAgenda(page);
       await settle(page);
-      await shot(nameOf(theme, view, size), page);
+      await playing(nameOf(theme, view, size), page);
       await close();
     }
 
@@ -318,6 +441,27 @@ async function railShowsAgenda(page) {
   await page.waitForSelector(".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active", {
     timeout: 40_000,
   });
+}
+
+/**
+ * The built-in ticker is never cut off (#442): every line that says it fits does, so one measured
+ * off the page cannot pass. With `crawls`, where the demo's ticker is wider than its box, the line
+ * crawls. A theme's own ticker template draws no built-in line and is left alone.
+ */
+async function tickerFitted(page, crawls) {
+  const sel = ".canccu-widget--ticker .canccu-widget__line";
+  await page.waitForFunction(
+    (lines) => [...document.querySelectorAll(lines)].every((el) => el.dataset.fit !== undefined),
+    sel,
+    { timeout: 10_000 },
+  );
+  const lines = await page.$$eval(sel, (els) =>
+    els.map((el) => ({ fit: el.dataset.fit, cut: el.scrollWidth > el.clientWidth + 1 })),
+  );
+  if (lines.some((line) => line.fit === "fits" && line.cut))
+    throw new Error("the ticker's line is cut off: it was measured as fitting");
+  if (crawls && !lines.some((line) => line.fit === "crawl"))
+    throw new Error("the demo's long ticker does not crawl");
 }
 
 /** The emergency takeover wears its fixed red (claims.css) whatever the layout does to its cards. */

@@ -25,7 +25,7 @@ def one(**kw: Any) -> list[Setting]:
 
 
 def test_shipped_declarations_load_with_contract_defaults() -> None:
-    d = load_declarations(DECL)
+    d = {m: decl.settings for m, decl in load_declarations(DECL).items()}
     assert {"admin", "agenda", "notify", "games"} <= set(d)
     agenda = {s.key: s for s in d["agenda"]}
     assert agenda["reminder_leads_minutes"].default == [30, 10]
@@ -40,30 +40,40 @@ def test_shipped_declarations_load_with_contract_defaults() -> None:
 
 def test_screen_declaration_matches_the_contract() -> None:
     # contracts/screen.md, Settings: the bounds and defaults the screen module reads.
-    screen = {s.key: s for s in load_declarations(DECL)["screen"]}
+    screen = {s.key: s for s in load_declarations(DECL)["screen"].settings}
     bounded = {
         "heartbeat_seconds": (5, 60, 15),
         "offline_after_seconds": (15, 300, 45),
         "break_min_gap_seconds": (0, 3600, 60),
         "ready_timeout_seconds": (1, 30, 8),
-        "photo_dwell_seconds": (5, 60, 8),
     }
     for key, (low, high, default) in bounded.items():
         assert (screen[key].type, screen[key].min, screen[key].max) == ("integer", low, high)
         assert screen[key].default == default
     assert (screen["web_allowlist"].type, screen["web_allowlist"].default) == ("list", [])
+    # Seconds per photo is the photo wall's own prop now (contracts/screen.md, Photos; sheet 16).
+    assert "photo_dwell_seconds" not in screen
     assert (screen["progress_bars"].type, screen["progress_bars"].default) == ("boolean", True)
     appearances = ("default", "high_contrast", "minimal", "broadcast")
     assert screen["ticker_appearance"].choices == appearances
     assert screen["ticker_appearance"].default == "default"
     assert screen["ready_fallback_asset_id"].default == ""
     assert (screen["burn_in_drift"].type, screen["burn_in_drift"].default) == ("boolean", False)
+    # The energy level and Follow the day (contracts/screen.md, Motion and burn-in drift).
+    assert screen["motion_level"].choices == ("none", "calm", "lively", "party")
+    assert screen["motion_level"].default == "lively"
+    assert (screen["follow_the_day"].type, screen["follow_the_day"].default) == ("boolean", True)
+    # The stage's game art (contracts/screen.md, The stage).
+    assert (screen["stage_art"].type, screen["stage_art"].default) == ("boolean", True)
     assert set(screen) == set(bounded) | {
         "web_allowlist",
         "progress_bars",
         "ticker_appearance",
         "ready_fallback_asset_id",
         "burn_in_drift",
+        "motion_level",
+        "follow_the_day",
+        "stage_art",
     }
 
 

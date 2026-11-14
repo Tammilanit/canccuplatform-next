@@ -80,7 +80,7 @@ function simpleLayouts(layouts: unknown): unknown {
 
 /**
  * The simple-mode manifest: no CSS, fonts, templates or embeds, no font or size tokens, the
- * colours generated from `brand`; images, layouts and `motion` kept.
+ * colours generated from `brand`; images, layouts, `motion` and `motion_style` kept.
  */
 function simpleManifest(manifest: Manifest, brand: Brand): Manifest {
   const out: Manifest = Object.fromEntries(
@@ -89,7 +89,11 @@ function simpleManifest(manifest: Manifest, brand: Brand): Manifest {
   out.mode = "simple";
   if (out.layouts !== undefined) out.layouts = simpleLayouts(out.layouts);
   const tokens = isObject(manifest.tokens) ? manifest.tokens : {};
-  out.tokens = tokens.motion === undefined ? {} : { motion: tokens.motion };
+  out.tokens = Object.fromEntries(
+    (["motion", "motion_style"] as const)
+      .filter((k) => tokens[k] !== undefined)
+      .map((k) => [k, tokens[k]]),
+  );
   return withColors(out, brand);
 }
 

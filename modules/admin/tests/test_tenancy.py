@@ -23,9 +23,10 @@ from conftest import SERVICE_KEY, SIGNIN_HOST, StoreProbe, fake_resolver
 
 from canccu_admin.app import create_app
 from canccu_admin.auth import Auth
-from canccu_admin.auth_db import MemoryAuthStore
+from canccu_admin.auth_memory import MemoryAuthStore
 from canccu_admin.db import MemoryStore
 from canccu_admin.declarations import load_declarations
+from canccu_admin.health import HealthWatch
 from canccu_admin.profile import make_validator
 from canccu_admin.service import Service
 
@@ -51,12 +52,11 @@ class Env:
             make_validator(ROOT / "contracts/profile.schema.json"),
             tmp_path,
             load_declarations(Path(__file__).parents[1] / "declarations"),
-            {},
         )
         auth = Auth(MemoryAuthStore(), self.service.bus, None, None)
         self.app = create_app(
             self.service,
-            Health("admin", "dev", {}),
+            HealthWatch(Health("admin", "dev", {}), {}),
             authorize,
             auth,
             fake_resolver({host: tenant for tenant, host in HOSTS.items()}),
@@ -177,7 +177,7 @@ async def test_store_refuses_work_without_a_tenant() -> None:
     with pytest.raises(NoTenant):
         await store.get_settings("screen")
     with pytest.raises(NoTenant):
-        await store.set_profile({"name": "x"})
+        await store.set_profile({"name": "x"}, loaded_by="u_1")
 
 
 async def test_events_go_to_the_tenants_own_stream(env: Env) -> None:

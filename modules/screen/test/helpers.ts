@@ -1,5 +1,5 @@
 /** A screen app on a real Postgres (RLS needs one) with fake tenants, admin and Valkey. */
-import type { ThemeNow } from "../src/compose/sources.js";
+import type { DraftTheme, ThemeNow } from "../src/compose/sources.js";
 import type { AgendaItem, AgendaNow, CheckinCode, VenueInfo } from "../src/compose/widgets.js";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -31,6 +31,9 @@ import type { RenderDeps } from "../src/render/jobs.js";
 import { MemoryRenderQueue } from "../src/render/queue.js";
 import { call, setCookie } from "./calls.js";
 import { SIGNIN_HOST, SUPERADMIN_HOST, fakeTenants } from "./tenants.js";
+import { fakeSettingsWrite } from "./settings-write.js";
+import type { SettingsWrites } from "./settings-write.js";
+import { ArtCache } from "../src/stage/art.js";
 
 /** Tests run only on a database named `*_test` (dropTables refuses any other). */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
@@ -99,6 +102,10 @@ export interface Harness {
   clock: { now: number };
   /** tenant → the admin settings it answers; unset keys take their default. */
   settings: Record<string, Record<string, SettingValue>>;
+  /** Screen's own settings written through admin (the Motion card). */
+  settingsWrites: SettingsWrites;
+  /** Set to make reading Screen's own settings fail, as while admin is down and none are held. */
+  settingsDown: { value: boolean };
   /** tenant → admin's own settings (the event's `language`), as Studio reads them. */
   adminSettings: Record<string, Record<string, SettingValue>>;
   /** The fake storage quota: bytes per tenant, and the limit each gets (default 2 GiB). */
@@ -119,6 +126,10 @@ export interface Harness {
   /** The app's rights cache; a test that changes SESSIONS clears it with `admin.rights.changed`. */
   rights: RightsChecker;
   /** One run of the offline sweep, as main starts every 5 seconds. */
+  /** The covers the edge answers for the stage's art, by path, on any host. */
+  covers: Record<string, Buffer>;
+  /** Each path the stage's art read through the edge, in order. */
+  coverReads: string[];
   sweep(): Promise<void>;
   queue: MemoryRenderQueue;
   /**
@@ -137,10 +148,16 @@ export interface FakeSources {
   revisions: Record<number, ThemeNow>;
   /** The revision read fails (a 500, a timeout) while the current read may still answer. */
   revisionsDown: boolean;
+  /** Theming's drafts by preview key; a key not here is one theming no longer knows. */
+  drafts: Record<string, DraftTheme>;
+  /** The draft read fails (theming does not answer). */
+  draftsDown: boolean;
   event: { name: string } | null;
   agenda: AgendaNow | null;
   /** The whole run of show (`GET /internal/agenda/items`); null is "down". */
   agendaItems: AgendaItem[] | null;
+  /** The run of show as kept for the screens' agenda version (`agendaDay`); null when none is. */
+  agendaDay: AgendaItem[] | null;
   venue: VenueInfo | null;
   /** The hostnames the guest read (event) was made with. */
   hosts: string[];
@@ -149,6 +166,10 @@ export interface FakeSources {
   checkin: CheckinCode | null;
   /** The purposes notify's check-in code was read for. */
   checkinReads: string[];
+  /** Notify's count of check-ins; null is "down". */
+  checkins: number | null;
+  /** The purposes the count was read for. */
+  countReads: string[];
 }
 
 /** Drops every screen table; `assignments` too, the name before migration 007. */
@@ -159,12 +180,15 @@ export async function dropTables(admin: pg.Client): Promise<void> {
        screen_playlist_items, screen_playlists, assignments, screen_assignments, screen_zones,
        screen_zone_seeds, devices, screen_migrations, screen_render_jobs, screen_asset_versions,
        screen_assets, screen_files, screen_ticker, screen_ticker_windows, screen_photos, screen_claims, screen_pins,
-       screen_pin_tenants CASCADE`,
+       screen_pin_tenants, screen_previews CASCADE`,
   );
 }
 
-/** A fresh schema per file, migrated by the module's own files, as at start. */
-export async function harness(): Promise<Harness> {
+/**
+ * A fresh schema per file, migrated by the module's own files, as at start. `saves: false` leaves
+ * out admin's settings write, as an app given none.
+ */
+export async function harness(options: { saves?: boolean } = {}): Promise<Harness> {
   const admin = new pg.Client({ connectionString: DATABASE_URL });
   await admin.connect();
   // finally: a refused database must not leave the client open and hold the run.
@@ -191,18 +215,25 @@ export async function harness(): Promise<Harness> {
   await writeFile(join(playerDir, "player.css"), "body {}\n");
   await writeFile(join(playerDir, "sw.js"), "self;\n");
   const oembedStatus = { value: 200 };
+  const covers: Record<string, Buffer> = {};
+  const coverReads: string[] = [];
   const fake: FakeSources = {
     theme: null,
     revisions: {},
     revisionsDown: false,
+    draftsDown: false,
+    drafts: {},
     event: null,
     agenda: null,
     agendaItems: null,
+    agendaDay: null,
     venue: null,
     hosts: [],
     tenants: [],
     checkin: null,
     checkinReads: [],
+    checkins: null,
+    countReads: [],
   };
   const answer = <T>(seen: string[], key: string, value: T): Promise<T> => {
     seen.push(key);
@@ -242,6 +273,11 @@ export async function harness(): Promise<Harness> {
     platformHosts: [SUPERADMIN_HOST, SIGNIN_HOST],
   });
   const rights = new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin }));
+  const settingsWrites: SettingsWrites = { versions: {}, values: {}, log: [] };
+  const settingsDown = { value: false };
+  // Screen's held copy of what admin answered: like the kit's SettingsClient, a write through
+  // admin reaches it only on load() (or admin's event, which the harness does not send).
+  const heldVersions: Record<string, number> = {};
   const app = buildApp({
     db,
     kv,
@@ -261,9 +297,19 @@ export async function harness(): Promise<Harness> {
     superadminHost: SUPERADMIN_HOST,
     health: createHealth({ module: "screen", version: "dev", checks: {} }),
     settings: {
-      ensure: () => Promise.resolve(),
+      ensure: () =>
+        settingsDown.value ? Promise.reject(new Error("admin is down")) : Promise.resolve(),
       get: (key: string, fallback: SettingValue) => settings[requireTenant()]?.[key] ?? fallback,
+      get settingsVersion() {
+        return heldVersions[requireTenant()] ?? 0;
+      },
+      load: (tenant: string) => {
+        settings[tenant] = { ...settings[tenant], ...settingsWrites.values[tenant] };
+        heldVersions[tenant] = settingsWrites.versions[tenant] ?? 0;
+        return Promise.resolve();
+      },
     },
+    ...(options.saves === false ? {} : { writeSettings: fakeSettingsWrite(settingsWrites) }),
     adminSettings: {
       ensure: () => Promise.resolve(),
       get: (key: string, fallback: SettingValue) =>
@@ -278,6 +324,10 @@ export async function harness(): Promise<Harness> {
     playerDir,
     streamPingMs: 200,
     publicEvent: (host) => Promise.resolve(publicEvents[host ?? ""] ?? null),
+    art: new ArtCache(kv, (_host, path) => {
+      coverReads.push(path);
+      return Promise.resolve(covers[path] ?? null);
+    }),
     sources: {
       theme: (tenantId) => answer(fake.tenants, tenantId, fake.theme),
       themeRevision: (tenantId, revision) =>
@@ -286,11 +336,16 @@ export async function harness(): Promise<Harness> {
           tenantId,
           fake.revisionsDown ? null : (fake.revisions[revision] ?? "gone"),
         ),
+      themePreview: (tenantId, key) =>
+        answer(fake.tenants, tenantId, fake.draftsDown ? null : (fake.drafts[key] ?? "gone")),
       event: (host) => answer(fake.hosts, host, fake.event),
       agendaNow: (tenantId) => answer(fake.tenants, tenantId, fake.agenda),
       agendaItems: (tenantId) => answer(fake.tenants, tenantId, fake.agendaItems),
+      // Not counted in `tenants`: the kept copy is no read of agenda.
+      agendaDay: () => Promise.resolve(fake.agendaDay),
       venueInfo: (tenantId) => answer(fake.tenants, tenantId, fake.venue),
       checkinCode: (_tenantId, purpose) => answer(fake.checkinReads, purpose, fake.checkin),
+      checkinCount: (_tenantId, purpose) => answer(fake.countReads, purpose, fake.checkins),
     },
   });
   // A stand-in for the device routes later slices add (the state, the stream): it runs only the check.
@@ -321,6 +376,8 @@ export async function harness(): Promise<Harness> {
     failAudit,
     clock,
     settings,
+    settingsWrites,
+    settingsDown,
     adminSettings,
     storage,
     quota,
@@ -331,6 +388,8 @@ export async function harness(): Promise<Harness> {
     publicEvents,
     tenants,
     rights,
+    covers,
+    coverReads,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
     queue,
     dispatch: (socketPath, opts = {}) =>

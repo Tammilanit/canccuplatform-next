@@ -252,16 +252,22 @@ describe.skipIf(!DATABASE_URL)("claims", () => {
       const area = s.regions.find((r) => r.id === id)?.area;
       return `${String(area?.columns)}×${String(area?.rows)}`;
     };
-    // The statistics boxes wait for their source (#389): the hero takes online and voice (#416).
+    // The statistics boxes wait for their source (#389). With nothing showcased the hero fills
+    // their cells (The hero fills first); a claim in it grows it to the showcase size (sheet 10).
     await save({ layout_id: "dashboard" });
-    expect(size(await state(), "hero")).toBe("12×5");
+    const waiting = await state();
+    expect([size(waiting, "hero"), size(waiting, "rail")]).toEqual(["8×10", "4×10"]);
     await start(override("ov_10", { regions: ["hero"] }));
     const grown = await state();
     expect(claims(grown)).toEqual({ hero: "ov_10" });
     expect([size(grown, "hero"), size(grown, "rail")]).toEqual(["8×10", "4×10"]);
     expect(grown.regions.some((r) => r.id === "online")).toBe(false);
+    // A zone whose showcase plays at its size keeps the hero's own size while the claim plays, so
+    // the waiting boxes hand their cells over to their neighbours instead.
     await save({ layout_id: "dashboard", grow_for_showcase: false });
-    expect(size(await state(), "hero")).toBe("12×5");
+    const kept = await state();
+    expect(claims(kept)).toEqual({ hero: "ov_10" });
+    expect([size(kept, "hero"), size(kept, "rail")]).toEqual(["12×5", "12×5"]);
     await save({ layout_id: null, grow_for_showcase: true });
   });
 

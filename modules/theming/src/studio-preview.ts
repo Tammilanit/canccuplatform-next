@@ -23,7 +23,7 @@ import { zipOf } from "./package-routes.js";
 import type { ProfileSource } from "./profile.js";
 import { WRITE, needs, noDraft, notFound, pageNeeds } from "./http.js";
 import { resolvedRevision, revisionZero } from "./theme.js";
-import { adminTokens, fillTokens, tokensCss } from "./tokens.js";
+import { adminTokens, fillTokens, themeTokens, tokensCss } from "./tokens.js";
 import { STARTERS, STUDIO, draftFileUrl } from "./studio-views.js";
 
 const THEMES = fileURLToPath(new URL("../../../events/demo/themes/", import.meta.url));
@@ -67,6 +67,8 @@ export function htmlHeaders(reply: FastifyReply, csp: string): FastifyReply {
 /** What one preview links: the token CSS, the event CSS, the logo and the Discord colour. */
 interface Look {
   tokens: string;
+  /** The organiser pages' tokens: the platform colours where the theme fails the contrast rules. */
+  adminTokens: string;
   css: string | undefined;
   logo: string | undefined;
   embedColor: string;
@@ -84,6 +86,7 @@ async function draftLook(c: SqlClient): Promise<Look | undefined> {
   const images = isObject(m.images) ? m.images : {};
   return {
     tokens: `${STUDIO}draft/tokens.css${v}`,
+    adminTokens: `${STUDIO}draft/admin-tokens.css${v}`,
     css: list(m.css).length > 0 ? `${STUDIO}draft/theme.css${v}` : undefined,
     logo: await draftFileUrl(c, images.logo),
     // As publish sets it: the brand's own, else the primary, alpha dropped.
@@ -96,6 +99,7 @@ async function currentLook(c: SqlClient, deps: StudioDeps): Promise<Look> {
     (await resolvedRevision(c)) ?? revisionZero(await deps.profile(requireTenant())).theme;
   return {
     tokens: theme.tokens_css_url,
+    adminTokens: theme.admin_tokens_css_url,
     css: theme.css_url,
     logo: theme.logo_url,
     embedColor: hex(theme.embed_color),
@@ -181,16 +185,19 @@ function discordCard(look: Look, event: string): Html {
 }
 
 /**
- * The organiser pages as they are: the shell in the platform's own look. No organiser page links
- * the event's tokens yet, so the preview takes none (UX audit C3: the preview shows what is).
+ * The organiser pages as they are: the shell with the event's admin tokens, which every organiser
+ * page links (UX audit C3: the preview shows what is). After the current tokens the shell links,
+ * so the draft's win.
  */
-function organiserPage(nonce: string, event: EventInfo | undefined): Html {
+function organiserPage(nonce: string, event: EventInfo | undefined, look: Look): Html {
   return shellPage({
     title: "Run of show",
     nonce,
     surface: "admin",
     cssHref: `${STUDIO}static/ui.css`,
-    head: html`<link rel="stylesheet" href="${STUDIO}static/preview.css" />`,
+    head: html`<link rel="stylesheet" href="${STUDIO}static/preview.css" />${stylesheet(
+        look.adminTokens,
+      )}`,
     event,
     tabs: [
       { href: "#", label: "Day", current: true },
@@ -224,7 +231,7 @@ function previewPage(
   const base = `${STUDIO}static/preview.css`;
   let doc: Html;
   if (surface === "admin") {
-    doc = organiserPage(nonce, event);
+    doc = organiserPage(nonce, event, look);
   } else if (surface === "discord") {
     doc = page({
       title: "Discord",
@@ -298,7 +305,7 @@ export function draftCssRoutes(app: FastifyInstance, deps: StudioDeps): void {
     const text = await deps.db.tenant(async (c) => {
       const draft = await loadDraft(c);
       if (draft === undefined) throw noDraft();
-      const tokens = fillTokens(draft.manifest.tokens ?? {});
+      const tokens = themeTokens(draft.manifest.tokens);
       if (name === "tokens.css") return tokensCss(tokens);
       if (name === "admin-tokens.css") return tokensCss(adminTokens(tokens));
       try {

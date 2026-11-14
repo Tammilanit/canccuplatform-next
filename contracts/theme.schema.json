@@ -186,6 +186,17 @@
           "description": "How much the screen moves: moderate (default), calm or none. contracts/theming.md, Stable classes and custom properties.",
           "enum": ["moderate", "calm", "none"],
           "default": "moderate"
+        },
+        "motion_style": {
+          "description": "How the screen's effects feel: speed, intensity, spotlight effect and motion pack. contracts/theming.md, Motion vocabulary.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "speed": { "enum": ["slower", "normal", "faster"], "default": "normal" },
+            "intensity": { "enum": ["subtle", "normal", "strong"], "default": "normal" },
+            "spotlight": { "enum": ["glow_and_trace", "glow", "trace"], "default": "glow_and_trace" },
+            "pack": { "enum": ["standard", "broadcast", "arcade"], "default": "standard" }
+          }
         }
       }
     },

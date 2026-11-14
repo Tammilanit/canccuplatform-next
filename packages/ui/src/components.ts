@@ -1,5 +1,5 @@
 import { Html, attrs, html, raw, type Slot } from "./html.js";
-import { themeStyle, type ProfileLike } from "./theme.js";
+import { eventTokens, themeStyle, type ProfileLike } from "./theme.js";
 
 export interface ButtonOptions {
   label: string;
@@ -120,7 +120,8 @@ export function page(o: PageOptions): Html {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${o.title}</title>
 <link${attrs({ rel: "stylesheet", href: o.cssHref ?? "/ui/ui.css" })}>
-${style}</head>
+${style}${eventTokens(o.surface ?? "admin")}
+</head>
 <body${attrs({ class: `canccu-page canccu-surface canccu-surface--${o.surface ?? "admin"}` })}>
 <header class="canccu-header">${logo}<span class="canccu-header__title">${o.title}</span></header>
 <main class="canccu-main">${o.body}</main>

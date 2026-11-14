@@ -23,7 +23,8 @@ export interface ZoneRecord {
   version: number;
   /** Of the zone's inputs (compose/state.ts, zoneFingerprint): an equal one changes nothing. */
   fingerprint: string;
-  zone: { key: string; name: string; epoch: string };
+  /** `show_name` is absent in a record stored before the setting: shown. */
+  zone: { key: string; name: string; epoch: string; show_name?: boolean };
   eventName: string;
   theme: Record<string, unknown>;
   /** The pinned bundle version; null or absent (a record stored before pins) for the platform's. */
@@ -35,7 +36,15 @@ export interface ZoneRecord {
   views: Record<Orientation, ZoneRecordView>;
   /** When a content widget next changes by itself (epoch ms): the hub rebuilds the zone then. */
   nextChangeAt?: number | null;
+  /**
+   * The counts the zone's widgets read: the hub rebuilds it only when one of them moves. Absent
+   * in a record stored before it was added: every count.
+   */
+  counts?: CountSource[];
 }
+
+/** The counts kept from other modules' events (compose/stats.ts). */
+export type CountSource = "presence" | "checkins";
 
 /** Where the zone's claims went; absent in a record stored before claims: none. */
 export interface ZoneRecordView {

@@ -82,7 +82,7 @@ Emitter: `notify`. Audience: personal. Payloads: [notify.md](notify.md#events-ve
 | Type | Meaning | Consumers |
 |---|---|---|
 | `notify.dm.requested` | A notification should reach a user as a Discord DM: the person chose DMs for its topic, or no push reached them | bot |
-| `notify.checkin.recorded` | A signed-in attendee checked in by the rotating QR | The module named in `purpose` (tournament for match check-in), admin |
+| `notify.checkin.recorded` | A signed-in attendee checked in by the rotating QR | The module named in `purpose` (tournament for match check-in), admin, screen (re-reads the count of arrival check-ins) |
 
 ## Screen
 Emitter: `screen`. Audience: system, except where noted. Payloads: [screen.md](screen.md#events-version-1).
@@ -95,7 +95,7 @@ Emitter: `screen`. Audience: system, except where noted. Payloads: [screen.md](s
 | `screen.pin.changed` | The event's pinned screen bundle or theme revision changed | theming (keeps the pinned revision and the one a timed pin restores) |
 | `screen.content.pushed`, `screen.content.cleared` | Content was pushed to zones, or a push ended | admin |
 | `screen.ticker.changed` | The ticker text changed. Audience: event-wide, `public` | bot (`/ticker status`), voices |
-| `screen.photo.added`, `screen.photo.removed` | A carousel photo was added or removed. Audience: event-wide, `public` | moments |
+| `screen.photo.added`, `screen.photo.removed` | A photo of the photo wall was added or removed. Audience: event-wide, `public` | moments |
 | `screen.claims.changed` | Where Moments' claims are placed on a zone, and which are unplaced or hidden | moments |
 | `screen.render.queued`, `.started`, `.succeeded`, `.failed`, `.cancelled` | A render job (PPTX or PDF deck) moved | admin |
 
@@ -138,7 +138,7 @@ Emitter: `theming`. Audience: event-wide, `public`. Payloads: [theming.md](themi
 ## Provisional events (version 1)
 The events the first ports need before their modules have a contract: pizza, tournament, bot, and the screen overrides. Each outline gives the name, a one-line meaning, the audience, the expected consumers and the `data` fields, so consumers built earlier (the bot's tournament side in step 6, Screen and Moments, Notify's topics) use the names the module will emit ([roadmap](../docs/roadmap.md), OC8).
 
-- **Provisional:** every event here is `version: 1` and provisional until its module's contract PR adopts it. That contract (`<module>.md`, plus `<module>.openapi.yaml` if the module has an HTTP API) is its own PR at the start of the module's port, written from the real legacy API, and merges before the module's code ([README.md](README.md#changing-a-contract)). It takes over these names and fields and may add events and fields; adding stays additive. Changing or dropping a name or field listed here is done in this catalog first, in its own PR, so nothing built against an outline breaks unseen.
+- **Provisional:** every event here is `version: 1` and provisional until its module's contract PR adopts it. That contract (`<module>.md`, plus `<module>.openapi.yaml` if the module has an HTTP API) comes at the start of the module's port, written from the real legacy API, in the same PR as the module code that first uses it ([README.md](README.md#changing-a-contract)). It takes over these names and fields and may add events and fields; adding stays additive. Changing or dropping a name or field listed here is done in this catalog first, in its own PR, so nothing built against an outline breaks unseen.
 - **Counts** (`pizza_count`, `registered_count`, …) come with the order's or session's revision (`revision`, or `order_revision` / `session_revision` on item and player events). Delivery is at least once ([admin.md](admin.md#transport)), so a consumer ignores counts older than the newest revision it has seen.
 - **Fields** are `snake_case`. Ids are strings; times are strings in RFC 3339, UTC (`2026-01-01T18:00:00Z`); Discord ids are strings, since a snowflake does not fit a JavaScript number. A field marked "or null" is always present. `actor_user_id` (string or null) is the user who made the change, `null` when the module's own scheduler did; consumers never show it to people.
 - **Shapes** used by several events (Person, Order, Session, Match, Override) are defined once in their section; `data` lists name the shape in the type.

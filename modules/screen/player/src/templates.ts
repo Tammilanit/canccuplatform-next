@@ -68,12 +68,27 @@ const trend = (field: string): TreeNode =>
     field,
     el("span", null, [], { class: [t("canccu-widget__trend canccu-widget__trend--"), f(field)] }),
   );
-/** A number with its trend and its label under it, as sheet 10's statistics draw it. */
-const stat = (field: string, label: string): TreeNode =>
-  el("li", "stat", [
-    el("strong", "big", [f(field), trend(`${field}_trend`)]),
-    el("span", "meta", [t(label)]),
-  ]);
+/**
+ * A number with its trend, its label under it and, where it has one, the day's peak under that,
+ * as sheet 10's Right now draws it. An absent number draws nothing, not an empty label.
+ */
+const stat = (field: string, label: string, peak?: string): TreeNode =>
+  sec(
+    field,
+    el("li", "stat", [
+      el("strong", "big", [f(field), trend(`${field}_trend`)]),
+      el("span", "meta", [t(label)]),
+      ...(peak === undefined
+        ? []
+        : [sec(peak, el("span", "peak", [t("peak "), f("count"), t(" · "), f("time_text")]))]),
+    ]),
+  );
+
+/** A photo with its caption, as a tile of the wall and as the pop over it. */
+const PHOTO: TreeNode[] = [
+  img("url", "image", [f("caption")]),
+  el("figcaption", "caption", [f("caption"), sec("author_name", t(" · "), f("author_name"))]),
+];
 
 /**
  * A bar that fills as `field`'s time comes near, over the last `span` seconds (widget.ts,
@@ -102,6 +117,24 @@ const CODE_BAR: TreeNode = sec(
   ),
 );
 
+/**
+ * A graph's hours as bars (the Dashboard's activity graph, "Today in numbers"): a template holds
+ * no styles, so each bar's height out of 10 travels in its class (widgets.css draws them).
+ */
+const GRAPH: TreeNode = el("div", "graph", [
+  sec(
+    "points",
+    el("span", null, [], {
+      class: [t("canccu-widget__point canccu-widget__point--"), f("level")],
+      "aria-label": [f("time_text"), t(": "), f("value")],
+    }),
+  ),
+]);
+
+/** One of "Today in numbers" (sheet 13): the number big, what it counts under it. */
+const figure = (field: string, label: TreeNode[]): TreeNode =>
+  el("li", "figure", [el("strong", "big", [f(field)]), el("span", "label", label)]);
+
 export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = {
   clock: [el("p", "meta", [f("date")]), el("time", "big", [f("time")], { datetime: [f("iso")] })],
   // No title: each row is labelled (NOW, NEXT), so "Now and next" above them says it twice.
@@ -110,12 +143,26 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
   // view-model has only the target, so the player adds what the rail's row of the same item says.
   // `next_up` is the player's too (screen.ts, idleOf): only the idle `next` countdown is surely the
   // next item; a widget's countdown may count to any item, and a claim's to anything.
+  // The Pulse hero (contracts/screen.md, The Pulse hero; sheets 9–10): a hero that holds a later
+  // item than the next one (it has a `chip`) says "Tonight", the game's art is a band with its
+  // name, and the chip counts down to what comes first, with the countdown's spotlight.
   countdown: [
-    sec("next_up", el("p", "kicker", [t("Next up")])),
+    sec(
+      "game",
+      sec(
+        "cover_url",
+        el("div", "band", [img("cover_url", "band-image"), el("p", "band-name", [f("name")])]),
+      ),
+    ),
+    sec("chip", el("p", "kicker", [t("Tonight on stage")])),
+    not("chip", sec("next_up", el("p", "kicker", [t("Next on stage")]))),
+    // Tonight's highlight (sheet 13) says so also when it is the next item.
+    not("chip", not("next_up", sec("highlight", el("p", "kicker", [t("Tonight on stage")])))),
     el("p", "headline", [f("label")]),
     el("p", "when", [
       sec("starts_text", el("span", "starts", [f("starts_text")])),
       sec("location", el("span", "where", [f("location")])),
+      sec("teams_left", el("span", "teams", [f("teams_left"), t(" teams left")])),
       sec(
         "delay_minutes",
         el("span", null, [t("+"), f("delay_minutes"), t(" min")], {
@@ -123,6 +170,14 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
         }),
       ),
     ]),
+    sec("description", el("p", "description", [f("description")])),
+    sec(
+      "chip",
+      el("p", "chip", [
+        el("span", "chip-label", [f("label"), t(" starts in")]),
+        el("time", "chip-time", [], { datetime: [f("target_at")] }),
+      ]),
+    ),
     el("p", "count", [t("Starts in "), el("time", "big", [], { datetime: [f("target_at")] })]),
     bar("target_at", 3600),
   ],
@@ -130,6 +185,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     el("p", "kicker", [t("Hot right now")]),
     sec("game", sec("cover_url", img("cover_url", "image")), el("p", "big", [f("name")])),
     el("p", "meta", [f("players"), t(" playing now")]),
+    sec("since_text", el("p", "since", [t("surging since "), f("since_text")])),
     QR,
   ],
   now_playing: [
@@ -178,11 +234,11 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
       ),
     ]),
   ],
+  // The wall (change 6): five tiles, the lead first (wall.css draws it large); a new photo pops
+  // over the whole box while `featured`.
   photo: [
-    el("figure", "photo", [
-      img("url", "image", [f("caption")]),
-      el("figcaption", "caption", [f("caption"), sec("author_name", t(" · "), f("author_name"))]),
-    ]),
+    el("div", "wall", [sec("tiles", el("figure", "tile", PHOTO))]),
+    sec("featured", el("figure", "pop", PHOTO)),
   ],
   announcement: [
     el(
@@ -219,13 +275,29 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     sec("has_floor_plan", el("p", "meta", [t("Floor plan on the hub")])),
     QR,
   ],
+  today_numbers: [
+    el("p", "kicker", [f("title")]),
+    el("p", "meta", [f("day_text"), t(", so far")]),
+    el("ul", "figures", [
+      sec("online_peak", figure("count", [t("most online, at "), f("time_text")])),
+      sec("photos", figure("photos", [t("photos shared")])),
+    ]),
+    GRAPH,
+  ],
+  activity_graph: [
+    el("p", "kicker", [f("label")]),
+    sec("peak", el("p", "peak", [t("peak "), f("count"), t(" · "), f("time_text")])),
+    GRAPH,
+  ],
+  // Right now (sheet 10); `still` is Ambient's one line, "N still online" (wall.css).
   stats: [
     el("p", "kicker", [t("Right now")]),
     el("ul", "stats", [
-      stat("members", "members"),
-      stat("online", "online"),
-      stat("in_voice", "in voice"),
+      stat("online", "online", "online_peak"),
+      stat("in_voice", "in voice", "in_voice_peak"),
+      stat("checked_in", "checked in"),
     ]),
+    sec("online", el("p", "still", [f("online"), t(" still online"), trend("online_trend")])),
   ],
   match_called: [
     el("p", "title", [t("Match called")]),

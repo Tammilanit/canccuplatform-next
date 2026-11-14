@@ -5,12 +5,13 @@
  * read, the real player previews it, and Go live saves it with the revision read.
  */
 import { boxEditor } from "./studio-layout.js";
+import { previewAt, screenPreview } from "./studio-screen-preview.js";
 
 (() => {
   const studio = window.canccuStudio;
   const form = document.querySelector("form[data-zone]");
   if (!studio || !form) return;
-  const { api, failure, reloadWith, say, show, notice } = studio;
+  const { api, counted, failure, reloadWith, say, show, notice } = studio;
   const UNDO_MS = 10 * 60_000;
   const PREVIEW_MESSAGE = "canccu-screen-preview";
   const original = JSON.parse(form.dataset.zone);
@@ -21,7 +22,7 @@ import { boxEditor } from "./studio-layout.js";
     [...r.querySelectorAll("[data-widgets] li")].map((li) => JSON.parse(li.dataset.entry));
 
   // The boxes, the gallery and the hero role (studio-layout.js); a tap on a box opens its region.
-  const boxes = boxEditor(form, { say, tell: show, changed: () => changed() });
+  const boxes = boxEditor(form, { say, counted, tell: show, changed: () => changed() });
   for (const pick of form.querySelectorAll("[data-pick]")) {
     pick.addEventListener("click", () => {
       for (const p of form.querySelectorAll("[data-pick]"))
@@ -44,6 +45,9 @@ import { boxEditor } from "./studio-layout.js";
         seconds: dwellOf(r),
       });
     }
+    // The photo wall's settings show while the box lists a photo (src/studio/widget-settings.ts).
+    const wall = r.querySelector("[data-photo-wall]");
+    if (wall) wall.hidden = !entriesOf(r).some((e) => e.widget === "photo");
     const names = [...r.querySelectorAll(".canccu-studio-widget__name")].map((n) => n.textContent);
     const shows = form.querySelector(`[data-pick="${CSS.escape(r.dataset.region)}"] [data-shows]`);
     if (shows && names.length > 0) shows.textContent = names.join(" → ");
@@ -97,6 +101,37 @@ import { boxEditor } from "./studio-layout.js";
     changed(region);
   });
 
+  // Key order apart: a theme's props in another order are no change.
+  const canonical = (value) =>
+    JSON.stringify(value, (_, v) =>
+      v && typeof v === "object" && !Array.isArray(v)
+        ? Object.fromEntries(Object.entries(v).sort())
+        : v,
+    );
+
+  /**
+   * The box's entries with the photo wall's settings on each `photo` entry: only the props that
+   * differ from the wall's defaults (contracts/screen.md, Photos), so an untouched wall saves none.
+   */
+  function withWall(r, entries) {
+    const wall = r.querySelector("[data-photo-wall]");
+    if (!wall) return entries;
+    const seconds = wall.querySelector("[name=photo_seconds]").value;
+    const order = wall.querySelector("[name=photo_order]").value;
+    const pop = wall.querySelector("[name=pop_new]").checked;
+    return entries.map((e) => {
+      if (e.widget !== "photo") return e;
+      const props = { ...(e.props || {}) };
+      for (const key of ["photo_seconds", "order", "pop_new"]) Reflect.deleteProperty(props, key);
+      if (seconds !== "") props.photo_seconds = Number(seconds);
+      if (order !== "newest") props.order = order;
+      if (!pop) props.pop_new = false;
+      const next = { ...e, props };
+      if (Object.keys(props).length === 0) delete next.props;
+      return next;
+    });
+  }
+
   // The zone the form says, on top of what was read, so fields Studio does not edit are kept.
   function zone() {
     const f = form.elements;
@@ -105,18 +140,27 @@ import { boxEditor } from "./studio-layout.js";
     z.name = f.name.value.trim();
     z.header = f.header.value || null;
     z.hub_qr = f.hub_qr.value;
+    const screenName = form.querySelector("[name=screen_name]");
+    if (screenName) z.screen_name = screenName.value;
     z.sound = { enabled: f.sound_enabled.checked, device_id: f.sound_device.value || null };
     for (const r of regions()) {
       const id = r.dataset.region;
       const s = { ...(z.regions[id] || {}) };
-      if (r.querySelector("[name=layout_widgets]").checked) delete s.widgets;
-      else s.widgets = entriesOf(r);
+      const listed = entriesOf(r);
+      const entries = withWall(r, listed);
+      // A wall setting on the layout's widgets makes them the box's own, so the setting is kept.
+      const changedWall = canonical(entries) !== canonical(listed);
+      if (r.querySelector("[name=layout_widgets]").checked && !changedWall) delete s.widgets;
+      else s.widgets = entries;
       const set = (name, value, fallback) => {
         if (value === fallback && !(name in (original.regions[id] || {})))
           Reflect.deleteProperty(s, name);
         else s[name] = value;
       };
-      set("rotation", r.querySelector("[name=rotation]").value || "sequence", "sequence");
+      // The hero's default is the Director's (contracts/screen.md, The Director).
+      set("rotation", r.querySelector("[name=rotation]").value, r.dataset.rotation);
+      const indicator = r.querySelector("[name=indicator]");
+      if (indicator) set("indicator", indicator.value, "line");
       set("idle", r.querySelector("[name=idle]").value || "logo", "logo");
       set("skip_empty", r.querySelector("[name=skip_empty]").checked, true);
       const dwell = r.querySelector("[name=dwell_seconds]").value;
@@ -182,25 +226,6 @@ import { boxEditor } from "./studio-layout.js";
   const save = form.querySelector("[data-save]");
   const discard = form.querySelector("[data-discard]");
   // A gap is a warning, not a change: it never enables Go live, and saving with it is allowed.
-  function gapLine({ text, fills }, i) {
-    const li = document.createElement("li");
-    li.className = "canccu-studio-changes__gap";
-    const icon = document.createElement("span");
-    icon.className = "canccu-i canccu-i--warn";
-    icon.setAttribute("aria-hidden", "true");
-    const words = document.createElement("span");
-    words.textContent = text;
-    li.append(icon, words);
-    if (fills) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "canccu-button canccu-button--secondary canccu-button--sm";
-      button.dataset.fillGap = String(i);
-      button.textContent = say("gap.fill");
-      li.append(button);
-    }
-    return li;
-  }
   function changed(region) {
     if (region) refreshRegion(region);
     const lines = changes();
@@ -211,7 +236,7 @@ import { boxEditor } from "./studio-layout.js";
         if (!lines.length) li.className = "canccu-muted";
         return li;
       }),
-      ...boxes.gaps().map(gapLine),
+      ...boxes.gapLines(),
     );
     save.disabled = lines.length === 0;
     discard.disabled = lines.length === 0;
@@ -235,10 +260,14 @@ import { boxEditor } from "./studio-layout.js";
   // A true preview: the server composes the zone as it would be saved, and the real player draws it.
   const frame = form.querySelector("iframe[data-preview]");
   form.querySelector("[data-zone-preview]").addEventListener("click", async () => {
-    const r = await api("POST", `${url}/preview`, zone());
+    const at = previewAt(document);
+    const query = at === null ? "" : `?at=${encodeURIComponent(at)}`;
+    const r = await api("POST", `${url}/preview${query}`, zone());
     if (!r.ok) return show(failure(r));
     frame.contentWindow.postMessage({ type: PREVIEW_MESSAGE, state: r.data }, location.origin);
   });
+
+  screenPreview(document, { api, failure, say, zone });
 
   async function put(body) {
     const r = await api("PUT", url, body);

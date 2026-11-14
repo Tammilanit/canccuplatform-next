@@ -1,0 +1,302 @@
+/*
+ * The motion vocabulary (contracts/theming.md, Motion vocabulary; design guideline sheet 11): the
+ * level and the pack are classes on <body> (motion.ts). Every effect moves only opacity and
+ * transform, the split-flap with one stepped reveal; no blur, no filters. Durations are the
+ * contract's at `normal` speed, times `--canccu-motion-speed` (tokens.css); glow and scale take
+ * `--canccu-motion-intensity`. The fastest repeat is the glow pulse, 1.6 s a turn at `normal`
+ * and 1.2 s at `faster` (the 3-per-second rule). A pack changes shapes and easing, never which
+ * effects play or how long they hold. In `canccu-base`, so a theme's layer restyles any of it.
+ */
+/* Unlayered, as player.css's glow is: once a level is named the stage draws it (stage.css). */
+body.canccu-surface--screen[class*="canccu-motion--"] {
+  background-image: none;
+}
+
+@layer canccu-base {
+  body {
+    --canccu-fx-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --canccu-fx-speed: var(--canccu-motion-speed, 1);
+    --canccu-fx-intensity: var(--canccu-motion-intensity, 1);
+  }
+
+  /* Number roll and split-flap: the changed value only. */
+  .canccu-fx--roll,
+  .canccu-fx--flap {
+    display: inline-block;
+  }
+
+  .canccu-fx--roll {
+    animation: canccu-roll calc(700ms * var(--canccu-fx-speed)) var(--canccu-fx-ease);
+  }
+
+  .canccu-fx--flap {
+    transform-origin: 50% 0;
+    animation: canccu-flap calc(600ms * var(--canccu-fx-speed)) steps(4, end);
+  }
+
+  /* Sweep: a light that crosses the changed box once. Pop and tilt follow it at party. */
+  .canccu-fx-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .canccu-fx-layer--sweep {
+    background: linear-gradient(
+      100deg,
+      transparent 35%,
+      color-mix(in srgb, var(--canccu-color-text) 30%, transparent) 50%,
+      transparent 65%
+    );
+    opacity: 0;
+    animation: canccu-sweep calc(1100ms * var(--canccu-fx-speed)) var(--canccu-fx-ease) forwards;
+  }
+
+  .canccu-fx--pop {
+    animation: canccu-pop calc(450ms * var(--canccu-fx-speed)) var(--canccu-fx-ease)
+      calc(1100ms * var(--canccu-fx-speed));
+  }
+
+  .canccu-fx--tilt {
+    animation: canccu-tilt calc(450ms * var(--canccu-fx-speed)) var(--canccu-fx-ease)
+      calc(1100ms * var(--canccu-fx-speed));
+  }
+
+  /* The countdown's spotlight: the box whose countdown starts within five minutes. */
+  .canccu-region > .canccu-widget.canccu-spotlight {
+    isolation: isolate;
+    container-type: size;
+  }
+
+  .canccu-spotlight--outline {
+    outline: calc(0.5 * var(--canccu-u)) solid var(--canccu-color-accent);
+    outline-offset: calc(-0.5 * var(--canccu-u));
+  }
+
+  .canccu-spotlight--glow::before,
+  .canccu-spotlight--trace::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .canccu-spotlight--glow::before {
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 calc(3 * var(--canccu-u) * var(--canccu-fx-intensity))
+      calc(0.6 * var(--canccu-u) * var(--canccu-fx-intensity))
+      color-mix(in srgb, var(--canccu-color-accent) 75%, transparent);
+    animation: canccu-glow calc(1600ms * var(--canccu-fx-speed)) ease-in-out infinite;
+  }
+
+  /* The tracing border: a short light that runs round the box, 2.4 s a turn. */
+  .canccu-spotlight--trace::after {
+    top: 0;
+    left: 0;
+    width: 16cqmin;
+    height: calc(0.6 * var(--canccu-u));
+    transform-origin: 0 50%;
+    background: linear-gradient(90deg, transparent, var(--canccu-color-accent), transparent);
+    animation: canccu-trace calc(2400ms * var(--canccu-fx-speed)) linear infinite;
+  }
+
+  .canccu-spotlight--pop {
+    animation: canccu-pop calc(450ms * var(--canccu-fx-speed)) var(--canccu-fx-ease);
+  }
+
+  .canccu-fx-layer--burst {
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: 100cqmax;
+    height: 100cqmax;
+    margin: -50cqmax 0 0 -50cqmax;
+    border-radius: 50%;
+    border: calc(0.8 * var(--canccu-u)) solid var(--canccu-color-accent);
+    opacity: 0;
+    animation: canccu-burst calc(900ms * var(--canccu-fx-speed)) var(--canccu-fx-ease);
+  }
+
+  /* Broadcast: slabs, skewed tabs and hard wipes. */
+  body.canccu-motion-pack--broadcast {
+    --canccu-fx-ease: cubic-bezier(0.7, 0, 0.3, 1);
+  }
+
+  body.canccu-motion-pack--broadcast .canccu-fx--roll {
+    animation-name: canccu-wipe;
+  }
+
+  body.canccu-motion-pack--broadcast .canccu-fx-layer--sweep {
+    background: linear-gradient(
+      100deg,
+      transparent 38%,
+      color-mix(in srgb, var(--canccu-color-accent) 45%, transparent) 38% 52%,
+      transparent 52%
+    );
+  }
+
+  body.canccu-motion-pack--broadcast .canccu-spotlight--outline,
+  body.canccu-motion-pack--broadcast .canccu-fx-layer--burst {
+    border-radius: 0;
+  }
+
+  /* Arcade: chunky cards and stepped motion. */
+  body.canccu-motion-pack--arcade {
+    --canccu-fx-ease: steps(5, end);
+  }
+
+  body.canccu-motion-pack--arcade .canccu-spotlight--outline {
+    outline-width: calc(0.9 * var(--canccu-u));
+  }
+
+  body.canccu-motion-pack--arcade .canccu-fx-layer--sweep {
+    background: repeating-linear-gradient(
+      100deg,
+      transparent 0 6%,
+      color-mix(in srgb, var(--canccu-color-accent) 35%, transparent) 6% 10%
+    );
+  }
+
+  @keyframes canccu-drift {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+
+    33% {
+      transform: translate(6%, -4%);
+    }
+
+    66% {
+      transform: translate(-5%, 5%);
+    }
+  }
+
+  @keyframes canccu-roll {
+    from {
+      opacity: 0;
+      transform: translateY(60%);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes canccu-wipe {
+    from {
+      opacity: 0;
+      transform: translateX(-40%) skewX(-12deg);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes canccu-flap {
+    from {
+      opacity: 0.4;
+      transform: scaleY(0.1);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes canccu-sweep {
+    from {
+      opacity: calc(0.9 * var(--canccu-fx-intensity));
+      transform: translateX(-100%);
+    }
+
+    to {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes canccu-pop {
+    0%,
+    100% {
+      transform: none;
+    }
+
+    40% {
+      transform: scale(calc(1 + 0.03 * var(--canccu-fx-intensity)));
+    }
+  }
+
+  @keyframes canccu-tilt {
+    0%,
+    100% {
+      transform: none;
+    }
+
+    40% {
+      transform: rotate(calc(1deg * var(--canccu-fx-intensity)));
+    }
+  }
+
+  @keyframes canccu-glow {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes canccu-trace {
+    0% {
+      transform: translate(0, 0);
+    }
+
+    25% {
+      transform: translate(calc(100cqw - 16cqmin), 0);
+    }
+
+    25.01% {
+      transform: translate(100cqw, 0) rotate(90deg);
+    }
+
+    50% {
+      transform: translate(100cqw, calc(100cqh - 16cqmin)) rotate(90deg);
+    }
+
+    50.01% {
+      transform: translate(100cqw, 100cqh) rotate(180deg);
+    }
+
+    75% {
+      transform: translate(16cqmin, 100cqh) rotate(180deg);
+    }
+
+    75.01% {
+      transform: translate(0, 100cqh) rotate(270deg);
+    }
+
+    100% {
+      transform: translate(0, 16cqmin) rotate(270deg);
+    }
+  }
+
+  @keyframes canccu-burst {
+    from {
+      opacity: 1;
+      transform: scale(0.2);
+    }
+
+    to {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
+}

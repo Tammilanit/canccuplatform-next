@@ -24,7 +24,9 @@ async def test_a_module_reads_its_own_settings_for_one_tenant(world: World) -> N
         "/internal/admin/settings/screen", params={"tenant_id": "other"}, headers=signed("screen")
     )
     assert r.status_code == 200
-    assert r.json() == {
+    body = r.json()
+    assert body.pop("groups")[0]["id"] == "playing"
+    assert body == {
         "module": "screen",
         "settings_version": 1,
         "values": {"rotation_seconds": 20},
@@ -75,7 +77,9 @@ async def test_a_module_writes_only_the_keys_it_names(world: World) -> None:
         {"settings_version": 1, "values": {"topics": ["a", "b"]}, "actor_user_id": "u_org"},
     )
     assert r.status_code == 200
-    assert r.json() == {
+    body = r.json()
+    assert [g["id"] for g in body.pop("groups")] == ["topics", "push_limits", "check_in"]
+    assert body == {
         "module": "notify",
         "settings_version": 2,
         "values": {"hourly_cap": 3, "topics": ["a", "b"]},

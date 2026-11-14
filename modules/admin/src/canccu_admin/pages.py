@@ -8,19 +8,28 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from canccu_kit import KitError, MissingRight, TenantResolver
+from canccu_kit import KitError, MissingRight, NotSignedIn, TenantResolver
 from canccu_kit.rights import Session, session_id_from_cookie
 from canccu_kit.ui import EventInfo, error_view, front_page, shell_page
 from starlette.requests import Request
-from starlette.responses import FileResponse, HTMLResponse, JSONResponse, Response
+from starlette.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+    Response,
+)
 
 if TYPE_CHECKING:
     from .auth import Auth
+    from .health import HealthWatch
 
 log = logging.getLogger("canccu.admin")
 
 BASE = "/admin"  # Caddy serves module pages under /admin/ and strips it
 CSS = f"{BASE}/static/ui.css"
+# What signing in keeps, said on notify's privacy page with what checking in keeps (#441).
+PRIVACY = "/notify/privacy"
 # The image sets CANCCU_UI_CSS; elsewhere packages/ui sits beside this module's source (an
 # editable install), while an installed kit has no packages/ui next to it.
 UI_CSS = Path(
@@ -29,6 +38,7 @@ UI_CSS = Path(
 # Parts of the platform by name, not id (UX audit A2); Health keeps the id in its log column.
 PART_NAMES = {
     "admin": "Admin",
+    "screen-render": "Screen rendering",
     "agenda": "Run of show",
     "notify": "Notifications",
     "screen": "Screens",
@@ -83,6 +93,9 @@ async def page(
     **shell: Any,
 ) -> HTMLResponse:
     """A page in the shell; with a session it gets the menu that session may follow."""
+    watch: HealthWatch | None = getattr(request.app.state, "health_watch", None)
+    # The watch's latest check only: a page never waits for a part that does not answer.
+    note = watch.latest.menu_note() if watch and watch.latest else None
     doc = shell_page(
         title,
         body,
@@ -90,6 +103,7 @@ async def page(
         event=await event_of(request),
         current=current,
         css=[CSS],
+        menu_notes={"health": note} if note else None,
         **shell,
     )
     return HTMLResponse(doc, status_code=status)
@@ -99,8 +113,27 @@ async def front(
     request: Request, title: str, card: str, status: int = 200, **shell: Any
 ) -> HTMLResponse:
     """A front door (sign-in, first run): the event's poster and one card."""
-    doc = front_page(title, card, event=await event_of(request), css=[CSS], **shell)
+    doc = front_page(
+        title, card, event=await event_of(request), css=[CSS], privacy=PRIVACY, **shell
+    )
     return HTMLResponse(doc, status_code=status)
+
+
+SCRIPTS = Path(__file__).parent / "static"
+
+
+async def static_script(request: Request) -> Response:
+    """Admin's own page scripts, by name from the files beside this module only."""
+    path = SCRIPTS / f"{request.path_params['name']}.js"
+    if path.parent != SCRIPTS or not path.is_file():
+        raise KitError("no such script", status=404, code="not_found")
+    response = FileResponse(path, media_type="text/javascript")
+    response.headers["Cache-Control"] = "no-cache"  # a changed worker must reach every phone
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    if path.name == "sw.js":
+        # The worker shows the offline page for every module's organiser pages, not only /admin/'s.
+        response.headers["Service-Worker-Allowed"] = "/"
+    return response
 
 
 async def static_ui_css(request: Request) -> Response:
@@ -125,6 +158,10 @@ def page_error_handler(auth: Auth) -> Callable[[Request, Exception], Awaitable[R
             session = await auth.session(session_id_from_cookie(request.headers.get("cookie")))
         except KitError:
             session = None
+        if isinstance(exc, MissingRight) and session is not None and not session.rights:
+            # Without any role "No access" names a page they never asked for; the sign-in page
+            # says what to do instead (sheet 3, "No role yet").
+            return RedirectResponse(f"{BASE}/sign-in", status_code=303)
         event = await event_of(request)
         title, view = error_view(
             exc,
@@ -137,3 +174,11 @@ def page_error_handler(auth: Auth) -> Callable[[Request, Exception], Awaitable[R
         return await page(request, title, view, exc.status, session=session, plain=True)
 
     return page_error
+
+
+async def not_signed_in(request: Request, exc: Exception) -> Response:
+    """The API answers 401 (contracts/admin.md); a page sends the browser to sign in."""
+    if request.url.path.startswith("/api/"):
+        assert isinstance(exc, NotSignedIn)
+        return JSONResponse(exc.to_body(), status_code=exc.status)
+    return RedirectResponse(f"{BASE}/sign-in", status_code=303)

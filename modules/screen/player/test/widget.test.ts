@@ -1,6 +1,8 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
-import { driftAt, effectiveMotion, FADE_MS } from "../src/display.js";
+import { driftAt, FADE_MS } from "../src/display.js";
+import { legacyMotion } from "@canccu/ui";
+import { levelOf } from "../src/motion.js";
 import { countdownText, drawWidget, fillCountdowns, liveView } from "../src/widget.js";
 
 const view = (over: Record<string, unknown>) => ({ qr: null, stale: false, empty: false, ...over });
@@ -67,12 +69,20 @@ describe("what ticks on the device", () => {
 });
 
 describe("how the screen moves", () => {
-  it("lowers the zone's motion to none under reduced motion, and never raises it", () => {
-    expect(effectiveMotion("moderate", false)).toBe("moderate");
-    expect(effectiveMotion("calm", false)).toBe("calm");
-    expect(effectiveMotion("moderate", true)).toBe("none");
-    expect(effectiveMotion(undefined, false)).toBe("moderate");
-    expect(effectiveMotion("wild", false)).toBe("moderate");
+  it("draws the zone's level, none under reduced motion, and moderate as lively from an older server", () => {
+    expect(levelOf({ motion_level: "party", motion: "moderate" }, false)).toBe("party");
+    expect(levelOf({ motion_level: "party", motion: "moderate" }, true)).toBe("none");
+    expect(levelOf({ motion: "moderate" }, false)).toBe("lively");
+    expect(levelOf({ motion: "calm" }, false)).toBe("calm");
+    expect(levelOf(undefined, false)).toBe("lively");
+    expect(levelOf({ motion_level: "wild", motion: "none" }, false)).toBe("none");
+    // Region transitions and the ticker keep the three ways of `display.motion`.
+    expect(["none", "calm", "lively", "party"].map((l) => legacyMotion(l as never))).toEqual([
+      "none",
+      "calm",
+      "moderate",
+      "moderate",
+    ]);
     expect(FADE_MS.none).toBe(0);
     expect(FADE_MS.calm).toBeGreaterThan(FADE_MS.moderate);
   });

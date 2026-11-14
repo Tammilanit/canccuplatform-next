@@ -21,6 +21,7 @@ beforeAll(async () => {
       failure: () => "",
       reloadWith: () => undefined,
       say: (key: string) => key,
+      counted: (key: string) => key,
       show: () => undefined,
     },
   });

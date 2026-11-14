@@ -3,11 +3,13 @@
  * pure function of the zone, the layout and what the sources said, so every screen of a zone
  * gets the same answer and the rules are tested without a stack.
  */
-import { placedBoxes } from "./boxes.js";
+import { boxWidgets, placedBoxes } from "./boxes.js";
 import type { Claim } from "./claims.js";
+import { directorOrder, jumpAt } from "./director.js";
 import { chooseLayout, roleOf } from "./layouts.js";
-import type { Area, Layout, LayoutRegion, Props, Role, WidgetEntry } from "./layouts.js";
+import type { Area, Layout, LayoutRegion, Props, Role } from "./layouts.js";
 import { partsOf } from "./parts.js";
+import { shuffled } from "./seeded.js";
 import type { HeaderMode, HubQrMode, Part } from "./parts.js";
 import { grown, traded } from "./showcase.js";
 import { handedOver, isWaiting } from "./waiting.js";
@@ -32,8 +34,11 @@ export interface BuildInput {
   themeLayouts: readonly Layout[];
   portrait: boolean;
   facts: ZoneFacts;
-  /** The hero grows for a showcase (src/compose/showcase.ts); the caller decides when. */
-  grow?: boolean;
+  /**
+   * A showcase plays in the hero (src/compose/showcase.ts, the caller decides): `grow`, the zone
+   * lets it grow; `keep`, it plays at its size. Absent: nothing is showcased.
+   */
+  showcase?: "grow" | "keep";
 }
 
 export interface WidgetView {
@@ -46,15 +51,19 @@ export interface WidgetView {
 }
 
 export type Idle = "logo" | "blank" | "collapse" | "next";
+export type Rotation = "sequence" | "shuffle" | "director";
+export type Indicator = "line" | "ring" | "off";
 
 export interface RegionView {
   id: string;
   role: Role | null;
   area: Area;
   layer: number;
-  rotation: "sequence" | "shuffle";
+  rotation: Rotation;
   order: number[];
   cycle_started_at: string;
+  /** How the screen shows the hero's turn (The Director). */
+  indicator: Indicator;
   idle: Idle;
   idle_view: { widget: "countdown"; view: View } | null;
   widgets: WidgetView[];
@@ -64,46 +73,29 @@ export interface RegionView {
 
 export const DEFAULT_DWELL_S = 15;
 const IDLES: readonly Idle[] = ["logo", "blank", "collapse", "next"];
+const ROTATIONS: readonly Rotation[] = ["sequence", "shuffle", "director"];
+const INDICATORS: readonly Indicator[] = ["line", "ring", "off"];
 
 const clampDwell = (value: unknown): number | undefined =>
   typeof value === "number" && Number.isInteger(value)
     ? Math.min(3600, Math.max(5, value))
     : undefined;
 
-/** mulberry32 over a string hash: small, and the same in every container and every reload. */
-function seeded(seed: string): () => number {
-  let h = 1779033703;
-  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
-  let a = h >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function shuffled(order: number[], seed: string): number[] {
-  const out = [...order];
-  const random = seeded(seed);
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(random() * (i + 1));
-    [out[i], out[j]] = [out[j] as number, out[i] as number];
-  }
-  return out;
-}
-
 /**
  * The widget a region shows at `nowMs`, or null when none takes part. A state's `order` is only
  * its own cycle's: later cycles follow the epoch, and a shuffle reshuffles each cycle with the
- * seed `region()` uses, as the player does between pushes (player/src/rotation.ts).
+ * seed `region()` uses, as the player does between pushes (player/src/rotation.ts). The Director
+ * plays a jump first, over the rotation running on underneath.
  */
 export function shownAt(
-  region: Pick<RegionView, "id" | "rotation" | "order" | "widgets">,
+  region: Pick<RegionView, "id" | "rotation" | "order"> & {
+    widgets: readonly Pick<WidgetView, "widget" | "dwell_seconds" | "view">[];
+  },
   zoneKey: string,
   nowMs: number,
 ): WidgetView | null {
+  const jump = region.rotation === "director" ? jumpAt(region.widgets, region.order, nowMs) : null;
+  if (jump !== null) return (region.widgets[jump.index] as WidgetView | undefined) ?? null;
   const dwellMs = (i: number): number => (region.widgets[i]?.dwell_seconds ?? 0) * 1000;
   // A shuffled order is a permutation of the plain one, which lists the widgets in place order.
   const plain =
@@ -116,7 +108,7 @@ export function shownAt(
   let end = cycle * cycleMs;
   for (const i of order) {
     end += dwellMs(i);
-    if (nowMs < end) return region.widgets[i] ?? null;
+    if (nowMs < end) return (region.widgets[i] as WidgetView | undefined) ?? null;
   }
   return null;
 }
@@ -124,16 +116,24 @@ export function shownAt(
 const idleOf = (setting: Record<string, unknown>): Idle =>
   IDLES.includes(setting.idle as Idle) ? (setting.idle as Idle) : "logo";
 
-/** The zone's widgets for a region, else the layout's. */
-const entriesOf = (source: LayoutRegion, input: BuildInput): WidgetEntry[] => {
-  const widgets = input.zone.regions[source.id]?.widgets;
-  return Array.isArray(widgets) ? (widgets as WidgetEntry[]) : source.widgets;
-};
+/**
+ * A box the zone, as set, leaves waiting while its statistics are empty, as they all are until
+ * their source comes (#389): Studio's gallery note follows this, not the layout alone.
+ */
+export function waitsWhileEmpty(
+  source: LayoutRegion,
+  regions: BuildInput["zone"]["regions"],
+): boolean {
+  const setting = regions[source.id] ?? {};
+  return (
+    setting.hidden !== true && isWaiting(boxWidgets(source, regions), idleOf(setting), () => true)
+  );
+}
 
 /** A box of statistics still waiting for its source (waiting.ts). */
 function waits(source: LayoutRegion, input: BuildInput): boolean {
   return isWaiting(
-    entriesOf(source, input),
+    boxWidgets(source, input.zone.regions),
     idleOf(input.zone.regions[source.id] ?? {}),
     (e) => viewOf(e.widget, e.props ?? {}, input.facts, e.embed ?? null).empty,
   );
@@ -142,7 +142,7 @@ function waits(source: LayoutRegion, input: BuildInput): boolean {
 /** A region as the zone sets it, drawn whole or as its parts. */
 function regionsOf(source: LayoutRegion, layout: Layout, input: BuildInput): RegionView[] {
   const setting = input.zone.regions[source.id] ?? {};
-  const entries = entriesOf(source, input);
+  const entries = boxWidgets(source, input.zone.regions);
   const role = roleOf(source.id, setting.role);
   const modes = {
     header: input.zone.header ?? layout.header ?? "separate",
@@ -186,7 +186,9 @@ function region(
     sequence.reduce((sum, i) => sum + (widgets[i] as WidgetView).dwell_seconds, 0) * 1000;
   const nowMs = input.facts.now.getTime();
   const cycle = cycleMs === 0 ? 0 : Math.floor(nowMs / cycleMs);
-  const rotation = setting.rotation === "shuffle" ? "shuffle" : "sequence";
+  // The hero's features are the Director's to pick (sheet 13), unless the zone says otherwise.
+  const rotation =
+    ROTATIONS.find((r) => r === setting.rotation) ?? (role === "hero" ? "director" : "sequence");
   const idle = idleOf(setting);
   const next = idle === "next" ? countdownFields(input.facts) : null;
   return {
@@ -198,8 +200,11 @@ function region(
     order:
       rotation === "shuffle"
         ? shuffled(sequence, `${input.zone.key}:${part.id}:${cycle}`)
-        : sequence,
+        : rotation === "director"
+          ? directorOrder(widgets, sequence)
+          : sequence,
     cycle_started_at: new Date(cycle * cycleMs).toISOString(),
+    indicator: INDICATORS.find((i) => i === setting.indicator) ?? "line",
     idle,
     idle_view:
       next === null
@@ -220,11 +225,61 @@ function synthetic(id: "_full" | "_overlay", layout: Layout, at: Date): RegionVi
     rotation: "sequence",
     order: [],
     cycle_started_at: new Date(Math.floor(at.getTime() / 1000) * 1000).toISOString(),
+    indicator: "off",
     idle: "blank",
     idle_view: null,
     widgets: [],
     claim: null,
   };
+}
+
+const holds = (a: Area, column: number, row: number): boolean =>
+  column >= a.column && column < a.column + a.columns && row >= a.row && row < a.row + a.rows;
+
+/** Every cell of `box` lies in a region of its layer, so the growth leaves none of them blank. */
+function filledIn(box: LayoutRegion, regions: readonly LayoutRegion[]): boolean {
+  const layer = regions.filter((r) => (r.layer ?? 0) === (box.layer ?? 0));
+  for (let row = box.area.row; row < box.area.row + box.area.rows; row++) {
+    for (let column = box.area.column; column < box.area.column + box.area.columns; column++) {
+      if (!layer.some((r) => holds(r.area, column, row))) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * The waiting boxes' cells filled by the hero, grown as for a showcase, when that pauses no box
+ * still drawn and leaves none of their cells blank (contracts/screen.md, The hero fills first);
+ * else null, for the hand-over. A neighbour that took the cells instead stretched a box
+ * made for three numbers over two thirds of the screen around one, and squeezed the hero into a
+ * strip without its label (v8 rule 5). The hero grows within the drawn boxes' band only, so a
+ * waiting box beyond that band would be left blank, not filled: its neighbour takes it then.
+ */
+function filledByHero(
+  kept: readonly LayoutRegion[],
+  waiting: readonly LayoutRegion[],
+  input: BuildInput,
+): readonly LayoutRegion[] | null {
+  if (waiting.length === 0) return null;
+  const filled = grown(kept, input.zone.regions);
+  if (filled === null || filled.length !== kept.length) return null;
+  return waiting.every((w) => filledIn(w, filled)) ? filled : null;
+}
+
+/**
+ * Who takes the room (contracts/screen.md, A showcase goes first): a showcase the zone lets grow
+ * grows the hero to the showcase size (sheet 10); one that plays at its size leaves the hero as
+ * it is, so the waiting boxes hand over, since giving it their cells would grow it after all; only
+ * without a showcase does the hero fill the waiting boxes' cells. Null: the hero keeps its size.
+ */
+function roomFor(
+  kept: readonly LayoutRegion[],
+  waiting: readonly LayoutRegion[],
+  input: BuildInput,
+): readonly LayoutRegion[] | null {
+  if (input.showcase === "grow") return grown(kept, input.zone.regions);
+  if (input.showcase === "keep") return null;
+  return filledByHero(kept, waiting, input);
 }
 
 export function buildRegions(input: BuildInput): { layout: Layout; regions: RegionView[] } {
@@ -234,14 +289,18 @@ export function buildRegions(input: BuildInput): { layout: Layout; regions: Regi
     themeLayouts: input.themeLayouts,
     portrait: input.portrait,
   });
-  // The zone's boxes first, then the trade, then the waiting boxes leave, then the growth or, when
-  // the hero does not grow, the waiting boxes' hand-over; parts last (contracts/screen.md, Order).
+  // The zone's boxes first, then the trade, then the waiting boxes leave, then the hero grows or,
+  // when it does not, the waiting boxes' hand-over; parts last (contracts/screen.md, Order).
   const boxes = placedBoxes(layout, input.zone.layoutId, input.zone.regions);
   const swapped = traded(boxes, input.zone.regions, input.zone.heroRegion ?? null);
   const waiting = new Set(swapped.filter((r) => waits(r, input)).map((r) => r.id));
   const kept = swapped.filter((r) => !waiting.has(r.id));
-  const growth = input.grow === true ? grown(kept, input.zone.regions) : kept;
-  const placed = growth !== kept ? growth : handedOver(swapped, waiting);
+  const growth = roomFor(
+    kept,
+    swapped.filter((r) => waiting.has(r.id)),
+    input,
+  );
+  const placed = growth ?? handedOver(swapped, waiting);
   const regions = placed.flatMap((r) => regionsOf(r, layout, input));
   return {
     layout,

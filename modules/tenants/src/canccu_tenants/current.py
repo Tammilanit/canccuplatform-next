@@ -25,7 +25,8 @@ async def get_current(request: Request) -> Response:
         primary = await core.primary_hostname(conn, ctx["tenant_id"])
     if await d.caller.can(ctx, session, "tenants.event.write"):
         return JSONResponse(model.tenant(row, primary, core.now()))
-    if row["status"] == "draft":  # a guest learns only that it is not open yet
+    if row["status"] == "draft" and not await d.caller.is_member(ctx, session):
+        # Anyone but its members learns only that it is not open yet (tenants.md, Lifecycle).
         return JSONResponse({"id": row["id"], "status": "draft"})
     return JSONResponse(model.public_tenant(row, primary))
 

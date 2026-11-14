@@ -14,8 +14,11 @@ import type { AgendaItem, AgendaNow, CheckinCode, VenueInfo } from "./widgets.js
 
 export interface ThemeNow {
   revision: number;
-  /** Complete, defaults filled in; only `motion` is read here (the display). */
-  tokens?: { motion?: unknown };
+  /**
+   * Complete, defaults filled in; `motion` and `motion_style` are read for the display, `colors`
+   * for the stage's scrim and the cards' veils.
+   */
+  tokens?: { motion?: unknown; motion_style?: unknown; colors?: unknown };
   tokens_css_url: string;
   css_url: string | null;
   logo_url: string | null;
@@ -24,6 +27,9 @@ export interface ThemeNow {
   /** Each embed's name and its frame in the sandbox; absent from an older theming. */
   embeds?: { name: string; frame_url: string }[];
 }
+
+/** The draft as theming answers a preview key: a theme that is no revision. */
+export type DraftTheme = Omit<ThemeNow, "revision"> & { revision: null };
 
 export interface EventPublic {
   name: string;
@@ -34,6 +40,11 @@ export interface Sources {
   agendaNow(tenantId: string, zoneKey: string): Promise<AgendaNow | null>;
   /** The event's whole run of show, read each time: the Studio's "what plays at…" (#267). */
   agendaItems(tenantId: string): Promise<AgendaItem[] | null>;
+  /**
+   * The whole run of show as last kept for the agenda version `agendaNow` read, for the day's
+   * phase (contracts/screen.md, Motion and burn-in drift); null when none is kept.
+   */
+  agendaDay?(tenantId: string): Promise<AgendaItem[] | null>;
   venueInfo(tenantId: string): Promise<VenueInfo | null>;
   theme(tenantId: string): Promise<ThemeNow | null>;
   /**
@@ -41,8 +52,15 @@ export interface Sources {
    * theming says the revision is not kept (404): a pin is cleared for that, never for a failed read.
    */
   themeRevision(tenantId: string, revision: number): Promise<ThemeNow | "gone" | null>;
+  /**
+   * The event's draft behind theming's preview key, for a preview on a screen (contracts/screen.md,
+   * Zones and assignments). Its `revision` is null; `gone` once theming no longer knows the key.
+   */
+  themePreview(tenantId: string, key: string): Promise<DraftTheme | "gone" | null>;
   event(host: string): Promise<EventPublic | null>;
   checkinCode(tenantId: string, purpose: string): Promise<CheckinCode | null>;
+  /** How many members have checked in for `purpose` (contracts/notify.md). */
+  checkinCount(tenantId: string, purpose: string): Promise<number | null>;
 }
 
 export interface SourceUrls {
@@ -117,8 +135,10 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
     path: string,
     headers: Record<string, string>,
     gone404: boolean,
+    /** What the warning names instead of the path, for a path that holds a secret. */
+    label?: string,
   ): Promise<unknown> => {
-    const route = path.split("?")[0] ?? path;
+    const route = label ?? path.split("?")[0] ?? path;
     try {
       const { status, body } = await getJson(`${base.replace(/\/+$/, "")}${path}`, headers);
       if (status >= 200 && status < 300) return body;
@@ -167,6 +187,7 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
   };
   return {
     agendaItems: readItems,
+    agendaDay: (tenantId) => agendas.get(tenantId)?.items ?? Promise.resolve(null),
     agendaNow: async (tenantId, zoneKey) => {
       const query = `tenant_id=${encodeURIComponent(tenantId)}&zone=${encodeURIComponent(zoneKey)}`;
       const body = (await read(
@@ -176,9 +197,11 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       )) as { agenda_version?: unknown; current?: AgendaItem[]; next?: AgendaItem[] } | null;
       if (body === null || !Array.isArray(body.current) || !Array.isArray(body.next)) return null;
       const now = { current: body.current, next: body.next };
-      if (body.next.length === 0 || typeof body.agenda_version !== "number") return now;
-      // Without the whole agenda the rail still shows now and next, only nothing after them.
+      if (typeof body.agenda_version !== "number") return now;
+      // Kept per version also while nothing is next: the day's phase reads it (agendaDay).
       const all = await allItems(tenantId, body.agenda_version);
+      if (body.next.length === 0) return now;
+      // Without the whole agenda the rail still shows now and next, only nothing after them.
       return { ...now, later: all === null ? [] : laterOf(all, body.next, zoneKey) };
     },
     venueInfo: async (tenantId) => {
@@ -207,6 +230,18 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       if (body === "gone") return body;
       return body === null || body.revision !== revision ? null : body;
     },
+    themePreview: async (tenantId, key) => {
+      const body = (await readOr(
+        urls.theming,
+        `/internal/theming/previews/${encodeURIComponent(key)}?tenant_id=${encodeURIComponent(tenantId)}`,
+        service.headers("theming"),
+        true,
+        // The key opens the draft: it never goes into a log.
+        "/internal/theming/previews/{preview_key}",
+      )) as DraftTheme | "gone" | null;
+      if (body === "gone") return body;
+      return body === null || typeof body.tokens_css_url !== "string" ? null : body;
+    },
     checkinCode: async (tenantId, purpose) => {
       const query = `tenant_id=${encodeURIComponent(tenantId)}&purpose=${encodeURIComponent(purpose)}`;
       const body = (await read(
@@ -216,6 +251,16 @@ export function httpSources(urls: SourceUrls, service: ServiceIdentity, log?: So
       )) as CheckinCode | null;
       const fields = ["purpose", "code", "url", "valid_until", "rotates_at"] as const;
       return body === null || fields.some((f) => typeof body[f] !== "string") ? null : body;
+    },
+    checkinCount: async (tenantId, purpose) => {
+      const query = `tenant_id=${encodeURIComponent(tenantId)}&purpose=${encodeURIComponent(purpose)}`;
+      const body = (await read(
+        urls.notify,
+        `/internal/notify/check-ins/count?${query}`,
+        service.headers("notify"),
+      )) as { count?: unknown } | null;
+      const n = body?.count;
+      return typeof n === "number" && Number.isInteger(n) && n >= 0 ? n : null;
     },
     event: async (host) => {
       const body = (await read(urls.tenants, "/api/tenants/current", {
@@ -233,6 +278,8 @@ export const noSources: Sources = {
   venueInfo: () => Promise.resolve(null),
   theme: () => Promise.resolve(null),
   themeRevision: () => Promise.resolve(null),
+  themePreview: () => Promise.resolve(null),
   event: () => Promise.resolve(null),
   checkinCode: () => Promise.resolve(null),
+  checkinCount: () => Promise.resolve(null),
 };

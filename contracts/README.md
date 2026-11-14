@@ -17,12 +17,12 @@ How modules talk to each other and what an event profile looks like. Modules use
 | [games.md](games.md) | Games contract: the game catalogue (baseline and each event's own), matching Discord activities, moderation, surges, games events |
 | [games.openapi.yaml](games.openapi.yaml) | Machine-readable games API (OpenAPI 3.1) |
 | [events.md](events.md) | Event catalog: every cross-module event, its audience and consumers, linked to its payload; provisional `version: 1` outlines for pizza, tournament, bot and the screen overrides (`moments.*`) until those contracts are written |
-| [screen.md](screen.md) | Screen contract: paired devices with device tokens and the venue IP check, moving devices between events, zones and assignments, the zone preview, mirroring, layouts and region roles, the widget types and their view-models, the Pulse options, how Moments' overrides claim regions, the composed state and its push channel (SSE), device health, offline behaviour, pinned bundle and theme revision with timed pins and the freeze, content and the weekly scheduler with its calendar, the render job for PPTX and PDF decks with its font warnings, the manual ticker, photos, the screen crew rights preset, screen events |
+| [screen.md](screen.md) | Screen contract: paired devices with device tokens and the venue IP check, moving devices between events, zones and assignments, the zone preview and the preview on a screen, mirroring, layouts and region roles, the widget types and their view-models, the Pulse options, how Moments' overrides claim regions, the composed state and its push channel (SSE), device health, offline behaviour, pinned bundle and theme revision with timed pins and the freeze, content and the weekly scheduler with its calendar, the render job for PPTX and PDF decks with its font warnings, the manual ticker, photos, the screen crew rights preset, screen events |
 | [screen.openapi.yaml](screen.openapi.yaml) | Machine-readable screen API (OpenAPI 3.1), with its paths in parts: [screen/devices](screen/devices.openapi.yaml) and [screen/content](screen/content.openapi.yaml) |
 | [tenants.md](tenants.md) | Tenants contract: events as tenants, hostnames, venues and the venue profile, users, their sign-in identities, roles and membership, access (info-page mode, venue IP check, admin access), feature flags, lifecycle, series and clone, privacy and retention, the audit log, the storage quota per event, global and per-tenant tables |
 | [tenants.openapi.yaml](tenants.openapi.yaml) | Machine-readable tenants API (OpenAPI 3.1), with its paths in parts: [tenants/event](tenants/event.openapi.yaml), [tenants/superadmin](tenants/superadmin.openapi.yaml) and [tenants/internal](tenants/internal.openapi.yaml) |
 | [theming.md](theming.md) | Theming contract: stable CSS classes and custom properties, the theme package (tokens, CSS, fonts, images), layouts as data, logic-less widget templates, embeds, the brand kit's simple and advanced modes, draft → preview → publish with rollback, git sync, clone with a series, upload safety (sandboxed SVG and HTML, the CSP, the same-host sandbox and the optional sandbox origin, `__Host-` session cookies), theming events |
-| [theming.openapi.yaml](theming.openapi.yaml) | Machine-readable theming API (OpenAPI 3.1) |
+| [theming.openapi.yaml](theming.openapi.yaml) | Machine-readable theming API (OpenAPI 3.1), with the current tokens for pages and the draft on a screen in a part: [theming/preview](theming/preview.openapi.yaml) |
 | [theme.schema.json](theme.schema.json) | JSON Schema (draft 2020-12) for a theme package's `theme.yaml` |
 | [flags.yaml](flags.yaml) | Every module's feature flags and their defaults, in one place ([tenants.md](tenants.md#feature-flags)) |
 | [profile.md](profile.md) | Event profile format v1 |
@@ -69,9 +69,9 @@ The phone hub's privacy page collects everything the platform holds on the calle
 - The tenants module holds the platform-wide part: the user, the privacy flags and the membership (`GET /api/tenants/me`, `…/me/privacy`; leaving is `DELETE /api/tenants/me/membership`). Deleting the whole account is `DELETE /api/tenants/users/{user_id}` (the superadmin's for now; self-service belongs to the App track's privacy center).
 
 ## Changing a contract
-- A contract change is its own PR and merges before its consumers.
-- Additive only: new fields, endpoints, events. Clients ignore fields they do not know.
-- Removing or renaming anything a consumer may use is breaking and needs a person's approval.
+- An additive change (new fields, endpoints, events, settings) goes in the package PR together with the code that uses it ([0029](../docs/decisions/0029-additive-contracts-ship-with-consumers.md)). Clients ignore fields they do not know.
+- Removing or renaming anything a consumer may use is breaking: its own PR, merged before its consumers, with a maintainer's accept.
+- Prefer additive changes; removing old things comes later, in a separate PR.
 
 ## Check
 `scripts/check-contracts` validates the demo profile and the demo theme packages against their schemas, checks the paths they name exist, and lints the OpenAPI files (`common.openapi.yaml` through its alias `common` in [redocly.yaml](redocly.yaml), so its components need no operation of its own). CI runs it as the `contracts` check. `scripts/check-contracts --dry-run` lists the steps without running them.

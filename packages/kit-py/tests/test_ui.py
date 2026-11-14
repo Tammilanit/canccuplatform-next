@@ -81,6 +81,19 @@ def test_shell_page() -> None:
     assert ">18:42<small>UTC</small></time>" in doc
 
 
+def test_a_menu_item_says_when_its_page_needs_a_look() -> None:
+    # Sheets 2 and 4: "Health 1 slow", a status badge at the item's end.
+    doc = shell_page(
+        "Settings",
+        "",
+        session=Viewer("admin.settings.read"),
+        menu_notes={"health": ("degraded", "1 <slow>")},
+    )
+    badge = '<span class="canccu-badge canccu-badge--degraded">1 &lt;slow&gt;</span>'
+    assert f"Health{badge}</a>" in doc
+    assert doc.count("canccu-badge--degraded") == 1
+
+
 def test_bar_puts_quick_add_in_the_middle() -> None:
     every = Viewer("agenda.items.write", "notify.topics.write", "screen.devices.read")
     assert [b["label"] for b in bar_for(every)] == [
@@ -115,6 +128,34 @@ def test_archived_event_has_badge_and_banner() -> None:
     archived = EventInfo(**{**EVENT.__dict__, "status": "archived"})
     doc = shell_page("x", "", event=archived, session=Viewer())
     assert ">Archived<" in doc and "canccu-banner" in doc
+
+
+def test_an_archived_event_has_no_quick_add_in_the_bar() -> None:
+    archived = EventInfo(**{**EVENT.__dict__, "status": "archived"})
+    doc = shell_page("x", "", event=archived, session=Viewer("agenda.items.write"))
+    assert 'href="/agenda/add"' not in doc and 'href="/agenda/"' in doc
+
+
+def test_the_header_shows_the_event_s_logo_or_initials() -> None:
+    doc = shell_page("x", "", event=EVENT, session=Viewer())
+    assert (
+        '<header class="canccu-header"><img class="canccu-header__logo" src="/theming/logo" alt="">'
+    ) in doc
+    assert "canccu-header__logo" not in shell_page("x", "")
+
+
+def test_a_phone_shows_three_tabs_and_the_rest_behind_a_count() -> None:
+    labels = ["Live", "Devices", "Zones", "Schedule", "Content", "Ticker"]
+    tabs = [(f"/s/{label}", label, label == "Content") for label in labels]
+    doc = shell_page("Studio", "", session=Viewer(), tabs=tabs)
+    nav = doc.split('<nav class="canccu-tabs"')[1].split("</nav>")[0]
+    assert '<a href="/s/Live">Live</a>' in nav
+    assert '<a href="/s/Content" aria-current="page">Content</a>' in nav
+    for extra in ("Zones", "Schedule", "Ticker"):
+        assert f'<a class="canccu-tabs__extra" href="/s/{extra}">{extra}</a>' in nav
+    assert 'popovertarget="canccu-tabs-more">3 more</button>' in nav
+    assert '<a href="/s/Zones">Zones</a>' in nav.split('id="canccu-tabs-more"')[1]
+    assert "canccu-tabs__more" not in shell_page("x", "", session=Viewer(), tabs=tabs[:3])
 
 
 def test_no_access_never_shows_the_right() -> None:
@@ -154,7 +195,10 @@ def test_parts() -> None:
     )
     assert 'class="canccu-notice canccu-notice--ok" role="status"' in notice("ok", "Saved")
     page = front_page("Sign in", "<h1>Sign in</h1>", event=EVENT, now=NOW)
-    assert 'class="canccu-poster__name">Demo &lt;Event&gt;' in page
+    assert (
+        '<div class="canccu-poster"><img class="canccu-poster__logo" src="/theming/logo" alt="">'
+        '<div class="canccu-poster__name">Demo &lt;Event&gt;'
+    ) in page
 
 
 def test_time_is_24_hour_in_the_event_zone() -> None:
@@ -179,3 +223,60 @@ def test_event_info_from_the_tenants_api() -> None:
     )
     # A draft event shows a guest only its status.
     assert EventInfo.from_api({"id": "demo", "status": "draft"}).name is None
+
+
+def test_pages_link_the_event_s_tokens_after_ui_css() -> None:
+    # contracts/theming.md, The current tokens, for pages (#432).
+    page = shell_page("Settings", "<p>x</p>", css=["/ui/ui.css", "/admin/static/admin.css"])
+    assert (
+        '<link rel="stylesheet" href="/ui/ui.css">'
+        '<link rel="stylesheet" href="/theming/current/admin-tokens.css">'
+        '<link rel="stylesheet" href="/admin/static/admin.css">'
+    ) in page
+    hub = front_page("Check in", "", css=["/ui/ui.css"], surface="hub")
+    assert '<link rel="stylesheet" href="/theming/current/tokens.css">' in hub
+    assert "admin-tokens.css" not in hub
+
+
+def test_an_error_page_marks_no_menu_item() -> None:
+    """An error page is nowhere in the menu (sheet 8): on a phone no bar item is current."""
+    doc = shell_page(
+        "Not found",
+        "<div></div>",
+        session=Viewer("agenda.items.write"),
+        current="agenda",
+        plain=True,
+    )
+    assert "aria-current" not in doc
+
+
+def test_a_signed_in_shell_loads_the_offline_fallback() -> None:
+    signed_in = shell_page("Settings", "", session=Viewer("admin.settings.read"))
+    assert '<script src="/admin/static/shell.js" defer></script>' in signed_in
+    assert "shell.js" not in shell_page("Signed out", "")
+
+
+def test_a_front_page_carries_the_privacy_tag_last() -> None:
+    """The safety element must be the page's last child, holding text only (packages/ui)."""
+    doc = front_page("Check in", "<h1>Check in</h1>", privacy="/notify/privacy")
+    assert doc.endswith(
+        '<a class="canccu-privacy-link" href="/notify/privacy">Privacy</a></body></html>'
+    )
+    assert "canccu-front--privacy" in doc
+    assert "canccu-privacy-link" not in front_page("Sign in", "")
+
+
+def test_initials_are_the_avatars_letters() -> None:
+    from canccu_kit.ui import initials
+
+    assert initials("aino  virtanen  ii") == "AV"
+    assert initials("🎮 Night") == "🎮N"
+    assert initials("   ") == "?"
+
+
+def test_local_time_reads_an_unknown_zone_as_utc() -> None:
+    from canccu_kit.ui import local_time
+
+    at = datetime(2026, 11, 14, 17, 0, tzinfo=UTC)
+    assert local_time(at, "Europe/Helsinki").hour == 19
+    assert local_time("2026-11-14T17:00:00Z", "Mars/Olympus").hour == 17

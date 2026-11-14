@@ -1,7 +1,7 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 
-// The browser globals static/studio.js uses; it runs in the page, untyped, so the typed rules skip it.
+// The browser globals the static scripts use; it runs in the page, untyped, so the typed rules skip it.
 const BROWSER = Object.fromEntries(
   [
     "document",
@@ -17,6 +17,8 @@ const BROWSER = Object.fromEntries(
     "addEventListener",
     "setTimeout",
     "clearTimeout",
+    "setInterval",
+    "clearInterval",
     "Option",
   ].map((name) => [name, "readonly"]),
 );

@@ -54,7 +54,12 @@ const VENUE_RAIL: WidgetEntry[] = [
   { widget: "venue_info" },
   { widget: "food_status" },
 ];
-const HERO = w("playlist", "hot_game", "bracket", "photo");
+// The Director's features (sheet 13): tonight's highlight, and "Today in numbers" at wind-down.
+const HERO: WidgetEntry[] = [
+  ...w("playlist", "hot_game", "bracket", "photo"),
+  { widget: "countdown", props: { highlight: true } },
+  { widget: "today_numbers" },
+];
 const RAIL = w("agenda_now", "countdown");
 
 const HEADER = (): LayoutRegion => ({
@@ -77,8 +82,8 @@ const landscape = (id: string, name: string, regions: LayoutRegion[]): Layout =>
 });
 
 // The six of contracts/screen.md, Built-in layouts, in the order Studio offers them. Dashboard's
-// `stats` and `now_playing` boxes show `empty` until the bot's presence reaches Screen (#389), so
-// they follow their idle rule meanwhile.
+// boxes are six different ones (sheet 10); its statistics show `empty` until the bot's data
+// reaches Screen (#389), and wait meanwhile (waiting.ts).
 export const BUILT_IN_LAYOUTS: readonly Layout[] = [
   landscape("pulse", "Pulse", [
     HEADER(),
@@ -90,8 +95,8 @@ export const BUILT_IN_LAYOUTS: readonly Layout[] = [
   landscape("dashboard", "Dashboard", [
     HEADER(),
     { id: "hero", area: at(1, 2, 4, 5), widgets: HERO },
-    { id: "online", area: at(5, 2, 4, 5), widgets: w("stats") },
-    { id: "voice", area: at(9, 2, 4, 5), widgets: w("stats") },
+    { id: "online", area: at(5, 2, 4, 5), widgets: w("activity_graph") },
+    { id: "voice", area: at(9, 2, 4, 5), widgets: w("voice_rooms") },
     { id: "top_games", area: at(1, 7, 4, 5), widgets: w("now_playing") },
     { id: "right_now", area: at(5, 7, 4, 5), widgets: w("stats") },
     { id: "rail", area: at(9, 7, 4, 5), widgets: RAIL },
@@ -109,22 +114,25 @@ export const BUILT_IN_LAYOUTS: readonly Layout[] = [
     { id: "venue_rail", area: at(8, 7, 5, 5), widgets: VENUE_RAIL },
     TICKER(),
   ]),
+  // Its `online` box is one line, "N still online" (layouts.css), and waits for the bot's counts.
   landscape("ambient", "Ambient", [
     { id: "header", area: at(1, 1, 12, 1), widgets: w("logo") },
     { id: "hero", area: at(2, 3, 10, 6), widgets: w("clock") },
     { id: "rail", area: at(2, 9, 10, 2), widgets: w("agenda_now") },
+    { id: "online", area: at(2, 11, 10, 1), widgets: w("stats") },
   ]),
   {
     id: "pulse_portrait",
     name: "Portrait",
     aspect: "9:16",
     grid: { columns: 6, rows: 16 },
-    // The Pulse's boxes stacked (sheet 10): the venue rail fills what was an empty band under the rail.
+    // The Pulse's boxes stacked (sheet 10), with the Right now box between the rail and the venue rail.
     regions: [
       { id: "header", area: at(1, 1, 6, 2), widgets: w("logo", "clock") },
       { id: "hero", area: at(1, 3, 6, 6), widgets: HERO },
-      { id: "rail", area: at(1, 9, 6, 4), widgets: RAIL },
-      { id: "venue_rail", area: at(1, 13, 6, 3), widgets: VENUE_RAIL },
+      { id: "rail", area: at(1, 9, 6, 3), widgets: RAIL },
+      { id: "right_now", area: at(1, 12, 6, 2), widgets: w("stats") },
+      { id: "venue_rail", area: at(1, 14, 6, 2), widgets: VENUE_RAIL },
       { id: "ticker", area: at(1, 16, 6, 1), widgets: w("ticker") },
     ],
   },

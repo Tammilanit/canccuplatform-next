@@ -1,0 +1,207 @@
+/*
+ * The photo wall (contracts/screen.md, Photos; design guideline v8, change 6, sheets 13 and 16) and
+ * Right now's peaks, its lone number and Ambient's line (sheet 10). In `canccu-base` like screen.css, so a theme
+ * restyles all of it.
+ */
+@layer canccu-base {
+  /*
+   * Five tiles in a 4×2 grid, the lead two by two and outlined, with a clear band under them for the
+   * hero's "starts in" chip and its rotation marks. Only the lead carries its caption: five
+   * captions in one box would be read by nobody.
+   */
+  .canccu-region > .canccu-widget--photo {
+    justify-content: flex-start;
+    padding: calc(1.6 * var(--canccu-u)) calc(1.6 * var(--canccu-u)) calc(7 * var(--canccu-u));
+  }
+
+  .canccu-widget__wall {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: calc(0.8 * var(--canccu-u));
+  }
+
+  .canccu-widget__tile {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    border-radius: calc(0.6 * var(--canccu-u));
+    background: var(--canccu-color-border);
+  }
+
+  .canccu-widget__tile:first-child {
+    grid-column: span 2;
+    grid-row: span 2;
+    outline: calc(0.3 * var(--canccu-u)) solid var(--canccu-color-primary);
+    outline-offset: calc(-0.3 * var(--canccu-u));
+  }
+
+  .canccu-widget--photo .canccu-widget__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    object-fit: cover;
+  }
+
+  .canccu-widget--photo .canccu-widget__caption {
+    position: absolute;
+    inset: auto 0 0;
+    padding: calc(1.6 * var(--canccu-u)) calc(2 * var(--canccu-u));
+    background: rgb(0 0 0 / 72%);
+    color: #fff;
+  }
+
+  .canccu-widget__tile:not(:first-child) .canccu-widget__caption {
+    display: none;
+  }
+
+  /*
+   * A new photo pops in large over the box for its 10 seconds, then the wall goes on. It stops at
+   * the clear band, as the wall does: the rotation marks there would run through its credit.
+   */
+  .canccu-widget__pop {
+    position: absolute;
+    inset: 0 0 calc(7 * var(--canccu-u));
+    z-index: 1;
+    margin: 0;
+    background: #000;
+  }
+
+  .canccu-widget__peak {
+    font-size: calc(3.4 * var(--canccu-u));
+    color: var(--canccu-color-text-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Ambient's statistics are one line under its rail: "N still online" with its trend. */
+  .canccu-widget__still {
+    display: none;
+  }
+
+  .canccu-layout--ambient .canccu-region--online > .canccu-widget--stats {
+    align-items: center;
+    padding: 0;
+  }
+
+  .canccu-layout--ambient .canccu-region--online .canccu-widget__kicker,
+  .canccu-layout--ambient .canccu-region--online .canccu-widget__stats {
+    display: none;
+  }
+
+  .canccu-layout--ambient .canccu-region--online .canccu-widget__still {
+    display: flex;
+    align-items: baseline;
+    gap: calc(1 * var(--canccu-u));
+    margin: 0;
+    font-size: calc(4.4 * var(--canccu-u));
+    font-weight: 600;
+    color: var(--canccu-color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * Portrait's rail is three rows high since it shares the band with Right now (contracts/screen.md,
+   * Built-in layouts): its two rows of the run of show side by side, not stacked.
+   */
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__body {
+    flex-direction: row;
+    gap: calc(3 * var(--canccu-u));
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__body > li {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__body > li + li {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .canccu-layout--pulse_portrait
+    .canccu-region[data-role="rail"]
+    .canccu-widget__body
+    > li:nth-child(n + 3) {
+    display: none;
+  }
+
+  /* Side by side a row is half as wide: a long name wraps, and a delayed row takes three lines. */
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__row--delayed {
+    grid-template-areas: "state delay" "name name" "until where";
+    grid-template-columns: auto 1fr;
+  }
+
+  /* Its venue rail is two rows high too: a QR's caption goes beside its code, not under it. */
+  .canccu-layout--pulse_portrait .canccu-region--venue_rail-2 .canccu-widget__qr,
+  .canccu-layout--pulse_portrait .canccu-region--venue_rail .canccu-widget--qr .canccu-widget__qr {
+    flex-direction: row;
+    text-align: start;
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region--venue_rail-2 .canccu-widget__code,
+  .canccu-layout--pulse_portrait
+    .canccu-region--venue_rail
+    .canccu-widget--qr
+    .canccu-widget__code {
+    width: auto;
+    height: calc(14 * var(--canccu-u));
+  }
+
+  .canccu-layout--pulse_portrait .canccu-region--venue_rail-2 .canccu-widget__caption,
+  .canccu-layout--pulse_portrait
+    .canccu-region--venue_rail
+    .canccu-widget--qr
+    .canccu-widget__caption {
+    white-space: normal;
+  }
+
+  /*
+   * One number alone, as Right now before the bot's data ("checked in" only): the box's one figure,
+   * centred, and large in a Dashboard box. At the size of three it sat in a corner of an empty
+   * panel (v8 rule 5). The box is a size container there (layouts.css), so the height caps the
+   * number in a two-row strip too.
+   */
+  .canccu-region
+    > .canccu-widget--stats
+    .canccu-widget__stats:has(> .canccu-widget__stat:only-child) {
+    justify-content: center;
+  }
+
+  .canccu-region > .canccu-widget--stats .canccu-widget__stat:only-child {
+    align-items: center;
+    text-align: center;
+  }
+
+  .canccu-layout--dashboard .canccu-region > .canccu-widget--stats .canccu-widget__stat:only-child {
+    gap: calc(1 * var(--canccu-u));
+  }
+
+  .canccu-layout--dashboard
+    .canccu-region
+    > .canccu-widget--stats
+    .canccu-widget__stat:only-child
+    .canccu-widget__big {
+    font-size: min(calc(14 * var(--canccu-u)), 40cqh);
+    line-height: 1;
+  }
+
+  .canccu-layout--dashboard
+    .canccu-region
+    > .canccu-widget--stats
+    .canccu-widget__stat:only-child
+    .canccu-widget__meta {
+    font-size: min(calc(4.4 * var(--canccu-u)), 14cqh);
+  }
+}

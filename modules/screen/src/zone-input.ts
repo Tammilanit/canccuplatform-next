@@ -6,6 +6,8 @@
  */
 import { boxProblem } from "./compose/boxes.js";
 import { BUILT_IN_LAYOUTS, themeLayouts } from "./compose/layouts.js";
+import { MOTION_LEVELS } from "./compose/motion.js";
+import type { MotionLevel } from "./compose/motion.js";
 import type { Sources } from "./compose/sources.js";
 import { invalidRequest } from "./http.js";
 
@@ -22,10 +24,12 @@ export function zoneKey(value: unknown, where: string): string {
 export const NAME_RE = /^[a-z][a-z0-9_-]{0,31}$/;
 const WIDGET_RE = /^[a-z][a-z0-9_]{0,39}$/;
 const ROLES = ["full", "hero", "rail", "venue_rail", "ticker", "header", "backdrop", "overlay"];
-const ROTATIONS = ["sequence", "shuffle"];
+const ROTATIONS = ["sequence", "shuffle", "director"];
+const INDICATORS = ["line", "ring", "off"];
 const IDLES = ["logo", "blank", "collapse", "next"];
 const HEADERS = ["separate", "shared"];
 const HUB_QRS = ["always", "rotate"];
+const SCREEN_NAMES = ["auto", "always", "never"];
 const MAX_REGIONS = 32;
 const MAX_WIDGETS = 12;
 const MAX_PROPS = 32;
@@ -43,9 +47,13 @@ export interface ZoneInput {
   /** Null: the layout's `header`, else `separate` (src/compose/parts.ts). */
   header: "separate" | "shared" | null;
   hub_qr: "always" | "rotate";
+  /** `auto`: shown while the event has two or more screens (src/compose/state.ts, showsName). */
+  screen_name: "auto" | "always" | "never";
   /** Null: no trade (src/compose/showcase.ts). */
   hero_region: string | null;
   grow_for_showcase: boolean;
+  /** Null: the event's level, moved by the day (src/compose/motion.ts). */
+  motion_level: MotionLevel | null;
   sound: ZoneSound;
   /** Required on PUT; ignored on POST, where it is read-only. */
   revision?: number;
@@ -118,11 +126,22 @@ function regionSettings(value: unknown, where: string): Json {
   if (!isObject(value)) throw invalidRequest(`${where} must be an object.`);
   onlyKeys(
     value,
-    ["role", "widgets", "rotation", "dwell_seconds", "skip_empty", "idle", "area", "hidden"],
+    [
+      "role",
+      "widgets",
+      "rotation",
+      "indicator",
+      "dwell_seconds",
+      "skip_empty",
+      "idle",
+      "area",
+      "hidden",
+    ],
     where,
   );
   oneOf(value.role, ROLES, `${where}.role`);
   oneOf(value.rotation, ROTATIONS, `${where}.rotation`);
+  oneOf(value.indicator, INDICATORS, `${where}.indicator`);
   oneOf(value.idle, IDLES, `${where}.idle`);
   const dwell = value.dwell_seconds;
   if (
@@ -159,8 +178,10 @@ export function zoneInput(value: unknown): ZoneInput {
       "regions",
       "header",
       "hub_qr",
+      "screen_name",
       "hero_region",
       "grow_for_showcase",
+      "motion_level",
       "sound",
       "revision",
     ],
@@ -193,6 +214,8 @@ export function zoneInput(value: unknown): ZoneInput {
   // Unlike `header`, `hub_qr` has no null: the contract gives it a plain default.
   const hubQr = value.hub_qr === undefined ? "always" : value.hub_qr;
   oneOf(hubQr, HUB_QRS, "`hub_qr`");
+  const screenName = value.screen_name === undefined ? "auto" : value.screen_name;
+  oneOf(screenName, SCREEN_NAMES, "`screen_name`");
   // Any region id is kept, also one the layout lacks: the zone survives a layout change.
   const heroRegion = value.hero_region ?? null;
   if (heroRegion !== null && (typeof heroRegion !== "string" || !NAME_RE.test(heroRegion))) {
@@ -201,6 +224,8 @@ export function zoneInput(value: unknown): ZoneInput {
   // Like `hub_qr`, no null: the contract gives it a plain default.
   const grow = value.grow_for_showcase === undefined ? true : value.grow_for_showcase;
   if (typeof grow !== "boolean") throw invalidRequest("`grow_for_showcase` must be true or false.");
+  const motionLevel = value.motion_level ?? null;
+  if (motionLevel !== null) oneOf(motionLevel, [...MOTION_LEVELS], "`motion_level`");
   const sound = value.sound ?? {};
   if (!isObject(sound)) throw invalidRequest("`sound` must be an object.");
   onlyKeys(sound, ["enabled", "device_id"], "sound");
@@ -221,11 +246,23 @@ export function zoneInput(value: unknown): ZoneInput {
     regions: regions as Record<string, Json>,
     header: header as ZoneInput["header"],
     hub_qr: hubQr as ZoneInput["hub_qr"],
+    screen_name: screenName as ZoneInput["screen_name"],
     hero_region: heroRegion,
     grow_for_showcase: grow,
+    motion_level: motionLevel as MotionLevel | null,
     sound: { enabled, device_id: deviceId },
     ...(revision === undefined ? {} : { revision: revision as number }),
   };
+}
+
+/**
+ * The zone's fields as a preview stores and composes them: all it read but the revision. One
+ * helper for both previews (a device's and a zone's), so a new field cannot be missed in one.
+ */
+export function zoneFields(zone: ZoneInput): Omit<ZoneInput, "revision"> {
+  const fields: Partial<ZoneInput> = { ...zone };
+  delete fields.revision;
+  return fields as Omit<ZoneInput, "revision">;
 }
 
 /**

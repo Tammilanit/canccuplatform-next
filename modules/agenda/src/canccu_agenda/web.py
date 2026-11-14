@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import logging
 import os
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from canccu_kit import (
@@ -42,10 +44,16 @@ UI_CSS = Path(
 # The run of show's own pages, as tabs under its title (docs/design/mockups.html, sheet 2). Quick
 # add is an action, so it is the page's button and the bar's, never a tab: nothing twice.
 TABS = (("/", "Run of show"), ("/templates", "Templates"))
-STYLESHEETS = ("ui.css", "agenda.css", "confirm.css")
+STYLESHEETS = ("ui.css", "agenda.css", "list.css", "confirm.css", "gap.css")
 CSS = tuple(f"{BASE}/static/{name}" for name in STYLESHEETS)
+SCRIPTS = ("day.js", "quickadd.js")
+# Each script's tag, from the list static_file serves, so a page cannot name one it does not.
+SCRIPT_TAGS = {name: f'<script src="{BASE}/static/{name}" defer></script>' for name in SCRIPTS}
 # A 24-hour time: native time fields follow the browser's locale, which may be 12-hour (UX B5).
 TIME_PATTERN = "[0-2][0-9]:[0-5][0-9]"
+# "Other date…": a day typed in the event's format with its year, "16 Mar 2027" (or "Tue 16 Mar
+# 2027"), so a form reaches any day, not only those it offers.
+DATE_PATTERN = "([A-Za-z]{3} )?[0-9]{1,2} [A-Za-z]{3} [0-9]{4}"
 log = logging.getLogger("canccu.agenda")
 VISIBILITY_LABELS = {"public": "Everyone", "attendees": "Attendees", "crew": "Crew only"}
 CHANNEL_LABELS = {
@@ -66,7 +74,19 @@ async def page_session(request: Request) -> Session:
         raise MissingRight(f"needs right {WRITE} or {CREW_READ}")
     check_admin_access(ctx, request.client.host if request.client else None, tailscale_cidrs())
     request.state.agenda_event = await event_of(request)
+    if ctx["status"] == "archived":
+        # Read only (sheets 2 and 8): the pages draw no change at all, as for crew who read.
+        session = replace(session, rights=session.rights - {WRITE})
+        request.state.agenda_session = session
     return session
+
+
+def archived(request: Request) -> bool:
+    return bool(tenant_of(request)["status"] == "archived")
+
+
+# What an item of an archived event says instead of its actions (sheet 8, Errors).
+ARCHIVED_ITEM = "The event is archived, so this item can't be delayed, edited or cancelled."
 
 
 async def page_writer(request: Request) -> Session:
@@ -128,8 +148,10 @@ def page(
     return response
 
 
-def redirect(path: str) -> RedirectResponse:
-    return RedirectResponse(f"{BASE}{path}", status_code=303)
+def redirect(path: str, item: str | None = None) -> RedirectResponse:
+    """`item`: after a change, the list opens at that item's row, not at the top (#482)."""
+    target = f"#r-{quote(item, safe='')}" if item else ""
+    return RedirectResponse(f"{BASE}{path}{target}", status_code=303)
 
 
 def notice(message: str, kind: str = "ok") -> str:
@@ -137,11 +159,14 @@ def notice(message: str, kind: str = "ok") -> str:
     return ui.notice("down" if kind == "error" else "ok", message)
 
 
-async def error_page(request: Request, exc: KitError) -> HTMLResponse:
+async def error_page(request: Request, exc: KitError) -> Response:
     """A refusal said in words, with the way on (canccu_kit.ui); a missing right goes to the
     log, never to the page (UX audit B3)."""
     if isinstance(exc, MissingRight):
         log.info("page %s refused: %s", request.url.path, exc.message)
+        session = getattr(request.state, "agenda_session", None)
+        if session is not None and not session.rights:  # admin's "No role yet" says what to do
+            return RedirectResponse(SIGN_IN, status_code=303)
     if exc.code == "version_conflict":
         exc = KitError(
             "Someone changed this item meanwhile. Open it again to see it as it is now.",
@@ -206,14 +231,36 @@ def next_minute(now: datetime) -> datetime:
     return now.replace(second=0, microsecond=0) + timedelta(minutes=1)
 
 
-def when_inputs(name: str, label: str, value: str | None, *, required: bool = False) -> str:
-    """A date and a 24-hour time for a datetime-local value (`posted_when` joins them back)."""
-    day, _, hm = (value or "").partition("T")
+def when_inputs(
+    name: str,
+    label: str,
+    value: str | None,
+    days: list[date],
+    *,
+    required: bool = False,
+    fallback: date | None = None,
+) -> str:
+    """A day and a 24-hour time for a datetime-local value (`posted_when` joins them back). The
+    day is a choice of the event's days in its own format ("Sat 14 Mar", sheet 1): a native date
+    field follows the browser's locale (mm/dd/yyyy). "Other date…" reaches any other day, typed
+    in the same format. Without a value the day is `fallback`."""
+    day, _, hm = (value or "").rpartition("T")
+    chosen = day or (fallback.isoformat() if fallback else "")
+    parsed = iso_day(chosen)
+    # A typed day the form could not read comes back as typed, under "Other date…".
+    other = parsed is None and bool(chosen or hm)
+    shown = sorted(set(days) | ({parsed} if parsed else set()))
+    options = "".join(
+        f'<option value="{d.isoformat()}"{" selected" if d == parsed else ""}>'
+        f"{day_label(d)}</option>"
+        for d in shown
+    )
+    options += f'<option value="other"{" selected" if other else ""}>Other date…</option>'
+    example = shown[-1] if shown else date.today()
     return (
         '<span class="canccu-agenda-when">'
-        + text_input(
-            f"{name}_day", day, "date", required=required, **{"aria-label": f"{label}: day"}
-        )
+        f'<select class="canccu-input" name={name}_day aria-label="{esc(label)}: day">'
+        f"{options}</select>"
         + text_input(
             f"{name}_time",
             hm[:5],
@@ -224,17 +271,47 @@ def when_inputs(name: str, label: str, value: str | None, *, required: bool = Fa
             maxlength=5,
             **{"aria-label": f"{label}: time, 24-hour"},
         )
-        + "</span>"
+        + '<span class="canccu-agenda-when__other">'
+        + text_input(
+            f"{name}_other",
+            chosen if other else "",
+            pattern=DATE_PATTERN,
+            placeholder=f"{example.day} {example:%b %Y}",
+            maxlength=16,
+            **{"aria-label": f"{label}: other date, as {example.day} {example:%b %Y}"},
+        )
+        + "</span></span>"
     )
 
 
+def iso_day(raw: str) -> date | None:
+    try:
+        return date.fromisoformat(raw)
+    except ValueError:
+        return None
+
+
+def typed_day(raw: str) -> date | None:
+    """A day typed as DATE_PATTERN has it; the weekday, when given, is not checked."""
+    parts = raw.split()
+    try:
+        return datetime.strptime(" ".join(parts[-3:]), "%d %b %Y").date()
+    except ValueError:
+        return None
+
+
 def posted_when(form: Any, name: str) -> str:
-    """A posted date and time as one datetime-local value; a form that sends the value whole
-    (an older page, a test) still works."""
+    """A posted day and time as one datetime-local value; a form that sends the value whole
+    (an older page, a test) still works. A day without a time is no value: the day field always
+    holds one. An "Other date…" the form cannot read stays as typed, so the time is refused."""
     if f"{name}_day" not in form and f"{name}_time" not in form:
         return str(form.get(name) or "")
     day, hm = str(form.get(f"{name}_day") or ""), str(form.get(f"{name}_time") or "")
-    return f"{day}T{hm}" if day or hm else ""
+    if day == "other":
+        typed = str(form.get(f"{name}_other") or "").strip()
+        found = typed_day(typed) if len(typed.split()) in (3, 4) else None
+        day = found.isoformat() if found else typed
+    return f"{day}T{hm}" if hm else ""
 
 
 def field(label: str, control: str, hint: str = "") -> str:
@@ -288,9 +365,10 @@ def button(label: str, kind: str = "primary", **attrs: Any) -> str:
 async def static_file(request: Request) -> Response:
     name = request.path_params["name"]
     path = UI_CSS if name == "ui.css" else _STATIC / name
-    if name not in STYLESHEETS or not path.is_file():
+    if name not in (*STYLESHEETS, *SCRIPTS) or not path.is_file():
         raise KitError("not found", status=404, code="not_found")
-    response = FileResponse(path, media_type="text/css")
+    kind = "text/javascript" if name in SCRIPTS else "text/css"
+    response = FileResponse(path, media_type=kind)
     response.headers["Cache-Control"] = "public, max-age=300"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response

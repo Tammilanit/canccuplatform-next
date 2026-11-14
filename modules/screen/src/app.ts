@@ -30,6 +30,7 @@ import { fileRoutes } from "./assets/serve.js";
 import { MAX_UPLOAD_BYTES } from "./assets/upload.js";
 import { versionRoutes } from "./assets/versions.js";
 import { assignmentRoutes } from "./assignments.js";
+import { previewRoutes } from "./preview/routes.js";
 import { composeRoutes } from "./compose/routes.js";
 import { noSources } from "./compose/sources.js";
 import type { Sources } from "./compose/sources.js";
@@ -38,6 +39,8 @@ import type { Settings } from "./health.js";
 import { heartbeatRoutes } from "./heartbeat.js";
 import type { Kv } from "./kv.js";
 import { notFound } from "./http.js";
+import { motionRoutes } from "./motion-routes.js";
+import type { SettingsWrite } from "./motion-routes.js";
 import { movingRoutes } from "./moving.js";
 import { pairingRoutes } from "./pairing.js";
 import { photoRoutes } from "./photos.js";
@@ -59,6 +62,8 @@ import { studioRoutes } from "./studio/routes.js";
 import type { StudioDeps } from "./studio/routes.js";
 import { tickerRoutes } from "./ticker/routes.js";
 import { zoneRoutes } from "./zones.js";
+import { ArtCache } from "./stage/art.js";
+import { artRoutes } from "./stage/routes.js";
 
 export interface ScreenDeps {
   db: Db;
@@ -95,8 +100,12 @@ export interface ScreenDeps {
   streamPingMs?: number;
   /** Admin's own settings, for the event's language on Studio's pages; English without them. */
   adminSettings?: Settings;
+  /** Admin's write of Screen's own settings, for the Motion card (src/motion-routes.ts). */
+  writeSettings?: SettingsWrite;
   /** The event's public answer, for the Studio shell's header. */
   publicEvent?: StudioDeps["publicEvent"];
+  /** The stage's game art (src/stage/art.ts); main reads covers through the edge, tests read none. */
+  art?: ArtCache;
 }
 
 const ENGLISH: Settings = {
@@ -225,6 +234,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
     sources: deps.sources ?? noSources,
     bundleVersion,
     bundles,
+    art: deps.art ?? new ArtCache(deps.kv, () => Promise.resolve(null)),
   };
   const push = {
     ...compose,
@@ -245,6 +255,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   registryRoutes(app, deps);
   zoneRoutes(app, compose);
   assignmentRoutes(app, compose);
+  previewRoutes(app, compose);
   playlistRoutes(app, deps);
   scheduleRoutes(app, deps);
   pushRoutes(app, deps);
@@ -252,6 +263,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   composeRoutes(app, compose);
   playerRoutes(app, compose);
   pinRoutes(app, compose);
+  motionRoutes(app, compose);
   studioRoutes(app, {
     ...compose,
     adminSettings: deps.adminSettings ?? ENGLISH,
@@ -285,6 +297,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   assetRoutes(app, assets);
   versionRoutes(app, assets);
   fileRoutes(app, assets);
+  artRoutes(app, compose);
   photoRoutes(app, assets);
   renderRoutes(app, assets);
   return app;

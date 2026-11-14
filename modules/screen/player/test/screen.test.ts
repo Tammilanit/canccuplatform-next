@@ -83,6 +83,28 @@ describe("the screen's layout", () => {
     expect(hero?.dataset.role).toBe("hero");
   });
 
+  // contracts/screen.md, `screen_name`: the header names the zone unless the zone hides it.
+  it("names the zone in the header beside the event, unless the state hides the name", () => {
+    const header = region("header", {
+      widgets: [widget("logo", { url: null, name: "Demo Event" })],
+    });
+    const zoneOf = (over: Partial<ScreenState>) =>
+      new Screen(host).draw(state([header], over)).querySelector(".canccu-widget__zone")
+        ?.textContent ?? null;
+    expect(zoneOf({})).toBe("Main hall");
+    const zone = { key: "main", name: "Main hall", epoch: "e1" };
+    expect(zoneOf({ zone: { ...zone, show_name: true } })).toBe("Main hall");
+    expect(zoneOf({ zone: { ...zone, show_name: false } })).toBeNull();
+    // The idle logo of an empty header follows the same setting.
+    const idle = region("header", { order: [], widgets: [] });
+    const idleZone = (show: boolean) =>
+      new Screen(host)
+        .draw(state([idle], { zone: { ...zone, show_name: show } }))
+        .querySelector(".canccu-widget__zone")?.textContent ?? null;
+    expect(idleZone(true)).toBe("Main hall");
+    expect(idleZone(false)).toBeNull();
+  });
+
   it("letterboxes a portrait layout to its own shape", () => {
     const screen = new Screen(host);
     const root = screen.draw(
@@ -245,6 +267,42 @@ describe("what a region shows", () => {
     await advance(61_000);
     expect(time()).toBe("01:28:59");
     expect(screen.root.querySelector(".canccu-widget--clock")?.textContent).toContain("18:01");
+  });
+
+  it("keeps the countdown's spotlight when new data redraws it in place", async () => {
+    const screen = new Screen(host);
+    const hero = (label: string) =>
+      state(
+        [
+          region("hero", {
+            order: [],
+            idle: "next",
+            idle_view: {
+              widget: "countdown",
+              view: {
+                label,
+                target_at: "2026-03-14T18:04:00Z",
+                ends_text: null,
+                qr: null,
+                stale: false,
+                empty: false,
+              },
+            },
+          }),
+        ],
+        { display: { motion: "calm", motion_level: "calm", drift: false } },
+      );
+    screen.draw(hero("Semis start in"));
+    screen.start();
+    await advance(FADE_MS.calm);
+    const box = screen.root.querySelector(".canccu-region--hero .canccu-widget");
+    const spotlit = () =>
+      [...(box?.classList ?? [])].filter((c) => c.startsWith("canccu-spotlight")).sort();
+    expect(spotlit()).toEqual(["canccu-spotlight", "canccu-spotlight--outline"]);
+    screen.draw(hero("Semis, moved, start in"));
+    expect(screen.root.querySelector(".canccu-region--hero .canccu-widget")).toBe(box);
+    expect(box?.textContent).toContain("moved");
+    expect(spotlit()).toEqual(["canccu-spotlight", "canccu-spotlight--outline"]);
   });
 
   it("shows the idle choice when nothing takes part: logo, blank, collapse", () => {

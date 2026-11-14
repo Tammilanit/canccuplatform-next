@@ -6,16 +6,23 @@
 import { CONTENT_EN } from "./content-messages.js";
 import { PLAYLIST_CLIENT_KEYS, PLAYLIST_EN } from "./playlist-messages.js";
 import { LAYOUT_CLIENT_KEYS, LAYOUT_EN } from "./layout-messages.js";
+import { WIDGET_SETTINGS_EN } from "./widget-settings.js";
+import { PREVIEW_CLIENT_KEYS, PREVIEW_EN } from "./preview-messages.js";
 import { SCHEDULE_CLIENT_KEYS, SCHEDULE_EN } from "./schedule-messages.js";
+import { MOTION_CLIENT_KEYS, MOTION_EN } from "./motion-view.js";
 
 const EN = {
   ...CONTENT_EN,
   ...SCHEDULE_EN,
   ...PLAYLIST_EN,
   ...LAYOUT_EN,
+  ...WIDGET_SETTINGS_EN,
+  ...PREVIEW_EN,
+  ...MOTION_EN,
   "studio.title": "Screen studio",
   "studio.page": "the Screen studio",
   "studio.back": "Back to the Screen studio",
+  "studio.archived": "The event is archived, so nothing in the Screen studio can be changed.",
   "tab.live": "Live",
   "tab.devices": "Devices",
   "tab.zones": "Zones and layouts",
@@ -28,6 +35,10 @@ const EN = {
   "live.no_screens": "No screens yet",
   "live.open": "Open {zone} full size",
   "live.quick": "Quick actions",
+  "live.delay_now": "Delay what\u2019s on now\u2026",
+  "live.delay_none": "Nothing runs now: open the run of show.",
+  "live.ticker_now": "Set the ticker\u2026",
+  "live.push_now": "Push content now\u2026",
   "live.set_ticker": "Set the ticker",
   "live.pair": "Pair a screen",
   "live.empty_title": "No zones yet",
@@ -239,6 +250,11 @@ const EN = {
   "widget.bracket": "Bracket",
   "widget.food_status": "Food status",
   "widget.embed": "Theme embed",
+  "widget.today_numbers": "Today in numbers",
+  "widget.activity_graph": "Activity graph",
+  "widget.voice_rooms": "Voice rooms",
+  "widget.stats": "Right now",
+  "widget.now_playing": "Now playing",
   "region.header": "Header",
   "region.hero": "Hero",
   "region.rail": "Side rail",
@@ -406,4 +422,6 @@ export const CLIENT_KEYS = [
   ...PLAYLIST_CLIENT_KEYS,
   ...LAYOUT_CLIENT_KEYS,
   ...SCHEDULE_CLIENT_KEYS,
+  ...PREVIEW_CLIENT_KEYS,
+  ...MOTION_CLIENT_KEYS,
 ] as const satisfies readonly MessageKey[];

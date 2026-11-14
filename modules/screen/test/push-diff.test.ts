@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { RegionView } from "../src/compose/build.js";
 import { diffZone } from "../src/push/diff.js";
+import { NO_DISPLAY } from "../src/compose/display.js";
 import type { ZoneRecord } from "../src/push/store.js";
 
 const widget = (type: string, view: Record<string, unknown>) => ({
@@ -24,6 +25,7 @@ const region = (
   rotation: "sequence",
   order: widgets.map((_, i) => i),
   cycle_started_at: "2026-01-01T12:00:00.000Z",
+  indicator: "line",
   idle: "logo",
   idle_view: null,
   widgets,
@@ -44,7 +46,7 @@ function record(over: Partial<ZoneRecord> = {}, regions?: RegionView[]): ZoneRec
     theme: { revision: 1, tokens_css_url: "/t.css", css_url: null, logo_url: null, templates: [] },
     ticker: { text: null, until: null, source: null, appearance: "default" },
     sound: { enabled: false, device_id: null },
-    display: { motion: "moderate", drift: false },
+    display: NO_DISPLAY,
     views: {
       landscape: { layout: { id: "pulse" }, regions: rs },
       portrait: { layout: { id: "pulse_portrait" }, regions: rs },
@@ -63,8 +65,11 @@ describe("the push diff", () => {
       record({ eventName: "Old event" }),
       record({ sound: { enabled: true, device_id: "dv_1" } }),
       // Motion and drift reach screens as a whole state (contracts/screen.md).
-      record({ display: { motion: "calm", drift: false } }),
-      record({ display: { motion: "moderate", drift: true } }),
+      record({ display: { ...NO_DISPLAY, motion_level: "calm", motion: "calm" } }),
+      record({ display: { ...NO_DISPLAY, drift: true } }),
+      record({
+        display: { ...NO_DISPLAY, motion_style: { ...NO_DISPLAY.motion_style, pack: "arcade" } },
+      }),
       // A record stored before `display` existed.
       ((old: ZoneRecord) => {
         delete old.display;

@@ -212,6 +212,11 @@ describe.skipIf(!DATABASE_URL)("theming core", () => {
         "(owner, path, file, bytes) VALUES ('draft', 'images/a.png', $1 || '.png', 1)",
         hex,
       ],
+      [
+        "theming_preview_keys",
+        "(key_sha256, expires_at, created_by) VALUES ($1, now() + interval '1 hour', 'u')",
+        hex,
+      ],
     ];
     for (const [table, insert, stored] of tables) {
       it(`${table} rows stay in their event`, async () => {

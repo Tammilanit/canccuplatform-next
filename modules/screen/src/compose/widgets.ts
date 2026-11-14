@@ -3,8 +3,12 @@
  * Types whose source is not on main yet answer `empty` (plan S13) and are filled by their slice.
  */
 import qrcode from "qrcode-generator";
+import { graphFields, todayFields } from "./features.js";
+import type { Presence } from "./features.js";
 import type { Props } from "./layouts.js";
+import type { MotionPhase } from "./motion.js";
 import type { PlaylistView } from "./playing.js";
+import { wallKey, wallSettings } from "./photos.js";
 
 export type View = Record<string, unknown> & { qr: Qr | null; stale: boolean; empty: boolean };
 export interface Qr {
@@ -29,10 +33,21 @@ export interface ZoneFacts {
    * (src/compose/state.ts). Absent: not read; `null`: nothing to show, or (`checkin`) the read failed.
    */
   playlist?: PlaylistView | null;
-  photo?: Record<string, unknown> | null;
+  /** Each distinct wall the zone's `photo` entries ask for, by wallKey; null: no photos to show. */
+  photos?: Record<string, Record<string, unknown> | null>;
   checkin?: CheckinCode | null;
+  /** The `stats` view-model's fields (src/compose/stats.ts); null: nothing counted yet. */
+  stats?: Record<string, unknown> | null;
   /** The theme's embeds (contracts/theming.md, Embeds). */
   embeds?: { name: string; frame_url: string }[];
+  /** The zone's day phase (Motion and burn-in drift): "Today in numbers" plays at wind-down. */
+  phase?: MotionPhase;
+  /** Tonight's highlight (features.ts, highlightOf); null: none ahead. */
+  highlight?: AgendaItem | null;
+  /** The graphs' hours and the peaks of the last 24 hours (stats.ts, presenceFacts). */
+  presence?: Presence | null;
+  /** Photos shared in the last 24 hours; absent while the wall is off or not read. */
+  photosToday?: number | null;
 }
 
 /** Notify's rotating code (contracts/notify.md, Check-in by the rotating QR). */
@@ -58,6 +73,8 @@ export interface AgendaItem {
   zone?: string | null;
   /** The planned end, before any delay (contracts/agenda.md); a moved end differs from it. */
   planned_ends_at?: string | null;
+  /** Optional in the agenda contract; absent from a read that leaves it out. */
+  description?: string | null;
 }
 export interface AgendaNow {
   current: AgendaItem[];
@@ -154,16 +171,41 @@ function agendaRows(facts: ZoneFacts): Record<string, unknown>[] {
     : [...rows(facts.agenda.current, "now", facts), ...rows(facts.agenda.next, "next", facts)];
 }
 
-/** The `countdown` view-model of `props.item_id`, else of the zone's next public item. */
-export function countdownFields(facts: ZoneFacts, itemId?: string): Record<string, unknown> | null {
+/**
+ * The `countdown` view-model of `given` (tonight's highlight), else of `props.item_id`, else of
+ * the zone's next public item.
+ */
+export function countdownFields(
+  facts: ZoneFacts,
+  itemId?: string,
+  given?: AgendaItem,
+): Record<string, unknown> | null {
   if (facts.agenda === null) return null;
   const all = publicOnly([...facts.agenda.current, ...facts.agenda.next]);
   const item =
-    itemId === undefined
+    given ??
+    (itemId === undefined
       ? publicOnly(facts.agenda.next)[0]
-      : all.find((i) => i.id === itemId && Date.parse(i.starts_at) > facts.now.getTime());
+      : all.find((i) => i.id === itemId && Date.parse(i.starts_at) > facts.now.getTime()));
   if (item === undefined) return null;
-  return { label: item.title, target_at: item.starts_at, ends_text: textOf(item.ends_at, facts) };
+  // The Pulse hero's fields (contracts/screen.md, The Pulse hero). `game` stays null until Screen
+  // reads tournament sessions and the games catalogue; `teams_left` until the tournament gives it.
+  const first = publicOnly(facts.agenda.next)[0];
+  const chip =
+    first !== undefined &&
+    first.id !== item.id &&
+    Date.parse(first.starts_at) < Date.parse(item.starts_at)
+      ? { label: first.title, target_at: first.starts_at }
+      : null;
+  return {
+    label: item.title,
+    target_at: item.starts_at,
+    ends_text: textOf(item.ends_at, facts),
+    kind: item.kind,
+    description: item.description ?? null,
+    game: null,
+    chip,
+  };
 }
 
 /** The code's URL is the path alone while the event has no primary hostname: made whole here. */
@@ -198,8 +240,20 @@ function fields(
       const later = rows(facts.agenda?.later ?? [], "next", facts);
       return items.length === 0 ? null : { title: "Now and next", items, later };
     }
-    case "countdown":
-      return countdownFields(facts, typeof props.item_id === "string" ? props.item_id : undefined);
+    case "countdown": {
+      if (props.highlight !== true)
+        return countdownFields(
+          facts,
+          typeof props.item_id === "string" ? props.item_id : undefined,
+        );
+      const highlight =
+        facts.highlight == null ? null : countdownFields(facts, undefined, facts.highlight);
+      return highlight === null ? null : { ...highlight, highlight: true };
+    }
+    case "today_numbers":
+      return todayFields(facts);
+    case "activity_graph":
+      return graphFields(props.metric, facts);
     case "venue_info": {
       if (facts.venue === null) return null;
       const wifi = facts.venue.wifi
@@ -225,7 +279,9 @@ function fields(
     case "playlist":
       return facts.playlist == null ? null : { ...facts.playlist };
     case "photo":
-      return facts.photo ?? null;
+      return facts.photos?.[wallKey(wallSettings(props))] ?? null;
+    case "stats":
+      return facts.stats ?? null;
     case "checkin_qr":
       return facts.checkin == null ? null : checkinFields(facts.checkin, facts);
     case "embed": {
@@ -259,4 +315,27 @@ export function viewOf(
     stale: isStale(type, facts),
     empty: found === null,
   };
+}
+
+/**
+ * The rail's run of show at `atMs`, as the screens read it (`agenda_now`): the zone's items and
+ * those of no zone, public and scheduled; what runs then, and the first to start after it.
+ */
+export function railAt(
+  items: readonly AgendaItem[],
+  zone: string,
+  atMs: number,
+): { now: AgendaItem[]; next: AgendaItem | null } {
+  const shown = items
+    .filter(
+      (i) =>
+        i.visibility === "public" &&
+        (i.status ?? "scheduled") === "scheduled" &&
+        (i.zone == null || i.zone === zone),
+    )
+    .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at));
+  const now = shown.filter(
+    (i) => Date.parse(i.starts_at) <= atMs && i.ends_at !== null && atMs < Date.parse(i.ends_at),
+  );
+  return { now, next: shown.find((i) => Date.parse(i.starts_at) > atMs) ?? null };
 }

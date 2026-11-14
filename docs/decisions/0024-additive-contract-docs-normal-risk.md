@@ -1,6 +1,6 @@
 # 0024. Additive contract docs are normal risk; the maintainer reviews contracts at the checkpoint
 
-- **Status:** Accepted (extends [0019](0019-work-packages.md) without superseding it)
+- **Status:** Accepted (extends [0019](0019-work-packages.md) without superseding it; its Contracts sentence amended by [0029](0029-additive-contracts-ship-with-consumers.md))
 - **Date:** 2026-11-07
 
 ## Context
