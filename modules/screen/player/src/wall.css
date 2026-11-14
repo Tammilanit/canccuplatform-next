@@ -61,10 +61,13 @@
     display: none;
   }
 
-  /* A new photo pops in large over the whole box for its 10 seconds, then the wall goes on. */
+  /*
+   * A new photo pops in large over the box for its 10 seconds, then the wall goes on. It stops at
+   * the clear band, as the wall does: the rotation marks there would run through its credit.
+   */
   .canccu-widget__pop {
     position: absolute;
-    inset: 0;
+    inset: 0 0 calc(7 * var(--canccu-u));
     z-index: 1;
     margin: 0;
     background: #000;

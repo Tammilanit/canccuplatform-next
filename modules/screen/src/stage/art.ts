@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { request as httpRequest } from "node:http";
 import { tenantKey } from "@canccu/kit";
 import sharp from "sharp";
+import { sniff } from "../assets/sniff.js";
 import type { Kv } from "../kv.js";
 import type { Extremes, Rgb } from "./scrim.js";
 
@@ -17,7 +18,18 @@ const ART_TTL_MS = 30 * 24 * 3600_000;
 const FAILED_TTL_MS = 10 * 60_000;
 /** The cover is one image a guest's browser loads; anything larger is no cover. */
 const MAX_COVER_BYTES = 8 * 1024 * 1024;
-const READ_TIMEOUT_MS = 3000;
+/**
+ * The whole read, not only a quiet socket: a cover that trickles in would otherwise hold the
+ * compose, and every screen's state with it.
+ */
+const READ_DEADLINE_MS = 3000;
+/**
+ * sharp's default (~268 Mpx) would decode a huge picture in full on the compose path; a cover is
+ * shown at 640 px, so 40 Mpx is far more than any real one.
+ */
+const MAX_COVER_PIXELS = 40_000_000;
+/** The formats every screen's browser shows; GIF and the rest are no covers. */
+const COVER_TYPES = new Set(["png", "jpg", "webp"]);
 const SAMPLE = 32;
 
 /** What compose needs of a cover: the blurred art's id and both images' extremes. */
@@ -45,19 +57,17 @@ export function coverPath(url: unknown): string | null {
   return /^[\x21-\x7e]+$/.test(url) ? url : null;
 }
 
-/** By content, as the screen's uploads are judged: only these are covers. */
+/** By content, as the screen's uploads are judged (assets/sniff.ts). */
 function isCoverImage(b: Buffer): boolean {
-  const png = b
-    .subarray(0, 8)
-    .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
-  const jpeg = b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
-  const webp = b.toString("latin1", 0, 4) === "RIFF" && b.toString("latin1", 8, 12) === "WEBP";
-  return png || jpeg || webp;
+  const kind = sniff(b.subarray(0, 4096), b.subarray(-64 * 1024));
+  return kind?.kind === "image" && COVER_TYPES.has(kind.ext);
 }
+
+const decode = (b: Buffer) => sharp(b, { limitInputPixels: MAX_COVER_PIXELS });
 
 /** The lightest and darkest pixel of a 32 px version, by luminance. */
 async function extremesOf(image: Buffer): Promise<Extremes> {
-  const { data, info } = await sharp(image)
+  const { data, info } = await decode(image)
     .resize(SAMPLE, SAMPLE, { fit: "inside" })
     .removeAlpha()
     .raw()
@@ -75,7 +85,7 @@ async function extremesOf(image: Buffer): Promise<Extremes> {
 
 /** The blurred art: 640 px wide (never enlarged past it), Gaussian sigma 20, WebP. */
 export async function blurCover(cover: Buffer): Promise<{ webp: Buffer } & ArtInfo> {
-  const webp = await sharp(cover)
+  const webp = await decode(cover)
     .rotate()
     .resize({ width: ART_WIDTH })
     .blur(ART_SIGMA)
@@ -91,12 +101,16 @@ export async function blurCover(cover: Buffer): Promise<{ webp: Buffer } & ArtIn
 }
 
 /** One GET through the edge (Caddy) with the event's hostname, as a guest's browser sends it. */
-export function edgeReader(edgeUrl: string): ReadCover {
+export function edgeReader(edgeUrl: string, deadlineMs = READ_DEADLINE_MS): ReadCover {
   return (hostname, path) =>
     new Promise((resolve) => {
+      const done = (bytes: Buffer | null): void => {
+        clearTimeout(deadline);
+        resolve(bytes);
+      };
       const req = httpRequest(
         new URL(path, edgeUrl),
-        { headers: { host: hostname, accept: "image/*" }, timeout: READ_TIMEOUT_MS },
+        { headers: { host: hostname, accept: "image/*" } },
         (res) => {
           const chunks: Buffer[] = [];
           let size = 0;
@@ -106,22 +120,31 @@ export function edgeReader(edgeUrl: string): ReadCover {
             else chunks.push(chunk);
           });
           res.on("end", () => {
-            resolve(res.statusCode === 200 ? Buffer.concat(chunks) : null);
+            done(res.statusCode === 200 ? Buffer.concat(chunks) : null);
           });
           res.on("error", () => {
-            resolve(null);
+            done(null);
           });
         },
       );
-      req.on("timeout", () => req.destroy(new Error("timeout")));
+      const deadline = setTimeout(() => {
+        req.destroy(new Error("deadline"));
+        done(null);
+      }, deadlineMs);
       req.on("error", () => {
-        resolve(null);
+        done(null);
       });
       req.end();
     });
 }
 
 export class ArtCache {
+  /**
+   * Reads under way, by their tenant's cover key: zones of one event compose at once, and each
+   * would otherwise read and blur the same uncached cover.
+   */
+  private readonly inFlight = new Map<string, Promise<ArtInfo | null>>();
+
   constructor(
     private readonly kv: Kv,
     private readonly read: ReadCover,
@@ -132,6 +155,14 @@ export class ArtCache {
     const path = coverPath(url);
     if (path === null) return null;
     const key = coverKey(path);
+    const running = this.inFlight.get(key);
+    if (running !== undefined) return running;
+    const made = this.lookup(hostname, path, key).finally(() => this.inFlight.delete(key));
+    this.inFlight.set(key, made);
+    return made;
+  }
+
+  private async lookup(hostname: string, path: string, key: string): Promise<ArtInfo | null> {
     const kept = await this.kv.get(key).catch(() => null);
     if (kept !== null) {
       const info = JSON.parse(kept) as ArtInfo | { failed: true };

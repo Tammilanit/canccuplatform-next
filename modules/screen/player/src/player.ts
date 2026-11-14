@@ -25,6 +25,7 @@ import type { FrameKind, FrameText } from "./frames.js";
 import { Live, STATE_PATH } from "./live.js";
 import type { Saved } from "./offline.js";
 import { Screen } from "./screen.js";
+import { mountBehindStage } from "./stage.js";
 import { isState } from "./state.js";
 import type { ScreenState } from "./state.js";
 import { backoffMs } from "./stream.js";
@@ -189,16 +190,9 @@ export class Player {
 
   private mount(node: HTMLElement, safety: HTMLElement[] = []): void {
     this.drawn = true;
-    // The screen keeps its layout between states: moving it out and back in would restart its
-    // fades and, later, its videos.
-    // The stage stays first, behind whatever is drawn (stage.ts): it is no frame of its own.
-    const stage = [...this.env.root.children].filter((c) => c.matches(".canccu-stage"));
-    if ((stage[0]?.nextElementSibling ?? this.env.root.firstElementChild) === node) return;
-    const keep = [...this.env.root.children].filter((c) =>
-      c.matches(".canccu-offline-marker, .canccu-preview-mark, .canccu-identify"),
-    );
-    this.env.root.replaceChildren(...stage, node, ...keep, ...safety);
-    keepSafetyLast(this.env.root);
+    // The screen keeps its layout between states; the stage stays first, behind it (stage.ts).
+    const marks = ".canccu-offline-marker, .canccu-preview-mark, .canccu-identify";
+    if (mountBehindStage(this.env.root, node, marks, safety)) keepSafetyLast(this.env.root);
   }
 
   settle(answer: Answer): void {

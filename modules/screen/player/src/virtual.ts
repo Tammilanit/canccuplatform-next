@@ -11,6 +11,7 @@ import { frame } from "./frames.js";
 import type { FrameText } from "./frames.js";
 import { Live } from "./live.js";
 import { Screen } from "./screen.js";
+import { mountBehindStage } from "./stage.js";
 import { isState } from "./state.js";
 import type { ScreenState } from "./state.js";
 import { backoffMs } from "./stream.js";
@@ -142,10 +143,6 @@ export class VirtualScreen {
 
   /** As the kiosk's: the screen keeps its layout between states, and the offline mark stays. */
   private mount(node: HTMLElement): void {
-    // The stage stays first, behind whatever is drawn (stage.ts).
-    const stage = [...this.env.root.children].filter((c) => c.matches(".canccu-stage"));
-    if ((stage[0]?.nextElementSibling ?? this.env.root.firstElementChild) === node) return;
-    const keep = [...this.env.root.children].filter((c) => c.matches(".canccu-offline-marker"));
-    this.env.root.replaceChildren(...stage, node, ...keep);
+    mountBehindStage(this.env.root, node, ".canccu-offline-marker");
   }
 }

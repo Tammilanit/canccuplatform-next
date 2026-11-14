@@ -9,6 +9,7 @@
 // and Ambient once under an emergency takeover, which keeps its fixed red there too. Dashboard is
 // handed sample statistics (#416), and shot once as the server draws it while they are missing.
 // The Director's strips (#447, director.mjs) are frames a few seconds apart.
+import { CLEAR_CHECKS } from "./clear.mjs";
 import { expect } from "./client.mjs";
 import { boxesGivenAway, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, stripNames, withDirector } from "./director.mjs";
@@ -345,6 +346,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       // #443's views draw what they are named for before the shot.
       const drawn = NEW_VIEWS[view];
       if (drawn !== undefined) await page.waitForSelector(drawn, { timeout: 30_000 });
+      await CLEAR_CHECKS[view]?.(page);
       if (view === "rail-empty") await railShowsIdle(page);
       else if (view === "dashboard-showcase") {
         await stripNamesCountdown(page);

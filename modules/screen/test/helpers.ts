@@ -126,6 +126,8 @@ export interface Harness {
   /** One run of the offline sweep, as main starts every 5 seconds. */
   /** The covers the edge answers for the stage's art, by path, on any host. */
   covers: Record<string, Buffer>;
+  /** Each path the stage's art read through the edge, in order. */
+  coverReads: string[];
   sweep(): Promise<void>;
   queue: MemoryRenderQueue;
   /**
@@ -207,6 +209,7 @@ export async function harness(): Promise<Harness> {
   await writeFile(join(playerDir, "sw.js"), "self;\n");
   const oembedStatus = { value: 200 };
   const covers: Record<string, Buffer> = {};
+  const coverReads: string[] = [];
   const fake: FakeSources = {
     theme: null,
     revisions: {},
@@ -311,7 +314,10 @@ export async function harness(): Promise<Harness> {
     playerDir,
     streamPingMs: 200,
     publicEvent: (host) => Promise.resolve(publicEvents[host ?? ""] ?? null),
-    art: new ArtCache(kv, (_host, path) => Promise.resolve(covers[path] ?? null)),
+    art: new ArtCache(kv, (_host, path) => {
+      coverReads.push(path);
+      return Promise.resolve(covers[path] ?? null);
+    }),
     sources: {
       theme: (tenantId) => answer(fake.tenants, tenantId, fake.theme),
       themeRevision: (tenantId, revision) =>
@@ -370,6 +376,7 @@ export async function harness(): Promise<Harness> {
     tenants,
     rights,
     covers,
+    coverReads,
     sweep: () => sweepOffline({ db, kv, bus, now: () => clock.now }),
     queue,
     dispatch: (socketPath, opts = {}) =>
