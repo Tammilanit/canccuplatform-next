@@ -97,13 +97,13 @@ export function photoWall(
   const order = orderOf(photos, s, seed, slot);
   const changes: number[] = order.length > 1 ? [(slot + 1) * slotMs] : [];
   let lead = slot % order.length;
-  let featured = false;
+  let featured: number | null = null;
   if (s.popNew) {
     const popMs = POP_SECONDS * 1000;
     for (const [id, end] of popUntil(photos)) {
       if (nowMs >= end - popMs && nowMs < end) {
         lead = order.findIndex((p) => p.id === id);
-        featured = true;
+        featured = end;
       }
       if (end > nowMs) changes.push(nowMs < end - popMs ? end - popMs : end);
     }
@@ -114,7 +114,13 @@ export function photoWall(
   );
   const first = tiles[0] as PhotoRow;
   return {
-    view: { ...tileOf(first), featured, tiles: tiles.map(tileOf) },
+    view: {
+      ...tileOf(first),
+      featured: featured !== null,
+      // The pop slot's end: the Director gives the photo the hero until then (director.ts).
+      featured_until: featured === null ? null : new Date(featured).toISOString(),
+      tiles: tiles.map(tileOf),
+    },
     changesAt: changes.length === 0 ? null : Math.min(...changes),
   };
 }

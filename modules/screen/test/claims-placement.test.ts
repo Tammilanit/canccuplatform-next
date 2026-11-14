@@ -13,6 +13,7 @@ function region(id: string, role: RegionView["role"]): RegionView {
     layer: 0,
     rotation: "sequence",
     order: [],
+    indicator: "line",
     cycle_started_at: "2026-01-01T18:00:00.000Z",
     idle: "logo",
     idle_view: null,

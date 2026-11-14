@@ -25,6 +25,7 @@ const region = (
   rotation: "sequence",
   order: widgets.map((_, i) => i),
   cycle_started_at: "2026-01-01T12:00:00.000Z",
+  indicator: "line",
   idle: "logo",
   idle_view: null,
   widgets,

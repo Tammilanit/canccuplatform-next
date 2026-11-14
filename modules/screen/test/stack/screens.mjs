@@ -8,8 +8,10 @@
 // built-in layouts (#404, sheet 10) are shot landscape in every theme, at 4K in the default one,
 // and Ambient once under an emergency takeover, which keeps its fixed red there too. Dashboard is
 // handed sample statistics (#416), and shot once as the server draws it while they are missing.
+// The Director's strips (#447, director.mjs) are frames a few seconds apart.
 import { expect } from "./client.mjs";
 import { boxesGivenAway, statsApart, stripNamesCountdown } from "./dashboard.mjs";
+import { DIRECTOR_STRIPS, directorStrip, stripNames, withDirector } from "./director.mjs";
 import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
 import {
   CLAIM_OF,
@@ -92,6 +94,8 @@ export function planned(check = false) {
     else for (const f of SURGE_FRAMES) out.push(nameOf("default", `${view}-${f}`, HD[0]));
   }
   out.push(nameOf("default", "pulse-hero-art", HD[0]));
+  for (const { view, frames } of DIRECTOR_STRIPS)
+    out.push(...stripNames(nameOf("default", view, HD[0]), frames));
   return out;
 }
 
@@ -240,6 +244,10 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
     await attempt(nameOf("default", "pulse-hero-art", HD[0]), () =>
       handed("default", "pulse-hero-art", HD[0], withHeroArt),
     );
+    for (const { view } of DIRECTOR_STRIPS)
+      await attempt(nameOf("default", view, HD[0]), () =>
+        handed("default", view, HD[0], withDirector(view)),
+      );
 
     /** The Pulse, then identify over it, then the offline marker. */
     async function pulse(theme, size) {
@@ -332,7 +340,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await page.goto(at("/screen/"));
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
       else await layout(page, size);
-      if (view.startsWith("dashboard")) await statsApart(page);
+      // A showcase pauses Right now, the Dashboard's one `stats` box (#447): no numbers to keep apart.
+      if (view.startsWith("dashboard") && view !== "dashboard-showcase") await statsApart(page);
       // #443's views draw what they are named for before the shot.
       const drawn = NEW_VIEWS[view];
       if (drawn !== undefined) await page.waitForSelector(drawn, { timeout: 30_000 });
@@ -342,7 +351,11 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         await tickerFitted(page, true);
       } else if (view === "ambient-takeover") await takeoverIsRed(page);
       else if (view === "stage-surge") return await surgeStrip(page, theme, view, size, close);
-      else if (view.startsWith("stage-") || view === "pulse-hero-art") {
+      else if (view.startsWith("director-") || view === "choreographer") {
+        await settle(page);
+        await directorStrip(page, view, (f) => shot(`${nameOf(theme, view, size)}-${f}`, page));
+        return await close();
+      } else if (view.startsWith("stage-") || view === "pulse-hero-art") {
         // The kind and phase tints fade in over the stage's longest fade.
         await page.waitForSelector(".canccu-stage--phase-peak");
         await page.waitForTimeout(STAGE_FADE_MS + 200);

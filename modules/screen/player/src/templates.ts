@@ -117,6 +117,24 @@ const CODE_BAR: TreeNode = sec(
   ),
 );
 
+/**
+ * A graph's hours as bars (the Dashboard's activity graph, "Today in numbers"): a template holds
+ * no styles, so each bar's height out of 10 travels in its class (widgets.css draws them).
+ */
+const GRAPH: TreeNode = el("div", "graph", [
+  sec(
+    "points",
+    el("span", null, [], {
+      class: [t("canccu-widget__point canccu-widget__point--"), f("level")],
+      "aria-label": [f("time_text"), t(": "), f("value")],
+    }),
+  ),
+]);
+
+/** One of "Today in numbers" (sheet 13): the number big, what it counts under it. */
+const figure = (field: string, label: TreeNode[]): TreeNode =>
+  el("li", "figure", [el("strong", "big", [f(field)]), el("span", "label", label)]);
+
 export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = {
   clock: [el("p", "meta", [f("date")]), el("time", "big", [f("time")], { datetime: [f("iso")] })],
   // No title: each row is labelled (NOW, NEXT), so "Now and next" above them says it twice.
@@ -138,6 +156,8 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     ),
     sec("chip", el("p", "kicker", [t("Tonight on stage")])),
     not("chip", sec("next_up", el("p", "kicker", [t("Next on stage")]))),
+    // Tonight's highlight (sheet 13) says so also when it is the next item.
+    not("chip", not("next_up", sec("highlight", el("p", "kicker", [t("Tonight on stage")])))),
     el("p", "headline", [f("label")]),
     el("p", "when", [
       sec("starts_text", el("span", "starts", [f("starts_text")])),
@@ -253,6 +273,20 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     ]),
     sec("has_floor_plan", el("p", "meta", [t("Floor plan on the hub")])),
     QR,
+  ],
+  today_numbers: [
+    el("p", "kicker", [f("title")]),
+    el("p", "meta", [f("day_text"), t(", so far")]),
+    el("ul", "figures", [
+      sec("online_peak", figure("count", [t("most online, at "), f("time_text")])),
+      sec("photos", figure("photos", [t("photos shared")])),
+    ]),
+    GRAPH,
+  ],
+  activity_graph: [
+    el("p", "kicker", [f("label")]),
+    sec("peak", el("p", "peak", [t("peak "), f("count"), t(" · "), f("time_text")])),
+    GRAPH,
   ],
   // Right now (sheet 10); `still` is Ambient's one line, "N still online" (wall.css).
   stats: [

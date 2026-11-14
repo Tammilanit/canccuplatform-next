@@ -20,6 +20,7 @@ function region(id: string, over: Partial<RegionView> = {}): RegionView {
     layer: 0,
     rotation: "sequence",
     order: [],
+    indicator: "line",
     cycle_started_at: iso(0),
     idle: "logo",
     idle_view: null,

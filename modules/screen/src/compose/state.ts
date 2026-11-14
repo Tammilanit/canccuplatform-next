@@ -24,10 +24,11 @@ import type { Override, Placement } from "./claims.js";
 import { contentFacts, entriesOf, photoProps } from "./content.js";
 import { NO_DISPLAY, displayOf, phaseSource } from "./display.js";
 import type { Display } from "./display.js";
-import type { MotionLevel } from "./motion.js";
+import { nextPhaseAt, type MotionLevel } from "./motion.js";
 import { themeLayouts } from "./layouts.js";
 import type { Layout } from "./layouts.js";
 import { loadOverrides } from "./overrides.js";
+import { highlightChangeAt, highlightOf } from "./features.js";
 import { isShowcase } from "./showcase.js";
 import type { HeaderMode, HubQrMode } from "./parts.js";
 import { readPin } from "../pins/store.js";
@@ -188,6 +189,19 @@ export async function composeZone(
   ]);
   const { theme, draft } = await lookFor(deps.sources, ctx.tenant_id, live, preview.themeKey);
   const eventName = event?.name ?? ctx.primary_hostname ?? "";
+  // The phase and the highlight come before the build: the hero's features read them.
+  const items = phaseSource(
+    (await deps.sources.agendaDay?.(ctx.tenant_id)) ?? null,
+    agenda,
+    zoneKey,
+  );
+  const { display, motion } = displayOf({
+    tokens: theme?.tokens,
+    items,
+    pin: read.zone.motion_level ?? null,
+    settings: deps.settings,
+    at: at.getTime(),
+  });
   const facts: ZoneFacts = {
     now: at,
     timeZone: ctx.time_zone,
@@ -198,9 +212,11 @@ export async function composeZone(
     venue,
     ticker: read.ticker,
     embeds: theme?.embeds ?? [],
+    phase: motion.phase,
+    highlight: highlightOf(items, at.getTime()),
   };
   const build = (portrait: boolean): ZoneView => {
-    const once = (grow: boolean): ZoneView => {
+    const once = (showcase?: "grow" | "keep"): ZoneView => {
       const { layout, regions } = buildRegions({
         zone: {
           key: read.zone.key,
@@ -214,13 +230,15 @@ export async function composeZone(
         themeLayouts: themeLayouts(theme?.layouts),
         portrait,
         facts,
-        grow,
+        ...(showcase === undefined ? {} : { showcase }),
       });
       return { layout, ...placeClaims(regions, read.claims) };
     };
-    const plain = once(false);
-    // A claim's place follows roles alone, so the grown build places every claim as this one did.
-    return read.zone.grow_for_showcase && isShowcase(plain.regions) ? once(true) : plain;
+    const plain = once();
+    // A claim's place follows roles alone, so the second build places every claim as this one
+    // did. A showcase decides the hero's size; only without one does it fill the waiting boxes.
+    if (!isShowcase(plain.regions)) return plain;
+    return once(read.zone.grow_for_showcase ? "grow" : "keep");
   };
   let views = { landscape: build(false), portrait: build(true) };
   // The content widgets' sources are read only for a zone that shows them, so their changes
@@ -230,6 +248,9 @@ export async function composeZone(
   const used = typesOf(views);
   for (const e of entries) used.add(e.widget);
   if (!withContent) for (const type of used) if (type !== "stats") used.delete(type);
+  // "Today in numbers" is empty outside wind-down: its counts would move every Pulse zone's
+  // version at each count for nothing.
+  if (facts.phase !== "wind_down") used.delete("today_numbers");
   const content = await contentFacts(deps, ctx, zoneKey, used, photoProps(entries), real.getTime());
   if (Object.keys(content.facts).length > 0) {
     Object.assign(facts, content.facts);
@@ -237,13 +258,6 @@ export async function composeZone(
   }
   const setting = deps.settings.get("ticker_appearance", "default");
   const appearance = typeof setting === "string" ? setting : "default";
-  const { display, motion } = displayOf({
-    tokens: theme?.tokens,
-    items: phaseSource((await deps.sources.agendaDay?.(ctx.tenant_id)) ?? null, agenda, zoneKey),
-    pin: read.zone.motion_level ?? null,
-    settings: deps.settings,
-    at: at.getTime(),
-  });
   const { stage, covers } = await stageOf({
     views,
     phase: motion.phase,
@@ -255,9 +269,11 @@ export async function composeZone(
     art: deps.art,
   });
   display.stage = stage;
-  // The level's next change and a tint's end rebuild the zone then, as a content widget's does.
+  // The level's and the phase's next change, the highlight's and a tint's end rebuild the zone
+  // then, as a content widget's does: a pinned level never names the phase's.
   const tintEnds = stage.tint === null ? null : Date.parse(stage.tint.until);
-  const changes = [content.changesAt, motion.next?.at, tintEnds].filter((t) => t != null);
+  const day = [nextPhaseAt(items, at.getTime()), highlightChangeAt(items, at.getTime())];
+  const changes = [content.changesAt, motion.next?.at, ...day, tintEnds].filter((t) => t != null);
   return {
     fingerprint: zoneFingerprint({
       zone: read.zone,

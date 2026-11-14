@@ -24,7 +24,8 @@ export function zoneKey(value: unknown, where: string): string {
 export const NAME_RE = /^[a-z][a-z0-9_-]{0,31}$/;
 const WIDGET_RE = /^[a-z][a-z0-9_]{0,39}$/;
 const ROLES = ["full", "hero", "rail", "venue_rail", "ticker", "header", "backdrop", "overlay"];
-const ROTATIONS = ["sequence", "shuffle"];
+const ROTATIONS = ["sequence", "shuffle", "director"];
+const INDICATORS = ["line", "ring", "off"];
 const IDLES = ["logo", "blank", "collapse", "next"];
 const HEADERS = ["separate", "shared"];
 const HUB_QRS = ["always", "rotate"];
@@ -125,11 +126,22 @@ function regionSettings(value: unknown, where: string): Json {
   if (!isObject(value)) throw invalidRequest(`${where} must be an object.`);
   onlyKeys(
     value,
-    ["role", "widgets", "rotation", "dwell_seconds", "skip_empty", "idle", "area", "hidden"],
+    [
+      "role",
+      "widgets",
+      "rotation",
+      "indicator",
+      "dwell_seconds",
+      "skip_empty",
+      "idle",
+      "area",
+      "hidden",
+    ],
     where,
   );
   oneOf(value.role, ROLES, `${where}.role`);
   oneOf(value.rotation, ROTATIONS, `${where}.rotation`);
+  oneOf(value.indicator, INDICATORS, `${where}.indicator`);
   oneOf(value.idle, IDLES, `${where}.idle`);
   const dwell = value.dwell_seconds;
   if (

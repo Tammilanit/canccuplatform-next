@@ -52,7 +52,7 @@ const keyArt = (blur = 0) =>
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="s" x2="0" y2="1"><stop offset="0" stop-color="#1d2142"/><stop offset="1" stop-color="#0b0d1a"/></linearGradient><radialGradient id="g" cx=".62" cy=".36" r=".45"><stop offset="0" stop-color="#b98cff" stop-opacity=".9"/><stop offset=".5" stop-color="#b98cff" stop-opacity=".3"/><stop offset="1" stop-color="#b98cff" stop-opacity="0"/></radialGradient><linearGradient id="l" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff" stop-opacity="0"/><stop offset=".55" stop-color="#3ddcff"/><stop offset="1" stop-color="#3ddcff" stop-opacity="0"/></linearGradient><filter id="b"><feGaussianBlur stdDeviation="${blur}"/></filter></defs><rect width="320" height="180" fill="#0b0d1a"/><g filter="${blur ? "url(#b)" : "none"}"><rect width="320" height="180" fill="url(#s)"/><rect width="320" height="180" fill="url(#g)"/><path d="M0 124 46 94l32 16 44-42 36 30 40-40 38 36 34-18 50 32v72H0Z" fill="#343c66"/><path d="M0 150 58 116l38 22 54-36 46 34 50-26 74 34v36H0Z" fill="#161a2e"/><path d="M20 180 296 18l8 8L44 180Z" fill="url(#l)"/><path d="M198 30l20 28-20 28-20-28Z" fill="none" stroke="#3ddcff" stroke-width="4"/><path d="M198 46l9 12-9 12-9-12Z" fill="#f3f5ff"/><circle cx="62" cy="34" r="1.6" fill="#f3f5ff"/><circle cx="118" cy="22" r="1.2" fill="#f3f5ff"/><circle cx="272" cy="40" r="1.4" fill="#f3f5ff"/></g></svg>`,
   ).toString("base64")}`;
 const COVER = keyArt();
-const GAME = { id: "g_1", name: "Demo Game", cover_url: COVER };
+export const GAME = { id: "g_1", name: "Demo Game", cover_url: COVER };
 
 /** What each claim view puts in the state (mockup 04). */
 export const CLAIM_OF = {
@@ -62,7 +62,7 @@ export const CLAIM_OF = {
   "claim-takeover": ["full", claim("full", "announcement", { title: "Please leave the hall", body: "Follow the exit signs.", level: "emergency" })],
 }; // prettier-ignore
 
-const TILES = [
+export const TILES = [
   [picture("#1e3a8a", "#6d28d9"), "Setup day"],
   [picture("#065f46", "#0e7490"), "Cable art"],
   [picture("#7c2d12", "#b45309"), "Midnight pizza"],
@@ -131,8 +131,19 @@ const SAMPLE = {
       { game_id: "g_3", name: "Demo Quest", players: 17, trend: "down" },
     ],
   },
+  // The last 24 hours by the hour (sheet 10's "Online · 24 h").
+  activity_graph: {
+    metric: "online",
+    label: "Online · 24 h",
+    peak: { count: 231, at: "2026-03-14T23:30:00Z", time_text: "01:30" },
+    points: [96, 80, 61, 44, 30, 22, 25, 41, 70, 104, 132, 151, 170, 166, 158, 172, 190, 201, 214, 231, 225, 212, 205, 218].map(
+      (value, i) => ({ time_text: `${String((19 + i) % 24).padStart(2, "0")}:00`, value, level: Math.round((10 * value) / 231) }),
+    ),
+  },
 }; // prettier-ignore
-const STATISTICS = ["online", "voice", "top_games", "right_now"];
+/** `voice` waits for the bot's per-room counts (`voice_rooms`), so `online` takes its cells. */
+const STATISTICS = ["online", "top_games", "right_now"];
+const GIVEN = { online: { column: 5, row: 2, columns: 8, rows: 5 } };
 
 /** The zone's `stats` regions given the sample counts: Portrait's Right now, Ambient's line. */
 export function withCounts(s) {
@@ -152,7 +163,7 @@ export function withOneScreen(s) {
  * Dashboard with its statistics: the server leaves the four boxes out while their source is not
  * there (contracts/screen.md, Boxes waiting for their source), so they come back here at the
  * layout's areas, with the hero and the rail at theirs, as the server composes them once the
- * statistics reach it.
+ * statistics reach it; the voice rooms still wait.
  */
 export function withStats(s) {
   const placed = new Map(s.layout.regions.map((r) => [r.id, r]));
@@ -163,7 +174,7 @@ export function withStats(s) {
     ...rail,
     id,
     role: null,
-    area: placed.get(id).area,
+    area: GIVEN[id] ?? placed.get(id).area,
     order: [0],
     idle: "logo",
     idle_view: null,
@@ -233,14 +244,19 @@ export const MOTION_VIEWS = [
 
 export function withMotion(level, pack) {
   const target_at = new Date(Date.now() + 290_000).toISOString();
+  const soon = (v) => ({ ...v, view: { ...v.view, target_at } });
+  // With a tournament or ceremony ahead the hero plays tonight's highlight, a countdown, rather
+  // than its idle view (#447): that countdown then counts down, and holds the hero.
+  const hero = (r) => {
+    const widgets = r.widgets.map((w) => (w.widget === "countdown" && !w.view.empty ? soon(w) : w));
+    const counting = widgets.findIndex((w) => w.widget === "countdown" && !w.view.empty);
+    const idle_view = r.idle_view === null ? null : soon(r.idle_view);
+    return { ...r, widgets, idle_view, ...(counting < 0 ? {} : { order: [counting] }) };
+  };
   return (s) => ({
     ...s,
     display: { ...s.display, motion_level: level, motion_style: { ...s.display?.motion_style, pack } },
-    regions: s.regions.map((r) =>
-      r.role !== "hero" || r.idle_view === null
-        ? r
-        : { ...r, idle_view: { ...r.idle_view, view: { ...r.idle_view.view, target_at } } },
-    ),
+    regions: s.regions.map((r) => (r.role === "hero" ? hero(r) : r)),
   }); // prettier-ignore
 }
 

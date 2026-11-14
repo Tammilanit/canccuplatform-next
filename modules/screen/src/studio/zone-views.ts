@@ -17,7 +17,13 @@ import { boxPart, boxesCard, heroCard, layoutGallery, zoneTabs } from "./layout-
 import type { BoxInfo } from "./layout-views.js";
 import { counted, nameOf } from "./messages.js";
 import { STUDIO, zoneFrame } from "./views.js";
-import { labelled, photoWallPart, screenNamePart, select } from "./widget-settings.js";
+import {
+  labelled,
+  photoWallPart,
+  rotationPart,
+  screenNamePart,
+  select,
+} from "./widget-settings.js";
 import type { ViewContext } from "./views.js";
 import {
   previewDialog,
@@ -41,6 +47,7 @@ export const WIDGETS = [
   "venue_info",
   "checkin_qr",
   "ticker",
+  "today_numbers",
 ] as const;
 
 const screensOf = (key: string, devices: readonly SeenDevice[]): number =>
@@ -187,9 +194,10 @@ function regionPart(
   const str = (v: unknown) => (typeof v === "string" ? v : "");
   const dwell = typeof r.settings.dwell_seconds === "number" ? r.settings.dwell_seconds : undefined;
   const regionDwell = dwell ?? r.layoutDwell;
+  const hero = roleOf(r.id, r.settings.role) === "hero";
   return html`<section
     class="canccu-card canccu-studio-region"
-    ${attrs({ "data-region": r.id, "data-label": r.label, "data-layout-dwell": r.layoutDwell, hidden: !shown })}
+    ${attrs({ "data-region": r.id, "data-label": r.label, "data-layout-dwell": r.layoutDwell, "data-rotation": hero ? "director" : "sequence", hidden: !shown })}
   >
     <p class="canccu-overline">${t("box.selected")}</p>
     <h2 class="canccu-card__title">${t("zone.region", { region: r.label })}</h2>
@@ -225,14 +233,7 @@ function regionPart(
       </button>
     </div>
     <div class="canccu-studio-row">
-      ${labelled(
-        `${f}-rotation`,
-        t("zone.rotation"),
-        select(`${f}-rotation`, "rotation", str(r.settings.rotation), [
-          ["", t("zone.rotation.sequence")],
-          ["shuffle", t("zone.rotation.shuffle")],
-        ]),
-      )}${labelled(`${f}-dwell`, t("zone.dwell"), html`<input class="canccu-input" type="number" min="5" max="3600" step="1" id="${f}-dwell" name="dwell_seconds" ${attrs({ value: dwell, placeholder: String(r.layoutDwell) })} />`, t("zone.dwell_hint", { seconds: r.layoutDwell }))}${labelled(
+      ${rotationPart(c, f, r.settings, hero)}${labelled(`${f}-dwell`, t("zone.dwell"), html`<input class="canccu-input" type="number" min="5" max="3600" step="1" id="${f}-dwell" name="dwell_seconds" ${attrs({ value: dwell, placeholder: String(r.layoutDwell) })} />`, t("zone.dwell_hint", { seconds: r.layoutDwell }))}${labelled(
         `${f}-idle`,
         t("zone.idle"),
         select(`${f}-idle`, "idle", str(r.settings.idle), [

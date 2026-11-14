@@ -139,7 +139,7 @@ describe("the composed state", () => {
     expect(hidden.some((r) => r.role === "hero")).toBe(false);
     const blank = { idle: "blank" };
     const regions = { online: { hidden: true }, voice: blank, top_games: blank, right_now: blank };
-    const grown = build({ layoutId: "dashboard", regions }, { grow: true });
+    const grown = build({ layoutId: "dashboard", regions }, { showcase: "grow" });
     expect(areas(grown)).toMatchObject({ hero: at(1, 2, 8, 10), voice: at(9, 2, 4, 5) });
     expect(areas(grown)).toMatchObject({ rail: at(9, 7, 4, 5) });
     expect(grown.some((r) => r.id === "top_games" || r.id === "right_now")).toBe(false);

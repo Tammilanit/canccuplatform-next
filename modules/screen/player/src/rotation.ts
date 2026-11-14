@@ -3,15 +3,17 @@
  * server's push leaves cycles and shuffles out (src/push/diff.ts), so the player keeps them
  * itself, on the server's clock: cycles are anchored on the epoch and a shuffle is seeded by zone,
  * region and cycle exactly as src/compose/build.ts does, so every screen of a zone agrees, also
- * offline and across reloads. test/player-rotation.test.ts holds the two to one answer.
+ * offline and across reloads. test/player-rotation.test.ts holds the two to one answer. The
+ * Director (`director`) turns as `sequence` does through its order, after any queue jump.
  */
+import { jumpAt } from "./director.js";
 
 export interface Rotating {
   id: string;
   rotation: string;
   /** The widgets that take part (the non-empty ones), in the state's cycle order. */
   order: number[];
-  widgets: { dwell_seconds: number }[];
+  widgets: { dwell_seconds: number; widget?: string; view?: Record<string, unknown> }[];
 }
 
 /** mulberry32 over a string hash, as the server seeds it. */
@@ -43,7 +45,9 @@ export function shownAt(
   region: Rotating,
   zoneKey: string,
   nowMs: number,
-): { index: number | null; until: number } {
+): { index: number | null; until: number; from?: number } {
+  const jump = region.rotation === "director" ? jumpAt(region.widgets, region.order, nowMs) : null;
+  if (jump !== null) return jump;
   const dwellMs = (i: number): number => (region.widgets[i]?.dwell_seconds ?? 0) * 1000;
   // A shuffled order is a permutation of the plain one, which lists the widgets in place order.
   const plain =

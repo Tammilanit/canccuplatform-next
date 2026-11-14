@@ -136,6 +136,18 @@ export function zoneMotion(
   return { level, phase, next: null };
 }
 
+/**
+ * The next time the day's phase changes, whatever the level does (a pinned zone's level never
+ * moves): what reads the phase, such as "Today in numbers" at wind-down, is rebuilt then.
+ */
+export function nextPhaseAt(items: readonly AgendaItem[], at: number): number | null {
+  const phase = phaseAt(items, at);
+  for (const t of boundaries(items, at, at + NEXT_HORIZON_MS)) {
+    if (phaseAt(items, t) !== phase) return t;
+  }
+  return null;
+}
+
 /** The event's motion settings as Screen reads them, defaults for anything else. */
 export function eventMotion(settings: { get(key: string, fallback: unknown): unknown }): {
   eventLevel: MotionLevel;

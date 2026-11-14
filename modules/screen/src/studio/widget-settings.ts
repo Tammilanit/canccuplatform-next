@@ -1,7 +1,8 @@
 /**
  * Settings Studio shows with the selected box's (sheet 16): the zone's screen name with its header
- * box, and the photo wall's props with a box that shows photos (contracts/screen.md, Header and
- * hub QR, `screen_name`; Photos). The field helpers are shared with zone-views.ts.
+ * box, the photo wall's props with a box that shows photos, and the rotation with, for the hero,
+ * the Director's turn indicator (contracts/screen.md, Header and hub QR, `screen_name`; Photos;
+ * The Director). The field helpers are shared with zone-views.ts.
  */
 import { attrs, html } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
@@ -23,6 +24,13 @@ export const WIDGET_SETTINGS_EN = {
   "photo_wall.order.oldest": "Oldest first",
   "photo_wall.order.shuffle": "Shuffle",
   "photo_wall.pop_new": "New photo pops in large",
+  "rotation.director": "The Director",
+  "rotation.director_hint":
+    "The Director plays the features in turn; a surging game or a new photo jumps the queue.",
+  "indicator.label": "Turn indicator",
+  "indicator.line": "A thin line",
+  "indicator.ring": "A ring",
+  "indicator.off": "None",
 } as const;
 
 export const select = (
@@ -101,4 +109,40 @@ export function photoWallPart(
       <label class="canccu-field__label" for="${f}-pop">${t("photo_wall.pop_new")}</label>
     </div>
   </fieldset>`;
+}
+
+/**
+ * The box's rotation; the hero's is the Director's unless the zone says otherwise, with its turn
+ * indicator (sheet 13, Q22). The page script saves the default as no setting at all.
+ */
+export function rotationPart(
+  c: ViewContext,
+  f: string,
+  settings: Record<string, unknown>,
+  hero: boolean,
+): Html {
+  const { t } = c;
+  const fallback = hero ? "director" : "sequence";
+  const value = typeof settings.rotation === "string" ? settings.rotation : fallback;
+  const options: [string, string][] = [
+    ...(hero || value === "director"
+      ? [["director", t("rotation.director")] as [string, string]]
+      : []),
+    ["sequence", t("zone.rotation.sequence")],
+    ["shuffle", t("zone.rotation.shuffle")],
+  ];
+  const id = `${f}-rotation`;
+  const hint = hero ? t("rotation.director_hint") : undefined;
+  const rotation = labelled(id, t("zone.rotation"), select(id, "rotation", value, options), hint);
+  if (!hero) return rotation;
+  const indicator = typeof settings.indicator === "string" ? settings.indicator : "line";
+  return html`${rotation}${labelled(
+    `${f}-indicator`,
+    t("indicator.label"),
+    select(`${f}-indicator`, "indicator", indicator, [
+      ["line", t("indicator.line")],
+      ["ring", t("indicator.ring")],
+      ["off", t("indicator.off")],
+    ]),
+  )}`;
 }

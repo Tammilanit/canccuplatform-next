@@ -260,6 +260,7 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
       { key: "ok", name: "x", regions: { _full: {} } },
       { key: "ok", name: "x", regions: { hero: { role: "sidebar" } } },
       { key: "ok", name: "x", regions: { hero: { rotation: "random" } } },
+      { key: "ok", name: "x", regions: { hero: { indicator: "spin" } } },
       { key: "ok", name: "x", regions: { hero: { dwell_seconds: 4 } } },
       { key: "ok", name: "x", regions: { hero: { dwell_seconds: 1.5 } } },
       { key: "ok", name: "x", regions: { hero: { skip_empty: "yes" } } },

@@ -6,6 +6,7 @@
  */
 import { tenantKey, withTenant } from "@canccu/kit";
 import type { Kv } from "../kv.js";
+import type { Presence } from "./features.js";
 import type { Sources } from "./sources.js";
 
 const DAY_MS = 24 * 3600_000;
@@ -105,6 +106,47 @@ export function peakOf(
   return { count: pick(best), at: new Date(best.at).toISOString(), time_text };
 }
 
+/** One hour of a graph: its start as `HH:MM`, its average count, and its bar out of 10. */
+export interface HourPoint {
+  time_text: string;
+  value: number;
+  level: number;
+}
+
+const HOUR_MS = 3600_000;
+
+/**
+ * The last 24 hours by the hour, oldest first: each hour that holds counts, at their average, with
+ * a bar scaled to the highest hour, since a template has no styles to size a bar with.
+ */
+export function hourlyOf(
+  counts: readonly PresenceCount[],
+  pick: (c: PresenceCount) => number,
+  timeZone: string,
+  nowMs: number,
+): HourPoint[] {
+  const hours = new Map<number, number[]>();
+  for (const c of counts) {
+    if (c.at <= nowMs - DAY_MS || c.at > nowMs) continue;
+    const hour = Math.floor(c.at / HOUR_MS);
+    hours.set(hour, [...(hours.get(hour) ?? []), pick(c)]);
+  }
+  const text = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone,
+  });
+  const averaged = [...hours.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([hour, values]) => ({
+      time_text: text.format(hour * HOUR_MS),
+      value: Math.round(values.reduce((sum, v) => sum + v, 0) / values.length),
+    }));
+  const top = Math.max(1, ...averaged.map((p) => p.value));
+  return averaged.map((p) => ({ ...p, level: Math.round((10 * p.value) / top) }));
+}
+
 /** The view-model's fields from the kept counts and the check-ins; null with neither. */
 export function statsView(
   counts: readonly PresenceCount[],
@@ -171,16 +213,10 @@ async function checkedIn(
   return { count: read, retryAt: null };
 }
 
-/** The `stats` view-model at `nowMs`, read in the event's tenant context. */
-export async function readStats(
-  kv: Kv,
-  sources: Sources,
-  tenant: string,
-  timeZone: string,
-  nowMs: number,
-): Promise<{ view: Record<string, unknown> | null; changesAt: number | null }> {
+/** The counts kept for the last 24 hours, read in the event's tenant context. */
+export async function readCounts(kv: Kv, nowMs: number): Promise<PresenceCount[]> {
   const members = await kv.live(presenceKey(), nowMs);
-  const counts = members.flatMap((m) => {
+  return members.flatMap((m) => {
     try {
       const c = JSON.parse(m) as Record<string, unknown>;
       const at = typeof c.at === "number" ? new Date(c.at).toISOString() : null;
@@ -190,6 +226,40 @@ export async function readStats(
       return [];
     }
   });
+}
+
+/** The graphs' hours and the day's peaks (`ZoneFacts.presence`), from the kept counts. */
+export function presenceFacts(
+  counts: readonly PresenceCount[],
+  timeZone: string,
+  nowMs: number,
+): Presence {
+  const online = (c: PresenceCount) => c.online;
+  const inVoice = (c: PresenceCount) => c.in_voice;
+  const kept = counts.filter((c) => c.at > nowMs - DAY_MS);
+  const peaks = {
+    online_peak: peakOf(kept, online, timeZone),
+    in_voice_peak: peakOf(kept, inVoice, timeZone),
+  };
+  return {
+    online: hourlyOf(kept, online, timeZone, nowMs),
+    in_voice: hourlyOf(kept, inVoice, timeZone, nowMs),
+    // An absent field, never an undefined one: the fingerprint reads the same JSON.
+    ...Object.fromEntries(Object.entries(peaks).filter(([, v]) => v !== undefined)),
+  };
+}
+
+/** The `stats` view-model at `nowMs`, read in the event's tenant context. */
+export async function readStats(
+  kv: Kv,
+  sources: Sources,
+  tenant: string,
+  timeZone: string,
+  nowMs: number,
+  /** The counts when the caller has read them already. */
+  counts?: readonly PresenceCount[],
+): Promise<{ view: Record<string, unknown> | null; changesAt: number | null }> {
+  const kept = counts ?? (await readCounts(kv, nowMs));
   const arrivals = await checkedIn(kv, sources, tenant, nowMs);
-  return { view: statsView(counts, arrivals.count, timeZone, nowMs), changesAt: arrivals.retryAt };
+  return { view: statsView(kept, arrivals.count, timeZone, nowMs), changesAt: arrivals.retryAt };
 }
