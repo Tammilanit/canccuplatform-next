@@ -147,7 +147,11 @@ describe("the stage's art", () => {
       const { port } = server.address() as AddressInfo;
       const read = edgeReader(`http://127.0.0.1:${port}`, 300);
       const started = Date.now();
-      const late = new Promise<"late">((resolve) => setTimeout(() => resolve("late"), 2000));
+      const late = new Promise<"late">((resolve) =>
+        setTimeout(() => {
+          resolve("late");
+        }, 2000),
+      );
       expect(await Promise.race([read("event.example", "/slow.png"), late])).toBeNull();
       expect(Date.now() - started).toBeLessThan(1500);
     } finally {

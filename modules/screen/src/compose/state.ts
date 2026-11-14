@@ -159,7 +159,10 @@ export async function composeZone(
   host: string,
   zoneKey: string,
   proposed?: ZoneRow,
-  /** False for the hub's view, which drops every content widget anyway (NOW_TYPES). */
+  /**
+   * False where no screen draws the result (the hub's view, a preview's checks): no content
+   * widget but `stats` (NOW_TYPES), and no stage, so no cover is read for it.
+   */
   withContent = true,
   preview: PreviewLook = {},
 ): Promise<ZoneComposed | null> {
@@ -258,20 +261,22 @@ export async function composeZone(
   }
   const setting = deps.settings.get("ticker_appearance", "default");
   const appearance = typeof setting === "string" ? setting : "default";
-  const { stage, covers } = await stageOf({
-    views,
-    phase: motion.phase,
-    agenda,
-    nowMs: at.getTime(),
-    stageArt: deps.settings.get("stage_art", true) !== false,
-    colors: themeColors(theme?.tokens),
-    hostname: ctx.primary_hostname ?? host,
-    art: deps.art,
-  });
-  display.stage = stage;
+  const { stage, covers } = withContent
+    ? await stageOf({
+        views,
+        phase: motion.phase,
+        agenda,
+        nowMs: at.getTime(),
+        stageArt: deps.settings.get("stage_art", true) !== false,
+        colors: themeColors(theme?.tokens),
+        hostname: ctx.primary_hostname ?? host,
+        art: deps.art,
+      })
+    : { stage: null, covers: [] };
+  if (stage !== null) display.stage = stage;
   // The level's and the phase's next change, the highlight's and a tint's end rebuild the zone
   // then, as a content widget's does: a pinned level never names the phase's.
-  const tintEnds = stage.tint === null ? null : Date.parse(stage.tint.until);
+  const tintEnds = stage?.tint == null ? null : Date.parse(stage.tint.until);
   const day = [nextPhaseAt(items, at.getTime()), highlightChangeAt(items, at.getTime())];
   const changes = [content.changesAt, motion.next?.at, ...day, tintEnds].filter((t) => t != null);
   return {
