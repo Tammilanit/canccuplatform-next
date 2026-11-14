@@ -135,6 +135,16 @@ const GRAPH: TreeNode = el("div", "graph", [
 const figure = (field: string, label: TreeNode[]): TreeNode =>
   el("li", "figure", [el("strong", "big", [f(field)]), el("span", "label", label)]);
 
+/**
+ * The theme's own art band (v8 rule 5, "No half-empty large panel"): where a large panel has no
+ * game art, the band holds the theme's glows under the card's veil (stage.css). Drawn only in the
+ * hero; elsewhere the look hides it.
+ */
+const THEME_BAND: TreeNode = el("div", null, [], {
+  class: [t("canccu-widget__band canccu-widget__band--theme")],
+  "aria-hidden": [t("true")],
+});
+
 export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = {
   clock: [el("p", "meta", [f("date")]), el("time", "big", [f("time")], { datetime: [f("iso")] })],
   // No title: each row is labelled (NOW, NEXT), so "Now and next" above them says it twice.
@@ -153,7 +163,9 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
         "cover_url",
         el("div", "band", [img("cover_url", "band-image"), el("p", "band-name", [f("name")])]),
       ),
+      not("cover_url", THEME_BAND),
     ),
+    not("game", THEME_BAND),
     sec("chip", el("p", "kicker", [t("Tonight on stage")])),
     not("chip", sec("next_up", el("p", "kicker", [t("Next on stage")]))),
     // Tonight's highlight (sheet 13) says so also when it is the next item.
@@ -241,6 +253,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     sec("featured", el("figure", "pop", PHOTO)),
   ],
   announcement: [
+    THEME_BAND,
     el(
       "div",
       null,

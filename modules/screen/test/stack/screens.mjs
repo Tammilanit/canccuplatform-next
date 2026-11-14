@@ -9,7 +9,7 @@
 // and Ambient once under an emergency takeover, which keeps its fixed red there too. Dashboard is
 // handed sample statistics (#416), and shot once as the server draws it while they are missing.
 // The Director's strips (#447, director.mjs) are frames a few seconds apart.
-import { CLEAR_CHECKS } from "./clear.mjs";
+import { CLEAR_CHECKS, panelFilled } from "./clear.mjs";
 import { expect } from "./client.mjs";
 import { boxesGivenAway, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, stripNames, withDirector } from "./director.mjs";
@@ -79,8 +79,8 @@ export function planned(check = false) {
     }
     for (const size of landscapeOf(theme, check))
       for (const view of LAYOUTS) out.push(nameOf(theme, view, size));
+    out.push(nameOf(theme, "dashboard-showcase", HD[0]));
   }
-  out.push(nameOf("default", "dashboard-showcase", HD[0]));
   out.push(nameOf("default", "dashboard-waiting", HD[0]));
   out.push(nameOf("default", "ambient-takeover", HD[0]));
   out.push(nameOf("default", "ambient-online", HD[0]));
@@ -176,10 +176,9 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         for (const size of landscapeOf(theme, check))
           for (const view of LAYOUTS)
             await attempt(nameOf(theme, view, size), () => layoutShot(theme, view, size));
-        if (theme === "default")
-          await attempt(nameOf(theme, "dashboard-showcase", HD[0]), () =>
-            layoutShot(theme, "dashboard", HD[0], "dashboard-showcase"),
-          );
+        await attempt(nameOf(theme, "dashboard-showcase", HD[0]), () =>
+          layoutShot(theme, "dashboard", HD[0], "dashboard-showcase"),
+        );
         if (theme === "default")
           await attempt(nameOf(theme, "dashboard-waiting", HD[0]), () =>
             layoutShot(theme, "dashboard", HD[0], "dashboard-waiting"),
@@ -258,6 +257,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await railShowsAgenda(page);
       await tickerFitted(page, theme === "default" && size === HD[0]);
       await settle(page);
+      await panelFilled(page);
       await shot(nameOf(theme, "pulse", size), page);
       expect(
         await demo.call("POST", `/api/screen/devices/${main.id}/commands`, {
@@ -298,6 +298,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await railShowsAgenda(page);
       if (view === "dashboard-waiting") await boxesGivenAway(page);
       await settle(page);
+      if (view === "hero") await panelFilled(page);
       await shot(nameOf(theme, view, size), page);
       await close();
     }

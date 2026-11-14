@@ -383,6 +383,7 @@
       :is(
         .canccu-widget__kicker,
         .canccu-widget__bar,
+        .canccu-widget__band--theme,
         .canccu-widget__when:has(.canccu-widget__delay) .canccu-widget__starts
       ) {
       display: none;
