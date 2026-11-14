@@ -9,7 +9,7 @@ import { BUILT_IN_LAYOUTS, themeLayouts } from "../compose/layouts.js";
 import { composeZone } from "../compose/state.js";
 import { body, invalidRequest, needs, notFound, rateLimited, tenantOf } from "../http.js";
 import { zoneExistsHere } from "../zones.js";
-import { checkBoxes, zoneInput } from "../zone-input.js";
+import { checkBoxes, zoneFields, zoneInput } from "../zone-input.js";
 import { previewTime } from "../preview/look.js";
 import { recordOf, refreshZone } from "./device-state.js";
 import { PING_MS } from "./feed.js";
@@ -131,21 +131,8 @@ export function zoneViewRoutes(
         ctx,
         hostOf(request),
         zone.key,
-        {
-          key: zone.key,
-          name: zone.name,
-          layout_id: zone.layout_id,
-          regions: zone.regions,
-          header: zone.header,
-          hub_qr: zone.hub_qr,
-          screen_name: zone.screen_name,
-          hero_region: zone.hero_region,
-          grow_for_showcase: zone.grow_for_showcase,
-          motion_level: zone.motion_level,
-          // A preview never sounds, so whose sound it is does not matter.
-          sound: zone.sound,
-          epoch: "preview",
-        },
+        // A preview never sounds, so whose sound it is does not matter.
+        { ...zoneFields(zone), epoch: "preview" },
         true,
         { at },
       );

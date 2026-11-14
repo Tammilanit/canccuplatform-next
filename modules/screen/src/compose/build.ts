@@ -116,6 +116,20 @@ export function shownAt(
 const idleOf = (setting: Record<string, unknown>): Idle =>
   IDLES.includes(setting.idle as Idle) ? (setting.idle as Idle) : "logo";
 
+/**
+ * A box the zone, as set, leaves waiting while its statistics are empty, as they all are until
+ * their source comes (#389): Studio's gallery note follows this, not the layout alone.
+ */
+export function waitsWhileEmpty(
+  source: LayoutRegion,
+  regions: BuildInput["zone"]["regions"],
+): boolean {
+  const setting = regions[source.id] ?? {};
+  return (
+    setting.hidden !== true && isWaiting(boxWidgets(source, regions), idleOf(setting), () => true)
+  );
+}
+
 /** A box of statistics still waiting for its source (waiting.ts). */
 function waits(source: LayoutRegion, input: BuildInput): boolean {
   return isWaiting(

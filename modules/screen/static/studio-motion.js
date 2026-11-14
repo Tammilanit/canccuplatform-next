@@ -32,6 +32,10 @@
         follow_the_day: follow,
       });
       if (!saved.ok) return show(failure(saved));
+      // Saved: a pin that fails next leaves the page as it is, and a retry must neither send the
+      // level again nor the version it replaced (a 409).
+      form.dataset.version = String(saved.data.settings_version);
+      Object.assign(before, { level, follow });
     }
     for (const key of changed) {
       const url = `/api/screen/zones/${encodeURIComponent(key)}`;

@@ -304,11 +304,13 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       { preHandler: pageNeeds(deps.rights, [READ]) },
       async (request, reply) => {
         const c = await context(request);
-        const [zones, all] = [await readZones(deps, tenantOf(request)), await devices()];
-        // A run of show that cannot be read leaves Delay pointing at the run of show itself.
-        const items = c.rights.has("agenda.items.write")
-          ? await deps.sources.agendaItems(tenantOf(request).tenant_id).catch(() => null)
-          : null;
+        const ctx = tenantOf(request);
+        // A run of show that cannot be read (null) leaves Delay pointing at the run of show itself.
+        const [zones, all, items] = await Promise.all([
+          readZones(deps, ctx),
+          devices(),
+          c.rights.has("agenda.items.write") ? deps.sources.agendaItems(ctx.tenant_id) : null,
+        ]);
         return page(request, reply, c, {
           title: "",
           tab: "live",
@@ -347,7 +349,13 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         const c = await context(request);
         const ctx = tenantOf(request);
         const [zones, all] = [await readZones(deps, ctx), await devices()];
-        const motion = await readMotion(deps, ctx.tenant_id, await heldSettings(deps.settings));
+        // Admin down with nothing held fails only the card's values: it draws the defaults, and a
+        // save from it meets admin's version check.
+        const held = await heldSettings(deps.settings).catch((err: unknown) => {
+          request.log.warn({ err }, "reading the screen settings for the Motion card failed");
+          return { settings_version: 0, values: {} };
+        });
+        const motion = await readMotion(deps, ctx.tenant_id, held);
         return page(request, reply, c, {
           title: "",
           tab: "zones",

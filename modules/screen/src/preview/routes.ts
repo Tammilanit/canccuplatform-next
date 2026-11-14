@@ -22,7 +22,7 @@ import {
 } from "../http.js";
 import type { Audit } from "../audit.js";
 import type { Fanout } from "../push/store.js";
-import { checkBoxes, zoneInput } from "../zone-input.js";
+import { checkBoxes, zoneFields, zoneInput } from "../zone-input.js";
 import { previewTime } from "./look.js";
 import {
   LONGEST_MS,
@@ -67,23 +67,7 @@ function input(value: Record<string, unknown>, nowMs: number): Input {
   if (key !== null && (typeof key !== "string" || !KEY.test(key))) {
     throw invalidRequest("`theme_preview_key` must be a key theming made.");
   }
-  let zone: PreviewZone | null = null;
-  if (value.zone !== undefined && value.zone !== null) {
-    const z = zoneInput(value.zone);
-    zone = {
-      key: z.key,
-      name: z.name,
-      layout_id: z.layout_id,
-      regions: z.regions,
-      header: z.header,
-      hub_qr: z.hub_qr,
-      screen_name: z.screen_name,
-      hero_region: z.hero_region,
-      grow_for_showcase: z.grow_for_showcase,
-      motion_level: z.motion_level,
-      sound: z.sound,
-    };
-  }
+  const zone: PreviewZone | null = value.zone == null ? null : zoneFields(zoneInput(value.zone));
   return { minutes, zone, at: previewTime(value.at, nowMs), themeKey: key };
 }
 
