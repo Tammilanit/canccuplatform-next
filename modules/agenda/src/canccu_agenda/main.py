@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import os
 
+import httpx
 import uvicorn
 from canccu_kit import (
     AdminClient,
@@ -25,7 +26,7 @@ from canccu_kit import (
     valkey_check,
 )
 
-from . import mirror, posts, timers
+from . import mirror, posts, timers, topic
 from .app import create_app
 from .db import Db
 from .deps import Deps
@@ -86,6 +87,12 @@ async def serve() -> None:
     bus.subscribe_tenants(["tournament"], on_tournament, from_id="0")
     scheduler = asyncio.create_task(timers.run(d))
     sender = asyncio.create_task(d.outbox.run())
+    notify_http = httpx.AsyncClient(timeout=10.0)
+    registering = asyncio.create_task(
+        topic.register(
+            notify_http, os.environ.get("CANCCU_NOTIFY_URL", "http://notify:8080"), identity
+        )
+    )
 
     async def ping() -> None:
         async with db.platform() as conn:
@@ -113,6 +120,8 @@ async def serve() -> None:
     finally:
         scheduler.cancel()
         sender.cancel()
+        registering.cancel()
+        await notify_http.aclose()
 
 
 def main() -> None:
