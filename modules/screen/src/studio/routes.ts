@@ -19,7 +19,7 @@ import {
   eventPageCsp,
   newNonce,
 } from "@canccu/kit";
-import type { Logger, PublicEvent, RightsChecker, Session } from "@canccu/kit";
+import type { Logger, PublicEvent, RightsChecker } from "@canccu/kit";
 import { errorTitle, errorView, html, notice, raw, shellPage } from "@canccu/ui";
 import type { EventInfo, Slot } from "@canccu/ui";
 import type { Sources } from "../compose/sources.js";
@@ -109,9 +109,6 @@ const CHANGE_RIGHTS = new Set([
 const archived = (request: FastifyRequest): boolean => tenantOf(request).status === "archived";
 const holds = (rights: ReadonlySet<string>, any: readonly string[]) =>
   any.some((r) => rights.has(r));
-
-const hasNoRole = (session: Session | null | undefined): boolean =>
-  session != null && session.rights.size === 0 && !session.superadmin;
 
 /** Sign-in first (so a signed-out browser is sent to sign in), then the address rule, then a right. */
 function pageNeeds(rights: RightsChecker, any: readonly string[]): preHandlerAsyncHookHandler {
@@ -250,10 +247,9 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       if (err instanceof NotSignedIn) {
         return reply.redirect(`${SIGN_IN}?next=${encodeURIComponent(request.url)}`, 303);
       }
-      if (err instanceof MissingRight && hasNoRole(request.session)) {
-        // "No access" would name a page they never had; admin's sign-in page says what to do
-        // instead (sheet 3, "No role yet"), as admin's own pages do.
-        return reply.redirect(SIGN_IN, 303);
+      const session = request.session;
+      if (err instanceof MissingRight && session?.rights.size === 0 && !session.superadmin) {
+        return reply.redirect(SIGN_IN, 303); // admin's "No role yet" says what to do (sheet 3)
       }
       // Right ids and the module's words for a refused page go to the log, not the page (B3).
       const known = err instanceof KitError;

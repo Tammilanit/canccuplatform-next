@@ -162,10 +162,8 @@ async def error_page(request: Request, exc: KitError) -> Response:
     log, never to the page (UX audit B3)."""
     if isinstance(exc, MissingRight):
         log.info("page %s refused: %s", request.url.path, exc.message)
-        session: Session | None = getattr(request.state, "agenda_session", None)
-        if session is not None and not session.rights:
-            # Without any role "No access" names a page they never had; admin's sign-in page
-            # says what to do instead (sheet 3, "No role yet"), as admin's own pages do.
+        session = getattr(request.state, "agenda_session", None)
+        if session is not None and not session.rights:  # admin's "No role yet" says what to do
             return RedirectResponse(SIGN_IN, status_code=303)
     if exc.code == "version_conflict":
         exc = KitError(

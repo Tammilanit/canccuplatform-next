@@ -114,15 +114,8 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
     studio.setErrorHandler(async (err: FastifyError, request, reply) => {
       if (err instanceof NotSignedIn) return signIn(request, reply);
       const session = request.session;
-      if (
-        err instanceof MissingRight &&
-        session &&
-        session.rights.size === 0 &&
-        !session.superadmin
-      ) {
-        // "No access" would name a page they never had; admin's sign-in page says what to do
-        // instead (sheet 3, "No role yet"), as admin's own pages do.
-        return reply.redirect(SIGN_IN, 303);
+      if (err instanceof MissingRight && session?.rights.size === 0 && !session.superadmin) {
+        return reply.redirect(SIGN_IN, 303); // admin's "No role yet" says what to do (sheet 3)
       }
       // Right ids and the module's words for a refused page go to the log, not the page (B3).
       const known = err instanceof KitError;
