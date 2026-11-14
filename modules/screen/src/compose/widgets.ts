@@ -62,6 +62,8 @@ export interface AgendaItem {
   zone?: string | null;
   /** The planned end, before any delay (contracts/agenda.md); a moved end differs from it. */
   planned_ends_at?: string | null;
+  /** Optional in the agenda contract; absent from a read that leaves it out. */
+  description?: string | null;
 }
 export interface AgendaNow {
   current: AgendaItem[];
@@ -167,7 +169,24 @@ export function countdownFields(facts: ZoneFacts, itemId?: string): Record<strin
       ? publicOnly(facts.agenda.next)[0]
       : all.find((i) => i.id === itemId && Date.parse(i.starts_at) > facts.now.getTime());
   if (item === undefined) return null;
-  return { label: item.title, target_at: item.starts_at, ends_text: textOf(item.ends_at, facts) };
+  // The Pulse hero's fields (contracts/screen.md, The Pulse hero). `game` stays null until Screen
+  // reads tournament sessions and the games catalogue; `teams_left` until the tournament gives it.
+  const first = publicOnly(facts.agenda.next)[0];
+  const chip =
+    first !== undefined &&
+    first.id !== item.id &&
+    Date.parse(first.starts_at) < Date.parse(item.starts_at)
+      ? { label: first.title, target_at: first.starts_at }
+      : null;
+  return {
+    label: item.title,
+    target_at: item.starts_at,
+    ends_text: textOf(item.ends_at, facts),
+    kind: item.kind,
+    description: item.description ?? null,
+    game: null,
+    chip,
+  };
 }
 
 /** The code's URL is the path alone while the event has no primary hostname: made whole here. */

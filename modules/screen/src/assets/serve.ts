@@ -37,13 +37,17 @@ export function parseRange(
   return [start, match[2] === "" ? size - 1 : Math.min(Number(match[2]), size - 1)];
 }
 
-/** The event's devices, or sessions with `screen.content.read`: who may read stored files and slides. */
+/**
+ * The event's devices, or sessions with `right` (`screen.content.read` by default): who may read
+ * stored files and slides, and (with `screen.devices.read`) the stage's art.
+ */
 export function contentAccess(
   app: FastifyInstance,
   deps: { db: Db; rights: RightsChecker },
+  right = "screen.content.read",
 ): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
   const device = requireDevice(deps.db);
-  const session = needs(deps.rights, "screen.content.read");
+  const session = needs(deps.rights, right);
   // A device cookie means a screen: it passes the device check or nothing, never a session's.
   return async (request, reply) => {
     if (cookie(request, DEVICE_COOKIE) !== undefined) {

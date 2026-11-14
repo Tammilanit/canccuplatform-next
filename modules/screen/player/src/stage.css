@@ -1,0 +1,269 @@
+/*
+ * The two backgrounds (contracts/theming.md, The two backgrounds; design guideline sheet 15, Q14).
+ * The stage (stage.ts) sits behind every region: the server's blurred art, the drifting glows, the
+ * kind and phase tints and a box's tint, then the scrim that keeps text readable over the art. The
+ * card is one box's own ground: its art under a veil of the theme's surface (widget.ts). Layers move
+ * only by opacity and transform, and the art arrives blurred, so nothing here filters live. In
+ * `canccu-base`, so a theme's layer restyles any part; colours come from the theme's tokens.
+ */
+@layer canccu-base {
+  .canccu-stage {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    --canccu-stage-kind-color: transparent;
+    --canccu-stage-phase-color: transparent;
+  }
+
+  .canccu-stage > * {
+    position: absolute;
+    inset: 0;
+  }
+
+  .canccu-stage__art {
+    background-position: center;
+    background-size: cover;
+    opacity: 0;
+    transition: opacity 2s ease;
+  }
+
+  .canccu-stage__glow {
+    inset: -20%;
+    background-image:
+      radial-gradient(
+        ellipse 64% 50% at 64% 0%,
+        color-mix(in srgb, var(--canccu-color-primary) 22%, transparent),
+        transparent
+      ),
+      radial-gradient(
+        ellipse 46% 40% at 8% 96%,
+        color-mix(in srgb, var(--canccu-color-accent) 12%, transparent),
+        transparent
+      );
+  }
+
+  /* Background drift (contracts/theming.md, Motion vocabulary): still at none. */
+  body.canccu-motion--calm .canccu-stage__glow {
+    animation: canccu-drift 120s ease-in-out infinite;
+  }
+
+  body.canccu-motion--lively .canccu-stage__glow {
+    animation: canccu-drift 45s ease-in-out infinite;
+  }
+
+  body.canccu-motion--party .canccu-stage__glow {
+    animation: canccu-drift 20s ease-in-out infinite;
+  }
+
+  .canccu-stage__kind,
+  .canccu-stage__phase,
+  .canccu-stage__tint {
+    opacity: 0;
+    transition: opacity 3s ease;
+  }
+
+  .canccu-stage__kind {
+    background-image: radial-gradient(
+      ellipse 70% 55% at 50% 112%,
+      color-mix(in srgb, var(--canccu-stage-kind-color) 20%, transparent),
+      transparent
+    );
+  }
+
+  .canccu-stage__phase {
+    background-image: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--canccu-stage-phase-color) 12%, transparent),
+      transparent 55%
+    );
+  }
+
+  .canccu-stage__tint {
+    background-image: radial-gradient(
+      ellipse 90% 80% at 50% 40%,
+      color-mix(in srgb, var(--canccu-color-accent) 18%, transparent),
+      transparent
+    );
+  }
+
+  /* The kind and phase tints, and a box's, show at lively and party only (amendment 1). */
+  body.canccu-motion--lively .canccu-stage__kind,
+  body.canccu-motion--party .canccu-stage__kind,
+  body.canccu-motion--lively .canccu-stage__phase,
+  body.canccu-motion--party .canccu-stage__phase,
+  .canccu-stage--tinted .canccu-stage__tint,
+  .canccu-stage--art .canccu-stage__art {
+    opacity: 1;
+  }
+
+  .canccu-stage__scrim {
+    background-color: var(--canccu-color-background);
+    opacity: 0;
+    transition: opacity 2s ease;
+  }
+
+  .canccu-stage--art .canccu-stage__scrim {
+    opacity: var(--canccu-stage-scrim, 1);
+  }
+
+  /* The starter kinds (contracts/agenda.md, Kinds); a kind an organiser adds is a theme's to style. */
+  .canccu-stage--kind-tournament,
+  .canccu-stage--kind-ceremony {
+    --canccu-stage-kind-color: var(--canccu-color-primary);
+  }
+
+  .canccu-stage--kind-doors,
+  .canccu-stage--kind-meal,
+  .canccu-stage--kind-activity {
+    --canccu-stage-kind-color: var(--canccu-color-accent);
+  }
+
+  .canccu-stage--kind-quiet_hours,
+  .canccu-stage--kind-other {
+    --canccu-stage-kind-color: var(--canccu-color-surface);
+  }
+
+  /* Every phase of the day (contracts/screen.md, Motion and burn-in drift). */
+  .canccu-stage--phase-build_up {
+    --canccu-stage-phase-color: var(--canccu-color-primary);
+  }
+
+  .canccu-stage--phase-doors {
+    --canccu-stage-phase-color: var(--canccu-color-accent);
+  }
+
+  .canccu-stage--phase-peak {
+    --canccu-stage-phase-color: color-mix(
+      in srgb,
+      var(--canccu-color-primary) 60%,
+      var(--canccu-color-accent)
+    );
+  }
+
+  .canccu-stage--phase-wind_down {
+    --canccu-stage-phase-color: var(--canccu-color-surface);
+  }
+
+  .canccu-stage--phase-quiet_hours {
+    --canccu-stage-phase-color: var(--canccu-color-background);
+  }
+
+  /* The card: its art under a veil of the surface, behind the box's content. */
+  .canccu-widget:has(> .canccu-widget__art) {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .canccu-widget__art {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background-position: center;
+    background-size: cover;
+    pointer-events: none;
+  }
+
+  .canccu-widget__art::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: var(--canccu-color-surface);
+    opacity: var(--canccu-card-veil, 1);
+  }
+
+  /* A card without art keeps a ground from the theme's colours: the bracket's. */
+  .canccu-widget--bracket {
+    background-image:
+      radial-gradient(
+        ellipse 80% 70% at 0% 0%,
+        color-mix(in srgb, var(--canccu-color-primary) 16%, transparent),
+        transparent
+      ),
+      radial-gradient(
+        ellipse 70% 60% at 100% 100%,
+        color-mix(in srgb, var(--canccu-color-accent) 10%, transparent),
+        transparent
+      );
+  }
+
+  /*
+   * The Pulse hero (sheets 9–10): the game's art as a band across the top of the card with its
+   * name, the teams left after the place, the item's description, and the chip of what starts
+   * first. The band reaches the card's edges, past its padding.
+   */
+  .canccu-widget--countdown .canccu-widget__band {
+    position: relative;
+    height: calc(16 * var(--canccu-u));
+    margin: calc(-4 * var(--canccu-u)) calc(-4.4 * var(--canccu-u)) 0;
+    flex: none;
+    overflow: hidden;
+    border-radius: inherit;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .canccu-widget__band-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .canccu-widget__band::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      0deg,
+      var(--canccu-color-surface),
+      color-mix(in srgb, var(--canccu-color-surface) 35%, transparent) 70%
+    );
+  }
+
+  .canccu-widget__band-name {
+    position: absolute;
+    z-index: 1;
+    left: calc(4.4 * var(--canccu-u));
+    bottom: calc(1.6 * var(--canccu-u));
+    margin: 0;
+    font-size: calc(3.6 * var(--canccu-u));
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .canccu-widget__when .canccu-widget__teams {
+    font-size: calc(4.4 * var(--canccu-u));
+  }
+
+  .canccu-widget__when .canccu-widget__teams::before {
+    content: "· ";
+  }
+
+  .canccu-widget--countdown .canccu-widget__description {
+    margin: 0;
+    max-width: 40ch;
+    font-size: calc(3.6 * var(--canccu-u));
+    color: var(--canccu-color-text-muted);
+  }
+
+  .canccu-widget--countdown .canccu-widget__chip {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: baseline;
+    gap: calc(1.2 * var(--canccu-u));
+    margin: 0;
+    padding: calc(0.8 * var(--canccu-u)) calc(2 * var(--canccu-u));
+    border: max(2px, calc(0.25 * var(--canccu-u))) solid var(--canccu-color-accent);
+    border-radius: 999px;
+    font-size: calc(3.4 * var(--canccu-u));
+  }
+
+  .canccu-widget__chip-time {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}

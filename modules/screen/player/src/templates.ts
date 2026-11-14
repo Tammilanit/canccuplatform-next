@@ -125,12 +125,24 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
   // view-model has only the target, so the player adds what the rail's row of the same item says.
   // `next_up` is the player's too (screen.ts, idleOf): only the idle `next` countdown is surely the
   // next item; a widget's countdown may count to any item, and a claim's to anything.
+  // The Pulse hero (contracts/screen.md, The Pulse hero; sheets 9–10): a hero that holds a later
+  // item than the next one (it has a `chip`) says "Tonight", the game's art is a band with its
+  // name, and the chip counts down to what comes first, with the countdown's spotlight.
   countdown: [
-    sec("next_up", el("p", "kicker", [t("Next up")])),
+    sec(
+      "game",
+      sec(
+        "cover_url",
+        el("div", "band", [img("cover_url", "band-image"), el("p", "band-name", [f("name")])]),
+      ),
+    ),
+    sec("chip", el("p", "kicker", [t("Tonight on stage")])),
+    not("chip", sec("next_up", el("p", "kicker", [t("Next on stage")]))),
     el("p", "headline", [f("label")]),
     el("p", "when", [
       sec("starts_text", el("span", "starts", [f("starts_text")])),
       sec("location", el("span", "where", [f("location")])),
+      sec("teams_left", el("span", "teams", [f("teams_left"), t(" teams left")])),
       sec(
         "delay_minutes",
         el("span", null, [t("+"), f("delay_minutes"), t(" min")], {
@@ -138,6 +150,14 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
         }),
       ),
     ]),
+    sec("description", el("p", "description", [f("description")])),
+    sec(
+      "chip",
+      el("p", "chip", [
+        el("span", "chip-label", [f("label"), t(" starts in")]),
+        el("time", "chip-time", [], { datetime: [f("target_at")] }),
+      ]),
+    ),
     el("p", "count", [t("Starts in "), el("time", "big", [], { datetime: [f("target_at")] })]),
     bar("target_at", 3600),
   ],

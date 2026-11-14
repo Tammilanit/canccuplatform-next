@@ -14,8 +14,11 @@ import type { AgendaItem, AgendaNow, CheckinCode, VenueInfo } from "./widgets.js
 
 export interface ThemeNow {
   revision: number;
-  /** Complete, defaults filled in; only `motion` and `motion_style` are read here (the display). */
-  tokens?: { motion?: unknown; motion_style?: unknown };
+  /**
+   * Complete, defaults filled in; `motion` and `motion_style` are read for the display, `colors`
+   * for the stage's scrim and the cards' veils.
+   */
+  tokens?: { motion?: unknown; motion_style?: unknown; colors?: unknown };
   tokens_css_url: string;
   css_url: string | null;
   logo_url: string | null;

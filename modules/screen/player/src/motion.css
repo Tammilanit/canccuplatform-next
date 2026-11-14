@@ -7,7 +7,7 @@
  * and 1.2 s at `faster` (the 3-per-second rule). A pack changes shapes and easing, never which
  * effects play or how long they hold. In `canccu-base`, so a theme's layer restyles any of it.
  */
-/* Unlayered, as player.css's glow is: the glow is drawn by the drifting layer instead. */
+/* Unlayered, as player.css's glow is: once a level is named the stage draws it (stage.css). */
 body.canccu-surface--screen[class*="canccu-motion--"] {
   background-image: none;
 }
@@ -17,35 +17,6 @@ body.canccu-surface--screen[class*="canccu-motion--"] {
     --canccu-fx-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
     --canccu-fx-speed: var(--canccu-motion-speed, 1);
     --canccu-fx-intensity: var(--canccu-motion-intensity, 1);
-  }
-
-  /*
-   * Background drift: the stage's glow (player.css) moves to a layer of its own once the player
-   * names a level, so it can drift by transform; still at none (contract table).
-   */
-  body.canccu-surface--screen[class*="canccu-motion--"]::before {
-    content: "";
-    position: fixed;
-    inset: -20%;
-    z-index: -1;
-    pointer-events: none;
-    background-image: radial-gradient(
-      ellipse 64% 50% at 64% 0%,
-      color-mix(in srgb, var(--canccu-color-primary) 22%, transparent),
-      transparent
-    );
-  }
-
-  body.canccu-motion--calm::before {
-    animation: canccu-drift 120s ease-in-out infinite;
-  }
-
-  body.canccu-motion--lively::before {
-    animation: canccu-drift 45s ease-in-out infinite;
-  }
-
-  body.canccu-motion--party::before {
-    animation: canccu-drift 20s ease-in-out infinite;
   }
 
   /* Number roll and split-flap: the changed value only. */

@@ -62,6 +62,8 @@ import { studioRoutes } from "./studio/routes.js";
 import type { StudioDeps } from "./studio/routes.js";
 import { tickerRoutes } from "./ticker/routes.js";
 import { zoneRoutes } from "./zones.js";
+import { ArtCache } from "./stage/art.js";
+import { artRoutes } from "./stage/routes.js";
 
 export interface ScreenDeps {
   db: Db;
@@ -102,6 +104,8 @@ export interface ScreenDeps {
   writeSettings?: SettingsWrite;
   /** The event's public answer, for the Studio shell's header. */
   publicEvent?: StudioDeps["publicEvent"];
+  /** The stage's game art (src/stage/art.ts); main reads covers through the edge, tests read none. */
+  art?: ArtCache;
 }
 
 const ENGLISH: Settings = {
@@ -230,6 +234,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
     sources: deps.sources ?? noSources,
     bundleVersion,
     bundles,
+    art: deps.art ?? new ArtCache(deps.kv, () => Promise.resolve(null)),
   };
   const push = {
     ...compose,
@@ -292,6 +297,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   assetRoutes(app, assets);
   versionRoutes(app, assets);
   fileRoutes(app, assets);
+  artRoutes(app, compose);
   photoRoutes(app, assets);
   renderRoutes(app, assets);
   return app;

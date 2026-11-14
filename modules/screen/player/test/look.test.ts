@@ -71,7 +71,7 @@ describe("the built-in templates", () => {
       delay_minutes: 15,
       next_up: true,
     });
-    expect(textOf(box, "kicker")).toBe("Next up");
+    expect(textOf(box, "kicker")).toBe("Next on stage");
     expect(textOf(box, "headline")).toBe("Grand final");
     // When and where it starts, and its delay as the badge; not its end (sheet 9).
     expect(textOf(box, "when")).toBe("18:30Stage+15 min");
@@ -235,12 +235,12 @@ describe("the screen's own parts of the look", () => {
     expect(root.querySelector(".canccu-rotation")).toBeNull();
   });
 
-  it('says "Next up" only on the idle next countdown, not on any countdown', () => {
+  it('says "Next on stage" only on the idle next countdown, not on any countdown', () => {
     const next = { label: "Semis", target_at: "2026-03-14T19:30:00Z", ends_text: null };
     expect(textOf(draw("countdown", next), "kicker")).toBeUndefined();
     const idle = region("hero", { widgets: [], idle: "next", idle_view: { widget: "countdown", view: { ...next, qr: null, stale: false, empty: false } } }); // prettier-ignore
     const root = new Screen(host).draw(state([idle]));
-    expect(root.querySelector(".canccu-widget__kicker")?.textContent).toBe("Next up");
+    expect(root.querySelector(".canccu-widget__kicker")?.textContent).toBe("Next on stage");
   });
 
   describe("the hero and the rail as one", () => {

@@ -40,6 +40,7 @@ import { ValkeyRenderQueue } from "./render/queue.js";
 import { TICK_MS, tickRunner } from "./tick/run.js";
 import type { SettingsDoc } from "./motion-routes.js";
 import { seedMainZone } from "./zones.js";
+import { ArtCache, edgeReader } from "./stage/art.js";
 
 const PORT = 8080;
 /** pg_advisory_lock key of the screen migrations; each module has its own. */
@@ -222,6 +223,8 @@ async function main(): Promise<void> {
     bundleVersion: config.version,
     bundles,
     push,
+    // Covers are read as a guest's browser reads them: through the edge, with the event's hostname.
+    art: new ArtCache(kv, edgeReader(process.env.CANCCU_EDGE_URL ?? "http://caddy")),
     health: screenHealth({
       module: config.module,
       version: config.version,

@@ -68,6 +68,7 @@ async def test_a_refused_save_keeps_what_was_typed(
             "offline_after_seconds": "3",
             "progress_bars": "on",
             "follow_the_day": "on",
+            "stage_art": "on",
         },
         headers=ORIGIN,
     )
@@ -96,6 +97,7 @@ async def test_a_conflict_compares_with_what_is_saved_now(
         "offline_after_seconds": "30",
         "progress_bars": "on",
         "follow_the_day": "on",
+        "stage_art": "on",
     }
     r = await browser.post(SCREEN, data=form, headers=ORIGIN)
     assert r.status_code == 409 and "Someone else saved these settings" in r.text
@@ -129,6 +131,7 @@ async def test_a_conflict_keeps_only_the_fields_the_user_changed(
         "offline_after_seconds": "30",
         "progress_bars": "on",
         "follow_the_day": "on",
+        "stage_art": "on",
     }
     assert form["heartbeat_seconds"] == bases["was.heartbeat_seconds"] == "15"
     r = await browser.post(SCREEN, data=form, headers=ORIGIN)

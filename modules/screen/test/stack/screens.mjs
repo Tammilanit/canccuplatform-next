@@ -14,7 +14,10 @@ import { publishTheme, saveZone, seedScreens } from "./fixture.mjs";
 import {
   CLAIM_OF,
   MOTION_VIEWS,
+  STAGE_VIEWS,
+  withHeroArt,
   withMotion,
+  withStage,
   withHeroItemOnly,
   withCounts,
   withOneScreen,
@@ -52,6 +55,12 @@ const NEW_VIEWS = {
   "portrait-right-now": ".canccu-region--right_now .canccu-widget__peak",
 };
 
+/** The surge's strip (sheet 15): before the tint, while it holds with its art, after it ended. */
+const SURGE_FRAMES = ["before", "during", "after"];
+/** How long the strip's tint holds, and the stage's longest fade (stage.css). */
+const SURGE_MS = 12_000;
+const STAGE_FADE_MS = 3000;
+
 const nameOf = (theme, view, [w, h]) => `theming-${theme}-screen-${view}-${w}x${h}`;
 
 /** Every PNG the run takes, in order, for the dry run. */
@@ -76,6 +85,11 @@ export function planned(check = false) {
   out.push(nameOf("default", "entrance", HD[1]));
   out.push(nameOf("default", "pulse-one-screen", HD[0]));
   out.push(nameOf("default", "portrait-right-now", HD[1]));
+  for (const { view, surge } of STAGE_VIEWS) {
+    if (!surge) out.push(nameOf("default", view, HD[0]));
+    else for (const f of SURGE_FRAMES) out.push(nameOf("default", `${view}-${f}`, HD[0]));
+  }
+  out.push(nameOf("default", "pulse-hero-art", HD[0]));
   return out;
 }
 
@@ -212,6 +226,14 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
     await attempt(nameOf("default", "portrait-right-now", HD[1]), () =>
       handed("default", "portrait-right-now", HD[1], withCounts),
     );
+    for (const { view, level, surge } of STAGE_VIEWS) {
+      await attempt(nameOf("default", view, HD[0]), () =>
+        handed("default", view, HD[0], withStage(level, surge, SURGE_MS)),
+      );
+    }
+    await attempt(nameOf("default", "pulse-hero-art", HD[0]), () =>
+      handed("default", "pulse-hero-art", HD[0], withHeroArt),
+    );
 
     /** The Pulse, then identify over it, then the offline marker. */
     async function pulse(theme, size) {
@@ -265,6 +287,24 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await close();
     }
 
+    /**
+     * The surge's strip: the stage before the tint (the state as the server had it a moment
+     * earlier), while it holds with the game's art, and after it ended on the screen's own clock.
+     */
+    async function surgeStrip(page, theme, view, size, close) {
+      await page.waitForSelector(".canccu-stage--art");
+      await page.waitForTimeout(STAGE_FADE_MS + 200);
+      await shot(nameOf(theme, `${view}-during`, size), page);
+      await page.waitForFunction(() => !document.querySelector(".canccu-stage--tinted"), null, {
+        timeout: SURGE_MS + 5000,
+      });
+      await page.waitForTimeout(STAGE_FADE_MS + 200);
+      await shot(nameOf(theme, `${view}-after`, size), page);
+      await close();
+      // Before: the same stage at the same level, no box asking yet.
+      await handed(theme, `${view}-before`, size, withStage("lively", false));
+    }
+
     /** The page handed a changed state, with no stream to replace it before the shot. */
     async function handed(theme, view, size, change) {
       const { page, close } = await open(size, main.cookie);
@@ -295,7 +335,12 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         await stripNamesCountdown(page);
         await tickerFitted(page, true);
       } else if (view === "ambient-takeover") await takeoverIsRed(page);
-      else if (view.startsWith("motion-")) {
+      else if (view === "stage-surge") return await surgeStrip(page, theme, view, size, close);
+      else if (view.startsWith("stage-") || view === "pulse-hero-art") {
+        // The kind and phase tints fade in over the stage's longest fade.
+        await page.waitForSelector(".canccu-stage--phase-peak");
+        await page.waitForTimeout(STAGE_FADE_MS + 200);
+      } else if (view.startsWith("motion-")) {
         // A strip of four frames 0.4 s apart from the spotlight's start (sheet 11, #445).
         // From the moment the box has faded in (1.5 s at calm), so each frame shows the level.
         await page.waitForFunction(() => {

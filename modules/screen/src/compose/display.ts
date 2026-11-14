@@ -4,6 +4,7 @@
  */
 import { eventMotion, legacyMotion, phaseItems, themeMotionOf, zoneMotion } from "./motion.js";
 import type { LegacyMotion, MotionLevel, ZoneMotion } from "./motion.js";
+import type { Stage } from "./stage.js";
 import type { AgendaItem, AgendaNow } from "./widgets.js";
 
 export type Motion = LegacyMotion;
@@ -21,6 +22,8 @@ export interface Display {
   motion_style: MotionStyle;
   motion: Motion;
   drift: boolean;
+  /** Set once the zone's views are built (compose/stage.ts). */
+  stage?: Stage;
 }
 
 export const DEFAULT_MOTION_STYLE: MotionStyle = {

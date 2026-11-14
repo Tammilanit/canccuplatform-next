@@ -211,3 +211,89 @@ export function withMotion(level, pack) {
     ),
   }); // prettier-ignore
 }
+
+/**
+ * The two backgrounds (sheet 15, #446). The stage's art as the server sends it is a blurred WebP
+ * of a game's cover; here a soft picture drawn as data stands in for it, so the frame is the
+ * player's own. `scrim` is what the server computes for it under the default theme.
+ */
+const blurred = `data:image/svg+xml;base64,${Buffer.from(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><defs><radialGradient id="a" cx=".3" cy=".35" r=".6"><stop offset="0" stop-color="#a855f7"/><stop offset="1" stop-color="#a855f7" stop-opacity="0"/></radialGradient><radialGradient id="b" cx=".75" cy=".65" r=".55"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></radialGradient></defs><rect width="640" height="360" fill="#1e1b4b"/><rect width="640" height="360" fill="url(#a)"/><rect width="640" height="360" fill="url(#b)"/></svg>`,
+).toString("base64")}`;
+const COVER = picture("#7c3aed", "#0ea5e9");
+const GAME = { id: "g_1", name: "Demo Game", cover_url: COVER };
+
+/** Each stage view's level, the item's kind and the day's phase; `surge` adds a box's tint. */
+export const STAGE_VIEWS = [
+  { view: "stage-calm", level: "calm", surge: false },
+  { view: "stage-lively", level: "lively", surge: false },
+  { view: "stage-party", level: "party", surge: false },
+  { view: "stage-surge", level: "lively", surge: true },
+];
+
+/** The hot game's claim in the hero, its surge just started, with its card art. */
+function surgeClaim() {
+  return claim("hero", "hot_game", {
+    game: GAME,
+    players: 14,
+    since: ago(1000),
+    card_art: { url: COVER, veil: 0.75 },
+  });
+}
+
+/**
+ * The stage at a level: the current item a tournament at the evening's peak. A surge puts the hot
+ * game's claim in the hero and tints the stage with its art for `tintMs` from the first state.
+ */
+export function withStage(level, surge, tintMs = 0) {
+  // From the first state handed, so the page's later polls keep the same end.
+  let until;
+  return (s) => ({
+    ...s,
+    display: {
+      ...s.display,
+      motion_level: level,
+      stage: {
+        phase: "peak",
+        kind: "tournament",
+        tint: surge
+          ? {
+              region_id: "hero",
+              widget: "hot_game",
+              until: (until ??= new Date(Date.now() + tintMs).toISOString()),
+              art: { url: blurred, scrim: 0.7 },
+            }
+          : null,
+      },
+    },
+    regions: surge
+      ? s.regions.map((r) => (r.role === "hero" ? { ...r, claim: surgeClaim() } : r))
+      : s.regions,
+  });
+}
+
+/**
+ * The Pulse hero of sheets 9–10: tonight's final with its game's band and card art, the teams
+ * still in, its description, and the chip of the semis, which start first.
+ */
+export function withHeroArt(s) {
+  const hour = 3_600_000;
+  const extra = {
+    target_at: new Date(Date.now() + 2.5 * hour).toISOString(),
+    label: "Demo Game Cup grand final",
+    kind: "tournament",
+    description: "Bring your own headset. Seats open 20:30.",
+    game: GAME,
+    teams_left: 8,
+    chip: { label: "Semis", target_at: new Date(Date.now() + hour).toISOString() },
+    card_art: { url: COVER, veil: 0.8 },
+  };
+  return {
+    ...withStage("lively", false)(s),
+    regions: s.regions.map((r) =>
+      r.role !== "hero" || r.idle_view === null
+        ? r
+        : { ...r, idle_view: { ...r.idle_view, view: { ...r.idle_view.view, ...extra } } },
+    ),
+  };
+}

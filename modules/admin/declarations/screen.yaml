@@ -56,6 +56,10 @@ settings:
     type: boolean
     label: Follow the day (calmer at doors and wind-down, livelier at peaks)
     default: true
+  - key: stage_art
+    type: boolean
+    label: Show a hot game's art on the stage
+    default: true
 groups:
   - id: playing
     label: Playing
@@ -64,7 +68,7 @@ groups:
   - id: motion
     label: Motion
     description: How lively the screens move, unless a zone pins its own level.
-    keys: [motion_level, follow_the_day]
+    keys: [motion_level, follow_the_day, stage_art]
   - id: network
     label: When the network is slow
     description: How long a screen waits before it says so.

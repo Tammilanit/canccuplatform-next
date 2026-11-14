@@ -14,7 +14,11 @@ import type { Orientation, ZoneStore } from "../push/store.js";
 import { resolveWinner } from "../schedule/winner.js";
 import { loadWindows } from "../tick/content.js";
 import { tickerNow } from "../ticker/store.js";
+import { showsName } from "./zone-reads.js";
 import { buildRegions } from "./build.js";
+import { stageOf } from "./stage.js";
+import type { ArtCache } from "../stage/art.js";
+import { themeColors } from "../stage/scrim.js";
 import { placeClaims } from "./claims.js";
 import type { Override, Placement } from "./claims.js";
 import { contentFacts, entriesOf, photoProps } from "./content.js";
@@ -33,6 +37,8 @@ import type { ZoneFacts } from "./widgets.js";
 import { agendaAt, lookFor } from "../preview/look.js";
 import type { DraftUse, PreviewLook } from "../preview/look.js";
 
+export { placement, showsName } from "./zone-reads.js";
+
 export interface ComposeDeps {
   db: Db;
   kv: Kv;
@@ -41,6 +47,8 @@ export interface ComposeDeps {
   bundleVersion: string;
   /** Each zone's state and change log (src/push/store.ts). */
   zones: ZoneStore;
+  /** The stage's game art (src/stage/art.ts); none in the pure tests. */
+  art?: ArtCache;
   /** For `screen.claims.changed`; none in the pure tests. */
   bus?: Pick<Bus, "publish">;
   log?: Logger;
@@ -82,44 +90,6 @@ async function zoneRow(c: SqlClient, key: string): Promise<ZoneRow | null> {
     [key],
   );
   return (rows[0] as ZoneRow | undefined) ?? null;
-}
-
-/** The zone a device draws, and whether it only mirrors it (one hop: a mirror of a mirror shows nothing). */
-export async function placement(
-  c: SqlClient,
-  deviceId: string,
-): Promise<{ zoneKey: string | null; mirror: boolean; mirrorOf: string | null }> {
-  const { rows } = await c.query(
-    `SELECT a.zone_key, a.mirror_device_id, a.mirror_zone_key, t.zone_key AS target_zone
-     FROM screen_assignments a LEFT JOIN screen_assignments t ON t.device_id = a.mirror_device_id
-     WHERE a.device_id = $1`,
-    [deviceId],
-  );
-  const row = rows[0] as Record<string, string | null> | undefined;
-  if (row === undefined) return { zoneKey: null, mirror: false, mirrorOf: null };
-  if (row.mirror_zone_key) return { zoneKey: row.mirror_zone_key, mirror: true, mirrorOf: null };
-  if (row.mirror_device_id) {
-    return { zoneKey: row.target_zone ?? null, mirror: true, mirrorOf: row.mirror_device_id };
-  }
-  return { zoneKey: row.zone_key ?? null, mirror: false, mirrorOf: null };
-}
-
-/**
- * Whether the header names the zone (contracts/screen.md, `screen_name`): with `auto`, while the
- * event has two or more screens, counted as its devices assigned to a zone or mirroring one; a
- * session's mirror and a preview are no devices, so they never count.
- */
-export async function showsName(
-  c: SqlClient,
-  zone: Pick<ZoneRow, "screen_name">,
-): Promise<boolean> {
-  if (zone.screen_name === "always") return true;
-  if (zone.screen_name === "never") return false;
-  const { rows } = await c.query(
-    `SELECT count(*)::int AS n FROM screen_assignments
-     WHERE zone_key IS NOT NULL OR mirror_device_id IS NOT NULL OR mirror_zone_key IS NOT NULL`,
-  );
-  return ((rows[0] as { n: number } | undefined)?.n ?? 0) >= 2;
 }
 
 async function windowLayoutId(
@@ -274,8 +244,20 @@ export async function composeZone(
     settings: deps.settings,
     at: at.getTime(),
   });
-  // The level's next change rebuilds the zone then, as a content widget's does.
-  const changes = [content.changesAt, motion.next?.at].filter((t) => t != null);
+  const { stage, covers } = await stageOf({
+    views,
+    phase: motion.phase,
+    agenda,
+    nowMs: at.getTime(),
+    stageArt: deps.settings.get("stage_art", true) !== false,
+    colors: themeColors(theme?.tokens),
+    hostname: ctx.primary_hostname ?? host,
+    art: deps.art,
+  });
+  display.stage = stage;
+  // The level's next change and a tint's end rebuild the zone then, as a content widget's does.
+  const tintEnds = stage.tint === null ? null : Date.parse(stage.tint.until);
+  const changes = [content.changesAt, motion.next?.at, tintEnds].filter((t) => t != null);
   return {
     fingerprint: zoneFingerprint({
       zone: read.zone,
@@ -287,6 +269,7 @@ export async function composeZone(
       claims: read.claims,
       bundle: read.pin.bundle_version,
       showName: read.showName,
+      art: covers,
     }),
     zone: read.zone,
     showName: read.showName,
@@ -315,6 +298,8 @@ export interface FingerprintInput {
   bundle?: string | null;
   /** Moves with the event's count of screens, which no other input carries. */
   showName?: boolean;
+  /** The cards' and the tint's art read (compose/stage.ts): a cover read only later moves it. */
+  art?: readonly string[];
 }
 
 /**
@@ -334,6 +319,7 @@ export function zoneFingerprint(input: FingerprintInput): string {
     claims: input.claims ?? [],
     bundle: input.bundle ?? null,
     show_name: input.showName ?? true,
+    art: input.art ?? [],
   };
   return createHash("sha256").update(JSON.stringify(stable)).digest("base64url");
 }
