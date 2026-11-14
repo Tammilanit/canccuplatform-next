@@ -58,9 +58,11 @@ describe.skipIf(!DATABASE_URL)("studio pins", () => {
       expect(res.body).toContain("Follows the published theme");
       expect(res.body).toMatch(/<nav class="canccu-tabs"[^>]*>.*>Pins<.*<\/nav>/s);
     }
-    for (const session of ["nobody", "ticker", "zoner"]) {
+    for (const session of ["ticker", "zoner"]) {
       expect((await page("/admin/screen/pins", session)).statusCode, session).toBe(403);
     }
+    // Without any role at all, admin's "No role yet" says what to do instead.
+    expect((await page("/admin/screen/pins", "nobody")).headers.location).toBe("/admin/sign-in");
     expect((await page("/admin/screen/", "bundler")).headers.location).toBe("/admin/screen/pins");
   });
 

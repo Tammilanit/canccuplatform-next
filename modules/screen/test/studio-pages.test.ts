@@ -33,7 +33,14 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect(res.statusCode).toBe(403);
     expect(res.body).toContain("the Screen studio");
     expect(res.body).not.toContain("screen.zones.write");
-    expect((await page("/admin/screen/", "nobody")).statusCode).toBe(403);
+  });
+
+  it("sends someone without any role to admin's No role yet, not No access", async () => {
+    for (const path of ["/admin/screen/", "/admin/screen/zones"]) {
+      const res = await page(path, "nobody");
+      expect(res.statusCode, path).toBe(303);
+      expect(res.headers.location, path).toBe("/admin/sign-in");
+    }
   });
 
   it("opens on Live while the event runs and on Zones before it, or the first tab one has", async () => {

@@ -271,6 +271,16 @@ async def test_every_menu_link_reaches_a_page_and_readers_get_no_writer_links(en
     assert "No access" in refused.text and "agenda.items.write" not in refused.text
 
 
+async def test_someone_without_any_role_goes_to_no_role_yet(env: Env) -> None:
+    """Signed in from here with no role at all: admin's "No role yet" says what to do, where
+    "No access" would name a page they never had."""
+    nobody = env.rights.sign_in("u_nobody")
+    async with env.client() as c:
+        for path in ("/", "/add"):
+            r = await c.get(path, headers=nobody)
+            assert r.status_code == 303 and r.headers["location"] == "/admin/sign-in", path
+
+
 async def test_quick_add_offers_each_choice_once(env: Env) -> None:
     async with env.client() as c:
         text = (await c.get("/add", headers=env.writer())).text

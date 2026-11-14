@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 from collections.abc import Awaitable, Callable
+from urllib.parse import parse_qsl, urlencode
 
 from canccu_kit import Event, KitError, NotSignedIn, error_body
 from canccu_kit.rights import SESSION_COOKIE, Session, session_id_from_cookie
@@ -24,6 +25,23 @@ Viewer = Callable[[str | None], Awaitable[Session]]
 FLOW_COOKIE = "canccu_sign_in"
 FLOW_PATH = f"{BASE}/sign-in"
 CALLBACK_PATH = f"{FLOW_PATH}/callback"  # the redirect URI registered with Discord
+CANCELLED = ("signin", "cancelled")
+CANCELLED_TEXT = "Discord was closed before it said yes. Nothing was changed."
+
+
+def unmark(back: str | None) -> tuple[str | None, bool]:
+    """The return path without the cancelled marker, and whether it carried one. A module page
+    that needs a session sends the marked address straight back here as `next`."""
+    if not back:
+        return back, False
+    rest, _, fragment = back.partition("#")
+    path, _, query = rest.partition("?")
+    pairs = parse_qsl(query, keep_blank_values=True)
+    kept = [p for p in pairs if p != CANCELLED]
+    if len(kept) == len(pairs):
+        return back, False
+    unmarked = path + (f"?{urlencode(kept)}" if kept else "")
+    return unmarked + (f"#{fragment}" if fragment else ""), True
 
 
 class OriginCheck:
@@ -71,7 +89,9 @@ def auth_routes(
         return await sign_in_card(request, warning, exc.status)
 
     async def sign_in_card(request: Request, warning: str = "", status: int = 200) -> Response:
-        back = safe_return_path(request.query_params.get("next"))
+        back, cancelled = unmark(safe_return_path(request.query_params.get("next")))
+        if cancelled and not warning:
+            warning = notice("warn", "Sign-in didn't finish", CANCELLED_TEXT)
         hidden = f'<input type=hidden name=next value="{html.escape(back)}">' if back else ""
         event = await event_of(request)
         card = views.sign_in_card(
@@ -151,11 +171,7 @@ def auth_routes(
                 marked = f"{path}{'&' if '?' in path else '?'}signin=cancelled"
                 marked += f"#{fragment}" if fragment else ""
                 return clear_flow(RedirectResponse(marked, status_code=303))
-            cancelled = KitError(
-                "Discord was closed before it said yes. Nothing was changed.",
-                status=400,
-                code="sign_in_cancelled",
-            )
+            cancelled = KitError(CANCELLED_TEXT, status=400, code="sign_in_cancelled")
             return clear_flow(await failed(request, cancelled))
         try:
             token, _, back = await auth.finish(
