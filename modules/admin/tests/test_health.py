@@ -9,6 +9,7 @@ from typing import Any
 
 import httpx
 from canccu_kit import Health
+from canccu_kit.health import CheckResult
 
 from canccu_admin.health import Check, HealthWatch, Part
 from canccu_admin.health_view import health_body
@@ -138,7 +139,7 @@ def test_the_menu_note_counts_the_parts_that_need_a_look() -> None:
 
 async def test_admin_itself_says_what_troubles_it() -> None:
     # Guards _probe_own reading its own answer the way it reads every other part's.
-    async def valkey() -> dict[str, str]:
+    async def valkey() -> CheckResult:
         return {"status": "down", "detail": "no answer"}
 
     own = Health("admin", "v1", {"valkey": valkey})
