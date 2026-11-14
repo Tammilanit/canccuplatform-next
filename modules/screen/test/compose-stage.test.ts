@@ -124,6 +124,32 @@ describe("the stage", () => {
     expect(v.landscape.regions[0]?.claim?.content.card_art).toBeDefined();
   });
 
+  it("gives each step of a sequence claim its own card art, as the surge plays it", async () => {
+    // contracts/screen.md's hot-game surge: a sting, then the hot game's card, each with its content.
+    const claim = {
+      ...claimOf("sting", { text: "Hot right now", image_url: null }),
+      steps: [
+        {
+          template: "sting",
+          content: { text: "Hot right now", image_url: null },
+          duration_ms: 2500,
+        },
+        { template: "hot_game", content: hot("g_2", NOW - 10_000), duration_ms: 30_000 },
+      ],
+    } as unknown as Claim;
+    const v = views([region("hero", { claim })]);
+    const { covers } = await stageOf({ ...base, views: v, art: cache(["/games/covers/g_2.webp"]) });
+    expect(covers).toEqual([`/games/covers/g_2.webp=${INFO.id}`]);
+    const steps = v.landscape.regions[0]?.claim?.steps;
+    expect(steps?.[0]?.content.card_art).toBeUndefined();
+    expect(steps?.[1]?.content.card_art).toEqual({
+      url: "/games/covers/g_2.webp",
+      veil: veilOf(base.colors, INFO.cover),
+    });
+    expect(steps?.[1]?.duration_ms).toBe(30_000);
+    expect(v.landscape.regions[0]?.claim?.content.card_art).toBeUndefined();
+  });
+
   it("leaves the art out where the cover cannot be read", async () => {
     const v = views([region("hero", { widgets: [widget("hot_game", hot("g_1", NOW - 1_000))] })]);
     const { stage } = await stageOf({ ...base, views: v, art: cache([]) });

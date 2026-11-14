@@ -103,7 +103,11 @@ function coversOf(views: Views, tint: TintAsk | null): string[] {
     for (const r of regions) {
       for (const w of r.widgets) add(coverOf(w.widget, w.view));
       if (r.idle_view !== null) add(coverOf("countdown", r.idle_view.view));
-      if (r.claim !== null) add(coverOf(r.claim.template, objectOr(r.claim.content) ?? {}));
+      if (r.claim !== null) {
+        add(coverOf(r.claim.template, objectOr(r.claim.content) ?? {}));
+        for (const step of r.claim.steps ?? [])
+          add(coverOf(step.template, objectOr(step.content) ?? {}));
+      }
     }
   }
   return [...urls];
@@ -123,6 +127,19 @@ function withCard<V extends Record<string, unknown>>(
   return { ...view, card_art: { url, veil: veilOf(colors, info.cover) } };
 }
 
+/** A template and its content, as a claim and each of its steps carry them. */
+interface Shown {
+  template: string;
+  content: unknown;
+}
+
+function withShownCard<S extends Shown>(shown: S, art: Art, colors: ThemeColors): S {
+  const content = objectOr(shown.content);
+  return content === null
+    ? shown
+    : { ...shown, content: withCard(shown.template, content, art, colors) };
+}
+
 /** The views with each card's art (Card backgrounds): set only where its cover could be read. */
 export function withCardArt(views: Views, art: Art, colors: ThemeColors): void {
   if (art.size === 0) return;
@@ -134,12 +151,14 @@ export function withCardArt(views: Views, art: Art, colors: ThemeColors): void {
         r.idle_view === null
           ? null
           : { ...r.idle_view, view: withCard<View>("countdown", r.idle_view.view, art, colors) },
+      // A sequence's steps replace the claim's own content while they run (contracts/screen.md),
+      // so each step's card carries its art too.
       claim:
-        r.claim === null || objectOr(r.claim.content) === null
-          ? r.claim
+        r.claim === null
+          ? null
           : {
-              ...r.claim,
-              content: withCard(r.claim.template, objectOr(r.claim.content) ?? {}, art, colors),
+              ...withShownCard(r.claim, art, colors),
+              steps: r.claim.steps?.map((step) => withShownCard(step, art, colors)) ?? null,
             },
     }));
   }

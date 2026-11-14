@@ -17,17 +17,19 @@ const MID: Rgb = [128, 128, 128];
 
 describe("the scrim and the veil", () => {
   it("reads the theme's hex colours, and falls back to the platform's", () => {
-    expect(parseHex("#0f172a")).toEqual([15, 23, 42]);
-    expect(parseHex("#fff")).toEqual([255, 255, 255]);
+    expect(parseHex("#0f172a")).toEqual([15, 23, 42, 1]);
+    expect(parseHex("#fff")).toEqual([255, 255, 255, 1]);
+    expect(parseHex("#ffffff80")).toEqual([255, 255, 255, 128 / 255]);
     expect(parseHex("rgb(1,2,3)")).toBeNull();
     expect(themeColors(undefined)).toEqual({
-      background: [15, 23, 42],
-      surface: [30, 41, 59],
-      text: [248, 250, 252],
+      background: [15, 23, 42, 1],
+      surface: [30, 41, 59, 1],
+      text: [248, 250, 252, 1],
     });
-    expect(themeColors({ colors: { background: "#ffffff", text: "#111" } }).background).toEqual(
-      WHITE,
-    );
+    expect(themeColors({ colors: { background: "#ffffff", text: "#111" } }).background).toEqual([
+      ...WHITE,
+      1,
+    ]);
   });
 
   it("measures contrast as WCAG does", () => {
@@ -70,5 +72,37 @@ describe("the scrim and the veil", () => {
     expect(veil).toBeGreaterThanOrEqual(0.5);
     expect(veil).toBeLessThanOrEqual(1);
     expect(scrimOf(light, { light: WHITE, dark: [230, 230, 230] })).toBe(0.55);
+  });
+
+  it("reads a theme's #rrggbbaa colours with their alpha, not as the platform's", () => {
+    // A light theme written with 8-digit tokens: its own colours, not the dark defaults.
+    const light = themeColors({
+      colors: { background: "#ffffffff", surface: "#f1f5f9ff", text: "#0f172aff" },
+    });
+    expect(light.background).toEqual([...WHITE, 1]);
+    expect(light.text).toEqual([15, 23, 42, 1]);
+    const art = { light: WHITE, dark: BLACK };
+    expect(scrimOf(light, art)).toBe(
+      scrimOf(themeColors({ colors: { background: "#ffffff", text: "#0f172a" } }), art),
+    );
+    // Light art under dark text needs no more than the least step; the dark defaults would.
+    expect(scrimOf(light, { light: WHITE, dark: [230, 230, 230] })).toBe(0.55);
+    expect(
+      scrimOf(themeColors(undefined), { light: WHITE, dark: [230, 230, 230] }),
+    ).toBeGreaterThan(0.55);
+  });
+
+  it("covers more with a translucent ground, and holds for translucent text", () => {
+    const art = { light: WHITE, dark: BLACK };
+    const opaque = leastOpacity([0, 0, 0, 1], [255, 255, 255, 1], art, SCRIM_FROM);
+    const half = leastOpacity([0, 0, 0, 0.8], [255, 255, 255, 1], art, SCRIM_FROM);
+    expect(half).toBeGreaterThan(opaque);
+    // The step found keeps 4.5:1 for the text as drawn: its alpha over the composited ground.
+    const text = [255, 255, 255, 0.9] as const;
+    const a = leastOpacity([0, 0, 0, 1], text, art, SCRIM_FROM);
+    const under = WHITE.map((c) => c * (1 - a)) as unknown as Rgb;
+    const drawn = under.map((c) => 255 * 0.9 + c * 0.1) as unknown as Rgb;
+    expect(contrast(drawn, under)).toBeGreaterThanOrEqual(4.5);
+    expect(a).toBeGreaterThan(opaque);
   });
 });

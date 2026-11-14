@@ -6,6 +6,9 @@
  */
 
 export type Rgb = readonly [number, number, number];
+/** A theme colour: its channels and its alpha, 0–1 (theming allows `#rrggbbaa`). */
+export type Rgba = readonly [number, number, number, number];
+type Colour = Rgb | Rgba;
 
 /** The lightest and darkest colour of an image, read from a small version of it (art.ts). */
 export interface Extremes {
@@ -18,26 +21,30 @@ const STEP = 0.05;
 export const SCRIM_FROM = 0.55;
 export const VEIL_FROM = 0.5;
 
-/** `#rgb` or `#rrggbb` (theming's colour tokens); null for anything else. */
-export function parseHex(value: unknown): Rgb | null {
+/** `#rgb`, `#rrggbb` or `#rrggbbaa` (theming's colour tokens); null for anything else. */
+export function parseHex(value: unknown): Rgba | null {
   if (typeof value !== "string") return null;
-  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value.trim());
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(value.trim());
   const hex = m?.[1];
   if (hex === undefined) return null;
   const full = hex.length === 3 ? hex.replace(/./g, (c) => c + c) : hex;
-  return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16)) as unknown as Rgb;
+  const byte = (i: number): number => parseInt(full.slice(i, i + 2), 16);
+  return [byte(0), byte(2), byte(4), full.length === 8 ? byte(6) / 255 : 1];
 }
+
+const rgbOf = (c: Colour): Rgb => [c[0], c[1], c[2]];
+const alphaOf = (c: Colour): number => (c.length === 4 ? c[3] : 1);
 
 const channel = (c: number): number => {
   const s = c / 255;
   return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
 };
 
-const luminance = ([r, g, b]: Rgb): number =>
+const luminance = ([r, g, b]: Colour): number =>
   0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 
 /** WCAG's contrast ratio, as theming checks its tokens. */
-export function contrast(a: Rgb, b: Rgb): number {
+export function contrast(a: Colour, b: Colour): number {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
   return (hi + 0.05) / (lo + 0.05);
 }
@@ -47,18 +54,24 @@ const mix = (over: Rgb, under: Rgb, alpha: number): Rgb =>
   over.map((c, i) => c * alpha + (under[i] ?? 0) * (1 - alpha)) as unknown as Rgb;
 
 /**
- * The least opacity from `from` to 1, in steps of 0.05, at which `text` reads on `ground` laid
- * over both of the image's extremes. 1 when no step does: the ground then covers the image whole,
- * and the theme's own contrast check already holds text on its ground.
+ * `text` on `ground` at `opacity` over `image`, composited as the browser draws them: a
+ * translucent colour lets what is under it through, so its alpha scales the layer's opacity.
  */
-export function leastOpacity(ground: Rgb, text: Rgb, image: Extremes, from: number): number {
+function reads(ground: Colour, text: Colour, image: Rgb, opacity: number): boolean {
+  const under = mix(rgbOf(ground), image, opacity * alphaOf(ground));
+  return contrast(mix(rgbOf(text), under, alphaOf(text)), under) >= MIN_RATIO;
+}
+
+/**
+ * The least opacity from `from` to 1, in steps of 0.05, at which `text` reads on `ground` laid
+ * over both of the image's extremes. 1 when no step does: the most of the image the ground can
+ * cover (all of it for an opaque ground, whose text the theme's own contrast check holds).
+ */
+export function leastOpacity(ground: Colour, text: Colour, image: Extremes, from: number): number {
   const steps = Math.round((1 - from) / STEP);
   for (let i = 0; i <= steps; i++) {
     const alpha = Math.round((from + i * STEP) * 100) / 100;
-    if (
-      contrast(text, mix(ground, image.light, alpha)) >= MIN_RATIO &&
-      contrast(text, mix(ground, image.dark, alpha)) >= MIN_RATIO
-    ) {
+    if (reads(ground, text, image.light, alpha) && reads(ground, text, image.dark, alpha)) {
       return alpha;
     }
   }
@@ -67,15 +80,15 @@ export function leastOpacity(ground: Rgb, text: Rgb, image: Extremes, from: numb
 
 /** The colours the scrim and veil are worked out from: the theme's, else the platform defaults (ui.css). */
 export interface ThemeColors {
-  background: Rgb;
-  surface: Rgb;
-  text: Rgb;
+  background: Rgba;
+  surface: Rgba;
+  text: Rgba;
 }
 
 const DEFAULTS: ThemeColors = {
-  background: [0x0f, 0x17, 0x2a],
-  surface: [0x1e, 0x29, 0x3b],
-  text: [0xf8, 0xfa, 0xfc],
+  background: [0x0f, 0x17, 0x2a, 1],
+  surface: [0x1e, 0x29, 0x3b, 1],
+  text: [0xf8, 0xfa, 0xfc, 1],
 };
 
 /** The theme's `colors` token (complete, defaults filled in by theming), or the platform's. */
