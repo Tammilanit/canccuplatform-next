@@ -26,6 +26,12 @@
   const screenFrame = document.querySelector("iframe[data-screen-preview]");
   const PREVIEW_MESSAGE = "canccu-screen-preview";
   const DRAWN_MESSAGE = "canccu-screen-preview-drawn";
+  /*
+   * How long the player may take to answer before the sample screen stands in: one that refused
+   * the state, or a pinned bundle from before the answer, would otherwise hold Publish for good.
+   */
+  const ANSWER_MS = 8000;
+  let unanswered;
   let screenShown = false;
   // Only the answer to the last state posted counts: an earlier zone's may still come in.
   let posts = 0;
@@ -114,17 +120,21 @@
   function load(src, onLoad) {
     screenShown = false;
     awaited = undefined;
+    clearTimeout(unanswered);
     if (onScreenLoad !== undefined) screenFrame.removeEventListener("load", onScreenLoad);
     onScreenLoad = onLoad;
     screenFrame.addEventListener("load", onLoad, { once: true });
     screenFrame.src = src;
   }
 
-  const fallback = () =>
+  function fallback() {
+    const caption = document.querySelector(".canccu-studio-zone");
+    if (caption !== null) caption.textContent = "";
     load(screenFrame.dataset.fallbackSrc, () => {
       screenShown = isSurface(screenFrame);
       check();
     });
+  }
 
   async function showZone(zone) {
     const pick = ++zonePicks;
@@ -143,6 +153,7 @@
         { type: PREVIEW_MESSAGE, state: draft, id: awaited },
         location.origin,
       );
+      unanswered = setTimeout(fallback, ANSWER_MS);
     });
   }
 
@@ -150,6 +161,7 @@
     if (event.source !== screenFrame?.contentWindow || event.origin !== location.origin) return;
     if (event.data?.type !== DRAWN_MESSAGE || awaited === undefined) return;
     if (event.data.id !== awaited) return;
+    clearTimeout(unanswered);
     screenShown = true;
     check();
   });

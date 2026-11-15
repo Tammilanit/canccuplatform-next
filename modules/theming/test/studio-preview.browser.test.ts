@@ -273,12 +273,19 @@ describe.skipIf(browser === undefined)(
     it("keeps Publish locked while the player has not drawn the draft", async () => {
       await heldDraft();
       const { page, posted } = await studio({ main: zoneState("Main", null, []) });
+      const publish = page.locator('.canccu-pagehead [data-action="publish"]');
       await expect.poll(() => posted("main")).toBeDefined();
       await expect.poll(() => surfacesShown(page)).toBe(true);
-      await page.waitForTimeout(300);
-      expect(await page.locator('.canccu-pagehead [data-action="publish"]').isDisabled()).toBe(
-        true,
-      );
+      await page.waitForTimeout(1000);
+      expect(await publish.isDisabled()).toBe(true);
+      // A player that never answers (one that refused the state, or a pinned bundle from before
+      // the answer) gives way to the Studio's sample screen, so Publish is never held for good.
+      const frame = page.locator("iframe[data-screen-preview]");
+      await expect
+        .poll(() => frame.getAttribute("src"), { timeout: 15_000 })
+        .toMatch(/^\/theming\/studio\/preview\/screen\?canccu_theme=draft/);
+      await expect.poll(() => publish.isDisabled()).toBe(false);
+      expect(await page.textContent(".canccu-studio-zone")).toBe("");
     });
 
     it("unlocks Publish once the player confirms it drew the draft", async () => {
