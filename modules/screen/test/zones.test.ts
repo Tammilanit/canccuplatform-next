@@ -273,6 +273,26 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
         name: "x",
         regions: { hero: { widgets: [{ widget: "clock", props: { a: {} } }] } },
       },
+      {
+        key: "ok",
+        name: "x",
+        regions: { hero: { widgets: [{ widget: "photo", props: { photo_seconds: 4 } }] } },
+      },
+      {
+        key: "ok",
+        name: "x",
+        regions: { hero: { widgets: [{ widget: "photo", props: { photo_seconds: 61 } }] } },
+      },
+      {
+        key: "ok",
+        name: "x",
+        regions: { hero: { widgets: [{ widget: "photo", props: { photo_seconds: 7.5 } }] } },
+      },
+      {
+        key: "ok",
+        name: "x",
+        regions: { hero: { widgets: [{ widget: "photo", props: { photo_seconds: "8" } }] } },
+      },
       { key: "ok", name: "x", regions: { hero: { hidden: "yes" } } },
       { key: "ok", name: "x", regions: { hero: { area: { column: 1, row: 1, columns: 2 } } } },
       {
@@ -301,6 +321,15 @@ describe.skipIf(!DATABASE_URL)("zones", () => {
       expect([res.statusCode, code(res)], JSON.stringify(body)).toEqual([400, "invalid_request"]);
     }
     expect((await zones()).map((z) => z.key)).not.toContain("ok");
+    const wall = (seconds: number) => ({
+      key: `wall-${seconds}`,
+      name: "x",
+      regions: { hero: { widgets: [{ widget: "photo", props: { photo_seconds: seconds } }] } },
+    });
+    for (const seconds of [5, 60]) {
+      const res = await call(h, "POST", "/api/screen/zones", { ...admin(), body: wall(seconds) });
+      expect(res.statusCode).toBe(201);
+    }
   });
 
   it("reads with screen.devices.read or screen.content.read, writes with screen.zones.write", async () => {
