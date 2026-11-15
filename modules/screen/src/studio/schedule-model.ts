@@ -210,9 +210,16 @@ function blocksOf(zone: ZoneCalendar, column: Column, input: ScheduleModelInput)
         boundTo: boundTo(window, input),
         column: 0,
         columns: 1,
-        losing: (losing.get(window.schedule_id) ?? []).filter(
-          (l) => l.startsAt < p.endsAt && l.endsAt > p.startsAt,
-        ),
+        // Stretches lost in a row merge across a run's end, so each is cut to this run's piece.
+        losing: (losing.get(window.schedule_id) ?? [])
+          .filter((l) => l.startsAt < p.endsAt && l.endsAt > p.startsAt)
+          .map((l) => ({
+            ...l,
+            startMinute: Math.max(l.startMinute, p.startMinute),
+            endMinute: Math.min(l.endMinute, p.endMinute),
+            startsAt: l.startsAt > p.startsAt ? l.startsAt : p.startsAt,
+            endsAt: l.endsAt < p.endsAt ? l.endsAt : p.endsAt,
+          })),
       });
     }
   }

@@ -15,15 +15,24 @@ import type { ViewContext } from "./views.js";
 /** Lines per side-panel list before "and N more": the panel stays readable on a phone. */
 const LIST_MAX = 6;
 
-/** "Thu 1 Jan 13:00–14:00"; an end at midnight is 24:00 of the day it ends, as the grid draws it. */
+/** "13:00–14:00"; an end at midnight is 24:00 of the day it ends, as the grid draws it. */
+export function timeSpan(c: ViewContext, s: Span): string {
+  return `${timeLabel(s.starts_at, c.timeZone)}–${endTime(c, s)}`;
+}
+
+function endTime(c: ViewContext, s: Span): string {
+  const time = timeLabel(s.ends_at, c.timeZone);
+  return time === "00:00" && s.ends_at > s.starts_at ? "24:00" : time;
+}
+
+/** "Thu 1 Jan 13:00–14:00"; an end at midnight is 24:00 of the day it ends. */
 export function when(c: ViewContext, s: Span): string {
   const day = (iso: string) => dayLabel(iso, c.timeZone);
-  const time = (iso: string) => timeLabel(iso, c.timeZone);
-  const start = `${day(s.starts_at)} ${time(s.starts_at)}`;
-  const midnight = time(s.ends_at) === "00:00" && s.ends_at > s.starts_at;
-  const endDay = midnight ? day(new Date(Date.parse(s.ends_at) - 1).toISOString()) : day(s.ends_at);
-  const endTime = midnight ? "24:00" : time(s.ends_at);
-  return `${start}–${endDay === day(s.starts_at) ? "" : `${endDay} `}${endTime}`;
+  const start = `${day(s.starts_at)} ${timeLabel(s.starts_at, c.timeZone)}`;
+  const end = endTime(c, s);
+  const endDay =
+    end === "24:00" ? day(new Date(Date.parse(s.ends_at) - 1).toISOString()) : day(s.ends_at);
+  return `${start}–${endDay === day(s.starts_at) ? "" : `${endDay} `}${end}`;
 }
 
 export function side(c: ViewContext, d: ScheduleViewData): Html {
