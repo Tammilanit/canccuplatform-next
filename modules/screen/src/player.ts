@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { eventPageCsp, newNonce, normalizeHost } from "@canccu/kit";
+import type { Logger } from "@canccu/kit";
 import { allowedOrigins, YOUTUBE_ORIGIN } from "./assets/links.js";
 import type { Db } from "./db.js";
 import type { Settings } from "./health.js";
@@ -28,6 +29,7 @@ export interface PlayerDeps {
   bundles: BundleStore;
   playerDir?: string;
   settings: Settings;
+  log?: Logger;
 }
 
 /**
@@ -96,9 +98,19 @@ export function playerRoutes(app: FastifyInstance, deps: PlayerDeps): void {
       throw err;
     }
   };
-  /** The event's pinned bundle while the store keeps it, else the platform's. */
+  /**
+   * The event's pinned bundle while the store keeps it, else the platform's. A pin that cannot be
+   * read (a database blip) is the platform's too: a kiosk reloading then still gets a page, where
+   * a 500 would leave it blank until its next try.
+   */
   const versionFor = async (): Promise<string> => {
-    const pinned = (await deps.db.tenant(readPin)).bundle_version;
+    const pinned = await deps.db.tenant(readPin).then(
+      (pin) => pin.bundle_version,
+      (err: unknown) => {
+        deps.log?.warn({ err }, "screen loader could not read the pin");
+        return null;
+      },
+    );
     if (pinned !== null && (await deps.bundles.available()).includes(pinned)) return pinned;
     return deps.bundles.current;
   };

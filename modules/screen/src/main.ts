@@ -43,6 +43,7 @@ import { TICK_MS, tickRunner } from "./tick/run.js";
 import type { SettingsDoc } from "./motion-routes.js";
 import { seedMainZone } from "./zones.js";
 import { ArtCache, edgeReader } from "./stage/art.js";
+import { serialTick } from "./tick/serial.js";
 
 const PORT = 8080;
 /** pg_advisory_lock key of the screen migrations; each module has its own. */
@@ -335,19 +336,8 @@ async function main(): Promise<void> {
     now: Date.now,
     log,
   });
-  let ticking = false;
-  const ticker = setInterval(() => {
-    // A slow step is never doubled up: the next second starts once this one is done.
-    if (ticking) return;
-    ticking = true;
-    Promise.all([tick(), pinTick()])
-      .catch((err: unknown) => {
-        log.warn({ err }, "screen tick failed");
-      })
-      .finally(() => {
-        ticking = false;
-      });
-  }, TICK_MS);
+  const tickRound = serialTick({ zones: tick, pins: pinTick }, log);
+  const ticker = setInterval(() => void tickRound(), TICK_MS);
 
   const stop = async (): Promise<void> => {
     clearInterval(sweep);
