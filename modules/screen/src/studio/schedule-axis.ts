@@ -20,6 +20,7 @@ export interface Axis {
 export const FULL_DAY: Axis = { startMinute: 0, endMinute: MINUTES_PER_DAY };
 
 const MINUTE_MS = 60_000;
+const HOUR_MS = 3_600_000;
 const DAY_MS = 86_400_000;
 const STEP = 15;
 const SLOTS = MINUTES_PER_DAY / STEP;
@@ -66,10 +67,12 @@ export function wallInstant(date: string, minute: number, timeZone: string): num
   const offsetAt = (ms: number) => localClock(new Date(ms), timeZone).offsetMinutes * MINUTE_MS;
   const found = wallMs - offsetAt(wallMs - offsetAt(wallMs));
   if (minuteFrom(date, found, timeZone) === minute) return found;
-  // A wall time the spring switch skips (in some zones midnight itself) lands before the switch;
-  // read with the offset from before it, it is the same time after the gap, so a day starts at
-  // its own first instant and never at the day before's 23:00.
-  return wallMs - offsetAt(found);
+  // A wall time the spring switch skips (in some zones midnight itself). The guess lands on either
+  // side of the switch, by the zone's side of UTC, so read the offset on both sides: the one from
+  // before the switch is the smaller, and read with it the wall time is the same time after the
+  // gap, so a day starts at its own first instant and never at the day before's 23:00. Switches
+  // lie months apart, so 6 hours each way reaches past the gap and to no other switch.
+  return wallMs - Math.min(offsetAt(found - 6 * HOUR_MS), offsetAt(found + 6 * HOUR_MS));
 }
 
 /** The instant a local date begins: its midnight. */

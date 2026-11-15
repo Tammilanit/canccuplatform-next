@@ -55,7 +55,18 @@ if (dialog && form) {
   async function act(method, url, body, done) {
     if (busy) return;
     setBusy(true);
-    const r = await api(method, url, body);
+    let r;
+    try {
+      r = await api(method, url, body);
+    } catch {
+      // A dropped network rejects the fetch: without this the controls would stay off until a
+      // reload, with nothing said.
+      setBusy(false);
+      error.textContent = say("error.failed");
+      error.hidden = false;
+      if (!dialog.open) show(say("error.failed"));
+      return;
+    }
     if (r.ok) {
       // Stays busy: the page is reloading, and nothing may act on what it showed.
       return reloadWith(say(done));

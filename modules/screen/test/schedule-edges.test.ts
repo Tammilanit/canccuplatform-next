@@ -95,6 +95,26 @@ describe("a day whose midnight is skipped", () => {
     );
   });
 
+  // East of UTC the first guess misses on the other side of the switch, and the offset found
+  // there is the one from after it.
+  test("east of UTC too, at 01:00 local on the asked date", () => {
+    // Africa/Cairo 2026: 23 April 22:00 UTC, midnight skipped (00:00 → 01:00, +02 → +03).
+    const cairo = dayStartMs("2026-04-24", "Africa/Cairo");
+    expect(new Date(cairo).toISOString()).toBe("2026-04-23T22:00:00.000Z");
+    expect(localDate(cairo, "Africa/Cairo")).toBe("2026-04-24");
+    // Asia/Beirut 2026: 28 March 22:00 UTC, midnight skipped (00:00 → 01:00, +02 → +03).
+    const beirut = dayStartMs("2026-03-29", "Asia/Beirut");
+    expect(new Date(beirut).toISOString()).toBe("2026-03-28T22:00:00.000Z");
+    expect(localDate(beirut, "Asia/Beirut")).toBe("2026-03-29");
+  });
+
+  test("a gap within the day reads the same time after it", () => {
+    // Europe/Paris 2026: 29 March 01:00 UTC, 02:00 → 03:00; 02:30 is 03:30 CEST.
+    expect(new Date(wallInstant("2026-03-29", 150, "Europe/Paris")).toISOString()).toBe(
+      "2026-03-29T01:30:00.000Z",
+    );
+  });
+
   test("its column starts there too", () => {
     expect(columnSpan("2026-03-08", FULL_DAY, HAVANA)).toEqual({
       starts_at: "2026-03-08T05:00:00.000Z",

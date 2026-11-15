@@ -130,6 +130,20 @@ describe("the window editor while a call runs", () => {
     expect(api).toHaveBeenCalledTimes(2);
   });
 
+  it("says so and takes Save again after the network drops", async () => {
+    api.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    $("[data-window-edit]").click();
+    submit();
+    await settle();
+    expect(save().disabled).toBe(false);
+    expect(remove().disabled).toBe(false);
+    const error = $("[data-window-error]");
+    expect(error.hidden).toBe(false);
+    expect(error.textContent).toBe("error.failed");
+    submit();
+    expect(api).toHaveBeenCalledTimes(2);
+  });
+
   it("keeps everything off after a save that reloads the page", async () => {
     $("[data-window-edit]").click();
     submit();
