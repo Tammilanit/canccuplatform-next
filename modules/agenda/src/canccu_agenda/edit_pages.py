@@ -206,7 +206,11 @@ async def show_now_save(request: Request) -> Response:
     inverse = Inverse()
     if minutes:
         revision = model.revision(as_int(form.get("revision")))
-        await edits.delay(d, session, row["id"], revision, -minutes, False, inverse=inverse)
+        # Quiet: screens show it at once, and "Announce it too" is the one way people are told,
+        # so they never get a "moved" push besides (or instead of) the announcement.
+        await edits.delay(
+            d, session, row["id"], revision, -minutes, False, announce=False, inverse=inverse
+        )
     # Saved before the announcement: the move has happened whatever the announcement does, so its
     # undo is offered either way. An announcement cannot be taken back.
     undo_id = await undo.save(d, session, inverse)

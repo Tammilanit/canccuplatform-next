@@ -28,7 +28,7 @@ from .deps import Deps, deps
 from .effective import read_channels
 from .inverse import Inverse
 from .item_pages import load_item
-from .preview import change_of, confirm_rows, the_day, told, when_moved
+from .preview import change_of, confirm_rows, moved_line, the_day, told, when_moved
 from .web import (
     BASE,
     button,
@@ -98,9 +98,12 @@ def facts(
         when = _time(starts, row["starts_at"], tz)
         if ends is not None:
             when += f", ends {esc(when_moved(ends, starts, tz))}"
+    # A following item that is running keeps its start: what moves is its end.
     others = [
-        f"{esc(r['title'])} {_time(s, r['starts_at'], tz)}"
-        for r, s, _ in plan.moves
+        esc(moved_line(r, s, e, tz))
+        if s == r["starts_at"]
+        else f"{esc(r['title'])} {_time(s, r['starts_at'], tz)}"
+        for r, s, e in plan.moves
         if r["id"] != row["id"]
     ]
     also = " · ".join(others) or "Nothing else moves."
@@ -114,8 +117,8 @@ def facts(
 
 
 async def preview(request: Request, row: Any, minutes: int) -> str:
-    """The rows of a told delay of this item alone: "show on screens now" brings it forward with
-    one."""
+    """The rows of a quiet delay of this item alone: "show on screens now" brings it forward with
+    one, and only its announcement tells people."""
     d = deps(request)
     now = d.now()
     plans, _, kinds = await _plans(d, row, minutes, [False], now)
@@ -123,7 +126,7 @@ async def preview(request: Request, row: Any, minutes: int) -> str:
     if isinstance(plan, KitError):
         raise plan
     channels = await read_channels(d)
-    return confirm_rows(facts(plan, row, kinds, channels, zone_of(request), now, True))
+    return confirm_rows(facts(plan, row, kinds, channels, zone_of(request), now, False))
 
 
 def _label(minutes: int, count: int, told_: bool) -> str:
