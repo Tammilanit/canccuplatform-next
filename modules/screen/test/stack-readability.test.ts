@@ -1,7 +1,7 @@
 // The readability check of the CI screenshots (#191, L7): its rules on samples the browser
 // collects, held here without a stack or a browser.
 import { describe, expect, it } from "vitest";
-import { contrast, grounds, judge, parseColors } from "./stack/readability.mjs";
+import { contrast, grounds, judge, judgePage, parseColors } from "./stack/readability.mjs";
 import type { Sample } from "./stack/readability.mjs";
 
 const WHITE = [255, 255, 255, 1];
@@ -28,6 +28,20 @@ describe("the readability check", () => {
       [255, 127.5, 0, 0.25],
     ]);
     expect(parseColors("none")).toEqual([]);
+  });
+
+  it("reads oklab() and oklch(), which Chrome keeps in computed values", () => {
+    const near = (got: number[][], want: number[]) => {
+      expect(got).toHaveLength(1);
+      want.forEach((v, i) => {
+        expect(got[0]?.[i]).toBeCloseTo(v, 0);
+      });
+    };
+    near(parseColors("oklch(0.627955 0.257683 29.2339)"), [255, 0, 0, 1]);
+    near(parseColors("oklch(62.7955% 0.257683 29.2339 / 0.5)"), [255, 0, 0, 0.5]);
+    near(parseColors("oklab(0.627955 0.224863 0.125846)"), [255, 0, 0, 1]);
+    near(parseColors("oklch(1 0 none)"), [255, 255, 255, 1]);
+    expect(parseColors("linear-gradient(oklch(0 0 0), rgb(1, 2, 3))")).toHaveLength(2);
   });
 
   it("measures contrast as WCAG does", () => {
@@ -81,5 +95,33 @@ describe("the readability check", () => {
     const [problem] = judge([sample({ text: "Wi-Fi", where: "section.canccu-region--venue_rail > p", fontPx: 12 })], viewport, tokens); // prettier-ignore
     expect(problem).toContain('"Wi-Fi"');
     expect(problem).toContain("section.canccu-region--venue_rail > p");
+  });
+
+  it("measures a theme's oklch() token and text, never a default black (#549)", () => {
+    const page = (color: string, primary: string) => ({
+      samples: [{ text: "Dinner", where: "main > p", fontPx: 40, color, layers: [{ color: "rgb(15, 23, 42)", image: "none" }] }],
+      tokens: { primary, accent: "" },
+      viewport,
+    }); // prettier-ignore
+    // Near white on the dark ground: read as black it failed at 1.2:1.
+    expect(judgePage(page("oklch(0.98 0 0)", ""))).toEqual([]);
+    // A mid blue, 3.6:1 on the ground: enough only as the theme's primary.
+    const blue = "oklch(0.55 0.15 255)";
+    expect(judgePage(page(blue, blue))).toEqual([]);
+    expect(judgePage(page(blue, "oklch(0.7 0.15 60)"))[0]).toContain("under 4.5:1");
+  });
+
+  it("reports a colour it cannot read instead of guessing one", () => {
+    const problems = judgePage({
+      samples: [{ text: "Dinner", where: "main > p", fontPx: 40, color: "color(display-p3 1 1 1)", layers: [{ color: "rgb(15, 23, 42)", image: "none" }] }],
+      tokens: { primary: "lab(50 40 30)" },
+      viewport,
+    }); // prettier-ignore
+    expect(problems).toEqual([
+      'the theme\'s primary: cannot read the colour "lab(50 40 30)"',
+      '"Dinner" at main > p: cannot read the colour "color(display-p3 1 1 1)"',
+    ]);
+    const token = judgePage({ samples: [], tokens: { primary: "lab(50 40 30)" }, viewport });
+    expect(token).toEqual(['the theme\'s primary: cannot read the colour "lab(50 40 30)"']);
   });
 });

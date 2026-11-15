@@ -11,33 +11,79 @@
 //   ends on purpose is fine: an ellipsis or a line clamp cuts inside the text's own box, and a
 //   marquee's text runs through its box while an endless animation moves it.
 
-/** Every colour in a computed CSS value, as [r, g, b, a] with r, g, b in 0–255. */
-export function parseColors(value) {
-  const out = [];
-  const re = /rgba?\(([^)]*)\)|color\(srgb ([^)]*)\)|#([0-9a-f]{3,8})\b/gi;
-  for (const m of String(value).matchAll(re)) {
-    if (m[1] !== undefined) {
-      const [r, g, b, a = 1] = m[1]
-        .split(/[\s,/]+/)
-        .filter(Boolean)
-        .map(Number);
-      out.push([r, g, b, a]);
-    } else if (m[2] !== undefined) {
-      const [rgb, alpha] = m[2].split("/");
-      const [r, g, b] = rgb
-        .trim()
-        .split(/\s+/)
-        .map((v) => Number(v) * 255);
-      out.push([r, g, b, alpha === undefined ? 1 : Number(alpha)]);
-    } else {
-      let hex = m[3];
-      if (hex.length <= 4) hex = [...hex].map((c) => c + c).join("");
-      const n = (i) => parseInt(hex.slice(i, i + 2), 16);
-      out.push([n(0), n(2), n(4), hex.length === 8 ? n(6) / 255 : 1]);
-    }
-  }
-  return out;
+// The colour functions a computed value may hold. Chrome resolves named colours, hsl() and hwb()
+// to rgb(), but keeps oklab(), oklch(), lab(), lch() and color() as written (CSS Color 4), so one
+// read as black or transparent let unreadable text pass (#549). What is not read here is reported.
+const COLOR =
+  /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\([^()]*\)|\bcolor-mix\(/gi;
+
+/** A number of a colour function: `none` is 0, a percentage a share of `full`. */
+const num = (v, full = 1) =>
+  v === "none" ? 0 : v.endsWith("%") ? (parseFloat(v) / 100) * full : Number(v);
+
+/** Linear-light sRGB, 0–1, as [r, g, b] in 0–255, out-of-gamut channels clipped. */
+const encoded = (rgb) =>
+  rgb.map((c) => {
+    const v = Math.min(1, Math.max(0, c));
+    return 255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055);
+  });
+
+/** OKLab to sRGB (Björn Ottosson's matrices, as CSS Color 4 gives them). */
+function fromOklab(L, a, b) {
+  const [l, m, s] = [
+    L + 0.3963377774 * a + 0.2158037573 * b,
+    L - 0.1055613458 * a - 0.0638541728 * b,
+    L - 0.0894841775 * a - 1.291485548 * b,
+  ].map((v) => v ** 3);
+  return encoded([
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ]);
 }
+
+/** One colour as [r, g, b, a] with r, g, b in 0–255; null for one this check cannot read. */
+export function readColor(value) {
+  const text = String(value).trim();
+  const hex = /^#([0-9a-f]{3,8})$/i.exec(text)?.[1];
+  if (hex !== undefined) {
+    const full = hex.length <= 4 ? [...hex].map((c) => c + c).join("") : hex;
+    const n = (i) => parseInt(full.slice(i, i + 2), 16);
+    return [n(0), n(2), n(4), full.length === 8 ? n(6) / 255 : 1];
+  }
+  const m = /^([a-z]+)\(([^()]*)\)$/i.exec(text);
+  if (m === null) return null;
+  const [body, alpha] = m[2].split("/");
+  const args = body.split(/[\s,]+/).filter(Boolean);
+  const name = m[1].toLowerCase();
+  let rgb = null;
+  let a = alpha === undefined ? 1 : num(alpha.trim());
+  if (name === "rgb" || name === "rgba") {
+    rgb = args.slice(0, 3).map((v) => num(v, 255));
+    if (args[3] !== undefined) a = num(args[3]);
+  } else if (name === "color" && args[0] === "srgb")
+    rgb = args.slice(1, 4).map((v) => num(v) * 255);
+  else if (name === "oklab") rgb = fromOklab(num(args[0]), num(args[1], 0.4), num(args[2], 0.4));
+  else if (name === "oklch") {
+    const [c, h] = [num(args[1], 0.4), (num(args[2]) * Math.PI) / 180];
+    rgb = fromOklab(num(args[0]), c * Math.cos(h), c * Math.sin(h));
+  }
+  if (rgb === null || rgb.length !== 3 || [...rgb, a].some((v) => !Number.isFinite(v))) return null;
+  return [...rgb, a];
+}
+
+/** Every colour written in a computed CSS value, as it stands there. */
+const colorsIn = (value) => [...String(value).matchAll(COLOR)].map((m) => m[0]);
+
+/** Every colour in a computed CSS value this check can read, as readColor() gives it. */
+export function parseColors(value) {
+  return colorsIn(value)
+    .map(readColor)
+    .filter((c) => c !== null);
+}
+
+/** The colours in a computed CSS value this check cannot read. */
+export const unreadColors = (value) => colorsIn(value).filter((c) => readColor(c) === null);
 
 /** `top` painted over the opaque `under`. */
 function over(top, under) {
@@ -85,6 +131,11 @@ export function judge(samples, viewport, tokens) {
     if (s.fontPx < minPx - 0.05) {
       problems.push(`${what}: ${round1(s.fontPx)} px, under ${round1(minPx)} px`);
     }
+    // A colour not read has no contrast to measure: the problem is that, not a guessed ratio.
+    if (s.unread?.length) {
+      for (const c of s.unread) problems.push(`${what}: cannot read the colour "${c}"`);
+      continue;
+    }
     const need = accents.some((t) => near(t, s.color)) ? 3 : 4.5;
     const worst = Math.min(...grounds(s.layers).map((g) => contrast(over(s.color, g), g)));
     if (worst < need) {
@@ -96,21 +147,31 @@ export function judge(samples, viewport, tokens) {
 
 /** judge() of what collectSamples() answered in the page. */
 export function judgePage(page) {
-  const samples = page.samples.map((s) => ({
-    ...s,
-    color: parseColors(s.color)[0] ?? [0, 0, 0, 1],
-    layers: s.layers.map((l) => ({
-      color: parseColors(l.color)[0] ?? [0, 0, 0, 0],
-      stops: /gradient/.test(l.image) ? parseColors(l.image) : [],
-    })),
-  }));
-  const tokens = Object.fromEntries(
-    Object.entries(page.tokens).flatMap(([k, v]) => {
-      const [c] = parseColors(v);
-      return c === undefined ? [] : [[k, c]];
-    }),
-  );
-  return judge(samples, page.viewport, tokens);
+  const samples = page.samples.map((s) => {
+    const values = [s.color, ...s.layers.flatMap((l) => [l.color, l.image])];
+    return {
+      ...s,
+      color: readColor(s.color) ?? [0, 0, 0, 1],
+      layers: s.layers.map((l) => ({
+        color: readColor(l.color) ?? [0, 0, 0, 0],
+        stops: /gradient/.test(l.image) ? parseColors(l.image) : [],
+      })),
+      unread: [
+        ...(readColor(s.color) === null ? [s.color] : []),
+        ...values.slice(1).flatMap(unreadColors),
+      ],
+    };
+  });
+  const problems = [];
+  const tokens = {};
+  for (const [k, v] of Object.entries(page.tokens)) {
+    // An unset token is no accent; one set but not read is a problem of its own.
+    if (v === "") continue;
+    const c = readColor(v);
+    if (c === null) problems.push(`the theme's ${k}: cannot read the colour "${v}"`);
+    else tokens[k] = c;
+  }
+  return [...problems, ...judge(samples, page.viewport, tokens)];
 }
 
 /**
@@ -121,7 +182,8 @@ export function judgePage(page) {
 export function collectSamples() {
   const vw = innerWidth;
   const vh = innerHeight;
-  const opaque = (c) => /^rgb\(/.test(c) || (/^color\(/.test(c) && !c.includes("/"));
+  // Chrome writes a colour with alpha as rgba() or with a "/ alpha" part.
+  const opaque = (c) => /^(rgb|color|oklab|oklch|lab|lch)\(/.test(c) && !c.includes("/");
   const where = (el) => {
     const parts = [];
     for (let n = el; n && n !== document.body && parts.length < 4; n = n.parentElement) {
@@ -198,8 +260,18 @@ export function collectSamples() {
   }
   const root = getComputedStyle(document.documentElement);
   const names = ["primary", "accent", "status-ok", "status-degraded", "status-down"];
+  // A token is what its theme wrote, a var() or a named colour too: a probe's computed colour
+  // resolves it as the browser does, so the judge reads what the text is drawn in.
+  const probe = document.createElement("span");
+  probe.hidden = true;
+  document.documentElement.append(probe);
   const tokens = Object.fromEntries(
-    names.map((k) => [k, root.getPropertyValue(`--canccu-color-${k}`).trim()]),
+    names.map((k) => {
+      if (root.getPropertyValue(`--canccu-color-${k}`).trim() === "") return [k, ""];
+      probe.style.color = `var(--canccu-color-${k})`;
+      return [k, getComputedStyle(probe).color];
+    }),
   );
+  probe.remove();
   return { samples, tokens, viewport: { width: vw, height: vh } };
 }
