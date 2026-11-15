@@ -13,6 +13,8 @@ export interface Sample {
   color: Rgba;
   /** The backgrounds under the text, outermost first. */
   layers: Layer[];
+  /** The colours of the text and its grounds the check could not read (readability.mjs, judgePage). */
+  unread?: string[];
 }
 export interface Viewport {
   width: number;
@@ -26,7 +28,9 @@ export interface PageSamples {
   tokens: Record<string, string>;
   viewport: Viewport;
 }
+export function readColor(value: string): Rgba | null;
 export function parseColors(value: string): Rgba[];
+export function unreadColors(value: string): string[];
 export function contrast(a: Rgba, b: Rgba): number;
 export function grounds(layers: Layer[]): Rgba[];
 export function judge(

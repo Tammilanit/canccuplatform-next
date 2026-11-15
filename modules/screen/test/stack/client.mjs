@@ -78,7 +78,9 @@ export function event(host) {
     return { id: paired.body.id, cookie };
   }
 
-  const revoke = (id) => call("POST", `/api/screen/devices/${id}/revoke`).catch(() => undefined);
+  // A failed cleanup fails the check (docs/ci.md, Screenshots): a device left paired plays on.
+  const revoke = async (id) =>
+    expect(await call("POST", `/api/screen/devices/${id}/revoke`), 204, `revoking device ${id}`);
   const setTicker = async (text) =>
     expect(await call("PUT", "/api/screen/ticker", { body: { text, until: null } }), 200, "ticker");
 

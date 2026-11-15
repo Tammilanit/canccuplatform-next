@@ -269,7 +269,7 @@ def test_a_front_page_carries_the_privacy_tag_last() -> None:
 def test_initials_are_the_avatars_letters() -> None:
     from canccu_kit.ui import initials
 
-    assert initials("aino  virtanen  ii") == "AV"
+    assert initials("demo  player  ii") == "DP"
     assert initials("🎮 Night") == "🎮N"
     assert initials("   ") == "?"
 
