@@ -256,6 +256,15 @@ export function withSmallShowcase(s) {
 }
 
 /**
+ * A showcase in a hero that cannot grow (Portrait's, a whole screen wide; Ambient's, ten columns
+ * of twelve): the spotlight in the hero as it is, at the large type of a large hero (#546).
+ */
+export function withHeroShowcase(s) {
+  const spotlight = claim("hero", "announcement", { title: "Grand final on stage", body: "Seats open 20:30 · bring your own headset", level: "info" }); // prettier-ignore
+  return { ...s, regions: s.regions.map((r) => (r.role === "hero" ? { ...r, claim: spotlight } : r)) }; // prettier-ignore
+}
+
+/**
  * The rail held on its `pick` widget, so it never turns during the shot. Empty as the player
  * takes it (`agendaOf`, player/src/hero-rail.ts): only `empty: true`, so the two cannot drift.
  */

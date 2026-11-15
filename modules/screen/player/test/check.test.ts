@@ -97,6 +97,29 @@ describe("the kiosk check", () => {
     expect(document.querySelector("button.canccu-selfcheck__unlock")).not.toBeNull();
   });
 
+  it("shows the server's time in its header once measured, and keeps it going (#546)", async () => {
+    // This kiosk's clock is ten minutes behind the server's (12:00 UTC in the state).
+    vi.useFakeTimers({ now: Date.parse("2026-01-01T11:50:00Z") });
+    try {
+      const api = new FakeApi().on("GET /api/screen/device/state", () => json(200, screenState()));
+      document.body.replaceChildren();
+      await new CheckPage({
+        fetch: api.fetch,
+        root: document.body,
+        bundle: "1.2.3",
+        viewport: () => good.viewport,
+        offline: () => good.offline,
+      }).start();
+      const clock = () => document.querySelector(".canccu-frame__clock")?.textContent;
+      expect(clock()).toBe("12:00");
+      expect(document.querySelector(".canccu-frame__date")?.textContent).toBe("Thu 1 Jan");
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(clock()).toBe("12:01");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("checks again only once the last check ended, and a late answer never lands over a newer one", async () => {
     vi.useFakeTimers();
     try {

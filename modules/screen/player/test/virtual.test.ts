@@ -4,6 +4,7 @@
  * person over the zone's own paths, without a heartbeat, and a preview posted by the framing page.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { clockText, dateText } from "../src/frames.js";
 import { PREVIEW_MESSAGE, VirtualScreen } from "../src/virtual.js";
 import { FakeApi, json, problem, screenState } from "./fake.js";
 
@@ -144,6 +145,16 @@ describe("the virtual screen", () => {
       expect(api.calls).not.toContain(`GET ${ZONE_STREAM}`);
     });
   }
+
+  it("dates and clocks the header of a frame it shows, and keeps it going (#546)", async () => {
+    const api = new FakeApi().on(`GET ${ZONE_STATE}`, () => problem(403, "forbidden"));
+    await setup(api).start();
+    const clock = () => document.body.querySelector(".canccu-frame__clock")?.textContent;
+    expect(clock()).toBe(clockText(T0));
+    expect(document.body.querySelector(".canccu-frame__date")?.textContent).toBe(dateText(T0));
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(clock()).toBe(clockText(T0 + 60_000));
+  });
 
   it("retries while the server does not answer", async () => {
     let up = false;
