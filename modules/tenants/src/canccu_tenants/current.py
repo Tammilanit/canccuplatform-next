@@ -76,7 +76,7 @@ async def get_flags(request: Request) -> Response:
     d, ctx = deps(request), tenant_of(request)
     if ctx["status"] == "draft":
         session = await d.caller.session(request)
-        if not await d.caller.can(ctx, session, "tenants.flags.write"):
+        if not await d.caller.is_member(ctx, session):
             raise KitError("not open yet", status=403, code="info_pages_closed")
     async with d.db.tenant() as conn:
         row = await core.tenant_row(conn, ctx["tenant_id"])

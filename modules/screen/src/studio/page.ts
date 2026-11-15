@@ -68,7 +68,9 @@ export function pageNeeds(
 
 export async function eventOf(request: FastifyRequest, deps: StudioDeps): Promise<EventInfo> {
   const ctx = tenantOf(request);
-  const e = await deps.publicEvent?.(request.headers.host).catch(() => null);
+  const e = await deps
+    .publicEvent?.(request.headers.host, request.headers.cookie)
+    .catch(() => null);
   return {
     name: e?.name,
     status: ctx.status,

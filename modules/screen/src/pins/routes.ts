@@ -38,7 +38,8 @@ export interface PinDeps {
   audit: Audit;
   sources: Pick<Sources, "theme" | "themeRevision">;
   bundles: BundleStore;
-  publicEvent?: ((host: string | undefined) => Promise<PublicEvent | null>) | undefined;
+  publicEvent?:
+    ((host: string | undefined, cookie?: string) => Promise<PublicEvent | null>) | undefined;
   now?: () => number;
 }
 
@@ -87,7 +88,9 @@ async function untilInput(
   const ms = typeof value === "string" ? Date.parse(value) : NaN;
   if (Number.isNaN(ms)) throw invalidRequest("`until` must be a date and time, or null.");
   if (ms <= nowMs) throw invalidRequest("`until` must be in the future.");
-  const event = await deps.publicEvent?.(request.headers.host).catch(() => null);
+  const event = await deps
+    .publicEvent?.(request.headers.host, request.headers.cookie)
+    .catch(() => null);
   const ends = event?.ends_at ? Date.parse(event.ends_at) : NaN;
   const cap = Math.max(nowMs + DAYS_14_MS, Number.isNaN(ends) ? 0 : ends);
   if (ms > cap) {

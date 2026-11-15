@@ -34,6 +34,15 @@ async def test_pages_are_in_the_shell_with_the_event_and_menu(
     assert (await world.client.get("/admin/static/ui.css")).text.startswith("/* @canccu/ui")
 
 
+async def test_a_draft_event_s_header_names_it_to_its_organiser(
+    world: World, caplog: pytest.LogCaptureFixture
+) -> None:
+    world.event["status"] = "draft"
+    owner, _ = await owner_and_member(world, caplog)
+    r = await world.browser(owner).get("/admin/settings")
+    assert '<span class="canccu-header__title">Demo Event</span>' in r.text
+
+
 async def test_settings_fields_have_units_and_hints(
     world: World, caplog: pytest.LogCaptureFixture
 ) -> None:

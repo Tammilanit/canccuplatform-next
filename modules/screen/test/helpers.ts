@@ -233,7 +233,12 @@ export async function harness(options: { saves?: boolean } = {}): Promise<Harnes
     bundleVersion: "test",
     playerDir,
     streamPingMs: 200,
-    publicEvent: (host) => Promise.resolve(publicEvents[host ?? ""] ?? null),
+    publicEvent: (host, cookie) => {
+      const e = publicEvents[host ?? ""] ?? null;
+      // As tenants hides a draft from guests; it names it to a member's session.
+      const hidden = e?.status === "draft" && !cookie;
+      return Promise.resolve(hidden ? { id: e.id, status: e.status } : e);
+    },
     art: new ArtCache(kv, (_host, path) => {
       coverReads.push(path);
       return Promise.resolve(covers[path] ?? null);

@@ -72,8 +72,12 @@ export interface StudioDeps extends Omit<ContentDeps, "now"> {
   /** The module's own settings: simulate's break gap, for "what plays at…". */
   settings: Settings;
   log?: Logger | undefined;
-  /** Names the event in the shell's header; without it the header shows what the tenant says. */
-  publicEvent?: ((host: string | undefined) => Promise<PublicEvent | null>) | undefined;
+  /**
+   * Names the event in the shell's header; without it the header shows what the tenant says. The
+   * request's cookie goes along, so a draft event is named to its members.
+   */
+  publicEvent?:
+    ((host: string | undefined, cookie?: string) => Promise<PublicEvent | null>) | undefined;
   now?: () => number;
 }
 
@@ -280,7 +284,9 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
         const c = await context(request);
         const ctx = tenantOf(request);
         const pin = await deps.db.tenant(readPin);
-        const event = await deps.publicEvent?.(request.headers.host).catch(() => null);
+        const event = await deps
+          .publicEvent?.(request.headers.host, request.headers.cookie)
+          .catch(() => null);
         return page(request, reply, c, {
           title: "",
           tab: "pins",

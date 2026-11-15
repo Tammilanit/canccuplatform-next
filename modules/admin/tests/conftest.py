@@ -75,6 +75,9 @@ def fake_resolver(
             known = hosts.get(request.headers["host"])
             body = {"id": known, "name": "Demo Event", "status": "live", "time_zone": "UTC"}
             body |= event or {}
+            if body["status"] == "draft" and "cookie" not in request.headers:
+                # As tenants hides a draft from guests; it names it to a member's session.
+                body = {"id": known, "status": "draft"}
             return httpx.Response(200 if known else 404, json=body)
         by_id = request.url.path.removeprefix("/internal/tenants/tenants/")
         if by_id != request.url.path:

@@ -227,7 +227,7 @@ async function main(): Promise<void> {
       AdminClient.raiseForError(response);
       return response.body as SettingsDoc;
     },
-    publicEvent: (host) => tenants.event(host),
+    publicEvent: (host, cookie) => tenants.event(host, cookie),
     sources,
     bundleVersion: config.version,
     bundles,

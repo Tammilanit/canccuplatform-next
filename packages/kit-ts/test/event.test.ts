@@ -15,7 +15,12 @@ const server = createServer((req, res) => {
   });
   res.statusCode = status;
   res.setHeader("content-type", "application/json");
-  const event = { id: "demo", name: "Demo Event", status: draft ? "draft" : "live", time_zone: "UTC" };
+  const event = {
+    id: "demo",
+    name: "Demo Event",
+    status: draft ? "draft" : "live",
+    time_zone: "UTC",
+  };
   // As tenants answers a draft event: its name only to a member's session.
   const member = req.headers.cookie === "canccu_session=member";
   res.end(JSON.stringify(draft && !member ? { id: "demo", status: "draft" } : event));
