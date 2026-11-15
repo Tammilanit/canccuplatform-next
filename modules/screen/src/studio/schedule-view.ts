@@ -18,7 +18,7 @@ import { placement } from "./calendar-pointer.js";
 import type { MessageKey } from "./messages.js";
 import type { ScheduleBlock, ScheduleModel } from "./schedule-model.js";
 import type { EditorView } from "./schedule-editor.js";
-import { side, when } from "./schedule-side.js";
+import { side, timeSpan, when } from "./schedule-side.js";
 import { STUDIO } from "./views.js";
 import type { ViewContext, ZoneSummary } from "./views.js";
 
@@ -238,7 +238,7 @@ function grid(c: ViewContext, d: ScheduleViewData, place: Place, rules: string[]
   >
     <div
       id="${ID}0"
-      class="canccu-sched__grid${many ? " canccu-sched__grid--lanes" : ""}"
+      class="canccu-sched__grid${many ? " canccu-sched__grid--lanes" : ""}${d.editor === null ? "" : " canccu-sched__grid--edit"}"
       data-axis="${model.axis.startMinute} ${model.axis.endMinute}"
     >
       <div class="canccu-sched__gutter">
@@ -261,13 +261,12 @@ function blockView(
   editable: boolean,
 ): Html {
   const { t } = c;
-  const time = (iso: string) => timeLabel(iso, c.timeZone);
   const id = next();
   const pop = `${id}-about`;
   place(id, block.startMinute, block.endMinute, {
     across: [(block.column / block.columns) * 100, 100 / block.columns],
   });
-  const span = `${time(block.startsAt)}–${time(block.endsAt)}`;
+  const span = timeSpan(c, { starts_at: block.startsAt, ends_at: block.endsAt });
   const opening = block.losing[0]?.startsAt === block.startsAt ? block.losing[0] : undefined;
   const second = [
     t("schedule.priority", { n: block.priority }),
@@ -283,7 +282,7 @@ function blockView(
   });
   const losing = block.losing.map((l) =>
     t("schedule.loses_at", {
-      when: `${time(l.startsAt)}–${time(l.endsAt)}`,
+      when: timeSpan(c, { starts_at: l.startsAt, ends_at: l.endsAt }),
       playlist: l.to,
       rule: t(`schedule.lost.${l.lostOn}`),
     }),

@@ -92,7 +92,7 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
   it("keeps a window's layout the page no longer offers, so a plain Save does not change it", async () => {
     const editor = editorOf(tight((await page("/admin/screen/schedule", "editor")).body));
     expect(editor).toContain(
-      '<option value="dropped" hidden>Its current layout (not offered)</option>',
+      '<option value="dropped" hidden disabled>Its current layout (not offered)</option>',
     );
     expect(editor.match(/value="dropped"/g)).toHaveLength(1);
     // Every playlist the windows play is offered, so none is kept hidden.
@@ -165,7 +165,7 @@ describe.skipIf(!DATABASE_URL)("studio schedule editor", () => {
     const crew = editorOf(tight((await page("/admin/screen/schedule", "crewwriter")).body));
     expect(crew).toMatch(/<option value="it_brief">Crew briefing · Thu 1 Jan 13:00<\/option>/);
     const plain = editorOf(tight((await page("/admin/screen/schedule", "editor")).body));
-    expect(plain).toContain('<option value="it_brief" hidden>A crew item</option>');
+    expect(plain).toContain('<option value="it_brief" hidden disabled>A crew item</option>');
   });
 
   it("keeps the editor from readers: no button, no form, no window data, no drag", async () => {

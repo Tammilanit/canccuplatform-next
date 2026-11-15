@@ -31,7 +31,16 @@ if (dialog && form) {
   const f = form.elements;
   const error = form.querySelector("[data-window-error]");
   const remove = form.querySelector("[data-window-delete]");
+  const save = dialog.querySelector('[type="submit"]');
   const title = form.querySelector("#canccu-sched-editor-title");
+  // True while a call runs: a second Save, Delete or drag meanwhile would send a second POST
+  // and create a duplicate window, so they wait for the answer.
+  let busy = false;
+  const setBusy = (on) => {
+    busy = on;
+    save.disabled = on;
+    remove.disabled = on;
+  };
 
   const conflict = () => {
     const again = Object.assign(document.createElement("button"), {
@@ -44,18 +53,32 @@ if (dialog && form) {
   };
   /** The API's answer as words on the page, or a reload with the done message carried over. */
   async function act(method, url, body, done) {
-    const r = await api(method, url, body);
+    if (busy) return;
+    setBusy(true);
+    let r;
+    try {
+      r = await api(method, url, body);
+    } catch {
+      // A dropped network rejects the fetch: without this the controls would stay off until a
+      // reload, with nothing said.
+      setBusy(false);
+      error.textContent = say("error.failed");
+      error.hidden = false;
+      if (!dialog.open) show(say("error.failed"));
+      return;
+    }
+    if (r.ok) {
+      // Stays busy: the page is reloading, and nothing may act on what it showed.
+      return reloadWith(say(done));
+    }
+    setBusy(false);
     if (r.status === 409 || (r.status === 404 && method !== "POST")) {
       dialog.close();
       return conflict();
     }
-    if (!r.ok) {
-      error.textContent = failure(r);
-      error.hidden = false;
-      if (!dialog.open) show(failure(r));
-      return;
-    }
-    reloadWith(say(done));
+    error.textContent = failure(r);
+    error.hidden = false;
+    if (!dialog.open) show(failure(r));
   }
 
   const kindShown = () => {
@@ -110,6 +133,7 @@ if (dialog && form) {
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (busy) return;
     const days = [...f.days].filter((box) => box.checked).map((box) => box.value);
     const fields = Object.fromEntries(
       [
@@ -144,6 +168,7 @@ if (dialog && form) {
     remove.textContent = label;
   }
   remove.addEventListener("click", () => {
+    if (busy) return;
     if (remove.dataset.armed !== "1") {
       remove.dataset.armed = "1";
       remove.textContent = remove.dataset.confirm;
@@ -168,7 +193,7 @@ if (dialog && form) {
     let swallow = false;
 
     grid.addEventListener("pointerdown", (event) => {
-      if (event.pointerType === "touch" || event.button !== 0) return;
+      if (busy || event.pointerType === "touch" || event.button !== 0) return;
       const body = event.target.closest(".canccu-sched__body");
       const block = event.target.closest("[data-window]");
       if (!body || (block && !block.hasAttribute("data-drag"))) return;

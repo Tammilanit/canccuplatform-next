@@ -55,7 +55,7 @@ export interface Answer extends Simulation {
   /** The hero's item then, 1-based; `empty` when nothing in it plays; null for a past time. */
   item: { index: number; count: number } | "empty" | null;
   /** The rail's run of show then; null when the agenda could not be read. */
-  rail: { now: AgendaItem[]; next: AgendaItem | null } | null;
+  rail: { now: AgendaItem[]; next: AgendaItem[] } | null;
   ticker: TickerNow;
   /** The next break after the asked time; null without one ahead, or for a past time. */
   nextBreak: { at: string; seconds: number } | null;

@@ -8,7 +8,7 @@ import type { Db } from "./db.js";
 import { requireDevice } from "./device-access.js";
 import { recordHeartbeat } from "./health.js";
 import type { Beat, NowPlaying, Settings, Viewport } from "./health.js";
-import { body, invalidRequest } from "./http.js";
+import { body, invalidRequest, rfc3339Ms } from "./http.js";
 import type { Kv } from "./kv.js";
 
 const INSTANCE_ID_RE = /^[A-Za-z0-9_-]{16,64}$/;
@@ -54,9 +54,7 @@ function viewport(v: unknown): Viewport | undefined {
 
 function clientTime(v: unknown): number | undefined {
   if (v === undefined) return undefined;
-  // An RFC 3339 time: Date.parse alone would also take "2026" or a local time without offset.
-  const rfc3339 = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?(Z|[+-]\d\d:\d\d)$/;
-  const ms = typeof v === "string" && rfc3339.test(v) ? Date.parse(v) : NaN;
+  const ms = rfc3339Ms(v);
   return Number.isNaN(ms) ? fail("client_time") : ms;
 }
 

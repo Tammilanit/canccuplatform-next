@@ -20,7 +20,7 @@ import { buildRegions } from "./build.js";
 import { stageOf } from "./stage.js";
 import type { ArtCache } from "../stage/art.js";
 import { themeColors } from "../stage/scrim.js";
-import { placeClaims } from "./claims.js";
+import { claimEndAt, placeClaims } from "./claims.js";
 import type { Override, Placement } from "./claims.js";
 import { contentFacts, entriesOf, photoProps } from "./content.js";
 import { NO_DISPLAY, displayOf, phaseSource } from "./display.js";
@@ -286,7 +286,11 @@ export async function composeZone(
   // then, as a content widget's does: a pinned level never names the phase's.
   const tintEnds = stage?.tint == null ? null : Date.parse(stage.tint.until);
   const day = [nextPhaseAt(items, at.getTime()), highlightChangeAt(items, at.getTime())];
-  const changes = [content.changesAt, motion.next?.at, ...day, tintEnds].filter((t) => t != null);
+  // A claim's end too: the hero a claim grew, and the regions it held, go back only on a rebuild.
+  const claimEnds = read.claims.map(claimEndAt);
+  const changes = [content.changesAt, motion.next?.at, ...day, tintEnds, ...claimEnds].filter(
+    (t) => t != null,
+  );
   return {
     fingerprint: zoneFingerprint({
       zone: read.zone,

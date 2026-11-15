@@ -325,13 +325,14 @@ export function viewOf(
 
 /**
  * The rail's run of show at `atMs`, as the screens read it (`agenda_now`): the zone's items and
- * those of no zone, public and scheduled; what runs then, and the first to start after it.
+ * those of no zone, public and scheduled; what runs then, and every item at the first start after
+ * it, as the agenda's now and next gives several when they start at once.
  */
 export function railAt(
   items: readonly AgendaItem[],
   zone: string,
   atMs: number,
-): { now: AgendaItem[]; next: AgendaItem | null } {
+): { now: AgendaItem[]; next: AgendaItem[] } {
   const shown = items
     .filter(
       (i) =>
@@ -343,5 +344,8 @@ export function railAt(
   const now = shown.filter(
     (i) => Date.parse(i.starts_at) <= atMs && i.ends_at !== null && atMs < Date.parse(i.ends_at),
   );
-  return { now, next: shown.find((i) => Date.parse(i.starts_at) > atMs) ?? null };
+  const first = shown.find((i) => Date.parse(i.starts_at) > atMs)?.starts_at;
+  const next =
+    first === undefined ? [] : shown.filter((i) => Date.parse(i.starts_at) === Date.parse(first));
+  return { now, next };
 }

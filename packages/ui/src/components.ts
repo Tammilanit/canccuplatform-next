@@ -57,7 +57,8 @@ export function field(o: FieldOptions): Html {
   if (type === "select") {
     const options = (o.options ?? []).map(
       (opt) =>
-        html`<option${attrs({ value: opt.value, selected: String(o.value) === opt.value, hidden: opt.hidden })}>${opt.label}</option>`,
+        // A hidden option alone is still listed and picked by iOS Safari's picker; disabled is not.
+        html`<option${attrs({ value: opt.value, selected: String(o.value) === opt.value, hidden: opt.hidden, disabled: opt.hidden })}>${opt.label}</option>`,
     );
     control = html`<select${attrs({ class: "canccu-input", ...common })}>${options}</select>`;
   } else if (type === "checkbox") {

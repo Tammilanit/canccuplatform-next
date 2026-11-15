@@ -4,8 +4,8 @@
  * event carries the whole item as crew sees it, so a crew item keeps its windows too. Main reads
  * the agenda streams from their start at every boot, so events may come twice or out of turn:
  * `agenda_version` (or, on started and ended, which carry none, the item's `revision`) decides,
- * and a removed item stays removed. A replay of the event that wrote a row applies again, so a row
- * kept before titles and visibility were (migration 010) fills at the next start.
+ * and a removed item stays removed. A replay of the event that wrote a row fills its title and
+ * visibility only, so a row kept before they were (migration 010) fills at the next start.
  */
 import type { Event, SqlClient } from "@canccu/kit";
 import type { Db } from "../db.js";
@@ -89,10 +89,10 @@ export async function applyAgendaEvent(db: Db, event: Event): Promise<void> {
   const item = itemOf(event.data.item);
   if (item === null || (versioned && !Number.isInteger(version))) return;
   const guard = versioned
-    ? "WHERE screen_agenda_items.agenda_version IS NULL OR screen_agenda_items.agenda_version <= EXCLUDED.agenda_version"
+    ? "WHERE screen_agenda_items.agenda_version IS NULL OR screen_agenda_items.agenda_version < EXCLUDED.agenda_version"
     : "WHERE NOT screen_agenda_items.removed AND screen_agenda_items.revision < EXCLUDED.revision";
-  await db.tenant((c) =>
-    c.query(`${UPSERT} ${guard}`, [
+  await db.tenant(async (c) => {
+    await c.query(`${UPSERT} ${guard}`, [
       item.id,
       item.startsAt,
       item.endsAt,
@@ -101,8 +101,17 @@ export async function applyAgendaEvent(db: Db, event: Event): Promise<void> {
       versioned ? version : null,
       item.title,
       item.visibility,
-    ]),
-  );
+    ]);
+    // The same version again (a replay) only fills what a row kept before titles and visibility
+    // lacks: its times, status and revision may since have moved on with started or ended.
+    if (versioned) {
+      await c.query(
+        `UPDATE screen_agenda_items SET title = COALESCE(title, $2), visibility = COALESCE(visibility, $3)
+         WHERE id = $1 AND agenda_version = $4 AND NOT removed`,
+        [item.id, item.title, item.visibility, version],
+      );
+    }
+  });
 }
 
 /** The items the scheduler's bound windows follow, by id. */
@@ -152,11 +161,18 @@ export interface AgendaChoice extends AgendaLabel {
   startsAt: string;
 }
 
-/** The items a window may be bound to, in run-of-show order. */
-export async function loadAgendaChoices(c: SqlClient): Promise<AgendaChoice[]> {
+/**
+ * The items a window may be bound to, in run-of-show order. A cancelled item never runs, so it is
+ * offered only to the windows already bound to it (`bound`), which keep their choice on a save.
+ */
+export async function loadAgendaChoices(
+  c: SqlClient,
+  bound: ReadonlySet<string>,
+): Promise<AgendaChoice[]> {
   const labels = await loadAgendaLabels(c);
   const items = await loadAgendaItems(c);
   return [...items.values()]
+    .filter((item) => item.status !== "cancelled" || bound.has(item.id))
     .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime() || a.id.localeCompare(b.id))
     .map((item) => ({
       id: item.id,

@@ -20,6 +20,7 @@ export interface Axis {
 export const FULL_DAY: Axis = { startMinute: 0, endMinute: MINUTES_PER_DAY };
 
 const MINUTE_MS = 60_000;
+const HOUR_MS = 3_600_000;
 const DAY_MS = 86_400_000;
 const STEP = 15;
 const SLOTS = MINUTES_PER_DAY / STEP;
@@ -63,8 +64,15 @@ export function addDays(date: string, n: number): string {
 /** The instant the wall clock shows `minute` minutes after `date`'s midnight; found from the zone's offset there. */
 export function wallInstant(date: string, minute: number, timeZone: string): number {
   const wallMs = Date.parse(`${date}T00:00:00Z`) + minute * MINUTE_MS;
-  const guess = wallMs - localClock(new Date(wallMs), timeZone).offsetMinutes * MINUTE_MS;
-  return wallMs - localClock(new Date(guess), timeZone).offsetMinutes * MINUTE_MS;
+  const offsetAt = (ms: number) => localClock(new Date(ms), timeZone).offsetMinutes * MINUTE_MS;
+  const found = wallMs - offsetAt(wallMs - offsetAt(wallMs));
+  if (minuteFrom(date, found, timeZone) === minute) return found;
+  // A wall time the spring switch skips (in some zones midnight itself). The guess lands on either
+  // side of the switch, by the zone's side of UTC, so read the offset on both sides: the one from
+  // before the switch is the smaller, and read with it the wall time is the same time after the
+  // gap, so a day starts at its own first instant and never at the day before's 23:00. Switches
+  // lie months apart, so 6 hours each way reaches past the gap and to no other switch.
+  return wallMs - Math.min(offsetAt(found - 6 * HOUR_MS), offsetAt(found + 6 * HOUR_MS));
 }
 
 /** The instant a local date begins: its midnight. */
@@ -84,6 +92,23 @@ export function columnSpan(date: string, axis: Axis, timeZone: string): Span {
   return {
     starts_at: new Date(wallInstant(date, axis.startMinute, timeZone)).toISOString(),
     ends_at: new Date(wallInstant(date, axis.endMinute, timeZone)).toISOString(),
+  };
+}
+
+/**
+ * What the schedule page reads for `days`: from the day before, so a run that began the evening
+ * before shows as going on and the axis sees what starts in the first day's small hours, and to a
+ * day past the last, since the axis may run the last column on into the small hours.
+ */
+export function pageReadRange(
+  days: readonly string[],
+  timeZone: string,
+): { from: number; to: number } {
+  const first = days[0] as string;
+  const last = days.at(-1) as string;
+  return {
+    from: dayStartMs(addDays(first, -1), timeZone),
+    to: dayStartMs(addDays(last, 2), timeZone),
   };
 }
 
@@ -128,6 +153,12 @@ export function scheduleAxis(
   const startMinute = Math.max(0, Math.floor((end * STEP - LEAD) / 60) * 60);
   let endMinute = Math.ceil(emptyFrom / 60) * 60;
   if (endMinute <= startMinute) endMinute += MINUTES_PER_DAY;
+  // Past midnight, a day's small hours are drawn at the foot of the day before's column, which the
+  // first shown day lacks: what starts there would be drawn nowhere, so keep the whole day.
+  const firstColumn = wallInstant(first, startMinute, timeZone);
+  const early = (s: Span) =>
+    Date.parse(s.starts_at) >= from && Date.parse(s.starts_at) < firstColumn;
+  if (endMinute > MINUTES_PER_DAY && spans.some(early)) return FULL_DAY;
   return { startMinute, endMinute };
 }
 

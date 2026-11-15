@@ -7,7 +7,7 @@
 import type { SqlClient } from "@canccu/kit";
 import { zoneCalendar } from "../schedule/calendar.js";
 import type { ZoneCalendar } from "../schedule/calendar.js";
-import { invalidRequest, unknownZone } from "../http.js";
+import { invalidRequest, rfc3339Ms, unknownZone } from "../http.js";
 import { loadContent } from "../tick/content.js";
 import { loadAgendaLabels } from "./agenda.js";
 
@@ -21,10 +21,10 @@ export interface Calendar {
   zones: ZoneCalendar[];
 }
 
-/** `from` and `to` as instants, or 400: both RFC 3339, `to` after `from`, at most 31 days apart. */
+/** `from` and `to` as instants, or 400: both RFC 3339 with an offset, `to` after `from`, at most 31 days apart. */
 export function calendarRange(from: unknown, to: unknown): { from: Date; to: Date } {
-  const fromMs = typeof from === "string" ? Date.parse(from) : NaN;
-  const toMs = typeof to === "string" ? Date.parse(to) : NaN;
+  const fromMs = rfc3339Ms(from);
+  const toMs = rfc3339Ms(to);
   if (Number.isNaN(fromMs) || Number.isNaN(toMs)) {
     throw invalidRequest("`from` and `to` must be times (RFC 3339).");
   }

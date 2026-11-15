@@ -43,9 +43,7 @@ export function editorView(c: ViewContext, d: EditorData): EditorView {
   const items = d.items.flatMap((i) => {
     if (i.crew && !crewReader) {
       // Kept only so a window bound to it opens as it is; never offered.
-      return bound.has(i.id)
-        ? [html`<option${attrs({ value: i.id, hidden: true })}>${t("window.crew_item")}</option>`]
-        : [];
+      return bound.has(i.id) ? [keptItem(i.id, t("window.crew_item"))] : [];
     }
     const label = t("window.item_label", {
       title: i.title ?? t("window.untitled"),
@@ -53,6 +51,10 @@ export function editorView(c: ViewContext, d: EditorData): EditorView {
     });
     return [html`<option${attrs({ value: i.id })}>${label}</option>`];
   });
+  // A bound item no longer offered (removed from the run of show) is kept as the layouts are.
+  const offeredItems = new Set(d.items.map((i) => i.id));
+  const goneItems = [...bound].filter((id) => !offeredItems.has(id));
+  items.push(...goneItems.map((id) => keptItem(id, t("window.item_kept"))));
   // A window's layout or playlist that is no longer offered (a layout its theme dropped, a break
   // playlist) stays as a hidden option: without it the select falls back to its first choice, and a
   // Save made to change only the priority would change what the screens show.
@@ -207,6 +209,11 @@ export function editorView(c: ViewContext, d: EditorData): EditorView {
     ${windowsJson(d.windows)}`;
   const hint = html`<p class="canccu-small canccu-muted">${t("window.drag_hint")}</p>`;
   return { add, dialog, hint };
+}
+
+/** A kept choice: hidden, and disabled since iOS Safari's picker still offers a hidden option. */
+function keptItem(value: string, label: string): Html {
+  return html`<option${attrs({ value, hidden: true, disabled: true })}>${label}</option>`;
 }
 
 /** The windows for the script; `<` escaped so no value can close the element. */

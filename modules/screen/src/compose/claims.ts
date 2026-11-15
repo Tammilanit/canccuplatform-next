@@ -175,6 +175,12 @@ export interface Placement {
   hidden: string[];
 }
 
+/** When a claim stops drawing: its `expires_at` or its `ends_at`, whichever comes first; null for neither. */
+export function claimEndAt(o: Override): number | null {
+  const ends = [o.expires_at, o.ends_at].flatMap((t) => (t === null ? [] : [Date.parse(t)]));
+  return ends.length === 0 ? null : Math.min(...ends);
+}
+
 /** The regions with their claims, by the contract's placement rule. */
 export function placeClaims(
   regions: readonly RegionView[],

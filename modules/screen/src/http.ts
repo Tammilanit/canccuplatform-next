@@ -34,6 +34,15 @@ export const codeInvalid = (): KitError =>
   )("This code is unknown, used or expired. Ask the screen for a new one.");
 
 /** An id with a readable prefix (`dv_…`); random, so ids say nothing about order or count. */
+/**
+ * An RFC 3339 time with its offset as milliseconds, else NaN. `Date.parse` alone also takes "2026",
+ * engine-specific forms and a time without an offset, which it reads in the server's time zone.
+ */
+export function rfc3339Ms(value: unknown): number {
+  const pattern = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?(Z|[+-]\d\d:\d\d)$/;
+  return typeof value === "string" && pattern.test(value) ? Date.parse(value) : NaN;
+}
+
 export function newId(prefix: string): string {
   return `${prefix}_${randomBytes(12).toString("base64url")}`;
 }

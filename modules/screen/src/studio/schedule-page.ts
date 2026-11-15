@@ -16,11 +16,10 @@ import type { Sources } from "../compose/sources.js";
 import { shownZone } from "./help.js";
 import type { SeenDevice } from "./help.js";
 import {
-  addDays,
   clipCalendar,
   columnSpan,
-  dayStartMs,
   localDate,
+  pageReadRange,
   scheduleAxis,
 } from "./schedule-axis.js";
 import { layoutsOf } from "./event-layouts.js";
@@ -74,23 +73,24 @@ export async function schedulePage(
   const first = page.days[0] as string;
   const last = page.days.at(-1) as string;
   const writer = c.rights.has(WRITE);
-  const [read, playlists, labels, windows, items] = await deps.db.tenant(
-    async (t) =>
-      [
-        // A day past the last: the axis may run the last column on into the small hours.
-        await readCalendar(t, {
-          from: new Date(dayStartMs(first, tz)),
-          to: new Date(dayStartMs(addDays(last, 2), tz)),
-          zone,
-          timeZone: tz,
-          revealCrew: c.rights.has("agenda.crew.read"),
-        }),
-        await loadPlaylists(t),
-        await loadAgendaLabels(t),
-        (await listSchedules(t)) as unknown as WindowFacts[],
-        writer ? await loadAgendaChoices(t) : ([] as AgendaChoice[]),
-      ] as const,
-  );
+  const range = pageReadRange(page.days, tz);
+  const [read, playlists, labels, windows, items] = await deps.db.tenant(async (t) => {
+    const facts = (await listSchedules(t)) as unknown as WindowFacts[];
+    const bound = new Set(facts.flatMap((w) => w.agenda_item_id ?? []));
+    return [
+      await readCalendar(t, {
+        from: new Date(range.from),
+        to: new Date(range.to),
+        zone,
+        timeZone: tz,
+        revealCrew: c.rights.has("agenda.crew.read"),
+      }),
+      await loadPlaylists(t),
+      await loadAgendaLabels(t),
+      facts,
+      writer ? await loadAgendaChoices(t, bound) : ([] as AgendaChoice[]),
+    ] as const;
+  });
   const layouts = await layoutsOf(deps.sources, tenantId);
   const axis = scheduleAxis(read.zones, page.days, tz);
   const calendar = clipCalendar(read, {
