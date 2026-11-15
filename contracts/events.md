@@ -28,7 +28,7 @@ Payloads: [admin.md](admin.md#admin-events-version-1).
 
 | Type | Meaning | Consumers |
 |---|---|---|
-| `admin.settings.changed` | A module's settings were written | The module whose settings changed |
+| `admin.settings.changed` | A module's settings were written | The module whose settings changed, and every module that reads admin's `language` |
 | `admin.profile.loaded` | A profile was imported and applied | All modules |
 | `admin.profile.saved` | A profile was exported | None required |
 | `admin.rights.changed` | A user's rights changed | Every module that caches rights |

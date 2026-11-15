@@ -562,8 +562,8 @@ paths:
         For the organiser shell's header and the sign-in and check-in posters (packages/ui), which name this one
         address instead of reading the theme. With a logo in the current theme (`logo_url` of `GET
         /api/theming/current`; at revision 0 the profile's main logo, once theming takes it in, under `/theming/a/`)
-        a `302` to that immutable address; without one, the event's initials (the first letter of each of the first
-        two words of its name, whole characters, upper-cased and XML-escaped; `?` when tenants gives no name) as a
+        a `302` to that immutable address; without one, the event's initials (the first code point of each of the
+        first two words of its name, so a flag or joined emoji shows its first, upper-cased and XML-escaped; `?` when tenants gives no name) as a
         square SVG: `primary_text` letters on a `primary`-to-`accent` gradient, in the colours of
         `admin_tokens_css_url`. The name comes from `GET /api/tenants/current` on tenants' internal address with the
         request's own hostname as `Host`, its public answer kept up to 30 s per hostname; a tenants module that does
@@ -620,6 +620,16 @@ paths:
               $ref: "#/components/headers/SameOriginResource"
         "304":
           description: The SVG is unchanged since the `If-None-Match` the request sent (its `ETag`).
+          headers:
+            Cache-Control:
+              description: "`no-cache`; `private, no-cache` while the event is `draft`."
+              schema:
+                type: string
+                enum: [no-cache, "private, no-cache"]
+            ETag:
+              description: The unchanged SVG's `ETag`.
+              schema:
+                type: string
         "404":
           $ref: "#/components/responses/NotFound"
   /theming/current/{file}:
