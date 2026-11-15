@@ -70,6 +70,8 @@ export interface ScreenTheme {
   css_url: string | null;
   logo_url: string | null;
   templates: unknown[];
+  /** The draft's layouts, which screen's state names as `theme.layouts`. */
+  layouts: unknown[];
 }
 
 /** A page's body and what goes in the shell's title row. */
@@ -149,6 +151,7 @@ async function screenTheme(
         : null,
     logo_url: logoUrl ?? null,
     templates,
+    layouts: Array.isArray(draft.manifest.layouts) ? draft.manifest.layouts : [],
   };
 }
 

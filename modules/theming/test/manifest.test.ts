@@ -139,3 +139,24 @@ describe("referenceProblems", () => {
     expect(() => referenceProblems(broken, paths([]))).not.toThrow();
   });
 });
+
+describe("checkManifest", () => {
+  it("knows the screen's statistics widgets (contracts/screen.md, Widgets)", () => {
+    const widgets = ["today_numbers", "activity_graph", "voice_rooms"].map((widget) => ({
+      widget,
+    }));
+    const layout = {
+      id: "stats",
+      name: "Stats",
+      aspect: "16:9",
+      grid: { columns: 3, rows: 1 },
+      regions: widgets.map((w, i) => ({
+        id: `r${i}`,
+        area: { column: i + 1, row: 1, columns: 1, rows: 1 },
+        widgets: [w],
+      })),
+    };
+    const m = { schema_version: 1, name: "T", mode: "advanced", tokens: {}, layouts: [layout] };
+    expect(checkManifest(m)).toEqual([]);
+  });
+});

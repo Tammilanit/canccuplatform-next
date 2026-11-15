@@ -4,7 +4,7 @@
  * person over the zone's own paths, without a heartbeat, and a preview posted by the framing page.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PREVIEW_MESSAGE, VirtualScreen } from "../src/virtual.js";
+import { PREVIEW_DRAWN, PREVIEW_MESSAGE, VirtualScreen } from "../src/virtual.js";
 import { FakeApi, json, problem, screenState } from "./fake.js";
 
 const T0 = Date.parse("2026-01-01T18:40:00Z");
@@ -159,13 +159,13 @@ describe("the virtual screen", () => {
     zone.live.stop();
   });
 
-  it("draws a preview its framing page posts, and lets the live zone go", async () => {
+  it("draws a preview its framing page posts, lets the live zone go and says it drew it", async () => {
     const api = streaming(new FakeApi()).on(`GET ${ZONE_STATE}`, () =>
       json(200, screenState({ device: mirror })),
     );
     const zone = setup(api);
     await zone.start();
-    const parent = {};
+    const parent = { postMessage: vi.fn() };
     const here = "https://alpha.test";
     const message = (source: unknown, origin: string, data: unknown): MessageEvent => {
       const event = new MessageEvent("message", { data, origin });
@@ -177,7 +177,11 @@ describe("the virtual screen", () => {
       zone: { key: "lobby", name: "Lobby", epoch: "preview" },
     });
     // Not from the framing page, not from this origin, or not a state: ignored.
-    zone.preview(message({}, here, { type: PREVIEW_MESSAGE, state }), parent, here);
+    zone.preview(
+      message({ postMessage: vi.fn() }, here, { type: PREVIEW_MESSAGE, state }),
+      parent,
+      here,
+    );
     zone.preview(
       message(parent, "https://evil.test", { type: PREVIEW_MESSAGE, state }),
       parent,
@@ -185,8 +189,14 @@ describe("the virtual screen", () => {
     );
     zone.preview(message(parent, here, { type: PREVIEW_MESSAGE, state: {} }), parent, here);
     expect(zone.live.running).toBe(true);
-    zone.preview(message(parent, here, { type: PREVIEW_MESSAGE, state }), parent, here);
+    // A refused post is never answered, so the Studio keeps Publish held.
+    expect(parent.postMessage).not.toHaveBeenCalled();
+    zone.preview(message(parent, here, { type: PREVIEW_MESSAGE, state, id: 7 }), parent, here);
     expect(zone.live.running).toBe(false);
     expect(document.body.querySelector(".canccu-layout")).not.toBeNull();
+    expect(parent.postMessage).toHaveBeenCalledExactlyOnceWith(
+      { type: PREVIEW_DRAWN, id: 7 },
+      here,
+    );
   });
 });
