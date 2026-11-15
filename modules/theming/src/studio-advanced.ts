@@ -206,7 +206,7 @@ export function historyView(
       : "";
   const empty =
     before === undefined
-      ? html`<p>Nothing published yet: screens show the platform's default look.</p>`
+      ? html`<p>Nothing published yet: screens show the event profile's look.</p>`
       : html`<p>No older revisions. <a href="${STUDIO}history">Newest revisions</a></p>`;
   return html`<div class="canccu-studio" ${attrs({ "data-current-revision": current })}>
     ${

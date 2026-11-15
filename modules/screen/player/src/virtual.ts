@@ -18,6 +18,11 @@ import { backoffMs } from "./stream.js";
 
 /** What a framing Studio page posts to draw a preview instead of the live zone. */
 export const PREVIEW_MESSAGE = "canccu-screen-preview";
+/**
+ * The answer once the posted state is drawn, with the post's `id`: theming's Studio holds Publish
+ * until its screen preview drew the draft, never on the frame's load alone (#551).
+ */
+export const PREVIEW_DRAWN = "canccu-screen-preview-drawn";
 
 export interface VirtualEnv {
   fetch: Fetch;
@@ -97,7 +102,7 @@ export class VirtualScreen {
 
   /** A state posted by the framing page (same origin only): drawn as is, the live zone let go. */
   preview(event: MessageEvent, parent: unknown, origin: string): void {
-    const data = event.data as { type?: unknown; state?: unknown } | null;
+    const data = event.data as { type?: unknown; state?: unknown; id?: unknown } | null;
     if (event.source !== parent || event.origin !== origin) return;
     if (data?.type !== PREVIEW_MESSAGE || !isState(data.state)) return;
     this.previewing = true;
@@ -108,6 +113,7 @@ export class VirtualScreen {
     this.live.setTheme(data.state.theme);
     this.mount(this.screen.draw(data.state));
     this.screen.start();
+    (event.source as Window).postMessage({ type: PREVIEW_DRAWN, id: data.id ?? null }, origin);
   }
 
   private settle(answer: Answer): void {

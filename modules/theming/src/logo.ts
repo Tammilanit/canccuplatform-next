@@ -76,7 +76,12 @@ export function logoRoutes(app: FastifyInstance, deps: LogoDeps): void {
       svg = initialsSvg("?", adminTokens(platformTokens()).colors);
     } else {
       const theme = await currentTheme(deps.db, deps.profile);
-      if (theme.logo_url !== undefined) return reply.redirect(theme.logo_url, 302);
+      if (theme.logo_url !== undefined) {
+        return reply
+          .header("x-content-type-options", "nosniff")
+          .header("cross-origin-resource-policy", "same-origin")
+          .redirect(theme.logo_url, 302);
+      }
       svg = initialsSvg(initials(named.name), adminTokens(theme.tokens).colors);
     }
     const etag = `"${createHash("sha256").update(svg).digest("hex").slice(0, 32)}"`;

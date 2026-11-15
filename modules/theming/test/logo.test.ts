@@ -83,6 +83,9 @@ describe.skipIf(!DATABASE_URL)("the current logo", () => {
     expect(res.statusCode).toBe(302);
     expect(res.headers.location).toBe(`/theming/a/${name}`);
     expect(res.headers["cache-control"]).toBe("no-cache");
+    // The redirect has the headers every answer has (theming.md, Where files are served).
+    expect(res.headers["x-content-type-options"]).toBe("nosniff");
+    expect(res.headers["cross-origin-resource-policy"]).toBe("same-origin");
   });
 
   it("hides a draft event from whoever tenants does not name it to", async () => {

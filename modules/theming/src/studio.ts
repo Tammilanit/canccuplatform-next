@@ -68,6 +68,7 @@ async function studioPage(
     body: html`<p class="canccu-studio-notice" role="alert" hidden></p>
       ${o.body}
       <script src="${STUDIO}static/studio.js" defer></script>
+      <script src="${STUDIO}static/studio-previews.js" defer></script>
       <script src="${STUDIO}static/studio-screen.js" defer></script>`,
   });
   return htmlHeaders(reply, eventPageCsp(nonce, request.hostname, { page: "admin" }))
@@ -86,6 +87,7 @@ const STATIC_TYPES: Record<string, string> = {
   "studio-previews.css": "text/css; charset=utf-8",
   "preview.css": "text/css; charset=utf-8",
   "studio.js": "text/javascript; charset=utf-8",
+  "studio-previews.js": "text/javascript; charset=utf-8",
   "studio-screen.js": "text/javascript; charset=utf-8",
 };
 

@@ -98,7 +98,7 @@ function brandForm(state: StudioState, draft: DraftRow, colors: Record<string, s
     <form class="canccu-studio-form" data-action="brand">
       ${hidden}${logoField(state, images.logo)}
       <div class="canccu-studio-pair">
-        ${colourField({ name: "primary", label: "Primary", value: brand?.primary ?? colors.primary })}${colourField({ name: "accent", label: "Accent", value: brand?.accent ?? colors.accent })}
+        ${colourField({ name: "primary", label: "Primary", value: brand?.primary ?? colors.primary, required: true })}${colourField({ name: "accent", label: "Accent", value: brand?.accent ?? colors.accent, required: true })}
       </div>
       <fieldset class="canccu-field canccu-studio-scheme">
         <legend class="canccu-field__label">Scheme</legend>
@@ -148,7 +148,7 @@ function fontField(draft: DraftRow): Html {
 /** Discard (sheet 6): under the form, apart from Publish, a quiet danger link that asks first. */
 function discardView(state: StudioState): Html {
   const back =
-    state.current > 0 ? "goes back to the published theme" : "keeps the platform's default look";
+    state.current > 0 ? "goes back to the published theme" : "keeps the event profile's look";
   return html`<div class="canccu-studio-discard">
     <button type="button" class="canccu-studio-danger-link" data-action="discard-ask">
       Discard draft…
@@ -164,13 +164,13 @@ const preview = (surface: string, label: string, note: string, v: number | undef
 
 /**
  * The screen is the real player of one of the event's zones (screen's virtual screen), given the
- * draft's look by static/studio.js; the Studio's sample screen is the fallback where the zone
+ * draft's look by static/studio-previews.js; the Studio's sample screen is the fallback where the zone
  * cannot be read.
  */
 function screenPreview(state: StudioState, v: number | undefined): Html {
   const t = state.screenTheme;
   const fallback = `${STUDIO}preview/screen${v === undefined ? "" : `?canccu_theme=draft&v=${v}`}`;
-  return html`<figure class="canccu-studio-preview canccu-studio-preview--screen"><div class="canccu-studio-preview__head"><figcaption class="canccu-overline">Venue screen <span class="canccu-studio-zone"></span></figcaption><select class="canccu-input canccu-studio-zones" aria-label="Zone" hidden></select><button class="canccu-button canccu-button--secondary canccu-button--sm canccu-studio-full-close" type="button" data-action="preview-close">${icon("close")}Close</button></div><div class="canccu-studio-preview__box"><iframe${attrs({ class: "canccu-studio-preview__frame", title: "Venue screen preview", "data-preview": true, "data-screen-preview": true, "data-fallback-src": fallback, "data-tokens-css-url": t?.tokens_css_url, "data-css-url": t?.css_url ?? undefined, "data-logo-url": t?.logo_url ?? undefined, "data-templates": t === undefined ? undefined : JSON.stringify(t.templates), tabindex: "-1" })}></iframe></div><button class="canccu-studio-tap" type="button" data-action="preview">${icon("monitor")}Tap to open full size</button></figure>`;
+  return html`<figure class="canccu-studio-preview canccu-studio-preview--screen"><div class="canccu-studio-preview__head"><figcaption class="canccu-overline">Venue screen <span class="canccu-studio-zone"></span></figcaption><select class="canccu-input canccu-studio-zones" aria-label="Zone" hidden></select><button class="canccu-button canccu-button--secondary canccu-button--sm canccu-studio-full-close" type="button" data-action="preview-close">${icon("close")}Close</button></div><div class="canccu-studio-preview__box"><iframe${attrs({ class: "canccu-studio-preview__frame", title: "Venue screen preview", "data-preview": true, "data-screen-preview": true, "data-fallback-src": fallback, "data-tokens-css-url": t?.tokens_css_url, "data-css-url": t?.css_url ?? undefined, "data-logo-url": t?.logo_url ?? undefined, "data-templates": t === undefined ? undefined : JSON.stringify(t.templates), "data-layouts": t === undefined ? undefined : JSON.stringify(t.layouts), tabindex: "-1" })}></iframe></div><button class="canccu-studio-tap" type="button" data-action="preview">${icon("monitor")}Tap to open full size</button></figure>`;
 }
 
 /** On a phone one preview shows at a time (sheet 6); static/studio-previews.css reads the choice. */

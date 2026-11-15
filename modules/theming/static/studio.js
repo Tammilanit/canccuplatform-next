@@ -89,8 +89,11 @@
     return { path, version: draft.draft_version };
   }
 
+  /** The form's own check failed: nothing was sent, so the page stays with what was typed. */
+  class Invalid extends Error {}
+
   async function saveBrand(form) {
-    if (!form.reportValidity()) throw new Error("A colour is a # and six or eight hex digits.");
+    if (!form.reportValidity()) throw new Invalid("A colour is a # and six or eight hex digits.");
     const f = form.elements;
     let version = draftVersion();
     let logo = f.namedItem("logo")?.value;
@@ -193,33 +196,78 @@
   };
 
   let busy = false;
-  let running;
-  /** The forms that save as they change; one changed while a save ran is saved before the reload. */
+  /** The forms that save as they change: the brand kit has no Save (UX audit C2). */
   const SAVES_AS_CHANGED = new Set([saveBrand, saveFont]);
-  const again = new Map();
+  const autoSaved = () => [
+    ...document.querySelectorAll('form[data-action="brand"], form[data-action="font"]'),
+  ];
+  // What the person set, not the stored logo's name a save puts in a hidden field.
+  const valuesOf = (form) =>
+    JSON.stringify(
+      [...form.elements]
+        .filter((el) => el.name !== "" && el.type !== "hidden" && el.type !== "file")
+        .map((el) => (el.type === "radio" ? el.checked : el.value)),
+    );
+  /** Each form as last sent (or drawn): one that differs holds a change not saved yet. */
+  const sent = new Map(autoSaved().map((form) => [form, valuesOf(form)]));
+  const unsaved = (form) =>
+    valuesOf(form) !== sent.get(form) ||
+    [...form.elements].some((el) => el.type === "file" && el.files.length > 0);
+
+  /** `true` when the action went through; a refusal is carried over the reload. */
   async function attempt(action, el) {
+    const before = sent.get(el);
+    if (SAVES_AS_CHANGED.has(action)) sent.set(el, valuesOf(el));
     try {
       await action(el);
+      return true;
     } catch (err) {
+      if (err instanceof Invalid) {
+        // Nothing was sent, so the form still holds its change: a later save's flush tries it
+        // again rather than reload over it.
+        if (SAVES_AS_CHANGED.has(action)) sent.set(el, before);
+        return err;
+      }
       sessionStorage.setItem(NOTICE_KEY, err instanceof Error ? err.message : String(err));
+      return false;
     }
   }
+
+  /**
+   * The previews show the version the page drew, so Publish waits for the reload. The hold is kept
+   * on the page, so a preview drawn later (studio-previews.js) cannot release it.
+   */
+  function holdPublish() {
+    root.dataset.previewStale = "1";
+    for (const b of document.querySelectorAll('[data-action="publish"], [data-action="light-ask"]'))
+      b.disabled = true;
+    const hint = document.querySelector(".canccu-studio-publish-hint");
+    if (hint !== null) hint.textContent = "Put the colour right to update the previews.";
+  }
+
   async function run(el, control) {
     const action = ACTIONS[el.dataset.action];
-    if (action === undefined) return;
-    if (busy) {
-      // The brand kit has no Save, so a change dropped here would be lost without a word.
-      if (SAVES_AS_CHANGED.has(action) && SAVES_AS_CHANGED.has(running)) again.set(action, el);
-      return;
-    }
+    // A form changed while a save runs is saved after it, below.
+    if (action === undefined || busy) return;
     busy = true;
-    running = action;
     control.disabled = true;
-    await attempt(action, el);
-    while (again.size > 0) {
-      const [save, form] = again.entries().next().value;
-      again.delete(save);
-      await attempt(save, form);
+    let outcome = await attempt(action, el);
+    let saved = outcome === true;
+    // Before the reload, each form changed meanwhile or still being typed in, so nothing typed is
+    // lost; after a failure the rest wait, so the first failure is the one said.
+    while (outcome === true && SAVES_AS_CHANGED.has(action)) {
+      const form = autoSaved().find(unsaved);
+      if (form === undefined) break;
+      outcome = await attempt(ACTIONS[form.dataset.action], form);
+      saved ||= outcome === true;
+    }
+    if (outcome instanceof Invalid) {
+      // A reload would drop the browser's message and the value it is about.
+      show(outcome.message);
+      if (saved) holdPublish();
+      busy = false;
+      control.disabled = false;
+      return;
     }
     location.reload();
   }
@@ -264,6 +312,24 @@
       if (swatch) swatch.value = el.value.slice(0, 7).toLowerCase();
     }
   });
+  /*
+   * The logo's drop box takes a dropped file as if it were chosen: left to the browser, a drop opens
+   * the file and leaves the Studio.
+   */
+  document.addEventListener("dragover", (event) => {
+    if (event.target.closest(".canccu-studio-drop") !== null) event.preventDefault();
+  });
+  document.addEventListener("drop", (event) => {
+    const box = event.target.closest(".canccu-studio-drop");
+    if (box === null) return;
+    event.preventDefault();
+    const input = document.getElementById(box.htmlFor);
+    const files = event.dataTransfer?.files;
+    if (input === null || !files || files.length === 0) return;
+    input.files = files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+
   // The brand kit has no Save: each finished change saves the brand and reloads its previews.
   document.addEventListener("change", (event) => {
     const file = event.target.closest(".canccu-studio-file");
@@ -295,125 +361,4 @@
       { passive: true },
     );
   }
-
-  /* Each preview is a page at its own size, scaled to its box's width. */
-  const scaled = new ResizeObserver((entries) => {
-    for (const { target } of entries) {
-      const width = parseFloat(getComputedStyle(target).getPropertyValue("--canccu-studio-w"));
-      if (width > 0) target.style.setProperty("--canccu-studio-scale", target.clientWidth / width);
-    }
-  });
-  for (const box of document.querySelectorAll(".canccu-studio-preview__box")) scaled.observe(box);
-
-  /*
-   * The screen preview is screen's virtual screen of one of the event's zones: the real player and
-   * layout with the zone's real content (contracts/screen.md, A zone for a session). The page reads
-   * the zone's state with this session, gives it the draft's look and posts it to the frame, which
-   * draws a posted state instead of the live zone. Where the zones cannot be read (no right to see
-   * the event's screens, or no screen module), the Studio's own sample screen stands in.
-   */
-  const screenFrame = document.querySelector("iframe[data-screen-preview]");
-  let screenShown = false;
-  const PREVIEW_MESSAGE = "canccu-screen-preview";
-
-  async function readJson(url) {
-    const res = await fetch(url, { credentials: "same-origin" }).catch(() => undefined);
-    return res?.ok ? res.json().catch(() => undefined) : undefined;
-  }
-
-  function withDraft(state) {
-    const d = screenFrame.dataset;
-    if (d.tokensCssUrl === undefined) return undefined;
-    const logo = d.logoUrl;
-    const withLogo = (w) =>
-      w?.widget === "logo" && logo !== undefined && w.view
-        ? { ...w, view: { ...w.view, url: logo } }
-        : w;
-    return {
-      ...state,
-      theme: {
-        ...state.theme,
-        tokens_css_url: d.tokensCssUrl,
-        css_url: d.cssUrl ?? null,
-        logo_url: logo ?? null,
-        templates: JSON.parse(d.templates ?? "[]"),
-      },
-      regions: state.regions.map((r) => ({
-        ...r,
-        widgets: r.widgets.map(withLogo),
-        idle_view: withLogo(r.idle_view),
-      })),
-    };
-  }
-
-  function load(src, onLoad) {
-    screenShown = false;
-    screenFrame.addEventListener("load", onLoad, { once: true });
-    screenFrame.src = src;
-  }
-
-  const fallback = () =>
-    load(screenFrame.dataset.fallbackSrc, () => {
-      screenShown = isSurface(screenFrame);
-      check();
-    });
-
-  async function showZone(zone) {
-    const key = encodeURIComponent(zone.key);
-    const state = await readJson(`/api/screen/zones/${key}/state`);
-    if (state === undefined || !Array.isArray(state.regions)) return fallback();
-    const caption = document.querySelector(".canccu-studio-zone");
-    if (caption !== null) caption.textContent = `· ${zone.name}`;
-    const draft = withDraft(state);
-    load(`/screen/zones/${key}`, () => {
-      if (draft !== undefined) {
-        screenFrame.contentWindow.postMessage(
-          { type: PREVIEW_MESSAGE, state: draft },
-          location.origin,
-        );
-      }
-      screenShown = true;
-      check();
-    });
-  }
-
-  async function startScreen() {
-    const zones = (await readJson("/api/screen/zones"))?.zones;
-    if (!Array.isArray(zones) || zones.length === 0) return fallback();
-    const select = document.querySelector(".canccu-studio-zones");
-    const first = zones.find((z) => z.key === "main") ?? zones[0];
-    if (select !== null && zones.length > 1) {
-      for (const z of zones) select.add(new Option(z.name, z.key, false, z === first));
-      select.hidden = false;
-      select.addEventListener("change", () => {
-        const zone = zones.find((z) => z.key === select.value);
-        if (zone !== undefined) void showZone(zone);
-      });
-    }
-    await showZone(first);
-  }
-
-  /*
-   * Publishing changed CSS needs its preview first (D10): the button waits until every preview
-   * frame shows this draft version: a surface page of the Studio's, or the screen given the draft.
-   * A frame may finish before this script runs.
-   */
-  function isSurface(frame) {
-    const doc = frame.contentDocument;
-    return (
-      doc !== null && doc.readyState === "complete" && doc.querySelector(".canccu-surface") !== null
-    );
-  }
-  const shown = (frame) => (frame === screenFrame ? screenShown : isSurface(frame));
-  const held = [...document.querySelectorAll("[data-needs-preview]")];
-  const frames = [...document.querySelectorAll("iframe[data-preview]")];
-  function check() {
-    if (held.length === 0 || !frames.every(shown)) return;
-    for (const button of held) button.disabled = false;
-    const hint = document.querySelector(".canccu-studio-publish-hint");
-    if (hint !== null) hint.textContent = "Previews shown: this version can be published.";
-  }
-  for (const frame of frames) if (frame !== screenFrame) frame.addEventListener("load", check);
-  if (screenFrame !== null) void startScreen();
-  check();
 })();
