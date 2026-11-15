@@ -7,6 +7,8 @@ import { attrs, dayLabel, html, notice, timeLabel } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import type { TenantContext } from "@canccu/kit";
 import type { Db } from "../db.js";
+import { heldBundle } from "../pins/bundles.js";
+import type { BundleStore } from "../pins/bundles.js";
 import { readPin } from "../pins/store.js";
 import type { PinRow, PinValues } from "../pins/store.js";
 import type { Translate } from "./messages.js";
@@ -29,10 +31,16 @@ const nameOf = (pin: PinRow) => pin.changed_by_name ?? pin.changed_by ?? "";
 /**
  * The one sentence that says what is frozen, until when and by whom: from the pinned values, not
  * from what is in effect, since a side the pin leaves null still moves (a publish, a platform update).
+ * `bundle` is the pinned one while it is kept: one that is not holds nothing, as screens then load
+ * the platform's.
  */
-function frozenText(c: Pick<ViewContext, "t" | "timeZone">, pin: PinRow): string | null {
+function frozenText(
+  c: Pick<ViewContext, "t" | "timeZone">,
+  pin: PinRow,
+  bundle: string | null,
+): string | null {
   if (pin.until === null) return null;
-  const { bundle_version: bundle, theme_revision: revision } = pin;
+  const revision = pin.theme_revision;
   const time = when(c, pin.until.toISOString());
   const name = nameOf(pin);
   if (bundle !== null && revision !== null) {
@@ -46,12 +54,13 @@ function frozenText(c: Pick<ViewContext, "t" | "timeZone">, pin: PinRow): string
 
 /** The banner for the current tenant's pin, or nothing while no pin has an end. */
 export async function frozenBanner(
-  deps: { db: Db },
+  deps: { db: Db; bundles: Pick<BundleStore, "available"> },
   ctx: TenantContext,
   t: Translate,
 ): Promise<Html | ""> {
   const pin = await deps.db.tenant(readPin);
-  const text = frozenText({ t, timeZone: ctx.time_zone }, pin);
+  const held = await heldBundle(deps.bundles, pin.bundle_version);
+  const text = frozenText({ t, timeZone: ctx.time_zone }, pin, held);
   if (text === null) return "";
   return html`<div class="canccu-studio-frozen">
     ${notice({ kind: "warn", title: t("frozen.title"), text })}
@@ -106,7 +115,7 @@ function freezeCard(c: ViewContext, pin: PinRow, endsAt: string | null | undefin
           t("pins.freeze_done"),
           true,
         )
-      : html`<form class="canccu-form" data-freeze>
+      : html`<form class="canccu-form" data-freeze${attrs({ "data-time-zone": c.timeZone })}>
           <div class="canccu-field">
             <label class="canccu-field__label" for="canccu-studio-freeze-until"
               >${t("pins.freeze_until")}</label

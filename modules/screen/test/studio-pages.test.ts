@@ -23,9 +23,24 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     call(h, "GET", url, { host, ...(session ? { session } : {}) });
 
   it("sends a signed-out browser to sign in, back to the page it asked for", async () => {
-    const res = await page("/admin/screen/devices");
+    const res = await page("/admin/screen/zones");
     expect(res.statusCode).toBe(303);
-    expect(res.headers.location).toBe("/admin/sign-in?next=%2Fadmin%2Fscreen%2Fdevices");
+    expect(res.headers.location).toBe("/admin/sign-in?next=%2Fadmin%2Fscreen%2Fzones");
+  });
+
+  it("sends a signed-out Devices to sign in from the browser, which keeps a scanned code", async () => {
+    // The kiosk's QR carries the code in the fragment, which never reaches a server: the page's
+    // script keeps it for after sign-in (static/studio-signin.js).
+    const res = await page("/admin/screen/devices?x=1");
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["cache-control"]).toBe("no-store");
+    expect(res.headers["content-security-policy"]).toContain("script-src 'self'");
+    expect(res.body).toContain('<script src="/admin/screen/static/studio-signin.js"></script>');
+    const next = "/admin/sign-in?next=%2Fadmin%2Fscreen%2Fdevices%3Fx%3D1";
+    expect(res.body).toContain(`href="${next}" data-sign-in`);
+    expect(res.body).toContain(`<noscript><meta http-equiv="refresh" content="0;url=${next}"`);
+    const js = await page("/admin/screen/static/studio-signin.js");
+    expect(js.statusCode).toBe(200);
   });
 
   it("refuses a page without its right in words, without the right's id", async () => {
@@ -274,6 +289,9 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect(body).toContain("Showing: Pizza orders close at 20");
     expect(body).toContain("Set in Studio · no end");
     expect(body).toContain('data-url="/api/screen/ticker"');
+    // Its end is read on the event's clock by the page's own script (#539).
+    expect(body).toContain('data-ticker data-time-zone="UTC"');
+    expect(body).toContain('<script type="module" src="/admin/screen/static/studio-ends.js">');
   });
 
   it("stays in English when admin cannot say the event's language", async () => {
