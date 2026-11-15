@@ -14,14 +14,14 @@ export async function layout(page, [width, height]) {
   );
 }
 
+const AGENDA = ".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active";
+
 /**
  * The rail turns between the run of show and a countdown every 15 s (BUILT_IN_LAYOUTS); the shot
  * waits for the run of show, which mockup 02 draws there, so the hero's countdown is not shown twice.
  */
 export async function railShowsAgenda(page) {
-  await page.waitForSelector(".canccu-region--rail > .canccu-widget--agenda_now.canccu-is-active", {
-    timeout: 40_000,
-  });
+  await page.waitForSelector(AGENDA, { timeout: 40_000 });
 }
 
 /**
@@ -63,6 +63,19 @@ export async function emergencyIsRed(page, region) {
     throw new Error(`the emergency in the ${region} region is ${background}, not its fixed red`);
   if (band !== "none")
     throw new Error(`the emergency in the ${region} region shows the theme's band`);
+}
+
+/**
+ * The rail on its run of show once the page has settled. `settle` may wait up to 10 s, in which
+ * an unheld rail can turn to its countdown, so the run of show is looked for again after it.
+ */
+export async function agendaSettled(page) {
+  for (let turn = 0; turn < 3; turn++) {
+    await railShowsAgenda(page);
+    await settle(page);
+    if ((await page.$(AGENDA)) !== null) return;
+  }
+  throw new Error("the rail turned from its run of show each time the page settled");
 }
 
 /** The rail shows its idle choice, on both of its turns: never the emptied run of show. */
