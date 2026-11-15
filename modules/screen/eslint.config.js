@@ -11,6 +11,7 @@ const BROWSER = Object.fromEntries(
     "sessionStorage",
     "fetch",
     "FormData",
+    "URLSearchParams",
     "DOMParser",
     "IntersectionObserver",
     "ResizeObserver",

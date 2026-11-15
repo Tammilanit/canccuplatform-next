@@ -12,9 +12,16 @@ import type { builder as Builder } from "../static/studio-playlist-editor.js";
 // The module's types are the server's (no DOM lib); the browser here is happy-dom's.
 const win = globalThis as unknown as Window;
 let builder: typeof Builder;
+interface Answer {
+  ok: boolean;
+  status: number;
+  data: unknown;
+}
 // The editor takes studio.js's helpers as it loads, so each is one mock the tests steer.
 const studio = {
-  api: vi.fn((..._: unknown[]) => Promise.resolve({ ok: true, status: 200, data: null })),
+  api: vi.fn<(method: string, url: string, body?: unknown) => Promise<Answer>>(() =>
+    Promise.resolve({ ok: true, status: 200, data: null }),
+  ),
   confirmed: () => true,
   failure: () => "",
   reloadWith: vi.fn(),
@@ -116,7 +123,9 @@ describe("saving", () => {
     const box = editor(regular());
     edit(box);
     save(box)?.click();
-    await vi.waitFor(() => expect(studio.reloadWith).toHaveBeenCalled());
+    await vi.waitFor(() => {
+      expect(studio.reloadWith).toHaveBeenCalled();
+    });
     expect(studio.reloadWith.mock.calls[0]?.[0]).toBe("playlist.saved");
     expect(reopened(studio.reloadWith.mock.calls[0]?.[1])).toEqual(SAME);
   });
@@ -126,12 +135,14 @@ describe("saving", () => {
       ok: false,
       status: 409,
       data: { error: { code: "version_conflict" } },
-    } as never);
+    });
     const assign = vi.spyOn(win.location, "assign").mockImplementation(() => undefined);
     const box = editor(regular());
     edit(box);
     save(box)?.click();
-    await vi.waitFor(() => expect(studio.show).toHaveBeenCalled());
+    await vi.waitFor(() => {
+      expect(studio.show).toHaveBeenCalled();
+    });
     (studio.show.mock.calls[0]?.[1] as HTMLButtonElement).click();
     expect(reopened(assign.mock.calls[0]?.[0])).toEqual(SAME);
     assign.mockRestore();
@@ -147,11 +158,14 @@ describe("dragging a row", () => {
     return data.setData;
   };
 
+  // happy-dom's types leave `draggable` out, though its elements keep what the script sets.
+  const draggable = (node: unknown) => (node as { draggable?: boolean }).draggable;
+
   it("starts at its handle only, so text in its fields can be selected", () => {
     const [row] = rowsOf(editor(regular())) as HTMLElement[];
     const handle = row?.querySelector(".canccu-studio-item__handle") as HTMLElement;
-    expect(row?.draggable).not.toBe(true);
-    expect(handle.draggable).toBe(true);
+    expect(draggable(row)).not.toBe(true);
+    expect(draggable(handle)).toBe(true);
     expect(dragStart(row?.querySelector("input") as HTMLElement)).not.toHaveBeenCalled();
     expect(dragStart(handle)).toHaveBeenCalledWith("application/x-canccu-item", "0");
   });

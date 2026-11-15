@@ -47,14 +47,18 @@ describe("New playlist", () => {
     expect(studio.api).toHaveBeenCalledTimes(1);
     expect(button().disabled).toBe(true);
     answer({ ok: true, status: 201, data: { id: "pl_9" } });
-    await vi.waitFor(() => expect(studio.reloadWith).toHaveBeenCalled());
+    await vi.waitFor(() => {
+      expect(studio.reloadWith).toHaveBeenCalled();
+    });
     expect(studio.reloadWith.mock.calls[0]?.[1]).toBe("/admin/screen/content?playlist=pl_9");
   });
 
   it("gives the button back after a refusal, with the reason", async () => {
     submit();
     answer({ ok: false, status: 400, data: null });
-    await vi.waitFor(() => expect(studio.show).toHaveBeenCalledWith("refused"));
+    await vi.waitFor(() => {
+      expect(studio.show).toHaveBeenCalledWith("refused");
+    });
     expect(button().disabled).toBe(false);
     (document.querySelector("[name=name]") as HTMLInputElement).value = "Lobby";
     submit();
