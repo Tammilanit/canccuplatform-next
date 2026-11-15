@@ -1,6 +1,4 @@
 /** A screen app on a real Postgres (RLS needs one) with fake tenants, admin and Valkey. */
-import type { DraftTheme, ThemeNow } from "../src/compose/sources.js";
-import type { AgendaItem, AgendaNow, CheckinCode, VenueInfo } from "../src/compose/widgets.js";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -34,6 +32,9 @@ import { SIGNIN_HOST, SUPERADMIN_HOST, fakeTenants } from "./tenants.js";
 import { fakeSettingsWrite } from "./settings-write.js";
 import type { SettingsWrites } from "./settings-write.js";
 import { ArtCache } from "../src/stage/art.js";
+import { fakeAdmin } from "./admin-fake.js";
+import { emptySources } from "./sources-fake.js";
+import type { FakeSources } from "./sources-fake.js";
 
 /** Tests run only on a database named `*_test` (dropTables refuses any other). */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
@@ -42,52 +43,8 @@ export { VENUE_IP } from "./calls.js";
 export const OUTSIDE_IP = "192.0.2.9";
 
 export { SIGNIN_HOST, SUPERADMIN_HOST, TENANTS, context } from "./tenants.js";
-
-const ALL_RIGHTS = [
-  "screen.devices.read",
-  "screen.devices.pair",
-  "screen.devices.write",
-  "screen.zones.write",
-  "screen.content.read",
-  "screen.content.write",
-  "screen.push.write",
-  "screen.ticker.write",
-  "screen.photos.write",
-  "screen.bundle.write",
-];
-/** The sessions the fake admin knows; a test may add or remove one (then drop it from `h.rights`). */
-export const SESSIONS: Record<string, string[]> = {
-  admin: ALL_RIGHTS,
-  crew: ["screen.devices.read"],
-  content: ["screen.content.read"],
-  editor: ["screen.content.read", "screen.content.write"],
-  ticker: ["screen.ticker.write"],
-  photos: ["screen.photos.write"],
-  bundler: ["screen.bundle.write"],
-  nobody: [],
-  // `superadmin` as admin answers it: a platform-bound session with `mfa_enabled` (G2).
-  root: [],
-};
-
-async function fakeAdmin(_url: string | URL | Request, init?: RequestInit): Promise<Response> {
-  const cookie = (init?.headers as Record<string, string> | undefined)?.cookie ?? "";
-  const id = cookie.replace("canccu_session=", "");
-  if (id === "admin-down") return Promise.resolve(new Response("down", { status: 503 }));
-  const rights = SESSIONS[id];
-  if (rights === undefined) {
-    return Promise.resolve(
-      Response.json({ error: { code: "not_signed_in", message: "no" } }, { status: 401 }),
-    );
-  }
-  return Promise.resolve(
-    Response.json({
-      user: { id: `u_${id}`, name: id },
-      rights,
-      expires_at: new Date(Date.now() + 3600_000).toISOString(),
-      superadmin: id === "root",
-    }),
-  );
-}
+export { SESSIONS } from "./admin-fake.js";
+export type { FakeSources } from "./sources-fake.js";
 
 export interface Harness {
   app: FastifyInstance;
@@ -142,36 +99,6 @@ export interface Harness {
   close(): Promise<void>;
 }
 
-export interface FakeSources {
-  theme: ThemeNow | null;
-  /** The event's theme revisions by number, as the pinned read answers them. */
-  revisions: Record<number, ThemeNow>;
-  /** The revision read fails (a 500, a timeout) while the current read may still answer. */
-  revisionsDown: boolean;
-  /** Theming's drafts by preview key; a key not here is one theming no longer knows. */
-  drafts: Record<string, DraftTheme>;
-  /** The draft read fails (theming does not answer). */
-  draftsDown: boolean;
-  event: { name: string } | null;
-  agenda: AgendaNow | null;
-  /** The whole run of show (`GET /internal/agenda/items`); null is "down". */
-  agendaItems: AgendaItem[] | null;
-  /** The run of show as kept for the screens' agenda version (`agendaDay`); null when none is. */
-  agendaDay: AgendaItem[] | null;
-  venue: VenueInfo | null;
-  /** The hostnames the guest read (event) was made with. */
-  hosts: string[];
-  /** The tenant ids the module reads (theme, now and next, venue info) were made for. */
-  tenants: string[];
-  checkin: CheckinCode | null;
-  /** The purposes notify's check-in code was read for. */
-  checkinReads: string[];
-  /** Notify's count of check-ins; null is "down". */
-  checkins: number | null;
-  /** The purposes the count was read for. */
-  countReads: string[];
-}
-
 /** Drops every screen table; `assignments` too, the name before migration 007. */
 export async function dropTables(admin: pg.Client): Promise<void> {
   await requireTestDatabase(admin);
@@ -217,24 +144,7 @@ export async function harness(options: { saves?: boolean } = {}): Promise<Harnes
   const oembedStatus = { value: 200 };
   const covers: Record<string, Buffer> = {};
   const coverReads: string[] = [];
-  const fake: FakeSources = {
-    theme: null,
-    revisions: {},
-    revisionsDown: false,
-    draftsDown: false,
-    drafts: {},
-    event: null,
-    agenda: null,
-    agendaItems: null,
-    agendaDay: null,
-    venue: null,
-    hosts: [],
-    tenants: [],
-    checkin: null,
-    checkinReads: [],
-    checkins: null,
-    countReads: [],
-  };
+  const fake = emptySources();
   const answer = <T>(seen: string[], key: string, value: T): Promise<T> => {
     seen.push(key);
     return Promise.resolve(value);

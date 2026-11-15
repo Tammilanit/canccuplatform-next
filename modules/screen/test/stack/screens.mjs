@@ -34,6 +34,7 @@ import {
   stillOnline,
 } from "./handed.mjs";
 import { collectSamples, judgePage } from "./readability.mjs";
+import { screenPages } from "./screen-pages.mjs";
 import {
   THEMES,
   HD,
@@ -49,7 +50,7 @@ import {
 } from "./screen-views.mjs";
 import {
   layout,
-  railShowsAgenda,
+  agendaSettled,
   tickerFitted,
   emergencyIsRed,
   railShowsIdle,
@@ -67,20 +68,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
     devices.push(device);
     return device;
   };
-  const open = async ([width, height], cookie) => {
-    const context = await browser.newContext({ viewport: { width, height } });
-    if (cookie) await context.addCookies([cookieOn(cookie)]);
-    // The screen's state and stream are the only things the page waits on; nothing leaves the stack.
-    await context.route(/^https:\/\/next-event\.example\//, (route) => route.abort());
-    const page = await context.newPage();
-    // A request still routed when the context closes (a state poll) would throw out of the run.
-    const close = async () => {
-      await page.unrouteAll({ behavior: "ignoreErrors" });
-      await context.unrouteAll({ behavior: "ignoreErrors" });
-      await context.close();
-    };
-    return { page, close };
-  };
+  const { open, attempt } = screenPages({ browser, cookieOn, fail });
   /** The screenshot, then its text against the readability rules. */
   const shot = async (name, page) => {
     // Taken in the merge queue's check too: without it the next view of the same screen did not
@@ -96,13 +84,6 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
   const playing = async (name, page) => {
     await stillOnline(page);
     await shot(name, page);
-  };
-  const attempt = async (name, run) => {
-    try {
-      await run();
-    } catch (err) {
-      fail(`${name}: ${String(err?.message ?? err).split("\n")[0]}`);
-    }
   };
 
   try {
@@ -217,9 +198,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       const { page, close } = await open(size, main.cookie);
       await page.goto(at("/screen/"));
       await layout(page, size);
-      await railShowsAgenda(page);
       await tickerFitted(page, theme === "default" && size === HD[0]);
-      await settle(page);
+      await agendaSettled(page);
       await panelFilled(page);
       await shot(nameOf(theme, "pulse", size), page);
       expect(
@@ -261,9 +241,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       const { page, close } = await open(size, main.cookie);
       await page.goto(at("/screen/"));
       await page.waitForSelector(`.canccu-layout--${id}`, { timeout: 30_000 });
-      await railShowsAgenda(page);
+      await agendaSettled(page);
       if (view === "dashboard-waiting") await boxesGivenAway(page);
-      await settle(page);
       if (view === "hero") await panelFilled(page);
       await shot(nameOf(theme, view, size), page);
       await close();
@@ -287,7 +266,11 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await handed(theme, `${view}-before`, size, withStage("lively", false));
     }
 
-    /** The page handed a changed state, its stream held open and empty so nothing replaces it. */
+    /**
+     * The page handed a changed state, its stream held open and empty so nothing replaces it. A
+     * state that cannot be handed (an answer not JSON, a `change` that throws) fails the view with
+     * its own error, not with the layout wait it would otherwise run out.
+     */
     async function handed(theme, view, size, change) {
       const { page, close } = await open(size, main.cookie);
       // The server picks the layout of the orientation a heartbeat reports, so the page first plays
@@ -297,14 +280,24 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         await layout(page, size);
       }
       await holdStream(page);
+      let broken;
+      const unhanded = new Promise((_, reject) => (broken = reject));
+      // A poll in flight when the view closes its page fails too, after the race below is decided.
+      unhanded.catch(() => undefined);
       await page.route("**/api/screen/device/state", async (route) => {
         try {
           const answer = await route.fetch();
           await route.fulfill({ response: answer, json: change(await answer.json()) });
-        } catch {
-          // The page closed while its poll was in flight: nobody waits for the answer.
+        } catch (err) {
+          broken(new Error(`the state handed to the page: ${err?.message ?? err}`));
+          await route.abort().catch(() => undefined);
         }
       });
+      await Promise.race([shown(theme, view, size, page, close), unhanded]);
+    }
+
+    /** The handed page drawing `view`, checked, and its shots. */
+    async function shown(theme, view, size, page, close) {
       await page.goto(at("/screen/"));
       if (view === "archived") await page.waitForSelector(".canccu-frame--archived");
       else await layout(page, size);
@@ -317,6 +310,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       // A showcase's checks measure its hero once the claim has faded in and its fonts are in.
       const showcase = view.startsWith("dashboard-showcase");
       if (!showcase) await CLEAR_CHECKS[view]?.(page);
+      let settled = settle;
       if (view === "rail-empty") await railShowsIdle(page);
       else if (view === "dashboard-showcase") {
         await stripNamesCountdown(page);
@@ -346,8 +340,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         }
         return await close();
       } else if (!["archived", "claim-rail", "claim-takeover"].includes(view))
-        await railShowsAgenda(page);
-      await settle(page);
+        settled = agendaSettled;
+      await settled(page);
       if (showcase) await CLEAR_CHECKS[view]?.(page);
       await playing(nameOf(theme, view, size), page);
       await close();

@@ -1,0 +1,80 @@
+# shellcheck shell=bash
+# The event profile and admin's tests of scripts/demo-stack-test, which sources this file after
+# its helpers (call, check, want, status_is, body_is) and its variables: the demo event imported as
+# a zip (platform smoke), and admin's Load, settings, export and health view. Admin's tests end by
+# importing the demo again, so the screenshots that follow show the demo event.
+
+profile_name=$(grep -m1 '^name:' "$EVENT_DIR/profile.yaml" | sed 's/^name:[[:space:]]*//')
+if want admin; then
+  call POST /admin/profile/load -H "cookie: $COOKIE" -D "$TMP/headers"
+  # shellcheck disable=SC2329
+  redirects_with_loaded() {
+    status_is 303 && grep -qi "^location: .*/profile?message=Loaded+${profile_name// /+}[&[:space:]]" "$TMP/headers"
+  }
+  check "${TESTS[4]}" redirects_with_loaded
+fi
+
+(cd "$EVENT_DIR" && python3 -m zipfile -c "$TMP/demo.zip" profile.yaml assets/)
+call PUT /api/admin/profile -H "cookie: $COOKIE" -H "content-type: application/zip" --data-binary "@$TMP/demo.zip"
+check "${TESTS[5]}" body_is 200 ".name == \"$profile_name\" and .schema_version == 1"
+
+if want admin; then
+  call GET /api/admin/settings/admin -H "cookie: $COOKIE"
+  check "${TESTS[6]}" body_is 200 '.module == "admin" and .values.timezone == "UTC" and .values.language == "en" and (.settings_version | type == "number") and ([.groups[].keys[]] == ["timezone", "language"])'
+  version=$(jq -r '.settings_version // 0' "$TMP/body" 2>/dev/null || echo 0)
+
+  call PUT /api/admin/settings/admin -H "cookie: $COOKIE" -H "content-type: application/json" \
+    --data "{\"settings_version\": $version, \"values\": {\"timezone\": \"UTC\", \"language\": \"fi\"}}"
+  check "${TESTS[7]}" body_is 200 ".values.language == \"fi\" and .settings_version > $version"
+
+  call PUT /api/admin/settings/admin -H "cookie: $COOKIE" -H "content-type: application/json" \
+    --data "{\"settings_version\": $version, \"values\": {\"timezone\": \"UTC\", \"language\": \"en\"}}"
+  check "${TESTS[8]}" body_is 409 '.error.code == "version_conflict"'
+
+  call GET /api/admin/settings/no-such-module -H "cookie: $COOKIE"
+  check "${TESTS[9]}" body_is 404 '.error.code == "not_found"'
+
+  call GET /api/admin/profile -H "cookie: $COOKIE"
+  cp "$TMP/body" "$TMP/export.zip"
+  # shellcheck disable=SC2329
+  export_has_demo() {
+    status_is 200 || return 1
+    python3 - "$TMP/export.zip" "$EVENT_DIR" <<'PY'
+import pathlib, sys, zipfile
+names = set(zipfile.ZipFile(sys.argv[1]).namelist())
+event = pathlib.Path(sys.argv[2])
+want = {"profile.yaml"} | {str(p.relative_to(event)) for p in (event / "assets").rglob("*") if p.is_file()}
+missing = want - names
+print("missing:", sorted(missing)) if missing else None
+sys.exit(1 if missing else 0)
+PY
+  }
+  check "${TESTS[10]}" export_has_demo
+
+  call GET /admin/health-view -H "cookie: $COOKIE"
+  # shellcheck disable=SC2329
+  names_the_parts() {
+    # Each part by name, its id in the Log name column (UX audit A2); the test module hello is
+    # left out of Health (deploy/compose.yml); screen's render check is a part of its own.
+    status_is 200 && grep -q '<b>Admin</b>' "$TMP/body" && grep -q '<b>Run of show</b>' "$TMP/body" \
+      && grep -q '<code class="canccu-muted">agenda</code>' "$TMP/body" \
+      && grep -q '<b>Screen rendering</b>' "$TMP/body"
+  }
+  check "${TESTS[11]}" names_the_parts
+
+  call GET /admin/profile/load -H "cookie: $COOKIE"
+  cp "$TMP/body" "$TMP/ask.html"
+  call GET /api/admin/settings/admin -H "cookie: $COOKIE"
+  # shellcheck disable=SC2329
+  asks_first() {
+    grep -q '>Replace settings and look</button>' "$TMP/ask.html" \
+      && jq -e '.values.language == "fi"' "$TMP/body" >/dev/null
+  }
+  check "${TESTS[26]}" asks_first
+
+  # The settings changed above; import the demo again so the screenshots that follow show the
+  # demo event.
+  call PUT /api/admin/profile -H "cookie: $COOKIE" -H "content-type: application/zip" --data-binary "@$TMP/demo.zip"
+  call GET /api/admin/settings/admin -H "cookie: $COOKIE"
+  check "${TESTS[12]}" body_is 200 '.values.language == "en"'
+fi
