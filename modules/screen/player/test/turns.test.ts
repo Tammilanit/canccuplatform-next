@@ -102,6 +102,21 @@ describe("a held turn", () => {
     expect(html).toContain("/f/two.jpg");
     expect(html).not.toContain("/f/one.jpg");
   });
+
+  it("lets the box go on when the held widget empties and leaves the rotation", () => {
+    const screen = new Screen(host);
+    const root = screen.draw(state([region("hero"), early]));
+    at(screen, 8000);
+    at(screen, 10_000);
+    expect(line(root, "hero")).toBe("a");
+    // Held on `a`; the server empties it and drops it from the rotation (an emptying region never
+    // waits, contracts/screen.md, The Director).
+    const gone = { ...ticker("a"), view: { qr: null, stale: false, empty: true, text: "a" } };
+    screen.draw(state([region("hero", { order: [1], widgets: [gone, ticker("b")] }), early]));
+    at(screen, 10_100);
+    expect(line(root, "hero")).toBe("b");
+    expect(box(root, "hero")?.querySelector(".canccu-is-active.canccu-is-empty")).toBeNull();
+  });
 });
 
 describe("the hero and the rail joined on what is shown", () => {

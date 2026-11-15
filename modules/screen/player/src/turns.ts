@@ -46,7 +46,9 @@ export function turnShown(
 
 /**
  * The turn `drawn` names, with its view as it is now: what a box the choreographer holds back
- * shows, so new data for it (a removed photo) still lands. Undefined when that turn is gone.
+ * shows, so new data for it (a removed photo) still lands. Undefined when that turn is gone,
+ * also when it has left the rotation: an empty widget is skipped and an emptying region never
+ * waits (contracts/screen.md, The Director), so the box goes straight on to its next choice.
  */
 export function heldShown(
   r: Region,
@@ -55,7 +57,7 @@ export function heldShown(
   now: number,
 ): Choice | undefined {
   const index = turnIndexOf(drawn);
-  if (index !== null) return turnShown(r, index, state, now);
+  if (index !== null) return r.order.includes(index) ? turnShown(r, index, state, now) : undefined;
   return drawn.key.startsWith("idle:") ? idleOf(r, state) : undefined;
 }
 
