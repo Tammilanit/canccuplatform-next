@@ -6,7 +6,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { DATABASE_URL, SESSIONS, call, harness, png, upload } from "./helpers.js";
 import type { Harness } from "./helpers.js";
 import { fakeRenderer, pdfPages } from "./render-fake.js";
@@ -241,6 +241,16 @@ describe.skipIf(!DATABASE_URL)("studio content", () => {
     expect(mine).toContain(`data-call="DELETE" data-url="/api/screen/render-jobs/${job?.id}"`);
     expect(mine).toContain(`data-live="render-${deck.id}"`);
     expect(card((await content("decks")).body, deck.id)).not.toContain("/api/screen/render-jobs/");
+  });
+
+  it("still draws the page when the queue cannot say the places (#542)", async () => {
+    const deck = await addDeck("Outage.pdf");
+    const down = vi.spyOn(h.queue, "positions").mockRejectedValueOnce(new Error("valkey down"));
+    const res = await content();
+    expect(res.statusCode).toBe(200);
+    expect(card(res.body, deck.id)).toContain("Waiting to render");
+    expect(down).toHaveBeenCalled();
+    down.mockRestore();
   });
 
   it("counts each slide as it lands while the deck renders, and a cancel stops it", async () => {
