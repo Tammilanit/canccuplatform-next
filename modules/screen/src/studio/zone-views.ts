@@ -379,6 +379,8 @@ export function zoneEditorView(
   const form = {
     "data-zone": JSON.stringify(zone),
     "data-layout": layoutId ?? "",
+    // What the previews compose instead of a missing layout, which their routes refuse.
+    "data-layout-drawn": found ? undefined : layout.id,
     "data-layout-names": JSON.stringify({ "": names.pulse ?? "pulse", ...names }),
     "data-region-names": JSON.stringify(Object.fromEntries(regions.map((r) => [r.id, r.label]))),
   };

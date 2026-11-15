@@ -292,17 +292,20 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
   }
 
   // A true preview: the server composes the zone as it would be saved, and the real player draws it.
+  // A missing layout is previewed as the Pulse the page drew; saving keeps the zone's own id.
+  const drawn = form.dataset.layoutDrawn;
+  const previewed = () => (drawn ? { ...zone(), layout_id: drawn } : zone());
   const frame = form.querySelector("iframe[data-preview]");
   form.querySelector("[data-zone-preview]").addEventListener("click", async () => {
     if (!sendable()) return;
     const at = previewAt(document);
     const query = at === null ? "" : `?at=${encodeURIComponent(at)}`;
-    const r = await api("POST", `${url}/preview${query}`, zone());
+    const r = await api("POST", `${url}/preview${query}`, previewed());
     if (!r.ok) return show(failure(r));
     frame.contentWindow.postMessage({ type: PREVIEW_MESSAGE, state: r.data }, location.origin);
   });
 
-  screenPreview(document, { api, failure, say, zone });
+  screenPreview(document, { api, failure, say, zone: previewed });
 
   async function put(body) {
     const r = await api("PUT", url, body);

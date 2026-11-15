@@ -32,7 +32,12 @@ const steps = (ready) => ({
     await page.keyboard.press("Shift+Tab");
     await page.keyboard.press("Tab");
   },
-  gone: ready,
+  // Preview draws the Pulse the warning names; a refusal above it would contradict it (#540).
+  gone: async (page) => {
+    await ready(page);
+    const said = page.locator(".canccu-studio-notice:not([hidden])");
+    if ((await said.count()) > 0) throw new Error(`Preview refused: ${await said.textContent()}`);
+  },
 });
 
 export async function editorShots({ demo, shot, ready }) {

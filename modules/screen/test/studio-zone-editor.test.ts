@@ -7,7 +7,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Element, HTMLElement, HTMLInputElement, Window } from "happy-dom";
+import type { Element, HTMLButtonElement, HTMLElement, HTMLInputElement, Window } from "happy-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BUILT_IN_LAYOUTS } from "../src/compose/layouts.js";
 import { CLIENT_KEYS, translator } from "../src/studio/messages.js";
@@ -66,6 +66,9 @@ async function open(z: Zone) {
       if (method === "GET")
         return Promise.resolve({ ok: true, status: 200, data: { previews: [] } });
       calls.push({ method, url, body });
+      // The preview frame is cut from this page, so a preview's answer must not reach it.
+      if (url.endsWith("/preview"))
+        return Promise.resolve({ ok: false, status: 400, data: { error: { code: "x" } } });
       return Promise.resolve({ ok: true, status: 200, data: { revision: z.revision + 1 } });
     },
     reloadWith: vi.fn(),
@@ -197,6 +200,31 @@ describe("a zone whose layout is gone", () => {
     name.dispatchEvent(new win.Event("input", { bubbles: true }));
     await submit();
     expect(calls[0]?.body.regions).toEqual({});
+  });
+
+  it("previews the Pulse it draws, here and on a screen, and keeps the saved id", async () => {
+    const { form, calls, submit } = await open(stale);
+    (form.querySelector("[data-zone-preview]") as HTMLElement).click();
+    await vi.waitFor(() => {
+      expect(calls).toHaveLength(1);
+    });
+    const dialog = document.querySelector("[data-screen-preview-dialog]") as HTMLElement;
+    dialog.insertAdjacentHTML(
+      "afterbegin",
+      '<input type="radio" name="preview_device" value="d1" checked>',
+    );
+    const start = dialog.querySelector("[data-screen-preview-start]") as HTMLButtonElement;
+    start.disabled = false;
+    start.click();
+    await vi.waitFor(() => {
+      expect(calls).toHaveLength(2);
+    });
+    expect(calls[0]?.url).toBe("/api/screen/zones/main/preview");
+    expect(calls[0]?.body.layout_id).toBe("pulse");
+    expect(calls[1]?.url).toBe("/api/screen/devices/d1/preview");
+    expect((calls[1]?.body.zone as Zone).layout_id).toBe("pulse");
+    await submit();
+    expect(calls[2]?.body.layout_id).toBe("gone");
   });
 });
 
