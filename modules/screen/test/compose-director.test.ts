@@ -5,6 +5,8 @@ import { directorOrder, jumpAt } from "../src/compose/director.js";
 import type { ZoneFacts } from "../src/compose/widgets.js";
 import { zoneInput } from "../src/zone-input.js";
 import { shownAt as playerShownAt } from "../player/src/rotation.js";
+import { jumpAt as playerJumpAt } from "../player/src/director.js";
+import { photoWall, WALL_DEFAULTS } from "../src/compose/photos.js";
 
 // The Director (contracts/screen.md, The Director; design guideline sheet 13).
 const NOW = Date.parse("2026-01-01T12:00:07Z");
@@ -126,6 +128,24 @@ describe("queue jumps", () => {
       feature("photo", { featured: false, featured_until: null }),
     ];
     expect(jumpAt(still, [0, 1], NOW)).toBeNull();
+  });
+
+  it("jumps for a burst of photos only while each is under 2 minutes old, on server and screen (#548)", () => {
+    const burst = Array.from({ length: 20 }, (_, i) => ({
+      id: `p${String(i).padStart(2, "0")}`,
+      url: `/f/${String(i)}.jpg`,
+      caption: null,
+      author_name: null,
+      posted_at: new Date(NOW).toISOString(),
+      created_at: NOW,
+    }));
+    const jumps = (t: number) => {
+      const view = photoWall(burst, WALL_DEFAULTS, "main", t)?.view ?? {};
+      const widgets = [feature("playlist"), feature("photo", view)];
+      return [jumpAt(widgets, [0, 1], t)?.until ?? null, playerJumpAt(widgets, [0, 1], t)?.until ?? null]; // prettier-ignore
+    };
+    expect(jumps(NOW + 115_000)).toEqual([NOW + 120_000, NOW + 120_000]);
+    for (const t of [NOW + 120_000, NOW + 150_000, NOW + 199_000]) expect(jumps(t)).toEqual([null, null]); // prettier-ignore
   });
 
   it("lets the surge go first when both jump, and never a feature that takes no part", () => {

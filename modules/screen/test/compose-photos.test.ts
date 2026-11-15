@@ -112,4 +112,19 @@ describe("popUntil", () => {
     expect(until.get("a")).toBe(T0 + 10_000);
     expect(until.get("b")).toBe(T0 + 20_000);
   });
+
+  it("pops a photo only while it is under 2 minutes old, so a burst never chains on (#548)", () => {
+    // Fifteen at once: the twelfth's slot ends as it turns 2 minutes old, the rest join the wall.
+    const burst = Array.from({ length: 15 }, (_, i) => photo(`p${String(i).padStart(2, "0")}`, T0));
+    const until = popUntil(burst);
+    expect(until.size).toBe(12);
+    expect(until.get("p11")).toBe(T0 + 120_000);
+    expect(until.has("p12")).toBe(false);
+    // One that comes after the burst has its own slot, at once.
+    const later = popUntil([...burst, photo("late", T0 + 125_000)]);
+    expect(later.get("late")).toBe(T0 + 135_000);
+    // The wall features none of the burst once its slots are over.
+    const view = photoWall(burst, wall(), "main", T0 + 125_000)?.view;
+    expect(view).toMatchObject({ featured: false, featured_until: null });
+  });
 });
