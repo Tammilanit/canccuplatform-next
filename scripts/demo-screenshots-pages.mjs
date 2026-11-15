@@ -142,6 +142,8 @@ export const OTHERS = [
   ["sign-in-phone", SIGN_IN, PHONE, { cookie: null }],
   ["error-not-found", MISSING, DESK, { status: 404 }],
   ["error-not-found-phone", MISSING, PHONE, { status: 404 }],
+  // A mistyped organiser address draws the module's page, not the kit's JSON (#556).
+  ["error-mistyped", "/admin/setings", DESK, { status: 404 }],
   // Quick add with a time after midnight typed: the next day picked, said why, and the button
   // repeating day and time (#434).
   ["agenda-quick-add-night-phone", "/agenda/add", PHONE, { ready: typeNight }],

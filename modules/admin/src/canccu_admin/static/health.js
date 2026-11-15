@@ -2,7 +2,8 @@
 // tab is in view it reads the page's live parts alone (/admin/health-view/live, never the whole
 // page with its menu) and swaps each part marked data-canccu-live (the tiles, the parts table and
 // "Last check"); scroll stays where it is and an open "What to check" stays open, by part. The
-// menu's Health note follows the checks through shell.js, as on every organiser page. It reads
+// menu's Health note follows the checks through shell.js, as on every organiser page; after each
+// swap it reads the note again (canccu-health-swapped), so tiles and note never disagree. It reads
 // without "?check=now", so an open page never makes admin check more often than the watch does.
 // Hidden, it pauses; back in view, it reads at once.
 const EVERY_MS = 10000;
@@ -54,7 +55,10 @@ async function tick() {
     if (!res.ok || res.redirected) return;
     const next = document.createElement("template");
     next.innerHTML = await res.text();
-    if (!selecting()) swap(next);
+    if (!selecting()) {
+      swap(next);
+      document.dispatchEvent(new Event("canccu-health-swapped"));
+    }
   } catch {
     // Nothing answered: the last check stays on screen, with its time.
   } finally {

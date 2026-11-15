@@ -24,8 +24,10 @@ def event_span(request: Request) -> tuple[date, date] | None:
     if event is None or not event.starts_at or not event.ends_at:
         return None
     tz = zone_of(request)
-    first, last = (_parsed(v).astimezone(tz).date() for v in (event.starts_at, event.ends_at))
-    return first, last
+    first = _parsed(event.starts_at).astimezone(tz).date()
+    # An end at midnight is the end of the day before: the next day has none of the event.
+    last = (_parsed(event.ends_at) - timedelta(microseconds=1)).astimezone(tz).date()
+    return first, max(first, last)
 
 
 def event_days(request: Request, today: date, *extra: date | None) -> list[date]:

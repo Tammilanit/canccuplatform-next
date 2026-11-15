@@ -140,7 +140,7 @@ async def undo_page(request: Request) -> Response:
     first = min(touched, key=lambda r: r["starts_at"], default=None)
     day = now if first is None else first["starts_at"]
     path = f"/?day={day.astimezone(zone_of(request)).date().isoformat()}&done=undone"
-    return redirect(path, None if first is None else first["id"])
+    return redirect(path, first, now)
 
 
 async def _current(conn: Any, step: dict[str, Any]) -> Any:

@@ -4,12 +4,16 @@ settings:
     min: 5
     max: 60
     label: Screen heartbeat (seconds)
+    short: Heartbeat
+    hint: How often a screen checks in.
     default: 15
   - key: offline_after_seconds
     type: integer
     min: 15
     max: 300
     label: Screen offline after (seconds)
+    short: Mark offline after
+    hint: "Shorter: more false alarms on a slow uplink."
     default: 45
   # Each item must be an https:// origin; a declaration cannot say so, so the
   # screen module checks it when it reads the list.
@@ -22,15 +26,18 @@ settings:
     min: 0
     max: 3600
     label: Minimum gap between breaks (seconds)
+    short: Least time between breaks
     default: 60
   - key: progress_bars
     type: boolean
     label: Show progress bars
+    hint: A thin bar under each rotating slide.
     default: true
   - key: ticker_appearance
     type: string
     choices: [default, high_contrast, minimal, broadcast]
     label: Ticker appearance
+    short: Ticker look
     default: default
   - key: ready_timeout_seconds
     type: integer

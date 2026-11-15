@@ -208,6 +208,23 @@ describe("errorView", () => {
     expect(view).toContain(title);
     expect(view).not.toContain("raw detail");
   });
+  it("offers the way back on a not-found page without a session", () => {
+    const back = { href: "/theming/studio/", label: "Back to the Theme studio" };
+    const view = s(errorView({ status: 404, code: "not_found", message: "x" }, { back }));
+    expect(view).toContain('href="/theming/studio/">Back to the Theme studio</a>');
+  });
+  it("offers the way back, not a retry, after a form post", () => {
+    const back = { href: "/theming/studio/", label: "Back to the Theme studio" };
+    const failed = { status: 500, code: "internal_error", message: "x" };
+    const view = s(errorView(failed, { session: ORGANISER, back }));
+    expect(view).not.toContain("Try again</a>");
+    expect(view).toContain("Back to the Theme studio</a>");
+    const retried = s(
+      errorView(failed, { session: ORGANISER, back, retry: "/theming/studio/?a=1" }),
+    );
+    expect(retried).toContain("Try again</a>");
+    expect(retried).not.toContain("Back to the Theme studio</a>");
+  });
   it("says a refused change in the module's own words", () => {
     const view = s(
       errorView({ status: 400, code: "invalid_request", message: "Pick a colour." }, {}),
