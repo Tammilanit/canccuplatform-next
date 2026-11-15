@@ -115,8 +115,10 @@ describe("a graph's bars and hours", () => {
     const points = graphOf(gap, BOX_UNITS).points;
     const at = points.flatMap((p, i) => (p.tick_text === undefined ? [] : [i]));
     const barUnits = (BOX_UNITS - 15) / gap.length;
-    for (const [a, b] of at.slice(1).map((b, k) => [at[k] as number, b]))
+    for (let k = 1; k < at.length; k++) {
+      const [a, b] = [at[k - 1] as number, at[k] as number];
       expect((b - a) * barUnits, `labels on bars ${String(a)} and ${String(b)}`).toBeGreaterThanOrEqual(10); // prettier-ignore
+    }
     expect(points.flatMap((p) => p.tick_text ?? [])).toEqual(["06:00", "12:00", "18:00"]);
   });
 
