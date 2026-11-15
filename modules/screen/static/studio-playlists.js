@@ -15,12 +15,19 @@ document.querySelector("[data-playlist-pick]")?.addEventListener("change", (e) =
 });
 
 const create = document.querySelector("form[data-playlist-new]");
+// The button waits for the answer, so a double click makes one playlist, not two.
 create?.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const button = create.querySelector("button[type=submit]");
+  if (button?.disabled) return;
   const f = new FormData(create);
   const body = { name: String(f.get("name")).trim(), type: f.get("type"), items: [] };
+  if (button) button.disabled = true;
   const r = await api("POST", "/api/screen/playlists", body);
-  if (!r.ok) return show(failure(r));
+  if (!r.ok) {
+    if (button) button.disabled = false;
+    return show(failure(r));
+  }
   reloadWith(say("playlist.created"), `${PAGE}?playlist=${encodeURIComponent(r.data.id)}`);
 });
 

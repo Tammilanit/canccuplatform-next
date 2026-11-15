@@ -155,7 +155,7 @@
   margin: 0;
 }
 
-.canccu-studio-item[draggable="true"] {
+.canccu-studio-item__handle[draggable="true"] {
   cursor: grab;
 }
 

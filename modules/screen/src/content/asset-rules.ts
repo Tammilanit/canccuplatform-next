@@ -20,6 +20,12 @@ export async function checkItemAssets(c: SqlClient, playlist: PlaylistInput): Pr
     const where = `items[${i}]`;
     const asset = assets.get(item.asset_id);
     if (asset === undefined) throw invalidRequest(`\`${where}.asset_id\`: ${NO_SUCH_ASSET}`);
+    // A claim's sound: the playlist widget draws no audio, so Studio could neither show nor keep it.
+    if (asset.kind === "audio") {
+      throw invalidRequest(
+        `\`${where}.asset_id\`: an audio asset plays only as a claim's sound, never in a playlist.`,
+      );
+    }
     if (item.duration_seconds === null && asset.kind !== "video" && !slideshow) {
       throw invalidRequest(
         `\`${where}.duration_seconds\`: only a video can play for its own length (null); give the seconds.`,

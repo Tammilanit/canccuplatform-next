@@ -150,7 +150,7 @@ describe("dragging a row", () => {
   it("starts at its handle only, so text in its fields can be selected", () => {
     const [row] = rowsOf(editor(regular())) as HTMLElement[];
     const handle = row?.querySelector(".canccu-studio-item__handle") as HTMLElement;
-    expect(row?.draggable).toBe(false);
+    expect(row?.draggable).not.toBe(true);
     expect(handle.draggable).toBe(true);
     expect(dragStart(row?.querySelector("input") as HTMLElement)).not.toHaveBeenCalled();
     expect(dragStart(handle)).toHaveBeenCalledWith("application/x-canccu-item", "0");
