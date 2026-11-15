@@ -5,7 +5,7 @@
   "description": "The screen module: paired devices, zones and what the venue screens show (contracts/screen.md).",
   "type": "module",
   "engines": {
-    "node": ">=22.13"
+    "node": ">=22.18"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json && npm run build:player",
