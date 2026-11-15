@@ -54,6 +54,7 @@ import {
   eventOf,
   holds,
   pageNeeds,
+  signInStep,
   studioPage,
   translate,
 } from "./page.js";
@@ -77,12 +78,19 @@ export interface StudioDeps extends Omit<ContentDeps, "now"> {
   now?: () => number;
 }
 
+/** The Ticker's and Pins' own script, which reads an end typed in on the event's clock. */
+const ENDS = { own: "studio-ends", module: true } as const;
+
 export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
   const now = deps.now ?? Date.now;
   void app.register((studio, _opts, done) => {
     // Pages answer pages: a browser without a session goes to sign in, a refusal is said in words.
     studio.setErrorHandler(async (err: FastifyError, request, reply) => {
       if (err instanceof NotSignedIn) {
+        // Devices is where the kiosk's pairing QR lands, with its code in the fragment.
+        if (request.url.split("?")[0] === `${STUDIO}devices`) {
+          return signInStep(request, reply, await translate(deps));
+        }
         return reply.redirect(`${SIGN_IN}?next=${encodeURIComponent(request.url)}`, 303);
       }
       const session = request.session;
@@ -269,6 +277,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
           tab: "ticker",
           description: c.t("ticker.desc"),
           body: tickerView(c, ticker),
+          ...ENDS,
         });
       },
     );
@@ -286,6 +295,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
           tab: "pins",
           description: c.t("pins.desc"),
           body: pinsView(c, pin, await inEffect(deps, ctx.tenant_id, pin), event?.ends_at),
+          ...ENDS,
         });
       },
     );

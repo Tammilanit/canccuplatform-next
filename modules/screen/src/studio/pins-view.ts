@@ -106,7 +106,7 @@ function freezeCard(c: ViewContext, pin: PinRow, endsAt: string | null | undefin
           t("pins.freeze_done"),
           true,
         )
-      : html`<form class="canccu-form" data-freeze>
+      : html`<form class="canccu-form" data-freeze${attrs({ "data-time-zone": c.timeZone })}>
           <div class="canccu-field">
             <label class="canccu-field__label" for="canccu-studio-freeze-until"
               >${t("pins.freeze_until")}</label

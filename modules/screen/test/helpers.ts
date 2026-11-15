@@ -19,7 +19,7 @@ import {
 import type { PublicEvent, SettingValue, StorageQuota } from "@canccu/kit";
 import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
 import { buildApp } from "../src/app.js";
-import type { AuditEntry } from "../src/audit.js";
+import type { Audit, AuditEntry } from "../src/audit.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "../src/db.js";
 import type { Db } from "../src/db.js";
 import { requireDevice } from "../src/device-access.js";
@@ -97,6 +97,8 @@ export interface Harness {
   bus: Bus;
   kv: MemoryKv;
   audits: AuditEntry[];
+  /** The app's audit, for calls made outside a request. */
+  audit: Audit;
   /** Set to make the next audit append fail, as a restarting tenants module does. */
   failAudit: { next: boolean };
   clock: { now: number };
@@ -278,21 +280,22 @@ export async function harness(options: { saves?: boolean } = {}): Promise<Harnes
   // Screen's held copy of what admin answered: like the kit's SettingsClient, a write through
   // admin reaches it only on load() (or admin's event, which the harness does not send).
   const heldVersions: Record<string, number> = {};
+  const audit: Audit = (entry) => {
+    if (failAudit.next) {
+      failAudit.next = false;
+      return Promise.reject(
+        new KitError("audit down", { status: 503, code: "tenants_unavailable" }),
+      );
+    }
+    audits.push(entry);
+    return Promise.resolve();
+  };
   const app = buildApp({
     db,
     kv,
     bus,
     rights,
-    audit: (entry) => {
-      if (failAudit.next) {
-        failAudit.next = false;
-        return Promise.reject(
-          new KitError("audit down", { status: 503, code: "tenants_unavailable" }),
-        );
-      }
-      audits.push(entry);
-      return Promise.resolve();
-    },
+    audit,
     tenants,
     superadminHost: SUPERADMIN_HOST,
     health: createHealth({ module: "screen", version: "dev", checks: {} }),
@@ -373,6 +376,7 @@ export async function harness(options: { saves?: boolean } = {}): Promise<Harnes
     bus,
     kv,
     audits,
+    audit,
     failAudit,
     clock,
     settings,

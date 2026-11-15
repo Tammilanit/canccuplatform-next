@@ -17,7 +17,7 @@ const TEXT = { "error.failed": "That did not work. Try again." };
 let calls: string[];
 let answer: () => Promise<Response>;
 // The document outlives each test, so the listeners a load adds are taken off after it.
-let added: [string, EventListener][] = [];
+let added: [string, (event: unknown) => void][] = [];
 
 function load(body: string): void {
   win.document.body.innerHTML = `
@@ -43,14 +43,14 @@ beforeEach(() => {
   const add = win.document.addEventListener.bind(win.document);
   vi.spyOn(win.document, "addEventListener").mockImplementation(((
     type: string,
-    listener: EventListener,
+    listener: (event: unknown) => void,
   ) => {
     added.push([type, listener]);
-    add(type, listener as never);
+    add(type, listener);
   }) as never);
 });
 afterEach(() => {
-  for (const [type, listener] of added) win.document.removeEventListener(type, listener as never);
+  for (const [type, listener] of added) win.document.removeEventListener(type, listener);
   added = [];
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -77,8 +77,9 @@ describe("a Studio button", () => {
     expect(calls).toEqual([]);
     button().click();
     await vi.waitFor(() => {
-      expect(calls).toHaveLength(1);
+      expect(notice().textContent).toBe("Cleared");
     });
+    expect(calls).toHaveLength(1);
     expect(button().textContent).toBe("Clear codes");
     button().click();
     expect(button().textContent).toBe("Tap again");
