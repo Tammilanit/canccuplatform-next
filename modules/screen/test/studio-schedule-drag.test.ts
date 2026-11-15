@@ -31,6 +31,7 @@ beforeEach(async () => {
         <h2 id="canccu-sched-editor-title" data-new="New" data-edit="Edit"></h2>
         <p data-window-error hidden></p>
         <button type="button" data-window-delete data-confirm="Sure?">Delete</button>
+        <button type="submit">Save</button>
       </form>
     </dialog>
     <script type="application/json" id="canccu-sched-windows">${JSON.stringify({ schedules: [WINDOW] })}</script>

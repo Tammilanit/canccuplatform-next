@@ -31,8 +31,7 @@ export async function agendaAt(
   const items = await sources.agendaItems(tenantId);
   if (items === null) return null;
   const rail = railAt(items, zoneKey, atMs);
-  const next = rail.next === null ? [] : [rail.next];
-  return { current: rail.now, next, later: laterOf(items, next, zoneKey) };
+  return { current: rail.now, next: rail.next, later: laterOf(items, rail.next, zoneKey) };
 }
 
 /**

@@ -7,6 +7,7 @@
  */
 import { attrs, dayLabel, html, timeLabel } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
+import type { AgendaItem } from "../compose/widgets.js";
 import type { AgendaLabel } from "../content/agenda.js";
 import type { Answer, WhatPlays, WindowFacts } from "./schedule-at.js";
 import { isDate, wallInstant } from "./schedule-axis.js";
@@ -85,8 +86,11 @@ function railLine(c: ViewContext, a: Answer): string {
   const { t } = c;
   if (a.rail === null) return t("at.rail_down");
   const time = (iso: string) => timeLabel(iso, c.timeZone);
-  const now = a.rail.now.map((i) => `“${i.title}”`).join(", ");
-  const next = a.rail.next && t("at.item_at", { title: a.rail.next.title, time: time(a.rail.next.starts_at) }); // prettier-ignore
+  const titles = (items: AgendaItem[]) => items.map((i) => `“${i.title}”`).join(", ");
+  const now = titles(a.rail.now);
+  const first = a.rail.next[0];
+  const next =
+    first && t("at.items_at", { titles: titles(a.rail.next), time: time(first.starts_at) });
   if (now !== "" && next) return t("at.rail", { now, next });
   if (next) return t("at.rail_next", { next });
   if (now !== "") return t("at.rail_now", { now });

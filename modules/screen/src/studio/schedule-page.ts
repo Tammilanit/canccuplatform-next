@@ -74,22 +74,23 @@ export async function schedulePage(
   const last = page.days.at(-1) as string;
   const writer = c.rights.has(WRITE);
   const range = pageReadRange(page.days, tz);
-  const [read, playlists, labels, windows, items] = await deps.db.tenant(
-    async (t) =>
-      [
-        await readCalendar(t, {
-          from: new Date(range.from),
-          to: new Date(range.to),
-          zone,
-          timeZone: tz,
-          revealCrew: c.rights.has("agenda.crew.read"),
-        }),
-        await loadPlaylists(t),
-        await loadAgendaLabels(t),
-        (await listSchedules(t)) as unknown as WindowFacts[],
-        writer ? await loadAgendaChoices(t) : ([] as AgendaChoice[]),
-      ] as const,
-  );
+  const [read, playlists, labels, windows, items] = await deps.db.tenant(async (t) => {
+    const facts = (await listSchedules(t)) as unknown as WindowFacts[];
+    const bound = new Set(facts.flatMap((w) => w.agenda_item_id ?? []));
+    return [
+      await readCalendar(t, {
+        from: new Date(range.from),
+        to: new Date(range.to),
+        zone,
+        timeZone: tz,
+        revealCrew: c.rights.has("agenda.crew.read"),
+      }),
+      await loadPlaylists(t),
+      await loadAgendaLabels(t),
+      facts,
+      writer ? await loadAgendaChoices(t, bound) : ([] as AgendaChoice[]),
+    ] as const;
+  });
   const layouts = await layoutsOf(deps.sources, tenantId);
   const axis = scheduleAxis(read.zones, page.days, tz);
   const calendar = clipCalendar(read, {

@@ -152,11 +152,18 @@ export interface AgendaChoice extends AgendaLabel {
   startsAt: string;
 }
 
-/** The items a window may be bound to, in run-of-show order. */
-export async function loadAgendaChoices(c: SqlClient): Promise<AgendaChoice[]> {
+/**
+ * The items a window may be bound to, in run-of-show order. A cancelled item never runs, so it is
+ * offered only to the windows already bound to it (`bound`), which keep their choice on a save.
+ */
+export async function loadAgendaChoices(
+  c: SqlClient,
+  bound: ReadonlySet<string>,
+): Promise<AgendaChoice[]> {
   const labels = await loadAgendaLabels(c);
   const items = await loadAgendaItems(c);
   return [...items.values()]
+    .filter((item) => item.status !== "cancelled" || bound.has(item.id))
     .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime() || a.id.localeCompare(b.id))
     .map((item) => ({
       id: item.id,

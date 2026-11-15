@@ -62,7 +62,7 @@ describe("field", () => {
       ),
     ).toMatchSnapshot();
   });
-  it("select with a hidden option it can still hold", () => {
+  it("select with a hidden option it can still hold but nobody can pick", () => {
     const h = s(
       field({
         name: "mode",
@@ -74,7 +74,8 @@ describe("field", () => {
       }),
     );
     expect(h).toContain('<option value="a">A</option>');
-    expect(h).toContain('<option value="gone" hidden>Gone</option>');
+    // Hidden alone is not enough: iOS Safari's picker still lists and picks it.
+    expect(h).toContain('<option value="gone" hidden disabled>Gone</option>');
   });
 });
 

@@ -328,12 +328,13 @@
   color: var(--canccu-ink-degraded);
 }
 
-/* The window editor (#267): writers drag on the days; a drag never selects text. */
+/* The window editor (#267): writers drag on the days; a drag never selects text. Readers keep
+   selection, so they can copy what the calendar says. */
 .canccu-sched__main > p {
   margin: 0;
 }
 
-.canccu-sched__body {
+.canccu-sched__grid--edit .canccu-sched__body {
   user-select: none;
 }
 

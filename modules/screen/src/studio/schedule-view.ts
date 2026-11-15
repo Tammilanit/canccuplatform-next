@@ -238,7 +238,7 @@ function grid(c: ViewContext, d: ScheduleViewData, place: Place, rules: string[]
   >
     <div
       id="${ID}0"
-      class="canccu-sched__grid${many ? " canccu-sched__grid--lanes" : ""}"
+      class="canccu-sched__grid${many ? " canccu-sched__grid--lanes" : ""}${d.editor === null ? "" : " canccu-sched__grid--edit"}"
       data-axis="${model.axis.startMinute} ${model.axis.endMinute}"
     >
       <div class="canccu-sched__gutter">
