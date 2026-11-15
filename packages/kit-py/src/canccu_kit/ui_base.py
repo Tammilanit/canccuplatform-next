@@ -43,7 +43,14 @@ MENU: dict[str, Any] = {
                     "label": "Screen studio",
                     "href": "/admin/screen/",
                     "icon": "monitor",
-                    "rights": ["screen.devices.read", "screen.zones.write", "screen.ticker.write"],
+                    "rights": [
+                        "screen.devices.read",
+                        "screen.zones.write",
+                        "screen.ticker.write",
+                        "screen.content.read",
+                        "screen.content.write",
+                        "screen.bundle.write",
+                    ],
                 },
                 {
                     "id": "theme",

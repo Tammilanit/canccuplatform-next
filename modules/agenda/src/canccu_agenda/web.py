@@ -102,7 +102,10 @@ async def page_writer(request: Request) -> Session:
 async def event_of(request: Request) -> ui.EventInfo | None:
     """The event the shell's header names (canccu_kit.ui)."""
     resolver: TenantResolver | None = getattr(request.app.state, "tenants", None)
-    return None if resolver is None else await resolver.event(request.headers.get("host"))
+    if resolver is None:
+        return None
+    # The cookie names a draft event to its members; an open event's answer stays shared.
+    return await resolver.event(request.headers.get("host"), request.headers.get("cookie"))
 
 
 def page(

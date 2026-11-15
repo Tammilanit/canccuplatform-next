@@ -66,6 +66,20 @@ describe.skipIf(!DATABASE_URL)("studio pins", () => {
     expect((await page("/admin/screen/", "bundler")).headers.location).toBe("/admin/screen/pins");
   });
 
+  it("names a draft event in the header and freezes it until its end", async () => {
+    h.publicEvents["alpha.test"] = {
+      id: "alpha",
+      name: "Demo Party",
+      status: "draft",
+      ends_at: ENDS,
+    };
+    const admin = (await page("/admin/screen/pins", "admin")).body;
+    expect(admin).toContain('<span class="canccu-header__title">Demo Party</span>');
+    expect(admin).toContain(
+      `data-body="${JSON.stringify({ freeze: true, until: ENDS }).replace(/"/g, "&quot;")}"`,
+    );
+  });
+
   it("offers Freeze for the event, until its end, only to screen.bundle.write", async () => {
     const admin = (await page("/admin/screen/pins", "admin")).body;
     expect(admin).toContain("Freeze for the event");

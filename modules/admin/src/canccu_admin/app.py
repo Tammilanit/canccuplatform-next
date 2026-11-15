@@ -104,8 +104,9 @@ def create_app(
         """A module's own settings for the tenant it serves; no hostname names the tenant on
         admin's internal address, so the kit sends it (contracts/admin.md, Settings)."""
         module = module_of(request)
-        # The middleware verified the caller; a module reads only its own settings.
-        if request.state.service != module:
+        # The middleware verified the caller; a module reads only its own settings, and admin's,
+        # which hold the event's language every module's pages follow (contracts/admin.md).
+        if module not in (request.state.service, "admin"):
             raise ServiceForbidden(f"module {request.state.service} reads only its own settings")
         tenant = request.query_params.get("tenant_id", "")
         if not is_tenant_id(tenant):

@@ -43,7 +43,7 @@ export async function eventOf(
   request: FastifyRequest,
   tenants: StudioDeps["tenants"],
 ): Promise<EventInfo | undefined> {
-  const e = await tenants?.event(request.headers.host);
+  const e = await tenants?.event(request.headers.host, request.headers.cookie);
   if (!e) return undefined;
   return {
     name: e.name,

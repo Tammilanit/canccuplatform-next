@@ -34,6 +34,12 @@ describe("menuFor", () => {
       ["Admin", ["settings", "health"]],
     ]);
   });
+  it("opens Screen studio to a role with content or bundle rights only", () => {
+    for (const right of ["screen.content.read", "screen.content.write", "screen.bundle.write"]) {
+      const groups = menuFor(new Set([right]));
+      expect(groups.flatMap((g) => g.items.map((i) => i.id))).toEqual(["screen"]);
+    }
+  });
 });
 
 describe("barFor", () => {

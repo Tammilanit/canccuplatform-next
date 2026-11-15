@@ -94,6 +94,11 @@ def test_a_menu_item_says_when_its_page_needs_a_look() -> None:
     assert doc.count("canccu-badge--degraded") == 1
 
 
+def test_screen_studio_opens_to_a_role_with_content_or_bundle_rights_only() -> None:
+    for right in ("screen.content.read", "screen.content.write", "screen.bundle.write"):
+        assert [i["id"] for g in menu_for(Viewer(right)) for i in g["items"]] == ["screen"]
+
+
 def test_bar_puts_quick_add_in_the_middle() -> None:
     every = Viewer("agenda.items.write", "notify.topics.write", "screen.devices.read")
     assert [b["label"] for b in bar_for(every)] == [

@@ -12,7 +12,7 @@ import time
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 import httpx
 
@@ -163,31 +163,43 @@ class TenantResolver:
             raise UnknownHost()
         return Resolution("tenant", context)
 
-    async def event(self, raw_host: str | None) -> EventInfo | None:
+    async def event(self, raw_host: str | None, cookie: str | None = None) -> EventInfo | None:
         """The event on this host as `GET /api/tenants/current` tells anyone (its name, dates,
         state and venue), for the organiser shell's header. None when the tenants module does not
-        answer: a page then shows a plain header rather than failing."""
+        answer: a page then shows a plain header rather than failing.
+
+        Tenants names a draft event only to its members (contracts/tenants.md, Lifecycle), so for
+        a draft the request's own `cookie` is asked again. That answer is the session's, so it is
+        never cached; an open event keeps the one shared answer whoever asks."""
         host = normalize_host(raw_host)
         if host is None:
             return None
         hit = self._events.get(host)
         if hit is not None and self._now() - hit.at < self._cache_seconds:
-            return hit.event
-        event, tenant = None, None
+            event = hit.event
+        else:
+            body = await self._current(host, None)
+            event = EventInfo.from_api(body) if body is not None else None
+            self._events.pop(host, None)
+            tenant = body.get("id") if body is not None else None
+            self._events[host] = _CachedEvent(self._now(), event, tenant)
+            while len(self._events) > self._max_entries:
+                self._events.popitem(last=False)
+        if event is None or event.status != "draft" or not cookie:
+            return event
+        own = await self._current(host, cookie)
+        return EventInfo.from_api(own) if own is not None else event
+
+    async def _current(self, host: str, cookie: str | None) -> dict[str, Any] | None:
+        headers = {"host": host} if cookie is None else {"host": host, "cookie": cookie}
         try:
             response = await self._http.get(
-                f"{self._tenants_url}/api/tenants/current", headers={"host": host}
+                f"{self._tenants_url}/api/tenants/current", headers=headers
             )
             body = response.json() if response.is_success else None
         except (httpx.HTTPError, ValueError):
             body = None
-        if isinstance(body, dict):
-            event, tenant = EventInfo.from_api(body), body.get("id")
-        self._events.pop(host, None)
-        self._events[host] = _CachedEvent(self._now(), event, tenant)
-        while len(self._events) > self._max_entries:
-            self._events.popitem(last=False)
-        return event
+        return body if isinstance(body, dict) else None
 
     @property
     def cache_size(self) -> int:

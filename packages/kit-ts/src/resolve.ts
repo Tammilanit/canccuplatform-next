@@ -157,31 +157,36 @@ export class TenantResolver {
    * venue), for the organiser shell's header. Null when the tenants module does not answer: a page
    * then shows a plain header rather than failing.
    *
-   * With `cookie`, the request's own Cookie header goes along, so tenants answers as it would
-   * that session (a draft event's name only to its members, contracts/tenants.md, Lifecycle);
-   * that answer is the session's, so it is never cached.
+   * Tenants names a draft event only to its members (contracts/tenants.md, Lifecycle), so for a
+   * draft the request's own `cookie` is asked again. That answer is the session's, so it is never
+   * cached; an open event keeps the one shared answer whoever asks.
    */
   async event(rawHost: string | null | undefined, cookie?: string): Promise<PublicEvent | null> {
     const host = normalizeHost(rawHost);
     if (host === undefined) return null;
-    if (cookie !== undefined) {
-      const own = await getJson(`${this.tenantsUrl}/api/tenants/current`, host, cookie).catch(
-        () => null,
-      );
-      return typeof own === "object" && own !== null ? (own as PublicEvent) : null;
-    }
     const hit = this.events.get(host);
-    if (hit !== undefined && this.now() - hit.at < this.cacheMs) return hit.event;
-    const body = await getJson(`${this.tenantsUrl}/api/tenants/current`, host).catch(() => null);
-    const event = typeof body === "object" && body !== null ? (body as PublicEvent) : null;
-    this.events.delete(host);
-    this.events.set(host, { at: this.now(), event });
-    while (this.events.size > this.maxEntries) {
-      const oldest = this.events.keys().next().value;
-      if (oldest === undefined) break;
-      this.events.delete(oldest);
+    let event: PublicEvent | null;
+    if (hit !== undefined && this.now() - hit.at < this.cacheMs) {
+      event = hit.event;
+    } else {
+      event = await this.current(host);
+      this.events.delete(host);
+      this.events.set(host, { at: this.now(), event });
+      while (this.events.size > this.maxEntries) {
+        const oldest = this.events.keys().next().value;
+        if (oldest === undefined) break;
+        this.events.delete(oldest);
+      }
     }
-    return event;
+    if (event?.status !== "draft" || !cookie) return event;
+    return (await this.current(host, cookie)) ?? event;
+  }
+
+  private async current(host: string, cookie?: string): Promise<PublicEvent | null> {
+    const body = await getJson(`${this.tenantsUrl}/api/tenants/current`, host, cookie).catch(
+      () => null,
+    );
+    return typeof body === "object" && body !== null ? (body as PublicEvent) : null;
   }
 
   get cacheSize(): number {
