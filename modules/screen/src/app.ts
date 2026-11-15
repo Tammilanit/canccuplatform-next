@@ -8,7 +8,7 @@ import { access } from "node:fs/promises";
 import multipart from "@fastify/multipart";
 import Fastify from "fastify";
 import type { FastifyInstance, FastifyServerOptions } from "fastify";
-import { FILES_ROOT, createHealth, postgresCheck } from "@canccu/kit";
+import { FILES_ROOT, Outbox, createHealth, postgresCheck } from "@canccu/kit";
 import type {
   Bus,
   CheckFn,
@@ -234,6 +234,8 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
     sources: deps.sources ?? noSources,
     bundleVersion,
     bundles,
+    // Every container sends what a failed flush left behind (main.ts's timer).
+    outbox: new Outbox(deps.bus, deps.db, deps.log === undefined ? {} : { log: deps.log }),
     art: deps.art ?? new ArtCache(deps.kv, () => Promise.resolve(null)),
   };
   const push = {

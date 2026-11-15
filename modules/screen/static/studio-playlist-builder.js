@@ -189,6 +189,33 @@ export function nextAt(timeZone, nowMs, hhmm) {
   return at;
 }
 
+/** The instant of a wall clock `YYYY-MM-DDTHH:MM` (a datetime-local field's value) in `timeZone`. */
+export function wallInstant(timeZone, local) {
+  const [date, time] = local.split("T");
+  const [y, mo, d] = date.split("-").map(Number);
+  const [h, m] = time.split(":").map(Number);
+  const wall = Date.UTC(y, mo - 1, d, h, m);
+  // The zone's offset at a first guess, then once more at the result, which a change of daylight
+  // saving time in between moves.
+  const offset = (ms) => {
+    const p = new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(ms);
+    const part = (type) => Number(p.find((x) => x.type === type)?.value);
+    return (
+      Date.UTC(part("year"), part("month") - 1, part("day"), part("hour"), part("minute")) - ms
+    );
+  };
+  const guess = wall - offset(wall);
+  return wall - offset(guess);
+}
+
 /** The push's end for a preset (minutes, `day` or `at` a time), or the key of why not. */
 export function pushUntil(choice, nowMs, timeZone, at) {
   let ms;

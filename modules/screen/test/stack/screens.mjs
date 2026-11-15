@@ -10,7 +10,7 @@
 // takeover, which keeps its fixed red there too. Dashboard is handed sample statistics (#416),
 // and shot once as the server draws it while they are missing.
 // The Director's strips (#447, director.mjs) are frames a few seconds apart.
-import { CLEAR_CHECKS, panelFilled } from "./clear.mjs";
+import { CLEAR_CHECKS, panelFilled, venueOnOneLine } from "./clear.mjs";
 import { expect } from "./client.mjs";
 import { boxesGivenAway, graphsScaled, statsApart, stripNamesCountdown } from "./dashboard.mjs";
 import { DIRECTOR_STRIPS, directorStrip, withDirector } from "./director.mjs";
@@ -26,6 +26,7 @@ import {
   withCounts,
   withOneScreen,
   withPhoto,
+  withHeroShowcase,
   withShowcase,
   withSmallShowcase,
   withStats,
@@ -42,6 +43,7 @@ import {
   UNTHEMED,
   CLAIMS,
   LAYOUTS,
+  DEFAULT_LAYOUT_VIEWS,
   landscapeOf,
   NEW_VIEWS,
   SURGE_MS,
@@ -120,21 +122,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
           layoutShot(theme, "dashboard", HD[0], "dashboard-showcase"),
         );
         if (theme === "default")
-          await attempt(nameOf(theme, "dashboard-showcase-small", HD[0]), () =>
-            layoutShot(theme, "dashboard", HD[0], "dashboard-showcase-small"),
-          );
-        if (theme === "default")
-          await attempt(nameOf(theme, "dashboard-waiting", HD[0]), () =>
-            layoutShot(theme, "dashboard", HD[0], "dashboard-waiting"),
-          );
-        if (theme === "default")
-          await attempt(nameOf(theme, "ambient-takeover", HD[0]), () =>
-            layoutShot(theme, "ambient", HD[0], "ambient-takeover"),
-          );
-        if (theme === "default")
-          await attempt(nameOf(theme, "ambient-online", HD[0]), () =>
-            layoutShot(theme, "ambient", HD[0], "ambient-online"),
-          );
+          for (const [view, id] of DEFAULT_LAYOUT_VIEWS)
+            await attempt(nameOf(theme, view, HD[0]), () => layoutShot(theme, id, HD[0], view));
       } finally {
         await saveZone(demo, "main", { layout_id: null });
       }
@@ -180,6 +169,9 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
     await attempt(nameOf("default", "portrait-right-now", HD[1]), () =>
       handed("default", "portrait-right-now", HD[1], withCounts),
     );
+    await attempt(nameOf("default", "portrait-showcase", HD[1]), () =>
+      handed("default", "portrait-showcase", HD[1], withHeroShowcase),
+    );
     for (const { view, level, surge } of STAGE_VIEWS) {
       await attempt(nameOf("default", view, HD[0]), () =>
         handed("default", view, HD[0], withStage(level, surge, SURGE_MS)),
@@ -201,6 +193,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await tickerFitted(page, theme === "default" && size === HD[0]);
       await agendaSettled(page);
       await panelFilled(page);
+      if (theme === "default") await venueOnOneLine(page);
       await shot(nameOf(theme, "pulse", size), page);
       expect(
         await demo.call("POST", `/api/screen/devices/${main.id}/commands`, {
@@ -238,6 +231,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         return handed(theme, view, size, (s) => withSmallShowcase(withStats(s)));
       if (view === "ambient-takeover") return handed(theme, view, size, withTakeover);
       if (view === "ambient-online") return handed(theme, view, size, withCounts);
+      if (view === "ambient-showcase") return handed(theme, view, size, withHeroShowcase);
       const { page, close } = await open(size, main.cookie);
       await page.goto(at("/screen/"));
       await page.waitForSelector(`.canccu-layout--${id}`, { timeout: 30_000 });
@@ -308,7 +302,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       const drawn = NEW_VIEWS[view];
       if (drawn !== undefined) await page.waitForSelector(drawn, { timeout: 30_000 });
       // A showcase's checks measure its hero once the claim has faded in and its fonts are in.
-      const showcase = view.startsWith("dashboard-showcase");
+      const showcase = view.includes("showcase");
       if (!showcase) await CLEAR_CHECKS[view]?.(page);
       let settled = settle;
       if (view === "rail-empty") await railShowsIdle(page);

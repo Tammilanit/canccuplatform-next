@@ -85,6 +85,9 @@ describe.skipIf(!DATABASE_URL)("studio pins", () => {
     expect(body).toContain("data-freeze");
     expect(body).toContain('type="datetime-local"');
     expect(body).toContain("The event has no end time. Freeze until:");
+    // Read on the event's clock by the page's own script (#545).
+    expect(body).toContain('data-freeze data-time-zone="UTC"');
+    expect(body).toContain('<script type="module" src="/admin/screen/static/studio-ends.js">');
   });
 
   it("shows a plain banner on every Studio page while frozen, and Unfreeze on Pins", async () => {

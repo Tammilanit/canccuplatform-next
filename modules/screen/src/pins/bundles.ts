@@ -25,6 +25,17 @@ const VERSION_RE = /^[0-9A-Za-z][0-9A-Za-z._+-]{0,63}$/;
 export const isBundleVersion = (value: unknown): value is string =>
   typeof value === "string" && VERSION_RE.test(value);
 
+/**
+ * The pinned bundle while the store keeps it, else null: screens then load the platform's, so
+ * what the pin reports as in effect is this too (contracts/screen.md, Pins).
+ */
+export async function heldBundle(
+  bundles: Pick<BundleStore, "available">,
+  pinned: string | null,
+): Promise<string | null> {
+  return pinned !== null && (await bundles.available()).includes(pinned) ? pinned : null;
+}
+
 export function bundlesDir(filesRoot: string): string {
   return join(platformFilesDir("screen", filesRoot), "bundles");
 }

@@ -179,7 +179,7 @@ def people_routes(auth: Auth, need: Need, on_event: OnEvent | None) -> list[Rout
                 notes + body + script,
                 session=viewer,
                 current="people",
-                description=description,
+                description_html=description,
                 actions=COPY,
             )
         counts = {
@@ -237,7 +237,7 @@ def people_routes(auth: Auth, need: Need, on_event: OnEvent | None) -> list[Rout
             body,
             session=viewer,
             current="people",
-            description=description,
+            description_html=description,
             actions=COPY,
         )
 

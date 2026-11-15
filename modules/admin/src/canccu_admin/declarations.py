@@ -5,6 +5,8 @@ settings:
   - key: rotation_seconds     # lowercase snake_case, as in a profile
     type: number              # string | number | integer | boolean | list
     label: Rotation (seconds)
+    short: Per slide          # optional: the form's label, where the full one is too long
+    hint: How long each slide stays.   # optional: one line under the field
     default: 15
     choices: [a, b]           # optional, string settings only
   - key: hourly_cap
@@ -66,6 +68,8 @@ class Setting:
     min: int | None = None
     max: int | None = None
     items: str = "string"
+    short: str = ""
+    hint: str = ""
 
 
 @dataclass(frozen=True)
@@ -120,6 +124,8 @@ def _build(module: str, item: dict[str, Any]) -> Setting:
         raise DeclarationError(f"{where}: choices only apply to string settings")
     if lo is not None and hi is not None and lo > hi:
         raise DeclarationError(f"{where}: min {lo} is above max {hi}")
+    if not all(isinstance(item.get(k, ""), str) for k in ("short", "hint")):
+        raise DeclarationError(f"{where}: short and hint must be text")
     setting = Setting(
         key=item["key"],
         type=kind,
@@ -129,6 +135,8 @@ def _build(module: str, item: dict[str, Any]) -> Setting:
         min=lo,
         max=hi,
         items=items,
+        short=item.get("short", ""),
+        hint=item.get("hint", ""),
     )
     if setting.default is not None:
         problem = check_values([setting], {setting.key: setting.default})

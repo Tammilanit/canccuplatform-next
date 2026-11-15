@@ -89,6 +89,7 @@ describe.skipIf(!DATABASE_URL)("an open stream between zone changes", () => {
       sources: noSources,
       settings: { ensure: () => Promise.resolve(), get: (_k: string, f: unknown) => f },
       bundleVersion: "test",
+      bundles: { available: () => Promise.resolve(["test"]) },
       zones,
     } as Parameters<typeof refreshZone>[0];
     const record = await withTenant("alpha", () =>

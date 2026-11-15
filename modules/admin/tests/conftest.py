@@ -208,6 +208,9 @@ def world(tmp_path: Path) -> World:
     async def authorize(cookie: str | None, right: str) -> Session:
         return await holder[0].check(cookie, right)
 
+    async def viewer(cookie: str | None) -> Session:
+        return await holder[0].session(cookie)
+
     watch = HealthWatch(Health("admin", "dev", {}), {}, clock=lambda: clock[0])
     app = create_app(
         service,
@@ -219,6 +222,7 @@ def world(tmp_path: Path) -> World:
         ),
         holder_event(holder),
         identity=ServiceIdentity("admin", SERVICE_KEY),
+        viewer=viewer,  # as main.py reads sessions: through the rights checker
     )
     internal = httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://admin:8080"

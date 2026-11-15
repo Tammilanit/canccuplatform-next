@@ -32,6 +32,8 @@ import { loadOverrides } from "./overrides.js";
 import { highlightChangeAt, highlightOf } from "./features.js";
 import { isShowcase } from "./showcase.js";
 import type { HeaderMode, HubQrMode } from "./parts.js";
+import { heldBundle } from "../pins/bundles.js";
+import type { BundleStore } from "../pins/bundles.js";
 import { readPin } from "../pins/store.js";
 import { themeFor } from "../pins/look.js";
 import type { Sources, ThemeNow } from "./sources.js";
@@ -47,6 +49,8 @@ export interface ComposeDeps {
   sources: Sources;
   settings: Settings;
   bundleVersion: string;
+  /** The kept bundles: a pinned one no longer kept is not what screens load. */
+  bundles: Pick<BundleStore, "available">;
   /** Each zone's state and change log (src/push/store.ts). */
   zones: ZoneStore;
   /** The stage's game art (src/stage/art.ts); none in the pure tests. */
@@ -128,7 +132,7 @@ export interface ZoneComposed {
   /** Whether the header names the zone (`zone.show_name`). */
   showName: boolean;
   theme: ThemeNow;
-  /** The pinned bundle version, or null for the platform's. */
+  /** The pinned bundle version while it is kept, or null for the platform's. */
   bundle: string | null;
   eventName: string;
   /** Landscape and portrait screens of a zone differ in the layout, its regions and so its claims. */
@@ -185,13 +189,14 @@ export async function composeZone(
     };
   });
   if (read === null) return null;
-  const [live, event, agenda, venue] = await Promise.all([
+  const [live, event, agenda, venue, bundle] = await Promise.all([
     themeFor(deps.sources, ctx.tenant_id, read.pin),
     deps.sources.event(host),
     preview.at == null
       ? deps.sources.agendaNow(ctx.tenant_id, zoneKey)
       : agendaAt(deps.sources, ctx.tenant_id, zoneKey, at.getTime()),
     deps.sources.venueInfo(ctx.tenant_id),
+    heldBundle(deps.bundles, read.pin.bundle_version),
   ]);
   const { theme, draft } = await lookFor(deps.sources, ctx.tenant_id, live, preview.themeKey);
   const eventName = event?.name ?? ctx.primary_hostname ?? "";
@@ -291,13 +296,13 @@ export async function composeZone(
       tickerAppearance: appearance,
       display,
       claims: read.claims,
-      bundle: read.pin.bundle_version,
+      bundle,
       showName: read.showName,
       art: covers,
     }),
     zone: read.zone,
     showName: read.showName,
-    bundle: read.pin.bundle_version,
+    bundle,
     theme: theme ?? NO_THEME,
     eventName,
     views,

@@ -18,7 +18,7 @@ from starlette.requests import Request
 
 from . import day_view
 from .day_view import state_of
-from .web import BASE, day_label, esc, hhmm
+from .web import BASE, day_label, esc, folded, hhmm
 
 # The filter's choices by the list's For column; empty is every item this person may read.
 AUDIENCES = (
@@ -108,7 +108,7 @@ def build(
     today = now.astimezone(tz).date()
     shown = [r for r in rows if not view.audience or r["visibility"] == view.audience]
     # What has started and is over: a running item stays, whenever it started.
-    earlier = [r for r in shown if r["starts_at"] <= now and state_of(r, now) != "running"]
+    earlier = [r for r in shown if folded(r, now)]
     hidden = set() if view.earlier else {r["id"] for r in earlier}
     visible = [r for r in shown if r["id"] not in hidden]
     counts = Counter(_day(r, tz) for r in shown)

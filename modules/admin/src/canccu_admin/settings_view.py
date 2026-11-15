@@ -12,7 +12,7 @@ from canccu_kit.ui import day_label, empty_state, esc, icon, time_label
 
 from .db import SettingsChange
 from .declarations import Setting
-from .forms import _UNIT, _words
+from .forms import _words, label_parts
 
 # Per part: what its settings are about, in a few words, and its values at a glance. A glance
 # names settings by key; a part not listed here shows its first labels and a count instead.
@@ -46,7 +46,7 @@ def glance(module: str, declared: list[Setting], values: Mapping[str, Any]) -> t
     if module in GROUPS:
         about, shape = GROUPS[module]
         return about, shape.format_map(_current(declared, values))
-    labels = [m.group(1) if (m := _UNIT.match(s.label)) else s.label for s in declared[:3]]
+    labels = [label_parts(s)[0] for s in declared[:3]]
     count = f"{len(declared)} {'setting' if len(declared) == 1 else 'settings'}"
     return ", ".join(labels), count
 
@@ -65,25 +65,30 @@ _SHORT_UNITS = {"seconds": "s", "minutes": "min"}
 _KEY_UNITS = {"_seconds": "seconds", "_minutes": "minutes"}
 
 
-def _label_of(key: str, declared: list[Setting]) -> tuple[str, Setting | None]:
-    """The setting's label as the form shows it, or for an undeclared key (a profile can carry
-    any) its words: `rotation_seconds` reads "Rotation (seconds)"."""
+def _label_of(key: str, declared: list[Setting]) -> tuple[str, str]:
+    """The setting's label and unit as the form shows them, or for an undeclared key (a profile
+    can carry any) its words: `rotation_seconds` reads "Rotation", in seconds."""
     if setting := next((s for s in declared if s.key == key), None):
-        return setting.label, setting
+        return label_parts(setting)
     for suffix, unit in _KEY_UNITS.items():
         if key.endswith(suffix) and key != suffix[1:]:
-            return f"{_words(key.removesuffix(suffix))} ({unit})", None
-    return _words(key), None
+            return _words(key.removesuffix(suffix)), unit
+    return _words(key), ""
+
+
+def _numbers(value: Any) -> bool:
+    items = value if isinstance(value, list) else [value]
+    return all(isinstance(v, int | float) and not isinstance(v, bool) for v in items)
 
 
 def _line(change: SettingsChange, key: str, group: str, declared: list[Setting]) -> str:
-    label, setting = _label_of(key, declared)
+    label, unit = _label_of(key, declared)
     value = change.changes[key]
-    unit = ""
-    # As the form does: only a number's "(seconds)" is a unit; any other keeps its whole label.
-    numeric = setting is None or setting.type in ("integer", "number") or setting.items == "integer"
-    if (match := _UNIT.match(label)) and numeric:
-        label, unit = match.group(1), " " + _SHORT_UNITS.get(match.group(2), match.group(2))
+    # A unit follows a number ("45 s"). Any other value, whatever the key or the declaration
+    # says it holds, leaves the unit in the label: "Rotation (seconds) to Auto".
+    if unit and value is not None and not _numbers(value):
+        label, unit = f"{label} ({unit})", ""
+    unit = f" {_SHORT_UNITS.get(unit, unit)}" if unit else ""
     where = f"{esc(group)} → {esc(label)}"
     if isinstance(value, bool):
         return f"turned {'on' if value else 'off'} {where}"

@@ -4,11 +4,13 @@ Registering). No database: Notify is a fake transport."""
 from __future__ import annotations
 
 import json
+import logging
 import re
 from pathlib import Path
 from typing import Any
 
 import httpx
+import pytest
 from canccu_kit import ServiceIdentity
 
 from canccu_agenda import topic
@@ -41,14 +43,14 @@ class Notify:
         return httpx.Response(status, json={})
 
 
-async def run(notify: Notify) -> list[float]:
+async def run(notify: Notify, url: str = URL) -> list[float]:
     paused: list[float] = []
 
     async def pause(seconds: float) -> None:
         paused.append(seconds)
 
     http = httpx.AsyncClient(transport=httpx.MockTransport(notify))
-    await topic.register(http, URL, ServiceIdentity("agenda", KEY), sleep=pause)
+    await topic.register(http, url, ServiceIdentity("agenda", KEY), sleep=pause)
     return paused
 
 
@@ -88,3 +90,19 @@ async def test_a_refused_registration_is_not_retried() -> None:
     notify = Notify(409)
     assert await run(notify) == []
     assert len(notify.requests) == 1
+
+
+@pytest.mark.parametrize("status", [401, 404, 408, 429])
+async def test_a_refusal_that_may_pass_is_retried_at_the_longest_pause(status: int) -> None:
+    # Notify not yet knowing the agenda's key (401), an older Notify without the path (404), a
+    # timeout (408) or a rate limit (429) can change on their own: tried again, a minute apart.
+    notify = Notify(status, status, 200)
+    assert await run(notify) == [topic.MAX_PAUSE_S, topic.MAX_PAUSE_S]
+    assert len(notify.requests) == 3
+
+
+async def test_any_other_failure_is_logged(caplog: pytest.LogCaptureFixture) -> None:
+    # A bad CANCCU_NOTIFY_URL is no httpx.HTTPError: the task must not end without a word.
+    with caplog.at_level(logging.ERROR, logger="canccu_agenda.topic"):
+        assert await run(Notify(200), url="http://notify:port") == []
+    assert any("schedule topic" in r.getMessage() and r.exc_info for r in caplog.records)
