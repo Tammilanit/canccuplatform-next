@@ -85,6 +85,13 @@ export class Bus {
     data: Record<string, unknown>,
     options: PublishOptions,
   ): Promise<Event> {
+    const event = this.envelope(type, data, options);
+    await this.send(event);
+    return event;
+  }
+
+  /** The event `publish` would send, checked but not sent (the outbox stores it). */
+  envelope(type: string, data: Record<string, unknown>, options: PublishOptions): Event {
     if (!EVENT_TYPE_RE.test(type)) {
       throw new InvalidEventType(`"${type}" is not <module>.<noun>.<past-tense verb>`);
     }
@@ -100,7 +107,7 @@ export class Bus {
     }
     if (options.platform !== true && tenant === undefined) throw new NoTenant();
     const correlationId = options.correlationId ?? getCorrelationId();
-    const event: Event = {
+    return {
       id: newId(),
       type,
       version: options.version,
@@ -110,12 +117,19 @@ export class Bus {
       ...(correlationId === undefined ? {} : { correlation_id: correlationId }),
       data,
     };
+  }
+
+  /** Sends an event built by `envelope`, also again: consumers drop a repeated id. */
+  async send(event: Event): Promise<void> {
+    if (event.source !== this.module) {
+      throw new InvalidEventType(`"${event.type}" is not this module's (${this.module})`);
+    }
+    const tenant = event.tenant;
     await this.store.xadd(
       tenant === undefined ? platformStream(this.module) : tenantStream(this.module, tenant),
       { event: JSON.stringify(event) },
       { maxlen: STREAM_MAXLEN, approximate: true },
     );
-    return event;
   }
 
   /** Read other modules' platform streams `events:<module>`. */

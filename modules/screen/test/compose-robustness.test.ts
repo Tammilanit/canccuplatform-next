@@ -151,6 +151,7 @@ describe.skipIf(!DATABASE_URL)("compose and the kiosk loader", () => {
       sources: noSources,
       settings: { ensure: () => Promise.resolve(), get: (_k: string, f: unknown) => f },
       bundleVersion: "test",
+      bundles: { available: () => Promise.resolve(["test"]) },
       zones: new MemoryZoneStore(new MemoryFanout()),
       now: () => h.clock.now,
     } as Parameters<typeof refreshZone>[0];

@@ -256,6 +256,15 @@ export function withSmallShowcase(s) {
 }
 
 /**
+ * A showcase in a hero that cannot grow (Portrait's, a whole screen wide; Ambient's, ten columns
+ * of twelve): the spotlight in the hero as it is, at the large type of a large hero (#546).
+ */
+export function withHeroShowcase(s) {
+  const spotlight = claim("hero", "announcement", { title: "Grand final on stage", body: "Seats open 20:30 · bring your own headset", level: "info" }); // prettier-ignore
+  return { ...s, regions: s.regions.map((r) => (r.role === "hero" ? { ...r, claim: spotlight } : r)) }; // prettier-ignore
+}
+
+/**
  * The rail held on its `pick` widget, so it never turns during the shot. Empty as the player
  * takes it (`agendaOf`, player/src/hero-rail.ts): only `empty: true`, so the two cannot drift.
  */
@@ -306,7 +315,9 @@ export function withMotion(level, pack) {
 /**
  * The two backgrounds (sheet 15, #446). The stage's art as the server sends it is a blurred WebP
  * of a game's cover; here the demo cover, blurred as data, stands in for it, so the frame is the
- * player's own. `scrim` is what the server computes for it under the default theme.
+ * player's own. Its `scrim` and the cards' `veil` are fixed values, not what the server would
+ * compute for this cover (src/stage/scrim.ts, from the art's lightest and darkest colour, which
+ * only the server reads): the shots show how the player draws a scrim and a veil it is handed.
  */
 const blurred = keyArt(18);
 

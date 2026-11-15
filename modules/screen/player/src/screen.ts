@@ -11,8 +11,7 @@ import type { Motion } from "./display.js";
 import { legacyMotion, motionStyleOf } from "@canccu/ui";
 import { MotionLayer, levelOf } from "./motion.js";
 import { StageLayer } from "./stage.js";
-import { agendaOf, joinHeroAndRail } from "./hero-rail.js";
-import { idleOf, zoneNameOf } from "./idle.js";
+import { idleOf } from "./idle.js";
 import type { Shown } from "./idle.js";
 import { Choreographer, paced } from "./pacing.js";
 import { syncMarks } from "./rotation-marks.js";
@@ -20,14 +19,9 @@ import { shownAt } from "./rotation.js";
 import { fitTickers } from "./ticker.js";
 import type { Layout, Region, ScreenState } from "./state.js";
 import { whenReady } from "./media.js";
-import {
-  dimsOffline,
-  drawWidget,
-  fillCountdowns,
-  identity,
-  liveView,
-  shownView,
-} from "./widget.js";
+import { heldShown, joinedShown, turnIndexOf, turnShown } from "./turns.js";
+import type { Choice } from "./turns.js";
+import { drawWidget, fillCountdowns, liveView } from "./widget.js";
 
 export interface ScreenHost {
   /** This device's clock corrected to the server's. */
@@ -180,43 +174,34 @@ export class Screen {
     if (takeover) this.root.dataset.takeover = "";
     else delete this.root.dataset.takeover;
     const drawns = [...this.regions.values()];
+    const regions = drawns.map((d) => d.state);
     const chosen = drawns.map((drawn) => this.choose(drawn, state, now, takeover));
-    const joined = joinHeroAndRail(
-      chosen.map((s, i) => {
-        const r = drawns[i]?.state;
-        if (typeof s !== "object" || s === null || r === undefined) return null;
-        return { ...s, role: r.role, agenda: agendaOf(r) };
-      }),
-      state.tenant.time_zone,
-    );
-    const shown = drawns.map((drawn, i) => {
-      const part = joined[i];
-      const own = chosen[i];
-      // The join took the rail's only row for the hero (hero-rail.ts): never an empty card.
-      const emptied =
-        part?.view.empty === true && !(typeof own === "object" && own?.view.empty === true);
-      return emptied ? idleOf(drawn.state, state) : (part ?? own ?? null);
-    });
+    // What each box would show were its change let through, for the choreographer to pace.
+    const wanted = joinedShown(regions, chosen, state);
     const released = this.pace.release(
-      drawns.flatMap((d, i) => (paced(d.shown, shown[i]) ? [d.state.id] : [])),
+      drawns.flatMap((d, i) => (paced(d.shown, wanted[i]) ? [d.state.id] : [])),
       now,
     );
+    // A change the choreographer holds back keeps the box on its turn, with that turn's fresh
+    // view; the hero and the rail are then joined on what the boxes show, so an item the hero
+    // shows is never on the rail as well, nor off both.
+    const held = drawns.map((d, i) =>
+      d.shown !== null && paced(d.shown, wanted[i]) && released !== d.state.id
+        ? heldShown(d.state, d.shown, state, now)
+        : undefined,
+    );
+    const shown = held.every((h) => h === undefined)
+      ? wanted
+      : joinedShown(
+          regions,
+          chosen.map((c, i) => (held[i] === undefined ? c : (held[i] ?? null))),
+          state,
+        );
     for (const [i, drawn] of drawns.entries()) {
       const next = shown[i] ?? null;
-      // A change the choreographer holds back keeps the box as it is, until its turn.
-      const held = paced(drawn.shown, next) && released !== drawn.state.id;
-      this.show(drawn, held ? drawn.shown : next, motion);
-      const onScreen = held ? drawn.shown : next;
-      const widget =
-        typeof onScreen === "object" && onScreen !== null && !onScreen.key.startsWith("claim:");
-      drawn.marks = syncMarks(
-        drawn.marks,
-        drawn.el,
-        drawn.state,
-        widget,
-        state.zone?.key ?? "",
-        now,
-      );
+      this.show(drawn, next, motion);
+      const zone = state.zone?.key ?? "";
+      drawn.marks = syncMarks(drawn.marks, drawn.el, drawn.state, turnIndexOf(next), zone, now);
     }
     fillCountdowns(this.root, now);
     this.motion.apply(this.root, level, motionStyleOf(state.display?.motion_style), now);
@@ -236,12 +221,7 @@ export class Screen {
    * The region's claim, else the rotation's widget now, else the region's idle choice; null draws
    * nothing. A `hidden` claim waits while the takeover above it runs, and shows once it ends.
    */
-  private choose(
-    drawn: Drawn,
-    state: ScreenState,
-    now: number,
-    takeover: boolean,
-  ): Shown | "collapse" | null {
+  private choose(drawn: Drawn, state: ScreenState, now: number, takeover: boolean): Choice {
     const r = drawn.state;
     const zone = state.zone?.key ?? "";
     const claim = claimOf(r.claim);
@@ -268,27 +248,10 @@ export class Screen {
     if (claim?.override_id !== drawn.claim?.override_id || shown === null) drawn.claim = null;
     if (drawn.next !== null && now >= drawn.next.until) drawn.next = null;
     const { index } = drawn.next ?? shownAt(r, zone, now);
-    const w = index === null ? undefined : r.widgets[index];
-    if (w !== undefined) {
-      const live = liveView(w.widget, w.view, now, state.tenant.time_zone);
-      const shown = shownView(w.widget, live, now);
-      // The header names the zone beside the event (mockup 02); the state has it, the logo's view not.
-      const view = w.widget === "logo" ? { ...shown, ...zoneNameOf(r, state) } : shown;
-      // A ticker's new text is a new thing to show, so it fades in (the calm fading line, L13);
-      // so are a new photo and a new playlist frame.
-      const text = w.widget === "ticker" ? JSON.stringify(view.text) : identity(w.widget, view);
-      return {
-        key: `${String(index)}:${text}`,
-        type: w.widget,
-        template: w.template ?? null,
-        view,
-        dims: dimsOffline(w.widget),
-      };
-    }
-    return idleOf(r, state);
+    return (index === null ? undefined : turnShown(r, index, state, now)) ?? idleOf(r, state);
   }
 
-  private show(drawn: Drawn, shown: Shown | "collapse" | null, motion: Motion): void {
+  private show(drawn: Drawn, shown: Choice, motion: Motion): void {
     this.redraw(drawn, shown, motion);
     const s = drawn.shown;
     const offline = this.host.offline?.() ?? false;
@@ -299,7 +262,7 @@ export class Screen {
   }
 
   /** Draws what the region shows now: a new thing fades in, new data for the same redraws it. */
-  private redraw(drawn: Drawn, shown: Shown | "collapse" | null, motion: Motion): void {
+  private redraw(drawn: Drawn, shown: Choice, motion: Motion): void {
     drawn.el.hidden = shown === "collapse";
     const next = shown === "collapse" ? null : shown;
     const templates = this.state?.theme.templates;

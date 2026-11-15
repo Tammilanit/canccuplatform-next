@@ -16,7 +16,7 @@ import { allowedOrigins, YOUTUBE_ORIGIN } from "./assets/links.js";
 import type { Db } from "./db.js";
 import type { Settings } from "./health.js";
 import { notFound } from "./http.js";
-import { BUNDLE_FILES } from "./pins/bundles.js";
+import { BUNDLE_FILES, heldBundle } from "./pins/bundles.js";
 import type { BundleStore } from "./pins/bundles.js";
 import { readPin } from "./pins/store.js";
 import { ZONE_KEY_RE } from "./zone-input.js";
@@ -111,8 +111,7 @@ export function playerRoutes(app: FastifyInstance, deps: PlayerDeps): void {
         return null;
       },
     );
-    if (pinned !== null && (await deps.bundles.available()).includes(pinned)) return pinned;
-    return deps.bundles.current;
+    return (await heldBundle(deps.bundles, pinned)) ?? deps.bundles.current;
   };
 
   app.get("/screen", async (request, reply) => {

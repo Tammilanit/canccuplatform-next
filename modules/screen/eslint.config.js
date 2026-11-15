@@ -16,6 +16,7 @@ const BROWSER = Object.fromEntries(
     "ResizeObserver",
     "CSS",
     "setTimeout",
+    "clearTimeout",
     "setInterval",
     "clearInterval",
     "structuredClone",

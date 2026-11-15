@@ -2,7 +2,7 @@
 // design guideline sheet 13), handed to the main zone's Pulse as screens.mjs hands its other
 // views: the hero's features in turn with the thin line, a surge jumping the queue with the ring,
 // and two boxes that would turn together pushed three seconds apart.
-import { graphsScaled } from "./dashboard.mjs";
+import { graphsScaled, turnsSettled } from "./dashboard.mjs";
 import { graphOf } from "../../src/compose/graph.ts";
 import { GAME, TILES, hoursFrom, unitsOf } from "./handed.mjs";
 
@@ -86,15 +86,6 @@ async function untilTurn(page, periodS, offsetMs) {
 }
 
 /**
- * Until no region is mid-crossfade, an incoming widget and an outgoing one drawn over each other
- * (screen.ts, enter): the rail turns on its own clock, and a frame caught in its fade drew two items.
- */
-const untilStill = (page) =>
-  page.waitForFunction(() => !document.querySelector(".canccu-slot--in, .canccu-slot--out"), null, {
-    timeout: 10_000,
-  });
-
-/**
  * The strip's frames. `director-line`: one frame in each 6 s turn, 2 s in, so each feature shows
  * with its line part filled. `director-ring`: the surge holds the hero, its ring 5 s fuller in the
  * second frame. `choreographer`: just before both turn, after the hero turned, after the rail did.
@@ -103,7 +94,7 @@ const untilStill = (page) =>
 export async function directorStrip(page, view, shoot) {
   let graphs = 0;
   const frame = async (n) => {
-    if (view !== "choreographer") await untilStill(page);
+    if (view !== "choreographer") await turnsSettled(page);
     await shoot(`f${n}`);
     graphs += await graphsScaled(page);
   };

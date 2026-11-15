@@ -9,8 +9,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from canccu_kit import KitError, MissingRight, NotSignedIn, TenantResolver
-from canccu_kit.rights import Session, session_id_from_cookie
-from canccu_kit.ui import EventInfo, error_view, front_page, shell_page
+from canccu_kit.rights import Session
+from canccu_kit.starlette import page_retry
+from canccu_kit.ui import EventInfo, error_view, front_page, menu_for, shell_page
 from starlette.requests import Request
 from starlette.responses import (
     FileResponse,
@@ -21,7 +22,6 @@ from starlette.responses import (
 )
 
 if TYPE_CHECKING:
-    from .auth import Auth
     from .health import HealthWatch
 
 log = logging.getLogger("canccu.admin")
@@ -143,19 +143,22 @@ async def static_ui_css(request: Request) -> Response:
     return response
 
 
-def page_error_handler(auth: Auth) -> Callable[[Request, Exception], Awaitable[Response]]:
-    """The KitError handler of every admin path."""
+def page_error_handler(
+    read_session: Callable[[str | None], Awaitable[Session]],
+) -> Callable[[Request, KitError], Awaitable[Response | None]]:
+    """The error page of every admin page path; the API keeps the kit's JSON body (None).
+    `read_session` reads a cookie's session as the pages' rights checks do, so the error page
+    draws the shell every other page of that session draws."""
 
-    async def page_error(request: Request, exc: Exception) -> Response:
-        """The API keeps its JSON body; a page says the refusal in words, in the shell of the
-        session it has, and the right it lacked goes to the log only (UX audit B3)."""
-        assert isinstance(exc, KitError)
+    async def page_error(request: Request, exc: KitError) -> Response | None:
+        """A page says the refusal in words, in the shell of the session it has, and the right
+        it lacked goes to the log only (UX audit B3)."""
         if not is_page(request):
-            return JSONResponse(exc.to_body(), status_code=exc.status)
+            return None
         if isinstance(exc, MissingRight):
             log.info("page %s refused: %s", request.url.path, exc.message)
         try:
-            session = await auth.session(session_id_from_cookie(request.headers.get("cookie")))
+            session = await read_session(request.headers.get("cookie"))
         except KitError:
             session = None
         if isinstance(exc, MissingRight) and session is not None and not session.rights:
@@ -163,17 +166,31 @@ def page_error_handler(auth: Auth) -> Callable[[Request, Exception], Awaitable[R
             # says what to do instead (sheet 3, "No role yet").
             return RedirectResponse(f"{BASE}/sign-in", status_code=303)
         event = await event_of(request)
+        section = request.url.path.split("/")[1]
         title, view = error_view(
             exc,
             session=session,
-            page=PAGE_NAMES.get(request.url.path.split("/")[1], "this page"),
+            page=PAGE_NAMES.get(section, "this page"),
             event=event.name if event else None,
-            retry=f"{BASE}{request.url.path}",
-            back=(f"{BASE}/settings", "Back to Settings"),
+            retry=page_retry(request, BASE),
+            back=way_back(session, section),
         )
         return await page(request, title, view, exc.status, session=session, plain=True)
 
     return page_error
+
+
+def way_back(session: Session | None, section: str) -> tuple[str, str]:
+    """Back to the page's own section when the session may open it, else to its first page."""
+    if session is None:
+        return f"{BASE}/sign-in", "Sign in"
+    pages = [i for g in menu_for(session) for i in g["items"]]
+    own = next((i for i in pages if i["href"] == f"{BASE}/{section}"), None)
+    if own:
+        return own["href"], f"Back to {own['label']}"
+    if pages:
+        return pages[0]["href"], f"Go to {pages[0]['label']}"
+    return f"{BASE}/sign-in", "Sign in"
 
 
 async def not_signed_in(request: Request, exc: Exception) -> Response:

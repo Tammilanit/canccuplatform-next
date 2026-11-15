@@ -8,6 +8,7 @@
 
 (() => {
   const NOTICE_KEY = "canccu-studio-notice";
+  const PAIR_KEY = "canccu-studio-pair";
   const text = JSON.parse(document.getElementById("canccu-studio-text")?.textContent || "{}");
   const notice = document.querySelector(".canccu-studio-notice");
   const say = (key, values = {}) =>
@@ -37,13 +38,19 @@
     else location.reload();
   };
 
+  /** A call that never reached the server (offline, a dropped connection) answers status 0. */
   async function api(method, url, body) {
-    const response = await fetch(url, {
-      method,
-      credentials: "same-origin",
-      headers: body === undefined ? {} : { "content-type": "application/json" },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
+    let response;
+    try {
+      response = await fetch(url, {
+        method,
+        credentials: "same-origin",
+        headers: body === undefined ? {} : { "content-type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    } catch {
+      return { status: 0, ok: false, data: null };
+    }
     const data = response.status === 204 ? null : await response.json().catch(() => null);
     return { status: response.status, ok: response.ok, data };
   }
@@ -54,17 +61,27 @@
   // The zone editor's own script (static/studio-zone.js) acts through the same helpers.
   window.canccuStudio = { api, confirmed, counted, failure, reloadWith, say, show, notice };
 
-  // A destructive action asks once more on the button itself; a second tap within 5 s acts.
+  // A destructive action asks once more on the button itself; a second tap within 5 s acts, and
+  // disarms it, so a third tap asks again instead of repeating the action.
+  const armed = new WeakMap();
   function confirmed(button) {
     const ask = button.dataset.confirm;
-    if (!ask || button.dataset.armed === "1") return true;
+    if (!ask) return true;
+    const held = armed.get(button);
+    if (held) {
+      clearTimeout(held.timer);
+      held.disarm();
+      return true;
+    }
     const label = button.textContent;
-    button.dataset.armed = "1";
-    button.textContent = ask;
-    setTimeout(() => {
+    const disarm = () => {
+      armed.delete(button);
       button.dataset.armed = "";
       button.textContent = label;
-    }, 5000);
+    };
+    button.dataset.armed = "1";
+    button.textContent = ask;
+    armed.set(button, { disarm, timer: setTimeout(disarm, 5000) });
     return false;
   }
 
@@ -133,8 +150,11 @@
   }
 
   // Pairing: by the button, or by the kiosk's QR, whose code rides in the fragment. The fragment is
-  // cleared once read, so the code stays out of the history (contracts/screen.md, Pairing).
+  // cleared once read, so the code stays out of the history (contracts/screen.md, Pairing). A
+  // signed-out scan went through sign-in, which drops the fragment: studio-signin.js kept the code.
   const pair = document.getElementById("canccu-studio-pair");
+  const kept = sessionStorage.getItem(PAIR_KEY);
+  sessionStorage.removeItem(PAIR_KEY);
   if (pair) {
     const open = (code) => {
       pair.querySelector("[name=code]").value = code;
@@ -147,7 +167,7 @@
       const code = decodeURIComponent(location.hash.slice(6)).replace(/[^A-Za-z0-9]/g, "");
       history.replaceState(null, "", location.pathname + location.search);
       open(code.toUpperCase());
-    }
+    } else if (kept) open(kept);
     pair.querySelector("form").addEventListener("submit", async (event) => {
       event.preventDefault();
       const f = new FormData(event.target);
@@ -224,50 +244,6 @@
       const r = await api("POST", "/api/screen/zones", body);
       if (!r.ok) return show(failure(r));
       location.assign(`/admin/screen/zones/${encodeURIComponent(body.key)}`);
-    });
-  }
-
-  // The ticker, also the phone remote: one line, an end, one tap.
-  const ticker = document.querySelector("form[data-ticker]");
-  if (ticker) {
-    const field = ticker.elements.text;
-    const count = document.getElementById("canccu-studio-ticker-count");
-    field.addEventListener(
-      "input",
-      () => (count.textContent = say("ticker.chars", { count: field.value.length })),
-    );
-    ticker.elements.at.addEventListener(
-      "input",
-      () => (ticker.querySelector("[value=at]").checked = true),
-    );
-    ticker.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const choice = new FormData(ticker).get("for");
-      let until = null;
-      if (choice === "at") {
-        const [h, m] = (ticker.elements.at.value || "").split(":").map(Number);
-        const at = new Date();
-        at.setHours(h || 0, m || 0, 0, 0);
-        if (at.getTime() <= Date.now()) at.setDate(at.getDate() + 1);
-        until = at.toISOString();
-      } else if (choice !== "none")
-        until = new Date(Date.now() + Number(choice) * 60_000).toISOString();
-      const r = await api("PUT", "/api/screen/ticker", { text: field.value.trim(), until });
-      if (!r.ok) return show(failure(r));
-      reloadWith(say("ticker.set_done"));
-    });
-  }
-
-  // "Freeze for the event" when the event has no end: the end comes from this form, in the
-  // browser's own time, as the ticker's end does.
-  const freeze = document.querySelector("form[data-freeze]");
-  if (freeze) {
-    freeze.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const until = new Date(freeze.elements.until.value).toISOString();
-      const r = await api("PUT", "/api/screen/pin", { freeze: true, until });
-      if (!r.ok) return show(failure(r));
-      reloadWith(say("pins.freeze_done"));
     });
   }
 })();

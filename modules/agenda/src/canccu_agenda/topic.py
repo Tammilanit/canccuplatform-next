@@ -16,6 +16,9 @@ log = logging.getLogger("canccu_agenda.topic")
 
 FIRST_PAUSE_S = 1.0
 MAX_PAUSE_S = 60.0
+# Refusals that can pass by themselves: Notify not knowing the agenda's key yet (401), a Notify
+# older than the path (404), a timeout (408), a rate limit (429). Tried again at the longest pause.
+PASSING_REFUSALS = frozenset({401, 404, 408, 429})
 
 _EVENT = {"field": "data.item.visibility"}
 _CHANNELS = "data.item.notify_channels"
@@ -122,11 +125,19 @@ async def register(
             response = await http.put(url, json=SCHEDULE, headers=identity.headers("notify"))
         except httpx.HTTPError as exc:
             problem = str(exc) or type(exc).__name__
+        except Exception:
+            # A bad CANCCU_NOTIFY_URL, say: sending again cannot mend it, and a task that ends
+            # with an exception says nothing by itself.
+            log.exception("registering the schedule topic with notify failed")
+            return
         else:
             if response.status_code < 400:
                 log.info("schedule topic registered with notify")
                 return
-            if response.status_code < 500:
+            if response.status_code in PASSING_REFUSALS:
+                pause = MAX_PAUSE_S
+                problem = f"HTTP {response.status_code}"
+            elif response.status_code < 500:
                 # Notify's own refusal (a bad registration, a key another module owns): the same
                 # body would get the same answer. The agenda serves on; the error says why
                 # phones hear nothing.
@@ -136,7 +147,8 @@ async def register(
                     response.text[:500],
                 )
                 return
-            problem = f"HTTP {response.status_code}"
+            else:
+                problem = f"HTTP {response.status_code}"
         log.warning("notify not reached (%s); registering again in %.0f s", problem, pause)
         await sleep(pause)
         pause = min(pause * 2, MAX_PAUSE_S)

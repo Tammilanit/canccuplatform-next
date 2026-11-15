@@ -2,8 +2,9 @@
 // run of show around now over two days with a running and a delayed item (day.mjs), a ticker line, the main
 // zone named as mockup 02 names it and an entrance zone with the check-in QR in its hero (mockup
 // 03). The venue's Wi-Fi is seeded by deploy/compose.ci.yml, since the CI session holds no tenants
-// right. A rerun on the same stack adds nothing twice. Also the theme switch the screenshots of
-// every demo theme need.
+// right. A rerun on the same stack adds nothing twice, but keeps the first run's times, which drift
+// from now: shots of the run of show around now need a fresh stack. Also the theme switch the
+// screenshots of every demo theme need.
 import { expect } from "./client.mjs";
 import { placeDay } from "./day.mjs";
 

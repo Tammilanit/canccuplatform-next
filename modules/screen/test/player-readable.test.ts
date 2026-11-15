@@ -71,8 +71,9 @@ describe("the screen's stylesheet", () => {
   });
 
   it("colours its text with the theme's tokens, never ui.css's oklab inks (#416)", () => {
-    // The rendered readability check parses rgb and srgb colours only; an ink read as black there
-    // failed every Dashboard shot at 1.44:1.
+    // ui.css's inks are fixed and do not follow a theme's grounds. The rendered readability check,
+    // which read only rgb and srgb colours until #549, took one as black and failed every
+    // Dashboard shot at 1.44:1.
     expect(rules).not.toMatch(/var\(--canccu-ink-/);
   });
 

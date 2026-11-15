@@ -108,6 +108,13 @@ describe.skipIf(!DATABASE_URL)("photos", () => {
     expect(events(h, "screen.photo.added", "iota")).toEqual([
       { photo_id: photo.id, actor_user_id: "u_photos" },
     ]);
+    expect(h.audits.at(-1)).toEqual({
+      tenant_id: "iota",
+      actor_user_id: "u_photos",
+      action: "screen.photo.added",
+      target: { type: "photo", id: photo.id },
+      changes: { file: { from: null, to: photo.url.split("/").at(-1) } },
+    });
     const served = await call(h, "GET", photo.url, { host: HOST, session: "content" });
     expect(served.statusCode).toBe(200);
     expect(served.headers["content-type"]).toBe("image/png");
@@ -117,6 +124,17 @@ describe.skipIf(!DATABASE_URL)("photos", () => {
     const res = await add(await png(2));
     expect(res.statusCode).toBe(201);
     expect(res.json()).toMatchObject({ caption: null, author_name: null, author_user_id: null });
+  });
+
+  it("adds no photo, and keeps no file, when the audit log is down", async () => {
+    const before = (await list()).length;
+    const audits = h.audits.length;
+    h.failAudit.next = true;
+    const res = await add(await png(17));
+    expect(res.statusCode).toBe(503);
+    expect(await list()).toHaveLength(before);
+    expect(h.audits).toHaveLength(audits);
+    expect(tmpFiles()).toEqual([]);
   });
 
   it("refuses anything but a photo with its fields in bounds", async () => {
@@ -182,6 +200,13 @@ describe.skipIf(!DATABASE_URL)("photos", () => {
     expect(events(h, "screen.photo.removed", "iota").at(-1)).toEqual({
       photo_id: photo.id,
       actor_user_id: "u_photos",
+    });
+    expect(h.audits.at(-1)).toEqual({
+      tenant_id: "iota",
+      actor_user_id: "u_photos",
+      action: "screen.photo.removed",
+      target: { type: "photo", id: photo.id },
+      changes: { file: { from: photo.url.split("/").at(-1), to: null } },
     });
     const again = await call(h, "DELETE", `/api/screen/photos/${photo.id}`, {
       host: HOST,
@@ -268,5 +293,10 @@ describe.skipIf(!DATABASE_URL)("photos", () => {
     expect(after).toHaveLength(before - 2);
     expect(after.every((p) => p.author_user_id !== "u_sam")).toBe(true);
     expect(events(h, "screen.photo.removed", "iota").at(-1)).toMatchObject({ actor_user_id: null });
+    // Gone with the user: audited with the module as the actor.
+    expect(h.audits.slice(-2)).toEqual([
+      expect.objectContaining({ action: "screen.photo.removed", actor_user_id: null }),
+      expect.objectContaining({ action: "screen.photo.removed", actor_user_id: null }),
+    ]);
   });
 });

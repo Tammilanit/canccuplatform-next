@@ -95,6 +95,12 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
                 env.clock[0],
             )
             await conn.execute("INSERT INTO agenda_outbox (event) VALUES ($1)", marker)
+            await conn.execute(
+                "INSERT INTO agenda_reminders_fired (item_id, lead_minutes) VALUES ($1, 10)", marker
+            )
+            await conn.execute(
+                "INSERT INTO agenda_last_post (event_type, data) VALUES ($1, '{}')", marker
+            )
 
     async def _read(tenant: str) -> set[str]:
         async with env.db.tenant(tenant) as conn:
@@ -106,6 +112,8 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
             logged = await conn.fetch("SELECT item_id FROM agenda_changes")
             undos = await conn.fetch("SELECT id FROM agenda_undo")
             pending = await conn.fetch("SELECT event FROM agenda_outbox")
+            fired = await conn.fetch("SELECT item_id FROM agenda_reminders_fired")
+            posted = await conn.fetch("SELECT event_type FROM agenda_last_post")
             states = await conn.fetchval("SELECT count(*) FROM agenda_state")
         assert states == 1
         return (
@@ -117,6 +125,8 @@ async def test_rls_keeps_every_table_apart(env: Env) -> None:
             | {r["item_id"] for r in logged}
             | {r["id"] for r in undos}
             | {r["event"] for r in pending}
+            | {r["item_id"] for r in fired}
+            | {r["event_type"] for r in posted}
         )
 
     await assert_tenant_isolation(Probe())

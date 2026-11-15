@@ -9,6 +9,7 @@ import type { DeviceRow } from "../db.js";
 import { NO_THEME, composeZone, isPortrait, placement, themeView } from "../compose/state.js";
 import type { ComposeDeps, ZoneComposed } from "../compose/state.js";
 import { NO_DISPLAY } from "../compose/display.js";
+import { heldBundle } from "../pins/bundles.js";
 import { themeFor } from "../pins/look.js";
 import { readPin } from "../pins/store.js";
 import { previewed } from "../preview/state.js";
@@ -200,7 +201,7 @@ export async function placeDevice(
       : {
           theme: themeView((await themeFor(deps.sources, ctx.tenant_id, pin)) ?? NO_THEME),
           eventName: (await deps.sources.event(host))?.name ?? "",
-          bundle: pin.bundle_version,
+          bundle: await heldBundle(deps.bundles, pin.bundle_version),
         };
   const side = { nowMs, ctx, device, mirror: where.mirror, bundleVersion: deps.bundleVersion };
   // A mirror of a device shows what the device shows, its preview too; a zone's mirror the live zone.

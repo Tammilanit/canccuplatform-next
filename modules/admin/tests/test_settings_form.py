@@ -48,7 +48,8 @@ async def test_fields_come_in_their_groups_with_a_save_bar(
     offline = field_of(text, "offline_after_seconds")
     assert 'value="45" data-canccu-was="45"' in offline
     assert "data-canccu-was-hint hidden>Was 45.</p>" in offline
-    assert "data-canccu-error hidden>Use a whole number from 15 to 300.</p>" in offline
+    why = "Use a whole number from 15 to 300."
+    assert f'data-canccu-error="{why}" hidden>{why}</p>' in offline
     assert '<div class="canccu-savebar" data-canccu-savebar>' in text
     assert 'href="/admin/settings/screen" data-canccu-undo>Undo</a>' in text
     assert "data-canccu-save>Save</button>" in text
@@ -75,7 +76,7 @@ async def test_a_refused_save_keeps_what_was_typed(
     assert r.status_code == 400
     assert "Couldn&#x27;t save" in r.text
     # The setting by its label, never its key.
-    assert "Screen offline after (seconds) must be from 15 up to 300." in r.text
+    assert "Mark offline after must be from 15 up to 300." in r.text
     offline = field_of(r.text, "offline_after_seconds")
     assert 'value="3" data-canccu-was="45"' in offline
     assert "data-canccu-was-hint>Was 45.</p>" in offline
@@ -122,7 +123,7 @@ async def test_a_conflict_keeps_only_the_fields_the_user_changed(
         await world.service.put_settings(
             "screen", 1, {"offline_after_seconds": 45, "heartbeat_seconds": 20}, "u2"
         )
-    # The user changed only "Screen offline after"; the heartbeat goes as the page had it (15).
+    # The user changed only "Mark offline after"; the heartbeat goes as the page had it (15).
     bases = dict(re.findall(r'name="(was\.[a-z_]+)" value="([^"]*)"', text))
     form = {
         **bases,
@@ -166,7 +167,7 @@ async def test_a_refused_save_on_a_stale_version_compares_with_what_is_saved_now
     }
     r = await browser.post(SCREEN, data=form, headers=ORIGIN)
     assert r.status_code == 400
-    assert "Screen offline after (seconds) must be from 15 up to 300." in r.text
+    assert "Mark offline after must be from 15 up to 300." in r.text
     assert "name=settings_version value=2>" in r.text
     assert 'value="3" data-canccu-was="45"' in field_of(r.text, "offline_after_seconds")
     assert 'value="20" data-canccu-was="20"' in field_of(r.text, "heartbeat_seconds")

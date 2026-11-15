@@ -132,8 +132,14 @@
     display: none;
   }
 
-  /* Side by side a row is half as wide: a long name wraps, and a delayed row takes three lines. */
-  .canccu-layout--pulse_portrait .canccu-region[data-role="rail"] .canccu-widget__name {
+  /*
+   * Side by side a row is half as wide: a long name wraps, and a delayed row takes three lines.
+   * Not the venue card's Wi-Fi name, which a guest types: it stays on one line (rail.css).
+   */
+  .canccu-layout--pulse_portrait
+    .canccu-region[data-role="rail"]
+    .canccu-widget:not(.canccu-widget--venue_info)
+    .canccu-widget__name {
     white-space: normal;
     overflow-wrap: anywhere;
   }
