@@ -2,6 +2,7 @@
  * What a region shows with nothing to rotate (contracts/screen.md, The Pulse options, `idle`), and
  * the zone's name a header's logo carries.
  */
+import { sameItem } from "./hero-rail.js";
 import type { Region, ScreenState } from "./state.js";
 import type { View } from "./widget.js";
 
@@ -18,16 +19,26 @@ export interface Shown {
   dims: boolean;
 }
 
-/** The region's idle choice: what it shows with nothing to rotate, or with its rail emptied. */
-export function idleOf(r: Region, state: ScreenState): Shown | "collapse" | null {
+/**
+ * The region's idle choice: what it shows with nothing to rotate, or with its rail emptied by the
+ * hero's countdown (`heroItem`). Such a rail's `next` would count down to the hero's own item
+ * again, without its place or delay: it shows the logo instead.
+ */
+export function idleOf(
+  r: Region,
+  state: ScreenState,
+  heroItem: View | null = null,
+): Shown | "collapse" | null {
   if (r.idle === "blank") return null;
   if (r.idle === "collapse") return "collapse";
   const base = { template: null, dims: false };
-  if (r.idle === "next" && r.idle_view !== null) {
+  const repeats = heroItem !== null && r.idle_view !== null && sameItem(r.idle_view.view, heroItem);
+  if (r.idle === "next" && r.idle_view !== null && !repeats) {
     const view = { ...r.idle_view.view, next_up: true };
     return { ...base, key: "idle:next", type: "countdown", view };
   }
-  // `logo`, and any idle value this player does not know (contracts/screen.md, The Pulse options).
+  // `logo`, a `next` that repeats the hero's item, and any idle value this player does not know
+  // (contracts/screen.md, The Pulse options).
   const view = { url: state.theme.logo_url, name: state.tenant.name, qr: null, empty: false };
   // The server sends no logo view without a theme logo, so the header's zone comes from here too.
   const zoneName = zoneNameOf(r, state);

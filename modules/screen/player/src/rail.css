@@ -114,16 +114,21 @@
 
   /*
    * The venue card (mockup 02, sheet 9): the Wi-Fi beside the hub QR, the two parts drawn as one
-   * card. The name stays on one line, never broken inside a word: an ellipsis ends a name too long.
+   * card. The name and the password each stay on one line, never broken inside a word (a hyphen
+   * would read as a line's end and guests would type it wrong): an ellipsis ends one too long.
    */
   .canccu-widget--venue_info .canccu-widget__row {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .canccu-widget--venue_info .canccu-widget__name {
+  .canccu-widget--venue_info .canccu-widget__name,
+  .canccu-widget--venue_info .canccu-widget__password {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .canccu-widget--venue_info .canccu-widget__name {
     font-size: calc(5.1 * var(--canccu-u));
   }
 

@@ -308,10 +308,13 @@
 
   /*
    * A showcased announcement (contracts/screen.md) laid out large under its band, only in a large
-   * hero: the Pulse's, or Dashboard's grown one. A hero that does not grow (`grow_for_showcase:
-   * false`) keeps the claim's own type (claims.css), so a long title leaves room for the body.
+   * hero: the Pulse's, Portrait's, Ambient's, or Dashboard's grown one. A hero that does not grow
+   * (`grow_for_showcase: false`) keeps the claim's own type (claims.css), so a long title leaves
+   * room for the body. Portrait's hero is the screen's short side less the safe inset, under
+   * 90 units on a 720 px wide screen; Ambient's is six rows of twelve, about 45 units high (#546).
+   * Dashboard's small hero, about 55 units wide, stays out.
    */
-  @container canccu-hero (min-width: 90cqmin) and (min-height: 55cqmin) {
+  @container canccu-hero (min-width: 75cqmin) and (min-height: 40cqmin) {
     .canccu-region[data-role="hero"] > .canccu-widget--announcement .canccu-widget__title {
       font-size: calc(9.3 * var(--canccu-u));
       line-height: 1.05;

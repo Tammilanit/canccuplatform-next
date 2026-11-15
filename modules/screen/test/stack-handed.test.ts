@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withShowcase, withSmallShowcase } from "./stack/handed.mjs";
+import { withHeroShowcase, withShowcase, withSmallShowcase } from "./stack/handed.mjs";
 
 const region = (id: string, widgets: string[], order: number[]) => ({
   id,
@@ -53,5 +53,15 @@ describe("withShowcase", () => {
   it("fails on a rail without a countdown", () => {
     const s = { regions: [region("hero", ["playlist"], [0]), region("rail", ["agenda_now"], [0])] };
     expect(() => withShowcase(s)).toThrow(/countdown/);
+  });
+});
+
+describe("withHeroShowcase", () => {
+  it("puts the announcement in the hero by its role, wherever the layout places it (#546)", () => {
+    const s = { regions: [{ ...region("main", ["clock"], [0]), role: "hero" }, { ...region("rail", ["agenda_now"], [0]), role: "rail" }] }; // prettier-ignore
+    const [hero, rail] = withHeroShowcase(s).regions;
+    expect(hero?.claim?.template).toBe("announcement");
+    expect(hero?.order).toEqual([0]);
+    expect(rail).toBe(s.regions[1]);
   });
 });

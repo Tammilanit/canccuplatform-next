@@ -44,16 +44,19 @@ const LABEL_HALF_UNITS = 4.25;
 const GRAPH_CHROME_UNITS = 15;
 const TICK_HOURS = [3, 6, 12];
 
-/** Every how many hours of the day a graph `unitsWide` wide names under its bar, at 24 bars. */
-function tickHoursOf(unitsWide: number): number {
+/**
+ * Every how many hours of the day a graph `unitsWide` wide names under its bar, at 24 bars; none
+ * when even every twelfth hour's labels would meet.
+ */
+function tickHoursOf(unitsWide: number): number | undefined {
   const bars = unitsWide - GRAPH_CHROME_UNITS;
-  return TICK_HOURS.find((h) => (h * bars) / 24 >= LABEL_ROOM_UNITS) ?? 12;
+  return TICK_HOURS.find((h) => (h * bars) / 24 >= LABEL_ROOM_UNITS);
 }
 
 /**
  * The scale and bars of `hours` in a box `unitsWide` units wide (compose/layouts.ts, unitsWide):
  * no scale over no hours, since no data is not zero, and the newest hour named when none of the
- * step falls among a few hours, so a graph always says when it is.
+ * step falls among a few hours, or the box has room for no step, so a graph always says when it is.
  */
 export function graphOf(
   hours: readonly Hour[],
@@ -63,9 +66,11 @@ export function graphOf(
   const scale = scaleOf(Math.max(0, ...hours.map((h) => h.value)));
   const top = scale[0] as number;
   const every = tickHoursOf(unitsWide);
-  const named = hours.map((h) => Number.parseInt(h.time_text, 10) % every === 0);
+  const named = hours.map(
+    (h) => every !== undefined && Number.parseInt(h.time_text, 10) % every === 0,
+  );
   if (!named.includes(true)) named[named.length - 1] = true;
-  clearBeforeNewest(named, (unitsWide - GRAPH_CHROME_UNITS) / hours.length);
+  spaceByBar(named, (unitsWide - GRAPH_CHROME_UNITS) / hours.length);
   const points = hours.map((h, i) => ({
     time_text: h.time_text,
     value: h.value,
@@ -77,14 +82,20 @@ export function graphOf(
 }
 
 /**
- * The look ends the newest hour's label on the box's edge instead of centring it under its bar
- * (director.css, `.canccu-widget__hour:last-child`), which moves it left by half a label less half
- * a bar; the labels before it that it would then meet are left unnamed (#527).
+ * Leaves unnamed each label that would meet the one after it, from the newest back. Measured in
+ * bars, not hours of the day: an hour without counts has no bar, so two hours of the step can sit
+ * on neighbouring bars (#548). The look ends the newest hour's label on the box's edge instead of
+ * centring it under its bar (director.css, `.canccu-widget__hour:last-child`), which moves it left
+ * by half a label less half a bar (#527).
  */
-function clearBeforeNewest(named: boolean[], barUnits: number): void {
+function spaceByBar(named: boolean[], barUnits: number): void {
   const newest = named.length - 1;
-  if (!named[newest]) return;
   const shift = Math.max(0, LABEL_HALF_UNITS - barUnits / 2);
-  for (let i = newest - 1; i >= 0 && (newest - i) * barUnits - shift < LABEL_ROOM_UNITS; i--)
-    named[i] = false;
+  let kept: number | null = null;
+  for (let i = newest; i >= 0; i--) {
+    if (!named[i]) continue;
+    const room = kept === null ? Infinity : (kept - i) * barUnits - (kept === newest ? shift : 0);
+    if (room < LABEL_ROOM_UNITS) named[i] = false;
+    else kept = i;
+  }
 }
