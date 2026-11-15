@@ -225,6 +225,59 @@ describe.skipIf(browser === undefined)(
       expect(areas).toEqual({ header: area(1, 1, 12, 2), hero: area(5, 2, 8, 10) });
     });
 
+    it("draws the parts of a split box where the draft puts the box", async () => {
+      // Screen splits a header and a box with the hub QR into parts `<id>`, `<id>-2` by default.
+      await api("POST", "/api/theming/draft", { from: "defaults" });
+      const layout = {
+        id: "pulse",
+        name: "Pulse, wider rail",
+        aspect: "16:9",
+        grid: { columns: 12, rows: 12 },
+        regions: [
+          { id: "header", area: area(1, 1, 12, 2), widgets: [{ widget: "logo" }] },
+          { id: "hero", area: area(1, 3, 6, 9), widgets: [{ widget: "clock" }] },
+          { id: "venue_rail", area: area(7, 3, 6, 10), widgets: [{ widget: "clock" }] },
+          { id: "rail", area: area(1, 12, 1, 1), widgets: [{ widget: "clock" }] },
+        ],
+      };
+      const v = (await draft()).draft_version;
+      const put = await api("PUT", `/api/theming/draft/layouts/pulse?draft_version=${v}`, layout);
+      expect(put.status).toBe(200);
+      const state = zoneState("Main", null, [
+        region("header", area(1, 1, 6, 1), [{ widget: "logo", view: view({}, true) }]),
+        region("header-2", area(7, 1, 6, 1), [{ widget: "clock", view: view({}) }]),
+        region("hero", area(1, 2, 8, 10), []),
+        region("venue_rail", area(9, 2, 2, 10), [{ widget: "agenda_now", view: view({}) }]),
+        region("venue_rail-2", area(11, 2, 2, 10), [{ widget: "qr", view: view({}) }]),
+        // The draft's rail is one column: too narrow for two parts, so screen draws it whole.
+        region("rail", area(1, 12, 1, 1), [{ widget: "clock", view: view({}) }]),
+        region("rail-2", area(2, 12, 1, 1), [{ widget: "qr", view: view({}) }]),
+      ]);
+      (state.layout.regions as unknown[]).push(
+        { id: "venue_rail", area: area(9, 2, 4, 10), widgets: [] },
+        { id: "rail", area: area(1, 12, 2, 1), widgets: [] },
+      );
+      const { posted } = await studio({ main: state });
+      await expect.poll(() => posted("main")).toBeDefined();
+      const regions = ((await posted("main"))?.state.regions ?? []) as {
+        id: string;
+        area: unknown;
+        widgets: { widget: string }[];
+        order: number[];
+      }[];
+      expect(Object.fromEntries(regions.map((r) => [r.id, r.area]))).toEqual({
+        header: area(1, 1, 6, 2),
+        "header-2": area(7, 1, 6, 2),
+        hero: area(1, 3, 6, 9),
+        venue_rail: area(7, 3, 3, 10),
+        "venue_rail-2": area(10, 3, 3, 10),
+        rail: area(1, 12, 1, 1),
+      });
+      const rail = regions.find((r) => r.id === "rail");
+      expect(rail?.widgets.map((w) => w.widget)).toEqual(["clock", "qr"]);
+      expect(rail).toMatchObject({ order: [0, 1] });
+    });
+
     it("shows the zone picked last, however late an earlier zone's state answers", async () => {
       await api("POST", "/api/theming/draft", { from: "defaults" });
       let release = (): void => undefined;
@@ -286,6 +339,32 @@ describe.skipIf(browser === undefined)(
         .toMatch(/^\/theming\/studio\/preview\/screen\?canccu_theme=draft/);
       await expect.poll(() => publish.isDisabled()).toBe(false);
       expect(await page.textContent(".canccu-studio-zone")).toBe("");
+    });
+
+    it("keeps Publish held after a save the previews do not show, whatever draws next", async () => {
+      await heldDraft();
+      const family = ((await draft()).manifest.fonts as { family: string }[])[0]?.family ?? "";
+      const { page, posted } = await studio(
+        { main: zoneState("Main", null, []), cafe: zoneState("Cafe", null, []) },
+        { ack: true },
+      );
+      const publish = page.locator('.canccu-pagehead [data-action="publish"]');
+      await expect.poll(() => publish.isDisabled()).toBe(false);
+      // The font saves, the refused colour keeps the page: the previews still show the old version.
+      const primary = page.locator('input[name="primary"]');
+      await primary.fill("abc");
+      await primary.blur();
+      await expect.poll(() => page.isVisible(".canccu-studio-notice")).toBe(true);
+      await page.selectOption('select[name="body"]', family);
+      await expect.poll(() => publish.isDisabled()).toBe(true);
+      // Another zone drawn and confirmed does not release it.
+      await page.selectOption(".canccu-studio-zones", "cafe");
+      await expect.poll(() => posted("cafe")).toBeDefined();
+      await page.waitForTimeout(500);
+      expect(await publish.isDisabled()).toBe(true);
+      expect(await page.textContent(".canccu-studio-publish-hint")).toContain(
+        "Put the colour right",
+      );
     });
 
     it("unlocks Publish once the player confirms it drew the draft", async () => {

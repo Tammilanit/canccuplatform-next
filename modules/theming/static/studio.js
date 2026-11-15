@@ -216,19 +216,29 @@
 
   /** `true` when the action went through; a refusal is carried over the reload. */
   async function attempt(action, el) {
+    const before = sent.get(el);
     if (SAVES_AS_CHANGED.has(action)) sent.set(el, valuesOf(el));
     try {
       await action(el);
       return true;
     } catch (err) {
-      if (err instanceof Invalid) return err;
+      if (err instanceof Invalid) {
+        // Nothing was sent, so the form still holds its change: a later save's flush tries it
+        // again rather than reload over it.
+        if (SAVES_AS_CHANGED.has(action)) sent.set(el, before);
+        return err;
+      }
       sessionStorage.setItem(NOTICE_KEY, err instanceof Error ? err.message : String(err));
       return false;
     }
   }
 
-  /** The previews show the version the page drew, so Publish waits for the reload. */
+  /**
+   * The previews show the version the page drew, so Publish waits for the reload. The hold is kept
+   * on the page, so a preview drawn later (studio-previews.js) cannot release it.
+   */
   function holdPublish() {
+    root.dataset.previewStale = "1";
     for (const b of document.querySelectorAll('[data-action="publish"], [data-action="light-ask"]'))
       b.disabled = true;
     const hint = document.querySelector(".canccu-studio-publish-hint");

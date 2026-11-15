@@ -105,6 +105,38 @@ describe.skipIf(browser === undefined)("the brand kit in Chromium", { timeout: 3
     expect((await draft()).manifest.brand).toMatchObject({ primary: "#7c5cff" });
   });
 
+  it("keeps a refused colour unsaved, so a later save does not reload over it", async () => {
+    const res = await fetch(`${s.origin}/api/theming/draft/package`, {
+      method: "PUT",
+      headers: {
+        cookie: "canccu_session=embedder",
+        origin: s.origin,
+        "content-type": "application/zip",
+      },
+      body: new Uint8Array(await demoZip("terminal")),
+    });
+    expect(res.status).toBe(200);
+    const family = ((await draft()).manifest.fonts as { family: string }[])[0]?.family ?? "";
+    const page = await open("/theming/studio/");
+    let loads = 0;
+    page.on("load", () => (loads += 1));
+    const primary = page.locator('input[name="primary"]');
+    await primary.fill("abc");
+    await primary.blur();
+    const accent = page.locator('input[name="accent"]');
+    await accent.fill("#7c5cff");
+    await accent.blur();
+    await expect.poll(() => page.isVisible(".canccu-studio-notice")).toBe(true);
+    await page.selectOption('select[name="body"]', family);
+    const font = () =>
+      draft().then((d) => (d.manifest.tokens as { fonts?: { body?: string } }).fonts?.body);
+    await expect.poll(font).toBe(family);
+    await page.waitForTimeout(500);
+    expect(loads).toBe(0);
+    expect([await primary.inputValue(), await accent.inputValue()]).toEqual(["abc", "#7c5cff"]);
+    expect(await page.textContent(".canccu-studio-notice")).toContain("hex digits");
+  });
+
   it("stops the saves queued behind one that failed, and says the first failure", async () => {
     await api("POST", "/api/theming/draft", { from: "defaults" });
     const before = (await draft()).manifest.brand;

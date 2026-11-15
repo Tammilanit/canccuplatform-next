@@ -54,11 +54,49 @@
   const fits = (a, grid) =>
     a.column + a.columns - 1 <= grid.columns && a.row + a.rows - 1 <= grid.rows;
 
+  /** A region's columns from left to right, as screen splits it (compose/parts.ts `columnsOf`). */
+  function columnsOf(area, parts) {
+    const base = Math.floor(area.columns / parts);
+    const extra = area.columns % parts;
+    let column = area.column;
+    return Array.from({ length: parts }, (_, i) => {
+      const columns = base + (i < extra ? 1 : 0);
+      const part = { ...area, column, columns };
+      column += columns;
+      return part;
+    });
+  }
+
+  /** Parts too many for their region's columns: screen then draws the region whole. */
+  function whole(parts, area, layer) {
+    let offset = 0;
+    const order = parts.flatMap((p) => {
+      const mine = p.order.map((i) => i + offset);
+      offset += p.widgets.length;
+      return mine;
+    });
+    return { ...parts[0], area, layer, widgets: parts.flatMap((p) => p.widgets), order };
+  }
+
   /*
-   * The draft's layout of the id the zone draws, as screen would place it: each box where the
-   * draft puts it, except one the zone placed itself (its area differs from the published layout's
-   * and still fits), and a box the draft drops gone. The synthetic regions (`_full`, `_overlay`)
-   * stay. Without a layout of that id the published one stays: only screen knows its fallback.
+   * A layout box as the zone draws it, whole or as parts side by side (`<id>`, `<id>-2`, …,
+   * contracts/screen.md, Header and hub QR). The zone placed the box itself when its area (the
+   * parts' together) differs from the published layout's and still fits; otherwise it goes where
+   * the draft puts it, and its parts split that area the way screen splits it.
+   */
+  function placed(parts, published, mine, grid) {
+    const first = parts[0];
+    const own = { ...first.area, columns: parts.reduce((sum, p) => sum + p.area.columns, 0) };
+    const area = !sameArea(own, published) && fits(own, grid) ? own : mine.area;
+    const layer = mine.layer ?? 0;
+    if (area.columns < parts.length) return [whole(parts, area, layer)];
+    return columnsOf(area, parts.length).map((a, i) => ({ ...parts[i], area: a, layer }));
+  }
+
+  /*
+   * The draft's layout of the id the zone draws, as screen would place it (`placed`), a box the
+   * draft drops gone. The synthetic regions (`_full`, `_overlay`) stay. Without a layout of that
+   * id the published one stays: only screen knows its fallback.
    */
   function withLayouts(state, layouts) {
     const published = state.layout;
@@ -67,14 +105,26 @@
     if (layout === undefined) return { ...state, theme };
     const before = new Map((published.regions ?? []).map((r) => [r.id, r.area]));
     const after = new Map(layout.regions.map((r) => [r.id, r]));
-    const regions = state.regions
-      .filter((r) => r.id.startsWith("_") || after.has(r.id))
-      .map((r) => {
-        const mine = after.get(r.id);
-        if (mine === undefined) return r;
-        const placed = !sameArea(r.area, before.get(r.id)) && fits(r.area, layout.grid);
-        return { ...r, area: placed ? r.area : mine.area, layer: mine.layer ?? 0 };
-      });
+    // A part's id is its box's id and its place; a layout box's own id is never a part's.
+    const boxOf = (id) => {
+      const part = /^(.+)-(\d+)$/.exec(id);
+      if (after.has(id) || part === null || !after.has(part[1])) return [id, 1];
+      return [part[1], Number(part[2])];
+    };
+    const boxes = new Map();
+    for (const r of state.regions) {
+      const [box, n] = boxOf(r.id);
+      if (after.has(box)) boxes.set(box, [...(boxes.get(box) ?? []), { n, r }]);
+    }
+    const drawn = new Map();
+    for (const [box, parts] of boxes) {
+      const inOrder = parts.sort((a, b) => a.n - b.n).map((p) => p.r);
+      for (const r of placed(inOrder, before.get(box), after.get(box), layout.grid))
+        drawn.set(r.id, r);
+    }
+    const regions = state.regions.flatMap((r) =>
+      r.id.startsWith("_") ? [r] : drawn.has(r.id) ? [drawn.get(r.id)] : [],
+    );
     return { ...state, theme, layout, regions };
   }
 
@@ -196,8 +246,10 @@
   const shown = (frame) => (frame === screenFrame ? screenShown : isSurface(frame));
   const held = [...document.querySelectorAll("[data-needs-preview]")];
   const frames = [...document.querySelectorAll("iframe[data-preview]")];
+  // Set by studio.js once a save has made the drawn version older than the draft (until a reload).
+  const stale = () => document.querySelector(".canccu-studio")?.dataset.previewStale === "1";
   function check() {
-    if (held.length === 0 || !frames.every(shown)) return;
+    if (held.length === 0 || stale() || !frames.every(shown)) return;
     for (const button of held) button.disabled = false;
     const hint = document.querySelector(".canccu-studio-publish-hint");
     if (hint !== null) hint.textContent = "Previews shown: this version can be published.";
