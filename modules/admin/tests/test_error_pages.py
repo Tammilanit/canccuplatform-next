@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import httpx
 import pytest
+from canccu_kit import NotSignedIn
+from canccu_kit.rights import Session
 from conftest import World, owner_and_member
 
 
@@ -17,6 +19,23 @@ async def test_a_mistyped_page_address_draws_the_not_found_page(
     assert "canccu-menu" in r.text  # in the shell of the session it has
     api = await world.browser(owner).get("/api/admin/nope")
     assert api.status_code == 404 and api.json()["error"]["code"] == "not_found"
+
+
+async def test_the_error_page_reads_the_session_as_the_pages_do(
+    world: World, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A session only the rights checker answers for, as with CI's session stub: the error page
+    # still draws its shell, as every other page of that session does.
+    owner, _ = await owner_and_member(world, caplog)
+    assert (await world.browser(owner).get("/admin/settings")).status_code == 200
+
+    async def unknown(session_id: str | None) -> Session:
+        raise NotSignedIn("sign in first")
+
+    monkeypatch.setattr(world.auth, "session", unknown)
+    r = await world.browser(owner).get("/admin/settingz")
+    assert r.status_code == 404 and "canccu-menu" in r.text
+    assert 'href="/admin/sign-in">Sign in</a>' not in r.text
 
 
 async def test_signed_out_a_mistyped_address_offers_sign_in(world: World) -> None:

@@ -80,5 +80,6 @@ async def test_the_live_parts_need_the_right_to_open_health(
     monkeypatch.setitem(ROLE_RIGHTS, "admin", ADMIN_RIGHTS - {"admin.settings.read"})
     me = (await world.browser(member).get("/api/admin/session")).json()["user"]["id"]
     await world.auth.set_role(me, "admin", "u_owner")
+    world.checker.forget_session(member)  # as admin.rights.changed drops it
     r = await world.browser(member).get("/admin/health-view/live")
     assert r.status_code == 403 and "<b>Notifications</b>" not in r.text

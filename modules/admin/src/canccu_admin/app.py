@@ -85,6 +85,9 @@ def create_app(
     async def need(request: Request, right: str) -> Session:
         return await authorize(request.headers.get("cookie"), right)
 
+    async def read_session(cookie: str | None) -> Session:
+        return await (viewer(cookie) if viewer else auth.session(session_id_from_cookie(cookie)))
+
     def module_of(request: Request) -> str:
         module = str(request.path_params["module"])
         if module not in MODULES:
@@ -374,7 +377,7 @@ def create_app(
     app.state.tenants = resolver  # the event the shell's header names (pages.event_of)
     app.state.health_watch = watch  # the menu's note on Health (pages.page)
     app.add_middleware(OriginCheck, origin=auth.public_origin)
-    install(app, watch.own, error_response=page_error_handler(auth))
+    install(app, watch.own, error_response=page_error_handler(read_session))
     # Innermost, as the kit's install_tenancy places it: the correlation id and the origin check
     # cover its 404s, and settings and profile handlers run inside the request's tenant.
     app.user_middleware.append(Middleware(TenantPaths, resolver=resolver))

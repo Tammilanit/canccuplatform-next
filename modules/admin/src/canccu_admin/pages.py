@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from canccu_kit import KitError, MissingRight, NotSignedIn, TenantResolver
-from canccu_kit.rights import Session, session_id_from_cookie
+from canccu_kit.rights import Session
 from canccu_kit.starlette import page_retry
 from canccu_kit.ui import EventInfo, error_view, front_page, menu_for, shell_page
 from starlette.requests import Request
@@ -22,7 +22,6 @@ from starlette.responses import (
 )
 
 if TYPE_CHECKING:
-    from .auth import Auth
     from .health import HealthWatch
 
 log = logging.getLogger("canccu.admin")
@@ -144,8 +143,12 @@ async def static_ui_css(request: Request) -> Response:
     return response
 
 
-def page_error_handler(auth: Auth) -> Callable[[Request, KitError], Awaitable[Response | None]]:
-    """The error page of every admin page path; the API keeps the kit's JSON body (None)."""
+def page_error_handler(
+    read_session: Callable[[str | None], Awaitable[Session]],
+) -> Callable[[Request, KitError], Awaitable[Response | None]]:
+    """The error page of every admin page path; the API keeps the kit's JSON body (None).
+    `read_session` reads a cookie's session as the pages' rights checks do, so the error page
+    draws the shell every other page of that session draws."""
 
     async def page_error(request: Request, exc: KitError) -> Response | None:
         """A page says the refusal in words, in the shell of the session it has, and the right
@@ -155,7 +158,7 @@ def page_error_handler(auth: Auth) -> Callable[[Request, KitError], Awaitable[Re
         if isinstance(exc, MissingRight):
             log.info("page %s refused: %s", request.url.path, exc.message)
         try:
-            session = await auth.session(session_id_from_cookie(request.headers.get("cookie")))
+            session = await read_session(request.headers.get("cookie"))
         except KitError:
             session = None
         if isinstance(exc, MissingRight) and session is not None and not session.rights:
