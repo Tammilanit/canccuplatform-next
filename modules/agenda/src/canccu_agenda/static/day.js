@@ -15,7 +15,10 @@ const SLOP_PX = 10; // a finger that moves this far is scrolling, not pressing
 
 if (list && list.querySelector(".canccu-agenda-gap, .canccu-agenda-addrow")) {
   const gaps = [...list.querySelectorAll(".canccu-agenda-gap")];
-  const adds = [...list.querySelectorAll(".canccu-agenda-gap a, .canccu-agenda-addrow a")];
+  // A gap whose next item has started offers a time already past: the bar skips it.
+  const adds = [
+    ...list.querySelectorAll(".canccu-agenda-gap:not(.is-ended) a, .canccu-agenda-addrow a"),
+  ];
   let timer = 0;
   let start = null;
   let shown = null;

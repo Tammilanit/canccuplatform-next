@@ -4,7 +4,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { withTenant } from "@canccu/kit";
+import { Outbox, withTenant } from "@canccu/kit";
 import { takeCommands } from "../src/assignments.js";
 import type { ThemeNow } from "../src/compose/sources.js";
 import { BundleStore, bundlesDir } from "../src/pins/bundles.js";
@@ -65,7 +65,7 @@ describe.skipIf(!DATABASE_URL)("pins", () => {
     tick = pinTickRunner({
       db: h.db,
       kv: h.kv,
-      bus: h.bus,
+      outbox: new Outbox(h.bus, h.db),
       audit: (entry) => {
         h.audits.push(entry);
         return Promise.resolve();

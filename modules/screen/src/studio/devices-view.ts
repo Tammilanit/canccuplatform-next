@@ -10,7 +10,7 @@ import type { SeenDevice } from "./help.js";
 import { counted } from "./messages.js";
 import type { MessageKey } from "./messages.js";
 import { nowShowing } from "./now-line.js";
-import { ago, clockTime, online, since, thumb } from "./views.js";
+import { ago, clockDay, clockTime, online, since, thumb } from "./views.js";
 import type { ViewContext, ZoneSummary } from "./views.js";
 import type { ZoneRecord } from "../push/store.js";
 
@@ -91,7 +91,7 @@ function statusPart(c: ViewContext, d: SeenDevice, fleet: Fleet): Html {
   const state = [
     on || seen === null
       ? ago(t, seen, c.nowMs)
-      : t("device.offline_for", { time: clockTime(seen, c.timeZone) }),
+      : t("device.offline_for", { time: clockDay(seen, c.nowMs, c.timeZone) }),
     lag > 0
       ? counted(t, "device.behind", lag)
       : h?.state_lag === undefined
@@ -107,7 +107,7 @@ function statusPart(c: ViewContext, d: SeenDevice, fleet: Fleet): Html {
           ${problems.map(
             (p) =>
               html`<p>
-                  ${t(p.title, { device: d.name, since: seen ? clockTime(seen, c.timeZone) : "" })}
+                  ${t(p.title, { device: d.name, since: seen ? clockDay(seen, c.nowMs, c.timeZone) : "" })}
                 </p>
                 <ol>
                   ${p.steps.map((s) => html`<li>${step(c, s)}</li>`)}
@@ -141,12 +141,15 @@ function deviceActions(c: ViewContext, d: SeenDevice, { zones, all }: Fleet): Sl
           : "";
   const opt = (value: string, label: string) =>
     html`<option${attrs({ value, selected: value === current })}>${label}</option>`;
+  // Only screens with a zone are offered as a new mirror; the one it mirrors now stays a choice
+  // either way, so the form never reads as "nothing" for a screen that shows something.
+  const mirrorable = all.filter(
+    (o) => o.id !== d.id && (o.zone_key !== null || current === `device:${o.id}`),
+  );
   const shows = [
     opt("", t("device.shows_none")),
     ...zones.map((z) => opt(`zone:${z.key}`, t("device.shows_zone", { zone: z.name }))),
-    ...all
-      .filter((o) => o.id !== d.id && o.zone_key !== null)
-      .map((o) => opt(`device:${o.id}`, t("device.shows_mirror", { device: o.name }))),
+    ...mirrorable.map((o) => opt(`device:${o.id}`, t("device.shows_mirror", { device: o.name }))),
     ...(current.startsWith("mirror-zone:") ? [opt(current, placeLine(c, d, { zones, all }))] : []),
   ];
   const unassigned = current === "";

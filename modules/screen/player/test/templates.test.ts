@@ -43,6 +43,15 @@ describe("the player's default templates", () => {
     );
   });
 
+  it("draws the Wi-Fi name and its password each as a part the look keeps on one line (#546)", () => {
+    const view = { wifi: { ssid: "demo-guest", password: "lan-party-2026", note: null } };
+    const box = draw(DEFAULT_TEMPLATES.venue_info ?? [], view);
+    expect(box.querySelector(".canccu-widget__name")?.textContent).toBe("demo-guest");
+    const password = box.querySelector(".canccu-widget__password");
+    expect(password?.textContent).toBe("lan-party-2026");
+    expect(password?.classList.contains("canccu-widget__meta")).toBe(true);
+  });
+
   // contracts/screen.md, Trend arrows (#416): the direction in the class, no arrow without one.
   it("draws a trend arrow beside each statistic that has one", () => {
     const stats = draw(DEFAULT_TEMPLATES.stats ?? [], {

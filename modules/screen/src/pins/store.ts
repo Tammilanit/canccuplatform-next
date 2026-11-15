@@ -4,14 +4,14 @@
  * that holds every version a pin names or restores.
  */
 import { isTenantId, requireTenant, withTenant } from "@canccu/kit";
-import type { Bus, SqlClient } from "@canccu/kit";
+import type { Outbox, SqlClient } from "@canccu/kit";
 import { queueCommand } from "../assignments.js";
 import type { Audit } from "../audit.js";
 import type { Db } from "../db.js";
 import type { Kv } from "../kv.js";
 import type { Fanout } from "../push/store.js";
-import { publishAll } from "../zones.js";
-import type { Emit } from "../zones.js";
+import type { Sources } from "../compose/sources.js";
+import { heldBundle } from "./bundles.js";
 import type { BundleStore } from "./bundles.js";
 
 export interface PinValues {
@@ -47,6 +47,31 @@ export async function readPin(c: SqlClient): Promise<PinRow> {
   return (rows[0] as PinRow | undefined) ?? NO_PIN;
 }
 
+/** Whether two pins end alike: the same `until` and the same `restores`. */
+export const sameEnd = (a: PinRow, b: PinRow): boolean =>
+  a.until?.getTime() === b.until?.getTime() &&
+  a.restores?.bundle_version === b.restores?.bundle_version &&
+  a.restores?.theme_revision === b.restores?.theme_revision;
+
+/**
+ * What putting `restores` back puts back: `restores`, or no pin when its bundle or revision is
+ * gone; undefined while theming cannot say (a failed read says nothing about the revision).
+ */
+export async function restoreOf(
+  deps: { bundles: Pick<BundleStore, "available">; sources: Pick<Sources, "themeRevision"> },
+  restores: PinValues,
+): Promise<PinValues | undefined> {
+  const none = { bundle_version: null, theme_revision: null };
+  if ((await heldBundle(deps.bundles, restores.bundle_version)) !== restores.bundle_version) {
+    return none;
+  }
+  const theme = restores.theme_revision;
+  if (theme === null) return restores;
+  const found = await deps.sources.themeRevision(requireTenant(), theme);
+  if (found === "gone") return none;
+  return found === null ? undefined : restores;
+}
+
 /** The pin locked for a change; the row is made first, so two first writers also queue. */
 export async function lockPin(c: SqlClient): Promise<PinRow> {
   await c.query("INSERT INTO screen_pins DEFAULT VALUES ON CONFLICT DO NOTHING");
@@ -54,18 +79,18 @@ export async function lockPin(c: SqlClient): Promise<PinRow> {
   return rows[0] as unknown as PinRow;
 }
 
-/** A committed change still to announce: its event, and the screens of the event to reload. */
+/** A committed change still to announce: the screens of the event to reload. */
 export interface PinChange {
-  emit: Emit;
   devices: string[];
 }
 
 /**
- * Writes `next` over `before` under the pin's lock and audits it (without `actor_user_id` for the
- * tick's restore); the caller hands the result to `announcePin` after commit.
+ * Writes `next` over `before` under the pin's lock, audits it (without `actor_user_id` for the
+ * tick's restore) and stores `screen.pin.changed` in the outbox, so theming, which keeps the
+ * pinned revisions, never misses one; the caller hands the result to `announcePin` after commit.
  */
 export async function changePin(
-  deps: { audit: Audit },
+  deps: { audit: Audit; outbox: Outbox },
   c: SqlClient,
   before: PinRow,
   next: PinRow,
@@ -110,33 +135,29 @@ export async function changePin(
     "SELECT id FROM devices WHERE current_tenant_id = $1 AND revoked_at IS NULL",
     [tenant],
   );
-  return {
-    emit: [
-      "screen.pin.changed",
-      {
-        bundle_version: next.bundle_version,
-        theme_revision: next.theme_revision,
-        until: until(next),
-        restores: next.restores,
-        reason,
-        actor_user_id: reason === "expired" ? null : next.changed_by,
-      },
-    ],
-    devices: rows.map((r) => r.id as string),
+  const data = {
+    bundle_version: next.bundle_version,
+    theme_revision: next.theme_revision,
+    until: until(next),
+    restores: next.restores,
+    reason,
+    actor_user_id: reason === "expired" ? null : next.changed_by,
   };
+  await deps.outbox.add(c, "screen.pin.changed", data, { version: 1 });
+  return { devices: rows.map((r) => r.id as string) };
 }
 
 /**
- * Publishes the change and queues a `reload` for every screen of the event. Only after commit:
- * a screen reloads on the nudge at once and reads the pin then, so a reload before commit would
- * load the old bundle and stay on it.
+ * Sends the outbox's events and queues a `reload` for every screen of the event. Only after
+ * commit: a screen reloads on the nudge at once and reads the pin then, so a reload before commit
+ * would load the old bundle and stay on it. An event the bus refuses now goes on a later flush.
  */
 export async function announcePin(
-  deps: { bus: Bus; kv: Kv; fanout: Pick<Fanout, "publish"> },
+  deps: { outbox: Outbox; kv: Kv; fanout: Pick<Fanout, "publish"> },
   change: PinChange,
   nowMs: number,
 ): Promise<void> {
-  await publishAll(deps.bus, [change.emit]);
+  await deps.outbox.flush();
   for (const device of change.devices) await queueCommand(deps, device, "reload", nowMs);
 }
 

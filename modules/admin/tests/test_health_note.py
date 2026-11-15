@@ -7,6 +7,7 @@ import pytest
 from conftest import START, World, owner_and_member
 from test_pages import TROUBLE
 
+from canccu_admin.auth import ADMIN_RIGHTS, ROLE_RIGHTS
 from canccu_admin.health import Check, Part
 
 NOTE = "/api/admin/health/note"
@@ -68,9 +69,17 @@ async def test_the_live_parts_are_the_pages_without_the_shell(
 
 
 async def test_the_live_parts_need_the_right_to_open_health(
-    world: World, caplog: pytest.LogCaptureFixture
+    world: World, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _, member = await owner_and_member(world, caplog)
     world.watch.latest = TROUBLE
+    # Without any role, a page sends on to sign-in's "No role yet".
     r = await world.browser(member).get("/admin/health-view/live")
-    assert "<b>Notifications</b>" not in r.text and r.status_code != 200
+    assert r.status_code == 303 and r.headers["location"] == "/admin/sign-in"
+    # A role without the right to open Health is refused.
+    monkeypatch.setitem(ROLE_RIGHTS, "admin", ADMIN_RIGHTS - {"admin.settings.read"})
+    me = (await world.browser(member).get("/api/admin/session")).json()["user"]["id"]
+    await world.auth.set_role(me, "admin", "u_owner")
+    world.checker.forget_session(member)  # as admin.rights.changed drops it
+    r = await world.browser(member).get("/admin/health-view/live")
+    assert r.status_code == 403 and "<b>Notifications</b>" not in r.text

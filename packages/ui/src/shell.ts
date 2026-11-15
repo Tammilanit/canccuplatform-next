@@ -328,7 +328,9 @@ export function errorView(err: PageError, c: ErrorContext): Html {
     : undefined;
   const link = (href: string, label: string, variant: string, ico = ""): Html =>
     html`<a class="canccu-button canccu-button--${variant}" href="${href}">${ico ? icon(ico) : ""}${label}</a>`;
-  const retry = c.retry ? link(c.retry, "Try again", "primary", "refresh") : "";
+  const back = c.back ? link(c.back.href, c.back.label, "secondary") : "";
+  // No retry after a form post (a link would GET it): the way back instead.
+  const retry = c.retry ? link(c.retry, "Try again", "primary", "refresh") : back;
   const event = c.event ?? "this event";
   const views: Record<Kind, [string, Slot, Slot, Slot]> = {
     no_access: [
@@ -344,7 +346,7 @@ export function errorView(err: PageError, c: ErrorContext): Html {
       "compass",
       "There's nothing at this address. It may have been removed, or the link is cut short.",
       "",
-      home ? link(home.href, `Open ${home.label}`, "primary") : "",
+      home ? link(home.href, `Open ${home.label}`, "primary") : back,
     ],
     not_at_venue: [
       "pin",
@@ -356,7 +358,7 @@ export function errorView(err: PageError, c: ErrorContext): Html {
       "archive",
       `${c.event ?? "The event"} has ended. Everything can still be read; nothing can be changed.`,
       "",
-      c.back ? link(c.back.href, c.back.label, "secondary") : "",
+      back,
     ],
     failed: [
       "alert",
@@ -366,7 +368,7 @@ export function errorView(err: PageError, c: ErrorContext): Html {
         : "Try again in a moment. If it stays, tell an organiser.",
       [retry, health ? link(health.href, "Open Health", "secondary") : ""],
     ],
-    refused: ["alert", err.message, "", c.back ? link(c.back.href, c.back.label, "secondary") : ""],
+    refused: ["alert", err.message, "", back],
   };
   const [ico, text, next, actions] = views[kind];
   return html`<div class="canccu-error"><span class="canccu-error__icon">${icon(ico)}</span><h1 class="canccu-error__title">${TITLES[kind]}</h1><p class="canccu-error__text">${text}</p>${next ? html`<p class="canccu-error__next">${next}</p>` : ""}<div class="canccu-cluster">${actions}</div></div>`;

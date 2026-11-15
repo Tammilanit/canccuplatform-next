@@ -133,6 +133,31 @@ describe("today in numbers", () => {
     expect(photos.online_peak).toBeUndefined();
   });
 
+  it('says nothing of photos while none was shared, so never "0 photos shared" (#548)', () => {
+    const view = viewOf(
+      "today_numbers",
+      {},
+      facts({ phase: "wind_down", presence, photosToday: 0 }),
+    );
+    expect(view).toMatchObject({ empty: false, online_peak: { count: 231 } });
+    expect("photos" in view).toBe(false);
+  });
+
+  it("names the evening's weekday after midnight, not the next day's (#548)", () => {
+    const at = (iso: string) => facts({ now: new Date(iso), phase: "wind_down", presence });
+    // Saturday 01:00 and 05:59 in the event's zone are still Friday's night.
+    expect(viewOf("today_numbers", {}, at("2026-03-14T01:00:00Z")).day_text).toBe("Friday");
+    expect(viewOf("today_numbers", {}, at("2026-03-14T05:59:00Z")).day_text).toBe("Friday");
+    expect(viewOf("today_numbers", {}, at("2026-03-14T06:00:00Z")).day_text).toBe("Saturday");
+    const helsinki = facts({
+      now: new Date("2026-03-13T23:00:00Z"),
+      timeZone: "Europe/Helsinki",
+      phase: "wind_down",
+      presence,
+    });
+    expect(viewOf("today_numbers", {}, helsinki).day_text).toBe("Friday");
+  });
+
   it("draws no graph and no scale over a day without an hour of counts (#527)", () => {
     const photos = viewOf("today_numbers", {}, facts({ phase: "wind_down", photosToday: 4 }));
     expect(photos).toMatchObject({ empty: false, scale: [], points: [] });
@@ -177,6 +202,21 @@ describe("the activity graph", () => {
     expect(points).toEqual([
       { time_text: "18:00", value: 110 },
       { time_text: "20:00", value: 220 },
+    ]);
+  });
+
+  it("starts each hour on the event's own hour in a zone half an hour off UTC (#548)", () => {
+    // 18:42 UTC is 00:12 in Kolkata (UTC+5:30): the counts of 17:45 and 18:20 UTC fall in the
+    // local hours 23:00 and 23:30–00:00, never a UTC hour named as a local one.
+    const points = hourlyOf(
+      [count(0.95, 100), count(0.37, 200), count(0.1, 300)],
+      (c) => c.online,
+      "Asia/Kolkata",
+      NOW,
+    );
+    expect(points).toEqual([
+      { time_text: "23:00", value: 150 },
+      { time_text: "00:00", value: 300 },
     ]);
   });
 

@@ -289,7 +289,12 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
         el("li", "row", [
           el("span", "state", [t("Wi-Fi")]),
           el("strong", "name", [f("ssid")]),
-          sec("password", el("span", "meta", [f("password")])),
+          sec(
+            "password",
+            el("span", null, [f("password")], {
+              class: [t("canccu-widget__meta canccu-widget__password")],
+            }),
+          ),
           not("password", el("span", "meta", [t("Password on the hub")])),
           sec("note", el("span", "meta", [f("note")])),
         ]),

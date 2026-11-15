@@ -49,6 +49,11 @@ def _minutes(delta: Any) -> int:
     return int(delta.total_seconds() // 60)
 
 
+def _minutes_up(delta: Any) -> int:
+    """A countdown's minutes: its last minute still reads 1, never 0."""
+    return -int(-delta.total_seconds() // 60)
+
+
 def _slip(row: Any) -> int:
     """How far the item slipped: its start, or once it has started only its end moves."""
     if row["starts_at"] != row["planned_starts_at"]:
@@ -132,13 +137,13 @@ def hero_html(
     screens show, with the run of show's last Discord post under it (posts.py)."""
     state = state_of(row, now)
     if state == "running":
-        left = _minutes(row["ends_at"] - now)
+        left = _minutes_up(row["ends_at"] - now)
         kicker = f"On now · {span(left)} left"
         when = f"until {hhmm(row['ends_at'], tz)}"
         if row["ends_at"] != row["planned_ends_at"] and row["planned_ends_at"] is not None:
             when += f" <s>{hhmm(row['planned_ends_at'], tz)}</s>"
     else:
-        kicker = f"Up next · in {span(_minutes(row['starts_at'] - now))}"
+        kicker = f"Up next · in {span(_minutes_up(row['starts_at'] - now))}"
         when = hhmm(row["starts_at"], tz)
         if row["starts_at"] != row["planned_starts_at"]:
             when += f" <s>{hhmm(row['planned_starts_at'], tz)}</s>"
@@ -229,9 +234,9 @@ def gap_html(
     href = f"{BASE}/add?day={day.isoformat()}&amp;at={hhmm(start, tz)}"
     href += f"&amp;minutes={room}" if room > 0 else ""
     names = f"{hhmm(before['starts_at'], tz)} and {hhmm(after['starts_at'], tz)}"
-    return (
-        f'<li class="canccu-agenda-gap"><a href="{href}">{icon("plus")}Add between {names}</a></li>'
-    )
+    # Its room is past once the next item has started: the bar's Quick add skips it (day.js).
+    cls = "canccu-agenda-gap is-ended" if after["starts_at"] <= now else "canccu-agenda-gap"
+    return f'<li class="{cls}"><a href="{href}">{icon("plus")}Add between {names}</a></li>'
 
 
 def add_row_html(day: date) -> str:
@@ -319,5 +324,11 @@ def side_html(
     body += changes + bring_back + read_only
     if session.has(WRITE) and state != "cancelled" and row["managed_by"] is None:
         body += f'<a class="canccu-agenda-danger" href="{base}/cancel">Cancel this item…</a>'
-    opened = " is-open" if close else ""
-    return f'<aside class="canccu-card canccu-agenda-side{opened}">{body}</aside>'
+    if not close:
+        return f'<aside class="canccu-card canccu-agenda-side">{body}</aside>'
+    # Over the day below 1440 px, its scrim closes it as Close does (agenda.css).
+    scrim = (
+        f'<a class="canccu-agenda-backdrop" href="{esc(close)}" tabindex="-1"'
+        ' aria-hidden="true"></a>'
+    )
+    return f'{scrim}<aside class="canccu-card canccu-agenda-side is-open">{body}</aside>'

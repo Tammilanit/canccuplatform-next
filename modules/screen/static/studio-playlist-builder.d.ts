@@ -65,6 +65,7 @@ export function runOrder(
 ): { rows: RunRow[]; total: number };
 export function clock(seconds: number): string;
 export function nextAt(timeZone: string, nowMs: number, hhmm: string): number;
+export function wallInstant(timeZone: string, local: string): number;
 export function pushUntil(
   choice: string,
   nowMs: number,

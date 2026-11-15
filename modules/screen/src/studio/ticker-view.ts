@@ -33,7 +33,10 @@ export function tickerView(c: ViewContext, now: TickerNow): Html {
     now.source === "admin" || now.source === "bot"
       ? html`<button${attrs({ class: "canccu-button canccu-button--danger-ghost", type: "button", "data-call": "DELETE", "data-url": "/api/screen/ticker", "data-done": t("ticker.clear_done") })}>${t("ticker.clear")}</button>`
       : "";
-  const form = html`<form class="canccu-card canccu-form" data-ticker>
+  const form = html`<form
+    class="canccu-card canccu-form"
+    data-ticker${attrs({ "data-time-zone": c.timeZone })}
+  >
     <div class="canccu-field">
       <label class="canccu-field__label" for="canccu-studio-ticker-text">${t("ticker.text")}</label
       ><textarea

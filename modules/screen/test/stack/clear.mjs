@@ -181,8 +181,8 @@ export async function panelFilled(page) {
     );
 }
 
-/** The hero's claim shows its title and body whole, as a showcase that does not grow must. */
-export async function showcaseWhole(page) {
+/** The hero's claim's title and body as drawn, and the screen's unit (screen.css, `--canccu-u`). */
+async function heroTexts(page) {
   const found = await page.evaluate((heroBox) => {
     const box = heroBox.map((s) => document.querySelector(s)).find((e) => e !== null);
     if (box === undefined) return null;
@@ -197,12 +197,55 @@ export async function showcaseWhole(page) {
       const fontSize = parseFloat(getComputedStyle(e).fontSize);
       return [{ name, extent: extent(e), scrollHeight, clientHeight, fontSize }];
     });
-    return { box: extent(box), texts };
+    const unit = parseFloat(getComputedStyle(box).getPropertyValue("--canccu-u"));
+    return { box: extent(box), texts, unit };
   }, HERO_BOX);
   if (found === null || found.texts.length < 2)
     throw new Error("the hero shows no announcement with a title and a body");
+  return found;
+}
+
+/** The hero's claim shows its title and body whole, as a showcase that does not grow must. */
+export async function showcaseWhole(page) {
+  const found = await heroTexts(page);
   const cut = cutText(found.box, found.texts);
   if (cut.length > 0) throw new Error(`the small showcase cuts its ${cut.join(" and ")}`);
+}
+
+/**
+ * A showcase in a large hero takes the large type (stage.css: a title of 9.3 units), its title
+ * and body whole: Portrait's hero and Ambient's wide, low one too (#546).
+ */
+async function showcaseLarge(page) {
+  const found = await heroTexts(page);
+  const title = found.texts.find((t) => t.name === "title");
+  if (title.fontSize < 9 * found.unit)
+    throw new Error(
+      `the showcase's title is ${title.fontSize} px, not the large type (${9.3 * found.unit} px)`,
+    );
+  const cut = cutText(found.box, found.texts);
+  if (cut.length > 0) throw new Error(`the large showcase cuts its ${cut.join(" and ")}`);
+}
+
+/**
+ * The venue card writes the Wi-Fi name and its password each on one line, never broken inside a
+ * word (at a hyphen), so guests type what the screen says (#546). The card may wait for its turn.
+ */
+export async function venueOnOneLine(page) {
+  await page.waitForSelector(".canccu-widget--venue_info .canccu-widget__name", {
+    timeout: 30_000,
+  });
+  const broken = await page.evaluate(() =>
+    ["name", "password"].filter((part) => {
+      const e = document.querySelector(`.canccu-widget--venue_info .canccu-widget__${part}`);
+      if (e === null) return false;
+      const range = document.createRange();
+      range.selectNodeContents(e);
+      return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size > 1;
+    }),
+  );
+  if (broken.length > 0)
+    throw new Error(`the venue card breaks its Wi-Fi ${broken.join(" and ")} across lines`);
 }
 
 /** Each view's check, run once it has drawn. */
@@ -212,4 +255,6 @@ export const CLEAR_CHECKS = {
   "claim-hero": surgingSince,
   "dashboard-showcase": panelFilled,
   "dashboard-showcase-small": showcaseWhole,
+  "portrait-showcase": showcaseLarge,
+  "ambient-showcase": showcaseLarge,
 };

@@ -104,8 +104,22 @@ describe("a graph's bars and hours", () => {
     expect(named(BOX_UNITS)).toEqual(["00:00", "06:00", "12:00", "18:00"]);
     // The Portrait hero, a whole 9:16 screen wide, names every third hour as the Pulse hero does.
     expect(named(100)).toHaveLength(8);
-    // A box of 2 of 12 columns.
-    expect(named((2 / 12) * (1600 / 9))).toEqual(["00:00", "12:00"]);
+    // A box of 2 of 12 columns has no room for any step: only the newest hour is named (#548).
+    expect(named((2 / 12) * (1600 / 9))).toEqual(["23:00"]);
+  });
+
+  it("spaces the labels by bar, so a gap of hours never brings two together (#548)", () => {
+    // 21 hours, 03:00–05:00 missing: 00:00 and 06:00 would sit 3 bars apart. The labels keep
+    // their spacing from the newest back, so the oldest one gives way.
+    const gap = day(0, Array<number>(24).fill(10)).filter((h) => !["03:00", "04:00", "05:00"].includes(h.time_text)); // prettier-ignore
+    const points = graphOf(gap, BOX_UNITS).points;
+    const at = points.flatMap((p, i) => (p.tick_text === undefined ? [] : [i]));
+    const barUnits = (BOX_UNITS - 15) / gap.length;
+    for (let k = 1; k < at.length; k++) {
+      const [a, b] = [at[k - 1] as number, at[k] as number];
+      expect((b - a) * barUnits, `labels on bars ${String(a)} and ${String(b)}`).toBeGreaterThanOrEqual(10); // prettier-ignore
+    }
+    expect(points.flatMap((p) => p.tick_text ?? [])).toEqual(["06:00", "12:00", "18:00"]);
   });
 
   it("leaves unnamed an hour the newest one's label, ending on the box's edge, would meet", () => {
