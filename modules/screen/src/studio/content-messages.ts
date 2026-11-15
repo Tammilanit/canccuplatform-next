@@ -36,6 +36,7 @@ export const CONTENT_EN = {
   "upload.list": "Uploads",
   "upload.progress": "Uploading {done} of {total}",
   "upload.waiting": "Waiting",
+  "upload.busy": "Wait for the current upload to finish, then add these files.",
   "upload.sending": "Uploading {percent}%",
   "upload.checking": "Checking the file",
   "upload.added": "Added",

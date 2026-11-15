@@ -355,6 +355,7 @@ export const CLIENT_KEYS = [
   "size.gb",
   "upload.progress",
   "upload.waiting",
+  "upload.busy",
   "upload.sending",
   "upload.checking",
   "upload.added",

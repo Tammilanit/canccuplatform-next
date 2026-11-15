@@ -51,7 +51,10 @@ export async function readContent(
     rights.has("screen.content.write") ? await assetIndex(c, deps.now()) : null,
   ]);
   const live = [...rows.values()].filter((r) => r.state === "queued").map((r) => r.id);
-  const positions = await deps.renderQueue.positions(ctx.tenant_id, live);
+  // The places are a nicety: with Valkey out the page still draws, its waiting decks placeless.
+  const positions = await deps.renderQueue
+    .positions(ctx.tenant_id, live)
+    .catch(() => new Map<string, number>());
   const jobs = new Map<string, DeckJob>();
   for (const [assetId, r] of rows) {
     jobs.set(assetId, {

@@ -60,7 +60,7 @@ class FakeXhr extends EventTarget {
 }
 
 const studio = {
-  api: vi.fn((..._args: unknown[]) =>
+  api: vi.fn<(method: string, url: string, body?: unknown) => Promise<unknown>>(() =>
     Promise.resolve({ ok: true, status: 200, data: { results: [{ asset_ids: [] }] } }),
   ),
   confirmed: () => true,
@@ -73,9 +73,9 @@ const studio = {
 
 // The scripts listen on the document, which outlives each test's page: what one run of them
 // added is taken off again, so the next run is the only one listening.
-type Listener = Parameters<Document["addEventListener"]>;
+type Listener = Parameters<typeof document.addEventListener>;
 const listening: Listener[] = [];
-const listen = document.addEventListener.bind(document) as (...a: Listener) => void;
+const listen = document.addEventListener.bind(document);
 (document as unknown as { addEventListener: (...a: Listener) => void }).addEventListener = (
   ...a
 ) => {
@@ -105,8 +105,8 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  const unlisten = document.removeEventListener.bind(document) as (...a: Listener) => void;
-  for (const a of listening.splice(0)) unlisten(...a);
+  const unlisten = document.removeEventListener.bind(document);
+  for (const [type, listener] of listening.splice(0)) unlisten(type, listener);
   vi.clearAllMocks();
   document.body.innerHTML = "";
 });

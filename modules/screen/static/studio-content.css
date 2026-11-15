@@ -2,6 +2,28 @@
 
 @import url("studio-playlists.css");
 
+/*
+ * Upload's and Replace's file inputs: kept in the tab order but out of sight, inside the button
+ * that names them, which shows the focus ring for them (the Theme studio's pattern).
+ */
+.canccu-studio-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.canccu-button:has(> .canccu-studio-file) {
+  position: relative;
+}
+
+.canccu-button:has(> .canccu-studio-file:focus-visible) {
+  outline: 2px solid var(--canccu-ink-primary);
+  outline-offset: 2px;
+}
+
 /* Search and kinds at the left, the event's storage at the right; stacked on a phone. */
 .canccu-studio-library-head {
   display: flex;

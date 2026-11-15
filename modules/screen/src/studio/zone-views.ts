@@ -301,7 +301,8 @@ function settingsCard(c: ViewContext, zone: Zone, devices: readonly SeenDevice[]
 /**
  * The editor for `zone` as saved, drawn with `layoutId` when the crew picked another layout in
  * the gallery: Studio then clears the boxes' sizes and hidden boxes (contracts/screen.md, Box
- * sizes and hidden boxes), and the page saves the pick with the rest.
+ * sizes and hidden boxes), and the page saves the pick with the rest. It clears them too for a
+ * layout gone missing, whose region ids may name other boxes of the Pulse drawn instead.
  */
 export function zoneEditorView(
   c: ViewContext,
@@ -325,8 +326,6 @@ export function zoneEditorView(
   const found = layouts.find((l) => l.id === (layoutId ?? "pulse"));
   const layout = found ?? layouts.find((l) => l.id === "pulse");
   if (layout === undefined) throw new Error("zoneEditorView needs the built-in layouts");
-  // Box sizes and hidden boxes belong to the layout they were set on, so they go with another
-  // layout picked and with a missing one, whose ids may name other boxes of the Pulse.
   const draft: Zone =
     layoutId !== zone.layout_id || found === undefined
       ? {
@@ -383,14 +382,13 @@ export function zoneEditorView(
     "data-layout-names": JSON.stringify({ "": names.pulse ?? "pulse", ...names }),
     "data-region-names": JSON.stringify(Object.fromEntries(regions.map((r) => [r.id, r.label]))),
   };
-  const missing =
-    found === undefined
-      ? notice({
-          kind: "warn",
-          title: t("zone.layout_missing", { layout: layoutId ?? "" }),
-          text: t("zone.layout_missing_text", { layout: layout.name }),
-        })
-      : "";
+  const missing = found
+    ? ""
+    : notice({
+        kind: "warn",
+        title: t("zone.layout_missing", { layout: String(layoutId) }),
+        text: t("zone.layout_missing_text", { layout: layout.name }),
+      });
   return html`${zoneTabs(c, zones, zone.key)}${previewNotice(c)}${missing}
     <form class="canccu-studio-editor" ${attrs(form)}>
       <div class="canccu-studio-editor__main">
