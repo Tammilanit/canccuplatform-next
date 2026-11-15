@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Mapping
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -149,10 +150,31 @@ def page(
     return response
 
 
-def redirect(path: str, item: str | None = None) -> RedirectResponse:
-    """`item`: after a change, the list opens at that item's row, not at the top (#482)."""
-    target = f"#r-{quote(item, safe='')}" if item else ""
+def redirect(
+    path: str, item: Mapping[str, Any] | None = None, now: datetime | None = None
+) -> RedirectResponse:
+    """`item` (a row, or the API's item): after a change, the list opens at that item's row, not at
+    the top (#482), and opens the earlier items first when its row is folded among them."""
+    if item is None:
+        return RedirectResponse(f"{BASE}{path}", status_code=303)
+    if now is not None and folded(item, now):
+        path += f"{'&' if '?' in path else '?'}earlier=1"
+    target = f"#r-{quote(item['id'], safe='')}"
     return RedirectResponse(f"{BASE}{path}{target}", status_code=303)
+
+
+def folded(item: Mapping[str, Any], now: datetime) -> bool:
+    """Whether the list folds the item behind "N earlier items": it has started and does not run
+    (cancelled, a moment, or over). Takes a row or the API's item, whose times are text."""
+    starts, ends = _moment(item["starts_at"]), _moment(item["ends_at"])
+    running = item["status"] != "cancelled" and ends is not None and now < ends
+    return starts is not None and starts <= now and not running
+
+
+def _moment(value: datetime | str | None) -> datetime | None:
+    if isinstance(value, str):
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return value
 
 
 def notice(message: str, kind: str = "ok") -> str:

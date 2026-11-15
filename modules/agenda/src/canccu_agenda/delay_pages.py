@@ -221,11 +221,13 @@ async def confirm(
     return Confirm(title, choices, body, version)
 
 
-def _form(row: Any, version: int) -> str:
+def _form(row: Any, version: int, picked: str | None = None) -> str:
+    """`picked`: the item the day view's panel shows under the sheet, which stays open after."""
+    fields = {"chosen": 1, "revision": row["revision"], "agenda_version": version}
     return (
         f'<form method=post action="{BASE}/items/{esc(row["id"])}/delay"'
         ' class="canccu-agenda-form canccu-agenda-choice">'
-        + hidden({"chosen": 1, "revision": row["revision"], "agenda_version": version})
+        + hidden(fields | ({"item": picked} if picked else {}))
     )
 
 
@@ -245,7 +247,7 @@ async def sheet(request: Request, row: Any, raw: str, back: str) -> str:
     return (
         f'<a class="canccu-agenda-scrim" href="{esc(back)}" tabindex="-1" aria-hidden="true"></a>'
         '<dialog open class="canccu-agenda-sheet" aria-labelledby="canccu-agenda-sheet">'
-        + _form(row, drawn.version)
+        + _form(row, drawn.version, request.query_params.get("item"))
         + f'<div class="canccu-agenda-sheet__head"><h2 class="canccu-card__title"'
         f' id="canccu-agenda-sheet">{esc(title)}</h2>{shut}</div>'
         f'<div class="canccu-agenda-confirm-choices">{drawn.choices}</div>{drawn.body}'
@@ -361,7 +363,9 @@ async def delay_save(request: Request) -> Response:
         )
         return redirect(f"/items/{item_id}/delay?{query}")
     path = f"/?day={day_of(items[0]['starts_at'], request)}&done=delayed"
-    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)), item_id)
+    picked = str(form.get("item") or "")
+    path += f"&{urlencode({'item': picked})}" if picked else ""
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)), items[0], d.now())
 
 
 def day_of(value: str, request: Request) -> str:
