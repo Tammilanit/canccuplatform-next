@@ -24,6 +24,7 @@ from canccu_kit import (
     ui,
 )
 from canccu_kit.rights import Session
+from canccu_kit.starlette import page_retry
 from canccu_kit.ui import esc as esc  # the pages' escaping, re-exported
 from canccu_kit.web_security import event_page_csp, new_nonce
 from starlette.requests import Request
@@ -136,7 +137,7 @@ def page(
         tabs=tabs,
         crumb=crumb,
         actions=actions,
-        description=esc(description),
+        description_html=esc(description),
         narrow=narrow,
         plain=plain,
     )
@@ -180,7 +181,7 @@ async def error_page(request: Request, exc: KitError) -> Response:
         session=getattr(request.state, "agenda_session", None),
         page="the run of show",
         event=event.name if event else None,
-        retry=f"{BASE}{request.url.path}",
+        retry=page_retry(request, BASE),
         back=(f"{BASE}/", "Back to the run of show"),
     )
     return page(request, title, view, status=exc.status, plain=True)

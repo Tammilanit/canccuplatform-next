@@ -237,7 +237,9 @@ def create_app(
             f'<div class="canccu-split">{settings_list(rows)}{side}</div>',
             session=session,
             current="settings",
-            description=f"How each part of {esc(name)} behaves. A change applies when you save it.",
+            description_html=(
+                f"How each part of {esc(name)} behaves. A change applies when you save it."
+            ),
         )
 
     async def form_page(
@@ -322,7 +324,7 @@ def create_app(
             body,
             session=session,
             current="health",
-            description=description,
+            description_html=description,
             actions=f'<a class="canccu-button canccu-button--secondary" '
             f'href="{BASE}/health-view?check=now">{icon("refresh")}Check now</a>',
         )
@@ -370,11 +372,10 @@ def create_app(
     app.state.tenants = resolver  # the event the shell's header names (pages.event_of)
     app.state.health_watch = watch  # the menu's note on Health (pages.page)
     app.add_middleware(OriginCheck, origin=auth.public_origin)
-    install(app, watch.own)
+    install(app, watch.own, error_response=page_error_handler(auth))
     # Innermost, as the kit's install_tenancy places it: the correlation id and the origin check
     # cover its 404s, and settings and profile handlers run inside the request's tenant.
     app.user_middleware.append(Middleware(TenantPaths, resolver=resolver))
     install_service_identity(app, identity)
     app.add_exception_handler(NotSignedIn, not_signed_in)
-    app.add_exception_handler(KitError, page_error_handler(auth))
     return app

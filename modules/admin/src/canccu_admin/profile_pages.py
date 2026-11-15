@@ -130,7 +130,7 @@ def profile_routes(service: Service, auth: Auth, need: Need) -> list[Route]:
             session=session,
             current="profile",
             narrow=True,
-            description="The event's name, modules, settings and look, as one file.",
+            description_html="The event's name, modules, settings and look, as one file.",
         )
 
     async def ask_load(request: Request) -> Response:
