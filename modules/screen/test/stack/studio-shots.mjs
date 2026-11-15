@@ -4,6 +4,7 @@
 // its own size, so their heartbeats give the device cards an orientation, a size and a state.
 import { expect } from "./client.mjs";
 import { removeContent, removePlaylist, seedContent, seedPlaylist } from "./content-fixture.mjs";
+import { editorShots } from "./editor-shots.mjs";
 import { saveZone } from "./fixture.mjs";
 import { previewShots } from "./preview-shots.mjs";
 
@@ -360,6 +361,7 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
     await shot("screen-zone-gap-saved", "/admin/screen/zones/main", DESK, { ready: gapOnLoad });
     await saveZone(demo, "main", { regions: savedRegions });
     savedRegions = null;
+    await editorShots({ demo, shot, ready: studioReady });
     made = await scheduleFixture(demo, assets);
     for (const [name, path, viewport, o] of SCHEDULE_PAGES) await shot(name, path, viewport, o);
     const until = new Date(Date.now() + 3600_000).toISOString();

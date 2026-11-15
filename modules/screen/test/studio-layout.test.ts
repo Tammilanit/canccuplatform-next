@@ -17,7 +17,7 @@ import { boxEditor } from "../static/studio-layout.js";
 
 vi.mock("../static/studio-boxes.js", async (original) => {
   const real = await original<typeof import("../static/studio-boxes.js")>();
-  return { ...real, gaps: vi.fn(real.gaps) };
+  return { ...real, gaps: vi.fn(real.gaps), fill: vi.fn(real.fill) };
 });
 
 const win = globalThis as unknown as Window;
@@ -130,6 +130,16 @@ describe("a gap's warning", () => {
     }).not.toThrow();
     expect(heroArea(form)).toBe("2 / 1 / span 10 / span 7");
     expect(notice.hidden).toBe(true);
+  });
+
+  it("says the box is blocked when a gap still there cannot be filled", () => {
+    const { form, list, notice } = page({
+      hero: { area: { column: 1, row: 2, columns: 7, rows: 10 } },
+    });
+    vi.mocked(geometry.fill).mockReturnValueOnce(null);
+    (list.querySelector("[data-fill-gap]") as HTMLButtonElement).click();
+    expect(heroArea(form)).toBe("2 / 1 / span 10 / span 7");
+    expect(notice.textContent).toBe(TEXT["box.blocked"]);
   });
 
   it("is worked out once per draw, not again for the Changes list", () => {

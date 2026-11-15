@@ -261,27 +261,47 @@ function cellsOf(grown, area) {
   return out;
 }
 
-/** The gap named, or its parts, cut where a box beside it starts or ends. */
-function named(scene, area) {
+const spans = (from, size, at) => {
+  const lines = [from, ...[...at].sort((x, y) => x - y), from + size];
+  return lines.slice(1).map((end, i) => [lines[i], end - lines[i]]);
+};
+// A split is better the fewer of its parts lie beside no box, then the more of them can be filled.
+const score = (parts) => [
+  -parts.filter((p) => p.box === null).length,
+  parts.filter((p) => p.fills).length,
+];
+const better = (a, b) => {
+  const [x, y] = [score(a), score(b)];
+  return x[0] !== y[0] ? x[0] > y[0] : x[1] > y[1];
+};
+
+/**
+ * The gap named, or its parts, cut where a box beside it starts or ends. It is cut along one axis
+ * only: cut both ways, a corner part may lie beside no box at all, a warning with nothing to fill
+ * it. Of the rows and the columns, the cut whose parts the boxes beside them fill best wins.
+ */
+function named(scene, area, cut = true) {
   const beside = touching(scene, area);
-  if (!beside.some((t) => t.fills && t.whole)) {
+  if (cut && !beside.some((t) => t.fills && t.whole)) {
     const cuts = { columns: new Set(), rows: new Set() };
     for (const t of beside) {
       const set = across(t.edge) ? cuts.rows : cuts.columns;
       for (const line of [t.start, t.start + t.span])
         if (line > t.gStart && line < t.gStart + t.gSpan) set.add(line);
     }
-    if (cuts.columns.size + cuts.rows.size > 0) {
-      const spans = (from, size, at) => {
-        const lines = [from, ...[...at].sort((x, y) => x - y), from + size];
-        return lines.slice(1).map((end, i) => [lines[i], end - lines[i]]);
-      };
-      return spans(area.row, area.rows, cuts.rows).flatMap(([row, rows]) =>
-        spans(area.column, area.columns, cuts.columns).flatMap(([column, columns]) =>
-          named(scene, { column, row, columns, rows }),
-        ),
+    const byRows = () =>
+      spans(area.row, area.rows, cuts.rows).flatMap(([row, rows]) =>
+        named(scene, { ...area, row, rows }, false),
       );
-    }
+    const byColumns = () =>
+      spans(area.column, area.columns, cuts.columns).flatMap(([column, columns]) =>
+        named(scene, { ...area, column, columns }, false),
+      );
+    const splits = [
+      ...(cuts.rows.size > 0 ? [byRows()] : []),
+      ...(cuts.columns.size > 0 ? [byColumns()] : []),
+    ];
+    if (splits.length > 0) return splits.reduce((best, next) => (better(next, best) ? next : best));
   }
   const pick =
     beside.find((t) => t.fills && t.whole) ??

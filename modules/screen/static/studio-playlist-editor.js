@@ -29,6 +29,18 @@ const smallButton = (label, kind = "ghost") =>
     textContent: label,
   });
 
+/**
+ * This page again with the playlist open, keeping the library's search and page: the page opens
+ * its first playlist when the address names none, which after a rename may be another.
+ */
+function reopen(id) {
+  const now = new URLSearchParams(location.search);
+  const next = new URLSearchParams();
+  for (const key of ["after", "q", "kind"]) if (now.get(key)) next.set(key, now.get(key));
+  next.set("playlist", id);
+  return `${PAGE}?${next}`;
+}
+
 export function builder(box, doc, write, library) {
   const state = {
     name: doc.name,
@@ -111,16 +123,20 @@ export function builder(box, doc, write, library) {
     const text = write
       ? null
       : itemDetail(item, asset, slideshow, asPlayed().slideshow_image_seconds);
+    // Only the handle drags: a draggable row would start a drag where text in its fields is
+    // being selected.
+    const handle = write
+      ? el("span", {
+          className: "canccu-studio-item__handle",
+          textContent: "⋮⋮",
+          title: say("playlist.drag"),
+          draggable: true,
+        })
+      : null;
     const li = el(
       "li",
       { className: write ? "canccu-studio-item canccu-studio-item--edit" : "canccu-studio-item" },
-      write
-        ? el("span", {
-            className: "canccu-studio-item__handle",
-            textContent: "⋮⋮",
-            title: say("playlist.drag"),
-          })
-        : null,
+      handle,
       el(
         "div",
         { className: "canccu-studio-item__main" },
@@ -135,11 +151,13 @@ export function builder(box, doc, write, library) {
       length,
     );
     li.dataset.index = String(i);
+    const arrows = {};
     if (write) {
-      li.draggable = true;
-      li.addEventListener("dragstart", (e) => {
+      handle.addEventListener("dragstart", (e) => {
         e.dataTransfer.setData(ITEM, String(i));
         e.dataTransfer.effectAllowed = "move";
+        // The whole row is what moves, so it is what the pointer carries.
+        e.dataTransfer.setDragImage?.(li, 0, 0);
       });
       const tools = el("div", { className: "canccu-studio-item__tools" });
       const tool = (label, symbol, act, disabled) => {
@@ -147,17 +165,18 @@ export function builder(box, doc, write, library) {
         Object.assign(b, { ariaLabel: label, title: label, disabled });
         b.addEventListener("click", act);
         tools.append(b);
+        return b;
       };
-      tool(say("playlist.move_up"), "↑", () => setItems(moveItem(state.items, i, i - 1)), i === 0);
+      arrows.up = tool(say("playlist.move_up"), "↑", () => move(i, i - 1, "up"), i === 0);
       const last = i === state.items.length - 1;
-      tool(say("playlist.move_down"), "↓", () => setItems(moveItem(state.items, i, i + 1)), last);
+      arrows.down = tool(say("playlist.move_down"), "↓", () => move(i, i + 1, "down"), last);
       tool(say("playlist.remove"), "✕", () => setItems(removeItem(state.items, i)), false);
       // itemFields is null for a slideshow image or a missing asset; append would print "null".
       const fields = itemFields(item, asset, slideshow, changed);
       li.append(...[tools, fields].filter((n) => n !== null));
     }
     li.append(error);
-    rows.push({ length, error });
+    rows.push({ length, error, arrows });
     return li;
   }
 
@@ -165,6 +184,17 @@ export function builder(box, doc, write, library) {
     state.items = items;
     dirty = true;
     draw();
+  }
+
+  /**
+   * ↑ or ↓: the redraw replaces every row, so the focus goes to the moved row's same arrow, or
+   * to its other one once it reached the end and that arrow is off.
+   */
+  function move(from, to, way) {
+    setItems(moveItem(state.items, from, to));
+    const { up, down } = rows[to]?.arrows ?? {};
+    const [same, other] = way === "up" ? [up, down] : [down, up];
+    (same && !same.disabled ? same : other)?.focus();
   }
 
   /** Where a drop lands: before the row under the pointer, or after it past its middle. */
@@ -297,13 +327,13 @@ export function builder(box, doc, write, library) {
       const again = smallButton(say("playlist.reload"), "secondary");
       again.addEventListener("click", () => {
         dirty = false;
-        location.reload();
+        location.assign(reopen(doc.id));
       });
       return show(say("playlist.conflict"), again);
     }
     if (!r.ok) return show(failure(r));
     dirty = false;
-    reloadWith(say("playlist.saved"));
+    reloadWith(say("playlist.saved"), reopen(doc.id));
   }
   save.addEventListener("click", saveAll);
 

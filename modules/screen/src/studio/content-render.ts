@@ -130,7 +130,7 @@ export function renderPart(
       ${cancel}${fast}`;
   } else if (job.state === "running") {
     body = html`<p class="canccu-small">${counted(t, "render.running", job.slides_done)}</p>
-      <progress aria-label="${t("render.running", { count: job.slides_done })}"></progress
+      <progress aria-label="${counted(t, "render.running", job.slides_done)}"></progress
       >${cancel}${fast}`;
   } else if (job.state === "succeeded") {
     const total = job.slides?.length ?? 0;

@@ -8,6 +8,7 @@
  */
 import { drag, fill, gapWords, gaps, hide, resize, sameArea, show } from "./studio-boxes.js";
 
+const ENDS = ["pointerup", "pointercancel", "lostpointercapture"];
 const place = (a) => `${a.row} / ${a.column} / span ${a.rows} / span ${a.columns}`;
 
 export function boxEditor(form, { say, counted, tell, changed }) {
@@ -81,8 +82,10 @@ export function boxEditor(form, { say, counted, tell, changed }) {
    * to the next gap's button, else to the list, and the notice says what was filled.
    */
   function fillGap(gap) {
-    const next = gap && fill(boxes, gap);
-    if (!next) return;
+    // A button whose gap is gone does nothing; a gap still there that cannot grow says so.
+    if (!gap) return;
+    const next = fill(boxes, gap);
+    if (!next) return tell(say("box.blocked"));
     update(next);
     tell(say("gap.filled", { box: nameOf(gap.box) }));
     const changes = form.querySelector("[data-changes]");
@@ -117,8 +120,11 @@ export function boxEditor(form, { say, counted, tell, changed }) {
     const check = event.target.closest("[data-box-hide]");
     if (!check) return;
     const id = regionOf(check);
-    if (check.checked) update(hide(boxes, id));
-    else {
+    if (check.checked) {
+      // A box off the screen cannot show the hero, so the role goes back to the hero region.
+      if (hero === id) hero = null;
+      update(hide(boxes, id));
+    } else {
       update(show(boxes, id, layoutAreas(), grid), "box.show_blocked");
       check.checked = boxes.find((b) => b.id === id)?.hidden ?? false;
     }
@@ -143,9 +149,13 @@ export function boxEditor(form, { say, counted, tell, changed }) {
     };
     handle.setPointerCapture(event.pointerId);
     handle.addEventListener("pointermove", move);
-    handle.addEventListener("pointerup", () => handle.removeEventListener("pointermove", move), {
-      once: true,
-    });
+    // Whichever way the drag ends: a release, the browser taking the pointer (a scroll, a
+    // gesture), or the capture lost.
+    const stop = () => {
+      handle.removeEventListener("pointermove", move);
+      for (const type of ENDS) handle.removeEventListener(type, stop);
+    };
+    for (const type of ENDS) handle.addEventListener(type, stop);
   });
   // A zone may be saved with a gap, and its warning shows from load. Not draw(): it calls
   // changed(), and the zone page has no editor to ask until this returns.

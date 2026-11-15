@@ -5,6 +5,7 @@
  * with its progress and, when refused, the API's own words. Also: the event's storage use, a
  * card's replace and adding a web or YouTube link. Every change goes through the JSON API.
  */
+import { ASSET } from "./studio-playlist-editor.js";
 import { replacePlan } from "./studio-replace-plan.js";
 // The builder and Push now share the page (mockup 10).
 import "./studio-playlists.js";
@@ -101,7 +102,9 @@ if (drop) {
   async function matchesOf(files) {
     const out = [];
     for (let i = 0; i < files.length; i += 100) {
-      const names = files.slice(i, i + 100).map((f) => f.name);
+      // The title the upload stores (src/assets/upload.ts, uploadTitle), so a long name never fails
+      // the check.
+      const names = files.slice(i, i + 100).map((f) => f.name.trim().slice(0, 200));
       const r = await api("POST", `${ASSETS}/name-check`, { names });
       if (!r.ok) throw r;
       for (const result of r.data.results) {
@@ -280,12 +283,17 @@ if (drop) {
 
   async function take(fileList) {
     const files = [...fileList];
-    if (busy || files.length === 0) return;
+    if (files.length === 0) return;
+    // One batch at a time, from its name check on; later files wait for the person to add them.
+    if (busy) return show(say("upload.busy"));
+    busy = true;
     let matches;
     try {
       matches = await matchesOf(files);
     } catch (r) {
       return show(failure(r));
+    } finally {
+      busy = false;
     }
     const plan = replacePlan({ files, matches, choice: "keep" });
     if (plan.some((e) => e.conflict)) ask(files, matches);
@@ -296,14 +304,18 @@ if (drop) {
     take(input.files);
     input.value = "";
   });
+  // A library card on its way to the builder is no file and no link: the band lets it pass.
+  const card = (e) => [...(e.dataTransfer?.types ?? [])].includes(ASSET);
   for (const type of ["dragenter", "dragover"]) {
     drop.addEventListener(type, (e) => {
+      if (card(e)) return;
       e.preventDefault();
       drop.classList.add("canccu-is-active");
     });
   }
   drop.addEventListener("dragleave", () => drop.classList.remove("canccu-is-active"));
   drop.addEventListener("drop", (e) => {
+    if (card(e)) return;
     e.preventDefault();
     drop.classList.remove("canccu-is-active");
     const files = e.dataTransfer?.files ?? [];
@@ -324,11 +336,13 @@ document.addEventListener("change", async (event) => {
   if (!input || input.files.length === 0) return;
   const id = input.dataset.replace;
   const status = document.querySelector(`#asset-${CSS.escape(id)} [data-asset-status]`);
+  const before = status?.textContent;
   const r = await send(`${ASSETS}/${encodeURIComponent(id)}/replace`, input.files[0], (percent) => {
     if (status) status.textContent = say("asset.replacing", { percent: percent ?? 100 });
   });
   input.value = "";
   if (r.ok) return reloadWith(say("asset.replaced"));
+  if (status) status.textContent = before;
   show(refusal(r.status, r.data));
 });
 

@@ -19,6 +19,7 @@ export const WIDGET_SETTINGS_EN = {
   "photo_wall.title": "Photo wall",
   "photo_wall.seconds": "Seconds per photo",
   "photo_wall.seconds_hint": "5 to 60 seconds.",
+  "photo_wall.seconds_invalid": "Seconds per photo must be a whole number from 5 to 60.",
   "photo_wall.order": "Order",
   "photo_wall.order.newest": "Newest first",
   "photo_wall.order.oldest": "Oldest first",

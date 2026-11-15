@@ -31,6 +31,7 @@ describe.skipIf(!DATABASE_URL)("playlists", () => {
       h,
       ...["as_1", "as_2", "as_ad"].map((id) => ({ id, kind: "image" as const })),
       ...["as_3", "as_4"].map((id) => ({ id, kind: "video" as const })),
+      { id: "as_cue", kind: "audio" as const },
     );
   });
   afterAll(async () => {
@@ -78,6 +79,32 @@ describe.skipIf(!DATABASE_URL)("playlists", () => {
         )
       ).statusCode,
     ).toBe(404);
+  });
+
+  it("refuses an audio asset, which plays only as a claim's sound", async () => {
+    const before = await call(h, "GET", "/api/screen/playlists", as("admin"));
+    for (const type of ["regular", "slideshow"]) {
+      const res = await call(
+        h,
+        "POST",
+        "/api/screen/playlists",
+        as("admin", { name: "Cues", type, items: items("as_1", "as_cue") }),
+      );
+      expect([res.statusCode, code(res)]).toEqual([400, "invalid_request"]);
+      expect(res.json<{ error: { message: string } }>().error.message).toContain("items[1]");
+    }
+    const made = await create({ name: "Loop", type: "regular", items: items("as_1") });
+    const put = await call(
+      h,
+      "PUT",
+      `/api/screen/playlists/${made.id}`,
+      as("admin", { ...made, items: items("as_cue"), revision: made.revision }),
+    );
+    expect([put.statusCode, code(put)]).toEqual([400, "invalid_request"]);
+    const after = await call(h, "GET", "/api/screen/playlists", as("admin"));
+    expect(after.json<{ playlists: unknown[] }>().playlists).toHaveLength(
+      before.json<{ playlists: unknown[] }>().playlists.length + 1,
+    );
   });
 
   it("needs screen.content.write to write and screen.content.read to read", async () => {

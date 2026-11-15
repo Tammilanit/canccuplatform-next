@@ -99,6 +99,29 @@ describe("a rendered deck's strip", () => {
   });
 });
 
+describe("a deck rendering", () => {
+  const running = (n: number): DeckJob => ({ ...done(n), state: "running", slides: null });
+  const deck = asset({ kind: "pdf", title: "Keynote.pdf", url: null });
+  const page = (job: DeckJob) =>
+    String(contentView(ctx(), { ...data([deck]), jobs: new Map([["a1", job]]) }));
+
+  it("names its progress for one slide in the singular, as its text does", () => {
+    expect(page(running(1))).toContain('aria-label="Rendering · 1 slide drawn"');
+    expect(page(running(2))).toContain('aria-label="Rendering · 2 slides drawn"');
+  });
+
+  it("keeps its preview tile live, so the first slide shows once the render is done", () => {
+    const tile = (job: DeckJob) => {
+      const body = page(job);
+      const at = body.indexOf("canccu-studio-asset__preview");
+      return body.slice(body.lastIndexOf("<div", at), body.indexOf("</div>", at));
+    };
+    expect(tile(running(1))).toContain('data-live="preview-a1"');
+    expect(tile(done(2))).toContain('data-live="preview-a1"');
+    expect(tile(done(2))).toContain("slide-1.png");
+  });
+});
+
 describe("the font warning", () => {
   it("says all N slides when every slide uses the stand-in", () => {
     expect(warningText(t, font([1, 2, 3, 4, 5, 6]), 6)).toBe(

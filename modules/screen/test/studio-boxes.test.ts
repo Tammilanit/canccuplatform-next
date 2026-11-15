@@ -199,6 +199,27 @@ describe("the empty space an edit leaves", () => {
     expect(gaps(once, GRID)).toMatchObject([{ area: at(9, 12, 4, 1), box: "venue_rail" }]);
   });
 
+  it("is cut along one axis only, so no part is left beside no box", () => {
+    // The gap's left side is cut into rows by a and c, its bottom into columns by b: cut both
+    // ways, its right column would lie beside nothing, a warning without Fill the gap.
+    const narrow = { columns: 8, rows: 12 };
+    const scene = [
+      { ...box("a", at(1, 1, 6, 2)), layoutArea: at(1, 1, 8, 2) },
+      { ...box("c", at(1, 3, 6, 2)), layoutArea: at(1, 3, 8, 2) },
+      box("b", at(7, 5, 1, 8)),
+    ];
+    expect(gaps(scene, narrow)).toEqual([
+      { area: at(7, 1, 2, 2), box: "a", edge: "right", fills: true, others: [] },
+      {
+        area: at(7, 3, 2, 2),
+        box: "c",
+        edge: "right",
+        fills: true,
+        others: [{ box: "b", edge: "top" }],
+      },
+    ]);
+  });
+
   it("is filled as far as a box beside can grow, the rest left for the next", () => {
     const split = [
       box("a", at(1, 1, 6, 5)),

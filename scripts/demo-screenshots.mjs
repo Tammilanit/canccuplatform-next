@@ -41,6 +41,7 @@ import {
   studioShots,
 } from "../modules/screen/test/stack/studio-shots.mjs";
 import { PREVIEW_PAGES } from "../modules/screen/test/stack/preview-shots.mjs";
+import { EDITOR_PAGES } from "../modules/screen/test/stack/editor-shots.mjs";
 import {
   CANCELLED,
   DAY_VIEW,
@@ -125,6 +126,7 @@ if (opts["dry-run"]) {
     [FROZEN_PAGES, "while frozen"],
     [PLAYLIST_PAGES, "with a playlist and its push"],
     [LAYOUT_PAGES, "the box editor, unsaved"],
+    [EDITOR_PAGES, "the editors' refusals, focus and a missing layout"],
     [SCHEDULE_PAGES, "on windows made for it"],
   ];
   for (const [list, how] of studioLists)

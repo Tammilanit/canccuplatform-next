@@ -124,7 +124,9 @@ function preview(a: ContentAsset, job: DeckJob | undefined): Html {
               class="canccu-i canccu-i--${ICONS[a.kind] ?? "box"}"
               aria-hidden="true"
             ></span>`;
-  return html`<div class="canccu-studio-asset__preview">${inner}</div>`;
+  // A deck's tile shows its first slide once rendered, so it follows the render as it lands.
+  const live = isDeck(a.kind) ? { "data-live": `preview-${a.id}` } : {};
+  return html`<div class="canccu-studio-asset__preview" ${attrs(live)}>${inner}</div>`;
 }
 
 function assetCard(c: ViewContext, d: ContentData, a: ContentAsset): Html {
@@ -145,7 +147,7 @@ function assetCard(c: ViewContext, d: ContentData, a: ContentAsset): Html {
   if (write && FILE_KINDS.includes(a.kind)) {
     actions.push(
       html`<label class="canccu-button canccu-button--secondary canccu-button--sm"
-        >${t("asset.replace")}<input type="file" hidden data-replace="${a.id}"
+        >${t("asset.replace")}<input type="file" class="canccu-studio-file" data-replace="${a.id}"
       /></label>`,
     );
   }
@@ -277,7 +279,11 @@ function adders(c: ViewContext, d: ContentData): Html {
         <span class="canccu-small canccu-muted">· ${t("upload.hint")}</span>
       </p>
       <label class="canccu-button canccu-button--primary canccu-button--sm"
-        >${t("upload.choose")}<input type="file" multiple hidden data-upload-input
+        >${t("upload.choose")}<input
+          type="file"
+          class="canccu-studio-file"
+          multiple
+          data-upload-input
       /></label>
     </div>
     ${link}
