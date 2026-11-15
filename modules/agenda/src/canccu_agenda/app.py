@@ -64,11 +64,10 @@ def create_app(
     app.router.redirect_slashes = False
     app.state.deps = d
     app.state.tenants = resolver  # the event the shell's header names (web.event_of)
-    install(app, health)
+    install(app, health, error_response=_page_error)
     install_tenancy(app, resolver)
-    # After install(), so these replace the kit's JSON handler for the pages only.
+    # After install(), so it replaces the kit's handler for NotSignedIn.
     app.add_exception_handler(NotSignedIn, _not_signed_in)
-    app.add_exception_handler(KitError, _kit_error)
 
     async def dispatch(scope: Scope, receive: Receive, send: Send) -> None:
         # Tenancy would 404 the internal callers' host (`agenda:8080`): they skip it.
@@ -87,8 +86,8 @@ async def _not_signed_in(request: Request, exc: Exception) -> Response:
     return RedirectResponse(f"{web.SIGN_IN}?{urlencode({'next': back})}", status_code=303)
 
 
-async def _kit_error(request: Request, exc: Exception) -> Response:
-    assert isinstance(exc, KitError)
+async def _page_error(request: Request, exc: KitError) -> Response | None:
+    """A page gets its errors as a page, the API as the kit's JSON body (None)."""
     if request.url.path.startswith("/api/"):
-        return JSONResponse(exc.to_body(), status_code=exc.status)
+        return None
     return await web.error_page(request, exc)

@@ -4,7 +4,7 @@
  * redrawn from a fresh read of the page every few seconds, so health stays current without
  * reloading the live views.
  */
-import { attrs, emptyState, html } from "@canccu/ui";
+import { attrs, dayLabel, emptyState, html } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
 import { shownZone } from "./help.js";
 import type { SeenDevice } from "./help.js";
@@ -72,6 +72,13 @@ export function clockTime(iso: string, timeZone: string): string {
   return new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit" }).format(
     new Date(iso),
   );
+}
+
+/** "09:05" today, "Sat 14 Nov 23:40" on another day: an outage since yesterday is no fresh one. */
+export function clockDay(iso: string, nowMs: number, timeZone: string): string {
+  const day = dayLabel(iso, timeZone);
+  const today = day === dayLabel(new Date(nowMs).toISOString(), timeZone);
+  return today ? clockTime(iso, timeZone) : `${day} ${clockTime(iso, timeZone)}`;
 }
 
 export const online = (devices: readonly SeenDevice[]): number =>

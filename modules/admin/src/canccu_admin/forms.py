@@ -23,6 +23,21 @@ def _words(value: str) -> str:
 _SAME = object()
 
 
+def label_parts(s: Setting) -> tuple[str, str]:
+    """The label's words and its unit: a trailing "(seconds)" is the unit, and a declared `short`
+    stands in for the words (sheet 4: "Heartbeat", not "Screen heartbeat")."""
+    words, unit = s.label, ""
+    if match := _UNIT.match(s.label):
+        words, unit = match.group(1), match.group(2)
+    return s.short or words, unit
+
+
+def required(s: Setting) -> bool:
+    """An emptied field has no value to save: a number always needs one, and so does text unless
+    empty is what it starts as (an asset id left empty means none)."""
+    return s.type in ("integer", "number") or (s.type == "string" and s.default not in (None, ""))
+
+
 def control_value(s: Setting, value: Any) -> str:
     """What the field's control holds for a value, in the words settings.js reads it back: a
     list as "30, 10" however it was typed, a box "on" or nothing."""
@@ -45,7 +60,10 @@ def _was(s: Setting, was: Any) -> str:
 
 
 def _error(s: Setting) -> str:
-    """What settings.js says under a number the browser finds out of bounds."""
+    """What settings.js says under a field the browser finds out of bounds; an emptied one it
+    tells "Needs a value." instead."""
+    if s.type == "string":
+        return "Needs a value."
     if s.type == "number":
         return "Use a number."
     if s.min is not None and s.max is not None:
@@ -59,8 +77,9 @@ def _error(s: Setting) -> str:
 
 def field_html(s: Setting, value: Any, was: Any = _SAME) -> str:
     """A declared setting as a packages/ui form field: a label's trailing "(seconds)" becomes
-    the field's unit, an integer's bounds its hint (UX audit A4). `was` is the saved value: its
-    words show under the field while the control differs from it ("Was 45.", sheet 4)."""
+    the field's unit, the declared hint and an integer's bounds its hint (UX audit A4). `was` is
+    the saved value: its words show under the field while the control differs from it ("Was 45.",
+    sheet 4)."""
     fid, name = f"canccu-field-{html.escape(s.key)}", html.escape(s.key)
     value = s.default if value is None else value
     was = value if was is _SAME else (s.default if was is None else was)
@@ -76,12 +95,10 @@ def field_html(s: Setting, value: Any, was: Any = _SAME) -> str:
         return (
             f'<div class="canccu-field canccu-field--check"><input class="canccu-check" '
             f"type=checkbox id={fid} name={name}{checked}{marks}>"
-            f'<label class="canccu-field__label" for={fid}>{html.escape(s.label)}</label>'
-            f"{was_html}</div>"
+            f'<label class="canccu-field__label" for={fid}>{html.escape(s.short or s.label)}'
+            f"</label>{was_html}{_hint(s.hint)}</div>"
         )
-    label, unit = s.label, ""
-    if match := _UNIT.match(s.label):
-        label, unit = match.group(1), match.group(2)
+    label, unit = label_parts(s)
     hint = ""
     if s.choices and s.type == "string":
         opts = "".join(
@@ -112,6 +129,8 @@ def field_html(s: Setting, value: Any, was: Any = _SAME) -> str:
             hint = "Separate them with commas."
             if s.choices:
                 hint = f"Any of {', '.join(s.choices)}, separated with commas."
+        if required(s):
+            attrs += " required"
         control = (
             f'<input class="canccu-input" {attrs} id={fid} name={name} '
             f'value="{html.escape(str(text))}"{marks}>'
@@ -122,17 +141,20 @@ def field_html(s: Setting, value: Any, was: Any = _SAME) -> str:
             f'<span class="canccu-inputgroup__add">{html.escape(unit)}</span></span>'
         )
     elif unit:
-        label = s.label
-    hint_html = f'<p class="canccu-field__hint">{html.escape(hint)}</p>' if hint else ""
-    error = (
-        f'<p class="canccu-field__error" data-canccu-error hidden>{html.escape(_error(s))}</p>'
-        if s.type in ("integer", "number")
-        else ""
-    )
+        label = f"{label} ({unit})"
+    error = ""
+    if required(s) and not s.choices:
+        why = html.escape(_error(s))
+        error = f'<p class="canccu-field__error" data-canccu-error="{why}" hidden>{why}</p>'
     return (
         f'<div class="canccu-field"><label class="canccu-field__label" for={fid}>'
-        f"{html.escape(label)}</label>{control}{error}{was_html}{hint_html}</div>"
+        f"{html.escape(label)}</label>{control}{error}{was_html}"
+        f"{_hint(' '.join(filter(None, (s.hint, hint))))}</div>"
     )
+
+
+def _hint(text: str) -> str:
+    return f'<p class="canccu-field__hint">{html.escape(text)}</p>' if text else ""
 
 
 def _integer(key: str, raw: str) -> int:
@@ -159,12 +181,16 @@ def from_form(declared: list[Setting], form: Any) -> dict[str, Any]:
         if s.type == "boolean":
             values[s.key] = raw
         elif s.type == "list":
-            # An emptied list input means "no items", unlike an emptied scalar,
-            # which means "leave unset": agenda allows `[]` for no channels.
+            # An emptied list input means "no items": agenda allows `[]` for no channels.
             parts = [p.strip() for p in str(raw or "").split(",") if p.strip()]
             values[s.key] = [_integer(s.key, p) for p in parts] if s.items == "integer" else parts
-        elif raw is None or raw == "":
+        elif raw is None:
+            # Left out of the post: the setting stays as it is.
             continue
+        elif raw == "":
+            if required(s):
+                raise BadSettings(f"{s.key} needs a value")
+            values[s.key] = ""
         elif s.type == "integer":
             values[s.key] = _integer(s.key, str(raw))
         elif s.type == "number":

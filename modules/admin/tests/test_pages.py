@@ -101,7 +101,7 @@ async def test_last_changes_name_settings_in_words_never_by_key(
     text = (await world.browser(owner).get("/admin/settings")).text
     assert "turned off Pizza → Ordering open" in text
     assert "set Screens → Rotation to 15 s" in text
-    assert "set Screens → Screen offline after to 45 s" in text
+    assert "set Screens → Mark offline after to 45 s" in text
     assert "set Run of show → Reminder lead times to 30, 10 min" in text
     assert "ordering_open" not in text and "rotation_seconds" not in text
     assert "→ pizza" not in text

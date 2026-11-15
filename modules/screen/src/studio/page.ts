@@ -22,6 +22,37 @@ export const ZONES = "screen.zones.write";
 export const TICKER = "screen.ticker.write";
 export const CONTENT = "screen.content.read";
 
+/**
+ * A signed-out browser's way to sign in from Devices: a page, not a redirect, so its script can
+ * keep the kiosk QR's pairing code, which rides in the fragment and is lost through sign-in
+ * (static/studio-signin.js). Without scripts it goes on to sign in all the same.
+ */
+export function signInStep(request: FastifyRequest, reply: FastifyReply, t: Translate) {
+  const next = `${SIGN_IN}?next=${encodeURIComponent(request.url)}`;
+  const doc = html`<!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>${t("signin.go")}</title>
+        <noscript><meta http-equiv="refresh" content="0;url=${next}" /></noscript>
+      </head>
+      <body>
+        <a href="${next}" data-sign-in>${t("signin.go")}</a>
+        <script src="${STUDIO}static/studio-signin.js"></script>
+      </body>
+    </html>`;
+  return reply
+    .type("text/html; charset=utf-8")
+    .header(
+      "content-security-policy",
+      eventPageCsp(newNonce(), request.hostname, { page: "admin" }),
+    )
+    .header("cache-control", "no-store")
+    .header("x-content-type-options", "nosniff")
+    .send(doc.toString());
+}
+
 /** The tabs, each shown only to holders of one of its rights (Live and Devices share one). */
 export const TABS: [path: string, label: MessageKey, rights: readonly string[]][] = [
   ["live", "tab.live", [READ]],
@@ -107,7 +138,7 @@ export interface PageOptions {
   crumb?: { href: string; label: string };
   status?: number;
   plain?: boolean;
-  /** A page's own stylesheet and script, if it has one (`<name>.css`, `<name>.js`, using studio.js's helpers). */
+  /** A page's own stylesheet and script, each if it has one (`<name>.css`, `<name>.js`, using studio.js's helpers). */
   own?: string;
   /** The page's own script is a module, which may import its neighbours in static/. */
   module?: boolean;
@@ -139,7 +170,7 @@ export async function studioPage(
     head: html`<link
         rel="stylesheet"
         href="${STUDIO}static/studio.css"
-      />${o.own === undefined ? "" : html`<link rel="stylesheet" href="${STUDIO}static/${o.own}.css" />`}${
+      />${o.own === undefined || !Object.hasOwn(STATIC_TYPES, `${o.own}.css`) ? "" : html`<link rel="stylesheet" href="${STUDIO}static/${o.own}.css" />`}${
         o.style === undefined
           ? ""
           : html`<style nonce="${nonce}">

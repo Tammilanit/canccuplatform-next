@@ -58,6 +58,12 @@ export interface FeatureFacts {
 }
 
 /**
+ * Until this hour of the morning the night still belongs to the evening before: a LAN night's
+ * wind-down runs past midnight, and "Saturday, so far" at 01:00 would name a day just begun.
+ */
+const EVENING_ENDS_MS = 6 * 3600_000;
+
+/**
  * "Today in numbers" at wind-down (sheet 13): the last 24 hours, as the peaks count them, so a
  * night past midnight keeps its evening. Hours played wait for the bot's history (#389).
  */
@@ -72,9 +78,11 @@ export function todayFields(
   const day = new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: facts.timeZone });
   return {
     title: "Today in numbers",
-    day_text: day.format(facts.now),
+    day_text: day.format(facts.now.getTime() - EVENING_ENDS_MS),
     ...(peak === undefined ? {} : { online_peak: peak }),
-    ...(facts.photosToday == null ? {} : { photos }),
+    // Left out at 0, as the hero rail leaves out a delay of 0: a template's section shows for
+    // any number, so 0 would read "0 photos shared".
+    ...(photos === 0 ? {} : { photos }),
     ...graphOf(facts.presence?.online ?? [], unitsWide),
   };
 }

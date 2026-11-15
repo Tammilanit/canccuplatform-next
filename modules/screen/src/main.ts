@@ -5,6 +5,7 @@ import {
   AdminClient,
   Bus,
   FILES_ROOT,
+  Outbox,
   RightsChecker,
   ServiceIdentity,
   SettingsClient,
@@ -49,6 +50,7 @@ const PORT = 8080;
 const MIGRATION_LOCK = 0x5c4ee7;
 /** How often a device past its deadline is reported offline (docs/plans/issue-107.md, D11). */
 const SWEEP_MS = 5000;
+const OUTBOX_MS = 2000;
 /** How often each event is checked for its storage upkeep, which itself runs once an hour. */
 const UPKEEP_CHECK_MS = 600_000;
 /** In the `render-socket` volume, shared with screen-render alone (deploy/compose.yml). */
@@ -323,10 +325,11 @@ async function main(): Promise<void> {
     },
     fanout: push.fanout,
   });
+  const outbox = new Outbox(bus, db, { log });
   const pinTick = pinTickRunner({
     db,
     kv,
-    bus,
+    outbox,
     audit,
     sources,
     bundles,
@@ -335,6 +338,13 @@ async function main(): Promise<void> {
     now: Date.now,
     log,
   });
+  // What a failed flush left in the outbox goes out from any container. A run that overlaps the
+  // last finds each event's lock taken and moves on; only a database that is down lands here.
+  const sender = setInterval(() => {
+    outbox.flushAll().catch((err: unknown) => {
+      log.warn({ err }, "outbox flush failed");
+    });
+  }, OUTBOX_MS);
   let ticking = false;
   const ticker = setInterval(() => {
     // A slow step is never doubled up: the next second starts once this one is done.
@@ -354,6 +364,7 @@ async function main(): Promise<void> {
     clearInterval(refresh);
     clearInterval(upkeep);
     clearInterval(ticker);
+    clearInterval(sender);
     // The running render goes back to its place before the pool and Valkey close; bounded, as a
     // dependency that is down may never answer.
     await Promise.race([

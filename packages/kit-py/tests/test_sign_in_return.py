@@ -8,7 +8,7 @@ from starlette.responses import PlainTextResponse, Response
 from starlette.routing import Route
 from starlette.testclient import TestClient
 
-from canccu_kit.starlette import sign_in_return
+from canccu_kit.starlette import page_retry, sign_in_return
 
 
 async def back(request: Request) -> Response:
@@ -62,3 +62,19 @@ def test_a_path_admin_would_refuse_returns_to_the_fallback() -> None:
     assert sign_in_return(odd, "/agenda", "/agenda/") == "/agenda/"
     fits = "x" * (1024 - len("/agenda/items//edit"))
     assert returns("GET", f"/items/{fits}/edit") == f"/agenda/items/{fits}/edit"
+
+
+async def retry(request: Request) -> Response:
+    return PlainTextResponse(page_retry(request, "/agenda") or "none")
+
+
+RETRY_APP = Starlette(routes=[Route("/items/{item_id}", retry, methods=["GET", "POST"])])
+
+
+def test_a_get_page_is_retried_with_its_query() -> None:
+    got = TestClient(RETRY_APP).get("/items/i1?day=2026-11-10&earlier=1").text
+    assert got == "/agenda/items/i1?day=2026-11-10&earlier=1"
+
+
+def test_a_failed_post_offers_no_retry() -> None:
+    assert TestClient(RETRY_APP).post("/items/i1?day=2026-11-10").text == "none"

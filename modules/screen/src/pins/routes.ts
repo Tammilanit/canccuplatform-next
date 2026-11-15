@@ -1,12 +1,13 @@
 /**
  * `GET`, `PUT /api/screen/pin` (contracts/screen.md, Pins and Timed pins and freeze): the values
  * with an optional `until`, the freeze form that pins what is in effect in one step, and
- * `freeze: false`, which puts `restores` back now. Each change is audited, announced as
- * `screen.pin.changed` and sent to the event's screens as a `reload`.
+ * `freeze: false`, which puts `restores` back now as `until` would. Each change is audited,
+ * announced as `screen.pin.changed` through the outbox and sent to the event's screens as a
+ * `reload`; a `PUT` that changes nothing does none of it.
  */
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { KitError } from "@canccu/kit";
-import type { Bus, PublicEvent, RightsChecker } from "@canccu/kit";
+import type { Outbox, PublicEvent, RightsChecker } from "@canccu/kit";
 import type { Audit } from "../audit.js";
 import type { Sources } from "../compose/sources.js";
 import type { Db } from "../db.js";
@@ -14,8 +15,9 @@ import { assertWritable, body, invalidRequest, needs, needsAny, tenantOf } from 
 import type { Kv } from "../kv.js";
 import type { Fanout } from "../push/store.js";
 import { onlyKeys } from "../zone-input.js";
+import { heldBundle } from "./bundles.js";
 import type { BundleStore } from "./bundles.js";
-import { announcePin, changePin, lockPin, readPin } from "./store.js";
+import { announcePin, changePin, lockPin, readPin, restoreOf, sameEnd } from "./store.js";
 import type { PinReason, PinRow, PinValues } from "./store.js";
 
 /** Who may read the pin: every Studio page can then say that screens are frozen. */
@@ -31,7 +33,7 @@ const READ_ONLY = ["available", "in_effect", "restores", "changed_by", "changed_
 
 export interface PinDeps {
   db: Db;
-  bus: Bus;
+  outbox: Outbox;
   kv: Kv;
   fanout: Pick<Fanout, "publish">;
   rights: RightsChecker;
@@ -49,7 +51,10 @@ const themingDown = (): KitError =>
     code: "theming_unavailable",
   });
 
-/** The values screens draw now: a null resolved to the platform's bundle or the current revision. */
+/**
+ * The values screens draw now: a null resolved to the current revision, and a bundle the store
+ * no longer keeps (or none) to the platform's, as the screens' loader does.
+ */
 export async function inEffect(
   deps: Pick<PinDeps, "sources" | "bundles">,
   tenantId: string,
@@ -57,7 +62,8 @@ export async function inEffect(
 ): Promise<{ bundle_version: string; theme_revision: number }> {
   const theme =
     pin.theme_revision ?? (await deps.sources.theme(tenantId).catch(() => null))?.revision ?? 0;
-  return { bundle_version: pin.bundle_version ?? deps.bundles.current, theme_revision: theme };
+  const bundle = (await heldBundle(deps.bundles, pin.bundle_version)) ?? deps.bundles.current;
+  return { bundle_version: bundle, theme_revision: theme };
 }
 
 export async function pinView(
@@ -131,7 +137,8 @@ async function valuesInput(
 type Form =
   | { kind: "values"; values: PinValues; until: Date | null }
   | { kind: "freeze"; until: Date; current: number | null }
-  | { kind: "unfreeze" };
+  /** `seen` is the pin read before the transaction, `back` what its `restores` puts back. */
+  | { kind: "unfreeze"; seen: PinRow; back: PinValues | null };
 
 async function formOf(deps: PinDeps, request: FastifyRequest, nowMs: number): Promise<Form> {
   const input = body(request);
@@ -143,7 +150,12 @@ async function formOf(deps: PinDeps, request: FastifyRequest, nowMs: number): Pr
   }
   if (input.freeze === false) {
     onlyKeys(input, ["freeze"], "pin");
-    return { kind: "unfreeze" };
+    // Checked as the tick checks at `until`, and like it before the transaction, never inside it.
+    const seen = await deps.db.tenant(readPin);
+    if (seen.restores === null) return { kind: "unfreeze", seen, back: null };
+    const back = await restoreOf(deps, seen.restores);
+    if (back === undefined) throw themingDown();
+    return { kind: "unfreeze", seen, back };
   }
   if (input.freeze !== true) throw invalidRequest("`freeze` must be true or false.");
   onlyKeys(input, ["freeze", "until"], "pin");
@@ -168,11 +180,10 @@ function nextPin(
           theme_revision: before.theme_revision,
         });
   if (form.kind === "unfreeze") {
-    if (before.until === null || before.restores === null) return null;
-    return {
-      next: { ...before, ...before.restores, until: null, restores: null },
-      reason: "cleared",
-    };
+    if (before.until === null || form.back === null) return null;
+    // Changed since it was read: that change stands, and its restore went unchecked.
+    if (!sameEnd(before, form.seen)) return null;
+    return { next: { ...before, ...form.back, until: null, restores: null }, reason: "cleared" };
   }
   if (form.kind === "freeze") {
     let theme = before.theme_revision;
@@ -182,17 +193,17 @@ function nextPin(
       theme = form.current === 0 ? null : form.current;
     }
     const values = { bundle_version: before.bundle_version ?? current, theme_revision: theme };
-    return {
-      next: { ...before, ...values, until: form.until, restores: keeps(form.until) },
-      reason: "set",
-    };
+    const next = { ...before, ...values, until: form.until, restores: keeps(form.until) };
+    return unchanged(before, next) ? null : { next, reason: "set" };
   }
   const none = form.values.bundle_version === null && form.values.theme_revision === null;
-  return {
-    next: { ...before, ...form.values, until: form.until, restores: keeps(form.until) },
-    reason: none && form.until === null ? "cleared" : "set",
-  };
+  const next = { ...before, ...form.values, until: form.until, restores: keeps(form.until) };
+  if (unchanged(before, next)) return null;
+  return { next, reason: none && form.until === null ? "cleared" : "set" };
 }
+
+const unchanged = (a: PinRow, b: PinRow): boolean =>
+  a.bundle_version === b.bundle_version && a.theme_revision === b.theme_revision && sameEnd(a, b);
 
 export function pinRoutes(app: FastifyInstance, deps: PinDeps): void {
   const now = deps.now ?? Date.now;

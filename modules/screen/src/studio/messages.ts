@@ -233,6 +233,7 @@ const EN = {
   "ticker.4h": "4 h",
   "ticker.at": "At a time",
   "ticker.forever": "No end",
+  "ticker.time_needed": "Choose the time the line ends.",
   "ticker.set": "Show on every screen",
   "ticker.set_done": "The ticker shows the new line.",
   "ticker.clear": "Clear",
@@ -267,6 +268,7 @@ const EN = {
   "ago.s": "{n} s ago",
   "ago.min": "{n} min ago",
   "ago.h": "{n} h ago",
+  "signin.go": "Sign in to the Screen studio",
   "error.failed": "That did not work. Try again.",
   "error.refused": "Couldn't do that: {message}",
 } as const;
@@ -342,6 +344,7 @@ export const CLIENT_KEYS = [
   "zone.widget_dwell",
   "ticker.set_done",
   "ticker.clear_done",
+  "ticker.time_needed",
   "pins.freeze_done",
   "ticker.chars",
   "error.failed",

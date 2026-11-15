@@ -285,3 +285,26 @@ def test_local_time_reads_an_unknown_zone_as_utc() -> None:
     at = datetime(2026, 11, 14, 17, 0, tzinfo=UTC)
     assert local_time(at, "Europe/Helsinki").hour == 19
     assert local_time("2026-11-14T17:00:00Z", "Mars/Olympus").hour == 17
+
+
+def test_a_page_description_is_html_by_name() -> None:
+    # The page's own words, which may hold markup (Health's live clock): the name says the caller
+    # escapes what it puts in, as it does for `body`.
+    doc = shell_page("x", "", description_html='Checked <span data-live="1">now</span>.')
+    assert '<p class="canccu-pagehead__desc">Checked <span data-live="1">now</span>.</p>' in doc
+    with pytest.raises(TypeError):
+        shell_page("x", "", description="<b>raw</b>")  # type: ignore[call-arg]
+
+
+def test_a_failure_after_a_form_post_offers_the_way_back_not_a_retry() -> None:
+    failed = KitError("boom", status=500, code="internal_error")
+    _, view = error_view(failed, session=Viewer(), back=("/agenda/", "Back to the run of show"))
+    assert "Try again</a>" not in view and 'href="/agenda/">Back to the run of show' in view
+    _, view = error_view(failed, retry="/agenda/?day=x", back=("/agenda/", "Back"))
+    assert 'href="/agenda/?day=x">' in view and ">Back</a>" not in view
+
+
+def test_off_the_venue_after_a_form_post_offers_the_way_back() -> None:
+    refused = KitError("x", status=403, code="admin_access_restricted")
+    _, view = error_view(refused, back=("/agenda/", "Back to the run of show"))
+    assert "Try again</a>" not in view and "Back to the run of show" in view

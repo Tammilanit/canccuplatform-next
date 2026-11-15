@@ -83,7 +83,7 @@ async def cancel_save(request: Request) -> Response:
     item_id = request.path_params["item_id"]
     item = await edits.cancel_one(d, session, item_id, revision, inverse=inverse)
     path = f"/?day={day_of(item['starts_at'], request)}&done=cancelled"
-    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)), item_id)
+    return redirect(undo.with_undo(path, await undo.save(d, session, inverse)), item, d.now())
 
 
 def bring_back_form(row: Any) -> str:
@@ -121,7 +121,7 @@ async def bring_back(request: Request) -> Response:
         rendered = {new["id"]: model.item_json(new, kinds, channels)}
         await undo.store_events(d, conn, session, out, rendered)
     await d.outbox.flush()
-    return redirect(f"/?day={_day(new, request)}&done=brought_back", new["id"])
+    return redirect(f"/?day={_day(new, request)}&done=brought_back", new, now)
 
 
 def bring_forward(row: Any, now: datetime) -> int:
@@ -206,7 +206,11 @@ async def show_now_save(request: Request) -> Response:
     inverse = Inverse()
     if minutes:
         revision = model.revision(as_int(form.get("revision")))
-        await edits.delay(d, session, row["id"], revision, -minutes, False, inverse=inverse)
+        # Quiet: screens show it at once, and "Announce it too" is the one way people are told,
+        # so they never get a "moved" push besides (or instead of) the announcement.
+        await edits.delay(
+            d, session, row["id"], revision, -minutes, False, announce=False, inverse=inverse
+        )
     # Saved before the announcement: the move has happened whatever the announcement does, so its
     # undo is offered either way. An announcement cannot be taken back.
     undo_id = await undo.save(d, session, inverse)
@@ -221,7 +225,8 @@ async def show_now_save(request: Request) -> Response:
             done = "shown_not_announced"
         else:
             done = "shown_announced" if minutes else "announced"
-    return redirect(undo.with_undo(f"/?day={_day(row, request)}&done={done}", undo_id), row["id"])
+    path = undo.with_undo(f"/?day={_day(row, request)}&done={done}", undo_id)
+    return redirect(path, row, d.now())
 
 
 ROUTES = [

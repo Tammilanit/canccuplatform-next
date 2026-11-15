@@ -24,6 +24,8 @@ function jumpOf(widget: string, view: Record<string, unknown>, nowMs: number): n
     return until - SURGE_JUMP_MS <= nowMs && nowMs < until ? until : null;
   }
   if (widget === "photo" && view.featured === true) {
+    // The server ends a pop slot while the photo is under 2 minutes old (src/compose/photos.ts,
+    // popUntil), so following `featured_until` keeps that cap here too, also offline.
     const until = timeOf(view.featured_until);
     return nowMs < until ? until : null;
   }

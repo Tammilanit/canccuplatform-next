@@ -7,7 +7,7 @@
  */
 import { call } from "./api.js";
 import type { Answer, Fetch } from "./api.js";
-import { frame } from "./frames.js";
+import { frame, setClock } from "./frames.js";
 import type { FrameText } from "./frames.js";
 import { Live } from "./live.js";
 import { Screen } from "./screen.js";
@@ -47,6 +47,7 @@ export class VirtualScreen {
   readonly live: Live;
   private readonly screen: Screen;
   private timer: ReturnType<typeof setTimeout> | undefined;
+  private clockTimer: ReturnType<typeof setInterval> | undefined;
   private failures = 0;
   private previewing = false;
   private readonly now: () => number;
@@ -84,6 +85,10 @@ export class VirtualScreen {
   }
 
   async start(): Promise<void> {
+    // A frame's header has a date and a clock, as on a kiosk (Player's): set and kept going here.
+    this.clockTimer ??= setInterval(() => {
+      this.clock();
+    }, 1000);
     if (this.env.root.firstElementChild === null) {
       this.show({ title: "Connecting…", lines: ["Reading the zone's screens."] });
     }
@@ -139,6 +144,12 @@ export class VirtualScreen {
 
   private show(text: FrameText): void {
     this.mount(frame("unknown", { ...text, event: null }));
+    this.clock();
+  }
+
+  /** A shown frame's date and clock, on the server's time once a state has set the offset. */
+  private clock(): void {
+    setClock(this.env.root, this.live.heartbeat.serverNow(), this.live.state?.tenant.time_zone);
   }
 
   /** As the kiosk's: the screen keeps its layout between states, and the offline mark stays. */

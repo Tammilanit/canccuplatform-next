@@ -7,7 +7,7 @@
  */
 import { rm } from "node:fs/promises";
 import type { FastifyInstance } from "fastify";
-import { KitError } from "@canccu/kit";
+import { KitError, requireTenant } from "@canccu/kit";
 import type { Bus, SqlClient, TenantContext } from "@canccu/kit";
 import {
   actorOf,
@@ -18,6 +18,7 @@ import {
   notFound,
   tenantOf,
 } from "./http.js";
+import type { Audit } from "./audit.js";
 import { preparePhoto, readMultipart } from "./assets/upload.js";
 import { writeDroppingFiles, writeWithFile } from "./assets/write.js";
 import type { AssetDeps, FileDeps } from "./assets/write.js";
@@ -81,11 +82,11 @@ function postedAt(value: string | undefined): Date {
 const isUniqueViolation = (err: unknown): boolean => (err as { code?: unknown }).code === "23505";
 
 /**
- * Deletes the photos `where` picks in the current tenant with their unused files, and returns
- * `screen.photo.removed` for each, to publish.
+ * Deletes the photos `where` picks in the current tenant with their unused files, audits each (a
+ * null `actor` is the module's own removal), and returns `screen.photo.removed` for each, to publish.
  */
 async function removePhotos(
-  deps: FileDeps,
+  deps: FileDeps & { audit: Audit },
   where: { sql: string; params: unknown[] },
   actor: string | null,
 ): Promise<Emit[]> {
@@ -94,6 +95,15 @@ async function removePhotos(
       `DELETE FROM screen_photos WHERE ${where.sql} RETURNING id, file`,
       where.params,
     );
+    for (const r of rows) {
+      await deps.audit({
+        tenant_id: requireTenant(),
+        actor_user_id: actor,
+        action: "screen.photo.removed",
+        target: { type: "photo", id: r.id as string },
+        changes: { file: { from: r.file, to: null } },
+      });
+    }
     return { result: rows, unused: rows.map((r) => r.file as string), freed: 0 };
   });
   return removed.map((r): Emit => [
@@ -109,7 +119,7 @@ async function removePhotos(
  * at a time), which is the lead's to decide for every module.
  */
 export async function deleteUserPhotos(
-  deps: FileDeps & { bus: Bus },
+  deps: FileDeps & { bus: Bus; audit: Audit },
   userId: string,
 ): Promise<number> {
   const emits = await removePhotos(deps, { sql: "author_user_id = $1", params: [userId] }, null);
@@ -190,6 +200,13 @@ export function photoRoutes(app: FastifyInstance, deps: AssetDeps & { bus: Bus }
         if (isUniqueViolation(err)) throw photoExists();
         throw err;
       }
+      await deps.audit({
+        tenant_id: ctx.tenant_id,
+        actor_user_id: actor,
+        action: "screen.photo.added",
+        target: { type: "photo", id },
+        changes: { file: { from: null, to: name } },
+      });
       const { rows } = await c.query(`${PHOTO_SELECT} WHERE id = $1`, [id]);
       return { result: photoView(rows[0] as Record<string, unknown>), unused: [], freed: 0 };
     });

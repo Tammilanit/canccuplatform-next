@@ -48,7 +48,7 @@
   .canccu-agenda-mini {
     position: relative;
     box-sizing: content-box;
-    width: 21rem;
+    width: 336px;
     aspect-ratio: 16 / 9;
     margin-top: 0.5rem;
     overflow: hidden;
@@ -57,7 +57,8 @@
     background: var(--canccu-color-background);
     box-shadow: 0 8px 24px -10px rgb(0 0 0 / 0.5);
   }
-  /* The player draws at 1920 × 1080; 21rem is 336 px, so it is scaled by 336 / 1920. */
+  /* The player draws at 1920 × 1080 and is scaled by 336 / 1920, so the box is 336 px whatever the
+     root font size. */
   .canccu-agenda-mini iframe {
     position: absolute;
     top: 0;
@@ -215,8 +216,8 @@
     border-radius: 1rem 1rem 0 0;
     box-shadow: 0 -12px 40px rgb(0 0 0 / 0.45);
   }
-  .canccu-agenda-day:has(.canccu-agenda-side.is-open)::before {
-    content: "";
+  /* A link, so a tap beside the open panel closes it, as the delay sheet's scrim does. */
+  .canccu-agenda-backdrop {
     position: fixed;
     inset: 0;
     z-index: 39;
@@ -290,7 +291,7 @@
     }
   }
   @media (min-width: 1440px) {
-    .canccu-agenda-hero:has(.canccu-agenda-hero__screen) { grid-template-columns: minmax(0, 1fr) 21rem; }
+    .canccu-agenda-hero:has(.canccu-agenda-hero__screen) { grid-template-columns: minmax(0, 1fr) 336px; }
     .canccu-agenda-hero__screen { display: block; }
     /* The picked row is marked where its item stands beside the list. */
     .canccu-agenda-row.is-selected {
@@ -308,7 +309,15 @@
       border-radius: calc(var(--canccu-radius) + 4px);
       box-shadow: var(--canccu-shadow);
     }
-    .canccu-agenda-day:has(.canccu-agenda-side.is-open)::before { content: none; }
+    .canccu-agenda-backdrop { display: none; }
+    /* Beside the item the list is narrower: a long title takes two lines, as sheet 5 shows it
+       whole, rather than being cut. */
+    .canccu-agenda-row__title {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      white-space: normal;
+    }
   }
   .canccu-agenda-chips { display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0; }
   .canccu-agenda-chips-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
