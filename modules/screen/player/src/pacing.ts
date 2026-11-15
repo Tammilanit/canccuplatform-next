@@ -2,8 +2,9 @@
  * The choreographer (contracts/screen.md, The Director; design guideline sheet 13): the Director
  * decides what, this decides when. A box changing what it shows is a notable change; at most one
  * starts every few seconds, so the screen is always moving somewhere and never everywhere. Ticks
- * fall on whole seconds of the server's clock, so every screen of a zone paces alike. One
- * spotlight at a time is the motion layer's rule (motion.ts).
+ * fall on whole seconds of the server's clock, but each screen holds its own changes: one turn may
+ * come up to about 3 s apart on two screens of a zone, and a box held past its widget's dwell
+ * skips that widget. One spotlight at a time is the motion layer's rule (motion.ts).
  */
 import type { Shown } from "./idle.js";
 
