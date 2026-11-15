@@ -25,6 +25,7 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from starlette.routing import Route
 
+from . import profile as prof
 from .auth import Auth
 from .auth_routes import Authorize, OnEvent, OriginCheck, Viewer, auth_routes
 from .forms import from_form, typed
@@ -42,7 +43,7 @@ from .pages import (
     static_ui_css,
 )
 from .people_pages import people_routes
-from .profile_pages import profile_routes
+from .profile_pages import capped_body, profile_routes
 from .service import BadSettings, Service
 from .settings_form import failure, kept_after_conflict
 from .settings_form import settings_form as settings_form_html
@@ -193,7 +194,8 @@ def create_app(
 
     async def put_profile(request: Request) -> Response:
         session = await need(request, "admin.profile.write")
-        return JSONResponse(await service.import_zip(await request.body(), session.user_id))
+        body = await capped_body(request, prof.MAX_ZIP_BYTES)
+        return JSONResponse(await service.import_zip(body, session.user_id))
 
     # --- pages
 

@@ -14,6 +14,7 @@ from starlette.datastructures import UploadFile
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import Route
+from starlette.types import Message
 
 from . import profile as prof
 from .auth import Auth
@@ -26,6 +27,33 @@ DOWNLOAD = '<a class="canccu-button canccu-button--secondary" href="/api/admin/p
 DOWNLOAD += f'download="profile.zip">{icon("download")}'
 KEPT = "The run of show, people and their roles."
 UNLOADABLE = "The profile in the event folder can't be loaded"
+# What an upload form carries beside its file (boundaries, part headers): far under this.
+FORM_SLACK = 64 * 1024
+
+
+async def capped_body(request: Request, limit: int) -> bytes:
+    """The request's body, refused once it passes `limit`: on Content-Length when the client
+    says it, else counted as it arrives, so an oversized profile is never parsed or held whole."""
+    declared = request.headers.get("content-length", "")
+    if declared.isdigit() and int(declared) > limit:
+        raise prof.ProfileInvalid("profile zip is too large")
+    chunks: list[bytes] = []
+    size = 0
+    async for chunk in request.stream():
+        size += len(chunk)
+        if size > limit:
+            raise prof.ProfileInvalid("profile zip is too large")
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+def _replayed(request: Request, body: bytes) -> Request:
+    """The request again, with its body already read, so its form can be parsed from it."""
+
+    async def receive() -> Message:
+        return {"type": "http.request", "body": body, "more_body": False}
+
+    return Request(request.scope, receive)
 
 
 def _loaded_card(name: str, by: str, modules: int, zone: str, saved: str) -> str:
@@ -170,14 +198,17 @@ def profile_routes(service: Service, auth: Auth, need: Need) -> list[Route]:
 
     async def upload(request: Request) -> Response:
         session = await need(request, "admin.profile.write")
-        file = (await request.form()).get("profile")
         try:
-            if not isinstance(file, UploadFile):
-                raise KitError("choose a profile file", status=400, code="profile_invalid")
-            # Before read(): an oversized file is refused without holding it in memory.
-            if file.size is not None and file.size > prof.MAX_ZIP_BYTES:
-                raise prof.ProfileInvalid("profile zip is too large")
-            result = await service.import_zip(await file.read(), session.user_id)
+            raw = await capped_body(request, prof.MAX_ZIP_BYTES + FORM_SLACK)
+            async with _replayed(request, raw).form() as form:
+                file = form.get("profile")
+                if not isinstance(file, UploadFile):
+                    raise KitError("choose a profile file", status=400, code="profile_invalid")
+                # The cap above leaves room for the form's own parts; the file has its own.
+                if file.size is not None and file.size > prof.MAX_ZIP_BYTES:
+                    raise prof.ProfileInvalid("profile zip is too large")
+                data = await file.read()
+            result = await service.import_zip(data, session.user_id)
         except KitError as exc:
             if exc.status != 400:
                 raise

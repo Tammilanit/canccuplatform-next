@@ -12,7 +12,7 @@ from canccu_kit import KitError, VersionConflict
 from canccu_kit.ui import esc, notice
 
 from .declarations import Group, Setting
-from .forms import control_value, field_html
+from .forms import control_value, field_html, label_parts
 from .pages import BASE
 
 UNANSWERED = "The platform didn't answer. Your change is still in the form."
@@ -61,7 +61,8 @@ def _fields(settings: list[Setting], values: Mapping[str, Any], stored: Mapping[
 
 
 def failure(settings: list[Setting], exc: KitError) -> str:
-    """Why a save failed, in words: a setting by its label, never its key (UX audit A2)."""
+    """Why a save failed, in words: a setting by its label as the form shows it, never its key
+    (UX audit A2)."""
     if isinstance(exc, VersionConflict):
         return (
             "Someone else saved these settings while you were editing. Your changes are still "
@@ -70,7 +71,7 @@ def failure(settings: list[Setting], exc: KitError) -> str:
     message = exc.message
     for s in settings:
         if message.startswith(f"{s.key} "):
-            message = s.label + message.removeprefix(s.key)
+            message = label_parts(s)[0] + message.removeprefix(s.key)
             break
     return f"{message[:1].upper()}{message[1:]}. Your change is still in the form."
 

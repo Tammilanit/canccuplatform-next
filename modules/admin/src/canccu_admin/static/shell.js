@@ -19,6 +19,9 @@ const NOTE_EVERY_MS = 10000;
 const HEALTH_ITEM = 'a.canccu-menu__item[href="/admin/health-view"]';
 const NOTE_STATUSES = new Set(["degraded", "down"]);
 let noteTimer;
+// One read at a time: two open at once could answer out of order and draw the older note.
+let noteReading = false;
+let noteAgain = false;
 
 function drawNote(item, { status, text }) {
   item.querySelector(".canccu-badge")?.remove();
@@ -31,13 +34,20 @@ function drawNote(item, { status, text }) {
 
 async function readNote() {
   const item = document.querySelector(HEALTH_ITEM);
-  if (!item || document.visibilityState !== "visible") return;
+  if (!item || noteReading || document.visibilityState !== "visible") return;
+  noteReading = true;
   try {
     const res = await fetch("/api/admin/health/note");
     // Signed out or refused: keep what the page has; its next load says why.
     if (res.ok) drawNote(item, await res.json());
   } catch {
     // Admin didn't answer: the last note stays.
+  } finally {
+    noteReading = false;
+    if (noteAgain) {
+      noteAgain = false;
+      readNote();
+    }
   }
 }
 
@@ -51,4 +61,10 @@ function followNote() {
 }
 
 document.addEventListener("visibilitychange", followNote);
+// The Health page swapped in a newer check (health.js): the note follows at once, or right after
+// a read that is open, since that one may answer with the older check.
+document.addEventListener("canccu-health-swapped", () => {
+  if (noteReading) noteAgain = true;
+  else readNote();
+});
 followNote();
