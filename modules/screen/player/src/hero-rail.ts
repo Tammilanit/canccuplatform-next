@@ -71,11 +71,23 @@ function withItem(view: View, rows: Row[], timeZone: string): View {
 /** A claim is the crew's own message: the join never takes it for the hero or swaps it away. */
 const isClaim = (p: Part): boolean => p.key.startsWith("claim:");
 
+/** Two countdowns of the same item: the same name and start. */
+export const sameItem = (a: View, b: View): boolean =>
+  a.label === b.label && a.target_at === b.target_at;
+
 const isCountdownOf = (p: Part, hero: Part): boolean =>
-  !isClaim(p) &&
-  p.type === "countdown" &&
-  p.view.label === hero.view.label &&
-  p.view.target_at === hero.view.target_at;
+  !isClaim(p) && p.type === "countdown" && sameItem(p.view, hero.view);
+
+/** The hero's countdown among the parts, if it shows one: the item the rail leaves to it. */
+export const heroCountdownOf = <P extends Part>(parts: readonly (P | null)[]): P | undefined =>
+  parts.find(
+    (p): p is P =>
+      p !== null &&
+      p.role === "hero" &&
+      p.type === "countdown" &&
+      !isClaim(p) &&
+      p.view.empty !== true,
+  );
 
 /**
  * The parts as drawn: countdowns joined to their rows, and the rail without the hero's item. A
@@ -91,9 +103,7 @@ export function joinHeroAndRail<P extends Part>(
     ...(p.type === "agenda_now" ? rowsOf(p.view) : []),
     ...(p.agenda === null ? [] : rowsOf(p.agenda.view)),
   ]);
-  const hero = shown.find(
-    (p) => p.role === "hero" && p.type === "countdown" && !isClaim(p) && p.view.empty !== true,
-  );
+  const hero = heroCountdownOf(shown);
   // The run of show without the hero's item, and what comes after next behind it: the look shows
   // the first rows (rail.css), so the rail's Next is the first item the hero does not show.
   const without = (view: View): View => {

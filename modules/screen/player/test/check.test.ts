@@ -98,10 +98,13 @@ describe("the kiosk check", () => {
   });
 
   it("shows the server's time in its header once measured, and keeps it going (#546)", async () => {
-    // This kiosk's clock is ten minutes behind the server's (12:00 UTC in the state).
+    // This kiosk's clock is ten minutes behind the server's.
     vi.useFakeTimers({ now: Date.parse("2026-01-01T11:50:00Z") });
     try {
-      const api = new FakeApi().on("GET /api/screen/device/state", () => json(200, screenState()));
+      const time = () => new Date(Date.now() + 600_000).toISOString();
+      const api = new FakeApi().on("GET /api/screen/device/state", () =>
+        json(200, screenState({ time: time() })),
+      );
       document.body.replaceChildren();
       await new CheckPage({
         fetch: api.fetch,
