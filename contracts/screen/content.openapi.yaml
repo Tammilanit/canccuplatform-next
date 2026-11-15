@@ -47,7 +47,7 @@
     description: |
       Right `screen.content.write`. A file ≤ 100 MiB, checked by content. A `pptx` or `pdf` upload submits a render job.
       400 `origin_not_allowed` for a web URL off `web_allowlist`; 400 `media_unsupported` for a video or audio
-      file the screens do not play; 413 `file_too_large` or `storage_quota_exceeded`.
+      file the screens do not play; 413 `file_too_large` or `storage_quota_exceeded`. Audited.
     requestBody:
       required: true
       content:
@@ -130,7 +130,7 @@
     tags: [content]
     operationId: editAsset
     summary: Rename an asset or reset its health
-    description: Right `screen.content.write`.
+    description: Right `screen.content.write`. Audited.
     requestBody:
       required: true
       content:
@@ -167,7 +167,7 @@
     summary: Delete an asset
     description: |
       Right `screen.content.write`. 409 `asset_in_use` while a playlist, an active push or the `ready_fallback_asset_id` setting refers to it. Its files and renders are deleted
-      only when nothing else of the tenant refers to them: no other asset version (also a kept undo version), render, photo or claim sound.
+      only when nothing else of the tenant refers to them: no other asset version (also a kept undo version), render, photo or claim sound. Audited.
     responses:
       "204":
         description: Deleted.
@@ -186,7 +186,7 @@
     tags: [content]
     operationId: replaceAsset
     summary: Replace an asset's file
-    description: Right `screen.content.write`. Keeps the previous version for one undo; slide ranges are clamped to the new deck.
+    description: Right `screen.content.write`. Keeps the previous version for one undo; slide ranges are clamped to the new deck. Audited.
     requestBody:
       required: true
       content:
@@ -219,7 +219,7 @@
     tags: [content]
     operationId: revertAsset
     summary: Undo the last replace
-    description: Right `screen.content.write`. 409 `nothing_to_revert`.
+    description: Right `screen.content.write`. 409 `nothing_to_revert`. Audited.
     responses:
       "200":
         description: The asset with its previous version.
@@ -372,7 +372,7 @@
     tags: [content]
     operationId: addPlaylist
     summary: Add a playlist
-    description: Right `screen.content.write`.
+    description: Right `screen.content.write`. Audited.
     requestBody:
       required: true
       content:
@@ -419,7 +419,7 @@
     tags: [content]
     operationId: savePlaylist
     summary: Replace a playlist and its items
-    description: Right `screen.content.write`, with the `revision` read.
+    description: Right `screen.content.write`, with the `revision` read. Audited.
     requestBody:
       required: true
       content:
@@ -447,7 +447,7 @@
     tags: [content]
     operationId: deletePlaylist
     summary: Delete a playlist with its items and windows
-    description: Right `screen.content.write`.
+    description: Right `screen.content.write`. Audited.
     responses:
       "204":
         description: Deleted.
@@ -492,7 +492,7 @@
     tags: [content]
     operationId: addSchedule
     summary: Add a schedule window
-    description: Right `screen.content.write`.
+    description: Right `screen.content.write`. Audited.
     requestBody:
       required: true
       content:
@@ -713,7 +713,7 @@
     tags: [content]
     operationId: saveSchedule
     summary: Replace a schedule window
-    description: Right `screen.content.write`, with the `revision` read (required here, read-only on POST); a stale one is 409 `version_conflict` (read again and retry).
+    description: Right `screen.content.write`, with the `revision` read (required here, read-only on POST); a stale one is 409 `version_conflict` (read again and retry). Audited.
     requestBody:
       required: true
       content:
@@ -741,7 +741,7 @@
     tags: [content]
     operationId: deleteSchedule
     summary: Delete a schedule window
-    description: Right `screen.content.write`. With `revision`, a stale one is 409 `version_conflict`.
+    description: Right `screen.content.write`. With `revision`, a stale one is 409 `version_conflict`. Audited.
     parameters:
       - name: revision
         in: query
@@ -765,7 +765,7 @@
     tags: [content]
     operationId: pushContent
     summary: Play a playlist or asset now in zones
-    description: Right `screen.push.write`. `zones` empty means every zone. Emits `screen.content.pushed`. Overrides are pushed through Moments.
+    description: Right `screen.push.write`. `zones` empty means every zone. Audited; emits `screen.content.pushed`. Overrides are pushed through Moments.
     requestBody:
       required: true
       content:
@@ -799,7 +799,7 @@
     tags: [content]
     operationId: clearPush
     summary: End a push
-    description: Right `screen.push.write`. Emits `screen.content.cleared`.
+    description: Right `screen.push.write`. Audited; emits `screen.content.cleared`.
     responses:
       "204":
         description: Ended.
@@ -844,7 +844,7 @@
     tags: [render]
     operationId: submitRenderJob
     summary: Submit a render job for a PPTX or PDF asset
-    description: Right `screen.content.write`. One live job per asset version; a second submit answers it (200). Emits `screen.render.queued`.
+    description: Right `screen.content.write`. One live job per asset version; a second submit answers it (200). Audited; emits `screen.render.queued`.
     requestBody:
       required: true
       content:
@@ -904,7 +904,7 @@
     tags: [render]
     operationId: cancelRenderJob
     summary: Cancel a queued or running job
-    description: Right `screen.content.write`. 409 `render_finished` once it ended. Emits `screen.render.cancelled`.
+    description: Right `screen.content.write`. 409 `render_finished` once it ended. Audited; emits `screen.render.cancelled`.
     responses:
       "204":
         description: Cancelled.
@@ -1023,7 +1023,7 @@
     tags: [ticker]
     operationId: addTickerWindow
     summary: Add a ticker window
-    description: Right `screen.ticker.write`.
+    description: Right `screen.ticker.write`. Audited.
     requestBody:
       required: true
       content:
@@ -1057,7 +1057,7 @@
     tags: [ticker]
     operationId: deleteTickerWindow
     summary: Delete a ticker window
-    description: Right `screen.ticker.write`.
+    description: Right `screen.ticker.write`. Audited.
     responses:
       "204":
         description: Deleted.

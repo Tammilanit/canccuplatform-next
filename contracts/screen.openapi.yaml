@@ -733,8 +733,8 @@ components:
           type: boolean
           default: true
           description: |
-            While the hero region shows a showcase (a claim in it, or a surging `hot_game`), it grows to two by two of its
-            size where the layout leaves room (contracts/screen.md, The hero role and the showcase).
+            While the hero region shows a showcase (a claim in it, or a surging `hot_game`), it grows to twice its
+            columns, over the band's full height, where the layout leaves room (contracts/screen.md, The hero role and the showcase).
         motion_level:
           oneOf:
             - $ref: "#/components/schemas/MotionLevel"
