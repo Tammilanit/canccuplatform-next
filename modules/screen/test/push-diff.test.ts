@@ -70,6 +70,8 @@ describe("the push diff", () => {
       record({
         display: { ...NO_DISPLAY, motion_style: { ...NO_DISPLAY.motion_style, pack: "arcade" } },
       }),
+      // A pin moves the bundle, which mirrors read from the state (#545).
+      record({ bundle: "0.9.0" }),
       // A record stored before `display` existed.
       ((old: ZoneRecord) => {
         delete old.display;
