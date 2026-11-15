@@ -20,6 +20,7 @@ const BROWSER = Object.fromEntries(
     "setInterval",
     "clearInterval",
     "Option",
+    "Event",
   ].map((name) => [name, "readonly"]),
 );
 

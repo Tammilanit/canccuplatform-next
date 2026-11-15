@@ -98,7 +98,7 @@ function brandForm(state: StudioState, draft: DraftRow, colors: Record<string, s
     <form class="canccu-studio-form" data-action="brand">
       ${hidden}${logoField(state, images.logo)}
       <div class="canccu-studio-pair">
-        ${colourField({ name: "primary", label: "Primary", value: brand?.primary ?? colors.primary })}${colourField({ name: "accent", label: "Accent", value: brand?.accent ?? colors.accent })}
+        ${colourField({ name: "primary", label: "Primary", value: brand?.primary ?? colors.primary, required: true })}${colourField({ name: "accent", label: "Accent", value: brand?.accent ?? colors.accent, required: true })}
       </div>
       <fieldset class="canccu-field canccu-studio-scheme">
         <legend class="canccu-field__label">Scheme</legend>
@@ -148,7 +148,7 @@ function fontField(draft: DraftRow): Html {
 /** Discard (sheet 6): under the form, apart from Publish, a quiet danger link that asks first. */
 function discardView(state: StudioState): Html {
   const back =
-    state.current > 0 ? "goes back to the published theme" : "keeps the platform's default look";
+    state.current > 0 ? "goes back to the published theme" : "keeps the event profile's look";
   return html`<div class="canccu-studio-discard">
     <button type="button" class="canccu-studio-danger-link" data-action="discard-ask">
       Discard draft…

@@ -180,7 +180,7 @@ export function status(state: StudioState, viewerId: string | undefined): Html {
     return html`${
       published
         ? "No draft. Screens show the published theme."
-        : "No draft. Nothing published yet: screens show the platform's default look."
+        : "No draft. Nothing published yet: screens show the event profile's look."
     }`;
   }
   const who =
@@ -223,7 +223,7 @@ export function checkView(problems: readonly Problem[], details: Slot = ""): Htm
     return notice({
       kind: "down",
       title: "Can't publish yet",
-      text: items(errors),
+      text: html`${items(errors)}${details}`,
       actions: fixes.length > 0 ? fixes : undefined,
     });
   }
@@ -249,10 +249,12 @@ export function colourField(o: {
   /** The swatch's colour while the field is empty. */
   fallback?: string | undefined;
   placeholder?: string;
+  /** An emptied field is refused in the page, before it reaches the API as "". */
+  required?: boolean;
 }): Html {
   const id = `canccu-studio-${o.name.replace(".", "-")}`;
   const swatch = (o.value ?? o.fallback ?? "#000000").slice(0, 7);
-  return html`<div class="canccu-field canccu-studio-colour"><label class="canccu-field__label"${attrs({ for: id })}>${o.label}</label><span class="canccu-studio-colour__row"><input${attrs({ class: "canccu-studio-colour__swatch", type: "color", "aria-label": `${o.label}: pick a colour`, "data-hex-for": o.name, value: swatch })}><input${attrs({ class: "canccu-input canccu-studio-colour__hex", name: o.name, pattern: COLOUR_PATTERN, type: "text", id, value: o.value, placeholder: o.placeholder, spellcheck: "false", autocomplete: "off" })}></span></div>`;
+  return html`<div class="canccu-field canccu-studio-colour"><label class="canccu-field__label"${attrs({ for: id })}>${o.label}</label><span class="canccu-studio-colour__row"><input${attrs({ class: "canccu-studio-colour__swatch", type: "color", "aria-label": `${o.label}: pick a colour`, "data-hex-for": o.name, value: swatch })}><input${attrs({ class: "canccu-input canccu-studio-colour__hex", name: o.name, pattern: COLOUR_PATTERN, required: o.required, type: "text", id, value: o.value, placeholder: o.placeholder, spellcheck: "false", autocomplete: "off" })}></span></div>`;
 }
 
 export const brandOf = (state: { draft?: DraftRow | undefined }): Brand | undefined => {

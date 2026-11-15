@@ -89,8 +89,11 @@
     return { path, version: draft.draft_version };
   }
 
+  /** The form's own check failed: nothing was sent, so the page stays with what was typed. */
+  class Invalid extends Error {}
+
   async function saveBrand(form) {
-    if (!form.reportValidity()) throw new Error("A colour is a # and six or eight hex digits.");
+    if (!form.reportValidity()) throw new Invalid("A colour is a # and six or eight hex digits.");
     const f = form.elements;
     let version = draftVersion();
     let logo = f.namedItem("logo")?.value;
@@ -193,33 +196,68 @@
   };
 
   let busy = false;
-  let running;
-  /** The forms that save as they change; one changed while a save ran is saved before the reload. */
+  /** The forms that save as they change: the brand kit has no Save (UX audit C2). */
   const SAVES_AS_CHANGED = new Set([saveBrand, saveFont]);
-  const again = new Map();
+  const autoSaved = () => [
+    ...document.querySelectorAll('form[data-action="brand"], form[data-action="font"]'),
+  ];
+  // What the person set, not the stored logo's name a save puts in a hidden field.
+  const valuesOf = (form) =>
+    JSON.stringify(
+      [...form.elements]
+        .filter((el) => el.name !== "" && el.type !== "hidden" && el.type !== "file")
+        .map((el) => (el.type === "radio" ? el.checked : el.value)),
+    );
+  /** Each form as last sent (or drawn): one that differs holds a change not saved yet. */
+  const sent = new Map(autoSaved().map((form) => [form, valuesOf(form)]));
+  const unsaved = (form) =>
+    valuesOf(form) !== sent.get(form) ||
+    [...form.elements].some((el) => el.type === "file" && el.files.length > 0);
+
+  /** `true` when the action went through; a refusal is carried over the reload. */
   async function attempt(action, el) {
+    if (SAVES_AS_CHANGED.has(action)) sent.set(el, valuesOf(el));
     try {
       await action(el);
+      return true;
     } catch (err) {
+      if (err instanceof Invalid) return err;
       sessionStorage.setItem(NOTICE_KEY, err instanceof Error ? err.message : String(err));
+      return false;
     }
   }
+
+  /** The previews show the version the page drew, so Publish waits for the reload. */
+  function holdPublish() {
+    for (const b of document.querySelectorAll('[data-action="publish"], [data-action="light-ask"]'))
+      b.disabled = true;
+    const hint = document.querySelector(".canccu-studio-publish-hint");
+    if (hint !== null) hint.textContent = "Put the colour right to update the previews.";
+  }
+
   async function run(el, control) {
     const action = ACTIONS[el.dataset.action];
-    if (action === undefined) return;
-    if (busy) {
-      // The brand kit has no Save, so a change dropped here would be lost without a word.
-      if (SAVES_AS_CHANGED.has(action) && SAVES_AS_CHANGED.has(running)) again.set(action, el);
-      return;
-    }
+    // A form changed while a save runs is saved after it, below.
+    if (action === undefined || busy) return;
     busy = true;
-    running = action;
     control.disabled = true;
-    await attempt(action, el);
-    while (again.size > 0) {
-      const [save, form] = again.entries().next().value;
-      again.delete(save);
-      await attempt(save, form);
+    let outcome = await attempt(action, el);
+    let saved = outcome === true;
+    // Before the reload, each form changed meanwhile or still being typed in, so nothing typed is
+    // lost; after a failure the rest wait, so the first failure is the one said.
+    while (outcome === true && SAVES_AS_CHANGED.has(action)) {
+      const form = autoSaved().find(unsaved);
+      if (form === undefined) break;
+      outcome = await attempt(ACTIONS[form.dataset.action], form);
+      saved ||= outcome === true;
+    }
+    if (outcome instanceof Invalid) {
+      // A reload would drop the browser's message and the value it is about.
+      show(outcome.message);
+      if (saved) holdPublish();
+      busy = false;
+      control.disabled = false;
+      return;
     }
     location.reload();
   }
@@ -264,6 +302,24 @@
       if (swatch) swatch.value = el.value.slice(0, 7).toLowerCase();
     }
   });
+  /*
+   * The logo's drop box takes a dropped file as if it were chosen: left to the browser, a drop opens
+   * the file and leaves the Studio.
+   */
+  document.addEventListener("dragover", (event) => {
+    if (event.target.closest(".canccu-studio-drop") !== null) event.preventDefault();
+  });
+  document.addEventListener("drop", (event) => {
+    const box = event.target.closest(".canccu-studio-drop");
+    if (box === null) return;
+    event.preventDefault();
+    const input = document.getElementById(box.htmlFor);
+    const files = event.dataTransfer?.files;
+    if (input === null || !files || files.length === 0) return;
+    input.files = files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+
   // The brand kit has no Save: each finished change saves the brand and reloads its previews.
   document.addEventListener("change", (event) => {
     const file = event.target.closest(".canccu-studio-file");
