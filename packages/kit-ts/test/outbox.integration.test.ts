@@ -79,9 +79,11 @@ describe.skipIf(!url)("the outbox", () => {
   const ns = (tenant: string) => sent(tenant).map((e) => (e.data as { n: number }).n);
   // As the login role: RLS does not bind it.
   async function pending(): Promise<[number, string[]]> {
-    const rows = await pool.query("SELECT count(*)::int AS n FROM kittest_outbox");
-    const tenants = await pool.query("SELECT tenant_id FROM kittest_outbox_tenants");
-    return [rows.rows[0].n as number, tenants.rows.map((r) => r.tenant_id as string)];
+    const rows = await pool.query<{ n: number }>("SELECT count(*)::int AS n FROM kittest_outbox");
+    const tenants = await pool.query<{ tenant_id: string }>(
+      "SELECT tenant_id FROM kittest_outbox_tenants",
+    );
+    return [rows.rows[0]?.n ?? 0, tenants.rows.map((r) => r.tenant_id)];
   }
 
   beforeAll(() => {

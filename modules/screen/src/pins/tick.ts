@@ -4,16 +4,16 @@
  * pin past its `until` gives way to `restores`, or to no pin when what it names is gone. Events
  * come from `screen_pin_tenants`, so an event with no screen paired is restored on time too.
  */
-import { isTenantId, requireTenant, tenantKey, withTenant } from "@canccu/kit";
-import type { Bus, Logger, TenantContext } from "@canccu/kit";
+import { isTenantId, tenantKey, withTenant } from "@canccu/kit";
+import type { Logger, Outbox, TenantContext } from "@canccu/kit";
 import type { Audit } from "../audit.js";
 import type { Sources } from "../compose/sources.js";
 import type { Db } from "../db.js";
 import type { Kv } from "../kv.js";
 import type { Fanout } from "../push/store.js";
 import type { BundleStore } from "./bundles.js";
-import { announcePin, changePin, lockPin, readPin } from "./store.js";
-import type { PinRow, PinValues } from "./store.js";
+import { announcePin, changePin, lockPin, readPin, restoreOf, sameEnd } from "./store.js";
+import type { PinRow } from "./store.js";
 
 /** Shorter than a tick, so the next second's check is free to any container. */
 const CLAIM_MS = 900;
@@ -21,7 +21,7 @@ const CLAIM_MS = 900;
 export interface PinTickDeps {
   db: Db;
   kv: Kv;
-  bus: Bus;
+  outbox: Outbox;
   audit: Audit;
   sources: Pick<Sources, "themeRevision">;
   bundles: Pick<BundleStore, "available">;
@@ -31,29 +31,13 @@ export interface PinTickDeps {
   log?: Logger;
 }
 
-const sameEnd = (a: PinRow, b: PinRow) =>
-  a.until?.getTime() === b.until?.getTime() &&
-  JSON.stringify(a.restores) === JSON.stringify(b.restores);
-
-/** What the restore puts back: `restores`, or nothing when its bundle or revision is gone; undefined to wait. */
-async function restoreOf(deps: PinTickDeps, restores: PinValues): Promise<PinValues | undefined> {
-  const none = { bundle_version: null, theme_revision: null };
-  const bundle = restores.bundle_version;
-  if (bundle !== null && !(await deps.bundles.available()).includes(bundle)) return none;
-  const theme = restores.theme_revision;
-  if (theme === null) return restores;
-  const found = await deps.sources.themeRevision(requireTenant(), theme);
-  if (found === "gone") return none;
-  // A failed read says nothing about the revision: the next second asks again.
-  return found === null ? undefined : restores;
-}
-
 /** Restores the current tenant's pin when its `until` has come. */
 export async function expirePin(deps: PinTickDeps): Promise<void> {
   const nowMs = deps.now();
   const seen = await deps.db.tenant(readPin);
   if (seen.until === null || seen.restores === null || seen.until.getTime() > nowMs) return;
   const back = await restoreOf(deps, seen.restores);
+  // Theming could not say whether the revision exists: the next second asks again.
   if (back === undefined) return;
   const change = await deps.db.tenant(async (c) => {
     const before = await lockPin(c);
