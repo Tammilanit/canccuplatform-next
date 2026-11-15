@@ -47,6 +47,18 @@ async def test_only_the_module_itself_and_only_signed(world: World) -> None:
     assert (another.status_code, another.json()["error"]["code"]) == (403, "service_forbidden")
 
 
+async def test_every_module_reads_admin_s_own_settings_for_the_event_s_language(
+    world: World,
+) -> None:
+    with tenant_scope("demo"):
+        await world.service.put_settings("admin", 0, {"language": "fi"}, "u1")
+    r = await world.internal.get(
+        "/internal/admin/settings/admin", params={"tenant_id": "demo"}, headers=signed("agenda")
+    )
+    assert r.status_code == 200
+    assert (r.json()["module"], r.json()["values"]) == ("admin", {"language": "fi"})
+
+
 async def test_needs_a_valid_tenant_and_a_known_module(world: World) -> None:
     bad = await world.internal.get(
         "/internal/admin/settings/screen", params={"tenant_id": "Demo!"}, headers=signed("screen")

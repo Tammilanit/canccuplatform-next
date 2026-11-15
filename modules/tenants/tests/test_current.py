@@ -47,6 +47,20 @@ async def test_members_of_a_draft_see_it_and_others_only_that_it_is_not_open(env
     assert as_admin["revision"] == 1 and "admin_access" in as_admin
 
 
+async def test_members_of_a_draft_read_its_flags_and_only_guests_are_refused(env: Env) -> None:
+    await make_tenant(env.db, "beta", "beta.example.org", status="draft", admins=("u_admin",))
+    member = env.rights.sign_in("u_crew", "agenda.crew.read")
+    admin = env.rights.sign_in("u_admin")
+    outsider = env.rights.sign_in("u_outsider")
+    async with env.client("beta.example.org") as c:
+        as_member = await c.get("/api/tenants/current/flags", headers=member)
+        as_admin = await c.get("/api/tenants/current/flags", headers=admin)
+        as_outsider = await c.get("/api/tenants/current/flags", headers=outsider)
+    assert as_member.status_code == 200 and "flags" in as_member.json()
+    assert as_admin.status_code == 200
+    assert as_outsider.json()["error"]["code"] == "info_pages_closed"
+
+
 async def test_patch_needs_a_right_and_the_role_for_access_settings(env: Env) -> None:
     await make_tenant(env.db, "alpha", HOST, admins=("u_admin",))
     granted = env.rights.sign_in("u_granted", "tenants.event.write", "tenants.access.write")

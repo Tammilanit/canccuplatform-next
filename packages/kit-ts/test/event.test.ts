@@ -6,6 +6,7 @@ import { TenantResolver } from "../src/resolve.js";
 // A real server: fetch() drops a Host header, so the resolver must send it another way.
 const asked: { path: string | undefined; host: string | undefined; cookie?: string }[] = [];
 let status = 200;
+let draft = false;
 const server = createServer((req, res) => {
   asked.push({
     path: req.url,
@@ -14,7 +15,10 @@ const server = createServer((req, res) => {
   });
   res.statusCode = status;
   res.setHeader("content-type", "application/json");
-  res.end(JSON.stringify({ id: "demo", name: "Demo Event", status: "live", time_zone: "UTC" }));
+  const event = { id: "demo", name: "Demo Event", status: draft ? "draft" : "live", time_zone: "UTC" };
+  // As tenants answers a draft event: its name only to a member's session.
+  const member = req.headers.cookie === "canccu_session=member";
+  res.end(JSON.stringify(draft && !member ? { id: "demo", status: "draft" } : event));
 });
 let url = "";
 beforeAll(async () => {
@@ -47,17 +51,29 @@ describe("TenantResolver.event", () => {
     expect(asked).toHaveLength(3);
   });
 
-  it("sends the request's own cookie when given, and never caches that answer", async () => {
+  it("asks a draft event again with the viewer's cookie, and never caches that answer", async () => {
     asked.length = 0;
+    draft = true;
     const r = new TenantResolver({ tenantsUrl: url });
-    await r.event("demo.localhost");
-    expect(await r.event("demo.localhost", "canccu_session=s1")).toMatchObject({ id: "demo" });
-    await r.event("demo.localhost", "canccu_session=s1");
+    expect(await r.event("demo.localhost", "canccu_session=member")).toMatchObject({
+      name: "Demo Event",
+    });
+    expect((await r.event("demo.localhost", "canccu_session=guest"))?.name).toBeUndefined();
+    expect((await r.event("demo.localhost"))?.name).toBeUndefined();
     expect(asked).toEqual([
       { path: "/api/tenants/current", host: "demo.localhost" },
-      { path: "/api/tenants/current", host: "demo.localhost", cookie: "canccu_session=s1" },
-      { path: "/api/tenants/current", host: "demo.localhost", cookie: "canccu_session=s1" },
+      { path: "/api/tenants/current", host: "demo.localhost", cookie: "canccu_session=member" },
+      { path: "/api/tenants/current", host: "demo.localhost", cookie: "canccu_session=guest" },
     ]);
+    draft = false;
+  });
+
+  it("keeps the shared answer for an open event whatever the cookie", async () => {
+    asked.length = 0;
+    const r = new TenantResolver({ tenantsUrl: url });
+    await r.event("demo.localhost", "canccu_session=a");
+    await r.event("demo.localhost", "canccu_session=b");
+    expect(asked).toEqual([{ path: "/api/tenants/current", host: "demo.localhost" }]);
   });
 
   it("answers null, never an error, when the tenants module does not answer", async () => {
