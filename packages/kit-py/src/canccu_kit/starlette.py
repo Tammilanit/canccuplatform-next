@@ -22,7 +22,7 @@ from starlette.routing import Match, Route
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from .context import CORRELATION_HEADER, correlation
-from .errors import KitError, MissingRight, code_for_status, error_body, internal_error_body
+from .errors import KitError, MissingRight, code_for_status, internal_error_body
 from .health import Health
 from .resolve import TenantResolver, UnknownHost
 from .rights import RightsChecker, Session
@@ -105,19 +105,34 @@ def _kit_error(hook: ErrorResponse | None) -> Callable[[Request, Exception], Awa
     return handler
 
 
-async def _http_error(request: Request, exc: Exception) -> Response:
-    assert isinstance(exc, HTTPException)
-    message = exc.detail if isinstance(exc.detail, str) else "request failed"
-    return JSONResponse(
-        error_body(code_for_status(exc.status_code), message),
-        status_code=exc.status_code,
-        headers=exc.headers,
-    )
+def _http_error(hook: ErrorResponse | None) -> Callable[[Request, Exception], Awaitable[Response]]:
+    async def handler(request: Request, exc: Exception) -> Response:
+        assert isinstance(exc, HTTPException)
+        message = exc.detail if isinstance(exc.detail, str) else "request failed"
+        error = KitError(message, status=exc.status_code, code=code_for_status(exc.status_code))
+        response = await _error_response(request, error, hook)
+        # A 405 keeps its Allow header, whoever drew it.
+        response.headers.update(exc.headers or {})
+        return response
+
+    return handler
 
 
-async def _internal_error(request: Request, exc: Exception) -> Response:
-    log.error("unhandled error", exc_info=exc, extra={"path": request.url.path})
-    return JSONResponse(internal_error_body(), status_code=500)
+def _internal_error(
+    hook: ErrorResponse | None,
+) -> Callable[[Request, Exception], Awaitable[Response]]:
+    async def handler(request: Request, exc: Exception) -> Response:
+        log.error("unhandled error", exc_info=exc, extra={"path": request.url.path})
+        if hook is not None:
+            # The details stay in the log: the hook gets only the bare 500.
+            error = KitError("internal error", status=500, code="internal_error")
+            try:
+                return await _error_response(request, error, hook)
+            except Exception as page_exc:  # a page that cannot draw still answers
+                log.error("error page failed", exc_info=page_exc)
+        return JSONResponse(internal_error_body(), status_code=500)
+
+    return handler
 
 
 class CorrelationMiddleware:
@@ -176,12 +191,14 @@ def install(
     app: Starlette, health: Health | None = None, *, error_response: ErrorResponse | None = None
 ) -> None:
     """Add the error body handlers, the origin check, correlation middleware and (optionally)
-    /health. `error_response` renders the KitErrors of the handlers and the origin check; pass
+    /health. `error_response` renders the KitErrors of the handlers and the origin check, and
+    also a path no route serves or a method it does not take (as a KitError of that status) and
+    an uncaught error (a bare 500 `internal_error`), so a page never answers the JSON body; pass
     the same to `install_tenancy` for its errors."""
     handlers: dict[Any, Any] = {
         KitError: _kit_error(error_response),
-        HTTPException: _http_error,
-        Exception: _internal_error,
+        HTTPException: _http_error(error_response),
+        Exception: _internal_error(error_response),
     }
     for exc_class, handler in handlers.items():
         app.add_exception_handler(exc_class, handler)
@@ -216,6 +233,15 @@ def sign_in_return(request: Request, prefix: str, fallback: str) -> str:
     if len(back) > RETURN_PATH_MAX or any(not "!" <= c <= "~" for c in back):
         return fallback
     return back
+
+
+def page_retry(request: Request, prefix: str) -> str | None:
+    """An error page's "Try again": this page under `prefix`, with its query. Only a GET is
+    retried: a link cannot send a form again, and would land on a 405 instead."""
+    if request.method not in ("GET", "HEAD"):
+        return None
+    query = request.url.query
+    return quote(prefix + request.url.path) + (f"?{query}" if query else "")
 
 
 def _has_page(request: Request) -> bool:

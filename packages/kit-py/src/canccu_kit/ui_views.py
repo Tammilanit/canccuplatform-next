@@ -115,8 +115,9 @@ def error_view(
     may_open = [i for g in menu_for(session) for i in g["items"]] if session else []
     home = may_open[0] if may_open else None
     health = next((i for i in may_open if i["id"] == "health"), None)
-    again = _button(retry, "Try again", "primary", "refresh") if retry else ""
     way_back = _button(back[0], back[1], "secondary") if back else ""
+    # No retry after a form post (a link would GET it): the way back instead.
+    again = _button(retry, "Try again", "primary", "refresh") if retry else way_back
     name = esc(event) if event else "this event"
     if kind == "no_access":
         go = _button(home["href"], f"Go to {home['label']}", "primary") if home else ""

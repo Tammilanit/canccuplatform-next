@@ -1,7 +1,8 @@
 """The organiser shell for the Python modules' pages: the same markup as packages/ui's shell.ts
 (docs/design/mockups.html, sheets 2, 3, 7 and 8), styled by packages/ui's ui.css, which each
-module serves. Every function returns HTML text with every value escaped. The modules import
-every view from here: canccu_kit.ui_views holds the front door, errors, empty states and
+module serves. Every function returns HTML text with every value escaped, but the parameters
+that are HTML (`body`, `actions`, `description_html`), which the caller escapes. The modules
+import every view from here: canccu_kit.ui_views holds the front door, errors, empty states and
 notices."""
 
 from __future__ import annotations
@@ -177,7 +178,7 @@ def shell_page(
     event: EventInfo | None = None,
     current: str | None = None,
     css: Iterable[str] = (),
-    description: str = "",
+    description_html: str = "",
     crumb: tuple[str, str] | None = None,
     actions: str = "",
     tabs: Sequence[tuple[str, str, bool]] = (),
@@ -186,9 +187,10 @@ def shell_page(
     now: datetime | None = None,
     menu_notes: Mapping[str, tuple[str, str]] | None = None,
 ) -> str:
-    """An organiser page in the shell. `body`, `actions` are HTML; `tabs` are (href, label,
-    current); `plain` leaves out the title row, for an error view that is its own title;
-    `menu_notes` badge a menu item by id with (status, text) when its page needs a look."""
+    """An organiser page in the shell. `body`, `actions` and `description_html` are HTML; `tabs`
+    are (href, label, current); `plain` leaves out the title row, for an error view that is its
+    own title; `menu_notes` badge a menu item by id with (status, text) when its page needs a
+    look."""
     banner = ""
     if event and event.status == "archived":
         banner = (
@@ -202,7 +204,9 @@ def shell_page(
             if crumb
             else ""
         )
-        desc = f'<p class="canccu-pagehead__desc">{description}</p>' if description else ""
+        desc = (
+            f'<p class="canccu-pagehead__desc">{description_html}</p>' if description_html else ""
+        )
         end = f'<div class="canccu-cluster">{actions}</div>' if actions else ""
         head = (
             f'<div class="canccu-pagehead"><div>{back}<h1 class="canccu-pagehead__title">'

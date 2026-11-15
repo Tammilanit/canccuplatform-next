@@ -9,6 +9,8 @@ import { shuffled } from "./seeded.js";
 
 /** A new photo's pop slot, the same for the whole event. */
 export const POP_SECONDS = 10;
+/** A photo is new, and pops, only this long after it arrived (sheet 13: "in the last 2 minutes"). */
+const NEW_MS = 120_000;
 const TILES = 5;
 const ORDERS = ["newest", "oldest", "shuffle"] as const;
 export type PhotoOrder = (typeof ORDERS)[number];
@@ -53,13 +55,17 @@ const byArrival = (a: Arrival, b: Arrival): number =>
 
 /**
  * When each photo's pop slot ends: one slot from its arrival, or from the end of the one before,
- * in the order they came. The photo list's `featured` and every `pop_new` zone read the same slots.
+ * in the order they came, and only for a photo whose slot ends while it is new, so a burst never
+ * chains on. The photo list's `featured`, every `pop_new` zone and the Director's queue jump (its
+ * `featured_until`, on the server and the screen) read the same slots.
  */
 export function popUntil(photos: readonly Arrival[]): Map<string, number> {
   const until = new Map<string, number>();
   let end = -Infinity;
   for (const p of [...photos].sort(byArrival)) {
-    end = Math.max(p.created_at, end) + POP_SECONDS * 1000;
+    const slotEnd = Math.max(p.created_at, end) + POP_SECONDS * 1000;
+    if (slotEnd > p.created_at + NEW_MS) continue;
+    end = slotEnd;
     until.set(p.id, end);
   }
   return until;

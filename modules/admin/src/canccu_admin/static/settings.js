@@ -32,7 +32,13 @@ function refresh() {
     if (invalid) bad++;
     field.querySelector("[data-canccu-was-hint]").hidden = !differs || invalid;
     const error = field.querySelector("[data-canccu-error]");
-    if (error) error.hidden = !invalid;
+    if (error) {
+      error.hidden = !invalid;
+      // An emptied field is not out of bounds: it has no value at all.
+      error.textContent = el.validity.valueMissing
+        ? "Needs a value."
+        : error.dataset.canccuError;
+    }
     if (invalid) el.setAttribute("aria-invalid", "true");
     else el.removeAttribute("aria-invalid");
   }

@@ -115,9 +115,18 @@ export function peakOf(
 
 const HOUR_MS = 3600_000;
 
+/** How far `timeZone`'s wall clock is ahead of UTC at `ms`, to the second. */
+function offsetAt(parts: Intl.DateTimeFormat, ms: number): number {
+  const p = Object.fromEntries(parts.formatToParts(ms).map((x) => [x.type, Number(x.value)]));
+  const wall = Date.UTC(p.year ?? 0, (p.month ?? 1) - 1, p.day, p.hour, p.minute, p.second);
+  return wall - (ms - (((ms % 1000) + 1000) % 1000));
+}
+
 /**
- * The last 24 hours by the hour, oldest first: each hour that holds counts, at their average. Each
- * graph sizes its bars against its own scale (graph.ts).
+ * The last 24 hours by the event's hour, oldest first: each hour that holds counts, at their
+ * average. By the wall clock's hour, not UTC's: in a zone a half or three quarters of an hour off
+ * UTC, a UTC hour would start at :30 or :45 there. Each graph sizes its bars against its own scale
+ * (graph.ts).
  */
 export function hourlyOf(
   counts: readonly PresenceCount[],
@@ -125,11 +134,22 @@ export function hourlyOf(
   timeZone: string,
   nowMs: number,
 ): Hour[] {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hourCycle: "h23",
+    timeZone,
+  });
   const hours = new Map<number, number[]>();
   for (const c of counts) {
     if (c.at <= nowMs - DAY_MS || c.at > nowMs) continue;
-    const hour = Math.floor(c.at / HOUR_MS);
-    hours.set(hour, [...(hours.get(hour) ?? []), pick(c)]);
+    const offset = offsetAt(parts, c.at);
+    const start = Math.floor((c.at + offset) / HOUR_MS) * HOUR_MS - offset;
+    hours.set(start, [...(hours.get(start) ?? []), pick(c)]);
   }
   const text = new Intl.DateTimeFormat("en-GB", {
     hour: "2-digit",
@@ -139,8 +159,8 @@ export function hourlyOf(
   });
   return [...hours.entries()]
     .sort(([a], [b]) => a - b)
-    .map(([hour, values]) => ({
-      time_text: text.format(hour * HOUR_MS),
+    .map(([start, values]) => ({
+      time_text: text.format(start),
       value: Math.round(values.reduce((sum, v) => sum + v, 0) / values.length),
     }));
 }

@@ -145,8 +145,19 @@ export class CheckPage {
   private readonly list = el("ul", "canccu-selfcheck");
   /** The latest check started; a tap's check may overlap the timed one, and the later wins. */
   private latest = 0;
+  /** The server's clock against this one and the event's time zone, once a check has read them. */
+  private offsetMs = 0;
+  private timeZone: string | undefined;
 
   constructor(private readonly env: CheckEnv) {}
+
+  /**
+   * The header's date and clock on the server's time: this page measures how far the kiosk's own
+   * clock is off, so its header must not show that clock.
+   */
+  private clock(): void {
+    setClock(this.env.root, (this.env.now ?? Date.now)() + this.offsetMs, this.timeZone);
+  }
 
   async start(): Promise<void> {
     const page = el("main", "canccu-frame canccu-frame--check");
@@ -169,6 +180,10 @@ export class CheckPage {
     );
     page.append(head, body, foot);
     this.env.root.replaceChildren(page);
+    this.clock();
+    setInterval(() => {
+      this.clock();
+    }, 1000);
     await this.again();
   }
 
@@ -180,10 +195,12 @@ export class CheckPage {
 
   private async run(): Promise<void> {
     const mine = ++this.latest;
-    setClock(this.env.root, (this.env.now ?? Date.now)());
     const { answer, offsetMs } = await measure(this.env.fetch, this.env.now ?? Date.now);
     const withoutTap = await this.withoutTap;
     if (mine !== this.latest) return;
+    if (offsetMs !== null) this.offsetMs = offsetMs;
+    if (isState(answer.body)) this.timeZone = answer.body.tenant.time_zone;
+    this.clock();
     const rows = checkRows({
       viewport: this.env.viewport(),
       offsetMs,
