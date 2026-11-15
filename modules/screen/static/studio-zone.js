@@ -50,7 +50,7 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
     if (wall) wall.hidden = !entriesOf(r).some((e) => e.widget === "photo");
     const names = [...r.querySelectorAll(".canccu-studio-widget__name")].map((n) => n.textContent);
     const shows = form.querySelector(`[data-pick="${CSS.escape(r.dataset.region)}"] [data-shows]`);
-    if (shows && names.length > 0) shows.textContent = names.join(" → ");
+    if (shows) shows.textContent = names.length ? names.join(" → ") : say("zone.region_empty");
   }
 
   form.addEventListener("click", (event) => {
@@ -78,11 +78,16 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
     changed(region);
   });
 
-  // Drag a row by its handle (or anywhere on it) to another place in the same list.
+  // Drag a row by its handle (or anywhere on it) to another place in the same list. A row only
+  // ever moves within its list, so its place at the end tells whether the order changed.
   let dragged = null;
+  let draggedFrom = -1;
+  const placeOf = (row) => [...row.parentElement.children].indexOf(row);
   form.addEventListener("dragstart", (event) => {
     dragged = event.target.closest?.("[data-widgets] li") ?? null;
-    if (dragged) event.dataTransfer.effectAllowed = "move";
+    if (!dragged) return;
+    draggedFrom = placeOf(dragged);
+    event.dataTransfer.effectAllowed = "move";
   });
   form.addEventListener("dragover", (event) => {
     const over = event.target.closest?.("[data-widgets] li");
@@ -96,8 +101,11 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
   form.addEventListener("dragend", () => {
     if (!dragged) return;
     const region = dragged.closest("[data-region]");
-    region.querySelector("[name=layout_widgets]").checked = false;
+    const moved = placeOf(dragged) !== draggedFrom;
     dragged = null;
+    // A drop back in place leaves the box on the layout's widgets, so it keeps following them.
+    if (!moved) return;
+    region.querySelector("[name=layout_widgets]").checked = false;
     changed(region);
   });
 
@@ -130,6 +138,32 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
       if (Object.keys(props).length === 0) delete next.props;
       return next;
     });
+  }
+
+  /**
+   * The first photo wall whose seconds the API would refuse (contracts/screen.md, Photos): only a
+   * box that lists a photo saves them. The browser's own check skips a region not on screen, and
+   * Preview is no submit, so the page checks before either sends.
+   */
+  function badWallSeconds() {
+    for (const r of regions()) {
+      const field = r.querySelector("[data-photo-wall] [name=photo_seconds]");
+      if (!field || field.value === "" || !entriesOf(r).some((e) => e.widget === "photo")) continue;
+      const n = Number(field.value);
+      if (!Number.isInteger(n) || n < 5 || n > 60) return field;
+    }
+    return null;
+  }
+  /** False, with the region opened, the field focused and the notice saying why, when refused. */
+  function sendable() {
+    const field = badWallSeconds();
+    if (field === null) return true;
+    const region = field.closest("[data-region]");
+    if (region.hidden)
+      form.querySelector(`[data-pick="${CSS.escape(region.dataset.region)}"]`)?.click();
+    show(say("photo_wall.seconds_invalid"));
+    field.focus();
+    return false;
   }
 
   // The zone the form says, on top of what was read, so fields Studio does not edit are kept.
@@ -260,6 +294,7 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
   // A true preview: the server composes the zone as it would be saved, and the real player draws it.
   const frame = form.querySelector("iframe[data-preview]");
   form.querySelector("[data-zone-preview]").addEventListener("click", async () => {
+    if (!sendable()) return;
     const at = previewAt(document);
     const query = at === null ? "" : `?at=${encodeURIComponent(at)}`;
     const r = await api("POST", `${url}/preview${query}`, zone());
@@ -290,6 +325,7 @@ import { previewAt, screenPreview } from "./studio-screen-preview.js";
   // Undo for 10 minutes: the page keeps the zone it replaced and saves it back (contracts/screen.md, Preview).
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (!sendable()) return;
     const saved = await put({ ...zone(), revision: original.revision });
     if (saved === null) return;
     if (saved.revision !== original.revision) {

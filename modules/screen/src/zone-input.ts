@@ -105,6 +105,16 @@ function widgetEntry(value: unknown, where: string): Json {
         throw invalidRequest(`${where}.props.${k} must be a string, number or boolean.`);
       }
     }
+    // The wall would draw such a value as its default (compose/photos.ts), so a zone saved with
+    // it would not show what was asked; a theme's or an older zone's still falls back there.
+    const seconds = props.photo_seconds;
+    if (
+      value.widget === "photo" &&
+      seconds !== undefined &&
+      !(Number.isInteger(seconds) && (seconds as number) >= 5 && (seconds as number) <= 60)
+    ) {
+      throw invalidRequest(`${where}.props.photo_seconds must be a whole number from 5 to 60.`);
+    }
   }
   return value;
 }

@@ -9,6 +9,9 @@ export const LAYOUT_EN = {
   "layout.pick": "Use the layout {layout}",
   "layout.portrait": "9:16",
   "layout.discard": "Picking another layout drops the changes not yet live. Go on?",
+  "zone.layout_missing": "This zone's layout {layout} is gone",
+  "zone.layout_missing_text":
+    "Its screens show {layout}, and so does this editor, without the old layout's box sizes and hidden boxes. Pick a layout to choose another.",
   "layout.statistics": "Statistics come with the bot's data",
   "layout.statistics_waiting":
     "{layout}'s statistics come with the bot's data. Until it arrives, its statistics boxes give their space to the boxes beside them on the screens.",

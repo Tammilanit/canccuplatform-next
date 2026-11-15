@@ -4,7 +4,7 @@
  * it shows in one line, and the chosen region's detail. The page script turns the form back into
  * a `Zone`, lists what changed, previews it in the real player and saves it with the revision read.
  */
-import { attrs, emptyState, html } from "@canccu/ui";
+import { attrs, emptyState, html, notice } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import { boxProblem } from "../compose/boxes.js";
 import { DEFAULT_DWELL_S } from "../compose/build.js";
@@ -320,24 +320,26 @@ export function zoneEditorView(
         <div class="canccu-studio-thumb canccu-studio-thumb--preview"><iframe${attrs({ src: zoneFrame(zone.key), title: t("zone.preview_title") })}></iframe></div>
       </section>`;
   }
-  const picked = layoutId !== zone.layout_id;
-  const draft: Zone = picked
-    ? {
-        ...zone,
-        layout_id: layoutId,
-        regions: Object.fromEntries(
-          Object.entries(zone.regions).flatMap(([id, settings]) => {
-            const rest = Object.entries(settings).filter(([k]) => k !== "area" && k !== "hidden");
-            return rest.length === 0 ? [] : [[id, Object.fromEntries(rest)]];
-          }),
-        ),
-      }
-    : zone;
   // A layout neither the theme nor the built-ins have draws the Pulse, as its screens do; the
   // routes always pass the built-ins, so the Pulse is there.
-  const layout =
-    layouts.find((l) => l.id === (layoutId ?? "pulse")) ?? layouts.find((l) => l.id === "pulse");
+  const found = layouts.find((l) => l.id === (layoutId ?? "pulse"));
+  const layout = found ?? layouts.find((l) => l.id === "pulse");
   if (layout === undefined) throw new Error("zoneEditorView needs the built-in layouts");
+  // Box sizes and hidden boxes belong to the layout they were set on, so they go with another
+  // layout picked and with a missing one, whose ids may name other boxes of the Pulse.
+  const draft: Zone =
+    layoutId !== zone.layout_id || found === undefined
+      ? {
+          ...zone,
+          layout_id: layoutId,
+          regions: Object.fromEntries(
+            Object.entries(zone.regions).flatMap(([id, settings]) => {
+              const rest = Object.entries(settings).filter(([k]) => k !== "area" && k !== "hidden");
+              return rest.length === 0 ? [] : [[id, Object.fromEntries(rest)]];
+            }),
+          ),
+        }
+      : zone;
   const regions = regionsOf(c, draft, layout);
   // The hero first, as the mockup opens it: what most of the screen shows.
   const first =
@@ -381,7 +383,15 @@ export function zoneEditorView(
     "data-layout-names": JSON.stringify({ "": names.pulse ?? "pulse", ...names }),
     "data-region-names": JSON.stringify(Object.fromEntries(regions.map((r) => [r.id, r.label]))),
   };
-  return html`${zoneTabs(c, zones, zone.key)}${previewNotice(c)}
+  const missing =
+    found === undefined
+      ? notice({
+          kind: "warn",
+          title: t("zone.layout_missing", { layout: layoutId ?? "" }),
+          text: t("zone.layout_missing_text", { layout: layout.name }),
+        })
+      : "";
+  return html`${zoneTabs(c, zones, zone.key)}${previewNotice(c)}${missing}
     <form class="canccu-studio-editor" ${attrs(form)}>
       <div class="canccu-studio-editor__main">
         ${layoutGallery(c, layouts, layout.id, draft.regions)}${boxesCard(c, regions, layout, first?.id)}${regions.map((r) => regionPart(c, r, layout, r === first, r.id === header ? zone.screen_name : null))}${layout.id === "dashboard" ? heroCard(c, regions, layout, zone) : ""}${settingsCard(c, zone, devices)}${remove}

@@ -340,6 +340,8 @@ export const CLIENT_KEYS = [
   "change.off",
   "change.default",
   "zone.widget_dwell",
+  "zone.region_empty",
+  "photo_wall.seconds_invalid",
   "ticker.set_done",
   "ticker.clear_done",
   "pins.freeze_done",
