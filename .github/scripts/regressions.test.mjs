@@ -124,6 +124,41 @@ test("the same failure the next night comments on the open issue instead of fili
   assert.match(arg(comment, "--body"), /p95 1\.4 s/);
 });
 
+test("a screenshot failing with another error the next night keeps its name and comments on the open issue", () => {
+  const night = (err) =>
+    log(`FAIL settings: http://demo.localhost/admin/settings: ${err}`, "  at page.goto", "screenshots: 1 failed");
+  const first = failuresOf([job(1, "demo-stack (shots pages)")], { 1: night("page.goto: Timeout 30000ms exceeded.") }, { perTest: true });
+  const second = failuresOf([job(1, "demo-stack (shots pages)")], { 1: night("locator.waitFor: 502 Bad Gateway") }, { perTest: true });
+  assert.deepEqual([first[0].name, second[0].name], ["settings", "settings"]);
+  assert.match(second[0].output, /FAIL settings: http:\/\/demo\.localhost\/admin\/settings: locator\.waitFor: 502/, "the full line stays in the output");
+
+  const open = { number: 52, title: "regression: settings", body: "...\n<!-- canccu-regression: settings -->" };
+  const gh = fakeGh({
+    "repos/o/r/actions/runs/77/jobs": { jobs: [job(1, "demo-stack (shots pages)")] },
+    "repos/o/r/actions/jobs/1/logs": night("locator.waitFor: 502 Bad Gateway"),
+    "repos/o/r/actions/workflows/demo-stack.yml/runs": { workflow_runs: [] },
+    "repos/o/r/issues": [open],
+  });
+  assert.deepEqual(run({ gh, env }), [{ name: "settings", commented: 52 }]);
+  assert.equal(created(gh).length, 0, "no second issue for the same shot");
+  const comment = gh.writes.find((w) => w[0] === "issue" && w[1] === "comment");
+  assert.match(arg(comment, "--body"), /locator\.waitFor: 502 Bad Gateway/);
+});
+
+test("a new screenshot failure is titled by the shot's name alone, with the full FAIL line in its body", () => {
+  const gh = fakeGh({
+    "repos/o/r/actions/runs/77/jobs": { jobs: [job(1, "demo-stack (shots front)")] },
+    "repos/o/r/actions/jobs/1/logs": log("FAIL screens: browserType.launch: Executable doesn't exist"),
+    "repos/o/r/actions/workflows/demo-stack.yml/runs": { workflow_runs: [] },
+    "repos/o/r/issues": [],
+  });
+  assert.deepEqual(run({ gh, env }), [{ name: "screens", filed: 100 }]);
+  const [issue] = created(gh);
+  assert.equal(arg(issue, "--title"), "regression: screens");
+  assert.match(arg(issue, "--body"), /FAIL screens: browserType\.launch: Executable doesn't exist/);
+  assert.match(arg(issue, "--body"), /<!-- canccu-regression: screens -->/);
+});
+
 test("without a green run yet the issue says so instead of listing commits", () => {
   const gh = repo({ green: null });
   run({ gh, env });

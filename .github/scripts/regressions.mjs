@@ -21,11 +21,13 @@ const clean = (text) =>
     .split(/\r?\n/)
     .map((l) => l.replace(/^\d{4}-\d\d-\d\dT[\d:.]+Z ?/, "").replace(/\x1b\[[0-9;]*m/g, ""));
 
-// A test's output is its FAIL line and what it printed until the next test's line.
+// A test's output is its FAIL line and what it printed until the next test's line. Its name stops
+// before the first `: ` (the screenshot scripts print `FAIL <shot>: <url>: <error>`) or the
+// ` (HTTP n)` of demo-stack-test, so the same test keeps its name however it failed.
 function testsOf(lines) {
   const tests = [];
   for (const line of lines) {
-    const fail = /^FAIL (.+?)(?: \(HTTP \d+\))?$/.exec(line);
+    const fail = /^FAIL (.+?)(?:: .*| \(HTTP \d+\))?$/.exec(line);
     if (fail) tests.push({ name: fail[1], lines: [line] });
     else if (/^(ok|FAIL) /.test(line) || /^##\[/.test(line)) tests.push(null);
     else if (tests.at(-1)) tests.at(-1).lines.push(line);
