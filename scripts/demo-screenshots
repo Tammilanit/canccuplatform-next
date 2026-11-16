@@ -117,14 +117,22 @@ if ! "${COMPOSE[@]}" exec -T postgres psql -U canccu -d canccu -v ON_ERROR_STOP=
   exit 1
 fi
 shoot demo-screenshots-front.mjs || status=1
+# Whatever ends the run from here (a failed pass, Ctrl-C, a cancelled CI job), the parts the
+# passes stop start again: a stack left with a part down fails every later check against it. One
+# handler for both, set before either stops (a second trap would replace the first), and one
+# start each, so a part that fails to start does not keep the other down.
+# shellcheck disable=SC2317 # called by the EXIT trap
+restore() {
+  "${COMPOSE[@]}" start notify >/dev/null
+  "${COMPOSE[@]}" start agenda >/dev/null
+  rm -rf "$work"
+}
+trap restore EXIT
 # Health with a part down (docs/design/mockups.html, sheet 4), late, as it stops notify (whose
 # check-in the front pass shows) for longer than admin's 10 s check. The pass asks for notify
 # back (the file start-notify) once its shots of the part down are taken, then follows Health
 # until the menu's note clears; notify starts again whatever the pass did.
 if takes demo-screenshots.mjs ', --trouble)'; then
-  # Whatever ends the run from here (a failed pass, Ctrl-C, a cancelled CI job), notify starts
-  # again: a stack left with a part down fails every later check against it.
-  trap '"${COMPOSE[@]}" start notify >/dev/null; rm -rf "$work"' EXIT
   "${COMPOSE[@]}" stop notify >/dev/null || status=1
   sleep 15
   rm -f "$work/start-notify"
@@ -136,13 +144,27 @@ if takes demo-screenshots.mjs ', --trouble)'; then
   done
   "${COMPOSE[@]}" start notify >/dev/null || status=1
   wait "$pass" || status=1
+  # The agenda-down pass and the tiers' checks after it reach notify through Caddy: a started
+  # container is not yet a serving one, and Caddy answers 502 until it is. A poll, not
+  # `up --wait`, which could recreate the container when the environment differs.
+  healthy=
+  for _ in $(seq 120); do
+    id=$("${COMPOSE[@]}" ps -q notify 2>/dev/null | head -n1)
+    if [ -n "$id" ] && [ "$(docker inspect -f '{{.State.Health.Status}}' "$id" 2>/dev/null)" = healthy ]; then
+      healthy=1
+      break
+    fi
+    sleep 1
+  done
+  if [ -z "$healthy" ]; then
+    echo "error: notify did not answer health within 120 s of starting again" >&2
+    exit 1
+  fi
 fi
 # Notify's own page with the menu's Health note (#478) needs another part down: the run of show,
 # stopped last, since the screens and the run of show's own pages need it. The shot waits for the
-# note, so nothing waits for admin's check here; agenda starts again whatever ends the run, as
-# notify does above.
+# note, so nothing waits for admin's check here.
 if ! takes demo-screenshots.mjs ', --agenda-down)'; then exit "$status"; fi
-trap '"${COMPOSE[@]}" start agenda >/dev/null; rm -rf "$work"' EXIT
 "${COMPOSE[@]}" stop agenda >/dev/null || status=1
 shoot demo-screenshots.mjs --agenda-down || status=1
 "${COMPOSE[@]}" start agenda >/dev/null || status=1
