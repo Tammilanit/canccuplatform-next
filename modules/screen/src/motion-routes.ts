@@ -17,9 +17,11 @@ import {
   eventMotion,
   isMotionLevel,
   phaseItems,
+  sceneLevel,
   themeMotionOf,
   zoneMotion,
 } from "./compose/motion.js";
+import type { ZoneScene } from "./compose/scenes.js";
 import type { MotionLevel, MotionPhase, ThemeMotion } from "./compose/motion.js";
 import type { Settings } from "./health.js";
 import { actorOf, assertWritable, body, invalidRequest, needs, tenantOf } from "./http.js";
@@ -128,8 +130,18 @@ export async function readMotion(
   doc: SettingsDoc,
 ): Promise<MotionRead> {
   const { zones, pin } = await deps.db.tenant(async (c) => ({
-    zones: (await c.query("SELECT key, name, motion_level FROM screen_zones ORDER BY key"))
-      .rows as { key: string; name: string; motion_level: MotionLevel | null }[],
+    zones: (
+      await c.query(
+        `SELECT z.key, z.name, z.motion_level, s.scene FROM screen_zones z
+         LEFT JOIN screen_scenes s ON s.tenant_id = z.tenant_id AND s.zone_key = z.key
+         ORDER BY z.key`,
+      )
+    ).rows as {
+      key: string;
+      name: string;
+      motion_level: MotionLevel | null;
+      scene: ZoneScene | null;
+    }[],
     pin: await readPin(c),
   }));
   const [items, theme] = await Promise.all([
@@ -145,18 +157,17 @@ export async function readMotion(
     follow_the_day: event.followTheDay,
     theme_motion: themeMotion,
     zones: zones.map((z) => {
-      const m = zoneMotion(
-        { ...event, pin: z.motion_level, themeMotion },
-        phaseItems(items ?? [], z.key),
-        at,
-      );
+      const levels = { ...event, pin: z.motion_level, themeMotion };
+      const m = zoneMotion(levels, phaseItems(items ?? [], z.key), at);
+      // A zone in a scene moves with it (D5); when it next changes is Moments' to know.
+      const next = z.scene === null ? m.next : null;
       return {
         key: z.key,
         name: z.name,
         motion_level: z.motion_level,
-        level: m.level,
+        level: z.scene === null ? m.level : sceneLevel(levels, z.scene),
         phase: m.phase,
-        next: m.next === null ? null : { ...m.next, at: new Date(m.next.at).toISOString() },
+        next: next === null ? null : { ...next, at: new Date(next.at).toISOString() },
       };
     }),
   };

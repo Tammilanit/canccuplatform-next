@@ -6,6 +6,7 @@ import type { AppDeps } from "./http.js";
 import { internalRoutes, venueRoutes } from "./module-routes.js";
 import { pageRoutes } from "./pages.js";
 import { momentRoutes } from "./routes.js";
+import { sceneRoutes } from "./scene-routes.js";
 import { settingsRoutes } from "./settings-routes.js";
 import { noteTenant } from "./tick.js";
 
@@ -49,6 +50,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     });
     momentRoutes(event, deps);
     settingsRoutes(event, deps);
+    sceneRoutes(event, deps);
     pageRoutes(event, deps);
     done();
   });

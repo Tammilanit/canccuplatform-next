@@ -21,6 +21,8 @@ tags:
     description: The emergency takeover, per event and venue-wide.
   - name: settings
     description: The priority order and the built-in rules.
+  - name: scenes
+    description: The venue's autopilot, the mood of each zone, and the crew button.
   - name: history
     description: What played where, why, and how it ended.
   - name: privacy
@@ -391,6 +393,126 @@ paths:
           $ref: "common.openapi.yaml#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+  /api/moments/scenes:
+    get:
+      tags: [scenes]
+      operationId: getScenes
+      summary: The event's scenes, each zone's scene now, and the crew button pressed
+      description: |
+        Right `moments.read`. Before the event's first use the list is the presets, `revision` 0 and `copied`
+        false; the first scene pass copies them (contracts/moments.md, Scenes).
+      responses:
+        "200":
+          $ref: "#/components/responses/ScenesAnswer"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
+    put:
+      tags: [scenes]
+      operationId: putScenes
+      summary: Replace the event's scenes, in priority order
+      description: |
+        Right `moments.settings.write`. Every zone is put in its scene at once. A stale `revision` is 409
+        `version_conflict`; an archived event is 409 `event_archived`. Audited (`moments.scenes.changed`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [scenes, revision]
+              properties:
+                scenes:
+                  type: array
+                  maxItems: 20
+                  items:
+                    $ref: "#/components/schemas/Scene"
+                revision:
+                  type: integer
+                  minimum: 0
+      responses:
+        "200":
+          $ref: "#/components/responses/ScenesAnswer"
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/moments/scenes/reset:
+    post:
+      tags: [scenes]
+      operationId: resetScenes
+      summary: Put the presets of this platform version back in place of the event's scenes
+      description: |
+        Right `moments.settings.write`, with the list's `revision` (O7). Audited (`moments.scenes.reset`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [revision]
+              properties:
+                revision:
+                  type: integer
+                  minimum: 0
+      responses:
+        "200":
+          $ref: "#/components/responses/ScenesAnswer"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/moments/scenes/{scene_key}/take:
+    post:
+      tags: [scenes]
+      operationId: takeScene
+      summary: Press a scene's crew button ("Peak now"), or press it again to take it off
+      description: |
+        Right `moments.scenes.take`. One tap, no confirmation (U11). The scene wins on `zones` (empty: every
+        zone) for its crew condition's `minutes`, over the whole list, until that time ends or the same button
+        is pressed again (E7); another scene's press replaces it. A scene without a crew condition is 400
+        `invalid_request`. Audited (`moments.scene.taken`, `moments.scene.released`).
+      parameters:
+        - name: scene_key
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/SceneKey"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                zones:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/ZoneKey"
+      responses:
+        "200":
+          $ref: "#/components/responses/ScenesAnswer"
+        "400":
+          $ref: "common.openapi.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "common.openapi.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "common.openapi.yaml#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /api/moments/history:
     get:
       tags: [history]
@@ -603,6 +725,12 @@ components:
         application/json:
           schema:
             $ref: "common.openapi.yaml#/components/schemas/Error"
+    ScenesAnswer:
+      description: The scenes, each zone's scene now and the crew button pressed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Scenes"
   schemas:
     ZoneKey:
       type: string
@@ -933,3 +1061,186 @@ components:
           type: [string, "null"]
         actor_name:
           type: [string, "null"]
+    SceneKey:
+      type: string
+      pattern: "^[a-z][a-z0-9_-]{1,31}$"
+    SceneCondition:
+      description: |
+        When a scene holds; any one of a scene's conditions is enough (contracts/moments.md, Scenes).
+        `time`: every day of the event from `from` to `to` (HH:MM in the event's time zone; past midnight when
+        `to` is earlier). `agenda`: an item of one of `kinds` runs on the zone, or, with `starts_within_minutes`,
+        starts within that many minutes. `checkins`: over `over` arrival check-ins in the last hour. `presence`:
+        members online `over` and/or `under` a count (never while no count is known). `games`: a game is
+        surging. `crew`: the scene's crew button, holding `minutes` per press.
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [type, from, to]
+          properties:
+            type: { const: time }
+            from: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
+            to: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
+        - type: object
+          additionalProperties: false
+          required: [type, kinds]
+          properties:
+            type: { const: agenda }
+            kinds:
+              type: array
+              minItems: 1
+              items: { type: string }
+            starts_within_minutes: { type: integer, minimum: 1, maximum: 720 }
+        - type: object
+          additionalProperties: false
+          required: [type, over]
+          properties:
+            type: { const: checkins }
+            over: { type: integer, minimum: 0 }
+        - type: object
+          additionalProperties: false
+          required: [type]
+          properties:
+            type: { const: presence }
+            over: { type: integer, minimum: 0 }
+            under: { type: integer, minimum: 0 }
+        - type: object
+          additionalProperties: false
+          required: [type]
+          properties:
+            type: { const: games }
+        - type: object
+          additionalProperties: false
+          required: [type, minutes]
+          properties:
+            type: { const: crew }
+            minutes: { type: integer, minimum: 1, maximum: 720 }
+    SceneMotion:
+      description: A level, or `calmer` and `livelier`, one step from the event's level as Follow the day moves it.
+      type: [string, "null"]
+      enum: [none, calm, lively, party, calmer, livelier, null]
+    StageMood:
+      description: The stage's mood, one of its phase tints (contracts/screen.md, The stage).
+      type: [string, "null"]
+      enum: [build_up, doors, peak, wind_down, quiet_hours, null]
+    ScenePalette:
+      description: "The theme's primary and accent colours while the scene holds (L14, the palette only)."
+      type: [object, "null"]
+      additionalProperties: false
+      properties:
+        primary: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
+        accent: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
+    HeroFeature:
+      type: string
+      enum: [bracket, leaderboard, countdown, playlist, photo, hot_game, today_numbers]
+    SceneChanges:
+      type: object
+      additionalProperties: false
+      required: [motion, layouts, stage_mood, palette, sound, quiet, hero_off]
+      properties:
+        motion:
+          $ref: "#/components/schemas/SceneMotion"
+        layouts:
+          description: Zone key to layout id; a zone not named keeps its own layout.
+          type: object
+          additionalProperties:
+            type: string
+        stage_mood:
+          $ref: "#/components/schemas/StageMood"
+        palette:
+          $ref: "#/components/schemas/ScenePalette"
+        sound:
+          description: Sound on or off for the sound gates (#113); null keeps the zone's.
+          type: [boolean, "null"]
+        quiet:
+          description: Quiet mode, the level at most `calm`; the sound gates play urgent only (#113).
+          type: boolean
+        hero_off:
+          description: The hero's features the scene switches off ("no slides at the peak").
+          type: array
+          items:
+            $ref: "#/components/schemas/HeroFeature"
+    Scene:
+      type: object
+      additionalProperties: false
+      required: [key, name, preset, zones, when, then, hold_minutes, blend_seconds]
+      properties:
+        key:
+          $ref: "#/components/schemas/SceneKey"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        preset:
+          description: The preset it was copied from (`quiet`, `wind_down`, `doors`, `peak`, `daytime`), or null.
+          type: [string, "null"]
+        zones:
+          description: The zones it applies to; empty, every zone.
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneKey"
+        when:
+          description: Any one is enough; an empty list always holds.
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/SceneCondition"
+        then:
+          $ref: "#/components/schemas/SceneChanges"
+        hold_minutes:
+          description: How long it stays on against any scene lower in the list, so scenes never flip back and forth.
+          type: integer
+          minimum: 0
+          maximum: 240
+        blend_seconds:
+          description: How long the screens take to blend its palette and mood in.
+          type: integer
+          minimum: 0
+          maximum: 600
+    Scenes:
+      type: object
+      required: [scenes, revision, copied, zones, crew]
+      properties:
+        scenes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Scene"
+        revision:
+          type: integer
+          minimum: 0
+        copied:
+          description: False until the event's first use copied the presets.
+          type: boolean
+        zones:
+          description: Each zone's scene now, as last sent in `moments.scene.changed`.
+          type: array
+          items:
+            type: object
+            required: [zone_key, scene_key, since, why, heartbeat_bpm]
+            properties:
+              zone_key:
+                $ref: "#/components/schemas/ZoneKey"
+              scene_key:
+                type: [string, "null"]
+              since:
+                type: string
+                format: date-time
+              why:
+                type: string
+              heartbeat_bpm:
+                type: integer
+                minimum: 4
+                maximum: 30
+        crew:
+          description: The crew button pressed now, or null.
+          type: [object, "null"]
+          required: [scene_key, zones, until]
+          properties:
+            scene_key:
+              $ref: "#/components/schemas/SceneKey"
+            zones:
+              type: array
+              items:
+                $ref: "#/components/schemas/ZoneKey"
+            until:
+              type: string
+              format: date-time

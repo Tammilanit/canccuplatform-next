@@ -58,8 +58,9 @@ export const TABS: [path: string, label: MessageKey, rights: readonly string[]][
   ["live", "tab.live", [READ]],
   ["devices", "tab.devices", [READ]],
   ["zones", "tab.zones", [ZONES]],
-  // Studio → Moments is the moments module's own pages (contracts/moments.md, Pages).
+  // Studio → Moments and Scenes are the moments module's own pages (contracts/moments.md, Pages).
   ["/moments/", "tab.moments", ["moments.read"]],
+  ["/moments/scenes", "tab.scenes", ["moments.read"]],
   ["schedule", "tab.schedule", [CONTENT]],
   ["content", "tab.content", [CONTENT]],
   ["ticker", "tab.ticker", [TICKER]],

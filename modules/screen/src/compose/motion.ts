@@ -77,25 +77,50 @@ export interface LevelInputs {
   themeMotion: ThemeMotion;
 }
 
+/** One step calmer (never below `calm`) or livelier (never above `party`); `none` never moves. */
+function stepped(base: MotionLevel, step: "calmer" | "livelier"): MotionLevel {
+  if (base === "none") return base;
+  if (step === "calmer") return base === "calm" ? "calm" : (MOTION_LEVELS[rank(base) - 1] ?? base);
+  return MOTION_LEVELS[Math.min(rank(base) + 1, 3)] ?? base;
+}
+
 /** Steps 1–2: the base, moved one step by the phase while Follow the day is on and nothing is pinned. */
 export function baseLevel(input: LevelInputs, phase: MotionPhase): MotionLevel {
   if (input.pin !== null) return input.pin;
   const base = input.eventLevel;
-  if (!input.followTheDay || base === "none") return base;
-  if (phase === "doors" || phase === "wind_down") {
-    return base === "calm" ? "calm" : (MOTION_LEVELS[rank(base) - 1] ?? base);
-  }
-  if (phase === "peak") return MOTION_LEVELS[Math.min(rank(base) + 1, 3)] ?? base;
+  if (!input.followTheDay) return base;
+  if (phase === "doors" || phase === "wind_down") return stepped(base, "calmer");
+  if (phase === "peak") return stepped(base, "livelier");
   return base;
+}
+
+/** Step 4, the theme's cap; nothing after the base raises a level. */
+function capped(level: MotionLevel, themeMotion: ThemeMotion): MotionLevel {
+  if (themeMotion === "none") return "none";
+  return themeMotion === "calm" ? atMost(level, "calm") : level;
 }
 
 /** Steps 1–4 (the device's reduced motion is the player's). Nothing after the base raises it. */
 export function levelOf(input: LevelInputs, phase: MotionPhase): MotionLevel {
-  let level = baseLevel(input, phase);
-  if (phase === "quiet_hours") level = atMost(level, "calm");
-  if (input.themeMotion === "calm") level = atMost(level, "calm");
-  if (input.themeMotion === "none") level = "none";
-  return level;
+  const level = baseLevel(input, phase);
+  return capped(phase === "quiet_hours" ? atMost(level, "calm") : level, input.themeMotion);
+}
+
+/**
+ * Steps 1–4 with a scene in place of the day's phase (D5): while Follow the day is on and nothing
+ * is pinned, the scene's level replaces the base or moves it a step; its quiet mode keeps the level
+ * at most `calm`, as quiet hours do, also for a pinned zone. The presets give levelOf's answer.
+ */
+export function sceneLevel(
+  input: LevelInputs,
+  scene: { motion: MotionLevel | "calmer" | "livelier" | null; quiet: boolean },
+): MotionLevel {
+  let level = input.pin ?? input.eventLevel;
+  const m = scene.motion;
+  if (input.pin === null && input.followTheDay && m !== null) {
+    level = m === "calmer" || m === "livelier" ? stepped(level, m) : m;
+  }
+  return capped(scene.quiet ? atMost(level, "calm") : level, input.themeMotion);
 }
 
 /** Every time the phase may change after `at`: each item's start and end, and an hour before quiet hours. */

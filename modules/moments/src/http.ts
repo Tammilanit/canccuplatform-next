@@ -19,12 +19,14 @@ import type { Engine, RequestResult } from "./engine.js";
 import { once } from "./idempotency.js";
 import type { Answer } from "./idempotency.js";
 import { keyOf } from "./idempotency.js";
+import type { AgendaReader } from "./scene-store.js";
 import { loadOrders } from "./store.js";
 import type { Actor, MomentRow } from "./store.js";
 
 export const READ = "moments.read";
 export const TAKE = "moments.take";
 export const EMERGENCY = "moments.emergency";
+export const SCENES_TAKE = "moments.scenes.take";
 export const SETTINGS = "moments.settings.write";
 
 export interface AppDeps {
@@ -38,6 +40,8 @@ export interface AppDeps {
   health: Health;
   log: Logger;
   now: () => Date;
+  /** The event's agenda, for the scenes' agenda conditions; none in most tests. */
+  agenda?: AgendaReader;
   /** The superadmin's hostname: the venue-wide emergency answers only there. */
   superadminHost: string | undefined;
 }

@@ -213,6 +213,44 @@ run("the moments API", () => {
     expect(json(ext).expires_at).toBe(new Date(w.now.getTime() + 600_000).toISOString());
   });
 
+  it("refuses to end a moment on a zone it does not cover, and never narrows on an unknown zone", async () => {
+    await w.tx("demo", (c) => c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main')`));
+    const some = await w.call("crew", "POST", "/api/moments/spotlight", {
+      show: "message",
+      title: "Main only",
+      zones: ["main"],
+    });
+    const other = await w.call("crew", "POST", `/api/moments/moments/${idOf(some)}/end`, {
+      zone_key: "stage",
+    });
+    expect(other.statusCode).toBe(400);
+    const every = await w.call("crew", "POST", "/api/moments/spotlight", {
+      show: "message",
+      title: "Everywhere",
+    });
+    const before = w.events("demo").length;
+    const unknown = await w.call("crew", "POST", `/api/moments/moments/${idOf(every)}/end`, {
+      zone_key: "nowhere",
+    });
+    expect(unknown.statusCode).toBe(400);
+    expect(w.events("demo").length).toBe(before);
+    const running = json(await w.call("reader", "GET", "/api/moments/moments")).moments as {
+      id: string;
+      zones: string[];
+    }[];
+    expect(running.map((m) => m.id).sort()).toEqual([idOf(some), idOf(every)].sort());
+  });
+
+  it("lets only one of two saves of one revision through, also before any order was saved", async () => {
+    const order = [...DEFAULT_ORDER];
+    const both = await Promise.all(
+      [0, 1].map(() =>
+        w.call("admin", "PUT", "/api/moments/priorities", { order, zones: [], revision: 0 }),
+      ),
+    );
+    expect(both.map((r) => r.statusCode).sort()).toEqual([200, 409]);
+  });
+
   it("refuses a module's moment with a 30 s retry when its regions are held, and needs the service identity", async () => {
     const top = await w.call("crew", "POST", "/api/moments/spotlight", {
       show: "message",

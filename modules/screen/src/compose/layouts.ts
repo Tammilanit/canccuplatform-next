@@ -156,6 +156,8 @@ export const BUILT_IN_LAYOUTS: readonly Layout[] = [
  */
 export function chooseLayout(opts: {
   windowLayoutId: string | null;
+  /** A scene's layout for the zone (D5); a schedule window's still wins, as planned content. */
+  sceneLayoutId?: string | null;
   zoneLayoutId: string | null;
   themeLayouts: readonly Layout[];
   portrait: boolean;
@@ -165,7 +167,12 @@ export function chooseLayout(opts: {
       ? undefined
       : (opts.themeLayouts.find((l) => l.id === id) ?? BUILT_IN_LAYOUTS.find((l) => l.id === id));
   const fallback = opts.portrait ? "pulse_portrait" : "pulse";
-  return find(opts.windowLayoutId) ?? find(opts.zoneLayoutId) ?? (find(fallback) as Layout);
+  return (
+    find(opts.windowLayoutId) ??
+    find(opts.sceneLayoutId ?? null) ??
+    find(opts.zoneLayoutId) ??
+    (find(fallback) as Layout)
+  );
 }
 
 export const ROLES = [

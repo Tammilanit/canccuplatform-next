@@ -173,6 +173,15 @@ export async function dropPlacements(
 }
 
 /** The event's zones, `main` first: every event starts with it (contracts/screen.md, Zones). */
+/** The zones already split off into overrides of their own (`<id>.<zone>`). */
+export async function splitZones(c: SqlClient, momentId: string): Promise<string[]> {
+  const { rows } = await c.query(
+    `SELECT override_id FROM moment_overrides WHERE moment_id = $1 AND override_id <> $1`,
+    [momentId],
+  );
+  return rows.map((r) => (r.override_id as string).slice(momentId.length + 1));
+}
+
 export async function knownZones(c: SqlClient): Promise<string[]> {
   const { rows } = await c.query(
     `SELECT zone_key FROM moments_zones ORDER BY zone_key <> 'main', zone_key`,
@@ -183,6 +192,18 @@ export async function knownZones(c: SqlClient): Promise<string[]> {
 
 export async function addZone(c: SqlClient, zone: string): Promise<void> {
   await c.query(`INSERT INTO moments_zones (zone_key) VALUES ($1) ON CONFLICT DO NOTHING`, [zone]);
+}
+
+/**
+ * Serialises the event's saves of one settings document until the transaction ends. A row lock
+ * would not do: before the first save there is no row to lock, and two saves of revision 0 would
+ * both pass their revision check.
+ */
+export async function lockSettings(c: SqlClient, name: string): Promise<void> {
+  await c.query(
+    `SELECT pg_advisory_xact_lock(hashtext('moments:' || current_setting('canccu.tenant') || ':' || $1))`,
+    [name],
+  );
 }
 
 export async function loadOrders(c: SqlClient): Promise<Orders & { revision: number }> {

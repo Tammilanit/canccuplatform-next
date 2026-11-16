@@ -29,6 +29,7 @@ const EN = {
   "tab.devices": "Devices",
   "tab.zones": "Zones and layouts",
   "tab.moments": "Moments",
+  "tab.scenes": "Scenes",
   "tab.ticker": "Ticker",
   "tab.pins": "Pins",
 

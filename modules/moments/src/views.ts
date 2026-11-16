@@ -114,6 +114,8 @@ export function onAirView(o: {
   canTake: boolean;
   canEmergency: boolean;
   archived: boolean;
+  /** Each zone's scene and the crew buttons (scene-views.ts), drawn by the caller. */
+  scenes: Html;
   done?: string | undefined;
   error?: string | undefined;
 }): Html {
@@ -154,7 +156,13 @@ export function onAirView(o: {
   return html`${flash}
     <div class="moments-onair">
       <div class="moments-zones">${columns}</div>
-      ${crew}
+      <div class="moments-side">
+        ${crew}
+        <section class="canccu-card moments-crew">
+          <h2 class="canccu-card__title">Scenes</h2>
+          ${o.scenes}
+        </section>
+      </div>
     </div>`;
 }
 

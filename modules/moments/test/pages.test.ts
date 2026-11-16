@@ -1,6 +1,7 @@
 /** Studio → Moments: On air, Spotlight, Priorities and History, drawn and used as a browser does. */
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
+import { DEFAULT_ORDER } from "../src/arbiter.js";
 import { applyClaims } from "../src/placements.js";
 import { DATABASE_URL, claims, freshDatabase } from "./helpers.js";
 import { appWorld, idOf } from "./app.js";
@@ -122,6 +123,38 @@ run("the Moments pages", () => {
     expect(w.events("demo")[0]?.data.override).toMatchObject({ rank: 100 });
     const page = await w.call("admin", "GET", "/on-air");
     expect(page.body).toContain("End emergency");
+  });
+
+  it("previews a split moment by the override its zone holds", async () => {
+    await w.tx("demo", (c) => c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main')`));
+    const own = [
+      "emergency",
+      "spotlight",
+      "stream",
+      "announcement",
+      "storyboard",
+      "tournament",
+      "finals",
+      "hot_game",
+      "reactions",
+      "ticker",
+    ];
+    await w.call("admin", "PUT", "/api/moments/priorities", {
+      order: [...DEFAULT_ORDER],
+      zones: [{ zone_key: "main", order: own }],
+      revision: 0,
+    });
+    const spot = await w.call("crew", "POST", "/api/moments/spotlight", {
+      show: "message",
+      title: "Split",
+    });
+    // The draft gives main the event's order back: the zone still holds `<id>.main`.
+    const page = await w.call(
+      "admin",
+      "GET",
+      `/priorities?scope=main&order=${DEFAULT_ORDER.join(",")}`,
+    );
+    expect(page.body).toContain(`${idOf(spot)}.main&quot;:70`);
   });
 
   it("moves a class in a draft order, previews it with its ranks, and saves it live", async () => {

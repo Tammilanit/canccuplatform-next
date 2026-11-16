@@ -103,6 +103,20 @@ run("a moment's and an event's life", () => {
     expect(await rows()).toBe(0);
   });
 
+  it("starts no rule's moment and keeps no source on an archived event (E10)", async () => {
+    const archived = event("tenants.status.changed", {
+      from: "live",
+      to: "archived",
+      actor_user_id: null,
+    });
+    await w.tx("demo", () => handleTenantEvent(deps(), archived));
+    await w.tx("demo", () => handleTenantEvent(deps(), FIXTURES.surge()));
+    await w.tx("demo", () => handleTenantEvent(deps(), FIXTURES.called()));
+    expect(w.events("demo").filter((e) => e.type === "moments.override.started")).toEqual([]);
+    const sources = await w.tx("demo", (c) => c.query(`SELECT 1 FROM moments_sources`));
+    expect(sources.rows).toEqual([]);
+  });
+
   it("forgets crew actions' keys after 24 hours", async () => {
     await w.call("crew", "POST", "/api/moments/spotlight", { show: "message", title: "Keyed" });
     const keys = async () =>

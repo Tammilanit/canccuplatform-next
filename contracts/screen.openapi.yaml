@@ -1165,6 +1165,37 @@ components:
               description: The event's `burn_in_drift` setting; the player then shifts the layout by at most `safe_inset` / 4.
             stage:
               $ref: "#/components/schemas/Stage"
+            scene:
+              type: object
+              description: |
+                The zone's scene from `moments.scene.changed` (contracts/screen.md, Motion and burn-in drift); absent
+                while the zone has no scene, when the day's phase decides as before.
+              required: [key, name, since, palette, sound, quiet, blend_seconds, heartbeat_bpm]
+              properties:
+                key:
+                  type: string
+                name:
+                  type: string
+                since:
+                  type: string
+                palette:
+                  type: [object, "null"]
+                  description: The theme's `primary` and `accent` while the scene holds.
+                  properties:
+                    primary: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
+                    accent: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
+                sound:
+                  type: [boolean, "null"]
+                quiet:
+                  type: boolean
+                blend_seconds:
+                  type: integer
+                  minimum: 0
+                  maximum: 600
+                heartbeat_bpm:
+                  type: integer
+                  minimum: 4
+                  maximum: 30
         preview:
           type: [object, "null"]
           description: |
