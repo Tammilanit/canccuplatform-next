@@ -4,6 +4,7 @@
 // the event gets every change, the p95 of all deliveries is under one second (the push channel's
 // budget, O2), and no screen ever sees the other event's ticker. scripts/demo-stack-test runs it
 // inside the screen container (client.mjs says why). Usage: node load.mjs [screens] [rounds]
+import { cleanUp } from "./cleanup.mjs";
 import { DEMO_HOST, event, tickerIs } from "./client.mjs";
 import { percentile } from "./measure.mjs";
 
@@ -35,6 +36,7 @@ async function change(ev, text, waitMs = DELIVERY_WAIT_MS) {
 
 const delays = [];
 let missing = 0;
+let threw = false;
 try {
   for (const [i, ev] of events.entries()) {
     // The first zone request of an event without zones makes its `main` (plan #107, D8).
@@ -70,12 +72,22 @@ try {
       delays.push(...got.filter((d) => d !== null));
     }
   }
+} catch (err) {
+  threw = true;
+  throw err;
 } finally {
-  for (const ev of events) {
-    for (const { sse } of ev.screens) sse.close();
-    await ev.call("DELETE", "/api/screen/ticker").catch(() => undefined);
-    for (const { id } of ev.screens) await ev.revoke(id);
-  }
+  for (const ev of events) for (const { sse } of ev.screens) sse.close();
+  await cleanUp(
+    events.flatMap((ev) => [
+      () => ev.call("DELETE", "/api/screen/ticker").catch(() => undefined),
+      ...ev.screens.map(
+        ({ id }) =>
+          () =>
+            ev.revoke(id),
+      ),
+    ]),
+    threw,
+  );
 }
 
 // Each timed text names its event's host, so a screen that shows another one's has crossed over.

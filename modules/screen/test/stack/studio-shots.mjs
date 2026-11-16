@@ -2,6 +2,7 @@
 // the same demo fixture (fixture.mjs) and theme, so its live views draw the Pulse the screens do.
 // Two screens play while they are taken, one landscape and one portrait, each in the browser at
 // its own size, so their heartbeats give the device cards an orientation, a size and a state.
+import { cleanUp } from "./cleanup.mjs";
 import { expect } from "./client.mjs";
 import { removeContent, removePlaylist, seedContent, seedPlaylist } from "./content-fixture.mjs";
 import { editorShots } from "./editor-shots.mjs";
@@ -325,6 +326,7 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
   let made = null;
   let lists = null;
   let savedRegions = null;
+  let threw = false;
   try {
     assets = await seedContent(demo);
     const hall = await demo.pair("Hall left", "main");
@@ -373,14 +375,24 @@ export async function studioShots({ browser, demo, at, cookieOn, shot }) {
     for (const [name, path, viewport] of FROZEN_PAGES) {
       await shot(name, path, viewport, { ready: studioReady });
     }
+  } catch (err) {
+    threw = true;
+    throw err;
   } finally {
-    await demo.call("PUT", "/api/screen/pin", { body: { freeze: false } }).catch(() => undefined);
-    if (savedRegions !== null)
-      await saveZone(demo, "main", { regions: savedRegions }).catch(() => undefined);
-    if (made !== null) await removeSchedule(demo, made);
-    if (lists !== null) await removePlaylist(demo, lists);
-    for (const context of contexts) await context.close();
-    for (const device of devices) await demo.revoke(device.id);
-    await removeContent(demo, assets);
+    await cleanUp(
+      [
+        () =>
+          demo.call("PUT", "/api/screen/pin", { body: { freeze: false } }).catch(() => undefined),
+        () =>
+          savedRegions !== null &&
+          saveZone(demo, "main", { regions: savedRegions }).catch(() => undefined),
+        () => made !== null && removeSchedule(demo, made),
+        () => lists !== null && removePlaylist(demo, lists),
+        ...contexts.map((context) => () => context.close()),
+        ...devices.map((device) => () => demo.revoke(device.id)),
+        () => removeContent(demo, assets),
+      ],
+      threw,
+    );
   }
 }
