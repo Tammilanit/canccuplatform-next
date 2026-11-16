@@ -27,7 +27,8 @@ import {
 } from "./consumer.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { Engine } from "./engine.js";
-import { TICK_MS, tickAll, upkeep } from "./tick.js";
+import { SceneTicker, TICK_MS, tickAll, upkeep } from "./tick.js";
+import { httpAgenda, timeZones } from "./agenda.js";
 
 const PORT = 8080;
 /** pg_advisory_lock key of the moments migrations; each module has its own. */
@@ -96,7 +97,9 @@ async function main(): Promise<void> {
   const outbox = new Outbox(new Bus(store, config.module, log), db, { log });
   const engine = new Engine(outbox);
   const now = () => new Date();
-  const consumer = { db, engine, flush: () => outbox.flush(), now };
+  const agenda = httpAgenda(env("CANCCU_AGENDA_URL"), service);
+  const timeZoneOf = timeZones(tenants);
+  const consumer = { db, engine, flush: () => outbox.flush(), now, agenda, timeZoneOf };
   listener.subscribe(["tenants", "admin"], async (event) => {
     if (event.source === "tenants") tenants.handleEvent(event);
     else rights.handleEvent(event);
@@ -115,6 +118,7 @@ async function main(): Promise<void> {
     tenants,
     audit: tenantsAudit(tenantsUrl, service),
     service,
+    agenda,
     log,
     now,
     superadminHost,
@@ -127,12 +131,13 @@ async function main(): Promise<void> {
   await app.listen({ host: "0.0.0.0", port: PORT });
   log.info({ port: PORT, version: config.version }, "moments started");
 
+  const scenes = new SceneTicker();
   // The tick owns every TTL and patience (E2); one pass at a time, never overlapping itself.
   let ticking = false;
   const tick = setInterval(() => {
     if (ticking) return;
     ticking = true;
-    tickAll({ db, engine, flush: () => outbox.flush(), now, log })
+    tickAll({ ...consumer, log, scenes })
       .catch((err: unknown) => {
         log.warn({ err }, "the moments tick failed");
       })

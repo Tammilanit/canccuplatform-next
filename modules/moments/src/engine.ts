@@ -85,7 +85,8 @@ export function covers(
 }
 
 export class Engine {
-  constructor(private readonly outbox: Outbox) {}
+  /** Scenes send their own events through it, in the same transactions (scene-store.ts). */
+  constructor(readonly outbox: Outbox) {}
 
   /** A request: renews the running moment of its key (E4), is refused, or starts. */
   async request(c: SqlClient, r: MomentRequest, now: Date): Promise<RequestResult> {
