@@ -147,7 +147,10 @@ function bandChart(days: readonly DayBands[], scenes: readonly Scene[], zone: st
     </p>
     <div class="moments-bands">
       <div class="moments-bands__axis canccu-small canccu-muted">
-        <span></span><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span>
+        <span></span
+        ><span class="moments-bands__hours"
+          ><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></span
+        >
       </div>
       ${rows.length === 0 ? html`<p class="canccu-muted">No days to show.</p>` : rows}
     </div>
@@ -266,17 +269,25 @@ function editView(s: Scene, zones: readonly string[], revision: number): Html {
     ${field("name", "Name", text("name", s.name))}
     <fieldset class="moments-fieldset">
       <legend class="canccu-field__label">Zones (none ticked: every zone)</legend>
-      ${zones.map((z) => check("zone", z, s.zones.includes(z), z))}
+      <div class="moments-checks">
+        ${zones.map((z) => check("zone", z, s.zones.includes(z), z))}
+      </div>
     </fieldset>
     <fieldset class="moments-fieldset">
       <legend class="canccu-field__label">When any of these holds</legend>
-      ${field("time_from", "Every day from (HH:MM)", text("time_from", time?.from))}
-      ${field("time_to", "until", text("time_to", time?.to))}
-      ${field("agenda_kinds", "The run of show has a running item of kind (comma-separated)", text("agenda_kinds", agenda?.kinds.join(", ")))}
-      ${field("agenda_within", "…or one starting within minutes", text("agenda_within", agenda?.starts_within_minutes, { type: "number" }))}
+      <div class="moments-pair">
+        ${field("time_from", "Every day from (HH:MM)", text("time_from", time?.from))}
+        ${field("time_to", "until", text("time_to", time?.to))}
+      </div>
+      <div class="moments-pair">
+        ${field("agenda_kinds", "An item of kind runs (comma-separated)", text("agenda_kinds", agenda?.kinds.join(", ")))}
+        ${field("agenda_within", "…or starts within (minutes)", text("agenda_within", agenda?.starts_within_minutes, { type: "number" }))}
+      </div>
       ${field("checkins_over", "Check-ins an hour over", text("checkins_over", conditionOf(s, "checkins")?.over, { type: "number" }))}
-      ${field("online_over", "Online over", text("online_over", presence?.over, { type: "number" }))}
-      ${field("online_under", "Online under", text("online_under", presence?.under, { type: "number" }))}
+      <div class="moments-pair">
+        ${field("online_over", "Online over", text("online_over", presence?.over, { type: "number" }))}
+        ${field("online_under", "Online under", text("online_under", presence?.under, { type: "number" }))}
+      </div>
       ${check("games", "yes", conditionOf(s, "games") !== undefined, "A game is surging")}
       ${field("crew_minutes", "Crew button, holds for minutes (empty: no button)", text("crew_minutes", conditionOf(s, "crew")?.minutes, { type: "number" }))}
       <p class="canccu-small canccu-muted">
@@ -292,8 +303,10 @@ function editView(s: Scene, zones: readonly string[], revision: number): Html {
       </datalist>
       ${field("stage_mood", "Stage", select("stage_mood", t.stage_mood ?? "", [["", "Follow the day"], ...MOODS.map((m): [string, string] => [m, MOOD_TEXT[m] ?? m])]))}
       ${check("palette_on", "yes", t.palette !== null, "Own palette (the theme stays)")}
-      ${field("palette_primary", "Primary", text("palette_primary", t.palette?.primary ?? "#3b82f6", { type: "color" }))}
-      ${field("palette_accent", "Accent", text("palette_accent", t.palette?.accent ?? "#f59e0b", { type: "color" }))}
+      <div class="moments-pair">
+        ${field("palette_primary", "Primary", text("palette_primary", t.palette?.primary ?? "#3b82f6", { type: "color" }))}
+        ${field("palette_accent", "Accent", text("palette_accent", t.palette?.accent ?? "#f59e0b", { type: "color" }))}
+      </div>
       ${field(
         "sound",
         "Sound",
@@ -305,10 +318,17 @@ function editView(s: Scene, zones: readonly string[], revision: number): Html {
       )}
       ${check("quiet", "yes", t.quiet, "Quiet mode: calm at most, urgent sounds only")}
       <p class="canccu-field__label">The hero skips</p>
-      ${HERO_FEATURES.map((f) => check("hero_off", f, t.hero_off.includes(f), f.replace(/_/g, " ")))}
+      <div class="moments-checks">
+        ${HERO_FEATURES.map((f) => check("hero_off", f, t.hero_off.includes(f), f.replace(/_/g, " ")))}
+      </div>
     </fieldset>
-    ${field("hold_minutes", "Hold for at least (minutes), so scenes never flip back and forth", text("hold_minutes", s.hold_minutes, { type: "number" }))}
-    ${field("blend_seconds", "Blend over (seconds): colours and motion change slowly", text("blend_seconds", s.blend_seconds, { type: "number" }))}
+    <div class="moments-pair">
+      ${field("hold_minutes", "Hold for at least (minutes)", text("hold_minutes", s.hold_minutes, { type: "number" }))}
+      ${field("blend_seconds", "Blend over (seconds)", text("blend_seconds", s.blend_seconds, { type: "number" }))}
+    </div>
+    <p class="canccu-small canccu-muted">
+      The hold keeps scenes from flipping back and forth; colours and mood blend in slowly.
+    </p>
     <div class="canccu-cluster">
       <button class="canccu-button canccu-button--primary" type="submit">Save scene</button>
       <a class="canccu-button canccu-button--ghost" href="${PREFIX}scenes">Cancel</a>

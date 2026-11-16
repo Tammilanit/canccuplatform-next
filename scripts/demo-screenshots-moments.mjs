@@ -2,7 +2,8 @@
 // 07, 08 and 09), on the screens' fixture (the main and entrance zones): a crew spotlight of the
 // standings, then one with a message that takes the hero from it, so On air shows one placed and
 // one waiting with why; On air at both widths, the spotlight form on a phone, Priorities with its
-// preview drawn, History, and the main hall's live view with "From the crew". Then an emergency:
+// preview drawn, History, Scenes with its band chart and Peak's editor, and the main hall's live
+// view with "From the crew"; then "Peak now" pressed, on On air and the main hall. Then an emergency:
 // On air and the main hall under it. Screen places a zone's claims, and reports where, only while
 // a screen of it is connected, so a screen is paired into each zone and its stream kept open while
 // the shots run. Every moment and screen started here ends afterwards.
@@ -100,8 +101,21 @@ export const MOMENTS_PAGES = [
   ["moments-priorities", "/moments/priorities", DESK, { ready: previewed }],
   ["moments-priorities-phone", "/moments/priorities", PHONE, { touch: true }],
   ["moments-history", "/moments/history?zone=main", DESK],
+  ["moments-scenes", "/moments/scenes", DESK],
+  ["moments-scenes-phone", "/moments/scenes", PHONE, { touch: true }],
+  ["moments-scenes-edit", "/moments/scenes?edit=peak", DESK],
   [
     "moments-screen-spotlight",
+    "/screen/zones/main",
+    SCREEN_VIEW,
+    { fullPage: false, ready: shows("From the crew") },
+  ],
+];
+/** With the crew's "Peak now" pressed (mockup 14): On air's scene card and the main hall. */
+export const PEAK_PAGES = [
+  ["moments-on-air-peak-phone", "/moments/on-air", PHONE, { touch: true }],
+  [
+    "moments-screen-peak",
     "/screen/zones/main",
     SCREEN_VIEW,
     { fullPage: false, ready: shows("From the crew") },
@@ -128,6 +142,13 @@ export function momentsListed(at) {
       height,
       "two crew spotlights",
     ]),
+    ...PEAK_PAGES.map(([name, path, { width, height }]) => [
+      name,
+      path,
+      width,
+      height,
+      "Peak now pressed",
+    ]),
     ...EMERGENCY_PAGES.map(([name, path, { width, height }]) => [
       name,
       path,
@@ -145,6 +166,7 @@ export async function momentsShots({ demo, shot, fail }) {
   const ids = [];
   const screens = [];
   let emergency = false;
+  let peak = false;
   try {
     for (const zone of ["main", "entrance"]) {
       const paired = await demo.pair(`Moments shots ${zone}`, zone);
@@ -172,6 +194,13 @@ export async function momentsShots({ demo, shot, fail }) {
     for (const [name, path, viewport, o] of MOMENTS_PAGES) {
       await shot(name, path, viewport, SESSION, o);
     }
+    const press = await moments("POST", "/api/moments/scenes/peak/take", {});
+    if (press.status !== 200)
+      throw new Error(`Peak now: HTTP ${press.status} ${JSON.stringify(press.body)}`);
+    peak = true;
+    for (const [name, path, viewport, o] of PEAK_PAGES) {
+      await shot(name, path, viewport, SESSION, o);
+    }
     const id = await start("/api/moments/emergency", {});
     emergency = true;
     await placed(id, ["main", "entrance"]);
@@ -186,6 +215,8 @@ export async function momentsShots({ demo, shot, fail }) {
         await moments("POST", "/api/moments/emergency/end", {
           all_clear: false,
         });
+      // A second press of the same button takes the scene off (E7).
+      if (peak) await moments("POST", "/api/moments/scenes/peak/take", {});
       for (const id of ids)
         await moments("POST", `/api/moments/moments/${id}/end`, {});
       for (const { paired, sse } of screens) {

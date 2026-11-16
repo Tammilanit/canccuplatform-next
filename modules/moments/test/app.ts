@@ -45,6 +45,7 @@ const ALL = [
   "moments.take",
   "moments.emergency",
   "moments.settings.write",
+  "moments.scenes.take",
   "screen.zones.write",
 ];
 const SESSIONS: Record<string, { rights: string[]; superadmin?: boolean }> = {

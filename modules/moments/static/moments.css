@@ -204,8 +204,9 @@
   align-items: center;
   gap: 0.5rem;
 }
-.moments-bands__axis {
-  grid-template-columns: 6.5rem repeat(4, 1fr) 0;
+.moments-bands__hours {
+  display: flex;
+  justify-content: space-between;
 }
 .moments-bands__bar {
   width: 100%;
@@ -251,6 +252,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
+  align-items: start;
   gap: 0.5rem;
   border-top: 1px solid var(--canccu-color-border);
   padding-top: 0.75rem;
@@ -261,4 +263,18 @@
 }
 .moments-scene p {
   margin: 0;
+}
+.moments-scene > div:first-child {
+  flex: 1 1 18rem;
+}
+/* The editor (sheet 12): two fields that belong together side by side, short checks in columns. */
+.moments-pair {
+  display: grid;
+  gap: 0 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+.moments-checks {
+  display: grid;
+  gap: 0 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
 }
