@@ -5,6 +5,7 @@
  * events come at least once, and to every container.
  */
 import type { Event } from "@canccu/kit";
+import { CREW_CUES } from "./cues/catalog.js";
 import type { Db } from "./db.js";
 import type { Engine } from "./engine.js";
 import { applyClaims, claimsReportOf } from "./placements.js";
@@ -49,6 +50,14 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
       await addZone(c, e.data.zone_key);
     } else if (e.type === "screen.zone.removed" && typeof e.data.zone_key === "string") {
       await zoneRemoved(c, deps.engine, e.data.zone_key, now);
+    } else if (e.type === "screen.photo.added" && typeof e.data.photo_id === "string") {
+      // A new photo's sound is a Moments cue (contracts/screen.md, A new photo); Screen draws its pop.
+      const id = e.data.photo_id;
+      await deps.engine.fireCue(
+        c,
+        { cue: CREW_CUES.photo, zones: [], key: `photo:${id}`, source: id },
+        now,
+      );
     } else if (e.source !== "screen") {
       const touched = await recordSource(c, e);
       await applyRules(c, deps.engine, e, now);

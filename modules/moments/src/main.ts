@@ -27,6 +27,9 @@ import {
 } from "./consumer.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { Engine } from "./engine.js";
+import { ValkeyCounters } from "./cues/counters.js";
+import { screenClient } from "./cues/screen.js";
+import { Cues } from "./cues/service.js";
 import { TICK_MS, tickAll, upkeep } from "./tick.js";
 
 const PORT = 8080;
@@ -94,7 +97,10 @@ async function main(): Promise<void> {
   const rights = new RightsChecker(new AdminClient(config.adminUrl));
   const db = poolDb(pool);
   const outbox = new Outbox(new Bus(store, config.module, log), db, { log });
-  const engine = new Engine(outbox);
+  const counters = ValkeyCounters.fromUrl(config.valkeyUrl);
+  const screen = screenClient(env("CANCCU_SCREEN_URL"), service);
+  const cues = new Cues({ outbox, counters, screen });
+  const engine = new Engine(outbox, cues);
   const now = () => new Date();
   const consumer = { db, engine, flush: () => outbox.flush(), now };
   listener.subscribe(["tenants", "admin"], async (event) => {
@@ -110,6 +116,8 @@ async function main(): Promise<void> {
   const app = buildApp({
     db,
     engine,
+    cues,
+    screen,
     outbox,
     rights,
     tenants,
@@ -156,7 +164,7 @@ async function main(): Promise<void> {
     // A dependency that is down may never answer; do not let it hold the exit.
     const grace = new Promise((resolve) => setTimeout(resolve, 2000).unref());
     await Promise.race([
-      Promise.allSettled([store.close(), listenStore.close(), pool.end()]),
+      Promise.allSettled([store.close(), listenStore.close(), counters.close(), pool.end()]),
       grace,
     ]);
     process.exit(0);

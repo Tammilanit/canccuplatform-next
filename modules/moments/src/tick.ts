@@ -31,6 +31,7 @@ export async function tickTenant(c: SqlClient, engine: Engine, now: Date): Promi
     if (m === null || m.ended_at !== null) continue;
     await engine.end(c, m, "preempted", null, now, r.zone_key);
   }
+  await engine.pumpSounds(c, now);
 }
 
 /** A priority change ranks every running moment again at once and never ends one (E8). */

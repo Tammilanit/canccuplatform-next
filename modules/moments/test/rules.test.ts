@@ -62,10 +62,13 @@ run("the built-in rules", () => {
       );
     });
   const overrides = () =>
-    w.events("demo").map((e): Record<string, unknown> => ({
-      type: e.type,
-      ...(e.data.override as Record<string, unknown>),
-    }));
+    w
+      .events("demo")
+      .filter((e) => e.type.startsWith("moments.override."))
+      .map((e): Record<string, unknown> => ({
+        type: e.type,
+        ...(e.data.override as Record<string, unknown>),
+      }));
 
   it("calls a match into the hero, and ends it when the match starts (E5)", async () => {
     await deliver(FIXTURES.called());

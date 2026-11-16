@@ -14,6 +14,8 @@ import type {
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { rankOf } from "./arbiter.js";
 import type { Audit } from "./audit.js";
+import type { Cues } from "./cues/service.js";
+import type { ScreenClient } from "./cues/screen.js";
 import type { Db } from "./db.js";
 import type { Engine, RequestResult } from "./engine.js";
 import { once } from "./idempotency.js";
@@ -30,6 +32,8 @@ export const SETTINGS = "moments.settings.write";
 export interface AppDeps {
   db: Db;
   engine: Engine;
+  cues: Cues;
+  screen: ScreenClient;
   outbox: Outbox;
   rights: RightsChecker;
   tenants: TenantResolver;

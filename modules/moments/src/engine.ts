@@ -24,6 +24,7 @@ import {
   writeHistory,
 } from "./store.js";
 import type { Actor, Binding, Kind, MomentRow, Origin, Qr, Source } from "./store.js";
+import type { CueTrigger, Cues } from "./cues/service.js";
 
 export const DEFAULT_TTL_SECONDS = 120;
 export const MAX_TTL_SECONDS = 7200;
@@ -53,6 +54,8 @@ export interface MomentRequest {
   dedupe_key?: string | null;
   rule_id?: string | null;
   actor?: Actor | null;
+  /** The cue its start plays: a picture on its box and a sound on its zones; an edit never does. */
+  cue?: string | null;
 }
 
 export type RequestResult =
@@ -74,7 +77,20 @@ export const CLASS_DEFAULTS: Record<Class, { kind: Kind; regions: string[] }> = 
 };
 
 export class Engine {
-  constructor(private readonly outbox: Outbox) {}
+  constructor(
+    private readonly outbox: Outbox,
+    private readonly cues?: Cues,
+  ) {}
+
+  /** A cue with no moment of its own (a new photo): its sound only. */
+  async fireCue(c: SqlClient, t: CueTrigger, now: Date): Promise<void> {
+    await this.cues?.fire(c, t, now);
+  }
+
+  /** The tick's turn for the sound queues (contracts/moments.md, Cues and sound). */
+  async pumpSounds(c: SqlClient, now: Date): Promise<void> {
+    await this.cues?.pumpAll(c, now);
+  }
 
   /** A request: renews the running moment of its key (E4), is refused, or starts. */
   async request(c: SqlClient, r: MomentRequest, now: Date): Promise<RequestResult> {
@@ -143,12 +159,25 @@ export class Engine {
         (people ? (ttl ?? FOREVER) : Math.min(RULE_PATIENCE_SECONDS, FOREVER)),
       qr: r.qr ?? null,
       binding: r.binding ?? null,
+      effect: r.cue == null || this.cues === undefined ? null : await this.cues.picture(c, r.cue),
       ended_at: null,
       end_reason: null,
     };
     await insertMoment(c, moment);
     await this.history(c, moment, now, { action: "started", actor: r.actor ?? null });
     await this.reconcile(c, moment, r.actor ?? null, "cleared", orders, zones);
+    if (r.cue != null && this.cues !== undefined) {
+      await this.cues.fire(
+        c,
+        {
+          cue: r.cue,
+          zones: moment.zones,
+          key: `moment:${moment.id}`,
+          source: moment.source.ref ?? moment.id,
+        },
+        now,
+      );
+    }
     return { status: "started", moment };
   }
 
@@ -367,6 +396,7 @@ function wire(m: MomentRow, s: SentOverride): Record<string, unknown> {
   return {
     ...s,
     source: m.source,
+    effect: m.effect,
     sound: null,
     steps: null,
     on_end: "resume",

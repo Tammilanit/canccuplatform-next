@@ -6,6 +6,9 @@ import { MemoryStreamStore, requireTestDatabase } from "@canccu/kit/testing";
 import { MIGRATIONS_DIR, poolDb } from "../src/db.js";
 import type { Db } from "../src/db.js";
 import { Engine } from "../src/engine.js";
+import { Cues } from "../src/cues/service.js";
+import type { Counters } from "../src/cues/counters.js";
+import type { ScreenClient, ZoneSoundStatus } from "../src/cues/screen.js";
 import { noteTenant } from "../src/tick.js";
 
 /** Tests run only on a database named `*_test` (the harness refuses any other). */
@@ -22,6 +25,12 @@ const TABLES = [
   "moments_history",
   "moments_idempotency",
   "moments_outbox",
+  "moments_sound_settings",
+  "moments_cues",
+  "moments_sounds",
+  "moments_sound_zones",
+  "moments_sound_sources",
+  "moments_sound_log",
   "moments_outbox_tenants",
   "moments_tenants",
   "moments_migrations",
@@ -56,6 +65,29 @@ export interface World {
   events(tenant: string): Event[];
   /** A new engine on the same database: what a restarted container is. */
   restart(): void;
+  cues: Cues;
+  /** What the fake Screen says of each zone's sound; a zone not set has `soundScreen`, lively. */
+  zoneStatus: Map<string, ZoneSoundStatus>;
+  soundScreen: NonNullable<ZoneSoundStatus["device"]>;
+  screen: ScreenClient;
+  /** Audio assets the fake Screen holds, by id. */
+  assets: Map<string, Awaited<ReturnType<ScreenClient["asset"]>>>;
+}
+
+/** Valkey's counters in memory; their keys name their minute or hour, so none needs expiring. */
+export class MemoryCounters implements Counters {
+  readonly values = new Map<string, number>();
+  get(keys: string[]): Promise<number[]> {
+    return Promise.resolve(keys.map((k) => this.values.get(k) ?? 0));
+  }
+  incr(key: string): Promise<number> {
+    const n = (this.values.get(key) ?? 0) + 1;
+    this.values.set(key, n);
+    return Promise.resolve(n);
+  }
+  close(): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
 export const T0 = new Date("2026-01-01T18:00:00Z");
@@ -63,9 +95,29 @@ export const T0 = new Date("2026-01-01T18:00:00Z");
 export function world(pool: pg.Pool): World {
   const db = poolDb(pool);
   const store = new MemoryStreamStore();
+  const zoneStatus = new Map<string, ZoneSoundStatus>();
+  const soundScreen = {
+    id: "dv_sound",
+    name: "Main hall sound",
+    online: true,
+    audio_unlocked: true,
+  };
+  const assets: World["assets"] = new Map();
+  const screen: ScreenClient = {
+    zoneSound: (_tenant, zone) =>
+      Promise.resolve(zoneStatus.get(zone) ?? { energy: "lively", device: soundScreen }),
+    asset: (_tenant, id) => Promise.resolve(assets.get(id) ?? null),
+  };
+  const counters = new MemoryCounters();
   const make = () => {
     const outbox = new Outbox(new Bus(store, "moments"), db);
-    return { outbox, engine: new Engine(outbox) };
+    const cues = new Cues({
+      outbox,
+      counters,
+      screen,
+      random: () => 0,
+    });
+    return { outbox, cues, engine: new Engine(outbox, cues) };
   };
   let parts = make();
   const w: World = {
@@ -78,6 +130,13 @@ export function world(pool: pg.Pool): World {
     get engine() {
       return parts.engine;
     },
+    get cues() {
+      return parts.cues;
+    },
+    zoneStatus,
+    soundScreen,
+    assets,
+    screen,
     now: T0,
     at: (s) => new Date(T0.getTime() + s * 1000),
     tx: (tenant, fn) =>
