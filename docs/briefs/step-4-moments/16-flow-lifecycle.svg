@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 900" width="1920" height="900" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 16: the lifecycle of a moment</title>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker>
+  </defs>
+  <rect width="1920" height="900" fill="#f3f4f6"/>
+<text x="24" y="44" font-size="28" fill="#1f2937" font-weight="700" text-anchor="start" >16 · The life of a moment: requested, then placed, hidden, queued or refused; renewed; ended with a reason; the region reverts</text>
+<rect x="60" y="330" width="280" height="150" rx="12" fill="#fff" stroke="#e5e7eb" stroke-width="2" /><text x="80" y="370" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >Requested</text>
+<text x="80" y="406" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >a rule, a person, a storyboard,</text>
+<text x="80" y="432" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >a scheduled announcement</text>
+<rect x="420" y="330" width="280" height="150" rx="12" fill="#fff" stroke="#e5e7eb" stroke-width="2" /><text x="440" y="370" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >Ranked</text>
+<text x="440" y="406" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >its priority (event or zone order),</text>
+<text x="440" y="432" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >its regions, its zones</text>
+<rect x="820" y="120" width="280" height="150" rx="12" fill="#fff" stroke="#e5e7eb" stroke-width="2" /><text x="840" y="160" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >Placed</text>
+<text x="840" y="196" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >holds a region of its chain;</text>
+<text x="840" y="222" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >Screen draws it</text>
+<rect x="820" y="330" width="280" height="150" rx="12" fill="#fff" stroke="#e5e7eb" stroke-width="2" /><text x="840" y="370" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >Hidden</text>
+<text x="840" y="406" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >under a full-screen moment;</text>
+<text x="840" y="432" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >keeps its place, not drawn</text>
+<rect x="820" y="540" width="280" height="150" rx="12" fill="#fff" stroke="#e5e7eb" stroke-width="2" /><text x="840" y="580" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >Queued</text>
+<text x="840" y="616" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >no region of its chain free;</text>
+<text x="840" y="642" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >waits up to its patience</text>
+<rect x="420" y="600" width="280" height="150" rx="12" fill="#fee2e2" stroke="#e5e7eb" stroke-width="2" /><text x="440" y="640" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >Refused</text>
+<text x="440" y="676" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >lower than what holds and</text>
+<text x="440" y="702" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >no patience; retry after 30 s</text>
+<rect x="1240" y="330" width="280" height="150" rx="12" fill="#e5e7eb" stroke="#e5e7eb" stroke-width="2" /><text x="1260" y="370" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >Ended</text>
+<text x="1260" y="406" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >expired · cleared · preempted ·</text>
+<text x="1260" y="432" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >source_ended · withdrawn</text>
+<rect x="1600" y="330" width="280" height="150" rx="12" fill="#dcfce7" stroke="#e5e7eb" stroke-width="2" /><text x="1620" y="370" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >Region reverts</text>
+<text x="1620" y="406" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >resume (the rotation where it</text>
+<text x="1620" y="432" font-size="17" fill="#374151" font-weight="400" text-anchor="start" >would be now) or next</text>
+<line x1="340" y1="405" x2="418" y2="405" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="700" y1="380" x2="818" y2="200" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="700" y1="405" x2="818" y2="405" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="700" y1="430" x2="818" y2="610" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="560" y1="482" x2="560" y2="598" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="1100" y1="200" x2="1238" y2="380" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="1100" y1="405" x2="1238" y2="405" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="1100" y1="610" x2="1238" y2="430" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="1520" y1="405" x2="1598" y2="405" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="960" y1="328" x2="960" y2="272" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/><line x1="980" y1="272" x2="980" y2="328" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
+<text x="1000" y="304" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >full ends / starts</text>
+<line x1="960" y1="538" x2="960" y2="482" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
+<text x="980" y="515" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >a region frees</text>
+<text x="820" y="100" font-size="15" fill="#6b7280" font-weight="400" text-anchor="start" >Renewed: a later expires_at in .changed; nothing moves</text>
+<text x="60" y="790" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >Restart and failure</text><text x="60" y="818" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >Every active, hidden and queued moment is a row in Postgres with its expires_at; on start Moments re-reads them and its tick resumes</text><text x="60" y="843" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >every timer. Screens end a claim at its expires_at by themselves, also offline or with Moments down, so nothing outlives a crash.</text>
+</svg>
