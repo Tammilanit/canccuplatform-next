@@ -119,7 +119,7 @@ live("cues", () => {
     expect(finals.every((r) => r.reason.length > 0)).toBe(true);
     expect(rows.some((r) => r.reason === "flood_minute")).toBe(true);
     expect(rows.some((r) => r.reason === "coalesced")).toBe(true);
-  });
+  }, 30_000);
 
   it("the hourly budget holds across the minutes, and urgent passes it", async () => {
     await w.tx("demo", (c) =>

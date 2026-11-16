@@ -61,6 +61,15 @@ export class Cues {
     this.random = deps.random ?? Math.random;
   }
 
+  /** The zone's sounds this minute and this hour, as the decisions count them. */
+  async counts(zone: string, at: number): Promise<[number, number]> {
+    const [minute, hour] = await this.deps.counters.get([
+      soundKeys.minute(zone, at),
+      soundKeys.hour(zone, at),
+    ]);
+    return [minute ?? 0, hour ?? 0];
+  }
+
   /** The effect a moment's box makes, never the cue's last one (L7); null for a sound-only cue. */
   async picture(c: SqlClient, name: string): Promise<Picture | null> {
     const cue = await loadCue(c, name);
