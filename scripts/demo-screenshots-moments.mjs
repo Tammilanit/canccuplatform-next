@@ -196,7 +196,9 @@ export async function momentsShots({ demo, shot, fail }) {
     }
     const press = await moments("POST", "/api/moments/scenes/peak/take", {});
     if (press.status !== 200)
-      throw new Error(`Peak now: HTTP ${press.status} ${JSON.stringify(press.body)}`);
+      throw new Error(
+        `Peak now: HTTP ${press.status} ${JSON.stringify(press.body)}`,
+      );
     peak = true;
     for (const [name, path, viewport, o] of PEAK_PAGES) {
       await shot(name, path, viewport, SESSION, o);
