@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# The weekly accessibility check (scripts/a11y-check.mjs, docs/ci.md#weekly) against the running
+# demo stack: axe-core in Chromium from the Playwright image, in the network namespace of the
+# stack's Caddy container, as scripts/demo-screenshots runs (see there for why).
+# Usage: a11y-check [--dry-run] [BASE_URL] [OUT_DIR]   (defaults http://127.0.0.1, a11y-report)
+# Writes OUT_DIR/a11y.md and a11y.json; exit 1 on a serious or critical finding or a page that
+# could not be checked. Needs Docker (the dry run only node); CANCCU_DEMO_COMPOSE as in
+# scripts/demo-screenshots.
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit 2
+
+# The browser and playwright-core of the screenshots, so the cached image serves both.
+PLAYWRIGHT=$(sed -n 's/^PLAYWRIGHT=//p' scripts/demo-screenshots)
+IMAGE=mcr.microsoft.com/playwright:v$PLAYWRIGHT-noble
+AXE=4.14.1
+
+usage() { echo "usage: a11y-check [--dry-run] [BASE_URL] [OUT_DIR]" >&2; exit 2; }
+dry=0
+if [ "${1:-}" = "--dry-run" ]; then dry=1; shift; fi
+case "${1:-}" in -*) usage ;; esac
+[ $# -le 2 ] || usage
+BASE=${1:-http://127.0.0.1}
+OUT=${2:-a11y-report}
+[ -n "$PLAYWRIGHT" ] || { echo "error: no PLAYWRIGHT= line in scripts/demo-screenshots" >&2; exit 2; }
+
+if [ "$dry" = 1 ]; then
+  command -v node >/dev/null || { echo "error: node not found" >&2; exit 2; }
+  echo "(axe-core $AXE in chromium of $IMAGE, in Caddy's network namespace), would check:"
+  exec node scripts/a11y-check.mjs --dry-run --base "$BASE"
+fi
+
+command -v docker >/dev/null || { echo "error: docker not found" >&2; exit 2; }
+read -ra COMPOSE <<< "${CANCCU_DEMO_COMPOSE:-docker compose -f deploy/compose.yml -f deploy/compose.ci.yml}"
+caddy=$("${COMPOSE[@]}" ps -q caddy 2>/dev/null | head -n1)
+if [ -z "$caddy" ]; then
+  echo "error: the stack's caddy container is not running; start the stack first" >&2
+  exit 1
+fi
+
+# The script and the modules it imports keep their repo layout, so the imports hold.
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+STACK=modules/screen/test/stack
+mkdir -p "$work/scripts" "$work/$STACK" "$OUT" && out=$(cd "$OUT" && pwd) || exit 2
+cp scripts/a11y-check.mjs scripts/demo-screenshots-pages.mjs scripts/demo-screenshots-shot.mjs "$work/scripts/" \
+  && cp "$STACK/client.mjs" "$work/$STACK/" || exit 2
+user="$(id -u):$(id -g)"
+# On the default network: Caddy's namespace may not reach the registry.
+if ! docker run --rm -u "$user" -e HOME=/tmp -v "$work:/work" -w /work "$IMAGE" \
+  npm install --no-save --no-audit --no-fund --loglevel=error "playwright-core@$PLAYWRIGHT" "axe-core@$AXE" >&2; then
+  echo "error: could not install playwright-core $PLAYWRIGHT and axe-core $AXE in $IMAGE" >&2
+  exit 1
+fi
+docker run --rm --network "container:$caddy" -u "$user" -e HOME=/tmp \
+  -e CANCCU_DEMO_HOST -e DEMO_SESSION -v "$work:/work" -v "$out:/out" -w /work "$IMAGE" \
+  node scripts/a11y-check.mjs --base "$BASE" --out /out

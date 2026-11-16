@@ -1,0 +1,397 @@
+name: Weekly
+
+# The weekly regression run (#575, docs/ci.md#weekly): what is too long or too broad for every
+# push. Each part is a job; each failed part files one `regression` issue (the report job), or
+# comments on the one still open. A pull request that changes this run or its scripts runs a
+# short form of it, to show every part works: a day of soak, one file mutated, and findings of
+# the audit and the accessibility check reported without failing; it files nothing.
+on:
+  schedule:
+    - cron: "43 3 * * 0"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/weekly.yml
+      - .github/scripts/regressions.mjs
+      - .github/scripts/screenshot-compare.mjs
+      - .github/scripts/mutation-score.mjs
+      - scripts/a11y-check
+      - scripts/a11y-check.mjs
+      - packages/kit-py/pyproject.toml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: weekly-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COMPOSE: docker compose -f deploy/compose.yml -f deploy/compose.ci.yml
+
+jobs:
+  # A week of the player's clock in an hour (the per-push soak runs a day in 6 minutes), then the
+  # platform smoke again: the stack must still answer after it.
+  soak:
+    name: soak
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/demo-stack-up
+        with:
+          browser: "true"
+      - name: Platform smoke, with the demo event
+        run: scripts/demo-stack-test --only "" http://127.0.0.1
+      - name: The player's soak, a week of its clock in an hour
+        env:
+          HOURS: ${{ github.event_name == 'pull_request' && '24' || '168' }}
+          MINUTES: ${{ github.event_name == 'pull_request' && '6' || '60' }}
+        run: scripts/screen-soak --hours "$HOURS" --minutes "$MINUTES" --out soak-report
+      - name: Platform smoke after the soak
+        run: scripts/demo-stack-test --only "" http://127.0.0.1
+      - name: Upload the soak report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-soak-report
+          path: soak-report/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Logs
+        if: failure()
+        run: $COMPOSE logs --no-color > compose.log
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-logs-soak
+          path: compose.log
+          retention-days: 30
+
+  # The last checkpoint's version with the demo event, upgraded in place to this commit as a host
+  # upgrades: same volumes, same secrets.
+  upgrade:
+    name: upgrade
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: The last step tag, checked out beside this commit
+        id: base
+        run: |
+          tag=$(git tag -l 'step-*' | sort -V | tail -n1)
+          test -n "$tag" || { echo "::error::no step-<n> tag to upgrade from"; exit 1; }
+          git worktree add -q "$RUNNER_TEMP/base" "$tag"
+          echo "tag=$tag" | tee -a "$GITHUB_OUTPUT"
+      # A module secret both versions have keeps the base's value; one this commit adds is new.
+      - name: Fresh secrets that live through the upgrade
+        run: |
+          echo "CANCCU_SECRETS_KEY=1:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+          (cd "$RUNNER_TEMP/base" && scripts/stack-smoke env) > "$RUNNER_TEMP/base.env"
+          scripts/stack-smoke env > "$RUNNER_TEMP/main.env"
+          cat "$RUNNER_TEMP/base.env" >> "$GITHUB_ENV"
+          awk -F= 'NR == FNR { seen[$1] = 1; next } !($1 in seen)' "$RUNNER_TEMP/base.env" "$RUNNER_TEMP/main.env" >> "$GITHUB_ENV"
+      - name: The base version up, with the demo event imported
+        working-directory: ${{ runner.temp }}/base
+        run: |
+          $COMPOSE up -d --build --wait
+          scripts/demo-stack-test --only "" http://127.0.0.1
+      - name: The demo event's profile on the base
+        run: |
+          curl -fsS -H "Host: demo.localhost" --cookie canccu_session=demo-ci -o "$RUNNER_TEMP/base.zip" http://127.0.0.1/api/admin/profile
+          unzip -p "$RUNNER_TEMP/base.zip" profile.yaml > "$RUNNER_TEMP/base.yaml"
+      - name: Upgrade in place to this commit
+        run: $COMPOSE up -d --build --wait --remove-orphans
+      # Before any test imports the demo event again, which would hide a lost one.
+      - name: The demo event lived through the upgrade
+        run: |
+          curl -fsS -H "Host: demo.localhost" --cookie canccu_session=demo-ci -o "$RUNNER_TEMP/main.zip" http://127.0.0.1/api/admin/profile
+          unzip -p "$RUNNER_TEMP/main.zip" profile.yaml > "$RUNNER_TEMP/main.yaml"
+          name=$(grep -m1 '^name:' "$RUNNER_TEMP/base.yaml")
+          test -n "$name" || { echo "::error::the base exported no event name"; exit 1; }
+          grep -qxF "$name" "$RUNNER_TEMP/main.yaml" || { echo "::error::the upgraded event lost '$name'"; exit 1; }
+          # A new version may write more; only the loss of the event fails.
+          diff -u "$RUNNER_TEMP/base.yaml" "$RUNNER_TEMP/main.yaml" || echo "::notice::the profile's export changed since ${{ steps.base.outputs.tag }}"
+      - name: Every API test on the upgraded stack
+        run: scripts/demo-stack-test --only all http://127.0.0.1
+      - name: Logs
+        if: failure()
+        run: $COMPOSE logs --no-color > compose.log
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-logs-upgrade
+          path: compose.log
+          retention-days: 30
+
+  # Every screenshot, once at the last step tag and once at this commit, each on a stack of its own
+  # version; screen-diff compares them.
+  screens:
+    name: screens (${{ matrix.side }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        side: [base, head]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: The last step tag, for the base
+        if: matrix.side == 'base'
+        run: |
+          tag=$(git tag -l 'step-*' | sort -V | tail -n1)
+          test -n "$tag" || { echo "::error::no step-<n> tag to compare with"; exit 1; }
+          git checkout -q "$tag"
+          echo "$tag" > "$RUNNER_TEMP/tag"
+      # The action and the scripts are the checked-out version's own.
+      - uses: ./.github/actions/demo-stack-up
+        with:
+          browser: "true"
+      - name: Platform smoke, with the demo event
+        run: scripts/demo-stack-test --only "" http://127.0.0.1
+      - name: Every screenshot
+        run: |
+          scripts/demo-screenshots http://127.0.0.1 screenshots
+          if [ -f "$RUNNER_TEMP/tag" ]; then cp "$RUNNER_TEMP/tag" screenshots/base-tag.txt; fi
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-screenshots-${{ matrix.side }}
+          path: screenshots/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Logs
+        if: failure()
+        run: $COMPOSE logs --no-color > compose.log
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-logs-screens-${{ matrix.side }}
+          path: compose.log
+          retention-days: 30
+
+  screen-diff:
+    name: screen-diff
+    needs: screens
+    if: always() && needs.screens.result != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: weekly-screenshots-base
+          path: base
+      - uses: actions/download-artifact@v4
+        with:
+          name: weekly-screenshots-head
+          path: head
+      - name: The screens that changed a lot since the last step tag
+        run: |
+          mkdir -p comparison
+          node .github/scripts/screenshot-compare.mjs base head --base "$(cat base/base-tag.txt)" --threshold 0.1 --out comparison/screen-changes.md
+          cat comparison/screen-changes.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screen-changes
+          path: comparison/
+          retention-days: 90
+
+  a11y:
+    name: a11y
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/demo-stack-up
+        with:
+          browser: "true"
+      - name: Platform smoke, with the demo event
+        run: scripts/demo-stack-test --only "" http://127.0.0.1
+      - name: axe-core on every page
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+        run: scripts/a11y-check http://127.0.0.1 a11y-report
+      - name: Summary
+        if: always()
+        run: if [ -f a11y-report/a11y.md ]; then cat a11y-report/a11y.md >> "$GITHUB_STEP_SUMMARY"; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a11y-report
+          path: a11y-report/
+          if-no-files-found: warn
+          retention-days: 90
+
+  # Known vulnerabilities in every lock file and Python project, high and critical only for npm.
+  audit:
+    name: audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: npm audit of every package-lock.json
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+        run: |
+          bad=0
+          for lock in $(git ls-files '*package-lock.json'); do
+            dir=$(dirname "$lock")
+            echo "::group::$dir"
+            (cd "$dir" && npm audit --audit-level=high) || { echo "FAIL npm audit $dir"; bad=1; }
+            echo "::endgroup::"
+          done
+          exit "$bad"
+      - name: pip-audit of every Python project
+        if: always()
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+        run: |
+          pip install --quiet pip-audit==2.10.1
+          bad=0
+          for project in $(git ls-files '*pyproject.toml'); do
+            dir=$(dirname "$project")
+            echo "::group::$dir"
+            pip-audit "$dir" || { echo "FAIL pip-audit $dir"; bad=1; }
+            echo "::endgroup::"
+          done
+          exit "$bad"
+
+  # The kit is what every module builds on, so its tests are the ones mutation testing weighs. Its
+  # tests need Postgres and Valkey as in its CI leg (.github/actions/check-module); one mutant at
+  # a time, since they share them.
+  mutation-ts:
+    name: mutation (kit-ts)
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      CANCCU_VALKEY_URL: redis://127.0.0.1:6379
+      CANCCU_DATABASE_URL: postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Postgres and Valkey
+        run: |
+          docker compose -f deploy/compose.yml -f deploy/compose.test.yml up -d --wait postgres valkey
+          for i in $(seq 1 10); do
+            docker compose -f deploy/compose.yml -f deploy/compose.test.yml exec -T postgres createdb -U canccu canccu_test && break
+            [ "$i" = 10 ] && exit 1
+            sleep 1
+          done
+      - name: Stryker
+        working-directory: packages/kit-ts
+        env:
+          MUTATE: ${{ github.event_name == 'pull_request' && 'src/config.ts' || 'src/**/*.ts' }}
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --no-audit --no-fund @stryker-mutator/core@10.1.1 @stryker-mutator/vitest-runner@10.1.1
+          npx stryker run --testRunner vitest --mutate "$MUTATE" --reporters json,clear-text,progress --concurrency 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mutation-kit-ts
+          path: packages/kit-ts/reports/mutation/mutation.json
+          retention-days: 30
+
+  mutation-py:
+    name: mutation (kit-py)
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      CANCCU_VALKEY_URL: redis://127.0.0.1:6379
+      CANCCU_DATABASE_URL: postgres://canccu:canccu-local-only@127.0.0.1:5432/canccu_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Postgres and Valkey
+        run: |
+          docker compose -f deploy/compose.yml -f deploy/compose.test.yml up -d --wait postgres valkey
+          for i in $(seq 1 10); do
+            docker compose -f deploy/compose.yml -f deploy/compose.test.yml exec -T postgres createdb -U canccu canccu_test && break
+            [ "$i" = 10 ] && exit 1
+            sleep 1
+          done
+      # The paths are in the package's [tool.mutmut].
+      - name: mutmut
+        working-directory: packages/kit-py
+        env:
+          ONLY: ${{ github.event_name == 'pull_request' && '*canccu_kit.config.*' || '' }}
+        run: |
+          pip install --quiet -e ".[dev]" mutmut==3.8.1
+          mutmut run --max-children 1 ${ONLY:+"$ONLY"}
+          mutmut export-cicd-stats
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mutation-kit-py
+          path: packages/kit-py/mutants/mutmut-cicd-stats.json
+          retention-days: 30
+
+  # The score the step checkpoint quotes: the artifact `mutation-score` of the newest weekly run.
+  mutation-score:
+    name: mutation-score
+    needs: [mutation-ts, mutation-py]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mutation-kit-*
+          path: reports
+      - name: One score per package
+        run: |
+          node .github/scripts/mutation-score.mjs --out mutation-score \
+            --stryker packages/kit-ts=reports/mutation-kit-ts/mutation.json \
+            --mutmut packages/kit-py=reports/mutation-kit-py/mutmut-cicd-stats.json
+          cat mutation-score/mutation-score.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-score
+          path: mutation-score/
+          retention-days: 90
+
+  report:
+    name: report
+    needs: [soak, upgrade, screens, screen-diff, a11y, audit, mutation-ts, mutation-py, mutation-score]
+    if: always() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: One regression issue per failed part
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          SHA: ${{ github.sha }}
+          WORKFLOW: weekly.yml
+          PER: job
+          PREFIX: "weekly: "
+        run: node .github/scripts/regressions.mjs

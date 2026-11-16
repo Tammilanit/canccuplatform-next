@@ -233,3 +233,31 @@ jobs:
           expect shots "$need_shots" "$SHOTS"
           expect screenshots "$need_merge" "$MERGED"
           exit "$bad"
+
+  # The nightly run's failing tests become `regression` issues, one per test, or a comment on the
+  # one still open (#575, docs/ci.md#regressions). It runs last, after the aggregator, whose own
+  # failure only repeats the others'.
+  regressions:
+    name: demo-stack (regressions)
+    needs: [plan, api, soak, shots, screenshots, demo-stack]
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: One regression issue per failing test
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          SHA: ${{ github.sha }}
+          WORKFLOW: demo-stack.yml
+          IGNORE: demo-stack
+        run: node .github/scripts/regressions.mjs

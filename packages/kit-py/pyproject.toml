@@ -49,6 +49,11 @@ exclude = ["^\\.venv/"]
 module = ["uuid6", "asyncpg", "asyncpg.*"]
 ignore_missing_imports = true
 
+# Mutation testing in the weekly run (docs/ci.md#weekly).
+[tool.mutmut]
+paths_to_mutate = ["src/canccu_kit/"]
+tests_dir = ["tests/"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
