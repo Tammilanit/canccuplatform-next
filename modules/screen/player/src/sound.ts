@@ -79,10 +79,11 @@ export class SoundPlayer {
       await audio.play();
     } catch {
       // Not unlocked, or the file failed: it stays unplayed, so a later state may catch it up.
-      this.starting = null;
+      if (this.starting === p.id) this.starting = null;
       return;
     }
-    this.starting = null;
+    // An urgent sound may have taken the slot while this play() was pending: only clear our own.
+    if (this.starting === p.id) this.starting = null;
     this.current = audio;
     this.done.push(p.id);
     if (this.done.length > KEEP) this.done.splice(0, this.done.length - KEEP);

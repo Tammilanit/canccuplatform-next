@@ -115,6 +115,23 @@ describe("the sound screen", () => {
     expect(FakeAudio.made).toHaveLength(1);
   });
 
+  it("a sound that settles never frees the guard of the urgent one still starting", async () => {
+    FakeAudio.hold = [];
+    const p = make();
+    p.take({ enabled: true, sounded_claims: [], play: play("a") });
+    await wait(400);
+    const urgent = play("b", { interrupts: true });
+    p.take({ enabled: true, sounded_claims: [], play: urgent });
+    await wait(400);
+    expect(FakeAudio.made).toHaveLength(2);
+    // A settles while B's play() is still pending.
+    FakeAudio.hold[0]?.();
+    await wait(0);
+    p.take({ enabled: true, sounded_claims: [], play: urgent });
+    await wait(1000);
+    expect(FakeAudio.made).toHaveLength(2);
+  });
+
   it("plays nothing where sound is not enabled: a mirror, another screen of the zone", async () => {
     const p = make();
     p.take({ enabled: false, sounded_claims: [], play: play("a") });
