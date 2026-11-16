@@ -1,0 +1,106 @@
+# Step 4 decisions (product owner, 2026-11-16)
+
+Every question in `docs/briefs/step-4-moments/questions.md`, answered by the product owner. "rec" means the question bank's recommendation was taken as written.
+
+- **U1** A (rec)
+- **U2** B (rec)
+- **U3** A, not the recommended B (so there is no separate `moments.announce.urgent` right; the lead's step 2 note is superseded, and Notify's urgent exception relies on the announce right): "Anyone who may announce."
+- **U4** C (rec)
+- **U5** B (rec)
+- **U6** A (rec)
+- **U7** B (rec)
+- **U8** A plus B (rec, as the bank recommends)
+- **U9** A (rec)
+- **U10** A (rec)
+- **U11** A (rec)
+- **U12** B (rec)
+- **L1** C (rec)
+- **L2** A (rec). PO note: With Possibility to do full screen announcement.
+- **L3** A (rec)
+- **L4** B, not the recommended A: "Both."
+- **L5** A (rec)
+- **L6** A (rec)
+- **L7** A (rec)
+- **L8** A (rec)
+- **L9** A (rec). PO note: Lots of existing sounds, in legacy. So, the default sound pack should be as in A, but each event can have whatever sounds they want.
+- **L10** A (rec)
+- **L11** A (rec)
+- **L12** A (rec)
+- **L13** A (rec)
+- **L14** A (rec)
+- **L15** A (rec)
+- **D1** A (rec)
+- **D2** B (rec)
+- **D3** B (rec)
+- **D4** B (rec)
+- **D5** A (rec)
+- **D6** A (rec)
+- **D7** A (rec). PO note: We will redefine the rules if needed at each step.
+- **D8** A (rec)
+- **D9** A (rec)
+- **D10** A (rec)
+- **D11** B, not the recommended A: "A, plus free variables the organiser defines."
+- **D12** A (rec)
+- **D13** A (rec)
+- **D14** A (rec)
+- **D15** A (rec)
+- **D16** Sound categories: the legacy six or the design's six? (design Q21): decided separately; see "D16: the sound model" below.
+- **D17** A (rec)
+- **D18** A (rec)
+- **D19** A (rec)
+- **D20** A (rec)
+- **D21** B (rec)
+- **D22** A (rec)
+- **D23** A (rec)
+- **D24** A (rec)
+- **E1** A (rec)
+- **E2** A (rec)
+- **E3** A (rec)
+- **E4** A (rec)
+- **E5** A (rec)
+- **E6** A (rec)
+- **E7** A (rec)
+- **E8** A (rec)
+- **E9** A (rec)
+- **E10** A (rec)
+- **E11** A (rec)
+- **E12** A (rec)
+- **E13** A (rec)
+- **E14** A (rec)
+- **E15** A (rec)
+- **E16** A (rec)
+- **E17** A (rec)
+- **E18** A (rec)
+- **O1** A (rec)
+- **O2** A (rec)
+- **O3** A (rec)
+- **O4** A (rec)
+- **O5** A (rec)
+- **O6** A (rec)
+- **O7** A (rec)
+- **O8** A (rec)
+- **P1** A (rec)
+- **P2** A (rec)
+- **P3** A (rec)
+- **P4** B (rec)
+- **P5** A (rec)
+- **P6** A (rec)
+- **P7** A (rec)
+- **P8** A (rec). PO note: We still want to have the TTS so it should be existing in the backlog.
+- **P9** A (rec)
+- **P10** A (rec)
+
+## D16: the sound model (decided after a review of the legacy plans PLAN_18 and PLAN_14)
+- Three layers, as the legacy built them:
+  - six fixed categories as the rule axis (priority, level, on/off): attention, something new, result, urgent, ended and ambient;
+  - cues as data per event, seeded from the 25 legacy cues, each with its own on/off, level, cooldown and sounds;
+  - a library where any sound can go to any cue.
+- Events add cues, not categories.
+- A cue can link several sounds, picked at random and never the same one twice running.
+- A cue can carry a recorded voice line as an optional second part (uploads, no TTS). TTS goes to the backlog (P8).
+- Only urgent and emergency interrupt a playing sound. Others wait in the short queue or drop, with a logged reason.
+- Uploads (MP3 or OGG) are capped at 30 s, with a warning over 10 s.
+- Flood and budget: the brief's stricter limits, 3 sounds a minute per zone plus an hourly budget per zone.
+- Energy levels: Calm plays urgent, attention and result. A quiet scene plays urgent only.
+- The default pack: CC0 sounds with a credits file. Legacy clips go in only where their CC0 source is confirmed. Each event can upload any sounds of its own.
+- Mockups 12 and 13 must be redrawn to show this: the per-cue level, the library, and no interrupting except urgent and emergency.

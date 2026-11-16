@@ -1,54 +1,135 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 900" width="1920" height="900" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
-  <title>Mockup 13: how a sound is decided</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1250" width="1920" height="1250" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 13: how a sound is decided (the plan's sound model, D16)</title>
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient>
     <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker>
+    <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="#000" stroke-opacity="0.08" stroke-width="4"/></pattern>
   </defs>
-  <rect width="1920" height="900" fill="#f3f4f6"/>
+  <rect width="1920" height="1250" fill="#f3f4f6"/>
 <text x="24" y="44" font-size="28" fill="#1f2937" font-weight="700" text-anchor="start" >13 · How a sound is decided: on the server, once per zone, the same on every screen of the zone</text>
-<rect x="40" y="80" width="420" height="190" rx="12" fill="#dbeafe" stroke="#e5e7eb" stroke-width="1.5" /><text x="60" y="120" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >1 · Trigger</text>
+<rect x="40" y="80" width="420" height="190" rx="12" fill="#dbeafe" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="60" y="120" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >1 · Trigger</text>
 <text x="60" y="160" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >a moment starts, a cue fires,</text>
 <text x="60" y="186" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >a scene changes, a storyboard</text>
 <text x="60" y="212" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >step begins</text>
 <line x1="462" y1="175" x2="506" y2="175" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
-<rect x="510" y="80" width="420" height="190" rx="12" fill="#dbeafe" stroke="#e5e7eb" stroke-width="1.5" /><text x="530" y="120" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >2 · Which sound</text>
-<text x="530" y="160" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >the cue's link: a sound from the</text>
-<text x="530" y="186" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >library, its volume and zones</text>
+<rect x="510" y="80" width="420" height="190" rx="12" fill="#dbeafe" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="530" y="120" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >2 · Which cue, which sound</text>
+<text x="530" y="160" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >the event&#x27;s cue for the trigger;</text>
+<text x="530" y="186" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >one of its sounds at random, never</text>
+<text x="530" y="212" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >the same twice running; its level</text>
+<text x="530" y="238" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >× its category&#x27;s; a voice line after</text>
 <line x1="932" y1="175" x2="976" y2="175" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
-<rect x="980" y="80" width="420" height="190" rx="12" fill="#fef3c7" stroke="#e5e7eb" stroke-width="1.5" /><text x="1000" y="120" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >3 · Master and quiet</text>
-<text x="1000" y="160" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >sounds on? a quiet scene lets</text>
-<text x="1000" y="186" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >only urgent through</text>
+<rect x="980" y="80" width="420" height="190" rx="12" fill="#fef3c7" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="1000" y="120" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >3 · Master and energy</text>
+<text x="1000" y="160" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >sounds on, not muted? party, lively:</text>
+<text x="1000" y="186" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >every category; calm: urgent,</text>
+<text x="1000" y="212" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >attention, result; a quiet scene:</text>
+<text x="1000" y="238" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >urgent only</text>
 <line x1="1402" y1="175" x2="1446" y2="175" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
-<rect x="1450" y="80" width="420" height="190" rx="12" fill="#fef3c7" stroke="#e5e7eb" stroke-width="1.5" /><text x="1470" y="120" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >4 · Category</text>
-<text x="1470" y="160" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >on? its cooldown passed?</text>
-<rect x="40" y="310" width="420" height="190" rx="12" fill="#fef3c7" stroke="#e5e7eb" stroke-width="1.5" /><text x="60" y="350" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >5 · Once per source</text>
+<rect x="1450" y="80" width="420" height="190" rx="12" fill="#fef3c7" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="1470" y="120" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >4 · Category and cue</text>
+<text x="1470" y="160" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >the category on? the cue on?</text>
+<text x="1470" y="186" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >the cue&#x27;s own cooldown passed?</text>
+<rect x="40" y="310" width="420" height="190" rx="12" fill="#fef3c7" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="60" y="350" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >5 · Once per source</text>
 <text x="60" y="390" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >this cue for this source already</text>
 <text x="60" y="416" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >played (7 days)? an edit never</text>
 <text x="60" y="442" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >sounds again</text>
 <line x1="462" y1="405" x2="506" y2="405" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
-<rect x="510" y="310" width="420" height="190" rx="12" fill="#fef3c7" stroke="#e5e7eb" stroke-width="1.5" /><text x="530" y="350" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >6 · Flood guard</text>
-<text x="530" y="390" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >at most 3 a minute per zone,</text>
-<text x="530" y="416" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >10 s per source</text>
+<rect x="510" y="310" width="420" height="190" rx="12" fill="#fef3c7" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="530" y="350" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >6 · Flood guard</text>
+<text x="530" y="390" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >coalesce 2 s; 10 s per source;</text>
+<text x="530" y="416" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >at most 3 sounds a minute</text>
+<text x="530" y="442" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >per zone</text>
 <line x1="932" y1="405" x2="976" y2="405" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
-<rect x="980" y="310" width="420" height="190" rx="12" fill="#fef3c7" stroke="#e5e7eb" stroke-width="1.5" /><text x="1000" y="350" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >7 · Budget</text>
-<text x="1000" y="390" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >at most 20 an hour per zone;</text>
-<text x="1000" y="416" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >urgent always passes, still counts</text>
+<rect x="980" y="310" width="420" height="190" rx="12" fill="#fef3c7" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="1000" y="350" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >7 · Hourly budget</text>
+<text x="1000" y="390" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >at most 20 an hour per zone</text>
+<text x="1000" y="416" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >(an event setting); urgent always</text>
+<text x="1000" y="442" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >passes and still counts</text>
 <line x1="1402" y1="405" x2="1446" y2="405" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
-<rect x="1450" y="310" width="420" height="190" rx="12" fill="#fef3c7" stroke="#e5e7eb" stroke-width="1.5" /><text x="1470" y="350" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >8 · One at a time</text>
-<text x="1470" y="390" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >a higher category interrupts;</text>
-<text x="1470" y="416" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >a lower one waits up to 4 s,</text>
-<text x="1470" y="442" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >then drops (stale)</text>
-
-<rect x="40" y="560" width="900" height="290" rx="12" fill="#dcfce7" stroke="#e5e7eb" stroke-width="1.5" /><text x="60" y="600" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >Play</text>
-<text x="60" y="640" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >The decision goes into the zone's composed state with play_at = now + 400 ms,</text>
-<text x="60" y="668" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >so every screen of the zone starts it together (the clock offset from the heartbeat</text>
-<text x="60" y="696" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >corrects each device); only the zone's sound screen plays it, mirrors never.</text>
-<text x="60" y="724" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >The heartbeat reports it played (claims_sounded); a reload never repeats it.</text>
-<text x="60" y="752" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >Target: the screens of a zone within 200 ms of each other (#113).</text>
-<rect x="980" y="560" width="900" height="290" rx="12" fill="#fee2e2" stroke="#e5e7eb" stroke-width="1.5" /><text x="1000" y="600" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >Suppressed, or late</text>
-<text x="1000" y="640" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >Any gate that says no writes the log with its reason; the picture still plays.</text>
-<text x="1000" y="668" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >Catch-up: a sound whose device was offline or reloading plays late only within</text>
-<text x="1000" y="696" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >its window (by default 2 minutes; the legacy tournament windows: from T−29 to T−15</text>
-<text x="1000" y="724" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >and from T−14 to T−2), at most once; outside the window it is dropped and logged.</text>
-<text x="1000" y="752" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >A burst of 50 triggers in a minute: 3 play, 47 are logged (the #113 test).</text>
+<rect x="1450" y="310" width="420" height="190" rx="12" fill="#fef3c7" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="1470" y="350" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >8 · One at a time</text>
+<text x="1470" y="390" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >only urgent (the emergency&#x27;s</text>
+<text x="1470" y="416" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >sounds too) interrupts; any other</text>
+<text x="1470" y="442" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >waits in the queue up to 4 s,</text>
+<text x="1470" y="468" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >then drops (stale)</text>
+<path d="M1660,272 L1660,290 L250,290 L250,306" fill="none" stroke="#6b7280" stroke-width="3" marker-end="url(#ah)"/>
+<rect x="40" y="540" width="1840" height="230" rx="12" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="60" y="578" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >One at a time, on the main hall&#x27;s timeline: only urgent interrupts</text>
+<line x1="260" y1="736" x2="260" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="260" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >0 s</text>
+<line x1="364" y1="736" x2="364" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="364" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >2 s</text>
+<line x1="468" y1="736" x2="468" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="468" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >4 s</text>
+<line x1="572" y1="736" x2="572" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="572" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >6 s</text>
+<line x1="676" y1="736" x2="676" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="676" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >8 s</text>
+<line x1="780" y1="736" x2="780" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="780" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >10 s</text>
+<line x1="884" y1="736" x2="884" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="884" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >12 s</text>
+<line x1="988" y1="736" x2="988" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="988" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >14 s</text>
+<line x1="1092" y1="736" x2="1092" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="1092" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >16 s</text>
+<line x1="1196" y1="736" x2="1196" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="1196" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >18 s</text>
+<line x1="1300" y1="736" x2="1300" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="1300" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >20 s</text>
+<line x1="1404" y1="736" x2="1404" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="1404" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >22 s</text>
+<line x1="1508" y1="736" x2="1508" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="1508" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >24 s</text>
+<line x1="1612" y1="736" x2="1612" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="1612" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >26 s</text>
+<line x1="1716" y1="736" x2="1716" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="1716" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >28 s</text>
+<line x1="1820" y1="736" x2="1820" y2="744" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="1820" y="762" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" >30 s</text>
+<line x1="260" y1="736" x2="1820" y2="736" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="60" y="632" font-size="16" fill="#111827" font-weight="700" text-anchor="start" >Playing</text>
+<text x="60" y="692" font-size="16" fill="#111827" font-weight="700" text-anchor="start" >Waiting</text>
+<rect x="260" y="606" width="197.6" height="36" rx="8" fill="#16a34a" stroke="#16a34a" stroke-width="1" />
+<text x="270" y="630" font-size="14" fill="#ffffff" font-weight="600" text-anchor="start" >result: fanfare-b</text>
+<rect x="286.0" y="666" width="171.6" height="36" rx="8" fill="#e0e7ff" stroke="#e0e7ff" stroke-width="1" />
+<rect x="286.0" y="666" width="171.6" height="36" rx="8" fill="url(#hatch)" />
+<text x="296.0" y="690" font-size="14" fill="#1e3a8a" font-weight="600" text-anchor="start" >attention waits 3.3 s</text>
+<rect x="457.6" y="606" width="114.4" height="36" rx="8" fill="#2563eb" stroke="#2563eb" stroke-width="1" />
+<text x="467.6" y="630" font-size="14" fill="#ffffff" font-weight="600" text-anchor="start" >attention</text>
+<rect x="624" y="606" width="468" height="36" rx="8" fill="#16a34a" stroke="#16a34a" stroke-width="1" />
+<text x="634" y="630" font-size="14" fill="#ffffff" font-weight="600" text-anchor="start" >result: drumroll (9 s)</text>
+<rect x="676" y="666" width="208" height="36" rx="8" fill="#fef3c7" stroke="#fef3c7" stroke-width="1" />
+<rect x="676" y="666" width="208" height="36" rx="8" fill="url(#hatch)" />
+<text x="686" y="690" font-size="14" fill="#92400e" font-weight="600" text-anchor="start" >ambient: stale, dropped</text>
+<rect x="1170.0" y="606" width="182.0" height="36" rx="8" fill="#a3a3a3" stroke="#a3a3a3" stroke-width="1" />
+<text x="1180.0" y="630" font-size="14" fill="#ffffff" font-weight="600" text-anchor="start" >ambient: hum-rise</text>
+<rect x="1352" y="606" width="468" height="36" rx="8" fill="#dc2626" stroke="#dc2626" stroke-width="1" />
+<text x="1362" y="630" font-size="14" fill="#ffffff" font-weight="600" text-anchor="start" >urgent: alarm-loop interrupts</text>
+<line x1="1352" y1="596" x2="1352" y2="650" stroke="#dc2626" stroke-width="3" stroke-dasharray="6 4"/>
+<rect x="40" y="800" width="900" height="410" rx="12" fill="#dcfce7" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="60" y="840" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >Play</text>
+<text x="60" y="884" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >The decision goes into the zone&#x27;s composed state with</text>
+<text x="60" y="918" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >play_at = now + 400 ms, so every screen of the zone starts it</text>
+<text x="60" y="952" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >together (the heartbeat&#x27;s clock offset corrects each device);</text>
+<text x="60" y="986" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >only the zone&#x27;s sound screen plays it, mirrors never.</text>
+<text x="60" y="1020" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >Level = the cue&#x27;s level × its category&#x27;s × the master volume.</text>
+<text x="60" y="1054" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >A cue&#x27;s voice line plays right after its sound: one count</text>
+<text x="60" y="1088" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >in the budget. Recorded uploads only; no text to speech.</text>
+<text x="60" y="1122" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >The heartbeat reports it played; a reload never repeats it.</text>
+<text x="60" y="1156" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >Target: the screens of a zone within 200 ms of each other.</text>
+<rect x="980" y="800" width="900" height="410" rx="12" fill="#fee2e2" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="1000" y="840" font-size="22" fill="#111827" font-weight="700" text-anchor="start" >Suppressed, dropped or late</text>
+<text x="1000" y="884" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >Any gate that says no writes the log with a reason code;</text>
+<text x="1000" y="918" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >the picture still plays.</text>
+<text x="1000" y="952" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >Waiting is short: a sound that is not urgent waits at most</text>
+<text x="1000" y="986" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >4 s behind the playing one, then drops as stale.</text>
+<text x="1000" y="1020" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >Catch-up: a sound whose device was offline or reloading</text>
+<text x="1000" y="1054" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >plays late only within its cue&#x27;s window (2 minutes by</text>
+<text x="1000" y="1088" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >default; the tournament cues T−29 to T−15 and T−14 to T−2),</text>
+<text x="1000" y="1122" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >at most once; outside the window it is dropped and logged.</text>
+<text x="1000" y="1156" font-size="18" fill="#374151" font-weight="400" text-anchor="start" >A burst of 50 triggers in a minute: 3 play, 47 are logged.</text>
 </svg>

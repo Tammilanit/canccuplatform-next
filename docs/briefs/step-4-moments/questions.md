@@ -6,6 +6,8 @@ The themes: **U** who uses it and how · **L** look and feel · **D** data and i
 
 **Decide first** (they change the most): L1, P1, D1, D2, U1, U3, D4, P4, D16.
 
+*Answered by the product owner on 2026-11-16: [decisions.md](decisions.md). The brief's [Plan](../step-4-moments.md#plan) is the outcome; where an answer overrode a recommendation below, a pointer says so.*
+
 A question marked **contract** needs a contract change if the recommendation is taken. An additive one ships in the package whose code uses it ([0029](../../decisions/0029-additive-contracts-ship-with-consumers.md)); **D2** is the only recommendation that is treated as breaking, so it would be its own PR, merged first, with the maintainer's accept. The design guideline's open questions that belong to Moments ([docs/design/README.md](../../design/README.md#questions-for-the-product-owner), Q17–Q22) are carried here as L11, L14, D5, D16 and E7; if the product owner has already answered one, that answer stands.
 
 ## U · Who uses it and how
@@ -27,6 +29,7 @@ The lead's step 2 note: Notify's urgent exception (pushed in quiet hours and ove
 - **B.** A separate right, `moments.announce.urgent`, held by the event admin role and grantable to crew; the API answers 403 when a request without it asks for urgent, and `moments.announcement.sent` carries `urgent: true` only when the sender held it.
 - **C.** The event admin only, not grantable.
 - **Recommendation: B.** Contract (moments.md, and notify.md's topic row).
+- *Decided: A, anyone who may announce ([Plan, Rights](../step-4-moments.md#rights)).*
 
 ### U4. Who may start an emergency?
 - **A.** The event admin (`moments.emergency` with the role), grantable to named crew.
@@ -90,6 +93,7 @@ The lead's step 2 note: Notify's urgent exception (pushed in quiet hours and ove
 - **A.** As [mockup 06](06-announce-on-screen.svg): info a card in the rail with a draining line; urgent the warning colour, a ripple and the screen's spotlight once; emergency the fixed-colour full-screen takeover.
 - **B.** Every level full screen, like the legacy.
 - **Recommendation: A.** The emergency's red stays outside the theme on purpose (design README, Known limits).
+- *Decided: A, plus an optional full-screen announcement ([Plan, #115](../step-4-moments.md#115--featmoments-the-announcement-composer-for-every-channel)).*
 
 ### L3. What is an announcement's degrade chain?
 - **A.** Info: rail → ticker. Urgent: rail → hero → ticker. Emergency: full.
@@ -101,6 +105,7 @@ The lead's step 2 note: Notify's urgent exception (pushed in quiet hours and ove
 - **A.** The line once.
 - **B.** Both.
 - **Recommendation: A.** One message, one line.
+- *Decided: B, both ([Plan, #115](../step-4-moments.md#115--featmoments-the-announcement-composer-for-every-channel)).*
 
 ### L5. Which storyboards are built in?
 - **A.** Doors open, Starting soon, Champion, Midnight, Match called ([mockup 11](11-storyboards-on-screen.svg)).
@@ -224,6 +229,7 @@ Pizza (step 5), the bot (step 6), the tournament (step 7) and Games (a track) em
 - **A.** `{item.title}`, `{item.starts_at}`, `{item.starts_in}`, `{item.location}`, `{event.name}`.
 - **B.** A, plus free variables the organiser defines.
 - **Recommendation: A.**
+- *Decided: B, plus free variables the organiser defines ([Plan, #115](../step-4-moments.md#115--featmoments-the-announcement-composer-for-every-channel)).*
 
 ### D12. What happens on Discord when an announcement is edited or withdrawn? (step 6)
 - **A.** The bot edits its post; a withdraw appends "(withdrawn)" and never deletes.
@@ -250,6 +256,7 @@ The design's table (bell, fanfare, alert, pizza, photo, ambient) is a proposal "
 - **A.** The legacy categories as the rule axis (priority, cooldown, level, on/off), the design's six as the default sounds linked to them ([mockup 12](12-sound-desk.svg)).
 - **B.** The design's six as categories.
 - **Recommendation: A.** Proposed cooldowns: attention 30 s, something new 2 min, result 60 s, urgent none, ended 60 s (off by default), ambient 5 min; the legacy had per-cue cooldowns of 0 except ticker 2 min and the strip cues 10 min, and relied on the flood guard.
+- *Decided separately: the Plan's [sound model](../step-4-moments.md#the-sound-model-d16) (categories, cues per event, a library; cooldowns per cue).*
 
 ### D17. Catch-up windows
 - **A.** Per cue, default 2 minutes; the tournament cues keep the legacy windows (T−29 to T−15, T−14 to T−2).
@@ -286,6 +293,7 @@ The design's table (bell, fanfare, alert, pizza, photo, ambient) is a proposal "
 - **A.** Uploads are Screen's `audio` assets (one asset store); MP3 or OGG, at most 10 s and 1 MiB; Moments keeps the links.
 - **B.** Moments keeps its own files.
 - **Recommendation: A.** The design's 10 s; the legacy allowed 30 s and 2 MiB, and its 10 s guide flag never fired.
+- *Decided: A, with D16's length: at most 30 s, a warning over 10 s ([Plan](../step-4-moments.md#the-sound-model-d16)).*
 
 ### D24. The shape of the Moments contract (contract)
 - **A.** `contracts/moments.md` and `moments.openapi.yaml` using the shared components, written in parts that travel with their packages: the engine (#112), scenes, cues and sound (#113), storyboards (#114), announcements (#115).
