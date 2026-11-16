@@ -23,7 +23,17 @@ from canccu_kit.ui import (
     time_label,
 )
 
-MENU_JSON = Path(__file__).resolve().parents[2] / "ui/src/menu.json"
+
+def _menu_json() -> Path:
+    # mutmut runs the tests from a copy (mutants/), one level deeper, so walk up, not a fixed depth.
+    for parent in Path(__file__).resolve().parents:
+        found = parent / "ui" / "src" / "menu.json"
+        if found.exists():
+            return found
+    raise FileNotFoundError("ui/src/menu.json not found above the test")
+
+
+MENU_JSON = _menu_json()
 EVENT = EventInfo(
     name="Demo <Event>",
     status="live",

@@ -3,8 +3,18 @@ name: Images
 # One image per module (every modules/<name>/Dockerfile), built from the repo root as in
 # deploy/compose.yml. Push to main pushes ghcr.io/<owner>/<repo>/<module>:dev; a release tag
 # v* pushes :<tag>. A pull request that changes this workflow or a Dockerfile builds the
-# images without pushing them.
+# images without pushing them. release-tag.yml calls it for the tag it made on a green main
+# (docs/ci.md#releases); then the github context is that workflow's, so the inputs name the
+# commit and the tag.
 on:
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+      sha:
+        type: string
+        required: true
   push:
     branches: [main]
     tags: ["v*"]
@@ -18,7 +28,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: images-${{ github.ref }}
+  # A call's ref is main's, so the tag keeps it out of the push builds' group.
+  group: images-${{ inputs.tag || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -29,6 +40,8 @@ jobs:
       list: ${{ steps.list.outputs.list }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
       - name: Modules with a Dockerfile
         id: list
         run: |
@@ -49,9 +62,11 @@ jobs:
       matrix:
         module: ${{ fromJSON(needs.modules.outputs.list) }}
     env:
-      PUSH: ${{ github.event_name == 'push' }}
+      PUSH: ${{ github.event_name == 'push' || inputs.tag != '' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
       - name: Image name (GHCR needs lowercase)
         id: name
         run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}/${{ matrix.module }}" >> "$GITHUB_OUTPUT"
@@ -68,8 +83,12 @@ jobs:
           images: ${{ steps.name.outputs.image }}
           tags: |
             type=ref,event=tag
-            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
+            type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
             type=ref,event=pr
+          # A call's github.sha is main's newest commit, not the tagged one; a later label wins.
+          labels: |
+            ${{ inputs.sha && format('org.opencontainers.image.revision={0}', inputs.sha) || '' }}
       - uses: docker/build-push-action@v6
         with:
           context: .

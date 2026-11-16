@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
 import { createHealth, postgresCheck, valkeyCheck } from "../src/index.js";
@@ -10,9 +12,20 @@ interface Schema {
   properties: Record<string, unknown>;
 }
 
-const spec = parse(
-  readFileSync(new URL("../../../contracts/admin.openapi.yaml", import.meta.url), "utf8"),
-) as {
+// Mutation testing runs the tests from a copy nested deeper (.stryker-tmp/sandbox-*), so the
+// contracts dir is found by walking up, not by a fixed depth.
+function contractPath(): string {
+  let dir = dirname(fileURLToPath(import.meta.url));
+  for (;;) {
+    const file = join(dir, "contracts", "admin.openapi.yaml");
+    if (existsSync(file)) return file;
+    const up = dirname(dir);
+    if (up === dir) throw new Error("contracts/admin.openapi.yaml not found above the test");
+    dir = up;
+  }
+}
+
+const spec = parse(readFileSync(contractPath(), "utf8")) as {
   components: { schemas: { Health: Schema; HealthStatus: { enum: string[] } } };
 };
 

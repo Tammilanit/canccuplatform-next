@@ -10,7 +10,17 @@ import yaml
 from canccu_kit import Check, CheckResult, Health, postgres_check, valkey_check
 from canccu_kit.testing import MemoryStreamStore
 
-CONTRACT = Path(__file__).resolve().parents[3] / "contracts" / "admin.openapi.yaml"
+
+def _contract() -> Path:
+    # mutmut runs the tests from a copy (mutants/), one level deeper, so walk up, not a fixed depth.
+    for parent in Path(__file__).resolve().parents:
+        found = parent / "contracts" / "admin.openapi.yaml"
+        if found.exists():
+            return found
+    raise FileNotFoundError("contracts/admin.openapi.yaml not found above the test")
+
+
+CONTRACT = _contract()
 
 
 def health_schema() -> dict[str, Any]:
