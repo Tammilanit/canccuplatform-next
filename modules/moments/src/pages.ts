@@ -3,7 +3,13 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { DEFAULT_ORDER, checkOrder, desiredOverrides, isClass } from "./arbiter.js";
 import type { Class } from "./arbiter.js";
 import { filterOf, historyRows } from "./history.js";
-import { EMERGENCY, READ, SETTINGS, TAKE, tenantOf } from "./http.js";
+import { html } from "@canccu/ui";
+import type { Html } from "@canccu/ui";
+import { EMERGENCY, READ, SCENES_TAKE, SETTINGS, TAKE, tenantOf } from "./http.js";
+import { scenePages } from "./scene-pages.js";
+import { loadCrew, loadScenes, sceneZones } from "./scene-store.js";
+import { crewButtons, onAirScenes } from "./scene-views.js";
+import type { ZoneSceneView } from "./scene-views.js";
 import type { AppDeps } from "./http.js";
 import { PREFIX, page, pageErrors, pageNeeds, refusal, staticRoutes, viaApi } from "./page-kit.js";
 import { loadRules } from "./rules.js";
@@ -62,10 +68,27 @@ async function onAir(deps: AppDeps): Promise<{ moments: MomentView[]; zones: str
   });
 }
 
+/** On air's scene card: each zone's scene, and the crew buttons for those who may press them. */
+async function sceneCard(deps: AppDeps, request: FastifyRequest): Promise<Html> {
+  const ctx = tenantOf(request);
+  const now = deps.now();
+  const s = await deps.db.tenant(async (c) => ({
+    scenes: (await loadScenes(c)).scenes,
+    zones: (await sceneZones(c)) as unknown as ZoneSceneView[],
+    crew: await loadCrew(c),
+  }));
+  const crew = s.crew !== null && s.crew.until > now ? s.crew : null;
+  const canTake = request.session?.rights.has(SCENES_TAKE) === true && ctx.status !== "archived";
+  return html`${onAirScenes(s.zones, s.scenes, ctx.time_zone)}
+    ${canTake ? crewButtons(s.scenes, crew === null ? null : { ...crew, until: crew.until.toISOString() }, "on-air") : ""}
+    <a class="canccu-small" href="${PREFIX}scenes">All scenes</a>`;
+}
+
 export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
   void app.register((pages, _opts, done) => {
     pageErrors(pages, deps);
     staticRoutes(pages);
+    scenePages(pages, deps);
     const read = { preHandler: pageNeeds(deps, READ) };
     const has = (r: FastifyRequest, right: string) => r.session?.rights.has(right) === true;
     const back = (reply: FastifyReply, path: string, key: "done" | "error", text: string) =>
@@ -94,6 +117,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
           canTake: has(request, TAKE),
           canEmergency: has(request, EMERGENCY),
           archived: tenantOf(request).status === "archived",
+          scenes: await sceneCard(deps, request),
           done: request.query.done,
           error: request.query.error,
         }),
