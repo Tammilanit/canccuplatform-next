@@ -79,6 +79,9 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect(crew).toContain(">Devices<");
     expect(crew).not.toContain(">Zones and layouts<");
     expect(crew).not.toContain(">Ticker<");
+    expect(crew).not.toContain(">Moments<");
+    const moments = tabs((await page("/admin/screen/live", "moments")).body);
+    expect(moments).toContain('href="/moments/">Moments<');
   });
 
   it("draws Live with every zone as a live view that opens full size", async () => {

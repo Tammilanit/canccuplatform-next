@@ -1,0 +1,31 @@
+# moments
+
+The moments module serves [contracts/moments.md](../../contracts/moments.md), the engine part: one server-side arbiter that ranks, times, queues and refuses every moment per zone, while Screen places them ([screen.md](../../contracts/screen.md#moments-drive-it-claims), step 4 plan D1). Issue #112; the step's plan is [docs/briefs/step-4-moments.md](../../docs/briefs/step-4-moments.md#plan).
+
+## How it works
+
+- **Tenancy:** each request's event comes from its `Host` (the kit's `installTenancy`). Every table is per tenant under RLS; work runs as `canccu_moments_app`. The global `moments_tenants` lists the events Moments serves (for the tick, the venue-wide emergency and retention) and `moments_outbox_tenants` the events with unsent events.
+- **The arbiter** (`arbiter.ts`, pure; `engine.ts`): a moment is a row in `moments` from its request to its end. Its class ranks it by the event's priority order (`moments_priorities`, a zone may have its own). It is shown by overrides (`moment_overrides`, as last sent): one for the zones that follow the event's order, and one per zone whose own order ranks it differently (`<id>.<zone>`), which that zone keeps for the moment's life, because Screen never brings an override back to a zone it left. Every change is reconciled into `moments.override.started`, `.changed` and `.ended` (narrowing first, D3), stored in `moments_outbox` in the same transaction and sent after the commit (the kit's `Outbox`; a loop resends what a failed send left, every 2 s).
+- **Legacy rules, regional:** TTL 120 s by default (1 to 7200); a request whose `dedupe_key` names a running moment renews it (E4: same content moves only `expires_at` and writes no history); a rule's or module's request is refused with a 30 s retry when every role of its chain is held by a higher rank on every zone it names, as Screen last reported (`blockedOn`); people's moments wait instead. Patience counts only until a moment's first place on a zone.
+- **Placement** (`placements.ts`): `screen.claims.changed` becomes `moment_placements` per override and zone, and each change a history row: placed, hidden, queued, or back after a higher moment ended, with what it displaced.
+- **The tick** (`tick.ts`): every container, every second, visits `moments_tenants` and ends what is due from the stored times (`FOR UPDATE SKIP LOCKED`, the expiry pass only; ending, re-ranking and archiving wait for a lock): moments past `expires_at`, and waiting moments past their patience on a zone. A restart resumes from the rows alone (E2; `test/engine.test.ts` proves a takeover reverts on time across one). Hourly: idempotency keys after 24 h, and an archived event's history 30 days after archiving (D21).
+- **Zones:** Moments keeps the event's zones in `moments_zones` from `screen.zone.saved` and `.removed` and from claim reports. A second subscription replays each screen stream from its start at every boot, changing only that set, so zones saved while Moments was down are known; a past removal never ends a moment running now (the live subscription does, E9).
+- **Rules** (`rules.ts`): the five built-ins, on the catalog's outlines, tested on fixture events (`test/fixtures.ts`, held to `contracts/events.md` and `games.md`). Settings per event in `moments_rules` override the defaults. Their `cue` is stored for the sound desk (#113) and plays nothing yet.
+- **Live data** (`sources.ts`): the latest leaderboard and each session with its matches (`moments_sources`, newest revision wins); a moment bound to one gets each change through `.changed`. A QR target becomes the view-model's `qr` as Screen makes it (`content.ts`).
+- **Crew actions** (`routes.ts`, `http.ts`, `idempotency.ts`): the spotlight, end, extend and the emergency each run in one transaction with their audit entry (tenants' `POST /internal/tenants/audit`) and their idempotency key (`moments_idempotency`, E18). The venue-wide emergency (`module-routes.ts`) answers only on the superadmin hostname. Modules request moments on `POST /internal/moments/moments` (the kit's service identity).
+- **Archiving** (`tenants.status.changed` to `archived`) ends every moment, the emergency included (E10); writes then answer 409 `event_archived`.
+- **Pages** (`pages.ts`, `views.ts`, `page-kit.ts`, `static/`): Studio → Moments, the Screen studio's Moments tab, at `/moments/` (Caddy strips the prefix): On air, Spotlight, Priorities (with the built-in rules, and a preview in the real player through Screen's zone preview with `ranks`) and History. A page's form goes on to the API itself (`app.inject`, the same cookie and host), so it has the API's rights, idempotency and audit. The emergency starts on a 2-second hold (`static/moments.js`); without the script it asks once more.
+
+## Environment
+
+`CANCCU_DATABASE_URL`, `CANCCU_MIGRATE_DATABASE_URL` (the migration role), `CANCCU_TENANTS_URL`, plus the kit's `CANCCU_MODULE`, `CANCCU_VERSION`, `CANCCU_VALKEY_URL`, `CANCCU_ADMIN_URL`, `CANCCU_SERVICE_KEY`. Optional: `CANCCU_SIGNIN_HOSTNAME`, `CANCCU_SUPERADMIN_HOSTNAME` (the venue-wide emergency answers only there), `CANCCU_IP_MODE=demo` (only with version `dev`).
+
+Through Caddy: `/api/moments/health`, the contract's `/api/moments/…` paths, and the pages under `/moments/` (`/moments` redirects there). Not through Caddy: `/internal/moments/…`, and the internal paths, the API and health under the pages' prefix (404).
+
+## Check
+
+```sh
+npm ci && npm run lint && npm run typecheck && npm test
+```
+
+The tests need a real Postgres, because RLS cannot be faked; without `CANCCU_DATABASE_URL` they are skipped. They drop and recreate the module's tables, so they refuse a database whose name does not end in `_test` ([docs/ci.md](../../docs/ci.md#modules)). `ci/stack-smoke.sh` checks the module on the running stack; `scripts/demo-stack-test` runs `ci/moment-latency.mjs`, which times crew spotlights from Moments to a paired screen's stream (p95 under 1 s, O2).

@@ -12,6 +12,7 @@ export const GROUPS = [
   "theming",
   "screens",
   "screen-studio",
+  "moments",
 ];
 
 /** The groups a `--groups a,b` option names; a typo fails the run rather than skip its shots. */
@@ -29,6 +30,7 @@ const PAGE_GROUPS = [
   ["/agenda/", "agenda"],
   ["/notify/", "notify"],
   ["/theming/", "theming"],
+  ["/moments/", "moments"],
   ["/screen/", "screens"],
 ];
 
@@ -46,7 +48,10 @@ export function groupOf(path) {
 // with the front and trouble passes about 3 min, the screens of every theme 4.5, the Screen
 // studio 2.5.
 export const SHARDS = [
-  { shard: "pages", groups: ["admin", "agenda", "notify", "theming"] },
+  {
+    shard: "pages",
+    groups: ["admin", "agenda", "notify", "theming", "moments"],
+  },
   { shard: "screens", groups: ["screens"] },
   { shard: "studio", groups: ["screen-studio"] },
 ];
@@ -75,6 +80,7 @@ const MAP = [
   ["modules/tenants/*", ["admin"]],
   ["modules/agenda/*", ["agenda"]],
   ["modules/notify/*", ["notify"]],
+  ["modules/moments/*", ["moments"]],
   ["modules/screen-render/*", ["screens"]],
   ["modules/screen/*", ["screens", "screen-studio"]],
   ["modules/*", []],

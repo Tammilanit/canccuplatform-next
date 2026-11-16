@@ -183,7 +183,10 @@ export async function composeZone(
       zone,
       windowLayout: await windowLayoutId(c, zone.key, ctx.time_zone, at),
       ticker: await tickerNow(c, ctx.time_zone, real.getTime()),
-      claims: await loadOverrides(c, zone.key, real.getTime()),
+      claims: (await loadOverrides(c, zone.key, real.getTime())).map((o) => {
+        const rank = preview.ranks?.[o.id];
+        return rank === undefined ? o : { ...o, rank };
+      }),
       pin: await readPin(c),
       showName: await showsName(c, zone),
     };

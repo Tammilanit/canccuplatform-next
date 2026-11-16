@@ -17,6 +17,8 @@ const ALL_RIGHTS = [
 export const SESSIONS: Record<string, string[]> = {
   admin: ALL_RIGHTS,
   crew: ["screen.devices.read"],
+  // The Moments crew preset with the screen crew's first right (contracts/moments.md, Rights).
+  moments: ["screen.devices.read", "moments.read"],
   content: ["screen.content.read"],
   editor: ["screen.content.read", "screen.content.write"],
   ticker: ["screen.ticker.write"],

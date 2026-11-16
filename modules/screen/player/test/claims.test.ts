@@ -126,6 +126,28 @@ describe("claims on the screen", () => {
     expect(text(screen, "rail")).toContain("Dinner is served");
   });
 
+  it("says a crew moment is from the crew, never who (Moments' spotlight, L15)", () => {
+    const screen = new Screen(host);
+    screen.draw(state({ claim: claim() }));
+    expect(text(screen, "rail")).toContain("Announcement");
+    const crew = claim({
+      content: { title: "Pizza is here", body: "", level: "info", from_crew: true },
+    });
+    screen.draw(state({ claim: crew }));
+    expect(text(screen, "rail")).toContain("From the crew");
+    expect(text(screen, "rail")).not.toContain("Announcement");
+    const standings = claim({
+      template: "leaderboard",
+      content: {
+        title: "Standings",
+        rows: [{ rank: 1, name: "Demo Player", points: 3 }],
+        from_crew: true,
+      },
+    });
+    screen.draw(state({ claim: standings }));
+    expect(text(screen, "rail")).toContain("From the crew");
+  });
+
   it("ends the claim on the device at its expiry, also with no word from the server", async () => {
     const screen = new Screen(host);
     screen.draw(state({ claim: claim({ expires_at: iso(T0 + 8000) }) }));

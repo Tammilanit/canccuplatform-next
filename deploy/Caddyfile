@@ -125,6 +125,32 @@
 		reverse_proxy notify:8080
 	}
 
+	# The moments contract's paths are /api/moments/... too; /internal/moments/ is never routed.
+	handle /api/moments/health {
+		rewrite * /health
+		reverse_proxy moments:8080
+	}
+
+	handle /api/moments/* {
+		reverse_proxy moments:8080
+	}
+
+	# As for agenda: the strip below would pass these on as moments' internal paths or as a
+	# second way into what /api/moments/ above already serves.
+	@moments-hidden path /moments/internal/* /moments/api/* /moments/health
+	handle @moments-hidden {
+		respond "not found" 404
+	}
+
+	handle /moments {
+		redir * /moments/{?query} 308
+	}
+
+	# Studio → Moments (the Screen studio's Moments tab); the module's own paths start at /.
+	handle_path /moments/* {
+		reverse_proxy moments:8080
+	}
+
 	# Admin's pages, and inside them screen's Studio pages, which the kiosk's pairing QR opens
 	# (/admin/screen/devices#pair=, contracts/screen.md, Pairing): screen's own paths, given back
 	# their prefix. They sit in this block, not in a handle of their own: Caddy sorts the top-level

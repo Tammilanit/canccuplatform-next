@@ -48,6 +48,7 @@ import {
   READ,
   SIGN_IN,
   TABS,
+  tabHref,
   TICKER,
   ZONES,
   archived,
@@ -146,7 +147,7 @@ export function studioRoutes(app: FastifyInstance, deps: StudioDeps): void {
       const rights = request.session?.rights ?? new Set<string>();
       const order = tenantOf(request).status === "live" ? TABS : [TABS[2], ...TABS];
       const first = order.find((tab) => tab !== undefined && holds(rights, tab[2]));
-      return reply.redirect(`${STUDIO}${first?.[0] ?? "live"}`, 303);
+      return reply.redirect(tabHref(first?.[0] ?? "live"), 303);
     });
 
     studio.get(
