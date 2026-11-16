@@ -18,7 +18,7 @@ interface State {
   theme: { revision: number };
   layout: { id: string } | null;
   regions: Region[];
-  sound: { enabled: boolean; sounded_claims: string[] };
+  sound: { enabled: boolean; sounded_claims: string[]; play: unknown };
   offline: { marker_after_seconds: number };
   display: { motion: string; drift: boolean };
 }
@@ -97,7 +97,7 @@ describe.skipIf(!DATABASE_URL)("the composed state", () => {
     expect(hero?.idle).toBe("next");
     expect(hero?.idle_view).toMatchObject({ widget: "countdown", view: { label: "Dinner" } });
     expect(body.regions.map((r) => r.id)).toContain("_full");
-    expect(body.sound).toEqual({ enabled: false, sounded_claims: [] });
+    expect(body.sound).toEqual({ enabled: false, sounded_claims: [], play: null });
     expect(h.sources.hosts.at(-1)).toBe("alpha.test");
     // Module reads by the event's id (theme, now and next, venue info): the info-page mode cannot
     // refuse them, as it does a guest.

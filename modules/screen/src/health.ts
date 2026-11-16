@@ -43,6 +43,8 @@ export interface Beat {
   client_time?: number;
   rtt_ms?: number;
   instance_id?: string;
+  /** The sounds (and claims) the device played, newest last. */
+  claims_sounded?: string[];
 }
 
 /** What the device's last heartbeat said, with what health has derived from it. */
@@ -73,6 +75,7 @@ const keys = {
   /** An open push stream's last sign of life, apart from the record so the two never overwrite. */
   seen: (id: string) => tenantKey("screen", "health", id, "seen"),
   online: () => tenantKey("screen", "online"),
+  sounded: (id: string) => tenantKey("screen", "health", id, "sounded"),
 };
 
 function seconds(value: SettingValue, fallback: number): number {
@@ -158,6 +161,10 @@ export async function recordHeartbeat(
         : Math.round(beat.client_time + (beat.rtt_ms ?? 0) / 2 - receivedMs),
   };
   await kv.set(keys.record(id), JSON.stringify(record), RECORD_TTL_MS);
+  // Kept apart from the record: a beat without the list (an older player) must not clear it.
+  if (beat.claims_sounded !== undefined && beat.claims_sounded.length > 0) {
+    await kv.set(keys.sounded(id), JSON.stringify(beat.claims_sounded), RECORD_TTL_MS);
+  }
   if (beat.instance_id !== undefined) {
     await kv.addExpiring(
       keys.instances(id),
@@ -231,6 +238,13 @@ export async function recordSeen(
  * Drop the current event's health of a device that has left it (moved away or deleted), so the
  * sweep never reports it offline there and a later return starts afresh.
  */
+/** What the device last said it played (contracts/screen.md, Sound): a reload repeats none of it. */
+export async function soundedOf(kv: Kv, id: string): Promise<string[]> {
+  const raw = await kv.get(keys.sounded(id));
+  const list: unknown = raw === null ? [] : JSON.parse(raw);
+  return Array.isArray(list) ? list.filter((x): x is string => typeof x === "string") : [];
+}
+
 export async function forgetHealth(kv: Kv, id: string): Promise<void> {
   await kv.del(keys.record(id), keys.instances(id), keys.playingQuiet(id), keys.seen(id));
   await kv.removeMember(keys.online(), id);

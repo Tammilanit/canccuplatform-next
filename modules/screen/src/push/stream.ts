@@ -30,6 +30,8 @@ const DRAFT_READ_MS = 60_000;
 export class DeviceStream extends Feed<StreamRequest> {
   private stopDevice: (() => void) | undefined;
   private draftReadAt = 0;
+  /** As the device last reported at (re)connect; the page keeps its own list after that. */
+  private sounded: string[] = [];
 
   get deviceId(): string {
     return this.req.device.id;
@@ -50,6 +52,7 @@ export class DeviceStream extends Feed<StreamRequest> {
   protected async locate(): Promise<FeedPlace> {
     const placed = await placeDevice(this.deps, this.req.ctx, this.req.host, this.req.device);
     this.mirror = placed.mirror;
+    this.sounded = placed.sounded;
     return placed;
   }
 
@@ -60,6 +63,7 @@ export class DeviceStream extends Feed<StreamRequest> {
       device: this.req.device,
       mirror: this.mirror,
       bundleVersion: this.deps.bundleVersion,
+      sounded: this.sounded,
     });
   }
 

@@ -10,6 +10,8 @@ import { clockText, identifyCard, keepSafetyLast, offlineMark } from "./frames.j
 import { Heartbeat } from "./heartbeat.js";
 import { applyPatch, isState } from "./state.js";
 import type { ScreenState } from "./state.js";
+import { SoundPlayer } from "./sound.js";
+import type { SoundState } from "./sound.js";
 import { STREAM_PATH, StreamClient } from "./stream.js";
 import type { SseMessage } from "./sse.js";
 
@@ -50,6 +52,7 @@ export class Live {
   /** The page carries `canccu-is-offline` now; the screen dims what the server keeps. */
   offline = false;
   readonly heartbeat: Heartbeat;
+  private readonly sound: SoundPlayer;
   private readonly stream: StreamClient;
   private streamOpen = false;
   private offlineTimer: ReturnType<typeof setTimeout> | undefined;
@@ -98,6 +101,7 @@ export class Live {
         theme_revision: this.state?.theme.revision ?? 0,
         audio_unlocked: audioUnlocked(),
         viewport: { width: window.innerWidth || 1, height: window.innerHeight || 1 },
+        claims_sounded: this.sound.played(),
       }),
       (answer) => {
         host.settle(answer);
@@ -105,6 +109,10 @@ export class Live {
       host.now,
       host.random,
     );
+    this.sound = new SoundPlayer({
+      serverNow: () => this.heartbeat.serverNow(),
+      audio: (src) => new Audio(src),
+    });
   }
 
   /**
@@ -125,6 +133,8 @@ export class Live {
       this.heartbeat.offsetMs = stateMs - this.host.now();
     }
     this.setTheme(state.theme);
+    // A state from the offline store is old news: its sound is not this moment's.
+    if (offlineSince === undefined) this.sound.take(state.sound as SoundState | undefined);
     if (this.running) return;
     this.running = true;
     this.streamOpen = false;

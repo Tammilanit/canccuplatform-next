@@ -9,6 +9,7 @@ import {
   Bus,
   KitError,
   RightsChecker,
+  ServiceIdentity,
   TenantResolver,
   createHealth,
   requireTenant,
@@ -38,6 +39,8 @@ import type { FakeSources } from "./sources-fake.js";
 
 /** Tests run only on a database named `*_test` (dropTables refuses any other). */
 export const DATABASE_URL = process.env.CANCCU_DATABASE_URL;
+/** The platform's service key in tests: Moments signs its calls to the internal paths with it. */
+export const SERVICE_KEY = "s".repeat(32);
 
 export { VENUE_IP } from "./calls.js";
 export const OUTSIDE_IP = "192.0.2.9";
@@ -109,7 +112,7 @@ export async function dropTables(admin: pg.Client): Promise<void> {
        screen_playlist_items, screen_playlists, assignments, screen_assignments, screen_zones,
        screen_zone_seeds, devices, screen_migrations, screen_render_jobs, screen_asset_versions,
        screen_assets, screen_files, screen_ticker, screen_ticker_windows, screen_photos, screen_claims, screen_pins,
-       screen_pin_tenants, screen_previews, screen_outbox, screen_outbox_tenants CASCADE`,
+       screen_pin_tenants, screen_previews, screen_outbox, screen_outbox_tenants, screen_zone_sounds CASCADE`,
   );
 }
 
@@ -208,6 +211,7 @@ export async function harness(options: { saves?: boolean } = {}): Promise<Harnes
     audit,
     tenants,
     superadminHost: SUPERADMIN_HOST,
+    service: new ServiceIdentity({ module: "screen", key: SERVICE_KEY }),
     health: createHealth({ module: "screen", version: "dev", checks: {} }),
     settings: {
       ensure: () =>

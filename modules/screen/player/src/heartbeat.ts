@@ -18,6 +18,8 @@ export interface Report {
   /** Whether sound may play now (the kiosk's autoplay flag, or a tap on the page). */
   audio_unlocked: boolean;
   viewport: { width: number; height: number };
+  /** The zone's sounds this page played, so a reload never plays one again. */
+  claims_sounded?: string[];
 }
 
 /** Random once per page load, so admin can tell a reload from a copied cookie (`shared_token`). */

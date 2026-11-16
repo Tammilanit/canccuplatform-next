@@ -162,6 +162,12 @@ export function installServiceIdentity(
 export interface TenancyOptions {
   /** `serve` only in a module that answers on the sign-in or superadmin hostname. */
   platformHosts?: "serve" | "refuse";
+  /**
+   * Paths under this prefix resolve no tenant from the Host: another module calls them by its
+   * service name (`screen:8080`), so they need `installServiceIdentity` and name the event in
+   * their query. For a module that installs tenancy on the whole app rather than on a plugin.
+   */
+  servicePrefix?: string;
 }
 
 /** `GET /health` stays outside tenant resolution (0013 item 2). */
@@ -181,7 +187,11 @@ export function installTenancy(
   app.decorateRequest("tenant", null);
   app.addHook("onRequest", (request, _reply, done) => {
     // The raw path: an escaped /health only loses its exemption, which fails safe.
-    if (isHealthRequest(request.method, request.url.split("?")[0] ?? "")) {
+    const path = request.url.split("?")[0] ?? "";
+    if (
+      isHealthRequest(request.method, path) ||
+      (options.servicePrefix !== undefined && path.startsWith(options.servicePrefix))
+    ) {
       done();
       return;
     }

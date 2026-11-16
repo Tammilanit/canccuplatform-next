@@ -30,6 +30,7 @@ import { sweepOffline } from "./health.js";
 import { ValkeyKv } from "./kv.js";
 import { applyAgendaEvent } from "./content/agenda.js";
 import { applyOverrideEvent } from "./compose/overrides.js";
+import { applySoundEvent } from "./moments-sound.js";
 import { httpSources } from "./compose/sources.js";
 import { BundleStore, bundlesDir } from "./pins/bundles.js";
 import { keepBundles } from "./pins/store.js";
@@ -207,6 +208,7 @@ async function main(): Promise<void> {
     log.warn({ err }, "keeping the player bundles failed");
   });
   const app = buildApp({
+    service,
     db,
     kv,
     bus,
@@ -268,8 +270,9 @@ async function main(): Promise<void> {
     async (event) => {
       try {
         await applyOverrideEvent(db, event);
+        await applySoundEvent(db, event);
       } catch (err) {
-        log.warn({ err, type: event.type }, "keeping a moments override failed");
+        log.warn({ err, type: event.type }, "keeping a moments override or sound failed");
       }
       app.pushHub.handleEvent(event);
     },

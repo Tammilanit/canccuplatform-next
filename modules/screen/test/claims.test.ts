@@ -1,7 +1,7 @@
 /**
  * Claims end to end with fixture `moments.override.*` events (#307): Screen's copy of the
  * overrides, their placement in the composed state, `screen.claims.changed`, expiry without
- * Moments, and the heartbeat's `claims_sounded` kept for step 4.
+ * Moments, and the heartbeat's `claims_sounded` returned as `sounded_claims`.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { newId, withTenant } from "@canccu/kit";
@@ -217,7 +217,7 @@ describe.skipIf(!DATABASE_URL)("claims", () => {
     expect(claims(await state())).toEqual({});
   });
 
-  it("validates the heartbeat's claims_sounded and keeps sounded_claims empty until step 4", async () => {
+  it("validates the heartbeat's claims_sounded and returns them in sounded_claims", async () => {
     await start(
       override("ov_10", { sound: { cue: "announce", url: null, volume: 1, play: "once" } }),
     );
@@ -233,7 +233,7 @@ describe.skipIf(!DATABASE_URL)("claims", () => {
       });
     expect((await beat(["ov_10"])).statusCode).toBe(200);
     expect((await beat([7])).statusCode).toBe(400);
-    expect((await state()).sound.sounded_claims).toEqual([]);
+    expect((await state()).sound.sounded_claims).toEqual(["ov_10"]);
   });
 
   // contracts/screen.md, The hero role and the showcase (#404).
