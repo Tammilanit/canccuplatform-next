@@ -342,7 +342,8 @@ jobs:
           path: packages/kit-py/mutants/mutmut-cicd-stats.json
           retention-days: 30
 
-  # The score the step checkpoint quotes: the artifact `mutation-score` of the newest weekly run.
+  # The score the step checkpoint quotes: the artifact `mutation-score` of the newest scheduled run on main.
+  # A pull request's short form mutates one file of each kit, so its score is named apart.
   mutation-score:
     name: mutation-score
     needs: [mutation-ts, mutation-py]
@@ -366,7 +367,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: mutation-score
+          name: ${{ github.event_name == 'pull_request' && 'mutation-score-short' || 'mutation-score' }}
           path: mutation-score/
           retention-days: 90
 
