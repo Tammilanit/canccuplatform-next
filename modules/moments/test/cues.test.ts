@@ -82,6 +82,17 @@ live("cues", () => {
     ]);
   });
 
+  it("a cue's picture is never the same effect twice running", async () => {
+    const names: string[] = [];
+    for (let n = 0; n < 6; n++) {
+      await pizza(n, w.at(n * 30));
+      const started = w.events("demo").filter((e) => e.type === "moments.override.started");
+      const o = started.at(-1)?.data.override as { effect: { name: string } };
+      names.push(o.effect.name);
+    }
+    for (let i = 1; i < names.length; i++) expect(names[i]).not.toBe(names[i - 1]);
+  });
+
   it("an edit or a renewal never sounds again", async () => {
     await pizza(1, T0);
     await w.tx("demo", (c) =>

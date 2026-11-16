@@ -71,13 +71,15 @@ try {
   let seen = null;
   const round = async (waitMs) => {
     const r = await moments("POST", "/api/moments/sound/check", { zones: ["main"] });
-    if (r.status !== 200) throw new Error(`sound check: HTTP ${r.status} ${JSON.stringify(r.body)}`);
+    if (r.status !== 200)
+      throw new Error(`sound check: HTTP ${r.status} ${JSON.stringify(r.body)}`);
     // Both screens' states, each stamped when it came: a screen starts at play_at, or then.
     const got = await Promise.all(
       streams.map((s) => s.next(newSound(seen), waitMs).then((f) => ({ f, at: Date.now() }))),
     );
     const play = got[0].f.data.sound.play;
-    if (got[1].f.data.sound.play.id !== play.id) throw new Error("the screens got different sounds");
+    if (got[1].f.data.sound.play.id !== play.id)
+      throw new Error("the screens got different sounds");
     seen = play.id;
     enabled = got.map((g) => g.f.data.sound.enabled);
     const starts = got.map((g) => Math.max(g.at, Date.parse(play.play_at)));
@@ -85,8 +87,9 @@ try {
   };
   // A fresh stack's screen finds the moments stream at its next rescan, as for the latency check.
   const warmUntil = Date.now() + WARM_UP_MS;
-  for (let ok = 0; ok < 2; ) {
-    if (Date.now() > warmUntil) throw new Error("Moments' sounds did not come through to the screens");
+  for (let ok = 0; ok < 2;) {
+    if (Date.now() > warmUntil)
+      throw new Error("Moments' sounds did not come through to the screens");
     ok = (await round(3000).catch(() => Infinity)) < BUDGET_MS ? ok + 1 : 0;
   }
   for (let i = 0; i < ROUNDS; i++) spreads.push(await round(5000));
