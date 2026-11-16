@@ -24,7 +24,6 @@ from canccu_kit.ui import (
 )
 
 
-
 def _menu_json() -> Path:
     # mutmut runs the tests from a copy (mutants/), one level deeper, so walk up, not a fixed depth.
     for parent in Path(__file__).resolve().parents:
