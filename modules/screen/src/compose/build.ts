@@ -39,6 +39,10 @@ export interface BuildInput {
    * lets it grow; `keep`, it plays at its size. Absent: nothing is showcased.
    */
   showcase?: "grow" | "keep";
+  /** The zone's scene's layout (D5): under a schedule window's, over the zone's own. */
+  sceneLayoutId?: string | null;
+  /** The hero's features the zone's scene switched off: the hero skips them. */
+  heroOff?: readonly string[];
 }
 
 export interface WidgetView {
@@ -180,7 +184,10 @@ function region(
     };
   });
   const skipEmpty = setting.skip_empty !== false;
-  const sequence = widgets.flatMap((w, i) => (skipEmpty && w.view.empty ? [] : [i]));
+  const off = new Set(role === "hero" ? (input.heroOff ?? []) : []);
+  const sequence = widgets.flatMap((w, i) =>
+    (skipEmpty && w.view.empty) || off.has(w.widget) ? [] : [i],
+  );
   // Cycles are anchored on the epoch, not on a save or a boot, so all screens of a zone show the
   // same widget at the same moment, also after a reload and offline.
   const cycleMs =
@@ -286,6 +293,7 @@ function roomFor(
 export function buildRegions(input: BuildInput): { layout: Layout; regions: RegionView[] } {
   const layout = chooseLayout({
     windowLayoutId: input.windowLayoutId,
+    sceneLayoutId: input.sceneLayoutId ?? null,
     zoneLayoutId: input.zone.layoutId,
     themeLayouts: input.themeLayouts,
     portrait: input.portrait,

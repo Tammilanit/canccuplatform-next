@@ -23,7 +23,9 @@ import { themeColors } from "../stage/scrim.js";
 import { claimEndAt, placeClaims } from "./claims.js";
 import type { Override, Placement } from "./claims.js";
 import { contentFacts, entriesOf, photoProps } from "./content.js";
-import { NO_DISPLAY, displayOf, phaseSource } from "./display.js";
+import { NO_DISPLAY, displayOf, moodOf, phaseSource } from "./display.js";
+import { loadScene } from "./scenes.js";
+import type { ZoneScene } from "./scenes.js";
 import type { Display } from "./display.js";
 import { nextPhaseAt, type MotionLevel } from "./motion.js";
 import { themeLayouts } from "./layouts.js";
@@ -189,6 +191,7 @@ export async function composeZone(
       }),
       pin: await readPin(c),
       showName: await showsName(c, zone),
+      scene: await loadScene(c, zone.key),
     };
   });
   if (read === null) return null;
@@ -215,6 +218,7 @@ export async function composeZone(
     pin: read.zone.motion_level ?? null,
     settings: deps.settings,
     at: at.getTime(),
+    scene: read.scene,
   });
   const facts: ZoneFacts = {
     now: at,
@@ -241,6 +245,8 @@ export async function composeZone(
           heroRegion: read.zone.hero_region,
         },
         windowLayoutId: read.windowLayout,
+        sceneLayoutId: read.scene?.layout ?? null,
+        heroOff: read.scene?.hero_off ?? [],
         themeLayouts: themeLayouts(theme?.layouts),
         portrait,
         facts,
@@ -275,7 +281,7 @@ export async function composeZone(
   const { stage, covers } = withContent
     ? await stageOf({
         views,
-        phase: motion.phase,
+        phase: moodOf(read.scene, motion.phase),
         agenda,
         nowMs: at.getTime(),
         stageArt: deps.settings.get("stage_art", true) !== false,
@@ -306,6 +312,7 @@ export async function composeZone(
       bundle,
       showName: read.showName,
       art: covers,
+      scene: read.scene,
     }),
     zone: read.zone,
     showName: read.showName,
@@ -337,6 +344,8 @@ export interface FingerprintInput {
   showName?: boolean;
   /** The cards' and the tint's art read (compose/stage.ts): a cover read only later moves it. */
   art?: readonly string[];
+  /** The zone's scene: its layout and hero features are in no other input. */
+  scene?: ZoneScene | null;
 }
 
 /**
@@ -357,6 +366,7 @@ export function zoneFingerprint(input: FingerprintInput): string {
     bundle: input.bundle ?? null,
     show_name: input.showName ?? true,
     art: input.art ?? [],
+    scene: input.scene ?? null,
   };
   return createHash("sha256").update(JSON.stringify(stable)).digest("base64url");
 }

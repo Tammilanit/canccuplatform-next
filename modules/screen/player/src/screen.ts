@@ -10,6 +10,7 @@ import { driftAt, FADE_MS } from "./display.js";
 import type { Motion } from "./display.js";
 import { legacyMotion, motionStyleOf } from "@canccu/ui";
 import { MotionLayer, levelOf } from "./motion.js";
+import { SceneLayer } from "./scene.js";
 import { StageLayer } from "./stage.js";
 import { idleOf } from "./idle.js";
 import type { Shown } from "./idle.js";
@@ -72,6 +73,7 @@ export class Screen {
   /** The level, pack and effects live on `<body>` (contracts/theming.md, Classes). */
   private readonly motion = new MotionLayer(document.body);
   private readonly stage = new StageLayer(document.body);
+  private readonly scene = new SceneLayer(document.body);
   private readonly pace = new Choreographer();
 
   constructor(private readonly host: ScreenHost) {}
@@ -206,6 +208,7 @@ export class Screen {
     fillCountdowns(this.root, now);
     this.motion.apply(this.root, level, motionStyleOf(state.display?.motion_style), now);
     this.stage.apply(state.display?.stage, level, now);
+    this.scene.apply(state.display?.scene);
     fitTickers(this.root, motion, now);
     if (state.display?.drift === true) {
       const { x, y } = driftAt(now);

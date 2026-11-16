@@ -14,6 +14,7 @@ import "./dashboard.css";
 import "./wall.css";
 import "./motion.css";
 import "./stage.css";
+import "./scene.css";
 import "./director.css";
 import { audioSettled, unlockOnGesture } from "./audio.js";
 import { CheckPage } from "./check.js";
