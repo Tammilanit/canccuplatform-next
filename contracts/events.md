@@ -38,16 +38,16 @@ Emitter: `agenda`. Audience: event-wide, by the item's `visibility`. Payloads: [
 
 | Type | Meaning | Consumers |
 |---|---|---|
-| `agenda.item.added` | An item was added | screen, notify (quiet hours) |
-| `agenda.item.changed` | An item was edited or moved | screen, notify (quiet hours) |
-| `agenda.item.delayed` | An item was delayed or brought forward | screen, notify, tournament (moves the session of a delayed session item, [agenda.md](agenda.md#tournament-sessions)) |
-| `agenda.item.cancelled` | An item was cancelled | screen, notify |
-| `agenda.item.removed` | An item was removed | screen, notify (quiet hours) |
+| `agenda.item.added` | An item was added | screen, notify (quiet hours), moments (scenes) |
+| `agenda.item.changed` | An item was edited or moved | screen, notify (quiet hours), moments (scenes) |
+| `agenda.item.delayed` | An item was delayed or brought forward | screen, notify, tournament (moves the session of a delayed session item, [agenda.md](agenda.md#tournament-sessions)), moments (scenes) |
+| `agenda.item.cancelled` | An item was cancelled | screen, notify, moments (scenes) |
+| `agenda.item.removed` | An item was removed | screen, notify (quiet hours), moments (scenes) |
 | `agenda.item.announced` | An organiser announced an item now, with an optional message | notify (`schedule`), bot (a post in the event's channel, on `discord_channel`) |
 | `agenda.item.started` | An item's start was reached | screen, moments |
 | `agenda.item.ended` | An item's end was reached | screen |
 | `agenda.reminder.triggered` | A lead time before an item's start was reached | bot, screen, notify |
-| `agenda.items.cloned` | The agenda was cloned from another event | screen, notify (quiet hours) |
+| `agenda.items.cloned` | The agenda was cloned from another event | screen, notify (quiet hours), moments (scenes) |
 | `agenda.kind.saved` | A kind of the event's kind list was added or changed. Audience: event-wide, `public` | screen, bot, notify (re-read items whose defaults changed) |
 | `agenda.kind.removed` | A kind was removed. Audience: event-wide, `public` | screen, bot |
 
@@ -82,7 +82,7 @@ Emitter: `notify`. Audience: personal. Payloads: [notify.md](notify.md#events-ve
 | Type | Meaning | Consumers |
 |---|---|---|
 | `notify.dm.requested` | A notification should reach a user as a Discord DM: the person chose DMs for its topic, or no push reached them | bot |
-| `notify.checkin.recorded` | A signed-in attendee checked in by the rotating QR | The module named in `purpose` (tournament for match check-in), admin, screen (re-reads the count of arrival check-ins) |
+| `notify.checkin.recorded` | A signed-in attendee checked in by the rotating QR | The module named in `purpose` (tournament for match check-in), admin, screen (re-reads the count of arrival check-ins), moments (scenes, arrival only) |
 
 ## Screen
 Emitter: `screen`. Audience: system, except where noted. Payloads: [screen.md](screen.md#events-version-1).
@@ -108,7 +108,7 @@ On the tenant's stream:
 |---|---|---|
 | `tenants.tenant.changed` | The event's fields changed (name, time zone, dates, access, venue, series) | All modules (the kit's tenant cache) |
 | `tenants.status.changed` | The event went live or was archived | All modules (archived is read-only); notify (deletes its subscriptions and notifications at archiving) |
-| `tenants.tenant.cloned` | The tenants part of a clone ran | admin (runs each module's clone) |
+| `tenants.tenant.cloned` | The tenants part of a clone ran | admin (runs each module's clone), moments (copies its settings) |
 | `tenants.flags.changed` | Feature flags were set | All modules; bot (re-registers slash commands) |
 | `tenants.venue_info.changed` | The event's venue info changed (also when copied in for a new venue). Audience: event-wide, `public` | screen, notify |
 | `tenants.venue_ip_check.changed` | The venue IP check was switched off or on | screen (the kit's tenant cache) |
@@ -331,4 +331,5 @@ The screen contract adds these optional fields ([screen.md](screen.md#moments-dr
 | `moments.override.started` | An override became active on its zones | event-wide, `public` | screen, voices (may speak it) | `override` (Override), `actor_user_id` |
 | `moments.override.changed` | An active override's content or end changed (extended, a live score) | event-wide, `public` | screen | `override` (Override), `changed` (list of string: field names), `actor_user_id` |
 | `moments.override.ended` | An override stopped: it expired, a person cleared it, a higher rank took its place, or its source ended | event-wide, `public` | screen, voices | `override_id` (string), `zones` (list of string: the zones it left; empty: everywhere), `reason` (string: `expired`, `cleared`, `preempted`, `source_ended`), `final` (boolean, additive: `true` only when the override is gone everywhere), `actor_user_id` |
+| `moments.scene.changed` | A zone's scene or its heartbeat changed ([moments.md](moments.md#scenes-design-sheet-12-d5-d6-e7-l10-l14-o7)) | event-wide, `public` | screen (composes it into the zone's `display`, layout and hero) | `zone_key` (string), `scene` (object or null: `key`, `name`, `motion`, `layout`, `stage_mood`, `palette`, `sound`, `quiet`, `hero_off`, `blend_seconds`), `since` (string, time), `why` (string), `heartbeat_bpm` (integer), `actor_user_id` |
 | `moments.sound.played` | Moments decided a sound for a zone's screens (additive, #113) | event-wide, `public` | screen | `zone_key` (string), `sound` (object: `id`, `cue`, `category`, `url`, `voice_url` (string or null), `volume` (0–1), `play_at`, `catch_up_until` (times), `interrupts` (boolean); [moments.md](moments.md#how-a-sound-is-decided-mockup-13)) |

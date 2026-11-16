@@ -4,7 +4,7 @@ Moments is the venue's autopilot at the peaks: one server-side arbiter ranks, ti
 
 **Machine-readable API: [moments.openapi.yaml](moments.openapi.yaml)** (OpenAPI 3.1). It is the source for paths, fields and status codes; this file explains them and adds the rules and events. Conventions (field names, times, error body): [README.md](README.md#conventions).
 
-The contract comes in parts, each with the package whose code uses it (step 4 plan D24): **the engine** (moments, priorities, the arbiter's rules, the crew spotlight, emergency, built-in rules, history), **cues and sound** (#113, below: [Cues and sound](#cues-and-sound)), then scenes, storyboards (#114) and announcements (#115).
+The contract comes in parts, each with the package whose code uses it (step 4 plan D24): **the engine** (moments, priorities, the arbiter's rules, the crew spotlight, emergency, built-in rules, history), **scenes** (below), **cues and sound** (#113, below: [Cues and sound](#cues-and-sound)), then storyboards (#114) and announcements (#115).
 
 ## Tenancy
 - Moments belong to one event, which is one tenant ([0013](../docs/decisions/0013-multi-tenant-core.md)); the tenant comes from the request's hostname. Every row carries `tenant_id` under row-level security. Events go to `t:<tenant>:events:moments`.
@@ -93,6 +93,31 @@ Rules turn catalog events into moments. Each built-in has these settings per eve
 | `pizza` | `pizza.order.placed`, `pizza.order.arrived` | `pizza_placed`, `announcement`, rail → ticker, 300 s | `pizza.order.cancelled` |
 | `hot_game` | `games.surge.started` | `hot_game`, `hot_game`, hero → rail, 120 s | `games.surge.ended` of the game |
 
+## Scenes (design sheet 12; D5, D6, E7, L10, L14, O7)
+A scene sets a zone's mood by itself, so nobody needs to direct at 03:00: a set of conditions (when) and a set of changes (then). Moments decides each zone's scene; Screen composes it ([screen.md](screen.md#motion-and-burn-in-drift)). A scene never starts or ends a moment; it only changes how the zone's screens look and what may play.
+
+- **A scene** (`Scene`): `key`, `name`, `preset` (the preset it was copied from, or null), `zones` (empty: every zone), `when` (conditions; any one is enough, and an empty list always holds), `then` (changes), `hold_minutes` (0 to 240) and `blend_seconds` (0 to 600). An event has at most 20, in priority order.
+- **Conditions** (D6): `time` (every day of the event from `from` to `to`, HH:MM in the event's time zone, past midnight when `to` is earlier: one line for a four-day event); `agenda` (an item of one of `kinds` runs on the zone, as Screen's day's phase reads items: public, scheduled, of the zone or of no zone, one without an end counting an hour and quiet hours without one never running; or, with `starts_within_minutes`, one starts within that many minutes); `checkins` (over `over` arrival check-ins in the last hour, from `notify.checkin.recorded`); `presence` (members online `over` and/or `under` a count, from `bot.presence.counted`; never while no count of the last 10 minutes is known); `games` (a game is surging, from `games.surge.started` until `.ended`); `crew` (the scene's crew button, holding `minutes` per press). Presence and games are tested on fixture events until their emitters land. The outside signal stays planned.
+- **Changes** (`then`): `motion` (a level, or `calmer` or `livelier`: one step from the event's level, as Follow the day moves it; null keeps it), `layouts` (zone key to layout id), `stage_mood` (the stage's mood: `build_up`, `doors`, `peak`, `wind_down` or `quiet_hours`), `palette` (the theme's `primary` and `accent` while it holds, or null; the palette only, never a whole theme, L14), `sound` (on, off, or null to keep the zone's), `quiet` (quiet mode: the level at most `calm`), `hero_off` (the hero's features it switches off: `bracket`, `leaderboard`, `countdown`, `playlist`, `photo`, `hot_game`, `today_numbers`). The sound gates read `sound` and `quiet` (#113).
+- **Which scene a zone is in** (E7), at every change of what the conditions read and every 10 seconds: the crew button pressed for the zone wins until its time ends; else the first scene of the list that applies to the zone and whose conditions hold. A scene stays on for its `hold_minutes` against any scene lower in the list, even when its own conditions drop for a moment; a scene higher in the list takes over at once. With none holding, the zone has no scene and Screen follows the day's phase.
+- **The crew button** (U11, E7): `POST /api/moments/scenes/{scene_key}/take` (right `moments.scenes.take`, an `Idempotency-Key` as every crew action) with optional `zones` (default every zone), for a scene with a `crew` condition. One tap, no confirmation; the scene wins for the condition's `minutes`, until that time ends or the same button is pressed again. One press per event: another scene's press replaces it. On air shows it as "Peak now" for the Peak preset.
+- **The presets** (O7): five built-ins, platform data an event copies on its first use (the first scene pass, at revision 0); a later platform version never changes an event's copy. In this order, without hold or blend, they are step 3's day's phase exactly, so an event that never opens Scenes looks as before; [moments/follow-the-day.json](moments/follow-the-day.json) holds the cases both modules' tests check, Moments that it sends these scenes, Screen that it composes them as the phase.
+
+  | Preset | When | Then |
+  |---|---|---|
+  | `quiet` Quiet | a `quiet_hours` item runs | quiet mode; mood `quiet_hours` |
+  | `wind_down` Wind down | a `quiet_hours` item starts within 60 minutes | `calmer`; mood `wind_down` |
+  | `doors` Doors | a `doors` item runs | `calmer`; mood `doors` |
+  | `peak` Peak | a `tournament` or `ceremony` item runs, or the crew button (30 minutes) | `livelier`; mood `peak` |
+  | `daytime` Daytime | always | mood `build_up` |
+
+- `GET /api/moments/scenes` (right `moments.read`) → `Scenes`: `scenes`, `revision`, `copied` (false until the first use copied the presets), `zones` (each zone's `scene_key`, `since`, `why` and `heartbeat_bpm` as last sent) and `crew` (the button pressed now: `scene_key`, `zones`, `until`; or null).
+- `PUT /api/moments/scenes` (right `moments.settings.write`) with `scenes` and `revision` replaces the list; `POST /api/moments/scenes/reset` with `revision` puts this platform version's presets back ("Reset to default"). Each puts every zone in its scene at once; a stale `revision` is 409 `version_conflict`, a bad list 400 `invalid_request`. Audited.
+- **`moments.scene.changed`** per zone, only when its scene or heartbeat changed: `zone_key`, `scene` (the scene's `key`, `name`, `motion`, `layout` (this zone's, or null), `stage_mood`, `palette`, `sound`, `quiet`, `hero_off`, `blend_seconds`; null while no scene holds), `since` (when the zone's scene began), `why` (the condition that held, "the crew pressed it", or the hold), `heartbeat_bpm` and `actor_user_id` (the person whose action changed it, or null).
+- **The visual heartbeat** (L10, P5): `heartbeat_bpm`, 4 to 30 beats a minute: the mood's own (`quiet_hours` 4, `wind_down` 6, `build_up` 8, `doors` 10, `peak` 12), one more for every five arrival check-ins of the last hour and for every 60 members online. Screen draws it.
+- **Clone with an event** (D22): on `tenants.tenant.cloned` (the tenants module checked the series and the caller), the source event's priorities, rules and scenes become the new event's, where it has none of its own (scenes it never saved count as none); never the history, a live moment or a zone's scene. A second delivery copies nothing again.
+- **Pages:** **Scenes** (Studio → Moments → Scenes, and the Screen studio's Scenes tab, sheet 12): the band chart (what the time and agenda conditions alone will do on each day of the event, for one zone), the list in priority order (move up and down, edit, add from a preset, delete), one scene's conditions and changes, hold and blend, "Reset to default", and the crew buttons. **On air** shows each zone's scene, since when and why, and the crew buttons ("Peak now", one tap).
+
 ## Cues and sound
 A **cue** is a picture plus an optional sound (step 4 plan, [The sound model](../docs/briefs/step-4-moments.md#the-sound-model-d16)); either half may play alone. A moment's start plays its cue: a rule's `cue`, the crew spotlight `announce.attention`, the emergency `emergency.start`, its "All clear" `announce.cleared`. A new photo (`screen.photo.added`) plays `photo.showcase`, sound only. A renewal or an edit of a moment never plays its cue again (E4, L13).
 
@@ -107,13 +132,13 @@ When a moment's cue has `effects`, Moments picks one at random, never the cue's 
 ### How a sound is decided (mockup 13)
 On the server, once per zone, the same for every screen of the zone; each zone's decisions run one at a time under its row lock. The gates, in order, each "no" a reason code in the log:
 1. `master_off`, `muted` (the timed mute).
-2. The zone's energy (Screen's `GET /internal/screen/zones/{zone_key}/sound`): `party` and `lively` play every category, `calm` urgent, attention and result (`calm`), quiet hours, as a quiet scene until scenes land, urgent only (`quiet`).
+2. The zone's energy (Screen's `GET /internal/screen/zones/{zone_key}/sound`): `party` and `lively` play every category, `calm` urgent, attention and result (`calm`), a quiet scene (its `quiet`, or quiet hours while the zone has no scene) urgent only (`quiet`).
 3. `category_off`, `cue_off`, `no_sound`, `cooldown` (the cue's on the zone); while an emergency runs on the zone only urgent (`emergency`).
 4. `dedupe` (the same appearance again), `once_per_source` (7 days), `outside_window` (a cue with a window before the start).
 5. `coalesced` (the same cue accepted on the zone in the last 2 s), the flood guard: `flood_source` (the same cue and source within `per_source_seconds`, 10) and `flood_minute` (`per_minute`, 3, per zone); `budget` (`hourly_budget`, 20, per zone). Urgent passes all three (`urgent_passes`) and still counts. The minute and hour counts are Valkey counters per zone (D15).
 6. One at a time: ambient never waits (`busy`) and keeps 30 s between ambient sounds (`ambient_gap`); only urgent interrupts a playing sound (`interrupted`); any other waits in the zone's queue, highest category first, at most 4 s from its request (`waited`, else `stale`).
 
-A sound that passes is sent to the zone's screens as `moments.sound.played` with `play_at` (now plus 400 ms) and `catch_up_until` (its cue's window); a voice line plays right after its sound and counts with it as one. The zone's sound screen, when Screen reports it offline or with its audio locked, makes the log line `missed` with `device_offline` or `audio_locked` (E12, E13); the sound stays sent, and the screen plays it late if it comes back within the window. A zone without a sound screen is `suppressed` with `no_sound_screen`.
+A sound that passes is sent to the zone's screens as `moments.sound.played` with `play_at` (now plus 400 ms) and `catch_up_until` (its cue's window); a voice line plays right after its sound and counts with it as one. The zone's sound screen, when Screen reports it offline or with its audio locked, makes the log line `missed` with `device_offline` or `audio_locked` (E12, E13); the sound stays sent, and the screen plays it late if it comes back within the window. A zone without a sound screen, or with its sound off (its own switch, or its scene's `sound`), is `suppressed` with `no_sound_screen`.
 
 ### The sound log
 `GET /api/moments/sound/log` (right `moments.read`): every decision, newest first, with `zone_key`, `cue`, `sound`, `outcome` (`played`, `queued`, `suppressed`, `dropped`, `missed`), `reason` (the codes above, `free` for a sound that played at once, `sound_check`) and `detail`. Kept as the history is (D21).
@@ -133,19 +158,20 @@ A sound that passes is sent to the zone's screens as `moments.sound.played` with
 
 ## Pages
 Studio → Moments, the Screen studio's Moments tab, at `/moments/` (Caddy strips the prefix), phone-first; a signed-out browser goes to `/admin/sign-in?next=`. `/moments/` opens **On air** while the event is live and **Priorities** before (U9).
-- **On air** (mockup 03, and the phone's Screens tab, mockup 04, U6): a column per zone with what is placed, hidden and waiting and why, time left, Extend and End in zone; the crew actions Spotlight and Emergency (hold 2 s).
+- **On air** (mockup 03, and the phone's Screens tab, mockup 04, U6): a column per zone with its scene and what is placed, hidden and waiting and why, time left, Extend and End in zone; the crew actions Spotlight, the scenes' crew buttons ("Peak now", mockup 14) and Emergency (hold 2 s).
 - **Spotlight:** the crew spotlight's form.
 - **Priorities** (mockup 08): the event's order and each zone's, moved up and down and saved; a preview of a zone in the real player through Screen's zone preview path (`POST /api/screen/zones/{zone_key}/preview` with `ranks`), with the running moments ranked as the order on the page would rank them; the built-in rules' settings.
+- **Scenes** (sheet 12; Scenes, above), at `/moments/scenes`, also the Screen studio's own Scenes tab.
 - **History** (mockup 09): the table per zone with its filters and Export CSV.
 - **Cues** (mockup 12, the sound desk): each zone's budget this hour and minute, what it lets through now and its sound screen; the master, the timed mute and the sound check; the categories; the cues with their sounds, voice lines and pictures, each editable, and "+ Add a cue"; the library with a preview of each sound and the upload (the page's script uploads to Screen, then links the asset); the log.
 
 ## Rights
-U2 as amended by U3: `moments.read` (On air, History, the settings read-only), `moments.announce` (#115), `moments.take` (the crew spotlight, ending and extending moments, the timed mute and the sound check), `moments.scenes.take` (scenes), `moments.emergency` (start and end an emergency), `moments.settings.write` (priorities, rules, cues, the sound settings and the library; later scenes, storyboards, templates). Event admins hold all of them through their role.
+U2 as amended by U3: `moments.read` (On air, History, Scenes, the settings read-only), `moments.announce` (#115), `moments.take` (the crew spotlight, ending and extending moments, the timed mute and the sound check), `moments.scenes.take` (the scenes' crew buttons, "Peak now"), `moments.emergency` (start and end an emergency), `moments.settings.write` (priorities, rules, scenes, cues, the sound settings and the library; later storyboards, templates). Event admins hold all of them through their role.
 
 **The "Moments crew" preset** (`moments_crew`): `moments.read`, `moments.announce`, `moments.take` and `moments.scenes.take`, a name for that list as `screen_crew` is ([screen.md](screen.md#rights)). `moments.emergency` is granted one by one to named crew.
 
 ## Audit
-Through `POST /internal/tenants/audit` in the same request ([tenants.md](tenants.md#audit-log)): every crew action (spotlight, end, extend), every emergency start and end (the venue-wide one in each event), every change of the priorities, the rules, the cues and the sound settings, with the old and new values, the mute, the sound check, and each sound linked to or taken out of the library.
+Through `POST /internal/tenants/audit` in the same request ([tenants.md](tenants.md#audit-log)): every crew action (spotlight, end, extend, a scene's crew button pressed or released), every emergency start and end (the venue-wide one in each event), every change of the priorities, the rules, the scenes (a reset too), the cues and the sound settings, with the old and new values, the mute, the sound check, and each sound linked to or taken out of the library.
 
 ## Privacy
 The history keeps the name and user id of whoever started or ended a moment. `GET /api/moments/me/export` answers the caller's history rows at this event; `DELETE /api/moments/me` removes their name and id from them ([README.md](README.md#privacy-export-and-delete)). `tenants.user.deleted` does the same in every event; `tenants.tenant.deleted` deletes the event's rows.
@@ -156,8 +182,11 @@ The history keeps the name and user id of whoever started or ended a moment. `GE
 | screen | `screen.claims.changed`, `screen.zone.saved`, `screen.zone.removed`, `screen.photo.added` | Placements, the history, the event's zones; a new photo's cue |
 | tournament | `tournament.match.called`, `.match.started`, `.match.finished`, `tournament.leaderboard.changed`, `tournament.session.*`, `tournament.result.corrected` | Rules; the spotlight's standings and bracket |
 | pizza | `pizza.order.placed`, `.arrived`, `.cancelled` | The `pizza` rule |
-| games | `games.surge.started`, `games.surge.ended` | The `hot_game` rule |
-| tenants | `tenants.status.changed`, `tenants.tenant.deleted`, `tenants.user.deleted` | Archiving (E10), deletes |
+| games | `games.surge.started`, `games.surge.ended` | The `hot_game` rule; scenes' games condition |
+| agenda | `agenda.*` (each carries `agenda_version`); the event's whole agenda as a module, `GET /internal/agenda/items` (on those events, and once per container at its first scene pass) | Scenes' agenda conditions |
+| notify | `notify.checkin.recorded` (purpose `arrival`) | Scenes' check-ins condition, the heartbeat |
+| bot | `bot.presence.counted` | Scenes' presence condition, the heartbeat |
+| tenants | `tenants.status.changed`, `tenants.tenant.cloned`, `tenants.tenant.deleted`, `tenants.user.deleted` | Archiving (E10), clone (D22), deletes |
 | admin | `admin.rights.changed` | Rights cache |
 
 ## Events (version 1)
@@ -168,7 +197,8 @@ Emitter `moments`, on the tenant's stream; listed in the catalog ([events.md](ev
 | `moments.override.started` | An override starts | `override` (Override), `actor_user_id` |
 | `moments.override.changed` | Its rank, zones, content or `expires_at` changed | `override`, `changed` (field names), `actor_user_id` |
 | `moments.override.ended` | It left zones or ended | `override_id`, `zones`, `reason`, `final`, `actor_user_id` |
+| `moments.scene.changed` | A zone's scene or heartbeat changed (Scenes) | `zone_key`, `scene`, `since`, `why`, `heartbeat_bpm`, `actor_user_id` |
 | `moments.sound.played` | A sound was decided for a zone's screens | `zone_key`, `sound`: `id`, `cue`, `category`, `url`, `voice_url` (or null), `volume` (0–1), `play_at`, `catch_up_until`, `interrupts` |
 
 ## Not in this contract
-Scenes (Moments reads the energy from Screen's day phase until they land), text to speech (backlog, P8), storyboards (#114), announcements and their composer (#115), reactions (the App track), the director desk (later), cloning Moments' settings with an event (with scenes, D22).
+Text to speech (backlog, P8), storyboards (#114), announcements and their composer (#115), reactions (the App track), the director desk (later), whole themes per scene (later, L14), the outside signal as a scene condition, cloning the cues, the sound settings and the library with an event.

@@ -31,6 +31,7 @@ import { ValkeyKv } from "./kv.js";
 import { applyAgendaEvent } from "./content/agenda.js";
 import { applyOverrideEvent } from "./compose/overrides.js";
 import { applySoundEvent } from "./moments-sound.js";
+import { applySceneEvent } from "./compose/scenes.js";
 import { httpSources } from "./compose/sources.js";
 import { BundleStore, bundlesDir } from "./pins/bundles.js";
 import { keepBundles } from "./pins/store.js";
@@ -271,8 +272,9 @@ async function main(): Promise<void> {
       try {
         await applyOverrideEvent(db, event);
         await applySoundEvent(db, event);
+        await applySceneEvent(db, event);
       } catch (err) {
-        log.warn({ err, type: event.type }, "keeping a moments override or sound failed");
+        log.warn({ err, type: event.type }, "keeping a moments override, sound or scene failed");
       }
       app.pushHub.handleEvent(event);
     },

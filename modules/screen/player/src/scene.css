@@ -1,0 +1,65 @@
+/*
+ * A zone's scene on a screen (contracts/screen.md, Motion and burn-in drift, `display.scene`; L10,
+ * L14): the heartbeat behind the stage's layers and the blend of the scene's palette and mood
+ * (scene.ts sets the custom properties). In `canccu-base`, so a theme restyles any of it.
+ */
+@layer canccu-base {
+  /*
+   * A scene's heartbeat (L10): a slow pulse behind the layers at the rate Moments sets
+   * (--canccu-stage-beat, one beat), at lively and party only, as the tints. A scene's mood and
+   * palette blend over its blend time; the colours are registered below so they can.
+   */
+  body.canccu-scene.canccu-motion--lively .canccu-stage::before,
+  body.canccu-scene.canccu-motion--party .canccu-stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(
+      ellipse 60% 50% at 50% 55%,
+      color-mix(in srgb, var(--canccu-color-primary) 10%, transparent),
+      transparent
+    );
+    animation: canccu-beat var(--canccu-stage-beat, 7.5s) ease-in-out infinite;
+  }
+
+  body.canccu-scene {
+    transition:
+      --canccu-color-primary var(--canccu-scene-blend, 0s) ease,
+      --canccu-color-accent var(--canccu-scene-blend, 0s) ease;
+  }
+
+  body.canccu-scene .canccu-stage {
+    transition: --canccu-stage-phase-color var(--canccu-scene-blend, 0s) ease;
+  }
+}
+
+/* Registered so a scene's palette and mood can blend (`transition` above); unregistered custom
+   properties change at once. Each keeps its value where a theme sets it. */
+@property --canccu-color-primary {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@property --canccu-color-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@property --canccu-stage-phase-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@keyframes canccu-beat {
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}

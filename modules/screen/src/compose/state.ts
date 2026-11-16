@@ -23,7 +23,9 @@ import { themeColors } from "../stage/scrim.js";
 import { claimEndAt, placeClaims } from "./claims.js";
 import type { Override, Placement } from "./claims.js";
 import { contentFacts, entriesOf, photoProps } from "./content.js";
-import { NO_DISPLAY, displayOf, phaseSource } from "./display.js";
+import { NO_DISPLAY, displayOf, moodOf, phaseSource } from "./display.js";
+import { loadScene } from "./scenes.js";
+import type { ZoneScene } from "./scenes.js";
 import type { Display } from "./display.js";
 import { nextPhaseAt, type MotionLevel, type MotionPhase } from "./motion.js";
 import { zonePlay } from "../moments-sound.js";
@@ -151,6 +153,8 @@ export interface ZoneComposed {
   play: Play | null;
   /** The day's phase now, which Moments' sound gates read (contracts/screen.md, For Moments). */
   phase: MotionPhase;
+  /** The zone's scene, whose quiet mode and sound switch the sound gates read in its place. */
+  scene: ZoneScene | null;
 }
 
 /** The widget types a zone's regions show, in either orientation. */
@@ -196,6 +200,7 @@ export async function composeZone(
       pin: await readPin(c),
       showName: await showsName(c, zone),
       play: await zonePlay(c, zone.key, real.getTime()),
+      scene: await loadScene(c, zone.key),
     };
   });
   if (read === null) return null;
@@ -222,6 +227,7 @@ export async function composeZone(
     pin: read.zone.motion_level ?? null,
     settings: deps.settings,
     at: at.getTime(),
+    scene: read.scene,
   });
   const facts: ZoneFacts = {
     now: at,
@@ -248,6 +254,8 @@ export async function composeZone(
           heroRegion: read.zone.hero_region,
         },
         windowLayoutId: read.windowLayout,
+        sceneLayoutId: read.scene?.layout ?? null,
+        heroOff: read.scene?.hero_off ?? [],
         themeLayouts: themeLayouts(theme?.layouts),
         portrait,
         facts,
@@ -282,7 +290,7 @@ export async function composeZone(
   const { stage, covers } = withContent
     ? await stageOf({
         views,
-        phase: motion.phase,
+        phase: moodOf(read.scene, motion.phase),
         agenda,
         nowMs: at.getTime(),
         stageArt: deps.settings.get("stage_art", true) !== false,
@@ -321,6 +329,7 @@ export async function composeZone(
       showName: read.showName,
       art: covers,
       play: read.play,
+      scene: read.scene,
     }),
     zone: read.zone,
     showName: read.showName,
@@ -335,6 +344,7 @@ export async function composeZone(
     draft,
     play: read.play,
     phase: motion.phase,
+    scene: read.scene,
   };
 }
 
@@ -356,6 +366,8 @@ export interface FingerprintInput {
   art?: readonly string[];
   /** Moments' sound: each new one is a new version, so every screen of the zone gets it. */
   play?: Play | null;
+  /** The zone's scene: its layout and hero features are in no other input. */
+  scene?: ZoneScene | null;
 }
 
 /**
@@ -377,6 +389,7 @@ export function zoneFingerprint(input: FingerprintInput): string {
     show_name: input.showName ?? true,
     art: input.art ?? [],
     play: input.play ?? null,
+    scene: input.scene ?? null,
   };
   return createHash("sha256").update(JSON.stringify(stable)).digest("base64url");
 }

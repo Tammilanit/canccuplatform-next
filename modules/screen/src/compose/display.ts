@@ -4,8 +4,9 @@
  */
 import { DEFAULT_MOTION_STYLE, legacyMotion, motionStyleOf } from "@canccu/ui";
 import type { MotionStyle } from "@canccu/ui";
-import { eventMotion, phaseItems, themeMotionOf, zoneMotion } from "./motion.js";
-import type { LegacyMotion, MotionLevel, ZoneMotion } from "./motion.js";
+import { eventMotion, phaseItems, sceneLevel, themeMotionOf, zoneMotion } from "./motion.js";
+import type { LegacyMotion, MotionLevel, MotionPhase, ZoneMotion } from "./motion.js";
+import type { ZoneScene } from "./scenes.js";
 import type { Stage } from "./stage.js";
 import type { AgendaItem, AgendaNow } from "./widgets.js";
 
@@ -18,7 +19,15 @@ export interface Display {
   drift: boolean;
   /** Set once the zone's views are built (compose/stage.ts). */
   stage?: Stage;
+  /** The zone's scene as the player draws it; absent while none is known (D5). */
+  scene?: SceneLook;
 }
+
+/** What of a scene the player draws itself: its palette, the heartbeat and the blend. */
+export type SceneLook = Pick<
+  ZoneScene,
+  "key" | "name" | "since" | "palette" | "sound" | "quiet" | "blend_seconds" | "heartbeat_bpm"
+>;
 
 /** A state stored before `display`, and a zone not composed yet. */
 export const NO_DISPLAY: Display = {
@@ -49,20 +58,45 @@ export interface DisplayInput {
   pin: MotionLevel | null;
   settings: { get(key: string, fallback: unknown): unknown };
   at: number;
+  /** The zone's scene, which takes the phase's place where known (D5). */
+  scene?: ZoneScene | null;
 }
 
+/** The stage's mood: the scene's, else the day's phase. */
+export const moodOf = (scene: ZoneScene | null | undefined, phase: MotionPhase): MotionPhase =>
+  scene?.stage_mood ?? phase;
+
 export function displayOf(input: DisplayInput): { display: Display; motion: ZoneMotion } {
-  const motion = zoneMotion(
-    { ...eventMotion(input.settings), pin: input.pin, themeMotion: themeMotionOf(input.tokens) },
-    input.items,
-    input.at,
-  );
+  const levels = {
+    ...eventMotion(input.settings),
+    pin: input.pin,
+    themeMotion: themeMotionOf(input.tokens),
+  };
+  const byPhase = zoneMotion(levels, input.items, input.at);
+  const scene = input.scene ?? null;
+  // Moments says when a scene changes: the phase's next change no longer moves the level.
+  const motion =
+    scene === null ? byPhase : { ...byPhase, level: sceneLevel(levels, scene), next: null };
   return {
     display: {
       motion_level: motion.level,
       motion_style: motionStyleOf(input.tokens?.motion_style),
       motion: legacyMotion(motion.level),
       drift: input.settings.get("burn_in_drift", false) === true,
+      ...(scene === null
+        ? {}
+        : {
+            scene: {
+              key: scene.key,
+              name: scene.name,
+              since: scene.since,
+              palette: scene.palette,
+              sound: scene.sound,
+              quiet: scene.quiet,
+              blend_seconds: scene.blend_seconds,
+              heartbeat_bpm: scene.heartbeat_bpm,
+            },
+          }),
     },
     motion,
   };

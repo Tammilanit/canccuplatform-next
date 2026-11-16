@@ -12,6 +12,7 @@ import {
 import type { TenantContext } from "@canccu/kit";
 import { buildApp } from "../src/app.js";
 import type { AuditEntry } from "../src/audit.js";
+import type { AppDeps } from "../src/http.js";
 import { world } from "./helpers.js";
 import type { World } from "./helpers.js";
 
@@ -44,6 +45,7 @@ const ALL = [
   "moments.take",
   "moments.emergency",
   "moments.settings.write",
+  "moments.scenes.take",
   "screen.zones.write",
 ];
 const SESSIONS: Record<string, { rights: string[]; superadmin?: boolean }> = {
@@ -112,7 +114,10 @@ export interface AppWorld extends World {
 }
 
 let keys = 0;
-export async function appWorld(pool: pg.Pool): Promise<AppWorld> {
+export async function appWorld(
+  pool: pg.Pool,
+  o: Partial<Pick<AppDeps, "agenda">> = {},
+): Promise<AppWorld> {
   const w = world(pool);
   const audit: AuditEntry[] = [];
   const app = buildApp({
@@ -136,6 +141,7 @@ export async function appWorld(pool: pg.Pool): Promise<AppWorld> {
     log: createLogger("moments"),
     now: () => w.now,
     superadminHost: SUPERADMIN_HOST,
+    ...o,
   });
   await app.ready();
   return Object.assign(w, {

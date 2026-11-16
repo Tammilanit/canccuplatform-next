@@ -7,6 +7,7 @@ import { internalRoutes, venueRoutes } from "./module-routes.js";
 import { cueRoutes, packRoutes } from "./cues/routes.js";
 import { pageRoutes } from "./pages.js";
 import { momentRoutes } from "./routes.js";
+import { sceneRoutes } from "./scene-routes.js";
 import { settingsRoutes } from "./settings-routes.js";
 import { noteTenant } from "./tick.js";
 
@@ -52,6 +53,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     settingsRoutes(event, deps);
     cueRoutes(event, deps);
     packRoutes(event);
+    sceneRoutes(event, deps);
     pageRoutes(event, deps);
     done();
   });

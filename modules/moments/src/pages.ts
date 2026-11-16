@@ -4,11 +4,17 @@ import { DEFAULT_ORDER, checkOrder, desiredOverrides, isClass } from "./arbiter.
 import type { Class } from "./arbiter.js";
 import { cuePages } from "./cues/pages.js";
 import { filterOf, historyRows } from "./history.js";
-import { EMERGENCY, READ, SETTINGS, TAKE, tenantOf } from "./http.js";
+import { html } from "@canccu/ui";
+import type { Html } from "@canccu/ui";
+import { EMERGENCY, READ, SCENES_TAKE, SETTINGS, TAKE, tenantOf } from "./http.js";
+import { scenePages } from "./scene-pages.js";
+import { loadCrew, loadScenes, sceneZones } from "./scene-store.js";
+import { crewButtons, onAirScenes } from "./scene-views.js";
+import type { ZoneSceneView } from "./scene-views.js";
 import type { AppDeps } from "./http.js";
 import { PREFIX, page, pageErrors, pageNeeds, refusal, staticRoutes, viaApi } from "./page-kit.js";
 import { loadRules } from "./rules.js";
-import { knownZones, loadOrders, runningMoments, titleOf } from "./store.js";
+import { knownZones, loadOrders, runningMoments, splitZones, titleOf } from "./store.js";
 import { historyView, prioritiesView } from "./settings-views.js";
 import { confirmEmergency, onAirView, spotlightView } from "./views.js";
 import type { MomentView } from "./views.js";
@@ -63,11 +69,28 @@ async function onAir(deps: AppDeps): Promise<{ moments: MomentView[]; zones: str
   });
 }
 
+/** On air's scene card: each zone's scene, and the crew buttons for those who may press them. */
+async function sceneCard(deps: AppDeps, request: FastifyRequest): Promise<Html> {
+  const ctx = tenantOf(request);
+  const now = deps.now();
+  const s = await deps.db.tenant(async (c) => ({
+    scenes: (await loadScenes(c)).scenes,
+    zones: (await sceneZones(c)) as unknown as ZoneSceneView[],
+    crew: await loadCrew(c),
+  }));
+  const crew = s.crew !== null && s.crew.until > now ? s.crew : null;
+  const canTake = request.session?.rights.has(SCENES_TAKE) === true && ctx.status !== "archived";
+  return html`${onAirScenes(s.zones, s.scenes, ctx.time_zone)}
+    ${canTake ? crewButtons(s.scenes, crew === null ? null : { ...crew, until: crew.until.toISOString() }, "on-air") : ""}
+    <a class="canccu-small" href="${PREFIX}scenes">All scenes</a>`;
+}
+
 export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
   void app.register((pages, _opts, done) => {
     pageErrors(pages, deps);
     staticRoutes(pages);
     cuePages(pages, deps);
+    scenePages(pages, deps);
     const read = { preHandler: pageNeeds(deps, READ) };
     const has = (r: FastifyRequest, right: string) => r.session?.rights.has(right) === true;
     const back = (reply: FastifyReply, path: string, key: "done" | "error", text: string) =>
@@ -96,6 +119,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
           canTake: has(request, TAKE),
           canEmergency: has(request, EMERGENCY),
           archived: tenantOf(request).status === "archived",
+          scenes: await sceneCard(deps, request),
           done: request.query.done,
           error: request.query.error,
         }),
@@ -206,7 +230,9 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
         orders: await loadOrders(c),
         zones: await knownZones(c),
         rules: await loadRules(c),
-        running: await runningMoments(c),
+        running: await Promise.all(
+          (await runningMoments(c)).map(async (m) => ({ m, split: await splitZones(c, m.id) })),
+        ),
       }));
       const saved =
         scope === "" ? state.orders.order : (state.orders.zones[scope] ?? state.orders.order);
@@ -220,8 +246,9 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
       const zone = scope !== "" ? scope : state.zones[0];
       const ranks: Record<string, number> = {};
       if (zone !== undefined) {
-        for (const m of state.running)
-          for (const w of desiredOverrides(m, orders, state.zones, [])) ranks[w.id] = w.rank;
+        // A zone split off keeps its own override (`<id>.<zone>`) whatever the draft ranks it.
+        for (const { m, split } of state.running)
+          for (const w of desiredOverrides(m, orders, state.zones, split)) ranks[w.id] = w.rank;
       }
       return page(request, reply, deps, {
         title: "Moments",

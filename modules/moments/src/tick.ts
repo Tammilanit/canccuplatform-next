@@ -8,6 +8,8 @@ import type { Logger, SqlClient } from "@canccu/kit";
 import { withTenant } from "@canccu/kit";
 import type { Db } from "./db.js";
 import type { Engine } from "./engine.js";
+import { evaluateScenes, storeAgenda } from "./scene-store.js";
+import type { AgendaReader } from "./scene-store.js";
 import { lockMoment, runningMoments } from "./store.js";
 
 export const TICK_MS = 1000;
@@ -64,16 +66,50 @@ export async function zoneRemoved(
   for (const m of covering) await engine.end(c, m, "source_ended", null, now, zone);
   await c.query(`DELETE FROM moments_zones WHERE zone_key = $1`, [zone]);
   await c.query(`DELETE FROM moment_placements WHERE zone_key = $1`, [zone]);
+  await c.query(`DELETE FROM moments_scene_zones WHERE zone_key = $1`, [zone]);
 }
 
-/** One pass over every event: the tick, then the outbox and the 24-hour idempotency keys. */
-export async function tickAll(deps: {
+/** How often each event's zones are put in their scenes, besides on the events they follow. */
+export const SCENES_EVERY_MS = 10_000;
+
+/** One container's pace of the scene pass: when each event's ran, and whose agenda it has read. */
+export class SceneTicker {
+  readonly last = new Map<string, number>();
+  /** The agenda is read once per container and event; its events keep it current after that. */
+  readonly read = new Set<string>();
+}
+
+interface TickDeps {
   db: Db;
   engine: Engine;
   flush: () => Promise<unknown>;
   now: () => Date;
   log?: Logger;
-}): Promise<void> {
+  scenes?: SceneTicker;
+  agenda?: AgendaReader;
+  timeZoneOf?: (tenant: string) => Promise<string>;
+}
+
+/** Time conditions and holds move by the clock alone: the zones' scenes are decided again. */
+async function sceneTick(deps: TickDeps, ticker: SceneTicker, tenant: string): Promise<void> {
+  const now = deps.now();
+  if (now.getTime() - (ticker.last.get(tenant) ?? Number.NEGATIVE_INFINITY) < SCENES_EVERY_MS)
+    return;
+  ticker.last.set(tenant, now.getTime());
+  let agenda = null;
+  if (!ticker.read.has(tenant) && deps.agenda !== undefined) {
+    agenda = await deps.agenda(tenant).catch(() => null);
+    if (agenda !== null) ticker.read.add(tenant);
+  }
+  const timeZone = (await deps.timeZoneOf?.(tenant)) ?? "UTC";
+  await deps.db.tenant(async (c) => {
+    if (agenda !== null) await storeAgenda(c, agenda);
+    await evaluateScenes(c, deps.engine.outbox, { timeZone, now });
+  });
+}
+
+/** One pass over every event: the tick, then the outbox and the 24-hour idempotency keys. */
+export async function tickAll(deps: TickDeps): Promise<void> {
   const tenants = await deps.db.global(async (c) => {
     const { rows } = await c.query(
       `SELECT tenant_id FROM moments_tenants WHERE archived_at IS NULL ORDER BY tenant_id`,
@@ -85,6 +121,7 @@ export async function tickAll(deps: {
     try {
       await withTenant(tenant, async () => {
         await deps.db.tenant((c) => tickTenant(c, deps.engine, deps.now()));
+        if (deps.scenes !== undefined) await sceneTick(deps, deps.scenes, tenant);
         await deps.flush();
       });
     } catch (err) {

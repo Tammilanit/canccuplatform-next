@@ -21,6 +21,7 @@ const STATIC = new URL("../static/", import.meta.url);
 export const TABS = [
   ["on-air", "On air"],
   ["priorities", "Priorities"],
+  ["scenes", "Scenes"],
   ["history", "History"],
   ["cues", "Cues"],
 ] as const;

@@ -1,4 +1,4 @@
-/** The cues' rows (migrations/002_cues.sql), read and written in the caller's tenant transaction. */
+/** The cues' rows (migrations/003_cues.sql), read and written in the caller's tenant transaction. */
 import type { SqlClient } from "@canccu/kit";
 import { BUILTIN_CUES, DEFAULT_SOUND_SETTINGS, PACK } from "./catalog.js";
 import type { Cue, SoundSettings } from "./catalog.js";

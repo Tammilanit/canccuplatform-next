@@ -15,9 +15,13 @@ import { notFound } from "./http.js";
 
 type Query = { Querystring: { tenant_id?: string } };
 
-/** The sound gates' energy: quiet hours are a quiet scene until scenes land; none moves as calm. */
-export function energyOf(z: Pick<ZoneComposed, "phase" | "display">): string {
-  if (z.phase === "quiet_hours") return "quiet";
+/**
+ * The sound gates' energy: the zone's scene's quiet mode, or quiet hours while it has none (a
+ * scene takes the day's phase's place, D5); else its level, which the scene already set. None
+ * moves as calm.
+ */
+export function energyOf(z: Pick<ZoneComposed, "phase" | "display" | "scene">): string {
+  if (z.scene === null ? z.phase === "quiet_hours" : z.scene.quiet) return "quiet";
   const level = z.display.motion_level;
   return level === "party" || level === "lively" ? level : "calm";
 }
@@ -41,7 +45,8 @@ export function internalRoutes(
         const host = ctx.primary_hostname ?? "localhost";
         const z = await composeZone(deps, ctx, host, request.params.zone_key, undefined, false);
         if (z === null) throw notFound();
-        const id = z.zone.sound.enabled ? z.zone.sound.device_id : null;
+        // A scene's sound switch wins over the zone's while it names one (null keeps the zone's).
+        const id = (z.scene?.sound ?? z.zone.sound.enabled) ? z.zone.sound.device_id : null;
         if (id === null) return { energy: energyOf(z), device: null };
         const { rows } = await deps.db.tenant((c) =>
           c.query(`SELECT name FROM devices WHERE id = $1`, [id]),

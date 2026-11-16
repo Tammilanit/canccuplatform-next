@@ -82,6 +82,9 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect(crew).not.toContain(">Moments<");
     const moments = tabs((await page("/admin/screen/live", "moments")).body);
     expect(moments).toContain('href="/moments/">Moments<');
+    // Scenes is Moments' page too, in the Screen studio's own place for it (sheet 12).
+    expect(moments).toContain('href="/moments/scenes">Scenes<');
+    expect(crew).not.toContain(">Scenes<");
   });
 
   it("draws Live with every zone as a live view that opens full size", async () => {

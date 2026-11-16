@@ -8,6 +8,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { ServiceIdentity, newId, withTenant } from "@canccu/kit";
 import type { Event } from "@canccu/kit";
 import { applyOverrideEvent } from "../src/compose/overrides.js";
+import { applySceneEvent } from "../src/compose/scenes.js";
 import { applySoundEvent } from "../src/moments-sound.js";
 import { DATABASE_URL, SERVICE_KEY, call, harness, pairDevice, png, upload } from "./helpers.js";
 import type { Harness } from "./helpers.js";
@@ -59,7 +60,12 @@ describe.skipIf(!DATABASE_URL)("Moments' sounds on the screens", () => {
   });
   beforeEach(async () => {
     h.clock.now = Date.parse("2026-01-01T12:00:00Z");
-    await withTenant("alpha", () => h.db.tenant((c) => c.query("DELETE FROM screen_zone_sounds")));
+    await withTenant("alpha", () =>
+      h.db.tenant(async (c) => {
+        await c.query("DELETE FROM screen_zone_sounds");
+        await c.query("DELETE FROM screen_scenes");
+      }),
+    );
   });
 
   const event = (type: string, data: Record<string, unknown>): Event => ({
@@ -184,6 +190,46 @@ describe.skipIf(!DATABASE_URL)("Moments' sounds on the screens", () => {
         energy: "lively",
         device: { id: sound.id, name: "Hall left", online: true, audio_unlocked: null },
       });
+    });
+
+    it("reads the zone's scene in the day's phase's place: its quiet mode and its sound switch", async () => {
+      const scene = (then: Record<string, unknown>) =>
+        withTenant("alpha", () =>
+          applySceneEvent(
+            h.db,
+            event("moments.scene.changed", {
+              zone_key: "main",
+              scene: {
+                key: "late",
+                name: "Late",
+                motion: null,
+                layout: null,
+                stage_mood: null,
+                palette: null,
+                sound: null,
+                quiet: false,
+                hero_off: [],
+                blend_seconds: 0,
+                ...then,
+              },
+              since: new Date(h.clock.now).toISOString(),
+              why: "test",
+              heartbeat_bpm: 8,
+              actor_user_id: null,
+            }),
+          ),
+        );
+      const answer = async () =>
+        (await internal("/internal/screen/zones/main/sound?tenant_id=alpha")).json<{
+          energy: string;
+          device: { id: string } | null;
+        }>();
+      await scene({ quiet: true });
+      expect(await answer()).toMatchObject({ energy: "quiet", device: { id: sound.id } });
+      await scene({ sound: false });
+      expect(await answer()).toEqual({ energy: "lively", device: null });
+      await scene({ sound: true, motion: "party" });
+      expect(await answer()).toMatchObject({ energy: "party", device: { id: sound.id } });
     });
 
     it("answers only Moments' service identity, and 404 for a zone or event it does not know", async () => {

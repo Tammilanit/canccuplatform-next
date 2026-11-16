@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { requireRight } from "@canccu/kit/fastify";
 import type { SqlClient } from "@canccu/kit";
 import { allClearRequest, emergencyRequest, invalid, spotlightRequest } from "./content.js";
+import { covers } from "./engine.js";
 import type { Engine } from "./engine.js";
 import {
   EMERGENCY,
@@ -107,6 +108,9 @@ export function momentRoutes(app: FastifyInstance, deps: AppDeps): void {
         if (m.class === "emergency") throw invalid("An emergency ends through Emergency.");
         if (zone === undefined && m.origin !== "crew") {
           throw invalid("A rule's moment ends on one zone at a time (End in zone).");
+        }
+        if (zone !== undefined && !covers(m, zone, await knownZones(c))) {
+          throw invalid("That moment is not on that zone.");
         }
         await deps.engine.end(c, m, "cleared", actor, now, zone);
         await deps.audit({

@@ -4,23 +4,38 @@
  * transaction, whose override events the outbox sends after the commit. Handlers are idempotent:
  * events come at least once, and to every container.
  */
-import type { Event } from "@canccu/kit";
+import type { Event, SqlClient } from "@canccu/kit";
 import { CREW_CUES } from "./cues/catalog.js";
 import type { Db } from "./db.js";
 import type { Engine } from "./engine.js";
 import { applyClaims, claimsReportOf } from "./placements.js";
 import { applyRules } from "./rules.js";
+import { evaluateScenes, recordFact, storeAgenda } from "./scene-store.js";
+import type { AgendaReader } from "./scene-store.js";
 import { recordSource, refreshBound } from "./sources.js";
 import { addZone } from "./store.js";
 import { endAll, noteTenant, zoneRemoved } from "./tick.js";
 
-export const TENANT_STREAMS = ["screen", "tenants", "tournament", "pizza", "games"];
+export const TENANT_STREAMS = [
+  "screen",
+  "tenants",
+  "tournament",
+  "pizza",
+  "games",
+  "agenda",
+  "notify",
+  "bot",
+];
 
 export interface ConsumerDeps {
   db: Db;
   engine: Engine;
   flush: () => Promise<unknown>;
   now: () => Date;
+  /** The event's agenda, read again on each of its changes (scenes' agenda conditions). */
+  agenda?: AgendaReader;
+  /** The event's time zone for the scenes' time conditions; UTC without it. */
+  timeZoneOf?: (tenant: string) => Promise<string>;
 }
 
 /** One tenant event, run inside its tenant (the kit's subscribeTenants sets it). */
@@ -40,14 +55,28 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
     await deps.flush();
     return;
   }
+  if (e.type === "tenants.tenant.cloned") {
+    const source = e.data.source_tenant_id;
+    if (typeof source === "string" && TENANT_ID.test(source) && source !== e.tenant)
+      await cloneFrom(deps.db, source, e.tenant);
+    return;
+  }
   if (e.source === "tenants") return;
   await noteTenant(deps.db, e.tenant);
+  // Reads go before the transaction, so none holds it open while another module answers.
+  const agenda =
+    e.source === "agenda" && typeof e.data.agenda_version === "number" && deps.agenda
+      ? await deps.agenda(e.tenant).catch(() => null)
+      : null;
+  const timeZone = (await deps.timeZoneOf?.(e.tenant)) ?? "UTC";
   await deps.db.tenant(async (c) => {
+    let scenes = false;
     if (e.type === "screen.claims.changed") {
       const report = claimsReportOf(e.data);
       if (report !== null) await applyClaims(c, report, now);
     } else if (e.type === "screen.zone.saved" && typeof e.data.zone_key === "string") {
       await addZone(c, e.data.zone_key);
+      scenes = true;
     } else if (e.type === "screen.zone.removed" && typeof e.data.zone_key === "string") {
       await zoneRemoved(c, deps.engine, e.data.zone_key, now);
     } else if (e.type === "screen.photo.added" && typeof e.data.photo_id === "string") {
@@ -59,12 +88,25 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
         now,
       );
     } else if (e.source !== "screen") {
+      // An archived event is read-only (E10): no rule starts or renews a moment on it.
+      if (await isArchived(c, e.tenant as string)) return;
+      if (agenda !== null) await storeAgenda(c, agenda);
+      scenes = (await recordFact(c, e)) || agenda !== null;
       const touched = await recordSource(c, e);
       await applyRules(c, deps.engine, e, now);
       if (touched !== null) await refreshBound(c, deps.engine, touched, now);
     }
+    if (scenes) await evaluateScenes(c, deps.engine.outbox, { timeZone, now });
   });
   await deps.flush();
+}
+
+async function isArchived(c: SqlClient, tenant: string): Promise<boolean> {
+  const { rows } = await c.query(
+    `SELECT 1 FROM moments_tenants WHERE tenant_id = $1 AND archived_at IS NOT NULL`,
+    [tenant],
+  );
+  return rows.length > 0;
 }
 
 /**
@@ -82,6 +124,49 @@ export async function handleZoneReplay(deps: ConsumerDeps, e: Event): Promise<vo
   } else if (e.type === "screen.zone.removed") {
     await deps.db.tenant((c) => c.query(`DELETE FROM moments_zones WHERE zone_key = $1`, [zone]));
   }
+}
+
+const TENANT_ID = /^[a-z][a-z0-9-]{2,31}$/;
+
+/**
+ * Clone with an event (D22): the source's priorities, rules and scenes become the new event's,
+ * where it has none of its own yet (scenes it never saved count as none). Never the history, the
+ * live moments or a zone's scene. The tenants module checked the series and the caller before it
+ * emitted `tenants.tenant.cloned`; the event comes at least once, so the copy is idempotent.
+ */
+async function cloneFrom(db: Db, source: string, target: string): Promise<void> {
+  await db.global(async (c) => {
+    // The app role is bound by RLS: each side is read and written with its own tenant set.
+    await c.query(`SELECT set_config('canccu.tenant', $1, true)`, [source]);
+    const priorities = (
+      await c.query(`SELECT event_order, zone_orders FROM moments_priorities`, [])
+    ).rows;
+    const rules = (await c.query(`SELECT rule_id, settings FROM moments_rules`, [])).rows;
+    const scenes = (await c.query(`SELECT scenes FROM moments_scenes`, [])).rows;
+    await c.query(`SELECT set_config('canccu.tenant', $1, true)`, [target]);
+    for (const p of priorities) {
+      await c.query(
+        `INSERT INTO moments_priorities (event_order, zone_orders, revision) VALUES ($1, $2, 0)
+         ON CONFLICT DO NOTHING`,
+        [p.event_order, p.zone_orders],
+      );
+    }
+    for (const r of rules) {
+      await c.query(
+        `INSERT INTO moments_rules (rule_id, settings, revision) VALUES ($1, $2, 0)
+         ON CONFLICT DO NOTHING`,
+        [r.rule_id, r.settings],
+      );
+    }
+    for (const s of scenes) {
+      await c.query(
+        `INSERT INTO moments_scenes (scenes, revision) VALUES ($1, 0)
+         ON CONFLICT (tenant_id) DO UPDATE SET scenes = EXCLUDED.scenes
+         WHERE moments_scenes.revision = 0`,
+        [JSON.stringify(s.scenes)],
+      );
+    }
+  });
 }
 
 /** Platform events: a deleted event's rows, a deleted user's name in the history. */
@@ -108,6 +193,10 @@ export async function handlePlatformEvent(deps: ConsumerDeps, e: Event): Promise
         "moments_sound_zones",
         "moments_sound_sources",
         "moments_sound_log",
+        "moments_scenes",
+        "moments_scene_zones",
+        "moments_scene_crew",
+        "moments_checkins",
       ]) {
         await c.query(`DELETE FROM ${table}`, []);
       }
