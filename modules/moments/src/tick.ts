@@ -15,7 +15,7 @@ export const TICK_MS = 1000;
 const HISTORY_AFTER_ARCHIVE = "30 days";
 
 export async function tickTenant(c: SqlClient, engine: Engine, now: Date): Promise<void> {
-  for (const m of await runningMoments(c, "expires_at <= $1", [now], true)) {
+  for (const m of await runningMoments(c, "expires_at <= $1", [now], "skip")) {
     await engine.end(c, m, "expired", null, now);
   }
   const { rows } = await c.query(
@@ -35,14 +35,14 @@ export async function tickTenant(c: SqlClient, engine: Engine, now: Date): Promi
 
 /** A priority change ranks every running moment again at once and never ends one (E8). */
 export async function reRank(c: SqlClient, engine: Engine): Promise<void> {
-  for (const m of await runningMoments(c, "TRUE", [], true)) {
+  for (const m of await runningMoments(c, "TRUE", [], "wait")) {
     await engine.show(c, m, null, "preempted");
   }
 }
 
 /** Archiving ends every moment, the emergency included (E10). */
 export async function endAll(c: SqlClient, engine: Engine, now: Date): Promise<void> {
-  for (const m of await runningMoments(c, "TRUE", [], true)) {
+  for (const m of await runningMoments(c, "TRUE", [], "wait")) {
     await engine.end(c, m, "source_ended", null, now);
   }
 }
@@ -58,7 +58,7 @@ export async function zoneRemoved(
     c,
     "(cardinality(zones) = 0 OR $1 = ANY (zones)) AND NOT ($1 = ANY (left_zones))",
     [zone],
-    true,
+    "wait",
   );
   for (const m of covering) await engine.end(c, m, "source_ended", null, now, zone);
   await c.query(`DELETE FROM moments_zones WHERE zone_key = $1`, [zone]);

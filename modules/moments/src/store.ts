@@ -68,16 +68,21 @@ export async function lockRunningByKey(c: SqlClient, key: string): Promise<Momen
   return rows[0] ? momentOf(rows[0]) : null;
 }
 
-/** Running moments, highest rank first is the caller's; `lock` takes them for a change. */
+/**
+ * Running moments, highest rank first is the caller's. `lock` "skip" leaves rows another
+ * transaction holds (only the expiry pass may: it retries next tick); "wait" blocks for them,
+ * for changes that must reach every moment (end, re-rank, archive). Both take rows in
+ * `starts_at, id` order, which `applyClaims` follows too, so the waits cannot deadlock.
+ */
 export async function runningMoments(
   c: SqlClient,
   where = "TRUE",
   values: unknown[] = [],
-  lock = false,
+  lock: false | "skip" | "wait" = false,
 ): Promise<MomentRow[]> {
   const { rows } = await c.query(
     `SELECT ${COLUMNS} FROM moments WHERE ended_at IS NULL AND (${where})
-     ORDER BY starts_at, id${lock ? " FOR UPDATE SKIP LOCKED" : ""}`,
+     ORDER BY starts_at, id${lock === "skip" ? " FOR UPDATE SKIP LOCKED" : lock === "wait" ? " FOR UPDATE" : ""}`,
     values,
   );
   return rows.map(momentOf);

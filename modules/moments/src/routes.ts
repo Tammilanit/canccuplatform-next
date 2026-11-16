@@ -34,6 +34,10 @@ export async function startEmergency(
   why: string,
   now: Date,
 ): Promise<Answer> {
+  // One per event: the lock makes two concurrent starts take turns, so the second sees the first.
+  await c.query(
+    `SELECT pg_advisory_xact_lock(hashtext('moments.emergency:' || current_setting('canccu.tenant', true)))`,
+  );
   const running = await runningMoments(c, "class = 'emergency'");
   if (running.length > 0) return failure(409, "emergency_active", "An emergency already runs.");
   const r = await deps.engine.request(c, emergencyRequest(body, actor, why, now), now);
@@ -58,7 +62,7 @@ export async function endEmergency(
   why: string,
   now: Date,
 ): Promise<Answer> {
-  const [m] = await runningMoments(c, "class = 'emergency'", [], true);
+  const [m] = await runningMoments(c, "class = 'emergency'", [], "wait");
   if (m === undefined) return failure(404, "not_found", "No emergency runs.");
   await deps.engine.end(c, m, "cleared", actor, now);
   if (allClear) await deps.engine.request(c, allClearRequest(actor, why, m.zones, now), now);

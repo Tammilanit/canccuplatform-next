@@ -6,7 +6,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
 import { handleTenantEvent } from "../src/consumer.js";
-import { upkeep } from "../src/tick.js";
+import { endAll, upkeep } from "../src/tick.js";
 import { DATABASE_URL, freshDatabase } from "./helpers.js";
 import { appWorld, json } from "./app.js";
 import type { AppWorld } from "./app.js";
@@ -111,5 +111,61 @@ run("a moment's and an event's life", () => {
     expect(await keys()).toBe(1);
     await upkeep(w.db, new Date(w.now.getTime() + DAY + 1000));
     expect(await keys()).toBe(0);
+  });
+
+  /** Holds the emergency row locked from a second connection, as a claims report does. */
+  async function holdEmergency(db: pg.Pool) {
+    const holder = await db.connect();
+    await holder.query("BEGIN");
+    await holder.query("SELECT 1 FROM moments WHERE class = 'emergency' FOR UPDATE");
+    return {
+      release: async () => {
+        await holder.query("COMMIT");
+        holder.release();
+      },
+    };
+  }
+  const settles = async (p: Promise<unknown>): Promise<boolean> =>
+    Promise.race([
+      p.then(() => true),
+      new Promise<boolean>((r) => {
+        setTimeout(() => {
+          r(false);
+        }, 400);
+      }),
+    ]);
+
+  it("ends the emergency even while another transaction holds its row, waiting for it", async () => {
+    expect((await w.call("admin", "POST", "/api/moments/emergency", {})).statusCode).toBe(201);
+    const held = await holdEmergency(pool as pg.Pool);
+    const ending = w.call("admin", "POST", "/api/moments/emergency/end", {});
+    expect(await settles(ending)).toBe(false);
+    await held.release();
+    expect((await ending).statusCode).toBe(200);
+    const left = await w.tx("demo", (c) => c.query("SELECT 1 FROM moments WHERE ended_at IS NULL"));
+    expect(left.rows).toHaveLength(0);
+  });
+
+  it("ends every moment at archive even while another transaction holds the emergency", async () => {
+    expect((await w.call("admin", "POST", "/api/moments/emergency", {})).statusCode).toBe(201);
+    const held = await holdEmergency(pool as pg.Pool);
+    const ending = w.tx("demo", (c) => endAll(c, w.engine, w.now));
+    expect(await settles(ending)).toBe(false);
+    await held.release();
+    await ending;
+    const left = await w.tx("demo", (c) => c.query("SELECT 1 FROM moments WHERE ended_at IS NULL"));
+    expect(left.rows).toHaveLength(0);
+  });
+
+  it("lets only one of two concurrent emergency starts through", async () => {
+    const both = await Promise.all([
+      w.call("admin", "POST", "/api/moments/emergency", {}),
+      w.call("admin", "POST", "/api/moments/emergency", {}),
+    ]);
+    expect(both.map((r) => r.statusCode).sort()).toEqual([201, 409]);
+    const { rows } = await w.tx("demo", (c) =>
+      c.query("SELECT 1 FROM moments WHERE class = 'emergency' AND ended_at IS NULL"),
+    );
+    expect(rows).toHaveLength(1);
   });
 });

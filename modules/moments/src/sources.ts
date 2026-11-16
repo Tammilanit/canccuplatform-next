@@ -139,7 +139,7 @@ export async function refreshBound(
     c,
     "binding->>'source' = $1 AND coalesce(binding->>'ref', '') = $2",
     [b.source, b.ref ?? ""],
-    true,
+    "wait",
   );
   if (bound.length === 0) return;
   const view = await renderBinding(c, b);

@@ -54,6 +54,7 @@ export async function applyClaims(c: SqlClient, report: ClaimsReport, now: Date)
     `SELECT o.override_id, m.* FROM moment_overrides o
      JOIN moments m ON m.tenant_id = o.tenant_id AND m.id = o.moment_id
      WHERE o.override_id = ANY($1::text[]) AND NOT o.ended AND m.ended_at IS NULL
+     ORDER BY m.starts_at, m.id
      FOR UPDATE OF m`,
     [[...states.keys()]],
   );
