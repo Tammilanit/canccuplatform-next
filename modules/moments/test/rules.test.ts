@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
 import type { Event } from "@canccu/kit";
-import { handleTenantEvent } from "../src/consumer.js";
+import { handleTenantEvent, handleZoneReplay } from "../src/consumer.js";
 import { spotlightRequest } from "../src/content.js";
 import { RULE_IDS, checkRule, loadRules } from "../src/rules.js";
 import { DATABASE_URL, freshDatabase, world } from "./helpers.js";
@@ -152,6 +152,29 @@ run("the built-in rules", () => {
     expect(checkRule("match_called", { ...good, template: "hot_game" })).toMatch(/template/);
     expect(checkRule("match_called", { ...good, class: "emergency" })).toMatch(/class/);
     expect(checkRule("match_called", { ...good, ttl_seconds: 7201 })).toMatch(/ttl/);
+  });
+
+  it("learns the event's zones from Screen's past zone events, and a past removal ends nothing", async () => {
+    const deps = { db: w.db, engine: w.engine, flush: () => w.outbox.flush(), now: () => w.now };
+    const zone = (type: string, key: string) => ({
+      ...FIXTURES.surge(),
+      type,
+      source: "screen",
+      data: { zone_key: key },
+    });
+    await deliver(FIXTURES.surge());
+    await w.tx("demo", async () => {
+      for (const e of [
+        zone("screen.zone.saved", "main"),
+        zone("screen.zone.saved", "stage"),
+        zone("screen.zone.removed", "stage"),
+      ]) {
+        await handleZoneReplay(deps, e);
+      }
+    });
+    const zones = await w.tx("demo", (c) => c.query(`SELECT zone_key FROM moments_zones`));
+    expect(zones.rows).toEqual([{ zone_key: "main" }]);
+    expect(w.events("demo").map((e) => e.type)).toEqual(["moments.override.started"]);
   });
 
   it("keeps the standings live: a bound spotlight gets each new leaderboard through .changed", async () => {

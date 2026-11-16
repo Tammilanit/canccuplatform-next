@@ -19,7 +19,12 @@ import {
 } from "@canccu/kit";
 import { buildApp } from "./app.js";
 import { tenantsAudit } from "./audit.js";
-import { TENANT_STREAMS, handlePlatformEvent, handleTenantEvent } from "./consumer.js";
+import {
+  TENANT_STREAMS,
+  handlePlatformEvent,
+  handleTenantEvent,
+  handleZoneReplay,
+} from "./consumer.js";
 import { APP_ROLE, MIGRATIONS_DIR, poolDb } from "./db.js";
 import { Engine } from "./engine.js";
 import { TICK_MS, tickAll, upkeep } from "./tick.js";
@@ -98,6 +103,9 @@ async function main(): Promise<void> {
     await handlePlatformEvent(consumer, event);
   });
   listener.subscribeTenants(TENANT_STREAMS, (event) => handleTenantEvent(consumer, event));
+  listener.subscribeTenants(["screen"], (event) => handleZoneReplay(consumer, event), {
+    fromId: "0",
+  });
 
   const app = buildApp({
     db,

@@ -21,6 +21,17 @@ export default tseslint.config(
     },
   },
   {
+    // The stack check runs as plain Node beside Screen's stack client (scripts/demo-stack-test).
+    files: ["ci/**/*.mjs"],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+      globals: Object.fromEntries(
+        ["process", "console", "performance", "setTimeout"].map((n) => [n, "readonly"]),
+      ),
+    },
+  },
+  {
     files: ["static/**/*.js"],
     ...tseslint.configs.disableTypeChecked,
     languageOptions: {

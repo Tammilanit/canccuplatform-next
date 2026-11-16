@@ -58,6 +58,23 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
   await deps.flush();
 }
 
+/**
+ * Screen's zone events replayed from the start of each stream at every boot, so zones saved while
+ * Moments was down or before it ran are known (moments with every zone narrow to them, D3). Only
+ * the set of zones changes here: a past removal must never end a moment running now; the live
+ * subscription (handleTenantEvent) ends moments on a zone removed now.
+ */
+export async function handleZoneReplay(deps: ConsumerDeps, e: Event): Promise<void> {
+  const zone = e.data.zone_key;
+  if (e.tenant === undefined || typeof zone !== "string") return;
+  if (e.type === "screen.zone.saved") {
+    await noteTenant(deps.db, e.tenant);
+    await deps.db.tenant((c) => addZone(c, zone));
+  } else if (e.type === "screen.zone.removed") {
+    await deps.db.tenant((c) => c.query(`DELETE FROM moments_zones WHERE zone_key = $1`, [zone]));
+  }
+}
+
 /** Platform events: a deleted event's rows, a deleted user's name in the history. */
 export async function handlePlatformEvent(deps: ConsumerDeps, e: Event): Promise<void> {
   if (e.type === "tenants.tenant.deleted" && typeof e.data.tenant_id === "string") {
