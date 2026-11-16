@@ -1,6 +1,7 @@
 // A stand-in for the `gh` CLI in the tests of the CI scripts: `gh api` reads answer from `answers`
-// (keyed by path, query string ignored; a function gets the query), and every other call is a
-// write, recorded in `writes` and answered as GitHub would. Only the jq forms the scripts use
+// (keyed by path, query string ignored; a function gets the query; a string is a raw body, as a
+// job's log is), and every other call is a write, recorded in `writes` and answered as GitHub
+// would. Only the jq forms the scripts use
 // (`.[]`, `.<key>[]`) are understood.
 export function fakeGh(answers) {
   const writes = [];
@@ -11,6 +12,7 @@ export function fakeGh(answers) {
       if (!(key in answers)) throw new Error(`fake gh: no answer for ${path}`);
       let answer = answers[key];
       if (typeof answer === "function") answer = answer(new URLSearchParams(query));
+      if (typeof answer === "string") return answer;
       const jq = args.includes("--jq") ? args[args.indexOf("--jq") + 1] : null;
       if (!jq) return JSON.stringify(answer);
       const m = /^\.(\w*)\[\]$/.exec(jq);
