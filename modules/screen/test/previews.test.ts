@@ -5,7 +5,8 @@
  */
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { withTenant } from "@canccu/kit";
+import { newId, withTenant } from "@canccu/kit";
+import { applyOverrideEvent } from "../src/compose/overrides.js";
 import type { DraftTheme } from "../src/compose/sources.js";
 import type { Kv } from "../src/kv.js";
 import { announcePreview, endExpired, runningPreview, startPreview } from "../src/preview/store.js";
@@ -242,6 +243,76 @@ describe.skipIf(!DATABASE_URL)("a preview on a screen", () => {
     });
     expect(late.statusCode).toBe(400);
     h.sources.agendaItems = null;
+  });
+
+  it("ranks Moments' running claims as `ranks` says, for the zone preview only (Priorities)", async () => {
+    const claim = (id: string, rank: number, regions: string[]) =>
+      withTenant("alpha", () =>
+        applyOverrideEvent(h.db, {
+          id: newId(),
+          type: "moments.override.started",
+          version: 1,
+          time: new Date(h.clock.now).toISOString(),
+          source: "moments",
+          tenant: "alpha",
+          data: {
+            actor_user_id: null,
+            override: {
+              id,
+              kind: "block",
+              zones: ["main"],
+              rank,
+              source: { module: "moments", event_id: null, ref: null },
+              template: "announcement",
+              content: { title: id, body: "", level: "info", starts_at: ahead(0) },
+              regions,
+              expires_at: ahead(30),
+              starts_at: ahead(0),
+              ends_at: null,
+            },
+          },
+        }),
+      );
+    await claim("ov_rank_a", 60, ["hero"]);
+    await claim("ov_rank_b", 50, ["hero", "rail"]);
+    const preview = async (query: string) => {
+      const r = await call(h, "POST", `/api/screen/zones/main/preview${query}`, {
+        session: "admin",
+        body: { key: "main", name: "Main" },
+      });
+      expect(r.statusCode).toBe(200);
+      const state = r.json<{
+        regions: { role: string; claim: { override_id: string } | null }[];
+        unplaced: string[];
+      }>();
+      const hero = state.regions.find((x) => x.role === "hero")?.claim?.override_id;
+      return { hero, unplaced: state.unplaced };
+    };
+    expect(await preview("")).toMatchObject({ hero: "ov_rank_a" });
+    expect(await preview("?ranks=ov_rank_b:90")).toEqual({
+      hero: "ov_rank_b",
+      unplaced: ["ov_rank_a"],
+    });
+    // Only the preview: the zone itself still ranks them as Moments sent them.
+    expect(await preview("")).toMatchObject({ hero: "ov_rank_a" });
+    const bad = await call(h, "POST", "/api/screen/zones/main/preview?ranks=ov_rank_b:high", {
+      session: "admin",
+      body: { key: "main", name: "Main" },
+    });
+    expect(bad.statusCode).toBe(400);
+    for (const id of ["ov_rank_a", "ov_rank_b"]) {
+      await withTenant("alpha", () =>
+        applyOverrideEvent(h.db, {
+          id: newId(),
+          type: "moments.override.ended",
+          version: 1,
+          time: new Date(h.clock.now).toISOString(),
+          source: "moments",
+          tenant: "alpha",
+          data: { override_id: id, zones: [], reason: "cleared", final: true, actor_user_id: null },
+        }),
+      );
+    }
   });
 
   it("ends with a reassignment, even to the same zone, audited by the module", async () => {

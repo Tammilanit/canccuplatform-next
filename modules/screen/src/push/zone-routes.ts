@@ -25,8 +25,23 @@ export const MAX_PREVIEWS_PER_MINUTE = 30;
 
 type ZoneQuery = {
   Params: { zone_key: string };
-  Querystring: { orientation?: string; at?: string };
+  Querystring: { orientation?: string; at?: string; ranks?: string };
 };
+
+/** `ranks` of the zone preview: `<override id>:<rank>`, comma-separated, at most 50. */
+function ranksOf(value: string | undefined): Record<string, number> | undefined {
+  if (value === undefined || value === "") return undefined;
+  const pairs = value.split(",");
+  const ranks: Record<string, number> = {};
+  for (const pair of pairs) {
+    const m = /^([A-Za-z0-9._-]{1,80}):(\d{1,4})$/.exec(pair);
+    if (m === null || pairs.length > 50) {
+      throw invalidRequest("`ranks` lists at most 50 `<override id>:<rank>` pairs.");
+    }
+    ranks[m[1] as string] = Number(m[2]);
+  }
+  return ranks;
+}
 
 function orientationOf(value: string | undefined): Orientation {
   if (value === undefined || value === "landscape") return "landscape";
@@ -116,6 +131,7 @@ export function zoneViewRoutes(
     async (request) => {
       const orientation = orientationOf(request.query.orientation);
       const at = previewTime(request.query.at, now());
+      const ranks = ranksOf(request.query.ranks);
       const zone = zoneInput(body(request));
       if (zone.key !== request.params.zone_key) {
         throw invalidRequest("The body's `key` must be the zone key of the path.");
@@ -134,7 +150,7 @@ export function zoneViewRoutes(
         // A preview never sounds, so whose sound it is does not matter.
         { ...zoneFields(zone), epoch: "preview" },
         true,
-        { at },
+        { at, ...(ranks === undefined ? {} : { ranks }) },
       );
       // composeZone answers null only when it reads the zone itself.
       if (composed === null) throw notFound();

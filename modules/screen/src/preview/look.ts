@@ -13,6 +13,11 @@ export interface PreviewLook {
   at?: number | null;
   /** Theming's key to the draft. */
   themeKey?: string | null;
+  /**
+   * Ranks for Moments' running claims by override id, so Moments' Priorities page sees what an
+   * order would show before it is saved (contracts/screen.md, Preview); the zone keeps its own.
+   */
+  ranks?: Readonly<Record<string, number>>;
 }
 
 /** The draft behind a preview key: drawn, `gone` (the key no longer resolves), or not read. */

@@ -676,6 +676,16 @@
         schema:
           type: string
           format: date-time
+      - name: ranks
+        in: query
+        required: false
+        description: |
+          Additive: ranks for Moments' running claims in this preview only, as `<override id>:<rank>` pairs, comma
+          separated, at most 50 (else 400 `invalid_request`), so Moments' Priorities page shows what an order would
+          place before it is saved (contracts/moments.md, Pages). The zone keeps the ranks Moments sent.
+        schema:
+          type: string
+          pattern: "^[A-Za-z0-9._-]{1,80}:[0-9]{1,4}(,[A-Za-z0-9._-]{1,80}:[0-9]{1,4})*$"
     requestBody:
       required: true
       content:

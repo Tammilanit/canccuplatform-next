@@ -58,11 +58,15 @@ export const TABS: [path: string, label: MessageKey, rights: readonly string[]][
   ["live", "tab.live", [READ]],
   ["devices", "tab.devices", [READ]],
   ["zones", "tab.zones", [ZONES]],
+  // Studio → Moments is the moments module's own pages (contracts/moments.md, Pages).
+  ["/moments/", "tab.moments", ["moments.read"]],
   ["schedule", "tab.schedule", [CONTENT]],
   ["content", "tab.content", [CONTENT]],
   ["ticker", "tab.ticker", [TICKER]],
   ["pins", "tab.pins", PIN_READ_RIGHTS],
 ];
+/** A tab's link: the Studio's own pages by name, another module's by its path. */
+export const tabHref = (path: string): string => (path.startsWith("/") ? path : STUDIO + path);
 export const ANY_TAB = [...new Set(TABS.flatMap(([, , rights]) => rights))];
 /**
  * The rights to change something in the Studio. An archived event changes nothing (sheets 2 and
@@ -189,7 +193,7 @@ export async function studioPage(
       ? {}
       : {
           tabs: TABS.filter(([, , any]) => holds(rights, any)).map(([path, label]) => ({
-            href: STUDIO + path,
+            href: tabHref(path),
             label: t(label),
             current: path === o.tab,
           })),

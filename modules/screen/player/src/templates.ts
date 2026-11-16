@@ -150,6 +150,9 @@ const figure = (field: string, label: TreeNode[]): TreeNode =>
  * game art, the band holds the theme's glows, faded into the card by a mask (stage.css). Drawn
  * only in the hero; elsewhere the look hides it.
  */
+/** A crew moment says it is from the crew and never who (Moments' spotlight, L15). */
+const FROM_CREW: TreeNode = sec("from_crew", el("p", "kicker", [t("From the crew")]));
+
 const THEME_BAND: TreeNode = el("div", null, [], {
   class: [t("canccu-widget__band canccu-widget__band--theme")],
   "aria-hidden": [t("true")],
@@ -224,6 +227,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     QR,
   ],
   bracket: [
+    FROM_CREW,
     title("title"),
     sec("session", el("p", "meta", [f("game_name")])),
     el("ul", "body", [
@@ -244,6 +248,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     QR,
   ],
   leaderboard: [
+    FROM_CREW,
     title("title"),
     el("ol", "body", [
       sec(
@@ -259,6 +264,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
   // The wall (change 6): five tiles, the lead first (wall.css draws it large); a new photo pops
   // over the whole box while `featured`.
   photo: [
+    FROM_CREW,
     el("div", "wall", [sec("tiles", el("figure", "tile", PHOTO))]),
     sec("featured", el("figure", "pop", PHOTO)),
   ],
@@ -267,7 +273,12 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     el(
       "div",
       null,
-      [el("p", "kicker", [t("Announcement")]), title("title"), el("p", "body", [f("body")])],
+      [
+        FROM_CREW,
+        not("from_crew", el("p", "kicker", [t("Announcement")])),
+        title("title"),
+        el("p", "body", [f("body")]),
+      ],
       {
         class: [t("canccu-widget__level canccu-widget__level--"), f("level")],
       },
