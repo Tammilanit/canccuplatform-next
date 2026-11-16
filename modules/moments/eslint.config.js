@@ -3,10 +3,9 @@ import tseslint from "typescript-eslint";
 
 // The page script runs in the browser, untyped, so the typed rules skip it.
 const BROWSER = Object.fromEntries(
-  ["document", "fetch", "location", "setTimeout", "clearTimeout", "window", "crypto"].map((name) => [
-    name,
-    "readonly",
-  ]),
+  ["document", "fetch", "location", "setTimeout", "clearTimeout", "window", "crypto"].map(
+    (name) => [name, "readonly"],
+  ),
 );
 
 export default tseslint.config(

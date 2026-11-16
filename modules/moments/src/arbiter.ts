@@ -111,7 +111,9 @@ export interface Held {
  * regional). A higher `full` claim holds every role but `overlay`; a waiting claim holds nothing.
  */
 export function blockedOn(chain: readonly string[], rank: number, held: readonly Held[]): boolean {
-  const higher = held.filter((h) => h.rank > rank && (h.state === "placed" || h.state === "hidden"));
+  const higher = held.filter(
+    (h) => h.rank > rank && (h.state === "placed" || h.state === "hidden"),
+  );
   const full = higher.some((h) => h.role === "full");
   return chain.every((role) =>
     role === "overlay"

@@ -139,7 +139,8 @@ export class Engine {
       expires_at: ttl === null ? null : new Date(now.getTime() + ttl * 1000),
       ttl_seconds: ttl,
       patience_seconds:
-        r.patience_seconds ?? (people ? (ttl ?? FOREVER) : Math.min(RULE_PATIENCE_SECONDS, FOREVER)),
+        r.patience_seconds ??
+        (people ? (ttl ?? FOREVER) : Math.min(RULE_PATIENCE_SECONDS, FOREVER)),
       qr: r.qr ?? null,
       binding: r.binding ?? null,
       ended_at: null,
@@ -169,7 +170,9 @@ export class Engine {
   /** Moves the end on by `seconds`, at most the longest TTL after now. */
   async extend(c: SqlClient, m: MomentRow, seconds: number, actor: Actor, now: Date) {
     const from = Math.max(m.expires_at?.getTime() ?? now.getTime(), now.getTime());
-    m.expires_at = new Date(Math.min(from + seconds * 1000, now.getTime() + MAX_TTL_SECONDS * 1000));
+    m.expires_at = new Date(
+      Math.min(from + seconds * 1000, now.getTime() + MAX_TTL_SECONDS * 1000),
+    );
     await saveMoment(c, m);
     await this.show(c, m, actor, "cleared");
   }
@@ -225,7 +228,8 @@ export class Engine {
     for (const zone of zones) {
       const here = held.filter((h) => h.zone === zone);
       if (!blockedOn(regions, rankOn(orders, zone, cls), here)) return null;
-      for (const h of here) if (top === null || h.rank > top.rank) top = { rank: h.rank, id: h.override_id };
+      for (const h of here)
+        if (top === null || h.rank > top.rank) top = { rank: h.rank, id: h.override_id };
     }
     if (top === null) return null;
     const { rows } = await c.query(
@@ -268,7 +272,10 @@ export class Engine {
     for (const w of wanted.filter((w) => !stored.has(w.id))) {
       const next = sentOf(m, w);
       await putOverride(c, m.id, next);
-      await this.emit(c, "moments.override.started", { override: wire(m, next), actor_user_id: by });
+      await this.emit(c, "moments.override.started", {
+        override: wire(m, next),
+        actor_user_id: by,
+      });
     }
     for (const w of wanted.filter((w) => stored.has(w.id))) {
       const before = stored.get(w.id) as SentOverride;

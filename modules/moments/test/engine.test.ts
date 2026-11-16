@@ -18,7 +18,11 @@ const run = DATABASE_URL ? describe : describe.skip;
 const hotGame = (players = 14): MomentRequest => ({
   class: "hot_game",
   template: "hot_game",
-  content: { game: { id: "g_1", name: "Demo Game", cover_url: null }, players, since: T0.toISOString() },
+  content: {
+    game: { id: "g_1", name: "Demo Game", cover_url: null },
+    players,
+    since: T0.toISOString(),
+  },
   origin: "rule",
   rule_id: "hot_game",
   why: "rule: games.surge.started",
@@ -45,7 +49,7 @@ const takeover: MomentRequest = {
 };
 
 run("the arbiter", () => {
-  let pool: pg.Pool;
+  let pool: pg.Pool | undefined;
   let w: World;
   beforeEach(async () => {
     if (pool !== undefined) await pool.end();
@@ -56,7 +60,7 @@ run("the arbiter", () => {
     });
   });
   afterAll(async () => {
-    await pool.end();
+    await pool?.end();
   });
 
   const start = (r: MomentRequest, s = 0) => w.tx("demo", (c) => w.engine.request(c, r, w.at(s)));
@@ -66,7 +70,9 @@ run("the arbiter", () => {
   const history = async () =>
     (
       await w.tx("demo", (c) =>
-        c.query(`SELECT action, zone_key, region, outcome, displaced FROM moments_history ORDER BY seq`),
+        c.query(
+          `SELECT action, zone_key, region, outcome, displaced FROM moments_history ORDER BY seq`,
+        ),
       )
     ).rows;
 
@@ -93,7 +99,9 @@ run("the arbiter", () => {
     const last = w.events("demo").at(-1);
     expect(last?.type).toBe("moments.override.changed");
     expect(last?.data.changed).toEqual(["expires_at"]);
-    expect((last?.data.override as Record<string, unknown>).expires_at).toBe(w.at(150).toISOString());
+    expect((last?.data.override as Record<string, unknown>).expires_at).toBe(
+      w.at(150).toISOString(),
+    );
     expect((last?.data.override as Record<string, unknown>).starts_at).toBe(T0.toISOString());
     expect(await history()).toHaveLength(before);
   });
@@ -111,7 +119,12 @@ run("the arbiter", () => {
     const rail = await start({ ...takeover, regions: ["rail"], kind: "block" });
     if (top.status === "refused" || rail.status === "refused") throw new Error("refused");
     for (const zone of ["main", "stage"]) {
-      await report(claims(zone, [[top.moment.id, "hero"], [rail.moment.id, "rail"]]));
+      await report(
+        claims(zone, [
+          [top.moment.id, "hero"],
+          [rail.moment.id, "rail"],
+        ]),
+      );
     }
     const r = await start(hotGame(), 5);
     expect(r).toEqual({
@@ -131,7 +144,12 @@ run("the arbiter", () => {
     const r = await start(hotGame());
     expect(r.status).toBe("started");
     if (r.status === "refused") return;
-    await report(claims("main", [[top.moment.id, "hero"], [r.moment.id, "rail"]]));
+    await report(
+      claims("main", [
+        [top.moment.id, "hero"],
+        [r.moment.id, "rail"],
+      ]),
+    );
     const placed = (await history()).filter((h) => h.action === "placed");
     expect(placed.map((h) => [h.zone_key, h.region])).toContainEqual(["main", "rail"]);
   });
@@ -212,7 +230,9 @@ run("the arbiter", () => {
       await reRank(c, w.engine);
     });
     const after = w.events("demo").slice(1);
-    expect(after.map((e) => [e.type, e.data.override_id ?? (e.data.override as { id: string }).id])).toEqual([
+    expect(
+      after.map((e) => [e.type, e.data.override_id ?? (e.data.override as { id: string }).id]),
+    ).toEqual([
       ["moments.override.started", `${r.moment.id}.stage`],
       ["moments.override.changed", r.moment.id],
       ["moments.override.ended", r.moment.id],
@@ -239,7 +259,8 @@ run("the arbiter", () => {
     if (r.status === "refused") throw new Error("refused");
     await w.tx("demo", async (c) => {
       const m = await lockMoment(c, r.moment.id);
-      if (m) await w.engine.end(c, m, "cleared", { user_id: "u_1", name: "Demo Crew" }, w.at(5), "main");
+      if (m)
+        await w.engine.end(c, m, "cleared", { user_id: "u_1", name: "Demo Crew" }, w.at(5), "main");
     });
     expect(w.events("demo").at(-1)?.data).toMatchObject({ zones: ["main"], final: false });
     await w.tx("demo", (c) => zoneRemoved(c, w.engine, "stage", w.at(6)));

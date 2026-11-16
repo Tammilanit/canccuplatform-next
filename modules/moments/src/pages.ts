@@ -1,0 +1,319 @@
+/** Studio → Moments (contracts/moments.md, Pages): On air, Spotlight, Priorities, History. */
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import { DEFAULT_ORDER, checkOrder, desiredOverrides, isClass } from "./arbiter.js";
+import type { Class } from "./arbiter.js";
+import { filterOf, historyRows } from "./history.js";
+import { EMERGENCY, READ, SETTINGS, TAKE, tenantOf } from "./http.js";
+import type { AppDeps } from "./http.js";
+import { PREFIX, page, pageErrors, pageNeeds, refusal, staticRoutes, viaApi } from "./page-kit.js";
+import { loadRules } from "./rules.js";
+import { knownZones, loadOrders, runningMoments, titleOf } from "./store.js";
+import {
+  confirmEmergency,
+  historyView,
+  onAirView,
+  prioritiesView,
+  spotlightView,
+} from "./views.js";
+import type { MomentView } from "./views.js";
+
+type Form = Record<string, string | undefined>;
+type Q = { Querystring: Form; Body: Form };
+const list = (v: string | undefined): string[] =>
+  (v ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s !== "");
+
+async function onAir(deps: AppDeps): Promise<{ moments: MomentView[]; zones: string[] }> {
+  return deps.db.tenant(async (c) => {
+    const running = await runningMoments(c);
+    const orders = await loadOrders(c);
+    const { rows } = await c.query(
+      `SELECT moment_id, zone_key, state, role FROM moment_placements WHERE moment_id = ANY($1::text[])`,
+      [running.map((m) => m.id)],
+    );
+    const moments = running
+      .map((m) => ({
+        id: m.id,
+        class: m.class,
+        rank: desiredOverrides(m, orders, [], [])[0]?.rank ?? 0,
+        template: m.template,
+        title: titleOf(m),
+        origin: m.origin,
+        who:
+          m.origin === "rule"
+            ? `rule ${m.rule_id ?? ""}`
+            : m.origin === "module"
+              ? m.source.module
+              : (m.actor_name ?? "the crew"),
+        zones: m.zones,
+        left: m.left_zones,
+        expires_at: m.expires_at?.toISOString() ?? null,
+        starts_at: m.starts_at.toISOString(),
+        patience_seconds: m.patience_seconds,
+        placements: rows
+          .filter((p) => p.moment_id === m.id)
+          .map((p) => ({
+            zone_key: p.zone_key as string,
+            state: p.state as string,
+            role: p.role as string | null,
+          })),
+      }))
+      .sort((a, b) => b.rank - a.rank);
+    return { moments, zones: await knownZones(c) };
+  });
+}
+
+export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
+  void app.register((pages, _opts, done) => {
+    pageErrors(pages, deps);
+    staticRoutes(pages);
+    const read = { preHandler: pageNeeds(deps, READ) };
+    const has = (r: FastifyRequest, right: string) => r.session?.rights.has(right) === true;
+    const back = (reply: FastifyReply, path: string, key: "done" | "error", text: string) =>
+      reply.redirect(
+        `${PREFIX}${path}${path.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(text)}`,
+        303,
+      );
+
+    // U9: On air while the event is live, Priorities before it.
+    pages.get("/", read, (request, reply) =>
+      reply.redirect(
+        `${PREFIX}${tenantOf(request).status === "live" ? "on-air" : "priorities"}`,
+        303,
+      ),
+    );
+
+    pages.get<Q>("/on-air", read, async (request, reply) => {
+      const state = await onAir(deps);
+      return page(request, reply, deps, {
+        title: "Moments",
+        tab: "on-air",
+        description: "What every zone shows now, what waits, and why. Live.",
+        body: onAirView({
+          ...state,
+          now: deps.now(),
+          canTake: has(request, TAKE),
+          canEmergency: has(request, EMERGENCY),
+          archived: tenantOf(request).status === "archived",
+          done: request.query.done,
+          error: request.query.error,
+        }),
+      });
+    });
+
+    pages.post<Q>(
+      "/on-air/:action",
+      { preHandler: pageNeeds(deps, TAKE) },
+      async (request, reply) => {
+        const action = (request.params as { action: string }).action;
+        if (action !== "end" && action !== "extend")
+          return back(reply, "on-air", "error", "No such action.");
+        const f = request.body;
+        const id = encodeURIComponent(f.moment_id ?? "");
+        const zone = f.zone_key === undefined || f.zone_key === "" ? {} : { zone_key: f.zone_key };
+        const a = await viaApi(
+          pages,
+          request,
+          "POST",
+          `/api/moments/moments/${id}/${action}`,
+          action === "end" ? zone : { seconds: 300 },
+        );
+        if (a.status >= 400) return back(reply, "on-air", "error", refusal(a));
+        return back(
+          reply,
+          "on-air",
+          "done",
+          action === "end" ? "Ended on that zone." : "Extended by 5 minutes.",
+        );
+      },
+    );
+
+    pages.post<Q>(
+      "/emergency",
+      { preHandler: pageNeeds(deps, EMERGENCY) },
+      async (request, reply) => {
+        // The hold is the script's (moments.js); without it, one more deliberate step asks first.
+        if (request.body.held !== "yes") {
+          return page(request, reply, deps, {
+            title: "Start the emergency?",
+            body: confirmEmergency(request.body.idempotency_key ?? ""),
+          });
+        }
+        const a = await viaApi(pages, request, "POST", "/api/moments/emergency", {});
+        return a.status >= 400
+          ? back(reply, "on-air", "error", refusal(a))
+          : back(reply, "on-air", "done", "Emergency on every zone.");
+      },
+    );
+    pages.post<Q>(
+      "/emergency/end",
+      { preHandler: pageNeeds(deps, EMERGENCY) },
+      async (request, reply) => {
+        const a = await viaApi(pages, request, "POST", "/api/moments/emergency/end", {
+          all_clear: request.body.all_clear === "true",
+        });
+        return a.status >= 400
+          ? back(reply, "on-air", "error", refusal(a))
+          : back(reply, "on-air", "done", "Emergency ended.");
+      },
+    );
+
+    pages.get("/spotlight", { preHandler: pageNeeds(deps, TAKE) }, async (request, reply) => {
+      const data = await deps.db.tenant(async (c) => {
+        const { rows } = await c.query(
+          `SELECT ref, data->'game'->>'name' AS name FROM moments_sources WHERE kind = 'session' ORDER BY ref`,
+          [],
+        );
+        return {
+          zones: await knownZones(c),
+          sessions: rows.map((r) => ({
+            id: r.ref as string,
+            name: `${(r.name as string | null) ?? "Session"} (${r.ref as string})`,
+          })),
+        };
+      });
+      return page(request, reply, deps, {
+        title: "Crew spotlight",
+        body: spotlightView(data),
+        description: "In the hero of the zones you pick, for as long as you choose.",
+      });
+    });
+    pages.post<Q>("/spotlight", { preHandler: pageNeeds(deps, TAKE) }, async (request, reply) => {
+      const f = request.body;
+      const raw = (request.body as unknown as Record<string, unknown>).zone;
+      const zones = Array.isArray(raw) ? raw : raw === undefined ? [] : [raw];
+      const show = f.show ?? "message";
+      const a = await viaApi(pages, request, "POST", "/api/moments/spotlight", {
+        show,
+        zones,
+        duration_seconds: Number(f.duration_seconds ?? 300),
+        ...(show === "message"
+          ? { title: f.title ?? "", ...(f.body ? { body: f.body } : {}) }
+          : {}),
+        ...(show === "bracket" ? { session_id: f.session_id ?? "" } : {}),
+        ...(show === "photo" ? { photo_url: f.photo_url ?? "" } : {}),
+        ...(f.qr_path ? { qr: { path: f.qr_path, label: "Scan me" } } : {}),
+      });
+      return a.status >= 400
+        ? back(reply, "on-air", "error", refusal(a))
+        : back(reply, "on-air", "done", "Spotlight on air.");
+    });
+
+    pages.get<Q>("/priorities", read, async (request, reply) => {
+      const scope = request.query.scope ?? "";
+      const state = await deps.db.tenant(async (c) => ({
+        orders: await loadOrders(c),
+        zones: await knownZones(c),
+        rules: await loadRules(c),
+        running: await runningMoments(c),
+      }));
+      const saved =
+        scope === "" ? state.orders.order : (state.orders.zones[scope] ?? state.orders.order);
+      const asked = list(request.query.order).filter(isClass);
+      const draft = asked.length > 0 && checkOrder(asked) === null;
+      const order: readonly Class[] = draft ? asked : saved;
+      const orders =
+        scope === ""
+          ? { ...state.orders, order }
+          : { ...state.orders, zones: { ...state.orders.zones, [scope]: order } };
+      const zone = scope !== "" ? scope : state.zones[0];
+      const ranks: Record<string, number> = {};
+      if (zone !== undefined) {
+        for (const m of state.running)
+          for (const w of desiredOverrides(m, orders, state.zones, [])) ranks[w.id] = w.rank;
+      }
+      return page(request, reply, deps, {
+        title: "Moments",
+        tab: "priorities",
+        description:
+          "A default order ships; change it for the event, or for a zone that needs its own.",
+        body: prioritiesView({
+          scope,
+          order,
+          draft,
+          zones: state.zones,
+          own: Object.keys(state.orders.zones),
+          revision: state.orders.revision,
+          preview: zone === undefined ? null : { zone, ranks },
+          rules: state.rules,
+          canWrite: has(request, SETTINGS) && tenantOf(request).status !== "archived",
+          done: request.query.done,
+          error: request.query.error,
+        }),
+      });
+    });
+    pages.post<Q>(
+      "/priorities",
+      { preHandler: pageNeeds(deps, SETTINGS) },
+      async (request, reply) => {
+        const f = request.body;
+        const scope = f.scope ?? "";
+        const orders = await deps.db.tenant((c) => loadOrders(c));
+        const order = f.do === "reset" ? [...DEFAULT_ORDER] : list(f.order);
+        const zones = Object.entries(orders.zones).filter(([z]) => z !== scope);
+        if (scope !== "" && f.do !== "follow") zones.push([scope, order.filter(isClass)]);
+        const a = await viaApi(pages, request, "PUT", "/api/moments/priorities", {
+          order: scope === "" ? order : orders.order,
+          zones: zones.map(([zone_key, o]) => ({ zone_key, order: o })),
+          revision: Number(f.revision),
+        });
+        const here = `priorities?scope=${encodeURIComponent(scope)}`;
+        return a.status >= 400
+          ? back(reply, here, "error", refusal(a))
+          : back(reply, here, "done", "Order saved: live at once.");
+      },
+    );
+    pages.post<Q>(
+      "/rules/:rule_id",
+      { preHandler: pageNeeds(deps, SETTINGS) },
+      async (request, reply) => {
+        const f = request.body;
+        const id = (request.params as { rule_id: string }).rule_id;
+        const a = await viaApi(
+          pages,
+          request,
+          "PUT",
+          `/api/moments/rules/${encodeURIComponent(id)}`,
+          {
+            enabled: f.enabled === "true",
+            template: f.template,
+            class: f.class,
+            regions: list(f.regions),
+            ttl_seconds: Number(f.ttl_seconds),
+            zones: list(f.zones),
+            cue: f.cue === undefined || f.cue === "" ? null : f.cue,
+            revision: Number(f.revision),
+          },
+        );
+        return a.status >= 400
+          ? back(reply, "priorities", "error", refusal(a))
+          : back(reply, "priorities", "done", "Rule saved.");
+      },
+    );
+
+    pages.get<Q>("/history", read, async (request, reply) => {
+      const filter = filterOf(request.query);
+      const before = request.query.before === undefined ? undefined : Number(request.query.before);
+      const out = await deps.db.tenant(async (c) => ({
+        rows: await historyRows(c, filter, 101, Number.isInteger(before) ? before : undefined),
+        zones: await knownZones(c),
+      }));
+      const more = out.rows.length > 100 ? (out.rows[99]?.seq ?? null) : null;
+      return page(request, reply, deps, {
+        title: "Moments",
+        tab: "history",
+        description: "What played where, why, what it displaced, and how it ended.",
+        body: historyView({
+          rows: out.rows.slice(0, 100),
+          zones: out.zones,
+          filter,
+          timeZone: tenantOf(request).time_zone,
+          more,
+        }),
+      });
+    });
+    done();
+  });
+}

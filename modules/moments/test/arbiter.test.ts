@@ -9,7 +9,7 @@ import {
   overrideChanges,
   rankOf,
 } from "../src/arbiter.js";
-import type { Held, MomentShape, SentOverride } from "../src/arbiter.js";
+import type { Class, Held, MomentShape, SentOverride } from "../src/arbiter.js";
 
 const moment = (over: Partial<MomentShape> = {}): MomentShape => ({
   id: "m_1",
@@ -54,8 +54,8 @@ describe("overrides per rank", () => {
   });
 
   it("splits a zone with its own rank into an override of its own", () => {
-    const stage = [...DEFAULT_ORDER].reverse().filter((c) => c !== "emergency");
-    const own = { order: DEFAULT_ORDER, zones: { stage: ["emergency", ...stage] } };
+    const stage: Class[] = [...DEFAULT_ORDER].reverse().filter((c) => c !== "emergency");
+    const own = { order: DEFAULT_ORDER, zones: { stage: ["emergency", ...stage] as Class[] } };
     expect(desiredOverrides(moment(), own, ["main", "stage", "cafe"], [])).toEqual([
       { id: "m_1", zones: ["cafe", "main"], rank: 50 },
       { id: "m_1.stage", zones: ["stage"], rank: rankOf(own.zones.stage, "hot_game") },
@@ -80,9 +80,9 @@ describe("overrides per rank", () => {
 
   it("never splits an emergency: nothing outranks it anywhere", () => {
     const stage = { order: DEFAULT_ORDER, zones: { stage: DEFAULT_ORDER } };
-    expect(
-      desiredOverrides(moment({ class: "emergency" }), stage, ["main", "stage"], []),
-    ).toEqual([{ id: "m_1", zones: [], rank: 100 }]);
+    expect(desiredOverrides(moment({ class: "emergency" }), stage, ["main", "stage"], [])).toEqual([
+      { id: "m_1", zones: [], rank: 100 },
+    ]);
   });
 });
 

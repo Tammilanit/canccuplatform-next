@@ -69,7 +69,7 @@ export async function zoneRemoved(
 export async function tickAll(deps: {
   db: Db;
   engine: Engine;
-  flush: () => Promise<void>;
+  flush: () => Promise<unknown>;
   now: () => Date;
   log?: Logger;
 }): Promise<void> {
@@ -101,9 +101,10 @@ export async function upkeep(db: Db, now: Date): Promise<void> {
   for (const t of tenants) {
     await withTenant(t.tenant_id, () =>
       db.tenant(async (c) => {
-        await c.query(`DELETE FROM moments_idempotency WHERE at < $1::timestamptz - interval '1 day'`, [
-          now,
-        ]);
+        await c.query(
+          `DELETE FROM moments_idempotency WHERE at < $1::timestamptz - interval '1 day'`,
+          [now],
+        );
         if (t.archived_at !== null) {
           await c.query(
             `DELETE FROM moments_history
@@ -119,10 +120,6 @@ export async function upkeep(db: Db, now: Date): Promise<void> {
 /** Notes an event the module serves, so the tick visits it (idempotent). */
 export async function noteTenant(db: Db, tenant: string): Promise<void> {
   await db.global((c) =>
-    c.query(`INSERT INTO moments_tenants (tenant_id) VALUES ($1) ON CONFLICT DO NOTHING`, [
-      tenant,
-    ]),
+    c.query(`INSERT INTO moments_tenants (tenant_id) VALUES ($1) ON CONFLICT DO NOTHING`, [tenant]),
   );
 }
-
-export { lockMoment };
