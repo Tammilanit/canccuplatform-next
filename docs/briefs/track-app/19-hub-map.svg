@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 850" width="1920" height="850" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 19: the hub's map</title>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0" y="0" width="1920" height="850" rx="0" fill="#f3f4f6"/>
+<text x="24" y="44" font-size="28" fill="#1f2937" font-weight="700" text-anchor="start">19 · The hub's map: tabs, pages, paths and where each reads from</text>
+<rect x="40" y="90" width="350" height="60" rx="12" fill="#0b0d1a"/>
+<text x="215" y="128" font-size="22" fill="#3ddcff" font-weight="700" text-anchor="middle">Now</text>
+<rect x="40" y="170" width="350" height="170" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="58" y="202" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Pages</text>
+<text x="58" y="230" font-size="15" fill="#374151" font-weight="400" text-anchor="start">/notify/ · Now (guest, member)</text>
+<text x="58" y="257" font-size="15" fill="#374151" font-weight="400" text-anchor="start">?zone=&lt;key&gt; from a zone's QR</text>
+<rect x="40" y="360" width="350" height="200" rx="14" fill="#f8fafc" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="58" y="392" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Reads</text>
+<text x="58" y="420" font-size="15" fill="#374151" font-weight="400" text-anchor="start">agenda now</text>
+<text x="58" y="447" font-size="15" fill="#374151" font-weight="400" text-anchor="start">screen now</text>
+<text x="58" y="474" font-size="15" fill="#374151" font-weight="400" text-anchor="start">moments announcements</text>
+<text x="58" y="501" font-size="15" fill="#374151" font-weight="400" text-anchor="start">tournament, pizza, notify (For you)</text>
+<text x="58" y="528" font-size="15" fill="#374151" font-weight="400" text-anchor="start">tenants venue-info</text>
+<rect x="410" y="90" width="350" height="60" rx="12" fill="#0b0d1a"/>
+<text x="585" y="128" font-size="22" fill="#3ddcff" font-weight="700" text-anchor="middle">Schedule</text>
+<rect x="410" y="170" width="350" height="170" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="428" y="202" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Pages</text>
+<text x="428" y="230" font-size="15" fill="#374151" font-weight="400" text-anchor="start">/notify/agenda · the run of show</text>
+<text x="428" y="257" font-size="15" fill="#374151" font-weight="400" text-anchor="start">/notify/agenda/{id} · one item</text>
+<rect x="410" y="360" width="350" height="200" rx="14" fill="#f8fafc" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="428" y="392" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Reads</text>
+<text x="428" y="420" font-size="15" fill="#374151" font-weight="400" text-anchor="start">agenda items</text>
+<text x="428" y="447" font-size="15" fill="#374151" font-weight="400" text-anchor="start">agenda kinds</text>
+<rect x="780" y="90" width="350" height="60" rx="12" fill="#0b0d1a"/>
+<text x="955" y="128" font-size="22" fill="#3ddcff" font-weight="700" text-anchor="middle">Play</text>
+<rect x="780" y="170" width="350" height="170" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="798" y="202" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Pages</text>
+<text x="798" y="230" font-size="15" fill="#374151" font-weight="400" text-anchor="start">/notify/play · now playing</text>
+<text x="798" y="257" font-size="15" fill="#374151" font-weight="400" text-anchor="start">/notify/games/{id} · one game</text>
+<rect x="780" y="360" width="350" height="200" rx="14" fill="#f8fafc" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="798" y="392" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Reads</text>
+<text x="798" y="420" font-size="15" fill="#374151" font-weight="400" text-anchor="start">bot presence read API</text>
+<text x="798" y="447" font-size="15" fill="#374151" font-weight="400" text-anchor="start">games catalogue, surges</text>
+<text x="798" y="474" font-size="15" fill="#374151" font-weight="400" text-anchor="start">notify follows</text>
+<rect x="1150" y="90" width="350" height="60" rx="12" fill="#0b0d1a"/>
+<text x="1325" y="128" font-size="22" fill="#3ddcff" font-weight="700" text-anchor="middle">Alerts</text>
+<rect x="1150" y="170" width="350" height="170" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="1168" y="202" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Pages</text>
+<text x="1168" y="230" font-size="15" fill="#374151" font-weight="400" text-anchor="start">/notify/alerts · this phone, your alerts</text>
+<text x="1168" y="257" font-size="15" fill="#374151" font-weight="400" text-anchor="start">/notify/inbox · everything not expired</text>
+<rect x="1150" y="360" width="350" height="200" rx="14" fill="#f8fafc" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="1168" y="392" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Reads</text>
+<text x="1168" y="420" font-size="15" fill="#374151" font-weight="400" text-anchor="start">notify topics, me,</text>
+<text x="1168" y="447" font-size="15" fill="#374151" font-weight="400" text-anchor="start">subscriptions, inbox</text>
+<rect x="1520" y="90" width="350" height="60" rx="12" fill="#0b0d1a"/>
+<text x="1695" y="128" font-size="22" fill="#3ddcff" font-weight="700" text-anchor="middle">More</text>
+<rect x="1520" y="170" width="350" height="170" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="1538" y="202" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Pages</text>
+<text x="1538" y="230" font-size="15" fill="#374151" font-weight="400" text-anchor="start">/notify/me · you, my event</text>
+<text x="1538" y="257" font-size="15" fill="#374151" font-weight="400" text-anchor="start">/notify/privacy · the privacy centre</text>
+<text x="1538" y="284" font-size="15" fill="#374151" font-weight="400" text-anchor="start">/notify/install · the guide</text>
+<text x="1538" y="311" font-size="15" fill="#374151" font-weight="400" text-anchor="start">Organiser tools → /admin/</text>
+<rect x="1520" y="360" width="350" height="200" rx="14" fill="#f8fafc" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="1538" y="392" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Reads</text>
+<text x="1538" y="420" font-size="15" fill="#374151" font-weight="400" text-anchor="start">tenants me, privacy</text>
+<text x="1538" y="447" font-size="15" fill="#374151" font-weight="400" text-anchor="start">every module's me/export</text>
+<rect x="40" y="590" width="900" height="230" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="58" y="622" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Pages without a tab</text>
+<text x="58" y="650" font-size="16" fill="#374151" font-weight="400" text-anchor="start">/notify/join#code=… · join the event (tenants.md; exists in the contract)</text>
+<text x="58" y="678" font-size="16" fill="#374151" font-weight="400" text-anchor="start">/notify/check-in?p=&amp;c= · check-in (exists, server-rendered; moves into the frame)</text>
+<text x="58" y="706" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Module pages in the frame: /pizza/… (#119), the tournament's my matches (step 7), the games' pages</text>
+<text x="58" y="734" font-size="16" fill="#374151" font-weight="400" text-anchor="start">/notify/manifest.webmanifest, /notify/sw.js · the PWA (scope / by the Service-Worker-Allowed header, Q</text>
+<text x="58" y="756" font-size="16" fill="#374151" font-weight="400" text-anchor="start">D3)</text>
+<rect x="980" y="590" width="900" height="230" rx="14" fill="#fff7ed" stroke="#d97706" stroke-width="1.5"/>
+<text x="998" y="622" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Changes to what exists</text>
+<text x="998" y="650" font-size="16" fill="#374151" font-weight="400" text-anchor="start">/notify/ today redirects to the admin topic list (deploy/Caddyfile): the hub takes /notify/; the topic</text>
+<text x="998" y="672" font-size="16" fill="#374151" font-weight="400" text-anchor="start">list stays at /notify/admin/topics, where admin's menu already links.</text>
+<text x="998" y="700" font-size="16" fill="#374151" font-weight="400" text-anchor="start">/notify/privacy (today a text page) becomes the privacy centre.</text>
+<text x="998" y="728" font-size="16" fill="#374151" font-weight="400" text-anchor="start">notify.md gains the route map (additive), so screen's QR targets resolve to real pages.</text>
+</svg>
