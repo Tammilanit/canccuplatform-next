@@ -3,7 +3,9 @@
 // standings, then one with a message that takes the hero from it, so On air shows one placed and
 // one waiting with why; On air at both widths, the spotlight form on a phone, Priorities with its
 // preview drawn, History, and the main hall's live view with "From the crew". Then an emergency:
-// On air and the main hall under it. Every moment started here ends afterwards.
+// On air and the main hall under it. Screen places a zone's claims, and reports where, only while
+// a screen of it is connected, so a screen is paired into each zone and its stream kept open while
+// the shots run. Every moment and screen started here ends afterwards.
 import { randomBytes } from "node:crypto";
 import { request } from "node:http";
 import {
@@ -62,17 +64,18 @@ async function start(path, body) {
   return r.body.id;
 }
 
-/** On air draws what Screen reported: wait until the main hall's placement of `id` is known. */
-async function placed(id) {
+/** On air draws what Screen reported: wait until every zone of the moment `id` has its place. */
+async function placed(id, zones) {
   const until = Date.now() + PLACED_MS;
   while (Date.now() < until) {
     const r = await moments("GET", "/api/moments/moments");
     const m = r.body?.moments?.find((x) => x.id === id);
-    if (m?.placements?.some((p) => p.zone_key === "main")) return;
+    const here = new Set((m?.placements ?? []).map((p) => p.zone_key));
+    if (zones.every((z) => here.has(z))) return;
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   throw new Error(
-    `Screen did not place ${id} on the main hall within ${PLACED_MS / 1000} s`,
+    `Screen did not place ${id} on ${zones.join(", ")} within ${PLACED_MS / 1000} s`,
   );
 }
 
@@ -138,10 +141,17 @@ export function momentsListed(at) {
   );
 }
 
-export async function momentsShots({ shot, fail }) {
+export async function momentsShots({ demo, shot, fail }) {
   const ids = [];
+  const screens = [];
   let emergency = false;
   try {
+    for (const zone of ["main", "entrance"]) {
+      const paired = await demo.pair(`Moments shots ${zone}`, zone);
+      const sse = demo.stream(paired.cookie);
+      screens.push({ paired, sse });
+      await sse.opened;
+    }
     ids.push(
       await start("/api/moments/spotlight", {
         show: "standings",
@@ -157,13 +167,14 @@ export async function momentsShots({ shot, fail }) {
         qr: { path: "/notify/", label: "Scan for the hub" },
       }),
     );
-    for (const id of ids) await placed(id);
+    await placed(ids[0], ["main"]);
+    await placed(ids[1], ["main", "entrance"]);
     for (const [name, path, viewport, o] of MOMENTS_PAGES) {
       await shot(name, path, viewport, SESSION, o);
     }
     const id = await start("/api/moments/emergency", {});
     emergency = true;
-    await placed(id);
+    await placed(id, ["main", "entrance"]);
     for (const [name, path, viewport, o] of EMERGENCY_PAGES) {
       await shot(name, path, viewport, SESSION, o);
     }
@@ -177,6 +188,10 @@ export async function momentsShots({ shot, fail }) {
         });
       for (const id of ids)
         await moments("POST", `/api/moments/moments/${id}/end`, {});
+      for (const { paired, sse } of screens) {
+        sse.close();
+        await demo.revoke(paired.id);
+      }
     } catch (err) {
       fail(`moments cleanup: ${firstLine(err)}`);
     }

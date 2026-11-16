@@ -167,8 +167,12 @@ export async function dropPlacements(
   );
 }
 
+/** The event's zones, `main` first: every event starts with it (contracts/screen.md, Zones). */
 export async function knownZones(c: SqlClient): Promise<string[]> {
-  const { rows } = await c.query(`SELECT zone_key FROM moments_zones ORDER BY zone_key`, []);
+  const { rows } = await c.query(
+    `SELECT zone_key FROM moments_zones ORDER BY zone_key <> 'main', zone_key`,
+    [],
+  );
   return rows.map((r) => r.zone_key as string);
 }
 

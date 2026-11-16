@@ -8,16 +8,13 @@ import type { AppDeps } from "./http.js";
 import { PREFIX, page, pageErrors, pageNeeds, refusal, staticRoutes, viaApi } from "./page-kit.js";
 import { loadRules } from "./rules.js";
 import { knownZones, loadOrders, runningMoments, titleOf } from "./store.js";
-import {
-  confirmEmergency,
-  historyView,
-  onAirView,
-  prioritiesView,
-  spotlightView,
-} from "./views.js";
+import { historyView, prioritiesView } from "./settings-views.js";
+import { confirmEmergency, onAirView, spotlightView } from "./views.js";
 import type { MomentView } from "./views.js";
 
 type Form = Record<string, string | undefined>;
+/** History rows per page. */
+const PAGE = 50;
 type Q = { Querystring: Form; Body: Form };
 const list = (v: string | undefined): string[] =>
   (v ?? "")
@@ -297,16 +294,16 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
       const filter = filterOf(request.query);
       const before = request.query.before === undefined ? undefined : Number(request.query.before);
       const out = await deps.db.tenant(async (c) => ({
-        rows: await historyRows(c, filter, 101, Number.isInteger(before) ? before : undefined),
+        rows: await historyRows(c, filter, PAGE + 1, Number.isInteger(before) ? before : undefined),
         zones: await knownZones(c),
       }));
-      const more = out.rows.length > 100 ? (out.rows[99]?.seq ?? null) : null;
+      const more = out.rows.length > PAGE ? (out.rows[PAGE - 1]?.seq ?? null) : null;
       return page(request, reply, deps, {
         title: "Moments",
         tab: "history",
         description: "What played where, why, what it displaced, and how it ended.",
         body: historyView({
-          rows: out.rows.slice(0, 100),
+          rows: out.rows.slice(0, PAGE),
           zones: out.zones,
           filter,
           timeZone: tenantOf(request).time_zone,

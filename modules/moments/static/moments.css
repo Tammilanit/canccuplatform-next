@@ -9,6 +9,12 @@
   grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
   align-items: start;
 }
+/* The crew remote (mockup 04): on a phone the crew moments come first. */
+@media (max-width: 63.99rem) {
+  .moments-crew {
+    order: -1;
+  }
+}
 @media (min-width: 64rem) {
   .moments-onair {
     grid-template-columns: 1fr 18rem;
@@ -132,6 +138,9 @@
 }
 .moments-rules {
   margin-top: 1rem;
+}
+.moments-rule .canccu-small {
+  overflow-wrap: anywhere;
 }
 .moments-rule {
   display: grid;
