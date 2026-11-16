@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 880" width="1920" height="880" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 18: the next event and the installed hub</title>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0" y="0" width="1920" height="880" rx="0" fill="#f3f4f6"/>
+<text x="24" y="44" font-size="28" fill="#1f2937" font-weight="700" text-anchor="start">18 · The next event: an installed hub belongs to one hostname, and each event has its own (Q D4)</text>
+<rect x="40" y="90" width="560" height="260" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="58" y="122" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Today: one hostname per event</text>
+<text x="58" y="150" font-size="16" fill="#374151" font-weight="400" text-anchor="start">demo.example.org is event 1; the next event in the series gets</text>
+<text x="58" y="172" font-size="16" fill="#374151" font-weight="400" text-anchor="start">its own hostname (tenants.md, Hostnames).</text>
+<text x="58" y="200" font-size="16" fill="#374151" font-weight="400" text-anchor="start">A PWA, its push permission and its subscription belong to one</text>
+<text x="58" y="222" font-size="16" fill="#374151" font-weight="400" text-anchor="start">origin. At archive Notify deletes the subscriptions.</text>
+<rect x="40" y="400" width="560" height="330" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="58" y="432" font-size="18" fill="#111827" font-weight="700" text-anchor="start">A · A new install per event (as the contracts are)</text>
+<text x="58" y="460" font-size="16" fill="#374151" font-weight="400" text-anchor="start">The next event's QR and link lead to a new hostname: install</text>
+<text x="58" y="482" font-size="16" fill="#374151" font-weight="400" text-anchor="start">again, allow alerts again.</text>
+<text x="58" y="510" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Simple, no change. The old icon stays on the home screen and</text>
+<text x="58" y="532" font-size="16" fill="#374151" font-weight="400" text-anchor="start">shows 'This event has ended'.</text>
+<text x="58" y="560" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Cost: none. Friction every event for regulars.</text>
+<rect x="680" y="400" width="560" height="330" rx="14" fill="#eef6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="698" y="432" font-size="18" fill="#111827" font-weight="700" text-anchor="start">B · A series hostname that moves (recommended)</text>
+<text x="698" y="460" font-size="16" fill="#374151" font-weight="400" text-anchor="start">The series gets a lasting hostname (series.example.org). At</text>
+<text x="698" y="482" font-size="16" fill="#374151" font-weight="400" text-anchor="start">clone the superadmin moves it from the old event to the new</text>
+<text x="698" y="504" font-size="16" fill="#374151" font-weight="400" text-anchor="start">one.</text>
+<text x="698" y="532" font-size="16" fill="#374151" font-weight="400" text-anchor="start">The installed app and its permission stay; on first open in</text>
+<text x="698" y="554" font-size="16" fill="#374151" font-weight="400" text-anchor="start">the new event the hub re-subscribes silently and asks only for</text>
+<text x="698" y="576" font-size="16" fill="#374151" font-weight="400" text-anchor="start">new topics.</text>
+<text x="698" y="604" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Cost: a tenants rule for moving a hostname within a series</text>
+<text x="698" y="626" font-size="16" fill="#374151" font-weight="400" text-anchor="start">(additive), and the hub's re-subscribe.</text>
+<rect x="1320" y="400" width="560" height="330" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="1338" y="432" font-size="18" fill="#111827" font-weight="700" text-anchor="start">C · One hub on the platform domain</text>
+<text x="1338" y="460" font-size="16" fill="#374151" font-weight="400" text-anchor="start">hub.example.org with an event picker; tenant from the path,</text>
+<text x="1338" y="482" font-size="16" fill="#374151" font-weight="400" text-anchor="start">not the hostname.</text>
+<text x="1338" y="510" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Breaks the tenancy rule 'the tenant comes from the hostname'</text>
+<text x="1338" y="532" font-size="16" fill="#374151" font-weight="400" text-anchor="start">and host-only cookies (0013, #52).</text>
+<text x="1338" y="560" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Cost: L, and high risk.</text>
+<rect x="680" y="90" width="1200" height="260" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="698" y="122" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Between events</text>
+<text x="698" y="150" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Nobody can be alerted that 'the next event is live': the old subscriptions are gone (tenants.md, archive).</text>
+<text x="698" y="178" font-size="16" fill="#374151" font-weight="400" text-anchor="start">With B, the archived event's 'Thanks for coming' page can offer 'Remind me when the next event opens', a new opt-in that lives with the</text>
+<text x="698" y="200" font-size="16" fill="#374151" font-weight="400" text-anchor="start">series, not the event (Q D4, personal data: high).</text>
+<rect x="40" y="780" width="1840" height="44" rx="10" fill="#fef9c3" stroke="#facc15" stroke-width="1.5"/>
+<text x="54" y="808" font-size="15" fill="#713f12" font-weight="500" text-anchor="start">Q D4 decides A, B or C. The pack recommends B: regulars come to several events a year at one venue (0022), and asking them to install and allow alerts again each time throws away the hub's best feature.</text>
+</svg>

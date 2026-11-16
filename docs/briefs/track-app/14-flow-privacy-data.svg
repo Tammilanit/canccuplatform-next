@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 960" width="1920" height="960" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 14: export, delete and leave across modules</title>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0" y="0" width="1920" height="960" rx="0" fill="#f3f4f6"/>
+<text x="24" y="44" font-size="28" fill="#1f2937" font-weight="700" text-anchor="start">14 · Flow: export, delete and leave across the modules, and what retention does on its own</text>
+<rect x="40" y="90" width="380" height="250" rx="14" fill="#eef6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="58" y="122" font-size="18" fill="#111827" font-weight="700" text-anchor="start">The hub (privacy centre)</text>
+<text x="58" y="150" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Signed-in member. Calls only what the</text>
+<text x="58" y="172" font-size="16" fill="#374151" font-weight="400" text-anchor="start">event runs (the profile's modules).</text>
+<text x="58" y="200" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Never takes a user id: every call acts on</text>
+<text x="58" y="222" font-size="16" fill="#374151" font-weight="400" text-anchor="start">the caller.</text>
+<rect x="620" y="90" width="300" height="56" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="638" y="122" font-size="17" fill="#374151" font-weight="400" text-anchor="start">notify</text>
+<line x1="425" y1="215" x2="615" y2="118" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="620" y="160" width="300" height="56" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="638" y="192" font-size="17" fill="#374151" font-weight="400" text-anchor="start">pizza</text>
+<line x1="425" y1="215" x2="615" y2="188" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="620" y="230" width="300" height="56" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="638" y="262" font-size="17" fill="#374151" font-weight="400" text-anchor="start">tournament</text>
+<line x1="425" y1="215" x2="615" y2="258" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="620" y="300" width="300" height="56" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="638" y="332" font-size="17" fill="#374151" font-weight="400" text-anchor="start">bot</text>
+<line x1="425" y1="215" x2="615" y2="328" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="620" y="370" width="300" height="56" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="638" y="402" font-size="17" fill="#374151" font-weight="400" text-anchor="start">games</text>
+<line x1="425" y1="215" x2="615" y2="398" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="620" y="440" width="300" height="56" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="638" y="472" font-size="17" fill="#374151" font-weight="400" text-anchor="start">moments</text>
+<line x1="425" y1="215" x2="615" y2="468" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="620" y="510" width="300" height="56" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="638" y="542" font-size="17" fill="#374151" font-weight="400" text-anchor="start">screen (none)</text>
+<line x1="425" y1="215" x2="615" y2="538" stroke="#6b7280" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="58" y="290" font-size="15" fill="#2563eb" font-weight="700" text-anchor="start">GET /api/&lt;module&gt;/me/export</text>
+<text x="58" y="316" font-size="15" fill="#dc2626" font-weight="700" text-anchor="start">DELETE /api/&lt;module&gt;/me</text>
+<rect x="1000" y="90" width="420" height="230" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="1018" y="122" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Leave the event</text>
+<text x="1018" y="150" font-size="16" fill="#374151" font-weight="400" text-anchor="start">DELETE /api/tenants/me/membership:</text>
+<text x="1018" y="172" font-size="16" fill="#374151" font-weight="400" text-anchor="start">attendee-only data closes to the person at</text>
+<text x="1018" y="194" font-size="16" fill="#374151" font-weight="400" text-anchor="start">once.</text>
+<text x="1018" y="222" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Q D14: does leaving also delete the module</text>
+<text x="1018" y="244" font-size="16" fill="#374151" font-weight="400" text-anchor="start">data, or only end membership?</text>
+<rect x="1000" y="350" width="420" height="290" rx="14" fill="#fff7ed" stroke="#d97706" stroke-width="1.5"/>
+<text x="1018" y="382" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Delete my account (proposed)</text>
+<text x="1018" y="410" font-size="16" fill="#374151" font-weight="400" text-anchor="start">New, additive: DELETE /api/tenants/me (the</text>
+<text x="1018" y="432" font-size="16" fill="#374151" font-weight="400" text-anchor="start">tenants contract hands self-service to the</text>
+<text x="1018" y="454" font-size="16" fill="#374151" font-weight="400" text-anchor="start">privacy centre).</text>
+<text x="1018" y="482" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Emits tenants.user.deleted, which every module</text>
+<text x="1018" y="504" font-size="16" fill="#374151" font-weight="400" text-anchor="start">already handles for the superadmin's delete.</text>
+<text x="1018" y="532" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Refused while the person is the last event</text>
+<text x="1018" y="554" font-size="16" fill="#374151" font-weight="400" text-anchor="start">admin of an event (Q E11).</text>
+<rect x="1480" y="90" width="400" height="550" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="1498" y="122" font-size="18" fill="#111827" font-weight="700" text-anchor="start">What happens without anyone</text>
+<text x="1498" y="150" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Archive: Notify drops subscriptions,</text>
+<text x="1498" y="172" font-size="16" fill="#374151" font-weight="400" text-anchor="start">choices, follows, notifications.</text>
+<text x="1498" y="200" font-size="16" fill="#374151" font-weight="400" text-anchor="start">+30 days: tenants.retention.reached</text>
+<text x="1498" y="222" font-size="16" fill="#374151" font-weight="400" text-anchor="start">presence: check-ins and presence samples</text>
+<text x="1498" y="244" font-size="16" fill="#374151" font-weight="400" text-anchor="start">go.</text>
+<text x="1498" y="272" font-size="16" fill="#374151" font-weight="400" text-anchor="start">+12 months: personal: rows lose their user</text>
+<text x="1498" y="294" font-size="16" fill="#374151" font-weight="400" text-anchor="start">id and name; counts and totals stay;</text>
+<text x="1498" y="316" font-size="16" fill="#374151" font-weight="400" text-anchor="start">members go; opt-in memories go.</text>
+<text x="1498" y="344" font-size="16" fill="#374151" font-weight="400" text-anchor="start">The privacy centre shows these dates for</text>
+<text x="1498" y="366" font-size="16" fill="#374151" font-weight="400" text-anchor="start">the person's own events (Q L7).</text>
+<rect x="40" y="700" width="900" height="220" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+<text x="58" y="732" font-size="18" fill="#111827" font-weight="700" text-anchor="start">Guests</text>
+<text x="58" y="760" font-size="16" fill="#374151" font-weight="400" text-anchor="start">A guest is only a push subscription: no user, no Person, never named by an event.</text>
+<text x="58" y="788" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Delete = DELETE /api/notify/subscriptions/{id} with the token kept on the phone; 'Turn off all alerts</text>
+<text x="58" y="810" font-size="16" fill="#374151" font-weight="400" text-anchor="start">on this phone' does it.</text>
+<text x="58" y="838" font-size="16" fill="#374151" font-weight="400" text-anchor="start">Clearing the browser's data loses the token: the subscription then lives until the push service answers</text>
+<text x="58" y="860" font-size="16" fill="#374151" font-weight="400" text-anchor="start">410 or the event is archived (Q E12).</text>
+<rect x="1000" y="700" width="880" height="88" rx="10" fill="#fef9c3" stroke="#facc15" stroke-width="1.5"/>
+<text x="1014" y="728" font-size="15" fill="#713f12" font-weight="500" text-anchor="start">Risk: the privacy centre touches personal data and account deletion: high (AGENTS.md, Merge rules). The</text>
+<text x="1014" y="750" font-size="15" fill="#713f12" font-weight="500" text-anchor="start">contract addition (DELETE /api/tenants/me) is additive, so it ships with the hub's page that uses it</text>
+<text x="1014" y="772" font-size="15" fill="#713f12" font-weight="500" text-anchor="start">(0029).</text>
+</svg>
