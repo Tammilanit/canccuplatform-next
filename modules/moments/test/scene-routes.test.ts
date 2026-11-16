@@ -5,10 +5,11 @@
  */
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import type pg from "pg";
-import type { Event } from "@canccu/kit";
+import type { Event, SqlClient } from "@canccu/kit";
 import { handleTenantEvent } from "../src/consumer.js";
 import { PRESETS } from "../src/scenes.js";
 import { evaluateScenes, loadScenes } from "../src/scene-store.js";
+import { lockSettings } from "../src/store.js";
 import { SceneTicker, tickAll } from "../src/tick.js";
 import { DATABASE_URL, freshDatabase } from "./helpers.js";
 import { appWorld, errorOf, json } from "./app.js";
@@ -229,6 +230,50 @@ run("scenes", () => {
       { host: "archived.test" },
     );
     expect(archived.statusCode).toBe(409);
+  });
+
+  it("finishes a save and a check-in pass that run at once, without a deadlock", async () => {
+    await evaluate();
+    let save: Promise<Awaited<ReturnType<AppWorld["call"]>>> | undefined;
+    // The pass holds "scene-zones" until the save waits on a lock, then reads the scenes row.
+    const holding = {
+      ...consumer(),
+      db: {
+        global: w.db.global.bind(w.db),
+        tenant: <T>(fn: (c: SqlClient) => Promise<T>) =>
+          w.db.tenant(async (c) => {
+            await lockSettings(c, "scene-zones");
+            save = w.call("admin", "PUT", "/api/moments/scenes", {
+              scenes: [PRESETS[4]],
+              revision: 0,
+            });
+            await expect
+              .poll(async () => {
+                const { rows } = await w.pool.query(
+                  `SELECT count(*)::int AS n FROM pg_stat_activity
+                   WHERE wait_event_type = 'Lock' AND wait_event = 'advisory'`,
+                );
+                return (rows[0] as { n: number }).n;
+              })
+              .toBe(1);
+            return fn(c);
+          }),
+      },
+    };
+    await w.tx("demo", () =>
+      handleTenantEvent(
+        holding,
+        event("notify.checkin.recorded", {
+          user_id: "u_1",
+          purpose: "arrival",
+          check_in_id: "ci_1",
+          checked_in_at: w.now.toISOString(),
+        }),
+      ),
+    );
+    const saved = await save;
+    expect(saved?.statusCode).toBe(200);
+    expect(json(saved as NonNullable<typeof saved>)).toMatchObject({ revision: 1 });
   });
 
   it("holds a scene across a restart and forgets a removed zone", async () => {

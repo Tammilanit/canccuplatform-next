@@ -60,6 +60,9 @@ export function sceneRoutes(app: FastifyInstance, deps: AppDeps): void {
     const now = deps.now();
     const out = await deps.db.tenant(async (c) => {
       await lockSettings(c, "scenes");
+      // Before writeScenes locks the list's row: a scene pass holds "scene-zones" and then
+      // reads that row, so the other order deadlocks a save against the pass.
+      await lockSettings(c, "scene-zones");
       const before = await loadScenes(c);
       if (revision !== before.revision)
         throw new KitError("Someone saved meanwhile: read it again.", {
