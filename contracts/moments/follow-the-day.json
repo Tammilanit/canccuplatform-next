@@ -50,7 +50,6 @@
     {
       "id": "ai_night",
       "kind": "quiet_hours",
-      "zone": null,
       "visibility": "public",
       "status": "scheduled",
       "starts_at": "2026-03-14T02:00:00Z",

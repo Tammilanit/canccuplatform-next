@@ -11,7 +11,7 @@ import type { Condition, Mood, Scene } from "./scenes.js";
 export interface AgendaItem {
   id: string;
   kind: string;
-  zone: string | null;
+  zone?: string | null;
   visibility: string;
   status?: string;
   starts_at: string;
@@ -45,7 +45,7 @@ function zoneItems(items: readonly AgendaItem[], zone: string): AgendaItem[] {
     (i) =>
       i.visibility === "public" &&
       (i.status ?? "scheduled") === "scheduled" &&
-      (i.zone === null || i.zone === zone),
+      (i.zone == null || i.zone === zone),
   );
 }
 
