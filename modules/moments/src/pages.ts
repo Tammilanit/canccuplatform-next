@@ -7,7 +7,7 @@ import { EMERGENCY, READ, SETTINGS, TAKE, tenantOf } from "./http.js";
 import type { AppDeps } from "./http.js";
 import { PREFIX, page, pageErrors, pageNeeds, refusal, staticRoutes, viaApi } from "./page-kit.js";
 import { loadRules } from "./rules.js";
-import { knownZones, loadOrders, runningMoments, titleOf } from "./store.js";
+import { knownZones, loadOrders, runningMoments, splitZones, titleOf } from "./store.js";
 import { historyView, prioritiesView } from "./settings-views.js";
 import { confirmEmergency, onAirView, spotlightView } from "./views.js";
 import type { MomentView } from "./views.js";
@@ -204,7 +204,9 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
         orders: await loadOrders(c),
         zones: await knownZones(c),
         rules: await loadRules(c),
-        running: await runningMoments(c),
+        running: await Promise.all(
+          (await runningMoments(c)).map(async (m) => ({ m, split: await splitZones(c, m.id) })),
+        ),
       }));
       const saved =
         scope === "" ? state.orders.order : (state.orders.zones[scope] ?? state.orders.order);
@@ -218,8 +220,9 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
       const zone = scope !== "" ? scope : state.zones[0];
       const ranks: Record<string, number> = {};
       if (zone !== undefined) {
-        for (const m of state.running)
-          for (const w of desiredOverrides(m, orders, state.zones, [])) ranks[w.id] = w.rank;
+        // A zone split off keeps its own override (`<id>.<zone>`) whatever the draft ranks it.
+        for (const { m, split } of state.running)
+          for (const w of desiredOverrides(m, orders, state.zones, split)) ranks[w.id] = w.rank;
       }
       return page(request, reply, deps, {
         title: "Moments",

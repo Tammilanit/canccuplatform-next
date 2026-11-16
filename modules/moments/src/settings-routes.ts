@@ -11,7 +11,7 @@ import { filterOf, historyCsv, historyRows } from "./history.js";
 import { READ, SETTINGS, actorOf, archivedError, tenantOf } from "./http.js";
 import type { AppDeps } from "./http.js";
 import { RULE_IDS, checkRule, loadRules } from "./rules.js";
-import { loadOrders } from "./store.js";
+import { loadOrders, lockSettings } from "./store.js";
 import { reRank } from "./tick.js";
 
 type Body = Record<string, unknown>;
@@ -54,8 +54,8 @@ export async function savePriorities(
     if (why !== null) throw invalid(`${z.zone_key}: ${why}`);
     own[z.zone_key] = z.order as Class[];
   }
+  await lockSettings(c, "priorities");
   const before = await loadOrders(c);
-  await c.query(`SELECT 1 FROM moments_priorities FOR UPDATE`, []);
   if (body.revision !== before.revision) throw conflict();
   const revision = before.revision + 1;
   await c.query(

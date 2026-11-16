@@ -22,6 +22,7 @@ import {
   saveMoment,
   titleOf,
   writeHistory,
+  splitZones,
 } from "./store.js";
 import type { Actor, Binding, Kind, MomentRow, Origin, Qr, Source } from "./store.js";
 
@@ -72,6 +73,16 @@ export const CLASS_DEFAULTS: Record<Class, { kind: Kind; regions: string[] }> = 
   reactions: { kind: "overlay", regions: ["overlay"] },
   ticker: { kind: "block", regions: ["ticker"] },
 };
+
+/** Whether `m` is on `zone` now: one it names (or a known zone, for every zone) it has not left. */
+export function covers(
+  m: Pick<MomentRow, "zones" | "left_zones">,
+  zone: string,
+  known: readonly string[],
+): boolean {
+  if (m.left_zones.includes(zone)) return false;
+  return m.zones.length === 0 ? known.includes(zone) : m.zones.includes(zone);
+}
 
 export class Engine {
   constructor(private readonly outbox: Outbox) {}
@@ -189,10 +200,11 @@ export class Engine {
     if (m.ended_at !== null) return;
     const zones = await knownZones(c);
     if (zone !== undefined) {
-      if (m.left_zones.includes(zone)) return;
+      // A zone it never covered would narrow it for nothing: one of every zone to the rest.
+      if (!covers(m, zone, zones)) return;
       m.left_zones = [...m.left_zones, zone];
       const orders = await loadOrders(c);
-      const split = await this.splitZones(c, m.id);
+      const split = await splitZones(c, m.id);
       if (desiredOverrides(m, orders, zones, split).length > 0) {
         await saveMoment(c, m);
         await this.history(c, m, now, { action: "ended", zone, outcome: reason, actor });
@@ -242,15 +254,6 @@ export class Engine {
     return `${row === undefined ? top.id : titleOf(row)} (rank ${top.rank})`;
   }
 
-  /** The zones already split off into overrides of their own (`<id>.<zone>`). */
-  private async splitZones(c: SqlClient, momentId: string): Promise<string[]> {
-    const { rows } = await c.query(
-      `SELECT override_id FROM moment_overrides WHERE moment_id = $1 AND override_id <> $1`,
-      [momentId],
-    );
-    return rows.map((r) => (r.override_id as string).slice(momentId.length + 1));
-  }
-
   /**
    * Sends what changed between the overrides last sent and the ones the moment wants now:
    * `.started` for new ones first (so a zone moved to its own override has no gap), then
@@ -267,7 +270,7 @@ export class Engine {
   ): Promise<void> {
     const stored = new Map((await liveOverrides(c, m.id)).map((s) => [s.override_id, s.sent]));
     const wanted =
-      m.ended_at === null ? desiredOverrides(m, orders, known, await this.splitZones(c, m.id)) : [];
+      m.ended_at === null ? desiredOverrides(m, orders, known, await splitZones(c, m.id)) : [];
     const by = actor?.user_id ?? null;
     for (const w of wanted.filter((w) => !stored.has(w.id))) {
       const next = sentOf(m, w);

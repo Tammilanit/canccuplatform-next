@@ -4,7 +4,7 @@
  * transaction, whose override events the outbox sends after the commit. Handlers are idempotent:
  * events come at least once, and to every container.
  */
-import type { Event } from "@canccu/kit";
+import type { Event, SqlClient } from "@canccu/kit";
 import type { Db } from "./db.js";
 import type { Engine } from "./engine.js";
 import { applyClaims, claimsReportOf } from "./placements.js";
@@ -50,12 +50,22 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
     } else if (e.type === "screen.zone.removed" && typeof e.data.zone_key === "string") {
       await zoneRemoved(c, deps.engine, e.data.zone_key, now);
     } else if (e.source !== "screen") {
+      // An archived event is read-only (E10): no rule starts or renews a moment on it.
+      if (await isArchived(c, e.tenant as string)) return;
       const touched = await recordSource(c, e);
       await applyRules(c, deps.engine, e, now);
       if (touched !== null) await refreshBound(c, deps.engine, touched, now);
     }
   });
   await deps.flush();
+}
+
+async function isArchived(c: SqlClient, tenant: string): Promise<boolean> {
+  const { rows } = await c.query(
+    `SELECT 1 FROM moments_tenants WHERE tenant_id = $1 AND archived_at IS NOT NULL`,
+    [tenant],
+  );
+  return rows.length > 0;
 }
 
 /**
