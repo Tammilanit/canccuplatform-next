@@ -11,7 +11,6 @@ from canccu_kit import Check, CheckResult, Health, postgres_check, valkey_check
 from canccu_kit.testing import MemoryStreamStore
 
 
-
 def _contract() -> Path:
     # mutmut runs the tests from a copy (mutants/), one level deeper, so walk up, not a fixed depth.
     for parent in Path(__file__).resolve().parents:
