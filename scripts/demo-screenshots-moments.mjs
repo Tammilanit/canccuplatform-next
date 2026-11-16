@@ -1,8 +1,9 @@
 // Studio → Moments shots of scripts/demo-screenshots.mjs (group `moments`; step 4 mockups 03, 04,
-// 07, 08 and 09), on the screens' fixture (the main and entrance zones): a crew spotlight of the
+// 07, 08, 09 and 12), on the screens' fixture (the main and entrance zones): a crew spotlight of the
 // standings, then one with a message that takes the hero from it, so On air shows one placed and
 // one waiting with why; On air at both widths, the spotlight form on a phone, Priorities with its
-// preview drawn, History, and the main hall's live view with "From the crew". Then an emergency:
+// preview drawn, History, the sound desk with the spotlights' cues and one cue's form, and the
+// main hall's live view with "From the crew" and its cue's frame. Then an emergency:
 // On air and the main hall under it. Screen places a zone's claims, and reports where, only while
 // a screen of it is connected, so a screen is paired into each zone and its stream kept open while
 // the shots run. Every moment and screen started here ends afterwards.
@@ -100,6 +101,10 @@ export const MOMENTS_PAGES = [
   ["moments-priorities", "/moments/priorities", DESK, { ready: previewed }],
   ["moments-priorities-phone", "/moments/priorities", PHONE, { touch: true }],
   ["moments-history", "/moments/history?zone=main", DESK],
+  // The sound desk (mockup 12) after the two spotlights' cues: the budget, the log, the library.
+  ["moments-cues", "/moments/cues", DESK],
+  ["moments-cues-phone", "/moments/cues", PHONE, { touch: true }],
+  ["moments-cue-edit", "/moments/cues/edit/tournament.start", DESK],
   [
     "moments-screen-spotlight",
     "/screen/zones/main",

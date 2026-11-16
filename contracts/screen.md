@@ -219,13 +219,25 @@ Moments emits `moments.override.started`, `.changed` and `.ended` ([events.md](e
 | `sound` | object or null | `cue` (string), `url` (the file URL of an `audio` asset of the event, or null for the platform cue named by `cue`), `volume` (0–1), `play` (`once`, `loop`): played by the zone's sound device when the claim first shows |
 | `steps` | list of object or null | A Moment sequence: each `template`, `content`, `duration_ms` (500–60000), optional `sound`; played in order in the claimed region, then the last step stays until the end |
 | `on_end` | string | What the region shows when the claim ends: `resume` (the rotation where it would be now) or `next` (the next widget). Default `resume` |
+| `effect` | object or null | A Moments cue's picture (#113): `name`, `hold_seconds` (0–600), `fade_seconds` (0–60). Screen hands it to the claim (Cue effects, below); a malformed one drops the override as any malformed field does |
 
 - **Placement:** for each zone, Screen walks the claims by `rank` (highest first; ties: the later `starts_at`, then the override id). Each claim takes the first role in its chain that the zone's layout offers and that is free:
   - first ignoring every `full` claim: `hero`, `rail`, `venue_rail`, `ticker` and `overlay` are each free when no higher claim holds that role;
   - `full` is free when no higher claim holds any role other than `overlay`.
 - A claim that finds no role at all is **`unplaced`**. A claim placed in any role (also `overlay`) that ranks below a placed `full` claim is **`hidden`**: it keeps its role and waits, not drawn, and shows again when the `full` claim ends. An overlay that ranks above the `full` claim is drawn on top of it. Both are listed in the zone's state and reported in `screen.claims.changed`, so Moments learns of them and decides whether they end. Placement is deterministic and renewals change no tie-breaker, so all screens of a zone agree and regions do not flap.
 - **What a claimed region shows:** the claim's `template` names a widget type (the table above; `pizza_placed` draws as `food_status`), `content` is that widget's whole view-model, and `steps` replace both while they run. `full` hides every region; `overlay` draws on top without hiding.
-- **Sound** plays once per claim per device: the heartbeat reports played claims, and the composed state returns them in `sound.sounded_claims`, so a reload does not repeat it. The sound budget and cue rules are Moments' (step 4).
+- **Sound** plays once per claim per device: the heartbeat reports played claims, and the composed state returns them in `sound.sounded_claims`, so a reload does not repeat it. The sound budget and cue rules are Moments' (Moments' sound, below).
+
+### Cue effects
+A claim whose override has `effect` carries it in the state's `Claim` (absent without one). The player draws it on the claimed region from the claim's `starts_at`, so every screen of the zone, and one that reloads, shows the same moment: a 0.6 s move (`pop`, `tilt`, `flip`, `slide`, `glow` as a pop; `ripple` and `ring_burst` as rings from the edge), then a frame and glow that hold `hold_seconds` and fade over `fade_seconds` (design sheet 14). At `calm` and `none` only the frame and glow show; the motion level changes how visible a cue is, never how long it holds.
+
+### Moments' sound (D14)
+Moments decides each sound once per zone and sends `moments.sound.played` ([moments.md](moments.md#cues-and-sound)). Screen keeps each zone's newest one (the newest event id decides, as for overrides) and composes it into every screen of the zone as `sound.play` (`id`, `cue`, `category`, `url`, `voice_url`, `volume`, `play_at`, `catch_up_until`, `interrupts`) until `catch_up_until`; each new one is a new `state_version`, so it reaches the screens as a `state`. Only the device whose `sound.enabled` is true (the zone's sound device; never a mirror, a preview or a zone view) plays it: at `play_at` by its clock corrected by the heartbeat's offset, so the screens of a zone start within 200 ms of each other; late, at once, while `catch_up_until` holds (a screen that was offline or reloading, E13); never when its id is in its own played list or in `sound.sounded_claims`; and with `interrupts` it stops what it plays. A `voice_url` plays right after the sound. The heartbeat's `claims_sounded` names the sounds it played (and the claims it sounded), newest last; Screen keeps the device's last list and returns it as `sound.sounded_claims` when the device (re)connects, so a reload never repeats a sound.
+
+### For Moments
+Two module paths, on the stack's network only (Caddy never routes `/internal/`), with the kit's service identity and the event in `tenant_id`:
+- `GET /internal/screen/zones/{zone_key}/sound?tenant_id=` → `energy` (`quiet` during quiet hours, the day's phase until Moments' scenes land; else the zone's motion level, `party`, `lively`, or `calm` for `calm` and `none`) and `device`: the zone's sound device (`id`, `name`, `online`, `audio_unlocked` as its last heartbeat said, or null), or null when the zone's sound is off or names none. 404 for a zone or event Screen does not know.
+- `GET /internal/screen/assets/{asset_id}?tenant_id=` → the `Asset`, for Moments' library (D23). 404 when the event has none.
 
 Examples (the `override` in `data`; the envelope as in [events.md](events.md)):
 
@@ -402,7 +414,7 @@ Through `POST /internal/tenants/audit` in the same request (the tick's own chang
 | bot | `bot.presence.counted`, `bot.voice_channels.created`; the read API `GET /api/bot/presence/playing` | `stats`, `now_playing` (once the bot contract adds a module path), voice channel names in `match_called` |
 | agenda | `agenda.*`; now and next of the public items as a module, `GET /internal/agenda/now`; all of the event's items as a module, `GET /internal/agenda/items` (whenever the `agenda_version` of now and next moves) | `agenda_now` (its `later` from all of the items), `countdown`, agenda-bound schedule windows, quiet hours and the day's phase (`display.motion_level`) |
 | games | `games.surge.*`, `games.game.*` | `hot_game` and the stage's tint; the games' covers for the stage's art and the cards' backgrounds |
-| moments | `moments.override.*` | Claims |
+| moments | `moments.override.*`, `moments.sound.played` | Claims; `sound.play` |
 | notify | The rotating check-in code, `GET /internal/notify/check-in/code`; `notify.checkin.recorded` and the count of arrival check-ins, `GET /internal/notify/check-ins/count` | `checkin_qr`; `stats`' `checked_in` |
 | theming | `theming.theme.published`; the revision in effect as a module (the current one, `GET /internal/theming/current`, or the pinned revision, `GET /internal/theming/revisions/{revision}`) | Layouts, templates, the `theme` push, the `motion` and `motion_style` tokens (`display`) |
 | tenants | `tenants.tenant.*`, `tenants.status.changed`, `tenants.venue_ip_check.changed`, `tenants.venue.changed`, `tenants.venue_info.changed`, `tenants.flags.changed`, `tenants.user.deleted`; the venue info as a module, `GET /internal/tenants/venue-info` | Tenant cache, venue IP check, `venue_info`, flags, deletes |

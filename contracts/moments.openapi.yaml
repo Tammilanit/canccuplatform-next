@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Moments API
   version: 1.0.0
-  summary: The arbiter of the screens' moments, engine part.
+  summary: The arbiter of the screens' moments, engine part, and its cues and sound.
   description: |
     Machine-readable part of the moments contract. Prose, the arbiter's rules, rules, history and events:
     contracts/moments.md. Conventions (snake_case, RFC 3339 UTC times, error body): contracts/README.md.
@@ -23,6 +23,8 @@ tags:
     description: The priority order and the built-in rules.
   - name: history
     description: What played where, why, and how it ended.
+  - name: cues
+    description: Cues and sound (#113), the sound desk; the paths are in moments/cues.openapi.yaml.
   - name: privacy
     description: The caller's own rows (contracts/README.md, Privacy).
   - name: internal
@@ -488,6 +490,26 @@ paths:
           description: Removed.
         "401":
           $ref: "common.openapi.yaml#/components/responses/Unauthorized"
+  /api/moments/sound:
+    $ref: "moments/cues.openapi.yaml#/~1api~1moments~1sound"
+  /api/moments/sound/settings:
+    $ref: "moments/cues.openapi.yaml#/~1api~1moments~1sound~1settings"
+  /api/moments/sound/mute:
+    $ref: "moments/cues.openapi.yaml#/~1api~1moments~1sound~1mute"
+  /api/moments/sound/check:
+    $ref: "moments/cues.openapi.yaml#/~1api~1moments~1sound~1check"
+  /api/moments/sound/log:
+    $ref: "moments/cues.openapi.yaml#/~1api~1moments~1sound~1log"
+  /api/moments/cues:
+    $ref: "moments/cues.openapi.yaml#/~1api~1moments~1cues"
+  /api/moments/cues/{cue}:
+    $ref: "moments/cues.openapi.yaml#/~1api~1moments~1cues~1{cue}"
+  /api/moments/sounds:
+    $ref: "moments/cues.openapi.yaml#/~1api~1moments~1sounds"
+  /api/moments/sounds/{sound_id}:
+    $ref: "moments/cues.openapi.yaml#/~1api~1moments~1sounds~1{sound_id}"
+  /api/moments/sounds/pack/{file}:
+    $ref: "moments/cues.openapi.yaml#/~1api~1moments~1sounds~1pack~1{file}"
   /internal/moments/moments:
     post:
       tags: [internal]
@@ -932,4 +954,252 @@ components:
         outcome:
           type: [string, "null"]
         actor_name:
+          type: [string, "null"]
+    SoundCategory:
+      type: string
+      description: The six fixed categories, highest priority first; only `urgent` interrupts a playing sound.
+      enum: [urgent, result, attention, something_new, ended, ambient]
+    EffectName:
+      type: string
+      description: The box effects of design sheet 14.
+      enum: [pop, tilt, flip, ripple, slide, glow, ring_burst]
+    CueInput:
+      type: object
+      required: [category, enabled, level, cooldown_seconds, catch_up_seconds, once_per_source, sounds, effects, hold_seconds, revision]
+      properties:
+        category:
+          $ref: "#/components/schemas/SoundCategory"
+        enabled:
+          type: boolean
+          description: The sound's on/off; the picture plays either way.
+        level:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Percent, times the category's level and the master volume.
+        cooldown_seconds:
+          type: integer
+          minimum: 0
+          maximum: 86400
+          description: Not again on a zone for this long.
+        catch_up_seconds:
+          type: integer
+          minimum: 0
+          maximum: 3600
+          description: How late a screen that missed it may still start it (D17).
+        catch_up_before_start:
+          description: |
+            Minutes before the source's start, `[from, to]`: the cue sounds only in that window, and catches up
+            until its end (the legacy tournament windows, T−29 to T−15 and T−14 to T−2).
+          oneOf:
+            - type: "null"
+            - type: array
+              minItems: 2
+              maxItems: 2
+              items:
+                type: integer
+        once_per_source:
+          type: boolean
+          description: One source (a match, an order) sounds once on a zone in 7 days.
+        sounds:
+          type: array
+          maxItems: 20
+          description: Library sound ids, picked at random, never the same twice running on a zone.
+          items:
+            type: string
+        voice_line:
+          type: [string, "null"]
+          description: A library sound played right after the sound, counted with it as one.
+        effects:
+          type: array
+          description: The picture's pool, picked at random, never the same twice running; empty for sound only.
+          items:
+            $ref: "#/components/schemas/EffectName"
+        hold_seconds:
+          type: integer
+          minimum: 60
+          maximum: 120
+          description: How long the frame and glow hold before they fade over 10 s (L8).
+        revision:
+          type: integer
+          minimum: 0
+    Cue:
+      allOf:
+        - $ref: "#/components/schemas/CueInput"
+        - type: object
+          required: [name, builtin]
+          properties:
+            name:
+              type: string
+            builtin:
+              type: boolean
+              description: One of the 25 seeded cues; false for the event's own.
+    SoundSettingsInput:
+      type: object
+      required: [enabled, volume, hourly_budget, per_minute, per_source_seconds, categories, revision]
+      properties:
+        enabled:
+          type: boolean
+          description: The master switch.
+        volume:
+          type: integer
+          minimum: 0
+          maximum: 100
+        hourly_budget:
+          type: integer
+          minimum: 0
+          maximum: 1000
+          description: Sounds per zone per hour (20 by default); urgent passes and counts.
+        per_minute:
+          type: integer
+          minimum: 1
+          maximum: 60
+          description: The flood guard per zone (3 by default); urgent passes and counts.
+        per_source_seconds:
+          type: integer
+          minimum: 0
+          maximum: 3600
+          description: The flood guard per cue and source (10 by default).
+        categories:
+          type: object
+          description: Exactly the six categories.
+          additionalProperties: false
+          required: [urgent, result, attention, something_new, ended, ambient]
+          properties:
+            urgent:
+              $ref: "#/components/schemas/CategorySettings"
+            result:
+              $ref: "#/components/schemas/CategorySettings"
+            attention:
+              $ref: "#/components/schemas/CategorySettings"
+            something_new:
+              $ref: "#/components/schemas/CategorySettings"
+            ended:
+              $ref: "#/components/schemas/CategorySettings"
+            ambient:
+              $ref: "#/components/schemas/CategorySettings"
+        revision:
+          type: integer
+          minimum: 0
+    CategorySettings:
+      type: object
+      required: [enabled, level]
+      properties:
+        enabled:
+          type: boolean
+        level:
+          type: integer
+          minimum: 0
+          maximum: 100
+    SoundSettings:
+      allOf:
+        - $ref: "#/components/schemas/SoundSettingsInput"
+        - type: object
+          required: [muted_until]
+          properties:
+            muted_until:
+              type: [string, "null"]
+              format: date-time
+    SoundDesk:
+      type: object
+      required: [settings, categories, zones]
+      properties:
+        settings:
+          $ref: "#/components/schemas/SoundSettings"
+        categories:
+          type: array
+          items:
+            type: object
+            required: [name, priority, interrupts, plays_at_calm]
+            properties:
+              name:
+                $ref: "#/components/schemas/SoundCategory"
+              priority:
+                type: integer
+              interrupts:
+                type: boolean
+              plays_at_calm:
+                type: boolean
+        zones:
+          type: array
+          items:
+            type: object
+            required: [zone_key, minute, hour, energy, lets_through, sound_screen]
+            properties:
+              zone_key:
+                $ref: "#/components/schemas/ZoneKey"
+              minute:
+                type: integer
+              hour:
+                type: integer
+              energy:
+                description: "`party`, `lively`, `calm` or `quiet`; null when Screen does not answer."
+                type: [string, "null"]
+              lets_through:
+                type: [array, "null"]
+                items:
+                  $ref: "#/components/schemas/SoundCategory"
+              sound_screen:
+                description: The zone's sound screen as Screen reports it (E12, E13), or null for none.
+                type: [object, "null"]
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  online:
+                    type: boolean
+                  audio_unlocked:
+                    type: [boolean, "null"]
+    LibrarySound:
+      type: object
+      required: [id, title, url, length_ms, source, asset_id, size_bytes, used_by, warning]
+      properties:
+        id:
+          type: string
+          description: "`pack.<name>` for the default pack, `snd_<asset id>` for the event's."
+        title:
+          type: string
+        url:
+          type: string
+          description: The pack's file under `/api/moments/sounds/pack/`, or the asset's under `/api/screen/files/`.
+        length_ms:
+          type: integer
+        source:
+          type: string
+          enum: [pack, upload]
+        asset_id:
+          type: [string, "null"]
+        size_bytes:
+          type: [integer, "null"]
+        used_by:
+          type: array
+          items:
+            type: string
+        warning:
+          type: [string, "null"]
+    SoundLogRow:
+      type: object
+      required: [seq, at, zone_key, cue, sound, outcome, reason, detail, source]
+      properties:
+        seq:
+          type: integer
+        at:
+          type: string
+          format: date-time
+        zone_key:
+          $ref: "#/components/schemas/ZoneKey"
+        cue:
+          type: string
+        sound:
+          type: [string, "null"]
+        outcome:
+          type: string
+          enum: [played, queued, suppressed, dropped, missed]
+        reason:
+          type: string
+          description: A reason code (contracts/moments.md, The sound log).
+        detail:
+          type: [string, "null"]
+        source:
           type: [string, "null"]

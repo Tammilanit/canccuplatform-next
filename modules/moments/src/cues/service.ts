@@ -27,6 +27,7 @@ import {
   writeLog,
 } from "./store.js";
 import type { LibrarySound } from "./store.js";
+import type { MomentRow } from "../store.js";
 
 export interface CueTrigger {
   cue: string;
@@ -80,6 +81,12 @@ export class Cues {
       (last) => pickNotLast(cue.effects, last as Effect | null, this.random) as Effect,
     );
     return { name: effect as Effect, hold_seconds: cue.hold_seconds, fade_seconds: FADE_SECONDS };
+  }
+
+  /** A moment's start sounds its cue once on its zones; its source is what it is about. */
+  async started(c: SqlClient, m: MomentRow, cue: string, now: Date): Promise<void> {
+    const t = { cue, zones: m.zones, key: `moment:${m.id}`, source: m.source.ref ?? m.id };
+    await this.fire(c, t, now);
   }
 
   /** Decides the cue's sound on each of its zones, in zone order (the row locks' order). */

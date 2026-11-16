@@ -166,18 +166,7 @@ export class Engine {
     await insertMoment(c, moment);
     await this.history(c, moment, now, { action: "started", actor: r.actor ?? null });
     await this.reconcile(c, moment, r.actor ?? null, "cleared", orders, zones);
-    if (r.cue != null && this.cues !== undefined) {
-      await this.cues.fire(
-        c,
-        {
-          cue: r.cue,
-          zones: moment.zones,
-          key: `moment:${moment.id}`,
-          source: moment.source.ref ?? moment.id,
-        },
-        now,
-      );
-    }
+    if (r.cue != null) await this.cues?.started(c, moment, r.cue, now);
     return { status: "started", moment };
   }
 
