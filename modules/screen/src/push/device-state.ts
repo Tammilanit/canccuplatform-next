@@ -9,6 +9,7 @@ import type { DeviceRow } from "../db.js";
 import { NO_THEME, composeZone, isPortrait, placement, themeView } from "../compose/state.js";
 import type { ComposeDeps, ZoneComposed } from "../compose/state.js";
 import { NO_DISPLAY } from "../compose/display.js";
+import { soundedOf } from "../health.js";
 import { heldBundle } from "../pins/bundles.js";
 import { themeFor } from "../pins/look.js";
 import { readPin } from "../pins/store.js";
@@ -37,7 +38,11 @@ export function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
     theme: themeView(composed.theme),
     bundle: composed.bundle,
     ticker: composed.ticker,
-    sound: { enabled: composed.zone.sound.enabled, device_id: composed.zone.sound.device_id },
+    sound: {
+      enabled: composed.zone.sound.enabled,
+      device_id: composed.zone.sound.device_id,
+      play: composed.play,
+    },
     display: composed.display,
     views: { landscape: view("landscape"), portrait: view("portrait") },
     nextChangeAt: composed.nextChangeAt,
@@ -130,6 +135,8 @@ export interface DeviceSide {
   bundleVersion: string;
   /** Only for a device without a zone: the theme, the event's name and the pinned bundle. */
   fallback?: { theme: Record<string, unknown>; eventName: string; bundle: string | null };
+  /** What its heartbeat said it played (`sounded_claims`). */
+  sounded?: string[];
 }
 
 /** The `ScreenState` of one device: the zone's part, and its own `device` and `sound`. */
@@ -162,8 +169,9 @@ export function assemble(
     // Only the zone's sound device plays sound; a mirror never does (contracts/screen.md, Zones).
     sound: {
       enabled: !side.mirror && sound?.enabled === true && sound.device_id === side.device.id,
-      // Kept for Moments (step 4): the heartbeat's claims_sounded are dropped until then.
-      sounded_claims: [],
+      sounded_claims: side.sounded ?? [],
+      // Every screen of the zone gets it; only the one with `enabled` plays it (D14).
+      play: sound?.play ?? null,
     },
     prefetch: [],
     offline: { marker_after_seconds: 10 },
@@ -181,6 +189,7 @@ export interface Placed {
   preview: RunningPreview | null;
   /** False when a resume could hand the screen the wrong state (a preview changed lately). */
   resumable: boolean;
+  sounded: string[];
 }
 
 /** Where the device is, its zone's state brought up to date, and its `ScreenState`. */
@@ -203,7 +212,15 @@ export async function placeDevice(
           eventName: (await deps.sources.event(host))?.name ?? "",
           bundle: await heldBundle(deps.bundles, pin.bundle_version),
         };
-  const side = { nowMs, ctx, device, mirror: where.mirror, bundleVersion: deps.bundleVersion };
+  const sounded = await soundedOf(deps.kv, device.id);
+  const side = {
+    nowMs,
+    ctx,
+    device,
+    mirror: where.mirror,
+    bundleVersion: deps.bundleVersion,
+    sounded,
+  };
   // A mirror of a device shows what the device shows, its preview too; a zone's mirror the live zone.
   const owner = where.mirror ? where.mirrorOf : device.id;
   const shown =
@@ -220,5 +237,6 @@ export async function placeDevice(
       shown?.state ?? assemble(record, orientation, { ...side, ...(fallback ? { fallback } : {}) }),
     preview: shown?.preview ?? null,
     resumable: shown === null && !changed,
+    sounded,
   };
 }

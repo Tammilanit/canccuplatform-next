@@ -2,6 +2,7 @@
 import type { SqlClient } from "@canccu/kit";
 import { DEFAULT_ORDERS, isClass } from "./arbiter.js";
 import type { Class, Held, Orders, SentOverride } from "./arbiter.js";
+import type { Picture } from "./cues/service.js";
 
 export type Origin = "rule" | "crew" | "emergency" | "module";
 export type Kind = "takeover" | "block" | "overlay";
@@ -45,13 +46,15 @@ export interface MomentRow {
   patience_seconds: number;
   qr: Qr | null;
   binding: Binding | null;
+  /** The picture its cue picked (contracts/moments.md, Cues and sound), or null. */
+  effect: Picture | null;
   ended_at: Date | null;
   end_reason: string | null;
 }
 
 const COLUMNS = `id, class, kind, regions, template, content, zones, left_zones, origin, rule_id,
   source, why, actor_user_id, actor_name, dedupe_key, starts_at, expires_at, ttl_seconds,
-  patience_seconds, qr, binding, ended_at, end_reason`;
+  patience_seconds, qr, binding, ended_at, end_reason, effect`;
 
 const momentOf = (r: Record<string, unknown>): MomentRow => r as unknown as MomentRow;
 
@@ -92,7 +95,7 @@ export async function insertMoment(c: SqlClient, m: MomentRow): Promise<void> {
   await c.query(
     `INSERT INTO moments (${COLUMNS})
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18,
-             $19, $20, $21, $22, $23)`,
+             $19, $20, $21, $22, $23, $24)`,
     [
       m.id,
       m.class,
@@ -117,6 +120,7 @@ export async function insertMoment(c: SqlClient, m: MomentRow): Promise<void> {
       m.binding,
       m.ended_at,
       m.end_reason,
+      m.effect,
     ],
   );
 }

@@ -16,11 +16,12 @@ import type {
   Health,
   Logger,
   RightsChecker,
+  ServiceIdentity,
   StorageQuota,
   StreamStore,
   TenantResolver,
 } from "@canccu/kit";
-import { install, installTenancy } from "@canccu/kit/fastify";
+import { install, installServiceIdentity, installTenancy } from "@canccu/kit/fastify";
 import type { Audit } from "./audit.js";
 import type { Db } from "./db.js";
 import { ffprobe } from "./assets/probe.js";
@@ -62,8 +63,12 @@ import { studioRoutes } from "./studio/routes.js";
 import type { StudioDeps } from "./studio/routes.js";
 import { tickerRoutes } from "./ticker/routes.js";
 import { zoneRoutes } from "./zones.js";
+import { internalRoutes } from "./internal-routes.js";
 import { ArtCache } from "./stage/art.js";
 import { artRoutes } from "./stage/routes.js";
+
+/** Module calls (internal-routes.ts): the caller's service identity, never a Host's event. */
+const INTERNAL_PREFIX = "/internal/screen/";
 
 export interface ScreenDeps {
   db: Db;
@@ -73,6 +78,8 @@ export interface ScreenDeps {
   audit: Audit;
   log?: Logger;
   tenants: TenantResolver;
+  /** Checks the modules that call `/internal/screen/` (Moments); without it those paths are 404. */
+  service?: ServiceIdentity;
   /** `CANCCU_SUPERADMIN_HOSTNAME`, the one host the device registry answers on. */
   superadminHost?: string;
   health: Health;
@@ -204,14 +211,18 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
   const app = Fastify(options);
   install(app, { health: deps.health });
   // The platform hostnames are served for the registry alone; every other route needs an event.
-  installTenancy(app, deps.tenants, { platformHosts: "serve" });
+  installTenancy(app, deps.tenants, { platformHosts: "serve", servicePrefix: INTERNAL_PREFIX });
+  if (deps.service !== undefined)
+    installServiceIdentity(app, deps.service, { prefix: INTERNAL_PREFIX });
   app.addHook("onRequest", async (request) => {
     const path = request.url.split("?")[0] ?? "";
     // The registry off its hostname is 404 here, before the body is parsed, so no body can make
     // it answer anything an unknown route would not.
     const hidden = path.startsWith(REGISTRY_PREFIX)
       ? !onSuperadminHost(deps.superadminHost, request.headers.host)
-      : request.tenant === null && path !== "/health";
+      : path.startsWith(INTERNAL_PREFIX)
+        ? deps.service === undefined
+        : request.tenant === null && path !== "/health";
     if (hidden) throw notFound();
     await Promise.resolve();
   });
@@ -277,6 +288,7 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
       hub.plan(tenant, zone, at);
     },
   });
+  if (deps.service !== undefined) internalRoutes(app, compose);
   zoneViewRoutes(app, {
     ...push,
     rights: deps.rights,

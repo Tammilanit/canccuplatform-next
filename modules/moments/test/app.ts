@@ -123,6 +123,8 @@ export async function appWorld(
   const app = buildApp({
     db: w.db,
     engine: w.engine,
+    cues: w.cues,
+    screen: w.screen,
     outbox: w.outbox,
     rights: new RightsChecker(new AdminClient("http://admin", { fetch: fakeAdmin })),
     tenants: new TenantResolver({

@@ -5,6 +5,7 @@
  * what it changed and a fade in progress is never cut short by an unrelated update.
  */
 import { claimEnd, claimOf, claimShown } from "./claims.js";
+import { applyCue } from "./cues.js";
 import type { ClaimState } from "./claims.js";
 import { driftAt, FADE_MS } from "./display.js";
 import type { Motion } from "./display.js";
@@ -202,6 +203,7 @@ export class Screen {
     for (const [i, drawn] of drawns.entries()) {
       const next = shown[i] ?? null;
       this.show(drawn, next, motion);
+      applyCue(drawn.el, drawn.claim, now);
       const zone = state.zone?.key ?? "";
       drawn.marks = syncMarks(drawn.marks, drawn.el, drawn.state, turnIndexOf(next), zone, now);
     }

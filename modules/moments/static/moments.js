@@ -79,4 +79,27 @@
       say(ranks.length === 0 ? "Nothing is live: the zone plays its rotation." : "");
     });
   }
+
+  // The sound desk's library (D23): the file becomes one of Screen's `audio` assets, then the
+  // form links it by id; Moments checks its length and size with Screen before it keeps it.
+  for (const form of document.querySelectorAll("form[data-upload-sound]")) {
+    form.addEventListener("submit", async (event) => {
+      const id = form.querySelector("input[name=asset_id]");
+      const file = form.querySelector("input[type=file]").files[0];
+      if (id.value !== "") return;
+      event.preventDefault();
+      if (file === undefined) return;
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/screen/assets", { method: "POST", body });
+      const answer = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const why = (answer.error && answer.error.message) || "Screen could not keep the file.";
+        location.assign(`/moments/cues?error=${encodeURIComponent(why)}`);
+        return;
+      }
+      id.value = answer.id;
+      form.submit();
+    });
+  }
 })();

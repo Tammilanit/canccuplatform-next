@@ -324,6 +324,7 @@ The screen contract adds these optional fields ([screen.md](screen.md#moments-dr
 | `sound` | object or null | `cue`, `url`, `volume` (0–1), `play` (`once`, `loop`) |
 | `steps` | list of object or null | A sequence: each `template`, `content`, `duration_ms`, optional `sound` |
 | `on_end` | string | What the region shows after it: `resume` (default) or `next` |
+| `effect` | object or null | A cue's picture for the claim's box (additive, #113): `name`, `hold_seconds`, `fade_seconds` ([moments.md](moments.md#the-picture)) |
 
 | Type | Meaning | Audience | Consumers | `data` |
 |---|---|---|---|---|
@@ -331,3 +332,4 @@ The screen contract adds these optional fields ([screen.md](screen.md#moments-dr
 | `moments.override.changed` | An active override's content or end changed (extended, a live score) | event-wide, `public` | screen | `override` (Override), `changed` (list of string: field names), `actor_user_id` |
 | `moments.override.ended` | An override stopped: it expired, a person cleared it, a higher rank took its place, or its source ended | event-wide, `public` | screen, voices | `override_id` (string), `zones` (list of string: the zones it left; empty: everywhere), `reason` (string: `expired`, `cleared`, `preempted`, `source_ended`), `final` (boolean, additive: `true` only when the override is gone everywhere), `actor_user_id` |
 | `moments.scene.changed` | A zone's scene or its heartbeat changed ([moments.md](moments.md#scenes-design-sheet-12-d5-d6-e7-l10-l14-o7)) | event-wide, `public` | screen (composes it into the zone's `display`, layout and hero) | `zone_key` (string), `scene` (object or null: `key`, `name`, `motion`, `layout`, `stage_mood`, `palette`, `sound`, `quiet`, `hero_off`, `blend_seconds`), `since` (string, time), `why` (string), `heartbeat_bpm` (integer), `actor_user_id` |
+| `moments.sound.played` | Moments decided a sound for a zone's screens (additive, #113) | event-wide, `public` | screen | `zone_key` (string), `sound` (object: `id`, `cue`, `category`, `url`, `voice_url` (string or null), `volume` (0–1), `play_at`, `catch_up_until` (times), `interrupts` (boolean); [moments.md](moments.md#how-a-sound-is-decided-mockup-13)) |

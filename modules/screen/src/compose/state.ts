@@ -27,7 +27,9 @@ import { NO_DISPLAY, displayOf, moodOf, phaseSource } from "./display.js";
 import { loadScene } from "./scenes.js";
 import type { ZoneScene } from "./scenes.js";
 import type { Display } from "./display.js";
-import { nextPhaseAt, type MotionLevel } from "./motion.js";
+import { nextPhaseAt, type MotionLevel, type MotionPhase } from "./motion.js";
+import { zonePlay } from "../moments-sound.js";
+import type { Play } from "../moments-sound.js";
 import { themeLayouts } from "./layouts.js";
 import type { Layout } from "./layouts.js";
 import { loadOverrides } from "./overrides.js";
@@ -147,6 +149,12 @@ export interface ZoneComposed {
   counts: CountSource[];
   /** Whether a preview's draft was drawn (PreviewLook.themeKey); `none` without one. */
   draft: DraftUse;
+  /** Moments' sound for the zone's screens (moments-sound.ts), or null. */
+  play: Play | null;
+  /** The day's phase now, which Moments' sound gates read (contracts/screen.md, For Moments). */
+  phase: MotionPhase;
+  /** The zone's scene, whose quiet mode and sound switch the sound gates read in its place. */
+  scene: ZoneScene | null;
 }
 
 /** The widget types a zone's regions show, in either orientation. */
@@ -191,6 +199,7 @@ export async function composeZone(
       }),
       pin: await readPin(c),
       showName: await showsName(c, zone),
+      play: await zonePlay(c, zone.key, real.getTime()),
       scene: await loadScene(c, zone.key),
     };
   });
@@ -297,9 +306,16 @@ export async function composeZone(
   const day = [nextPhaseAt(items, at.getTime()), highlightChangeAt(items, at.getTime())];
   // A claim's end too: the hero a claim grew, and the regions it held, go back only on a rebuild.
   const claimEnds = read.claims.map(claimEndAt);
-  const changes = [content.changesAt, motion.next?.at, ...day, tintEnds, ...claimEnds].filter(
-    (t) => t != null,
-  );
+  // And the sound's catch-up end, so a screen that comes back later no longer gets it.
+  const soundEnds = read.play === null ? null : Date.parse(read.play.catch_up_until);
+  const changes = [
+    content.changesAt,
+    motion.next?.at,
+    ...day,
+    tintEnds,
+    ...claimEnds,
+    soundEnds,
+  ].filter((t) => t != null);
   return {
     fingerprint: zoneFingerprint({
       zone: read.zone,
@@ -312,6 +328,7 @@ export async function composeZone(
       bundle,
       showName: read.showName,
       art: covers,
+      play: read.play,
       scene: read.scene,
     }),
     zone: read.zone,
@@ -325,6 +342,9 @@ export async function composeZone(
     nextChangeAt: changes.length === 0 ? null : Math.min(...changes),
     counts: countsOf(used),
     draft,
+    play: read.play,
+    phase: motion.phase,
+    scene: read.scene,
   };
 }
 
@@ -344,6 +364,8 @@ export interface FingerprintInput {
   showName?: boolean;
   /** The cards' and the tint's art read (compose/stage.ts): a cover read only later moves it. */
   art?: readonly string[];
+  /** Moments' sound: each new one is a new version, so every screen of the zone gets it. */
+  play?: Play | null;
   /** The zone's scene: its layout and hero features are in no other input. */
   scene?: ZoneScene | null;
 }
@@ -366,6 +388,7 @@ export function zoneFingerprint(input: FingerprintInput): string {
     bundle: input.bundle ?? null,
     show_name: input.showName ?? true,
     art: input.art ?? [],
+    play: input.play ?? null,
     scene: input.scene ?? null,
   };
   return createHash("sha256").update(JSON.stringify(stable)).digest("base64url");

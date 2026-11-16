@@ -19,6 +19,8 @@ export interface ClaimState {
   starts_at: string;
   ends_at: string | null;
   expires_at: string | null;
+  /** Moments' cue picture (cues.ts); absent from a claim without one. */
+  effect?: unknown;
 }
 
 /** What the region draws now: `key` changes with the claim and the step, so each fades in. */

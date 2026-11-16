@@ -1,0 +1,368 @@
+# Part of moments.openapi.yaml: the cues and sound paths (#113), path items only, referenced from
+# its `paths` and linted through it (contracts/README.md, Shared components).
+/api/moments/sound:
+  get:
+    tags: [cues]
+    operationId: getSoundDesk
+    summary: The sound settings, the categories and each zone's state now
+    description: |
+      Right `moments.read`. Each zone's sounds this minute and this hour (the Valkey counts the gates read), its
+      energy and what it lets through now, and its sound screen as Screen reports it.
+    responses:
+      "200":
+        description: The sound desk.
+        content:
+          application/json:
+            schema:
+              $ref: "../moments.openapi.yaml#/components/schemas/SoundDesk"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+/api/moments/sound/settings:
+  put:
+    tags: [cues]
+    operationId: putSoundSettings
+    summary: Replace the master, the limits and the six categories' level and on/off
+    description: |
+      Right `moments.settings.write`. `categories` names exactly the six categories; `muted_until` is kept (the
+      mute has its own path). 409 `version_conflict` on a stale `revision`. Audited.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../moments.openapi.yaml#/components/schemas/SoundSettingsInput"
+    responses:
+      "200":
+        description: The settings as saved.
+        content:
+          application/json:
+            schema:
+              $ref: "../moments.openapi.yaml#/components/schemas/SoundSettings"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/sound/mute:
+  post:
+    tags: [cues]
+    operationId: muteSound
+    summary: Mute every zone for a while, or unmute
+    description: Right `moments.take`. `minutes` 1 to 240, or 0 to unmute. A crew action (idempotency key). Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [minutes]
+            properties:
+              minutes:
+                type: integer
+                minimum: 0
+                maximum: 240
+    responses:
+      "200":
+        description: The settings with `muted_until`.
+        content:
+          application/json:
+            schema:
+              $ref: "../moments.openapi.yaml#/components/schemas/SoundSettings"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/sound/check:
+  post:
+    tags: [cues]
+    operationId: soundCheck
+    summary: Play a sound on zones now
+    description: |
+      Right `moments.take`. A sound check on `zones` (empty: every zone) with `sound_id` (default the pack's bright
+      chime): past every gate but the master switch, it interrupts what plays and counts in no budget. Logged with
+      the reason `sound_check`. A crew action (idempotency key). Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              zones:
+                type: array
+                items:
+                  $ref: "../moments.openapi.yaml#/components/schemas/ZoneKey"
+              sound_id:
+                type: [string, "null"]
+    responses:
+      "200":
+        description: Sent.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [zones, sound_id]
+              properties:
+                zones:
+                  type: array
+                  items:
+                    $ref: "../moments.openapi.yaml#/components/schemas/ZoneKey"
+                sound_id:
+                  type: [string, "null"]
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/sound/log:
+  get:
+    tags: [cues]
+    operationId: soundLog
+    summary: Every sound decision with its reason code
+    description: Right `moments.read`. Newest first; `before` a row's `seq` for the next page.
+    parameters:
+      - name: zone
+        in: query
+        schema:
+          $ref: "../moments.openapi.yaml#/components/schemas/ZoneKey"
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 100
+      - name: before
+        in: query
+        schema:
+          type: integer
+    responses:
+      "200":
+        description: The rows.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rows]
+              properties:
+                rows:
+                  type: array
+                  items:
+                    $ref: "../moments.openapi.yaml#/components/schemas/SoundLogRow"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+/api/moments/cues:
+  get:
+    tags: [cues]
+    operationId: listCues
+    summary: The cues, the six categories and the effects
+    description: Right `moments.read`. The 25 built-in cues first, as the event set them, then the event's own.
+    responses:
+      "200":
+        description: The cues.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cues, categories, effects]
+              properties:
+                cues:
+                  type: array
+                  items:
+                    $ref: "../moments.openapi.yaml#/components/schemas/Cue"
+                categories:
+                  type: array
+                  items:
+                    type: object
+                    required: [name, priority]
+                    properties:
+                      name:
+                        $ref: "../moments.openapi.yaml#/components/schemas/SoundCategory"
+                      priority:
+                        type: integer
+                effects:
+                  type: array
+                  items:
+                    $ref: "../moments.openapi.yaml#/components/schemas/EffectName"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+/api/moments/cues/{cue}:
+  parameters:
+    - name: cue
+      in: path
+      required: true
+      description: The cue's name, lowercase words joined by dots (`raffle.draw`).
+      schema:
+        type: string
+        pattern: "^[a-z][a-z0-9_]{0,31}(\\.[a-z0-9_]{1,32}){0,2}$"
+  put:
+    tags: [cues]
+    operationId: putCue
+    summary: Change a cue, or add one of the event's own
+    description: |
+      Right `moments.settings.write`. A name no cue has adds the event's own (`revision` 0). `category` is one of
+      the six: events add cues, never categories. `sounds` and `voice_line` name sounds of the library. 409
+      `version_conflict` on a stale `revision`. Audited with the old and new values.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../moments.openapi.yaml#/components/schemas/CueInput"
+    responses:
+      "200":
+        description: The cue as saved.
+        content:
+          application/json:
+            schema:
+              $ref: "../moments.openapi.yaml#/components/schemas/Cue"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [cues]
+    operationId: deleteCue
+    summary: Remove the event's own cue, or set a built-in back to its seed
+    description: Right `moments.settings.write`. Audited.
+    responses:
+      "204":
+        description: Removed or reset.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+/api/moments/sounds:
+  get:
+    tags: [cues]
+    operationId: listSounds
+    summary: The library, the default pack and the event's sounds
+    description: Right `moments.read`. Each sound with the cues that use it and a warning over 10 s.
+    responses:
+      "200":
+        description: The library.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sounds]
+              properties:
+                sounds:
+                  type: array
+                  items:
+                    $ref: "../moments.openapi.yaml#/components/schemas/LibrarySound"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+  post:
+    tags: [cues]
+    operationId: linkSound
+    summary: Add one of Screen's audio assets to the library
+    description: |
+      Right `moments.settings.write`. The asset is uploaded through Screen (`POST /api/screen/assets`, which checks
+      it is MP3 or OGG); Moments reads it from Screen and keeps it only as an `audio` asset of at most 1 MiB and
+      30 s (400 `invalid_request` otherwise; 404 when the event has no such asset). Linking the same asset again
+      answers its sound. Audited.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [asset_id]
+            properties:
+              asset_id:
+                type: string
+    responses:
+      "201":
+        description: The sound, with `warning` over 10 s.
+        content:
+          application/json:
+            schema:
+              $ref: "../moments.openapi.yaml#/components/schemas/LibrarySound"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+/api/moments/sounds/{sound_id}:
+  delete:
+    tags: [cues]
+    operationId: unlinkSound
+    summary: Take one of the event's sounds out of the library
+    description: |
+      Right `moments.settings.write`. 409 `sound_in_use` while a cue names it; the asset stays in Screen. Audited.
+    parameters:
+      - name: sound_id
+        in: path
+        required: true
+        schema:
+          type: string
+    responses:
+      "204":
+        description: Removed.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/sounds/pack/{file}:
+  get:
+    tags: [cues]
+    operationId: packSound
+    summary: A sound of the CC0 default pack
+    description: No sign-in, so the screens fetch it as they fetch their files; only the pack's own files.
+    security:
+      - {}
+    parameters:
+      - name: file
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: "^[a-z0-9-]+\\.ogg$"
+    responses:
+      "200":
+        description: The sound.
+        content:
+          audio/ogg:
+            schema:
+              type: string
+              contentMediaType: audio/ogg
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"

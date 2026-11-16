@@ -23,6 +23,7 @@ export const TABS = [
   ["priorities", "Priorities"],
   ["scenes", "Scenes"],
   ["history", "History"],
+  ["cues", "Cues"],
 ] as const;
 
 /** A fresh key in every form, so a resent form does nothing twice (E18). */
@@ -180,7 +181,7 @@ export interface ApiAnswer {
 export async function viaApi(
   app: FastifyInstance,
   request: FastifyRequest,
-  method: "POST" | "PUT",
+  method: "GET" | "POST" | "PUT" | "DELETE",
   url: string,
   payload: Record<string, unknown>,
 ): Promise<ApiAnswer> {
@@ -192,13 +193,13 @@ export async function viaApi(
     headers: {
       host: request.headers.host ?? "",
       cookie: request.headers.cookie ?? "",
-      "content-type": "application/json",
+      ...(method === "GET" ? {} : { "content-type": "application/json" }),
       ...(request.headers["x-forwarded-for"] === undefined
         ? {}
         : { "x-forwarded-for": request.headers["x-forwarded-for"] }),
       ...(key === undefined ? {} : { "idempotency-key": key }),
     },
-    payload: JSON.stringify(payload),
+    ...(method === "GET" ? {} : { payload: JSON.stringify(payload) }),
   });
   const body = res.body === "" ? {} : (JSON.parse(res.body) as Record<string, unknown>);
   return { status: res.statusCode, body };

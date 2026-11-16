@@ -75,7 +75,11 @@ export function heartbeatInput(value: Fields): Beat & { errors: Fields[] } {
   const sounded = value.claims_sounded;
   if (
     sounded !== undefined &&
-    !(Array.isArray(sounded) && sounded.length <= 50 && sounded.every((c) => typeof c === "string"))
+    !(
+      Array.isArray(sounded) &&
+      sounded.length <= 50 &&
+      sounded.every((c) => typeof c === "string" && c.length <= MAX_ID)
+    )
   )
     fail("claims_sounded");
   const errors = value.errors ?? [];
@@ -103,6 +107,7 @@ export function heartbeatInput(value: Fields): Beat & { errors: Fields[] } {
     ...(time === undefined ? {} : { client_time: time }),
     ...(rtt_ms === undefined ? {} : { rtt_ms }),
     ...(instance_id === undefined ? {} : { instance_id }),
+    ...(sounded === undefined ? {} : { claims_sounded: sounded as string[] }),
     errors: errors as Fields[],
   };
 }

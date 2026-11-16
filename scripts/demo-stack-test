@@ -68,6 +68,7 @@ TESTS=(
   "Notify offers the Schedule topic the agenda registers at start"
   "a reminder, an announced delay and an announcement each reach a subscribed phone's deliveries"
   "Moments brings a crew spotlight to a paired screen's stream within a second (p95 of 20)"
+  "the screens of a zone start Moments' sound within 200 ms of each other; only its sound screen plays"
 )
 # Whose test each is, in TESTS' order: `platform` always runs; a test of several modules runs
 # for any of them.
@@ -75,7 +76,7 @@ TAGS=(
   platform platform platform platform admin platform admin admin admin admin admin admin admin
   platform platform platform notify notify agenda screen "agenda notify" "agenda notify" screen
   platform screen soak admin platform platform "agenda notify" "agenda notify"
-  moments
+  moments moments
 )
 # TAGS pairs with TESTS by position: a test added without its tag would run every later one under
 # its neighbour's module.
@@ -346,6 +347,17 @@ if want moments; then
   }
   check "${TESTS[31]}" moment_latency
   sed -n 's/^moment latency: /     /p' "$TMP/body"
+  # Sync (#113, D14): two screens of one zone get a sound check's play_at and start together.
+  # shellcheck disable=SC2329
+  sound_sync() {
+    code=
+    "${COMPOSE[@]}" cp modules/screen/test/stack/. screen:/tmp/canccu-stack >/dev/null &&
+      "${COMPOSE[@]}" cp modules/moments/ci/sound-sync.mjs screen:/tmp/canccu-stack/ >/dev/null &&
+      "${COMPOSE[@]}" exec -T -e CANCCU_DEMO_HOST="$DEMO_HOST" -w /tmp/canccu-stack screen \
+        node sound-sync.mjs > "$TMP/body" 2>&1
+  }
+  check "${TESTS[32]}" sound_sync
+  sed -n 's/^sound sync: /     /p' "$TMP/body"
 fi
 
 if [ "$fail" = 0 ]; then echo "demo-stack-test: all $n tests passed"; else echo "demo-stack-test: tests failed" >&2; fi

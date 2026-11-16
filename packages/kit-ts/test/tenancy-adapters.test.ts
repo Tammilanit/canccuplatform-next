@@ -70,6 +70,22 @@ describe("Fastify installTenancy", () => {
     ).inject({ url: "/who", headers: { host: "signin.example.org" } });
     expect(served.json()).toEqual({ context: null, als: null });
   });
+
+  it("leaves a module's service paths to their caller's identity, on any host", async () => {
+    const a = Fastify();
+    install(a, { health });
+    installTenancy(a, resolver(), { servicePrefix: "/internal/pizza/" });
+    a.get("/internal/pizza/who", () => ({ context: null, als: currentTenant() ?? null }));
+    a.get("/internal/other", () => ({}));
+    await a.ready();
+    const internal = await a.inject({
+      url: "/internal/pizza/who",
+      headers: { host: "pizza:8080" },
+    });
+    expect(internal.json()).toEqual({ context: null, als: null });
+    const other = await a.inject({ url: "/internal/other", headers: { host: "pizza:8080" } });
+    expect(other.statusCode).toBe(404);
+  });
 });
 
 describe("Web withTenancy", () => {

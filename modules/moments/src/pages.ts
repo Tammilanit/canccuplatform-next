@@ -2,6 +2,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { DEFAULT_ORDER, checkOrder, desiredOverrides, isClass } from "./arbiter.js";
 import type { Class } from "./arbiter.js";
+import { cuePages } from "./cues/pages.js";
 import { filterOf, historyRows } from "./history.js";
 import { html } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
@@ -88,6 +89,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
   void app.register((pages, _opts, done) => {
     pageErrors(pages, deps);
     staticRoutes(pages);
+    cuePages(pages, deps);
     scenePages(pages, deps);
     const read = { preHandler: pageNeeds(deps, READ) };
     const has = (r: FastifyRequest, right: string) => r.session?.rights.has(right) === true;

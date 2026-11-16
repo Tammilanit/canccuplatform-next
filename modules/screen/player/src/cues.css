@@ -1,0 +1,122 @@
+/*
+ * A cue's picture on a claimed box (cues.ts; design sheet 14, change 2): a small move of 0.6 s,
+ * then a frame and a soft glow that hold for the cue's hold and fade over its fade. The move plays
+ * at lively and party; calm and none (reduced motion) keep the frame only, so the energy changes
+ * how visible a cue is, never how long it holds. Only opacity and transform move, as in motion.css.
+ * In `canccu-base`, so a theme's layer restyles any of it.
+ */
+@layer canccu-base {
+  .canccu-cue {
+    --canccu-cue-move: calc(600ms * var(--canccu-fx-speed, 1));
+    animation: var(--canccu-cue-anim, none) var(--canccu-cue-move) var(--canccu-fx-ease, ease-out)
+      var(--canccu-cue-delay, 0s) both;
+  }
+
+  /* The frame and glow: on from the start, fading after the hold. */
+  .canccu-cue::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow:
+      inset 0 0 0 calc(0.4 * var(--canccu-u)) var(--canccu-color-primary),
+      0 0 calc(3 * var(--canccu-u) * var(--canccu-fx-intensity, 1))
+        color-mix(in srgb, var(--canccu-color-primary) 55%, transparent);
+    animation: canccu-cue-fade var(--canccu-cue-fade, 10s) linear
+      calc(var(--canccu-cue-delay, 0s) + var(--canccu-cue-hold, 60s)) forwards;
+  }
+
+  /* Ripple and ring burst: rings that spread from the box's edge once. */
+  .canccu-cue--ripple::before,
+  .canccu-cue--ring_burst::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    border-radius: inherit;
+    border: calc(0.4 * var(--canccu-u)) solid var(--canccu-color-primary);
+    opacity: 0;
+    animation: canccu-cue-ring calc(1200ms * var(--canccu-fx-speed, 1)) ease-out
+      var(--canccu-cue-delay, 0s) 1;
+  }
+
+  .canccu-cue--ring_burst::before {
+    animation-iteration-count: 2;
+  }
+
+  body.canccu-motion--lively .canccu-cue--pop,
+  body.canccu-motion--party .canccu-cue--pop {
+    --canccu-cue-anim: canccu-cue-pop;
+  }
+
+  body.canccu-motion--lively .canccu-cue--tilt,
+  body.canccu-motion--party .canccu-cue--tilt {
+    --canccu-cue-anim: canccu-cue-tilt;
+  }
+
+  body.canccu-motion--lively .canccu-cue--flip,
+  body.canccu-motion--party .canccu-cue--flip {
+    --canccu-cue-anim: canccu-cue-flip;
+  }
+
+  body.canccu-motion--lively .canccu-cue--slide,
+  body.canccu-motion--party .canccu-cue--slide {
+    --canccu-cue-anim: canccu-cue-slide;
+  }
+
+  body.canccu-motion--lively .canccu-cue--glow,
+  body.canccu-motion--party .canccu-cue--glow {
+    --canccu-cue-anim: canccu-cue-pop;
+  }
+
+  body.canccu-motion--calm .canccu-cue::before,
+  body.canccu-motion--none .canccu-cue::before {
+    animation: none;
+  }
+
+  @keyframes canccu-cue-fade {
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes canccu-cue-pop {
+    40% {
+      transform: scale(calc(1 + 0.04 * var(--canccu-fx-intensity, 1)));
+    }
+  }
+
+  @keyframes canccu-cue-tilt {
+    35% {
+      transform: perspective(60em) rotateY(calc(6deg * var(--canccu-fx-intensity, 1)));
+    }
+  }
+
+  @keyframes canccu-cue-flip {
+    from {
+      transform: perspective(60em) rotateX(90deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes canccu-cue-slide {
+    from {
+      transform: translateX(6%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes canccu-cue-ring {
+    from {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1.12);
+    }
+  }
+}

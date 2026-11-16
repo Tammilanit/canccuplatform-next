@@ -8,6 +8,7 @@ import { tenantKey } from "@canccu/kit";
 import type { Valkey } from "iovalkey";
 import type { RegionView } from "../compose/build.js";
 import type { Display } from "../compose/display.js";
+import type { Play } from "../moments-sound.js";
 
 export type Orientation = "landscape" | "portrait";
 export const ORIENTATIONS: readonly Orientation[] = ["landscape", "portrait"];
@@ -30,7 +31,8 @@ export interface ZoneRecord {
   /** The pinned bundle version; null or absent (a record stored before pins) for the platform's. */
   bundle?: string | null;
   ticker: Record<string, unknown>;
-  sound: { enabled: boolean; device_id: string | null };
+  /** `play` is absent in a record stored before Moments' sounds: none. */
+  sound: { enabled: boolean; device_id: string | null; play?: Play | null };
   /** Absent in a record stored before it was added: screens then get the defaults. */
   display?: Display;
   views: Record<Orientation, ZoneRecordView>;

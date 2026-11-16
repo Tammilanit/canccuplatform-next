@@ -40,6 +40,8 @@ tags:
     description: The photo wall.
   - name: clone
     description: Copying screen content from another event of the series.
+  - name: internal
+    description: Module paths on the stack's internal network for Moments; the edge Caddy never routes them.
 security:
   - session: []
 paths:
@@ -162,6 +164,83 @@ paths:
     $ref: "screen/content.openapi.yaml#/~1api~1screen~1photos~1{photo_id}"
   /api/screen/clone:
     $ref: "screen/content.openapi.yaml#/~1api~1screen~1clone"
+  /internal/screen/zones/{zone_key}/sound:
+    get:
+      tags: [internal]
+      operationId: zoneSoundInternal
+      summary: A zone's energy and its sound screen, for Moments' sound gates
+      description: The kit's service identity; the event in `tenant_id` (contracts/screen.md, For Moments).
+      security:
+        - {}
+      parameters:
+        - name: zone_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tenant_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The zone's sound status.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [energy, device]
+                properties:
+                  energy:
+                    type: string
+                    enum: [party, lively, calm, quiet]
+                  device:
+                    type: [object, "null"]
+                    required: [id, name, online, audio_unlocked]
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      online:
+                        type: boolean
+                      audio_unlocked:
+                        type: [boolean, "null"]
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /internal/screen/assets/{asset_id}:
+    get:
+      tags: [internal]
+      operationId: assetInternal
+      summary: One of the event's assets, for Moments' library
+      description: The kit's service identity; the event in `tenant_id`.
+      security:
+        - {}
+      parameters:
+        - name: asset_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tenant_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The asset.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 components:
   securitySchemes:
     session:
@@ -567,8 +646,10 @@ components:
         claims_sounded:
           type: array
           maxItems: 50
+          description: The claims and Moments' sounds (`sound.play.id`) this page played, newest last.
           items:
             type: string
+            maxLength: 200
         errors:
           type: array
           maxItems: 20
@@ -865,6 +946,55 @@ components:
           type: [string, "null"]
           format: date-time
           description: The override's `expires_at` (else `starts_at` plus `ttl_seconds`); the screen ends the claim then, also offline. Renewals move it; `starts_at` never moves.
+        effect:
+          $ref: "#/components/schemas/CueEffect"
+    CueEffect:
+      type: object
+      description: A Moments cue's picture on the claimed box, from `starts_at` (contracts/screen.md, Cue effects). Absent without one.
+      required: [name, hold_seconds, fade_seconds]
+      properties:
+        name:
+          type: string
+          pattern: "^[a-z_]{1,32}$"
+          description: "`pop`, `tilt`, `flip`, `ripple`, `slide`, `glow` or `ring_burst`; a player draws a name it does not know as nothing."
+        hold_seconds:
+          type: integer
+          minimum: 0
+          maximum: 600
+        fade_seconds:
+          type: integer
+          minimum: 0
+          maximum: 60
+    SoundPlay:
+      type: object
+      description: Moments' sound for the zone's screens (contracts/screen.md, Moments' sound).
+      required: [id, cue, category, url, voice_url, volume, play_at, catch_up_until, interrupts]
+      properties:
+        id:
+          type: string
+        cue:
+          type: string
+        category:
+          type: string
+        url:
+          type: [string, "null"]
+          description: A same-origin path; null plays nothing.
+        voice_url:
+          type: [string, "null"]
+          description: Played right after the sound.
+        volume:
+          type: number
+          minimum: 0
+          maximum: 1
+        play_at:
+          $ref: "#/components/schemas/Time"
+          description: When every screen of the zone starts it, by its clock corrected by the heartbeat's offset.
+        catch_up_until:
+          $ref: "#/components/schemas/Time"
+          description: A screen that missed `play_at` (offline, reloading) may start it until then.
+        interrupts:
+          type: boolean
+          description: True for an urgent sound, which stops what plays.
     Region:
       type: object
       required: [id, role, area, layer, rotation, cycle_started_at, widgets, claim]
@@ -1131,9 +1261,16 @@ components:
               description: False on a mirroring device and on devices other than the zone's sound device.
             sounded_claims:
               type: array
-              description: Claims this device already sounded, so a reload does not play them again.
+              description: |
+                What this device's last heartbeat said it played (claims and Moments' sounds), so a reload does not
+                play them again.
               items:
                 type: string
+            play:
+              description: Moments' newest sound for the zone until its `catch_up_until`, on every screen of the zone; only one with `enabled` plays it.
+              oneOf:
+                - $ref: "#/components/schemas/SoundPlay"
+                - type: "null"
         prefetch:
           type: array
           items:

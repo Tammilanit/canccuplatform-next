@@ -19,7 +19,7 @@ export interface RuleSettings {
   regions: string[];
   ttl_seconds: number;
   zones: string[];
-  /** The cue it will ask for once cues and sound land (#113); it plays nothing yet. */
+  /** The cue its moment's start plays (contracts/moments.md, Cues and sound), or null. */
   cue: string | null;
 }
 
@@ -249,6 +249,7 @@ export async function applyRules(c: SqlClient, engine: Engine, e: Event, now: Da
         source: { module: e.source, event_id: e.id, ref: ref === "" ? null : ref },
         dedupe_key: `${def.id}:${ref}`,
         binding: def.binding ?? null,
+        cue: s.cue,
       },
       now,
     );

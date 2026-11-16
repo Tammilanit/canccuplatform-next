@@ -5,6 +5,7 @@
 import qrcode from "qrcode-generator";
 import { KitError } from "@canccu/kit";
 import type { SqlClient } from "@canccu/kit";
+import { CREW_CUES } from "./cues/catalog.js";
 import type { MomentRequest } from "./engine.js";
 import { renderBinding } from "./sources.js";
 import type { Actor, Binding, Qr } from "./store.js";
@@ -123,6 +124,7 @@ export async function spotlightRequest(
     qr,
     binding,
     actor,
+    cue: CREW_CUES.spotlight,
   };
 }
 
@@ -145,6 +147,7 @@ export function emergencyRequest(body: Data, actor: Actor, why: string, now: Dat
     zones: zonesOf(body.zones),
     ttl_seconds: null,
     actor,
+    cue: CREW_CUES.emergency,
   };
 }
 
@@ -169,5 +172,6 @@ export function allClearRequest(
     zones,
     ttl_seconds: 60,
     actor,
+    cue: CREW_CUES.all_clear,
   };
 }

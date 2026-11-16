@@ -5,6 +5,7 @@
  * events come at least once, and to every container.
  */
 import type { Event, SqlClient } from "@canccu/kit";
+import { CREW_CUES } from "./cues/catalog.js";
 import type { Db } from "./db.js";
 import type { Engine } from "./engine.js";
 import { applyClaims, claimsReportOf } from "./placements.js";
@@ -78,6 +79,14 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
       scenes = true;
     } else if (e.type === "screen.zone.removed" && typeof e.data.zone_key === "string") {
       await zoneRemoved(c, deps.engine, e.data.zone_key, now);
+    } else if (e.type === "screen.photo.added" && typeof e.data.photo_id === "string") {
+      // A new photo's sound is a Moments cue (contracts/screen.md, A new photo); Screen draws its pop.
+      const id = e.data.photo_id;
+      await deps.engine.fireCue(
+        c,
+        { cue: CREW_CUES.photo, zones: [], key: `photo:${id}`, source: id },
+        now,
+      );
     } else if (e.source !== "screen") {
       // An archived event is read-only (E10): no rule starts or renews a moment on it.
       if (await isArchived(c, e.tenant as string)) return;
@@ -178,6 +187,12 @@ export async function handlePlatformEvent(deps: ConsumerDeps, e: Event): Promise
         "moments_history",
         "moments_idempotency",
         "moments_outbox",
+        "moments_sound_settings",
+        "moments_cues",
+        "moments_sounds",
+        "moments_sound_zones",
+        "moments_sound_sources",
+        "moments_sound_log",
         "moments_scenes",
         "moments_scene_zones",
         "moments_scene_crew",

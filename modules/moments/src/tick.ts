@@ -33,6 +33,7 @@ export async function tickTenant(c: SqlClient, engine: Engine, now: Date): Promi
     if (m === null || m.ended_at !== null) continue;
     await engine.end(c, m, "preempted", null, now, r.zone_key);
   }
+  await engine.pumpSounds(c, now);
 }
 
 /** A priority change ranks every running moment again at once and never ends one (E8). */
@@ -129,7 +130,10 @@ export async function tickAll(deps: TickDeps): Promise<void> {
   }
 }
 
-/** Hourly: idempotency keys after 24 hours, and an archived event's history after 30 days. */
+/**
+ * Hourly: idempotency keys after 24 hours, once-per-source sounds after 7 days, and an archived
+ * event's history and sound log after 30 days.
+ */
 export async function upkeep(db: Db, now: Date): Promise<void> {
   const tenants = await db.global(async (c) => {
     const { rows } = await c.query(`SELECT tenant_id, archived_at FROM moments_tenants`, []);
@@ -142,9 +146,19 @@ export async function upkeep(db: Db, now: Date): Promise<void> {
           `DELETE FROM moments_idempotency WHERE at < $1::timestamptz - interval '1 day'`,
           [now],
         );
+        // Once per source holds 7 days (D16, the legacy's oncePerSource memory).
+        await c.query(
+          `DELETE FROM moments_sound_sources WHERE at < $1::timestamptz - interval '7 days'`,
+          [now],
+        );
         if (t.archived_at !== null) {
           await c.query(
             `DELETE FROM moments_history
+             WHERE $1::timestamptz >= $2::timestamptz + interval '${HISTORY_AFTER_ARCHIVE}'`,
+            [now, t.archived_at],
+          );
+          await c.query(
+            `DELETE FROM moments_sound_log
              WHERE $1::timestamptz >= $2::timestamptz + interval '${HISTORY_AFTER_ARCHIVE}'`,
             [now, t.archived_at],
           );

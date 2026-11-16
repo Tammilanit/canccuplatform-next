@@ -4,7 +4,7 @@ Moments is the venue's autopilot at the peaks: one server-side arbiter ranks, ti
 
 **Machine-readable API: [moments.openapi.yaml](moments.openapi.yaml)** (OpenAPI 3.1). It is the source for paths, fields and status codes; this file explains them and adds the rules and events. Conventions (field names, times, error body): [README.md](README.md#conventions).
 
-The contract comes in parts, each with the package whose code uses it (step 4 plan D24): **the engine** (moments, priorities, the arbiter's rules, the crew spotlight, emergency, built-in rules, history), **scenes** (below), then cues and sound (#113), storyboards (#114) and announcements (#115).
+The contract comes in parts, each with the package whose code uses it (step 4 plan D24): **the engine** (moments, priorities, the arbiter's rules, the crew spotlight, emergency, built-in rules, history), **scenes** (below), **cues and sound** (#113, below: [Cues and sound](#cues-and-sound)), then storyboards (#114) and announcements (#115).
 
 ## Tenancy
 - Moments belong to one event, which is one tenant ([0013](../docs/decisions/0013-multi-tenant-core.md)); the tenant comes from the request's hostname. Every row carries `tenant_id` under row-level security. Events go to `t:<tenant>:events:moments`.
@@ -57,7 +57,7 @@ The legacy directive rules, moved to the server and made regional:
 Moments follows `screen.claims.changed` ([screen.md](screen.md#events-version-1)): for each zone, which of its overrides are `placed` (and in which role), `unplaced` (waiting) or `hidden` (under a `full` claim). It stores each as the moment's placement on that zone and writes the history from it. `screen.zone.saved` and `screen.zone.removed` tell it the event's zones; a moment leaves a removed zone (`source_ended`, E9).
 
 ### The overrides it emits
-`moments.override.started`, `.changed` and `.ended` ([events.md](events.md#screen-overrides)) with the fields of [screen.md](screen.md#moments-drive-it-claims). `ttl_seconds` is never sent: `expires_at` always is (null for an emergency). `.ended` carries the additive field `final` (below).
+`moments.override.started`, `.changed` and `.ended` ([events.md](events.md#screen-overrides)) with the fields of [screen.md](screen.md#moments-drive-it-claims). `ttl_seconds` is never sent: `expires_at` always is (null for an emergency). `.ended` carries the additive field `final` (below). An override whose moment's cue has a picture carries `effect` ([Cues and sound](#the-picture)).
 
 - **Narrowing (D3):** when an override leaves some of its zones but stays on others, Moments first emits `.changed` with `zones` narrowed to the explicit list it still holds (`changed` names `zones`), then `.ended` with just the zones it left and `final: false`. An override that held every zone (`zones: []`) is narrowed to the zones Moments knows minus the ones it leaves.
 - **`final`** (boolean, additive): `true` only when the override is gone everywhere. An `.ended` with `zones: []` ends it everywhere and is always `final: true`.
@@ -83,7 +83,7 @@ Moments follows `screen.claims.changed` ([screen.md](screen.md#events-version-1)
 Every crew action (`POST` on the spotlight, emergency, venue emergency, end and extend) carries a key, the header `Idempotency-Key` (8 to 64 characters of `A–Z a–z 0–9 - _`; without one 400 `invalid_request`). The same key from the same person within 24 hours answers what the first request answered and does nothing again, so a phone's retry never sends twice. The pages put a fresh key in each form.
 
 ## Built-in rules (D7, D8)
-Rules turn catalog events into moments. Each built-in has these settings per event: `enabled`, `template` (one of the rule's), `class` (its rank), `regions`, `ttl_seconds`, `zones` and `cue` (the sound cue it will ask for once cues land, #113; it plays nothing yet). `GET /api/moments/rules` (right `moments.read`) lists them with their `revision`; `PUT /api/moments/rules/{rule_id}` (right `moments.settings.write`) with the settings and `revision` changes one (409 `version_conflict` on a stale one). Audited. They fire when their emitters appear (tested on fixture events now); a later step may redefine its own rules.
+Rules turn catalog events into moments. Each built-in has these settings per event: `enabled`, `template` (one of the rule's), `class` (its rank), `regions`, `ttl_seconds`, `zones` and `cue` (the cue its moment's start plays, or null: [Cues and sound](#cues-and-sound)). The defaults: `match_called` `tournament.start`, `standings` none (a leaderboard changes too often to sound), `finals_result` `tournament.post`, `pizza` `pizza.placed`, `hot_game` `chrome.hot`. `GET /api/moments/rules` (right `moments.read`) lists them with their `revision`; `PUT /api/moments/rules/{rule_id}` (right `moments.settings.write`) with the settings and `revision` changes one (409 `version_conflict` on a stale one). Audited. They fire when their emitters appear (tested on fixture events now); a later step may redefine its own rules.
 
 | Rule | On | Shows (template, class, regions, TTL) | Ends early on (`source_ended`) |
 |---|---|---|---|
@@ -118,6 +118,39 @@ A scene sets a zone's mood by itself, so nobody needs to direct at 03:00: a set 
 - **Clone with an event** (D22): on `tenants.tenant.cloned` (the tenants module checked the series and the caller), the source event's priorities, rules and scenes become the new event's, where it has none of its own (scenes it never saved count as none); never the history, a live moment or a zone's scene. A second delivery copies nothing again.
 - **Pages:** **Scenes** (Studio → Moments → Scenes, and the Screen studio's Scenes tab, sheet 12): the band chart (what the time and agenda conditions alone will do on each day of the event, for one zone), the list in priority order (move up and down, edit, add from a preset, delete), one scene's conditions and changes, hold and blend, "Reset to default", and the crew buttons. **On air** shows each zone's scene, since when and why, and the crew buttons ("Peak now", one tap).
 
+## Cues and sound
+A **cue** is a picture plus an optional sound (step 4 plan, [The sound model](../docs/briefs/step-4-moments.md#the-sound-model-d16)); either half may play alone. A moment's start plays its cue: a rule's `cue`, the crew spotlight `announce.attention`, the emergency `emergency.start`, its "All clear" `announce.cleared`. A new photo (`screen.photo.added`) plays `photo.showcase`, sound only. A renewal or an edit of a moment never plays its cue again (E4, L13).
+
+### The model
+- **Six categories, fixed,** the rule axis: `urgent` (priority 70, level 100 %), `result` (50, 80 %), `attention` (40, 80 %), `something_new` (30, 80 %), `ended` (20, 80 %), `ambient` (10, 35 %). Each has a level and an on/off per event. Events add cues, never categories.
+- **Cues, as data per event,** seeded from the 25 legacy cues with their names, categories, on/off and cooldowns (poll and cast seeded off: no emitter yet). Each has `enabled`, `level`, `cooldown_seconds`, `catch_up_seconds` (default 120) or `catch_up_before_start` (the tournament cues' legacy windows), `once_per_source` (the tournament, strip and pizza cues), one or more `sounds`, an optional `voice_line`, and its picture: `effects` and `hold_seconds`. An event adds cues of its own; a built-in can be set back to its seed.
+- **The library:** any sound can go to any cue. The default pack is CC0 with a credits file (`modules/moments/static/sounds/CREDITS.md`), served without sign-in at `/api/moments/sounds/pack/<file>`. An event's own sounds are Screen's `audio` assets (D23): uploaded through Screen, then linked here, at most 1 MiB and 30 s, with a warning over 10 s.
+
+### The picture
+When a moment's cue has `effects`, Moments picks one at random, never the cue's last one (L7), and sends it on the moment's overrides as the additive Override field `effect`: `name` (`pop`, `tilt`, `flip`, `ripple`, `slide`, `glow`, `ring_burst`), `hold_seconds` (the cue's, 60 to 120, L8) and `fade_seconds` (10). Screen hands it to the claim, and the player draws it on the box from the claim's `starts_at`: the move once, then the frame and glow hold and fade ([screen.md](screen.md#cue-effects)). The picture plays whatever the sound gates say.
+
+### How a sound is decided (mockup 13)
+On the server, once per zone, the same for every screen of the zone; each zone's decisions run one at a time under its row lock. The gates, in order, each "no" a reason code in the log:
+1. `master_off`, `muted` (the timed mute).
+2. The zone's energy (Screen's `GET /internal/screen/zones/{zone_key}/sound`): `party` and `lively` play every category, `calm` urgent, attention and result (`calm`), a quiet scene (its `quiet`, or quiet hours while the zone has no scene) urgent only (`quiet`).
+3. `category_off`, `cue_off`, `no_sound`, `cooldown` (the cue's on the zone); while an emergency runs on the zone only urgent (`emergency`).
+4. `dedupe` (the same appearance again), `once_per_source` (7 days), `outside_window` (a cue with a window before the start).
+5. `coalesced` (the same cue accepted on the zone in the last 2 s), the flood guard: `flood_source` (the same cue and source within `per_source_seconds`, 10) and `flood_minute` (`per_minute`, 3, per zone); `budget` (`hourly_budget`, 20, per zone). Urgent passes all three (`urgent_passes`) and still counts. The minute and hour counts are Valkey counters per zone (D15).
+6. One at a time: ambient never waits (`busy`) and keeps 30 s between ambient sounds (`ambient_gap`); only urgent interrupts a playing sound (`interrupted`); any other waits in the zone's queue, highest category first, at most 4 s from its request (`waited`, else `stale`).
+
+A sound that passes is sent to the zone's screens as `moments.sound.played` with `play_at` (now plus 400 ms) and `catch_up_until` (its cue's window); a voice line plays right after its sound and counts with it as one. The zone's sound screen, when Screen reports it offline or with its audio locked, makes the log line `missed` with `device_offline` or `audio_locked` (E12, E13); the sound stays sent, and the screen plays it late if it comes back within the window. A zone without a sound screen, or with its sound off (its own switch, or its scene's `sound`), is `suppressed` with `no_sound_screen`.
+
+### The sound log
+`GET /api/moments/sound/log` (right `moments.read`): every decision, newest first, with `zone_key`, `cue`, `sound`, `outcome` (`played`, `queued`, `suppressed`, `dropped`, `missed`), `reason` (the codes above, `free` for a sound that played at once, `sound_check`) and `detail`. Kept as the history is (D21).
+
+### The sound desk's paths
+- `GET /api/moments/sound` (`moments.read`): the settings, the categories, and per zone this minute's and this hour's count, its energy, what it lets through and its sound screen.
+- `PUT /api/moments/sound/settings` (`moments.settings.write`): the master switch, the volume, `hourly_budget`, `per_minute`, `per_source_seconds` and the six categories, validated whole; `revision`.
+- `POST /api/moments/sound/mute` (`moments.take`, a crew action with its key): `minutes` 1 to 240, or 0 to unmute.
+- `POST /api/moments/sound/check` (`moments.take`, a crew action): a sound on zones now, past every gate but the master switch; it counts in no budget.
+- `GET /api/moments/cues`, `PUT` and `DELETE /api/moments/cues/{cue}` (`moments.settings.write` to write): the cues.
+- `GET /api/moments/sounds`, `POST /api/moments/sounds` with `asset_id`, `DELETE /api/moments/sounds/{sound_id}` (409 `sound_in_use` while a cue names it): the library.
+
 ## History (D21, mockup 09)
 - Every decision is a row: a moment started, was refused, placed, hidden, queued (waiting), came back, changed or ended, with the zone (or none for the whole moment), the region, why (the rule and its event, or the person and the action), what it displaced, and how it ended. A renewal of the same content writes nothing.
 - `GET /api/moments/history` (right `moments.read`) with filters `zone` (its rows and the whole-moment rows), `region`, `origin` (`rule`, `crew`, `emergency`, `module`) and `action`, newest first, `limit` (default 100, at most 500) and `before` (a row's `seq`, for the next page). `GET /api/moments/history.csv` answers the same rows, at most 10,000, as CSV.
@@ -130,14 +163,15 @@ Studio → Moments, the Screen studio's Moments tab, at `/moments/` (Caddy strip
 - **Priorities** (mockup 08): the event's order and each zone's, moved up and down and saved; a preview of a zone in the real player through Screen's zone preview path (`POST /api/screen/zones/{zone_key}/preview` with `ranks`), with the running moments ranked as the order on the page would rank them; the built-in rules' settings.
 - **Scenes** (sheet 12; Scenes, above), at `/moments/scenes`, also the Screen studio's own Scenes tab.
 - **History** (mockup 09): the table per zone with its filters and Export CSV.
+- **Cues** (mockup 12, the sound desk): each zone's budget this hour and minute, what it lets through now and its sound screen; the master, the timed mute and the sound check; the categories; the cues with their sounds, voice lines and pictures, each editable, and "+ Add a cue"; the library with a preview of each sound and the upload (the page's script uploads to Screen, then links the asset); the log.
 
 ## Rights
-U2 as amended by U3: `moments.read` (On air, History, Scenes, the settings read-only), `moments.announce` (#115), `moments.take` (the crew spotlight, ending and extending moments), `moments.scenes.take` (the scenes' crew buttons, "Peak now"), `moments.emergency` (start and end an emergency), `moments.settings.write` (priorities, rules and scenes; later storyboards, cues, templates). Event admins hold all of them through their role.
+U2 as amended by U3: `moments.read` (On air, History, Scenes, the settings read-only), `moments.announce` (#115), `moments.take` (the crew spotlight, ending and extending moments, the timed mute and the sound check), `moments.scenes.take` (the scenes' crew buttons, "Peak now"), `moments.emergency` (start and end an emergency), `moments.settings.write` (priorities, rules, scenes, cues, the sound settings and the library; later storyboards, templates). Event admins hold all of them through their role.
 
 **The "Moments crew" preset** (`moments_crew`): `moments.read`, `moments.announce`, `moments.take` and `moments.scenes.take`, a name for that list as `screen_crew` is ([screen.md](screen.md#rights)). `moments.emergency` is granted one by one to named crew.
 
 ## Audit
-Through `POST /internal/tenants/audit` in the same request ([tenants.md](tenants.md#audit-log)): every crew action (spotlight, end, extend, a scene's crew button pressed or released), every emergency start and end (the venue-wide one in each event), and every change of the priorities, the rules and the scenes (a reset too), with the old and new values.
+Through `POST /internal/tenants/audit` in the same request ([tenants.md](tenants.md#audit-log)): every crew action (spotlight, end, extend, a scene's crew button pressed or released), every emergency start and end (the venue-wide one in each event), every change of the priorities, the rules, the scenes (a reset too), the cues and the sound settings, with the old and new values, the mute, the sound check, and each sound linked to or taken out of the library.
 
 ## Privacy
 The history keeps the name and user id of whoever started or ended a moment. `GET /api/moments/me/export` answers the caller's history rows at this event; `DELETE /api/moments/me` removes their name and id from them ([README.md](README.md#privacy-export-and-delete)). `tenants.user.deleted` does the same in every event; `tenants.tenant.deleted` deletes the event's rows.
@@ -145,7 +179,7 @@ The history keeps the name and user id of whoever started or ended a moment. `GE
 ## What Moments consumes
 | From | Events | Used for |
 |---|---|---|
-| screen | `screen.claims.changed`, `screen.zone.saved`, `screen.zone.removed` | Placements, the history, the event's zones |
+| screen | `screen.claims.changed`, `screen.zone.saved`, `screen.zone.removed`, `screen.photo.added` | Placements, the history, the event's zones; a new photo's cue |
 | tournament | `tournament.match.called`, `.match.started`, `.match.finished`, `tournament.leaderboard.changed`, `tournament.session.*`, `tournament.result.corrected` | Rules; the spotlight's standings and bracket |
 | pizza | `pizza.order.placed`, `.arrived`, `.cancelled` | The `pizza` rule |
 | games | `games.surge.started`, `games.surge.ended` | The `hot_game` rule; scenes' games condition |
@@ -164,6 +198,7 @@ Emitter `moments`, on the tenant's stream; listed in the catalog ([events.md](ev
 | `moments.override.changed` | Its rank, zones, content or `expires_at` changed | `override`, `changed` (field names), `actor_user_id` |
 | `moments.override.ended` | It left zones or ended | `override_id`, `zones`, `reason`, `final`, `actor_user_id` |
 | `moments.scene.changed` | A zone's scene or heartbeat changed (Scenes) | `zone_key`, `scene`, `since`, `why`, `heartbeat_bpm`, `actor_user_id` |
+| `moments.sound.played` | A sound was decided for a zone's screens | `zone_key`, `sound`: `id`, `cue`, `category`, `url`, `voice_url` (or null), `volume` (0–1), `play_at`, `catch_up_until`, `interrupts` |
 
 ## Not in this contract
-Cues and sound (#113: the rules' `cue` plays nothing until then; the sound gates read a scene's `sound` and `quiet`), storyboards (#114), announcements and their composer (#115), reactions (the App track), the director desk (later), whole themes per scene (later, L14), the outside signal as a scene condition.
+Text to speech (backlog, P8), storyboards (#114), announcements and their composer (#115), reactions (the App track), the director desk (later), whole themes per scene (later, L14), the outside signal as a scene condition, cloning the cues, the sound settings and the library with an event.

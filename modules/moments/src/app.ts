@@ -4,6 +4,7 @@ import type { FastifyInstance } from "fastify";
 import { install, installServiceIdentity, installTenancy } from "@canccu/kit/fastify";
 import type { AppDeps } from "./http.js";
 import { internalRoutes, venueRoutes } from "./module-routes.js";
+import { cueRoutes, packRoutes } from "./cues/routes.js";
 import { pageRoutes } from "./pages.js";
 import { momentRoutes } from "./routes.js";
 import { sceneRoutes } from "./scene-routes.js";
@@ -50,6 +51,8 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     });
     momentRoutes(event, deps);
     settingsRoutes(event, deps);
+    cueRoutes(event, deps);
+    packRoutes(event);
     sceneRoutes(event, deps);
     pageRoutes(event, deps);
     done();

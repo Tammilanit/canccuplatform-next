@@ -36,6 +36,14 @@ export interface Override {
   sound: Sound | null;
   steps: Step[] | null;
   on_end: "resume" | "next";
+  /** Moments' cue picture for the claim's box (contracts/screen.md, Cue effects), or null. */
+  effect: Effect | null;
+}
+
+export interface Effect {
+  name: string;
+  hold_seconds: number;
+  fade_seconds: number;
 }
 
 /** `Claim` of contracts/screen.openapi.yaml. */
@@ -52,6 +60,8 @@ export interface Claim {
   starts_at: string;
   ends_at: string | null;
   expires_at: string | null;
+  /** Only when the override has one, so a claim without stays as it was. */
+  effect?: Effect;
 }
 
 const KINDS = ["takeover", "block", "overlay"] as const;
@@ -99,6 +109,28 @@ function stepOf(v: unknown): Step | undefined {
   return { template: v.template, content: v.content, duration_ms: ms as number, sound };
 }
 
+/** A cue's effect, null for none, undefined when malformed. */
+function effectOf(v: unknown): Effect | null | undefined {
+  if (v === null || v === undefined) return null;
+  if (!isObject(v)) return undefined;
+  const ok =
+    typeof v.name === "string" &&
+    /^[a-z_]{1,32}$/.test(v.name) &&
+    Number.isInteger(v.hold_seconds) &&
+    (v.hold_seconds as number) >= 0 &&
+    (v.hold_seconds as number) <= 600 &&
+    Number.isInteger(v.fade_seconds) &&
+    (v.fade_seconds as number) >= 0 &&
+    (v.fade_seconds as number) <= 60;
+  return ok
+    ? {
+        name: v.name as string,
+        hold_seconds: v.hold_seconds as number,
+        fade_seconds: v.fade_seconds as number,
+      }
+    : undefined;
+}
+
 /**
  * An override of a `moments.override.*` event, or null when it is not one the contract allows:
  * a malformed override is dropped whole rather than drawn in part.
@@ -124,8 +156,10 @@ export function overrideOf(v: unknown): Override | null {
     return null;
   }
   const sound = soundOf(v.sound);
+  const effect = effectOf(v.effect);
   const steps = Array.isArray(v.steps) ? v.steps.map(stepOf) : null;
-  if (sound === undefined || steps?.some((s) => s === undefined) === true) return null;
+  if (sound === undefined || effect === undefined || steps?.some((s) => s === undefined) === true)
+    return null;
   const ttl = v.ttl_seconds as number | null | undefined;
   const expires =
     (v.expires_at as string | null | undefined) ??
@@ -144,6 +178,7 @@ export function overrideOf(v: unknown): Override | null {
     sound,
     steps: steps as Step[] | null,
     on_end: v.on_end === "next" ? "next" : "resume",
+    effect,
   };
 }
 
@@ -237,5 +272,6 @@ function claimOf(o: Override, role: Role, hidden: boolean): Claim {
     starts_at: o.starts_at,
     ends_at: o.ends_at,
     expires_at: o.expires_at,
+    ...(o.effect === null ? {} : { effect: o.effect }),
   };
 }

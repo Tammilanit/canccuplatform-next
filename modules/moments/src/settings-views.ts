@@ -200,8 +200,8 @@ function rulesView(rules: RuleView[], canWrite: boolean): Html {
   return html`<section class="canccu-card moments-rules">
     <h2 class="canccu-card__title">Built-in rules</h2>
     <p class="canccu-small canccu-muted">
-      What fires by itself when the tournament, pizza and games modules report. Cues sound once the
-      sound desk lands.
+      What fires by itself when the tournament, pizza and games modules report. Each rule's cue is
+      set up on the Cues tab: its picture and its sound.
     </p>
     ${rows}
   </section>`;

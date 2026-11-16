@@ -45,8 +45,10 @@ const REBUILDS = [
   "tenants.status.changed",
   "tenants.venue_info.changed",
   "theming.theme.published",
-  // Main hands these on only once src/compose/overrides.ts and scenes.ts have kept them.
+  // Main hands these on only once src/compose/overrides.ts, scenes.ts and src/moments-sound.ts
+  // have kept them.
   "moments.override.",
+  "moments.sound.",
   "moments.scene.",
 ];
 /** The event's context changed: every stream checks its device again and may redraw. */
