@@ -146,6 +146,29 @@ run("the built-in rules", () => {
     });
   });
 
+  it("plays each rule's cue when its moment starts, and a new photo's cue, sound only", async () => {
+    await w.tx("demo", (c) => c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main')`));
+    await deliver(FIXTURES.placed());
+    // After the pizza's sound: one sound at a time on a zone.
+    w.now = w.at(10);
+    await deliver({
+      ...FIXTURES.placed(),
+      id: "01928f3e-7a2b-7c4d-9e8f-0a1b2c3d4ff1",
+      type: "screen.photo.added",
+      source: "screen",
+      data: { photo_id: "ph_1", actor_user_id: null },
+    });
+    const cues = w
+      .events("demo")
+      .filter((e) => e.type === "moments.sound.played")
+      .map((e) => (e.data.sound as { cue: string }).cue);
+    expect(cues).toEqual(["pizza.placed", "photo.showcase"]);
+    const started = w.events("demo").find((e) => e.type === "moments.override.started");
+    expect((started?.data.override as { effect: { name: string } }).effect.name).toMatch(
+      /pop|ripple/,
+    );
+  });
+
   it("lists every rule with its defaults, and refuses settings it cannot use", async () => {
     const rules = await w.tx("demo", (c) => loadRules(c));
     expect(rules.map((r) => r.rule_id)).toEqual(RULE_IDS);

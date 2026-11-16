@@ -93,7 +93,10 @@ export async function tickAll(deps: {
   }
 }
 
-/** Hourly: idempotency keys after 24 hours, and an archived event's history after 30 days. */
+/**
+ * Hourly: idempotency keys after 24 hours, once-per-source sounds after 7 days, and an archived
+ * event's history and sound log after 30 days.
+ */
 export async function upkeep(db: Db, now: Date): Promise<void> {
   const tenants = await db.global(async (c) => {
     const { rows } = await c.query(`SELECT tenant_id, archived_at FROM moments_tenants`, []);
@@ -106,9 +109,19 @@ export async function upkeep(db: Db, now: Date): Promise<void> {
           `DELETE FROM moments_idempotency WHERE at < $1::timestamptz - interval '1 day'`,
           [now],
         );
+        // Once per source holds 7 days (D16, the legacy's oncePerSource memory).
+        await c.query(
+          `DELETE FROM moments_sound_sources WHERE at < $1::timestamptz - interval '7 days'`,
+          [now],
+        );
         if (t.archived_at !== null) {
           await c.query(
             `DELETE FROM moments_history
+             WHERE $1::timestamptz >= $2::timestamptz + interval '${HISTORY_AFTER_ARCHIVE}'`,
+            [now, t.archived_at],
+          );
+          await c.query(
+            `DELETE FROM moments_sound_log
              WHERE $1::timestamptz >= $2::timestamptz + interval '${HISTORY_AFTER_ARCHIVE}'`,
             [now, t.archived_at],
           );

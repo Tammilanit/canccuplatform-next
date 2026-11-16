@@ -102,6 +102,12 @@ export async function handlePlatformEvent(deps: ConsumerDeps, e: Event): Promise
         "moments_history",
         "moments_idempotency",
         "moments_outbox",
+        "moments_sound_settings",
+        "moments_cues",
+        "moments_sounds",
+        "moments_sound_zones",
+        "moments_sound_sources",
+        "moments_sound_log",
       ]) {
         await c.query(`DELETE FROM ${table}`, []);
       }

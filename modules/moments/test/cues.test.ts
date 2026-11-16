@@ -3,11 +3,13 @@ import type pg from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Event } from "@canccu/kit";
 import { emergencyRequest } from "../src/content.js";
-import { tickTenant } from "../src/tick.js";
+import { handlePlatformEvent } from "../src/consumer.js";
+import { tickTenant, upkeep } from "../src/tick.js";
 import { DATABASE_URL, T0, freshDatabase, world } from "./helpers.js";
 import type { World } from "./helpers.js";
 
 const live = DATABASE_URL ? describe : describe.skip;
+const DAY = 86_400_000;
 
 live("cues", () => {
   let pool: pg.Pool;
@@ -214,5 +216,40 @@ live("cues", () => {
     expect(play.cue).toBe("sound_check");
     expect(play.url).toBe("/api/moments/sounds/pack/gong.ogg");
     expect((await log()).map((r) => [r.outcome, r.reason])).toEqual([["played", "sound_check"]]);
+  });
+
+  it("keeps once-per-source 7 days and the log as the history; a deleted event loses it all", async () => {
+    await pizza(1, T0);
+    const count = async (table: string) =>
+      (await pool.query<{ n: number }>(`SELECT count(*)::int AS n FROM ${table}`)).rows[0]?.n;
+    expect(await count("moments_sound_sources")).toBe(1);
+    await upkeep(w.db, new Date(T0.getTime() + 6 * DAY));
+    expect(await count("moments_sound_sources")).toBe(1);
+    await upkeep(w.db, new Date(T0.getTime() + 8 * DAY));
+    expect(await count("moments_sound_sources")).toBe(0);
+    await pool.query(`UPDATE moments_tenants SET archived_at = $1 WHERE tenant_id = 'demo'`, [T0]);
+    await upkeep(w.db, new Date(T0.getTime() + 31 * DAY));
+    expect(await count("moments_sound_log")).toBe(0);
+    await pool.query(`UPDATE moments_tenants SET archived_at = NULL WHERE tenant_id = 'demo'`);
+    await pizza(2, w.at(10));
+    const deleted = {
+      id: "01928f3e-7a2b-7c4d-9e8f-0a1b2c3d4e99",
+      type: "tenants.tenant.deleted",
+      version: 1,
+      time: T0.toISOString(),
+      source: "tenants",
+      data: { tenant_id: "demo" },
+    };
+    await handlePlatformEvent(
+      { db: w.db, engine: w.engine, flush: () => w.outbox.flush(), now: () => T0 },
+      deleted,
+    );
+    for (const table of [
+      "moments_sound_log",
+      "moments_sound_zones",
+      "moments_sound_sources",
+      "moments_cues",
+    ])
+      expect(await count(table)).toBe(0);
   });
 });

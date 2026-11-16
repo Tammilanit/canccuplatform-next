@@ -21,3 +21,8 @@ done
 echo "-- a signed-out page sends the browser to sign in, and back to that page"
 curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' "$base/moments/history" | tee "$t/r.txt"
 grep -qxF "303 $base/admin/sign-in?next=%2Fmoments%2Fhistory" "$t/r.txt"
+echo "-- the default sound pack plays without a session; the internal paths of Screen are not routed"
+code=$(curl -sS -o "$t/s.ogg" -w '%{http_code} %{content_type}' "$base/api/moments/sounds/pack/chime-bright.ogg"); echo "$code"
+[ "$code" = "200 audio/ogg" ] && [ "$(head -c 4 "$t/s.ogg")" = OggS ]
+code=$(curl -sS -o /dev/null -w '%{http_code}' "$base/internal/screen/zones/main/sound?tenant_id=demo"); echo "$code"
+[ "$code" = 404 ]
