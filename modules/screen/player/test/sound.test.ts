@@ -22,6 +22,7 @@ const play = (id: string, o: Partial<SoundPlay> = {}): SoundPlay => ({
 class FakeAudio extends EventTarget {
   static made: FakeAudio[] = [];
   static refuse = false;
+  static hold: (() => void)[] | null = null;
   volume = 1;
   paused = true;
   constructor(readonly src: string) {
@@ -31,6 +32,8 @@ class FakeAudio extends EventTarget {
   play(): Promise<void> {
     if (FakeAudio.refuse) return Promise.reject(new Error("NotAllowedError"));
     this.paused = false;
+    const hold = FakeAudio.hold;
+    if (hold) return new Promise((resolve) => hold.push(resolve));
     return Promise.resolve();
   }
   pause(): void {
@@ -68,6 +71,7 @@ describe("the sound screen", () => {
     now = T;
     FakeAudio.made = [];
     FakeAudio.refuse = false;
+    FakeAudio.hold = null;
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -88,6 +92,24 @@ describe("the sound screen", () => {
     ]);
     expect(p.played()).toEqual(["a"]);
     // The same state again (a patch, a reconnect) plays nothing more.
+    p.take({ enabled: true, sounded_claims: [], play: play("a") });
+    await wait(1000);
+    expect(FakeAudio.made).toHaveLength(1);
+  });
+
+  it("never starts the same sound twice while its play() is still pending", async () => {
+    FakeAudio.hold = [];
+    const p = make();
+    p.take({ enabled: true, sounded_claims: [], play: play("a") });
+    await wait(400);
+    expect(FakeAudio.made).toHaveLength(1);
+    // A patch with the same play arrives before the browser has settled play().
+    p.take({ enabled: true, sounded_claims: [], play: play("a") });
+    await wait(1000);
+    expect(FakeAudio.made).toHaveLength(1);
+    for (const r of FakeAudio.hold) r();
+    await wait(0);
+    expect(p.played()).toEqual(["a"]);
     p.take({ enabled: true, sounded_claims: [], play: play("a") });
     await wait(1000);
     expect(FakeAudio.made).toHaveLength(1);

@@ -45,6 +45,8 @@ export interface SoundHost {
 export class SoundPlayer {
   private readonly done: string[] = [];
   private pending: { id: string; timer: ReturnType<typeof setTimeout> } | null = null;
+  /** The id whose `play()` has not settled yet: a state arriving in that gap must not start it again. */
+  private starting: string | null = null;
   private current: HTMLAudioElement | null = null;
 
   constructor(private readonly host: SoundHost) {}
@@ -58,7 +60,7 @@ export class SoundPlayer {
   take(sound: SoundState | undefined): void {
     const p = sound?.play ?? null;
     if (sound?.enabled !== true || p === null || p.url === null) return;
-    if (this.pending?.id === p.id) return;
+    if (this.pending?.id === p.id || this.starting === p.id) return;
     const seen = new Set([...this.done, ...(sound.sounded_claims ?? [])]);
     const wait = startIn(p, this.host.serverNow(), seen);
     if (wait === null) return;
@@ -69,6 +71,7 @@ export class SoundPlayer {
 
   private async start(p: SoundPlay): Promise<void> {
     this.pending = null;
+    this.starting = p.id;
     if (p.interrupts) this.current?.pause();
     const audio = this.host.audio(p.url as string);
     audio.volume = p.volume;
@@ -76,8 +79,10 @@ export class SoundPlayer {
       await audio.play();
     } catch {
       // Not unlocked, or the file failed: it stays unplayed, so a later state may catch it up.
+      this.starting = null;
       return;
     }
+    this.starting = null;
     this.current = audio;
     this.done.push(p.id);
     if (this.done.length > KEEP) this.done.splice(0, this.done.length - KEEP);
