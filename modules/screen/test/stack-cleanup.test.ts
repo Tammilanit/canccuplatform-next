@@ -21,7 +21,9 @@ describe("the stack tests' cleanup", () => {
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
     SCREEN.port = (server.address() as AddressInfo).port;
   });
-  afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())));
+  afterAll(() => {
+    server.close();
+  });
 
   it("revokes every device when one revoke fails mid-loop, then throws once", async () => {
     revoked.length = 0;

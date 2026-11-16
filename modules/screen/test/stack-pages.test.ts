@@ -61,16 +61,32 @@ describe("the screen shots' pages", () => {
   it("closes the context of a page whose setup throws", async () => {
     const { browser, contexts } = fakeBrowser({ pageFails: "the browser has crashed" });
     const failed: string[] = [];
-    const { open, attempt } = screenPages({ browser, cookieOn: () => ({}), fail: (m) => failed.push(m) });
+    const { open, attempt } = screenPages({
+      browser,
+      cookieOn: () => ({}),
+      fail: (m) => failed.push(m),
+    });
     await attempt("pulse", () => open([1920, 1080], "a"));
     expect(failed).toEqual(["pulse: the browser has crashed"]);
     expect(contexts.map((c) => c.closed)).toEqual([1]);
   });
 
+  it("closes a page once when the view and the run close it together", async () => {
+    const { browser, contexts } = fakeBrowser();
+    const { open } = screenPages({ browser, cookieOn: () => ({}), fail: () => undefined });
+    const { close } = await open([1920, 1080], "a");
+    await Promise.all([close(), close()]);
+    expect(contexts.map((c) => c.tries)).toEqual([1]);
+  });
+
   it("keeps a page whose close failed, and closes it after the view", async () => {
     const { browser, contexts } = fakeBrowser({ closeFails: 1 });
     const failed: string[] = [];
-    const { open, attempt } = screenPages({ browser, cookieOn: () => ({}), fail: (m) => failed.push(m) });
+    const { open, attempt } = screenPages({
+      browser,
+      cookieOn: () => ({}),
+      fail: (m) => failed.push(m),
+    });
     await attempt("pulse", async () => {
       const { close } = await open([1920, 1080], "a");
       await close();
@@ -119,7 +135,12 @@ function fakePage() {
   return { page, request };
 }
 
-const never = (ms = 50) => new Promise((resolve) => setTimeout(() => resolve("still open"), ms));
+const never = (ms = 50) =>
+  new Promise((resolve) =>
+    setTimeout(() => {
+      resolve("still open");
+    }, ms),
+  );
 
 describe("a page handed its states", () => {
   const change = (s: object) => ({ ...s, ticker: "handed" });

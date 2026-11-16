@@ -10,6 +10,7 @@
 // takeover, which keeps its fixed red there too. Dashboard is handed sample statistics (#416),
 // and shot once as the server draws it while they are missing.
 // The Director's strips (#447, director.mjs) are frames a few seconds apart.
+import { cleanUp } from "./cleanup.mjs";
 import { CLEAR_CHECKS, panelFilled, venueOnOneLine } from "./clear.mjs";
 import { expect } from "./client.mjs";
 import { boxesGivenAway, graphsScaled, statsApart, stripNamesCountdown } from "./dashboard.mjs";
@@ -35,7 +36,7 @@ import {
   stillOnline,
 } from "./handed.mjs";
 import { collectSamples, judgePage } from "./readability.mjs";
-import { screenPages } from "./screen-pages.mjs";
+import { handStates, screenPages } from "./screen-pages.mjs";
 import {
   THEMES,
   HD,
@@ -88,6 +89,7 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
     await shot(name, page);
   };
 
+  let threw = false;
   try {
     const main = await pair("Hall left", "main");
     const spare = await pair("Café TV", undefined);
@@ -274,20 +276,8 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
         await layout(page, size);
       }
       await holdStream(page);
-      let broken;
-      const unhanded = new Promise((_, reject) => (broken = reject));
-      // A poll in flight when the view closes its page fails too, after the race below is decided.
-      unhanded.catch(() => undefined);
-      await page.route("**/api/screen/device/state", async (route) => {
-        try {
-          const answer = await route.fetch();
-          await route.fulfill({ response: answer, json: change(await answer.json()) });
-        } catch (err) {
-          broken(new Error(`the state handed to the page: ${err?.message ?? err}`));
-          await route.abort().catch(() => undefined);
-        }
-      });
-      await Promise.race([shown(theme, view, size, page, close), unhanded]);
+      const { unhanded, close: closeView } = await handStates(page, close, change);
+      await Promise.race([shown(theme, view, size, page, closeView), unhanded]);
     }
 
     /** The handed page drawing `view`, checked, and its shots. */
@@ -376,7 +366,13 @@ export async function screenShots({ browser, demo, at, out, fail, ok, cookieOn, 
       await shot(nameOf("default", view, size), page);
       await close();
     }
+  } catch (err) {
+    threw = true;
+    throw err;
   } finally {
-    for (const device of devices) await demo.revoke(device.id);
+    await cleanUp(
+      devices.map((device) => () => demo.revoke(device.id)),
+      threw,
+    );
   }
 }
