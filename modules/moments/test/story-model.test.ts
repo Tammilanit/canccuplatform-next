@@ -5,9 +5,10 @@
  * from offsets and `every`, `clock every` in its window, skips, which rounds sound, and the
  * placeholder rules (D10, SD3).
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { checkStory } from "../src/story/check.js";
-import { EMPTY_CONDITIONS } from "../src/story/model.js";
+import { DOMAIN_TYPES, EMPTY_CONDITIONS, TRANSITIONS } from "../src/story/model.js";
 import type { Story, StoryStep } from "../src/story/model.js";
 import { PRESETS, presetOf } from "../src/story/presets.js";
 import {
@@ -295,5 +296,31 @@ describe("placeholders (D10, SD3)", () => {
     });
     expect(checkStory(take, DEFAULT_TIMING)).toBeNull();
     expect(say("{prize}")).toMatch(/asked only at a take/);
+  });
+});
+
+describe("contracts/moments/storyboard.schema.json", () => {
+  const schema = JSON.parse(
+    readFileSync(
+      new URL("../../../contracts/moments/storyboard.schema.json", import.meta.url),
+      "utf8",
+    ),
+  ) as {
+    required: string[];
+    $defs: {
+      Trigger: { oneOf: { properties: { kind: { const: string }; type?: { enum: string[] } } }[] };
+      Step: { required: string[]; properties: { transition: { enum: string[] } } };
+    };
+  };
+
+  it("names the fields every preset has, the domain types and the transitions the code knows", () => {
+    for (const p of PRESETS) {
+      expect(Object.keys(p).sort(), p.key).toEqual([...schema.required].sort());
+      for (const step of [...p.round.steps, ...(p.finale ?? [])])
+        expect(Object.keys(step).sort()).toEqual([...schema.$defs.Step.required].sort());
+    }
+    const domain = schema.$defs.Trigger.oneOf.find((t) => t.properties.kind.const === "domain");
+    expect(domain?.properties.type?.enum).toEqual(Object.keys(DOMAIN_TYPES));
+    expect(schema.$defs.Step.properties.transition.enum).toEqual([...TRANSITIONS]);
   });
 });

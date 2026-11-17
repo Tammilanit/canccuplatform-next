@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://canccu.invalid/contracts/moments/storyboard.schema.json",
+  "title": "Storyboard",
+  "description": "A story as data (contracts/moments.md, Storyboards; #114). The shape only: the rules this schema cannot say (placeholders every trigger fills, the round's length after its repeat and the busy venue factor, the gap at least the round's length, `last` only with a known last round) are the API's, which answers 400 naming the culprit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["key", "name", "preset", "enabled", "triggers", "conditions", "run_mode", "full_screen", "round", "rounds", "end", "finale", "sound"],
+  "properties": {
+    "key": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,39}$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 60 },
+    "preset": { "description": "The preset it was copied from, or null for the event's own.", "type": ["string", "null"] },
+    "enabled": { "type": "boolean" },
+    "triggers": { "description": "Any one starts it (SD4).", "type": "array", "minItems": 1, "maxItems": 8, "items": { "$ref": "#/$defs/Trigger" } },
+    "conditions": { "$ref": "#/$defs/Conditions" },
+    "run_mode": { "description": "What a fire does while the story runs (SD7).", "enum": ["per_source", "restart", "ignore"] },
+    "full_screen": { "description": "The chain `[\"full\"]` instead of `[\"hero\", \"rail\"]` (SL4).", "type": "boolean" },
+    "round": { "$ref": "#/$defs/Round" },
+    "rounds": { "$ref": "#/$defs/Rounds" },
+    "end": { "$ref": "#/$defs/Ends" },
+    "finale": {
+      "description": "One or two steps played once on every planned end (fix 3), each at least 8 s; null for none.",
+      "oneOf": [{ "type": "null" }, { "type": "array", "minItems": 1, "maxItems": 2, "items": { "$ref": "#/$defs/Step" } }]
+    },
+    "sound": { "description": "Which rounds sound (fix 6); `last` and `first_and_last` only when the last round is known.", "enum": ["first", "every", "last", "first_and_last"] }
+  },
+  "$defs": {
+    "HHMM": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+    "Trigger": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "kinds", "item_id", "anchor"],
+          "properties": {
+            "kind": { "const": "item" },
+            "kinds": { "type": "array", "items": { "type": "string" } },
+            "item_id": { "type": ["string", "null"] },
+            "anchor": { "description": "T is the item's start or end; it follows delays, a cancel withdraws it.", "enum": ["start", "end"] }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "type", "final_only"],
+          "properties": {
+            "kind": { "const": "domain" },
+            "type": {
+              "enum": [
+                "tournament.registration.opened",
+                "tournament.registration.closed",
+                "tournament.checkin.opened",
+                "tournament.checkin.closed",
+                "tournament.match.called",
+                "tournament.match.started",
+                "tournament.match.finished",
+                "pizza.order.opened",
+                "pizza.order.placed",
+                "pizza.order.arrived",
+                "pizza.order.closed",
+                "games.surge.started",
+                "screen.photo.added"
+              ]
+            },
+            "final_only": { "type": "boolean" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "mode", "at", "every_minutes", "from", "until"],
+          "properties": {
+            "kind": { "const": "clock" },
+            "mode": { "enum": ["once", "daily", "event_start", "event_end", "every"] },
+            "at": { "description": "`once`: a date-time; `daily`: HH:MM.", "type": ["string", "null"] },
+            "every_minutes": { "type": ["integer", "null"], "minimum": 15, "maximum": 240 },
+            "from": { "oneOf": [{ "$ref": "#/$defs/HHMM" }, { "type": "null" }] },
+            "until": { "oneOf": [{ "$ref": "#/$defs/HHMM" }, { "type": "null" }] }
+          }
+        },
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "take" } } },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "scene_key", "change"],
+          "properties": { "kind": { "const": "scene" }, "scene_key": { "type": "string" }, "change": { "enum": ["enters", "leaves"] } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "count", "at"],
+          "properties": {
+            "kind": { "const": "milestone" },
+            "count": { "enum": ["checkins", "online", "photos"] },
+            "at": { "description": "A value to cross, or null for a new peak.", "type": ["integer", "null"], "minimum": 1 }
+          }
+        }
+      ]
+    },
+    "Conditions": {
+      "description": "All must hold when a trigger fires.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["zones", "item_zone", "scenes", "not_scenes", "energy_min", "energy_max", "window", "days", "once", "cooldown_minutes", "quiet"],
+      "properties": {
+        "zones": { "type": "array", "items": { "type": "string" } },
+        "item_zone": { "type": "boolean" },
+        "scenes": { "type": "array", "items": { "type": "string" } },
+        "not_scenes": { "type": "array", "items": { "type": "string" } },
+        "energy_min": { "enum": ["none", "calm", "lively", "party", null] },
+        "energy_max": { "enum": ["none", "calm", "lively", "party", null] },
+        "window": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "object", "additionalProperties": false, "required": ["from", "until"], "properties": { "from": { "$ref": "#/$defs/HHMM" }, "until": { "$ref": "#/$defs/HHMM" } } }
+          ]
+        },
+        "days": { "type": "array", "items": { "type": "string", "format": "date" } },
+        "once": { "enum": ["event", "day", "source", null] },
+        "cooldown_minutes": { "type": "integer", "minimum": 0, "maximum": 1440 },
+        "quiet": { "description": "In a quiet scene: play calm and silent (E11), or skip.", "enum": ["calm", "skip"] }
+      }
+    },
+    "Step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["template", "content", "duration_seconds", "transition", "cue", "on_the_dot", "message"],
+      "properties": {
+        "template": { "description": "A Screen widget (`title_card`, `sting`, `countdown`, `qr`, …) or `video`.", "type": "string", "pattern": "^[a-z][a-z_]{1,31}$" },
+        "content": { "description": "The widget's view-model as written; strings may hold placeholders. A `video` step names `asset_id`; the API keeps its `kind`, `url`, `title` and `duration_ms`.", "type": "object" },
+        "duration_seconds": { "description": "1–60; a sting 1–5. A text step plays at least its readable floor, the message step at least the minimum card time.", "type": "integer", "minimum": 0, "maximum": 60 },
+        "transition": { "enum": ["cut", "fade", "rise", "slide", "flash"] },
+        "cue": { "description": "An event cue played at the step's start, or null.", "type": ["string", "null"], "maxLength": 64 },
+        "on_the_dot": { "type": "boolean" },
+        "message": { "type": "boolean" }
+      }
+    },
+    "Round": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps", "repeat", "hold_seconds"],
+      "properties": {
+        "steps": { "type": "array", "minItems": 1, "maxItems": 12, "items": { "$ref": "#/$defs/Step" } },
+        "repeat": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["from", "to", "times"],
+              "properties": { "from": { "type": "integer", "minimum": 0 }, "to": { "type": "integer", "minimum": 0 }, "times": { "type": "integer", "minimum": 2, "maximum": 5 } }
+            }
+          ]
+        },
+        "hold_seconds": { "description": "The long hold (SL2): the round lasts this long, its last step held.", "type": ["integer", "null"], "minimum": 10, "maximum": 180 }
+      }
+    },
+    "Rounds": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "offsets_minutes"],
+          "properties": { "mode": { "const": "offsets" }, "offsets_minutes": { "type": "array", "minItems": 1, "maxItems": 20, "items": { "type": "integer", "minimum": -240, "maximum": 240 } } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "every_minutes", "from_minutes"],
+          "properties": { "mode": { "const": "every" }, "every_minutes": { "type": "integer", "minimum": 2, "maximum": 120 }, "from_minutes": { "type": "integer", "minimum": -240, "maximum": 240 } }
+        }
+      ]
+    },
+    "Ends": {
+      "description": "Any one ends the loop; every loop has at least one.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rounds", "for_minutes", "until_clock", "until_event", "crew"],
+      "properties": {
+        "rounds": { "type": ["integer", "null"], "minimum": 1, "maximum": 20 },
+        "for_minutes": { "type": ["integer", "null"], "minimum": 1, "maximum": 360 },
+        "until_clock": { "oneOf": [{ "$ref": "#/$defs/HHMM" }, { "type": "null" }] },
+        "until_event": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "enum": ["item_starts", "item_ends", "next_item_starts"] } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "type"], "properties": { "kind": { "const": "domain" }, "type": { "type": "string" } } }
+          ]
+        },
+        "crew": { "type": "boolean" }
+      }
+    },
+    "Settings": {
+      "description": "The event's storyboard settings.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["factor", "min_card_seconds", "airtime_percent", "handover_seconds"],
+      "properties": {
+        "factor": { "description": "The busy venue factor (SL1).", "enum": [1, 1.5, 2] },
+        "min_card_seconds": { "type": "integer", "minimum": 6, "maximum": 60 },
+        "airtime_percent": { "description": "Storyboards hold a zone at most this share of any 10 minutes (SO1).", "type": "integer", "minimum": 20, "maximum": 80 },
+        "handover_seconds": { "description": "A phase waits at most this long for a story's round (SD9).", "type": "integer", "minimum": 0, "maximum": 120 }
+      }
+    }
+  }
+}

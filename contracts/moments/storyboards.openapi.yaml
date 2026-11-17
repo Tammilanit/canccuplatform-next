@@ -1,0 +1,175 @@
+# Part of moments.openapi.yaml: the storyboards paths (#114), path items only, referenced from
+# its `paths` and linted through it (contracts/README.md, Shared components).
+/api/moments/storyboards:
+  get:
+    tags: [storyboards]
+    operationId: listStoryboards
+    summary: The event's stories, settings, the presets and the live and recent runs
+    description: |
+      Right `moments.read`. The five presets are copied on first use (SD8, O7). Each story adds `free_variables`
+      (the ones a take asks for) and `rule_off` (the built-in rule it turns off while on, SD6, or null).
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/StoryboardsAnswer"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+  put:
+    tags: [storyboards]
+    operationId: saveStoryboards
+    summary: Replace the event's stories and settings at `revision`
+    description: |
+      Right `moments.settings.write`. Validated whole (storyboard.schema.json and the rules it cannot say): 400 names
+      the culprit, an unknown placeholder or one not every trigger fills without a fallback among them (D10, SD3).
+      A `video` step's asset must be a Screen `video` or `youtube` asset of the event whose length is known; a
+      `youtube` one whose probe (`health`) is `error` (a private or removed video) is refused with that reason.
+      The API keeps the asset's `kind`, `url`, `title` and `duration_ms` in the step's content, and sends
+      `moments.prefetch.changed` with the uploaded files of the stories that are on. A stale `revision` is 409
+      `version_conflict`. Audited.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [stories, revision]
+            properties:
+              stories:
+                type: array
+                maxItems: 40
+                items:
+                  $ref: "storyboard.schema.json"
+              settings:
+                $ref: "storyboard.schema.json#/$defs/Settings"
+              revision:
+                type: integer
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/StoryboardsAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/storyboards/reset:
+  post:
+    tags: [storyboards]
+    operationId: resetStoryboards
+    summary: Reset to default, one preset (`key`) or every preset
+    description: Right `moments.settings.write`. This platform version's preset replaces the event's copy; the event's own stories stay. Audited.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [revision]
+            properties:
+              key:
+                type: [string, "null"]
+              revision:
+                type: integer
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/StoryboardsAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/storyboards/{story_key}/take:
+  post:
+    tags: [storyboards]
+    operationId: takeStoryboard
+    summary: Fire a story by hand, or test-fire one round on one zone
+    description: |
+      Right `moments.take`. A crew action (idempotency key). The story needs a `take` trigger and to be on; a
+      story with an `item` trigger asks for `item_id` and counts its rounds from that item's time, a take that
+      comes after a round's offset playing the round due now (SU3). `variables` fill its free placeholders.
+      `test` plays its first round now on one zone, silent unless `sound`, marked as a test in the history (SU4),
+      whatever its triggers and conditions. 201 with the run; 409 `not_fired` with the reason (a condition, the run
+      mode); 409 `not_running` for a story that is off. Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/StoryKey"
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              item_id:
+                type: string
+              variables:
+                type: object
+                additionalProperties:
+                  type: string
+                  maxLength: 120
+              test:
+                type: object
+                required: [zone]
+                properties:
+                  zone:
+                    type: string
+                  sound:
+                    type: boolean
+    responses:
+      "201":
+        $ref: "../moments.openapi.yaml#/components/responses/StoryboardRunAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/storyboards/runs/{run_id}/stop:
+  post:
+    tags: [storyboards]
+    operationId: stopStoryboardRun
+    summary: Stop loop
+    description: Right `moments.take`. A crew action. The live round ends now (`cleared`) and no finale plays (fix 3). 409 `not_running` once the loop ended. Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/RunId"
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/StoryboardRunAnswer"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/storyboards/runs/{run_id}/finale:
+  post:
+    tags: [storyboards]
+    operationId: skipStoryboardToFinale
+    summary: Skip to finale
+    description: Right `moments.take`. A crew action. The live round ends and the finale plays at once; a story without one ends. 409 `not_running` once the loop ended. Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/RunId"
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/StoryboardRunAnswer"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
