@@ -131,7 +131,14 @@ export class Engine {
     const running = key === null ? null : await lockRunningByKey(c, key);
     if (running !== null) {
       const same = running.template === r.template && isDeepStrictEqual(running.content, r.content);
-      running.expires_at = ttl === null ? null : new Date(now.getTime() + ttl * 1000);
+      // A re-post extends and never shortens (contracts/moments.md, E4): the crew's Extend holds,
+      // and a request without a TTL keeps the moment's own.
+      const renewTtl = r.ttl_seconds === undefined ? running.ttl_seconds : r.ttl_seconds;
+      if (renewTtl === null || running.expires_at === null) running.expires_at = null;
+      else {
+        const end = Math.max(running.expires_at.getTime(), now.getTime() + renewTtl * 1000);
+        running.expires_at = new Date(end);
+      }
       if (!same) {
         running.template = r.template;
         running.content = r.content;

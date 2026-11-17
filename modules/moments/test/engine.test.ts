@@ -106,6 +106,23 @@ run("the arbiter", () => {
     expect(await history()).toHaveLength(before);
   });
 
+  // #611: a renewal never brings the end nearer, so the crew's Extend survives it.
+  it("keeps a crew's Extend through a renewal, and a moment's own TTL when the request has none", async () => {
+    const r = await start(hotGame());
+    if (r.status === "refused") throw new Error("refused");
+    await w.tx("demo", (c) =>
+      w.engine.extend(c, r.moment, 3600, { user_id: "u_crew", name: "Demo Crew" }, w.at(10)),
+    );
+    await start(hotGame(), 60);
+    const expiresAt = async (id: string) =>
+      (await w.tx("demo", (c) => lockMoment(c, id)))?.expires_at?.toISOString();
+    expect(await expiresAt(r.moment.id)).toBe(w.at(3720).toISOString());
+    const long = await start({ ...hotGame(), dedupe_key: "hot_game:g_2", ttl_seconds: 3600 }, 0);
+    if (long.status === "refused") throw new Error("refused");
+    await start({ ...hotGame(), dedupe_key: "hot_game:g_2" }, 100);
+    expect(await expiresAt(long.moment.id)).toBe(w.at(3700).toISOString());
+  });
+
   it("updates the content in place when the same rule posts something new", async () => {
     await start(hotGame(14));
     await start(hotGame(20), 10);
