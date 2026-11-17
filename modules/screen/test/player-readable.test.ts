@@ -18,7 +18,11 @@ describe("the screen's stylesheet", () => {
     const sizes = [...looks.matchAll(/font-size:\s*([^;]+);/g)].map((m) => m[1]?.trim() ?? "");
     expect(sizes.length).toBeGreaterThan(5);
     for (const size of sizes) {
-      const value = /^calc\(([\d.]+) \* var\(--canccu-u\)\)$/.exec(size);
+      // An announcement card may carry `--canccu-fit` (fit.ts, E17): the player steps its type down
+      // while a long text overflows, so the base size, not the stepped one, is held to the floor.
+      const value = /^calc\(([\d.]+) \* var\(--canccu-u\)(?: \* var\(--canccu-fit, 1\))?\)$/.exec(
+        size,
+      );
       expect(value, size).not.toBeNull();
       expect(Number(value?.[1]), size).toBeGreaterThanOrEqual(2.6);
     }
