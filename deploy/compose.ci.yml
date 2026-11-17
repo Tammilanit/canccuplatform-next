@@ -102,9 +102,12 @@ services:
       - /config
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/ready"]
-      interval: 2s
+      # deploy/compose.yml's x-health-timing (#612); an anchor does not reach across files.
+      start_period: 60s
+      start_interval: 2s
+      interval: 30s
       timeout: 3s
-      retries: 30
+      retries: 3
 
   admin:
     environment:

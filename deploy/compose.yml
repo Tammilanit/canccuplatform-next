@@ -14,6 +14,19 @@ x-kit-env: &kit-env
   # CANCCU_MIGRATE_DATABASE_URL, the migration role.
   CANCCU_DATABASE_URL: postgres://canccu_app:${CANCCU_DB_APP_PASSWORD:-canccu-local-only-app}@postgres:5432/canccu
 
+# Every health check (#612): every 2 s only while its container starts, then every 30 s, so an idle
+# stack costs almost no CPU (22 containers probed every 2 s kept dockerd and containerd at about
+# 18 % of a core). Failures inside the start period do not count, and Docker slows to `interval`
+# as soon as a container is healthy, so `up --wait` is as fast as before; 60 s is the old budget
+# (30 retries × 2 s). After start, 3 failures 30 s apart mark a hung container unhealthy within
+# about 90 s. scripts/demo-stack-test holds every running container to this.
+x-health-timing: &health-timing
+  start_period: 60s
+  start_interval: 2s
+  interval: 30s
+  timeout: 3s
+  retries: 3
+
 x-after-db: &after-db
   postgres:
     condition: service_healthy
@@ -38,10 +51,8 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
+      <<: *health-timing
       test: ["CMD-SHELL", "pg_isready -U canccu -d canccu"]
-      interval: 2s
-      timeout: 3s
-      retries: 30
     restart: unless-stopped
 
   # Creates the login and migration roles (deploy/postgres/roles.sql) and sets their passwords,
@@ -107,10 +118,8 @@ services:
     volumes:
       - valkey-data:/data
     healthcheck:
+      <<: *health-timing
       test: ["CMD", "valkey-cli", "ping"]
-      interval: 2s
-      timeout: 3s
-      retries: 30
     restart: unless-stopped
 
   hello:
@@ -132,14 +141,12 @@ services:
     depends_on:
       <<: [*after-db, *after-files]
     healthcheck:
+      <<: *health-timing
       test:
         - CMD
         - node
         - -e
         - "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
-      interval: 2s
-      timeout: 3s
-      retries: 30
     restart: unless-stopped
 
   screen:
@@ -166,14 +173,12 @@ services:
       screen-render:
         condition: service_started
     healthcheck:
+      <<: *health-timing
       test:
         - CMD
         - node
         - -e
         - "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
-      interval: 2s
-      timeout: 3s
-      retries: 30
     restart: unless-stopped
 
   theming:
@@ -194,14 +199,12 @@ services:
     depends_on:
       <<: [*after-db, *after-files]
     healthcheck:
+      <<: *health-timing
       test:
         - CMD
         - node
         - -e
         - "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
-      interval: 2s
-      timeout: 3s
-      retries: 30
     restart: unless-stopped
 
   moments:
@@ -223,14 +226,12 @@ services:
     depends_on:
       <<: *after-db
     healthcheck:
+      <<: *health-timing
       test:
         - CMD
         - node
         - -e
         - "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
-      interval: 2s
-      timeout: 3s
-      retries: 30
     restart: unless-stopped
 
   admin:
@@ -263,14 +264,12 @@ services:
       tenants:
         condition: service_healthy
     healthcheck:
+      <<: *health-timing
       test:
         - CMD
         - python
         - -c
         - "import sys,urllib.request as u; sys.exit(0 if u.urlopen('http://127.0.0.1:8080/health').status==200 else 1)"
-      interval: 2s
-      timeout: 3s
-      retries: 30
     restart: unless-stopped
 
   tenants:
@@ -297,14 +296,12 @@ services:
     depends_on:
       <<: [*after-db, *after-files]
     healthcheck:
+      <<: *health-timing
       test:
         - CMD
         - python
         - -c
         - "import sys,urllib.request as u; sys.exit(0 if u.urlopen('http://127.0.0.1:8080/health').status==200 else 1)"
-      interval: 2s
-      timeout: 3s
-      retries: 30
     restart: unless-stopped
 
   # The render job (modules/screen-render): parses untrusted PPTX and PDF decks, so it gets nothing
@@ -326,10 +323,9 @@ services:
     cpus: 2
     pids_limit: 256
     healthcheck:
+      <<: *health-timing
       test: ["CMD", "python", "-m", "canccu_screen_render.main", "--ping"]
-      interval: 2s
       timeout: 5s
-      retries: 30
     restart: unless-stopped
 
   agenda:
@@ -352,14 +348,12 @@ services:
       tenants:
         condition: service_healthy
     healthcheck:
+      <<: *health-timing
       test:
         - CMD
         - python
         - -c
         - "import sys,urllib.request as u; sys.exit(0 if u.urlopen('http://127.0.0.1:8080/health').status==200 else 1)"
-      interval: 2s
-      timeout: 3s
-      retries: 30
     restart: unless-stopped
 
   notify:
@@ -390,14 +384,12 @@ services:
       tenants:
         condition: service_healthy
     healthcheck:
+      <<: *health-timing
       test:
         - CMD
         - python
         - -c
         - "import sys,urllib.request as u; sys.exit(0 if u.urlopen('http://127.0.0.1:8080/health').status==200 else 1)"
-      interval: 2s
-      timeout: 3s
-      retries: 30
     restart: unless-stopped
 
   caddy:

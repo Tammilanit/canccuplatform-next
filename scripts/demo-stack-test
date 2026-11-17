@@ -69,6 +69,7 @@ TESTS=(
   "a reminder, an announced delay and an announcement each reach a subscribed phone's deliveries"
   "Moments brings a crew spotlight to a paired screen's stream within a second (p95 of 20)"
   "the screens of a zone start Moments' sound within 200 ms of each other; only its sound screen plays"
+  "every health check probes every 2 s only while its container starts, then every 30 s"
 )
 # Whose test each is, in TESTS' order: `platform` always runs; a test of several modules runs
 # for any of them.
@@ -76,7 +77,7 @@ TAGS=(
   platform platform platform platform admin platform admin admin admin admin admin admin admin
   platform platform platform notify notify agenda screen "agenda notify" "agenda notify" screen
   platform screen soak admin platform platform "agenda notify" "agenda notify"
-  moments moments
+  moments moments platform
 )
 # TAGS pairs with TESTS by position: a test added without its tag would run every later one under
 # its neighbour's module.
@@ -359,6 +360,28 @@ if want moments; then
   check "${TESTS[32]}" sound_sync
   sed -n 's/^sound sync: /     /p' "$TMP/body"
 fi
+
+# An idle stack's health checks cost almost no CPU (#612): Docker probes every start_interval only
+# while a container starts, then every interval, and marks a hung one unhealthy within about 90 s.
+# This reads what Docker applied to every running container, so an image's own HEALTHCHECK or a
+# check the CI overlay adds is held to the same rule. $TMP/body names each container off the rule.
+# shellcheck disable=SC2329
+health_timing() {
+  code=
+  local ids
+  ids=$("${COMPOSE[@]}" ps -q) && [ -n "$ids" ] || return 1
+  # shellcheck disable=SC2086  # one container id per word
+  docker inspect $ids | jq -r '
+    [.[] | select((.Config.Healthcheck.Test // ["NONE"])[0] != "NONE")] as $checked
+    | if $checked == [] then "no running container has a health check" else empty end,
+      ($checked[] | (.Config.Healthcheck | {i: (.Interval // 0), s: (.StartInterval // 0),
+          p: (.StartPeriod // 0), t: (.Timeout // 0), r: (.Retries // 0)}) as $h
+        | select($h.s != 2e9 or $h.p < 60e9 or $h.i != 30e9 or $h.t > 5e9 or $h.r < 1
+            or $h.r * $h.i > 90e9)
+        | "\(.Name): every \($h.s / 1e9) s for \($h.p / 1e9) s, then every \($h.i / 1e9) s, timeout \($h.t / 1e9) s, \($h.r) retries")
+  ' > "$TMP/body" && [ ! -s "$TMP/body" ]
+}
+check "${TESTS[33]}" health_timing
 
 if [ "$fail" = 0 ]; then echo "demo-stack-test: all $n tests passed"; else echo "demo-stack-test: tests failed" >&2; fi
 exit "$fail"
