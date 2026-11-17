@@ -1,10 +1,10 @@
 # Step 4 brief: storyboards (research pack)
 
-A research pack for the product owner's brainstorming session on storyboards, issue #596, before #114 is built. It follows the [outline of a research pack](../README.md#outline-of-a-research-pack) for one feature of [step 4](../step-4-moments.md): the step's [Plan](../step-4-moments.md#plan) stands, and this pack only reopens what the product owner asked to rethink on 2026-11-17. After it merges, the lead runs the session over as many rounds as it takes, writes the final plan into this file (`## Plan`) and rewrites #114 from it before it gets `ready`.
+A research pack for the product owner's brainstorming session on storyboards, issue #596, before #114 is built. It follows the [outline of a research pack](../README.md#outline-of-a-research-pack) for one feature of [step 4](../step-4-moments.md): the step's [Plan](../step-4-moments.md#plan) stands, and this pack only reopens what the product owner asked to rethink on 2026-11-17. After it merges, the lead runs the session over as many rounds as it takes, writes the final plan into this file (`## Plan`) and rewrites #114 from it before it gets `ready`. **The final plan is the [Plan](#plan) below the goal;** it overrides the research where they differ.
 
 **In this pack**
 - This file: the goal and the input, what was read, how others solve it, three directions and the recommended one, the trigger, timing and sound models, the preset catalogue, the contract impact, port / drop / invent, the question bank, and the proposed changes to #114.
-- Mockups 17–21 in this folder, drawn new with the demo event only. Mockups [10](10-storyboard-builder.svg) and [11](11-storyboards-on-screen.svg) of the step pack stay as they are; 18 and 20 are drawn to replace them if the session takes this pack's recommendation.
+- Mockups 17–21 in this folder, and mockup [22](22-storyboard-premiere.svg) added by the Plan (Premiere), drawn new with the demo event only. Mockups [10](10-storyboard-builder.svg) and [11](11-storyboards-on-screen.svg) of the step pack stay as they are; 18 and 20 are drawn to replace them if the session takes this pack's recommendation.
 
 | Mockup | Shows |
 |---|---|
@@ -13,6 +13,7 @@ A research pack for the product owner's brainstorming session on storyboards, is
 | [19](19-storyboard-loop-timeline.svg) | One loop's timeline on the main hall: rounds, inner repeats, the rotation between rounds, sounds against the budget, an announcement, an emergency, the end when the item starts |
 | [20](20-storyboard-presets-on-screen.svg) | Six presets on screen, drawn at phone-readable scale |
 | [21](21-storyboard-preset-picker.svg) | The preset picker: every built-in, on or off per event, grouped as "every event" and "some venues" |
+| [22](22-storyboard-premiere.svg) | Added by the Plan: the Premiere preset on screen (countdown, the video full screen, the after-card) and its builder row |
 
 ## Goal
 Storyboards are the sequences for the peaks of the event (#114): a doors-open welcome, "starting soon" before the final, the champion, midnight. They are data an organiser edits without code, and Moments plays them through the same arbiter, sound gates and history as every other moment.
@@ -26,6 +27,215 @@ Storyboards are the sequences for the peaks of the event (#114): a doors-open we
 - **Sound in the story.** Every step can carry a cue (sound and recorded voice line), under the sound model's gates (D16).
 
 Out of scope, as the issue says: code, text to speech (#578), the director desk, a rehearsal mode with a movable clock (U10 B).
+
+## Plan
+The product owner answered the bank in four rounds on 2026-11-17. This plan turns the answers into the storyboards design and the issue set. The product owner accepts it by accepting this PR. It bounds the storyboards build: each issue's Room to design is measured against it and against the step's [Plan](../step-4-moments.md#plan), not against the pack's recommendations below. The research below stays as it was, apart from short fixes and pointers where the answers overrode it.
+
+### What the answers changed
+Every question took its recommendation; these answers changed it or added to it:
+- **SL2 · both, A by default:** rounds (T−15, T−5, T−1) are the default and the presets' style. A story may instead use a **long hold**: one round held 2–3 minutes, with a hold limit of 180 s in place of the 120 s round limit. The gap rule and the airtime cap still apply.
+- **PV1 · new, A:** a **`video` step** and a new preset, **Premiere** (countdown → video → after-card). See [The video step](#the-video-step-pv1).
+- **SL4 · A, with a note:** the Premiere video plays full screen, and the organiser may set any story full screen. Among the other presets only Midnight is full screen.
+- **SD2 · A, plus clock `every`:** the six trigger kinds, and the `clock` kind gains `every` n minutes within a window (round 2).
+- **SP2 · A, plus two:** the pack's 22 presets, plus Premiere and Champion replay: 24 in all.
+
+And ten fixes to the pack's model, from the review of the pack ([#598](https://github.com/Tammilanit/canccuplatform-next/issues/598)), accepted as proposed in round 2:
+1. An **"on the dot"** marker on a step: the round starts early, so the marked step lands exactly on the trigger time (`clock` and `item`). Midnight uses it.
+2. **Clock `every`** n minutes, 15–240, within a window. Sponsor thanks and Venue info use it.
+3. The **finale plays on every planned end** (a count, a time, a clock time, an event), never on a crew stop or an item's cancel.
+4. **Champion replay** is a preset of its own (same trigger as Champion, rounds at +10 and +30 min, silent). The model keeps one round shape.
+5. **Offsets are relative to the trigger time** (the item's start): there is no second anchor on the trigger.
+6. **Sound options:** first round, every round, last round, or first and last round.
+7. **A story's flood source is its run:** at most one sound per 10 s per run, worded in the contract's flood guard.
+8. **The 6 h cap** holds only for `until_event` loops; clock and window loops end at their window.
+9. **The 8 s floor holds everywhere,** finales included (Pizza order open's finale is 8 s). When the busy venue factor pushes a round over its limit, its inner repeat is dropped.
+10. **`until_event: next_item_starts`** (the next public item on the zone), with `{next.title}` and `{next.starts_at}`.
+
+The pack's review also found that preset 21's "until the order is closed" can never come after the order arrived, and that Notify already pushes some pizza and match happenings to the people they concern; both are fixed below ([the catalogue](#the-preset-catalogue-final), [ownership](#ownership-wd1-wd2-wd4)).
+
+### Every answer
+| Theme | Answers |
+|---|---|
+| Who uses it | SU1 A · SU2 A · SU3 A · SU4 A · SU5 A |
+| Look and feel | SL1 A · SL2 both (A by default) · SL3 A · SL4 A (+ the note above) · SL5 A · SL6 A |
+| Data | SD1 A · SD2 A (+ clock `every`) · SD3 A · SD4 A · SD5 A · SD6 A · SD7 A · SD8 A · SD9 A |
+| Edge cases | SE1 A · SE2 A · SE3 A · SE4 A · SE5 A as amended by fix 8 and the video step · SE6 A · SE7 A |
+| Operations | SO1 A · SO2 A (+ fix 6, 7) · SO3 A · SO4 A (+ the new tests below) |
+| Widgets | WD1 A · WD2 A · WD3 A · WD4 A |
+| The package | SP1 A · SP2 A (24 presets) |
+| Added in the session | PV1 A (the video step and Premiere) |
+
+Rounds 1 to 3 were the product owner's answers; in round 4 the lead took the pack's recommendation for the rest and listed them to the product owner.
+
+### Direction
+**B, rounds and repeats** (two levels, no more), as recommended. A story is a round of steps with at most one inner repeat, played by a schedule of rounds that ends by a count, a time, a clock time, an event or a crew stop, with an optional finale. A round compiles to one Override with `steps` (SD1; a round with a video step may be placed as back-to-back Overrides, [below](#the-video-step-pv1)); Moments runs the rounds, the waits, the ends and the finale on its tick.
+
+### Triggers as decided
+A story has **one or more triggers** (any one starts it, SD4), **conditions** (all must hold when it fires) and a **run mode**.
+
+**Six kinds** (SD2), with their placeholders as the pack's [table](#trigger-kinds) lists them, changed as follows:
+- **`item`:** `match` (`kinds` or one `item_id`) and `anchor`, `start` or `end`. The trigger time T is that moment of the item; it follows the item's delays, and a cancel withdraws it (E15). The rounds' offsets say how long before or after T each round plays (fix 5). The pack's anchors `before` and `after_end` are dropped: an offset says the same.
+- **`domain`:** as the pack. T is when the event arrives.
+- **`clock`:** `once` (a date-time), `daily` (HH:MM), relative to the event (`event_start`, `event_end`), and new **`every`** n minutes, 15–240, within a window `from`–`until` (HH:MM) on the event's days (fix 2). Each `every` fire is a run of its own, aligned to the window's start (10:00, 11:00, …). T is the clock time.
+- **`take`, `scene`, `milestone`:** as the pack. T is the fire. A take of a story with an `item` trigger asks for the item (SU3); T is then that item's time, and rounds whose offsets have passed are skipped.
+
+**"On the dot"** (fix 1): one step of a round may be marked on the dot. For `item` and `clock` triggers, whose time is known ahead, the round then starts early by the length of the steps before the marked step, so the marked step starts exactly at its round's time (T plus the round's offset). Midnight's sting "Midnight!" starts at 00:00:00; its 10 s countdown plays from 23:59:50. For the other kinds the marker has no effect, and the builder says so.
+
+**`until_event`** ends: the item starts, the item ends, a named domain event (the order closes, the match starts, check-in closes), and new **`next_item_starts`**: the next public item on the trigger's zone starts (fix 10). It fills **`{next.title}`** and **`{next.starts_at}`**. A story whose trigger finds no next item on the zone does not fire, written "not fired: no next item on Stage".
+
+**Conditions** (zones, scene, energy, window, days, once, cooldown, quiet) and **placeholders across triggers** (only those every trigger fills, else a fallback text, SD3) are as the pack says.
+
+**Run mode** (SD7): `per_source` (default), `restart`, `ignore`.
+
+### Phase hand-over
+SD9 A as the pack's [phase changes](#phase-changes-the-story-first-then-the-phase) say, with `item` triggers now anchored at `start` plus negative offsets: the story's round plays first, and the phase's display or scene applies when the round ends, at most 30 s later (0–120 s). A quiet-hours story plays its finale at the start of quiet calm and silent; preset 7's "Good night" holds the hand-over.
+
+### Timing
+SL1 A:
+- **A duration per step,** 1–60 s. Stings (1–5 s) are transitions and never the only step of a round.
+- **The readable floor** for every step that shows text, stings apart: 3 s plus 1 s per 3 words, never under 8 s, **finales included** (fix 9).
+- **The minimum card time** for the round's message step: 15 s by default, 6–60 s.
+- **The busy venue factor** (×1, ×1.5, ×2) stretches text steps, never stings. When the stretch pushes a round over its limit, the round drops its inner repeat (plays one pass); if it is still over, the stretch stops at the limit, and no step goes under its ×1 length.
+- **Limits:** a round is at most 120 s after its repeat is unrolled and at most 12 steps (SO3). A **long hold** story (SL2) has one round with its last step held, at most 180 s. A video step's own length is outside these limits ([below](#the-video-step-pv1)).
+
+**Repeats and loops:** one inner repeat per round, 2–5 times. The rounds are **offsets** from T (−240 to +240 min) or **every** n minutes (2–120) from T or from a first offset; between rounds the region goes back to its rotation (SL5). The gap between rounds is at least the round's length.
+
+### Ends, the finale and the cap
+- **Ends** (any one, and at least one): `rounds` (1–20), `for` (a time, up to 6 h), `until_clock`, `until_event`, `crew` (Stop loop).
+- **The finale** (fix 3) plays once on **every planned end**: at the end event, at the end clock time, after the time of `for`, or after the last round of `rounds`. It does not play on a crew Stop loop or on the item's cancel; Skip to finale plays it at once. A finale is one or two steps, each at least 8 s.
+- **The 6 h cap** (SE5, fix 8) holds only for `until_event` loops: such a run ends at the latest 6 h after it started, "ended: time limit", without a finale; the time a video step plays, with its pauses, does not count. A `clock every` story and a loop with `until_clock` end at their window; a `rounds` loop ends by its count.
+
+### Sound
+SO2 A with fixes 6 and 7:
+- A cue per step, optional, decided per zone when the step starts, with `play_at` the step's planned start; a hidden or waiting round makes no sound. The Override step's `sound` stays null.
+- **Which rounds sound:** `first` (the default), `every`, `last`, or `first_and_last`. Inside a round, only the first pass of an inner repeat sounds. The finale's cue plays when the finale plays.
+- **The story cap:** at most 2 sounds per round and 6 per run per zone.
+- **The flood source of a story sound is its run,** whatever the cue: at most one sound per 10 s per run. Every story sound also counts against the minute's flood guard and the hourly budget per zone.
+- A countdown is one sound of its whole length.
+
+### Airtime
+SO1 A: per story, the gap rule (at most half of its loop); for all stories, at most 40 % of any 10 minutes per zone (event setting, 20–80 %); a lower moment of the hero's chain that has waited 60 s gets its place before the story's next round. On air and the builder show each story's share.
+
+### Ownership (WD1, WD2, WD4)
+- **One happening, one owner** (WD1 A): the arbiter holds one live moment per happening key (`type` + source id) and refuses a second, with a history line. The module widget shows the steady state and highlights; the moment is the only voice on screen and in sound. A story's runs between rounds hold no key, so Champion's round and Champion replay's rounds 10 and 30 minutes later do not collide.
+- **A rule and a preset** (WD2 A, SD6 A): turning a preset on turns its overlapping rule off for that event; the `pizza` rule keeps its placed trigger and gives its arrived trigger to preset 21.
+- **Push and the bot** (WD4 A): a story has the screen and the sound only; a push or a Discord post for a happening comes from an announcement. **Notify's personal pushes stay:** the `food` and `tournament` topics' pushes to the people concerned (each person with a pizza in an arrived order, each player of a called match, [notify.md](../../../contracts/notify.md#topics-and-sources)) are personal, not the happening's public voice, and the presets do not change them.
+
+### Edge cases
+SE1–SE7 A, as the pack's [bank](#edge-cases-and-failure) says: a round due on a held region waits its patience, then is skipped (rounds never stack); an emergency skips the rounds due and the live round comes back if its time remains; a delay moves the offsets, a cancel ends the loop silently; a restart starts the round due now; a quiet scene plays calm and silent or skips; two stories go by the later start. SE5 is the 6 h cap above.
+
+### The video step (PV1)
+- **A `video` step** plays a Screen `video` or `youtube` asset ([screen.md, Assets](../../../contracts/screen.md#content-and-scheduling)) **full screen**, to its own end, with **its own audio**. Its length is the video's, any length (a premiere is often a long film).
+- **Sound:** the video's audio plays on the zone's sound screen only, through the gates at the step's start as one story sound. The budget and the flood guard count it but never refuse it, since a premiere is planned; the zone's energy level (calm or none) and a muted zone play it muted. While it plays, every other non-urgent sound on its zones is held, logged with the reason; an urgent sound still interrupts it.
+- **Preloaded:** while a story with a video step is on for the event, an uploaded video is in the `prefetch` of the story's zones, so the file is on the players before any run. A screen without the file shows the round's other steps and skips the video.
+- **YouTube:** a `youtube` asset plays through the embed screens already allow (`youtube-nocookie.com`). It must be **public or unlisted**: YouTube does not embed a private video, so the asset's probe (`health`) flags one as `error` and the builder refuses it with that reason. It is not preloaded and needs the venue's internet: a screen that cannot play it (offline, `youtube-playback-error`) skips the video, shows the round's other steps and logs why. The builder suggests uploading the file for the premiere when the venue's internet is unsure.
+- **In sync:** every screen of the story's zones starts the video at the step's start on the server clock, within the 200 ms of the sound sync (#113) for an uploaded file; a YouTube video is started on each screen at that moment and seeks to the server clock's position once it plays (best effort).
+- **Placement:** the video holds the full-screen region for its length plus any pause (below), ranked as a storyboard; the round's other steps stay in the story's region. The build chooses how (a step that takes the full-screen region, or the round placed as back-to-back Overrides of the run); either way the screens play it from the server clock (an uploaded file offline too; a `youtube` asset needs the internet, above).
+- **Limits:** a video has no length limit; the round's other steps stay within 120 s. A video round counts in the airtime cap, but the cap never defers it: a premiere is planned. The time a video plays, with its pauses, does not count toward the 6 h cap (SE5, Ends).
+- **Interrupted:** an emergency or an urgent moment pauses the video; when it ends, the video **resumes where it stopped**, not where it would be now (a premiere is watched, not sampled). Moments extends the video's hold (or its Override's `expires_at`) by the pause and rebases the step's server-clock start by the same amount, so every screen resumes at the same position; the story's later rounds move by the pause.
+- **Quiet:** a video step is skipped in a quiet scene; the round plays its other steps calm and silent, or the story is skipped with `quiet: skip`.
+
+**The Premiere preset:** countdown → video → after-card ([mockup 22](22-storyboard-premiere.svg)). Its trigger is an **`item`** of a kind the organiser adds (agenda kinds are per event, [agenda.md, Kinds](../../../contracts/agenda.md#kinds); for example `premiere`), a **take**, or **`clock once`**. The video step is on the dot, so it starts at the item's time. An example of its use: an event shows the previous event's video at the start of each new event.
+
+### The preset catalogue (final)
+Twenty-four built-ins: the pack's 22, Premiere and Champion replay (SP2), platform data an event copies on first use, on or off per event (SD8). This table replaces the pack's [catalogue](#the-preset-catalogue); rows marked † changed. Durations at ×1; "msg" marks the message step; ⟲2 an inner repeat twice; ● on the dot. T is the trigger time.
+
+| # | Preset | Trigger | Round | Rounds, end | Sound | Default |
+|---|---|---|---|---|---|---|
+| 1 | Doors open | item `doors`, start | sting 3 s · msg "Welcome to {event.name}" 20 s · venue info 20 s · check-in QR 20 s | every 10 min from T, 3 rounds | `story.doors` first | every event; on |
+| 2† | Starting soon | item `tournament`, `ceremony`, start; take | ⟲2 [sting 3 s · msg countdown card 20 s] | offsets −15, −5, −1; until the item starts; finale "It's on!" 8 s | `tournament.pre` first and last; finale `tournament.start` | every event; on |
+| 3 | Match called | `tournament.match.called` | msg match card 30 s | every 2 min, 3 rounds; until the match starts | `tournament.start` first | every event; on |
+| 4† | Champion | `tournament.match.finished`, `session.is_final`; take | sting 4 s · msg winner card 30 s · bracket 20 s · photo-wall QR 15 s | 1 round | `tournament.post` on the winner card | every event; on |
+| 5† | Midnight | clock daily 00:00 | countdown 10 s · ● sting "Midnight!" 4 s · msg "Night {now.day} at {event.name}" 15 s; full screen | 1 round | one 10 s countdown sound | every event; on; `quiet: skip` |
+| 6 | Meal is served | item `meal`, start | sting 3 s · msg "{item.title} is served · {item.location}" 20 s | every 5 min from T, 3 rounds; until the item ends | `story.meal` first | every event; on |
+| 7† | Quiet hours soon | item `quiet_hours`, start | msg "Quiet hours from {item.starts_at}: headphones on" 20 s | offsets −15, −5; until the item starts; finale "Good night" 10 s, calm and silent | soft chime first; finale silent | every event; on |
+| 8† | Good morning | item `quiet_hours`, end | "Good morning" 10 s · msg today's run of show 30 s | 1 round | soft chime | every event; on |
+| 9 | Check-in open | `tournament.checkin.opened` | msg "Check in for {session.name} until {checkin.closes_at}" 20 s | every 10 min; until check-in closes | `story.checkin` first | every event; on |
+| 10† | Pizza order open | `pizza.order.opened` | msg "Pizza order open · order in the hub" with QR 20 s | every 10 min, 6 rounds; until `pizza.order.closed`; finale "Order closed" 8 s | `pizza.open` first; finale `pizza.closed` | every event; on |
+| 11† | Closing time | clock `event_end` | msg "{event.name} ends at {event.ends_at}: pack up, take your trash" 20 s · thanks card 15 s | offsets −60, −30, −10; 3 rounds | soft chime first and last | every event; on |
+| 12 | Arrival check-in | item `doors`, start | msg check-in QR 30 s | every 30 min from T, 6 rounds | none | some venues; off |
+| 13 | Hot game | `games.surge.started` | sting 3 s · msg hot game 30 s | 1 round; cooldown 30 min per game | `chrome.hot` | some venues; off |
+| 14 | Record crowd | milestone members online, new peak | sting 3 s · msg "{milestone.value} of us online" 15 s | 1 round; once per day | `story.record` | some venues; off |
+| 15† | Sponsor thanks | clock every 60 min, 10:00–22:00 | msg sponsor card 15 s | 1 round per fire | none | some venues; off |
+| 16† | Prize draw | one item, start; take | msg "Prize draw at {item.starts_at} · {item.location}" 20 s | offsets −10, −2; until the item starts; finale "Draw now on stage" 10 s | drum roll on the finale | some venues; off |
+| 17† | Group photo | one item, start; take | msg "Group photo · {item.location}" 20 s | offsets −10, −3; until the item starts; finale "Group photo now" 8 s | `story.photo` last | some venues; off |
+| 18† | Venue info | clock every 45 min, 09:00–23:00 | msg venue info 20 s · floor plan 15 s | 1 round per fire | none | some venues; off |
+| 19† | Stage break | item `tournament`, `ceremony`, end; zone `item_zone` | msg "Back at {next.starts_at}: {next.title}" 30 s | every 5 min from T; until `next_item_starts` | none | some venues; off |
+| 20† | Pizza last call | `pizza.order.closing`; take | sting 3 s · msg "Last call: pizza order closes at {order.closes_at}" with QR 20 s | offsets 0, +8; until `pizza.order.closed` | `pizza.open` first | every event; on |
+| 21† | Pizza orders ready | `pizza.order.arrived` | sting 3 s · msg "Pizza is here: order {order.seq}, come and get it" 20 s | every 5 min, 3 rounds | `pizza.placed` first | every event; on |
+| 22 | Round start | `tournament.round.started`; take | sting 3 s · msg "{session.name}: round {round.number} starts now" 20 s | 1 round; once per round | `tournament.start` | every event; on |
+| 23† | **Premiere** (new) | item of an organiser-added kind, start; take; clock once | msg countdown "Premiere at {item.starts_at}" 30 s · ● video (its length, full screen) · after-card "Again at 21:00 on Stage" 15 s | 1 round | the video's own audio | some venues; off; `quiet: skip` |
+| 24† | **Champion replay** (new) | as Champion | msg winner card 20 s | offsets +10, +30; 2 rounds | silent | every event; on |
+
+Notes:
+- **Preset 2's take** asks for the item (SU3), so its rounds still count from the item's start.
+- **Preset 20:** `pizza.order.closing` arrives 10 minutes before the close, so offsets 0 and +8 are the pack's −10 and −2 of the close.
+- **Preset 21** ends after its 3 rounds: an arrived order is already closed, so "until the order is closed" never came. When the pizza module (step 5) adds a pickup event, the preset may also end on it.
+- **Premiere's** after-card text is the organiser's (a free variable at the take, or written in the preset); "Again at 21:00 on Stage" is the demo's.
+- **Champion replay** is on wherever Champion is on, and turned off with it by default; each can be turned off alone.
+
+### Contract impact as decided
+Additive unless stated; the Plan names them, and the build packages make them, each in the package whose code uses it ([0029](../../decisions/0029-additive-contracts-ship-with-consumers.md)).
+
+| Change | Where | Package |
+|---|---|---|
+| The storyboards part of the Moments contract and its JSON schema: triggers with `clock every` and its window, the `item` anchor `start` or `end` with offsets relative to T, the on-the-dot marker, `until_event` with `next_item_starts`, the placeholders (`{next.title}`, `{next.starts_at}`, `{order.seq}`), the sound options `first`, `every`, `last`, `first_and_last`, the long hold (180 s), the finale on every planned end, the 6 h cap for `until_event`, run mode, the paths, history rows | `moments.md`, `moments/storyboards.openapi.yaml`, `moments/storyboard.schema.json` | #114 |
+| **Flood source per run:** for a story sound, `flood_source` keys on the run, not on the cue and source (at most one sound per 10 s per run); other moments unchanged | `moments.md`, Cues and sound | #114 |
+| A **`video` step** (a Screen `video` asset, full screen, its own audio), the hold of other sound while it plays (with its log reason), and Moments' way to put a story's video in its zones' `prefetch` | `moments.md`, `screen.md`, `screen.openapi.yaml` | #114 |
+| `transition` and **`effect`** on a Step (D9, SD5) | `screen.md`, `screen.openapi.yaml`, `events.md` | #114 |
+| A **`title_card`** widget (`title`, `subtitle`, `image_url`) (SL3) | `screen.md` and the player | #114 |
+| **`pizza.order.closing`** (with the order's `closes_at`) and **`tournament.round.started`** (with `round.number`), provisional until steps 5 and 7 emit them (WD3) | `events.md` | the preset catalogue |
+| `story.*` cues in the seed, Premiere and Champion replay among the built-ins | `moments.md` | the preset catalogue |
+
+**No breaking change.** The Step's `sound` stays, unused. Rights stay (SU1): `moments.settings.write` edits stories, `moments.take` fires, stops and skips them.
+
+### Mockups
+- **New:** [22](22-storyboard-premiere.svg), the Premiere preset on screen (countdown in the hero, the video full screen, the after-card) and its builder row.
+- **Stand:** 17–21 as drawn. 18's sound chip "first and last round" is now an option; its trigger chip "15 min before its start" reads, in the plan's model, as the first offset of the rounds (−15) from the item's start. 18 and 20 replace the step pack's 10 and 11.
+
+### The issue set
+Two issues, merging in this order (SP1 A). Each keeps the standard Room to design: the criteria are the floor, this plan is the bound.
+
+| Issue | Status |
+|---|---|
+| [#114](https://github.com/Tammilanit/canccuplatform-next/issues/114) storyboards: the model, loops and the builder | kept, rewritten |
+| New: storyboards: the preset catalogue | new (SP1) |
+
+#### #114 · feat(moments): storyboards: the model, loops and the builder
+- **Goal:** sequences for the peaks as data an organiser edits without code: several triggers, a duration per step, rounds and repeats with their ends and a finale, a cue per step, a video step, held long enough to be seen; with the five L5 presets.
+- **Criteria:**
+  - [ ] The contract parts this plan lists for #114 ([Contract impact](#contract-impact-as-decided)), additive, with the JSON schema; unknown placeholders fail validation (D10, SD3).
+  - [ ] Triggers: the six kinds with their parameters, `clock every` within a window, several per story, conditions, run mode (SD2, SD4, SD7). The on-the-dot marker; offsets relative to T; a take asks for its item and free variables (SU3).
+  - [ ] A round compiles to one Override with `steps` (SD1); Moments' tick runs the rounds, their patience and skips, the ends and the finale on every planned end; the 6 h cap for `until_event`.
+  - [ ] Timing (SL1): durations, the readable floor (finales too), the minimum card time, the busy venue factor dropping the repeat over the limit; the long hold (SL2).
+  - [ ] Sound (SO2): a cue per step at its start; first, every, last or first and last round; at most 2 a round and 6 a run per zone; the flood source per run.
+  - [ ] Airtime (SO1): the gap rule, the cap per zone, the yield.
+  - [ ] The video step (PV1): full screen, its own audio with other sound held, preloaded on the players, in sync across the zones, skipped in quiet.
+  - [ ] Interruptions and edges (SE1–SE7, E6, E11), phase hand-over (SD9), one owner per happening (WD1, WD2, SD6).
+  - [ ] The builder (mockup 18): triggers as sentences, the step strip with durations and floors, the repeat, the on-the-dot marker, the rounds' timeline, the cue per step and "+ New cue", the meters; preview with a scrubber and the compressed loop; test-fire one round on one zone (SU4). Fire, Stop loop and Skip to finale on On air and the phone (SU2). Studio → Moments → Storyboards (SU5).
+  - [ ] The five L5 presets (1–5 of the catalogue), platform data copied on first use, with reset to default and clone (SD8); the `title_card` widget (SL3); `transition` and `effect` per step (SL6, SD5).
+  - [ ] History rows for each round started, skipped (with why) and each loop's end.
+  - [ ] Tests (SO4) on a fake clock: offsets with a finale at the item's start, a delay and a cancel; `every` rounds and `clock every` in a window; each end and the finale; on the dot (Midnight's sting at 00:00:00); a long hold; a held region, an emergency and a restart mid-loop; the sound cap and the flood source per run; the airtime cap; a video preloaded and started in sync on two screens; one pizza order and one match each shown and sounded once with a rule, a preset and a widget on. A CI screenshot of each L5 preset's message step (O3).
+- **Out of scope:** presets 6–24 (the next issue); the director desk; a rehearsal mode with a movable clock (U10 B); text to speech (#578); a story step that also announces (WD4 B).
+- **Risk:** normal: module and UI code, additive contract parts.
+- **Blocked by:** this plan (#599). The step's other packages it builds on are merged.
+
+#### New · feat(moments): storyboards: the preset catalogue
+- **Goal:** the other nineteen presets, Premiere and Champion replay among them, on or off per event, so each event takes what fits its venue.
+- **Criteria:**
+  - [ ] Presets 6–24 as the [catalogue](#the-preset-catalogue-final) says, with their defaults, as platform data copied on first use.
+  - [ ] `pizza.order.closing` and `tournament.round.started` in events.md (provisional; steps 5 and 7 emit them); presets 20 and 22 idle until then.
+  - [ ] The preset picker (mockup 21): "every event" and "some venues", on or off per event, what triggers each, "idle: no matching item in the run of show", duplicate to edit, reset to default, the owner where a preset and a rule overlap.
+  - [ ] The `story.*` cues and their CC0 sounds in the default pack, with their credits (L9).
+  - [ ] Premiere on the demo event with a short demo video (mockup 22).
+  - [ ] A CI screenshot of each preset's message step, and of Premiere's three steps, through the demo screenshot scripts and their groups file (O3).
+- **Out of scope:** new trigger kinds, end conditions or widgets beyond #114's.
+- **Risk:** normal: data, one page, screenshots and two additive provisional events.
+- **Blocked by:** #114 merged.
+
+**Order:** `pkg-4-storyboards` (#114), then `pkg-4-presets` (the catalogue); the step's package plan ([step 4 Plan](../step-4-moments.md#order-packages-by-dependency-chain)) gains the second.
+
+**The step 4 gate** adds, on the demo tenant: "Starting soon" plays at T−15, T−5 and T−1 and its finale at the start; Midnight's sting lands on 00:00:00; Premiere plays its video full screen in sync on two screens with its own sound.
 
 ## What was read
 - **The step 4 Plan and its decisions:** [step-4-moments.md](../step-4-moments.md#plan) and [decisions.md](decisions.md): L5 (the five built-ins), L6 (motion per energy level), L12 (hero first, full screen only where the story says so), E6 (an interrupted story comes back at the step it would be in now), E11 (a quiet scene plays it calm and silent, or skips it), D9 (an Override with `steps`, plus `transition`), D10 (a fixed placeholder vocabulary per trigger kind), D16 (the sound model). The design principles, above all 2 (share before you queue), 4 (subtle but not brief) and 5 (sound is a budget, not a right).
@@ -91,9 +301,9 @@ A storyboard has **one or more triggers** (any one starts it), **conditions** (a
 ### Trigger kinds
 | Kind | Fires when | Parameters | Placeholders it fills (D10) |
 |---|---|---|---|
-| `item` | A run-of-show item reaches its anchor | `match`: `kinds` (one or more of the event's kinds) or `item_id` (one item); `anchor`: `start`, `before` (n minutes, 1–240), `end`, `after_end` (n minutes); follows the item's delays and is withdrawn by its cancel (as announcements do, E15); only public, scheduled items | `{item.title}`, `{item.starts_at}`, `{item.starts_in}`, `{item.ends_at}`, `{item.location}`, `{item.kind}`, `{item.game}` (the game of its tournament session, as the Pulse hero reads it) |
+| `item` | A run-of-show item reaches its anchor | `match`: `kinds` (one or more of the event's kinds) or `item_id` (one item); `anchor`: `start` or `end`, the trigger time T (the rounds' offsets say how long before or after T each round plays; the Plan dropped `before` and `after_end`, fix 5); follows the item's delays and is withdrawn by its cancel (as announcements do, E15); only public, scheduled items | `{item.title}`, `{item.starts_at}`, `{item.starts_in}`, `{item.ends_at}`, `{item.location}`, `{item.kind}`, `{item.game}` (the game of its tournament session, as the Pulse hero reads it); with `until_event: next_item_starts`, `{next.title}` and `{next.starts_at}` (the next public item on the zone) |
 | `domain` | A catalogue event arrives | `type` from a fixed list (below) and its filters (`session.is_final`, a session, a game) | the event's public fields, per type (below) |
-| `clock` | A time comes | `once` (a date-time), `daily` (HH:MM on every day of the event, past midnight counting as that night), or relative to the event (`event_start` or `event_end`, plus or minus minutes) | `{now.time}`, `{now.day}` |
+| `clock` | A time comes | `once` (a date-time), `daily` (HH:MM on every day of the event, past midnight counting as that night), or relative to the event (`event_start` or `event_end`; the rounds' offsets give the minutes before or after), or `every` n minutes (15–240) within a window (HH:MM–HH:MM), each fire a run of its own (the Plan, fix 2) | `{now.time}`, `{now.day}` |
 | `take` | A person fires it | from the builder, On air or the crew remote (`moments.take`); optional free variables asked at the take (D11's free variables) | the free variables |
 | `scene` | A zone enters or leaves a scene | `scene_key`, `enters` or `leaves` | `{scene.name}` |
 | `milestone` | A count crosses a value | `count`: arrival check-ins, members online, photos on the wall; `at` (a value) or `new_peak` | `{milestone.value}` |
@@ -121,8 +331,8 @@ A phase change is a **trigger** like any other, a new kind of `item` or `clock` 
 
 | Phase | Trigger it uses | Parameters |
 |---|---|---|
-| Quiet hours start / end | `item` kind `quiet_hours`, anchor `before`, `start`, `end` | `before`: n minutes (default 15) |
-| Doors, meals | `item` kinds `doors`, `meal` | anchor `start`, `before`, `end` |
+| Quiet hours start / end | `item` kind `quiet_hours`, anchor `start` or `end` | the rounds' offsets, e.g. −15 and −5 |
+| Doors, meals | `item` kinds `doors`, `meal` | anchor `start` or `end`, with offsets |
 | The day's phases (D7: morning, day, evening, night, as Screen reads them) | `item` of the phase, or `clock` daily at the phase's start | the phase name; `{phase.name}`, `{phase.next}` |
 | A scene change (#582) | `scene` `enters` or `leaves` | `scene_key`; the scene may be the quiet scene |
 
@@ -140,17 +350,17 @@ A phase change is a **trigger** like any other, a new kind of `item` or `clock` 
 
 ### A minimum time on screen
 A busy venue does not look up for 2 s. Three rules, from signage practice:
-1. **A readable floor per step:** a step that shows text holds at least 3 s plus 1 s per 3 words, and never under 8 s; the builder shows the floor, warns under it, and cannot go below 3 s.
+1. **A readable floor per step:** a step that shows text (a sting apart), finales included, holds at least 3 s plus 1 s per 3 words, and never under 8 s; the builder shows the floor, warns under it, and cannot go below 3 s.
 2. **A message floor per round:** the round's main card (the step marked "message"; by default the longest) holds at least the event's *minimum card time*, 15 s by default, 6–60 s.
-3. **Busy venue factor:** an event setting, ×1, ×1.5 or ×2, stretches every step that shows text (never stings). It is how an organiser says "my hall is loud" once, rather than per step.
+3. **Busy venue factor:** an event setting, ×1, ×1.5 or ×2, stretches every step that shows text (never stings). It is how an organiser says "my hall is loud" once, rather than per step. When it pushes a round over the 120 s limit, the round drops its inner repeat ([Plan](#timing), fix 9).
 
 And **repeats beat length:** a message seen three times at T−15, T−5 and T−1 is seen; one held for three minutes is ignored after the first twenty seconds. The presets use rounds rather than long holds.
 
 ### Repeats and loops
 - **Inner repeat:** a run of neighbouring steps repeats `times` (2–5). Between passes nothing waits: a wait inside a round is a held step, since the round holds its region until it ends. One inner repeat per round.
-- **Outer loop, the rounds:** `offsets` from an anchor (minutes before or after the trigger's anchor: −15, −5, −1) or `every` n minutes (2–120) from the first fire; between rounds the region goes back to its rotation.
-- **End conditions** (any one ends the loop): `rounds` (after n, 1–20), `for` (after a time), `until_clock` (at HH:MM), `until_event` (the item starts, the item ends, a domain event, the order closes), `crew` (a person taps "Stop loop" on On air). A loop with no end condition is invalid: every story ends.
-- **Finale:** an optional short round (one or two steps) that plays once when the loop ends by its event ("It's on!" when the item starts). It does not play when the loop ends by a count, a time or a crew stop, or when its event comes after the loop already ended.
+- **Outer loop, the rounds:** `offsets` relative to the trigger time T, the item's start for an `item` trigger (−15, −5, −1; fix 5), or `every` n minutes (2–120) from T; between rounds the region goes back to its rotation.
+- **End conditions** (any one ends the loop): `rounds` (after n, 1–20), `for` (after a time), `until_clock` (at HH:MM), `until_event` (the item starts, the item ends, `next_item_starts`: the next public item on the zone starts, a domain event, the order closes), `crew` (a person taps "Stop loop" on On air). A loop with no end condition is invalid: every story ends.
+- **Finale:** an optional short round (one or two steps) that plays once on every planned end: an event ("It's on!" when the item starts), a clock time, a time, or a count. It does not play on a crew stop or on the item's cancel, or when its event comes after the loop already ended (the Plan, fix 3).
 - **Limits:** a round is at most 120 s after unrolling its repeat, and at most 12 steps; a looping story's gap between rounds is at least its round's length (so it never holds a region more than half of its loop).
 
 ### Meeting other moments
@@ -172,43 +382,43 @@ And **repeats beat length:** a message seen three times at T−15, T−5 and T�
 ## Sound in the story
 - **A cue per step**, optional: a step names a cue of the event ([moments.md, Cues and sound](../../../contracts/moments.md#cues-and-sound)), with its sounds (picked at random, never the same twice running) and its recorded voice line, played after the sound. The builder's "+ New cue" makes an event cue named `story.<story>.<step>`, in a category the organiser picks (default `attention`), so every story sound lives in the sound desk and its log like any other.
 - **Decided per zone when the step starts:** Moments' tick runs each step's sound through the gates when that step begins on a zone where the round is placed and not hidden, with `play_at` the step's planned start. A hidden or waiting round makes no sound (`suppressed`, reason `hidden`). The step's `sound` field of the Override stays null: it would bypass the gates, and no player plays it.
-- **Which pass sounds:** each step's cue plays on the **first pass of an inner repeat only**, and on **the first round only**, unless the organiser chooses "every round" or "last round" ("Starting soon" sounds at T−15 and at T−1, silent at T−5). The finale's cue plays when it plays.
-- **The budget and the flood guard count every story sound** as any other: 3 a minute per zone, 10 s per source, the hourly budget per zone. A story's source for the flood guard is its run, so one story never makes two sounds in 10 s. On top, a **story cap**: at most 2 sounds per round and 6 per run per zone; the builder shows a story's sounds per hour beside the zone's budget ([mockup 19](19-storyboard-loop-timeline.svg)).
+- **Which pass sounds:** each step's cue plays on the **first pass of an inner repeat only**, and on **the first round only**, unless the organiser chooses "every round", "last round" or "first and last round" ("Starting soon" sounds at T−15 and at T−1, silent at T−5; fix 6). The finale's cue plays when it plays.
+- **The budget and the flood guard count every story sound** as any other: 3 a minute per zone, 10 s per source, the hourly budget per zone. The contract's flood guard keys on the same cue and source, so two cues of one run could both pass; the [Plan](#sound) makes a story's flood source its run, whatever the cue: at most one sound per 10 s per run (fix 7). On top, a **story cap**: at most 2 sounds per round and 6 per run per zone; the builder shows a story's sounds per hour beside the zone's budget ([mockup 19](19-storyboard-loop-timeline.svg)).
 - **Length:** a cue's sound plus its voice line may run past its step (it plays on); one that would still play when the next step's cue starts makes the builder warn, since the next one waits at most 4 s and then drops.
 - **Countdowns:** one sound of the countdown's whole length, never one per second.
 
 ## The preset catalogue
-Twenty-two built-ins, platform data an event copies on first use (O7, as scenes do), each on or off per event. **Every event** presets are on by default and idle where their trigger never comes (no `doors` item, no pizza); **some venues** presets are off by default. The five decided in L5 are reworked for longer holds and rounds. Durations are at the busy venue factor ×1; "msg" marks the round's message step; ⟲2 an inner repeat twice.
+**The Plan's [catalogue](#the-preset-catalogue-final) is final** (24 presets, with the fixes below applied). Twenty-two built-ins, platform data an event copies on first use (O7, as scenes do), each on or off per event. **Every event** presets are on by default and idle where their trigger never comes (no `doors` item, no pizza); **some venues** presets are off by default. The five decided in L5 are reworked for longer holds and rounds. Durations are at the busy venue factor ×1; "msg" marks the round's message step; ⟲2 an inner repeat twice.
 
 | # | Preset | Purpose | Trigger | Round (steps, durations) | Rounds, end | Sound | Default |
 |---|---|---|---|---|---|---|---|
 | 1 | **Doors open** (L5) | Welcome, Wi-Fi, check in | item kind `doors` at start | sting "Doors are open" 3 s · msg "Welcome to {event.name}" 20 s · venue info (Wi-Fi) 20 s · check-in QR 20 s | every 10 min, 3 rounds | `story.doors` first round | every event; on (off where the doors are always open) |
-| 2 | **Starting soon** (L5) | Bring people to the next big item | item kinds `tournament`, `ceremony` at 15 min before; take | ⟲2 [sting "Starting soon" 3 s · msg countdown card with {item.title}, {item.location}, game art 20 s] | offsets −15, −5, −1; until the item starts; finale "It's on!" 8 s | `tournament.pre` first and last round; finale `tournament.start` | every event; on |
+| 2 | **Starting soon** (L5) | Bring people to the next big item | item kinds `tournament`, `ceremony` at start; take | ⟲2 [sting "Starting soon" 3 s · msg countdown card with {item.title}, {item.location}, game art 20 s] | offsets −15, −5, −1; until the item starts; finale "It's on!" 8 s | `tournament.pre` first and last round; finale `tournament.start` | every event; on |
 | 3 | **Match called** (L5) | Get the players to their seats | `tournament.match.called` | msg match card (teams, voice channels) 30 s | every 2 min, 3 rounds; until `tournament.match.started` of the match | `tournament.start` first round | every event; on |
-| 4 | **Champion** (L5) | Crown the winner | `tournament.match.finished` with `session.is_final`; take | sting "And the champion is…" 4 s · msg winner card 30 s · bracket 20 s · photo-wall QR "Share your photos" 15 s | 1 round; replays the winner card alone (20 s, silent) at +10 and +30 min | `tournament.post` on the winner card | every event; on |
-| 5 | **Midnight** (L5) | Mark the night, full screen | clock daily 00:00 | countdown 10 s · sting "Midnight!" 4 s · msg "Night {now.day} at {event.name}" 15 s; **full screen** (L12) | 1 round | one 10 s countdown sound | every event; on; `quiet: skip` |
+| 4 | **Champion** (L5) | Crown the winner | `tournament.match.finished` with `session.is_final`; take | sting "And the champion is…" 4 s · msg winner card 30 s · bracket 20 s · photo-wall QR "Share your photos" 15 s | 1 round; the replays at +10 and +30 min are the Plan's preset 24, Champion replay (fix 4) | `tournament.post` on the winner card | every event; on |
+| 5 | **Midnight** (L5) | Mark the night, full screen | clock daily 00:00 | countdown 10 s · sting "Midnight!" 4 s, on the dot (it starts at 00:00:00, the round at 23:59:50; fix 1) · msg "Night {now.day} at {event.name}" 15 s; **full screen** (L12) | 1 round | one 10 s countdown sound | every event; on; `quiet: skip` |
 | 6 | **Meal is served** | Food is ready | item kind `meal` at start | sting 3 s · msg "{item.title} is served · {item.location}" 20 s | every 5 min, 3 rounds; until the item ends | `story.meal` first round | every event; on |
-| 7 | **Quiet hours soon** | Warn before quiet hours | item kind `quiet_hours` at 15 min before | msg "Quiet hours from {item.starts_at}: headphones on" 20 s | offsets −15, −5; finale "Good night" 10 s at start | soft chime first round; finale silent | every event; on |
-| 8 | **Good morning** | Restart the day | item kind `quiet_hours` at end | msg "Good morning" 10 s · today's run of show 30 s | 1 round | soft chime | every event; on |
+| 7 | **Quiet hours soon** | Warn before quiet hours | item kind `quiet_hours` at start | msg "Quiet hours from {item.starts_at}: headphones on" 20 s | offsets −15, −5; until the item starts; finale "Good night" 10 s | soft chime first round; finale silent | every event; on |
+| 8 | **Good morning** | Restart the day | item kind `quiet_hours` at end | "Good morning" 10 s · msg today's run of show 30 s | 1 round | soft chime | every event; on |
 | 9 | **Check-in open** | Tournament check-in reminder | `tournament.checkin.opened` | msg "Check in for {session.name} until {checkin.closes_at}" 20 s | every 10 min; until `tournament.checkin.closed` | `story.checkin` first round | every event; on |
-| 10 | **Pizza order open** | Join the group order | `pizza.order.opened` | msg "Pizza order open · order in the hub" with QR 20 s | every 10 min, 6 rounds; until `pizza.order.closed`; finale "Order closed" 6 s | `pizza.open` first round | every event; on |
-| 11 | **Closing time** | Pack up, tidy up | clock `event_end` −60 min | msg "{event.name} ends at {event.ends_at}: pack up, take your trash" 20 s · thanks card 15 s | offsets −60, −30, −10 | soft chime first and last round | every event; on |
+| 10 | **Pizza order open** | Join the group order | `pizza.order.opened` | msg "Pizza order open · order in the hub" with QR 20 s | every 10 min, 6 rounds; until `pizza.order.closed`; finale "Order closed" 8 s | `pizza.open` first round | every event; on |
+| 11 | **Closing time** | Pack up, tidy up | clock `event_end` | msg "{event.name} ends at {event.ends_at}: pack up, take your trash" 20 s · thanks card 15 s | offsets −60, −30, −10; 3 rounds | soft chime first and last round | every event; on |
 | 12 | **Arrival check-in** | Venue check-in by QR | item kind `doors` at start | msg check-in QR "Check in at the door" 30 s | every 30 min, 6 rounds | none | some venues; off (check-in is never mandatory, 0027) |
 | 13 | **Hot game** | A game surges | `games.surge.started` | sting "Hot right now" 3 s · msg hot game 30 s | 1 round; cooldown 30 min per game | `chrome.hot` | some venues; off (the `hot_game` rule covers it) |
 | 14 | **Record crowd** | Celebrate a peak | milestone members online, new peak | sting 3 s · msg "{milestone.value} of us online" 15 s | 1 round; once per day | `story.record` | some venues; off |
-| 15 | **Sponsor thanks** | Thank the sponsors | clock every 60 min, 10:00–22:00 | msg sponsor card (image) 15 s | every 60 min; until 22:00 | none | some venues; off |
-| 16 | **Prize draw** | A raffle on stage | one item (`item_id`), 10 min before; take | msg "Prize draw at {item.starts_at} · {item.location}" 20 s | offsets −10, −2; finale "Draw now on stage" 10 s | drum roll on the finale | some venues; off |
-| 17 | **Group photo** | Gather everyone | one item, 10 min before; take | msg "Group photo · {item.location}" 20 s | offsets −10, −3; finale 8 s | `story.photo` last round | some venues; off |
-| 18 | **Venue info** | Wi-Fi, floor plan, rules | clock every 45 min, 09:00–23:00 | msg venue info 20 s · floor plan 15 s | every 45 min; until 23:00 | none | some venues; off |
-| 19 | **Stage break** | "Back at …" on the stage zone | item kinds `tournament`, `ceremony` at end; zone `item_zone` | msg "Back at {next.starts_at}" with the next item 30 s | every 5 min; until the next item on the zone starts | none | some venues; off |
-| 20 | **Pizza last call** | Last chance to join the order | `pizza.order.closing` (additive domain event, [WD3](#wd3-the-missing-pizza-and-tournament-moments)); a take | sting 3 s · msg "Last call: pizza order closes at {order.closes_at}" with QR 20 s | offsets −10, −2 of the close; until `pizza.order.closed` | `pizza.open` first round | every event; on |
-| 21 | **Pizza orders ready** | Food has arrived, come and get it | `pizza.order.arrived` | sting 3 s · msg "Pizza is here · {order.pickup}" 20 s | every 5 min, 3 rounds; until the order is closed | `pizza.placed` first round | every event; on (replaces the `pizza` rule's arrived card, WD2) |
+| 15 | **Sponsor thanks** | Thank the sponsors | clock every 60 min, 10:00–22:00 | msg sponsor card (image) 15 s | 1 round per fire; the window ends it | none | some venues; off |
+| 16 | **Prize draw** | A raffle on stage | one item (`item_id`) at start; take | msg "Prize draw at {item.starts_at} · {item.location}" 20 s | offsets −10, −2; until the item starts; finale "Draw now on stage" 10 s | drum roll on the finale | some venues; off |
+| 17 | **Group photo** | Gather everyone | one item at start; take | msg "Group photo · {item.location}" 20 s | offsets −10, −3; until the item starts; finale 8 s | `story.photo` last round | some venues; off |
+| 18 | **Venue info** | Wi-Fi, floor plan, rules | clock every 45 min, 09:00–23:00 | msg venue info 20 s · floor plan 15 s | 1 round per fire; the window ends it | none | some venues; off |
+| 19 | **Stage break** | "Back at …" on the stage zone | item kinds `tournament`, `ceremony` at end; zone `item_zone` | msg "Back at {next.starts_at}: {next.title}" 30 s | every 5 min; until `next_item_starts` | none | some venues; off |
+| 20 | **Pizza last call** | Last chance to join the order | `pizza.order.closing` (additive domain event, [WD3](#wd3-the-missing-pizza-and-tournament-moments)); a take | sting 3 s · msg "Last call: pizza order closes at {order.closes_at}" with QR 20 s | offsets 0, +8 (the event comes 10 min before the close); until `pizza.order.closed` | `pizza.open` first round | every event; on |
+| 21 | **Pizza orders ready** | Food has arrived, come and get it | `pizza.order.arrived` | sting 3 s · msg "Pizza is here: order {order.seq}, come and get it" 20 s | every 5 min, 3 rounds (an arrived order is already closed, so "until closed" never came) | `pizza.placed` first round | every event; on (replaces the `pizza` rule's arrived card, WD2) |
 | 22 | **Round start** | A tournament round begins | `tournament.round.started` (additive, WD3); take | sting 3 s · msg "{session.name}: round {round.number} starts now" 20 s | 1 round; once per round | `tournament.start` | every event; on |
 
 Notes for the session:
 - **Rules and presets that overlap:** `match_called`, `finals_result` and `hot_game` are built-in rules (#112) on the same events as presets 3, 4 and 13. Turning a preset on turns its rule off for that event, and back ([SD6](#sd6-a-preset-and-a-built-in-rule-on-the-same-event)).
 - **Templates:** most steps use widgets Screen already draws (`sting`, `countdown`, `match_called`, `winner_card`, `bracket`, `hot_game`, `venue_info`, `checkin_qr`, `qr`, `agenda_now`, `photo`). The message cards ("Welcome to …", "Quiet hours from …") need a big title card with a subtitle and an optional image, which no widget is today: `announcement` carries level colours and `sting` is short. [SL3](#sl3-a-title-card-template) proposes one additive `title_card` widget.
-- `{next.starts_at}` (preset 19) is a placeholder the `item` trigger would add: the next public item on the zone.
+- `{next.title}` and `{next.starts_at}` (preset 19) come with the `until_event` end `next_item_starts`: the next public item on the zone (fix 10).
 - Sounds named `story.*` are new cues each preset brings in the default CC0 pack (L9).
 
 ![Presets on screen](20-storyboard-presets-on-screen.svg)
@@ -226,7 +436,7 @@ Pizza (step 5) and the tournament (step 7) draw widgets of their own, and their 
 | **Story / rule moment** | **the moment**: the card and the sound of one happening, with its repeats | show the steady state (a story's bracket step reads the widget's data, it does not rebuild it) |
 | **Cue** | the picture and sound of **its** moment, once per source (`once_per_source`) | play outside a moment, or a second time for the same source |
 | **Announcement** | what a person writes: a message, with its channels (screen, ticker, Discord, push) | repeat a happening a story already owns (the preset is turned off, or the announcement is the manual extra) |
-| **Push (Notify)** | the one notification, only through an announcement's `push` channel or a topic Moments registers | notify for a happening the story shows; stories have no push of their own |
+| **Push (Notify)** | the public notification, only through an announcement's `push` channel or a topic Moments registers; the modules' personal pushes stay as [notify.md](../../../contracts/notify.md#topics-and-sources) has them (a pizza arrived to the people in the order, a match called to its players) | send a public push for a happening the story shows; stories have no push of their own |
 | **Bot (step 6)** | the Discord post, as an announcement's `discord` channel, or the module's own post for its own domain event | read a story, or post what the owner's channels already posted |
 
 **Ownership of the seeded cues** (each cue has one owner; `once_per_source` is already set on the tournament, strip and pizza cues):
@@ -423,7 +633,7 @@ Grouped by theme; each with options and a recommendation. IDs are used above and
 - **Recommendation: A** (E2).
 
 #### SE5. A loop whose end never comes
-- **A.** Every loop needs an end condition, and every run ends at the latest 6 hours after it started, logged "ended: time limit".
+- **A.** Every loop needs an end condition, and every run ends at the latest 6 hours after it started, logged "ended: time limit". (The Plan, fix 8: the cap holds only for `until_event` loops; clock and window loops end at their window; a video step's play time does not count.)
 - **B.** No limit.
 - **Recommendation: A.**
 
@@ -488,7 +698,7 @@ Grouped by theme; each with options and a recommendation. IDs are used above and
 - **Recommendation: A**, in the second package.
 
 ## Proposed changes to #114
-For the lead to apply after the session; each assumes the recommendation of the questions it names.
+For the lead to apply after the session; each assumes the recommendation of the questions it names. **The Plan's [issue set](#the-issue-set) replaces this proposal.**
 
 **Split** into two packages that merge in order (SP1): #114 keeps the first; the second is a new issue the lead files.
 
@@ -521,4 +731,4 @@ For the lead to apply after the session; each assumes the recommendation of the 
 **Order:** #114 after the step's merged packages (all of them are merged now); the preset catalogue after #114.
 
 ## Open questions
-All of them are in the bank above. Decide first: **WD1** (who owns a happening), **SD9** (phase changes), **SD1** (where loops run), **SL1** (the minimum time on screen), **SO1** (airtime), **SO2** (sound per loop), **SD6** (presets and rules), **SP1** (the split).
+All of them were answered in the session; the answers are in the [Plan](#every-answer). They were in the bank above. Decide first: **WD1** (who owns a happening), **SD9** (phase changes), **SD1** (where loops run), **SL1** (the minimum time on screen), **SO1** (airtime), **SO2** (sound per loop), **SD6** (presets and rules), **SP1** (the split).
