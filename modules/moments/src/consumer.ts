@@ -132,7 +132,7 @@ export async function handleZoneReplay(deps: ConsumerDeps, e: Event): Promise<vo
 const TENANT_ID = /^[a-z][a-z0-9-]{2,31}$/;
 
 /**
- * Clone with an event (D22): the source's priorities, rules, scenes and announcement templates
+ * Clone with an event (D22): the source's priorities, rules, scenes, announcement templates and stories
  * become the new event's, where it has none of its own yet (scenes it never saved count as
  * none). Never the history, the live moments, an announcement or a zone's scene. The tenants module checked the series and the caller before it
  * emitted `tenants.tenant.cloned`; the event comes at least once, so the copy is idempotent.
@@ -149,6 +149,7 @@ async function cloneFrom(db: Db, source: string, target: string): Promise<void> 
     const templates = (
       await c.query(`SELECT key, name, title, body, level FROM moments_announcement_templates`, [])
     ).rows;
+    const stories = (await c.query(`SELECT stories, settings FROM moments_stories`, [])).rows;
     await c.query(`SELECT set_config('canccu.tenant', $1, true)`, [target]);
     for (const p of priorities) {
       await c.query(
@@ -170,6 +171,14 @@ async function cloneFrom(db: Db, source: string, target: string): Promise<void> 
          ON CONFLICT (tenant_id) DO UPDATE SET scenes = EXCLUDED.scenes
          WHERE moments_scenes.revision = 0`,
         [JSON.stringify(s.scenes)],
+      );
+    }
+    // The stories with their on/off and settings (SD8); never a run or the event's facts.
+    for (const st of stories) {
+      await c.query(
+        `INSERT INTO moments_stories (stories, settings, event, revision) VALUES ($1, $2, '{}', 1)
+         ON CONFLICT DO NOTHING`,
+        [JSON.stringify(st.stories), JSON.stringify(st.settings)],
       );
     }
     for (const t of templates) {

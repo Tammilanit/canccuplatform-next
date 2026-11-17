@@ -9,6 +9,7 @@ import { RULE_IDS, checkRule, loadRules } from "../src/rules.js";
 import { DATABASE_URL, freshDatabase, world } from "./helpers.js";
 import type { World } from "./helpers.js";
 import { FIXTURES } from "./fixtures.js";
+import { DEFAULT_SETTINGS, ensureStories, writeStories } from "../src/story/store.js";
 
 // The catalog outlines each event; the games contract, written already, holds its own `data`.
 const contract = (name: string): string =>
@@ -70,7 +71,21 @@ run("the built-in rules", () => {
         ...(e.data.override as Record<string, unknown>),
       }));
 
+  /** The presets Match called and Champion show these happenings while on (SD6): off here. */
+  const presetsOff = () =>
+    w.tx("demo", async (c) => {
+      const doc = await ensureStories(c);
+      const stories = doc.stories.map((s) => ({ ...s, enabled: s.preset === null || !["match_called", "champion"].includes(s.preset) }));
+      await writeStories(c, stories, DEFAULT_SETTINGS, doc.revision + 1);
+    });
+
+  it("leaves a happening to its preset while the preset is on (SD6)", async () => {
+    await deliver(FIXTURES.called());
+    expect(overrides().map((o) => o.template)).toEqual(["title_card"]);
+  });
+
   it("calls a match into the hero, and ends it when the match starts (E5)", async () => {
+    await presetsOff();
     await deliver(FIXTURES.called());
     expect(overrides()[0]).toMatchObject({
       type: "moments.override.started",
@@ -89,6 +104,7 @@ run("the built-in rules", () => {
   });
 
   it("shows the champion only for a final", async () => {
+    await presetsOff();
     await deliver(FIXTURES.finished(false));
     expect(w.events("demo")).toHaveLength(0);
     await deliver(FIXTURES.finished(true));

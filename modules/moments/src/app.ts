@@ -10,6 +10,7 @@ import { pageRoutes } from "./pages.js";
 import { momentRoutes } from "./routes.js";
 import { sceneRoutes } from "./scene-routes.js";
 import { settingsRoutes } from "./settings-routes.js";
+import { storyRoutes } from "./story/routes.js";
 import { noteTenant } from "./tick.js";
 
 export function buildApp(deps: AppDeps): FastifyInstance {
@@ -56,6 +57,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     packRoutes(event);
     sceneRoutes(event, deps);
     announceRoutes(event, deps);
+    storyRoutes(event, deps);
     pageRoutes(event, deps);
     done();
   });
