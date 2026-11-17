@@ -908,6 +908,15 @@ components:
           oneOf:
             - $ref: "#/components/schemas/Sound"
             - type: "null"
+        transition:
+          description: Additive (#114). How the step enters, at the zone's energy level.
+          type: string
+          enum: [cut, fade, rise, slide, flash]
+        effect:
+          description: Additive (#114). The step's cue picture, drawn on the box from the step's start.
+          oneOf:
+            - $ref: "#/components/schemas/CueEffect"
+            - type: "null"
     Claim:
       type: object
       description: A Moments override placed on this region (contracts/screen.md, Moments drive it).
@@ -1272,6 +1281,7 @@ components:
                 - $ref: "#/components/schemas/SoundPlay"
                 - type: "null"
         prefetch:
+          description: File URLs to keep ahead, the schedule's and the storyboards' video files (contracts/screen.md, The video step).
           type: array
           items:
             type: string

@@ -11,6 +11,8 @@ import type { Engine } from "./engine.js";
 import { leaderboardView } from "./sources.js";
 import { lockRunningByKey } from "./store.js";
 import type { Binding } from "./store.js";
+import { loadStories } from "./story/store.js";
+import { RULE_OF_PRESET } from "./story/presets.js";
 
 export interface RuleSettings {
   enabled: boolean;
@@ -225,6 +227,12 @@ export function checkRule(id: string, s: Data): string | null {
 /** Runs every rule an event fires or ends; refused requests are left for the next event to ask. */
 export async function applyRules(c: SqlClient, engine: Engine, e: Event, now: Date): Promise<void> {
   const rules = await loadRules(c);
+  // A preset on for the event shows the same happening: its rule is off (SD6, WD2).
+  const shownByPreset = new Set(
+    (await loadStories(c)).stories
+      .filter((st) => st.enabled && st.preset !== null)
+      .map((st) => RULE_OF_PRESET[st.preset as string]),
+  );
   for (const def of RULES) {
     const s = rules.find((r) => r.rule_id === def.id);
     if (s === undefined) continue;
@@ -232,7 +240,8 @@ export async function applyRules(c: SqlClient, engine: Engine, e: Event, now: Da
       const m = await lockRunningByKey(c, `${def.id}:${def.ref(e.data)}`);
       if (m !== null) await engine.end(c, m, "source_ended", null, now);
     }
-    if (!s.enabled || !def.on.includes(e.type) || def.applies?.(e.data) === false) continue;
+    if (!s.enabled || shownByPreset.has(def.id) || !def.on.includes(e.type)) continue;
+    if (def.applies?.(e.data) === false) continue;
     const ref = def.ref(e.data);
     await engine.request(
       c,
@@ -250,6 +259,7 @@ export async function applyRules(c: SqlClient, engine: Engine, e: Event, now: Da
         dedupe_key: `${def.id}:${ref}`,
         binding: def.binding ?? null,
         cue: s.cue,
+        happening: ref === "" ? null : `${e.type}:${ref}`,
       },
       now,
     );

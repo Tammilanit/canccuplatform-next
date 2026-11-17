@@ -9,6 +9,7 @@ import { html } from "@canccu/ui";
 import type { Html } from "@canccu/ui";
 import { ANNOUNCE, EMERGENCY, READ, SCENES_TAKE, SETTINGS, TAKE, tenantOf } from "./http.js";
 import { scenePages } from "./scene-pages.js";
+import { storyCard, storyPages } from "./story/pages.js";
 import { loadCrew, loadScenes, sceneZones } from "./scene-store.js";
 import { crewButtons, onAirScenes } from "./scene-views.js";
 import type { ZoneSceneView } from "./scene-views.js";
@@ -93,6 +94,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
     cuePages(pages, deps);
     scenePages(pages, deps);
     announcePages(pages, deps);
+    storyPages(pages, deps);
     const read = { preHandler: pageNeeds(deps, READ) };
     const has = (r: FastifyRequest, right: string) => r.session?.rights.has(right) === true;
     const back = (reply: FastifyReply, path: string, key: "done" | "error", text: string) =>
@@ -123,6 +125,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
           canEmergency: has(request, EMERGENCY),
           archived: tenantOf(request).status === "archived",
           scenes: await sceneCard(deps, request),
+          stories: await storyCard(deps, request),
           done: request.query.done,
           error: request.query.error,
         }),

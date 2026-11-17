@@ -18,7 +18,13 @@ export interface Step {
   content: Record<string, unknown>;
   duration_ms: number;
   sound?: Sound | null;
+  /** Additive (#114, D9): how the step enters (`cut`, `fade`, `rise`, `slide`, `flash`). */
+  transition?: string;
+  /** Additive (#114, SD5): the step's cue picture, drawn from the step's start. */
+  effect?: Effect | null;
 }
+
+const TRANSITIONS = ["cut", "fade", "rise", "slide", "flash"];
 
 /** An override as Screen keeps it: the fields it draws and places by, its lifetime resolved. */
 export interface Override {
@@ -106,7 +112,17 @@ function stepOf(v: unknown): Step | undefined {
     return undefined;
   const sound = soundOf(v.sound);
   if (sound === undefined) return undefined;
-  return { template: v.template, content: v.content, duration_ms: ms as number, sound };
+  const effect = effectOf(v.effect);
+  if (effect === undefined) return undefined;
+  if (v.transition !== undefined && !TRANSITIONS.includes(v.transition as string)) return undefined;
+  return {
+    template: v.template,
+    content: v.content,
+    duration_ms: ms as number,
+    sound,
+    ...(v.transition === undefined ? {} : { transition: v.transition as string }),
+    ...(effect === null ? {} : { effect }),
+  };
 }
 
 /** A cue's effect, null for none, undefined when malformed. */

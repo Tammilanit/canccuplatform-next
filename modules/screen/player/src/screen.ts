@@ -204,7 +204,8 @@ export class Screen {
     for (const [i, drawn] of drawns.entries()) {
       const next = shown[i] ?? null;
       this.show(drawn, next, motion);
-      applyCue(drawn.el, drawn.claim, now);
+      // A step's own cue picture wins over the claim's, from the step's start (#114).
+      applyCue(drawn.el, (typeof next === "object" ? next?.cue : undefined) ?? drawn.claim, now);
       const zone = state.zone?.key ?? "";
       drawn.marks = syncMarks(drawn.marks, drawn.el, drawn.state, turnIndexOf(next), zone, now);
     }
@@ -319,8 +320,13 @@ export class Screen {
     templates: unknown,
     media: Parameters<typeof drawWidget>[4],
   ): HTMLElement {
-    const el = drawWidget(shown.type, shown.template, shown.view, templates, media);
+    const el = drawWidget(shown.type, shown.template, shown.view, templates, {
+      ...(media ?? { sound: false, nowMs: Date.now() }),
+      claimId: shown.key.startsWith("claim:") ? shown.key.slice(6).split(":")[0] : undefined,
+      zone: this.state?.zone?.key ?? "",
+    });
     if (shown.key.startsWith("claim:")) el.classList.add("canccu-is-claim");
+    if (shown.transition !== undefined) el.classList.add(`canccu-step--${shown.transition}`);
     return el;
   }
 

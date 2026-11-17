@@ -12,6 +12,7 @@ import { evaluateScenes, storeAgenda } from "./scene-store.js";
 import type { AgendaReader } from "./scene-store.js";
 import { lockMoment, runningMoments } from "./store.js";
 import { tickAnnouncements } from "./announce/follow.js";
+import { tickStories } from "./story/triggers.js";
 
 export const TICK_MS = 1000;
 /** History of an archived event is deleted this long after archiving (D21). */
@@ -35,6 +36,7 @@ export async function tickTenant(c: SqlClient, engine: Engine, now: Date): Promi
     await engine.end(c, m, "preempted", null, now, r.zone_key);
   }
   await tickAnnouncements(c, engine, now);
+  await tickStories({ c, engine, now });
   await engine.pumpSounds(c, now);
 }
 

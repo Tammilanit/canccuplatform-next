@@ -10,6 +10,7 @@ import type { AgendaItem, SceneFacts } from "./scene-eval.js";
 import { PRESETS, crewMinutes, sceneEvent } from "./scenes.js";
 import type { Scene } from "./scenes.js";
 import { knownZones, lockSettings } from "./store.js";
+import { holdsHandover } from "./story/handover.js";
 
 /** The event's whole agenda as a module reads it (`GET /internal/agenda/items`), or null. */
 export type AgendaReader = (
@@ -205,6 +206,8 @@ export async function evaluateScenes(
     };
     if (st !== undefined && st.scene_key === key && canonical(st.sent) === canonical(sent))
       continue;
+    // A story's round live on the zone plays first (SD9); the scene follows within the hand-over.
+    if (st !== undefined && st.scene_key !== key && (await holdsHandover(c, zone, o.now))) continue;
     const since = st !== undefined && st.scene_key === key ? st.since : o.now;
     const why = picked?.why ?? "no scene holds";
     await c.query(

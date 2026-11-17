@@ -33,6 +33,8 @@ export interface ZoneRecord {
   ticker: Record<string, unknown>;
   /** `play` is absent in a record stored before Moments' sounds: none. */
   sound: { enabled: boolean; device_id: string | null; play?: Play | null };
+  /** Moments' preload (#114); absent in a record stored before it: none. */
+  prefetch?: string[];
   /** Absent in a record stored before it was added: screens then get the defaults. */
   display?: Display;
   views: Record<Orientation, ZoneRecordView>;

@@ -138,7 +138,8 @@ const CHIP = {
 
 /**
  * The legacy's 25 cues with their categories, on/off and cooldowns; poll and cast have no emitter
- * yet and start off, as `ticker.message` did. The sounds and effects are the default pack's.
+ * yet and start off, as `ticker.message` did. The sounds and effects are the default pack's. Then
+ * the storyboards' presets' own.
  */
 export const BUILTIN_CUES: readonly Cue[] = [
   seed("announce.attention", "attention", ["chime-soft", "chime-bright", "happy-beep"], {
@@ -182,6 +183,9 @@ export const BUILTIN_CUES: readonly Cue[] = [
   seed("pizza.open", "something_new", ["bicycle-bell"], ONCE),
   seed("pizza.closed", "ended", ["airplane-chime"], ONCE),
   seed("pizza.placed", "result", ["bicycle-bell", "ding"], { ...ONCE, effects: ["pop", "ripple"] }),
+  // The storyboards' own (#114): Doors open's sting and Midnight's countdown, one sound of its length.
+  seed("story.doors", "attention", ["chime-soft"], { effects: ["glow"] }),
+  seed("story.midnight", "attention", ["gong"], { effects: [] }),
 ];
 
 /** The cue a crew action asks for: the spotlight, the emergency and its "All clear". */

@@ -29,6 +29,8 @@ tags:
     description: Cues and sound (#113), the sound desk; the paths are in moments/cues.openapi.yaml.
   - name: announcements
     description: The announcement composer (#115); the paths are in moments/announcements.openapi.yaml.
+  - name: storyboards
+    description: Storyboards (#114), the sequences for the peaks; the paths are in moments/storyboards.openapi.yaml, a story's shape in moments/storyboard.schema.json.
   - name: privacy
     description: The caller's own rows (contracts/README.md, Privacy).
   - name: internal
@@ -646,6 +648,16 @@ paths:
     $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcement-templates"
   /api/moments/announcement-templates/{template_key}:
     $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcement-templates~1{template_key}"
+  /api/moments/storyboards:
+    $ref: "moments/storyboards.openapi.yaml#/~1api~1moments~1storyboards"
+  /api/moments/storyboards/reset:
+    $ref: "moments/storyboards.openapi.yaml#/~1api~1moments~1storyboards~1reset"
+  /api/moments/storyboards/{story_key}/take:
+    $ref: "moments/storyboards.openapi.yaml#/~1api~1moments~1storyboards~1{story_key}~1take"
+  /api/moments/storyboards/runs/{run_id}/stop:
+    $ref: "moments/storyboards.openapi.yaml#/~1api~1moments~1storyboards~1runs~1{run_id}~1stop"
+  /api/moments/storyboards/runs/{run_id}/finale:
+    $ref: "moments/storyboards.openapi.yaml#/~1api~1moments~1storyboards~1runs~1{run_id}~1finale"
   /internal/moments/moments:
     post:
       tags: [internal]
@@ -715,6 +727,21 @@ components:
       schema:
         type: string
         pattern: "^[a-z][a-z0-9_]{1,31}$"
+    StoryKey:
+      name: story_key
+      in: path
+      required: true
+      description: The story.
+      schema:
+        type: string
+        pattern: "^[a-z][a-z0-9_]{0,39}$"
+    RunId:
+      name: run_id
+      in: path
+      required: true
+      description: A run of a story.
+      schema:
+        type: string
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -777,11 +804,24 @@ components:
         `version_conflict`: a stale `revision`; `event_archived`: the event is read-only; `moment_refused`: every
         region the moment may take is held by a higher rank on every zone it names (the body's `error` adds
         `retry_after_seconds` and `held_by`); `emergency_active`: an emergency already runs; `not_running`: the
-        moment has ended, or the announcement ended or was withdrawn.
+        moment has ended, the announcement ended or was withdrawn, the story is off or its loop ended;
+        `not_fired`: a story's condition or run mode said no (the message says which).
       content:
         application/json:
           schema:
             $ref: "common.openapi.yaml#/components/schemas/Error"
+    StoryboardsAnswer:
+      description: The event's stories and settings, the presets and the live and recent runs.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Storyboards"
+    StoryboardRunAnswer:
+      description: The run.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/StoryboardRun"
     ScenesAnswer:
       description: The scenes, each zone's scene now and the crew button pressed.
       content:
@@ -789,6 +829,88 @@ components:
           schema:
             $ref: "#/components/schemas/Scenes"
   schemas:
+    Storyboards:
+      type: object
+      required: [stories, settings, revision, presets, runs]
+      properties:
+        stories:
+          type: array
+          items:
+            allOf:
+              - $ref: "moments/storyboard.schema.json"
+              - type: object
+                required: [free_variables, rule_off]
+                properties:
+                  free_variables:
+                    type: array
+                    items:
+                      type: string
+                  rule_off:
+                    type: [string, "null"]
+        settings:
+          $ref: "moments/storyboard.schema.json#/$defs/Settings"
+        revision:
+          type: integer
+        presets:
+          type: array
+          items:
+            type: string
+        runs:
+          type: array
+          items:
+            $ref: "#/components/schemas/StoryboardRun"
+    StoryboardRun:
+      description: One run of a story from its trigger to its end (contracts/moments.md, Storyboards).
+      type: object
+      required: [id, story_key, name, source, status, test, zones, t, round, rounds_played, has_finale, started_at, ended_at, end_reason]
+      properties:
+        id:
+          type: string
+        story_key:
+          type: string
+        name:
+          type: string
+        source:
+          description: What `per_source` keys on (`item:<id>`, `match:<id>`, `clock:<time>`, …).
+          type: string
+        status:
+          type: string
+          enum: [live, ended]
+        test:
+          type: boolean
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneKey"
+        t:
+          description: The trigger time T the rounds count from.
+          type: string
+          format: date-time
+        round:
+          description: The round on screen, or null between rounds.
+          type: [object, "null"]
+          required: [number, finale, until]
+          properties:
+            number:
+              type: integer
+            finale:
+              type: boolean
+            until:
+              type: string
+              format: date-time
+        rounds_played:
+          type: integer
+        has_finale:
+          type: boolean
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: [string, "null"]
+          format: date-time
+        end_reason:
+          type: [string, "null"]
+          enum: [planned, stopped, cancelled, time_limit, cleared, null]
     ZoneKey:
       type: string
       pattern: "^[a-z0-9_-]{2,32}$"
@@ -803,7 +925,7 @@ components:
       enum: [rule, crew, emergency, module]
     HistoryAction:
       type: string
-      enum: [started, refused, placed, hidden, queued, back, changed, ended]
+      enum: [started, refused, placed, hidden, queued, back, changed, ended, round_started, round_skipped, loop_ended, not_fired]
     Order:
       type: array
       description: Every class once, highest first, `emergency` first.

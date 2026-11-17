@@ -112,7 +112,7 @@ export async function dropTables(admin: pg.Client): Promise<void> {
        screen_playlist_items, screen_playlists, assignments, screen_assignments, screen_zones,
        screen_zone_seeds, devices, screen_migrations, screen_render_jobs, screen_asset_versions,
        screen_assets, screen_files, screen_ticker, screen_ticker_windows, screen_photos, screen_claims, screen_scenes, screen_pins,
-       screen_pin_tenants, screen_previews, screen_outbox, screen_outbox_tenants, screen_zone_sounds CASCADE`,
+       screen_pin_tenants, screen_previews, screen_outbox, screen_outbox_tenants, screen_zone_sounds, screen_moments_prefetch CASCADE`,
   );
 }
 

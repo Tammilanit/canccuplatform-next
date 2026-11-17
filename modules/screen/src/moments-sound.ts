@@ -83,3 +83,36 @@ export async function zonePlay(c: SqlClient, zone: string, nowMs: number): Promi
   const play = playOf(rows[0]?.sound);
   return play !== null && Date.parse(play.catch_up_until) > nowMs ? play : null;
 }
+
+/** Only this host's files: a URL elsewhere would be refused by the screens' CSP anyway. */
+const OWN_FILE = /^\/api\/screen\/files\/[A-Za-z0-9_.-]+$/;
+
+/** Keep Moments' latest preload list (`moments.prefetch.changed`); run inside the event's tenant. */
+export async function applyPrefetchEvent(db: Db, event: Event): Promise<void> {
+  if (event.type !== "moments.prefetch.changed" || !Array.isArray(event.data.files)) return;
+  const files = (event.data.files as unknown[]).flatMap((f) => {
+    const x = f as { url?: unknown; zones?: unknown } | null;
+    return typeof x?.url === "string" && OWN_FILE.test(x.url) && Array.isArray(x.zones)
+      ? [{ url: x.url, zones: x.zones.filter((z): z is string => typeof z === "string") }]
+      : [];
+  });
+  await db.tenant((c) =>
+    c.query(
+      `INSERT INTO screen_moments_prefetch (files, event_id) VALUES ($1, $2)
+       ON CONFLICT (tenant_id) DO UPDATE SET files = EXCLUDED.files, event_id = EXCLUDED.event_id
+       WHERE screen_moments_prefetch.event_id < EXCLUDED.event_id`,
+      [JSON.stringify(files), event.id],
+    ),
+  );
+}
+
+/** The files Moments asks the zone's screens to keep: its stories' videos (empty zones: every zone). */
+export async function zonePrefetch(c: SqlClient, zone: string): Promise<string[]> {
+  const { rows } = await c.query(`SELECT files FROM screen_moments_prefetch`, []);
+  const files = (rows[0]?.files ?? []) as { url: string; zones: string[] }[];
+  return [
+    ...new Set(
+      files.filter((f) => f.zones.length === 0 || f.zones.includes(zone)).map((f) => f.url),
+    ),
+  ];
+}

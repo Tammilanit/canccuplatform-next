@@ -14,6 +14,7 @@ import { evaluateScenes, recordFact, storeAgenda } from "./scene-store.js";
 import type { AgendaReader } from "./scene-store.js";
 import { recordSource, refreshBound } from "./sources.js";
 import { addZone } from "./store.js";
+import { storyEvent } from "./story/triggers.js";
 import { endAll, noteTenant, zoneRemoved } from "./tick.js";
 
 export const TENANT_STREAMS = [
@@ -87,6 +88,7 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
         { cue: CREW_CUES.photo, zones: [], key: `photo:${id}`, source: id },
         now,
       );
+      await storyEvent({ c, engine: deps.engine, now }, e);
     } else if (e.source !== "screen") {
       // An archived event is read-only (E10): no rule starts or renews a moment on it.
       if (await isArchived(c, e.tenant as string)) return;
@@ -94,6 +96,7 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
       scenes = (await recordFact(c, e)) || agenda !== null;
       const touched = await recordSource(c, e);
       await applyRules(c, deps.engine, e, now);
+      await storyEvent({ c, engine: deps.engine, now }, e);
       if (touched !== null) await refreshBound(c, deps.engine, touched, now);
     }
     if (scenes) await evaluateScenes(c, deps.engine.outbox, { timeZone, now });
@@ -129,7 +132,7 @@ export async function handleZoneReplay(deps: ConsumerDeps, e: Event): Promise<vo
 const TENANT_ID = /^[a-z][a-z0-9-]{2,31}$/;
 
 /**
- * Clone with an event (D22): the source's priorities, rules, scenes and announcement templates
+ * Clone with an event (D22): the source's priorities, rules, scenes, announcement templates and stories
  * become the new event's, where it has none of its own yet (scenes it never saved count as
  * none). Never the history, the live moments, an announcement or a zone's scene. The tenants module checked the series and the caller before it
  * emitted `tenants.tenant.cloned`; the event comes at least once, so the copy is idempotent.
@@ -146,6 +149,7 @@ async function cloneFrom(db: Db, source: string, target: string): Promise<void> 
     const templates = (
       await c.query(`SELECT key, name, title, body, level FROM moments_announcement_templates`, [])
     ).rows;
+    const stories = (await c.query(`SELECT stories, settings FROM moments_stories`, [])).rows;
     await c.query(`SELECT set_config('canccu.tenant', $1, true)`, [target]);
     for (const p of priorities) {
       await c.query(
@@ -167,6 +171,14 @@ async function cloneFrom(db: Db, source: string, target: string): Promise<void> 
          ON CONFLICT (tenant_id) DO UPDATE SET scenes = EXCLUDED.scenes
          WHERE moments_scenes.revision = 0`,
         [JSON.stringify(s.scenes)],
+      );
+    }
+    // The stories with their on/off and settings (SD8); never a run or the event's facts.
+    for (const st of stories) {
+      await c.query(
+        `INSERT INTO moments_stories (stories, settings, event, revision) VALUES ($1, $2, '{}', 1)
+         ON CONFLICT DO NOTHING`,
+        [JSON.stringify(st.stories), JSON.stringify(st.settings)],
       );
     }
     for (const t of templates) {
@@ -209,6 +221,9 @@ export async function handlePlatformEvent(deps: ConsumerDeps, e: Event): Promise
         "moments_checkins",
         "moments_announcements",
         "moments_announcement_templates",
+        "moments_stories",
+        "moments_story_runs",
+        "moments_story_marks",
       ]) {
         await c.query(`DELETE FROM ${table}`, []);
       }
@@ -247,8 +262,19 @@ export async function forgetUser(
        AND moment_id IN (SELECT id FROM moments WHERE actor_user_id = $1)`,
     [user],
   );
+  // A story's rows of a person's take or test-fire name them in `why` too (#114).
+  await c.query(
+    `UPDATE moments_history SET why = ${ANONYMOUS_WHY}
+     WHERE actor_user_id = $1 AND action IN ('round_started', 'round_skipped', 'loop_ended', 'not_fired')`,
+    [user],
+  );
   await c.query(
     `UPDATE moments_history SET actor_user_id = NULL, actor_name = NULL WHERE actor_user_id = $1`,
+    [user],
+  );
+  await c.query(
+    `UPDATE moments_story_runs SET actor_user_id = NULL, actor_name = NULL, why = ${ANONYMOUS_WHY}
+     WHERE actor_user_id = $1`,
     [user],
   );
   await c.query(

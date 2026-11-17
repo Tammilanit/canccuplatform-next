@@ -280,3 +280,57 @@
     color-scheme: normal;
   }
 }
+
+/* A storyboard step's transition (#114, SL6): how the step enters, at the zone's energy level.
+   Calm keeps fades only and none cuts (motion.css' levels); reduced motion fades. */
+.canccu-layout[data-motion="moderate"] .canccu-step--rise {
+  animation: canccu-step-rise 600ms ease-out both;
+}
+.canccu-layout[data-motion="moderate"] .canccu-step--slide {
+  animation: canccu-step-slide 600ms ease-out both;
+}
+.canccu-layout[data-motion="moderate"] .canccu-step--flash {
+  animation: canccu-step-flash 450ms ease-out both;
+}
+.canccu-layout:not([data-motion="none"]) .canccu-step--fade {
+  animation: canccu-step-fade 600ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .canccu-step--rise,
+  .canccu-step--slide,
+  .canccu-step--flash {
+    animation: canccu-step-fade 600ms ease-out both;
+  }
+}
+@keyframes canccu-step-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes canccu-step-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8%);
+  }
+}
+@keyframes canccu-step-slide {
+  from {
+    opacity: 0;
+    transform: translateX(8%);
+  }
+}
+@keyframes canccu-step-flash {
+  from {
+    filter: brightness(2.5);
+  }
+}
+
+/* A storyboard's video plays across the full-screen region (#114, PV1). */
+.canccu-widget--video {
+  background: #000;
+}
+.canccu-widget--video .canccu-widget__media {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+}

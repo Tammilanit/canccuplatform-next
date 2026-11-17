@@ -359,6 +359,13 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
     sec("points", el("p", "meta", [f("points"), t(" points")])),
   ],
   sting: [sec("image_url", img("image_url", "image")), el("p", "big", [f("text")])],
+  // A storyboard's message card (SL3, #114): a big title, a subtitle, an image and a QR.
+  title_card: [
+    sec("image_url", img("image_url", "image")),
+    title("title"),
+    el("p", "body", [f("subtitle")]),
+    QR,
+  ],
   // The name is written out beside the image, so the image's `alt` stays empty.
   logo: [
     sec("url", img("url", "image")),

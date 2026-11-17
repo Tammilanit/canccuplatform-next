@@ -48,13 +48,17 @@ export interface MomentRow {
   binding: Binding | null;
   /** The picture its cue picked (contracts/moments.md, Cues and sound), or null. */
   effect: Picture | null;
+  /** A storyboard round's steps as the Override carries them (D9), or null. */
+  steps: Record<string, unknown>[] | null;
+  /** `type:source id` of the happening it shows (WD1), or null. */
+  happening: string | null;
   ended_at: Date | null;
   end_reason: string | null;
 }
 
 const COLUMNS = `id, class, kind, regions, template, content, zones, left_zones, origin, rule_id,
   source, why, actor_user_id, actor_name, dedupe_key, starts_at, expires_at, ttl_seconds,
-  patience_seconds, qr, binding, ended_at, end_reason, effect`;
+  patience_seconds, qr, binding, ended_at, end_reason, effect, steps, happening`;
 
 const momentOf = (r: Record<string, unknown>): MomentRow => r as unknown as MomentRow;
 
@@ -95,7 +99,7 @@ export async function insertMoment(c: SqlClient, m: MomentRow): Promise<void> {
   await c.query(
     `INSERT INTO moments (${COLUMNS})
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18,
-             $19, $20, $21, $22, $23, $24)`,
+             $19, $20, $21, $22, $23, $24, $25, $26)`,
     [
       m.id,
       m.class,
@@ -121,6 +125,8 @@ export async function insertMoment(c: SqlClient, m: MomentRow): Promise<void> {
       m.ended_at,
       m.end_reason,
       m.effect,
+      m.steps === null ? null : JSON.stringify(m.steps),
+      m.happening,
     ],
   );
 }
@@ -129,8 +135,17 @@ export async function insertMoment(c: SqlClient, m: MomentRow): Promise<void> {
 export async function saveMoment(c: SqlClient, m: MomentRow): Promise<void> {
   await c.query(
     `UPDATE moments SET template = $2, content = $3, left_zones = $4, expires_at = $5,
-       ended_at = $6, end_reason = $7 WHERE id = $1`,
-    [m.id, m.template, m.content, m.left_zones, m.expires_at, m.ended_at, m.end_reason],
+       ended_at = $6, end_reason = $7, steps = $8 WHERE id = $1`,
+    [
+      m.id,
+      m.template,
+      m.content,
+      m.left_zones,
+      m.expires_at,
+      m.ended_at,
+      m.end_reason,
+      m.steps === null ? null : JSON.stringify(m.steps),
+    ],
   );
 }
 
@@ -240,7 +255,19 @@ export async function heldOn(c: SqlClient, zones: string[]): Promise<(Held & { z
 export interface HistoryEntry {
   at: Date;
   zone_key: string | null;
-  action: "started" | "refused" | "placed" | "hidden" | "queued" | "back" | "changed" | "ended";
+  action:
+    | "started"
+    | "refused"
+    | "placed"
+    | "hidden"
+    | "queued"
+    | "back"
+    | "changed"
+    | "ended"
+    | "round_started"
+    | "round_skipped"
+    | "loop_ended"
+    | "not_fired";
   moment_id: string | null;
   class: Class;
   origin: Origin;
@@ -273,6 +300,22 @@ export async function writeHistory(c: SqlClient, e: HistoryEntry): Promise<void>
       e.actor?.name ?? null,
     ],
   );
+}
+
+/** The live moment that shows `happening` (WD1), or null. */
+export async function happeningOwner(
+  c: SqlClient,
+  happening: string,
+  run: string | null = null,
+): Promise<{ id: string; title: string } | null> {
+  const { rows } = await c.query(
+    `SELECT id, template, content FROM moments WHERE happening = $1 AND ended_at IS NULL
+       AND ($2::text IS NULL OR dedupe_key IS NULL OR dedupe_key NOT LIKE 'story:' || $2 || ':%')
+     LIMIT 1`,
+    [happening, run],
+  );
+  const row = rows[0] as (Pick<MomentRow, "template" | "content"> & { id: string }) | undefined;
+  return row === undefined ? null : { id: row.id, title: titleOf(row) };
 }
 
 /** What people read a moment as: its content's own title, else its template. */

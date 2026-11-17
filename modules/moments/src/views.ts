@@ -117,6 +117,8 @@ export function onAirView(o: {
   archived: boolean;
   /** Each zone's scene and the crew buttons (scene-views.ts), drawn by the caller. */
   scenes: Html;
+  /** The storyboards' fire, Stop loop and Skip to finale (story/views.ts), drawn by the caller. */
+  stories?: Html;
   done?: string | undefined;
   error?: string | undefined;
 }): Html {
@@ -159,7 +161,7 @@ export function onAirView(o: {
     <div class="moments-onair">
       <div class="moments-zones">${columns}</div>
       <div class="moments-side">
-        ${crew}
+        ${crew} ${o.stories ?? ""}
         <section class="canccu-card moments-crew">
           <h2 class="canccu-card__title">Scenes</h2>
           ${o.scenes}

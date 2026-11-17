@@ -22,6 +22,7 @@ export const TABS = [
   ["on-air", "On air"],
   ["priorities", "Priorities"],
   ["scenes", "Scenes"],
+  ["storyboards", "Storyboards"],
   ["history", "History"],
   ["cues", "Cues"],
 ] as const;

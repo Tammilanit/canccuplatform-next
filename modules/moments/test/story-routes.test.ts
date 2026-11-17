@@ -1,0 +1,281 @@
+/**
+ * The storyboards API (contracts/moments/storyboards.openapi.yaml): the presets copied on first
+ * use, saving with validation and video assets (a private YouTube refused), the preload, reset
+ * to default, fire with its item, test-fire one round on one zone, Stop loop and Skip to finale.
+ */
+import type pg from "pg";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { storeAgenda } from "../src/scene-store.js";
+import { addZone } from "../src/store.js";
+import { forgetUser } from "../src/consumer.js";
+import { DATABASE_URL, freshDatabase } from "./helpers.js";
+import { appWorld, errorOf, json } from "./app.js";
+import type { AppWorld } from "./app.js";
+import { ITEM, TABLES, step } from "./story-kit.js";
+
+type Stories = { stories: Record<string, unknown>[]; revision: number };
+
+describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
+  let pool: pg.Pool;
+  let w: AppWorld;
+  beforeAll(async () => {
+    pool = await freshDatabase();
+  });
+  afterAll(async () => {
+    await pool.end();
+  });
+  beforeEach(async () => {
+    await pool.query(`TRUNCATE ${TABLES}, moments_idempotency`);
+    w = await appWorld(pool);
+    await w.tx("demo", async (c) => {
+      await addZone(c, "main");
+      await storeAgenda(c, { agenda_version: 1, items: [ITEM] });
+    });
+  });
+
+  const list = async () =>
+    json(await w.call("reader", "GET", "/api/moments/storyboards")) as unknown as Stories;
+  const put = async (stories: unknown[], revision: number, who = "admin") =>
+    w.call(who, "PUT", "/api/moments/storyboards", { stories, revision });
+
+  it("copies the five presets on first use and validates a save", async () => {
+    const doc = await list();
+    expect(doc.stories.map((s) => s.key)).toEqual([
+      "doors_open",
+      "starting_soon",
+      "match_called",
+      "champion",
+      "midnight",
+    ]);
+    expect(doc.stories[2]).toMatchObject({ rule_off: "match_called" });
+    expect((await put(doc.stories, 0, "crew")).statusCode).toBe(403);
+    const broken = [
+      {
+        ...doc.stories[0],
+        round: {
+          steps: [step({ content: { title: "{item.nope}" } })],
+          repeat: null,
+          hold_seconds: null,
+        },
+      },
+    ];
+    const bad = await put(broken, 0);
+    expect(bad.statusCode).toBe(400);
+    expect(errorOf(bad).message).toContain("Unknown placeholder {item.nope}");
+    expect((await put(doc.stories, 7)).statusCode).toBe(409);
+  });
+
+  it("keeps a video step's file and length, preloads it, and refuses a private YouTube video", async () => {
+    w.assets.set("as_film", {
+      id: "as_film",
+      kind: "video",
+      title: "Last year",
+      url: "/api/screen/files/abc.mp4",
+      size_bytes: 1,
+      duration_seconds: 95,
+    });
+    w.assets.set("as_yt", {
+      id: "as_yt",
+      kind: "youtube",
+      title: "Private",
+      url: "https://www.youtube.com/watch?v=x",
+      size_bytes: null,
+      duration_seconds: 60,
+      health: "error",
+    } as never);
+    const doc = await list();
+    const premiere = {
+      ...doc.stories[1],
+      key: "premiere",
+      name: "Premiere",
+      preset: null,
+      triggers: [{ kind: "take" }],
+      round: {
+        steps: [
+          step({ message: true }),
+          step({ template: "video", content: { asset_id: "as_film" }, on_the_dot: true }),
+        ],
+        repeat: null,
+        hold_seconds: null,
+      },
+      rounds: { mode: "offsets", offsets_minutes: [0] },
+      end: { rounds: 1, for_minutes: null, until_clock: null, until_event: null, crew: true },
+      finale: null,
+      sound: "first",
+    };
+    const ok = await put([...doc.stories, premiere], 0);
+    expect(ok.statusCode).toBe(200);
+    const saved = (json(ok) as unknown as Stories).stories.at(-1) as {
+      round: { steps: { content: unknown }[] };
+    };
+    expect(saved.round.steps[1]?.content).toEqual({
+      asset_id: "as_film",
+      kind: "video",
+      url: "/api/screen/files/abc.mp4",
+      title: "Last year",
+      duration_ms: 95_000,
+    });
+    const prefetch = w
+      .events("demo")
+      .filter((e) => e.type === "moments.prefetch.changed")
+      .at(-1);
+    expect(prefetch?.data).toEqual({ files: [{ url: "/api/screen/files/abc.mp4", zones: [] }] });
+    const yt = {
+      ...premiere,
+      round: {
+        ...premiere.round,
+        steps: [
+          step({ message: true }),
+          step({ template: "video", content: { asset_id: "as_yt" } }),
+        ],
+      },
+    };
+    const refused = await put([...doc.stories, yt], 1);
+    expect(refused.statusCode).toBe(400);
+    expect(errorOf(refused).message).toContain("public or unlisted");
+    // YouTube gives no length: the organiser says how long it plays.
+    w.assets.set("as_yt_ok", {
+      id: "as_yt_ok",
+      kind: "youtube",
+      title: "Recap",
+      url: "https://www.youtube.com/watch?v=abcdefgh",
+      size_bytes: null,
+      duration_seconds: null,
+      health: "ok",
+    } as never);
+    const ytStep = (content: Record<string, unknown>) => ({
+      ...premiere,
+      round: {
+        ...premiere.round,
+        steps: [step({ message: true }), step({ template: "video", content })],
+      },
+    });
+    expect(
+      errorOf(await put([...doc.stories, ytStep({ asset_id: "as_yt_ok" })], 1)).message,
+    ).toContain("give the video's length");
+    const ok2 = await put(
+      [...doc.stories, ytStep({ asset_id: "as_yt_ok", duration_seconds: 600 })],
+      1,
+    );
+    expect(ok2.statusCode).toBe(200);
+    const yts = (json(ok2) as unknown as Stories).stories.at(-1) as {
+      round: { steps: { content: Record<string, unknown> }[] };
+    };
+    expect(yts.round.steps[1]?.content).toMatchObject({ kind: "youtube", duration_ms: 600_000 });
+  });
+
+  it("resets a preset to default", async () => {
+    const doc = await list();
+    const changed = doc.stories.map((s) =>
+      s.key === "midnight" ? { ...s, name: "Our midnight", enabled: false } : s,
+    );
+    expect((await put(changed, 0)).statusCode).toBe(200);
+    const r = await w.call("admin", "POST", "/api/moments/storyboards/reset", {
+      key: "midnight",
+      revision: 1,
+    });
+    expect(r.statusCode).toBe(200);
+    const midnight = (json(r) as unknown as Stories).stories.find((s) => s.key === "midnight");
+    expect(midnight).toMatchObject({ name: "Midnight", enabled: true });
+  });
+
+  it("fires a story with its item, stops its loop without a finale, and skips another to its finale", async () => {
+    w.now = new Date("2026-01-01T18:40:00Z");
+    const noItem = await w.call("crew", "POST", "/api/moments/storyboards/starting_soon/take", {});
+    expect(errorOf(noItem).message).toBe("Choose the item this story is about.");
+    const fired = await w.call("crew", "POST", "/api/moments/storyboards/starting_soon/take", {
+      item_id: "it_final",
+    });
+    expect(fired.statusCode).toBe(201);
+    const run = json(fired);
+    expect(run).toMatchObject({ status: "live", t: "2026-01-01T19:00:00.000Z" });
+    const stop = await w.call(
+      "crew",
+      "POST",
+      `/api/moments/storyboards/runs/${String(run.id)}/stop`,
+      {},
+    );
+    expect(json(stop)).toMatchObject({ status: "ended", end_reason: "stopped" });
+    expect(
+      (await w.call("crew", "POST", `/api/moments/storyboards/runs/${String(run.id)}/stop`, {}))
+        .statusCode,
+    ).toBe(409);
+    const again = json(
+      await w.call("crew", "POST", "/api/moments/storyboards/starting_soon/take", {
+        item_id: "it_final",
+      }),
+    );
+    const skip = await w.call(
+      "crew",
+      "POST",
+      `/api/moments/storyboards/runs/${String(again.id)}/finale`,
+      {},
+    );
+    expect(json(skip)).toMatchObject({ status: "live", round: { finale: true } });
+    expect(w.audit.map((a) => a.action)).toContain("moments.storyboard.skipped");
+  });
+
+  it("test-fires one round on one zone, marked as a test", async () => {
+    const r = await w.call("crew", "POST", "/api/moments/storyboards/midnight/take", {
+      test: { zone: "main", sound: false },
+    });
+    expect(r.statusCode).toBe(201);
+    expect(json(r)).toMatchObject({ test: true, zones: ["main"], round: { number: 1 } });
+    const { rows } = await pool.query(
+      `SELECT why FROM moments_history WHERE action = 'round_started'`,
+    );
+    expect((rows[0] as { why: string } | undefined)?.why).toMatch(
+      /^Demo crew · test-fire Midnight/,
+    );
+  });
+
+  it("forgets a person's name in the story's runs and history rows", async () => {
+    await w.call("crew", "POST", "/api/moments/storyboards/midnight/take", {
+      test: { zone: "main", sound: false },
+    });
+    await w.tx("demo", (c) => forgetUser(c, "u_crew"));
+    const { rows } = await pool.query(
+      `SELECT why, actor_name FROM moments_history WHERE action = 'round_started'
+       UNION ALL SELECT why, actor_name FROM moments_story_runs`,
+    );
+    expect(rows.length).toBe(2);
+    for (const r of rows as { why: string; actor_name: string | null }[]) {
+      expect(r.actor_name).toBeNull();
+      expect(r.why).not.toContain("Demo crew");
+    }
+  });
+
+  it("keeps the stopper's and the finisher's names out of the history and the run, and forgets both people", async () => {
+    w.now = new Date("2026-01-01T18:40:00Z");
+    const fire = async () =>
+      json(
+        await w.call("crew", "POST", "/api/moments/storyboards/starting_soon/take", {
+          item_id: "it_final",
+        }),
+      );
+    const stopped = await fire();
+    await w.call("admin", "POST", `/api/moments/storyboards/runs/${String(stopped.id)}/stop`, {});
+    const skipped = await fire();
+    await w.call("admin", "POST", `/api/moments/storyboards/runs/${String(skipped.id)}/finale`, {});
+    const left = async () => {
+      const { rows } = await pool.query(
+        `SELECT to_jsonb(h)::text AS t FROM moments_history h
+         UNION ALL SELECT to_jsonb(r)::text FROM moments_story_runs r`,
+      );
+      return (rows as { t: string }[]).map((r) => r.t).join("\n");
+    };
+    // Bob (admin) is the actor of his own rows only; Alice (crew) stays the run's actor.
+    const runs = await pool.query(`SELECT actor_user_id FROM moments_story_runs`);
+    expect(
+      (runs.rows as { actor_user_id: string }[]).every((r) => r.actor_user_id === "u_crew"),
+    ).toBe(true);
+    expect(await left()).not.toMatch(/stopped by Demo|finale by Demo/);
+    await w.tx("demo", (c) => forgetUser(c, "u_crew"));
+    await w.tx("demo", (c) => forgetUser(c, "u_admin"));
+    const rest = await left();
+    expect(rest).not.toContain("Demo crew");
+    expect(rest).not.toContain("Demo admin");
+    expect(rest).not.toContain("u_crew");
+    expect(rest).not.toContain("u_admin");
+  });
+});

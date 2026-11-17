@@ -21,6 +21,9 @@ export interface MediaOptions {
   nowMs: number;
   /** The browser reports `prefers-reduced-motion: reduce`: an embed shows its still alone. */
   reducedMotion?: boolean;
+  /** The claim a widget is drawn for, and the zone: a story's video skips and mutes by them. */
+  claimId?: string | undefined;
+  zone?: string;
 }
 
 /** contracts/screen.md, CSP: how a web asset is framed. */

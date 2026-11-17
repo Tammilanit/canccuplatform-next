@@ -80,6 +80,75 @@
     });
   }
 
+  // Storyboards (SU4): one round in the real player, scrubbed to a moment of it, or the whole
+  // loop with its gaps shortened to 2 s. The round is a claim whose steps run from `starts_at`, so
+  // a scrub is only an earlier start.
+  const story = document.querySelector("iframe[data-story-preview]");
+  if (story) {
+    const note = document.querySelector("[data-preview-note]");
+    const zone = encodeURIComponent(story.dataset.zone);
+    const json = { "content-type": "application/json" };
+    const steps = JSON.parse(story.dataset.steps);
+    const chain = JSON.parse(story.dataset.regions);
+    const length = Number(story.dataset.length);
+    let base = null;
+    const read = async () => {
+      const got = await fetch(`/api/screen/zones/${zone}`, { headers: json });
+      if (!got.ok) {
+        note.textContent =
+          "The player preview needs the right to edit zones; the round is drawn above.";
+        return null;
+      }
+      const res = await fetch(`/api/screen/zones/${zone}/preview`, {
+        method: "POST",
+        headers: json,
+        body: JSON.stringify(await got.json()),
+      });
+      return res.ok ? res.json() : null;
+    };
+    const draw = async (offsetMs) => {
+      base = base ?? (await read());
+      if (!base) return;
+      const state = JSON.parse(JSON.stringify(base));
+      const now = Date.now();
+      const region = (role) => state.regions.find((r) => r.role === role);
+      const role = chain.find((r) => region(r) && !(region(r).claim && region(r).claim.rank > 65));
+      if (role) {
+        region(role).claim = {
+          override_id: "preview-story",
+          hidden: false,
+          role,
+          rank: 65,
+          template: steps[0] ? steps[0].template : "title_card",
+          content: steps[0] ? steps[0].content : {},
+          steps,
+          sound: null,
+          on_end: "resume",
+          starts_at: new Date(now - offsetMs).toISOString(),
+          ends_at: null,
+          expires_at: new Date(now - offsetMs + length).toISOString(),
+        };
+      }
+      story.contentWindow.postMessage({ type: "canccu-screen-preview", state }, location.origin);
+    };
+    const scrub = document.querySelector("[data-story-scrub]");
+    scrub?.addEventListener("input", () => void draw(Number(scrub.value)));
+    const rounds = JSON.parse(story.dataset.rounds);
+    document.querySelector("[data-story-loop]")?.addEventListener("click", () => {
+      // Each round plays through, then 2 s of the rotation stand for the gap before the next.
+      let at = 0;
+      for (const [i] of rounds.entries()) {
+        setTimeout(() => {
+          note.textContent = `Round ${i + 1} of ${rounds.length}`;
+          void draw(0);
+        }, at);
+        at += length + 2000;
+      }
+    });
+    story.addEventListener("load", () => void draw(0));
+    void draw(0);
+  }
+
   // Announcements (U11): the card in the real player before it goes out. Screen's zone preview
   // composes the zone as it is now; the card takes the first region of its chain that the layout
   // has and no higher claim holds, as Screen would place it, and the ticker line the ticker.

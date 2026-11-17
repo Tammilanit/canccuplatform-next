@@ -7,7 +7,7 @@
 // from across a hall fails the run, so a screenshot of an error never passes for a real one. Runs
 // in Caddy's network namespace (scripts/demo-screenshots says why).
 // The lists live by group, next to what they need: demo-screenshots-pages.mjs (one URL each),
-// -agenda.mjs, -theming.mjs, -moments.mjs, -announce.mjs, and the screens' and Screen studio's in
+// -agenda.mjs, -theming.mjs, -moments.mjs, -announce.mjs, -stories.mjs, and the screens' and Screen studio's in
 // modules/screen/test/stack/.
 // This file picks the groups and keeps the order, which the shots depend on.
 // Usage: node demo-screenshots.mjs [--dry-run] [--base BASE_URL] [--out DIR] [--groups LIST] [--check]
@@ -55,6 +55,7 @@ import {
 import { GROUPS, groupOf, pickGroups } from "./demo-screenshots-groups.mjs";
 import { momentsListed, momentsShots } from "./demo-screenshots-moments.mjs";
 import { announceListed, announceShots } from "./demo-screenshots-announce.mjs";
+import { storiesListed, storiesShots } from "./demo-screenshots-stories.mjs";
 import {
   AGENDA_DOWN,
   CHECK_IN,
@@ -119,7 +120,9 @@ if (opts["dry-run"]) {
     ...pagesListed(at),
     ...themingListed(at),
     ...agendaListed(at),
-    ...(want("moments") ? [...momentsListed(at), ...announceListed(at)] : []),
+    ...(want("moments")
+      ? [...momentsListed(at), ...announceListed(at), ...storiesListed(at)]
+      : []),
   ];
   for (const name of want("screens") ? planned(opts.check) : []) {
     lines.push(`  ${name}.png  ${at("/screen/")}  (a paired screen)`);
@@ -159,7 +162,14 @@ const ok = (what) => {
 };
 
 const browser = await chromium.launch();
-const shot = shooter({ browser, at, out: opts.out, check: opts.check, fail, ok });
+const shot = shooter({
+  browser,
+  at,
+  out: opts.out,
+  check: opts.check,
+  fail,
+  ok,
+});
 const run = { demo, at, shot, fail };
 
 if (opts.trouble || opts["agenda-down"]) {
@@ -182,7 +192,12 @@ try {
 
   // The fixture's run of show, ticker and zones, which the day view and the studios draw (the
   // screens seed it themselves).
-  if (want("agenda") || want("theming") || want("screen-studio") || want("moments")) {
+  if (
+    want("agenda") ||
+    want("theming") ||
+    want("screen-studio") ||
+    want("moments")
+  ) {
     try {
       await seedScreens(demo);
       await dayShots(run);
@@ -251,6 +266,7 @@ try {
     await momentsShots(run);
     // Run the event → Announcements (#115), after them: it hides the entrance's rail a while.
     await announceShots(run);
+    await storiesShots(run);
   }
 } finally {
   await browser.close();

@@ -45,7 +45,13 @@ export type Reason =
   | "budget"
   | "ambient_gap"
   | "busy"
-  | "stale";
+  | "stale"
+  | "video"
+  | "hidden"
+  | "story_cap";
+
+/** The cue name a story's video plays its own sound under (contracts/moments.md, The video step). */
+export const VIDEO_CUE = "story.video";
 
 /** One decided sound, as the zone's screens get it (without the files' URLs). */
 export interface Play {
@@ -113,6 +119,8 @@ export interface DecideInput {
   source: string | null;
   /** The source's start, for a cue with a window before the start. */
   starts_at: string | null;
+  /** The flood guard's source instead of the cue and source: a story's run (fix 7). */
+  flood?: string | null;
   counts: Counts;
   /** A library sound's length, or null when it is gone. */
   length: (sound: string) => number | null;
@@ -178,6 +186,8 @@ export function decide(i: DecideInput): Decision {
     );
   }
   if (i.emergency && !urgent) return no("emergency");
+  const held = i.zone.playing !== null && now < i.zone.playing.until_ms ? i.zone.playing : null;
+  if (held?.cue === VIDEO_CUE && !urgent) return no("video", "held while a video plays");
   const seen = Object.fromEntries(
     Object.entries(i.zone.seen).filter(([, at]) => now - at < SEEN_MS),
   );
@@ -201,8 +211,8 @@ export function decide(i: DecideInput): Decision {
   const sources = Object.fromEntries(
     Object.entries(i.zone.sources).filter(([, at]) => now - at < window),
   );
-  const sourceKey = `${cue.name}|${i.source ?? ""}`;
-  if (i.source !== null && sources[sourceKey] !== undefined) {
+  const sourceKey = i.flood ?? `${cue.name}|${i.source ?? ""}`;
+  if ((i.source !== null || i.flood != null) && sources[sourceKey] !== undefined) {
     if (!urgent) return no("flood_source", `${String(s.per_source_seconds)} s per source`);
     passes = "urgent_passes";
   }
@@ -239,7 +249,7 @@ export function decide(i: DecideInput): Decision {
     seen: { ...seen, [i.key]: now },
     accepted_ms: { ...i.zone.accepted_ms, [cue.name]: now },
     last_sound: { ...i.zone.last_sound, [cue.name]: sound },
-    sources: i.source === null ? sources : { ...sources, [sourceKey]: now },
+    sources: i.source === null && i.flood == null ? sources : { ...sources, [sourceKey]: now },
   };
   const accept = { count: true, once: cue.once_per_source, lead_ms: LEAD_MS };
   if (playing !== null && !(urgent && playing.category !== "urgent")) {

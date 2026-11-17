@@ -5,6 +5,7 @@
  * every screen of a zone agrees and a claim ends on time also offline.
  */
 import type { View } from "./widget.js";
+import { skipped } from "./story-video.js";
 
 export interface ClaimState {
   override_id: string;
@@ -13,7 +14,16 @@ export interface ClaimState {
   rank: number;
   template: string;
   content: View;
-  steps: { template: string; content: View; duration_ms: number }[] | null;
+  steps:
+    | {
+        template: string;
+        content: View;
+        duration_ms: number;
+        /** Additive (#114): how the step enters, and its cue's picture from the step's start. */
+        transition?: string;
+        effect?: unknown;
+      }[]
+    | null;
   sound: unknown;
   on_end: string;
   starts_at: string;
@@ -28,6 +38,10 @@ export interface ClaimShown {
   key: string;
   type: string;
   view: View;
+  /** The step's transition, when it names one. */
+  transition?: string;
+  /** The step's cue picture and its start, drawn as a claim's (cues.ts). */
+  cue?: { starts_at: string; effect: unknown };
 }
 
 const isClaim = (v: unknown): v is ClaimState => {
@@ -60,6 +74,8 @@ const typeOf = (template: string): string =>
 export function claimShown(c: ClaimState, nowMs: number): ClaimShown | null {
   const end = claimEnd(c);
   if (end !== null && nowMs >= end) return null;
+  // A video this screen cannot play is skipped: the region shows its rotation.
+  if (c.template === "video" && skipped(c.override_id)) return null;
   const key = `claim:${c.override_id}`;
   const steps = Array.isArray(c.steps) ? c.steps : [];
   if (steps.length === 0) return { key, type: typeOf(c.template), view: c.content };
@@ -67,13 +83,23 @@ export function claimShown(c: ClaimState, nowMs: number): ClaimShown | null {
   const elapsed = Math.max(0, nowMs - Date.parse(c.starts_at));
   let at = 0;
   let index = steps.length - 1;
+  let from = 0;
   for (const [i, step] of steps.entries()) {
     at += step.duration_ms;
     if (elapsed < at) {
       index = i;
       break;
     }
+    from = at;
   }
+  if (index === steps.length - 1) from = at - (steps[index]?.duration_ms ?? 0);
   const step = steps[index] as (typeof steps)[number];
-  return { key: `${key}:${String(index)}`, type: typeOf(step.template), view: step.content };
+  const startsAt = new Date(Date.parse(c.starts_at) + from).toISOString();
+  return {
+    key: `${key}:${String(index)}`,
+    type: typeOf(step.template),
+    view: step.content,
+    ...(typeof step.transition === "string" ? { transition: step.transition } : {}),
+    ...(step.effect != null ? { cue: { starts_at: startsAt, effect: step.effect } } : {}),
+  };
 }

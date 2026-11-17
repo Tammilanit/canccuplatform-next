@@ -4,6 +4,7 @@
  * a zone shows the same moment (docs/plans/issue-109.md, S6).
  */
 import { call, isDeviceAnswer } from "./api.js";
+import { takeErrors } from "./story-video.js";
 import type { Answer, Fetch } from "./api.js";
 
 export const HEARTBEAT_PATH = "/api/screen/device/heartbeat";
@@ -83,7 +84,7 @@ export class Heartbeat {
       client_time: new Date(sent).toISOString(),
       instance_id: this.instanceId,
       ...(this.rttMs === null ? {} : { rtt_ms: this.rttMs }),
-      errors: [],
+      errors: takeErrors(),
     };
     const answer = await call(this.fetchFn, "POST", HEARTBEAT_PATH, body);
     if (this.timer === undefined) return;
