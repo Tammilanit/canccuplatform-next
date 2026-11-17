@@ -171,6 +171,47 @@ describe("the sound screen", () => {
     expect(FakeAudio.made.map((a) => a.paused)).toEqual([true, false]);
   });
 
+  it("an urgent sound also stops one whose play() has not settled yet", async () => {
+    FakeAudio.hold = [];
+    const p = make();
+    p.take({ enabled: true, sounded_claims: [], play: play("a") });
+    await wait(400);
+    p.take({ enabled: true, sounded_claims: [], play: play("b", { interrupts: true }) });
+    await wait(400);
+    expect(FakeAudio.made.map((a) => [a.src, a.paused])).toEqual([
+      ["/api/moments/sounds/pack/ding.ogg", true],
+      ["/api/moments/sounds/pack/ding.ogg", false],
+    ]);
+  });
+
+  it("a start the urgent one overtook stays stopped when it settles late", async () => {
+    FakeAudio.hold = [];
+    const p = make();
+    p.take({ enabled: true, sounded_claims: [], play: play("a") });
+    await wait(400);
+    p.take({
+      enabled: true,
+      sounded_claims: [],
+      play: play("b", { interrupts: true, voice_url: "/v.ogg" }),
+    });
+    await wait(400);
+    const [a, b] = FakeAudio.made;
+    // B settles first, A only after it: A must not take B's place as what plays.
+    FakeAudio.hold[1]?.();
+    await wait(0);
+    FakeAudio.hold[0]?.();
+    await wait(0);
+    expect(a?.paused).toBe(true);
+    // B's voice line still plays after B, since B is still what plays.
+    b?.end();
+    expect(FakeAudio.made.map((x) => x.src).at(-1)).toBe("/v.ogg");
+    // A later urgent sound stops the voice line, not the long-stopped A.
+    FakeAudio.hold = null;
+    p.take({ enabled: true, sounded_claims: [], play: play("c", { interrupts: true }) });
+    await wait(400);
+    expect(FakeAudio.made[2]?.paused).toBe(true);
+  });
+
   it("a sound the browser refuses (audio locked) is not reported as played", async () => {
     FakeAudio.refuse = true;
     const p = make();
