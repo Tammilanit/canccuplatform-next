@@ -7,19 +7,16 @@
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import type { Outbox, SqlClient } from "@canccu/kit";
-import { blockedOn, desiredOverrides, overrideChanges, rankOf, rankOn } from "./arbiter.js";
-import type { Class, Orders, SentOverride, WantedOverride } from "./arbiter.js";
+import { blockedOn, desiredOverrides, rankOn } from "./arbiter.js";
+import type { Class, Orders } from "./arbiter.js";
+import { reconcile } from "./reconcile.js";
 import {
-  dropPlacements,
-  endOverride,
   heldOn,
   insertMoment,
   knownZones,
-  liveOverrides,
   loadOrders,
   happeningOwner,
   lockRunningByKey,
-  putOverride,
   saveMoment,
   titleOf,
   writeHistory,
@@ -218,7 +215,7 @@ export class Engine {
     };
     await insertMoment(c, moment);
     await this.history(c, moment, now, { action: "started", actor: r.actor ?? null });
-    await this.reconcile(c, moment, r.actor ?? null, "cleared", orders, zones);
+    await reconcile(this.outbox, c, moment, r.actor ?? null, "cleared", orders, zones);
     if (r.cue != null) await this.cues?.started(c, moment, r.cue, now);
     return { status: "started", moment };
   }
@@ -268,7 +265,7 @@ export class Engine {
       if (desiredOverrides(m, orders, zones, split).length > 0) {
         await saveMoment(c, m);
         await this.history(c, m, now, { action: "ended", zone, outcome: reason, actor });
-        await this.reconcile(c, m, actor, reason, orders, zones);
+        await reconcile(this.outbox, c, m, actor, reason, orders, zones);
         return;
       }
     }
@@ -276,12 +273,12 @@ export class Engine {
     m.end_reason = reason;
     await saveMoment(c, m);
     await this.history(c, m, now, { action: "ended", outcome: reason, actor });
-    await this.reconcile(c, m, actor, reason, await loadOrders(c), zones);
+    await reconcile(this.outbox, c, m, actor, reason, await loadOrders(c), zones);
   }
 
   /** Shows a moment again as its row now says: content, end, rank and zones (E8). */
   async show(c: SqlClient, m: MomentRow, actor: Actor | null, reason: EndReason): Promise<void> {
-    await this.reconcile(c, m, actor, reason, await loadOrders(c), await knownZones(c));
+    await reconcile(this.outbox, c, m, actor, reason, await loadOrders(c), await knownZones(c));
   }
 
   /** Who holds every region the request may take on every zone it names, or null. */
@@ -314,70 +311,6 @@ export class Engine {
     return `${row === undefined ? top.id : titleOf(row)} (rank ${top.rank})`;
   }
 
-  /**
-   * Sends what changed between the overrides last sent and the ones the moment wants now:
-   * `.started` for new ones first (so a zone moved to its own override has no gap), then
-   * `.changed`, a narrowing's `.ended` with `final: false`, and `.ended` for the ones it no
-   * longer wants (contracts/moments.md, The overrides it emits).
-   */
-  private async reconcile(
-    c: SqlClient,
-    m: MomentRow,
-    actor: Actor | null,
-    reason: EndReason,
-    orders: Orders,
-    known: string[],
-  ): Promise<void> {
-    const stored = new Map((await liveOverrides(c, m.id)).map((s) => [s.override_id, s.sent]));
-    const wanted =
-      m.ended_at === null ? desiredOverrides(m, orders, known, await splitZones(c, m.id)) : [];
-    const by = actor?.user_id ?? null;
-    for (const w of wanted.filter((w) => !stored.has(w.id))) {
-      const next = sentOf(m, w);
-      await putOverride(c, m.id, next);
-      await this.emit(c, "moments.override.started", {
-        override: wire(m, next),
-        actor_user_id: by,
-      });
-    }
-    for (const w of wanted.filter((w) => stored.has(w.id))) {
-      const before = stored.get(w.id) as SentOverride;
-      const next = sentOf(m, w);
-      const changed = overrideChanges(before, next);
-      if (changed.length === 0) continue;
-      await putOverride(c, m.id, next);
-      await this.emit(c, "moments.override.changed", {
-        override: wire(m, next),
-        changed,
-        actor_user_id: by,
-      });
-      const left = (before.zones.length === 0 ? known : before.zones).filter(
-        (z) => !next.zones.includes(z),
-      );
-      if (next.zones.length > 0 && left.length > 0) {
-        await dropPlacements(c, w.id, left);
-        await this.emit(c, "moments.override.ended", {
-          override_id: w.id,
-          zones: left,
-          reason,
-          final: false,
-          actor_user_id: by,
-        });
-      }
-    }
-    for (const [id, sent] of stored) {
-      if (wanted.some((w) => w.id === id)) continue;
-      await endOverride(c, id);
-      await this.emit(c, "moments.override.ended", {
-        override_id: id,
-        zones: sent.zones,
-        reason,
-        final: true,
-        actor_user_id: by,
-      });
-    }
-  }
-
   async history(
     c: SqlClient,
     m: MomentRow,
@@ -403,43 +336,7 @@ export class Engine {
       actor: e.actor,
     });
   }
-
-  private async emit(c: SqlClient, type: string, data: Record<string, unknown>): Promise<void> {
-    await this.outbox.add(c, type, data, { version: 1 });
-  }
 }
 
 const asJson = (v: Record<string, unknown>): Record<string, unknown> =>
   JSON.parse(JSON.stringify(v)) as Record<string, unknown>;
-
-function sentOf(m: MomentRow, w: WantedOverride): SentOverride {
-  return {
-    id: w.id,
-    kind: m.kind,
-    zones: w.zones,
-    rank: w.rank,
-    template: m.template,
-    content: m.content,
-    regions: m.regions,
-    expires_at: m.expires_at?.toISOString() ?? null,
-  };
-}
-
-/** The Override as the events carry it (events.md, Screen overrides; screen.md, claims). */
-function wire(m: MomentRow, s: SentOverride): Record<string, unknown> {
-  return {
-    ...s,
-    source: m.source,
-    effect: m.effect,
-    sound: null,
-    steps: m.steps,
-    on_end: "resume",
-    starts_at: m.starts_at.toISOString(),
-    ends_at: m.ended_at?.toISOString() ?? null,
-  };
-}
-
-/** The rank a moment has in the event's order, as the API shows it. */
-export function eventRank(orders: Orders, cls: Class): number {
-  return rankOf(orders.order, cls);
-}
