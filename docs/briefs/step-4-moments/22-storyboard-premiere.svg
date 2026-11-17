@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1290" width="1920" height="1290" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 22: the Premiere preset on screen and its builder row</title>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker><linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e1b4b"/><stop offset="0.55" stop-color="#7c3aed"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs>
+<rect x="0" y="0" width="1920" height="1290" rx="0" fill="#f3f4f6" />
+<text x="24" y="44" font-size="26" fill="#111827" font-weight="700" text-anchor="start" >22 · Premiere: countdown in the hero, the video full screen, the after-card (preset 23, PV1)</text>
+<text x="24" y="74" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" >Demo event · a run-of-show item of kind premiere at 19:00 on the main hall · the video step is on the dot, so it starts at 19:00:00</text>
+<text x="56" y="118" font-size="20" fill="#111827" font-weight="800" text-anchor="start" >1 · Countdown in the hero</text>
+<text x="56" y="142" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >18:59:30 · 30 s · message step · the rotation stays in the rail</text>
+<text x="672" y="118" font-size="20" fill="#111827" font-weight="800" text-anchor="start" >2 · The video, full screen</text>
+<text x="672" y="142" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >19:00:00 ● on the dot · its own length (2:40) · its own sound</text>
+<text x="1288" y="118" font-size="20" fill="#111827" font-weight="800" text-anchor="start" >3 · The after-card</text>
+<text x="1288" y="142" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >19:02:40 · 15 s · title card · then the screen is the screen again</text>
+<line x1="638" y1="318" x2="666" y2="318" stroke="#6b7280" stroke-width="2" marker-end="url(#ah)" />
+<line x1="1254" y1="318" x2="1282" y2="318" stroke="#6b7280" stroke-width="2" marker-end="url(#ah)" />
+<g transform="translate(56,160) scale(0.3)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a" />
+<rect x="48" y="22" width="46" height="46" rx="10" fill="url(#g)" />
+<text x="110" y="58" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="start" >DEMO EVENT</text>
+<text x="1500" y="58" font-size="30" fill="#a9b1d6" font-weight="600" text-anchor="end" >Main hall</text>
+<text x="1872" y="58" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end" >18:59</text>
+<rect x="48" y="102" width="1212" height="876" rx="14" fill="#1b2246" stroke="#b98cff" stroke-width="6" />
+<text x="110" y="220" font-size="52" fill="#b98cff" font-weight="800" text-anchor="start" letter-spacing="4">PREMIERE</text>
+<text x="110" y="380" font-size="88" fill="#f3f5ff" font-weight="900" text-anchor="start" >Demo Event: the film</text>
+<text x="110" y="480" font-size="56" fill="#a9b1d6" font-weight="400" text-anchor="start" >Main hall · lights down, sound up</text>
+<text x="110" y="820" font-size="240" fill="#f3f5ff" font-weight="900" text-anchor="start" >00:30</text>
+<text x="110" y="910" font-size="52" fill="#b98cff" font-weight="700" text-anchor="start" >starts at 19:00</text>
+<rect x="1290" y="102" width="582" height="876" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="2" />
+<text x="1322" y="160" font-size="30" fill="#a9b1d6" font-weight="700" text-anchor="start" >NEXT</text>
+<text x="1322" y="230" font-size="40" fill="#f3f5ff" font-weight="600" text-anchor="start" >19:30 · Café</text>
+<text x="1322" y="282" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start" >Dinner</text>
+<text x="1322" y="380" font-size="40" fill="#f3f5ff" font-weight="600" text-anchor="start" >21:00 · Stage</text>
+<text x="1322" y="432" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start" >Demo Game Cup final</text>
+</g>
+<g transform="translate(672,160) scale(0.3)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="url(#sky)" />
+<circle cx="1320" cy="640" r="170" fill="#fde68a" opacity="0.85"/>
+<path d="M0,820 L320,560 L620,780 L980,500 L1340,800 L1640,620 L1920,760 L1920,1080 L0,1080 z" fill="#111827" opacity="0.9"/>
+<path d="M0,920 L420,760 L860,900 L1260,780 L1920,940 L1920,1080 L0,1080 z" fill="#0b0d1a"/>
+<rect x="48" y="40" width="290" height="64" rx="32" fill="#0b0d1a" stroke="#b98cff" stroke-width="3" />
+<circle cx="88" cy="72" r="10" fill="#f87171"/>
+<text x="112" y="85" font-size="36" fill="#f3f5ff" font-weight="700" text-anchor="start" >Premiere</text>
+<rect x="48" y="1030" width="1824" height="10" rx="5" fill="#ffffff" />
+<rect x="48" y="1030" width="1824" height="10" rx="5" fill="#0b0d1a" opacity="0.55"/>
+<rect x="48" y="1030" width="420" height="10" rx="5" fill="#b98cff"/>
+</g>
+<g transform="translate(1288,160) scale(0.3)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a" />
+<rect x="48" y="22" width="46" height="46" rx="10" fill="url(#g)" />
+<text x="110" y="58" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="start" >DEMO EVENT</text>
+<text x="1500" y="58" font-size="30" fill="#a9b1d6" font-weight="600" text-anchor="end" >Main hall</text>
+<text x="1872" y="58" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end" >19:02</text>
+<rect x="48" y="102" width="1212" height="876" rx="14" fill="#1b2246" stroke="#b98cff" stroke-width="6" />
+<text x="110" y="220" font-size="52" fill="#b98cff" font-weight="800" text-anchor="start" letter-spacing="4">THANKS FOR WATCHING</text>
+<text x="110" y="420" font-size="130" fill="#f3f5ff" font-weight="900" text-anchor="start" >Again at 21:00</text>
+<text x="110" y="540" font-size="96" fill="#f3f5ff" font-weight="800" text-anchor="start" >on Stage</text>
+<text x="110" y="860" font-size="56" fill="#a9b1d6" font-weight="400" text-anchor="start" >Demo Event: the film</text>
+<rect x="1290" y="102" width="582" height="876" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="2" />
+<text x="1322" y="160" font-size="30" fill="#a9b1d6" font-weight="700" text-anchor="start" >NEXT</text>
+<text x="1322" y="230" font-size="40" fill="#f3f5ff" font-weight="600" text-anchor="start" >19:30 · Café</text>
+<text x="1322" y="282" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start" >Dinner</text>
+<text x="1322" y="380" font-size="40" fill="#f3f5ff" font-weight="600" text-anchor="start" >21:00 · Stage</text>
+<text x="1322" y="432" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start" >Demo Event: the film, again</text>
+</g>
+<text x="56" y="524" font-size="15" fill="#374151" font-weight="400" text-anchor="start" >Countdown widget, ticks by itself; silent</text>
+<text x="56" y="546" font-size="15" fill="#374151" font-weight="400" text-anchor="start" >The video is in the zone's prefetch while</text>
+<text x="56" y="568" font-size="15" fill="#374151" font-weight="400" text-anchor="start" >the story is on: on every player before 19:00</text>
+<text x="672" y="524" font-size="15" fill="#374151" font-weight="400" text-anchor="start" >Plays to its end; the zone's sound screen plays</text>
+<text x="672" y="546" font-size="15" fill="#374151" font-weight="400" text-anchor="start" >its audio, every other non-urgent sound is held;</text>
+<text x="672" y="568" font-size="15" fill="#374151" font-weight="400" text-anchor="start" >every screen starts on the server clock (≤ 200 ms)</text>
+<text x="1288" y="524" font-size="15" fill="#374151" font-weight="400" text-anchor="start" >Title card, text the organiser's (a free variable</text>
+<text x="1288" y="546" font-size="15" fill="#374151" font-weight="400" text-anchor="start" >at the take, or written in the preset);</text>
+<text x="1288" y="568" font-size="15" fill="#374151" font-weight="400" text-anchor="start" >then the rotation comes back</text>
+<rect x="20" y="610" width="1880" height="660" rx="10" fill="#f6f7fb" stroke="#9ca3af" stroke-width="2" />
+<rect x="20" y="610" width="1880" height="44" rx="10" fill="#e5e7eb" />
+<rect x="20" y="640" width="1880" height="14" rx="0" fill="#e5e7eb" />
+<text x="40" y="639" font-size="14" fill="#9ca3af" font-weight="700" text-anchor="start" >●  ●  ●</text>
+<rect x="130" y="619" width="560" height="26" rx="13" fill="#fff" />
+<text x="146" y="638" font-size="15" fill="#6b7280" font-weight="400" text-anchor="start" >/moments/storyboards/premiere</text>
+<text x="44" y="694" font-size="24" fill="#111827" font-weight="700" text-anchor="start" >Storyboard: Premiere</text>
+<text x="44" y="718" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >Preset 23 · some venues · class Storyboard (65) · hero → rail; the video step takes the full screen</text>
+<rect x="1600" y="680" width="44" height="24" rx="12" fill="#2563eb" />
+<circle cx="1630" cy="692" r="9" fill="#fff"/>
+<text x="1654" y="698" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >On for this event</text>
+<rect x="44" y="738" width="900" height="240" rx="12" fill="#fff" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="64" y="772" font-size="18" fill="#111827" font-weight="700" text-anchor="start" >Plays when (any one)</text>
+<text x="64" y="816" font-size="15" fill="#6b7280" font-weight="700" text-anchor="start" >1</text>
+<text x="92" y="816" font-size="15" fill="#111827" font-weight="400" text-anchor="start" >A run-of-show item of kind</text>
+<rect x="306" y="798" width="89" height="26" rx="13" fill="#eff6ff" />
+<text x="317" y="816" font-size="14" fill="#2563eb" font-weight="600" text-anchor="start" >premiere</text>
+<text x="403" y="816" font-size="15" fill="#111827" font-weight="400" text-anchor="start" >·</text>
+<rect x="417" y="798" width="122" height="26" rx="13" fill="#eff6ff" />
+<text x="428" y="816" font-size="14" fill="#2563eb" font-weight="600" text-anchor="start" >at its start</text>
+<text x="547" y="816" font-size="15" fill="#111827" font-weight="400" text-anchor="start" >follows delays</text>
+<text x="64" y="856" font-size="15" fill="#6b7280" font-weight="700" text-anchor="start" >2</text>
+<text x="92" y="856" font-size="15" fill="#111827" font-weight="400" text-anchor="start" >Taken by hand · asks for</text>
+<rect x="288" y="838" width="89" height="26" rx="13" fill="#eff6ff" />
+<text x="299" y="856" font-size="14" fill="#2563eb" font-weight="600" text-anchor="start" >the item</text>
+<rect x="385" y="838" width="181" height="26" rx="13" fill="#eff6ff" />
+<text x="396" y="856" font-size="14" fill="#2563eb" font-weight="600" text-anchor="start" >the after-card text</text>
+<text x="64" y="896" font-size="15" fill="#6b7280" font-weight="700" text-anchor="start" >3</text>
+<text x="92" y="896" font-size="15" fill="#111827" font-weight="400" text-anchor="start" >At a time</text>
+<rect x="174" y="878" width="55" height="26" rx="13" fill="#eff6ff" />
+<text x="185" y="896" font-size="14" fill="#2563eb" font-weight="600" text-anchor="start" >once</text>
+<rect x="237" y="878" width="97" height="26" rx="13" fill="#eff6ff" />
+<text x="248" y="896" font-size="14" fill="#2563eb" font-weight="600" text-anchor="start" >Sat 19:00</text>
+<text x="92" y="924" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start" >premiere is a kind this event added: agenda kinds are per event</text>
+<text x="64" y="960" font-size="15" fill="#111827" font-weight="700" text-anchor="start" >Only if (all)</text>
+<rect x="184" y="942" width="100" height="26" rx="13" fill="#f3f4f6" />
+<text x="195" y="960" font-size="13" fill="#111827" font-weight="600" text-anchor="start" >Zones: all</text>
+<rect x="292" y="942" width="193" height="26" rx="13" fill="#f3f4f6" />
+<text x="303" y="960" font-size="13" fill="#111827" font-weight="600" text-anchor="start" >In a quiet scene: skip</text>
+<rect x="493" y="942" width="123" height="26" rx="13" fill="#f3f4f6" />
+<text x="504" y="960" font-size="13" fill="#111827" font-weight="600" text-anchor="start" >Once per item</text>
+<rect x="964" y="738" width="912" height="240" rx="12" fill="#fff" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="984" y="772" font-size="18" fill="#111827" font-weight="700" text-anchor="start" >Before you save</text>
+<text x="984" y="808" font-size="14" fill="#166534" font-weight="400" text-anchor="start" >✓ demo-film.mp4 · MP4, H.264 + AAC · 2:40 · under 10 min</text>
+<text x="984" y="835" font-size="14" fill="#166534" font-weight="400" text-anchor="start" >✓ preloaded: on 6 of 6 screens of the main hall</text>
+<text x="984" y="862" font-size="14" fill="#166534" font-weight="400" text-anchor="start" >✓ the video lands on 19:00:00: the round starts at 18:59:30</text>
+<text x="984" y="889" font-size="14" fill="#166534" font-weight="400" text-anchor="start" >✓ the round's other steps: 45 s ≤ 120 s</text>
+<text x="984" y="916" font-size="14" fill="#92400e" font-weight="400" text-anchor="start" >! airtime: the video counts in the cap but is never deferred</text>
+<text x="984" y="943" font-size="14" fill="#92400e" font-weight="400" text-anchor="start" >! while it plays, other sounds on the main hall wait</text>
+<rect x="44" y="998" width="1832" height="250" rx="12" fill="#fff" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="64" y="1032" font-size="18" fill="#111827" font-weight="700" text-anchor="start" >The round</text>
+<text x="174" y="1032" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >3 steps · 1 round · no finale · sound: the video's own</text>
+<rect x="64" y="1050" width="360" height="130" rx="8" fill="#fff" stroke="#b98cff" stroke-width="3" />
+<text x="78" y="1076" font-size="15" fill="#111827" font-weight="700" text-anchor="start" >1 · Countdown card</text>
+<rect x="339" y="1058" width="75" height="22" rx="11" fill="#fef3c7" />
+<text x="347" y="1073" font-size="12" fill="#92400e" font-weight="600" text-anchor="start" >message</text>
+<text x="78" y="1100" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >30 s · rise · floor 8 s</text>
+<text x="78" y="1124" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start" >countdown · {item.title} · {item.starts_at}</text>
+<text x="78" y="1148" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start" >♪ none</text>
+<rect x="444" y="1050" width="720" height="130" rx="8" fill="#fff" stroke="#3ddcff" stroke-width="3" />
+<text x="458" y="1076" font-size="15" fill="#111827" font-weight="700" text-anchor="start" >2 · Video</text>
+<rect x="1039" y="1058" width="115" height="22" rx="11" fill="#e0f2fe" />
+<text x="1047" y="1073" font-size="12" fill="#075985" font-weight="600" text-anchor="start" >● on the dot</text>
+<text x="458" y="1100" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >its length 2:40 · full screen · its own sound</text>
+<text x="458" y="1124" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start" >Screen asset: demo-film.mp4 · preloaded on the zone's players</text>
+<text x="458" y="1148" font-size="13" fill="#2563eb" font-weight="600" text-anchor="start" >skipped in a quiet scene · other sound held while it plays</text>
+<rect x="1184" y="1050" width="360" height="130" rx="8" fill="#fff" stroke="#ffc94d" stroke-width="3" />
+<text x="1198" y="1076" font-size="15" fill="#111827" font-weight="700" text-anchor="start" >3 · After-card</text>
+<text x="1198" y="1100" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >15 s · fade · floor 8 s</text>
+<text x="1198" y="1124" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start" >title card · "Again at 21:00 on Stage"</text>
+<text x="1198" y="1148" font-size="13" fill="#6b7280" font-weight="400" text-anchor="start" >♪ none</text>
+<rect x="1564" y="1050" width="292" height="130" rx="8" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="1710" y="1110" font-size="15" fill="#2563eb" font-weight="700" text-anchor="middle" >+ step</text>
+<text x="1710" y="1134" font-size="12" fill="#6b7280" font-weight="400" text-anchor="middle" >a card, a sting, a video, …</text>
+<line x1="64" y1="1220" x2="1854" y2="1220" stroke="#9ca3af" stroke-width="2" />
+<rect x="64" y="1198" width="243" height="16" rx="3" fill="#b98cff" />
+<text x="64" y="1238" font-size="13" fill="#6b7280" font-weight="600" text-anchor="start" >18:59:30</text>
+<rect x="307" y="1198" width="1296" height="16" rx="3" fill="#3ddcff" />
+<text x="307" y="1238" font-size="13" fill="#6b7280" font-weight="600" text-anchor="start" >19:00:00 ●</text>
+<rect x="1603" y="1198" width="121" height="16" rx="3" fill="#ffc94d" />
+<text x="1603" y="1238" font-size="13" fill="#6b7280" font-weight="600" text-anchor="start" >19:02:40</text>
+<text x="1724" y="1238" font-size="13" fill="#6b7280" font-weight="600" text-anchor="start" >19:02:55 · rotation</text>
+<text x="934" y="1192" font-size="12" fill="#6b7280" font-weight="600" text-anchor="middle" >hero → full screen → hero</text>
+</svg>
