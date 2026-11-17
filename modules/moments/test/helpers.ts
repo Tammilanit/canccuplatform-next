@@ -35,6 +35,8 @@ const TABLES = [
   "moments_scene_zones",
   "moments_scene_crew",
   "moments_checkins",
+  "moments_announcements",
+  "moments_announcement_templates",
   "moments_outbox_tenants",
   "moments_tenants",
   "moments_migrations",
