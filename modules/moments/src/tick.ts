@@ -11,7 +11,7 @@ import type { Engine } from "./engine.js";
 import { evaluateScenes, storeAgenda } from "./scene-store.js";
 import type { AgendaReader } from "./scene-store.js";
 import { lockMoment, runningMoments } from "./store.js";
-import { tickAnnouncements } from "./announce/service.js";
+import { tickAnnouncements } from "./announce/follow.js";
 
 export const TICK_MS = 1000;
 /** History of an archived event is deleted this long after archiving (D21). */

@@ -30,6 +30,7 @@ export const TAKE = "moments.take";
 export const EMERGENCY = "moments.emergency";
 export const SCENES_TAKE = "moments.scenes.take";
 export const SETTINGS = "moments.settings.write";
+export const ANNOUNCE = "moments.announce";
 
 export interface AppDeps {
   db: Db;

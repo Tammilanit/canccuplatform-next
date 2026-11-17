@@ -5,16 +5,17 @@
  */
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { html } from "@canccu/ui";
-import { SETTINGS, tenantOf } from "../http.js";
+import { ANNOUNCE, SETTINGS, tenantOf } from "../http.js";
 import type { AppDeps } from "../http.js";
 import { PREFIX, page, pageNeeds, refusal, viaApi } from "../page-kit.js";
 import { knownZones } from "../store.js";
-import { ANNOUNCE } from "./routes.js";
 import { listAnnouncements, lockAnnouncement, runOfShow } from "./store.js";
 import type { AnnouncementRow, RunItem } from "./store.js";
 import { isBuiltin, loadTemplates } from "./templates.js";
-import { clock, composerForm, editView, flash, listView, previewView } from "./views.js";
-import type { ComposerState, Listed, Preview } from "./views.js";
+import { editView, listView } from "./list-views.js";
+import type { Listed } from "./list-views.js";
+import { clock, composerForm, flash, previewView } from "./views.js";
+import type { ComposerState, Preview } from "./views.js";
 
 type Form = Record<string, string | undefined>;
 type Q = { Querystring: Form; Body: Form };

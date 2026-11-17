@@ -21,7 +21,7 @@ const SCREEN_VIEW = { width: 1920, height: 1080 };
 const PLACED_MS = 30_000;
 
 /** A call to Moments through Caddy (SCREEN is Caddy's address here), with a fresh key. */
-function moments(method, path, body) {
+export function moments(method, path, body) {
   return new Promise((resolve, reject) => {
     const payload = body === undefined ? undefined : JSON.stringify(body);
     const req = request(
@@ -67,7 +67,7 @@ async function start(path, body) {
 }
 
 /** On air draws what Screen reported: wait until every zone of the moment `id` has its place. */
-async function placed(id, zones) {
+export async function placed(id, zones) {
   const until = Date.now() + PLACED_MS;
   while (Date.now() < until) {
     const r = await moments("GET", "/api/moments/moments");

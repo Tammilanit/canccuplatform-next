@@ -11,13 +11,7 @@ import type { Engine, MomentRequest } from "../engine.js";
 import { lockMoment } from "../store.js";
 import type { Actor, MomentRow } from "../store.js";
 import { BODY_MAX, TITLE_MAX, cut, fill } from "./text.js";
-import {
-  actorOfRow,
-  insertAnnouncement,
-  openAnnouncements,
-  runOfShow,
-  saveAnnouncement,
-} from "./store.js";
+import { actorOfRow, insertAnnouncement, runOfShow, saveAnnouncement } from "./store.js";
 import type { AnnouncementRow, Channels, EndReason, Level, RunItem, When } from "./store.js";
 
 /** How long the "Updated" chip shows after an edit (L13). */
@@ -112,11 +106,11 @@ export async function compose(
   return a;
 }
 
-const itemOf = (a: AnnouncementRow, items: RunItem[] | null): RunItem | null =>
+export const itemOf = (a: AnnouncementRow, items: RunItem[] | null): RunItem | null =>
   a.item_id === null ? null : (items?.find((i) => i.id === a.item_id) ?? null);
 
 /** When a scheduled one goes out, as now known: its time, or its item's start less the lead. */
-function fireAt(a: AnnouncementRow, items: RunItem[] | null, now: Date): Date | null {
+export function fireAt(a: AnnouncementRow, items: RunItem[] | null, now: Date): Date | null {
   if (a.when.mode === "now") return now;
   if (a.when.mode === "at") return a.when.at === undefined ? now : new Date(a.when.at);
   const item = itemOf(a, items);
@@ -124,7 +118,7 @@ function fireAt(a: AnnouncementRow, items: RunItem[] | null, now: Date): Date | 
   return new Date(Date.parse(item.starts_at) - (a.when.minutes_before ?? 0) * 60_000);
 }
 
-async function send(
+export async function send(
   c: SqlClient,
   engine: Engine,
   a: AnnouncementRow,
@@ -227,7 +221,7 @@ async function emit(
 }
 
 /** The running moments of a live one, locked. */
-async function momentsOf(c: SqlClient, a: AnnouncementRow): Promise<MomentRow[]> {
+export async function momentsOf(c: SqlClient, a: AnnouncementRow): Promise<MomentRow[]> {
   const out: MomentRow[] = [];
   for (const id of [a.line_moment_id, a.card_moment_id]) {
     if (id === null) continue;
@@ -238,7 +232,7 @@ async function momentsOf(c: SqlClient, a: AnnouncementRow): Promise<MomentRow[]>
 }
 
 /** Sets `updated` on its moments' content, and anything else `patch` names; no cue ever plays. */
-async function patchMoments(
+export async function patchMoments(
   c: SqlClient,
   engine: Engine,
   a: AnnouncementRow,
@@ -321,84 +315,4 @@ export async function withdrawAnnouncement(
       actor_user_id: w.actor?.user_id ?? null,
     });
   }
-}
-
-/** Why its item takes it away (E15), or null while the item stands or the run of show is unknown. */
-function itemGone(
-  a: AnnouncementRow,
-  items: RunItem[] | null,
-): { reason: EndReason; why: string } | null {
-  if (a.item_id === null || items === null) return null;
-  const item = itemOf(a, items);
-  if (item === null) return { reason: "item_removed", why: "Its run-of-show item was removed." };
-  if (item.status === "cancelled")
-    return { reason: "item_cancelled", why: `${item.title} was cancelled.` };
-  return null;
-}
-
-/**
- * The tick's turn (contracts/moments.md, Sending): scheduled ones follow their item and go out
- * when due; live ones lose their item, drop the "Updated" chip after 60 s, and end with their card.
- */
-export async function tickAnnouncements(c: SqlClient, engine: Engine, now: Date): Promise<void> {
-  const items = await runOfShow(c);
-  for (const a of await openAnnouncements(c, "scheduled")) {
-    const gone = itemGone(a, items);
-    if (gone !== null) {
-      await withdrawAnnouncement(c, engine, a, { ...gone, actor: null }, now);
-      continue;
-    }
-    const at = fireAt(a, items, now);
-    if (at !== null && at <= now) {
-      await send(c, engine, a, itemOf(a, items), now);
-    } else if (at?.getTime() !== a.fire_at?.getTime()) {
-      a.fire_at = at;
-      await saveAnnouncement(c, a);
-    }
-  }
-  for (const a of await openAnnouncements(c, "live")) {
-    const gone = itemGone(a, items);
-    if (gone !== null) {
-      await withdrawAnnouncement(c, engine, a, { ...gone, actor: null }, now);
-      continue;
-    }
-    if (await endedWithItsMoments(c, engine, a, now)) continue;
-    if (a.updated_until !== null && a.updated_until <= now) {
-      a.updated_until = null;
-      await patchMoments(c, engine, a, joined(a.title ?? "", a.body ?? ""), false, now);
-      await saveAnnouncement(c, a);
-    }
-  }
-}
-
-/**
- * Its main moment (the card, else the line) is over: expired, it simply ended; ended by a person
- * on On air, it is withdrawn everywhere, so the bot and the list agree with the screens.
- */
-async function endedWithItsMoments(
-  c: SqlClient,
-  engine: Engine,
-  a: AnnouncementRow,
-  now: Date,
-): Promise<boolean> {
-  const main = a.card_moment_id ?? a.line_moment_id;
-  const m = main === null ? null : await lockMoment(c, main);
-  if (m !== null && m.ended_at === null) return false;
-  if (m?.end_reason === "cleared") {
-    await withdrawAnnouncement(
-      c,
-      engine,
-      a,
-      { reason: "ended_on_air", why: "Ended on On air.", actor: null },
-      now,
-    );
-    return true;
-  }
-  for (const other of await momentsOf(c, a)) await engine.end(c, other, "expired", null, now);
-  a.status = "ended";
-  a.ended_at = m?.ended_at ?? now;
-  a.end_reason = "expired";
-  a.updated_until = null;
-  await saveAnnouncement(c, a);
-  return true;
 }

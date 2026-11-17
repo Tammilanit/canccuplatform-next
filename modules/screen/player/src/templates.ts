@@ -276,8 +276,7 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
       [
         FROM_CREW,
         not("from_crew", el("p", "kicker", [t("Announcement")])),
-        // An edit's chip for 60 s (L13); its ticker line, shown only where the card holds the
-        // ticker role, so both lines show there (L4; claims.css).
+        // An edit's chip (L13); the ticker line shows only in the ticker role (L4, claims.css).
         sec("updated", el("p", "updated", [t("Updated")])),
         title("title"),
         el("p", "body", [f("body")]),
@@ -288,7 +287,6 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
       },
     ),
   ],
-  // An announcement's ticker line says Urgent, or Updated after an edit (#115); the rest say Info.
   ticker: [
     el("p", "label", [
       sec("updated", t("Updated")),
