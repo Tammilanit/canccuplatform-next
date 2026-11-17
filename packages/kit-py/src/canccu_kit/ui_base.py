@@ -55,7 +55,6 @@ MENU: dict[str, Any] = {
                         "screen.zones.write",
                         "screen.ticker.write",
                         "screen.content.read",
-                        "screen.content.write",
                         "screen.bundle.write",
                     ],
                 },

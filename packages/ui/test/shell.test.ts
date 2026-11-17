@@ -35,10 +35,12 @@ describe("menuFor", () => {
     ]);
   });
   it("opens Screen studio to a role with content or bundle rights only", () => {
-    for (const right of ["screen.content.read", "screen.content.write", "screen.bundle.write"]) {
+    for (const right of ["screen.content.read", "screen.bundle.write"]) {
       const groups = menuFor(new Set([right]));
       expect(groups.flatMap((g) => g.items.map((i) => i.id))).toEqual(["screen"]);
     }
+    // No Studio tab opens with it alone (#611): Schedule and Content need screen.content.read.
+    expect(menuFor(new Set(["screen.content.write"]))).toEqual([]);
   });
 });
 

@@ -3,6 +3,7 @@
  * event's state, the pair dialog, the zone editor, the ticker and the page's headers.
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { menuFor } from "@canccu/ui";
 import { DATABASE_URL, SESSIONS, TENANTS, call, context, harness, pairDevice } from "./helpers.js";
 import type { Harness } from "./helpers.js";
 
@@ -67,6 +68,24 @@ describe.skipIf(!DATABASE_URL)("studio pages", () => {
     expect((await page("/admin/screen/", "crew", "eta.test")).headers.location).toBe(
       "/admin/screen/live",
     );
+  });
+
+  // #611: the shared menu's Screen studio item must never lead to "no access".
+  it("opens a tab for every right that shows Screen studio in the menu", async () => {
+    const item = menuFor(new Set(["screen.devices.read"]))
+      .flatMap((g) => g.items)
+      .find((i) => i.id === "screen");
+    expect(item?.rights.length).toBeGreaterThan(0);
+    for (const right of item?.rights ?? []) {
+      // A session of its own per right: the rights checker caches a session's answer.
+      const session = `only-${right}`;
+      SESSIONS[session] = [right];
+      const home = await page("/admin/screen/", session);
+      expect(home.statusCode, right).toBe(303);
+      const tab = await page(home.headers.location as string, session);
+      expect(tab.statusCode, `${right} → ${String(home.headers.location)}`).toBe(200);
+      Reflect.deleteProperty(SESSIONS, session);
+    }
   });
 
   it("shows each tab only to holders of its right", async () => {
