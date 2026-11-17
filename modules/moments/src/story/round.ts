@@ -71,7 +71,11 @@ export async function quietZones(c: SqlClient): Promise<string[]> {
 }
 
 /** The run's zones as a list; empty (every zone) stays empty unless some must be left out. */
-export async function zonesWithout(c: SqlClient, zones: string[], out: string[]): Promise<string[] | null> {
+export async function zonesWithout(
+  c: SqlClient,
+  zones: string[],
+  out: string[],
+): Promise<string[] | null> {
   if (out.length === 0) return zones;
   const all = zones.length > 0 ? zones : await knownZones(c);
   const kept = all.filter((z) => !out.includes(z));
@@ -122,7 +126,7 @@ export async function buildRound(
       ...(p.video ? { video_ms: p.duration_ms } : {}),
     });
     if (p.cue !== null && p.pass === 0 && sounds && (run.facts["@silent"] ?? "") === "")
-      seg.sounds.push({ at_ms: at, cue: p.cue, key: `${String(p.step)}` });
+      seg.sounds.push({ at_ms: at, cue: p.cue, key: String(p.step) });
     at += p.duration_ms;
     seg.until_ms = at;
   }
@@ -138,7 +142,13 @@ export async function buildRound(
   };
 }
 
-async function startSegment(ctx: Ctx, run: RunRow, story: Story, seg: Segment, i: number): Promise<string> {
+async function startSegment(
+  ctx: Ctx,
+  run: RunRow,
+  story: Story,
+  seg: Segment,
+  i: number,
+): Promise<string> {
   const round = run.round as RoundState;
   const actor: Actor | null = actorOfRun(run);
   const first = seg.steps[0] ?? { template: "title_card", content: {} };
@@ -180,9 +190,16 @@ async function startSegment(ctx: Ctx, run: RunRow, story: Story, seg: Segment, i
     ctx.now,
   );
   if (r.status === "refused") {
-    await history(ctx, run, story, "round_skipped", `${label(run, story)} skipped: one owner per happening`, {
-      displaced: r.held_by,
-    });
+    await history(
+      ctx,
+      run,
+      story,
+      "round_skipped",
+      `${label(run, story)} skipped: one owner per happening`,
+      {
+        displaced: r.held_by,
+      },
+    );
     return "refused";
   }
   return r.moment.id;
@@ -196,16 +213,27 @@ export const label = (run: RunRow, story: Story): string => {
 };
 
 /** Where a segment's moment is placed and shown now, and whether Screen has said so yet. */
-async function shownOn(c: SqlClient, momentId: string): Promise<{ shown: string[]; known: string[] }> {
+async function shownOn(
+  c: SqlClient,
+  momentId: string,
+): Promise<{ shown: string[]; known: string[] }> {
   const { rows } = await c.query(
     `SELECT zone_key, state FROM moment_placements WHERE moment_id = $1`,
     [momentId],
   );
   const r = rows as { zone_key: string; state: string }[];
-  return { shown: r.filter((x) => x.state === "placed").map((x) => x.zone_key), known: r.map((x) => x.zone_key) };
+  return {
+    shown: r.filter((x) => x.state === "placed").map((x) => x.zone_key),
+    known: r.map((x) => x.zone_key),
+  };
 }
 
-async function soundStep(ctx: Ctx, run: RunRow, seg: Segment, s: Segment["sounds"][number]): Promise<boolean> {
+async function soundStep(
+  ctx: Ctx,
+  run: RunRow,
+  seg: Segment,
+  s: Segment["sounds"][number],
+): Promise<boolean> {
   const round = run.round as RoundState;
   const at = ctx.now.getTime();
   const placed = await shownOn(ctx.c, seg.moment_id as string);
@@ -236,7 +264,8 @@ async function soundStep(ctx: Ctx, run: RunRow, seg: Segment, s: Segment["sounds
 
 /** An emergency or an urgent moment on the run's zones pauses its video. */
 async function pausing(c: SqlClient, zones: string[]): Promise<boolean> {
-  for (const zone of zones.length > 0 ? zones : await knownZones(c)) if (await emergencyOn(c, zone)) return true;
+  for (const zone of zones.length > 0 ? zones : await knownZones(c))
+    if (await emergencyOn(c, zone)) return true;
   const { rows } = await c.query(
     `SELECT 1 FROM moments WHERE ended_at IS NULL AND class = 'announcement'
        AND content->>'level' = 'urgent'
@@ -256,7 +285,12 @@ async function followPause(ctx: Ctx, run: RunRow, i: number): Promise<void> {
   const paused = await pausing(ctx.c, run.zones);
   if (paused && round.paused_at === null) {
     round.paused_at = at;
-    await ctx.engine.setContent(ctx.c, m, { ...m.content, paused_at: ctx.now.toISOString() }, ctx.now);
+    await ctx.engine.setContent(
+      ctx.c,
+      m,
+      { ...m.content, paused_at: ctx.now.toISOString() },
+      ctx.now,
+    );
   } else if (!paused && round.paused_at !== null) {
     const d = at - round.paused_at;
     round.paused_at = null;
@@ -281,7 +315,11 @@ async function followPause(ctx: Ctx, run: RunRow, i: number): Promise<void> {
  * its steps' sounds. Answers how it stands: `playing`, `done` (its time is over) or `held`
  * (its moments gave up the region, or one owner refused it: skipped).
  */
-export async function playRound(ctx: Ctx, run: RunRow, story: Story): Promise<"playing" | "done" | "held"> {
+export async function playRound(
+  ctx: Ctx,
+  run: RunRow,
+  story: Story,
+): Promise<"playing" | "done" | "held"> {
   const round = run.round as RoundState;
   const at = ctx.now.getTime();
   for (const [i, seg] of round.segments.entries()) {
@@ -299,10 +337,14 @@ export async function playRound(ctx: Ctx, run: RunRow, story: Story): Promise<"p
       if (await soundStep(ctx, run, seg, s)) round.decided.push(s.key);
     }
   }
-  const ids = round.segments.flatMap((s) => (s.moment_id === null || s.moment_id === "refused" ? [] : [s.moment_id]));
+  const ids = round.segments.flatMap((s) =>
+    s.moment_id === null || s.moment_id === "refused" ? [] : [s.moment_id],
+  );
   const last = ids.at(-1);
   const m = last === undefined ? null : await lockMoment(ctx.c, last);
-  const over = (at >= round.until_ms && round.paused_at === null) || (m?.ended_at != null && m.end_reason === "preempted");
+  const over =
+    (at >= round.until_ms && round.paused_at === null) ||
+    (m?.ended_at != null && m.end_reason === "preempted");
   if (!over) return "playing";
   return (await neverShown(ctx.c, ids)) ? "held" : "done";
 }
@@ -320,11 +362,16 @@ async function neverShown(c: SqlClient, ids: string[]): Promise<boolean> {
 }
 
 /** Ends the live round's moments now (an end event, the crew's stop or skip). */
-export async function endRound(ctx: Ctx, run: RunRow, reason: "source_ended" | "cleared"): Promise<void> {
+export async function endRound(
+  ctx: Ctx,
+  run: RunRow,
+  reason: "source_ended" | "cleared",
+): Promise<void> {
   for (const seg of run.round?.segments ?? []) {
     if (seg.moment_id === null || seg.moment_id === "refused") continue;
     const m = await lockMoment(ctx.c, seg.moment_id);
-    if (m !== null && m.ended_at === null) await ctx.engine.end(ctx.c, m, reason, actorOfRun(run), ctx.now);
+    if (m !== null && m.ended_at === null)
+      await ctx.engine.end(ctx.c, m, reason, actorOfRun(run), ctx.now);
   }
   run.round = null;
 }

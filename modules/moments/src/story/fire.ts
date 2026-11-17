@@ -37,7 +37,8 @@ export interface Occurrence {
 
 export type Fired = { run: RunRow } | { not: string };
 
-const minutesOf = (hhmm: string): number => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+const minutesOf = (hhmm: string): number =>
+  Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
 
 function inWindow(w: { from: string; until: string }, minutes: number): boolean {
   const from = minutesOf(w.from);
@@ -46,12 +47,22 @@ function inWindow(w: { from: string; until: string }, minutes: number): boolean 
 }
 
 /** The zones it plays on, or why it does not fire: zones, scenes, energy and quiet (all must hold). */
-async function zonesFor(ctx: Ctx, s: Story, o: Occurrence, energyOf: (z: string) => Promise<string | null>): Promise<string[] | string> {
+async function zonesFor(
+  ctx: Ctx,
+  s: Story,
+  o: Occurrence,
+  energyOf: (z: string) => Promise<string | null>,
+): Promise<string[] | string> {
   const k = s.conditions;
   let zones = k.zones;
   if (k.item_zone && o.zone !== null) zones = [o.zone];
   if (o.kind === "scene" && o.zone !== null) zones = [o.zone];
-  const zoneBound = k.scenes.length > 0 || k.not_scenes.length > 0 || k.energy_min !== null || k.energy_max !== null || k.quiet === "skip";
+  const zoneBound =
+    k.scenes.length > 0 ||
+    k.not_scenes.length > 0 ||
+    k.energy_min !== null ||
+    k.energy_max !== null ||
+    k.quiet === "skip";
   if (!zoneBound) return zones;
   const all = zones.length > 0 ? zones : await knownZones(ctx.c);
   const { rows } = await ctx.c.query(`SELECT zone_key, scene_key FROM moments_scene_zones`, []);
@@ -62,13 +73,28 @@ async function zonesFor(ctx: Ctx, s: Story, o: Occurrence, energyOf: (z: string)
   let why = "";
   for (const z of all) {
     const scene = sceneOf.get(z) ?? null;
-    if (k.scenes.length > 0 && (scene === null || !k.scenes.includes(scene))) { why = `${z} is not in ${k.scenes.join(" or ")}`; continue; }
-    if (scene !== null && k.not_scenes.includes(scene)) { why = `${z} is in ${scene}`; continue; }
-    if (k.quiet === "skip" && quiet.includes(z)) { why = `not in quiet (${z})`; continue; }
+    if (k.scenes.length > 0 && (scene === null || !k.scenes.includes(scene))) {
+      why = `${z} is not in ${k.scenes.join(" or ")}`;
+      continue;
+    }
+    if (scene !== null && k.not_scenes.includes(scene)) {
+      why = `${z} is in ${scene}`;
+      continue;
+    }
+    if (k.quiet === "skip" && quiet.includes(z)) {
+      why = `not in quiet (${z})`;
+      continue;
+    }
     if (k.energy_min !== null || k.energy_max !== null) {
       const e = rank(await energyOf(z));
-      if (k.energy_min !== null && e < ENERGIES.indexOf(k.energy_min)) { why = `${z} is calmer than ${k.energy_min}`; continue; }
-      if (k.energy_max !== null && e > ENERGIES.indexOf(k.energy_max)) { why = `${z} is livelier than ${k.energy_max}`; continue; }
+      if (k.energy_min !== null && e < ENERGIES.indexOf(k.energy_min)) {
+        why = `${z} is calmer than ${k.energy_min}`;
+        continue;
+      }
+      if (k.energy_max !== null && e > ENERGIES.indexOf(k.energy_max)) {
+        why = `${z} is livelier than ${k.energy_max}`;
+        continue;
+      }
     }
     kept.push(z);
   }
@@ -80,16 +106,28 @@ async function zonesFor(ctx: Ctx, s: Story, o: Occurrence, energyOf: (z: string)
 async function notNow(ctx: Ctx, s: Story, o: Occurrence): Promise<string | null> {
   const k = s.conditions;
   const local = localParts(ctx.now.getTime(), ctx.event.time_zone);
-  if (k.window !== null && !inWindow(k.window, local.minutes)) return `outside ${k.window.from}–${k.window.until}`;
+  if (k.window !== null && !inWindow(k.window, local.minutes))
+    return `outside ${k.window.from}–${k.window.until}`;
   if (k.days.length > 0 && !k.days.includes(local.date)) return "not on this day";
   const epoch = new Date(0);
-  if (k.once === "event" && (await runSince(ctx.c, s.key, null, epoch)) !== null) return "once per event: it ran";
-  if (k.once === "source" && (await runSince(ctx.c, s.key, o.source, epoch)) !== null) return "once per source: it ran";
+  if (k.once === "event" && (await runSince(ctx.c, s.key, null, epoch)) !== null)
+    return "once per event: it ran";
+  if (k.once === "source" && (await runSince(ctx.c, s.key, o.source, epoch)) !== null)
+    return "once per source: it ran";
   if (k.once === "day") {
     const midnight = atLocal(local.date, "00:00", ctx.event.time_zone);
-    if ((await runSince(ctx.c, s.key, null, new Date(midnight))) !== null) return "once per day: it ran today";
+    if ((await runSince(ctx.c, s.key, null, new Date(midnight))) !== null)
+      return "once per day: it ran today";
   }
-  if (k.cooldown_minutes > 0 && (await runSince(ctx.c, s.key, null, new Date(ctx.now.getTime() - k.cooldown_minutes * 60_000))) !== null)
+  if (
+    k.cooldown_minutes > 0 &&
+    (await runSince(
+      ctx.c,
+      s.key,
+      null,
+      new Date(ctx.now.getTime() - k.cooldown_minutes * 60_000),
+    )) !== null
+  )
     return `cooldown ${String(k.cooldown_minutes)} min`;
   return null;
 }
@@ -99,7 +137,12 @@ async function notFired(ctx: Ctx, s: Story, o: Occurrence, why: string): Promise
   const mark = `nf:${s.key}:${o.source}`;
   if ((await readMark(ctx.c, mark)) === null) {
     await writeMark(ctx.c, mark, ctx.now.toISOString());
-    const fake = { why: o.why, test: false, actor_user_id: o.actor?.user_id ?? null, actor_name: o.actor?.name ?? null } as RunRow;
+    const fake = {
+      why: o.why,
+      test: false,
+      actor_user_id: o.actor?.user_id ?? null,
+      actor_name: o.actor?.name ?? null,
+    } as RunRow;
     await history(ctx, fake, s, "not_fired", `not fired: ${why}`);
   }
   return { not: why };
@@ -109,11 +152,15 @@ async function notFired(ctx: Ctx, s: Story, o: Occurrence, why: string): Promise
 async function nextItem(c: SqlClient, zone: string | null, t: number): Promise<Facts | null> {
   const items = ((await runOfShow(c)) ?? []) as (RunItem & { zone?: string | null })[];
   const next = items
-    .filter((i) => (i.visibility ?? "public") === "public" && (i.status ?? "scheduled") === "scheduled")
+    .filter(
+      (i) => (i.visibility ?? "public") === "public" && (i.status ?? "scheduled") === "scheduled",
+    )
     .filter((i) => zone === null || i.zone == null || i.zone === zone)
     .filter((i) => Date.parse(i.starts_at) > t)
     .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))[0];
-  return next === undefined ? null : { "next.title": next.title, "@next.starts_at": next.starts_at };
+  return next === undefined
+    ? null
+    : { "next.title": next.title, "@next.starts_at": next.starts_at };
 }
 
 /** Fires `s` for one occurrence: a new run, or why not. */
@@ -121,7 +168,7 @@ export async function fireStory(
   ctx: Ctx,
   s: Story,
   o: Occurrence,
-  energyOf: (z: string) => Promise<string | null> = async () => null,
+  energyOf: (z: string) => Promise<string | null> = () => Promise.resolve(null),
 ): Promise<Fired> {
   let zones: string[];
   if (o.test != null) zones = [o.test.zone];
@@ -149,8 +196,14 @@ export async function fireStory(
   let facts = o.facts;
   if (s.end.until_event?.kind === "next_item_starts") {
     const next = await nextItem(ctx.c, o.zone, o.t);
-    if (next === null) return notFired(ctx, s, o, `no next item${o.zone === null ? "" : ` on ${o.zone}`}`);
-    facts = { ...facts, ...next, "next.starts_at": localParts(Date.parse(next["@next.starts_at"] ?? ""), ctx.event.time_zone).hhmm };
+    if (next === null)
+      return notFired(ctx, s, o, `no next item${o.zone === null ? "" : ` on ${o.zone}`}`);
+    facts = {
+      ...facts,
+      ...next,
+      "next.starts_at": localParts(Date.parse(next["@next.starts_at"] ?? ""), ctx.event.time_zone)
+        .hhmm,
+    };
   }
   if (o.test?.sound === true) facts = { ...facts, "@test_sound": "1" };
   const run: RunRow = {

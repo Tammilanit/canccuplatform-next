@@ -29,7 +29,8 @@ export function roundAt(s: Schedule, t: number, n: number, leadMs: number): numb
 
 /** The shortest gap between two rounds, or null for a single round. */
 export function gapMs(s: Schedule): number | null {
-  if (s.rounds.mode === "every") return roundCount(s) === 1 ? null : s.rounds.every_minutes * MINUTE;
+  if (s.rounds.mode === "every")
+    return roundCount(s) === 1 ? null : s.rounds.every_minutes * MINUTE;
   const o = s.rounds.offsets_minutes;
   const n = Math.min(o.length, s.end.rounds ?? o.length);
   if (n < 2) return null;

@@ -85,15 +85,25 @@ export function kit(w: World, tenant = "demo") {
     async run(from: number, to: number, every = 1) {
       for (let s = from; s <= to; s += every) await tx((c) => tickTenant(c, w.engine, w.at(s)));
     },
-    place: (zone: string, ids: [string, string][], at: Date, unplaced: string[] = [], hidden: string[] = []) =>
-      tx((c) => applyClaims(c, claims(zone, ids, unplaced, hidden), at)),
+    place: (
+      zone: string,
+      ids: [string, string][],
+      at: Date,
+      unplaced: string[] = [],
+      hidden: string[] = [],
+    ) => tx((c) => applyClaims(c, claims(zone, ids, unplaced, hidden), at)),
     history: () =>
       tx(async (c) => {
         const { rows } = await c.query(
           `SELECT action, outcome, title, zone_key FROM moments_history WHERE action IN ('round_started', 'round_skipped', 'loop_ended', 'not_fired') ORDER BY seq`,
           [],
         );
-        return rows as { action: string; outcome: string; title: string; zone_key: string | null }[];
+        return rows as {
+          action: string;
+          outcome: string;
+          title: string;
+          zone_key: string | null;
+        }[];
       }),
     soundLog: () =>
       tx(async (c) => {
@@ -109,10 +119,20 @@ export function kit(w: World, tenant = "demo") {
           `SELECT id, story_key, status, end_reason, next_round, rounds_played, t, round FROM moments_story_runs ORDER BY started_at`,
           [],
         );
-        return rows as { id: string; story_key: string; status: string; end_reason: string | null; next_round: number; rounds_played: number; t: Date; round: unknown }[];
+        return rows as {
+          id: string;
+          story_key: string;
+          status: string;
+          end_reason: string | null;
+          next_round: number;
+          rounds_played: number;
+          t: Date;
+          round: unknown;
+        }[];
       }),
     started: () =>
-      w.events(tenant)
+      w
+        .events(tenant)
         .filter((e: Event) => e.type === "moments.override.started")
         .map((e: Event) => e.data.override as Record<string, unknown>),
   };

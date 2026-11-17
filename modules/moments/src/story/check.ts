@@ -48,12 +48,14 @@ function checkTrigger(t: Trigger, i: number): string | null {
         return `${at}: name one or more item kinds, or one item.`;
       return null;
     case "domain":
-      return DOMAIN_TYPES[t.type] === undefined ? `${at}: ${String(t.type)} cannot start a story.` : null;
+      return DOMAIN_TYPES[t.type] === undefined ? `${at}: ${t.type} cannot start a story.` : null;
     case "clock":
-      if (t.mode === "once") return Number.isNaN(Date.parse(t.at ?? "")) ? `${at}: a date-time.` : null;
+      if (t.mode === "once")
+        return Number.isNaN(Date.parse(t.at ?? "")) ? `${at}: a date-time.` : null;
       if (t.mode === "daily") return HHMM.test(t.at ?? "") ? null : `${at}: a time HH:MM.`;
       if (t.mode === "every") {
-        if (!int(t.every_minutes, LIMITS.clockEveryMinutes)) return `${at}: every 15 to 240 minutes.`;
+        if (!int(t.every_minutes, LIMITS.clockEveryMinutes))
+          return `${at}: every 15 to 240 minutes.`;
         return HHMM.test(t.from ?? "") && HHMM.test(t.until ?? "")
           ? null
           : `${at}: a window HH:MM to HH:MM.`;
@@ -75,10 +77,16 @@ function checkTrigger(t: Trigger, i: number): string | null {
 }
 
 function checkStep(s: StoryStep, at: string, finale: boolean): string | null {
-  if (!isObj(s) || typeof s.template !== "string" || !TEMPLATE.test(s.template) || !isObj(s.content))
+  if (
+    !isObj(s) ||
+    typeof s.template !== "string" ||
+    !TEMPLATE.test(s.template) ||
+    !isObj(s.content)
+  )
     return `${at}: a template and its content.`;
   if (!oneOf(s.transition, TRANSITIONS)) return `${at}: an unknown transition.`;
-  if (s.cue !== null && (typeof s.cue !== "string" || s.cue.length > 64)) return `${at}: a cue name.`;
+  if (s.cue !== null && (typeof s.cue !== "string" || s.cue.length > 64))
+    return `${at}: a cue name.`;
   if (isVideo(s)) {
     if (finale) return `${at}: a finale has no video.`;
     return typeof s.content.asset_id === "string" ? null : `${at}: choose the video.`;
@@ -88,7 +96,8 @@ function checkStep(s: StoryStep, at: string, finale: boolean): string | null {
     return `${at}: ${String(range[0])} to ${String(range[1])} s${isSting(s) ? " for a sting" : ""}.`;
   if (finale && !isSting(s) && s.duration_seconds < LIMITS.minFloorSeconds)
     return `${at}: a finale step holds at least 8 s.`;
-  if (s.duration_seconds < 3 && floorSeconds(s) > 0) return `${at}: a text step holds at least 3 s.`;
+  if (s.duration_seconds < 3 && floorSeconds(s) > 0)
+    return `${at}: a text step holds at least 3 s.`;
   return null;
 }
 
@@ -134,7 +143,10 @@ function checkShape(s: Story): string | null {
     !strings(c.not_scenes, KEY) ||
     !(c.energy_min === null || oneOf(c.energy_min, ENERGIES)) ||
     !(c.energy_max === null || oneOf(c.energy_max, ENERGIES)) ||
-    !(c.window === null || (isObj(c.window) && HHMM.test(c.window.from) && HHMM.test(c.window.until))) ||
+    !(
+      c.window === null ||
+      (isObj(c.window) && HHMM.test(c.window.from) && HHMM.test(c.window.until))
+    ) ||
     !strings(c.days, DATE) ||
     !(c.once === null || oneOf(c.once, ["event", "day", "source"])) ||
     !int(c.cooldown_minutes, LIMITS.cooldownMinutes) ||
@@ -146,15 +158,19 @@ function checkShape(s: Story): string | null {
 
 function checkRounds(s: Story, length: number): string | null {
   const r = s.rounds;
+  // The list comes from a request: its mode may be anything until checked.
+  const mode = r.mode as string;
+  const open = mode !== "offsets";
   if (r.mode === "offsets") {
     const o = r.offsets_minutes;
     if (!Array.isArray(o) || o.length === 0 || o.length > LIMITS.rounds[1])
       return "One to twenty offsets.";
     if (!o.every((x) => int(x, LIMITS.offsetMinutes))) return "Offsets are −240 to +240 minutes.";
     if (o.some((x, i) => i > 0 && x <= (o[i - 1] as number))) return "Offsets go up, each once.";
-  } else if (r.mode === "every") {
+  } else if (mode === "every") {
     if (!int(r.every_minutes, LIMITS.everyMinutes)) return "Every 2 to 120 minutes.";
-    if (!int(r.from_minutes, LIMITS.offsetMinutes)) return "The first round is −240 to +240 minutes.";
+    if (!int(r.from_minutes, LIMITS.offsetMinutes))
+      return "The first round is −240 to +240 minutes.";
   } else return "Rounds at offsets or every n minutes.";
   const e = s.end;
   if (!isObj(e)) return "The loop needs an end.";
@@ -166,7 +182,14 @@ function checkRounds(s: Story, length: number): string | null {
     return "Until an event this story can know.";
   if (u !== null && u.kind !== "domain" && !s.triggers.some((t) => t.kind === "item"))
     return "Until the item starts or ends needs an item trigger.";
-  if (r.mode === "every" && e.rounds === null && e.for_minutes === null && e.until_clock === null && u === null && !e.crew)
+  if (
+    open &&
+    e.rounds === null &&
+    e.for_minutes === null &&
+    e.until_clock === null &&
+    u === null &&
+    !e.crew
+  )
     return "Every loop ends: by a count, a time, a clock time, an event or the crew.";
   if (typeof e.crew !== "boolean") return "Crew stop is on or off.";
   const gap = gapMs(s);
@@ -194,13 +217,20 @@ export function checkStory(s: Story, t: Timing): string | null {
   const rep = round.repeat;
   if (rep !== null) {
     if (!int(rep.times, LIMITS.repeatTimes)) return "A repeat plays 2 to 5 times.";
-    if (!int(rep.from, [0, round.steps.length - 1]) || !int(rep.to, [rep.from, round.steps.length - 1]))
+    if (
+      !int(rep.from, [0, round.steps.length - 1]) ||
+      !int(rep.to, [rep.from, round.steps.length - 1])
+    )
       return "The repeat covers neighbouring steps of the round.";
     if (round.steps.slice(rep.from, rep.to + 1).some(isVideo)) return "A video does not repeat.";
   }
   if (round.hold_seconds !== null && !int(round.hold_seconds, [10, 180]))
     return "A long hold is at most 180 s.";
-  if (round.hold_seconds !== null && s.rounds.mode === "offsets" && s.rounds.offsets_minutes.length > 1)
+  if (
+    round.hold_seconds !== null &&
+    s.rounds.mode === "offsets" &&
+    s.rounds.offsets_minutes.length > 1
+  )
     return "A long hold story has one round.";
   const compiled = compileRound(round, t);
   if (compiled.steps.length > LIMITS.steps) return "At most 12 steps a round, its repeat unrolled.";
@@ -225,7 +255,8 @@ export function checkStories(list: unknown, t: Timing): string | null {
   const keys = new Set<string>();
   for (const s of list as Story[]) {
     const why = checkStory(s, t);
-    if (why !== null) return `${isObj(s) && typeof s.name === "string" ? s.name : "A story"}: ${why}`;
+    if (why !== null)
+      return `${isObj(s) && typeof s.name === "string" ? s.name : "A story"}: ${why}`;
     if (keys.has(s.key)) return `The key ${s.key} is used twice.`;
     keys.add(s.key);
   }

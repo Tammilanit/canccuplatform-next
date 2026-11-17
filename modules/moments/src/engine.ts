@@ -433,7 +433,10 @@ function wire(m: MomentRow, s: SentOverride): Record<string, unknown> {
 }
 
 /** The live moment that shows `happening` (WD1), or null. */
-async function ownerOf(c: SqlClient, happening: string): Promise<{ id: string; title: string } | null> {
+async function ownerOf(
+  c: SqlClient,
+  happening: string,
+): Promise<{ id: string; title: string } | null> {
   const { rows } = await c.query(
     `SELECT id, template, content FROM moments WHERE happening = $1 AND ended_at IS NULL LIMIT 1`,
     [happening],

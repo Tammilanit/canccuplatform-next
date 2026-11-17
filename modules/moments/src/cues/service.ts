@@ -185,7 +185,13 @@ export class Cues {
    * its energy is calm or quiet; while it plays every other non-urgent sound there is held.
    * Answers the zones where the video plays muted.
    */
-  async video(c: SqlClient, zones: string[], untilMs: number, source: string, now: Date): Promise<string[]> {
+  async video(
+    c: SqlClient,
+    zones: string[],
+    untilMs: number,
+    source: string,
+    now: Date,
+  ): Promise<string[]> {
     const settings = await loadSettings(c);
     const at = now.getTime();
     const muted: string[] = [];
@@ -211,7 +217,12 @@ export class Cues {
       const state = await lockZone(c, zone);
       await saveZone(c, zone, {
         ...state,
-        playing: { id: `video_${source}`, cue: VIDEO_CUE, category: "attention", until_ms: untilMs },
+        playing: {
+          id: `video_${source}`,
+          cue: VIDEO_CUE,
+          category: "attention",
+          until_ms: untilMs,
+        },
       });
       await writeLog(c, { ...log, outcome: "played", reason: "free" });
     }
@@ -219,8 +230,24 @@ export class Cues {
   }
 
   /** A story step that does not sound on a zone: hidden there, or over the story's cap (SO2). */
-  async skipped(c: SqlClient, zone: string, cue: string, source: string, reason: "hidden" | "story_cap", now: Date) {
-    await writeLog(c, { at: now, zone_key: zone, cue, sound: null, source, outcome: "suppressed", reason, detail: null });
+  async skipped(
+    c: SqlClient,
+    zone: string,
+    cue: string,
+    source: string,
+    reason: "hidden" | "story_cap",
+    now: Date,
+  ) {
+    await writeLog(c, {
+      at: now,
+      zone_key: zone,
+      cue,
+      sound: null,
+      source,
+      outcome: "suppressed",
+      reason,
+      detail: null,
+    });
   }
 
   /** The zone's energy as Screen says it, or null when Screen does not answer. */

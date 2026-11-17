@@ -42,8 +42,14 @@ export const LIMITS = {
  */
 export const DOMAIN_TYPES: Readonly<Record<string, { source: string; fills: readonly string[] }>> =
   {
-    "tournament.registration.opened": { source: "session", fills: ["session.name", "session.game"] },
-    "tournament.registration.closed": { source: "session", fills: ["session.name", "session.game"] },
+    "tournament.registration.opened": {
+      source: "session",
+      fills: ["session.name", "session.game"],
+    },
+    "tournament.registration.closed": {
+      source: "session",
+      fills: ["session.name", "session.game"],
+    },
     "tournament.checkin.opened": {
       source: "session",
       fills: ["session.name", "session.game", "checkin.closes_at"],
@@ -220,7 +226,9 @@ export const KNOWN_PLACEHOLDERS: ReadonlySet<string> = new Set([
 /** The placeholders one trigger fills (the plan's trigger table); a take fills free variables. */
 export function fillsOf(t: Trigger, s: Pick<Story, "triggers" | "end">): Set<string> {
   const out = new Set(COMMON);
-  const add = (xs: readonly string[]) => xs.forEach((x) => out.add(x));
+  const add = (xs: readonly string[]) => {
+    xs.forEach((x) => out.add(x));
+  };
   const next = s.end.until_event?.kind === "next_item_starts";
   const hasItem = s.triggers.some((x) => x.kind === "item");
   if (t.kind === "item" || (t.kind === "take" && hasItem)) {

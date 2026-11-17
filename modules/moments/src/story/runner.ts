@@ -17,7 +17,15 @@ import type { Story } from "./model.js";
 import { CAP_MS, dueRound, plannedEnd, roundAt, roundSounds } from "./schedule.js";
 import { compileFinale, compileRound } from "./timing.js";
 import type { Compiled } from "./timing.js";
-import { buildRound, endRound, history, label, playRound, quietZones, zonesWithout } from "./round.js";
+import {
+  buildRound,
+  endRound,
+  history,
+  label,
+  playRound,
+  quietZones,
+  zonesWithout,
+} from "./round.js";
 import type { Ctx } from "./round.js";
 import { liveRuns, loadStories, saveRun } from "./store.js";
 import type { RunRow } from "./store.js";
@@ -35,9 +43,14 @@ export const compiledOf = (story: Story, ctx: Pick<Ctx, "settings">): Compiled =
   compileRound(story.round, ctx.settings, videoMs);
 
 /** The item a run follows and its anchor time, or why it is gone. */
-function follow(run: RunRow, story: Story, items: RunItem[] | null): { t: number } | { gone: string } | null {
+function follow(
+  run: RunRow,
+  story: Story,
+  items: RunItem[] | null,
+): { t: number } | { gone: string } | null {
   if (run.item_id === null || items === null) return null;
-  const item = items.find((i) => i.id === run.item_id) as (RunItem & { ends_at?: string | null }) | undefined;
+  const item = items.find((i) => i.id === run.item_id) as
+    (RunItem & { ends_at?: string | null }) | undefined;
   if (item === undefined) return { gone: "its run-of-show item was removed" };
   if (item.status === "cancelled") return { gone: `${item.title} was cancelled` };
   const trigger = story.triggers.find((t) => t.kind === "item");
@@ -54,15 +67,23 @@ function untilReached(story: Story, run: RunRow, items: RunItem[] | null, at: nu
     const next = run.facts["@next.starts_at"];
     return next !== undefined && Date.parse(next) <= at;
   }
-  const item = items?.find((i) => i.id === run.item_id) as (RunItem & { ends_at?: string | null }) | undefined;
+  const item = items?.find((i) => i.id === run.item_id) as
+    (RunItem & { ends_at?: string | null }) | undefined;
   if (item === undefined) return false;
   const when = u.kind === "item_starts" ? item.starts_at : (item.ends_at ?? null);
   return when !== null && Date.parse(when) <= at;
 }
 
 /** Ends the run; `planned` ends play the finale first when the story has one (fix 3). */
-export async function endRun(ctx: Ctx, run: RunRow, story: Story, why: string, reason: string): Promise<void> {
-  if (run.round !== null) await endRound(ctx, run, reason === "planned" ? "source_ended" : "cleared");
+export async function endRun(
+  ctx: Ctx,
+  run: RunRow,
+  story: Story,
+  why: string,
+  reason: string,
+): Promise<void> {
+  if (run.round !== null)
+    await endRound(ctx, run, reason === "planned" ? "source_ended" : "cleared");
   run.status = "ended";
   run.ended_at = ctx.now;
   run.end_reason = reason;
@@ -86,11 +107,27 @@ export async function planEnd(ctx: Ctx, run: RunRow, story: Story, why: string):
 async function startFinale(ctx: Ctx, run: RunRow, story: Story): Promise<void> {
   const quiet = story.conditions.quiet === "skip" ? await quietZones(ctx.c) : [];
   if ((await zonesWithout(ctx.c, run.zones, quiet)) === null) {
-    await endRun(ctx, run, story, `${run.facts["@end"] ?? "planned"}; finale skipped: not in quiet`, "planned");
+    await endRun(
+      ctx,
+      run,
+      story,
+      `${run.facts["@end"] ?? "planned"}; finale skipped: not in quiet`,
+      "planned",
+    );
     return;
   }
   const compiled = compileFinale(story.finale ?? [], ctx.settings);
-  run.round = await buildRound(ctx, run, story, compiled, run.next_round, true, ctx.now.getTime(), true, quiet);
+  run.round = await buildRound(
+    ctx,
+    run,
+    story,
+    compiled,
+    run.next_round,
+    true,
+    ctx.now.getTime(),
+    true,
+    quiet,
+  );
   run.finale_due = false;
   await history(ctx, run, story, "round_started", "finale");
   await playRound(ctx, run, story);
@@ -130,15 +167,31 @@ async function yieldTo(ctx: Ctx, zones: string[]): Promise<string | null> {
     [STORYBOARD_RANK, ctx.now, YIELD_AFTER_MS / 1000, zones],
   );
   const r = rows[0] as { template: string; content: Record<string, unknown> } | undefined;
-  return r === undefined ? null : String(r.content.title ?? r.template);
+  return r === undefined
+    ? null
+    : typeof r.content.title === "string"
+      ? r.content.title
+      : r.template;
 }
 
 async function skip(ctx: Ctx, run: RunRow, story: Story, n: number, why: string): Promise<void> {
-  await history(ctx, run, story, "round_skipped", `${label({ ...run, round: null, next_round: n }, story)} skipped: ${why}`);
+  await history(
+    ctx,
+    run,
+    story,
+    "round_skipped",
+    `${label({ ...run, round: null, next_round: n }, story)} skipped: ${why}`,
+  );
 }
 
 /** Starts round `n` now, or skips or defers it with the reason. */
-async function startRound(ctx: Ctx, run: RunRow, story: Story, compiled: Compiled, n: number): Promise<void> {
+async function startRound(
+  ctx: Ctx,
+  run: RunRow,
+  story: Story,
+  compiled: Compiled,
+  n: number,
+): Promise<void> {
   const at = ctx.now.getTime();
   const planned = roundAt(story, run.t.getTime(), n, compiled.lead_ms) ?? at;
   const zones = run.zones.length > 0 ? run.zones : await knownZones(ctx.c);
@@ -169,17 +222,29 @@ async function startRound(ctx: Ctx, run: RunRow, story: Story, compiled: Compile
   run.round = await buildRound(ctx, run, story, compiled, n, false, planned, sounds, quiet);
   run.next_round = n + 1;
   run.rounds_played += 1;
-  for (const z of Object.keys(run.sounds)) run.sounds[z] = { run: run.sounds[z]?.run ?? 0, round: 0 };
+  for (const z of Object.keys(run.sounds))
+    run.sounds[z] = { run: run.sounds[z]?.run ?? 0, round: 0 };
   await history(ctx, run, story, "round_started", label(run, story));
   const state = await playRound(ctx, run, story);
   if (state === "held") run.round = null;
 }
 
 /** One live run, one tick. */
-export async function stepRun(ctx: Ctx, run: RunRow, story: Story | undefined, items: RunItem[] | null): Promise<void> {
+export async function stepRun(
+  ctx: Ctx,
+  run: RunRow,
+  story: Story | undefined,
+  items: RunItem[] | null,
+): Promise<void> {
   const at = ctx.now.getTime();
   if (story === undefined || (!story.enabled && !run.test))
-    return endRun(ctx, run, { name: story?.name ?? run.story_key } as Story, "the story was turned off", "cleared");
+    return endRun(
+      ctx,
+      run,
+      { name: story?.name ?? run.story_key } as Story,
+      "the story was turned off",
+      "cleared",
+    );
   const f = follow(run, story, items);
   if (f !== null && "gone" in f) return endRun(ctx, run, story, f.gone, "cancelled");
   if (f !== null && f.t !== run.t.getTime()) run.t = new Date(f.t);
@@ -191,7 +256,16 @@ export async function stepRun(ctx: Ctx, run: RunRow, story: Story | undefined, i
   if (run.finale_due) return startFinale(ctx, run, story);
   if (untilReached(story, run, items, at)) {
     const u = story.end.until_event?.kind;
-    return planEnd(ctx, run, story, u === "item_ends" ? "the item ended" : u === "next_item_starts" ? "the next item started" : "the item started");
+    return planEnd(
+      ctx,
+      run,
+      story,
+      u === "item_ends"
+        ? "the item ended"
+        : u === "next_item_starts"
+          ? "the next item started"
+          : "the item started",
+    );
   }
   if (story.end.until_event !== null && at - run.started_at.getTime() - run.uncounted_ms >= CAP_MS)
     return endRun(ctx, run, story, "time limit", "time_limit");
@@ -201,7 +275,8 @@ export async function stepRun(ctx: Ctx, run: RunRow, story: Story | undefined, i
     if (state === "held")
       await skip(ctx, run, story, run.round.index, "its region was held past its patience");
     const video = run.round.segments.find((s) => s.kind === "video");
-    if (video !== undefined && video.moment_id !== null) run.uncounted_ms += video.until_ms - video.from_ms;
+    if (video !== undefined && video.moment_id !== null)
+      run.uncounted_ms += video.until_ms - video.from_ms;
     run.round = null;
   }
   const end = plannedEnd(story, run.t.getTime(), run.started_at.getTime(), ctx.event.time_zone);
@@ -209,7 +284,8 @@ export async function stepRun(ctx: Ctx, run: RunRow, story: Story | undefined, i
   if (run.deferred_until !== null && at < run.deferred_until.getTime()) return saveRun(ctx.c, run);
   const compiled = compiledOf(story, ctx);
   const due = dueRound(story, run.t.getTime(), compiled.lead_ms, at, run.next_round);
-  const reason = run.deferred_until !== null ? (run.facts["@deferred"] ?? "airtime") : "its time ran out";
+  const reason =
+    run.deferred_until !== null ? (run.facts["@deferred"] ?? "airtime") : "its time ran out";
   for (const n of due.missed) await skip(ctx, run, story, n, reason);
   if (due.missed.length > 0) run.next_round = Math.max(...due.missed) + 1;
   run.deferred_until = null;
@@ -218,8 +294,15 @@ export async function stepRun(ctx: Ctx, run: RunRow, story: Story | undefined, i
     return saveRun(ctx.c, run);
   }
   const more = roundAt(story, run.t.getTime(), run.next_round, compiled.lead_ms) !== null;
-  if (run.test && run.rounds_played > 0) return endRun(ctx, run, story, "the test round played", "planned");
-  if (!more && (story.end.until_event === null || story.end.until_event.kind === "domain" && run.rounds_played > 0 && story.end.rounds !== null))
+  if (run.test && run.rounds_played > 0)
+    return endRun(ctx, run, story, "the test round played", "planned");
+  if (
+    !more &&
+    (story.end.until_event === null ||
+      (story.end.until_event.kind === "domain" &&
+        run.rounds_played > 0 &&
+        story.end.rounds !== null))
+  )
     return planEnd(ctx, run, story, "after its last round");
   return saveRun(ctx.c, run);
 }
@@ -232,5 +315,11 @@ export async function tickRuns(c: SqlClient, engine: Engine, now: Date): Promise
   if (runs.length === 0) return;
   const ctx: Ctx = { c, engine, now, settings: doc.settings, event: doc.event };
   const items = await runOfShow(c);
-  for (const run of runs) await stepRun(ctx, run, doc.stories.find((s) => s.key === run.story_key), items);
+  for (const run of runs)
+    await stepRun(
+      ctx,
+      run,
+      doc.stories.find((s) => s.key === run.story_key),
+      items,
+    );
 }

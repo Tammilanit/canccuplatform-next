@@ -47,7 +47,13 @@ const story = (o: Partial<Story> = {}): Story => ({
   full_screen: false,
   round: { steps: [step({ message: true })], repeat: null, hold_seconds: null },
   rounds: { mode: "offsets", offsets_minutes: [-15, -5, -1] },
-  end: { rounds: null, for_minutes: null, until_clock: null, until_event: { kind: "item_starts" }, crew: true },
+  end: {
+    rounds: null,
+    for_minutes: null,
+    until_clock: null,
+    until_event: { kind: "item_starts" },
+    crew: true,
+  },
   finale: null,
   sound: "first",
   ...o,
@@ -70,12 +76,17 @@ describe("the presets", () => {
 
 describe("timing (SL1, SL2)", () => {
   it("holds a text step at its readable floor and the message at the card time", () => {
-    const words = "one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty twenty-one";
+    const words =
+      "one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty twenty-one";
     expect(floorSeconds(step({ content: { title: words } }))).toBe(10);
     expect(floorSeconds(step({ content: { title: "Hi" } }))).toBe(8);
     expect(floorSeconds(step({ template: "sting" }))).toBe(0);
     const c = compileRound(
-      { steps: [step({ duration_seconds: 4 }), step({ duration_seconds: 10, message: true })], repeat: null, hold_seconds: null },
+      {
+        steps: [step({ duration_seconds: 4 }), step({ duration_seconds: 10, message: true })],
+        repeat: null,
+        hold_seconds: null,
+      },
       DEFAULT_TIMING,
     );
     expect(c.steps.map((s) => s.duration_ms)).toEqual([8000, 15_000]);
@@ -98,7 +109,10 @@ describe("timing (SL1, SL2)", () => {
 
   it("drops the repeat past the limit, then stops the stretch there, never under ×1", () => {
     const round = {
-      steps: [step({ template: "sting", duration_seconds: 5 }), step({ duration_seconds: 40, message: true })],
+      steps: [
+        step({ template: "sting", duration_seconds: 5 }),
+        step({ duration_seconds: 40, message: true }),
+      ],
       repeat: { from: 0, to: 1, times: 2 },
       hold_seconds: null,
     };
@@ -111,19 +125,40 @@ describe("timing (SL1, SL2)", () => {
       step({ duration_seconds: 30 }),
       step({ duration_seconds: 20 }),
     ];
-    const long = compileRound({ steps, repeat: null, hold_seconds: null }, { factor: 2, min_card_seconds: 15 });
+    const long = compileRound(
+      { steps, repeat: null, hold_seconds: null },
+      { factor: 2, min_card_seconds: 15 },
+    );
     expect(long.capped).toBe(true);
     expect(Math.abs(long.length_ms - 120_000)).toBeLessThanOrEqual(2);
     const x1 = compileRound({ steps, repeat: null, hold_seconds: null }, DEFAULT_TIMING);
-    long.steps.forEach((s, i) => expect(s.duration_ms).toBeGreaterThanOrEqual(x1.steps[i]?.duration_ms ?? 0));
+    long.steps.forEach((s, i) => {
+      expect(s.duration_ms).toBeGreaterThanOrEqual(x1.steps[i]?.duration_ms ?? 0);
+    });
     expect(long.steps[0]?.duration_ms).toBe(5000);
   });
 
   it("holds the last step of a long hold story up to its hold (SL2)", () => {
-    const c = compileRound({ steps: [step({ message: true })], repeat: null, hold_seconds: 150 }, DEFAULT_TIMING);
+    const c = compileRound(
+      { steps: [step({ message: true })], repeat: null, hold_seconds: 150 },
+      DEFAULT_TIMING,
+    );
     expect(c.length_ms).toBe(150_000);
-    expect(checkStory(story({ round: { steps: [step({ message: true })], repeat: null, hold_seconds: 150 }, rounds: { mode: "offsets", offsets_minutes: [-5] } }), DEFAULT_TIMING)).toBeNull();
-    expect(checkStory(story({ round: { steps: [step()], repeat: null, hold_seconds: 200 } }), DEFAULT_TIMING)).toMatch(/180 s/);
+    expect(
+      checkStory(
+        story({
+          round: { steps: [step({ message: true })], repeat: null, hold_seconds: 150 },
+          rounds: { mode: "offsets", offsets_minutes: [-5] },
+        }),
+        DEFAULT_TIMING,
+      ),
+    ).toBeNull();
+    expect(
+      checkStory(
+        story({ round: { steps: [step()], repeat: null, hold_seconds: 200 } }),
+        DEFAULT_TIMING,
+      ),
+    ).toMatch(/180 s/);
   });
 
   it("starts Midnight's round early so its sting lands on 00:00:00 (fix 1)", () => {
@@ -140,9 +175,22 @@ describe("timing (SL1, SL2)", () => {
 describe("rounds and ends", () => {
   it("plays offsets relative to T, and every n minutes from T", () => {
     const s = story();
-    expect([0, 1, 2, 3].map((n) => roundAt(s, T, n, 0))).toEqual([T - 15 * MIN, T - 5 * MIN, T - MIN, null]);
-    const every = story({ rounds: { mode: "every", every_minutes: 10, from_minutes: 0 }, end: { ...s.end, rounds: 3, until_event: null } });
-    expect([0, 1, 2, 3].map((n) => roundAt(every, T, n, 0))).toEqual([T, T + 10 * MIN, T + 20 * MIN, null]);
+    expect([0, 1, 2, 3].map((n) => roundAt(s, T, n, 0))).toEqual([
+      T - 15 * MIN,
+      T - 5 * MIN,
+      T - MIN,
+      null,
+    ]);
+    const every = story({
+      rounds: { mode: "every", every_minutes: 10, from_minutes: 0 },
+      end: { ...s.end, rounds: 3, until_event: null },
+    });
+    expect([0, 1, 2, 3].map((n) => roundAt(every, T, n, 0))).toEqual([
+      T,
+      T + 10 * MIN,
+      T + 20 * MIN,
+      null,
+    ]);
   });
 
   it("plays the round due now and skips the ones it missed; a round past its patience is skipped", () => {
@@ -162,26 +210,52 @@ describe("rounds and ends", () => {
     expect(pick("every")).toEqual([true, true, true]);
     expect(pick("last")).toEqual([false, false, true]);
     expect(pick("first_and_last")).toEqual([true, false, true]);
-    const open = story({ rounds: { mode: "every", every_minutes: 5, from_minutes: 0 }, sound: "last" });
+    const open = story({
+      rounds: { mode: "every", every_minutes: 5, from_minutes: 0 },
+      sound: "last",
+    });
     expect(checkStory(open, DEFAULT_TIMING)).toMatch(/last round is known/);
   });
 
   it("fires `clock every` aligned to its window, and ends by a time or a clock time", () => {
-    const t = { kind: "clock" as const, mode: "every" as const, at: null, every_minutes: 60, from: "10:00", until: "22:00" };
+    const t = {
+      kind: "clock" as const,
+      mode: "every" as const,
+      at: null,
+      every_minutes: 60,
+      from: "10:00",
+      until: "22:00",
+    };
     const ev = { starts_at: null, ends_at: null, timeZone: "UTC" };
-    const at = (iso: string) => clockTimes(t, ev, Date.parse(iso), 0).map((x) => new Date(x).toISOString());
-    expect(at("2026-03-14T12:30:00Z")).toEqual(["2026-03-14T11:00:00.000Z", "2026-03-14T12:00:00.000Z"]);
+    const at = (iso: string) =>
+      clockTimes(t, ev, Date.parse(iso), 0).map((x) => new Date(x).toISOString());
+    expect(at("2026-03-14T12:30:00Z")).toEqual([
+      "2026-03-14T11:00:00.000Z",
+      "2026-03-14T12:00:00.000Z",
+    ]);
     expect(at("2026-03-14T23:30:00Z").at(-1)).toBe("2026-03-14T22:00:00.000Z");
     expect(at("2026-03-14T09:30:00Z").at(-1)).toBe("2026-03-13T22:00:00.000Z");
-    const s = story({ end: { rounds: null, for_minutes: 30, until_clock: "21:10", until_event: null, crew: false } });
+    const s = story({
+      end: { rounds: null, for_minutes: 30, until_clock: "21:10", until_event: null, crew: false },
+    });
     expect(plannedEnd(s, T, T - 15 * MIN, "UTC")).toBe(T + 10 * MIN);
     expect(CAP_MS).toBe(6 * 3_600_000);
   });
 
   it("needs an end for every loop and a gap at least the round's length", () => {
-    const open = story({ rounds: { mode: "every", every_minutes: 5, from_minutes: 0 }, end: { rounds: null, for_minutes: null, until_clock: null, until_event: null, crew: false } });
+    const open = story({
+      rounds: { mode: "every", every_minutes: 5, from_minutes: 0 },
+      end: { rounds: null, for_minutes: null, until_clock: null, until_event: null, crew: false },
+    });
     expect(checkStory(open, DEFAULT_TIMING)).toMatch(/Every loop ends/);
-    const tight = story({ rounds: { mode: "every", every_minutes: 2, from_minutes: 0 }, round: { steps: [step({ duration_seconds: 60 }), step({ duration_seconds: 61 })], repeat: null, hold_seconds: null } });
+    const tight = story({
+      rounds: { mode: "every", every_minutes: 2, from_minutes: 0 },
+      round: {
+        steps: [step({ duration_seconds: 60 }), step({ duration_seconds: 61 })],
+        repeat: null,
+        hold_seconds: null,
+      },
+    });
     expect(checkStory(tight, DEFAULT_TIMING)).toMatch(/1 to 60 s/);
   });
 });
@@ -189,12 +263,27 @@ describe("rounds and ends", () => {
 describe("placeholders (D10, SD3)", () => {
   it("fails an unknown one and one not every trigger fills, unless it has a fallback", () => {
     const say = (title: string, triggers: Story["triggers"] = story().triggers) =>
-      checkStory(story({ triggers, round: { steps: [step({ content: { title } })], repeat: null, hold_seconds: null } }), DEFAULT_TIMING);
+      checkStory(
+        story({
+          triggers,
+          round: { steps: [step({ content: { title } })], repeat: null, hold_seconds: null },
+        }),
+        DEFAULT_TIMING,
+      );
     expect(say("{item.nope}")).toBe("Unknown placeholder {item.nope}.");
     expect(say("Hi {")).toMatch(/brace/);
     expect(say("{item.title} at {item.location}")).toBeNull();
-    const clock = { kind: "clock" as const, mode: "daily" as const, at: "12:00", every_minutes: null, from: null, until: null };
-    expect(say("{item.title}", [...story().triggers, clock])).toMatch(/Not every trigger fills \{item.title\}/);
+    const clock = {
+      kind: "clock" as const,
+      mode: "daily" as const,
+      at: "12:00",
+      every_minutes: null,
+      from: null,
+      until: null,
+    };
+    expect(say("{item.title}", [...story().triggers, clock])).toMatch(
+      /Not every trigger fills \{item.title\}/,
+    );
     expect(say("{item.title|the show}", [...story().triggers, clock])).toBeNull();
     // A take of a story with an item trigger asks for the item, so it fills the item's fields.
     expect(say("{item.title}", [...story().triggers, { kind: "take" }])).toBeNull();

@@ -15,13 +15,17 @@ export type Facts = Record<string, string>;
 
 const obj = (v: unknown): Data => (typeof v === "object" && v !== null ? (v as Data) : {});
 const list = (v: unknown): Data[] => (Array.isArray(v) ? v.map(obj) : []);
-const str = (v: unknown): string => (typeof v === "string" ? v : typeof v === "number" ? String(v) : "");
+const str = (v: unknown): string =>
+  typeof v === "string" ? v : typeof v === "number" ? String(v) : "";
 
 export const hhmm = (iso: string, timeZone: string): string =>
   Number.isNaN(Date.parse(iso)) ? "" : localParts(Date.parse(iso), timeZone).hhmm;
 
 /** An item's facts; its start is kept as an instant too, so `{item.starts_in}` is filled fresh. */
-export function itemFacts(item: RunItem & { ends_at?: string | null; game?: unknown }, timeZone: string): Facts {
+export function itemFacts(
+  item: RunItem & { ends_at?: string | null; game?: unknown },
+  timeZone: string,
+): Facts {
   return {
     "item.title": item.title,
     "item.starts_at": hhmm(item.starts_at, timeZone),
@@ -34,7 +38,11 @@ export function itemFacts(item: RunItem & { ends_at?: string | null; game?: unkn
 }
 
 const teamName = (t: Data): string =>
-  str(t.name) || list(t.people).map((p) => str(p.name)).filter(Boolean).join(" & ");
+  str(t.name) ||
+  list(t.people)
+    .map((p) => str(p.name))
+    .filter(Boolean)
+    .join(" & ");
 
 /** A domain event's public facts, per type (the fixed list); personal fields are never read. */
 export function domainFacts(type: string, d: Data, timeZone: string): Facts {
@@ -44,7 +52,9 @@ export function domainFacts(type: string, d: Data, timeZone: string): Facts {
   const order = obj(d.order);
   const game = obj(d.game);
   const first = list(d.results).sort((a, b) => Number(a.rank) - Number(b.rank))[0] ?? {};
-  const winners = list(first.people).map((p) => str(p.name)).filter(Boolean);
+  const winners = list(first.people)
+    .map((p) => str(p.name))
+    .filter(Boolean);
   const all: Facts = {
     "session.name": str(session.name),
     "session.game": str(obj(session.game).name),
@@ -60,7 +70,9 @@ export function domainFacts(type: string, d: Data, timeZone: string): Facts {
     "game.name": str(game.name),
     "game.players": str(d.players),
   };
-  return Object.fromEntries(fills.map((k) => [k, all[k] ?? ""]).filter(([, v]) => v !== ""));
+  return Object.fromEntries(
+    fills.map((k) => [k, all[k] ?? ""]).filter(([, v]) => v !== ""),
+  ) as Facts;
 }
 
 /** What a domain event's story keys on (`per_source`, `once` per source), or null. */
@@ -85,10 +97,15 @@ export interface FillContext {
 
 /** The night of the event `at` is in: past midnight counts as that night, until 06:00. */
 function dayOf(at: number, ctx: FillContext): string {
-  const day = (ms: number) => Date.parse(`${localParts(ms - 6 * 3_600_000, ctx.timeZone).date}T00:00:00Z`);
+  const day = (ms: number) =>
+    Date.parse(`${localParts(ms - 6 * 3_600_000, ctx.timeZone).date}T00:00:00Z`);
   if (ctx.eventStartsAt === null || Number.isNaN(Date.parse(ctx.eventStartsAt)))
-    return new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: ctx.timeZone }).format(new Date(at - 6 * 3_600_000));
-  return String(Math.max(1, Math.round((day(at) - day(Date.parse(ctx.eventStartsAt))) / 86_400_000) + 1));
+    return new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: ctx.timeZone }).format(
+      new Date(at - 6 * 3_600_000),
+    );
+  return String(
+    Math.max(1, Math.round((day(at) - day(Date.parse(ctx.eventStartsAt))) / 86_400_000) + 1),
+  );
 }
 
 function value(name: string, ctx: FillContext): string {

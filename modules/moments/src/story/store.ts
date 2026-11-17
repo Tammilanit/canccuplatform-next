@@ -209,7 +209,11 @@ function values(r: RunRow): unknown[] {
 }
 
 /** Live runs, oldest first, locked: two containers' ticks never run one twice. */
-export async function liveRuns(c: SqlClient, where = "TRUE", args: unknown[] = []): Promise<RunRow[]> {
+export async function liveRuns(
+  c: SqlClient,
+  where = "TRUE",
+  args: unknown[] = [],
+): Promise<RunRow[]> {
   const { rows } = await c.query(
     `SELECT ${COLUMNS} FROM moments_story_runs WHERE status = 'live' AND (${where})
      ORDER BY started_at, id FOR UPDATE SKIP LOCKED`,

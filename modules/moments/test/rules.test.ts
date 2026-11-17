@@ -75,7 +75,10 @@ run("the built-in rules", () => {
   const presetsOff = () =>
     w.tx("demo", async (c) => {
       const doc = await ensureStories(c);
-      const stories = doc.stories.map((s) => ({ ...s, enabled: s.preset === null || !["match_called", "champion"].includes(s.preset) }));
+      const stories = doc.stories.map((s) => ({
+        ...s,
+        enabled: s.preset === null || !["match_called", "champion"].includes(s.preset),
+      }));
       await writeStories(c, stories, DEFAULT_SETTINGS, doc.revision + 1);
     });
 

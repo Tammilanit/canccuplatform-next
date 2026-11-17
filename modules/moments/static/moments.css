@@ -320,3 +320,47 @@
 .moments-row > div:first-child {
   display: grid;
 }
+
+/* Storyboards (mockup 18): the round's strip and the rounds' timeline, drawn as SVG. */
+.moments-strip,
+.moments-timeline {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+.moments-strip__card {
+  fill: var(--canccu-color-surface);
+  stroke: var(--canccu-color-border);
+}
+.moments-strip__card--message {
+  stroke: var(--canccu-color-primary);
+  stroke-width: 2;
+}
+.moments-strip__label {
+  font-size: 11px;
+  font-weight: 600;
+  fill: currentColor;
+}
+.moments-strip__meta {
+  font-size: 10px;
+  fill: var(--canccu-color-text-muted);
+}
+.moments-strip__bracket,
+.moments-timeline__axis {
+  fill: none;
+  stroke: var(--canccu-color-border);
+  stroke-width: 1.5;
+}
+.moments-timeline__round {
+  fill: var(--canccu-color-surface);
+  stroke: var(--canccu-color-primary);
+}
+.moments-timeline__round--sound {
+  fill: var(--canccu-color-primary);
+}
+.moments-timeline__finale {
+  fill: var(--canccu-color-accent);
+}
+.moments-story-fire + .moments-story-fire {
+  margin-block-start: 0.75rem;
+}

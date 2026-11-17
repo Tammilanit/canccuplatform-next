@@ -9,7 +9,12 @@
 import { EMPTY_CONDITIONS } from "./model.js";
 import type { Story, StoryStep } from "./model.js";
 
-const step = (template: string, content: Record<string, unknown>, s: number, o: Partial<StoryStep> = {}): StoryStep => ({
+const step = (
+  template: string,
+  content: Record<string, unknown>,
+  s: number,
+  o: Partial<StoryStep> = {},
+): StoryStep => ({
   template,
   content,
   duration_seconds: s,
@@ -23,7 +28,13 @@ const step = (template: string, content: Record<string, unknown>, s: number, o: 
 const card = (title: string, subtitle: string, s: number, o: Partial<StoryStep> = {}) =>
   step("title_card", { title, subtitle, image_url: null }, s, o);
 
-const NO_END = { rounds: null, for_minutes: null, until_clock: null, until_event: null, crew: true };
+const NO_END = {
+  rounds: null,
+  for_minutes: null,
+  until_clock: null,
+  until_event: null,
+  crew: true,
+};
 
 export const PRESETS: readonly Story[] = [
   {
@@ -39,7 +50,16 @@ export const PRESETS: readonly Story[] = [
       steps: [
         step("sting", { text: "Doors are open", image_url: null }, 3, { cue: "story.doors" }),
         card("Welcome to {event.name}", "Find your seat, say hi, have fun", 20, { message: true }),
-        step("title_card", { title: "Wi-Fi and venue info", subtitle: "Open the hub", image_url: null, qr: { path: "/notify/", label: "Venue info in the hub" } }, 20),
+        step(
+          "title_card",
+          {
+            title: "Wi-Fi and venue info",
+            subtitle: "Open the hub",
+            image_url: null,
+            qr: { path: "/notify/", label: "Venue info in the hub" },
+          },
+          20,
+        ),
         step("qr", { qr: { path: "/notify/", label: "Check in at the door" } }, 20),
       ],
       repeat: null,
@@ -67,7 +87,11 @@ export const PRESETS: readonly Story[] = [
         step("sting", { text: "Starting soon", image_url: null }, 3, { cue: "tournament.pre" }),
         step(
           "countdown",
-          { label: "{item.title}", target_at: "", ends_text: "{item.location|the stage} · in {item.starts_in}" },
+          {
+            label: "{item.title}",
+            target_at: "",
+            ends_text: "{item.location|the stage} · in {item.starts_in}",
+          },
           20,
           { message: true },
         ),
@@ -77,7 +101,12 @@ export const PRESETS: readonly Story[] = [
     },
     rounds: { mode: "offsets", offsets_minutes: [-15, -5, -1] },
     end: { ...NO_END, until_event: { kind: "item_starts" } },
-    finale: [card("It's on!", "{item.title} · {item.location|the stage}", 8, { cue: "tournament.start", transition: "flash" })],
+    finale: [
+      card("It's on!", "{item.title} · {item.location|the stage}", 8, {
+        cue: "tournament.start",
+        transition: "flash",
+      }),
+    ],
     sound: "first_and_last",
   },
   {
@@ -90,12 +119,21 @@ export const PRESETS: readonly Story[] = [
     run_mode: "per_source",
     full_screen: false,
     round: {
-      steps: [card("Match called: {match.label}", "{match.teams} · {session.game}", 30, { message: true, cue: "tournament.start" })],
+      steps: [
+        card("Match called: {match.label}", "{match.teams} · {session.game}", 30, {
+          message: true,
+          cue: "tournament.start",
+        }),
+      ],
       repeat: null,
       hold_seconds: null,
     },
     rounds: { mode: "every", every_minutes: 2, from_minutes: 0 },
-    end: { ...NO_END, rounds: 3, until_event: { kind: "domain", type: "tournament.match.started" } },
+    end: {
+      ...NO_END,
+      rounds: 3,
+      until_event: { kind: "domain", type: "tournament.match.started" },
+    },
     finale: null,
     sound: "first",
   },
@@ -114,7 +152,10 @@ export const PRESETS: readonly Story[] = [
     round: {
       steps: [
         step("sting", { text: "And the champion is…", image_url: null }, 4),
-        card("{winner.name|Our champion}", "{session.game|The final} champion", 30, { message: true, cue: "tournament.post" }),
+        card("{winner.name|Our champion}", "{session.game|The final} champion", 30, {
+          message: true,
+          cue: "tournament.post",
+        }),
         card("{session.name|The bracket}", "Thanks to every player", 20),
         step("qr", { qr: { path: "/notify/", label: "Share your photos" } }, 15),
       ],
@@ -131,13 +172,17 @@ export const PRESETS: readonly Story[] = [
     name: "Midnight",
     preset: "midnight",
     enabled: true,
-    triggers: [{ kind: "clock", mode: "daily", at: "00:00", every_minutes: null, from: null, until: null }],
+    triggers: [
+      { kind: "clock", mode: "daily", at: "00:00", every_minutes: null, from: null, until: null },
+    ],
     conditions: { ...EMPTY_CONDITIONS, quiet: "skip" },
     run_mode: "per_source",
     full_screen: true,
     round: {
       steps: [
-        step("countdown", { label: "Midnight", target_at: "", ends_text: "" }, 10, { cue: "story.midnight" }),
+        step("countdown", { label: "Midnight", target_at: "", ends_text: "" }, 10, {
+          cue: "story.midnight",
+        }),
         step("sting", { text: "Midnight!", image_url: null }, 4, { on_the_dot: true }),
         card("Night {now.day} at {event.name}", "Keep it going", 15, { message: true }),
       ],
