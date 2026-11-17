@@ -167,8 +167,11 @@ async function startSegment(
   let content = first.content as Record<string, unknown>;
   if (video) {
     zones = (await zonesWithout(ctx.c, run.zones, await quietZones(ctx.c))) ?? [];
-    const muted =
-      (await ctx.engine.sound?.video(ctx.c, zones, seg.until_ms, run.id, ctx.now)) ?? [];
+    // A test-fire is silent unless the crew chose sound (#114): the film's own sound included.
+    const silent = run.test && run.facts["@test_sound"] !== "1";
+    const muted = silent
+      ? zones
+      : ((await ctx.engine.sound?.video(ctx.c, zones, seg.until_ms, run.id, ctx.now)) ?? []);
     content = {
       ...content,
       started_at: new Date(seg.from_ms).toISOString(),
