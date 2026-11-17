@@ -276,15 +276,26 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
       [
         FROM_CREW,
         not("from_crew", el("p", "kicker", [t("Announcement")])),
+        // An edit's chip for 60 s (L13); its ticker line, shown only where the card holds the
+        // ticker role, so both lines show there (L4; claims.css).
+        sec("updated", el("p", "updated", [t("Updated")])),
         title("title"),
         el("p", "body", [f("body")]),
+        sec("ticker_line", el("p", "ticker-line", [f("ticker_line")])),
       ],
       {
         class: [t("canccu-widget__level canccu-widget__level--"), f("level")],
       },
     ),
   ],
-  ticker: [el("p", "label", [t("Info")]), el("p", "line", [f("text")])],
+  // An announcement's ticker line says Urgent, or Updated after an edit (#115); the rest say Info.
+  ticker: [
+    el("p", "label", [
+      sec("updated", t("Updated")),
+      not("updated", sec("urgent", t("Urgent")), not("urgent", t("Info"))),
+    ]),
+    el("p", "line", [f("text")]),
+  ],
   food_status: [
     el("p", "title", [f("pizzeria_name")]),
     el("p", "big", [f("state")]),

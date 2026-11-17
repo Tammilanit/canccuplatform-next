@@ -80,6 +80,64 @@
     });
   }
 
+  // Announcements (U11): the card in the real player before it goes out. Screen's zone preview
+  // composes the zone as it is now; the card takes the first region of its chain that the layout
+  // has and no higher claim holds, as Screen would place it, and the ticker line the ticker.
+  const announce = document.querySelector("iframe[data-announce-preview]");
+  if (announce) {
+    const note = document.querySelector("[data-preview-note]");
+    const zone = encodeURIComponent(announce.dataset.zone);
+    const json = { "content-type": "application/json" };
+    const draw = async () => {
+      const got = await fetch(`/api/screen/zones/${zone}`, { headers: json });
+      if (!got.ok) {
+        note.textContent = "The player preview needs the right to edit zones; the texts are below.";
+        return;
+      }
+      const res = await fetch(`/api/screen/zones/${zone}/preview`, {
+        method: "POST",
+        headers: json,
+        body: JSON.stringify(await got.json()),
+      });
+      if (!res.ok) return;
+      const state = await res.json();
+      const now = new Date().toISOString();
+      const claim = (role, template, content) => ({
+        override_id: `preview-${role}`,
+        hidden: false,
+        role,
+        rank: 80,
+        template,
+        content,
+        steps: null,
+        sound: null,
+        on_end: "resume",
+        starts_at: now,
+        ends_at: null,
+        expires_at: null,
+      });
+      const region = (role) => state.regions.find((r) => r.role === role);
+      const free = (role) => region(role) && !(region(role).claim && region(role).claim.rank > 80);
+      const role = JSON.parse(announce.dataset.chain).find(free);
+      if (role) region(role).claim = claim(role, "announcement", JSON.parse(announce.dataset.card));
+      const line = announce.dataset.line;
+      if (line && role !== "ticker" && free("ticker")) {
+        const urgent = announce.dataset.urgent === "true";
+        region("ticker").claim = claim("ticker", "ticker", {
+          text: line,
+          until: null,
+          source: "moments",
+          urgent,
+          updated: false,
+        });
+      }
+      announce.contentWindow.postMessage({ type: "canccu-screen-preview", state }, location.origin);
+    };
+    // The frame's player listens once it has loaded; drawing again on load covers a slow frame.
+    announce.addEventListener("load", () => void draw());
+    void draw();
+  }
+
   // The sound desk's library (D23): the file becomes one of Screen's `audio` assets, then the
   // form links it by id; Moments checks its length and size with Screen before it keeps it.
   for (const form of document.querySelectorAll("form[data-upload-sound]")) {
