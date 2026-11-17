@@ -42,6 +42,29 @@ interface Stored {
 
 type Ours = MomentRow & { override_id: string };
 
+/**
+ * Whether the report of event `eventId` is newer than the last applied on its zone, which it then
+ * becomes (under the zone's row lock, so the live and the replay subscriptions apply it once).
+ * Event ids are UUIDv7, ordered by time. The replay (`replayed`) applies only on a zone the live
+ * subscription has marked, so a first boot never replays the stream's whole past into the history.
+ */
+export async function newerClaims(
+  c: SqlClient,
+  zone: string,
+  eventId: string,
+  replayed: boolean,
+): Promise<boolean> {
+  if (!replayed) await addZone(c, zone);
+  const { rows } = await c.query(
+    `UPDATE moments_zones SET claims_event_id = $2
+     WHERE zone_key = $1
+       AND (claims_event_id < $2 OR (claims_event_id IS NULL AND NOT $3))
+     RETURNING zone_key`,
+    [zone, eventId, replayed],
+  );
+  return rows.length > 0;
+}
+
 export async function applyClaims(c: SqlClient, report: ClaimsReport, now: Date): Promise<void> {
   const zone = report.zone_key;
   await addZone(c, zone);

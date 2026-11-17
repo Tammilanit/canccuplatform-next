@@ -62,6 +62,18 @@ export async function endAll(c: SqlClient, engine: Engine, now: Date): Promise<v
   await c.query(`DELETE FROM moments_rule_retries`, []);
 }
 
+/** The event is archived (E10): every moment ends, and its writes answer 409 from now on. */
+export async function archive(db: Db, engine: Engine, tenant: string, now: Date): Promise<void> {
+  await withTenant(tenant, () => db.tenant((c) => endAll(c, engine, now)));
+  await db.global((c) =>
+    c.query(
+      `INSERT INTO moments_tenants (tenant_id, archived_at) VALUES ($1, $2)
+       ON CONFLICT (tenant_id) DO UPDATE SET archived_at = EXCLUDED.archived_at`,
+      [tenant, now],
+    ),
+  );
+}
+
 /** A removed zone: every moment leaves it (E9), and it is no zone of the event any more. */
 export async function zoneRemoved(
   c: SqlClient,
@@ -91,6 +103,15 @@ export class SceneTicker {
   readonly read = new Set<string>();
 }
 
+/** How often a container reads each event's status again (E10, for an archive it missed). */
+export const STATUS_EVERY_MS = 60_000;
+
+/** One container's pace of reading each event's status from the tenants module. */
+export class StatusTicker {
+  readonly last = new Map<string, number>();
+  constructor(readonly statusOf: (tenant: string) => Promise<string | null>) {}
+}
+
 interface TickDeps {
   db: Db;
   engine: Engine;
@@ -98,6 +119,7 @@ interface TickDeps {
   now: () => Date;
   log?: Logger;
   scenes?: SceneTicker;
+  statuses?: StatusTicker;
   agenda?: AgendaReader;
   timeZoneOf?: (tenant: string) => Promise<string>;
 }
@@ -120,6 +142,19 @@ async function sceneTick(deps: TickDeps, ticker: SceneTicker, tenant: string): P
   });
 }
 
+/**
+ * Whether the tenants module now says the event is archived, read at most once a minute: an
+ * archive sent while Moments was down reaches no subscription, which reads from "now" (E10).
+ */
+async function archivedMeanwhile(deps: TickDeps, tenant: string): Promise<boolean> {
+  const ticker = deps.statuses;
+  if (ticker === undefined) return false;
+  const now = deps.now().getTime();
+  if (now - (ticker.last.get(tenant) ?? Number.NEGATIVE_INFINITY) < STATUS_EVERY_MS) return false;
+  ticker.last.set(tenant, now);
+  return (await ticker.statusOf(tenant).catch(() => null)) === "archived";
+}
+
 /** One pass over every event: the tick, then the outbox and the 24-hour idempotency keys. */
 export async function tickAll(deps: TickDeps): Promise<void> {
   const tenants = await deps.db.global(async (c) => {
@@ -131,6 +166,11 @@ export async function tickAll(deps: TickDeps): Promise<void> {
   });
   for (const tenant of tenants) {
     try {
+      if (await archivedMeanwhile(deps, tenant)) {
+        await archive(deps.db, deps.engine, tenant, deps.now());
+        await withTenant(tenant, deps.flush);
+        continue;
+      }
       await withTenant(tenant, async () => {
         await deps.db.tenant((c) => tickTenant(c, deps.engine, deps.now(), deps.log));
         if (deps.scenes !== undefined) await sceneTick(deps, deps.scenes, tenant);

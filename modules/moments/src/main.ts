@@ -30,7 +30,7 @@ import { Engine } from "./engine.js";
 import { ValkeyCounters } from "./cues/counters.js";
 import { screenClient } from "./cues/screen.js";
 import { Cues } from "./cues/service.js";
-import { SceneTicker, TICK_MS, tickAll, upkeep } from "./tick.js";
+import { SceneTicker, StatusTicker, TICK_MS, tickAll, upkeep } from "./tick.js";
 import { httpAgenda, timeZones } from "./agenda.js";
 import { registerTopic } from "./announce/topic.js";
 
@@ -143,12 +143,13 @@ async function main(): Promise<void> {
   void registerTopic(process.env.CANCCU_NOTIFY_URL ?? "http://notify:8080", service, { log });
 
   const scenes = new SceneTicker();
+  const statuses = new StatusTicker(async (t) => (await tenants.byId(t))?.status ?? null);
   // The tick owns every TTL and patience (E2); one pass at a time, never overlapping itself.
   let ticking = false;
   const tick = setInterval(() => {
     if (ticking) return;
     ticking = true;
-    tickAll({ ...consumer, log, scenes })
+    tickAll({ ...consumer, log, scenes, statuses })
       .catch((err: unknown) => {
         log.warn({ err }, "the moments tick failed");
       })
