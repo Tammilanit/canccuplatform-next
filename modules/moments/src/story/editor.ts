@@ -134,7 +134,7 @@ function stepFields(s: StoryStep, i: number, story: Story, cues: string[]): Html
         ${opt("", "none", s.cue)}${cues.map((x) => opt(x, x, s.cue))}
       </select>`,
     )}
-    <a class="canccu-small" href="${PREFIX}cues?new=${encodeURIComponent(newCue)}"
+    <a class="canccu-small" href="${PREFIX}cues/new?name=${encodeURIComponent(newCue)}"
       >+ New cue (${newCue})</a
     >
     <label class="canccu-field canccu-field--check"

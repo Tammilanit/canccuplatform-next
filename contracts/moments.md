@@ -211,7 +211,7 @@ Sequences for the peaks as data an organiser edits without code (the [storyboard
 ### Ends, the finale and the cap
 - **Ends** (any one, at least one): `rounds` (1–20), `for_minutes` (up to 360), `until_clock` (HH:MM, the first after T), `until_event` (`item_starts`, `item_ends`, `next_item_starts`: the next public item on the zone; or a `domain` event of the run's source: a match started, an order closed, check-in closed), `crew` (Stop loop).
 - **The finale** plays once on every planned end (a count, a time, a clock time, an event), never on the crew's Stop loop or an item's cancel; Skip to finale plays it at once. An end event that comes while a round plays ends that round early (`source_ended`).
-- **The 6 h cap** holds only for `until_event` loops: such a run ends at the latest 6 h after it started, history "ended: time limit", without a finale; the time a video step plays, with its pauses, does not count. A `clock every` story and a loop with `until_clock` end at their window; a `rounds` loop by its count.
+- **The 6 h cap** holds for `until_event` loops and for `every` loops whose only end is the crew's Stop loop: such a run ends at the latest 6 h after it started, history "ended: time limit", without a finale; the time a video step plays, with its pauses, does not count. A `clock every` story and a loop with `until_clock` end at their window; a `rounds` loop by its count, a `for_minutes` loop by its time.
 
 ### How a run plays
 - **A run** is a row from its trigger to its end; the tick (every second) runs its rounds from the row alone, so after a restart it starts the round due now and skips the ones it missed (SE4). A round whose time ran out (its patience) is skipped and never played late.

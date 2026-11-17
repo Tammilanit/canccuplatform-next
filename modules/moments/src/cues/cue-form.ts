@@ -11,6 +11,8 @@ export function cueForm(o: {
   cue: (Cue & { revision: number }) | null;
   library: LibraryView[];
   error?: string;
+  /** A new cue's name filled in: a story's "+ New cue" names it `story.<story>.<step>` (#114). */
+  name?: string;
 }): Html {
   const c = o.cue;
   const action = c === null ? `${PREFIX}cues/new` : `${PREFIX}cues/edit/${c.name}`;
@@ -33,7 +35,7 @@ export function cueForm(o: {
   return html`${notice(undefined, o.error)}
     <form class="canccu-card moments-cue-form" method="post" action="${action}">
       <input type="hidden" name="revision" value="${c?.revision ?? 0}" />
-      ${c === null ? html`<label class="canccu-small">Name <input class="canccu-input" name="name" required pattern="[a-z][a-z0-9_]*(\\.[a-z0-9_]+){0,2}" placeholder="raffle.draw" /></label>` : html`<h2 class="canccu-card__title">${c.name}</h2>`}
+      ${c === null ? html`<label class="canccu-small">Name <input class="canccu-input" name="name" required pattern="[a-z][a-z0-9_]*(\\.[a-z0-9_]+){0,2}" placeholder="raffle.draw" value="${o.name ?? ""}" /></label>` : html`<h2 class="canccu-card__title">${c.name}</h2>`}
       <label class="canccu-small"
         >Category
         <select class="canccu-input" name="category">

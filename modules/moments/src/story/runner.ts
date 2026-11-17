@@ -229,6 +229,17 @@ async function startRound(
   if (state === "held") run.round = null;
 }
 
+/**
+ * The 6 h cap (SE5, fix 8): for loops that wait for an event, and for `every` loops the crew's
+ * Stop alone ends; the others end by their count, time or clock time.
+ */
+export const capped = (s: Story): boolean =>
+  s.end.until_event !== null ||
+  (s.rounds.mode === "every" &&
+    s.end.rounds === null &&
+    s.end.for_minutes === null &&
+    s.end.until_clock === null);
+
 /** One live run, one tick. */
 export async function stepRun(
   ctx: Ctx,
@@ -267,7 +278,7 @@ export async function stepRun(
           : "the item started",
     );
   }
-  if (story.end.until_event !== null && at - run.started_at.getTime() - run.uncounted_ms >= CAP_MS)
+  if (capped(story) && at - run.started_at.getTime() - run.uncounted_ms >= CAP_MS)
     return endRun(ctx, run, story, "time limit", "time_limit");
   if (run.round !== null) {
     const state = await playRound(ctx, run, story);

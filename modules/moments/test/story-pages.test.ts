@@ -55,6 +55,7 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
       "Test-fire one round on",
       "data-story-scrub",
       "+ New cue (story.starting_soon.1)",
+      "/moments/cues/new?name=story.starting_soon.1",
       "the first and last round",
     ])
       expect(b.body, text).toContain(text);
@@ -137,5 +138,10 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
     );
     expect(stop.headers.location).toContain("done=Loop%20stopped");
     expect((await w.call("crew", "GET", "/on-air")).body).toContain("No loop is running.");
+  });
+
+  it("opens the sound desk's new cue with the story's cue name filled in", async () => {
+    const r = await w.call("admin", "GET", "/cues/new?name=story.starting_soon.1");
+    expect(r.body).toContain('value="story.starting_soon.1"');
   });
 });

@@ -283,4 +283,20 @@ describe.skipIf(!DATABASE_URL)("storyboard runs", () => {
     const m = await k.tx((c) => lockMoment(c, k.started()[1]?.id as string));
     expect(m?.starts_at.toISOString()).toBe(w.at(T - 300).toISOString());
   });
+
+  it("ends an `every` loop the crew's Stop alone ends after 6 h, without its finale (SE5)", async () => {
+    const s = story({
+      rounds: { mode: "every", every_minutes: 120, from_minutes: 0 },
+      end: { rounds: null, for_minutes: null, until_clock: null, until_event: null, crew: true },
+      finale: [step({ content: { title: "Bye" }, duration_seconds: 8 })],
+    });
+    await k.setup([s]);
+    await take(s, w.at(0));
+    await k.tick(w.at(6 * 3600 - 1));
+    expect((await k.runs())[0]?.status).toBe("live");
+    await k.tick(w.at(6 * 3600));
+    const h = rounds(await k.history());
+    expect(h.at(-1)).toBe("loop_ended ended: time limit");
+    expect(h.some((x) => x.includes("finale"))).toBe(false);
+  });
 });

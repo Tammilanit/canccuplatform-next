@@ -303,5 +303,13 @@ describe.skipIf(!DATABASE_URL)("storyboards among the other moments", () => {
       ),
     );
     expect(second.status).toBe("refused");
+    // Its domain end event: the match starts, and the loop ends (Match called has no finale).
+    await w.tx("demo", () =>
+      handleTenantEvent({ ...deps, now: () => w.at(30) }, FIXTURES.started()),
+    );
+    expect((await k.history()).at(-1)).toMatchObject({
+      action: "loop_ended",
+      outcome: "ended: tournament.match.started",
+    });
   });
 });

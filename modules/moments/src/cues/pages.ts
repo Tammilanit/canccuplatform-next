@@ -140,6 +140,7 @@ export function cuePages(pages: FastifyInstance, deps: AppDeps): void {
         cue: null,
         library: await library(request),
         ...(request.query.error === undefined ? {} : { error: request.query.error }),
+        ...(request.query.name === undefined ? {} : { name: request.query.name }),
       }),
     }),
   );
