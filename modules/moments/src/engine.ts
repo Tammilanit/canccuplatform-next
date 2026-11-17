@@ -62,6 +62,8 @@ export interface MomentRequest {
   steps?: Record<string, unknown>[] | null;
   /** `type:source id` (WD1): refused while another live moment shows the same happening. */
   happening?: string | null;
+  /** The story run that asks: its own live moments never count as another owner. */
+  happening_run?: string | null;
   /** False: a rule's moment that waits its patience instead of being refused (a story's round). */
   refuse?: boolean;
   /** A story's round starts at its planned time, so its steps and an on-the-dot step land on it. */
@@ -161,7 +163,8 @@ export class Engine {
         held_by: heldBy,
       };
     };
-    const owner = r.happening == null ? null : await happeningOwner(c, r.happening);
+    const owner =
+      r.happening == null ? null : await happeningOwner(c, r.happening, r.happening_run ?? null);
     if (owner !== null)
       return refused(
         "not started: one owner per happening",

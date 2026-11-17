@@ -209,7 +209,8 @@ export async function storyEvent(ctx: Omit<Ctx, "settings" | "event">, e: Event)
   const doc = await ensureStories(ctx.c);
   const full: Ctx = { ...ctx, settings: doc.settings, event: doc.event };
   const source = domainSource(e.type, e.data);
-  for (const run of await liveRuns(ctx.c)) {
+  // A blocking lock: the tick locks every live run, and a skipped run would lose its end for good.
+  for (const run of source === null ? [] : await liveRuns(ctx.c, "source = $1", [source], true)) {
     const s = doc.stories.find((x) => x.key === run.story_key);
     const u = s?.end.until_event;
     if (

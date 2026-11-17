@@ -244,4 +244,38 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
       expect(r.why).not.toContain("Demo crew");
     }
   });
+
+  it("keeps the stopper's and the finisher's names out of the history and the run, and forgets both people", async () => {
+    w.now = new Date("2026-01-01T18:40:00Z");
+    const fire = async () =>
+      json(
+        await w.call("crew", "POST", "/api/moments/storyboards/starting_soon/take", {
+          item_id: "it_final",
+        }),
+      );
+    const stopped = await fire();
+    await w.call("admin", "POST", `/api/moments/storyboards/runs/${String(stopped.id)}/stop`, {});
+    const skipped = await fire();
+    await w.call("admin", "POST", `/api/moments/storyboards/runs/${String(skipped.id)}/finale`, {});
+    const left = async () => {
+      const { rows } = await pool.query(
+        `SELECT to_jsonb(h)::text AS t FROM moments_history h
+         UNION ALL SELECT to_jsonb(r)::text FROM moments_story_runs r`,
+      );
+      return (rows as { t: string }[]).map((r) => r.t).join("\n");
+    };
+    // Bob (admin) is the actor of his own rows only; Alice (crew) stays the run's actor.
+    const runs = await pool.query(`SELECT actor_user_id FROM moments_story_runs`);
+    expect(
+      (runs.rows as { actor_user_id: string }[]).every((r) => r.actor_user_id === "u_crew"),
+    ).toBe(true);
+    expect(await left()).not.toMatch(/stopped by Demo|finale by Demo/);
+    await w.tx("demo", (c) => forgetUser(c, "u_crew"));
+    await w.tx("demo", (c) => forgetUser(c, "u_admin"));
+    const rest = await left();
+    expect(rest).not.toContain("Demo crew");
+    expect(rest).not.toContain("Demo admin");
+    expect(rest).not.toContain("u_crew");
+    expect(rest).not.toContain("u_admin");
+  });
 });

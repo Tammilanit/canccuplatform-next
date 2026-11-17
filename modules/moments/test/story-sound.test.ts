@@ -12,7 +12,7 @@ import { lockMoment } from "../src/store.js";
 import { loadStories } from "../src/story/store.js";
 import { takeStory } from "../src/story/triggers.js";
 import type { Story } from "../src/story/model.js";
-import { FIXTURES } from "./fixtures.js";
+import { FIXTURES, event } from "./fixtures.js";
 import { DATABASE_URL, freshDatabase, world } from "./helpers.js";
 import type { World } from "./helpers.js";
 import { TABLES, kit, preset, rounds, step, story } from "./story-kit.js";
@@ -307,6 +307,66 @@ describe.skipIf(!DATABASE_URL)("storyboards among the other moments", () => {
     await w.tx("demo", () =>
       handleTenantEvent({ ...deps, now: () => w.at(30) }, FIXTURES.started()),
     );
+    expect((await k.history()).at(-1)).toMatchObject({
+      action: "loop_ended",
+      outcome: "ended: tournament.match.started",
+    });
+  });
+
+  it("plays the video of a round after its steps in a story a domain event started (WD1 ignores the run's own moments)", async () => {
+    const film = {
+      asset_id: "as_film",
+      kind: "video",
+      url: "/api/screen/files/abc.mp4",
+      duration_ms: 60_000,
+      title: "Last year",
+    };
+    await k.setup([
+      story({
+        triggers: [{ kind: "domain", type: "tournament.registration.opened", final_only: false }],
+        round: {
+          steps: [
+            step({ message: true, duration_seconds: 15 }),
+            step({ template: "video", content: film }),
+          ],
+          repeat: null,
+          hold_seconds: null,
+        },
+      }),
+    ]);
+    const deps = { db: w.db, engine: w.engine, flush: () => w.outbox.flush(), now: () => w.at(0) };
+    const opened = event("tournament.registration.opened", {
+      session: { id: "ts_1", name: "Heat", game: { id: "g_1", name: "Demo Game" } },
+    });
+    await w.tx("demo", () => handleTenantEvent(deps, opened));
+    await k.tick(w.at(14));
+    expect(k.started().map((o) => o.template)).toEqual(["title_card", "video"]);
+    expect(rounds(await k.history()).some((x) => x.includes("one owner per happening"))).toBe(
+      false,
+    );
+  });
+
+  it("applies a loop's domain end that arrives while the tick holds the run's row", async () => {
+    await k.setup([preset("match_called")]);
+    const deps = { db: w.db, engine: w.engine, flush: () => w.outbox.flush(), now: () => w.at(0) };
+    await w.tx("demo", () => handleTenantEvent(deps, FIXTURES.called()));
+    const locker = await pool.connect();
+    try {
+      await locker.query("BEGIN");
+      await locker.query(`SELECT id FROM moments_story_runs WHERE status = 'live' FOR UPDATE`);
+      let done = false;
+      const ending = w
+        .tx("demo", () => handleTenantEvent({ ...deps, now: () => w.at(30) }, FIXTURES.started()))
+        .then(() => {
+          done = true;
+        });
+      await new Promise((r) => setTimeout(r, 300));
+      expect(done).toBe(false);
+      await locker.query("COMMIT");
+      await ending;
+    } finally {
+      locker.release();
+    }
     expect((await k.history()).at(-1)).toMatchObject({
       action: "loop_ended",
       outcome: "ended: tournament.match.started",

@@ -306,10 +306,13 @@ export async function writeHistory(c: SqlClient, e: HistoryEntry): Promise<void>
 export async function happeningOwner(
   c: SqlClient,
   happening: string,
+  run: string | null = null,
 ): Promise<{ id: string; title: string } | null> {
   const { rows } = await c.query(
-    `SELECT id, template, content FROM moments WHERE happening = $1 AND ended_at IS NULL LIMIT 1`,
-    [happening],
+    `SELECT id, template, content FROM moments WHERE happening = $1 AND ended_at IS NULL
+       AND ($2::text IS NULL OR dedupe_key IS NULL OR dedupe_key NOT LIKE 'story:' || $2 || ':%')
+     LIMIT 1`,
+    [happening, run],
   );
   const row = rows[0] as (Pick<MomentRow, "template" | "content"> & { id: string }) | undefined;
   return row === undefined ? null : { id: row.id, title: titleOf(row) };

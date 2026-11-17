@@ -213,10 +213,11 @@ export async function liveRuns(
   c: SqlClient,
   where = "TRUE",
   args: unknown[] = [],
+  wait = false,
 ): Promise<RunRow[]> {
   const { rows } = await c.query(
     `SELECT ${COLUMNS} FROM moments_story_runs WHERE status = 'live' AND (${where})
-     ORDER BY started_at, id FOR UPDATE SKIP LOCKED`,
+     ORDER BY started_at, id FOR UPDATE${wait ? "" : " SKIP LOCKED"}`,
     args,
   );
   return rows.map(runOf);

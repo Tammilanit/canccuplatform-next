@@ -341,10 +341,8 @@ export function storyRoutes(app: FastifyInstance, deps: AppDeps): void {
           const story =
             doc.stories.find((s) => s.key === run.story_key) ??
             ({ name: run.story_key, finale: null } as unknown as Story);
-          run.actor_user_id = actor.user_id;
-          run.actor_name = actor.name;
           await act(
-            { c, engine: deps.engine, now, settings: doc.settings, event: doc.event },
+            { c, engine: deps.engine, now, settings: doc.settings, event: doc.event, by: actor },
             run,
             story,
           );
@@ -360,12 +358,12 @@ export function storyRoutes(app: FastifyInstance, deps: AppDeps): void {
     );
   // Stop loop: the live round ends now, and no finale plays (fix 3).
   onRun("stop", "moments.storyboard.stopped", (ctx, run, story) =>
-    endRun(ctx, run, story, `stopped by ${run.actor_name ?? "the crew"}`, "stopped"),
+    endRun(ctx, run, story, "stopped by the crew", "stopped"),
   );
   // Skip to finale: the finale at once, or the end without one.
   onRun("finale", "moments.storyboard.skipped", async (ctx, run, story) => {
     if (run.round !== null) await endRound(ctx, run, "cleared");
-    await planEnd(ctx, run, story, `skipped to the finale by ${run.actor_name ?? "the crew"}`);
+    await planEnd(ctx, run, story, "skipped to the finale by the crew");
     if (run.status === "live") await saveRun(ctx.c, run);
   });
 }

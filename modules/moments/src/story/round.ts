@@ -34,6 +34,8 @@ export interface Ctx {
   now: Date;
   settings: StorySettings;
   event: EventFacts;
+  /** The crew member whose Stop or Skip this is: the actor of its history row only (never of the run). */
+  by?: Actor;
 }
 
 export const regionsOf = (s: Story): string[] => (s.full_screen ? ["full"] : ["hero", "rail"]);
@@ -54,12 +56,18 @@ export async function history(
     class: "storyboard",
     origin: run.actor_user_id === null ? "rule" : "crew",
     title: story.name,
-    why: run.why,
+    // The run's why names whoever fired it; a row by someone else must not carry that name.
+    why: ctx.by === undefined ? run.why : anonymousWhy(run.why),
     outcome,
     displaced: extra.displaced ?? null,
-    actor: actorOfRun(run),
+    actor: ctx.by ?? actorOfRun(run),
   });
 }
+
+const anonymousWhy = (why: string): string => {
+  const i = why.indexOf(" · ");
+  return `A person${i < 0 ? "" : why.slice(i)}`;
+};
 
 /** The zones in a quiet scene now (E11): their scene's `quiet`. */
 export async function quietZones(c: SqlClient): Promise<string[]> {
@@ -184,6 +192,7 @@ async function startSegment(
       source: { module: "moments", event_id: null, ref: run.source },
       dedupe_key: `story:${run.id}:${String(round.index)}:${round.finale ? "f" : ""}${String(i)}`,
       happening: run.facts["@happening"] ?? null,
+      happening_run: run.id,
       refuse: false,
       actor,
     },
