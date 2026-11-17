@@ -8,6 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { newId, withTenant } from "@canccu/kit";
 import type { Event } from "@canccu/kit";
 import { applyOverrideEvent } from "../src/compose/overrides.js";
+import { applyPrefetchEvent } from "../src/moments-sound.js";
 import { DATABASE_URL, TENANTS, call, context, harness } from "./helpers.js";
 import type { Harness } from "./helpers.js";
 import { pushClient } from "./sse.js";
@@ -296,6 +297,28 @@ describe.skipIf(!DATABASE_URL)("the push channel", () => {
       state_version: (first.data.state_version as number) + 1,
       region: { id: "rail", claim: { override_id: "ov_10", role: "rail", hidden: false } },
     });
+    sse.close();
+  });
+
+  // #611: the preload list exists only in `state`, so a connected screen needs a whole new one.
+  it("pushes Moments' new preload list to a screen that is already connected", async () => {
+    const { token } = await screen();
+    const sse = open(token);
+    const first = await sse.next("state");
+    expect(first.data.prefetch).toEqual([]);
+    const event: Event = {
+      id: newId(),
+      type: "moments.prefetch.changed",
+      version: 1,
+      time: new Date(h.clock.now).toISOString(),
+      source: "moments",
+      tenant: "alpha",
+      data: { files: [{ url: "/api/screen/files/film.mp4", zones: ["main"] }] },
+    };
+    await withTenant("alpha", () => applyPrefetchEvent(h.db, event));
+    h.app.pushHub.handleEvent(event);
+    const pushed = await sse.next("state");
+    expect(pushed.data.prefetch).toEqual(["/api/screen/files/film.mp4"]);
     sse.close();
   });
 });
