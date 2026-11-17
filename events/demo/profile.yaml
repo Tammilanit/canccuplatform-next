@@ -1,5 +1,6 @@
 # Demo event profile. Format: contracts/profile.md. Placeholder content only.
 # assets/logo.svg is hand-written; assets/sounds/chime.wav is a 0.4 s 880 Hz sine tone made with Python's wave module.
+# assets/video/demo-film.mp4 is a 12 s title card with a soft chord, made with ffmpeg's lavfi sources (DejaVu Sans), for Premiere.
 schema_version: 1
 name: Demo Event
 modules:

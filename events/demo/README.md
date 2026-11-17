@@ -2,6 +2,9 @@
 
 Complete placeholder profile used by tests and screenshots; the tenants module seeds the demo tenant from it. Validated by `scripts/check-contracts`. Contains no real event content.
 
+## Assets
+- `assets/video/demo-film.mp4`: "Demo Event: the film", a 12 s placeholder (a title card over a soft chord, H.264 and AAC, made with ffmpeg's `color` and `aevalsrc` sources and `drawtext` in DejaVu Sans). The storyboards' Premiere preset plays it in the CI screenshots (`scripts/demo-screenshots-stories.mjs`, mockup 22).
+
 ## Themes
 `themes/` holds the demo tenant's theme packages ([contracts/theming.md](../../contracts/theming.md)); CI screenshots each one, and those screenshots are the theming contract's test.
 

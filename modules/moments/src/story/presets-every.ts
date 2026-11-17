@@ -75,7 +75,7 @@ export const CHECKIN_OPEN = preset({
   triggers: [domain("tournament.checkin.opened")],
   steps: [
     card(
-      "Check in for {session.name}",
+      "Check in for {session.name|the next session}",
       "Until {checkin.closes_at|the session starts}: check in on the hub",
       20,
       { message: true, cue: "story.checkin" },
@@ -154,7 +154,7 @@ export const PIZZA_ARRIVED = preset({
   triggers: [domain("pizza.order.arrived")],
   steps: [
     sting("Pizza is here", 3, { cue: "pizza.placed" }),
-    card("Pizza is here: order {order.seq}", "Come and get it", 20, { message: true }),
+    card("Pizza is here", "Order {order.seq|ready}: come and get it", 20, { message: true }),
   ],
   rounds: every(5),
   // An arrived order is already closed, so no close can end it: the count does.

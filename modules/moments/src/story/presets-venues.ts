@@ -43,7 +43,7 @@ export const HOT_GAME = preset({
   conditions: { ...EMPTY_CONDITIONS, cooldown_minutes: 30 },
   steps: [
     sting("Hot right now", 3, { cue: "chrome.hot" }),
-    card("{game.name} is hot", "{game.players|Many} playing now", 30, { message: true }),
+    card("{game.name|A game} is hot", "{game.players|Many} playing now", 30, { message: true }),
   ],
   ...ONE_ROUND,
 });
@@ -56,7 +56,7 @@ export const RECORD_CROWD = preset({
   conditions: { ...EMPTY_CONDITIONS, once: "day" },
   steps: [
     sting("New record", 3, { cue: "story.record" }),
-    card("{milestone.value} of us online", "A new record for {event.name}", 15, {
+    card("{milestone.value|So many} of us online", "A new record for {event.name}", 15, {
       message: true,
     }),
   ],
