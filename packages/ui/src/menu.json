@@ -17,6 +17,13 @@
           "href": "/notify/admin/topics",
           "icon": "bell",
           "rights": ["notify.topics.write", "notify.stats.read"]
+        },
+        {
+          "id": "announce",
+          "label": "Announcements",
+          "href": "/moments/announce",
+          "icon": "megaphone",
+          "rights": ["moments.announce"]
         }
       ]
     },

@@ -129,9 +129,9 @@ export async function handleZoneReplay(deps: ConsumerDeps, e: Event): Promise<vo
 const TENANT_ID = /^[a-z][a-z0-9-]{2,31}$/;
 
 /**
- * Clone with an event (D22): the source's priorities, rules and scenes become the new event's,
- * where it has none of its own yet (scenes it never saved count as none). Never the history, the
- * live moments or a zone's scene. The tenants module checked the series and the caller before it
+ * Clone with an event (D22): the source's priorities, rules, scenes and announcement templates
+ * become the new event's, where it has none of its own yet (scenes it never saved count as
+ * none). Never the history, the live moments, an announcement or a zone's scene. The tenants module checked the series and the caller before it
  * emitted `tenants.tenant.cloned`; the event comes at least once, so the copy is idempotent.
  */
 async function cloneFrom(db: Db, source: string, target: string): Promise<void> {
@@ -143,6 +143,9 @@ async function cloneFrom(db: Db, source: string, target: string): Promise<void> 
     ).rows;
     const rules = (await c.query(`SELECT rule_id, settings FROM moments_rules`, [])).rows;
     const scenes = (await c.query(`SELECT scenes FROM moments_scenes`, [])).rows;
+    const templates = (
+      await c.query(`SELECT key, name, title, body, level FROM moments_announcement_templates`, [])
+    ).rows;
     await c.query(`SELECT set_config('canccu.tenant', $1, true)`, [target]);
     for (const p of priorities) {
       await c.query(
@@ -164,6 +167,13 @@ async function cloneFrom(db: Db, source: string, target: string): Promise<void> 
          ON CONFLICT (tenant_id) DO UPDATE SET scenes = EXCLUDED.scenes
          WHERE moments_scenes.revision = 0`,
         [JSON.stringify(s.scenes)],
+      );
+    }
+    for (const t of templates) {
+      await c.query(
+        `INSERT INTO moments_announcement_templates (key, name, title, body, level, revision)
+         VALUES ($1, $2, $3, $4, $5, 1) ON CONFLICT DO NOTHING`,
+        [t.key, t.name, t.title, t.body, t.level],
       );
     }
   });
@@ -197,6 +207,8 @@ export async function handlePlatformEvent(deps: ConsumerDeps, e: Event): Promise
         "moments_scene_zones",
         "moments_scene_crew",
         "moments_checkins",
+        "moments_announcements",
+        "moments_announcement_templates",
       ]) {
         await c.query(`DELETE FROM ${table}`, []);
       }
@@ -237,6 +249,10 @@ export async function forgetUser(
   );
   await c.query(
     `UPDATE moments_history SET actor_user_id = NULL, actor_name = NULL WHERE actor_user_id = $1`,
+    [user],
+  );
+  await c.query(
+    `UPDATE moments_announcements SET actor_user_id = NULL, actor_name = NULL WHERE actor_user_id = $1`,
     [user],
   );
   await c.query(

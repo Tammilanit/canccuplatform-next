@@ -125,3 +125,18 @@ async def test_a_failed_announcement_after_the_move_still_offers_the_undo(
     assert done.status_code == 303 and "undo=un_" in done.headers["location"]
     assert "Brought forward, but not announced" in landed.text
     assert "a cancelled item cannot be announced" not in done.headers["location"]
+
+
+async def test_announce_this_opens_the_moments_composer_with_the_item(env: Env) -> None:
+    """U5: "Announce this" on a run-of-show item, for those who may announce (contracts/moments.md,
+    Announcements, Pages); the composer fills {item.…} from it and can send with it."""
+    async with env.client() as c:
+        quiz = await add(c, env.writer(), title="Quiz", starts_at=at(45), ends_at=at(105))
+        may = await c.get(f"/items/{quiz['id']}", headers=env.writer("moments.announce"))
+        may_not = await c.get(f"/items/{quiz['id']}", headers=env.writer())
+        side = await c.get(f"/?item={quiz['id']}", headers=env.writer("moments.announce"))
+    link = f"/moments/announce?item={quiz['id']}&amp;template=starting_soon"
+    assert link in may.text and "Announce this" in may.text
+    # The day view's selected item too (sheet 5's side panel).
+    assert link in side.text.split("<aside")[1]
+    assert "/moments/announce" not in may_not.text

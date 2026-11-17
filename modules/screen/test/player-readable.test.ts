@@ -18,9 +18,16 @@ describe("the screen's stylesheet", () => {
     const sizes = [...looks.matchAll(/font-size:\s*([^;]+);/g)].map((m) => m[1]?.trim() ?? "");
     expect(sizes.length).toBeGreaterThan(5);
     for (const size of sizes) {
-      const value = /^calc\(([\d.]+) \* var\(--canccu-u\)\)$/.exec(size);
-      expect(value, size).not.toBeNull();
-      expect(Number(value?.[1]), size).toBeGreaterThanOrEqual(2.6);
+      // An announcement card may carry `--canccu-fit` (fit.ts, E17): the stepped size sits inside
+      // a `max()` whose floor is the readability floor, so the smallest step still reads.
+      const stepped =
+        /^max\(([\d.]+) \* var\(--canccu-u\), calc\(([\d.]+) \* var\(--canccu-u\) \* var\(--canccu-fit, 1\)\)\)$/.exec(
+          size,
+        );
+      const plain = /^calc\(([\d.]+) \* var\(--canccu-u\)\)$/.exec(size);
+      expect(stepped ?? plain, size).not.toBeNull();
+      expect(Number((stepped ?? plain)?.[1]), size).toBeGreaterThanOrEqual(2.6);
+      if (stepped !== null) expect(Number(stepped[2]), size).toBeGreaterThanOrEqual(2.6);
     }
   });
 

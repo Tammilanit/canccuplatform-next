@@ -33,6 +33,13 @@ MENU: dict[str, Any] = {
                     "icon": "bell",
                     "rights": ["notify.topics.write", "notify.stats.read"],
                 },
+                {
+                    "id": "announce",
+                    "label": "Announcements",
+                    "href": "/moments/announce",
+                    "icon": "megaphone",
+                    "rights": ["moments.announce"],
+                },
             ],
         },
         {

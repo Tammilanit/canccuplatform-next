@@ -18,6 +18,8 @@ from .web import BASE, CHANNEL_LABELS, VISIBILITY_LABELS, esc, hhmm, next_minute
 # Screen's own player of a zone for a signed-in person (contracts/screen.md, A zone for a
 # session), so the miniature is the live Pulse with this list's delays. Every event has `main`.
 SCREEN_READ = "screen.devices.read"
+# Moments' composer (contracts/moments.md, Announcements, Pages: U5) has a right of its own.
+ANNOUNCE = "moments.announce"
 MAIN_ZONE = "/screen/zones/main"
 DELAY_CHIPS = (5, 10, 15)
 # Until this hour an item belongs to the night before (sheet 5: "00:15 Sun").
@@ -313,6 +315,7 @@ def side_html(
         f'<div class="canccu-agenda-chips">{badges}</div></div>'
         '<dl class="canccu-dl">' + "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in facts) + "</dl>"
     )
+    actions = []
     if session.has(WRITE) and state != "cancelled":
         if can_delay(row, state):
             body += _delay(row, here, grid=True)
@@ -320,6 +323,12 @@ def side_html(
         actions.append(
             f'<a class="canccu-button canccu-button--secondary" href="{base}/edit">Edit or move</a>'
         )
+    if session.has(ANNOUNCE) and state != "cancelled":
+        composer = f"/moments/announce?item={esc(row['id'])}&amp;template=starting_soon"
+        actions.append(
+            f'<a class="canccu-button canccu-button--secondary" href="{composer}">Announce this</a>'
+        )
+    if actions:
         body += f'<div class="canccu-agenda-side__actions">{"".join(actions)}</div>'
     body += changes + bring_back + read_only
     if session.has(WRITE) and state != "cancelled" and row["managed_by"] is None:

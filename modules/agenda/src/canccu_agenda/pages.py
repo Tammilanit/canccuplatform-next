@@ -14,7 +14,7 @@ from starlette.routing import Route
 
 from . import day_list, day_view, delay_pages, edit_pages, model, posts, store, undo
 from .access import WRITE, viewer
-from .day_view import can_delay, can_show, state_of
+from .day_view import ANNOUNCE, can_delay, can_show, state_of
 from .deps import deps
 from .effective import read_channels
 from .event_dates import event_over, event_span
@@ -235,21 +235,25 @@ async def item_page(request: Request) -> Response:
     body += "".join(f"<dt>{esc(k)}</dt><dd>{esc(v)}</dd>" for k, v in facts) + "</dl></section>"
     if row["managed_by"] is not None:
         body += "<p>Its title and times come from the tournament module.</p>"
+    base = f"{BASE}/items/{esc(row['id'])}"
+    actions = []
     if session.has(WRITE) and state != "cancelled":
-        base = f"{BASE}/items/{esc(row['id'])}"
-        actions = []
         if can_delay(row, state):
-            actions.append(("delay", "Delay…", "primary"))
+            actions.append((f"{base}/delay", "Delay…", "primary"))
         if can_show(row, state):
-            actions.append(("show-now", "Show on screens now", "secondary"))
-        actions.append(("edit", "Edit or move", "secondary"))
+            actions.append((f"{base}/show-now", "Show on screens now", "secondary"))
+        actions.append((f"{base}/edit", "Edit or move", "secondary"))
         if row["managed_by"] is None:
-            actions.append(("cancel", "Cancel…", "danger-ghost"))
+            actions.append((f"{base}/cancel", "Cancel…", "danger-ghost"))
+    if session.has(ANNOUNCE) and state != "cancelled":
+        composer = f"/moments/announce?item={esc(row['id'])}&amp;template=starting_soon"
+        actions.append((composer, "Announce this", "secondary"))
+    if actions:
         body += (
             '<div class="canccu-agenda-actions">'
             + "".join(
-                f'<a class="canccu-button canccu-button--{k}" href="{base}/{p}">{esc(t)}</a>'
-                for p, t, k in actions
+                f'<a class="canccu-button canccu-button--{k}" href="{h}">{esc(t)}</a>'
+                for h, t, k in actions
             )
             + "</div>"
         )

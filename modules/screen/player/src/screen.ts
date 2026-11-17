@@ -19,6 +19,7 @@ import { Choreographer, paced } from "./pacing.js";
 import { syncMarks } from "./rotation-marks.js";
 import { shownAt } from "./rotation.js";
 import { fitTickers } from "./ticker.js";
+import { fitAnnouncements } from "./fit.js";
 import type { Layout, Region, ScreenState } from "./state.js";
 import { whenReady } from "./media.js";
 import { heldShown, joinedShown, turnIndexOf, turnShown } from "./turns.js";
@@ -212,6 +213,7 @@ export class Screen {
     this.stage.apply(state.display?.stage, level, now);
     this.scene.apply(state.display?.scene);
     fitTickers(this.root, motion, now);
+    fitAnnouncements(this.root);
     if (state.display?.drift === true) {
       const { x, y } = driftAt(now);
       this.root.style.setProperty("--canccu-drift-x", String(x));

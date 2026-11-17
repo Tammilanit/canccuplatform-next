@@ -10,8 +10,10 @@
     box-shadow: inset 0 0 0 calc(0.3 * var(--canccu-u)) var(--canccu-color-primary);
   }
 
+  /* `--canccu-fit` steps the type down while a long text overflows its card (fit.ts, E17); never under the
+     2.6 readability floor, which test/player-readable.test.ts holds. */
   .canccu-widget--announcement .canccu-widget__title {
-    font-size: calc(6.6 * var(--canccu-u));
+    font-size: max(2.6 * var(--canccu-u), calc(6.6 * var(--canccu-u) * var(--canccu-fit, 1)));
     font-weight: 700;
     letter-spacing: 0;
     text-transform: none;
@@ -19,7 +21,67 @@
   }
 
   .canccu-widget--announcement .canccu-widget__body {
-    font-size: calc(4 * var(--canccu-u));
+    font-size: max(2.6 * var(--canccu-u), calc(4 * var(--canccu-u) * var(--canccu-fit, 1)));
+  }
+
+  /* Urgent (mockup 06 b): the warning colour, the theme's accent, on the frame and the kicker. */
+  .canccu-region > .canccu-widget.canccu-is-claim:has(.canccu-widget__level--urgent) {
+    border-color: var(--canccu-color-accent);
+    box-shadow: inset 0 0 0 calc(0.5 * var(--canccu-u)) var(--canccu-color-accent);
+  }
+
+  .canccu-widget__level--urgent .canccu-widget__kicker {
+    color: var(--canccu-color-accent);
+  }
+
+  /* An edit's chip for 60 s (mockup 06 c, L13). */
+  .canccu-widget--announcement .canccu-widget__updated {
+    align-self: flex-start;
+    margin: 0;
+    padding: calc(0.3 * var(--canccu-u)) calc(1.2 * var(--canccu-u));
+    border-radius: 999px;
+    background: var(--canccu-color-accent);
+    color: var(--canccu-color-background);
+    font-size: calc(2.6 * var(--canccu-u));
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* The card's own ticker line shows only where the card holds the ticker role: there it draws
+     both its line and the ticker channel's (L4), one after the other along the edge. */
+  .canccu-widget--announcement .canccu-widget__ticker-line {
+    display: none;
+  }
+
+  .canccu-region[data-role="ticker"] > .canccu-widget--announcement,
+  .canccu-region[data-role="ticker"] > .canccu-widget--announcement > .canccu-widget__level {
+    flex-direction: row;
+    align-items: center;
+    gap: calc(2.4 * var(--canccu-u));
+  }
+
+  .canccu-region[data-role="ticker"] > .canccu-widget--announcement .canccu-widget__title,
+  .canccu-region[data-role="ticker"] > .canccu-widget--announcement .canccu-widget__body {
+    font-size: calc(3.4 * var(--canccu-u));
+    white-space: nowrap;
+  }
+
+  .canccu-region[data-role="ticker"] .canccu-widget--announcement .canccu-widget__ticker-line {
+    display: block;
+    padding-inline-start: calc(2.4 * var(--canccu-u));
+    border-inline-start: calc(0.3 * var(--canccu-u)) solid var(--canccu-color-border);
+    font-size: calc(3.4 * var(--canccu-u));
+    white-space: nowrap;
+  }
+
+  /* A ticker line Moments claims (an announcement's) wears the accent on its label, so it stands
+     apart from the crew's own ticker line. */
+  .canccu-region[data-role="ticker"]
+    > .canccu-widget--ticker.canccu-is-claim
+    .canccu-widget__label {
+    background: var(--canccu-color-accent);
+    color: var(--canccu-color-background);
   }
 
   /* A takeover hides every region but itself and the overlay; the overlay is a lower-third band. */
@@ -38,12 +100,12 @@
 
   .canccu-region--_full .canccu-widget__big,
   .canccu-region--_full .canccu-widget--announcement .canccu-widget__title {
-    font-size: calc(12.4 * var(--canccu-u));
+    font-size: max(2.6 * var(--canccu-u), calc(12.4 * var(--canccu-u) * var(--canccu-fit, 1)));
     line-height: 1.05;
   }
 
   .canccu-region--_full .canccu-widget--announcement .canccu-widget__body {
-    font-size: calc(5 * var(--canccu-u));
+    font-size: max(2.6 * var(--canccu-u), calc(5 * var(--canccu-u) * var(--canccu-fit, 1)));
   }
 
   /* An emergency (sheet 9): white on a fixed red, the same in every theme a theme leaves alone. */

@@ -38,7 +38,7 @@ Each topic type has an event-wide part, a personal part, or both. An attendee op
 | `schedule` | agenda | event: event (on, off) | `agenda.reminder.triggered` | `data.item.visibility` | kind not `quiet_hours`; `data.lead_minutes` `nearest_in` `data.leads_minutes` to param `lead_minutes` (default 10; on a tie the larger), so an item with leads `[15]` is still announced, at 15, and one with `[]` never | no |
 | | | | `agenda.item.delayed`, `agenda.item.cancelled` | `data.item.visibility` | kind not `quiet_hours`; `data.item.starts_at` `within_minutes` 120; a delay only when `data.announce` is `true` (a quiet shift is never announced, [agenda.md](agenda.md#notification-channels)); dedupe by `correlation_id` and `audience`, so a delay with `following` gives one notification per audience, for the earliest shifted item it may see | no |
 | | | | `agenda.item.announced` | `data.item.visibility` | kind not `quiet_hours`; one notification per announcement (dedupe by the event's `id`); title the item's, body the organiser's `data.message` (empty when none was given) | no |
-| `announcements` | admin (provisional: the announce action, step 4) | event: event (on, off) | the announce action's event (step 4) | its visibility | — | `data.urgent` |
+| `announcements` | moments | event: event (on, off) | `moments.announcement.sent` | `public` | only when `data.channels.push` is `true` (the composer's "Push to phones", [moments.md](moments.md#announcements-115)) | `data.urgent` |
 | `food` | pizza | event: event (off, off); personal: user (on, off) | `pizza.order.opened`, `pizza.order.closed` (provisional) | event: `public` | — | no |
 | | | | `pizza.order.arrived` (provisional) | personal: `data.user_ids` (each person with a pizza in the order) | — | no |
 | `tournament` | tournament | event: event (off, off); personal: user (on, off) | `tournament.registration.opened` (provisional) | event: `public` | — | no |
@@ -87,6 +87,21 @@ The `schedule` registration in full, as the agenda module sends it:
    "url": "/notify/agenda/{data.item.id}", "expires_at": "data.item.ends_at", "expires_after_minutes": 60}]}
 ```
 
+The `announcements` registration in full, as the moments module sends it (D20; the sender holds `moments.announce`, so the urgent exception relies on that right):
+
+```json
+{"key": "announcements", "owner": "moments", "title": "Announcements",
+ "description": "What the organisers announce to everyone at the event",
+ "parts": {"event": {"scope": "event", "channels": ["push", "discord_dm"],
+                     "defaults": {"push": true, "discord_dm": false}}},
+ "triggers": [
+  {"event": "moments.announcement.sent", "part": "event", "audience": {"value": "public"},
+   "where": [{"field": "data.channels.push", "op": "eq", "value": true}],
+   "urgent": {"field": "data.urgent"},
+   "title": "{data.title}", "body": "{data.body}",
+   "url": "/notify/", "expires_at": "data.expires_at"}]}
+```
+
 **Quiet hours** are not a topic: Notify follows `agenda.item.added`, `.changed`, `.delayed`, `.cancelled` and `.removed` of `quiet_hours` items, and `agenda.items.cloned`, to time them (Delivery rules), whether or not the change was announced (`data.announce`).
 
 ## Topic registry
@@ -96,7 +111,7 @@ A topic type (`TopicType` in the OpenAPI file) is a registration:
 | Field | Meaning |
 |---|---|
 | `key` | Lowercase `snake_case`, 1–32 characters. Module keys have no prefix; an event's own topics start with `custom_` (see Custom topics) |
-| `owner` | The module that registered it (`admin` for the announce action until step 4 fixes it) |
+| `owner` | The module that registered it |
 | `title`, `description` | Text for people; the hub shows them on the preferences page |
 | `parts` | `event` and/or `personal`. Each part has a `scope`, the `channels` a person may pick from (`push`, `discord_dm`) and their `defaults`. The event part's scope is always `event`. The personal part's scope is `user` (the trigger event names its recipients) or `entity` (its recipients are the people who follow one entity, for example one game; see Follows) |
 | `parts.personal.entity` | For scope `entity`: the entity `type` (e.g. `game`), and optionally `merged` and `removed`: the events that tell Notify an entity was merged into another (`event`, the paths `from` and `into`) or is gone (`event`, the path `id`), so Notify moves or deletes the follows |
@@ -188,7 +203,7 @@ The hub is a static PWA served by Notify under `/notify/`, reached from the Puls
 | The hub shows | For | From |
 |---|---|---|
 | Now and next, the run-of-show | Guests (`public` items), members (also `attendees` items) | agenda API: `GET /api/agenda/now`, `GET /api/agenda/items` |
-| Announcements | Guests and members | The announce action's API (step 4) |
+| Announcements | Guests and members | Moments' announcements ([moments.md](moments.md#announcements-115)); a read for the hub comes with the App track |
 | Notifications, preferences, subscribe and unsubscribe | Guests and members | This API |
 | Channels per topic, followed games | Members | This API (`/api/notify/me`, follows); the games for the follow list from the games API ([games.md](games.md)) |
 | Your order | Members | The pizza contract: the caller's own orders and their status |

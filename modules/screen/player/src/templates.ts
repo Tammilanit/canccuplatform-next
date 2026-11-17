@@ -276,15 +276,24 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
       [
         FROM_CREW,
         not("from_crew", el("p", "kicker", [t("Announcement")])),
+        // An edit's chip (L13); the ticker line shows only in the ticker role (L4, claims.css).
+        sec("updated", el("p", "updated", [t("Updated")])),
         title("title"),
         el("p", "body", [f("body")]),
+        sec("ticker_line", el("p", "ticker-line", [f("ticker_line")])),
       ],
       {
         class: [t("canccu-widget__level canccu-widget__level--"), f("level")],
       },
     ),
   ],
-  ticker: [el("p", "label", [t("Info")]), el("p", "line", [f("text")])],
+  ticker: [
+    el("p", "label", [
+      sec("updated", t("Updated")),
+      not("updated", sec("urgent", t("Urgent")), not("urgent", t("Info"))),
+    ]),
+    el("p", "line", [f("text")]),
+  ],
   food_status: [
     el("p", "title", [f("pizzeria_name")]),
     el("p", "big", [f("state")]),

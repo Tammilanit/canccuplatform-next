@@ -43,6 +43,33 @@ describe("the player's default templates", () => {
     );
   });
 
+  // contracts/screen.md, Widgets: an announcement's edit and its ticker line (#115, L4, L13).
+  it("marks an edited announcement Updated, and carries its ticker line for the ticker role", () => {
+    const view = { title: "Pizza is here", body: "At the desk", level: "info" };
+    const plain = draw(DEFAULT_TEMPLATES.announcement ?? [], view);
+    expect(plain.querySelector(".canccu-widget__updated")).toBeNull();
+    expect(plain.querySelector(".canccu-widget__ticker-line")).toBeNull();
+    const edited = draw(DEFAULT_TEMPLATES.announcement ?? [], {
+      ...view,
+      updated: true,
+      ticker_line: "Pizza is here · At the desk",
+    });
+    expect(edited.querySelector(".canccu-widget__updated")?.textContent).toBe("Updated");
+    expect(edited.querySelector(".canccu-widget__ticker-line")?.textContent).toBe(
+      "Pizza is here · At the desk",
+    );
+  });
+
+  it("labels an announcement's ticker line Urgent or Updated instead of Info", () => {
+    const t = (view: Record<string, unknown>) =>
+      draw(DEFAULT_TEMPLATES.ticker ?? [], { text: "Semis in 15 min", ...view }).querySelector(
+        ".canccu-widget__label",
+      )?.textContent;
+    expect(t({})).toBe("Info");
+    expect(t({ urgent: true, source: "moments" })).toBe("Urgent");
+    expect(t({ urgent: true, updated: true, source: "moments" })).toBe("Updated");
+  });
+
   it("draws the Wi-Fi name and its password each as a part the look keeps on one line (#546)", () => {
     const view = { wifi: { ssid: "demo-guest", password: "lan-party-2026", note: null } };
     const box = draw(DEFAULT_TEMPLATES.venue_info ?? [], view);

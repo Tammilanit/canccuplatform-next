@@ -279,7 +279,7 @@ export async function writeHistory(c: SqlClient, e: HistoryEntry): Promise<void>
 export function titleOf(m: Pick<MomentRow, "content" | "template">): string {
   const c = m.content;
   const game = c.game as { name?: unknown } | undefined;
-  for (const v of [c.title, c.label, game?.name, c.pizzeria_name, c.caption]) {
+  for (const v of [c.title, c.label, game?.name, c.pizzeria_name, c.caption, c.text]) {
     if (typeof v === "string" && v.trim() !== "") return v.trim().slice(0, 120);
   }
   return m.template;

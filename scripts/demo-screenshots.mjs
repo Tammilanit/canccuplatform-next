@@ -7,7 +7,7 @@
 // from across a hall fails the run, so a screenshot of an error never passes for a real one. Runs
 // in Caddy's network namespace (scripts/demo-screenshots says why).
 // The lists live by group, next to what they need: demo-screenshots-pages.mjs (one URL each),
-// -agenda.mjs, -theming.mjs, -moments.mjs, and the screens' and Screen studio's in
+// -agenda.mjs, -theming.mjs, -moments.mjs, -announce.mjs, and the screens' and Screen studio's in
 // modules/screen/test/stack/.
 // This file picks the groups and keeps the order, which the shots depend on.
 // Usage: node demo-screenshots.mjs [--dry-run] [--base BASE_URL] [--out DIR] [--groups LIST] [--check]
@@ -54,6 +54,7 @@ import {
 } from "./demo-screenshots-agenda.mjs";
 import { GROUPS, groupOf, pickGroups } from "./demo-screenshots-groups.mjs";
 import { momentsListed, momentsShots } from "./demo-screenshots-moments.mjs";
+import { announceListed, announceShots } from "./demo-screenshots-announce.mjs";
 import {
   AGENDA_DOWN,
   CHECK_IN,
@@ -118,7 +119,7 @@ if (opts["dry-run"]) {
     ...pagesListed(at),
     ...themingListed(at),
     ...agendaListed(at),
-    ...(want("moments") ? momentsListed(at) : []),
+    ...(want("moments") ? [...momentsListed(at), ...announceListed(at)] : []),
   ];
   for (const name of want("screens") ? planned(opts.check) : []) {
     lines.push(`  ${name}.png  ${at("/screen/")}  (a paired screen)`);
@@ -248,6 +249,8 @@ try {
   if (want("moments")) {
     // Studio → Moments, on the fixture's zones; it ends every moment it starts.
     await momentsShots(run);
+    // Run the event → Announcements (#115), after them: it hides the entrance's rail a while.
+    await announceShots(run);
   }
 } finally {
   await browser.close();

@@ -47,6 +47,8 @@ export class SoundPlayer {
   private pending: { id: string; timer: ReturnType<typeof setTimeout> } | null = null;
   /** The id whose `play()` has not settled yet: a state arriving in that gap must not start it again. */
   private starting: string | null = null;
+  /** The newest start's audio, from its `play()` on: an urgent sound stops it even before it settles. */
+  private latest: HTMLAudioElement | null = null;
   private current: HTMLAudioElement | null = null;
 
   constructor(private readonly host: SoundHost) {}
@@ -72,9 +74,13 @@ export class SoundPlayer {
   private async start(p: SoundPlay): Promise<void> {
     this.pending = null;
     this.starting = p.id;
-    if (p.interrupts) this.current?.pause();
+    if (p.interrupts) {
+      this.current?.pause();
+      this.latest?.pause();
+    }
     const audio = this.host.audio(p.url as string);
     audio.volume = p.volume;
+    this.latest = audio;
     try {
       await audio.play();
     } catch {
@@ -84,9 +90,16 @@ export class SoundPlayer {
     }
     // An urgent sound may have taken the slot while this play() was pending: only clear our own.
     if (this.starting === p.id) this.starting = null;
-    this.current = audio;
+    // It started, so it counts as played. Overtaken while pending, it stays stopped and what plays
+    // now (the urgent one) stays `current`: its voice line still follows, and the next urgent
+    // sound stops the right one.
     this.done.push(p.id);
     if (this.done.length > KEEP) this.done.splice(0, this.done.length - KEEP);
+    if (this.latest !== audio) {
+      audio.pause();
+      return;
+    }
+    this.current = audio;
     if (p.voice_url !== null) {
       const voice = p.voice_url;
       audio.addEventListener(
@@ -96,6 +109,7 @@ export class SoundPlayer {
           const line = this.host.audio(voice);
           line.volume = p.volume;
           this.current = line;
+          this.latest = line;
           void line.play().catch(() => undefined);
         },
         { once: true },

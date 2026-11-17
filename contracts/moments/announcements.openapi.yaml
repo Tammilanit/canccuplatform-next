@@ -1,0 +1,204 @@
+# Part of moments.openapi.yaml: the announcements paths (#115), path items only, referenced from
+# its `paths` and linted through it (contracts/README.md, Shared components).
+/api/moments/announcements:
+  get:
+    tags: [announcements]
+    operationId: listAnnouncements
+    summary: The live and scheduled announcements, then the last 20 that ended
+    description: Right `moments.announce`.
+    responses:
+      "200":
+        description: The announcements.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [announcements]
+              properties:
+                announcements:
+                  type: array
+                  items:
+                    $ref: "../moments.openapi.yaml#/components/schemas/Announcement"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+  post:
+    tags: [announcements]
+    operationId: sendAnnouncement
+    summary: Send an announcement now, at a time, or with a run-of-show item
+    description: |
+      Right `moments.announce`, either level (U3). A crew action (idempotency key). Now: 201 `live`, its moments
+      started and `moments.announcement.sent` emitted; at a time or with an item: 201 `scheduled`. 400 for an
+      unknown placeholder, a free variable without a value, an item placeholder without a known item, a text over
+      its limit once filled (title 60, body 140). Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../moments.openapi.yaml#/components/schemas/AnnouncementInput"
+    responses:
+      "201":
+        $ref: "../moments.openapi.yaml#/components/responses/AnnouncementAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/announcements/preview:
+  post:
+    tags: [announcements]
+    operationId: previewAnnouncement
+    summary: What an announcement would send on each channel, saving nothing
+    description: Right `moments.announce`. The same validation as a send (U11).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../moments.openapi.yaml#/components/schemas/AnnouncementInput"
+    responses:
+      "200":
+        description: Each channel as it would go out.
+        content:
+          application/json:
+            schema:
+              $ref: "../moments.openapi.yaml#/components/schemas/AnnouncementPreview"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+/api/moments/announcements/{announcement_id}:
+  patch:
+    tags: [announcements]
+    operationId: editAnnouncement
+    summary: Edit an announcement in place
+    description: |
+      Right `moments.announce`. A crew action (idempotency key). A live one changes everywhere in place with an
+      "Updated" chip for 60 s and no new sound, and `moments.announcement.changed` is emitted (L13, E16); a
+      scheduled one keeps the new texts. 409 `not_running` once it ended or was withdrawn. Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/AnnouncementId"
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../moments.openapi.yaml#/components/schemas/AnnouncementEdit"
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/AnnouncementAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/announcements/{announcement_id}/withdraw:
+  post:
+    tags: [announcements]
+    operationId: withdrawAnnouncement
+    summary: Withdraw an announcement everywhere, silently
+    description: |
+      Right `moments.announce`. A crew action (idempotency key). A live one leaves every screen at once with no
+      sound and `moments.announcement.withdrawn` is emitted; a scheduled one never goes out. 409 `not_running`
+      once it ended or was withdrawn. Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/AnnouncementId"
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/AnnouncementAnswer"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/announcement-templates:
+  get:
+    tags: [announcements]
+    operationId: listAnnouncementTemplates
+    summary: The built-in templates and the event's own
+    description: Right `moments.announce`.
+    responses:
+      "200":
+        description: The templates, built-ins first.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [templates]
+              properties:
+                templates:
+                  type: array
+                  items:
+                    $ref: "../moments.openapi.yaml#/components/schemas/AnnouncementTemplate"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+/api/moments/announcement-templates/{template_key}:
+  put:
+    tags: [announcements]
+    operationId: putAnnouncementTemplate
+    summary: Save one of the event's own templates
+    description: |
+      Right `moments.settings.write`. `revision` 0 makes a new one; a stale one is 409 `version_conflict`. A
+      built-in's key, an unknown placeholder or a stray brace is 400. Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/TemplateKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../moments.openapi.yaml#/components/schemas/AnnouncementTemplateInput"
+    responses:
+      "200":
+        description: The template as saved.
+        content:
+          application/json:
+            schema:
+              $ref: "../moments.openapi.yaml#/components/schemas/AnnouncementTemplate"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+  delete:
+    tags: [announcements]
+    operationId: deleteAnnouncementTemplate
+    summary: Delete one of the event's own templates
+    description: Right `moments.settings.write`. A built-in is 400. Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/TemplateKey"
+    responses:
+      "204":
+        description: Deleted.
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
