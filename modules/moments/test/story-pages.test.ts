@@ -213,6 +213,16 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
     );
   });
 
+  // #611: the Fire form lists only the items the person may see (canSee).
+  it("lists a crew-only item in the Fire form only for a crew reader", async () => {
+    const secret = { ...ITEM, id: "it_crew", title: "Crew briefing", visibility: "crew" };
+    await w.tx("demo", (c) => storeAgenda(c, { agenda_version: 2, items: [ITEM, secret] }));
+    const crew = await w.call("crew", "GET", "/on-air");
+    expect(crew.body).toContain("Demo Game Cup final · 19:00");
+    expect(crew.body).not.toContain("Crew briefing");
+    expect((await w.call("lead", "GET", "/on-air")).body).toContain("Crew briefing");
+  });
+
   it("fires from On air with its item, then stops the loop and skips another to its finale", async () => {
     const onAir = await w.call("crew", "GET", "/on-air");
     expect(onAir.body).toContain("Fire Starting soon");

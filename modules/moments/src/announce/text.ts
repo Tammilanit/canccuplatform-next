@@ -58,7 +58,8 @@ export function checkText(
     if (p.kind === "unknown") return `Unknown placeholder ${p.raw}.`;
     if (p.kind === "item" && !hasItem)
       return `{item.${p.field}} needs a run-of-show item: choose one.`;
-    if (p.kind === "free" && (variables[p.name] ?? "").trim() === "") return `Fill in {${p.name}}.`;
+    if (p.kind === "free" && (own(variables, p.name) ?? "").trim() === "")
+      return `Fill in {${p.name}}.`;
   }
   return null;
 }
@@ -91,6 +92,10 @@ function clock(iso: string, timeZone: string): string {
   }).format(new Date(iso));
 }
 
+/** A name's own value: `{constructor}` and its kind are free variables, never Object.prototype's. */
+export const own = <T>(values: Readonly<Record<string, T>>, name: string): T | undefined =>
+  Object.hasOwn(values, name) ? values[name] : undefined;
+
 /** The text with every placeholder filled; it has passed `checkText` first. */
 export function fill(
   text: string,
@@ -114,7 +119,7 @@ export function fill(
           return item.location ?? "";
       }
     }
-    return FREE.test(inner) ? (variables[inner] ?? "").trim() : whole;
+    return FREE.test(inner) ? (own(variables, inner) ?? "").trim() : whole;
   });
 }
 

@@ -56,6 +56,7 @@ const SESSIONS: Record<string, { rights: string[]; superadmin?: boolean }> = {
     rights: ["moments.read", "moments.announce", "agenda.crew.read"],
   },
   reader: { rights: ["moments.read"] },
+  lead: { rights: ["moments.read", "moments.take", "agenda.crew.read"] },
   nobody: { rights: [] },
   super: { rights: [], superadmin: true },
 };

@@ -26,7 +26,7 @@ import { gapMs } from "./schedule.js";
 
 const KEY = /^[a-z][a-z0-9_]{0,39}$/;
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
+export const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const ZONE = /^[a-z0-9][a-z0-9_-]{0,39}$/;
 const TEMPLATE = /^[a-z][a-z_]{1,31}$/;
 

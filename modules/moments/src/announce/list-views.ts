@@ -8,7 +8,7 @@ import type { Html } from "@canccu/ui";
 import { PREFIX, formKey } from "../page-kit.js";
 import type { Level } from "./store.js";
 import type { Template } from "./templates.js";
-import { freeVariables } from "./text.js";
+import { freeVariables, own } from "./text.js";
 
 export interface Listed {
   id: string;
@@ -137,7 +137,7 @@ ${o.body}</textarea>
             id="var_${v}"
             name="var_${v}"
             maxlength="60"
-            value="${o.variables[v] ?? ""}"
+            value="${own(o.variables, v) ?? ""}"
           />
         </div>`,
     )}

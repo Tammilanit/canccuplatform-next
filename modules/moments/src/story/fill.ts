@@ -5,7 +5,7 @@
  * placeholder never shows raw: what a run lacks takes its fallback, or the empty text. Pure.
  */
 import { qrView } from "../content.js";
-import { startsIn } from "../announce/text.js";
+import { own, startsIn } from "../announce/text.js";
 import type { RunItem } from "../announce/store.js";
 import { DOMAIN_TYPES, TOKEN } from "./model.js";
 import { localParts } from "./schedule.js";
@@ -131,7 +131,7 @@ function value(name: string, ctx: FillContext): string {
       return at === undefined ? "" : startsIn(at, new Date(ctx.now));
     }
     default:
-      return ctx.facts[name] ?? "";
+      return own(ctx.facts, name) ?? "";
   }
 }
 

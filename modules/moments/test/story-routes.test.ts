@@ -60,6 +60,33 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
     expect((await put(doc.stories, 7)).statusCode).toBe(409);
   });
 
+  // #611, #114 "validated by a JSON schema": the contract's storyboard.schema.json, then the rules.
+  it("refuses a story its JSON schema refuses: an unknown property, a bad enum, no rounds", async () => {
+    const own = story({ key: "own", name: "Own story" });
+    const noRounds: Record<string, unknown> = { ...own };
+    delete noRounds.rounds;
+    const cases: [unknown, string][] = [
+      [{ ...own, colour: "red" }, "colour"],
+      [
+        {
+          ...own,
+          triggers: [{ kind: "take" }],
+          end: { ...own.end, until_event: { kind: "foo" } },
+        },
+        "until_event",
+      ],
+      [{ ...own, round: { ...own.round, steps: [step({ message: "yes" as never })] } }, "message"],
+      [noRounds, "rounds"],
+    ];
+    for (const [bad, culprit] of cases) {
+      const r = await put([bad], 0);
+      expect(r.statusCode, culprit).toBe(400);
+      expect(errorOf(r).code, culprit).toBe("invalid_request");
+      expect(errorOf(r).message, culprit).toContain(culprit);
+    }
+    expect((await put([own], 0)).statusCode).toBe(200);
+  });
+
   /**
    * A story with a video step, alone in the event's list: each save validates and audits the
    * whole list, so the video tests save only the story they look at (#602's carry-over: this
@@ -198,6 +225,22 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
     );
     expect(json(skip)).toMatchObject({ status: "live", round: { finale: true } });
     expect(w.audit.map((a) => a.action)).toContain("moments.storyboard.skipped");
+  });
+
+  // #611: firing is no way around the agenda's visibility, as the composer is not (canSee).
+  it("fires with a crew-only item only for a crew reader, and never prints its fields", async () => {
+    w.now = new Date("2026-01-01T18:40:00Z");
+    const secret = { ...ITEM, id: "it_crew", title: "Crew briefing", visibility: "crew" };
+    await w.tx("demo", (c) => storeAgenda(c, { agenda_version: 2, items: [ITEM, secret] }));
+    const fire = (who: string) =>
+      w.call(who, "POST", "/api/moments/storyboards/starting_soon/take", { item_id: "it_crew" });
+    const hidden = await fire("crew");
+    expect(hidden.statusCode).toBe(400);
+    expect(errorOf(hidden).message).toBe("No such run-of-show item.");
+    const crewReader = await fire("lead");
+    expect(crewReader.statusCode).toBe(400);
+    expect(errorOf(crewReader).message).toContain("not public");
+    expect((await w.tx("demo", (c) => c.query(`SELECT id FROM moments`))).rows).toEqual([]);
   });
 
   it("test-fires one round on one zone, marked as a test", async () => {

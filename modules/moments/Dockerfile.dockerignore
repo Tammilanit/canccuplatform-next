@@ -3,5 +3,6 @@
 !packages/kit-ts
 !packages/ui
 !modules/moments
+!contracts/moments/storyboard.schema.json
 **/node_modules
 **/dist

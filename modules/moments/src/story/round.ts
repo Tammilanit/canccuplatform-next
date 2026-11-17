@@ -6,7 +6,7 @@
  * start, only where the round is placed and not hidden, within the story's cap. An emergency or
  * an urgent moment pauses a video; it resumes where it stopped, its end and start moved on.
  */
-import type { SqlClient } from "@canccu/kit";
+import type { Logger, SqlClient } from "@canccu/kit";
 import type { Engine } from "../engine.js";
 import { knownZones, lockMoment, saveMoment, writeHistory } from "../store.js";
 import type { Actor } from "../store.js";
@@ -36,6 +36,7 @@ export interface Ctx {
   event: EventFacts;
   /** The crew member whose Stop or Skip this is: the actor of its history row only (never of the run). */
   by?: Actor;
+  log?: Logger | undefined;
 }
 
 export const regionsOf = (s: Story): string[] => (s.full_screen ? ["full"] : ["hero", "rail"]);
@@ -166,8 +167,11 @@ async function startSegment(
   let content = first.content as Record<string, unknown>;
   if (video) {
     zones = (await zonesWithout(ctx.c, run.zones, await quietZones(ctx.c))) ?? [];
-    const muted =
-      (await ctx.engine.sound?.video(ctx.c, zones, seg.until_ms, run.id, ctx.now)) ?? [];
+    // A test-fire is silent unless the crew chose sound (#114): the film's own sound included.
+    const silent = run.test && run.facts["@test_sound"] !== "1";
+    const muted = silent
+      ? zones
+      : ((await ctx.engine.sound?.video(ctx.c, zones, seg.until_ms, run.id, ctx.now)) ?? []);
     content = {
       ...content,
       started_at: new Date(seg.from_ms).toISOString(),

@@ -66,6 +66,13 @@ describe("validation", () => {
     expect(ok("At {place}", { place: "  " })).toMatch(/\{place\}/);
   });
 
+  // #611: a name of Object.prototype is a free variable like any other, never the prototype's.
+  it("asks for a free variable named like an object's own key, and fills it with nothing", () => {
+    expect(ok("At {constructor}")).toBe("Fill in {constructor}.");
+    expect(fill("At {constructor}", ctx, {})).toBe("At ");
+    expect(fill("At {constructor}", ctx, { constructor: "the desk" })).toBe("At the desk");
+  });
+
   it("refuses an item placeholder when no item is chosen", () => {
     expect(ok("{item.title}", {}, false)).toMatch(/run-of-show item/);
   });

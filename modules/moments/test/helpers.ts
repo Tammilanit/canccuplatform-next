@@ -40,6 +40,8 @@ const TABLES = [
   "moments_stories",
   "moments_story_runs",
   "moments_story_marks",
+  "moments_rule_retries",
+  "moments_claims_marks",
   "moments_outbox_tenants",
   "moments_tenants",
   "moments_migrations",

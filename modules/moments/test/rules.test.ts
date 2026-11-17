@@ -5,8 +5,12 @@ import type pg from "pg";
 import type { Event } from "@canccu/kit";
 import { handleTenantEvent, handleZoneReplay } from "../src/consumer.js";
 import { spotlightRequest } from "../src/content.js";
+import { applyClaims } from "../src/placements.js";
 import { RULE_IDS, checkRule, loadRules } from "../src/rules.js";
-import { DATABASE_URL, freshDatabase, world } from "./helpers.js";
+import type { RuleView } from "../src/rules.js";
+import { lockMoment } from "../src/store.js";
+import { tickTenant } from "../src/tick.js";
+import { DATABASE_URL, claims, freshDatabase, world } from "./helpers.js";
 import type { World } from "./helpers.js";
 import { FIXTURES } from "./fixtures.js";
 import { DEFAULT_SETTINGS, ensureStories, writeStories } from "../src/story/store.js";
@@ -85,6 +89,90 @@ run("the built-in rules", () => {
   it("leaves a happening to its preset while the preset is on (SD6)", async () => {
     await deliver(FIXTURES.called());
     expect(overrides().map((o) => o.template)).toEqual(["title_card"]);
+  });
+
+  // #611, contracts/moments.md "the rule waits 30 s before asking again": and then asks.
+  it("asks again 30 s after a refusal, and holds the rule's own re-asks until then", async () => {
+    await presetsOff();
+    const top = await w.tx("demo", async (c) => {
+      await c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main')`);
+      return w.engine.request(
+        c,
+        {
+          class: "spotlight",
+          kind: "takeover",
+          regions: ["full"],
+          template: "announcement",
+          content: { title: "Doors", body: "", level: "info", starts_at: null },
+          origin: "crew",
+          why: "test",
+          ttl_seconds: 5,
+        },
+        w.at(0),
+      );
+    });
+    if (top.status === "refused") throw new Error("refused");
+    await w.tx("demo", (c) => applyClaims(c, claims("main", [[top.moment.id, "full"]]), w.at(0)));
+    const called = () => overrides().filter((o) => o.template === "match_called");
+    const tick = (s: number) => w.tx("demo", (c) => tickTenant(c, w.engine, w.at(s)));
+    await deliver(FIXTURES.called());
+    expect(called()).toEqual([]);
+    await tick(5);
+    expect((await w.tx("demo", (c) => lockMoment(c, top.moment.id)))?.ended_at).not.toBeNull();
+    // The same match called again before its 30 s is held back, not asked at once.
+    w.now = w.at(10);
+    await deliver(FIXTURES.called());
+    await tick(29);
+    expect(called()).toEqual([]);
+    await tick(30);
+    expect(called()).toHaveLength(1);
+    expect(called()[0]).toMatchObject({
+      type: "moments.override.started",
+      source: { ref: "tm_1" },
+    });
+    await tick(61);
+    expect(called()).toHaveLength(1);
+  });
+
+  it("never asks again for a rule the crew turned off after the refusal (#611)", async () => {
+    await presetsOff();
+    const top = await w.tx("demo", async (c) => {
+      await c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main')`);
+      return w.engine.request(
+        c,
+        {
+          class: "spotlight",
+          kind: "takeover",
+          regions: ["full"],
+          template: "announcement",
+          content: { title: "Doors", body: "", level: "info", starts_at: null },
+          origin: "crew",
+          why: "test",
+          ttl_seconds: 5,
+        },
+        w.at(0),
+      );
+    });
+    if (top.status === "refused") throw new Error("refused");
+    await w.tx("demo", (c) => applyClaims(c, claims("main", [[top.moment.id, "full"]]), w.at(0)));
+    await deliver(FIXTURES.called());
+    const stored = () =>
+      w.tx("demo", async (c) => (await c.query(`SELECT 1 FROM moments_rule_retries`, [])).rows);
+    expect(await stored()).toHaveLength(1);
+    await w.tx("demo", async (c) => {
+      const r = (await loadRules(c)).find((x) => x.rule_id === "match_called");
+      const { revision, template, class: cls, regions, ttl_seconds, zones, cue } = r as RuleView;
+      const settings = { template, class: cls, regions, ttl_seconds, zones, cue };
+      await c.query(
+        `INSERT INTO moments_rules (rule_id, settings, revision) VALUES ('match_called', $1, $2)
+         ON CONFLICT (tenant_id, rule_id) DO UPDATE SET settings = EXCLUDED.settings`,
+        [{ ...settings, enabled: false }, revision + 1],
+      );
+    });
+    await w.tx("demo", (c) => tickTenant(c, w.engine, w.at(5)));
+    await w.tx("demo", (c) => tickTenant(c, w.engine, w.at(30)));
+    expect(overrides().filter((o) => o.template === "match_called")).toEqual([]);
+    expect(await stored()).toEqual([]);
   });
 
   it("calls a match into the hero, and ends it when the match starts (E5)", async () => {

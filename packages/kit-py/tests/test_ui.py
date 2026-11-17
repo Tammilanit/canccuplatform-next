@@ -105,8 +105,10 @@ def test_a_menu_item_says_when_its_page_needs_a_look() -> None:
 
 
 def test_screen_studio_opens_to_a_role_with_content_or_bundle_rights_only() -> None:
-    for right in ("screen.content.read", "screen.content.write", "screen.bundle.write"):
+    for right in ("screen.content.read", "screen.bundle.write"):
         assert [i["id"] for g in menu_for(Viewer(right)) for i in g["items"]] == ["screen"]
+    # No Studio tab opens with it alone (#611): Schedule and Content need screen.content.read.
+    assert menu_for(Viewer("screen.content.write")) == []
 
 
 def test_bar_puts_quick_add_in_the_middle() -> None:

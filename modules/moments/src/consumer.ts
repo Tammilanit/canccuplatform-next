@@ -8,14 +8,14 @@ import type { Event, SqlClient } from "@canccu/kit";
 import { CREW_CUES } from "./cues/catalog.js";
 import type { Db } from "./db.js";
 import type { Engine } from "./engine.js";
-import { applyClaims, claimsReportOf } from "./placements.js";
+import { applyClaims, claimsReportOf, newerClaims } from "./placements.js";
 import { applyRules } from "./rules.js";
 import { evaluateScenes, recordFact, storeAgenda } from "./scene-store.js";
 import type { AgendaReader } from "./scene-store.js";
 import { recordSource, refreshBound } from "./sources.js";
 import { addZone } from "./store.js";
 import { storyEvent } from "./story/triggers.js";
-import { endAll, noteTenant, zoneRemoved } from "./tick.js";
+import { archive, noteTenant, zoneRemoved } from "./tick.js";
 
 export const TENANT_STREAMS = [
   "screen",
@@ -45,14 +45,7 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
   const now = deps.now();
   if (e.type === "tenants.status.changed") {
     if (e.data.to !== "archived") return;
-    await deps.db.tenant((c) => endAll(c, deps.engine, now));
-    await deps.db.global((c) =>
-      c.query(
-        `INSERT INTO moments_tenants (tenant_id, archived_at) VALUES ($1, $2)
-         ON CONFLICT (tenant_id) DO UPDATE SET archived_at = EXCLUDED.archived_at`,
-        [e.tenant, now],
-      ),
-    );
+    await archive(deps.db, deps.engine, e.tenant, now);
     await deps.flush();
     return;
   }
@@ -74,7 +67,8 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
     let scenes = false;
     if (e.type === "screen.claims.changed") {
       const report = claimsReportOf(e.data);
-      if (report !== null) await applyClaims(c, report, now);
+      if (report !== null && (await newerClaims(c, report.zone_key, e.id, false)))
+        await applyClaims(c, report, now);
     } else if (e.type === "screen.zone.saved" && typeof e.data.zone_key === "string") {
       await addZone(c, e.data.zone_key);
       scenes = true;
@@ -116,12 +110,21 @@ async function isArchived(c: SqlClient, tenant: string): Promise<boolean> {
  * Screen's zone events replayed from the start of each stream at every boot, so zones saved while
  * Moments was down or before it ran are known (moments with every zone narrow to them, D3). Only
  * the set of zones changes here: a past removal must never end a moment running now; the live
- * subscription (handleTenantEvent) ends moments on a zone removed now.
+ * subscription (handleTenantEvent) ends moments on a zone removed now. Claims reports newer than
+ * the last applied on their zone are the ones Screen sent while Moments was down (E2): without
+ * them a moment placed meanwhile would run out its patience on screen.
  */
 export async function handleZoneReplay(deps: ConsumerDeps, e: Event): Promise<void> {
   const zone = e.data.zone_key;
   if (e.tenant === undefined || typeof zone !== "string") return;
-  if (e.type === "screen.zone.saved") {
+  if (e.type === "screen.claims.changed") {
+    const report = claimsReportOf(e.data);
+    if (report === null) return;
+    await deps.db.tenant(async (c) => {
+      if (await newerClaims(c, zone, e.id, true)) await applyClaims(c, report, deps.now());
+    });
+    await deps.flush();
+  } else if (e.type === "screen.zone.saved") {
     await noteTenant(deps.db, e.tenant);
     await deps.db.tenant((c) => addZone(c, zone));
   } else if (e.type === "screen.zone.removed") {
@@ -224,6 +227,8 @@ export async function handlePlatformEvent(deps: ConsumerDeps, e: Event): Promise
         "moments_stories",
         "moments_story_runs",
         "moments_story_marks",
+        "moments_rule_retries",
+        "moments_claims_marks",
       ]) {
         await c.query(`DELETE FROM ${table}`, []);
       }

@@ -10,7 +10,7 @@ import type { AppDeps } from "../http.js";
 import { PREFIX, page, pageNeeds, refusal, viaApi } from "../page-kit.js";
 import { knownZones } from "../store.js";
 import { loadCues } from "../cues/store.js";
-import { runOfShow } from "../announce/store.js";
+import { canSee, runOfShow } from "../announce/store.js";
 import { describeStory } from "./describe.js";
 import { one, storyFromForm } from "./form.js";
 import type { Story } from "./model.js";
@@ -31,7 +31,11 @@ const TEN_MINUTES = 600_000;
 async function state(deps: AppDeps, request: FastifyRequest) {
   const a = await viaApi(request.server, request, "GET", "/api/moments/storyboards", {});
   const agenda = (await deps.db.tenant((c) => runOfShow(c))) ?? [];
-  const items = agenda.filter((i) => (i.status ?? "scheduled") === "scheduled");
+  const rights = request.session?.rights ?? new Set<string>();
+  // Fire lists only what the person may see, as the API takes only that (story/routes.ts).
+  const items = agenda.filter(
+    (i) => (i.status ?? "scheduled") === "scheduled" && canSee(i, rights),
+  );
   return {
     stories: (a.body.stories ?? []) as Story[],
     revision: Number(a.body.revision ?? 0),

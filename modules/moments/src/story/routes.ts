@@ -20,9 +20,11 @@ import {
 } from "../http.js";
 import type { AppDeps } from "../http.js";
 import { lockSettings } from "../store.js";
-import { runOfShow } from "../announce/store.js";
+import { canSee, runOfShow } from "../announce/store.js";
+import { own } from "../announce/text.js";
 import { checkStories } from "./check.js";
-import { freeVariablesOf, isVideo } from "./model.js";
+import { schemaChecked } from "./schema.js";
+import { freeVariablesOf, isVideo, textsOf } from "./model.js";
 import type { Story } from "./model.js";
 import { PRESETS, RULE_OF_PRESET } from "./presets.js";
 import { endRound } from "./round.js";
@@ -241,11 +243,13 @@ export function storyRoutes(app: FastifyInstance, deps: AppDeps): void {
   app.put("/api/moments/storyboards", write, (request) => {
     const body = (request.body ?? {}) as Body;
     if (!Array.isArray(body.stories)) throw invalid("`stories` is the event's list.");
+    const stories = schemaChecked(body.stories);
+    if (typeof stories === "string") throw invalid(stories);
     return save(
       request,
       (doc) =>
         Promise.resolve({
-          stories: body.stories as Story[],
+          stories: stories as Story[],
           settings: settingsOf(body.settings, doc.settings),
         }),
       body.revision,
@@ -292,19 +296,31 @@ export function storyRoutes(app: FastifyInstance, deps: AppDeps): void {
         const vars = (body.variables ?? {}) as Body;
         const variables: Record<string, string> = {};
         for (const name of freeVariablesOf(story)) {
-          const v = vars[name];
+          const v = own(vars, name);
           if (v !== undefined && (typeof v !== "string" || v.length > 120))
             throw invalid(`{${name}} is a text of at most 120 characters.`);
           if (typeof v === "string" && VAR.test(name)) variables[name] = v.trim();
         }
         const needsItem = story.triggers.some((t) => t.kind === "item");
         const items = (await runOfShow(c)) ?? [];
+        const rights = request.session?.rights ?? new Set<string>();
+        // A hidden item answers like a missing one, as in the composer (announce/routes.ts).
         const item =
           typeof body.item_id === "string"
-            ? (items.find((i) => i.id === body.item_id) ?? null)
+            ? (items.find((i) => i.id === body.item_id && canSee(i, rights)) ?? null)
             : null;
         if (typeof body.item_id === "string" && item === null)
           return failure(400, "invalid_request", "No such run-of-show item.");
+        // The screens are public: a crew reader may time a story by a crew item, never print it.
+        const printsItem = [...story.round.steps, ...(story.finale ?? [])].some((st) =>
+          textsOf(st.content).some((t) => t.includes("{item.")),
+        );
+        if (item !== null && item.visibility !== "public" && printsItem)
+          return failure(
+            400,
+            "invalid_request",
+            "This item is not public: its `{item.…}` fields cannot go on the screens.",
+          );
         if (needsItem && item === null && test === undefined)
           return failure(400, "invalid_request", "Choose the item this story is about.");
         const ctx: Ctx = { c, engine: deps.engine, now, settings: doc.settings, event: doc.event };

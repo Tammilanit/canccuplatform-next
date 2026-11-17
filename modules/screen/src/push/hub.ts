@@ -50,6 +50,7 @@ const REBUILDS = [
   "moments.override.",
   "moments.sound.",
   "moments.scene.",
+  "moments.prefetch.",
 ];
 /** The event's context changed: every stream checks its device again and may redraw. */
 const RECHECKS = new Set([

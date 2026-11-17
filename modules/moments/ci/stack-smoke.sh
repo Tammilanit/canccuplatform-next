@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Moments' checks against the running stack; CI runs it through scripts/stack-smoke (docs/ci.md#compose).
 set -euo pipefail
+# One check per line: under set -e a failing first command of an && list does not stop the script.
 base=$CANCCU_SMOKE_BASE_URL
 t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
 
@@ -9,13 +10,16 @@ curl -fsS "$base/api/moments/health" | tee "$t/r.json"; echo
 jq -e '.status == "ok" and .module == "moments" and .checks.postgres.status == "ok"' "$t/r.json"
 echo "-- the API without a session is 401 not_signed_in"
 code=$(curl -sS -o "$t/r.json" -w '%{http_code}' "$base/api/moments/moments"); echo "$code"
-[ "$code" = 401 ] && jq -e '.error.code == "not_signed_in"' "$t/r.json"
+[ "$code" = 401 ]
+jq -e '.error.code == "not_signed_in"' "$t/r.json"
 echo "-- the scenes API without a session is 401 not_signed_in"
 code=$(curl -sS -o "$t/r.json" -w '%{http_code}' "$base/api/moments/scenes"); echo "$code"
-[ "$code" = 401 ] && jq -e '.error.code == "not_signed_in"' "$t/r.json"
+[ "$code" = 401 ]
+jq -e '.error.code == "not_signed_in"' "$t/r.json"
 echo "-- the announcements API without a session is 401 not_signed_in"
 code=$(curl -sS -o "$t/r.json" -w '%{http_code}' "$base/api/moments/announcements"); echo "$code"
-[ "$code" = 401 ] && jq -e '.error.code == "not_signed_in"' "$t/r.json"
+[ "$code" = 401 ]
+jq -e '.error.code == "not_signed_in"' "$t/r.json"
 echo "-- /moments without the slash goes to the pages"
 curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' "$base/moments" | tee "$t/r.txt"
 grep -qxF "308 $base/moments/" "$t/r.txt"
@@ -29,6 +33,7 @@ curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' "$base/moments/history
 grep -qxF "303 $base/admin/sign-in?next=%2Fmoments%2Fhistory" "$t/r.txt"
 echo "-- the default sound pack plays without a session; the internal paths of Screen are not routed"
 code=$(curl -sS -o "$t/s.ogg" -w '%{http_code} %{content_type}' "$base/api/moments/sounds/pack/chime-bright.ogg"); echo "$code"
-[ "$code" = "200 audio/ogg" ] && [ "$(head -c 4 "$t/s.ogg")" = OggS ]
+[ "$code" = "200 audio/ogg" ]
+[ "$(head -c 4 "$t/s.ogg")" = OggS ]
 code=$(curl -sS -o /dev/null -w '%{http_code}' "$base/internal/screen/zones/main/sound?tenant_id=demo"); echo "$code"
 [ "$code" = 404 ]

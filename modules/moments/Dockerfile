@@ -33,6 +33,8 @@ COPY --from=build /repo/modules/moments/dist modules/moments/dist
 COPY --from=build /repo/modules/moments/migrations modules/moments/migrations
 COPY --from=build /repo/modules/moments/static modules/moments/static
 COPY --from=build /repo/modules/moments/node_modules modules/moments/node_modules
+# The storyboards API validates against the contract itself (src/story/schema.ts).
+COPY contracts/moments/storyboard.schema.json contracts/moments/storyboard.schema.json
 WORKDIR /repo/modules/moments
 USER nobody
 EXPOSE 8080
