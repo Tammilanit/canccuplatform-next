@@ -6,8 +6,9 @@
  * time ran out are skipped and written so (SE1, SE2, SE4); a round over the airtime cap or behind
  * a waiting lower moment waits for the next minute (SO1). From the rows alone.
  */
-import type { SqlClient } from "@canccu/kit";
+import type { Logger, SqlClient } from "@canccu/kit";
 import type { Engine } from "../engine.js";
+import { isolated } from "../db.js";
 import { runOfShow } from "../announce/store.js";
 import type { RunItem } from "../announce/store.js";
 import { emergencyOn } from "../cues/store.js";
@@ -321,18 +322,29 @@ export async function stepRun(
 }
 
 /** The tick: every live run, one at a time, each locked so two containers never play it twice. */
-export async function tickRuns(c: SqlClient, engine: Engine, now: Date): Promise<void> {
+export async function tickRuns(
+  c: SqlClient,
+  engine: Engine,
+  now: Date,
+  log?: Logger,
+): Promise<void> {
   const doc = await loadStories(c);
   if (!doc.copied) return;
   const runs = await liveRuns(c);
   if (runs.length === 0) return;
-  const ctx: Ctx = { c, engine, now, settings: doc.settings, event: doc.event };
+  const ctx: Ctx = { c, engine, now, settings: doc.settings, event: doc.event, log };
   const items = await runOfShow(c);
-  for (const run of runs)
-    await stepRun(
-      ctx,
-      run,
-      doc.stories.find((s) => s.key === run.story_key),
-      items,
+  for (const run of runs) {
+    await isolated(
+      c,
+      () =>
+        stepRun(
+          ctx,
+          run,
+          doc.stories.find((s) => s.key === run.story_key),
+          items,
+        ),
+      (err) => log?.warn({ err, run: run.id }, "a story run's tick failed"),
     );
+  }
 }

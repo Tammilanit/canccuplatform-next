@@ -6,7 +6,7 @@
  * start, only where the round is placed and not hidden, within the story's cap. An emergency or
  * an urgent moment pauses a video; it resumes where it stopped, its end and start moved on.
  */
-import type { SqlClient } from "@canccu/kit";
+import type { Logger, SqlClient } from "@canccu/kit";
 import type { Engine } from "../engine.js";
 import { knownZones, lockMoment, saveMoment, writeHistory } from "../store.js";
 import type { Actor } from "../store.js";
@@ -36,6 +36,7 @@ export interface Ctx {
   event: EventFacts;
   /** The crew member whose Stop or Skip this is: the actor of its history row only (never of the run). */
   by?: Actor;
+  log?: Logger | undefined;
 }
 
 export const regionsOf = (s: Story): string[] => (s.full_screen ? ["full"] : ["hero", "rail"]);

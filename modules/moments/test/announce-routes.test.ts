@@ -93,6 +93,10 @@ describe.skipIf(!DATABASE_URL)("the announcements API", () => {
     expect(String(errorOf(long).message)).toMatch(/60/);
     const unknownItem = await post("crew", { ...BASE, item_id: "it_nope" });
     expect(unknownItem.statusCode).toBe(400);
+    // #611: a free variable named after an Object.prototype key is asked for, not a 500.
+    const proto = await post("crew", { ...BASE, title: "At {constructor}", variables: {} });
+    expect(proto.statusCode).toBe(400);
+    expect(String(errorOf(proto).message)).toContain("Fill in {constructor}");
   });
 
   it("previews every channel as it would go out, and saves nothing (U11)", async () => {

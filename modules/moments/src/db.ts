@@ -48,3 +48,22 @@ export function poolDb(pool: pg.Pool): Db {
     global: (fn) => run(fn, null),
   };
 }
+
+/**
+ * `fn` in a savepoint of the open transaction: its fault rolls back its own writes only, and the
+ * rest of that transaction (an event's whole tick) goes on. The fault goes to `failed`.
+ */
+export async function isolated(
+  c: SqlClient,
+  fn: () => Promise<void>,
+  failed: (err: unknown) => void,
+): Promise<void> {
+  await c.query(`SAVEPOINT isolated`, []);
+  try {
+    await fn();
+  } catch (err) {
+    await c.query(`ROLLBACK TO SAVEPOINT isolated`, []);
+    failed(err);
+  }
+  await c.query(`RELEASE SAVEPOINT isolated`, []);
+}

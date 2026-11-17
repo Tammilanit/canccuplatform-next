@@ -8,7 +8,7 @@ import type { Html } from "@canccu/ui";
 import { PREFIX, formKey } from "../page-kit.js";
 import type { Channels, Level, RunItem } from "./store.js";
 import type { Template } from "./templates.js";
-import { freeVariables } from "./text.js";
+import { freeVariables, own } from "./text.js";
 
 /** What the form holds: the posted values again after a preview, or a template's. */
 export interface ComposerState {
@@ -128,7 +128,7 @@ ${s.body}</textarea>
             id="var_${v}"
             name="var_${v}"
             maxlength="60"
-            value="${s.variables[v] ?? ""}"
+            value="${own(s.variables, v) ?? ""}"
           />
         </div>`,
     )}

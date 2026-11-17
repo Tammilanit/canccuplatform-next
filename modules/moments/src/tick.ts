@@ -18,7 +18,12 @@ export const TICK_MS = 1000;
 /** History of an archived event is deleted this long after archiving (D21). */
 const HISTORY_AFTER_ARCHIVE = "30 days";
 
-export async function tickTenant(c: SqlClient, engine: Engine, now: Date): Promise<void> {
+export async function tickTenant(
+  c: SqlClient,
+  engine: Engine,
+  now: Date,
+  log?: Logger,
+): Promise<void> {
   for (const m of await runningMoments(c, "expires_at <= $1", [now], "skip")) {
     await engine.end(c, m, "expired", null, now);
   }
@@ -36,7 +41,7 @@ export async function tickTenant(c: SqlClient, engine: Engine, now: Date): Promi
     await engine.end(c, m, "preempted", null, now, r.zone_key);
   }
   await tickAnnouncements(c, engine, now);
-  await tickStories({ c, engine, now });
+  await tickStories({ c, engine, now, log });
   await engine.pumpSounds(c, now);
 }
 
@@ -124,7 +129,7 @@ export async function tickAll(deps: TickDeps): Promise<void> {
   for (const tenant of tenants) {
     try {
       await withTenant(tenant, async () => {
-        await deps.db.tenant((c) => tickTenant(c, deps.engine, deps.now()));
+        await deps.db.tenant((c) => tickTenant(c, deps.engine, deps.now(), deps.log));
         if (deps.scenes !== undefined) await sceneTick(deps, deps.scenes, tenant);
         await deps.flush();
       });

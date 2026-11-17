@@ -21,6 +21,7 @@ import {
 import type { AppDeps } from "../http.js";
 import { lockSettings } from "../store.js";
 import { runOfShow } from "../announce/store.js";
+import { own } from "../announce/text.js";
 import { checkStories } from "./check.js";
 import { freeVariablesOf, isVideo } from "./model.js";
 import type { Story } from "./model.js";
@@ -292,7 +293,7 @@ export function storyRoutes(app: FastifyInstance, deps: AppDeps): void {
         const vars = (body.variables ?? {}) as Body;
         const variables: Record<string, string> = {};
         for (const name of freeVariablesOf(story)) {
-          const v = vars[name];
+          const v = own(vars, name);
           if (v !== undefined && (typeof v !== "string" || v.length > 120))
             throw invalid(`{${name}} is a text of at most 120 characters.`);
           if (typeof v === "string" && VAR.test(name)) variables[name] = v.trim();

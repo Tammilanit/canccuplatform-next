@@ -8,6 +8,7 @@
  */
 import type { Event } from "@canccu/kit";
 import type { Engine } from "../engine.js";
+import { isolated } from "../db.js";
 import { runOfShow } from "../announce/store.js";
 import type { RunItem } from "../announce/store.js";
 import type { Actor } from "../store.js";
@@ -190,15 +191,28 @@ export async function tickStories(ctx: Omit<Ctx, "settings" | "event">): Promise
   const full: Ctx = { ...ctx, settings: doc.settings, event: doc.event };
   const on = doc.stories.filter((s) => s.enabled);
   const items = ((await runOfShow(ctx.c)) ?? []) as Item[];
+  // One story that cannot be built must not roll back the event's whole second (#611).
   for (const s of on) {
-    for (const [i, t] of s.triggers.entries()) {
-      if (t.kind === "item") await itemTriggers(full, s, t, items);
-      else if (t.kind === "clock") await clockTriggers(full, s, t);
-      else if (t.kind === "milestone") await milestoneTriggers(full, s, t, i);
-    }
+    await isolated(
+      ctx.c,
+      async () => {
+        for (const [i, t] of s.triggers.entries()) {
+          if (t.kind === "item") await itemTriggers(full, s, t, items);
+          else if (t.kind === "clock") await clockTriggers(full, s, t);
+          else if (t.kind === "milestone") await milestoneTriggers(full, s, t, i);
+        }
+      },
+      (err) => ctx.log?.warn({ err, story: s.key }, "a story's triggers failed"),
+    );
   }
-  if (on.some((s) => s.triggers.some((t) => t.kind === "scene"))) await sceneTriggers(full, on);
-  await tickRuns(ctx.c, ctx.engine, ctx.now);
+  if (on.some((s) => s.triggers.some((t) => t.kind === "scene"))) {
+    await isolated(
+      ctx.c,
+      () => sceneTriggers(full, on),
+      (err) => ctx.log?.warn({ err }, "the stories' scene triggers failed"),
+    );
+  }
+  await tickRuns(ctx.c, ctx.engine, ctx.now, ctx.log);
 }
 
 /** A domain event: the stories it starts, and the runs whose `until_event` it is. */

@@ -120,7 +120,8 @@ export function templateRoutes(app: FastifyInstance, deps: AppDeps): void {
       };
       for (const text of [t.title, t.body]) {
         // A template's free variables are filled in the composer; only their names are checked here.
-        const why = checkText(text, new Proxy({}, { get: () => "x" }), true);
+        const filled = Object.fromEntries(freeVariables(text).map((v) => [v, "x"]));
+        const why = checkText(text, filled, true);
         if (why !== null) throw invalid(why);
       }
       return deps.db.tenant(async (c) => {
