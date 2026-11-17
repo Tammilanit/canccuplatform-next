@@ -5,7 +5,6 @@
  * which rounds sound. Pure types, limits and the placeholder vocabulary (D10, SD3).
  */
 
-export const TRIGGER_KINDS = ["item", "domain", "clock", "take", "scene", "milestone"] as const;
 export const TRANSITIONS = ["cut", "fade", "rise", "slide", "flash"] as const;
 export const RUN_MODES = ["per_source", "restart", "ignore"] as const;
 export const SOUND_ROUNDS = ["first", "every", "last", "first_and_last"] as const;

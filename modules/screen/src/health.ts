@@ -234,10 +234,6 @@ export async function recordSeen(
   }
 }
 
-/**
- * Drop the current event's health of a device that has left it (moved away or deleted), so the
- * sweep never reports it offline there and a later return starts afresh.
- */
 /** What the device last said it played (contracts/screen.md, Sound): a reload repeats none of it. */
 export async function soundedOf(kv: Kv, id: string): Promise<string[]> {
   const raw = await kv.get(keys.sounded(id));
@@ -245,6 +241,11 @@ export async function soundedOf(kv: Kv, id: string): Promise<string[]> {
   return Array.isArray(list) ? list.filter((x): x is string => typeof x === "string") : [];
 }
 
+/**
+ * Drop the current event's health of a device that has left it (moved away or deleted), so the
+ * sweep never reports it offline there and a later return starts afresh. What it last sounded is
+ * not dropped: that key only expires (RECORD_TTL_MS).
+ */
 export async function forgetHealth(kv: Kv, id: string): Promise<void> {
   await kv.del(keys.record(id), keys.instances(id), keys.playingQuiet(id), keys.seen(id));
   await kv.removeMember(keys.online(), id);

@@ -11,7 +11,6 @@ import type { Display } from "../compose/display.js";
 import type { Play } from "../moments-sound.js";
 
 export type Orientation = "landscape" | "portrait";
-export const ORIENTATIONS: readonly Orientation[] = ["landscape", "portrait"];
 
 /** One SSE message: its `event:` name and its `data`. */
 export interface Message {
