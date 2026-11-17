@@ -7,11 +7,14 @@
 import { readFileSync } from "node:fs";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import type { ErrorObject } from "ajv/dist/2020.js";
+import { DATE } from "./check.js";
 
 const SCHEMA_URL = new URL("../../../../contracts/moments/storyboard.schema.json", import.meta.url);
 const schema = JSON.parse(readFileSync(SCHEMA_URL, "utf8")) as { $id: string };
 
 const ajv = new Ajv2020({ allErrors: false, strict: false });
+// The schema's one format: a day as check.ts takes it, with no format package for one pattern.
+ajv.addFormat("date", DATE);
 const storyCheck = ajv.compile(schema);
 
 /** The fields GET adds to each story (storyboards.openapi.yaml); a client may send them back. */
