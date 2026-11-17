@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1060" width="1920" height="1060" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 15: reminders and auto-release</title>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0" y="0" width="1920" height="1060" rx="0" fill="#f3f4f6"/>
+<text x="24" y="44" font-size="28" fill="#1f2937" font-weight="700" text-anchor="start">15 · Reminders, last call and auto-release, on a time line (holder, crew)</text>
+<line x1="140" y1="160" x2="1840" y2="160" stroke="#9ca3af" stroke-width="2"/>
+<line x1="270.7692307692308" y1="152" x2="270.7692307692308" y2="168" stroke="#9ca3af" stroke-width="2"/>
+<text x="270.7692307692308" y="144" font-size="14" fill="#6b7280" font-weight="600" text-anchor="middle">18:00</text>
+<line x1="532.3076923076924" y1="152" x2="532.3076923076924" y2="168" stroke="#9ca3af" stroke-width="2"/>
+<text x="532.3076923076924" y="144" font-size="14" fill="#6b7280" font-weight="600" text-anchor="middle">18:30</text>
+<line x1="793.8461538461538" y1="152" x2="793.8461538461538" y2="168" stroke="#9ca3af" stroke-width="2"/>
+<text x="793.8461538461538" y="144" font-size="14" fill="#6b7280" font-weight="600" text-anchor="middle">19:00</text>
+<line x1="1055.3846153846152" y1="152" x2="1055.3846153846152" y2="168" stroke="#9ca3af" stroke-width="2"/>
+<text x="1055.3846153846152" y="144" font-size="14" fill="#6b7280" font-weight="600" text-anchor="middle">19:30</text>
+<line x1="1316.923076923077" y1="152" x2="1316.923076923077" y2="168" stroke="#9ca3af" stroke-width="2"/>
+<text x="1316.923076923077" y="144" font-size="14" fill="#6b7280" font-weight="600" text-anchor="middle">20:00</text>
+<line x1="1578.4615384615386" y1="152" x2="1578.4615384615386" y2="168" stroke="#9ca3af" stroke-width="2"/>
+<text x="1578.4615384615386" y="144" font-size="14" fill="#6b7280" font-weight="600" text-anchor="middle">20:30</text>
+<line x1="1840.0" y1="152" x2="1840.0" y2="168" stroke="#9ca3af" stroke-width="2"/>
+<text x="1840.0" y="144" font-size="14" fill="#6b7280" font-weight="600" text-anchor="middle">21:00</text>
+<text x="30" y="200" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Order 3, on time</text>
+<line x1="140" y1="230" x2="1840" y2="230" stroke="#e5e7eb" stroke-width="2"/>
+<circle cx="183.5897435897436" cy="230" r="9" fill="#2563eb"/>
+<text x="183.5897435897436" y="262" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">opened, closes 18:45</text>
+<circle cx="575.8974358974359" cy="230" r="9" fill="#b45309"/>
+<text x="575.8974358974359" y="212" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">last call</text>
+<circle cx="663.0769230769231" cy="230" r="9" fill="#2563eb"/>
+<text x="663.0769230769231" y="262" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">closed</text>
+<circle cx="671.7948717948718" cy="230" r="9" fill="#2563eb"/>
+<circle cx="1037.9487179487178" cy="230" r="9" fill="#7c3aed"/>
+<text x="1037.9487179487178" y="262" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">arrived</text>
+<circle cx="1299.4871794871794" cy="230" r="9" fill="#16a34a"/>
+<text x="1299.4871794871794" y="212" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">done</text>
+<text x="30" y="370" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Order 2, the holder stalls</text>
+<line x1="140" y1="400" x2="1840" y2="400" stroke="#e5e7eb" stroke-width="2"/>
+<circle cx="288.2051282051282" cy="400" r="9" fill="#2563eb"/>
+<text x="288.2051282051282" y="432" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">opened</text>
+<circle cx="445.12820512820514" cy="400" r="9" fill="#b45309"/>
+<text x="445.12820512820514" y="382" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">last call</text>
+<circle cx="541.0256410256411" cy="400" r="9" fill="#2563eb"/>
+<text x="541.0256410256411" y="432" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">closed</text>
+<circle cx="802.5641025641025" cy="400" r="9" fill="#b45309"/>
+<text x="802.5641025641025" y="382" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">+30: holder</text>
+<circle cx="1064.102564102564" cy="400" r="9" fill="#dc2626"/>
+<text x="1064.102564102564" y="432" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">+60: holder and crew</text>
+<circle cx="1587.179487179487" cy="400" r="9" fill="#6b7280"/>
+<text x="1587.179487179487" y="382" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">2 h: auto-release</text>
+<text x="30" y="540" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Auto-close off (U3: B)</text>
+<line x1="140" y1="570" x2="1840" y2="570" stroke="#e5e7eb" stroke-width="2"/>
+<circle cx="270.7692307692308" cy="570" r="9" fill="#2563eb"/>
+<text x="270.7692307692308" y="602" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">opened, target 18:30</text>
+<circle cx="793.8461538461538" cy="570" r="9" fill="#b45309"/>
+<text x="793.8461538461538" y="552" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">+30 past target</text>
+<circle cx="1055.3846153846152" cy="570" r="9" fill="#dc2626"/>
+<text x="1055.3846153846152" y="602" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">+60 past target</text>
+<text x="30" y="710" font-size="17" fill="#111827" font-weight="700" text-anchor="start">Called in, no sign of it</text>
+<line x1="140" y1="740" x2="1840" y2="740" stroke="#e5e7eb" stroke-width="2"/>
+<circle cx="671.7948717948718" cy="740" r="9" fill="#2563eb"/>
+<text x="671.7948717948718" y="772" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">called in, about 19:31</text>
+<circle cx="1325.6410256410256" cy="740" r="9" fill="#b45309"/>
+<text x="1325.6410256410256" y="722" font-size="14" fill="#374151" font-weight="600" text-anchor="middle">+30 past the estimate: &#x27;arrived?&#x27; to the holder (U11)</text>
+<rect x="30" y="830" width="1860" height="200" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/>
+<text x="54" y="866" font-size="17" fill="#111827" font-weight="700" text-anchor="start">The legacy rules, kept (reminders.ts and its tests)</text>
+<text x="54" y="896" font-size="15" fill="#374151" font-weight="400" text-anchor="start">• +30 and +60 min, each step at most once per order; only the latest due step; skipped when more than 30 min late (an outage never sends stale ones).</text>
+<text x="54" y="922" font-size="15" fill="#374151" font-weight="400" text-anchor="start">• A step is marked sent only after its delivery succeeded; auto-release clears the holder and nothing else; it never cancels or calls in.</text>
+<text x="54" y="960" font-size="15" fill="#374151" font-weight="400" text-anchor="start">New: a scheduler inside the pizza container, due times in Postgres (a restart loses nothing; two replicas never send twice: one row lock per due step).</text>
+<text x="54" y="986" font-size="15" fill="#374151" font-weight="400" text-anchor="start">New: who hears it. The holder by push (a personal pizza topic, D12) and, from step 6, the bot&#x27;s mention; the crew from +60 (U10). Every time is a per-event setting.</text>
+<text x="54" y="1012" font-size="15" fill="#6b7280" font-weight="400" text-anchor="start">pizza.reminder.triggered (kind, minutes) is the event; Moments never shows reminders on the screen.</text>
+</svg>

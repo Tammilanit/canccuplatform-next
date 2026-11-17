@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 760" width="1920" height="760" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 01: three directions for step 5</title>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0" y="0" width="1920" height="760" rx="0" fill="#f3f4f6"/>
+<text x="24" y="44" font-size="28" fill="#1f2937" font-weight="700" text-anchor="start">01 · Three directions for food at the event</text>
+<text x="24" y="76" font-size="17" fill="#374151" font-weight="400" text-anchor="start">The same moment in each: 18:10 on Saturday, two groups want food from two pizzerias, and order 1 has just arrived at the door.</text>
+<rect x="24" y="96" width="610" height="640" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/>
+<text x="46" y="136" font-size="25" fill="#111827" font-weight="700" text-anchor="start">A · The group order, as it was</text>
+<text x="46" y="164" font-size="16" fill="#2563eb" font-weight="600" text-anchor="start">A faithful port, restyled</text>
+<text x="46" y="204" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start">WHAT IT FEELS LIKE</text>
+<text x="46" y="230" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• One open order per event, as the legacy: one list for</text>
+<text x="60" y="252" font-size="16" fill="#374151" font-weight="400" text-anchor="start">everyone.</text>
+<text x="46" y="282" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Attendees: sign in once instead of a token link; the same</text>
+<text x="60" y="304" font-size="16" fill="#374151" font-weight="400" text-anchor="start">pages, phone-first, in the hub&#x27;s frame.</text>
+<text x="46" y="334" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Holder: the legacy checklist (prepare, close, call, placed);</text>
+<text x="60" y="356" font-size="16" fill="#374151" font-weight="400" text-anchor="start">release and take-over.</text>
+<text x="46" y="386" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Organisers: pizzerias and menus, the daily record and CSV,</text>
+<text x="60" y="408" font-size="16" fill="#374151" font-weight="400" text-anchor="start">force actions.</text>
+<text x="46" y="438" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Venue staff: nothing changes; the delivery asks for &#x27;whoever</text>
+<text x="60" y="460" font-size="16" fill="#374151" font-weight="400" text-anchor="start">ordered&#x27;.</text>
+<text x="46" y="504" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start">TRADE-OFFS</text>
+<text x="46" y="530" font-size="16" fill="#16a34a" font-weight="400" text-anchor="start">+ Cheapest; the legacy tests are the spec, nearly line for</text>
+<text x="46" y="552" font-size="16" fill="#16a34a" font-weight="400" text-anchor="start">line.</text>
+<text x="46" y="580" font-size="16" fill="#b45309" font-weight="400" text-anchor="start">− A second pizzeria waits until the first order is placed.</text>
+<text x="46" y="608" font-size="16" fill="#b45309" font-weight="400" text-anchor="start">− Nobody learns when food arrives or who still has to collect.</text>
+<text x="46" y="636" font-size="16" fill="#b45309" font-weight="400" text-anchor="start">− The holder still chases who paid them, by memory.</text>
+<text x="46" y="710" font-size="20" fill="#111827" font-weight="700" text-anchor="start">Cost: S–M</text>
+<rect x="656" y="96" width="610" height="640" rx="14" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/>
+<text x="678" y="136" font-size="25" fill="#111827" font-weight="700" text-anchor="start">B · The food desk</text>
+<text x="678" y="164" font-size="16" fill="#2563eb" font-weight="600" text-anchor="start">The crew runs food like a counter</text>
+<text x="678" y="204" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start">WHAT IT FEELS LIKE</text>
+<text x="678" y="230" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Food rounds are planned in the run of show (&#x27;Dinner: order</text>
+<text x="692" y="252" font-size="16" fill="#374151" font-weight="400" text-anchor="start">by 17:30&#x27;).</text>
+<text x="678" y="282" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Attendees: pick from the menu; collect at the counter by</text>
+<text x="692" y="304" font-size="16" fill="#374151" font-weight="400" text-anchor="start">number.</text>
+<text x="678" y="334" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Organisers and crew: hold every order, call, receive, hand</text>
+<text x="692" y="356" font-size="16" fill="#374151" font-weight="400" text-anchor="start">out from a desk; per-person paid status.</text>
+<text x="678" y="386" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Venue staff: a counter screen that says which bag is whose.</text>
+<text x="678" y="416" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Spontaneous orders only if the crew opens one.</text>
+<text x="678" y="460" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start">TRADE-OFFS</text>
+<text x="678" y="486" font-size="16" fill="#16a34a" font-weight="400" text-anchor="start">+ Predictable for attendees; one place to collect.</text>
+<text x="678" y="514" font-size="16" fill="#b45309" font-weight="400" text-anchor="start">− Moves the work onto the crew at the busiest hours.</text>
+<text x="678" y="542" font-size="16" fill="#b45309" font-weight="400" text-anchor="start">− Loses the legacy&#x27;s &#x27;decided on the spot&#x27;, which worked.</text>
+<text x="678" y="570" font-size="16" fill="#b45309" font-weight="400" text-anchor="start">− Drifts toward the service-order engine 0022 rules out.</text>
+<text x="678" y="710" font-size="20" fill="#111827" font-weight="700" text-anchor="start">Cost: L</text>
+<rect x="1288" y="96" width="610" height="640" rx="14" fill="#ffffff" stroke="#2563eb" stroke-width="3"/>
+<text x="1310" y="136" font-size="25" fill="#111827" font-weight="700" text-anchor="start">C · Group order, effortless</text>
+<text x="1310" y="164" font-size="16" fill="#2563eb" font-weight="600" text-anchor="start">The legacy model, with the edges fixed (recommended)</text>
+<text x="1310" y="204" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start">WHAT IT FEELS LIKE</text>
+<text x="1310" y="230" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Anyone who joined opens an order, one per pizzeria, several</text>
+<text x="1324" y="252" font-size="16" fill="#374151" font-weight="400" text-anchor="start">at once; a close time with a last call.</text>
+<text x="1310" y="282" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Attendees: QR → menu → added in under a minute; live status</text>
+<text x="1324" y="304" font-size="16" fill="#374151" font-weight="400" text-anchor="start">and &#x27;pizza is here&#x27; by push.</text>
+<text x="1310" y="334" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Holder: call mode, an arrival time, a hand-out list with</text>
+<text x="1324" y="356" font-size="16" fill="#374151" font-weight="400" text-anchor="start">&#x27;paid me&#x27; ticks; the app chases, not them.</text>
+<text x="1310" y="386" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Organisers and crew: one Food page to see, step in, correct</text>
+<text x="1324" y="408" font-size="16" fill="#374151" font-weight="400" text-anchor="start">(audited); &#x27;crew only&#x27; opening as a setting.</text>
+<text x="1310" y="438" font-size="16" fill="#374151" font-weight="400" text-anchor="start">• Venue staff: the crew phone shows the arriving order and its</text>
+<text x="1324" y="460" font-size="16" fill="#374151" font-weight="400" text-anchor="start">holder.</text>
+<text x="1310" y="504" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start">TRADE-OFFS</text>
+<text x="1310" y="530" font-size="16" fill="#16a34a" font-weight="400" text-anchor="start">+ Fixes exactly the legacy&#x27;s weak spots, keeps what worked.</text>
+<text x="1310" y="558" font-size="16" fill="#16a34a" font-weight="400" text-anchor="start">+ Moments&#x27; pizza stories and Notify&#x27;s food topic light up as</text>
+<text x="1310" y="580" font-size="16" fill="#16a34a" font-weight="400" text-anchor="start">built.</text>
+<text x="1310" y="608" font-size="16" fill="#b45309" font-weight="400" text-anchor="start">− More states and tests than A (several orders, hand-out,</text>
+<text x="1310" y="630" font-size="16" fill="#b45309" font-weight="400" text-anchor="start">ETA).</text>
+<text x="1310" y="658" font-size="16" fill="#b45309" font-weight="400" text-anchor="start">− Several open orders is a catalog sentence to change (D1).</text>
+<text x="1310" y="710" font-size="20" fill="#111827" font-weight="700" text-anchor="start">Cost: M</text>
+</svg>
