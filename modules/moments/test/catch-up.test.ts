@@ -85,6 +85,21 @@ run("catching up after a restart", () => {
     expect(m?.ended_at).toBeNull();
   });
 
+  it("catches up a zone whose key was removed and saved again in Screen's past (#611)", async () => {
+    const id = await start();
+    const waiting = report(id, false);
+    await w.tx("demo", () => handleTenantEvent(deps(), waiting));
+    w.restart();
+    const placed = report(id, true);
+    w.now = w.at(40);
+    // The whole stream replays at boot: removed, saved, the live-applied report, the downtime one.
+    const removed = event("screen.zone.removed", { zone_key: "main" });
+    const saved = event("screen.zone.saved", { zone_key: "main" });
+    for (const e of [removed, saved, waiting, placed])
+      await w.tx("demo", () => handleZoneReplay(deps(), e));
+    expect(await placement(id)).toBe("placed");
+  });
+
   it("ends every moment of an event archived while Moments was down, on the tick", async () => {
     const id = await start();
     const status = new Map([["demo", "live"]]);

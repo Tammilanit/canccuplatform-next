@@ -228,6 +228,7 @@ export async function handlePlatformEvent(deps: ConsumerDeps, e: Event): Promise
         "moments_story_runs",
         "moments_story_marks",
         "moments_rule_retries",
+        "moments_claims_marks",
       ]) {
         await c.query(`DELETE FROM ${table}`, []);
       }

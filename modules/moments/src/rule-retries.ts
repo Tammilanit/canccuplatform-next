@@ -8,6 +8,9 @@
 import type { SqlClient } from "@canccu/kit";
 import type { Engine, MomentRequest, RequestResult } from "./engine.js";
 import { DEFAULT_TTL_SECONDS } from "./engine.js";
+import { loadRules } from "./rules.js";
+import { rulesOff } from "./story/presets.js";
+import { loadStories } from "./story/store.js";
 
 const RETRY_MS = 30_000;
 
@@ -70,8 +73,27 @@ export async function retryRules(c: SqlClient, engine: Engine, now: Date): Promi
      ORDER BY retry_at FOR UPDATE SKIP LOCKED`,
     [now],
   );
+  if (rows.length === 0) return;
+  const rules = await loadRules(c);
+  const stories = (await loadStories(c)).stories;
   for (const row of rows as { request: MomentRequest; give_up_at: Date }[]) {
-    const r = row.request as MomentRequest & { dedupe_key: string; rule_id: string };
+    const old = row.request as MomentRequest & { dedupe_key: string; rule_id: string };
+    const rule = rules.find((x) => x.rule_id === old.rule_id);
+    // `why` is "rule: <event type>"; a preset on now may take that happening over.
+    const type = old.why.replace(/^rule: /, "");
+    if (rule === undefined || !rule.enabled || rulesOff(stories, type).has(old.rule_id)) {
+      await dropRetry(c, old.dedupe_key);
+      continue;
+    }
+    // The crew may have changed the rule since the refusal: ask with its settings now.
+    const r = {
+      ...old,
+      class: rule.class,
+      template: rule.template,
+      regions: rule.regions,
+      ttl_seconds: rule.ttl_seconds,
+      zones: rule.zones,
+    };
     await settle(c, r, await engine.request(c, r, now), now, row.give_up_at);
   }
 }

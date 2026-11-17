@@ -7,6 +7,7 @@ import { handleTenantEvent, handleZoneReplay } from "../src/consumer.js";
 import { spotlightRequest } from "../src/content.js";
 import { applyClaims } from "../src/placements.js";
 import { RULE_IDS, checkRule, loadRules } from "../src/rules.js";
+import type { RuleView } from "../src/rules.js";
 import { lockMoment } from "../src/store.js";
 import { tickTenant } from "../src/tick.js";
 import { DATABASE_URL, claims, freshDatabase, world } from "./helpers.js";
@@ -131,6 +132,47 @@ run("the built-in rules", () => {
     });
     await tick(61);
     expect(called()).toHaveLength(1);
+  });
+
+  it("never asks again for a rule the crew turned off after the refusal (#611)", async () => {
+    await presetsOff();
+    const top = await w.tx("demo", async (c) => {
+      await c.query(`INSERT INTO moments_zones (zone_key) VALUES ('main')`);
+      return w.engine.request(
+        c,
+        {
+          class: "spotlight",
+          kind: "takeover",
+          regions: ["full"],
+          template: "announcement",
+          content: { title: "Doors", body: "", level: "info", starts_at: null },
+          origin: "crew",
+          why: "test",
+          ttl_seconds: 5,
+        },
+        w.at(0),
+      );
+    });
+    if (top.status === "refused") throw new Error("refused");
+    await w.tx("demo", (c) => applyClaims(c, claims("main", [[top.moment.id, "full"]]), w.at(0)));
+    await deliver(FIXTURES.called());
+    const stored = () =>
+      w.tx("demo", async (c) => (await c.query(`SELECT 1 FROM moments_rule_retries`, [])).rows);
+    expect(await stored()).toHaveLength(1);
+    await w.tx("demo", async (c) => {
+      const r = (await loadRules(c)).find((x) => x.rule_id === "match_called");
+      const { revision, template, class: cls, regions, ttl_seconds, zones, cue } = r as RuleView;
+      const settings = { template, class: cls, regions, ttl_seconds, zones, cue };
+      await c.query(
+        `INSERT INTO moments_rules (rule_id, settings, revision) VALUES ('match_called', $1, $2)
+         ON CONFLICT (tenant_id, rule_id) DO UPDATE SET settings = EXCLUDED.settings`,
+        [{ ...settings, enabled: false }, revision + 1],
+      );
+    });
+    await w.tx("demo", (c) => tickTenant(c, w.engine, w.at(5)));
+    await w.tx("demo", (c) => tickTenant(c, w.engine, w.at(30)));
+    expect(overrides().filter((o) => o.template === "match_called")).toEqual([]);
+    expect(await stored()).toEqual([]);
   });
 
   it("calls a match into the hero, and ends it when the match starts (E5)", async () => {

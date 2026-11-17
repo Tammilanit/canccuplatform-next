@@ -44,9 +44,9 @@ type Ours = MomentRow & { override_id: string };
 
 /**
  * Whether the report of event `eventId` is newer than the last applied on its zone, which it then
- * becomes (under the zone's row lock, so the live and the replay subscriptions apply it once).
+ * becomes (under the mark's row lock, so the live and the replay subscriptions apply it once).
  * Event ids are UUIDv7, ordered by time. The replay (`replayed`) applies only on a zone the live
- * subscription has marked, so a first boot never replays the stream's whole past into the history.
+ * subscription has marked (the mark outlives a replayed zone removal), so a first boot never replays the stream's whole past into the history.
  */
 export async function newerClaims(
   c: SqlClient,
@@ -56,11 +56,14 @@ export async function newerClaims(
 ): Promise<boolean> {
   if (!replayed) await addZone(c, zone);
   const { rows } = await c.query(
-    `UPDATE moments_zones SET claims_event_id = $2
-     WHERE zone_key = $1
-       AND (claims_event_id < $2 OR (claims_event_id IS NULL AND NOT $3))
-     RETURNING zone_key`,
-    [zone, eventId, replayed],
+    replayed
+      ? `UPDATE moments_claims_marks SET claims_event_id = $2
+         WHERE zone_key = $1 AND claims_event_id < $2 RETURNING zone_key`
+      : `INSERT INTO moments_claims_marks (zone_key, claims_event_id) VALUES ($1, $2)
+         ON CONFLICT (tenant_id, zone_key) DO UPDATE SET claims_event_id = EXCLUDED.claims_event_id
+         WHERE moments_claims_marks.claims_event_id < EXCLUDED.claims_event_id
+         RETURNING zone_key`,
+    [zone, eventId],
   );
   return rows.length > 0;
 }
