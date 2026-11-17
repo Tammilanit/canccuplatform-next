@@ -8,6 +8,7 @@ import type { Event, SqlClient } from "@canccu/kit";
 import { isClass } from "./arbiter.js";
 import type { Class } from "./arbiter.js";
 import type { Engine } from "./engine.js";
+import { askForRule, dropRetry } from "./rule-retries.js";
 import { leaderboardView } from "./sources.js";
 import { lockRunningByKey } from "./store.js";
 import type { Binding } from "./store.js";
@@ -224,7 +225,7 @@ export function checkRule(id: string, s: Data): string | null {
   return null;
 }
 
-/** Runs every rule an event fires or ends; refused requests are left for the next event to ask. */
+/** Runs every rule an event fires or ends; a refused request asks again 30 s later (rule-retries.ts). */
 export async function applyRules(c: SqlClient, engine: Engine, e: Event, now: Date): Promise<void> {
   const rules = await loadRules(c);
   // A preset on for the event shows the same happening: its rule is off (SD6, WD2).
@@ -238,12 +239,14 @@ export async function applyRules(c: SqlClient, engine: Engine, e: Event, now: Da
     if (def.ends.includes(e.type) || takenOver) {
       const m = await lockRunningByKey(c, `${def.id}:${def.ref(e.data)}`);
       if (m !== null) await engine.end(c, m, "source_ended", null, now);
+      await dropRetry(c, `${def.id}:${def.ref(e.data)}`);
     }
     if (!s.enabled || takenOver || !def.on.includes(e.type)) continue;
     if (def.applies?.(e.data) === false) continue;
     const ref = def.ref(e.data);
-    await engine.request(
+    await askForRule(
       c,
+      engine,
       {
         class: s.class,
         template: s.template,

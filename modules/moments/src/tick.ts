@@ -12,6 +12,7 @@ import { evaluateScenes, storeAgenda } from "./scene-store.js";
 import type { AgendaReader } from "./scene-store.js";
 import { lockMoment, runningMoments } from "./store.js";
 import { tickAnnouncements } from "./announce/follow.js";
+import { retryRules } from "./rule-retries.js";
 import { tickStories } from "./story/triggers.js";
 
 export const TICK_MS = 1000;
@@ -40,6 +41,7 @@ export async function tickTenant(
     if (m === null || m.ended_at !== null) continue;
     await engine.end(c, m, "preempted", null, now, r.zone_key);
   }
+  await retryRules(c, engine, now);
   await tickAnnouncements(c, engine, now);
   await tickStories({ c, engine, now, log });
   await engine.pumpSounds(c, now);
@@ -57,6 +59,7 @@ export async function endAll(c: SqlClient, engine: Engine, now: Date): Promise<v
   for (const m of await runningMoments(c, "TRUE", [], "wait")) {
     await engine.end(c, m, "source_ended", null, now);
   }
+  await c.query(`DELETE FROM moments_rule_retries`, []);
 }
 
 /** A removed zone: every moment leaves it (E9), and it is no zone of the event any more. */
