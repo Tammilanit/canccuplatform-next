@@ -91,6 +91,10 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
     await w.tx("demo", (c) => writeStories(c, PRESETS.slice(0, 5), DEFAULT_SETTINGS, 3));
     const list = await w.call("admin", "GET", "/storyboards");
     expect(list.body).toContain("not in this event yet");
+    // An uncopied preset is Off whatever the platform default says, so its button matches toggled().
+    const uncopied = /storyboards\/pizza_last_call\/toggle[\s\S]{0,400}/.exec(list.body)?.[0] ?? "";
+    expect(uncopied).toContain("Turn on");
+    expect(uncopied).not.toContain("Turn off");
     const toggle = (key: string, revision: number) =>
       w.call(
         "admin",

@@ -104,7 +104,8 @@ export function pickerView(o: {
   const presetRows = (g: PresetGroup): Row[] =>
     PRESETS.filter((p) => PRESET_INFO[p.key]?.group === g).map((p) => {
       const own = byKey.get(p.key);
-      return { story: own ?? p, copied: own !== undefined };
+      // Not copied means not running, whatever the platform default says; "Turn on" copies it in.
+      return { story: own ?? { ...p, enabled: false }, copied: own !== undefined };
     });
   const own: Row[] = o.stories
     .filter((s) => s.preset === null || PRESET_INFO[s.key] === undefined)
