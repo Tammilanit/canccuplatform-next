@@ -224,7 +224,9 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
     const { rows } = await pool.query(
       `SELECT why FROM moments_history WHERE action = 'round_started'`,
     );
-    expect((rows[0] as { why: string } | undefined)?.why).toMatch(/^Demo crew · test-fire Midnight/);
+    expect((rows[0] as { why: string } | undefined)?.why).toMatch(
+      /^Demo crew · test-fire Midnight/,
+    );
   });
 
   it("forgets a person's name in the story's runs and history rows", async () => {
