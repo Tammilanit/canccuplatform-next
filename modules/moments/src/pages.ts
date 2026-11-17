@@ -2,6 +2,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { DEFAULT_ORDER, checkOrder, desiredOverrides, isClass } from "./arbiter.js";
 import type { Class } from "./arbiter.js";
+import { announcePages } from "./announce/pages.js";
+import { ANNOUNCE } from "./announce/routes.js";
 import { cuePages } from "./cues/pages.js";
 import { filterOf, historyRows } from "./history.js";
 import { html } from "@canccu/ui";
@@ -91,6 +93,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
     staticRoutes(pages);
     cuePages(pages, deps);
     scenePages(pages, deps);
+    announcePages(pages, deps);
     const read = { preHandler: pageNeeds(deps, READ) };
     const has = (r: FastifyRequest, right: string) => r.session?.rights.has(right) === true;
     const back = (reply: FastifyReply, path: string, key: "done" | "error", text: string) =>
@@ -117,6 +120,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
           ...state,
           now: deps.now(),
           canTake: has(request, TAKE),
+          canAnnounce: has(request, ANNOUNCE),
           canEmergency: has(request, EMERGENCY),
           archived: tenantOf(request).status === "archived",
           scenes: await sceneCard(deps, request),

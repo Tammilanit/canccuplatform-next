@@ -112,6 +112,7 @@ export function onAirView(o: {
   zones: string[];
   now: Date;
   canTake: boolean;
+  canAnnounce: boolean;
   canEmergency: boolean;
   archived: boolean;
   /** Each zone's scene and the crew buttons (scene-views.ts), drawn by the caller. */
@@ -144,11 +145,12 @@ export function onAirView(o: {
     </section>`;
   });
   const crew =
-    o.archived || !(o.canTake || o.canEmergency)
+    o.archived || !(o.canTake || o.canAnnounce || o.canEmergency)
       ? ""
       : html`<section class="canccu-card moments-crew">
           <h2 class="canccu-card__title">Crew actions</h2>
           <div class="moments-crew__buttons">
+            ${o.canAnnounce ? html`<a class="canccu-button canccu-button--primary canccu-button--block" href="${PREFIX}announce">Announce…</a>` : ""}
             ${o.canTake ? html`<a class="canccu-button canccu-button--secondary canccu-button--block" href="${PREFIX}spotlight">Spotlight…</a>` : ""}
           </div>
           ${o.canEmergency ? emergencyBox(emergency) : ""}

@@ -26,18 +26,18 @@ describe("the announcements topic", () => {
     const calls: { url: string; method: string; body: unknown; caller: string | null }[] = [];
     const answers = [503, 401, 200];
     const service = new ServiceIdentity({ module: "moments", key: "k".repeat(32) });
-    const fetchFake = (url: string | URL | Request, init?: RequestInit) => {
+    const fetchFake = (url: string, init?: RequestInit) => {
       const headers = new Headers(init?.headers);
       calls.push({
-        url: String(url),
+        url,
         method: init?.method ?? "GET",
-        body: JSON.parse(String(init?.body)),
+        body: JSON.parse(init?.body as string) as unknown,
         caller: headers.get("x-canccu-service") ?? headers.get("authorization"),
       });
       return Promise.resolve(new Response("{}", { status: answers.shift() ?? 200 }));
     };
     const ok = await registerTopic("http://notify:8080/", service, {
-      fetch: fetchFake,
+      fetch: fetchFake as typeof fetch,
       sleep: () => Promise.resolve(),
     });
     expect(ok).toBe(true);

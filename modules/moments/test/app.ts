@@ -42,6 +42,7 @@ export const SUPERADMIN_HOST = "super.test";
 
 const ALL = [
   "moments.read",
+  "moments.announce",
   "moments.take",
   "moments.emergency",
   "moments.settings.write",
