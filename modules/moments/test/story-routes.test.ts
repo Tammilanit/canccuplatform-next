@@ -200,6 +200,22 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
     expect(w.audit.map((a) => a.action)).toContain("moments.storyboard.skipped");
   });
 
+  // #611: firing is no way around the agenda's visibility, as the composer is not (canSee).
+  it("fires with a crew-only item only for a crew reader, and never prints its fields", async () => {
+    w.now = new Date("2026-01-01T18:40:00Z");
+    const secret = { ...ITEM, id: "it_crew", title: "Crew briefing", visibility: "crew" };
+    await w.tx("demo", (c) => storeAgenda(c, { agenda_version: 2, items: [ITEM, secret] }));
+    const fire = (who: string) =>
+      w.call(who, "POST", "/api/moments/storyboards/starting_soon/take", { item_id: "it_crew" });
+    const hidden = await fire("crew");
+    expect(hidden.statusCode).toBe(400);
+    expect(errorOf(hidden).message).toBe("No such run-of-show item.");
+    const crewReader = await fire("lead");
+    expect(crewReader.statusCode).toBe(400);
+    expect(errorOf(crewReader).message).toContain("not public");
+    expect((await w.tx("demo", (c) => c.query(`SELECT id FROM moments`))).rows).toEqual([]);
+  });
+
   it("test-fires one round on one zone, marked as a test", async () => {
     const r = await w.call("crew", "POST", "/api/moments/storyboards/midnight/take", {
       test: { zone: "main", sound: false },
