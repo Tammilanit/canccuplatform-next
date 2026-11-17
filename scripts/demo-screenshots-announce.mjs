@@ -3,7 +3,8 @@
 // in the real player, on a desk and a phone; then on the main hall an info card in the rail with its
 // ticker line, the same card edited ("Updated"), an urgent one and a full-screen one. The entrance's
 // rail is hidden for the run, so there the card degrades to the ticker and shows both lines (L4);
-// it is shown again afterwards. Every announcement sent here is withdrawn and every screen revoked.
+// it is shown again afterwards. Last, a withdrawn one opened from its Edit link: read-only (#603).
+// Every announcement sent here is withdrawn and every screen revoked.
 import { SESSION } from "../modules/screen/test/stack/client.mjs";
 import { saveZone } from "../modules/screen/test/stack/fixture.mjs";
 import { moments, placed } from "./demo-screenshots-moments.mjs";
@@ -56,6 +57,15 @@ export const URGENT_PAGES = [
 export const FULL_PAGES = [
   screen("announce-screen-full", "main", "Doors close at 23:00"),
 ];
+/** Its path ends in the withdrawn announcement's id, known only once it is sent. */
+export const WITHDRAWN_PAGES = [
+  [
+    "announce-withdrawn",
+    "/moments/announce?edit=",
+    DESK,
+    { ready: shows("can no longer be changed") },
+  ],
+];
 
 /** The dry run's lines. */
 export function announceListed(at) {
@@ -64,6 +74,7 @@ export function announceListed(at) {
     [UPDATED_PAGES, "the same, edited"],
     [URGENT_PAGES, "an urgent announcement"],
     [FULL_PAGES, "a full-screen announcement"],
+    [WITHDRAWN_PAGES, "the last one withdrawn, opened read-only"],
   ].flatMap(([pages, how]) =>
     pages.map(
       ([name, path, { width, height }]) =>
@@ -154,6 +165,11 @@ export async function announceShots({ demo, shot, fail }) {
       for (const [name, path, viewport, o] of list)
         await shot(name, path, viewport, SESSION, o);
     }
+    const last = sent.splice(0);
+    for (const id of last)
+      await moments("POST", `/api/moments/announcements/${id}/withdraw`, {});
+    for (const [name, path, viewport, o] of WITHDRAWN_PAGES)
+      await shot(name, `${path}${last[0]}`, viewport, SESSION, o);
   } catch (err) {
     fail(`announce: ${firstLine(err)}`);
   } finally {
