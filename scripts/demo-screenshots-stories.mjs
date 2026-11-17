@@ -14,7 +14,7 @@ import { DESK, PHONE, firstLine } from "./demo-screenshots-shot.mjs";
 
 const SCREEN_VIEW = { width: 1920, height: 1080 };
 const FILM = new URL(
-  "../events/demo/assets/video/demo-film.mp4",
+  "../events/demo/media/demo-film.mp4",
   import.meta.url,
 );
 
