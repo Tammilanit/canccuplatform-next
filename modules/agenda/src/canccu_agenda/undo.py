@@ -27,7 +27,8 @@ from .effective import event_settings
 from .history import labels
 from .inverse import Inverse
 from .kinds import not_found
-from .web import BASE, button, esc, redirect, zone_of
+from .times import zone_of
+from .web import BASE, button, esc, redirect
 
 LIFETIME = timedelta(minutes=2)
 _ID = re.compile(r"un_[0-9a-f]{32}")

@@ -20,7 +20,8 @@ from zoneinfo import ZoneInfo
 
 from . import model
 from .day_view import span
-from .web import VISIBILITY_LABELS, day_label, esc, hhmm
+from .times import day_label, hhmm
+from .web import VISIBILITY_LABELS, esc
 
 Action = Literal["delay", "cancel", "move"]
 SCHEDULE_WINDOW = timedelta(minutes=120)  # the schedule topic's `within_minutes` 120

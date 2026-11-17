@@ -18,7 +18,8 @@ from starlette.requests import Request
 
 from . import day_view
 from .day_view import state_of
-from .web import BASE, day_label, esc, folded, hhmm
+from .times import day_label, hhmm
+from .web import BASE, esc, folded
 
 # The filter's choices by the list's For column; empty is every item this person may read.
 AUDIENCES = (

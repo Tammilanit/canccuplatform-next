@@ -21,20 +21,8 @@ from .inverse import Inverse
 from .item_pages import load_item
 from .kinds import not_found
 from .preview import change_of, preview_html, told, told_announce
-from .web import (
-    BASE,
-    button,
-    esc,
-    field,
-    hhmm,
-    hidden,
-    notice,
-    page,
-    page_writer,
-    redirect,
-    text_input,
-    zone_of,
-)
+from .times import hhmm, zone_of
+from .web import BASE, button, esc, field, hidden, notice, page, page_writer, redirect, text_input
 
 
 def _day(row: Any, request: Request) -> str:

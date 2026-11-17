@@ -13,7 +13,8 @@ from canccu_kit.rights import Session
 from canccu_kit.ui import icon
 
 from .access import WRITE
-from .web import BASE, CHANNEL_LABELS, VISIBILITY_LABELS, esc, hhmm, next_minute
+from .times import hhmm, next_minute
+from .web import BASE, CHANNEL_LABELS, VISIBILITY_LABELS, esc
 
 # Screen's own player of a zone for a signed-in person (contracts/screen.md, A zone for a
 # session), so the miniature is the live Pulse with this list's delays. Every event has `main`.

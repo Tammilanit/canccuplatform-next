@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 
 from starlette.requests import Request
 
-from .web import zone_of
+from .times import zone_of
 
 # A longer event (or one with odd dates) offers no day list of its own: today, tomorrow and the
 # form's own days stay.
