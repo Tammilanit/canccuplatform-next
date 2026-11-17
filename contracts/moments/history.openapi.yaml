@@ -1,0 +1,99 @@
+# Part of moments.openapi.yaml: the history and the caller's own data, path items only, referenced
+# from its `paths` and linted through it (contracts/README.md, Shared components).
+/api/moments/history:
+  get:
+    tags: [history]
+    operationId: listHistory
+    summary: The history, newest first
+    description: Right `moments.read`.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/HistoryZone"
+      - $ref: "../moments.openapi.yaml#/components/parameters/HistoryRegion"
+      - $ref: "../moments.openapi.yaml#/components/parameters/HistoryOrigin"
+      - $ref: "../moments.openapi.yaml#/components/parameters/HistoryAction"
+      - name: limit
+        in: query
+        description: Rows per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 100
+      - name: before
+        in: query
+        description: The `seq` of the last row of the previous page.
+        schema:
+          type: integer
+    responses:
+      "200":
+        description: A page of rows.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rows]
+              properties:
+                rows:
+                  type: array
+                  items:
+                    $ref: "../moments.openapi.yaml#/components/schemas/HistoryRow"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+/api/moments/history.csv:
+  get:
+    tags: [history]
+    operationId: exportHistory
+    summary: The history as CSV
+    description: Right `moments.read`. The same filters; at most 10,000 rows.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/HistoryZone"
+      - $ref: "../moments.openapi.yaml#/components/parameters/HistoryRegion"
+      - $ref: "../moments.openapi.yaml#/components/parameters/HistoryOrigin"
+      - $ref: "../moments.openapi.yaml#/components/parameters/HistoryAction"
+    responses:
+      "200":
+        description: "Columns: at, zone, action, moment, class, region, why, displaced, outcome."
+        content:
+          text/csv:
+            schema:
+              type: string
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+/api/moments/me/export:
+  get:
+    tags: [privacy]
+    operationId: exportMine
+    summary: The caller's history rows at this event
+    responses:
+      "200":
+        description: The rows that name the caller.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [history]
+              properties:
+                history:
+                  type: array
+                  items:
+                    $ref: "../moments.openapi.yaml#/components/schemas/HistoryRow"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+/api/moments/me:
+  delete:
+    tags: [privacy]
+    operationId: deleteMine
+    summary: Remove the caller's name and id from the history
+    responses:
+      "204":
+        description: Removed.
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"

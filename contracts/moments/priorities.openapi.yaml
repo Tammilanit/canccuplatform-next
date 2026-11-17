@@ -1,0 +1,126 @@
+# Part of moments.openapi.yaml: the priority order and the built-in rules, path items only,
+# referenced from its `paths` and linted through it (contracts/README.md, Shared components).
+/api/moments/priorities:
+  get:
+    tags: [settings]
+    operationId: getPriorities
+    summary: The event's priority order and the zones' own
+    description: Right `moments.read`.
+    responses:
+      "200":
+        description: The orders.
+        content:
+          application/json:
+            schema:
+              $ref: "../moments.openapi.yaml#/components/schemas/PriorityOrders"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+  put:
+    tags: [settings]
+    operationId: putPriorities
+    summary: Replace the priority orders
+    description: |
+      Right `moments.settings.write`. Each order names every class once, `emergency` first. Every running
+      moment is ranked again at once; none ends. Audited.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [order, zones, revision]
+            properties:
+              order:
+                $ref: "../moments.openapi.yaml#/components/schemas/Order"
+              zones:
+                type: array
+                items:
+                  $ref: "../moments.openapi.yaml#/components/schemas/ZoneOrder"
+              revision:
+                type: integer
+                minimum: 0
+    responses:
+      "200":
+        description: The orders as saved.
+        content:
+          application/json:
+            schema:
+              $ref: "../moments.openapi.yaml#/components/schemas/PriorityOrders"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/rules:
+  get:
+    tags: [settings]
+    operationId: listRules
+    summary: The built-in rules and their settings
+    description: Right `moments.read`.
+    responses:
+      "200":
+        description: Every built-in rule.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rules]
+              properties:
+                rules:
+                  type: array
+                  items:
+                    $ref: "../moments.openapi.yaml#/components/schemas/Rule"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+/api/moments/rules/{rule_id}:
+  put:
+    tags: [settings]
+    operationId: putRule
+    summary: Change one built-in rule's settings
+    description: Right `moments.settings.write`. Audited.
+    parameters:
+      - name: rule_id
+        in: path
+        required: true
+        description: The rule.
+        schema:
+          type: string
+          enum: [match_called, standings, finals_result, pizza, hot_game]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "../moments.openapi.yaml#/components/schemas/RuleSettings"
+              - type: object
+                required: [revision]
+                properties:
+                  revision:
+                    type: integer
+                    minimum: 0
+    responses:
+      "200":
+        description: The rule as saved.
+        content:
+          application/json:
+            schema:
+              $ref: "../moments.openapi.yaml#/components/schemas/Rule"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
