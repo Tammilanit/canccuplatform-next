@@ -158,3 +158,14 @@ async def test_quick_add_leaves_out_templates_whose_kind_is_gone(env: Env) -> No
         await c.delete("/api/agenda/kinds/raffle?revision=1", headers=h)
         assert "Draw" not in await templates_of(c, h)
         assert "kind removed" in (await c.get("/templates", headers=h)).text
+
+
+async def test_quick_add_offers_an_announcement_to_those_who_may_announce(env: Env) -> None:
+    """U5, U6: the phone's quick action reaches Moments' composer too (contracts/moments.md,
+    Announcements, Pages); only for the right that sends announcements."""
+    async with env.client() as c:
+        may = (await c.get("/add", headers=env.writer("moments.announce"))).text
+        may_not = (await c.get("/add", headers=env.writer())).text
+    entry = '<a class="canccu-button canccu-button--secondary" href="/moments/announce">'
+    assert entry + "Announce something instead</a>" in may
+    assert entry not in may_not

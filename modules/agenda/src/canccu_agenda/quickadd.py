@@ -15,7 +15,7 @@ from starlette.responses import Response
 from starlette.routing import Route
 
 from . import forms, items, model, store, templates, undo
-from .day_view import NIGHT_ENDS
+from .day_view import ANNOUNCE, NIGHT_ENDS
 from .deps import deps
 from .event_dates import event_days
 from .inverse import Inverse
@@ -154,7 +154,7 @@ async def _choices(request: Request) -> tuple[list[tuple[str, str]], list[Any], 
 
 
 async def quick_page(request: Request) -> Response:
-    await page_writer(request)
+    session = await page_writer(request)
     tz, now = zone_of(request), deps(request).now()
     today = now.astimezone(tz).date()
     what, _, _ = await _choices(request)
@@ -164,7 +164,14 @@ async def quick_page(request: Request) -> Response:
     # In the small hours the calendar day already is the night's: 01:00 then means in a while,
     # not tomorrow night, so nothing moves (review of #455).
     auto = None if named or now.astimezone(tz).hour < NIGHT_ENDS else day.isoformat()
-    return page(request, "Quick add", _form(_from_gap(request), what, day, days, auto))
+    # The phone's quick action reaches Moments' composer too (U5, U6), for those who may announce.
+    announce = (
+        '<p><a class="canccu-button canccu-button--secondary" href="/moments/announce">'
+        "Announce something instead</a></p>"
+        if session.has(ANNOUNCE)
+        else ""
+    )
+    return page(request, "Quick add", announce + _form(_from_gap(request), what, day, days, auto))
 
 
 def _from_gap(request: Request) -> dict[str, str]:
