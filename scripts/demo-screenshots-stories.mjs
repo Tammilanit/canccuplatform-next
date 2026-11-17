@@ -321,8 +321,6 @@ export async function storiesShots({ demo, shot, fail }) {
       null,
     );
     const premiere = await setUpPremiere(demo, add);
-    for (const [name, path, viewport, o] of STORY_PAGES)
-      await shot(name, path, viewport, SESSION, o);
     const itemOf = await itemsFor(demo, quiet);
     for (const [i, [key, , pick]] of PRESET_SHOTS.entries()) {
       const run = await testFire(key, itemOf(pick));
@@ -332,6 +330,9 @@ export async function storiesShots({ demo, shot, fail }) {
       await shot(name, path, viewport, SESSION, o);
       await stop(run);
     }
+    // After the test-fires, which wait until Moments knows the items made here.
+    for (const [name, path, viewport, o] of STORY_PAGES)
+      await shot(name, path, viewport, SESSION, o);
     const [builder, ...steps] = PREMIERE_PAGES;
     await shot(builder[0], builder[1], builder[2], SESSION, builder[3]);
     const film = await testFire("premiere", premiere);

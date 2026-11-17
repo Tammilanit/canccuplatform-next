@@ -256,7 +256,9 @@ export async function stepRun(
       "the story was turned off",
       "cleared",
     );
-  const f = follow(run, story, items);
+  // A test-fire plays its one round now (SU4): its item only fills the placeholders, so its
+  // time, a delay or its start never move or end the test.
+  const f = run.test ? null : follow(run, story, items);
   if (f !== null && "gone" in f) return endRun(ctx, run, story, f.gone, "cancelled");
   if (f !== null && f.t !== run.t.getTime()) run.t = new Date(f.t);
   if (run.round?.finale === true) {
@@ -265,7 +267,7 @@ export async function stepRun(
     return endRun(ctx, run, story, run.facts["@end"] ?? "planned", "planned");
   }
   if (run.finale_due) return startFinale(ctx, run, story);
-  if (untilReached(story, run, items, at)) {
+  if (!run.test && untilReached(story, run, items, at)) {
     const u = story.end.until_event?.kind;
     return planEnd(
       ctx,

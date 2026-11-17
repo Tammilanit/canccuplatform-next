@@ -214,6 +214,28 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
     );
   });
 
+  it("test-fires a round now with an item whose time has passed: it plays, not skipped", async () => {
+    const doors = {
+      ...ITEM,
+      id: "it_doors",
+      title: "Doors open",
+      kind: "doors",
+      starts_at: "2026-01-01T14:00:00Z",
+      ends_at: "2026-01-01T15:00:00Z",
+    };
+    await w.tx("demo", (c) => storeAgenda(c, { agenda_version: 2, items: [ITEM, doors] }));
+    const r = await w.call("crew", "POST", "/api/moments/storyboards/doors_open/take", {
+      test: { zone: "main", sound: false },
+      item_id: "it_doors",
+    });
+    expect(r.statusCode).toBe(201);
+    expect(json(r)).toMatchObject({ test: true, status: "live", round: { number: 1 } });
+    const { rows } = await pool.query(
+      `SELECT action FROM moments_history WHERE action IN ('round_started', 'round_skipped', 'loop_ended')`,
+    );
+    expect(rows.map((x: { action: string }) => x.action)).toEqual(["round_started"]);
+  });
+
   it("forgets a person's name in the story's runs and history rows", async () => {
     await w.call("crew", "POST", "/api/moments/storyboards/midnight/take", {
       test: { zone: "main", sound: false },

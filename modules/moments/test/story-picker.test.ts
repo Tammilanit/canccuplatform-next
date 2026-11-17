@@ -15,6 +15,7 @@ import {
   toggled,
   triggerShort,
 } from "../src/story/picker.js";
+import { roundsText, triggerText } from "../src/story/describe.js";
 import { PRESETS, presetOf } from "../src/story/presets.js";
 
 const preset = (key: string): Story => JSON.parse(JSON.stringify(presetOf(key))) as Story;
@@ -63,6 +64,10 @@ describe("the picker's words", () => {
     expect(soundShort(preset("starting_soon"))).toBe("first and last round · finale");
     expect(soundShort(preset("prize_draw"))).toBe("finale");
     expect(soundShort(preset("sponsor_thanks"))).toBe("none");
+    expect(soundShort(preset("premiere"))).toBe("the video's own");
+    // The builder's sentences for a clock with no time yet and one round at T.
+    expect(preset("premiere").triggers.map(triggerText).at(-1)).toBe("Once, at a time not set yet");
+    expect(roundsText(preset("premiere"))).toMatch(/^At T · 1 rounds/);
   });
 });
 

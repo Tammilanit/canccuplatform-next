@@ -28,7 +28,8 @@ export function triggerText(t: Trigger): string {
       if (t.mode === "every")
         return `Every ${String(t.every_minutes)} min from ${t.from ?? ""} to ${t.until ?? ""}, each a run of its own`;
       if (t.mode === "daily") return `Every day at ${t.at ?? ""}`;
-      if (t.mode === "once") return `Once, at ${t.at ?? ""}`;
+      if (t.mode === "once")
+        return t.at === null ? "Once, at a time not set yet" : `Once, at ${t.at}`;
       return `At the event's ${t.mode === "event_start" ? "start" : "end"}`;
     case "take":
       return "Taken by hand · On air and the phone (moments.take)";
@@ -61,7 +62,9 @@ export function roundsText(st: Story): string {
   const r = st.rounds;
   const at =
     r.mode === "offsets"
-      ? `At ${r.offsets_minutes.map(min).join(", ")} min of T`
+      ? r.offsets_minutes.length === 1 && r.offsets_minutes[0] === 0
+        ? "At T"
+        : `At ${r.offsets_minutes.map(min).join(", ")} min of T`
       : `Every ${String(r.every_minutes)} min from ${min(r.from_minutes)} min`;
   const e = st.end;
   const ends = [

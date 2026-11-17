@@ -43,11 +43,12 @@ function row(r: Row, ctx: PickerCtx, canWrite: boolean, revision: number): Html 
       >
       ${r.copied ? "" : html`<span class="canccu-table__sub">not in this event yet: turning it on copies it</span>`}
     </td>
-    <td class="canccu-hide-phone">${roundsShort(s)}</td>
-    <td class="canccu-hide-phone">${soundShort(s)}</td>
+    <td class="canccu-hide-phone">
+      ${roundsShort(s)}<span class="canccu-table__sub">♪ ${soundShort(s)}</span>
+    </td>
     <td>${status.map((x) => html`<span class="canccu-table__sub">${x}</span>`)}</td>
     <td>
-      <span class="canccu-cluster">
+      <span class="canccu-cluster moments-picker__actions">
         <span class="canccu-badge ${s.enabled ? "canccu-badge--ok" : "canccu-badge--plain"}"
           >${s.enabled ? "On" : "Off"}</span
         >
@@ -60,12 +61,11 @@ function row(r: Row, ctx: PickerCtx, canWrite: boolean, revision: number): Html 
 }
 
 function table(rows: Row[], ctx: PickerCtx, canWrite: boolean, revision: number): Html {
-  return html`<table class="canccu-table">
+  return html`<table class="canccu-table moments-picker">
     <thead>
       <tr>
         <th>Preset</th>
-        <th class="canccu-hide-phone">Rounds, end</th>
-        <th class="canccu-hide-phone">Sound</th>
+        <th class="canccu-hide-phone">Rounds, end · sound</th>
         <th>Status</th>
         <th>On</th>
       </tr>

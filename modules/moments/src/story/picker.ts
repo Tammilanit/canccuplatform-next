@@ -5,7 +5,7 @@
  * edit. Pure: the page reads the stories, the run of show and the event, then saves through the API.
  */
 import type { Story, Trigger } from "./model.js";
-import { PROVISIONAL } from "./model.js";
+import { PROVISIONAL, isVideo } from "./model.js";
 import { FOLLOWS, RULE_OF_PRESET, presetOf } from "./presets.js";
 import { localParts } from "./schedule.js";
 import type { EventFacts } from "./store.js";
@@ -82,7 +82,7 @@ export function roundsShort(s: Story): string {
 export function soundShort(s: Story): string {
   const round = s.round.steps.some((x) => x.cue !== null);
   const finale = (s.finale ?? []).some((x) => x.cue !== null);
-  if (!round) return finale ? "finale" : "none";
+  if (!round) return finale ? "finale" : s.round.steps.some(isVideo) ? "the video's own" : "none";
   return `${s.sound.replace(/_/g, " ")} round${finale ? " · finale" : ""}`;
 }
 
