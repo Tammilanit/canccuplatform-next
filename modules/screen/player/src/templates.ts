@@ -4,39 +4,14 @@
  * (plan S5). They read only the fields the screen contract documents for each type.
  */
 import type { TreeNode } from "./tree.js";
+import { el, f, img, not, sec, t, title } from "./tree-build.js";
 
-type Attrs = Record<string, TreeNode[]>;
-
-const t = (text: string): TreeNode => ({ text });
-const f = (field: string): TreeNode => ({ field });
-const sec = (section: string, ...children: TreeNode[]): TreeNode => ({
-  section,
-  inverted: false,
-  children,
-});
-const not = (section: string, ...children: TreeNode[]): TreeNode => ({
-  section,
-  inverted: true,
-  children,
-});
-/** An element; `cls` names a `canccu-widget__…` part, `extra` adds attributes. */
-function el(tag: string, cls: string | null, children: TreeNode[], extra: Attrs = {}): TreeNode {
-  const attrs: Attrs = cls === null ? extra : { class: [t(`canccu-widget__${cls}`)], ...extra };
-  return { element: tag, attrs, children };
-}
-const title = (field: string): TreeNode => el("p", "title", [f(field)]);
-const img = (field: string, cls: string, alt: TreeNode[] = []): TreeNode =>
-  el("img", cls, [], { src: [f(field)], alt });
-
-/** The QR handoff any widget may carry (contracts/screen.md, QR handoff). */
-const QR: TreeNode = sec(
-  "qr",
-  el("figure", "qr", [img("image_url", "code"), el("figcaption", "caption", [f("label")])]),
-);
 /** A QR widget's own code: the view-model is the QR itself. */
 const OWN_QR: TreeNode[] = [
   el("figure", "qr", [img("image_url", "code"), el("figcaption", "caption", [f("label")])]),
 ];
+/** The QR handoff any widget may carry (contracts/screen.md, QR handoff). */
+const QR: TreeNode = sec("qr", ...OWN_QR);
 
 // The tree has no `{{.}}` (theming's names are `a.b` only), so no template can show a list of plain
 // strings: the `names` and `voice_channels` lists stay off the defaults.
@@ -145,14 +120,14 @@ const GRAPH: TreeNode = el("div", "graph", [
 const figure = (field: string, label: TreeNode[]): TreeNode =>
   el("li", "figure", [el("strong", "big", [f(field)]), el("span", "label", label)]);
 
+/** A crew moment says it is from the crew and never who (Moments' spotlight, L15). */
+const FROM_CREW: TreeNode = sec("from_crew", el("p", "kicker", [t("From the crew")]));
+
 /**
  * The theme's own art band (v8 rule 5, "No half-empty large panel"): where a large panel has no
  * game art, the band holds the theme's glows, faded into the card by a mask (stage.css). Drawn
  * only in the hero; elsewhere the look hides it.
  */
-/** A crew moment says it is from the crew and never who (Moments' spotlight, L15). */
-const FROM_CREW: TreeNode = sec("from_crew", el("p", "kicker", [t("From the crew")]));
-
 const THEME_BAND: TreeNode = el("div", null, [], {
   class: [t("canccu-widget__band canccu-widget__band--theme")],
   "aria-hidden": [t("true")],

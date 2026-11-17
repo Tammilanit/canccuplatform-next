@@ -17,7 +17,7 @@ from zoneinfo import ZoneInfo
 from . import store
 from .deps import Deps
 from .items import edit_values
-from .web import local_input
+from .times import local_input
 
 
 @dataclass

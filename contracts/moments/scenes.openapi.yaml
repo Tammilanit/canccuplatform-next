@@ -1,0 +1,122 @@
+# Part of moments.openapi.yaml: the scenes, path items only, referenced from its `paths` and linted
+# through it (contracts/README.md, Shared components).
+/api/moments/scenes:
+  get:
+    tags: [scenes]
+    operationId: getScenes
+    summary: The event's scenes, each zone's scene now, and the crew button pressed
+    description: |
+      Right `moments.read`. Before the event's first use the list is the presets, `revision` 0 and `copied`
+      false; the first scene pass copies them (contracts/moments.md, Scenes).
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/ScenesAnswer"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+  put:
+    tags: [scenes]
+    operationId: putScenes
+    summary: Replace the event's scenes, in priority order
+    description: |
+      Right `moments.settings.write`. Every zone is put in its scene at once. A stale `revision` is 409
+      `version_conflict`; an archived event is 409 `event_archived`. Audited (`moments.scenes.changed`).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [scenes, revision]
+            properties:
+              scenes:
+                type: array
+                maxItems: 20
+                items:
+                  $ref: "../moments.openapi.yaml#/components/schemas/Scene"
+              revision:
+                type: integer
+                minimum: 0
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/ScenesAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/scenes/reset:
+  post:
+    tags: [scenes]
+    operationId: resetScenes
+    summary: Put the presets of this platform version back in place of the event's scenes
+    description: |
+      Right `moments.settings.write`, with the list's `revision` (O7). Audited (`moments.scenes.reset`).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [revision]
+            properties:
+              revision:
+                type: integer
+                minimum: 0
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/ScenesAnswer"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/scenes/{scene_key}/take:
+  post:
+    tags: [scenes]
+    operationId: takeScene
+    summary: Press a scene's crew button ("Peak now"), or press it again to take it off
+    description: |
+      Right `moments.scenes.take`. One tap, no confirmation (U11). The scene wins on `zones` (empty: every
+      zone) for its crew condition's `minutes`, over the whole list, until that time ends or the same button
+      is pressed again (E7); another scene's press replaces it. A scene without a crew condition is 400
+      `invalid_request`. Audited (`moments.scene.taken`, `moments.scene.released`).
+    parameters:
+      - name: scene_key
+        in: path
+        required: true
+        schema:
+          $ref: "../moments.openapi.yaml#/components/schemas/SceneKey"
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              zones:
+                type: array
+                items:
+                  $ref: "../moments.openapi.yaml#/components/schemas/ZoneKey"
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/ScenesAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"

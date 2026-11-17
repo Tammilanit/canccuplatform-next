@@ -47,7 +47,7 @@ export interface ZoneInput {
   /** Null: the layout's `header`, else `separate` (src/compose/parts.ts). */
   header: "separate" | "shared" | null;
   hub_qr: "always" | "rotate";
-  /** `auto`: shown while the event has two or more screens (src/compose/state.ts, showsName). */
+  /** `auto`: shown while the event has two or more screens (src/compose/zone-reads.ts, showsName). */
   screen_name: "auto" | "always" | "never";
   /** Null: no trade (src/compose/showcase.ts). */
   hero_region: string | null;

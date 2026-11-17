@@ -29,19 +29,8 @@ from .effective import read_channels
 from .inverse import Inverse
 from .item_pages import load_item
 from .preview import change_of, confirm_rows, moved_line, the_day, told, when_moved
-from .web import (
-    BASE,
-    button,
-    check,
-    esc,
-    hhmm,
-    hidden,
-    notice,
-    page,
-    page_writer,
-    redirect,
-    zone_of,
-)
+from .times import hhmm, zone_of
+from .web import BASE, button, check, esc, hidden, notice, page, page_writer, redirect
 
 CHIPS = (5, 10, 15, 30)
 

@@ -5,7 +5,7 @@ import { buildRegions } from "../src/compose/build.js";
 import type { BuildInput, RegionView, ZoneSetup } from "../src/compose/build.js";
 import { themeLayouts } from "../src/compose/layouts.js";
 import type { Layout, LayoutRegion } from "../src/compose/layouts.js";
-import { zoneFingerprint } from "../src/compose/state.js";
+import { zoneFingerprint } from "../src/compose/fingerprint.js";
 import type { ZoneFacts } from "../src/compose/widgets.js";
 
 const NOW = new Date("2026-01-01T12:00:07Z");

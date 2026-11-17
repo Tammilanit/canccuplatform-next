@@ -9,7 +9,8 @@ from datetime import date, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from .web import VISIBILITY_LABELS, day_label, esc, hhmm
+from .times import day_label, hhmm
+from .web import VISIBILITY_LABELS, esc
 
 FIELD_LABELS = {
     "title": "title",

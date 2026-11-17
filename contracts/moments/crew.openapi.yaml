@@ -1,0 +1,239 @@
+# Part of moments.openapi.yaml: the crew's moments, the spotlight and the emergencies, path items
+# only, referenced from its `paths` and linted through it (contracts/README.md, Shared components).
+/api/moments/moments:
+  get:
+    tags: [moments]
+    operationId: listMoments
+    summary: The running moments, with the zones Moments knows
+    description: Right `moments.read`. Highest rank first, each with its placements per zone.
+    responses:
+      "200":
+        description: Running moments.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [moments, zones]
+              properties:
+                moments:
+                  type: array
+                  items:
+                    $ref: "../moments.openapi.yaml#/components/schemas/Moment"
+                zones:
+                  type: array
+                  items:
+                    $ref: "../moments.openapi.yaml#/components/schemas/ZoneKey"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+/api/moments/moments/{moment_id}/end:
+  post:
+    tags: [moments]
+    operationId: endMoment
+    summary: End a moment everywhere, or on one zone
+    description: |
+      Right `moments.take`. Without `zone_key`, ends a crew moment everywhere; with it, any moment on that
+      zone only ("End in zone"). An emergency ends only through the emergency paths. Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/MomentId"
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              zone_key:
+                $ref: "../moments.openapi.yaml#/components/schemas/ZoneKey"
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/MomentAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/moments/{moment_id}/extend:
+  post:
+    tags: [moments]
+    operationId: extendMoment
+    summary: Move a moment's end on
+    description: Right `moments.take`. `expires_at` moves on by `seconds`, at most 7200 s after now. Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/MomentId"
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [seconds]
+            properties:
+              seconds:
+                type: integer
+                minimum: 1
+                maximum: 3600
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/MomentAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/spotlight:
+  post:
+    tags: [moments]
+    operationId: startSpotlight
+    summary: Start a crew spotlight in the hero
+    description: Right `moments.take`. "From the crew" on screen; the history keeps the name. Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../moments.openapi.yaml#/components/schemas/SpotlightRequest"
+    responses:
+      "201":
+        $ref: "../moments.openapi.yaml#/components/responses/MomentAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/emergency:
+  post:
+    tags: [emergency]
+    operationId: startEmergency
+    summary: Start the event's emergency
+    description: Right `moments.emergency`. Full screen at rank 100 on the zones, no end time. Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../moments.openapi.yaml#/components/schemas/EmergencyRequest"
+    responses:
+      "201":
+        $ref: "../moments.openapi.yaml#/components/responses/MomentAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/emergency/end:
+  post:
+    tags: [emergency]
+    operationId: endEmergency
+    summary: End the event's emergency
+    description: Right `moments.emergency`. With `all_clear`, an "All clear" card takes the rail for 60 s. Audited.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../moments.openapi.yaml#/components/schemas/EmergencyEnd"
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/MomentAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+        description: "`not_found`: no emergency runs."
+      "409":
+        $ref: "../moments.openapi.yaml#/components/responses/Conflict"
+/api/moments/venue-emergency:
+  post:
+    tags: [emergency]
+    operationId: startVenueEmergency
+    summary: Start the emergency of every event at a venue
+    description: The superadmin, on the superadmin hostname only. Each event's emergency is audited there.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "../moments.openapi.yaml#/components/schemas/EmergencyRequest"
+              - type: object
+                required: [venue_id]
+                properties:
+                  venue_id:
+                    type: string
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/VenueAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"
+        description: "`not_found`: no event at the venue that is not archived."
+/api/moments/venue-emergency/end:
+  post:
+    tags: [emergency]
+    operationId: endVenueEmergency
+    summary: End the emergency of every event at a venue
+    description: The superadmin, on the superadmin hostname only.
+    parameters:
+      - $ref: "../moments.openapi.yaml#/components/parameters/IdempotencyKey"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "../moments.openapi.yaml#/components/schemas/EmergencyEnd"
+              - type: object
+                required: [venue_id]
+                properties:
+                  venue_id:
+                    type: string
+    responses:
+      "200":
+        $ref: "../moments.openapi.yaml#/components/responses/VenueAnswer"
+      "400":
+        $ref: "../common.openapi.yaml#/components/responses/BadRequest"
+      "401":
+        $ref: "../common.openapi.yaml#/components/responses/Unauthorized"
+      "403":
+        $ref: "../common.openapi.yaml#/components/responses/Forbidden"
+      "404":
+        $ref: "../common.openapi.yaml#/components/responses/NotFound"

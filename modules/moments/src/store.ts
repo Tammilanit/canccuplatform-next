@@ -79,7 +79,10 @@ export async function lockRunningByKey(c: SqlClient, key: string): Promise<Momen
  * Running moments, highest rank first is the caller's. `lock` "skip" leaves rows another
  * transaction holds (only the expiry pass may: it retries next tick); "wait" blocks for them,
  * for changes that must reach every moment (end, re-rank, archive). Both take rows in
- * `starts_at, id` order, which `applyClaims` follows too, so the waits cannot deadlock.
+ * `starts_at, id` order, which `applyClaims` follows too, so these waits cannot deadlock one
+ * another. The tick's patience pass (tick.ts) still can, against another container's tick: it
+ * waits on one moment (`lockMoment`) while holding its expiry pass's rows. Postgres then aborts
+ * one tick, and the next one heals it.
  */
 export async function runningMoments(
   c: SqlClient,

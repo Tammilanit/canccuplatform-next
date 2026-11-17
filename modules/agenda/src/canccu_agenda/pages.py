@@ -20,6 +20,7 @@ from .effective import read_channels
 from .event_dates import event_over, event_span
 from .history import changes_html
 from .kinds import not_found
+from .times import day_label, hhmm, zone_of
 from .web import (
     ARCHIVED_ITEM,
     BASE,
@@ -27,13 +28,10 @@ from .web import (
     SCRIPT_TAGS,
     VISIBILITY_LABELS,
     archived,
-    day_label,
     esc,
-    hhmm,
     notice,
     page,
     page_session,
-    zone_of,
 )
 
 # Fixed texts for the notice after a change: a query parameter never puts its own words on a page.

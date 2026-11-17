@@ -19,22 +19,19 @@ from .day_view import ANNOUNCE, NIGHT_ENDS
 from .deps import deps
 from .event_dates import event_days
 from .inverse import Inverse
+from .times import api_time, day_label, next_minute, zone_of
 from .web import (
     BASE,
     SCRIPT_TAGS,
     TIME_PATTERN,
-    api_time,
     button,
-    day_label,
     esc,
     field,
-    next_minute,
     notice,
     page,
     page_writer,
     redirect,
     text_input,
-    zone_of,
 )
 
 WHEN = (("now", "Now"), ("in30", "In 30 min"), ("at", "At"))

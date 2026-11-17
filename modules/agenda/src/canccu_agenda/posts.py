@@ -15,7 +15,7 @@ from zoneinfo import ZoneInfo
 from canccu_kit import Outbox as KitOutbox
 from canccu_kit.bus import Event
 
-from .web import hhmm
+from .times import hhmm
 
 POSTED = frozenset(
     {

@@ -11,7 +11,6 @@ import type { Display } from "../compose/display.js";
 import type { Play } from "../moments-sound.js";
 
 export type Orientation = "landscape" | "portrait";
-export const ORIENTATIONS: readonly Orientation[] = ["landscape", "portrait"];
 
 /** One SSE message: its `event:` name and its `data`. */
 export interface Message {
@@ -22,7 +21,7 @@ export interface Message {
 /** What the zone's screens draw, the same for all of them; each device adds its own part. */
 export interface ZoneRecord {
   version: number;
-  /** Of the zone's inputs (compose/state.ts, zoneFingerprint): an equal one changes nothing. */
+  /** Of the zone's inputs (compose/fingerprint.ts): an equal one changes nothing. */
   fingerprint: string;
   /** `show_name` is absent in a record stored before the setting: shown. */
   zone: { key: string; name: string; epoch: string; show_name?: boolean };
