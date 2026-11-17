@@ -35,12 +35,12 @@ live("the cues and sound API", () => {
       (c) => c.name === name,
     ) as Row;
 
-  it("lists the 27 seeded cues, the six categories and the effects; reading needs moments.read", async () => {
+  it("lists the 33 seeded cues, the six categories and the effects; reading needs moments.read", async () => {
     const r = await w.call("reader", "GET", "/api/moments/cues");
     expect(r.statusCode).toBe(200);
     const body = json(r);
     // The legacy's 25 and the storyboards' two (#114).
-    expect((body.cues as Row[]).filter((c) => c.builtin)).toHaveLength(27);
+    expect((body.cues as Row[]).filter((c) => c.builtin)).toHaveLength(33);
     expect((body.categories as Row[]).map((c) => c.name)).toEqual([
       "urgent",
       "result",

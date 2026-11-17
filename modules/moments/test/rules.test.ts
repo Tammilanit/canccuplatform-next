@@ -71,13 +71,13 @@ run("the built-in rules", () => {
         ...(e.data.override as Record<string, unknown>),
       }));
 
-  /** The presets Match called and Champion show these happenings while on (SD6): off here. */
-  const presetsOff = () =>
+  /** The presets Match called, Champion and Pizza orders ready show these happenings while on (SD6): off here. */
+  const presetsOff = (keys = ["match_called", "champion"]) =>
     w.tx("demo", async (c) => {
       const doc = await ensureStories(c);
       const stories = doc.stories.map((s) => ({
         ...s,
-        enabled: s.preset === null || !["match_called", "champion"].includes(s.preset),
+        enabled: s.enabled && (s.preset === null || !keys.includes(s.preset)),
       }));
       await writeStories(c, stories, DEFAULT_SETTINGS, doc.revision + 1);
     });
@@ -119,6 +119,7 @@ run("the built-in rules", () => {
   });
 
   it("puts pizza in the rail, updates it when it arrives, and ends it when cancelled", async () => {
+    await presetsOff(["pizza_arrived"]);
     await deliver(FIXTURES.placed());
     await deliver(FIXTURES.arrived());
     const [started, changed] = overrides();

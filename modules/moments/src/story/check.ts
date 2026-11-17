@@ -44,14 +44,16 @@ function checkTrigger(t: Trigger, i: number): string | null {
   switch (t.kind) {
     case "item":
       if (!oneOf(t.anchor, ["start", "end"])) return `${at}: the anchor is start or end.`;
-      if (t.item_id === null && (!strings(t.kinds, KEY) || t.kinds.length === 0))
-        return `${at}: name one or more item kinds, or one item.`;
+      // No kind and no item yet: it never fires (a preset's "pick an item"); a take asks for one.
+      if (t.item_id === null && !strings(t.kinds, KEY))
+        return `${at}: name item kinds, or one item.`;
       return null;
     case "domain":
       return DOMAIN_TYPES[t.type] === undefined ? `${at}: ${t.type} cannot start a story.` : null;
     case "clock":
+      // No time yet: it never fires until one is set (Premiere's).
       if (t.mode === "once")
-        return Number.isNaN(Date.parse(t.at ?? "")) ? `${at}: a date-time.` : null;
+        return t.at !== null && Number.isNaN(Date.parse(t.at)) ? `${at}: a date-time.` : null;
       if (t.mode === "daily") return HHMM.test(t.at ?? "") ? null : `${at}: a time HH:MM.`;
       if (t.mode === "every") {
         if (!int(t.every_minutes, LIMITS.clockEveryMinutes))

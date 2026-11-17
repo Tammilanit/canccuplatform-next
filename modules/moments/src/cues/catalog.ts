@@ -1,8 +1,8 @@
 /**
  * The sound model's fixed parts (step 4 plan, The sound model D16; contracts/moments.md, Cues and
  * sound): the six categories, the 25 cues seeded from the legacy (canccusignage
- * src/lib/sound/cues.ts, names kept), the screen effects (design sheet 14) and the CC0 default pack
- * (static/sounds/CREDITS.md). An event changes these per event and adds cues, never categories.
+ * src/lib/sound/cues.ts, names kept) and the storyboards' `story.*`, the screen effects (design
+ * sheet 14) and the CC0 default pack (static/sounds/CREDITS.md). An event changes these per event and adds cues, never categories.
  */
 
 export const CATEGORIES = [
@@ -109,6 +109,7 @@ export const PACK: readonly { id: string; file: string; title: string; length_ms
     title: "Airplane chime",
     length_ms: 2934,
   },
+  { id: "pack.applause", file: "applause.ogg", title: "Applause", length_ms: 6320 },
 ];
 
 const MIN = 60;
@@ -183,9 +184,17 @@ export const BUILTIN_CUES: readonly Cue[] = [
   seed("pizza.open", "something_new", ["bicycle-bell"], ONCE),
   seed("pizza.closed", "ended", ["airplane-chime"], ONCE),
   seed("pizza.placed", "result", ["bicycle-bell", "ding"], { ...ONCE, effects: ["pop", "ripple"] }),
-  // The storyboards' own (#114): Doors open's sting and Midnight's countdown, one sound of its length.
+  // The storyboards' own (#114, #602): Doors open's sting and Midnight's countdown, one sound of
+  // its length; the meal, check-in, record, photo and prize draw; and the soft chime of quiet
+  // hours, the morning and closing time, at a low level, since it plays as the venue winds down.
   seed("story.doors", "attention", ["chime-soft"], { effects: ["glow"] }),
   seed("story.midnight", "attention", ["gong"], { effects: [] }),
+  seed("story.meal", "attention", ["chime-bright"], { effects: ["glow"] }),
+  seed("story.checkin", "attention", ["happy-beep"], { effects: ["glow"] }),
+  seed("story.record", "something_new", ["applause"], { effects: ["pop", "ring_burst"] }),
+  seed("story.photo", "attention", ["music-box"], { effects: ["glow"] }),
+  seed("story.draw", "result", ["drum-roll"], { effects: ["pop"] }),
+  seed("story.chime", "attention", ["chime-soft"], { level: 60, effects: [] }),
 ];
 
 /** The cue a crew action asks for: the spotlight, the emergency and its "All clear". */

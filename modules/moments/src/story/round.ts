@@ -116,7 +116,8 @@ export async function buildRound(
   const segments: Segment[] = [];
   let at = startMs;
   for (const p of compiled.steps) {
-    if (p.video && videoZones === null) continue; // Skipped in a quiet scene: the other steps play.
+    // Skipped in a quiet scene, or with no video chosen yet (a preset's test-fire): the other steps play.
+    if (p.video && (videoZones === null || !p.content.url)) continue;
     const kind = p.video ? "video" : "steps";
     let seg = segments.at(-1);
     if (seg === undefined || seg.kind === "video" || kind === "video") {

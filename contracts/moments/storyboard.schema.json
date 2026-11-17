@@ -35,7 +35,7 @@
           "properties": {
             "kind": { "const": "item" },
             "kinds": { "type": "array", "items": { "type": "string" } },
-            "item_id": { "type": ["string", "null"] },
+            "item_id": { "description": "One item; with no kinds and no item the trigger never fires until one is picked (a take still asks for it).", "type": ["string", "null"] },
             "anchor": { "description": "T is the item's start or end; it follows delays, a cancel withdraws it.", "enum": ["start", "end"] }
           }
         },
@@ -54,7 +54,9 @@
                 "tournament.match.called",
                 "tournament.match.started",
                 "tournament.match.finished",
+                "tournament.round.started",
                 "pizza.order.opened",
+                "pizza.order.closing",
                 "pizza.order.placed",
                 "pizza.order.arrived",
                 "pizza.order.closed",
@@ -72,7 +74,7 @@
           "properties": {
             "kind": { "const": "clock" },
             "mode": { "enum": ["once", "daily", "event_start", "event_end", "every"] },
-            "at": { "description": "`once`: a date-time; `daily`: HH:MM.", "type": ["string", "null"] },
+            "at": { "description": "`once`: a date-time, or null while none is set (it never fires); `daily`: HH:MM.", "type": ["string", "null"] },
             "every_minutes": { "type": ["integer", "null"], "minimum": 15, "maximum": 240 },
             "from": { "oneOf": [{ "$ref": "#/$defs/HHMM" }, { "type": "null" }] },
             "until": { "oneOf": [{ "$ref": "#/$defs/HHMM" }, { "type": "null" }] }

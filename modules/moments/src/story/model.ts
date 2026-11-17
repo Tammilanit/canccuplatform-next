@@ -75,7 +75,14 @@ export const DOMAIN_TYPES: Readonly<Record<string, { source: string; fills: read
         "winner.points",
       ],
     },
+    // Provisional (contracts/events.md): the round's facts once step 7's tournament emits it.
+    "tournament.round.started": {
+      source: "round",
+      fills: ["session.name", "session.game", "round.number"],
+    },
     "pizza.order.opened": { source: "order", fills: ["order.seq", "order.target_at"] },
+    // Provisional (contracts/events.md): 10 minutes before the close, once step 5's pizza emits it.
+    "pizza.order.closing": { source: "order", fills: ["order.seq", "order.closes_at"] },
     "pizza.order.placed": {
       source: "order",
       fills: ["order.seq", "order.target_at", "order.pizza_count"],

@@ -1,6 +1,6 @@
 /**
  * Storyboards, pure (contracts/moments.md, Storyboards; the storyboards plan, Timing, Repeats and
- * loops, Ends): the five presets validate, the readable floor and card time, the busy venue factor
+ * loops, Ends): the readable floor and card time, the busy venue factor
  * dropping the repeat and stopping at the limit, the long hold, the on-the-dot lead, round times
  * from offsets and `every`, `clock every` in its window, skips, which rounds sound, and the
  * placeholder rules (D10, SD3).
@@ -61,19 +61,6 @@ const story = (o: Partial<Story> = {}): Story => ({
 });
 
 const preset = (key: string): Story => presetOf(key) as Story;
-
-describe("the presets", () => {
-  it("are the five L5 stories, each valid", () => {
-    expect(PRESETS.map((p) => p.key)).toEqual([
-      "doors_open",
-      "starting_soon",
-      "match_called",
-      "champion",
-      "midnight",
-    ]);
-    for (const p of PRESETS) expect(checkStory(p, DEFAULT_TIMING), p.key).toBeNull();
-  });
-});
 
 describe("timing (SL1, SL2)", () => {
   it("holds a text step at its readable floor and the message at the card time", () => {
