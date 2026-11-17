@@ -59,7 +59,7 @@ The pack's review also found that preset 21's "until the order is closed" can ne
 | Who uses it | SU1 A · SU2 A · SU3 A · SU4 A · SU5 A |
 | Look and feel | SL1 A · SL2 both (A by default) · SL3 A · SL4 A (+ the note above) · SL5 A · SL6 A |
 | Data | SD1 A · SD2 A (+ clock `every`) · SD3 A · SD4 A · SD5 A · SD6 A · SD7 A · SD8 A · SD9 A |
-| Edge cases | SE1 A · SE2 A · SE3 A · SE4 A · SE5 A as amended by fix 8 · SE6 A · SE7 A |
+| Edge cases | SE1 A · SE2 A · SE3 A · SE4 A · SE5 A as amended by fix 8 and the video step · SE6 A · SE7 A |
 | Operations | SO1 A · SO2 A (+ fix 6, 7) · SO3 A · SO4 A (+ the new tests below) |
 | Widgets | WD1 A · WD2 A · WD3 A · WD4 A |
 | The package | SP1 A · SP2 A (24 presets) |
@@ -103,7 +103,7 @@ SL1 A:
 ### Ends, the finale and the cap
 - **Ends** (any one, and at least one): `rounds` (1–20), `for` (a time, up to 6 h), `until_clock`, `until_event`, `crew` (Stop loop).
 - **The finale** (fix 3) plays once on **every planned end**: at the end event, at the end clock time, after the time of `for`, or after the last round of `rounds`. It does not play on a crew Stop loop or on the item's cancel; Skip to finale plays it at once. A finale is one or two steps, each at least 8 s.
-- **The 6 h cap** (SE5, fix 8) holds only for `until_event` loops: such a run ends at the latest 6 h after it started, "ended: time limit", without a finale. A `clock every` story and a loop with `until_clock` end at their window; a `rounds` loop ends by its count.
+- **The 6 h cap** (SE5, fix 8) holds only for `until_event` loops: such a run ends at the latest 6 h after it started, "ended: time limit", without a finale; the time a video step plays, with its pauses, does not count. A `clock every` story and a loop with `until_clock` end at their window; a `rounds` loop ends by its count.
 
 ### Sound
 SO2 A with fixes 6 and 7:
@@ -130,9 +130,9 @@ SE1–SE7 A, as the pack's [bank](#edge-cases-and-failure) says: a round due on 
 - **Preloaded:** while a story with a video step is on for the event, an uploaded video is in the `prefetch` of the story's zones, so the file is on the players before any run. A screen without the file shows the round's other steps and skips the video.
 - **YouTube:** a `youtube` asset plays through the embed screens already allow (`youtube-nocookie.com`). It must be **public or unlisted**: YouTube does not embed a private video, so the asset's probe (`health`) flags one as `error` and the builder refuses it with that reason. It is not preloaded and needs the venue's internet: a screen that cannot play it (offline, `youtube-playback-error`) skips the video, shows the round's other steps and logs why. The builder suggests uploading the file for the premiere when the venue's internet is unsure.
 - **In sync:** every screen of the story's zones starts the video at the step's start on the server clock, within the 200 ms of the sound sync (#113) for an uploaded file; a YouTube video is started on each screen at that moment and seeks to the server clock's position once it plays (best effort).
-- **Placement:** the video holds the full-screen region for exactly its length, ranked as a storyboard; the round's other steps stay in the story's region. The build chooses how (a step that takes the full-screen region, or the round placed as back-to-back Overrides of the run); either way the screens play it from the server clock, offline too.
-- **Limits:** a video has no length limit; the round's other steps stay within 120 s. A video round counts in the airtime cap, but the cap never defers it: a premiere is planned. The 6 h cap (SE5) counts from the end of the video.
-- **Interrupted:** an emergency or an urgent moment pauses the video; when it ends, the video **resumes where it stopped**, not where it would be now (a premiere is watched, not sampled), and the story's later rounds move by the pause.
+- **Placement:** the video holds the full-screen region for its length plus any pause (below), ranked as a storyboard; the round's other steps stay in the story's region. The build chooses how (a step that takes the full-screen region, or the round placed as back-to-back Overrides of the run); either way the screens play it from the server clock (an uploaded file offline too; a `youtube` asset needs the internet, above).
+- **Limits:** a video has no length limit; the round's other steps stay within 120 s. A video round counts in the airtime cap, but the cap never defers it: a premiere is planned. The time a video plays, with its pauses, does not count toward the 6 h cap (SE5, Ends).
+- **Interrupted:** an emergency or an urgent moment pauses the video; when it ends, the video **resumes where it stopped**, not where it would be now (a premiere is watched, not sampled). Moments extends the video's hold (or its Override's `expires_at`) by the pause and rebases the step's server-clock start by the same amount, so every screen resumes at the same position; the story's later rounds move by the pause.
 - **Quiet:** a video step is skipped in a quiet scene; the round plays its other steps calm and silent, or the story is skipped with `quiet: skip`.
 
 **The Premiere preset:** countdown → video → after-card ([mockup 22](22-storyboard-premiere.svg)). Its trigger is an **`item`** of a kind the organiser adds (agenda kinds are per event, [agenda.md, Kinds](../../../contracts/agenda.md#kinds); for example `premiere`), a **take**, or **`clock once`**. The video step is on the dot, so it starts at the item's time. An example of its use: an event shows the previous event's video at the start of each new event.
@@ -633,7 +633,7 @@ Grouped by theme; each with options and a recommendation. IDs are used above and
 - **Recommendation: A** (E2).
 
 #### SE5. A loop whose end never comes
-- **A.** Every loop needs an end condition, and every run ends at the latest 6 hours after it started, logged "ended: time limit". (The Plan, fix 8: the cap holds only for `until_event` loops; clock and window loops end at their window.)
+- **A.** Every loop needs an end condition, and every run ends at the latest 6 hours after it started, logged "ended: time limit". (The Plan, fix 8: the cap holds only for `until_event` loops; clock and window loops end at their window; a video step's play time does not count.)
 - **B.** No limit.
 - **Recommendation: A.**
 
