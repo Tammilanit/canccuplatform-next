@@ -8,7 +8,7 @@ import type { Outbox, SqlClient } from "@canccu/kit";
 import { requireTenant } from "@canccu/kit";
 import { FADE_SECONDS } from "./catalog.js";
 import type { Effect } from "./catalog.js";
-import { LEAD_MS, decide, pickNotLast, pump } from "./decide.js";
+import { LEAD_MS, VIDEO_CUE, decide, pickNotLast, pump } from "./decide.js";
 import type { Done, Play } from "./decide.js";
 import { soundKeys } from "./counters.js";
 import type { Counters } from "./counters.js";
@@ -37,6 +37,14 @@ export interface CueTrigger {
   key: string;
   source: string | null;
   starts_at?: string | null;
+  /** A story's run: its flood source, whatever the cue (fix 7). */
+  flood?: string | null;
+}
+
+/** What a zone decided, for a story's own cap (SO2). */
+export interface ZoneOutcome {
+  zone: string;
+  outcome: string;
 }
 
 export interface Picture {
@@ -90,20 +98,23 @@ export class Cues {
   }
 
   /** Decides the cue's sound on each of its zones, in zone order (the row locks' order). */
-  async fire(c: SqlClient, t: CueTrigger, now: Date): Promise<void> {
+  async fire(c: SqlClient, t: CueTrigger, now: Date): Promise<ZoneOutcome[]> {
+    const out: ZoneOutcome[] = [];
     const cue = await loadCue(c, t.cue);
     const zones = t.zones.length > 0 ? t.zones : await this.knownZones(c);
     const at = now.getTime();
     const base = { at: now, cue: t.cue, source: t.source, sound: null, detail: null };
     if (cue === null) {
-      for (const zone of [...zones].sort())
+      for (const zone of [...zones].sort()) {
         await writeLog(c, {
           ...base,
           zone_key: zone,
           outcome: "suppressed",
           reason: "unknown_cue",
         });
-      return;
+        out.push({ zone, outcome: "suppressed" });
+      }
+      return out;
     }
     const settings = await loadSettings(c);
     const library = await loadLibrary(c);
@@ -118,6 +129,7 @@ export class Cues {
           outcome: "suppressed",
           reason: "no_sound_screen",
         });
+        out.push({ zone, outcome: "suppressed" });
         continue;
       }
       const emergency = await emergencyOn(c, zone);
@@ -140,6 +152,7 @@ export class Cues {
         key: t.key,
         source: t.source,
         starts_at: t.starts_at ?? null,
+        flood: t.flood ?? null,
         counts: { minute: minute ?? 0, hour: hour ?? 0, once_played: once },
         length,
         random: this.random,
@@ -161,7 +174,58 @@ export class Cues {
         detail: missed?.detail ?? d.detail ?? null,
       });
       if (d.play !== undefined) await this.send(c, zone, d.play, library);
+      out.push({ zone, outcome: d.outcome });
     }
+    return out;
+  }
+
+  /**
+   * A story's video sound (contracts/moments.md, The video step): counted as one sound in the
+   * minute and the hour but never refused by them, muted where the zone's sound is off, muted or
+   * its energy is calm or quiet; while it plays every other non-urgent sound there is held.
+   * Answers the zones where the video plays muted.
+   */
+  async video(c: SqlClient, zones: string[], untilMs: number, source: string, now: Date): Promise<string[]> {
+    const settings = await loadSettings(c);
+    const at = now.getTime();
+    const muted: string[] = [];
+    for (const zone of [...(zones.length > 0 ? zones : await this.knownZones(c))].sort()) {
+      const status = await this.status(zone);
+      const off = !settings.enabled
+        ? "master_off"
+        : settings.muted_until !== null && Date.parse(settings.muted_until) > at
+          ? "muted"
+          : status !== null && status.device === null
+            ? "no_sound_screen"
+            : status?.energy === "calm" || status?.energy === "quiet"
+              ? status.energy
+              : null;
+      const log = { at: now, zone_key: zone, cue: VIDEO_CUE, sound: null, source, detail: null };
+      if (off !== null) {
+        muted.push(zone);
+        await writeLog(c, { ...log, outcome: "suppressed", reason: off });
+        continue;
+      }
+      await this.deps.counters.incr(soundKeys.minute(zone, at), soundKeys.ttl.minute);
+      await this.deps.counters.incr(soundKeys.hour(zone, at), soundKeys.ttl.hour);
+      const state = await lockZone(c, zone);
+      await saveZone(c, zone, {
+        ...state,
+        playing: { id: `video_${source}`, cue: VIDEO_CUE, category: "attention", until_ms: untilMs },
+      });
+      await writeLog(c, { ...log, outcome: "played", reason: "free" });
+    }
+    return muted;
+  }
+
+  /** A story step that does not sound on a zone: hidden there, or over the story's cap (SO2). */
+  async skipped(c: SqlClient, zone: string, cue: string, source: string, reason: "hidden" | "story_cap", now: Date) {
+    await writeLog(c, { at: now, zone_key: zone, cue, sound: null, source, outcome: "suppressed", reason, detail: null });
+  }
+
+  /** The zone's energy as Screen says it, or null when Screen does not answer. */
+  async energy(zone: string): Promise<string | null> {
+    return (await this.status(zone))?.energy ?? null;
   }
 
   /** The tick: each zone with a sound waiting plays it or lets it go (stale, emergency). */

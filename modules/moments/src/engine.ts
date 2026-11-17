@@ -25,7 +25,7 @@ import {
   splitZones,
 } from "./store.js";
 import type { Actor, Binding, Kind, MomentRow, Origin, Qr, Source } from "./store.js";
-import type { CueTrigger, Cues } from "./cues/service.js";
+import type { CueTrigger, Cues, ZoneOutcome } from "./cues/service.js";
 
 export const DEFAULT_TTL_SECONDS = 120;
 export const MAX_TTL_SECONDS = 7200;
@@ -57,6 +57,16 @@ export interface MomentRequest {
   actor?: Actor | null;
   /** The cue its start plays: a picture on its box and a sound on its zones; an edit never does. */
   cue?: string | null;
+  /** A storyboard round's steps (D9). */
+  steps?: Record<string, unknown>[] | null;
+  /** `type:source id` (WD1): refused while another live moment shows the same happening. */
+  happening?: string | null;
+  /** False: a rule's moment that waits its patience instead of being refused (a story's round). */
+  refuse?: boolean;
+  /** A story's round starts at its planned time, so its steps and an on-the-dot step land on it. */
+  starts_at?: Date;
+  /** Its planned end, to the millisecond (a story's round); else from `ttl_seconds`. */
+  expires_at?: Date;
 }
 
 export type RequestResult =
@@ -95,8 +105,13 @@ export class Engine {
   ) {}
 
   /** A cue with no moment of its own (a new photo): its sound only. */
-  async fireCue(c: SqlClient, t: CueTrigger, now: Date): Promise<void> {
-    await this.cues?.fire(c, t, now);
+  async fireCue(c: SqlClient, t: CueTrigger, now: Date): Promise<ZoneOutcome[]> {
+    return (await this.cues?.fire(c, t, now)) ?? [];
+  }
+
+  /** The cues, for a story's video sound and its skipped steps; undefined without sound. */
+  get sound(): Cues | undefined {
+    return this.cues;
   }
 
   /** The tick's turn for the sound queues (contracts/moments.md, Cues and sound). */
@@ -125,9 +140,26 @@ export class Engine {
     }
     const defaults = CLASS_DEFAULTS[r.class];
     const regions = r.regions ?? defaults.regions;
+    const owner = r.happening == null ? null : await ownerOf(c, r.happening);
+    if (owner !== null) {
+      await writeHistory(c, {
+        at: now,
+        zone_key: null,
+        action: "refused",
+        moment_id: null,
+        class: r.class,
+        origin: r.origin,
+        title: titleOf(r),
+        region: regions[0] ?? null,
+        why: r.why,
+        outcome: "not started: one owner per happening",
+        displaced: `${owner.title} already owns ${r.happening ?? ""}`,
+      });
+      return { status: "refused", retry_after_seconds: REFUSAL_RETRY_SECONDS, held_by: owner.id };
+    }
     const orders = await loadOrders(c);
     const zones = await knownZones(c);
-    if (r.origin === "rule" || r.origin === "module") {
+    if ((r.origin === "rule" || r.origin === "module") && r.refuse !== false) {
       const heldBy = await this.refusal(c, r.class, regions, r.zones ?? [], orders, zones);
       if (heldBy !== null) {
         await writeHistory(c, {
@@ -163,8 +195,8 @@ export class Engine {
       actor_user_id: r.actor?.user_id ?? null,
       actor_name: r.actor?.name ?? null,
       dedupe_key: key,
-      starts_at: now,
-      expires_at: ttl === null ? null : new Date(now.getTime() + ttl * 1000),
+      starts_at: r.starts_at ?? now,
+      expires_at: r.expires_at ?? (ttl === null ? null : new Date(now.getTime() + ttl * 1000)),
       ttl_seconds: ttl,
       patience_seconds:
         r.patience_seconds ??
@@ -172,6 +204,8 @@ export class Engine {
       qr: r.qr ?? null,
       binding: r.binding ?? null,
       effect: r.cue == null || this.cues === undefined ? null : await this.cues.picture(c, r.cue),
+      steps: r.steps ?? null,
+      happening: r.happening ?? null,
       ended_at: null,
       end_reason: null,
     };
@@ -391,11 +425,21 @@ function wire(m: MomentRow, s: SentOverride): Record<string, unknown> {
     source: m.source,
     effect: m.effect,
     sound: null,
-    steps: null,
+    steps: m.steps,
     on_end: "resume",
     starts_at: m.starts_at.toISOString(),
     ends_at: m.ended_at?.toISOString() ?? null,
   };
+}
+
+/** The live moment that shows `happening` (WD1), or null. */
+async function ownerOf(c: SqlClient, happening: string): Promise<{ id: string; title: string } | null> {
+  const { rows } = await c.query(
+    `SELECT id, template, content FROM moments WHERE happening = $1 AND ended_at IS NULL LIMIT 1`,
+    [happening],
+  );
+  const row = rows[0] as (Pick<MomentRow, "template" | "content"> & { id: string }) | undefined;
+  return row === undefined ? null : { id: row.id, title: titleOf(row) };
 }
 
 /** The rank a moment has in the event's order, as the API shows it. */

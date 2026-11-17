@@ -14,6 +14,7 @@ import { evaluateScenes, recordFact, storeAgenda } from "./scene-store.js";
 import type { AgendaReader } from "./scene-store.js";
 import { recordSource, refreshBound } from "./sources.js";
 import { addZone } from "./store.js";
+import { storyEvent } from "./story/triggers.js";
 import { endAll, noteTenant, zoneRemoved } from "./tick.js";
 
 export const TENANT_STREAMS = [
@@ -87,6 +88,7 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
         { cue: CREW_CUES.photo, zones: [], key: `photo:${id}`, source: id },
         now,
       );
+      await storyEvent({ c, engine: deps.engine, now }, e);
     } else if (e.source !== "screen") {
       // An archived event is read-only (E10): no rule starts or renews a moment on it.
       if (await isArchived(c, e.tenant as string)) return;
@@ -94,6 +96,7 @@ export async function handleTenantEvent(deps: ConsumerDeps, e: Event): Promise<v
       scenes = (await recordFact(c, e)) || agenda !== null;
       const touched = await recordSource(c, e);
       await applyRules(c, deps.engine, e, now);
+      await storyEvent({ c, engine: deps.engine, now }, e);
       if (touched !== null) await refreshBound(c, deps.engine, touched, now);
     }
     if (scenes) await evaluateScenes(c, deps.engine.outbox, { timeZone, now });
@@ -209,6 +212,9 @@ export async function handlePlatformEvent(deps: ConsumerDeps, e: Event): Promise
         "moments_checkins",
         "moments_announcements",
         "moments_announcement_templates",
+        "moments_stories",
+        "moments_story_runs",
+        "moments_story_marks",
       ]) {
         await c.query(`DELETE FROM ${table}`, []);
       }
