@@ -6,7 +6,7 @@
     operationId: listStoryboards
     summary: The event's stories, settings, the presets and the live and recent runs
     description: |
-      Right `moments.read`. The five presets are copied on first use (SD8, O7). Each story adds `free_variables`
+      Right `moments.read`. The 24 presets are copied on first use (SD8, O7); `presets` lists every preset's key in the catalogue's order. Each story adds `free_variables`
       (the ones a take asks for) and `rule_off` (the built-in rule it turns off while on, SD6, or null).
     responses:
       "200":
@@ -61,7 +61,7 @@
     tags: [storyboards]
     operationId: resetStoryboards
     summary: Reset to default, one preset (`key`) or every preset
-    description: Right `moments.settings.write`. This platform version's preset replaces the event's copy; the event's own stories stay. Audited.
+    description: Right `moments.settings.write`. This platform version's preset replaces the event's copy, or is copied when the event has none yet; the event's own stories stay. Audited.
     requestBody:
       required: true
       content:
