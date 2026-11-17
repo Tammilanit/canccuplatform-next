@@ -12,6 +12,7 @@ import { PREVIEW_CHANNEL } from "../preview/store.js";
 import { refreshZone } from "./device-state.js";
 import type { CountSource } from "./store.js";
 import type { Feed, StreamDeps } from "./feed.js";
+import { ENDS, RECHECKS, rebuilds } from "./hub-events.js";
 
 export const COALESCE_MS = 100;
 /**
@@ -30,37 +31,6 @@ export const FOLLOW_MS = 1000;
  * events, as the tick does, and carries a tenant id and zone keys only.
  */
 const PLAYED_CHANNEL = platformKey("screen", "zone", "played");
-
-/** Events after which a zone may draw something else. */
-const REBUILDS = [
-  "screen.zone.saved",
-  "screen.ticker.changed",
-  "screen.content.",
-  "screen.photo.",
-  "screen.pin.changed",
-  "agenda.item.",
-  "agenda.items.",
-  "agenda.kind.",
-  "tenants.tenant.changed",
-  "tenants.status.changed",
-  "tenants.venue_info.changed",
-  "theming.theme.published",
-  // Main hands these on only once src/compose/overrides.ts, scenes.ts and src/moments-sound.ts
-  // have kept them.
-  "moments.override.",
-  "moments.sound.",
-  "moments.scene.",
-  "moments.prefetch.",
-];
-/** The event's context changed: every stream checks its device again and may redraw. */
-const RECHECKS = new Set([
-  "tenants.tenant.changed",
-  "tenants.status.changed",
-  "tenants.venue_ip_check.changed",
-  "tenants.venue.changed",
-]);
-/** The device no longer serves this event, or its token stopped: its streams end. */
-const ENDS = new Set(["screen.device.revoked", "screen.device.released", "screen.device.moved"]);
 
 export interface HubDeps extends StreamDeps {
   log?: Logger;
@@ -148,9 +118,7 @@ export class PushHub {
       return;
     }
     if (RECHECKS.has(event.type)) for (const s of streams) void s.refresh();
-    if (!REBUILDS.some((p) => (p.endsWith(".") ? event.type.startsWith(p) : event.type === p))) {
-      return;
-    }
+    if (!rebuilds(event.type)) return;
     const zone = event.type.startsWith("screen.zone.") ? event.data.zone_key : undefined;
     for (const key of this.zonesOf(tenant)) {
       if (zone === undefined || zone === key) this.schedule(tenant, key);
@@ -212,12 +180,8 @@ export class PushHub {
   }
 
   private onPlayed(message: string): void {
-    let notice: { tenant?: unknown; zones?: unknown };
-    try {
-      notice = JSON.parse(message) as typeof notice;
-    } catch {
-      return;
-    }
+    const notice = parseNotice(message);
+    if (notice === undefined) return;
     const { tenant, zones } = notice;
     if (typeof tenant !== "string" || !Array.isArray(zones)) return;
     const held = this.zonesOf(tenant);
@@ -230,12 +194,8 @@ export class PushHub {
    * streams and every mirror draw again, as after an assignment, each with one whole `state`.
    */
   private onPreview(message: string): void {
-    let notice: { tenant?: unknown; device_id?: unknown };
-    try {
-      notice = JSON.parse(message) as typeof notice;
-    } catch {
-      return;
-    }
+    const notice = parseNotice(message);
+    if (notice === undefined) return;
     const { tenant, device_id: deviceId } = notice;
     if (typeof tenant !== "string" || typeof deviceId !== "string") return;
     for (const s of this.streams.get(tenant) ?? []) {
@@ -398,4 +358,13 @@ const PLANNED_MS = 60_000;
 
 function plannedKey(zone: string): string {
   return tenantKey("screen", "zone", zone, "planned");
+}
+
+/** A fanout notice as sent, or undefined when it is not JSON (it is then ignored). */
+function parseNotice(message: string): Record<string, unknown> | undefined {
+  try {
+    return JSON.parse(message) as Record<string, unknown>;
+  } catch {
+    return undefined;
+  }
 }
