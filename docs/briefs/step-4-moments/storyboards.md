@@ -116,6 +116,22 @@ All must hold when a trigger fires; a fire that fails one is written to the hist
 - **Placeholders across triggers:** the builder offers the placeholders every trigger of the story fills; one that only some fill needs a fallback text (`{item.location|the stage}`), else validation fails (D10 extended, [SD3](#sd3-placeholders-a-story-with-several-triggers-can-fill)).
 - **Run mode** (home automation's modes, cut to three): `per_source` (the default: a second fire for the same item, session or order while its run is live is ignored and logged; another source starts its own run, which the arbiter places next to or after the first), `restart` (start again from round 1), `ignore` (one run of this story at a time).
 
+### Phase changes: the story first, then the phase
+A phase change is a **trigger** like any other, a new kind of `item` or `clock` read: the story plays its rounds, then hands over to the phase's own display. Phases are the run of show's own items and the scenes' changes, so no new trigger kind is needed; the builder offers them as a "Phase" shortcut that fills the `item` or `scene` trigger.
+
+| Phase | Trigger it uses | Parameters |
+|---|---|---|
+| Quiet hours start / end | `item` kind `quiet_hours`, anchor `before`, `start`, `end` | `before`: n minutes (default 15) |
+| Doors, meals | `item` kinds `doors`, `meal` | anchor `start`, `before`, `end` |
+| The day's phases (D7: morning, day, evening, night, as Screen reads them) | `item` of the phase, or `clock` daily at the phase's start | the phase name; `{phase.name}`, `{phase.next}` |
+| A scene change (#582) | `scene` `enters` or `leaves` | `scene_key`; the scene may be the quiet scene |
+
+**The hand-over rule:** a phase's own display (the quiet-hours look, the day's phase on the Pulse screen, the new scene's chain) is applied **when the story's current round ends, or at most n s later** (default 30 s, 0 to 120). The phase is never held back longer; a story that is skipped, hidden or has no round due hands over at once. The story's steps come first because they are what tells people the phase is coming ("Quiet hours from 23:00: headphones on", then the calm look).
+- **Quiet and E11:** a story that announces quiet hours is the one story that is **not** silenced or skipped by the quiet scene it announces: its rounds before the phase starts (preset 7's −15 and −5) play as usual, since the venue is not yet quiet; its finale at the start of quiet plays **calm and silent** (cards only, no sound, E11) for at most the hand-over time, then the scene takes the zone. A story with `quiet: skip` is skipped in quiet as before.
+- **The scene changes at the same moment:** preset 7's finale "Good night" at the start of quiet hours is the round that holds the hand-over; the quiet scene takes effect when it ends, at most 30 s later. Preset 8 (end of quiet) plays after the scene has left quiet, so its rounds play normally.
+- Doors, meals and the day's phases follow the same rule: the story, then the phase's display. The history writes "scene Quiet applied after round 3 of 3".
+- Open: [SD9](#sd9-phase-changes-and-the-hand-over).
+
 ## The timing model
 ### Step durations
 - **Each step has its own duration**, set by the organiser, 1 to 60 s (Screen's 500 ms floor is kept for transitions only; a step that shows text is held longer, below).
@@ -162,7 +178,7 @@ And **repeats beat length:** a message seen three times at T−15, T−5 and T�
 - **Countdowns:** one sound of the countdown's whole length, never one per second.
 
 ## The preset catalogue
-Nineteen built-ins, platform data an event copies on first use (O7, as scenes do), each on or off per event. **Every event** presets are on by default and idle where their trigger never comes (no `doors` item, no pizza); **some venues** presets are off by default. The five decided in L5 are reworked for longer holds and rounds. Durations are at the busy venue factor ×1; "msg" marks the round's message step; ⟲2 an inner repeat twice.
+Twenty-two built-ins, platform data an event copies on first use (O7, as scenes do), each on or off per event. **Every event** presets are on by default and idle where their trigger never comes (no `doors` item, no pizza); **some venues** presets are off by default. The five decided in L5 are reworked for longer holds and rounds. Durations are at the busy venue factor ×1; "msg" marks the round's message step; ⟲2 an inner repeat twice.
 
 | # | Preset | Purpose | Trigger | Round (steps, durations) | Rounds, end | Sound | Default |
 |---|---|---|---|---|---|---|---|
@@ -185,6 +201,9 @@ Nineteen built-ins, platform data an event copies on first use (O7, as scenes do
 | 17 | **Group photo** | Gather everyone | one item, 10 min before; take | msg "Group photo · {item.location}" 20 s | offsets −10, −3; finale 8 s | `story.photo` last round | some venues; off |
 | 18 | **Venue info** | Wi-Fi, floor plan, rules | clock every 45 min, 09:00–23:00 | msg venue info 20 s · floor plan 15 s | every 45 min; until 23:00 | none | some venues; off |
 | 19 | **Stage break** | "Back at …" on the stage zone | item kinds `tournament`, `ceremony` at end; zone `item_zone` | msg "Back at {next.starts_at}" with the next item 30 s | every 5 min; until the next item on the zone starts | none | some venues; off |
+| 20 | **Pizza last call** | Last chance to join the order | `pizza.order.closing` (additive domain event, [WD3](#wd3-the-missing-pizza-and-tournament-moments)); a take | sting 3 s · msg "Last call: pizza order closes at {order.closes_at}" with QR 20 s | offsets −10, −2 of the close; until `pizza.order.closed` | `pizza.open` first round | every event; on |
+| 21 | **Pizza orders ready** | Food has arrived, come and get it | `pizza.order.arrived` | sting 3 s · msg "Pizza is here · {order.pickup}" 20 s | every 5 min, 3 rounds; until the order is closed | `pizza.placed` first round | every event; on (replaces the `pizza` rule's arrived card, WD2) |
+| 22 | **Round start** | A tournament round begins | `tournament.round.started` (additive, WD3); take | sting 3 s · msg "{session.name}: round {round.number} starts now" 20 s | 1 round; once per round | `tournament.start` | every event; on |
 
 Notes for the session:
 - **Rules and presets that overlap:** `match_called`, `finals_result` and `hot_game` are built-in rules (#112) on the same events as presets 3, 4 and 13. Turning a preset on turns its rule off for that event, and back ([SD6](#sd6-a-preset-and-a-built-in-rule-on-the-same-event)).
@@ -195,6 +214,38 @@ Notes for the session:
 ![Presets on screen](20-storyboard-presets-on-screen.svg)
 
 ![Preset picker](21-storyboard-preset-picker.svg)
+
+## Stories and module widgets: one behaviour, no doubles
+Pizza (step 5) and the tournament (step 7) draw widgets of their own, and their happenings may also be moments, stories, cues, announcements, pushes and bot posts. The rule that stops one happening from showing, sounding or notifying twice is one sentence:
+
+**One happening has one owner, and the owner's moment is its only voice.** A happening is a source event with its id (an order, a match, a session, an item). Every other surface either shows the steady state around it or is a channel of the owner's moment. Moments' arbiter holds one live moment per happening key (`type` + source id), so a second source of the same happening is refused and written to the history ("not started: the `pizza` rule already owns order 12").
+
+| Surface | Owns | Never does |
+|---|---|---|
+| **Module widget** (pizza status, tournament standings) | the **steady state**: what is true now (open orders, the bracket, the leaderboard) | animate, sound or notify on its own; while its happening's moment plays, it only gets a quiet highlight ("new") from the moment's `bound` data |
+| **Story / rule moment** | **the moment**: the card and the sound of one happening, with its repeats | show the steady state (a story's bracket step reads the widget's data, it does not rebuild it) |
+| **Cue** | the picture and sound of **its** moment, once per source (`once_per_source`) | play outside a moment, or a second time for the same source |
+| **Announcement** | what a person writes: a message, with its channels (screen, ticker, Discord, push) | repeat a happening a story already owns (the preset is turned off, or the announcement is the manual extra) |
+| **Push (Notify)** | the one notification, only through an announcement's `push` channel or a topic Moments registers | notify for a happening the story shows; stories have no push of their own |
+| **Bot (step 6)** | the Discord post, as an announcement's `discord` channel, or the module's own post for its own domain event | read a story, or post what the owner's channels already posted |
+
+**Ownership of the seeded cues** (each cue has one owner; `once_per_source` is already set on the tournament, strip and pizza cues):
+
+| Cue | Owner | Not played by |
+|---|---|---|
+| `tournament.pre` | preset 2, first and last round | the tournament widget |
+| `tournament.start` | preset 2 finale, presets 3 and 22 (one of them per source: 3 for the match, 22 for the round) | the `match_called` rule while preset 3 is on (SD6) |
+| `tournament.post` | preset 4 (the winner card) | the `finals_result` rule while preset 4 is on |
+| `strip.tournament_next` | preset 2 on a normal tournament item | the signage strip widget |
+| `strip.finals_open`, `strip.finals_start` | preset 2 on a final (`session.is_final`): the first round, the finale | the same preset on a normal item |
+| `pizza.open` | presets 10 and 20, first round | the pizza widget |
+| `pizza.placed` | the `pizza` rule (an order placed); preset 21 plays it for the arrival | both on one order: WD2 |
+| `pizza.closed` | preset 10's finale | the pizza widget |
+
+- **The widget highlights, the moment animates.** The widget never plays a cue or an effect: its change shows when the moment's `bound` data says so, so a pizza order shows once in the status widget and once as a card, never as two cards.
+- **One choice per happening** is made in Studio where a preset and a rule or a widget overlap: the picker shows the owner ("Pizza orders ready is shown by this preset; the rule is off").
+- The **mockups' counts stay** (19 presets drawn); presets 20 to 22 are text only in this pack and get their shots in #114's second package.
+- Open: [WD1](#wd1-who-owns-a-happening), [WD2](#wd2-a-rule-and-a-preset-on-the-same-happening), [WD3](#wd3-the-missing-pizza-and-tournament-moments), [WD4](#wd4-push-and-the-bot-for-a-story).
 
 ## The builder
 [Mockup 18](18-storyboard-builder.svg): Studio → Moments → Storyboards → one story.
@@ -238,7 +289,7 @@ D9 compiles a story to an Override with `steps`. With loops:
 | **Invent** | Rounds with offsets or every n minutes, end conditions, a finale | The product owner's loops; stadium scripts and esports pre-shows |
 | **Invent** | A readable floor per step, a minimum card time, a busy venue factor | "Longer holds" |
 | **Invent** | Story airtime per zone and a yield rule | Share before you queue, for loops |
-| **Invent** | 19 presets, on or off per event, in two groups | "More presets"; each event takes what fits its venue |
+| **Invent** | 22 presets, on or off per event, in two groups | "More presets"; each event takes what fits its venue |
 
 ## Question bank
 Grouped by theme; each with options and a recommendation. IDs are used above and in the session.
@@ -346,6 +397,12 @@ Grouped by theme; each with options and a recommendation. IDs are used above and
 - **A.** As scenes: built-ins are platform data an event copies on first use; "reset to default" per preset; clone with an event copies the stories and their on/off (D22, O7).
 - **Recommendation: A.**
 
+#### SD9. Phase changes and the hand-over
+- **A.** Phases use `item` and `scene` triggers; the story's round plays first, the phase's display or scene applies when it ends or at most 30 s later; a story that announces quiet hours plays calm and silent at the start of quiet.
+- **B.** The phase applies at once and the story is skipped.
+- **C.** The story may delay the phase by any time it needs.
+- **Recommendation: A.** B loses the warning; C lets a loop hold the venue out of quiet.
+
 ### Edge cases and failure
 #### SE1. A round is due while its region is held
 - **A.** It waits its patience (a quarter of the gap, at most 60 s), then is skipped and logged; rounds never stack.
@@ -383,7 +440,7 @@ Grouped by theme; each with options and a recommendation. IDs are used above and
 #### SO1. Airtime
 - **A.** Per story, the gap rule (at most half of its loop); for all stories, at most 40 % of any 10 minutes per zone (event setting 20–80 %); a yield to a lower moment that waited 60 s.
 - **B.** The gap rule only.
-- **Recommendation: A.** Nineteen presets on at once must still leave the screen to the event.
+- **Recommendation: A.** Twenty-two presets on at once must still leave the screen to the event.
 
 #### SO2. Sound per loop
 - **A.** First pass of an inner repeat and first round only, unless chosen; at most 2 sounds per round and 6 per run per zone; every sound counts in the zone's budget.
@@ -391,22 +448,43 @@ Grouped by theme; each with options and a recommendation. IDs are used above and
 - **Recommendation: A.** B lets one story eat the hour's budget.
 
 #### SO3. How many stories may an event have?
-- **A.** At most 40 (the 19 presets plus the event's own), each at most 12 steps a round.
+- **A.** At most 40 (the 22 presets plus the event's own), each at most 12 steps a round.
 - **Recommendation: A.**
 
 #### SO4. Tests that prove it
 - **A.** A loop's schedule on a fake clock (offsets, every, each end condition, finale), a skipped round on a held region, an emergency mid-loop, a restart mid-loop, the sound cap, the airtime cap, and a CI screenshot of each preset's message step (O3).
 - **Recommendation: A.**
 
+### Widgets and stories
+#### WD1. Who owns a happening?
+- **A.** One owner per happening key; the widget shows steady state and highlights, the moment is the only voice (the table above).
+- **B.** Widgets may animate and play sounds themselves; the arbiter only de-duplicates moments.
+- **Recommendation: A.** B makes the widget and the story two voices and needs every module to repeat the sound rules.
+
+#### WD2. A rule and a preset on the same happening
+- **A.** The preset takes the happening and the rule is switched off for it (SD6 applies to `pizza`: its arrived trigger goes to preset 21, its placed trigger stays).
+- **B.** Both run; the arbiter's one-moment-per-happening refuses the second.
+- **Recommendation: A**, with B's refusal as the safety net.
+
+#### WD3. The missing pizza and tournament moments
+- **A.** Add presets 20 (last call), 21 (orders ready) and 22 (round start) now, each asking for one additive domain event (`pizza.order.closing`, `tournament.round.started`) in its module's contract, which step 5 and step 7 must emit.
+- **B.** Only the presets whose events exist today (21).
+- **Recommendation: A.** The missing events are the modules' to add, additive; until they are emitted the presets idle.
+
+#### WD4. Push and the bot for a story
+- **A.** A story has the screen and the sound only; a push or a Discord post comes from an announcement, and its preset is then off for that happening.
+- **B.** A story step "also announce" that sends one announcement with the story's text.
+- **Recommendation: A.** B is a later, additive step if the session wants it.
+
 ### The package
 #### SP1. Does #114 split?
-- **A.** Two packages in order: (1) the model, the loop runner and the builder, with the five L5 presets; (2) the other fourteen presets with their cues, sounds and screenshots.
+- **A.** Two packages in order: (1) the model, the loop runner and the builder, with the five L5 presets; (2) the other seventeen presets with their cues, sounds and screenshots.
 - **B.** One package.
 - **Recommendation: A.** Each is close to the 4,000-line limit; the second is mostly data, screenshots and the sound pack.
 
 #### SP2. Which presets ship in step 4?
-- **A.** All nineteen.
-- **B.** The eleven "every event" ones; the eight "some venues" ones later.
+- **A.** All twenty-two.
+- **B.** The fourteen "every event" ones; the eight "some venues" ones later.
 - **Recommendation: A**, in the second package.
 
 ## Proposed changes to #114
@@ -424,14 +502,16 @@ For the lead to apply after the session; each assumes the recommendation of the 
   - [ ] Sound: a cue per step decided at the step's start on the zones where the round is placed; first pass and first round only unless chosen; at most 2 a round and 6 a run per zone; a test proves a looping story stays within the cap and the budget (SO2).
   - [ ] The builder (mockup 18): triggers as sentences, the step strip with durations and floors, the repeat bracket, the rounds' timeline, the cue per step and "+ New cue", the airtime and sound meters; preview with a scrubber and the compressed loop; test-fire one round on one zone (SU4). Fire, stop loop and skip to finale on On air and the phone (SU2).
   - [ ] The five L5 presets reworked as the catalogue says, platform data copied on first use, with reset to default and clone (SD8); turning one on turns its overlapping rule off (SD6).
+  - [ ] One owner per happening (WD1): the arbiter refuses a second moment for the same happening key, with a history line; the widget highlights from the moment's data and never plays a cue; a test proves one pizza order and one match each show and sound once with a rule, a preset and a widget on.
+  - [ ] Phase changes (SD9): the story's round first, then the phase's display or scene within the hand-over time; quiet-hours finale calm and silent; tested on a fake clock.
   - [ ] History rows for each round started, skipped (with why) and each loop's end.
-- **Out of scope:** the other fourteen presets (the next issue); the director desk; a rehearsal mode with a movable clock (U10 B); text to speech (#578).
+- **Out of scope:** the other seventeen presets (the next issue); the director desk; a rehearsal mode with a movable clock (U10 B); text to speech (#578).
 - **Risk:** normal: module and UI code, additive contract parts.
 
 ### New · feat(moments): storyboards: the preset catalogue (normal)
-- **Goal:** the fourteen other presets of the catalogue, on or off per event, so each event takes what fits its venue.
+- **Goal:** the seventeen other presets of the catalogue, on or off per event, so each event takes what fits its venue.
 - **Criteria:**
-  - [ ] Presets 6–19 as the catalogue says, with their default on or off, as platform data copied on first use.
+  - [ ] Presets 6–22 as the catalogue says, with their default on or off, as platform data copied on first use.
   - [ ] The preset picker (mockup 21): every built-in grouped as "every event" and "some venues", on or off per event, what triggers it, "idle: no matching item in the run of show", duplicate to edit, reset to default.
   - [ ] The `story.*` cues and their CC0 sounds in the default pack, with their credits (L9).
   - [ ] A CI screenshot of each preset's message step through the demo screenshot scripts and their groups file (O3).
@@ -441,4 +521,4 @@ For the lead to apply after the session; each assumes the recommendation of the 
 **Order:** #114 after the step's merged packages (all of them are merged now); the preset catalogue after #114.
 
 ## Open questions
-All of them are in the bank above. Decide first: **SD1** (where loops run), **SL1** (the minimum time on screen), **SO1** (airtime), **SO2** (sound per loop), **SD6** (presets and rules), **SP1** (the split).
+All of them are in the bank above. Decide first: **WD1** (who owns a happening), **SD9** (phase changes), **SD1** (where loops run), **SL1** (the minimum time on screen), **SO1** (airtime), **SO2** (sound per loop), **SD6** (presets and rules), **SP1** (the split).
