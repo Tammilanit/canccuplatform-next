@@ -19,7 +19,11 @@ import {
 import { openAnnouncements, runOfShow, saveAnnouncement } from "./store.js";
 import type { AnnouncementRow, EndReason, RunItem } from "./store.js";
 
-/** Why its item takes it away (E15), or null while the item stands or the run of show is unknown. */
+/**
+ * Why its item takes it away (E15), or null while the item stands or the run of show is unknown.
+ * The `why` goes out on the public `.withdrawn` event and is stored for every announcer, so it
+ * names the item only when the item is public: a crew item may time an announcement, never show.
+ */
 function itemGone(
   a: AnnouncementRow,
   items: RunItem[] | null,
@@ -27,9 +31,12 @@ function itemGone(
   if (a.item_id === null || items === null) return null;
   const item = itemOf(a, items);
   if (item === null) return { reason: "item_removed", why: "Its run-of-show item was removed." };
-  if (item.status === "cancelled")
-    return { reason: "item_cancelled", why: `${item.title} was cancelled.` };
-  return null;
+  if (item.status !== "cancelled") return null;
+  const why =
+    item.visibility === "public"
+      ? `${item.title} was cancelled.`
+      : "Its run-of-show item was cancelled.";
+  return { reason: "item_cancelled", why };
 }
 
 export async function tickAnnouncements(c: SqlClient, engine: Engine, now: Date): Promise<void> {

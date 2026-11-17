@@ -206,7 +206,11 @@ describe.skipIf(!DATABASE_URL)("the announcement composer", () => {
       await holder.query("SELECT 1 FROM moments_announcements WHERE id = $1 FOR UPDATE", [id]);
       const page = await Promise.race([
         w.call("crew", "GET", `/announce?edit=${id}`),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+        new Promise<null>((resolve) => {
+          setTimeout(() => {
+            resolve(null);
+          }, 2000);
+        }),
       ]);
       expect(page?.body).toContain("Edit announcement");
     } finally {
@@ -232,7 +236,11 @@ describe.skipIf(!DATABASE_URL)("the announcement composer", () => {
     );
     expect((await templates()).find((t) => t.key === "raffle")?.title).toBe("Raffle at {time}");
     // Opened from its chip, the same name saves over it: that is the change asked for.
-    const update = await save({ title: "Raffle at 9", template_name: "Raffle", template_key: "raffle" });
+    const update = await save({
+      title: "Raffle at 9",
+      template_name: "Raffle",
+      template_key: "raffle",
+    });
     expect(String(update.headers.location)).toMatch(/done=/);
     expect((await templates()).find((t) => t.key === "raffle")?.title).toBe("Raffle at 9");
   });

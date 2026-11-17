@@ -6,12 +6,26 @@
  */
 const STEPS = [1, 0.85, 0.72, 0.6, 0.5];
 
+/** Web fonts loaded so far: a late font reflows the text, so every box is measured again. */
+let fontLoads = 0;
+const watched = new WeakSet<object>();
+
+function watchFonts(): void {
+  const fonts = (globalThis.document as Document | undefined)?.fonts as EventTarget | undefined;
+  if (fonts === undefined || watched.has(fonts)) return;
+  watched.add(fonts);
+  fonts.addEventListener("loadingdone", () => {
+    fontLoads += 1;
+  });
+}
+
 export function fitAnnouncements(root: ParentNode): void {
+  watchFonts();
   for (const box of root.querySelectorAll<HTMLElement>(".canccu-widget--announcement")) {
     // Not laid out yet (a layout before the player mounts it): it waits for a tick on the page.
     if (box.clientHeight === 0) continue;
-    // Measured once per text and box size; a redraw with new text brings a fresh measure.
-    const key = `${String(box.clientHeight)}:${box.textContent}`;
+    // Measured once per text, box size and font set; the player's tick brings a fresh measure.
+    const key = `${String(box.clientWidth)}x${String(box.clientHeight)}:${String(fontLoads)}:${box.textContent}`;
     if (box.dataset.fit === key) continue;
     let i = 0;
     box.style.setProperty("--canccu-fit", "1");
