@@ -70,7 +70,7 @@ export async function storiesView(c: SqlClient, now: Date): Promise<Body> {
     stories: doc.stories.map((s) => ({
       ...s,
       free_variables: freeVariablesOf(s),
-      rule_off: s.enabled && s.preset !== null ? (RULE_OF_PRESET[s.preset] ?? null) : null,
+      rule_off: s.enabled && s.preset !== null ? (RULE_OF_PRESET[s.preset]?.rule ?? null) : null,
     })),
     settings: doc.settings,
     revision: doc.revision,
@@ -108,6 +108,12 @@ async function withVideos(deps: AppDeps, tenant: string, stories: Story[]): Prom
         continue;
       }
       const id = String(step.content.asset_id);
+      // A preset's video step names none until the organiser picks one; it may stay off so.
+      if (id === "") {
+        if (s.enabled) throw invalid(`${s.name}: choose the video before turning it on.`);
+        steps.push(step);
+        continue;
+      }
       const a = (await deps.screen.asset(tenant, id).catch(() => null)) as
         | (Body & {
             kind?: string;

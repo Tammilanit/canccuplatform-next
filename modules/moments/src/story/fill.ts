@@ -67,6 +67,8 @@ export function domainFacts(type: string, d: Data, timeZone: string): Facts {
     "order.seq": str(order.seq),
     "order.target_at": hhmm(str(order.target_at), timeZone),
     "order.pizza_count": str(order.pizza_count),
+    "order.closes_at": hhmm(str(d.closes_at), timeZone),
+    "round.number": str(obj(d.round).number),
     "game.name": str(game.name),
     "game.players": str(d.players),
   };
@@ -79,6 +81,12 @@ export function domainFacts(type: string, d: Data, timeZone: string): Facts {
 export function domainSource(type: string, d: Data): string | null {
   const kind = DOMAIN_TYPES[type]?.source;
   if (kind === "photo") return typeof d.photo_id === "string" ? `photo:${d.photo_id}` : null;
+  if (kind === "round") {
+    // A round has no id of its own: its session and number name it, once per round.
+    const id = obj(d.session).id;
+    const n = obj(d.round).number;
+    return typeof id === "string" && Number.isInteger(n) ? `round:${id}:${String(n)}` : null;
+  }
   const id = kind === undefined ? null : obj(d[kind]).id;
   return typeof id === "string" ? `${kind ?? ""}:${id}` : null;
 }

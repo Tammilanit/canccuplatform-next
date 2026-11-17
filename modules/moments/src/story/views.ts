@@ -1,5 +1,5 @@
 /**
- * Studio → Moments → Storyboards (SU5): the list, the builder (mockup 18) and the crew's part on
+ * Studio → Moments → Storyboards (SU5): the builder (mockup 18) and the crew's part on
  * On air and the phone (SU2): fire, Stop loop, Skip to finale. Server-drawn with `packages/ui`
  * classes; the strip and the timeline are SVG, as the pages' CSP allows no inline style.
  */
@@ -207,54 +207,6 @@ export function crewStories(o: {
     }
     ${fire}
   </section>`;
-}
-
-export function storyListView(o: {
-  stories: Story[];
-  runs: RunView[];
-  items: ItemChoice[];
-  canWrite: boolean;
-  canTake: boolean;
-  revision: number;
-  done?: string | undefined;
-  error?: string | undefined;
-}): Html {
-  const rows = o.stories.map(
-    (s) =>
-      html`<li class="moments-list__row">
-        <span class="canccu-stack">
-          <a href="${PREFIX}storyboards?edit=${s.key}"><strong>${s.name}</strong></a>
-          <span class="canccu-small canccu-muted"
-            >${s.triggers.map(triggerText).join(" · or · ")}</span
-          >
-          <span class="canccu-small canccu-muted">${roundsText(s)}</span>
-        </span>
-        <span class="canccu-cluster">
-          <span class="canccu-badge ${s.enabled ? "canccu-badge--ok" : "canccu-badge--plain"}"
-            >${s.enabled ? "On" : "Off"}</span
-          >
-          ${o.canWrite ? html`<form method="post" action="${PREFIX}storyboards/${s.key}/toggle">${formKey()}<input type="hidden" name="revision" value="${String(o.revision)}" /><button class="canccu-button canccu-button--ghost canccu-button--sm" type="submit">${s.enabled ? "Turn off" : "Turn on"}</button></form>` : ""}
-          ${o.canWrite && s.preset !== null ? html`<form method="post" action="${PREFIX}storyboards/${s.key}/reset">${formKey()}<input type="hidden" name="revision" value="${String(o.revision)}" /><button class="canccu-button canccu-button--ghost canccu-button--sm" type="submit">Reset to default</button></form>` : ""}
-        </span>
-      </li>`,
-  );
-  return html`${flash(o.done, o.error)}
-    <div class="moments-onair">
-      <section class="canccu-card moments-zones">
-        <h2 class="canccu-card__title">Storyboards</h2>
-        <p class="canccu-small canccu-muted">
-          Sequences for the peaks: each plays its rounds through the arbiter, the sound gates and
-          the history. Presets are copied on first use; reset brings back this version's.
-        </p>
-        <ul class="moments-list">
-          ${rows}
-        </ul>
-        ${o.canWrite ? html`<form method="post" action="${PREFIX}storyboards/new">${formKey()}<input type="hidden" name="revision" value="${String(o.revision)}" /><button class="canccu-button canccu-button--secondary" type="submit">New story</button></form>` : ""}
-      </section>
-      <div class="moments-side">
-        ${crewStories({ stories: o.stories, runs: o.runs, items: o.items, canTake: o.canTake, back: "storyboards" })}
-      </div>
-    </div>`;
 }
 
 export function builderView(o: {

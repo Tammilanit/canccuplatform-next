@@ -1,6 +1,7 @@
 /**
  * Studio → Moments → Storyboards (SU5) and the crew's part on On air (SU2), as a browser uses
- * them: the list, the builder of mockup 18 (triggers as sentences, the step strip with floors,
+ * them: the preset picker of mockup 21 (every event and some venues, on or off, what triggers
+ * each, its status, duplicate, reset, the rule a preset replaces), the builder of mockup 18 (triggers as sentences, the step strip with floors,
  * the repeat, the rounds' timeline, the cue per step and "+ New cue", the meters, the preview
  * and the test-fire), a save through the form, and Fire, Stop loop and Skip to finale.
  */
@@ -8,7 +9,8 @@ import type pg from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { storeAgenda } from "../src/scene-store.js";
 import { addZone } from "../src/store.js";
-import { ensureStories } from "../src/story/store.js";
+import { PRESETS } from "../src/story/presets.js";
+import { DEFAULT_SETTINGS, ensureStories, writeStories } from "../src/story/store.js";
 import { DATABASE_URL, freshDatabase } from "./helpers.js";
 import { appWorld } from "./app.js";
 import type { AppWorld } from "./app.js";
@@ -59,6 +61,103 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
       "the first and last round",
     ])
       expect(b.body, text).toContain(text);
+  });
+
+  it("picks presets: every event and some venues, what triggers each, its status and the rule it replaces", async () => {
+    const list = await w.call("admin", "GET", "/storyboards");
+    expect(list.statusCode).toBe(200);
+    for (const text of [
+      "Every event",
+      "Some venues",
+      "Meal is served",
+      "Premiere",
+      "Champion replay",
+      "item meal · start",
+      "every 5 min · 3 rounds · until it ends",
+      "idle: no matching item in the run of show",
+      "next: Thu 19:00 Demo Game Cup final",
+      "replaces rule match_called",
+      "would replace rule hot_game",
+      "takes the arrived order from rule pizza",
+      "pick an item",
+      "Reset all to default",
+      "Duplicate",
+      "New storyboard",
+    ])
+      expect(list.body, text).toContain(text);
+  });
+
+  it("turns presets on and off, copies one an older event lacks, and turns Champion replay with Champion", async () => {
+    await w.tx("demo", (c) => writeStories(c, PRESETS.slice(0, 5), DEFAULT_SETTINGS, 3));
+    const list = await w.call("admin", "GET", "/storyboards");
+    expect(list.body).toContain("not in this event yet");
+    // An uncopied preset is Off whatever the platform default says, so its button matches toggled().
+    const uncopied = /storyboards\/pizza_last_call\/toggle[\s\S]{0,400}/.exec(list.body)?.[0] ?? "";
+    expect(uncopied).toContain("Turn on");
+    expect(uncopied).not.toContain("Turn off");
+    const toggle = (key: string, revision: number) =>
+      w.call(
+        "admin",
+        "POST",
+        `/storyboards/${key}/toggle`,
+        { idempotency_key: `k-${key}-${String(revision)}`, revision: String(revision) },
+        form,
+      );
+    expect((await toggle("meal_served", 3)).headers.location).toContain("done=");
+    expect((await toggle("champion", 4)).headers.location).toContain("done=");
+    let doc = await w.tx("demo", (c) => ensureStories(c));
+    const on = (key: string) => doc.stories.find((s) => s.key === key)?.enabled;
+    expect([on("meal_served"), on("champion"), on("champion_replay")]).toEqual([
+      true,
+      false,
+      undefined,
+    ]);
+    await toggle("champion", 5);
+    doc = await w.tx("demo", (c) => ensureStories(c));
+    expect([on("champion"), on("champion_replay")]).toEqual([true, true]);
+    // Premiere needs its video first.
+    const premiere = await toggle("premiere", 6);
+    expect(decodeURIComponent(String(premiere.headers.location))).toContain(
+      "choose the video before turning it on",
+    );
+  });
+
+  it("duplicates a preset to edit, opens the copy's builder, and resets every preset to default", async () => {
+    const dup = await w.call(
+      "admin",
+      "POST",
+      "/storyboards/doors_open/duplicate",
+      { idempotency_key: "k-dup", revision: "0" },
+      form,
+    );
+    expect(dup.statusCode).toBe(303);
+    expect(dup.headers.location).toContain("storyboards?edit=doors_open_copy");
+    let doc = await w.tx("demo", (c) => ensureStories(c));
+    expect(doc.stories.find((s) => s.key === "doors_open_copy")).toMatchObject({
+      name: "Doors open (copy)",
+      preset: null,
+      enabled: false,
+    });
+    const own = await w.call("admin", "GET", "/storyboards");
+    expect(own.body).toContain("Your storyboards");
+    await w.call(
+      "admin",
+      "POST",
+      "/storyboards/meal_served/toggle",
+      { idempotency_key: "k-off", revision: "1" },
+      form,
+    );
+    const reset = await w.call(
+      "admin",
+      "POST",
+      "/storyboards/reset",
+      { idempotency_key: "k-reset", revision: "2" },
+      form,
+    );
+    expect(reset.headers.location).toContain("done=");
+    doc = await w.tx("demo", (c) => ensureStories(c));
+    expect(doc.stories.find((s) => s.key === "meal_served")?.enabled).toBe(true);
+    expect(doc.stories.some((s) => s.key === "doors_open_copy")).toBe(true);
   });
 
   it("saves the builder's form through the API, and refuses a broken one with the reason", async () => {

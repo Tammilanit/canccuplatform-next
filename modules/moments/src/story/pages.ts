@@ -17,7 +17,10 @@ import type { Story } from "./model.js";
 import { EMPTY_CONDITIONS } from "./model.js";
 import { videoMs } from "./runner.js";
 import { ensureStories } from "./store.js";
-import { builderView, crewStories, storyListView } from "./views.js";
+import { duplicated, toggled } from "./picker.js";
+import type { PickerItem } from "./picker.js";
+import { pickerView } from "./picker-view.js";
+import { builderView, crewStories } from "./views.js";
 import type { ItemChoice, RunView } from "./views.js";
 
 type Raw = Record<string, string | string[] | undefined>;
@@ -27,14 +30,14 @@ const TEN_MINUTES = 600_000;
 
 async function state(deps: AppDeps, request: FastifyRequest) {
   const a = await viaApi(request.server, request, "GET", "/api/moments/storyboards", {});
-  const items = await deps.db.tenant(async (c) =>
-    ((await runOfShow(c)) ?? []).filter((i) => (i.status ?? "scheduled") === "scheduled"),
-  );
+  const agenda = (await deps.db.tenant((c) => runOfShow(c))) ?? [];
+  const items = agenda.filter((i) => (i.status ?? "scheduled") === "scheduled");
   return {
     stories: (a.body.stories ?? []) as Story[],
     revision: Number(a.body.revision ?? 0),
     runs: (a.body.runs ?? []) as RunView[],
     items: items.map((i): ItemChoice => ({ id: i.id, title: i.title, starts_at: i.starts_at })),
+    agenda: agenda as PickerItem[],
   };
 }
 
@@ -93,21 +96,22 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
     const s = await state(deps, request);
     const key = request.query.edit;
     const story = key === undefined ? undefined : s.stories.find((x) => x.key === key);
+    const doc = await deps.db.tenant((c) => ensureStories(c));
     if (story === undefined)
       return page(request, reply, deps, {
         title: "Storyboards",
         tab: "storyboards",
         description:
           "Sequences for the peaks, as data: triggers, rounds, a finale, a cue per step.",
-        body: storyListView({
+        body: pickerView({
           ...s,
+          ctx: { items: s.agenda, now: deps.now().getTime(), event: doc.event },
           canWrite: has(request, SETTINGS),
           canTake: has(request, TAKE),
           done: request.query.done,
           error: request.query.error,
         }),
       });
-    const doc = await deps.db.tenant((c) => ensureStories(c));
     const zones = await deps.db.tenant((c) => knownZones(c));
     const cues = (await deps.db.tenant((c) => loadCues(c))).map((c) => c.name);
     return page(request, reply, deps, {
@@ -145,12 +149,33 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
     "/storyboards/:key/toggle",
     write,
     async (request, reply) => {
-      const a = await putList(request, (list) =>
-        list.map((s) => (s.key === request.params.key ? { ...s, enabled: !s.enabled } : s)),
-      );
+      const a = await putList(request, (list) => toggled(list, request.params.key));
       return after(reply, "storyboards", a, "Saved.");
     },
   );
+
+  pages.post<{ Params: { key: string } }>(
+    "/storyboards/:key/duplicate",
+    write,
+    async (request, reply) => {
+      let key = request.params.key;
+      const a = await putList(request, (list) => {
+        const d = duplicated(list, request.params.key);
+        key = d.key;
+        return d.list;
+      });
+      return a.status >= 400
+        ? back(reply, "storyboards", "error", refusal(a))
+        : reply.redirect(`${PREFIX}storyboards?edit=${key}`, 303);
+    },
+  );
+
+  pages.post("/storyboards/reset", write, async (request, reply) => {
+    const a = await viaApi(pages, request, "POST", "/api/moments/storyboards/reset", {
+      revision: Number(one(raw(request).revision)),
+    });
+    return after(reply, "storyboards", a, "Every preset is back to the platform's.");
+  });
 
   pages.post("/storyboards/new", write, async (request, reply) => {
     const doc = await deps.db.tenant((c) => ensureStories(c));

@@ -364,3 +364,10 @@
 .moments-story-fire + .moments-story-fire {
   margin-block-start: 0.75rem;
 }
+/* The preset picker (mockup 21): a row's on/off, duplicate and reset stay on one line on a desk. */
+@media (min-width: 64rem) {
+  .moments-picker__actions {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+}

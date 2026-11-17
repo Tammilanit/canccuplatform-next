@@ -154,6 +154,26 @@
     color: var(--canccu-color-primary-text);
   }
 
+  /* A storyboard's message card (SL3; storyboards mockups 20 and 22): the title is the message,
+     big as an announcement's, with the subtitle under it; the base title is a small label. */
+  .canccu-widget--title_card .canccu-widget__title {
+    font-size: max(2.6 * var(--canccu-u), calc(6.6 * var(--canccu-u) * var(--canccu-fit, 1)));
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--canccu-color-text);
+  }
+
+  .canccu-widget--title_card .canccu-widget__body {
+    font-size: max(2.6 * var(--canccu-u), calc(4 * var(--canccu-u) * var(--canccu-fit, 1)));
+  }
+
+  .canccu-region--_full .canccu-widget--title_card .canccu-widget__title {
+    font-size: max(2.6 * var(--canccu-u), calc(12.4 * var(--canccu-u) * var(--canccu-fit, 1)));
+    line-height: 1.05;
+  }
+
   /* The lower-third band (mockup 04 d): its heading on its own line, the rest after it. The band
      is the primary colour with the theme's text for it, the pair the contrast rules check. */
   .canccu-region--_overlay > .canccu-widget {
