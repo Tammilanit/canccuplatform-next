@@ -205,6 +205,25 @@ describe.skipIf(!DATABASE_URL)("the announcements API", () => {
     expect((await post("crew", { ...BASE, when: { mode: "item" } })).statusCode).toBe(400);
   });
 
+  it("refuses a time in the past instead of sending it at once under Scheduled", async () => {
+    const past = new Date(w.now.getTime() - 60_000).toISOString();
+    const r = await post("crew", { ...BASE, when: { mode: "at", at: past } });
+    expect(r.statusCode).toBe(400);
+    expect(String(errorOf(r).message)).toContain("past");
+    const list = json(await w.call("crew", "GET", "/api/moments/announcements"));
+    expect(list.announcements).toHaveLength(0);
+  });
+
+  it("the withdraw audit records the status it really had, scheduled or live", async () => {
+    const at = new Date(w.now.getTime() + 3600_000).toISOString();
+    const later = idOf(await post("crew", { ...BASE, when: { mode: "at", at } }));
+    await w.call("crew", "POST", `/api/moments/announcements/${later}/withdraw`, {});
+    expect(w.audit.at(-1)?.changes).toEqual({ status: { old: "scheduled", new: "withdrawn" } });
+    const live = idOf(await post("crew", BASE));
+    await w.call("crew", "POST", `/api/moments/announcements/${live}/withdraw`, {});
+    expect(w.audit.at(-1)?.changes).toEqual({ status: { old: "live", new: "withdrawn" } });
+  });
+
   it("edits in place and withdraws once; an ended one is not running", async () => {
     const id = idOf(await post("crew", BASE));
     const edit = await w.call("crew", "PATCH", `/api/moments/announcements/${id}`, {
