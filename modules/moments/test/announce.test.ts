@@ -272,6 +272,38 @@ describe.skipIf(!DATABASE_URL)("announcements", () => {
     expect(w.events("demo").some((e) => e.type.startsWith("moments.announcement."))).toBe(false);
   });
 
+  it("a cancelled public item is named in the public .withdrawn event", async () => {
+    await w.tx("demo", (c) => storeAgenda(c, { agenda_version: 1, items: [ITEM] }));
+    const a = await send({ item_id: ITEM.id });
+    await w.tx("demo", (c) =>
+      storeAgenda(c, { agenda_version: 2, items: [{ ...ITEM, status: "cancelled" }] }),
+    );
+    await tick(w.at(1));
+    const withdrawn = w.events("demo").find((e) => e.type === "moments.announcement.withdrawn");
+    expect(withdrawn?.data).toMatchObject({
+      id: a.id,
+      reason: "item_cancelled",
+      why: "Demo Game Cup, semis was cancelled.",
+    });
+  });
+
+  it("a cancelled crew-only item is never named: not in any event, nor in the stored why", async () => {
+    const secret = { ...ITEM, id: "it_setup", title: "Secret sponsor setup", visibility: "crew" };
+    await w.tx("demo", (c) => storeAgenda(c, { agenda_version: 1, items: [secret] }));
+    // Timed by the crew item only: the announcement itself is public.
+    const a = await send({ item_id: secret.id });
+    await w.tx("demo", (c) =>
+      storeAgenda(c, { agenda_version: 2, items: [{ ...secret, status: "cancelled" }] }),
+    );
+    await tick(w.at(1));
+    const r = await row(a.id);
+    expect(r).toMatchObject({ status: "withdrawn", end_reason: "item_cancelled" });
+    expect(r.why).toBe("Its run-of-show item was cancelled.");
+    const withdrawn = w.events("demo").find((e) => e.type === "moments.announcement.withdrawn");
+    expect(withdrawn?.data.why).toBe("Its run-of-show item was cancelled.");
+    expect(JSON.stringify(w.events("demo"))).not.toContain("Secret sponsor");
+  });
+
   it("a removed item withdraws a live one, with the .withdrawn event", async () => {
     await w.tx("demo", (c) => storeAgenda(c, { agenda_version: 1, items: [ITEM] }));
     const a = await send({ item_id: ITEM.id });

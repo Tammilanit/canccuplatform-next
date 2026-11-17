@@ -9,10 +9,10 @@ import { ANNOUNCE, SETTINGS, tenantOf } from "../http.js";
 import type { AppDeps } from "../http.js";
 import { PREFIX, page, pageNeeds, refusal, viaApi } from "../page-kit.js";
 import { knownZones } from "../store.js";
-import { canSee, listAnnouncements, lockAnnouncement, runOfShow } from "./store.js";
+import { canSee, listAnnouncements, readAnnouncement, runOfShow } from "./store.js";
 import type { AnnouncementRow, RunItem } from "./store.js";
 import { isBuiltin, loadTemplates } from "./templates.js";
-import { editView, listView } from "./list-views.js";
+import { closedView, editView, listView } from "./list-views.js";
 import type { Listed } from "./list-views.js";
 import { clock, composerForm, flash, previewView } from "./views.js";
 import type { ComposerState, Preview } from "./views.js";
@@ -164,13 +164,20 @@ export function announcePages(pages: FastifyInstance, deps: AppDeps): void {
             canSaveTemplate: has(request, SETTINGS) && !archived,
             previewed: o.preview !== undefined,
           })
-        : editView({
-            id: o.edit.id,
-            status: o.edit.status,
-            title: o.edit.title_text,
-            body: o.edit.body_text,
-            variables: o.edit.variables,
-          });
+        : o.edit.status === "live" || o.edit.status === "scheduled"
+          ? editView({
+              id: o.edit.id,
+              status: o.edit.status,
+              title: o.edit.title_text,
+              body: o.edit.body_text,
+              variables: o.edit.variables,
+            })
+          : closedView({
+              status: o.edit.status,
+              title: o.edit.title ?? o.edit.title_text,
+              body: o.edit.body ?? o.edit.body_text,
+              why: o.edit.why,
+            });
     const preview =
       o.preview === undefined ? "" : previewView(o.preview, state, o.preview.zones[0]);
     return page(request, reply, deps, {
@@ -196,7 +203,7 @@ export function announcePages(pages: FastifyInstance, deps: AppDeps): void {
   pages.get<Q>("/announce", announce, async (request, reply) => {
     const q = request.query;
     if (q.edit !== undefined) {
-      const edit = await deps.db.tenant((c) => lockAnnouncement(c, q.edit ?? ""));
+      const edit = await deps.db.tenant((c) => readAnnouncement(c, q.edit ?? ""));
       if (edit !== null) return render(request, reply, BLANK, { edit });
     }
     const templates = await deps.db.tenant((c) => loadTemplates(c));
@@ -223,6 +230,14 @@ export function announcePages(pages: FastifyInstance, deps: AppDeps): void {
       if (isBuiltin(key)) key = `my_${key}`;
       key = key.slice(0, 32);
       const own = (await deps.db.tenant((c) => loadTemplates(c))).find((t) => t.key === key);
+      // Saving over a template is meant only when it is the one opened from its chip; any other
+      // name that lands on its key would replace it unseen.
+      if (own !== undefined && state.template_key !== key)
+        return back(
+          reply,
+          "error",
+          `"${own.name}" is already a template: choose another name, or open it from its chip to change it.`,
+        );
       const a = await viaApi(pages, request, "PUT", `/api/moments/announcement-templates/${key}`, {
         name: name === "" ? key : name,
         title: state.title,
