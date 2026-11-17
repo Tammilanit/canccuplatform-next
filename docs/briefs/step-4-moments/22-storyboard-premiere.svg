@@ -113,7 +113,7 @@
 <text x="504" y="960" font-size="13" fill="#111827" font-weight="600" text-anchor="start" >Once per item</text>
 <rect x="964" y="738" width="912" height="240" rx="12" fill="#fff" stroke="#e5e7eb" stroke-width="1.5" />
 <text x="984" y="772" font-size="18" fill="#111827" font-weight="700" text-anchor="start" >Before you save</text>
-<text x="984" y="808" font-size="14" fill="#166534" font-weight="400" text-anchor="start" >✓ demo-film.mp4 · MP4, H.264 + AAC · 2:40 · under 10 min</text>
+<text x="984" y="808" font-size="14" fill="#166534" font-weight="400" text-anchor="start" >✓ demo-film.mp4 · MP4, H.264 + AAC · 2:40 · any length</text>
 <text x="984" y="835" font-size="14" fill="#166534" font-weight="400" text-anchor="start" >✓ preloaded: on 6 of 6 screens of the main hall</text>
 <text x="984" y="862" font-size="14" fill="#166534" font-weight="400" text-anchor="start" >✓ the video lands on 19:00:00: the round starts at 18:59:30</text>
 <text x="984" y="889" font-size="14" fill="#166534" font-weight="400" text-anchor="start" >✓ the round's other steps: 45 s ≤ 120 s</text>
