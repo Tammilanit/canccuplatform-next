@@ -74,6 +74,8 @@ async function endedWithItsMoments(
   now: Date,
 ): Promise<boolean> {
   const main = a.card_moment_id ?? a.line_moment_id;
+  // Discord or push only: no moment carries it, so its own time ends it, not the next tick.
+  if (main === null && (a.expires_at === null || a.expires_at > now)) return false;
   const m = main === null ? null : await lockMoment(c, main);
   if (m !== null && m.ended_at === null) return false;
   if (m?.end_reason === "cleared") {

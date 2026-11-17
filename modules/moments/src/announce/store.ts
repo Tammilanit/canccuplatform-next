@@ -164,6 +164,17 @@ export interface RunItem {
   visibility?: string;
 }
 
+/** The right that lets a caller read `crew` items (contracts/agenda.md, Who sees what). */
+export const CREW_READ = "agenda.crew.read";
+
+/**
+ * Whether the caller may see the item. An announcement goes out as public, so the composer must
+ * not be a way around the agenda's visibility: `public` for all, the rest only for crew readers
+ * (the session carries no event membership, so `attendees` items stay with the crew too).
+ */
+export const canSee = (item: RunItem, rights: ReadonlySet<string>): boolean =>
+  item.visibility === "public" || rights.has(CREW_READ);
+
 /**
  * The run-of-show as Moments keeps it (scenes read the same row), or null while it has never been
  * read: then no item can be told missing, so nothing is withdrawn for it.

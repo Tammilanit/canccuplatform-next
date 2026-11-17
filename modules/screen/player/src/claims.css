@@ -10,9 +10,10 @@
     box-shadow: inset 0 0 0 calc(0.3 * var(--canccu-u)) var(--canccu-color-primary);
   }
 
-  /* `--canccu-fit` steps the type down while a long text overflows its card (fit.ts, E17). */
+  /* `--canccu-fit` steps the type down while a long text overflows its card (fit.ts, E17); never under the
+     2.6 readability floor, which test/player-readable.test.ts holds. */
   .canccu-widget--announcement .canccu-widget__title {
-    font-size: calc(6.6 * var(--canccu-u) * var(--canccu-fit, 1));
+    font-size: max(2.6 * var(--canccu-u), calc(6.6 * var(--canccu-u) * var(--canccu-fit, 1)));
     font-weight: 700;
     letter-spacing: 0;
     text-transform: none;
@@ -20,7 +21,7 @@
   }
 
   .canccu-widget--announcement .canccu-widget__body {
-    font-size: calc(4 * var(--canccu-u) * var(--canccu-fit, 1));
+    font-size: max(2.6 * var(--canccu-u), calc(4 * var(--canccu-u) * var(--canccu-fit, 1)));
   }
 
   /* Urgent (mockup 06 b): the warning colour, the theme's accent, on the frame and the kicker. */
@@ -99,12 +100,12 @@
 
   .canccu-region--_full .canccu-widget__big,
   .canccu-region--_full .canccu-widget--announcement .canccu-widget__title {
-    font-size: calc(12.4 * var(--canccu-u) * var(--canccu-fit, 1));
+    font-size: max(2.6 * var(--canccu-u), calc(12.4 * var(--canccu-u) * var(--canccu-fit, 1)));
     line-height: 1.05;
   }
 
   .canccu-region--_full .canccu-widget--announcement .canccu-widget__body {
-    font-size: calc(5 * var(--canccu-u) * var(--canccu-fit, 1));
+    font-size: max(2.6 * var(--canccu-u), calc(5 * var(--canccu-u) * var(--canccu-fit, 1)));
   }
 
   /* An emergency (sheet 9): white on a fixed red, the same in every theme a theme leaves alone. */

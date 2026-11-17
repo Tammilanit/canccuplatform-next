@@ -1,7 +1,7 @@
 /**
  * A long announcement fits its box (contracts/moments.md, Templates and placeholders; E17): its
  * title and body are written at the look's size and step down while the text overflows the card,
- * never below half (the limits, 60 and 140 characters, keep half readable). The step is
+ * never below half, and claims.css holds the type at the readability floor besides. The step is
  * `--canccu-fit`, which claims.css multiplies into the type sizes, so a theme keeps its own scale.
  */
 const STEPS = [1, 0.85, 0.72, 0.6, 0.5];

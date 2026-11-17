@@ -157,6 +157,45 @@ describe.skipIf(!DATABASE_URL)("the announcements API", () => {
     });
   });
 
+  it("a crew item stays with crew readers: hidden from others, never printed publicly", async () => {
+    await w.tx("demo", (c) =>
+      storeAgenda(c, {
+        agenda_version: 1,
+        items: [
+          {
+            id: "it_crew",
+            title: "Load-in plan",
+            kind: "other",
+            visibility: "crew",
+            location: "Back dock",
+            starts_at: new Date(w.now.getTime() + 15 * 60_000).toISOString(),
+            ends_at: null,
+          } as AgendaItem,
+        ],
+      }),
+    );
+    const leak = {
+      title: "{item.title}",
+      body: "{item.location}",
+      level: "info",
+      item_id: "it_crew",
+    };
+    const preview = (who: string, b: unknown) =>
+      w.call(who, "POST", "/api/moments/announcements/preview", b);
+    // Without agenda.crew.read it answers like a missing item, on preview and on send.
+    for (const r of [await preview("crew", leak), await post("crew", leak)]) {
+      expect(r.statusCode).toBe(400);
+      expect(errorOf(r).message).toBe("No such run-of-show item.");
+    }
+    // A crew reader may time an announcement by it, but its fields never go out as public.
+    expect(errorOf(await post("stagehand", leak)).message).toMatch(/not public/);
+    expect((await post("stagehand", { ...BASE, item_id: "it_crew" })).statusCode).toBe(201);
+    // The composer's picker lists it only for the crew reader.
+    const picker = (who: string) => w.call(who, "GET", "/announce").then((r) => r.body);
+    expect(await picker("stagehand")).toContain("Load-in plan");
+    expect(await picker("crew")).not.toContain("Load-in plan");
+  });
+
   it("schedules at a time, at most 14 days ahead", async () => {
     const at = new Date(w.now.getTime() + 3600_000).toISOString();
     const r = await post("crew", { ...BASE, when: { mode: "at", at } });
@@ -238,6 +277,10 @@ describe.skipIf(!DATABASE_URL)("the announcements API", () => {
       revision: 0,
     });
     const id = idOf(await post("crew", BASE));
+    // Another user withdraws it: their name is not kept in the reason.
+    expect(
+      (await w.call("admin", "POST", `/api/moments/announcements/${id}/withdraw`)).statusCode,
+    ).toBe(200);
     const deps = { db: w.db, engine: w.engine, flush: () => w.outbox.flush(), now: () => w.now };
     const ev = (type: string, data: Record<string, unknown>, tenant?: string): Event => ({
       id: "01928f3e-7a2b-7c4d-9e8f-0a1b2c3d4e98",
@@ -266,6 +309,12 @@ describe.skipIf(!DATABASE_URL)("the announcements API", () => {
       }[]
     ).find((a) => a.id === id);
     expect(mine?.actor).toBeNull();
+    await handlePlatformEvent(deps, ev("tenants.user.deleted", { user_id: "u_admin" }));
+    const rows = await pool.query<{ why: string | null }>(
+      `SELECT why FROM moments_announcements WHERE id = $1`,
+      [id],
+    );
+    expect(rows.rows[0]?.why ?? "").not.toContain("admin");
     await handlePlatformEvent(deps, ev("tenants.tenant.deleted", { tenant_id: "demo" }));
     const left = await pool.query(
       `SELECT (SELECT count(*) FROM moments_announcements WHERE tenant_id = 'demo')::int AS a,

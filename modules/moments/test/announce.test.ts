@@ -283,6 +283,44 @@ describe.skipIf(!DATABASE_URL)("announcements", () => {
     ).toBe("item_removed");
   });
 
+  it("a Discord-only one has no moment: it stays live until its time, editable and withdrawable", async () => {
+    const only = { screen: false, ticker: false, discord: true, push: false };
+    const a = await send({ channels: only, duration_seconds: 60 });
+    expect(await row(a.id)).toMatchObject({ status: "live", card_moment_id: null });
+    await tick(w.at(5));
+    await tick(w.at(6));
+    expect(await row(a.id)).toMatchObject({ status: "live" });
+    await w.tx("demo", async (c) =>
+      editAnnouncement(
+        c,
+        w.engine,
+        (await lockAnnouncement(c, a.id)) as NonNullable<
+          Awaited<ReturnType<typeof lockAnnouncement>>
+        >,
+        { title_text: "Pizza is here", body_text: "Now at the desk", variables: {} },
+        CREW,
+        w.at(7),
+      ),
+    );
+    expect(w.events("demo").some((e) => e.type === "moments.announcement.changed")).toBe(true);
+    await tick(w.at(61));
+    expect(await row(a.id)).toMatchObject({ status: "ended", end_reason: "expired" });
+    const b = await send({ channels: only, duration_seconds: 60 }, w.at(100));
+    await tick(w.at(101));
+    await w.tx("demo", async (c) =>
+      withdrawAnnouncement(
+        c,
+        w.engine,
+        (await lockAnnouncement(c, b.id)) as NonNullable<
+          Awaited<ReturnType<typeof lockAnnouncement>>
+        >,
+        { reason: "withdrawn", why: "Withdrawn by the crew.", actor: CREW },
+        w.at(102),
+      ),
+    );
+    expect(w.events("demo").some((e) => e.type === "moments.announcement.withdrawn")).toBe(true);
+  });
+
   it("ends by itself at its time with no event; ended on On air it is withdrawn", async () => {
     const a = await send({ duration_seconds: 60 });
     await tick(w.at(60));

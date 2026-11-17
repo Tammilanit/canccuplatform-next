@@ -9,7 +9,7 @@ import type { AppDeps } from "../http.js";
 import { knownZones } from "../store.js";
 import { chainOf, compose, editAnnouncement, filled, withdrawAnnouncement } from "./service.js";
 import type { Draft } from "./service.js";
-import { listAnnouncements, lockAnnouncement, runOfShow } from "./store.js";
+import { canSee, listAnnouncements, lockAnnouncement, runOfShow } from "./store.js";
 import type { AnnouncementRow, Channels, RunItem, When } from "./store.js";
 import { TEMPLATE_KEY, str, templateRoutes } from "./templates.js";
 import { BODY_MAX, TITLE_MAX, checkText } from "./text.js";
@@ -76,6 +76,7 @@ async function draftOf(
   b: Body,
   event: { name: string; time_zone: string },
   now: Date,
+  rights: ReadonlySet<string>,
 ): Promise<{ draft: Draft; item: RunItem | null }> {
   if (b.level !== "info" && b.level !== "urgent")
     throw invalid("`level` is info or urgent; an emergency starts from Emergency.");
@@ -102,7 +103,7 @@ async function draftOf(
         ? b.template_key
         : null,
   };
-  const item = await checkTexts(c, draft, now);
+  const item = await checkTexts(c, draft, now, rights);
   return { draft, item };
 }
 
@@ -111,6 +112,7 @@ async function checkTexts(
   c: SqlClient,
   d: Pick<Draft, "title_text" | "body_text" | "variables" | "item_id" | "event_name" | "time_zone">,
   now: Date,
+  rights: ReadonlySet<string>,
 ): Promise<RunItem | null> {
   for (const text of [d.title_text, d.body_text]) {
     const why = checkText(text, d.variables, d.item_id !== null);
@@ -120,8 +122,14 @@ async function checkTexts(
   if (d.item_id !== null) {
     const items = await runOfShow(c);
     if (items === null) throw invalid("The run of show is not known yet: try again in a moment.");
-    item = items.find((i) => i.id === d.item_id) ?? null;
+    item = items.find((i) => i.id === d.item_id && canSee(i, rights)) ?? null;
+    // A hidden item answers like a missing one, so the composer does not confirm that it exists.
     if (item === null) throw invalid("No such run-of-show item.");
+    // The announcement is public: a crew reader may time it by a crew item, never print its fields.
+    if (item.visibility !== "public" && [d.title_text, d.body_text].some((t) => /\{item\./.test(t)))
+      throw invalid(
+        "This item is not public: its `{item.…}` fields cannot go into an announcement.",
+      );
   }
   const raw = filled(d, item, now, false);
   if (raw.title.length > TITLE_MAX)
@@ -187,6 +195,9 @@ export async function previewOf(
   };
 }
 
+const rightsOf = (request: FastifyRequest): ReadonlySet<string> =>
+  request.session?.rights ?? new Set<string>();
+
 const notRunning = () =>
   new KitError("That announcement has ended or was withdrawn.", {
     status: 409,
@@ -214,7 +225,7 @@ export function announceRoutes(app: FastifyInstance, deps: AppDeps): void {
     const event = await eventOf(deps, request);
     const now = deps.now();
     return deps.db.tenant(async (c) => {
-      const { draft, item } = await draftOf(c, bodyOf(request.body), event, now);
+      const { draft, item } = await draftOf(c, bodyOf(request.body), event, now, rightsOf(request));
       return previewOf(c, draft, item, now);
     });
   });
@@ -222,7 +233,7 @@ export function announceRoutes(app: FastifyInstance, deps: AppDeps): void {
   app.post("/api/moments/announcements", announce, async (request, reply) => {
     const event = await eventOf(deps, request);
     return crewAction(deps, request, reply, async (c, actor, now) => {
-      const { draft } = await draftOf(c, bodyOf(request.body), event, now);
+      const { draft } = await draftOf(c, bodyOf(request.body), event, now, rightsOf(request));
       const a = await compose(c, deps.engine, draft, actor, now);
       await deps.audit({
         tenant_id: tenantOf(request).tenant_id,
@@ -256,7 +267,7 @@ export function announceRoutes(app: FastifyInstance, deps: AppDeps): void {
           body_text: b.body === undefined ? a.body_text : str(b.body, "body", 400, false),
           variables: b.variables === undefined ? a.variables : variablesOf(b.variables),
         };
-        await checkTexts(c, { ...a, ...edit }, now);
+        await checkTexts(c, { ...a, ...edit }, now, rightsOf(request));
         const before = { title: a.title ?? a.title_text, body: a.body ?? a.body_text };
         await editAnnouncement(c, deps.engine, a, edit, actor, now);
         await deps.audit({
@@ -285,7 +296,7 @@ export function announceRoutes(app: FastifyInstance, deps: AppDeps): void {
           c,
           deps.engine,
           a,
-          { reason: "withdrawn", why: `${actor.name} withdrew it.`, actor },
+          { reason: "withdrawn", why: "Withdrawn by the crew.", actor },
           now,
         );
         await deps.audit({

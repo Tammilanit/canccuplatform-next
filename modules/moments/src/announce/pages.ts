@@ -9,7 +9,7 @@ import { ANNOUNCE, SETTINGS, tenantOf } from "../http.js";
 import type { AppDeps } from "../http.js";
 import { PREFIX, page, pageNeeds, refusal, viaApi } from "../page-kit.js";
 import { knownZones } from "../store.js";
-import { listAnnouncements, lockAnnouncement, runOfShow } from "./store.js";
+import { canSee, listAnnouncements, lockAnnouncement, runOfShow } from "./store.js";
 import type { AnnouncementRow, RunItem } from "./store.js";
 import { isBuiltin, loadTemplates } from "./templates.js";
 import { editView, listView } from "./list-views.js";
@@ -148,7 +148,7 @@ export function announcePages(pages: FastifyInstance, deps: AppDeps): void {
       templates: await loadTemplates(c),
       zones: (await knownZones(c)).sort(),
       items: ((await runOfShow(c)) ?? [])
-        .filter((i) => i.status !== "cancelled")
+        .filter((i) => i.status !== "cancelled" && canSee(i, request.session?.rights ?? new Set()))
         .sort((a, b) => a.starts_at.localeCompare(b.starts_at)),
       announcements: await listAnnouncements(c),
     }));

@@ -52,6 +52,9 @@ const ALL = [
 const SESSIONS: Record<string, { rights: string[]; superadmin?: boolean }> = {
   admin: { rights: ALL },
   crew: { rights: ["moments.read", "moments.announce", "moments.take", "moments.scenes.take"] },
+  stagehand: {
+    rights: ["moments.read", "moments.announce", "agenda.crew.read"],
+  },
   reader: { rights: ["moments.read"] },
   nobody: { rights: [] },
   super: { rights: [], superadmin: true },
