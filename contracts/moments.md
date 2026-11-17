@@ -4,7 +4,7 @@ Moments is the venue's autopilot at the peaks: one server-side arbiter ranks, ti
 
 **Machine-readable API: [moments.openapi.yaml](moments.openapi.yaml)** (OpenAPI 3.1). It is the source for paths, fields and status codes; this file explains them and adds the rules and events. Conventions (field names, times, error body): [README.md](README.md#conventions).
 
-The contract comes in parts, each with the package whose code uses it (step 4 plan D24): **the engine** (moments, priorities, the arbiter's rules, the crew spotlight, emergency, built-in rules, history), **scenes** (below), **cues and sound** (#113, below: [Cues and sound](#cues-and-sound)), then storyboards (#114) and announcements (#115).
+The contract comes in parts, each with the package whose code uses it (step 4 plan D24): **the engine** (moments, priorities, the arbiter's rules, the crew spotlight, emergency, built-in rules, history), **scenes** (below), **cues and sound** (#113, below: [Cues and sound](#cues-and-sound)), **announcements** (#115, below: [Announcements](#announcements-115)), then storyboards (#114).
 
 ## Tenancy
 - Moments belong to one event, which is one tenant ([0013](../docs/decisions/0013-multi-tenant-core.md)); the tenant comes from the request's hostname. Every row carries `tenant_id` under row-level security. Events go to `t:<tenant>:events:moments`.
@@ -22,7 +22,7 @@ The contract comes in parts, each with the package whose code uses it (step 4 pl
 |---|---|---|---|
 | `emergency` | 100, locked at the top | `takeover`, `["full"]` | people with `moments.emergency`, the superadmin |
 | `stream` | 90 | (the Cast track, later) | — |
-| `announcement` | 80 | `block`, `["rail", "ticker"]` | the announcement composer (#115), the pizza rule, "All clear" |
+| `announcement` | 80 | `block`, `["rail", "ticker"]` (an announcement's chain follows its level, below) | the announcement composer (#115), the pizza rule, "All clear" |
 | `spotlight` | 70 | `block`, `["hero"]` | the crew (`moments.take`) |
 | `storyboard` | 65 | (storyboards, #114) | — |
 | `tournament` | 60 | `block`, `["hero", "rail"]` | rules |
@@ -151,6 +151,40 @@ A sound that passes is sent to the zone's screens as `moments.sound.played` with
 - `GET /api/moments/cues`, `PUT` and `DELETE /api/moments/cues/{cue}` (`moments.settings.write` to write): the cues.
 - `GET /api/moments/sounds`, `POST /api/moments/sounds` with `asset_id`, `DELETE /api/moments/sounds/{sound_id}` (409 `sound_in_use` while a cue names it): the library.
 
+## Announcements (#115)
+One form makes an announcement for every channel: the screen card, the ticker line, the Discord post (the bot, step 6) and a push through Notify (step 4 plan, #115; mockups 05 and 06). Paths: [moments/announcements.openapi.yaml](moments/announcements.openapi.yaml), referenced from `moments.openapi.yaml`.
+
+- **An announcement** (`Announcement`): `id`, `status` (`scheduled`, `live`, `ended`, `withdrawn`), `level` (`info` or `urgent`; an emergency is Emergency's, above), `full_screen`, the texts as written (`title_text`, `body_text`) and as filled (`title`, `body`; null until it is sent), `variables`, `item_id`, `channels` (`screen`, `ticker`, `discord`, `push`, each a boolean), `zones` (empty: every zone), `duration_seconds` (60 to 7200, default 300), `when` (`mode` `now`, `at` with `at`, or `item` with `minutes_before`, 0 to 1440), `fire_at` (when a scheduled one goes out, as now known), `sent_at`, `expires_at`, `updated_until`, `ended_at`, `end_reason` (`expired`, `withdrawn`, `item_cancelled`, `item_removed`, `ended_on_air`) and `why`, `actor` (who sent it), `moments` (the ids of its `card` and `line` moments, or null).
+- **Who:** anyone with `moments.announce` sends, edits and withdraws announcements, at either level (U3). Reading them needs the same right.
+
+### Levels, regions and the full screen (L2, L3)
+- The **card** is a moment of class `announcement` with template `announcement` (`title`, `body`, `level`, `starts_at`, plus `updated` and `ticker_line`, [screen.md](screen.md#widgets)). Its chain follows its level: **info** `["rail", "ticker"]`, **urgent** `["rail", "hero", "ticker"]`. Info plays the cue `announce.attention`, urgent `announce.urgent` (its picture a ripple from the card's edge, its sound urgent: it interrupts and is pushed in quiet hours).
+- **Full screen** (`full_screen: true`, either level): the chain starts with `full`, then the level's (`["full", "rail", "ticker"]` for info). It takes the full-screen region in the theme's look (the `announcement` template at level `info` or `urgent`, never the emergency's fixed red), ranked as an announcement, and where a higher claim holds a region of the zone it degrades along its level's chain (Screen's placement: `full` is free only when no higher claim holds a role).
+- An announcement is a crew moment: never refused, it waits its whole life for a region (E3: two senders at once both run; the second takes the next free region of its chain, or waits).
+
+### Channels (D13, L4)
+- **Screen card** (`channels.screen`, default on): the card above.
+- **Ticker line** (`channels.ticker`): a second moment of class `announcement`, template `ticker` (`text` is the title and the body joined by " · ", `until`, `source` `moments`, `urgent`, `updated`), regions `["ticker"]`, no cue: a claim in the `ticker` role owned by Moments, with the card's end; Screen's manual ticker ([0018](../docs/decisions/0018-ticker-manual.md)) is untouched. The card starts a millisecond after its line, so on a zone where the card itself degrades to the ticker the card wins the role (Screen's tie-break: the later start), and the card then carries the line in `ticker_line` and draws **both lines** there (L4 B); the line waits on that zone.
+- **Discord** (`channels.discord`): carried in the events for the bot (step 6), which posts, edits and marks withdrawn posts (D12). Nothing else in step 4.
+- **Push** (`channels.push`): Notify's `announcements` topic, owned by `moments`, turns `moments.announcement.sent` into a notification when `data.channels.push` is true, urgent from `data.urgent` ([notify.md](notify.md#topics-and-sources), D20). Moments registers it at start: `PUT /internal/notify/topic-types/announcements` with the registration there.
+
+### Templates and placeholders (D11, E17)
+- A text may hold placeholders: `{item.title}`, `{item.starts_at}` (HH:MM in the event's time zone), `{item.starts_in}` ("15 minutes", "1 h 5 min", "now"; from the moment it is sent), `{item.location}` (empty when the item has none), `{event.name}`, and **free variables** the organiser defines: any `{name}` of `a–z 0–9 _` (a letter first, at most 32), filled from `variables` in the composer before sending. An `item.` placeholder needs `item_id`, an item of the run-of-show (the agenda Moments keeps, [Scenes](#scenes-design-sheet-12-d5-d6-e7-l10-l14-o7)).
+- **Validation** (400 `invalid_request`, naming it): an unknown placeholder, a free variable without a value, an `item.` placeholder without an item or with an unknown one, a `{` or `}` that opens or closes no placeholder. A placeholder never shows raw.
+- **Limits:** the filled title at most 60 characters and the body at most 140 (E17), checked when it is composed; the card fits its text to its box (the template's auto-fit). A scheduled one is filled again when it goes out: a text the new `{item.starts_in}` makes longer is cut to the limit with "…".
+- **Templates** per event (`AnnouncementTemplate`: `key`, `name`, `title`, `body`, `level`, `builtin`, `variables`, the free variables its texts name, `revision`): four built-ins (`starting_soon`, `food`, `lost_found`, `doors_close`), platform data, plus the event's own. `GET /api/moments/announcement-templates` (`moments.announce`); `PUT` and `DELETE /api/moments/announcement-templates/{key}` (`moments.settings.write`; a built-in's key is 400; a stale `revision` 409 `version_conflict`). Audited. Clone with an event copies the event's own (D22).
+
+### Sending, scheduling, editing, withdrawing (E3, E15, E16, L13)
+- `POST /api/moments/announcements/preview` (`moments.announce`) with an `AnnouncementInput` answers what would go out, saving nothing (U11): the filled `title` and `body`, the `regions` of the card, the ticker `line`, the `push` (`title`, `body`, `urgent`) and `discord` (`text`) as their channels would carry them (null when off), and the `zones`. Validation as on send.
+- `POST /api/moments/announcements` (`moments.announce`, a crew action with its `Idempotency-Key`) with an `AnnouncementInput`: **now** starts its moments and emits `moments.announcement.sent` (201, `live`); **at a time** (at most 14 days ahead) or **with a run-of-show item** (`minutes_before` its start) keeps it `scheduled` (201) until `fire_at`. An item's delay moves `fire_at` with it (the agenda Moments keeps, read again on every `agenda.*` event); an item cancelled or removed before then withdraws it, and after it is sent too, with `end_reason` `item_cancelled` or `item_removed` and `why` naming the item (E15). The tick sends what is due, also after a restart.
+- `PATCH /api/moments/announcements/{id}` (`moments.announce`, a crew action) with `title`, `body` and `variables`: a live one changes in place everywhere, card and line, whatever shape each zone gave it (E16), with `updated: true` for 60 s (the "Updated" chip) and no new sound: the moments' `.changed`, and `moments.announcement.changed`. A scheduled one only keeps the new texts. An ended or withdrawn one is 409 `not_running`.
+- `POST /api/moments/announcements/{id}/withdraw` (`moments.announce`, a crew action): ends its moments everywhere at once, silently (`cleared`, no cue), and emits `moments.announcement.withdrawn`; a scheduled one never goes out. An ended or withdrawn one is 409 `not_running`.
+- It ends by itself at `expires_at` (`expired`, no event). A crew member who ends its card everywhere on On air withdraws it (`ended_on_air`).
+- `GET /api/moments/announcements` (`moments.announce`): the live and scheduled ones, then the last 20 that ended or were withdrawn.
+
+### Pages (U5, U11)
+The composer is **Run the event → Announcements** (`/moments/announce`, a menu item for `moments.announce`), reached too from the phone's On air ("Announce", the crew's quick action) and from "Announce this" on a run-of-show item (`/moments/announce?item=<item id>`). One form: a template, the title and body with their variables, the level and full screen, the channels, the zones and when. "Preview" shows each channel as it will go out and the card in the real player (Screen's zone preview, as Priorities); "Send" (or "Schedule") sends it. Beside it the live and scheduled announcements, each with Edit and Withdraw (one tap), and the event's templates ("Save as template" for `moments.settings.write`).
+
 ## History (D21, mockup 09)
 - Every decision is a row: a moment started, was refused, placed, hidden, queued (waiting), came back, changed or ended, with the zone (or none for the whole moment), the region, why (the rule and its event, or the person and the action), what it displaced, and how it ended. A renewal of the same content writes nothing.
 - `GET /api/moments/history` (right `moments.read`) with filters `zone` (its rows and the whole-moment rows), `region`, `origin` (`rule`, `crew`, `emergency`, `module`) and `action`, newest first, `limit` (default 100, at most 500) and `before` (a row's `seq`, for the next page). `GET /api/moments/history.csv` answers the same rows, at most 10,000, as CSV.
@@ -166,12 +200,12 @@ Studio → Moments, the Screen studio's Moments tab, at `/moments/` (Caddy strip
 - **Cues** (mockup 12, the sound desk): each zone's budget this hour and minute, what it lets through now and its sound screen; the master, the timed mute and the sound check; the categories; the cues with their sounds, voice lines and pictures, each editable, and "+ Add a cue"; the library with a preview of each sound and the upload (the page's script uploads to Screen, then links the asset); the log.
 
 ## Rights
-U2 as amended by U3: `moments.read` (On air, History, Scenes, the settings read-only), `moments.announce` (#115), `moments.take` (the crew spotlight, ending and extending moments, the timed mute and the sound check), `moments.scenes.take` (the scenes' crew buttons, "Peak now"), `moments.emergency` (start and end an emergency), `moments.settings.write` (priorities, rules, scenes, cues, the sound settings and the library; later storyboards, templates). Event admins hold all of them through their role.
+U2 as amended by U3: `moments.read` (On air, History, Scenes, the settings read-only), `moments.announce` (announcements: send, edit, withdraw, read, either level), `moments.take` (the crew spotlight, ending and extending moments, the timed mute and the sound check), `moments.scenes.take` (the scenes' crew buttons, "Peak now"), `moments.emergency` (start and end an emergency), `moments.settings.write` (priorities, rules, scenes, cues, the sound settings and the library; announcement templates; later storyboards). Event admins hold all of them through their role.
 
 **The "Moments crew" preset** (`moments_crew`): `moments.read`, `moments.announce`, `moments.take` and `moments.scenes.take`, a name for that list as `screen_crew` is ([screen.md](screen.md#rights)). `moments.emergency` is granted one by one to named crew.
 
 ## Audit
-Through `POST /internal/tenants/audit` in the same request ([tenants.md](tenants.md#audit-log)): every crew action (spotlight, end, extend, a scene's crew button pressed or released), every emergency start and end (the venue-wide one in each event), every change of the priorities, the rules, the scenes (a reset too), the cues and the sound settings, with the old and new values, the mute, the sound check, and each sound linked to or taken out of the library.
+Through `POST /internal/tenants/audit` in the same request ([tenants.md](tenants.md#audit-log)): every crew action (spotlight, end, extend, a scene's crew button pressed or released), every emergency start and end (the venue-wide one in each event), every change of the priorities, the rules, the scenes (a reset too), the cues and the sound settings, with the old and new values, the mute, the sound check, each sound linked to or taken out of the library, and every announcement sent or scheduled, edited and withdrawn, and each announcement template saved or deleted.
 
 ## Privacy
 The history keeps the name and user id of whoever started or ended a moment. `GET /api/moments/me/export` answers the caller's history rows at this event; `DELETE /api/moments/me` removes their name and id from them ([README.md](README.md#privacy-export-and-delete)). `tenants.user.deleted` does the same in every event; `tenants.tenant.deleted` deletes the event's rows.
@@ -183,7 +217,7 @@ The history keeps the name and user id of whoever started or ended a moment. `GE
 | tournament | `tournament.match.called`, `.match.started`, `.match.finished`, `tournament.leaderboard.changed`, `tournament.session.*`, `tournament.result.corrected` | Rules; the spotlight's standings and bracket |
 | pizza | `pizza.order.placed`, `.arrived`, `.cancelled` | The `pizza` rule |
 | games | `games.surge.started`, `games.surge.ended` | The `hot_game` rule; scenes' games condition |
-| agenda | `agenda.*` (each carries `agenda_version`); the event's whole agenda as a module, `GET /internal/agenda/items` (on those events, and once per container at its first scene pass) | Scenes' agenda conditions |
+| agenda | `agenda.*` (each carries `agenda_version`); the event's whole agenda as a module, `GET /internal/agenda/items` (on those events, and once per container at its first scene pass) | Scenes' agenda conditions; announcements' item placeholders, `fire_at` and cancels (E15) |
 | notify | `notify.checkin.recorded` (purpose `arrival`) | Scenes' check-ins condition, the heartbeat |
 | bot | `bot.presence.counted` | Scenes' presence condition, the heartbeat |
 | tenants | `tenants.status.changed`, `tenants.tenant.cloned`, `tenants.tenant.deleted`, `tenants.user.deleted` | Archiving (E10), clone (D22), deletes |
@@ -198,7 +232,10 @@ Emitter `moments`, on the tenant's stream; listed in the catalog ([events.md](ev
 | `moments.override.changed` | Its rank, zones, content or `expires_at` changed | `override`, `changed` (field names), `actor_user_id` |
 | `moments.override.ended` | It left zones or ended | `override_id`, `zones`, `reason`, `final`, `actor_user_id` |
 | `moments.scene.changed` | A zone's scene or heartbeat changed (Scenes) | `zone_key`, `scene`, `since`, `why`, `heartbeat_bpm`, `actor_user_id` |
+| `moments.announcement.sent` | An announcement went out (now, or when its time came) | `id`, `level`, `urgent`, `full_screen`, `title`, `body`, `channels`, `zones`, `visibility` (`public`), `item_id`, `sent_at`, `expires_at`, `actor_user_id` |
+| `moments.announcement.changed` | A live announcement was edited | the same, plus `changed` (field names) |
+| `moments.announcement.withdrawn` | A live announcement was withdrawn, by a person or by its item (E15) | `id`, `reason` (`withdrawn`, `item_cancelled`, `item_removed`, `ended_on_air`), `why`, `actor_user_id` |
 | `moments.sound.played` | A sound was decided for a zone's screens | `zone_key`, `sound`: `id`, `cue`, `category`, `url`, `voice_url` (or null), `volume` (0–1), `play_at`, `catch_up_until`, `interrupts` |
 
 ## Not in this contract
-Text to speech (backlog, P8), storyboards (#114), announcements and their composer (#115), reactions (the App track), the director desk (later), whole themes per scene (later, L14), the outside signal as a scene condition, cloning the cues, the sound settings and the library with an event.
+Text to speech (backlog, P8), storyboards (#114), the bot's announce command and its Discord post (step 6), push delivery (Notify, the App track), reactions (the App track), the director desk (later), whole themes per scene (later, L14), the outside signal as a scene condition, cloning the cues, the sound settings and the library with an event.

@@ -27,6 +27,8 @@ tags:
     description: What played where, why, and how it ended.
   - name: cues
     description: Cues and sound (#113), the sound desk; the paths are in moments/cues.openapi.yaml.
+  - name: announcements
+    description: The announcement composer (#115); the paths are in moments/announcements.openapi.yaml.
   - name: privacy
     description: The caller's own rows (contracts/README.md, Privacy).
   - name: internal
@@ -632,6 +634,18 @@ paths:
     $ref: "moments/cues.openapi.yaml#/~1api~1moments~1sounds~1{sound_id}"
   /api/moments/sounds/pack/{file}:
     $ref: "moments/cues.openapi.yaml#/~1api~1moments~1sounds~1pack~1{file}"
+  /api/moments/announcements:
+    $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcements"
+  /api/moments/announcements/preview:
+    $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcements~1preview"
+  /api/moments/announcements/{announcement_id}:
+    $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcements~1{announcement_id}"
+  /api/moments/announcements/{announcement_id}/withdraw:
+    $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcements~1{announcement_id}~1withdraw"
+  /api/moments/announcement-templates:
+    $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcement-templates"
+  /api/moments/announcement-templates/{template_key}:
+    $ref: "moments/announcements.openapi.yaml#/~1api~1moments~1announcement-templates~1{template_key}"
   /internal/moments/moments:
     post:
       tags: [internal]
@@ -686,6 +700,21 @@ components:
       description: The moment.
       schema:
         type: string
+    AnnouncementId:
+      name: announcement_id
+      in: path
+      required: true
+      description: The announcement.
+      schema:
+        type: string
+    TemplateKey:
+      name: template_key
+      in: path
+      required: true
+      description: The announcement template.
+      schema:
+        type: string
+        pattern: "^[a-z][a-z0-9_]{1,31}$"
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -719,6 +748,12 @@ components:
       schema:
         $ref: "#/components/schemas/HistoryAction"
   responses:
+    AnnouncementAnswer:
+      description: The announcement.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Announcement"
     MomentAnswer:
       description: The moment.
       content:
@@ -742,7 +777,7 @@ components:
         `version_conflict`: a stale `revision`; `event_archived`: the event is read-only; `moment_refused`: every
         region the moment may take is held by a higher rank on every zone it names (the body's `error` adds
         `retry_after_seconds` and `held_by`); `emergency_active`: an emergency already runs; `not_running`: the
-        moment has ended.
+        moment has ended, or the announcement ended or was withdrawn.
       content:
         application/json:
           schema:
@@ -1514,3 +1549,262 @@ components:
           type: [string, "null"]
         source:
           type: [string, "null"]
+    AnnouncementLevel:
+      type: string
+      enum: [info, urgent]
+      description: Emergency is not a level here; it is Emergency's own flow.
+    AnnouncementChannels:
+      type: object
+      properties:
+        screen:
+          type: boolean
+          default: true
+          description: The card, in the rail (urgent also the hero), else the ticker.
+        ticker:
+          type: boolean
+          default: false
+          description: A ticker line, a claim in the `ticker` role owned by Moments (D13).
+        discord:
+          type: boolean
+          default: false
+          description: The bot's post in the event's announcements channel (step 6).
+        push:
+          type: boolean
+          default: false
+          description: Notify's `announcements` topic (D20).
+    AnnouncementWhen:
+      type: object
+      required: [mode]
+      properties:
+        mode:
+          type: string
+          enum: [now, at, item]
+        at:
+          type: string
+          format: date-time
+          description: For `at`, at most 14 days ahead.
+        minutes_before:
+          type: integer
+          minimum: 0
+          maximum: 1440
+          default: 0
+          description: For `item`, before the item's start; it follows the item's delays (E15).
+    AnnouncementInput:
+      type: object
+      required: [title, level]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: With placeholders; at most 60 characters once filled.
+        body:
+          type: string
+          maxLength: 400
+          default: ""
+          description: With placeholders; at most 140 characters once filled.
+        level:
+          $ref: "#/components/schemas/AnnouncementLevel"
+        full_screen:
+          type: boolean
+          default: false
+        channels:
+          $ref: "#/components/schemas/AnnouncementChannels"
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneKey"
+          default: []
+        duration_seconds:
+          type: integer
+          minimum: 60
+          maximum: 7200
+          default: 300
+        item_id:
+          type: [string, "null"]
+          description: The run-of-show item its `item.` placeholders read, and for `when.mode` `item` its time.
+        variables:
+          type: object
+          additionalProperties:
+            type: string
+            maxLength: 60
+          description: The values of its free variables, by name.
+        when:
+          $ref: "#/components/schemas/AnnouncementWhen"
+        template_key:
+          type: [string, "null"]
+          description: The template it started from, kept for the record.
+    AnnouncementEdit:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        body:
+          type: string
+          maxLength: 400
+        variables:
+          type: object
+          additionalProperties:
+            type: string
+            maxLength: 60
+    Announcement:
+      type: object
+      required: [id, status, level, full_screen, title_text, body_text, variables, item_id, title, body, channels,
+        zones, duration_seconds, when, fire_at, sent_at, expires_at, updated_until, ended_at, end_reason, why,
+        actor, moments]
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [scheduled, live, ended, withdrawn]
+        level:
+          $ref: "#/components/schemas/AnnouncementLevel"
+        full_screen:
+          type: boolean
+        title_text:
+          type: string
+        body_text:
+          type: string
+        variables:
+          type: object
+          additionalProperties:
+            type: string
+        item_id:
+          type: [string, "null"]
+        title:
+          type: [string, "null"]
+          description: As filled when it was sent; null while scheduled.
+        body:
+          type: [string, "null"]
+        channels:
+          $ref: "#/components/schemas/AnnouncementChannels"
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneKey"
+        duration_seconds:
+          type: integer
+        when:
+          $ref: "#/components/schemas/AnnouncementWhen"
+        fire_at:
+          type: [string, "null"]
+          format: date-time
+        sent_at:
+          type: [string, "null"]
+          format: date-time
+        expires_at:
+          type: [string, "null"]
+          format: date-time
+        updated_until:
+          type: [string, "null"]
+          format: date-time
+          description: The "Updated" chip shows until then.
+        ended_at:
+          type: [string, "null"]
+          format: date-time
+        end_reason:
+          type: [string, "null"]
+          enum: [expired, withdrawn, item_cancelled, item_removed, ended_on_air, null]
+        why:
+          type: [string, "null"]
+        actor:
+          type: [object, "null"]
+          required: [user_id, name]
+          properties:
+            user_id:
+              type: string
+            name:
+              type: string
+        moments:
+          type: object
+          required: [card, line]
+          properties:
+            card:
+              type: [string, "null"]
+            line:
+              type: [string, "null"]
+    AnnouncementPreview:
+      type: object
+      required: [title, body, regions, line, push, discord, zones]
+      properties:
+        title:
+          type: string
+        body:
+          type: string
+        regions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Role"
+          description: The card's chain; empty when the screen card is off.
+        line:
+          type: [string, "null"]
+          description: The ticker line's text, or null when that channel is off.
+        push:
+          type: [object, "null"]
+          required: [title, body, urgent]
+          properties:
+            title:
+              type: string
+            body:
+              type: string
+            urgent:
+              type: boolean
+        discord:
+          type: [object, "null"]
+          required: [text]
+          properties:
+            text:
+              type: string
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneKey"
+          description: The zones it reaches (every zone Moments knows when it names none).
+    AnnouncementTemplateInput:
+      type: object
+      required: [name, title, level, revision]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 40
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        body:
+          type: string
+          maxLength: 400
+          default: ""
+        level:
+          $ref: "#/components/schemas/AnnouncementLevel"
+        revision:
+          type: integer
+          minimum: 0
+    AnnouncementTemplate:
+      type: object
+      required: [key, name, title, body, level, builtin, variables, revision]
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        level:
+          $ref: "#/components/schemas/AnnouncementLevel"
+        builtin:
+          type: boolean
+        variables:
+          type: array
+          items:
+            type: string
+          description: The free variables its texts name, in order of first use.
+        revision:
+          type: integer
