@@ -6,6 +6,7 @@ The research pack for the product owner's brainstorming session on [roadmap step
 - This file: goal, what was read, how others solve it, three directions and the recommended one, the key flows, port / drop / invent, the lead's step 2 notes, proposed issue changes.
 - [step-4-moments/questions.md](step-4-moments/questions.md): the question bank, 87 questions in six themes, each with options and a recommendation. IDs (U3, D2, …) are used throughout.
 - [step-4-moments/](step-4-moments/): 16 SVG mockups, drawn new, with the demo event only. GitHub shows them inline below. Mockups 12 and 13 were redrawn for the Plan's [sound model](#the-sound-model-d16).
+- [step-4-moments/storyboards.md](step-4-moments/storyboards.md): the storyboards research pack (#596, for #114), with mockups 17–21.
 
 ## Goal
 One module decides what the screens show and play, and when: the Moments at the peaks of the event ([0022](../decisions/0022-product-vision.md)). It is built on the legacy directive ranking and sound engine (takeovers, blocks, overlays and the sound budget) and runs on the server, so every screen gets the same thing and a reload loses nothing. One announce action reaches the screen, Discord and the ticker at once; the Discord side lands in step 6 (roadmap step 4).
