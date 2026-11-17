@@ -179,6 +179,72 @@ describe.skipIf(!DATABASE_URL)("the announcement composer", () => {
     expect((await list())[0]?.status).toBe("withdrawn");
   });
 
+  it("an ended or withdrawn one opens read-only, without the edit form", async () => {
+    await w.call("crew", "POST", "/announce", { ...FIELDS, do: "send" }, form);
+    const id = (await list())[0]?.id ?? "";
+    await w.call(
+      "crew",
+      "POST",
+      `/announce/${id}/withdraw`,
+      { idempotency_key: "page-key-0003" },
+      form,
+    );
+    const page = await w.call("crew", "GET", `/announce?edit=${id}`);
+    expect(page.statusCode).toBe(200);
+    expect(page.body).toContain("Food is here");
+    expect(page.body).toContain("withdrawn");
+    expect(page.body).not.toContain(`action="/moments/announce/${id}/edit"`);
+    expect(page.body).not.toContain("Edit announcement");
+  });
+
+  it("opening the edit page takes no row lock: it renders while the row is held", async () => {
+    await w.call("crew", "POST", "/announce", { ...FIELDS, do: "send" }, form);
+    const id = (await list())[0]?.id ?? "";
+    const holder = await pool.connect();
+    try {
+      await holder.query("BEGIN");
+      await holder.query("SELECT 1 FROM moments_announcements WHERE id = $1 FOR UPDATE", [id]);
+      const page = await Promise.race([
+        w.call("crew", "GET", `/announce?edit=${id}`),
+        new Promise<null>((resolve) => {
+          setTimeout(() => {
+            resolve(null);
+          }, 2000);
+        }),
+      ]);
+      expect(page?.body).toContain("Edit announcement");
+    } finally {
+      await holder.query("ROLLBACK");
+      holder.release();
+    }
+  });
+
+  it("Save as template never overwrites another template of the same name silently", async () => {
+    const save = (o: Record<string, string>) =>
+      w.call("admin", "POST", "/announce", { ...FIELDS, do: "template", ...o }, form);
+    const templates = async () =>
+      json(await w.call("admin", "GET", "/api/moments/announcement-templates")).templates as {
+        key: string;
+        title: string;
+      }[];
+    expect((await save({ title: "Raffle at {time}", template_name: "Raffle" })).statusCode).toBe(
+      303,
+    );
+    const clash = await save({ title: "Quiz soon", template_name: "Raffle!", template_key: "" });
+    expect(decodeURIComponent(String(clash.headers.location))).toMatch(
+      /error=.*already a template/,
+    );
+    expect((await templates()).find((t) => t.key === "raffle")?.title).toBe("Raffle at {time}");
+    // Opened from its chip, the same name saves over it: that is the change asked for.
+    const update = await save({
+      title: "Raffle at 9",
+      template_name: "Raffle",
+      template_key: "raffle",
+    });
+    expect(String(update.headers.location)).toMatch(/done=/);
+    expect((await templates()).find((t) => t.key === "raffle")?.title).toBe("Raffle at 9");
+  });
+
   it("saves the form as one of the event's templates, for those who may", async () => {
     const r = await w.call(
       "admin",

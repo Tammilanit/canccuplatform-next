@@ -147,3 +147,22 @@ ${o.body}</textarea>
     </div>
   </form>`;
 }
+
+/** An ended or withdrawn one, opened from an old link: what went out, and no form to change it. */
+export function closedView(o: {
+  status: string;
+  title: string;
+  body: string;
+  why: string | null;
+}): Html {
+  return html`<h2 class="canccu-card__title">Announcement</h2>
+    <p class="canccu-small canccu-muted">
+      This one is ${o.status}${o.why === null ? "" : html` · ${o.why}`}: it can no longer be
+      changed.
+    </p>
+    <p><strong>${o.title}</strong></p>
+    ${o.body === "" ? "" : html`<p>${o.body}</p>`}
+    <div class="canccu-cluster">
+      <a class="canccu-button canccu-button--ghost" href="${PREFIX}announce">Back</a>
+    </div>`;
+}

@@ -58,6 +58,9 @@ function whenOf(v: unknown, itemId: string | null, now: Date): When {
     const at = typeof b.at === "string" ? Date.parse(b.at) : Number.NaN;
     if (Number.isNaN(at) || at > now.getTime() + AHEAD_MS)
       throw invalid("`when.at` is a time at most 14 days ahead.");
+    // Else the tick would send it at once while the composer says "Scheduled."
+    if (at < now.getTime())
+      throw invalid("`when.at` is in the past: choose a later time, or send it now.");
     return { mode, at: new Date(at).toISOString() };
   }
   if (mode === "item") {
@@ -292,6 +295,7 @@ export function announceRoutes(app: FastifyInstance, deps: AppDeps): void {
         const a = await lockAnnouncement(c, request.params.id);
         if (a === null) return failure(404, "not_found", "No such announcement.");
         if (a.status !== "live" && a.status !== "scheduled") throw notRunning();
+        const was = a.status;
         await withdrawAnnouncement(
           c,
           deps.engine,
@@ -304,7 +308,7 @@ export function announceRoutes(app: FastifyInstance, deps: AppDeps): void {
           actor_user_id: actor.user_id,
           action: "moments.announcement.withdrawn",
           target: { type: "announcement", id: a.id },
-          changes: { status: { old: "live", new: "withdrawn" } },
+          changes: { status: { old: was, new: "withdrawn" } },
         });
         return { status: 200, body: announcementView(a) };
       }),

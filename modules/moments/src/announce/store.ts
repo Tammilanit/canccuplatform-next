@@ -123,6 +123,14 @@ export async function lockAnnouncement(c: SqlClient, id: string): Promise<Announ
   return rows[0] === undefined ? null : rowOf(rows[0]);
 }
 
+/** Unlocked, for pages: a render must never wait on, or hold up, the tick or a crew action. */
+export async function readAnnouncement(c: SqlClient, id: string): Promise<AnnouncementRow | null> {
+  const { rows } = await c.query(`SELECT ${COLUMNS} FROM moments_announcements WHERE id = $1`, [
+    id,
+  ]);
+  return rows[0] === undefined ? null : rowOf(rows[0]);
+}
+
 /** The open ones (scheduled or live), locked; another container's are skipped, as the tick's. */
 export async function openAnnouncements(
   c: SqlClient,
