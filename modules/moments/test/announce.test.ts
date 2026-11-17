@@ -118,6 +118,10 @@ describe.skipIf(!DATABASE_URL)("announcements", () => {
       "ticker",
     ]);
     expect(events.find((e) => e.type === "moments.announcement.sent")?.data.urgent).toBe(true);
+    // Mockup 06 b: a ripple from the card's edge, the screen's spotlight once.
+    expect(overrides(events, "moments.override.started")[0]?.effect).toMatchObject({
+      name: "ripple",
+    });
   });
 
   it("full screen takes the full region first, then degrades along its level's chain", async () => {

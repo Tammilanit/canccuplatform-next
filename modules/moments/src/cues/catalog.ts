@@ -145,7 +145,7 @@ export const BUILTIN_CUES: readonly Cue[] = [
     effects: ["glow", "slide"],
     hold_seconds: 120,
   }),
-  seed("announce.urgent", "urgent", ["alarm"], { effects: [] }),
+  seed("announce.urgent", "urgent", ["alarm"], { effects: ["ripple"] }),
   seed("announce.result", "result", ["ding"]),
   seed("announce.ended", "ended", ["airplane-chime"]),
   seed("announce.cleared", "ended", ["airplane-chime"], { effects: ["glow"] }),
