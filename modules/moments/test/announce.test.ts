@@ -6,12 +6,7 @@
 import type pg from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Event } from "@canccu/kit";
-import {
-  compose,
-  editAnnouncement,
-  tickAnnouncements,
-  withdrawAnnouncement,
-} from "../src/announce/service.js";
+import { compose, editAnnouncement, withdrawAnnouncement } from "../src/announce/service.js";
 import type { Draft } from "../src/announce/service.js";
 import { lockAnnouncement } from "../src/announce/store.js";
 import { storeAgenda } from "../src/scene-store.js";

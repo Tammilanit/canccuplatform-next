@@ -55,17 +55,28 @@ export interface Filled {
   line: string;
 }
 
-/** The texts filled from the item as it is now; cut to the limits (a scheduled one may grow). */
+/**
+ * The texts filled from the item as it is now, cut to the limits: a scheduled one whose
+ * `{item.starts_in}` grew still goes out. The composer checks the uncut length (`limits: false`).
+ */
 export function filled(
   a: Pick<AnnouncementRow, "title_text" | "body_text" | "variables" | "event_name" | "time_zone">,
   item: RunItem | null,
   now: Date,
+  limits = true,
 ): Filled {
   const ctx = { item, eventName: a.event_name, timeZone: a.time_zone, now };
-  const title = cut(fill(a.title_text, ctx, a.variables).trim(), TITLE_MAX);
-  const body = cut(fill(a.body_text, ctx, a.variables).trim(), BODY_MAX);
-  return { title, body, line: body === "" ? title : `${title} · ${body}` };
+  const title = fill(a.title_text, ctx, a.variables).trim();
+  const body = fill(a.body_text, ctx, a.variables).trim();
+  return limits ? joined(cut(title, TITLE_MAX), cut(body, BODY_MAX)) : joined(title, body);
 }
+
+/** The ticker line is the title and the body joined. */
+export const joined = (title: string, body: string): Filled => ({
+  title,
+  body,
+  line: body === "" ? title : `${title} · ${body}`,
+});
 
 /** Composes one: sends it now, or keeps it scheduled for the tick. */
 export async function compose(
@@ -354,9 +365,7 @@ export async function tickAnnouncements(c: SqlClient, engine: Engine, now: Date)
     if (await endedWithItsMoments(c, engine, a, now)) continue;
     if (a.updated_until !== null && a.updated_until <= now) {
       a.updated_until = null;
-      const text = { title: a.title ?? "", body: a.body ?? "", line: "" };
-      text.line = text.body === "" ? text.title : `${text.title} · ${text.body}`;
-      await patchMoments(c, engine, a, text, false, now);
+      await patchMoments(c, engine, a, joined(a.title ?? "", a.body ?? ""), false, now);
       await saveAnnouncement(c, a);
     }
   }
