@@ -9,7 +9,7 @@ import { ServiceIdentity, newId, withTenant } from "@canccu/kit";
 import type { Event } from "@canccu/kit";
 import { applyOverrideEvent } from "../src/compose/overrides.js";
 import { applySceneEvent } from "../src/compose/scenes.js";
-import { applySoundEvent } from "../src/moments-sound.js";
+import { applyPrefetchEvent, applySoundEvent } from "../src/moments-sound.js";
 import { DATABASE_URL, SERVICE_KEY, call, harness, pairDevice, png, upload } from "./helpers.js";
 import type { Harness } from "./helpers.js";
 
@@ -24,7 +24,8 @@ interface Play {
 }
 interface State {
   sound: { enabled: boolean; sounded_claims: string[]; play: Play | null };
-  regions: { id: string; claim: { effect?: unknown } | null }[];
+  regions: { id: string; claim: { effect?: unknown; steps?: unknown } | null }[];
+  prefetch: string[];
 }
 
 describe.skipIf(!DATABASE_URL)("Moments' sounds on the screens", () => {
@@ -64,6 +65,7 @@ describe.skipIf(!DATABASE_URL)("Moments' sounds on the screens", () => {
       h.db.tenant(async (c) => {
         await c.query("DELETE FROM screen_zone_sounds");
         await c.query("DELETE FROM screen_scenes");
+        await c.query("DELETE FROM screen_moments_prefetch");
       }),
     );
   });
@@ -255,5 +257,77 @@ describe.skipIf(!DATABASE_URL)("Moments' sounds on the screens", () => {
         404,
       );
     });
+  });
+
+  // #114, PV1: a story's uploaded video is on the players before any run.
+  it("preloads a story's video on its zones, keeping only Moments' newest list", async () => {
+    const files = (list: { url: string; zones: string[] }[]) =>
+      event("moments.prefetch.changed", { files: list });
+    const older = files([{ url: "/api/screen/files/old.mp4", zones: [] }]);
+    const newer = files([
+      { url: "/api/screen/files/film.mp4", zones: ["main"] },
+      { url: "/api/screen/files/cafe.mp4", zones: ["cafe"] },
+      { url: "https://elsewhere.test/x.mp4", zones: [] },
+    ]);
+    await withTenant("alpha", () => applyPrefetchEvent(h.db, newer));
+    await withTenant("alpha", () => applyPrefetchEvent(h.db, older));
+    expect((await state(sound.token)).prefetch).toEqual(["/api/screen/files/film.mp4"]);
+    expect((await state(other.token)).prefetch).toEqual(["/api/screen/files/film.mp4"]);
+    await withTenant("alpha", () => applyPrefetchEvent(h.db, files([])));
+    expect((await state(sound.token)).prefetch).toEqual([]);
+  });
+
+  // #114, D9 and SD5: a story step's transition and its cue picture reach the claim.
+  it("keeps a step's transition and effect, and drops an override with an unknown transition", async () => {
+    const steps = (transition: string) => [
+      {
+        template: "sting",
+        content: { text: "Starting soon" },
+        duration_ms: 3000,
+        transition: "flash",
+        sound: null,
+      },
+      {
+        template: "title_card",
+        content: { title: "Demo Game Cup final", subtitle: "Stage" },
+        duration_ms: 20_000,
+        transition,
+        effect: { name: "pop", hold_seconds: 60, fade_seconds: 10 },
+        sound: null,
+      },
+    ];
+    const override = (id: string, transition: string) =>
+      event("moments.override.started", {
+        override: {
+          id,
+          kind: "block",
+          zones: [],
+          rank: 65,
+          source: { module: "moments", event_id: null, ref: null },
+          template: "sting",
+          content: { text: "Starting soon" },
+          regions: ["hero", "rail"],
+          expires_at: new Date(h.clock.now + 23_000).toISOString(),
+          sound: null,
+          steps: steps(transition),
+          on_end: "resume",
+          starts_at: new Date(h.clock.now).toISOString(),
+          ends_at: null,
+        },
+        actor_user_id: null,
+      });
+    await withTenant("alpha", () => applyOverrideEvent(h.db, override("ov_story", "rise")));
+    await withTenant("alpha", () => applyOverrideEvent(h.db, override("ov_bad", "spin")));
+    const claims = (await state(sound.token)).regions.flatMap((r) =>
+      r.claim === null ? [] : [r.claim],
+    );
+    const ids = claims.map((c) => (c as { override_id?: string }).override_id);
+    expect(ids).toContain("ov_story");
+    expect(ids).not.toContain("ov_bad");
+    const story = claims.find((c) => (c as { override_id?: string }).override_id === "ov_story");
+    expect(story?.steps).toMatchObject([
+      { transition: "flash" },
+      { transition: "rise", effect: { name: "pop" } },
+    ]);
   });
 });

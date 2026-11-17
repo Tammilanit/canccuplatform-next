@@ -44,6 +44,7 @@ export function recordOf(composed: ZoneComposed, version: number): ZoneRecord {
       play: composed.play,
     },
     display: composed.display,
+    prefetch: composed.prefetch,
     views: { landscape: view("landscape"), portrait: view("portrait") },
     nextChangeAt: composed.nextChangeAt,
     counts: composed.counts,
@@ -173,7 +174,7 @@ export function assemble(
       // Every screen of the zone gets it; only the one with `enabled` plays it (D14).
       play: sound?.play ?? null,
     },
-    prefetch: [],
+    prefetch: record?.prefetch ?? [],
     offline: { marker_after_seconds: 10 },
     display: record?.display ?? NO_DISPLAY,
   };

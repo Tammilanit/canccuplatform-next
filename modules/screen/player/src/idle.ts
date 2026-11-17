@@ -10,6 +10,10 @@ import type { View } from "./widget.js";
 export interface Shown {
   key: string;
   type: string;
+  /** A claim step's transition (claims.ts): how it enters. */
+  transition?: string;
+  /** A claim step's cue picture, drawn on the box from the step's start. */
+  cue?: { starts_at: string; effect: unknown };
   template: string | null;
   view: View;
   /**

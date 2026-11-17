@@ -28,7 +28,7 @@ import { loadScene } from "./scenes.js";
 import type { ZoneScene } from "./scenes.js";
 import type { Display } from "./display.js";
 import { nextPhaseAt, type MotionLevel, type MotionPhase } from "./motion.js";
-import { zonePlay } from "../moments-sound.js";
+import { zonePlay, zonePrefetch } from "../moments-sound.js";
 import type { Play } from "../moments-sound.js";
 import { themeLayouts } from "./layouts.js";
 import type { Layout } from "./layouts.js";
@@ -151,6 +151,8 @@ export interface ZoneComposed {
   draft: DraftUse;
   /** Moments' sound for the zone's screens (moments-sound.ts), or null. */
   play: Play | null;
+  /** The files Moments asks the zone's screens to keep ahead: its stories' videos (#114). */
+  prefetch: string[];
   /** The day's phase now, which Moments' sound gates read (contracts/screen.md, For Moments). */
   phase: MotionPhase;
   /** The zone's scene, whose quiet mode and sound switch the sound gates read in its place. */
@@ -200,6 +202,7 @@ export async function composeZone(
       pin: await readPin(c),
       showName: await showsName(c, zone),
       play: await zonePlay(c, zone.key, real.getTime()),
+      prefetch: await zonePrefetch(c, zone.key),
       scene: await loadScene(c, zone.key),
     };
   });
@@ -330,6 +333,7 @@ export async function composeZone(
       art: covers,
       play: read.play,
       scene: read.scene,
+      prefetch: read.prefetch,
     }),
     zone: read.zone,
     showName: read.showName,
@@ -343,6 +347,7 @@ export async function composeZone(
     counts: countsOf(used),
     draft,
     play: read.play,
+    prefetch: read.prefetch,
     phase: motion.phase,
     scene: read.scene,
   };
@@ -368,6 +373,8 @@ export interface FingerprintInput {
   play?: Play | null;
   /** The zone's scene: its layout and hero features are in no other input. */
   scene?: ZoneScene | null;
+  /** Moments' preload: a new video is a new version, so the screens fetch it ahead. */
+  prefetch?: readonly string[];
 }
 
 /**
@@ -390,6 +397,10 @@ export function zoneFingerprint(input: FingerprintInput): string {
     art: input.art ?? [],
     play: input.play ?? null,
     scene: input.scene ?? null,
+    // Absent while empty, so a zone's version stays as it was before the preload existed.
+    ...(input.prefetch === undefined || input.prefetch.length === 0
+      ? {}
+      : { prefetch: input.prefetch }),
   };
   return createHash("sha256").update(JSON.stringify(stable)).digest("base64url");
 }

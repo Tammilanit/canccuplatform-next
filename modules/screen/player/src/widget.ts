@@ -6,6 +6,7 @@
 import { embedWidget } from "@canccu/ui";
 import type { EmbedOptions } from "@canccu/ui";
 import { currentItem, drawMedia } from "./media.js";
+import { skipVideo, videoItem, videoPosition } from "./story-video.js";
 import type { MediaOptions } from "./media.js";
 import { templateFor } from "./templates.js";
 import { renderTree } from "./tree.js";
@@ -47,12 +48,40 @@ export function drawWidget(
     const item = currentItem(view, media.nowMs);
     const shown = item === null ? null : drawMedia(item, media);
     if (shown !== null) el.append(shown);
+  } else if (type === "video") {
+    el.append(...drawStoryVideo(view, media));
   } else if (type !== "embed") {
     el.append(...renderTree(templateFor(type, template, themeTemplates), view));
   }
   const art = cardArt(view);
   if (art !== null) el.prepend(art);
   return el;
+}
+
+/** A storyboard's video step: from its server-clock start, held while paused, skipped on failure. */
+function drawStoryVideo(view: View, media: MediaOptions): HTMLElement[] {
+  const claim = media.claimId ?? "";
+  const item = videoItem(view, media.zone ?? "");
+  const shown = item === null ? null : drawMedia(item, { ...media, nowMs: media.nowMs });
+  if (shown === null) {
+    skipVideo(claim, "video-unplayable", typeof view.url === "string" ? view.url : "");
+    return [];
+  }
+  if (shown instanceof HTMLVideoElement) {
+    shown.loop = false;
+    shown.currentTime = videoPosition(view, media.nowMs);
+    if (typeof view.paused_at === "string") shown.autoplay = false;
+    shown.addEventListener("error", () => {
+      skipVideo(claim, "video-playback-error", shown.error?.message ?? "");
+    });
+  } else {
+    // A YouTube frame that never loads: offline, or YouTube refuses the embed.
+    setTimeout(() => {
+      if (shown.classList.contains("canccu-is-failed"))
+        skipVideo(claim, "youtube-playback-error", typeof view.url === "string" ? view.url : "");
+    }, 9000);
+  }
+  return [shown];
 }
 
 /** An image on the event's hostname, or a picture handed in as data (the demo shots). */
