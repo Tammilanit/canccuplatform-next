@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1560" width="1920" height="1560" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 21: the storyboard preset picker with on and off per event</title>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker><linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient></defs>
+<rect x="0" y="0" width="1920" height="1560" rx="0" fill="#f3f4f6" />
+<text x="24" y="44" font-size="26" fill="#111827" font-weight="700" text-anchor="start" >21 · The preset picker: every built-in, on or off per event</text>
+<g transform="translate(20,64)">
+<rect x="0" y="0" width="1880" height="1480" rx="10" fill="#f6f7fb" stroke="#9ca3af" stroke-width="2" />
+<rect x="0" y="0" width="1880" height="44" rx="10" fill="#e5e7eb" />
+<rect x="0" y="30" width="1880" height="14" rx="0" fill="#e5e7eb" />
+<text x="20" y="29" font-size="14" fill="#9ca3af" font-weight="700" text-anchor="start" >●  ●  ●</text>
+<rect x="110" y="9" width="560" height="26" rx="13" fill="#fff" />
+<text x="126" y="28" font-size="15" fill="#6b7280" font-weight="400" text-anchor="start" >/moments/storyboards</text>
+<rect x="0" y="44" width="230" height="1436" rx="0" fill="#fff" />
+<line x1="230" y1="44" x2="230" y2="1480" stroke="#e5e7eb" stroke-width="1" />
+<text x="22" y="84" font-size="20" fill="#111827" font-weight="700" text-anchor="start" >Demo Event</text>
+<text x="22" y="108" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >Sat 14 – Sun 15 Mar</text>
+<text x="22" y="150" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">RUN THE EVENT</text>
+<text x="26" y="183" font-size="16" fill="#111827" font-weight="400" text-anchor="start" >Run of show</text>
+<text x="26" y="217" font-size="16" fill="#111827" font-weight="400" text-anchor="start" >Announcements</text>
+<text x="22" y="280" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">SCREENS AND LOOK</text>
+<rect x="12" y="292" width="206" height="30" rx="6" fill="#eff6ff" />
+<text x="26" y="313" font-size="16" fill="#2563eb" font-weight="600" text-anchor="start" >Screen studio</text>
+<text x="26" y="347" font-size="16" fill="#111827" font-weight="400" text-anchor="start" >Theme studio</text>
+<text x="260" y="90" font-size="26" fill="#111827" font-weight="700" text-anchor="start" >Screen studio</text>
+<text x="291.0" y="132" font-size="15" fill="#6b7280" font-weight="500" text-anchor="middle" >Live</text>
+<text x="366.0" y="132" font-size="15" fill="#6b7280" font-weight="500" text-anchor="middle" >Devices</text>
+<text x="497.0" y="132" font-size="15" fill="#6b7280" font-weight="500" text-anchor="middle" >Zones and layouts</text>
+<text x="623.5" y="132" font-size="15" fill="#6b7280" font-weight="500" text-anchor="middle" >Scenes</text>
+<text x="707.0" y="132" font-size="15" fill="#2563eb" font-weight="700" text-anchor="middle" >Moments</text>
+<rect x="667" y="140" width="80" height="3" rx="0" fill="#2563eb" />
+<text x="782.0" y="132" font-size="15" fill="#6b7280" font-weight="500" text-anchor="middle" >Cues</text>
+<text x="861.0" y="132" font-size="15" fill="#6b7280" font-weight="500" text-anchor="middle" >Schedule</text>
+<text x="953.0" y="132" font-size="15" fill="#6b7280" font-weight="500" text-anchor="middle" >Content</text>
+<line x1="250" y1="144" x2="1860" y2="144" stroke="#e5e7eb" stroke-width="1" />
+<text x="260" y="186" font-size="24" fill="#111827" font-weight="700" text-anchor="start" >Storyboards</text>
+<text x="260" y="210" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >Built-ins are copied into the event on first use; a later platform version never changes them.</text>
+<rect x="1400" y="166" width="190" height="38" rx="8" fill="#2563eb" />
+<text x="1495.0" y="191" font-size="14" fill="#fff" font-weight="700" text-anchor="middle" >+ New storyboard</text>
+<rect x="1610" y="166" width="190" height="38" rx="8" fill="#fff" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="1705.0" y="191" font-size="14" fill="#2563eb" font-weight="700" text-anchor="middle" >Reset all to default</text>
+<rect x="260" y="240" width="1580" height="598" rx="12" fill="#fff" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="280" y="274" font-size="18" fill="#111827" font-weight="700" text-anchor="start" >Every event</text>
+<text x="410" y="274" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >on by default · idle where the trigger never comes</text>
+<text x="280" y="310" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">Preset</text>
+<text x="520" y="310" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">Trigger</text>
+<text x="900" y="310" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">Rounds, end</text>
+<text x="1230" y="310" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">Sound</text>
+<text x="1430" y="310" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">Status</text>
+<text x="1780" y="310" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">On</text>
+<line x1="270" y1="324" x2="1830" y2="324" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="354" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Doors open</text>
+<text x="520" y="354" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >item doors · start</text>
+<text x="900" y="354" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >every 10 min · 3</text>
+<text x="1230" y="354" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >first round</text>
+<rect x="1430" y="334" width="129" height="26" rx="13" fill="#dcfce7" /><text x="1440" y="352" font-size="13" fill="#166534" font-weight="600" text-anchor="start" >next: Sat 18:00</text>
+<rect x="1780" y="335" width="44" height="24" rx="12" fill="#2563eb" /><circle cx="1810" cy="347" r="9" fill="#fff"/>
+<line x1="270" y1="370" x2="1830" y2="370" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="400" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Starting soon</text>
+<text x="520" y="400" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >tournament, ceremony · −15 min; by hand</text>
+<text x="900" y="400" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >−15, −5, −1 · until it starts</text>
+<text x="1230" y="400" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >first, last, finale</text>
+<rect x="1430" y="380" width="143" height="26" rx="13" fill="#dcfce7" /><text x="1440" y="398" font-size="13" fill="#166534" font-weight="600" text-anchor="start" >next: 21:00 final</text>
+<rect x="1780" y="381" width="44" height="24" rx="12" fill="#2563eb" /><circle cx="1810" cy="393" r="9" fill="#fff"/>
+<line x1="270" y1="416" x2="1830" y2="416" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="446" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Match called</text>
+<text x="520" y="446" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >tournament.match.called</text>
+<text x="900" y="446" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >every 2 min · 3 · until started</text>
+<text x="1230" y="446" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >first round</text>
+<rect x="1430" y="426" width="209" height="26" rx="13" fill="#eff6ff" /><text x="1440" y="444" font-size="13" fill="#2563eb" font-weight="600" text-anchor="start" >replaces rule match_called</text>
+<rect x="1780" y="427" width="44" height="24" rx="12" fill="#2563eb" /><circle cx="1810" cy="439" r="9" fill="#fff"/>
+<line x1="270" y1="462" x2="1830" y2="462" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="492" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Champion</text>
+<text x="520" y="492" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >final finished; by hand</text>
+<text x="900" y="492" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >1 · replays +10, +30 min</text>
+<text x="1230" y="492" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >winner card</text>
+<rect x="1430" y="472" width="216" height="26" rx="13" fill="#eff6ff" /><text x="1440" y="490" font-size="13" fill="#2563eb" font-weight="600" text-anchor="start" >replaces rule finals_result</text>
+<rect x="1780" y="473" width="44" height="24" rx="12" fill="#2563eb" /><circle cx="1810" cy="485" r="9" fill="#fff"/>
+<line x1="270" y1="508" x2="1830" y2="508" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="538" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Midnight</text>
+<text x="520" y="538" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >clock daily 00:00</text>
+<text x="900" y="538" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >1 · full screen</text>
+<text x="1230" y="538" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >countdown</text>
+<rect x="1430" y="518" width="107" height="26" rx="13" fill="#f3f4f6" /><text x="1440" y="536" font-size="13" fill="#6b7280" font-weight="600" text-anchor="start" >not in quiet</text>
+<rect x="1780" y="519" width="44" height="24" rx="12" fill="#2563eb" /><circle cx="1810" cy="531" r="9" fill="#fff"/>
+<line x1="270" y1="554" x2="1830" y2="554" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="584" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Meal is served</text>
+<text x="520" y="584" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >item meal · start</text>
+<text x="900" y="584" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >every 5 min · 3 · until it ends</text>
+<text x="1230" y="584" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >first round</text>
+<rect x="1430" y="564" width="151" height="26" rx="13" fill="#dcfce7" /><text x="1440" y="582" font-size="13" fill="#166534" font-weight="600" text-anchor="start" >next: 19:00 Dinner</text>
+<rect x="1780" y="565" width="44" height="24" rx="12" fill="#2563eb" /><circle cx="1810" cy="577" r="9" fill="#fff"/>
+<line x1="270" y1="600" x2="1830" y2="600" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="630" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Quiet hours soon</text>
+<text x="520" y="630" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >item quiet_hours · −15 min</text>
+<text x="900" y="630" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >−15, −5 · finale at start</text>
+<text x="1230" y="630" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >first round</text>
+<rect x="1430" y="610" width="100" height="26" rx="13" fill="#dcfce7" /><text x="1440" y="628" font-size="13" fill="#166534" font-weight="600" text-anchor="start" >next: 02:00</text>
+<rect x="1780" y="611" width="44" height="24" rx="12" fill="#2563eb" /><circle cx="1810" cy="623" r="9" fill="#fff"/>
+<line x1="270" y1="646" x2="1830" y2="646" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="676" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Good morning</text>
+<text x="520" y="676" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >item quiet_hours · end</text>
+<text x="900" y="676" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >1</text>
+<text x="1230" y="676" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >soft chime</text>
+<rect x="1430" y="656" width="100" height="26" rx="13" fill="#dcfce7" /><text x="1440" y="674" font-size="13" fill="#166534" font-weight="600" text-anchor="start" >next: 09:00</text>
+<rect x="1780" y="657" width="44" height="24" rx="12" fill="#2563eb" /><circle cx="1810" cy="669" r="9" fill="#fff"/>
+<line x1="270" y1="692" x2="1830" y2="692" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="722" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Check-in open</text>
+<text x="520" y="722" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >tournament.checkin.opened</text>
+<text x="900" y="722" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >every 10 min · until closed</text>
+<text x="1230" y="722" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >first round</text>
+<rect x="1780" y="703" width="44" height="24" rx="12" fill="#2563eb" /><circle cx="1810" cy="715" r="9" fill="#fff"/>
+<line x1="270" y1="738" x2="1830" y2="738" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="768" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Pizza order open</text>
+<text x="520" y="768" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >pizza.order.opened</text>
+<text x="900" y="768" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >every 10 min · 6 · until closed</text>
+<text x="1230" y="768" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >first round</text>
+<rect x="1780" y="749" width="44" height="24" rx="12" fill="#2563eb" /><circle cx="1810" cy="761" r="9" fill="#fff"/>
+<line x1="270" y1="784" x2="1830" y2="784" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="814" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Closing time</text>
+<text x="520" y="814" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >event end −60 min</text>
+<text x="900" y="814" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >−60, −30, −10</text>
+<text x="1230" y="814" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >first, last</text>
+<rect x="1430" y="794" width="85" height="26" rx="13" fill="#dcfce7" /><text x="1440" y="812" font-size="13" fill="#166534" font-weight="600" text-anchor="start" >Sun 18:00</text>
+<rect x="1780" y="795" width="44" height="24" rx="12" fill="#2563eb" /><circle cx="1810" cy="807" r="9" fill="#fff"/>
+<rect x="260" y="870" width="1580" height="460" rx="12" fill="#fff" stroke="#e5e7eb" stroke-width="1.5" />
+<text x="280" y="904" font-size="18" fill="#111827" font-weight="700" text-anchor="start" >Some venues</text>
+<text x="410" y="904" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >off by default · turn on what fits the venue</text>
+<text x="280" y="940" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">Preset</text>
+<text x="520" y="940" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">Trigger</text>
+<text x="900" y="940" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">Rounds, end</text>
+<text x="1230" y="940" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">Sound</text>
+<text x="1430" y="940" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">Status</text>
+<text x="1780" y="940" font-size="12" fill="#6b7280" font-weight="700" text-anchor="start" letter-spacing="1">On</text>
+<line x1="270" y1="954" x2="1830" y2="954" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="984" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Arrival check-in</text>
+<text x="520" y="984" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >item doors · start</text>
+<text x="900" y="984" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >every 30 min · 6</text>
+<text x="1230" y="984" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >none</text>
+<rect x="1430" y="964" width="165" height="26" rx="13" fill="#f3f4f6" /><text x="1440" y="982" font-size="13" fill="#6b7280" font-weight="600" text-anchor="start" >check-in is optional</text>
+<rect x="1780" y="965" width="44" height="24" rx="12" fill="#d1d5db" /><circle cx="1794" cy="977" r="9" fill="#fff"/>
+<line x1="270" y1="1000" x2="1830" y2="1000" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="1030" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Hot game</text>
+<text x="520" y="1030" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >games.surge.started</text>
+<text x="900" y="1030" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >1 · cooldown 30 min a game</text>
+<text x="1230" y="1030" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >chrome.hot</text>
+<rect x="1430" y="1010" width="216" height="26" rx="13" fill="#eff6ff" /><text x="1440" y="1028" font-size="13" fill="#2563eb" font-weight="600" text-anchor="start" >would replace rule hot_game</text>
+<rect x="1780" y="1011" width="44" height="24" rx="12" fill="#d1d5db" /><circle cx="1794" cy="1023" r="9" fill="#fff"/>
+<line x1="270" y1="1046" x2="1830" y2="1046" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="1076" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Record crowd</text>
+<text x="520" y="1076" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >milestone online, new peak</text>
+<text x="900" y="1076" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >1 · once a day</text>
+<text x="1230" y="1076" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >story.record</text>
+<rect x="1780" y="1057" width="44" height="24" rx="12" fill="#d1d5db" /><circle cx="1794" cy="1069" r="9" fill="#fff"/>
+<line x1="270" y1="1092" x2="1830" y2="1092" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="1122" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Sponsor thanks</text>
+<text x="520" y="1122" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >clock every 60 min 10–22</text>
+<text x="900" y="1122" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >until 22:00</text>
+<text x="1230" y="1122" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >none</text>
+<rect x="1780" y="1103" width="44" height="24" rx="12" fill="#d1d5db" /><circle cx="1794" cy="1115" r="9" fill="#fff"/>
+<line x1="270" y1="1138" x2="1830" y2="1138" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="1168" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Prize draw</text>
+<text x="520" y="1168" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >one item · −10 min; by hand</text>
+<text x="900" y="1168" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >−10, −2 · finale</text>
+<text x="1230" y="1168" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >finale</text>
+<rect x="1430" y="1148" width="107" height="26" rx="13" fill="#fef3c7" /><text x="1440" y="1166" font-size="13" fill="#92400e" font-weight="600" text-anchor="start" >pick an item</text>
+<rect x="1780" y="1149" width="44" height="24" rx="12" fill="#d1d5db" /><circle cx="1794" cy="1161" r="9" fill="#fff"/>
+<line x1="270" y1="1184" x2="1830" y2="1184" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="1214" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Group photo</text>
+<text x="520" y="1214" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >one item · −10 min; by hand</text>
+<text x="900" y="1214" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >−10, −3 · finale</text>
+<text x="1230" y="1214" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >last round</text>
+<rect x="1430" y="1194" width="107" height="26" rx="13" fill="#fef3c7" /><text x="1440" y="1212" font-size="13" fill="#92400e" font-weight="600" text-anchor="start" >pick an item</text>
+<rect x="1780" y="1195" width="44" height="24" rx="12" fill="#d1d5db" /><circle cx="1794" cy="1207" r="9" fill="#fff"/>
+<line x1="270" y1="1230" x2="1830" y2="1230" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="1260" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Venue info</text>
+<text x="520" y="1260" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >clock every 45 min 09–23</text>
+<text x="900" y="1260" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >until 23:00</text>
+<text x="1230" y="1260" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >none</text>
+<rect x="1780" y="1241" width="44" height="24" rx="12" fill="#d1d5db" /><circle cx="1794" cy="1253" r="9" fill="#fff"/>
+<line x1="270" y1="1276" x2="1830" y2="1276" stroke="#e5e7eb" stroke-width="1" />
+<text x="280" y="1306" font-size="15" fill="#111827" font-weight="600" text-anchor="start" >Stage break</text>
+<text x="520" y="1306" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >tournament, ceremony · end</text>
+<text x="900" y="1306" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >every 5 min · until next starts</text>
+<text x="1230" y="1306" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >none</text>
+<rect x="1430" y="1286" width="143" height="26" rx="13" fill="#dcfce7" /><text x="1440" y="1304" font-size="13" fill="#166534" font-weight="600" text-anchor="start" >on for this event</text>
+<rect x="1780" y="1287" width="44" height="24" rx="12" fill="#2563eb" /><circle cx="1810" cy="1299" r="9" fill="#fff"/>
+<text x="280" y="1362" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" >A row opens the builder. A built-in can be duplicated to edit a copy, or edited and later reset to default. Turning on a preset that overlaps a built-in rule turns the rule off for this event, and back.</text>
+</g>
+</svg>

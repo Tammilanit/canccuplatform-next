@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 4020" width="1000" height="4020" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 20: six storyboard presets on screen at phone-readable scale</title>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker><linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient></defs>
+<rect x="0" y="0" width="1000" height="4020" rx="0" fill="#f3f4f6" />
+<text x="20" y="40" font-size="30" fill="#111827" font-weight="700" text-anchor="start" >20 · Presets on screen, drawn at phone-readable scale</text>
+<text x="20" y="72" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" >Hero first (L12); text sized for the far end of a busy hall</text>
+<text x="20" y="130" font-size="30" fill="#111827" font-weight="800" text-anchor="start" >1 · Doors open</text>
+<text x="20" y="162" font-size="20" fill="#6b7280" font-weight="400" text-anchor="start" >round 1 of 3 · message step, 20 s</text>
+<g transform="translate(20,180) scale(0.5)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a" />
+<rect x="48" y="22" width="46" height="46" rx="10" fill="url(#g)" />
+<text x="110" y="58" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="start" >DEMO EVENT</text>
+<text x="1500" y="58" font-size="30" fill="#a9b1d6" font-weight="600" text-anchor="end" >Main hall</text>
+<text x="1872" y="58" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end" >18:00</text>
+<rect x="48" y="102" width="1212" height="876" rx="14" fill="#1b2246" stroke="#3ddcff" stroke-width="6" />
+<text x="110" y="220" font-size="52" fill="#3ddcff" font-weight="800" text-anchor="start" letter-spacing="4">DOORS ARE OPEN</text>
+<text x="110" y="400" font-size="130" fill="#f3f5ff" font-weight="900" text-anchor="start" >Welcome!</text>
+<text x="110" y="510" font-size="60" fill="#a9b1d6" font-weight="400" text-anchor="start" >to Demo Event · find a seat, plug in</text>
+<text x="110" y="700" font-size="96" fill="#f3f5ff" font-weight="800" text-anchor="start" >Have fun, be kind</text>
+<text x="110" y="860" font-size="52" fill="#3ddcff" font-weight="700" text-anchor="start" >Wi-Fi and check-in next →</text>
+<rect x="1290" y="102" width="582" height="876" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="2" />
+<text x="1322" y="160" font-size="30" fill="#a9b1d6" font-weight="700" text-anchor="start" >NEXT</text>
+<text x="1322" y="230" font-size="40" fill="#f3f5ff" font-weight="600" text-anchor="start" >19:00 · Café</text>
+<text x="1322" y="282" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start" >Dinner</text>
+<text x="1322" y="380" font-size="40" fill="#f3f5ff" font-weight="600" text-anchor="start" >21:00 · Stage</text>
+<text x="1322" y="432" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start" >Demo Game Cup final</text>
+</g>
+<text x="20" y="780" font-size="30" fill="#111827" font-weight="800" text-anchor="start" >2 · Starting soon</text>
+<text x="20" y="812" font-size="20" fill="#6b7280" font-weight="400" text-anchor="start" >round 2 at T−5 · countdown card, 20 s (×2 per round)</text>
+<g transform="translate(20,830) scale(0.5)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a" />
+<rect x="48" y="22" width="46" height="46" rx="10" fill="url(#g)" />
+<text x="110" y="58" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="start" >DEMO EVENT</text>
+<text x="1500" y="58" font-size="30" fill="#a9b1d6" font-weight="600" text-anchor="end" >Main hall</text>
+<text x="1872" y="58" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end" >20:55</text>
+<rect x="48" y="102" width="1212" height="876" rx="14" fill="#1b2246" stroke="#ffc94d" stroke-width="6" />
+<text x="110" y="220" font-size="52" fill="#ffc94d" font-weight="800" text-anchor="start" letter-spacing="4">STARTING SOON</text>
+<text x="110" y="400" font-size="104" fill="#f3f5ff" font-weight="900" text-anchor="start" >Demo Game Cup final</text>
+<text x="110" y="510" font-size="60" fill="#a9b1d6" font-weight="400" text-anchor="start" >Stage · in 5 minutes</text>
+<text x="110" y="860" font-size="230" fill="#f3f5ff" font-weight="900" text-anchor="start" >05:00</text>
+<rect x="1290" y="102" width="582" height="876" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="2" />
+<text x="1322" y="160" font-size="30" fill="#a9b1d6" font-weight="700" text-anchor="start" >NOW</text>
+<text x="1322" y="230" font-size="40" fill="#f3f5ff" font-weight="600" text-anchor="start" >Dinner</text>
+<text x="1322" y="282" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start" >until 21:15 · Café</text>
+</g>
+<text x="20" y="1430" font-size="30" fill="#111827" font-weight="800" text-anchor="start" >3 · Match called</text>
+<text x="20" y="1462" font-size="20" fill="#6b7280" font-weight="400" text-anchor="start" >round 1 of 3 · match card, 30 s</text>
+<g transform="translate(20,1480) scale(0.5)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a" />
+<rect x="48" y="22" width="46" height="46" rx="10" fill="url(#g)" />
+<text x="110" y="58" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="start" >DEMO EVENT</text>
+<text x="1500" y="58" font-size="30" fill="#a9b1d6" font-weight="600" text-anchor="end" >Main hall</text>
+<text x="1872" y="58" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end" >19:46</text>
+<rect x="48" y="102" width="1212" height="876" rx="14" fill="#1b2246" stroke="#3ddcff" stroke-width="6" />
+<text x="110" y="220" font-size="52" fill="#3ddcff" font-weight="800" text-anchor="start" letter-spacing="4">MATCH CALLED · SEMI-FINAL 1</text>
+<text x="110" y="400" font-size="84" fill="#f3f5ff" font-weight="900" text-anchor="start" >Team Alpha vs Team Beta</text>
+<text x="110" y="510" font-size="60" fill="#a9b1d6" font-weight="400" text-anchor="start" >Join voice: Match 1 · Stage</text>
+<text x="110" y="760" font-size="96" fill="#3ddcff" font-weight="800" text-anchor="start" >To your seats now</text>
+<rect x="1290" y="102" width="582" height="876" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="2" />
+<text x="1322" y="160" font-size="30" fill="#a9b1d6" font-weight="700" text-anchor="start" >ALSO NOW</text>
+<text x="1322" y="230" font-size="40" fill="#f3f5ff" font-weight="600" text-anchor="start" >Semi-final 2</text>
+<text x="1322" y="282" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start" >at 20:15 · Stage</text>
+</g>
+<text x="20" y="2080" font-size="30" fill="#111827" font-weight="800" text-anchor="start" >4 · Champion</text>
+<text x="20" y="2112" font-size="20" fill="#6b7280" font-weight="400" text-anchor="start" >the winner card, 30 s · then the bracket</text>
+<g transform="translate(20,2130) scale(0.5)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a" />
+<rect x="48" y="22" width="46" height="46" rx="10" fill="url(#g)" />
+<text x="110" y="58" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="start" >DEMO EVENT</text>
+<text x="1500" y="58" font-size="30" fill="#a9b1d6" font-weight="600" text-anchor="end" >Main hall</text>
+<text x="1872" y="58" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end" >23:41</text>
+<rect x="48" y="102" width="1212" height="876" rx="14" fill="#1b2246" stroke="#ffc94d" stroke-width="6" />
+<text x="654" y="230" font-size="52" fill="#ffc94d" font-weight="800" text-anchor="middle" letter-spacing="4">DEMO GAME CUP CHAMPION</text>
+<circle cx="654" cy="470" r="140" fill="#161a2e" stroke="#ffc94d" stroke-width="8"/>
+<text x="654" y="505" font-size="100" fill="#f3f5ff" font-weight="900" text-anchor="middle" >TG</text>
+<text x="654" y="760" font-size="130" fill="#f3f5ff" font-weight="900" text-anchor="middle" >Team Gamma</text>
+<text x="654" y="870" font-size="56" fill="#a9b1d6" font-weight="400" text-anchor="middle" >3 – 1 in the grand final</text>
+<rect x="1290" y="102" width="582" height="876" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="2" />
+<text x="1322" y="160" font-size="30" fill="#a9b1d6" font-weight="700" text-anchor="start" >NEXT</text>
+<text x="1322" y="230" font-size="40" fill="#f3f5ff" font-weight="600" text-anchor="start" >00:00 · Main hall</text>
+<text x="1322" y="282" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start" >Midnight</text>
+</g>
+<text x="20" y="2730" font-size="30" fill="#111827" font-weight="800" text-anchor="start" >5 · Midnight</text>
+<text x="20" y="2762" font-size="20" fill="#6b7280" font-weight="400" text-anchor="start" >full screen (L12), 15 s after a 10 s countdown</text>
+<g transform="translate(20,2780) scale(0.5)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a" />
+<rect x="48" y="22" width="46" height="46" rx="10" fill="url(#g)" />
+<text x="110" y="58" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="start" >DEMO EVENT</text>
+<text x="1500" y="58" font-size="30" fill="#a9b1d6" font-weight="600" text-anchor="end" >Main hall</text>
+<text x="1872" y="58" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end" >00:00</text>
+<rect x="0" y="90" width="1920" height="990" rx="0" fill="#140f2e" />
+<text x="960" y="470" font-size="230" fill="#f3f5ff" font-weight="900" text-anchor="middle" >Midnight!</text>
+<text x="960" y="640" font-size="96" fill="#b98cff" font-weight="800" text-anchor="middle" >Night 2 at Demo Event</text>
+<text x="960" y="780" font-size="56" fill="#a9b1d6" font-weight="400" text-anchor="middle" >Stay hydrated · quiet hours from 02:00</text>
+</g>
+<text x="20" y="3380" font-size="30" fill="#111827" font-weight="800" text-anchor="start" >6 · Quiet hours soon</text>
+<text x="20" y="3412" font-size="20" fill="#6b7280" font-weight="400" text-anchor="start" >calm level: fades only · round at T−15</text>
+<g transform="translate(20,3430) scale(0.5)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a" />
+<rect x="48" y="22" width="46" height="46" rx="10" fill="url(#g)" />
+<text x="110" y="58" font-size="34" fill="#f3f5ff" font-weight="700" text-anchor="start" >DEMO EVENT</text>
+<text x="1500" y="58" font-size="30" fill="#a9b1d6" font-weight="600" text-anchor="end" >Café</text>
+<text x="1872" y="58" font-size="40" fill="#f3f5ff" font-weight="700" text-anchor="end" >01:45</text>
+<rect x="48" y="102" width="1212" height="876" rx="14" fill="#1b2246" stroke="#7c86b8" stroke-width="6" />
+<text x="110" y="220" font-size="52" fill="#7c86b8" font-weight="800" text-anchor="start" letter-spacing="4">QUIET HOURS SOON</text>
+<text x="110" y="400" font-size="104" fill="#f3f5ff" font-weight="900" text-anchor="start" >From 02:00</text>
+<text x="110" y="510" font-size="60" fill="#a9b1d6" font-weight="400" text-anchor="start" >Headphones on, voices down</text>
+<text x="110" y="760" font-size="76" fill="#a9b1d6" font-weight="700" text-anchor="start" >Good night in 15 minutes</text>
+<rect x="1290" y="102" width="582" height="876" rx="14" fill="#161a2e" stroke="#343c66" stroke-width="2" />
+<text x="1322" y="160" font-size="30" fill="#a9b1d6" font-weight="700" text-anchor="start" >TOMORROW</text>
+<text x="1322" y="230" font-size="40" fill="#f3f5ff" font-weight="600" text-anchor="start" >09:00 · Café</text>
+<text x="1322" y="282" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start" >Breakfast</text>
+</g>
+</svg>
