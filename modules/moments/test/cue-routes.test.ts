@@ -202,7 +202,7 @@ live("the cues and sound API", () => {
       expect(put.statusCode).toBe(200);
       const lib = json(await w.call("reader", "GET", "/api/moments/sounds")).sounds as Row[];
       expect(lib.find((s) => s.id === sound.id)?.used_by).toEqual(["pizza.placed"]);
-      expect(lib.filter((s) => s.source === "pack")).toHaveLength(11);
+      expect(lib.filter((s) => s.source === "pack")).toHaveLength(12);
       const busy = await w.call("admin", "DELETE", `/api/moments/sounds/${String(sound.id)}`);
       expect(errorOf(busy).code).toBe("sound_in_use");
       expect(w.audit.at(-1)?.action).toBe("moments.cue.changed");

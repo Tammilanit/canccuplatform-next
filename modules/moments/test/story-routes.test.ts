@@ -8,10 +8,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { storeAgenda } from "../src/scene-store.js";
 import { addZone } from "../src/store.js";
 import { forgetUser } from "../src/consumer.js";
+import { PRESETS } from "../src/story/presets.js";
 import { DATABASE_URL, freshDatabase } from "./helpers.js";
 import { appWorld, errorOf, json } from "./app.js";
 import type { AppWorld } from "./app.js";
-import { ITEM, TABLES, step } from "./story-kit.js";
+import { ITEM, TABLES, step, story } from "./story-kit.js";
 
 type Stories = { stories: Record<string, unknown>[]; revision: number };
 
@@ -38,15 +39,9 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
   const put = async (stories: unknown[], revision: number, who = "admin") =>
     w.call(who, "PUT", "/api/moments/storyboards", { stories, revision });
 
-  it("copies the five presets on first use and validates a save", async () => {
+  it("copies the 24 presets on first use and validates a save", async () => {
     const doc = await list();
-    expect(doc.stories.map((s) => s.key)).toEqual([
-      "doors_open",
-      "starting_soon",
-      "match_called",
-      "champion",
-      "midnight",
-    ]);
+    expect(doc.stories.map((s) => s.key)).toEqual(PRESETS.map((p) => p.key));
     expect(doc.stories[2]).toMatchObject({ rule_off: "match_called" });
     expect((await put(doc.stories, 0, "crew")).statusCode).toBe(403);
     const broken = [
@@ -65,7 +60,24 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
     expect((await put(doc.stories, 7)).statusCode).toBe(409);
   });
 
-  it("keeps a video step's file and length, preloads it, and refuses a private YouTube video", async () => {
+  /**
+   * A story with a video step, alone in the event's list: each save validates and audits the
+   * whole list, so the video tests save only the story they look at (#602's carry-over: this
+   * test once timed out on a loaded CI runner; no call in it waits, each save took 12–51 ms here).
+   */
+  const film = (video: Record<string, unknown>) => ({
+    ...story({ key: "film", name: "Last year's film" }),
+    round: {
+      steps: [
+        step({ message: true }),
+        step({ template: "video", content: video, on_the_dot: true }),
+      ],
+      repeat: null,
+      hold_seconds: null,
+    },
+  });
+
+  it("keeps a video step's file and length, and preloads it", async () => {
     w.assets.set("as_film", {
       id: "as_film",
       kind: "video",
@@ -74,36 +86,7 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
       size_bytes: 1,
       duration_seconds: 95,
     });
-    w.assets.set("as_yt", {
-      id: "as_yt",
-      kind: "youtube",
-      title: "Private",
-      url: "https://www.youtube.com/watch?v=x",
-      size_bytes: null,
-      duration_seconds: 60,
-      health: "error",
-    } as never);
-    const doc = await list();
-    const premiere = {
-      ...doc.stories[1],
-      key: "premiere",
-      name: "Premiere",
-      preset: null,
-      triggers: [{ kind: "take" }],
-      round: {
-        steps: [
-          step({ message: true }),
-          step({ template: "video", content: { asset_id: "as_film" }, on_the_dot: true }),
-        ],
-        repeat: null,
-        hold_seconds: null,
-      },
-      rounds: { mode: "offsets", offsets_minutes: [0] },
-      end: { rounds: 1, for_minutes: null, until_clock: null, until_event: null, crew: true },
-      finale: null,
-      sound: "first",
-    };
-    const ok = await put([...doc.stories, premiere], 0);
+    const ok = await put([film({ asset_id: "as_film" })], 0);
     expect(ok.statusCode).toBe(200);
     const saved = (json(ok) as unknown as Stories).stories.at(-1) as {
       round: { steps: { content: unknown }[] };
@@ -120,17 +103,19 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
       .filter((e) => e.type === "moments.prefetch.changed")
       .at(-1);
     expect(prefetch?.data).toEqual({ files: [{ url: "/api/screen/files/abc.mp4", zones: [] }] });
-    const yt = {
-      ...premiere,
-      round: {
-        ...premiere.round,
-        steps: [
-          step({ message: true }),
-          step({ template: "video", content: { asset_id: "as_yt" } }),
-        ],
-      },
-    };
-    const refused = await put([...doc.stories, yt], 1);
+  });
+
+  it("refuses a private YouTube video, and asks a YouTube video's length", async () => {
+    w.assets.set("as_yt", {
+      id: "as_yt",
+      kind: "youtube",
+      title: "Private",
+      url: "https://www.youtube.com/watch?v=x",
+      size_bytes: null,
+      duration_seconds: 60,
+      health: "error",
+    } as never);
+    const refused = await put([film({ asset_id: "as_yt" })], 0);
     expect(refused.statusCode).toBe(400);
     expect(errorOf(refused).message).toContain("public or unlisted");
     // YouTube gives no length: the organiser says how long it plays.
@@ -143,25 +128,25 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
       duration_seconds: null,
       health: "ok",
     } as never);
-    const ytStep = (content: Record<string, unknown>) => ({
-      ...premiere,
-      round: {
-        ...premiere.round,
-        steps: [step({ message: true }), step({ template: "video", content })],
-      },
-    });
-    expect(
-      errorOf(await put([...doc.stories, ytStep({ asset_id: "as_yt_ok" })], 1)).message,
-    ).toContain("give the video's length");
-    const ok2 = await put(
-      [...doc.stories, ytStep({ asset_id: "as_yt_ok", duration_seconds: 600 })],
-      1,
+    expect(errorOf(await put([film({ asset_id: "as_yt_ok" })], 0)).message).toContain(
+      "give the video's length",
     );
-    expect(ok2.statusCode).toBe(200);
-    const yts = (json(ok2) as unknown as Stories).stories.at(-1) as {
+    const ok = await put([film({ asset_id: "as_yt_ok", duration_seconds: 600 })], 0);
+    expect(ok.statusCode).toBe(200);
+    const yts = (json(ok) as unknown as Stories).stories.at(-1) as {
       round: { steps: { content: Record<string, unknown> }[] };
     };
     expect(yts.round.steps[1]?.content).toMatchObject({ kind: "youtube", duration_ms: 600_000 });
+  });
+
+  it("keeps a preset's video step unchosen while it is off, and refuses to turn it on so", async () => {
+    const doc = await list();
+    const premiere = doc.stories.find((s) => s.key === "premiere") as Record<string, unknown>;
+    const on = doc.stories.map((s) => (s.key === "premiere" ? { ...premiere, enabled: true } : s));
+    const refused = await put(on, 0);
+    expect(refused.statusCode).toBe(400);
+    expect(errorOf(refused).message).toContain("Premiere: choose the video before turning it on.");
+    expect((await put(doc.stories, 0)).statusCode).toBe(200);
   });
 
   it("resets a preset to default", async () => {

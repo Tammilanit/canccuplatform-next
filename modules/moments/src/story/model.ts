@@ -93,6 +93,12 @@ export const DOMAIN_TYPES: Readonly<Record<string, { source: string; fills: read
     "screen.photo.added": { source: "photo", fills: [] },
   };
 
+/** Domain types no module sends yet: provisional in contracts/events.md, with who will send them. */
+export const PROVISIONAL: Readonly<Record<string, string>> = {
+  "pizza.order.closing": "the pizza module, step 5",
+  "tournament.round.started": "the tournament module, step 7",
+};
+
 export type Trigger =
   | { kind: "item"; kinds: string[]; item_id: string | null; anchor: "start" | "end" }
   | { kind: "domain"; type: string; final_only: boolean }
