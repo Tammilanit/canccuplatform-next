@@ -132,6 +132,35 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
     const refused = await put([...doc.stories, yt], 1);
     expect(refused.statusCode).toBe(400);
     expect(errorOf(refused).message).toContain("public or unlisted");
+    // YouTube gives no length: the organiser says how long it plays.
+    w.assets.set("as_yt_ok", {
+      id: "as_yt_ok",
+      kind: "youtube",
+      title: "Recap",
+      url: "https://www.youtube.com/watch?v=abcdefgh",
+      size_bytes: null,
+      duration_seconds: null,
+      health: "ok",
+    } as never);
+    const ytStep = (content: Record<string, unknown>) => ({
+      ...premiere,
+      round: {
+        ...premiere.round,
+        steps: [step({ message: true }), step({ template: "video", content })],
+      },
+    });
+    expect(
+      errorOf(await put([...doc.stories, ytStep({ asset_id: "as_yt_ok" })], 1)).message,
+    ).toContain("give the video's length");
+    const ok2 = await put(
+      [...doc.stories, ytStep({ asset_id: "as_yt_ok", duration_seconds: 600 })],
+      1,
+    );
+    expect(ok2.statusCode).toBe(200);
+    const yts = (json(ok2) as unknown as Stories).stories.at(-1) as {
+      round: { steps: { content: Record<string, unknown> }[] };
+    };
+    expect(yts.round.steps[1]?.content).toMatchObject({ kind: "youtube", duration_ms: 600_000 });
   });
 
   it("resets a preset to default", async () => {

@@ -22,7 +22,8 @@
     description: |
       Right `moments.settings.write`. Validated whole (storyboard.schema.json and the rules it cannot say): 400 names
       the culprit, an unknown placeholder or one not every trigger fills without a fallback among them (D10, SD3).
-      A `video` step's asset must be a Screen `video` or `youtube` asset of the event whose length is known; a
+      A `video` step's asset must be a Screen `video` or `youtube` asset of the event, with a length: a file's is read
+      from the asset, a `youtube` one's (YouTube gives none) from the step's `content.duration_seconds`; a
       `youtube` one whose probe (`health`) is `error` (a private or removed video) is refused with that reason.
       The API keeps the asset's `kind`, `url`, `title` and `duration_ms` in the step's content, and sends
       `moments.prefetch.changed` with the uploaded files of the stories that are on. A stale `revision` is 409

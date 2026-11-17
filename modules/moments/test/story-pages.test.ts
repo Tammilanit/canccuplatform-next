@@ -31,14 +31,15 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
     w.now = new Date("2026-01-01T18:40:00Z");
     await w.tx("demo", async (c) => {
       await addZone(c, "main");
-      await storeAgenda(c, { agenda_version: 1, items: [ITEM as never] });
+      await storeAgenda(c, { agenda_version: 1, items: [ITEM] });
     });
   });
 
   it("lists the stories and draws the builder of a preset", async () => {
     const list = await w.call("reader", "GET", "/storyboards");
     expect(list.statusCode).toBe(200);
-    for (const name of ["Doors open", "Starting soon", "Match called", "Champion", "Midnight"]) expect(list.body).toContain(name);
+    for (const name of ["Doors open", "Starting soon", "Match called", "Champion", "Midnight"])
+      expect(list.body).toContain(name);
     expect(list.body).not.toContain("Turn off");
     const b = await w.call("admin", "GET", "/storyboards?edit=starting_soon");
     expect(b.statusCode).toBe(200);
@@ -95,21 +96,45 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
     expect(saved.statusCode).toBe(303);
     expect(saved.headers.location).toContain("done=");
     const doc = await w.tx("demo", (c) => ensureStories(c));
-    expect(doc.stories.find((s) => s.key === "midnight")).toMatchObject({ name: "Midnight!", conditions: { quiet: "skip" }, round: { steps: [{ template: "countdown" }, { on_the_dot: true }, { message: true }] } });
-    const broken = await w.call("admin", "POST", "/storyboards/midnight/save", { ...fields, idempotency_key: "k-broken", revision: "1", s2_title: "{nope.nope}" }, form);
-    expect(decodeURIComponent(String(broken.headers.location))).toContain("Unknown placeholder {nope.nope}");
+    expect(doc.stories.find((s) => s.key === "midnight")).toMatchObject({
+      name: "Midnight!",
+      conditions: { quiet: "skip" },
+      round: { steps: [{ template: "countdown" }, { on_the_dot: true }, { message: true }] },
+    });
+    const broken = await w.call(
+      "admin",
+      "POST",
+      "/storyboards/midnight/save",
+      { ...fields, idempotency_key: "k-broken", revision: "1", s2_title: "{nope.nope}" },
+      form,
+    );
+    expect(decodeURIComponent(String(broken.headers.location))).toContain(
+      "Unknown placeholder {nope.nope}",
+    );
   });
 
   it("fires from On air with its item, then stops the loop and skips another to its finale", async () => {
     const onAir = await w.call("crew", "GET", "/on-air");
     expect(onAir.body).toContain("Fire Starting soon");
     expect(onAir.body).toContain("Demo Game Cup final · 19:00");
-    const fired = await w.call("crew", "POST", "/storyboards/starting_soon/fire", { idempotency_key: "k-fire-1", item_id: "it_final", back: "on-air" }, form);
+    const fired = await w.call(
+      "crew",
+      "POST",
+      "/storyboards/starting_soon/fire",
+      { idempotency_key: "k-fire-1", item_id: "it_final", back: "on-air" },
+      form,
+    );
     expect(fired.headers.location).toContain("done=Fired");
     const live = await w.call("crew", "GET", "/on-air");
     const id = /storyboards\/runs\/([^/]+)\/stop/.exec(live.body)?.[1] ?? "";
     expect(live.body).toContain("Skip to finale");
-    const stop = await w.call("crew", "POST", `/storyboards/runs/${id}/stop`, { idempotency_key: "k-stop-1", back: "on-air" }, form);
+    const stop = await w.call(
+      "crew",
+      "POST",
+      `/storyboards/runs/${id}/stop`,
+      { idempotency_key: "k-stop-1", back: "on-air" },
+      form,
+    );
     expect(stop.headers.location).toContain("done=Loop%20stopped");
     expect((await w.call("crew", "GET", "/on-air")).body).toContain("No loop is running.");
   });

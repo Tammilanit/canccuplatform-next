@@ -127,7 +127,7 @@
       "required": ["template", "content", "duration_seconds", "transition", "cue", "on_the_dot", "message"],
       "properties": {
         "template": { "description": "A Screen widget (`title_card`, `sting`, `countdown`, `qr`, …) or `video`.", "type": "string", "pattern": "^[a-z][a-z_]{1,31}$" },
-        "content": { "description": "The widget's view-model as written; strings may hold placeholders. A `video` step names `asset_id`; the API keeps its `kind`, `url`, `title` and `duration_ms`.", "type": "object" },
+        "content": { "description": "The widget's view-model as written; strings may hold placeholders. A `video` step names `asset_id` (and, for a `youtube` asset, its length in `duration_seconds`); the API keeps its `kind`, `url`, `title` and `duration_ms`.", "type": "object" },
         "duration_seconds": { "description": "1–60; a sting 1–5. A text step plays at least its readable floor, the message step at least the minimum card time.", "type": "integer", "minimum": 0, "maximum": 60 },
         "transition": { "enum": ["cut", "fade", "rise", "slide", "flash"] },
         "cue": { "description": "An event cue played at the step's start, or null.", "type": ["string", "null"], "maxLength": 64 },

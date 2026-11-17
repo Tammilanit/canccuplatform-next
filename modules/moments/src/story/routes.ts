@@ -123,8 +123,13 @@ async function withVideos(deps: AppDeps, tenant: string, stories: Story[]): Prom
         throw invalid(
           `${s.name}: YouTube does not play this video here (private, or removed): make it public or unlisted, or upload the file.`,
         );
-      if (typeof a.duration_seconds !== "number" || a.duration_seconds <= 0)
-        throw invalid(`${s.name}: the video's length is not known yet.`);
+      // A file's length is probed; YouTube gives none, so the organiser says how long it plays.
+      const given = step.content.duration_seconds;
+      const probed = typeof a.duration_seconds === "number" && a.duration_seconds > 0;
+      const asked = typeof given === "number" && given > 0 && given <= 6 * 3600;
+      const seconds = probed ? (a.duration_seconds as number) : asked ? given : null;
+      if (seconds === null)
+        throw invalid(`${s.name}: give the video's length (its asset has none).`);
       steps.push({
         ...step,
         content: {
@@ -132,7 +137,8 @@ async function withVideos(deps: AppDeps, tenant: string, stories: Story[]): Prom
           kind: a.kind,
           url: a.url ?? "",
           title: a.title ?? "",
-          duration_ms: Math.round(a.duration_seconds * 1000),
+          duration_ms: Math.round(seconds * 1000),
+          ...(asked ? { duration_seconds: given } : {}),
         },
       });
     }

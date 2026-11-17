@@ -150,8 +150,10 @@ function contentOf(
           label: p("qr_label") || p("title") || "Open the hub",
         },
       };
-    case "video":
-      return { asset_id: p("asset") };
+    case "video": {
+      const seconds = num(f[`s${String(i)}_video_seconds`]);
+      return { asset_id: p("asset"), ...(seconds === null ? {} : { duration_seconds: seconds }) };
+    }
     default:
       return before;
   }

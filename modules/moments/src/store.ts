@@ -302,6 +302,19 @@ export async function writeHistory(c: SqlClient, e: HistoryEntry): Promise<void>
   );
 }
 
+/** The live moment that shows `happening` (WD1), or null. */
+export async function happeningOwner(
+  c: SqlClient,
+  happening: string,
+): Promise<{ id: string; title: string } | null> {
+  const { rows } = await c.query(
+    `SELECT id, template, content FROM moments WHERE happening = $1 AND ended_at IS NULL LIMIT 1`,
+    [happening],
+  );
+  const row = rows[0] as (Pick<MomentRow, "template" | "content"> & { id: string }) | undefined;
+  return row === undefined ? null : { id: row.id, title: titleOf(row) };
+}
+
 /** What people read a moment as: its content's own title, else its template. */
 export function titleOf(m: Pick<MomentRow, "content" | "template">): string {
   const c = m.content;

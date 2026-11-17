@@ -17,6 +17,7 @@ import {
   knownZones,
   liveOverrides,
   loadOrders,
+  happeningOwner,
   lockRunningByKey,
   putOverride,
   saveMoment,
@@ -140,8 +141,7 @@ export class Engine {
     }
     const defaults = CLASS_DEFAULTS[r.class];
     const regions = r.regions ?? defaults.regions;
-    const owner = r.happening == null ? null : await ownerOf(c, r.happening);
-    if (owner !== null) {
+    const refused = async (outcome: string, displaced: string, heldBy: string | null) => {
       await writeHistory(c, {
         at: now,
         zone_key: null,
@@ -152,31 +152,28 @@ export class Engine {
         title: titleOf(r),
         region: regions[0] ?? null,
         why: r.why,
-        outcome: "not started: one owner per happening",
-        displaced: `${owner.title} already owns ${r.happening ?? ""}`,
+        outcome,
+        displaced,
       });
-      return { status: "refused", retry_after_seconds: REFUSAL_RETRY_SECONDS, held_by: owner.id };
-    }
+      return {
+        status: "refused" as const,
+        retry_after_seconds: REFUSAL_RETRY_SECONDS,
+        held_by: heldBy,
+      };
+    };
+    const owner = r.happening == null ? null : await happeningOwner(c, r.happening);
+    if (owner !== null)
+      return refused(
+        "not started: one owner per happening",
+        `${owner.title} already owns ${r.happening ?? ""}`,
+        owner.id,
+      );
     const orders = await loadOrders(c);
     const zones = await knownZones(c);
     if ((r.origin === "rule" || r.origin === "module") && r.refuse !== false) {
       const heldBy = await this.refusal(c, r.class, regions, r.zones ?? [], orders, zones);
-      if (heldBy !== null) {
-        await writeHistory(c, {
-          at: now,
-          zone_key: null,
-          action: "refused",
-          moment_id: null,
-          class: r.class,
-          origin: r.origin,
-          title: titleOf(r),
-          region: regions[0] ?? null,
-          why: r.why,
-          outcome: `refused, retry in ${REFUSAL_RETRY_SECONDS} s`,
-          displaced: `held by ${heldBy}`,
-        });
-        return { status: "refused", retry_after_seconds: REFUSAL_RETRY_SECONDS, held_by: heldBy };
-      }
+      if (heldBy !== null)
+        return refused(`refused, retry in ${REFUSAL_RETRY_SECONDS} s`, `held by ${heldBy}`, heldBy);
     }
     const people = r.origin === "crew" || r.origin === "emergency";
     const moment: MomentRow = {
@@ -430,19 +427,6 @@ function wire(m: MomentRow, s: SentOverride): Record<string, unknown> {
     starts_at: m.starts_at.toISOString(),
     ends_at: m.ended_at?.toISOString() ?? null,
   };
-}
-
-/** The live moment that shows `happening` (WD1), or null. */
-async function ownerOf(
-  c: SqlClient,
-  happening: string,
-): Promise<{ id: string; title: string } | null> {
-  const { rows } = await c.query(
-    `SELECT id, template, content FROM moments WHERE happening = $1 AND ended_at IS NULL LIMIT 1`,
-    [happening],
-  );
-  const row = rows[0] as (Pick<MomentRow, "template" | "content"> & { id: string }) | undefined;
-  return row === undefined ? null : { id: row.id, title: titleOf(row) };
 }
 
 /** The rank a moment has in the event's order, as the API shows it. */

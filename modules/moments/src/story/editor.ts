@@ -118,7 +118,7 @@ function stepFields(s: StoryStep, i: number, story: Story, cues: string[]): Html
     ${text(p("title"), title, { label: "Title (or sting text, countdown label)", placeholder: "{item.title}" })}
     ${text(p("subtitle"), sub, { label: "Subtitle" })}
     ${text(p("qr_path"), qr.path, { label: "QR path on the event's hostname", placeholder: "/notify/" })}${text(p("qr_label"), qr.label, { label: "QR label" })}
-    ${s.template === "video" ? text(p("asset"), str(c.asset_id), { label: "Video or YouTube asset (Screen → Content)" }) : ""}
+    ${s.template === "video" ? html`${text(p("asset"), str(c.asset_id), { label: "Video or YouTube asset (Screen → Content)" })}${text(p("video_seconds"), str(c.duration_seconds), { label: "Its length in seconds (YouTube only: a file's is read)" })}` : ""}
     ${text(p("seconds"), s.duration_seconds, { label: "Seconds (1–60; stings 1–5)" })}
     ${field(
       p("transition"),
