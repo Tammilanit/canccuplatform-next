@@ -262,8 +262,19 @@ export async function forgetUser(
        AND moment_id IN (SELECT id FROM moments WHERE actor_user_id = $1)`,
     [user],
   );
+  // A story's rows of a person's take or test-fire name them in `why` too (#114).
+  await c.query(
+    `UPDATE moments_history SET why = ${ANONYMOUS_WHY}
+     WHERE actor_user_id = $1 AND action IN ('round_started', 'round_skipped', 'loop_ended', 'not_fired')`,
+    [user],
+  );
   await c.query(
     `UPDATE moments_history SET actor_user_id = NULL, actor_name = NULL WHERE actor_user_id = $1`,
+    [user],
+  );
+  await c.query(
+    `UPDATE moments_story_runs SET actor_user_id = NULL, actor_name = NULL, why = ${ANONYMOUS_WHY}
+     WHERE actor_user_id = $1`,
     [user],
   );
   await c.query(

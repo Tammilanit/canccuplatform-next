@@ -7,6 +7,7 @@ import type pg from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { storeAgenda } from "../src/scene-store.js";
 import { addZone } from "../src/store.js";
+import { forgetUser } from "../src/consumer.js";
 import { DATABASE_URL, freshDatabase } from "./helpers.js";
 import { appWorld, errorOf, json } from "./app.js";
 import type { AppWorld } from "./app.js";
@@ -223,6 +224,22 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
     const { rows } = await pool.query(
       `SELECT why FROM moments_history WHERE action = 'round_started'`,
     );
-    expect((rows[0] as { why: string } | undefined)?.why).toMatch(/^test-fire · Demo crew/);
+    expect((rows[0] as { why: string } | undefined)?.why).toMatch(/^Demo crew · test-fire Midnight/);
+  });
+
+  it("forgets a person's name in the story's runs and history rows", async () => {
+    await w.call("crew", "POST", "/api/moments/storyboards/midnight/take", {
+      test: { zone: "main", sound: false },
+    });
+    await w.tx("demo", (c) => forgetUser(c, "u_crew"));
+    const { rows } = await pool.query(
+      `SELECT why, actor_name FROM moments_history WHERE action = 'round_started'
+       UNION ALL SELECT why, actor_name FROM moments_story_runs`,
+    );
+    expect(rows.length).toBe(2);
+    for (const r of rows as { why: string; actor_name: string | null }[]) {
+      expect(r.actor_name).toBeNull();
+      expect(r.why).not.toContain("Demo crew");
+    }
   });
 });

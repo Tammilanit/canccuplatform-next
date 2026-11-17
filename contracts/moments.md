@@ -264,7 +264,7 @@ U2 as amended by U3: `moments.read` (On air, History, Scenes, the settings read-
 Through `POST /internal/tenants/audit` in the same request ([tenants.md](tenants.md#audit-log)): every crew action (spotlight, end, extend, a scene's crew button pressed or released), every emergency start and end (the venue-wide one in each event), every change of the priorities, the rules, the scenes (a reset too), the cues, the sound settings and the storyboards (a reset too), with the old and new values, each story fired, test-fired, stopped or skipped to its finale, the mute, the sound check, each sound linked to or taken out of the library, and every announcement sent or scheduled, edited and withdrawn, and each announcement template saved or deleted.
 
 ## Privacy
-The history keeps the name and user id of whoever started or ended a moment. `GET /api/moments/me/export` answers the caller's history rows at this event; `DELETE /api/moments/me` removes their name and id from them ([README.md](README.md#privacy-export-and-delete)). `tenants.user.deleted` does the same in every event; `tenants.tenant.deleted` deletes the event's rows.
+The history keeps the name and user id of whoever started or ended a moment. `GET /api/moments/me/export` answers the caller's history rows at this event; `DELETE /api/moments/me` removes their name and id from them, and from the storyboards' runs they fired ([README.md](README.md#privacy-export-and-delete)). `tenants.user.deleted` does the same in every event; `tenants.tenant.deleted` deletes the event's rows.
 
 ## What Moments consumes
 | From | Events | Used for |

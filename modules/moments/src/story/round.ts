@@ -54,7 +54,7 @@ export async function history(
     class: "storyboard",
     origin: run.actor_user_id === null ? "rule" : "crew",
     title: story.name,
-    why: run.test ? `test-fire · ${run.why}` : run.why,
+    why: run.why,
     outcome,
     displaced: extra.displaced ?? null,
     actor: actorOfRun(run),
