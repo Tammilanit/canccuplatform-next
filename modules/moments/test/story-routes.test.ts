@@ -60,6 +60,33 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
     expect((await put(doc.stories, 7)).statusCode).toBe(409);
   });
 
+  // #611, #114 "validated by a JSON schema": the contract's storyboard.schema.json, then the rules.
+  it("refuses a story its JSON schema refuses: an unknown property, a bad enum, no rounds", async () => {
+    const own = story({ key: "own", name: "Own story" });
+    const noRounds: Record<string, unknown> = { ...own };
+    delete noRounds.rounds;
+    const cases: [unknown, string][] = [
+      [{ ...own, colour: "red" }, "colour"],
+      [
+        {
+          ...own,
+          triggers: [{ kind: "take" }],
+          end: { ...own.end, until_event: { kind: "foo" } },
+        },
+        "until_event",
+      ],
+      [{ ...own, round: { ...own.round, steps: [step({ message: "yes" as never })] } }, "message"],
+      [noRounds, "rounds"],
+    ];
+    for (const [bad, culprit] of cases) {
+      const r = await put([bad], 0);
+      expect(r.statusCode, culprit).toBe(400);
+      expect(errorOf(r).code, culprit).toBe("invalid_request");
+      expect(errorOf(r).message, culprit).toContain(culprit);
+    }
+    expect((await put([own], 0)).statusCode).toBe(200);
+  });
+
   /**
    * A story with a video step, alone in the event's list: each save validates and audits the
    * whole list, so the video tests save only the story they look at (#602's carry-over: this

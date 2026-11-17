@@ -23,6 +23,7 @@ import { lockSettings } from "../store.js";
 import { canSee, runOfShow } from "../announce/store.js";
 import { own } from "../announce/text.js";
 import { checkStories } from "./check.js";
+import { schemaChecked } from "./schema.js";
 import { freeVariablesOf, isVideo, textsOf } from "./model.js";
 import type { Story } from "./model.js";
 import { PRESETS, RULE_OF_PRESET } from "./presets.js";
@@ -242,11 +243,13 @@ export function storyRoutes(app: FastifyInstance, deps: AppDeps): void {
   app.put("/api/moments/storyboards", write, (request) => {
     const body = (request.body ?? {}) as Body;
     if (!Array.isArray(body.stories)) throw invalid("`stories` is the event's list.");
+    const stories = schemaChecked(body.stories);
+    if (typeof stories === "string") throw invalid(stories);
     return save(
       request,
       (doc) =>
         Promise.resolve({
-          stories: body.stories as Story[],
+          stories: stories as Story[],
           settings: settingsOf(body.settings, doc.settings),
         }),
       body.revision,
