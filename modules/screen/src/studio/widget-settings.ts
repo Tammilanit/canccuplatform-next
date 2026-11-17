@@ -2,7 +2,7 @@
  * Settings Studio shows with the selected box's (sheet 16): the zone's screen name with its header
  * box, the photo wall's props with a box that shows photos, and the rotation with, for the hero,
  * the Director's turn indicator (contracts/screen.md, Header and hub QR, `screen_name`; Photos;
- * The Director). The field helpers are shared with zone-views.ts.
+ * The Director). The field helpers are shared with zone-views.ts and region-views.ts.
  */
 import { attrs, html } from "@canccu/ui";
 import type { Html, Slot } from "@canccu/ui";
