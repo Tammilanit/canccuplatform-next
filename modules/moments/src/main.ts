@@ -32,6 +32,7 @@ import { screenClient } from "./cues/screen.js";
 import { Cues } from "./cues/service.js";
 import { SceneTicker, TICK_MS, tickAll, upkeep } from "./tick.js";
 import { httpAgenda, timeZones } from "./agenda.js";
+import { registerTopic } from "./announce/topic.js";
 
 const PORT = 8080;
 /** pg_advisory_lock key of the moments migrations; each module has its own. */
@@ -138,6 +139,8 @@ async function main(): Promise<void> {
   });
   await app.listen({ host: "0.0.0.0", port: PORT });
   log.info({ port: PORT, version: config.version }, "moments started");
+  // Notify may start after Moments; the registration waits for it without holding the start up.
+  void registerTopic(process.env.CANCCU_NOTIFY_URL ?? "http://notify:8080", service, { log });
 
   const scenes = new SceneTicker();
   // The tick owns every TTL and patience (E2); one pass at a time, never overlapping itself.

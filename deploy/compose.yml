@@ -215,6 +215,7 @@ services:
       CANCCU_TENANTS_URL: http://tenants:8080
       CANCCU_SCREEN_URL: http://screen:8080
       CANCCU_AGENDA_URL: http://agenda:8080
+      CANCCU_NOTIFY_URL: http://notify:8080
       CANCCU_SIGNIN_HOSTNAME: ${CANCCU_SIGNIN_HOSTNAME:-}
       CANCCU_SUPERADMIN_HOSTNAME: ${CANCCU_SUPERADMIN_HOSTNAME:-}
       # The demo tenant on the host's IP address; honoured only while CANCCU_VERSION is dev.

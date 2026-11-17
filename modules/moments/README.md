@@ -20,7 +20,7 @@ The moments module serves [contracts/moments.md](../../contracts/moments.md): th
 
 ## Environment
 
-`CANCCU_DATABASE_URL`, `CANCCU_MIGRATE_DATABASE_URL` (the migration role), `CANCCU_TENANTS_URL`, `CANCCU_AGENDA_URL` (the agenda's internal read, for scenes), `CANCCU_SCREEN_URL` (the sound gates and the library ask Screen), plus the kit's `CANCCU_MODULE`, `CANCCU_VERSION`, `CANCCU_VALKEY_URL`, `CANCCU_ADMIN_URL`, `CANCCU_SERVICE_KEY`. Optional: `CANCCU_SIGNIN_HOSTNAME`, `CANCCU_SUPERADMIN_HOSTNAME` (the venue-wide emergency answers only there), `CANCCU_IP_MODE=demo` (only with version `dev`).
+`CANCCU_DATABASE_URL`, `CANCCU_MIGRATE_DATABASE_URL` (the migration role), `CANCCU_TENANTS_URL`, `CANCCU_AGENDA_URL` (the agenda's internal read, for scenes and announcements), `CANCCU_NOTIFY_URL` (the `announcements` topic is registered there at start), `CANCCU_SCREEN_URL` (the sound gates and the library ask Screen), plus the kit's `CANCCU_MODULE`, `CANCCU_VERSION`, `CANCCU_VALKEY_URL`, `CANCCU_ADMIN_URL`, `CANCCU_SERVICE_KEY`. Optional: `CANCCU_SIGNIN_HOSTNAME`, `CANCCU_SUPERADMIN_HOSTNAME` (the venue-wide emergency answers only there), `CANCCU_IP_MODE=demo` (only with version `dev`).
 
 Through Caddy: `/api/moments/health`, the contract's `/api/moments/…` paths, and the pages under `/moments/` (`/moments` redirects there). Not through Caddy: `/internal/moments/…`, and the internal paths, the API and health under the pages' prefix (404).
 
