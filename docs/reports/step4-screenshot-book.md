@@ -13,7 +13,7 @@ Issue #620. Every page, state and screen that step 4 (Moments) added or changed,
   - Desktop pages are 1280 px wide; phone pages 390 px wide, as tall as the page. Pages are shown 1:1, as full pages; a few local ones show only the top of the page (the window, 1280×800), where the change is.
   - Screens were shot at 1920×1080 (the main hall), 3840×2160 (the main hall in 4K) and 1080×1920 (the entrance, portrait). Here they are scaled to 720 px on the short side (JPEG), with one 1:1 crop of a 4K screen.
   - Sequences are rows of numbered frames. Each frame's label says when it was taken, in UTC, which is also the event's time zone, so it matches the clock on the screen.
-- **Time:** CI took its shots about 21:31–21:36 UTC, the local ones 22:48–23:06 UTC, and the Midnight sting at 00:00 UTC on 18 November.
+- **Time:** CI took its shots about 21:31–21:36 UTC, the local ones 22:48–23:06 UTC, and the Midnight sting from 23:59:48 to 00:00:18 UTC, 17–18 November.
 - **Mockups:** "mockup NN" is the step 4 brief's mockup in [docs/briefs/step-4-moments/](../briefs/step-4-moments/) (01–16 in [the brief](../briefs/step-4-moments.md), 17–22 in [the storyboards pack](../briefs/step-4-moments/storyboards.md)); "sheet N" is sheet N of the design guideline [docs/design/mockups.html](../design/mockups.html).
 
 ## Contents
@@ -400,7 +400,13 @@ Each sequence is a row of numbered frames. The screen's own clock is in the top 
 
 #### S2 · The Midnight sting at 00:00:00
 
-MIDNIGHT-PLACEHOLDER
+![Midnight around 00:00:00, main hall](step4-screenshot-book/s02-midnight.jpg)
+
+*Local, real time.* Nothing fired by hand: the main hall at 1080p, from 12 s before the event's midnight (00:00 UTC, the event's time zone) to 18 s after. The Pulse as usual (1); at 23:59:50 the full-screen countdown "Midnight · 00:00 · Starts in…" (2–5); the sting "Midnight!" on the accent colour (6–7); its crossfade into the card (8); "Night 2 at Demo Event · Keep it going" (9–11). Each label is the instant the shot was asked for; the browser takes up to about a second to capture, which is why frame 5, asked at 00:00:00.0, still shows "00:00:01". The sting was on screen by 00:00:01.5. Full-screen steps hide the screen's clock, hence the labels. Mockup 20.
+
+![Midnight at 00:00:00, entrance](step4-screenshot-book/s02-midnight-p00000-portrait.jpg) ![Midnight at 00:00:05, entrance](step4-screenshot-book/s02-midnight-p05000-portrait.jpg)
+
+*Local, real time.* The entrance (portrait) at the same two instants as frames 5 and 8: at 00:00:00 it showed only its background, with no countdown and no sting (see [Seen while shooting](#seen-while-shooting)); at 00:00:05 "Night 2 at Demo Event", full screen.
 
 #### S3 · Premiere on two screens at once
 ![Premiere on two main-hall screens](step4-screenshot-book/s03-premiere-two-screens.jpg)
@@ -423,6 +429,7 @@ Not fixed here (out of scope); for the lead to sort.
 - **Message cards and the finale are small.** Most preset message steps and "It's on!" use small text in the top-left of a large empty hero (R21, S1 frame 8, R22), where mockup 20 fills the hero.
 - **The QR step drew a white square.** In the first test-fire of Doors open, its QR step showed a white square with no code for the 3 s it was watched (R20). The QR draws in CI's arrival check-in shot, so this may be a first draw that comes late.
 - **The event's name was missing once.** The first test-fire of Doors open read "Welcome to" with no event name, on main and on the entrance (A5, R19). A later test-fire read "Welcome to Demo Event" (R17 frame 4).
+- **Midnight on the entrance missed the dot.** At 00:00:00 the portrait entrance showed an empty background while the main hall showed the countdown; the card came at 00:00:05 (S2).
 - **Peak looks the same as Daytime.** After Peak now, the main hall and the entrance look as they did before (A6). If Peak is meant to change the look (sheet 12), it does not show here.
 - **Match called with no data** reads "Match called:" over an empty hero (R21). A test-fire could fill its placeholders with their sample text, as the builder's preview does.
 - **Midnight and Starting soon in R21 are the wrong frame.** CI's Midnight shot waits for the text "Night" and so matched "Tonight on stage" on the Pulse; its Starting soon shot caught the sting. Both shots pass without showing their preset. S2 and S1 show the real ones.
