@@ -1,0 +1,384 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1764 1800" width="1764" height="1800" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Step 4 polish 01: the sound desk, Cues at 1280 px</title>
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><linearGradient id="gh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><radialGradient id="glowp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#3ddcff" stop-opacity="0.35"/><stop offset="1" stop-color="#3ddcff" stop-opacity="0"/></radialGradient><radialGradient id="glowa" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#b98cff" stop-opacity="0.32"/><stop offset="1" stop-color="#b98cff" stop-opacity="0"/></radialGradient><linearGradient id="scrim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0d1a" stop-opacity="0"/><stop offset="0.45" stop-color="#0b0d1a" stop-opacity="0.15"/><stop offset="1" stop-color="#0b0d1a" stop-opacity="0.92"/></linearGradient><linearGradient id="heroin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2140"/><stop offset="1" stop-color="#141831"/></linearGradient><linearGradient id="photo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a4b2a"/><stop offset="0.5" stop-color="#c8763a"/><stop offset="1" stop-color="#3a1f2c"/></linearGradient><radialGradient id="bokeh" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffe2a8" stop-opacity="0.85"/><stop offset="1" stop-color="#ffe2a8" stop-opacity="0"/></radialGradient><clipPath id="sh32_110"><rect x="32" y="110" width="1280" height="1300" rx="10"/></clipPath></defs>
+<rect x="0" y="0" width="1764" height="1800" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">01 · The sound desk: Cues (desktop, 1280 px)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">Replaces mockup 12’s one-page console. The page splits into four sub-pages under one master strip. Book shots O9, O11, O12.</text>
+<g clip-path="url(#sh32_110)">
+<rect x="32" y="110" width="1280" height="1300" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="110" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="32" y1="166" x2="1312" y2="166" stroke="#343c66" stroke-width="1"/>
+<rect x="52" y="124" width="84" height="28" rx="6" fill="#3b82f6"/>
+<text x="94" y="143" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle">Demo</text>
+<text x="148" y="144" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
+<line x1="244" y1="128" x2="244" y2="148" stroke="#343c66" stroke-width="1"/>
+<text x="257" y="143" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Tue 17 – Wed 18 Nov</text>
+<rect x="403" y="127" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="415" cy="138" r="3.5" fill="#3ee39a"/>
+<text x="423" y="142.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
+<text x="1266" y="145" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">21:32</text>
+<text x="1292" y="145" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
+<rect x="32" y="167" width="255" height="1243" rx="0" fill="#0e1122"/>
+<line x1="287" y1="167" x2="287" y2="1410" stroke="#343c66" stroke-width="1"/>
+<text x="56" y="196" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="58" y="222" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="233" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Run of show</text>
+<rect x="58" y="264" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="275" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Notifications</text>
+<rect x="58" y="306" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="317" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Announcements</text>
+<text x="56" y="369" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="44" y="382" width="231" height="40" rx="8" fill="#1c374d"/>
+<rect x="44" y="382" width="3" height="40" rx="1" fill="#3ddcff"/>
+<rect x="58" y="395" width="14" height="14" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="87" y="406" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Screen studio</text>
+<rect x="58" y="437" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="448" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Theme studio</text>
+<text x="56" y="500" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">ADMIN</text>
+<rect x="58" y="526" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="537" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
+<rect x="58" y="568" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="579" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Health</text>
+<rect x="58" y="610" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="621" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Event profile</text>
+<rect x="58" y="652" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="663" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">People</text>
+<text x="328" y="208" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">‹ Screen studio</text>
+<text x="328" y="245" font-size="28" fill="#f3f5ff" font-weight="500" text-anchor="start">Cues</text>
+<text x="342" y="288" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">On air</text>
+<text x="415.24" y="288" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Priorities</text>
+<text x="518.64" y="288" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Scenes</text>
+<text x="591.88" y="288" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Storyboards</text>
+<text x="702.82" y="288" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">History</text>
+<rect x="769.6" y="303" width="58.16" height="2" rx="0" fill="#3ddcff"/>
+<text x="783.6" y="288" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Cues</text>
+<line x1="328" y1="305" x2="1272" y2="305" stroke="#343c66" stroke-width="1"/>
+<rect x="328" y="330" width="94.48" height="36" rx="18" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="344" y="353" font-size="14.5" fill="#7be7ff" font-weight="600" text-anchor="start">Cues</text>
+<rect x="382.48" y="338" width="26" height="20" rx="10" fill="#333850"/>
+<text x="395.48" y="352" font-size="11.5" fill="#ccd0e6" font-weight="600" text-anchor="middle">25</text>
+<text x="444.48" y="353" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Library</text>
+<rect x="507.32" y="338" width="26" height="20" rx="10" fill="#333850"/>
+<text x="520.32" y="352" font-size="11.5" fill="#ccd0e6" font-weight="600" text-anchor="middle">12</text>
+<text x="569.32" y="353" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Limits and categories</text>
+<text x="777.84" y="353" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Log</text>
+<rect x="328" y="384" width="944" height="104" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="348" y="414" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Sound</text>
+<rect x="402" y="399" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="431" cy="410" r="8" fill="#0b0d1a"/>
+<text x="468" y="414" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Master</text>
+<rect x="524" y="406" width="190" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="524" y="406" width="152" height="6" rx="3" fill="#3ddcff"/>
+<circle cx="676" cy="409" r="9" fill="#f3f5ff" stroke="#3ddcff" stroke-width="3"/>
+<text x="728" y="414" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start">80 %</text>
+<rect x="1103.76" y="395" width="148.24" height="36" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1177.88" y="418" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Sound check</text>
+<line x1="1218" y1="401" x2="1218" y2="425" stroke="#616788" stroke-width="1"/>
+<path d="M1229,410 l5,5 l5,-5" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<rect x="926.16" y="395" width="167.6" height="36" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<path d="M940.16,410.0 h4 l5,-5 v16 l-5,-5 h-4 z" fill="#f3f5ff"/>
+<path d="M952.16,409.0 l7,8 M959.16,409.0 l-7,8" fill="none" stroke="#f3f5ff" stroke-width="1.6" stroke-linecap="round"/>
+<text x="1018.96" y="418" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Mute all 15 min</text>
+<line x1="348" y1="442" x2="1252" y2="442" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="468" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Main hall</text>
+<rect x="426.04" y="459" width="80" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="426.04" y="459" width="8" height="6" rx="3" fill="#3ee39a"/>
+<text x="516.04" y="468" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">2 of 20 this hour</text>
+<text x="660.96" y="468" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Entrance</text>
+<rect x="731.44" y="453" width="116.8" height="22" rx="11" fill="#453d34"/>
+<text x="789.84" y="467.5" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="middle">no sound screen</text>
+<text x="1252" y="468" font-size="13.5" fill="#3ddcff" font-weight="500" text-anchor="end">Limits and categories ›</text>
+<rect x="328" y="506" width="944" height="874" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="348" y="524" width="180" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="360" y="547" font-size="14.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Search cues</text>
+<rect x="542" y="527" width="64.28" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<path d="M553,542.0 l4,4 l7,-8" fill="none" stroke="#7be7ff" stroke-width="2" stroke-linecap="round"/>
+<text x="573" y="546.6" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="start">All</text>
+<rect x="614.28" y="527" width="66.56" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="627.28" y="546.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Urgent</text>
+<rect x="688.84" y="527" width="66.56" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="701.84" y="546.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Result</text>
+<rect x="763.4" y="527" width="86.84" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="776.4" y="546.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Attention</text>
+<rect x="858.24" y="527" width="113.88" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="871.24" y="546.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Something new</text>
+<rect x="980.12" y="527" width="59.8" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="993.12" y="546.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Ended</text>
+<rect x="1047.92" y="527" width="73.32" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1060.92" y="546.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Ambient</text>
+<rect x="1132" y="524" width="120" height="36" rx="8" fill="#3ddcff"/>
+<path d="M1147,542.0 h12 M1153,536.0 v12" fill="none" stroke="#0b0d1a" stroke-width="2" stroke-linecap="round"/>
+<text x="1201" y="547" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="middle">New cue</text>
+<rect x="329" y="580" width="942" height="32" rx="0" fill="#1c2138"/>
+<text x="348" y="601" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">CUE</text>
+<text x="728" y="601" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">PICTURE</text>
+<text x="888" y="601" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">LEVEL</text>
+<text x="1052" y="601" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">NOT AGAIN FOR</text>
+<text x="1166" y="601" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">ON</text>
+<text x="348" y="638" font-size="11.5" fill="#ffa3ae" font-weight="700" text-anchor="start" letter-spacing="1.2">URGENT</text>
+<text x="411.84" y="638" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">level 100 % · interrupts</text>
+<line x1="348" y1="650" x2="1252" y2="650" stroke="#343c66" stroke-width="1"/>
+<circle cx="364" cy="679" r="15" fill="#2a2f4d"/>
+<path d="M359,672 l11,7 l-11,7 z" fill="#f3f5ff"/>
+<text x="390" y="675" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Urgent announcement</text>
+<text x="390" y="695" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">announce.urgent · Alarm</text>
+<text x="728" y="684" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Ripple · holds 60 s</text>
+<rect x="888" y="676" width="90" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="888" y="676" width="90" height="6" rx="3" fill="#3ddcff"/>
+<text x="988" y="684" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">100 %</text>
+<text x="1052" y="684" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">none</text>
+<rect x="1166" y="668" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1195" cy="679" r="8" fill="#0b0d1a"/>
+<text x="1242" y="685" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
+<line x1="348" y1="708" x2="1252" y2="708" stroke="#343c66" stroke-width="1"/>
+<circle cx="364" cy="737" r="15" fill="#2a2f4d"/>
+<path d="M359,730 l11,7 l-11,7 z" fill="#f3f5ff"/>
+<text x="390" y="733" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Emergency</text>
+<text x="390" y="753" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">emergency.start · Alarm</text>
+<text x="728" y="742" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Sound only</text>
+<rect x="888" y="734" width="90" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="888" y="734" width="90" height="6" rx="3" fill="#3ddcff"/>
+<text x="988" y="742" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">100 %</text>
+<text x="1052" y="742" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">none</text>
+<rect x="1166" y="726" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1195" cy="737" r="8" fill="#0b0d1a"/>
+<text x="1242" y="743" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
+<text x="348" y="792" font-size="11.5" fill="#7cecba" font-weight="700" text-anchor="start" letter-spacing="1.2">RESULT</text>
+<text x="411.84" y="792" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">level 80 %</text>
+<line x1="348" y1="804" x2="1252" y2="804" stroke="#343c66" stroke-width="1"/>
+<circle cx="364" cy="833" r="15" fill="#2a2f4d"/>
+<path d="M359,826 l11,7 l-11,7 z" fill="#f3f5ff"/>
+<text x="390" y="829" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Result announced</text>
+<text x="390" y="849" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">announce.result · Ding</text>
+<text x="728" y="838" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Pop, glow · 60 s</text>
+<rect x="888" y="830" width="90" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="888" y="830" width="90" height="6" rx="3" fill="#3ddcff"/>
+<text x="988" y="838" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">100 %</text>
+<text x="1052" y="838" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">none</text>
+<rect x="1166" y="822" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1195" cy="833" r="8" fill="#0b0d1a"/>
+<text x="1242" y="839" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
+<line x1="348" y1="862" x2="1252" y2="862" stroke="#343c66" stroke-width="1"/>
+<circle cx="364" cy="891" r="15" fill="#2a2f4d"/>
+<path d="M359,884 l11,7 l-11,7 z" fill="#f3f5ff"/>
+<text x="390" y="887" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Tournament over</text>
+<text x="390" y="907" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">tournament.post · Drum roll, Chime bright</text>
+<text x="728" y="896" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Pop, flip, ring burst</text>
+<rect x="888" y="888" width="90" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="888" y="888" width="90" height="6" rx="3" fill="#3ddcff"/>
+<text x="988" y="896" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">100 %</text>
+<text x="1052" y="896" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">none</text>
+<rect x="1166" y="880" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1195" cy="891" r="8" fill="#0b0d1a"/>
+<text x="1242" y="897" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
+<text x="348" y="946" font-size="11.5" fill="#7be7ff" font-weight="700" text-anchor="start" letter-spacing="1.2">ATTENTION</text>
+<text x="434.76" y="946" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">level 80 %</text>
+<line x1="348" y1="958" x2="1252" y2="958" stroke="#343c66" stroke-width="1"/>
+<circle cx="364" cy="987" r="15" fill="#2a2f4d"/>
+<path d="M359,980 l11,7 l-11,7 z" fill="#f3f5ff"/>
+<text x="390" y="983" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Announcement</text>
+<text x="390" y="1003" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">announce.attention · Chime soft, Chime bright, Happy beep</text>
+<text x="728" y="992" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Glow, slide · 120 s</text>
+<rect x="888" y="984" width="90" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="888" y="984" width="90" height="6" rx="3" fill="#3ddcff"/>
+<text x="988" y="992" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">100 %</text>
+<text x="1052" y="992" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">none</text>
+<rect x="1166" y="976" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1195" cy="987" r="8" fill="#0b0d1a"/>
+<text x="1242" y="993" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
+<line x1="348" y1="1016" x2="1252" y2="1016" stroke="#343c66" stroke-width="1"/>
+<circle cx="364" cy="1045" r="15" fill="#2a2f4d"/>
+<path d="M359,1038 l11,7 l-11,7 z" fill="#f3f5ff"/>
+<text x="390" y="1041" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Storyboard chime</text>
+<text x="390" y="1061" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">story.chime · Chime soft</text>
+<text x="728" y="1050" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Sound only</text>
+<rect x="888" y="1042" width="90" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="888" y="1042" width="54" height="6" rx="3" fill="#3ddcff"/>
+<text x="988" y="1050" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">60 %</text>
+<text x="1052" y="1050" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">none</text>
+<rect x="1166" y="1034" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1195" cy="1045" r="8" fill="#0b0d1a"/>
+<text x="1242" y="1051" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
+<text x="348" y="1100" font-size="11.5" fill="#cdacff" font-weight="700" text-anchor="start" letter-spacing="1.2">SOMETHING NEW</text>
+<text x="465.32" y="1100" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">level 80 % · silent at calm</text>
+<line x1="348" y1="1112" x2="1252" y2="1112" stroke="#343c66" stroke-width="1"/>
+<circle cx="364" cy="1141" r="15" fill="#2a2f4d"/>
+<path d="M359,1134 l11,7 l-11,7 z" fill="#f3f5ff"/>
+<text x="390" y="1137" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Tournament about to start</text>
+<text x="390" y="1157" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">tournament.pre · Chime bright</text>
+<text x="728" y="1146" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Pop, glow · 60 s</text>
+<rect x="888" y="1138" width="90" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="888" y="1138" width="90" height="6" rx="3" fill="#3ddcff"/>
+<text x="988" y="1146" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">100 %</text>
+<text x="1052" y="1146" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">none</text>
+<rect x="1166" y="1130" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1195" cy="1141" r="8" fill="#0b0d1a"/>
+<text x="1242" y="1147" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
+<line x1="348" y1="1170" x2="1252" y2="1170" stroke="#343c66" stroke-width="1"/>
+<circle cx="364" cy="1199" r="15" fill="#2a2f4d"/>
+<path d="M359,1192 l11,7 l-11,7 z" fill="#f3f5ff"/>
+<text x="390" y="1195" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Tournament starts</text>
+<text x="390" y="1215" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">tournament.start · Gong, Drum roll</text>
+<text x="728" y="1204" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Ripple, pop · 120 s</text>
+<rect x="888" y="1196" width="90" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="888" y="1196" width="90" height="6" rx="3" fill="#3ddcff"/>
+<text x="988" y="1204" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">100 %</text>
+<text x="1052" y="1204" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">none</text>
+<rect x="1166" y="1188" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1195" cy="1199" r="8" fill="#0b0d1a"/>
+<text x="1242" y="1205" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
+<line x1="348" y1="1228" x2="1252" y2="1228" stroke="#343c66" stroke-width="1"/>
+<circle cx="364" cy="1257" r="15" fill="#2a2f4d"/>
+<path d="M359,1250 l11,7 l-11,7 z" fill="#a9b1d6"/>
+<text x="390" y="1253" font-size="15" fill="#a9b1d6" font-weight="600" text-anchor="start">Poll opens</text>
+<text x="390" y="1273" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">poll.open · Happy beep</text>
+<text x="728" y="1262" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Pop, glow · 60 s</text>
+<rect x="888" y="1254" width="90" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="888" y="1254" width="90" height="6" rx="3" fill="#616788"/>
+<text x="988" y="1262" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">100 %</text>
+<text x="1052" y="1262" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start">none</text>
+<rect x="1166" y="1246" width="40" height="22" rx="11" fill="#2a2f4d" stroke="#616788" stroke-width="1"/>
+<circle cx="1177" cy="1257" r="8" fill="#c5cae3"/>
+<text x="1242" y="1263" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
+<line x1="348" y1="1286" x2="1252" y2="1286" stroke="#343c66" stroke-width="1"/>
+<circle cx="364" cy="1315" r="15" fill="#2a2f4d"/>
+<path d="M359,1308 l11,7 l-11,7 z" fill="#f3f5ff"/>
+<text x="390" y="1311" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Now playing</text>
+<text x="390" y="1331" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">nowplaying.start · Music box</text>
+<text x="728" y="1320" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Flip, slide · 60 s</text>
+<rect x="888" y="1312" width="90" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="888" y="1312" width="90" height="6" rx="3" fill="#3ddcff"/>
+<text x="988" y="1320" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">100 %</text>
+<text x="1052" y="1320" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">none</text>
+<rect x="1166" y="1304" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1195" cy="1315" r="8" fill="#0b0d1a"/>
+<text x="1242" y="1321" font-size="20" fill="#a9b1d6" font-weight="400" text-anchor="end">›</text>
+<line x1="348" y1="1344" x2="1252" y2="1344" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="1374" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">10 of 25 shown · Ended and Ambient below</text>
+<text x="1252" y="1374" font-size="13.5" fill="#3ddcff" font-weight="500" text-anchor="end">Show all 25 ›</text>
+<rect x="336" y="1172" width="928" height="54" rx="8" fill="none" stroke="#3ddcff" stroke-width="1.5"/>
+</g>
+<circle cx="331" cy="348" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="331" y="353" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">1</text>
+<circle cx="331" cy="436" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="331" y="441" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">2</text>
+<circle cx="571.6" cy="670" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="571.6" y="675" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">3</text>
+<circle cx="876" cy="833" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="876" y="838" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">4</text>
+<circle cx="349" cy="833" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="349" y="838" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">5</text>
+<circle cx="1266" cy="542" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1266" y="547" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">6</text>
+<circle cx="1228" cy="1199" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1228" y="1204" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">7</text>
+<circle cx="1298" cy="180" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1298" y="185" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">8</text>
+<text x="32" y="1450" font-size="20" fill="#111827" font-weight="700" text-anchor="start">The master strip in its two other states</text>
+<text x="32" y="1474" font-size="15" fill="#6b7280" font-weight="400" text-anchor="start">Same strip, every sub-page; shown here at 1280 px content width</text>
+<rect x="32" y="1492" width="1280" height="316" rx="10" fill="#0b0d1a"/>
+<text x="56" y="1524" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start">Muted for 15 minutes (O11): the strip turns amber and counts down; pictures still play.</text>
+<rect x="56" y="1538" width="1232" height="104" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="76" y="1568" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Sound</text>
+<rect x="130" y="1553" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="159" cy="1564" r="8" fill="#0b0d1a"/>
+<text x="196" y="1568" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Master</text>
+<rect x="252" y="1560" width="190" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="252" y="1560" width="152" height="6" rx="3" fill="#616788"/>
+<circle cx="404" cy="1563" r="9" fill="#f3f5ff" stroke="#616788" stroke-width="3"/>
+<text x="456" y="1568" font-size="14" fill="#a9b1d6" font-weight="600" text-anchor="start">80 %</text>
+<rect x="1157.6" y="1549" width="110.4" height="36" rx="8" fill="#3ddcff"/>
+<text x="1212.8" y="1572" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="middle">Unmute now</text>
+<rect x="867.6" y="1549" width="280" height="36" rx="8" fill="#453d34" stroke="#8a723e" stroke-width="1"/>
+<path d="M881.5999999999999,1564 h4 l5,-5 v16 l-5,-5 h-4 z" fill="#ffd36d"/>
+<path d="M893.5999999999999,1563 l7,8 M900.5999999999999,1563 l-7,8" fill="none" stroke="#ffd36d" stroke-width="1.6" stroke-linecap="round"/>
+<text x="909.6" y="1572" font-size="13.5" fill="#ffd36d" font-weight="600" text-anchor="start">Muted · back at 23:17 (14:52 left)</text>
+<line x1="76" y1="1596" x2="1268" y2="1596" stroke="#343c66" stroke-width="1"/>
+<text x="76" y="1622" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Main hall</text>
+<rect x="154.04" y="1613" width="80" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="154.04" y="1613" width="8" height="6" rx="3" fill="#3ee39a"/>
+<text x="244.04" y="1622" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">2 of 20 this hour</text>
+<text x="388.96" y="1622" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Entrance</text>
+<rect x="459.44" y="1607" width="116.8" height="22" rx="11" fill="#453d34"/>
+<text x="517.84" y="1621.5" font-size="12" fill="#ffd36d" font-weight="600" text-anchor="middle">no sound screen</text>
+<text x="1268" y="1622" font-size="13.5" fill="#3ddcff" font-weight="500" text-anchor="end">Limits and categories ›</text>
+<text x="56" y="1672" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start">Sound check sent (O12): the answer per zone, in words, where the organiser pressed.</text>
+<rect x="56" y="1686" width="1232" height="104" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="76" y="1716" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Sound</text>
+<rect x="130" y="1701" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="159" cy="1712" r="8" fill="#0b0d1a"/>
+<text x="196" y="1716" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Master</text>
+<rect x="252" y="1708" width="190" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="252" y="1708" width="152" height="6" rx="3" fill="#3ddcff"/>
+<circle cx="404" cy="1711" r="9" fill="#f3f5ff" stroke="#3ddcff" stroke-width="3"/>
+<text x="456" y="1716" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start">80 %</text>
+<rect x="1119.76" y="1697" width="148.24" height="36" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1193.88" y="1720" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Sound check</text>
+<line x1="1234" y1="1703" x2="1234" y2="1727" stroke="#616788" stroke-width="1"/>
+<path d="M1245,1712 l5,5 l5,-5" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<rect x="942.16" y="1697" width="167.6" height="36" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<path d="M956.16,1712.0 h4 l5,-5 v16 l-5,-5 h-4 z" fill="#f3f5ff"/>
+<path d="M968.16,1711.0 l7,8 M975.16,1711.0 l-7,8" fill="none" stroke="#f3f5ff" stroke-width="1.6" stroke-linecap="round"/>
+<text x="1034.96" y="1720" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Mute all 15 min</text>
+<line x1="76" y1="1744" x2="1268" y2="1744" stroke="#343c66" stroke-width="1"/>
+<circle cx="85" cy="1765" r="8" fill="#3ee39a"/>
+<path d="M81,1765 l3,3 l5,-6" fill="none" stroke="#0b0d1a" stroke-width="1.8" stroke-linecap="round"/>
+<text x="100" y="1770" font-size="13.5" fill="#7cecba" font-weight="600" text-anchor="start">Sound check sent to every zone at 21:31:40.</text>
+<text x="396" y="1770" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Main hall played it · Entrance has no sound screen, so nothing was heard there.</text>
+<circle cx="44" cy="1590" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="44" y="1595" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">2</text>
+<text x="1352" y="140" font-size="20" fill="#111827" font-weight="700" text-anchor="start">What changed and why</text>
+<circle cx="1365" cy="169" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="174" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">1</text>
+<text x="1386" y="174" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Four sub-pages, one master strip</text>
+<text x="1386" y="196" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">O9 was one 7,000 px page: budget, master,</text>
+<text x="1386" y="216" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">categories, 25 cues, library and log in a</text>
+<text x="1386" y="236" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">row. Now Cues, Library, Limits and categories</text>
+<text x="1386" y="256" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">and Log are sub-pages; the strip with the</text>
+<text x="1386" y="276" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">master sits on top of each.</text>
+<circle cx="1365" cy="305" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="310" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">2</text>
+<text x="1386" y="310" font-size="16" fill="#111827" font-weight="700" text-anchor="start">The master is a slider; mute and check stay one tap</text>
+<text x="1386" y="332" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Master volume is a slider with its value, not</text>
+<text x="1386" y="352" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">a number box. Mute all 15 min and Sound check</text>
+<text x="1386" y="372" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">(with its zone menu) sit at the right of the</text>
+<text x="1386" y="392" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">strip, so the crew finds them on every</text>
+<text x="1386" y="412" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">sub-page (O11, O12).</text>
+<circle cx="1365" cy="441" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="446" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">3</text>
+<text x="1386" y="446" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Plain names first</text>
+<text x="1386" y="468" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Each cue reads as what it is, "Urgent</text>
+<text x="1386" y="488" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">announcement"; its id and sounds are the grey</text>
+<text x="1386" y="508" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">second line. O9 listed raw ids such as</text>
+<text x="1386" y="528" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">announce.urgent as links.</text>
+<circle cx="1365" cy="557" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="562" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">4</text>
+<text x="1386" y="562" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Levels as bars</text>
+<text x="1386" y="584" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">A cue’s level is a bar with its percent, and</text>
+<text x="1386" y="604" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">the slider is in the editor. Typed level</text>
+<text x="1386" y="624" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">boxes are gone from the list.</text>
+<circle cx="1365" cy="653" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="658" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">5</text>
+<text x="1386" y="658" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Preview in place</text>
+<text x="1386" y="680" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The round play button plays the cue’s sound</text>
+<text x="1386" y="700" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">and its picture on the virtual screen,</text>
+<text x="1386" y="720" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">without opening it.</text>
+<circle cx="1365" cy="749" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="754" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">6</text>
+<text x="1386" y="754" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Grouped and filtered by category</text>
+<text x="1386" y="776" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Cues group under their category, with its</text>
+<text x="1386" y="796" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">level and calm rule beside the heading; chips</text>
+<text x="1386" y="816" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">filter, search finds by name or id. New cue</text>
+<text x="1386" y="836" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">is the one primary action.</text>
+<circle cx="1365" cy="865" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="870" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">7</text>
+<text x="1386" y="870" font-size="16" fill="#111827" font-weight="700" text-anchor="start">The row opens the editor</text>
+<text x="1386" y="892" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The whole row is the link (sheet 02); On is a</text>
+<text x="1386" y="912" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">switch in the row.</text>
+<circle cx="1365" cy="941" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="946" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">8</text>
+<text x="1386" y="946" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Fits 1280 px</text>
+<text x="1386" y="968" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">O9 was 1,291 px wide at 1280. No table here</text>
+<text x="1386" y="988" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">is wider than the content column; the long</text>
+<text x="1386" y="1008" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">lists are rows, not table columns.</text>
+</svg>

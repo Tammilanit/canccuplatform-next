@@ -1,0 +1,416 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1764 1420" width="1764" height="1420" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Step 4 polish 02: the cue editor at 1280 px</title>
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><linearGradient id="gh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><radialGradient id="glowp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#3ddcff" stop-opacity="0.35"/><stop offset="1" stop-color="#3ddcff" stop-opacity="0"/></radialGradient><radialGradient id="glowa" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#b98cff" stop-opacity="0.32"/><stop offset="1" stop-color="#b98cff" stop-opacity="0"/></radialGradient><linearGradient id="scrim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0d1a" stop-opacity="0"/><stop offset="0.45" stop-color="#0b0d1a" stop-opacity="0.15"/><stop offset="1" stop-color="#0b0d1a" stop-opacity="0.92"/></linearGradient><linearGradient id="heroin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2140"/><stop offset="1" stop-color="#141831"/></linearGradient><linearGradient id="photo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a4b2a"/><stop offset="0.5" stop-color="#c8763a"/><stop offset="1" stop-color="#3a1f2c"/></linearGradient><radialGradient id="bokeh" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffe2a8" stop-opacity="0.85"/><stop offset="1" stop-color="#ffe2a8" stop-opacity="0"/></radialGradient><clipPath id="sh32_110"><rect x="32" y="110" width="1280" height="1270" rx="10"/></clipPath></defs>
+<rect x="0" y="0" width="1764" height="1420" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">02 · The cue editor (desktop, 1280 px)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">One cue, as a two-card form on the content grid. Book shot O10 (and the library players of O9).</text>
+<g clip-path="url(#sh32_110)">
+<rect x="32" y="110" width="1280" height="1270" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="110" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="32" y1="166" x2="1312" y2="166" stroke="#343c66" stroke-width="1"/>
+<rect x="52" y="124" width="84" height="28" rx="6" fill="#3b82f6"/>
+<text x="94" y="143" font-size="13" fill="#ffffff" font-weight="700" text-anchor="middle">Demo</text>
+<text x="148" y="144" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
+<line x1="244" y1="128" x2="244" y2="148" stroke="#343c66" stroke-width="1"/>
+<text x="257" y="143" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Tue 17 – Wed 18 Nov</text>
+<rect x="403" y="127" width="50" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="415" cy="138" r="3.5" fill="#3ee39a"/>
+<text x="423" y="142.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
+<text x="1266" y="145" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">21:32</text>
+<text x="1292" y="145" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">UTC</text>
+<rect x="32" y="167" width="255" height="1213" rx="0" fill="#0e1122"/>
+<line x1="287" y1="167" x2="287" y2="1380" stroke="#343c66" stroke-width="1"/>
+<text x="56" y="196" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="58" y="222" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="233" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Run of show</text>
+<rect x="58" y="264" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="275" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Notifications</text>
+<rect x="58" y="306" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="317" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Announcements</text>
+<text x="56" y="369" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="44" y="382" width="231" height="40" rx="8" fill="#1c374d"/>
+<rect x="44" y="382" width="3" height="40" rx="1" fill="#3ddcff"/>
+<rect x="58" y="395" width="14" height="14" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="87" y="406" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Screen studio</text>
+<rect x="58" y="437" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="448" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Theme studio</text>
+<text x="56" y="500" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">ADMIN</text>
+<rect x="58" y="526" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="537" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
+<rect x="58" y="568" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="579" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Health</text>
+<rect x="58" y="610" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="621" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Event profile</text>
+<rect x="58" y="652" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="663" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">People</text>
+<text x="328" y="208" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">‹ Cues</text>
+<text x="328" y="245" font-size="28" fill="#f3f5ff" font-weight="500" text-anchor="start">Tournament starts</text>
+<text x="589.52" y="244" font-size="15" fill="#a9b1d6" font-weight="400" text-anchor="start" font-family="ui-monospace, Menlo, monospace">tournament.start</text>
+<text x="342" y="288" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">On air</text>
+<text x="415.24" y="288" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Priorities</text>
+<text x="518.64" y="288" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Scenes</text>
+<text x="591.88" y="288" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Storyboards</text>
+<text x="702.82" y="288" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">History</text>
+<rect x="769.6" y="303" width="58.16" height="2" rx="0" fill="#3ddcff"/>
+<text x="783.6" y="288" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Cues</text>
+<line x1="328" y1="305" x2="1272" y2="305" stroke="#343c66" stroke-width="1"/>
+<text x="1220" y="226" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="end">On</text>
+<rect x="1228" y="211" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="1257" cy="222" r="8" fill="#0b0d1a"/>
+<rect x="328" y="330" width="560" height="960" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="348" y="362" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Sound</text>
+<text x="348" y="402" font-size="13" fill="#c5cae3" font-weight="500" text-anchor="start">Category</text>
+<rect x="348" y="414" width="66.56" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="361" y="433.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Urgent</text>
+<rect x="422.56" y="414" width="66.56" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="435.56" y="433.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Result</text>
+<rect x="497.12" y="414" width="86.84" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="510.12" y="433.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Attention</text>
+<rect x="591.96" y="414" width="131.88" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<path d="M602.96,429.0 l4,4 l7,-8" fill="none" stroke="#7be7ff" stroke-width="2" stroke-linecap="round"/>
+<text x="622.96" y="433.6" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="start">Something new</text>
+<rect x="731.84" y="414" width="59.8" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="744.84" y="433.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Ended</text>
+<rect x="348" y="454" width="73.32" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="361" y="473.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Ambient</text>
+<text x="348" y="508" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Something new plays at 80 %, waits behind urgent, results and attention, and is</text>
+<text x="348" y="525" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">silent at calm.</text>
+<text x="348" y="564" font-size="13" fill="#c5cae3" font-weight="500" text-anchor="start">Sounds</text>
+<text x="868" y="564" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end">One is picked at random, never the same twice running</text>
+<rect x="348" y="576" width="476" height="48" rx="10" fill="#1c2138" stroke="#3ddcff" stroke-width="1.5"/>
+<circle cx="372" cy="600" r="14" fill="#3ddcff"/>
+<rect x="367" y="595" width="10" height="10" rx="1.5" fill="#0b0d1a"/>
+<text x="396" y="605" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start">Gong</text>
+<rect x="500" y="596.596" width="3" height="6.80743" rx="1.5" fill="#3ddcff"/>
+<rect x="505" y="594.264" width="3" height="11.4711" rx="1.5" fill="#3ddcff"/>
+<rect x="510" y="595.701" width="3" height="8.59763" rx="1.5" fill="#3ddcff"/>
+<rect x="515" y="594.062" width="3" height="11.8751" rx="1.5" fill="#3ddcff"/>
+<rect x="520" y="594.038" width="3" height="11.9235" rx="1.5" fill="#3ddcff"/>
+<rect x="525" y="598.047" width="3" height="3.90603" rx="1.5" fill="#3ddcff"/>
+<rect x="530" y="598.412" width="3" height="3.17634" rx="1.5" fill="#3ddcff"/>
+<rect x="535" y="593.074" width="3" height="13.8511" rx="1.5" fill="#3ddcff"/>
+<rect x="540" y="596.876" width="3" height="6.2477" rx="1.5" fill="#3ddcff"/>
+<rect x="545" y="597.084" width="3" height="5.83249" rx="1.5" fill="#3ddcff"/>
+<rect x="550" y="592.699" width="3" height="14.6021" rx="1.5" fill="#3ddcff"/>
+<rect x="555" y="595.862" width="3" height="8.27547" rx="1.5" fill="#3ddcff"/>
+<rect x="560" y="593.99" width="3" height="12.0199" rx="1.5" fill="#3ddcff"/>
+<rect x="565" y="596.035" width="3" height="7.92963" rx="1.5" fill="#3ddcff"/>
+<rect x="570" y="595.332" width="3" height="9.3357" rx="1.5" fill="#3ddcff"/>
+<rect x="575" y="597.786" width="3" height="4.42773" rx="1.5" fill="#3ddcff"/>
+<rect x="580" y="595.629" width="3" height="8.74202" rx="1.5" fill="#3ddcff"/>
+<rect x="585" y="594.763" width="3" height="10.4737" rx="1.5" fill="#3ddcff"/>
+<rect x="590" y="596.361" width="3" height="7.27706" rx="1.5" fill="#3ddcff"/>
+<rect x="595" y="595.631" width="3" height="8.73757" rx="1.5" fill="#3ddcff"/>
+<rect x="600" y="596.047" width="3" height="7.9051" rx="1.5" fill="#3ddcff"/>
+<rect x="605" y="598.28" width="3" height="3.43996" rx="1.5" fill="#3ddcff"/>
+<rect x="610" y="596.06" width="3" height="7.88014" rx="1.5" fill="#3ddcff"/>
+<rect x="615" y="596.491" width="3" height="7.01858" rx="1.5" fill="#616788"/>
+<rect x="620" y="597.41" width="3" height="5.17913" rx="1.5" fill="#616788"/>
+<rect x="625" y="598.381" width="3" height="3.2378" rx="1.5" fill="#616788"/>
+<rect x="630" y="594.993" width="3" height="10.0131" rx="1.5" fill="#616788"/>
+<rect x="635" y="596.482" width="3" height="7.03603" rx="1.5" fill="#616788"/>
+<rect x="640" y="595.275" width="3" height="9.44934" rx="1.5" fill="#616788"/>
+<rect x="645" y="594.367" width="3" height="11.2668" rx="1.5" fill="#616788"/>
+<rect x="650" y="594.986" width="3" height="10.0281" rx="1.5" fill="#616788"/>
+<rect x="655" y="593.767" width="3" height="12.4654" rx="1.5" fill="#616788"/>
+<rect x="660" y="596.385" width="3" height="7.23043" rx="1.5" fill="#616788"/>
+<rect x="665" y="594.037" width="3" height="11.9267" rx="1.5" fill="#616788"/>
+<rect x="670" y="595.926" width="3" height="8.14888" rx="1.5" fill="#616788"/>
+<rect x="675" y="592.879" width="3" height="14.2412" rx="1.5" fill="#616788"/>
+<rect x="680" y="593.029" width="3" height="13.9417" rx="1.5" fill="#616788"/>
+<rect x="685" y="597.872" width="3" height="4.25565" rx="1.5" fill="#616788"/>
+<rect x="690" y="597.594" width="3" height="4.811" rx="1.5" fill="#616788"/>
+<rect x="695" y="597.008" width="3" height="5.98443" rx="1.5" fill="#616788"/>
+<rect x="700" y="591.651" width="3" height="16.6989" rx="1.5" fill="#616788"/>
+<rect x="705" y="595.311" width="3" height="9.37817" rx="1.5" fill="#616788"/>
+<rect x="710" y="593.782" width="3" height="12.4361" rx="1.5" fill="#616788"/>
+<rect x="715" y="596.168" width="3" height="7.66375" rx="1.5" fill="#616788"/>
+<rect x="720" y="594.46" width="3" height="11.0791" rx="1.5" fill="#616788"/>
+<rect x="725" y="595.483" width="3" height="9.03407" rx="1.5" fill="#616788"/>
+<rect x="730" y="595.833" width="3" height="8.3349" rx="1.5" fill="#616788"/>
+<rect x="735" y="594.18" width="3" height="11.6406" rx="1.5" fill="#616788"/>
+<rect x="740" y="594.313" width="3" height="11.3744" rx="1.5" fill="#616788"/>
+<rect x="745" y="592.216" width="3" height="15.5674" rx="1.5" fill="#616788"/>
+<rect x="750" y="593.909" width="3" height="12.1823" rx="1.5" fill="#616788"/>
+<rect x="755" y="592.448" width="3" height="15.1036" rx="1.5" fill="#616788"/>
+<rect x="760" y="593.107" width="3" height="13.7861" rx="1.5" fill="#616788"/>
+<text x="812" y="605" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end">5.6 s</text>
+<rect x="348" y="634" width="476" height="48" rx="10" fill="#1c2138" stroke="#3c446c" stroke-width="1"/>
+<circle cx="372" cy="658" r="14" fill="#2a2f4d"/>
+<path d="M368,652.0 l10,6 l-10,6 z" fill="#f3f5ff"/>
+<text x="396" y="663" font-size="14" fill="#f3f5ff" font-weight="500" text-anchor="start">Drum roll</text>
+<rect x="500" y="653.909" width="3" height="8.18132" rx="1.5" fill="#616788"/>
+<rect x="505" y="655.326" width="3" height="5.34801" rx="1.5" fill="#616788"/>
+<rect x="510" y="651.575" width="3" height="12.849" rx="1.5" fill="#616788"/>
+<rect x="515" y="655.968" width="3" height="4.06451" rx="1.5" fill="#616788"/>
+<rect x="520" y="652.679" width="3" height="10.6423" rx="1.5" fill="#616788"/>
+<rect x="525" y="653.972" width="3" height="8.05617" rx="1.5" fill="#616788"/>
+<rect x="530" y="656.112" width="3" height="3.7767" rx="1.5" fill="#616788"/>
+<rect x="535" y="653.213" width="3" height="9.57484" rx="1.5" fill="#616788"/>
+<rect x="540" y="656.265" width="3" height="3.46953" rx="1.5" fill="#616788"/>
+<rect x="545" y="653.879" width="3" height="8.24171" rx="1.5" fill="#616788"/>
+<rect x="550" y="656.093" width="3" height="3.81401" rx="1.5" fill="#616788"/>
+<rect x="555" y="655.991" width="3" height="4.01763" rx="1.5" fill="#616788"/>
+<rect x="560" y="654.211" width="3" height="7.57776" rx="1.5" fill="#616788"/>
+<rect x="565" y="652.222" width="3" height="11.5568" rx="1.5" fill="#616788"/>
+<rect x="570" y="655.886" width="3" height="4.22737" rx="1.5" fill="#616788"/>
+<rect x="575" y="655.442" width="3" height="5.11614" rx="1.5" fill="#616788"/>
+<rect x="580" y="653.663" width="3" height="8.67484" rx="1.5" fill="#616788"/>
+<rect x="585" y="652.42" width="3" height="11.1596" rx="1.5" fill="#616788"/>
+<rect x="590" y="654.141" width="3" height="7.71787" rx="1.5" fill="#616788"/>
+<rect x="595" y="654.965" width="3" height="6.07046" rx="1.5" fill="#616788"/>
+<rect x="600" y="652.934" width="3" height="10.1322" rx="1.5" fill="#616788"/>
+<rect x="605" y="656.34" width="3" height="3.32007" rx="1.5" fill="#616788"/>
+<rect x="610" y="653.737" width="3" height="8.5253" rx="1.5" fill="#616788"/>
+<rect x="615" y="655.516" width="3" height="4.96891" rx="1.5" fill="#616788"/>
+<rect x="620" y="655.978" width="3" height="4.04343" rx="1.5" fill="#616788"/>
+<rect x="625" y="656.048" width="3" height="3.90322" rx="1.5" fill="#616788"/>
+<rect x="630" y="655.25" width="3" height="5.49952" rx="1.5" fill="#616788"/>
+<rect x="635" y="653.016" width="3" height="9.96756" rx="1.5" fill="#616788"/>
+<rect x="640" y="655.689" width="3" height="4.62149" rx="1.5" fill="#616788"/>
+<rect x="645" y="653.765" width="3" height="8.47099" rx="1.5" fill="#616788"/>
+<rect x="650" y="653.356" width="3" height="9.28787" rx="1.5" fill="#616788"/>
+<rect x="655" y="654.587" width="3" height="6.82684" rx="1.5" fill="#616788"/>
+<rect x="660" y="653.567" width="3" height="8.86686" rx="1.5" fill="#616788"/>
+<rect x="665" y="656.15" width="3" height="3.69982" rx="1.5" fill="#616788"/>
+<rect x="670" y="656.155" width="3" height="3.6902" rx="1.5" fill="#616788"/>
+<rect x="675" y="655.263" width="3" height="5.47461" rx="1.5" fill="#616788"/>
+<rect x="680" y="652.265" width="3" height="11.4709" rx="1.5" fill="#616788"/>
+<rect x="685" y="653.745" width="3" height="8.50933" rx="1.5" fill="#616788"/>
+<rect x="690" y="654.408" width="3" height="7.1842" rx="1.5" fill="#616788"/>
+<rect x="695" y="652.473" width="3" height="11.0538" rx="1.5" fill="#616788"/>
+<rect x="700" y="653.285" width="3" height="9.43009" rx="1.5" fill="#616788"/>
+<rect x="705" y="654.308" width="3" height="7.38361" rx="1.5" fill="#616788"/>
+<rect x="710" y="650.519" width="3" height="14.9619" rx="1.5" fill="#616788"/>
+<rect x="715" y="651.085" width="3" height="13.8294" rx="1.5" fill="#616788"/>
+<rect x="720" y="654.556" width="3" height="6.88786" rx="1.5" fill="#616788"/>
+<rect x="725" y="652.009" width="3" height="11.9827" rx="1.5" fill="#616788"/>
+<rect x="730" y="652.508" width="3" height="10.9846" rx="1.5" fill="#616788"/>
+<rect x="735" y="650.038" width="3" height="15.9243" rx="1.5" fill="#616788"/>
+<rect x="740" y="651.272" width="3" height="13.4556" rx="1.5" fill="#616788"/>
+<rect x="745" y="654.499" width="3" height="7.00201" rx="1.5" fill="#616788"/>
+<rect x="750" y="649.901" width="3" height="16.1972" rx="1.5" fill="#616788"/>
+<rect x="755" y="655.731" width="3" height="4.53833" rx="1.5" fill="#616788"/>
+<rect x="760" y="653.867" width="3" height="8.26614" rx="1.5" fill="#616788"/>
+<text x="812" y="663" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="end">4.0 s</text>
+<rect x="832" y="582" width="36" height="36" rx="8" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M844,594 l12,12 M856,594 l-12,12" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<rect x="832" y="640" width="36" height="36" rx="8" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M844,652 l12,12 M856,652 l-12,12" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<text x="348" y="710" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Add from the library</text>
+<rect x="348" y="722" width="118.36" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M359,737.0 h9 M363.5,732.5 v9" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<text x="379" y="741.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Chime, soft</text>
+<rect x="474.36" y="722" width="131.88" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M485.36,737.0 h9 M489.86,732.5 v9" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<text x="505.36" y="741.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Chime, bright</text>
+<rect x="614.24" y="722" width="111.6" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M625.24,737.0 h9 M629.74,732.5 v9" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<text x="645.24" y="741.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Happy beep</text>
+<rect x="733.84" y="722" width="104.84" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M744.84,737.0 h9 M749.34,732.5 v9" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<text x="764.84" y="741.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Music box</text>
+<rect x="348" y="762" width="77.8" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M359,777.0 h9 M363.5,772.5 v9" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<text x="379" y="781.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Nudge</text>
+<rect x="433.8" y="762" width="71.04" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M444.8,777.0 h9 M449.3,772.5 v9" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<text x="464.8" y="781.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Ding</text>
+<rect x="512.84" y="762" width="125.12" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M523.84,777.0 h9 M528.34,772.5 v9" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<text x="543.84" y="781.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Bicycle bell</text>
+<rect x="645.96" y="762" width="77.8" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M656.96,777.0 h9 M661.46,772.5 v9" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<text x="676.96" y="781.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Alarm</text>
+<rect x="348" y="802" width="138.64" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M359,817.0 h9 M363.5,812.5 v9" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<text x="379" y="821.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Airplane chime</text>
+<rect x="494.64" y="802" width="98.08" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M505.64,817.0 h9 M510.14,812.5 v9" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<text x="525.64" y="821.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Applause</text>
+<text x="348" y="872" font-size="13" fill="#c5cae3" font-weight="500" text-anchor="start">Voice line</text>
+<rect x="348" y="884" width="71.04" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<path d="M359,899.0 l4,4 l7,-8" fill="none" stroke="#7be7ff" stroke-width="2" stroke-linecap="round"/>
+<text x="379" y="903.6" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="start">None</text>
+<rect x="427.04" y="884" width="179.2" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M438.03999999999996,899.0 h9 M442.53999999999996,894.5 v9" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<text x="458.04" y="903.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Choose a voice line…</text>
+<text x="348" y="938" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Plays right after the sound; counts once in the budget.</text>
+<line x1="348" y1="960" x2="868" y2="960" stroke="#343c66" stroke-width="1"/>
+<text x="348" y="994" font-size="13" fill="#c5cae3" font-weight="500" text-anchor="start">Level</text>
+<text x="868" y="994" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="end">100 %</text>
+<rect x="348" y="1013" width="520" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="348" y="1013" width="520" height="6" rx="3" fill="#3ddcff"/>
+<line x1="348" y1="1024" x2="348" y2="1029" stroke="#616788" stroke-width="1.5"/>
+<line x1="478" y1="1024" x2="478" y2="1029" stroke="#616788" stroke-width="1.5"/>
+<line x1="608" y1="1024" x2="608" y2="1029" stroke="#616788" stroke-width="1.5"/>
+<line x1="738" y1="1024" x2="738" y2="1029" stroke="#616788" stroke-width="1.5"/>
+<line x1="868" y1="1024" x2="868" y2="1029" stroke="#616788" stroke-width="1.5"/>
+<circle cx="868" cy="1016" r="9" fill="#f3f5ff" stroke="#3ddcff" stroke-width="3"/>
+<text x="348" y="1048" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Heard at 64 %: master 80 % × Something new 80 % × this cue 100 %.</text>
+<text x="348" y="1086" font-size="13" fill="#c5cae3" font-weight="500" text-anchor="start">Not again for</text>
+<text x="868" y="1086" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="end">Off</text>
+<rect x="348" y="1105" width="520" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="348" y="1105" width="0" height="6" rx="3" fill="#3ddcff"/>
+<line x1="348" y1="1116" x2="348" y2="1121" stroke="#616788" stroke-width="1.5"/>
+<line x1="452" y1="1116" x2="452" y2="1121" stroke="#616788" stroke-width="1.5"/>
+<line x1="556" y1="1116" x2="556" y2="1121" stroke="#616788" stroke-width="1.5"/>
+<line x1="660" y1="1116" x2="660" y2="1121" stroke="#616788" stroke-width="1.5"/>
+<line x1="764" y1="1116" x2="764" y2="1121" stroke="#616788" stroke-width="1.5"/>
+<line x1="868" y1="1116" x2="868" y2="1121" stroke="#616788" stroke-width="1.5"/>
+<circle cx="348" cy="1108" r="9" fill="#f3f5ff" stroke="#3ddcff" stroke-width="3"/>
+<text x="348" y="1130" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Off</text>
+<text x="452" y="1130" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle">30 s</text>
+<text x="556" y="1130" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle">1 min</text>
+<text x="660" y="1130" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle">2 min</text>
+<text x="764" y="1130" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle">5 min</text>
+<text x="868" y="1130" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="end">10 min</text>
+<text x="348" y="1170" font-size="13" fill="#c5cae3" font-weight="500" text-anchor="start">Catch-up</text>
+<rect x="348" y="1182" width="150" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<line x1="386" y1="1188" x2="386" y2="1212" stroke="#3c446c" stroke-width="1"/>
+<line x1="460" y1="1188" x2="460" y2="1212" stroke="#3c446c" stroke-width="1"/>
+<path d="M361,1200.0 h12" fill="none" stroke="#f3f5ff" stroke-width="2" stroke-linecap="round"/>
+<path d="M473,1200.0 h12 M479,1194.0 v12" fill="none" stroke="#f3f5ff" stroke-width="2" stroke-linecap="round"/>
+<text x="423" y="1205" font-size="14.5" fill="#f3f5ff" font-weight="600" text-anchor="middle">2 min</text>
+<text x="514" y="1196" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">If a moment is missed (a screen was off), it may still</text>
+<text x="514" y="1213" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">sound this long after.</text>
+<text x="348" y="1244" font-size="13" fill="#c5cae3" font-weight="500" text-anchor="start">Once per source</text>
+<rect x="828" y="1229" width="40" height="22" rx="11" fill="#3ddcff"/>
+<circle cx="857" cy="1240" r="8" fill="#0b0d1a"/>
+<text x="348" y="1266" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Each tournament sounds it once, within 7 days.</text>
+<rect x="908" y="330" width="364" height="470" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="928" y="362" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Picture</text>
+<text x="928" y="402" font-size="13" fill="#c5cae3" font-weight="500" text-anchor="start">Effects</text>
+<rect x="928" y="414" width="64.28" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<path d="M939,429.0 l4,4 l7,-8" fill="none" stroke="#7be7ff" stroke-width="2" stroke-linecap="round"/>
+<text x="959" y="433.6" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="start">Pop</text>
+<rect x="1000.28" y="414" width="53.04" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1013.28" y="433.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Tilt</text>
+<rect x="1061.32" y="414" width="53.04" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1074.32" y="433.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Flip</text>
+<rect x="1122.36" y="414" width="84.56" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<path d="M1133.36,429.0 l4,4 l7,-8" fill="none" stroke="#7be7ff" stroke-width="2" stroke-linecap="round"/>
+<text x="1153.36" y="433.6" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="start">Ripple</text>
+<rect x="928" y="454" width="59.8" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="941" y="473.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Slide</text>
+<rect x="995.8" y="454" width="53.04" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1008.8" y="473.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Glow</text>
+<rect x="1056.84" y="454" width="93.6" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1069.84" y="473.6" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Ring burst</text>
+<text x="928" y="506" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Picked at random, never twice running.</text>
+<text x="928" y="540" font-size="13" fill="#c5cae3" font-weight="500" text-anchor="start">Holds for</text>
+<text x="1252" y="540" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="end">2 min</text>
+<rect x="928" y="559" width="324" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="928" y="559" width="129.6" height="6" rx="3" fill="#3ddcff"/>
+<line x1="928" y1="570" x2="928" y2="575" stroke="#616788" stroke-width="1.5"/>
+<line x1="992.8" y1="570" x2="992.8" y2="575" stroke="#616788" stroke-width="1.5"/>
+<line x1="1057.6" y1="570" x2="1057.6" y2="575" stroke="#616788" stroke-width="1.5"/>
+<line x1="1122.4" y1="570" x2="1122.4" y2="575" stroke="#616788" stroke-width="1.5"/>
+<line x1="1187.2" y1="570" x2="1187.2" y2="575" stroke="#616788" stroke-width="1.5"/>
+<line x1="1252" y1="570" x2="1252" y2="575" stroke="#616788" stroke-width="1.5"/>
+<circle cx="1057.6" cy="562" r="9" fill="#f3f5ff" stroke="#3ddcff" stroke-width="3"/>
+<text x="928" y="584" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start">0</text>
+<text x="1057.6" y="584" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="middle">2 min</text>
+<text x="1252" y="584" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="end">5 min</text>
+<rect x="928" y="606" width="324" height="150" rx="10" fill="#090b16" stroke="#343c66" stroke-width="1"/>
+<rect x="940" y="620" width="96" height="56" rx="6" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="940" y="686" width="96" height="56" rx="6" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1044" y="620" width="96" height="56" rx="6" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1044" y="686" width="96" height="56" rx="6" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1148" y="620" width="92" height="56" rx="6" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1148" y="686" width="92" height="56" rx="6" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="1044" y="620" width="96" height="56" rx="6" fill="#161a2e" stroke="#3ddcff" stroke-width="2.5"/>
+<rect x="1038" y="614" width="108" height="68" rx="9" fill="none" stroke="#3ddcff" stroke-width="1.2" opacity="0.45"/>
+<rect x="1032" y="608" width="120" height="80" rx="12" fill="none" stroke="#3ddcff" stroke-width="1" opacity="0.2"/>
+<text x="1092" y="653" font-size="11" fill="#f3f5ff" font-weight="600" text-anchor="middle">Tournament</text>
+<text x="928" y="778" font-size="11.5" fill="#a9b1d6" font-weight="400" text-anchor="start">The chosen effect plays here: ripple, 0.3 s, then the glow holds.</text>
+<rect x="908" y="820" width="364" height="230" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="928" y="852" font-size="17" fill="#f3f5ff" font-weight="600" text-anchor="start">Try it</text>
+<text x="928" y="894" font-size="13" fill="#c5cae3" font-weight="500" text-anchor="start">Where</text>
+<rect x="928" y="906" width="225.96" height="34" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<rect x="931" y="909" width="49.04" height="28" rx="6" fill="#1e4158"/>
+<text x="955.52" y="927.8" font-size="13" fill="#7be7ff" font-weight="600" text-anchor="middle">Here</text>
+<text x="1027.46" y="927.8" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle">Main hall</text>
+<text x="1112.92" y="927.8" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="middle">Entrance</text>
+<rect x="928" y="960" width="222.48" height="36" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<path d="M944,972.0 l10,6 l-10,6 z" fill="#f3f5ff"/>
+<text x="1048.24" y="983" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Play sound and picture</text>
+<text x="928" y="1018" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">“Here” plays in this browser; a zone plays it</text>
+<text x="928" y="1034" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">silently unless its sound is on.</text>
+<rect x="908" y="1070" width="364" height="118" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="928" y="1102" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start">From the default pack</text>
+<text x="928" y="1124" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">Changed here: Drum roll added, picture holds 2</text>
+<text x="928" y="1141" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">min.</text>
+<text x="928" y="1172" font-size="13.5" fill="#ffa3ae" font-weight="500" text-anchor="start">Reset to default</text>
+<rect x="328" y="1310" width="944" height="64" rx="12" fill="#1c2138" stroke="#3c446c" stroke-width="1"/>
+<text x="348" y="1348" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start">Unsaved changes: sounds, holds for</text>
+<rect x="1172" y="1324" width="80" height="36" rx="8" fill="#3ddcff"/>
+<text x="1212" y="1347" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="middle">Save</text>
+<rect x="1072" y="1324" width="90" height="36" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1117" y="1347" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Cancel</text>
+</g>
+<circle cx="331" cy="356" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="331" y="361" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">1</text>
+<circle cx="331" cy="428" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="331" y="433" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">2</text>
+<circle cx="331" cy="600" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="331" y="605" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">3</text>
+<circle cx="331" cy="994" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="331" y="999" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">4</text>
+<circle cx="331" cy="1086" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="331" y="1091" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">5</text>
+<circle cx="911" cy="428" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="911" y="433" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">6</text>
+<circle cx="911" cy="976" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="911" y="981" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">7</text>
+<text x="1352" y="140" font-size="20" fill="#111827" font-weight="700" text-anchor="start">What changed and why</text>
+<circle cx="1365" cy="169" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="174" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">1</text>
+<text x="1386" y="174" font-size="16" fill="#111827" font-weight="700" text-anchor="start">A form on the grid</text>
+<text x="1386" y="196" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">O10 stacked full-width boxes in one column</text>
+<text x="1386" y="216" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">with labels jammed together ("Once per source</text>
+<text x="1386" y="236" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">(7 days) Level %"). Now two cards on the</text>
+<text x="1386" y="256" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">content grid: Sound on the left, Picture and</text>
+<text x="1386" y="276" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Try it on the right; each label sits on its</text>
+<text x="1386" y="296" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">own line above its control.</text>
+<circle cx="1365" cy="325" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="330" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">2</text>
+<text x="1386" y="330" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Category as chips, with its meaning</text>
+<text x="1386" y="352" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The category is one chip of six, and the line</text>
+<text x="1386" y="372" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">below says what it means in plain words</text>
+<text x="1386" y="392" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">(level, who it waits for, calm). O10 had a</text>
+<text x="1386" y="412" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">dropdown.</text>
+<circle cx="1365" cy="441" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="446" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">3</text>
+<text x="1386" y="446" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Sounds as themed players</text>
+<text x="1386" y="468" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The chosen sounds are players in the theme</text>
+<text x="1386" y="488" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">with play and stop, a waveform and the</text>
+<text x="1386" y="508" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">length; × removes one. The rest of the</text>
+<text x="1386" y="528" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">library is one tap away as chips. O10 had a</text>
+<text x="1386" y="548" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">wrapped line of small checkboxes; O9 had the</text>
+<text x="1386" y="568" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">browser’s light-grey players.</text>
+<circle cx="1365" cy="597" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="602" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">4</text>
+<text x="1386" y="602" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Level as a slider, with what you hear</text>
+<text x="1386" y="624" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">A slider in steps of 5 %, and one line that</text>
+<text x="1386" y="644" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">multiplies it out: master × category × cue.</text>
+<circle cx="1365" cy="673" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="678" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">5</text>
+<text x="1386" y="678" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Times as sliders and steppers</text>
+<text x="1386" y="700" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Not again for is a slider with named stops</text>
+<text x="1386" y="720" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">(Off to 10 min); catch-up is a stepper in</text>
+<text x="1386" y="740" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">minutes; once per source is a switch. No</text>
+<text x="1386" y="760" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">typed seconds.</text>
+<circle cx="1365" cy="789" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="794" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">6</text>
+<text x="1386" y="794" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Picture effects as chips, with a preview</text>
+<text x="1386" y="816" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Effects are chips; Holds for is a slider; the</text>
+<text x="1386" y="836" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">small virtual screen plays the chosen effect.</text>
+<circle cx="1365" cy="865" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1365" y="870" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">7</text>
+<text x="1386" y="870" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Try it, then save</text>
+<text x="1386" y="892" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Try it plays the cue here or on a zone. Save</text>
+<text x="1386" y="912" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">and Cancel sit in a pending row; Reset to</text>
+<text x="1386" y="932" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">default moves into the card that says what</text>
+<text x="1386" y="952" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">changed from the pack.</text>
+</svg>
