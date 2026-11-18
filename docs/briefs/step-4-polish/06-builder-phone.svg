@@ -1,0 +1,357 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1802 1040" width="1802" height="1040" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Step 4 polish 06: the storyboard builder on a phone at 390 px</title>
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><linearGradient id="gh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><radialGradient id="glowp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#3ddcff" stop-opacity="0.35"/><stop offset="1" stop-color="#3ddcff" stop-opacity="0"/></radialGradient><radialGradient id="glowa" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#b98cff" stop-opacity="0.32"/><stop offset="1" stop-color="#b98cff" stop-opacity="0"/></radialGradient><linearGradient id="scrim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0d1a" stop-opacity="0"/><stop offset="0.45" stop-color="#0b0d1a" stop-opacity="0.15"/><stop offset="1" stop-color="#0b0d1a" stop-opacity="0.92"/></linearGradient><linearGradient id="heroin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2140"/><stop offset="1" stop-color="#141831"/></linearGradient><linearGradient id="photo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a4b2a"/><stop offset="0.5" stop-color="#c8763a"/><stop offset="1" stop-color="#3a1f2c"/></linearGradient><radialGradient id="bokeh" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffe2a8" stop-opacity="0.85"/><stop offset="1" stop-color="#ffe2a8" stop-opacity="0"/></radialGradient><clipPath id="ph32_150"><rect x="32" y="150" width="390" height="844" rx="38"/></clipPath><clipPath id="ph482_150"><rect x="482" y="150" width="390" height="844" rx="38"/></clipPath><clipPath id="ph932_150"><rect x="932" y="150" width="390" height="844" rx="38"/></clipPath><clipPath id="clpp"><rect x="0" y="0" width="1920" height="1080" rx="0"/></clipPath></defs>
+<rect x="0" y="0" width="1802" height="1040" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">06 · The storyboard builder on a phone (390 px)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">The same builder in one column, in three parts the organiser moves between: Overview, Round, Preview. Book shot O29.</text>
+<rect x="22" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#ph32_150)">
+<rect x="32" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="66" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">21:32</text>
+<rect x="358" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="360" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="32" y="200" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="48" y="213" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="84" y="232" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="177" y="216" width="46" height="20" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="200" y="230" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">Live</text>
+<rect x="382" y="218" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="382" y="225" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="382" y="232" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<line x1="32" y1="252" x2="422" y2="252" stroke="#343c66" stroke-width="1"/>
+<text x="48" y="280" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">‹ Storyboards</text>
+<text x="48" y="310" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start">Starting soon</text>
+<rect x="48" y="357" width="78.16" height="2" rx="0" fill="#3ddcff"/>
+<text x="59" y="346" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Overview</text>
+<text x="137.16" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Round</text>
+<text x="194.26" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Preview</text>
+<line x1="48" y1="359" x2="422" y2="359" stroke="#343c66" stroke-width="1"/>
+<rect x="48" y="379" width="358" height="50" rx="10" fill="#453d34" stroke="#8a723e" stroke-width="1"/>
+<circle cx="70" cy="404" r="9" fill="#ffc94d"/>
+<text x="70" y="409" font-size="13" fill="#0b0d1a" font-weight="800" text-anchor="middle">!</text>
+<text x="88" y="409" font-size="13.5" fill="#ffd36d" font-weight="600" text-anchor="start">3 checks pass · 1 to look at</text>
+<text x="392" y="409" font-size="18" fill="#ffd36d" font-weight="400" text-anchor="end">›</text>
+<text x="48" y="445" font-size="12.5" fill="#c5cae3" font-weight="500" text-anchor="start">Plays when · any one</text>
+<rect x="48" y="455" width="278" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<path d="M59,470.0 l4,4 l7,-8" fill="none" stroke="#7be7ff" stroke-width="2" stroke-linecap="round"/>
+<text x="79" y="474.6" font-size="12.5" fill="#7be7ff" font-weight="600" text-anchor="start">A tournament or ceremony item starts</text>
+<rect x="48" y="493" width="89.5" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<path d="M59,508.0 l4,4 l7,-8" fill="none" stroke="#7be7ff" stroke-width="2" stroke-linecap="round"/>
+<text x="79" y="512.6" font-size="12.5" fill="#7be7ff" font-weight="600" text-anchor="start">By hand</text>
+<rect x="145.5" y="493" width="63.5" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<path d="M156.5,508.0 h9 M161.0,503.5 v9" fill="none" stroke="#c5cae3" stroke-width="1.6" stroke-linecap="round"/>
+<text x="176.5" y="512.6" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start">Add</text>
+<text x="48" y="549" font-size="12.5" fill="#c5cae3" font-weight="500" text-anchor="start">Only if · all</text>
+<rect x="48" y="559" width="180.5" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<path d="M59,574.0 l4,4 l7,-8" fill="none" stroke="#7be7ff" stroke-width="2" stroke-linecap="round"/>
+<text x="79" y="578.6" font-size="12.5" fill="#7be7ff" font-weight="600" text-anchor="start">Item’s zone, else all</text>
+<rect x="48" y="597" width="200" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<path d="M59,612.0 l4,4 l7,-8" fill="none" stroke="#7be7ff" stroke-width="2" stroke-linecap="round"/>
+<text x="79" y="616.6" font-size="12.5" fill="#7be7ff" font-weight="600" text-anchor="start">Calm and silent if quiet</text>
+<rect x="256" y="597" width="128.5" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<path d="M267.0,612.0 l4,4 l7,-8" fill="none" stroke="#7be7ff" stroke-width="2" stroke-linecap="round"/>
+<text x="287" y="616.6" font-size="12.5" fill="#7be7ff" font-weight="600" text-anchor="start">Once per item</text>
+<text x="48" y="653" font-size="12.5" fill="#c5cae3" font-weight="500" text-anchor="start">Rounds</text>
+<rect x="192" y="633" width="193.28" height="28" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<rect x="195" y="636" width="78.16" height="22" rx="6" fill="#1e4158"/>
+<text x="234.08" y="651.8" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="middle">Set times</text>
+<text x="330.72" y="651.8" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="middle">Every few min</text>
+<rect x="48" y="683" width="358" height="92" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<line x1="66" y1="727" x2="372" y2="727" stroke="#616788" stroke-width="2"/>
+<rect x="66" y="707" width="16" height="16" rx="4" fill="#ffc94d"/>
+<text x="66" y="751" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="start">T−15</text>
+<rect x="270" y="707" width="16" height="16" rx="4" fill="#ffc94d"/>
+<text x="270" y="751" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="start">T−5</text>
+<rect x="351.6" y="707" width="16" height="16" rx="4" fill="#ffc94d"/>
+<text x="351.6" y="751" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="start">T−1</text>
+<rect x="374" y="705" width="22" height="20" rx="5" fill="url(#g)"/>
+<text x="385" y="751" font-size="12" fill="#f3f5ff" font-weight="600" text-anchor="middle">T</text>
+<text x="66" y="767" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start">Until the item starts · finale It’s on!</text>
+<rect x="32" y="846" width="390" height="64" rx="0" fill="#1c2138"/>
+<line x1="32" y1="846" x2="422" y2="846" stroke="#343c66" stroke-width="1"/>
+<text x="48" y="883" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">Saved</text>
+<rect x="330" y="859" width="76" height="38" rx="8" fill="#3ddcff"/>
+<text x="368" y="883" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="middle">Save</text>
+<rect x="218" y="859" width="104" height="38" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<path d="M234,872.0 l10,6 l-10,6 z" fill="#f3f5ff"/>
+<text x="279" y="883" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Test-fire</text>
+<rect x="32" y="910" width="390" height="84" rx="0" fill="#121528"/>
+<line x1="32" y1="910" x2="422" y2="910" stroke="#343c66" stroke-width="1"/>
+<rect x="63" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="71" y="964" font-size="11" fill="#c5cae3" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="141" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="149" y="964" font-size="11" fill="#c5cae3" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="227" cy="934" r="15" fill="#3ddcff"/>
+<path d="M221.0,934 h12 M227.0,928 v12" fill="none" stroke="#0b0d1a" stroke-width="2.2" stroke-linecap="round"/>
+<text x="227" y="964" font-size="11" fill="#c5cae3" font-weight="400" text-anchor="middle">Add</text>
+<rect x="297" y="924" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="305" y="964" font-size="11" fill="#3ddcff" font-weight="600" text-anchor="middle">Screens</text>
+<rect x="375" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="383" y="964" font-size="11" fill="#c5cae3" font-weight="400" text-anchor="middle">More</text>
+<rect x="160" y="982" width="134" height="5" rx="3" fill="#f3f5ff" opacity="0.6"/>
+</g>
+<rect x="472" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#ph482_150)">
+<rect x="482" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="516" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">21:32</text>
+<rect x="808" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="810" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="482" y="200" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="498" y="213" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="534" y="232" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="627" y="216" width="46" height="20" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="650" y="230" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">Live</text>
+<rect x="832" y="218" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="832" y="225" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="832" y="232" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<line x1="482" y1="252" x2="872" y2="252" stroke="#343c66" stroke-width="1"/>
+<text x="498" y="280" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">‹ Storyboards</text>
+<text x="498" y="310" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start">Starting soon</text>
+<text x="509" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Overview</text>
+<rect x="576.16" y="357" width="57.1" height="2" rx="0" fill="#3ddcff"/>
+<text x="587.16" y="346" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Round</text>
+<text x="644.26" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Preview</text>
+<line x1="498" y1="359" x2="872" y2="359" stroke="#343c66" stroke-width="1"/>
+<text x="498" y="379" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">46 s · 4 steps · repeats ×2</text>
+<rect x="498" y="393" width="120" height="67.5" rx="4" fill="url(#g)"/>
+<text x="558" y="431.75" font-size="13.2" fill="#0b0d1a" font-weight="800" text-anchor="middle">Starting soon</text>
+<text x="498" y="480.5" font-size="12.5" fill="#f3f5ff" font-weight="600" text-anchor="start">1 · Sting</text>
+<text x="618" y="480.5" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">3 s</text>
+<rect x="630" y="393" width="120" height="67.5" rx="4" fill="url(#heroin)" stroke="#ffc94d" stroke-width="1.2"/>
+<text x="690" y="411.9" font-size="8.4" fill="#f3f5ff" font-weight="600" text-anchor="middle">Demo Cup, final</text>
+<text x="690" y="440.25" font-size="26.4" fill="#f3f5ff" font-weight="700" text-anchor="middle">05:00</text>
+<rect x="627" y="390" width="126" height="73.5" rx="6" fill="none" stroke="#3ddcff" stroke-width="2"/>
+<text x="630" y="480.5" font-size="12.5" fill="#f3f5ff" font-weight="600" text-anchor="start">2 · Countdown</text>
+<text x="750" y="480.5" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">20 s</text>
+<rect x="762" y="393" width="120" height="67.5" rx="6" fill="none" stroke="#616788" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="822" y="431" font-size="13" fill="#3ddcff" font-weight="500" text-anchor="middle">+ Step</text>
+<line x1="498" y1="504.5" x2="856" y2="504.5" stroke="#343c66" stroke-width="1"/>
+<text x="498" y="532.5" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Step 2 · Countdown</text>
+<text x="856" y="532.5" font-size="13" fill="#ffa3ae" font-weight="500" text-anchor="end">Remove</text>
+<text x="498" y="558.5" font-size="12.5" fill="#c5cae3" font-weight="500" text-anchor="start">Shows</text>
+<rect x="498" y="568.5" width="71.5" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="511" y="588.1" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start">Message</text>
+<rect x="577.5" y="568.5" width="58.5" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="590.5" y="588.1" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start">Title</text>
+<rect x="644" y="568.5" width="102.5" height="30" rx="15" fill="#1e4158" stroke="#2a7b96" stroke-width="1.5"/>
+<path d="M655.0,583.5 l4,4 l7,-8" fill="none" stroke="#7be7ff" stroke-width="2" stroke-linecap="round"/>
+<text x="675" y="588.1" font-size="12.5" fill="#7be7ff" font-weight="600" text-anchor="start">Countdown</text>
+<rect x="754.5" y="568.5" width="58.5" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="767.5" y="588.1" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start">Sting</text>
+<rect x="498" y="606.5" width="39" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="511" y="626.1" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start">QR</text>
+<rect x="545" y="606.5" width="58.5" height="30" rx="15" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="558" y="626.1" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start">Video</text>
+<text x="498" y="662.5" font-size="13" fill="#c5cae3" font-weight="500" text-anchor="start">Title</text>
+<rect x="498" y="670.5" width="358" height="38" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="510" y="694.5" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" font-family="ui-monospace, Menlo, monospace">{item.title}</text>
+<text x="498" y="730.5" font-size="13" fill="#c5cae3" font-weight="500" text-anchor="start">Under the title</text>
+<rect x="498" y="738.5" width="358" height="38" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="510" y="762.5" font-size="12.5" fill="#f3f5ff" font-weight="400" text-anchor="start" font-family="ui-monospace, Menlo, monospace">{item.location|the stage}</text>
+<text x="498" y="800.5" font-size="12.5" fill="#c5cae3" font-weight="500" text-anchor="start">Seconds</text>
+<text x="856" y="800.5" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="end">20 s</text>
+<rect x="502" y="817.5" width="350" height="6" rx="3" fill="#2a2f4d"/>
+<rect x="502" y="817.5" width="115.5" height="6" rx="3" fill="#3ddcff"/>
+<line x1="502" y1="828.5" x2="502" y2="833.5" stroke="#616788" stroke-width="1.5"/>
+<line x1="589.5" y1="828.5" x2="589.5" y2="833.5" stroke="#616788" stroke-width="1.5"/>
+<line x1="677" y1="828.5" x2="677" y2="833.5" stroke="#616788" stroke-width="1.5"/>
+<line x1="764.5" y1="828.5" x2="764.5" y2="833.5" stroke="#616788" stroke-width="1.5"/>
+<line x1="852" y1="828.5" x2="852" y2="833.5" stroke="#616788" stroke-width="1.5"/>
+<circle cx="617.5" cy="820.5" r="9" fill="#f3f5ff" stroke="#3ddcff" stroke-width="3"/>
+<rect x="482" y="846" width="390" height="64" rx="0" fill="#1c2138"/>
+<line x1="482" y1="846" x2="872" y2="846" stroke="#343c66" stroke-width="1"/>
+<text x="498" y="883" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">1 change</text>
+<rect x="780" y="859" width="76" height="38" rx="8" fill="#3ddcff"/>
+<text x="818" y="883" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="middle">Save</text>
+<rect x="668" y="859" width="104" height="38" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<path d="M684,872.0 l10,6 l-10,6 z" fill="#f3f5ff"/>
+<text x="729" y="883" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Test-fire</text>
+<rect x="482" y="910" width="390" height="84" rx="0" fill="#121528"/>
+<line x1="482" y1="910" x2="872" y2="910" stroke="#343c66" stroke-width="1"/>
+<rect x="513" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="521" y="964" font-size="11" fill="#c5cae3" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="591" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="599" y="964" font-size="11" fill="#c5cae3" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="677" cy="934" r="15" fill="#3ddcff"/>
+<path d="M671.0,934 h12 M677.0,928 v12" fill="none" stroke="#0b0d1a" stroke-width="2.2" stroke-linecap="round"/>
+<text x="677" y="964" font-size="11" fill="#c5cae3" font-weight="400" text-anchor="middle">Add</text>
+<rect x="747" y="924" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="755" y="964" font-size="11" fill="#3ddcff" font-weight="600" text-anchor="middle">Screens</text>
+<rect x="825" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="833" y="964" font-size="11" fill="#c5cae3" font-weight="400" text-anchor="middle">More</text>
+<rect x="610" y="982" width="134" height="5" rx="3" fill="#f3f5ff" opacity="0.6"/>
+</g>
+<rect x="922" y="140" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#ph932_150)">
+<rect x="932" y="150" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="966" y="180" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">21:32</text>
+<rect x="1258" y="169" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1260" y="171" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="932" y="200" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="948" y="213" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="984" y="232" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Demo Event</text>
+<rect x="1077" y="216" width="46" height="20" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="1100" y="230" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="middle">Live</text>
+<rect x="1282" y="218" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1282" y="225" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1282" y="232" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<line x1="932" y1="252" x2="1322" y2="252" stroke="#343c66" stroke-width="1"/>
+<text x="948" y="280" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">‹ Storyboards</text>
+<text x="948" y="310" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start">Starting soon</text>
+<text x="959" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Overview</text>
+<text x="1037.16" y="346" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Round</text>
+<rect x="1083.26" y="357" width="71.14" height="2" rx="0" fill="#3ddcff"/>
+<text x="1094.26" y="346" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Preview</text>
+<line x1="948" y1="359" x2="1322" y2="359" stroke="#343c66" stroke-width="1"/>
+<g transform="translate(948,379) scale(0.18645833333333334)">
+<g clip-path="url(#clpp)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a"/>
+<ellipse cx="1497.6000000000001" cy="172.8" rx="768.0" ry="540.0" fill="url(#glowp)"/>
+<ellipse cx="288.0" cy="918.0" rx="672.0" ry="486.0" fill="url(#glowa)"/>
+<rect x="48" y="26" width="52" height="52" rx="12" fill="url(#g)"/>
+<text x="118" y="66" font-size="34" fill="#f3f5ff" font-weight="600" text-anchor="start" letter-spacing="3">DEMO EVENT</text>
+<text x="354.4" y="66" font-size="30" fill="#a9b1d6" font-weight="400" text-anchor="start">Main hall</text>
+<text x="1872" y="72" font-size="58" fill="#f3f5ff" font-weight="400" text-anchor="end">20:55</text>
+<text x="1703.2" y="70" font-size="30" fill="#a9b1d6" font-weight="400" text-anchor="end">Tue 17 Nov</text>
+<rect x="1276" y="132" width="596" height="476" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1308" y="190" font-size="26" fill="#a9b1d6" font-weight="500" text-anchor="start" letter-spacing="3">NOW</text>
+<text x="1308" y="252" font-size="50" fill="#f3f5ff" font-weight="400" text-anchor="start">Dinner</text>
+<text x="1308" y="312" font-size="44" fill="#f3f5ff" font-weight="400" text-anchor="start">until 22:25</text>
+<text x="1308" y="360" font-size="30" fill="#a9b1d6" font-weight="400" text-anchor="start">Café</text>
+<line x1="1308" y1="400" x2="1840" y2="400" stroke="#343c66" stroke-width="1"/>
+<text x="1308" y="452" font-size="26" fill="#a9b1d6" font-weight="500" text-anchor="start" letter-spacing="3">NEXT</text>
+<text x="1308" y="516" font-size="54" fill="#f3f5ff" font-weight="400" text-anchor="start">22:41</text>
+<text x="1466" y="512" font-size="32" fill="#a9b1d6" font-weight="400" text-anchor="start">· Stage</text>
+<text x="1308" y="570" font-size="34" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Game Cup, semis</text>
+<rect x="1276" y="628" width="596" height="318" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1308" y="690" font-size="26" fill="#a9b1d6" font-weight="500" text-anchor="start" letter-spacing="3">WI-FI</text>
+<text x="1308" y="744" font-size="44" fill="#f3f5ff" font-weight="400" text-anchor="start">demo-guest</text>
+<text x="1308" y="790" font-size="28" fill="#a9b1d6" font-weight="400" text-anchor="start">Password on the hub</text>
+<rect x="1662" y="664" width="180" height="180" rx="7.2" fill="#ffffff"/>
+<path d="M1755.3,670.7h6.7v6.7h-6.7zM1762.0,670.7h6.7v6.7h-6.7zM1715.3,677.3h6.7v6.7h-6.7zM1722.0,677.3h6.7v6.7h-6.7zM1728.7,677.3h6.7v6.7h-6.7zM1748.7,677.3h6.7v6.7h-6.7zM1755.3,677.3h6.7v6.7h-6.7zM1762.0,677.3h6.7v6.7h-6.7zM1782.0,677.3h6.7v6.7h-6.7zM1722.0,684.0h6.7v6.7h-6.7zM1735.3,684.0h6.7v6.7h-6.7zM1742.0,684.0h6.7v6.7h-6.7zM1755.3,684.0h6.7v6.7h-6.7zM1762.0,684.0h6.7v6.7h-6.7zM1782.0,684.0h6.7v6.7h-6.7zM1735.3,690.7h6.7v6.7h-6.7zM1768.7,690.7h6.7v6.7h-6.7zM1775.3,690.7h6.7v6.7h-6.7zM1782.0,690.7h6.7v6.7h-6.7zM1715.3,697.3h6.7v6.7h-6.7zM1722.0,697.3h6.7v6.7h-6.7zM1728.7,697.3h6.7v6.7h-6.7zM1742.0,697.3h6.7v6.7h-6.7zM1755.3,697.3h6.7v6.7h-6.7zM1762.0,697.3h6.7v6.7h-6.7zM1782.0,697.3h6.7v6.7h-6.7zM1728.7,704.0h6.7v6.7h-6.7zM1742.0,704.0h6.7v6.7h-6.7zM1762.0,704.0h6.7v6.7h-6.7zM1775.3,704.0h6.7v6.7h-6.7zM1715.3,710.7h6.7v6.7h-6.7zM1722.0,710.7h6.7v6.7h-6.7zM1728.7,710.7h6.7v6.7h-6.7zM1742.0,710.7h6.7v6.7h-6.7zM1768.7,710.7h6.7v6.7h-6.7zM1775.3,710.7h6.7v6.7h-6.7zM1675.3,717.3h6.7v6.7h-6.7zM1702.0,717.3h6.7v6.7h-6.7zM1715.3,717.3h6.7v6.7h-6.7zM1722.0,717.3h6.7v6.7h-6.7zM1742.0,717.3h6.7v6.7h-6.7zM1762.0,717.3h6.7v6.7h-6.7zM1768.7,717.3h6.7v6.7h-6.7zM1775.3,717.3h6.7v6.7h-6.7zM1782.0,717.3h6.7v6.7h-6.7zM1788.7,717.3h6.7v6.7h-6.7zM1808.7,717.3h6.7v6.7h-6.7zM1815.3,717.3h6.7v6.7h-6.7zM1668.7,724.0h6.7v6.7h-6.7zM1675.3,724.0h6.7v6.7h-6.7zM1695.3,724.0h6.7v6.7h-6.7zM1702.0,724.0h6.7v6.7h-6.7zM1708.7,724.0h6.7v6.7h-6.7zM1722.0,724.0h6.7v6.7h-6.7zM1742.0,724.0h6.7v6.7h-6.7zM1775.3,724.0h6.7v6.7h-6.7zM1782.0,724.0h6.7v6.7h-6.7zM1788.7,724.0h6.7v6.7h-6.7zM1802.0,724.0h6.7v6.7h-6.7zM1808.7,724.0h6.7v6.7h-6.7zM1668.7,730.7h6.7v6.7h-6.7zM1695.3,730.7h6.7v6.7h-6.7zM1702.0,730.7h6.7v6.7h-6.7zM1708.7,730.7h6.7v6.7h-6.7zM1715.3,730.7h6.7v6.7h-6.7zM1748.7,730.7h6.7v6.7h-6.7zM1755.3,730.7h6.7v6.7h-6.7zM1762.0,730.7h6.7v6.7h-6.7zM1782.0,730.7h6.7v6.7h-6.7zM1822.0,730.7h6.7v6.7h-6.7zM1668.7,737.3h6.7v6.7h-6.7zM1695.3,737.3h6.7v6.7h-6.7zM1722.0,737.3h6.7v6.7h-6.7zM1735.3,737.3h6.7v6.7h-6.7zM1748.7,737.3h6.7v6.7h-6.7zM1775.3,737.3h6.7v6.7h-6.7zM1802.0,737.3h6.7v6.7h-6.7zM1688.7,744.0h6.7v6.7h-6.7zM1735.3,744.0h6.7v6.7h-6.7zM1762.0,744.0h6.7v6.7h-6.7zM1795.3,744.0h6.7v6.7h-6.7zM1802.0,744.0h6.7v6.7h-6.7zM1808.7,744.0h6.7v6.7h-6.7zM1822.0,744.0h6.7v6.7h-6.7zM1675.3,750.7h6.7v6.7h-6.7zM1688.7,750.7h6.7v6.7h-6.7zM1695.3,750.7h6.7v6.7h-6.7zM1702.0,750.7h6.7v6.7h-6.7zM1708.7,750.7h6.7v6.7h-6.7zM1715.3,750.7h6.7v6.7h-6.7zM1722.0,750.7h6.7v6.7h-6.7zM1728.7,750.7h6.7v6.7h-6.7zM1735.3,750.7h6.7v6.7h-6.7zM1742.0,750.7h6.7v6.7h-6.7zM1762.0,750.7h6.7v6.7h-6.7zM1775.3,750.7h6.7v6.7h-6.7zM1782.0,750.7h6.7v6.7h-6.7zM1788.7,750.7h6.7v6.7h-6.7zM1795.3,750.7h6.7v6.7h-6.7zM1802.0,750.7h6.7v6.7h-6.7zM1815.3,750.7h6.7v6.7h-6.7zM1822.0,750.7h6.7v6.7h-6.7zM1668.7,757.3h6.7v6.7h-6.7zM1682.0,757.3h6.7v6.7h-6.7zM1708.7,757.3h6.7v6.7h-6.7zM1728.7,757.3h6.7v6.7h-6.7zM1735.3,757.3h6.7v6.7h-6.7zM1775.3,757.3h6.7v6.7h-6.7zM1788.7,757.3h6.7v6.7h-6.7zM1795.3,757.3h6.7v6.7h-6.7zM1815.3,757.3h6.7v6.7h-6.7zM1668.7,764.0h6.7v6.7h-6.7zM1675.3,764.0h6.7v6.7h-6.7zM1682.0,764.0h6.7v6.7h-6.7zM1688.7,764.0h6.7v6.7h-6.7zM1702.0,764.0h6.7v6.7h-6.7zM1728.7,764.0h6.7v6.7h-6.7zM1748.7,764.0h6.7v6.7h-6.7zM1755.3,764.0h6.7v6.7h-6.7zM1775.3,764.0h6.7v6.7h-6.7zM1788.7,764.0h6.7v6.7h-6.7zM1802.0,764.0h6.7v6.7h-6.7zM1808.7,764.0h6.7v6.7h-6.7zM1828.7,764.0h6.7v6.7h-6.7zM1675.3,770.7h6.7v6.7h-6.7zM1695.3,770.7h6.7v6.7h-6.7zM1702.0,770.7h6.7v6.7h-6.7zM1708.7,770.7h6.7v6.7h-6.7zM1722.0,770.7h6.7v6.7h-6.7zM1762.0,770.7h6.7v6.7h-6.7zM1775.3,770.7h6.7v6.7h-6.7zM1788.7,770.7h6.7v6.7h-6.7zM1795.3,770.7h6.7v6.7h-6.7zM1808.7,770.7h6.7v6.7h-6.7zM1815.3,770.7h6.7v6.7h-6.7zM1668.7,777.3h6.7v6.7h-6.7zM1675.3,777.3h6.7v6.7h-6.7zM1682.0,777.3h6.7v6.7h-6.7zM1708.7,777.3h6.7v6.7h-6.7zM1722.0,777.3h6.7v6.7h-6.7zM1762.0,777.3h6.7v6.7h-6.7zM1768.7,777.3h6.7v6.7h-6.7zM1782.0,777.3h6.7v6.7h-6.7zM1788.7,777.3h6.7v6.7h-6.7zM1802.0,777.3h6.7v6.7h-6.7zM1822.0,777.3h6.7v6.7h-6.7zM1828.7,777.3h6.7v6.7h-6.7zM1682.0,784.0h6.7v6.7h-6.7zM1708.7,784.0h6.7v6.7h-6.7zM1715.3,784.0h6.7v6.7h-6.7zM1735.3,784.0h6.7v6.7h-6.7zM1742.0,784.0h6.7v6.7h-6.7zM1768.7,784.0h6.7v6.7h-6.7zM1802.0,784.0h6.7v6.7h-6.7zM1815.3,784.0h6.7v6.7h-6.7zM1722.0,790.7h6.7v6.7h-6.7zM1728.7,790.7h6.7v6.7h-6.7zM1742.0,790.7h6.7v6.7h-6.7zM1755.3,790.7h6.7v6.7h-6.7zM1762.0,790.7h6.7v6.7h-6.7zM1775.3,790.7h6.7v6.7h-6.7zM1782.0,790.7h6.7v6.7h-6.7zM1788.7,790.7h6.7v6.7h-6.7zM1795.3,790.7h6.7v6.7h-6.7zM1802.0,790.7h6.7v6.7h-6.7zM1828.7,790.7h6.7v6.7h-6.7zM1715.3,797.3h6.7v6.7h-6.7zM1722.0,797.3h6.7v6.7h-6.7zM1748.7,797.3h6.7v6.7h-6.7zM1755.3,797.3h6.7v6.7h-6.7zM1768.7,797.3h6.7v6.7h-6.7zM1808.7,797.3h6.7v6.7h-6.7zM1822.0,797.3h6.7v6.7h-6.7zM1722.0,804.0h6.7v6.7h-6.7zM1728.7,804.0h6.7v6.7h-6.7zM1735.3,804.0h6.7v6.7h-6.7zM1748.7,804.0h6.7v6.7h-6.7zM1768.7,804.0h6.7v6.7h-6.7zM1782.0,804.0h6.7v6.7h-6.7zM1788.7,804.0h6.7v6.7h-6.7zM1802.0,804.0h6.7v6.7h-6.7zM1822.0,804.0h6.7v6.7h-6.7zM1715.3,810.7h6.7v6.7h-6.7zM1728.7,810.7h6.7v6.7h-6.7zM1735.3,810.7h6.7v6.7h-6.7zM1755.3,810.7h6.7v6.7h-6.7zM1762.0,810.7h6.7v6.7h-6.7zM1788.7,810.7h6.7v6.7h-6.7zM1802.0,810.7h6.7v6.7h-6.7zM1808.7,810.7h6.7v6.7h-6.7zM1815.3,810.7h6.7v6.7h-6.7zM1828.7,810.7h6.7v6.7h-6.7zM1715.3,817.3h6.7v6.7h-6.7zM1722.0,817.3h6.7v6.7h-6.7zM1748.7,817.3h6.7v6.7h-6.7zM1788.7,817.3h6.7v6.7h-6.7zM1795.3,817.3h6.7v6.7h-6.7zM1802.0,817.3h6.7v6.7h-6.7zM1808.7,817.3h6.7v6.7h-6.7zM1815.3,817.3h6.7v6.7h-6.7zM1722.0,824.0h6.7v6.7h-6.7zM1748.7,824.0h6.7v6.7h-6.7zM1755.3,824.0h6.7v6.7h-6.7zM1762.0,824.0h6.7v6.7h-6.7zM1768.7,824.0h6.7v6.7h-6.7zM1775.3,824.0h6.7v6.7h-6.7zM1782.0,824.0h6.7v6.7h-6.7zM1788.7,824.0h6.7v6.7h-6.7zM1802.0,824.0h6.7v6.7h-6.7zM1808.7,824.0h6.7v6.7h-6.7zM1815.3,824.0h6.7v6.7h-6.7zM1822.0,824.0h6.7v6.7h-6.7zM1828.7,824.0h6.7v6.7h-6.7zM1715.3,830.7h6.7v6.7h-6.7zM1728.7,830.7h6.7v6.7h-6.7zM1742.0,830.7h6.7v6.7h-6.7zM1782.0,830.7h6.7v6.7h-6.7zM1795.3,830.7h6.7v6.7h-6.7zM1815.3,830.7h6.7v6.7h-6.7zM1822.0,830.7h6.7v6.7h-6.7zM1828.7,830.7h6.7v6.7h-6.7z" fill="#0b0d1a"/>
+<rect x="1668.67" y="670.667" width="46.6667" height="46.6667" rx="0" fill="#0b0d1a"/>
+<rect x="1675.33" y="677.333" width="33.3333" height="33.3333" rx="0" fill="#ffffff"/>
+<rect x="1682" y="684" width="20" height="20" rx="0" fill="#0b0d1a"/>
+<rect x="1788.67" y="670.667" width="46.6667" height="46.6667" rx="0" fill="#0b0d1a"/>
+<rect x="1795.33" y="677.333" width="33.3333" height="33.3333" rx="0" fill="#ffffff"/>
+<rect x="1802" y="684" width="20" height="20" rx="0" fill="#0b0d1a"/>
+<rect x="1668.67" y="790.667" width="46.6667" height="46.6667" rx="0" fill="#0b0d1a"/>
+<rect x="1675.33" y="797.333" width="33.3333" height="33.3333" rx="0" fill="#ffffff"/>
+<rect x="1682" y="804" width="20" height="20" rx="0" fill="#0b0d1a"/>
+<text x="1752" y="902" font-size="26" fill="#a9b1d6" font-weight="400" text-anchor="middle">The event hub</text>
+<rect x="48" y="966" width="1824" height="70" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="48" y="966" width="120" height="70" rx="10" fill="#3ddcff"/>
+<text x="108" y="1012" font-size="28" fill="#0b0d1a" font-weight="600" text-anchor="middle" letter-spacing="2">INFO</text>
+<text x="196" y="1012" font-size="34" fill="#f3f5ff" font-weight="400" text-anchor="start">Orders close at 20:00 · Lost and found at the info desk · Grand final on stage tonight</text>
+<rect x="48" y="132" width="1208" height="814" rx="12" fill="url(#heroin)"/>
+<rect x="42" y="126" width="1220" height="826" rx="16" fill="none" stroke="#ffc94d" stroke-width="2" opacity="0.35"/>
+<rect x="48" y="132" width="1208" height="814" rx="12" fill="none" stroke="#ffc94d" stroke-width="4"/>
+<text x="652" y="282" font-size="44" fill="#ffc94d" font-weight="600" text-anchor="middle" letter-spacing="6">STARTING SOON</text>
+<text x="652" y="392" font-size="88" fill="#f3f5ff" font-weight="600" text-anchor="middle">Demo Cup, final</text>
+<text x="652" y="722" font-size="330" fill="#f3f5ff" font-weight="700" text-anchor="middle" letter-spacing="-4">05:00</text>
+<text x="652" y="842" font-size="48" fill="#c5cae3" font-weight="400" text-anchor="middle">Stage · in 5 minutes</text>
+</g>
+</g>
+<rect x="949" y="597.375" width="21.3478" height="10" rx="3" fill="url(#g)"/>
+<rect x="972.348" y="597.375" width="153.652" height="10" rx="3" fill="#ffc94d"/>
+<rect x="1128" y="597.375" width="21.3478" height="10" rx="3" fill="url(#g)"/>
+<rect x="1151.35" y="597.375" width="153.652" height="10" rx="3" fill="#ffc94d"/>
+<circle cx="1127" cy="602.375" r="11" fill="#f3f5ff" stroke="#3ddcff" stroke-width="3"/>
+<text x="948" y="632.375" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start">0:23 of 0:46 · round 2 at T−5</text>
+<rect x="948" y="652.375" width="166.5" height="32" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<rect x="951" y="655.375" width="80.5" height="26" rx="6" fill="#1e4158"/>
+<text x="991.25" y="673.175" font-size="12.5" fill="#7be7ff" font-weight="600" text-anchor="middle">Main hall</text>
+<text x="1074.5" y="673.175" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Entrance</text>
+<rect x="1194" y="651.375" width="112" height="34" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<path d="M1210,662.375 l10,6 l-10,6 z" fill="#f3f5ff"/>
+<text x="1259" y="673.375" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Play round</text>
+<text x="948" y="710.375" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start">Before you save</text>
+<circle cx="957" cy="731.375" r="8" fill="#3ee39a"/>
+<path d="M953,731.375 l3,3 l5,-6" fill="none" stroke="#0b0d1a" stroke-width="1.8" stroke-linecap="round"/>
+<text x="974" y="736.375" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start">Every round ends: the item starts</text>
+<circle cx="957" cy="761.375" r="8" fill="#3ee39a"/>
+<path d="M953,761.375 l3,3 l5,-6" fill="none" stroke="#0b0d1a" stroke-width="1.8" stroke-linecap="round"/>
+<text x="974" y="766.375" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start">Gap 4 min ≥ round 46 s</text>
+<circle cx="957" cy="791.375" r="8" fill="#ffc94d"/>
+<text x="957" y="795.875" font-size="12" fill="#0b0d1a" font-weight="800" text-anchor="middle">!</text>
+<text x="974" y="796.375" font-size="13" fill="#ffd36d" font-weight="400" text-anchor="start">By hand has no item: the place reads “the stage”</text>
+<circle cx="957" cy="821.375" r="8" fill="#3ee39a"/>
+<path d="M953,821.375 l3,3 l5,-6" fill="none" stroke="#0b0d1a" stroke-width="1.8" stroke-linecap="round"/>
+<text x="974" y="826.375" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start">Countdown 20 s ≥ 9 s for its words</text>
+<rect x="932" y="846" width="390" height="64" rx="0" fill="#1c2138"/>
+<line x1="932" y1="846" x2="1322" y2="846" stroke="#343c66" stroke-width="1"/>
+<text x="948" y="883" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start">1 change</text>
+<rect x="1230" y="859" width="76" height="38" rx="8" fill="#3ddcff"/>
+<text x="1268" y="883" font-size="14" fill="#0b0d1a" font-weight="600" text-anchor="middle">Save</text>
+<rect x="1118" y="859" width="104" height="38" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<path d="M1134,872.0 l10,6 l-10,6 z" fill="#f3f5ff"/>
+<text x="1179" y="883" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle">Test-fire</text>
+<rect x="932" y="910" width="390" height="84" rx="0" fill="#121528"/>
+<line x1="932" y1="910" x2="1322" y2="910" stroke="#343c66" stroke-width="1"/>
+<rect x="963" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="971" y="964" font-size="11" fill="#c5cae3" font-weight="400" text-anchor="middle">Run of show</text>
+<rect x="1041" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1049" y="964" font-size="11" fill="#c5cae3" font-weight="400" text-anchor="middle">Notifications</text>
+<circle cx="1127" cy="934" r="15" fill="#3ddcff"/>
+<path d="M1121.0,934 h12 M1127.0,928 v12" fill="none" stroke="#0b0d1a" stroke-width="2.2" stroke-linecap="round"/>
+<text x="1127" y="964" font-size="11" fill="#c5cae3" font-weight="400" text-anchor="middle">Add</text>
+<rect x="1197" y="924" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1205" y="964" font-size="11" fill="#3ddcff" font-weight="600" text-anchor="middle">Screens</text>
+<rect x="1275" y="924" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1283" y="964" font-size="11" fill="#c5cae3" font-weight="400" text-anchor="middle">More</text>
+<rect x="1060" y="982" width="134" height="5" rx="3" fill="#f3f5ff" opacity="0.6"/>
+</g>
+<text x="32" y="128" font-size="20" fill="#111827" font-weight="700" text-anchor="start">Overview</text>
+<text x="482" y="128" font-size="20" fill="#111827" font-weight="700" text-anchor="start">Round</text>
+<text x="932" y="128" font-size="20" fill="#111827" font-weight="700" text-anchor="start">Preview</text>
+<circle cx="40" cy="404" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="40" y="409" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">1</text>
+<circle cx="40" cy="563" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="40" y="568" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">2</text>
+<circle cx="40" cy="727" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="40" y="732" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">3</text>
+<circle cx="490" cy="427" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="490" y="432" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">4</text>
+<circle cx="490" cy="730.5" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="490" y="735.5" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">5</text>
+<circle cx="940" cy="602.375" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="940" y="607.375" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">6</text>
+<circle cx="940" cy="878" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="940" y="883" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">7</text>
+<text x="1382" y="150" font-size="20" fill="#111827" font-weight="700" text-anchor="start">What changed and why</text>
+<circle cx="1395" cy="179" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1395" y="184" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">1</text>
+<text x="1416" y="184" font-size="16" fill="#111827" font-weight="700" text-anchor="start">The checks as one line on top</text>
+<text x="1416" y="206" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">O29 opened with the full Before you save card;</text>
+<text x="1416" y="226" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">here one line says how many pass and opens</text>
+<text x="1416" y="246" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">them.</text>
+<circle cx="1395" cy="275" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1395" y="280" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">2</text>
+<text x="1416" y="280" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Chips wrap</text>
+<text x="1416" y="302" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Triggers and conditions wrap in the column;</text>
+<text x="1416" y="322" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">nothing is wider than the phone.</text>
+<circle cx="1395" cy="351" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1395" y="356" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">3</text>
+<text x="1416" y="356" font-size="16" fill="#111827" font-weight="700" text-anchor="start">The rounds on a short timeline</text>
+<text x="1416" y="378" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The same axis as on the desktop, drawn small.</text>
+<circle cx="1395" cy="407" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1395" y="412" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">4</text>
+<text x="1416" y="412" font-size="16" fill="#111827" font-weight="700" text-anchor="start">The strip scrolls sideways</text>
+<text x="1416" y="434" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Tap a step to open its form below.</text>
+<circle cx="1395" cy="463" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1395" y="468" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">5</text>
+<text x="1416" y="468" font-size="16" fill="#111827" font-weight="700" text-anchor="start">One field a row, labels above</text>
+<text x="1416" y="490" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">On the phone a field takes the column’s width;</text>
+<text x="1416" y="510" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">on the desktop they sit two to a row (sheet</text>
+<text x="1416" y="530" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">05).</text>
+<circle cx="1395" cy="559" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1395" y="564" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">6</text>
+<text x="1416" y="564" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Preview with scrub</text>
+<text x="1416" y="586" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">The player at the full width; the scrub bar is</text>
+<text x="1416" y="606" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">coloured by step.</text>
+<circle cx="1395" cy="635" r="13" fill="#f59e0b" stroke="#0b0d1a" stroke-width="2"/>
+<text x="1395" y="640" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">7</text>
+<text x="1416" y="640" font-size="16" fill="#111827" font-weight="700" text-anchor="start">Test-fire and Save in the pending row</text>
+<text x="1416" y="662" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Always one tap away, above the bottom bar</text>
+<text x="1416" y="682" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">(design decision 5).</text>
+</svg>
