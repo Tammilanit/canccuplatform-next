@@ -448,7 +448,7 @@ Not fixed here (out of scope); for the lead to sort.
 
 ## Lead's evaluation
 
-**Verdict.** Step 4 works, and most of it looks like the product. The new organiser pages sit cleanly in the shell, and the crew spotlight, announcements and the emergency look right on screen. Premiere plays in sync on two screens. Storyboards are the weak part. They are the step's new picture, and on screen they look much plainer than everything around them. Their text is small, dim and stuck in a corner, where mockup 20 draws it large across the hero. Two of the gate's three sequences show this, so in my view step 4 is not ready for `checkpoint-ok` yet. One focused polish package should close the gap; the list is at the end.
+**Verdict.** Step 4 works, and most of it looks like the product. The new organiser pages sit cleanly in the shell, and the crew spotlight, announcements and the emergency look right on screen. Premiere plays in sync on two screens. Storyboards are the weak part. They are the step's new picture, and on screen they look much plainer than everything around them. Their text is small, dim and stuck in a corner, where mockup 20 draws it large across the hero. Two of the gate's three sequences show this, so in my view step 4 is not ready for `checkpoint-ok` yet. The polish agreed with the product owner is at the end.
 
 ### The organiser at the desk: good, with two broken pages
 - **Good:** On air (O1–O4) reads at a glance: one card per zone, what waits and why, and the crew actions on the right. Priorities with its live preview (O5), Scenes with "the event at a glance" (O7), History (O6) and the announcement composer with its real-player preview (O13–O16) follow their mockups and the shell. The withdrawn view (O18) is calm and clear.
@@ -479,28 +479,28 @@ Not fixed here (out of scope); for the lead to sort.
 ### Did step 3 hold?
 Yes, for what step 3 built. The Pulse, rail, ticker, header and clock look as they did at the step 3 gate, on every screen here (R1, R6, S3 frames 1–2). Step 4's own templates are what break the unity. Storyboards did not reuse the hero type that the spotlight and announcements already use.
 
-### Improvement plan
-**Gate-blocking, in my view (one polish package before `checkpoint-ok`):**
-1. **Storyboard steps at hero scale.** Message, title and finale steps use the same hero type as the crew spotlight, sized as in mockup 20. Stings are large, centred and bright on the accent, never dark on dark. Add storyboard steps to the screens' readability check, so CI catches this next time (R17, R21, R22, S1).
-2. **Midnight done properly.** A full-size countdown. A sting in the theme's look, not a flat block. No overlap in the crossfade. Every zone on the dot, the entrance too (S2).
-3. **Premiere full bleed.** A video step fills the screen with no card border and no side bars. The countdown text matches its time (S3).
-4. **Pages that fit.** Storyboards and Cues fit the window at 1280 px and on a phone. The Fire panel moves into the page's grid. History scrolls inside its own box on a phone (O19, O9, O28, O30, O27).
-5. **On-screen bugs.** The QR step draws its code on the first fire (R20), and `{event.name}` is filled on the first fire (A5, R19).
-6. **Fire picks the next fitting item.** It never picks a past one by default (O2, R22).
-7. **Urgent looks urgent.** It reads "URGENT" in the warning colour, as mockup 06 shows (R6, A3).
+### The product owner's notes
+The PO read the book on 18 November 2026 and added:
+- **Priorities (O5):** drag and drop, not arrows; the rank numbers mean nothing on their own (only the order counts), so they go.
+- **The sound desk (O9) is one huge page and not user-friendly:** redesign it. The cue editor (O10) does not look professional. Sliders suit levels and times better than typed numbers.
+- **The builder (O20–O22):** the fields' boxes are oddly aligned, with one long edit box.
+- **History (O27)** does not fit the width.
+- **The screens do not use their space:** content should be aligned and fill a larger part of the screen. R2: a crew spotlight's text is small in the lower corner of an empty hero (the hero is meant for a photo, which the remote cannot pick yet).
+- **The entrance screen may not exist** at every event, or any screen at all. Moments works without one; the entrance's on-the-dot fix stays a correctness fix but no longer blocks the gate.
 
-After the package: a fresh S1, S2, R17 and R21, plus phone shots of O28 and O30, for the gate.
+### The mockups themselves
+Measured against the PO's notes, the step 4 research pack's mockups were strong on behaviour and weak as UX design. Mockup 12 drew the sound desk as one dense console with raw cue ids, and mockup 08 showed the rank numbers: the build copied both. Mockup 08's drag and drop, mockup 18's builder (a strip of steps, a timeline, a scrub preview) and mockup 20's hero scale were good, and the build lost them. From step 5 on, the lead gives a UX verdict on every pack's mockups before the PO reads it, and a build that falls short of its mockup sheet does not pass review.
 
-**Later (step 5 polish, or the backlog):**
-- The builder with a visible strip of the round's steps, beside the form, as in mockup 18 (O20, O29).
-- A photo picker in the crew remote instead of raw paths (C2).
-- Small page fixes:
-  - The cue editor's choices as chips (O10).
-  - Themed audio players in the library (O9).
-  - Rules rows that do not wrap mid-word (O5).
-  - The scheduled list showing the filled text, not the template (O17, C7).
-  - A separator between title and body in the preview card (O13).
-  - The withdrawn note's punctuation (O18).
-- Test-fire fills placeholders with sample text, so "Match called:" is never empty (R21).
-- The ticker fallback for two lines (A8).
-- Check Peak's look and pace on a live screen. If it really does not change, make it visible (sheet 12).
+### Improvement plan (agreed with the PO)
+**Redesign first:** new mockups for the PO's accept, then a rebuild (#623):
+1. **The sound desk** (O9–O12, O30): sections or sub-pages, plain cue names, sliders, a professional cue editor with chips and themed players. Rebuilt in #626.
+2. **The storyboard builder** (O20–O23, O29): mockup 18 in the dark shell, with aligned fields. Rebuilt in #627.
+3. **The hero uses the screen** (R1, R2, R17–R22, S1–S3, A5): one rule for every hero template: large, centred, filling the hero; a photo when there is one. Built in #625.
+
+**Build to the existing mockups now** (#624, the organiser pages): drag-and-drop priorities without numbers; chips and sliders in the built-in rules; Storyboards and History fit at 1280 px and on a phone; Fire defaults to the next fitting item; a photo picker in the crew spotlight remote.
+
+**The screens** (#625, after the hero sheet): storyboard steps and stings at hero scale and in the readability check; Midnight with a full-size countdown, a themed sting, no overlap, every zone on the dot; Premiere full bleed with matching countdown text; the QR step and `{event.name}` on the first fire; Urgent reads "URGENT" in the warning colour.
+
+**Later (step 5 polish, or the backlog):** scheduled announcements show the filled text (O17, C7); a separator in the preview card (O13); the withdrawn note's punctuation (O18); test-fire fills placeholders with sample text (R21); the ticker's two-line fallback (A8); Peak checked on a live screen.
+
+**The gate:** once #623–#627 have merged, a fresh book of the changed pages and screens (S1, S2, R2, R17, R21, the sound desk, the builder, O27, O28 and O30 on a phone) goes to the PO, then `checkpoint-ok` on #618.
