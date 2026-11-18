@@ -1,0 +1,342 @@
+/* The organiser pages fixed after the step 4 checkpoint (#624): Priorities and its rules (mockup 08),
+   History (mockup 09), the storyboard catalogue (mockup 21) and the spotlight's photo picker
+   (mockup 04). Only layout; every look comes from ui.css. Each fits a 1280 px window and a 390 px
+   phone without sideways scroll: tracks are minmax(0, …) and wide rows reflow by their own width. */
+
+/* Priorities: the order beside the preview. */
+.moments-priorities {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 64rem) {
+  .moments-priorities {
+    grid-template-columns: 26rem minmax(0, 1fr);
+    align-items: start;
+  }
+}
+.moments-scopes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+/* Each class is a row of its own, as mockup 08 draws them: the order is all that counts. */
+.moments-order {
+  list-style: none;
+  display: grid;
+  gap: 0.375rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+}
+.moments-order__row {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  gap: 0.25rem;
+  align-items: center;
+  min-height: 2.75rem;
+  border: 1px solid var(--canccu-color-border);
+  border-radius: var(--canccu-radius);
+  background: var(--canccu-tint);
+}
+.moments-order__name {
+  font-weight: 600;
+}
+/* The handle is the grip a finger or the keyboard takes; 44 px square, as a touch target. */
+.moments-order__handle {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--canccu-radius);
+  background: transparent;
+  color: var(--canccu-ink-muted);
+  font: inherit;
+  letter-spacing: -0.2em;
+  cursor: grab;
+  touch-action: none;
+}
+.moments-order__handle:focus-visible {
+  outline: 2px solid var(--canccu-ink-primary);
+  outline-offset: -2px;
+}
+.moments-order__row--dragging {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.35);
+  opacity: 0.95;
+}
+.moments-order__row--dragging .moments-order__handle {
+  cursor: grabbing;
+}
+.moments-said {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.moments-preview__frame {
+  aspect-ratio: 16 / 9;
+  margin-bottom: 0.75rem;
+}
+.moments-preview__frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* The built-in rules: every rule on one grid, so the fields line up from row to row. */
+.moments-rules {
+  margin-top: 1rem;
+  container: rules / inline-size;
+}
+.moments-rule {
+  display: grid;
+  gap: 0.75rem 1rem;
+  align-items: start;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--canccu-color-border);
+}
+.moments-rule:last-child {
+  border-bottom: 0;
+}
+.moments-rule p {
+  margin: 0.25rem 0 0;
+}
+.moments-rule label > .canccu-input {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+.moments-rule legend {
+  margin-bottom: 0.375rem;
+  padding: 0;
+}
+.moments-event {
+  font-size: 0.8125rem;
+  hyphens: none;
+}
+.moments-rule__seconds {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.5rem;
+  gap: 0.25rem 0.5rem;
+  align-items: center;
+}
+.moments-rule__seconds > label {
+  grid-column: 1 / -1;
+}
+.moments-rule__seconds output {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.moments-range {
+  width: 100%;
+  min-height: 2.75rem;
+  margin: 0;
+  accent-color: var(--canccu-color-primary);
+}
+.moments-rule__save {
+  justify-self: start;
+}
+@container rules (min-width: 34rem) {
+  .moments-rule {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "name name"
+      "class cue"
+      "seconds seconds"
+      "regions regions"
+      "zones zones"
+      "save save";
+  }
+}
+@container rules (min-width: 52rem) {
+  .moments-rule {
+    grid-template-columns: 13rem repeat(3, minmax(0, 1fr)) auto;
+    grid-template-areas:
+      "name class seconds cue save"
+      "name regions regions zones zones";
+  }
+  .moments-rule__save {
+    align-self: end;
+  }
+}
+@container rules (min-width: 34rem) {
+  .moments-rule__name {
+    grid-area: name;
+  }
+  .moments-rule__class {
+    grid-area: class;
+  }
+  .moments-rule__seconds {
+    grid-area: seconds;
+  }
+  .moments-rule__cue {
+    grid-area: cue;
+  }
+  .moments-rule__regions {
+    grid-area: regions;
+  }
+  .moments-rule__zones {
+    grid-area: zones;
+  }
+  .moments-rule__save {
+    grid-area: save;
+  }
+}
+
+/* History: the filters, then the table; on a phone each row is a card of labelled lines. */
+.moments-filters {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  align-items: end;
+  margin-bottom: 1rem;
+}
+.moments-table {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.moments-history td {
+  overflow-wrap: break-word;
+}
+@media (max-width: 40rem) {
+  .moments-history thead {
+    display: none;
+  }
+  .moments-history,
+  .moments-history tbody,
+  .moments-history tr {
+    display: block;
+    width: 100%;
+  }
+  .moments-history tr {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--canccu-color-border);
+  }
+  .moments-history td {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border: 0;
+  }
+  .moments-history td::before {
+    content: attr(data-label);
+    color: var(--canccu-ink-muted);
+    font-size: var(--canccu-text-xs);
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}
+
+/* Storyboards: the catalogue, and the Fire panel in its own column on a desk. */
+.moments-stories {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+@media (min-width: 64rem) {
+  .moments-stories {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+  }
+}
+.moments-stories > *,
+.moments-stories__side {
+  min-width: 0;
+}
+.moments-stories__side .canccu-input {
+  width: 100%;
+  max-width: 100%;
+}
+.moments-presets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  container: presets / inline-size;
+}
+.moments-preset {
+  display: grid;
+  gap: 0.375rem 1rem;
+  padding: 0.875rem 0;
+  border-top: 1px solid var(--canccu-color-border);
+  overflow-wrap: break-word;
+}
+.moments-preset:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.moments-preset__actions form {
+  margin: 0;
+}
+@container presets (min-width: 34rem) {
+  .moments-preset {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    grid-template-areas:
+      "name status"
+      "rounds status"
+      "actions actions";
+  }
+  .moments-preset__name {
+    grid-area: name;
+  }
+  .moments-preset__rounds {
+    grid-area: rounds;
+  }
+  .moments-preset__status {
+    grid-area: status;
+  }
+  .moments-preset__actions {
+    grid-area: actions;
+  }
+}
+
+/* The spotlight's photo picker: thumbnails in a grid, the picked one outlined. */
+.moments-photos {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+}
+.moments-photo {
+  position: relative;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 2px solid transparent;
+  border-radius: var(--canccu-radius);
+  cursor: pointer;
+}
+.moments-photo > input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.moments-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--canccu-radius);
+  background: var(--canccu-color-surface);
+}
+.moments-photo__title {
+  overflow: hidden;
+  color: var(--canccu-ink-muted);
+  font-size: var(--canccu-text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.moments-photo:has(> input:checked) {
+  border-color: var(--canccu-color-primary);
+}
+.moments-photo:has(> input:focus-visible) {
+  outline: 2px solid var(--canccu-ink-primary);
+  outline-offset: 2px;
+}

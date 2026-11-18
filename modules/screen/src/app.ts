@@ -288,7 +288,8 @@ export function buildApp(deps: ScreenDeps): FastifyInstance {
       hub.plan(tenant, zone, at);
     },
   });
-  if (deps.service !== undefined) internalRoutes(app, compose);
+  if (deps.service !== undefined)
+    internalRoutes(app, { ...compose, filesRoot: deps.filesRoot ?? FILES_ROOT });
   zoneViewRoutes(app, {
     ...push,
     rights: deps.rights,

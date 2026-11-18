@@ -218,7 +218,7 @@ run("the Moments pages", () => {
   });
 
   it("serves the pages' own static files", async () => {
-    for (const name of ["ui.css", "moments.css", "moments.js"]) {
+    for (const name of ["ui.css", "moments.css", "organiser.css", "moments.js"]) {
       expect((await w.call("reader", "GET", `/static/${name}`)).statusCode).toBe(200);
     }
     expect((await w.call("reader", "GET", "/static/other.js")).statusCode).toBe(404);

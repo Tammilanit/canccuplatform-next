@@ -251,10 +251,10 @@ Sequences for the peaks as data an organiser edits without code (the [storyboard
 ## Pages
 Studio → Moments, the Screen studio's Moments tab, at `/moments/` (Caddy strips the prefix), phone-first; a signed-out browser goes to `/admin/sign-in?next=`. `/moments/` opens **On air** while the event is live and **Priorities** before (U9).
 - **On air** (mockup 03, and the phone's Screens tab, mockup 04, U6): a column per zone with its scene and what is placed, hidden and waiting and why, time left, Extend and End in zone; the crew actions Spotlight, the scenes' crew buttons ("Peak now", mockup 14) and Emergency (hold 2 s).
-- **Spotlight:** the crew spotlight's form.
-- **Priorities** (mockup 08): the event's order and each zone's, moved up and down and saved; a preview of a zone in the real player through Screen's zone preview path (`POST /api/screen/zones/{zone_key}/preview` with `ranks`), with the running moments ranked as the order on the page would rank them; the built-in rules' settings.
+- **Spotlight** (mockup 04): the crew spotlight's form; a photo is picked by its thumbnail from the event's images (Screen's `GET /internal/screen/images`, [screen.md](screen.md#for-moments)), which `/moments/spotlight/images/{asset_id}` shows to `moments.take`, and the QR to the phone hub (`/notify/`) is a switch.
+- **Priorities** (mockup 08): the event's order and each zone's, moved by drag and drop (a pointer, a finger, or the arrow keys on a row's handle; without the script, arrows) and saved, with no rank numbers shown; a preview of a zone in the real player through Screen's zone preview path (`POST /api/screen/zones/{zone_key}/preview` with `ranks`), with the running moments ranked as the order on the page would rank them; the built-in rules' settings, regions and zones as chips and the seconds on a slider.
 - **Scenes** (sheet 12; Scenes, above), at `/moments/scenes`, also the Screen studio's own Scenes tab.
-- **History** (mockup 09): the table per zone with its filters and Export CSV.
+- **History** (mockup 09): the table per zone with its filters and Export CSV; on a phone each row is a card.
 - **Cues** (mockup 12, the sound desk): each zone's budget this hour and minute, what it lets through now and its sound screen; the master, the timed mute and the sound check; the categories; the cues with their sounds, voice lines and pictures, each editable, and "+ Add a cue"; the library with a preview of each sound and the upload (the page's script uploads to Screen, then links the asset); the log.
 
 ## Rights

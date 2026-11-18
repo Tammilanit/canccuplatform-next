@@ -16,6 +16,7 @@ import type { ZoneSceneView } from "./scene-views.js";
 import type { AppDeps } from "./http.js";
 import { PREFIX, page, pageErrors, pageNeeds, refusal, staticRoutes, viaApi } from "./page-kit.js";
 import { loadRules } from "./rules.js";
+import { loadCues } from "./cues/store.js";
 import { knownZones, loadOrders, runningMoments, splitZones, titleOf } from "./store.js";
 import { historyView, prioritiesView } from "./settings-views.js";
 import { confirmEmergency, onAirView, spotlightView } from "./views.js";
@@ -30,6 +31,11 @@ const list = (v: string | undefined): string[] =>
     .split(",")
     .map((s) => s.trim())
     .filter((s) => s !== "");
+/** A form's ticked boxes of one name: none, one or many. */
+const ticked = (v: unknown): string[] =>
+  (Array.isArray(v) ? v : v === undefined ? [] : [v]).map(String).filter((s) => s !== "");
+/** Where the hub QR of a crew spotlight points (contracts/notify.md: the hub is under /notify/). */
+const HUB = { path: "/notify/", label: "Scan for the hub" };
 
 async function onAir(deps: AppDeps): Promise<{ moments: MomentView[]; zones: string[] }> {
   return deps.db.tenant(async (c) => {
@@ -189,7 +195,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
       },
     );
 
-    pages.get("/spotlight", { preHandler: pageNeeds(deps, TAKE) }, async (request, reply) => {
+    pages.get<Q>("/spotlight", { preHandler: pageNeeds(deps, TAKE) }, async (request, reply) => {
       const data = await deps.db.tenant(async (c) => {
         const { rows } = await c.query(
           `SELECT ref, data->'game'->>'name' AS name FROM moments_sources WHERE kind = 'session' ORDER BY ref`,
@@ -197,6 +203,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
         );
         return {
           zones: await knownZones(c),
+          images: await deps.screen.images(tenantOf(request).tenant_id),
           sessions: rows.map((r) => ({
             id: r.ref as string,
             name: `${(r.name as string | null) ?? "Session"} (${r.ref as string})`,
@@ -205,15 +212,22 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
       });
       return page(request, reply, deps, {
         title: "Crew spotlight",
-        body: spotlightView(data),
+        body: spotlightView({ ...data, error: request.query.error }),
         description: "In the hero of the zones you pick, for as long as you choose.",
       });
     });
     pages.post<Q>("/spotlight", { preHandler: pageNeeds(deps, TAKE) }, async (request, reply) => {
       const f = request.body;
-      const raw = (request.body as unknown as Record<string, unknown>).zone;
-      const zones = Array.isArray(raw) ? raw : raw === undefined ? [] : [raw];
+      const zones = ticked((request.body as unknown as Record<string, unknown>).zone);
       const show = f.show ?? "message";
+      // The crew picks a photo by its asset; the screens load its file (contracts/screen.md).
+      let photo = "";
+      if (show === "photo") {
+        const images = await deps.screen.images(tenantOf(request).tenant_id);
+        photo = images.find((i) => i.id === f.photo_asset)?.url ?? "";
+        if (photo === "")
+          return back(reply, "spotlight", "error", "Pick one of the photos, then start it.");
+      }
       const a = await viaApi(pages, request, "POST", "/api/moments/spotlight", {
         show,
         zones,
@@ -222,20 +236,38 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
           ? { title: f.title ?? "", ...(f.body ? { body: f.body } : {}) }
           : {}),
         ...(show === "bracket" ? { session_id: f.session_id ?? "" } : {}),
-        ...(show === "photo" ? { photo_url: f.photo_url ?? "" } : {}),
-        ...(f.qr_path ? { qr: { path: f.qr_path, label: "Scan me" } } : {}),
+        ...(show === "photo" ? { photo_url: photo } : {}),
+        ...(f.hub_qr === "yes" ? { qr: HUB } : {}),
       });
       return a.status >= 400
         ? back(reply, "on-air", "error", refusal(a))
         : back(reply, "on-air", "done", "Spotlight on air.");
     });
 
+    // The picker's thumbnails: Screen serves a file only to `screen.content.read`, which the
+    // crew may not hold, so Moments passes on the event's images, and only those, to `moments.take`.
+    pages.get<{ Params: { asset_id: string } }>(
+      "/spotlight/images/:asset_id",
+      { preHandler: pageNeeds(deps, TAKE) },
+      async (request, reply) => {
+        const got = await deps.screen
+          .image(tenantOf(request).tenant_id, request.params.asset_id)
+          .catch(() => null);
+        if (got === null) return reply.status(404).type("text/plain").send("No such image.");
+        return reply
+          .header("content-type", got.type)
+          .header("cache-control", "private, max-age=3600")
+          .header("x-content-type-options", "nosniff")
+          .send(got.body);
+      },
+    );
     pages.get<Q>("/priorities", read, async (request, reply) => {
       const scope = request.query.scope ?? "";
       const state = await deps.db.tenant(async (c) => ({
         orders: await loadOrders(c),
         zones: await knownZones(c),
         rules: await loadRules(c),
+        cues: (await loadCues(c)).map((q) => q.name),
         running: await Promise.all(
           (await runningMoments(c)).map(async (m) => ({ m, split: await splitZones(c, m.id) })),
         ),
@@ -268,8 +300,9 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
           zones: state.zones,
           own: Object.keys(state.orders.zones),
           revision: state.orders.revision,
-          preview: zone === undefined ? null : { zone, ranks },
+          preview: zone === undefined ? null : { zone, ranks, auto: request.query.preview === "1" },
           rules: state.rules,
+          cues: state.cues,
           canWrite: has(request, SETTINGS) && tenantOf(request).status !== "archived",
           done: request.query.done,
           error: request.query.error,
@@ -302,6 +335,7 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
       { preHandler: pageNeeds(deps, SETTINGS) },
       async (request, reply) => {
         const f = request.body;
+        const all = request.body as unknown as Record<string, unknown>;
         const id = (request.params as { rule_id: string }).rule_id;
         const a = await viaApi(
           pages,
@@ -312,9 +346,9 @@ export function pageRoutes(app: FastifyInstance, deps: AppDeps): void {
             enabled: f.enabled === "true",
             template: f.template,
             class: f.class,
-            regions: list(f.regions),
+            regions: ticked(all.regions),
             ttl_seconds: Number(f.ttl_seconds),
-            zones: list(f.zones),
+            zones: ticked(all.zones),
             cue: f.cue === undefined || f.cue === "" ? null : f.cue,
             revision: Number(f.revision),
           },

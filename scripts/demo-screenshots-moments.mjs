@@ -1,8 +1,9 @@
 // Studio → Moments shots of scripts/demo-screenshots.mjs (group `moments`; step 4 mockups 03, 04,
 // 07, 08, 09 and 12), on the screens' fixture (the main and entrance zones): a crew spotlight of the
 // standings, then one with a message that takes the hero from it, so On air shows one placed and
-// one waiting with why; On air at both widths, the spotlight form on a phone, Priorities with its
-// preview drawn, History, the sound desk with the spotlights' cues and one cue's form, Scenes with
+// one waiting with why; On air at both widths, the spotlight form with its photo picker (an image
+// uploaded for it) at both widths, Priorities with its preview drawn, History at both widths, the
+// sound desk with the spotlights' cues and one cue's form, Scenes with
 // its band chart and Peak's editor, and the main hall's live view with "From the crew" and its
 // cue's frame; then "Peak now" pressed, on On air and the main hall. Then an emergency:
 // On air and the main hall under it. Screen places a zone's claims, and reports where, only while
@@ -15,6 +16,7 @@ import {
   SCREEN,
   SESSION,
 } from "../modules/screen/test/stack/client.mjs";
+import { poster } from "../modules/screen/test/stack/content-fixture.mjs";
 import { DESK, PHONE, firstLine } from "./demo-screenshots-shot.mjs";
 
 const SCREEN_VIEW = { width: 1920, height: 1080 };
@@ -98,10 +100,18 @@ const previewed = async (page) => {
 export const MOMENTS_PAGES = [
   ["moments-on-air", "/moments/on-air", DESK],
   ["moments-on-air-phone", "/moments/on-air", PHONE, { touch: true }],
+  // The spotlight with the photo picker's thumbnails (mockup 04; #624).
+  ["moments-spotlight", "/moments/spotlight", DESK],
   ["moments-spotlight-phone", "/moments/spotlight", PHONE, { touch: true }],
   ["moments-priorities", "/moments/priorities", DESK, { ready: previewed }],
   ["moments-priorities-phone", "/moments/priorities", PHONE, { touch: true }],
   ["moments-history", "/moments/history?zone=main", DESK],
+  [
+    "moments-history-phone",
+    "/moments/history?zone=main",
+    PHONE,
+    { touch: true },
+  ],
   // The sound desk (mockup 12) after the two spotlights' cues: the budget, the log, the library.
   ["moments-cues", "/moments/cues", DESK],
   ["moments-cues-phone", "/moments/cues", PHONE, { touch: true }],
@@ -167,9 +177,30 @@ export function momentsListed(at) {
   );
 }
 
+/** An image for the spotlight's photo picker, uploaded as Studio uploads it. */
+async function image(demo) {
+  const boundary = "canccu-moments-shot";
+  const body = Buffer.concat([
+    Buffer.from(
+      `--${boundary}\r\ncontent-disposition: form-data; name="file"; filename="poster-final.png"\r\n` +
+        "content-type: application/octet-stream\r\n\r\n",
+    ),
+    poster(),
+    Buffer.from(`\r\n--${boundary}--\r\n`),
+  ]);
+  const type = `multipart/form-data; boundary=${boundary}`;
+  const r = await demo.call("POST", "/api/screen/assets", { body, type });
+  if (r.status !== 201)
+    throw new Error(
+      `uploading an image: HTTP ${r.status} ${JSON.stringify(r.body)}`,
+    );
+  return r.body.id;
+}
+
 export async function momentsShots({ demo, shot, fail }) {
   const ids = [];
   const screens = [];
+  const images = [];
   let emergency = false;
   let peak = false;
   try {
@@ -196,6 +227,7 @@ export async function momentsShots({ demo, shot, fail }) {
     );
     await placed(ids[0], ["main"]);
     await placed(ids[1], ["main", "entrance"]);
+    images.push(await image(demo));
     for (const [name, path, viewport, o] of MOMENTS_PAGES) {
       await shot(name, path, viewport, SESSION, o);
     }
@@ -226,6 +258,8 @@ export async function momentsShots({ demo, shot, fail }) {
       if (peak) await moments("POST", "/api/moments/scenes/peak/take", {});
       for (const id of ids)
         await moments("POST", `/api/moments/moments/${id}/end`, {});
+      for (const id of images)
+        await demo.call("DELETE", `/api/screen/assets/${id}`);
       for (const { paired, sse } of screens) {
         sse.close();
         await demo.revoke(paired.id);

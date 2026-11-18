@@ -1,6 +1,7 @@
 /**
- * What Moments asks Screen about sound (contracts/screen.md, For Moments): a zone's energy and its
- * sound screen, and an `audio` asset the library links. Through Screen's internal paths with the
+ * What Moments asks Screen (contracts/screen.md, For Moments): a zone's energy and its sound
+ * screen, an `audio` asset the library links, and the event's images for the crew spotlight's
+ * photo picker. Through Screen's internal paths with the
  * kit's service identity; Moments never reads Screen's data.
  */
 import type { ServiceIdentity } from "@canccu/kit";
@@ -21,11 +22,22 @@ export interface AudioAsset {
   duration_seconds: number | null;
 }
 
+export interface ScreenImage {
+  id: string;
+  title: string;
+  /** The file under `/api/screen/files/`, as the screens load it. */
+  url: string;
+}
+
 export interface ScreenClient {
   /** Null when Screen does not know the zone or does not answer. */
   zoneSound(tenant: string, zone: string): Promise<ZoneSoundStatus | null>;
   /** Null when the event has no such asset. */
   asset(tenant: string, assetId: string): Promise<AudioAsset | null>;
+  /** The event's images, newest first; none when Screen does not answer. */
+  images(tenant: string): Promise<ScreenImage[]>;
+  /** An image's bytes for its thumbnail; null when the event has no such image. */
+  image(tenant: string, assetId: string): Promise<{ type: string; body: Buffer } | null>;
 }
 
 const ENERGIES = new Set(["party", "lively", "calm", "quiet"]);
@@ -36,7 +48,7 @@ export function screenClient(
   fetchFn: typeof fetch = fetch,
 ): ScreenClient {
   const base = screenUrl.replace(/\/+$/, "");
-  const get = async (path: string, tenant: string): Promise<unknown> => {
+  const ask = async (path: string, tenant: string): Promise<Response | null> => {
     const res = await fetchFn(`${base}${path}?tenant_id=${encodeURIComponent(tenant)}`, {
       headers: service.headers("screen"),
       // A sound decides within a request or the tick: a slow Screen must not hold either.
@@ -44,8 +56,10 @@ export function screenClient(
     });
     if (res.status === 404) return null;
     if (!res.ok) throw new Error(`screen answered ${String(res.status)}`);
-    return res.json();
+    return res;
   };
+  const get = async (path: string, tenant: string): Promise<unknown> =>
+    (await ask(path, tenant))?.json() ?? null;
   return {
     async zoneSound(tenant, zone) {
       try {
@@ -63,6 +77,24 @@ export function screenClient(
         `/internal/screen/assets/${encodeURIComponent(assetId)}`,
         tenant,
       )) as AudioAsset | null;
+    },
+    async images(tenant) {
+      try {
+        const v = (await get("/internal/screen/images", tenant)) as {
+          images?: ScreenImage[];
+        } | null;
+        return v?.images ?? [];
+      } catch {
+        return [];
+      }
+    },
+    async image(tenant, assetId) {
+      const res = await ask(`/internal/screen/images/${encodeURIComponent(assetId)}`, tenant);
+      if (res === null) return null;
+      return {
+        type: res.headers.get("content-type") ?? "application/octet-stream",
+        body: Buffer.from(await res.arrayBuffer()),
+      };
     },
   };
 }

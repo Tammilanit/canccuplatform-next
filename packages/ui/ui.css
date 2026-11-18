@@ -910,6 +910,30 @@
     background: color-mix(in srgb, var(--canccu-color-primary) 16%, transparent);
     color: var(--canccu-color-text);
   }
+  /* A chip that is a checkbox or radio: a form's choice that works without the script. The box
+     is hidden but stays focusable, so the chip shows its state and the keyboard's focus. */
+  .canccu-chip:has(> input) {
+    position: relative;
+  }
+  .canccu-chip > input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .canccu-chip:has(> input:checked) {
+    border-color: var(--canccu-color-primary);
+    background: color-mix(in srgb, var(--canccu-color-primary) 16%, transparent);
+    color: var(--canccu-color-text);
+  }
+  .canccu-chip:has(> input:focus-visible) {
+    outline: 2px solid var(--canccu-ink-primary);
+    outline-offset: 2px;
+  }
+  .canccu-chip:has(> input:disabled) {
+    cursor: default;
+  }
   /* A quiet danger link: the filled danger button is kept for the step that asks first. */
   :where(.canccu-page) .canccu-danger-link {
     color: var(--canccu-ink-down);

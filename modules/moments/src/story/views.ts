@@ -27,7 +27,35 @@ export interface RunView {
 export interface ItemChoice {
   id: string;
   title: string;
+  kind: string;
   starts_at: string;
+  ends_at: string | null;
+}
+
+/**
+ * Fire's items (O2, R22): those the story's item triggers take whose start (or end, by the
+ * trigger's anchor) is still to come, soonest first, so the first is the default. A past item
+ * would send the run straight to its finale.
+ */
+export function fireChoices(s: Story, items: readonly ItemChoice[], now: number): ItemChoice[] {
+  const triggers = s.triggers.filter(
+    (t): t is Extract<Story["triggers"][number], { kind: "item" }> => t.kind === "item",
+  );
+  return items
+    .map((i) => {
+      const times = triggers
+        .filter((t) =>
+          t.item_id !== null
+            ? t.item_id === i.id
+            : t.kinds.length === 0 || t.kinds.includes(i.kind),
+        )
+        .map((t) => Date.parse((t.anchor === "end" ? i.ends_at : i.starts_at) ?? ""))
+        .filter((at) => at >= now);
+      return { i, at: Math.min(...times) };
+    })
+    .filter((x) => Number.isFinite(x.at))
+    .sort((a, b) => a.at - b.at)
+    .map((x) => x.i);
 }
 
 const secs = (ms: number): string => `${String(Math.round(ms / 100) / 10)} s`;
@@ -147,6 +175,7 @@ export function crewStories(o: {
   stories: Story[];
   runs: RunView[];
   items: ItemChoice[];
+  now: number;
   canTake: boolean;
   back: string;
 }): Html {
@@ -155,6 +184,7 @@ export function crewStories(o: {
   const live = o.runs.filter((r) => r.status === "live");
   const fire = takes.map((s) => {
     const needsItem = s.triggers.some((t) => t.kind === "item");
+    const choices = needsItem ? fireChoices(s, o.items, o.now) : [];
     const vars = freeVariablesOf(s);
     return html`<form
       class="canccu-stack moments-story-fire"
@@ -166,7 +196,7 @@ export function crewStories(o: {
         needsItem
           ? html`<label class="canccu-field__label" for="item-${s.key}">Item</label>
               <select class="canccu-input" id="item-${s.key}" name="item_id">
-                ${o.items.map((i) => html`<option value="${i.id}">${i.title} · ${i.starts_at.slice(11, 16)}</option>`)}
+                ${choices.length === 0 ? html`<option value="">No coming item it takes</option>` : choices.map((i, n) => html`<option value="${i.id}" ${n === 0 ? " selected" : ""}>${i.title} · ${i.starts_at.slice(11, 16)}</option>`)}
               </select>`
           : ""
       }

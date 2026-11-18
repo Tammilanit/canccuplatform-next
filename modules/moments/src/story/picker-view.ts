@@ -3,7 +3,8 @@
  * Every built-in in two groups, "every event" (on by default) and "some venues" (off), each with
  * what triggers it, its rounds and sound, its status and the rule it replaces; on or off, duplicate
  * to edit, reset to default. A preset the event has not copied yet shows the platform's and is
- * copied when turned on. On a phone the rounds and sound columns step aside.
+ * copied when turned on. Each row is a small grid, not a table row, so the page fits a phone and
+ * the Fire panel keeps its column on a desk (O19, O28).
  */
 import type { Html } from "@canccu/ui";
 import { html } from "@canccu/ui";
@@ -35,45 +36,35 @@ function row(r: Row, ctx: PickerCtx, canWrite: boolean, revision: number): Html 
   const s = r.story;
   const number = s.preset === null ? null : PRESET_INFO[s.preset]?.number;
   const status = statusOf(s, ctx);
-  return html`<tr>
-    <td>
+  return html`<li class="moments-preset">
+    <div class="moments-preset__name">
       ${r.copied ? html`<a href="${PREFIX}storyboards?edit=${s.key}"><strong>${s.name}</strong></a>` : html`<strong>${s.name}</strong>`}
       <span class="canccu-table__sub"
         >${number === undefined || number === null ? "" : `${String(number)} · `}${s.triggers.map(triggerShort).join("; ")}</span
       >
       ${r.copied ? "" : html`<span class="canccu-table__sub">not in this event yet: turning it on copies it</span>`}
-    </td>
-    <td class="canccu-hide-phone">
+    </div>
+    <div class="moments-preset__rounds canccu-small">
       ${roundsShort(s)}<span class="canccu-table__sub">♪ ${soundShort(s)}</span>
-    </td>
-    <td>${status.map((x) => html`<span class="canccu-table__sub">${x}</span>`)}</td>
-    <td>
-      <span class="canccu-cluster moments-picker__actions">
-        <span class="canccu-badge ${s.enabled ? "canccu-badge--ok" : "canccu-badge--plain"}"
-          >${s.enabled ? "On" : "Off"}</span
-        >
-        ${canWrite ? post(`${s.key}/toggle`, revision, s.enabled ? "Turn off" : "Turn on") : ""}
-        ${canWrite ? post(`${s.key}/duplicate`, revision, "Duplicate") : ""}
-        ${canWrite && r.copied && s.preset !== null ? post(`${s.key}/reset`, revision, "Reset to default") : ""}
-      </span>
-    </td>
-  </tr>`;
+    </div>
+    <div class="moments-preset__status">
+      ${status.map((x) => html`<span class="canccu-table__sub">${x}</span>`)}
+    </div>
+    <div class="canccu-cluster moments-preset__actions">
+      <span class="canccu-badge ${s.enabled ? "canccu-badge--ok" : "canccu-badge--plain"}"
+        >${s.enabled ? "On" : "Off"}</span
+      >
+      ${canWrite ? post(`${s.key}/toggle`, revision, s.enabled ? "Turn off" : "Turn on") : ""}
+      ${canWrite ? post(`${s.key}/duplicate`, revision, "Duplicate") : ""}
+      ${canWrite && r.copied && s.preset !== null ? post(`${s.key}/reset`, revision, "Reset to default") : ""}
+    </div>
+  </li>`;
 }
 
-function table(rows: Row[], ctx: PickerCtx, canWrite: boolean, revision: number): Html {
-  return html`<table class="canccu-table moments-picker">
-    <thead>
-      <tr>
-        <th>Preset</th>
-        <th class="canccu-hide-phone">Rounds, end · sound</th>
-        <th>Status</th>
-        <th>On</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${rows.map((r) => row(r, ctx, canWrite, revision))}
-    </tbody>
-  </table>`;
+function list(rows: Row[], ctx: PickerCtx, canWrite: boolean, revision: number): Html {
+  return html`<ul class="moments-presets">
+    ${rows.map((r) => row(r, ctx, canWrite, revision))}
+  </ul>`;
 }
 
 const GROUPS: { group: PresetGroup; title: string; text: string }[] = [
@@ -93,6 +84,7 @@ export function pickerView(o: {
   stories: Story[];
   runs: RunView[];
   items: ItemChoice[];
+  now: number;
   ctx: PickerCtx;
   canWrite: boolean;
   canTake: boolean;
@@ -114,7 +106,7 @@ export function pickerView(o: {
     html`<section class="canccu-card">
       <h2 class="canccu-card__title">${title}</h2>
       <p class="canccu-small canccu-muted">${text}</p>
-      ${table(rows, o.ctx, o.canWrite, o.revision)}
+      ${list(rows, o.ctx, o.canWrite, o.revision)}
     </section>`;
   const actions = o.canWrite
     ? html`<div class="canccu-cluster">
@@ -123,7 +115,7 @@ export function pickerView(o: {
       </div>`
     : "";
   return html`${flash(o.done, o.error)}
-    <div class="moments-onair">
+    <div class="moments-stories">
       <div class="canccu-stack">
         <p class="canccu-small canccu-muted">
           Built-ins are copied into the event on first use; a later platform version never changes
@@ -134,8 +126,8 @@ export function pickerView(o: {
         ${actions} ${GROUPS.map((g) => section(g.title, g.text, presetRows(g.group)))}
         ${own.length === 0 ? "" : section("Your storyboards", "The event's own stories and copies.", own)}
       </div>
-      <div class="moments-side">
-        ${crewStories({ stories: o.stories, runs: o.runs, items: o.items, canTake: o.canTake, back: "storyboards" })}
+      <div class="moments-stories__side">
+        ${crewStories({ stories: o.stories, runs: o.runs, items: o.items, now: o.now, canTake: o.canTake, back: "storyboards" })}
       </div>
     </div>`;
 }

@@ -1,13 +1,18 @@
 /**
  * What Moments asks Screen (contracts/screen.md, For Moments): a zone's energy and its sound
- * screen for the sound gates (D16, E12, E13), and an asset its library links (D23). Module calls
+ * screen for the sound gates (D16, E12, E13), an asset its library links (D23), and the event's
+ * images with their files for the crew spotlight's photo picker (#624). Module calls
  * by the service name, so they name the event in `tenant_id` and need the kit's service identity
  * (app.ts installs it for `/internal/screen/`); no Caddy route reaches them.
  */
+import { createReadStream } from "node:fs";
+import { stat } from "node:fs/promises";
 import type { FastifyInstance } from "fastify";
 import { withTenant } from "@canccu/kit";
 import type { TenantResolver } from "@canccu/kit";
-import { viewAsset } from "./assets/store.js";
+import { filePath } from "./assets/files.js";
+import { ASSET_SELECT, fileUrl, viewAsset } from "./assets/store.js";
+import type { AssetRow } from "./assets/store.js";
 import { composeZone } from "./compose/state.js";
 import type { ComposeDeps, ZoneComposed } from "./compose/state.js";
 import { healthOf } from "./health.js";
@@ -28,7 +33,7 @@ export function energyOf(z: Pick<ZoneComposed, "phase" | "display" | "scene">): 
 
 export function internalRoutes(
   app: FastifyInstance,
-  deps: ComposeDeps & { tenants: TenantResolver },
+  deps: ComposeDeps & { tenants: TenantResolver; filesRoot: string },
 ): void {
   const event = async (tenant: string | undefined) => {
     const ctx = tenant === undefined || tenant === "" ? null : await deps.tenants.byId(tenant);
@@ -75,4 +80,51 @@ export function internalRoutes(
       );
     },
   );
+
+  // The picker shows at most this many, newest first: a crew phone scrolls a short grid.
+  app.get<Query>("/internal/screen/images", async (request) => {
+    const ctx = await event(request.query.tenant_id);
+    const rows = await withTenant(ctx.tenant_id, () =>
+      deps.db.tenant(async (c) => {
+        const { rows } = await c.query(
+          `${ASSET_SELECT} WHERE a.kind = 'image' AND v.file IS NOT NULL
+           ORDER BY a.created_at DESC, a.id DESC LIMIT ${String(IMAGES_LISTED)}`,
+          [],
+        );
+        return rows as unknown as AssetRow[];
+      }),
+    );
+    return {
+      images: rows.map((r) => ({ id: r.id, title: r.title, url: fileUrl(r.file ?? "") })),
+    };
+  });
+
+  // Crew without `screen.content.read` see the thumbnails through Moments; only images go.
+  app.get<Query & { Params: { asset_id: string } }>(
+    "/internal/screen/images/:asset_id",
+    async (request, reply) => {
+      const ctx = await event(request.query.tenant_id);
+      // The file's path names the tenant, so it is built inside the tenant's context too.
+      const found = await withTenant(ctx.tenant_id, async () => {
+        const row = await deps.db.tenant(async (c) => {
+          const { rows } = await c.query(`${ASSET_SELECT} WHERE a.id = $1`, [
+            request.params.asset_id,
+          ]);
+          return rows[0] as unknown as AssetRow | undefined;
+        });
+        if (row?.kind !== "image" || row.file === null || row.mime_type === null) return null;
+        const path = filePath(deps.filesRoot, row.file);
+        const size = (await stat(path).catch(() => null))?.size;
+        return size === undefined ? null : { path, size, mime: row.mime_type };
+      });
+      if (found === null) throw notFound();
+      return reply
+        .header("content-type", found.mime)
+        .header("content-length", found.size)
+        .header("x-content-type-options", "nosniff")
+        .send(createReadStream(found.path));
+    },
+  );
 }
+
+const IMAGES_LISTED = 60;
