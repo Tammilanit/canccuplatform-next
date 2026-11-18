@@ -12,7 +12,7 @@ function screen(answer: (path: string) => Response): { asked: string[]; fetch: t
     asked.push(`${u.pathname}${u.search}`);
     return Promise.resolve(answer(u.pathname));
   };
-  return { asked, fetch: fake as typeof fetch };
+  return { asked, fetch: fake };
 }
 
 describe("Screen's images for the photo picker", () => {

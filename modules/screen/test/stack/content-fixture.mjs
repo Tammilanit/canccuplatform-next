@@ -8,7 +8,7 @@ import { expect } from "./client.mjs";
 const MEDIA = new URL("../fixtures/media/", import.meta.url);
 
 /** A 1280×720 PNG in two colours, drawn without an image library. */
-function poster() {
+export function poster() {
   const [w, h] = [1280, 720];
   const rows = [];
   for (let y = 0; y < h; y++) {
