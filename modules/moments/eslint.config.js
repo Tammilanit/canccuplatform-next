@@ -12,6 +12,9 @@ const BROWSER = Object.fromEntries(
     "window",
     "crypto",
     "FormData",
+    "URL",
+    "history",
+    "AbortController",
   ].map((name) => [name, "readonly"]),
 );
 
