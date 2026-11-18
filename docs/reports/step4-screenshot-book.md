@@ -448,3 +448,59 @@ Not fixed here (out of scope); for the lead to sort.
 
 ## Lead's evaluation
 
+**Verdict.** Step 4 works, and most of it looks like the product. The new organiser pages sit cleanly in the shell, and the crew spotlight, announcements and the emergency look right on screen. Premiere plays in sync on two screens. Storyboards are the weak part. They are the step's new picture, and on screen they look much plainer than everything around them. Their text is small, dim and stuck in a corner, where mockup 20 draws it large across the hero. Two of the gate's three sequences show this, so in my view step 4 is not ready for `checkpoint-ok` yet. One focused polish package should close the gap; the list is at the end.
+
+### The organiser at the desk: good, with two broken pages
+- **Good:** On air (O1–O4) reads at a glance: one card per zone, what waits and why, and the crew actions on the right. Priorities with its live preview (O5), Scenes with "the event at a glance" (O7), History (O6) and the announcement composer with its real-player preview (O13–O16) follow their mockups and the shell. The withdrawn view (O18) is calm and clear.
+- **Falls short:** Storyboards (O19) and Cues (O9, O11, O12) are wider than the window. On Storyboards the Fire panel pushes the page to 1657 px, so the top bar stops halfway across and the panel hangs off the right edge. That looks broken, not just plain. The builder (O20–O23) is one long column of raw fields. Mockup 18 has a round you can see, as a strip of steps, with the form beside it; here the preview is a thumbnail and the round is only words. The cue editor's choices are a box of small checkboxes (O10), the sound library uses the browser's own light-grey players (O9), and the built-in rules wrap event names mid-word (O5).
+
+### The organiser on a phone: falls short
+- **Good:** Priorities, Scenes, a scene's editor and the builder fold into one readable column (O24–O26, O29).
+- **Falls short:** Storyboards (O28, 601 px) and Cues (O30, 883 px) do not fit the phone. The browser shrinks them until the text is unreadable, and O28 ends in a long empty area. History's table runs off the screen (O27). An organiser on the floor cannot use the two pages step 4 is about.
+
+### The crew: good
+- **Good:** On air on a phone (C1) puts the crew actions first, with a real press-and-hold emergency. Peak now, the emergency and Stop loop (C3–C5) are one tap each, and the composer works in one column (C6, C7). The mute (C8) is clear.
+- **Falls short:** the spotlight remote (C2) is a plain form that asks for raw paths ("/screen/files/…", "/notify/"). Mockup 04 lets the crew pick a photo instead. Fire defaults to the first item of the day, even one that is past (O2). Firing Starting soon on it put "It's on!" in the room (R22) when nothing was starting.
+
+### Screens, 1080p, 4K and portrait: good, except storyboards
+- **Good:** the crew spotlight (R1, R2, A1), announcements as card and ticker (R4, R5, R8, R9, A2), the full-screen announcement (R7, A4) and the emergency (R12, R13, A7) are big, calm and readable from the back of a hall. The split zone (R15, R16) and All clear (R14) work. The cue picture (R10) crossfades and glows, which is the energy we asked for. 4K is sharp (R9).
+- **Falls short:**
+  - **Storyboard steps.** Every message step is about a quarter of the size mockup 20 asks for, top-left in a big empty hero (R21, R22, A5, the S3 after-card). Stings are dark grey on dark blue, about the same size, and hard to read even on a monitor (R17 frame 2, S1 frames 1, 3 and 5). Next to the crew spotlight on the same screen (R1) they look like a different product.
+  - **Urgent.** An urgent announcement reads "ANNOUNCEMENT" in the secondary purple (R6, A3). Mockup 06 says "URGENT" in the warning colour. In the room, urgent and info look almost the same.
+  - **Bugs seen on screen:** the QR step drew a white square (R20). The first test-fire showed "Welcome to" with no event name (A5, R19).
+  - **Peak.** Peak looks the same as Daytime in stills (A6, R11). I cannot tell from stills whether motion and pace change. I will check it on a live screen, not here.
+  - **Rail hidden.** With the rail hidden, the card's two lines are squeezed and clipped in the ticker (A8). This is a rare case.
+
+### The gate's three sequences
+- **Starting soon, T−15, T−5 and T−1, with its finale (S1): falls short.** The timing is right: each round plays on time, follows the item and hands over to the Pulse between rounds. The countdowns are readable. But each round opens with the dim, small "Starting soon" sting, and the finale "It's on!" is a small line in the corner (frame 8). This should be the loudest moment on the screen, and it is the quietest. Mockup 20 has the countdown at full hero size.
+- **The Midnight sting at 00:00:00 (S2): falls short.** The main hall is on time: the sting was up by 00:00:01.5. But the countdown screen is mostly empty, with "Midnight 00:00" small at the top. The sting is a flat cyan block with black text, not the theme's look. In frame 8 the crossfade draws "Midnight!" and "Night 2 at Demo Event" on top of each other. The entrance (portrait) showed only its background at 00:00:00 and caught up at 00:00:05. So "on the dot" holds on one screen but not both.
+- **Premiere on two screens in sync (S3): passes on sync.** The two players stay within 26 ms of each other and do not drift, which is better than the plan asked. Two things to fix. The film plays inside a bordered card with black bars left and right, so it is not truly full screen. The countdown's subtitle says "Starts 02:00" while the counter shows 30 s.
+
+### Did step 3 hold?
+Yes, for what step 3 built. The Pulse, rail, ticker, header and clock look as they did at the step 3 gate, on every screen here (R1, R6, S3 frames 1–2). Step 4's own templates are what break the unity. Storyboards did not reuse the hero type that the spotlight and announcements already use.
+
+### Improvement plan
+**Gate-blocking, in my view (one polish package before `checkpoint-ok`):**
+1. **Storyboard steps at hero scale.** Message, title and finale steps use the same hero type as the crew spotlight, sized as in mockup 20. Stings are large, centred and bright on the accent, never dark on dark. Add storyboard steps to the screens' readability check, so CI catches this next time (R17, R21, R22, S1).
+2. **Midnight done properly.** A full-size countdown. A sting in the theme's look, not a flat block. No overlap in the crossfade. Every zone on the dot, the entrance too (S2).
+3. **Premiere full bleed.** A video step fills the screen with no card border and no side bars. The countdown text matches its time (S3).
+4. **Pages that fit.** Storyboards and Cues fit the window at 1280 px and on a phone. The Fire panel moves into the page's grid. History scrolls inside its own box on a phone (O19, O9, O28, O30, O27).
+5. **On-screen bugs.** The QR step draws its code on the first fire (R20), and `{event.name}` is filled on the first fire (A5, R19).
+6. **Fire picks the next fitting item.** It never picks a past one by default (O2, R22).
+7. **Urgent looks urgent.** It reads "URGENT" in the warning colour, as mockup 06 shows (R6, A3).
+
+After the package: a fresh S1, S2, R17 and R21, plus phone shots of O28 and O30, for the gate.
+
+**Later (step 5 polish, or the backlog):**
+- The builder with a visible strip of the round's steps, beside the form, as in mockup 18 (O20, O29).
+- A photo picker in the crew remote instead of raw paths (C2).
+- Small page fixes:
+  - The cue editor's choices as chips (O10).
+  - Themed audio players in the library (O9).
+  - Rules rows that do not wrap mid-word (O5).
+  - The scheduled list showing the filled text, not the template (O17, C7).
+  - A separator between title and body in the preview card (O13).
+  - The withdrawn note's punctuation (O18).
+- Test-fire fills placeholders with sample text, so "Match called:" is never empty (R21).
+- The ticker fallback for two lines (A8).
+- Check Peak's look and pace on a live screen. If it really does not change, make it visible (sheet 12).
