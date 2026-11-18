@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 960" width="1900" height="960" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Step 4 polish 10: the hero rule at 4K and in portrait</title>
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><linearGradient id="gh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3ddcff"/><stop offset="1" stop-color="#b98cff"/></linearGradient><radialGradient id="glowp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#3ddcff" stop-opacity="0.35"/><stop offset="1" stop-color="#3ddcff" stop-opacity="0"/></radialGradient><radialGradient id="glowa" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#b98cff" stop-opacity="0.32"/><stop offset="1" stop-color="#b98cff" stop-opacity="0"/></radialGradient><linearGradient id="scrim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0d1a" stop-opacity="0"/><stop offset="0.3" stop-color="#0b0d1a" stop-opacity="0.1"/><stop offset="0.58" stop-color="#0b0d1a" stop-opacity="0.72"/><stop offset="1" stop-color="#0b0d1a" stop-opacity="0.94"/></linearGradient><linearGradient id="heroin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2140"/><stop offset="1" stop-color="#141831"/></linearGradient><linearGradient id="photo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a4b2a"/><stop offset="0.5" stop-color="#c8763a"/><stop offset="1" stop-color="#3a1f2c"/></linearGradient><radialGradient id="bokeh" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffe2a8" stop-opacity="0.85"/><stop offset="1" stop-color="#ffe2a8" stop-opacity="0"/></radialGradient><clipPath id="clk4"><rect x="0" y="0" width="1920" height="1080" rx="0"/></clipPath><clipPath id="phk4p"><rect x="48" y="132" width="1208" height="814" rx="12"/></clipPath><clipPath id="pcp1"><rect x="0" y="0" width="1080" height="1920" rx="0"/></clipPath></defs>
+<rect x="0" y="0" width="1900" height="960" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start">10 · The same rule at 4K and in portrait</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start">A crew spotlight with a photo on a 3840 × 2160 screen (drawn at 25 %), and Doors open on the portrait entrance, 1080 × 1920 (drawn at 40 %). Book shots R2, R19, A1, A5.</text>
+<text x="32" y="132" font-size="20" fill="#111827" font-weight="700" text-anchor="start">4K · crew spotlight with a photo (R2)</text>
+<g transform="translate(32,150) scale(0.5)">
+<g clip-path="url(#clk4)">
+<rect x="0" y="0" width="1920" height="1080" rx="0" fill="#0b0d1a"/>
+<ellipse cx="1497.6000000000001" cy="172.8" rx="768.0" ry="540.0" fill="url(#glowp)"/>
+<ellipse cx="288.0" cy="918.0" rx="672.0" ry="486.0" fill="url(#glowa)"/>
+<rect x="48" y="26" width="52" height="52" rx="12" fill="url(#g)"/>
+<text x="118" y="66" font-size="34" fill="#f3f5ff" font-weight="600" text-anchor="start" letter-spacing="3">DEMO EVENT</text>
+<text x="354.4" y="66" font-size="30" fill="#a9b1d6" font-weight="400" text-anchor="start">Main hall</text>
+<text x="1872" y="72" font-size="58" fill="#f3f5ff" font-weight="400" text-anchor="end">21:32</text>
+<text x="1703.2" y="70" font-size="30" fill="#a9b1d6" font-weight="400" text-anchor="end">Tue 17 Nov</text>
+<rect x="1276" y="132" width="596" height="476" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1308" y="190" font-size="26" fill="#a9b1d6" font-weight="500" text-anchor="start" letter-spacing="3">NOW</text>
+<text x="1308" y="252" font-size="50" fill="#f3f5ff" font-weight="400" text-anchor="start">Dinner</text>
+<text x="1308" y="312" font-size="44" fill="#f3f5ff" font-weight="400" text-anchor="start">until 22:25</text>
+<text x="1308" y="360" font-size="30" fill="#a9b1d6" font-weight="400" text-anchor="start">Café</text>
+<line x1="1308" y1="400" x2="1840" y2="400" stroke="#343c66" stroke-width="1"/>
+<text x="1308" y="452" font-size="26" fill="#a9b1d6" font-weight="500" text-anchor="start" letter-spacing="3">NEXT</text>
+<text x="1308" y="516" font-size="54" fill="#f3f5ff" font-weight="400" text-anchor="start">22:41</text>
+<text x="1466" y="512" font-size="32" fill="#a9b1d6" font-weight="400" text-anchor="start">· Stage</text>
+<text x="1308" y="570" font-size="34" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Game Cup, semis</text>
+<rect x="1276" y="628" width="596" height="318" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="1308" y="690" font-size="26" fill="#a9b1d6" font-weight="500" text-anchor="start" letter-spacing="3">WI-FI</text>
+<text x="1308" y="744" font-size="44" fill="#f3f5ff" font-weight="400" text-anchor="start">demo-guest</text>
+<text x="1308" y="790" font-size="28" fill="#a9b1d6" font-weight="400" text-anchor="start">Password on the hub</text>
+<rect x="1662" y="664" width="180" height="180" rx="7.2" fill="#ffffff"/>
+<path d="M1755.3,670.7h6.7v6.7h-6.7zM1762.0,670.7h6.7v6.7h-6.7zM1715.3,677.3h6.7v6.7h-6.7zM1722.0,677.3h6.7v6.7h-6.7zM1728.7,677.3h6.7v6.7h-6.7zM1748.7,677.3h6.7v6.7h-6.7zM1755.3,677.3h6.7v6.7h-6.7zM1762.0,677.3h6.7v6.7h-6.7zM1782.0,677.3h6.7v6.7h-6.7zM1722.0,684.0h6.7v6.7h-6.7zM1735.3,684.0h6.7v6.7h-6.7zM1742.0,684.0h6.7v6.7h-6.7zM1755.3,684.0h6.7v6.7h-6.7zM1762.0,684.0h6.7v6.7h-6.7zM1782.0,684.0h6.7v6.7h-6.7zM1735.3,690.7h6.7v6.7h-6.7zM1768.7,690.7h6.7v6.7h-6.7zM1775.3,690.7h6.7v6.7h-6.7zM1782.0,690.7h6.7v6.7h-6.7zM1715.3,697.3h6.7v6.7h-6.7zM1722.0,697.3h6.7v6.7h-6.7zM1728.7,697.3h6.7v6.7h-6.7zM1742.0,697.3h6.7v6.7h-6.7zM1755.3,697.3h6.7v6.7h-6.7zM1762.0,697.3h6.7v6.7h-6.7zM1782.0,697.3h6.7v6.7h-6.7zM1728.7,704.0h6.7v6.7h-6.7zM1742.0,704.0h6.7v6.7h-6.7zM1762.0,704.0h6.7v6.7h-6.7zM1775.3,704.0h6.7v6.7h-6.7zM1715.3,710.7h6.7v6.7h-6.7zM1722.0,710.7h6.7v6.7h-6.7zM1728.7,710.7h6.7v6.7h-6.7zM1742.0,710.7h6.7v6.7h-6.7zM1768.7,710.7h6.7v6.7h-6.7zM1775.3,710.7h6.7v6.7h-6.7zM1675.3,717.3h6.7v6.7h-6.7zM1702.0,717.3h6.7v6.7h-6.7zM1715.3,717.3h6.7v6.7h-6.7zM1722.0,717.3h6.7v6.7h-6.7zM1742.0,717.3h6.7v6.7h-6.7zM1762.0,717.3h6.7v6.7h-6.7zM1768.7,717.3h6.7v6.7h-6.7zM1775.3,717.3h6.7v6.7h-6.7zM1782.0,717.3h6.7v6.7h-6.7zM1788.7,717.3h6.7v6.7h-6.7zM1808.7,717.3h6.7v6.7h-6.7zM1815.3,717.3h6.7v6.7h-6.7zM1668.7,724.0h6.7v6.7h-6.7zM1675.3,724.0h6.7v6.7h-6.7zM1695.3,724.0h6.7v6.7h-6.7zM1702.0,724.0h6.7v6.7h-6.7zM1708.7,724.0h6.7v6.7h-6.7zM1722.0,724.0h6.7v6.7h-6.7zM1742.0,724.0h6.7v6.7h-6.7zM1775.3,724.0h6.7v6.7h-6.7zM1782.0,724.0h6.7v6.7h-6.7zM1788.7,724.0h6.7v6.7h-6.7zM1802.0,724.0h6.7v6.7h-6.7zM1808.7,724.0h6.7v6.7h-6.7zM1668.7,730.7h6.7v6.7h-6.7zM1695.3,730.7h6.7v6.7h-6.7zM1702.0,730.7h6.7v6.7h-6.7zM1708.7,730.7h6.7v6.7h-6.7zM1715.3,730.7h6.7v6.7h-6.7zM1748.7,730.7h6.7v6.7h-6.7zM1755.3,730.7h6.7v6.7h-6.7zM1762.0,730.7h6.7v6.7h-6.7zM1782.0,730.7h6.7v6.7h-6.7zM1822.0,730.7h6.7v6.7h-6.7zM1668.7,737.3h6.7v6.7h-6.7zM1695.3,737.3h6.7v6.7h-6.7zM1722.0,737.3h6.7v6.7h-6.7zM1735.3,737.3h6.7v6.7h-6.7zM1748.7,737.3h6.7v6.7h-6.7zM1775.3,737.3h6.7v6.7h-6.7zM1802.0,737.3h6.7v6.7h-6.7zM1688.7,744.0h6.7v6.7h-6.7zM1735.3,744.0h6.7v6.7h-6.7zM1762.0,744.0h6.7v6.7h-6.7zM1795.3,744.0h6.7v6.7h-6.7zM1802.0,744.0h6.7v6.7h-6.7zM1808.7,744.0h6.7v6.7h-6.7zM1822.0,744.0h6.7v6.7h-6.7zM1675.3,750.7h6.7v6.7h-6.7zM1688.7,750.7h6.7v6.7h-6.7zM1695.3,750.7h6.7v6.7h-6.7zM1702.0,750.7h6.7v6.7h-6.7zM1708.7,750.7h6.7v6.7h-6.7zM1715.3,750.7h6.7v6.7h-6.7zM1722.0,750.7h6.7v6.7h-6.7zM1728.7,750.7h6.7v6.7h-6.7zM1735.3,750.7h6.7v6.7h-6.7zM1742.0,750.7h6.7v6.7h-6.7zM1762.0,750.7h6.7v6.7h-6.7zM1775.3,750.7h6.7v6.7h-6.7zM1782.0,750.7h6.7v6.7h-6.7zM1788.7,750.7h6.7v6.7h-6.7zM1795.3,750.7h6.7v6.7h-6.7zM1802.0,750.7h6.7v6.7h-6.7zM1815.3,750.7h6.7v6.7h-6.7zM1822.0,750.7h6.7v6.7h-6.7zM1668.7,757.3h6.7v6.7h-6.7zM1682.0,757.3h6.7v6.7h-6.7zM1708.7,757.3h6.7v6.7h-6.7zM1728.7,757.3h6.7v6.7h-6.7zM1735.3,757.3h6.7v6.7h-6.7zM1775.3,757.3h6.7v6.7h-6.7zM1788.7,757.3h6.7v6.7h-6.7zM1795.3,757.3h6.7v6.7h-6.7zM1815.3,757.3h6.7v6.7h-6.7zM1668.7,764.0h6.7v6.7h-6.7zM1675.3,764.0h6.7v6.7h-6.7zM1682.0,764.0h6.7v6.7h-6.7zM1688.7,764.0h6.7v6.7h-6.7zM1702.0,764.0h6.7v6.7h-6.7zM1728.7,764.0h6.7v6.7h-6.7zM1748.7,764.0h6.7v6.7h-6.7zM1755.3,764.0h6.7v6.7h-6.7zM1775.3,764.0h6.7v6.7h-6.7zM1788.7,764.0h6.7v6.7h-6.7zM1802.0,764.0h6.7v6.7h-6.7zM1808.7,764.0h6.7v6.7h-6.7zM1828.7,764.0h6.7v6.7h-6.7zM1675.3,770.7h6.7v6.7h-6.7zM1695.3,770.7h6.7v6.7h-6.7zM1702.0,770.7h6.7v6.7h-6.7zM1708.7,770.7h6.7v6.7h-6.7zM1722.0,770.7h6.7v6.7h-6.7zM1762.0,770.7h6.7v6.7h-6.7zM1775.3,770.7h6.7v6.7h-6.7zM1788.7,770.7h6.7v6.7h-6.7zM1795.3,770.7h6.7v6.7h-6.7zM1808.7,770.7h6.7v6.7h-6.7zM1815.3,770.7h6.7v6.7h-6.7zM1668.7,777.3h6.7v6.7h-6.7zM1675.3,777.3h6.7v6.7h-6.7zM1682.0,777.3h6.7v6.7h-6.7zM1708.7,777.3h6.7v6.7h-6.7zM1722.0,777.3h6.7v6.7h-6.7zM1762.0,777.3h6.7v6.7h-6.7zM1768.7,777.3h6.7v6.7h-6.7zM1782.0,777.3h6.7v6.7h-6.7zM1788.7,777.3h6.7v6.7h-6.7zM1802.0,777.3h6.7v6.7h-6.7zM1822.0,777.3h6.7v6.7h-6.7zM1828.7,777.3h6.7v6.7h-6.7zM1682.0,784.0h6.7v6.7h-6.7zM1708.7,784.0h6.7v6.7h-6.7zM1715.3,784.0h6.7v6.7h-6.7zM1735.3,784.0h6.7v6.7h-6.7zM1742.0,784.0h6.7v6.7h-6.7zM1768.7,784.0h6.7v6.7h-6.7zM1802.0,784.0h6.7v6.7h-6.7zM1815.3,784.0h6.7v6.7h-6.7zM1722.0,790.7h6.7v6.7h-6.7zM1728.7,790.7h6.7v6.7h-6.7zM1742.0,790.7h6.7v6.7h-6.7zM1755.3,790.7h6.7v6.7h-6.7zM1762.0,790.7h6.7v6.7h-6.7zM1775.3,790.7h6.7v6.7h-6.7zM1782.0,790.7h6.7v6.7h-6.7zM1788.7,790.7h6.7v6.7h-6.7zM1795.3,790.7h6.7v6.7h-6.7zM1802.0,790.7h6.7v6.7h-6.7zM1828.7,790.7h6.7v6.7h-6.7zM1715.3,797.3h6.7v6.7h-6.7zM1722.0,797.3h6.7v6.7h-6.7zM1748.7,797.3h6.7v6.7h-6.7zM1755.3,797.3h6.7v6.7h-6.7zM1768.7,797.3h6.7v6.7h-6.7zM1808.7,797.3h6.7v6.7h-6.7zM1822.0,797.3h6.7v6.7h-6.7zM1722.0,804.0h6.7v6.7h-6.7zM1728.7,804.0h6.7v6.7h-6.7zM1735.3,804.0h6.7v6.7h-6.7zM1748.7,804.0h6.7v6.7h-6.7zM1768.7,804.0h6.7v6.7h-6.7zM1782.0,804.0h6.7v6.7h-6.7zM1788.7,804.0h6.7v6.7h-6.7zM1802.0,804.0h6.7v6.7h-6.7zM1822.0,804.0h6.7v6.7h-6.7zM1715.3,810.7h6.7v6.7h-6.7zM1728.7,810.7h6.7v6.7h-6.7zM1735.3,810.7h6.7v6.7h-6.7zM1755.3,810.7h6.7v6.7h-6.7zM1762.0,810.7h6.7v6.7h-6.7zM1788.7,810.7h6.7v6.7h-6.7zM1802.0,810.7h6.7v6.7h-6.7zM1808.7,810.7h6.7v6.7h-6.7zM1815.3,810.7h6.7v6.7h-6.7zM1828.7,810.7h6.7v6.7h-6.7zM1715.3,817.3h6.7v6.7h-6.7zM1722.0,817.3h6.7v6.7h-6.7zM1748.7,817.3h6.7v6.7h-6.7zM1788.7,817.3h6.7v6.7h-6.7zM1795.3,817.3h6.7v6.7h-6.7zM1802.0,817.3h6.7v6.7h-6.7zM1808.7,817.3h6.7v6.7h-6.7zM1815.3,817.3h6.7v6.7h-6.7zM1722.0,824.0h6.7v6.7h-6.7zM1748.7,824.0h6.7v6.7h-6.7zM1755.3,824.0h6.7v6.7h-6.7zM1762.0,824.0h6.7v6.7h-6.7zM1768.7,824.0h6.7v6.7h-6.7zM1775.3,824.0h6.7v6.7h-6.7zM1782.0,824.0h6.7v6.7h-6.7zM1788.7,824.0h6.7v6.7h-6.7zM1802.0,824.0h6.7v6.7h-6.7zM1808.7,824.0h6.7v6.7h-6.7zM1815.3,824.0h6.7v6.7h-6.7zM1822.0,824.0h6.7v6.7h-6.7zM1828.7,824.0h6.7v6.7h-6.7zM1715.3,830.7h6.7v6.7h-6.7zM1728.7,830.7h6.7v6.7h-6.7zM1742.0,830.7h6.7v6.7h-6.7zM1782.0,830.7h6.7v6.7h-6.7zM1795.3,830.7h6.7v6.7h-6.7zM1815.3,830.7h6.7v6.7h-6.7zM1822.0,830.7h6.7v6.7h-6.7zM1828.7,830.7h6.7v6.7h-6.7z" fill="#0b0d1a"/>
+<rect x="1668.67" y="670.667" width="46.6667" height="46.6667" rx="0" fill="#0b0d1a"/>
+<rect x="1675.33" y="677.333" width="33.3333" height="33.3333" rx="0" fill="#ffffff"/>
+<rect x="1682" y="684" width="20" height="20" rx="0" fill="#0b0d1a"/>
+<rect x="1788.67" y="670.667" width="46.6667" height="46.6667" rx="0" fill="#0b0d1a"/>
+<rect x="1795.33" y="677.333" width="33.3333" height="33.3333" rx="0" fill="#ffffff"/>
+<rect x="1802" y="684" width="20" height="20" rx="0" fill="#0b0d1a"/>
+<rect x="1668.67" y="790.667" width="46.6667" height="46.6667" rx="0" fill="#0b0d1a"/>
+<rect x="1675.33" y="797.333" width="33.3333" height="33.3333" rx="0" fill="#ffffff"/>
+<rect x="1682" y="804" width="20" height="20" rx="0" fill="#0b0d1a"/>
+<text x="1752" y="902" font-size="26" fill="#a9b1d6" font-weight="400" text-anchor="middle">The event hub</text>
+<rect x="48" y="966" width="1824" height="70" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="48" y="966" width="120" height="70" rx="10" fill="#3ddcff"/>
+<text x="108" y="1012" font-size="28" fill="#0b0d1a" font-weight="600" text-anchor="middle" letter-spacing="2">INFO</text>
+<text x="196" y="1012" font-size="34" fill="#f3f5ff" font-weight="400" text-anchor="start">Orders close at 20:00 · Lost and found at the info desk · Grand final on stage tonight</text>
+<g clip-path="url(#phk4p)">
+<rect x="48" y="132" width="1208" height="814" rx="0" fill="url(#photo)"/>
+<circle cx="724.205" cy="583.384" r="69.0285" fill="url(#bokeh)" opacity="0.7"/>
+<circle cx="661.472" cy="418.879" r="69.9903" fill="url(#bokeh)" opacity="0.7"/>
+<circle cx="666.386" cy="439.635" r="49.6242" fill="url(#bokeh)" opacity="0.7"/>
+<circle cx="161.701" cy="280.181" r="93.715" fill="url(#bokeh)" opacity="0.7"/>
+<circle cx="1026.05" cy="470.675" r="42.8118" fill="url(#bokeh)" opacity="0.7"/>
+<circle cx="1234.49" cy="603.188" r="39.2755" fill="url(#bokeh)" opacity="0.7"/>
+<circle cx="791.6" cy="208.92" r="83.6363" fill="url(#bokeh)" opacity="0.7"/>
+<circle cx="686.285" cy="161.085" r="37.3273" fill="url(#bokeh)" opacity="0.7"/>
+<circle cx="340.267" cy="146.692" r="50.0263" fill="url(#bokeh)" opacity="0.7"/>
+<circle cx="580.162" cy="543.441" r="69.866" fill="url(#bokeh)" opacity="0.7"/>
+<circle cx="821.472" cy="376.089" r="73.8661" fill="url(#bokeh)" opacity="0.7"/>
+<circle cx="600.454" cy="267.855" r="84.2543" fill="url(#bokeh)" opacity="0.7"/>
+<circle cx="1250.8" cy="542.361" r="108.55" fill="url(#bokeh)" opacity="0.7"/>
+<circle cx="428.855" cy="244.169" r="87.542" fill="url(#bokeh)" opacity="0.7"/>
+<rect x="28" y="579.7" width="1248" height="407" rx="0" fill="#4a2a1c"/>
+<ellipse cx="434.56" cy="669.24" rx="260.92800000000005" ry="149.792" fill="#d9a35b"/>
+<ellipse cx="434.56" cy="669.24" rx="229.52" ry="130.46400000000003" fill="#e2563b"/>
+<ellipse cx="503.899666721166" cy="610.8319883161095" rx="21.744" ry="13.288000000000002" fill="#f6e3b0"/>
+<ellipse cx="397.2385691912976" cy="680.7647041778647" rx="21.744" ry="13.288000000000002" fill="#f6e3b0"/>
+<ellipse cx="368.1934589227197" cy="666.6419297312087" rx="21.744" ry="13.288000000000002" fill="#f6e3b0"/>
+<ellipse cx="444.9411674941141" cy="641.717761466895" rx="21.744" ry="13.288000000000002" fill="#f6e3b0"/>
+<ellipse cx="339.7730687923179" cy="677.2511600904502" rx="21.744" ry="13.288000000000002" fill="#f6e3b0"/>
+<ellipse cx="503.90371613296975" cy="643.5711547469942" rx="21.744" ry="13.288000000000002" fill="#f6e3b0"/>
+<ellipse cx="409.99533323943825" cy="737.9734451568273" rx="21.744" ry="13.288000000000002" fill="#f6e3b0"/>
+<ellipse cx="404.21720624256" cy="653.538899672216" rx="21.744" ry="13.288000000000002" fill="#f6e3b0"/>
+<ellipse cx="570.4950592115756" cy="620.0394149256285" rx="21.744" ry="13.288000000000002" fill="#f6e3b0"/>
+<ellipse cx="893.5999999999999" cy="718.0799999999999" rx="221.78880000000004" ry="127.32320000000001" fill="#d9a35b"/>
+<ellipse cx="893.5999999999999" cy="718.0799999999999" rx="195.092" ry="110.89440000000002" fill="#e2563b"/>
+<ellipse cx="972.251272657879" cy="768.011833741694" rx="18.482400000000002" ry="11.2948" fill="#f6e3b0"/>
+<ellipse cx="896.592587923108" cy="698.0368223333469" rx="18.482400000000002" ry="11.2948" fill="#f6e3b0"/>
+<ellipse cx="830.8596463562928" cy="719.1524453888286" rx="18.482400000000002" ry="11.2948" fill="#f6e3b0"/>
+<ellipse cx="829.5696225471847" cy="667.4728499658964" rx="18.482400000000002" ry="11.2948" fill="#f6e3b0"/>
+<ellipse cx="896.8905800108702" cy="719.322663556708" rx="18.482400000000002" ry="11.2948" fill="#f6e3b0"/>
+<ellipse cx="924.4747548808001" cy="688.7425752505425" rx="18.482400000000002" ry="11.2948" fill="#f6e3b0"/>
+<ellipse cx="893.6219575791193" cy="717.914383864819" rx="18.482400000000002" ry="11.2948" fill="#f6e3b0"/>
+<ellipse cx="798.762935555449" cy="737.2996754510215" rx="18.482400000000002" ry="11.2948" fill="#f6e3b0"/>
+<ellipse cx="911.2575823814708" cy="791.9524528161973" rx="18.482400000000002" ry="11.2948" fill="#f6e3b0"/>
+<text x="1238" y="166" font-size="22" fill="#ffffff" font-weight="600" text-anchor="end" opacity="0.55">photo</text>
+</g>
+<rect x="48" y="132" width="1208" height="814" rx="12" fill="url(#scrim)"/>
+<rect x="42" y="126" width="1220" height="826" rx="16" fill="none" stroke="#3ddcff" stroke-width="2" opacity="0.35"/>
+<rect x="48" y="132" width="1208" height="814" rx="12" fill="none" stroke="#3ddcff" stroke-width="4"/>
+<text x="652" y="601.76" font-size="44" fill="#3ddcff" font-weight="600" text-anchor="middle" letter-spacing="6">FROM THE CREW</text>
+<text x="652" y="756.64" font-size="128" fill="#f3f5ff" font-weight="600" text-anchor="middle">Pizza is here</text>
+<text x="652" y="868.8" font-size="60" fill="#dde0ef" font-weight="400" text-anchor="middle">Pick up at the café</text>
+</g>
+</g>
+<text x="32" y="730" font-size="16" fill="#374151" font-weight="400" text-anchor="start">At 4K every size doubles: the safe area is 128 px, the headline 256 px, the kicker 88 px,</text>
+<text x="32" y="753" font-size="16" fill="#374151" font-weight="400" text-anchor="start">the body 120 px. The layout is the same picture, only sharper (R2 showed the 1080p sizes</text>
+<text x="32" y="776" font-size="16" fill="#374151" font-weight="400" text-anchor="start">in a corner of the 4K hero). A photo narrower than half the hero is not stretched:</text>
+<text x="32" y="799" font-size="16" fill="#374151" font-weight="400" text-anchor="start">the hero falls back to type without it.</text>
+<text x="1052" y="132" font-size="20" fill="#111827" font-weight="700" text-anchor="start">Portrait · Doors open at the entrance (A5)</text>
+<g transform="translate(1052,150) scale(0.4)">
+<g clip-path="url(#pcp1)">
+<rect x="0" y="0" width="1080" height="1920" rx="0" fill="#0b0d1a"/>
+<ellipse cx="864.0" cy="230.39999999999998" rx="648.0" ry="576.0" fill="url(#glowp)"/>
+<ellipse cx="108.0" cy="1728.0" rx="540.0" ry="576.0" fill="url(#glowa)"/>
+<rect x="48" y="26" width="52" height="52" rx="12" fill="url(#g)"/>
+<text x="118" y="66" font-size="34" fill="#f3f5ff" font-weight="600" text-anchor="start" letter-spacing="3">DEMO EVENT</text>
+<text x="354.4" y="66" font-size="30" fill="#a9b1d6" font-weight="400" text-anchor="start">Entrance</text>
+<text x="1032" y="72" font-size="58" fill="#f3f5ff" font-weight="400" text-anchor="end">21:32</text>
+<rect x="48" y="1192" width="984" height="300" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="84" y="1250" font-size="26" fill="#a9b1d6" font-weight="500" text-anchor="start" letter-spacing="3">NEXT</text>
+<text x="84" y="1320" font-size="60" fill="#f3f5ff" font-weight="400" text-anchor="start">22:41</text>
+<text x="260" y="1316" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start">· Stage</text>
+<text x="84" y="1390" font-size="44" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Game Cup, semis</text>
+<text x="84" y="1450" font-size="34" fill="#a9b1d6" font-weight="400" text-anchor="start">People in: 86</text>
+<rect x="48" y="1512" width="984" height="280" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<text x="84" y="1570" font-size="26" fill="#a9b1d6" font-weight="500" text-anchor="start" letter-spacing="3">WI-FI</text>
+<text x="84" y="1630" font-size="50" fill="#f3f5ff" font-weight="400" text-anchor="start">demo-guest</text>
+<text x="84" y="1680" font-size="30" fill="#a9b1d6" font-weight="400" text-anchor="start">Password on the hub</text>
+<rect x="776" y="1540" width="220" height="220" rx="8.8" fill="#ffffff"/>
+<path d="M841.2,1548.1h8.1v8.1h-8.1zM849.3,1548.1h8.1v8.1h-8.1zM857.5,1548.1h8.1v8.1h-8.1zM865.6,1548.1h8.1v8.1h-8.1zM873.8,1548.1h8.1v8.1h-8.1zM881.9,1548.1h8.1v8.1h-8.1zM914.5,1548.1h8.1v8.1h-8.1zM841.2,1556.3h8.1v8.1h-8.1zM849.3,1556.3h8.1v8.1h-8.1zM857.5,1556.3h8.1v8.1h-8.1zM865.6,1556.3h8.1v8.1h-8.1zM906.4,1556.3h8.1v8.1h-8.1zM914.5,1556.3h8.1v8.1h-8.1zM865.6,1564.4h8.1v8.1h-8.1zM898.2,1564.4h8.1v8.1h-8.1zM914.5,1564.4h8.1v8.1h-8.1zM857.5,1572.6h8.1v8.1h-8.1zM906.4,1572.6h8.1v8.1h-8.1zM922.7,1572.6h8.1v8.1h-8.1zM841.2,1580.7h8.1v8.1h-8.1zM849.3,1580.7h8.1v8.1h-8.1zM865.6,1580.7h8.1v8.1h-8.1zM873.8,1580.7h8.1v8.1h-8.1zM890.1,1580.7h8.1v8.1h-8.1zM914.5,1580.7h8.1v8.1h-8.1zM841.2,1588.9h8.1v8.1h-8.1zM849.3,1588.9h8.1v8.1h-8.1zM857.5,1588.9h8.1v8.1h-8.1zM873.8,1588.9h8.1v8.1h-8.1zM881.9,1588.9h8.1v8.1h-8.1zM898.2,1588.9h8.1v8.1h-8.1zM922.7,1588.9h8.1v8.1h-8.1zM841.2,1597.0h8.1v8.1h-8.1zM849.3,1597.0h8.1v8.1h-8.1zM873.8,1597.0h8.1v8.1h-8.1zM881.9,1597.0h8.1v8.1h-8.1zM890.1,1597.0h8.1v8.1h-8.1zM898.2,1597.0h8.1v8.1h-8.1zM906.4,1597.0h8.1v8.1h-8.1zM808.6,1605.2h8.1v8.1h-8.1zM816.7,1605.2h8.1v8.1h-8.1zM841.2,1605.2h8.1v8.1h-8.1zM873.8,1605.2h8.1v8.1h-8.1zM881.9,1605.2h8.1v8.1h-8.1zM890.1,1605.2h8.1v8.1h-8.1zM898.2,1605.2h8.1v8.1h-8.1zM906.4,1605.2h8.1v8.1h-8.1zM922.7,1605.2h8.1v8.1h-8.1zM930.8,1605.2h8.1v8.1h-8.1zM939.0,1605.2h8.1v8.1h-8.1zM947.1,1605.2h8.1v8.1h-8.1zM963.4,1605.2h8.1v8.1h-8.1zM971.6,1605.2h8.1v8.1h-8.1zM979.7,1605.2h8.1v8.1h-8.1zM792.3,1613.3h8.1v8.1h-8.1zM800.4,1613.3h8.1v8.1h-8.1zM808.6,1613.3h8.1v8.1h-8.1zM816.7,1613.3h8.1v8.1h-8.1zM824.9,1613.3h8.1v8.1h-8.1zM841.2,1613.3h8.1v8.1h-8.1zM849.3,1613.3h8.1v8.1h-8.1zM865.6,1613.3h8.1v8.1h-8.1zM881.9,1613.3h8.1v8.1h-8.1zM906.4,1613.3h8.1v8.1h-8.1zM930.8,1613.3h8.1v8.1h-8.1zM939.0,1613.3h8.1v8.1h-8.1zM947.1,1613.3h8.1v8.1h-8.1zM955.3,1613.3h8.1v8.1h-8.1zM963.4,1613.3h8.1v8.1h-8.1zM792.3,1621.5h8.1v8.1h-8.1zM800.4,1621.5h8.1v8.1h-8.1zM808.6,1621.5h8.1v8.1h-8.1zM816.7,1621.5h8.1v8.1h-8.1zM824.9,1621.5h8.1v8.1h-8.1zM841.2,1621.5h8.1v8.1h-8.1zM849.3,1621.5h8.1v8.1h-8.1zM881.9,1621.5h8.1v8.1h-8.1zM930.8,1621.5h8.1v8.1h-8.1zM939.0,1621.5h8.1v8.1h-8.1zM971.6,1621.5h8.1v8.1h-8.1zM833.0,1629.6h8.1v8.1h-8.1zM857.5,1629.6h8.1v8.1h-8.1zM890.1,1629.6h8.1v8.1h-8.1zM906.4,1629.6h8.1v8.1h-8.1zM930.8,1629.6h8.1v8.1h-8.1zM939.0,1629.6h8.1v8.1h-8.1zM979.7,1629.6h8.1v8.1h-8.1zM784.1,1637.8h8.1v8.1h-8.1zM800.4,1637.8h8.1v8.1h-8.1zM816.7,1637.8h8.1v8.1h-8.1zM865.6,1637.8h8.1v8.1h-8.1zM881.9,1637.8h8.1v8.1h-8.1zM922.7,1637.8h8.1v8.1h-8.1zM930.8,1637.8h8.1v8.1h-8.1zM971.6,1637.8h8.1v8.1h-8.1zM979.7,1637.8h8.1v8.1h-8.1zM800.4,1645.9h8.1v8.1h-8.1zM824.9,1645.9h8.1v8.1h-8.1zM841.2,1645.9h8.1v8.1h-8.1zM857.5,1645.9h8.1v8.1h-8.1zM865.6,1645.9h8.1v8.1h-8.1zM890.1,1645.9h8.1v8.1h-8.1zM898.2,1645.9h8.1v8.1h-8.1zM930.8,1645.9h8.1v8.1h-8.1zM955.3,1645.9h8.1v8.1h-8.1zM971.6,1645.9h8.1v8.1h-8.1zM979.7,1645.9h8.1v8.1h-8.1zM792.3,1654.1h8.1v8.1h-8.1zM808.6,1654.1h8.1v8.1h-8.1zM824.9,1654.1h8.1v8.1h-8.1zM833.0,1654.1h8.1v8.1h-8.1zM849.3,1654.1h8.1v8.1h-8.1zM881.9,1654.1h8.1v8.1h-8.1zM890.1,1654.1h8.1v8.1h-8.1zM930.8,1654.1h8.1v8.1h-8.1zM939.0,1654.1h8.1v8.1h-8.1zM955.3,1654.1h8.1v8.1h-8.1zM800.4,1662.2h8.1v8.1h-8.1zM816.7,1662.2h8.1v8.1h-8.1zM833.0,1662.2h8.1v8.1h-8.1zM865.6,1662.2h8.1v8.1h-8.1zM873.8,1662.2h8.1v8.1h-8.1zM890.1,1662.2h8.1v8.1h-8.1zM906.4,1662.2h8.1v8.1h-8.1zM914.5,1662.2h8.1v8.1h-8.1zM922.7,1662.2h8.1v8.1h-8.1zM939.0,1662.2h8.1v8.1h-8.1zM955.3,1662.2h8.1v8.1h-8.1zM971.6,1662.2h8.1v8.1h-8.1zM784.1,1670.4h8.1v8.1h-8.1zM792.3,1670.4h8.1v8.1h-8.1zM808.6,1670.4h8.1v8.1h-8.1zM824.9,1670.4h8.1v8.1h-8.1zM833.0,1670.4h8.1v8.1h-8.1zM841.2,1670.4h8.1v8.1h-8.1zM849.3,1670.4h8.1v8.1h-8.1zM898.2,1670.4h8.1v8.1h-8.1zM955.3,1670.4h8.1v8.1h-8.1zM800.4,1678.5h8.1v8.1h-8.1zM816.7,1678.5h8.1v8.1h-8.1zM849.3,1678.5h8.1v8.1h-8.1zM857.5,1678.5h8.1v8.1h-8.1zM865.6,1678.5h8.1v8.1h-8.1zM898.2,1678.5h8.1v8.1h-8.1zM906.4,1678.5h8.1v8.1h-8.1zM922.7,1678.5h8.1v8.1h-8.1zM930.8,1678.5h8.1v8.1h-8.1zM939.0,1678.5h8.1v8.1h-8.1zM947.1,1678.5h8.1v8.1h-8.1zM979.7,1678.5h8.1v8.1h-8.1zM800.4,1686.7h8.1v8.1h-8.1zM808.6,1686.7h8.1v8.1h-8.1zM849.3,1686.7h8.1v8.1h-8.1zM857.5,1686.7h8.1v8.1h-8.1zM865.6,1686.7h8.1v8.1h-8.1zM873.8,1686.7h8.1v8.1h-8.1zM906.4,1686.7h8.1v8.1h-8.1zM914.5,1686.7h8.1v8.1h-8.1zM922.7,1686.7h8.1v8.1h-8.1zM939.0,1686.7h8.1v8.1h-8.1zM979.7,1686.7h8.1v8.1h-8.1zM849.3,1694.8h8.1v8.1h-8.1zM857.5,1694.8h8.1v8.1h-8.1zM865.6,1694.8h8.1v8.1h-8.1zM873.8,1694.8h8.1v8.1h-8.1zM881.9,1694.8h8.1v8.1h-8.1zM890.1,1694.8h8.1v8.1h-8.1zM906.4,1694.8h8.1v8.1h-8.1zM865.6,1703.0h8.1v8.1h-8.1zM890.1,1703.0h8.1v8.1h-8.1zM898.2,1703.0h8.1v8.1h-8.1zM914.5,1703.0h8.1v8.1h-8.1zM922.7,1703.0h8.1v8.1h-8.1zM947.1,1703.0h8.1v8.1h-8.1zM955.3,1703.0h8.1v8.1h-8.1zM963.4,1703.0h8.1v8.1h-8.1zM971.6,1703.0h8.1v8.1h-8.1zM841.2,1711.1h8.1v8.1h-8.1zM857.5,1711.1h8.1v8.1h-8.1zM865.6,1711.1h8.1v8.1h-8.1zM890.1,1711.1h8.1v8.1h-8.1zM922.7,1711.1h8.1v8.1h-8.1zM971.6,1711.1h8.1v8.1h-8.1zM857.5,1719.3h8.1v8.1h-8.1zM881.9,1719.3h8.1v8.1h-8.1zM914.5,1719.3h8.1v8.1h-8.1zM930.8,1719.3h8.1v8.1h-8.1zM955.3,1719.3h8.1v8.1h-8.1zM979.7,1719.3h8.1v8.1h-8.1zM914.5,1727.4h8.1v8.1h-8.1zM922.7,1727.4h8.1v8.1h-8.1zM963.4,1727.4h8.1v8.1h-8.1zM971.6,1727.4h8.1v8.1h-8.1zM979.7,1727.4h8.1v8.1h-8.1zM865.6,1735.6h8.1v8.1h-8.1zM898.2,1735.6h8.1v8.1h-8.1zM930.8,1735.6h8.1v8.1h-8.1zM947.1,1735.6h8.1v8.1h-8.1zM963.4,1735.6h8.1v8.1h-8.1zM971.6,1735.6h8.1v8.1h-8.1zM857.5,1743.7h8.1v8.1h-8.1zM865.6,1743.7h8.1v8.1h-8.1zM881.9,1743.7h8.1v8.1h-8.1zM890.1,1743.7h8.1v8.1h-8.1zM922.7,1743.7h8.1v8.1h-8.1zM955.3,1743.7h8.1v8.1h-8.1zM963.4,1743.7h8.1v8.1h-8.1zM971.6,1743.7h8.1v8.1h-8.1z" fill="#0b0d1a"/>
+<rect x="784.148" y="1548.15" width="57.037" height="57.037" rx="0" fill="#0b0d1a"/>
+<rect x="792.296" y="1556.3" width="40.7407" height="40.7407" rx="0" fill="#ffffff"/>
+<rect x="800.444" y="1564.44" width="24.4444" height="24.4444" rx="0" fill="#0b0d1a"/>
+<rect x="930.815" y="1548.15" width="57.037" height="57.037" rx="0" fill="#0b0d1a"/>
+<rect x="938.963" y="1556.3" width="40.7407" height="40.7407" rx="0" fill="#ffffff"/>
+<rect x="947.111" y="1564.44" width="24.4444" height="24.4444" rx="0" fill="#0b0d1a"/>
+<rect x="784.148" y="1694.81" width="57.037" height="57.037" rx="0" fill="#0b0d1a"/>
+<rect x="792.296" y="1702.96" width="40.7407" height="40.7407" rx="0" fill="#ffffff"/>
+<rect x="800.444" y="1711.11" width="24.4444" height="24.4444" rx="0" fill="#0b0d1a"/>
+<rect x="48" y="1812" width="984" height="70" rx="10" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="48" y="1812" width="120" height="70" rx="10" fill="#3ddcff"/>
+<text x="108" y="1858" font-size="28" fill="#0b0d1a" font-weight="600" text-anchor="middle" letter-spacing="2">INFO</text>
+<text x="196" y="1858" font-size="34" fill="#f3f5ff" font-weight="400" text-anchor="start">Lost and found at the info desk</text>
+<rect x="48" y="132" width="984" height="1040" rx="12" fill="url(#heroin)"/>
+<rect x="42" y="126" width="996" height="1052" rx="16" fill="none" stroke="#3ddcff" stroke-width="2" opacity="0.35"/>
+<rect x="48" y="132" width="984" height="1040" rx="12" fill="none" stroke="#3ddcff" stroke-width="4"/>
+<text x="540" y="437.6" font-size="44" fill="#3ddcff" font-weight="600" text-anchor="middle" letter-spacing="6">DOORS ARE OPEN</text>
+<text x="540" y="612.28" font-size="150" fill="#f3f5ff" font-weight="600" text-anchor="middle">Welcome to</text>
+<text x="540" y="780.28" font-size="150" fill="#f3f5ff" font-weight="600" text-anchor="middle">Demo Event</text>
+<text x="540" y="893.68" font-size="56" fill="#c5cae3" font-weight="400" text-anchor="middle">Find a seat, plug in, have fun</text>
+</g>
+</g>
+<text x="1524" y="160" font-size="20" fill="#111827" font-weight="700" text-anchor="start">Portrait</text>
+<text x="1524" y="190" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">The hero is the top of the screen, the full</text>
+<text x="1524" y="212" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">width less 48 px a side and about 1,040 px</text>
+<text x="1524" y="234" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">tall; the next item and the Wi-Fi sit under it.</text>
+<text x="1524" y="268" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">The same steps apply: the headline starts at</text>
+<text x="1524" y="290" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">150 px here because the hero is narrower, and</text>
+<text x="1524" y="312" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">takes up to three lines.</text>
+<text x="1524" y="346" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">The event’s name is filled before the first</text>
+<text x="1524" y="368" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">step is drawn, so the first fire never reads</text>
+<text x="1524" y="390" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">“Welcome to” on its own (A5, R19).</text>
+<text x="1524" y="424" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">A screen with no rail (a single wide hero) uses</text>
+<text x="1524" y="446" font-size="15.5" fill="#374151" font-weight="400" text-anchor="start">the full-screen sizes.</text>
+</svg>
