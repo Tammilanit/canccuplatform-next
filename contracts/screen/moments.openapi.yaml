@@ -1,0 +1,74 @@
+# Part of screen.openapi.yaml: path items only, referenced from its `paths`
+# and linted through it (contracts/README.md, Shared components).
+/internal/screen/images:
+  get:
+    tags: [internal]
+    operationId: listImagesInternal
+    summary: The event's image assets, for the crew spotlight's photo picker
+    description: The kit's service identity; the event in `tenant_id` (contracts/screen.md, For Moments). At most 60, newest first.
+    security:
+      - {}
+    parameters:
+      - name: tenant_id
+        in: query
+        required: true
+        schema:
+          type: string
+    responses:
+      "200":
+        description: The images.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [images]
+              properties:
+                images:
+                  type: array
+                  maxItems: 60
+                  items:
+                    type: object
+                    required: [id, title, url]
+                    properties:
+                      id:
+                        type: string
+                      title:
+                        type: string
+                      url:
+                        type: string
+                        description: The file under `/api/screen/files/`, as the screens load it.
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"
+/internal/screen/images/{asset_id}:
+  get:
+    tags: [internal]
+    operationId: imageFileInternal
+    summary: An image asset's file, for the picker's thumbnails
+    description: The kit's service identity; the event in `tenant_id`. 404 for an asset of another kind.
+    security:
+      - {}
+    parameters:
+      - name: asset_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: tenant_id
+        in: query
+        required: true
+        schema:
+          type: string
+    responses:
+      "200":
+        description: The image's bytes, with its media type.
+        content:
+          image/*:
+            schema:
+              type: string
+              contentMediaType: application/octet-stream
+      "401":
+        $ref: "../screen.openapi.yaml#/components/responses/Unauthorized"
+      "404":
+        $ref: "../screen.openapi.yaml#/components/responses/NotFound"

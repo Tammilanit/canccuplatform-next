@@ -211,6 +211,10 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+  /internal/screen/images:
+    $ref: "screen/moments.openapi.yaml#/~1internal~1screen~1images"
+  /internal/screen/images/{asset_id}:
+    $ref: "screen/moments.openapi.yaml#/~1internal~1screen~1images~1{asset_id}"
   /internal/screen/assets/{asset_id}:
     get:
       tags: [internal]
