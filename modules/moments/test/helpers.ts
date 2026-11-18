@@ -83,6 +83,8 @@ export interface World {
   screen: ScreenClient;
   /** Audio assets the fake Screen holds, by id. */
   assets: Map<string, Awaited<ReturnType<ScreenClient["asset"]>>>;
+  /** The event's images the fake Screen holds, newest first, with their bytes. */
+  images: { id: string; title: string; url: string; type: string; body: Buffer }[];
 }
 
 /** Valkey's counters in memory; their keys name their minute or hour, so none needs expiring. */
@@ -114,10 +116,16 @@ export function world(pool: pg.Pool): World {
     audio_unlocked: true,
   };
   const assets: World["assets"] = new Map();
+  const images: World["images"] = [];
   const screen: ScreenClient = {
     zoneSound: (_tenant, zone) =>
       Promise.resolve(zoneStatus.get(zone) ?? { energy: "lively", device: soundScreen }),
     asset: (_tenant, id) => Promise.resolve(assets.get(id) ?? null),
+    images: () => Promise.resolve(images.map(({ id, title, url }) => ({ id, title, url }))),
+    image: (_tenant, id) => {
+      const i = images.find((x) => x.id === id);
+      return Promise.resolve(i === undefined ? null : { type: i.type, body: i.body });
+    },
   };
   const counters = new MemoryCounters();
   const make = () => {
@@ -147,6 +155,7 @@ export function world(pool: pg.Pool): World {
     zoneStatus,
     soundScreen,
     assets,
+    images,
     screen,
     now: T0,
     at: (s) => new Date(T0.getTime() + s * 1000),

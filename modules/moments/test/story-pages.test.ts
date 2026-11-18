@@ -223,6 +223,48 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
     expect((await w.call("lead", "GET", "/on-air")).body).toContain("Crew briefing");
   });
 
+  // #624 (O2, R22): firing on a past item went straight to the finale.
+  it("offers Fire only the coming items its story takes, the next one first", async () => {
+    const at = (iso: string) => ({
+      starts_at: iso,
+      ends_at: iso.slice(0, 11) + "23:00:00Z",
+    });
+    const past = { ...ITEM, id: "it_past", title: "Opening match", ...at("2026-01-01T18:00:00Z") };
+    const doors = {
+      ...ITEM,
+      id: "it_doors",
+      title: "Doors open",
+      kind: "doors",
+      ...at("2026-01-01T18:50:00Z"),
+    };
+    const awards = {
+      ...ITEM,
+      id: "it_awards",
+      title: "Awards",
+      kind: "ceremony",
+      ...at("2026-01-01T21:00:00Z"),
+    };
+    await w.tx("demo", (c) =>
+      storeAgenda(c, { agenda_version: 2, items: [past, doors, awards, ITEM] }),
+    );
+    const page = (await w.call("crew", "GET", "/on-air")).body;
+    const fire = page.slice(page.indexOf('action="/moments/storyboards/starting_soon/fire"'));
+    const select = fire.slice(0, fire.indexOf("</select>"));
+    expect(select).not.toContain("Opening match");
+    expect(select).not.toContain("Doors open");
+    expect(select).toContain("Awards");
+    expect(select.indexOf("Demo Game Cup final")).toBeLessThan(select.indexOf("Awards"));
+    expect(select).toMatch(/value="it_final" selected/);
+  });
+
+  it("keeps the catalogue and its Fire panel in one grid that fits a phone", async () => {
+    const page = (await w.call("crew", "GET", "/storyboards")).body;
+    expect(page).toContain('class="moments-stories"');
+    expect(page).toContain('class="moments-stories__side"');
+    expect(page).toContain('class="moments-presets"');
+    expect(page).not.toContain("<table");
+  });
+
   it("fires from On air with its item, then stops the loop and skips another to its finale", async () => {
     const onAir = await w.call("crew", "GET", "/on-air");
     expect(onAir.body).toContain("Fire Starting soon");
