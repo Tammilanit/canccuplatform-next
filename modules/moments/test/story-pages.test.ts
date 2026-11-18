@@ -254,7 +254,7 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
     expect(select).not.toContain("Doors open");
     expect(select).toContain("Awards");
     expect(select.indexOf("Demo Game Cup final")).toBeLessThan(select.indexOf("Awards"));
-    expect(select).toMatch(/value="it_final" selected/);
+    expect(select).toMatch(/value="it_final"\s*selected/);
   });
 
   it("keeps the catalogue and its Fire panel in one grid that fits a phone", async () => {

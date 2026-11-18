@@ -40,7 +40,14 @@ async function state(deps: AppDeps, request: FastifyRequest) {
     stories: (a.body.stories ?? []) as Story[],
     revision: Number(a.body.revision ?? 0),
     runs: (a.body.runs ?? []) as RunView[],
-    items: items.map((i): ItemChoice => ({ id: i.id, title: i.title, starts_at: i.starts_at })),
+    items: items.map((i): ItemChoice => ({
+      id: i.id,
+      title: i.title,
+      kind: i.kind ?? "",
+      starts_at: i.starts_at,
+      ends_at: i.ends_at ?? null,
+    })),
+    now: deps.now().getTime(),
     agenda: agenda as PickerItem[],
   };
 }

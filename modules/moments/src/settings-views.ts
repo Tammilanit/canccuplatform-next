@@ -1,11 +1,12 @@
 /** Priorities with the built-in rules (mockup 08) and History (mockup 09): server-drawn, `packages/ui` classes. */
 import type { Html } from "@canccu/ui";
 import { emptyState, html, notice } from "@canccu/ui";
-import { CLASSES, rankOf } from "./arbiter.js";
+
 import type { Class } from "./arbiter.js";
 import type { HistoryFilter, HistoryRow } from "./history.js";
 import { PREFIX } from "./page-kit.js";
 import type { RuleView } from "./rules.js";
+import { rulesView } from "./rules-view.js";
 import { CLASS_NAMES } from "./views.js";
 
 export function prioritiesView(o: {
@@ -15,8 +16,10 @@ export function prioritiesView(o: {
   zones: string[];
   own: string[];
   revision: number;
-  preview: { zone: string; ranks: Record<string, number> } | null;
+  /** `auto`: the script draws it at once (a moved order's Preview reloads with the draft). */
+  preview: { zone: string; ranks: Record<string, number>; auto: boolean } | null;
   rules: RuleView[];
+  cues: string[];
   canWrite: boolean;
   done?: string | undefined;
   error?: string | undefined;
@@ -40,31 +43,34 @@ export function prioritiesView(o: {
     next.splice(i + by, 0, c as Class);
     return next;
   };
+  const name = (c: Class) => CLASS_NAMES[c];
+  // Only the order counts, so no rank numbers (the PO's note on O5). Emergency has no handle.
   const rows = o.order.map((c, i) => {
     const locked = c === "emergency";
-    const up =
-      !locked && i > 1 && o.canWrite
-        ? html`<a
-            class="canccu-button canccu-button--ghost canccu-button--sm"
-            href="${href(moved(i, -1))}"
-            aria-label="Move ${CLASS_NAMES[c]} up"
-            >▲</a
-          >`
-        : "";
-    const down =
-      !locked && i < o.order.length - 1 && o.canWrite
-        ? html`<a
-            class="canccu-button canccu-button--ghost canccu-button--sm"
-            href="${href(moved(i, 1))}"
-            aria-label="Move ${CLASS_NAMES[c]} down"
-            >▼</a
-          >`
-        : "";
-    return html`<li class="moments-order__row">
-      <span class="moments-order__name"
-        >${CLASS_NAMES[c]}${locked ? html` <span class="canccu-small canccu-muted">locked at the top</span>` : ""}</span
-      ><span class="canccu-num">${rankOf(o.order, c)}</span
-      ><span class="canccu-cluster">${up}${down}</span>
+    const movable = !locked && o.canWrite;
+    const arrow = (by: number, label: string, glyph: string) =>
+      html`<a
+        class="canccu-button canccu-button--ghost canccu-button--sm"
+        href="${href(moved(i, by))}"
+        aria-label="Move ${name(c)} ${label}"
+        >${glyph}</a
+      >`;
+    // Without the script the arrows still move a class, as a draft in the address.
+    const arrows = movable
+      ? html`<noscript
+          ><span class="canccu-cluster"
+            >${i > 1 ? arrow(-1, "up", "▲") : ""}${i < o.order.length - 1 ? arrow(1, "down", "▼") : ""}</span
+          ></noscript
+        >`
+      : "";
+    return html`<li
+      class="moments-order__row${locked ? " moments-order__row--locked" : ""}"
+      data-class="${c}"
+    >
+      ${movable ? html`<button class="moments-order__handle" type="button" data-order-handle aria-label="Move ${name(c)}" aria-describedby="order-help">⋮⋮</button>` : html`<span class="moments-order__handle" aria-hidden="true"></span>`}<span
+        class="moments-order__name"
+        >${name(c)}${locked ? html` <span class="canccu-small canccu-muted">locked at the top</span>` : ""}</span
+      >${arrows}
     </li>`;
   });
   const scopes = [
@@ -76,6 +82,7 @@ export function prioritiesView(o: {
           <input type="hidden" name="scope" value="${o.scope}" /><input
             type="hidden"
             name="order"
+            data-order-input
             value="${o.order.join(",")}"
           /><input type="hidden" name="revision" value="${o.revision}" />
           <button class="canccu-button canccu-button--primary" type="submit" name="do" value="save">
@@ -83,6 +90,9 @@ export function prioritiesView(o: {
           </button>
           ${o.scope === "" ? html`<button class="canccu-button canccu-button--ghost" type="submit" name="do" value="reset">Reset to default</button>` : o.own.includes(o.scope) ? html`<button class="canccu-button canccu-button--ghost" type="submit" name="do" value="follow">Follow the event order</button>` : ""}
         </form>
+        <p class="canccu-small" data-order-unsaved hidden>
+          Not saved yet: save the order to rank what is live by it.
+        </p>
         <p class="canccu-small canccu-muted">
           Takes effect at once, also on what is live; nothing ends. Audited.
         </p>`
@@ -102,6 +112,7 @@ export function prioritiesView(o: {
               data-preview
               data-zone="${o.preview.zone}"
               data-ranks="${JSON.stringify(o.preview.ranks)}"
+              ${o.preview.auto ? " data-preview-auto" : ""}
             ></iframe>
           </div>
           <button class="canccu-button canccu-button--secondary" type="button" data-preview-run>
@@ -116,95 +127,16 @@ export function prioritiesView(o: {
         <nav class="moments-scopes" aria-label="Where the order applies">
           ${scopes.map(([v, label]) => html`<a class="canccu-badge${v === o.scope ? " canccu-badge--primary" : " canccu-badge--plain"}" href="${PREFIX}priorities?scope=${encodeURIComponent(v ?? "")}">${label}</a>`)}
         </nav>
-        <ol class="moments-order">
+        ${o.canWrite ? html`<p class="canccu-small canccu-muted" id="order-help">Drag a class by its handle, or focus it and use the arrow keys. Emergency stays at the top.</p>` : ""}
+        <ol class="moments-order" data-order>
           ${rows}
         </ol>
+        <p class="moments-said" aria-live="polite" data-order-said></p>
         ${save}
       </section>
       ${preview}
     </div>
-    ${rulesView(o.rules, o.canWrite)}`;
-}
-
-function rulesView(rules: RuleView[], canWrite: boolean): Html {
-  const rows = rules.map((r) => {
-    const classes = CLASSES.filter((c) => c !== "emergency").map(
-      (c) =>
-        html`<option value="${c}" ${c === r.class ? " selected" : ""}>${CLASS_NAMES[c]}</option>`,
-    );
-    return html`<form class="moments-rule" method="post" action="${PREFIX}rules/${r.rule_id}">
-      <input type="hidden" name="revision" value="${r.revision}" /><input
-        type="hidden"
-        name="template"
-        value="${r.template}"
-      />
-      <div class="canccu-field canccu-field--check">
-        <input
-          class="canccu-check"
-          type="checkbox"
-          id="on-${r.rule_id}"
-          name="enabled"
-          value="true"
-          ${r.enabled ? " checked" : ""}${canWrite ? "" : " disabled"}
-        />
-        <label class="canccu-field__label" for="on-${r.rule_id}"
-          >${r.rule_id.replaceAll("_", " ")}</label
-        >
-      </div>
-      <p class="canccu-small canccu-muted">On ${r.on.join(", ")}</p>
-      <label class="canccu-small"
-        >As
-        <select class="canccu-input" name="class" ${canWrite ? "" : " disabled"}>
-          ${classes}
-        </select></label
-      >
-      <label class="canccu-small"
-        >Regions
-        <input
-          class="canccu-input"
-          name="regions"
-          value="${r.regions.join(", ")}"
-          ${canWrite ? "" : " disabled"}
-      /></label>
-      <label class="canccu-small"
-        >Seconds
-        <input
-          class="canccu-input"
-          type="number"
-          min="1"
-          max="7200"
-          name="ttl_seconds"
-          value="${r.ttl_seconds}"
-          ${canWrite ? "" : " disabled"}
-      /></label>
-      <label class="canccu-small"
-        >Zones
-        <input
-          class="canccu-input"
-          name="zones"
-          value="${r.zones.join(", ")}"
-          placeholder="every zone"
-          ${canWrite ? "" : " disabled"}
-      /></label>
-      <label class="canccu-small"
-        >Cue
-        <input
-          class="canccu-input"
-          name="cue"
-          value="${r.cue ?? ""}"
-          ${canWrite ? "" : " disabled"}
-      /></label>
-      ${canWrite ? html`<button class="canccu-button canccu-button--secondary canccu-button--sm" type="submit">Save</button>` : ""}
-    </form>`;
-  });
-  return html`<section class="canccu-card moments-rules">
-    <h2 class="canccu-card__title">Built-in rules</h2>
-    <p class="canccu-small canccu-muted">
-      What fires by itself when the tournament, pizza and games modules report. Each rule's cue is
-      set up on the Cues tab: its picture and its sound.
-    </p>
-    ${rows}
-  </section>`;
+    ${rulesView(o.rules, { zones: o.zones, cues: o.cues, canWrite: o.canWrite })}`;
 }
 
 const ORIGINS = ["rule", "crew", "emergency", "module"];
@@ -244,7 +176,7 @@ export function historyView(o: {
           text: "Every moment's start, place, wait and end is written here.",
         })
       : html`<div class="moments-table">
-          <table class="canccu-table">
+          <table class="canccu-table moments-history">
             <thead>
               <tr>
                 <th>Time</th>
@@ -260,17 +192,17 @@ export function historyView(o: {
               ${o.rows.map(
                 (r) =>
                   html`<tr>
-                    <td class="canccu-num">${time(r.at)}</td>
-                    <td>${r.zone_key ?? "all"}</td>
-                    <td>
+                    <td class="canccu-num" data-label="Time">${time(r.at)}</td>
+                    <td data-label="Zone">${r.zone_key ?? "all"}</td>
+                    <td data-label="Moment">
                       <b>${r.title}</b><br /><span class="canccu-small canccu-muted"
                         >${r.action}</span
                       >
                     </td>
-                    <td>${r.region ?? "—"}</td>
-                    <td>${r.why}</td>
-                    <td>${r.displaced ?? "—"}</td>
-                    <td>${r.outcome ?? "—"}</td>
+                    <td data-label="Region">${r.region ?? "—"}</td>
+                    <td data-label="Why">${r.why}</td>
+                    <td data-label="Displaced">${r.displaced ?? "—"}</td>
+                    <td data-label="Ended or outcome">${r.outcome ?? "—"}</td>
                   </tr>`,
               )}
             </tbody>

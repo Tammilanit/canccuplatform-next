@@ -1,4 +1,5 @@
-/* The Moments pages (mockups 03, 04, 08, 09): only layout; every look comes from ui.css. */
+/* The Moments pages (mockups 03, 04, 07, 12, 14, 18): only layout; every look comes from ui.css.
+   Priorities, History, the catalogue and the photo picker are in organiser.css. */
 .moments-onair {
   display: grid;
   gap: 1rem;
@@ -97,68 +98,6 @@
     transition: none;
     transform: scaleX(0.5);
   }
-}
-.moments-priorities {
-  display: grid;
-  gap: 1rem;
-}
-@media (min-width: 64rem) {
-  .moments-priorities {
-    grid-template-columns: 26rem 1fr;
-    align-items: start;
-  }
-}
-.moments-scopes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-.moments-order {
-  list-style: none;
-  margin: 0 0 0.75rem;
-  padding: 0;
-}
-.moments-order__row {
-  display: grid;
-  grid-template-columns: 1fr 3rem auto;
-  gap: 0.5rem;
-  align-items: center;
-  min-height: 2.75rem;
-  border-bottom: 1px solid var(--canccu-color-border);
-}
-.moments-preview__frame {
-  aspect-ratio: 16 / 9;
-  margin-bottom: 0.75rem;
-}
-.moments-preview__frame iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-.moments-rules {
-  margin-top: 1rem;
-}
-.moments-rule .canccu-small {
-  overflow-wrap: anywhere;
-}
-.moments-rule {
-  display: grid;
-  gap: 0.5rem;
-  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
-  align-items: end;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--canccu-color-border);
-}
-.moments-filters {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
-  align-items: end;
-  margin-bottom: 1rem;
-}
-.moments-table {
-  overflow-x: auto;
 }
 .moments-fieldset {
   border: 0;
@@ -363,11 +302,4 @@
 }
 .moments-story-fire + .moments-story-fire {
   margin-block-start: 0.75rem;
-}
-/* The preset picker (mockup 21): a row's on/off, duplicate and reset stay on one line on a desk. */
-@media (min-width: 64rem) {
-  .moments-picker__actions {
-    flex-wrap: nowrap;
-    white-space: nowrap;
-  }
 }

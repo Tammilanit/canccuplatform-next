@@ -71,7 +71,10 @@ export async function page(
     nonce,
     surface: "admin",
     cssHref: `${PREFIX}static/ui.css`,
-    head: html`<link rel="stylesheet" href="${PREFIX}static/moments.css" />`,
+    head: html`<link rel="stylesheet" href="${PREFIX}static/moments.css" /><link
+        rel="stylesheet"
+        href="${PREFIX}static/organiser.css"
+      />`,
     event: await eventOf(request, deps),
     session: request.session ?? undefined,
     // Studio → Moments is the Screen studio's Moments tab (mockups 03, 08, 09); the composer is
@@ -149,6 +152,7 @@ export function pageErrors(scope: FastifyInstance, deps: AppDeps): void {
 const TYPES: Record<string, string> = {
   "ui.css": "text/css; charset=utf-8",
   "moments.css": "text/css; charset=utf-8",
+  "organiser.css": "text/css; charset=utf-8",
   "moments.js": "text/javascript; charset=utf-8",
 };
 const files = new Map<string, Promise<Buffer>>();

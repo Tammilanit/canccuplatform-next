@@ -2,6 +2,7 @@
 import type { Html } from "@canccu/ui";
 import { html, notice } from "@canccu/ui";
 import type { Class } from "./arbiter.js";
+import type { ScreenImage } from "./cues/screen.js";
 import { PREFIX, formKey } from "./page-kit.js";
 
 export const CLASS_NAMES: Record<Class, string> = {
@@ -240,63 +241,83 @@ export function confirmEmergency(key: string): Html {
 export function spotlightView(o: {
   zones: string[];
   sessions: { id: string; name: string }[];
+  /** The event's images (Screen's), picked by thumbnail (mockup 04). */
+  images: ScreenImage[];
+  error?: string | undefined;
 }): Html {
-  const zoneChecks = o.zones.map(
-    (z) =>
-      html`<div class="canccu-field canccu-field--check">
-        <input class="canccu-check" type="checkbox" id="zone-${z}" name="zone" value="${z}" />
-        <label class="canccu-field__label" for="zone-${z}">${z}</label>
-      </div>`,
-  );
+  const zoneChecks = html`<span class="canccu-chips"
+    >${o.zones.map(
+      (z) =>
+        html`<label class="canccu-chip"
+          ><input type="checkbox" name="zone" value="${z}" />${z}</label
+        >`,
+    )}</span
+  >`;
+  const photos =
+    o.images.length === 0
+      ? html`<p class="canccu-small canccu-muted">
+          No images yet: add them in Screen studio → Content.
+        </p>`
+      : html`<div class="moments-photos">
+          ${o.images.map(
+            (i) =>
+              html`<label class="moments-photo"
+                ><input type="radio" name="photo_asset" value="${i.id}" /><img
+                  src="${PREFIX}spotlight/images/${i.id}"
+                  alt="${i.title}"
+                  loading="lazy"
+                /><span class="moments-photo__title">${i.title}</span></label
+              >`,
+          )}
+        </div>`;
   const option = (v: string, label: string) => html`<option value="${v}">${label}</option>`;
-  return html`<form class="canccu-form moments-form" method="post" action="${PREFIX}spotlight">
-    ${formKey()}
-    <div class="canccu-field">
-      <label class="canccu-field__label" for="show">What it shows</label>
-      <select class="canccu-input" id="show" name="show">
-        ${option("message", "A message")}${option("standings", "The standings")}${option("bracket", "A bracket")}${option("photo", "A photo")}
-      </select>
-    </div>
-    <div class="canccu-field">
-      <label class="canccu-field__label" for="title">Message</label
-      ><input class="canccu-input" id="title" name="title" maxlength="80" />
-    </div>
-    <div class="canccu-field">
-      <label class="canccu-field__label" for="body">More (optional)</label
-      ><input class="canccu-input" id="body" name="body" maxlength="280" />
-    </div>
-    <div class="canccu-field">
-      <label class="canccu-field__label" for="session_id">Bracket of</label>
-      <select class="canccu-input" id="session_id" name="session_id">
-        ${o.sessions.length === 0 ? option("", "No sessions yet") : o.sessions.map((s) => option(s.id, s.name))}
-      </select>
-    </div>
-    <div class="canccu-field">
-      <label class="canccu-field__label" for="photo_url"
-        >Photo (a path on this event, such as /screen/files/…)</label
-      ><input class="canccu-input" id="photo_url" name="photo_url" />
-    </div>
-    <fieldset class="moments-fieldset">
-      <legend class="canccu-field__label">Zones (none ticked: every zone)</legend>
-      ${zoneChecks}
-    </fieldset>
-    <div class="canccu-field">
-      <label class="canccu-field__label" for="duration">For</label>
-      <select class="canccu-input" id="duration" name="duration_seconds">
-        ${option("300", "5 min")}${option("600", "10 min")}${option("900", "15 min")}${option("1800", "30 min")}
-      </select>
-    </div>
-    <div class="canccu-field">
-      <label class="canccu-field__label" for="qr_path"
-        >QR to (optional, a path such as /notify/)</label
-      ><input class="canccu-input" id="qr_path" name="qr_path" />
-    </div>
-    <p class="canccu-small canccu-muted">
-      The screens say "From the crew"; the history keeps your name.
-    </p>
-    <div class="canccu-cluster">
-      <button class="canccu-button canccu-button--primary" type="submit">Start spotlight</button
-      ><a class="canccu-button canccu-button--ghost" href="${PREFIX}on-air">Cancel</a>
-    </div>
-  </form>`;
+  return html`${o.error ? notice({ kind: "down", title: "Not started", text: o.error }) : ""}
+    <form class="canccu-form moments-form" method="post" action="${PREFIX}spotlight">
+      ${formKey()}
+      <div class="canccu-field">
+        <label class="canccu-field__label" for="show">What it shows</label>
+        <select class="canccu-input" id="show" name="show">
+          ${option("message", "A message")}${option("standings", "The standings")}${option("bracket", "A bracket")}${option("photo", "A photo")}
+        </select>
+      </div>
+      <div class="canccu-field">
+        <label class="canccu-field__label" for="title">Message</label
+        ><input class="canccu-input" id="title" name="title" maxlength="80" />
+      </div>
+      <div class="canccu-field">
+        <label class="canccu-field__label" for="body">More (optional)</label
+        ><input class="canccu-input" id="body" name="body" maxlength="280" />
+      </div>
+      <div class="canccu-field">
+        <label class="canccu-field__label" for="session_id">Bracket of</label>
+        <select class="canccu-input" id="session_id" name="session_id">
+          ${o.sessions.length === 0 ? option("", "No sessions yet") : o.sessions.map((s) => option(s.id, s.name))}
+        </select>
+      </div>
+      <fieldset class="moments-fieldset">
+        <legend class="canccu-field__label">Photo</legend>
+        ${photos}
+      </fieldset>
+      <fieldset class="moments-fieldset">
+        <legend class="canccu-field__label">Zones (none ticked: every zone)</legend>
+        ${zoneChecks}
+      </fieldset>
+      <div class="canccu-field">
+        <label class="canccu-field__label" for="duration">For</label>
+        <select class="canccu-input" id="duration" name="duration_seconds">
+          ${option("300", "5 min")}${option("600", "10 min")}${option("900", "15 min")}${option("1800", "30 min")}
+        </select>
+      </div>
+      <div class="canccu-field canccu-field--check">
+        <input class="canccu-check" id="hub_qr" type="checkbox" name="hub_qr" value="yes" />
+        <label class="canccu-field__label" for="hub_qr">Show the QR to the phone hub</label>
+      </div>
+      <p class="canccu-small canccu-muted">
+        The screens say "From the crew"; the history keeps your name.
+      </p>
+      <div class="canccu-cluster">
+        <button class="canccu-button canccu-button--primary" type="submit">Start spotlight</button
+        ><a class="canccu-button canccu-button--ghost" href="${PREFIX}on-air">Cancel</a>
+      </div>
+    </form>`;
 }

@@ -166,6 +166,7 @@ export interface RunItem {
   id: string;
   title: string;
   starts_at: string;
+  ends_at?: string | null;
   location?: string | null;
   status?: string;
   kind?: string;

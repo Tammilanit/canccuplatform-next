@@ -54,9 +54,9 @@ describe.skipIf(!DATABASE_URL)("the organiser pages", () => {
     expect(page).toContain('aria-describedby="order-help"');
     expect(page).toContain("or focus it and use the arrow keys");
     // Without the script the arrows still move a class, as a draft of the order.
-    expect(order).toContain("<noscript>");
+    expect(order).toMatch(/<noscript\s*>/);
     expect(order).toContain("Move Announcement up");
-    expect(page).toContain('name="order" data-order-input');
+    expect(page).toMatch(/name="order"\s+data-order-input/);
     const reader = (await w.call("reader", "GET", "/priorities")).body;
     expect(reader).not.toContain("data-order-handle");
   });
@@ -65,16 +65,17 @@ describe.skipIf(!DATABASE_URL)("the organiser pages", () => {
     const page = (await w.call("admin", "GET", "/priorities")).body;
     const standings = page.slice(page.indexOf('action="/moments/rules/standings"'));
     const form = standings.slice(0, standings.indexOf("</form>"));
-    expect(form).toContain('type="checkbox" name="regions" value="hero" checked');
-    expect(form).toContain('type="checkbox" name="regions" value="ticker" />');
-    expect(form).toContain('type="checkbox" name="zones" value="stage" />');
-    expect(form).toContain(
-      'type="range" name="ttl_seconds" min="5" max="600" step="5" value="120"',
+    expect(form).toMatch(/type="checkbox"\s+name="regions"\s+value="hero"\s+checked/);
+    expect(form).toMatch(/type="checkbox"\s+name="regions"\s+value="ticker"\s*\/>/);
+    expect(form).toMatch(/type="checkbox"\s+name="zones"\s+value="stage"\s*\/>/);
+    expect(form).toMatch(
+      /type="range"\s+name="ttl_seconds"\s+min="5"\s+max="600"\s+step="5"\s+value="120"/,
     );
     expect(form).toContain("2 min");
     // An event name breaks only after a dot, never inside a word.
     expect(form).toContain("tournament.<wbr />leaderboard.<wbr />changed");
     expect(form).toMatch(/<select class="canccu-input" name="cue"/);
+    expect(form).toContain('<option value="">No cue</option>');
     const saved = await post(w, "admin", "/rules/standings", [
       ["revision", "0"],
       ["template", "leaderboard"],
@@ -102,6 +103,8 @@ describe.skipIf(!DATABASE_URL)("the organiser pages", () => {
     await w.call("crew", "POST", "/api/moments/spotlight", { show: "message", title: "Hello" });
     const page = (await w.call("reader", "GET", "/history")).body;
     expect(page).toContain('class="canccu-table moments-history"');
+    // Its phone layout is in the organiser pages' own stylesheet.
+    expect(page).toContain('href="/moments/static/organiser.css"');
     for (const label of ["Time", "Zone", "Region", "Why", "Displaced", "Ended or outcome"])
       expect(page).toContain(`data-label="${label}"`);
   });
