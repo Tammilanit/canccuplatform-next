@@ -12,7 +12,9 @@ import { knownZones } from "../store.js";
 import { loadCues } from "../cues/store.js";
 import { canSee, runOfShow } from "../announce/store.js";
 import { describeStory } from "./describe.js";
-import { one, storyFromForm } from "./form.js";
+import { itemFacts, fillText } from "./fill.js";
+import type { FillContext } from "./fill.js";
+import { one, stepAfter, storyFromForm } from "./form.js";
 import type { Story } from "./model.js";
 import { EMPTY_CONDITIONS } from "./model.js";
 import { videoMs } from "./runner.js";
@@ -20,11 +22,12 @@ import { ensureStories } from "./store.js";
 import { duplicated, toggled } from "./picker.js";
 import type { PickerItem } from "./picker.js";
 import { pickerView } from "./picker-view.js";
-import { builderView, crewStories } from "./views.js";
+import { builderView } from "./builder.js";
+import { crewStories, fireChoices } from "./views.js";
 import type { ItemChoice, RunView } from "./views.js";
 
 type Raw = Record<string, string | string[] | undefined>;
-type Q = { Querystring: { edit?: string; done?: string; error?: string } };
+type Q = { Querystring: { edit?: string; step?: string; done?: string; error?: string } };
 
 const TEN_MINUTES = 600_000;
 
@@ -125,6 +128,19 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
       });
     const zones = await deps.db.tenant((c) => knownZones(c));
     const cues = (await deps.db.tenant((c) => loadCues(c))).map((c) => c.name);
+    // The sample the builder fills placeholders with: the story's next item and the event.
+    const next = fireChoices(story, s.items, s.now)[0];
+    const item = next === undefined ? undefined : s.agenda.find((i) => i.id === next.id);
+    const fill: FillContext = {
+      facts: item === undefined ? {} : itemFacts(item, doc.event.time_zone),
+      now: s.now,
+      t: item === undefined ? s.now : Date.parse(item.starts_at),
+      timeZone: doc.event.time_zone,
+      eventName: doc.event.name,
+      eventStartsAt: doc.event.starts_at,
+      eventEndsAt: doc.event.ends_at,
+      hostname: doc.event.hostname,
+    };
     return page(request, reply, deps, {
       title: `Storyboard: ${story.name}`,
       tab: "storyboards",
@@ -138,6 +154,8 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
         canWrite: has(request, SETTINGS),
         canTake: has(request, TAKE),
         airtime: await airtime(deps, deps.now()),
+        step: Number(request.query.step ?? 0) || 0,
+        sample: (text) => fillText(text, fill),
         done: request.query.done,
         error: request.query.error,
       }),
@@ -148,10 +166,16 @@ export function storyPages(pages: FastifyInstance, deps: AppDeps): void {
     "/storyboards/:key/save",
     write,
     async (request, reply) => {
-      const path = `storyboards?edit=${request.params.key}`;
+      let step = 0;
       const a = await putList(request, (list) =>
-        list.map((s) => (s.key === request.params.key ? storyFromForm(raw(request), s) : s)),
+        list.map((s) => {
+          if (s.key !== request.params.key) return s;
+          const saved = storyFromForm(raw(request), s);
+          step = stepAfter(raw(request), saved);
+          return saved;
+        }),
       );
+      const path = `storyboards?edit=${request.params.key}&step=${String(step)}`;
       return after(reply, path, a, "Saved.");
     },
   );

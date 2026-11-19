@@ -252,7 +252,9 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
     expect(form(0)).toContain("hidden");
     expect(form(1)).not.toContain("hidden");
     expect(b.body).toContain("Step 2 · Countdown");
-    expect(b.body).toMatch(/aria-current="step"[^>]*data-step="1"|data-step="1"[^>]*aria-current="step"/);
+    expect(b.body).toMatch(
+      /aria-current="step"[^>]*data-step="1"|data-step="1"[^>]*aria-current="step"/,
+    );
     // Every step's fields go with the form, so saving one step never empties another.
     expect(b.body).toContain('name="s0_title"');
     expect(b.body).toContain('name="s1_title"');
@@ -298,11 +300,13 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
         "POST",
         "/storyboards/midnight/save",
         [
-          ...fields.filter(([n]) => n !== "idempotency_key" && n !== "revision"),
+          ...fields.filter(
+            ([n]) => n !== "idempotency_key" && n !== "revision" && !extra.some(([x]) => x === n),
+          ),
           ["idempotency_key", k],
           ["revision", revision],
           ...extra,
-        ] as unknown as Record<string, string>,
+        ],
         form,
       );
     const saved = await save([["step", "0"]], key, "0");

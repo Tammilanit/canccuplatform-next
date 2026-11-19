@@ -50,7 +50,7 @@ async function open(width: number, key = "starting_soon"): Promise<Page> {
   await page.route(`${ORIGIN}/**`, (route) =>
     route.request().url().includes("/moments/storyboards")
       ? route.fulfill({
-          contentType: "text/html",
+          contentType: "text/html; charset=utf-8",
           body: `<!doctype html><html><head><style>${css}</style></head><body class="canccu-page"><main class="canccu-main">${String(body)}</main><script>${script}</script></body></html>`,
         })
       : route.fulfill({ status: 404, body: "" }),
@@ -69,76 +69,82 @@ const shownForm = (page: Page) =>
     forms.filter((f) => !(f as HTMLElement).hidden).map((f) => (f as HTMLElement).dataset.stepForm),
   );
 
-describe.skipIf(browser === undefined)("the storyboard builder in Chromium", { timeout: 30_000 }, () => {
-  afterAll(async () => {
-    await browser?.close();
-  });
+describe.skipIf(browser === undefined)(
+  "the storyboard builder in Chromium",
+  { timeout: 30_000 },
+  () => {
+    afterAll(async () => {
+      await browser?.close();
+    });
 
-  it("puts the strip, the chosen step's form and the preview's column side by side at 1280 px", async () => {
-    const page = await open(1280);
-    const strip = await box(page, ".moments-builder__strip");
-    const form = await box(page, ".moments-builder__step");
-    const side = await box(page, ".moments-builder__side");
-    expect(strip.x + strip.width).toBeLessThanOrEqual(form.x);
-    expect(form.x + form.width).toBeLessThanOrEqual(side.x);
-    expect(Math.abs(strip.y - form.y)).toBeLessThan(2);
-    expect(Math.abs(form.y - side.y)).toBeLessThan(2);
-    // Two even columns of fields, labels above them.
-    const title = await box(page, '[data-step-form="0"] [data-field="title"]');
-    const cue = await box(page, '[data-step-form="0"] [data-field="cue"]');
-    expect(await page.isVisible(".moments-builder__tabs")).toBe(false);
-    expect(Math.abs(title.width - cue.width)).toBeLessThan(2);
-  });
+    it("puts the strip, the chosen step's form and the preview's column side by side at 1280 px", async () => {
+      const page = await open(1280);
+      const strip = await box(page, ".moments-builder__strip");
+      const form = await box(page, ".moments-builder__step");
+      const side = await box(page, ".moments-builder__side");
+      expect(strip.x + strip.width).toBeLessThanOrEqual(form.x);
+      expect(form.x + form.width).toBeLessThanOrEqual(side.x);
+      expect(Math.abs(strip.y - form.y)).toBeLessThan(2);
+      expect(Math.abs(form.y - side.y)).toBeLessThan(2);
+      // Two even columns of fields, labels above them.
+      const title = await box(page, '[data-step-form="0"] [data-field="title"]');
+      const cue = await box(page, '[data-step-form="0"] [data-field="cue"]');
+      expect(await page.isVisible(".moments-builder__tabs")).toBe(false);
+      expect(Math.abs(title.width - cue.width)).toBeLessThan(2);
+    });
 
-  it("opens a step's form from the strip and keeps the choice in the form and the address", async () => {
-    const page = await open(1280);
-    expect(await shownForm(page)).toEqual(["0"]);
-    await page.locator('.moments-step[data-step="1"]').click();
-    expect(await shownForm(page)).toEqual(["1"]);
-    expect(await page.inputValue('input[name="step"]')).toBe("1");
-    expect(new URL(page.url()).searchParams.get("step")).toBe("1");
-    expect(await page.getAttribute('.moments-step[data-step="1"]', "aria-current")).toBe("step");
-  });
+    it("opens a step's form from the strip and keeps the choice in the form and the address", async () => {
+      const page = await open(1280);
+      expect(await shownForm(page)).toEqual(["0"]);
+      await page.locator('.moments-step[data-step="1"]').click();
+      expect(await shownForm(page)).toEqual(["1"]);
+      expect(await page.inputValue('input[name="step"]')).toBe("1");
+      expect(new URL(page.url()).searchParams.get("step")).toBe("1");
+      expect(await page.getAttribute('.moments-step[data-step="1"]', "aria-current")).toBe("step");
+    });
 
-  it("moves a step with the arrow keys, renumbers the strip and keeps the order for Save", async () => {
-    const page = await open(1280);
-    await page.locator('.moments-step[data-step="1"]').focus();
-    await page.keyboard.press("ArrowUp");
-    expect(await page.inputValue('input[name="order"]')).toBe("1,0");
-    const labels = await page.$$eval(".moments-step__name", (xs) => xs.map((x) => x.textContent));
-    expect(labels).toEqual(["1 · Countdown", "2 · Sting"]);
-    expect(await page.isVisible("[data-builder-unsaved]")).toBe(true);
-    expect(
-      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.step),
-    ).toBe("1");
-  });
+    it("moves a step with the arrow keys, renumbers the strip and keeps the order for Save", async () => {
+      const page = await open(1280);
+      await page.locator('.moments-step[data-step="1"]').focus();
+      await page.keyboard.press("ArrowUp");
+      expect(await page.inputValue('input[name="order"]')).toBe("1,0");
+      const labels = await page.$$eval(".moments-step__name", (xs) => xs.map((x) => x.textContent));
+      expect(labels).toEqual(["1 · Countdown", "2 · Sting"]);
+      expect(await page.isVisible("[data-builder-unsaved]")).toBe(true);
+      expect(
+        await page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.step),
+      ).toBe("1");
+    });
 
-  it("fits a phone, as three tabs with the checks in one line", async () => {
-    const page = await open(390);
-    const wide = await page.evaluate(() => document.documentElement.scrollWidth);
-    expect(wide).toBeLessThanOrEqual(390);
-    expect(await page.isVisible(".moments-builder__tabs")).toBe(true);
-    expect(await page.isVisible(".moments-builder__checkline")).toBe(true);
-    expect(await page.isVisible(".moments-builder__rounds")).toBe(true);
-    expect(await page.isVisible(".moments-builder__strip")).toBe(false);
-    await page.getByRole("tab", { name: "Round" }).click();
-    expect(await page.isVisible(".moments-builder__strip")).toBe(true);
-    expect(await page.isVisible(".moments-builder__rounds")).toBe(false);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-      390,
-    );
-    await page.locator(".moments-builder__checkline").evaluate((x) => x.scrollIntoView());
-    await page.getByRole("tab", { name: "Preview" }).click();
-    expect(await page.isVisible(".moments-builder__checks")).toBe(true);
-    expect(await page.isVisible(".moments-builder__strip")).toBe(false);
-    // Test-fire and Save sit in the pending row.
-    expect(await page.isVisible(".moments-builder__pending [type=submit]")).toBe(true);
-  });
+    it("fits a phone, as three tabs with the checks in one line", async () => {
+      const page = await open(390);
+      const wide = await page.evaluate(() => document.documentElement.scrollWidth);
+      expect(wide).toBeLessThanOrEqual(390);
+      expect(await page.isVisible(".moments-builder__tabs")).toBe(true);
+      expect(await page.isVisible(".moments-builder__checkline")).toBe(true);
+      expect(await page.isVisible(".moments-builder__rounds")).toBe(true);
+      expect(await page.isVisible(".moments-builder__strip")).toBe(false);
+      await page.getByRole("tab", { name: "Round" }).click();
+      expect(await page.isVisible(".moments-builder__strip")).toBe(true);
+      expect(await page.isVisible(".moments-builder__rounds")).toBe(false);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        390,
+      );
+      await page.locator(".moments-builder__checkline").evaluate((x) => {
+        x.scrollIntoView();
+      });
+      await page.getByRole("tab", { name: "Preview" }).click();
+      expect(await page.isVisible(".moments-builder__checks")).toBe(true);
+      expect(await page.isVisible(".moments-builder__strip")).toBe(false);
+      // Test-fire and Save sit in the pending row.
+      expect(await page.isVisible(".moments-builder__pending [type=submit]")).toBe(true);
+    });
 
-  it("draws a loop with its rounds every few minutes", async () => {
-    const page = await open(1280, "doors_open");
-    expect(await page.isChecked('input[name="rounds_mode"][value="every"]')).toBe(true);
-    expect(await page.isVisible(".moments-rounds__every")).toBe(true);
-    expect(await page.isVisible(".moments-rounds__offsets")).toBe(false);
-  });
-});
+    it("draws a loop with its rounds every few minutes", async () => {
+      const page = await open(1280, "doors_open");
+      expect(await page.isChecked('input[name="rounds_mode"][value="every"]')).toBe(true);
+      expect(await page.isVisible(".moments-rounds__every")).toBe(true);
+      expect(await page.isVisible(".moments-rounds__offsets")).toBe(false);
+    });
+  },
+);
