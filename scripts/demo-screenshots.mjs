@@ -67,7 +67,12 @@ import {
   pagesListed,
   troubleListed,
 } from "./demo-screenshots-pages.mjs";
-import { cookieOn, firstLine, shooter } from "./demo-screenshots-shot.mjs";
+import {
+  cookieOn,
+  firstLine,
+  sequencer,
+  shooter,
+} from "./demo-screenshots-shot.mjs";
 import {
   DRAFT,
   LIGHT,
@@ -170,7 +175,15 @@ const shot = shooter({
   fail,
   ok,
 });
-const run = { demo, at, shot, fail };
+const sequence = sequencer({
+  browser,
+  at,
+  out: opts.out,
+  check: opts.check,
+  fail,
+  ok,
+});
+const run = { demo, at, shot, sequence, fail };
 
 if (opts.trouble || opts["agenda-down"]) {
   for (const [name, path, viewport, how] of opts.trouble
