@@ -46,19 +46,51 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
     const b = await w.call("admin", "GET", "/storyboards?edit=starting_soon");
     expect(b.statusCode).toBe(200);
     for (const text of [
-      "A run-of-show item of kind tournament or ceremony · its start · follows delays",
-      "Taken by hand",
-      "repeat ×2",
-      "floor 8 s",
-      "♪ tournament.pre",
-      "At −15, −5, −1 min of T · until item starts",
-      "finale It&#39;s on!",
-      "Sounds per run, per zone",
-      "Test-fire one round on",
-      "data-story-scrub",
+      // The header: Test-fire and Save stay in reach (sheet 05, 1).
+      "Test-fire on",
+      'form="story-save"',
+      // Triggers and conditions as chip rows, labels in one column (2).
+      "Plays when",
+      "A tournament or ceremony item starts",
+      "By hand, from On air",
+      "Add a trigger",
+      "Only if",
+      "Every zone",
+      "Quiet scene: calm and silent",
+      "Add a condition",
+      // The rounds on a timeline, one switch for set times or a loop (3).
+      "At set times",
+      "Every few minutes",
+      "−15 min",
+      "−1 min",
+      "Add a round",
+      "the item starts",
+      "the first and last round",
+      "Finale: It&#39;s on! · 8 s",
+      "moments-timeline",
+      // The round as a strip of steps, the repeat a bracket (4), the step's form beside it (5).
+      " · 4 steps",
+      "×2",
+      "1 · Sting",
+      "2 · Countdown",
+      "Step 1 · Sting",
+      "Remove step",
+      // Fields on a grid: seconds a slider, placeholders as chips, what they fill with (6).
+      'type="range"',
+      "{item.title}",
+      "Fills with: Demo Game Cup final",
       "+ New cue (story.starting_soon.1)",
       "/moments/cues/new?name=story.starting_soon.1",
-      "the first and last round",
+      // The live preview with scrub (7) and the checks before saving (8).
+      "data-story-scrub",
+      "Play round",
+      "Whole loop",
+      "Before you save",
+      "Airtime on the hero",
+      "Sounds per run, per zone",
+      // On a phone: three parts and the checks in one line (sheet 06).
+      "Overview",
+      "to look at",
     ])
       expect(b.body, text).toContain(text);
   });
@@ -211,6 +243,103 @@ describe.skipIf(!DATABASE_URL)("the Storyboards pages", () => {
     expect(decodeURIComponent(String(broken.headers.location))).toContain(
       "Unknown placeholder {nope.nope}",
     );
+  });
+
+  it("opens the chosen step's form beside the strip and keeps the others in the form", async () => {
+    const b = await w.call("admin", "GET", "/storyboards?edit=starting_soon&step=1");
+    const form = (i: number) =>
+      new RegExp(`<fieldset[^>]*data-step-form="${String(i)}"[^>]*>`).exec(b.body)?.[0] ?? "";
+    expect(form(0)).toContain("hidden");
+    expect(form(1)).not.toContain("hidden");
+    expect(b.body).toContain("Step 2 · Countdown");
+    expect(b.body).toMatch(/aria-current="step"[^>]*data-step="1"|data-step="1"[^>]*aria-current="step"/);
+    // Every step's fields go with the form, so saving one step never empties another.
+    expect(b.body).toContain('name="s0_title"');
+    expect(b.body).toContain('name="s1_title"');
+  });
+
+  it("saves rounds as chips, a dragged order and a moved step through the same API", async () => {
+    const b = await w.call("admin", "GET", "/storyboards?edit=midnight");
+    const key = /name="idempotency_key"\s+value="([^"]+)"/.exec(b.body)?.[1] ?? "k-1";
+    const fields: [string, string][] = [
+      ["idempotency_key", key],
+      ["revision", "0"],
+      ["name", "Midnight"],
+      ["enabled", "yes"],
+      ["t0_mode", "daily"],
+      ["t0_at", "00:00"],
+      ["s0_template", "countdown"],
+      ["s0_title", "Midnight"],
+      ["s0_seconds", "10"],
+      ["s0_transition", "fade"],
+      ["s1_template", "sting"],
+      ["s1_title", "Midnight!"],
+      ["s1_seconds", "4"],
+      ["s1_transition", "flash"],
+      ["s2_template", "title_card"],
+      ["s2_title", "Night {now.day} at {event.name}"],
+      ["s2_seconds", "15"],
+      ["s2_transition", "rise"],
+      ["message", "2"],
+      ["dot", "1"],
+      ["rounds_mode", "offsets"],
+      // Each round is a chip with its own field; an empty "Add a round" adds nothing.
+      ["offsets", "-2"],
+      ["offsets", "0"],
+      ["offsets", ""],
+      ["end_crew", "yes"],
+      ["sound", "first"],
+      // Dragged: the title card first, then the countdown and the sting.
+      ["order", "2,0,1"],
+    ];
+    const save = (extra: [string, string][], k: string, revision: string) =>
+      w.call(
+        "admin",
+        "POST",
+        "/storyboards/midnight/save",
+        [
+          ...fields.filter(([n]) => n !== "idempotency_key" && n !== "revision"),
+          ["idempotency_key", k],
+          ["revision", revision],
+          ...extra,
+        ] as unknown as Record<string, string>,
+        form,
+      );
+    const saved = await save([["step", "0"]], key, "0");
+    expect(saved.headers.location).toContain("done=");
+    let doc = await w.tx("demo", (c) => ensureStories(c));
+    const story = () => doc.stories.find((s) => s.key === "midnight");
+    expect(story()?.rounds).toEqual({ mode: "offsets", offsets_minutes: [-2, 0] });
+    expect(story()?.round.steps.map((s) => s.template)).toEqual([
+      "title_card",
+      "countdown",
+      "sting",
+    ]);
+    // The marks travel with their steps.
+    expect(story()?.round.steps.map((s) => [s.message, s.on_the_dot])).toEqual([
+      [true, false],
+      [false, false],
+      [false, true],
+    ]);
+    // "Move later" on the first step (the countdown, field s0, before the drag) saves it moved.
+    const moved = await save(
+      [
+        ["order", "0,1,2"],
+        ["move", "0:1"],
+      ],
+      "k-move",
+      "1",
+    );
+    expect(moved.headers.location).toContain("step=1");
+    doc = await w.tx("demo", (c) => ensureStories(c));
+    expect(story()?.round.steps.map((s) => s.template)).toEqual([
+      "sting",
+      "countdown",
+      "title_card",
+    ]);
+    // A step added through its button opens at once.
+    const added = await save([["add_step", "yes"]], "k-add", "2");
+    expect(added.headers.location).toContain("step=3");
   });
 
   // #611: the Fire form lists only the items the person may see (canSee).
