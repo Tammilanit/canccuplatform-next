@@ -1,0 +1,256 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 980" width="1920" height="980" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Step 7 mockup 08: Standings, the final cut and the final (organiser)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="980.0" rx="0" fill="#f3f4f6"/>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">08 · Standings, the final cut and the final (organiser)</text>
+<text x="32.0" y="80.0" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: an organiser checks the standings before Sunday, confirms the finalists, scores the final and adds the champions&#x27; photos</text>
+<text x="32.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 932.0">Standings and final · the cut</text>
+<defs><clipPath id="c1"><rect x="0" y="0" width="1280" height="960" rx="10"/></clipPath></defs>
+<g transform="translate(32.0,140.0) scale(0.72)"><g clip-path="url(#c1)">
+<rect x="0.0" y="0.0" width="1280.0" height="960.0" rx="0" fill="#0b0d1a"/>
+<rect x="0.0" y="0.0" width="1280.0" height="56.0" rx="0" fill="#121528"/>
+<line x1="0.0" y1="56.0" x2="1280.0" y2="56.0" stroke="#343c66" stroke-width="1"/>
+<rect x="20.0" y="14.0" width="84.0" height="28.0" rx="6" fill="#3b82f6"/>
+<text x="62.0" y="33.0" font-size="13" fill="#fff" font-weight="700" text-anchor="middle">Demo</text>
+<text x="116.0" y="34.0" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
+<line x1="212.0" y1="18.0" x2="212.0" y2="38.0" stroke="#343c66" stroke-width="1"/>
+<text x="225.0" y="33.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Fri 6 – Sun 8 Nov</text>
+<rect x="355.0" y="17.0" width="50.0" height="22.0" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="367.0" cy="28.0" r="3.5" fill="#3ee39a"/>
+<text x="375.0" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
+<text x="1234.0" y="35.0" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">11:48</text>
+<text x="1260.0" y="35.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">EET</text>
+<rect x="0.0" y="57.0" width="255.0" height="903.0" rx="0" fill="#0e1122"/>
+<line x1="255.0" y1="57.0" x2="255.0" y2="960.0" stroke="#343c66" stroke-width="1"/>
+<text x="24.0" y="86.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="26.0" y="117.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="129.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Run of show</text>
+<rect x="26.0" y="159.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="171.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Notifications</text>
+<rect x="26.0" y="201.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="213.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Announcements</text>
+<rect x="12.0" y="232.0" width="230.0" height="36.0" rx="6" fill="#1c2a44"/>
+<rect x="12.0" y="232.0" width="3.0" height="36.0" rx="0" fill="#3ddcff"/>
+<rect x="26.0" y="243.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="255.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Tournament</text>
+<rect x="26.0" y="285.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="297.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Food</text>
+<text x="24.0" y="338.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="26.0" y="369.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="381.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Screen studio</text>
+<rect x="26.0" y="411.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="423.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Theme studio</text>
+<text x="24.0" y="464.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">ADMIN</text>
+<rect x="26.0" y="495.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="507.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
+<rect x="26.0" y="537.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="549.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Health</text>
+<rect x="26.0" y="579.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="591.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Event profile</text>
+<rect x="26.0" y="621.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="633.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">People</text>
+<text x="296.0" y="114.0" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296.0 1020.0">Tournament</text>
+<text x="296.0" y="136.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 1020.0">Demo Game Cup · standings after 5 of 6 sessions</text>
+<text x="300.0" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Sessions</text>
+<text x="389.9" y="178.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Standings and final</text>
+<line x1="385.9" y1="186.0" x2="544.3" y2="186.0" stroke="#3ddcff" stroke-width="2"/>
+<text x="570.3" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Players and teams</text>
+<text x="734.3" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
+<line x1="296.0" y1="187.0" x2="1240.0" y2="187.0" stroke="#343c66" stroke-width="1"/>
+<rect x="296.0" y="215.0" width="209.0" height="32.0" rx="8" fill="#3ddcff"/>
+<text x="400.5" y="235.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="300.0 501.0">Confirm the 10 finalists</text>
+<rect x="515.0" y="215.0" width="102.2" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="566.1" y="235.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="519.0 613.2">Export CSV</text>
+<rect x="627.2" y="215.0" width="170.9" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="712.7" y="235.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="631.2 794.1">Show on the screens</text>
+<text x="296.0" y="271.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">#</text>
+<text x="346.0" y="271.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">PLAYER</text>
+<text x="626.0" y="271.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">POINTS</text>
+<text x="726.0" y="271.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">SESSIONS</text>
+<text x="826.0" y="271.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">WINS</text>
+<text x="906.0" y="271.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1">TIE-BREAK</text>
+<line x1="296.0" y1="283.0" x2="1240.0" y2="283.0" stroke="#343c66" stroke-width="1"/>
+<text x="296.0" y="309.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="296.0 338.0">1</text>
+<text x="346.0" y="309.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="346.0 618.0">Player Five</text>
+<text x="626.0" y="309.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="626.0 718.0">14</text>
+<text x="726.0" y="309.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="726.0 818.0">5</text>
+<text x="826.0" y="309.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826.0 898.0">3</text>
+<text x="1156.0" y="309.0" font-size="14" fill="#3ee39a" font-weight="400" text-anchor="start">▲1</text>
+<line x1="296.0" y1="323.0" x2="1240.0" y2="323.0" stroke="#262c4a" stroke-width="1"/>
+<text x="296.0" y="349.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="296.0 338.0">2</text>
+<text x="346.0" y="349.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="346.0 618.0">Demo Player</text>
+<text x="626.0" y="349.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="626.0 718.0">13</text>
+<text x="726.0" y="349.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="726.0 818.0">5</text>
+<text x="826.0" y="349.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826.0 898.0">2</text>
+<text x="1156.0" y="349.0" font-size="14" fill="#ff6b81" font-weight="400" text-anchor="start">▼1</text>
+<line x1="296.0" y1="363.0" x2="1240.0" y2="363.0" stroke="#262c4a" stroke-width="1"/>
+<text x="296.0" y="389.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="296.0 338.0">3</text>
+<text x="346.0" y="389.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="346.0 618.0">Player Two</text>
+<text x="626.0" y="389.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="626.0 718.0">12</text>
+<text x="726.0" y="389.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="726.0 818.0">5</text>
+<text x="826.0" y="389.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826.0 898.0">2</text>
+<line x1="296.0" y1="403.0" x2="1240.0" y2="403.0" stroke="#262c4a" stroke-width="1"/>
+<text x="296.0" y="429.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="296.0 338.0">…</text>
+<line x1="296.0" y1="443.0" x2="1240.0" y2="443.0" stroke="#262c4a" stroke-width="1"/>
+<text x="296.0" y="469.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="296.0 338.0">9</text>
+<text x="346.0" y="469.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="346.0 618.0">Player Nine</text>
+<text x="626.0" y="469.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="626.0 718.0">8</text>
+<text x="726.0" y="469.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="726.0 818.0">4</text>
+<text x="826.0" y="469.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826.0 898.0">1</text>
+<text x="906.0" y="469.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="906.0 1148.0">more wins</text>
+<line x1="296.0" y1="483.0" x2="1240.0" y2="483.0" stroke="#262c4a" stroke-width="1"/>
+<text x="296.0" y="509.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="296.0 338.0">10</text>
+<text x="346.0" y="509.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="346.0 618.0">Player Seven</text>
+<text x="626.0" y="509.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="626.0 718.0">8</text>
+<text x="726.0" y="509.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="726.0 818.0">5</text>
+<text x="826.0" y="509.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826.0 898.0">1</text>
+<text x="906.0" y="509.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="906.0 1148.0">more sessions</text>
+<text x="1156.0" y="509.0" font-size="14" fill="#3ee39a" font-weight="400" text-anchor="start">▲2</text>
+<line x1="296.0" y1="523.0" x2="1240.0" y2="523.0" stroke="#262c4a" stroke-width="1"/>
+<line x1="296.0" y1="523.0" x2="1240.0" y2="523.0" stroke="#ffc94d" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="1240.0" y="517.0" font-size="12" fill="#ffc94d" font-weight="600" text-anchor="end">the cut: top 10 play the final</text>
+<text x="296.0" y="549.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="296.0 338.0">11</text>
+<text x="346.0" y="549.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="346.0 618.0">Player Three</text>
+<text x="626.0" y="549.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="626.0 718.0">8</text>
+<text x="726.0" y="549.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="726.0 818.0">5</text>
+<text x="826.0" y="549.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826.0 898.0">1</text>
+<text x="906.0" y="549.0" font-size="14" fill="#ffc94d" font-weight="400" text-anchor="start" data-box="906.0 1148.0">drawn: crew decides</text>
+<line x1="296.0" y1="563.0" x2="1240.0" y2="563.0" stroke="#262c4a" stroke-width="1"/>
+<text x="296.0" y="589.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="296.0 338.0">12</text>
+<text x="346.0" y="589.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="346.0 618.0">Player Eight</text>
+<text x="626.0" y="589.0" font-size="14" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="626.0 718.0">7</text>
+<text x="726.0" y="589.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="726.0 818.0">4</text>
+<text x="826.0" y="589.0" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826.0 898.0">1</text>
+<text x="1156.0" y="589.0" font-size="14" fill="#ff6b81" font-weight="400" text-anchor="start">▼3</text>
+<line x1="296.0" y1="603.0" x2="1240.0" y2="603.0" stroke="#262c4a" stroke-width="1"/>
+<rect x="296.0" y="627.0" width="944.0" height="92.0" rx="12" fill="#161a2e" stroke="#ffc94d" stroke-width="1"/>
+<text x="312.0" y="657.0" font-size="15" fill="#ffc94d" font-weight="700" text-anchor="start" data-box="312.0 1224.0">Places 10 and 11 are tied on every rule</text>
+<text x="312.0" y="681.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="312.0 1040.0">The rules say a tie-break game decides; record its winner here.</text>
+<rect x="1045.5" y="659.0" width="178.5" height="32.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1134.8" y="679.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="1049.5 1220.0">Record the tie-break</text>
+</g></g>
+<text x="1000.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1000.0 1880.0">The final · ranks and the champions&#x27; photos</text>
+<defs><clipPath id="c2"><rect x="0" y="0" width="1220" height="960" rx="10"/></clipPath></defs>
+<g transform="translate(1000.0,140.0) scale(0.72)"><g clip-path="url(#c2)">
+<rect x="0.0" y="0.0" width="1220.0" height="960.0" rx="0" fill="#0b0d1a"/>
+<rect x="0.0" y="0.0" width="1220.0" height="56.0" rx="0" fill="#121528"/>
+<line x1="0.0" y1="56.0" x2="1220.0" y2="56.0" stroke="#343c66" stroke-width="1"/>
+<rect x="20.0" y="14.0" width="84.0" height="28.0" rx="6" fill="#3b82f6"/>
+<text x="62.0" y="33.0" font-size="13" fill="#fff" font-weight="700" text-anchor="middle">Demo</text>
+<text x="116.0" y="34.0" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start">Demo Event</text>
+<line x1="212.0" y1="18.0" x2="212.0" y2="38.0" stroke="#343c66" stroke-width="1"/>
+<text x="225.0" y="33.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start">Fri 6 – Sun 8 Nov</text>
+<rect x="355.0" y="17.0" width="50.0" height="22.0" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="367.0" cy="28.0" r="3.5" fill="#3ee39a"/>
+<text x="375.0" y="32.5" font-size="12" fill="#7cecba" font-weight="400" text-anchor="start">Live</text>
+<text x="1174.0" y="35.0" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end">14:41</text>
+<text x="1200.0" y="35.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end">EET</text>
+<rect x="0.0" y="57.0" width="255.0" height="903.0" rx="0" fill="#0e1122"/>
+<line x1="255.0" y1="57.0" x2="255.0" y2="960.0" stroke="#343c66" stroke-width="1"/>
+<text x="24.0" y="86.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">RUN THE EVENT</text>
+<rect x="26.0" y="117.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="129.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Run of show</text>
+<rect x="26.0" y="159.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="171.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Notifications</text>
+<rect x="26.0" y="201.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="213.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Announcements</text>
+<rect x="12.0" y="232.0" width="230.0" height="36.0" rx="6" fill="#1c2a44"/>
+<rect x="12.0" y="232.0" width="3.0" height="36.0" rx="0" fill="#3ddcff"/>
+<rect x="26.0" y="243.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="255.0" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start">Tournament</text>
+<rect x="26.0" y="285.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="297.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Food</text>
+<text x="24.0" y="338.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">SCREENS AND LOOK</text>
+<rect x="26.0" y="369.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="381.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Screen studio</text>
+<rect x="26.0" y="411.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="423.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Theme studio</text>
+<text x="24.0" y="464.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">ADMIN</text>
+<rect x="26.0" y="495.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="507.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Settings</text>
+<rect x="26.0" y="537.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="549.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Health</text>
+<rect x="26.0" y="579.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="591.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">Event profile</text>
+<rect x="26.0" y="621.0" width="14.0" height="14.0" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="55.0" y="633.0" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start">People</text>
+<text x="296.0" y="114.0" font-size="26" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="296.0 960.0">Demo Arena final</text>
+<text x="296.0" y="136.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 960.0">Sun 13:00 · Stage · 10 finalists · final ranks decide the champion</text>
+<text x="300.0" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Desk</text>
+<text x="356.9" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Matches</text>
+<text x="438.6" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">Players and teams</text>
+<text x="602.6" y="178.0" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start">Results</text>
+<line x1="598.6" y1="186.0" x2="658.2" y2="186.0" stroke="#3ddcff" stroke-width="2"/>
+<text x="684.2" y="178.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start">History</text>
+<line x1="296.0" y1="187.0" x2="1180.0" y2="187.0" stroke="#343c66" stroke-width="1"/>
+<rect x="296.0" y="215.0" width="60.0" height="38.0" rx="8" fill="#1c2a44" stroke="#3ddcff" stroke-width="1"/>
+<text x="326.0" y="240.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="middle">1</text>
+<text x="376.0" y="240.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="376.0 656.0">Player Five</text>
+<text x="676.0" y="240.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">score</text>
+<rect x="726.0" y="215.0" width="100.0" height="38.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="742.0" y="240.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start">2 410</text>
+<rect x="296.0" y="263.0" width="60.0" height="38.0" rx="8" fill="#1c2a44" stroke="#3ddcff" stroke-width="1"/>
+<text x="326.0" y="288.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="middle">2</text>
+<text x="376.0" y="288.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="376.0 656.0">Player Two</text>
+<text x="676.0" y="288.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">score</text>
+<rect x="726.0" y="263.0" width="100.0" height="38.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="742.0" y="288.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start">2 180</text>
+<rect x="296.0" y="311.0" width="60.0" height="38.0" rx="8" fill="#1c2a44" stroke="#3ddcff" stroke-width="1"/>
+<text x="326.0" y="336.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="middle">3</text>
+<text x="376.0" y="336.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="376.0 656.0">Demo Player</text>
+<text x="676.0" y="336.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">score</text>
+<rect x="726.0" y="311.0" width="100.0" height="38.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="742.0" y="336.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start">1 960</text>
+<rect x="296.0" y="359.0" width="60.0" height="38.0" rx="8" fill="#1c2a44" stroke="#3ddcff" stroke-width="1"/>
+<text x="326.0" y="384.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="middle">4</text>
+<text x="376.0" y="384.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="376.0 656.0">Player Nine</text>
+<text x="676.0" y="384.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start">score</text>
+<rect x="726.0" y="359.0" width="100.0" height="38.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="742.0" y="384.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start">1 720</text>
+<text x="296.0" y="415.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="start">+ 6 more finalists</text>
+<text x="296.0" y="449.0" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" letter-spacing="1.2">PHOTOS · SHOWN ON THE WINNER CARD AND THE CHAMPIONS PAGE</text>
+<rect x="296.0" y="465.0" width="200.0" height="196.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="308.0" y="477.0" width="176.0" height="124.0" rx="8" fill="#2a2f6a"/>
+<text x="396.0" y="545.0" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="middle">photo</text>
+<text x="308.0" y="625.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="308.0 484.0">Winner</text>
+<text x="308.0" y="647.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="308.0 484.0">consent asked</text>
+<rect x="512.0" y="465.0" width="200.0" height="196.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="524.0" y="477.0" width="176.0" height="124.0" rx="8" fill="#2a2f6a"/>
+<text x="612.0" y="545.0" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="middle">photo</text>
+<text x="524.0" y="625.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="524.0 700.0">Second</text>
+<text x="524.0" y="647.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="524.0 700.0">consent asked</text>
+<rect x="728.0" y="465.0" width="200.0" height="196.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="740.0" y="477.0" width="176.0" height="124.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1" stroke-dasharray="6 4"/>
+<text x="828.0" y="545.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">+ Add</text>
+<text x="740.0" y="625.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="740.0 916.0">Third</text>
+<text x="740.0" y="647.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="740.0 916.0">take on the crew phone</text>
+<rect x="944.0" y="465.0" width="200.0" height="196.0" rx="12" fill="#161a2e" stroke="#3c446c" stroke-width="1"/>
+<rect x="956.0" y="477.0" width="176.0" height="124.0" rx="8" fill="#2a2f6a"/>
+<text x="1044.0" y="545.0" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="middle">photo</text>
+<text x="956.0" y="625.0" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="956.0 1132.0">The moment</text>
+<text x="956.0" y="647.0" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="956.0 1132.0">consent asked</text>
+<rect x="296.0" y="687.0" width="163.2" height="36.0" rx="8" fill="#3ddcff"/>
+<text x="377.6" y="709.5" font-size="12.5" fill="#0b0d1a" font-weight="600" text-anchor="middle" data-box="300.0 455.2">Crown the champion</text>
+<rect x="469.2" y="687.0" width="201.4" height="36.0" rx="8" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="569.9" y="709.5" font-size="12.5" fill="#fff" font-weight="600" text-anchor="middle" data-box="473.2 666.6">Save without announcing</text>
+<text x="296.0" y="749.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="296.0 1180.0">Crowning saves the final&#x27;s result: Moments plays the Champion story (built).</text>
+</g></g>
+<circle cx="45.0" cy="867.0" r="13" fill="#f59e0b"/>
+<text x="45.0" y="872.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<text x="66.0" y="872.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">Standings: points over all sessions, no-shows excluded; ▲▼ for the last change (legacy rules, D3).</text>
+<circle cx="985.0" cy="867.0" r="13" fill="#f59e0b"/>
+<text x="985.0" y="872.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<text x="1006.0" y="872.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Tie-break chain, the legacy had none: more wins, then more sessions, then a crew-recorded game (D3).</text>
+<circle cx="45.0" cy="901.0" r="13" fill="#f59e0b"/>
+<text x="45.0" y="906.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+<text x="66.0" y="906.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">The cut is a setting (top 10 by default); finalists are confirmed, not auto-locked (U11).</text>
+<circle cx="985.0" cy="901.0" r="13" fill="#f59e0b"/>
+<text x="985.0" y="906.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">4</text>
+<text x="1006.0" y="906.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Final ranks lead the standings once scored; points never change (legacy final.ts, kept).</text>
+<circle cx="45.0" cy="935.0" r="13" fill="#f59e0b"/>
+<text x="45.0" y="940.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">5</text>
+<text x="66.0" y="940.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">Photos go to the tenant&#x27;s files volume, four slots as in the legacy, with consent (D9, L5).</text>
+<circle cx="985.0" cy="935.0" r="13" fill="#f59e0b"/>
+<text x="985.0" y="940.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">6</text>
+<text x="1006.0" y="940.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Crowning emits tournament.match.finished on the final session: the winner card (built).</text>
+</svg>

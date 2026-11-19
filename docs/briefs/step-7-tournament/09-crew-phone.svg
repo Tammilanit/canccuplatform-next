@@ -1,0 +1,247 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Step 7 mockup 09: The crew phone: a match desk in the hand (crew, venue staff)</title>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/></marker></defs>
+<rect x="0.0" y="0.0" width="1920.0" height="1080.0" rx="0" fill="#f3f4f6"/>
+<text x="32.0" y="48.0" font-size="28" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 1888.0">09 · The crew phone: a match desk in the hand (crew, venue staff)</text>
+<text x="32.0" y="80.0" font-size="17" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32.0 1888.0">Use case: a crew member at the stage runs check-in and matches from a phone at 390 px, with no laptop</text>
+<text x="32.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="32.0 312.0">1 · Now</text>
+<text x="352.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="352.0 632.0">2 · Call a match</text>
+<text x="672.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="672.0 952.0">3 · At the stage desk</text>
+<text x="992.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="992.0 1272.0">4 · Mark present</text>
+<text x="1312.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1312.0 1592.0">5 · Quick result</text>
+<text x="1632.0" y="128.0" font-size="17" fill="#111827" font-weight="700" text-anchor="start" data-box="1632.0 1912.0">6 · The photo</text>
+<g transform="translate(32.0,140.0) scale(0.72)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
+<rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">19:29</text>
+<text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26.0" y="92.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Crew</text>
+<text x="195.0" y="92.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110.0 280.0">Demo Arena 5v5</text>
+<rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="26.0" y="112.0" width="208.3" height="23.0" rx="11.5" fill="#3a3320"/>
+<text x="130.2" y="127.0" font-size="13" fill="#ffc94d" font-weight="600" text-anchor="middle" data-box="30.0 230.3">Check-in closes in 01:00</text>
+<rect x="26.0" y="150.0" width="164.0" height="84.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="190.0" font-size="24" fill="#f3f5ff" font-weight="800" text-anchor="start">36/40</text>
+<text x="44.0" y="218.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 180.0">checked in</text>
+<rect x="200.0" y="150.0" width="164.0" height="84.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="218.0" y="190.0" font-size="24" fill="#f3f5ff" font-weight="800" text-anchor="start">2</text>
+<text x="218.0" y="218.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="218.0 354.0">waiting teams</text>
+<text x="26.0" y="272.0" font-size="12" fill="#a9b1d6" font-weight="700" text-anchor="start" letter-spacing="1">NEXT</text>
+<rect x="26.0" y="286.0" width="338.0" height="46.0" rx="12" fill="#3ddcff"/>
+<text x="195.0" y="315.0" font-size="15" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="32.0 358.0">Call semi-final 1</text>
+<rect x="26.0" y="344.0" width="338.0" height="46.0" rx="12" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="195.0" y="373.0" font-size="15" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="32.0 358.0">Close check-in now</text>
+<text x="26.0" y="430.0" font-size="12" fill="#a9b1d6" font-weight="700" text-anchor="start" letter-spacing="1">NEEDS YOU</text>
+<rect x="26.0" y="444.0" width="338.0" height="66.0" rx="16" fill="#1d2442" stroke="#ffc94d" stroke-width="1.5"/>
+<text x="44.0" y="472.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 346.0">Player Four not in</text>
+<text x="44.0" y="496.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">Team Alpha · 4 of 5</text>
+<rect x="26.0" y="520.0" width="338.0" height="66.0" rx="16" fill="#1d2442" stroke="#ffc94d" stroke-width="1.5"/>
+<text x="44.0" y="548.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 346.0">Team Gamma short</text>
+<text x="44.0" y="572.0" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">3 of 5 · fill from solo</text>
+</g>
+<g transform="translate(352.0,140.0) scale(0.72)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
+<rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">19:31</text>
+<text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26.0" y="92.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Desk</text>
+<text x="195.0" y="92.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110.0 280.0">Call semi-final 1</text>
+<rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="26.0" y="112.0" width="338.0" height="120.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="146.0" font-size="16" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="44.0 346.0">Team Alpha vs Team Gamma</text>
+<text x="44.0" y="174.0" font-size="13.5" fill="#3ee39a" font-weight="600" text-anchor="start" data-box="44.0 346.0">All 10 checked in</text>
+<text x="44.0" y="200.0" font-size="13.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="44.0 346.0">Voice: Alpha room, Gamma room</text>
+<text x="26.0" y="262.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="26.0 364.0">Where</text>
+<rect x="26.0" y="270.0" width="338.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="38.0" y="293.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="34.0 356.0">Stage 2</text>
+<text x="26.0" y="340.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="26.0 364.0">Lobby id (optional)</text>
+<rect x="26.0" y="348.0" width="338.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="38.0" y="371.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="34.0 356.0">K7Q2</text>
+<text x="26.0" y="440.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">Calling pushes to the 10 players and</text>
+<text x="26.0" y="464.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">puts &#x27;Match called&#x27; on the screens.</text>
+<rect x="26.0" y="676.0" width="338.0" height="46.0" rx="12" fill="#3ddcff"/>
+<text x="195.0" y="705.0" font-size="15" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="32.0 358.0">Call the match</text>
+</g>
+<g transform="translate(672.0,140.0) scale(0.72)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
+<rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">19:16</text>
+<text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26.0" y="92.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Desk</text>
+<text x="195.0" y="92.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110.0 280.0">Stage desk QR</text>
+<rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="70.0" y="130.0" width="250.0" height="250.0" rx="12.5" fill="#ffffff"/>
+<rect x="90.0" y="150.0" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="90.0" y="173.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="90.0" y="196.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="90.0" y="266.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="90.0" y="290.0" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="90.0" y="313.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="90.0" y="336.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="113.3" y="150.0" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="113.3" y="173.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="113.3" y="196.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="113.3" y="290.0" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="113.3" y="313.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="113.3" y="336.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="136.7" y="150.0" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="136.7" y="173.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="136.7" y="196.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="136.7" y="290.0" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="136.7" y="313.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="136.7" y="336.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="160.0" y="150.0" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="160.0" y="243.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="160.0" y="266.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="183.3" y="173.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="183.3" y="243.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="183.3" y="290.0" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="206.7" y="150.0" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="206.7" y="196.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="206.7" y="266.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="206.7" y="313.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="230.0" y="150.0" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="230.0" y="173.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="230.0" y="196.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="230.0" y="290.0" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="230.0" y="313.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="253.3" y="150.0" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="253.3" y="173.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="253.3" y="196.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="276.7" y="150.0" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="276.7" y="173.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="276.7" y="196.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="276.7" y="243.3" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<rect x="276.7" y="266.7" width="21.0" height="21.0" rx="0" fill="#111827"/>
+<text x="195.0" y="420.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle">Check in: Demo Arena 5v5</text>
+<text x="195.0" y="448.0" font-size="14" fill="#a9b1d6" font-weight="400" text-anchor="middle">New code in 18 s</text>
+<text x="195.0" y="500.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="middle">Players scan this with the hub.</text>
+<text x="195.0" y="524.0" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="middle">Needs the notify.checkin.display right.</text>
+</g>
+<g transform="translate(992.0,140.0) scale(0.72)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
+<rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">19:27</text>
+<text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26.0" y="92.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Desk</text>
+<text x="195.0" y="92.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110.0 280.0">Players</text>
+<rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="26.0" y="120.0" width="338.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="38.0" y="143.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="34.0 356.0">Search a name</text>
+<rect x="26.0" y="190.0" width="338.0" height="68.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="220.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 200.0">Player Four</text>
+<rect x="44.0" y="230.0" width="58.3" height="21.0" rx="10.5" fill="#3d1f2a"/>
+<text x="73.1" y="243.0" font-size="11" fill="#ff6b81" font-weight="600" text-anchor="middle" data-box="48.0 98.3">Not in</text>
+<rect x="250.0" y="206.0" width="98.0" height="36.0" rx="10" fill="#3ddcff"/>
+<text x="299.0" y="229.0" font-size="13.5" fill="#0b0d1a" font-weight="700" text-anchor="middle">Present</text>
+<rect x="26.0" y="270.0" width="338.0" height="68.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="300.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 200.0">Player Twelve</text>
+<rect x="44.0" y="310.0" width="51.5" height="21.0" rx="10.5" fill="#2c2348"/>
+<text x="69.8" y="323.0" font-size="11" fill="#b98cff" font-weight="600" text-anchor="middle" data-box="48.0 91.5">Guest</text>
+<rect x="250.0" y="286.0" width="98.0" height="36.0" rx="10" fill="#3ddcff"/>
+<text x="299.0" y="309.0" font-size="13.5" fill="#0b0d1a" font-weight="700" text-anchor="middle">Present</text>
+<rect x="26.0" y="350.0" width="338.0" height="68.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="380.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 200.0">Player Eleven</text>
+<rect x="44.0" y="390.0" width="71.7" height="21.0" rx="10.5" fill="#1c2a44"/>
+<text x="79.8" y="403.0" font-size="11" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="48.0 111.7">Moved up</text>
+<rect x="26.0" y="430.0" width="338.0" height="68.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="460.0" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="44.0 200.0">Player Nine</text>
+<rect x="44.0" y="470.0" width="31.4" height="21.0" rx="10.5" fill="#1e4244"/>
+<text x="59.7" y="483.0" font-size="11" fill="#7cecba" font-weight="600" text-anchor="middle" data-box="48.0 71.4">In</text>
+</g>
+<g transform="translate(1312.0,140.0) scale(0.72)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
+<rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">20:09</text>
+<text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26.0" y="92.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Desk</text>
+<text x="195.0" y="92.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110.0 280.0">Semi-final 1</text>
+<rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<text x="26.0" y="130.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start">Who won?</text>
+<rect x="26.0" y="150.0" width="338.0" height="72.0" rx="16" fill="#1d2442" stroke="#3ee39a" stroke-width="1.5"/>
+<text x="44.0" y="194.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="44.0 260.0">Team Alpha</text>
+<text x="346.0" y="194.0" font-size="20" fill="#3ee39a" font-weight="700" text-anchor="end">✓</text>
+<rect x="26.0" y="234.0" width="338.0" height="72.0" rx="16" fill="#1d2442" stroke="#343c66" stroke-width="1.5"/>
+<text x="44.0" y="278.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="44.0 260.0">Team Gamma</text>
+<text x="26.0" y="340.0" font-size="12.5" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="26.0 186.0">Games</text>
+<rect x="26.0" y="348.0" width="160.0" height="36.0" rx="8" fill="#0f1430" stroke="#616788" stroke-width="1"/>
+<text x="38.0" y="371.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="34.0 178.0">2 – 1</text>
+<text x="26.0" y="452.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">Who played comes from the voice</text>
+<text x="26.0" y="476.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">roster; check it on the desk later.</text>
+<rect x="26.0" y="676.0" width="338.0" height="46.0" rx="12" fill="#3ddcff"/>
+<text x="195.0" y="705.0" font-size="15" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="32.0 358.0">Save: Team Alpha won</text>
+</g>
+<g transform="translate(1632.0,140.0) scale(0.72)">
+<rect x="0.0" y="0.0" width="390.0" height="844.0" rx="44" fill="#0f172a"/>
+<rect x="10.0" y="10.0" width="370.0" height="824.0" rx="36" fill="#0b0d1a"/>
+<text x="40.0" y="50.0" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start">14:44</text>
+<text x="350.0" y="50.0" font-size="14" fill="#f3f5ff" font-weight="400" text-anchor="end">●●● ▮</text>
+<text x="26.0" y="92.0" font-size="16" fill="#3ddcff" font-weight="600" text-anchor="start">‹ Final</text>
+<text x="195.0" y="92.0" font-size="17" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="110.0 280.0">Champion photo</text>
+<rect x="10.0" y="760.0" width="370.0" height="74.0" rx="0" fill="#161a2e"/>
+<text x="47.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Now</text>
+<text x="121.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Schedule</text>
+<text x="195.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Play</text>
+<text x="269.0" y="800.0" font-size="13" fill="#a9b1d6" font-weight="500" text-anchor="middle">Alerts</text>
+<text x="343.0" y="800.0" font-size="13" fill="#3ddcff" font-weight="600" text-anchor="middle">More</text>
+<rect x="26.0" y="112.0" width="338.0" height="360.0" rx="16" fill="#2a2f6a"/>
+<text x="195.0" y="300.0" font-size="16" fill="#c5cae3" font-weight="600" text-anchor="middle">camera</text>
+<circle cx="195.0" cy="420.0" r="30" fill="#ffffff"/>
+<rect x="26.0" y="494.0" width="61.9" height="22.0" rx="11.0" fill="#1c2a44"/>
+<text x="57.0" y="508.0" font-size="12" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="30.0 83.9">Winner</text>
+<rect x="112.0" y="494.0" width="61.9" height="22.0" rx="11.0" fill="#22263f"/>
+<text x="143.0" y="508.0" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="116.0 169.9">Second</text>
+<rect x="198.0" y="494.0" width="54.6" height="22.0" rx="11.0" fill="#22263f"/>
+<text x="225.3" y="508.0" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="202.0 248.6">Third</text>
+<rect x="284.0" y="494.0" width="61.9" height="22.0" rx="11.0" fill="#22263f"/>
+<text x="315.0" y="508.0" font-size="12" fill="#a9b1d6" font-weight="600" text-anchor="middle" data-box="288.0 341.9">Moment</text>
+<text x="26.0" y="560.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">Ask before you shoot: the photo is</text>
+<text x="26.0" y="584.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">shown on the screens and the</text>
+<text x="26.0" y="608.0" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="26.0 364.0">champions page.</text>
+<rect x="26.0" y="676.0" width="338.0" height="46.0" rx="12" fill="#3ddcff"/>
+<text x="195.0" y="705.0" font-size="15" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="32.0 358.0">Use this photo</text>
+</g>
+<circle cx="45.0" cy="785.0" r="13" fill="#f59e0b"/>
+<text x="45.0" y="790.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">1</text>
+<text x="66.0" y="790.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">The crew phone is the desk at 390 px: what&#x27;s next first, then what needs the crew (U13).</text>
+<circle cx="985.0" cy="785.0" r="13" fill="#f59e0b"/>
+<text x="985.0" y="790.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">2</text>
+<text x="1006.0" y="790.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Calling a match sets where and an optional lobby id, and emits tournament.match.called (D1).</text>
+<circle cx="45.0" cy="819.0" r="13" fill="#f59e0b"/>
+<text x="45.0" y="824.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">3</text>
+<text x="66.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">The stage QR is Notify&#x27;s rotating code with purpose tournament:&lt;session&gt; (built, #35) (D6).</text>
+<circle cx="985.0" cy="819.0" r="13" fill="#f59e0b"/>
+<text x="985.0" y="824.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">4</text>
+<text x="1006.0" y="824.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">Marking present is the only way in for a guest without an account (the lead&#x27;s note) (U12).</text>
+<circle cx="45.0" cy="853.0" r="13" fill="#f59e0b"/>
+<text x="45.0" y="858.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">5</text>
+<text x="66.0" y="858.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="66.0 932.0">A quick result needs the winner only; who played comes from the voice roster (U8).</text>
+<circle cx="985.0" cy="853.0" r="13" fill="#f59e0b"/>
+<text x="985.0" y="858.0" font-size="14" fill="#111827" font-weight="700" text-anchor="middle">6</text>
+<text x="1006.0" y="858.0" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1006.0 1872.0">The champion photo is taken on the crew phone and stored in the tenant&#x27;s files (D9).</text>
+</svg>
