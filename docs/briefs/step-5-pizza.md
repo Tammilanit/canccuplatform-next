@@ -252,6 +252,26 @@ Each with its reason ([0020](../decisions/0020-best-of-old-freely-new.md)).
 | Live pages by server-sent events (D13) | #119's push without polling |
 | The caller's own orders and a For you card (D14) | The lead's step 2 note; the App track's For you |
 
+## The product owner's notes (2026-11-19)
+Given while reading the pack. They change the money questions and come before the recommendations where the two differ.
+
+- **How a pizza is paid for today.** The holder, who calls the order in, pays the pizzeria. They pay either when ordering (for example a Wolt order) or when the pizza arrives.
+- **Settling up, the default.** The money goes through the organiser. After the event, the cost of each order is divided evenly among the people who ordered in it.
+- **Settling up, an organiser option.** The organiser can instead let attendees pay the holder directly.
+- **Exact prices.** There must be a way to record each person's exact price in an order, instead of an even share.
+- **Receipts.** The holder or the crew can add photos of an order's receipts to the order. A receipt can also be the source for entering the real cost per attendee later.
+
+**What this changes in the pack.**
+- Principle 8 ("no money, no engine") becomes: the app keeps what each order cost and what each person owes. No money moves through the app, and there is still no generic service engine.
+- [D8](step-5-pizza/questions.md#d8-the-bill-total) is answered A: settling food after the event is still done, through the organiser.
+- [D7](step-5-pizza/questions.md#d7-prices-on-the-menu) (prices on the menu), [U12](step-5-pizza/questions.md#u12-who-sees-the-paid-the-holder-tick) (the "paid the holder" tick) and [U13](step-5-pizza/questions.md#u13-who-paid-the-pizzeria-the-payer) (the payer) are reopened for the session, in the light of these notes.
+- New for the session:
+  - the settle-up setting (through the organiser, or directly to the holder);
+  - an even share or exact prices per person;
+  - receipt photos: who adds them, who sees them, how long they are kept;
+  - what each person owes, and to whom, in the record and the CSV.
+- [Decision 0022](../decisions/0022-product-vision.md) says "no payments". The plan records how these notes refine it: amounts are tracked, and no payment is taken in the app.
+
 ## The lead's step 2 notes
 - **"The pizza contract gives the phone hub a read of the caller's own orders":** `GET /api/pizza/me/orders`, and `me/summary` cards if the App track takes its D18 ([D14](step-5-pizza/questions.md#d14-the-callers-own-orders-the-leads-step-2-note)); proposed for #117.
 - **"Add a demo pizzeria and orders to `events/demo/`":** two placeholder pizzerias in the demo profile, and demo orders made by the stack's screenshot script through the API ([D18](step-5-pizza/questions.md#d18-demo-data)); proposed for #117 (the pizzerias) and #119 (the orders in CI).
