@@ -229,9 +229,9 @@
 <circle cx="1375" cy="281" r="13" fill="#f59e0b"/>
 <text x="1375" y="286" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">2</text>
 <text x="1396" y="286" font-size="16" fill="#111827" font-weight="700" text-anchor="start">The AI reader is off until turned on</text>
-<text x="1396" y="310" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">It also needs a provider key that the platform</text>
-<text x="1396" y="331" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">operator sets; without one, the switch is greyed with</text>
-<text x="1396" y="352" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">&quot;Not set up on this platform&quot;. It reads receipts</text>
+<text x="1396" y="310" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">It also needs an API key, set in Admin →</text>
+<text x="1396" y="331" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">Integrations (secret, revokable); without one it is greyed:</text>
+<text x="1396" y="352" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">&quot;No AI key set up&quot;, with a link. It reads receipts</text>
 <text x="1396" y="373" font-size="14.5" fill="#374151" font-weight="400" text-anchor="start">(mockup 18) and menus (mockup 11).</text>
 <circle cx="1375" cy="407" r="13" fill="#f59e0b"/>
 <text x="1375" y="412" font-size="14" fill="#0b0d1a" font-weight="800" text-anchor="middle">3</text>
