@@ -116,7 +116,7 @@ describe.skipIf(browser === undefined)(
           (x) =>
             x.value !== document.querySelector("[data-story-preview]")?.getAttribute("data-zone"),
         );
-        if (box === null) throw new Error("no condition zone box");
+        if (box === undefined) throw new Error("no condition zone box");
         box.checked = true;
         box.dispatchEvent(new Event("change", { bubbles: true }));
       });
