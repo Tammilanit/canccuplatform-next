@@ -1,0 +1,241 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2660 1200" width="2660" height="1200" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 11: venues and the venue profile</title>
+<defs><clipPath id="c1"><rect x="32" y="150" width="1280" height="970" rx="10"/></clipPath><clipPath id="c2"><rect x="1372" y="160" width="390" height="844" rx="38"/></clipPath><clipPath id="c3"><rect x="1832" y="160" width="390" height="844" rx="38"/></clipPath></defs>
+<rect x="0" y="0" width="2660" height="1200" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2628">11 · Venues: the venue profile the superadmin keeps, and the copy each event gets (superadmin, event admin)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2628">Built on the tenants contract&#x27;s venues: addresses, house rules, Wi-Fi, floor plan, copied into each event (copy-in, never a live link). New: crew notes and the venue&#x27;s screens.</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2628">Use case: the superadmin keeps the hall&#x27;s lasting facts in one place; an event admin pulls the hall&#x27;s latest Wi-Fi into their event after the venue changed it</text>
+<text x="672" y="1154" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="32 1312">A · A venue at 1280 px: summary band, then panels in a band (amendment 3)</text>
+<g clip-path="url(#c1)">
+<rect x="32" y="150" width="1280" height="970" rx="0" fill="#0b0d1a"/>
+<rect x="32" y="150" width="1280" height="56" rx="0" fill="#121528"/>
+<line x1="32" y1="206" x2="1312" y2="206" stroke="#343c66" stroke-width="1"/>
+<rect x="52" y="164" width="92" height="28" rx="6" fill="#b98cff"/>
+<text x="98" y="183" font-size="13" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="52 144">Platform</text>
+<text x="158" y="184" font-size="16" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="32 1312">Superadmin console</text>
+<rect x="332" y="167" width="111.84" height="22" rx="11" fill="#2d2550" stroke="#5b4a9a" stroke-width="1"/>
+<text x="342" y="182.5" font-size="12" fill="#d9c8ff" font-weight="600" text-anchor="start" data-box="332 443.84">Tailscale only</text>
+<text x="1266" y="185" font-size="20" fill="#f3f5ff" font-weight="400" text-anchor="end" data-box="32 1312">11:05</text>
+<text x="1292" y="185" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="32 1312">UTC</text>
+<rect x="32" y="207" width="256" height="913" rx="0" fill="#0e1122"/>
+<line x1="288" y1="207" x2="288" y2="1120" stroke="#343c66" stroke-width="1"/>
+<text x="56" y="236" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">PLATFORM</text>
+<rect x="58" y="261" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="272" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Stack health</text>
+<rect x="58" y="303" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="314" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Incidents</text>
+<rect x="58" y="345" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="356" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Fixes</text>
+<text x="56" y="410" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">EVENTS</text>
+<rect x="58" y="435" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="446" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Events</text>
+<rect x="58" y="477" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="488" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Series</text>
+<rect x="44" y="506" width="231" height="40" rx="8" fill="#1c374d"/>
+<rect x="44" y="506" width="3" height="40" rx="1" fill="#3ddcff"/>
+<rect x="58" y="519" width="14" height="14" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.4"/>
+<text x="87" y="530" font-size="14.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="32 288">Venues</text>
+<text x="56" y="584" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">PEOPLE</text>
+<rect x="58" y="609" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="620" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Users</text>
+<rect x="58" y="651" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="662" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Superadmins</text>
+<text x="56" y="716" font-size="11" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="32 288" letter-spacing="1.2">RECORD</text>
+<rect x="58" y="741" width="14" height="14" rx="3" fill="none" stroke="#a9b1d6" stroke-width="1.4"/>
+<text x="87" y="752" font-size="14.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="32 288">Audit</text>
+</g>
+<text x="328" y="239" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">‹ Venues</text>
+<text x="328" y="277" font-size="28" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="328 1272">Demo Hall</text>
+<rect x="1193.93" y="249" width="78.0691" height="36" rx="10" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<text x="1232.97" y="272.04" font-size="14" fill="#ffb4bd" font-weight="600" text-anchor="middle" data-box="1193.93 1272">Delete</text>
+<rect x="1126.71" y="249" width="59.2251" height="36" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1156.32" y="272.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1126.71 1185.93">Edit</text>
+<text x="328" y="305" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="328 1272">Used by 2 events (Demo Event, live; Demo Event (spring), draft) · can&#x27;t be deleted while used</text>
+<rect x="328" y="331" width="464" height="230" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="346" y="361" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="346 774">Addresses</text>
+<text x="774" y="361" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="346 774">gate screens and admin access</text>
+<rect x="346" y="379" width="428" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="358" y="401.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="346 774">192.0.2.0/28</text>
+<rect x="346" y="423" width="428" height="36" rx="8" fill="#0f1224" stroke="#616788" stroke-width="1"/>
+<text x="358" y="445.86" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="346 774">2001:db8:1::/48</text>
+<rect x="346" y="477" width="428" height="64" rx="8" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="360" y="503" font-size="13.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="346 774">You are at 192.0.2.10: inside Demo Hall</text>
+<text x="360" y="525" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="346 774">Changing these is audited and reaches every event here.</text>
+<circle cx="788" cy="339" r="13" fill="#f59e0b"/>
+<text x="788" y="344" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="775 801">1</text>
+<rect x="808" y="331" width="464" height="230" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="826" y="361" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="826 1254">The venue&#x27;s screens</text>
+<text x="1254" y="361" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="826 1254">from Screen&#x27;s registry (D16)</text>
+<text x="826" y="399" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="826 1254">Main hall screen 1</text>
+<text x="1008" y="399" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1254">Demo Event</text>
+<rect x="1182.1" y="384" width="71.9019" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1194.1" cy="395" r="3.5" fill="#3ee39a"/>
+<text x="1203.1" y="399.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1182.1 1254">Online</text>
+<text x="826" y="441" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="826 1254">Main hall screen 2</text>
+<text x="1008" y="441" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1254">Demo Event</text>
+<rect x="1182.1" y="426" width="71.9019" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="1194.1" cy="437" r="3.5" fill="#3ee39a"/>
+<text x="1203.1" y="441.5" font-size="12" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1182.1 1254">Online</text>
+<text x="826" y="483" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="826 1254">Lobby screen</text>
+<text x="1008" y="483" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1254">Demo Event</text>
+<rect x="1181.16" y="468" width="72.8363" height="22" rx="11" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<circle cx="1193.16" cy="479" r="3.5" fill="#a9b1d6"/>
+<text x="1202.16" y="483.5" font-size="12" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="1181.16 1254">Offline</text>
+<text x="826" y="525" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="826 1254">Stage left</text>
+<text x="1008" y="525" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1254">no event</text>
+<rect x="1181.16" y="510" width="72.8363" height="22" rx="11" fill="#2a2f4d" stroke="#4a5078" stroke-width="1"/>
+<circle cx="1193.16" cy="521" r="3.5" fill="#a9b1d6"/>
+<text x="1202.16" y="525.5" font-size="12" fill="#c5cae3" font-weight="600" text-anchor="start" data-box="1181.16 1254">Offline</text>
+<rect x="328" y="577" width="464" height="230" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="346" y="607" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="346 774">House rules</text>
+<text x="774" y="607" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="346 774">copied into each event</text>
+<text x="346" y="637" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="346 774">Doors open at 16:00. No outside drinks in the main hall.</text>
+<text x="346" y="658" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="346 774">Sleeping only in the rest area. Ask the crew before moving</text>
+<text x="346" y="679" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="346 774">any table or cable. Quiet from 02:00 in the rest area.</text>
+<text x="346" y="789" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="346 774">2,140 of 20,000 characters</text>
+<rect x="808" y="577" width="464" height="230" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="826" y="607" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="826 1254">Wi-Fi</text>
+<text x="1254" y="607" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="826 1254">visibility per network</text>
+<text x="826" y="647" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="826 1254">DemoHall-Guest</text>
+<text x="826" y="667" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1254">password open</text>
+<rect x="1170.31" y="635" width="83.6871" height="22" rx="11" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="1180.31" y="650.5" font-size="12" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="1170.31 1254">Everyone</text>
+<text x="826" y="707" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="826 1254">DemoHall-Players</text>
+<text x="826" y="727" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1254">password ••••••••</text>
+<rect x="1165.67" y="695" width="88.3325" height="22" rx="11" fill="#2d2550" stroke="#5b4a9a" stroke-width="1"/>
+<text x="1175.67" y="710.5" font-size="12" fill="#d9c8ff" font-weight="600" text-anchor="start" data-box="1165.67 1254">Attendees</text>
+<text x="826" y="789" font-size="12" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="826 1254">Guests never see an attendees&#x27; password (tenants.md).</text>
+<rect x="328" y="823" width="464" height="190" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="346" y="853" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="346 774">Floor plan</text>
+<text x="774" y="853" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="346 774">PNG, JPEG or WebP, 10 MB</text>
+<rect x="346" y="871" width="160" height="120" rx="6" fill="#1b2140" stroke="#3c446c" stroke-width="1"/>
+<rect x="358" y="883" width="70" height="46" rx="2" fill="none" stroke="#616788" stroke-width="1"/>
+<rect x="436" y="883" width="58" height="96" rx="2" fill="none" stroke="#616788" stroke-width="1"/>
+<rect x="358" y="937" width="70" height="42" rx="2" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="524" y="893" font-size="13.5" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="524 774">floor-plan.webp · 1.8 MB</text>
+<text x="524" y="915" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="524 774">Replaced 2 Apr</text>
+<rect x="524" y="933" width="85.9316" height="32" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="566.966" y="953.68" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="524 609.932">Replace</text>
+<rect x="808" y="823" width="464" height="190" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="826" y="853" font-size="15.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="826 1254">Crew notes</text>
+<text x="1254" y="853" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="end" data-box="826 1254">new · crew only (D15)</text>
+<text x="826" y="883" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1254">Fuse box behind the stage door, left. The venue&#x27;s caretaker</text>
+<text x="826" y="904" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1254">opens the loading door from 15:00. Crew Wi-Fi password is</text>
+<text x="826" y="925" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="826 1254">in the crew&#x27;s Discord channel.</text>
+<circle cx="1268" cy="831" r="13" fill="#f59e0b"/>
+<text x="1268" y="836" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1255 1281">2</text>
+<text x="1567" y="1050" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1372 1762">B · Venues on a phone: one card per venue</text>
+<rect x="1362" y="150" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#c2)">
+<rect x="1372" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1406" y="190" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1372 1762">11:06</text>
+<rect x="1698" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="1700" y="181" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="1372" y="210" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1388" y="223" width="26" height="26" rx="6" fill="#b98cff"/>
+<text x="1424" y="242" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1372 1762">Platform</text>
+<rect x="1504" y="225" width="76.8759" height="22" rx="11" fill="#2d2550" stroke="#5b4a9a" stroke-width="1"/>
+<text x="1514" y="240.5" font-size="11.5" fill="#d9c8ff" font-weight="600" text-anchor="start" data-box="1504 1580.88">Tailscale</text>
+<rect x="1722" y="228" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1722" y="235" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="1722" y="242" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1388" y="290" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1372 1762">Venues</text>
+<rect x="1388" y="332" width="358" height="134" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1406" y="366" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1404 1730">Demo Hall</text>
+<text x="1406" y="392" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1404 1730">2 addresses · 4 screens</text>
+<text x="1406" y="414" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1404 1730">2 events: 1 live, 1 draft</text>
+<rect x="1406" y="426" width="65.3677" height="30" rx="10" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1438.68" y="445.68" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="1406 1471.37">Open</text>
+<rect x="1388" y="482" width="358" height="134" rx="12" fill="#161a2e" stroke="#343c66" stroke-width="1"/>
+<text x="1406" y="516" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1404 1730">Demo Annex</text>
+<text x="1406" y="542" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1404 1730">1 address · 1 screen</text>
+<text x="1406" y="564" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1404 1730">no event now</text>
+<rect x="1406" y="576" width="65.3677" height="30" rx="10" fill="none" stroke="#616788" stroke-width="1"/>
+<text x="1438.68" y="595.68" font-size="13" fill="#c5cae3" font-weight="600" text-anchor="middle" data-box="1406 1471.37">Open</text>
+<rect x="1388" y="644" width="358" height="36" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1567" y="667.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1388 1746">New venue</text>
+<rect x="1372" y="920" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1403" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1411" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1372 1450">Stack</text>
+<rect x="1481" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1489" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1450 1528">Incidents</text>
+<rect x="1559" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1567" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1528 1606">Events</text>
+<rect x="1637" y="934" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="1645" y="974" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="1606 1684">Venues</text>
+<rect x="1715" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1723" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1684 1762">More</text>
+<rect x="1500" y="992" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<text x="2027" y="1050" font-size="16" fill="#374151" font-weight="600" text-anchor="middle" data-box="1832 2222">C · An event&#x27;s Venue info: copy again</text>
+<rect x="1822" y="150" width="410" height="864" rx="46" fill="#000000"/>
+<g clip-path="url(#c3)">
+<rect x="1832" y="160" width="390" height="844" rx="0" fill="#0b0d1a"/>
+<text x="1866" y="190" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1832 2222">16:40</text>
+<rect x="2158" y="179" width="26" height="12" rx="3" fill="none" stroke="#f3f5ff" stroke-width="1.2"/>
+<rect x="2160" y="181" width="18" height="8" rx="1.5" fill="#f3f5ff"/>
+<rect x="1832" y="210" width="390" height="52" rx="0" fill="#121528"/>
+<rect x="1848" y="223" width="26" height="26" rx="6" fill="#3b82f6"/>
+<text x="1884" y="242" font-size="15" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1832 2222">Demo Event</text>
+<rect x="1998.65" y="225" width="57.9518" height="22" rx="11" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<circle cx="2010.65" cy="236" r="3.5" fill="#3ee39a"/>
+<text x="2019.65" y="240.5" font-size="11.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1998.65 2056.6">Live</text>
+<rect x="2182" y="228" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="2182" y="235" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<rect x="2182" y="242" width="20" height="2" rx="1" fill="#f3f5ff"/>
+<text x="1848" y="290" font-size="22" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1832 2222">Venue info</text>
+<text x="1848" y="338" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1848 2206">Copied from Demo Hall on 20 Nov, 09:12</text>
+<rect x="1848" y="356" width="358" height="120" rx="12" fill="#1e4158" stroke="#2a7b96" stroke-width="1"/>
+<text x="1864" y="384" font-size="15" fill="#7be7ff" font-weight="600" text-anchor="start" data-box="1864 2190">Demo Hall changed since</text>
+<text x="1864" y="408" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1864 2190">Wi-Fi: DemoHall-Players has a new</text>
+<text x="1864" y="428" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1864 2190">password (changed today 15:58).</text>
+<rect x="1864" y="438" width="123.878" height="30" rx="10" fill="#3ddcff"/>
+<text x="1925.94" y="457.68" font-size="13" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="1864 1987.88">Copy again…</text>
+<rect x="1832" y="490" width="390" height="514" rx="20" fill="#1c2138" stroke="#343c66" stroke-width="1"/>
+<rect x="2007" y="500" width="40" height="4" rx="2" fill="#616788"/>
+<text x="1848" y="538" font-size="18" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1848 2206">Copy Demo Hall&#x27;s profile again?</text>
+<text x="1848" y="566" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1848 2206">It replaces this event&#x27;s house rules, Wi-Fi and floor</text>
+<text x="1848" y="586" font-size="13.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1848 2206">plan with Demo Hall&#x27;s current ones.</text>
+<rect x="1848" y="612" width="358" height="110" rx="10" fill="#453d34" stroke="#8a6d2a" stroke-width="1"/>
+<text x="1864" y="640" font-size="14" fill="#ffd36d" font-weight="600" text-anchor="start" data-box="1848 2206">Your edits here will be replaced</text>
+<text x="1864" y="664" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1848 2206">House rules: edited 20 Nov by Player One</text>
+<text x="1864" y="686" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1848 2206">Wi-Fi and floor plan: as copied</text>
+<text x="1864" y="708" font-size="13" fill="#f3f5ff" font-weight="400" text-anchor="start" data-box="1848 2206">Crew notes come along too.</text>
+<rect x="1848" y="860" width="171" height="36" rx="10" fill="#1f2440" stroke="#616788" stroke-width="1"/>
+<text x="1933.5" y="883.04" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="middle" data-box="1848 2019">Cancel</text>
+<rect x="2035" y="860" width="171" height="36" rx="10" fill="#3ddcff"/>
+<text x="2120.5" y="883.04" font-size="14" fill="#0b0d1a" font-weight="700" text-anchor="middle" data-box="2035 2206">Copy again</text>
+<rect x="1832" y="920" width="390" height="84" rx="0" fill="#121528"/>
+<rect x="1863" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1871" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1832 1910">Health</text>
+<rect x="1941" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="1949" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1910 1988">Studio</text>
+<circle cx="2027" cy="944" r="15" fill="#3ddcff"/>
+<text x="2027" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1988 2066">Add</text>
+<rect x="2097" y="934" width="16" height="16" rx="4" fill="none" stroke="#c5cae3" stroke-width="1.6"/>
+<text x="2105" y="974" font-size="10.5" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="2066 2144">Screens</text>
+<rect x="2175" y="934" width="16" height="16" rx="4" fill="none" stroke="#3ddcff" stroke-width="1.6"/>
+<text x="2183" y="974" font-size="10.5" fill="#3ddcff" font-weight="600" text-anchor="middle" data-box="2144 2222">More</text>
+<rect x="1960" y="992" width="134" height="5" rx="3" fill="#f3f5ff"/>
+</g>
+<text x="2262" y="180" font-size="18" fill="#111827" font-weight="700" text-anchor="start" data-box="2262 2632">Notes</text>
+<circle cx="2275" cy="205" r="13" fill="#f59e0b"/>
+<text x="2275" y="210" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="2262 2288">1</text>
+<text x="2298" y="210" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">Addresses are the venue IP check&#x27;s and</text>
+<text x="2298" y="231" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">admin access&#x27;s ground truth (tenants.md,</text>
+<text x="2298" y="252" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">Access). The page says where you stand</text>
+<text x="2298" y="273" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">now, so a wrong prefix is caught before it</text>
+<text x="2298" y="294" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">locks a hall&#x27;s screens out.</text>
+<circle cx="2275" cy="324" r="13" fill="#f59e0b"/>
+<text x="2275" y="329" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="2262 2288">2</text>
+<text x="2298" y="329" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">Crew notes: one new, crew-only text in the</text>
+<text x="2298" y="350" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">profile, copied in like the rest; never</text>
+<text x="2298" y="371" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">shown to attendees or on screens. No</text>
+<text x="2298" y="392" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">structured contacts: they would be</text>
+<text x="2298" y="413" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">personal data (D15).</text>
+<circle cx="2275" cy="443" r="13" fill="#f59e0b"/>
+<text x="2275" y="448" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="2262 2288">3</text>
+<text x="2298" y="448" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">Copy again shows what it replaces before</text>
+<text x="2298" y="469" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">it does (C). The venue&#x27;s edits never reach</text>
+<text x="2298" y="490" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="2298 2632">an event by themselves (copy-in, U15).</text>
+</svg>

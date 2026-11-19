@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1120" width="2560" height="1120" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 08: a screen goes dark, end to end</title>
+<defs></defs>
+<rect x="0" y="0" width="2560" height="1120" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2528">08 · A screen goes dark: from the hall to Discord to the crew&#x27;s phone and back (flow)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2528">The step&#x27;s exit criterion as a story: an alert reaches Discord and is acked, and the recovery closes it. Every time on the line is a setting&#x27;s default (D2).</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2528">Use case: during the evening, one of the Main hall&#x27;s two screens loses power; the crew on duty hears of it, acks, fixes it, and the platform notices it is back</text>
+<rect x="32" y="160" width="476" height="700" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="52" y="198" font-size="24" fill="#111827" font-weight="700" text-anchor="start" data-box="52 488">21:29</text>
+<text x="144" y="198" font-size="18" fill="#374151" font-weight="600" text-anchor="start" data-box="52 488">In the hall</text>
+<text x="52" y="226" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" data-box="52 488">Screen 2 goes black; screen 1 plays on</text>
+<rect x="536" y="160" width="476" height="700" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="556" y="198" font-size="24" fill="#111827" font-weight="700" text-anchor="start" data-box="556 992">21:31</text>
+<text x="648" y="198" font-size="18" fill="#374151" font-weight="600" text-anchor="start" data-box="556 992">In Discord</text>
+<text x="556" y="226" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" data-box="556 992">Confirmed after 2 min: one post, one ping</text>
+<rect x="1040" y="160" width="476" height="700" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="1060" y="198" font-size="24" fill="#111827" font-weight="700" text-anchor="start" data-box="1060 1496">21:33</text>
+<text x="1152" y="198" font-size="18" fill="#374151" font-weight="600" text-anchor="start" data-box="1060 1496">On a crew phone</text>
+<text x="1060" y="226" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1060 1496">Player Two acks from the incident</text>
+<rect x="1544" y="160" width="476" height="700" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="1564" y="198" font-size="24" fill="#111827" font-weight="700" text-anchor="start" data-box="1564 2000">21:40</text>
+<text x="1656" y="198" font-size="18" fill="#374151" font-weight="600" text-anchor="start" data-box="1564 2000">At the screen&#x27;s PC</text>
+<text x="1564" y="226" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1564 2000">Power back; the kiosk finds its way home</text>
+<rect x="2048" y="160" width="476" height="700" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="2068" y="198" font-size="24" fill="#111827" font-weight="700" text-anchor="start" data-box="2068 2504">21:41</text>
+<text x="2160" y="198" font-size="18" fill="#374151" font-weight="600" text-anchor="start" data-box="2068 2504">Closed</text>
+<text x="2068" y="226" font-size="14" fill="#6b7280" font-weight="400" text-anchor="start" data-box="2068 2504">Back for 30 s: the message says so</text>
+<rect x="60" y="260" width="420" height="206" rx="10" fill="#1f2937"/>
+<rect x="70" y="270" width="400" height="186" rx="4" fill="#0b0d1a"/>
+<rect x="82" y="282" width="240" height="106" rx="8" fill="#1b2140"/>
+<text x="96" y="312" font-size="11" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="52 488">NEXT UP</text>
+<text x="96" y="340" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="52 488">Quiz on stage</text>
+<text x="96" y="366" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="52 488">21:45 · Main stage</text>
+<rect x="334" y="282" width="124" height="106" rx="8" fill="#1b2140"/>
+<text x="346" y="310" font-size="13" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="52 488">Food</text>
+<text x="346" y="334" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="52 488">2 orders open</text>
+<rect x="82" y="398" width="376" height="46" rx="8" fill="#1b2140"/>
+<text x="96" y="426" font-size="14" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="52 488">Welcome to Demo Event</text>
+<text x="60" y="486" font-size="13" fill="#374151" font-weight="600" text-anchor="start" data-box="52 488">Main hall screen 1 · online</text>
+<rect x="60" y="516" width="420" height="206" rx="10" fill="#1f2937"/>
+<rect x="70" y="526" width="400" height="186" rx="4" fill="#000000"/>
+<text x="270" y="624" font-size="14" fill="#4b5563" font-weight="400" text-anchor="middle" data-box="52 488">no picture</text>
+<text x="60" y="742" font-size="13" fill="#374151" font-weight="600" text-anchor="start" data-box="52 488">Main hall screen 2 · last word 21:29:10</text>
+<text x="52" y="780" font-size="13.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="52 488">Screen keeps its last word from each device; 45 s without one</text>
+<text x="52" y="799" font-size="13.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="52 488">is offline (built).</text>
+<rect x="594" y="256" width="360" height="496" rx="36" fill="#111827"/>
+<rect x="604" y="266" width="340" height="476" rx="30" fill="#1f2a44"/>
+<text x="774" y="350" font-size="54" fill="#ffffff" font-weight="300" text-anchor="middle" data-box="556 992">21:31</text>
+<text x="774" y="382" font-size="14" fill="#d1d5db" font-weight="400" text-anchor="middle" data-box="556 992">Saturday 21 November</text>
+<rect x="618" y="420" width="312" height="120" rx="16" fill="#ffffff" opacity="0.92"/>
+<rect x="632" y="436" width="26" height="26" rx="6" fill="#4b5ccf"/>
+<text x="668" y="455" font-size="11.5" fill="#374151" font-weight="700" text-anchor="start" data-box="556 992">DISCORD · #crew-alerts</text>
+<text x="916" y="455" font-size="11.5" fill="#6b7280" font-weight="400" text-anchor="end" data-box="556 992">now</text>
+<text x="632" y="486" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="556 992">Demo Bot: @Crew on duty</text>
+<text x="632" y="508" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="556 992">Main hall screen 2 is dark. Screen 1</text>
+<text x="632" y="526" font-size="13" fill="#111827" font-weight="400" text-anchor="start" data-box="556 992">still shows Main hall.</text>
+<text x="556" y="780" font-size="13.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="556 992">The ping comes from the alert role on the first post only (U3);</text>
+<text x="556" y="799" font-size="13.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="556 992">in the channel the message carries Acknowledge (mockup</text>
+<text x="556" y="818" font-size="13.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="556 992">04).</text>
+<rect x="1098" y="256" width="360" height="496" rx="36" fill="#000000"/>
+<rect x="1108" y="266" width="340" height="476" rx="30" fill="#0b0d1a"/>
+<rect x="1108" y="304" width="340" height="46" rx="0" fill="#121528"/>
+<text x="1128" y="333" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1060 1496">Demo Event</text>
+<text x="1128" y="384" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1060 1496">‹ Health</text>
+<text x="1128" y="414" font-size="20" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1060 1496">Screen 2 is dark</text>
+<rect x="1128" y="430" width="66.8961" height="22" rx="11" fill="#4a2430" stroke="#a8464f" stroke-width="1"/>
+<circle cx="1140" cy="441" r="3.5" fill="#f87171"/>
+<text x="1149" y="445.5" font-size="12" fill="#ffb4bd" font-weight="600" text-anchor="start" data-box="1128 1194.9">Down</text>
+<text x="1128" y="478" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="1060 1496">Main hall · since 21:29</text>
+<rect x="1128" y="496" width="300" height="108" rx="10" fill="#1e4244" stroke="#2a7e64" stroke-width="1"/>
+<text x="1144" y="524" font-size="14.5" fill="#7cecba" font-weight="600" text-anchor="start" data-box="1060 1496">Acked: you&#x27;re on it</text>
+<text x="1144" y="548" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1060 1496">Reminders stop. The Discord post</text>
+<text x="1144" y="566" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1060 1496">now says Player Two is on it.</text>
+<text x="1144" y="588" font-size="12.5" fill="#3ddcff" font-weight="600" text-anchor="start" data-box="1060 1496">Undo</text>
+<text x="1128" y="640" font-size="14" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="1060 1496">What to check</text>
+<text x="1128" y="666" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1060 1496">· Is the PC on, browser on the screen page?</text>
+<text x="1128" y="688" font-size="12" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="1060 1496">· Screen 1 is online: the network works.</text>
+<text x="1060" y="780" font-size="13.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1060 1496">Opened from the post&#x27;s Open in admin, or Health&#x27;s card. Ack</text>
+<text x="1060" y="799" font-size="13.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1060 1496">needs admin.alerts.ack, so the on_duty preset is enough (U1).</text>
+<rect x="1572" y="260" width="420" height="206" rx="10" fill="#1f2937"/>
+<rect x="1582" y="270" width="400" height="186" rx="4" fill="#0b0d1a"/>
+<text x="1782" y="364" font-size="22" fill="#f3f5ff" font-weight="700" text-anchor="middle" data-box="1564 2000">Demo Event</text>
+<text x="1782" y="396" font-size="15" fill="#c5cae3" font-weight="400" text-anchor="middle" data-box="1564 2000">Connecting…</text>
+<text x="1782" y="422" font-size="13" fill="#a9b1d6" font-weight="400" text-anchor="middle" data-box="1564 2000">Main hall screen 2</text>
+<text x="1572" y="486" font-size="13" fill="#374151" font-weight="600" text-anchor="start" data-box="1564 2000">21:40:20 · the kiosk&#x27;s browser starts</text>
+<rect x="1572" y="516" width="420" height="206" rx="10" fill="#1f2937"/>
+<rect x="1582" y="526" width="400" height="186" rx="4" fill="#0b0d1a"/>
+<rect x="1594" y="538" width="240" height="106" rx="8" fill="#1b2140"/>
+<text x="1608" y="568" font-size="11" fill="#3ddcff" font-weight="700" text-anchor="start" data-box="1564 2000">NEXT UP</text>
+<text x="1608" y="596" font-size="20" fill="#f3f5ff" font-weight="700" text-anchor="start" data-box="1564 2000">Quiz on stage</text>
+<rect x="1846" y="538" width="124" height="106" rx="8" fill="#1b2140"/>
+<rect x="1594" y="654" width="376" height="46" rx="8" fill="#1b2140"/>
+<text x="1572" y="742" font-size="13" fill="#374151" font-weight="600" text-anchor="start" data-box="1564 2000">21:40:31 · back in step with screen 1</text>
+<text x="1564" y="780" font-size="13.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1564 2000">No new pairing code: the device cookie keeps it paired, and</text>
+<text x="1564" y="799" font-size="13.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1564 2000">the zone&#x27;s clock puts it on the same frame as screen 1 (built).</text>
+<rect x="2076" y="260" width="420" height="200" rx="10" fill="#26282f"/>
+<circle cx="2106" cy="294" r="14" fill="#3b82f6"/>
+<text x="2130" y="292" font-size="13.5" fill="#e6e7ea" font-weight="600" text-anchor="start" data-box="2068 2504">Demo Bot</text>
+<text x="2213.93" y="292" font-size="11.5" fill="#9a9ca5" font-weight="400" text-anchor="start" data-box="2068 2504">21:41 (edited)</text>
+<rect x="2130" y="310" width="350" height="130" rx="6" fill="#2f3139"/>
+<rect x="2130" y="310" width="4" height="130" rx="2" fill="#3ee39a"/>
+<text x="2146" y="338" font-size="14" fill="#e6e7ea" font-weight="700" text-anchor="start" data-box="2068 2504">Main hall screen 2 is back</text>
+<text x="2146" y="362" font-size="12.5" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="2068 2504">Back after 12 min. Nothing more to do.</text>
+<text x="2146" y="390" font-size="11" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="2068 2504">WAS DOWN</text>
+<text x="2146" y="410" font-size="12.5" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="2068 2504">21:29 – 21:41</text>
+<text x="2278" y="390" font-size="11" fill="#9a9ca5" font-weight="700" text-anchor="start" data-box="2068 2504">ACKED</text>
+<text x="2278" y="410" font-size="12.5" fill="#d0d2d8" font-weight="400" text-anchor="start" data-box="2068 2504">Player Two</text>
+<rect x="2076" y="490" width="420" height="200" rx="10" fill="#0b0d1a"/>
+<text x="2096" y="526" font-size="16" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2068 2504">Health · Now</text>
+<text x="2096" y="556" font-size="13" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2068 2504">0 need you · 1 muted · platform ok</text>
+<line x1="2096" y1="574" x2="2476" y2="574" stroke="#343c66" stroke-width="1"/>
+<text x="2096" y="604" font-size="13" fill="#a9b1d6" font-weight="600" text-anchor="start" data-box="2068 2504">History</text>
+<text x="2096" y="632" font-size="12.5" fill="#a9b1d6" font-weight="400" text-anchor="start" data-box="2068 2504">21:29</text>
+<text x="2148" y="632" font-size="13.5" fill="#f3f5ff" font-weight="600" text-anchor="start" data-box="2068 2504">Main hall screen 2 dark</text>
+<text x="2148" y="654" font-size="12.5" fill="#c5cae3" font-weight="400" text-anchor="start" data-box="2068 2504">12 min · acked by Player Two</text>
+<text x="2068" y="780" font-size="13.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="2068 2504">Recovery is confirmed after 30 s online, then the post is</text>
+<text x="2068" y="799" font-size="13.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="2068 2504">edited and Health lets it go; the incident stays in History (D8).</text>
+<line x1="48" y1="920" x2="2512" y2="920" stroke="#9ca3af" stroke-width="2"/>
+<circle cx="90" cy="920" r="7" fill="#374151"/>
+<text x="90" y="950" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="32 2528">21:29:10</text>
+<text x="90" y="970" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" data-box="32 2528">last word</text>
+<circle cx="300" cy="920" r="7" fill="#374151"/>
+<text x="300" y="950" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="32 2528">21:29:55</text>
+<text x="300" y="970" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" data-box="32 2528">offline (45 s)</text>
+<circle cx="520" cy="920" r="7" fill="#374151"/>
+<text x="520" y="950" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="32 2528">21:31:10</text>
+<text x="520" y="970" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" data-box="32 2528">confirmed (2 min) · posted</text>
+<circle cx="1010" cy="920" r="7" fill="#374151"/>
+<text x="1010" y="950" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="32 2528">21:33:40</text>
+<text x="1010" y="970" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" data-box="32 2528">acked: reminders stop</text>
+<circle cx="1520" cy="920" r="7" fill="#374151"/>
+<text x="1520" y="950" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="32 2528">21:40:31</text>
+<text x="1520" y="970" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" data-box="32 2528">online again</text>
+<circle cx="2010" cy="920" r="7" fill="#374151"/>
+<text x="2010" y="950" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="32 2528">21:41:01</text>
+<text x="2010" y="970" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" data-box="32 2528">back for 30 s · edited</text>
+<circle cx="2290" cy="920" r="7" fill="#374151"/>
+<text x="2290" y="950" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="32 2528">22:01</text>
+<text x="2290" y="970" font-size="13" fill="#6b7280" font-weight="400" text-anchor="middle" data-box="32 2528">no reminder: acked</text>
+<text x="32" y="1020" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="32 2528">Had nobody acked, a reminder would reply under the post at 22:01 and every 30 min after, until the screen is back (U5, D2). During the run of show&#x27;s quiet hours nothing is posted (E9).</text>
+</svg>

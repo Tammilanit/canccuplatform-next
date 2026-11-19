@@ -286,7 +286,7 @@
 <text x="1825" y="546" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1812 1838">4</text>
 <text x="1848" y="546" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">Ack stops the reminders and tells the others</text>
 <text x="1848" y="567" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">someone is on it; Mute silences one subject</text>
-<text x="1848" y="588" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">for a set time, never for ever (U6, U7).</text>
+<text x="1848" y="588" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">for a set time, never for ever (U5, U6).</text>
 <circle cx="1825" cy="618" r="13" fill="#f59e0b"/>
 <text x="1825" y="623" font-size="14" fill="#111827" font-weight="700" text-anchor="middle" data-box="1812 1838">5</text>
 <text x="1848" y="623" font-size="15" fill="#374151" font-weight="400" text-anchor="start" data-box="1848 2208">The event&#x27;s own parts, as a table: compared</text>

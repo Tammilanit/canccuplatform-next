@@ -2,7 +2,7 @@
 
 The open questions of the [step 8 research pack](../step-8-admin-operations.md), for the product owner's brainstorming session. Each has its options and a recommendation; the IDs (U3, D10, …) are used in the brief and in the mockups' notes. **Decide first:** [P1](#p1-the-direction), [U2](#u2-what-event-crew-see-of-the-platform), [U3](#u3-who-hears-an-alert-in-discord), [D1](#d1-the-alert-kinds), [D10](#d10-the-executor), [U13](#u13-who-runs-a-clone), [P2](#p2-the-issue-set) and [P3](#p3-the-exit-criterion).
 
-Seven themes: the step itself (P), who uses it and how (U), look and feel (L), data and integrations (D), edge cases and failure (E), operations and scale (O). 76 questions.
+Six themes: the step itself (P), who uses it and how (U), look and feel (L), data and integrations (D), edge cases and failure (E), operations and scale (O). 77 questions.
 
 Words used here: a **part** is one of the stack's containers (a module, or a shared service such as Postgres) as admin's Health checks it; a **subject** is what an alert is about (a part, a screen, the event's bot); an **incident** runs from the moment a subject is confirmed not ok until it is ok again; an **audience** is who hears about it (the platform's superadmins, or one event's crew).
 
@@ -368,6 +368,12 @@ The roadmap: "the executor is designed new".
 - **A.** A `screens_refused` kind when screens of the event are refused by the venue IP check for 2 min, pointing to the emergency switch; Screen emits the fact (additive).
 - **B.** Leave it to the crew.
 - **Recommendation: A,** if the session keeps it in step 8; otherwise a `Follow-up:`.
+
+### E17. The bot moves while the last event is live
+The bot contract's clone moves the source's Discord connection and binding to the new event at once. The next event is usually copied while the last one is still on, or the day after.
+- **A.** As contracted: the move happens with the copy, and the live event loses its bot.
+- **B.** The move waits until the source is archived (or an admin of both chooses "move now"); the copy says so ([mockup 10](10-copy-from-last.svg)).
+- **Recommendation: B.** It changes when the bot's clone runs, not its shape; the session decides whether that is additive (a new `when` on the bot's clone) or a breaking change that needs its own contract PR first.
 
 ## Operations and scale (O)
 

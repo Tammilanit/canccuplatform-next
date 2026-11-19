@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1000" width="2560" height="1000" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Mockup 12: the incident lifecycle and who hears what</title>
+<defs></defs>
+<rect x="0" y="0" width="2560" height="1000" rx="0" fill="#f3f4f6"/>
+<text x="32" y="48" font-size="30" fill="#111827" font-weight="700" text-anchor="start" data-box="32 2528">12 · The incident lifecycle, the alert kinds and who hears what (everyone, implicitly)</text>
+<text x="32" y="80" font-size="18" fill="#6b7280" font-weight="400" text-anchor="start" data-box="32 2528">canccumanager&#x27;s incident rules kept (its alert tests are the spec), with the legacy&#x27;s known problems fixed. Times are the defaults (D2, O7).</text>
+<text x="32" y="108" font-size="17" fill="#374151" font-weight="600" text-anchor="start" data-box="32 2528">Use case: the reviewer, the builder and the session read one picture of when an alert speaks, who hears it, and what it emits</text>
+<rect x="32" y="150" width="1240" height="820" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="56" y="190" font-size="20" fill="#111827" font-weight="700" text-anchor="start" data-box="56 1248">One incident per subject</text>
+<rect x="102" y="270" width="240" height="84" rx="12" fill="#e5f7ee" stroke="#2a7e64" stroke-width="2"/>
+<text x="222" y="306" font-size="16" fill="#111827" font-weight="700" text-anchor="middle" data-box="102 342">Watching</text>
+<text x="222" y="330" font-size="13" fill="#374151" font-weight="400" text-anchor="middle" data-box="102 342">ok</text>
+<rect x="392" y="270" width="240" height="84" rx="12" fill="#fff4e0" stroke="#b7791f" stroke-width="2"/>
+<text x="512" y="306" font-size="16" fill="#111827" font-weight="700" text-anchor="middle" data-box="392 632">Being confirmed</text>
+<text x="512" y="330" font-size="13" fill="#374151" font-weight="400" text-anchor="middle" data-box="392 632">not ok, not yet sure</text>
+<rect x="682" y="270" width="240" height="84" rx="12" fill="#fde8ea" stroke="#b4374a" stroke-width="2"/>
+<text x="802" y="306" font-size="16" fill="#111827" font-weight="700" text-anchor="middle" data-box="682 922">Open</text>
+<text x="802" y="330" font-size="13" fill="#374151" font-weight="400" text-anchor="middle" data-box="682 922">alerts the audience</text>
+<rect x="682" y="530" width="240" height="84" rx="12" fill="#fde8ea" stroke="#b4374a" stroke-width="2"/>
+<text x="802" y="566" font-size="16" fill="#111827" font-weight="700" text-anchor="middle" data-box="682 922">Acked</text>
+<text x="802" y="590" font-size="13" fill="#374151" font-weight="400" text-anchor="middle" data-box="682 922">someone is on it</text>
+<rect x="972" y="400" width="240" height="84" rx="12" fill="#fff4e0" stroke="#b7791f" stroke-width="2"/>
+<text x="1092" y="436" font-size="16" fill="#111827" font-weight="700" text-anchor="middle" data-box="972 1212">Being confirmed back</text>
+<text x="1092" y="460" font-size="13" fill="#374151" font-weight="400" text-anchor="middle" data-box="972 1212">ok, not yet sure</text>
+<rect x="972" y="710" width="240" height="84" rx="12" fill="#eef0f4" stroke="#6b7280" stroke-width="2"/>
+<text x="1092" y="746" font-size="16" fill="#111827" font-weight="700" text-anchor="middle" data-box="972 1212">Closed</text>
+<text x="1092" y="770" font-size="13" fill="#374151" font-weight="400" text-anchor="middle" data-box="972 1212">in History</text>
+<line x1="342" y1="312" x2="392" y2="312" stroke="#4b5563" stroke-width="2"/>
+<path d="M392,312 L382.8,315.9 M392,312 L382.8,308.1" fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="367" y="250" font-size="13" fill="#374151" font-weight="400" text-anchor="middle" data-box="327 407">not ok</text>
+<line x1="632" y1="312" x2="682" y2="312" stroke="#4b5563" stroke-width="2"/>
+<path d="M682,312 L672.8,315.9 M682,312 L672.8,308.1" fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="657" y="250" font-size="13" fill="#374151" font-weight="400" text-anchor="middle" data-box="602 712">holds (D2)</text>
+<path d="M512,354 V400 H222 V356 M222,356 l-6,10 M222,356 l6,10" fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="367" y="426" font-size="13" fill="#374151" font-weight="400" text-anchor="middle" data-box="152 512">back to ok first: nothing is said</text>
+<text x="367" y="444" font-size="13" fill="#374151" font-weight="400" text-anchor="middle" data-box="152 512">(an A→B→A flicker never alerts)</text>
+<line x1="802" y1="354" x2="802" y2="530" stroke="#4b5563" stroke-width="2"/>
+<path d="M802,530 L798.1,520.8 M802,530 L805.9,520.8" fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="816" y="420" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="816 966">Ack:</text>
+<text x="816" y="438" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="816 966">reminders stop,</text>
+<text x="816" y="456" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="816 966">the post names who</text>
+<line x1="922" y1="312" x2="972" y2="430" stroke="#4b5563" stroke-width="2"/>
+<path d="M972,430 L964.8,423.0 M972,430 L972.0,420.0" fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="922" y1="570" x2="972" y2="470" stroke="#4b5563" stroke-width="2"/>
+<path d="M972,470 L971.4,480.0 M972,470 L964.4,476.5" fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1092" y="530" font-size="13" fill="#374151" font-weight="400" text-anchor="middle" data-box="972 1212">ok again</text>
+<line x1="1092" y1="484" x2="1092" y2="710" stroke="#4b5563" stroke-width="2"/>
+<path d="M1092,710 L1088.1,700.8 M1092,710 L1095.9,700.8" fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1106" y="580" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="1106 1256">holds 30 s:</text>
+<text x="1106" y="598" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="1106 1256">&quot;back after N min&quot;</text>
+<text x="1106" y="616" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="1106 1256">is posted, acked or not</text>
+<line x1="1022" y1="400" x2="892" y2="364" stroke="#4b5563" stroke-width="2"/>
+<path d="M892,364 L901.9,362.7 M892,364 L899.8,370.2" fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1042" y="386" font-size="12.5" fill="#374151" font-weight="400" text-anchor="start" data-box="932 1248">not ok again: same incident</text>
+<rect x="72" y="530" width="560" height="116" rx="10" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="92" y="560" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="56 1248">While open and not acked</text>
+<text x="92" y="586" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">A reminder every 30 min, as a reply under the post, with the</text>
+<text x="92" y="606" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">incident&#x27;s start and the state now (legacy F9).</text>
+<text x="92" y="628" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">Slow → down inside an incident: the same post is edited.</text>
+<rect x="72" y="666" width="560" height="116" rx="10" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="92" y="696" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="56 1248">Muted subject</text>
+<text x="92" y="722" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">No post, no reminder, no auto-fix until the mute ends; Health</text>
+<text x="92" y="742" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">still shows it. A mute that ends while not ok reminds at once</text>
+<text x="92" y="762" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">(U6, U7, E14).</text>
+<rect x="72" y="802" width="560" height="140" rx="10" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="92" y="832" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="56 1248">Keeps changing</text>
+<text x="92" y="858" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">4 changes in 10 min: one &quot;keeps changing&quot; edit, then quiet</text>
+<text x="92" y="878" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">until it holds 5 min (E4). A new version answering: its part&#x27;s</text>
+<text x="92" y="898" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">incidents wait 3 min (deploy grace, E5). One cause, many parts:</text>
+<text x="92" y="918" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">one incident names the cause (E6).</text>
+<rect x="682" y="810" width="560" height="132" rx="10" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="702" y="840" font-size="15" fill="#111827" font-weight="700" text-anchor="start" data-box="56 1248">Fixed from the legacy</text>
+<text x="702" y="866" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">P4: &quot;gave up&quot; and &quot;blocked&quot; are timeline entries, not states.</text>
+<text x="702" y="886" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">P7: an undelivered recovery is retried every 5 min (E2).</text>
+<text x="702" y="906" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">P6: every actor is a signed-in user, never a header.</text>
+<text x="702" y="926" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="56 1248">P11: history has a retention (D8).</text>
+<rect x="1300" y="150" width="1228" height="560" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="1324" y="190" font-size="20" fill="#111827" font-weight="700" text-anchor="start" data-box="1324 2504">The alert kinds (D1) and who hears them</text>
+<text x="1324" y="230" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start" data-box="1324 2504">Kind</text>
+<text x="1530" y="230" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start" data-box="1324 2504">Audience</text>
+<text x="1680" y="230" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start" data-box="1324 2504">Alerts after</text>
+<text x="1860" y="230" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start" data-box="1324 2504">Fix tried first</text>
+<text x="2060" y="230" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start" data-box="1324 2504">Event crew see</text>
+<text x="2250" y="230" font-size="13" fill="#6b7280" font-weight="700" text-anchor="start" data-box="1324 2504">Superadmin sees</text>
+<line x1="1316" y1="246" x2="2512" y2="246" stroke="#e5e7eb" stroke-width="1"/>
+<text x="1324" y="276" font-size="13.5" fill="#111827" font-weight="600" text-anchor="start" data-box="1324 1522">part_down</text>
+<text x="1530" y="276" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1530 1672">platform</text>
+<text x="1680" y="276" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1680 1852">30 s</text>
+<text x="1860" y="276" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1860 2052">restart (off)</text>
+<text x="2060" y="276" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2060 2242">&quot;Platform: down&quot;</text>
+<text x="2250" y="276" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2250 2504">the part, its lines</text>
+<line x1="1316" y1="294" x2="2512" y2="294" stroke="#e5e7eb" stroke-width="1"/>
+<text x="1324" y="324" font-size="13.5" fill="#111827" font-weight="600" text-anchor="start" data-box="1324 1522">part_slow</text>
+<text x="1530" y="324" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1530 1672">platform</text>
+<text x="1680" y="324" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1680 1852">5 min slow</text>
+<text x="1860" y="324" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1860 2052">—</text>
+<text x="2060" y="324" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2060 2242">&quot;Platform: slow&quot;</text>
+<text x="2250" y="324" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2250 2504">the part</text>
+<line x1="1316" y1="342" x2="2512" y2="342" stroke="#e5e7eb" stroke-width="1"/>
+<text x="1324" y="372" font-size="13.5" fill="#111827" font-weight="600" text-anchor="start" data-box="1324 1522">screen_dark</text>
+<text x="1530" y="372" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1530 1672">event</text>
+<text x="1680" y="372" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1680 1852">2 min</text>
+<text x="1860" y="372" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1860 2052">— (offline)</text>
+<text x="2060" y="372" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2060 2242">the screen</text>
+<text x="2250" y="372" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2250 2504">via support only</text>
+<line x1="1316" y1="390" x2="2512" y2="390" stroke="#e5e7eb" stroke-width="1"/>
+<text x="1324" y="420" font-size="13.5" fill="#111827" font-weight="600" text-anchor="start" data-box="1324 1522">screen_stuck</text>
+<text x="1530" y="420" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1530 1672">event</text>
+<text x="1680" y="420" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1680 1852">1 min</text>
+<text x="1860" y="420" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1860 2052">reload</text>
+<text x="2060" y="420" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2060 2242">the screen</text>
+<text x="2250" y="420" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2250 2504">via support only</text>
+<line x1="1316" y1="438" x2="2512" y2="438" stroke="#e5e7eb" stroke-width="1"/>
+<text x="1324" y="468" font-size="13.5" fill="#111827" font-weight="600" text-anchor="start" data-box="1324 1522">bot_offline</text>
+<text x="1530" y="468" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1530 1672">event</text>
+<text x="1680" y="468" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1680 1852">1 min</text>
+<text x="1860" y="468" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1860 2052">reconnect</text>
+<text x="2060" y="468" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2060 2242">the bot</text>
+<text x="2250" y="468" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2250 2504">the client&#x27;s state</text>
+<line x1="1316" y1="486" x2="2512" y2="486" stroke="#e5e7eb" stroke-width="1"/>
+<text x="1324" y="516" font-size="13.5" fill="#111827" font-weight="600" text-anchor="start" data-box="1324 1522">storage_nearly_full</text>
+<text x="1530" y="516" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1530 1672">event</text>
+<text x="1680" y="516" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1680 1852">at 90 %</text>
+<text x="1860" y="516" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1860 2052">—</text>
+<text x="2060" y="516" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2060 2242">the quota</text>
+<text x="2250" y="516" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2250 2504">every quota</text>
+<line x1="1316" y1="534" x2="2512" y2="534" stroke="#e5e7eb" stroke-width="1"/>
+<text x="1324" y="564" font-size="13.5" fill="#111827" font-weight="600" text-anchor="start" data-box="1324 1522">fix_gave_up</text>
+<text x="1530" y="564" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1530 1672">the subject&#x27;s</text>
+<text x="1680" y="564" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1680 1852">at once</text>
+<text x="1860" y="564" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1860 2052">—</text>
+<text x="2060" y="564" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2060 2242">if theirs</text>
+<text x="2250" y="564" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2250 2504">always</text>
+<line x1="1316" y1="582" x2="2512" y2="582" stroke="#e5e7eb" stroke-width="1"/>
+<text x="1324" y="612" font-size="13.5" fill="#111827" font-weight="600" text-anchor="start" data-box="1324 1522">fix_blocked</text>
+<text x="1530" y="612" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1530 1672">the subject&#x27;s</text>
+<text x="1680" y="612" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1680 1852">at once</text>
+<text x="1860" y="612" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1860 2052">—</text>
+<text x="2060" y="612" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2060 2242">if theirs</text>
+<text x="2250" y="612" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2250 2504">always</text>
+<line x1="1316" y1="630" x2="2512" y2="630" stroke="#e5e7eb" stroke-width="1"/>
+<text x="1324" y="660" font-size="13.5" fill="#111827" font-weight="600" text-anchor="start" data-box="1324 1522">screens_refused</text>
+<text x="1530" y="660" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1530 1672">event</text>
+<text x="1680" y="660" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1680 1852">2 min</text>
+<text x="1860" y="660" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="1860 2052">— (E16)</text>
+<text x="2060" y="660" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2060 2242">the check</text>
+<text x="2250" y="660" font-size="13.5" fill="#374151" font-weight="400" text-anchor="start" data-box="2250 2504">the venue</text>
+<rect x="1300" y="730" width="1228" height="240" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+<text x="1324" y="770" font-size="20" fill="#111827" font-weight="700" text-anchor="start" data-box="1324 2504">What admin emits (D3, additive)</text>
+<text x="1324" y="806" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1324 2504">admin.alert.opened</text>
+<text x="1324" y="826" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="1324 2504">id, kind, subject, state, since, audience</text>
+<text x="1914" y="806" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1324 2504">admin.alert.changed</text>
+<text x="1914" y="826" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="1324 2504">id, state (slow ↔ down, keeps changing)</text>
+<text x="1324" y="854" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1324 2504">admin.alert.reminded</text>
+<text x="1324" y="874" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="1324 2504">id, state, since, reminder number</text>
+<text x="1914" y="854" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1324 2504">admin.alert.acked</text>
+<text x="1914" y="874" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="1324 2504">id, actor_user_id, note</text>
+<text x="1324" y="902" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1324 2504">admin.alert.muted</text>
+<text x="1324" y="922" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="1324 2504">subject, until, actor_user_id</text>
+<text x="1914" y="902" font-size="14" fill="#111827" font-weight="700" text-anchor="start" data-box="1324 2504">admin.alert.recovered</text>
+<text x="1914" y="922" font-size="13" fill="#374151" font-weight="400" text-anchor="start" data-box="1324 2504">id, down_seconds</text>
+<text x="1324" y="958" font-size="12.5" fill="#6b7280" font-weight="400" text-anchor="start" data-box="1324 2504">Event alerts on t:&lt;event&gt;:events:admin; platform ones on events:admin. Words and ids only: never secrets or log lines.</text>
+</svg>
