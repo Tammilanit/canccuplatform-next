@@ -86,8 +86,8 @@ function state(layout: typeof LANDSCAPE, regions: Region[]): ScreenState {
 
 /** The texts a region draws now, each widget's, the fading ones too. */
 const drawn = (screen: Screen, id: string) =>
-  [...(screen.root.querySelector(`.canccu-region--${id}`)?.children ?? [])].map(
-    (el) => el.textContent.replace(/\s+/g, " ").trim(),
+  [...(screen.root.querySelector(`.canccu-region--${id}`)?.children ?? [])].map((el) =>
+    el.textContent.replace(/\s+/g, " ").trim(),
   );
 
 describe("a storyboard's steps on the screen", () => {
