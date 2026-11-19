@@ -1,95 +1,105 @@
 /**
- * Studio → Cues, the sound desk (mockup 12; contracts/moments.md, Pages): the page and its forms,
- * each sent on to the cues API (cues/routes.ts) as the same person, so the page has the API's
- * rights, validation, idempotency and audit and nothing of its own.
+ * Studio → Cues, the sound desk (#626; contracts/moments.md, Pages): its four sub-pages and the
+ * master strip's and Limits' forms, each sent on to the cues API (cues/routes.ts) as the same
+ * person, so the page has the API's rights, validation, idempotency and audit and nothing of its
+ * own. The cue editor's routes are editor-pages.ts.
  */
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { READ, SETTINGS, TAKE, tenantOf } from "../http.js";
 import type { AppDeps } from "../http.js";
-import { PREFIX, page, pageNeeds, refusal, viaApi } from "../page-kit.js";
+import { page, pageNeeds, refusal, viaApi } from "../page-kit.js";
 import { CATEGORIES } from "./catalog.js";
+import { editorPages } from "./editor-pages.js";
+import { int, on, one } from "./form-fields.js";
+import type { Form, Q } from "./form-fields.js";
+import { FILTERS } from "./log-view.js";
 import { deskView as deskData } from "./routes.js";
-import { loadCue, loadCues, readLog } from "./store.js";
-import { cueForm } from "./cue-form.js";
-import { deskView } from "./views.js";
-import type { DeskZone, LibraryView } from "./views.js";
+import { SOUND_CHECK } from "./service.js";
+import { loadCues, readLog } from "./store.js";
+import type { LogRow } from "./store.js";
+import { SUBS, deskPage, subPath } from "./views.js";
+import type { DeskZone, LibraryView, Sub } from "./views.js";
 
-type Form = Record<string, string | string[] | undefined>;
-type Q = { Querystring: Record<string, string | undefined>; Body: Form; Params: { name: string } };
 
-const one = (v: Form[string]): string => (Array.isArray(v) ? (v[0] ?? "") : (v ?? ""));
-/** A checkbox list arrives repeated (a list) or, from a plain field, comma-separated. */
-const many = (v: Form[string]): string[] =>
-  (Array.isArray(v) ? v : (v ?? "").split(",")).map((s) => s.trim()).filter((s) => s !== "");
-const int = (v: Form[string]): number => (one(v) === "" ? NaN : Number(one(v)));
-const on = (v: Form[string]): boolean => one(v) === "on";
+/** The sub-page a form came from, so its answer lands there; anything else is Cues. */
+const backOf = (f: Form): Sub => SUBS.find((s) => s === one(f.back)) ?? "cues";
 
-function cueBody(f: Form): Record<string, unknown> {
-  const window = many(f.catch_up_before_start).map(Number);
-  return {
-    category: one(f.category),
-    enabled: on(f.enabled),
-    level: int(f.level),
-    cooldown_seconds: int(f.cooldown_seconds),
-    catch_up_seconds: int(f.catch_up_seconds),
-    catch_up_before_start: window.length === 2 ? window : null,
-    once_per_source: on(f.once_per_source),
-    sounds: many(f.sounds),
-    voice_line: one(f.voice_line) === "" ? null : one(f.voice_line),
-    effects: many(f.effects),
-    hold_seconds: int(f.hold_seconds),
-    revision: int(f.revision),
-  };
+/** The lines of the newest sound check: one per zone, all written at the same instant. */
+function lastCheck(rows: LogRow[]): LogRow[] {
+  const checks = rows.filter((r) => r.cue === SOUND_CHECK);
+  const at = checks[0]?.at.getTime();
+  return checks.filter((r) => r.at.getTime() === at).reverse();
 }
 
 export function cuePages(pages: FastifyInstance, deps: AppDeps): void {
   const read = { preHandler: pageNeeds(deps, READ) };
   const write = { preHandler: pageNeeds(deps, SETTINGS) };
   const take = { preHandler: pageNeeds(deps, TAKE) };
-  const back = (reply: FastifyReply, key: "done" | "error", text: string, path = "cues") =>
-    reply.redirect(`${PREFIX}${path}?${key}=${encodeURIComponent(text)}`, 303);
   const answer = async (
     reply: FastifyReply,
     run: Promise<{ status: number; body: Record<string, unknown> }>,
     done: string,
-    path?: string,
+    sub: Sub,
+    extra = "",
   ) => {
     const a = await run;
-    return a.status >= 400 ? back(reply, "error", refusal(a), path) : back(reply, "done", done);
-  };
-  const library = async (request: FastifyRequest): Promise<LibraryView[]> => {
-    const a = await viaApi(pages, request, "GET", "/api/moments/sounds", {});
-    return a.body.sounds as LibraryView[];
+    const [key, text] = a.status >= 400 ? ["error", refusal(a)] : ["done", done];
+    return reply.redirect(`${subPath(sub)}?${extra}${key}=${encodeURIComponent(text)}`, 303);
   };
 
-  pages.get<Q>("/cues", read, async (request, reply) => {
+  const desk = async (request: FastifyRequest<Q>, reply: FastifyReply, sub: Sub) => {
     const has = (right: string) => request.session?.rights.has(right) === true;
+    const q = request.query;
     const now = deps.now();
+    const outcome = FILTERS.find((f) => f === q.outcome);
+    const zone = q.zone === undefined || q.zone === "" ? undefined : q.zone;
+    const search = q.q === undefined || q.q.trim() === "" ? undefined : q.q.trim();
     const data = await deps.db.tenant(async (c) => ({
       desk: await deskData(c, deps, now),
       cues: await loadCues(c),
-      log: await readLog(c, { limit: 50 }),
+      log:
+        sub === "log"
+          ? await readLog(c, {
+              limit: 100,
+              ...(zone === undefined ? {} : { zone }),
+              ...(outcome === undefined ? {} : { outcome }),
+              ...(search === undefined ? {} : { search }),
+            })
+          : [],
+      check: q.checked === "1" ? lastCheck(await readLog(c, { limit: 50 })) : null,
     }));
+    const library = await viaApi(pages, request, "GET", "/api/moments/sounds", {});
     return page(request, reply, deps, {
       title: "Cues",
       tab: "cues",
-      description:
-        "What a screen does, and sounds like, when something happens. Decided on the server, once per zone.",
-      body: deskView({
-        settings: data.desk.settings as Parameters<typeof deskView>[0]["settings"],
+      description: "What a screen does, and sounds like, when something happens.",
+      body: deskPage({
+        sub,
+        settings: data.desk.settings as Parameters<typeof deskPage>[0]["settings"],
         zones: data.desk.zones as DeskZone[],
         cues: data.cues,
-        library: await library(request),
+        library: library.body.sounds as LibraryView[],
         log: data.log,
+        check: data.check,
+        query: {
+          ...(q.category === undefined ? {} : { category: q.category }),
+          ...(q.q === undefined ? {} : { q: q.q }),
+          ...(outcome === undefined ? {} : { outcome }),
+          ...(zone === undefined ? {} : { zone }),
+        },
         timeZone: tenantOf(request).time_zone,
         now,
         canTake: has(TAKE),
         canWrite: has(SETTINGS) && tenantOf(request).status !== "archived",
-        ...(request.query.done === undefined ? {} : { done: request.query.done }),
-        ...(request.query.error === undefined ? {} : { error: request.query.error }),
+        ...(q.done === undefined ? {} : { done: q.done }),
+        ...(q.error === undefined ? {} : { error: q.error }),
       }),
     });
-  });
+  };
+  for (const sub of SUBS)
+    pages.get<Q>(sub === "cues" ? "/cues" : `/cues/${sub}`, read, (request, reply) =>
+      desk(request, reply, sub),
+    );
 
   pages.post<Q>("/cues/mute", take, (request, reply) =>
     answer(
@@ -98,6 +108,7 @@ export function cuePages(pages: FastifyInstance, deps: AppDeps): void {
         minutes: int(request.body.minutes),
       }),
       int(request.body.minutes) === 0 ? "Sounds are back." : "Muted.",
+      backOf(request.body),
     ),
   );
 
@@ -109,6 +120,29 @@ export function cuePages(pages: FastifyInstance, deps: AppDeps): void {
         zones: zone === "" ? [] : [zone],
       }),
       "Sound check sent.",
+      backOf(request.body),
+      "checked=1&",
+    );
+  });
+
+  // The master strip changes the switch and the volume; the rest goes back as it is, and the
+  // form's revision makes a stale strip a conflict, as a stale Limits form is.
+  pages.post<Q>("/cues/master", write, async (request, reply) => {
+    const now = await viaApi(pages, request, "GET", "/api/moments/sound", {});
+    const s = now.body.settings as Record<string, unknown>;
+    return answer(
+      reply,
+      viaApi(pages, request, "PUT", "/api/moments/sound/settings", {
+        enabled: on(request.body.enabled),
+        volume: int(request.body.volume),
+        hourly_budget: s.hourly_budget,
+        per_minute: s.per_minute,
+        per_source_seconds: s.per_source_seconds,
+        categories: s.categories,
+        revision: int(request.body.revision),
+      }),
+      "Saved.",
+      backOf(request.body),
     );
   });
 
@@ -129,75 +163,9 @@ export function cuePages(pages: FastifyInstance, deps: AppDeps): void {
         revision: int(f.revision),
       }),
       "Saved.",
+      "limits",
     );
   });
-
-  pages.get<Q>("/cues/new", write, async (request, reply) =>
-    page(request, reply, deps, {
-      title: "Add a cue",
-      tab: "cues",
-      body: cueForm({
-        cue: null,
-        library: await library(request),
-        ...(request.query.error === undefined ? {} : { error: request.query.error }),
-        ...(request.query.name === undefined ? {} : { name: request.query.name }),
-      }),
-    }),
-  );
-  pages.post<Q>("/cues/new", write, (request, reply) => {
-    const name = one(request.body.name);
-    return answer(
-      reply,
-      viaApi(pages, request, "PUT", `/api/moments/cues/${encodeURIComponent(name)}`, {
-        ...cueBody(request.body),
-        revision: 0,
-      }),
-      `${name} added.`,
-      "cues/new",
-    );
-  });
-
-  pages.get<Q>("/cues/edit/:name", write, async (request, reply) => {
-    const cue = await deps.db.tenant((c) => loadCue(c, request.params.name));
-    if (cue === null) return back(reply, "error", "No such cue.");
-    return page(request, reply, deps, {
-      title: `Cue ${cue.name}`,
-      tab: "cues",
-      body: cueForm({
-        cue,
-        library: await library(request),
-        ...(request.query.error === undefined ? {} : { error: request.query.error }),
-      }),
-    });
-  });
-  pages.post<Q>("/cues/edit/:name", write, (request, reply) => {
-    const name = request.params.name;
-    return answer(
-      reply,
-      viaApi(
-        pages,
-        request,
-        "PUT",
-        `/api/moments/cues/${encodeURIComponent(name)}`,
-        cueBody(request.body),
-      ),
-      `${name} saved.`,
-      `cues/edit/${encodeURIComponent(name)}`,
-    );
-  });
-  pages.post<Q>("/cues/edit/:name/delete", write, (request, reply) =>
-    answer(
-      reply,
-      viaApi(
-        pages,
-        request,
-        "DELETE",
-        `/api/moments/cues/${encodeURIComponent(request.params.name)}`,
-        {},
-      ),
-      `${request.params.name}: done.`,
-    ),
-  );
 
   pages.post<Q>("/cues/library", write, (request, reply) =>
     answer(
@@ -206,6 +174,7 @@ export function cuePages(pages: FastifyInstance, deps: AppDeps): void {
         asset_id: one(request.body.asset_id),
       }),
       "Added to the library.",
+      "library",
     ),
   );
   pages.post<Q & { Params: { id: string } }>("/cues/library/:id/remove", write, (request, reply) =>
@@ -219,6 +188,10 @@ export function cuePages(pages: FastifyInstance, deps: AppDeps): void {
         {},
       ),
       "Removed from the library.",
+      "library",
     ),
   );
+
+  editorPages(pages, deps);
 }
+

@@ -11,6 +11,8 @@ import type { AppWorld } from "./app.js";
 
 const run = DATABASE_URL ? describe : describe.skip;
 const form = { form: true };
+/** The page with each run of white space one space, as the formatter may wrap a tag. */
+const flat = (body: string) => body.replace(/\s+/g, " ");
 const text = (body: string) =>
   body
     .replace(/<[^>]+>/g, " ")
@@ -68,37 +70,37 @@ run("the cue editor", () => {
     expect(words).toContain("Tournament starts");
     expect(words).toContain("tournament.start");
     for (const card of ["Sound", "Picture", "Try it", "From the default pack"])
-      expect(page.body).toContain(`<h2 class="canccu-card__title">${card}</h2>`);
+      expect(flat(page.body)).toMatch(new RegExp(`<h2 class="canccu-card__title"> ?${card} ?</h2>`));
     // The category as six chips, the chosen one checked, and what it means in words.
-    expect(page.body).toMatch(/type="radio" name="category" value="something_new" checked/);
+    expect(flat(page.body)).toMatch(/type="radio" name="category" value="something_new" checked/);
     expect(words).toContain(
       "Something new plays at 80 %, waits behind urgent, result and attention, and is silent at calm.",
     );
     // The chosen sounds are players; the rest of the library are add-chips.
-    expect(page.body).toMatch(/data-chosen[\s\S]*data-sound="\/api\/moments\/sounds\/pack\/gong.ogg"/);
-    expect(page.body).toMatch(/name="sounds" value="pack.gong" checked/);
-    expect(page.body).toMatch(/name="sounds" value="pack.chime-soft"(?! checked)/);
+    expect(flat(page.body)).toMatch(/data-chosen[\s\S]*data-sound="\/api\/moments\/sounds\/pack\/gong.ogg"/);
+    expect(flat(page.body)).toMatch(/name="sounds" value="pack.gong" checked/);
+    expect(flat(page.body)).toMatch(/name="sounds" value="pack.chime-soft"(?! checked)/);
     expect(words).toContain("Add from the library");
-    expect(page.body).toMatch(/name="voice_line" value="" checked/);
+    expect(flat(page.body)).toMatch(/name="voice_line" value="" checked/);
     // Level, not again for and holds for are sliders; catch-up a stepper; once per source a switch.
-    expect(page.body).toMatch(/type="range"[^>]*name="level"[^>]*value="100"/);
+    expect(flat(page.body)).toMatch(/type="range"[^>]*name="level"[^>]*value="100"/);
     expect(words).toContain("Heard at 64 %: master 80 % × Something new 80 % × this cue 100 %.");
-    expect(page.body).toMatch(/type="range"[^>]*name="cooldown_step"[^>]*max="5"[^>]*value="0"/);
-    expect(page.body).toContain(`name="cooldown_stops" value="${STOPS}"`);
+    expect(flat(page.body)).toMatch(/type="range"[^>]*name="cooldown_step"[^>]*max="5"[^>]*value="0"/);
+    expect(flat(page.body)).toContain(`name="cooldown_stops" value="${STOPS}"`);
     for (const stop of ["Off", "30 s", "1 min", "2 min", "5 min", "10 min"])
       expect(words).toContain(stop);
-    expect(page.body).toMatch(/name="catch_up_minutes"[^>]*value="2"/);
-    expect(page.body).toMatch(/role="switch"[^>]*name="once_per_source"[^>]*checked/);
-    expect(page.body).toMatch(/type="range"[^>]*name="hold_seconds"[^>]*min="60"[^>]*max="120"/);
-    expect(page.body).toMatch(/type="checkbox" name="effects" value="ripple" checked/);
+    expect(flat(page.body)).toMatch(/name="catch_up_minutes"[^>]*value="2"/);
+    expect(flat(page.body)).toMatch(/role="switch"[^>]*name="once_per_source"[^>]*checked/);
+    expect(flat(page.body)).toMatch(/type="range"[^>]*name="hold_seconds"[^>]*min="60"[^>]*max="120"/);
+    expect(flat(page.body)).toMatch(/type="checkbox" name="effects" value="ripple" checked/);
     // Try it here or on a zone; the pending row; the seed as it is.
-    expect(page.body).toMatch(/name="try_zone" value="here" checked/);
-    expect(page.body).toMatch(/name="try_zone" value="main"/);
+    expect(flat(page.body)).toMatch(/name="try_zone" value="here" checked/);
+    expect(flat(page.body)).toMatch(/name="try_zone" value="main"/);
     expect(words).toContain("Play sound and picture");
-    expect(page.body).toContain("canccu-savebar");
+    expect(flat(page.body)).toContain("canccu-savebar");
     expect(words).toContain("Cancel");
     expect(words).toContain("Same as the default pack.");
-    expect(page.body).not.toContain('type="number" min="0" max="100"');
+    expect(flat(page.body)).not.toContain('type="number" min="0" max="100"');
   });
 
   it("saves what the editor posts, the stops and minutes in seconds", async () => {
@@ -127,7 +129,7 @@ run("the cue editor", () => {
     });
     const words = text((await w.call("admin", "GET", "/cues/edit/tournament.start")).body);
     expect(words).toContain(
-      "Changed here: Drum roll removed, voice line Chime, soft, level 90 %, not again for 2 min, catch-up 150 s, picture holds 60 s.",
+      "Changed here: Drum roll removed, voice line Chime, soft, level 90 %, not again for 2 min, catch-up 150 s, picture holds 1 min.",
     );
     expect(words).toContain("Reset to default");
   });
@@ -141,8 +143,8 @@ run("the cue editor", () => {
     }, form);
     expect(await cue("chrome.hot")).toMatchObject({ cooldown_seconds: 900 });
     const page = await w.call("admin", "GET", "/cues/edit/chrome.hot");
-    expect(page.body).toContain('name="cooldown_stops" value="0,30,60,120,300,600,900"');
-    expect(page.body).toMatch(/name="cooldown_step"[^>]*max="6"[^>]*value="6"/);
+    expect(flat(page.body)).toContain('name="cooldown_stops" value="0,30,60,120,300,600,900"');
+    expect(flat(page.body)).toMatch(/name="cooldown_step"[^>]*max="6"[^>]*value="6"/);
     expect(text(page.body)).toContain("15 min");
   });
 
@@ -199,13 +201,13 @@ run("the cue editor", () => {
 
   it("adds a cue of the event's own, named by a story, and says why a bad one is refused", async () => {
     const blank = await w.call("admin", "GET", "/cues/new?name=story.raffle.draw");
-    expect(blank.body).toMatch(/name="name"[^>]*value="story.raffle.draw"/);
-    expect(blank.body).not.toContain("From the default pack");
+    expect(flat(blank.body)).toMatch(/name="name"[^>]*value="story.raffle.draw"/);
+    expect(flat(blank.body)).not.toContain("From the default pack");
     const add = (name: string) =>
       w.call("admin", "POST", "/cues/new", { ...seedForm({ category: "result" }), name }, form);
     expect((await add("raffle.draw")).headers.location).toMatch(/done=/);
     const words = text((await w.call("admin", "GET", "/cues")).body);
-    expect(words).toContain("Raffle draw raffle.draw");
+    expect(words).toContain("Raffle draw event's own raffle.draw");
     const own = text((await w.call("admin", "GET", "/cues/edit/raffle.draw")).body);
     expect(own).toContain("The event's own");
     expect(own).toContain("Remove this cue");
