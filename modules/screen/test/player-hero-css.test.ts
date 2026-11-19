@@ -122,4 +122,22 @@ describe("hero.css, the hero rule", () => {
       ruleOf(".canccu-region > .canccu-widget.canccu-is-claim:has(.canccu-widget__level--urgent)"),
     ).toContain("border-color: var(--canccu-color-status-degraded);");
   });
+
+  // #638 (V5): the cue's frame and glow kept the primary colour over an urgent card.
+  it("gives an urgent card's cue frame and glow the warning colour too", () => {
+    expect(
+      ruleOf(".canccu-region > .canccu-widget.canccu-is-claim:has(.canccu-widget__level--urgent)"),
+    ).toContain("--canccu-cue-ink: var(--canccu-color-status-degraded);");
+    const cues = read("cues.css").replace(/\/\*[\s\S]*?\*\//g, "");
+    expect(cues).not.toContain("var(--canccu-color-primary)");
+    expect(cues.match(/var\(--canccu-cue-ink, var\(--canccu-color-primary\)\)/g)?.length).toBe(3);
+  });
+
+  // #638 (V5): the ticker's URGENT label sat on the accent ground.
+  it("gives an urgent ticker line's label the warning colour", () => {
+    const claims = read("claims.css").replace(/\/\*[\s\S]*?\*\//g, "");
+    const rule = /([^{}]*:has\(\.canccu-widget__urgent\)[^{}]*)\{([^{}]*)\}/.exec(claims);
+    expect(rule?.[1]).toContain(".canccu-widget__label");
+    expect(rule?.[2]).toContain("background: var(--canccu-color-status-degraded);");
+  });
 });
