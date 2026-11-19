@@ -250,7 +250,17 @@ export const DEFAULT_TEMPLATES: Readonly<Record<string, readonly TreeNode[]>> = 
       null,
       [
         FROM_CREW,
-        not("from_crew", el("p", "kicker", [t("Announcement")])),
+        // `urgent` is the player's (widget.ts, withUrgent), from the level (R6).
+        not(
+          "from_crew",
+          sec(
+            "urgent",
+            el("p", null, [t("Urgent")], {
+              class: [t("canccu-widget__kicker canccu-widget__urgent")],
+            }),
+          ),
+          not("urgent", el("p", "kicker", [t("Announcement")])),
+        ),
         // An edit's chip (L13); the ticker line shows only in the ticker role (L4, claims.css).
         sec("updated", el("p", "updated", [t("Updated")])),
         title("title"),

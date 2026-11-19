@@ -280,9 +280,13 @@ export function storyRoutes(app: FastifyInstance, deps: AppDeps): void {
   app.post<{ Params: { key: string } }>(
     "/api/moments/storyboards/:key/take",
     take,
-    (request, reply) =>
-      crewAction(deps, request, reply, async (c, actor, now) => {
+    async (request, reply) => {
+      // Read with the fire itself (A5, R19, R20): a fire before any page read the event filled
+      // `{event.name}` with nothing and, with no hostname, drew the QR step without its code.
+      const facts = await eventFactsOf(deps, request);
+      return crewAction(deps, request, reply, async (c, actor, now) => {
         const body = (request.body ?? {}) as Body;
+        if (facts !== null) await noteEvent(c, facts);
         const doc = await ensureStories(c);
         const story = doc.stories.find((s) => s.key === request.params.key);
         if (story === undefined) return failure(404, "not_found", "No such story.");
@@ -343,7 +347,8 @@ export function storyRoutes(app: FastifyInstance, deps: AppDeps): void {
         });
         if ("not" in fired) return failure(409, "not_fired", `Not fired: ${fired.not}.`);
         return { status: 201, body: runView(fired.run, doc.stories) };
-      }),
+      });
+    },
   );
 
   const onRun = (

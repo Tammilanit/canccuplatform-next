@@ -70,6 +70,18 @@ export function claimEnd(c: ClaimState): number | null {
 const typeOf = (template: string): string =>
   template === "pizza_placed" ? "food_status" : template;
 
+/**
+ * A countdown step's own line is its `ends_text` (the builder's subtitle, Starting soon's "Stage ·
+ * in 5 minutes"); the countdown template draws the line under the counter as its `description`
+ * (hero.css), which the Pulse's countdown keeps for the item's own words (#625, S1).
+ */
+function stepView(template: string, content: View): View {
+  const line = typeof content.ends_text === "string" ? content.ends_text.trim() : "";
+  if (template !== "countdown" || line === "" || typeof content.description === "string")
+    return content;
+  return { ...content, description: line };
+}
+
 /** The claim's template and content at `nowMs`, or null once it has ended. */
 export function claimShown(c: ClaimState, nowMs: number): ClaimShown | null {
   const end = claimEnd(c);
@@ -98,7 +110,7 @@ export function claimShown(c: ClaimState, nowMs: number): ClaimShown | null {
   return {
     key: `${key}:${String(index)}`,
     type: typeOf(step.template),
-    view: step.content,
+    view: stepView(step.template, step.content),
     ...(typeof step.transition === "string" ? { transition: step.transition } : {}),
     ...(step.effect != null ? { cue: { starts_at: startsAt, effect: step.effect } } : {}),
   };

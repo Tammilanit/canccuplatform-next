@@ -4,9 +4,10 @@
  * outgoing step leaves before the next comes in, so two steps' text is never drawn at once (S2);
  * Midnight's sting is up on every zone in the second it lands, the portrait entrance too (S2);
  * a story's countdown under an hour reads as minutes and seconds (sheet 08, 7); the urgent
- * announcement says so (R6, A3); a countdown step's own line under its counter.
+ * announcement says so (R6, A3).
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { claimShown } from "../src/claims.js";
 import type { ClaimState } from "../src/claims.js";
 import { Screen } from "../src/screen.js";
 import type { Region, ScreenState } from "../src/state.js";
@@ -86,7 +87,7 @@ function state(layout: typeof LANDSCAPE, regions: Region[]): ScreenState {
 /** The texts a region draws now, each widget's, the fading ones too. */
 const drawn = (screen: Screen, id: string) =>
   [...(screen.root.querySelector(`.canccu-region--${id}`)?.children ?? [])].map(
-    (el) => el.textContent?.replace(/\s+/g, " ").trim() ?? "",
+    (el) => el.textContent.replace(/\s+/g, " ").trim(),
   );
 
 describe("a storyboard's steps on the screen", () => {
@@ -108,7 +109,8 @@ describe("a storyboard's steps on the screen", () => {
       await vi.advanceTimersByTimeAsync(100);
       expect(drawn(screen, "hero").length, `at +${String(ms + 100)} ms`).toBeLessThanOrEqual(1);
     }
-    expect(drawn(screen, "hero")).toEqual(["Night 2 at Demo Event Keep it going"]);
+    expect(drawn(screen, "hero")).toHaveLength(1);
+    expect(drawn(screen, "hero")[0]).toContain("Night 2 at Demo Event");
     screen.stop();
   });
 
@@ -116,7 +118,9 @@ describe("a storyboard's steps on the screen", () => {
     // Two zones, each its own screen; the entrance's clock runs 700 ms behind the server's.
     const main = new Screen({ serverNow: () => Date.now(), reducedMotion: () => false });
     const entrance = new Screen({ serverNow: () => Date.now(), reducedMotion: () => false });
-    main.draw(state(LANDSCAPE, [region("hero", "hero", null), region("_full", "full", midnight())]));
+    main.draw(
+      state(LANDSCAPE, [region("hero", "hero", null), region("_full", "full", midnight())]),
+    );
     entrance.draw(
       state(PORTRAIT, [region("hero", "hero", null), region("_full", "full", midnight())]),
     );
@@ -124,7 +128,9 @@ describe("a storyboard's steps on the screen", () => {
     entrance.start();
     await vi.advanceTimersByTimeAsync(4000);
     for (const s of [main, entrance]) {
-      expect(s.root.querySelector(".canccu-region--_full .canccu-widget--countdown")).not.toBeNull();
+      expect(
+        s.root.querySelector(".canccu-region--_full .canccu-widget--countdown"),
+      ).not.toBeNull();
       expect(s.root.dataset.takeover).toBe("");
     }
     await vi.advanceTimersByTimeAsync(1000);
@@ -135,7 +141,10 @@ describe("a storyboard's steps on the screen", () => {
       const sting = s.root.querySelector(".canccu-region--_full > .canccu-widget--sting");
       expect(sting, name).not.toBeNull();
       expect(sting?.classList.contains("canccu-slot--in"), name).toBe(false);
-      expect(s.root.querySelector(".canccu-region--_full .canccu-widget--countdown"), name).toBeNull();
+      expect(
+        s.root.querySelector(".canccu-region--_full .canccu-widget--countdown"),
+        name,
+      ).toBeNull();
     }
     main.stop();
     entrance.stop();
@@ -158,25 +167,50 @@ describe("a story's countdown and the urgent card", () => {
     expect(big(step)?.textContent).toBe("01:02:05");
   });
 
-  it("draws a countdown step's own line under its counter", () => {
-    const el = drawWidget(
-      "countdown",
-      null,
-      { label: "Demo Cup, final", target_at: iso(MIDNIGHT), ends_text: "Stage · in 5 minutes" },
-      null,
+  it("draws a countdown step's own line (its `ends_text`, the builder's subtitle) under its counter", () => {
+    const view = {
+      label: "Demo Cup, final",
+      target_at: iso(MIDNIGHT),
+      ends_text: "Stage · in 5 minutes",
+    };
+    const c = claim(
+      [{ template: "countdown", content: view, duration_ms: 20_000 }],
+      MIDNIGHT - 60_000,
     );
-    expect(el.querySelector(".canccu-widget__ends")?.textContent).toBe("Stage · in 5 minutes");
-    const none = drawWidget("countdown", null, { label: "Next", target_at: iso(MIDNIGHT) }, null);
-    expect(none.querySelector(".canccu-widget__ends")).toBeNull();
+    const shown = claimShown(c, MIDNIGHT - 50_000);
+    const el = drawWidget("countdown", null, shown?.view ?? {}, null);
+    expect(el.querySelector(".canccu-widget__description")?.textContent).toBe(
+      "Stage · in 5 minutes",
+    );
+    // Premiere's own description stays; an empty line draws nothing.
+    const own = { ...view, ends_text: "", description: "Lights down, sound up" };
+    const premiere = claimShown(
+      claim([{ template: "countdown", content: own, duration_ms: 30_000 }], MIDNIGHT - 60_000),
+      MIDNIGHT - 50_000,
+    );
+    expect(premiere?.view.description).toBe("Lights down, sound up");
+    const none = claimShown(
+      claim(
+        [{ template: "countdown", content: { ...view, ends_text: "" }, duration_ms: 30_000 }],
+        MIDNIGHT - 60_000,
+      ),
+      MIDNIGHT - 50_000,
+    );
+    expect(none?.view.description).toBeUndefined();
   });
 
   it("says URGENT on an urgent announcement and Announcement on another, from the crew neither", () => {
     const card = (level: string, more: Record<string, unknown> = {}) =>
-      drawWidget("announcement", null, { title: "Semis in 15 min", body: "", level, ...more }, null);
+      drawWidget(
+        "announcement",
+        null,
+        { title: "Semis in 15 min", body: "", level, ...more },
+        null,
+      );
     const urgent = card("urgent");
-    expect(urgent.querySelector(".canccu-widget__level--urgent .canccu-widget__urgent")?.textContent).toBe(
-      "Urgent",
-    );
+    expect(
+      urgent.querySelector(".canccu-widget__level--urgent .canccu-widget__urgent")?.textContent,
+    ).toBe("Urgent");
     expect(card("info").querySelector(".canccu-widget__kicker")?.textContent).toContain(
       "Announcement",
     );

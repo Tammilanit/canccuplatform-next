@@ -27,9 +27,28 @@ const unit = (px: number) => Math.round((px / 10.8) * 10) / 10;
 const STEP_IN_HERO = '.canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim';
 
 describe("hero.css, the hero rule", () => {
+  it("sizes all its text in the screen's unit, at least the 2.6 readability floor", () => {
+    // As test/player-readable.test.ts holds the other sheets; hero.css is not among them, since
+    // it reads the hero's size in a container query (`cqmin`), as stage.css does.
+    const sizes = [...rules.matchAll(/font-size:\s*([^;]+);/g)].map((m) => m[1]?.trim() ?? "");
+    expect(sizes.length).toBeGreaterThan(10);
+    for (const size of sizes) {
+      const stepped =
+        /^max\(([\d.]+) \* var\(--canccu-u\), calc\(([\d.]+) \* var\(--canccu-u\) \* var\(--canccu-fit, 1\)\)\)$/.exec(
+          size,
+        );
+      const plain = /^calc\(([\d.]+) \* var\(--canccu-u\)\)$/.exec(size);
+      expect(stepped ?? plain, size).not.toBeNull();
+      expect(Number((stepped ?? plain)?.[1]), size).toBeGreaterThanOrEqual(2.6);
+    }
+    expect(rules).not.toContain("!important");
+  });
+
   it("is loaded by the player, in the base layer, after the claims' look", () => {
     const main = read("main.ts");
-    expect(main.indexOf('import "./hero.css"')).toBeGreaterThan(main.indexOf('import "./claims.css"'));
+    expect(main.indexOf('import "./hero.css"')).toBeGreaterThan(
+      main.indexOf('import "./claims.css"'),
+    );
     expect(hero).toMatch(/@layer canccu-base \{[\s\S]*\}\s*$/);
   });
 
@@ -45,16 +64,22 @@ describe("hero.css, the hero rule", () => {
     const size = (selector: string) => /font-size: ([^;]+);/.exec(ruleOf(selector))?.[1];
     const fit = (floor: number, full: number) =>
       `max(${String(unit(floor))} * var(--canccu-u), calc(${String(unit(full))} * var(--canccu-u) * var(--canccu-fit, 1)))`;
-    expect(size(`${STEP_IN_HERO} .canccu-widget__kicker`)).toBe(`calc(${String(unit(44))} * var(--canccu-u))`);
+    expect(size(`${STEP_IN_HERO} .canccu-widget__kicker`)).toBe(
+      `calc(${String(unit(44))} * var(--canccu-u))`,
+    );
     expect(size(`${STEP_IN_HERO} .canccu-widget__title`)).toBe(fit(88, 160));
     expect(size(`${STEP_IN_HERO} .canccu-widget__body`)).toBe(fit(44, 60));
     expect(size(`${STEP_IN_HERO} .canccu-widget__count .canccu-widget__big`)).toBe(fit(88, 330));
     expect(size(`${STEP_IN_HERO}.canccu-widget--sting .canccu-widget__big`)).toBe(fit(88, 230));
     // Full screen (Midnight, Premiere's countdown): the countdown 420 px, the sting 300 px.
-    expect(size(".canccu-region--_full > .canccu-widget.canccu-is-claim .canccu-widget__count .canccu-widget__big")).toBe(
-      fit(88, 420),
+    expect(
+      size(
+        ".canccu-region--_full > .canccu-widget.canccu-is-claim .canccu-widget__count .canccu-widget__big",
+      ),
+    ).toBe(fit(88, 420));
+    expect(size(".canccu-region--_full > .canccu-widget--sting .canccu-widget__big")).toBe(
+      fit(88, 300),
     );
-    expect(size(".canccu-region--_full > .canccu-widget--sting .canccu-widget__big")).toBe(fit(88, 300));
   });
 
   it("draws stings and a step that enters with a flash bright on the theme's gradient, in its dark ink", () => {
@@ -63,19 +88,21 @@ describe("hero.css, the hero rule", () => {
       ".canccu-region > .canccu-widget.canccu-is-claim.canccu-step--flash",
     ]) {
       const body = ruleOf(selector);
+      // Under a light sweep, the last background layer.
       expect(body, selector).toMatch(
-        /background: linear-gradient\(\s*\d+deg,\s*var\(--canccu-color-primary\),\s*var\(--canccu-color-accent\)\s*\);/,
+        /background:[^;]*,\s*linear-gradient\(\s*\d+deg,\s*var\(--canccu-color-primary\),\s*var\(--canccu-color-accent\)\s*\);/,
       );
       expect(body, selector).toContain("color: var(--canccu-color-primary-text);");
     }
   });
 
   it("lets a crew photo fill the hero, cropped from the centre, with its words on a scrim at its foot", () => {
-    const image = ruleOf(`${STEP_IN_HERO}.canccu-widget--photo .canccu-widget__image`);
+    const PHOTO = '.canccu-region[data-role="hero"] > .canccu-widget--photo.canccu-is-claim';
+    const image = ruleOf(`${PHOTO} .canccu-widget__image`);
     expect(image).toContain("object-fit: cover;");
     expect(image).toContain("object-position: center;");
-    const scrim = ruleOf(`${STEP_IN_HERO}.canccu-widget--photo::after`);
-    expect(scrim).toMatch(/linear-gradient\(\s*180deg,\s*transparent[^;]*94%\)/);
+    const scrim = ruleOf(`${PHOTO}::after`);
+    expect(scrim).toMatch(/linear-gradient\(\s*180deg,\s*transparent[^;]*\b94%/);
   });
 
   it("plays Premiere's film edge to edge: no card, no border, no padding", () => {

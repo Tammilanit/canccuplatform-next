@@ -4,7 +4,8 @@
  * to default, fire with its item, test-fire one round on one zone, Stop loop and Skip to finale.
  */
 import type pg from "pg";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { TenantResolver } from "@canccu/kit";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { storeAgenda } from "../src/scene-store.js";
 import { addZone } from "../src/store.js";
 import { forgetUser } from "../src/consumer.js";
@@ -32,6 +33,10 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
       await addZone(c, "main");
       await storeAgenda(c, { agenda_version: 1, items: [ITEM] });
     });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   const list = async () =>
@@ -260,6 +265,11 @@ describe.skipIf(!DATABASE_URL)("the storyboards API", () => {
   // A5, R19, R20 (#625): the first fire, before any page read the event, read "Welcome to" with
   // no name and drew the QR step's code as a white square (no hostname, no code).
   it("fills the event's name and draws the QR step's code on the very first fire", async () => {
+    // The kit asks tenants over plain HTTP, which the fake fetch does not answer.
+    vi.spyOn(TenantResolver.prototype, "event").mockResolvedValue({
+      name: "Demo Event",
+      status: "live",
+    } as Awaited<ReturnType<TenantResolver["event"]>>);
     const r = await w.call("crew", "POST", "/api/moments/storyboards/doors_open/take", {
       test: { zone: "main", sound: false },
     });

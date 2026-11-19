@@ -1,0 +1,386 @@
+/*
+ * The hero uses the screen (#625; docs/briefs/step-4-polish/README.md and sheets 07–10): one rule
+ * for every claim drawn large, in the hero or across the whole screen: the crew spotlight, the
+ * announcement card and a storyboard's steps. One block, centred both ways in the box less 64 px
+ * (5.9 units: a unit is 1 % of the layout's short side, 10.8 px at 1080p, so every size doubles at
+ * 4K and portrait keeps the same steps); never small type in a corner of an empty hero (R2, R21).
+ * The sheet's sizes at 1080p, in units: kicker 44 px, headline 160 px stepping down to fit to no
+ * less than 88 px, body 60 to 44 px, countdown 330 px (420 px full screen), sting 230 px (300 px).
+ * The step down is `--canccu-fit` (fit.ts). The idle Pulse keeps its own look (stage.css): only a
+ * claim is drawn here. In `canccu-base` like screen.css, so a theme restyles all of it; loaded
+ * last, so it wins the ties with the looks it refines.
+ */
+@layer canccu-base {
+  .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim,
+  .canccu-region--_full > .canccu-widget.canccu-is-claim {
+    align-items: center;
+    justify-content: center;
+    gap: calc(1.6 * var(--canccu-u));
+    padding: calc(5.9 * var(--canccu-u));
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  /* The block's parts: each takes the slots it has, an empty slot no room (sheet 07, C). */
+  .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim .canccu-widget__kicker,
+  .canccu-region--_full > .canccu-widget.canccu-is-claim .canccu-widget__kicker {
+    font-size: calc(4.1 * var(--canccu-u));
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim .canccu-widget__title,
+  .canccu-region--_full > .canccu-widget.canccu-is-claim .canccu-widget__title,
+  .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim .canccu-widget__headline,
+  .canccu-region--_full > .canccu-widget.canccu-is-claim .canccu-widget__headline {
+    font-size: max(8.1 * var(--canccu-u), calc(14.8 * var(--canccu-u) * var(--canccu-fit, 1)));
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--canccu-color-text);
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim .canccu-widget__body,
+  .canccu-region--_full > .canccu-widget.canccu-is-claim .canccu-widget__body {
+    font-size: max(4.1 * var(--canccu-u), calc(5.6 * var(--canccu-u) * var(--canccu-fit, 1)));
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim .canccu-widget__description,
+  .canccu-region--_full > .canccu-widget.canccu-is-claim .canccu-widget__description {
+    max-width: none;
+    font-size: calc(3.7 * var(--canccu-u));
+    color: var(--canccu-color-text-muted);
+  }
+
+  /*
+   * The theme's band stays as the card's ground behind the block, not a strip above it, so a
+   * large card is never half empty (stage.css, v8 rule 5) and the block still sits in the middle.
+   */
+  .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim > .canccu-widget__band--theme {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    height: auto;
+    margin: 0;
+  }
+
+  .canccu-region[data-role="hero"]
+    > .canccu-widget.canccu-is-claim:has(> .canccu-widget__band--theme)
+    > :not(.canccu-widget__band--theme) {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* A countdown step's name sits over its counter, smaller than it (sheet 08, 7). */
+  .canccu-region[data-role="hero"]
+    > .canccu-widget.canccu-is-claim.canccu-widget--countdown
+    .canccu-widget__headline,
+  .canccu-region--_full
+    > .canccu-widget.canccu-is-claim.canccu-widget--countdown
+    .canccu-widget__headline {
+    font-size: max(4.1 * var(--canccu-u), calc(8.1 * var(--canccu-u) * var(--canccu-fit, 1)));
+  }
+
+  /* A countdown step: its name over the counter at full hero size, its own line under it (S1). */
+  .canccu-widget.canccu-is-claim .canccu-widget__when:empty,
+  .canccu-widget.canccu-is-claim > .canccu-widget__band:not(.canccu-widget__band--theme) {
+    display: none;
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim .canccu-widget__count,
+  .canccu-region--_full > .canccu-widget.canccu-is-claim .canccu-widget__count {
+    margin: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    font-size: calc(4.1 * var(--canccu-u));
+    color: var(--canccu-color-text-muted);
+  }
+
+  .canccu-region[data-role="hero"]
+    > .canccu-widget.canccu-is-claim
+    .canccu-widget__count
+    .canccu-widget__big {
+    font-size: max(8.1 * var(--canccu-u), calc(30.6 * var(--canccu-u) * var(--canccu-fit, 1)));
+    font-weight: 300;
+    line-height: 1;
+    color: var(--canccu-color-text);
+  }
+
+  .canccu-region--_full > .canccu-widget.canccu-is-claim .canccu-widget__count .canccu-widget__big {
+    font-size: max(8.1 * var(--canccu-u), calc(38.9 * var(--canccu-u) * var(--canccu-fit, 1)));
+    font-weight: 300;
+    line-height: 1;
+    color: var(--canccu-color-text);
+  }
+
+  .canccu-widget.canccu-is-claim.canccu-widget--countdown .canccu-widget__bar {
+    width: min(100%, calc(60 * var(--canccu-u)));
+  }
+
+  /* A countdown step's own line (its `description`) and its bar come under the counter (S1). */
+  .canccu-widget.canccu-is-claim.canccu-widget--countdown > .canccu-widget__description {
+    order: 1;
+  }
+
+  .canccu-widget.canccu-is-claim.canccu-widget--countdown > .canccu-widget__bar {
+    order: 2;
+  }
+
+  /* The QR step (R20): the code large, beside its words. */
+  .canccu-region[data-role="hero"] > .canccu-widget--qr.canccu-is-claim .canccu-widget__qr,
+  .canccu-region--_full > .canccu-widget--qr.canccu-is-claim .canccu-widget__qr {
+    flex-direction: row;
+    align-items: center;
+    gap: calc(4.4 * var(--canccu-u));
+    text-align: start;
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--qr.canccu-is-claim .canccu-widget__code,
+  .canccu-region--_full > .canccu-widget--qr.canccu-is-claim .canccu-widget__code {
+    flex: none;
+    width: calc(34 * var(--canccu-u));
+    max-width: 45%;
+    border-radius: calc(1 * var(--canccu-u));
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--qr.canccu-is-claim .canccu-widget__caption,
+  .canccu-region--_full > .canccu-widget--qr.canccu-is-claim .canccu-widget__caption {
+    font-size: max(5.6 * var(--canccu-u), calc(8.1 * var(--canccu-u) * var(--canccu-fit, 1)));
+    font-weight: 600;
+    line-height: 1.1;
+    white-space: normal;
+    color: var(--canccu-color-text);
+  }
+
+  /*
+   * A crew photo fills the hero, cropped from the centre (R2; sheet 07, B): the lead tile is the
+   * whole card, the others go, and "From the crew" and the caption sit centred at its foot on a
+   * scrim from clear to 94 %. The wall's own boxes step aside (`display: contents`), so the
+   * kicker, the photo and its caption are one grid.
+   */
+  .canccu-region[data-role="hero"] > .canccu-widget--photo.canccu-is-claim {
+    display: grid;
+    grid-template-rows: 1fr auto auto;
+    padding: calc(5.9 * var(--canccu-u));
+    row-gap: calc(1 * var(--canccu-u));
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--photo.canccu-is-claim .canccu-widget__wall,
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--photo.canccu-is-claim
+    .canccu-widget__tile:first-child {
+    display: contents;
+  }
+
+  .canccu-region[data-role="hero"]
+    > .canccu-widget--photo.canccu-is-claim
+    .canccu-widget__tile:not(:first-child),
+  .canccu-region[data-role="hero"] > .canccu-widget--photo.canccu-is-claim .canccu-widget__pop {
+    display: none;
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--photo.canccu-is-claim .canccu-widget__image {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--photo.canccu-is-claim::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(
+      180deg,
+      transparent 30%,
+      color-mix(in srgb, var(--canccu-color-background) 72%, transparent) 58%,
+      color-mix(in srgb, var(--canccu-color-background) 94%, transparent)
+    );
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--photo.canccu-is-claim .canccu-widget__kicker {
+    grid-row: 2;
+    position: relative;
+    z-index: 1;
+  }
+
+  .canccu-region[data-role="hero"] > .canccu-widget--photo.canccu-is-claim .canccu-widget__caption {
+    grid-row: 3;
+    position: relative;
+    z-index: 1;
+    padding: 0;
+    background: none;
+    font-size: max(8.1 * var(--canccu-u), calc(11.9 * var(--canccu-u) * var(--canccu-fit, 1)));
+    font-weight: 600;
+    line-height: 1.05;
+    color: var(--canccu-color-text);
+  }
+
+  /*
+   * Stings, and a step that enters with a flash (a finale's "It's on!", the builder's default
+   * for a finale), are the loudest moments (R17, S1, R22): the box turns to the theme's gradient,
+   * primary to accent, with the ink computed for the primary (design decision 1) and a light
+   * sweep across it.
+   */
+  .canccu-region > .canccu-widget--sting.canccu-is-claim,
+  .canccu-region > .canccu-widget.canccu-is-claim.canccu-step--flash {
+    border-color: transparent;
+    box-shadow: none;
+    background:
+      linear-gradient(
+        112deg,
+        transparent 18%,
+        rgb(255 255 255 / 18%) 18% 26%,
+        transparent 26% 32%,
+        rgb(255 255 255 / 12%) 32% 36%,
+        transparent 36%
+      ),
+      linear-gradient(135deg, var(--canccu-color-primary), var(--canccu-color-accent));
+    color: var(--canccu-color-primary-text);
+  }
+
+  .canccu-region > .canccu-widget.canccu-is-claim.canccu-step--flash .canccu-widget__title,
+  .canccu-region > .canccu-widget.canccu-is-claim.canccu-step--flash .canccu-widget__body,
+  .canccu-region > .canccu-widget.canccu-is-claim.canccu-step--flash .canccu-widget__kicker,
+  .canccu-region > .canccu-widget.canccu-is-claim.canccu-step--flash .canccu-widget__big {
+    color: inherit;
+  }
+
+  .canccu-region > .canccu-widget.canccu-is-claim.canccu-step--flash .canccu-widget__band--theme {
+    display: none;
+  }
+
+  .canccu-region[data-role="hero"]
+    > .canccu-widget.canccu-is-claim.canccu-widget--sting
+    .canccu-widget__big {
+    font-size: max(8.1 * var(--canccu-u), calc(21.3 * var(--canccu-u) * var(--canccu-fit, 1)));
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+  }
+
+  .canccu-region[data-role="hero"]
+    > .canccu-widget.canccu-is-claim.canccu-step--flash
+    .canccu-widget__title {
+    font-size: max(8.1 * var(--canccu-u), calc(17.6 * var(--canccu-u) * var(--canccu-fit, 1)));
+    font-weight: 800;
+  }
+
+  /*
+   * Full screen (Midnight, S2; sheet 09): the sting covers the screen edge to edge, with a ring
+   * burst and a scatter of confetti from its centre.
+   */
+  .canccu-region--_full > .canccu-widget--sting {
+    inset: calc(-1 * var(--canccu-safe-inset));
+    border: 0;
+    border-radius: 0;
+  }
+
+  .canccu-region--_full > .canccu-widget--sting .canccu-widget__big {
+    font-size: max(8.1 * var(--canccu-u), calc(27.8 * var(--canccu-u) * var(--canccu-fit, 1)));
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+  }
+
+  .canccu-region--_full > .canccu-widget--sting::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        circle at 50% 50%,
+        transparent 21%,
+        rgb(255 255 255 / 28%) 21.4% 22%,
+        transparent 22.4%
+      ),
+      radial-gradient(
+        circle at 50% 50%,
+        transparent 31%,
+        rgb(255 255 255 / 16%) 31.3% 31.8%,
+        transparent 32.2%
+      ),
+      radial-gradient(circle at 12% 22%, rgb(255 255 255 / 70%) 0.4%, transparent 0.5%),
+      radial-gradient(circle at 84% 14%, rgb(255 255 255 / 70%) 0.4%, transparent 0.5%),
+      radial-gradient(circle at 22% 78%, rgb(255 255 255 / 70%) 0.4%, transparent 0.5%),
+      radial-gradient(circle at 76% 70%, rgb(255 255 255 / 70%) 0.4%, transparent 0.5%),
+      radial-gradient(circle at 64% 30%, rgb(255 255 255 / 60%) 0.3%, transparent 0.4%),
+      radial-gradient(circle at 36% 62%, rgb(255 255 255 / 60%) 0.3%, transparent 0.4%);
+  }
+
+  .canccu-region--_full > .canccu-widget--sting > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .canccu-layout[data-motion="moderate"] .canccu-region--_full > .canccu-widget--sting::after {
+    animation: canccu-hero-burst 900ms ease-out both;
+  }
+
+  @keyframes canccu-hero-burst {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
+  /*
+   * Premiere's film (S3) fills the screen edge to edge, with no card: only the film's own aspect
+   * leaves bars (`object-fit: contain`, claims.css). The playing and its sync are story-video.ts'.
+   */
+  .canccu-region--_full > .canccu-widget--video,
+  .canccu-region--_full > .canccu-widget--video.canccu-is-claim {
+    inset: calc(-1 * var(--canccu-safe-inset));
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /*
+   * A hero that does not grow (Dashboard's small one, about 55 units wide; stage.css) keeps the
+   * claim's own type (claims.css), so its title and body stay whole.
+   */
+  @container canccu-hero not ((min-width: 75cqmin) and (min-height: 40cqmin)) {
+    .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim {
+      gap: calc(1 * var(--canccu-u));
+      padding: calc(2.4 * var(--canccu-u)) calc(2.8 * var(--canccu-u));
+    }
+
+    .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim .canccu-widget__kicker {
+      font-size: calc(3.4 * var(--canccu-u));
+    }
+
+    .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim .canccu-widget__title,
+    .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim .canccu-widget__headline,
+    .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim .canccu-widget__caption {
+      font-size: max(2.6 * var(--canccu-u), calc(6.6 * var(--canccu-u) * var(--canccu-fit, 1)));
+    }
+
+    .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim .canccu-widget__body {
+      font-size: max(2.6 * var(--canccu-u), calc(4 * var(--canccu-u) * var(--canccu-fit, 1)));
+    }
+
+    .canccu-region[data-role="hero"] > .canccu-widget.canccu-is-claim .canccu-widget__big {
+      font-size: max(2.6 * var(--canccu-u), calc(9.3 * var(--canccu-u) * var(--canccu-fit, 1)));
+    }
+  }
+
+  /*
+   * Urgent (R6, A3; mockup 06 b): "Urgent" in the warning colour, on the kicker and the frame.
+   */
+  .canccu-widget__level--urgent .canccu-widget__urgent {
+    color: var(--canccu-color-status-degraded);
+  }
+
+  .canccu-region > .canccu-widget.canccu-is-claim:has(.canccu-widget__level--urgent) {
+    border-color: var(--canccu-color-status-degraded);
+    box-shadow: inset 0 0 0 calc(0.5 * var(--canccu-u)) var(--canccu-color-status-degraded);
+  }
+}

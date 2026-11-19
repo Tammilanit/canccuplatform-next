@@ -159,7 +159,8 @@ export const PREMIERE = preset({
         label: "{item.title|The premiere}",
         target_at: "",
         ends_text: "",
-        description: "Starts {item.starts_at|at zero} · lights down, sound up",
+        // No clock time: a take's countdown runs 30 s whatever the item's time (S3, #625).
+        description: "Lights down, sound up",
       },
       30,
       { message: true },

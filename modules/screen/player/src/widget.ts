@@ -51,12 +51,19 @@ export function drawWidget(
   } else if (type === "video") {
     el.append(...drawStoryVideo(view, media));
   } else if (type !== "embed") {
-    el.append(...renderTree(templateFor(type, template, themeTemplates), view));
+    el.append(...renderTree(templateFor(type, template, themeTemplates), withUrgent(type, view)));
   }
   const art = cardArt(view);
   if (art !== null) el.prepend(art);
   return el;
 }
+
+/**
+ * An urgent announcement says so (R6, A3; mockup 06 b): the player adds `urgent`, as the ticker's
+ * view-model carries it, since a template can test a field but not a value.
+ */
+const withUrgent = (type: string, view: View): View =>
+  type === "announcement" && view.level === "urgent" ? { ...view, urgent: true } : view;
 
 /** A storyboard's video step: from its server-clock start, held while paused, skipped on failure. */
 function drawStoryVideo(view: View, media: MediaOptions): HTMLElement[] {
@@ -232,6 +239,11 @@ export function fillCountdowns(root: ParentNode, nowMs: number): void {
     }
     if (el.textContent !== "" && el.dataset.canccuCountdown === undefined) continue;
     el.dataset.canccuCountdown = "";
-    el.textContent = countdownText(target - nowMs);
+    // A story's step counts its last hour as minutes and seconds, at hero size (sheet 08, 7).
+    const left = target - nowMs;
+    el.textContent =
+      left <= 3_600_000 && el.closest(".canccu-is-claim") !== null
+        ? countdownText(left).slice(3)
+        : countdownText(left);
   }
 }
