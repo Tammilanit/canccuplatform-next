@@ -446,7 +446,7 @@ async function sequenceShots(sequence, itemOf, add, runs) {
     ]);
     await sequence(
       name,
-      `/screen/zones/${zone}`,
+      `/screen/zones/${zone}${viewport.height > viewport.width ? "?orientation=portrait" : ""}`,
       viewport,
       SESSION,
       async () => {

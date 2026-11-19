@@ -270,6 +270,13 @@
     color: var(--canccu-color-primary-text);
   }
 
+  /* An opaque ground under the sweep and the gradient: what the readability check reads as the
+     ground of the ink, as a see-through one would let the page's own colour count (#625). */
+  .canccu-region > .canccu-widget--sting.canccu-is-claim,
+  .canccu-region > .canccu-widget.canccu-is-claim.canccu-step--flash {
+    background-color: var(--canccu-color-primary);
+  }
+
   .canccu-region > .canccu-widget.canccu-is-claim.canccu-step--flash .canccu-widget__title,
   .canccu-region > .canccu-widget.canccu-is-claim.canccu-step--flash .canccu-widget__body,
   .canccu-region > .canccu-widget.canccu-is-claim.canccu-step--flash .canccu-widget__kicker,
