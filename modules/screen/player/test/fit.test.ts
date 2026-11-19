@@ -89,3 +89,34 @@ describe("fitting an announcement to its box", () => {
     }
   });
 });
+
+describe("fitting a storyboard step in the hero (#625)", () => {
+  /** A claimed step of `type` whose words need `wide` px across at full size in a 500 px box. */
+  function step(type: string, wide: number, claim = true): HTMLElement {
+    const root = document.createElement("main");
+    root.innerHTML = `<section class="canccu-region"><div class="canccu-widget canccu-widget--${type}${claim ? " canccu-is-claim" : ""}"><p class="canccu-widget__big">Starting</p></div></section>`;
+    const el = root.querySelector<HTMLElement>(".canccu-widget") as HTMLElement;
+    const fit = () => Number(el.style.getPropertyValue("--canccu-fit") || "1");
+    Object.defineProperty(el, "clientHeight", { get: () => 400 });
+    Object.defineProperty(el, "scrollHeight", { get: () => 300 * fit() });
+    Object.defineProperty(el, "clientWidth", { get: () => 500 });
+    Object.defineProperty(el, "scrollWidth", { get: () => Math.max(500, wide * fit()) });
+    return root;
+  }
+  const fitIn = (root: HTMLElement) =>
+    root.querySelector<HTMLElement>(".canccu-widget")?.style.getPropertyValue("--canccu-fit");
+
+  it("steps a sting, a card, a countdown, a QR or a crew photo down while a word runs out across", () => {
+    for (const type of ["sting", "title_card", "countdown", "qr", "photo"]) {
+      const root = step(type, 800);
+      fitAnnouncements(root);
+      expect(fitIn(root), type).toBe("0.6");
+    }
+  });
+
+  it("leaves the rotation's own widgets alone: only a claim's step is fitted", () => {
+    const root = step("countdown", 800, false);
+    fitAnnouncements(root);
+    expect(fitIn(root)).toBe("");
+  });
+});

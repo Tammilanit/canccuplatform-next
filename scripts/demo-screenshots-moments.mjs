@@ -143,6 +143,13 @@ export const MOMENTS_PAGES = [
     SCREEN_VIEW,
     { fullPage: false, ready: shows("From the crew") },
   ],
+  // The hero rule at 4K (#625; docs/briefs/step-4-polish, sheet 10).
+  [
+    "moments-screen-spotlight-4k",
+    "/screen/zones/main",
+    { width: 3840, height: 2160 },
+    { fullPage: false, ready: shows("From the crew") },
+  ],
 ];
 /** With the crew's "Peak now" pressed (mockup 14): On air's scene card and the main hall. */
 export const PEAK_PAGES = [
@@ -196,7 +203,7 @@ export function momentsListed(at) {
 }
 
 /** An image for the spotlight's photo picker, uploaded as Studio uploads it. */
-async function image(demo) {
+export async function image(demo) {
   const boundary = "canccu-moments-shot";
   const body = Buffer.concat([
     Buffer.from(
@@ -212,7 +219,7 @@ async function image(demo) {
     throw new Error(
       `uploading an image: HTTP ${r.status} ${JSON.stringify(r.body)}`,
     );
-  return r.body.id;
+  return r.body;
 }
 
 export async function momentsShots({ demo, shot, fail }) {
@@ -245,7 +252,7 @@ export async function momentsShots({ demo, shot, fail }) {
     );
     await placed(ids[0], ["main"]);
     await placed(ids[1], ["main", "entrance"]);
-    images.push(await image(demo));
+    images.push((await image(demo)).id);
     for (const [name, path, viewport, o] of MOMENTS_PAGES) {
       await shot(name, path, viewport, SESSION, o);
     }

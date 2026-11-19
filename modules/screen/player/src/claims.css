@@ -24,16 +24,6 @@
     font-size: max(2.6 * var(--canccu-u), calc(4 * var(--canccu-u) * var(--canccu-fit, 1)));
   }
 
-  /* Urgent (mockup 06 b): the warning colour, the theme's accent, on the frame and the kicker. */
-  .canccu-region > .canccu-widget.canccu-is-claim:has(.canccu-widget__level--urgent) {
-    border-color: var(--canccu-color-accent);
-    box-shadow: inset 0 0 0 calc(0.5 * var(--canccu-u)) var(--canccu-color-accent);
-  }
-
-  .canccu-widget__level--urgent .canccu-widget__kicker {
-    color: var(--canccu-color-accent);
-  }
-
   /* An edit's chip for 60 s (mockup 06 c, L13). */
   .canccu-widget--announcement .canccu-widget__updated {
     align-self: flex-start;
@@ -145,13 +135,6 @@
     background: #fff;
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01'/%3E%3C/svg%3E")
       center / contain no-repeat;
-  }
-
-  /* A sting: a short word across the screen on the primary colour. */
-  .canccu-region > .canccu-widget--sting {
-    border-color: var(--canccu-color-primary);
-    background: var(--canccu-color-primary);
-    color: var(--canccu-color-primary-text);
   }
 
   /* A storyboard's message card (SL3; storyboards mockups 20 and 22): the title is the message,
