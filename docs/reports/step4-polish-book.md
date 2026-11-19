@@ -307,3 +307,97 @@ Not fixed here (out of scope); for the lead to sort.
 - **After Test-fire the builder says "One test round on main."** as a notice under the header. Polish 05 puts it in the header and adds "marked as a test in History" (P14).
 
 ## Lead's evaluation
+
+**Verdict.** The polish did its job, and in my view step 4 is ready for `checkpoint-ok`.
+- All seven gate-blocking items from the first book are closed; Urgent and Midnight are closed in the main, with small gaps.
+- Every product owner note is answered on the page it was about.
+- The screens now look like one product: storyboard steps, stings and the finale are large and centred in the hero, and they sit well next to the crew spotlight and the Pulse.
+- The sound desk and the builder are new pages, close to their sheets.
+
+What is left is smaller polish, listed at the end. One cheap, quick package would remove the things you are most likely to notice. None of it needs to hold the gate.
+
+### The organiser and crew: good, with a few rough edges
+- **Good:**
+  - Priorities is drag and drop, with no rank numbers and no arrows (P1). The built-in rules use chips and sliders, and event names no longer wrap mid-word (P2).
+  - The sound desk is four sub-pages under one master strip, instead of one 7,000 px page (P3–P7). Every level and limit is a slider, or a stepper for times (P4, P6).
+  - The cue editor now looks like a product: chips, themed players, sliders with named stops, and "Heard at 64 %" in words (P4).
+  - The mute and the sound check report in words (P8, P9).
+  - The builder matches polish 05 and 06 (P11–P13): the round as a strip of steps, a two-column form, a scrub preview, and the "Before you save" checks. On a phone it is three tabs.
+  - Every phone shot is 390 px wide. Nothing runs off the screen any more, History included (P15).
+- **Falls short:**
+  - **On air still shows rank numbers** ("rank 70") on every moment (P16). You called them meaningless on Priorities, and they are still here.
+  - **Zones are shown by their key, not their name**: "main" and "entrance" on the sound desk, the rules, Test-fire, History, On air and the spotlight form (P2–P9, P14–P17). The screens themselves say "Main hall" and "Entrance".
+  - **Raw ids still show in places:**
+    - Match called's triggers read "tournament.match.called" and "tournament.match.started" (P14), where Starting soon reads "A tournament or ceremony item starts" (P11).
+    - Cue pickers show ids ("tournament.pre", "+ New cue (story.starting_soon.1)").
+    - The catalogue shows notes like "idle: pizza.order.closing: provisional, not sent yet" (P10).
+    - Placeholders are code tokens (`{item.title}`), not the chips I asked for on #628.
+  - **The builder's text boxes are narrow** and cut off the template ("Welcome to {event.n", "Find your seat, sa"; P12, P13). The "Fills with:" line below helps.
+  - **Fire by hand on a later item shows nothing.** On air says "between rounds" and the screens stay on the Pulse (P16, V7). The item list writes its time in UTC and is clipped ("12:3"), and the list touches the first Fire button.
+  - **The spotlight form** shows every field at once, each the full width of the page, with a plain browser checkbox (P17). It works, and the photo picker replaced the raw path, but it is the plainest page in the set.
+  - The catalogue is still a long list (P10: 4,600 px on the desktop, 7,000 px on a phone). It fits, though, and crew fire from On air, where the Fire panel is at the top on a phone (P16).
+
+### Screens: good
+- **Good:**
+  - Every storyboard message, title, QR step and finale fills the hero, large and centred, at 1080p, 4K and portrait (V2, V4, V6). The 4K crop is sharp (V2).
+  - Stings are bright on the theme's gradient with dark ink (V3). The finale "It's on!" is now the loudest thing on the screen (V2, S1 frame 10).
+  - A crew spotlight photo fills the hero with its words on a scrim (V1). This answers R2's "small text in the corner of an empty hero".
+  - The first fire on a fresh stack reads "Welcome to Demo Event" and draws its QR (V6).
+- **Falls short:**
+  - The steps have no kicker line ("DOORS ARE OPEN", "CHECK-IN", "STARTING SOON"), and the QR step has no "Scan with your phone", as polish 08 draws (V2, V4, V6). They read fine without them; it is a finishing touch.
+  - **Urgent** now says URGENT in amber on the card (V5). But the card's frame keeps the normal cyan glow, and the ticker's URGENT label is purple (V5, portrait). Urgent and info are now easy to tell apart on the card, not yet everywhere.
+  - A test-fired Starting soon counts down "14:56" while its own line says "in 55 minutes" (V4, 2; Starting soon in V2, 2). A real run counts correctly (S1). The builder's step thumbnails always read "05:00" (P11, P13).
+  - Match called with no data still reads "Match called:" over an empty hero (V4, 3). It was on the old "later" list.
+
+### The gate's three sequences
+- **Starting soon, T−15, T−5, T−1 and its finale (S1): passes.** It fired by itself on the fixture's item and played each round on time. Each round opens with the full-hero sting, and each countdown fills the hero. The Pulse comes back between rounds, and "It's on!" lands at 00:45:01 on the accent gradient. This is what mockup 20 and polish 08 asked for. One small thing: after T, the rail still lists the semis as "Delayed · 00:45" (frames 10–11), a step 3 Pulse matter.
+- **Midnight at 00:00:00 (S2): passes.**
+  - Both zones show the countdown by 23:59:55 and the sting by 00:00:00.8, and sting and card never overlap. The entrance is now on the dot with the main hall.
+  - Next to polish 09, the full-screen countdown and the "Night 1 at Demo Event" card are about half the sheet's size, in a big dark screen (frames 3–4 and 7–8). The sheet's kicker lines are missing, there are only a few confetti dots, and a purple glow the sheet does not draw runs round the edge during the countdown.
+  - The entrance shows a 0.6 s empty background between sting and card (frame 6). The capture may cause that.
+- **Premiere on two screens (S3): passes.** The film plays full bleed with no frame and no bars. The two players stay 49–50 ms apart with no drift. The countdown's words now match its count.
+
+### The first book's seven gate items
+1. **Storyboard steps at hero scale; stings bright and large: closed** (V2, V3, V4, S1). The readability check now covers storyboard steps in CI.
+2. **Midnight done properly: closed** (S2): on the dot on both zones, the sting in the theme's look, no overlap. The countdown and card are smaller than polish 09 (later).
+3. **Premiere full bleed, with countdown text that matches: closed** (S3).
+4. **Pages that fit:** Storyboards, Cues and History at 1280 px and on a phone, with the Fire panel in the grid: **closed** (P3, P10, P15).
+5. **The QR and `{event.name}` on the first fire: closed** (V6).
+6. **Fire picks the next fitting item: closed** (P16). Two gaps are left: the time is shown in UTC, and nothing visible happens until the first round.
+7. **Urgent looks urgent: mostly closed** (V5): the label is amber on the card. The card's frame and the ticker label are not.
+
+### Your notes
+- **Drag and drop, no rank numbers:** closed on Priorities (P1). "Rank 70" is still on On air (P16).
+- **The sound desk, one huge page:** closed (P3–P9).
+- **Sliders, not typed numbers:** closed (P2, P4, P6, P11).
+- **The cue editor looking professional:** closed (P4).
+- **The builder's box alignment and the one long edit box:** closed (P11–P13). The text boxes are narrow, and the spotlight form now has the long boxes instead (P17).
+- **History fitting the width:** closed (P15).
+- **The screens using their space, with the hero text large:** closed (V1, V2, V4). Midnight's countdown and card are the exception (S2).
+- **The QR on a phone (a link instead):** this book does not show the attendee's phone pages, so I cannot confirm it from here. I will check it on the demo stack.
+
+### What is left
+**Before the gate:** nothing blocking.
+
+If you want the most visible rough edges gone first, one small fast-lane package can do it in a few hours:
+- remove "rank 70" from On air;
+- name zones by their names everywhere ("Main hall", not "main");
+- give Fire a visible result ("Starting soon starts at 02:15, T−15"), and show item times in the event's clock;
+- make the urgent ticker label and frame amber.
+- plain words instead of ids: triggers and Until in the builder (P14), cue pickers, the catalogue's notes (P10).
+
+Otherwise these go first in step 5's polish.
+
+**Later (step 5 polish, or the backlog):**
+- Placeholders as chips (P11–P13).
+- Wider text fields in the builder's step form (P12, P13).
+- The spotlight form shows only the fields of the kind chosen, with themed controls (P17).
+- Kicker lines on storyboard steps, and "Scan with your phone" on the QR step (polish 08).
+- Midnight's countdown and card at polish 09's size, with its confetti, and without the edge glow (S2).
+- A test-fired countdown counts to the item, or says it is a test; step thumbnails show the step's real length (V4, P11, P13).
+- Test-fire's notice in the header, naming Main hall and History (P14).
+- "Match called:" with no data (V4, 3).
+- The rail lists a started item as Now, not "Delayed" (S1).
+- The Cues list folds after ten, as polish 01 draws it (P3).
+- The CI full-page shots draw the sticky Save row in the middle of the page (P4, P6). That comes from the capture, not the page. Fix the script so the next book is clean.
+- Check Peak's look and pace, and the attendee's QR-as-link, on a live screen and phone.
