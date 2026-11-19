@@ -13,7 +13,6 @@
 import { readFileSync } from "node:fs";
 import { SESSION } from "../modules/screen/test/stack/client.mjs";
 import { image, moments, placed } from "./demo-screenshots-moments.mjs";
-import { onAirZoneShots } from "./demo-screenshots-onair.mjs";
 import { DESK, PHONE, firstLine } from "./demo-screenshots-shot.mjs";
 
 const SCREEN_VIEW = { width: 1920, height: 1080 };
@@ -269,18 +268,7 @@ export const PHOTO_PAGES = [
 
 /** The dry run's lines. */
 export function storiesListed(at) {
-  const zoneShots = [1, 2, 4, 8].map((n) => [
-    `stories-on-air-${n}-zones`,
-    "/moments/on-air",
-    DESK,
-  ]);
-  zoneShots.push([
-    "stories-on-air-8-zones-1920",
-    "/moments/on-air",
-    { width: 1920, height: 1080 },
-  ]);
   return [
-    [zoneShots, "On air with that many zones, the zones added for the shot"],
     [STORY_PAGES, "the preset picker and the builder"],
     [PRESET_PAGES, "a preset's message step, test-fired on the main hall"],
     [PREMIERE_PAGES, "Premiere on the demo event, its builder and its steps"],
@@ -657,7 +645,6 @@ export async function storiesShots({ demo, shot, sequence, fail }) {
     runs.push(await testFire("doors_open"));
     for (const [name, path, viewport, o] of LIVE_PAGES)
       await shot(name, path, viewport, SESSION, o);
-    await onAirZoneShots({ demo, shot, fail });
   } catch (err) {
     fail(`storyboards: ${firstLine(err)}`);
   } finally {
